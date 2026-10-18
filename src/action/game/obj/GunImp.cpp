@@ -22,7 +22,6 @@
 
 #pragma fp_contract(off)
 
-#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 
 // The weapons with their own firing: a minigun's spin up and down, and two lasers

@@ -89,6 +89,13 @@
 #include "action/devtools/MenuProbe.h"
 #include "action/devtools/Demo.h"
 #include "action/engine/LaunchOptions.h"
+#include "action/game/Spline.h"
+#include "action/util/Sort.h"
+#include "action/game/obj/DynamicObject.h"
+#include "action/game/obj/Lock.h"
+#include "action/game/obj/control.h"
+#include "action/game/obj/build.h"
+#include "action/engine/parsemap.h"
 
 #include "common/launchInfo.h"
 

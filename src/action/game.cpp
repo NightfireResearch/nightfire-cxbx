@@ -24,6 +24,35 @@
 #include "engine/LaunchOptions.h"
 #include "game/obj/Break.h"
 #include "game/view.h"
+#include "engine/Camera.h"
+#include "engine/viewer.h"
+#include "engine/AIPath.h"
+#include "engine/Anim.h"
+#include "engine/Collide.h"
+#include "engine/Loader.h"
+#include "engine/Script.h"
+#include "engine/Woman.h"
+#include "engine/parsemap.h"
+#include "engine/psiGraphics.h"
+#include "engine/psiLight.h"
+#include "game/drone/Drone.h"
+#include "game/obj/Copter.h"
+#include "game/obj/Door.h"
+#include "game/obj/Effect.h"
+#include "game/obj/Env.h"
+#include "game/obj/Light.h"
+#include "game/obj/Player.h"
+#include "game/obj/ScriptPlayer.h"
+#include "game/obj/Sensor.h"
+#include "game/obj/build.h"
+#include "game/obj/bullet.h"
+#include "game/obj/car.h"
+#include "game/obj/control.h"
+#include "game/sp/Mission.h"
+#include "game/sp/SwitchChannels.h"
+#include "gfx/LowLevel.h"
+#include "gfx/Sprite.h"
+#include <math.h>
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -31,8 +60,6 @@ uint32_t BackgroundMovieHashcode;
 // Functions taking void and returning through registers are fine in either __cdecl or __stdcall
 // It's only when they take arguments that the calling convention matters
 
-// AUTOGEN
-void __stdcall Light_Update(void);
 
 
 
@@ -171,8 +198,6 @@ uint32_t SoundInfo;
 
 // AUTOGEN
 void __stdcall Boot_LoadPTPData(void);
-// AUTOGEN
-void __stdcall ResetMap_Load(void);
 // AUTOGEN
 void Boot_GetPTPData(void **param_1,uint *param_2);
 
@@ -334,8 +359,6 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
 
 #define IsWarmReset U8_AT(0x00279250)
 
-// AUTOGEN
-void __cdecl GameFlow_PushState(int state, float param_2, uint param_3);
 
 // AUTOINJECT
 void GS_PauseGame(bool param_1) {
@@ -650,6 +673,278 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
     }
 }
 
+// ---- Loading a level (ResetMap_Load), over several calls of the game flow's state 3
+
+// The empty function the linker shares with others, at the places nightfire-port calls View_Init, AnimCacheInit,
+// Sound_SetLogSfxFile and build_MakeCelOverlapBox
+#define View_Init ((void (__cdecl *)(void))0x000e0ec0)
+#define AnimCacheInit ((void (__cdecl *)(void))0x000e0ec0)
+#define Sound_SetLogSfxFile ((void (__cdecl *)(void))0x000e0ec0)
+#define build_MakeCelOverlapBox ((void (__cdecl *)(world_tag *world))0x000e0ec0)
+
+#define Text_Init ((void (__cdecl *)(uchar warmReset))0x000d1c90)
+#define Creature_Init ((void (__cdecl *)(void))0x0002e3f0)
+#define MenuManager_Init ((void (__cdecl *)(void))0x00092ae0)
+#define Sound_Kill ((void (__cdecl *)(void))0x000cb730)
+#define Sound_Init ((void (__cdecl *)(void))0x000cb700)
+#define hashtable_initialise ((void (__cdecl *)(void))0x0006b3d0)
+#define hashtable_create_sections ((void (__cdecl *)(void))0x0006b540)
+#define maybeGetNextMissionInSequence ((HASHCODE (__cdecl *)(HASHCODE movie))0x000bdcd0)
+#define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
+#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
+#define MP_Start ((void (__cdecl *)(void))0x000a25f0)
+#define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
+#define Cameras_PostLoad ((void (__cdecl *)(void))0x000252e0)
+#define LoadScreen_Draw ((void (__cdecl *)(void))0x000bf9f0)
+#define Font_WordWrapString ((char *(__cdecl *)(char **text, int length, void *font, int width))0x0006a700)
+#define Sprite_SetParams ((void (__cdecl *)(sprite *spr, uchar enabled, short x, short y, HASHCODE texture, uint colour))0x000cec40)
+
+// The step ResetMap_Load is at (RESETMAP_)
+#define ResetMap_State U32_AT(0x00279284)
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+// The level to load, while the shared files (0x07000500) load first
+#define ResetMap_SavedLevel (*(HASHCODE *)0x00279280)
+// Set once a level has finished loading (cleared while the loader runs)
+#define bLevelLoaded U8_AT(0x00279251)
+#define LoadableIndex U8_AT(0x00279180)
+#define gbl_room_cels (*(cel_tag ***)0x001f6664)
+// The map file's (parsemap.cpp)
+#define DynamicBH (*(block_header_tag *)0x00274b34)
+#define DynamicPtr PTR_AT(0x00274c58)
+#define FileLastBlock U32_AT(0x00274c74)
+#define FileDiscard U32_AT(0x00274c78)
+#define MenuFlowLatch U8_AT(0x0025fb11)          // cleared at each level's start (nightfire-port: mf_menu)
+#define switch_NO_DRONES U32_AT(0x001df99c)
+// The loading screen's picture (LoadingGfx), its texture set to the level's
+#define LoadingGfx (*(SpriteInfo *)0x00181bb8)
+#define LoadScreenFont ((void *)0x0015eb18)
+
+#define HT_MainMenu ((HASHCODE)0x07000048)
+#define HT_SharedFiles ((HASHCODE)0x07000500)
+
+enum {
+    RESETMAP_START = 0,         // the heap and the shared files; the movie before the level, if any
+    RESETMAP_MOVIE = 1,
+    RESETMAP_AFTER_MOVIE = 2,   // the level the movie leads to
+    RESETMAP_LOAD = 3,          // the level itself
+};
+
+// The game's state for a new level: nothing left of the last, the world and every subsystem started again
+// AUTOINJECT
+void ResetMap_GameInit(void) {
+    GameState.CurrentLevelHashcode = (HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff);
+    MPSettings.isMultiplayer = GameState.isMultiplayerLevel;
+    GameState.ReloadGame = 0;
+    GameState.maybePaused = 0;
+    GameState.SomeAlternatePauseState = 0;
+    GameState.VibrationEnabled = 1;
+    MenuFlowLatch = 0;
+    if (switch_NO_DRONES != 0)
+        Drone_bDisableSystem = 1;
+    GS_PauseGame(0);
+    InitShards();
+    Player_ResetStartPos();
+    Env_Reset();
+    memset(&glb_players, 0, sizeof(glb_players));
+    memset(&glb_viewer, 0, sizeof(glb_viewer));
+    glb_world = build_alloc_world();
+    Txt_LanguageInit();          // the original passes IsWarmReset == 0, which it does not read
+    Script_Init();
+    control_init_object_lists();
+    View_Init();
+    Sprite_InitLists();
+    Text_Init(IsWarmReset);
+    Effect_InitLists();
+    Light_Init();
+    Drone_LevelReset();
+    Door_Init();
+    Copter_Init();
+    Sensor_Init();
+    Coll_ResetHitHeap();
+    Bullet_InitCasingLists();
+    AnimCacheInit();
+    AnimPreLoadInit(0);
+    AIPath_Init();
+    Creature_Init();
+    MP_Init();
+    Camera_CreateCameras();
+    Drone_PreLoad_Init();
+    MenuManager_Init();
+    Car_Init();
+    SSys_Init();
+    gbl_room_cels = NULL;
+    if (!IsWarmReset)
+        Init_SwitchChannels();
+    Sound_SetLogSfxFile();
+    if (!(GameState.NextLevelHashcode & 0xff0000))
+        Mission_Init(GameState.CurrentLevelHashcode, (char)IsWarmReset);
+}
+
+// The loading screen: the level's picture, label 0x3c1 wrapped in lines 15 apart from 408 down, drawn four times
+// AUTOINJECT
+void ResetMap_GenLoadScreen(void) {
+    char *label = (char *)Txt_BindLabel((Action_TranslatedText)0x3c1, 0);
+    char *hint, *objective;
+    LoadingGfx.textureHashcode = _ResetMap_LevelCode2Img((HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff), &hint,
+                                                             &objective);
+    Sprite_Create2(&LoadingGfx);
+    Txt_GetStringFromHeap(0);
+    Txt_GetStringFromHeap(0);
+    float y = 408.0f;
+    if (label != NULL) {
+        char *text = label;
+        do {
+            char *line = Font_WordWrapString(&text, (int)strlen(text), LoadScreenFont, 0x21c);
+            if (line == NULL)
+                break;
+            sprite *spr = Sprite_CreateAndLink2Viewer(0x63);
+            Sprite_SetParams(spr, 0, 0x138, (short)Ftol(y), (HASHCODE)0, 0x7d6d59ff);
+            Sprite_SetTextNFmt(spr, line, (char *)LoadScreenFont);
+            y = y + 15.0f;
+        } while (text != NULL);
+    }
+    LoadScreen_Draw();
+    LoadScreen_Draw();
+    LoadScreen_Draw();
+    LoadScreen_Draw();
+    LoadingScreenMakeVisible();
+}
+
+// The subtitles of the movie before a level, or 0 for none
+static HASHCODE ResetMap_MovieSubtitles(uint movie) {
+    switch (movie) {
+    case 0x07100001: return (HASHCODE)0x0600095a;
+    case 0x07100005: return (HASHCODE)0x06000961;
+    case 0x07100009: return (HASHCODE)0x06000963;
+    case 0x0710000c: return (HASHCODE)0x06000965;
+    case 0x07100011: return (HASHCODE)0x06000967;
+    case 0x07100014: return (HASHCODE)0x06000969;
+    case 0x07100018: return (HASHCODE)0x0600096b;
+    case 0x07300004: return (HASHCODE)0x0600095d;
+    case 0x07300008: return (HASHCODE)0x06000962;
+    case 0x0730000b: return (HASHCODE)0x06000964;
+    case 0x0730000d: return (HASHCODE)0x06000966;
+    case 0x07300013: return (HASHCODE)0x06000968;
+    case 0x07300017: return (HASHCODE)0x0600097a;
+    case 0x0730001b: return (HASHCODE)0x0600096c;
+    default: return (HASHCODE)0;
+    }
+}
+
+// Loads the next level, a step a call: the heap, sounds and input started again and the shared files loaded; a movie
+// first if the level comes with one (its subtitles, and then the level the movie leads to); then the level, its
+// rooms, objects, doors and paths, and the game flow on to state 4.
+// AUTOINJECT
+void ResetMap_Load(void) {
+    switch (ResetMap_State) {
+    case RESETMAP_START:
+        maybePsiResetResources();
+        MenuManager_Load(0, 0);
+        Sound_Kill();
+        Mem_Init();
+        hashtable_initialise();
+        Sound_Init();
+        Input_Ready();
+        if (GameState.NextLevelHashcode != HT_MainMenu) {
+            ResetMap_GameInit();
+            ResetMap_SavedLevel = GameState.NextLevelHashcode;
+            GameState.NextLevelHashcode = HT_SharedFiles;
+            bLevelLoaded = 0;
+            while (LoaderLoad(1, GameState.NextLevelHashcode, 0, 0))
+                ;
+            GameState.NextLevelHashcode = ResetMap_SavedLevel;
+        }
+        LoadWoman_Thunk();           // the Xbox layer's (0x000dc860)
+        if (!(GameState.NextLevelHashcode & 0xff0000)) {
+            ResetMap_State = RESETMAP_LOAD;
+            return;
+        }
+        if (SubtitlesEnabled) {
+            HASHCODE subtitles = ResetMap_MovieSubtitles(GameState.NextLevelHashcode);
+            if (subtitles != 0 && hashtable_getitem(subtitles) != NULL)
+                SP_Create(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, subtitles, (HASHCODE)0, 1, 1, NULL, NULL, NULL, 0);
+        }
+        GameFlow_PushState(6, 0.0f, 0xff);
+        GameState.MovieHashcode = GameState.NextLevelHashcode;
+        GameState.NextLevelHashcode = (HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff);
+        GameState.field5_0x14 = 0;
+        if (GameState.NextLevelHashcode == 0x07000018)
+            GameState.NextLevelHashcode = (HASHCODE)0x0700001b;
+        Mem_SetMallocMethod(0);
+        psiStartBackgroundMovie((HASHCODE)GameState.MovieHashcode, 0, SFXGetVolume());
+        ResetMap_State = RESETMAP_MOVIE;
+        return;
+
+    case RESETMAP_MOVIE:
+        ResetMap_State = RESETMAP_AFTER_MOVIE;
+        return;
+
+    case RESETMAP_AFTER_MOVIE:
+        GameState.NextLevelHashcode = maybeGetNextMissionInSequence((HASHCODE)GameState.MovieHashcode);
+        GameState.CurrentLevelHashcode = GameState.NextLevelHashcode;
+        if (GameState.NextLevelHashcode == HT_MainMenu)
+            GameState.ReloadMenupage = 0x40000036;
+        ResetMap_State = (GameState.NextLevelHashcode & 0xff0000) ? RESETMAP_START : RESETMAP_LOAD;
+        return;
+
+    case RESETMAP_LOAD:
+        if (GameState.NextLevelHashcode != HT_MainMenu)
+            ResetMap_GenLoadScreen();
+        LoadableIndex = 0;
+        psiInitTimeIn100ths();
+        maybePsiResetResources();
+        MenuManager_Load(0, 0);
+        Sound_Kill();
+        Mem_Init();
+        hashtable_initialise();
+        Sound_Init();
+        Input_Ready();
+        ResetMap_GameInit();
+        SFXLoadCorrectBank();
+        psiLight_Create();           // the original passes 1, which it does not read
+        bLevelLoaded = 0;
+        while (LoaderLoad(1, GameState.NextLevelHashcode, 0, 0))
+            ;
+        ResetMap_State = 4;
+        build_MakeCelOverlapBox(glb_world);
+        build_link_objects_to_rooms(glb_world->firstCel);
+        parsemap_reset_to_block_memory_discard();
+        parsemap_block_map_data_dynamic(&DynamicBH, (uchar *)DynamicPtr, 1);
+        build_LinkDoors2Portals(glb_world->firstCel, control_first_object());
+        AIPath_BindNodes();
+        Mem_Shrink((void **)&FileDiscard, FileLastBlock - FileDiscard);
+        LoadingScreenMakeInvisible();
+        bLevelLoaded = 1;
+        ReadTuningVars();
+        Player_Start();
+        MP_Start();
+        Drone_PostLoad_Init();
+        MP_PostLoad_Init();
+        Cameras_PostLoad();
+        LoadWoman_Thunk();
+        if (GameState.CurrentLevelHashcode == HT_MainMenu)
+            MenuManager_Create(GameState.ReloadMainMenu, GameState.ReloadMenupage, -1, 0, 0x28, 0, 5);
+        Mem_SetMallocMethod(0);
+        hashtable_create_sections();
+        GameFlow_PopState();
+        GameFlow_PushState(4, 0.0f, 0xff);
+        ResetMap_State = RESETMAP_START;
+        return;
+    }
+}
+
+// The state on top of the game flow's stack; 0 when it is empty
+// AUTOINJECT
 uint GameFlow_GetState(void) {
   if (StackIndex == 0) {
     return 0;
@@ -657,6 +952,8 @@ uint GameFlow_GetState(void) {
   return GameStateStack[StackIndex - 1];
 }
 
+// The game is not drawn in some states (loading, the movies)
+// AUTOINJECT
 void set_InhibitGameDrawIfRequired(void) {
   switch(GameFlow_GetState()) {
     case 1:
@@ -679,13 +976,50 @@ void set_InhibitGameDrawIfRequired(void) {
     }
 }
 
+// Takes the top state off the stack and answers it (0 when the stack is empty)
+// AUTOINJECT
 uint GameFlow_PopState(void)
 {
-  if (StackIndex != 0) {
-    StackIndex--;
-    set_InhibitGameDrawIfRequired();
+  if (StackIndex == 0) {
+    return 0;
   }
-  return GameFlow_GetState();
+  StackIndex--;
+  set_InhibitGameDrawIfRequired();
+  return GameStateStack[StackIndex];
+}
+
+// Puts a state on the stack, which wraps round at 64. States 7 and 13 fade the screen first (over 'time' frames, to
+// 'colour') and are 8 and 14 once the fade has started, or are not pushed if it cannot; state 11 sets the fade's rate
+// and is 12.
+// AUTOINJECT
+void GameFlow_PushState(int state, float time, uint colour) {
+  switch (state) {
+    case 7:
+      if (!Camera_SetFade(6, time, colour, 1))
+        return;
+      state = 8;
+      GameState.InhibitGameDraw = 0;
+      break;
+    case 0xb:
+      glb_viewer[6]->fadeRate = time;
+      state = 0xc;
+      GameState.InhibitGameDraw = 0;
+      break;
+    case 0xd:
+      if (!Camera_SetFade(6, time, colour, 1))
+        return;
+      state = 0xe;
+      GameState.InhibitGameDraw = 0;
+      break;
+  }
+  // GC check (0x80051420): the stack wraps round (kept)
+  NF_WARN_IF(StackIndex + 1 > 0x3f, "**** STACK OVERFLOW ****\n");
+  GameStateStack[StackIndex] = state;
+  StackIndex++;
+  if (StackIndex >= ARRAY_SIZE(GameStateStack)) {
+    StackIndex = 0;
+  }
+  set_InhibitGameDrawIfRequired();
 }
 
 void GameFlow_QuickPushState(uint state) {

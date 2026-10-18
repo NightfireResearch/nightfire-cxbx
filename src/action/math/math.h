@@ -74,6 +74,7 @@ void RotMatrixZYX(_VECTOR *param_1,_MATRIX *mtx);
 void RotTransMatrix(_VECTOR *rot, _VECTOR *trans, _MATRIX *mtx);
 bool Plane_PlaneEq(plane_equ_tag *planeEq, _VECTOR *v1, _VECTOR *v2, _VECTOR *v3);
 double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane);
+void Plane_PutPntOnPlane(_VECTOR *out, _VECTOR *point, plane_equ_tag *plane);
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut);
 bool vecutil_point_on_poly(_VECTOR *point, _VECTOR *vtx1, _VECTOR *vtx2, _VECTOR *vtx3, plane_equ_tag *plane);
 double vecutil_calculate_closest_point_on_line(_VECTOR *out, _VECTOR *a, _VECTOR *b, _VECTOR *p);

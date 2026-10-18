@@ -1,0 +1,2261 @@
+// Shadow tests for parcel 14's package B: the objects' control (game/obj/control.cpp), the rooms (build.cpp), the
+// map file (engine/parsemap.cpp, Emitter.cpp's parsemap_block_particles), sorting (util/Sort.cpp), the paths
+// (game/Spline.cpp), the locks (Lock.cpp, sp/Locks.cpp, Player_UnEquipKey), DynamicObject_Create, Env_Create,
+// Plane_PutPntOnPlane, View_AddSkyObj, the game flow's stack and the level's loading (game.cpp's ResetMap_*,
+// GameFlow_*, engine/Loader.cpp's LoadableLoad and LoadableReload): each function, the original and ours, on the same
+// made-up world - objects, cels and their portals, models, hits, a map file's blocks, arrays to sort, paths of keys,
+// locks and their bullets - with zeros of both signs, NaNs and boundary values among the numbers. What needs the game
+// running (the heap, the hashtable, collision queries, sounds, text, menus, the loader and every subsystem a level's
+// loading starts) goes to a logging fake; the package's functions, ours, run for real underneath both.
+// Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=engineport runs it alone.
+
+#include "EnginePortShadow.h"
+#include "ShadowHarness.h"
+
+#include "../../common/xbeOriginal.h"
+#include "../actionhelpers.h"
+#include "../game.h"
+#include "../engine/Anim.h"
+#include "../engine/Collide.h"
+#include "../engine/Loader.h"
+#include "../engine/Vision.h"
+#include "../engine/celglist.h"
+#include "../engine/parsemap.h"
+#include "../engine/psiGraphics.h"
+#include "../engine/viewer.h"
+#include "../game/Spline.h"
+#include "../game/view.h"
+#include "../game/drone/BOT.h"
+#include "../game/drone/Drone.h"
+#include "../game/mp/multiplayer.h"
+#include "../game/obj/DynamicObject.h"
+#include "../game/obj/Emitter.h"
+#include "../game/obj/Env.h"
+#include "../game/obj/GT.h"
+#include "../game/obj/Light.h"
+#include "../game/obj/Lock.h"
+#include "../game/obj/Player.h"
+#include "../game/obj/PlayerWeapon.h"
+#include "../game/obj/build.h"
+#include "../game/obj/bullet.h"
+#include "../game/obj/control.h"
+#include "../game/obj/object.h"
+#include "../game/sp/Locks.h"
+#include "../gfx/Sprite.h"
+#include "../math/math.h"
+#include "../ui/HUD.h"
+#include "../util/Sort.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+#include <map>
+#include <string>
+#include <vector>
+
+#ifndef NOMINMAX
+#define NOMINMAX
+#endif
+#include <windows.h>
+
+namespace {
+
+#define ORIGINAL(at, type) ((type)(uintptr_t)(at))
+#ifndef COUNT
+#define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
+#endif
+
+// The game's globals the package reads and writes
+#define DynamicObjHead ((obj_tag *)0x001df338)  // the list's head: its nextObject is the first object
+#define DynamicObjFirst (*(obj_tag **)0x001df34c)
+#define ForcedListInfo (*(LLISTINFO_tag *)0x001df41c)
+#define RoomCels (*(cel_tag ***)0x001f6664)
+#define ControlFuncs ((ControlFunction *)0x00163b98)
+#define GameGlobalVars (*(GlobalVars_t *)0x001f6568)
+#define GameStackIndex U16_AT(0x0017bfe8)
+#define GameStack (*(uint (*)[64])0x0017bff0)
+#define GameResetMapState U32_AT(0x00279284)
+#define GameKeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
+// parsemap's
+#define GameFileNextBlock (*(uint **)0x00274c70)
+#define GameFileBase (*(uchar **)0x00274c6c)
+#define GameBinFileVersion U32_AT(0x00274c64)
+#define GameBinFileHeader (*(uint **)0x00274c5c)
+#define GameFileDiscardHeader (*(uint **)0x00274c94)
+#define GameFileDiscard U32_AT(0x00274c78)
+#define GameFileLastBlock U32_AT(0x00274c74)
+#define GameCurrentBH (*(block_header_tag *)0x00274b40)
+#define GameDynamicBH (*(block_header_tag *)0x00274b34)
+#define GameDynamicPtr PTR_AT(0x00274c58)
+#define GameBMH (*(void **)0x00274c84)
+#define GameEntityCount U32_AT(0x00274c8c)
+#define GameCelList (*(celglist_tag **)0x00274c7c)
+#define GameCurrCelList (*(celglist_tag **)0x00274c80)
+#define GamePaths (*(void ***)0x00274b4c)
+#define GamePathsAt (*(void ***)0x00274c60)
+#define GameMap (*(map_tag **)0x00274b50)
+#define GamePallHeader (*(void **)0x00274b30)
+#define GameTexData (*(texDataEntry **)0x00274b3c)
+#define GameBmpHeader (*(bmpHeaderEntry **)0x00274b48)
+
+const int OBJS = 12;
+const int EXTRA = 0xa00;
+const int CELS = 8;
+const int PORTALS = 8;
+const int GLISTS = 12;
+const int HITS = 8;
+const int KEYS = 12;
+const int HEAP = 0x4000;
+const int FILE_SIZE = 0x2000;
+
+struct World {
+    obj_tag objs[OBJS];
+    uint8_t extra[OBJS][EXTRA];
+    cel_tag cels[CELS];
+    portal_tag portals[PORTALS];
+    celglist_tag glists[GLISTS];
+    world_tag worlds[2];
+    cel_tag *roomList[CELS + 1];
+    HITDATA_tag hits[HITS];
+    AnimState anims[2];
+    weapon_definition_tag weapons[4];
+    framelist_tag path[KEYS];
+    viewer_tag viewer;
+    level_tag keys;
+    _VECTOR v[6];
+    _MATRIX mtx[2];
+    quaternion_tag quat;
+    char text[256];
+    uint8_t file[FILE_SIZE];
+    uint32_t fileTable[16];
+    uint8_t heap[HEAP];
+    uint32_t heapUsed;
+    cel_tag *straddled[4];
+    bmpHeaderEntry bmp[8];
+    uint32_t pal[16];
+    texDataEntry tex[8];
+    map_tag map;
+    void *paths[4];
+    // the fakes' state
+    uint32_t loaderCalls;
+    uint32_t createUsed;
+};
+World world;
+
+int cases, differ, nanChoices;
+
+// Bytes a case leaves uncompared: where ours and the original keep different copies of a static
+uint8_t *maskAt;
+size_t maskSize;
+
+// The cases' random numbers: each run of a case starts from the same point, so the original and ours are given the
+// same arguments, and the fakes the same answers
+uint32_t gen, caseSeed;
+
+uint32_t R(uint32_t n) {
+    gen = gen * 1664525u + 1013904223u;
+    uint32_t v = gen ^ (gen >> 16);
+    return n ? v % n : v;
+}
+
+float RF(float lo, float hi) {
+    return lo + (hi - lo) * (float)R(0x10000) / 65535.0f;
+}
+
+// Every NaN as one: which of two NaNs an operation gives is the x87's or SSE2's choice
+uint32_t Bits(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    if ((u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0)
+        return 0x7fc0ffffu;
+    return u;
+}
+
+// A pointer as the logs show it: an offset in the world, else its address
+uint32_t W(const void *p) {
+    if (p == NULL)
+        return 0xffffffffu;
+    uintptr_t at = (uintptr_t)p, base = (uintptr_t)&world;
+    if (at >= base && at < base + sizeof(world))
+        return (uint32_t)(at - base);
+    char here;
+    ptrdiff_t distance = (const char *)p - &here;
+    if (distance > -0x10000 && distance < 0x10000)
+        return 0x7fffffffu; // the stack, as one value
+    return 0x80000000u | (uint32_t)at;
+}
+
+void LogVector(const char *name, const _VECTOR *v) {
+    if (v == NULL)
+        ShadowLog("%s=null", name);
+    else
+        ShadowLog("%s=%x:%08x,%08x,%08x", name, W(v), Bits(v->x), Bits(v->y), Bits(v->z));
+}
+
+// Mostly in range, now and then an edge: zeros of both signs, a NaN, an infinity, a huge or tiny value
+float Value(float lo, float hi) {
+    switch (R(48)) {
+    case 0: return 0.0f;
+    case 1: return -0.0f;
+    case 2: return NAN;
+    case 3: return R(2) ? INFINITY : -INFINITY;
+    case 4: return R(2) ? 1e30f : -1e-30f;
+    case 5: return (float)(int)RF(lo, hi);
+    default: return RF(lo, hi);
+    }
+}
+
+float Plain(float lo, float hi) {
+    return RF(lo, hi);
+}
+
+void RandomVector(_VECTOR *v, float range) {
+    v->x = Value(-range, range);
+    v->y = Value(-range, range);
+    v->z = Value(-range, range);
+}
+
+void PlainVector(_VECTOR *v, float range) {
+    v->x = Plain(-range, range);
+    v->y = Plain(-range, range);
+    v->z = Plain(-range, range);
+}
+
+void RandomMatrix(_MATRIX *m, float range) {
+    _VECTOR rot;
+    PlainVector(&rot, 3.2f);
+    RotMatrix(&rot, m);
+    m->m[3] = m->m[7] = m->m[11] = 0.0f;
+    PlainVector((_VECTOR *)&m->m[12], range);
+    if (R(16) == 0)
+        m->m[R(15)] = Value(-2.0f, 2.0f);
+}
+
+void RandomBytes(void *at, size_t n) {
+    for (size_t i = 0; i < n; i++)
+        ((uint8_t *)at)[i] = (uint8_t)R(256);
+}
+
+obj_tag *AnyObj(void) {
+    return &world.objs[R(OBJS)];
+}
+
+obj_tag *AnyObjOrNull(void) {
+    return R(5) == 0 ? NULL : AnyObj();
+}
+
+cel_tag *AnyCel(void) {
+    return &world.cels[R(CELS)];
+}
+
+// ---- the fakes
+
+bool sureMalloc, sureItem;
+
+void *__cdecl FakeMalloc(size_t size, MallocFlags flags, uint32_t align) {
+    ShadowLog("malloc(%x,%x,%x)", (uint32_t)size, (uint16_t)flags, align);
+    uint32_t at = (world.heapUsed + 3) & ~3u;
+    if (at + size > HEAP)
+        at = 0;
+    if (!sureMalloc && R(32) == 0)
+        return NULL;
+    world.heapUsed = at + (uint32_t)size;
+    return &world.heap[at];
+}
+
+void __cdecl FakeFree(void **p) {
+    ShadowLog("free(%x)", W(*p));
+    *p = NULL;
+}
+
+obj_tag *__cdecl FakeCreate(int size, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat) {
+    ShadowLog("create(%d,%x)", size, W(quat));
+    LogVector("pos", pos);
+    LogVector("rot", rot);
+    if (R(16) == 0 || world.createUsed >= 2)
+        return NULL;
+    obj_tag *obj = &world.objs[OBJS - 1 - world.createUsed++];
+    memset(obj, 0, sizeof(obj_tag));
+    uint8_t *extra = world.extra[obj - world.objs];
+    memset(extra, 0, EXTRA);
+    obj->extraObjectData = extra;
+    if (pos != NULL)
+        obj->position = *pos;
+    if (rot != NULL)
+        obj->rotation = *rot;
+    obj->scale = 1.0f;
+    obj->tweakR = obj->tweakG = obj->tweakB = obj->tweakA = 0xff;
+    obj->ambientR = obj->ambientG = obj->ambientB = 0xff;
+    RandomMatrix(&obj->transformMatrix, 20.0f);
+    return obj;
+}
+
+void SetHits(HITDATA_tag **list, int most) {
+    int n = (int)R(most + 1);
+    for (int i = 0; i < HITS; i++)
+        world.hits[i].next = i + 1 < HITS ? &world.hits[i + 1] : NULL;
+    *list = n == 0 ? NULL : &world.hits[R(HITS - n + 1)];
+    if (n != 0)
+        (*list)[n - 1].next = NULL;
+}
+
+bool __cdecl FakeRay(_VECTOR *from, _VECTOR *to, cel_tag *cel, obj_tag *a, obj_tag *b, HITDATA_tag **list, char only,
+                     ushort mask, ushort flags) {
+    ShadowLog("ray(%x,%x,%x,%x,%d,%x,%x)", W(cel), W(a), W(b), W(list), only, mask, flags);
+    LogVector("from", from);
+    LogVector("to", to);
+    SetHits(list, 2);
+    return *list != NULL;
+}
+
+bool __cdecl FakeSphere(_VECTOR *pos, float radius, cel_tag *cel, obj_tag *a, obj_tag *b, HITDATA_tag **list,
+                        char only, char oneSided, ushort mask, ushort flags) {
+    ShadowLog("sphere(%08x,%x,%x,%x,%x,%d,%d,%x,%x)", Bits(radius), W(cel), W(a), W(b), W(list), only, oneSided, mask,
+              flags);
+    LogVector("pos", pos);
+    SetHits(list, 2);
+    return *list != NULL && R(5) != 0;
+}
+
+void __cdecl FakeFreeHits(HITDATA_tag **list) {
+    ShadowLog("freehits(%x)", W(*list));
+    *list = NULL;
+}
+
+cel_tag **__cdecl FakeStraddle(HITTEST_tag *test, ushort *count) {
+    ShadowLog("straddle(%x,%08x,%x)", W(test->cel), Bits(test->radius), test->type);
+    LogVector("pos", &test->pos);
+    *count = (ushort)R(4);
+    for (int i = 0; i < 4; i++)
+        world.straddled[i] = AnyCel();
+    return world.straddled;
+}
+
+void __cdecl FakeCollideUpdate(obj_tag *first) {
+    ShadowLog("collide(%x)", W(first));
+    for (obj_tag *obj = first; obj != NULL; obj = obj->nextObject) {
+        if (R(3) == 0)
+            obj->transformFlags |= TRANSFORM_MOVED;
+    }
+}
+
+uchar __cdecl FakeLink2Portal(obj_tag *obj) {
+    ShadowLog("link2portal(%x)", W(obj));
+    return (uchar)(R(3) != 0);
+}
+
+cel_tag *__cdecl FakeLeftCel(cel_tag *cel, _VECTOR *from, _VECTOR *to) {
+    ShadowLog("leftcel(%x)", W(cel));
+    LogVector("from", from);
+    LogVector("to", to);
+    return R(3) == 0 ? AnyCel() : NULL;
+}
+
+void __cdecl FakeObj(obj_tag *obj) {
+    ShadowLog("obj(%x)", W(obj));
+}
+
+void __cdecl FakeAmbient(obj_tag *obj) {
+    ShadowLog("ambient(%x)", W(obj));
+    obj->ambientR = (uchar)(obj->ambientR + 1);
+}
+
+bool __cdecl FakeLListAdd(LLISTINFO_tag *list, LLNODE_tag *node) {
+    ShadowLog("lladd(%x,%x)", W(list), W(node));
+    return true;
+}
+
+LLNODE_tag *__cdecl FakeLListRemove(LLISTINFO_tag *list, LLNODE_tag *node) {
+    ShadowLog("llremove(%x,%x)", W(list), W(node));
+    return node;
+}
+
+// control_delete_object: logged, and the object taken out of the list (so the deleting loop ends)
+void __cdecl FakeDelete(obj_tag *obj) {
+    ShadowLog("delete(%x)", W(obj));
+    if (obj->prevObject != NULL)
+        obj->prevObject->nextObject = obj->nextObject;
+    if (obj->nextObject != NULL)
+        obj->nextObject->prevObject = obj->prevObject;
+    obj->objectType = OBJECTTYPE_DELETED;
+    obj->flags &= ~1;
+}
+
+void __cdecl FakeUpdate(obj_tag *obj) {
+    ShadowLog("update(%x)", W(obj));
+    if (R(4) == 0)
+        obj->flags |= 1;
+    if (R(3) == 0)
+        obj->transformFlags |= TRANSFORM_MOVED;
+}
+
+void __cdecl FakeNothing(void) {
+    ShadowLog("hook");
+}
+
+bool __cdecl FakeLinkToRoom(obj_tag *obj, char straddle, world_tag *w) {
+    ShadowLog("room(%x,%d,%x)", W(obj), straddle, W(w));
+    if (R(2)) {
+        obj->inCel = AnyCel();
+        return true;
+    }
+    return false;
+}
+
+cel_tag *__cdecl FakeFindCel(_VECTOR *pos, world_tag *w) {
+    ShadowLog("findcel(%x)", W(w));
+    LogVector("pos", pos);
+    return R(4) == 0 ? NULL : AnyCel();
+}
+
+void __cdecl FakeSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot, obj_tag *obj, char a, ushort b,
+                        ushort c, char d) {
+    ShadowLog("skyobj(%d,%x,%x,%d,%d,%d,%d)", slot, W(glist), W(obj), a, b, c, d);
+    LogVector("pos", pos);
+    LogVector("rot", rot);
+}
+
+obj_tag *__cdecl FakeEmitter(HASHCODE hc, _VECTOR *pos, _VECTOR *dir, float life, uint on, uint off, uint alive,
+                             float period) {
+    ShadowLog("emitter(%x,%08x,%d,%d,%d,%08x)", hc, Bits(life), on, off, alive, Bits(period));
+    LogVector("pos", pos);
+    LogVector("dir", dir);
+    return NULL;
+}
+
+DYNAMICSOUNDS *__cdecl FakeSound3D(uint sfx, _VECTOR *pos, float volume, float outer, float inner, ushort pitch,
+                                   uint p7, int p8) {
+    ShadowLog("sound3d(%x,%08x,%08x,%08x,%x,%x,%x)", sfx, Bits(volume), Bits(outer), Bits(inner), pitch, p7, p8);
+    LogVector("at", pos);
+    return NULL;
+}
+
+DYNAMICSOUNDS *__cdecl FakeSoundExt(uint sfx, float volume, ushort pitch, uint p4) {
+    ShadowLog("soundext(%x,%08x,%x,%x)", sfx, Bits(volume), pitch, p4);
+    return NULL;
+}
+
+bool menuExists[4];
+
+bool __cdecl FakeMenuExists(uchar manager) {
+    ShadowLog("menuexists(%d)", manager);
+    return menuExists[manager & 3];
+}
+
+void __cdecl FakeMenuEnable(uchar enable, uchar manager) {
+    ShadowLog("menuenable(%d,%d)", enable, manager);
+}
+
+uint __cdecl FakeMenuCreate(uint a, uint b, short c, uchar d, uint e, char f, uint g) {
+    ShadowLog("menucreate(%x,%x,%d,%d,%x,%d,%d)", a, b, c, d, e, f, g);
+    return R(4);
+}
+
+void __cdecl FakeMenuDelete(uchar manager) {
+    ShadowLog("menudelete(%d)", manager);
+}
+
+char *__cdecl FakeStringHeap(uchar n) {
+    ShadowLog("stringheap(%d)", n);
+    return world.text;
+}
+
+const char *__cdecl FakeBindLabel(uint label, uint p2) {
+    ShadowLog("label(%x,%x)", label, p2);
+    return label == 0x02000014 ? "%c%c%c%c" : "a line of text to wrap";
+}
+
+void __cdecl FakeText(char player, char p2, int kind, char *text, int sprite, short frames) {
+    ShadowLog("text(%d,%d,%d,%x:%.40s,%x,%d)", player, p2, kind, W(text), text, sprite, frames);
+}
+
+bool __cdecl FakeSetFade(ushort viewer, float frames, uint colour, uchar mode) {
+    ShadowLog("fade(%d,%08x,%x,%d)", viewer, Bits(frames), colour, mode);
+    return R(3) != 0;
+}
+
+void *__cdecl FakeGetItem(HASHCODE hash) {
+    ShadowLog("item(%x)", hash);
+    if (!sureItem && R(6) == 0)
+        return NULL;
+    return &world.glists[R(GLISTS)];
+}
+
+void __cdecl FakeAddItem(HASHCODE hash, void *data) {
+    ShadowLog("additem(%x,%x)", hash, W(data));
+}
+
+uint __cdecl FakeIsLoadable(HASHCODE hash) {
+    ShadowLog("isloadable(%x)", hash);
+    return R(3);
+}
+
+void __cdecl FakeHashType(uint type) {
+    ShadowLog("deletetype(%x)", type);
+}
+
+void __cdecl FakePointer(void *p) {
+    ShadowLog("ptr(%x)", W(p));
+}
+
+void __cdecl FakeCreateDynamic(void *placement, level_tag *keys, uint type, celglist_tag *glist, void *a, void *b,
+                               char creation) {
+    ShadowLog("dynamic(%x,%x,%x,%x,%x,%d)", W(placement), type, W(glist), W(a), W(b), creation);
+    for (int i = 0; i < 0xb0; i += 4)
+        ShadowLog("%x,", *(uint32_t *)((uint8_t *)keys + i));
+}
+
+void __cdecl FakeFixup(cel_tag *cel, uint *flags, level_tag *keys) {
+    ShadowLog("fixup(%x,%x)", W(cel), *flags);
+    for (int i = 0x2c; i < 0x48; i += 4)
+        ShadowLog("%x,", *(uint32_t *)((uint8_t *)keys + i));
+    cel->bitsFromPlacementTag ^= R(0x10000);
+}
+
+void __cdecl FakeDrops(uchar type) {
+    ShadowLog("drops(%d)", type);
+}
+
+bool __cdecl FakeBlockId(char mainMap) {
+    ShadowLog("blockid(%d,%x,%x)", mainMap, GameCurrentBH.size, GameCurrentBH.identifier);
+    return R(4) == 0;
+}
+
+void __cdecl FakeScriptFree(HASHCODE hash) {
+    ShadowLog("scriptfree(%x)", hash);
+}
+
+uint32_t mallocMethod;
+
+uint32_t __cdecl FakeMallocMethod(uint32_t method) {
+    ShadowLog("method(%d)", method);
+    uint32_t was = mallocMethod;
+    mallocMethod = method;
+    return was;
+}
+
+void __cdecl FakeArg(int arg) {
+    ShadowLog("arg(%d)", arg);
+}
+
+bool __cdecl FakeLoaderLoad(int mode, uint hash, uint unused, int variant) {
+    ShadowLog("loaderload(%d,%x,%x,%d)", mode, hash, unused, variant);
+    return world.loaderCalls++ < 2;
+}
+
+obj_tag *__cdecl FakeSPCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE a, HASHCODE b, short mode, char once, obj_tag *owner,
+                              void *callback, void *context, short mask) {
+    ShadowLog("spcreate(%x,%x,%d,%d,%x,%x,%x,%d)", a, b, mode, once, W(owner), W(callback), W(context), mask);
+    return NULL;
+}
+
+int __cdecl FakeVolume(void) {
+    ShadowLog("volume");
+    return 77;
+}
+
+void __cdecl FakeMovie(HASHCODE hash, char loop, int volume) {
+    ShadowLog("movie(%x,%d,%d)", hash, loop, volume);
+}
+
+HASHCODE __cdecl FakeNextMission(HASHCODE movie) {
+    ShadowLog("nextmission(%x)", movie);
+    static const uint32_t kNext[] = {0x07000048, 0x07000012, 0x07100005};
+    return (HASHCODE)kNext[R(3)];
+}
+
+void __cdecl FakeMission(HASHCODE level, short warm) {
+    ShadowLog("mission(%x,%d)", level, warm);
+}
+
+void __cdecl FakeText1(uchar warm) {
+    ShadowLog("textinit(%d)", warm);
+}
+
+void __cdecl FakePause(bool pause) {
+    ShadowLog("pause(%d)", pause);
+}
+
+world_tag *__cdecl FakeAllocWorld(void) {
+    ShadowLog("allocworld");
+    return &world.worlds[R(2)];
+}
+
+void __cdecl FakeMenuLoad(uint a, uint *b) {
+    ShadowLog("menuload(%x,%x)", a, W(b));
+}
+
+void __cdecl FakeMapDynamic(block_header_tag *bh, uchar *block, uchar creation) {
+    ShadowLog("mapdynamic(%x,%x,%d)", W(bh), W(block), creation);
+}
+
+void __cdecl FakeLinkObjects(cel_tag *first) {
+    ShadowLog("linkobjects(%x)", W(first));
+}
+
+void __cdecl FakeLinkDoors(cel_tag *first, obj_tag *objs) {
+    ShadowLog("linkdoors(%x,%x)", W(first), W(objs));
+}
+
+obj_tag *__cdecl FakeFirstObject(void) {
+    return &world.objs[1];
+}
+
+void __cdecl FakeShrink(void **p, uint n) {
+    ShadowLog("shrink(%x,%x)", *(uint32_t *)p, n);
+}
+
+void __cdecl FakePush(int state, float time, uint colour) {
+    ShadowLog("push(%d,%08x,%x)", state, Bits(time), colour);
+}
+
+uint __cdecl FakePop(void) {
+    ShadowLog("pop");
+    return 0;
+}
+
+char *__cdecl FakeWrap(char **text, int length, void *font, int width) {
+    ShadowLog("wrap(%d,%x,%d)", length, W(font), width);
+    if (*text == NULL || R(4) == 0)
+        return NULL;
+    char *line = *text;
+    *text = R(2) ? NULL : *text + 1;
+    return line;
+}
+
+sprite *__cdecl FakeSpriteLink(char viewer) {
+    ShadowLog("spritelink(%d)", viewer);
+    return (sprite *)&world.extra[5][0];
+}
+
+void __cdecl FakeSpriteParams(sprite *spr, uchar a, short x, short y, HASHCODE t, uint c) {
+    ShadowLog("spriteparams(%x,%d,%d,%d,%x,%x)", W(spr), a, x, y, t, c);
+}
+
+void __cdecl FakeSpriteText(sprite *spr, char *text, char *font) {
+    ShadowLog("spritetext(%x,%x,%x)", W(spr), W(text), W(font));
+}
+
+sprite *__cdecl FakeSpriteCreate(SpriteInfo *info) {
+    ShadowLog("spritecreate(%x,%x)", W(info), info->textureHashcode);
+    return NULL;
+}
+
+HASHCODE __cdecl FakeLevelImg(void) {
+    return (HASHCODE)0;
+}
+
+// A void(void) fake for each of the many a level's loading calls, logged by its number
+#define VOID_FAKE(n) void __cdecl FakeVoid##n(void) { ShadowLog("v%d", n); }
+VOID_FAKE(0) VOID_FAKE(1) VOID_FAKE(2) VOID_FAKE(3) VOID_FAKE(4) VOID_FAKE(5) VOID_FAKE(6) VOID_FAKE(7) VOID_FAKE(8)
+VOID_FAKE(9) VOID_FAKE(10) VOID_FAKE(11) VOID_FAKE(12) VOID_FAKE(13) VOID_FAKE(14) VOID_FAKE(15) VOID_FAKE(16)
+VOID_FAKE(17) VOID_FAKE(18) VOID_FAKE(19) VOID_FAKE(20) VOID_FAKE(21) VOID_FAKE(22) VOID_FAKE(23) VOID_FAKE(24)
+VOID_FAKE(25) VOID_FAKE(26) VOID_FAKE(27) VOID_FAKE(28) VOID_FAKE(29) VOID_FAKE(30) VOID_FAKE(31) VOID_FAKE(32)
+VOID_FAKE(33) VOID_FAKE(34) VOID_FAKE(35) VOID_FAKE(36) VOID_FAKE(37) VOID_FAKE(38) VOID_FAKE(39) VOID_FAKE(40)
+VOID_FAKE(41) VOID_FAKE(42) VOID_FAKE(43) VOID_FAKE(44) VOID_FAKE(45) VOID_FAKE(46)
+VOID_FAKE(47)
+
+// A hook on an original and its port
+void Hook(unsigned at, const void *fake) {
+    if (at == 0x000e0ec0)
+        return; // the shared empty function: its port is a trivial stub of ours other ports share, so it runs for real
+    ShadowHook_Install(at, fake);
+}
+
+// ---- the world
+
+void LinkWorld(void) {
+    // the cels in one chain, the first in glb_world
+    for (int i = 0; i < CELS; i++)
+        world.cels[i].nextCel = i + 1 < CELS ? &world.cels[i + 1] : NULL;
+    world.worlds[0].firstCel = &world.cels[0];
+    world.worlds[1].firstCel = &world.cels[R(CELS)];
+    glb_world = &world.worlds[0];
+    // the objects in the list
+    obj_tag *prev = DynamicObjHead;
+    int count = 1 + (int)R(OBJS - 2);
+    for (int i = 0; i < count; i++) {
+        obj_tag *obj = &world.objs[i];
+        obj->prevObject = prev;
+        obj->nextObject = i + 1 < count ? &world.objs[i + 1] : NULL;
+        prev = obj;
+    }
+    DynamicObjFirst = &world.objs[0];
+    for (int i = count; i < OBJS; i++) {
+        world.objs[i].prevObject = NULL;
+        world.objs[i].nextObject = NULL;
+    }
+}
+
+void RandomObject(int i) {
+    obj_tag *obj = &world.objs[i];
+    memset(obj, 0, sizeof(*obj));
+    RandomBytes(world.extra[i], 0x40);
+    obj->extraObjectData = world.extra[i];
+    static const char kTypes[] = {OBJECTTYPE_DRONE, OBJECTTYPE_PLAYER, OBJECTTYPE_BULLET, 6, OBJECTTYPE_CASING,
+                                  OBJECTTYPE_EXPLODE, OBJECTTYPE_EFFECT, OBJECTTYPE_DEAD_DRONE, OBJECTTYPE_DEAD_PLAYER,
+                                  OBJECTTYPE_ANIMDEBUGHANDLER, OBJECTTYPE_DOOR, OBJECTTYPE_SIMPLESCRIPT,
+                                  OBJECTTYPE_CAR, OBJECTTYPE_ANIMOBJECT, OBJECTTYPE_LOCK, OBJECTTYPE_GUNTURRET2, 30,
+                                  0x50};
+    obj->objectType = kTypes[R(sizeof(kTypes))];
+    RandomVector(&obj->position, 30.0f);
+    RandomVector(&obj->lastPosition, 30.0f);
+    RandomVector(&obj->rotation, 4.0f);
+    RandomVector(&obj->lastRotation, 4.0f);
+    RandomVector(&obj->centrePoint, 30.0f);
+    RandomVector(&obj->lastCentrePoint, 30.0f);
+    if (R(4) == 0)
+        obj->lastCentrePoint = obj->centrePoint;
+    obj->radius = R(3) == 0 ? Value(0.0f, 0.2f) : Value(0.0f, 3.0f);
+    RandomMatrix(&obj->transformMatrix, 30.0f);
+    obj->scale = R(3) == 0 ? 1.0f : Value(-2.0f, 3.0f);
+    static const ushort kFlagBits[] = {1, 2, 4, 8, 0x20, 0x40, 0x80, 0x100, 0x200, 0x400};
+    for (int b = 0; b < COUNT(kFlagBits); b++) {
+        if (R(4) == 0)
+            obj->transformFlags |= kFlagBits[b];
+    }
+    static const uint kEffectBits[] = {0x10, 0x20, 0x8000, 0x10000000, 0x20000000};
+    for (int b = 0; b < COUNT(kEffectBits); b++) {
+        if (R(5) == 0)
+            obj->effectFlags |= kEffectBits[b];
+    }
+    obj->flags = (char)(R(8) == 0 ? 1 : (R(4) == 0 ? 2 : 0));
+    obj->drawnCountdown = (char)R(3);
+    obj->objGraphics = R(4) == 0 ? NULL : &world.glists[R(GLISTS)];
+    obj->animState = R(3) == 0 ? &world.anims[R(2)] : NULL;
+    if (obj->animState == NULL && (obj->transformFlags & TRANSFORM_ANIMATED))
+        obj->animState = &world.anims[0];
+    obj->inCel = R(5) == 0 ? NULL : AnyCel();
+    obj->maybeParent = R(5) == 0 ? AnyObj() : NULL;
+    obj->curState = (ushort)R(6);
+    obj->subState = (ushort)R(5);
+    obj->ambientR = R(3) ? 0xff : (uchar)R(256);
+    obj->ambientG = R(4) ? 0xff : (uchar)R(256);
+    obj->ambientB = R(4) ? 0xff : (uchar)R(256);
+    obj->tweakG = (uchar)R(256);
+    obj->tweakB = (uchar)(R(3) == 0 ? R(8) : R(256));
+    obj->hitList = R(3) == 0 ? NULL : &world.hits[R(HITS)];
+    obj->nextInCel = R(3) == 0 ? AnyObj() : NULL;
+    obj->prevInCel = R(3) == 0 ? AnyObj() : NULL;
+}
+
+void RandomCel(cel_tag *cel) {
+    RandomBytes(cel, sizeof(*cel));
+    static const uint kKinds[] = {0xc047, 0xc023, 0x8017, 0x8018, 0x8019, 0x1234};
+    cel->bitsFromPlacementTag = kKinds[R(COUNT(kKinds))] | (R(2) ? CEL_ROOM : 0);
+    PlainVector(&cel->someMin, 40.0f);
+    cel->someMax.x = cel->someMin.x + Plain(0.0f, 60.0f);
+    cel->someMax.y = cel->someMin.y + Plain(0.0f, 60.0f);
+    cel->someMax.z = cel->someMin.z + Plain(0.0f, 60.0f);
+    if (R(12) == 0)
+        cel->someMin.x = NAN;
+    PlainVector(&cel->sphere, 30.0f);
+    cel->sphereRadius = Value(0.0f, 50.0f);
+    PlainVector(&cel->position, 30.0f);
+    PlainVector(&cel->rotation, 3.0f);
+    cel->glist = &world.glists[R(GLISTS)];
+    cel->firstObject = R(2) ? AnyObj() : NULL;
+    cel->portals = R(3) == 0 ? NULL : &world.portals[R(PORTALS)];
+    cel->childCel = R(2) ? AnyCel() : NULL;
+    cel->someSwitchChannel = (uchar)R(6);
+    cel->env = NULL;
+}
+
+void RandomPortal(portal_tag *portal) {
+    RandomBytes(portal, sizeof(*portal));
+    int i = (int)(portal - world.portals);
+    portal->next = i + 1 < PORTALS && R(3) != 0 ? &world.portals[i + 1] : NULL;
+    portal->partner = &world.portals[R(PORTALS)];
+    portal->cel = AnyCel();
+    portal->door = R(2) ? NULL : AnyObj();
+    for (int k = 0; k < 4; k++)
+        PlainVector(&portal->corners[k], 10.0f);
+    Plane_PlaneEq(&portal->plane, &portal->corners[0], &portal->corners[1], &portal->corners[2]);
+}
+
+void RandomGlist(celglist_tag *glist) {
+    RandomBytes(glist, sizeof(*glist));
+    glist->name = world.text;
+    PlainVector((_VECTOR *)&glist->boundSphere, 5.0f);
+    glist->boundSphere.r = Value(0.0f, 8.0f);
+    PlainVector(&glist->extentMin, 5.0f);
+    PlainVector(&glist->extentMax, 5.0f);
+    glist->lod = R(2) ? &world.glists[R(GLISTS)] : NULL;
+    glist->applyFlagsToObject = R(3) == 0 ? 0x40000 : R(0x100);
+}
+
+void RandomWorld(void) {
+    for (int i = 0; i < OBJS; i++)
+        RandomObject(i);
+    for (int i = 0; i < CELS; i++)
+        RandomCel(&world.cels[i]);
+    for (int i = 0; i < PORTALS; i++)
+        RandomPortal(&world.portals[i]);
+    for (int i = 0; i < GLISTS; i++)
+        RandomGlist(&world.glists[i]);
+    for (int i = 0; i < HITS; i++) {
+        HITDATA_tag *hit = &world.hits[i];
+        RandomBytes(hit, sizeof(*hit));
+        hit->next = i + 1 < HITS && R(3) ? &world.hits[i + 1] : NULL;
+        hit->dist = Value(0.0f, 300.0f);
+        hit->hitCel = R(4) == 0 ? NULL : AnyCel();
+        hit->hitObj = R(4) == 0 ? NULL : AnyObj();
+        RandomVector(&hit->hitPosition, 20.0f);
+    }
+    for (int i = 0; i < 2; i++) {
+        RandomBytes(&world.anims[i], sizeof(AnimState));
+        PlainVector((_VECTOR *)world.anims[i].animObj.boundSphere, 4.0f);
+        world.anims[i].animObj.boundSphere[3] = Value(0.0f, 3.0f);
+    }
+    static const short kWeapons[] = {78, 79, 86, 87, 3};
+    for (int i = 0; i < 4; i++) {
+        memset(&world.weapons[i], 0, sizeof(world.weapons[i]));
+        world.weapons[i].weaponVariantNum = kWeapons[R(COUNT(kWeapons))];
+    }
+    for (int i = 0; i < KEYS; i++) {
+        framelist_tag *key = &world.path[i];
+        PlainVector(&key->pos, 10.0f);
+        if (i > 0 && R(4) == 0)
+            key->pos = world.path[i - 1].pos;
+        for (int q = 0; q < 4; q++)
+            key->quat.q[q] = Plain(-1.0f, 1.0f);
+        if (i > 0 && R(4) == 0)
+            key->quat = world.path[i - 1].quat;
+        if (R(24) == 0)
+            key->pos.x = Value(-5.0f, 5.0f);
+    }
+    RandomBytes(&world.viewer, sizeof(world.viewer));
+    RandomBytes(&world.keys, sizeof(world.keys));
+    for (int i = 0; i < 6; i++)
+        RandomVector(&world.v[i], 20.0f);
+    RandomMatrix(&world.mtx[0], 20.0f);
+    RandomMatrix(&world.mtx[1], 20.0f);
+    strcpy(world.text, "1234");
+    RandomBytes(world.file, 0x100);
+    RandomBytes(world.heap, 0x200);
+    world.heapUsed = 0;
+    world.loaderCalls = R(3);
+    world.createUsed = 0;
+    for (int i = 0; i < 4; i++)
+        menuExists[i] = R(2) != 0;
+    mallocMethod = R(3);
+
+    for (int i = 0; i < 256; i++)
+        switch_channels[i] = (char)(R(3) == 0);
+    for (int i = 0; i < 256; i++)
+        switch_channels_hold[i] = (char)(R(3) == 0);
+    MPSettings.maybeDroneAIEnabled = R(3) == 0;
+    for (int i = 0; i < 10; i++)
+        MPGame.players[i].playerObj = R(3) == 0 ? NULL : AnyObj();
+    GameState.InhibitGameDraw = (uchar)R(2);
+    GameState.NumFramesUnpaused = R(0x10000);
+    GameState.difficultyModifier = R(3);
+    RoomCels = NULL;
+    for (int i = 0; i < 4; i++) {
+        glb_players[i] = R(4) == 0 ? NULL : AnyObj();
+        glb_blokes[i] = R(4) == 0 ? NULL : (BLData *)world.extra[R(OBJS)];
+    }
+    LinkWorld();
+}
+
+// ---- calling
+
+typedef uint32_t (*Runner)(bool original);
+struct Case {
+    const char *name;
+    Runner run;
+};
+const Case *current;
+
+// The stack below, as zeros, the same for both
+__declspec(noinline) void ZeroStack(void) {
+    volatile uint32_t below[0x1000];
+    for (int i = 0; i < 0x1000; i++)
+        below[i] = 0;
+}
+
+uint32_t RunCase(bool original) {
+    gen = caseSeed;
+    sureMalloc = false;
+    sureItem = false;
+    maskAt = NULL;
+    maskSize = 0;
+    ZeroStack();
+    return current->run(original);
+}
+
+#define CDECL_RUN(at, ours, type, ...)                                                                                \
+    (original ? ([&]() { XbeOriginalScope o(at); ZeroStack(); return ORIGINAL(at, type)(__VA_ARGS__); }()) \
+              : ours(__VA_ARGS__))
+
+#define CDECL_VOID(at, ours, type, ...)                                                                               \
+    do {                                                                                                              \
+        if (original) {                                                                                               \
+            XbeOriginalScope o(at);                                                                                   \
+            ZeroStack();                                                                                              \
+            ORIGINAL(at, type)(__VA_ARGS__);                                                                          \
+        } else {                                                                                                      \
+            ours(__VA_ARGS__);                                                                                        \
+        }                                                                                                             \
+    } while (0)
+
+// ---- the regions and the comparison (two NaNs the same: the x87 and SSE2 choose differently between two)
+
+struct Area {
+    uint8_t *at;
+    size_t size;
+};
+Area areas[48];
+int areaCount;
+ShadowRegions regions;
+
+void AddArea(void *at, size_t size) {
+    regions.Add(at, size);
+    areas[areaCount].at = (uint8_t *)at;
+    areas[areaCount++].size = size;
+}
+
+bool IsNaNWord(const uint8_t *p) {
+    uint32_t u;
+    memcpy(&u, p, 4);
+    return (u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0;
+}
+
+bool CompareCase(const char *what, int trial) {
+    static std::vector<uint8_t> theirState, ourState;
+    regions.Save();
+    ShadowLog_Clear();
+    uint32_t theirResult = RunCase(true);
+    regions.Capture(theirState);
+    std::string theirLog = ShadowLog_Text();
+    regions.Restore();
+    ShadowLog_Clear();
+    uint32_t ourResult = RunCase(false);
+    regions.Capture(ourState);
+    const std::string &ourLog = ShadowLog_Text();
+
+    static std::map<std::string, int> reports;
+    int &reported = reports[what];
+    bool same = true;
+    if (theirResult != ourResult) {
+        same = false;
+        if (reported++ < 3)
+            printf("[engineport] %s case %d: returns 0x%x, the original 0x%x\n", what, trial, ourResult, theirResult);
+    }
+    size_t at = 0;
+    bool nans = false, memorySame = true;
+    bool identical = theirState.size() == ourState.size() &&
+                     memcmp(theirState.data(), ourState.data(), theirState.size()) == 0;
+    for (int a = 0; a < areaCount && memorySame && !identical; a++) {
+        for (size_t j = 0; j < areas[a].size; j++) {
+            if (theirState[at + j] == ourState[at + j])
+                continue;
+            if (areas[a].at + j >= maskAt && areas[a].at + j < maskAt + maskSize)
+                continue;
+            size_t window = j >= 3 ? j - 3 : 0;
+            for (; window <= j && window + 4 <= areas[a].size; window++) {
+                if (IsNaNWord(&theirState[at + window]) && IsNaNWord(&ourState[at + window]))
+                    break;
+            }
+            if (window <= j && window + 4 <= areas[a].size) {
+                nans = true;
+                j = window + 3;
+                continue;
+            }
+            size_t word = j & ~(size_t)3;
+            memorySame = false;
+            if (reported++ < 3) {
+                uint32_t theirs = 0, ours = 0;
+                if (word + 4 <= areas[a].size) {
+                    memcpy(&theirs, &theirState[at + word], 4);
+                    memcpy(&ours, &ourState[at + word], 4);
+                }
+                printf("[engineport] %s case %d: memory differs in region %d at +0x%x: 0x%08x, the original 0x%08x\n",
+                       what, trial, a, (unsigned)word, ours, theirs);
+            }
+            break;
+        }
+        at += areas[a].size;
+    }
+    same = same && memorySame;
+    if (theirLog != ourLog) {
+        same = false;
+        if (reported++ < 3) {
+            size_t d = 0;
+            while (d < theirLog.size() && d < ourLog.size() && theirLog[d] == ourLog[d])
+                d++;
+            size_t from = d > 120 ? d - 120 : 0;
+            printf("[engineport] %s case %d: calls differ at %d\n  ours:     %.400s\n  original: %.400s\n", what, trial,
+                   (int)d, ourLog.c_str() + from, theirLog.c_str() + from);
+        }
+    }
+    if (same && nans)
+        nanChoices++;
+    return same;
+}
+
+void Test(const char *group, const Case *list, int count, int trials) {
+    int groupCases = cases, groupDiffer = differ;
+    for (int c = 0; c < count; c++) {
+        current = &list[c];
+        if (getenv("NIGHTFIRE_SHADOW_TRACE") != NULL) {
+            printf("[engineport] %s\n", current->name);
+            fflush(stdout);
+        }
+        for (int trial = 0; trial < trials; trial++) {
+            gen = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
+            RandomWorld();
+            caseSeed = gen;
+            cases++;
+            if (!CompareCase(current->name, trial))
+                differ++;
+        }
+    }
+    printf("[engineport] %s: %d cases, %d differ\n", group, cases - groupCases, differ - groupDiffer);
+    fflush(stdout);
+}
+
+#define C(name, run) {name, run}
+
+// ---- the objects (control.cpp)
+
+void InstallControlFakes(void) {
+    Hook(0x0002dc10, (const void *)&FakeCreate);
+    Hook(0x00021110, (const void *)&FakeLinkToRoom);
+    Hook(0x0002b910, (const void *)&FakeStraddle);
+    Hook(0x0006e4d0, (const void *)&FakeLListAdd);
+    Hook(0x0006e550, (const void *)&FakeLListRemove);
+    Hook(0x00031970, (const void *)&FakeObj);
+    Hook(0x00026a00, (const void *)&FakeObj);
+    Hook(0x000db3d0, (const void *)&FakeObj);
+    Hook(0x000d8810, (const void *)&FakeLeftCel);
+    Hook(0x0006d790, (const void *)&FakeAmbient);
+    Hook(0x0006fba0, (const void *)&FakeObj);
+    Hook(0x0002d080, (const void *)&FakeDelete);
+    Hook(0x0002cca0, (const void *)&FakeCollideUpdate);
+    Hook(0x00032a00, (const void *)&FakeVoid0);
+    Hook(0x0002f8d0, (const void *)&FakeVoid1);
+    Hook(0x000d3950, (const void *)&FakeVoid2);
+    Hook(0x000e0ec0, (const void *)&FakeNothing);
+}
+
+uint32_t RunGetObjMatrix(bool original) {
+    obj_tag *obj = AnyObj();
+    _MATRIX *mtx = R(3) == 0 ? &world.mtx[0] : &obj->transformMatrix;
+    CDECL_VOID(0x0002cf10, Control_GetObjMatrix, void (__cdecl *)(obj_tag *, _MATRIX *), obj, mtx);
+    return 0;
+}
+
+uint32_t RunBuildWorldSph(bool original) {
+    obj_tag *obj = AnyObj();
+    CDECL_VOID(0x0002db20, Control_BuildWorldSph, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunLinkToCel(bool original) {
+    obj_tag *obj = AnyObj();
+    cel_tag *cel = R(3) == 0 ? NULL : AnyCel();
+    CDECL_VOID(0x0002d200, control_link_object_to_cel, void (__cdecl *)(obj_tag *, cel_tag *), obj, cel);
+    return 0;
+}
+
+uint32_t RunStraddle(bool original) {
+    obj_tag *obj = AnyObj();
+    return (uint32_t)CDECL_RUN(0x0002d2a0, Controls_StraddleTest, bool (__cdecl *)(obj_tag *), obj);
+}
+
+uint32_t RunCelChange(bool original) {
+    obj_tag *obj = R(16) == 0 ? NULL : AnyObj();
+    CDECL_VOID(0x0002d3a0, control_handle_cel_change, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunSwitches(bool original) {
+    CDECL_VOID(0x0002d640, maybeControl_Switches_Update, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t P32(const void *p) {
+    return (uint32_t)(uintptr_t)p;
+}
+
+// The objects a frame works on, with the bullets and explosions that may point at one deleted
+void MovingObjects(void) {
+    for (obj_tag *obj = DynamicObjFirst; obj != NULL; obj = obj->nextObject) {
+        PlainVector(&obj->rotation, R(4) == 0 ? 9.0f : 3.0f);
+        if (obj->objectType == OBJECTTYPE_BULLET) {
+            BU_tag *bullet = (BU_tag *)obj->extraObjectData;
+            bullet->firedByObj = R(2) ? AnyObj() : NULL;
+            bullet->heatseekTarget = R(2) ? AnyObj() : NULL;
+        } else if (obj->objectType == OBJECTTYPE_EXPLODE) {
+            ((uint32_t *)obj->extraObjectData)[7] = R(2) ? P32(AnyObj()) : 0;
+        }
+    }
+}
+
+uint32_t RunHandler(bool original) {
+    MovingObjects();
+    CDECL_VOID(0x0002dd00, control_movement_object_handler, void (__cdecl *)(char), (char)R(2));
+    return 0;
+}
+
+uint32_t RunCreateEx(bool original) {
+    _VECTOR *pos = R(4) == 0 ? NULL : &world.v[0];
+    _VECTOR *rot = R(4) == 0 ? NULL : &world.v[1];
+    _MATRIX *mtx = R(2) ? NULL : &world.mtx[0];
+    celglist_tag *glist = R(3) == 0 ? NULL : &world.glists[R(GLISTS)];
+    obj_tag *carrier = AnyObjOrNull();
+    char link = (char)R(2);
+    ushort transform = (ushort)R(0x800);
+    float scale = Value(-2.0f, 3.0f);
+    ushort effect = (ushort)R(0x10000);
+    uchar r = (uchar)R(256), g = (uchar)R(256), b = (uchar)R(256);
+    ushort size = (ushort)R(0x200);
+    return W(CDECL_RUN(0x0002e320, Control_CreateObjEx,
+                       obj_tag *(__cdecl *)(ushort, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *, char,
+                                            ushort, float, ushort, uchar, uchar, uchar),
+                       size, pos, rot, mtx, glist, carrier, link, transform, scale, effect, r, g, b));
+}
+
+uint32_t RunNextLOD(bool original) {
+    obj_tag *obj = R(8) == 0 ? NULL : AnyObj();
+    return (uint32_t)CDECL_RUN(0x0002da50, Control_NextLOD, bool (__cdecl *)(obj_tag *), obj);
+}
+
+uint32_t RunReferenced(bool original) {
+    obj_tag *obj = AnyObj();
+    char referenced = (char)R(3);
+    CDECL_VOID(0x0002db00, Control_ObjectReferenced, void (__cdecl *)(obj_tag *, char), obj, referenced);
+    return 0;
+}
+
+uint32_t RunPlr2Ind(bool original) {
+    obj_tag *obj = R(10) == 0 ? NULL : AnyObj();
+    if (obj != NULL) {
+        static const char kTypes[] = {OBJECTTYPE_PLAYER, OBJECTTYPE_DEAD_PLAYER, OBJECTTYPE_DRONE,
+                                      OBJECTTYPE_DEAD_DRONE, OBJECTTYPE_GUNTURRET2, OBJECTTYPE_BULLET, 0x50};
+        obj->objectType = kTypes[R(COUNT(kTypes))];
+        if (obj->objectType == OBJECTTYPE_PLAYER || obj->objectType == OBJECTTYPE_DEAD_PLAYER) {
+            ((BLData *)obj->extraObjectData)->playerNum = (char)(R(6) - 1);
+        } else if (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE) {
+            BOT_vars_t *bot = (BOT_vars_t *)world.extra[R(OBJS)];
+            bot->playerIndex = (short)R(4);
+            ((Drone_tag *)obj->extraObjectData)->botVars = bot;
+        }
+        obj->curState = (ushort)R(3);
+        obj->subState = (ushort)R(5);
+        int player = (int)R(4);
+        MPGame.players[player].playerObj = R(2) ? obj : AnyObj();
+    }
+    return CDECL_RUN(0x0002d8a0, Control_Plr2Ind, short (__cdecl *)(obj_tag *), obj) & 0xffff;
+}
+
+uint32_t RunInherit(bool original) {
+    obj_tag *obj = AnyObj(), *from = AnyObj();
+    if (R(3) == 0)
+        from->lastRotation = from->rotation;
+    CDECL_VOID(0x0002d6a0, Control_InheritVelocity, void (__cdecl *)(obj_tag *, obj_tag *, float), obj, from,
+               Value(0.0f, 1.0f));
+    return 0;
+}
+
+const Case kControl[] = {
+    C("Control_GetObjMatrix", RunGetObjMatrix),
+    C("Control_BuildWorldSph", RunBuildWorldSph),
+    C("control_link_object_to_cel", RunLinkToCel),
+    C("Controls_StraddleTest", RunStraddle),
+    C("control_handle_cel_change", RunCelChange),
+    C("maybeControl_Switches_Update", RunSwitches),
+    C("control_movement_object_handler", RunHandler),
+    C("Control_CreateObjEx", RunCreateEx),
+    C("Control_NextLOD", RunNextLOD),
+    C("Control_ObjectReferenced", RunReferenced),
+    C("Control_Plr2Ind", RunPlr2Ind),
+    C("Control_InheritVelocity", RunInherit),
+};
+
+// ---- the rooms (build.cpp), Plane_PutPntOnPlane and View_AddSkyObj
+
+void InstallRoomFakes(void) {
+    Hook(0x00070ae0, (const void *)&FakeMalloc);
+    Hook(0x0002c4e0, (const void *)&FakeRay);
+    Hook(0x0002c610, (const void *)&FakeSphere);
+    Hook(0x000294d0, (const void *)&FakeFreeHits);
+    Hook(0x0002b910, (const void *)&FakeStraddle);
+    Hook(0x0002f4c0, (const void *)&FakeLink2Portal);
+    Hook(0x0006e4d0, (const void *)&FakeLListAdd);
+    Hook(0x0006e550, (const void *)&FakeLListRemove);
+}
+
+void RoomList(void) {
+    if (R(2) == 0)
+        return;
+    int n = 0;
+    for (int i = 0; i < CELS; i++) {
+        if (R(3) != 0)
+            world.roomList[n++] = &world.cels[i];
+    }
+    world.roomList[n] = NULL;
+    RoomCels = world.roomList;
+}
+
+uint32_t RunFindCel(bool original) {
+    sureMalloc = true;
+    RoomList();
+    _VECTOR *pos = &world.v[R(2)];
+    if (R(2)) {
+        cel_tag *cel = AnyCel();
+        pos->x = Plain(cel->someMin.x, cel->someMax.x);
+        pos->y = Plain(cel->someMin.y, cel->someMax.y);
+        pos->z = Plain(cel->someMin.z, cel->someMax.z);
+    }
+    world_tag *w = &world.worlds[R(3) == 0 ? 1 : 0];
+    return W(CDECL_RUN(0x00020c30, build_FindCel, cel_tag *(__cdecl *)(_VECTOR *, world_tag *), pos, w));
+}
+
+uint32_t RunMakeRoomList(bool original) {
+    sureMalloc = true;
+    cel_tag *first = R(5) == 0 ? NULL : AnyCel();
+    CDECL_VOID(0x00020bd0, build_MakeRoomList, void (__cdecl *)(cel_tag *), first);
+    return 0;
+}
+
+uint32_t RunLinkToRoom(bool original) {
+    sureMalloc = true;
+    RoomList();
+    obj_tag *obj = AnyObj();
+    if (R(2)) {
+        cel_tag *cel = AnyCel();
+        obj->transformMatrix.m[12] = Plain(cel->someMin.x, cel->someMax.x);
+        obj->transformMatrix.m[13] = Plain(cel->someMin.y, cel->someMax.y);
+        obj->transformMatrix.m[14] = Plain(cel->someMin.z, cel->someMax.z);
+        obj->objGraphics = NULL;
+        obj->transformFlags |= TRANSFORM_MATRIX_PLACED;
+    }
+    char straddle = (char)R(2);
+    world_tag *w = &world.worlds[R(3) == 0 ? 1 : 0];
+    return (uint32_t)CDECL_RUN(0x00021110, build_LinkToRoom, bool (__cdecl *)(obj_tag *, char, world_tag *), obj, straddle, w);
+}
+
+uint32_t RunLinkObjects(bool original) {
+    for (int i = 0; i < CELS; i++) {
+        if (R(2)) {
+            cel_tag *room = AnyCel();
+            world.cels[i].sphere.x = Plain(room->someMin.x, room->someMax.x);
+            world.cels[i].sphere.y = Plain(room->someMin.y, room->someMax.y);
+            world.cels[i].sphere.z = Plain(room->someMin.z, room->someMax.z);
+        }
+    }
+    cel_tag *first = R(6) == 0 ? NULL : &world.cels[R(3)];
+    CDECL_VOID(0x00020f70, build_link_objects_to_rooms, void (__cdecl *)(cel_tag *), first);
+    return 0;
+}
+
+uint32_t RunLinkDoors(bool original) {
+    for (int i = 0; i < OBJS; i++) {
+        if (R(2))
+            world.objs[i].objectType = OBJECTTYPE_DOOR;
+    }
+    for (int i = 0; i < PORTALS; i++) {
+        if (R(2)) {
+            portal_tag *portal = &world.portals[i];
+            obj_tag *door = AnyObj();
+            door->centrePoint.x = (portal->corners[0].x + portal->corners[1].x + portal->corners[2].x) / 3.0f;
+            door->centrePoint.y = (portal->corners[0].y + portal->corners[1].y + portal->corners[2].y) / 3.0f;
+            door->centrePoint.z = (portal->corners[0].z + portal->corners[1].z + portal->corners[2].z) / 3.0f;
+        }
+    }
+    obj_tag *first = R(8) == 0 ? NULL : &world.objs[R(3)];
+    CDECL_VOID(0x000209e0, build_LinkDoors2Portals, void (__cdecl *)(cel_tag *, obj_tag *), AnyCel(), first);
+    return 0;
+}
+
+uint32_t RunInitCel(bool original) {
+    cel_tag *cel = AnyCel();
+    cel_tag *next = R(3) == 0 ? NULL : AnyCel();
+    CDECL_VOID(0x00020660, init_cel, void (__cdecl *)(cel_tag *, cel_tag *), cel, next);
+    return 0;
+}
+
+uint32_t RunAllocCel(bool original) {
+    sureMalloc = true;
+    world.heapUsed = (uint32_t)R(0x40) * 4;
+    cel_tag *next = R(3) == 0 ? NULL : AnyCel();
+    return W(CDECL_RUN(0x00020700, build_alloc_cel, cel_tag *(__cdecl *)(cel_tag *), next));
+}
+
+uint32_t RunAllocWorld(bool original) {
+    sureMalloc = true;
+    world.heapUsed = (uint32_t)R(0x100) * 4;
+    return W(CDECL_RUN(0x00020640, build_alloc_world, world_tag *(__cdecl *)(void)));
+}
+
+uint32_t RunAllocPortal(bool original) {
+    sureMalloc = true;
+    world.heapUsed = (uint32_t)R(0x40) * 4;
+    portal_tag *from = &world.portals[R(PORTALS)];
+    if (R(8) == 0)
+        from->corners[R(4)].y = Value(-5.0f, 5.0f);
+    portal_tag *next = R(2) ? NULL : &world.portals[R(PORTALS)];
+    return W(CDECL_RUN(0x00020730, build_alloc_portal, portal_tag *(__cdecl *)(portal_tag *, portal_tag *, cel_tag *, char),
+                       from, next, AnyCel(), (char)R(2)));
+}
+
+uint32_t RunPutPntOnPlane(bool original) {
+    plane_equ_tag plane;
+    PlainVector(&plane.normal, 1.0f);
+    Vec_Normalise(&plane.normal, &plane.normal);
+    plane.d = Value(-10.0f, 10.0f);
+    if (R(12) == 0)
+        plane.a = Value(-1.0f, 1.0f);
+    CDECL_VOID(0x000d7f30, Plane_PutPntOnPlane, void (__cdecl *)(_VECTOR *, _VECTOR *, plane_equ_tag *), &world.v[0],
+               &world.v[1], &plane);
+    return 0;
+}
+
+uint32_t RunSkyObj(bool original) {
+    ushort slot = (ushort)R(24);
+    celglist_tag *glist = R(3) == 0 ? NULL : &world.glists[R(GLISTS)];
+    _VECTOR *pos = R(3) == 0 ? NULL : &world.v[0];
+    _VECTOR *rot = R(3) == 0 ? NULL : &world.v[1];
+    obj_tag *obj = AnyObjOrNull();
+    CDECL_VOID(0x000d9c60, View_AddSkyObj,
+               void (__cdecl *)(ushort, celglist_tag *, _VECTOR *, _VECTOR *, obj_tag *, char, ushort, ushort, char),
+               slot, glist, pos, rot, obj, (char)R(2), (ushort)R(0x10000), (ushort)R(0x100), (char)R(3));
+    return 0;
+}
+
+const Case kRooms[] = {
+    C("build_FindCel", RunFindCel),
+    C("build_MakeRoomList", RunMakeRoomList),
+    C("build_LinkToRoom", RunLinkToRoom),
+    C("build_link_objects_to_rooms", RunLinkObjects),
+    C("build_LinkDoors2Portals", RunLinkDoors),
+    C("init_cel", RunInitCel),
+    C("build_alloc_cel", RunAllocCel),
+    C("build_alloc_world", RunAllocWorld),
+    C("build_alloc_portal", RunAllocPortal),
+    C("Plane_PutPntOnPlane", RunPutPntOnPlane),
+    C("View_AddSkyObj", RunSkyObj),
+};
+
+// ---- the map file (parsemap.cpp, parsemap_block_particles)
+
+void InstallMapFakes(void) {
+    Hook(0x00070ae0, (const void *)&FakeMalloc);
+    Hook(0x0006b500, (const void *)&FakeGetItem);
+    Hook(0x0006b420, (const void *)&FakeAddItem);
+    Hook(0x000be600, (const void *)&FakeIsLoadable);
+    Hook(0x000a4bc0, (const void *)&FakeCreateDynamic);
+    Hook(0x000a4790, (const void *)&FakeFixup);
+}
+
+// The block in the file buffer, its header word, CurrentBH as parsemap_parsenextblock leaves it
+uint32_t *Block(uint32_t identifier, uint32_t size) {
+    uint32_t *block = (uint32_t *)world.file;
+    block[0] = (identifier << 24) | size;
+    GameFileNextBlock = block;
+    GameCurrentBH.size = size;
+    GameCurrentBH.identifier = identifier;
+    return block;
+}
+
+// Each cel the model of the same number, for the blocks that find cels by their entity
+void CelsByEntity(void) {
+    for (int i = 0; i < CELS; i++)
+        world.cels[i].glist = &world.glists[i];
+    GameCelList = world.glists;
+}
+
+uint32_t RunMapHeader(bool original) {
+    sureMalloc = true;
+    uint32_t *block = Block(0x0e, 16);
+    block[1] = R(3);
+    block[2] = R(3) == 0 ? 0 : 1 + R(4);
+    block[3] = R(4);
+    world.heapUsed = (uint32_t)R(16) * 4;
+    CDECL_VOID(0x000a5eb0, parsemap_block_map_header, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunHashList(bool original) {
+    uint32_t n = R(6);
+    uint32_t *block = Block(0x2c, 4 + 4 * n);
+    for (uint32_t i = 0; i < n; i++)
+        block[1 + i] = R(4) == 0 ? 0x06000000 : 0x05000000 + R(16);
+    CDECL_VOID(0x000a5f80, parsemap_block_hashlist, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunLOD(bool original) {
+    uint32_t count = R(GLISTS + 1);
+    world.fileTable[1] = count;
+    GameBMH = world.fileTable;
+    GameCelList = world.glists;
+    uint32_t *block = Block(0x27, 4 + 8 * count);
+    for (uint32_t i = 0; i < count; i++) {
+        block[1 + 2 * i] = R(3) == 0 ? 0xffffffff : R(GLISTS);
+        block[2 + 2 * i] = R(0x100);
+    }
+    CDECL_VOID(0x000a5fe0, parsemap_block_LOD, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunPaletteHeader(bool original) {
+    GameMap = &world.map;
+    RandomBytes(&world.map, sizeof(world.map));
+    uint32_t n = R(4);
+    Block(0x0f, 4 + 8 * n + (R(4) == 0 ? 4 : 0));
+    world.heapUsed = (uint32_t)R(16) * 4;
+    CDECL_VOID(0x000a6030, parsemap_block_palette_header, void (__cdecl *)(void));
+    return 0;
+}
+
+void TextureTables(void) {
+    for (int i = 0; i < 16; i++)
+        world.pal[i] = R(3) == 0 ? 0xffffffff : 0x04000000 + R(16);
+    RandomBytes(world.bmp, sizeof(world.bmp));
+    for (int i = 0; i < 8; i++) {
+        if (R(3) == 0)
+            world.bmp[i].textureInfo = (TextureInfo *)(uintptr_t)0xffffffff;
+    }
+    GamePallHeader = &world.pal[2 * R(4)];
+    GameTexData = &world.tex[R(4)];
+    GameBmpHeader = &world.bmp[R(4)];
+    Block(R(2) ? 0x12 : 0x18, 0x20);
+}
+
+uint32_t RunPaletteData(bool original) {
+    TextureTables();
+    CDECL_VOID(0x000a60a0, parsemap_block_palette_data_psx, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunTextureData(bool original) {
+    TextureTables();
+    CDECL_VOID(0x000a6110, parsemap_block_texture_data_Xbox, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunPortalData(bool original) {
+    sureMalloc = true;
+    CelsByEntity();
+    uint32_t count = 1 + R(3);
+    uint32_t *block = Block(0x21, 8 + count * 0x38);
+    block[1] = count;
+    float *f = (float *)&block[2];
+    for (uint32_t i = 0; i < count; i++) {
+        for (int k = 0; k < 12; k++)
+            f[k] = Value(-10.0f, 10.0f);
+        ushort *link = (ushort *)(f + 12);
+        link[0] = (ushort)R(CELS);
+        link[1] = (ushort)R(CELS);
+        link[2] = (ushort)R(4);
+        link[3] = (ushort)R(0x10000);
+        f += 14;
+    }
+    CDECL_VOID(0x000a6260, parsemap_block_portal_data, void (__cdecl *)(void));
+    return 0;
+}
+
+// Placements in the block: their keys numbered below 33, their models found by hashcode or by entity
+uint32_t *Placements(uint32_t identifier, bool dynamic) {
+    uint32_t *block = (uint32_t *)world.file;
+    uint8_t *at = (uint8_t *)(block + 1);
+    uint32_t count = R(4);
+    GameEntityCount = R(GLISTS);
+    GameCelList = world.glists;
+    for (uint32_t i = 0; i < count; i++) {
+        uint32_t *p = (uint32_t *)at;
+        RandomBytes(p, 0x48);
+        ushort *entity = (ushort *)p;
+        entity[0] = (ushort)R(GameEntityCount + 2);
+        if (dynamic && entity[0] + 1 >= GLISTS)
+            entity[0] = (ushort)R(GLISTS - 1);
+        p[1] = R(3) == 0 ? 0xffffffff : 0x05000000 + R(8);
+        static const uint kTypes[] = {0x8017, 0x8019, 0xc047, 0xc023, 0x00ef, 0x2000, 0x0020, 0x1000f};
+        p[2] = kTypes[R(COUNT(kTypes))];
+        ushort *spline = (ushort *)(p + 0x10);
+        spline[0] = (ushort)(R(2) ? 0 : 1 + R(5));
+        spline[1] = (ushort)R(100);
+        spline[2] = (ushort)R(4);
+        uint32_t keys = R(4);
+        p[0x12] = keys;
+        for (uint32_t k = 0; k < keys; k++) {
+            p[0x13 + 2 * k] = R(33);
+            p[0x14 + 2 * k] = R(0x10000);
+        }
+        at += 0x4c + 8 * keys;
+    }
+    uint32_t size = (uint32_t)(at - (uint8_t *)block);
+    block[0] = (identifier << 24) | size;
+    GameFileNextBlock = block;
+    GameCurrentBH.size = size;
+    GameCurrentBH.identifier = identifier;
+    return block;
+}
+
+uint32_t RunMapStatic(bool original) {
+    sureMalloc = true;
+    sureItem = true;
+    Placements(0x1a, false);
+    // a model found by its entity must be in the table: the original reads one past it for entity == count
+    CDECL_VOID(0x000a6550, parsemap_block_map_data_static, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunMapDynamic(bool original) {
+    for (int i = 0; i < 4; i++)
+        world.paths[i] = &world.path[i];
+    GamePaths = world.paths;
+    uint32_t *block = Placements(0x1a, true);
+    block_header_tag bh = {GameCurrentBH.size, 0x1a};
+    CDECL_VOID(0x000a66f0, parsemap_block_map_data_dynamic, void (__cdecl *)(block_header_tag *, uchar *, uchar), &bh,
+               (uchar *)block, (uchar)R(2));
+    return 0;
+}
+
+void FileTable(void) {
+    GameFileBase = world.file;
+    for (int i = 0; i < 16; i++)
+        world.fileTable[i] = 4 * R(0x100);
+    GameBinFileHeader = &world.fileTable[R(8)];
+    GameFileDiscardHeader = &world.fileTable[R(8)];
+    GameBinFileVersion = R(2);
+    GameFileDiscard = P32(&world.file[4 * R(0x100)]);
+}
+
+uint32_t RunResetDiscard(bool original) {
+    FileTable();
+    CDECL_VOID(0x000a6510, parsemap_reset_to_block_memory_discard, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunTransformBox(bool original) {
+    cel_tag *cel = AnyCel();
+    if (R(4) == 0)
+        cel->glist = NULL;
+    CDECL_VOID(0x000a4b60, parseentity_transform_bounding_box, void (__cdecl *)(cel_tag *), cel);
+    return 0;
+}
+
+uint32_t RunParticles(bool original) {
+    uint32_t *block = (uint32_t *)world.file;
+    uint32_t count = R(4);
+    block[0] = count;
+    uint8_t *at = (uint8_t *)(block + 1);
+    for (uint32_t i = 0; i < count; i++) {
+        uint32_t *p = (uint32_t *)at;
+        RandomBytes(p, 0x38);
+        p[0] = (R(8) == 0 ? 3 : 4) | (R(4) << 8);
+        p[2] = R(3) == 0 ? 0xffffffff : 0x04000000 + R(8);
+        p[3] = R(3) == 0 ? 0xffffffff : 0x05000000 + R(8);
+        float *f = (float *)(p + 5);
+        for (int k = 0; k < 10; k++)
+            f[k] = Value(-10.0f, 100.0f);
+        uint32_t keys = R(4);
+        p[15] = keys;
+        float *key = (float *)(p + 16);
+        for (uint32_t k = 0; k < keys * 5; k++)
+            key[k] = Value(0.0f, 255.0f);
+        at += 0x40 + 20 * keys;
+    }
+    world.heapUsed = (uint32_t)R(16) * 4;
+    CDECL_VOID(0x00068020, parsemap_block_particles, void (__cdecl *)(uchar *), (uchar *)block);
+    return 0;
+}
+
+const Case kMap[] = {
+    C("parsemap_block_map_header", RunMapHeader),
+    C("parsemap_block_hashlist", RunHashList),
+    C("parsemap_block_LOD", RunLOD),
+    C("parsemap_block_palette_header", RunPaletteHeader),
+    C("parsemap_block_palette_data_psx", RunPaletteData),
+    C("parsemap_block_texture_data_Xbox", RunTextureData),
+    C("parsemap_block_portal_data", RunPortalData),
+    C("parsemap_block_map_data_static", RunMapStatic),
+    C("parsemap_block_map_data_dynamic", RunMapDynamic),
+    C("parsemap_reset_to_block_memory_discard", RunResetDiscard),
+    C("parseentity_transform_bounding_box", RunTransformBox),
+    C("parsemap_block_particles", RunParticles),
+};
+
+// The blocks by identifier: each block's own function a fake
+void InstallBlockFakes(void) {
+    Hook(0x000a5eb0, (const void *)&FakeVoid3);
+    Hook(0x000a5f80, (const void *)&FakeVoid4);
+    Hook(0x000a5fe0, (const void *)&FakeVoid5);
+    Hook(0x000a6030, (const void *)&FakeVoid6);
+    Hook(0x000a60a0, (const void *)&FakeVoid7);
+    Hook(0x000a6110, (const void *)&FakeVoid8);
+    Hook(0x000a6260, (const void *)&FakeVoid9);
+    Hook(0x000a6550, (const void *)&FakeVoid10);
+    Hook(0x000a63f0, (const void *)&FakeVoid11);
+    Hook(0x000a6180, (const void *)&FakeVoid12);
+    Hook(0x00068020, (const void *)&FakePointer);
+    Hook(0x000a6c40, (const void *)&FakePointer);
+    Hook(0x0006e3b0, (const void *)&FakePointer);
+    Hook(0x000cb870, (const void *)&FakePointer);
+}
+
+uint32_t RunBlockId(bool original) {
+    world.fileTable[0] = 0;
+    GameMap = &world.map;
+    GameCurrCelList = &world.glists[R(GLISTS)];
+    GameBmpHeader = &world.bmp[R(4)];
+    for (int i = 0; i < 4; i++)
+        world.paths[i] = NULL;
+    GamePathsAt = &world.paths[R(2)];
+    FileTable();
+    Block(R(0x34), 4 + 4 * R(0x40));
+    return (uint32_t)CDECL_RUN(0x000a6820, parsemap_handle_block_id, bool (__cdecl *)(char), (char)R(2));
+}
+
+uint32_t RunNextBlock(bool original) {
+    FileTable();
+    Block(R(0x34), 4 + 4 * R(0x40));
+    if (R(2))
+        GameFileNextBlock = (uint32_t *)&world.file[4 * R(0x40)];
+    return (uint32_t)CDECL_RUN(0x000a6a80, parsemap_parsenextblock, bool (__cdecl *)(char), (char)R(2));
+}
+
+const Case kBlocks[] = {
+    C("parsemap_handle_block_id", RunBlockId),
+};
+
+const Case kNextBlock[] = {
+    C("parsemap_parsenextblock", RunNextBlock),
+};
+
+// ---- sorting (Sort.cpp) and the paths (Spline.cpp)
+
+int __cdecl CustomOrder(const void *a, const void *b) {
+    ShadowLog("custom(%x,%x)", W(a), W(b));
+    int x = *(const int *)a, y = *(const int *)b;
+    return x < y ? -1 : x > y;
+}
+
+// Things to sort, in the world's spare buffers: what each comparison reads, and arrays of them or of pointers to them
+uint32_t SortArray(COMP_FUNC kind, uint *size, uint32_t least) {
+    uint32_t count = R(4) == 0 ? R(3) : R(24);
+    if (count < least)
+        count = least;
+    uint8_t *things = world.extra[1];
+    void **pointers = (void **)world.heap;
+    switch (kind) {
+    case Compare_Sprites:
+        for (uint32_t i = 0; i < count; i++) {
+            sprite *spr = (sprite *)(things + i * sizeof(sprite));
+            spr->maybeEnabled = (uchar)(R(3) == 0 ? R(256) : R(4));
+            pointers[i] = spr;
+        }
+        *size = sizeof(void *);
+        break;
+    case Compare_HitData:
+    case Compare_BoxList:
+        for (uint32_t i = 0; i < count; i++) {
+            HITDATA_tag *hit = (HITDATA_tag *)(things + i * 0x50);
+            hit->dist = R(3) == 0 ? (float)R(4) : Value(0.0f, 10.0f);
+            ((BOXENTRY_tag *)hit)->t = hit->dist;
+            pointers[i] = hit;
+        }
+        *size = sizeof(void *);
+        break;
+    case Compare_MsgTxt:
+        for (uint32_t i = 0; i < count; i++) {
+            HUDPANE_tag *pane = (HUDPANE_tag *)(things + i * sizeof(HUDPANE_tag));
+            pane->field_0x1d = (char)(R(2) ? R(4) : R(256));
+            pointers[i] = pane;
+        }
+        *size = sizeof(void *);
+        break;
+    case Compare_DrawCels:
+    case Compare_MenuCtrl:
+        for (uint32_t i = 0; i < count; i++) {
+            uint16_t *entry = (uint16_t *)world.heap + i * 4;
+            entry[0] = (uint16_t)i;
+            entry[2] = (uint16_t)(R(2) ? R(4) : R(0x10000));
+        }
+        *size = 8;
+        break;
+    case Compare_AlphaObj:
+    case Compare_TargetObj:
+        for (uint32_t i = 0; i < count; i++) {
+            float *entry = (float *)world.heap + i * 3;
+            entry[0] = R(3) == 0 ? (float)R(4) : Value(-50.0f, 50.0f);
+            entry[1] = R(3) == 0 ? (float)R(4) : Value(0.0f, 50.0f);
+            ((uint32_t *)entry)[2] = i;
+        }
+        *size = 12;
+        break;
+    case Compare_Strings:
+        for (uint32_t i = 0; i < count; i++) {
+            char *s = (char *)world.heap + i * 8;
+            int n = (int)R(7);
+            for (int c = 0; c < n; c++)
+                s[c] = (char)('a' + R(3) + (R(16) == 0 ? 0x80 : 0));
+            s[n] = 0;
+        }
+        *size = 8;
+        break;
+    case Compare_CustomFunction:
+        for (uint32_t i = 0; i < count; i++)
+            ((int *)world.heap)[i] = (int)R(8) - 4;
+        *size = 4;
+        break;
+    default:
+        for (uint32_t i = 0; i < count; i++) {
+            light_tag *light = (light_tag *)(things + i * sizeof(light_tag));
+            light->distanceShare = R(3) == 0 ? (float)R(4) : Value(0.0f, 2.0f);
+            pointers[i] = light;
+        }
+        *size = sizeof(void *);
+        break;
+    }
+    if (least == 0 && R(16) == 0)
+        *size = 0;
+    return count;
+}
+
+uint32_t RunQuickSort(bool original) {
+    static const COMP_FUNC kKinds[] = {Compare_Sprites, Compare_Unknown1, Compare_HitData, Compare_DrawCels,
+                                       Compare_AlphaObj, Compare_MsgTxt, Compare_TargetObj, Compare_MenuCtrl,
+                                       Compare_Strings, Compare_BoxList, Compare_CustomFunction, (COMP_FUNC)11};
+    COMP_FUNC kind = kKinds[R(COUNT(kKinds))];
+    uint size;
+    uint count = SortArray(kind, &size, 0);
+    CDECL_VOID(0x000bda60, QuickSort, void (__cdecl *)(void *, uint, uint, COMP_FUNC, CompareFunc), world.heap, count,
+               size, kind, &CustomOrder);
+    return 0;
+}
+
+// Each comparison alone, on two of its things
+uint32_t CompareTwo(bool original, unsigned at, CompareFunc ours, COMP_FUNC kind, int elements) {
+    uint size;
+    SortArray(kind, &size, elements);
+    uint8_t *a = world.heap + R(elements) * size;
+    uint8_t *b = world.heap + R(elements) * size;
+    return (uint32_t)CDECL_RUN(at, ours, int (__cdecl *)(const void *, const void *), a, b);
+}
+
+uint32_t RunCompSpr(bool original) { return CompareTwo(original, 0x000bd830, CompSpr, Compare_Sprites, 2); }
+uint32_t RunCompLight(bool original) { return CompareTwo(original, 0x000bd860, CompLight, Compare_Unknown1, 2); }
+uint32_t RunCompHitData(bool original) { return CompareTwo(original, 0x000bd8d0, CompHitData, Compare_HitData, 2); }
+uint32_t RunCompBoxList(bool original) { return CompareTwo(original, 0x000bd8a0, CompBoxList, Compare_BoxList, 2); }
+uint32_t RunCompDrawCels(bool original) { return CompareTwo(original, 0x000bd940, CompDrawCels, Compare_DrawCels, 2); }
+uint32_t RunCompAlphaObj(bool original) { return CompareTwo(original, 0x000bd960, CompAlphaObj, Compare_AlphaObj, 2); }
+uint32_t RunCompMsgTxt(bool original) { return CompareTwo(original, 0x000bd910, CompMsgTxt, Compare_MsgTxt, 2); }
+uint32_t RunCompTargetObj(bool original) { return CompareTwo(original, 0x000bd990, CompTargetObj, Compare_TargetObj, 2); }
+uint32_t RunCompMenuCtrl(bool original) { return CompareTwo(original, 0x000bd9d0, CompMenuCtrl, Compare_MenuCtrl, 2); }
+uint32_t RunCompStrings(bool original) { return CompareTwo(original, 0x000bda00, CompStrings, Compare_Strings, 2); }
+
+const Case kSort[] = {
+    C("QuickSort", RunQuickSort),
+    C("CompSpr", RunCompSpr),
+    C("CompLight", RunCompLight),
+    C("CompHitData", RunCompHitData),
+    C("CompBoxList", RunCompBoxList),
+    C("CompDrawCels", RunCompDrawCels),
+    C("CompAlphaObj", RunCompAlphaObj),
+    C("CompMsgTxt", RunCompMsgTxt),
+    C("CompTargetObj", RunCompTargetObj),
+    C("CompMenuCtrl", RunCompMenuCtrl),
+    C("CompStrings", RunCompStrings),
+};
+
+uint32_t RunEval3D(bool original) {
+    float t = R(4) == 0 ? Value(-1.0f, 2.0f) : Plain(0.0f, 1.0f);
+    CDECL_VOID(0x000d5f90, Spline_Eval3D, void (__cdecl *)(_VECTOR *, _VECTOR *, _VECTOR *, _VECTOR *, float, _VECTOR *),
+               &world.v[0], &world.v[1], &world.v[2], &world.v[3], t, &world.v[4]);
+    return 0;
+}
+
+float PathFrame(ushort first, ushort last) {
+    ushort lo = first < last ? first : last, hi = first < last ? last : first;
+    switch (R(6)) {
+    case 0: return Value(-3.0f, 15.0f);
+    case 1: return (float)(lo + R(hi - lo + 1));
+    default: return Plain((float)lo - 1.0f, (float)hi + 1.0f);
+    }
+}
+
+uint32_t RunSplineInterp(bool original) {
+    void *path = R(16) == 0 ? NULL : (void *)world.path;
+    ushort first = (ushort)R(KEYS), last = (ushort)R(KEYS);
+    float t = PathFrame(first, last);
+    quaternion_tag *quat = R(2) ? &world.quat : NULL;
+    int mode = (int)R(6) - 1;
+    CDECL_VOID(0x000d8df0, Spline_Interp,
+               void (__cdecl *)(void *, ushort, ushort, float, _MATRIX *, quaternion_tag *, int), path, first, last, t,
+               &world.mtx[0], quat, mode);
+    return 0;
+}
+
+uint32_t RunKeyFrameInterp(bool original) {
+    void *path = R(16) == 0 ? NULL : (void *)world.path;
+    ushort first = (ushort)R(KEYS), last = (ushort)R(KEYS);
+    float t = PathFrame(first, last);
+    CDECL_VOID(0x000d8ac0, KeyFrame_Interp, void (__cdecl *)(void *, ushort, ushort, float, _MATRIX *), path, first,
+               last, t, &world.mtx[0]);
+    return 0;
+}
+
+const Case kPaths[] = {
+    C("Spline_Eval3D", RunEval3D),
+    C("Spline_Interp", RunSplineInterp),
+    C("KeyFrame_Interp", RunKeyFrameInterp),
+};
+
+// ---- the locks (Lock.cpp, Locks_Init, Player_UnEquipKey), DynamicObject_Create and Env_Create
+
+void InstallLockFakes(void) {
+    Hook(0x0002dc10, (const void *)&FakeCreate);
+    Hook(0x00021110, (const void *)&FakeLinkToRoom);
+    Hook(0x00068290, (const void *)&FakeEmitter);
+    Hook(0x000cb8c0, (const void *)&FakeSound3D);
+    Hook(0x000cb940, (const void *)&FakeSoundExt);
+    Hook(0x00092b60, (const void *)&FakeMenuExists);
+    Hook(0x00092c10, (const void *)&FakeMenuEnable);
+    Hook(0x00093960, (const void *)&FakeMenuCreate);
+    Hook(0x000942b0, (const void *)&FakeMenuDelete);
+    Hook(0x0006d140, (const void *)&FakeStringHeap);
+    Hook(0x0006d460, (const void *)&FakeBindLabel);
+    Hook(0x000d1d70, (const void *)&FakeText);
+    Hook(0x00020c30, (const void *)&FakeFindCel);
+    Hook(0x00070ae0, (const void *)&FakeMalloc);
+    Hook(0x000a3180, (const void *)&FakeDrops);
+}
+
+// The player: object 0, his BLData in its extra, and the keys he has
+obj_tag *Player(void) {
+    obj_tag *player = &world.objs[0];
+    player->objectType = OBJECTTYPE_PLAYER;
+    BLData *blData = (BLData *)player->extraObjectData;
+    for (int i = 0; i < 0x34; i++)
+        blData->keys[i] = (char)(R(3) == 0);
+    blData->playerNum = (char)R(4);
+    glb_players[0] = player;
+    glb_blokes[0] = R(8) == 0 ? NULL : blData;
+    GameGlobalVars.keypadPlayer = player;
+    GameGlobalVars.keypadBLData = blData;
+    return player;
+}
+
+// A lock, and bullets of the laser and the decryptor among its hits
+obj_tag *Lock(void) {
+    obj_tag *obj = &world.objs[1 + R(4)];
+    obj->objectType = OBJECTTYPE_LOCK;
+    LOCK_tag *lock = (LOCK_tag *)obj->extraObjectData;
+    lock->kind = (ushort)(R(3) == 0 ? LOCK_LASER : R(4));
+    lock->key = (ushort)(R(4) == 0 ? 0 : R(51));
+    lock->openSound = (ushort)(R(3) == 0 ? 0xffff : R(0x400));
+    lock->lockedSound = (ushort)R(0x400);
+    lock->channel = (ushort)(R(2) ? 0 : R(256));
+    lock->menu = (ushort)R(4);
+    lock->path = world.path;
+    lock->pathFrames = R(3) == 0 ? 0 : R(KEYS);
+    lock->pathPos = R(3) == 0 ? (float)lock->pathFrames : Value(0.0f, 12.0f);
+    lock->pathSpeed = Value(0.0f, 2.0f);
+    static const uchar kTints[] = {0, 1, 2, 3, 4, 9, 11, 253, 254, 255};
+    obj->tweakG = R(2) ? kTints[R(COUNT(kTints))] : (uchar)R(256);
+    obj->tweakB = R(2) ? kTints[R(COUNT(kTints))] : (uchar)R(256);
+    obj->curState = (ushort)(R(12) == 0 ? R(0x10000) : R(6));
+    static const ushort kCounts[] = {0, 1, 4, 5, 39, 40, 41, 80, 81, 120, 121, 160, 161, 3000, 3005};
+    obj->subState = (ushort)(R(2) ? kCounts[R(COUNT(kCounts))] : R(200));
+    for (int i = 0; i < OBJS; i++) {
+        if (world.objs[i].objectType == OBJECTTYPE_BULLET)
+            ((BU_tag *)world.objs[i].extraObjectData)->wpnDef = &world.weapons[R(4)];
+    }
+    for (int i = 0; i < HITS; i++) {
+        if (R(2) == 0)
+            continue;
+        obj_tag *bullet = &world.objs[6 + R(5)];
+        bullet->objectType = OBJECTTYPE_BULLET;
+        BU_tag *bu = (BU_tag *)bullet->extraObjectData;
+        bu->wpnDef = &world.weapons[R(4)];
+        bu->firedByObj = R(3) == 0 ? &world.objs[0] : AnyObjOrNull();
+        world.hits[i].hitObj = bullet;
+    }
+    for (int i = 0; i < 4; i++) {
+        GameGlobalVars.DecoderDisplay[i] = (char)('0' + R(10));
+        GameGlobalVars.DecoderTarget[i] = R(2) ? GameGlobalVars.DecoderDisplay[i] : (char)('0' + R(10));
+    }
+    GameGlobalVars.DecoderNumDigits = (uchar)(R(4) == 0 ? R(6) : 4);
+    GameGlobalVars.DecoderDigitAt = (uchar)R(6);
+    return obj;
+}
+
+uint32_t RunLockCreate(bool original) {
+    level_tag *keys = &world.keys;
+    LockPlacement *p = (LockPlacement *)keys;
+    p->kind = R(4);
+    p->openSound = R(2) ? 0 : R(0x400);
+    p->lockedSound = R(2) ? 0 : R(0x400);
+    p->easy = R(2) ? 0 : R(3);
+    p->splinePoints = (ushort)(R(3) == 0 ? 0 : 1 + R(KEYS - 1));
+    p->splineLength = (ushort)R(200);
+    p->spline = world.path;
+    _VECTOR *pos = &world.v[0], *rot = &world.v[1];
+    celglist_tag *glist = &world.glists[R(GLISTS)];
+    return W(CDECL_RUN(0x000d13f0, Lock_Create,
+                       obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *), pos, rot, keys, glist));
+}
+
+uint32_t RunLockUpdate(bool original) {
+    Player();
+    obj_tag *obj = Lock();
+    CDECL_VOID(0x000d1550, Lock_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunLockActivate(bool original) {
+    obj_tag *player = Player();
+    obj_tag *lock = R(10) == 0 ? NULL : Lock();
+    obj_tag *user = R(10) == 0 ? NULL : (R(4) == 0 ? AnyObj() : player);
+    if (user != NULL && user != player)
+        user->objectType = (char)(R(2) ? OBJECTTYPE_DRONE : OBJECTTYPE_PLAYER);
+    CDECL_VOID(0x000d0230, Lock_Activate, void (__cdecl *)(obj_tag *, obj_tag *), lock, user);
+    return 0;
+}
+
+uint32_t RunLockUnlock(bool original) {
+    obj_tag *player = Player();
+    char silent = (char)R(2);
+    obj_tag *lock = !silent && R(10) == 0 ? NULL : Lock();
+    obj_tag *user = R(10) == 0 ? NULL : (R(4) == 0 ? AnyObj() : player);
+    CDECL_VOID(0x000d0310, Lock_Unlock, void (__cdecl *)(obj_tag *, obj_tag *, char), user, lock, silent);
+    return 0;
+}
+
+uint32_t RunLockReLock(bool original) {
+    obj_tag *player = Player();
+    obj_tag *lock = R(10) == 0 ? NULL : Lock();
+    obj_tag *user = R(10) == 0 ? NULL : (R(4) == 0 ? AnyObj() : player);
+    CDECL_VOID(0x000d0400, Lock_ReLock, void (__cdecl *)(obj_tag *, obj_tag *), user, lock);
+    return 0;
+}
+
+uint32_t RunUnEquipKey(bool original) {
+    BLData *blData = (BLData *)Player()->extraObjectData;
+    CDECL_VOID(0x000b9b20, Player_UnEquipKey, void (__cdecl *)(BLData *, ushort), blData, (ushort)R(0x34));
+    return 0;
+}
+
+uint32_t RunLocksInit(bool original) {
+    GameState.NumFramesUnpaused = R(R(4) == 0 ? 4 : 0x10000);
+#if FIX_ORIGINAL_GAME_BUGS
+    // Ours draws its digits from 0 to 9 (docs/original-bug-fixes.md): the draws and the flags are compared
+    maskAt = (uint8_t *)&GameKeyCodes;
+    maskSize = sizeof(GameKeyCodes);
+#endif
+    CDECL_VOID(0x000d01c0, Locks_Init, void (__cdecl *)(void));
+#if FIX_ORIGINAL_GAME_BUGS
+    for (int i = 0; i < 51; i++) {
+        if (GameKeyCodes[i].discovered)
+            ShadowLog("discovered %d", i);
+        for (int d = 0; d < 4; d++) {
+            if (GameKeyCodes[i].asciiDigit[d] < '0' || GameKeyCodes[i].asciiDigit[d] > '9')
+                ShadowLog("digit %d %d", i, d);
+        }
+    }
+#endif
+    return 0;
+}
+
+uint32_t RunDynamicObject(bool original) {
+    level_tag *keys = &world.keys;
+    _VECTOR *pos = &world.v[0], *rot = &world.v[1];
+    celglist_tag *glist = &world.glists[R(GLISTS)];
+    return W(CDECL_RUN(0x000a4000, DynamicObject_Create,
+                       obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *), pos, rot, keys, glist));
+}
+
+uint32_t RunEnvCreate(bool original) {
+    EnvPlacement *p = (EnvPlacement *)&world.keys;
+    p->wind = R(3) == 0 ? 0x80000000u + R(100) : R(200);
+    p->sun = R(2);
+    p->sunYaw = R(4) == 0 ? 0xfffffff0u : R(360);
+    p->sunPitch = R(4) == 0 ? 0xffffff00u : R(90);
+    for (int i = 0; i < CELS; i++)
+        world.cels[i].env = R(3) == 0 ? (ENV_tag *)world.extra[3] : NULL;
+    _VECTOR *pos = &world.v[0], *rot = &world.v[1];
+    CDECL_VOID(0x00068a30, Env_Create, void (__cdecl *)(_VECTOR *, _VECTOR *, celglist_tag *, level_tag *), pos, rot,
+               &world.glists[0], (level_tag *)p);
+    return 0;
+}
+
+const Case kLocks[] = {
+    C("Lock_Create", RunLockCreate),
+    C("Lock_Update", RunLockUpdate),
+    C("Lock_Activate", RunLockActivate),
+    C("Lock_Unlock", RunLockUnlock),
+    C("Lock_ReLock", RunLockReLock),
+    C("Player_UnEquipKey", RunUnEquipKey),
+    C("Locks_Init", RunLocksInit),
+    C("DynamicObject_Create", RunDynamicObject),
+    C("Env_Create", RunEnvCreate),
+};
+
+// ---- the game flow's stack (GameFlow_*) and the level's loading (ResetMap_*, LoadableLoad, LoadableReload)
+
+void GameFlowStack(void) {
+    GameStackIndex = (ushort)(R(4) == 0 ? R(2) : (R(8) == 0 ? 63 : R(64)));
+    for (int i = 0; i < 64; i++)
+        GameStack[i] = R(16);
+    glb_viewer[6] = &world.viewer;
+}
+
+uint32_t RunGetState(bool original) {
+    GameFlowStack();
+    return CDECL_RUN(0x0006aa70, GameFlow_GetState, uint (__cdecl *)(void));
+}
+
+uint32_t RunPopState(bool original) {
+    GameFlowStack();
+    return CDECL_RUN(0x0006abc0, GameFlow_PopState, uint (__cdecl *)(void));
+}
+
+uint32_t RunPushState(bool original) {
+    GameFlowStack();
+    static const int kStates[] = {7, 0xb, 0xd, 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 14, 0};
+    int state = kStates[R(COUNT(kStates))];
+    CDECL_VOID(0x0006abf0, GameFlow_PushState, void (__cdecl *)(int, float, uint), state, Value(0.0f, 60.0f), R(0));
+    return 0;
+}
+
+uint32_t RunInhibit(bool original) {
+    GameFlowStack();
+    CDECL_VOID(0x0006ab60, set_InhibitGameDrawIfRequired, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kFlow[] = {
+    C("GameFlow_GetState", RunGetState),
+    C("GameFlow_PopState", RunPopState),
+    C("GameFlow_PushState", RunPushState),
+    C("set_InhibitGameDrawIfRequired", RunInhibit),
+};
+
+void InstallLoadableFakes(void) {
+    Hook(0x0006b790, (const void *)&FakeHashType);
+    Hook(0x0006b540, (const void *)&FakeVoid0);
+    Hook(0x000c1820, (const void *)&FakeScriptFree);
+    Hook(0x00014b80, (const void *)&FakeArg);
+    Hook(0x000706c0, (const void *)&FakeMallocMethod);
+    Hook(0x000e0ec0, (const void *)&FakeNothing);
+}
+
+uint32_t RunLoadableLoad(bool original) {
+    return (uint32_t)CDECL_RUN(0x000bff90, LoadableLoad, bool (__cdecl *)(HASHCODE, uint), (HASHCODE)R(0), R(4));
+}
+
+uint32_t RunLoadableReload(bool original) {
+    return (uint32_t)CDECL_RUN(0x000bffd0, LoadableReload, bool (__cdecl *)(HASHCODE), (HASHCODE)R(0));
+}
+
+const Case kLoadables[] = {
+    C("LoadableLoad", RunLoadableLoad),
+    C("LoadableReload", RunLoadableReload),
+};
+
+// What a level's loading calls, each a fake
+void InstallLoadFakes(void) {
+    static const unsigned kVoids[] = {
+        0x0001f820, 0x000a98b0, 0x00068f80, 0x0006d420, 0x000c1530, 0x0002d020, 0x000ceb30, 0x0006fa30,
+        0x0006d510, 0x00031780, 0x0002f610, 0x0006b810, 0x000d0610, 0x00029470, 0x00023030, 0x000a6c20,
+        0x0002e3f0, 0x0009ca50, 0x00025d10, 0x0002fb00, 0x00092ae0, 0x00026650, 0x000cf7b0, 0x0002cfd0,
+        0x000e02e0, 0x000cb730, 0x00070a40, 0x0006b3d0, 0x000cb700, 0x0006ce90, 0x000dc860, 0x000dffa0,
+        0x000cbdf0, 0x000a6510, 0x000a72a0, 0x000dff90, 0x000be0b0, 0x000ae870, 0x000a25f0, 0x00031fd0,
+        0x0009ed40, 0x000252e0, 0x0006b540, 0x000bf9f0, 0x000dff70, 0x000e0ec0,
+    };
+    static void (__cdecl *const kFakes[])(void) = {
+        FakeVoid0, FakeVoid1, FakeVoid2, FakeVoid3, FakeVoid4, FakeVoid5, FakeVoid6, FakeVoid7, FakeVoid8, FakeVoid9,
+        FakeVoid10, FakeVoid11, FakeVoid12, FakeVoid13, FakeVoid14, FakeVoid15, FakeVoid16, FakeVoid17, FakeVoid18,
+        FakeVoid19, FakeVoid20, FakeVoid21, FakeVoid22, FakeVoid23, FakeVoid24, FakeVoid25, FakeVoid26, FakeVoid27,
+        FakeVoid28, FakeVoid29, FakeVoid30, FakeVoid31, FakeVoid32, FakeVoid33, FakeVoid34, FakeVoid35, FakeVoid36,
+        FakeVoid37, FakeVoid38, FakeVoid39, FakeVoid40, FakeVoid41, FakeVoid42, FakeVoid43, FakeVoid44, FakeVoid45,
+    };
+    for (int i = 0; i < COUNT(kVoids); i++)
+        Hook(kVoids[i], (const void *)kFakes[i]);
+    Hook(0x0006af70, (const void *)&FakePause);
+    Hook(0x00020640, (const void *)&FakeAllocWorld);
+    Hook(0x000d1c90, (const void *)&FakeText1);
+    Hook(0x00014b80, (const void *)&FakeArg);
+    Hook(0x0009c630, (const void *)&FakeMission);
+    Hook(0x00092b50, (const void *)&FakeMenuLoad);
+    Hook(0x000be910, (const void *)&FakeLoaderLoad);
+    Hook(0x000c4650, (const void *)&FakeSPCreate);
+    Hook(0x000c5090, (const void *)&FakeVolume);
+    Hook(0x000dccd0, (const void *)&FakeMovie);
+    Hook(0x000bdcd0, (const void *)&FakeNextMission);
+    Hook(0x000706c0, (const void *)&FakeMallocMethod);
+    Hook(0x00070850, (const void *)&FakeShrink);
+    Hook(0x00020f70, (const void *)&FakeLinkObjects);
+    Hook(0x000a66f0, (const void *)&FakeMapDynamic);
+    Hook(0x0002cfc0, (const void *)&FakeFirstObject);
+    Hook(0x000209e0, (const void *)&FakeLinkDoors);
+    Hook(0x00093960, (const void *)&FakeMenuCreate);
+    Hook(0x0006abc0, (const void *)&FakePop);
+    Hook(0x0006abf0, (const void *)&FakePush);
+    Hook(0x0006b500, (const void *)&FakeGetItem);
+    Hook(0x0006d460, (const void *)&FakeBindLabel);
+    Hook(0x0006d140, (const void *)&FakeStringHeap);
+    Hook(0x0006a700, (const void *)&FakeWrap);
+    Hook(0x000cedd0, (const void *)&FakeSpriteLink);
+    Hook(0x000cec40, (const void *)&FakeSpriteParams);
+    Hook(0x000cebf0, (const void *)&FakeSpriteText);
+    Hook(0x000cedf0, (const void *)&FakeSpriteCreate);
+}
+
+void LoadState(void) {
+    static const uint32_t kLevels[] = {0x07000048, 0x07000012, 0x07010018, 0x07000018, 0x07000030, 0x07100001,
+                                       0x07100002, 0x07100005, 0x07100009, 0x0710000c, 0x07100011, 0x07100014,
+                                       0x07100018, 0x07300004, 0x07300008, 0x0730000b, 0x0730000d, 0x07300013,
+                                       0x07300017, 0x0730001b, 0x07300009, 0x07400001};
+    GameState.NextLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
+    GameState.CurrentLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
+    GameState.MovieHashcode = kLevels[R(COUNT(kLevels))];
+    GameState.isMultiplayerLevel = R(2);
+    U32_AT(0x001f6614) = R(2);                     // the subtitles
+    U8_AT(0x00279250) = (uint8_t)(R(3) == 0);      // IsWarmReset
+    U32_AT(0x001df99c) = R(3) == 0;                // switch_NO_DRONES
+    GameResetMapState = R(5);
+}
+
+uint32_t RunGameInit(bool original) {
+    LoadState();
+    CDECL_VOID(0x000bec90, ResetMap_GameInit, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunGenLoadScreen(bool original) {
+    LoadState();
+    CDECL_VOID(0x000bfa60, ResetMap_GenLoadScreen, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunResetMapLoad(bool original) {
+    LoadState();
+    CDECL_VOID(0x000bfb60, ResetMap_Load, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kInit[] = {
+    C("ResetMap_GameInit", RunGameInit),
+    C("ResetMap_GenLoadScreen", RunGenLoadScreen),
+};
+
+const Case kLoad[] = {
+    C("ResetMap_Load", RunResetMapLoad),
+};
+
+void Group(const char *name, const Case *list, int count, int trials, void (*fakes)(void)) {
+    ShadowHook_RemoveAll();
+    if (fakes != NULL)
+        fakes();
+    Test(name, list, count, trials);
+}
+
+void InstallInitAndLoadFakes(void) {
+    InstallLoadFakes();
+    Hook(0x000bec90, (const void *)&FakeVoid46);
+    Hook(0x000bfa60, (const void *)&FakeVoid47);
+}
+
+// The control table's update functions, all a fake for the frame's test
+ControlFunction savedFuncs[85];
+
+void FakeUpdates(bool on) {
+    DWORD old;
+    VirtualProtect(ControlFuncs, sizeof(savedFuncs), PAGE_READWRITE, &old);
+    if (on) {
+        memcpy(savedFuncs, ControlFuncs, sizeof(savedFuncs));
+        for (int i = 0; i < 85; i++)
+            ControlFuncs[i].updateFunc = R(4) == 0 ? NULL : &FakeUpdate;
+    } else {
+        memcpy(ControlFuncs, savedFuncs, sizeof(savedFuncs));
+    }
+    VirtualProtect(ControlFuncs, sizeof(savedFuncs), old, &old);
+}
+
+} // namespace
+
+void EnginePortShadow_Run(void) {
+    struct Saved {
+        void *at;
+        size_t size;
+        std::vector<uint8_t> bytes;
+    };
+    static const struct {
+        uint32_t at;
+        size_t size;
+    } kGlobals[] = {
+        {0x001f6580, sizeof(GameState_t)},  // GameState
+        {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
+        {0x00262738, sizeof(MPGameStruct)}, // MPGame
+        {0x001dee38, 256},                  // switch_channels_prev
+        {0x001df138, 0x200},                // switch_channels, switch_channels_hold
+        {0x001df338, 0x1c},                 // the object list
+        {0x001df41c, 0xc},                  // ForcedList
+        {0x001df428, 1024},                 // switch_channels_time
+        {0x0018cdf8, 8},                    // the random words
+        {0x001f6568, 0x18},                 // GlobalVars
+        {0x001f661c, 44},                   // glb_viewer
+        {0x001f6654, 16},                   // glb_players
+        {0x001f6664, 4},                    // the room list
+        {0x001f6668, 12},                   // the sun
+        {0x001f6674, 4},                    // glb_world
+        {0x001f64ac, 4},                    // GlobalEnv
+        {0x002774b8, 16},                   // glb_blokes
+        {0x0029aaf8, 0xff},                 // KeyCodes
+        {0x0029d7a0, 0x444},                // the sky's models
+        {0x0017bfe8, 0x108},                // the game flow's stack
+        {0x00274b30, 0x178},                // the map file's
+        {0x00279180, 1},                    // LoadableIndex
+        {0x00279250, 2},                    // IsWarmReset, bLevelLoaded
+        {0x00279280, 8},                    // ResetMap_Load's level and step
+        {0x0025fb11, 1},                    // the menu flow latch
+        {0x001df99c, 4},                    // switch_NO_DRONES
+        {0x001dfa2a, 1},                    // Drone_bDisableSystem
+        {0x00181bb8, 0x40},                 // the loading screen's picture
+        {0x001f6614, 4},                    // the subtitles
+    };
+    std::vector<Saved> saved;
+    for (const auto &g : kGlobals) {
+        Saved s;
+        s.at = (void *)(uintptr_t)g.at;
+        s.size = g.size;
+        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        saved.push_back(s);
+    }
+
+    regions.Clear();
+    areaCount = 0;
+    AddArea(&world, sizeof(world));
+    for (const auto &g : kGlobals)
+        AddArea((void *)(uintptr_t)g.at, g.size);
+    NfWarnMuted++;
+    cases = differ = nanChoices = 0;
+
+    FakeUpdates(true);
+    Group("objects", kControl, COUNT(kControl), 3000, InstallControlFakes);
+    FakeUpdates(false);
+    Group("rooms", kRooms, COUNT(kRooms), 3000, InstallRoomFakes);
+    Group("the map file's blocks", kMap, COUNT(kMap), 3000, InstallMapFakes);
+    Group("the blocks by identifier", kBlocks, COUNT(kBlocks), 6000, InstallBlockFakes);
+    Group("the next block", kNextBlock, COUNT(kNextBlock), 4000, [] { Hook(0x000a6820, (const void *)&FakeBlockId); });
+    Group("sorting", kSort, COUNT(kSort), 3000, NULL);
+    Group("paths", kPaths, COUNT(kPaths), 6000, NULL);
+    Group("locks and objects of the map", kLocks, COUNT(kLocks), 4000, InstallLockFakes);
+    Group("the game flow", kFlow, COUNT(kFlow), 4000, [] { Hook(0x000243b0, (const void *)&FakeSetFade); });
+    Group("loadables", kLoadables, COUNT(kLoadables), 2000, InstallLoadableFakes);
+    Group("a level's start", kInit, COUNT(kInit), 3000, InstallLoadFakes);
+    Group("a level's loading", kLoad, COUNT(kLoad), 6000, InstallInitAndLoadFakes);
+    ShadowHook_RemoveAll();
+    if (nanChoices != 0)
+        printf("[engineport] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);
+
+    NfWarnMuted--;
+    for (auto &s : saved)
+        memcpy(s.at, s.bytes.data(), s.size);
+}

@@ -6,6 +6,7 @@
 // hurt, and go on to a death, an impact anim or the next state.
 
 #include "NDrone2_Damage.h"
+#include "../obj/control.h"
 #include "DroneTuning.h"
 #include "BOT.h"
 #include "Behaviour.h"
@@ -27,8 +28,6 @@
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 // game.cpp's GameFlow_GetState is an unpatched draft
-#define GameFlow_GetState ((uint (__stdcall *)(void))0x0006aa70)
-#define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
 #define BOT_soundEffect ((void (__cdecl *)(DCVars_tag *dcv, int sound))0x0001aca0)
 #define BOT_handlePain ((void (__cdecl *)(DCVars_tag *dcv, float damage, ushort unknown, short location))0x0001b6b0)
 // Tells the drones around obj of something at pos (here, that the drone is hurt)

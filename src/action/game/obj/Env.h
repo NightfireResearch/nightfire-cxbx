@@ -19,9 +19,10 @@ typedef struct ENV_tag {
     float windSpread;           // 0x38 - how much the wind grows along its way from the cel's centre
     uchar unknown3c[3];         // 0x3c
     uchar dropType;             // 0x3f - InitDrops' kind for the level (GlobalEnv's)
-    uchar unknown40;            // 0x40
+    uchar unknown40;            // 0x40 - with no rain only
     uchar windRising;           // 0x41 - windStrength is swelling
-    uchar unknown42[2];         // 0x42
+    uchar unknown42;            // 0x42
+    uchar pad43;
 } ENV_tag;
 
 static_assert(sizeof(ENV_tag) == 0x44, "ENV_tag is 0x44 bytes");
@@ -30,6 +31,25 @@ static_assert(offsetof(ENV_tag, windRising) == 0x41, "Bad offset of ENV_tag.wind
 
 // The last ENV_tag Env_Create made, whose dropType is the level's rain
 #define GlobalEnv (*(ENV_tag **)0x001f64ac)
+
+// A wind's placement keys (level_tag)
+typedef struct EnvPlacement {
+    char _unknown00[0x2c];
+    uint dropType;              // 0x2c - ENV_tag's
+    uint unknown30;             // 0x30
+    uint unknown34;             // 0x34
+    uint wind;                  // 0x38 - tenths
+    uint unknown3c;             // 0x3c
+    uint unknown40;             // 0x40
+    uint unknown44;             // 0x44
+    uint unknown48;             // 0x48
+    uint unknown4c;             // 0x4c
+    uint sun;                   // 0x50 - the sun is placed
+    uint sunYaw;                // 0x54 - degrees
+    uint sunPitch;              // 0x58 - degrees, upwards
+} EnvPlacement;
+
+static_assert(offsetof(EnvPlacement, sunPitch) == 0x58, "Bad offset of EnvPlacement.sunPitch");
 
 // An animated tree's placement keys (level_tag)
 typedef struct TreePlacement {

@@ -11,6 +11,10 @@
 #include "Gas.h"
 #include "RainBox.h"
 #include "../../math/X87Ops.h"
+#include "../../memory.h"
+#include "../../engine/celglist.h"
+#include "../../engine/parsemap.h"
+#include "build.h"
 
 #pragma fp_contract(off)
 
@@ -42,8 +46,53 @@ static_assert(std::bit_cast<uint32_t>(WindDrawScale) == 0x37810e36, "not the ori
 
 #define ScriptLoops 0x80000000u     // sAnimScript_tag::flags
 
-// AUTOGEN
-void Env_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
+// Degrees to radians
+static constexpr float kDegrees = 0.017453292f; // the original's float at 0x0015d558
+static_assert(std::bit_cast<uint32_t>(kDegrees) == 0x3c8efa35, "kDegrees");
+
+// An unsigned key as a float (FILD, and 2^32 added to one read as negative)
+static double UnsignedKey(uint key) {
+    return (double)(int32_t)key + ((int32_t)key < 0 ? 4294967296.0f : 0.0f);
+}
+
+// The wind of the cel at pos, if it has none yet: its strength in tenths, its direction from rot, and the level's
+// rain; and the sun's place in the sky, 1000 away, from its two angles in degrees (none without them)
+// AUTOINJECT
+void Env_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
+    _VECTOR up = {0.0f, 1.0f, 0.0f};
+    cel_tag *cel = build_FindCel(pos, glb_world);
+    if (cel == NULL || cel->env != NULL)
+        return;
+    ENV_tag *env = (ENV_tag *)Mem_Malloc(sizeof(ENV_tag), (MallocFlags)0x104, 0);
+    if (env == NULL)
+        return;
+    EnvPlacement *keys = (EnvPlacement *)lvl;
+    env->dropType = (uchar)keys->dropType;
+    env->unknown40 = env->dropType ? 0 : (uchar)keys->unknown30;
+    env->unknown42 = (uchar)keys->unknown34;
+    env->windRising = 1;
+    env->windStrength = (float)(UnsignedKey(keys->wind) * 0.1f);
+    env->windGust = -1.0f;
+    env->windMax = (float)(UnsignedKey(keys->wind) * 0.1f);
+    env->unknown3c[0] = (uchar)keys->unknown3c;
+    env->unknown3c[1] = (uchar)keys->unknown40;
+    env->unknown3c[2] = (uchar)keys->unknown44;
+    env->unknown30 = (float)UnsignedKey(keys->unknown48);
+    env->unknown34 = (float)UnsignedKey(keys->unknown4c);
+    env->windSpread = 1.0f / cel->glist->boundSphere.r;
+    Vec_Copy(pos, &env->pos);
+    cel->env = env;
+    GlobalEnv = env;
+    _MATRIX mtx;
+    RotMatrix(rot, &mtx);
+    Mat_GetDir(&env->windDir, &mtx);
+    Vec_Cross(&env->windDir, &up, &env->windSide);
+    InitDrops(env->dropType);
+    Vec_Zero(&SkySunPos);
+    if (keys->sun)
+        Vec_Spherical_2_Cartesian(&SkySunPos.x, 1000.0f, (float)(UnsignedKey(keys->sunYaw) * kDegrees),
+                                  (float)-(UnsignedKey(keys->sunPitch) * kDegrees));
+}
 
 // The cel's wind at pos: its direction times its strength, growing along its way from the cel's centre; none without
 // wind

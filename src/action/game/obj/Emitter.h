@@ -36,7 +36,10 @@ typedef struct EMITTER_DEF {
     ushort count;               // 0x38 - particles
     ushort perFrame;            // 0x3a - started at most a frame
     ushort additive;            // 0x3c - 0 blends the list additively (psiDrawParticleList's blend)
+    char _pad3e[2];
 } EMITTER_DEF;
+
+static_assert(sizeof(EMITTER_DEF) == 0x40, "EMITTER_DEF is 0x40 bytes");
 
 static_assert(offsetof(EMITTER_DEF, perFrame) == 0x3a, "Bad offset of EMITTER_DEF.perFrame");
 
@@ -103,5 +106,6 @@ obj_tag * Emitter_CreatePlist(_MATRIX *mtx, level_tag *lvl);
 void Emitter_Update(obj_tag *obj);
 void Emitter_Draw(obj_tag *obj, viewer_tag *viewer);
 void ColourGetValue(KEYED_CLR *out, float t, KEYED_CLR *keys, int count);
+void parsemap_block_particles(uchar *data);
 
 #endif // EMITTER_H_

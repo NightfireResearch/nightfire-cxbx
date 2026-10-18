@@ -30,8 +30,6 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-#define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
-#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define MP_RegisterPickup ((void (__cdecl *)(obj_tag *pickup))0x000a1310)
 #define MP_UnregisterPickup ((void (__cdecl *)(obj_tag *pickup))0x0009de20)
 #define MP_getMPpickup ((void *(__cdecl *)(PICKUPINFO *info))0x0009e870)

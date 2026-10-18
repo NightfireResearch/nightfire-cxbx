@@ -16,6 +16,7 @@
 #include "../../engine/celglist.h"
 #include "../../engine/viewer.h"
 #include "../../math/X87Ops.h"
+#include "../../util/Sort.h"
 
 #pragma fp_contract(off)
 
@@ -24,7 +25,6 @@
 // Lights_CalcClosestLights' answer
 #define ClosestLights (*(light_tag *(*)[30])0x00215718)
 
-#define QuickSort ((void (__cdecl *)(void *list, uint count, uint size, COMP_FUNC compare, undefined *custom))0x000bda60)
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).

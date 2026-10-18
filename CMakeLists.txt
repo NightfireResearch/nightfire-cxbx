@@ -124,6 +124,7 @@ add_library(actioninject SHARED
   src/action/devtools/EffectPortShadow.cpp
   src/action/devtools/ViewMathShadow.cpp
   src/action/devtools/ObjectPortShadow.cpp
+  src/action/devtools/EnginePortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -192,6 +193,7 @@ add_library(actioninject SHARED
   src/action/util/hashtable.cpp
   src/action/util/LList.cpp
   src/action/util/Random.cpp
+  src/action/util/Sort.cpp
   src/action/util/Stack.cpp
   src/action/ui/HUD.cpp
   src/action/ui/ui.cpp
@@ -208,6 +210,7 @@ add_library(actioninject SHARED
   src/action/ui/Menu.cpp
   src/action/ui/MenuScript.cpp
   src/action/autofunc.cpp
+  src/action/game/Spline.cpp
   src/action/game/Upgrade.cpp
   src/action/game/view.cpp
   src/action/game/drone/BOT.cpp
@@ -244,6 +247,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Drone_AIHints.cpp
+  src/action/game/obj/DynamicObject.cpp
   src/action/game/obj/FuseBox.cpp
   src/action/game/obj/Hint.cpp
   src/action/game/obj/Hurt.cpp
@@ -264,6 +268,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Ladder.cpp
   src/action/game/obj/Light.cpp
   src/action/game/obj/LeafGen.cpp
+  src/action/game/obj/Lock.cpp
   src/action/game/obj/OneSided.cpp
   src/action/game/obj/Pickup.cpp
   src/action/game/obj/RainBox.cpp

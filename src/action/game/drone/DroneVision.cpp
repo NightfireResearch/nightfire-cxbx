@@ -5,6 +5,7 @@
 // registers its opponent (DroneVision_HaveOpponentSight). docs/drone/architecture/README.md has the fields.
 
 #include "DroneVision.h"
+#include "../obj/control.h"
 #include "NDrone2.h"
 #include "BOT.h"
 #include "Behaviour.h"
@@ -27,7 +28,6 @@
 
 // Originals called by address
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define Control_Plr2Ind ((short (__cdecl *)(obj_tag *obj))0x0002d8a0)
 #define BOTSTATE_combatWeaponChangeChoice ((ushort (__cdecl *)(Drone_tag *drone, obj_tag *opponent, char p3, char p4, char p5))0x0001d750)
 #define BOTSTATE_opponentIsMissile ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj))0x0001c600)
 #define BOTSTATE_reallyCloseCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c690)

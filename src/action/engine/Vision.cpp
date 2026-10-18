@@ -4,20 +4,12 @@
 #include "Collide.h"
 #include "../game/obj/Door.h"
 #include "../math/X87Ops.h"
+#include "../util/Sort.h"
 
 #include <string.h>
 
 // What a view sees: the cels it is in or looks into through portals, each portal narrowing the view's pyramid to
 // the part of the opening still in sight.
-
-#pragma pack(push, 1)
-// A cel to draw and how many portals deep it was found
-struct VisCel {
-    cel_tag *cel;
-    ushort depth;
-    ushort pad;
-};
-#pragma pack(pop)
 
 // Up to ten planes a depth: the view's five, then a portal's edges seen from the eye and the portal itself
 #define VISION_DEPTHS 48
@@ -34,7 +26,6 @@ struct VisCel {
 #define VisCelList (*(VisCel (*)[64])0x002a0870)
 #define VisCelCount U16_AT(0x002a0a70)
 
-void __cdecl QuickSort(void *list, uint count, uint size, COMP_FUNC compareType, undefined *customComparisonFunc);
 
 // AUTOINJECT
 bool Vision_InView(_VECTOR *point, float radius, viewer_tag *viewer) {

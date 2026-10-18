@@ -25,13 +25,12 @@
 #include "Pickup.h"
 #include "Player.h"
 #include "PlayerWeapon.h"
+#include "../../util/Sort.h"
 
 #pragma fp_contract(off)
 
-#define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 #define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
-#define QuickSort ((void (__cdecl *)(void *list, uint count, uint size, COMP_FUNC compare, undefined *custom))0x000bda60)
 
 // GT_Track's candidates
 #define TARGETS 64

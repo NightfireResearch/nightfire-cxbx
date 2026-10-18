@@ -50,7 +50,7 @@ to what it does. A function ported that way:
 
 | 13 | vecmath, view (with camera, vision and build) | 65: package A, 32 from vecmath (math.cpp: the angle, vector, matrix-row, inverse, product, rotation and quaternion helpers, Mat_LookAt), package B, 33 from view (Concat and ApplyMatrixLVI in math.cpp, Rand_Random and Rand_Rand in Random.cpp, the camera in Camera.cpp, build_alloc_viewer and build_point_in_bounding_box in build.cpp, the portal vision in Vision.cpp, the draw lists, render modes, sky and Game_Draw in view.cpp). Their `Mat_Inverse` is two Xbox functions, `Mat_InverseSelf` 0xd5190 (renamed from FUN_) and `Mat_Inverse` 0xd51e0; their `View_SetupRenderModes_Tweak` is 0xd9900 (renamed); their `Camera_Reset` is `Viewer_Init` 0x24290. Helpers ported with them: ClipEdge (FUN_db730), PortalPlanesFrom (FUN_db970), View_AddToList (FUN_d91d0), View_SetupCelRenderModes (FUN_d9bd0), View_DrawAttachments (0xda1d0). 3 AUTOLTCG adaptors (View_AddObjects, View_AddCels, View_DrawCelGlist). With them, every port that used the host's trigonometry or float sums where the original runs the x87 made exact (below) | 62 of 65 (MulMatrix2, RotMatrixY, RotMatrixXY not reached). ViewMathShadow: 84 lines of maths x 20,000 cases and 35 of game functions x 6,000 worlds, all 0 differ (the NaN chosen where two NaNs meet counted apart in the plain double ports); one planted bug in each of its eight groups, all caught. With package A and B alone (Part 2 reverted), all nine time demos match; with Part 2 they no longer do, as expected (the recordings hold the inexact maths) | see git log |
 
-| 14 | turret, scenery, pickup, copter, hazard, emitter, gunimp, weather, lights (package A) | 71 (package A): GT.cpp (the gun turrets and the deployed minigun), Ripples.cpp, LeafGen.cpp, OneSided.cpp, Env.cpp (breath, trees, wind), Effect.cpp (the particle objects), Pickup.cpp, Player_EquipKey (PlayerWeapon.cpp), Check_Target (Autoaim.cpp), Intersect_ConeSphere (Collide.cpp), Copter.cpp, Mine.cpp, Shooter.cpp, Apocalypse.cpp, Emitter.cpp, GunImp.cpp, RainBox.cpp, Lightning.cpp, Cloud.cpp, Light.cpp (ambient and closest lights), Corona.cpp, Flicker.cpp. Of their 8 names without an Xbox function of that name, `Leaf_Create` is 0xcdef0, `Particles_Create` 0x6feb0 and `ColourGetValue` 0x67ea0 (FUN_, renamed and ported); `Copter_Register` is 0x6b900 (no function in Ghidra; created, named and ported); their `__static_initialization_and_destruction_0` is the two initialisers `Copter_InitConeCos` 0xf5460 and `Copter_InitConeSin` 0xf5470 (renamed, ported); `Emitter_LoadDefs` is `parsemap_block_particles` 0x68020 (left to the original); `Emitter_Kill` is the shared empty function 0xe0ec0; `Light_FindMapLight` is 0xde5f0, a stub returning NULL (Ghidra: `psiLight_Create`). Helpers renamed from FUN_ and ported: `Copter_NextPath` 0x6b9f0, `Copter_SeesPlayer` 0x6b830, `GT_AimAt` 0x9a5b0. 11 AUTOLTCG adaptors (Copter_CreatePath, Copter_NextPath, Copter_Move, Copter_FireGun, Copter_FireMissile, Copter_SeesPlayer, GT_maybeInterpolateAimDir, GT_AimAt, GT_RandMove, Pickup_CanInheritPosition, Pickup_Handler) | 45 of 71; 666 of 1,249 blocks. ObjectPortShadow: 228,500 cases in seven groups, all 0 differ (2 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 1,219 of the 1,242 blocks of the 71 and their helpers (of the 23 left: unsigned-conversion fix-ups of values never negative, failed-creation returns, `ColourGetValue` with the key past the count, `Particles_Create` past the stub's -1, a few branches of `Pickup_Handler` and `Check_Target`). All nine time demos match | see git log |
+| 14 | turret, scenery, pickup, copter, hazard, emitter, gunimp, weather, lights (package A); control, parsemap, sort, spline, objects, build, resetmap, gameflow, loader, drone_init, ssys (package B) | 71 (package A): GT.cpp (the gun turrets and the deployed minigun), Ripples.cpp, LeafGen.cpp, OneSided.cpp, Env.cpp (breath, trees, wind), Effect.cpp (the particle objects), Pickup.cpp, Player_EquipKey (PlayerWeapon.cpp), Check_Target (Autoaim.cpp), Intersect_ConeSphere (Collide.cpp), Copter.cpp, Mine.cpp, Shooter.cpp, Apocalypse.cpp, Emitter.cpp, GunImp.cpp, RainBox.cpp, Lightning.cpp, Cloud.cpp, Light.cpp (ambient and closest lights), Corona.cpp, Flicker.cpp. Of their 8 names without an Xbox function of that name, `Leaf_Create` is 0xcdef0, `Particles_Create` 0x6feb0 and `ColourGetValue` 0x67ea0 (FUN_, renamed and ported); `Copter_Register` is 0x6b900 (no function in Ghidra; created, named and ported); their `__static_initialization_and_destruction_0` is the two initialisers `Copter_InitConeCos` 0xf5460 and `Copter_InitConeSin` 0xf5470 (renamed, ported); `Emitter_LoadDefs` is `parsemap_block_particles` 0x68020 (left to the original); `Emitter_Kill` is the shared empty function 0xe0ec0; `Light_FindMapLight` is 0xde5f0, a stub returning NULL (Ghidra: `psiLight_Create`). Helpers renamed from FUN_ and ported: `Copter_NextPath` 0x6b9f0, `Copter_SeesPlayer` 0x6b830, `GT_AimAt` 0x9a5b0. 11 AUTOLTCG adaptors (Copter_CreatePath, Copter_NextPath, Copter_Move, Copter_FireGun, Copter_FireMissile, Copter_SeesPlayer, GT_maybeInterpolateAimDir, GT_AimAt, GT_RandMove, Pickup_CanInheritPosition, Pickup_Handler). 65 of 67 (package B): control.cpp (the objects' frame, cel changes and links, matrices and spheres, creation, LOD, references, carried velocity, player index), build.cpp (finding and linking rooms, objects and doors into rooms, the allocations), parsemap.cpp (the map file's blocks), `parsemap_block_particles` (Emitter.cpp), util/Sort.cpp (new: `QuickSort` and the ten comparisons), Spline.cpp, `Plane_PutPntOnPlane` (math.cpp), `View_AddSkyObj` (view.cpp), DynamicObject.cpp, `Env_Create`, Lock.cpp, `Locks_Init` (Locks.cpp, now injected, its FIX_ORIGINAL_GAME_BUGS branch kept), `Player_UnEquipKey` (PlayerWeapon.cpp), game.cpp (`ResetMap_GameInit`, `_GenLoadScreen`, `_Load` and the game flow's stack), `LoadableLoad` and `LoadableReload` (Loader.cpp). Not again: `NDrone2_GetDTYPENEW` (parcel 8's static helper) and `NDrone2_init_DMODE_Normal` (a jump). Their 39 names without an Xbox function of that name: see the section. Helpers ported: `maybeControl_Switches_Update` 0x2d640, `build_MakeRoomList` 0x20bd0 (renamed from FUN_), `init_cel` 0x20660, `set_InhibitGameDrawIfRequired` 0x6ab60; `MenuManager_Enable` 0x92c10 renamed. No register-argument originals | 45 of 71; 666 of 1,249 blocks. ObjectPortShadow: 228,500 cases in seven groups, all 0 differ (2 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 1,219 of the 1,242 blocks of the 71 and their helpers (of the 23 left: unsigned-conversion fix-ups of values never negative, failed-creation returns, `ColourGetValue` with the key past the count, `Particles_Create` past the stub's -1, a few branches of `Pickup_Handler` and `Check_Target`). All nine time demos match. Package B: 55 of 67; 743 of 968 blocks (LoadableLoad, LoadableReload, Locks_Init, Lock_ReLock, Player_UnEquipKey, Control_Plr2Ind, CompTargetObj, CompStrings, CompBoxList and parsemap_block_palette_data_psx not reached; Locks_Init was already ours, called by name). EnginePortShadow: 234,000 cases in twelve groups, all 0 differ (about 200 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 916 of the 934 blocks of the 65 and their helpers (of the 18 left: clamps that cannot fire in `Spline_Interp`, `KeyFrame_Interp` and `Lock_Update`, an unsigned fix-up of a count never negative and the inlined unlock's decrypting test in `Lock_Create`, and `Lock_Update`'s laser tint at 255). All nine time demos match | see git log |
 
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
@@ -618,6 +618,60 @@ Found along the way:
   structs of each object; `GlobalEnv` 0x1f64ac, `ClosestLights` 0x215718, `TargetList` 0x25fc20, `PickupMatrix`
   0x17e5d8, `UseableGuns` 0x17e648, the GUNTYPE table 0x163a30. `psiCopyToSP` takes (pointer, offset, size).
 
+### Parcel 14 (package B: control, parsemap, sort, spline, objects, build, resetmap, gameflow, loader, ssys)
+- Their names without an Xbox function of that name: `control_add_object_to_list` is inline in
+  `control_create_object`; `control_init_collision` has no Xbox counterpart; `control_AnimUpdate` is not on the Xbox
+  (the control table points types 0x15 and 0x1f at `AnimObjectUpdate` itself). `parsemap_block_texture_header`
+  (block 0x10), `_texture_data_pc` (0x15, 0x16: the data's address put in the texture header),
+  `_texture_data_pcdx` (0x29: the same, then `parsemap_block_palette_data_psx`), `_path_data` (0x19) and
+  `_memory_discard` (0x1c) are inline in `parsemap_handle_block_id`; `_texture_data_GameCube` (0x17) is
+  `parsemap_block_texture_data_Xbox` and `_palette_data_pc` (0x11) `parsemap_block_palette_data_psx`; the dictionaries
+  (`_dict_xyz`, `_uv`, `_rgba`, `_norm`, `_comlist`), `_morph_data`, `_PS2_GFX`, `_coll_data` and `_datums` have no
+  Xbox handling (blocks 0-3, 8, 0xa, 0xb, 0x20, 0x22-0x25, 0x2a, 0x2b and 0x2d fall to the default).
+  `parseentity_fixup_entity` is `parseentityfixup_entity` (0xa4790, left to the original). `Swap` is inline in
+  `QuickSort`. `build_MakeCelOverlapBox` is the shared empty function 0xe0ec0 (`ResetMap_Load` calls it with
+  glb_world). `GetLevelToLoadFromMovieCode` is `maybeGetNextMissionInSequence` (0xbdcd0, left to the original).
+  `LoaderLoadAnims`, `LoaderShrink`, `MP_NeedFile`, `CheckSize` and `CheckSizeAndShrink` have no Xbox counterpart:
+  the Xbox's `LoadableLoad` and `LoadableReload` load nothing, `ResetMap_Load` shrinks with `Mem_Shrink` itself and
+  `parsemap_parsenextblock` asks no multiplayer question. The drone mode initialisers were accounted for in parcel 8.
+- Not ported again: `NDrone2_GetDTYPENEW` (0x3fae0) is the static helper of our drone mode code (parcel 8, called
+  only from there); `NDrone2_init_DMODE_Normal` (0x408a0) is a single jump to `NDrone2_init_DMODE_Defaults`.
+- Helpers ported with them: `maybeControl_Switches_Update` (0x2d640, theirs inline in
+  `control_movement_object_handler`), `build_MakeRoomList` (0x20bd0, renamed from FUN_; theirs inline in
+  `build_FindCel`), `init_cel` (0x20660, theirs inline in `build_alloc_cel`), `set_InhibitGameDrawIfRequired`
+  (0x6ab60, our draft finished). `MenuManager_Enable` (0x92c10) renamed from FUN_ (left to the original).
+- `control_handle_cel_change` calls `Controls_StraddleTest` and returns only for an object always forced. Its box
+  clamp compares each bound (radius plus the box's edge) with the position before rounding it to a float.
+- `control_movement_object_handler`'s switched rooms are `maybeControl_Switches_Update`, which reads the cel's
+  model's LOD before it knows there is a model (theirs skips cels without one). The pointers cleared for a deleted
+  object are the bullet's at 0x24 and 0x34 and the explosion's at 0x1c. Their `MP_DebugDraw` is the shared empty
+  function.
+- `build_FindCel` takes a hit's distance as the new reach unless the reach is already below it, so a NaN distance is
+  taken (theirs: only a smaller one).
+- `build_alloc_portal` sums the corners in the original's order (x: 3, 1, 0, 2; y: 2, 3, 1, 0; z: 1, 0, 2, 3).
+- `Plane_PutPntOnPlane` sums bÂ·y first, then aÂ·x, cÂ·z and d.
+- `Spline_Eval3D` is ((((3t - 5)Â·p1 + 4Â·p2) - 3tÂ·p2 + (t - 1)Â·p3)Â·t + (p2 - (t - 1)Â²Â·p0))Â·t + 2Â·p1, halved,
+  unrounded on the x87 (theirs groups the p1 terms otherwise).
+- `CompLight` reads the light at 0x2c and gives 0 for a NaN (theirs 0x38 and 1); `CompBoxList` puts a NaN after
+  (theirs before).
+- `ResetMap_GenLoadScreen` on the Xbox is only label 0x3c1, wrapped 0x21c wide at x 0x138 from 408 down, 15 apart,
+  then four `LoadScreen_Draw`s and `LoadingScreenMakeVisible`; theirs (the PS2's) adds the mission and the hint.
+- `ResetMap_GameInit`'s `View_Init`, `AnimCacheInit` and `Sound_SetLogSfxFile` are the shared empty function on the
+  Xbox; `ResetMap_Load` loads the shared files 0x07000500 first, calls `LoadWoman` (the Xbox layer's thunk 0xdc860),
+  `SFXLoadCorrectBank` and `psiLight_Create(1)`, and `LoadingScreenMakeInvisible` once the level is in.
+- `GameFlow_PopState` returns the state it takes off (0 for an empty stack), not the new top.
+- `LoadableLoad` and `LoadableReload` load nothing on the Xbox: they drop the hashtable's items of type 0x04000000
+  and make its sections again under malloc method 1 (`LoadableReload` frees the script first and starts the anims'
+  preload again).
+- `Lock_Update`'s decryptor reads the bullet's weapon unchecked where the laser checks it.
+- Found in ours, not theirs: `obj_tag::lastCentrePoint` 0x54 (was `_pad_2`), `cel_tag::headPrev` 0x0c and `parentCel`
+  0x1c (were undefined bytes), `portal_tag::unknown24`, `CEL_ROOM`, the effect flags `FLAG_STRADDLES_CELS`,
+  `FLAG_FORCED_LISTED` and `FLAG_ALWAYS_FORCED`; `level_tag` (0xb0: the spline and 33 keys), `TARGET_PLACEMENT`'s
+  spline and key count, `block_header_tag` moved to parsemap.h; `GlobalVars_t::keypadPlayer`, `keypadBLData` and
+  `DecoderTargetKnown`; `EMITTER_DEF` padded to its 0x40 bytes; `ENV_tag::unknown42` a byte; `LOCK_tag`,
+  `LockPlacement`, `EnvPlacement`, `DYNAMICOBJECT_tag`, `DynamicObjectPlacement`, `framelist_tag`; `VisCel` moved to
+  Vision.h; `GameState_t::InhibitGameDraw` a byte. util/Sort.cpp is new (QuickSort and the comparisons).
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -776,6 +830,21 @@ Found along the way:
 - `ColourGetValue` reads the key past the last. `Flicker_Update`'s blue has no minimum step (red and green have).
 - `Copter_GetBody` (ported earlier) tests the channel with the bounded `SwitchChannel_IsActive`, as the original.
 
+- `maybeControl_Switches_Update` reads a cel's model's LOD before it knows the cel has a model.
+  `control_link_object_to_cel` and `build_LinkToRoom` index the cel's two ambient colours by its channel's byte, any
+  value. `Control_Plr2Ind` reads a drone's bot data unchecked (NULL for a drone that is not a bot) and uses the index
+  unchecked against `MPGame.players`.
+- `build_MakeRoomList` fills what `Mem_Malloc` returns without a check; so does `parsemap_block_map_header` (the
+  entities and the texture table).
+- `parsemap_block_map_data_static` lets an entity number equal to the count through (one past the table, where the
+  dynamic placements' test is strict) and uses a model found by hashcode unchecked; both it and
+  `parsemap_block_map_data_dynamic` write the placement's keys by key number unbounded (33 in a level_tag).
+  `parsemap_block_portal_data` keeps the cels found for the previous portal when the next's are not found (NULL for
+  the first). `parsemap_block_LOD` indexes the entities with the file's number unchecked.
+- `Lock_Update`'s decryptor reads the bullet's weapon unchecked; locks index `KeyCodes` (51) with the placement's key
+  unbounded. `Lock_Unlock`'s silent path does not check the lock.
+- `ResetMap_GenLoadScreen` takes two strings from the string heap and uses neither.
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -804,6 +873,9 @@ Found along the way:
   controlled state start their local matrices zeroed; `GT_DeployMiniGun`'s disable key and `GT_Track`'s difference
   start at zero; `Pickup_Update` and `GunImp_Update` start their hit lists at NULL. All uninitialised stack in the
   original.
+
+- `Controls_StraddleTest` and `build_LinkDoors2Portals` start their HITTEST at zero, and `parsemap_block_particles`
+  its definition (whose two padding bytes the original copies from the stack): uninitialised stack in the original.
 
 ## What the demos do not cover
 

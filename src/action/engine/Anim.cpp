@@ -120,10 +120,8 @@ typedef struct AnimSizes {
 #define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 #define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
-#define Plane_PutPntOnPlane ((void (__cdecl *)(float *out, float *point, float *plane))0x000d7f30)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 #define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
-#define Control_GetObjMatrix ((void (__cdecl *)(obj_tag *obj, _MATRIX *mtx))0x0002cf10)
 
 // AnimDistanceTableGet (0x000174a0): the distance table of a sequence, made the first time (the sequence in ESI)
 static __declspec(naked) AnimDistanceTable *AnimDistanceTableGet(HASHCODE hashcode) {
@@ -2990,10 +2988,10 @@ void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQu
         Vec_Add2(headPos, &up, &p1);
         Vec_Add2(headPos, &ahead, &p2);
         Plane_PlaneEq(&plane, headPos, &p1, &p2);
-        Plane_PutPntOnPlane(&onPlane.x, &target->x, (float *)&plane);
+        Plane_PutPntOnPlane(&onPlane, target, &plane);
         if (Vec_SqDist3D(headPos, &onPlane) >= 0.25f) {
             found = 2;
-            Plane_PutPntOnPlane(&front.x, &p2.x, (float *)&plane);
+            Plane_PutPntOnPlane(&front, &p2, &plane);
             Vec_UnitVector(&toFront, headPos, &front);
             Vec_UnitVector(&toTarget, headPos, &onPlane);
             double cosine = DotZYX(&toFront, &toTarget);
@@ -3008,10 +3006,10 @@ void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQu
         Vec_Add2(headPos, &side, &front);
         Vec_Add2(headPos, &ahead, &onPlane);
         Plane_PlaneEq(&plane, headPos, &front, &onPlane);
-        Plane_PutPntOnPlane(&p2.x, &target->x, (float *)&plane);
+        Plane_PutPntOnPlane(&p2, target, &plane);
         if (Vec_SqDist3D(headPos, &p2) >= 0.25f) {
             found |= 1;
-            Plane_PutPntOnPlane(&p1.x, &onPlane.x, (float *)&plane);
+            Plane_PutPntOnPlane(&p1, &onPlane, &plane);
             Vec_UnitVector(&toTarget, headPos, &p1);
             Vec_UnitVector(&toFront, headPos, &p2);
             yaw = ClampedAcos((float)DotZYX(&toTarget, &toFront));
@@ -3178,9 +3176,9 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
         Vec_Add2(pelvis, &up, &p1);
         Vec_Add2(pelvis, &ahead, &p2);
         Plane_PlaneEq(&plane, pelvis, &p1, &p2);
-        Plane_PutPntOnPlane(&muzzleOn.x, &muzzle.x, (float *)&plane);
-        Plane_PutPntOnPlane(&farOn.x, &gunDir.x, (float *)&plane);
-        Plane_PutPntOnPlane(&targetOn.x, &target->x, (float *)&plane);
+        Plane_PutPntOnPlane(&muzzleOn, &muzzle, &plane);
+        Plane_PutPntOnPlane(&farOn, &gunDir, &plane);
+        Plane_PutPntOnPlane(&targetOn, target, &plane);
         if (Vec_SqDist3D(pelvis, &targetOn) >= 0.25f)
             found = 2;
         float muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
@@ -3212,9 +3210,9 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
             Vec_Add2(pelvis, &side, &p1);
             Vec_Add2(pelvis, &ahead, &p2);
             Plane_PlaneEq(&plane, pelvis, &p1, &p2);
-            Plane_PutPntOnPlane(&muzzleOn.x, &muzzle.x, (float *)&plane);
-            Plane_PutPntOnPlane(&farOn.x, &gunDir.x, (float *)&plane);
-            Plane_PutPntOnPlane(&targetOn.x, &target->x, (float *)&plane);
+            Plane_PutPntOnPlane(&muzzleOn, &muzzle, &plane);
+            Plane_PutPntOnPlane(&farOn, &gunDir, &plane);
+            Plane_PutPntOnPlane(&targetOn, target, &plane);
             if (Vec_SqDist3D(pelvis, &targetOn) >= 0.25f)
                 found |= 1;
             muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);

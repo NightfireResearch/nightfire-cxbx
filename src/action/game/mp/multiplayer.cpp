@@ -7,13 +7,12 @@
 #include "../obj/Pickup.h"
 #include "../drone/BOT.h"
 #include "../obj/bullet.h"
+#include "../obj/control.h"
 #include <stdio.h>
 #include <string.h>
 
 #define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
 #define AssassinTarget (*(obj_tag **)0x00261788)
-// AUTOGEN
-short Control_Plr2Ind(obj_tag* a);
 
 #define NUM_SKINS 29 // unique characters
 // XBE_GLOBAL(0x001637c0, 0x1d0)

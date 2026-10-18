@@ -25,6 +25,7 @@
 #include "control.h"
 #include "build.h"
 #include "Light.h"
+#include "Lock.h"
 #include "Door.h"
 #include "Trigger.h"
 #include "SS.h"
@@ -1670,9 +1671,6 @@ void Player_PositionCamera(obj_tag *player) {
 #define MP_PlayerKilled ((void (__cdecl *)(obj_tag *player))0x000a1fc0)
 #define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
 #define Menu_PlayerHasQuitOrRestarted ((bool (__cdecl *)(void))0x00092c30)
-#define Control_Plr2Ind ((short (__cdecl *)(obj_tag *player))0x0002d8a0)
-#define GameFlow_GetState ((uint (__cdecl *)(void))0x0006aa70)
-#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 #define debug_scanmode U8_AT(0x001fec49)   // the player starts every level flying (MovementType_ScanMode)
@@ -3596,7 +3594,6 @@ void __declspec(naked) Player_SSScanMode(void) {
 // Using things (Player_Activate)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define Lock_Activate ((void (__cdecl *)(obj_tag *lock, obj_tag *user))0x000d0230)
 
 // What the player uses: with the standing icon showing, the nearest creep wall (true); otherwise whatever is within 1
 // of the point in front of his eyes - scripted objects, doors (true when one opens), switches, triggers, cars, gun

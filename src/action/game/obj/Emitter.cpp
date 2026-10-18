@@ -9,6 +9,9 @@
 #include "../../math/X87Ops.h"
 #include "../view.h"
 #include "control.h"
+#include "../../memory.h"
+#include "../../util/bin.h"
+#include "../../util/hashtable.h"
 
 #pragma fp_contract(off)
 
@@ -267,5 +270,57 @@ void Emitter_Draw(obj_tag *obj, viewer_tag *viewer) {
         emitter->rot.y = REC_FRAME_RATE + emitter->rot.y;
         View_RotTransMatrix(&emitter->rot, &emitter->pos[DrawIndex].v, &DrawMatrix);
         psiDrawObjectMatrix(emitter->def->model, &DrawMatrix);
+    }
+}
+
+// The map's emitter definitions (block 0x30; nightfire-port's Emitter_LoadDefs): each, of version 4, is read into an
+// EMITTER_DEF with its colour keys after it and listed under its hashcode. A definition of another version ends the
+// block. The keys' red, green and blue are halved.
+// AUTOINJECT
+void parsemap_block_particles(uchar *data) {
+    uint count = BIN_GetDWord(&data);
+    for (ushort i = 0; i < count; i++) {
+        uint version = BIN_GetDWord(&data);
+        if ((uchar)version != 4)
+            return;
+        HASHCODE hashcode = (HASHCODE)BIN_GetDWord(&data);
+        EMITTER_DEF def = {};
+        def.additive = (ushort)(version >> 8);
+        HASHCODE texture = (HASHCODE)BIN_GetDWord(&data);
+        HASHCODE model = (HASHCODE)BIN_GetDWord(&data);
+        def.count = BIN_GetWord(&data);
+        def.perFrame = BIN_GetWord(&data);
+        def.size = BIN_GetFloat(&data);
+        def.lifeBase = BIN_GetFloat(&data);
+        def.lifeRange = BIN_GetFloat(&data);
+        def.gravity = BIN_GetFloat(&data);
+        def.speedBase = BIN_GetFloat(&data);
+        def.speedRange = BIN_GetFloat(&data);
+        def.elevationBase = BIN_GetFloat(&data);
+        def.elevationRange = BIN_GetFloat(&data);
+        def.azimuthBase = BIN_GetFloat(&data);
+        def.azimuthRange = BIN_GetFloat(&data);
+        def.keyCount = BIN_GetDWord(&data);
+        // GC check (0x800c9358): a definition with no texture
+        NF_WARN_IF(texture == 0xffffffff, "EMITTER TEXTURE MISSING\n");
+        int *textureItem = texture != 0xffffffff ? (int *)hashtable_getitem(texture) : NULL;
+        def.texture = textureItem != NULL ? *textureItem : 0;
+        def.model = model != 0xffffffff ? (celglist_tag *)hashtable_getitem(model) : NULL;
+
+        EMITTER_DEF *made = (EMITTER_DEF *)Mem_Malloc(sizeof(EMITTER_DEF) + def.keyCount * sizeof(KEYED_CLR),
+                                                    (MallocFlags)0x4204, 0);
+        if (made == NULL)
+            continue;
+        *made = def;
+        made->keys = (KEYED_CLR *)(made + 1);
+        for (ushort k = 0; k < (uint)def.keyCount; k++) {
+            KEYED_CLR *key = &made->keys[k];
+            key->r = BIN_GetFloat(&data) * 0.5f;
+            key->g = BIN_GetFloat(&data) * 0.5f;
+            key->b = BIN_GetFloat(&data) * 0.5f;
+            key->a = BIN_GetFloat(&data);
+            key->time = BIN_GetFloat(&data);
+        }
+        hashtable_additem(hashcode, made);
     }
 }

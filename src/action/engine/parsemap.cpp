@@ -18,6 +18,17 @@
 #include "../game/obj/Rotor.h"
 #include "../game/obj/Switch.h"
 #include "../game/view.h"
+#include "../game/obj/build.h"
+#include "../util/bin.h"
+#include "../util/hashtable.h"
+#include "AIPath.h"
+#include "Loader.h"
+#include "celglist.h"
+#include "viewer.h"
+
+#include <string.h>
+
+#define parseentityfixup_entity ((void (__cdecl *)(cel_tag *cel, uint *flags, level_tag *keys))0x000a4790)
 
 #define pCurrCelList (*(celglist_tag**)(0x00274c80))
 #define FileNextBlock (*(uint**)(0x00274c70))
@@ -25,12 +36,6 @@
 static uint8_t StartingNewMap;
 #define m_pmap (*(map_tag**)0x00274b50)
 
-// Also used in Loader.cpp
-
-typedef struct block_header_tag {
-    uint size;
-    uint identifier;
-} block_header_tag;
 
 typedef struct {
     uint32_t size; // maybe block_header_tag?
@@ -46,12 +51,6 @@ typedef struct {
 } block_entity_data;
 
 static_assert(sizeof(block_entity_data) == 0x54, "Bad size for block_entity_data");
-
-// AUTOGEN
-bool parsemap_parsenextblock(char param_1);
-
-// AUTOGEN
-void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar* param_2, uchar doCreation);
 
 // XBE_GLOBAL(0x00274b34, 0x8)
 #define DynamicBH (*(block_header_tag*)0x00274b34)
@@ -259,8 +258,19 @@ typedef struct TARGET_PLACEMENT {
     _VECTOR rot;
     quaternion_tag quat;
     _VECTOR unknown;
-    //...
+    ushort splinePoints;            // 0x40 - with a spline: the level_tag's
+    ushort splineLength;            // 0x42
+    ushort spline;                  // 0x44 - the map's path
+    char _unknown46[2];
+    uint keyCount;                  // 0x48 - the key pairs (PLACEMENT_KEY) after it
 } TARGET_PLACEMENT;
+
+typedef struct PLACEMENT_KEY {
+    uint key;
+    uint value;
+} PLACEMENT_KEY;
+
+static_assert(sizeof(TARGET_PLACEMENT) == 0x4c, "TARGET_PLACEMENT is 0x4c bytes");
 
 static_assert(offsetof(TARGET_PLACEMENT, placementType) == 0x8, "Bad offset of placementType");
 static_assert(offsetof(TARGET_PLACEMENT, pos) == 0xc, "Bad offset of pos");
@@ -734,4 +744,440 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
     }
 
 
+}
+
+
+// ---- Reading a map file's blocks. Each starts with a word: its identifier in the top byte, its size (the word
+// ---- included) in the rest. A version 1 file has a table of the blocks' offsets after its first word.
+
+#define FileBase (*(uchar **)0x00274c6c)
+#define BinFileVersion U32_AT(0x00274c64)
+#define pBinFileHeader (*(uint **)0x00274c5c)
+#define pFileDiscardHeader (*(uint **)0x00274c94)
+#define prev_block (*(uint **)0x00274c9c)
+#define pBMH (*(MAPHEADER_tag **)0x00274c84)
+#define MapEntityCount U32_AT(0x00274c8c)
+#define pCelList (*(celglist_tag **)0x00274c7c)
+#define m_paths (*(void ***)0x00274b4c)
+#define m_ppaths (*(void ***)0x00274c60)
+// The texture tables walked together, an entry a texture: the palette headers, psiCreateMapTextures's results and the
+// texture headers
+#define pPallHeader (*(PALHEADER_tag **)0x00274b30)
+#define pTexData (*(texDataEntry **)0x00274b3c)
+#define pBmpHeader (*(bmpHeaderEntry **)0x00274b48)
+
+#define Sound_LoadMapSounds ((void (__cdecl *)(void *sounds))0x000cb870)
+
+// The map header block's data
+typedef struct MAPHEADER_tag {
+    uint unknown0;
+    uint entityCount;           // 0x04
+    uint pathCount;             // 0x08
+} MAPHEADER_tag;
+
+// A palette header (8 bytes)
+typedef struct PALHEADER_tag {
+    uint unknown0;
+    uint data;                  // 0x04 - the palette's hashcode (-1 for none), then the address of its data
+} PALHEADER_tag;
+
+// The block ids parsemap_handle_block_id acts on
+enum {
+    BLOCK_ENTITY_PARAMS = 0x04,
+    BLOCK_AI_PATHS = 0x05,
+    BLOCK_ENTITY_GEOMETRY = 0x0d,
+    BLOCK_MAP_HEADER = 0x0e,
+    BLOCK_PALETTE_HEADER = 0x0f,
+    BLOCK_TEXTURE_HEADER = 0x10,
+    BLOCK_PALETTE_DATA_PC = 0x11,
+    BLOCK_PALETTE_DATA_PSX = 0x12,
+    BLOCK_TEXTURE_DATA_PC = 0x15,
+    BLOCK_TEXTURE_DATA_PC2 = 0x16,
+    BLOCK_TEXTURE_DATA_GAMECUBE = 0x17,
+    BLOCK_TEXTURE_DATA_XBOX = 0x18,
+    BLOCK_PATH = 0x19,
+    BLOCK_MAP_DATA = 0x1a,
+    BLOCK_MEMORY_DISCARD = 0x1c,
+    BLOCK_END = 0x1d,
+    BLOCK_ENTITY_PARAMS2 = 0x1f,
+    BLOCK_PORTALS = 0x21,
+    BLOCK_AMBIENT_RADIATORS = 0x26,
+    BLOCK_LOD = 0x27,
+    BLOCK_SOUNDS = 0x28,
+    BLOCK_TEXTURE_DATA_PCDX = 0x29,
+    BLOCK_HASHLIST = 0x2c,
+    BLOCK_COLLISION = 0x2e,
+    BLOCK_COLLISION2 = 0x2f,
+    BLOCK_PARTICLES = 0x30,
+};
+
+// The current block's data, after its header word
+static void *BlockData(void) {
+    return FileNextBlock + 1;
+}
+
+// The map's entities (a celglist_tag each), its paths and its texture table, allocated from the header's counts
+// AUTOINJECT
+void parsemap_block_map_header(void) {
+    pBMH = (MAPHEADER_tag *)BlockData();
+    MapEntityCount = pBMH->entityCount;
+    if (MapEntityCount == 0)
+        return;
+    pCelList = (celglist_tag *)Mem_Malloc(MapEntityCount * sizeof(celglist_tag), (MallocFlags)0x904, 0);
+    memset(pCelList, 0, pBMH->entityCount * sizeof(celglist_tag));
+    pCelList->colldata = NULL;
+    pCurrCelList = pCelList;
+    if (pBMH->pathCount == 0) {
+        m_paths = NULL;
+    } else {
+        m_paths = (void **)Mem_Malloc(pBMH->pathCount * sizeof(void *), (MallocFlags)0x1804, 0);
+        if (m_paths != NULL)
+            m_ppaths = m_paths;
+    }
+    m_pmap = (map_tag *)Mem_Malloc(sizeof(map_tag), (MallocFlags)0xa04, 0);
+    m_pmap->paletteHeaderData = NULL;
+    m_pmap->numPaletteHeaderEntries = 0;
+    m_pmap->texHeaderData = NULL;
+    m_pmap->numTexHeaderEntries = 0;
+    m_pmap->texData = NULL;
+}
+
+// The hashcodes the map needs: each not already loaded is asked for (isLoadable). 0x06000000 is passed by.
+// AUTOINJECT
+void parsemap_block_hashlist(void) {
+    uchar *data = (uchar *)BlockData();
+    for (uint count = (CurrentBH.size - 4) / 4; count != 0; count--) {
+        HASHCODE hashcode = (HASHCODE)BIN_GetDWord(&data);
+        if (hashcode != 0x06000000 && hashtable_getitem(hashcode) == NULL) {
+            uint loadable = isLoadable(hashcode);
+            // GC check (0x80058e5c): one neither loaded nor loadable (the Xbox does not keep the answer)
+            NF_WARN_IF(loadable == 0 && (hashcode & 0xff000000) != 0x03000000 && hashcode != 0x05000000,
+                       "HT_Script / HT_Skin 0x%x not loaded in HT_Level %x\n", hashcode,
+                       GameState.CurrentLevelHashcode);
+        }
+    }
+}
+
+// Each entity's next model down (celglist_tag::lod), by entity number; -1 for none. The entries are 8 bytes.
+// AUTOINJECT
+void parsemap_block_LOD(void) {
+    uint *entry = (uint *)BlockData();
+    for (ushort i = 0; i < pBMH->entityCount; i++, entry += 2) {
+        if (entry[0] != 0xffffffff)
+            pCelList[i].lod = &pCelList[entry[0]];
+    }
+}
+
+// The palette headers, and psiCreateMapTextures's table of results, an entry each; the texture tables start
+// AUTOINJECT
+void parsemap_block_palette_header(void) {
+    PALHEADER_tag *headers = (PALHEADER_tag *)BlockData();
+    m_pmap->paletteHeaderData = headers;
+    m_pmap->numPaletteHeaderEntries = (CurrentBH.size - 4) / sizeof(PALHEADER_tag);
+    m_pmap->texData = NULL;
+    if (m_pmap->numPaletteHeaderEntries != 0)
+        m_pmap->texData = (texDataEntry *)Mem_Malloc(m_pmap->numPaletteHeaderEntries * sizeof(texDataEntry),
+                                                    (MallocFlags)0xb08, 0);
+    pPallHeader = headers;
+    pTexData = m_pmap->texData;
+}
+
+// A palette's data (blocks 0x11, 0x12 and 0x29, which no Xbox map has): the palette is listed under its hashcode
+// with the size of its texture, and its header points at the data. The three tables move on.
+// AUTOINJECT
+void parsemap_block_palette_data_psx(void) {
+    if (pPallHeader->data != 0xffffffff)
+        hashtable_additem((HASHCODE)pPallHeader->data, pTexData);
+    pTexData->width = pBmpHeader->widthMinusOne + 1;
+    pTexData->height = pBmpHeader->heightMinusOne + 1;
+    pPallHeader->data = (uint)(uintptr_t)BlockData();
+    pBmpHeader++;
+    pPallHeader++;
+    pTexData++;
+}
+
+// A texture's data: the texture is listed under the hashcode its header holds, with its size, and its header points
+// at the data. The three tables move on. (Blocks 0x17 and 0x18 both come here.)
+// AUTOINJECT
+void parsemap_block_texture_data_Xbox(void) {
+    HASHCODE hashcode = (HASHCODE)(uintptr_t)pBmpHeader->textureInfo;
+    if (hashcode != 0xffffffff)
+        hashtable_additem(hashcode, pTexData);
+    pTexData->width = pBmpHeader->widthMinusOne + 1;
+    pTexData->height = pBmpHeader->heightMinusOne + 1;
+    pBmpHeader->textureInfo = (TextureInfo *)BlockData();
+    pBmpHeader++;
+    pPallHeader++;
+    pTexData++;
+}
+
+// The portals: four corners (the second side's reversed), the indices of the two entities whose cels they join,
+// and a flag each that the side is shut. A portal is made in each cel, the two partners. The cels found are kept
+// from one portal to the next when the next's are not found.
+// AUTOINJECT
+void parsemap_block_portal_data(void) {
+    uint *data = (uint *)BlockData();
+    uint count = *data++;
+    cel_tag *cel = NULL;            // the cel of the second entity
+    cel_tag *other = NULL;          // of the first
+    for (ushort i = 0; i < count; i++) {
+        portal_tag front, back;
+        _VECTOR *corner = (_VECTOR *)data;
+        for (int k = 0; k < 4; k++) {
+            front.corners[k] = corner[k];
+            back.corners[3 - k] = corner[k];
+        }
+        data += 12;
+        Plane_PlaneEq(&front.plane, &front.corners[0], &front.corners[1], &front.corners[2]);
+        Plane_PlaneEq(&back.plane, &back.corners[0], &back.corners[1], &back.corners[2]);
+        ushort *link = (ushort *)data;
+        ushort first = link[0];
+        ushort second = link[1];
+        ushort flags = link[2];
+        data += 2;
+        for (cel_tag *c = glb_world->firstCel; c != NULL; c = c->nextCel) {
+            if (c->glist == &pCelList[second])
+                cel = c;
+            if (c->glist == &pCelList[first])
+                other = c;
+        }
+        // GC check (0x80059370): a cel not found (the GameCube then goes on with it)
+        if (cel == NULL)
+            NF_WARN(">>>FAILED<<< Portal Link unknown<->%s\n", other != NULL ? other->glist->name : "");
+        else if (other == NULL)
+            NF_WARN(">>>FAILED<<< Portal Link unknown<->%s\n", cel->glist->name);
+        char openFront = (flags & 2) != 2;
+        char openBack = (flags & 1) != 1;
+        portal_tag *a = build_alloc_portal(&front, cel->portals, other, openFront);
+        cel->portals = a;
+        portal_tag *b = build_alloc_portal(&back, other->portals, cel, openBack);
+        other->portals = b;
+        a->partner = b;
+        b->partner = a;
+    }
+}
+
+// The cel of a placement: its box and model's flags from the model, its place, then the fixed-up kind and the model's
+// sphere in the world
+static void parsemap_PlaceCel(TARGET_PLACEMENT *placement, celglist_tag *glist, uint kind, level_tag *keys) {
+    glb_world->firstCel = build_alloc_cel(glb_world->firstCel);
+    cel_tag *cel = glb_world->firstCel;
+    cel->glist = glist;
+    if (glist != NULL) {
+        cel->someMin = glist->extentMin;
+        cel->someMax = glist->extentMax;
+    }
+    cel->bitsFromPlacementTag = kind;
+    cel->flags84 = glist->applyFlagsToObject;
+    cel->position = placement->pos;
+    cel->rotation = placement->rot;
+    cel->bitsFromPlacementTag = kind;
+    uint flags = 0;
+    parseentityfixup_entity(cel, &flags, keys);
+    memcpy(&cel->sphere, &cel->glist->boundSphere, sizeof(sphere_equ_tag));
+    parseentity_transform_bounding_box(cel);
+}
+
+// A placement's keys, by key number (unbounded, as in the original)
+static void parsemap_ReadKeys(TARGET_PLACEMENT *placement, level_tag *keys) {
+    memset(keys, 0, sizeof(level_tag));
+    PLACEMENT_KEY *pair = (PLACEMENT_KEY *)(placement + 1);
+    for (uint i = 0; i < placement->keyCount; i++)
+        keys->keys[pair[i].key] = pair[i].value;
+}
+
+// The next placement, after this one's keys
+static TARGET_PLACEMENT *parsemap_NextPlacement(TARGET_PLACEMENT *placement, uint *left) {
+    uint size = sizeof(TARGET_PLACEMENT) + placement->keyCount * sizeof(PLACEMENT_KEY);
+    *left -= size;
+    return (TARGET_PLACEMENT *)((uchar *)placement + size);
+}
+
+// The map's static placements: those of the cel kinds (bit 0x8000) become cels of the world. An entity number one
+// past the last is let through (the dynamic placements' test is strict).
+// AUTOINJECT
+void parsemap_block_map_data_static(void) {
+    TARGET_PLACEMENT *placement = (TARGET_PLACEMENT *)BlockData();
+    for (uint left = CurrentBH.size - 4; left != 0; placement = parsemap_NextPlacement(placement, &left)) {
+        level_tag keys;
+        parsemap_ReadKeys(placement, &keys);
+        celglist_tag *glist;
+        if (placement->glistHashcode != 0xffffffff) {
+            glist = (celglist_tag *)hashtable_getitem(placement->glistHashcode);
+            // GC check (0x800598ac): a placement's model not loaded
+            NF_WARN_IF(glist == NULL, "Entity not loaded (or broken) Hashcode=0x%x [%f,%f,%f]!\n",
+                       placement->glistHashcode, placement->pos.x, placement->pos.y, placement->pos.z);
+        } else {
+            if (placement->entityNum > MapEntityCount)
+                continue;
+            glist = &pCelList[placement->entityNum];
+        }
+        uint kind = placement->placementType & 0xffff;
+        if (kind & 0x8000)
+            parsemap_PlaceCel(placement, glist, kind, &keys);
+    }
+}
+
+// The map's dynamic placements, the objects: each not of the cel kinds (bits 0x8000 and 0x2000) and with a model is
+// handed to parsemap_create_dynamic_objects with its spline and the next entity's model
+// AUTOINJECT
+void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar *block, uchar doCreation) {
+    TARGET_PLACEMENT *placement = (TARGET_PLACEMENT *)(block + 4);
+    for (uint left = bh->size - 4; left != 0; placement = parsemap_NextPlacement(placement, &left)) {
+        celglist_tag *next = &pCelList[placement->entityNum + 1];
+        level_tag keys;
+        parsemap_ReadKeys(placement, &keys);
+        celglist_tag *glist;
+        if (placement->glistHashcode != 0xffffffff) {
+            glist = (celglist_tag *)hashtable_getitem(placement->glistHashcode);
+        } else if (placement->entityNum < MapEntityCount) {
+            glist = &pCelList[placement->entityNum];
+        } else {
+            // GC check (0x80059a5c): an entity number past the map's, skipped
+            NF_WARN("Dynamic HT_Entity_Type 0x%.4x With uninit glist [%f,%f,%f]\n",
+                    placement->placementType & 0xffff, placement->pos.x, placement->pos.y, placement->pos.z);
+            glist = NULL;
+        }
+        uint type = placement->placementType;
+        if (placement->splinePoints != 0) {
+            keys.spline = m_paths[placement->spline];
+            keys.splineLength = placement->splineLength;
+            keys.splinePoints = placement->splinePoints;
+        }
+        if (!(type & 0xa000) && glist != NULL)
+            parsemap_create_dynamic_objects(placement, &keys, (ObjectPlacementType)type, glist, keys.spline, next,
+                                            doCreation);
+    }
+}
+
+// Acts on a block by its identifier; true at the end block. The paths, ambient light and sounds are the main map's
+// alone.
+// AUTOINJECT
+bool parsemap_handle_block_id(char mainMap) {
+    switch (CurrentBH.identifier) {
+    case BLOCK_ENTITY_PARAMS:
+    case BLOCK_ENTITY_PARAMS2:
+        parsemap_block_entity_params();
+        return false;
+    case BLOCK_AI_PATHS:
+        AIPath_Parse((AIPathBlock *)FileNextBlock);
+        return false;
+    case BLOCK_ENTITY_GEOMETRY:
+        pCurrCelList->geom_idx = (int)(uintptr_t)BlockData();
+        return false;
+    case BLOCK_MAP_HEADER:
+        parsemap_block_map_header();
+        return false;
+    case BLOCK_PALETTE_HEADER:
+        parsemap_block_palette_header();
+        return false;
+    case BLOCK_TEXTURE_HEADER:
+        pBmpHeader = (bmpHeaderEntry *)BlockData();
+        m_pmap->texHeaderData = pBmpHeader;
+        m_pmap->numTexHeaderEntries = (CurrentBH.size - 4) / sizeof(bmpHeaderEntry);
+        return false;
+    case BLOCK_PALETTE_DATA_PSX:
+        parsemap_block_palette_data_psx();
+        return false;
+    case BLOCK_TEXTURE_DATA_PC:
+    case BLOCK_TEXTURE_DATA_PC2:
+        pBmpHeader->textureInfo = (TextureInfo *)BlockData();
+        return false;
+    case BLOCK_TEXTURE_DATA_GAMECUBE:
+    case BLOCK_TEXTURE_DATA_XBOX:
+        parsemap_block_texture_data_Xbox();
+        return false;
+    case BLOCK_PATH:
+        if (mainMap)
+            *m_ppaths++ = BlockData();
+        return false;
+    case BLOCK_MAP_DATA:
+        DynamicBH = CurrentBH;
+        DynamicPtr = FileNextBlock;
+        parsemap_block_map_data_static();
+        return false;
+    case BLOCK_MEMORY_DISCARD:
+        FileDiscard = (uint)(uintptr_t)FileNextBlock;
+        pFileDiscardHeader = pBinFileHeader;
+        return false;
+    case BLOCK_END:
+        return true;
+    case BLOCK_PORTALS:
+        parsemap_block_portal_data();
+        return false;
+    case BLOCK_AMBIENT_RADIATORS:
+        if (mainMap)
+            Light_SetAmbientRadiators((AMBIENT_RADIATORS *)BlockData());
+        return false;
+    case BLOCK_LOD:
+        parsemap_block_LOD();
+        return false;
+    case BLOCK_SOUNDS:
+        if (mainMap)
+            Sound_LoadMapSounds(BlockData());
+        return false;
+    case BLOCK_TEXTURE_DATA_PCDX:
+        pBmpHeader->textureInfo = (TextureInfo *)BlockData();
+        // fall through
+    case BLOCK_PALETTE_DATA_PC:
+        parsemap_block_palette_data_psx();
+        return false;
+    case BLOCK_HASHLIST:
+        parsemap_block_hashlist();
+        return false;
+    case BLOCK_COLLISION:
+    case BLOCK_COLLISION2:
+        parsemap_block_Coll_Data_New();
+        return false;
+    case BLOCK_PARTICLES:
+        parsemap_block_particles((uchar *)BlockData());
+        return false;
+    default:
+        return false;
+    }
+}
+
+// Reads the next block and moves on to the one after; true at the end block. A version 1 file finds its blocks by its
+// table of offsets. The GameCube's check of a block of no size (it would read the same block for ever) is not in the
+// Xbox build.
+// AUTOINJECT
+bool parsemap_parsenextblock(char mainMap) {
+    if (BinFileVersion == 1)
+        FileNextBlock = (uint *)(FileBase + *pBinFileHeader + 4);
+    uint header = *FileNextBlock;
+    CurrentBH.size = header & 0xffffff;
+    CurrentBH.identifier = header >> 24;
+    if (parsemap_handle_block_id(mainMap))
+        return true;
+    prev_block = FileNextBlock;
+    if (BinFileVersion == 1) {
+        pBinFileHeader++;
+        FileNextBlock = (uint *)(FileBase + *pBinFileHeader + 4);
+    } else {
+        FileNextBlock = (uint *)((uchar *)FileNextBlock + CurrentBH.size);
+    }
+    return false;
+}
+
+// Back to the memory discard block, from which the rest of the file is read again
+// AUTOINJECT
+void parsemap_reset_to_block_memory_discard(void) {
+    if (BinFileVersion == 1) {
+        pBinFileHeader = pFileDiscardHeader;
+        FileNextBlock = (uint *)(FileBase + *pBinFileHeader + 4);
+    } else {
+        FileNextBlock = (uint *)(uintptr_t)FileDiscard;
+    }
+}
+
+// A cel's sphere in the world: its model's, through the cel's rotation and position
+// AUTOINJECT
+void parseentity_transform_bounding_box(cel_tag *cel) {
+    _MATRIX mtx;
+    RotMatrix(&cel->rotation, &mtx);
+    Matrix_SetTrans(&cel->position, &mtx);
+    if (cel->glist != NULL) {
+        MatrixMultiplyVector(&mtx, (_VECTOR *)&cel->glist->boundSphere, &cel->sphere);
+        cel->sphereRadius = cel->glist->boundSphere.r;
+    }
 }

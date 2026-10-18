@@ -22,6 +22,7 @@
 #include "obj/RainBox.h"
 #include "obj/control.h"
 #include "obj/object.h"
+#include "../util/Sort.h"
 #include <bit>
 #include <math.h>
 
@@ -144,7 +145,6 @@ uint32_t switch_ForceDrawAll;
 
 // The empty function the linker shares, where the source called its profiling hooks
 #define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
-void __cdecl QuickSort(void *list, uint count, uint size, COMP_FUNC compareType, undefined *customComparisonFunc);
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -701,8 +701,38 @@ void View_DrawSky(viewer_tag *viewer, char pass) {
 }
 
 
-// AUTOGEN
-void View_AddSkyObj(ushort param_1,celglist_tag *param_2,_VECTOR *param_3,_VECTOR *param_4,obj_tag *param_5,char param_6,ushort param_7,ushort param_8,char param_9);
+// One of the sky's models (at most SKY_OBJS): a model or an object, or with 'flash' one that flashes, for 'length'
+// frames at random within 'interval' seconds. An object given is hidden from the ordinary drawing.
+// AUTOINJECT
+void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot, obj_tag *obj, char flash,
+                    ushort interval, ushort length, char pass) {
+    if (slot >= SKY_OBJS)
+        return;
+    SkyObj *sky = &SkyObjs[slot];
+    if (flash) {
+        sky->flashObj = obj;
+        sky->flashGlist = glist;
+        sky->flashInterval = (ushort)(int)((double)interval * _FRAME_RATE);
+        sky->flashLength = length;
+    } else {
+        sky->obj = obj;
+        sky->glist = glist;
+    }
+    sky->flashTimer = 0;
+    sky->countdown = 0;
+    sky->thunderDelay = 0;
+    sky->pass = pass;
+    if (obj != NULL)
+        obj->effectFlags |= FLAG_HIDDEN;
+    if (pos != NULL)
+        Vec_Copy(pos, &sky->pos);
+    else
+        Vec_Zero(&sky->pos);
+    if (rot != NULL)
+        Vec_Copy(rot, &sky->rot);
+    else
+        Vec_Zero(&sky->rot);
+}
 
 
 #define SprCnt U32_AT(0x0029e810)

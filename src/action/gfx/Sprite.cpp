@@ -1,4 +1,5 @@
 #include "Sprite.h"
+#include "../util/Sort.h"
 
 // for strlen
 #include <string.h>
@@ -24,8 +25,6 @@ static sprite* SprActiveList[MAX_SPRITES];
 // The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of maybeFlags)
 #define SPRITE_FLAGS_KEEP_MASK 0xfff0
 
-// AUTOGEN
-void __cdecl QuickSort(void * list, uint maybeSize, uint param_3, COMP_FUNC compareType, undefined * customComparisonFunc);
 
 // AUTOINJECT
 void Sprite_InitLists(void) {

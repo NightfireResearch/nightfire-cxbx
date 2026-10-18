@@ -7,7 +7,6 @@
 
 #pragma fp_contract(off)
 
-#define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
 
 // Others may point at it until it goes
 // AUTOINJECT

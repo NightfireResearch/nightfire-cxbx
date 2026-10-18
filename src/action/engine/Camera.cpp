@@ -247,8 +247,6 @@ void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,floa
 
 }
 
-// AUTOGEN
-cel_tag* build_alloc_cel(cel_tag *cel);
 
 // AUTOINJECT
 void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushort posY, ushort width, ushort height) {
@@ -287,8 +285,6 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
 }
 
 
-// AUTOGEN
-world_tag* build_alloc_world(void);
 
 
 // AUTOINJECT

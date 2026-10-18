@@ -93,13 +93,13 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | # | GC function | GC addr | Condition | Message | Fatal? | Xbox function | Xbox addr | Conf | Xbox |
 |---|---|---|---|---|---|---|---|---|---|
 | **Level parse** |
-| 34 | parsemap_parsenextblock | 0x80058c94 | next block pointer == current (zero-size block) | Fatal, messed up data blocks | no | parsemap_parsenextblock | 0xa6a80 | high | dropped (would loop forever) |
-| 35 | parsemap_block_hashlist | 0x80058e5c | hash not in table, not loadable, not type 3/5, not 0x06000000 | HT_Script / HT_Skin 0x%x not loaded in HT_Level %x | no | parsemap_block_hashlist | 0xa5f80 | high | ? |
-| 36 | parsemap_portal_data | 0x80059370 | a portal's cel is not found (GC then dereferences it anyway) | >>>FAILED<<< Portal Link unknown<->%s | no | parsemap_block_portal_data | 0xa6260 | high | ? |
-| 37 | parsemap_block_map_data_static | 0x800598ac | placement glist hash not in hashtable | Entity not loaded (or broken) Hashcode=0x%x [%f,%f,%f]! | no | parsemap_block_map_data_static | 0xa6550 | high | ? |
-| 38 | parsemap_block_map_data_dynamic | 0x80059a5c | glist == -1 and entityNum >= MapEntityCount → object skipped | Dynamic HT_Entity_Type 0x%.4x With uninit glist [%f,%f,%f] | no | parsemap_block_map_data_dynamic | 0xa66f0 | high | ? |
+| 34 | parsemap_parsenextblock | 0x80058c94 | next block pointer == current (zero-size block) | Fatal, messed up data blocks | no | parsemap_parsenextblock | 0xa6a80 | high | dropped (would loop forever) - ported without it (no condition to keep): src/action/engine/parsemap.cpp |
+| 35 | parsemap_block_hashlist | 0x80058e5c | hash not in table, not loadable, not type 3/5, not 0x06000000 | HT_Script / HT_Skin 0x%x not loaded in HT_Level %x | no | parsemap_block_hashlist | 0xa5f80 | high | silent (isLoadable's answer dropped) - added: src/action/engine/parsemap.cpp |
+| 36 | parsemap_portal_data | 0x80059370 | a portal's cel is not found (GC then dereferences it anyway) | >>>FAILED<<< Portal Link unknown<->%s | no | parsemap_block_portal_data | 0xa6260 | high | dropped (the Xbox goes on with the last cels found) - added: src/action/engine/parsemap.cpp |
+| 37 | parsemap_block_map_data_static | 0x800598ac | placement glist hash not in hashtable | Entity not loaded (or broken) Hashcode=0x%x [%f,%f,%f]! | no | parsemap_block_map_data_static | 0xa6550 | high | dropped - added: src/action/engine/parsemap.cpp |
+| 38 | parsemap_block_map_data_dynamic | 0x80059a5c | glist == -1 and entityNum >= MapEntityCount → object skipped | Dynamic HT_Entity_Type 0x%.4x With uninit glist [%f,%f,%f] | no | parsemap_block_map_data_dynamic | 0xa66f0 | high | silent - added: src/action/engine/parsemap.cpp |
 | 39 | parsemap_block_coll_data | 0x80059774 | old-format collision block present | 0x%x has old col data | no | none named (block id probably ignored by parsemap_handle_block_id 0xa6820) | - | low | ? |
-| 40 | parsemap_block_particles → FUN_800c9358 | 0x800c9358 | emitter texture hash == -1 | EMITTER TEXTURE MISSING | no | parsemap_block_particles (inlined) | 0x68020 | med-high | ? |
+| 40 | parsemap_block_particles → FUN_800c9358 | 0x800c9358 | emitter texture hash == -1 | EMITTER TEXTURE MISSING | no | parsemap_block_particles (inlined) | 0x68020 | med-high | dropped - added: src/action/game/obj/Emitter.cpp |
 | 41 | FUN_8005a760 (AI path node → cel link) | 0x8005a760 | build_FindCel(node pos) == NULL | FATAL: AIPath '%s' NODE (%d) IS NOT IN A ROOM: %f, %f, %f | no | AIPath_BindNodes (inlined; AIPath_Link2Cel on the PS2) | 0xa72a0 | med | silent | src/action/engine/AIPath.cpp - added |
 | 42 | AIBounds link (FUN_8005a9e0) | 0x8005a9e0 | build_FindCel(node pos) == NULL | same as 41 | no | AIBounds_Link2Cel | 0xa7160 | high | silent |
 | 43 | Script_Load | 0x80060338 | script placement whose hash is not loaded (param_4 == 0) | Warning : map contains script 0x%x that is not loaded / not setup correctly xyz[...] | no | Script_Load | 0xc1550 | high | silent - added: src/action/engine/Script.cpp (Script_Load) |
@@ -126,7 +126,7 @@ Confidence refers to the GC→Xbox function match: **high** = same name, or the 
 | 62 | View_CaptureSceneSub (FUN_800714fc) | 0x800714fc | viewer == NULL | ERROR Bad View | no | View_CaptureSceneSub | 0xda130 | high | silent |
 | 63 | Camera_CheckLocation (FUN_8010b688) | 0x8010b688 | camera position in no cel and no previous cel → use first cel of world | Error : Camera cant be linked to a cel! | no | Camera_CheckLocation | 0x250a0 | med-high | ? |
 | **Game flow / collision / bullets** |
-| 64 | GameFlow_PushState | 0x80051420 | StackIndex+1 > 0x3f → index reset to 0 | **** STACK OVERFLOW **** | no | GameFlow_PushState | 0x6abf0 | high | silent (reset kept) |
+| 64 | GameFlow_PushState | 0x80051420 | StackIndex+1 > 0x3f → index reset to 0 | **** STACK OVERFLOW **** | no | GameFlow_PushState | 0x6abf0 | high | silent (reset kept) - added: src/action/game.cpp |
 | 65 | Collide_Update | 0x801071ec | hit heap count != HitAllocCnt after freeing all hit lists (leak) | Someone hasn't freed there hitlist! | no | Collide_Update | 0x2cca0 | high | dropped - added: src/action/engine/Collide.cpp (Collide_Update) |
 | 66 | Bullet_init | 0x80079b64 | direction vector pointer NULL → return NULL | Oops, null bullet vector | no | Bullet_init | 0x211f0 | high | ? |
 | **Objects** |

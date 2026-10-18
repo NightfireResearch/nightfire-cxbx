@@ -39,7 +39,6 @@ enum SP_State {
 void _SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer);
 
 // The original's, called by address: Ghidra calls it __stdcall, but its callers pop its arguments
-#define LoadableLoad ((bool (__cdecl *)(HASHCODE hashcode, uint loadable))0x000bff90)
 
 // AUTOINJECT
 void SP_RemoveObj(obj_tag* obj, void* scriptPlayerPtr) {

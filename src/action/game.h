@@ -29,8 +29,13 @@ uint32_t __stdcall Xbox_QueryPerformanceCounter(union _LARGE_INTEGER *counter);
 uint32_t __stdcall Xbox_QueryPerformanceFrequency(union _LARGE_INTEGER *frequency);
 void Reset_MapLoadSettings(void);
 uint GameFlow_GetState(void);
-void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
+void ResetMap_GameInit(void);
+void ResetMap_GenLoadScreen(void);
+void ResetMap_Load(void);
+void GameFlow_PushState(int state, float time, uint colour);
+uint GameFlow_PopState(void);
+void set_InhibitGameDrawIfRequired(void);
 // The loading screen's picture for a level and its hint and objective text (0x000bedf0). The original takes its
 // arguments in registers: ResetMap_LevelCode2Img is the entry for that, _ResetMap_LevelCode2Img the C++ under it.
 HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut);
@@ -65,7 +70,8 @@ typedef struct {
     undefined4 NumFramesUnpaused;
     undefined4 VideoFrames;
     undefined4 NumFrames;
-    undefined4 InhibitGameDraw;
+    uchar InhibitGameDraw;      // 0x40 - a byte: every reader and writer takes one
+    undefined field19_0x41[3];
     undefined4 field20_0x44;
     undefined4 BaseMapHashCode;
     undefined4 LoadTimeStart;
@@ -221,10 +227,10 @@ typedef struct { /* PTP Data */
 } sNightFireShared_tag;
 
 typedef struct {
-    undefined4 field0_0x0;
-    undefined4 field1_0x4;
-    char DecoderTarget[4];
-    undefined field3_0xc;
+    obj_tag *keypadPlayer;     // 0x00 - who opened a lock's keypad (Lock_Activate)
+    BLData *keypadBLData;      // 0x04 - and his BLData
+    char DecoderTarget[4];     // 0x08 - the lock's code, copied with its KeyCodeEntry
+    undefined DecoderTargetKnown; // 0x0c - the KeyCodeEntry's discovered
     char DecoderDisplay[4];
     undefined field5_0x11;
     uchar DecoderNumDigits;

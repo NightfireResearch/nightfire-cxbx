@@ -673,6 +673,15 @@ double DistancePointToPlane(_VECTOR *point, plane_equ_tag *plane) {
   return (double)point->z * plane->c + (double)point->y * plane->b + (double)point->x * plane->a + plane->d;
 }
 
+// The point moved along the plane's normal onto it. The distance stays unrounded on the x87, y first.
+// AUTOINJECT
+void Plane_PutPntOnPlane(_VECTOR *out, _VECTOR *point, plane_equ_tag *plane) {
+  double k = -((double)point->y * plane->b + (double)point->x * plane->a + (double)plane->c * point->z + plane->d);
+  out->x = (float)(k * plane->a + point->x);
+  out->y = (float)(k * plane->b + point->y);
+  out->z = (float)(k * plane->c + point->z);
+}
+
 // Multiplied and added on the x87
 // AUTOINJECT
 void auxVec_AddMulR32(_VECTOR *add, _VECTOR *vIn, float multiply, _VECTOR *vOut) {

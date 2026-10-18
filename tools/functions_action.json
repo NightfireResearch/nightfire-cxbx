@@ -3404,7 +3404,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00020bd0",
+        "name": "build_MakeRoomList",
         "address": "0x00020bd0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29180,7 +29180,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00092c10",
+        "name": "MenuManager_Enable",
         "address": "0x00092c10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

@@ -178,7 +178,7 @@ typedef struct obj_tag {
     _VECTOR lastPosition; // 0x30 - comment previously (incorrectly) said 0x28; confirmed via Ghidra's own struct
     _VECTOR rotation; // 0x3C
     _VECTOR lastRotation; // 0x48
-    char _pad_2[12];
+    _VECTOR lastCentrePoint; // 0x54 - centrePoint before Control_BuildWorldSph last moved it
     _VECTOR centrePoint; // 0x60
     float radius; // 0x6C
     _MATRIX transformMatrix; // 0x70
@@ -215,6 +215,9 @@ typedef struct obj_tag {
 typedef enum{
     FLAG_HIDDEN = 0x10, // Set/cleared by Script_HideObj
     FLAG_UNKNOWN_40 = 0x40,
+    FLAG_STRADDLES_CELS = 0x8000,       // set while it straddles cels (Controls_StraddleTest), and on one always forced
+    FLAG_FORCED_LISTED = 0x10000000,    // in ForcedList
+    FLAG_ALWAYS_FORCED = 0x20000000,    // in no cel: always in ForcedList (build_LinkToRoom)
     FLAG_IN_FORCEDLIST = 0x30000000,
 } ObjectEffectFlags;
 

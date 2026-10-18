@@ -68,8 +68,6 @@ static_assert(std::bit_cast<uint32_t>(DOOR_CLEARANCE) == 0x3e99999a, "not the or
 #define TXT_DOOR_UNLOCKED ((Action_TranslatedText)0x02000003)
 
 // The originals, called by address
-#define KeyFrame_Interp ((void (__cdecl *)(void *path, uint firstKey, uint lastKey, float frame, _MATRIX *mtx))0x000d8ac0)
-#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *drone))0x0001a190)
 
 // AUTOINJECT

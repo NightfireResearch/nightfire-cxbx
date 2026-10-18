@@ -13,6 +13,7 @@
 #include "../game/obj/control.h"
 #include "../game/obj/object.h"
 #include "../util/Random.h"
+#include "../util/Sort.h"
 
 #include <math.h>
 #include <string.h>
@@ -33,7 +34,6 @@
 // XBE_GLOBAL(0x001dec34, 0x2)
 #define PortalTriangle U16_AT(0x001dec34)
 
-#define QuickSort ((void (__cdecl *)(void *list, uint count, uint size, COMP_FUNC compare, undefined *custom))0x000bda60)
 
 // The vertices and planes of a leaf box's triangles: shorts, the normals times 2^-14
 constexpr float kCollScale = 6.103888e-05f;

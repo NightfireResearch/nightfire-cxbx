@@ -83,7 +83,42 @@ typedef enum {
 
 
 
+#pragma pack(push, 1)
+// A block's header word, split (CurrentBH, DynamicBH)
+typedef struct block_header_tag {
+    uint size;
+    uint identifier;
+} block_header_tag;
+
+// An object's placement keys as the create functions take them (0xb0 bytes): the placement's spline and the values
+// of its key pairs by key number. Each object's own placement struct names its keys.
+struct level_tag {
+    char _unknown00[2];
+    ushort splinePoints;        // 0x02
+    ushort splineLength;        // 0x04
+    char _unknown06[2];
+    void *spline;               // 0x08 - the map's path
+    char _unknown0c[0x2c - 0x0c];
+    uint keys[33];              // 0x2c
+};
+#pragma pack(pop)
+static_assert(sizeof(level_tag) == 0xb0, "level_tag is 0xb0 bytes");
+
 bool parsemap_parsemap(uint hashcode, bool param_2);
+bool parsemap_parsenextblock(char mainMap);
+bool parsemap_handle_block_id(char mainMap);
+void parsemap_block_map_header(void);
+void parsemap_block_hashlist(void);
+void parsemap_block_LOD(void);
+void parsemap_block_palette_header(void);
+void parsemap_block_palette_data_psx(void);
+void parsemap_block_texture_data_Xbox(void);
+void parsemap_block_portal_data(void);
+void parsemap_block_map_data_static(void);
+void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar *block, uchar doCreation);
+void parsemap_reset_to_block_memory_discard(void);
+void parseentity_transform_bounding_box(cel_tag *cel);
+void parsemap_block_entity_params(void);
 void parsemap_block_Coll_Data_New(void);
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* a, void* b, char doCreation);
 

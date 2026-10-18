@@ -100,7 +100,7 @@ struct portal_tag {
     obj_tag *door;              // 0x0c - a door in the opening: closed, the vision does not look through
     plane_equ_tag plane;        // 0x10
     uint32_t stamp;             // 0x20 - GameState.collisionStamp when Collide_StraddleCels last visited it
-    char _unknown24[2];
+    ushort unknown24;           // 0x24 - 0xffff from build_alloc_portal
     uchar seen;                 // 0x26 - looked through (Vision_Recurse), on both sides
     uchar open;                 // 0x27 - the vision may look through it
     _VECTOR corners[4];         // 0x28 - two triangles, through Intersect_Portal's index table
@@ -120,18 +120,12 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field6_0x6;
     undefined field7_0x7;
     obj_tag *firstObject;      // 0x08 - first object in this cel
-    undefined field9_0xc;
-    undefined field10_0xd;
-    undefined field11_0xe;
-    undefined field12_0xf;
+    obj_tag *headPrev;         // 0x0c - kept NULL: the cel heads its objects' list as an object would (prevInCel)
     struct ATTACH_tag *attachments;     // 0x10 - the marks on it (Effect_Bullet, Effect_Player)
     cel_tag *nextCel;
     cel_tag *childCel;                  // 0x18 - a cel's first cel within it, and a cel's next in the same one
                                         //        (Collide_Pick)
-    undefined field28_0x1c;
-    undefined field29_0x1d;
-    undefined field30_0x1e;
-    undefined field31_0x1f;
+    cel_tag *parentCel;                 // 0x1c - the room it is linked into (build_link_objects_to_rooms)
     cel_tag *nextVisible;               // 0x20 - the cels drawn this frame, from GfxList (vision_generate_display_list)
     struct AINode_tag *aiNodes;         // 0x24 - the AI path nodes in this cel (AIPath_BindNodes)
     portal_tag *portals;                // 0x28 - this cel's portals, linked through portal_tag.next
@@ -166,6 +160,8 @@ static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sp
 static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
 static_assert(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
 
+// cel_tag::bitsFromPlacementTag: a room, an object's cel (build_FindCel)
+#define CEL_ROOM 0x00040000
 // cel_tag::bitsFromPlacementTag: the geometry is in world space, and Collide_Pick tests the cel's box (not its sphere)
 #define CEL_WORLD_SPACE 0x08000000
 // cel_tag::bitsFromPlacementTag: the cel does not show the sky (vision_generate_display_list)

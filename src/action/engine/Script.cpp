@@ -26,6 +26,7 @@
 #include "../game/sp/PlayerStats.h"
 #include "../game/sp/SwitchChannels.h"
 #include "../game/view.h"
+#include "../game/Spline.h"
 #include "../game.h"
 #include "../gfx/Sprite.h"
 #include "../input.h"
@@ -91,15 +92,12 @@ typedef struct {
 
 // The originals, called by address where Ghidra's prototypes do not fit
 #define hashtable_deleteitem ((void (__cdecl *)(HASHCODE hashcode))0x0006b4a0)
-#define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 // The originals: ours in Break.cpp are not patched in yet
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 
 // AUTOGEN
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
-// AUTOGEN
-void Spline_Eval3D(_VECTOR *cp0, _VECTOR *cp1, _VECTOR *cp2, _VECTOR *cp3, float t, _VECTOR *vOut);
 // AUTOGEN
 void NDrone2_CreateNinjaEyes(obj_tag *obj);
 // Generated for Player.cpp

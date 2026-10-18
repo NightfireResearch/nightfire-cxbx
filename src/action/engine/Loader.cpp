@@ -355,5 +355,35 @@ uint isLoadable(HASHCODE hashcode) {
   return 0;
 }
 
-// AUTOGEN
-bool LoadableReload(HASHCODE hashcode);
+// The empty function the linker shares with others
+#define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
+#define hashtable_delete_hashtype ((void (__cdecl *)(uint type))0x0006b790)
+#define hashtable_create_sections ((void (__cdecl *)(void))0x0006b540)
+
+// A loadable part of the level (isLoadable's index). The Xbox build loads nothing for it: the hashtable's loadable
+// items (type 0x04000000) are dropped and its sections made again, under the second malloc method. Both arguments are
+// unread.
+// AUTOINJECT
+bool LoadableLoad(HASHCODE hashcode, uint loadable) {
+    __profiling_or_debugging_hook_point();
+    uint method = Mem_SetMallocMethod(1);
+    hashtable_delete_hashtype(0x04000000);
+    bLevelLoaded = 0;
+    hashtable_create_sections();
+    Mem_SetMallocMethod(method);
+    return true;
+}
+
+// The same for a script reloaded: the script freed first, and the anims' preload started again
+// AUTOINJECT
+bool LoadableReload(HASHCODE hashcode) {
+    uint method = Mem_SetMallocMethod(1);
+    Script_FreeFromHashTable(hashcode);
+    __profiling_or_debugging_hook_point();
+    hashtable_delete_hashtype(0x04000000);
+    bLevelLoaded = 0;
+    hashtable_create_sections();
+    AnimPreLoadInit(1);
+    Mem_SetMallocMethod(method);
+    return true;
+}

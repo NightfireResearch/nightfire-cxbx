@@ -7,6 +7,13 @@
 #define GfxList (*(cel_tag **)0x0029d79c)
 
 #pragma pack(push, 1)
+// A cel to draw and how many portals deep it was found
+struct VisCel {
+    cel_tag *cel;
+    ushort depth;
+    ushort pad;
+};
+
 // An opening as a polygon, cut down by planes (ClipPortalWithPlane)
 struct VisPortal {
     char count;

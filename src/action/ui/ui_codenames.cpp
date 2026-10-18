@@ -10,6 +10,7 @@
 #include "../game/mp/multiplayer.h"
 #include "../game/sp/PlayerStats.h"
 #include "../sound/SFX.h"
+#include "../util/Sort.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -145,7 +146,6 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define Menu_UpdateCodenameWheel ((void (__cdecl *)(byte, M_CONTROL *, HASHCODE, HASHCODE, HASHCODE, HASHCODE, char))0x0007fb20)
 #define WriteStateFileAndLaunch ((void (__cdecl *)(int, void *, int))0x000e9350)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
-void __cdecl QuickSort(void *list, uint count, uint size, COMP_FUNC compareType, undefined *customComparisonFunc);   // the original (Sprite.cpp)
 void Process_Create(M_CONTROL *control, M_MESSAGE *msg, undefined4 delay);   // the original (ui_credits.cpp)
 #define psiDeleteSave ((bool (__cdecl *)(const char *))0x000dfec0)   // deletes a codename's save; true if it did (name ours)
 #define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0) // false, with a box, without room for a new codename (name ours)
