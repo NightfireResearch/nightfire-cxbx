@@ -24,15 +24,6 @@ typedef struct NEW_CONTROL {
 } NEW_CONTROL;
 static_assert(sizeof(NEW_CONTROL) == 0x24, "NEW_CONTROL is 0x24 bytes");
 
-// A piece of a control's skin (Component_GetHandle): its insets
-typedef struct MENU_SKINPIECE {
-    char unknown00[6];
-    short unknown06;
-    short unknown08;
-    short unknown0a;
-    short unknown0c;
-} MENU_SKINPIECE;
-
 // One key of the grid, in pixels from the grid's corner
 typedef struct TEXTBOX_KEY {
     int x;
@@ -50,11 +41,11 @@ static_assert(sizeof(TEXTBOX_KEY) == 0x14, "TEXTBOX_KEY is 0x14 bytes");
 
 typedef struct M_TEXTBOX {
     M_CONTROL control;
-    void *defaultScripts[6];    // 0x7c SetScript's slots (a seventh would be the label's first word)
+    M_SCRIPT *defaultScripts[6]; // 0x7c SetScript's slots (a seventh would be the label's first word)
     char label[0x114];          // 0x94 an M_LABEL, which shows the typed text
-    char frame[0x94];           // 0x1a8 skin components: the grid's frame,
-    char cursor[0x94];          // 0x23c the cursor's box
-    char grid[0x94];            // 0x2d0 and the grid
+    M_BASECONTROL frame;        // 0x1a8 skin components: the grid's frame,
+    M_BASECONTROL cursor;       // 0x23c the cursor's box
+    M_BASECONTROL grid;         // 0x2d0 and the grid
     char unknown364[0x478 - 0x364];
     TEXTBOX_KEY keys[TEXTBOX_KEYS]; // 0x478
     char text[TEXTBOX_MAX_TEXT];    // 0x98c the label's string
@@ -75,7 +66,7 @@ static_assert(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
 M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked);
 void Text_SetupChar(void);
 int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2);
-void TextBox_Update(M_MANAGER *manager, M_PAGE *page, M_TEXTBOX *box);
+void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box);
 void Text_Init(M_TEXTBOX *box, NEW_CONTROL *create, M_CONTROL *parent);
 
 #endif // TEXTBOX_H

@@ -53,6 +53,11 @@ typedef struct M_MANAGER M_MANAGER;
 typedef struct M_PAGE M_PAGE;
 typedef unsigned int BotNum;   // Ghidra's enum of the multiplayer characters: an mp_characters identifier
 typedef struct M_MESSAGE M_MESSAGE;
+typedef struct M_SCRIPT M_SCRIPT;
+typedef struct M_KEYFRAME M_KEYFRAME;
+typedef struct MENU_COMPONENT MENU_COMPONENT;
+typedef struct MENU_COMPONENTPIECE MENU_COMPONENTPIECE;
+typedef struct MENU_COMPONENTSET MENU_COMPONENTSET;
 typedef struct REWARDINFO_tag REWARDINFO_tag;
 typedef struct BOT_stats_t BOT_stats_t;
 typedef struct DLISTINFO_tag DLISTINFO_tag;

@@ -18,18 +18,17 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle);
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything);
 void Menu_ProcessDelayedMessages(void);
 void __stdcall Menu_ClearDelayedMessages(void);
-void* Menu_Malloc(int size);
 M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
-undefined4 __stdcall Menu_GetLastController(void);
 void __stdcall Menu_RestartFrontEndLoop(void);
 void __stdcall Menu_StopFrontEndMusic(void);
 void Menu_UpdateMessageBox(uchar managerNum, ushort mask, byte slot);
 undefined4 Menu_UpdateOptionBox(undefined4 *type);
 void Menu_CreateOptionBoxLabel(byte managerNum, Action_TranslatedText text, undefined4 type, char param_4, char param_5);
 
-int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum,uint param_4, int param_5, int param_6);
-int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
-uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
+int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int arg1, int arg2);
+int __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, int arg1, int arg2);
+int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2);
+uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, int arg2);
 void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3);
 undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
 
@@ -162,5 +161,52 @@ extern uint8_t cn_secret_mode; // P_CNNAME was entered from the codename menu (S
 #define OPTIONBOX_LOSE_CHANGES       0xd // "Are you sure you want to exit and lose your changes?"
 
 extern uint8_t mp_explosive_scenery_unlocked; // defined in MenuUnlocks.cpp
+
+// The framework (Menu.cpp): skins, finding controls, dispatch, input, sprites, sounds
+MENU_COMPONENTSET* Component_AddSet(uchar managerNum, ushort id);
+void Component_InitComponents(void);
+void Component_DestroyAll(uchar managerNum);
+MENU_COMPONENTPIECE* Component_AddComponent(MENU_COMPONENT *component, short left, short top, short right, short bottom,
+                                            HASHCODE texture, short count);
+void Component_InitInstance(MENU_COMPONENTPIECE *piece, short x, short y, short width, short height, short u, short v,
+                            short uw, short vh, uint flags, uint colour, float stretchWidth, float stretchHeight);
+MENU_COMPONENT* Component_GetHandle(M_CONTROL *control);
+void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int width, int height);
+void Component_Free(M_CONTROL *control);
+
+// Menu_FindControl's directions
+#define MENU_DIR_UP     1
+#define MENU_DIR_DOWN   2
+#define MENU_DIR_LEFT   4
+#define MENU_DIR_RIGHT  8
+
+int Menu_CursorOverMe(M_MANAGER *mgr, M_CONTROL *control);
+M_CONTROL* Menu_GetControl(M_MANAGER *mgr);
+M_CONTROL* Menu_FindControl(M_MANAGER *mgr, uchar direction);
+M_CONTROL* Menu_GetFirstControl(M_MANAGER *mgr);
+M_PAGE* Menu_GetPage(M_CONTROL *control);
+void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control);
+ushort _Menu_GetAction(short player, int action, uchar flags);
+void Menu_GetAction(void);     // the original's register arguments, for _Menu_GetAction
+ushort Menu_InputAction(short player, int action, int flags);
+void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short width, short height, char *text,
+                           HASHCODE texture, uint colour, uint colour2, ushort u, ushort v, ushort uw, ushort vh,
+                           ushort flags);
+void Menu_ResizeControl(M_CONTROL *control, short x, short y, short width, short height);
+void Menu_ResizeControl(M_CONTROL *control, M_CONTROL *from);
+int Menu_ClipString(sprite *spr, int width, char *format);
+sprite* Menu_CreateSprite(SpriteInfo *info);
+void* Menu_Malloc(int size);
+void Menu_Free(void **data, undefined4 type);
+void Menu_SetAction(short player, int action, uchar state);
+uint Menu_GetLastController(void);
+uint Menu_GetNoInputCount(void);
+void Menu_ResetNoInputCount(void);
+void Menu_AlphaUpdate(void);
+void Menu_AlphaReset(void);
+short Menu_AlphaGet(void);
+void Menu_EnableSounds(HASHCODE page);
+void Menu_PlaySound(uint sound);
+void Menu_UpdateTextFmt(void);
 
 #endif // MENU_H

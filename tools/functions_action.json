@@ -24062,7 +24062,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00071c60",
+        "name": "Component_AddSet",
         "address": "0x00071c60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28946,7 +28946,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00090bc0",
+        "name": "LinkedList_GetIndex",
         "address": "0x00090bc0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29642,7 +29642,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000969a0",
+        "name": "Script_AddScript",
         "address": "0x000969a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29784,7 +29784,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00096d80",
+        "name": "Script_CalculateSpline",
         "address": "0x00096d80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,

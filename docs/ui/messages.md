@@ -274,22 +274,29 @@ the slot table; `M_MANAGER` calls the current page `someHashcode` and the manage
 |---|---|---|---|---|
 | 0x0 | 0x4 | next | M_CONTROL* | next in the page's control list (page +0x94) |
 | 0x4 | 0x4 | prev | M_CONTROL* | previous; Page_Update walks the list from the tail through this |
+| 0x8 | 0x4 | sprites | sprite** | its skin's sprites (Component_SetupInstance makes them, Component_Free deletes them) |
 | 0xc | 0x4 | parent | M_CONTROL* | page for controls, manager for pages; notifications go here |
 | 0x10 | 0x4 | extraControlHash | HASHCODE | page only: a control Page_Update also updates (looked up with 0x39) |
+| 0x14 | 0x4 | skin | uint | its skin: the set's id << 16, the skin's index in the set (Component_GetHandle) |
 | 0x18 | 0x4 | hashcode | HASHCODE | C_/P_ hashcode, used by Handler_HandleMessage |
 | 0x1c | 0x4 | drawState | uint | 0x10 normal, 0x20 focused, 0x40 pressed/checked, 0x80 cursor over; textbox bit31 = editing, Label bit2 = fixed alpha |
 | 0x20 | 0x4 | id | int | 0x20 SetId / 0x3d GetId; matched by __Menu_SendEx (== item) and __Menu_SendEx2 (bitmask) |
 | 0x24 | 0x4 | framesFocused | uint | counter reset when focus arrives (Page_Update) |
 | 0x28 | 0x10 | scripts | LINKEDLIST | scripts owned by the control |
-| 0x38 | 0x4 | selectedScript | M_SCRIPT* |  |
-| 0x3c | 0x4 | scriptPlaying | M_KEYFRAME* |  |
+| 0x38 | 0x4 | script | M_SCRIPT* | the script selected (Script_Select, Script_Play) |
+| 0x3c | 0x4 | key | M_KEYFRAME* | the keyframe being played to; NULL when none plays (Script_Stop) |
+| 0x40 | 0x4 | loopKey | M_KEYFRAME* | where a keyframe flagged 4 goes back to (set at one flagged 2) |
+| 0x44 | 0x4 | loopStep | int | the step there |
+| 0x4c | 0x4 | step | int | keyframes passed (-1 before the first) |
 | 0x50 | 0x4 | lastScriptResult | int | result of the previous script message; a script arg1 of -4 means 'use this' |
-| 0x58 | 0x4 | scriptExecutionFlags | uint |  |
+| 0x54 | 0x4 | frame | int | the script's frame |
+| 0x58 | 0x4 | scriptExecutionFlags | uint | 0x10 set when a loop goes back; Script_ExitLoop clears 8; nothing reads either |
 | 0x5c | 0x10 | processes | LINKEDLIST | running processes (0xe1 colour fades) |
 | 0x70 | 0x2 | x | short | relative to the page |
 | 0x72 | 0x2 | y | short |  |
 | 0x74 | 0x2 | width | short |  |
 | 0x76 | 0x2 | height | short |  |
+| 0x6c | 0x4 | numSprites | int | the skin's sprites |
 | 0x78 | 0x2 | depth | ushort | draw/hit order; lower wins in Menu_CursorOverMe |
 | 0x7a | 0x1 | state | byte | 0x2b SetState: bit0 hidden, bit1 not selectable, bit2 'was hidden' (internal); navigation skips controls with state != 0 |
 | 0x7b | 0x1 | type | CONTROL_TYPE | see ControlType |

@@ -41,6 +41,8 @@ invented function names in Ghidra carry an "INVENTED NAME" plate comment.
 | `ui_secrets.cpp` | Menu_SpecialCodenameCheck, Menu_UpgradeCheat, Menu_IsValidCodename, P_CNNAME, C_KEYBOARD |
 | `ui_credits.cpp` | Menu_InitCredits, Menu_SetupCredits (from `CreditsData.inc`, generated from `data/credits.csv`), P_CREDITS |
 | `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work) |
+| `Menu.cpp`, `Component.h` | the framework (nightfire-port parcel 16, package A): the skins (`Component_*`), finding controls and moving the cursor, the dispatch (`__Menu_SendMessage`, `Menu_Update`, `__Menu_Send`, `__Menu_SendEx`, `__Menu_SendEx2`), input (`Menu_GetAction` - a register adaptor -, `Menu_InputAction`, `Menu_SetAction`, the idle count), the sprite helpers, `Menu_Malloc`/`Menu_Free`, the pulse, the sounds, `Menu_UpdateTextFmt` ([framework.md](framework.md) §1) |
+| `MenuScript.cpp`, `LinkedList.cpp` | the menu scripts (every `Script_*` of 0x96960-0x97560: keyframes, messages, interpolation by line and spline, default scripts) and `LinkedList_GetIndex` |
 
 The item lists are ours: arrays in the source beside their handlers. They lived in the game's memory, reached
 through address macros, until every function that refers to them was reimplemented - the handlers, and the
@@ -66,8 +68,9 @@ Not yet: the handlers without lists (`handlers.md` step 2).
 - `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
   (every code, 224 runs), `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs),
   `UpgradeShadow.cpp` (the weapon upgrade readers), `MemShadow.cpp` (the heap allocator, ~19000 random calls
-  on two scratch heaps), `SaveShadow.cpp` (the codename save) and `CodenameShadow.cpp` (the codename pages, the
-  cheat checkboxes, the keypad).
+  on two scratch heaps), `SaveShadow.cpp` (the codename save), `CodenameShadow.cpp` (the codename pages, the
+  cheat checkboxes, the keypad) and `MenuPortShadow.cpp` (the framework of `Menu.cpp`, `MenuScript.cpp` and
+  `LinkedList.cpp`; `NIGHTFIRE_SHADOW_ONLY=menuport` runs it alone).
 
 `tools/ui/run_menu.sh <script> [name]` runs a script from a fresh boot (language, intro, start page) in
 `build/menurun/<name>/`, with a copy of `Release/saves` so the start page leads to the main menu, and writes the

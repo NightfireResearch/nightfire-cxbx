@@ -26,6 +26,16 @@ Rules for adding a fix:
 - **Effect:** the keycodes the game generates differ. Each call still draws one `Rand_Random` per digit, so the random
   sequence after it is unchanged.
 
+### Menu_UpdateWheel: an empty wheel slot is coloured from item 999
+
+- **Where:** `src/action/ui/Menu.cpp`, `Menu_UpdateWheel` (default.xbe 0x0007f680).
+- **Original:** the wheel's four outer slots are 999 when the list ends before them, but all five colour messages
+  are sent regardless (0x0007f9fa-0x0007fac1), each reading the item's enabled byte at `items + idx * 0x18 + 0x10`,
+  so an empty slot reads item 999, past the end of the list.
+- **Fix:** no colour message for an empty slot. Its text is already blank.
+- **Effect:** an empty slot keeps the colour it had. Nothing visible changes, since the slot shows no text; the fix
+  removes the read past the list (which on the host may fall outside the allocation).
+
 ## Driving engine
 
 ### Scheduler::Run: a fractional timeScale loses its fraction

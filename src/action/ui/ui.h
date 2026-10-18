@@ -4,6 +4,7 @@
 #include "../actionhelpers.h"
 
 #include "../util/Stack.h"
+#include "LinkedList.h"
 
 // Messages between the menu system's controls, pages, the manager and the handlers (docs/ui/messages.md).
 // Every name is invented - the game has none. A handler gets (managerNum, control, hashcode, message, a1, a2);
@@ -123,6 +124,7 @@ typedef enum {
     ControlType_Text = 12,      // the on-screen keyboard's character grid
     ControlType_Window = 13,    // a page's background and script holder
     ControlType_Memo = 200,     // multi-line text with a scroll at +0x94
+    ControlType_72 = 0x72,      // no such control is created; Menu_GetPage accepts it
 } ControlType;
 
 // MessageType_SetState's argument (M_CONTROL.state)
@@ -153,28 +155,34 @@ typedef enum {
 
 #pragma pack(push, 1)
 
+typedef struct M_SCRIPT M_SCRIPT;
+typedef struct M_KEYFRAME M_KEYFRAME;
+
 // The part every control, page and the manager share (docs/ui/messages.md). Each type extends it: ordinary
 // controls continue with their script slots (M_WIDGET), the page and the manager with their own fields.
 typedef struct M_CONTROL {
     M_CONTROL *next;            // 0x00 in the page's control list
     M_CONTROL *prev;            // 0x04
-    uint unknown08;             // 0x08 cleared by the initialisers
+    sprite **sprites;           // 0x08 its skin's pieces (Component_SetupInstance), numSprites of them
     M_CONTROL *parent;          // 0x0c the page for a control, the manager for a page; messages bubble up to it
     HASHCODE extraControlHash;  // 0x10 page only: a control Page_Update also updates
-    uint skinPiece;             // 0x14 its skin's index << 16 | the piece of it (Component_*)
+    uint skin;                  // 0x14 its skin: the set's id << 16 | the skin's index in the set (Component_GetHandle)
     HASHCODE hashcode;          // 0x18 the C_/P_ hashcode Handler_HandleMessage dispatches on
     uint drawState;             // 0x1c 0x10 normal, 0x20 focused, 0x40 pressed/checked, 0x80 under the cursor
     int id;                     // 0x20 SetId/GetId: a key's character code, a wheel's item; __Menu_SendEx picks by it
     uint framesFocused;         // 0x24
-    char scripts[16];           // 0x28 LINKEDLIST of the control's scripts
-    void *selectedScript;       // 0x38
-    void *scriptPlaying;        // 0x3c
-    char pad_40[0x10];
-    int lastScriptResult;       // 0x50
-    char pad_54[4];
-    uint scriptExecutionFlags;  // 0x58
-    char processes[16];         // 0x5c LINKEDLIST of running processes (colour fades)
-    char pad_6c[4];
+    LINKEDLIST scripts;         // 0x28 M_SCRIPT
+    M_SCRIPT *script;           // 0x38 the script selected (Script_Select, Script_Play)
+    M_KEYFRAME *key;            // 0x3c the keyframe being played to; NULL when no script plays
+    M_KEYFRAME *loopKey;        // 0x40 where a keyframe flagged KEYFRAME_LOOP_BACK goes back to
+    int loopStep;               // 0x44 the step there
+    char pad_48[4];
+    int step;                   // 0x4c the keyframes passed
+    int lastScriptResult;       // 0x50 the last keyframe message's result (an argument of -4 passes it on)
+    int frame;                  // 0x54 the script's frame
+    uint scriptExecutionFlags;  // 0x58 0x10 once a loop has gone back; Script_ExitLoop clears 8
+    LINKEDLIST processes;       // 0x5c running processes (colour fades)
+    int numSprites;             // 0x6c
     short x;                    // 0x70 relative to the page
     short y;                    // 0x72
     short width;                // 0x74
@@ -191,10 +199,27 @@ static_assert(offsetof(M_CONTROL, type) == 0x7b, "M_CONTROL type offset incorrec
 // An ordinary control (every type but the page and the manager): the shared part, then the default scripts.
 typedef struct M_WIDGET {
     M_CONTROL control;
-    void *defaultScripts[7];    // 0x7c SetScript slots: 0 created/entered, 1 focus gained, 2 selected, 3 scrolled,
-                                //      4 focus lost, 5 B pressed
+    M_SCRIPT *defaultScripts[7]; // 0x7c SetScript slots: 0 created/entered, 1 focus gained, 2 selected, 3 scrolled,
+                                //      4 focus lost, 5 B pressed (Script_PlayDefault)
 } M_WIDGET;
 static_assert(sizeof(M_WIDGET) == 0x98, "M_WIDGET is 0x98 bytes");
+
+// The 0x94 bytes every control type starts with (M_WIDGET's seventh slot is not every type's): the text box's skin
+// parts, Menu_GetFirstControl's stand-in
+typedef struct M_BASECONTROL {
+    M_CONTROL control;
+    M_SCRIPT *defaultScripts[6]; // 0x7c
+} M_BASECONTROL;
+static_assert(sizeof(M_BASECONTROL) == 0x94, "M_BASECONTROL is 0x94 bytes");
+
+// A page's background and script holder
+typedef struct M_WINDOW {
+    M_CONTROL control;
+    M_SCRIPT *defaultScripts[6]; // 0x7c
+    struct M_PAGE *page;        // 0x94
+    char pad_98[4];
+} M_WINDOW;
+static_assert(sizeof(M_WINDOW) == 0x9c, "M_WINDOW is 0x9c bytes");
 
 typedef struct M_SCROLL {
     M_WIDGET widget;
@@ -208,7 +233,7 @@ static_assert(sizeof(M_SCROLL) == 0x148, "M_SCROLL is 0x148 bytes");
 typedef struct M_PAGE {
     M_CONTROL control;          // type ControlType_Page
     char pad_7c[0x94 - 0x7c];
-    char controls[16];          // 0x94 LINKEDLIST of the page's controls
+    LINKEDLIST controls;        // 0x94 M_CONTROL
     void *pageLink[2];          // 0xa4 in the manager's page list
     M_CONTROL *focused;         // 0xac the control under the cursor
     M_CONTROL *playerFocus[4];  // 0xb0 SetPlayerFocus; while one is set the d-pad does not move the cursor
@@ -224,7 +249,7 @@ typedef struct M_MANAGER {
     M_CONTROL control;          // type ControlType_Manager
     char pad_7c[0x94 - 0x7c];
     sprite *cursorSprite;       // 0x94 its position picks the focused control
-    char pages[16];             // 0x98 LINKEDLIST of all pages
+    LINKEDLIST pages;           // 0x98 M_PAGE, linked through pageLink
     STACKINFO stack;            // 0xa8 page history for Back: {M_PAGE*, focused control} entries
     int stackMem[64];           // 0xb0
     HASHCODE currentMovie;      // 0x1b0 the background movie playing
@@ -249,14 +274,53 @@ static_assert(sizeof(M_MANAGER) == 0x1d8, "M_MANAGER is 0x1d8 bytes");
 static_assert(offsetof(M_MANAGER, stack) == 0xa8, "M_MANAGER stack offset incorrect");
 static_assert(offsetof(M_MANAGER, currentPage) == 0x1bc, "M_MANAGER currentPage offset incorrect");
 
-// A message kept for later: a process (Process_Create; type 0xe1 is a colour fade) or a delayed message.
+// A message a keyframe sends as it passes (Script_RunFrame), or a process (Process_Create; type 0xe1 is a colour fade)
 typedef struct M_MESSAGE {
-    char pad_00[0xc];
-    int type;                   // 0x0c
-    int arg1;                   // 0x10
+    M_MESSAGE *next;            // 0x00
+    M_MESSAGE *prev;            // 0x04
+    uint target;                // 0x08 the hashcode of the controls it goes to, or MESSAGE_TO_*
+    uint type;                  // 0x0c a MessageType; from MESSAGE_PROCESS on, a process
+    int arg1;                   // 0x10 MESSAGE_LAST_RESULT: the control's lastScriptResult
     int arg2;                   // 0x14
 } M_MESSAGE;
 static_assert(sizeof(M_MESSAGE) == 0x18, "M_MESSAGE is 0x18 bytes");
+
+#define MESSAGE_TO_MANAGER  0xfffffffdu
+#define MESSAGE_TO_SELF     0xfffffffeu
+#define MESSAGE_LAST_RESULT -4
+#define MESSAGE_PROCESS     0xe1
+
+// A keyframe of a control's script: where the control is at that frame, and the messages it sends then
+typedef struct M_KEYFRAME {
+    M_KEYFRAME *next;           // 0x00
+    M_KEYFRAME *prev;           // 0x04
+    LINKEDLIST messages;        // 0x08 M_MESSAGE
+    uint frame;                 // 0x18
+    uint flags;                 // 0x1c KEYFRAME_*
+    short x;                    // 0x20
+    short y;
+    short width;
+    short height;
+} M_KEYFRAME;
+static_assert(sizeof(M_KEYFRAME) == 0x28, "M_KEYFRAME is 0x28 bytes");
+
+#define KEYFRAME_LOOP_START 2       // a later KEYFRAME_LOOP_BACK comes back here
+#define KEYFRAME_LOOP_BACK  4
+#define KEYFRAME_FIXED      0x20    // Script_AddKeyFrame does not change it
+
+// A control's keyframe script (the menu data's 0xfffffff7 records)
+typedef struct M_SCRIPT {
+    M_SCRIPT *next;             // 0x00
+    M_SCRIPT *prev;             // 0x04
+    LINKEDLIST keys;            // 0x08 M_KEYFRAME, by frame
+    int id;                     // 0x18
+    uint flags;                 // 0x1c SCRIPT_*
+} M_SCRIPT;
+static_assert(sizeof(M_SCRIPT) == 0x20, "M_SCRIPT is 0x20 bytes");
+
+#define SCRIPT_SPLINE   1       // interpolated by spline, else by line
+#define SCRIPT_LOOPING  8       // a KEYFRAME_LOOP_START has been passed
+
 
 // Common between PS2 and Xbox
 typedef struct M_ITEM {

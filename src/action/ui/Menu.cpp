@@ -1,11 +1,22 @@
 #include "Menu.h"
+#include "Component.h"
 #include "Manager.h"
+#include "TextBox.h"
 
 #include "../game/drone/BOT.h"
 #include "../input.h"
+#include "../memory.h"
+#include "../gfx/Font.h"
+#include "../gfx/Sprite.h"
+#include "../math/X87Ops.h"
+#include "../sound/Sound.h"
+#include "../util/Sort.h"
 
 
+#include <math.h>
+#include <stddef.h>
 #include <stdio.h>
+#include <string.h>
 
 // XBE_GLOBAL(0x0025d7de, 0x1)
 uint8_t cn_secret_mode;
@@ -45,9 +56,6 @@ void Menu_PlayIris(char param_1, uchar param_2, uint param_3);
 // AUTOGEN
 void Menu_ChangePageCloseIris(HASHCODE param_1, uchar param_2, uint param_3);
 
-// AUTOGEN
-void* Menu_Malloc(int size);
-
 
 // AUTOGEN
 void __stdcall Menu_PrepareBots(void);
@@ -57,9 +65,6 @@ void Menu_CreateOptionBox(byte managerNum, int **text, undefined4 type, char par
 
 // AUTOGEN
 M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int hashcodeToMatch, uint numItems);
-
-// AUTOGEN
-undefined4 __stdcall Menu_GetLastController(void);
 
 // AUTOGEN
 void __stdcall Menu_RestartFrontEndLoop(void);
@@ -147,9 +152,6 @@ void __stdcall Menu_ClearDelayedMessages(void) {
   for(int i = 0; i < ARRAY_SIZE(menu_delay_msg); i++)
     menu_delay_msg[i].dispatchOnFrameNum = 0;
 }
-
-// AUTOGEN
-int __Menu_SendEx(byte param_1,HASHCODE param_2,uint itemNum, uint param_4,int **param_5,int **param_6);
 
 // Exists on PS2 at 00202fd8, inlined on Xbox
 bool Menu_IsBotGood(uint idx) {
@@ -269,7 +271,9 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   const int colourDisabled[3] = {0x48484880, 0x48484840, 0x48484820};
   const int colourEnabled[3] = {0x7d6d5aff, 0x7d6d5a80, 0x7d6d5a40};
 
-  // Previously, the game wouldn't check for 999 resulting in an out-of-bounds read. Now fixed.
+  // The original colours all four outer slots, an empty one (999) from item 999 past the list's end
+  // (docs/original-bug-fixes.md); the fix leaves an empty slot's colour as it was.
+#if FIX_ORIGINAL_GAME_BUGS
   if(idxUp2 != 999)
     __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
   if(idxUp1 != 999)
@@ -278,6 +282,12 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
     __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
   if(idxDown2 != 999)
     __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+#else
+  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+#endif
 
   // The middle item can't be offscreen, no need to check
   __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
@@ -306,17 +316,8 @@ void Menu_DeleteSprite(sprite* spr) {
 }
 
 // AUTOGEN
-int __Menu_SendMessage(M_CONTROL *param_1, uint param_2, int param_3, int param_4);
-
-// AUTOGEN
-uint __Menu_Send(uchar param_1, HASHCODE param_2, uint param_3, int param_4, int param_5);
-
-// AUTOGEN
 bool Menu_SelectItemInControl(M_CONTROL* control, M_ITEM *list, ushort size, int idx);
 
-
-// AUTOGEN
-void Menu_Free(void **data, undefined4 mallocFlags);
 
 
 #define menu_unlock_everything U8_AT(0x0025d79e)
@@ -364,3 +365,944 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
 
 // AUTOGEN
 bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
+
+// ---- the framework: skins, finding controls, dispatch, input, sprites, sounds (PS2: menu.cpp)
+
+#pragma fp_contract(off)
+
+// The control types' own functions, called by address
+#define Button_SendMessage ((int (__cdecl *)(M_CONTROL *button, uint message, int arg1, int arg2))0x00070e00)
+#define Checkbox_SendMessage ((int (__cdecl *)(M_CONTROL *checkbox, uint message, int arg1, int arg2))0x00071380)
+#define Combo_SendMessage ((int (__cdecl *)(M_CONTROL *combo, uint message, int arg1, int arg2))0x00071890)
+#define Label_SendMessage ((int (__cdecl *)(M_CONTROL *label, uint message, int arg1, int arg2))0x00090590)
+#define List_SendMessage ((int (__cdecl *)(M_CONTROL *list, uint message, int arg1, int arg2))0x00091b10)
+#define Memo_SendMessage ((int (__cdecl *)(M_CONTROL *memo, uint message, int arg1, int arg2))0x00095330)
+#define Page_SendMessage ((int (__cdecl *)(M_PAGE *page, uint message, int arg1, int arg2))0x00095820)
+#define Radio_SendMessage ((int (__cdecl *)(M_CONTROL *radio, uint message, int arg1, int arg2))0x00096380)
+#define Scroll_SendMessage ((int (__cdecl *)(M_CONTROL *scroll, uint message, int arg1, int arg2))0x00097870)
+#define Spin_SendMessage ((int (__cdecl *)(M_CONTROL *spin, uint message, int arg1, int arg2))0x000986f0)
+#define Window_SendMessage ((int (__cdecl *)(M_CONTROL *window, uint message, int arg1, int arg2))0x00099c60)
+#define Button_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *button))0x00070fe0)
+#define Checkbox_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *checkbox))0x00071530)
+#define Combo_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *combo))0x000719b0)
+#define Label_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *label, bool cursorOver))0x0008fff0)
+#define List_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *list))0x00090fc0)
+#define Memo_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *memo))0x00094cf0)
+#define Page_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, int takingInput))0x00095a80)
+#define Radio_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *radio))0x00096210)
+#define Scroll_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *scroll))0x00097be0)
+#define Spin_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *spin))0x000989c0)
+// On the Xbox the empty function the linker shares with others (0x000e0ec0)
+#define Window_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window))0x000e0ec0)
+#define MenuManager_GetStatus ((uint (__cdecl *)(void))0x00092b80)
+#define LinkedList_Init ((void (__cdecl *)(LINKEDLIST *list, uint offset))0x00090a70)
+#define LinkedList_Add ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090ab0)
+#define LinkedList_Remove ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090b70)
+
+// Every manager's skin sets
+#define component_list (*(LINKEDLIST *)0x00223a90)
+// Frames counted by Menu_AlphaUpdate, and the frame and controller of the last action Menu_GetAction reported
+#define menu_frame U32_AT(0x00223aa0)
+#define menu_last_action U32_AT(0x00223aa4)
+#define menu_last_controller U32_AT(0x0017c540)     // -1 at boot
+// The highlight's pulse (Menu_AlphaUpdate)
+#define menu_alpha I16_AT(0x00223b2c)
+#define menu_alpha_phase FLOAT_AT(0x00223b30)
+// The sounds the page allows (Menu_EnableSounds): MENU_SOUND_*
+#define menu_sounds U32_AT(0x00223b34)
+// The text's throb (Menu_UpdateTextFmt). Nothing reads the scale.
+#define menu_text_scale FLOAT_AT(0x00223b38)
+#define menu_text_phase FLOAT_AT(0x00223b3c)
+// The text format of a sprite Menu_InitializeSprite gives a text (also List_Init's)
+#define MenuTextFormat ((char *)0x0015eb5c)
+
+// What Menu_GetFirstControl hands back when a page has nothing to focus on
+#define menu_no_control (*(M_BASECONTROL *)0x00224558)
+#define NO_CONTROL_HASHCODE ((HASHCODE)0x1fffffff)
+
+#define COMPONENTSET_NEXT_ID 999    // Component_AddSet: the next id free
+#define MENU_ALLOCATIONS 0x3104     // Mem_Malloc's type for the menus
+
+#define MENU_SEND_ALL 0xffffffffu   // the hashcode that matches every control
+#define MENU_SEND_STEPS 1000        // pages and controls a send visits before it gives up
+
+#define MENU_VIEWER 7               // the viewer the menus' sprites are drawn in
+#define MENU_SPRITE_HIDDEN 0xff
+
+#define TWO_PI 6.2831855f
+
+#define MENU_SOUND_SELECT    1      // sounds 0-2 and 8 play only with their bit
+#define MENU_SOUND_ALT1      2
+#define MENU_SOUND_ALT2      4
+#define MENU_SOUND_BACK      8
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+// ---- skins (components)
+
+// AUTOINJECT
+void Component_InitComponents(void) {
+    LinkedList_Init(&component_list, 0);
+}
+
+// A new set of skins for a manager
+// AUTOINJECT
+MENU_COMPONENTSET* Component_AddSet(uchar managerNum, ushort id) {
+    MENU_COMPONENTSET *set = (MENU_COMPONENTSET *)Menu_Malloc(sizeof(MENU_COMPONENTSET));
+    if (id == COMPONENTSET_NEXT_ID)
+        set->id = component_list.count + 1;
+    else
+        set->id = id;
+    set->managerNum = managerNum;
+    LinkedList_Add(&component_list, &set->prev, set);
+    return set;
+}
+
+// AUTOINJECT
+void Component_DestroyAll(uchar managerNum) {
+    MENU_COMPONENTSET *set = (MENU_COMPONENTSET *)LinkedList_First(&component_list);
+    while (set != NULL) {
+        if (set->managerNum == managerNum) {
+            for (int i = 0; i < COMPONENTS_PER_SET; i++) {
+                if (set->components[i].pieces != NULL)
+                    Menu_Free((void **)&set->components[i].pieces, 1);
+            }
+            LinkedList_Remove(&component_list, &set->prev, set);
+            MENU_COMPONENTSET *freed = set;
+            Menu_Free((void **)&freed, 1);
+        }
+        // Read from the block just freed
+        set = set->next;
+    }
+}
+
+// AUTOINJECT
+MENU_COMPONENTPIECE* Component_AddComponent(MENU_COMPONENT *component, short left, short top, short right, short bottom,
+                                            HASHCODE texture, short count) {
+    component->left = left;
+    component->top = top;
+    component->right = right;
+    component->bottom = bottom;
+    component->texture = texture;
+    component->count = count;
+    if (count != 0)
+        component->pieces = (MENU_COMPONENTPIECE *)Menu_Malloc(count * sizeof(MENU_COMPONENTPIECE));
+    else
+        component->pieces = NULL;
+    return component->pieces;
+}
+
+// AUTOINJECT
+void Component_InitInstance(MENU_COMPONENTPIECE *piece, short x, short y, short width, short height, short u, short v,
+                            short uw, short vh, uint flags, uint colour, float stretchWidth, float stretchHeight) {
+    piece->info.posX = x;
+    piece->info.posY = y;
+    piece->info.onscreenWidth = width;
+    piece->info.onscreenHeight = height;
+    piece->info.spritesheetX = u;
+    piece->info.spritesheetY = v;
+    piece->info.maybeSpritesheetWidth = uw;
+    piece->info.maybeSpritesheetHeight = vh;
+    piece->info.maybeFlags = 0;
+    piece->info.textRef = (Action_TranslatedText)-1;
+    piece->info.maybeEnabled = 0xffff;
+    piece->info.maybeClippedText = NULL;
+    piece->info.textureHashcode = (HASHCODE)0;
+    piece->info.linkedViewer = 0;
+    piece->info.colour = colour;
+    piece->stretchWidth = stretchWidth;
+    piece->stretchHeight = stretchHeight;
+    piece->flags = flags;
+}
+
+// A control's skin: M_CONTROL::skin's set and index
+// AUTOINJECT
+MENU_COMPONENT* Component_GetHandle(M_CONTROL *control) {
+    for (MENU_COMPONENTSET *set = (MENU_COMPONENTSET *)LinkedList_First(&component_list); set != NULL; set = set->next) {
+        if (set->id == control->skin >> 16)
+            return &set->components[control->skin & 0xffff];
+    }
+    return NULL;
+}
+
+// What a stretched piece takes of the room: its share, between none and all of it. The share is tested below 0 as
+// computed, and against the room as stored.
+static int Component_Stretch(int room, float share) {
+    double stretched = room * (double)share;
+    float stored = (float)stretched;
+    if (stretched < 0.0)
+        return 0;
+    if (stored > (double)room)
+        return Ftol(room);
+    return Ftol(stored);
+}
+
+// Lays the control's skin out in a rectangle (-1: the control's own) for a draw state: the fixed pieces along the
+// edges their flags give, the stretched pieces sharing what room is left; pieces not shown in that state hidden. The
+// sprites are made the first time.
+// AUTOINJECT
+void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int width, int height) {
+    M_PAGE *page = Menu_GetPage(control);
+    if (page == NULL)
+        return;
+    if (x == -1)
+        x = control->x;
+    if (y == -1)
+        y = control->y;
+    if (width == -1)
+        width = control->width;
+    if (height == -1)
+        height = control->height;
+    MENU_COMPONENT *component = Component_GetHandle(control);
+    if (component == NULL)
+        return;
+
+    // The room the fixed pieces leave
+    int right = width;
+    int left = 0;
+    int top = 0;
+    int bottom = height;
+
+    if (control->sprites == NULL) {
+        if (component->count == 0)
+            return;
+        control->sprites = (sprite **)Menu_Malloc(component->count * sizeof(sprite *));
+        control->numSprites = component->count;
+        for (int i = 0; i < control->numSprites; i++) {
+            component->pieces[i].info.textureHashcode = component->texture;
+            control->sprites[i] = Menu_CreateSprite(&component->pieces[i].info);
+        }
+    }
+    if (component->pieces == NULL)
+        return;
+
+    for (int i = 0; i < control->numSprites; i++) {
+        MENU_COMPONENTPIECE *piece = &component->pieces[i];
+        if ((piece->flags & state) == 0) {
+            if (control->sprites[i] != NULL)
+                control->sprites[i]->maybeEnabled = MENU_SPRITE_HIDDEN;
+            continue;
+        }
+
+        if (piece->flags & PIECE_WIDTH_FROM_HEIGHT) {
+            if (piece->stretchHeight == 0.0f)
+                piece->info.onscreenWidth = control->sprites[i]->onscreenHeight;
+            else
+                piece->info.onscreenWidth = Ftol((bottom - top) * (double)piece->stretchHeight);
+        }
+
+        short pieceWidth;
+        if (piece->stretchWidth == 0.0f) {
+            if (!(piece->flags & PIECE_KEEP_ROOM_X)) {
+                if (piece->flags & PIECE_RIGHT) {
+                    int edge = width - piece->info.onscreenWidth - piece->info.posX;
+                    if (edge < right)
+                        right = edge;
+                } else {
+                    int edge = piece->info.posX + piece->info.onscreenWidth;
+                    if (edge > left)
+                        left = edge;
+                }
+            }
+            pieceWidth = piece->info.onscreenWidth;
+        } else {
+            pieceWidth = Component_Stretch(right - left, piece->stretchWidth);
+        }
+
+        if (piece->flags & PIECE_HEIGHT_FROM_WIDTH) {
+            if (piece->stretchWidth == 0.0f)
+                piece->info.onscreenHeight = piece->info.onscreenWidth;
+            else
+                piece->info.onscreenHeight = Ftol((right - left) * (double)piece->stretchWidth);
+        }
+
+        short pieceHeight;
+        if (piece->stretchHeight == 0.0f) {
+            if (!(piece->flags & PIECE_KEEP_ROOM_Y)) {
+                if (piece->flags & PIECE_BOTTOM) {
+                    int edge = height - piece->info.onscreenHeight - piece->info.posY;
+                    if (edge < bottom)
+                        bottom = edge;
+                } else {
+                    int edge = piece->info.posY + piece->info.onscreenHeight;
+                    if (edge > top)
+                        top = edge;
+                }
+            }
+            pieceHeight = piece->info.onscreenHeight;
+        } else {
+            pieceHeight = Component_Stretch(bottom - top, piece->stretchHeight);
+        }
+
+        // A fixed piece of a focused control pulses; the bytes carry into each other
+        uint colour = piece->info.colour;
+        if ((state & 0x20) && piece->stretchWidth == 0.0f && piece->stretchHeight == 0.0f) {
+            int alpha = Menu_AlphaGet();
+            colour = ((colour & 0xff0000) + (alpha << 16)) | ((colour & 0xff000000) + (alpha << 24)) |
+                     ((colour & 0xff00) + (alpha << 8)) | (colour & 0xff);
+        } else if (state & 0xc0) {
+            Menu_AlphaReset();
+        }
+
+        uint spriteFlags;
+        if (piece->flags & PIECE_SPRITE_100)
+            spriteFlags = 0x100;
+        else
+            spriteFlags = (piece->flags & PIECE_SPRITE_200) ? 0x200 : 0;
+
+        int spriteY;
+        if (piece->flags & PIECE_BOTTOM)
+            spriteY = page->control.y - piece->info.posY - pieceHeight + y + height;
+        else if (piece->flags & PIECE_CENTRE_Y)
+            spriteY = page->control.y + y + ((height - pieceHeight) >> 1);
+        else
+            spriteY = page->control.y + y + piece->info.posY;
+        int spriteX;
+        if (piece->flags & PIECE_RIGHT)
+            spriteX = page->control.x - piece->info.posX - pieceWidth + x + width;
+        else if (piece->flags & PIECE_CENTRE_X)
+            spriteX = page->control.x + x + ((width - pieceWidth) >> 1);
+        else
+            spriteX = page->control.x + x + piece->info.posX;
+
+        Menu_InitializeSprite(control->sprites[i], (uchar)(control->depth - page->control.depth), spriteX, spriteY,
+                              pieceWidth, pieceHeight, NULL, component->texture, colour, 0, piece->info.spritesheetX,
+                              piece->info.spritesheetY, piece->info.maybeSpritesheetWidth,
+                              piece->info.maybeSpritesheetHeight, spriteFlags);
+    }
+}
+
+// AUTOINJECT
+void Component_Free(M_CONTROL *control) {
+    if (control->sprites == NULL)
+        return;
+    for (int i = 0; i < control->numSprites; i++)
+        Menu_DeleteSprite(control->sprites[i]);
+    Menu_Free((void **)&control->sprites, 1);
+    control->sprites = NULL;
+}
+
+// ---- finding controls
+
+static M_PAGE* Menu_NextPage(M_PAGE *page) {
+    if (page->pageLink[0] == NULL)
+        return NULL;
+    return (M_PAGE *)((char *)page->pageLink[0] - offsetof(M_PAGE, pageLink));
+}
+
+// Whether the control is the one the cursor is over: of the controls under it (edges included), the lowest depth. 0 or
+// 1 in the whole register, which its callers pass on.
+// AUTOINJECT
+int Menu_CursorOverMe(M_MANAGER *mgr, M_CONTROL *control) {
+    M_PAGE *page = mgr->currentPage;
+    if (page == NULL)
+        return 0;
+    short x = mgr->cursorSprite->positionX - page->control.x;
+    short y = mgr->cursorSprite->positionY - page->control.y;
+    M_CONTROL *under[32];
+    int last = -1;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
+        if (c->type == ControlType_Window || c->state != CONTROL_STATE_SHOWN)
+            continue;
+        if (x >= c->x && x <= c->x + c->width && y >= c->y && y <= c->y + c->height)
+            under[++last] = c;
+    }
+    if (last < 0)
+        return 0;
+    M_CONTROL *top = under[0];
+    for (int i = 0; i <= last; i++) {
+        if (under[i]->depth < top->depth)
+            top = under[i];
+    }
+    return top == control;
+}
+
+// The control under the cursor (edges excluded): the smallest, then the lowest depth; else Menu_GetFirstControl
+// AUTOINJECT
+M_CONTROL* Menu_GetControl(M_MANAGER *mgr) {
+    M_PAGE *page = mgr->currentPage;
+    if (page == NULL)
+        return Menu_GetFirstControl(mgr);
+    short x = mgr->cursorSprite->positionX - page->control.x;
+    short y = mgr->cursorSprite->positionY - page->control.y;
+    M_CONTROL *under[32];
+    int smallness[32];
+    int last = -1;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
+        if (x > c->x && x < c->x + c->width && y > c->y && y < c->y + c->height &&
+            c->state == CONTROL_STATE_SHOWN && c->type != ControlType_Window) {
+            under[++last] = c;
+            smallness[last] = (SCREEN_HEIGHT - c->height) + (SCREEN_WIDTH - c->width);
+        }
+    }
+    if (last < 0)
+        return Menu_GetFirstControl(mgr);
+    uchar best = 0;
+    for (int i = 0; i <= last; i++) {
+        if (smallness[i] > smallness[best] ||
+            (smallness[i] == smallness[best] && under[i]->depth < under[best]->depth))
+            best = i;
+    }
+    return under[best];
+}
+
+// A control Menu_FindControl could move to, and how far it is (QuickSort's Compare_MenuCtrl sorts by the cost)
+typedef struct MENU_NEIGHBOUR {
+    M_CONTROL *control;
+    short cost;
+    char pad[2];
+} MENU_NEIGHBOUR;
+static_assert(sizeof(MENU_NEIGHBOUR) == 8, "MENU_NEIGHBOUR is 8 bytes");
+
+#define NO_NEIGHBOUR 9999
+#define MENU_NEIGHBOURS 64
+
+// Moves the cursor from the control under it to the nearest in a direction (MENU_DIR_*) among the controls that
+// overlap it across that direction; with none there, round to the farthest the other way. The cursor goes to the
+// middle of the control, 10 pixels larger.
+// AUTOINJECT
+M_CONTROL* Menu_FindControl(M_MANAGER *mgr, uchar direction) {
+    MENU_NEIGHBOUR nearest[MENU_NEIGHBOURS];
+    MENU_NEIGHBOUR wrapped[MENU_NEIGHBOURS];
+    ushort numNearest = 0;
+    ushort numWrapped = 0;
+    M_CONTROL *from = Menu_GetControl(mgr);
+    M_CONTROL *c = (M_CONTROL *)LinkedList_First(&mgr->currentPage->controls);
+    if (from == NULL) {
+        from = c;
+        if (from == NULL)
+            return NULL;
+    }
+    nearest[0].control = from;
+    wrapped[0].control = from;
+
+    // Only the nearest are counted against the table; the wrap-around list is not bounded
+    for (; c != NULL && numNearest < MENU_NEIGHBOURS - 1; c = c->next) {
+        if (c == from || c->state != CONTROL_STATE_SHOWN || c->type == ControlType_Window)
+            continue;
+        int width = c->width;
+        int height = c->height;
+        if (width * height == 0)
+            continue;
+        // From the other control's corner to this one's sides
+        float left = from->x - c->x;
+        float right = from->width - c->x + from->x;
+        float top = from->y - c->y;
+        float bottom = from->height - c->y + from->y;
+        float fwidth = width;
+        bool acrossX = left < fwidth && right > 0.0f;
+        bool acrossY = bottom > 0.0f && height > top;
+
+        short nearCost = NO_NEIGHBOUR;
+        short wrapCost = NO_NEIGHBOUR;
+        switch (direction) {
+            case MENU_DIR_UP:
+                if (height < top && acrossX)
+                    nearCost = Ftol(fabs((double)top) * 2 + fabs((double)left) * 0.1);
+                if (bottom < 0.0f && acrossX)
+                    wrapCost = Ftol(bottom * 2.0 + fabs((double)left) * 0.1);
+                break;
+            case MENU_DIR_DOWN:
+                if (top < height && acrossX)
+                    nearCost = Ftol(fabs((double)bottom) * 2 + fabs((double)left) * 0.1);
+                if (top > height && acrossX)
+                    wrapCost = Ftol(top * -2.0f + fabs((double)left) * 0.1);
+                break;
+            case MENU_DIR_LEFT:
+                if (left > fwidth && acrossY)
+                    nearCost = Ftol(fabs((double)top) + fabs((double)left));
+                if (right < 0.0f && acrossY)
+                    wrapCost = Ftol(fabs((double)top) + right);
+                break;
+            case MENU_DIR_RIGHT:
+                if (left < fwidth && acrossY)
+                    nearCost = Ftol(fabs((double)top) + fabs((double)right));
+                if (left > fwidth && acrossY)
+                    wrapCost = Ftol(fabs((double)top) - left);
+                break;
+        }
+        if (nearCost != NO_NEIGHBOUR) {
+            nearest[numNearest].control = c;
+            nearest[numNearest].cost = nearCost;
+            numNearest++;
+        }
+        if (wrapCost != NO_NEIGHBOUR) {
+            wrapped[numWrapped].control = c;
+            wrapped[numWrapped].cost = wrapCost;
+            numWrapped++;
+        }
+    }
+
+    QuickSort(nearest, numNearest, sizeof(MENU_NEIGHBOUR), Compare_MenuCtrl, NULL);
+    if (nearest[0].control == from) {
+        QuickSort(wrapped, numWrapped, sizeof(MENU_NEIGHBOUR), Compare_MenuCtrl, NULL);
+        nearest[0] = wrapped[0];
+    }
+    M_CONTROL *to = nearest[0].control;
+    sprite *cursor = mgr->cursorSprite;
+    cursor->positionX = to->x + mgr->currentPage->control.x + (to->width >> 1);
+    cursor->positionY = (to->height >> 1) + to->y + mgr->currentPage->control.y;
+    cursor->onscreenWidth = to->width + 10;
+    cursor->onscreenHeight = to->height + 10;
+    cursor->maybeEnabled = (uchar)to->depth + 1;
+    return to;
+}
+
+// The page's focused control, or its first that can take focus, or else a stand-in off the screen
+// AUTOINJECT
+M_CONTROL* Menu_GetFirstControl(M_MANAGER *mgr) {
+    M_CONTROL *focused = mgr->currentPage->focused;
+    if (focused != NULL && focused->hashcode != NO_CONTROL_HASHCODE)
+        return focused;
+    memset(&menu_no_control, 0, sizeof(menu_no_control));
+    menu_no_control.control.type = 0xff;
+    menu_no_control.control.hashcode = NO_CONTROL_HASHCODE;
+    menu_no_control.control.x = -100;
+    menu_no_control.control.y = -100;
+    menu_no_control.control.width = 0;
+    menu_no_control.control.height = 0;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&mgr->currentPage->controls); c != NULL; c = c->next) {
+        if (c->type != ControlType_Window && c->state == CONTROL_STATE_SHOWN)
+            return c;
+    }
+    return &menu_no_control.control;
+}
+
+// The types that sit on a page (inline on the Xbox)
+static bool Menu_Assert(M_CONTROL *control) {
+    if (control == NULL || control->parent == NULL)
+        return false;
+    switch (control->type) {
+        case ControlType_Button:
+        case ControlType_Checkbox:
+        case ControlType_Combo:
+        case ControlType_Label:
+        case ControlType_List:
+        case ControlType_Memo:
+        case ControlType_Radio:
+        case ControlType_Scroll:
+        case ControlType_Spin:
+        case ControlType_Text:
+        case ControlType_72:
+            return true;
+    }
+    return false;
+}
+
+// The page a control is on. A Window's own page is never taken: Menu_Assert refuses Windows.
+// AUTOINJECT
+M_PAGE* Menu_GetPage(M_CONTROL *control) {
+    if (!Menu_Assert(control))
+        return NULL;
+    if (control->type == ControlType_Window)
+        return ((M_WINDOW *)control)->page;
+    for (M_CONTROL *owner = control->parent; owner != NULL; owner = owner->parent) {
+        if (owner->type == ControlType_Page)
+            return (M_PAGE *)owner;
+    }
+    return NULL;
+}
+
+// ---- dispatch
+
+// To the control's type. Nothing is sent to a control about itself.
+// AUTOINJECT
+int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
+    if (control == NULL || control == (M_CONTROL *)arg1)
+        return 0;
+    switch (control->type) {
+        case ControlType_Button: return Button_SendMessage(control, message, arg1, arg2);
+        case ControlType_Checkbox: return Checkbox_SendMessage(control, message, arg1, arg2);
+        case ControlType_Combo: return Combo_SendMessage(control, message, arg1, arg2);
+        case ControlType_Label: return Label_SendMessage(control, message, arg1, arg2);
+        case ControlType_List: return List_SendMessage(control, message, arg1, arg2);
+        case ControlType_Manager: return Manager_SendMessage((M_MANAGER *)control, (MessageType)message, arg1, arg2);
+        case ControlType_Memo: return Memo_SendMessage(control, message, arg1, arg2);
+        case ControlType_Page: return Page_SendMessage((M_PAGE *)control, message, arg1, arg2);
+        case ControlType_Radio: return Radio_SendMessage(control, message, arg1, arg2);
+        case ControlType_Scroll: return Scroll_SendMessage(control, message, arg1, arg2);
+        case ControlType_Spin: return Spin_SendMessage(control, message, arg1, arg2);
+        case ControlType_Text: return Text_SendMessage((M_TEXTBOX *)control, message, arg1, arg2);
+        case ControlType_Window: return Window_SendMessage(control, message, arg1, arg2);
+    }
+    return 0;
+}
+
+// AUTOINJECT
+void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control) {
+    switch (control->type) {
+        case ControlType_Button: Button_Update(mgr, page, control); break;
+        case ControlType_Checkbox: Checkbox_Update(mgr, page, control); break;
+        case ControlType_Combo: Combo_Update(mgr, page, control); break;
+        case ControlType_Label: Label_Update(mgr, page, control, false); break;
+        case ControlType_List: List_Update(mgr, page, control); break;
+        case ControlType_Memo: Memo_Update(mgr, page, control); break;
+        case ControlType_Page: Page_Update(mgr, (M_PAGE *)control, 1); break;
+        case ControlType_Radio: Radio_Update(mgr, page, control); break;
+        case ControlType_Scroll: Scroll_Update(mgr, page, control); break;
+        case ControlType_Spin: Spin_Update(mgr, page, control); break;
+        case ControlType_Text: TextBox_Update(mgr, page, (M_TEXTBOX *)control); break;
+        case ControlType_Window: Window_Update(mgr, page, control); break;
+    }
+}
+
+// A player's action (-1: any player's) as Input_Action reports it, noting the frame and controller of one reported
+ushort _Menu_GetAction(short player, int action, uchar flags) {
+    if (player == -1) {
+        ushort pressed = 0;
+        for (ushort i = 0; i < 4; i++) {
+            ushort before = pressed;
+            pressed |= Input_Action(i, (GameActions_tag)action, flags);
+            if (pressed != before) {
+                menu_last_controller = i;
+                menu_last_action = menu_frame;
+            }
+        }
+        return pressed;
+    }
+    if (player >= 4)
+        return 0;
+    if (!(PlayerInputs[player].actions[action] & flags))
+        return 0;
+    ushort value = Ftol(PlayerInputs[player].fChannels[action] * 100.0);
+    if (value != 0) {
+        menu_last_controller = player;
+        menu_last_action = menu_frame;
+    }
+    return value;
+}
+
+// AX the player
+// AUTOLTCG
+__declspec(naked) void Menu_GetAction(void) {
+    __asm {
+        push dword ptr [esp + 8]
+        push dword ptr [esp + 8]
+        push eax
+        call _Menu_GetAction
+        add esp, 12
+        ret
+    }
+}
+
+// An action for the menus: select and start are ignored while back is held, back while either is; in a menu of
+// status above 3 start and select stand for each other.
+// AUTOINJECT
+ushort Menu_InputAction(short player, int action, int flags) {
+    if (action == ACTION_MENU_SELECT || action == ACTION_PAUSE) {
+        if (_Menu_GetAction(player, ACTION_MENU_BACK, 1))
+            return 0;
+    }
+    if (action == ACTION_MENU_BACK) {
+        if (_Menu_GetAction(player, ACTION_MENU_SELECT, 1) || _Menu_GetAction(player, ACTION_PAUSE, 1))
+            return 0;
+    } else if ((action == ACTION_MENU_SELECT || action == ACTION_PAUSE) && MenuManager_GetStatus() > 3) {
+        if (_Menu_GetAction(player, ACTION_MENU_SELECT, flags) || _Menu_GetAction(player, ACTION_PAUSE, flags))
+            return 1;
+    }
+    return _Menu_GetAction(player, action, flags);
+}
+
+// To every control of every page of the manager with that hashcode (MENU_SEND_ALL: every control); the last result
+// that is not 0. After MENU_SEND_STEPS pages and controls it gives up and answers 0.
+// AUTOINJECT
+uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, int arg2) {
+    uint result = 0;
+    uint steps = 0;
+    for (M_PAGE *page = (M_PAGE *)LinkedList_First(&manager[managerNum].pages); page != NULL; page = Menu_NextPage(page)) {
+        if (++steps > MENU_SEND_STEPS)
+            return 0;
+        for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
+            if (++steps > MENU_SEND_STEPS)
+                return 0;
+            if (c->hashcode == hashcode || (uint)hashcode == MENU_SEND_ALL) {
+                uint answer = __Menu_SendMessage(c, message, arg1, arg2);
+                if (answer != 0)
+                    result = answer;
+            }
+        }
+    }
+    return result;
+}
+
+// To the controls with that hashcode and id on the current page; if the last of them answers 0, to those on the page
+// under an overlay. The last one's result.
+// AUTOINJECT
+int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int arg1, int arg2) {
+    M_MANAGER *m = &manager[managerNum];
+    int result = 0;
+    uint steps = 0;
+    if (m->currentPage == NULL)
+        return 0;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&m->currentPage->controls); c != NULL; c = c->next) {
+        if (++steps > MENU_SEND_STEPS)
+            return 0;
+        if ((c->hashcode == hashcode || (uint)hashcode == MENU_SEND_ALL) && c->id == id)
+            result = __Menu_SendMessage(c, message, arg1, arg2);
+    }
+    if (result != 0)
+        return result;
+    if (m->underPage == NULL)
+        return 0;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&m->underPage->controls); c != NULL; c = c->next) {
+        if (++steps > MENU_SEND_STEPS)
+            return 0;
+        if ((c->hashcode == hashcode || (uint)hashcode == MENU_SEND_ALL) && c->id == id)
+            result = __Menu_SendMessage(c, message, arg1, arg2);
+    }
+    return result;
+}
+
+// To the controls with that hashcode on the current page whose id, read as a sum of the bits 0x80 down to 1, has the
+// bit
+// AUTOINJECT
+int __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, int arg1, int arg2) {
+    M_PAGE *page = manager[managerNum].currentPage;
+    if (page == NULL)
+        return 0;
+    int result = 0;
+    uint steps = 0;
+    for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
+        if (++steps > MENU_SEND_STEPS)
+            return 0;
+        if (c->hashcode != hashcode && (uint)hashcode != MENU_SEND_ALL)
+            continue;
+        int rest = c->id;
+        for (int b = 7; b >= 0; b--) {
+            uint value = 1u << b;
+            int remainder = (int)((uint)rest - value);
+            if (remainder < 0)
+                continue;
+            if (value == bit) {
+                result = __Menu_SendMessage(c, message, arg1, arg2);
+                break;
+            }
+            rest = remainder;
+        }
+    }
+    return result;
+}
+
+// ---- sprites, memory and the rest
+
+// Sets a sprite up in the menus' viewer: u 0xffff keeps its texture rectangle, a colour of 0 is grey
+// AUTOINJECT
+void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short width, short height, char *text,
+                           HASHCODE texture, uint colour, uint colour2, ushort u, ushort v, ushort uw, ushort vh,
+                           ushort flags) {
+    if (spr == NULL)
+        return;
+    if (texture != 0)
+        hashtable_set_sprite(spr, texture);
+    spr->maybeEnabled = priority;
+    spr->positionX = x;
+    spr->positionY = y;
+    spr->onscreenWidth = width;
+    spr->onscreenHeight = height;
+    spr->maybeClippedString = NULL;
+    spr->linkedViewer = MENU_VIEWER;
+    spr->maybeFlags = flags;
+    if (u != 0xffff) {
+        spr->spritesheetX = u;
+        spr->spritesheetY = v;
+        spr->spritesheetWidth = uw;
+        spr->spritesheetHeight = vh;
+    }
+    if (text != NULL) {
+        spr->text = text;
+        spr->maybeClippedString = MenuTextFormat;
+        spr->length = strlen(text);
+    } else {
+        spr->text = NULL;
+    }
+    spr->colourTint = colour != 0 ? colour : 0x7f7f7fc0;
+    spr->unknown1 = colour2;
+}
+
+// FUNC_AT(0x00072c30)
+void Menu_ResizeControl(M_CONTROL *control, short x, short y, short width, short height) {
+    control->x = x;
+    control->y = y;
+    control->width = width;
+    control->height = height;
+}
+
+// FUNC_AT(0x00072c60)
+void Menu_ResizeControl(M_CONTROL *control, M_CONTROL *from) {
+    control->x = from->x;
+    control->y = from->y;
+    control->width = from->width;
+    control->height = from->height;
+}
+
+// Cuts the sprite's text to what fits in the width, and measures what is left into its spritesheet size; the width
+// AUTOINJECT
+int Menu_ClipString(sprite *spr, int width, char *format) {
+    if (spr == NULL || spr->text == NULL)
+        return 0;
+    spr->length = Font_GetTextCountExtent(spr->text, format, &spr->scale, (float)width);
+    GPOINT extent = {0.0f, 0.0f};
+    Font_GetTextExtent(spr->text, format, &extent, &spr->scale, (ushort)spr->length);
+    spr->spritesheetWidth = Ftol(extent.x);
+    spr->spritesheetHeight = Ftol(extent.y);
+    return Ftol(extent.x);
+}
+
+// AUTOINJECT
+sprite* Menu_CreateSprite(SpriteInfo *info) {
+    if (info == NULL)
+        return Sprite_Create();
+    info->linkedViewer = MENU_VIEWER;
+    return Sprite_Create2(info);
+}
+
+// AUTOINJECT
+void* Menu_Malloc(int size) {
+    return Mem_Malloc(size, MENU_ALLOCATIONS, 0);
+}
+
+// The callers' type is not used
+// AUTOINJECT
+void Menu_Free(void **data, undefined4 type) {
+    Mem_Free(data);
+}
+
+// AUTOINJECT
+void Menu_SetAction(short player, int action, uchar state) {
+    if (player == -1) {
+        Input_SetAction(0, (GameActions_tag)action, state);
+        Input_SetAction(1, (GameActions_tag)action, state);
+        Input_SetAction(2, (GameActions_tag)action, state);
+        Input_SetAction(3, (GameActions_tag)action, state);
+    } else {
+        Input_SetAction(player, (GameActions_tag)action, state);
+    }
+}
+
+// AUTOINJECT
+uint Menu_GetLastController(void) {
+    return menu_last_controller;
+}
+
+// AUTOINJECT
+uint Menu_GetNoInputCount(void) {
+    return menu_frame - menu_last_action;
+}
+
+// AUTOINJECT
+void Menu_ResetNoInputCount(void) {
+    menu_last_action = menu_frame;
+}
+
+// The highlight's pulse: 64 sin, a step of 0.2 a frame
+// AUTOINJECT
+void Menu_AlphaUpdate(void) {
+    double phase = (double)menu_alpha_phase + 0.2f;
+    menu_frame++;
+    menu_alpha_phase = (float)phase;
+    if (phase >= TWO_PI)
+        menu_alpha_phase = 0.0f;
+    menu_alpha = Ftol((double)(FSin(menu_alpha_phase) * Extended(64.0f)));
+}
+
+// AUTOINJECT
+void Menu_AlphaReset(void) {
+    menu_alpha_phase = 0.0f;
+}
+
+// AUTOINJECT
+short Menu_AlphaGet(void) {
+    return menu_alpha;
+}
+
+// The sounds each page allows
+// AUTOINJECT
+void Menu_EnableSounds(HASHCODE page) {
+    switch ((uint)page) {
+        case P_MAIN:
+        case P_START:
+        case 0x40000015:
+            menu_sounds = MENU_SOUND_SELECT;
+            break;
+        case P_CNCONTROLS:
+            menu_sounds = MENU_SOUND_SELECT | MENU_SOUND_ALT2 | MENU_SOUND_BACK;
+            break;
+        case P_MPDEBRIEFING:
+            menu_sounds = MENU_SOUND_SELECT | MENU_SOUND_ALT1;
+            break;
+        case P_NFRESULTS:
+        case P_NFBONUS:
+            menu_sounds = MENU_SOUND_SELECT | MENU_SOUND_ALT1 | MENU_SOUND_ALT2;
+            break;
+        case P_NFSTATS:
+        case P_DSRECORDS:
+        case P_DSREWARDS:
+        case P_DSGADGETS:
+        case P_DSWEAPONS:
+        case P_CNDRIVINGCONTROLS:
+            menu_sounds = MENU_SOUND_BACK;
+            break;
+        case 0x40000005:
+        case P_NFMAP:
+        case P_NFSELECT:
+        case P_PAUSE:
+            menu_sounds = MENU_SOUND_SELECT | MENU_SOUND_ALT1 | MENU_SOUND_BACK;
+            break;
+        default:
+            menu_sounds = MENU_SOUND_SELECT | MENU_SOUND_BACK;
+            break;
+    }
+}
+
+// 0-2 select, alternative selects; 3-6 a scroll's steps; 7 the focus moving; 8 back
+// AUTOINJECT
+void Menu_PlaySound(uint sound) {
+    switch (sound) {
+        case 0:
+            if (menu_sounds & MENU_SOUND_SELECT)
+                Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
+            break;
+        case 1:
+            if (menu_sounds & MENU_SOUND_ALT1)
+                Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
+            break;
+        case 2:
+            if (menu_sounds & MENU_SOUND_ALT2)
+                Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
+            break;
+        case 3:
+        case 5:
+            Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_UP, 100.0f, 0, 0);
+            break;
+        case 4:
+        case 6:
+            Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_DOWN, 100.0f, 0, 0);
+            break;
+        case 7:
+            Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
+            break;
+        case 8:
+            if (menu_sounds & MENU_SOUND_BACK)
+                Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_DOWN, 100.0f, 0, 0);
+            break;
+    }
+}
+
+// The text's throb: 1 + sin / 32, a step of 0.1 a frame
+// AUTOINJECT
+void Menu_UpdateTextFmt(void) {
+    double phase = (double)menu_text_phase + 0.1f;
+    menu_text_phase = (float)phase;
+    if (phase >= TWO_PI)
+        menu_text_phase = 0.0f;
+    menu_text_scale = (float)(FSin(menu_text_phase) * Extended(0.03125f) + Extended(1.0f));
+}

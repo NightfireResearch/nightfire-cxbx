@@ -13,7 +13,7 @@
 // The order QuickSort sorts in: -1 to put a before b, 1 after, 0 for either. A NaN compares as neither less nor more
 // unless said.
 
-// The elements of a Compare_MenuCtrl sort (nothing in the Xbox build asks for one): a short at 4
+// The elements of a Compare_MenuCtrl sort (Menu_FindControl's neighbours, ui/Menu.cpp): a short at 4, the cost
 struct MenuCtrlKey {
     char _unknown0[4];
     short order;

@@ -9,6 +9,7 @@
 // Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=hudport runs it alone.
 
 #include "HudPortShadow.h"
+#include "../ui/Component.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -107,7 +108,7 @@ struct World {
     M_CONTROL parent;
     M_CONTROL focused;
     NEW_CONTROL newControl;
-    MENU_SKINPIECE piece;
+    MENU_COMPONENT piece;
     char labelText[0x30];
     char text[256];
     uint32_t args[16];
@@ -421,7 +422,7 @@ void __cdecl FakeMovie(void) {
 }
 
 // The menu framework's
-MENU_SKINPIECE *__cdecl FakeHandle(void *component) {
+MENU_COMPONENT *__cdecl FakeHandle(void *component) {
     ShadowLog("handle(%x)", W(component));
     return &world.piece;
 }
@@ -762,10 +763,10 @@ void RandomWorld(void) {
         world.list[i] = &world.sprites[i];
     }
     memset(&world.piece, 0, sizeof(world.piece));
-    world.piece.unknown06 = (short)R(40);
-    world.piece.unknown08 = (short)R(40);
-    world.piece.unknown0a = (short)R(40);
-    world.piece.unknown0c = (short)R(40);
+    world.piece.left = (short)R(40);
+    world.piece.top = (short)R(40);
+    world.piece.right = (short)R(40);
+    world.piece.bottom = (short)R(40);
 
     // The game's globals
     GameFont = GameFontTable[1 + R(3)].font;

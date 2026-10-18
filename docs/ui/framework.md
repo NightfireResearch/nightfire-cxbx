@@ -56,6 +56,16 @@ The source files: `src/action/ui/Manager.{h,cpp}` and `MenuManager.{h,cpp}` only
 (`// AUTOGEN`); `Menu.{h,cpp}` has the delayed messages, `Menu_UpdateWheel`, `Menu_AddItemsToControl`,
 `Menu_ClearStack` and AUTOGEN declarations for the rest; `ui.cpp` is the generated dispatcher.
 
+**Since 18 Oct 2026 (nightfire-port parcel 16, package A, docs/nightfire-port-lifts.md)** the framework under the
+control types is ours too: the skins (`Component_*`, `ui/Component.h` has their layouts), finding controls
+(`Menu_CursorOverMe`, `Menu_GetControl`, `Menu_FindControl`, `Menu_GetFirstControl`, `Menu_GetPage`), the dispatch
+(`__Menu_SendMessage`, `Menu_Update`, `__Menu_Send`, `__Menu_SendEx`, `__Menu_SendEx2`), input (`Menu_GetAction`,
+`Menu_InputAction`, `Menu_SetAction`, the idle count, `Menu_GetLastController`), the sprite helpers, `Menu_Malloc`/
+`Menu_Free`, the pulse, the sounds and `Menu_UpdateTextFmt` (all `Menu.cpp`), every menu script function
+(`MenuScript.cpp`: `Script_*` from 0x96960 to 0x97560, `Script_Play` being Ghidra's `Script_Play_UISTUFF`) and
+`LinkedList_GetIndex` (`LinkedList.cpp`, with the `LINKEDLIST` layout). The managers, pages, control types and
+`Process_*` are still original. The table above predates this.
+
 ## 2. Managers
 
 `manager[5]` at 0x25f1d0, 0x1d8 bytes each (`M_MANAGER` in `ui.h`). A manager is one menu instance; the index is the
@@ -108,7 +118,7 @@ stream of dword-tagged records that `MenuManager_Create` interprets as it builds
 | 0xfffffff9 | control descriptor, 30 bytes (below) | the previous control gets `ControlCreated` (0x51, through the manager and then the page with a2 = 1); then `CreateObject` if the flag byte is 0 or 1, else the control and its records are skipped |
 | 0xfffffff6 | byte id, a1, a2 | setup message to the control just created (0x1d skipped; colour 0x7d6d59ff replaced by 0x645a49ff for 0x1a-0x1c) |
 | 0xfffffff8 | 32-byte font name (2-byte chars folded) | `SetFont` |
-| 0xfffffff7 | script hash, dword | new menu script on the control (FUN_000969a0 *(invented `Script_New`)*) |
+| 0xfffffff7 | script hash, dword | new menu script on the control (`Script_AddScript`, 0x969a0, its PS2 name; was FUN_000969a0, *(invented `Script_New`)* here) |
 | 0xfffffff5 | keyframe: 5 words + dword | `Script_AddKeyFrame` |
 | 0xfffffff4 | target, byte id, a1, a2 | message carried by that keyframe (`Script_AddMessage`; target -3 manager, -2 the control) |
 | 0xfffffff3 | byte id, a1, a2 | message to the manager (none in the retail files) |
@@ -343,7 +353,11 @@ draws.
   middle), stretch factors and a draw-state mask. `Component_SetupInstance` (0x71e00) lays a control's pieces out
   for its current draw state (+0x1c: 0x10 normal, 0x20 focused, 0x40 pressed, 0x80 cursor over), creating the
   sprites on first use (control +0x08 array, +0x6c count) and hiding pieces whose mask does not match. The skin
-  index is the descriptor's word after the id.
+  index is the descriptor's word after the id. The layouts (`MENU_COMPONENTSET` of 14 `MENU_COMPONENT`s, each with
+  its insets and `MENU_COMPONENTPIECE`s: a SpriteInfo, two stretch shares and the `PIECE_*` flags) are in
+  `src/action/ui/Component.h`. A stretched piece takes its share of the room the fixed pieces before it leave,
+  clamped to none or all of it; a fixed piece of a focused control (draw state 0x20) adds the pulse to each byte of
+  its colour, carries running into the next byte.
 - **Depth**: a sprite's draw order is the control's depth (+0x78) minus the page's; the current page is depth 5,
   an under-page 0xfffb, a side page 0xfff6.
 - **Colours**: normal and highlight colours per Label/List/Memo (setup messages 0x1b/0x1c), pulse colour (0x29, with
@@ -394,7 +408,9 @@ label)` (0x7f320) starts it at frame 1, queues `LockInput(1)` after 1 frame and 
 
 Fonts are set by name from the menu data (`SetFont`, with a suffix per state) or by id on lists (1/2/3). The
 help line at the bottom of a page is found on its first frame (`Page_FindHelpControl`) and refreshed every frame
-(`Page_SetHelpText`). `Menu_UpdateTextFmt`/`Menu_GetNormalTextFmt` (PS2 name) keep the shared text format.
+(`Page_SetHelpText`). `Menu_UpdateTextFmt` steps a phase by 0.1 a frame and writes 1 + sin/32 to a scale at
+0x223b38 that nothing on the Xbox reads; the PS2's `Menu_GetNormalTextFmt`, which would apply it, has no Xbox
+counterpart.
 
 ## 12. Sounds
 
@@ -468,13 +484,21 @@ The functions that more than one handler shares, with their state. Ours marked *
 - C_GCPAUSE's GainFocus on a tab button (ids 0, 1, 3, 4) switches the panel - the pause menu's tabs change on hover,
   not on A.
 
+- (18 Oct 2026, parcel 16) `Script_ExitLoop` (message 0x14) clears bit 8 of the control's +0x58, which nothing in
+  the menu code reads; `Script_RunFrame` loops on the script's own flag 8 (set at a keyframe flagged 2, gone back to at
+  one flagged 4), so the message ends no loop. `Script_RunFrame` sets +0x58 bit 0x10 when it goes back, also unread.
+- `Menu_GetLastController` returns the controller `Menu_GetAction` last saw act (0x17c540, -1 at boot), not 0 as the
+  PS2 reading has it.
+- `Menu_GetPage` cannot return a Window's page: its type check (`Menu_Assert` on the PS2, inline here) accepts types
+  1, 2, 3, 5, 6, 9, 10, 11, 12, 200 and 0x72 only, so the branch for type 13 is dead.
+- `Menu_FindControl`'s neighbours are sorted by `QuickSort` with `Compare_MenuCtrl` (util/Sort.cpp said nothing
+  asked for that comparison).
+
 ## 15. Open questions
 
 - The descriptor's two trailing dwords (1 on lists and scrolls) and the Window's id values (2 on P_PAUSE's, 0xf on
   most) are unexplained.
 - Only two menu files were parsed; the other level bundles are assumed to carry the same in-level file.
-- `Menu_UpdateTextFmt` and the help-text pair (`Page_FindHelpControl`, `Page_SetHelpText`) were not read in detail.
-- The Component (skin) piece layout (0x38 bytes) is only partly understood: anchors and stretch flags 1, 2, 4, 8,
-  0x100, 0x200, 0x400, 0x800, 0x1000 are used in `Component_SetupInstance`.
+- The help-text pair (`Page_FindHelpControl`, `Page_SetHelpText`) was not read in detail.
 - Whether anything outside the menus reads a menu manager's state besides `MenuManager_GetStatus`,
   `MenuManager_Exists` and `user_restarted_or_quit` was not checked.
