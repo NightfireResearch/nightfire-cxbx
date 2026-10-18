@@ -184,9 +184,9 @@ Back uses `5 | (overlayMode ? 8 : 0)` and then `0x22 SetCursor` to restore the c
 | 0x6e | `MessageType_PageResume` | Manager GoPage with flag 8 and not 0x10 | handlers (P_MPBOTS...) | a1 = page, a2 = previous page hashcode | - | 0x92c40 |
 | 0x6f | `MessageType_SetInputDelay` | P_START | Page (+0xcc) | a1 = frames after entering before input is taken | 0 | 0x95820, 0x95a80 |
 | 0x70 | `MessageType_SetPulse` | P_LANGUAGE, XBox_DoSaveFlow | Label (+0x10f), List (+0x568) | a1 = bool | 0 | 0x90590 |
-| 0x73 | `MessageType_ListSetSelectionColour` | P_NFSTATS | List (+0x548) | a1 = colour (guess) | 0 | 0x91b10 |
+| 0x73 | `MessageType_ListSetSelectionColour` | P_NFSTATS | List (+0x548) | a1 = the colour of every other row's stripe (0: no stripes) | 0 | 0x91b10 |
 | 0x74 | `MessageType_GetCurrentPage` | none found | Manager | - | hashcode of the current page (or of the page under an overlay) | 0x92c40 |
-| 0x75 | `MessageType_SetLineSpacing` | C_GCPAUSE, P_PAUSE, Menu_CreateOptionBox, MenuManager_Monitor... | List, Memo | a1 = row height in % of the font height (sets visible rows) | 0 | 0x91b10, 0x95330 |
+| 0x75 | `MessageType_SetLineSpacing` | C_GCPAUSE, P_PAUSE, Menu_CreateOptionBox, MenuManager_Monitor... | List, Memo | a1 = row height in % of the font height; sets the visible rows to the row height over the control's (the inverse of `List_Update`'s and `Memo_Update`'s count, so usually 0 until the next update) | 0 | 0x91b10, 0x95330 |
 | 0x76 | `MessageType_SetAlwaysHighlighted` | P_MPBOTSETUP | Label (+0x110) | a1 = bool | 0 | 0x90590 |
 | 0xe1 | `(script process) ColourFade` | script keyframes, Label_Update | Process_Create/Process_RunFrame (not a message) | a1 = target colour, a2 = flag | - | 0x95de0, 0x97370 |
 

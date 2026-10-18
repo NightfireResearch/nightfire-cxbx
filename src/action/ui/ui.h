@@ -104,9 +104,9 @@ typedef enum {
     MessageType_PageResume = 0x6e,           // handlers (P_MPBOTS...). Args: a1 = page, a2 = previous page hashcode.
     MessageType_SetInputDelay = 0x6f,        // Page (+0xcc). Args: a1 = frames after entering before input is taken. Returns: 0.
     MessageType_SetPulse = 0x70,             // Label (+0x10f), List (+0x568). Args: a1 = bool. Returns: 0.
-    MessageType_ListSetSelectionColour = 0x73, // List (+0x548). Args: a1 = colour (guess). Returns: 0.
+    MessageType_ListSetSelectionColour = 0x73, // List (+0x548). Args: a1 = the colour of every other row's stripe, 0 none. Returns: 0.
     MessageType_GetCurrentPage = 0x74,       // Manager. Returns: hashcode of the current page (or of the page under an overlay).
-    MessageType_SetLineSpacing = 0x75,       // List, Memo. Args: a1 = row height in % of the font height (sets visible rows). Returns: 0.
+    MessageType_SetLineSpacing = 0x75,       // List, Memo. Args: a1 = row height in % of the font height (visible rows = row height / control height). Returns: 0.
     MessageType_SetAlwaysHighlighted = 0x76, // Label (+0x110). Args: a1 = bool. Returns: 0.
 } MessageType;
 
@@ -132,6 +132,7 @@ typedef enum {
     CONTROL_STATE_SHOWN = 0,
     CONTROL_STATE_HIDDEN = 1,
     CONTROL_STATE_INERT = 2,    // shown, but the cursor skips it
+    CONTROL_STATE_UNDRAWN = 4,  // its update found it or its owner hidden, and freed its sprites
 } ControlState;
 
 // Radios (a row of options picked with left and right, e.g. the multiplayer settings)
@@ -221,14 +222,35 @@ typedef struct M_WINDOW {
 } M_WINDOW;
 static_assert(sizeof(M_WINDOW) == 0x9c, "M_WINDOW is 0x9c bytes");
 
-typedef struct M_SCROLL {
-    M_WIDGET widget;
-    char pad_98[0x144 - 0x98];
-    uchar wrap;                 // 0x144 the value wraps around from max to min (MessageType_ScrollNoWrap clears it)
-    uchar proportionalBar;      // 0x145
-    char pad_146[2];
-} M_SCROLL;
-static_assert(sizeof(M_SCROLL) == 0x148, "M_SCROLL is 0x148 bytes");
+// What MenuManager_Create hands a control's initialiser from the menu data, and what a control hands the parts it is
+// made of. The words at 0x04 and 0x08 are the type's own.
+typedef struct NEW_CONTROL {
+    HASHCODE hashcode;          // 0x00
+    union {
+        char *font;             // 0x04 a label's format
+        int min;                // a scroll's range
+        int value;              // a checkbox's state, a list's highlight mode, a button's unknown1a8
+    };
+    union {
+        char *text;             // 0x08 a label's text
+        int max;
+    };
+    int id;                     // 0x0c
+    int keepState;              // 0x10 NEW_CONTROL_LAYOUT: Scroll_Init only lays the scroll out again
+    ushort skin;                // 0x14 the skin set (M_CONTROL::skin's high word); the type picks the skin in it
+    ushort depth;               // 0x16
+    short x;                    // 0x18
+    short y;
+    short width;
+    short height;
+    uchar hasBar;               // 0x20 a scroll shows its bar (MenuManager_Create: a scroll of the menu data's own)
+    uchar type;                 // 0x21 ControlType (MessageType_CreateObject)
+    char pad_22[2];
+} NEW_CONTROL;
+static_assert(sizeof(NEW_CONTROL) == 0x24, "NEW_CONTROL is 0x24 bytes");
+
+#define NEW_CONTROL_LAYOUT 0xff
+
 
 typedef struct M_PAGE {
     M_CONTROL control;          // type ControlType_Page
@@ -263,11 +285,11 @@ typedef struct M_MANAGER {
     uchar startPlayer;          // 0x1ce
     uchar field_0x1cf;          // 0x1cf 7 once created
     uchar index;                // 0x1d0 the manager number, every handler's first argument
-    bool exists;                // 0x1d1
-    bool takingInput;           // 0x1d2
-    bool overlayMode;           // 0x1d3 GoPage flag 2; Back then adds flag 8
-    bool inputLocked;           // 0x1d4 LockInput
-    bool didPauseAudio;         // 0x1d5
+    uchar exists;               // 0x1d1
+    uchar takingInput;          // 0x1d2
+    uchar overlayMode;          // 0x1d3 GoPage flag 2; Back then adds flag 8
+    uchar inputLocked;          // 0x1d4 LockInput
+    uchar didPauseAudio;        // 0x1d5
     char pad_1d6[2];
 } M_MANAGER;
 static_assert(sizeof(M_MANAGER) == 0x1d8, "M_MANAGER is 0x1d8 bytes");
@@ -289,6 +311,20 @@ static_assert(sizeof(M_MESSAGE) == 0x18, "M_MESSAGE is 0x18 bytes");
 #define MESSAGE_TO_SELF     0xfffffffeu
 #define MESSAGE_LAST_RESULT -4
 #define MESSAGE_PROCESS     0xe1
+
+// A control's process (Process_Create): a message that runs a number of frames and then sends the control its colour
+typedef struct M_PROCESS {
+    M_PROCESS *next;            // 0x00
+    M_PROCESS *prev;            // 0x04
+    uint frame;                 // 0x08 the frames it has run
+    uint type;                  // 0x0c its message's: MESSAGE_PROCESS fades the colour each frame
+    uint colour;                // 0x10 the colour it ends on
+    int tint;                   // 0x14 above 0, the colour is sent as a tint (MessageType_SetColour's second argument)
+    uint from;                  // 0x18 the control's colour when it began (MessageType_GetColour)
+    uint unknown1c;             // 0x1c
+    uint frames;                // 0x20 how long it runs
+} M_PROCESS;
+static_assert(sizeof(M_PROCESS) == 0x24, "M_PROCESS is 0x24 bytes");
 
 // A keyframe of a control's script: where the control is at that frame, and the messages it sends then
 typedef struct M_KEYFRAME {

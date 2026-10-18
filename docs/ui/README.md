@@ -42,7 +42,10 @@ invented function names in Ghidra carry an "INVENTED NAME" plate comment.
 | `ui_credits.cpp` | Menu_InitCredits, Menu_SetupCredits (from `CreditsData.inc`, generated from `data/credits.csv`), P_CREDITS |
 | `ui_dossier.cpp` | `ds_options`, `ds_weapons`, `ds_gadgets`; the dossier pages (earlier work) |
 | `Menu.cpp`, `Component.h` | the framework (nightfire-port parcel 16, package A): the skins (`Component_*`), finding controls and moving the cursor, the dispatch (`__Menu_SendMessage`, `Menu_Update`, `__Menu_Send`, `__Menu_SendEx`, `__Menu_SendEx2`), input (`Menu_GetAction` - a register adaptor -, `Menu_InputAction`, `Menu_SetAction`, the idle count), the sprite helpers, `Menu_Malloc`/`Menu_Free`, the pulse, the sounds, `Menu_UpdateTextFmt` ([framework.md](framework.md) §1) |
-| `MenuScript.cpp`, `LinkedList.cpp` | the menu scripts (every `Script_*` of 0x96960-0x97560: keyframes, messages, interpolation by line and spline, default scripts) and `LinkedList_GetIndex` |
+| `MenuScript.cpp`, `LinkedList.cpp` | the menu scripts (every `Script_*` of 0x96960-0x97560: keyframes, messages, interpolation by line and spline, default scripts) and the linked lists |
+| `MenuManager.cpp`, `Manager.cpp` | the managers (package B): `MenuManager_*` (create from the menu file, update, the close actions and the controller-removed flow), `Manager_SendMessage` (creating controls and pages, GoPage, the history, Back, the cursor and focus); `MenuManager_GetStatus` is a register adaptor (it keeps EDX) |
+| `Page.cpp`, `Window.cpp`, `Process.cpp` | pages (the help line, focus, updates of their controls), windows, processes (the colour fades) |
+| `Label.cpp`, `Button.cpp`, `Checkbox.cpp`, `Scroll.cpp`, `List.cpp`, `Radio.cpp`, `Memo.cpp`, `Controls.h`, `MenuCommon.h` | the control types but Combo and Spin: `*_Init`, `*_SendMessage`, `*_Update`, the lists' and radios' index helpers (register adaptors); their layouts (`Controls.h`) and shared constants (`MenuCommon.h`) |
 
 The item lists are ours: arrays in the source beside their handlers. They lived in the game's memory, reached
 through address macros, until every function that refers to them was reimplemented - the handlers, and the
@@ -63,7 +66,8 @@ Not yet: the handlers without lists (`handlers.md` step 2).
 - `MenuScript=<file>` replays pad input from a script (`tools/ui/scripts/`): `wait`, `waitpage <page>` (so a run
   is timed from the page, whatever the boot took), `press`, `hold`, `focus <control> [id]`, `gopage <page>`,
   `shot <name>`, `log`, `secretstest`, `poke <address> <value>`, `seed`, `quit`.
-- `MenuOriginal=<hash>:<address>,<address>` runs those handlers or functions as the original code.
+- `MenuOriginal=<hash>:<address>,<address>` runs those handlers or functions as the original code (a function's
+  replacement then jumps to the original, so our callers reach it too; a register adaptor's C core does not).
 - `MenuCheckLists=on` compares the lists in our source with the game's copies (all 12 identical).
 - `MenuShadowTests=on` runs the shadow tests at start, before the game (no display needed): `SecretsShadow.cpp`
   (every code, 224 runs), `UnlocksShadow.cpp` (the seven progress/unlock functions over their inputs, 1440 runs),

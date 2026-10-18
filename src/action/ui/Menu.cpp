@@ -2,6 +2,16 @@
 #include "Component.h"
 #include "Manager.h"
 #include "TextBox.h"
+#include "Button.h"
+#include "Checkbox.h"
+#include "Label.h"
+#include "List.h"
+#include "Memo.h"
+#include "MenuManager.h"
+#include "Page.h"
+#include "Radio.h"
+#include "Scroll.h"
+#include "Window.h"
 
 #include "../game/drone/BOT.h"
 #include "../input.h"
@@ -342,11 +352,11 @@ void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItem
 // AUTOINJECT
 void Menu_ClearStack(M_MANAGER *mgr) {
 
+    // Each entry is a page and its focused control (Manager_SendMessage, MessageType_GoPage)
     while (!Stack_IsEmpty(&mgr->stack)) {
-        // The Xbox code takes Stack_Top, then calls Stack_Pop and discards the return value.
-        // No need to do that here, we can just pop it which should have the same end result
-        // but does so in a much more idiomatic way.
-        Menu_Free((void **)Stack_Pop(&mgr->stack), 8);
+        void *entry = Stack_Top(&mgr->stack);
+        Stack_Pop(&mgr->stack);
+        Menu_Free(&entry, 8);
     }
 
 }
@@ -371,33 +381,12 @@ bool Menu_HasMedal(HASHCODE hc, uint level, uchar maybePlayerNum);
 #pragma fp_contract(off)
 
 // The control types' own functions, called by address
-#define Button_SendMessage ((int (__cdecl *)(M_CONTROL *button, uint message, int arg1, int arg2))0x00070e00)
-#define Checkbox_SendMessage ((int (__cdecl *)(M_CONTROL *checkbox, uint message, int arg1, int arg2))0x00071380)
 #define Combo_SendMessage ((int (__cdecl *)(M_CONTROL *combo, uint message, int arg1, int arg2))0x00071890)
-#define Label_SendMessage ((int (__cdecl *)(M_CONTROL *label, uint message, int arg1, int arg2))0x00090590)
-#define List_SendMessage ((int (__cdecl *)(M_CONTROL *list, uint message, int arg1, int arg2))0x00091b10)
-#define Memo_SendMessage ((int (__cdecl *)(M_CONTROL *memo, uint message, int arg1, int arg2))0x00095330)
-#define Page_SendMessage ((int (__cdecl *)(M_PAGE *page, uint message, int arg1, int arg2))0x00095820)
-#define Radio_SendMessage ((int (__cdecl *)(M_CONTROL *radio, uint message, int arg1, int arg2))0x00096380)
-#define Scroll_SendMessage ((int (__cdecl *)(M_CONTROL *scroll, uint message, int arg1, int arg2))0x00097870)
 #define Spin_SendMessage ((int (__cdecl *)(M_CONTROL *spin, uint message, int arg1, int arg2))0x000986f0)
-#define Window_SendMessage ((int (__cdecl *)(M_CONTROL *window, uint message, int arg1, int arg2))0x00099c60)
-#define Button_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *button))0x00070fe0)
-#define Checkbox_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *checkbox))0x00071530)
 #define Combo_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *combo))0x000719b0)
-#define Label_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *label, bool cursorOver))0x0008fff0)
-#define List_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *list))0x00090fc0)
-#define Memo_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *memo))0x00094cf0)
-#define Page_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, int takingInput))0x00095a80)
-#define Radio_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *radio))0x00096210)
-#define Scroll_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *scroll))0x00097be0)
 #define Spin_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *spin))0x000989c0)
 // On the Xbox the empty function the linker shares with others (0x000e0ec0)
 #define Window_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window))0x000e0ec0)
-#define MenuManager_GetStatus ((uint (__cdecl *)(void))0x00092b80)
-#define LinkedList_Init ((void (__cdecl *)(LINKEDLIST *list, uint offset))0x00090a70)
-#define LinkedList_Add ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090ab0)
-#define LinkedList_Remove ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090b70)
 
 // Every manager's skin sets
 #define component_list (*(LINKEDLIST *)0x00223a90)
@@ -920,19 +909,19 @@ int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
     if (control == NULL || control == (M_CONTROL *)arg1)
         return 0;
     switch (control->type) {
-        case ControlType_Button: return Button_SendMessage(control, message, arg1, arg2);
-        case ControlType_Checkbox: return Checkbox_SendMessage(control, message, arg1, arg2);
+        case ControlType_Button: return Button_SendMessage((M_BUTTON *)control, message, arg1, arg2);
+        case ControlType_Checkbox: return Checkbox_SendMessage((M_CHECKBOX *)control, message, arg1, arg2);
         case ControlType_Combo: return Combo_SendMessage(control, message, arg1, arg2);
-        case ControlType_Label: return Label_SendMessage(control, message, arg1, arg2);
-        case ControlType_List: return List_SendMessage(control, message, arg1, arg2);
+        case ControlType_Label: return Label_SendMessage((M_LABEL *)control, message, arg1, arg2);
+        case ControlType_List: return List_SendMessage((M_LIST *)control, message, arg1, arg2);
         case ControlType_Manager: return Manager_SendMessage((M_MANAGER *)control, (MessageType)message, arg1, arg2);
-        case ControlType_Memo: return Memo_SendMessage(control, message, arg1, arg2);
+        case ControlType_Memo: return Memo_SendMessage((M_MEMO *)control, message, arg1, arg2);
         case ControlType_Page: return Page_SendMessage((M_PAGE *)control, message, arg1, arg2);
-        case ControlType_Radio: return Radio_SendMessage(control, message, arg1, arg2);
-        case ControlType_Scroll: return Scroll_SendMessage(control, message, arg1, arg2);
+        case ControlType_Radio: return Radio_SendMessage((M_RADIO *)control, message, arg1, arg2);
+        case ControlType_Scroll: return Scroll_SendMessage((M_SCROLL *)control, message, arg1, arg2);
         case ControlType_Spin: return Spin_SendMessage(control, message, arg1, arg2);
         case ControlType_Text: return Text_SendMessage((M_TEXTBOX *)control, message, arg1, arg2);
-        case ControlType_Window: return Window_SendMessage(control, message, arg1, arg2);
+        case ControlType_Window: return Window_SendMessage((M_WINDOW *)control, message, arg1, arg2);
     }
     return 0;
 }
@@ -940,15 +929,15 @@ int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
 // AUTOINJECT
 void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control) {
     switch (control->type) {
-        case ControlType_Button: Button_Update(mgr, page, control); break;
-        case ControlType_Checkbox: Checkbox_Update(mgr, page, control); break;
+        case ControlType_Button: Button_Update(mgr, page, (M_BUTTON *)control); break;
+        case ControlType_Checkbox: Checkbox_Update(mgr, page, (M_CHECKBOX *)control); break;
         case ControlType_Combo: Combo_Update(mgr, page, control); break;
-        case ControlType_Label: Label_Update(mgr, page, control, false); break;
-        case ControlType_List: List_Update(mgr, page, control); break;
-        case ControlType_Memo: Memo_Update(mgr, page, control); break;
+        case ControlType_Label: Label_Update(mgr, page, (M_LABEL *)control, false); break;
+        case ControlType_List: List_Update(mgr, page, (M_LIST *)control); break;
+        case ControlType_Memo: Memo_Update(mgr, page, (M_MEMO *)control); break;
         case ControlType_Page: Page_Update(mgr, (M_PAGE *)control, 1); break;
-        case ControlType_Radio: Radio_Update(mgr, page, control); break;
-        case ControlType_Scroll: Scroll_Update(mgr, page, control); break;
+        case ControlType_Radio: Radio_Update(mgr, page, (M_RADIO *)control); break;
+        case ControlType_Scroll: Scroll_Update(mgr, page, (M_SCROLL *)control); break;
         case ControlType_Spin: Spin_Update(mgr, page, control); break;
         case ControlType_Text: TextBox_Update(mgr, page, (M_TEXTBOX *)control); break;
         case ControlType_Window: Window_Update(mgr, page, control); break;
@@ -1305,4 +1294,13 @@ void Menu_UpdateTextFmt(void) {
     if (phase >= TWO_PI)
         menu_text_phase = 0.0f;
     menu_text_scale = (float)(FSin(menu_text_phase) * Extended(0.03125f) + Extended(1.0f));
+}
+
+// A sprite's text at its normal size
+// AUTOINJECT
+void Menu_GetNormalTextFmt(sprite *spr) {
+    if (spr == NULL)
+        return;
+    spr->scale.x = 1.0f;
+    spr->scale.y = 1.0f;
 }

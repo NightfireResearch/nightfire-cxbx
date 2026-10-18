@@ -63,8 +63,11 @@ control types is ours too: the skins (`Component_*`, `ui/Component.h` has their 
 `Menu_InputAction`, `Menu_SetAction`, the idle count, `Menu_GetLastController`), the sprite helpers, `Menu_Malloc`/
 `Menu_Free`, the pulse, the sounds and `Menu_UpdateTextFmt` (all `Menu.cpp`), every menu script function
 (`MenuScript.cpp`: `Script_*` from 0x96960 to 0x97560, `Script_Play` being Ghidra's `Script_Play_UISTUFF`) and
-`LinkedList_GetIndex` (`LinkedList.cpp`, with the `LINKEDLIST` layout). The managers, pages, control types and
-`Process_*` are still original. The table above predates this.
+`LinkedList_GetIndex` (`LinkedList.cpp`, with the `LINKEDLIST` layout). Package B made the rest ours: the managers
+(`MenuManager.cpp`, `Manager.cpp`), pages, windows and processes (`Page.cpp`, `Window.cpp`, `Process.cpp`), the
+control types but Combo, Spin and the text box's `Text_*` (`Label.cpp`, `Button.cpp`, `Checkbox.cpp`, `Scroll.cpp`,
+`List.cpp`, `Radio.cpp`, `Memo.cpp`; their layouts in `Controls.h`) and the rest of `LinkedList.cpp`. The table
+above predates both.
 
 ## 2. Managers
 
@@ -409,8 +412,8 @@ label)` (0x7f320) starts it at frame 1, queues `LockInput(1)` after 1 frame and 
 Fonts are set by name from the menu data (`SetFont`, with a suffix per state) or by id on lists (1/2/3). The
 help line at the bottom of a page is found on its first frame (`Page_FindHelpControl`) and refreshed every frame
 (`Page_SetHelpText`). `Menu_UpdateTextFmt` steps a phase by 0.1 a frame and writes 1 + sin/32 to a scale at
-0x223b38 that nothing on the Xbox reads; the PS2's `Menu_GetNormalTextFmt`, which would apply it, has no Xbox
-counterpart.
+0x223b38 that nothing on the Xbox reads; the Xbox's `Menu_GetNormalTextFmt` (0x73220, called by `Label_Update`)
+sets a sprite's scale to 1 rather than to it.
 
 ## 12. Sounds
 

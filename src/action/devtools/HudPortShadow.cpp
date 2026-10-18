@@ -1670,7 +1670,7 @@ void RandomBox(void) {
     LABEL_TEXT_SHADOW *text = (LABEL_TEXT_SHADOW *)world.labelText;
     text->text = box->text;
     text->length = (ushort)R(TEXTBOX_MAX_TEXT);
-    *(void **)&box->label[0xe8] = world.labelText;
+    box->label.drawn = (sprite *)world.labelText;
     box->control.drawState = R(0) & 0xc00000f0;
     box->control.state = (uchar)(R(3) == 0 ? R(8) : 0);
     box->cursorX = (int)R(260) - 4;

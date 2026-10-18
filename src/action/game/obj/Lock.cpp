@@ -24,8 +24,6 @@
 
 #define GlobalVars (*((GlobalVars_t *)0x001f6568))
 
-#define MenuManager_Exists ((bool (__cdecl *)(uchar manager))0x00092b60)
-#define MenuManager_Enable ((void (__cdecl *)(uchar enable, uchar manager))0x00092c10)
 
 // The weapons that open locks (weapon variants)
 #define WEAPON_LASER 78

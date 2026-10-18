@@ -29,6 +29,11 @@ inline void *LinkedList_Link(LINKEDLIST *list, void *element) {
     return (char *)element + list->offset * 4;
 }
 
+void LinkedList_Init(LINKEDLIST *list, unsigned int offset);
+void LinkedList_ReInit(LINKEDLIST *list);
+bool LinkedList_Add(LINKEDLIST *list, void *prevLink, void *link);
+bool LinkedList_Insert(LINKEDLIST *list, void *after, void *prevLink, void *link);
+bool LinkedList_Remove(LINKEDLIST *list, void *prevLink, void *link);
 void* LinkedList_GetIndex(LINKEDLIST *list, unsigned int index);
 
 #endif // UI_LINKEDLIST_H

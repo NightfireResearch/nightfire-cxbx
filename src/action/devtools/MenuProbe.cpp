@@ -106,6 +106,7 @@
 #include "HudPortShadow.h"
 #include "SoundPortShadow.h"
 #include "MenuPortShadow.h"
+#include "MenuControlShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
 #include "Teleport.h"
@@ -140,6 +141,21 @@ typedef bool(__cdecl *HandlerFn)(uchar, M_CONTROL *, uint, uint, int, int);
 static struct { unsigned hashcode, address; } g_originals[32];
 static int g_originalCount = 0;
 static bool g_logging = false;
+
+// A jump written over our replacement's entry to the original, so our code calling it by name runs the original too
+static void SendPortToOriginal(unsigned at) {
+    unsigned port = XbeOriginal_Target(at);
+    if (port == 0)
+        return;
+    uint8_t jump[5] = {0xe9};
+    int32_t rel = (int32_t)(at - (port + 5));
+    memcpy(&jump[1], &rel, 4);
+    DWORD old;
+    VirtualProtect((void *)(uintptr_t)port, 5, PAGE_EXECUTE_READWRITE, &old);
+    memcpy((void *)(uintptr_t)port, jump, 5);
+    VirtualProtect((void *)(uintptr_t)port, 5, old, &old);
+    FlushInstructionCache(GetCurrentProcess(), (void *)(uintptr_t)port, 5);
+}
 
 static bool __cdecl LoggedHandleMessage(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2) {
     bool result;
@@ -592,6 +608,10 @@ void MenuProbe_Install(void) {
         SoundPortShadow_Run();
         fflush(stdout);
         _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menucontrols") == 0) {
+        MenuControlShadow_Run();
+        fflush(stdout);
+        _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menuport") == 0) {
         MenuPortShadow_Run();
         fflush(stdout);
@@ -645,6 +665,7 @@ void MenuProbe_Install(void) {
         HudPortShadow_Run();
         SoundPortShadow_Run();
         MenuPortShadow_Run();
+        MenuControlShadow_Run();
         MathExactShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;
@@ -667,6 +688,8 @@ void MenuProbe_Install(void) {
         if (colon && g_originalCount < 32) {
             g_originals[g_originalCount].hashcode = (unsigned)strtoul(t, NULL, 0);
             g_originals[g_originalCount++].address = address;
+        } else if (!colon) {
+            SendPortToOriginal(address);
         }
         printf("[menu] running the original 0x%x%s\n", address, colon ? " (handler)" : "");
     }

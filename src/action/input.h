@@ -40,8 +40,8 @@ typedef struct {
     uchar actions[40]; /* Created by retype action */
     uchar actionLock[40];       // 0x12c - ACTIONLOCK_: an action is not reported while its lock holds
     undefined anyInput;         // 0x154 - some action has a value this frame (Input_Update)
-    undefined field142_0x155;
-    undefined1 controllerPort; /* Created by retype action */
+    uchar controllerIsActive;   // 0x155 - psiInput_MapInputs (the PlayerInput_tag view of these records)
+    undefined1 controllerPort; // 0x156 - the pad's port
     undefined field144_0x157;
 } PlayerInput;
 

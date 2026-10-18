@@ -3,6 +3,7 @@
 #include "Menu.h"
 #include "Component.h"
 #include "MenuScript.h"
+#include "Label.h"
 #include "../gfx/Font.h"
 
 #include <math.h>
@@ -21,19 +22,14 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-// The menu framework's, called by address
-#define Label_Init ((void (__cdecl *)(void *label, NEW_CONTROL *create, M_CONTROL *parent))0x0008fdd0)
-#define Label_Update ((void (__cdecl *)(M_MANAGER *manager, M_PAGE *page, void *label, bool cursorOver))0x0008fff0)
-#define Label_SendMessage ((int (__cdecl *)(void *label, int message, int arg1, int arg2))0x00090590)
-
-// The label's string record (its M_LABEL's +0xe8): the text and its length
+// The label's sprite: the text and its length
 typedef struct LABEL_TEXT {
     char unknown00[0x18];
     char *text;             // 0x18
     char unknown1c[4];
     ushort length;          // 0x20
 } LABEL_TEXT;
-#define TextOf(box) (*(LABEL_TEXT **)&(box)->label[0xe8])
+#define TextOf(box) ((LABEL_TEXT *)(box)->label.drawn)
 
 // Frames a direction has been held (TextBox_Update): it repeats every 5th after 15
 #define TextBoxHeldFrames U32_AT(0x0025fc1c)
@@ -116,7 +112,7 @@ int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2) {
         case MessageType_GetId:
             return box->control.id;
         case MessageType_Destroy:
-            Label_SendMessage(box->label, MessageType_Destroy, 0, 0);
+            Label_SendMessage(&box->label, MessageType_Destroy, 0, 0);
             Component_Free(&box->control);
             Component_Free(&box->grid.control);
             Component_Free(&box->frame.control);
@@ -128,7 +124,7 @@ int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2) {
             TextBox_EndEntry(box);
             return 1;
         default:
-            return Label_SendMessage(box->label, message, arg1, arg2);
+            return Label_SendMessage(&box->label, message, arg1, arg2);
     }
 }
 
@@ -163,7 +159,7 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
     }
     box->control.state &= ~4;
     short right = box->control.width - Component_GetHandle(&box->control)->right + box->control.x;
-    Menu_ResizeControl((M_CONTROL *)box->label, Component_GetHandle(&box->control)->left + box->control.x, box->control.y, right,
+    Menu_ResizeControl(&box->label.control, Component_GetHandle(&box->control)->left + box->control.x, box->control.y, right,
                        box->control.height);
 
     if (page->focused->hashcode != box->control.hashcode) {
@@ -228,7 +224,7 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
         Font_GetTextExtent(TextOf(box)->text, TextBoxFormat, &extent, NULL, -1);
     }
 
-    Label_Update(mgr, page, box->label, Menu_CursorOverMe(mgr, &box->control));
+    Label_Update(mgr, page, &box->label, Menu_CursorOverMe(mgr, &box->control));
     Component_SetupInstance(&box->control, box->control.drawState, -1, -1, -1, -1);
     int lineHeight = Ftol(box->lineHeight);
     Component_SetupInstance(&box->frame.control, box->control.drawState, Component_GetHandle(&box->grid.control)->left + box->control.x,
@@ -273,10 +269,10 @@ void Text_Init(M_TEXTBOX *box, NEW_CONTROL *create, M_CONTROL *parent) {
     label.width = (short)(Component_GetHandle(&box->control)->left - piece->right + 0xfa);
     int lineHeight = Ftol(box->lineHeight);
     label.font = TextBoxFormat;
-    label.unknown10 = 0;
+    label.keepState = 0;
     label.depth--;
     label.height = (short)(lineHeight + 5);
-    Label_Init(box->label, &label, &box->control);
+    Label_Init(&box->label, &label, &box->control);
     memset(box->text, 0, sizeof(box->text));
     TextOf(box)->text = box->text;
 

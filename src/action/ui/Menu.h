@@ -208,5 +208,6 @@ short Menu_AlphaGet(void);
 void Menu_EnableSounds(HASHCODE page);
 void Menu_PlaySound(uint sound);
 void Menu_UpdateTextFmt(void);
+void Menu_GetNormalTextFmt(sprite *spr);
 
 #endif // MENU_H

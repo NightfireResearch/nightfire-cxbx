@@ -24744,7 +24744,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00073220",
+        "name": "Menu_GetNormalTextFmt",
         "address": "0x00073220",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28996,7 +28996,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00090e60",
+        "name": "List_GetIndex_RealItem",
         "address": "0x00090e60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -29028,7 +29028,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00090ee0",
+        "name": "List_SetIndex_RealItem",
         "address": "0x00090ee0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,

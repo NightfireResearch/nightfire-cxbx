@@ -1,0 +1,2354 @@
+// Shadow tests for parcel 16's package B: the menus' control types (labels, buttons, checkboxes, scrolls, lists,
+// radios, memos), pages, windows, processes, the managers and the lists they are linked in. Each function, the original
+// and ours, on the same made-up state: managers with pages of controls of every type, rows and items, skins, sprites,
+// processes, the page history, a menu file, pads; with zeros of both signs, NaNs and ends among the numbers. What a
+// function calls that is not its own goes to a logging fake: the heap, sprites, fonts, text, sounds, input, the
+// framework's dispatch and skins (package A), the scripts, the other control types and the game's flow.
+// Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=menucontrols runs it alone,
+// NIGHTFIRE_MENUCONTROLS_GROUP=<part of a name> one group.
+
+#include "MenuControlShadow.h"
+#include "ShadowHarness.h"
+
+#include "../../common/xbeOriginal.h"
+#include "../actionhelpers.h"
+#include "../game.h"
+#include "../input.h"
+#include "../engine/Script.h"
+#include "../game/mp/multiplayer.h"
+#include "../ui/Button.h"
+#include "../ui/Checkbox.h"
+#include "../ui/Component.h"
+#include "../ui/Label.h"
+#include "../ui/LinkedList.h"
+#include "../ui/List.h"
+#include "../ui/Manager.h"
+#include "../ui/Memo.h"
+#include "../ui/Menu.h"
+#include "../ui/MenuManager.h"
+#include "../ui/Page.h"
+#include "../ui/Process.h"
+#include "../ui/Radio.h"
+#include "../ui/Scroll.h"
+#include "../ui/Window.h"
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <map>
+#include <string>
+#include <vector>
+
+namespace {
+
+#define ORIGINAL(at, type) ((type)(uintptr_t)(at))
+#ifndef COUNT
+#define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
+#endif
+
+const int OBJECTS = 12;
+const int OBJECT_SIZE = 0xa00;
+const int PAGES = 4;
+const int ROWS = 48;
+const int SPRITES = 64;
+const int POOL = 32;
+const int PROCESSES = 24;
+const int HEAP = 0x20000;
+const int TEXTS = 8;
+const int HISTORY = 8;
+
+union Obj {
+    uint8_t raw[OBJECT_SIZE];
+    M_CONTROL c;
+    M_LABEL label;
+    M_BUTTON button;
+    M_CHECKBOX checkbox;
+    M_SCROLL scroll;
+    M_LIST list;
+    M_RADIO radio;
+    M_MEMO memo;
+    M_WINDOW window;
+};
+
+struct History {
+    M_PAGE *page;
+    M_CONTROL *focused;
+};
+
+struct World {
+    Obj objects[OBJECTS];
+    M_PAGE pages[PAGES];
+    LIST_ROW rows[ROWS];
+    sprite sprites[SPRITES];
+    sprite pool[POOL];
+    sprite cursor;
+    sprite *tables[OBJECTS][8];
+    M_PROCESS processes[PROCESSES];
+    MENU_COMPONENT components[4];
+    MENU_COMPONENTSET set;
+    MENU_COMPONENTPIECE pieces[16];
+    M_SCRIPT scripts[4];
+    M_KEYFRAME keys[4];
+    History history[HISTORY];
+    NEW_CONTROL create;
+    M_MESSAGE msg;
+    void *links[16][4];
+    LINKEDLIST list;
+    char text[TEXTS][96];
+    char labels[8][48];
+    char lines[8][32];
+    char formats[4][16];
+    uint8_t menuData[0x1800];
+    uint8_t heap[HEAP];
+    uint32_t heapUsed;
+    uint32_t poolUsed;
+    uint32_t wrapLeft;
+    uint32_t flowState;
+    int scrollValue;
+    int scrollMax;
+    int sendNull;
+    ushort input[4][40];
+    M_CONTROL *under;
+};
+World world;
+
+// The game's state the package reads and writes
+#define GameManagers ((M_MANAGER *)0x0025f1d0)
+
+int cases, differ, nanChoices;
+uint32_t gen, caseSeed;
+
+uint32_t R(uint32_t n) {
+    gen = gen * 1664525u + 1013904223u;
+    uint32_t v = gen ^ (gen >> 15);
+    v *= 0x2c1b3c6du;
+    v ^= v >> 12;
+    v *= 0x297a2d39u;
+    v ^= v >> 15;
+    return n ? v % n : v;
+}
+
+float RF(float lo, float hi) {
+    return lo + (hi - lo) * (float)R(0x10000) / 65535.0f;
+}
+
+// A number for a float: mostly in range, sometimes a signed zero, an end, a NaN or an infinity
+float Num(float lo, float hi) {
+    switch (R(24)) {
+        case 0: return 0.0f;
+        case 1: return -0.0f;
+        case 2: { uint32_t u = 0x7fc00000u | R(0x400000); float f; memcpy(&f, &u, 4); return f; }
+        case 3: return hi;
+        case 4: return lo;
+        case 5: return R(2) ? INFINITY : -INFINITY;
+        default: return RF(lo, hi);
+    }
+}
+
+// A short: mostly small, sometimes at an end or negative
+short S(int range) {
+    switch (R(16)) {
+        case 0: return 0;
+        case 1: return (short)0x7fff;
+        case 2: return (short)0x8000;
+        case 3: return (short)-(int)R(range);
+        default: return (short)R(range);
+    }
+}
+
+uint32_t W(const void *p) {
+    if (p == NULL)
+        return 0xffffffffu;
+    uintptr_t at = (uintptr_t)p, base = (uintptr_t)&world;
+    if (at >= base && at < base + sizeof(world))
+        return (uint32_t)(at - base);
+    return 0x80000000u | (uint32_t)at;
+}
+
+// An address outside the world (a local the original and ours keep in different places) is not compared
+uint32_t WS(const void *p) {
+    uint32_t w = W(p);
+    return p != NULL && (w & 0x80000000u) ? 0x80000000u : w;
+}
+
+uint32_t P(const void *p) {
+    return (uint32_t)(uintptr_t)p;
+}
+
+uint32_t F(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    return u;
+}
+
+void Fill(void *p, size_t n) {
+    uint8_t *b = (uint8_t *)p;
+    for (size_t i = 0; i < n; i++)
+        b[i] = (uint8_t)R(0x100);
+}
+
+// ---- calling originals with register arguments
+
+struct Regs {
+    uint32_t eax, ebx, ecx, edx, esi, edi;
+};
+
+__declspec(naked) uint32_t __cdecl CallRegs(unsigned at, const Regs *r, int argc, const uint32_t *args) {
+    _asm {
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+    pushing:
+        test ecx, ecx
+        jz pushed
+        push dword ptr [edx + ecx * 4 - 4]
+        dec ecx
+        jmp pushing
+    pushed:
+        mov eax, [ebp + 12]
+        mov ebx, [eax + 4]
+        mov ecx, [eax + 8]
+        mov edx, [eax + 12]
+        mov esi, [eax + 16]
+        mov edi, [eax + 20]
+        mov eax, [eax]
+        call dword ptr [ebp + 8]
+        mov ecx, [ebp + 16]
+        lea esp, [esp + ecx * 4]
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    }
+}
+
+typedef uint32_t (*Runner)(bool original);
+struct Case {
+    const char *name;
+    Runner run;
+    unsigned real[6];       // the package's functions this case runs as they are, not as fakes
+};
+const Case *current;
+
+__declspec(noinline) void ZeroStack(void) {
+    volatile uint32_t below[0x1800];
+    for (int i = 0; i < 0x1800; i++)
+        below[i] = 0;
+}
+
+uint32_t RunCase(bool original) {
+    gen = caseSeed;
+    world.heapUsed = 0;
+    world.poolUsed = 0;
+    ZeroStack();
+    return current->run(original);
+}
+
+uint32_t RegCall(bool original, unsigned at, const void *ours, const Regs &r, int argc, const uint32_t *args) {
+    if (original) {
+        XbeOriginalScope scope_(at);
+        ZeroStack();
+        return CallRegs(at, &r, argc, args);
+    }
+    ZeroStack();
+    return CallRegs(P(ours), &r, argc, args);
+}
+
+#define CDECL_RUN(at, ours, type, ...)                                                                                \
+    (original ? ([&]() { XbeOriginalScope scope_(at); ZeroStack(); return ORIGINAL(at, type)(__VA_ARGS__); }()) \
+              : ([&]() { ZeroStack(); return ours(__VA_ARGS__); }()))
+
+#define CDECL_VOID(at, ours, type, ...)                                                                               \
+    do {                                                                                                              \
+        ZeroStack();                                                                                                  \
+        if (original) {                                                                                               \
+            XbeOriginalScope scope_(at);                                                                                   \
+            ORIGINAL(at, type)(__VA_ARGS__);                                                                          \
+        } else {                                                                                                      \
+            ours(__VA_ARGS__);                                                                                        \
+        }                                                                                                             \
+    } while (0)
+
+// ---- the regions and the comparison (two NaNs the same: the x87 and SSE2 choose differently between two)
+
+struct Area {
+    uint8_t *at;
+    size_t size;
+};
+Area areas[24];
+int areaCount;
+ShadowRegions regions;
+
+void AddArea(void *at, size_t size) {
+    regions.Add(at, size);
+    areas[areaCount].at = (uint8_t *)at;
+    areas[areaCount++].size = size;
+}
+
+bool IsNaNWord(const uint8_t *p) {
+    uint32_t u;
+    memcpy(&u, p, 4);
+    return (u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0;
+}
+
+bool CompareCase(const char *what, int trial) {
+    static std::vector<uint8_t> theirState, ourState;
+    regions.Save();
+    ShadowLog_Clear();
+    uint32_t theirResult = RunCase(true);
+    regions.Capture(theirState);
+    std::string theirLog = ShadowLog_Text();
+    regions.Restore();
+    ShadowLog_Clear();
+    uint32_t ourResult = RunCase(false);
+    regions.Capture(ourState);
+    const std::string &ourLog = ShadowLog_Text();
+
+    static std::map<std::string, int> reports;
+    int &reported = reports[what];
+    bool same = true;
+    if (theirResult != ourResult) {
+        same = false;
+        if (reported++ < 3)
+            printf("[menucontrols] %s case %d: returns 0x%x, the original 0x%x\n", what, trial, ourResult, theirResult);
+    }
+    size_t at = 0;
+    bool nans = false, memorySame = true;
+    bool identical = theirState.size() == ourState.size() &&
+                     memcmp(theirState.data(), ourState.data(), theirState.size()) == 0;
+    for (int a = 0; a < areaCount && memorySame && !identical; a++) {
+        for (size_t j = 0; j < areas[a].size; j++) {
+            if (theirState[at + j] == ourState[at + j])
+                continue;
+            size_t window = j >= 3 ? j - 3 : 0;
+            for (; window <= j && window + 4 <= areas[a].size; window++) {
+                if (IsNaNWord(&theirState[at + window]) && IsNaNWord(&ourState[at + window]))
+                    break;
+            }
+            if (window <= j && window + 4 <= areas[a].size) {
+                nans = true;
+                j = window + 3;
+                continue;
+            }
+            size_t word = j & ~(size_t)3;
+            memorySame = false;
+            if (reported++ < 3) {
+                uint32_t theirs = 0, ours = 0;
+                if (word + 4 <= areas[a].size) {
+                    memcpy(&theirs, &theirState[at + word], 4);
+                    memcpy(&ours, &ourState[at + word], 4);
+                }
+                printf("[menucontrols] %s case %d: memory differs in region %d at +0x%x: 0x%08x, the original 0x%08x\n",
+                       what, trial, a, (unsigned)word, ours, theirs);
+            }
+            break;
+        }
+        at += areas[a].size;
+    }
+    same = same && memorySame;
+    if (theirLog != ourLog) {
+        same = false;
+        if (reported++ < 3) {
+            size_t d = 0;
+            while (d < theirLog.size() && d < ourLog.size() && theirLog[d] == ourLog[d])
+                d++;
+            size_t from = d > 120 ? d - 120 : 0;
+            printf("[menucontrols] %s case %d: calls differ at %d\n  ours:     %.400s\n  original: %.400s\n", what,
+                   trial, (int)d, ourLog.c_str() + from, theirLog.c_str() + from);
+        }
+    }
+    if (same && nans)
+        nanChoices++;
+    return same;
+}
+
+void RandomWorld(void);
+void InstallFakes(const unsigned *real);
+
+void Test(const char *group, const Case *list, int count, int trials) {
+    int groupCases = cases, groupDiffer = differ;
+    for (int c = 0; c < count; c++) {
+        current = &list[c];
+        ShadowHook_RemoveAll();
+        InstallFakes(current->real);
+        if (getenv("NIGHTFIRE_SHADOW_TRACE") != NULL) {
+            printf("[menucontrols] %s\n", current->name);
+            fflush(stdout);
+        }
+        for (int trial = 0; trial < trials; trial++) {
+            gen = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
+            RandomWorld();
+            caseSeed = gen;
+            cases++;
+            if (!CompareCase(current->name, trial))
+                differ++;
+        }
+    }
+    ShadowHook_RemoveAll();
+    printf("[menucontrols] %s: %d cases, %d differ\n", group, cases - groupCases, differ - groupDiffer);
+    fflush(stdout);
+}
+
+// ---- the fakes
+
+uint32_t Answer(void) {
+    return R(4) == 0 ? 0 : R(0);
+}
+
+uint32_t ManagerOf(const void *m) {
+    return (uint32_t)((uintptr_t)m - 0x0025f1d0);
+}
+
+#define SEND_FAKE(name, tag)                                                                                          \
+    int __cdecl name(void *c, uint message, int a1, int a2) {                                                         \
+        ShadowLog(tag "(%x,%x,%x,%x)", W(c), message, WS((void *)(uintptr_t)a1), (uint32_t)a2);                        \
+        return (int)Answer();                                                                                         \
+    }
+SEND_FAKE(FakeButtonSend, "button")
+SEND_FAKE(FakeCheckboxSend, "checkbox")
+SEND_FAKE(FakeLabelSend, "label")
+SEND_FAKE(FakeListSend, "list")
+SEND_FAKE(FakeMemoSend, "memo")
+SEND_FAKE(FakePageSend, "page")
+SEND_FAKE(FakeRadioSend, "radio")
+SEND_FAKE(FakeWindowSend, "window")
+SEND_FAKE(FakeSendMessage, "send")
+
+// A scroll's value and maximum as the test chose them; any other answer as it comes
+int __cdecl FakeScrollSend(void *c, uint message, int a1, int a2) {
+    ShadowLog("scroll(%x,%x,%x,%x)", W(c), message, (uint32_t)a1, (uint32_t)a2);
+    if (message == MessageType_GetValue)
+        return world.scrollValue;
+    if (message == MessageType_GetMax)
+        return world.scrollMax;
+    return (int)Answer();
+}
+
+// CreatePage and CreateObject give a page and a control of the world's (or none)
+int __cdecl FakeManagerSend(void *m, uint message, int a1, int a2) {
+    ShadowLog("manager(%x,%x,%x,%x)", ManagerOf(m), message, WS((void *)(uintptr_t)a1), (uint32_t)a2);
+    if (message == MessageType_CreatePage)
+        return R(5) ? (int)&world.pages[R(PAGES)] : 0;
+    if (message == MessageType_CreateObject)
+        return R(5) ? (int)&world.objects[R(OBJECTS)] : 0;
+    return (int)Answer();
+}
+
+// GetControl gives a control of the world's (now and then none, where the test allows)
+uint __cdecl FakeMenuSend(uchar m, HASHCODE h, uint message, int a1, int a2) {
+    ShadowLog("menusend(%x,%x,%x,%x,%x)", (uint32_t)m, (uint32_t)h, message, W((void *)(uintptr_t)a1),
+              (uint32_t)a2);
+    if (message == MessageType_GetControl)
+        return world.sendNull && R(4) == 0 ? 0 : (uint)&world.objects[(uint32_t)h % OBJECTS];
+    return Answer();
+}
+
+#define UPDATE_FAKE(name, tag)                                    \
+    void __cdecl name(M_MANAGER *m, M_PAGE *page, void *c) {         \
+        ShadowLog(tag "(%x,%x,%x)", ManagerOf(m), W(page), W(c));     \
+    }
+UPDATE_FAKE(FakeButtonUpdate, "buttonupd")
+UPDATE_FAKE(FakeCheckboxUpdate, "checkboxupd")
+UPDATE_FAKE(FakeListUpdate, "listupd")
+UPDATE_FAKE(FakeMemoUpdate, "memoupd")
+UPDATE_FAKE(FakeRadioUpdate, "radioupd")
+UPDATE_FAKE(FakeScrollUpdate, "scrollupd")
+UPDATE_FAKE(FakeMenuUpdate, "menuupd")
+
+void __cdecl FakeLabelUpdate(M_MANAGER *m, M_PAGE *page, void *c, int cursorOver) {
+    ShadowLog("labelupd(%x,%x,%x,%x)", ManagerOf(m), W(page), W(c), (uint32_t)cursorOver & 0xff);
+}
+
+void __cdecl FakePageUpdate(M_MANAGER *m, M_PAGE *page, int input) {
+    ShadowLog("pageupd(%x,%x,%x)", ManagerOf(m), W(page), (uint32_t)input);
+}
+
+void LogCreate(const char *tag, void *c, NEW_CONTROL *create, void *parent) {
+    const uint32_t *w = (const uint32_t *)create;
+    ShadowLog("%s(%x,%x:%x %x %x %x %x %x %x %x %x,%x)", tag, W(c), WS(create), w[0], w[1], w[2], w[3], w[4], w[5],
+              w[6], w[7], w[8] & 0xffff, W(parent));
+}
+
+#define INIT_FAKE(name, tag)                                                                                          \
+    void __cdecl name(void *c, NEW_CONTROL *create, void *parent) {                                                   \
+        LogCreate(tag, c, create, parent);                                                                            \
+    }
+INIT_FAKE(FakeLabelInit, "labelinit")
+INIT_FAKE(FakeButtonInit, "buttoninit")
+INIT_FAKE(FakeCheckboxInit, "checkboxinit")
+INIT_FAKE(FakeScrollInit, "scrollinit")
+INIT_FAKE(FakeListInit, "listinit")
+INIT_FAKE(FakeRadioInit, "radioinit")
+INIT_FAKE(FakeMemoInit, "memoinit")
+INIT_FAKE(FakeComboInit, "comboinit")
+INIT_FAKE(FakeSpinInit, "spininit")
+INIT_FAKE(FakeTextInit, "textinit")
+INIT_FAKE(FakeWindowInit, "windowinit")
+
+void __cdecl FakePageInit(M_PAGE *page, HASHCODE h, void *m) {
+    ShadowLog("pageinit(%x,%x,%x)", W(page), (uint32_t)h, ManagerOf(m));
+}
+
+void *__cdecl FakeMalloc(size_t size, uint32_t flags, uint32_t align) {
+    ShadowLog("malloc(%x,%x,%x)", (uint32_t)size, flags & 0xffff, align);
+    if (size > HEAP / 2)
+        return world.heap;
+    uint32_t at = (world.heapUsed + 3) & ~3u;
+    if (at + size > HEAP)
+        at = 0;
+    world.heapUsed = at + (uint32_t)size;
+    memset(&world.heap[at], 0xcd, size);
+    return &world.heap[at];
+}
+
+void __cdecl FakeFree(void **p) {
+    ShadowLog("free(%x,%x)", WS(p), W(*p));
+    *p = NULL;
+}
+
+sprite *__cdecl FakeSpriteCreate(void) {
+    ShadowLog("spritecreate");
+    return &world.pool[world.poolUsed++ % POOL];
+}
+
+sprite *__cdecl FakeSpriteCreate2(SpriteInfo *info) {
+    const uint32_t *w = (const uint32_t *)info;
+    ShadowLog("spritecreate2(%x:%x %x %x %x %x %x %x %x %x %x %x)", W(info), w[0], w[1], w[2], w[3], w[4], w[5], w[6],
+              W((void *)(uintptr_t)w[7]), W((void *)(uintptr_t)w[8]), w[9], w[10] & 0xff);
+    return &world.pool[world.poolUsed++ % POOL];
+}
+
+void __cdecl FakeSpriteDelete(sprite *spr) {
+    ShadowLog("spritedelete(%x)", W(spr));
+}
+
+bool __cdecl FakeSetSprite(sprite *spr, HASHCODE hc) {
+    ShadowLog("setsprite(%x,%x)", W(spr), (uint32_t)hc);
+    spr->spritesheetWidth = (short)R(0x10000);
+    spr->spritesheetHeight = (short)R(0x10000);
+    spr->maybeFlags = (short)R(0x10000);
+    return R(2) != 0;
+}
+
+uint32_t __cdecl FakeSoundPlayExt(uint32_t sound, float volume, uint32_t pitch, uint32_t tag) {
+    ShadowLog("sound(%x,%x,%x,%x)", sound, F(volume), pitch & 0xffff, tag);
+    return 0;
+}
+
+uint __cdecl FakeCountExtent(const char *text, const char *format, const GPOINT *scale, float width) {
+    ShadowLog("countextent(%x,%x,%x,%x)", W(text), W(format), WS(scale), F(width));
+    return R(4) == 0 ? R(0) : R(40);
+}
+
+bool __cdecl FakeTextExtent(const char *text, const char *format, GPOINT *extent, const GPOINT *scale, int count) {
+    ShadowLog("textextent(%x,%x,%x,%x,%x)", W(text), W(format), WS(extent), WS(scale), (uint32_t)count);
+    extent->x = Num(-10.0f, 600.0f);
+    extent->y = Num(-5.0f, 40.0f);
+    return true;
+}
+
+// Lines of the text, a few at most; the text runs out now and then
+char *__cdecl FakeWordWrap(char **text, int length, const char *format, uint width) {
+    ShadowLog("wordwrap(%x,%x,%x,%x)", W(*text), (uint32_t)length, W(format), width);
+    if (world.wrapLeft == 0 || *text == NULL)
+        return NULL;
+    world.wrapLeft--;
+    char *line = world.lines[world.wrapLeft % 8];
+    if (R(3) == 0 || **text == '\0')
+        *text = NULL;
+    else
+        (*text)++;
+    return line;
+}
+
+const char *__cdecl FakeBindLabel(Action_TranslatedText label, uint lock) {
+    ShadowLog("bindlabel(%x,%x)", (uint32_t)label, lock);
+    return world.labels[(uint32_t)label % 8];
+}
+
+ushort __cdecl FakeMenuInputAction(short player, int action, int flags) {
+    ShadowLog("menuaction(%x,%x,%x)", (uint32_t)(ushort)player, (uint32_t)action, (uint32_t)flags);
+    // Pressed, held and repeated answer apart
+    return world.input[(ushort)player & 3][((uint32_t)action + (uint32_t)flags * 7) % 40];
+}
+
+void __cdecl FakeLog0(void) {
+    ShadowLog("void");
+}
+
+#define LOG_FAKE(name, tag)                                                                                           \
+    void __cdecl name(uint32_t a) {                                                                                   \
+        ShadowLog(tag "(%x)", W((void *)(uintptr_t)a));                                                               \
+    }
+#define LOG0_FAKE(name, tag)                                                                                          \
+    void __cdecl name(void) {                                                                                         \
+        ShadowLog(tag);                                                                                               \
+    }
+LOG0_FAKE(FakeAlphaReset, "alphareset")
+LOG0_FAKE(FakeAlphaUpdate, "alphaupdate")
+LOG0_FAKE(FakeTextFmt, "textfmt")
+LOG0_FAKE(FakeDelayed, "delayed")
+LOG0_FAKE(FakeClearDelayed, "cleardelayed")
+LOG0_FAKE(FakeStopBackground, "stopbackground")
+LOG0_FAKE(FakeSfxPause, "sfxpause")
+LOG0_FAKE(FakeSfxPauseStreams, "sfxpausestreams")
+LOG0_FAKE(FakeSfxUnPause, "sfxunpause")
+LOG0_FAKE(FakeSfxUnPauseStreams, "sfxunpausestreams")
+LOG0_FAKE(FakeMovieCounter, "moviecounter")
+LOG0_FAKE(FakeInitComponents, "initcomponents")
+LOG_FAKE(FakeEnableSounds, "enablesounds")
+LOG_FAKE(FakePlaySound, "playsound")
+LOG_FAKE(FakeComponentFree, "componentfree")
+LOG_FAKE(FakeDestroyAll, "destroyall")
+LOG_FAKE(FakePrepare, "prepare")
+LOG_FAKE(FakeScriptStop, "scriptstop")
+LOG_FAKE(FakeDelAllScripts, "delallscripts")
+LOG_FAKE(FakeClearStack, "clearstack")
+LOG_FAKE(FakeProcessInit, "processinit")
+LOG_FAKE(FakeProcessRunFrame, "processrun")
+LOG_FAKE(FakeProcessDestroy, "processdestroy")
+LOG_FAKE(FakeHelpControl, "findhelp")
+LOG_FAKE(FakeHelpText, "helptext")
+LOG_FAKE(FakeStopMovie, "stopmovie")
+LOG_FAKE(FakeClearAllActions, "clearactions")
+LOG_FAKE(FakeRumbleStop, "rumblestop")
+LOG_FAKE(FakePauseGame, "pausegame")
+LOG_FAKE(FakeDelete, "menudelete")
+
+bool __cdecl FakeMovieFinished(void) {
+    ShadowLog("moviefinished");
+    return R(3) != 0;
+}
+
+uint __cdecl FakeFlowState(void) {
+    ShadowLog("flowstate");
+    return world.flowState;
+}
+
+short __cdecl FakeAlphaGet(void) {
+    ShadowLog("alphaget");
+    return (short)(R(8) ? R(0x81) : R(0x10000));
+}
+
+void __cdecl FakeSetAction(short player, int action, uchar value) {
+    ShadowLog("setaction(%x,%x,%x)", (uint32_t)(ushort)player, (uint32_t)action, (uint32_t)value);
+}
+
+void __cdecl FakePlayMovie(HASHCODE movie, uchar a, char b, char c, char d, int e) {
+    ShadowLog("playmovie(%x,%x,%x,%x,%x,%x)", (uint32_t)movie, a, (uchar)b, (uchar)c, (uchar)d, (uint32_t)e);
+}
+
+bool __cdecl FakeHandler(uchar m, M_CONTROL *c, uint message, int a1, int a2) {
+    int here;
+    if (message == MessageType_QueryBack && (uintptr_t)a2 - (uintptr_t)&here < 0x10000) {
+        // From Manager_Back, a2 is the answer's address: a stack slot that differs between the two
+        int *answer = (int *)(uintptr_t)a2;
+        ShadowLog("handler(%x,%x,%x,%x,=%x)", (uint32_t)m, W(c), message, W((void *)(uintptr_t)a1), *answer);
+        if (R(4) == 0)
+            *answer = (int)0xfffffffe;
+        return R(2) != 0;
+    }
+    ShadowLog("handler(%x,%x,%x,%x,%x)", (uint32_t)m, W(c), message, W((void *)(uintptr_t)a1), (uint32_t)a2);
+    return R(2) != 0;
+}
+
+int __cdecl FakeCursorOverMe(M_MANAGER *m, M_CONTROL *c) {
+    ShadowLog("cursorover(%x,%x)", ManagerOf(m), W(c));
+    return (int)R(2);
+}
+
+M_CONTROL *__cdecl FakeGetControl(M_MANAGER *m) {
+    ShadowLog("getcontrol(%x)", ManagerOf(m));
+    return R(3) ? world.under : &world.objects[R(OBJECTS)].c;
+}
+
+M_CONTROL *__cdecl FakeFindControl(M_MANAGER *m, uchar dir) {
+    ShadowLog("findcontrol(%x,%x)", ManagerOf(m), dir);
+    return NULL;
+}
+
+MENU_COMPONENT *__cdecl FakeGetHandle(M_CONTROL *c) {
+    ShadowLog("gethandle(%x)", W(c));
+    return &world.components[c->skin & 3];
+}
+
+void __cdecl FakeSetupInstance(M_CONTROL *c, uint state, int x, int y, int w, int h) {
+    ShadowLog("setup(%x,%x,%x,%x,%x,%x)", W(c), state, (uint32_t)x, (uint32_t)y, (uint32_t)w, (uint32_t)h);
+}
+
+MENU_COMPONENTSET *__cdecl FakeAddSet(uchar m, ushort id) {
+    ShadowLog("addset(%x,%x)", m, id);
+    return &world.set;
+}
+
+MENU_COMPONENTPIECE *__cdecl FakeAddComponent(MENU_COMPONENT *comp, short l, short t, short r, short b, HASHCODE tex,
+                                              short count) {
+    ShadowLog("addcomponent(%x,%x,%x,%x,%x,%x,%x)", W(comp), (ushort)l, (ushort)t, (ushort)r, (ushort)b, (uint32_t)tex,
+              (ushort)count);
+    return world.pieces;
+}
+
+void __cdecl FakeInitInstance(MENU_COMPONENTPIECE *p, short x, short y, short w, short h, short u, short v, short uw,
+                              short vh, uint flags, uint colour, float sw, float sh) {
+    ShadowLog("initinstance(%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x,%x)", W(p), (ushort)x, (ushort)y, (ushort)w, (ushort)h,
+              (ushort)u, (ushort)v, (ushort)uw, (ushort)vh, flags, colour, F(sw), F(sh));
+}
+
+M_SCRIPT *__cdecl FakeAddScript(M_CONTROL *c, int id) {
+    ShadowLog("addscript(%x,%x)", W(c), (uint32_t)id);
+    return &world.scripts[id & 3];
+}
+
+M_KEYFRAME *__cdecl FakeAddKeyFrame(M_SCRIPT *s, M_KEYFRAME *k) {
+    ShadowLog("addkey(%x,%x %x %x %x %x %x)", W(s), k->frame, (ushort)k->x, (ushort)k->y, (ushort)k->width,
+              (ushort)k->height, k->flags);
+    return &world.keys[R(4)];
+}
+
+M_MESSAGE *__cdecl FakeAddMessage(M_KEYFRAME *k, M_MESSAGE *m) {
+    ShadowLog("addmessage(%x,%x %x %x %x)", W(k), m->target, m->type, (uint32_t)m->arg1, (uint32_t)m->arg2);
+    return m;
+}
+
+M_SCRIPT *__cdecl FakeSelect(M_CONTROL *c, int id) {
+    ShadowLog("select(%x,%x)", W(c), (uint32_t)id);
+    return R(3) ? &world.scripts[id & 3] : NULL;
+}
+
+bool __cdecl FakePlay(M_CONTROL *c, int id, char atEnd) {
+    ShadowLog("play(%x,%x,%x)", W(c), (uint32_t)id, (uchar)atEnd);
+    return R(2) != 0;
+}
+
+bool __cdecl FakePlayDefault(M_CONTROL *c, uint message) {
+    ShadowLog("playdefault(%x,%x)", W(c), message);
+    return R(2) != 0;
+}
+
+bool __cdecl FakeExitLoop(M_CONTROL *c) {
+    ShadowLog("exitloop(%x)", W(c));
+    return R(2) != 0;
+}
+
+void __cdecl FakeRunFrame(M_MANAGER *m, M_CONTROL *c) {
+    ShadowLog("runframe(%x,%x)", ManagerOf(m), W(c));
+}
+
+void __cdecl FakeProcessCreate(M_CONTROL *c, M_MESSAGE *msg, uint frames, int unused) {
+    ShadowLog("processcreate(%x,%x %x %x %x %x,%x,%x)", W(c), msg->target, msg->type, (uint32_t)msg->arg1,
+              (uint32_t)msg->arg2, (uint32_t)msg->next, frames, (uint32_t)unused);
+}
+
+M_CONTROL *__cdecl FakeWindowGet(M_PAGE *page) {
+    ShadowLog("windowget(%x)", W(page));
+    return &world.objects[R(OBJECTS)].c;
+}
+
+uint __cdecl FakeCreate(uint menu, uint page, short player, uchar m, uint action, char pause, uint status) {
+    ShadowLog("create(%x,%x,%x,%x,%x,%x,%x)", menu, page, (uint32_t)(ushort)player, (uint32_t)m, action, (uchar)pause,
+              status);
+    return Answer();
+}
+
+struct Fake {
+    unsigned at;
+    const void *fake;
+};
+
+const Fake kFakes[] = {
+    // the engine's
+    {0x00070ae0, (const void *)&FakeMalloc},
+    {0x000705f0, (const void *)&FakeFree},
+    {0x000cec90, (const void *)&FakeSpriteCreate},
+    {0x000cedf0, (const void *)&FakeSpriteCreate2},
+    {0x000cecf0, (const void *)&FakeSpriteDelete},
+    {0x0006b670, (const void *)&FakeSetSprite},
+    {0x000cb940, (const void *)&FakeSoundPlayExt},
+    {0x0006a670, (const void *)&FakeCountExtent},
+    {0x0006a5d0, (const void *)&FakeTextExtent},
+    {0x0006a700, (const void *)&FakeWordWrap},
+    {0x0006d460, (const void *)&FakeBindLabel},
+    {0x0006cb70, (const void *)&FakeClearAllActions},
+    {0x0006cc40, (const void *)&FakeRumbleStop},
+    {0x0006af70, (const void *)&FakePauseGame},
+    {0x0006aa70, (const void *)&FakeFlowState},
+    {0x000dccc0, (const void *)&FakeStopBackground},
+    {0x000dcd90, (const void *)&FakeMovieFinished},
+    {0x000c9960, (const void *)&FakeSfxPause},
+    {0x000c6200, (const void *)&FakeSfxPauseStreams},
+    {0x000c9a10, (const void *)&FakeSfxUnPause},
+    {0x000c6250, (const void *)&FakeSfxUnPauseStreams},
+    {0x0007fdf0, (const void *)&FakeMovieCounter},
+    {0x0007fea0, (const void *)&FakeStopMovie},
+    {0x0007fe00, (const void *)&FakePlayMovie},
+    {0x0008e320, (const void *)&FakeHandler},
+    {0x000716c0, (const void *)&FakeComboInit},
+    {0x00098550, (const void *)&FakeSpinInit},
+    {0x00099550, (const void *)&FakeTextInit},
+    // the framework's (package A)
+    {0x00072630, (const void *)&FakeSendMessage},
+    {0x00072820, (const void *)&FakeMenuSend},
+    {0x00072a90, (const void *)&FakeMenuUpdate},
+    {0x000723c0, (const void *)&FakeCursorOverMe},
+    {0x00073370, (const void *)&FakeGetControl},
+    {0x000734d0, (const void *)&FakeFindControl},
+    {0x00072e20, (const void *)&FakeMenuInputAction},
+    {0x000730f0, (const void *)&FakePlaySound},
+    {0x00072ff0, (const void *)&FakeAlphaReset},
+    {0x00072fa0, (const void *)&FakeAlphaUpdate},
+    {0x000731d0, (const void *)&FakeTextFmt},
+    {0x00073000, (const void *)&FakeAlphaGet},
+    {0x000732f0, (const void *)&FakeDelayed},
+    {0x00073340, (const void *)&FakeClearDelayed},
+    {0x00073010, (const void *)&FakeEnableSounds},
+    {0x00072ee0, (const void *)&FakeSetAction},
+    {0x00092bc0, (const void *)&FakeClearStack},
+    {0x00071c50, (const void *)&FakeInitComponents},
+    {0x00071c60, (const void *)&FakeAddSet},
+    {0x00071cc0, (const void *)&FakeAddComponent},
+    {0x00071d20, (const void *)&FakeInitInstance},
+    {0x00071db0, (const void *)&FakeGetHandle},
+    {0x00071e00, (const void *)&FakeSetupInstance},
+    {0x000722e0, (const void *)&FakeComponentFree},
+    {0x00072330, (const void *)&FakeDestroyAll},
+    {0x00096960, (const void *)&FakePrepare},
+    {0x000969a0, (const void *)&FakeAddScript},
+    {0x00096a10, (const void *)&FakeAddKeyFrame},
+    {0x00096b10, (const void *)&FakeAddMessage},
+    {0x00096b60, (const void *)&FakeSelect},
+    {0x00096ba0, (const void *)&FakePlay},
+    {0x00096c70, (const void *)&FakePlayDefault},
+    {0x00096d50, (const void *)&FakeExitLoop},
+    {0x00096d70, (const void *)&FakeScriptStop},
+    {0x00097370, (const void *)&FakeRunFrame},
+    {0x00097560, (const void *)&FakeDelAllScripts},
+    // this package's, faked where they are not under test
+    {0x0008fdd0, (const void *)&FakeLabelInit},
+    {0x00090590, (const void *)&FakeLabelSend},
+    {0x0008fff0, (const void *)&FakeLabelUpdate},
+    {0x00070d40, (const void *)&FakeButtonInit},
+    {0x00070e00, (const void *)&FakeButtonSend},
+    {0x00070fe0, (const void *)&FakeButtonUpdate},
+    {0x00071280, (const void *)&FakeCheckboxInit},
+    {0x00071380, (const void *)&FakeCheckboxSend},
+    {0x00071530, (const void *)&FakeCheckboxUpdate},
+    {0x000975b0, (const void *)&FakeScrollInit},
+    {0x00097870, (const void *)&FakeScrollSend},
+    {0x00097be0, (const void *)&FakeScrollUpdate},
+    {0x00090c00, (const void *)&FakeListInit},
+    {0x00091b10, (const void *)&FakeListSend},
+    {0x00090fc0, (const void *)&FakeListUpdate},
+    {0x000960e0, (const void *)&FakeRadioInit},
+    {0x00096380, (const void *)&FakeRadioSend},
+    {0x00096210, (const void *)&FakeRadioUpdate},
+    {0x00094b80, (const void *)&FakeMemoInit},
+    {0x00095330, (const void *)&FakeMemoSend},
+    {0x00094cf0, (const void *)&FakeMemoUpdate},
+    {0x00095790, (const void *)&FakePageInit},
+    {0x00095820, (const void *)&FakePageSend},
+    {0x00095a80, (const void *)&FakePageUpdate},
+    {0x00095990, (const void *)&FakeHelpControl},
+    {0x000959e0, (const void *)&FakeHelpText},
+    {0x00099be0, (const void *)&FakeWindowInit},
+    {0x00099c60, (const void *)&FakeWindowSend},
+    {0x00099d50, (const void *)&FakeWindowGet},
+    {0x00095dc0, (const void *)&FakeProcessInit},
+    {0x00095de0, (const void *)&FakeProcessCreate},
+    {0x00096090, (const void *)&FakeProcessDestroy},
+    {0x00095e60, (const void *)&FakeProcessRunFrame},
+    {0x00092c40, (const void *)&FakeManagerSend},
+    {0x00093960, (const void *)&FakeCreate},
+    {0x000942b0, (const void *)&FakeDelete},
+};
+
+void InstallFakes(const unsigned *real) {
+    for (const Fake &f : kFakes) {
+        bool keep = false;
+        for (int i = 0; i < 6 && real[i] != 0; i++)
+            keep |= real[i] == f.at;
+        if (!keep)
+            ShadowHook_Install(f.at, f.fake);
+    }
+}
+
+// ---- the made-up world
+
+HASHCODE Hash(void) {
+    return (HASHCODE)(R(6) == 0 ? R(0) : 0x10000001u + R(6));
+}
+
+char *Text(void) {
+    return world.text[R(TEXTS)];
+}
+
+char *Format(void) {
+    return world.formats[R(4)];
+}
+
+void MakeSprite(sprite *s) {
+    Fill(s, sizeof(*s));
+    s->text = R(4) ? Text() : NULL;
+    s->maybeClippedString = Format();
+    s->scale.x = Num(0.0f, 2.0f);
+    s->scale.y = Num(0.0f, 2.0f);
+    s->positionX = S(700);
+    s->positionY = S(500);
+}
+
+// A list of elements through their link at offset 0
+void LinkElements(LINKEDLIST *list, void **elements, int n) {
+    list->head = n ? elements[0] : NULL;
+    list->tail = n ? elements[n - 1] : NULL;
+    list->count = n;
+    list->offset = 0;
+    for (int i = 0; i < n; i++) {
+        void **link = (void **)elements[i];
+        link[0] = i + 1 < n ? elements[i + 1] : NULL;
+        link[1] = i > 0 ? elements[i - 1] : NULL;
+    }
+}
+
+void MakeProcesses(M_CONTROL *c) {
+    int n = R(3) ? 0 : 1 + (int)R(3);
+    void *elements[4];
+    for (int i = 0; i < n; i++) {
+        M_PROCESS *p = &world.processes[R(PROCESSES)];
+        // Not already linked in this list
+        bool used = false;
+        for (int j = 0; j < i; j++)
+            used |= elements[j] == p;
+        if (used) {
+            n = i;
+            break;
+        }
+        elements[i] = p;
+    }
+    LinkElements(&c->processes, elements, n);
+}
+
+void MakeBase(M_CONTROL *c, uchar type, M_CONTROL *parent, int index) {
+    c->type = type;
+    c->parent = parent;
+    c->state = R(4) ? 0 : (uchar)R(8);
+    c->hashcode = Hash();
+    c->id = R(3) ? (int)R(4) : (int)R(0);
+    c->x = S(600);
+    c->y = S(440);
+    c->width = R(6) ? (short)R(300) : S(1000);
+    c->height = R(6) ? (short)R(200) : S(1000);
+    c->depth = (ushort)(R(4) ? R(16) : R(0x10000));
+    c->skin = R(0);
+    c->sprites = R(3) ? world.tables[index % OBJECTS] : NULL;
+    c->numSprites = R(9);
+    c->scripts.head = c->scripts.tail = NULL;
+    c->scripts.count = 0;
+    c->scripts.offset = 0;
+    c->script = NULL;
+    c->key = NULL;
+    c->framesFocused = R(4) ? R(10) : R(0);
+    c->drawState = R(0);
+    MakeProcesses(c);
+}
+
+void MakeLabel(M_LABEL *l, M_CONTROL *parent, int index) {
+    MakeBase(&l->control, ControlType_Label, parent, index);
+    memcpy(l->format, world.formats[R(4)], sizeof(l->format));
+    MakeSprite(&l->model);
+    l->model.maybeClippedString = R(3) ? l->format : Format();
+    l->drawn = R(2) ? &world.sprites[R(SPRITES)] : NULL;
+    l->iconFlags = R(0);
+    l->textLabel = R(3) ? Action_TranslatedText_NULLVALUE : (Action_TranslatedText)R(16);
+    l->text = Text();
+    l->icon = (HASHCODE)R(0);
+    l->mode = R(6) ? R(4) : R(0);
+    l->faded = R(3) ? (short)R(2) : (short)R(0x10000);
+    l->textFlag2000 = (uchar)(R(3) ? R(2) : R(0x100));
+    l->pulse = (uchar)R(2);
+    l->alwaysHighlighted = (uchar)R(2);
+}
+
+void MakeScroll(M_SCROLL *s, M_CONTROL *parent, int index) {
+    MakeBase(&s->control, ControlType_Scroll, parent, index);
+    MakeBase(&s->thumb.control, ControlType_72, &s->control, index);
+    s->thumb.control.sprites = NULL;
+    s->min = R(3) ? (int)R(5) : (int)R(100) - 50;
+    s->max = s->min + (int)R(12) - (R(8) == 0 ? 3 : 0);
+    if (s->max == s->min - 1)
+        s->max = s->min;
+    s->range = s->max - s->min + 1;
+    s->value = s->min + (int)R(s->max >= s->min ? s->max - s->min + 3 : 3) - 1;
+    static const uint kHeld[] = {0, 5, 15, 16, 17, 0x1f9, 0x1fa, 0x300, 19, 20};
+    s->heldFrames = R(5) ? kHeld[R(COUNT(kHeld))] : R(0);
+    s->flags = (ushort)(R(5) ? R(4) : R(0x10000));
+    s->startInset = S(20);
+    s->endInset = S(20);
+    static const ushort kPressed[] = {0, 0x40, 0x80, 0x10};
+    s->pressed = kPressed[R(4)];
+    s->wrap = (uchar)R(2);
+    s->proportionalBar = (uchar)R(2);
+    // Laid out from a sensible size, mostly
+    if (R(4)) {
+        s->control.width = (short)(20 + R(200));
+        s->control.height = (short)(10 + R(60));
+        if (R(2)) {
+            short t = s->control.width;
+            s->control.width = s->control.height;
+            s->control.height = t;
+        }
+    }
+}
+
+// Rows of the world's, n of them from one, linked into a list
+void MakeRows(LINKEDLIST *list, int first, int n) {
+    void *elements[ROWS];
+    for (int i = 0; i < n; i++) {
+        LIST_ROW *row = &world.rows[(first + i) % ROWS];
+        elements[i] = row;
+    }
+    LinkElements(list, elements, n);
+}
+
+void MakeList(M_LIST *l, M_CONTROL *parent, int index) {
+    MakeBase(&l->control, ControlType_List, parent, index);
+    l->control.height = (short)(R(8) ? R(300) : -(int)R(50));
+    MakeBase(&l->highlight.control, ControlType_72, &l->control, index);
+    l->highlight.control.sprites = NULL;
+    MakeScroll(&l->scroll, &l->control, index);
+    int n = (int)R(8);
+    MakeRows(&l->rows, (int)R(ROWS), n);
+    for (int i = 0; i < LIST_VISIBLE_ROWS; i++)
+        for (int j = 0; j < LIST_COLUMNS; j++)
+            l->cells[i][j] = R(3) ? &world.sprites[R(SPRITES)] : NULL;
+    l->visibleRows = (int)R(10);
+    l->numColumns = R(10) ? 1 + (int)R(5) : 0;
+    for (int j = 0; j < LIST_COLUMNS; j++) {
+        l->columnWidth[j] = (int)R(120);
+        l->columnAlign[j] = (int)R(4);
+    }
+    l->rowHeight = Num(10.0f, 40.0f);
+    l->topRow = (int)R(6) - 1;
+    l->highlightColour = R(0);
+    l->normalColour = R(0);
+    l->pulseColour = R(0);
+    l->alpha = R(0x100);
+    l->stripeColour = R(2) ? 0 : R(0);
+    l->format = Format();
+    memcpy(l->selectedFormat, world.formats[R(4)], sizeof(l->selectedFormat));
+    l->selected = n && R(5) ? (LIST_ROW *)LinkedList_GetIndex(&l->rows, R(n)) : NULL;
+    l->highlightMode = (ushort)R(4);
+    l->textFlag2000 = (uchar)R(2);
+    l->pulse = (uchar)R(2);
+    l->wrap = (uchar)R(2);
+    l->continuedRows = (uchar)R(3);
+    l->selectedIndex = (uchar)R(8);
+}
+
+void MakeButton(M_BUTTON *b, M_CONTROL *parent, int index) {
+    MakeBase(&b->control, ControlType_Button, parent, index);
+    MakeLabel(&b->label, &b->control, index);
+    MakeProcesses(&b->label.control);
+}
+
+void MakeCheckbox(M_CHECKBOX *b, M_CONTROL *parent, int index) {
+    MakeBase(&b->control, ControlType_Checkbox, parent, index);
+    MakeLabel(&b->label, &b->control, index);
+    b->checked = (uchar)(R(3) ? R(2) : R(0x100));
+}
+
+void MakeRadio(M_RADIO *r, M_CONTROL *parent, int index) {
+    MakeBase(&r->control, ControlType_Radio, parent, index);
+    MakeLabel(&r->label, &r->control, index);
+    MakeScroll(&r->scroll, &r->control, index);
+    int n = R(6) ? 1 + (int)R(6) : 0;
+    MakeRows(&r->items, (int)R(ROWS), n);
+    r->selected = n && R(5) ? (LIST_ROW *)LinkedList_GetIndex(&r->items, R(n)) : NULL;
+}
+
+void MakeMemo(M_MEMO *m, M_CONTROL *parent, int index) {
+    MakeBase(&m->control, ControlType_Memo, parent, index);
+    MakeScroll(&m->scroll, &m->control, index);
+    m->text = R(5) ? Text() : NULL;
+    m->format = Format();
+    bool full = R(4) == 0;
+    for (int i = 0; i < MEMO_LINES; i++)
+        m->lines[i] = full || R(3) ? &world.sprites[R(SPRITES)] : NULL;
+    // Not every line has a sprite: the original reads past the table when all have
+    m->lines[MEMO_LINES - 1] = NULL;
+    m->visibleLines = (int)R(8);
+    m->numLines = (int)R(12);
+    m->lineHeight = Num(6.0f, 20.0f);
+    m->topLine = (int)R(5);
+    m->highlightColour = R(0);
+    m->normalColour = R(0);
+    m->alpha = R(0x100);
+    m->centred = (uchar)R(3);
+    m->linesShown = (uchar)R(4);
+    m->centredVertically = (uchar)R(2);
+}
+
+void MakeWindow(M_WINDOW *w, M_CONTROL *parent, int index) {
+    MakeBase(&w->control, ControlType_Window, parent, index);
+    w->page = &world.pages[R(PAGES)];
+}
+
+// A control of any type (one in eight of a type no function here makes)
+void MakeObject(int i, M_CONTROL *parent) {
+    Obj *o = &world.objects[i];
+    Fill(o, sizeof(*o));
+    switch (R(9)) {
+        case 0: MakeLabel(&o->label, parent, i); break;
+        case 1: MakeButton(&o->button, parent, i); break;
+        case 2: MakeCheckbox(&o->checkbox, parent, i); break;
+        case 3: MakeScroll(&o->scroll, parent, i); break;
+        case 4: MakeList(&o->list, parent, i); break;
+        case 5: MakeRadio(&o->radio, parent, i); break;
+        case 6: MakeMemo(&o->memo, parent, i); break;
+        case 7: MakeWindow(&o->window, parent, i); break;
+        default:
+            MakeBase(&o->c, R(2) ? ControlType_Text : 4, parent, i);
+            break;
+    }
+}
+
+void MakeRow(LIST_ROW *row) {
+    Fill(row, sizeof(*row));
+    for (int j = 0; j < LIST_COLUMNS; j++) {
+        int n = (int)R(R(6) ? 24 : LIST_CELL_TEXT - 1);
+        for (int k = 0; k < n; k++)
+            row->cells[j].text[k] = R(5) ? (char)('a' + R(26)) : ' ';
+        row->cells[j].text[n] = '\0';
+    }
+    row->value = R(3) ? (int)R(8) : (int)R(0);
+    row->continued = (uchar)(R(4) == 0);
+    row->stripe = R(3) ? NULL : &world.sprites[R(SPRITES)];
+}
+
+void RandomWorld(void) {
+    for (int i = 0; i < TEXTS; i++) {
+        int n = (int)R(80);
+        for (int j = 0; j < n; j++)
+            world.text[i][j] = R(5) ? (char)('A' + R(26)) : (R(4) ? ' ' : (R(2) ? '~' : '\n'));
+        world.text[i][n] = '\0';
+    }
+    for (int i = 0; i < 8; i++) {
+        int n = i == 0 ? 0 : (int)R(30);
+        for (int j = 0; j < n; j++)
+            world.labels[i][j] = (char)('a' + R(26));
+        world.labels[i][n] = '\0';
+        world.lines[i][0] = (char)('A' + i);
+        world.lines[i][1] = '\0';
+    }
+    // The removed pad's message (label 0x10001ec)
+    strcpy(world.labels[4], "PORT %d");
+    static const char *kFormats[] = {"\xff\x02", "\xff\x02\xfe\x01", "\xff\x02\xfe\x02", "\xff\x02\xfe\x03\xfc\x64\xfb\x64"};
+    for (int i = 0; i < 4; i++) {
+        memset(world.formats[i], 0, sizeof(world.formats[i]));
+        strcpy(world.formats[i], kFormats[(i + R(4)) % 4]);
+    }
+    MakeSprite(&world.cursor);
+    for (int i = 0; i < SPRITES; i++)
+        MakeSprite(&world.sprites[i]);
+    for (int i = 0; i < POOL; i++)
+        MakeSprite(&world.pool[i]);
+    for (int c = 0; c < OBJECTS; c++)
+        for (int p = 0; p < 8; p++)
+            world.tables[c][p] = &world.sprites[R(SPRITES)];
+    for (int i = 0; i < ROWS; i++)
+        MakeRow(&world.rows[i]);
+    for (int i = 0; i < PROCESSES; i++) {
+        M_PROCESS *p = &world.processes[i];
+        Fill(p, sizeof(*p));
+        p->type = R(3) ? MESSAGE_PROCESS : R(0x100);
+        p->frame = R(4) ? R(20) : R(0);
+        p->frames = R(4) ? R(20) : R(0);
+        p->tint = (int)R(3) - 1;
+    }
+    for (int i = 0; i < 4; i++) {
+        Fill(&world.components[i], sizeof(world.components[i]));
+        world.components[i].left = S(20);
+        world.components[i].top = S(20);
+        world.components[i].right = S(20);
+        world.components[i].bottom = S(20);
+    }
+    Fill(&world.set, sizeof(world.set));
+    Fill(world.pieces, sizeof(world.pieces));
+    Fill(world.scripts, sizeof(world.scripts));
+    Fill(world.keys, sizeof(world.keys));
+    Fill(&world.create, sizeof(world.create));
+    world.create.font = R(3) ? Format() : NULL;
+    world.create.text = R(3) ? Text() : NULL;
+    world.create.x = S(600);
+    world.create.y = S(440);
+    world.create.width = R(6) ? (short)R(700) : S(1000);
+    world.create.height = R(6) ? (short)R(520) : S(1000);
+    world.create.keepState = R(3) ? (int)R(0x100) : NEW_CONTROL_LAYOUT;
+    world.create.hasBar = (uchar)R(2);
+    // A scroll's range is never empty: the original divides by it
+    world.create.min = (int)R(10);
+    world.create.max = world.create.min + (int)R(10);
+    Fill(&world.msg, sizeof(world.msg));
+    world.msg.type = R(3) ? MESSAGE_PROCESS : R(0x100);
+
+    // Pages of three controls each, the first a window
+    for (int p = 0; p < PAGES; p++) {
+        M_PAGE *page = &world.pages[p];
+        Fill(page, sizeof(*page));
+        page->control.type = ControlType_Page;
+        page->control.parent = &GameManagers[R(5)].control;
+        page->control.hashcode = (HASHCODE)(R(4) ? 0x40000000u + R(6) : R(0));
+        page->control.x = S(100);
+        page->control.y = S(100);
+        page->control.depth = (ushort)R(8);
+        page->control.state = (uchar)(R(3) ? 0 : R(4));
+        page->control.extraControlHash = R(3) ? (HASHCODE)0 : Hash();
+        MakeProcesses(&page->control);
+        void *elements[3];
+        for (int i = 0; i < 3; i++) {
+            MakeObject(p * 3 + i, &page->control);
+            elements[i] = &world.objects[p * 3 + i];
+        }
+        LinkElements(&page->controls, elements, 3);
+        page->focused = R(8) ? &world.objects[p * 3 + R(3)].c : &world.objects[R(OBJECTS)].c;
+        for (int i = 0; i < 4; i++)
+            page->playerFocus[i] = R(4) ? NULL : &world.objects[p * 3 + R(3)].c;
+        page->navigationMode = (int)R(5);
+        page->backgroundMovie = R(3) ? (HASHCODE)0 : Hash();
+        page->framesShown = R(3) ? (int)R(3) : (int)R(0);
+        page->inputDelay = (int)R(4);
+    }
+    world.under = &world.objects[R(OBJECTS)].c;
+    for (int i = 0; i < HISTORY; i++) {
+        world.history[i].page = &world.pages[R(PAGES)];
+        world.history[i].focused = R(4) ? &world.objects[R(OBJECTS)].c : NULL;
+    }
+
+    // The managers: every page in each one's list, a page shown and some history
+    memset(GameManagers, 0, sizeof(M_MANAGER) * 5);
+    for (int m = 0; m < 5; m++) {
+        M_MANAGER *mgr = &GameManagers[m];
+        Fill(mgr, sizeof(*mgr));
+        mgr->control.type = R(10) ? ControlType_Manager : (uchar)R(0x100);
+        mgr->index = (uchar)m;
+        mgr->exists = R(2) != 0;
+        mgr->cursorSprite = &world.cursor;
+        int n = (int)R(PAGES + 1);
+        mgr->pages.count = n;
+        mgr->pages.offset = offsetof(M_PAGE, pageLink) / 4;
+        mgr->pages.head = n ? world.pages[0].pageLink : NULL;
+        mgr->pages.tail = n ? world.pages[n - 1].pageLink : NULL;
+        mgr->currentPage = R(6) ? &world.pages[R(PAGES)] : NULL;
+        mgr->underPage = R(2) ? &world.pages[R(PAGES)] : NULL;
+        mgr->sidePage = R(3) ? NULL : &world.pages[R(PAGES)];
+        Stack_Init(&mgr->stack, 64, mgr->stackMem);
+        for (int i = (int)R(4); i > 0; i--)
+            Stack_Push(&mgr->stack, &world.history[R(HISTORY)]);
+        mgr->whichPlayer = (short)(R(2) ? -1 : R(4));
+        mgr->status = R(4) ? R(6) : R(0);
+        static const uint kActions[] = {ACTION_PAUSE, MENU_NO_CLOSE_ACTION, ACTION_MENU_BACK, 3};
+        mgr->closeAction = kActions[R(4)];
+        mgr->takingInput = R(2) != 0;
+        mgr->inputLocked = R(4) == 0;
+        mgr->overlayMode = R(3) == 0;
+        mgr->didPauseAudio = R(2) != 0;
+        mgr->currentMovie = R(2) ? (HASHCODE)0 : Hash();
+    }
+    // Every page in each list, one after the other
+    for (int p = 0; p < PAGES; p++) {
+        world.pages[p].pageLink[0] = p + 1 < PAGES ? world.pages[p + 1].pageLink : NULL;
+        world.pages[p].pageLink[1] = p > 0 ? world.pages[p - 1].pageLink : NULL;
+    }
+
+    // The pads, the flow, the scroll fake's answers
+    for (int p = 0; p < 4; p++)
+        for (int a = 0; a < 40; a++) {
+            static const ushort kInput[] = {0, 0, 0, 0, 1, 100, 0x100, 0xffff};
+            world.input[p][a] = kInput[R(COUNT(kInput))];
+        }
+    world.wrapLeft = R(7);
+    static const uint kStates[] = {7, 8, 9, 0xb, 0xc, 0xd, 0xe, 0, 1, 5, 0x10};
+    world.flowState = kStates[R(COUNT(kStates))];
+    world.scrollValue = (int)R(8) - 1;
+    world.scrollMax = (int)R(8);
+    world.sendNull = 0;
+}
+
+Obj *AnyObject(void) {
+    return &world.objects[R(OBJECTS)];
+}
+
+M_MANAGER *AnyManager(void) {
+    return &GameManagers[R(5)];
+}
+
+// A page of the world's and its manager, for the updates: the page's focus is never NULL there
+M_PAGE *AnyPage(M_MANAGER **mgr) {
+    M_PAGE *page = &world.pages[R(PAGES)];
+    *mgr = (M_MANAGER *)page->control.parent;
+    return page;
+}
+
+// ---- the lists
+
+void MakeLinks(void) {
+    // Sixteen elements of four words; the list's links one word in, or none
+    int offset = (int)R(2);
+    int n = (int)R(8);
+    for (int i = 0; i < 16; i++)
+        for (int j = 0; j < 4; j++)
+            world.links[i][j] = R(4) ? NULL : (void *)&world.links[R(16)][R(2)];
+    world.list.offset = offset;
+    world.list.count = R(6) ? n : R(10);
+    void **first = NULL, **last = NULL, **prev = NULL;
+    for (int i = 0; i < n; i++) {
+        void **link = &world.links[i][offset];
+        link[0] = NULL;
+        link[1] = prev;
+        if (prev != NULL)
+            prev[0] = link;
+        if (first == NULL)
+            first = link;
+        last = link;
+        prev = link;
+    }
+    world.list.head = first;
+    world.list.tail = last;
+}
+
+void *AnyLink(void) {
+    return R(8) ? (void *)&world.links[R(16)][world.list.offset] : NULL;
+}
+
+uint32_t RunLLInit(bool original) {
+    MakeLinks();
+    LINKEDLIST *list = R(10) ? &world.list : NULL;
+    uint offset = R(3) ? R(4) : R(0);
+    CDECL_VOID(0x00090a70, LinkedList_Init, void (__cdecl *)(LINKEDLIST *, uint), list, offset);
+    return 0;
+}
+
+uint32_t RunLLReInit(bool original) {
+    MakeLinks();
+    LINKEDLIST *list = R(10) ? &world.list : NULL;
+    CDECL_VOID(0x00090a90, LinkedList_ReInit, void (__cdecl *)(LINKEDLIST *), list);
+    return 0;
+}
+
+uint32_t RunLLAdd(bool original) {
+    MakeLinks();
+    LINKEDLIST *list = R(10) ? &world.list : NULL;
+    void **link = (void **)AnyLink();
+    void *prevLink = link != NULL && R(8) ? (void *)&link[1] : (R(2) ? NULL : AnyLink());
+    return CDECL_RUN(0x00090ab0, LinkedList_Add, bool (__cdecl *)(LINKEDLIST *, void *, void *), list, prevLink,
+                     link);
+}
+
+uint32_t RunLLInsert(bool original) {
+    MakeLinks();
+    LINKEDLIST *list = R(10) ? &world.list : NULL;
+    void **link = (void **)AnyLink();
+    void *prevLink = link != NULL && R(8) ? (void *)&link[1] : (R(2) ? NULL : AnyLink());
+    void *after = R(3) ? (world.list.head != NULL && R(2) ? world.list.head : AnyLink()) : NULL;
+    return CDECL_RUN(0x00090b00, LinkedList_Insert, bool (__cdecl *)(LINKEDLIST *, void *, void *, void *), list, after,
+                     prevLink, link);
+}
+
+uint32_t RunLLRemove(bool original) {
+    MakeLinks();
+    LINKEDLIST *list = R(10) ? &world.list : NULL;
+    // An element of the list, or now and then one not in it
+    void **link = (void **)AnyLink();
+    if (world.list.head != NULL && R(4)) {
+        link = (void **)world.list.head;
+        for (int i = (int)R(4); i > 0 && link[0] != NULL; i--)
+            link = (void **)link[0];
+    }
+    void *prevLink = link != NULL && R(10) ? (void *)&link[1] : (R(2) ? NULL : AnyLink());
+    return CDECL_RUN(0x00090b70, LinkedList_Remove, bool (__cdecl *)(LINKEDLIST *, void *, void *), list, prevLink,
+                     link);
+}
+
+const Case kLists[] = {
+    {"LinkedList_Init", RunLLInit, {0x00090a70}},
+    {"LinkedList_ReInit", RunLLReInit, {0x00090a90}},
+    {"LinkedList_Add", RunLLAdd, {0x00090ab0}},
+    {"LinkedList_Insert", RunLLInsert, {0x00090b00}},
+    {"LinkedList_Remove", RunLLRemove, {0x00090b70}},
+};
+
+// ---- labels
+
+const uint kAllMessages[] = {0x14, 0x16, 0x18, 0x1a, 0x1b, 0x1c, 0x1d, 0x1e, 0x20, 0x21, 0x23, 0x24, 0x29, 0x2b, 0x2d,
+                             0x2e, 0x2f, 0x30, 0x31, 0x32, 0x33, 0x34, 0x35, 0x39, 0x3d, 0x3e, 0x3f, 0x40, 0x47, 0x58,
+                             0x62, 0x6c, 0x70, 0x76, 0x0e, 0x0f, 0x10, 0x11, 0x12, 0x13, 0x15, 0x17, 0x19, 0x1f, 0x25,
+                             0x26, 0x27, 0x28, 0x2a, 0x2c, 0x38, 0x3a, 0x3b, 0x3c, 0x41, 0x49, 0x4b, 0x52, 0x54, 0x59,
+                             0x5d, 0x5e, 0x64, 0x65, 0x66, 0x69, 0x6d, 0x73, 0x75, 0x7f, 0};
+
+uint Message(void) {
+    return R(10) ? kAllMessages[R(COUNT(kAllMessages))] : R(0x100);
+}
+
+int Arg(void) {
+    switch (R(6)) {
+        case 0: return 0;
+        case 1: return (int)Text();
+        case 2: return (int)R(8) - 1;
+        default: return (int)R(0);
+    }
+}
+
+// A label on a page, or in a button
+M_LABEL *AnyLabel(void) {
+    Obj *o = AnyObject();
+    M_LABEL *label;
+    if (R(3)) {
+        label = &o->label;
+        Fill(o, sizeof(*o));
+        MakeLabel(label, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    } else {
+        Fill(o, sizeof(*o));
+        MakeButton(&o->button, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+        label = &o->button.label;
+    }
+    return label;
+}
+
+uint32_t RunLabelInit(bool original) {
+    Obj *o = AnyObject();
+    // The text is a label's (the word is a scroll's maximum for others)
+    world.create.text = R(3) ? Text() : NULL;
+    M_CONTROL *parent = R(10) ? &world.pages[R(PAGES)].control : NULL;
+    CDECL_VOID(0x0008fdd0, Label_Init, void (__cdecl *)(M_LABEL *, NEW_CONTROL *, M_CONTROL *), &o->label,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunLabelSend(bool original) {
+    M_LABEL *label = AnyLabel();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetFont)
+        a1 = (int)Format();
+    if (message == MessageType_SetText) {
+        // A string, or a text label
+        a1 = R(2) ? (int)Text() : 0;
+        a2 = R(2) ? (int)R(16) : 0;
+    }
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    return CDECL_RUN(0x00090590, Label_SendMessage, int (__cdecl *)(M_LABEL *, uint, int, int), label, message, a1, a2);
+}
+
+uint32_t RunLabelUpdate(bool original) {
+    M_LABEL *label = AnyLabel();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    bool over = R(2) != 0;
+    CDECL_VOID(0x0008fff0, Label_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_LABEL *, bool), mgr, page, label,
+               over);
+    return 0;
+}
+
+uint32_t RunNormalTextFmt(bool original) {
+    sprite *s = R(10) ? &world.sprites[R(SPRITES)] : NULL;
+    CDECL_VOID(0x00073220, Menu_GetNormalTextFmt, void (__cdecl *)(sprite *), s);
+    return 0;
+}
+
+const Case kLabels[] = {
+    {"Label_Init", RunLabelInit, {0x0008fdd0}},
+    {"Label_SendMessage", RunLabelSend, {0x00090590, 0x0008fff0}},
+    {"Label_Update", RunLabelUpdate, {0x0008fff0}},
+    {"Menu_GetNormalTextFmt", RunNormalTextFmt, {0x00073220}},
+};
+
+// ---- buttons and checkboxes
+
+uint32_t RunButtonInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x00070d40, Button_Init, void (__cdecl *)(M_BUTTON *, NEW_CONTROL *, M_CONTROL *), &o->button,
+               &world.create, parent);
+    return 0;
+}
+
+M_BUTTON *AnyButton(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeButton(&o->button, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->button;
+}
+
+M_CHECKBOX *AnyCheckbox(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeCheckbox(&o->checkbox, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->checkbox;
+}
+
+uint32_t RunButtonSend(bool original) {
+    M_BUTTON *button = AnyButton();
+    if (button->label.drawn == NULL)
+        button->label.drawn = &world.sprites[R(SPRITES)];
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    return CDECL_RUN(0x00070e00, Button_SendMessage, int (__cdecl *)(M_BUTTON *, uint, int, int), button, message, a1,
+                     a2);
+}
+
+uint32_t RunButtonUpdate(bool original) {
+    M_BUTTON *button = AnyButton();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(2))
+        page->focused->hashcode = button->control.hashcode;
+    if (R(2))
+        page->focused->id = button->control.id;
+    CDECL_VOID(0x00070fe0, Button_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_BUTTON *), mgr, page, button);
+    return 0;
+}
+
+uint32_t RunCheckboxInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x00071280, Checkbox_Init, void (__cdecl *)(M_CHECKBOX *, NEW_CONTROL *, M_CONTROL *), &o->checkbox,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunCheckboxSend(bool original) {
+    M_CHECKBOX *checkbox = AnyCheckbox();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    return CDECL_RUN(0x00071380, Checkbox_SendMessage, int (__cdecl *)(M_CHECKBOX *, uint, int, int), checkbox, message,
+                     a1, a2);
+}
+
+uint32_t RunCheckboxUpdate(bool original) {
+    M_CHECKBOX *checkbox = AnyCheckbox();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(2))
+        page->focused->hashcode = checkbox->control.hashcode;
+    CDECL_VOID(0x00071530, Checkbox_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_CHECKBOX *), mgr, page,
+               checkbox);
+    return 0;
+}
+
+const Case kButtons[] = {
+    {"Button_Init", RunButtonInit, {0x00070d40}},
+    {"Button_SendMessage", RunButtonSend, {0x00070e00}},
+    {"Button_Update", RunButtonUpdate, {0x00070fe0}},
+    {"Checkbox_Init", RunCheckboxInit, {0x00071280}},
+    {"Checkbox_SendMessage", RunCheckboxSend, {0x00071380}},
+    {"Checkbox_Update", RunCheckboxUpdate, {0x00071530}},
+};
+
+// ---- scrolls
+
+M_SCROLL *AnyScroll(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeScroll(&o->scroll, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->scroll;
+}
+
+uint32_t RunScrollInit(bool original) {
+    Obj *o = AnyObject();
+    if (world.create.keepState == NEW_CONTROL_LAYOUT && R(2))
+        MakeScroll(&o->scroll, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x000975b0, Scroll_Init, void (__cdecl *)(M_SCROLL *, NEW_CONTROL *, M_CONTROL *), &o->scroll,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunScrollSend(bool original) {
+    M_SCROLL *scroll = AnyScroll();
+    uint message = Message();
+    int a1 = R(2) ? scroll->min + (int)R(14) - 2 : Arg(), a2 = R(2) ? scroll->min + (int)R(14) - 2 : Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    return CDECL_RUN(0x00097870, Scroll_SendMessage, int (__cdecl *)(M_SCROLL *, uint, int, int), scroll, message, a1,
+                     a2);
+}
+
+uint32_t RunScrollUpdate(bool original) {
+    M_SCROLL *scroll = AnyScroll();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(3))
+        page->focused->hashcode = scroll->control.hashcode;
+    if (R(8) == 0)
+        page->focused = NULL;
+    // The selects read the focus without a check
+    if (page->focused == NULL && mgr->takingInput && !mgr->inputLocked)
+        page->focused = &world.objects[R(OBJECTS)].c;
+    if (page->focused == NULL)
+        page->focused = world.under;
+    CDECL_VOID(0x00097be0, Scroll_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_SCROLL *), mgr, page, scroll);
+    return 0;
+}
+
+const Case kScrolls[] = {
+    {"Scroll_Init", RunScrollInit, {0x000975b0}},
+    {"Scroll_SendMessage", RunScrollSend, {0x00097870}},
+    {"Scroll_Update", RunScrollUpdate, {0x00097be0, 0x000975b0}},
+};
+
+// ---- lists
+
+M_LIST *AnyList(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeList(&o->list, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->list;
+}
+
+uint32_t RunListInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x00090c00, List_Init, void (__cdecl *)(M_LIST *, NEW_CONTROL *, M_CONTROL *), &o->list, &world.create,
+               parent);
+    return 0;
+}
+
+uint32_t RunListSend(bool original) {
+    M_LIST *list = AnyList();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    int count = list->rows.count;
+    switch (message) {
+        case MessageType_ListAddRow:
+            a1 = (int)&world.rows[R(ROWS)];
+            break;
+        case MessageType_AddItem:
+            // A text, or none
+            a1 = R(5) ? (int)Text() : 0;
+            break;
+        case MessageType_SetScript:
+            if (R(2))
+                a1 = (int)R(9) - 1;
+            break;
+        case MessageType_SetFont:
+            a1 = (int)R(5);
+            break;
+        case MessageType_ListSetCellText:
+            a1 = (int)(R(count + 2) << 16 | R(7));
+            a2 = (int)Text();
+            break;
+        case MessageType_ListSetColumnWidth:
+        case MessageType_ListSetColumnAlign:
+        case MessageType_ListRemoveItem:
+        case MessageType_ListSetTopRow:
+            a1 = (int)R(8) - 1;
+            break;
+        case MessageType_SelectIndex:
+            // The rows' first is not a wrapped one, and a selection of the list's
+            if (count == 0)
+                message = MessageType_GetId;
+            a1 = (int)R(count + 1);
+            break;
+        case MessageType_GetSelectedIndex:
+            if (list->selected == NULL)
+                message = MessageType_GetId;
+            break;
+        case MessageType_Scroll:
+        case MessageType_MemoBack:
+            // The value on a row, and (as the game's lists have) a first row that a text begins on
+            world.scrollValue = count ? (int)R(count) : 0;
+            world.scrollMax = count ? count - 1 : 0;
+            if (count)
+                ((LIST_ROW *)LinkedList_First(&list->rows))->continued = 0;
+            break;
+    }
+    if ((message == MessageType_SelectIndex || message == MessageType_AddItem) && count != 0)
+        ((LIST_ROW *)LinkedList_First(&list->rows))->continued = 0;
+    return CDECL_RUN(0x00091b10, List_SendMessage, int (__cdecl *)(M_LIST *, uint, int, int), list, message, a1, a2);
+}
+
+uint32_t RunListUpdate(bool original) {
+    M_LIST *list = AnyList();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(2))
+        page->focused->hashcode = list->control.hashcode;
+    CDECL_VOID(0x00090fc0, List_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_LIST *), mgr, page, list);
+    return 0;
+}
+
+uint32_t RunListGetIndex(bool original) {
+    M_LIST *list = AnyList();
+    LIST_ROW *row = R(4) ? (LIST_ROW *)LinkedList_GetIndex(&list->rows, R(list->rows.count + 1)) : &world.rows[R(ROWS)];
+    uint32_t args[1] = {P(&list->rows)};
+    Regs r = {P(list), R(0), R(0), P(row), R(0), R(0)};
+    return RegCall(original, 0x00090e30, (const void *)&List_GetIndex, r, 1, args);
+}
+
+uint32_t RunListSetIndex(bool original) {
+    M_LIST *list = AnyList();
+    int index = R(4) ? (int)R(list->rows.count + 2) : (int)R(0);
+    uint32_t args[1] = {P(&list->rows)};
+    Regs r = {R(0), R(0), P(list), (uint32_t)index, R(0), R(0)};
+    return W((void *)(uintptr_t)RegCall(original, 0x00090eb0, (const void *)&List_SetIndex, r, 1, args));
+}
+
+uint32_t RunGetIndexReal(bool original) {
+    M_LIST *list = AnyList();
+    // A row of the list (the original reads past the last row for one that is not)
+    LIST_ROW *row = list->rows.count ? (LIST_ROW *)LinkedList_GetIndex(&list->rows, R(list->rows.count)) : NULL;
+    return CDECL_RUN(0x00090e60, List_GetIndex_RealItem, int (__cdecl *)(M_LIST *, LINKEDLIST *, LIST_ROW *), list,
+                     &list->rows, row);
+}
+
+uint32_t RunSetIndexReal(bool original) {
+    M_LIST *list = AnyList();
+    // The original reads the first row of an empty list
+    if (list->rows.count == 0)
+        MakeRows(&list->rows, (int)R(ROWS), 1 + (int)R(5));
+    int index = R(4) ? (int)R(list->rows.count + 2) - 1 : (int)R(0);
+    return W(CDECL_RUN(0x00090ee0, List_SetIndex_RealItem, LIST_ROW *(__cdecl *)(M_LIST *, LINKEDLIST *, int), list,
+                       &list->rows, index));
+}
+
+uint32_t RunShowSelected(bool original) {
+    M_LIST *list = AnyList();
+    CDECL_VOID(0x00090f20, List_ShowSelected, void (__cdecl *)(M_LIST *), list);
+    return 0;
+}
+
+const Case kLists2[] = {
+    {"List_Init", RunListInit, {0x00090c00}},
+    {"List_SendMessage", RunListSend, {0x00091b10, 0x00090f20}},
+    {"List_Update", RunListUpdate, {0x00090fc0}},
+    {"List_GetIndex", RunListGetIndex, {0x00090e30}},
+    {"List_SetIndex", RunListSetIndex, {0x00090eb0}},
+    {"List_GetIndex_RealItem", RunGetIndexReal, {0x00090e60}},
+    {"List_SetIndex_RealItem", RunSetIndexReal, {0x00090ee0}},
+    {"List_ShowSelected", RunShowSelected, {0x00090f20}},
+};
+
+// ---- radios
+
+M_RADIO *AnyRadio(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeRadio(&o->radio, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->radio;
+}
+
+uint32_t RunRadioInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x000960e0, Radio_Init, void (__cdecl *)(M_RADIO *, NEW_CONTROL *, M_CONTROL *), &o->radio,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunRadioSend(bool original) {
+    M_RADIO *radio = AnyRadio();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    int count = radio->items.count;
+    switch (message) {
+        case MessageType_AddItem:
+            a1 = (int)Text();
+            break;
+        case MessageType_SetScript:
+            if (R(2))
+                a1 = (int)R(9) - 1;
+            break;
+        case MessageType_SelectIndex:
+        case MessageType_Scroll:
+        case MessageType_Select:
+        case MessageType_MemoBack:
+        case MessageType_AltSelect1:
+        case MessageType_AltSelect2:
+        case MessageType_ValueSet:
+            // The original reads the first item's next of an empty radio for an index past 0
+            if (count == 0) {
+                world.scrollValue = (int)R(2) - 1;
+                a1 = (int)R(2) - 1;
+            } else {
+                world.scrollValue = (int)R(count + 2) - 1;
+                a1 = (int)R(count + 2) - 1;
+            }
+            break;
+        case MessageType_SelectItemByValue:
+            a1 = R(2) ? (int)R(8) : (int)R(0);
+            break;
+    }
+    return CDECL_RUN(0x00096380, Radio_SendMessage, int (__cdecl *)(M_RADIO *, uint, int, int), radio, message, a1, a2);
+}
+
+uint32_t RunRadioUpdate(bool original) {
+    M_RADIO *radio = AnyRadio();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    CDECL_VOID(0x00096210, Radio_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_RADIO *), mgr, page, radio);
+    return 0;
+}
+
+uint32_t RunRadioGetIndex(bool original) {
+    M_RADIO *radio = AnyRadio();
+    LIST_ROW *item = R(4) ? (LIST_ROW *)LinkedList_GetIndex(&radio->items, R(radio->items.count + 1)) : &world.rows[R(ROWS)];
+    uint32_t args[1] = {P(&radio->items)};
+    Regs r = {P(radio), R(0), R(0), P(item), R(0), R(0)};
+    return RegCall(original, 0x00096320, (const void *)&Radio_GetIndex, r, 1, args);
+}
+
+uint32_t RunRadioSetIndex(bool original) {
+    M_RADIO *radio = AnyRadio();
+    int index = radio->items.count ? (R(4) ? (int)R(radio->items.count + 3) - 1 : (int)R(0)) : (int)R(2) - 1;
+    uint32_t args[1] = {P(&radio->items)};
+    Regs r = {R(0), R(0), P(radio), R(0), (uint32_t)index, R(0)};
+    return W((void *)(uintptr_t)RegCall(original, 0x00096350, (const void *)&Radio_SetIndex, r, 1, args));
+}
+
+const Case kRadios[] = {
+    {"Radio_Init", RunRadioInit, {0x000960e0}},
+    {"Radio_SendMessage", RunRadioSend, {0x00096380}},
+    {"Radio_Update", RunRadioUpdate, {0x00096210}},
+    {"Radio_GetIndex", RunRadioGetIndex, {0x00096320}},
+    {"Radio_SetIndex", RunRadioSetIndex, {0x00096350}},
+};
+
+// ---- memos
+
+M_MEMO *AnyMemo(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeMemo(&o->memo, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->memo;
+}
+
+uint32_t RunMemoInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x00094b80, Memo_Init, void (__cdecl *)(M_MEMO *, NEW_CONTROL *, M_CONTROL *), &o->memo, &world.create,
+               parent);
+    return 0;
+}
+
+uint32_t RunMemoSend(bool original) {
+    M_MEMO *memo = AnyMemo();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    if (message == MessageType_SetFont)
+        a1 = (int)Format();
+    return CDECL_RUN(0x00095330, Memo_SendMessage, int (__cdecl *)(M_MEMO *, uint, int, int), memo, message, a1, a2);
+}
+
+uint32_t RunMemoUpdate(bool original) {
+    M_MEMO *memo = AnyMemo();
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(2))
+        page->focused->hashcode = memo->control.hashcode;
+    world.scrollValue = (int)R(4);
+    CDECL_VOID(0x00094cf0, Memo_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_MEMO *), mgr, page, memo);
+    return 0;
+}
+
+const Case kMemos[] = {
+    {"Memo_Init", RunMemoInit, {0x00094b80}},
+    {"Memo_SendMessage", RunMemoSend, {0x00095330}},
+    {"Memo_Update", RunMemoUpdate, {0x00094cf0}},
+};
+
+// ---- pages, windows and processes
+
+uint32_t RunPageInit(bool original) {
+    M_PAGE *page = &world.pages[R(PAGES)];
+    HASHCODE h = Hash();
+    M_MANAGER *mgr = AnyManager();
+    CDECL_VOID(0x00095790, Page_Init, void (__cdecl *)(M_PAGE *, HASHCODE, M_MANAGER *), page, h, mgr);
+    return 0;
+}
+
+const uint kPageMessages[] = {0x42, 0x47, 0x48, 0x49, 0x4a, 0x4b, 0x4e, 0x4f, 0x51, 0x52, 0x53, 0x54, 0x5d, 0x5e, 0x61,
+                              0x6d, 0x6f, 0x43, 0x44, 0x4c, 0x4d, 0x50, 0x00};
+
+uint32_t RunPageSend(bool original) {
+    M_PAGE *page = &world.pages[R(PAGES)];
+    uint message = R(8) ? kPageMessages[R(COUNT(kPageMessages))] : R(0x100);
+    int a1 = R(4) ? (int)&world.objects[R(OBJECTS)] : (int)R(0);
+    int a2 = R(2) ? 0 : (int)R(3);
+    if (message == MessageType_CreateObject)
+        a1 = (int)&world.objects[R(OBJECTS)];
+    if (message == MessageType_IsCursorOverFocused && R(2))
+        page->control.parent = &AnyManager()->control;
+    return CDECL_RUN(0x00095820, Page_SendMessage, int (__cdecl *)(M_PAGE *, uint, int, int), page, message, a1, a2);
+}
+
+uint32_t RunPageUpdate(bool original) {
+    M_MANAGER *mgr;
+    M_PAGE *page = AnyPage(&mgr);
+    if (R(4) == 0)
+        page = NULL;
+    if (R(8) == 0)
+        mgr->cursorSprite = NULL;
+    if (R(3))
+        mgr->currentPage = page;
+    world.sendNull = 1;
+    // The help memo, now and then
+    if (R(3) == 0) {
+        M_CONTROL *c = &world.objects[R(OBJECTS)].c;
+        c->type = ControlType_Memo;
+        c->hashcode = (HASHCODE)0x10000225;
+    }
+    if (R(4) == 0)
+        U32_AT(0x0025fc18) = P(&world.objects[R(OBJECTS)]);
+    int input = (int)R(2);
+    CDECL_VOID(0x00095a80, Page_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, int), mgr, page, input);
+    return 0;
+}
+
+uint32_t RunFindHelp(bool original) {
+    M_PAGE *page = R(10) ? &world.pages[R(PAGES)] : NULL;
+    if (page != NULL && R(2)) {
+        M_CONTROL *c = (M_CONTROL *)LinkedList_GetIndex(&page->controls, R(3));
+        c->type = ControlType_Memo;
+        c->hashcode = (HASHCODE)0x10000225;
+    }
+    CDECL_VOID(0x00095990, Page_FindHelpControl, void (__cdecl *)(M_PAGE *), page);
+    return 0;
+}
+
+uint32_t RunSetHelp(bool original) {
+    M_PAGE *page = &world.pages[R(PAGES)];
+    U32_AT(0x0025fc18) = R(4) ? P(&world.objects[R(OBJECTS)]) : 0;
+    if (R(8) == 0)
+        page->focused = NULL;
+    // A control of a help line's now and then (the lines are the game's data)
+    if (page->focused != NULL && R(2)) {
+        const uint32_t *line = (const uint32_t *)(uintptr_t)(0x0017d640 + 0xc * R(130));
+        page->focused->hashcode = (HASHCODE)line[0];
+    }
+    CDECL_VOID(0x000959e0, Page_SetHelpText, void (__cdecl *)(M_PAGE *), page);
+    return 0;
+}
+
+uint32_t RunWindowInit(bool original) {
+    Obj *o = AnyObject();
+    M_MANAGER *mgr = AnyManager();
+    CDECL_VOID(0x00099be0, Window_Init, void (__cdecl *)(M_WINDOW *, NEW_CONTROL *, M_MANAGER *), &o->window,
+               &world.create, mgr);
+    return 0;
+}
+
+uint32_t RunWindowSend(bool original) {
+    Obj *o = AnyObject();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    return CDECL_RUN(0x00099c60, Window_SendMessage, int (__cdecl *)(M_WINDOW *, uint, int, int), &o->window, message,
+                     a1, a2);
+}
+
+uint32_t RunWindowGet(bool original) {
+    M_PAGE *page = &world.pages[R(PAGES)];
+    if (R(4) == 0)
+        page->controls.head = NULL;
+    return W(CDECL_RUN(0x00099d50, Window_Get, M_CONTROL *(__cdecl *)(M_PAGE *), page));
+}
+
+uint32_t RunProcessInit(bool original) {
+    M_CONTROL *c = R(10) ? &AnyObject()->c : NULL;
+    CDECL_VOID(0x00095dc0, Process_Init, void (__cdecl *)(M_CONTROL *), c);
+    return 0;
+}
+
+uint32_t RunProcessCreate(bool original) {
+    M_CONTROL *c = R(10) ? &AnyObject()->c : NULL;
+    M_MESSAGE *msg = R(10) ? &world.msg : NULL;
+    uint frames = R(4) ? R(30) : R(0);
+    CDECL_VOID(0x00095de0, Process_Create, void (__cdecl *)(M_CONTROL *, M_MESSAGE *, uint, int), c, msg, frames,
+               (int)R(2));
+    return 0;
+}
+
+uint32_t RunProcessDestroy(bool original) {
+    // Its own list: another control may have relinked the elements it shares
+    M_CONTROL *c = &AnyObject()->c;
+    MakeProcesses(c);
+    CDECL_VOID(0x00096090, Process_Destroy, void (__cdecl *)(M_CONTROL *), c);
+    return 0;
+}
+
+uint32_t RunProcessRunFrame(bool original) {
+    M_CONTROL *c = R(4) ? &AnyObject()->c : &world.pages[R(PAGES)].control;
+    // Sometimes read as a combo or a spin, whose labels are elsewhere
+    uchar type = c->type;
+    if (c->type != ControlType_Page && R(3) == 0)
+        c->type = R(2) ? ControlType_Combo : ControlType_Spin;
+    // Its own lists, and its label's: other controls may have relinked the elements they share
+    MakeProcesses(c);
+    switch (c->type) {
+        case ControlType_Button:
+        case ControlType_Radio:
+        case ControlType_Checkbox:
+            MakeProcesses(&((M_BUTTON *)c)->label.control);
+            break;
+        case ControlType_Combo:
+            ((M_COMBO *)c)->label.control.type = ControlType_Label;
+            MakeProcesses(&((M_COMBO *)c)->label.control);
+            break;
+        case ControlType_Spin:
+            ((M_SPIN *)c)->label.control.type = ControlType_Label;
+            MakeProcesses(&((M_SPIN *)c)->label.control);
+            break;
+    }
+    CDECL_VOID(0x00095e60, Process_RunFrame, void (__cdecl *)(M_CONTROL *), c);
+    c->type = type;
+    return 0;
+}
+
+const Case kPages[] = {
+    {"Page_Init", RunPageInit, {0x00095790}},
+    {"Page_SendMessage", RunPageSend, {0x00095820}},
+    {"Page_Update", RunPageUpdate, {0x00095a80, 0x00095990, 0x000959e0}},
+    {"Page_FindHelpControl", RunFindHelp, {0x00095990}},
+    {"Page_SetHelpText", RunSetHelp, {0x000959e0}},
+    {"Window_Init", RunWindowInit, {0x00099be0}},
+    {"Window_SendMessage", RunWindowSend, {0x00099c60}},
+    {"Window_Get", RunWindowGet, {0x00099d50}},
+    {"Process_Init", RunProcessInit, {0x00095dc0}},
+    {"Process_Create", RunProcessCreate, {0x00095de0}},
+    {"Process_Destroy", RunProcessDestroy, {0x00096090}},
+    {"Process_RunFrame", RunProcessRunFrame, {0x00095e60}},
+};
+
+// ---- the managers
+
+const uint kManagerMessages[] = {0x42, 0x43, 0x44, 0x45, 0x47, 0x74, 0x22, 0x5a, 0x5f, 0x68, 0x56, 0x49, 0x4a, 0x4b,
+                                 0x4e, 0x4f, 0x52, 0x53, 0x4c, 0x4d, 0x50, 0x51, 0x60, 0x5c, 0x6b, 0x23, 0x7f};
+
+uint32_t RunManagerSend(bool original) {
+    M_MANAGER *mgr = AnyManager();
+    uint message = R(10) ? kManagerMessages[R(COUNT(kManagerMessages))] : R(0x100);
+    // A control the message is about (the original reads its type for some)
+    int a1 = (int)&world.objects[R(OBJECTS)];
+    int a2 = (int)R(4);
+    switch (message) {
+        case MessageType_CreateObject:
+            world.create.type = R(8) ? (uchar)(R(14)) : (uchar)ControlType_Memo;
+            a1 = (int)&world.create;
+            if (mgr->currentPage == NULL)
+                mgr->currentPage = &world.pages[R(PAGES)];
+            break;
+        case MessageType_CreatePage:
+        case MessageType_GoPage:
+        case MessageType_SetSidePage:
+            a1 = R(5) ? (int)world.pages[R(PAGES)].control.hashcode : (R(2) ? 0 : (int)R(0));
+            a2 = R(2) ? (int)R(0x20) : (int)R(0);
+            if (message == MessageType_GoPage && R(4) == 0) {
+                // No page shown, one under: nothing to put on the history
+                mgr->currentPage = NULL;
+                mgr->underPage = &world.pages[R(PAGES)];
+                a2 |= 1;
+                break;
+            }
+            // A page left goes on the history, with its focus
+            if (mgr->currentPage == NULL)
+                mgr->currentPage = &world.pages[R(PAGES)];
+            break;
+        case MessageType_Back:
+            a1 = (int)R(2);
+            if (mgr->currentPage == NULL)
+                mgr->currentPage = &world.pages[R(PAGES)];
+            break;
+        case MessageType_SetCursor:
+            a1 = R(2) ? (int)world.objects[R(OBJECTS)].c.hashcode : 0;
+            a2 = R(2) ? (int)&world.objects[R(OBJECTS)] : 0;
+            break;
+        case MessageType_SetPlayerFocus:
+            a1 = R(4) ? (int)world.objects[R(OBJECTS)].c.hashcode : 0;
+            break;
+        case MessageType_SetPageOption:
+            a1 = (int)R(3);
+            break;
+    }
+    return CDECL_RUN(0x00092c40, Manager_SendMessage, int (__cdecl *)(M_MANAGER *, MessageType, int, int), mgr,
+                     (MessageType)message, a1, a2);
+}
+
+uint32_t RunManagerInit(bool original) {
+    CDECL_VOID(0x00092ae0, MenuManager_Init, void (__cdecl *)(void));
+    return 0;
+}
+
+// A menu file: records of every kind, of this menu and others', of every platform; some ending without their end
+void MakeMenuData(uint menu) {
+    uint8_t *p = world.menuData;
+    uint8_t *end = world.menuData + sizeof(world.menuData) - 0x80;
+    auto dword = [&](uint32_t v) { memcpy(p, &v, 4); p += 4; };
+    auto word = [&](uint16_t v) { memcpy(p, &v, 2); p += 2; };
+    auto byte = [&](uint8_t v) { *p++ = v; };
+    dword(R(0));
+    int records = 4 + (int)R(40);
+    for (int i = 0; i < records && p < end; i++) {
+        switch (R(14)) {
+            case 0: dword(0xfffffffe); dword(R(0)); break;
+            case 1: dword(0xfffffffd); word((uint16_t)R(4)); break;
+            case 2: dword(0xfffffffc); word((uint16_t)R(4)); dword(R(0)); word((uint16_t)R(20)); word((uint16_t)R(20));
+                    word((uint16_t)R(20)); word((uint16_t)R(20)); break;
+            case 3:
+                dword(0xfffffffb);
+                for (int k = 0; k < 8; k++)
+                    word((uint16_t)R(0x10000));
+                dword(R(0));
+                dword(R(0));
+                dword(R(4) ? R(2) : R(0));
+                dword(R(4) ? R(2) : R(0));
+                break;
+            case 4: {
+                dword(0xfffffff0);
+                dword(0x40000000u + R(6));
+                uint32_t owner = R(3) ? menu : R(0);
+                uint8_t platform = (uint8_t)R(4);
+                dword(owner);
+                dword(R(2) ? 0 : R(0));
+                byte(platform);
+                // What a page of another menu or platform has after it, skipped
+                bool taken = owner == menu && platform <= 1;
+                uint32_t skip = !taken && R(2) ? 4 * R(4) : 0;
+                dword(skip);
+                for (uint32_t k = 0; k < skip; k++)
+                    byte(0);
+                break;
+            }
+            case 5: {
+                // Sometimes a label over the whole screen
+                bool screen = R(8) == 0;
+                dword(0xfffffff9);
+                dword(R(4) ? 0x10000001u + R(6) : (R(2) ? 0x10000224u : R(0)));
+                byte((uint8_t)(screen ? ControlType_Label : R(4) ? R(14) : R(0x100)));
+                byte((uint8_t)R(4));
+                word((uint16_t)(screen ? -(int)R(2) : S(100)));
+                word((uint16_t)(screen ? -(int)R(2) : S(100)));
+                word((uint16_t)(screen ? 640 + R(2) : R(3) ? R(700) : S(1000)));
+                word((uint16_t)(screen ? 480 + R(2) : R(3) ? R(520) : S(1000)));
+                word((uint16_t)R(16));
+                dword(R(8));
+                word((uint16_t)R(4));
+                dword(R(0));
+                dword(R(0));
+                break;
+            }
+            case 6: {
+                dword(0xfffffff6);
+                static const uint8_t kTypes[] = {0x1a, 0x1b, 0x1c, 0x1d, 0x18, 0x2b, 0x21};
+                byte(kTypes[R(COUNT(kTypes))]);
+                dword(R(2) ? 0x7d6d59ffu : R(0));
+                dword(R(0));
+                break;
+            }
+            case 7:
+                dword(0xfffffff8);
+                // 16-bit characters or 8-bit, with a terminator in the 32 bytes
+                for (int k = 0; k < 0x20; k++)
+                    p[k] = 0;
+                if (R(2)) {
+                    for (int k = 0; k < 10; k++)
+                        p[2 * k] = (uint8_t)('a' + R(26));
+                } else {
+                    for (int k = 0; k < 10; k++)
+                        p[k] = (uint8_t)('a' + R(26));
+                }
+                p += 0x20;
+                break;
+            case 8: dword(0xfffffff7); dword(R(8)); dword(R(4)); break;
+            case 9: dword(0xfffffff5); word((uint16_t)R(100)); word((uint16_t)S(600)); word((uint16_t)S(400));
+                    word((uint16_t)S(300)); word((uint16_t)S(300)); dword(R(8)); break;
+            case 10: dword(0xfffffff4); dword(R(0)); byte((uint8_t)R(0x100)); dword(R(0)); dword(R(0)); break;
+            case 11: dword(0xfffffff3); byte((uint8_t)R(0x80)); dword(R(0)); dword(R(0)); break;
+            case 12: if (R(4) == 0) { dword(0xfffffff1); } break;
+            default: break;
+        }
+    }
+    dword(R(10) ? 0xfffffff2 : 0xfffffffa);
+}
+
+uint32_t RunManagerCreate(bool original) {
+    uint menu = 0x80000000u + R(5);
+    MakeMenuData(menu);
+    U32_AT(0x0025fb08) = R(10) ? P(world.menuData) : 0;
+    uchar m = (uchar)R(5);
+    if (R(2))
+        GameManagers[m].exists = false;
+    uint page = 0x40000000u + R(6);
+    short player = (short)(R(2) ? -1 : R(4));
+    uint action = R(2) ? ACTION_PAUSE : MENU_NO_CLOSE_ACTION;
+    char pause = (char)R(2);
+    uint status = R(6);
+    return CDECL_RUN(0x00093960, MenuManager_Create,
+                     uint (__cdecl *)(uint, uint, short, uchar, uint, char, uint), menu, page, player, m, action,
+                     pause, status);
+}
+
+uint32_t RunManagerDelete(bool original) {
+    uchar m = (uchar)R(5);
+    CDECL_VOID(0x000942b0, MenuManager_Delete, void (__cdecl *)(uchar), m);
+    return 0;
+}
+
+uint32_t RunManagerUpdate(bool original) {
+    // A manager that has a page shown, or takes no input
+    for (int m = 0; m < 5; m++) {
+        M_MANAGER *mgr = &GameManagers[m];
+        if (mgr->currentPage == NULL && !mgr->inputLocked)
+            mgr->currentPage = &world.pages[R(PAGES)];
+    }
+    CDECL_VOID(0x00094370, MenuManager_Update, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunManagerMonitor(bool original) {
+    if (R(4) == 0) {
+        for (int m = 0; m < 5; m++)
+            GameManagers[m].status = 0;
+    }
+    U32_AT(0x0025fb0c) = R(6);
+    I32_AT(0x0017d638) = (int)R(4) - (R(4) == 0 ? 2 : 0);
+    if (I32_AT(0x0017d638) < 0 && U32_AT(0x0025fb0c) == 2)
+        I32_AT(0x0017d638) = 0;
+    I32_AT(0x0017d63c) = R(3) ? 1 : (int)R(12) - 1;
+    U8_AT(0x0025fb11) = (uint8_t)R(2);
+    MPSettings.numPlayers = R(5);
+    GameState.CurrentLevelHashcode = R(8) ? (HASHCODE)0x07000001 : HT_Level_Menu_Pre;
+    GameState.maybePaused = R(2);
+    ScriptCam = R(2) ? (HASHCODE)0 : Hash();
+    for (int p = 0; p < 4; p++) {
+        PlayerInputs[p].controllerIsActive = (uchar)(R(3) != 0);
+        PlayerInputs[p].controllerPort = (uchar)R(4);
+    }
+    CDECL_VOID(0x00094720, MenuManager_Monitor, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunManagerLoad(bool original) {
+    uint *data = R(4) ? (uint *)world.menuData : NULL;
+    CDECL_VOID(0x00092b50, MenuManager_Load, void (__cdecl *)(uint, uint *), R(0), data);
+    return 0;
+}
+
+uint32_t RunManagerExists(bool original) {
+    uchar m = (uchar)R(5);
+    GameManagers[m].exists = R(2) != 0;
+    return CDECL_RUN(0x00092b60, MenuManager_Exists, uchar (__cdecl *)(uchar), m);
+}
+
+uint32_t RunManagerStatus(bool original) {
+    return CDECL_RUN(0x00092b80, MenuManager_GetStatus, uint (__cdecl *)(void));
+}
+
+uint32_t RunManagerEnable(bool original) {
+    bool enable = R(2) != 0;
+    uchar m = (uchar)R(5);
+    CDECL_VOID(0x00092c10, MenuManager_Enable, void (__cdecl *)(bool, uchar), enable, m);
+    return 0;
+}
+
+uint32_t RunQuitOrRestarted(bool original) {
+    U8_AT(0x0025fb10) = (uint8_t)R(3);
+    return CDECL_RUN(0x00092c30, Menu_PlayerHasQuitOrRestarted, uchar (__cdecl *)(void));
+}
+
+uint32_t RunClearStack(bool original) {
+    M_MANAGER *mgr = AnyManager();
+    CDECL_VOID(0x00092bc0, Menu_ClearStack, void (__cdecl *)(M_MANAGER *), mgr);
+    return 0;
+}
+
+const Case kManagers[] = {
+    {"Manager_SendMessage", RunManagerSend, {0x00092c40}},
+    {"MenuManager_Init", RunManagerInit, {0x00092ae0}},
+    {"MenuManager_Create", RunManagerCreate, {0x00093960, 0x00095990}},
+    {"MenuManager_Delete", RunManagerDelete, {0x000942b0}},
+    {"MenuManager_Update", RunManagerUpdate, {0x00094370}},
+    {"MenuManager_Monitor", RunManagerMonitor, {0x00094720}},
+    {"MenuManager_Load", RunManagerLoad, {0x00092b50}},
+    {"MenuManager_Exists", RunManagerExists, {0x00092b60}},
+    {"MenuManager_GetStatus", RunManagerStatus, {0x00092b80}},
+    {"MenuManager_Enable", RunManagerEnable, {0x00092c10}},
+    {"Menu_PlayerHasQuitOrRestarted", RunQuitOrRestarted, {0x00092c30}},
+    {"Menu_ClearStack", RunClearStack, {0x00092bc0}},
+};
+
+void Group(const char *name, const Case *list, int count, int trials) {
+    const char *only = getenv("NIGHTFIRE_MENUCONTROLS_GROUP");
+    if (only != NULL && strstr(name, only) == NULL)
+        return;
+    Test(name, list, count, trials);
+}
+
+} // namespace
+
+void MenuControlShadow_Run(void) {
+    struct Saved {
+        void *at;
+        size_t size;
+        std::vector<uint8_t> bytes;
+    };
+    static const struct {
+        uint32_t at;
+        size_t size;
+    } kGlobals[] = {
+        {0x0025f1d0, sizeof(M_MANAGER) * 5}, // manager
+        {0x0025fb08, 0x90},                  // the menu file, the pad's message and its text, the quit flag
+        {0x0017d60c, 0x34},                  // the cursor's sprite info, the pad's player and wait
+        {0x0017d540, 0x48},                  // ls
+        {0x0025fc18, 4},                     // the help memo
+        {0x0025d7bc, 4},                     // the front end's music
+        {0x001fe6d0, 0x158 * 4},             // PlayerInputs
+        {0x001f6580, 0x58},                  // GameState
+        {0x001f6678, 4},                     // ScriptCam
+        {0x00260044, 4},                     // MPSettings.numPlayers
+    };
+    std::vector<Saved> saved;
+    for (const auto &g : kGlobals) {
+        Saved s;
+        s.at = (void *)(uintptr_t)g.at;
+        s.size = g.size;
+        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        saved.push_back(s);
+    }
+
+    regions.Clear();
+    areaCount = 0;
+    AddArea(&world, sizeof(world));
+    for (const auto &g : kGlobals)
+        AddArea((void *)(uintptr_t)g.at, g.size);
+    NfWarnMuted++;
+    cases = differ = nanChoices = 0;
+
+    Group("linked lists", kLists, COUNT(kLists), 8000);
+    Group("labels", kLabels, COUNT(kLabels), 8000);
+    Group("buttons and checkboxes", kButtons, COUNT(kButtons), 6000);
+    Group("scrolls", kScrolls, COUNT(kScrolls), 10000);
+    Group("lists", kLists2, COUNT(kLists2), 6000);
+    Group("radios", kRadios, COUNT(kRadios), 8000);
+    Group("memos", kMemos, COUNT(kMemos), 8000);
+    Group("pages, windows and processes", kPages, COUNT(kPages), 5000);
+    Group("managers", kManagers, COUNT(kManagers), 4000);
+    ShadowHook_RemoveAll();
+    if (nanChoices != 0)
+        printf("[menucontrols] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);
+
+    NfWarnMuted--;
+    for (auto &s : saved)
+        memcpy(s.at, s.bytes.data(), s.size);
+}

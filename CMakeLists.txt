@@ -128,6 +128,7 @@ add_library(actioninject SHARED
   src/action/devtools/HudPortShadow.cpp
   src/action/devtools/SoundPortShadow.cpp
   src/action/devtools/MenuPortShadow.cpp
+  src/action/devtools/MenuControlShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -217,6 +218,18 @@ add_library(actioninject SHARED
   src/action/ui/Menu.cpp
   src/action/ui/MenuScript.cpp
   src/action/ui/LinkedList.cpp
+  src/action/ui/Label.cpp
+  src/action/ui/Button.cpp
+  src/action/ui/Checkbox.cpp
+  src/action/ui/Scroll.cpp
+  src/action/ui/List.cpp
+  src/action/ui/Radio.cpp
+  src/action/ui/Memo.cpp
+  src/action/ui/Page.cpp
+  src/action/ui/Window.cpp
+  src/action/ui/Process.cpp
+  src/action/ui/Manager.cpp
+  src/action/ui/MenuManager.cpp
   src/action/autofunc.cpp
   src/action/game/Spline.cpp
   src/action/game/Upgrade.cpp

@@ -1,4 +1,6 @@
 #include "MenuScript.h"
+#include "Process.h"
+#include "Window.h"
 
 #include <math.h>
 #include <string.h>
@@ -9,17 +11,6 @@
 // PS2: menu_script.cpp.
 
 #pragma fp_contract(off)
-
-// Called by address
-#define LinkedList_Init ((void (__cdecl *)(LINKEDLIST *list, uint offset))0x00090a70)
-#define LinkedList_Add ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090ab0)
-#define LinkedList_Insert ((bool (__cdecl *)(LINKEDLIST *list, void *after, void *prevLink, void *link))0x00090b00)
-#define LinkedList_Remove ((bool (__cdecl *)(LINKEDLIST *list, void *prevLink, void *link))0x00090b70)
-#define Process_Init ((void (__cdecl *)(M_CONTROL *control))0x00095dc0)
-#define Process_Create ((void (__cdecl *)(M_CONTROL *control, M_MESSAGE *msg, int frames, int unknown))0x00095de0)
-#define Process_RunFrame ((void (__cdecl *)(M_CONTROL *control))0x00095e60)
-#define Process_Destroy ((void (__cdecl *)(M_CONTROL *control))0x00096090)
-#define Window_Get ((M_CONTROL *(__cdecl *)(M_CONTROL *page))0x00099d50)
 
 // MenuManager_Update's B on a focused control: an event for its script slot 5, never sent as a message
 #define SCRIPT_EVENT_BACK 0x5b
@@ -174,7 +165,7 @@ bool Script_PlayDefault(M_CONTROL *control, uint message) {
         default: return false;
     }
     if (message == MessageType_PageEnter || message == MessageType_PageLeave || message == MessageType_BackAtRoot) {
-        M_CONTROL *window = Window_Get(control);
+        M_CONTROL *window = Window_Get((M_PAGE *)control);
         if (window == NULL)
             return false;
         M_SCRIPT *script = ((M_WIDGET *)window)->defaultScripts[slot];

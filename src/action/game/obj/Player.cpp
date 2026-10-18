@@ -1670,7 +1670,6 @@ void Player_PositionCamera(obj_tag *player) {
 // The originals, called by address
 #define MP_PlayerKilled ((void (__cdecl *)(obj_tag *player))0x000a1fc0)
 #define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
-#define Menu_PlayerHasQuitOrRestarted ((bool (__cdecl *)(void))0x00092c30)
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 #define debug_scanmode U8_AT(0x001fec49)   // the player starts every level flying (MovementType_ScanMode)
@@ -3688,7 +3687,6 @@ void __declspec(naked) Player_Activate(void) {
 // Every frame (Player_Update)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define MenuManager_Create ((uint (__cdecl *)(uint param_1, uint param_2, short param_3, byte playerNum, uint32_t actions, char pauseAudio, uint status))0x00093960)
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 
 #define benchmark U8_AT(0x002adf32) // set, the player stands still

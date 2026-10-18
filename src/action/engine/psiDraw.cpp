@@ -8,6 +8,7 @@
 #include "Direct3D/xboxMatrix.h"
 #include "../sound/dsndSeam.h"    // dsndUpdateVoices
 #include "../memory.h"
+#include "../ui/MenuManager.h"
 #include "../game.h"              // GameState, Graphics_IsSomeGraphicsRegion
 #include "../assets.h"            // HT_Level_*
 #include "../util/hashtable.h"
@@ -309,8 +310,6 @@ void ConfigureGammaForLevel(void) {
 
 // Ends the frame: the screen blur if one is on (not while the menus are up), the swap, the sound voices and the
 // rumble
-// AUTOGEN
-uint __stdcall MenuManager_GetStatus(void);
 
 // AUTOINJECT
 void psiPostDraw(void) {

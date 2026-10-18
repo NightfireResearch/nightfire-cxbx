@@ -1,6 +1,7 @@
 #include "ui.h"
 #include "Manager.h"
 #include "Menu.h"
+#include "Process.h"
 
 #include "../engine/Text.h"
 #include "../sound/SFX.h"
@@ -92,8 +93,6 @@ static const char *CreditsFormat(uchar style) {
     return credits_format_name;
 }
 
-// AUTOGEN
-void Process_Create(M_CONTROL *control, M_MESSAGE *msg, undefined4 delay);
 
 // AUTOINJECT
 bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
@@ -175,7 +174,7 @@ bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             fade.type = 0xe1;
             fade.arg1 = 0xff;
             fade.arg2 = 0;
-            Process_Create(CONTROL_GET(managerNum, SUB_P_CREDITS_FADE), &fade, 0xf);
+            Process_Create(CONTROL_GET(managerNum, SUB_P_CREDITS_FADE), &fade, 0xf, 0);
         }
 
         for (uint i = 0; i < CREDITS_NUM_CONTROLS; i++) {

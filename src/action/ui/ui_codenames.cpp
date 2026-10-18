@@ -1,3 +1,4 @@
+#include "Process.h"
 #include "ui.h"
 
 #include "Manager.h"
@@ -146,7 +147,6 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define Menu_UpdateCodenameWheel ((void (__cdecl *)(byte, M_CONTROL *, HASHCODE, HASHCODE, HASHCODE, HASHCODE, char))0x0007fb20)
 #define WriteStateFileAndLaunch ((void (__cdecl *)(int, void *, int))0x000e9350)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
-void Process_Create(M_CONTROL *control, M_MESSAGE *msg, undefined4 delay);   // the original (ui_credits.cpp)
 #define psiDeleteSave ((bool (__cdecl *)(const char *))0x000dfec0)   // deletes a codename's save; true if it did (name ours)
 #define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0) // false, with a box, without room for a new codename (name ours)
 #define Menu_GoToDashboard ((void (__cdecl *)(void))0x0008fd90)    // to free the space Menu_CheckSaveSpace asked for (name ours)
@@ -436,7 +436,7 @@ static void FadeMenuGroup(uchar managerNum, int arg1) {
     fade.type = COLOUR_FADE;
     fade.arg1 = arg1;
     fade.arg2 = 0;
-    Process_Create(CONTROL_GET(managerNum, SUB_P_CNSELECT_MENU_GROUP), &fade, 0xf);
+    Process_Create(CONTROL_GET(managerNum, SUB_P_CNSELECT_MENU_GROUP), &fade, 0xf, 0);
 }
 
 // AUTOINJECT
