@@ -6,6 +6,7 @@
 #include "DroneTablesCheck.h"
 
 #include "../game/drone/DroneTables.h"
+#include "../../common/xbeOriginal.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -22,15 +23,23 @@ static const BOT_stats_t botStats[] = DEFAULT_BOT_STATS_INIT;
 static_assert(sizeof(behaviourMasks) == sizeof(DroneBehaviourMasks), "mask count");
 static_assert(sizeof(botStats) == sizeof(DefaultBotStats), "bot stats count");
 
+// Word by word. A function the tables name by C++ name is ours once ported, while the game's copy holds its address,
+// whose jump leads to ours: the same function, so a word that differs only that way matches.
 static int Compare(const char *name, const void *ours, const void *theirs, size_t size, size_t entry) {
     if (memcmp(ours, theirs, size) == 0)
         return 0;
-    for (size_t i = 0; i < size; i++)
-        if (((const uchar *)ours)[i] != ((const uchar *)theirs)[i]) {
-            printf("[drone tables] %s differs from entry %u (byte 0x%x)\n", name, (uint)(i / entry), (uint)i);
-            break;
+    for (size_t i = 0; i < size; i += 4) {
+        uint32_t a = 0, b = 0;
+        size_t n = size - i < 4 ? size - i : 4;
+        memcpy(&a, (const uchar *)ours + i, n);
+        memcpy(&b, (const uchar *)theirs + i, n);
+        if (a != b && XbeOriginal_Target(b) != a) {
+            printf("[drone tables] %s differs from entry %u (byte 0x%x): ours %08x, the game's %08x\n", name,
+                   (uint)(i / entry), (uint)i, a, b);
+            return 1;
         }
-    return 1;
+    }
+    return 0;
 }
 
 void DroneTablesCheck_Run(void) {

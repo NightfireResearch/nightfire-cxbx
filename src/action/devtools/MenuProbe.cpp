@@ -110,6 +110,15 @@
 #include "MenuHandlerShadow.h"
 #include "CameraShadow.h"
 #include "MathExactShadow.h"
+#include "BotCoreShadow.h"
+#include "BotStateShadow.h"
+#include "DroneMPShadow.h"
+#include "MPMatchShadow.h"
+#include "MPMenusShadow.h"
+#include "MPObjectsShadow.h"
+#include "MPFlagShadow.h"
+#include "MPGoldenEyeShadow.h"
+#include "MPObjectivesShadow.h"
 #include "Teleport.h"
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
@@ -575,8 +584,22 @@ static void CheckLists(void) {
     printf("[lists] %d item lists checked against the game's: %d items differ\n", (int)ARRAY_SIZE(lists), bad);
 }
 
+void Devtools_Tick(void) {
+    ActionTeleport_Tick();
+    MPMatchShadow_Tick();
+}
+
 void MenuProbe_Install(void) {
     CameraShadow_Install();
+    BotCoreShadow_Install();
+    BotStateShadow_Install();
+    DroneMPShadow_Install();
+    MPMatchShadow_Install();
+    MPMenusShadow_Install();
+    MPObjectsShadow_Install();
+    MPFlagShadow_Install();
+    MPGoldenEyeShadow_Install();
+    MPObjectivesShadow_Install();
     if (SettingOn("MenuCheckLists")) {
         CheckLists();
         DroneTablesCheck_Run();
@@ -673,6 +696,7 @@ void MenuProbe_Install(void) {
         MenuControlShadow_Run();
         MenuHandlerShadow_Run();
         MathExactShadow_Run();
+        MPMenusShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;
     g_logging = SettingOn("MenuLog");

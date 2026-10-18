@@ -35,6 +35,8 @@ undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,
 
 bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
+void __stdcall Menu_StoreMPSettings(void);
+void __stdcall Menu_RestoreMPSettings(void);
 bool Menu_HasMedal(HASHCODE level, uint medal, uchar player);
 
 // The front end (ui_frontend.cpp): the movies a page plays, the language, the mini mission

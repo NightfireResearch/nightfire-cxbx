@@ -178,9 +178,6 @@ void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
 
 
 // AUTOGEN
-void __stdcall Menu_PrepareBots(void);
-
-// AUTOGEN
 void __stdcall Menu_RestartFrontEndLoop(void);
 
 // AUTOGEN

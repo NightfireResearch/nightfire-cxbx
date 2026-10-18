@@ -114,10 +114,10 @@ void Drone_SM_SendDelayedMsgs(void) {
     }
 }
 
-// Delivers a message, or queues it if it is not due yet: to every drone (receiver 0), to a multiplayer bot
-// (receiver -1-n), or to the drone with that id. Drones waiting on a switch, dead or fading are skipped, and so are
-// those playing a script, except when the message is for them alone. A message to several drones has each one's id
-// written into it in turn.
+// Delivers a message, or queues it if it is not due yet: to every drone (receiver 0), to the multiplayer bots on
+// team n (receiver -1-n), or to the drone with that id. Drones waiting on a switch, dead or fading are skipped, and
+// so are those playing a script, except when the message is for them alone. A message to several drones has each
+// one's id written into it in turn.
 // AUTOINJECT
 void Drone_SM_RouteMsg(MsgObject *msg) {
     if (msg->handleOnFrame > GameState.NumFramesUnpaused) {
@@ -147,11 +147,11 @@ void Drone_SM_RouteMsg(MsgObject *msg) {
     }
 
     if (MPSettings.maybeDroneAIEnabled != 0 && msg->receiver < 0) {
-        // The bots are players 4 on. Worked out before the loop, which overwrites the receiver.
-        int bot = -1 - msg->receiver;
-        for (int i = 4; i < 10; i++) {
+        // The bots follow the human players. Worked out before the loop, which overwrites the receiver.
+        int team = -1 - msg->receiver;
+        for (int i = NUM_PLAYERS; i < NUM_AGENTS; i++) {
             obj_tag *gameObj = MPGame.players[i].playerObj;
-            if (gameObj == NULL || (int)MPSettings.Player[i].TeamId != bot)
+            if (gameObj == NULL || (int)MPSettings.Player[i].TeamId != team)
                 continue;
             // Whether it worked is not tested
             DCVars_tag dcv;

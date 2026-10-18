@@ -382,20 +382,32 @@ typedef struct {
     uint paused;
     uint victories;         // the debriefing's "Victories"
     uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
-    char unknown_pad0[0x18-0xc];
+    char unknown0c[4];
+    uint unknown10;         // 0x10 MP_PlayerKilled adds one with each victory and clears it on a suicide
+    char unknown14[4];
     float points;           // the debriefing's "Points"
     obj_tag* playerObj;
     short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    ushort unknown26;    // 0x26 - with any of bits 0-3 set, NDrone2_FindOpponent's bots favour this player
+    ushort flags;           // 0x26 MPGamePlayerFlags; NDrone2_FindOpponent tests the low 4 bits
     short maybeIdxOfMyAssassin;
-    char unknown_pad2[0x30-0x2a];
+    char unknown2a[2];
+    float hillSoundTime;    // 0x2c MPGame.TimeIncPaused when MP_KOHUpdate last played the hill's entry sound
 } MPGamePlayer;
+
+enum MPGamePlayerFlags : ushort {
+    MPPLAYER_FLAG_1 = 1,        // a CTF bot with it heads for its base (BOTSTATE_pickGoal)
+    MPPLAYER_FLAG_2 = 2,        // a Blueprint bot with it heads for the espionage base; MP_BluePrintReachedBase clears it
+    MPPLAYER_GOLDENEYE_KEY = 4,     // holds the GoldenEye key (MP_GoldenEyeUpdate)
+    MPPLAYER_GOLDENEYE_CRYSTAL = 8, // holds the GoldenEye crystal (MP_GoldenEyeUpdate)
+    MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
+};
 
 static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
 static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
-static_assert(offsetof(MPGamePlayer, unknown26) == 0x26, "Wrong offset for MPGamePlayer.unknown26");
+static_assert(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
+static_assert(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
 
 // The marks over the assassin and the target a player sees
 typedef struct {
@@ -405,27 +417,36 @@ typedef struct {
 
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
-  MPGamePlayer players[10];
+  MPGamePlayer players[NUM_AGENTS];
   // Immediately following is more state related to MP game
   float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
   uint EndGameFlowState;
-  uint unknown_3; // end conditions
-  uint TimeUnpaused;
+  uint unknown_3; // MP_CheckForEndCondition: the highest score, team or player
+  float TimeUnpaused; // seconds of unpaused play, against TimeLimit (MP_CheckForEndCondition)
   float TimeLimit;
   float restartScenarioTimeout;
-  uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
+  float TimeIncPaused; // seconds of unpaused play, counted even with switch_MP4EVER: pickup visit times, bot goals
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
-  short unknown_maybe_capture_state; // player status / goals
-  short unknown_maybe_unused; // restart
-  short unknown_9; // uplink, goldeneye, blueprint timers?
+  union {
+    struct {
+      short unknown_maybe_capture_state; // player status / goals
+      short unknown_maybe_unused; // restart
+      short unknown_9; // uplink, goldeneye, blueprint timers?
+    };
+    ushort teamObjectiveFlags[3]; // by MPTeam: bits 1 and 2 match an objective's MP_OBJ_EXT.flags, and a bot drops
+                                  // its goal for an objective whose bit is set (BOTSTATE_processGoals). BOTSTATE_pickGoal
+                                  // reads it for NO_TEAM too, which is unknown_9
+  };
   short maybe_pad;
-  MPRadarMarks radarMarks[4]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
+  MPRadarMarks radarMarks[NUM_PLAYERS]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
 } MPGameStruct;
 
 static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
 
 static_assert(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
+static_assert(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaused wrong");
+static_assert(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
 
 #pragma pack(pop)
 

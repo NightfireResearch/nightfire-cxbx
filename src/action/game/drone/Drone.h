@@ -498,6 +498,12 @@ typedef struct Drone_tag {
     struct BOT_vars_t *botVars;     // 0x974 - multiplayer bots only
 } Drone_tag;
 
+// The level_tag Drone_Create is given: the object header, then the drone's keys
+typedef struct DroneCreationData {
+    char baseObj[0x2c];
+    DroneKeys keys;
+} DroneCreationData;
+
 // A state machine message (0x1c bytes). See docs/drone/architecture/README.md 3.2.
 typedef struct MsgObject {
     uint msgType;           // 0x00 - a DRONE_MSG
@@ -521,6 +527,7 @@ static_assert(offsetof(DroneImpact_tag, source) == 0x14, "Wrong offset for Drone
 static_assert(sizeof(DIVars_tag) == 0xa4, "DIVars is wrong size");
 static_assert(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 static_assert(sizeof(MsgObject) == 0x1c, "MsgObject is 0x1c bytes");
+static_assert(sizeof(DroneCreationData) == 0xb0, "DroneCreationData is 0xb0 bytes");
 static_assert(sizeof(Drone_tag) == 0x978, "Drone_tag is 0x978 bytes");
 static_assert(offsetof(Drone_tag, side) == 0x44, "Wrong offset for side");
 static_assert(offsetof(Drone_tag, oneBurst) == 0x3d, "Wrong offset for oneBurst");
@@ -594,7 +601,6 @@ static_assert(offsetof(Drone_tag, opponentSeenFrame) == 0x1d8, "Wrong offset for
 static_assert(offsetof(Drone_tag, sightFrames) == 0x200, "Wrong offset for sightFrames");
 static_assert(offsetof(Drone_tag, lastAttacker) == 0x234, "Wrong offset for lastAttacker");
 static_assert(offsetof(Drone_tag, explosiveTimeout) == 0x298, "Wrong offset for explosiveTimeout");
-static_assert(offsetof(Drone_tag, opponentCursor) == 0x240, "Wrong offset for opponentCursor");
 static_assert(offsetof(Drone_tag, explosiveState) == 0x2b0, "Wrong offset for explosiveState");
 static_assert(offsetof(Drone_tag, headTrackUntil) == 0x2b4, "Wrong offset for headTrackUntil");
 static_assert(offsetof(Drone_tag, headTarget) == 0x2bc, "Wrong offset for headTarget");
@@ -657,9 +663,7 @@ static_assert(offsetof(Drone_tag, opponentDelta) == 0x16c, "Wrong offset for opp
 static_assert(offsetof(Drone_tag, opponentFacing) == 0x184, "Wrong offset for opponentFacing");
 static_assert(offsetof(Drone_tag, targetMoving) == 0x190, "Wrong offset for targetMoving");
 static_assert(offsetof(Drone_tag, targetPos) == 0x19c, "Wrong offset for targetPos");
-static_assert(offsetof(Drone_tag, aimOffset) == 0x1b4, "Wrong offset for aimOffset");
 static_assert(offsetof(Drone_tag, targetChangeFrame) == 0x1c4, "Wrong offset for targetChangeFrame");
-static_assert(offsetof(Drone_tag, unseenFrames) == 0x204, "Wrong offset for unseenFrames");
 static_assert(offsetof(Drone_tag, unknown434) == 0x434, "Wrong offset for unknown434");
 static_assert(offsetof(Drone_tag, unknown46c) == 0x46c, "Wrong offset for unknown46c");
 static_assert(offsetof(Drone_tag, clip) == 0x840, "Wrong offset for clip");

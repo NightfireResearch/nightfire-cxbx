@@ -31,6 +31,26 @@ static_assert(offsetof(BOT_stats_t, health) == 0x4, "BOT_stats_t health offset m
 static_assert(offsetof(BOT_stats_t, isBad) == 0x9, "BOT_stats_t isBad offset mismatch");
 static_assert(offsetof(BOT_stats_t, editable) == 0xd, "BOT_stats_t editable offset mismatch");
 
+// BOT_stats_t.personality
+typedef enum {
+    BOT_PERSONALITY_NONE = 0,
+    BOT_PERSONALITY_COLLECTOR = 1,
+    BOT_PERSONALITY_GUARDIAN = 2,
+    BOT_PERSONALITY_TEAM_PLAYER = 3,
+    BOT_PERSONALITY_JUDGE = 4,
+    BOT_PERSONALITY_BERSERKER = 5,
+    BOT_PERSONALITY_GREEDY = 6,
+    BOT_PERSONALITY_VENGEFUL = 7,
+    BOT_PERSONALITY_ASSASSIN = 8,
+} BOT_PERSONALITY;
+
+// BOT_stats_t.traitFlags
+enum {
+    BOT_TRAIT_FISTS_UP_CLOSE = 4,
+    BOT_TRAIT_ATTACK_ON_SIGHT = 8,
+    BOT_TRAIT_REGENERATE = 0x10,
+};
+
 // One of a bot's two goals (BOTSTATE_pickGoal): slot 0 a pickup, an opponent or a friend to guard, slot 1 the game
 // mode's objective. See docs/drone/bots-and-navigation/README.md 5.2 and 5.6.
 typedef struct BOT_goal_t {
@@ -49,12 +69,12 @@ typedef struct BOT_goal_t {
     uchar pickFlags;            // 0x36 - 2 single pass, 8 avoid the opponent's path, 0x20 ignore visit times
     uchar maxEmitterDistance;   // 0x37
     uchar lastRouteStatus;      // 0x38
-    uchar _pad39;
+    uchar unknown39;            // 0x39 - BOT_init: 0 in goal 0, 1 in goal 1
     uchar subtype;              // 0x3a - 1 enemy flag, 2 own base, 3 GoldenEye ... 9 opponent
     uchar _pad3b;
 } BOT_goal_t;
 
-// What a bot knows of one player (BOT_vars_t.players), refreshed by FUN_0001a660
+// What a bot knows of one player (BOT_vars_t.players), refreshed by BOT_setOtherPlayerInfo (0x1a660; invented name, the PS2 name of the function)
 typedef struct BOT_playerInfo_t {
     float activeTime;           // 0x0 - MPGame.TimeIncPaused while BOT_PLAYER_ACTIVE is set
     float distanceSq;           // 0x4
@@ -69,15 +89,23 @@ typedef struct BOT_playerInfo_t {
 #define BOT_PLAYER_IN_SIGHT 4   // NDrone2_CanSeeObject from bone 5
 #define BOT_PLAYER_TEAMMATE 8
 
-// A bot player's state (six at 0x001d98e0, one per bot player 4..9; Drone_tag.botVars). Ghidra's type is 0x75f
+// One weapon as a bot holds it (BOT_vars_t.weapons, indexed by weapon id). Invented name.
+typedef struct BOT_weapon_t {
+    uchar unknown0[4];          // 0x0 - sqrt(range)
+    short rounds;               // 0x4 - rounds in clip
+    uchar held;                 // 0x6
+    uchar unknown7[5];
+} BOT_weapon_t;
+
+// A bot player's state (NUM_BOTS at 0x001d98e0, one per bot agent; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
 typedef struct BOT_vars_t {
     BOT_goal_t goals[2];            // 0x000
     BOT_stats_t stats;              // 0x078 - a copy of the bot's stats
     uchar _pad86[2];
-    BOT_playerInfo_t players[10];   // 0x088 - what it knows of each MPGame player (FUN_0001a660)
+    BOT_playerInfo_t players[NUM_AGENTS]; // 0x088 - what it knows of each MPGame player (BOT_setOtherPlayerInfo)
     _VECTOR opponentLastPos;        // 0x128
-    uchar weapons[114][0xc];        // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
+    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
                                     //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
                                     //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
@@ -114,13 +142,15 @@ typedef struct BOT_vars_t {
     uchar routeFailCount;           // 0x761
     uchar lastPickup;               // 0x762 - never the same pickup twice in a row
     uchar atObjective;              // 0x763
-    uchar beingGuarded;             // 0x764
+    uchar targeted;                 // 0x764 - another bot's drone has this bot as its opponent (BOT_setOtherPlayerInfo)
     uchar insideObjective;          // 0x765 - the protection / demolition object
     uchar _pad766[2];
 } BOT_vars_t;
 
 static_assert(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
 static_assert(sizeof(BOT_playerInfo_t) == 0x10, "BOT_playerInfo_t is 0x10 bytes");
+static_assert(sizeof(BOT_weapon_t) == 0xc, "BOT_weapon_t is 0xc bytes");
+static_assert(offsetof(BOT_weapon_t, held) == 0x6, "Wrong offset for BOT_weapon_t.held");
 static_assert(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
 static_assert(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
 static_assert(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");
@@ -128,6 +158,9 @@ static_assert(offsetof(BOT_vars_t, reserveAmmo) == 0x68c, "Wrong offset for BOT_
 static_assert(offsetof(BOT_vars_t, attackers) == 0x6d0, "Wrong offset for BOT_vars_t.attackers");
 static_assert(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t.drone");
 static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
+
+// One per bot, indexed by BOT_vars_t.botIndex
+#define BOT_vars (*(BOT_vars_t(*)[NUM_BOTS])0x001d98e0)
 
 #pragma pack(pop)
 
@@ -151,7 +184,11 @@ typedef enum {
 } BOTSTATE_CLASS;
 
 BOT_stats_t* BOT_getDefaultStats(uint identifier);
-bool BOT_respawn(obj_tag* gameObj, int playerNum, char param_3);
+// noSpawn (0 from every caller): BOT_init does not start the drone, BOT_respawn does not move it to a spawn point
+struct MPBOT;
+obj_tag* BOT_init(short playerNum, _VECTOR *pos, _VECTOR *rot, obj_tag *gameObj, MPBOT *bot, char noSpawn);
+bool BOT_respawn(obj_tag* gameObj, int playerNum, char noSpawn);
+void BOT_setOtherPlayerInfo(DCVars_tag *dcv);
 // Both return in ST0; BOT_getAggressionMul's value is not rounded to a float (see BOT.cpp)
 double BOT_getAggressionMul(Drone_tag *drone);
 float BOT_getMovementSpeedMul(Drone_tag *drone);

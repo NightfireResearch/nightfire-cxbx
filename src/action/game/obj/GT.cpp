@@ -201,7 +201,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
 
     if (MPSettings.isMultiplayer) {
         range = range * 0.2f;
-        for (ushort i = 0; i < 10; i++) {
+        for (ushort i = 0; i < NUM_AGENTS; i++) {
             obj_tag *other = MPGame.players[i].playerObj;
             if (other == NULL || turret->owner == other)
                 continue;

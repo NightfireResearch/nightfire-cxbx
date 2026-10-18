@@ -250,7 +250,7 @@ static void Pause_ShowScores(uchar managerNum) {
         }
         for (int i = 0; i < (int)MPSettings.numPlayers; i++)
             Pause_AddScore(managerNum, i, &mi6Row, &phoenixRow, &mi6Total, &phoenixTotal);
-        for (int i = 4; i < (int)MPSettings.numBots + 4; i++)
+        for (int i = NUM_PLAYERS; i < (int)MPSettings.numBots + NUM_PLAYERS; i++)
             Pause_AddScore(managerNum, i, &mi6Row, &phoenixRow, &mi6Total, &phoenixTotal);
         if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
             char text[0x20];

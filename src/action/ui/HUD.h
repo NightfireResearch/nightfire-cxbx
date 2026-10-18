@@ -109,15 +109,6 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 void HUD_Update(BLData *playerInfo, obj_tag *obj);
 void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4);
 
-// A thing on the multiplayer radar (MP_GetRadarObjects)
-typedef struct RADAROBJ {
-    _VECTOR pos;
-    uint colour;        // 0x0c
-    ushort icon;        // 0x10 into RadarIcons
-    ushort pad;
-} RADAROBJ;
-static_assert(sizeof(RADAROBJ) == 0x14, "RADAROBJ is 0x14 bytes");
-
 void _HUD_UpdateCrossHair(BLData *player, sprite *spr);
 void HUD_UpdateCrossHair(void);
 void _HUD_MonitorNightSight(BLData *player);
@@ -162,5 +153,6 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
+void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 
 #endif // HUD_H

@@ -257,7 +257,7 @@ void Pickup_Update(obj_tag *obj) {
 
     double reach = (double)obj->radius + 1.1f;
     float reachSq = (float)(reach * reach);
-    for (ushort i = 0; i < 4; i++) {
+    for (ushort i = 0; i < NUM_PLAYERS; i++) {
         obj_tag *player = glb_players[i];
         if (player == NULL || player->curState != 1 || player->objectType == OBJECTTYPE_DEAD_PLAYER)
             continue;
@@ -270,8 +270,8 @@ void Pickup_Update(obj_tag *obj) {
     }
 
     if (MPSettings.maybeDroneAIEnabled) {
-        for (ushort i = 0; i < 6; i++) {
-            obj_tag *bot = MPGame.players[i + 4].playerObj;
+        for (ushort i = 0; i < NUM_BOTS; i++) {
+            obj_tag *bot = MPGame.players[NUM_PLAYERS + i].playerObj;
             if (bot == NULL || bot->objectType == OBJECTTYPE_DEAD_DRONE)
                 continue;
             Drone_tag *drone = (Drone_tag *)bot->extraObjectData;
@@ -306,14 +306,14 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
         if (MPSettings.Player[drone->botVars->playerIndex].TeamId != 0) {
             if (item == 13)
                 item = 10;
-        } else if (item == 10 && bot->weapons[10][6]) {
+        } else if (item == 10 && bot->weapons[10].held) {
             item = 13;
         }
     }
 
     switch (info->kind) {
     case PICKUP_KIND_WEAPON:
-        if (!bot->weapons[item][6]) {
+        if (!bot->weapons[item].held) {
             short drop = 0;
             if (MPSettings.maybeDroneAIEnabled && MPSettings.TripleDamageModifierProfessionalMode) {
                 // Weapon 0x3b is kept by team 0 in one mode and team 1 in another
@@ -324,7 +324,7 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
                     keep59 = MPSettings.Player[bot->playerIndex].TeamId == 1;
                 short klass = weapon_data[PickupMatrix[MPSettings.weaponSet][0]].weaponBaseNum;
                 for (short k = 2; k < 0x53; k++) {
-                    if (k == klass || !drone->botVars->weapons[k][6])
+                    if (k == klass || !drone->botVars->weapons[k].held)
                         continue;
                     if (k == 0x3b && keep59)
                         continue;
@@ -335,7 +335,7 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
             if (!BOTWEAP_EquipWeapon(drone, item, info->count))
                 return false;
             if (drop != 0) {
-                drone->botVars->weapons[drop][6] = 0;
+                drone->botVars->weapons[drop].held = 0;
                 BOTSTATE_pickupWeaponChangeChoice(drone, item, 0, 0);
             }
             if (!BOTWEAP_hasLoadedWeapon(drone, item))

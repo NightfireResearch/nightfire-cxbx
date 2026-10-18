@@ -1,10 +1,9 @@
+#pragma once
 #include <stddef.h>
 #include "../../actionhelpers.h"
 #include "../../math/math.h"
 #include "../../engine/AINetwork.h"
-
-
-#define MAX_MP_AGENTS 8 // = 4 bots + 4 players? Or is it 7??
+#include "../drone/BOT.h"
 
 
 typedef enum {
@@ -59,7 +58,7 @@ typedef enum  {
 
 #pragma pack(push, 1)
 
-// Should contain team, character ID, health bonus etc for each of 10 agents in the multiplayer game
+// Should contain team, character ID, health bonus etc for each agent in the multiplayer game
 typedef struct {
     char Name[32];
     MPTeam TeamId;
@@ -71,11 +70,12 @@ static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wro
 
 typedef struct { // on Xbox, starts at 0025fe38
 
-    MPSettings_PerPlayer Player[10]; // Different on PS2 and Xbox.  1E0: Xbox
+    MPSettings_PerPlayer Player[NUM_AGENTS]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
     undefined4 maybeDroneAIEnabled;
-    undefined4 Started;
+    bool Started; // a byte: MP_Start clears it, then sets it once the match is set up
+    undefined _pad1e9[3];
     undefined4 maybeIsTeamGame;
     undefined4 field53_0x190;
     undefined4 numPlayersAndBots;
@@ -95,7 +95,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     undefined4 MiniVehiclesEnabled;
     undefined4 GrappleEnabled;
     undefined4 ExplosiveSceneryEnabled;
-    short numActivePickups;
+    ushort numActivePickups;
     undefined field72_0x1da;
     undefined field73_0x1db;
 } MPSettings_t;
@@ -132,9 +132,12 @@ typedef struct {
 
 static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
+// XBE_GLOBAL(0x001637c0, 0x1d0)
+#define MP_skins ((MP_skin*)0x001637c0)
 
-typedef struct {
-    char stats[14];     // 0x00 its BOT_stats_t: the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
+
+typedef struct MPBOT {
+    BOT_stats_t stats;  // 0x00 the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
     char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
     char isGood;        // 0x0f its character is on MI6's side (Menu_IsBotGood)
     char SkinNum;       // 0x10 its character: an mp_characters identifier
@@ -146,13 +149,15 @@ static_assert(sizeof(MPBOT) == 18, "MPBOT is wrong size");
 typedef struct {
     char Enabled;
     char NumBots;
-    MPBOT bot[6]; // FIXME: How many bots are there? Platform-specific? Enough memory for 10 on Xbox
+    MPBOT bot[NUM_BOTS];
 } MPBOTS;
+
+static_assert(sizeof(MPBOTS) == 0x6e, "MPBOTS is wrong size");
 
 // XBE_GLOBAL(0x00245280, 0x6e)
 #define mpbots (*(MPBOTS*)0x00245280)
 
-// The four controllers' places on the join page (P_MPJOIN)
+// The controllers' places on the join page (P_MPJOIN)
 typedef struct {
     char joined;        // 0x00
     char ready;         // 0x01 finished setting up (C_RBMPSETUP)
@@ -164,17 +169,20 @@ typedef struct {
 } MPJoinSlot;
 static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 
-#define mp_join_slots (*(MPJoinSlot(*)[4])0x00245240)
+#define mp_join_slots (*(MPJoinSlot(*)[NUM_PLAYERS])0x00245240)
 
 
 typedef struct {
     obj_tag* gameObj;
-    char unknown[16];
-    AIEmitter_tag aiEmitter;
-    char unknown2[8];
+    CelPos_tag celPos;          // 0x04 - where bots go for it
+    AIEmitter_tag aiEmitter;    // 0x14
+    uint flags;                 // 0x3c - 1 or 2: its bit in MPGame.teamObjectiveFlags (BOTSTATE_processGoals)
+    char unknown40[4];
 } MP_OBJ_EXT;
 
 static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
+static_assert(offsetof(MP_OBJ_EXT, aiEmitter) == 0x14, "Bad offset of MP_OBJ_EXT.aiEmitter");
+static_assert(offsetof(MP_OBJ_EXT, flags) == 0x3c, "Bad offset of MP_OBJ_EXT.flags");
 
 typedef enum {
     CTF_FLAG = 0,
@@ -192,12 +200,22 @@ typedef enum {
 typedef struct {
     ushort type; // MPOBJECTTYPE
     ushort num;
-    char unknown_pad_1[8];
-    obj_tag *scriptPlayer;
-    char _pad[0x50-16];
+    short unknown04;            // 0x04 MP_PlayerKilled sets it to 30 seconds of frames when a hurt object of types 5-7
+                                //      was among the holder's damage
+    char unknown06[2];
+    obj_tag *holder;            // 0x08 MP_PlayerKilled hands the object back when this one dies
+    obj_tag *scriptPlayer;      // 0x0c
+    _MATRIX resetMtx;           // 0x10 MP_ResetMPObject puts the object back here (MP_GoldeneyeResetObject,
+                                //      MP_BluePrintReachedBase pick it)
+    short attackerIdx;          // 0x4c demolition, protection: the agent index (Control_Plr2Ind) that last damaged it
+                                //      (our name)
+    short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
 static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+static_assert(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
+static_assert(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
+static_assert(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
 
 typedef struct {
@@ -221,6 +239,63 @@ static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known f
 
 #pragma pack(pop)
 
+#define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
+#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
+#define GoldenEyeKeyCount U16_AT(0x00262970)
+#define GoldenEyeNonKeyCount U16_AT(0x00262972)
+
+
+// One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from MP_Init's clear)
+#pragma pack(push, 1)
+typedef struct {
+    obj_tag *gameObj;
+    CelPos_tag celPos;                  // 0x04
+    AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
+    float maybeBotPickupVisitTimes[NUM_BOTS]; // 0x3c one per bot: MP_Pickup_Process ages them all, MP_ResetBotPickupTimes
+                                        //      and BOTSTATE_pickGoal index it by bot
+    uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
+} MP_PICKUP;
+#pragma pack(pop)
+static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
+static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
+
+#define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
+
+// What a radar blip stands for (MP_GetRadarObjects); HUD_RadarUpdate picks its sprite by it
+typedef enum {
+    MP_RADAR_AGENT = 0,
+    MP_RADAR_FLAG = 1,
+    MP_RADAR_UPLINK = 2,
+    MP_RADAR_OBJECTIVE = 3,         // the demolition or protection object
+    MP_RADAR_GOLDENEYE_KEY = 4,
+    MP_RADAR_BLUEPRINT = 6,
+    MP_RADAR_BASE = 7,              // an espionage base
+} MP_RADAR_TYPE;
+
+// A thing on the multiplayer radar, as MP_GetRadarObjects lists them for HUD_RadarUpdate
+#pragma pack(push, 1)
+typedef struct RADAROBJ {
+    _VECTOR pos;        // 0x00
+    uint colour;        // 0x0c - 0xRRGGBBAA
+    ushort icon;        // 0x10 - MP_RADAR_TYPE, into HUD_RadarUpdate's RadarIcons
+    ushort pad;
+} RADAROBJ;
+#pragma pack(pop)
+static_assert(sizeof(RADAROBJ) == 0x14, "RADAROBJ is 0x14 bytes");
+
+// Room for 22 up to Uplinks (0x002633d8); MP_GetRadarObjects writes at most NUM_AGENTS + 8
+#define MPRadarObjects (*(RADAROBJ(*)[22])0x00263220)
+
+#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
+#define BluePrintCount U16_AT(0x002637d4)
+
+#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
+#define AssassinTarget (*(obj_tag **)0x00261788)
+#define MPObjects (*(obj_tag*(*)[64])0x00263640)
+#define Bases (*(MP_OBJ_EXT(*)[2])0x00261bd0)
+#define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
+#define TimeSpr (*(sprite **)0x002637d8)
+#define StatusSpr (*(sprite **)0x002637dc)
 
 void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
@@ -234,12 +309,17 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);
 obj_tag* MP_RegisterMPObject(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void MP_objectBeingDeleted(obj_tag* obj);
 void MP_Update(void);
-obj_tag* MP_getFlagObj(uint i);
-obj_tag* MP_getBaseObj(uint i);
-obj_tag* MP_getDemolitionObj(void);
-obj_tag* MP_getProtectionObj(void);
-obj_tag* MP_getHillObj(void);
+MP_OBJ_EXT* MP_getFlagObj(uint i);
+MP_OBJ_EXT* MP_getBaseObj(uint i);
+MP_OBJ_EXT* MP_getDemolitionObj(void);
+MP_OBJ_EXT* MP_getProtectionObj(void);
+MP_OBJ_EXT* MP_getHillObj(void);
 MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
+void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
+// The original takes ext in ESI: MP_recalcObjExtPaths is the entry for that, _MP_recalcObjExtPaths the C++ under it.
+void MP_recalcObjExtPaths(bool keepPos);
+void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace);
+void _MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach);
 short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
@@ -248,6 +328,42 @@ void MP_RestartScenario(void);
 void MP_Init(void);
 obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
+// The original takes obj in EAX and team in CX: MP_HitBy is the entry for that, _MP_HitBy the C++ under it
+obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
+obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
+obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly);
+bool MP_playerIsDead(obj_tag *obj);
+void MP_ResetBotPickupTimes(ushort botNum);
+ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects);
+void MP_assassinReset(bool handOver);
+void MP_Start(void);
+
+// multiplayer_modes.cpp
+void MP_KOHUpdate(obj_tag *hill);
+// The original takes gameObj in EAX: MP_UplinkUpdate is the entry for that, _MP_UplinkUpdate the C++ under it.
+void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
+void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
+void MP_PlayerKilled(obj_tag *obj);
+
+// multiplayer_flag.cpp
+// The originals take gameObj in EAX (and MP_FlagUpdate mpObj in EDI): the plain names are the entries for that,
+// the _ names the C++ under them.
+void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
+void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
+void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+// multiplayer_goldeneye.cpp
+void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char state);
+// The original takes gameObj in EAX: MP_GoldenEyeUpdate is the entry for that, _MP_GoldenEyeUpdate the C++ under it.
+void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
+// multiplayer_objects.cpp
+void MP_ObjectUpdate(obj_tag *gameObj);
+// The original takes defenders in AX and gameObj in EBX: MP_DemolitionProtectionUpdate is the entry for that,
+// _MP_DemolitionProtectionUpdate the C++ under it.
+void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders);
+void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj);
+void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj);
 
 // FIXME move to a separate file
 bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float distance, _VECTOR *searchDirection);

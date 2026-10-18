@@ -80,6 +80,7 @@ add_library(actioninject SHARED
   src/action/devtools/FileDump.cpp
   src/action/devtools/SecretsShadow.cpp
   src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/MPMenusShadow.cpp
   src/action/devtools/UpgradeShadow.cpp
   src/action/devtools/MemShadow.cpp
   src/action/devtools/ScoreShadow.cpp
@@ -132,6 +133,14 @@ add_library(actioninject SHARED
   src/action/devtools/MenuHandlerShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
+  src/action/devtools/BotCoreShadow.cpp
+  src/action/devtools/MPFlagShadow.cpp
+  src/action/devtools/MPGoldenEyeShadow.cpp
+  src/action/devtools/DroneMPShadow.cpp
+  src/action/devtools/MPMatchShadow.cpp
+  src/action/devtools/BotStateShadow.cpp
+  src/action/devtools/MPObjectsShadow.cpp
+  src/action/devtools/MPObjectivesShadow.cpp
   src/action/devtools/Teleport.cpp
   src/action/devtools/Demo.cpp
   src/action/engine/LaunchOptions.cpp
@@ -240,6 +249,7 @@ add_library(actioninject SHARED
   src/action/game/Upgrade.cpp
   src/action/game/view.cpp
   src/action/game/drone/BOT.cpp
+  src/action/game/drone/BOTSTATE.cpp
   src/action/game/drone/Behaviour.cpp
   src/action/game/drone/Drone.cpp
   src/action/game/drone/DroneAnim.cpp
@@ -270,6 +280,10 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2_Roles.cpp
   src/action/game/obj/DroneSpawner.cpp
   src/action/game/mp/multiplayer.cpp
+  src/action/game/mp/multiplayer_goldeneye.cpp
+  src/action/game/mp/multiplayer_modes.cpp
+  src/action/game/mp/multiplayer_flag.cpp
+  src/action/game/mp/multiplayer_objects.cpp
   src/action/game/obj/Break.cpp
   src/action/game/obj/Door.cpp
   src/action/game/obj/Drone_AIHints.cpp

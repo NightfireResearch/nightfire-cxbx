@@ -84,7 +84,7 @@ function marked * is reimplemented.
 | 00261d58 | 0x700 | MP_Init | SpawnPoints (MPSpawnPoint[64]) | `SpawnPoints` |
 | 00262458 | 0x2e0 | MP_Init | BluePrints (SpawnPlace[8]) | |
 | 00262738 | 0x230 (0x1e0) | bootup_bootup*, MP_Init | MPGame (MPGameStruct; players) | `MPGame`, size asserted |
-| 00262948 | 0x20 | MP_Start | MPGame.radar_related | |
+| 00262948 | 0x20 | MP_Start | MPGame.radarMarks | |
 | 00262978 | 0x5c0 | MP_Init | GoldenEyeSpawns (SpawnPlace[16]) | |
 | 00262f40 | 0x2e0 | MP_Init | DemolitionPlaces (SpawnPlace[8]) | `DemolitionPlaces` |
 | 002633d8 | 0x220 (0x44) | MP_Init (MP_objectBeingDeleted*) | Uplinks (MP_OBJ_EXT[8]) | `Uplinks` |

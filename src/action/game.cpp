@@ -54,6 +54,7 @@
 #include "gfx/LowLevel.h"
 #include "gfx/Sprite.h"
 #include <math.h>
+#include "devtools/MenuProbe.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -120,7 +121,7 @@ void Game_Run(void) {
 
   psiPreGame_Run();
   Input_UpdateWithMouse();
-  ActionTeleport_Tick();   // devtools: F8/F9 teleport, F7 frame dump
+  Devtools_Tick();   // devtools: F8/F9 teleport, F7 frame dump, per-frame shadow tests
 
 
   if ((FreezeGame != '\0') && (switch_allowFreeze != '\0')) return;
@@ -1189,17 +1190,17 @@ void bootup_bootup(void) {
   MPSettings.ShowTeamAndNameOverhead = 1;
   MPSettings.GameMode = GM_ARENA;
 
-  for(int i = 0; i < 10; i++) {
+  for(int i = 0; i < NUM_AGENTS; i++) {
 
     MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
     MPSettings.Player[i].SomeField2 = 1;
     MPSettings.Player[i].HealthModifier = 0;
 
-    if(i < 4) {
+    if(i < NUM_PLAYERS) {
       sprintf(MPSettings.Player[i].Name, "%s %d", Txt_BindLabel(PLAYER, 0), i + 1);
     } else {
-      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - 3);
+      sprintf(MPSettings.Player[i].Name, "%s %d", "Bot", i - NUM_PLAYERS + 1);
     }
 
   }

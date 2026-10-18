@@ -41,6 +41,7 @@
 #include "action/game/sp/SSys.h"
 #include "action/game/mp/multiplayer.h"
 #include "action/game/drone/BOT.h"
+#include "action/game/drone/BOTSTATE.h"
 #include "action/game/drone/NDrone2.h"
 #include "action/game/drone/DroneAnim.h"
 #include "action/game/drone/Behaviour.h"

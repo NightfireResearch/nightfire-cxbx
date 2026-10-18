@@ -1127,7 +1127,7 @@ void RandomWorld(void) {
     world.animScript.flags = R(0) & 0xffff00ff;
     world.bot.playerIndex = (short)R(10);
     for (int i = 0; i < 114; i++)
-        world.bot.weapons[i][6] = (uchar)R(2);
+        world.bot.weapons[i].held = (uchar)R(2);
     world.bot.armour = (uchar)R(60);
     world.bot.stats.health = (ushort)R(300);
     world.stats.isBad = (uchar)R(2);

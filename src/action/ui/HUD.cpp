@@ -2750,7 +2750,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             targetMark->maybeEnabled = 0xff;
     }
 
-    for (ushort i = 0; i < 10; i++) {
+    for (ushort i = 0; i < NUM_AGENTS; i++) {
         if (!MPSettings.ShowTeamAndNameOverhead && MPSettings.GameMode != GM_ASSASSIN)
             break;
         if (i == blData->playerNum)

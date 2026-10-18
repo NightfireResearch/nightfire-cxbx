@@ -296,7 +296,7 @@ void RandomBot(BOT_vars_t *bot) {
     bot->stats.personality = personalities[ShadowRand(4)];
     bot->botIndex = (short)ShadowRand(10);
     bot->atObjective = (uchar)(ShadowRand(5) == 0);
-    bot->beingGuarded = (uchar)(ShadowRand(4) == 0);
+    bot->targeted = (uchar)(ShadowRand(4) == 0);
     static const float facings[] = {-10.0f, 10.0f, -9.999999f, 9.999999f, 45.0f, -45.0f, 0.0f};
     for (int i = 0; i < 10; i++) {
         BOT_playerInfo_t *info = &bot->players[i];
@@ -482,7 +482,7 @@ void RandomWorld(bool bots) {
             MPGame.players[i].playerObj = ShadowRand(3) == 0 ? NULL : RandomOpponent();
         else
             MPGame.players[i].playerObj = ShadowRand(3) == 0 ? NULL : &world.objs[ShadowRand(DRONES)];
-        MPGame.players[i].unknown26 = (ushort)(ShadowRand(3) == 0 ? ShadowRand(0x40) : 0);
+        MPGame.players[i].flags = (ushort)(ShadowRand(3) == 0 ? ShadowRand(0x40) : 0);
     }
 
     world.dcv.drone = &world.drones[0];

@@ -274,7 +274,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
     float rangeSq = drone->viewRange * drone->viewRange;
     // The slot is read signed
     obj_tag *preferred = bot->preferredOpponent == 0xff ? NULL : MPGame.players[(int8_t)bot->preferredOpponent].playerObj;
-    uchar attacksOnSight = drone->botVars->stats.traitFlags & 8;
+    uchar attacksOnSight = drone->botVars->stats.traitFlags & BOT_TRAIT_ATTACK_ON_SIGHT;
     if (preferred != NULL && preferred->objectType != OBJECTTYPE_PLAYER && preferred->objectType != OBJECTTYPE_DRONE) {
         preferred = NULL;
         bot->preferredOpponent = 0xff;
@@ -301,10 +301,10 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
             NDrone2_SetOpponent(drone, NULL);
     }
 
-    float costs[10];
-    bool distracted[10];
+    float costs[NUM_AGENTS];
+    bool distracted[NUM_AGENTS];
     float bestCost = NO_COST;
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < NUM_AGENTS; i++) {
         obj_tag *player = MPGame.players[i].playerObj;
         BOT_playerInfo_t *info = &bot->players[i];
         costs[i] = NO_COST;
@@ -320,7 +320,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
             continue;
         if (!(info->flags & BOT_PLAYER_IN_SIGHT) && !attacksOnSight)
             continue;
-        ushort favoured = MPGame.players[i].unknown26 & 0xf;
+        ushort favoured = MPGame.players[i].flags & 0xf;
         if (info->flags & BOT_PLAYER_TEAMMATE) {
             if (!attacksOnSight)
                 FacingDegrees(me, player);   // worked out and not used
@@ -345,10 +345,11 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
             }
         }
         if (player != drone->opponent && player != preferred
-            && (bot->stats.personality == 5 || bot->stats.personality == 2)) {
+            && (bot->stats.personality == BOT_PERSONALITY_BERSERKER
+                || bot->stats.personality == BOT_PERSONALITY_GUARDIAN)) {
             bool taken = false;
-            if (i < 4) {
-                for (int k = 4; k < 10; k++) {
+            if (i < NUM_PLAYERS) {
+                for (int k = NUM_PLAYERS; k < NUM_AGENTS; k++) {
                     obj_tag *other = MPGame.players[k].playerObj;
                     if (k != i && other != NULL && ((Drone_tag *)other->extraObjectData)->opponent == player) {
                         taken = true;
@@ -356,7 +357,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
                     }
                 }
             } else {
-                taken = ((Drone_tag *)player->extraObjectData)->botVars->beingGuarded != 0;
+                taken = ((Drone_tag *)player->extraObjectData)->botVars->targeted != 0;
             }
             if (taken)
                 cost *= 16.0f;
@@ -376,9 +377,9 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
             if (keepAny || distracted[bestIndex])
                 return BOT_handleOpponentHistory(drone, best);
             double facing;
-            if (bestIndex < 4)
+            if (bestIndex < NUM_PLAYERS)
                 facing = FacingDegrees(me, best);
-            else
+            else    // this bot's entry is players[bot->playerIndex], not [botIndex], as the original
                 facing = ((Drone_tag *)best->extraObjectData)->botVars->players[botIndex].facing;
             if (!(facing < -viewDegrees) && !(facing > viewDegrees))
                 return BOT_handleOpponentHistory(drone, best);
@@ -386,7 +387,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
             costs[bestIndex] = NO_COST;
             bestIndex = -1;
             float lowest = NO_COST;
-            for (int i = 0; i < 10; i++) {
+            for (int i = 0; i < NUM_AGENTS; i++) {
                 if (costs[i] < lowest) {
                     lowest = costs[i];
                     bestIndex = i;

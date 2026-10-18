@@ -266,7 +266,8 @@ Everything else in their readings of parcel 6 matched the Xbox.
     (0x37d8d-0x37da9); theirs `fptoui(FRAME_RATE * (mul * 20))`. `SetOpponent` converts unseenFrames unsigned on the
     x87 (0x37ae7).
 - `NDrone2_FindOpponent` walks MPGame's 10 Xbox player slots (0x262754-0x262934, stride 0x30), and slots 4-9 for "a
-  bot already targets it"; theirs 8, and 4-7.
+  bot already targets it"; theirs 8, and 4-7. Ours now counts them with `NUM_AGENTS` and `NUM_PLAYERS`
+  (game/mp/MPLimits.h; see "Merged with the bot limit" below).
 - The obstacle record of `NDrone2_Steer` is 0x30 bytes on the Xbox, the obstacle's ending where the drone's begins
   (ESP+0x18 and ESP+0x48); theirs is one 0xd0-byte record.
 - Layout, not errors: the sound alertness is `DYNAMICSOUNDS.alertness` (+0x38; theirs +0x48); a bot's view of a player
@@ -1110,6 +1111,40 @@ Found along the way:
   leaves as stack.
 - The handlers' `Process_Create` messages (P_MAIN's label fades and P_NFSELECT's group fade) start
   zeroed; the original fills only the fields it sets and leaves the rest as stack.
+
+## Merged with the bot limit (multiplayer-num-bots)
+
+The multiplayer-num-bots branch (based on dev of 10 October 2026) made the bot count a constant: `NUM_PLAYERS`,
+`NUM_BOTS` and `NUM_AGENTS` in game/mp/MPLimits.h, with every original that hard-coded 4, 6 or 10 ported
+(docs/architecture/player-weapons-mp.md, "The bot limit"). Six of its ports had been made again in these parcels:
+`NDrone2_FindOpponent` 0x37c10 (parcels 3 and 7), `Drone_SM_RouteMsg` 0x4e630 (parcel 3), `Pickup_Update` 0xa84d0
+and `GT_Track` 0x99da0 (14a), `HUD_RadarUpdate` 0xb54d0 (15a) and `C_GCPAUSE_Handler` 0x80590 (16c). The merge
+(18 October 2026) kept ours, in their files and our layouts, with the constants put in where the original has the
+count:
+
+- `Pickup_Update` and `GT_Track`: the original tests a drone's flags, health, type and deletion bit inline (0xa87e4,
+  0x99fab), as ours does; the branch's called `MPDrone_MaybeIsDyingOrDead`, a call the original does not make.
+  `GT_Track` keeps the x87 distance unrounded against the range (FST then FCOMP, 0x99ec4), as ours does.
+- `NDrone2_FindOpponent`, `Drone_SM_RouteMsg`, `HUD_RadarUpdate`, `C_GCPAUSE_Handler`: the two agree in behaviour;
+  ours kept, the branch's comments taken where they say more (a bot reads another bot's view of it at
+  `players[botIndex]`, not at its own player index: kept, as the original).
+
+Structures both sides had invented were made one: `BOT_playerInfo_t` (our names; the branch's `BOT_weapon_t` taken),
+`MPGame.radarMarks` (the branch's `radar_related`), `RADAROBJ` (moved to multiplayer.h, the branch's
+`MP_RADAR_OBJECT`), `PICKUPINFO`, `GUNTURRET`, `Drone_tag`, `NPCGlobals_t` and BLData (our names). From the branch:
+`MPGamePlayer.flags` (`MPGamePlayerFlags`, our `unknown26`), `BOT_vars_t.targeted` (our `beingGuarded`: the branch
+has its writer, `BOT_setOtherPlayerInfo`), the bot personality and trait enums, and `PlrMissionStats` sized by
+`NUM_AGENTS`.
+
+The branch's live-play shadows (settings keys `<Name>Shadow=on`: BotCore, BotState, DroneMP, MPMatch, MPObjects,
+MPFlag, MPGoldenEye, MPObjectives) were written when the callers of `NDrone2_FindOpponent`, `GT_Track` and
+`HUD_Update` were originals; ours now call them by name, so DroneMPShadow and MPObjectsShadow also put a jump on our
+own entries (taken off while the shadow runs ours), and MPObjectsShadow catches our `_Pickup_Handler` as it does the
+original's. Checked with the merge: the full MenuShadowTests run, MPMenusShadow included, 0 differ; the nine time
+demos match; MenuProbe A/B over mp_setup, mp_start, mp_confirm, multiplayer and multiplayer_bots with the 37 merged
+functions as the originals, identical screenshots and messages; Quick Game matches in each of the 12 modes (mp_start
+with `poke 0x0026003c <GameMode>`) with every MP shadow on, 0 differ (planted bugs in `NDrone2_FindOpponent`,
+`Pickup_Update` and `HUD_RadarUpdate` caught). `GT_Track` is not reached: the Quick Game map has no turrets.
 
 ## What the demos do not cover
 

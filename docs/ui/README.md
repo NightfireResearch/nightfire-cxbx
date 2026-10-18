@@ -60,7 +60,7 @@ definitions. A consequence for A/B runs: an original handler run with `MenuOrigi
 no longer changes. (An alternative was built and is not used: `// RELOCATE` on an array plus `tools/data_refs.py`
 repoints every code reference at it - `src/common/xbeRelocate.h`.)
 
-Not yet: the multiplayer join and setup handlers (P_MPJOIN, P_MPSETUP, C_RBMPSTART, C_RBMPCNAME, C_RBMPFINISH, C_MPDBG), P_MPRULES, P_MPBOTSETUP and the movie selector P_FMVTEST.
+Not yet: the multiplayer join and setup handlers (P_MPJOIN, P_MPSETUP, C_RBMPSTART, C_RBMPCNAME, C_RBMPFINISH, C_MPDBG), P_MPRULES and the movie selector P_FMVTEST (P_MPBOTSETUP is ours, in `ui_mp.cpp`).
 
 ## Checking against the original
 
