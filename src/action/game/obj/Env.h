@@ -5,18 +5,40 @@
 
 #pragma pack(push, 1)
 
-// A cel's wind (cel_tag::env). Only what Env_GetWindVel reads is named.
+// A cel's wind (cel_tag::env), 0x44 bytes (Env_Create). Its strength swells to windMax and dies back to a quarter
+// of it, and its gust runs from -1 to 1 over and over (Env_Update).
 typedef struct ENV_tag {
     _VECTOR windDir;            // 0x00
-    char _unknown0c[0x24 - 0x0c];
+    _VECTOR windSide;           // 0x0c - windDir crossed with the placement's direction
+    _VECTOR pos;                // 0x18 - the placement's
     float windStrength;         // 0x24
-    float windOn;               // 0x28 - no wind for 0
+    float windMax;              // 0x28 - no wind for 0
     float windGust;             // 0x2c - its size counts
-    char _unknown30[0x38 - 0x30];
+    float unknown30;            // 0x30
+    float unknown34;            // 0x34
     float windSpread;           // 0x38 - how much the wind grows along its way from the cel's centre
+    uchar unknown3c[3];         // 0x3c
+    uchar dropType;             // 0x3f - InitDrops' kind for the level (GlobalEnv's)
+    uchar unknown40;            // 0x40
+    uchar windRising;           // 0x41 - windStrength is swelling
+    uchar unknown42[2];         // 0x42
 } ENV_tag;
 
+static_assert(sizeof(ENV_tag) == 0x44, "ENV_tag is 0x44 bytes");
 static_assert(offsetof(ENV_tag, windSpread) == 0x38, "Bad offset of ENV_tag.windSpread");
+static_assert(offsetof(ENV_tag, windRising) == 0x41, "Bad offset of ENV_tag.windRising");
+
+// The last ENV_tag Env_Create made, whose dropType is the level's rain
+#define GlobalEnv (*(ENV_tag **)0x001f64ac)
+
+// An animated tree's placement keys (level_tag)
+typedef struct TreePlacement {
+    char _unknown00[0x2c];
+    HASHCODE skin;              // 0x2c
+    HASHCODE script;            // 0x30
+} TreePlacement;
+
+static_assert(offsetof(TreePlacement, script) == 0x30, "Bad offset of TreePlacement.script");
 
 #pragma pack(pop)
 
@@ -24,6 +46,10 @@ void Env_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl)
 obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Env_GetWindVel(cel_tag *cel, _VECTOR *pos, _VECTOR *velOut);
 void Env_WaterRipple(HITDATA_tag *hit);
+void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created);
+void Env_Tree_Update(obj_tag *obj);
+void Env_Update(void);
+void Env_Reset(void);
 
 
 #endif // ENV_H_

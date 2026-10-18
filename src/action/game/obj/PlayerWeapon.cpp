@@ -35,8 +35,6 @@
 #define Check_Target ((void (__cdecl *)(obj_tag *player))0x000b9580)
 #define Control_CreateObjEx ((obj_tag *(__cdecl *)(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *gfx, obj_tag *parent, char linkToRoom, ushort p8, float glowScale, ushort p10, uchar r, uchar g, uchar b))0x0002e320)
 #define Text_AddMsg ((void (__cdecl *)(char player, char p2, int p3, const char *text, int p5, short frames))0x000d1d70)
-#define GT_TakeControl ((bool (__cdecl *)(obj_tag *turret, obj_tag *player))0x0009a790)
-#define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *player))0x0009a9b0)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(int p1, int message, int weapon, int p4, obj_tag *player))0x0009e430)
 
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
@@ -91,7 +89,7 @@ typedef struct {
     uint32_t switchChannelTimes[256];   // 0x604
     short bondMoments[10];              // 0xa04 - BondMoments[0x65] on
     short weapon;                       // 0xa18 - the weapon being switched to
-    char weaponTail[0x33];              // 0xa1a - BLData::unknown6b0
+    char weaponTail[0x33];              // 0xa1a - BLData::keys
     char switchChannels[256];           // 0xa4d
     char switchChannelsHold[256];       // 0xb4d
     char switchChannelsPrev[256];       // 0xc4d
@@ -182,6 +180,12 @@ void Player_InitAmmoWeapons(obj_tag *player) {
     blData->lastWeapon = 0;
 }
 
+// A key taken: its byte, unbounded
+// AUTOINJECT
+void Player_EquipKey(BLData *blData, ushort key) {
+    blData->keys[key] = 1;
+}
+
 // Gives the player a weapon (upgraded as his upgrades say, in single player) and ammo for it. A weapon he did not have
 // comes with a full clip and the rest of the ammo goes to his stock; one he had only adds ammo, and nothing when the
 // stock is full or there is none to add. Returns whether he took it. With the auto-switch option, a better weapon is
@@ -249,7 +253,7 @@ void Player_RamLoad(BLData *blData, char boostHealth) {
 
     memcpy(blData->ammo, RamSaveData.ammo, sizeof(RamSaveData.ammo));
     memcpy(blData->weaponStats, RamSaveData.weaponStats, sizeof(RamSaveData.weaponStats));
-    memcpy(blData->unknown6b0, RamSaveData.weaponTail, sizeof(RamSaveData.weaponTail));
+    memcpy(blData->keys, RamSaveData.weaponTail, sizeof(RamSaveData.weaponTail));
     SSys_RamLoad(RamSaveData.ssysItems);
     float health = RamSaveData.health;
     memcpy(&PlrMissionStats[0], &RamSaveData.stats, sizeof(RamSaveData.stats));
@@ -287,7 +291,7 @@ void Player_RamLoad(BLData *blData, char boostHealth) {
 void Player_RamSave(BLData *blData) {
     memcpy(RamSaveData.ammo, blData->ammo, sizeof(RamSaveData.ammo));
     memcpy(RamSaveData.weaponStats, blData->weaponStats, sizeof(RamSaveData.weaponStats));
-    memcpy(RamSaveData.weaponTail, blData->unknown6b0, sizeof(RamSaveData.weaponTail));
+    memcpy(RamSaveData.weaponTail, blData->keys, sizeof(RamSaveData.weaponTail));
     memcpy(RamSaveData.ssysItems, SSysItems, sizeof(RamSaveData.ssysItems));
     memcpy(&RamSaveData.stats, &PlrMissionStats[0], sizeof(RamSaveData.stats));
     memcpy(RamSaveData.bondMoments, &BondMoments[0x65], sizeof(RamSaveData.bondMoments));

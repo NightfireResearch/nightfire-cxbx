@@ -3,6 +3,37 @@
 
 #include "../actionhelpers.h"
 
+#pragma pack(push, 1)
+// The sky's models (View_AddSkyObj), each a model or an object, and those that flash: lightning, in the sky's
+// level of the given pass, at random within its interval for its length, with thunder after
+struct SkyObj {
+    celglist_tag *glist;
+    celglist_tag *flashGlist;   // 0x04
+    obj_tag *obj;               // 0x08
+    obj_tag *flashObj;          // 0x0c
+    _VECTOR pos;                // 0x10
+    _VECTOR rot;                // 0x1c
+    ushort flashInterval;       // 0x28 - frames
+    ushort flashLength;         // 0x2a
+    short flashTimer;           // 0x2c
+    short countdown;            // 0x2e
+    short thunderDelay;         // 0x30
+    char pass;                  // 0x32
+    char pad33;
+};
+#pragma pack(pop)
+static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
+
+#define SKY_OBJS 21
+#define SkyObjs (*(SkyObj (*)[SKY_OBJS])0x0029d7a0)
+// A flash shows this frame; this flash is overhead (Lightning_Update reads both); its thunder is near
+#define LightningFlash U8_AT(0x0029e81a)
+#define ThunderNear U8_AT(0x0029e81b)
+#define LightningOverhead U8_AT(0x0029e81c)
+// The frames the sky has turned, on its level 0x0700001b, and where its sun goes
+#define SkyTurn U32_AT(0x0029e820)
+#define SkySunPos (*(_VECTOR *)0x001f6668)
+
 void View_SetDrawInAllViews(obj_tag* o);
 void View_SetDrawInNoViews(obj_tag* o);
 void View_SetDrawInOtherViewsOnly(obj_tag* param_1, char playerNum);

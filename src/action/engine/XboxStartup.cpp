@@ -43,10 +43,6 @@
 
 // The game's own static initialisers (C++ constructors of globals) that are not ours yet
 // AUTOGEN
-undefined FUN_000f5460(void);
-// AUTOGEN
-undefined FUN_000f5470(void);
-// AUTOGEN
 undefined FUN_000f5480(void);
 // AUTOGEN
 void __stdcall FUN_000f5490(void);
@@ -295,8 +291,8 @@ static void Xbox_cinit(void) {
     CrtInitStdio();
     CrtInitAtExit();
     // The C++ constructors
-    FUN_000f5460();
-    FUN_000f5470();
+    Copter_InitConeCos();
+    Copter_InitConeSin();
     FUN_000f5480();
     FUN_000f5490();
     HUD_InitObjectiveStatusPaneWidth();

@@ -553,7 +553,7 @@ void RandomWorld(void) {
         s->variant = (char)(ShadowRand(3) ? 0 : ShadowRand(3));
     }
     for (int i = 0; i < 0x34; i++)
-        bl->unknown6b0[i] = (char)ShadowRand(256);
+        bl->keys[i] = (char)ShadowRand(256);
     RandomVector(&bl->lastMovement, 0.3f);
     RandomVector(&bl->muzzle, 6.0f);
     bl->autoAimTarget = ShadowRand(3) ? NULL : &world.droneObjs[ShadowRand(DRONES)];

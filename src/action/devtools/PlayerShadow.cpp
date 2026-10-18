@@ -674,9 +674,9 @@ void RandomWorld(void) {
     world.player.subState = subStates[ShadowRand(19)];
     world.player.curState = (ushort)(ShadowRand(5) ? 1 : ShadowRand(5));
     world.player.hitList = ShadowRand(3) ? &world.hits[0] : NULL;
-    world.player.light_related1 = (uchar)ShadowRand(256);
-    world.player.light_related2 = (uchar)ShadowRand(256);
-    world.player.light_related3 = (uchar)ShadowRand(256);
+    world.player.ambientR = (uchar)ShadowRand(256);
+    world.player.ambientG = (uchar)ShadowRand(256);
+    world.player.ambientB = (uchar)ShadowRand(256);
     world.player.effectFlags = ShadowRand(0x10000);
     world.player.transformFlags = (ushort)ShadowRand(0x80);
     world.player.creationTimeFrames = (int)ShadowRand(0x7fff);

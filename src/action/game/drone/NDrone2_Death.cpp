@@ -2,6 +2,7 @@
 // set as dead, and fading out. Also which way an explosion that kills it came from.
 
 #include "NDrone2.h"
+#include "../obj/Pickup.h"
 #include "DroneTables.h"
 #include "DroneWeapon.h"
 #include "Behaviour.h"
@@ -20,7 +21,6 @@
 #include <math.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, _VECTOR *pos))0x000a7f10)
 #define DroneAnim_SetScript ((bool (__cdecl *)(HASHCODE script, ushort animState, ushort nextRow, uchar blend,                                              short endState, uint endMsg, uint flags, DCVars_tag *dcv))0x00034680)
 #define NDrone2_SlideToPosition ((void (__cdecl *)(_VECTOR *pos, float speed, char turn, DCVars_tag *dcv))0x00043b20)
 // FUN_0002faa0 in Ghidra (our name): Vec_Dist3D from the drone to obj, returned in ST0
@@ -182,7 +182,7 @@ void DroneFunc_OnInitDeath(DCVars_tag *dcv) {
     case HT_Level_CastleCourtyard:
     case HT_Level_CastleIndoors1:
     case HT_Level_CastleIndoors2:
-        Pickup_CreateSimple(&dcv->gameObj->transformMatrix, 0x35, 2, NULL);
+        Pickup_CreateSimple(&dcv->gameObj->transformMatrix, 0x35, 2, 0);
         break;
     case HT_Level_TowerA:
     case HT_Level_TowerB:
@@ -194,7 +194,7 @@ void DroneFunc_OnInitDeath(DCVars_tag *dcv) {
     case HT_Level_EvilSilo:
     case HT_Level_EvilBaseC:
     case HT_Level_Tower2Elevator:
-        Pickup_CreateSimple(&dcv->gameObj->transformMatrix, 0x34, 1, NULL);
+        Pickup_CreateSimple(&dcv->gameObj->transformMatrix, 0x34, 1, 0);
         break;
     default:
         break;

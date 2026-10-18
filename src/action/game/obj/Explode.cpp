@@ -24,7 +24,6 @@
 
 #define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
 #define MP_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage, obj_tag *from))0x000a12b0)
-#define GT_Disable ((void (__cdecl *)(obj_tag *obj))0x0009a6f0)
 #define Sub_ApplyDamage ((void (__cdecl *)(obj_tag *sub, float damage))0x000cf6a0)
 // On the Xbox both are the empty function the linker shares with others (0x000e0ec0)
 #define Sensor_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage))0x000e0ec0)
@@ -189,8 +188,8 @@ void Explode_Propagate(_VECTOR *pos, float radius, cel_tag *cel, float damage, o
             for (COPTER *copter = (COPTER *)CopterList.head; copter != NULL; copter = (COPTER *)copter->node.next) {
                 for (int i = 0; i < 9; i++) {
                     if (hit->hitObj == copter->parts[i]) {
-                        copter->damageB += hurt;
-                        copter->damageA += hurt;
+                        copter->attackDamage += hurt;
+                        copter->damage += hurt;
                     }
                 }
             }

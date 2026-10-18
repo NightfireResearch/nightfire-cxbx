@@ -27,6 +27,19 @@ typedef struct {
     char unknown82[2];
 } GUNIMP;
 
+// A kind of emplacement (GUNIMP::gunType): the multiplayer weapon sets' 0-10, 11 single player's
+typedef struct GUNTYPE {
+    _VECTOR muzzle;              // 0x00 - in the gun's frame
+    HASHCODE model;              // 0x0c - the gun's
+    int weapon;                  // 0x10
+    float refire;                // 0x14 - frames
+    int sound;                   // 0x18 - each shot's, or the loop's for weapons 0x67 and 0x70
+} GUNTYPE;
+
+static_assert(sizeof(GUNTYPE) == 0x1c, "Bad size for GUNTYPE");
+
+#define GunTypes (*(GUNTYPE (*)[12])0x00163a30)
+
 static_assert(sizeof(GUNIMP) == 0x84, "Bad size for GUNIMP");
 static_assert(offsetof(GUNIMP, userOffset) == 0x50, "Bad offset of userOffset");
 static_assert(offsetof(GUNIMP, firingSound) == 0x7c, "Bad offset of firingSound");
@@ -37,5 +50,7 @@ static_assert(offsetof(GUNIMP, gunType) == 0x81, "Bad offset of gunType");
 void GunImp_Activate(obj_tag *gunObj, obj_tag *player);
 void GunImp_Deactivate(obj_tag *gunObj);
 obj_tag * GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl);
+void GunImp_PlayerHasDied(obj_tag *player);
+void GunImp_Update(obj_tag *gunObj);
 
 #endif // GUNIMP_H_

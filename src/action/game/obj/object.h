@@ -201,9 +201,9 @@ typedef struct obj_tag {
     char unknown_0xd9;     // 0xd9 - bits: 1 player and drones, 2 bullets, 8 doors; tested by Collide_PickObj
     char flags; // (1 == Marked for deletion or resetting)
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
-    uchar light_related1;
-    uchar light_related2;
-    uchar light_related3;
+    uchar ambientR;        // 0xdc - the ambient light, eased towards its cel's (Lights_CalcAmbientLight)
+    uchar ambientG;
+    uchar ambientB;
     uchar tweakR;
     uchar tweakG;
     uchar tweakB;

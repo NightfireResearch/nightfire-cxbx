@@ -20762,7 +20762,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00067ea0",
+        "name": "ColourGetValue",
         "address": "0x00067ea0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -22024,7 +22024,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006b830",
+        "name": "Copter_SeesPlayer",
         "address": "0x0006b830",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -22056,7 +22056,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006b9f0",
+        "name": "Copter_NextPath",
         "address": "0x0006b9f0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": true,
@@ -23610,7 +23610,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006feb0",
+        "name": "Particles_Create",
         "address": "0x0006feb0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -30272,7 +30272,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009a5b0",
+        "name": "GT_AimAt",
         "address": "0x0009a5b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -40786,7 +40786,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000cdef0",
+        "name": "Leaf_Create",
         "address": "0x000cdef0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -46224,7 +46224,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000de5d0",
+        "name": "psiCreateParticles",
         "address": "0x000de5d0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -56242,7 +56242,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5460",
+        "name": "Copter_InitConeCos",
         "address": "0x000f5460",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -56254,7 +56254,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5470",
+        "name": "Copter_InitConeSin",
         "address": "0x000f5470",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,

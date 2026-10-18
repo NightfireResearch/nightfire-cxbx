@@ -150,9 +150,9 @@ void control_init_object(obj_tag* obj) {
     obj->tweakG = 0xff;
     obj->tweakB = 0xff;
     obj->tweakA = 0xff;
-    obj->light_related1 = 0xff;
-    obj->light_related2 = 0xff;
-    obj->light_related3 = 0xff;
+    obj->ambientR = 0xff;
+    obj->ambientG = 0xff;
+    obj->ambientB = 0xff;
 
 }
 

@@ -576,10 +576,10 @@ void psiSetShardRenderStates(void) {
     d3dSetCullMode(0);
 }
 
-// The PS2 build copied to the scratchpad; here it is the pointer itself
+// The PS2 build copied size bytes to its scratchpad at offset; here it is the pointer itself
 // AUTOINJECT
-uint32_t psiCopyToSP(uint32_t value) {
-    return value;
+void* psiCopyToSP(void *src, uint offset, uint size) {
+    return src;
 }
 
 // ---------------------------------------------------------------------------------------------------------------

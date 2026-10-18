@@ -1641,8 +1641,30 @@ bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *
   return false;
 }
 
-// AUTOGEN
-bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
+// Whether a sphere (its radius after its centre) touches a cone: its apex, its unit direction and the cosine and sine
+// of its half angle. Inside the sphere counts. The x87's values are kept where it keeps them; the distance's square
+// is compared unrounded with the radius's, rounded with the rest.
+// AUTOINJECT
+bool Intersect_ConeSphere(_VECTOR *apex, _VECTOR *dir, float cosA, float sinA, _VECTOR *sphere) {
+    _VECTOR toCentre;
+    Vec_Subtract(sphere, apex, &toCentre);
+    float radius = ((sphere_equ_tag *)sphere)->r;
+    float radiusSq = radius * radius;
+    double distSq = Vec_SqMagnitude(&toCentre);
+    float distSqf = (float)distSq;
+    if (distSq <= radiusSq)
+        return true;
+
+    double along = (double)toCentre.y * dir->y + (double)toCentre.z * dir->z + (double)toCentre.x * dir->x;
+    double alongSq = along * along;
+    if (alongSq >= (double)cosA * cosA * distSqf && along > 0.0)
+        return true;
+
+    double edge = sqrt(AbsFchs(distSqf - alongSq)) * sinA + along * cosA;
+    if (!(edge * edge - distSqf + radiusSq >= 0.0))
+        return false;
+    return edge >= 0.0;
+}
 
 // Empties the hit heap (entries of 0x50 bytes, none preallocated - Coll_GetHit grows it 0x40 at a time) and
 // allocates a fresh, zeroed triangle buffer of 100 entries.

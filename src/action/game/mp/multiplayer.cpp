@@ -4,6 +4,7 @@
 #include "../obj/car.h"
 #include "../obj/GT.h"
 #include "../obj/GunImp.h"
+#include "../obj/Pickup.h"
 #include "../drone/BOT.h"
 #include "../obj/bullet.h"
 #include <stdio.h>
@@ -775,8 +776,6 @@ void MP_Update(void) {
 
 }
 
-// AUTOGEN
-void __stdcall Pickup_MakeRandomWeaponSet(void);
 
 // One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from this clear)
 #pragma pack(push, 1)

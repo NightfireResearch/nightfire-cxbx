@@ -123,6 +123,7 @@ add_library(actioninject SHARED
   src/action/devtools/CollidePortShadow.cpp
   src/action/devtools/EffectPortShadow.cpp
   src/action/devtools/ViewMathShadow.cpp
+  src/action/devtools/ObjectPortShadow.cpp
   src/action/devtools/CameraShadow.cpp
   src/action/devtools/MathExactShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -262,6 +263,19 @@ add_library(actioninject SHARED
   src/action/game/obj/GunImp.cpp
   src/action/game/obj/Ladder.cpp
   src/action/game/obj/Light.cpp
+  src/action/game/obj/LeafGen.cpp
+  src/action/game/obj/OneSided.cpp
+  src/action/game/obj/Pickup.cpp
+  src/action/game/obj/RainBox.cpp
+  src/action/game/obj/Ripples.cpp
+  src/action/game/obj/Emitter.cpp
+  src/action/game/obj/Flicker.cpp
+  src/action/game/obj/Mine.cpp
+  src/action/game/obj/Shooter.cpp
+  src/action/game/obj/Apocalypse.cpp
+  src/action/game/obj/Cloud.cpp
+  src/action/game/obj/Corona.cpp
+  src/action/game/obj/Lightning.cpp
   src/action/game/obj/PCQWorm.cpp
   src/action/game/obj/Player.cpp
   src/action/game/obj/PlayerTraverse.cpp

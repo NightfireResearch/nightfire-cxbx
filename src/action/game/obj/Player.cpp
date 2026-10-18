@@ -1,4 +1,5 @@
 #include "Player.h"
+#include "Pickup.h"
 #include "../Upgrade.h"
 #include "../mp/multiplayer.h"
 #include "../view.h"
@@ -1666,13 +1667,9 @@ void Player_PositionCamera(obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 
 // The originals, called by address
-#define Lights_CalcClosestLights ((light_tag **(__cdecl *)(_VECTOR *pos, uint mask, ushort *count))0x0006d8f0)
-#define GunImp_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x00026f10)
-#define GT_PlayerHasDied ((void (__cdecl *)(obj_tag *player))0x0009a960)
 #define MP_PlayerKilled ((void (__cdecl *)(obj_tag *player))0x000a1fc0)
 #define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
 #define Menu_PlayerHasQuitOrRestarted ((bool (__cdecl *)(void))0x00092c30)
-#define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, int weapon, short count, int param_4))0x000a7f10)
 #define Control_Plr2Ind ((short (__cdecl *)(obj_tag *player))0x0002d8a0)
 #define GameFlow_GetState ((uint (__cdecl *)(void))0x0006aa70)
 #define Control_BuildWorldSph ((void (__cdecl *)(obj_tag *obj))0x0002db20)
@@ -1967,7 +1964,7 @@ void __declspec(naked) Player_InWater(void) {
 // lights, an eighth of its colour scaled by distance over brightness; 255 is fully lit.
 // AUTOINJECT
 void Player_InShadow(BLData *blData, obj_tag *player) {
-    int sum = player->light_related1 + player->light_related2 + player->light_related3;
+    int sum = player->ambientR + player->ambientG + player->ambientB;
     int light = Ftol((double)sum * 0.33333334f);
 
     ushort count;

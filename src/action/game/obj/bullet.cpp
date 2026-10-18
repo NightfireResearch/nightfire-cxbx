@@ -34,7 +34,6 @@
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 #define Bullet_acquiretarget ((void (__cdecl *)(BU_tag *bullet, obj_tag *shooter))0x00022db0)
 #define Control_ObjectReferenced ((void (__cdecl *)(obj_tag *obj, char referenced))0x0002db00)
-#define GT_Disable ((void (__cdecl *)(obj_tag *obj))0x0009a6f0)
 
 // The spent cases, used in turn
 #define NUM_CASINGS 32

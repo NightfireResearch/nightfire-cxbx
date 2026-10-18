@@ -17,6 +17,9 @@
 #include "../math/X87Ops.h"
 #include "obj/Break.h"
 #include "obj/Effect.h"
+#include "obj/Emitter.h"
+#include "obj/Light.h"
+#include "obj/RainBox.h"
 #include "obj/control.h"
 #include "obj/object.h"
 #include <bit>
@@ -136,10 +139,7 @@ uint32_t switch_ForceDrawAll;
 #define FlashMod FLOAT_AT(0x0027911c)
 
 // The originals, called by address
-#define Lights_CalcClosestLights ((void **(__cdecl *)(_VECTOR *sphere, uint mask, ushort *count))0x0006d8f0)
-#define Emitter_Draw ((void (__cdecl *)(obj_tag *obj, viewer_tag *viewer))0x00068930)
 #define View_DrawSprites ((void (__cdecl *)(viewer_tag *viewer, sprite **list, uint first, uint last))0x000d9410)
-#define DrawDrops ((void (__cdecl *)(void))0x000a3560)
 #define GlobalBlur U8_AT(0x001f667c)
 
 // The empty function the linker shares, where the source called its profiling hooks
@@ -414,16 +414,16 @@ void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
     if (flashes && FlashOption && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
         double flash = FlashMod;
         if (obj->effectFlags & 0x800) {
-            psiSetTweakARGB(alpha, Ftol((int)(obj->tweakR * obj->light_related1) * flash * (1.0f / 255.0f)),
-                            Ftol((int)(obj->tweakG * obj->light_related2) * flash * (1.0f / 255.0f)),
-                            Ftol((int)(obj->tweakB * obj->light_related3) * flash * (1.0f / 255.0f)));
+            psiSetTweakARGB(alpha, Ftol((int)(obj->tweakR * obj->ambientR) * flash * (1.0f / 255.0f)),
+                            Ftol((int)(obj->tweakG * obj->ambientG) * flash * (1.0f / 255.0f)),
+                            Ftol((int)(obj->tweakB * obj->ambientB) * flash * (1.0f / 255.0f)));
         } else {
             psiSetTweakARGB(alpha, Ftol((int)obj->tweakR * flash), Ftol((int)obj->tweakG * flash),
                             Ftol((int)obj->tweakB * flash));
         }
     } else if (obj->effectFlags & 0x800) {
-        psiSetTweakARGB(alpha, (obj->tweakR * obj->light_related1) >> 8, (obj->tweakG * obj->light_related2) >> 8,
-                        (obj->tweakB * obj->light_related3) >> 8);
+        psiSetTweakARGB(alpha, (obj->tweakR * obj->ambientR) >> 8, (obj->tweakG * obj->ambientG) >> 8,
+                        (obj->tweakB * obj->ambientB) >> 8);
     } else {
         psiSetTweakARGB(alpha, obj->tweakR, obj->tweakG, obj->tweakB);
     }
@@ -437,7 +437,7 @@ void View_SetupRenderModes(viewer_tag *viewer, obj_tag *obj) {
 
     View_SetupRenderModes_Tweak(viewer, obj);
     ushort count;
-    void **lights = Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
+    void **lights = (void **)Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
     psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
 }
 
@@ -453,7 +453,7 @@ void View_SetupRenderModes2(viewer_tag *viewer, obj_tag *obj) {
         float radius;
     } eye = {viewer->pos, 2.0f};
     ushort count;
-    void **lights = Lights_CalcClosestLights(&eye.centre, (ushort)obj->effectFlags, &count);
+    void **lights = (void **)Lights_CalcClosestLights(&eye.centre, (ushort)obj->effectFlags, &count);
     psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
 }
 
@@ -473,7 +473,7 @@ static void View_SetupCelRenderModes(cel_tag *cel) {
     }
     psiSetTweakARGB(alpha, 0xff, 0xff, 0xff);
     ushort count;
-    void **lights = Lights_CalcClosestLights(&cel->sphere, (ushort)cel->flags84, &count);
+    void **lights = (void **)Lights_CalcClosestLights(&cel->sphere, (ushort)cel->flags84, &count);
     psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
 }
 
@@ -586,7 +586,7 @@ void View_DrawObjList(viewer_tag *viewer, ushort list) {
         }
         View_SetupRenderModes_Tweak(viewer, obj);
         ushort count;
-        void **lights = Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
+        void **lights = (void **)Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
         psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
         if (obj->transformFlags & 0x10)
             __profiling_or_debugging_hook_point();
@@ -601,36 +601,6 @@ void View_DrawObjList(viewer_tag *viewer, ushort list) {
     bShadowCharacter = 0;
 }
 
-#pragma pack(push, 1)
-// The sky's models (View_AddSkyObj), each a model or an object, and those that flash: lightning, in the sky's
-// level of the given pass, at random within its interval for its length, with thunder after
-struct SkyObj {
-    celglist_tag *glist;
-    celglist_tag *flashGlist;   // 0x04
-    obj_tag *obj;               // 0x08
-    obj_tag *flashObj;          // 0x0c
-    _VECTOR pos;                // 0x10
-    _VECTOR rot;                // 0x1c
-    ushort flashInterval;       // 0x28 - frames
-    ushort flashLength;         // 0x2a
-    short flashTimer;           // 0x2c
-    short countdown;            // 0x2e
-    short thunderDelay;         // 0x30
-    char pass;                  // 0x32
-    char pad33;
-};
-#pragma pack(pop)
-static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
-
-#define SKY_OBJS 21
-#define SkyObjs (*(SkyObj (*)[SKY_OBJS])0x0029d7a0)
-// A flash shows this frame; this flash is overhead (Lightning_Update reads both); its thunder is near
-#define LightningFlash U8_AT(0x0029e81a)
-#define ThunderNear U8_AT(0x0029e81b)
-#define LightningOverhead U8_AT(0x0029e81c)
-// The frames the sky has turned, on its level 0x0700001b, and where its sun goes
-#define SkyTurn U32_AT(0x0029e820)
-#define SkySunPos (*(_VECTOR *)0x001f6668)
 #define SKY_TURNING_LEVEL 0x0700001b
 #define SKY_SUN_YAW 4.9741883f
 #define SKY_SUN_PITCH -0.6632251f

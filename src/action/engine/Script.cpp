@@ -1,4 +1,5 @@
 #include "Script.h"
+#include "../game/obj/Emitter.h"
 #include "../util/bin.h"
 #include "Anim.h"
 #include "Collide.h"
@@ -94,8 +95,6 @@ typedef struct {
 #define Sound_IsFinnished ((bool (__cdecl *)(DYNAMICSOUNDS *handle))0x000cbac0)
 // The originals: ours in Break.cpp are not patched in yet
 #define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
-// Ghidra says it returns nothing; it returns the emitter Emitter_Create made
-#define Emitter_CreatePlistObj ((obj_tag *(__cdecl *)(_MATRIX *mtx, level_tag *placement))0x00068470)
 
 // AUTOGEN
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
@@ -782,7 +781,7 @@ obj_tag* _Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placemen
         obj = Switch_Create(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, placement, hashtable_hashcode_to_celglist(hashcode));
         break;
     case Place_Emitter:
-        obj = Emitter_CreatePlistObj(&identity, placement);
+        obj = Emitter_CreatePlist(&identity, placement);
         control_unlink_object(obj);
         break;
     case Place_Destroy:

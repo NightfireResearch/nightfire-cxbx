@@ -32,8 +32,6 @@ uint32_t BackgroundMovieHashcode;
 // It's only when they take arguments that the calling convention matters
 
 // AUTOGEN
-void __stdcall Env_Update(void);
-// AUTOGEN
 void __stdcall Light_Update(void);
 
 

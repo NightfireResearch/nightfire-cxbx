@@ -1402,9 +1402,9 @@ void MakeObj(int i) {
     o.tweakG = (uchar)NextWord();
     o.tweakB = (uchar)NextWord();
     o.tweakA = (uchar)NextWord();
-    o.light_related1 = (uchar)NextWord();
-    o.light_related2 = (uchar)NextWord();
-    o.light_related3 = (uchar)NextWord();
+    o.ambientR = (uchar)NextWord();
+    o.ambientG = (uchar)NextWord();
+    o.ambientB = (uchar)NextWord();
     o.flags = (char)NextWord();
     static const char kTypes[] = {2, 2, OBJECTTYPE_CLOUD, 5, 1};
     o.objectType = kTypes[R(5)];

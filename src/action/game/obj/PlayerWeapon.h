@@ -57,6 +57,7 @@
 
 void Player_InitAmmoWeapons(obj_tag *player);
 bool Player_EquipWeapon(BLData *blData, short weapon, short amount);
+void Player_EquipKey(BLData *blData, ushort key);
 void Player_RamLoad(BLData *blData, char boostHealth);
 void Player_RamSave(BLData *blData);
 void Player_SetWeaponAnim(obj_tag *player);

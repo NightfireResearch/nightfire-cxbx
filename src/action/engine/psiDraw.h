@@ -54,7 +54,7 @@ void *psiCreateShard(const TriListVertex *vertices);
 void psiDrawShard(void *vtxData, _MATRIX *matrix, int texture);
 void psiSetShardRenderStates(void);
 void psiClearZ(void);
-uint32_t psiCopyToSP(uint32_t value);
+void* psiCopyToSP(void *src, uint offset, uint size);
 
 void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist);
 void psiDrawSkinObjectMatrix(celglist_tag *glist, _MATRIX *unused, void *obj, void *palette);

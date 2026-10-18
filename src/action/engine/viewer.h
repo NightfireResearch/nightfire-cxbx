@@ -150,15 +150,12 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     uint flags84;                      // 0x84 - CEL_ flags
     undefined field111_0x88;
     undefined field112_0x89;
-    undefined field113_0x8a;
-    undefined field114_0x8b;
-    undefined field115_0x8c;
-    undefined field116_0x8d;
-    undefined field117_0x8e;
-    undefined field118_0x8f;
+    uchar ambientR[2];                 // 0x8a - the ambient light of objects in it, by its channel's state
+    uchar ambientG[2];                 // 0x8c   (Lights_CalcAmbientLight)
+    uchar ambientB[2];                 // 0x8e
     undefined addedToDraw;
     uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
-    undefined1 someSwitchChannel; /* Created by retype action */
+    undefined1 someSwitchChannel;      // 0x92 - the channel choosing its ambient light
     uchar blink;                       // 0x93 - its alpha: bits 0-1 the mode, 4-7 the speed (View_SetupCelRenderModes)
 };
 static_assert(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
@@ -167,6 +164,7 @@ static_assert(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
 static_assert(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
 static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
 static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
+static_assert(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
 
 // cel_tag::bitsFromPlacementTag: the geometry is in world space, and Collide_Pick tests the cel's box (not its sphere)
 #define CEL_WORLD_SPACE 0x08000000

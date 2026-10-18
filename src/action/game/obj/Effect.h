@@ -111,5 +111,7 @@ void Effect_LinkToCel(void);
 void _Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj);
 void Effect_LinkToObject(void);
 void Effect_RemoveSObjs(obj_tag *obj);
+void Particles_Create(int kind, _VECTOR *pos, plane_equ_tag *plane);
+void Particles_Update(obj_tag *obj);
 
 #endif // EFFECT_H_

@@ -101,7 +101,7 @@ typedef struct BLData {
     // indexed by weapon_definition_tag::ammoType, capped at ammo_data[].maybeMaxNumPerPlayer.
     short ammo[34]; // 0x114
     WeaponStatus weaponStats[114]; // 0x158
-    char unknown6b0[0x6e4-0x6b0]; // 0x6b0 - Player_RamSave carries the first 0x33 bytes with the weapons
+    char keys[0x6e4-0x6b0]; // 0x6b0 - a byte for each key held (Player_EquipKey); Player_RamSave carries the first 0x33 bytes with the weapons
     // The capsule the player collides with, set up every frame by Player_Collision. Its hitType is 0 while
     // Player_Disable has the player out of play, 0x800 from Player_Enable.
     HITTEST_tag hitTest; // 0x6e4
@@ -244,7 +244,7 @@ typedef struct BLData {
     // a second, from Player_ChangeSubState)
     char animWait; // 0x8f0
     char nightVisionActive; // 0x8f1
-    char _pad_5e;
+    char ambientBoost; // 0x8f2 - objects with effect flag 0x10000 are lit twice as bright (Lights_CalcAmbientLight)
     uchar flashBlur; // 0x8f3 - Player_SetFlashBang
     char laserSight; // 0x8f4 - the gun has a laser sight (weapon flag 8: Player_SetWeaponAnim)
     char punchSkin; // 0x8f5 - which of the fists' models the level's skin goes with (Player_Init)
@@ -357,7 +357,7 @@ static_assert(offsetof(BLData, idleState) == 0x8e9, "Offset of idleState not cor
 static_assert(offsetof(BLData, taserHit) == 0x8ed, "Offset of taserHit not correct");
 static_assert(offsetof(BLData, laserSight) == 0x8f4, "Offset of laserSight not correct");
 static_assert(offsetof(BLData, idleSwayPhase) == 0x878, "Offset of idleSwayPhase not correct");
-static_assert(offsetof(BLData, unknown6b0) == 0x6b0, "Offset of unknown6b0 not correct");
+static_assert(offsetof(BLData, keys) == 0x6b0, "Offset of keys not correct");
 static_assert(offsetof(BLData, field_0x8e6) == 0x8e6, "Offset of field_0x8e6 not correct");
 static_assert(offsetof(BLData, twinGunHand) == 0x8e8, "Offset of twinGunHand not correct");
 

@@ -217,7 +217,7 @@ bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     Mat_GetDir(&direction, &sensorObj->transformMatrix);
     bool inCone = Intersect_ConeSphere(
         sensorPosition,
-        &direction.x,
+        &direction,
         sensor->viewConeCos,
         sensor->viewConeSin,
         &targetObj->centrePoint

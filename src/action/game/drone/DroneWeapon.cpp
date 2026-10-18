@@ -5,6 +5,7 @@
 // damage the drones' bullets do to the player. docs/drone/architecture/README.md has the fields.
 
 #include "DroneWeapon.h"
+#include "../obj/Pickup.h"
 #include "DroneTuning.h"
 #include "NDrone2.h"
 #include "BOT.h"
@@ -42,9 +43,7 @@
 #define BOTWEAP_tooCloseForWeapon ((bool (__cdecl *)(Drone_tag *drone, short weapon, float distance))0x0001f740)
 #define BOTWEAP_decrRounds ((void (__cdecl *)(Drone_tag *drone, short rounds))0x0001e9a0)
 #define BOTSTATE_changeWeapon ((uint (__cdecl *)(BOT_vars_t *bot, uint weapon, char param_3, char param_4))0x0001e3f0)
-#define GT_DeployMiniGun ((obj_tag *(__cdecl *)(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner))0x0009a9b0)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define Pickup_CreateSimple ((obj_tag *(__cdecl *)(_MATRIX *mtx, short weapon, short count, int param_4))0x000a7f10)
 
 // The weapons with at least a second between shots and bursts of their own length (DroneWeap_FireDelay,
 // DroneWeap_BurstLength, _DroneWeap_NextBulletTime)

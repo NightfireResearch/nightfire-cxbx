@@ -1,5 +1,7 @@
 #include "Light.h"
 
+#include <math.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../util/DList.h"
@@ -11,9 +13,29 @@
 #include "../../sound/Sound.h"
 #include "../sp/SwitchChannels.h"
 #include "../../game.h"
+#include "../../engine/celglist.h"
+#include "../../engine/viewer.h"
+#include "../../math/X87Ops.h"
+
+#pragma fp_contract(off)
 
 #define LightList (*(DLISTINFO_tag*)0x00215700)
 #define NUM_LIGHTS 32
+// Lights_CalcClosestLights' answer
+#define ClosestLights (*(light_tag *(*)[30])0x00215718)
+
+#define QuickSort ((void (__cdecl *)(void *list, uint count, uint size, COMP_FUNC compare, undefined *custom))0x000bda60)
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
 
 // AUTOINJECT
 void Light_Init(void) {
@@ -145,3 +167,100 @@ void Light_Update(void) {
     }
 }
 
+// A colour component moved towards another by a share of the way, at least 1 unless already there
+// FUNC_AT(0x0006b0a0)
+double ClrStep(float from, float to, float share) {
+    double step = (double)to - from;
+    if (share < 0.0f)
+        share = 0.0f;
+    else if (share > 1.0f)
+        share = 1.0f;
+    if (step == 0.0)
+        return from;
+    step = step * share;
+    if (!(AbsFchs(step) < 1.0f))
+        return step + from;
+    if (step < 0.0f)
+        return -1.0f + (double)from;
+    return 1.0f + (double)from;
+}
+
+// An object lit by its cel (effect flag 0x800) eases its ambient light towards the cel's for the state of the cel's
+// channel, twice as bright (up to 255) with flag 0x10000 while player 0's night vision is on
+// AUTOINJECT
+void Lights_CalcAmbientLight(obj_tag *obj) {
+    cel_tag *cel = obj->inCel;
+    if (cel == NULL || !(obj->effectFlags & 0x800))
+        return;
+    ushort state = (uchar)switch_channels[(uchar)cel->someSwitchChannel];
+    short r = cel->ambientR[state];
+    short g = cel->ambientG[state];
+    short b = cel->ambientB[state];
+    if ((obj->effectFlags & 0x10000) && glb_blokes[0]->ambientBoost) {
+        r = r * 2 > 0xff ? 0xff : r * 2;
+        g = g * 2 > 0xff ? 0xff : g * 2;
+        b = b * 2 > 0xff ? 0xff : b * 2;
+    }
+    obj->ambientR = (uchar)Ftol(ClrStep(obj->ambientR, r, 0.1f));
+    obj->ambientG = (uchar)Ftol(ClrStep(obj->ambientG, g, 0.1f));
+    obj->ambientB = (uchar)Ftol(ClrStep(obj->ambientB, b, 0.1f));
+}
+
+// The lights within reach of a sphere (its radius after its centre), up to 30, sorted, in a list of the module's; NULL
+// for none. Mask 0x80 lets in the level's ambient lights (type 0) and those carried by objects within 4 across the
+// floor (type 2); 0x100 keeps out type 1.
+// AUTOINJECT
+light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) {
+    ushort found = 0;
+    if (count == NULL)
+        return NULL;
+    for (light_tag *light = (light_tag *)LightList.activeList.head; light != NULL;
+         light = (light_tag *)light->node.next) {
+        if (found >= 30)
+            break;
+        if (!light->enabled)
+            continue;
+        uchar type = light->lightType;
+        if (type == 0 && !(mask & 0x80))
+            continue;
+        if (type == 1 && (mask & 0x100))
+            continue;
+        double distance;
+        if (type == 2) {
+            if (!(mask & 0x80))
+                continue;
+            distance = Vec_Dist2D(&light->maybeParentObject->position, sphere);
+            if (distance > 4.0f)
+                continue;
+            light->field33_0x34 = (float)((1.0f - 0.25f * distance) * 50.0f);
+        } else {
+            distance = Vec_Dist3D(&light->position, sphere);
+            if (distance > (double)light->brightness + ((sphere_equ_tag *)sphere)->r)
+                continue;
+        }
+        light->distanceShare = (float)(distance / ((double)light->brightness * 0.5f));
+        ClosestLights[found++] = light;
+    }
+    *count = found;
+    if (found == 1)
+        return ClosestLights;
+    if (found == 0)
+        return NULL;
+    QuickSort(ClosestLights, found, sizeof(light_tag *), Compare_Unknown1, NULL);
+    return ClosestLights;
+}
+
+// The level's ambient lights, from its map: type 0, each colour component from 0 to 1, the radius from its square
+// AUTOINJECT
+void Light_SetAmbientRadiators(AMBIENT_RADIATORS *radiators) {
+    for (ushort i = 0; i < radiators->count; i++) {
+        AMBIENT_RADIATOR *radiator = &radiators->lights[i];
+        _VECTOR pos;
+        Vec_Copy(&radiator->pos, &pos);
+        float radius = (float)sqrt(radiator->radiusSq);
+        uchar b = (uchar)Ftol(radiator->b * 255.0f);
+        uchar g = (uchar)Ftol(radiator->g * 255.0f);
+        uchar r = (uchar)Ftol(radiator->r * 255.0f);
+        Light_Create(&pos, r, g, b, radius, 0, -1, 0, 1.0f, 0, 0, 0, 0xffff);
+    }
+}

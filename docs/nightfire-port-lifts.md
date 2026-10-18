@@ -50,6 +50,8 @@ to what it does. A function ported that way:
 
 | 13 | vecmath, view (with camera, vision and build) | 65: package A, 32 from vecmath (math.cpp: the angle, vector, matrix-row, inverse, product, rotation and quaternion helpers, Mat_LookAt), package B, 33 from view (Concat and ApplyMatrixLVI in math.cpp, Rand_Random and Rand_Rand in Random.cpp, the camera in Camera.cpp, build_alloc_viewer and build_point_in_bounding_box in build.cpp, the portal vision in Vision.cpp, the draw lists, render modes, sky and Game_Draw in view.cpp). Their `Mat_Inverse` is two Xbox functions, `Mat_InverseSelf` 0xd5190 (renamed from FUN_) and `Mat_Inverse` 0xd51e0; their `View_SetupRenderModes_Tweak` is 0xd9900 (renamed); their `Camera_Reset` is `Viewer_Init` 0x24290. Helpers ported with them: ClipEdge (FUN_db730), PortalPlanesFrom (FUN_db970), View_AddToList (FUN_d91d0), View_SetupCelRenderModes (FUN_d9bd0), View_DrawAttachments (0xda1d0). 3 AUTOLTCG adaptors (View_AddObjects, View_AddCels, View_DrawCelGlist). With them, every port that used the host's trigonometry or float sums where the original runs the x87 made exact (below) | 62 of 65 (MulMatrix2, RotMatrixY, RotMatrixXY not reached). ViewMathShadow: 84 lines of maths x 20,000 cases and 35 of game functions x 6,000 worlds, all 0 differ (the NaN chosen where two NaNs meet counted apart in the plain double ports); one planted bug in each of its eight groups, all caught. With package A and B alone (Part 2 reverted), all nine time demos match; with Part 2 they no longer do, as expected (the recordings hold the inexact maths) | see git log |
 
+| 14 | turret, scenery, pickup, copter, hazard, emitter, gunimp, weather, lights (package A) | 71 (package A): GT.cpp (the gun turrets and the deployed minigun), Ripples.cpp, LeafGen.cpp, OneSided.cpp, Env.cpp (breath, trees, wind), Effect.cpp (the particle objects), Pickup.cpp, Player_EquipKey (PlayerWeapon.cpp), Check_Target (Autoaim.cpp), Intersect_ConeSphere (Collide.cpp), Copter.cpp, Mine.cpp, Shooter.cpp, Apocalypse.cpp, Emitter.cpp, GunImp.cpp, RainBox.cpp, Lightning.cpp, Cloud.cpp, Light.cpp (ambient and closest lights), Corona.cpp, Flicker.cpp. Of their 8 names without an Xbox function of that name, `Leaf_Create` is 0xcdef0, `Particles_Create` 0x6feb0 and `ColourGetValue` 0x67ea0 (FUN_, renamed and ported); `Copter_Register` is 0x6b900 (no function in Ghidra; created, named and ported); their `__static_initialization_and_destruction_0` is the two initialisers `Copter_InitConeCos` 0xf5460 and `Copter_InitConeSin` 0xf5470 (renamed, ported); `Emitter_LoadDefs` is `parsemap_block_particles` 0x68020 (left to the original); `Emitter_Kill` is the shared empty function 0xe0ec0; `Light_FindMapLight` is 0xde5f0, a stub returning NULL (Ghidra: `psiLight_Create`). Helpers renamed from FUN_ and ported: `Copter_NextPath` 0x6b9f0, `Copter_SeesPlayer` 0x6b830, `GT_AimAt` 0x9a5b0. 11 AUTOLTCG adaptors (Copter_CreatePath, Copter_NextPath, Copter_Move, Copter_FireGun, Copter_FireMissile, Copter_SeesPlayer, GT_maybeInterpolateAimDir, GT_AimAt, GT_RandMove, Pickup_CanInheritPosition, Pickup_Handler) | 45 of 71; 666 of 1,249 blocks. ObjectPortShadow: 228,500 cases in seven groups, all 0 differ (2 where only the NaN chosen between two NaNs differs); one planted bug per group, all caught. Under the suite the originals reach 1,219 of the 1,242 blocks of the 71 and their helpers (of the 23 left: unsigned-conversion fix-ups of values never negative, failed-creation returns, `ColourGetValue` with the key past the count, `Particles_Create` past the stub's -1, a few branches of `Pickup_Handler` and `Check_Target`). All nine time demos match | see git log |
+
 Parcel 1's first playback found two things the coverage alone would not have shown:
 - **A crash in our code.** The port of `Script_CreateEntity` called our `Break_Create` by name, which is a known-broken
   draft that was never patched in. `tools/draft_calls.py` now finds such calls.
@@ -593,6 +595,29 @@ Found along the way:
   `cel_tag::nextVisible` (0x20) and `blink` (0x93); `portal_tag::door`, `seen`, `open`; `struct VisPortal`,
   `VisCel`, `DrawEntry` and `SkyObj` (21 at 0x29d7a0).
 
+### Parcel 14 (package A: turret, scenery, pickup, copter, hazard, emitter, gunimp, weather and lights)
+- Their names without an Xbox function of that name: see the table. `Copter_CreatePath` and `Copter_NextPath` are
+  two Xbox functions (0x6b930, EBX the copter; 0x6b9f0, ESI), theirs one.
+- Register arguments their prototypes hide: `Copter_CreatePath` (EBX), `Copter_NextPath` and `GT_RandMove` (ESI),
+  `Copter_Move` (EAX and the stack), `Copter_FireGun`, `Copter_FireMissile` and `Copter_SeesPlayer` (EDI),
+  `GT_maybeInterpolateAimDir` (EAX the matrix it turns and writes, ECX the one it turns from), `Pickup_Handler`
+  (EDI the pickup's info).
+- `Apocalypse_Update` multiplies in the original's order: (rumble / length) x left and (left / length) x 5 and x 382
+  (theirs groups them otherwise). Its channel index is signed and not masked.
+- `Mine_Update`'s explosion passes 0xc8, 0xc8 and 0.
+- `GT_SpinBarrel`'s matrix has its translation zeroed by `Vec_Zero` (theirs says it is left as garbage).
+- `UpdateDrops` works in batches of 1000 drops, the step indexed within the batch (theirs 992).
+- `Check_Target` reads the weapon from the player's `animState->currentWeaponId`.
+- `Leaf_Update`'s leaf has no w (theirs a 16-byte vector).
+- Found in ours, not theirs: `COPTER` fields `damage`, `attackDamage`, `enableChannel`, `scriptPlayer` (were
+  `damageA`, `damageB`, `switchChannelToShowCopterBody`, `scriptPlayerObj`), `COPTERPATH`, `COPTERBIT`; the whole
+  `GUNTURRET` (0xe4), `TARGETOBJ`; `PICKUPINFO` (0x34); `ENV_tag` to 0x44 (`windSide`, `pos`, `windMax` (was
+  `windOn`), `dropType` 0x3f, `windRising` 0x41); `RAINBOX_tag`, `DROP_tag`; `EMITTER_tag` (0x4c), `EMITTER_DEF`,
+  `KEYED_CLR`; `light_tag::distanceShare` 0x2c; `cel_tag::ambientR/G/B[2]` 0x8a and `obj_tag::ambientR/G/B` (were
+  `light_related1-3`); `BLData::keys` (was `unknown6b0`) and `ambientBoost` 0x8f2 (was `_pad_5e`); the placement
+  structs of each object; `GlobalEnv` 0x1f64ac, `ClosestLights` 0x215718, `TargetList` 0x25fc20, `PickupMatrix`
+  0x17e5d8, `UseableGuns` 0x17e648, the GUNTYPE table 0x163a30. `psiCopyToSP` takes (pointer, offset, size).
+
 ## Original bugs found while porting (kept; candidates for FIX_ORIGINAL_GAME_BUGS)
 
 - `Script_Load`, a file with 0x3f streams or more: hands its record to `DList_RemoveFromInUse2Free(&ScriptList)`,
@@ -740,6 +765,17 @@ Found along the way:
 - `Explode_Propagate` writes the mine's damage through `Coll_AddHitToList`'s result unchecked.
 - `Mat_Inverse` (0xd51e0) negates the translation without turning it by the transposed rotation. `View_AddCels` reads `viewer->someCel` unchecked. `ClipPortalWithPlane` writes as many clipped points as it makes, past the portal's 12. `vision_generate_display_list` links the visible cels onto whatever `GfxList` already holds.
 
+- `Env_Breath`'s second `Gas_Init` and `Cloud_Create`'s object are not checked; `Env_Tree_Create` checks neither its
+  object nor its script; `Lightning_Create`'s segments, `GT_Update`'s barrel, `GunImp_Create`'s gun,
+  `Emitter_Create`'s object, `DrawDrops`' hashtable item and `Copter_CreatePath`'s allocation are used unchecked.
+  `Copter_FireGun` uses the flash and the player unchecked.
+- `GT_Track` compares copters with the difference left from the previous candidate, and its second candidate is a
+  stack slot reused from the first. `GT_TakeControl` takes the turret's subState as the player's index.
+- `Pickup_CreateFromSet` returns NULL for the ammo once the weapon is made. `PlrStat_LogBondBonus` is called with no
+  argument (`Pickup_Handler`).
+- `ColourGetValue` reads the key past the last. `Flicker_Update`'s blue has no minimum step (red and green have).
+- `Copter_GetBody` (ported earlier) tests the channel with the bounded `SwitchChannel_IsActive`, as the original.
+
 ## Departures from the original
 
 - The AI dispatcher's Exit, Enter and 0x2e messages leave their scope and frames as uninitialised stack in the
@@ -763,6 +799,11 @@ Found along the way:
 - `Break_DoBreak` zeroes its hit before setting its plane, position and direction; `Explode_Create` starts the
   nearest player's position at zero, which the original leaves as stack when there is no player.
 - `View_AddForcedObjects` starts its HITTEST at zero; the original leaves it as stack.
+
+- `DrawDrops`, `GunImp_Create`, `Emitter_Create`, `GT_RandMove`, `GT_AimAt`, `GT_SpinBarrel` and `GT_Update`'s
+  controlled state start their local matrices zeroed; `GT_DeployMiniGun`'s disable key and `GT_Track`'s difference
+  start at zero; `Pickup_Update` and `GunImp_Update` start their hit lists at NULL. All uninitialised stack in the
+  original.
 
 ## What the demos do not cover
 

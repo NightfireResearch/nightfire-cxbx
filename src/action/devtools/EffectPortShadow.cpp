@@ -1042,7 +1042,7 @@ void RandomWorld(void) {
     }
     UnitVector(&world.env.windDir);
     world.env.windStrength = Value(0.0f, 3.0f);
-    world.env.windOn = R(4) ? Value(0.0f, 1.0f) : 0.0f;
+    world.env.windMax = R(4) ? Value(0.0f, 1.0f) : 0.0f;
     world.env.windGust = Value(-2.0f, 2.0f);
     world.env.windSpread = Value(-1.0f, 1.0f);
 
@@ -1096,9 +1096,9 @@ void RandomWorld(void) {
         COPTER *c = &world.copters[i];
         for (int p = 0; p < 9; p++)
             c->parts[p] = R(3) ? NULL : AnyObj();
-        c->damageA = Value(0.0f, 50.0f);
-        c->damageB = Value(0.0f, 50.0f);
-        c->switchChannelToShowCopterBody = (ushort)(R(2) ? 0 : R(8));
+        c->damage = Value(0.0f, 50.0f);
+        c->attackDamage = Value(0.0f, 50.0f);
+        c->enableChannel = (ushort)(R(2) ? 0 : R(8));
     }
     if (R(3)) {
         copters->head = &world.copters[0].node;

@@ -178,7 +178,7 @@ _VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_ta
 bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent, obj_tag *obj);
 bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
-bool Intersect_ConeSphere(_VECTOR *coneApex, float *coneDirection, float coneCos, float coneSin, _VECTOR *sphereCenter);
+bool Intersect_ConeSphere(_VECTOR *apex, _VECTOR *dir, float cosA, float sinA, _VECTOR *sphere);
 void Collide_Update(obj_tag *first);
 
 // Register-argument adaptors patched over the originals (the registers in Collide.cpp); never call them from C.

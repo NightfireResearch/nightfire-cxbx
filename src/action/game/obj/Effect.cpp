@@ -6,6 +6,7 @@
 #include "../../engine/viewer.h"
 #include "../../sound/Sound.h"
 #include "../mp/multiplayer.h"
+#include "../view.h"
 #include "bullet.h"
 #include "control.h"
 #include "Emitter.h"
@@ -17,6 +18,10 @@
 // XBE_GLOBAL(0x002237c0, 0x18)
 #define EffectList (*(DLISTINFO_tag *)0x002237c0)
 
+// The platform's particle update, MSVC's shared `return false` on the Xbox
+#define psiParticleUpdate ((bool (__cdecl *)(void *particles))0x000de5e0)
+// The platform's particle system: none on the Xbox (-1)
+#define psiCreateParticles ((int (__cdecl *)(int kind, _VECTOR *pos, plane_equ_tag *plane))0x000de5d0)
 #define hashtable_set_sub_object_to_entity_gfx ((void (__cdecl *)(ATTACH_tag *mark, HASHCODE hashcode))0x0006b6d0)
 
 // The laser's sparks
@@ -413,4 +418,33 @@ void Effect_RemoveSObjs(obj_tag *obj) {
         DList_RemoveFromInUse2Free(&EffectList, &mark->node);
         mark = next;
     }
+}
+
+// A particle system of the platform's at pos, as an object drawn in every view (never on the Xbox, whose platform has
+// none)
+// AUTOINJECT
+void Particles_Create(int kind, _VECTOR *pos, plane_equ_tag *plane) {
+    int system = psiCreateParticles(kind, pos, plane);
+    if (system == -1)
+        return;
+    obj_tag *obj = control_create_object(0, pos, NULL, NULL);
+    if (obj == NULL)
+        return;
+    obj->transformFlags |= 0x10;
+    obj->effectFlags |= 0x21;
+    obj->objectType = OBJECTTYPE_PARTICLES;
+    obj->radius = 10.0f;
+    Vec_Copy(pos, &obj->centrePoint);
+    build_LinkToRoom(obj, 0, glb_world);
+    View_SetDrawInAllViews(obj);
+    obj->extraObjectData = (void *)(intptr_t)system;
+}
+
+// A particle system's object goes once the platform's system has run out (on the Xbox, at once)
+// AUTOINJECT
+void Particles_Update(obj_tag *obj) {
+    if (obj == NULL)
+        return;
+    if (!psiParticleUpdate(obj->extraObjectData))
+        obj->flags |= 1;
 }
