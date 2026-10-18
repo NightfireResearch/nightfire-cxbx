@@ -403,6 +403,9 @@ any time (G2 needs SDL's GPU subsystem in the Windows build, off by default). A1
   only host whose addresses change from run to run (the image slides), which is the first thing to rule out.
   Left open by the user's decision (small, by eye invisible); `lmac_c` waits for it, or for frames to be compared
   with a threshold here.
+- **CI** (`macos-arm64` in .github/workflows/ci.yml, GitHub's macos-26 Apple Silicon image): the preset's build with
+  FFmpeg from the submodule (cached by its commit), `gamewindow_test`, and `tools/fused_ops.sh` on both executables
+  (fused multiply-adds only where the source asks for them). No game runs there: they need the disc.
 - **Not done**: the comparison of the Mac's traces with `lbase_c` (the baselines are on the PC: copy
   build/baselines/lbase_c_* over), A3, and the x86 checks of these changes (the Windows and Linux builds, CI).
 
