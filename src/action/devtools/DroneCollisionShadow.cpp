@@ -11,6 +11,7 @@
 // Rand_Random state, and it is compared afterwards.
 
 #include "DroneCollisionShadow.h"
+#include "../game/obj/Player.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -192,6 +193,9 @@ void InstallFakes() {
     ShadowHook_Install(0x000119a0, (const void *)&FakeHeadTracking);
     ShadowHook_Install(0x00068f20, (const void *)&FakeWaterRipple);
     ShadowHook_Install(0x000ab390, (const void *)&DroneCollisionShadow_FakeFeetCollision);
+    // our Drone_FeetOnPoint calls the port's core by name
+    ShadowHook_Install((unsigned)(uintptr_t)&_PlayerOrDrone_FeetOnPoint_DoCollision,
+                       (const void *)&DroneCollisionShadow_LogFeetCollision);
 }
 
 // Every original of this file at once, so they reach each other rather than ours

@@ -172,7 +172,7 @@ typedef struct BLData {
     float aimAccelY; // 0x888
     float turnAccelState; // 0x88c
     float lookAccel; // 0x890
-    char _pad_222223[0x898-0x894];
+    float ladderYaw; // 0x894 - the player's facing as he got onto the ladder (PlayerCollLadder)
     float headSwimOffset; // 0x898 - eased towards 0.7 while surfaced (Player_PositionCamera)
     float headCrouchOffset; // 0x89c - how far crouching has lowered the view, 0 to 0.45
     // Added to the turn every frame and decaying by a tenth a frame: -0.1 or 0.1 from hits by fists (weapon bases 0x63,
@@ -432,6 +432,7 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach);
 void Player_Cam2Mode(ushort playerNum, uint mode);
 void Player_SetHealth(BLData *obj, float health);
 void Player_Kill(obj_tag *player);
+bool PlayerMoveAllowed(obj_tag *player);
 void Player_ScopeOff(obj_tag *player);
 void Player_ResetZoom(obj_tag *player);
 void Player_CheckWeaponsLoaded(BLData *blData);
@@ -441,6 +442,10 @@ ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
 void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
 void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
 void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
+void Player_SetupTaser(BLData *blData, _VECTOR *target);
+void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder);
+obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying);
+void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, struct HITDATA_tag *hit);
 void Player_Start(void);
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
 void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
@@ -483,6 +488,7 @@ void Player_GrappleSetRope(void);   // EDI player
 void Player_Swim(void);             // ESI player, EAX his data
 void Player_ClampSomeAngles(void);  // ECX the player's data; player
 void Player_UpdateBlurAndFade(void); // ESI the player's data
+void PlayerOrDrone_FeetOnPoint_DoCollision(void); // EAX the object, ECX the hit
 int _Player_InWater(obj_tag *player, BLData *blData);
 void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
 float Player_Hurt(obj_tag *player, float damage, _VECTOR *from);

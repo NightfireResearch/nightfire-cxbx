@@ -31,7 +31,6 @@
 
 #pragma fp_contract(off)
 
-#define Bullet_acquiretarget ((void (__cdecl *)(BU_tag *bullet, obj_tag *shooter))0x00022db0)
 
 // The spent cases, used in turn
 #define NUM_CASINGS 32
@@ -874,6 +873,32 @@ void __declspec(naked) Bullet_heatseekable(void) {
         pop edx
         pop ecx
         ret
+    }
+}
+
+// A homing projectile's target: the nearest object it may chase (other than who fired it) within 1000, ahead of the
+// shooter (within about 49 degrees of where he faces) and in his line of sight.
+// AUTOINJECT
+void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter) {
+    float nearest = 1000.0f;
+    bullet->heatseekTarget = NULL;
+    for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
+        if (!_Bullet_heatseekable(obj) || obj == bullet->firedByObj)
+            continue;
+        float distance = Vec_Dist3D(&obj->position, &shooter->position);
+        if (!(distance < nearest))
+            continue;
+        _VECTOR facing, towards;
+        Mat_GetDir(&facing, &shooter->transformMatrix);
+        Vec_Subtract(&obj->position, &shooter->position, &towards);
+        Vec_Normalise(&towards, &towards);
+        double dot = (double)towards.z * facing.z + (double)towards.y * facing.y + (double)towards.x * facing.x;
+        if (!(dot > 0.66f))
+            continue;
+        if (Collide_LineOfSight(&shooter->position, &obj->position, shooter->inCel, shooter, obj, 8)) {
+            bullet->heatseekTarget = obj;
+            nearest = distance;
+        }
     }
 }
 

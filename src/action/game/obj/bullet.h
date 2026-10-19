@@ -129,6 +129,7 @@ void Bullet_DoTrails(void);
 void Bullet_Delete(obj_tag *obj);
 bool _Bullet_heatseekable(obj_tag *obj);
 void Bullet_heatseekable(void);
+void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter);
 void _Bullet_homing(BU_tag *bullet, obj_tag *obj);
 void Bullet_homing(void);
 void Bullet_InitCasingLists(void);

@@ -99,6 +99,48 @@ static void EndsXZ(_VECTOR *offset, _VECTOR *endA, _VECTOR *endB) {
 // Ladders
 // ---------------------------------------------------------------------------------------------------------------
 
+// Onto a ladder the player has run into: unless climbing or grappling already, just off a ladder (traverseWait) or
+// dead, and only facing it (more than a right angle from its own facing). He goes no lower than just above its
+// bottom; between its ends he is put half a unit in front of it, climbing, with his hands empty.
+// AUTOINJECT
+void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder) {
+    if (player->subState == MovementType_Climb || player->subState == MovementType_Grapple)
+        return;
+    if (blData->traverseWait != 0)
+        return;
+    if (blData->health < 0.0f || blData->health == 0.0f)
+        return;
+    if (!(AbsFchs(Vec_AngleDifference(player->rotation.y, ladder->rotation.y)) > HALF_PI))
+        return;
+
+    float x = ladder->centrePoint.x;
+    float z = ladder->centrePoint.z;
+    blData->ladderTop = (float)((double)ladder->centrePoint.y + ladder->radius + 0.85f);
+    double bottom = (double)ladder->centrePoint.y - ladder->radius + 1.0f;
+    blData->ladderBottom = (float)bottom;
+    double y = bottom + 0.02f;
+    if (y < player->position.y)
+        y = player->position.y;
+    player->position.y = (float)y;
+    player->lastPosition.y = (float)y;
+    if (!(y > blData->ladderBottom) || !(y < blData->ladderTop))
+        return;
+
+    double facing = (double)ladder->rotation.y + PI;
+    player->rotation.x = 0.0f;
+    player->rotation.z = 0.0f;
+    player->position.x = (float)(Extended(x) - FSin(facing) * Extended(0.5f));
+    player->position.y = (float)y;
+    player->position.z = (float)(Extended(z) - FCos((double)(float)facing) * Extended(0.5f));
+    blData->ladderYaw = player->rotation.y;
+    Player_ClearInertia(player);
+    Player_ChangeSubState(player, MovementType_Climb);
+    blData->traverseStep = 1;
+    blData->aimAutoLevelState = 2;
+    Player_WeaponNone(player);
+    blData->attachedToSpecialMovementItem = ladder;
+}
+
 // Off the ladder: a second before any ladder takes the player again, walking, his weapon back. The name is ours.
 // FUNC_AT(0x000aeac0)
 void Player_LeaveLadder(obj_tag *player, BLData *blData) {

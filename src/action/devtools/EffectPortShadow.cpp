@@ -656,6 +656,9 @@ obj_tag *__cdecl FakeOcclude(_VECTOR *pos, ushort life, ushort kind) {
 }
 
 // Every fake but those of the package's own functions
+// Bullet_homing's tests fake its target search; the search's own test does not
+bool fakeAcquire = true;
+
 void InstallFakes(void) {
     ShadowHook_Install(0x0002dc10, (const void *)&FakeCreate);
     ShadowHook_Install(0x00021110, (const void *)&FakeLinkToRoom);
@@ -718,7 +721,8 @@ void InstallFakes(void) {
     ShadowHook_Install(0x00013070, (const void *)&FakeBoneTrans);
     ShadowHook_Install(0x00013630, (const void *)&FakeWeaponInfo);
     ShadowHook_Install(0x00013590, (const void *)&FakeDatumIndex);
-    ShadowHook_Install(0x00022db0, (const void *)&FakeAcquire);
+    if (fakeAcquire)
+        ShadowHook_Install(0x00022db0, (const void *)&FakeAcquire);
     ShadowHook_Install(0x0006ead0, (const void *)&FakeDListInit);
     ShadowHook_Install(0x0006ea10, (const void *)&FakeLListInit);
 }
@@ -1682,6 +1686,18 @@ uint32_t RunHoming(bool original) {
     return RegsRun(original, 0x00022eb0, (const void *)&Bullet_homing, r, 1, args) & 0;
 }
 
+uint32_t RunAcquire(bool original) {
+    obj_tag *obj = Bullet();
+    obj_tag *shooter = AnyObj();
+    CDECL_RUN(0x00022db0, Bullet_acquiretarget, void (__cdecl *)(BU_tag *, obj_tag *), (BU_tag *)obj->extraObjectData,
+              shooter);
+    return 0;
+}
+
+const Case kAcquire[] = {
+    C("Bullet_acquiretarget", RunAcquire),
+};
+
 const Case kBullets[] = {
     C("Bullet_init", RunBulletInit),
     C("Bullet_handle_object_destruction", RunDestruction),
@@ -2124,6 +2140,9 @@ void EffectPortShadow_Run(void) {
     Group("the breakables and the shards", kBreak, COUNT(kBreak), 3000, false, false, false, false);
     Group("destroyables, hurt volumes and occluders", kDestroy, COUNT(kDestroy), 3000, true, false, false, false);
     Group("the bullets", kBullets, COUNT(kBullets), 4000, true, true, true, false);
+    fakeAcquire = false;
+    Group("a homing bullet's target", kAcquire, COUNT(kAcquire), 4000, true, true, true, false);
+    fakeAcquire = true;
     Group("the spent cases", kCasings, COUNT(kCasings), 3000, false, false, false, false);
     Group("the effects", kEffects, COUNT(kEffects), 4000, false, true, false, false);
     Group("smoke, debris, wind and trails", kGas, COUNT(kGas), 4000, false, false, false, false);

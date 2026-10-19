@@ -89,6 +89,7 @@ struct World {
     obj_tag objs[2];            // the object list for control_first_object
     uint8_t objData[2][8];
     HITDATA_tag hits[HITS];
+    HITDATA_tag addedHit;   // what the hit-adding fake hands out
     sAnimScript_tag script;
     light_tag lights[LIGHTS];
     light_tag *lightList[LIGHTS];
@@ -304,6 +305,13 @@ bool __cdecl FakeRayIntersect(_VECTOR *a, _VECTOR *b, cel_tag *cel, obj_tag *obj
     *list = NULL;
     return false;
 }
+void __cdecl FakeInherit(obj_tag *obj, obj_tag *from, float k) {
+    ShadowLog("inherit(%x,%x,%08x)", W(obj), W(from), Bits(k));
+}
+HITDATA_tag *__cdecl FakeAddHit(HITDATA_tag **list, float dist, cel_tag *cel, obj_tag *obj) {
+    ShadowLog("addhit(%x,%08x,%x,%x)", W(list), Bits(dist), W(cel), W(obj));
+    return &world.addedHit;
+}
 bool __cdecl FakeSphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *obj, obj_tag *ignore,
                                  HITDATA_tag **list, char p7, char p8, ushort flags, int p10) {
     ShadowLog("sphere(%08x,%x,%x,%x,%d,%d,%x,%d)", Bits(radius), W(cel), W(obj), W(ignore), p7, p8, flags, p10);
@@ -396,6 +404,9 @@ obj_tag *__cdecl FakeFeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *normal,
 void __cdecl FakeOtherViews(obj_tag *obj, char player) { ShadowLog("otherviewsonly(%x,%d)", W(obj), player); }
 void __cdecl FakeInitWeapon(BLData *bl, obj_tag *obj, void *p3) { ShadowLog("initweapon(%x,%x)", W(bl), W(obj)); }
 
+// The collision's tests fake getting onto a ladder and the feet's ray; their own tests do not
+bool fakeLadder = true;
+
 void InstallFakes(void) {
     ShadowFakes_Install();
     ShadowHook_Install(0x00017820, (const void *)&FakeAnimSetDeleteAll);
@@ -443,6 +454,8 @@ void InstallFakes(void) {
     ShadowHook_Install(0x0006d8f0, (const void *)&FakeClosestLights);
     ShadowHook_Install(0x0002c5b0, (const void *)&FakeLineOfSight);
     ShadowHook_Install(0x0002c4e0, (const void *)&FakeRayIntersect);
+    ShadowHook_Install(0x0002d6a0, (const void *)&FakeInherit);
+    ShadowHook_Install(0x00029560, (const void *)&FakeAddHit);
     ShadowHook_Install(0x0002c610, (const void *)&FakeSphereIntersect);
     ShadowHook_Install(0x00020c30, (const void *)&FakeFindCel);
     ShadowHook_Install(0x00020eb0, (const void *)&FakePointOnFloor);
@@ -473,8 +486,10 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000ce4b0, (const void *)&FakeBodyGlow);
     ShadowHook_Install(0x0002e320, (const void *)&FakeCreateObjEx);
     ShadowHook_Install(0x0006b610, (const void *)&FakeCelglist);
-    ShadowHook_Install(0x000ab450, (const void *)&FakeFeetOnPoint);
-    ShadowHook_Install(0x000ae930, (const void *)&FakeObjCall2);    // PlayerCollLadder (the third argument unlogged)
+    if (fakeLadder)
+        ShadowHook_Install(0x000ab450, (const void *)&FakeFeetOnPoint);
+    if (fakeLadder)
+        ShadowHook_Install(0x000ae930, (const void *)&FakeObjCall2);    // PlayerCollLadder (the third argument unlogged)
     ShadowHook_Install(0x000c4000, (const void *)&FakeObjCall2);    // SP_Activate
     ShadowHook_Install(0x0002f1f0, (const void *)&FakeDoorActivate);
     ShadowHook_Install(0x000cb310, (const void *)&FakeObjCall);     // SS_Activate
@@ -540,6 +555,8 @@ void RandomHits(void) {
         h->next = (i + 1 < HITS && ShadowRand(3)) ? &world.hits[i + 1] : NULL;
         h->dmgAmt = PICK(0.0f, 1.0f, 10.0f, 35.5f, 120.0f);
         RandomVector(&h->hitPosition, 6.0f);
+        h->dist = PICK(0.0f, 0.5f, 1.2f, 1.25f, 2.0f);
+        h->surfaceNormal.b = PICK(1.0f, 0.7f, 0.2f);
         if (ShadowRand(2))
             h->hitPosition.y = world.player.position.y + ShadowRandFloat(-1.0f, 1.0f);
         RandomVector(&h->maybehitDirection, 1.0f);
@@ -1023,6 +1040,22 @@ uint32_t RunBlurAndFade(bool original) {
     Regs6(original, 0x000ab0b0, (const void *)&Player_UpdateBlurAndFade, r, 0, NULL);
     return 0;
 }
+uint32_t RunMoveAllowed(bool original) {
+    return (uchar)CDECL_RUN(0x000a9930, PlayerMoveAllowed, bool (__cdecl *)(obj_tag *), Pl());
+}
+uint32_t RunCollLadder(bool original) {
+    obj_tag *ladder = &world.line;
+    ladder->radius = APICK(0.5f, 2.0f, 5.0f);
+    ladder->centrePoint.y = Pl()->position.y + APICK(-3.0f, 0.0f, 1.0f, 4.0f);
+    ladder->rotation.y = Pl()->rotation.y + APICK(0.0f, 3.1415927f, 2.0f, -2.5f, 1.5707964f);
+    CDECL_RUN(0x000ae930, PlayerCollLadder, void (__cdecl *)(obj_tag *, BLData *, obj_tag *), Pl(), Bl(), ladder);
+    return 0;
+}
+uint32_t RunFeetOnPoint(bool original) {
+    float *normal = Arg(3) ? &Bl()->floorNormalY : NULL;
+    return W(CDECL_RUN(0x000ab450, PlayerNotDrone_FeetOnPoint, obj_tag *(__cdecl *)(obj_tag *, HITTEST_tag *, float *, char),
+                       Pl(), &Bl()->hitTest, normal, (char)Arg(2)));
+}
 uint32_t RunKill(bool original) {
     CDECL_RUN(0x000ae6c0, Player_Kill, void (__cdecl *)(obj_tag *), Pl());
     return 0;
@@ -1351,6 +1384,7 @@ const Case kHealth[] = {
     C("Player_Swim", RunSwim),
     C("Player_ClampSomeAngles", RunClampSomeAngles),
     C("Player_UpdateBlurAndFade", RunBlurAndFade),
+    C("PlayerMoveAllowed", RunMoveAllowed),
     C("Player_Kill", RunKill),
     C("Player_ScopeOff", RunScopeOff),
     C("Player_ResetZoom", RunResetZoom),
@@ -1415,6 +1449,10 @@ const Case kObjects[] = {
 const Case kInitUpdate[] = {
     C("Player_Init", RunInit),
     C("Player_Update", RunUpdate),
+};
+const Case kLadder[] = {
+    C("PlayerCollLadder", RunCollLadder),
+    C("PlayerNotDrone_FeetOnPoint", RunFeetOnPoint),
 };
 
 } // namespace
@@ -1489,6 +1527,11 @@ void PlayerShadow_Run(void) {
     Test("the placements, icons and third-person cameras", kObjects, COUNT(kObjects), trials);
     Test("Player_Init and Player_Update", kInitUpdate, COUNT(kInitUpdate), trials);
     ShadowHook_RemoveAll();
+    fakeLadder = false;
+    InstallFakes();
+    Test("getting onto a ladder and the feet", kLadder, COUNT(kLadder), trials);
+    ShadowHook_RemoveAll();
+    fakeLadder = true;
 
     NfWarnMuted--;
     memcpy(&GameState, gameState, sizeof(gameState));

@@ -13,6 +13,7 @@
 #include "../../engine/Collide.h"      // Collide_RayIntersect, Collide_FreeHitList
 #include "../../engine/viewer.h"       // cel_tag
 #include "../../math/math.h"
+#include "../obj/Player.h"           // _PlayerOrDrone_FeetOnPoint_DoCollision
 
 #include <string.h>
 
@@ -37,18 +38,6 @@
 
 #define SKINCLASS_0C 0xc
 #define SKINCLASS_13 0x13
-
-// Takes on the movement of what the feet stand on, and gives it a hit from above. The original takes the object in
-// EAX and the hit in ECX.
-static void __declspec(naked) PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
-    _asm {
-        mov eax, [esp + 4]
-        mov ecx, [esp + 8]
-        mov edx, 0x000ab390
-        call edx
-        ret
-    }
-}
 
 // ---- when the drone collides and falls
 
@@ -214,7 +203,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
                         continue;
                     if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
                         continue;
-                    PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
+                    _PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
                     break;
                 }
             }

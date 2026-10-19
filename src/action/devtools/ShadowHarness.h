@@ -46,6 +46,9 @@ const std::string &ShadowLog_Text(void);
 
 // A pseudo-random sequence, the same on every run
 uint32_t ShadowRand(uint32_t n);
+// The generator's state, so a suite can be run alone from where it stood in the full run
+uint32_t ShadowRand_Seed(void);
+void ShadowRand_SetSeed(uint32_t s);
 float ShadowRandFloat(float lo, float hi);
 
 // Runs theirs, then ours, from the same state of the regions and an empty log; true when both leave the regions and

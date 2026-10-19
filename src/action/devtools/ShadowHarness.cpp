@@ -145,6 +145,9 @@ uint32_t ShadowRand(uint32_t n) {
     return n ? (seed >> 8) % n : 0;
 }
 
+uint32_t ShadowRand_Seed(void) { return seed; }
+void ShadowRand_SetSeed(uint32_t s) { seed = s; }
+
 float ShadowRandFloat(float lo, float hi) {
     return lo + (hi - lo) * (float)ShadowRand(0x10000) / 65535.0f;
 }

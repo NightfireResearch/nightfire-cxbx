@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Pickup.h"
+#include "Lightning.h"
 #include "PlayerWeapon.h"
 #include "../Upgrade.h"
 #include "../mp/multiplayer.h"
@@ -44,6 +45,17 @@
 #include <string.h>
 
 #include "Env.h"
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
 
 // XBE_GLOBAL(0x002774c8, 0x4)
 static uint32_t player_start_positions_index;
@@ -386,6 +398,46 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
 
 }
 
+#define WEAPON_TASER 0x4c
+
+// The taser's bolt: from the gun's datum 0 to the target, pulled in to the taser's range, as a jagged line of a
+// segment per 1.25 units (2 to 32), each segment a beam drawn in every view at a random brightness.
+// AUTOINJECT
+void Player_SetupTaser(BLData *blData, _VECTOR *target) {
+    _VECTOR start;
+    AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &start, NULL);
+    blData->beamObjs[0]->position = start;
+
+    float range = weapon_data[WEAPON_TASER].range;
+    float distance = Vec_Dist3D(&start, target);
+    if (distance > range) {
+        _VECTOR towards;
+        Vec_Subtract(target, &start, &towards);
+        Vec_Scalef(&towards, range / distance, &towards);
+        Vec_Add2(&start, &towards, target);
+        distance = range;
+    }
+    short segments = (short)Ftol((double)distance * 0.8f);
+    if (segments < 2)
+        segments = 2;
+    else if (segments > 32)
+        segments = 32;
+
+    FractalThing(blData->beamObjs, 0, segments, &start, target, 1);
+    for (short i = 0; i < segments - 1; i++) {
+        obj_tag *beam = blData->beamObjs[i];
+        hashtable_set_object_to_entity_gfx(beam, (HASHCODE)0x0200026d);
+        View_SetDrawInAllViews(beam);
+        PositionBeam(beam, &beam->position, &blData->beamObjs[i + 1]->position);
+        beam->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
+    }
+    obj_tag *last = blData->beamObjs[segments - 1];
+    hashtable_set_object_to_entity_gfx(last, (HASHCODE)0x0200026d);
+    View_SetDrawInAllViews(last);
+    PositionBeam(last, &last->position, target);
+    last->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
+}
+
 // AUTOINJECT
 void Player_Start(void) {
 
@@ -532,10 +584,22 @@ static float Plr_NoAimTurnSpeed_X_Mul = 2.0f;
 // XBE_GLOBAL(0x00181a78, 0x4)
 static float Plr_NoAimTurnSpeed_X_Steps = 120.0f;
 
-// False while dying or dead, and in the substates that move the player themselves (climbing, wire, creeping,
-// zipline). Called rather than reproduced, so that naming it in Ghidra later does not leave two copies.
-static bool PlayerMoveAllowed(obj_tag *player) {
-    return reinterpret_cast<bool (__cdecl *)(obj_tag *)>(0x000a9930)(player);
+// False while dying or dead (curState 2 to 4), and in the substates that move the player themselves (climbing,
+// wire, creeping, zipline). Not named on PS2; the name is ours.
+// FUNC_AT(0x000a9930)
+bool PlayerMoveAllowed(obj_tag *player) {
+    short state = (short)player->curState;
+    if (state >= 2 && state <= 4)
+        return false;
+    switch ((short)player->subState) {
+        case MovementType_Climb:
+        case MovementType_Wire:
+        case MovementType_Creep:
+        case MovementType_Zipline:
+            return false;
+        default:
+            return true;
+    }
 }
 
 // Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap is
@@ -1705,16 +1769,6 @@ void Player_PositionCamera(obj_tag *player) {
 
 void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
 static float Magnitude(float x) {
@@ -2935,9 +2989,91 @@ void Player_Collision(obj_tag *player) {
 // What the collision found (Player_CollisionHandler, Player_DealWithObjHit)
 // ---------------------------------------------------------------------------------------------------------------
 
-// The originals, called by address (the weapon's are the next parcel's)
-#define PlayerNotDrone_FeetOnPoint ((obj_tag *(__cdecl *)(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying))0x000ab450)
-#define PlayerCollLadder ((void (__cdecl *)(obj_tag *player, BLData *blData, obj_tag *ladder))0x000ae930)
+// What the feet stand on moves the player or drone with it (unless it is a drone, player, bullet, body or rigid
+// body), and is given a hit from above at the same point.
+void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
+    obj_tag *under = hit->hitObj;
+    if (under == NULL)
+        return;
+    switch ((uchar)under->objectType) {
+        case OBJECTTYPE_DRONE:
+        case OBJECTTYPE_PLAYER:
+        case OBJECTTYPE_BULLET:
+        case OBJECTTYPE_DEAD_DRONE:
+        case OBJECTTYPE_DEAD_PLAYER:
+        case OBJECTTYPE_RIGIDBODY:
+            break;
+        default:
+            Control_InheritVelocity(obj, under, 3.0f);
+            obj->animState->animFlags |= ANIM_CONTACT_MOVER;
+            break;
+    }
+    HITDATA_tag *above = Coll_AddHitToList(&under->hitList, 1.0f, NULL, obj);
+    above->dmgAmt = 0.0f;
+    Vec_Copy(&CONST_UP_VECTOR, (_VECTOR *)&above->surfaceNormal);
+    Vec_Negate(&CONST_UP_VECTOR, &above->maybehitDirection);
+    Vec_Copy(&hit->hitPosition, &above->hitPosition);
+}
+
+// The object in EAX, the hit in ECX
+// AUTOLTCG
+void __declspec(naked) PlayerOrDrone_FeetOnPoint_DoCollision(void) {
+    _asm {
+        push ecx
+        push eax
+        call _PlayerOrDrone_FeetOnPoint_DoCollision
+        add esp, 8
+        ret
+    }
+}
+
+// A ray from the position to 0.6 below the test's end. The first hit is stood on when its distance is within 0.1 of
+// the root height (*floorNormalY gets its normal's y); the first hit that may be stood on moves the player with it.
+// At the surface, the first hit of a material is kept as the anim's floor unless the floor is already 0xd or 0xe.
+// Returns what it stands on.
+// AUTOINJECT
+obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying) {
+    HITDATA_tag *hits = NULL;
+    HITDATA_tag *stoodOn = NULL;
+    HITDATA_tag *material = NULL;
+    _VECTOR up, below;
+    Mat_GetUp(&up, &obj->transformMatrix);
+    if (floorNormalY != NULL)
+        *floorNormalY = 1.0f;
+    float root = obj->animState->animObj.rootHeight;
+    auxVec_AddMulR32(&test->rayEnd, &up, (float)-((double)root + 0.6f), &below);
+    Collide_RayIntersect(&obj->position, &below, obj->inCel, obj, NULL, &hits, 0, 0xc, 8);
+
+    if (hits != NULL) {
+        if (hits->materialType != 0)
+            material = hits;
+        if ((double)hits->dist - 0.1f <= root) {
+            stoodOn = hits;
+            if (floorNormalY != NULL)
+                *floorNormalY = hits->surfaceNormal.b;
+        }
+        for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
+            if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
+                continue;
+            if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
+                continue;
+            _PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
+            break;
+        }
+    }
+
+    if (test->found != 0 || stoodOn != NULL)
+        obj->animState->animFlags |= ANIM_CONTACT_FLOOR;
+    if (material != NULL && surfaced) {
+        AnimState *anim = obj->animState;
+        uchar floor = (uchar)anim->floor.materialType;
+        if ((floor < 0xd || floor > 0xe) && (anim->animFlags & ANIM_CONTACT_FLOOR))
+            memcpy(&anim->floor, material, sizeof(HITDATA_tag));
+    }
+    Collide_FreeHitList(&hits);
+    // Read from the hit after the list is freed, as the original does
+    return stoodOn != NULL ? stoodOn->hitObj : NULL;
+}
 
 // The anim flags the collision works out afresh every frame
 #define ANIM_CONTACTS (ANIM_CONTACT_FLOOR | ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE | ANIM_CONTACT_MOVER)
@@ -3961,7 +4097,7 @@ void Player_Update(obj_tag *player) {
             ApplyMatrixLV(&player->transformMatrix, &blData->movement, &move);
             Vec_Add2(&player->position, &move, &player->position);
             Vec_Copy(&blData->movement, &blData->lastMovement);
-            blData->rotationDelta.y = (float)((double)blData->turnKick + blData->rotationDelta.y);
+            blData->rotationDelta.y = (float)(Extended(blData->turnKick) + Extended(blData->rotationDelta.y));
             Vec_Add2(&player->rotation, &blData->rotationDelta, &player->rotation);
             Vec_Copy(&blData->rotationDelta, &blData->lastRotationDelta);
             break;

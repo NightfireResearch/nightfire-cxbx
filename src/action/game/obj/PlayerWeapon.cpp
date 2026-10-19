@@ -31,7 +31,6 @@
 
 // The originals, called by address
 #define Player_ResetZoom ((void (__cdecl *)(obj_tag *player))0x000b7100)
-#define Player_SetupTaser ((void (__cdecl *)(BLData *blData, _VECTOR *target))0x000b8400)
 #define Check_Target ((void (__cdecl *)(obj_tag *player))0x000b9580)
 #define Text_AddMsg ((void (__cdecl *)(char player, char p2, int p3, const char *text, int p5, short frames))0x000d1d70)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(int p1, int message, int weapon, int p4, obj_tag *player))0x0009e430)
@@ -126,12 +125,25 @@ static bool IsGadget(int weapon) {
     return weapon > 0x49 && weapon < 0x5f;
 }
 
+// Turns the gun towards the crosshairs: by their offset over the view's zoom, pi/6 at an offset of 1, across scaled
+// by the aspect ratio and less the recoil's.
+void _Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    viewer_tag *viewer = glb_viewer[blData->playerNum];
+    Extended zoom = viewer->zoom;
+    blData->weaponObject->rotation.x = (float)(Extended(blData->crosshairOffsetY) / zoom * Extended(-0.5235988f));
+    blData->weaponObject->rotation.y = (float)(Extended(blData->recoilY)
+        - Extended(blData->crosshairOffsetX) / zoom * Extended(0.5235988f) * Extended(viewer->AspectRatio));
+    blData->weaponObject->rotation.z = 0.0f;
+}
+
 // The player in EAX
-static void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
+// AUTOLTCG
+void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(void) {
     _asm {
-        mov eax, [esp + 4]
-        mov ecx, 0x000b7eb0
-        call ecx
+        push eax
+        call _Player_TiltWeaponTowardsCrosshairs
+        add esp, 4
         ret
     }
 }
@@ -651,7 +663,7 @@ void Player_WeaponRecoil(obj_tag *player) {
     sway.x = (float)(FSin(idle) * Extended(0.001f) + Extended(sway.x));
     sway.y = (float)(FCos(idle * 1.7f) * Extended(0.001f) + walkLift);
 
-    Player_TiltWeaponTowardsCrosshairs(player);
+    _Player_TiltWeaponTowardsCrosshairs(player);
     Player_SetWeaponAnimObj(player, &sway);
 }
 

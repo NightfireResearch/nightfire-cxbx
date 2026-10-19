@@ -325,7 +325,6 @@ uchar __cdecl LogActivate(BLData *bl, obj_tag *player) {
     ShadowLog("activate(%x,%x)", W(bl), W(player));
     return (uchar)Next(3);
 }
-void __cdecl LogTilt(obj_tag *player) { ShadowLog("tilt(%x)", W(player)); }
 // Player_Activate: EAX the player's data, EDI the player; our port's core is faked as well
 __declspec(naked) void FakeActivateRegs(void) {
     _asm {
@@ -336,15 +335,9 @@ __declspec(naked) void FakeActivateRegs(void) {
         ret
     }
 }
-// Player_TiltWeaponTowardsCrosshairs: EAX the player
-__declspec(naked) void FakeTilt(void) {
-    _asm {
-        push eax
-        call LogTilt
-        add esp, 4
-        ret
-    }
-}
+
+// The callers' tests fake the taser; its own test does not
+bool fakeTaser = true;
 
 void InstallFakes(void) {
     ShadowFakes_InstallCreate();
@@ -363,9 +356,9 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000a9660, (const void *)&FakeObjCall);       // PlayerAnimSetInit
     ShadowHook_Install(0x000b7100, (const void *)&FakeResetZoom);
     ShadowHook_Install(0x000b8260, (const void *)&FakeBeam);          // Player_SetupLaser
-    ShadowHook_Install(0x000b8400, (const void *)&FakeBeam);          // Player_SetupTaser
+    if (fakeTaser)
+        ShadowHook_Install(0x000b8400, (const void *)&FakeBeam);      // Player_SetupTaser
     ShadowHook_Install(0x000b9580, (const void *)&FakeObjCall);       // Check_Target
-    ShadowHook_Install(0x000b7eb0, (const void *)&FakeTilt);
     ShadowHook_Install(0x000b86b0, (const void *)&FakeActivateRegs);
     ShadowHook_Install((unsigned)(uintptr_t)&_Player_Activate, (const void *)&LogActivate);
     ShadowHook_Install(0x0002e320, (const void *)&FakeCreateObjEx);
@@ -628,6 +621,7 @@ void RandomWorld(void) {
     viewer_tag *viewer = Viewer();
     viewer->idx = 0;
     viewer->zoom = PICK(1.0f, 2.0f);
+    viewer->AspectRatio = PICK(1.3333334f, 1.7777778f, 1.0f);
     viewer->width = 640.0f;
     viewer->height = 480.0f;
     viewer->projectionScaleX = PICK(320.0f, 554.0f);
@@ -894,6 +888,12 @@ uint32_t RunSetFiringAnim(bool original) {
     uint32_t args[2] = {P(Bl()), P(&world.gun)};
     return W((void *)Regs6(original, 0x000b7cf0, (const void *)&Player_SetFiringAnim, r, 2, args));
 }
+uint32_t RunTilt(bool original) {
+    Regs r = {};
+    r.eax = P(Pl());
+    Regs6(original, 0x000b7eb0, (const void *)&Player_TiltWeaponTowardsCrosshairs, r, 0, NULL);
+    return 0;
+}
 uint32_t RunResetWalkAnim(bool original) {
     CDECL_RUN(0x000a8980, Player_ResetWalkAnim, void (__cdecl *)(obj_tag *), Pl());
     return 0;
@@ -918,6 +918,18 @@ uint32_t RunZoom(bool original) {
 uint32_t RunFiring(bool original) {
     char fire = (char)Arg(3);
     CDECL_RUN(0x000bb300, Player_WeaponFiring, void (__cdecl *)(obj_tag *, char), Pl(), fire);
+    return 0;
+}
+uint32_t RunSetupTaser(bool original) {
+    Bl()->beamObjs[0] = &world.beams[0];
+    static const float scales[] = {0.02f, 0.2f, 1.0f, 5.0f};
+    Vec_Scalef(&world.vectorArg, scales[Arg(4)], &world.vectorArg);
+    // the taser's range, long enough for more than two segments
+    float range = weapon_data[0x4c].range;
+    static const float ranges[] = {2.0f, 10.0f, 30.0f, 60.0f};
+    weapon_data[0x4c].range = ranges[Arg(4)];
+    CDECL_RUN(0x000b8400, Player_SetupTaser, void (__cdecl *)(BLData *, _VECTOR *), Bl(), &world.vectorArg);
+    weapon_data[0x4c].range = range;
     return 0;
 }
 uint32_t RunInitBullet(bool original) {
@@ -1001,6 +1013,7 @@ const Case kGun[] = {
     C("Player_WeaponRecoil", RunRecoil),
     C("Player_SetFiringAnim", RunSetFiringAnim),
     C("Player_ResetWalkAnim", RunResetWalkAnim),
+    C("Player_TiltWeaponTowardsCrosshairs", RunTilt),
     C("WatchOrHands_Create", RunWatchOrHands),
     C("Player_CreateBeams", RunCreateBeams),
     C("Player_GetAimingPoint", RunAimingPoint),
@@ -1023,6 +1036,9 @@ const Case kEffects[] = {
     C("Player_MuzzleFlash", RunMuzzleFlash),
     C("Draw_MuzzleFlash", RunDrawMuzzleFlash),
     C("Player_SetWatch", RunSetWatch),
+};
+const Case kTaser[] = {
+    C("Player_SetupTaser", RunSetupTaser),
 };
 
 } // namespace
@@ -1102,6 +1118,11 @@ void PlayerWeaponShadow_Run(void) {
     Test("the auto-aim", kAutoAim, COUNT(kAutoAim), 8000);
     Test("the laser sight, the muzzle flash and the watch", kEffects, COUNT(kEffects), 4000);
     ShadowHook_RemoveAll();
+    fakeTaser = false;
+    InstallFakes();
+    Test("the taser", kTaser, COUNT(kTaser), 4000);
+    ShadowHook_RemoveAll();
+    fakeTaser = true;
 
     NfWarnMuted--;
     memcpy(&GameState, gameState, sizeof(gameState));

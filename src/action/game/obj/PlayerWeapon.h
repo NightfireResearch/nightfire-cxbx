@@ -67,6 +67,7 @@ void Player_PositionGun(obj_tag *player, BLData *blData);
 void Player_ResetWalkAnim(obj_tag *player);
 obj_tag *WatchOrHands_Create(obj_tag *owner);
 void Player_CreateBeams(obj_tag *player, char playerNum);
+void Player_TiltWeaponTowardsCrosshairs(void);   // EAX player
 void Player_WeaponRecoil(obj_tag *player);
 void Player_WeaponSelect(obj_tag *player);
 bool Player_WeaponUsable(BLData *blData, short weapon);

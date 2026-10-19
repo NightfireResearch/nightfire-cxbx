@@ -1863,8 +1863,11 @@ obj_tag *Lock(void) {
     static const ushort kCounts[] = {0, 1, 4, 5, 39, 40, 41, 80, 81, 120, 121, 160, 161, 3000, 3005};
     obj->subState = (ushort)(R(2) ? kCounts[R(COUNT(kCounts))] : R(200));
     for (int i = 0; i < OBJS; i++) {
-        if (world.objs[i].objectType == OBJECTTYPE_BULLET)
-            ((BU_tag *)world.objs[i].extraObjectData)->wpnDef = &world.weapons[R(4)];
+        if (world.objs[i].objectType == OBJECTTYPE_BULLET) {
+            BU_tag *bu = (BU_tag *)world.objs[i].extraObjectData;
+            bu->wpnDef = &world.weapons[R(4)];
+            bu->firedByObj = AnyObjOrNull();   // not left as whatever the extra data held
+        }
     }
     for (int i = 0; i < HITS; i++) {
         if (R(2) == 0)

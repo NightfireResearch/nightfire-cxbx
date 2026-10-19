@@ -57,6 +57,7 @@
 #include "../ui/ui.h"
 #include "../ui/Manager.h"
 #include "SecretsShadow.h"
+#include "ShadowHarness.h"
 #include "UnlocksShadow.h"
 #include "LoadScreenShadow.h"
 #include "UpgradeShadow.h"
@@ -606,8 +607,11 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, player: with the weapons) runs that suite alone
+    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, effectport, player: with the weapons) runs that suite alone
     const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
+    // NIGHTFIRE_SHADOW_SEED=0x... starts the tests' random numbers there, to run a suite from another stream
+    if (const char *seed = getenv("NIGHTFIRE_SHADOW_SEED"))
+        ShadowRand_SetSeed((uint32_t)strtoul(seed, NULL, 0));
     // The x87 runtime's error handling (__CIacos outside -1 to 1, say) sets errno, which needs the per-thread block
     // the game's heap allocates, and there is no heap yet. Its flag at 0x00300608 skips it: the result is the same.
     uint32_t mathErrors = U32_AT(0x00300608);
@@ -642,6 +646,10 @@ void MenuProbe_Install(void) {
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menuport") == 0) {
         MenuPortShadow_Run();
+        fflush(stdout);
+        _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "effectport") == 0) {
+        EffectPortShadow_Run();
         fflush(stdout);
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "player") == 0) {
