@@ -425,7 +425,7 @@ void Input_Init(void) {
         input->crouchToggle = 1;
         input->field5_0x5 = 1;
         input->levelViewOnPace = 1;
-        input->field6_0x6 = 1;
+        input->rememberZoom = 1;
         input->crosshairsEnabled = 1;
         input->controlStyle = 0;
         input->controlStyleDriving = 0;

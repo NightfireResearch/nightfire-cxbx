@@ -396,40 +396,6 @@ obj_tag *__cdecl FakeFeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *normal,
 void __cdecl FakeOtherViews(obj_tag *obj, char player) { ShadowLog("otherviewsonly(%x,%d)", W(obj), player); }
 void __cdecl FakeInitWeapon(BLData *bl, obj_tag *obj, void *p3) { ShadowLog("initweapon(%x,%x)", W(bl), W(obj)); }
 
-// The register-argument originals Player_Update calls: Player_Swim (EAX data, ESI player), Player_ClampSomeAngles
-// (ECX data, the player on the stack) and Player_UpdateBlurAndFade (ESI data)
-void __cdecl LogRegs(const char *what, uint32_t a, uint32_t b) { ShadowLog("%s(%x,%x)", what, W((void *)a), W((void *)b)); }
-void __cdecl LogSwim(uint32_t data, uint32_t player) { LogRegs("swim", data, player); }
-void __cdecl LogClamp(uint32_t data, uint32_t player) { LogRegs("clampangles", data, player); }
-void __cdecl LogBlur(uint32_t data, uint32_t unused) { LogRegs("blurandfade", data, unused); }
-__declspec(naked) void FakeSwim(void) {
-    _asm {
-        push esi
-        push eax
-        call LogSwim
-        add esp, 8
-        ret
-    }
-}
-__declspec(naked) void FakeClampSomeAngles(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push ecx
-        call LogClamp
-        add esp, 8
-        ret
-    }
-}
-__declspec(naked) void FakeBlurAndFade(void) {
-    _asm {
-        push 0
-        push esi
-        call LogBlur
-        add esp, 8
-        ret
-    }
-}
-
 void InstallFakes(void) {
     ShadowFakes_Install();
     ShadowHook_Install(0x00017820, (const void *)&FakeAnimSetDeleteAll);
@@ -521,9 +487,6 @@ void InstallFakes(void) {
     ShadowHook_Install(0x0009a750, (const void *)&FakeObjCall);     // GT_Activate
     ShadowHook_Install(0x000db3a0, (const void *)&FakeOtherViews);
     ShadowHook_Install(0x000db3d0, (const void *)&FakeObjCall);     // View_SetDrawInNoViews
-    ShadowHook_Install(0x000aa590, (const void *)&FakeSwim);
-    ShadowHook_Install(0x000ab180, (const void *)&FakeClampSomeAngles);
-    ShadowHook_Install(0x000ab0b0, (const void *)&FakeBlurAndFade);
 }
 
 // ---- the made-up world
@@ -646,6 +609,7 @@ void RandomGlobals(void) {
     PlayerInputs[0].crouchToggle = (undefined)ShadowRand(2);
     PlayerInputs[0].levelViewOnPace = (undefined)ShadowRand(2);
     PlayerInputs[0].hudVisibility = (undefined)ShadowRand(2);
+    PlayerInputs[0].rememberZoom = (undefined)ShadowRand(2);
     obj_tag **assassin = (obj_tag **)GameAssassin;
     assassin[0] = ShadowRand(2) ? &world.player : NULL;     // AssassinTarget
     assassin[1] = ShadowRand(2) ? &world.shooter : NULL;    // CurrentAssassinObjId
@@ -718,7 +682,8 @@ void RandomWorld(void) {
     bl->health = PICK(100.0f, 0.0f, -5.0f, 1.0f, 0.99999994f, 600.0f, 33.0f);
     bl->armor = PICK(0.0f, 10.0f, 50.0f, 0.5f);
     bl->pitchFromHorizontal = PICK(0.0f, 0.5f, -0.99f, 1.0f);
-    bl->pitchAutoLevelTarget = PICK(0.0f, 0.3f);
+    bl->pitchAutoLevelTarget = PICK(0.0f, 0.3f, 0.501f, 1.5f, -2.0f);
+    bl->aimAutoLevelDelay = (char)(ShadowRand(3) ? 0 : ShadowRand(3));
     bl->zoom = PICK(1.0f, 2.0f, 4.5f);
     bl->scopeAccelX = PICK(0.015f, 0.03f, 0.06f, -0.02f);
     bl->scopeAccelY = PICK(0.011f, 0.03f);
@@ -739,6 +704,8 @@ void RandomWorld(void) {
     bl->turnKick = PICK(0.0f, 0.1f, -0.1f);
     bl->visibility = 0.5f;
     bl->flashTime = PICK(0.0f, 2.0f);
+    bl->flashTimeLeft = PICK(0.0f, 1.0f, 2.0f, 0.5f);
+    bl->flashBlur = (uchar)ShadowRand(256);
     bl->fallFrames = PICK(0.0f, 30.0f, 60.0f, 70.0f, 70.5f, 200.0f);
     bl->stepDistance = 3.0f;
     bl->groundBits = (ushort)(ShadowRand(3) ? ShadowRand(16) : 0x8000);
@@ -773,6 +740,11 @@ void RandomWorld(void) {
     anim->currentWeaponId = weapons[ShadowRand(8)];
     anim->switchingToWeaponId = weapons[ShadowRand(8)];
     anim->prevHeldWeaponId = weapons[ShadowRand(8)];
+    for (char weapon : weapons)
+        bl->weaponStats[(ushort)weapon_data[weapon].weaponBaseNum].zoom = PICK(1.0f, 2.5f, 8.0f, 100.0f);
+    bl->zoomTarget = PICK(1.0f, 2.0f, 60.0f);
+    bl->zoomMax = PICK(1.0f, 4.0f);
+    bl->zoomSound = ShadowRand(2) ? (DYNAMICSOUNDS *)&world.cels[2] : NULL;
     anim->inWater = (char)ShadowRand(4);
     static const char floors[] = {0, 0xd, 0xe, 3};
     anim->floor.materialType = floors[ShadowRand(4)];
@@ -1030,6 +1002,38 @@ uint32_t RunInWater(bool original) {
     r.esi = P(Pl());
     r.edi = P(Bl());
     return Regs6(original, 0x000ab280, (const void *)&Player_InWater, r, 0, NULL);
+}
+uint32_t RunSwim(bool original) {
+    Regs r = {};
+    r.esi = P(Pl());
+    r.eax = P(Bl());
+    Regs6(original, 0x000aa590, (const void *)&Player_Swim, r, 0, NULL);
+    return 0;
+}
+uint32_t RunClampSomeAngles(bool original) {
+    Regs r = {};
+    r.ecx = P(Bl());
+    uint32_t args[1] = {P(Pl())};
+    Regs6(original, 0x000ab180, (const void *)&Player_ClampSomeAngles, r, 1, args);
+    return 0;
+}
+uint32_t RunBlurAndFade(bool original) {
+    Regs r = {};
+    r.esi = P(Bl());
+    Regs6(original, 0x000ab0b0, (const void *)&Player_UpdateBlurAndFade, r, 0, NULL);
+    return 0;
+}
+uint32_t RunKill(bool original) {
+    CDECL_RUN(0x000ae6c0, Player_Kill, void (__cdecl *)(obj_tag *), Pl());
+    return 0;
+}
+uint32_t RunScopeOff(bool original) {
+    CDECL_RUN(0x000b70b0, Player_ScopeOff, void (__cdecl *)(obj_tag *), Pl());
+    return 0;
+}
+uint32_t RunResetZoom(bool original) {
+    CDECL_RUN(0x000b7100, Player_ResetZoom, void (__cdecl *)(obj_tag *), Pl());
+    return 0;
 }
 uint32_t RunInShadow(bool original) {
     CDECL_RUN(0x000aafb0, Player_InShadow, void (__cdecl *)(BLData *, obj_tag *), Bl(), Pl());
@@ -1344,6 +1348,12 @@ const Case kHealth[] = {
     C("Player_ClearInertia/ClearAimInertia", RunClearInertia),
     C("Player_GetHeadPos", RunGetHeadPos),
     C("Player_InWater", RunInWater),
+    C("Player_Swim", RunSwim),
+    C("Player_ClampSomeAngles", RunClampSomeAngles),
+    C("Player_UpdateBlurAndFade", RunBlurAndFade),
+    C("Player_Kill", RunKill),
+    C("Player_ScopeOff", RunScopeOff),
+    C("Player_ResetZoom", RunResetZoom),
     C("Player_InShadow", RunInShadow),
     C("Player_HandlePain", RunHandlePain),
     C("Player_CheckForDeath", RunCheckForDeath),

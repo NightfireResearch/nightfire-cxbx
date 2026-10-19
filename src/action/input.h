@@ -23,7 +23,7 @@ typedef struct {
     undefined manualAimToggle; // 0x3 - the "aim: toggle/hold" option; non-zero = toggle
     undefined crouchToggle;     // 0x4 (PS2 name)
     undefined field5_0x5;
-    undefined field6_0x6;
+    undefined rememberZoom;     // 0x6 - the scope comes up at the zoom it was left at (Player_ResetZoom)
     undefined levelViewOnPace; // 0x7 - a change of walking pace sets the view levelling (Ghidra: someSettingRelatedToCrouch)
     undefined crosshairsEnabled;
     undefined1 vibrationEnabled; /* Created by retype action */

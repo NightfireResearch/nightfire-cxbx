@@ -64,6 +64,7 @@ void Player_RamSave(BLData *blData);
 void Player_SetWeaponAnim(obj_tag *player);
 void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway);
 void Player_PositionGun(obj_tag *player, BLData *blData);
+void Player_ResetWalkAnim(obj_tag *player);
 void Player_WeaponRecoil(obj_tag *player);
 void Player_WeaponSelect(obj_tag *player);
 bool Player_WeaponUsable(BLData *blData, short weapon);

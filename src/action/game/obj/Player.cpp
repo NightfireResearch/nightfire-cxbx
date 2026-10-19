@@ -1,5 +1,6 @@
 #include "Player.h"
 #include "Pickup.h"
+#include "PlayerWeapon.h"
 #include "../Upgrade.h"
 #include "../mp/multiplayer.h"
 #include "../view.h"
@@ -648,16 +649,33 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
 
 // AnimScriptAdd, with the script's playback speed set (sAnimScript_tag +0x94) when it starts.
 // AnimScriptAdd, played backwards: raises the "reverse" flag at 0x001d7828 and tail-calls AnimScriptAdd.
-// Leaving the scope: target zoom back to 1x, view auto-levelling suppressed (aimAutoLevelState = 1), walk
-// animation reset, zoom motor sound stopped. Not a function on PS2 (inlined in Player_Weapon), so the name is
-// invented.
-// AUTOGEN
-void Player_ScopeOff(obj_tag *param_1);
-// Sets the zoom target and limit for the CURRENT weapon: 1x, or the zoom remembered for this weapon base when
-// the player's "remember zoom" option is on and the scope is up, clamped to weapon_data[].maxZoom. Also
-// inlined on PS2; the name is invented.
-// AUTOGEN
-void Player_ResetZoom(obj_tag *param_1);
+// Leaving the scope: the zoom back to 1x, the view's auto-levelling off, the walk anim reset and the zoom motor's
+// sound stopped.
+// AUTOINJECT
+void Player_ScopeOff(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    blData->aimAutoLevelState = 1;
+    blData->zoomTarget = 1.0f;
+    Player_ResetWalkAnim(player);
+    if (blData->zoomSound != NULL) {
+        Sound_Stop(blData->zoomSound);
+        blData->zoomSound = NULL;
+    }
+}
+
+// The zoom for the held weapon: 1x, or with the scope up and the player's "remember zoom" option on, the zoom
+// its base weapon was left at; never past the weapon's maxZoom.
+// AUTOINJECT
+void Player_ResetZoom(obj_tag *player) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    int weapon = player->animState->currentWeaponId;
+    blData->zoomTarget = 1.0f;
+    if (PlayerInputs[blData->playerNum].rememberZoom && (player->animState->animFlags & ANIM_SCOPED) != 0)
+        blData->zoomTarget = blData->weaponStats[(ushort)weapon_data[weapon].weaponBaseNum].zoom;
+    blData->zoomMax = weapon_data[weapon].maxZoom;
+    if (blData->zoomMax < blData->zoomTarget)
+        blData->zoomTarget = blData->zoomMax;
+}
 
 static_assert(offsetof(weapon_definition_tag, offsetToNextAltFireVariant) == 0x05, "offsetToNextAltFireVariant");
 static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x2e, "numFireModes");
@@ -1741,6 +1759,11 @@ void Player_SetHealth(BLData *blData, float health) {
         health = 0.0f;
     blData->health = health;
     PlrStat_LogHealth(health, blData->playerNum);
+}
+
+// AUTOINJECT
+void Player_Kill(obj_tag *player) {
+    Player_SetHealth((BLData *)player->extraObjectData, 0.0f);
 }
 
 // The eyes: above the position by the eye height less the crouch, and, given a matrix, the view's. Flying and in zero
@@ -3250,7 +3273,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     blData->aimY = 0.0f;
     blData->pitchAutoLevelTarget = 0.0f;
     blData->pitchFromHorizontal = 0.0f;
-    blData->field_0x8e7 = 0;
+    blData->aimAutoLevelDelay = 0;
     blData->zoomMax = 1.0f;
     blData->zoomTarget = 1.0f;
     blData->zoom = 1.0f;
@@ -3418,7 +3441,7 @@ static void ZeroGAxis(float *last, float *movement, float target) {
 void _Player_ZeroG(BLData *blData, obj_tag *player) {
     Vec_Zero(&blData->field_0x3c);
     blData->aimAutoLevelState = 2;
-    blData->field_0x8e7 = 0;
+    blData->aimAutoLevelDelay = 0;
     blData->pitchFromHorizontal = 0.0f;
 
     if (!(player->animState->animFlags & 1)) {
@@ -3690,40 +3713,109 @@ void __declspec(naked) Player_Activate(void) {
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 
 #define benchmark U8_AT(0x002adf32) // set, the player stands still
+#define GlobalBlur U8_AT(0x001f667c)
+
+// Swimming: the move, then walking out once the feet stand on something with the surface at least 0.3 below the
+// position, and the movement kept from taking the position above 0.3 below the surface.
+void _Player_Swim(obj_tag *player, BLData *blData) {
+    Player_Move(blData, player, 1.0f);
+    if (player->inCel == NULL)
+        return;
+
+    if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) != 0
+        && !((double)player->position.y - 0.3f < player->inCel->shearHeight)) {
+        blData->aimAutoLevelState = 2;
+        Player_ChangeSubState(player, MovementType_Walk);
+    }
+
+    _VECTOR move;
+    ApplyMatrixLV(&player->transformMatrix, &blData->movement, &move);
+    float surface = player->inCel->shearHeight - 0.3f;
+    if (!(player->position.y < surface)) {
+        if (move.y > 0.0f)
+            move.y = 0.0f;
+    }
+    else if ((double)move.y + player->position.y > surface) {
+        move.y = surface - player->position.y;
+    }
+    _MATRIX inverse;
+    Mat_Inverse(&player->transformMatrix, &inverse);
+    ApplyMatrixLV(&inverse, &move, &blData->movement);
+}
 
 // The player's object in ESI, his data in EAX
-static void __declspec(naked) Player_Swim(obj_tag *player, BLData *blData) {
+// AUTOLTCG
+void __declspec(naked) Player_Swim(void) {
     _asm {
+        push eax
         push esi
-        mov esi, [esp + 8]
-        mov eax, [esp + 0xc]
-        mov ecx, 0x000aa590
-        call ecx
-        pop esi
+        call _Player_Swim
+        add esp, 8
         ret
     }
+}
+
+// Eases the pitch 7.5% of the way to pitchAutoLevelTarget a frame while aimAutoLevelState is 2 or 3, after
+// aimAutoLevelDelay frames, and not while jumping. Once the step is within 0.0002, state 2 becomes 3.
+void _Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
+    char state = blData->aimAutoLevelState;
+    if (state < 2 || state > 3)
+        return;
+    if (blData->aimAutoLevelDelay != 0) {
+        blData->aimAutoLevelDelay--;
+        return;
+    }
+
+    double step = ((double)blData->pitchAutoLevelTarget - blData->pitchFromHorizontal) * 0.075f;
+    if (player->subState == MovementType_Walk && blData->jumpState != JUMP_NONE)
+        return;
+    double pitch = step + blData->pitchFromHorizontal;
+    blData->pitchFromHorizontal = (float)pitch;
+    if (pitch < -1.0f)
+        blData->pitchFromHorizontal = -1.0f;
+    else if (pitch > 1.0f)
+        blData->pitchFromHorizontal = 1.0f;
+    if (step <= 0.0002f && step >= -0.0002f && state == 2)
+        blData->aimAutoLevelState = 3;
 }
 
 // The player's data in ECX, his object on the stack
-static void __declspec(naked) Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
+// AUTOLTCG
+void __declspec(naked) Player_ClampSomeAngles(void) {
     _asm {
-        mov ecx, [esp + 4]
-        push dword ptr [esp + 8]
-        mov eax, 0x000ab180
-        call eax
-        add esp, 4
+        push dword ptr [esp + 4]
+        push ecx
+        call _Player_ClampSomeAngles
+        add esp, 8
         ret
     }
 }
 
+// A flash bang's fade (Player_SetFlashBang): flashTimeLeft counts down a frame at a time. While flashTime is set,
+// single player blurs by flashBlur; over the first half of flashTime the fade is held, then it runs over the
+// frames left and flashTime is cleared.
+void _Player_UpdateBlurAndFade(BLData *blData) {
+    if (blData->flashTimeLeft != 0.0f)
+        blData->flashTimeLeft -= 1.0f;
+    if (blData->flashTime == 0.0f)
+        return;
+    if (MPSettings.isMultiplayer == 0)
+        GlobalBlur = blData->flashBlur;
+    if (blData->flashTime * 0.5f < blData->flashTimeLeft) {
+        Camera_SetFade(blData->playerNum, -100000.0f, blData->flashBlur | 0xffffff00, 0);
+        return;
+    }
+    Camera_SetFade(blData->playerNum, -blData->flashTimeLeft, blData->flashBlur | 0xffffff00, 0);
+    blData->flashTime = 0.0f;
+}
+
 // The player's data in ESI
-static void __declspec(naked) Player_UpdateBlurAndFade(BLData *blData) {
+// AUTOLTCG
+void __declspec(naked) Player_UpdateBlurAndFade(void) {
     _asm {
         push esi
-        mov esi, [esp + 8]
-        mov eax, 0x000ab0b0
-        call eax
-        pop esi
+        call _Player_UpdateBlurAndFade
+        add esp, 4
         ret
     }
 }
@@ -3856,7 +3948,7 @@ void Player_Update(obj_tag *player) {
                         _Player_SSGrapple(blData, player);
                         break;
                     case MovementType_Swim:
-                        Player_Swim(player, blData);
+                        _Player_Swim(player, blData);
                         break;
                     case MovementType_ScanMode:
                         _Player_SSScanMode(blData, player);
@@ -3865,7 +3957,7 @@ void Player_Update(obj_tag *player) {
             }
 
             _Player_MonitorAir(player, blData);
-            Player_ClampSomeAngles(blData, player);
+            _Player_ClampSomeAngles(blData, player);
             Player_Aiming(player);
             Player_ViewClamping(player);
 
@@ -3886,7 +3978,7 @@ void Player_Update(obj_tag *player) {
     }
 
     Player_InShadow(blData, player);
-    Player_UpdateBlurAndFade(blData);
+    _Player_UpdateBlurAndFade(blData);
     if (blData->field_0x8cc <= 0)
         blData->field_0x8cc = (short)((Rand_Random() & 0x3ff) + 0xff);
     AnimObjectUpdate(player);

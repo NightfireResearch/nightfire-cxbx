@@ -31,8 +31,6 @@ static int32_t Ftol(double x) {
 void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
 // AUTOGEN
-void Player_Kill(obj_tag *obj);
-// AUTOGEN
 undefined MPSound_Play(Action_SFX sfx);
 
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)

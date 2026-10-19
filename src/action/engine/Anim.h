@@ -154,6 +154,8 @@ typedef struct AnimState {
 #define ANIM_CONTACT_HIT    0x10    // the capsule hit something
 #define ANIM_CONTACT_ABOVE  0x20    // the capsule hit something above its top
 #define ANIM_CONTACT_MOVER  0x80    // moves with what it stands on (PlayerOrDrone_FeetOnPoint_DoCollision)
+// AnimState::animFlags, for the player: the weapon's scope is up
+#define ANIM_SCOPED         0x01
 // AnimState::animFlags: a footstep this frame (AnimObjectUpdate)
 #define ANIM_FOOTSTEP       0x04
 

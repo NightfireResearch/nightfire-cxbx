@@ -606,7 +606,7 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport) runs that suite alone
+    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, player) runs that suite alone
     const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
     // The x87 runtime's error handling (__CIacos outside -1 to 1, say) sets errno, which needs the per-thread block
     // the game's heap allocates, and there is no heap yet. Its flag at 0x00300608 skips it: the result is the same.
@@ -642,6 +642,10 @@ void MenuProbe_Install(void) {
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menuport") == 0) {
         MenuPortShadow_Run();
+        fflush(stdout);
+        _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "player") == 0) {
+        PlayerShadow_Run();
         fflush(stdout);
         _exit(0);
     } else if (SettingOn("MenuShadowTests")) {

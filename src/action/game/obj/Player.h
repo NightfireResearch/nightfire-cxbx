@@ -229,7 +229,7 @@ typedef struct BLData {
     uchar field_0x8e4; // 0x8e4 - set to 0xff when the walking, crouching or zero G anim set is chosen
     char field_0x8e5; // 0x8e5 - zeroed by Player_Init
     char field_0x8e6; // 0x8e6 - zeroed by Player_InitWeapon
-    char field_0x8e7; // 0x8e7 - zeroed by Player_ZeroG
+    char aimAutoLevelDelay; // 0x8e7 - frames before Player_ClampSomeAngles eases the pitch; zeroed by Player_ZeroG
     // Which hand fires next for twin guns, and which reload anim plays next for alternating ones (Player_SetFiringAnim,
     // Player_WeaponFiring); zeroed by Player_InitWeapon
     char twinGunHand; // 0x8e8
@@ -431,6 +431,9 @@ void Player_Weapon(obj_tag *player);
 void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach);
 void Player_Cam2Mode(ushort playerNum, uint mode);
 void Player_SetHealth(BLData *obj, float health);
+void Player_Kill(obj_tag *player);
+void Player_ScopeOff(obj_tag *player);
+void Player_ResetZoom(obj_tag *player);
 void Player_CheckWeaponsLoaded(BLData *blData);
 short Player_AmmoIndex(short weaponIndex);
 uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount);
@@ -477,6 +480,9 @@ void AccelFunc0(void);              // the stack's arguments, keeping ECX and ED
 void Player_InitGrapple(void);      // ESI the player's data; player
 void Player_SSGrapple(void);        // EAX the player's data, EDI player
 void Player_GrappleSetRope(void);   // EDI player
+void Player_Swim(void);             // ESI player, EAX his data
+void Player_ClampSomeAngles(void);  // ECX the player's data; player
+void Player_UpdateBlurAndFade(void); // ESI the player's data
 int _Player_InWater(obj_tag *player, BLData *blData);
 void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
 float Player_Hurt(obj_tag *player, float damage, _VECTOR *from);
