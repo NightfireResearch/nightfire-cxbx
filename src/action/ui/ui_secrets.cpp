@@ -279,8 +279,9 @@ bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
     }
     switch (key) {
     case KEY_DELETE:
-        // as the original: with nothing typed, this clears the byte before the buffer
-        kbd_text[strlen(kbd_text) - 1] = 0;
+        // With nothing typed the original clears the byte before the buffer, padding that nothing reads.
+        if (strlen(kbd_text) != 0)
+            kbd_text[strlen(kbd_text) - 1] = 0;
         break;
     case KEY_SPACE:
         if (strlen(kbd_text) < SECRET_CODE_MAX)
