@@ -420,6 +420,10 @@ void ShadowFakes_Install(void) {
     ShadowHook_Install(0x0009be00, (const void *)&FakeMissionStatus);
 }
 
+void ShadowFakes_InstallCreate(void) {
+    ShadowHook_Install(0x0002dc10, (const void *)&FakeCreate);
+}
+
 void ShadowFakes_AddRegions(ShadowRegions &regions) {
     regions.Add(ShadowCreatePool, sizeof(ShadowCreatePool));
     regions.Add(&createUsed, sizeof(createUsed));

@@ -347,6 +347,7 @@ __declspec(naked) void FakeTilt(void) {
 }
 
 void InstallFakes(void) {
+    ShadowFakes_InstallCreate();
     ShadowHook_Install(0x00017220, (const void *)&FakeScriptAdd);
     ShadowHook_Install(0x00017270, (const void *)&FakeScriptAddSpeed);
     ShadowHook_Install(0x00012780, (const void *)&FakeScriptIsStopped);
@@ -897,6 +898,15 @@ uint32_t RunResetWalkAnim(bool original) {
     CDECL_RUN(0x000a8980, Player_ResetWalkAnim, void (__cdecl *)(obj_tag *), Pl());
     return 0;
 }
+uint32_t RunWatchOrHands(bool original) {
+    obj_tag *o = CDECL_RUN(0x000b6c20, WatchOrHands_Create, obj_tag *(__cdecl *)(obj_tag *), Pl());
+    return o == NULL ? 0 : (uint32_t)((uint8_t *)o - ShadowCreatePool) + 1;
+}
+uint32_t RunCreateBeams(bool original) {
+    char playerNum = (char)Arg(4);
+    CDECL_RUN(0x000b6dd0, Player_CreateBeams, void (__cdecl *)(obj_tag *, char), Pl(), playerNum);
+    return 0;
+}
 uint32_t RunAimingPoint(bool original) {
     CDECL_RUN(0x000b85a0, Player_GetAimingPoint, void (__cdecl *)(obj_tag *, _VECTOR *), Pl(), &world.vectorArg);
     return 0;
@@ -956,11 +966,13 @@ void Test(const char *group, const Case *list, int count, int trials) {
         current = &list[c];
         for (int trial = 0; trial < trials; trial++) {
             RandomWorld();
+            ShadowFakes.createFails = ShadowRand(6) == 0;
             cases++;
             if (!ShadowCompare(regions, "playerweapon", current->name, trial, RunTheirs, RunOurs))
                 differ++;
         }
     }
+    ShadowFakes.createFails = false;
     printf("[playerweapon] %s: %d cases, %d differ\n", group, cases - groupCases, differ - groupDiffer);
 }
 
@@ -989,6 +1001,8 @@ const Case kGun[] = {
     C("Player_WeaponRecoil", RunRecoil),
     C("Player_SetFiringAnim", RunSetFiringAnim),
     C("Player_ResetWalkAnim", RunResetWalkAnim),
+    C("WatchOrHands_Create", RunWatchOrHands),
+    C("Player_CreateBeams", RunCreateBeams),
     C("Player_GetAimingPoint", RunAimingPoint),
     C("Player_Zoom", RunZoom),
 };
@@ -1077,6 +1091,7 @@ void PlayerWeaponShadow_Run(void) {
     regions.Add(&GameSurfaced, 1);
     regions.Add(&GameWarmReset, 1);
     regions.Add(&GameBlur, 1);
+    ShadowFakes_AddRegions(regions);
     NfWarnMuted++;
     cases = differ = 0;
 

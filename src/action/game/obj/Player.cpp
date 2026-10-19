@@ -865,10 +865,6 @@ void Player_Weapon(obj_tag *player) {
 }
 
 // AUTOGEN
-obj_tag * WatchOrHands_Create(int * param_1);
-// AUTOGEN
-undefined4 FUN_000b6dd0(obj_tag * param_1, byte param_2);
-// AUTOGEN
 void MP_EquipPlayer(obj_tag * param_1);
 
 // How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
@@ -933,7 +929,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
     blData->field_0xf2 = 0;
 
     // The original pushes blData->playerNum as a second argument, but WatchOrHands_Create never reads it
-    blData->weaponObject = WatchOrHands_Create((int *)player);
+    blData->weaponObject = WatchOrHands_Create(player);
 
     blData->swayPhase = 0.0f;
     blData->recoilX = 0.0f;
@@ -945,7 +941,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
     blData->field_0x8e6 = 0;
     blData->twinGunHand = 0;
 
-    FUN_000b6dd0(player, blData->playerNum); // creates blData->beamObjs[]
+    Player_CreateBeams(player, blData->playerNum);
     Player_CreateSight(player, blData->playerNum);
     Player_CreateMuzzleFlash(player, blData->playerNum);
 

@@ -76,5 +76,7 @@ extern uint8_t ShadowCreatePool[SHADOW_CREATE_POOL];
 // HUD_Enable, Input_SetAction, Input_Action, Collide_GetDamageNObjects, MPDrone_MaybeIsDyingOrDead (true when the
 // drone's tweakA is odd), control_first_object, psiGetTimeIn100ths, Mission_Status.
 void ShadowFakes_Install(void);
+// control_create_object's fake alone, for a suite that tests some of the others
+void ShadowFakes_InstallCreate(void);
 // The fakes' own state, for a test's regions
 void ShadowFakes_AddRegions(ShadowRegions &regions);

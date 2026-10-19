@@ -1802,6 +1802,46 @@ void Player_AutoAim(obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 // The laser sight, the muzzle flash and the watch
 
+// The object the gun or the watch is drawn on: placed by its matrix, drawn in no view, its owner the player. The
+// watch's hands go with the last one.
+// AUTOINJECT
+obj_tag* WatchOrHands_Create(obj_tag *owner) {
+    obj_tag *obj = control_create_object(0, NULL, NULL, NULL);
+    SecondHand = NULL;
+    MinuteHand = NULL;
+    HourHand = NULL;
+    if (obj != NULL) {
+        obj->transformFlags |= TRANSFORM_MATRIX_PLACED;
+        Vec_Zero(&obj->position);
+        Vec_Zero(&obj->rotation);
+        View_SetDrawInNoViews(obj);
+        obj->curState = 0;
+        obj->objectType = 0;
+        obj->maybeParent = owner;
+        obj->effectFlags |= 0x2020;
+    }
+    return obj;
+}
+
+// The player's 32 beams (the laser sight's, the taser's): graphics objects stretched along their length, drawn
+// only in the player's own view. Not named on PS2; the name is ours.
+// FUNC_AT(0x000b6dd0)
+void Player_CreateBeams(obj_tag *player, char playerNum) {
+    BLData *blData = (BLData *)player->extraObjectData;
+    for (int i = 0; i < 32; i++) {
+        obj_tag *beam = control_create_object(0, NULL, NULL, NULL);
+        if (beam == NULL)
+            continue;
+        beam->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
+        beam->objectType = OBJECTTYPE_GFX;
+        beam->effectFlags |= 0x20;
+        beam->maybeParent = player;
+        beam->scale = 1.0f;
+        View_SetDrawInThisViewOnly(beam, playerNum);
+        blData->beamObjs[i] = beam;
+    }
+}
+
 // The laser sight (weapons with flag 8, or whose alt-fire variant has it): a beam from the gun's datum 4 along it, to
 // where the line from the eyes 100 out along it first hits something (the point on that line nearest the hit), only in
 // the player's own first-person view; brighter in night vision. Where it hits, the red dot, just off the surface and

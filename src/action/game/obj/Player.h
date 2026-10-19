@@ -112,7 +112,7 @@ typedef struct BLData {
     HUDINFO_tag* hudInfo; // 0x770
     char _pad_2222[4];
     obj_tag* weaponObject; // 0x778 - the gun in the first-person view (its state: Player_SetWeaponAnimObj)
-    // The beam drawing objects (FUN_000b6dd0 creates them): [0] the laser sight's and the laser's beam
+    // The beam drawing objects (Player_CreateBeams creates them): [0] the laser sight's and the laser's beam
     // (Player_LaserPointer, Player_SetupLaser), all of them the taser's jagged one (Player_SetupTaser)
     obj_tag* beamObjs[32]; // 0x77c
     obj_tag* sightObj; // 0x7fc - the laser sight's dot where it meets a surface (Player_LaserPointer)
