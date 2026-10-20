@@ -36,6 +36,7 @@ static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
 
 void View_SetDrawInAllViews(obj_tag* o);
 void View_SetDrawInNoViews(obj_tag* o);
+void View_SetDrawInViews(obj_tag* o, short views);
 void View_SetDrawInOtherViewsOnly(obj_tag* param_1, char playerNum);
 void View_SetDrawInThisViewOnly(obj_tag *param_1, char playerNum);
 void View_RotTransMatrix(_VECTOR *rotation, _VECTOR *position, _MATRIX *matrix);

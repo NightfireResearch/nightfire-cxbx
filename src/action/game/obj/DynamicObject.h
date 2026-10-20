@@ -6,11 +6,12 @@
 #pragma pack(push, 1)
 // A dynamic object's extra data (OBJECTTYPE_DYNAMICOBJECT, 0xc bytes): keys 0 to 3 and its model's effect flags
 typedef struct DYNAMICOBJECT_tag {
-    short unknown0;             // 0x00 - key 0: non-zero adds effect flags 0x30
-    short unknown2;             // 0x02 - key 1
+    short showChannel;          // 0x00 - key 0: a switch channel; until it is on the object is hidden (flags 0x30)
+                                //        and not updated
+    short hideChannel;          // 0x02 - key 1: a switch channel that hides it (hideOnly) or deletes it
     uint effectFlags;           // 0x04 - its model's
-    short unknown8;             // 0x08 - key 2
-    uchar unknownA;             // 0x0a - key 3
+    short fadeDistance;         // 0x08 - key 2: from the first view, its alpha rises over the second half of this
+    uchar hideOnly;             // 0x0a - key 3
     uchar padB;
 } DYNAMICOBJECT_tag;
 
@@ -27,5 +28,6 @@ typedef struct DynamicObjectPlacement {
 #pragma pack(pop)
 
 obj_tag* DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
+void DynamicObject_Update(obj_tag *obj);
 
 #endif // DYNAMICOBJECT_H_

@@ -1,6 +1,7 @@
 #include "Player.h"
 #include "Pickup.h"
 #include "Lightning.h"
+#include "BodyGlow.h"
 #include "PlayerWeapon.h"
 #include "../Upgrade.h"
 #include "../mp/multiplayer.h"
@@ -3332,7 +3333,6 @@ void Player_CollisionHandler(obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 
 #define AnimDebugCreate ((void (__cdecl *)(void))0x00019180)
-#define BodyGlow_Create ((obj_tag *(__cdecl *)(obj_tag *obj))0x000ce4b0)
 
 // The camera updater, by its original address (which jumps to ours), as the game has it
 #define PLAYER_POSITION_CAMERA ((cameraUpdateFunc)0x000a8a60)

@@ -27,6 +27,7 @@
 #include "../game/drone/Drone.h"
 #include "../game/drone/NDrone2.h"
 #include "../game/mp/multiplayer.h"
+#include "../game/obj/DynamicObject.h"
 #include "../game/obj/Apocalypse.h"
 #include "../game/obj/Cloud.h"
 #include "../game/obj/Copter.h"
@@ -1483,6 +1484,18 @@ uint32_t RunRipplesCreate(bool original) {
     return W(obj);
 }
 
+uint32_t RunBubbleUpdate(bool original) {
+    obj_tag *obj = Subject(6);
+    BUBBLE_tag *bubble = (BUBBLE_tag *)obj->extraObjectData;
+    obj->inCel = R(5) == 0 ? NULL : &world.cels[R(3)];
+    obj->objGraphics = &world.glists[R(4)];
+    bubble->framesLeft = (short)(R(3) == 0 ? R(3) : R(100));
+    if (obj->inCel != NULL && R(2))
+        obj->inCel->someMax.y = obj->position.y + obj->objGraphics->extentMax.y + (R(2) ? 0.5f : -0.5f);
+    CDECL_VOID(0x000cd0b0, Bubble_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
 uint32_t RunRipplesUpdate(bool original) {
     obj_tag *obj = Subject(OBJECTTYPE_RIPPLES);
     RIPPLES_tag *ripples = (RIPPLES_tag *)obj->extraObjectData;
@@ -1706,6 +1719,36 @@ uint32_t RunCoronaCreate(bool original) {
     return W(obj);
 }
 
+uint32_t RunCoronaUpdate(bool original) {
+    obj_tag *obj = Subject(OBJECTTYPE_CORONA);
+    static const uchar alphas[] = {0, 10, 16, 17, 239, 240, 250, 255};
+    obj->curState = (ushort)R(2);
+    obj->drawnCountdown = (char)R(3);
+    obj->tweakA = alphas[R(COUNT(alphas))];
+    CDECL_VOID(0x000a3eb0, Corona_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunSunreflectionUpdate(bool original) {
+    obj_tag *obj = Subject(0);
+    static const float scales[] = {1.0f, 1.9f, 2.0f, 2.2f, 95.0f, 100.0f, 101.0f, 0.0f};
+    obj->scale = scales[R(COUNT(scales))];
+    obj->curState = (ushort)R(2);
+    CDECL_VOID(0x000a3f60, Sunreflection_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunDynamicObjectUpdate(bool original) {
+    obj_tag *obj = Subject(OBJECTTYPE_DYNAMICOBJECT);
+    DYNAMICOBJECT_tag *data = (DYNAMICOBJECT_tag *)obj->extraObjectData;
+    data->showChannel = (short)(R(2) ? 0 : R(256));
+    data->hideChannel = (short)(R(2) ? 0 : R(256));
+    data->hideOnly = (uchar)R(2);
+    data->fadeDistance = (short)(R(3) == 0 ? 0 : R(30));
+    CDECL_VOID(0x000a4090, DynamicObject_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
 uint32_t RunApocalypseCreate(bool original) {
     obj_tag *obj = CDECL_RUN(0x000a4180, Apocalypse_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *),
                              &world.v[0], &world.v[1], Placement(), &world.glists[R(4)]);
@@ -1774,6 +1817,7 @@ uint32_t RunFlickerUpdate(bool original) {
 const Case kScenery[] = {
     C("Ripples_Create", RunRipplesCreate),
     C("Ripples_Update", RunRipplesUpdate),
+    C("Bubble_Update", RunBubbleUpdate),
     C("LeafGen_Create", RunLeafGenCreate),
     C("LeafGen_Update", RunLeafGenUpdate),
     C("Leaf_Create", RunLeafCreate),
@@ -1790,6 +1834,9 @@ const Case kScenery[] = {
     C("Lightning_Create", RunLightningCreate),
     C("Lightning_Update", RunLightningUpdate),
     C("Corona_Create", RunCoronaCreate),
+    C("Corona_Update", RunCoronaUpdate),
+    C("Sunreflection_Update", RunSunreflectionUpdate),
+    C("DynamicObject_Update", RunDynamicObjectUpdate),
     C("Apocalypse_Create", RunApocalypseCreate),
     C("Apocalypse_Update", RunApocalypseUpdate),
     C("Mine_Create", RunMineCreate),

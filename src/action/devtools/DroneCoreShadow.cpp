@@ -506,7 +506,7 @@ void RandomDrone(int i) {
     d->distanceToTarget = Pick(distances, 6);
 
     // Drone_Delete's links
-    d->bodyGlow = ShadowRand(2) ? (void *)&world.casing : NULL;
+    d->bodyGlow = ShadowRand(2) ? (obj_tag *)&world.casing : NULL;
     d->route1.nodes = ShadowRand(2) ? world.routeNodes[i][0] : NULL;
     d->route2.nodes = ShadowRand(2) ? world.routeNodes[i][1] : NULL;
     d->group = ShadowRand(3);

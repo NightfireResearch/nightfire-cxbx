@@ -116,7 +116,7 @@ typedef struct Drone_tag {
     Drone_tag *next;                // 0x004
     Drone_tag *groupNext;           // 0x008 - NDrone2_SetupGroups
     obj_tag *gameObj;               // 0x00c
-    void *bodyGlow;                 // 0x010
+    obj_tag *bodyGlow;              // 0x010 - BodyGlow_Create's object
     uchar vulnerable;               // 0x014 - NDrone2_HitDamage takes health only while it is set (nightfire-port's
                                     //         name)
     uchar unknown15;                // 0x015 - NDrone2_DeathTalk: death cry 9 rather than 1

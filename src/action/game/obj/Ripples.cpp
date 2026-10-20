@@ -7,6 +7,9 @@
 #include "build.h"
 #include "control.h"
 #include "Gas.h"
+#include "../../engine/celglist.h"
+#include "../../engine/viewer.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -111,4 +114,25 @@ void Ripples_Update(obj_tag *obj) {
     gas->vel.x = 0.0f;
     gas->vel.y = REC_FRAME_RATE;
     gas->vel.z = 0.0f;
+}
+
+// A bubble in a cel: grows by 0.001 a frame and moves by its velocity, which slows by 5% a frame across, until its
+// time is up or the top of its model is past the cel's ceiling (someMax.y), and it is deleted. Out of any cel it
+// waits.
+// AUTOINJECT
+void Bubble_Update(obj_tag *obj) {
+    BUBBLE_tag *bubble = (BUBBLE_tag *)obj->extraObjectData;
+    cel_tag *cel = obj->inCel;
+    if (cel == NULL)
+        return;
+    obj->scale = (float)((double)obj->scale + 0.001f);
+    bubble->framesLeft--;
+    if (bubble->framesLeft > 0 && !((double)obj->objGraphics->extentMax.y + obj->position.y > cel->someMax.y)) {
+        Vec_Add2(&bubble->velocity, &obj->position, &obj->position);
+        bubble->velocity.x = (float)((double)bubble->velocity.x * 0.95f);
+        bubble->velocity.z = (float)((double)bubble->velocity.z * 0.95f);
+        obj->transformFlags |= TRANSFORM_MOVED;
+        return;
+    }
+    obj->flags |= 1;
 }

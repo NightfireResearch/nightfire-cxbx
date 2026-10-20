@@ -40,7 +40,7 @@
 #define NDrone2_OpenDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039ec0)
 #define DroneSpawner_CreateBlank ((void (__cdecl *)(void))0x0002fb90)
 #define BOT_setOtherPlayerInfo ((void (__cdecl *)(DCVars_tag *dcv))0x0001a660)
-#define BodyGlow_Delete ((void (__cdecl *)(void *glow))0x000ce5a0)
+#include "../obj/BodyGlow.h"
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 

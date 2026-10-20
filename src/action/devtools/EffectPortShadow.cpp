@@ -25,6 +25,7 @@
 #include "../game/drone/NDrone2.h"
 #include "../game/drone/NDrone2_Damage.h"
 #include "../game/mp/multiplayer.h"
+#include "../game/obj/BodyGlow.h"
 #include "../game/obj/Break.h"
 #include "../game/obj/Copter.h"
 #include "../game/obj/Destroy.h"
@@ -35,6 +36,7 @@
 #include "../game/obj/Gas.h"
 #include "../game/obj/Hurt.h"
 #include "../game/obj/Player.h"
+#include "../ui/HUD.h"
 #include "../game/obj/Swoosh.h"
 #include "../game/obj/bullet.h"
 #include "../game/obj/car.h"
@@ -540,6 +542,10 @@ void __cdecl FakeSpline(void *path, ushort first, ushort last, float frame, _MAT
     ShadowLog("spline(%x,%d,%d,%08x,%x,%x,%d)", W(path), first, last, Bits(frame), W(mtx), W(q), flags);
 }
 
+void __cdecl FakePalette(obj_tag *obj, AnimObj *animObj, char build) {
+    ShadowLog("palette(%x,%d)", W(obj), build);
+}
+
 void __cdecl FakeDrawIn(obj_tag *obj) {
     ShadowLog("drawin(%x)", W(obj));
 }
@@ -717,6 +723,7 @@ void InstallFakes(void) {
     ShadowHook_Install(0x0006afb0, (const void *)&FakePaused);
     ShadowHook_Install(0x000d8df0, (const void *)&FakeSpline);
     ShadowHook_Install(0x000db3d0, (const void *)&FakeDrawIn);
+    ShadowHook_Install(0x000dd290, (const void *)&FakePalette);
     ShadowHook_Install(0x000db3c0, (const void *)&FakeDrawIn);
     ShadowHook_Install(0x00013070, (const void *)&FakeBoneTrans);
     ShadowHook_Install(0x00013630, (const void *)&FakeWeaponInfo);
@@ -1686,6 +1693,113 @@ uint32_t RunHoming(bool original) {
     return RegsRun(original, 0x00022eb0, (const void *)&Bullet_homing, r, 1, args) & 0;
 }
 
+// ---- the body glow: its own owner, skeleton, views and HUDs
+
+#define GLOW_BONES 64
+
+struct GlowWorld {
+    obj_tag glow;
+    BODYGLOW_tag data;
+    obj_tag beams[BODYGLOW_BEAMS];
+    obj_tag owner;
+    uint8_t ownerExtra[0x900];          // a Drone_tag or a BLData
+    AnimState anim;
+    uint8_t skin[sizeof(sAnimSkin_tag)];
+    uchar bones[GLOW_BONES];
+    _MATRIX mtxs[GLOW_BONES];
+    viewer_tag viewers[4];
+    uint8_t blokes[4][0x900];
+    HUDINFO_tag huds[4];
+} glowWorld;
+
+#define NoDronesAt ((uint32_t *)0x001df99c)
+
+obj_tag *GlowOwner(void) {
+    GlowWorld &g = glowWorld;
+    memset(&g.owner, 0, sizeof(g.owner));
+    memset(g.ownerExtra, 0, sizeof(g.ownerExtra));
+    static const char types[] = {OBJECTTYPE_DRONE, OBJECTTYPE_PLAYER, OBJECTTYPE_DRONE, OBJECTTYPE_PLAYER, 0};
+    g.owner.objectType = types[R(5)];
+    g.owner.flags = (char)(R(5) == 0);
+    g.owner.curState = (ushort)R(3);
+    g.owner.extraObjectData = g.ownerExtra;
+    g.owner.inCel = &world.cels[R(3)];
+    PlainVector(&g.owner.position, 15.0f);
+    PlainVector(&g.owner.rotation, 3.0f);
+    static const float healths[] = {1.0f, 0.0f, -1.0f, 50.0f};
+    ((Drone_tag *)g.ownerExtra)->health = healths[R(4)];
+    ((BLData *)g.ownerExtra)->health = healths[R(4)];
+    return &g.owner;
+}
+
+uint32_t RunBodyGlowCreate(bool original) {
+    obj_tag *owner = R(8) == 0 ? NULL : GlowOwner();
+    *NoDronesAt = R(6) == 0;
+    sureCreate = true;
+    obj_tag *glow = CDECL_RUN(0x000ce4b0, BodyGlow_Create, obj_tag *(__cdecl *)(obj_tag *), owner);
+    sureCreate = false;
+    return W(glow);
+}
+
+uint32_t RunBodyGlowDelete(bool original) {
+    GlowWorld &g = glowWorld;
+    g.glow.flags = (char)R(4);
+    g.glow.extraObjectData = &g.data;
+    for (int i = 0; i < BODYGLOW_BEAMS; i++) {
+        g.data.beams[i] = &g.beams[i];
+        g.beams[i].flags = (char)R(4);
+    }
+    CDECL_RUN(0x000ce5a0, BodyGlow_Delete, void (__cdecl *)(obj_tag *), &g.glow);
+    return 0;
+}
+
+uint32_t RunBodyGlowUpdate(bool original) {
+    GlowWorld &g = glowWorld;
+    obj_tag *owner = GlowOwner();
+    *NoDronesAt = R(10) == 0;
+    owner->animState = R(10) == 0 ? NULL : &g.anim;
+    memset(&g.anim, 0, sizeof(g.anim));
+    g.anim.animObj.skin = (sAnimSkin_tag *)g.skin;
+    ((sAnimSkin_tag *)g.skin)->bones = g.bones;
+    g.anim.animObj.boneMtxs = g.mtxs;
+    for (int b = 0; b < GLOW_BONES; b++) {
+        g.bones[b] = (uchar)(R(57) | (R(2) << 7));
+        _VECTOR rot, pos;
+        PlainVector(&rot, 3.0f);
+        PlainVector(&pos, 8.0f);
+        RotTransMatrix(&rot, &pos, &g.mtxs[b]);
+    }
+    memset(&g.glow, 0, sizeof(g.glow));
+    g.glow.extraObjectData = &g.data;
+    g.data.owner = owner;
+    static const short lives[] = {1, 2, 0x80, 0x100};
+    g.data.life = lives[R(4)];
+    for (int i = 0; i < BODYGLOW_BEAMS; i++) {
+        memset(&g.beams[i], 0, sizeof(obj_tag));
+        g.beams[i].effectFlags = (int)R(0x10000);
+        g.data.beams[i] = &g.beams[i];
+    }
+    for (int i = 0; i < 4; i++) {
+        memset(&g.viewers[i], 0, sizeof(viewer_tag));
+        g.viewers[i].nightVisionRelated = (undefined2)(R(3) == 0 ? 2 : R(2));
+        PlainVector(&g.viewers[i].pos, 15.0f);
+        glb_viewer[i] = R(3) ? &g.viewers[i] : NULL;
+        glb_blokes[i] = R(5) == 0 ? (BLData *)g.ownerExtra : (BLData *)g.blokes[i];
+        glb_blokes[i]->hudInfo = &g.huds[i];
+        g.huds[i].pane[OICW].enabled = R(4) == 0;
+    }
+    if (glb_viewer[0] == NULL)
+        glb_viewer[0] = &g.viewers[0];
+    CDECL_RUN(0x000ce5e0, BodyGlow_Update, void (__cdecl *)(obj_tag *), &g.glow);
+    return 0;
+}
+
+const Case kBodyGlow[] = {
+    C("BodyGlow_Create", RunBodyGlowCreate),
+    C("BodyGlow_Delete", RunBodyGlowDelete),
+    C("BodyGlow_Update", RunBodyGlowUpdate),
+};
+
 uint32_t RunAcquire(bool original) {
     obj_tag *obj = Bullet();
     obj_tag *shooter = AnyObj();
@@ -2129,6 +2243,9 @@ void EffectPortShadow_Run(void) {
     AddArea(CasingListAt, 0x82);
     AddArea(CopterListAt, 0xc);
     AddArea(PlayersAt, 16);
+    AddArea(&glowWorld, sizeof(glowWorld));
+    AddArea(glb_blokes, 16);
+    AddArea(NoDronesAt, 4);
     AddArea(ViewersAt, 44);
     AddArea(ScriptCamAt, 4);
     AddArea(GravityAt, 12);
@@ -2142,6 +2259,7 @@ void EffectPortShadow_Run(void) {
     Group("the bullets", kBullets, COUNT(kBullets), 4000, true, true, true, false);
     fakeAcquire = false;
     Group("a homing bullet's target", kAcquire, COUNT(kAcquire), 4000, true, true, true, false);
+    Group("the body glow", kBodyGlow, COUNT(kBodyGlow), 4000, false, false, false, false);
     fakeAcquire = true;
     Group("the spent cases", kCasings, COUNT(kCasings), 3000, false, false, false, false);
     Group("the effects", kEffects, COUNT(kEffects), 4000, false, true, false, false);
