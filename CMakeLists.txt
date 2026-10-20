@@ -901,7 +901,9 @@ set(nf_driving_sources
   src/driving/platform/XboxInput.cpp
   src/driving/platform/LaunchOptions.cpp
   src/driving/platform/CRuntime.cpp
+  src/driving/platform/CRuntimeCore.cpp
   src/driving/platform/CRuntimeFloat.cpp
+  src/driving/platform/CRuntimeX87.cpp
   src/driving/platform/CRuntimeFormat.cpp
   src/driving/platform/CRuntimeParse.cpp
   src/driving/platform/CRuntimeStd.cpp
