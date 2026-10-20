@@ -74,6 +74,7 @@
 #include "MatrixShadow.h"
 #include "ScriptShadow.h"
 #include "RandomShadow.h"
+#include "CRuntimeShadow.h"
 #include "TriggerShadow.h"
 #include "DoorShadow.h"
 #include "SecurityShadow.h"
@@ -121,6 +122,7 @@
 #include "MPGoldenEyeShadow.h"
 #include "MPObjectivesShadow.h"
 #include "Teleport.h"
+#include "../engine/XboxStartup.h"   // ProcessHeapHandle
 #include "../game.h"   // reload: ResetMap_LevelToLoad, GameFlow_PushState
 
 #include <stdio.h>
@@ -607,13 +609,17 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, effectport, player: with the weapons) runs that suite alone
+    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, effectport, crt, player: with the weapons) runs that suite alone
     const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
     // NIGHTFIRE_SHADOW_SEED=0x... starts the tests' random numbers there, to run a suite from another stream
     if (const char *seed = getenv("NIGHTFIRE_SHADOW_SEED"))
         ShadowRand_SetSeed((uint32_t)strtoul(seed, NULL, 0));
-    // The x87 runtime's error handling (__CIacos outside -1 to 1, say) sets errno, which needs the per-thread block
-    // the game's heap allocates, and there is no heap yet. Its flag at 0x00300608 skips it: the result is the same.
+    // The x87 runtime's error handling (Crt::CIacos outside -1 to 1, say) sets errno, in the per-thread block the C
+    // runtime allocates on the process heap, and the startup has not made the heap yet: a heap of the tests' own
+    // stands in until they finish.
+    HANDLE startupHeap = ProcessHeapHandle;
+    if (startupHeap == NULL)
+        ProcessHeapHandle = HeapCreate(0, 0x1000, 0);
     uint32_t mathErrors = U32_AT(0x00300608);
     U32_AT(0x00300608) = 1;
     if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "viewmath") == 0) {
@@ -652,6 +658,10 @@ void MenuProbe_Install(void) {
         EffectPortShadow_Run();
         fflush(stdout);
         _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "crt") == 0) {
+        CRuntimeShadow_Run();
+        fflush(stdout);
+        _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "player") == 0) {
         PlayerShadow_Run();
         PlayerWeaponShadow_Run();
@@ -673,6 +683,7 @@ void MenuProbe_Install(void) {
         MatrixShadow_Run();
         ScriptShadow_Run();
         RandomShadow_Run();
+        CRuntimeShadow_Run();
         TriggerShadow_Run();
         DoorShadow_Run();
         SecurityShadow_Run();
@@ -712,6 +723,10 @@ void MenuProbe_Install(void) {
         MPMenusShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;
+    if (startupHeap == NULL) {
+        HeapDestroy(ProcessHeapHandle);
+        ProcessHeapHandle = NULL;
+    }
     g_logging = SettingOn("MenuLog");
     if (g_logging) {
         char skip[256] = "";

@@ -95,6 +95,7 @@ add_library(actioninject SHARED
   src/action/devtools/MatrixShadow.cpp
   src/action/devtools/ScriptShadow.cpp
   src/action/devtools/RandomShadow.cpp
+  src/action/devtools/CRuntimeShadow.cpp
   src/action/devtools/ShadowHarness.cpp
   src/action/devtools/TriggerShadow.cpp
   src/action/devtools/DoorShadow.cpp
@@ -184,6 +185,12 @@ add_library(actioninject SHARED
   src/common/fmv/Ffmpeg.cpp
   src/common/fmv/FmvAudio.cpp
   src/action/engine/XboxStartup.cpp
+  src/action/engine/CRuntime.cpp
+  # The driving engine's C runtime, the same library (src/action/engine/CRuntime.h)
+  src/driving/platform/CRuntimeCore.cpp
+  src/driving/platform/CRuntimeX87.cpp
+  src/driving/platform/CRuntimeFormat.cpp
+  src/driving/platform/CRuntimeFloat.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
   src/action/engine/Direct3D/xboxMatrix.cpp
@@ -1010,6 +1017,8 @@ target_compile_definitions(drivinginject PRIVATE UNICODE _UNICODE)
 # AntiAliasing in settings.ini: 0 off, 1 FXAA (src/common/gfx/fxaa.cpp, the default), 2 SMAA (not implemented
 # yet). Remove these two lines and fxaa.cpp from both source lists to take it out.
 target_compile_definitions(actioninject PRIVATE NF_ANTIALIASING)
+# The C runtime the action engine shares with the driving engine keeps its x87 forms (NIGHTFIRE_X87 above).
+target_compile_definitions(actioninject PRIVATE NIGHTFIRE_X87=1)
 # No inlining in the action engine. A shadow test fakes a function by hooking its entry, the original's and our
 # port's, and a call the compiler has inlined never reaches that entry, so the fake was bypassed without a word
 # (parcel 8 of docs/nightfire-port-lifts.md). And a port that matches only when inlined is exact by luck: MSVC

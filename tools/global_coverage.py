@@ -62,6 +62,14 @@ NOT_POINTERS = [(0x0019CD08, 0x001B4D78, "vertex shader microcode (VtxShaderFunc
 # The initialiser tables _rtinit and _cinit walk (__xi/__xc). Our startup (engine/XboxStartup.cpp) calls their
 # entries by name instead, leaving out DSOUND's, so a function being listed here no longer makes it run.
 NOT_POINTERS += [(0x00163100, 0x00163170, "the C runtime's initialiser tables, which our startup no longer walks")]
+# The C runtime's own function pointers, whose readers are its originals our runtime (engine/CRuntime.cpp, the
+# driving engine's shared files) replaces.
+NOT_POINTERS += [(0x001D5CA0, 0x001D5CAC, "the C runtime's _FPinit, _FPmtinit and _FPmtterm, read only by _cinit and "
+                                         "FUN_000f4f7a: our startup calls Crt::_fpmath itself"),
+                 (0x001D5D40, 0x001D5D58, "the C runtime's _cfltcvt_tab, read only by its own printf and scanf cores: "
+                                         "ours call the conversions directly"),
+                 (0x001D6320, 0x001D6324, "the C runtime's _aexit_rtn, read only by its _amsg_exit (0x000f28d4): "
+                                         "Crt::_amsg_exit has its own")]
 NOT_POINTERS += [(a, a + 4, "two 16-bit values, not a pointer") for a in
                  (0x00179050, 0x00179224, 0x0017929C, 0x00179320, 0x0017A8E4, 0x0017AAFA, 0x0017BEBC, 0x0017BF4C,
                   0x001D5C90)]

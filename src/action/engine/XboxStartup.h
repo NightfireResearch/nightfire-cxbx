@@ -12,6 +12,10 @@ DWORD WINAPI mainXapiStartup(LPVOID unused);
 DWORD __stdcall Xbox_GetLastError(void);
 void __stdcall Xbox_SetLastError(DWORD error);
 
+// The process heap, Win32's, which the C runtime's malloc allocates from (CRuntime.cpp). XAPI's GetProcessHeap
+// (0x000eb649) reads it here.
+#define ProcessHeapHandle (*(HANDLE *)0x0030093cu)
+
 // Process initialisation: the process heap and the XAPI initialiser table, without the console-only parts.
 void __stdcall Xbox_XapiInitProcess(void);
 

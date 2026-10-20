@@ -32,8 +32,8 @@ Extended FCos(const Extended &x);
 Extended FPatan(double y, double x);
 // FPTAN: the tangent (the 1 the instruction pushes after it is popped)
 Extended FPtan(double x);
-// The XBE's own C runtime acos (__CIacos, 0x000ee294): the argument and the result in ST0. Outside -1 to 1 it goes
-// to the runtime's error handling, which needs the game's thread set up.
+// The C runtime's acos (__CIacos, Crt::CIacos): the argument and the result in ST0. Outside -1 to 1 it is a domain
+// error, which sets errno in the per-thread block the runtime allocates on the process heap.
 Extended CIAcos(double x);
 // e^x as MSVC's inline exp computes it: FLDL2E, FMUL, then FRNDINT, F2XM1, FLD1, FADD and FSCALE on the whole and
 // fractional parts

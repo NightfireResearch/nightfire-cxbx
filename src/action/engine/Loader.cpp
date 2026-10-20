@@ -7,6 +7,7 @@
 #include "../ui/MenuManager.h"
 #include "Script.h"
 #include "psiFile.h"
+#include "CRuntime.h"
 #include "../memory.h"
 
 #include <stdio.h>
@@ -114,10 +115,6 @@ static uint LoaderFilesPerBatch = 0xffffffff;
 // MALLOC_LOW_END (memory.cpp): the batch goes at the low end of a free block
 #define LOADER_BATCH_MALLOC_METHOD 2
 
-// The game's CRT toupper (locale-aware, through _pctype). Called rather than our CRT's so the names come out
-// byte for byte as the original's, even for bytes above 0x7f (passed sign-extended, as the original does).
-// AUTOGEN
-int __cdecl maybeToUpper(int param_1);
 
 // Reads one directory entry at *cursor and advances *cursor past it: a 32-bit little-endian size, a type byte
 // and a NUL-terminated name whose last component is the file's hashcode in hex.
@@ -133,10 +130,10 @@ static void LoaderReadDirEntry(uint *len, uint *type, uint *hash, char *name, uc
     *type = *p++;
 
     int i = 0;
-    name[0] = (char)maybeToUpper((signed char)*p++);
+    name[0] = (char)Crt::toupper((signed char)*p++);
     while (name[i] != '\0') {
         i++;
-        name[i] = (char)maybeToUpper((signed char)*p++);
+        name[i] = (char)Crt::toupper((signed char)*p++);
     }
     *cursor = p;
 

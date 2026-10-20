@@ -2,6 +2,7 @@
 #include "XboxFile.h"
 #include "XboxError.h"
 #include "EDL.h"
+#include "CRuntime.h"
 #include "../memory.h"
 #include "../game.h"          // timestamp
 #include "../gfx/LowLevel.h"  // ShowLoadProgressScreen
@@ -169,8 +170,6 @@ int __declspec(naked) FS_MatchFilenameToHeader(char* filename) {
 
 }
 
-// AUTOGEN
-int maybeToLower(int characterIn);
 
 // ---------------------------------------------------------------------------------------------------------------
 // The open-file table (0x000e24a0-0x000e2900). Reads are overlapped: maybeReadFile issues one and
@@ -268,7 +267,7 @@ void FS_Init(void) {
     // Set up the path normalisation table
     // This lookup converts to lowercase, and uses backslash for separators
     for(int i = 0; i < 256; i++) {
-        FileSystem.PathNormalisationTable[i] = i < 128 ? maybeToLower(i) : i;
+        FileSystem.PathNormalisationTable[i] = i < 128 ? Crt::tolower(i) : i;
     }
     FileSystem.PathNormalisationTable['/'] = '\\';
 
