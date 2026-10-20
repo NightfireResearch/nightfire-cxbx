@@ -50,6 +50,8 @@ struct World {
     uint uintArg;
     char charArg;
     float floatArg;
+    obj_tag objective;
+    celglist_tag objectiveModel;
 
     // What the fakes answer: a sequence drawn per call, the same for both runs (the world is restored)
     uint32_t answers;
@@ -132,6 +134,20 @@ const FakeSpec kFakes[] = {
     {0x00046f30, "NDrone2_MoveToGoalPosition", "ppfw", 'r'},
     {0x00066640, "DroneWeap_OpponentIsAimingAtMe", "pf", 'b'},
     {0x00043ee0, "NDrone2_BondIsFacingMe", "pf", 'b'},
+    {0x00047030, "NDrone2_MoveToAlertPosition", "p", 'r'},
+    {0x0001bed0, "BOTSTATE_getActiveGoal", "p", 'g'},
+    {0x0001c550, "BOTSTATE_setPickupVisitTime", "pp", 'v'},
+    {0x0001bbc0, "BOTSTATE_initGoal", "pdbppb", 'v'},
+    {0x0001bc30, "BOTSTATE_gotoGoal", "pdd", 'b'},
+    {0x0001d750, "BOTSTATE_combatWeaponChangeChoice", "ppbbb", 'u'},
+    {0x0001da80, "BOTSTATE_getPreferredTraitOpponentObjIndex", "p", 'o'},
+    {0x000a1600, "MP_getProtectionObj_NotExt", "", 'O'},
+    {0x000a1610, "MP_getDemolitionObj_NotExt", "", 'O'},
+    {0x0009ec80, "MP_PlayerOrBotInd", "p", 'i'},
+    {0x0002d8a0, "Control_Plr2Ind", "p", 'i'},
+    {0x00039f10, "NDrone2_DoorIsOpen", "p", 'b'},
+    {0x00039ec0, "NDrone2_OpenDoor", "p", 'v'},
+    {0x00044e70, "NDrone2_DistanceToAIPoint", "pp", 'F'},
     {0x0009e430, "MP_sendTeamBotMessage", "dddpp", 'v'},
     {0x0001b4f0, "BOT_respawn", "pdb", 'b'},
     {0x00037a10, "NDrone2_SetOpponent", "pp", 'v'},
@@ -189,6 +205,20 @@ uint32_t Respond(const FakeSpec &fake, const uint32_t *args) {
         return Answer(3);
     case 'r':
         return Answer(12);  // an AIROUTE status
+    case 'g':
+        return Answer(4) ? (uint32_t)(uintptr_t)&world.bots[0].goals[Answer(2)] : 0;
+    case 'o':
+        return Answer(2) ? 0xff : Answer(8);
+    case 'O':
+        return Answer(5) ? (uint32_t)(uintptr_t)&world.objective : 0;
+    case 'i':
+        return Answer(4) ? Answer(NUM_AGENTS) : 0xffff;
+    case 'F': {
+        float f = 3.5f + Answer(4);
+        uint32_t u;
+        memcpy(&u, &f, 4);
+        return u;
+    }
     default:
         return 0;
     }
@@ -218,6 +248,33 @@ FAKE_STUB(40) FAKE_STUB(41) FAKE_STUB(42) FAKE_STUB(43) FAKE_STUB(44) FAKE_STUB(
 FAKE_STUB(48) FAKE_STUB(49) FAKE_STUB(50) FAKE_STUB(51) FAKE_STUB(52) FAKE_STUB(53) FAKE_STUB(54) FAKE_STUB(55)
 FAKE_STUB(56) FAKE_STUB(57) FAKE_STUB(58) FAKE_STUB(59) FAKE_STUB(60) FAKE_STUB(61) FAKE_STUB(62) FAKE_STUB(63)
 
+// The same for a callee returning in ST0: the answer's bits loaded as a float
+#define FAKE_FSTUB(i)                                                                                                 \
+    __declspec(naked) void FakeFStub##i() {                                                                           \
+        __asm push i                                                                                                  \
+        __asm call DroneBotShadow_Fake                                                                                \
+        __asm add esp, 4                                                                                              \
+        __asm push eax                                                                                                \
+        __asm fld dword ptr [esp]                                                                                     \
+        __asm add esp, 4                                                                                              \
+        __asm ret                                                                                                     \
+    }
+FAKE_FSTUB(40) FAKE_FSTUB(41) FAKE_FSTUB(42) FAKE_FSTUB(43) FAKE_FSTUB(44) FAKE_FSTUB(45) FAKE_FSTUB(46) FAKE_FSTUB(47)
+FAKE_FSTUB(48) FAKE_FSTUB(49) FAKE_FSTUB(50) FAKE_FSTUB(51) FAKE_FSTUB(52) FAKE_FSTUB(53) FAKE_FSTUB(54) FAKE_FSTUB(55)
+FAKE_FSTUB(56) FAKE_FSTUB(57) FAKE_FSTUB(58) FAKE_FSTUB(59) FAKE_FSTUB(60) FAKE_FSTUB(61) FAKE_FSTUB(62) FAKE_FSTUB(63)
+FAKE_FSTUB(64) FAKE_FSTUB(65) FAKE_FSTUB(66) FAKE_FSTUB(67) FAKE_FSTUB(68) FAKE_FSTUB(69) FAKE_FSTUB(70) FAKE_FSTUB(71)
+FAKE_STUB(64) FAKE_STUB(65) FAKE_STUB(66) FAKE_STUB(67) FAKE_STUB(68) FAKE_STUB(69) FAKE_STUB(70) FAKE_STUB(71)
+
+void (*const kFStubs[])() = {
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL,
+    FakeFStub40, FakeFStub41, FakeFStub42, FakeFStub43, FakeFStub44, FakeFStub45, FakeFStub46, FakeFStub47,
+    FakeFStub48, FakeFStub49, FakeFStub50, FakeFStub51, FakeFStub52, FakeFStub53, FakeFStub54, FakeFStub55,
+    FakeFStub56, FakeFStub57, FakeFStub58, FakeFStub59, FakeFStub60, FakeFStub61, FakeFStub62, FakeFStub63,
+    FakeFStub64, FakeFStub65, FakeFStub66, FakeFStub67, FakeFStub68, FakeFStub69, FakeFStub70, FakeFStub71,
+};
+
 void (*const kStubs[])() = {
     FakeStub0, FakeStub1, FakeStub2, FakeStub3, FakeStub4, FakeStub5, FakeStub6, FakeStub7,
     FakeStub8, FakeStub9, FakeStub10, FakeStub11, FakeStub12, FakeStub13, FakeStub14, FakeStub15,
@@ -227,12 +284,17 @@ void (*const kStubs[])() = {
     FakeStub40, FakeStub41, FakeStub42, FakeStub43, FakeStub44, FakeStub45, FakeStub46, FakeStub47,
     FakeStub48, FakeStub49, FakeStub50, FakeStub51, FakeStub52, FakeStub53, FakeStub54, FakeStub55,
     FakeStub56, FakeStub57, FakeStub58, FakeStub59, FakeStub60, FakeStub61, FakeStub62, FakeStub63,
+    FakeStub64, FakeStub65, FakeStub66, FakeStub67, FakeStub68, FakeStub69, FakeStub70, FakeStub71,
 };
 static_assert(sizeof(kStubs) / sizeof(kStubs[0]) >= FAKES, "more fakes than stubs");
 
 void InstallFakes() {
-    for (int i = 0; i < FAKES; i++)
-        ShadowHook_Install(kFakes[i].at, (const void *)kStubs[i]);
+    for (int i = 0; i < FAKES; i++) {
+        bool inST0 = kFakes[i].answer == 'F';
+        if (inST0 && kFStubs[i] == NULL)
+            printf("[dronebots] fake %s cannot return in ST0\n", kFakes[i].name);
+        ShadowHook_Install(kFakes[i].at, inST0 ? (const void *)kFStubs[i] : (const void *)kStubs[i]);
+    }
 }
 
 // ---- the made-up world
@@ -306,6 +368,28 @@ void RandomDrone(int i) {
     bot->nextWeapon = (uchar)ShadowRand(0x53);
     bot->flags = ShadowRand(8);
     bot->stats.traitFlags = (uchar)ShadowRand(0x20);
+    for (int g = 0; g < 2; g++) {
+        bot->goals[g].kind = (uchar)ShadowRand(4);
+        bot->goals[g].target = ShadowRand(2) ? (void *)&world.player : NULL;
+        bot->goals[g].lastRouteStatus = (uchar)ShadowRand(12);
+    }
+    bot->goalReturnState = ShadowRand(2) ? 0 : DSTATE_BotAttack + ShadowRand(10);
+    bot->guardFriend = ShadowRand(4) ? &world.objs[2] : NULL;
+    for (int p = 0; p < NUM_AGENTS; p++) {
+        bot->players[p].flags = (uchar)ShadowRand(16);
+        bot->players[p].distanceSq = ShadowRand(4) ? ShadowRandFloat(0.0f, 40.0f) : 20.25f;
+    }
+    bot->insideObjective = (uchar)ShadowRand(2);
+    bot->atObjective = 0;
+    bot->preferredOpponent = (uchar)ShadowRand(10);
+    d->aiPoint.distance = ShadowRandFloat(0.0f, 20.0f);
+    if (ShadowRand(4) == 0) {
+        d->aiPoint.radius = 0.5f;
+        d->aiPoint.distance = 8.5f;     // exactly 8 beyond reach
+    }
+    d->baseAlertness1 = ShadowRand(3) ? ShadowRandFloat(0.0f, 1.2f) : 0.66f;
+    d->alertness = ShadowRand(3) ? ShadowRandFloat(0.0f, 1.2f) : (ShadowRand(2) ? 0.66f : 1.0f);
+    d->unknown38 = (uchar)ShadowRand(2);
     if (ShadowRand(4) == 0)
         bot->weapon = 1;
     for (int r = 0; r < 5; r++)
@@ -358,6 +442,19 @@ void RandomWorld() {
 
     GameState.NumFramesUnpaused = ShadowRand(100000);
     NPCGlobals.unknown138c = ShadowRand(3) ? 0.5f : ShadowRandFloat(0.0f, 2.0f);
+    static const MultiplayerGameMode modes[] = {GM_PROTECTION, GM_DEMOLITION, GM_CTF};
+    MPSettings.GameMode = Pick(modes);
+    memset(&world.objective, 0, sizeof(world.objective));
+    memset(&world.objectiveModel, 0, sizeof(world.objectiveModel));
+    world.objective.objGraphics = ShadowRand(5) ? &world.objectiveModel : NULL;
+    float *m = (float *)&world.objective.transformMatrix;
+    for (size_t k = 0; k < sizeof(world.objective.transformMatrix) / sizeof(float); k++)
+        m[k] = ShadowRandFloat(-4.0f, 4.0f);
+    world.objectiveModel.extentMin = {-1.0f, -1.0f, -1.0f};
+    world.objectiveModel.extentMax = {1.0f, 1.0f, 1.0f};
+    world.objs[0].centrePoint.x = ShadowRandFloat(-6.0f, 6.0f);
+    world.objs[0].centrePoint.y = ShadowRandFloat(-6.0f, 6.0f);
+    world.objs[0].centrePoint.z = ShadowRandFloat(-6.0f, 6.0f);
     FRAME_RATE_INT = ShadowRand(2) ? 60 : 50;
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -367,7 +464,7 @@ void RandomMessage() {
     memset(&world.msg, 0, sizeof(world.msg));
     // the messages the bot states handle, more often than the rest
     static const uint types[] = {0, 1, 1, 1, 2, 3, 3, 3, 3, 4, 5, 5, 6, 7, 8, 9, 0xc, 0xc, 0xd, 0xd, 0xf, 0x14, 0x17,
-                                 0x18, 0x19, 0x1b, 0x1c, 0x21, 0x2e, 0x3a};
+                                 0x18, 0x19, 0x1b, 0x1c, 0x20, 0x21, 0x2e, 0x3a};
     world.msg.msgType = ShadowRand(10) ? Pick(types) : ShadowRand(0x50);
     world.msg.sender = 101;
     world.msg.receiver = 100;
@@ -468,6 +565,15 @@ const Case kCover[] = {
     CASE(NDrone2_DSTATE_BotCoverLeaveNow, 0x0004df50),
 };
 
+const Case kPlaces[] = {
+    CASE(NDrone2_DSTATE_BotAlertToPosition, 0x000633e0),
+    CASE(NDrone2_DSTATE_BotGotoGoalPosition, 0x000635d0),
+    CASE(NDrone2_DSTATE_BotDoorOpen, 0x00063c10),
+    CASE(NDrone2_DSTATE_BotGuardFriendIdle, 0x00063e00),
+    CASE(NDrone2_DSTATE_BotGuardFriendFollow, 0x00063ec0),
+    CASE(NDrone2_DSTATE_BotIdle, 0x00064100),
+};
+
 int Test(const Case *cases, int count, int trials, int *differ) {
     int run = 0;
     for (int c = 0; c < count; c++) {
@@ -499,6 +605,8 @@ void DroneBotShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(RandWords, 8);
     regions.Add(&FRAME_RATE_INT, 4);
+    regions.Add(&MPSettings.GameMode, 4);
+    MultiplayerGameMode gameMode = MPSettings.GameMode;
 
     InstallFakes();
     NfWarnMuted++;
@@ -513,6 +621,7 @@ void DroneBotShadow_Run(void) {
         {"life, death and impacts", kLife, sizeof(kLife) / sizeof(kLife[0]), 3000},
         {"attack", kAttack, sizeof(kAttack) / sizeof(kAttack[0]), 6000},
         {"cover", kCover, sizeof(kCover) / sizeof(kCover[0]), 6000},
+        {"going places, guarding and idling", kPlaces, sizeof(kPlaces) / sizeof(kPlaces[0]), 8000},
     };
     const int n = sizeof(groups) / sizeof(groups[0]);
     int cases[n], differ[n];
@@ -527,6 +636,7 @@ void DroneBotShadow_Run(void) {
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(RandWords, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
+    MPSettings.GameMode = gameMode;
 
     for (int g = 0; g < n; g++)
         printf("[dronebots] %s: %d cases, %d differ\n", groups[g].what, cases[g], differ[g]);

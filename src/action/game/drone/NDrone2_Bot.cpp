@@ -12,6 +12,8 @@
 #include "NDrone2_Combat.h"
 #include "NDrone2_Cover.h"
 #include "NDrone2_Route.h"              // NDrone2_MoveToGoalPosition
+#include "NDrone2_Alert.h"              // NDrone2_MoveToAlertPosition, NDrone2_DistanceToAIPoint
+#include "../obj/control.h"             // Control_Plr2Ind
 #include "NDrone2_Damage.h"
 #include "NDrone2_Opponent.h"
 #include "../mp/multiplayer.h"          // MP_PlayerKilled, MP_ResetBotPickupTimes
@@ -49,6 +51,13 @@
 // The state to react to the opponent in (BotAttack or BotAttackFire given), 0 with the drones blinded (FUN_00064910,
 // the entry of NDrone2_ReactToOpponentSighted)
 #define NDrone2_ReactToOpponentSighted ((short (__cdecl *)(DCVars_tag *dcv, short state))0x00064910)
+#define BOTSTATE_getActiveGoal ((BOT_goal_t *(__cdecl *)(Drone_tag *drone))0x0001bed0)
+#define BOTSTATE_setPickupVisitTime ((void (__cdecl *)(Drone_tag *drone, void *pickup))0x0001c550)
+#define BOTSTATE_initGoal ((void (__cdecl *)(BOT_vars_t *bot, uint slot, uchar kind, void *pos, void *target, uchar flags))0x0001bbc0)
+#define BOTSTATE_gotoGoal ((uchar (__cdecl *)(DCVars_tag *dcv, int slot, uint nextState))0x0001bc30)
+#define BOTSTATE_combatWeaponChangeChoice ((ushort (__cdecl *)(Drone_tag *drone, obj_tag *opponent, char a, char b, char c))0x0001d750)
+#define MP_getProtectionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1600)
+#define MP_getDemolitionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1610)
 // Sends a message to the bots of a team (2 every bot): extraData, after delay frames, from sender
 #define MP_sendTeamBotMessage ((void (__cdecl *)(int team, uint msgType, uint extraData, uint delay, uint sender))0x0009e430)
 
@@ -61,7 +70,12 @@
 #define DANIM_STRAFE_RIGHT 0xd
 #define DANIM_CROUCH_WALK 0xf
 #define DANIM_RUN 0x1e
+#define DANIM_GUARD 0x22
+#define DANIM_STAND_ALERT 0x21
+#define DANIM_STAND_IDLE 0x24
 #define DANIM_STUNNED 0x2d
+#define DANIM_DOOR_WAIT 0x4b
+#define DANIM_USE_DOOR 0x4e
 #define DANIM_DEATH_EXPLOSION 0x44
 #define DANIM_ROLL_LEFT 0x53
 #define DANIM_ROLL_RIGHT 0x54
@@ -88,6 +102,10 @@ constexpr float kCoverDrift = 1.5f;            // how far from the cover positio
 constexpr float kCoverTooClose = 4.0f;         // an opponent in sight this near: no running to cover
 constexpr float kCoverAimedAt = 7.5f;          // DroneWeap_OpponentIsAimingAtMe's angle
 constexpr float kCoverWaitScale = 120.0f;
+constexpr float kGuardRangeSq = 20.25f;        // 4.5 m: a guard follows its friend beyond it
+constexpr float kAlertStopRange = 8.0f;        // past the alert point by this, it stops running
+constexpr float kObjectiveRadius = 3.0f;       // within this of the protection / demolition object's box
+constexpr float kDoorAlertness = 0.66f;
 constexpr float kPi = 3.1415927f;
 static_assert(std::bit_cast<uint32_t>(kCoverSlide) == 0x3da3d70a, "not the original's 0.08");
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's pi");
@@ -1282,6 +1300,294 @@ bool NDrone2_DSTATE_BotCoverLeaveNow(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
         return BotCoverImpact(dcv, msg, 1);
     case DRONE_MSG_ExplosiveSeen:
         return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// ---- going places
+
+// BOT_goal_t.kind
+#define BOT_GOAL_PICKUP 1
+#define BOT_GOAL_OBJECT 3
+
+// Running to where an alert came from (NDrone2_MoveToAlertPosition), for up to 5 s; seeing the opponent, the attack;
+// running past the point once the wait is over and it is still 8 m beyond reach.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotAlertToPosition(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        DroneAnim_CallAnim(DroneAnim_CanDoAnimState(dcv, DANIM_MOVE_8, 0) ? DANIM_MOVE_8 : DANIM_RUN, 0, 0, 0, 0.0f, 0,
+                           dcv);
+        SetTimerA(dcv, GameState.NumFramesUnpaused + FRAME_RATE_INT * 5);
+        return true;
+    case DRONE_MSG_Update: {
+        if (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        uint route = NDrone2_MoveToAlertPosition(dcv);
+        if (!BOTSTATE_validateRoute(dcv, route))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackNoRoute, 0);
+        switch (route) {
+        case AIROUTE_FOLLOWING:
+        case AIROUTE_PARTIAL:
+        case AIROUTE_DIRECT:
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackRun, 0);
+        case AIROUTE_ARRIVED:
+            NDrone2_InvalidateAttackRoute(dcv);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        case AIROUTE_DOOR:
+            dcv->drone->nodeReturnState = DSTATE_BotAttack;
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDoorOpen, 0);
+        default:
+            return true;
+        }
+    }
+    case DRONE_MSG_TimerA:
+        if (!((double)dcv->drone->aiPoint.radius + kAlertStopRange > dcv->drone->aiPoint.distance))
+            DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+        return true;
+    case DRONE_MSG_1B:
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+    default:
+        return false;
+    }
+}
+
+// Going to the active goal (aiPoint), keeping the route's status in it: a pickup the route fails for is marked visited,
+// and idle. Without a goal, back to the state it was saved from (goalReturnState, then cleared), or idle.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotGotoGoalPosition(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+        NDrone2_DistanceToAIPoint(dcv, &dcv->drone->aiPoint);
+        return true;
+    case DRONE_MSG_Update: {
+        BOT_goal_t *goal = BOTSTATE_getActiveGoal(drone);
+        BOT_vars_t *bot = dcv->drone->botVars;
+        if (goal == NULL || goal->kind == 0) {
+            if (bot->goalReturnState != 0) {
+                Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)bot->goalReturnState, 0);
+                bot->goalReturnState = 0;
+                return true;
+            }
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        }
+        Drone_tag *self = dcv->drone;
+        uint route = NDrone2_MoveToGoalPosition(dcv, (CelPos_tag *)&self->aiPoint.pos, self->aiPoint.radius, 0);
+        goal->lastRouteStatus = (uchar)route;
+        if (!BOTSTATE_validateRoute(dcv, route)) {
+            if (goal->kind == BOT_GOAL_PICKUP)
+                BOTSTATE_setPickupVisitTime(drone, goal->target);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        }
+        switch (route) {
+        case AIROUTE_FOLLOWING:
+        case AIROUTE_PARTIAL:
+        case AIROUTE_DIRECT:
+            DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+            return true;
+        case AIROUTE_DOOR:
+            dcv->drone->nodeReturnState = DSTATE_BotGotoGoalPosition;
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDoorOpen, 0);
+        default:
+            return true;
+        }
+    }
+    default:
+        return false;
+    }
+}
+
+// Opening the door on its route and waiting for it, then back to the state it left (nodeReturnState). With a door
+// property (0x15, 0x16, or alerted 0x14) the door anim, the door opened by its event; otherwise a stand anim and the
+// door opened now. Every two seconds (timer A) it tries the door again. (As the original: 0x15 and 0x16 count without
+// the alertness.)
+// AUTOINJECT
+bool NDrone2_DSTATE_BotDoorOpen(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter: {
+        if (NDrone2_DoorIsOpen(dcv))
+            return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->nodeReturnState, 0);
+        Drone_tag *self = dcv->drone;
+        bool alert = self->baseAlertness1 >= kDoorAlertness || self->alertness >= kDoorAlertness;
+        if ((alert && behaviour_util_getProperty(DRONE_PROP_14, self->currentBehaviour) != 0) ||
+            behaviour_util_getProperty(DRONE_PROP_15, dcv->drone->currentBehaviour) != 0 ||
+            behaviour_util_getProperty(DRONE_PROP_16, dcv->drone->currentBehaviour) != 0) {
+            DroneAnim_CallAnim(DANIM_USE_DOOR, 0, 0, 0, 0.0f, 0, dcv);
+        } else {
+            if (dcv->drone->alertness < 1.0f) {
+                DroneAnim_CallAnim(DANIM_DOOR_WAIT, 1, 0, 0, 0.0f, 0, dcv);
+            } else {
+                DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
+                dcv->drone->unknown38 = 1;
+            }
+            NDrone2_OpenDoor(dcv);
+        }
+        SetTimerA(dcv, GameState.NumFramesUnpaused + FRAME_RATE_INT * 2);
+        return true;
+    }
+    case DRONE_MSG_Exit:
+        dcv->drone->unknown38 = 0;
+        return true;
+    case DRONE_MSG_Update:
+        if (NDrone2_DoorIsOpen(dcv))
+            return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->nodeReturnState, 0);
+        dcv->drone->unknown38 = 1;
+        return true;
+    case DRONE_MSG_TimerA:
+        NDrone2_OpenDoor(dcv);
+        SetTimerA(dcv, GameState.NumFramesUnpaused + FRAME_RATE_INT * 2);
+        return true;
+    case DRONE_MSG_AnimEvent:
+        NDrone2_OpenDoor(dcv);
+        return true;
+    default:
+        return false;
+    }
+}
+
+// ---- guarding a friend (the Guardian's)
+
+// What the bot knows of its friend: the entry for it, or NULL when it has none or the friend is no player
+static BOT_playerInfo_t *GuardFriendInfo(BOT_vars_t *bot, short index) {
+    return index == -1 ? NULL : &bot->players[index];
+}
+
+// Standing guard by the friend; following it once it is present and over 4.5 m away; idle without one.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotGuardFriendIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        DroneAnim_CallAnim(DANIM_GUARD, 0, 0, 0, 0.0f, 0, dcv);
+        return true;
+    case DRONE_MSG_Update: {
+        BOT_vars_t *bot = dcv->drone->botVars;
+        if (bot->guardFriend == NULL)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        BOT_playerInfo_t *info = GuardFriendInfo(bot, MP_PlayerOrBotInd(bot->guardFriend));
+        if (info == NULL)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        if ((info->flags & BOT_PLAYER_PRESENT) && info->distanceSq > kGuardRangeSq)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGuardFriendFollow, 0);
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
+// Following the friend (a goal of kind 3 on it), and once there, while it is still over 4.5 m away, setting off after
+// it again; back to guarding when the route fails or the friend is near.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotGuardFriendFollow(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter: {
+        BOT_vars_t *bot = dcv->drone->botVars;
+        BOTSTATE_initGoal(bot, 0, BOT_GOAL_OBJECT, NULL, bot->guardFriend, 0);
+        BOTSTATE_gotoGoal(dcv, 0, DSTATE_BotGuardFriendIdle);
+        if (!DroneAnim_CallAnim(DANIM_MOVE_8, 0, 0, 0, 0.0f, 0, dcv))
+            DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+        NDrone2_DistanceToAIPoint(dcv, &dcv->drone->aiPoint);
+        return true;
+    }
+    case DRONE_MSG_Update: {
+        BOT_vars_t *bot = dcv->drone->botVars;
+        obj_tag *guarded = bot->guardFriend;
+        if (guarded == NULL || MP_PlayerOrBotInd(guarded) == -1)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        BOT_goal_t *goal = BOTSTATE_getActiveGoal(drone);
+        if (goal == NULL)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        uint route = NDrone2_MoveToGoalPosition(dcv, (CelPos_tag *)&dcv->drone->aiPoint.pos,
+                                                dcv->drone->aiPoint.radius, 0);
+        goal->lastRouteStatus = (uchar)route;
+        if (!BOTSTATE_validateRoute(dcv, route))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGuardFriendIdle, 0);
+        if (route <= AIROUTE_DIRECT) {
+            if (!DroneAnim_CallAnim(DANIM_MOVE_8, 0, 0, 0, 0.0f, 0, dcv))
+                DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+            return true;
+        }
+        if (route != AIROUTE_ARRIVED)
+            return true;
+        BOT_playerInfo_t *info = GuardFriendInfo(bot, Control_Plr2Ind(guarded));
+        if (info == NULL || !(info->flags & BOT_PLAYER_PRESENT) || !(info->distanceSq > kGuardRangeSq))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGuardFriendIdle, 0);
+        NDrone2_InvalidateAttackRoute(dcv);
+        BOT_vars_t *self = dcv->drone->botVars;
+        BOTSTATE_initGoal(self, 0, BOT_GOAL_OBJECT, NULL, self->guardFriend, 0);
+        BOTSTATE_gotoGoal(dcv, 0, DSTATE_BotGuardFriendIdle);
+        NDrone2_DistanceToAIPoint(dcv, &dcv->drone->aiPoint);
+        return true;
+    }
+    default:
+        return false;
+    }
+}
+
+// ---- idle
+
+// Waiting for something to do: on, attacking an opponent it sees (choosing the weapon for it) or forgetting its
+// opponent; each frame, chasing the opponent its personality prefers, or inside the protection or demolition object
+// checking it still is (within 3 m of its box: at the objective), or else going for the game's objective.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter: {
+        obj_tag *opponent = drone->opponent;
+        if (opponent != NULL && (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT)) {
+            BOTSTATE_combatWeaponChangeChoice(dcv->drone, opponent, 1, 0, 1);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        }
+        NDrone2_SetOpponent(dcv->drone, NULL);
+        SetTimerA(dcv, GameState.NumFramesUnpaused + 2);
+        return true;
+    }
+    case DRONE_MSG_TimerA:
+        DroneAnim_CallAnim(DANIM_STAND_IDLE, 0, 0, 0, 0.0f, 0, dcv);
+        return true;
+    case DRONE_MSG_Update: {
+        dcv->drone->botVars->preferredOpponent = BOTSTATE_getPreferredTraitOpponentObjIndex(dcv->drone);
+        BOT_vars_t *bot = dcv->drone->botVars;
+        if (bot->preferredOpponent != 0xff) {
+            BOTSTATE_setGoalPickPrefs(bot, 0, 0.0f, 0.0f, 0.0f, 0.0f, 0, 0);
+            if (BOTSTATE_pickGoal(dcv, 0))
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGotoGoalPosition, 0);
+        }
+        bot = dcv->drone->botVars;
+        if (bot->insideObjective &&
+            (MPSettings.GameMode == GM_PROTECTION || MPSettings.GameMode == GM_DEMOLITION)) {
+            obj_tag *objective = MPSettings.GameMode == GM_PROTECTION ? MP_getProtectionObj_NotExt()
+                                                                     : MP_getDemolitionObj_NotExt();
+            if (objective == NULL || objective->objGraphics == NULL)
+                return true;
+            _VECTOR offset;
+            Vec_Subtract(&dcv->gameObj->centrePoint, Mat_Position(objective->transformMatrix), &offset);
+            celglist_tag *model = objective->objGraphics;
+            dcv->drone->botVars->insideObjective = Intersect_SphereBox(&offset, kObjectiveRadius, &model->extentMin,
+                                                                       &model->extentMax);
+            if (dcv->drone->botVars->insideObjective)
+                drone->botVars->atObjective = 1;
+            return true;
+        }
+        BOTSTATE_setGoalPickPrefs(bot, 1, 0.0f, 0.0f, 0.0f, 1.0f, 0, 0);
+        if (BOTSTATE_pickGoal(dcv, 1))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGotoGoalPosition, 0);
+        return true;
+    }
     default:
         return false;
     }
