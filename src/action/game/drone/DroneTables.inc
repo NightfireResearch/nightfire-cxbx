@@ -4,30 +4,242 @@
 // The initialisers of the tables in DroneTables.h, as the XBE has them. Include once, where the table is defined.
 
 // The functions of ours the tables point at
+bool NDrone2_DSTATE_AbseilDeath(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AbseilHang(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AbseilInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AbseilSlide(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AbseilStepOff(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_ActionAnim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimBackoff(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimCrouchFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimCrouchReload(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimStand(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimStandDiscard(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimStandFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AimStandReload(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Alert(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AlertToPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Alerted1stEncounter(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyFollow(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyFollowDone(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyFollowInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyFollowWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyGoToGoalPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLeadBondCombat(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLeadHide(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_AllyLeadInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLeadMissionWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLeadPlayerInWay(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AllyLeadWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AltAttack(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AmbushInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AmbushWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AstronautCombat(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AstronautCombatMove(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AstronautDeath(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AstronautHit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_AstronautLaunch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Attack(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAlertToPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttack(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackBackoff(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackChangeWeapon(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackNoRoute(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackReload(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackRollLeftCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackRollRightCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackRun(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackRunChangePosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackStepAimLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackStepAimRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackStrafeAimLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackStrafeAimRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotAttackUnarmed(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCollector(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverAim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverLeave(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverLeaveNow(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverReturn(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverRunTo(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotCoverTypeChange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotDeathAnim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotDeathByExplosion(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotDoorOpen(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotGlobal(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotGotoGoalPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotGuardFriendFollow(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotGuardFriendIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotHeardNoise(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotImpactBullet(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotImpactExplosive(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotImpactPunch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotImpactStunGrenade(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotRespawn(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotSeenDroneShot(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BotStuck(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_BulletImpact(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CastleChatGuard1(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Civilian(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CivilianChallenge(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CivilianDoorGuard(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CivilianGuard(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CivilianHiding(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_CivilianInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_CivilianMission(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_CivilianMissionWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_CivilianPatrol(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CivilianScared(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Combat(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatNewSighting(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatNoMove(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatNoRoute(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatNoSight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatOutOfRange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatTooClose(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CombatWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_CrouchCover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Dead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Death_Anim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_DeleteMe(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Disabled(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_DonePressAlarm(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_DrawWeapon(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_DroneStuck(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_ElevatorJumper(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_EnemyMission(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_EnemyRunToPoint(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_ExplosiveImpact(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Fade(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_FadeFast(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_FailMission(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Global(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_GoToGoalPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_GrenadeThrow(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HangUp(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HeardNoise(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HeardNoiseAlert(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HeardNoiseAware(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HeardNoiseSuspect(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HideFromScaryObject(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HoldItRightThere(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Hostage(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageDead(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageDie(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageGoToGoalPosition(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageHide(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageKiller(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_HostageSaved(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Idle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_InitPatrol(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Interogate(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_InterogateAssist(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_InterogateAssistWait(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_InterogateWalk(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Interogator(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Investigate(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_JustStand(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_KickObject(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_KikoMission(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_KikoMissionRun(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_KnockedOut_Anim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Knocked_Out(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaAttack(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaAttackLongRange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaAttackMidRange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaAttackShortRange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaBackflip(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaGetCloseToPlayer(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaNoRoute(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaSideflip(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaSideflipLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaSideflipRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaSomersault(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaStand(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaStandFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NinjaSword(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_NoOpponent(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Obstructed(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_OpenDoor(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_PartyGirl(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_PartyGirlInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_Patrol(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_PlayScript(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_PressAlarm(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Prone(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_ProneFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_PunchImpact(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RecoverFromScaryObject(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_ReturnToPatrolPath(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RollLeftCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RollRightCrouch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RunAwayFromObject(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RunForCover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_RunToAlarm(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SearchArea(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SeenDeadBody(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SeenDroneShot(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SeenExplosive(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SeenSurrenderedDrone(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SmokedOut(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SmokedOut_Loop(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SmokedOut_Recover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SniperAim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SniperFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SniperIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SniperReload(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SpaceDrake(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StandBlind(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StandFiddle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StepAimLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StepAimRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StrafeAimLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StrafeAimRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StrafeDodgeLeft(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StrafeDodgeRight(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunDartImpact(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunDartLoop(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunDartRecover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunGrenadeImpact(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunGrenadeLoop(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_StunGrenadeRecover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Stunned(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Stunned_Recover(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Surrender_Anim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Surrendered(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Taser(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Tester1(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Tester2(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Tester3(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Tester4(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_TruckDriverIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_TruckDriverInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_TruckDriverInitAlert(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_TruckDriverMission(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverAim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverIdle(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverLeave(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverLeaveNow(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverReturn(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverSniperFire(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverSniperReload(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_UnderCoverTypeChange(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
+bool NDrone2_DSTATE_Unsurrender_Anim(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_WaitForever(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_WaitSwitch(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 void NDrone2_initDTYPE_Sniper(Drone_tag *);
@@ -63,248 +275,248 @@ void NDrone2_init_DMODE_Zoe(Drone_tag *);
     /*   5 DSTATE_Alert                       */ NDrone2_DSTATE_Alert, \
     /*   6 DSTATE_InitPatrol                  */ NDrone2_DSTATE_InitPatrol, \
     /*   7 DSTATE_Patrol                      */ NDrone2_DSTATE_Patrol, \
-    /*   8 DSTATE_HostageKiller               */ (DroneStateFunc)0x0004fa40 /* NDrone2_DSTATE_HostageKiller */, \
-    /*   9 DSTATE_HostageKillerAttack         */ (DroneStateFunc)0x0004fcc0 /* NDrone2_DSTATE_HostageKillerAttack */, \
-    /*  10 DSTATE_Hostage                     */ (DroneStateFunc)0x0004fea0 /* NDrone2_DSTATE_Hostage */, \
-    /*  11 DSTATE_HostageDie                  */ (DroneStateFunc)0x0004b420 /* NDrone2_DSTATE_HostageDie */, \
-    /*  12 DSTATE_HostageSaved                */ (DroneStateFunc)0x00050000 /* NDrone2_DSTATE_HostageSaved */, \
-    /*  13 DSTATE_HostageIdle                 */ (DroneStateFunc)0x00050150 /* NDrone2_DSTATE_HostageIdle */, \
-    /*  14 DSTATE_HostageHide                 */ (DroneStateFunc)0x000502e0 /* NDrone2_DSTATE_HostageHide */, \
-    /*  15 DSTATE_HostageDead                 */ (DroneStateFunc)0x00050440 /* NDrone2_DSTATE_HostageDead */, \
+    /*   8 DSTATE_HostageKiller               */ NDrone2_DSTATE_HostageKiller, \
+    /*   9 DSTATE_HostageKillerAttack         */ NDrone2_DSTATE_HostageKillerAttack, \
+    /*  10 DSTATE_Hostage                     */ NDrone2_DSTATE_Hostage, \
+    /*  11 DSTATE_HostageDie                  */ NDrone2_DSTATE_HostageDie, \
+    /*  12 DSTATE_HostageSaved                */ NDrone2_DSTATE_HostageSaved, \
+    /*  13 DSTATE_HostageIdle                 */ NDrone2_DSTATE_HostageIdle, \
+    /*  14 DSTATE_HostageHide                 */ NDrone2_DSTATE_HostageHide, \
+    /*  15 DSTATE_HostageDead                 */ NDrone2_DSTATE_HostageDead, \
     /*  16 DSTATE_CivilianInit                */ NDrone2_DSTATE_CivilianInit, \
     /*  17 DSTATE_Civilian                    */ NDrone2_DSTATE_Civilian, \
-    /*  18 DSTATE_CivilianScared              */ (DroneStateFunc)0x000508c0 /* NDrone2_DSTATE_CivilianScared */, \
-    /*  19 DSTATE_CivilianHiding              */ (DroneStateFunc)0x0004b470 /* NDrone2_DSTATE_CivilianHiding */, \
+    /*  18 DSTATE_CivilianScared              */ NDrone2_DSTATE_CivilianScared, \
+    /*  19 DSTATE_CivilianHiding              */ NDrone2_DSTATE_CivilianHiding, \
     /*  20 DSTATE_CivilianPatrol              */ NDrone2_DSTATE_CivilianPatrol, \
     /*  21 DSTATE_ReturnToPatrolPath          */ NDrone2_DSTATE_ReturnToPatrolPath, \
     /*  22 DSTATE_CivilianMission             */ NDrone2_DSTATE_CivilianMission, \
     /*  23 DSTATE_CivilianMissionWait         */ NDrone2_DSTATE_CivilianMissionWait, \
-    /*  24 DSTATE_StandBlind                  */ (DroneStateFunc)0x0004b590 /* NDrone2_DSTATE_StandBlind */, \
-    /*  25 DSTATE_KikoMission                 */ (DroneStateFunc)0x000513c0 /* NDrone2_DSTATE_KikoMission */, \
-    /*  26 DSTATE_KikoMissionRun              */ (DroneStateFunc)0x000515b0 /* NDrone2_DSTATE_KikoMissionRun */, \
-    /*  27 DSTATE_EnemyMission                */ (DroneStateFunc)0x00051700 /* NDrone2_DSTATE_EnemyMission */, \
+    /*  24 DSTATE_StandBlind                  */ NDrone2_DSTATE_StandBlind, \
+    /*  25 DSTATE_KikoMission                 */ NDrone2_DSTATE_KikoMission, \
+    /*  26 DSTATE_KikoMissionRun              */ NDrone2_DSTATE_KikoMissionRun, \
+    /*  27 DSTATE_EnemyMission                */ NDrone2_DSTATE_EnemyMission, \
     /*  28 DSTATE_AllyLeadInit                */ NDrone2_DSTATE_AllyLeadInit, \
-    /*  29 DSTATE_AllyLead                    */ (DroneStateFunc)0x00051bc0 /* NDrone2_DSTATE_AllyLead */, \
-    /*  30 DSTATE_AllyLeadPlayerInWay         */ (DroneStateFunc)0x00051ec0 /* NDrone2_DSTATE_AllyLeadPlayerInWay */, \
-    /*  31 DSTATE_AllyLeadHide                */ (DroneStateFunc)0x00052050 /* NDrone2_DSTATE_AllyLeadHide */, \
-    /*  32 DSTATE_AllyLeadWait                */ (DroneStateFunc)0x000521e0 /* NDrone2_DSTATE_AllyLeadWait */, \
-    /*  33 DSTATE_AllyLeadMissionWait         */ (DroneStateFunc)0x000523a0 /* NDrone2_DSTATE_AllyLeadMissionWait */, \
-    /*  34 DSTATE_AllyLeadBondCombat          */ (DroneStateFunc)0x000524e0 /* NDrone2_DSTATE_AllyLeadBondCombat */, \
-    /*  35 DSTATE_AllyLeadDone                */ (DroneStateFunc)0x0004b5c0 /* NDrone2_DSTATE_AllyFollowDone */, \
-    /*  36 DSTATE_AllyFollowInit              */ (DroneStateFunc)0x00052660 /* NDrone2_DSTATE_AllyFollowInit */, \
-    /*  37 DSTATE_AllyFollow                  */ (DroneStateFunc)0x00052760 /* NDrone2_DSTATE_AllyFollow */, \
-    /*  38 DSTATE_AllyFollowWait              */ (DroneStateFunc)0x000528c0 /* NDrone2_DSTATE_AllyFollowWait */, \
-    /*  39 DSTATE_AllyFollowDone              */ (DroneStateFunc)0x0004b5c0 /* NDrone2_DSTATE_AllyFollowDone */, \
-    /*  40 DSTATE_AllyGoToGoalPosition        */ (DroneStateFunc)0x00052a20 /* NDrone2_DSTATE_AllyGoToGoalPosition */, \
-    /*  41 DSTATE_SniperIdle                  */ (DroneStateFunc)0x00052c00 /* NDrone2_DSTATE_SniperIdle */, \
-    /*  42 DSTATE_SniperAim                   */ (DroneStateFunc)0x00052da0 /* NDrone2_DSTATE_SniperAim */, \
-    /*  43 DSTATE_SniperFire                  */ (DroneStateFunc)0x00052f20 /* NDrone2_DSTATE_SniperFire */, \
-    /*  44 DSTATE_SniperReload                */ (DroneStateFunc)0x0004b680 /* NDrone2_DSTATE_SniperReload */, \
-    /*  45 DSTATE_GrenadeThrow                */ (DroneStateFunc)0x0004be80 /* NDrone2_DSTATE_GrenadeThrow */, \
+    /*  29 DSTATE_AllyLead                    */ NDrone2_DSTATE_AllyLead, \
+    /*  30 DSTATE_AllyLeadPlayerInWay         */ NDrone2_DSTATE_AllyLeadPlayerInWay, \
+    /*  31 DSTATE_AllyLeadHide                */ NDrone2_DSTATE_AllyLeadHide, \
+    /*  32 DSTATE_AllyLeadWait                */ NDrone2_DSTATE_AllyLeadWait, \
+    /*  33 DSTATE_AllyLeadMissionWait         */ NDrone2_DSTATE_AllyLeadMissionWait, \
+    /*  34 DSTATE_AllyLeadBondCombat          */ NDrone2_DSTATE_AllyLeadBondCombat, \
+    /*  35 DSTATE_AllyLeadDone                */ NDrone2_DSTATE_AllyFollowDone, \
+    /*  36 DSTATE_AllyFollowInit              */ NDrone2_DSTATE_AllyFollowInit, \
+    /*  37 DSTATE_AllyFollow                  */ NDrone2_DSTATE_AllyFollow, \
+    /*  38 DSTATE_AllyFollowWait              */ NDrone2_DSTATE_AllyFollowWait, \
+    /*  39 DSTATE_AllyFollowDone              */ NDrone2_DSTATE_AllyFollowDone, \
+    /*  40 DSTATE_AllyGoToGoalPosition        */ NDrone2_DSTATE_AllyGoToGoalPosition, \
+    /*  41 DSTATE_SniperIdle                  */ NDrone2_DSTATE_SniperIdle, \
+    /*  42 DSTATE_SniperAim                   */ NDrone2_DSTATE_SniperAim, \
+    /*  43 DSTATE_SniperFire                  */ NDrone2_DSTATE_SniperFire, \
+    /*  44 DSTATE_SniperReload                */ NDrone2_DSTATE_SniperReload, \
+    /*  45 DSTATE_GrenadeThrow                */ NDrone2_DSTATE_GrenadeThrow, \
     /*  46 DSTATE_PartyGirlInit               */ NDrone2_DSTATE_PartyGirlInit, \
     /*  47 DSTATE_PartyGirl                   */ NDrone2_DSTATE_PartyGirl, \
-    /*  48 DSTATE_CivilianGuard               */ (DroneStateFunc)0x00053430 /* NDrone2_DSTATE_CivilianGuard */, \
-    /*  49 DSTATE_CivilianDoorGuard           */ (DroneStateFunc)0x000536c0 /* NDrone2_DSTATE_CivilianDoorGuard */, \
-    /*  50 DSTATE_TruckDriverInit             */ (DroneStateFunc)0x00053c00 /* NDrone2_DSTATE_TruckDriverInit */, \
-    /*  51 DSTATE_TruckDriverInitAlert        */ (DroneStateFunc)0x00053e10 /* NDrone2_DSTATE_TruckDriverInitAlert */, \
-    /*  52 DSTATE_TruckDriverIdle             */ (DroneStateFunc)0x00053f80 /* NDrone2_DSTATE_TruckDriverIdle */, \
-    /*  53 DSTATE_TruckDriverMission          */ (DroneStateFunc)0x00054130 /* NDrone2_DSTATE_TruckDriverMission */, \
-    /*  54 DSTATE_CastleChatGuard1            */ (DroneStateFunc)0x000543c0 /* NDrone2_DSTATE_CastleChatGuard1 */, \
-    /*  55 DSTATE_AmbushInit                  */ (DroneStateFunc)0x00054650 /* NDrone2_DSTATE_AmbushInit */, \
-    /*  56 DSTATE_AmbushWait                  */ (DroneStateFunc)0x000546b0 /* NDrone2_DSTATE_AmbushWait */, \
-    /*  57 DSTATE_InterogateAssist            */ (DroneStateFunc)0x00054840 /* NDrone2_DSTATE_InterogateAssist */, \
-    /*  58 DSTATE_InterogateAssistWait        */ (DroneStateFunc)0x00054990 /* NDrone2_DSTATE_InterogateAssistWait */, \
-    /*  59 DSTATE_Interogator                 */ (DroneStateFunc)0x00054b80 /* NDrone2_DSTATE_Interogator */, \
-    /*  60 DSTATE_Interogate                  */ (DroneStateFunc)0x00054bb0 /* NDrone2_DSTATE_Interogate */, \
-    /*  61 DSTATE_InterogateWalk              */ (DroneStateFunc)0x00055240 /* NDrone2_DSTATE_InterogateWalk */, \
-    /*  62 DSTATE_CivilianChallenge           */ (DroneStateFunc)0x0004b840 /* NDrone2_DSTATE_CivilianChallenge */, \
-    /*  63 DSTATE_Surrender_Anim              */ (DroneStateFunc)0x000554a0 /* NDrone2_DSTATE_Surrender_Anim */, \
-    /*  64 DSTATE_Surrendered                 */ (DroneStateFunc)0x000556f0 /* NDrone2_DSTATE_Surrendered */, \
-    /*  65 DSTATE_Unsurrender_Anim            */ (DroneStateFunc)0x0004b9e0 /* NDrone2_DSTATE_Unsurrender_Anim */, \
-    /*  66 DSTATE_KnockedOut_Anim             */ (DroneStateFunc)0x00055830 /* NDrone2_DSTATE_KnockedOut_Anim */, \
-    /*  67 DSTATE_Knocked_Out                 */ (DroneStateFunc)0x00055940 /* NDrone2_DSTATE_Knocked_Out */, \
+    /*  48 DSTATE_CivilianGuard               */ NDrone2_DSTATE_CivilianGuard, \
+    /*  49 DSTATE_CivilianDoorGuard           */ NDrone2_DSTATE_CivilianDoorGuard, \
+    /*  50 DSTATE_TruckDriverInit             */ NDrone2_DSTATE_TruckDriverInit, \
+    /*  51 DSTATE_TruckDriverInitAlert        */ NDrone2_DSTATE_TruckDriverInitAlert, \
+    /*  52 DSTATE_TruckDriverIdle             */ NDrone2_DSTATE_TruckDriverIdle, \
+    /*  53 DSTATE_TruckDriverMission          */ NDrone2_DSTATE_TruckDriverMission, \
+    /*  54 DSTATE_CastleChatGuard1            */ NDrone2_DSTATE_CastleChatGuard1, \
+    /*  55 DSTATE_AmbushInit                  */ NDrone2_DSTATE_AmbushInit, \
+    /*  56 DSTATE_AmbushWait                  */ NDrone2_DSTATE_AmbushWait, \
+    /*  57 DSTATE_InterogateAssist            */ NDrone2_DSTATE_InterogateAssist, \
+    /*  58 DSTATE_InterogateAssistWait        */ NDrone2_DSTATE_InterogateAssistWait, \
+    /*  59 DSTATE_Interogator                 */ NDrone2_DSTATE_Interogator, \
+    /*  60 DSTATE_Interogate                  */ NDrone2_DSTATE_Interogate, \
+    /*  61 DSTATE_InterogateWalk              */ NDrone2_DSTATE_InterogateWalk, \
+    /*  62 DSTATE_CivilianChallenge           */ NDrone2_DSTATE_CivilianChallenge, \
+    /*  63 DSTATE_Surrender_Anim              */ NDrone2_DSTATE_Surrender_Anim, \
+    /*  64 DSTATE_Surrendered                 */ NDrone2_DSTATE_Surrendered, \
+    /*  65 DSTATE_Unsurrender_Anim            */ NDrone2_DSTATE_Unsurrender_Anim, \
+    /*  66 DSTATE_KnockedOut_Anim             */ NDrone2_DSTATE_KnockedOut_Anim, \
+    /*  67 DSTATE_Knocked_Out                 */ NDrone2_DSTATE_Knocked_Out, \
     /*  68 DSTATE_Death_Anim                  */ NDrone2_DSTATE_Death_Anim, \
     /*  69 DSTATE_DeathByExplosion            */ NDrone2_DSTATE_DeathByExplosion, \
-    /*  70 DSTATE_SpecialDeath_Anim           */ (DroneStateFunc)0x00056bd0 /* NDrone2_DSTATE_SpecialDeath_Anim */, \
+    /*  70 DSTATE_SpecialDeath_Anim           */ NDrone2_DSTATE_SpecialDeath_Anim, \
     /*  71 DSTATE_Dead                        */ NDrone2_DSTATE_Dead, \
     /*  72 DSTATE_Fade                        */ NDrone2_DSTATE_Fade, \
     /*  73 DSTATE_FadeFast                    */ NDrone2_DSTATE_FadeFast, \
-    /*  74 DSTATE_Taser                       */ (DroneStateFunc)0x000559b0 /* NDrone2_DSTATE_Taser */, \
-    /*  75 DSTATE_Stunned                     */ (DroneStateFunc)0x00055c50 /* NDrone2_DSTATE_Stunned */, \
-    /*  76 DSTATE_Stunned_Recover             */ (DroneStateFunc)0x00055e90 /* NDrone2_DSTATE_Stunned_Recover */, \
-    /*  77 DSTATE_StunGrenadeImpact           */ (DroneStateFunc)0x00055fc0 /* NDrone2_DSTATE_StunGrenadeImpact */, \
-    /*  78 DSTATE_StunGrenadeLoop             */ (DroneStateFunc)0x000560c0 /* NDrone2_DSTATE_StunGrenadeLoop */, \
-    /*  79 DSTATE_StunGrenadeRecover          */ (DroneStateFunc)0x000562a0 /* NDrone2_DSTATE_StunGrenadeRecover */, \
-    /*  80 DSTATE_StunDartImpact              */ (DroneStateFunc)0x000563d0 /* NDrone2_DSTATE_StunDartImpact */, \
-    /*  81 DSTATE_StunDartLoop                */ (DroneStateFunc)0x000564e0 /* NDrone2_DSTATE_StunDartLoop */, \
-    /*  82 DSTATE_StunDartRecover             */ (DroneStateFunc)0x000566c0 /* NDrone2_DSTATE_StunDartRecover */, \
-    /*  83 DSTATE_PunchImpact                 */ (DroneStateFunc)0x0004bcd0 /* NDrone2_DSTATE_PunchImpact */, \
-    /*  84 DSTATE_ExplosiveImpact             */ (DroneStateFunc)0x0004bdb0 /* NDrone2_DSTATE_ExplosiveImpact */, \
-    /*  85 DSTATE_BulletImpact                */ (DroneStateFunc)0x000570e0 /* NDrone2_DSTATE_BulletImpact */, \
-    /*  86 DSTATE_Attack                      */ (DroneStateFunc)0x000571b0 /* NDrone2_DSTATE_Attack */, \
-    /*  87 DSTATE_Alerted1stEncounter         */ (DroneStateFunc)0x00057310 /* NDrone2_DSTATE_Alerted1stEncounter */, \
-    /*  88 DSTATE_Combat                      */ (DroneStateFunc)0x00057340 /* NDrone2_DSTATE_Combat */, \
-    /*  89 DSTATE_CombatNoMove                */ (DroneStateFunc)0x000573f0 /* NDrone2_DSTATE_CombatNoMove */, \
-    /*  90 DSTATE_CombatOutOfRange            */ (DroneStateFunc)0x000576b0 /* NDrone2_DSTATE_CombatOutOfRange */, \
-    /*  91 DSTATE_CombatNewSighting           */ (DroneStateFunc)0x00057840 /* NDrone2_DSTATE_CombatNewSighting */, \
-    /*  92 DSTATE_CombatNoSight               */ (DroneStateFunc)0x000578d0 /* NDrone2_DSTATE_CombatNoSight */, \
-    /*  93 DSTATE_CombatTooClose              */ (DroneStateFunc)0x000579f0 /* NDrone2_DSTATE_CombatTooClose */, \
-    /*  94 DSTATE_CombatWait                  */ (DroneStateFunc)0x00057a30 /* NDrone2_DSTATE_CombatWait */, \
-    /*  95 DSTATE_CombatNoRoute               */ (DroneStateFunc)0x00057c80 /* NDrone2_DSTATE_CombatNoRoute */, \
-    /*  96 DSTATE_NoOpponent                  */ (DroneStateFunc)0x00058040 /* NDrone2_DSTATE_NoOpponent */, \
-    /*  97 DSTATE_Obstructed                  */ (DroneStateFunc)0x00058190 /* NDrone2_DSTATE_Obstructed */, \
-    /*  98 DSTATE_AlertToPosition             */ (DroneStateFunc)0x00058270 /* NDrone2_DSTATE_AlertToPosition */, \
-    /*  99 DSTATE_GoToGoalPosition            */ (DroneStateFunc)0x00058650 /* NDrone2_DSTATE_GoToGoalPosition */, \
-    /* 100 DSTATE_HostageGoToGoalPosition     */ (DroneStateFunc)0x00058a10 /* NDrone2_DSTATE_HostageGoToGoalPosition */, \
-    /* 101 DSTATE_SearchArea                  */ (DroneStateFunc)0x00058be0 /* NDrone2_DSTATE_SearchArea */, \
-    /* 102 DSTATE_DrawWeapon                  */ (DroneStateFunc)0x00059040 /* NDrone2_DSTATE_DrawWeapon */, \
-    /* 103 DSTATE_AimStand                    */ (DroneStateFunc)0x000591d0 /* NDrone2_DSTATE_AimStand */, \
-    /* 104 DSTATE_AimStandFire                */ (DroneStateFunc)0x00059390 /* NDrone2_DSTATE_AimStandFire */, \
-    /* 105 DSTATE_AimStandReload              */ (DroneStateFunc)0x0004bf80 /* NDrone2_DSTATE_AimStandReload */, \
-    /* 106 DSTATE_AimStandDiscard             */ (DroneStateFunc)0x0004c110 /* NDrone2_DSTATE_AimStandDiscard */, \
-    /* 107 DSTATE_Prone                       */ (DroneStateFunc)0x0004c200 /* NDrone2_DSTATE_Prone */, \
-    /* 108 DSTATE_ProneFire                   */ (DroneStateFunc)0x00059700 /* NDrone2_DSTATE_ProneFire */, \
-    /* 109 DSTATE_AimBackoff                  */ (DroneStateFunc)0x00059860 /* NDrone2_DSTATE_AimBackoff */, \
-    /* 110 DSTATE_CrouchCover                 */ (DroneStateFunc)0x00059a70 /* NDrone2_DSTATE_CrouchCover */, \
-    /* 111 DSTATE_AimCrouch                   */ (DroneStateFunc)0x00059c30 /* NDrone2_DSTATE_AimCrouch */, \
-    /* 112 DSTATE_AimCrouchFire               */ (DroneStateFunc)0x00059d50 /* NDrone2_DSTATE_AimCrouchFire */, \
-    /* 113 DSTATE_AimCrouchReload             */ (DroneStateFunc)0x0004c320 /* NDrone2_DSTATE_AimCrouchReload */, \
-    /* 114 DSTATE_AltAttack                   */ (DroneStateFunc)0x0004c470 /* NDrone2_DSTATE_AltAttack */, \
-    /* 115 DSTATE_StepAimLeft                 */ (DroneStateFunc)0x0005a020 /* NDrone2_DSTATE_StepAimLeft */, \
-    /* 116 DSTATE_StepAimRight                */ (DroneStateFunc)0x0005a160 /* NDrone2_DSTATE_StepAimRight */, \
-    /* 117 DSTATE_StrafeAimLeft               */ (DroneStateFunc)0x0005a2a0 /* NDrone2_DSTATE_StrafeAimLeft */, \
-    /* 118 DSTATE_StrafeAimRight              */ (DroneStateFunc)0x0005a480 /* NDrone2_DSTATE_StrafeAimRight */, \
-    /* 119 DSTATE_StrafeDodgeLeft             */ (DroneStateFunc)0x0005a660 /* NDrone2_DSTATE_StrafeDodgeLeft */, \
-    /* 120 DSTATE_StrafeDodgeRight            */ (DroneStateFunc)0x0005a810 /* NDrone2_DSTATE_StrafeDodgeRight */, \
-    /* 121 DSTATE_RollLeftCrouch              */ (DroneStateFunc)0x0004c5b0 /* NDrone2_DSTATE_RollLeftCrouch */, \
-    /* 122 DSTATE_RollRightCrouch             */ (DroneStateFunc)0x0004c6d0 /* NDrone2_DSTATE_RollRightCrouch */, \
-    /* 123 DSTATE_SmokedOut                   */ (DroneStateFunc)0x0004d640 /* NDrone2_DSTATE_SmokedOut */, \
-    /* 124 DSTATE_SmokedOut_Loop              */ (DroneStateFunc)0x0005dab0 /* NDrone2_DSTATE_SmokedOut_Loop */, \
-    /* 125 DSTATE_SmokedOut_Recover           */ (DroneStateFunc)0x0004d730 /* NDrone2_DSTATE_SmokedOut_Recover */, \
-    /* 126 DSTATE_Investigate                 */ (DroneStateFunc)0x0005a9c0 /* NDrone2_DSTATE_Investigate */, \
-    /* 127 DSTATE_DroneStuck                  */ (DroneStateFunc)0x00058f40 /* NDrone2_DSTATE_DroneStuck */, \
-    /* 128 DSTATE_HoldItRightThere            */ (DroneStateFunc)0x0004c7f0 /* NDrone2_DSTATE_HoldItRightThere */, \
-    /* 129 DSTATE_OpenDoor                    */ (DroneStateFunc)0x0005aba0 /* NDrone2_DSTATE_OpenDoor */, \
-    /* 130 DSTATE_KickObject                  */ (DroneStateFunc)0x0005ae60 /* NDrone2_DSTATE_KickObject */, \
-    /* 131 DSTATE_ActionAnim                  */ (DroneStateFunc)0x0005afb0 /* NDrone2_DSTATE_ActionAnim */, \
-    /* 132 DSTATE_StandFiddle                 */ (DroneStateFunc)0x0005b140 /* NDrone2_DSTATE_StandFiddle */, \
+    /*  74 DSTATE_Taser                       */ NDrone2_DSTATE_Taser, \
+    /*  75 DSTATE_Stunned                     */ NDrone2_DSTATE_Stunned, \
+    /*  76 DSTATE_Stunned_Recover             */ NDrone2_DSTATE_Stunned_Recover, \
+    /*  77 DSTATE_StunGrenadeImpact           */ NDrone2_DSTATE_StunGrenadeImpact, \
+    /*  78 DSTATE_StunGrenadeLoop             */ NDrone2_DSTATE_StunGrenadeLoop, \
+    /*  79 DSTATE_StunGrenadeRecover          */ NDrone2_DSTATE_StunGrenadeRecover, \
+    /*  80 DSTATE_StunDartImpact              */ NDrone2_DSTATE_StunDartImpact, \
+    /*  81 DSTATE_StunDartLoop                */ NDrone2_DSTATE_StunDartLoop, \
+    /*  82 DSTATE_StunDartRecover             */ NDrone2_DSTATE_StunDartRecover, \
+    /*  83 DSTATE_PunchImpact                 */ NDrone2_DSTATE_PunchImpact, \
+    /*  84 DSTATE_ExplosiveImpact             */ NDrone2_DSTATE_ExplosiveImpact, \
+    /*  85 DSTATE_BulletImpact                */ NDrone2_DSTATE_BulletImpact, \
+    /*  86 DSTATE_Attack                      */ NDrone2_DSTATE_Attack, \
+    /*  87 DSTATE_Alerted1stEncounter         */ NDrone2_DSTATE_Alerted1stEncounter, \
+    /*  88 DSTATE_Combat                      */ NDrone2_DSTATE_Combat, \
+    /*  89 DSTATE_CombatNoMove                */ NDrone2_DSTATE_CombatNoMove, \
+    /*  90 DSTATE_CombatOutOfRange            */ NDrone2_DSTATE_CombatOutOfRange, \
+    /*  91 DSTATE_CombatNewSighting           */ NDrone2_DSTATE_CombatNewSighting, \
+    /*  92 DSTATE_CombatNoSight               */ NDrone2_DSTATE_CombatNoSight, \
+    /*  93 DSTATE_CombatTooClose              */ NDrone2_DSTATE_CombatTooClose, \
+    /*  94 DSTATE_CombatWait                  */ NDrone2_DSTATE_CombatWait, \
+    /*  95 DSTATE_CombatNoRoute               */ NDrone2_DSTATE_CombatNoRoute, \
+    /*  96 DSTATE_NoOpponent                  */ NDrone2_DSTATE_NoOpponent, \
+    /*  97 DSTATE_Obstructed                  */ NDrone2_DSTATE_Obstructed, \
+    /*  98 DSTATE_AlertToPosition             */ NDrone2_DSTATE_AlertToPosition, \
+    /*  99 DSTATE_GoToGoalPosition            */ NDrone2_DSTATE_GoToGoalPosition, \
+    /* 100 DSTATE_HostageGoToGoalPosition     */ NDrone2_DSTATE_HostageGoToGoalPosition, \
+    /* 101 DSTATE_SearchArea                  */ NDrone2_DSTATE_SearchArea, \
+    /* 102 DSTATE_DrawWeapon                  */ NDrone2_DSTATE_DrawWeapon, \
+    /* 103 DSTATE_AimStand                    */ NDrone2_DSTATE_AimStand, \
+    /* 104 DSTATE_AimStandFire                */ NDrone2_DSTATE_AimStandFire, \
+    /* 105 DSTATE_AimStandReload              */ NDrone2_DSTATE_AimStandReload, \
+    /* 106 DSTATE_AimStandDiscard             */ NDrone2_DSTATE_AimStandDiscard, \
+    /* 107 DSTATE_Prone                       */ NDrone2_DSTATE_Prone, \
+    /* 108 DSTATE_ProneFire                   */ NDrone2_DSTATE_ProneFire, \
+    /* 109 DSTATE_AimBackoff                  */ NDrone2_DSTATE_AimBackoff, \
+    /* 110 DSTATE_CrouchCover                 */ NDrone2_DSTATE_CrouchCover, \
+    /* 111 DSTATE_AimCrouch                   */ NDrone2_DSTATE_AimCrouch, \
+    /* 112 DSTATE_AimCrouchFire               */ NDrone2_DSTATE_AimCrouchFire, \
+    /* 113 DSTATE_AimCrouchReload             */ NDrone2_DSTATE_AimCrouchReload, \
+    /* 114 DSTATE_AltAttack                   */ NDrone2_DSTATE_AltAttack, \
+    /* 115 DSTATE_StepAimLeft                 */ NDrone2_DSTATE_StepAimLeft, \
+    /* 116 DSTATE_StepAimRight                */ NDrone2_DSTATE_StepAimRight, \
+    /* 117 DSTATE_StrafeAimLeft               */ NDrone2_DSTATE_StrafeAimLeft, \
+    /* 118 DSTATE_StrafeAimRight              */ NDrone2_DSTATE_StrafeAimRight, \
+    /* 119 DSTATE_StrafeDodgeLeft             */ NDrone2_DSTATE_StrafeDodgeLeft, \
+    /* 120 DSTATE_StrafeDodgeRight            */ NDrone2_DSTATE_StrafeDodgeRight, \
+    /* 121 DSTATE_RollLeftCrouch              */ NDrone2_DSTATE_RollLeftCrouch, \
+    /* 122 DSTATE_RollRightCrouch             */ NDrone2_DSTATE_RollRightCrouch, \
+    /* 123 DSTATE_SmokedOut                   */ NDrone2_DSTATE_SmokedOut, \
+    /* 124 DSTATE_SmokedOut_Loop              */ NDrone2_DSTATE_SmokedOut_Loop, \
+    /* 125 DSTATE_SmokedOut_Recover           */ NDrone2_DSTATE_SmokedOut_Recover, \
+    /* 126 DSTATE_Investigate                 */ NDrone2_DSTATE_Investigate, \
+    /* 127 DSTATE_DroneStuck                  */ NDrone2_DSTATE_DroneStuck, \
+    /* 128 DSTATE_HoldItRightThere            */ NDrone2_DSTATE_HoldItRightThere, \
+    /* 129 DSTATE_OpenDoor                    */ NDrone2_DSTATE_OpenDoor, \
+    /* 130 DSTATE_KickObject                  */ NDrone2_DSTATE_KickObject, \
+    /* 131 DSTATE_ActionAnim                  */ NDrone2_DSTATE_ActionAnim, \
+    /* 132 DSTATE_StandFiddle                 */ NDrone2_DSTATE_StandFiddle, \
     /* 133 DSTATE_EnemyRunToPoint             */ NDrone2_DSTATE_EnemyRunToPoint, \
-    /* 134 DSTATE_RunAwayFromObject           */ (DroneStateFunc)0x0005b3d0 /* NDrone2_DSTATE_RunAwayFromObject */, \
-    /* 135 DSTATE_HideFromScaryObject         */ (DroneStateFunc)0x0005b6a0 /* NDrone2_DSTATE_HideFromScaryObject */, \
-    /* 136 DSTATE_RecoverFromScaryObject      */ (DroneStateFunc)0x0005b860 /* NDrone2_DSTATE_RecoverFromScaryObject */, \
-    /* 137 DSTATE_RunToAlarm                  */ (DroneStateFunc)0x0005b8f0 /* NDrone2_DSTATE_RunToAlarm */, \
-    /* 138 DSTATE_PressAlarm                  */ (DroneStateFunc)0x0004c890 /* NDrone2_DSTATE_PressAlarm */, \
-    /* 139 DSTATE_DonePressAlarm              */ (DroneStateFunc)0x0005b990 /* NDrone2_DSTATE_DonePressAlarm */, \
-    /* 140 DSTATE_RunForCover                 */ (DroneStateFunc)0x0005ba50 /* NDrone2_DSTATE_RunForCover */, \
-    /* 141 DSTATE_ElevatorJumper              */ (DroneStateFunc)0x0005bdd0 /* NDrone2_DSTATE_ElevatorJumper */, \
-    /* 142 DSTATE_AbseilInit                  */ (DroneStateFunc)0x0005bf10 /* NDrone2_DSTATE_AbseilInit */, \
-    /* 143 DSTATE_AbseilSlide                 */ (DroneStateFunc)0x0005c070 /* NDrone2_DSTATE_AbseilSlide */, \
-    /* 144 DSTATE_AbseilHang                  */ (DroneStateFunc)0x0005c260 /* NDrone2_DSTATE_AbseilHang */, \
-    /* 145 DSTATE_AbseilStepOff               */ (DroneStateFunc)0x0004caf0 /* NDrone2_DSTATE_AbseilStepOff */, \
-    /* 146 DSTATE_AbseilDeath                 */ (DroneStateFunc)0x0004cbf0 /* NDrone2_DSTATE_AbseilDeath */, \
-    /* 147 DSTATE_UnderCoverInit              */ (DroneStateFunc)0x0004cd60 /* NDrone2_DSTATE_UnderCoverInit */, \
-    /* 148 DSTATE_UnderCoverIdle              */ (DroneStateFunc)0x0005c420 /* NDrone2_DSTATE_UnderCoverIdle */, \
-    /* 149 DSTATE_UnderCoverAim               */ (DroneStateFunc)0x0004cf20 /* NDrone2_DSTATE_UnderCoverAim */, \
-    /* 150 DSTATE_UnderCoverFire              */ (DroneStateFunc)0x0005c880 /* NDrone2_DSTATE_UnderCoverFire */, \
-    /* 151 DSTATE_UnderCoverSniperFire        */ (DroneStateFunc)0x0005cb00 /* NDrone2_DSTATE_UnderCoverSniperFire */, \
-    /* 152 DSTATE_UnderCoverSniperReload      */ (DroneStateFunc)0x0004d080 /* NDrone2_DSTATE_UnderCoverSniperReload */, \
-    /* 153 DSTATE_UnderCoverReturn            */ (DroneStateFunc)0x0005ce10 /* NDrone2_DSTATE_UnderCoverReturn */, \
-    /* 154 DSTATE_UnderCoverTypeChange        */ (DroneStateFunc)0x0005cfd0 /* NDrone2_DSTATE_UnderCoverTypeChange */, \
-    /* 155 DSTATE_UnderCoverLeave             */ (DroneStateFunc)0x0005d0c0 /* NDrone2_DSTATE_UnderCoverLeave */, \
-    /* 156 DSTATE_UnderCoverLeaveNow          */ (DroneStateFunc)0x0004d1d0 /* NDrone2_DSTATE_UnderCoverLeaveNow */, \
-    /* 157 DSTATE_SeenOpponent                */ (DroneStateFunc)0x0005d120 /* NDrone2_DSTATE_SeenDroneShot */, \
-    /* 158 DSTATE_SeenDeadBody                */ (DroneStateFunc)0x0004d380 /* NDrone2_DSTATE_SeenDeadBody */, \
-    /* 159 DSTATE_SeenSurrenderedDrone        */ (DroneStateFunc)0x0004d4c0 /* NDrone2_DSTATE_SeenSurrenderedDrone */, \
-    /* 160 DSTATE_SeenDroneShot               */ (DroneStateFunc)0x0005d120 /* NDrone2_DSTATE_SeenDroneShot */, \
-    /* 161 DSTATE_SeenExplosive               */ (DroneStateFunc)0x0004d620 /* NDrone2_DSTATE_SeenExplosive */, \
-    /* 162 DSTATE_HeardNoise                  */ (DroneStateFunc)0x0005d150 /* NDrone2_DSTATE_HeardNoise */, \
-    /* 163 DSTATE_HeardNoiseAware             */ (DroneStateFunc)0x0005d190 /* NDrone2_DSTATE_HeardNoiseAware */, \
-    /* 164 DSTATE_HeardNoiseSuspect           */ (DroneStateFunc)0x0005d390 /* NDrone2_DSTATE_HeardNoiseSuspect */, \
-    /* 165 DSTATE_HeardNoiseAlert             */ (DroneStateFunc)0x0005d790 /* NDrone2_DSTATE_HeardNoiseAlert */, \
-    /* 166 DSTATE_NinjaStand                  */ (DroneStateFunc)0x0005dc10 /* NDrone2_DSTATE_NinjaStand */, \
-    /* 167 DSTATE_NinjaAttack                 */ (DroneStateFunc)0x0005ddc0 /* NDrone2_DSTATE_NinjaAttack */, \
-    /* 168 DSTATE_NinjaAttackLongRange        */ (DroneStateFunc)0x0005e220 /* NDrone2_DSTATE_NinjaAttackLongRange */, \
-    /* 169 DSTATE_NinjaAttackMidRange         */ (DroneStateFunc)0x0005e4a0 /* NDrone2_DSTATE_NinjaAttackMidRange */, \
-    /* 170 DSTATE_NinjaAttackShortRange       */ (DroneStateFunc)0x0005e830 /* NDrone2_DSTATE_NinjaAttackShortRange */, \
-    /* 171 DSTATE_NinjaGetCloseToPlayer       */ (DroneStateFunc)0x0005ecb0 /* NDrone2_DSTATE_NinjaGetCloseToPlayer */, \
-    /* 172 DSTATE_NinjaSword                  */ (DroneStateFunc)0x0005f2c0 /* NDrone2_DSTATE_NinjaSword */, \
-    /* 173 DSTATE_NinjaSomersault             */ (DroneStateFunc)0x0005f440 /* NDrone2_DSTATE_NinjaSomersault */, \
-    /* 174 DSTATE_NinjaBackflip               */ (DroneStateFunc)0x0005f5c0 /* NDrone2_DSTATE_NinjaBackflip */, \
-    /* 175 DSTATE_NinjaSideflip               */ (DroneStateFunc)0x0005eee0 /* NDrone2_DSTATE_NinjaSideflip */, \
-    /* 176 DSTATE_NinjaSideflipLeft           */ (DroneStateFunc)0x0005efc0 /* NDrone2_DSTATE_NinjaSideflipLeft */, \
-    /* 177 DSTATE_NinjaSideflipRight          */ (DroneStateFunc)0x0005f140 /* NDrone2_DSTATE_NinjaSideflipRight */, \
-    /* 178 DSTATE_NinjaStandFire              */ (DroneStateFunc)0x0005f730 /* NDrone2_DSTATE_NinjaStandFire */, \
-    /* 179 DSTATE_NinjaNoRoute                */ (DroneStateFunc)0x0005f9c0 /* NDrone2_DSTATE_NinjaNoRoute */, \
+    /* 134 DSTATE_RunAwayFromObject           */ NDrone2_DSTATE_RunAwayFromObject, \
+    /* 135 DSTATE_HideFromScaryObject         */ NDrone2_DSTATE_HideFromScaryObject, \
+    /* 136 DSTATE_RecoverFromScaryObject      */ NDrone2_DSTATE_RecoverFromScaryObject, \
+    /* 137 DSTATE_RunToAlarm                  */ NDrone2_DSTATE_RunToAlarm, \
+    /* 138 DSTATE_PressAlarm                  */ NDrone2_DSTATE_PressAlarm, \
+    /* 139 DSTATE_DonePressAlarm              */ NDrone2_DSTATE_DonePressAlarm, \
+    /* 140 DSTATE_RunForCover                 */ NDrone2_DSTATE_RunForCover, \
+    /* 141 DSTATE_ElevatorJumper              */ NDrone2_DSTATE_ElevatorJumper, \
+    /* 142 DSTATE_AbseilInit                  */ NDrone2_DSTATE_AbseilInit, \
+    /* 143 DSTATE_AbseilSlide                 */ NDrone2_DSTATE_AbseilSlide, \
+    /* 144 DSTATE_AbseilHang                  */ NDrone2_DSTATE_AbseilHang, \
+    /* 145 DSTATE_AbseilStepOff               */ NDrone2_DSTATE_AbseilStepOff, \
+    /* 146 DSTATE_AbseilDeath                 */ NDrone2_DSTATE_AbseilDeath, \
+    /* 147 DSTATE_UnderCoverInit              */ NDrone2_DSTATE_UnderCoverInit, \
+    /* 148 DSTATE_UnderCoverIdle              */ NDrone2_DSTATE_UnderCoverIdle, \
+    /* 149 DSTATE_UnderCoverAim               */ NDrone2_DSTATE_UnderCoverAim, \
+    /* 150 DSTATE_UnderCoverFire              */ NDrone2_DSTATE_UnderCoverFire, \
+    /* 151 DSTATE_UnderCoverSniperFire        */ NDrone2_DSTATE_UnderCoverSniperFire, \
+    /* 152 DSTATE_UnderCoverSniperReload      */ NDrone2_DSTATE_UnderCoverSniperReload, \
+    /* 153 DSTATE_UnderCoverReturn            */ NDrone2_DSTATE_UnderCoverReturn, \
+    /* 154 DSTATE_UnderCoverTypeChange        */ NDrone2_DSTATE_UnderCoverTypeChange, \
+    /* 155 DSTATE_UnderCoverLeave             */ NDrone2_DSTATE_UnderCoverLeave, \
+    /* 156 DSTATE_UnderCoverLeaveNow          */ NDrone2_DSTATE_UnderCoverLeaveNow, \
+    /* 157 DSTATE_SeenOpponent                */ NDrone2_DSTATE_SeenDroneShot, \
+    /* 158 DSTATE_SeenDeadBody                */ NDrone2_DSTATE_SeenDeadBody, \
+    /* 159 DSTATE_SeenSurrenderedDrone        */ NDrone2_DSTATE_SeenSurrenderedDrone, \
+    /* 160 DSTATE_SeenDroneShot               */ NDrone2_DSTATE_SeenDroneShot, \
+    /* 161 DSTATE_SeenExplosive               */ NDrone2_DSTATE_SeenExplosive, \
+    /* 162 DSTATE_HeardNoise                  */ NDrone2_DSTATE_HeardNoise, \
+    /* 163 DSTATE_HeardNoiseAware             */ NDrone2_DSTATE_HeardNoiseAware, \
+    /* 164 DSTATE_HeardNoiseSuspect           */ NDrone2_DSTATE_HeardNoiseSuspect, \
+    /* 165 DSTATE_HeardNoiseAlert             */ NDrone2_DSTATE_HeardNoiseAlert, \
+    /* 166 DSTATE_NinjaStand                  */ NDrone2_DSTATE_NinjaStand, \
+    /* 167 DSTATE_NinjaAttack                 */ NDrone2_DSTATE_NinjaAttack, \
+    /* 168 DSTATE_NinjaAttackLongRange        */ NDrone2_DSTATE_NinjaAttackLongRange, \
+    /* 169 DSTATE_NinjaAttackMidRange         */ NDrone2_DSTATE_NinjaAttackMidRange, \
+    /* 170 DSTATE_NinjaAttackShortRange       */ NDrone2_DSTATE_NinjaAttackShortRange, \
+    /* 171 DSTATE_NinjaGetCloseToPlayer       */ NDrone2_DSTATE_NinjaGetCloseToPlayer, \
+    /* 172 DSTATE_NinjaSword                  */ NDrone2_DSTATE_NinjaSword, \
+    /* 173 DSTATE_NinjaSomersault             */ NDrone2_DSTATE_NinjaSomersault, \
+    /* 174 DSTATE_NinjaBackflip               */ NDrone2_DSTATE_NinjaBackflip, \
+    /* 175 DSTATE_NinjaSideflip               */ NDrone2_DSTATE_NinjaSideflip, \
+    /* 176 DSTATE_NinjaSideflipLeft           */ NDrone2_DSTATE_NinjaSideflipLeft, \
+    /* 177 DSTATE_NinjaSideflipRight          */ NDrone2_DSTATE_NinjaSideflipRight, \
+    /* 178 DSTATE_NinjaStandFire              */ NDrone2_DSTATE_NinjaStandFire, \
+    /* 179 DSTATE_NinjaNoRoute                */ NDrone2_DSTATE_NinjaNoRoute, \
     /* 180 DSTATE_DeleteMe                    */ NDrone2_DSTATE_DeleteMe, \
-    /* 181 DSTATE_FailMission                 */ (DroneStateFunc)0x0005fc40 /* NDrone2_DSTATE_FailMission */, \
+    /* 181 DSTATE_FailMission                 */ NDrone2_DSTATE_FailMission, \
     /* 182 DSTATE_JustStand                   */ NDrone2_DSTATE_JustStand, \
-    /* 183 DSTATE_Tester1                     */ (DroneStateFunc)0x0004d950 /* NDrone2_DSTATE_Tester1 */, \
-    /* 184 DSTATE_Tester2                     */ (DroneStateFunc)0x0005fc80 /* NDrone2_DSTATE_Tester2 */, \
-    /* 185 DSTATE_Tester3                     */ (DroneStateFunc)0x0004daf0 /* NDrone2_DSTATE_Tester3 */, \
-    /* 186 DSTATE_Tester4                     */ (DroneStateFunc)0x0005fcd0 /* NDrone2_DSTATE_Tester4 */, \
-    /* 187 DSTATE_HangUp                      */ (DroneStateFunc)0x0004db90 /* NDrone2_DSTATE_HangUp */, \
+    /* 183 DSTATE_Tester1                     */ NDrone2_DSTATE_Tester1, \
+    /* 184 DSTATE_Tester2                     */ NDrone2_DSTATE_Tester2, \
+    /* 185 DSTATE_Tester3                     */ NDrone2_DSTATE_Tester3, \
+    /* 186 DSTATE_Tester4                     */ NDrone2_DSTATE_Tester4, \
+    /* 187 DSTATE_HangUp                      */ NDrone2_DSTATE_HangUp, \
     /* 188 DSTATE_WaitForever                 */ NDrone2_DSTATE_WaitForever, \
-    /* 189 DSTATE_AstronautLaunch             */ (DroneStateFunc)0x0005fd70 /* NDrone2_DSTATE_AstronautLaunch */, \
-    /* 190 DSTATE_AstronautHit                */ (DroneStateFunc)0x00060030 /* NDrone2_DSTATE_AstronautHit */, \
-    /* 191 DSTATE_AstronautDeath              */ (DroneStateFunc)0x00060140 /* NDrone2_DSTATE_AstronautDeath */, \
-    /* 192 DSTATE_AstronautCombat             */ (DroneStateFunc)0x0004dc00 /* NDrone2_DSTATE_AstronautCombat */, \
-    /* 193 DSTATE_AstronautCombatMove         */ (DroneStateFunc)0x0005fef0 /* NDrone2_DSTATE_AstronautCombatMove */, \
-    /* 194 DSTATE_SpaceDrake                  */ (DroneStateFunc)0x00060230 /* NDrone2_DSTATE_SpaceDrake */, \
-    /* 195 DSTATE_BotInit                     */ (DroneStateFunc)0x00060390 /* NDrone2_DSTATE_BotInit */, \
-    /* 196 DSTATE_BotRespawn                  */ (DroneStateFunc)0x0004dcf0 /* NDrone2_DSTATE_BotRespawn */, \
-    /* 197 DSTATE_BotGlobal                   */ (DroneStateFunc)0x000603e0 /* NDrone2_DSTATE_BotGlobal */, \
-    /* 198 DSTATE_BotCollector                */ (DroneStateFunc)0x000613f0 /* NDrone2_DSTATE_BotCollector */, \
-    /* 199 DSTATE_BotGuardian                 */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 200 DSTATE_BotTeamPlayer               */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 201 DSTATE_BotBully                    */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 202 DSTATE_BotBerserker                */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 203 DSTATE_BotGreedy                   */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 204 DSTATE_BotVengeful                 */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 205 DSTATE_BotJudge                    */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 206 DSTATE_BotAssassin                 */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 207 DSTATE_BotAttack                   */ (DroneStateFunc)0x000614a0 /* NDrone2_DSTATE_BotAttack */, \
-    /* 208 DSTATE_BotAttackRun                */ (DroneStateFunc)0x00061690 /* NDrone2_DSTATE_BotAttackRun */, \
-    /* 209 DSTATE_BotAttackNoRoute            */ (DroneStateFunc)0x000618b0 /* NDrone2_DSTATE_BotAttackNoRoute */, \
-    /* 210 DSTATE_BotAttackFire               */ (DroneStateFunc)0x000618f0 /* NDrone2_DSTATE_BotAttackFire */, \
-    /* 211 DSTATE_BotAttackNoOpponent         */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 212 DSTATE_BotAttackStrafeAimLeft      */ (DroneStateFunc)0x00061b30 /* NDrone2_DSTATE_BotAttackStrafeAimLeft */, \
-    /* 213 DSTATE_BotAttackStrafeAimRight     */ (DroneStateFunc)0x00061ca0 /* NDrone2_DSTATE_BotAttackStrafeAimRight */, \
-    /* 214 DSTATE_BotAttackRunChangePosition  */ (DroneStateFunc)0x00061e10 /* NDrone2_DSTATE_BotAttackRunChangePosition */, \
-    /* 215 DSTATE_BotAttackBackoff            */ (DroneStateFunc)0x00061f40 /* NDrone2_DSTATE_BotAttackBackoff */, \
-    /* 216 DSTATE_BotAttackCrouch             */ (DroneStateFunc)0x00062190 /* NDrone2_DSTATE_BotAttackCrouch */, \
-    /* 217 DSTATE_BotAttackRollLeftCrouch     */ (DroneStateFunc)0x000624c0 /* NDrone2_DSTATE_BotAttackRollLeftCrouch */, \
-    /* 218 DSTATE_BotAttackRollRightCrouch    */ (DroneStateFunc)0x00062560 /* NDrone2_DSTATE_BotAttackRollRightCrouch */, \
-    /* 219 DSTATE_BotAttackStepAimLeft        */ (DroneStateFunc)0x00062600 /* NDrone2_DSTATE_BotAttackStepAimLeft */, \
-    /* 220 DSTATE_BotAttackStepAimRight       */ (DroneStateFunc)0x000626f0 /* NDrone2_DSTATE_BotAttackStepAimRight */, \
-    /* 221 DSTATE_BotAttackReload             */ (DroneStateFunc)0x000627e0 /* NDrone2_DSTATE_BotAttackReload */, \
-    /* 222 DSTATE_BotAttackChangeWeapon       */ (DroneStateFunc)0x00062900 /* NDrone2_DSTATE_BotAttackChangeWeapon */, \
-    /* 223 DSTATE_BotAttackUnarmed            */ (DroneStateFunc)0x000629a0 /* NDrone2_DSTATE_BotAttackUnarmed */, \
-    /* 224 DSTATE_BotCoverRunTo               */ (DroneStateFunc)0x00062a20 /* NDrone2_DSTATE_BotCoverRunTo */, \
-    /* 225 DSTATE_BotCoverInit                */ (DroneStateFunc)0x0004dd30 /* NDrone2_DSTATE_BotCoverInit */, \
-    /* 226 DSTATE_BotCoverIdle                */ (DroneStateFunc)0x00062bc0 /* NDrone2_DSTATE_BotCoverIdle */, \
-    /* 227 DSTATE_BotCoverAim                 */ (DroneStateFunc)0x0004de70 /* NDrone2_DSTATE_BotCoverAim */, \
-    /* 228 DSTATE_BotCoverFire                */ (DroneStateFunc)0x00062ee0 /* NDrone2_DSTATE_BotCoverFire */, \
-    /* 229 DSTATE_BotCoverReturn              */ (DroneStateFunc)0x00063070 /* NDrone2_DSTATE_BotCoverReturn */, \
-    /* 230 DSTATE_BotCoverTypeChange          */ (DroneStateFunc)0x000631c0 /* NDrone2_DSTATE_BotCoverTypeChange */, \
-    /* 231 DSTATE_BotCoverLeave               */ (DroneStateFunc)0x000632c0 /* NDrone2_DSTATE_BotCoverLeave */, \
-    /* 232 DSTATE_BotCoverLeaveNow            */ (DroneStateFunc)0x0004df50 /* NDrone2_DSTATE_BotCoverLeaveNow */, \
-    /* 233 DSTATE_BotStuck                    */ (DroneStateFunc)0x00061470 /* NDrone2_DSTATE_BotStuck */, \
-    /* 234 DSTATE_BotAlertToPosition          */ (DroneStateFunc)0x000633e0 /* NDrone2_DSTATE_BotAlertToPosition */, \
-    /* 235 DSTATE_BotGotoGoalPosition         */ (DroneStateFunc)0x000635d0 /* NDrone2_DSTATE_BotGotoGoalPosition */, \
-    /* 236 DSTATE_BotSeenOpponent             */ (DroneStateFunc)0x00063760 /* NDrone2_DSTATE_BotSeenDroneShot */, \
-    /* 237 DSTATE_BotSeenDroneShot            */ (DroneStateFunc)0x00063760 /* NDrone2_DSTATE_BotSeenDroneShot */, \
-    /* 238 DSTATE_BotHeardNoise               */ (DroneStateFunc)0x0004e040 /* NDrone2_DSTATE_BotHeardNoise */, \
-    /* 239 DSTATE_BotImpactBullet             */ (DroneStateFunc)0x00063790 /* NDrone2_DSTATE_BotImpactBullet */, \
-    /* 240 DSTATE_BotImpactExplosive          */ (DroneStateFunc)0x000638b0 /* NDrone2_DSTATE_BotImpactExplosive */, \
-    /* 241 DSTATE_BotImpactPunch              */ (DroneStateFunc)0x00063930 /* NDrone2_DSTATE_BotImpactPunch */, \
-    /* 242 DSTATE_BotDeathAnim                */ (DroneStateFunc)0x0004e050 /* NDrone2_DSTATE_BotDeathAnim */, \
-    /* 243 DSTATE_BotDeathByExplosion         */ (DroneStateFunc)0x0004e0d0 /* NDrone2_DSTATE_BotDeathByExplosion */, \
-    /* 244 DSTATE_BotDead                     */ (DroneStateFunc)0x00063a60 /* NDrone2_DSTATE_BotDead */, \
-    /* 245 DSTATE_BotImpactStunGrenade        */ (DroneStateFunc)0x000639c0 /* NDrone2_DSTATE_BotImpactStunGrenade */, \
-    /* 246 DSTATE_BotDoorOpen                 */ (DroneStateFunc)0x00063c10 /* NDrone2_DSTATE_BotDoorOpen */, \
-    /* 247 DSTATE_BotGuardFriendIdle          */ (DroneStateFunc)0x00063e00 /* NDrone2_DSTATE_BotGuardFriendIdle */, \
-    /* 248 DSTATE_BotGuardFriendFollow        */ (DroneStateFunc)0x00063ec0 /* NDrone2_DSTATE_BotGuardFriendFollow */, \
-    /* 249 DSTATE_BotIdle                     */ (DroneStateFunc)0x00064100 /* NDrone2_DSTATE_BotIdle */, \
+    /* 189 DSTATE_AstronautLaunch             */ NDrone2_DSTATE_AstronautLaunch, \
+    /* 190 DSTATE_AstronautHit                */ NDrone2_DSTATE_AstronautHit, \
+    /* 191 DSTATE_AstronautDeath              */ NDrone2_DSTATE_AstronautDeath, \
+    /* 192 DSTATE_AstronautCombat             */ NDrone2_DSTATE_AstronautCombat, \
+    /* 193 DSTATE_AstronautCombatMove         */ NDrone2_DSTATE_AstronautCombatMove, \
+    /* 194 DSTATE_SpaceDrake                  */ NDrone2_DSTATE_SpaceDrake, \
+    /* 195 DSTATE_BotInit                     */ NDrone2_DSTATE_BotInit, \
+    /* 196 DSTATE_BotRespawn                  */ NDrone2_DSTATE_BotRespawn, \
+    /* 197 DSTATE_BotGlobal                   */ NDrone2_DSTATE_BotGlobal, \
+    /* 198 DSTATE_BotCollector                */ NDrone2_DSTATE_BotCollector, \
+    /* 199 DSTATE_BotGuardian                 */ NDrone2_DSTATE_BotStuck, \
+    /* 200 DSTATE_BotTeamPlayer               */ NDrone2_DSTATE_BotStuck, \
+    /* 201 DSTATE_BotBully                    */ NDrone2_DSTATE_BotStuck, \
+    /* 202 DSTATE_BotBerserker                */ NDrone2_DSTATE_BotStuck, \
+    /* 203 DSTATE_BotGreedy                   */ NDrone2_DSTATE_BotStuck, \
+    /* 204 DSTATE_BotVengeful                 */ NDrone2_DSTATE_BotStuck, \
+    /* 205 DSTATE_BotJudge                    */ NDrone2_DSTATE_BotStuck, \
+    /* 206 DSTATE_BotAssassin                 */ NDrone2_DSTATE_BotStuck, \
+    /* 207 DSTATE_BotAttack                   */ NDrone2_DSTATE_BotAttack, \
+    /* 208 DSTATE_BotAttackRun                */ NDrone2_DSTATE_BotAttackRun, \
+    /* 209 DSTATE_BotAttackNoRoute            */ NDrone2_DSTATE_BotAttackNoRoute, \
+    /* 210 DSTATE_BotAttackFire               */ NDrone2_DSTATE_BotAttackFire, \
+    /* 211 DSTATE_BotAttackNoOpponent         */ NDrone2_DSTATE_BotStuck, \
+    /* 212 DSTATE_BotAttackStrafeAimLeft      */ NDrone2_DSTATE_BotAttackStrafeAimLeft, \
+    /* 213 DSTATE_BotAttackStrafeAimRight     */ NDrone2_DSTATE_BotAttackStrafeAimRight, \
+    /* 214 DSTATE_BotAttackRunChangePosition  */ NDrone2_DSTATE_BotAttackRunChangePosition, \
+    /* 215 DSTATE_BotAttackBackoff            */ NDrone2_DSTATE_BotAttackBackoff, \
+    /* 216 DSTATE_BotAttackCrouch             */ NDrone2_DSTATE_BotAttackCrouch, \
+    /* 217 DSTATE_BotAttackRollLeftCrouch     */ NDrone2_DSTATE_BotAttackRollLeftCrouch, \
+    /* 218 DSTATE_BotAttackRollRightCrouch    */ NDrone2_DSTATE_BotAttackRollRightCrouch, \
+    /* 219 DSTATE_BotAttackStepAimLeft        */ NDrone2_DSTATE_BotAttackStepAimLeft, \
+    /* 220 DSTATE_BotAttackStepAimRight       */ NDrone2_DSTATE_BotAttackStepAimRight, \
+    /* 221 DSTATE_BotAttackReload             */ NDrone2_DSTATE_BotAttackReload, \
+    /* 222 DSTATE_BotAttackChangeWeapon       */ NDrone2_DSTATE_BotAttackChangeWeapon, \
+    /* 223 DSTATE_BotAttackUnarmed            */ NDrone2_DSTATE_BotAttackUnarmed, \
+    /* 224 DSTATE_BotCoverRunTo               */ NDrone2_DSTATE_BotCoverRunTo, \
+    /* 225 DSTATE_BotCoverInit                */ NDrone2_DSTATE_BotCoverInit, \
+    /* 226 DSTATE_BotCoverIdle                */ NDrone2_DSTATE_BotCoverIdle, \
+    /* 227 DSTATE_BotCoverAim                 */ NDrone2_DSTATE_BotCoverAim, \
+    /* 228 DSTATE_BotCoverFire                */ NDrone2_DSTATE_BotCoverFire, \
+    /* 229 DSTATE_BotCoverReturn              */ NDrone2_DSTATE_BotCoverReturn, \
+    /* 230 DSTATE_BotCoverTypeChange          */ NDrone2_DSTATE_BotCoverTypeChange, \
+    /* 231 DSTATE_BotCoverLeave               */ NDrone2_DSTATE_BotCoverLeave, \
+    /* 232 DSTATE_BotCoverLeaveNow            */ NDrone2_DSTATE_BotCoverLeaveNow, \
+    /* 233 DSTATE_BotStuck                    */ NDrone2_DSTATE_BotStuck, \
+    /* 234 DSTATE_BotAlertToPosition          */ NDrone2_DSTATE_BotAlertToPosition, \
+    /* 235 DSTATE_BotGotoGoalPosition         */ NDrone2_DSTATE_BotGotoGoalPosition, \
+    /* 236 DSTATE_BotSeenOpponent             */ NDrone2_DSTATE_BotSeenDroneShot, \
+    /* 237 DSTATE_BotSeenDroneShot            */ NDrone2_DSTATE_BotSeenDroneShot, \
+    /* 238 DSTATE_BotHeardNoise               */ NDrone2_DSTATE_BotHeardNoise, \
+    /* 239 DSTATE_BotImpactBullet             */ NDrone2_DSTATE_BotImpactBullet, \
+    /* 240 DSTATE_BotImpactExplosive          */ NDrone2_DSTATE_BotImpactExplosive, \
+    /* 241 DSTATE_BotImpactPunch              */ NDrone2_DSTATE_BotImpactPunch, \
+    /* 242 DSTATE_BotDeathAnim                */ NDrone2_DSTATE_BotDeathAnim, \
+    /* 243 DSTATE_BotDeathByExplosion         */ NDrone2_DSTATE_BotDeathByExplosion, \
+    /* 244 DSTATE_BotDead                     */ NDrone2_DSTATE_BotDead, \
+    /* 245 DSTATE_BotImpactStunGrenade        */ NDrone2_DSTATE_BotImpactStunGrenade, \
+    /* 246 DSTATE_BotDoorOpen                 */ NDrone2_DSTATE_BotDoorOpen, \
+    /* 247 DSTATE_BotGuardFriendIdle          */ NDrone2_DSTATE_BotGuardFriendIdle, \
+    /* 248 DSTATE_BotGuardFriendFollow        */ NDrone2_DSTATE_BotGuardFriendFollow, \
+    /* 249 DSTATE_BotIdle                     */ NDrone2_DSTATE_BotIdle, \
 }
 
 #define DRONE_MODE_SETTINGS_INIT { \
