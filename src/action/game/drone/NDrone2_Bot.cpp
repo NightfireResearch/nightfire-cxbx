@@ -13,6 +13,7 @@
 #include "NDrone2_Cover.h"
 #include "NDrone2_Route.h"              // NDrone2_MoveToGoalPosition
 #include "NDrone2_Alert.h"              // NDrone2_MoveToAlertPosition, NDrone2_DistanceToAIPoint
+#include "DroneVision_Alerts.h"         // NDrone2_ReactToOpponentSighted
 #include "../obj/control.h"             // Control_Plr2Ind
 #include "NDrone2_Damage.h"
 #include "NDrone2_Opponent.h"
@@ -48,9 +49,6 @@
 // no names for them; ours)
 #define BOTWEAP_canReload ((bool (__cdecl *)(obj_tag *gameObj, int unused))0x0001e5b0)
 #define BOTWEAP_hasReloadAnim ((bool (__cdecl *)(ushort weapon))0x0001eeb0)
-// The state to react to the opponent in (BotAttack or BotAttackFire given), 0 with the drones blinded (FUN_00064910,
-// the entry of NDrone2_ReactToOpponentSighted)
-#define NDrone2_ReactToOpponentSighted ((short (__cdecl *)(DCVars_tag *dcv, short state))0x00064910)
 #define BOTSTATE_getActiveGoal ((BOT_goal_t *(__cdecl *)(Drone_tag *drone))0x0001bed0)
 #define BOTSTATE_setPickupVisitTime ((void (__cdecl *)(Drone_tag *drone, void *pickup))0x0001c550)
 #define BOTSTATE_initGoal ((void (__cdecl *)(BOT_vars_t *bot, uint slot, uchar kind, void *pos, void *target, uchar flags))0x0001bbc0)

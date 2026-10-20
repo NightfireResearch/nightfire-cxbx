@@ -14,6 +14,10 @@
 #include "../mp/multiplayer.h"          // MPSettings, MP_areObjectsOnSameTeam
 #include "../obj/build.h"               // build_FindCel
 #include "DroneVision.h"
+#include "NDrone2_Combat.h"              // NDrone2_CheckSurrender, NDrone2_ChooseCombatMove
+#include "NDrone2_Opponent.h"            // NDrone2_DroneAlertToObject
+#include "../../assets.h"               // HT_Level_*
+#include "../../util/Random.h"          // Rand_Rand
 
 #include <bit>
 #include <stdint.h>
@@ -408,4 +412,330 @@ void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv) {
     drone->heardFrame = GameState.NumFramesUnpaused;
     drone->heardLevel = level;
     Drone_SM_SendMsgSelf(DRONE_MSG_HeardNoise, NULL, 0, 0, dcv);
+}
+
+// ---- the alerts of the older handler (the bots' DSTATE_BotGlobal still uses it)
+
+constexpr float kPowerstationShout = 40.0f;     // in PowerStationA1 to Cut_Level2: heard anywhere within this,
+constexpr float kPowerstationShoutInCel = 100.0f;   // and within this in the same cel
+constexpr float kShout = 15.0f;                 // elsewhere
+constexpr float kShoutInCel = 20.0f;
+
+// Drone_tag.sightFlags: NDrone2_ReactToOpponentSighted has reacted once (our name)
+#define DRONE_SIGHT_REACTED_ONCE 0x20
+// Drone_tag.flags
+#define DRONE_FLAG_HAS_COVER 0x800
+#define DRONE_FLAG_ALARM_SENT 0x200000
+
+// Whether the drone hears a shout from obj: within 15 m, or 20 m in the same cel (40 and 100 m in PowerStationA1,
+// PowerStationA2, Cut_Level1 and Cut_Level2).
+// AUTOINJECT
+bool NDrone2_InShoutingRange(DCVars_tag *dcv, obj_tag *obj) {
+    double distance = Vec_Dist3D(&dcv->gameObj->position, &obj->position);
+    uint level = GameState.CurrentLevelHashcode;
+    float near, inCel;
+    if (level >= HT_Level_PowerStationA1 && level <= HT_Level_Cut_Level2) {
+        near = kPowerstationShout;
+        inCel = kPowerstationShoutInCel;
+    } else {
+        near = kShout;
+        inCel = kShoutInCel;
+    }
+    if (distance < near)
+        return true;
+    return distance < inCel && dcv->gameObj->inCel == obj->inCel;
+}
+
+// Leaves the state for an alert, as a state may answer it: the state given (or DSTATE_Attack) for a civilian,
+// party girl or guard civilian, another state for the rest, through BOT_reactToDroneAlertMsg for a bot. Unless
+// unknown33 or explosiveSeen is set, the drone first keeps where it was. True when the alert was taken (whether or
+// not the state changed). Messages: a sound heard (0x14), the global alarm (0x1e), and other drones' shouts (0x11-0x16)
+// from a drone on the same path within shouting range. FUN_00038ff0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
+    DroneAlert_tag *alert = (DroneAlert_tag *)msg->extraData;
+    Drone_tag *drone = dcv->drone;
+    Drone_tag *sender = NULL;
+    if (alert != NULL) {
+        if (alert->sender == dcv->gameObj)
+            return false;
+        if (alert->sender != NULL && alert->sender->objectType == OBJECTTYPE_DRONE)
+            sender = (Drone_tag *)alert->sender->extraObjectData;
+    }
+    if (!drone->unknown33 && !drone->explosiveSeen) {
+        drone->returnState = (short)dcv->aiStateMachine->curState;
+        NDrone2_FeetPos(dcv->gameObj, &dcv->drone->returnPos);
+        dcv->drone->returnCel = dcv->gameObj->inCel;
+    }
+
+    StateMachineInfo_tag *sm = dcv->aiStateMachine;
+    switch (msg->msgType) {
+    case DRONE_MSG_HeardNoise: {
+        if (behaviour_util_getProperty(DRONE_PROP_1F, dcv->drone->currentBehaviour) == 0)
+            return false;
+        Drone_tag *self = dcv->drone;
+        if (self->flags & DRONE_FLAG_DEAF)
+            return false;
+        if (self->dtype == DTYPE_Bot) {
+            if (!BOT_reactToDroneAlertMsg(msg->msgType, drone, sender))
+                return false;
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotHeardNoise, 0);
+            return true;
+        }
+        if (self->distanceToTarget > kHearingRange)
+            return false;
+        if (sm->curState == DSTATE_Interogate || sm->curState == DSTATE_InterogateWalk)
+            return true;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_PartyGirl:
+        case DTYPE_CivilianGuard:
+        case DTYPE_CivDoorGuard:
+            if (!(drone->alertness > 0.7f))
+                return false;
+            Drone_SM_SetState(sm, state != 0 ? (DSTATE)state : DSTATE_Attack, 0);
+            return true;
+        default:
+            if (dcv->gameObj->curState == 0x63)
+                return false;
+            Drone_SM_SetState(sm, DSTATE_HeardNoise, 0);
+            return true;
+        }
+    }
+
+    case DRONE_MSG_GlobalAlarm:
+        if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
+            return false;
+        dcv->drone->alertness = 1.0f;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_PartyGirl:
+            return false;
+        case DTYPE_CivilianGuard:
+            Drone_SM_SetState(dcv->aiStateMachine, state != 0 ? (DSTATE)state : DSTATE_Attack, 0);
+            return true;
+        case DTYPE_Bot:
+            // the sender must be a drone (the original reads its object regardless)
+            if (!MP_areObjectsOnSameTeam(drone->gameObj, sender->gameObj))
+                return false;
+            if (!BOT_reactToDroneAlertMsg(msg->msgType, drone, sender))
+                return false;
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+            return true;
+        default:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
+            return true;
+        }
+
+    default:
+        break;
+    }
+
+    // The other drones' shouts: only from a drone on the same AI path
+    if (alert == NULL || sender == NULL)
+        return false;
+    if (dcv->drone->route1.path != sender->route1.path)
+        return false;
+    switch (msg->msgType) {
+    case 0x11:
+        if (behaviour_util_getProperty(DRONE_PROP_28, dcv->drone->currentBehaviour) == 0)
+            return false;
+        if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
+            return false;
+        if (sm->curState == DSTATE_Interogate || sm->curState == DSTATE_InterogateWalk)
+            return true;
+        if (!NDrone2_InShoutingRange(dcv, alert->sender))
+            return true;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_PartyGirl:
+        case DTYPE_CivilianGuard:
+            if (state != 0) {
+                Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)state, 0);
+                return true;
+            }
+            break;
+        case DTYPE_Bot:
+            if (!MP_areObjectsOnSameTeam(drone->gameObj, sender->gameObj))
+                return false;
+            if (!BOT_reactToDroneAlertMsg(msg->msgType, drone, sender))
+                return false;
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+            return true;
+        }
+        dcv->drone->alertness = 1.0f;
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
+        return true;
+
+    case 0x12:
+        if (behaviour_util_getProperty(DRONE_PROP_27, dcv->drone->currentBehaviour) == 0)
+            return false;
+        if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
+            return false;
+        if (!NDrone2_InShoutingRange(dcv, alert->sender))
+            return true;
+        dcv->drone->alertness = 1.0f;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_CivilianScared:
+        case DTYPE_PartyGirl:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
+            return true;
+        case DTYPE_Bot:
+            if (!MP_areObjectsOnSameTeam(drone->gameObj, sender->gameObj))
+                return false;
+            if (!BOT_reactToDroneAlertMsg(msg->msgType, drone, sender))
+                return false;
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotSeenDroneShot, 0);
+            return true;
+        default:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SeenDroneShot, 0);
+            return true;
+        }
+
+    case 0x13:
+        if (!NDrone2_InShoutingRange(dcv, alert->sender) && !(dcv->drone->flags & DRONE_FLAG_NO_ALERTS))
+            return false;
+        if (behaviour_util_getProperty(DRONE_PROP_4F, dcv->drone->currentBehaviour) == 0)
+            return false;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_CivilianScared:
+        case DTYPE_PartyGirl:
+        case DTYPE_CivilianGuard:
+            Drone_SM_SetState(dcv->aiStateMachine, state != 0 ? (DSTATE)state : DSTATE_Attack, 0);
+            return true;
+        case DTYPE_Bot:
+            return false;
+        default:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SeenSurrenderedDrone, 0);
+            return true;
+        }
+
+    case DRONE_MSG_DroneAlert:
+        if (behaviour_util_getProperty(DRONE_PROP_29, dcv->drone->currentBehaviour) == 0)
+            return false;
+        if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
+            return false;
+        if (!NDrone2_InShoutingRange(dcv, alert->sender))
+            return false;
+        dcv->drone->alertness = 1.0f;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_CivilianScared:
+        case DTYPE_PartyGirl:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
+            return true;
+        case DTYPE_Bot:
+            return false;
+        default:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SeenDeadBody, 0);
+            return true;
+        }
+
+    case 0x16:
+        if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
+            return false;
+        if (!NDrone2_InShoutingRange(dcv, alert->sender))
+            return false;
+        dcv->drone->alertness = 1.0f;
+        switch (drone->dtype) {
+        case DTYPE_Civilian:
+        case DTYPE_CivilianScared:
+        case DTYPE_PartyGirl:
+        case DTYPE_CivilianGuard:
+            Drone_SM_SetState(dcv->aiStateMachine, state != 0 ? (DSTATE)state : DSTATE_Attack, 0);
+            return true;
+        case DTYPE_Bot:
+            if (!MP_areObjectsOnSameTeam(drone->gameObj, sender->gameObj))
+                return false;
+            if (!BOT_reactToDroneAlertMsg(msg->msgType, drone, sender))
+                return false;
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+            return true;
+        default:
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
+            return true;
+        }
+
+    default:
+        return false;
+    }
+}
+
+// ---- reacting to the opponent
+
+constexpr float kReactAlertness = 0.75f;
+constexpr float kAlarmShout = 0.76f;
+static_assert(std::bit_cast<uint32_t>(kAlarmShout) == 0x3f428f5c, "not the original's 0.76");
+
+// With property 0x33, a drone that has not yet raised the alarm shouts its opponent to those within 20 m (message
+// 0x11) and raises it
+static void ShoutOpponent(DCVars_tag *dcv, float strength) {
+    if (behaviour_util_getProperty(DRONE_PROP_33, dcv->drone->currentBehaviour) == 0)
+        return;
+    if (dcv->drone->flags & DRONE_FLAG_ALARM_SENT)
+        return;
+    NDrone2_DroneAlertToObject(dcv, 0x11, dcv->drone->opponent, 20.0f, 20.0f, strength);
+    dcv->drone->flags |= DRONE_FLAG_ALARM_SENT;
+}
+
+// The state a drone that sees its opponent goes to, `state` for the plain attack, or 0 to stay: none while the drones
+// are blinded, without an opponent, for a neutral, or while it has cover. A drone barely alert to the player (and
+// without property 0x51) stays, as does a run-to-point or alarm-raising drone without property 0x57 on its way. One that
+// surrenders, surrenders. The first time it reacts it becomes alert (0.75), shouting with property 0x33, and by its
+// properties interrogates, attacks, makes a combat move or throws a grenade; after that it is fully alert, shouting
+// again. Ghidra splits it: FUN_00064910 is the entry, NDrone2_ReactToOpponentSighted (0x6491d) the rest.
+// AUTOINJECT
+short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state) {
+    if (switch_BLIND_DRONES)
+        return 0;
+    Drone_tag *drone = dcv->drone;
+    if (drone->opponent == NULL)
+        return 0;
+    if (drone->side == 3)
+        return 0;
+    if (drone->flags & DRONE_FLAG_HAS_COVER)
+        return 0;
+    if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
+        behaviour_util_getProperty(DRONE_PROP_51, dcv->drone->currentBehaviour) == 0)
+        return 0;
+    if (behaviour_util_getProperty(DRONE_PROP_57, dcv->drone->currentBehaviour) == 0 &&
+        (dcv->drone->dtype == DTYPE_RunToPoint || dcv->drone->dtype == DTYPE_AlarmRaiser) &&
+        (dcv->aiStateMachine->curState == DSTATE_EnemyRunToPoint ||
+         dcv->aiStateMachine->curState == DSTATE_GoToGoalPosition))
+        return 0;
+    if (NDrone2_CheckSurrender(dcv)) {
+        dcv->drone->alertness = 1.0f;
+        return DSTATE_Surrender_Anim;
+    }
+
+    if (dcv->drone->sightFlags & DRONE_SIGHT_REACTED_ONCE) {
+        ShoutOpponent(dcv, 1.0f);
+        dcv->drone->alertness = 1.0f;
+        return state;
+    }
+    dcv->drone->sightFlags |= DRONE_SIGHT_REACTED_ONCE;
+    if (!(drone->alertness <= kReactAlertness))
+        return state;
+    if (behaviour_util_getProperty(DRONE_PROP_3C, dcv->drone->currentBehaviour) == 0)
+        return 0;
+    dcv->drone->alertness = kReactAlertness;
+    ShoutOpponent(dcv, kAlarmShout);
+    if (drone->dtype == DTYPE_Interogator)
+        return DSTATE_Interogate;
+    if (behaviour_util_getProperty(DRONE_PROP_18, dcv->drone->currentBehaviour) != 0)
+        return DSTATE_Attack;
+    if (behaviour_util_getProperty(DRONE_PROP_19, dcv->drone->currentBehaviour) != 0)
+        return NDrone2_ChooseCombatMove(dcv);
+    if (behaviour_util_getProperty(DRONE_PROP_1A, dcv->drone->currentBehaviour) != 0)
+        return DSTATE_Interogate;
+    if (behaviour_util_getProperty(DRONE_PROP_4A, dcv->drone->currentBehaviour) != 0)
+        return DSTATE_GrenadeThrow;
+    if (behaviour_util_getProperty(DRONE_PROP_1B, dcv->drone->currentBehaviour) != 0) {
+        if (Rand_Rand(2) == 1)
+            return NDrone2_ChooseCombatMove(dcv);
+        return DSTATE_Attack;
+    }
+    return state;
 }

@@ -33,6 +33,11 @@ ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg);
 ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv);
 void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv);
 
+// The bots' alerts and reactions (FUN_00038ff0 is NDrone2_HandleDroneAlert, our name)
+bool NDrone2_InShoutingRange(DCVars_tag *dcv, obj_tag *obj);
+bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state);
+short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state);
+
 // The originals take the DCVars in a register: the game reaches the adaptors, C++ calls the cores
 ushort _DroneVision_AlertSound(DCVars_tag *dcv);
 void DroneVision_AlertSound(void);

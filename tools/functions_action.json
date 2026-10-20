@@ -9126,7 +9126,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00038ff0",
+        "name": "NDrone2_HandleDroneAlert",
         "address": "0x00038ff0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9136,7 +9136,7 @@
             "uint *",
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00038ff0(int * param_1, uint * param_2, short param_3)",
+        "prototype_string": "undefined4 __cdecl NDrone2_HandleDroneAlert(int * param_1, uint * param_2, short param_3)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[uint * param_2@Stack[0x8]:4]",
@@ -19930,19 +19930,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00064910",
+        "name": "NDrone2_ReactToOpponentSighted",
         "address": "0x00064910",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_00064910()",
+        "prototype_string": "undefined NDrone2_ReactToOpponentSighted()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "NDrone2_ReactToOpponentSighted",
+        "name": "NDrone2_ReactToOpponentSighted_Tail",
         "address": "0x0006491d",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -19951,7 +19951,7 @@
             "int *",
             "short"
         ],
-        "prototype_string": "short __cdecl NDrone2_ReactToOpponentSighted(int * param_1, short param_2)",
+        "prototype_string": "short __cdecl NDrone2_ReactToOpponentSighted_Tail(int * param_1, short param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]"
