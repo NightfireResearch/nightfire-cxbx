@@ -397,6 +397,35 @@ void __cdecl FakeFrameCallback(obj_tag *obj, sAnimSkin_tag *skin, sAnimSeq_tag *
 }
 void __cdecl FakeListCallback(obj_tag *obj, sAnimScript_tag *script) { ShadowLog("listcallback(%x,%x)", W(obj), W(script)); }
 
+void __cdecl FakeBodyGlow(obj_tag *owner) { ShadowLog("bodyglow(%x)", W(owner)); }
+bool __cdecl FakeLinkRoom(obj_tag *obj, char straddle, void *w) {
+    ShadowLog("linkroom(%x,%x,%x)", W(obj), straddle & 0xff, W(w));
+    return true;
+}
+
+// AnimDebugCreate's: the object gets the world's anim state; its foot's height made up
+int __cdecl FakeObjectNew(obj_tag *obj, HASHCODE skin) {
+    ShadowLog("objectnew(%x,%x)", W(obj), (uint)skin);
+    obj->animState = &world.anim;
+    return 1;
+}
+float __cdecl FakeInitialPoseCore(obj_tag *obj) {
+    ShadowLog("initialpose(%x)", W(obj));
+    return (float)(Next(8)) * 0.125f - 0.4f;
+}
+// The original's AnimObjectInitialPose: the object in ESI, the height in ST0
+__declspec(naked) void FakeInitialPose(void) {
+    _asm {
+        push esi
+        call FakeInitialPoseCore
+        add esp, 4
+        ret
+    }
+}
+
+// The fakes; without AnimSetDelete's for the group that tests it
+bool fakeSetDelete = true;
+
 void InstallFakes(void) {
     ShadowHook_Install(0x00070ae0, (const void *)&FakeMalloc);
     ShadowHook_Install(0x000705f0, (const void *)&FakeFree);
@@ -426,7 +455,8 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000dde50, (const void *)&FakeDrawObject);
     ShadowHook_Install(0x000d9390, (const void *)&FakeDrawGlist);
     ShadowHook_Install(0x000ddf00, (const void *)&FakeTweak);
-    ShadowHook_Install(0x000177a0, (const void *)&FakeSetDelete);
+    if (fakeSetDelete)
+        ShadowHook_Install(0x000177a0, (const void *)&FakeSetDelete);
     ShadowHook_Install(0x000174a0, (const void *)&FakeDistance);
     // Our AnimSeqSet calls the core of the register adaptor
     ShadowHook_Install((unsigned)(uintptr_t)&_AnimDistanceTableGet, (const void *)&LogDistance);
@@ -1844,6 +1874,65 @@ const Case kFaces[] = {
     C("AnimDatum*, AnimObjectIsClose", RunDatums),
 };
 
+// ---- the set's deletion, the peek at a script's sequence, the rigid parts, the debug displays
+
+uint32_t RunSetDelete(bool original) {
+    obj_tag *obj = Arg(10) ? Obj() : NULL;
+    sAnimSet_tag *set = &world.sets[Arg(3)];
+    if (Arg(3) == 0)
+        set->strafeScript = NULL;
+    else
+        set->strafeScript = AnyScript();
+    sAnimSet_tag *slot = set;
+    CDECL_RUN(0x000177a0, AnimSetDelete, void (__cdecl *)(obj_tag *, sAnimSet_tag **), obj, &slot);
+    return W(slot);
+}
+uint32_t RunPeekSeq(bool original) {
+    HASHCODE hc = AnyScriptHash();
+    // Now and then a script that plays once at 60 a second, its first command on one of the sequences
+    uint8_t *data = (uint8_t *)FakeGetItem(hc);
+    if (data != NULL && Arg(2)) {
+        data[7] = Arg(4) ? 0x78 : (uint8_t)Arg(0x100);
+        ((ushort *)(data + 8))[3] = (ushort)((uint)kSeqHash[Arg(SEQ_FILES)] & 0xffff);
+    }
+    return W(CDECL_RUN(0x000125b0, AnimScriptPeekSeq, sAnimRawSeq_tag *(__cdecl *)(HASHCODE), hc));
+}
+uint32_t RunDiscreteDelete(bool original) {
+    CDECL_RUN(0x00011340, Discrete_Delete, void (__cdecl *)(obj_tag *), Obj());
+    return 0;
+}
+uint32_t RunDebugCreate(bool original) {
+    static const HASHCODE levels[] = {HT_Level_AllCharacters, HT_Level_AllCharacters2, HT_Level_RefRoom,
+                                      (HASHCODE)0x07000042};
+    GameState.CurrentLevelHashcode = levels[Arg(COUNT(levels))];
+    world.mallocFails = 0;
+    // RefRoom's character, as the made-up skin (the original takes its script without checking it was made)
+    void *skin = FakeGetItem(kSkinHash);
+    if (skin != NULL && FakeGetItem((HASHCODE)0x0500002e) == NULL && world.tableCount < TABLE) {
+        world.table[world.tableCount].hashcode = (HASHCODE)0x0500002e;
+        world.table[world.tableCount].data = skin;
+        world.tableCount++;
+    }
+    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom && FakeGetItem((HASHCODE)0x0500002e) == NULL)
+        return 0;
+    // Skeleton 0 or 1, or (for the ring, which leaves it out) 3
+    SkeletonTable[0] = SkeletonTable[1] = (SkeletonInfo *)world.skel;
+    world.skin.skeletonNum = Arg(4) == 0 && GameState.CurrentLevelHashcode != HT_Level_RefRoom ? 3 : Arg(2);
+    world.obj.rotation.y = ArgFloat(-7.0f, 7.0f);
+    obj_tag *player = glb_players[0];
+    glb_players[0] = Obj();
+    CDECL_RUN(0x00019180, AnimDebugCreate, void (__cdecl *)(void));
+    glb_players[0] = player;
+    return 0;
+}
+
+const Case kDebug[] = {
+    C("AnimSetDelete", RunSetDelete),
+    C("AnimScriptPeekSeq", RunPeekSeq),
+    C("Discrete_Delete", RunDiscreteDelete),
+    C("AnimDebugCreate", RunDebugCreate),
+};
+
 const Case kObjects[] = {
     C("AnimObjectNew", RunObjectNew),
     C("maybeFixupSkinHashcode", RunFixupSkin),
@@ -1909,6 +1998,18 @@ void AnimPortShadow_Run(void) {
     Test("bones, head tracking, aiming, drawing", kBones, COUNT(kBones), 2000);
     Test("the anim object", kObjects, COUNT(kObjects), 1000);
     Test("sets and the player's", kSets, COUNT(kSets), 1500);
+    ShadowHook_RemoveAll();
+    fakeSetDelete = false;
+    InstallFakes();
+    ShadowFakes_InstallCreate();
+    ShadowHook_Install(0x00021110, (const void *)&FakeLinkRoom);
+    ShadowHook_Install(0x000ce4b0, (const void *)&FakeBodyGlow);
+    ShadowHook_Install(0x00011440, (const void *)&FakeObjectNew);
+    ShadowHook_Install(0x000190f0, (const void *)&FakeInitialPose);
+    ShadowHook_Install((unsigned)(uintptr_t)&_AnimObjectInitialPose, (const void *)&FakeInitialPoseCore);
+    ShadowFakes_AddRegions(regions);
+    Test("the set's deletion, the peek, the parts and the debug displays", kDebug, COUNT(kDebug), 1500);
+    fakeSetDelete = true;
     ShadowHook_RemoveAll();
 
     NfWarnMuted--;

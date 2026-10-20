@@ -22,6 +22,8 @@
 #include "../game/drone/NDrone2.h"
 #include "../game/obj/Player.h"
 #include "../game/obj/control.h"
+#include "../game/obj/BodyGlow.h"
+#include "../game/obj/build.h"
 #include "../game/obj/bullet.h"
 #include "../game/obj/Gas.h"
 #include "../game/obj/Light.h"
@@ -117,7 +119,6 @@ typedef struct AnimSizes {
 #define MORPH_EYES_X 14
 
 // The originals, called by address
-#define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 
 // The sequences' distance tables, made once each (AnimDistanceTableGet)
@@ -1075,6 +1076,26 @@ sAnimScript_tag* AnimScriptAddSpeed(obj_tag *obj, HASHCODE hashcode, float speed
 sAnimScript_tag* AnimScriptAddReverse(obj_tag *obj, HASHCODE hashcode) {
     ReverseFlag = 1;
     return AnimScriptAdd(obj, hashcode);
+}
+
+// The info word of a script that does not loop and plays at 60 frames a second
+#define ANIMSCRIPT_INFO_ONCE_60 0x7800
+
+// The sequence a script's first command plays, without starting the script; NULL unless the script is loaded and
+// plays once at 60 frames a second
+// AUTOINJECT
+sAnimRawSeq_tag* AnimScriptPeekSeq(HASHCODE script) {
+    uchar *data = (uchar *)hashtable_getitem(script);
+    if (data == NULL)
+        return NULL;
+    // The data is not aligned: the hashcode a byte at a time
+    uint hashcode = data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24;
+    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+        return NULL;
+    if ((*(ushort *)(data + 6) & 0xff00) != ANIMSCRIPT_INFO_ONCE_60)
+        return NULL;
+    ushort *cmd = (ushort *)(data + 8);
+    return (sAnimRawSeq_tag *)hashtable_getitem((HASHCODE)(cmd[3] | ANIM_HASHTYPE_SEQ));
 }
 
 // Adds hashcode after the object's other scripts, up to 32 of them
@@ -2667,6 +2688,12 @@ void AnimObjectDelete(obj_tag *obj) {
     Mem_Free((void **)&obj->animState);
 }
 
+// A rigid part of an animated object (AnimObjectNew) forgets its owner
+// AUTOINJECT
+void Discrete_Delete(obj_tag *obj) {
+    obj->extraObjectData = NULL;
+}
+
 // The player's stride between footsteps, and on a ladder
 static constexpr float kStride = 1.65f;
 static constexpr float kStrideLadder = 0.4125f;
@@ -2839,6 +2866,89 @@ void __declspec(naked) AnimObjectInitialPose(void) {
         call _AnimObjectInitialPose
         add esp, 4
         ret
+    }
+}
+
+// The control functions' thunk to AnimObjectUpdate (a lone JMP)
+// FUNC_AT(0x0002cf00)
+int AnimObjectUpdateThunk(obj_tag *obj) {
+    return AnimObjectUpdate(obj);
+}
+
+// The debug levels' displays: AllCharacters puts every character's skin in a ring around the player, facing out;
+// RefRoom one character in front of the player, talking
+#define ANIMDEBUG_RING_SPACING 0.23873241f  // a skin's share of the ring's radius: 1.5 / 2 pi
+#define ANIMDEBUG_FLOOR 0.09f
+static constexpr float kPi = 3.14159274f;
+static constexpr float kTwoPi = 6.28318548f;
+static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi");
+static_assert(std::bit_cast<uint32_t>(kTwoPi) == 0x40c90fdb, "2 pi");
+#define ANIMDEBUG_REF_SKIN ((HASHCODE)0x0500002e)
+#define ANIMDEBUG_REF_STAND ((HASHCODE)0x0600011b)
+#define ANIMDEBUG_REF_TALK ((HASHCODE)0x06000128)
+static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_RING_SPACING) == 0x3e747645, "0.23873241");
+static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_FLOOR) == 0x3db851ec, "0.09");
+
+// AUTOINJECT
+void AnimDebugCreate(void) {
+    if (GameState.CurrentLevelHashcode == HT_Level_AllCharacters ||
+        GameState.CurrentLevelHashcode == HT_Level_AllCharacters2) {
+        // The skins of skeletons 0 and 1
+        HASHCODE skins[256];
+        int count = hashtable_get_hashtype_count(ANIM_HASHTYPE_SKIN);
+        hashtable_get_hashtype_data(ANIM_HASHTYPE_SKIN, skins);
+        for (int i = count - 1; i >= 0; i--) {
+            sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skins[i]);
+            if (skin->skeletonNum != 0 && skin->skeletonNum != 1) {
+                memmove(&skins[i], &skins[i + 1], (count - i - 1) * sizeof(HASHCODE));
+                count--;
+            }
+        }
+        _VECTOR centre;
+        Vec_Copy(&glb_players[0]->position, &centre);
+        centre.y = 0.0f;
+        float countf = (float)count;
+        float spacing = (float)(count * (double)ANIMDEBUG_RING_SPACING);
+        for (int i = 0; i < count; i++) {
+            double angle = i / (double)countf * (double)kTwoPi;
+            _VECTOR at;
+            at.y = 0.0f;
+            at.x = (float)FCos(angle);
+            Extended sine = FSin(angle);
+            at.z = (float)sine;
+            float facingZ = (float)-sine;
+            float facingX = X87Negate(at.x);
+            Vec_Scalef(&at, spacing, &at);
+            Vec_Add2(&centre, &at, &at);
+            obj_tag *obj = control_create_object(0, &at, NULL, NULL);
+            double yaw = (double)FPatan(facingX, facingZ);
+            obj->effectFlags |= 0x20;
+            obj->rotation.y = (float)yaw;
+            build_LinkToRoom(obj, 0, glb_world);
+            obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
+            AnimObjectNew(obj, skins[i]);
+            obj->position.y = (float)(ANIMDEBUG_FLOOR - (double)_AnimObjectInitialPose(obj));
+        }
+    }
+    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom) {
+        float yaw = glb_players[0]->rotation.y - 0.3f;   // 0x3e99999a
+        obj_tag *obj = control_create_object(0, &glb_players[0]->position, NULL, NULL);
+        Extended sine = FSin(yaw);
+        obj->effectFlags |= 0x20;
+        obj->position.x = (float)(sine * Extended(3.3f) + Extended(obj->position.x));
+        obj->position.z = (float)(FCos(yaw) * Extended(3.3f) + Extended(obj->position.z));
+        obj->rotation.y = yaw + kPi;
+        build_LinkToRoom(obj, 0, glb_world);
+        obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
+        AnimObjectNew(obj, ANIMDEBUG_REF_SKIN);
+        AnimScriptAdd(obj, ANIMDEBUG_REF_STAND)->flags |= ANIMSCRIPT_NO_MORPH | ANIMSCRIPT_LOOP;
+        AnimObj *animObj = &obj->animState->animObj;
+        sAnimScript_tag *talk = AnimScriptAppend(obj, ANIMDEBUG_REF_TALK);
+        talk->playMode = ANIMPLAY_DELETE;
+        talk->groupTag = ANIMTAG_FACE_SPEECH;
+        animObj->facialState = FACIAL_TALKING;
+        talk->flags |= ANIMSCRIPT_LOOP;
+        BodyGlow_Create(obj);
     }
 }
 
@@ -3814,6 +3924,27 @@ sAnimSet_tag* AnimSetAppend(obj_tag *obj, HASHCODE *list, float a, float b) {
     }
     _AnimSetInit(set, list, obj, a, b);
     return set;
+}
+
+// A set, its strafe and its scripts deleted and unlinked; *slot is freed
+// AUTOINJECT
+void AnimSetDelete(obj_tag *obj, sAnimSet_tag **slot) {
+    if (obj == NULL || obj->animState == NULL)
+        return;
+    AnimState *animState = obj->animState;
+    sAnimSet_tag *set = *slot;
+    if (set->strafeScript != NULL)
+        AnimScriptDelete(obj, &set->strafeScript);
+    AnimListBuild(obj, ANIMLIST_TAG, (*slot)->tag, NULL, ANIMLIST_RESTART);
+    AnimListDelete(obj);
+    set = *slot;
+    if (set->prev == NULL)
+        animState->animObj.animSets = set->next;
+    else
+        set->prev->next = set->next;
+    if (set->next != NULL)
+        set->next->prev = set->prev;
+    Mem_Free((void **)slot);
 }
 
 // AUTOINJECT
