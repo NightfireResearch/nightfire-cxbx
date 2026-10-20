@@ -927,8 +927,6 @@ void Player_Weapon(obj_tag *player) {
     Player_AutoAim(player);
 }
 
-// AUTOGEN
-void MP_EquipPlayer(obj_tag * param_1);
 
 // How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
 // and difficulty; the XBE's initial values (12, 18) are the same as the normal-difficulty ones.

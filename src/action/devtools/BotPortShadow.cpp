@@ -22,6 +22,9 @@
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/Pickup.h"
 #include "../engine/Script.h"
+#include "../engine/parsemap.h"
+#include "../assets.h"
+#include "../game/obj/Player.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -40,6 +43,8 @@ namespace {
 #define Demolition (*(MP_OBJ_EXT*)0x00261af8)
 #define Protection (*(MP_OBJ_EXT*)0x00261b40)
 #define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
+#define DemolitionPlaceCount U16_AT(0x002637cc)
+#define ProtectionPlaceCount U16_AT(0x002637d0)
 
 const int BOTS = 3;
 const int MPOBJS = 6;
@@ -69,6 +74,15 @@ struct World {
     MPOBJECT mpObjects[2];
     PICKUPINFO pickupInfos[3];
     char text[128];
+    obj_tag player;
+    BLData blData;
+    AnimState playerAnim;
+    sAnimSkin_tag skin;
+    obj_tag made;               // what control_create_object makes
+    uint8_t madeExtra[0x60];
+    level_tag lvl;
+    _MATRIX mtx;
+    _VECTOR v[2];
     ushort routeNodes[8];
     uint32_t answers;           // the fakes' answers, a bit a call
     int fakeCalls;
@@ -320,6 +334,95 @@ uchar __cdecl FakeLevelLoaded(void) {
     return Answer();
 }
 
+void __cdecl FakeInitAmmoWeapons(obj_tag *player) {
+    ShadowLog("initammo(%x)", Offset(player));
+}
+
+uint __cdecl FakeUpgradeMPWeapon(short player, uint weapon) {
+    ShadowLog("upgrade(%d,%u)", player, weapon);
+    return (world.answers >> 6) & 1 ? weapon + 1 : weapon;
+}
+
+bool __cdecl FakePlayerEquipWeapon(BLData *blData, short weapon, short amount) {
+    ShadowLog("equipweapon(%x,%d,%d)", Offset(blData), weapon, amount);
+    return Answer();
+}
+
+uint __cdecl FakePlayerEquipAmmo(BLData *blData, short weapon, short amount) {
+    ShadowLog("equipammo(%x,%d,%d)", Offset(blData), weapon, amount);
+    return 0;
+}
+
+void __cdecl FakePlayerCheckLoaded(BLData *blData) {
+    ShadowLog("checkloaded(%x)", Offset(blData));
+}
+
+void __cdecl FakeGetObjMatrix(obj_tag *obj, _MATRIX *mtx) {
+    ShadowLog("objmatrix(%x,%x)", Offset(obj), Offset(mtx));
+}
+
+void __cdecl FakeUnlink(obj_tag *obj) {
+    ShadowLog("unlink(%x)", Offset(obj));
+}
+
+void __cdecl FakeHUDEnable(void *hud, int pane, char enable, ushort state) {
+    ShadowLog("hudenable(%x,%d,%d,%u)", Offset(hud), pane, enable, state);
+}
+
+void __cdecl FakeSetCamMode(BLData *blData, ushort mode) {
+    ShadowLog("cammode(%x,%u)", Offset(blData), mode);
+}
+
+void __cdecl FakePlayerSetHealth(BLData *blData, float health) {
+    ShadowLog("sethealth(%x,%08x)", Offset(blData), Bits(health));
+    blData->health = health;
+}
+
+void __cdecl FakeCameraSet(viewer_tag *viewer, _VECTOR *pos, _VECTOR *rot) {
+    ShadowLog("cameraset(%p,%x,%x)", viewer, Offset(pos), Offset(rot));
+}
+
+void __cdecl FakeChangeState(obj_tag *obj, ushort state) {
+    ShadowLog("changestate(%x,%u)", Offset(obj), state);
+}
+
+int __cdecl FakeChangeSubState(obj_tag *obj, ushort state) {
+    ShadowLog("changesubstate(%x,%u)", Offset(obj), state);
+    return 0;
+}
+
+void __cdecl FakeStandAt(obj_tag *obj, _VECTOR *pos, _VECTOR *rot, ushort subState) {
+    ShadowLog("standat(%x,%x,%x,%u)", Offset(obj), Offset(pos), Offset(rot), subState);
+}
+
+int __cdecl FakeAnimObjectUpdate(obj_tag *obj) {
+    ShadowLog("animupdate(%x)", Offset(obj));
+    return 0;
+}
+
+void __cdecl FakeFreeHitList(HITDATA_tag **list) {
+    ShadowLog("freehits(%x)", Offset(list));
+}
+
+obj_tag *__cdecl FakeCreateObject(int size, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat) {
+    ShadowLog("create(%d,%08x,%08x,%08x,%p,%p)", size, Bits(pos->x), Bits(pos->y), Bits(pos->z), rot, quat);
+    if (!Answer() && !Answer())
+        return NULL;
+    obj_tag *obj = &world.made;
+    memset(obj, 0, sizeof(*obj));
+    memset(world.madeExtra, 0, sizeof(world.madeExtra));
+    obj->extraObjectData = world.madeExtra;
+    obj->position = *pos;
+    return obj;
+}
+
+obj_tag *__cdecl FakeSPCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE s0, HASHCODE s1, short mode, char once,
+                              obj_tag *owner, void *callback, void *context, short mask) {
+    ShadowLog("spcreate(%08x,%08x,%08x,%08x,%x,%x,%d,%d,%p,%p,%p,%d)", Bits(pos->x), Bits(rot->x), Bits(rot->y),
+              Bits(rot->z), s0, s1, mode, once, owner, callback, context, mask);
+    return &world.mpObjs[1];
+}
+
 struct Fake {
     unsigned at;
     const void *fake;
@@ -373,6 +476,24 @@ const Fake kFakes[] = {
     {0x0004e630, (const void *)&FakeRouteMsg},
     {0x000cb940, (const void *)&FakeSoundPlayExt},
     {0x000bff80, (const void *)&FakeLevelLoaded},
+    {0x000b6d30, (const void *)&FakeInitAmmoWeapons},
+    {0x000b9d40, (const void *)&FakeUpgradeMPWeapon},
+    {0x000ba5e0, (const void *)&FakePlayerEquipWeapon},
+    {0x000ba790, (const void *)&FakePlayerEquipAmmo},
+    {0x000b9b40, (const void *)&FakePlayerCheckLoaded},
+    {0x0002cf10, (const void *)&FakeGetObjMatrix},
+    {0x0002d050, (const void *)&FakeUnlink},
+    {0x000b1a60, (const void *)&FakeHUDEnable},
+    {0x000abef0, (const void *)&FakeSetCamMode},
+    {0x000ac050, (const void *)&FakePlayerSetHealth},
+    {0x000240c0, (const void *)&FakeCameraSet},
+    {0x000a9700, (const void *)&FakeChangeState},
+    {0x000a9720, (const void *)&FakeChangeSubState},
+    {0x000ac7e0, (const void *)&FakeStandAt},
+    {0x00018690, (const void *)&FakeAnimObjectUpdate},
+    {0x000294d0, (const void *)&FakeFreeHitList},
+    {0x0002dc10, (const void *)&FakeCreateObject},
+    {0x000c4650, (const void *)&FakeSPCreate},
 };
 
 // ---- the made-up world
@@ -556,6 +677,13 @@ uint32_t Theirs() {
     return result;
 }
 
+// The stack below, as zeros, the same for both sides: an original may copy a local it never set
+__declspec(noinline) void ZeroStack(void) {
+    volatile uint32_t below[0x1000];
+    for (int i = 0; i < 0x1000; i++)
+        below[i] = 0;
+}
+
 uint32_t Ours() {
     return caseRun(false);
 }
@@ -609,9 +737,9 @@ float ArgWeight() {
 }
 
 #define CDECL(at, ours, type, ...) \
-    (original ? (uint32_t)ORIGINAL(at, type)(__VA_ARGS__) : (uint32_t)ours(__VA_ARGS__))
+    (ZeroStack(), original ? (uint32_t)ORIGINAL(at, type)(__VA_ARGS__) : (uint32_t)ours(__VA_ARGS__))
 #define CDECL_VOID(at, ours, type, ...) \
-    do { if (original) ORIGINAL(at, type)(__VA_ARGS__); else ours(__VA_ARGS__); } while (0)
+    do { ZeroStack(); if (original) ORIGINAL(at, type)(__VA_ARGS__); else ours(__VA_ARGS__); } while (0)
 
 // ---- calling register-argument originals
 
@@ -1675,6 +1803,140 @@ const Case kMPMessages[] = {
     {"MP_initObjExt", 0x000a1560, RunInitObjExt},
 };
 
+// ---- MP: the agents and objects coming into being
+
+void RandomPlayer() {
+    obj_tag *obj = &world.player;
+    BLData *blData = &world.blData;
+    memset(obj, 0, sizeof(*obj));
+    memset(blData, 0, sizeof(*blData));
+    memset(&world.playerAnim, 0, sizeof(world.playerAnim));
+    memset(&world.skin, 0, sizeof(world.skin));
+    obj->extraObjectData = blData;
+    obj->animState = &world.playerAnim;
+    world.playerAnim.animObj.skin = &world.skin;
+    world.skin.hashcode = (HASHCODE)(A(3) == 0 ? 0x05000085 : 0x05000080 + A(8));
+    obj->objectType = (char)(A(5) == 0 ? OBJECTTYPE_DEAD_PLAYER : OBJECTTYPE_PLAYER);
+    obj->effectFlags = (int)A(0);
+    obj->hitList = (HITDATA_tag *)world.item;
+    blData->playerNum = (char)A(NUM_PLAYERS);
+    blData->weaponObject = &world.mpObjs[5];
+    blData->hudInfo = (HUDINFO_tag *)world.item;
+    blData->armor = 50.0f;
+    blData->health = 20.0f;
+    blData->movementDisabled = 1;
+    blData->grappleState = 3;
+    blData->pitchFromHorizontal = 0.5f;
+    MPSettings.Player[blData->playerNum].HealthModifier = A(3) == 0 ? (uint)-(int)A(50) : A(100);
+    MPSettings.GrappleEnabled = A(2);
+    static const MultiplayerGameMode modes[] = {GM_ARENA, GM_PROTECTION, GM_DEMOLITION, GM_TOPAGENT, GM_CTF};
+    MPSettings.GameMode = modes[A(COUNT(modes))];
+    MPSettings.weaponSet = (WeaponSet)A(PICKUP_SETS);
+    MPSettings.MaxPoints = A(10);
+}
+
+uint32_t RunEquipPlayer(bool original) {
+    RandomPlayer();
+    CDECL_VOID(0x0009d5b0, MP_EquipPlayer, void (__cdecl *)(obj_tag *), &world.player);
+    return 0;
+}
+
+uint32_t RunPostLoadInit(bool original) {
+    static const MultiplayerGameMode modes[] = {GM_ARENA, GM_CTF, GM_DEMOLITION, GM_PROTECTION, GM_BLUEPRINT,
+                                                GM_GOLDENEYE, GM_KOTH, GM_TEAMKOTH, GM_UPLINK, GM_ASSASSIN};
+    MPSettings.GameMode = modes[A(COUNT(modes))];
+    MPSettings.isMultiplayer = A(8) != 0;
+    GameState.NextLevelHashcode = (HASHCODE)(A(8) == 0 ? HT_Level_Menu_Pre : 0x07000050);
+    for (int i = 0; i < 64; i++) {
+        if (A(10) == 0) {
+            MPpickups[i].gameObj = &world.mpObjs[A(MPOBJS)];
+            MPpickups[i].aiEmitter.path = A(2) ? &world.path : NULL;
+        }
+    }
+    CDECL_VOID(0x0009ed40, MP_PostLoad_Init, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunReSpawn(bool original) {
+    RandomPlayer();
+    MPGame.EndGameFlowState = A(8) == 0;
+    MPSettings.isMultiplayer = A(8) != 0;
+    obj_tag *obj = A(3) == 0 ? &world.objs[A(BOTS)] : &world.player;
+    if (obj != &world.player && A(3) == 0)
+        obj->objectType = OBJECTTYPE_DEAD_DRONE;
+    ushort playerNum = (ushort)A(NUM_AGENTS);
+    MPGame.players[playerNum].deaths = A(12);
+    for (int i = 0; i < 6; i++) {
+        SpawnPoints[i].spawnPos.x = (float)A(100);
+        SpawnPoints[i].spawnPos.z = (float)A(100);
+        SpawnPoints[i].facingDir.y = (float)A(7);
+    }
+    return CDECL(0x0009f0b0, MP_ReSpawn, uint32_t (__cdecl *)(obj_tag *, ushort), obj, playerNum) & 0xff;
+}
+
+void RandomKeys(uint *keys) {
+    keys[MP_KEY_TYPE] = A(6) == 0 ? A(12) : A(10);
+    keys[MP_KEY_NUM] = A(3);
+    keys[MP_KEY_SCRIPT] = A(3) == 0 ? 0 : 0x0b000000 + A(100);
+    keys[MP_KEY_PLAY_MODE] = A(4);
+    keys[MP_KEY_PLAY_ONCE] = A(2);
+    keys[MP_KEY_SCRIPT2] = 0x0b000100 + A(100);
+    keys[6] = A(0);
+}
+
+uint32_t RunCreateObject(bool original) {
+    uint *keys = world.lvl.keys;
+    RandomKeys(keys);
+    for (int i = 0; i < 64; i++)
+        MPObjects[i] = A(3) == 0 ? &world.mpObjs[A(MPOBJS)] : NULL;
+    if (A(8) == 0) {
+        for (int i = 0; i < 64; i++)
+            MPObjects[i] = &world.mpObjs[0];
+    }
+    MPSettings.maybeIsTeamGame = A(2);
+    MPSettings.GameMode = A(4) == 0 ? GM_ASSASSIN : GM_ARENA;
+    _MATRIX *mtx = &world.mtx;
+    for (int k = 0; k < 15; k++)
+        mtx->m[k] = (float)A(200) / 100.0f - 1.0f;
+    celglist_tag *celgl = A(3) == 0 ? NULL : &world.glist;
+    world.glist.applyFlagsToObject = A(0);
+    return CDECL(0x000a1710, MP_CreateObject, uint32_t (__cdecl *)(_MATRIX *, uint *, celglist_tag *), mtx, keys, celgl);
+}
+
+uint32_t RunRegisterMPObject(bool original) {
+    RandomKeys(world.lvl.keys);
+    static const MultiplayerGameMode modes[] = {GM_CTF, GM_UPLINK, GM_DEMOLITION, GM_PROTECTION, GM_BLUEPRINT,
+                                                GM_GOLDENEYE, GM_KOTH, GM_TEAMKOTH, GM_ARENA};
+    MPSettings.GameMode = modes[A(COUNT(modes))];
+    for (int i = 0; i < 64; i++)
+        MPObjects[i] = A(2) ? &world.mpObjs[0] : NULL;
+    ushort counts[] = {(ushort)A(10), (ushort)A(10), (ushort)A(10), (ushort)A(10), (ushort)A(10)};
+    DemolitionPlaceCount = counts[0];
+    ProtectionPlaceCount = counts[1];
+    BluePrintCount = counts[2];
+    GoldenEyeKeyCount = counts[3];
+    GoldenEyeNonKeyCount = counts[4];
+    UplinkCount = (ushort)A(10);
+    _VECTOR *pos = &world.v[0], *rot = &world.v[1];
+    pos->x = (float)A(100);
+    pos->y = (float)A(10);
+    pos->z = (float)A(100) - 50.0f;
+    rot->x = (float)A(10) / 10.0f;
+    rot->y = (float)A(63) / 10.0f;
+    rot->z = 0.0f;
+    celglist_tag *celgl = A(3) == 0 ? NULL : &world.glist;
+    return CDECL(0x000a2df0, MP_RegisterMPObject,
+                 uint32_t (__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *), pos, rot, &world.lvl, celgl);
+}
+
+const Case kMPMatch[] = {
+    {"MP_EquipPlayer", 0x0009d5b0, RunEquipPlayer},
+    {"MP_PostLoad_Init", 0x0009ed40, RunPostLoadInit},
+    {"MP_ReSpawn", 0x0009f0b0, RunReSpawn},
+    {"MP_CreateObject", 0x000a1710, RunCreateObject},
+    {"MP_RegisterMPObject", 0x000a2df0, RunRegisterMPObject},
+};
+
 const Case *currentCase;
 uint32_t caseSeed;
 
@@ -1751,6 +2013,7 @@ void BotPortShadow_Run(void) {
     Group("the bots' alerts, pain, aim and respawn", kBots, COUNT(kBots), 3000);
     Group("the multiplayer scenario objects", kMPObjects, COUNT(kMPObjects), 3000);
     Group("the multiplayer messages, status and pickups", kMPMessages, COUNT(kMPMessages), 3000);
+    Group("the multiplayer agents and objects coming into being", kMPMatch, COUNT(kMPMatch), 3000);
 
     ShadowHook_RemoveAll();
     MPSettings = shippedSettings;

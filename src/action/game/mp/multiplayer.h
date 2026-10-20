@@ -231,10 +231,20 @@ typedef struct {
 
 static_assert(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
 
+// A scenario object's placement keys (level_tag.keys), as MP_CreateObject reads them
+enum {
+    MP_KEY_TYPE = 0,            // MPOBJECTTYPE
+    MP_KEY_NUM = 1,             // its team or number
+    MP_KEY_SCRIPT = 2,          // its script player's scripts (SP_Create), none if 0
+    MP_KEY_PLAY_MODE = 3,
+    MP_KEY_PLAY_ONCE = 4,
+    MP_KEY_SCRIPT2 = 5,
+    MP_PLACE_KEYS = 7,          // the keys SpawnPlace keeps
+};
+
 typedef struct {
   _MATRIX mtx;
-  uint maybePlacementData;
-  char unknown[24];
+  uint keys[MP_PLACE_KEYS];     // 0x3c - the placement's (MP_RegisterMPObject)
   celglist_tag *celgl;
 } SpawnPlace;
 
@@ -362,7 +372,9 @@ void MP_Pickup_Process(void);
 void MP_CheckForEndCondition(void);
 void MP_RestartScenario(void);
 void MP_Init(void);
-obj_tag* MP_CreateObject(_MATRIX *mtx, unsigned short* data, celglist_tag *celgl);
+obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl);
+void MP_EquipPlayer(obj_tag *player);
+void MP_PostLoad_Init(void);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
 // The original takes obj in EAX and team in CX: MP_HitBy is the entry for that, _MP_HitBy the C++ under it
 obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);

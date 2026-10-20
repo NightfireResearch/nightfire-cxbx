@@ -741,8 +741,9 @@ bool __cdecl FakeBotLoaded(Drone_tag *drone, short weapon) {
     return R(3) != 0;
 }
 
-void __cdecl FakeBotChoice(Drone_tag *drone, short weapon, int ammo, int p4) {
-    ShadowLog("botchoice(%x,%d,%d,%d)", W(drone), weapon, ammo, p4);
+// BOTSTATE_pickupWeaponChangeChoice reads its last two arguments as bytes
+void __cdecl FakeBotChoice(Drone_tag *drone, short weapon, int checkHeld, int checkLoaded) {
+    ShadowLog("botchoice(%x,%d,%d,%d)", W(drone), weapon, checkHeld & 0xff, checkLoaded & 0xff);
 }
 
 void __cdecl FakeBotVisit(Drone_tag *drone, void *pickup) {
