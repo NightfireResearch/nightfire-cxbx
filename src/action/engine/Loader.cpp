@@ -44,8 +44,14 @@ static char DirFileName[0x40];
 static uint DirFileHashValue;
 #define DirFileHash ((HASHCODE)DirFileHashValue)
 
-// Still the game's: IsLevelLoaded, LoadableLoad, LoadableReload and ResetMap_Load (none of them ours) use it.
+// LoadableLoad, LoadableReload and ResetMap_Load (the game's still) use it too.
 #define bLevelLoaded (*(uchar*)0x00279251)
+
+// The flag's byte as it is
+// AUTOINJECT
+uchar IsLevelLoaded(void) {
+    return bLevelLoaded;
+}
 
 // The header at the start of an archive: 0x20 bytes (the size the loader reads), of which it uses two fields.
 #pragma pack(push, 1)

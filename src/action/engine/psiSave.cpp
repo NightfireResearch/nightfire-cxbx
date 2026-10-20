@@ -120,11 +120,15 @@ static uint8_t SaveGamesCached;
 // XBE_GLOBAL(0x002adf1c, 0x4)
 static int32_t SaveGamesReturned;
 
-// Still the game's: FUN_000dfd80 (reached from FUN_000dfec0, the delete path) removes entries from the cache and
-// decrements the count.
+// SaveGame_Delete takes a deleted save out of it
 #define NumberSaveGamesGot (*(int32_t*)0x002adf14)                       // PS2's name for the count
 #define SAVE_NAME_SLOT 9                                                 // 8 characters + NUL
 #define SaveGameCache ((char(*)[SAVE_NAME_SLOT])0x002a2e68)                // no fixed length in the original
+
+// The entries psiGetNextSave has handed out in this enumeration, skipped ones included
+#define SavesListed U32_AT(0x002adf0c)
+// A save the walk could not read was found: the message box's B then leaves for the dashboard (ui_codenames.cpp)
+#define SaveFlowDashboard U8_AT(0x0025edba)
 
 // How many entries Menu_EnumSaves takes from psiGetNextSave per frame: 2 while the drive is being walked, then
 // 0x200 once the cache is complete. Menu_EnumSaves (original) reads it.
@@ -154,8 +158,8 @@ static char g_saveEnumNameBuf[16]; // matches the original's 9-byte (8 char + NU
 
 // AUTOINJECT
 void psiStartSaveEnum(void) {
-    U32_AT(0x002adf0c) = 0;
-    U8_AT(0x0025edba) = 0;
+    SavesListed = 0;
+    SaveFlowDashboard = 0;
     psiInternalLoadingDataState = 10;
     SaveGamesReturned = 0;
 
@@ -254,6 +258,20 @@ char* psiGetNextSaveName(void) {
     return name;
 }
 
+// The next save of the enumeration, counted; a skipped one also marks the damaged-save message's way out
+// AUTOINJECT
+char* psiGetNextSave(void) {
+    char *name = psiGetNextSaveName();
+    if (name == SAVE_ENUM_SKIP) {
+        SavesListed++;
+        SaveFlowDashboard = 1;
+        return name;
+    }
+    if (name != NULL)
+        SavesListed++;
+    return name;
+}
+
 // Ends an enumeration pass. The drive handle is closed here only if the walk did not reach its end - when it did,
 // psiGetNextSaveName has closed it already.
 // AUTOINJECT
@@ -280,6 +298,60 @@ int SaveDrive_Delete(const char *profileName) {
     char path[256];
     BuildSavePath(path, sizeof(path), profileName);
     return remove(path) == 0 ? SAVE_DELETED : SAVE_DELETE_FAILED;
+}
+
+// A codename's save deleted, and once it is, taken out of the cache (matched without case). The name is ours.
+int _SaveGame_Delete(const char *profileName) {
+    int result = SaveDrive_Delete(profileName);
+    if (result != SAVE_DELETED)
+        return result;
+    for (int i = 0; i < NumberSaveGamesGot; i++) {
+        if (_stricmp(profileName, SaveGameCache[i]) != 0)
+            continue;
+        int last = NumberSaveGamesGot - 1;
+        if (i < last)
+            memmove(SaveGameCache[i], SaveGameCache[i + 1], (last - i) * SAVE_NAME_SLOT);
+        NumberSaveGamesGot = last;
+        if (last < 0)
+            NumberSaveGamesGot = 0;
+        return result;
+    }
+    return result;
+}
+
+// EAX the codename
+// AUTOLTCG
+int __declspec(naked) SaveGame_Delete(void) {
+    _asm {
+        push eax
+        call _SaveGame_Delete
+        add esp, 4
+        ret
+    }
+}
+
+// The menus' poll of the last load, save and delete: 2 done, 4 not (PS2 names)
+// AUTOINJECT
+int psiLoadingData(void) {
+    return psiInternalLoadingDataState == 1 ? 2 : 4;
+}
+
+// AUTOINJECT
+int psiSavingData(void) {
+    return psiInternalLoadingDataState == 4 ? 2 : 4;
+}
+
+// Deleting is never waited for
+// AUTOINJECT
+int psiDeletingData(void) {
+    return 4;
+}
+
+// Deletes a codename's save, its result left for the polls; true if it was deleted. The name is ours.
+// AUTOINJECT
+bool psiDeleteSave(const char *profileName) {
+    psiInternalLoadingDataState = _SaveGame_Delete(profileName);
+    return psiInternalLoadingDataState == SAVE_DELETED;
 }
 
 // Free blocks on the save drive, 50000 at most (0x000e37c0)

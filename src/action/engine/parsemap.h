@@ -105,6 +105,7 @@ struct level_tag {
 static_assert(sizeof(level_tag) == 0xb0, "level_tag is 0xb0 bytes");
 
 bool parsemap_parsemap(uint hashcode, bool param_2);
+void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys);
 bool parsemap_parsenextblock(char mainMap);
 bool parsemap_handle_block_id(char mainMap);
 void parsemap_block_map_header(void);

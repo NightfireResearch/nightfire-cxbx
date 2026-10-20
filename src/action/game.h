@@ -9,6 +9,8 @@ bool movieFinished(void);
 bool Graphics_IsPalI(void);
 bool IsNotPalI(void);
 bool Graphics_IsSomeGraphicsRegion(void);
+int GetTvType(void);
+HASHCODE maybeGetNextMissionInSequence(HASHCODE movie);
 bool Graphics_IsWidescreen(void);
 bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);

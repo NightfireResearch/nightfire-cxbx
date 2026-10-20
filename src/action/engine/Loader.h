@@ -2,6 +2,7 @@
 #define LOADER_H
 
 bool LoaderProcess(void);
+uchar IsLevelLoaded(void);
 bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant);
 void parsemap_block_entity_params(void);
 uint isLoadable(HASHCODE hashcode);

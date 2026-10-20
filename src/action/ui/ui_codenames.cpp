@@ -140,12 +140,9 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define saveflow_relist        U8_AT(0x0025edb9)   // a codenames page lists the codenames as it enters or resumes
 
 #define XBox_DoSaveFlow ((void (__cdecl *)(M_MANAGER *, uint, MENU_LS *))0x0008f3f0)
-#define psiDeletingData ((uint (__cdecl *)(void))0x000dfc50)
-#define psiGetNextSave ((char *(__cdecl *)(void))0x000dfe60)
 #define WriteStateFileAndLaunch ((void (__cdecl *)(int, void *, int))0x000e9350)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
-#define psiDeleteSave ((bool (__cdecl *)(const char *))0x000dfec0)   // deletes a codename's save; true if it did (name ours)
 #define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0) // false, with a box, without room for a new codename (name ours)
 #define Menu_GoToDashboard ((void (__cdecl *)(void))0x0008fd90)    // to free the space Menu_CheckSaveSpace asked for (name ours)
 

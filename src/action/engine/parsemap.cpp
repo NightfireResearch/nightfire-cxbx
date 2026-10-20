@@ -28,7 +28,6 @@
 
 #include <string.h>
 
-#define parseentityfixup_entity ((void (__cdecl *)(cel_tag *cel, uint *flags, level_tag *keys))0x000a4790)
 
 #define pCurrCelList (*(celglist_tag**)(0x00274c80))
 #define FileNextBlock (*(uint**)(0x00274c70))
@@ -63,6 +62,21 @@ static uint32_t ParseMap_State;
 static char filename[0x100];
 #define FileLastBlock U32_AT(0x00274c74)
 #define FileDiscard U32_AT(0x00274c78)
+#define FileBase (*(uchar **)0x00274c6c)
+#define BinFileVersion U32_AT(0x00274c64)
+#define pBinFileHeader (*(uint **)0x00274c5c)
+
+// A map file loaded whole for parsing: its first word, then its blocks
+// AUTOINJECT
+void psiFileLoadForParse(char *name) {
+    int size;
+    uint *file = (uint *)psiFileLoad(name, 0x1704, &size);
+    FileNextBlock = file;
+    FileBase = (uchar *)file;
+    FileLastBlock = (uint)(uintptr_t)file + size;
+    BinFileVersion = *FileNextBlock++;
+    pBinFileHeader = FileNextBlock;
+}
 
 // AUTOINJECT
 bool parsemap_parsemap(uint hashcode, bool secondPass) {
@@ -750,9 +764,6 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
 // ---- Reading a map file's blocks. Each starts with a word: its identifier in the top byte, its size (the word
 // ---- included) in the rest. A version 1 file has a table of the blocks' offsets after its first word.
 
-#define FileBase (*(uchar **)0x00274c6c)
-#define BinFileVersion U32_AT(0x00274c64)
-#define pBinFileHeader (*(uint **)0x00274c5c)
 #define pFileDiscardHeader (*(uint **)0x00274c94)
 #define prev_block (*(uint **)0x00274c9c)
 #define pBMH (*(MAPHEADER_tag **)0x00274c84)
@@ -954,6 +965,110 @@ void parsemap_block_portal_data(void) {
         other->portals = b;
         a->partner = b;
         b->partner = a;
+    }
+}
+
+// A placement cel whose place and turn are both zero has its geometry in world space
+static bool parseentity_AtOrigin(cel_tag *cel) {
+    return Vec_IsEqual(&cel->position, &CONST_ZERO_VECTOR, 0.0f) && Vec_IsEqual(&cel->rotation, &CONST_ZERO_VECTOR, 0.0f);
+}
+
+// A room's kind: in world space, and without the sky when key 3 says so. Its keys 0 to 2 are its ambient light (a
+// grey of 60 when all are zero), key 4 its music event.
+static void parseentity_RoomKeys(cel_tag *cel, level_tag *keys, uint kind) {
+    cel->bitsFromPlacementTag = CEL_WORLD_SPACE | CEL_ROOM | kind;
+    if (keys->keys[3] != 0)
+        cel->bitsFromPlacementTag = CEL_NO_SKY | CEL_WORLD_SPACE | CEL_ROOM | kind;
+}
+
+// A cel's kind, from its placement's, and what goes with it: the model's flags out through flags
+// AUTOINJECT
+void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
+    *flags = cel->glist->applyFlagsToObject;
+    switch (cel->bitsFromPlacementTag & 0xffff) {
+        case Place_Drone:
+            cel->bitsFromPlacementTag = Place_Drone;
+            return;
+        case Place_Breakable:
+            cel->bitsFromPlacementTag = Place_Breakable;
+            return;
+        case Place_Light:
+            cel->bitsFromPlacementTag = Place_Light;
+            return;
+        case 0x00dd:
+            cel->bitsFromPlacementTag = 0x00dd;
+            return;
+        case Place_GunImp:
+        case Place_RigidBody:
+        case Place_ScriptPlayer:
+        case Place_Car:
+        case Place_Env:
+        case Place_Creature:
+        case Place_Destroy:
+        case Place_SS:
+        case Place_Flicker:
+        case Place_Hurt:
+        case Place_Emitter:
+        case Place_EnvTree:
+            cel->bitsFromPlacementTag = 0x8019;
+            return;
+        case 0x8017:
+            cel->bitsFromPlacementTag = 0x8017;
+            if (parseentity_AtOrigin(cel))
+                cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
+            return;
+        case 0x8018:
+            cel->bitsFromPlacementTag = 0x8018;
+            if (parseentity_AtOrigin(cel))
+                cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
+            return;
+        case 0x8019:
+            // Its alpha: the speed in key 1, the mode in key 0
+            cel->bitsFromPlacementTag = 0x8019;
+            if (parseentity_AtOrigin(cel))
+                cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
+            cel->blink = (uchar)((uchar)keys->keys[1] << 4 | (uchar)keys->keys[0]);
+            return;
+        case 0x803d:
+            cel->bitsFromPlacementTag = 0x28019;
+            return;
+        case 0xc023:
+            parseentity_RoomKeys(cel, keys, 0xc023);
+            cel->shearHeight = cel->someMax.y;
+            cel->position.x = 0.0f;
+            cel->position.y = 0.0f;
+            cel->position.z = 0.0f;
+            cel->musicEvent = (uchar)keys->keys[4];
+            cel->soundEnvironment = (short)0x9898;
+            cel->ambientR[0] = (uchar)keys->keys[0];
+            cel->ambientG[0] = (uchar)keys->keys[1];
+            cel->ambientB[0] = (uchar)keys->keys[2];
+            break;
+        case 0xc047:
+            // Two ambient lights, chosen by a switch channel (key 5): the second in keys 6 to 8; its sound
+            // environment in key 9
+            parseentity_RoomKeys(cel, keys, 0xc047);
+            cel->position.z = 0.0f;
+            cel->position.y = 0.0f;
+            cel->position.x = 0.0f;
+            cel->musicEvent = (uchar)keys->keys[4];
+            cel->someSwitchChannel = (uchar)keys->keys[5];
+            cel->ambientR[0] = (uchar)keys->keys[0];
+            cel->ambientG[0] = (uchar)keys->keys[1];
+            cel->ambientB[0] = (uchar)keys->keys[2];
+            cel->ambientR[1] = (uchar)keys->keys[6];
+            cel->ambientG[1] = (uchar)keys->keys[7];
+            cel->ambientB[1] = (uchar)keys->keys[8];
+            cel->shearHeight = -500.0f;
+            cel->soundEnvironment = (short)keys->keys[9];
+            break;
+        default:
+            return;
+    }
+    if (cel->ambientR[0] == 0 && cel->ambientG[0] == 0 && cel->ambientB[0] == 0) {
+        cel->ambientB[0] = 60;
+        cel->ambientG[0] = 60;
+        cel->ambientR[0] = 60;
     }
 }
 

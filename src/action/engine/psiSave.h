@@ -29,7 +29,15 @@ char* SaveEnum_GetNextEntry(void);
 
 // The body of psiGetNextSave (Ghidra: FUN_000dfce0): the next save name, (char*)-1 to skip one, NULL at the end.
 char* psiGetNextSaveName(void);
+char* psiGetNextSave(void);
 void psiEndSaveEnum(void);
+
+int psiLoadingData(void);       // 2 when the save was read, else 4
+int psiSavingData(void);        // 2 when the save was written, else 4
+int psiDeletingData(void);      // always 4
+bool psiDeleteSave(const char *profileName);     // true if the codename's save was deleted
+int _SaveGame_Delete(const char *profileName);   // 8 deleted (and out of the cache), 9 not
+int SaveGame_Delete(void);                       // the original's entry (AUTOLTCG): EAX the codename
 
 void SaveDrive_Open(void);
 void SaveDrive_Close(void);

@@ -685,12 +685,43 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 #define Sound_SetLogSfxFile ((void (__cdecl *)(void))0x000e0ec0)
 #define build_MakeCelOverlapBox ((void (__cdecl *)(world_tag *world))0x000e0ec0)
 
-#define maybeGetNextMissionInSequence ((HASHCODE (__cdecl *)(HASHCODE movie))0x000bdcd0)
+// The movie that follows a movie (0x072000xx to 0x071000xx), or the front end after one of the 0x073000xx ones;
+// otherwise the next level, its variant byte cleared
+// AUTOINJECT
+HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
+    switch ((uint)movie) {
+        case 0x07200001: return (HASHCODE)0x07100002;
+        case 0x07200002: return (HASHCODE)0x07100003;
+        case 0x07200003: return (HASHCODE)0x07100004;
+        case 0x07200005: return (HASHCODE)0x07100006;
+        case 0x07200006: return (HASHCODE)0x07100007;
+        case 0x07200007: return (HASHCODE)0x07100008;
+        case 0x07200009: return (HASHCODE)0x0710000a;
+        case 0x0720000a: return (HASHCODE)0x0710000b;
+        case 0x0720000c: return (HASHCODE)0x0710000d;
+        case 0x0720000e: return (HASHCODE)0x0710000f;
+        case 0x07200011: return (HASHCODE)0x07100012;
+        case 0x07200012: return (HASHCODE)0x0710004a;
+        case 0x07200014: return (HASHCODE)0x07100015;
+        case 0x07200015: return (HASHCODE)0x07100016;
+        case 0x0720004a: return (HASHCODE)0x07100013;
+        case 0x07300004:
+        case 0x07300008:
+        case 0x0730000b:
+        case 0x0730000d:
+        case 0x0730000f:
+        case 0x07300010:
+        case 0x07300013:
+        case 0x07300017:
+        case 0x0730001b:
+            return HT_Level_Menu_Pre;
+    }
+    return (HASHCODE)((uint)GameState.NextLevelHashcode & 0xff00ffff);
+}
 #define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 #define MP_Start ((void (__cdecl *)(void))0x000a25f0)
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
-#define LoadScreen_Draw ((void (__cdecl *)(void))0x000bf9f0)
 
 // The step ResetMap_Load is at (RESETMAP_)
 #define ResetMap_State U32_AT(0x00279284)
@@ -1379,6 +1410,14 @@ bool IsNotPalI(void) {
 // AUTOINJECT
 bool Graphics_IsSomeGraphicsRegion(void) {
   return Gfx.isNtscM;
+}
+
+// The television's standard for the driving engine: 0 NTSC-M, 1 not PAL-I, 2 PAL-I
+// AUTOINJECT
+int GetTvType(void) {
+  if (Graphics_IsSomeGraphicsRegion())
+    return 0;
+  return IsNotPalI() ? 1 : 2;
 }
 
 // AUTOINJECT

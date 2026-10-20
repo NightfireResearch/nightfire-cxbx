@@ -1022,6 +1022,19 @@ static void UseCamera(short *current, short num) {
 // The frame: every view's scene gathered, then the players' views (0-3) drawn pass by pass - near sky, opaque lists,
 // far sky, sorted lists with the shards and drops, the last lists (on a cleared depth when view 5 has any), sprites
 // and fades - then the other views (4-9) one at a time, with view 4 drawing the shards and drops.
+// A frame of the loading screen: its sprites alone, through the last viewer
+// AUTOINJECT
+void LoadScreen_Draw(void) {
+    undefined4 start = 0;
+    uint lastForeground = 0, count = 0;
+    GameState.maybeLoadingBlobs++;
+    psiPreDraw();
+    psiUseCamera(glb_viewer[10]);
+    sprite **list = Sprite_BuildList(99, &start, &lastForeground, &count);
+    View_DrawSprites(glb_viewer[10], list, start, count);
+    psiPostDraw();
+}
+
 // AUTOINJECT
 void __stdcall Game_Draw(void) {
     short current = -1;

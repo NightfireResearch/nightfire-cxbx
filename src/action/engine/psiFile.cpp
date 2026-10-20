@@ -20,9 +20,6 @@ struct PsiOpenFile {
 // XBE_GLOBAL(0x002adf74, 0xc)
 static PsiOpenFile CurrentFile;
 
-// AUTOGEN
-void psiFileLoadForParse(char *param_1);
-
 // AUTOINJECT
 int psiFileOpen(char* param_1)
 {

@@ -46552,13 +46552,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000dfc30",
+        "name": "psiSavingData",
         "address": "0x000dfc30",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "char",
         "param_types": [],
-        "prototype_string": "char __stdcall FUN_000dfc30(void)",
+        "prototype_string": "char __stdcall psiSavingData(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -46600,13 +46600,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000dfd80",
+        "name": "SaveGame_Delete",
         "address": "0x000dfd80",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000dfd80()",
+        "prototype_string": "undefined SaveGame_Delete()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -46668,7 +46668,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000dfec0",
+        "name": "psiDeleteSave",
         "address": "0x000dfec0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -46676,7 +46676,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000dfec0(undefined4 param_1)",
+        "prototype_string": "undefined psiDeleteSave(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],

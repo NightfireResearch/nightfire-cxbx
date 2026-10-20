@@ -22,6 +22,10 @@
 #include "../engine/celglist.h"
 #include "../engine/parsemap.h"
 #include "../engine/psiGraphics.h"
+#include "../engine/psiFile.h"
+#include "../engine/psiSave.h"
+#include "../engine/Woman.h"
+#include "../engine/Direct3D/GraphicsSystem.h"
 #include "../engine/viewer.h"
 #include "../game/Spline.h"
 #include "../game/view.h"
@@ -139,6 +143,14 @@ struct World {
     // the fakes' state
     uint32_t loaderCalls;
     uint32_t createUsed;
+    uint32_t textureCalls;
+    // the loader's leaves: the pause film, its textures and a codename
+    uint32_t womanFire[0x4100];
+    uint32_t womanOut[0x4000];
+    uint8_t womanFile[0x6000];
+    uint8_t texRecords[4][sizeof(TextureInfo) + 0x40];
+    uint32_t texItems[4];
+    char codename[16];
 };
 World world;
 
@@ -503,13 +515,6 @@ void __cdecl FakeCreateDynamic(void *placement, level_tag *keys, uint type, celg
     ShadowLog("dynamic(%x,%x,%x,%x,%x,%d)", W(placement), type, W(glist), W(a), W(b), creation);
     for (int i = 0; i < 0xb0; i += 4)
         ShadowLog("%x,", *(uint32_t *)((uint8_t *)keys + i));
-}
-
-void __cdecl FakeFixup(cel_tag *cel, uint *flags, level_tag *keys) {
-    ShadowLog("fixup(%x,%x)", W(cel), *flags);
-    for (int i = 0x2c; i < 0x48; i += 4)
-        ShadowLog("%x,", *(uint32_t *)((uint8_t *)keys + i));
-    cel->bitsFromPlacementTag ^= R(0x10000);
 }
 
 void __cdecl FakeDrops(uchar type) {
@@ -1347,7 +1352,6 @@ void InstallMapFakes(void) {
     Hook(0x0006b420, (const void *)&FakeAddItem);
     Hook(0x000be600, (const void *)&FakeIsLoadable);
     Hook(0x000a4bc0, (const void *)&FakeCreateDynamic);
-    Hook(0x000a4790, (const void *)&FakeFixup);
 }
 
 // The block in the file buffer, its header word, CurrentBH as parsemap_parsenextblock leaves it
@@ -2152,6 +2156,256 @@ const Case kLoad[] = {
     C("ResetMap_Load", RunResetMapLoad),
 };
 
+// ---- the loader's leaves (parsemap.cpp, psiSave.cpp, Woman.cpp, view.cpp, game.cpp, Loader.cpp)
+
+#define SaveCacheNames ((char(*)[9])0x002a2e68)
+#define SaveCacheCount (*(int32_t *)0x002adf14)
+#define SaveState U32_AT(0x002adf10)
+#define WomanMemory (*(uint8_t **)0x002ae2dc)
+#define WomanAt (*(uint8_t **)0x002ae2e0)
+#define WomanFrameNo U32_AT(0x002ae2e4)
+#define WomanFire U32_AT(0x002ae4f0)
+
+void *__cdecl FakeFileLoad(char *name, MallocFlags flags, int *size) {
+    ShadowLog("fileload(%s,%x)", name, flags);
+    *size = (int)R(FILE_SIZE);
+    return world.file;
+}
+
+int __cdecl FakeDriveDelete(const char *name) {
+    ShadowLog("drivedelete(%s)", name);
+    return R(3) ? 8 : 9;
+}
+
+char *__cdecl FakeNextName(void) {
+    ShadowLog("nextname");
+    switch (R(3)) {
+    case 0: return NULL;
+    case 1: return (char *)-1;
+    }
+    return world.codename;
+}
+
+void __cdecl FakeLoaderVoid(void) {
+    ShadowLog("drawstep");
+}
+
+void __cdecl FakeCamera(viewer_tag *viewer, int unused) {
+    ShadowLog("camera(%x)", W(viewer));
+}
+
+sprite **__cdecl FakeBuildList(ushort viewer, undefined4 *start, uint *last, uint *count) {
+    ShadowLog("buildlist(%d)", viewer);
+    *start = R(50);
+    *last = R(50);
+    *count = R(50);
+    return (sprite **)world.heap;
+}
+
+void __cdecl FakeDrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) {
+    ShadowLog("drawsprites(%x,%x,%u,%u)", W(viewer), W(list), first, last);
+}
+
+void *__cdecl FakeTexItem(HASHCODE hash) {
+    ShadowLog("item(%x)", hash);
+    return R(8) == 0 ? NULL : &world.texItems[R(4)];
+}
+
+void *__cdecl FakeRawData(int slot) {
+    ShadowLog("rawdata(%d)", slot);
+    if (R(10) == 0)
+        return NULL;
+    return world.textureCalls++ == 0 ? (void *)world.womanFire : (void *)world.womanOut;
+}
+
+void InstallLeafFakes(void) {
+    Hook(0x000dca30, (const void *)&FakeFileLoad);
+    Hook(0x000e3790, (const void *)&FakeDriveDelete);
+    Hook(0x000dfce0, (const void *)&FakeNextName);
+    Hook(0x000dd150, (const void *)&FakeLoaderVoid);
+    Hook(0x000dd8e0, (const void *)&FakeLoaderVoid);
+    Hook(0x000dd950, (const void *)&FakeCamera);
+    Hook(0x000ced20, (const void *)&FakeBuildList);
+    Hook(0x000d9410, (const void *)&FakeDrawSprites);
+    Hook(0x0006b500, (const void *)&FakeTexItem);
+    Hook(0x000e4660, (const void *)&FakeRawData);
+}
+
+uint32_t RunFixup(bool original) {
+    static const uint kinds[] = {0x000f, 0x0020, 0x0034, 0x004e, 0x00d7, 0x00d8, 0x00d9, 0x00da, 0x00db, 0x00dc,
+                                 0x00dd, 0x00de, 0x00df, 0x00e0, 0x00e1, 0x00e2, 0x00e3, 0x00e4, 0x00e5, 0x00f2,
+                                 0x00f3, 0x8017, 0x8018, 0x8019, 0x803d, 0xc023, 0xc047, 0x8000, 0xc024, 0x0010};
+    cel_tag *cel = AnyCel();
+    cel->glist = &world.glists[R(GLISTS)];
+    cel->bitsFromPlacementTag = kinds[R(COUNT(kinds))] | (R(3) == 0 ? R(0) & 0xffff0000u : 0);
+    if (R(2)) {
+        memset(&cel->position, 0, sizeof(cel->position));
+        if (R(3))
+            memset(&cel->rotation, 0, sizeof(cel->rotation));
+    }
+    for (int i = 0; i < 12; i++)
+        world.keys.keys[i] = R(3) == 0 ? 0 : (R(4) == 0 ? R(0) : R(256));
+    CDECL_VOID(0x000a4790, parseentityfixup_entity, void (__cdecl *)(cel_tag *, uint *, level_tag *), cel,
+               &world.fileTable[0], &world.keys);
+    return 0;
+}
+
+uint32_t RunNextMovie(bool original) {
+    uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? 0x07100000 : R(2) ? 0x07200000 : 0x07300000) + R(0x50);
+    return (uint32_t)CDECL_RUN(0x000bdcd0, maybeGetNextMissionInSequence, HASHCODE (__cdecl *)(HASHCODE), (HASHCODE)movie);
+}
+
+uint32_t RunLoadForParse(bool original) {
+    uint32_t *file = (uint32_t *)world.file;
+    file[0] = R(3);
+    strcpy(world.text, "07000005.bin");
+    CDECL_VOID(0x000a5e60, psiFileLoadForParse, void (__cdecl *)(char *), world.text);
+    return 0;
+}
+
+uint32_t RunLevelLoaded(bool original) {
+    U8_AT(0x00279251) = (uint8_t)(R(2) ? R(256) : R(2));
+    return (uint32_t)CDECL_RUN(0x000bff80, IsLevelLoaded, uchar (__cdecl *)(void));
+}
+
+uint32_t RunTvType(bool original) {
+    uint8_t ntsc = Gfx.isNtscM, notPal = Gfx.isNotPalI;
+    Gfx.isNtscM = (uint8_t)R(2);
+    Gfx.isNotPalI = (uint8_t)R(2);
+    uint32_t type = (uint32_t)CDECL_RUN(0x000dff50, GetTvType, int (__cdecl *)(void));
+    Gfx.isNtscM = ntsc;
+    Gfx.isNotPalI = notPal;
+    return type;
+}
+
+uint32_t RunSavePolls(bool original) {
+    SaveState = R(13);
+    uint32_t loading = (uint32_t)CDECL_RUN(0x000dfc10, psiLoadingData, int (__cdecl *)(void));
+    uint32_t saving = (uint32_t)CDECL_RUN(0x000dfc30, psiSavingData, int (__cdecl *)(void));
+    uint32_t deleting = (uint32_t)CDECL_RUN(0x000dfc50, psiDeletingData, int (__cdecl *)(void));
+    return loading | saving << 8 | deleting << 16;
+}
+
+uint32_t RunNextSave(bool original) {
+    strcpy(world.codename, "BOND");
+    char *name = CDECL_RUN(0x000dfe60, psiGetNextSave, char *(__cdecl *)(void));
+    return name == (char *)-1 ? 0xfffffffeu : W(name);
+}
+
+uint32_t RunDeleteSave(bool original) {
+    static const char *names[] = {"BOND", "Bond", "M", "QBRANCH", "ALURA", "Q", "DOMINIQ"};
+    SaveCacheCount = (int32_t)R(7) - (R(10) == 0 ? 1 : 0);
+    for (int i = 0; i < 8; i++) {
+        memset(SaveCacheNames[i], 0, 9);
+        strcpy(SaveCacheNames[i], names[R(COUNT(names))]);
+    }
+    strcpy(world.codename, names[R(COUNT(names))]);
+    SaveState = R(13);
+    return (uint32_t)CDECL_RUN(0x000dfec0, psiDeleteSave, bool (__cdecl *)(const char *), world.codename) & 0xff;
+}
+
+// A function taking its one argument in EAX
+__declspec(noinline) uint32_t CallEax(unsigned at, uint32_t value) {
+    uint32_t result;
+    _asm {
+        mov eax, value
+        call at
+        mov result, eax
+    }
+    return result;
+}
+
+uint32_t RunSaveGameDelete(bool original) {
+    static const char *names[] = {"BOND", "Bond", "M", "QBRANCH", "ALURA", "Q", "DOMINIQ"};
+    SaveCacheCount = (int32_t)R(7) - (R(10) == 0 ? 1 : 0);
+    for (int i = 0; i < 8; i++) {
+        memset(SaveCacheNames[i], 0, 9);
+        strcpy(SaveCacheNames[i], names[R(COUNT(names))]);
+    }
+    strcpy(world.codename, names[R(COUNT(names))]);
+    if (original) {
+        XbeOriginalScope o(0x000dfd80);
+        ZeroStack();
+        return CallEax(0x000dfd80, (uint32_t)(uintptr_t)world.codename);
+    }
+    return CallEax((unsigned)(uintptr_t)&SaveGame_Delete, (uint32_t)(uintptr_t)world.codename);
+}
+
+uint32_t RunLoadScreen(bool original) {
+    glb_viewer[10] = R(4) == 0 ? NULL : &world.viewer;
+    CDECL_VOID(0x000bf9f0, LoadScreen_Draw, void (__cdecl *)(void));
+    return 0;
+}
+
+// A frame of the pause film: its runs exactly fill the 0x4000 pixels
+void WomanFrameData(void) {
+    uint8_t *at = world.womanFile;
+    uint left = 0x4000;
+    bool clear = true;
+    while (left != 0) {
+        uint count;
+        if (clear) {
+            count = R(3) == 0 ? 0 : R(400);
+            if (count > left)
+                count = left;
+            left -= count;
+        } else {
+            count = R(5);
+        }
+        *at++ = (uint8_t)(count >> 8);
+        *at++ = (uint8_t)count;
+        if (!clear) {
+            for (uint i = 0; i < count; i++) {
+                uint length = R(256);
+                if (length > left)
+                    length = left;
+                left -= length;
+                *at++ = (uint8_t)length;
+            }
+        }
+        clear = !clear;
+    }
+}
+
+uint32_t RunWoman(bool original) {
+    world.textureCalls = 0;
+    for (int i = 0; i < 0x4100; i++)
+        world.womanFire[i] = R(0);
+    for (int i = 0; i < 4; i++) {
+        TextureInfo *info = (TextureInfo *)world.texRecords[i];
+        memset(world.texRecords[i], 0, sizeof(world.texRecords[i]));
+        info->numFrames = 1 + (int)R(8);
+        info->animSpeed = 1 + (int)R(6);
+        int *slots = &info->baseIdx;
+        for (int j = 0; j < 8; j++)
+            slots[j] = (int)R(100);
+        Tex[i] = info;
+        world.texItems[i] = R(4);
+    }
+    WomanFrameData();
+    WomanMemory = R(10) == 0 ? NULL : world.womanFile;
+    WomanAt = world.womanFile;
+    WomanFrameNo = R(3) ? R(348) : 345 + R(250);
+    WomanFire = R(0);
+    GameState.NumFramesUnpaused = R(0);
+    CDECL_VOID(0x000e0020, psiDecompressWoman, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kLeaves[] = {
+    C("parseentityfixup_entity", RunFixup),
+    C("maybeGetNextMissionInSequence", RunNextMovie),
+    C("psiFileLoadForParse", RunLoadForParse),
+    C("IsLevelLoaded", RunLevelLoaded),
+    C("GetTvType", RunTvType),
+    C("psiLoadingData, psiSavingData, psiDeletingData", RunSavePolls),
+    C("psiGetNextSave", RunNextSave),
+    C("psiDeleteSave", RunDeleteSave),
+    C("SaveGame_Delete", RunSaveGameDelete),
+    C("LoadScreen_Draw", RunLoadScreen),
+    C("psiDecompressWoman", RunWoman),
+};
+
 void Group(const char *name, const Case *list, int count, int trials, void (*fakes)(void)) {
     ShadowHook_RemoveAll();
     if (fakes != NULL)
@@ -2222,6 +2476,12 @@ void EnginePortShadow_Run(void) {
         {0x001dfa2a, 1},                    // Drone_bDisableSystem
         {0x00181bb8, 0x40},                 // the loading screen's picture
         {0x001f6614, 4},                    // the subtitles
+        {0x002a2e68, 9 * 8},                // the codenames' cache
+        {0x002adf0c, 0xc},                  // the enumeration's count, the save state, the cache's count
+        {0x0025edba, 1},                    // the damaged-save message's way out
+        {0x002ae2dc, 0xc},                  // the pause film's memory, place and frame
+        {0x002ae4f0, 4},                    // and its fire's offset
+        {0x002abe80, 0x10},                 // Tex, its first four
     };
     std::vector<Saved> saved;
     for (const auto &g : kGlobals) {
@@ -2254,6 +2514,7 @@ void EnginePortShadow_Run(void) {
     Group("loadables", kLoadables, COUNT(kLoadables), 2000, InstallLoadableFakes);
     Group("a level's start", kInit, COUNT(kInit), 3000, InstallLoadFakes);
     Group("a level's loading", kLoad, COUNT(kLoad), 6000, InstallInitAndLoadFakes);
+    Group("the loader's leaves", kLeaves, COUNT(kLeaves), 3000, InstallLeafFakes);
     ShadowHook_RemoveAll();
     if (nanChoices != 0)
         printf("[engineport] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);

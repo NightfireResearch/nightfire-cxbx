@@ -58,6 +58,7 @@ void View_DrawObjectGlist(obj_tag *obj, viewer_tag *viewer);
 void View_DrawObjList(viewer_tag *viewer, ushort list);
 void View_DrawSky(viewer_tag *viewer, char pass);
 void __stdcall Game_Draw(void);
+void LoadScreen_Draw(void);
 short View_3DPoint2Screen(_VECTOR *vecIn, _VECTOR *vecOut, ushort viewerNum);
 
 #endif // VIEW_H_
