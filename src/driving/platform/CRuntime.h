@@ -12,10 +12,14 @@
 // own, which prints and parses floats differently, sorts differently and allocates elsewhere, so these are the
 // game's algorithms, not ours under its names. In a namespace of their own because the names are the same.
 //
-// Files: CRuntime.cpp (the heap, the exit list and locks, rand and errno, character classes, qsort, the x87
-// helpers), CRuntimeFormat.cpp (the printf family), CRuntimeParse.cpp (the scanf family, atof, atol, strtod,
-// strtol), CRuntimeFloat.cpp (the 12-byte long double arithmetic both conversions go through, see
-// CRuntimeInternal.h).
+// Files: CRuntimeCore.cpp (the heap, the locks and the fatal stop, errno, character tests), CRuntime.cpp (what
+// those stand on in this engine, the exit list, rand, localeconv, qsort), CRuntimeX87.cpp (the x87 helpers),
+// CRuntimeFormat.cpp (the printf family), CRuntimeParse.cpp (the scanf family, atof, atol, strtod, strtol),
+// CRuntimeFloat.cpp (the 12-byte long double arithmetic both conversions go through, see CRuntimeInternal.h).
+//
+// The action engine's runtime is the same library: it compiles CRuntimeCore.cpp, CRuntimeX87.cpp,
+// CRuntimeFormat.cpp and CRuntimeFloat.cpp too, over its own heap, kernel calls and class table
+// (src/action/engine/CRuntime.cpp), which patches its entry points to them.
 // ---------------------------------------------------------------------------------------------------------------
 
 namespace Crt {
@@ -46,7 +50,7 @@ struct Lconv {
 };
 LAYOUT_32(sizeof(Lconv) == 0x30, "lconv");
 
-// ---- the heap, on the process heap XAPI made (CRuntime.cpp)
+// ---- the heap, on the process heap XAPI made (CRuntimeCore.cpp)
 
 void* malloc(size_t size);                                                   // 0x001340e3
 void free(void *block);                                                      // 0x001331dc
@@ -54,10 +58,10 @@ void* calloc(size_t count, size_t size);                                     // 
 void* realloc(void *block, size_t size);                                     // 0x00134815
 size_t _msize(void *block);                                                  // 0x001369cc
 
-// ---- the runtime's initialisers, the exit list, its locks and its fatal stop (CRuntime.cpp)
+// ---- the runtime's initialisers, the exit list (CRuntime.cpp), its locks and its fatal stop (CRuntimeCore.cpp)
 
 int _onexitinit();                                                           // 0x00132a1b
-void _fpmath();                                                              // 0x00131d28
+void _fpmath();                                                              // 0x00131d28 (CRuntimeX87.cpp)
 int atexit(AtExitFn function);                                               // 0x00132a7b
 int _mtinitlocks();                                                          // 0x001363d8
 void _mtdeletelocks();                                                       // 0x00136421
@@ -67,23 +71,25 @@ void _amsg_exit(int code);                                                   // 
 void _exit(int code);                                                        // 0x0013438b
 void _purecall();                                                            // 0x00131d35 (Ghidra: __pure_virtual)
 
-// ---- per-thread state, in the block XboxStartup.cpp's Xbox_getptd hands out (CRuntime.cpp)
+// ---- per-thread state, in the block XboxStartup.cpp's Xbox_getptd hands out (rand: CRuntime.cpp; _errno:
+//      CRuntimeCore.cpp)
 
 int rand();                                                                  // 0x00133ee0
 int* _errno();                                                               // 0x00133664
 
-// ---- characters (CRuntime.cpp)
+// ---- characters (CRuntimeCore.cpp; localeconv: CRuntime.cpp)
 
 int isdigit(int c);                                                          // 0x0013399d
 int isalnum(int c);                                                          // 0x001339ef
 int tolower(int c);                                                          // 0x001327f9
+int toupper(int c);                                                          // the action engine's (0x000ee96b)
 Lconv* localeconv();                                                         // 0x001333d6
 
 // ---- sorting (CRuntime.cpp)
 
 void qsort(void *base, size_t count, size_t width, CompareFn compare);       // 0x00132db0
 
-// ---- the x87 (CRuntime.cpp). The _CI functions take their operands and answer on the FPU stack: acos and asin
+// ---- the x87 (CRuntimeX87.cpp). The _CI functions take their operands and answer on the FPU stack: acos and asin
 //      the value in ST0, pow the base in ST1 and the exponent in ST0. Without NIGHTFIRE_X87 they are C functions
 //      taking and answering doubles. _clearfp answers the x87 status, abstracted.
 

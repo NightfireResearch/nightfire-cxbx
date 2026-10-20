@@ -1,4 +1,5 @@
 #include "PlayerWeapon.h"
+#include "../../engine/CRuntime.h"
 #include "Player.h"
 #include "GT.h"
 #include "bullet.h"
@@ -148,12 +149,11 @@ void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(void) {
     }
 }
 
-// The C runtime's x87 asin (__CIasin_default): the argument in ST0, the result in ST0
+// The C runtime's x87 asin (__CIasin_default, Crt::CIasin): the argument in ST0, the result in ST0
 static double __declspec(naked) CIAsin(double x) {
     _asm {
         fld qword ptr [esp + 4]
-        mov eax, 0x000ee8a0
-        call eax
+        call Crt::CIasin
         ret
     }
 }

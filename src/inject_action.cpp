@@ -17,6 +17,7 @@
 #include "action/engine/XboxFile.h"
 #include "common/xboxPath.h"
 #include "action/engine/XboxStartup.h"
+#include "action/engine/CRuntime.h"
 #include "action/engine/psiSave.h"
 #include "action/engine/LoadSave.h"
 #include "action/ui/Menu.h"
@@ -162,6 +163,7 @@ void Inject()
   Xbox_SetDiscRoot(Settings_GetDiscPath());
 
   Inject_XboxStartup();
+  Inject_CRuntime();
 
   // FFmpeg, for the movies (engine/Fmv.cpp)
   Fmv_Init();

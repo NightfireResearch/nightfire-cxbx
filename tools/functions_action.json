@@ -51916,7 +51916,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000ec4a1",
+        "name": "XapiCreateHeap",
         "address": "0x000ec4a1",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -51929,7 +51929,7 @@
             "int *",
             "int *"
         ],
-        "prototype_string": "int * __stdcall FUN_000ec4a1(uint param_1, int * param_2, uint param_3, uint param_4, int * param_5, int * param_6)",
+        "prototype_string": "int * __stdcall XapiCreateHeap(uint param_1, int * param_2, uint param_3, uint param_4, int * param_5, int * param_6)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]",
             "[int * param_2@Stack[0x8]:4]",
@@ -51942,7 +51942,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000ec8c5",
+        "name": "RtlAllocateHeap",
         "address": "0x000ec8c5",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -51952,7 +51952,7 @@
             "uint",
             "uint"
         ],
-        "prototype_string": "int * * __stdcall FUN_000ec8c5(undefined2 * param_1, uint param_2, uint param_3)",
+        "prototype_string": "int * * __stdcall RtlAllocateHeap(undefined2 * param_1, uint param_2, uint param_3)",
         "parameters": [
             "[undefined2 * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -51974,7 +51974,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000ed07c",
+        "name": "RtlFreeHeap",
         "address": "0x000ed07c",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -51984,7 +51984,7 @@
             "uint",
             "int"
         ],
-        "prototype_string": "undefined __stdcall FUN_000ed07c(int param_1, uint param_2, int param_3)",
+        "prototype_string": "undefined __stdcall RtlFreeHeap(int param_1, uint param_2, int param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -52460,31 +52460,31 @@
         "namespace": "Global"
     },
     {
-        "name": "SetupPtrsToLibFuncs",
+        "name": "_cfltcvt_init",
         "address": "0x000ee24d",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall SetupPtrsToLibFuncs(void)",
+        "prototype_string": "void __stdcall _cfltcvt_init(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "SetupLibs",
+        "name": "_fpmath",
         "address": "0x000ee285",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall SetupLibs(void)",
+        "prototype_string": "void __stdcall _fpmath(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FID_conflict:__CIacos",
+        "name": "_CIacos",
         "address": "0x000ee294",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -52492,7 +52492,7 @@
         "param_types": [
             "double"
         ],
-        "prototype_string": "double FID_conflict:__CIacos(double n)",
+        "prototype_string": "double _CIacos(double n)",
         "parameters": [
             "[double n@ST0:10]"
         ],
@@ -52586,7 +52586,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FID_conflict:_memcpy",
+        "name": "memcpy",
         "address": "0x000ee4b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -52596,7 +52596,7 @@
             "void *",
             "size_t"
         ],
-        "prototype_string": "void * __cdecl FID_conflict:_memcpy(void * __dest, void * __src, size_t __n)",
+        "prototype_string": "void * __cdecl memcpy(void * __dest, void * __src, size_t __n)",
         "parameters": [
             "[void * __dest@Stack[0x4]:4]",
             "[void * __src@Stack[0x8]:4]",
@@ -52636,13 +52636,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FID_conflict:__CIasin_default",
+        "name": "_CIasin",
         "address": "0x000ee8a0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FID_conflict:__CIasin_default(void)",
+        "prototype_string": "void __stdcall _CIasin(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -52666,7 +52666,7 @@
         "namespace": "Global"
     },
     {
-        "name": "maybeToUpper",
+        "name": "toupper",
         "address": "0x000ee96b",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -52674,7 +52674,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl maybeToUpper(int param_1)",
+        "prototype_string": "int __cdecl toupper(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -52852,7 +52852,7 @@
         "namespace": "Global"
     },
     {
-        "name": "maybeToLower",
+        "name": "tolower",
         "address": "0x000eed6b",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -52860,7 +52860,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl maybeToLower(int param_1)",
+        "prototype_string": "int __cdecl tolower(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -53924,7 +53924,7 @@
         "namespace": "Global"
     },
     {
-        "name": "maybeNarrowToAscii",
+        "name": "_isctype",
         "address": "0x000f0b0e",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -53933,7 +53933,7 @@
             "int",
             "ushort"
         ],
-        "prototype_string": "ushort __cdecl maybeNarrowToAscii(int param_1, ushort param_2)",
+        "prototype_string": "ushort __cdecl _isctype(int param_1, ushort param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[ushort param_2@Stack[0x8]:2]"
@@ -53942,7 +53942,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f0b2f",
+        "name": "free",
         "address": "0x000f0b2f",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -53950,7 +53950,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f0b2f(int param_1)",
+        "prototype_string": "void __cdecl free(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -54296,13 +54296,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f1455",
+        "name": "_errno",
         "address": "0x000f1455",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "int * *",
         "param_types": [],
-        "prototype_string": "int * * __stdcall FUN_000f1455(void)",
+        "prototype_string": "int * * __stdcall _errno(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -54696,7 +54696,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f28d4",
+        "name": "_amsg_exit",
         "address": "0x000f28d4",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -54704,7 +54704,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f28d4(int param_1)",
+        "prototype_string": "void __cdecl _amsg_exit(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -54970,13 +54970,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f2e0d",
+        "name": "_fptrap",
         "address": "0x000f2e0d",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000f2e0d(void)",
+        "prototype_string": "void __stdcall _fptrap(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -55114,13 +55114,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3178",
+        "name": "_ioinit",
         "address": "0x000f3178",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f3178()",
+        "prototype_string": "undefined _ioinit()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -55210,7 +55210,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3481",
+        "name": "_heap_alloc",
         "address": "0x000f3481",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55218,7 +55218,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "void __cdecl FUN_000f3481(uint param_1)",
+        "prototype_string": "void __cdecl _heap_alloc(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -55244,7 +55244,7 @@
         "namespace": "Global"
     },
     {
-        "name": "_malloc",
+        "name": "malloc",
         "address": "0x000f34d4",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55252,7 +55252,7 @@
         "param_types": [
             "size_t"
         ],
-        "prototype_string": "void * __cdecl _malloc(size_t __size)",
+        "prototype_string": "void * __cdecl malloc(size_t __size)",
         "parameters": [
             "[size_t __size@Stack[0x4]:4]"
         ],
@@ -55312,19 +55312,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f35fe",
+        "name": "_mtdeletelocks",
         "address": "0x000f35fe",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f35fe()",
+        "prototype_string": "undefined _mtdeletelocks()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3627",
+        "name": "_unlock",
         "address": "0x000f3627",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55332,7 +55332,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f3627(int param_1)",
+        "prototype_string": "void __cdecl _unlock(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -55340,7 +55340,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3639",
+        "name": "_mtinitlocknum",
         "address": "0x000f3639",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55348,7 +55348,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000f3639(int param_1)",
+        "prototype_string": "undefined4 __cdecl _mtinitlocknum(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -55356,7 +55356,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f36b5",
+        "name": "_lock",
         "address": "0x000f36b5",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55364,7 +55364,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f36b5(int param_1)",
+        "prototype_string": "void __cdecl _lock(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -55494,7 +55494,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3a4f",
+        "name": "calloc",
         "address": "0x000f3a4f",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55503,7 +55503,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "int * * __cdecl FUN_000f3a4f(int param_1, int param_2)",
+        "prototype_string": "int * * __cdecl calloc(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -55536,7 +55536,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3b20",
+        "name": "doexit",
         "address": "0x000f3b20",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55545,7 +55545,7 @@
             "undefined4",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f3b20(undefined4 param_1, int param_2)",
+        "prototype_string": "void __cdecl doexit(undefined4 param_1, int param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -55554,7 +55554,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f3bca",
+        "name": "_exit",
         "address": "0x000f3bca",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55562,7 +55562,7 @@
         "param_types": [
             "undefined4"
         ],
-        "prototype_string": "void __cdecl FUN_000f3bca(undefined4 param_1)",
+        "prototype_string": "void __cdecl _exit(undefined4 param_1)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]"
         ],
@@ -55780,7 +55780,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f4254",
+        "name": "_NMSG_WRITE",
         "address": "0x000f4254",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -55788,7 +55788,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000f4254(int param_1)",
+        "prototype_string": "void __cdecl _NMSG_WRITE(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -55796,13 +55796,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f4280",
+        "name": "_FF_MSGBANNER",
         "address": "0x000f4280",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000f4280(void)",
+        "prototype_string": "void __stdcall _FF_MSGBANNER(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56064,13 +56064,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f4f52",
+        "name": "__initmbctable",
         "address": "0x000f4f52",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f4f52()",
+        "prototype_string": "undefined __initmbctable()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

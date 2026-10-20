@@ -1,4 +1,5 @@
 #include "X87Ops.h"
+#include "../engine/CRuntime.h"
 
 // The x87 instructions behind Extended (X87Ops.h). Each loads its operands, does one operation and stores the
 // 80-bit result, so it is rounded only as the instruction itself rounds it.
@@ -89,8 +90,7 @@ static void __declspec(naked) CosineOf(Extended *out, const Extended *x) {
 static void __declspec(naked) ArcCosine(Extended *out, double x) {
     __asm {
         fld qword ptr [esp + 8]
-        mov eax, 0x000ee294
-        call eax
+        call Crt::CIacos
         mov eax, dword ptr [esp + 4]
         fstp tbyte ptr [eax]
         ret

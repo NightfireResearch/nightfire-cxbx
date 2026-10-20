@@ -29,7 +29,18 @@ struct PerThreadData {
 };
 LAYOUT_32(sizeof(PerThreadData) == 0x84, "_tiddata");
 
+// ---- what each engine's runtime stands on (the driving engine's in CRuntime.cpp, the action engine's in
+//      src/action/engine/CRuntime.cpp): the per-thread block, XAPI's process heap (RtlAllocateHeap and the rest on
+//      GetProcessHeap()), the kernel's critical sections and bug check, and the debugger's output
+
 PerThreadData* PerThread();
+
+const uint32_t kHeapZeroMemory = 8;   // HEAP_ZERO_MEMORY
+void* ProcessHeapAlloc(uint32_t flags, size_t size);
+void ProcessHeapFree(void *block);
+void* ProcessHeapReAlloc(void *block, size_t size);
+size_t ProcessHeapSize(void *block);
+
 
 // _XcptActTab: what the runtime's exception filter does for each exception (the signal raised and its action, 0
 // for the default). Only that filter and the per-thread block's release read it, and nothing runs either.
@@ -40,7 +51,7 @@ struct ExceptionAction {
 };
 extern ExceptionAction ExceptionActions[10];
 
-// The runtime's locks (CRuntime.cpp): 36 slots of a critical section and whether _mtinitlocks points it at one of
+// The runtime's locks (CRuntimeCore.cpp): 36 slots of a critical section and whether _mtinitlocks points it at one of
 // the static sections; the others are made on first use. The sections are the Xbox's 28-byte ones.
 struct CriticalSection {
     uint8_t bytes[0x1c];
@@ -51,8 +62,18 @@ struct LockSlot {
 };
 const int kLockCount = 36;
 const int kPreallocatedLocks = 14;
+enum {
+    kExitLock = 8,
+    kLockTableLock = 10
+};
 extern LockSlot LockTable[kLockCount];
 extern CriticalSection StaticLocks[kPreallocatedLocks];
+
+void InitialiseSection(CriticalSection *section);   // RtlInitializeCriticalSection
+void EnterSection(CriticalSection *section);
+void LeaveSection(CriticalSection *section);
+void BugCheck(uint32_t code);                       // KeBugCheck, which does not return
+void DebugOutput(const char *text);                 // OutputDebugStringA
 
 // The exit list (CRuntime.cpp), for the shadow test.
 extern AtExitFn *OnExitBegin;
@@ -100,6 +121,26 @@ enum CtypeClass {
     kAlpha = 0x103,       // _ALPHA with _UPPER and _LOWER
     kLeadByte = 0x8000
 };
+
+// The C locale's classes of a character, as its table has them.
+constexpr unsigned short CLocaleClass(int c) {
+    unsigned short classes = 0;
+    if (c < 0x20 || c == 0x7f)
+        classes |= kControl;
+    if (c >= '\t' && c <= '\r')
+        classes |= kSpace;
+    if (c == ' ')
+        classes |= kSpace | kBlank;
+    if (c >= '0' && c <= '9')
+        classes |= kDigit | kHexDigit;
+    else if (c >= 'A' && c <= 'Z')
+        classes |= kUpper | (c <= 'F' ? kHexDigit : 0);
+    else if (c >= 'a' && c <= 'z')
+        classes |= kLower | (c <= 'f' ? kHexDigit : 0);
+    else if (c > ' ' && c < 0x7f)
+        classes |= kPunct;
+    return classes;
+}
 
 inline int Ctype(int c) {
     return CtypeTable[c];

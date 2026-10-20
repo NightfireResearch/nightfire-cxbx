@@ -84,13 +84,30 @@ and the static initialisers' `_Init_locks` and `_Init_atexit` objects are constr
 ports. The game's printf (0x00132192) has been ours from the start (logging.cpp's dbg_wprintf, the host's printf:
 debug output); its by-address callers now call it directly.
 
+## The action engine's runtime
+
+Default.xbe links the same runtime, function for function (compared instruction by instruction with Driving.xbe's,
+addresses aside; 20 October 2026). So the action engine compiles CRuntimeCore.cpp, CRuntimeX87.cpp,
+CRuntimeFormat.cpp and CRuntimeFloat.cpp too, and src/action/engine/CRuntime.cpp gives them what is its own: the
+per-thread block (engine/XboxStartup.cpp's `Xbox_getptd`), the process heap (Win32's, as XAPI's heap calls are
+there too), the kernel's calls through the XBE's import table, and the class table with the words before it that a
+negative character reads (the action XBE's). The driving engine's tags do not apply there (the preprocessor reads
+only src/action for that engine): engine/CRuntime.cpp patches sprintf (0x000ee382) by hand to `Crt::sprintf`, and
+tags the two helpers only that engine's code still needs, `__ftol2` (0x000ee3dc, the MSVC routine as it is) and
+memcpy (0x000ee4b0, memmove's semantics). Our own callers call the rest directly (toupper, tolower, `_CIacos`,
+`_CIasin`; `_fpmath`, `_mtinitlocks`, `_mtdeletelocks`, calloc and `_amsg_exit` from the startup), so lib.crt has
+nothing live. `src/action/devtools/CRuntimeShadow.cpp` (`NIGHTFIRE_SHADOW_ONLY=crt`, and in the default list)
+compares each with the original.
+
 ## Layout
 
 | File | What |
 |---|---|
 | `platform/CRuntime.h` | every C library entry, in `namespace Crt` (the names are our DLL's runtime's too) |
 | `platform/CRuntimeInternal.h` | what the runtime's files share: the per-thread block, errno values, the character classes, the float conversions' interface, the exit list for the shadow |
-| `platform/CRuntime.cpp` | the heap, `_onexitinit`, atexit, the locks, `_amsg_exit`, `_exit`, rand, errno, the character classes, localeconv, qsort, the x87 helpers, `_fpmath`, `_clearfp` |
+| `platform/CRuntimeCore.cpp` | shared with the action engine: the heap (malloc, free, calloc, realloc, `_msize`), the locks, `_amsg_exit`, `_exit`, `_purecall`, errno, isdigit, isalnum, tolower, toupper |
+| `platform/CRuntime.cpp` | what those stand on here (`PerThread`, the process heap's and the kernel's calls, the debug output), the class table, `_onexitinit`, atexit, rand, localeconv, qsort |
+| `platform/CRuntimeX87.cpp` | shared with the action engine: the x87 helpers, `_fpmath`, `_clearfp` |
 | `platform/CRuntimeFormat.cpp`, `CRuntimeParse.cpp` | the printf family over `_output`; sscanf over `_input`, atof, atol, strtod, strtol and its forms |
 | `platform/CRuntimeFloat.cpp` | the 12-byte long double: its arithmetic, the power-of-ten tables, text to long double (`__strgtold12`), long double to double and float (`__ld12cvt`), double to digits (`$I10_OUTPUT`), the `%e/%f/%g` layouts |
 | `platform/CRuntimeStd.h/.cpp` | the C++ library (`namespace GameStd`): the locks, `_Mutex`, `_Init_locks`, `_Init_atexit`, the locale and facets, `_Locinfo`, ctype's tables, ios_base, strstreambuf, the strstreams' destructors, `_Stod`/`_Stof`, std::exception, bad_cast, runtime_error, and (`namespace Crt`) the throw and the `eh vector` iterators. Members of the stream classes in data/StdStreams.h (Mutex, Exception, Locale, Facet, IosBase...) are defined here |

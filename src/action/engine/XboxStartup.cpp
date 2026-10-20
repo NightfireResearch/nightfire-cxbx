@@ -1,4 +1,5 @@
 #include "XboxStartup.h"
+#include "CRuntime.h"
 #include "../actionhelpers.h"
 #include "../game/weapon_stats.h"   // WeaponDataTableInit
 #include "../ui/HUD.h"              // the HUD panes' static initialisers
@@ -27,19 +28,13 @@
 //  - XapiBootToDash at the end reboots the console. main never returns, so it is unreachable anyway.
 //
 // What is kept is what still means something: process initialisation cut down to the process heap and the
-// XAPI initialiser table (see Xbox_XapiInitProcess below), then _rtinit and _cinit, then main.
+// XAPI initialiser table (see Xbox_XapiInitProcess below), then _rtinit and _cinit, then main. The C runtime they
+// initialise is ours (CRuntime.cpp).
 //
 // Note the calling convention. The original is reached as a thread start routine - __stdcall, one ignored
 // parameter - and the loader's PsCreateSystemThreadEx hands it straight to Win32 CreateThread, which wants
 // exactly the same shape. So this is an ordinary LPTHREAD_START_ROUTINE and the stack works out on its own.
 // ---------------------------------------------------------------------------------------------------------------
-
-// The C runtime's own initialisers, which the original _rtinit and _cinit found in the XBE's initialiser tables
-// (0x00163100-0x00163160). The C runtime stays the game's until the code calling it is ours, so these still run.
-#define CrtInitFloatingPoint ((void (__cdecl *)(void))0x000f3178u)   // _rtinit's second entry
-#define CrtSetupLibs         ((void (__cdecl *)(void))0x000ee285u)   // _cinit's library hook
-#define CrtInitStdio         ((void (__cdecl *)(void))0x000f0e37u)   // ___initstdio
-#define CrtInitAtExit        ((void (__cdecl *)(void))0x000f4f52u)
 
 // The game's own static initialisers (C++ constructors of globals) that are not ours yet
 // AUTOGEN
@@ -53,14 +48,7 @@ undefined FUN_000f54f0(void);
 // AUTOGEN
 undefined FUN_000f5520(void);
 
-// The XBE's own heap manager - RtlCreateHeap in all but name, and the allocator every malloc in the game
-// eventually reaches. It is left in place and simply given memory to work with: its heap blocks are the ones
-// the game's own free() understands, so replacing it would mean replacing the whole allocator with it.
-#define XapiCreateHeap  ((void *(__stdcall *)(unsigned flags, void *base, unsigned reserve, \
-                                              unsigned commit, void *lock, void *parameters))0x000ec4a1u)
-
-// Where XapiInitProcess leaves the process heap handle, and the table of initialisers it runs afterwards.
-#define ProcessHeapHandle (*(void **)0x0030093cu)
+// The table of initialisers XapiInitProcess runs once the heap is made.
 #define InitTableBegin    ((void (**)(void))0x00163178u)
 #define InitTableEnd      ((void (**)(void))0x0016317cu)
 
@@ -92,8 +80,11 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 //
 // The original does six things. Two of them still mean something here and are kept:
 //
-//  - it creates the process heap, with the reserve and commit sizes out of the XBE header, and leaves the
-//    handle at 0x0030093c where the game's allocator looks for it. Nothing works without this;
+//  - it creates the process heap, with the reserve and commit sizes out of the XBE header, where the C runtime's
+//    malloc allocates. The heap is Win32's, as in the driving engine (src/driving/platform/XboxXapi.cpp): XAPI's
+//    heap (RtlCreateHeap and its siblings) is NT's, and so is Win32's, and only the C runtime uses this one - its
+//    per-thread blocks and locks, nothing of the game's. XAPI's entry points are pointed at Win32's below, so
+//    any original that still reaches them gets the same heap;
 //  - it runs the table of initialisers at 0x163178, which is how parts of XAPI register themselves.
 //
 // The other four are dropped. Mounting D:, the title's save directories and the utility drive is handled by
@@ -103,13 +94,26 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 // and each of them ends in XapiBootToDash, which reboots.
 // ---------------------------------------------------------------------------------------------------------------
 
-void __stdcall Xbox_XapiInitProcess(void) {
-    // RTL_HEAP_PARAMETERS, all defaults. Only the leading length field is set, exactly as the original does.
-    unsigned parameters[12];
-    memset(parameters, 0, sizeof(parameters));
-    parameters[0] = sizeof(parameters);
+// XapiCreateHeap (0x000ec4a1): RtlCreateHeap(flags, base, reserve, commit, lock, parameters). Flag 2
+// (HEAP_GROWABLE) makes a heap without a maximum, Win32's for a maximum of 0.
+static HANDLE __stdcall Xbox_XapiCreateHeap(ULONG flags, void *base, ULONG reserve, ULONG commit, void *lock,
+                                            void *parameters) {
+    (void)base, (void)lock, (void)parameters;
+    return HeapCreate(0, commit, (flags & 2) ? 0 : reserve);
+}
 
-    ProcessHeapHandle = XapiCreateHeap(2, NULL, 0x100000, 0x1000, NULL, parameters);
+// RtlAllocateHeap (0x000ec8c5) and RtlFreeHeap (0x000ed07c), whose flags are Win32's.
+static void *__stdcall Xbox_RtlAllocateHeap(HANDLE heap, ULONG flags, SIZE_T size) {
+    return HeapAlloc(heap, flags, size);
+}
+
+static BOOLEAN __stdcall Xbox_RtlFreeHeap(HANDLE heap, ULONG flags, void *block) {
+    return HeapFree(heap, flags, block) ? TRUE : FALSE;
+}
+
+void __stdcall Xbox_XapiInitProcess(void) {
+    // The original's RTL_HEAP_PARAMETERS are all defaults
+    ProcessHeapHandle = Xbox_XapiCreateHeap(2, NULL, 0x100000, 0x1000, NULL, NULL);
     if (ProcessHeapHandle == NULL) {
         printf("[startup] the process heap could not be created - nothing can allocate\n");
         fflush(stdout);
@@ -132,18 +136,12 @@ void __stdcall Xbox_XapiInitProcess(void) {
 // problem as the last-error pair, and it is where startup faulted next, at 0x000f4090 writing to address 8.
 //
 // These three keep everything about the original except where the pointer is kept, which becomes a Win32 TLS
-// slot. In particular the block itself is still allocated by the game's own calloc, because the game's own
-// free is what will eventually release it - a block from this DLL's heap handed to the XBE's heap manager
-// would be a much less obvious crash than the one being fixed.
+// slot. The block itself is allocated by the C runtime's calloc, on the process heap.
 //
 // The original also guards on FS:[0x24], the Xbox's current IRQL, bug-checking above APC level. A Win32
 // thread is never at a raised IRQL, so there is nothing to check.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CrtCalloc            ((void *(__cdecl *)(size_t count, size_t size))0x000f3a4fu)
-#define CrtInitLocks         ((int (__cdecl *)(void))0x000f35b5u)
-#define CrtLockInitFailed    ((void (__cdecl *)(void))0x000f35feu)
-#define CrtFatalError        ((void (__cdecl *)(int code))0x000f28d4u)
 // XBE_GLOBAL(0x001d6538, 0x90)
 #define CrtDefaultLocaleInfo ((void *)0x001d6538u)
 
@@ -163,10 +161,10 @@ void *__cdecl Xbox_getptd(void) {
 
     void *ptd = (g_perThreadSlot != TLS_OUT_OF_INDEXES) ? TlsGetValue(g_perThreadSlot) : NULL;
     if (ptd == NULL) {
-        ptd = CrtCalloc(1, 0x84);
+        ptd = Crt::calloc(1, 0x84);
         if (ptd == NULL) {
             SetLastError(lastError);
-            CrtFatalError(0x10);   // _RT_THREAD: no way to continue without per-thread state
+            Crt::_amsg_exit(0x10);   // _RT_THREAD: no way to continue without per-thread state
             return NULL;
         }
 
@@ -207,8 +205,8 @@ int __cdecl Xbox_mtinit(void) {
         return 0;
     }
 
-    if (CrtInitLocks() == 0) {
-        CrtLockInitFailed();
+    if (Crt::_mtinitlocks() == 0) {
+        Crt::_mtdeletelocks();
         return 0;
     }
 
@@ -278,18 +276,21 @@ static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
 // (0x000edd7b). Those walk the XBE's initialiser tables; these call the same entries, in the same order, by
 // name - except the four DSOUND ones at the end of the constructor table (0x00114b94, 0x00114b9f, 0x0011a230,
 // 0x0011a23b), which only point DSOUND's internal globals at its own data. DSOUND is never entered now.
+//
+// The C runtime's initialisers are left out but for the per-thread data and the x87's set-up, as in the driving
+// engine: low-level I/O's handle table (_ioinit, 0x000f3178, _rtinit's second entry), stdio's stream table
+// (___initstdio, 0x000f0e37) and the multibyte code page (__initmbctable, 0x000f4f52) are read only by the
+// runtime's own stdio, low-level I/O and multibyte functions, which nothing runs. _cinit's library hook
+// (_fpmath, 0x000ee285) points printf's and scanf's float conversions at the runtime's (ours call them
+// directly), then sets the x87: that is Crt::_fpmath.
 // ---------------------------------------------------------------------------------------------------------------
 
 static void Xbox_rtinit(void) {
     Xbox_mtinit();          // the table's first entry, 0x000f405e, already ours
-    CrtInitFloatingPoint();
 }
 
 static void Xbox_cinit(void) {
-    CrtSetupLibs();
-    // The C initialisers
-    CrtInitStdio();
-    CrtInitAtExit();
+    Crt::_fpmath();
     // The C++ constructors
     Copter_InitConeCos();
     Copter_InitConeSin();
@@ -359,6 +360,9 @@ void Inject_XboxStartup(void) {
     WriteJump(0x000eb2ac, (void *)Xbox_Entry);               // the entry point
     WriteJump(0x000eb238, (void *)mainXapiStartup);          // the whole of process startup
     WriteJump(0x000ed8ac, (void *)Xbox_XapiInitProcess);     // heap and the XAPI initialiser table
+    WriteJump(0x000ec4a1, (void *)Xbox_XapiCreateHeap);
+    WriteJump(0x000ec8c5, (void *)Xbox_RtlAllocateHeap);
+    WriteJump(0x000ed07c, (void *)Xbox_RtlFreeHeap);
     WriteJump(0x000e9a24, (void *)Xbox_GetLastError);
     WriteJump(0x000e9a4c, (void *)Xbox_SetLastError);
     WriteJump(0x000f3ec7, (void *)Xbox_getptd);              // the CRT's per-thread data
