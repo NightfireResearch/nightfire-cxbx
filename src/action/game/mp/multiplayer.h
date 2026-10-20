@@ -339,6 +339,17 @@ obj_tag* MP_getAssassinTarget(void);
 struct PICKUPINFO;
 MP_PICKUP* MP_getMPpickup(struct PICKUPINFO *info);
 obj_tag* MP_getProtectionObj_NotExt(void);
+void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay);
+void MP_sendTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint delay, uint senderId);
+void MP_setPlayerStatus(obj_tag *obj, ushort status, uint msg, uint unused, obj_tag *target, bool clear);
+bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);
+void MPSound_Play(Action_SFX sfx);
+void MP_ApplyDamage(obj_tag *obj, float damage, obj_tag *from);
+void MP_UnregisterPickup(obj_tag *pickup);
+int MP_RegisterPickup(obj_tag *pickup);
+void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj);
+// The original takes ext in ECX and obj in EAX
+void MP_initObjExt(void);
 obj_tag* MP_getDemolitionObj_NotExt(void);
 void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
 // The original takes ext in ESI: MP_recalcObjExtPaths is the entry for that, _MP_recalcObjExtPaths the C++ under it.

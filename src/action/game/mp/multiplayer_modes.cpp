@@ -25,11 +25,8 @@
 #define HitByList (*(obj_tag*(*)[64])0x00261c58)
 
 
-// AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
 #define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
 // Bot messages sent here (docs/drone/bots-and-navigation, DSTATE_BotGlobal): 0x3a objective changed, 0x3b goal
 // complete, 0x3d cancel goals on an object, 0x43 a player died. 0x39, 0x3e and 0x3f are not in its table.

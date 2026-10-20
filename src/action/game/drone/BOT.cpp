@@ -27,8 +27,6 @@
 // XBE_GLOBAL(0x00163990, 0x37)
 #define BotStateClasses (*(const uchar(*)[DSTATE_BotIdle - DSTATE_BotInit + 1])0x00163990)
 
-// AUTOGEN
-bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);
 
 // The player's damage modifiers (Player.cpp)
 #define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)

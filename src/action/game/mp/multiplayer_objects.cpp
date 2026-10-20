@@ -43,11 +43,8 @@ static int32_t Ftol(double x) {
 #define HitByList (*(obj_tag*(*)[64])0x00261c58)
 
 
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 
-// Defined in multiplayer_modes.cpp's AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
 
 constexpr Action_TranslatedText MP_SUPPOSED_TO_PROTECT_TARGET = (Action_TranslatedText)0x0200002b;

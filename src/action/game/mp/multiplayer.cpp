@@ -19,6 +19,11 @@
 #include "../../math/X87Ops.h"
 #include "../obj/build.h"               // build_FindCel
 #include "../obj/ScriptPlayer.h"        // SP_getScriptInfo
+#include "../drone/BOTWEAP.h"           // BOTWEAP_isValidWeapon
+#include "../drone/Drone.h"
+#include "../drone/NDrone2.h"           // Drone_SM_SendMsgSelf
+#include "../../engine/Loader.h"        // IsLevelLoaded
+#include "../../sound/Sound.h"
 #include <bit>
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
@@ -38,9 +43,12 @@ static int32_t Ftol(double x) {
 
 #define NUM_SKINS 29 // unique characters
 
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
-// The bot message telling a side the demolition or protection object has gone (MP_getObjExtObj)
+// Bot messages (docs/drone/bots-and-navigation): 0x3b goal complete, 0x3d cancel goals on an object, 0x40 the
+// demolition or protection object has gone (MP_getObjExtObj)
+#define BOT_MSG_GOAL_COMPLETE 0x3b
+#define BOT_MSG_3C 0x3c
+#define BOT_MSG_CANCEL_GOALS 0x3d
 #define BOT_MSG_OBJECTIVE_GONE 0x40
 
 constexpr float HalfPi = 1.5707964f;
@@ -1655,4 +1663,261 @@ obj_tag* MP_getProtectionObj_NotExt(void) {
 // AUTOINJECT
 obj_tag* MP_getDemolitionObj_NotExt(void) {
     return MP_getObjExtObj(&Demolition);
+}
+
+// ---- messages to the bots, the agents' status and the pickups
+
+// A bot message (bot messages are DRONE_MSGs for the BotGlobal state) to one drone, after delay frames
+// AUTOINJECT
+void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay) {
+    if (obj->objectType != OBJECTTYPE_DRONE)
+        return;
+    DCVars_tag dc;
+    if (Drone_DCVfromOBJ(obj, &dc))
+        Drone_SM_SendMsgSelf(msg, (void *)(uintptr_t)extra, delay, DSTATE_BotGlobal, &dc);
+}
+
+// A bot message to every bot of a team (any bot for NO_TEAM), after delay frames
+// AUTOINJECT
+void MP_sendTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint delay, uint senderId) {
+    MsgObject message;
+    message.msgType = msg;
+    message.scope = DSTATE_BotGlobal;
+    message.sender = senderId;
+    message.receiver = team == NO_TEAM ? 0 : -1 - (int)team;
+    message.createdFrame = GameState.NumFramesUnpaused;
+    message.handleOnFrame = GameState.NumFramesUnpaused + delay;
+    message.extraData = obj;
+    Drone_SM_RouteMsg(&message);
+}
+
+// Sets (or with clear, clears) an agent's MPGame flags, and tells the bots what happened: msg is a bot message
+// for the agent itself, and some also change its team's objective flags and tell the team's bots of target.
+// AUTOINJECT
+void MP_setPlayerStatus(obj_tag *obj, ushort status, uint msg, uint unused, obj_tag *target, bool clear) {
+    if (obj == NULL)
+        return;
+    int playerIndex = Control_Plr2Ind(obj);
+    if (playerIndex == -1)
+        return;
+
+    ushort flags = MPGame.players[playerIndex].flags;
+    MPTeam team = MPSettings.Player[playerIndex].TeamId;
+    uint sender = 0;
+    if (clear)
+        MPGame.players[playerIndex].flags = ~status & flags;
+    else
+        MPGame.players[playerIndex].flags = flags | status;
+    if (msg == 0)
+        return;
+
+    if (obj->objectType == OBJECTTYPE_DRONE) {
+        DCVars_tag dc;
+        Drone_DCVfromOBJ(obj, &dc);
+        sender = dc.aiStateMachine->id;
+    }
+
+    ushort *teamFlags = &MPGame.teamObjectiveFlags[team];
+    switch (msg) {
+        case 0x2f: case 0x32: case 0x35:
+            *teamFlags |= 1;
+            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+            break;
+        case 0x36:
+            *teamFlags |= 2;
+            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+            break;
+        case 0x30: case 0x33: case 0x37:
+            *teamFlags &= ~1;
+            MP_sendBotMessage(obj, BOT_MSG_3C, 1, 0);
+            break;
+        case 0x38:
+            *teamFlags &= ~2;
+            MP_sendBotMessage(obj, BOT_MSG_3C, 1, 0);
+            break;
+        case 0x31: case 0x34:
+            *teamFlags &= ~3;
+            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            break;
+        case 0x39:
+            // nothing for an agent already in the hill
+            if (flags & MPPLAYER_IN_HILL) {
+                msg = 0;
+                break;
+            }
+            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            break;
+        case 0x3e:
+            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+            break;
+    }
+    MPGame.teamObjectiveFlags[NO_TEAM] = 0;
+    if (msg != 0)
+        MP_sendBotMessage(obj, msg, 0, 0);
+}
+
+// In Assassin, a respawned agent takes over its old object's part: oldObj's player goes back to Phoenix, and newObj
+// becomes the target or the assassin (on MI6) in its place. False when it was neither.
+// AUTOINJECT
+bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj) {
+    if (MPSettings.GameMode != GM_ASSASSIN)
+        return false;
+    short oldIndex = Control_Plr2Ind(oldObj);
+    if (oldIndex >= 0)
+        MPSettings.Player[oldIndex].TeamId = PHOENIX;
+    short newIndex = Control_Plr2Ind(newObj);
+    if (newIndex < 0)
+        return false;
+    if (AssassinTarget == oldObj) {
+        AssassinTarget = newObj;
+        return true;
+    }
+    if (CurrentAssassinObjId == oldObj) {
+        CurrentAssassinObjId = newObj;
+        MPSettings.Player[newIndex].TeamId = MI6;
+        return true;
+    }
+    return false;
+}
+
+// A sound for the whole match, at full volume
+// AUTOINJECT
+void MPSound_Play(Action_SFX sfx) {
+    Sound_PlayExt(sfx, 100.0f, 0, 0);
+}
+
+// Damage to the demolition or protection object: its state counts its strength down, and the attacker is noted
+// AUTOINJECT
+void MP_ApplyDamage(obj_tag *obj, float damage, obj_tag *from) {
+    MPOBJECT *mpObj = (MPOBJECT *)obj->extraObjectData;
+    if (mpObj->type != DEMOLITION && mpObj->type != PROTECTION)
+        return;
+    obj->curState = (ushort)Ftol((double)(short)obj->curState - damage);
+    if (damage > 0.0f)
+        mpObj->attackerIdx = MP_PlayerOrBotInd(from);
+}
+
+// Takes a pickup out of the multiplayer slots: the slot and the pickup's own data are cleared
+// AUTOINJECT
+void MP_UnregisterPickup(obj_tag *pickup) {
+    if (!MPSettings.isMultiplayer)
+        return;
+    if (pickup == NULL || pickup->objectType != OBJECTTYPE_PICKUP)
+        return;
+    PICKUPINFO *info = (PICKUPINFO *)pickup->extraObjectData;
+    int slot = info->mpIndex;
+    if (slot == -1)
+        return;
+    MP_PICKUP *mpPickup = &MPpickups[slot];
+    if (mpPickup->gameObj == NULL || mpPickup->gameObj != pickup)
+        return;
+    if (mpbots.NumBots && mpPickup->aiEmitter.data != NULL)
+        AINetwork_FreeEmitter(&mpPickup->aiEmitter);
+    memset(mpPickup, 0, sizeof(*mpPickup));
+    memset(pickup->extraObjectData, 0, sizeof(PICKUPINFO));
+    info->mpIndex = -1;
+    MPSettings.numActivePickups--;
+    PickupLastDeletedIdx = slot;
+}
+
+// Gives a pickup a multiplayer slot, with a path for the bots: the slot last freed, else the next free one from
+// where the last was added, else the one with the shortest lifetime left is taken over. Returns the slot, -1 for
+// none.
+// AUTOINJECT
+int MP_RegisterPickup(obj_tag *pickup) {
+    int slot = -1;
+    if (!MPSettings.isMultiplayer)
+        return -1;
+    if (pickup == NULL || pickup->objectType != OBJECTTYPE_PICKUP)
+        return -1;
+    PICKUPINFO *info = (PICKUPINFO *)pickup->extraObjectData;
+    if (info->kind == PICKUP_KIND_WEAPON && mpbots.NumBots)
+        BOTWEAP_isValidWeapon(info->item);
+
+    if (PickupLastDeletedIdx != -1 && MPpickups[PickupLastDeletedIdx].gameObj == NULL) {
+        slot = PickupLastDeletedIdx;
+        PickupLastDeletedIdx = -1;
+    } else {
+        int next = PickupNextAddIndex;
+        for (int i = next; i < 64 && slot == -1; i++) {
+            if (MPpickups[i].gameObj == NULL)
+                slot = i;
+        }
+        for (int i = 0; i < next && slot == -1; i++) {
+            if (MPpickups[i].gameObj == NULL)
+                slot = i;
+        }
+    }
+
+    if (slot == -1) {
+        // Kept as the original has it: the slot's pickup is taken over, but the mpIndex set below is that of the
+        // last pickup looked at here
+        ushort shortest = 0xffff;
+        int left = MPSettings.numActivePickups;
+        if (left == 0)
+            return -1;
+        for (int i = 0; left != 0; i++) {
+            if (MPpickups[i].gameObj == NULL)
+                continue;
+            info = (PICKUPINFO *)MPpickups[i].gameObj->extraObjectData;
+            if (info->lifetime != 0 && info->lifetime < shortest) {
+                shortest = info->lifetime;
+                slot = i;
+            }
+            left--;
+        }
+        if (slot == -1)
+            return -1;
+        MP_UnregisterPickup(MPpickups[slot].gameObj);
+    }
+
+    MP_PICKUP *mpPickup = &MPpickups[slot];
+    mpPickup->gameObj = pickup;
+    cel_tag *cel = pickup->inCel;
+    if (cel == NULL)
+        cel = build_FindCel((_VECTOR *)&pickup->transformMatrix.m[12], glb_world);
+    mpPickup->celPos.pos = pickup->position;
+    mpPickup->celPos.cel = cel;
+    if (cel != NULL && mpbots.NumBots)
+        AINetwork_InitEmitter(NULL, (_VECTOR *)&pickup->transformMatrix.m[12], cel, &mpPickup->aiEmitter, NULL);
+    info->mpIndex = (short)slot;
+    if (IsLevelLoaded() && slot < 64 && mpPickup->gameObj != NULL && IsLevelLoaded() && mpbots.NumBots &&
+        mpPickup->aiEmitter.path != NULL)
+        AINetwork_EmitPath(&mpPickup->aiEmitter, 0.0f);
+
+    MPSettings.numActivePickups++;
+    PickupNextAddIndex = slot < 63 ? slot + 1 : 0;
+    return slot;
+}
+
+// A scenario object's MP_OBJ_EXT: the object, where it stands, and its path for the bots
+void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
+    if (ext == NULL)
+        return;
+    ext->gameObj = obj;
+    ext->celPos.pos = obj->position;
+    ext->celPos.cel = obj->inCel;
+    if (mpbots.NumBots) {
+        if (ext->celPos.cel == NULL)
+            ext->celPos.cel = build_FindCel((_VECTOR *)&obj->transformMatrix.m[12], glb_world);
+        if (ext->celPos.cel != NULL)
+            AINetwork_InitEmitter(NULL, (_VECTOR *)&obj->transformMatrix.m[12], ext->celPos.cel, &ext->aiEmitter, NULL);
+    }
+    if (IsLevelLoaded() && mpbots.NumBots && ext->aiEmitter.path != NULL)
+        AINetwork_EmitPath(&ext->aiEmitter, 0.0f);
+}
+
+// The original takes ext in ECX and obj in EAX
+// AUTOLTCG
+__declspec(naked) void MP_initObjExt(void) {
+    _asm {
+        push eax
+        push ecx
+        call _MP_initObjExt
+        add esp, 8
+        ret
+    }
 }

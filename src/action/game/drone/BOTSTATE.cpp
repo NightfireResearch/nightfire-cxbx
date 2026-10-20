@@ -21,8 +21,6 @@
 #include "../../util/Sort.h"
 
 
-// multiplayer_modes.cpp's AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
 // FUN_000d8690: whether the segment from a to b passes within radius of centre, and the point it passes at (our
 // reading and name)

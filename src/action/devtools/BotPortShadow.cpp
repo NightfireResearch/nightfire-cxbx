@@ -114,6 +114,7 @@ bool __cdecl FakeDCVfromOBJ(obj_tag *obj, DCVars_tag *dcv) {
     memset(dcv, 0, sizeof(*dcv));
     dcv->gameObj = obj;
     dcv->drone = (Drone_tag *)obj->extraObjectData;
+    dcv->aiStateMachine = &dcv->drone->sm;
     return true;
 }
 
@@ -300,6 +301,25 @@ void __cdecl FakeTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint param4
     ShadowLog("teammsg(%d,%x,%d,%u,%u)", team, msg, Who(obj), param4, sender);
 }
 
+void __cdecl FakeSendMsgSelf(uint msg, void *extra, uint delay, uint scope, DCVars_tag *dc) {
+    ShadowLog("msgself(%x,%x,%u,%u,%d)", msg, Offset(extra), delay, scope, Who(dc->drone));
+}
+
+void __cdecl FakeRouteMsg(MsgObject *msg) {
+    ShadowLog("routemsg(%x,%u,%u,%d,%u,%u,%x)", msg->msgType, msg->scope, msg->sender, msg->receiver, msg->createdFrame,
+              msg->handleOnFrame, Offset(msg->extraData));
+}
+
+DYNAMICSOUNDS *__cdecl FakeSoundPlayExt(Action_SFX sfx, float volume, ushort pitch, uint param4) {
+    ShadowLog("playext(%x,%08x,%u,%u)", sfx, Bits(volume), pitch, param4);
+    return NULL;
+}
+
+uchar __cdecl FakeLevelLoaded(void) {
+    ShadowLog("levelloaded");
+    return Answer();
+}
+
 struct Fake {
     unsigned at;
     const void *fake;
@@ -349,6 +369,10 @@ const Fake kFakes[] = {
     {0x000c44e0, (const void *)&FakeScriptInfo},
     {0x000c2700, (const void *)&FakeScriptGetObj},
     {0x0009e430, (const void *)&FakeTeamBotMessage},
+    {0x0004e890, (const void *)&FakeSendMsgSelf},
+    {0x0004e630, (const void *)&FakeRouteMsg},
+    {0x000cb940, (const void *)&FakeSoundPlayExt},
+    {0x000bff80, (const void *)&FakeLevelLoaded},
 };
 
 // ---- the made-up world
@@ -1505,6 +1529,152 @@ const Case kMPObjects[] = {
     {"MP_getDemolitionObj_NotExt", 0x000a1610, RunDemolitionNotExt},
 };
 
+// ---- MP: messages, status and pickups
+
+#define PickupNextAddIndex I32_AT(0x0025fe30)
+#define PickupLastDeletedIdx I32_AT(0x00261b84)
+
+uint32_t RunSendBotMessage(bool original) {
+    obj_tag *obj = A(4) == 0 ? &world.mpObjs[0] : &world.objs[A(BOTS)];
+    uint msg = 0x2f + A(0x20), extra = A(4) == 0 ? P(&world.objs[0]) : A(3), delay = A(3) == 0 ? A(100) : 0;
+    CDECL_VOID(0x0009e3e0, MP_sendBotMessage, void (__cdecl *)(obj_tag *, uint, uint, uint), obj, msg, extra, delay);
+    return 0;
+}
+
+uint32_t RunSendTeamBotMessage(bool original) {
+    MPTeam team = (MPTeam)A(3);
+    uint msg = 0x2f + A(0x20), delay = A(3) == 0 ? A(100) : 0, sender = A(1000);
+    obj_tag *obj = A(3) == 0 ? NULL : &world.objs[A(BOTS)];
+    CDECL_VOID(0x0009e430, MP_sendTeamBotMessage, void (__cdecl *)(MPTeam, uint, obj_tag *, uint, uint), team, msg,
+               obj, delay, sender);
+    return 0;
+}
+
+uint32_t RunSetPlayerStatus(bool original) {
+    for (int i = 0; i < BOTS; i++)
+        if (A(5) != 0)
+            MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
+    obj_tag *obj = A(8) == 0 ? NULL : A(6) == 0 ? &world.mpObjs[0] : &world.objs[A(BOTS)];
+    ushort status = (ushort)(1 << A(6));
+    uint msg = A(4) == 0 ? 0 : A(3) == 0 ? A(0x60) : 0x2f + A(0x11);
+    obj_tag *target = &world.objs[A(BOTS)];
+    bool clear = A(2) != 0;
+    uint unused = A(0);
+    CDECL_VOID(0x0009e490, MP_setPlayerStatus, void (__cdecl *)(obj_tag *, ushort, uint, uint, obj_tag *, bool), obj,
+               status, msg, unused, target, clear);
+    return 0;
+}
+
+uint32_t RunChangeAssassin(bool original) {
+    for (int i = 0; i < BOTS; i++)
+        if (A(5) != 0)
+            MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
+    MPSettings.GameMode = A(4) == 0 ? GM_ARENA : GM_ASSASSIN;
+    obj_tag *oldObj = &world.objs[A(BOTS)], *newObj = A(5) == 0 ? &world.mpObjs[0] : &world.objs[A(BOTS)];
+    if (A(2))
+        AssassinTarget = oldObj;
+    else if (A(2))
+        CurrentAssassinObjId = oldObj;
+    return CDECL(0x0009e7c0, MP_changeAssassinOrTarget, uint32_t (__cdecl *)(obj_tag *, obj_tag *), oldObj, newObj) &
+           0xff;
+}
+
+uint32_t RunMPSound(bool original) {
+    Action_SFX sfx = (Action_SFX)A(0x400);
+    CDECL_VOID(0x0009ec60, MPSound_Play, void (__cdecl *)(Action_SFX), sfx);
+    return 0;
+}
+
+uint32_t RunApplyDamage(bool original) {
+    obj_tag *obj = &world.mpObjs[A(MPOBJS)];
+    MPOBJECT *mpObj = (MPOBJECT *)obj->extraObjectData;
+    static const ushort types[] = {DEMOLITION, PROTECTION, DEMOLITION, PROTECTION, CTF_FLAG, KOH};
+    mpObj->type = types[A(COUNT(types))];
+    obj->curState = (ushort)(A(3) == 0 ? A(0x10000) : A(2000));
+    static const float damages[] = {0.0f, -0.0f, 1.0f, 0.5f, 2.75f, 100.0f, -3.0f, 1000.5f};
+    float damage = damages[A(COUNT(damages))];
+    obj_tag *from = A(3) == 0 ? NULL : &world.objs[A(BOTS)];
+    for (int i = 0; i < BOTS; i++)
+        if (A(4) != 0)
+            MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
+    CDECL_VOID(0x000a12b0, MP_ApplyDamage, void (__cdecl *)(obj_tag *, float, obj_tag *), obj, damage, from);
+    return 0;
+}
+
+// The pickups: objects 2-5 are pickups, some in slots
+void Pickups() {
+    for (int i = 2; i < MPOBJS; i++) {
+        obj_tag *obj = &world.mpObjs[i];
+        obj->objectType = (char)(A(8) == 0 ? OBJECTTYPE_MPOBJECT : OBJECTTYPE_PICKUP);
+        PICKUPINFO *info = (PICKUPINFO *)obj->extraObjectData;
+        memset(info, 0, sizeof(*info));
+        info->kind = (ushort)A(3);
+        info->item = (ushort)A(0x54);
+        info->lifetime = (ushort)(A(3) == 0 ? 0 : A(4000));
+        info->mpIndex = -1;
+    }
+    memset(MPpickups, 0, sizeof(MPpickups));
+    int used = 0;
+    for (int i = 2; i < MPOBJS; i++) {
+        if (A(2)) {
+            int slot = (int)A(64);
+            if (MPpickups[slot].gameObj == NULL) {
+                MPpickups[slot].gameObj = &world.mpObjs[i];
+                MPpickups[slot].aiEmitter.data = A(2) ? world.item : NULL;
+                ((PICKUPINFO *)world.mpObjs[i].extraObjectData)->mpIndex = (short)slot;
+                used++;
+            }
+        }
+    }
+    // a full table now and then
+    if (A(5) == 0) {
+        for (int slot = 0; slot < 64; slot++) {
+            if (MPpickups[slot].gameObj == NULL) {
+                MPpickups[slot].gameObj = &world.mpObjs[2 + A(MPOBJS - 2)];
+                used++;
+            }
+        }
+    }
+    // no more than are in the table: the original's search for the shortest lifetime counts them down
+    MPSettings.numActivePickups = (ushort)(A(4) == 0 ? A(used + 1) : used);
+    PickupLastDeletedIdx = A(3) == 0 ? -1 : (int)A(64);
+    PickupNextAddIndex = (int)A(66);
+    MPSettings.isMultiplayer = A(8) != 0;
+}
+
+uint32_t RunUnregisterPickup(bool original) {
+    Pickups();
+    obj_tag *pickup = A(8) == 0 ? NULL : &world.mpObjs[2 + A(MPOBJS - 2)];
+    CDECL_VOID(0x0009de20, MP_UnregisterPickup, void (__cdecl *)(obj_tag *), pickup);
+    return 0;
+}
+
+uint32_t RunRegisterPickup(bool original) {
+    Pickups();
+    obj_tag *pickup = A(8) == 0 ? NULL : &world.mpObjs[2 + A(MPOBJS - 2)];
+    return CDECL(0x000a1310, MP_RegisterPickup, uint32_t (__cdecl *)(obj_tag *), pickup);
+}
+
+uint32_t RunInitObjExt(bool original) {
+    MP_OBJ_EXT *ext = A(6) == 0 ? NULL : &Uplinks[A(8)];
+    obj_tag *obj = &world.mpObjs[A(MPOBJS)];
+    Regs r = {P(obj), 0, P(ext), 0, 0, 0};
+    RegsRun(original, 0x000a1560, (const void *)&MP_initObjExt, r, 0, NULL);
+    return 0;
+}
+
+const Case kMPMessages[] = {
+    {"MP_sendBotMessage", 0x0009e3e0, RunSendBotMessage},
+    {"MP_sendTeamBotMessage", 0x0009e430, RunSendTeamBotMessage},
+    {"MP_setPlayerStatus", 0x0009e490, RunSetPlayerStatus},
+    {"MP_changeAssassinOrTarget", 0x0009e7c0, RunChangeAssassin},
+    {"MPSound_Play", 0x0009ec60, RunMPSound},
+    {"MP_ApplyDamage", 0x000a12b0, RunApplyDamage},
+    {"MP_UnregisterPickup", 0x0009de20, RunUnregisterPickup},
+    {"MP_RegisterPickup", 0x000a1310, RunRegisterPickup},
+    {"MP_initObjExt", 0x000a1560, RunInitObjExt},
+};
+
 const Case *currentCase;
 uint32_t caseSeed;
 
@@ -1557,6 +1727,7 @@ void BotPortShadow_Run(void) {
     regions.Add(&SpawnPoints, sizeof(SpawnPoints));
     regions.Add(MPBlock, kMPBlock);
     regions.Add(&mpbots, sizeof(mpbots));
+    regions.Add((void *)0x0025fe30, 4);     // PickupNextAddIndex
     static MPSettings_t shippedSettings;
     static MPGameStruct shippedGame;
     static GameState_t shippedState;
@@ -1568,6 +1739,7 @@ void BotPortShadow_Run(void) {
     memcpy(shippedBlock, MPBlock, kMPBlock);
     static MPBOTS shippedBots;
     shippedBots = mpbots;
+    int shippedNextPickup = I32_AT(0x0025fe30);
     static MPSpawnPoint shippedSpawns[64];
     memcpy(shippedSpawns, SpawnPoints, sizeof(shippedSpawns));
     uint8_t shippedRandom[8];
@@ -1578,6 +1750,7 @@ void BotPortShadow_Run(void) {
     Group("the bots' distraction, dodges and weapon choice", kStates2, COUNT(kStates2), 3000);
     Group("the bots' alerts, pain, aim and respawn", kBots, COUNT(kBots), 3000);
     Group("the multiplayer scenario objects", kMPObjects, COUNT(kMPObjects), 3000);
+    Group("the multiplayer messages, status and pickups", kMPMessages, COUNT(kMPMessages), 3000);
 
     ShadowHook_RemoveAll();
     MPSettings = shippedSettings;
@@ -1588,6 +1761,7 @@ void BotPortShadow_Run(void) {
     memcpy(SpawnPoints, shippedSpawns, sizeof(shippedSpawns));
     memcpy(MPBlock, shippedBlock, kMPBlock);
     mpbots = shippedBots;
+    I32_AT(0x0025fe30) = shippedNextPickup;
     memcpy((void *)0x0018cdf8, shippedRandom, 8);
     printf("[botport] %d cases, %d differ\n", cases, differ);
 }
