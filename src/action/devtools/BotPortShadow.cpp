@@ -20,6 +20,8 @@
 #include "../game/drone/BOTWEAP.h"
 #include "../game/drone/Drone.h"
 #include "../game/mp/multiplayer.h"
+#include "../game/obj/Pickup.h"
+#include "../engine/Script.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -30,7 +32,17 @@ namespace {
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
 #define GameStartWeapon I16_AT(0x001639c8)
 
+// The scenario objects (multiplayer.cpp)
+#define UplinkCount U16_AT(0x002637c8)
+#define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
+#define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
+#define Hill (*(MP_OBJ_EXT*)0x00261b88)
+#define Demolition (*(MP_OBJ_EXT*)0x00261af8)
+#define Protection (*(MP_OBJ_EXT*)0x00261b40)
+#define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
+
 const int BOTS = 3;
+const int MPOBJS = 6;
 
 struct World {
     obj_tag objs[BOTS];
@@ -51,6 +63,12 @@ struct World {
     AINode_tag nodes[6];
     MAPNODE_tag mapNodes[6];
     sAnimScript_tag scripts[2];
+    obj_tag mpObjs[MPOBJS];
+    uint8_t mpExtra[MPOBJS][0x60];
+    celglist_tag glist;
+    MPOBJECT mpObjects[2];
+    PICKUPINFO pickupInfos[3];
+    char text[128];
     ushort routeNodes[8];
     uint32_t answers;           // the fakes' answers, a bit a call
     int fakeCalls;
@@ -239,6 +257,49 @@ uint __cdecl FakeGameFlowState(void) {
     return (world.answers & 0x700) == 0 ? 3 : 2;
 }
 
+char *__cdecl FakeStringHeap(uchar which) {
+    ShadowLog("stringheap(%d)", which);
+    return world.text;
+}
+
+void __cdecl FakeFreeEmitter(AIEmitter_tag *emitter) {
+    ShadowLog("freeemitter(%x)", Offset(emitter));
+}
+
+void __cdecl FakeInitEmitter(obj_tag *obj, _VECTOR *pos, cel_tag *cel, AIEmitter_tag *emitter, AIPath_tag *path) {
+    ShadowLog("initemitter(%d,%08x,%x,%x,%x)", Who(obj), Bits(pos->x), Offset(cel), Offset(emitter), Offset(path));
+    emitter->path = Answer() ? &world.path : NULL;
+}
+
+uint __cdecl FakeEmitPath(AIEmitter_tag *emitter, float maxCost) {
+    ShadowLog("emitpath(%x,%08x)", Offset(emitter), Bits(maxCost));
+    return 0;
+}
+
+cel_tag *__cdecl FakeFindCel(_VECTOR *pos, world_tag *level) {
+    ShadowLog("findcel(%08x,%08x,%08x,%p)", Bits(pos->x), Bits(pos->y), Bits(pos->z), level);
+    return Answer() ? (cel_tag *)world.item : NULL;
+}
+
+bool __cdecl FakePointOnFloor(cel_tag *cel, obj_tag *obj, _VECTOR *pos, float distance, _VECTOR *direction) {
+    ShadowLog("onfloor(%x,%d,%x,%08x,%p)", Offset(cel), Who(obj), Offset(pos), Bits(distance), direction);
+    return Answer();
+}
+
+SCRIPTINFO *__cdecl FakeScriptInfo(obj_tag *obj) {
+    ShadowLog("scriptinfo(%d)", Who(obj));
+    return (SCRIPTINFO *)world.item;
+}
+
+obj_tag *__cdecl FakeScriptGetObj(SCRIPTINFO *script, ushort stream) {
+    ShadowLog("scriptobj(%x,%d)", Offset(script), stream);
+    return Answer() ? &world.mpObjs[(world.answers >> 4) % MPOBJS] : NULL;
+}
+
+void __cdecl FakeTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint param4, uint sender) {
+    ShadowLog("teammsg(%d,%x,%d,%u,%u)", team, msg, Who(obj), param4, sender);
+}
+
 struct Fake {
     unsigned at;
     const void *fake;
@@ -279,6 +340,15 @@ const Fake kFakes[] = {
     {0x00021110, (const void *)&FakeLinkToRoom},
     {0x000b0600, (const void *)&FakeLogHealth},
     {0x0006aa70, (const void *)&FakeGameFlowState},
+    {0x0006d140, (const void *)&FakeStringHeap},
+    {0x00049d40, (const void *)&FakeFreeEmitter},
+    {0x0004a870, (const void *)&FakeInitEmitter},
+    {0x00049d70, (const void *)&FakeEmitPath},
+    {0x00020c30, (const void *)&FakeFindCel},
+    {0x00020eb0, (const void *)&FakePointOnFloor},
+    {0x000c44e0, (const void *)&FakeScriptInfo},
+    {0x000c2700, (const void *)&FakeScriptGetObj},
+    {0x0009e430, (const void *)&FakeTeamBotMessage},
 };
 
 // ---- the made-up world
@@ -376,6 +446,8 @@ void RandomBot(int i) {
     }
 }
 
+void RandomMP();
+
 void RandomWorld() {
     GameState.NumFramesUnpaused = R(4) == 0 ? 0 : R(100000);
     for (int i = 0; i < BOTS; i++)
@@ -439,6 +511,7 @@ void RandomWorld() {
     BOT_startWeapon = R(2) ? weapon_data[PickupMatrix[R(PICKUP_SETS)][0]].weaponBaseNum : starts[R(COUNT(starts))];
     memset(world.list, 0x5a, sizeof(world.list));
     world.count = (int)R(1000);
+    RandomMP();
 }
 
 // ---- running both sides
@@ -515,6 +588,54 @@ float ArgWeight() {
     (original ? (uint32_t)ORIGINAL(at, type)(__VA_ARGS__) : (uint32_t)ours(__VA_ARGS__))
 #define CDECL_VOID(at, ours, type, ...) \
     do { if (original) ORIGINAL(at, type)(__VA_ARGS__); else ours(__VA_ARGS__); } while (0)
+
+// ---- calling register-argument originals
+
+struct Regs {
+    uint32_t eax, ebx, ecx, edx, esi, edi;
+};
+
+__declspec(naked) uint32_t __cdecl CallRegs(unsigned at, const Regs *r, int argc, const uint32_t *args) {
+    _asm {
+        push ebp
+        mov ebp, esp
+        push ebx
+        push esi
+        push edi
+        mov ecx, [ebp + 16]
+        mov edx, [ebp + 20]
+    pushing:
+        test ecx, ecx
+        jz pushed
+        push dword ptr [edx + ecx * 4 - 4]
+        dec ecx
+        jmp pushing
+    pushed:
+        mov eax, [ebp + 12]
+        mov ebx, [eax + 4]
+        mov ecx, [eax + 8]
+        mov edx, [eax + 12]
+        mov esi, [eax + 16]
+        mov edi, [eax + 20]
+        mov eax, [eax]
+        call dword ptr [ebp + 8]
+        mov ecx, [ebp + 16]
+        lea esp, [esp + ecx * 4]
+        pop edi
+        pop esi
+        pop ebx
+        pop ebp
+        ret
+    }
+}
+
+uint32_t P(const void *p) {
+    return (uint32_t)(uintptr_t)p;
+}
+
+uint32_t RegsRun(bool original, unsigned at, const void *ours, Regs r, int argc, const uint32_t *args) {
+    return CallRegs(original ? at : (unsigned)(uintptr_t)ours, &r, argc, args);
+}
 
 typedef uint32_t (__cdecl *DroneWeapon)(Drone_tag *, short);
 typedef uint32_t (__cdecl *DroneWeaponCount)(Drone_tag *, short, short);
@@ -1180,6 +1301,210 @@ const Case kBots[] = {
     {"BOT_postLoadInit", 0x0001b8e0, RunPostLoad},
 };
 
+// ---- MP: the scenario objects
+
+#define MPBlock ((uint8_t *)0x00260078)
+const size_t kMPBlock = 0x002637e0 - 0x00260078;
+
+void RandomObjExt(MP_OBJ_EXT *ext) {
+    memset(ext, 0, sizeof(*ext));
+    ext->gameObj = R(4) == 0 ? NULL : &world.mpObjs[R(MPOBJS)];
+    ext->aiEmitter.path = R(2) ? &world.path : NULL;
+    ext->aiEmitter.data = R(2) ? world.item : NULL;
+    ext->mpObj = R(3) == 0 ? NULL : &world.mpObjects[R(2)];
+    ext->celPos.cel = R(2) ? (cel_tag *)world.item : NULL;
+}
+
+void RandomMP() {
+    for (int i = 0; i < MPOBJS; i++) {
+        obj_tag *obj = &world.mpObjs[i];
+        memset(obj, 0, sizeof(*obj));
+        obj->extraObjectData = world.mpExtra[i];
+        obj->curState = (ushort)R(4);
+        obj->maybeParent = R(3) == 0 ? NULL : &world.objs[R(BOTS)];
+        obj->rotation.y = ShadowRandFloat(-3.2f, 3.2f);
+        obj->radius = ShadowRandFloat(0.0f, 3.0f);
+        obj->centrePoint.x = ShadowRandFloat(-10.0f, 10.0f);
+        obj->centrePoint.y = ShadowRandFloat(-2.0f, 2.0f);
+        obj->centrePoint.z = ShadowRandFloat(-10.0f, 10.0f);
+        for (int k = 12; k < 15; k++)
+            obj->transformMatrix.m[k] = ShadowRandFloat(-5.0f, 5.0f);
+        obj->objGraphics = &world.glist;
+        obj->inCel = R(2) ? (cel_tag *)world.item : NULL;
+    }
+    memset(&world.glist, 0, sizeof(world.glist));
+    world.glist.extentMin.x = -ShadowRandFloat(0.0f, 4.0f);
+    world.glist.extentMin.y = -ShadowRandFloat(0.0f, 4.0f);
+    world.glist.extentMin.z = -ShadowRandFloat(0.0f, 4.0f);
+    world.glist.extentMax.x = ShadowRandFloat(0.0f, 4.0f);
+    world.glist.extentMax.y = ShadowRandFloat(0.0f, 4.0f);
+    world.glist.extentMax.z = ShadowRandFloat(0.0f, 4.0f);
+    for (int i = 0; i < 2; i++) {
+        memset(&world.mpObjects[i], 0, sizeof(world.mpObjects[i]));
+        world.mpObjects[i].scriptPlayer = &world.mpObjs[R(MPOBJS)];
+        world.mpObjects[i].type = (ushort)R(11);
+        world.mpObjects[i].num = (ushort)R(2);
+    }
+
+    memset(MPBlock, 0, kMPBlock);
+    for (int i = 0; i < 2; i++) {
+        RandomObjExt(&Flags[i]);
+        RandomObjExt(&Bases[i]);
+        RandomObjExt(&EsponageBase[i]);
+        RandomObjExt(&GoldenEye.keys[i]);
+    }
+    for (int i = 0; i < 8; i++)
+        RandomObjExt(&Uplinks[i]);
+    UplinkCount = (ushort)R(9);
+    RandomObjExt(&BluePrint);
+    RandomObjExt(&Hill);
+    if (Hill.gameObj == NULL)
+        Hill.gameObj = &world.mpObjs[0];
+    RandomObjExt(&Demolition);
+    RandomObjExt(&Protection);
+    AssassinTarget = R(3) == 0 ? NULL : &world.objs[R(BOTS)];
+    for (int i = 0; i < 64; i++) {
+        if (R(8) == 0) {
+            obj_tag *obj = &world.mpObjs[R(MPOBJS)];
+            MPpickups[i].gameObj = obj;
+            obj->extraObjectData = &world.pickupInfos[R(3)];
+        }
+    }
+    for (int t = 0; t < 2; t++)
+        MPGame.teamScore[t] = R(4) == 0 ? -ShadowRandFloat(0.0f, 5.0f) : ShadowRandFloat(0.0f, 30.0f);
+    for (int p = 0; p < NUM_AGENTS; p++) {
+        MPGame.players[p].victories = R(20);
+        MPGame.players[p].deaths = R(20);
+        MPGame.players[p].points = ShadowRandFloat(-3.0f, 50.0f);
+    }
+    mpbots.NumBots = (char)R(3);
+    MPSettings.field53_0x190 = R(2);
+    memset(world.text, 0, sizeof(world.text));
+}
+
+uint32_t RunTeamScore(bool original) {
+    ushort team = (ushort)A(3);
+    return CDECL(0x0009d840, MP_GetTeamScore, uint32_t (__cdecl *)(ushort), team);
+}
+
+uint32_t RunPlayerScore(bool original) {
+    ushort player = (ushort)A(NUM_AGENTS);
+    return CDECL(0x0009d8d0, MP_GetPlayerScore, uint32_t (__cdecl *)(ushort), player);
+}
+
+uint32_t RunIsFlagParent(bool original) {
+    obj_tag *obj = &world.objs[A(BOTS)];
+    ushort team = (ushort)A(2);
+    return CDECL(0x0009d980, MP_IsFlagParent, uint32_t (__cdecl *)(obj_tag *, ushort), obj, team) & 0xff;
+}
+
+uint32_t RunIsBluePrintParent(bool original) {
+    obj_tag *obj = &world.objs[A(BOTS)];
+    return CDECL(0x0009d9b0, MP_IsBluePrintParent, uint32_t (__cdecl *)(obj_tag *), obj) & 0xff;
+}
+
+uint32_t RunTeamHasGE(bool original) {
+    for (int i = 0; i < BOTS; i++)
+        MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
+    obj_tag *obj = &world.objs[A(BOTS)];
+    int part = (int)A(2);
+    return CDECL(0x0009d9d0, MP_ObjTeamHasGEObj, uint32_t (__cdecl *)(obj_tag *, int), obj, part) & 0xff;
+}
+
+uint32_t RunPostLoadObjExt(bool original) {
+    MP_OBJ_EXT *ext = A(5) == 0 ? NULL : &Uplinks[A(8)];
+    Regs r = {P(ext), 0, 0, 0, 0, 0};
+    RegsRun(original, 0x0009e020, (const void *)&MP_PostLoadInitObjExt, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunObjExtFromMPObject(bool original) {
+    MPOBJECT *mpObj = &world.mpObjects[A(2)];
+    if (A(3) == 0) {
+        Uplinks[A(8)].gameObj = &world.mpObjs[0];
+        world.mpObjs[0].extraObjectData = mpObj;
+    }
+    Regs r = {0, 0, 0, 0, 0, P(mpObj)};
+    return RegsRun(original, 0x0009e130, (const void *)&MP_getObjExtFromMPOBJECT, r, 0, NULL);
+}
+
+uint32_t RunUplinkObj(bool original) {
+    int idx = (int)A(20) - 10;
+    int filter = (int)A(4);
+    return CDECL(0x0009e230, MP_getUplinkObj, uint32_t (__cdecl *)(int, int), idx, filter);
+}
+
+uint32_t RunUplinkStatus(bool original) {
+    short uplink = (short)A(8);
+    return CDECL(0x0009e2a0, MP_getUplinkStatus, uint32_t (__cdecl *)(short), uplink) & 0xffff;
+}
+
+uint32_t RunBlueprintObj(bool original) {
+    return CDECL(0x0009e2e0, MP_getBlueprintObj, uint32_t (__cdecl *)(void));
+}
+
+uint32_t RunEsponageBase(bool original) {
+    uint team = A(3);
+    int quadrant = (int)A(7) - 1;
+    return CDECL(0x0009e2f0, MP_getEsponageBaseObj, uint32_t (__cdecl *)(uint, int), team, quadrant);
+}
+
+uint32_t RunGoldenEyeObj(bool original) {
+    uint key = A(3);
+    return CDECL(0x0009e3a0, MP_getGoldenEyeObj, uint32_t (__cdecl *)(uint), key);
+}
+
+uint32_t RunOnHill(bool original) {
+    _VECTOR *pos = &world.pos.pos;
+    pos->x = Hill.gameObj->transformMatrix.m[12] + (float)A(1000) / 100.0f - 5.0f;
+    pos->y = Hill.gameObj->transformMatrix.m[13] + (float)A(1000) / 100.0f - 5.0f;
+    pos->z = Hill.gameObj->transformMatrix.m[14] + (float)A(1000) / 100.0f - 5.0f;
+    return CDECL(0x0009e650, MP_isPosOnHill, uint32_t (__cdecl *)(_VECTOR *), pos) & 0xff;
+}
+
+uint32_t RunObjExtObj(bool original) {
+    MP_OBJ_EXT *ext = A(3) == 0 ? &Uplinks[A(8)] : A(2) ? &Protection : &Demolition;
+    return CDECL(0x0009e740, MP_getObjExtObj, uint32_t (__cdecl *)(MP_OBJ_EXT *), ext);
+}
+
+uint32_t RunAssassinTarget(bool original) {
+    return CDECL(0x0009e7b0, MP_getAssassinTarget, uint32_t (__cdecl *)(void));
+}
+
+uint32_t RunMPPickup(bool original) {
+    PICKUPINFO *info = &world.pickupInfos[A(4) % 3];
+    return CDECL(0x0009e870, MP_getMPpickup, uint32_t (__cdecl *)(PICKUPINFO *), info);
+}
+
+uint32_t RunProtectionNotExt(bool original) {
+    return CDECL(0x000a1600, MP_getProtectionObj_NotExt, uint32_t (__cdecl *)(void));
+}
+
+uint32_t RunDemolitionNotExt(bool original) {
+    return CDECL(0x000a1610, MP_getDemolitionObj_NotExt, uint32_t (__cdecl *)(void));
+}
+
+const Case kMPObjects[] = {
+    {"MP_GetTeamScore", 0x0009d840, RunTeamScore},
+    {"MP_GetPlayerScore", 0x0009d8d0, RunPlayerScore},
+    {"MP_IsFlagParent", 0x0009d980, RunIsFlagParent},
+    {"MP_IsBluePrintParent", 0x0009d9b0, RunIsBluePrintParent},
+    {"MP_ObjTeamHasGEObj", 0x0009d9d0, RunTeamHasGE},
+    {"MP_PostLoadInitObjExt", 0x0009e020, RunPostLoadObjExt},
+    {"MP_getObjExtFromMPOBJECT", 0x0009e130, RunObjExtFromMPObject},
+    {"MP_getUplinkObj", 0x0009e230, RunUplinkObj},
+    {"MP_getUplinkStatus", 0x0009e2a0, RunUplinkStatus},
+    {"MP_getBlueprintObj", 0x0009e2e0, RunBlueprintObj},
+    {"MP_getEsponageBaseObj", 0x0009e2f0, RunEsponageBase},
+    {"MP_getGoldenEyeObj", 0x0009e3a0, RunGoldenEyeObj},
+    {"MP_isPosOnHill", 0x0009e650, RunOnHill},
+    {"MP_getObjExtObj", 0x0009e740, RunObjExtObj},
+    {"MP_getAssassinTarget", 0x0009e7b0, RunAssassinTarget},
+    {"MP_getMPpickup", 0x0009e870, RunMPPickup},
+    {"MP_getProtectionObj_NotExt", 0x000a1600, RunProtectionNotExt},
+    {"MP_getDemolitionObj_NotExt", 0x000a1610, RunDemolitionNotExt},
+};
+
 const Case *currentCase;
 uint32_t caseSeed;
 
@@ -1230,6 +1555,8 @@ void BotPortShadow_Run(void) {
     regions.Add(&BOT_startWeapon, sizeof(BOT_startWeapon));
     regions.Add((void *)0x0018cdf8, 8);     // Rand_Random's state
     regions.Add(&SpawnPoints, sizeof(SpawnPoints));
+    regions.Add(MPBlock, kMPBlock);
+    regions.Add(&mpbots, sizeof(mpbots));
     static MPSettings_t shippedSettings;
     static MPGameStruct shippedGame;
     static GameState_t shippedState;
@@ -1237,6 +1564,10 @@ void BotPortShadow_Run(void) {
     shippedGame = MPGame;
     shippedState = GameState;
     short shippedStart = GameStartWeapon, ourStart = BOT_startWeapon;
+    static uint8_t shippedBlock[0x002637e0 - 0x00260078];
+    memcpy(shippedBlock, MPBlock, kMPBlock);
+    static MPBOTS shippedBots;
+    shippedBots = mpbots;
     static MPSpawnPoint shippedSpawns[64];
     memcpy(shippedSpawns, SpawnPoints, sizeof(shippedSpawns));
     uint8_t shippedRandom[8];
@@ -1246,6 +1577,7 @@ void BotPortShadow_Run(void) {
     Group("the bots' combat moves and goals", kStates, COUNT(kStates), 3000);
     Group("the bots' distraction, dodges and weapon choice", kStates2, COUNT(kStates2), 3000);
     Group("the bots' alerts, pain, aim and respawn", kBots, COUNT(kBots), 3000);
+    Group("the multiplayer scenario objects", kMPObjects, COUNT(kMPObjects), 3000);
 
     ShadowHook_RemoveAll();
     MPSettings = shippedSettings;
@@ -1254,6 +1586,8 @@ void BotPortShadow_Run(void) {
     GameStartWeapon = shippedStart;
     BOT_startWeapon = ourStart;
     memcpy(SpawnPoints, shippedSpawns, sizeof(shippedSpawns));
+    memcpy(MPBlock, shippedBlock, kMPBlock);
+    mpbots = shippedBots;
     memcpy((void *)0x0018cdf8, shippedRandom, 8);
     printf("[botport] %d cases, %d differ\n", cases, differ);
 }

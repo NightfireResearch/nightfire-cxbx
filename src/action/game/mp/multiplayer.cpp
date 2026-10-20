@@ -14,6 +14,12 @@
 #include <math.h>
 #include <stdint.h>
 #include "../../engine/AINetwork.h"
+#include "../../engine/Script.h"        // Script_GetObj
+#include "../../engine/Text.h"          // Txt_GetStringFromHeap
+#include "../../math/X87Ops.h"
+#include "../obj/build.h"               // build_FindCel
+#include "../obj/ScriptPlayer.h"        // SP_getScriptInfo
+#include <bit>
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -31,6 +37,14 @@ static int32_t Ftol(double x) {
 #define BOT_init ((obj_tag* (__cdecl *)(short, _VECTOR *, _VECTOR *, obj_tag *, MPBOT *, char))0x0001b170)
 
 #define NUM_SKINS 29 // unique characters
+
+#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
+
+// The bot message telling a side the demolition or protection object has gone (MP_getObjExtObj)
+#define BOT_MSG_OBJECTIVE_GONE 0x40
+
+constexpr float HalfPi = 1.5707964f;
+static_assert(std::bit_cast<uint32_t>(HalfPi) == 0x3fc90fdb, "not the original's pi / 2");
 
 
 // AUTOINJECT
@@ -470,8 +484,8 @@ MP_OBJ_EXT* MP_getHillObj(void) {
   return &Hill;
 }
 
-// UNINJECTABLE - custom calling convention
-MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
+// The scenario object's MP_OBJ_EXT, by its type: an uplink's is looked up by its object
+MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 
   switch(mpObj->type) {
     case CTF_FLAG:
@@ -479,7 +493,7 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
     case CTF_BASE:
       return &Bases[mpObj->num];
     case UPLINK:
-      for(int i = 0; i < ARRAY_SIZE(Uplinks); i++) {
+      for(int i = 0; i < (int)ARRAY_SIZE(Uplinks); i++) {
         if(Uplinks[i].gameObj != NULL && Uplinks[i].gameObj->extraObjectData == mpObj)
           return &Uplinks[i];
       }
@@ -503,6 +517,17 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
   return NULL;
 }
 
+
+// The original takes mpObj in EDI
+// AUTOLTCG
+__declspec(naked) MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void) {
+    _asm {
+        push edi
+        call _MP_getObjExtFromMPOBJECT
+        add esp, 4
+        ret
+    }
+}
 
 // Rebuilds a scenario object's AI emitter, which the bots path to: at the object's matrix and cel unless keepPos,
 // the cel looked up if it has none. Emitters exist only in a game with bots.
@@ -551,7 +576,7 @@ void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool kee
     Control_BuildWorldSph(gameObj);
     build_LinkToRoom(gameObj, 0, glb_world);
     gameObj->maybeParent = NULL;
-    MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
+    MP_OBJ_EXT *ext = _MP_getObjExtFromMPOBJECT(mpObj);
     if (ext != NULL)
         _MP_recalcObjExtPaths(ext, false);
     gameObj->effectFlags &= ~0x21;
@@ -1434,4 +1459,200 @@ void MP_Start(void) {
 
     MPSettings.Started = true;
     MPGame.lastTimePaused = -1.0f;
+}
+
+// ---- the scenario objects, as the HUD and the bots ask for them
+
+// A team's score line for the HUD: its score and the other team's. NULL outside a team game.
+// AUTOINJECT
+char* MP_GetTeamScore(ushort team) {
+    if (!MPSettings.maybeIsTeamGame)
+        return NULL;
+    char *text = Txt_GetStringFromHeap(0);
+    // both settings of field53_0x190 print the same
+    int theirs = Ftol(MPGame.teamScore[team == PHOENIX]);
+    int ours = Ftol(MPGame.teamScore[team]);
+    sprintf(text, "%d - %d", ours, theirs);
+    return text;
+}
+
+// An agent's score lines for the HUD: victories and deaths, after its points in Assassin and King of the Hill
+// AUTOINJECT
+char* MP_GetPlayerScore(ushort player) {
+    char *text = Txt_GetStringFromHeap(0);
+    MPGamePlayer *agent = &MPGame.players[player];
+    if (MPSettings.GameMode == GM_ASSASSIN || MPSettings.GameMode == GM_KOTH)
+        sprintf(text, "%d\n%d\n%d", Ftol(agent->points), agent->victories, agent->deaths);
+    else if (MPSettings.maybeIsTeamGame)
+        sprintf(text, "%d\n%d", agent->victories, agent->deaths);
+    else
+        sprintf(text, "\n%d\n%d", agent->victories, agent->deaths);
+    return text;
+}
+
+// Whether obj carries the team's flag
+// AUTOINJECT
+bool MP_IsFlagParent(obj_tag *obj, ushort team) {
+    obj_tag *flag = Flags[team].gameObj;
+    return flag != NULL && flag->maybeParent == obj;
+}
+
+// AUTOINJECT
+bool MP_IsBluePrintParent(obj_tag *obj) {
+    obj_tag *blueprint = BluePrint.gameObj;
+    return blueprint != NULL && blueprint->maybeParent == obj;
+}
+
+// Whether the GoldenEye key or crystal (part 0 or 1) is carried by someone on obj's team
+// AUTOINJECT
+bool MP_ObjTeamHasGEObj(obj_tag *obj, int part) {
+    MP_OBJ_EXT *ext = &GoldenEye.keys[part];
+    if (ext->gameObj == NULL || ext->gameObj->maybeParent == NULL)
+        return false;
+    MPTeam team = MPSettings.Player[Control_Plr2Ind(obj)].TeamId;
+    return team == MPSettings.Player[Control_Plr2Ind(ext->gameObj->maybeParent)].TeamId;
+}
+
+// The bots' path to a scenario object, once the level is loaded
+void _MP_PostLoadInitObjExt(MP_OBJ_EXT *ext) {
+    if (ext != NULL && mpbots.NumBots && ext->aiEmitter.path != NULL)
+        AINetwork_EmitPath(&ext->aiEmitter, 0);
+}
+
+// The original takes ext in EAX
+// AUTOLTCG
+__declspec(naked) void MP_PostLoadInitObjExt(void) {
+    _asm {
+        push eax
+        call _MP_PostLoadInitObjExt
+        add esp, 4
+        ret
+    }
+}
+
+// An uplink: by index (NULL past the last, or with no object), or for a negative idx the first from -1 - idx whose
+// object is not in state filterState
+// AUTOINJECT
+MP_OBJ_EXT* MP_getUplinkObj(int idx, int filterState) {
+    if (idx < 0) {
+        for (int i = -1 - idx; i < UplinkCount; i++) {
+            MP_OBJ_EXT *ext = &Uplinks[i];
+            if (ext->gameObj != NULL && (short)ext->gameObj->curState != filterState)
+                return ext;
+        }
+        return NULL;
+    }
+    if (idx >= UplinkCount)
+        return NULL;
+    MP_OBJ_EXT *ext = &Uplinks[idx];
+    return ext->gameObj != NULL ? ext : NULL;
+}
+
+// An uplink's state (its object's), 2 with none
+// AUTOINJECT
+ushort MP_getUplinkStatus(short uplink) {
+    obj_tag *obj = Uplinks[uplink].gameObj;
+    if (obj == NULL)
+        return 2;
+    return obj->curState;
+}
+
+// AUTOINJECT
+MP_OBJ_EXT* MP_getBlueprintObj(void) {
+    return BluePrint.gameObj != NULL ? &BluePrint : NULL;
+}
+
+// A team's espionage base, with its bot goal moved to the side of the base given by quadrant (0-3, a quarter turn
+// each from its facing) and its path rebuilt; another quadrant leaves it where it was
+// AUTOINJECT
+MP_OBJ_EXT* MP_getEsponageBaseObj(uint team, int quadrant) {
+    if (team >= 2)
+        return NULL;
+    if (quadrant < 0 || quadrant > 3)
+        return &EsponageBase[team];
+
+    MP_OBJ_EXT *ext = &EsponageBase[team];
+    obj_tag *base = ext->gameObj;
+    if (base == NULL)
+        return NULL;
+    Extended angle = Extended((double)quadrant) * Extended(HalfPi) + Extended(base->rotation.y);
+    Extended reach = Extended(base->radius) + Extended(0.1f);
+    ext->celPos.pos.x = (float)(FSin(angle) * reach + Extended(base->centrePoint.x));
+    ext->celPos.pos.y = base->centrePoint.y;
+    ext->celPos.pos.z = (float)(FCos(angle) * reach + Extended(base->centrePoint.z));
+    ext->celPos.cel = build_FindCel(&ext->celPos.pos, glb_world);
+    build_PointOnFloor(ext->celPos.cel, NULL, &ext->celPos.pos, 1.25f, NULL);
+    _MP_recalcObjExtPaths(ext, true);
+    return ext;
+}
+
+// The GoldenEye key or crystal while it is in state 0 or 2, else NULL
+// AUTOINJECT
+MP_OBJ_EXT* MP_getGoldenEyeObj(uint key) {
+    if (key > 1)
+        return NULL;
+    MP_OBJ_EXT *ext = &GoldenEye.keys[key];
+    if (ext->gameObj == NULL)
+        return NULL;
+    short state = ext->gameObj->curState;
+    return state == 0 || state == 2 ? ext : NULL;
+}
+
+// Whether pos is inside the King of the Hill object's box
+// AUTOINJECT
+bool MP_isPosOnHill(_VECTOR *pos) {
+    obj_tag *hill = Hill.gameObj;
+    _VECTOR offset;
+    Vec_Subtract(pos, (_VECTOR *)&hill->transformMatrix.m[12], &offset);
+    return Intersect_SphereBox(&offset, 0.0f, &hill->objGraphics->extentMin, &hill->objGraphics->extentMax);
+}
+
+// A scenario object's object. The demolition and protection objects are their script's: when that changes, the
+// side's bots are told the old one has gone (bot message 0x40).
+// AUTOINJECT
+obj_tag* MP_getObjExtObj(MP_OBJ_EXT *ext) {
+    MPTeam told;    // the side told when the object goes
+    if (ext == &Protection)
+        told = PHOENIX;
+    else if (ext == &Demolition)
+        told = MI6;
+    else
+        return ext->gameObj;
+
+    if (ext->mpObj != NULL) {
+        obj_tag *obj = Script_GetObj(SP_getScriptInfo(ext->mpObj->scriptPlayer), 0);
+        obj_tag *old = ext->gameObj;
+        if (obj != old) {
+            ext->gameObj = obj;
+            if (old != NULL)
+                MP_sendTeamBotMessage(told, BOT_MSG_OBJECTIVE_GONE, old, 0, 0);
+        }
+    }
+    return ext->gameObj;
+}
+
+// AUTOINJECT
+obj_tag* MP_getAssassinTarget(void) {
+    return AssassinTarget;
+}
+
+// The multiplayer pickup slot of a pickup, or NULL
+// AUTOINJECT
+MP_PICKUP* MP_getMPpickup(PICKUPINFO *info) {
+    for (int i = 0; i < 64; i++) {
+        obj_tag *obj = MPpickups[i].gameObj;
+        if (obj != NULL && obj->extraObjectData == info)
+            return &MPpickups[i];
+    }
+    return NULL;
+}
+
+// AUTOINJECT
+obj_tag* MP_getProtectionObj_NotExt(void) {
+    return MP_getObjExtObj(&Protection);
+}
+
+// AUTOINJECT
+obj_tag* MP_getDemolitionObj_NotExt(void) {
+    return MP_getObjExtObj(&Demolition);
 }

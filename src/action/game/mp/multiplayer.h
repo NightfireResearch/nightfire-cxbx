@@ -172,12 +172,15 @@ static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 #define mp_join_slots (*(MPJoinSlot(*)[NUM_PLAYERS])0x00245240)
 
 
+struct MPOBJECT_tag;
+
 typedef struct {
     obj_tag* gameObj;
     CelPos_tag celPos;          // 0x04 - where bots go for it
     AIEmitter_tag aiEmitter;    // 0x14
     uint flags;                 // 0x3c - 1 or 2: its bit in MPGame.teamObjectiveFlags (BOTSTATE_processGoals)
-    char unknown40[4];
+    struct MPOBJECT_tag *mpObj; // 0x40 - the demolition and protection objects': its script's object is gameObj
+                                //        (MP_getObjExtObj)
 } MP_OBJ_EXT;
 
 static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
@@ -197,7 +200,7 @@ typedef enum {
     KOH,
 } MPOBJECTTYPE;
 
-typedef struct {
+typedef struct MPOBJECT_tag {
     ushort type; // MPOBJECTTYPE
     ushort num;
     short unknown04;            // 0x04 MP_PlayerKilled sets it to 30 seconds of frames when a hurt object of types 5-7
@@ -314,7 +317,29 @@ MP_OBJ_EXT* MP_getBaseObj(uint i);
 MP_OBJ_EXT* MP_getDemolitionObj(void);
 MP_OBJ_EXT* MP_getProtectionObj(void);
 MP_OBJ_EXT* MP_getHillObj(void);
-MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
+MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
+// The original takes mpObj in EDI: MP_getObjExtFromMPOBJECT is the entry for that, _MP_getObjExtFromMPOBJECT the C++
+MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void);
+char* MP_GetTeamScore(ushort team);
+char* MP_GetPlayerScore(ushort player);
+bool MP_IsFlagParent(obj_tag *obj, ushort team);
+bool MP_IsBluePrintParent(obj_tag *obj);
+bool MP_ObjTeamHasGEObj(obj_tag *obj, int part);
+void _MP_PostLoadInitObjExt(MP_OBJ_EXT *ext);
+// The original takes ext in EAX
+void MP_PostLoadInitObjExt(void);
+MP_OBJ_EXT* MP_getUplinkObj(int idx, int filterState);
+ushort MP_getUplinkStatus(short uplink);
+MP_OBJ_EXT* MP_getBlueprintObj(void);
+MP_OBJ_EXT* MP_getEsponageBaseObj(uint team, int quadrant);
+MP_OBJ_EXT* MP_getGoldenEyeObj(uint key);
+bool MP_isPosOnHill(_VECTOR *pos);
+obj_tag* MP_getObjExtObj(MP_OBJ_EXT *ext);
+obj_tag* MP_getAssassinTarget(void);
+struct PICKUPINFO;
+MP_PICKUP* MP_getMPpickup(struct PICKUPINFO *info);
+obj_tag* MP_getProtectionObj_NotExt(void);
+obj_tag* MP_getDemolitionObj_NotExt(void);
 void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
 // The original takes ext in ESI: MP_recalcObjExtPaths is the entry for that, _MP_recalcObjExtPaths the C++ under it.
 void MP_recalcObjExtPaths(bool keepPos);

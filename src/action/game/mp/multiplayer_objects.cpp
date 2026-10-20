@@ -43,7 +43,6 @@ static int32_t Ftol(double x) {
 #define HitByList (*(obj_tag*(*)[64])0x00261c58)
 
 
-#define MP_getObjExtObj ((obj_tag *(__cdecl *)(MP_OBJ_EXT *ext))0x0009e740)
 #define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 

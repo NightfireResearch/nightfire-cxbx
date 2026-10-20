@@ -23,13 +23,10 @@
 
 // multiplayer_modes.cpp's AUTOGEN
 void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
-#define MP_getProtectionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1600)
-#define MP_getDemolitionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1610)
 
 // FUN_000d8690: whether the segment from a to b passes within radius of centre, and the point it passes at (our
 // reading and name)
 #define SegmentNearPoint ((int (__cdecl *)(_VECTOR *a, _VECTOR *b, _VECTOR *centre, float radius, _VECTOR *at))0x000d8690)
-#define MP_isPosOnHill ((bool (__cdecl *)(_VECTOR *pos))0x0009e650)
 
 // The position NDrone2_CanWalkStraightTo (0x45340) last tested a walk to
 #define LastWalkTarget (*(_VECTOR *)0x001ee420)
@@ -60,11 +57,6 @@ static int32_t Ftol(double x) {
 #define NDrone2_DistanceToAIPoint ((float (__cdecl *)(DCVars_tag *dc, AIPoint_tag *point))0x00044e70)
 #define NDrone2_DistanceToEmitter ((uchar (__cdecl *)(CelPos_tag *from, AIPath_tag *path, ushort *nearestNode, AIEmitter_tag *emitter, obj_tag *mover, float *distance))0x00046260)
 #define NDrone2_MoveToGoalPosition ((uint (__cdecl *)(DCVars_tag *dc, _VECTOR *pos, float radius, ushort param4))0x00046f30)
-#define MP_getUplinkObj ((MP_OBJ_EXT *(__cdecl *)(int idx, int filterState))0x0009e230)
-#define MP_getBlueprintObj ((MP_OBJ_EXT *(__cdecl *)(void))0x0009e2e0)
-#define MP_getEsponageBaseObj ((MP_OBJ_EXT *(__cdecl *)(uint team, int approachQuadrant))0x0009e2f0)
-#define MP_getGoldenEyeObj ((MP_OBJ_EXT *(__cdecl *)(uint key))0x0009e3a0)
-#define MP_getAssassinTarget ((obj_tag *(__cdecl *)(void))0x0009e7b0)
 
 // Whether a bot other than playerIndex has obj as its objective goal. Every bot slot is asked, whatever its team;
 // a player on no team gets false.
