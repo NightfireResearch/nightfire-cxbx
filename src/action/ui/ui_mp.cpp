@@ -781,6 +781,8 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 // Each agent's box on the join page (P_MPSETUP) is a radio, C_RBMPSETUP with the agent's number as its id, that
 // steps through these; B steps back.
 typedef enum {
+    JOIN_OUT = 0,               // the join page: not joined
+    JOIN_CHOOSE_CODENAME = 1,   // the join page
     JOIN_CHOOSE_TEAM = 2,       // team games only
     JOIN_CHOOSE_CHARACTER = 3,
     JOIN_CHOOSE_HANDICAP = 4,
@@ -971,6 +973,457 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     return true;
 }
 
+// ---- the join page (P_MPJOIN), then each agent's setup (P_MPSETUP)
+
+#define menu_bonus ((ulong *)0x0025d6e8)    // MenuUnlocks.cpp
+
+// A missing controller's message, the player's number in it (names ours): for one that had joined, one that had not
+#define MP_CONTROLLER_MISSING_JOINED ((Action_TranslatedText)0x10002d5)
+#define MP_CONTROLLER_MISSING        ((Action_TranslatedText)0x10002a2)
+// The bots' short names, one per mp_characters identifier from the first
+#define MP_BOT_SHORT_NAME_FIRST 0x10002e2
+#define MP_BOT_SHORT_NAMES      29
+#define BotString ((char *)0x0015d3c0)  // "Bot"
+
+// The parts of a codename's save a player loads; part 8 too when only one player has joined
+#define LS_MASK_ALONE  0x2d
+#define LS_MASK_SHARED 0x25
+
+// The colours the join page fades from and to
+#define FADE_BLACK 0xff
+#define FADE_CLEAR 0
+
+// XBE_GLOBAL(0x0022507c, 0x4)
+uint8_t mp_controller_missing[NUM_PLAYERS];         // the last update found the player's controller missing
+// XBE_GLOBAL(0x00225078, 0x4)
+uint8_t mp_controller_missing_joined[NUM_PLAYERS];  // ... and the player had joined; never read
+// XBE_GLOBAL(0x00224f78, 0x100)
+char mp_controller_text[0x100];
+
+// A player's boxes as the controller comes and goes: without it, the message and every box but the first two
+// hidden (on the join page, the player leaves); once it is back, the join prompt again on the join page, else the
+// setup's boxes shown again.
+// AUTOINJECT
+void Menu_UpdateMPControllers(uchar managerNum, uchar player, char joinPage) {
+    if (PlayerInputs[player].controllerIsActive) {
+        if (mp_controller_missing[player]) {
+            if (joinPage) {
+                mp_join_step[player] = JOIN_OUT;
+                Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, player);
+                __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetText,
+                              (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
+                __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetText,
+                              (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
+            } else {
+                __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_SendEx(managerNum, C_RBMPSETUP, player, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+            }
+        }
+        mp_controller_missing[player] = 0;
+        mp_controller_missing_joined[player] = 0;
+        return;
+    }
+    sprintf(mp_controller_text,
+            Txt_BindLabel(mp_join_slots[player].joined ? MP_CONTROLLER_MISSING_JOINED : MP_CONTROLLER_MISSING, 0),
+            player + 1);
+    __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetText, (int)mp_controller_text, 0);
+    __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetText, (int)mp_controller_text, 0);
+    __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+    __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+    __Menu_SendEx(managerNum, C_RBMPSETUP, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    __Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+    if (joinPage) {
+        mp_join_slots[player].joined = 0;
+        mp_join_slots[player].ready = 0;
+    }
+    mp_controller_missing[player] = 1;
+    mp_controller_missing_joined[player] = mp_join_step[player] != JOIN_OUT;
+}
+
+// A character's short name, as the bots are called ("Bot" past the last)
+// AUTOINJECT
+char* Menu_GetBotShortName(BotNum skin) {
+    if (skin >= MP_BOT_SHORT_NAMES)
+        return BotString;
+    return (char *)Txt_BindLabel((Action_TranslatedText)(MP_BOT_SHORT_NAME_FIRST + skin), 0);
+}
+
+// The codenames to be listed again
+static void RelistCodenames(uchar managerNum) {
+    ls.busy = 1;
+    ls.slot = LS_SLOT_NEW;
+    ls.returnPage = (HASHCODE)0;
+    ls.returnPageArg = 0;
+    ls.operation = LS_OPERATION_ENUM;
+    ls.done = 0;
+    ls.control = NULL;
+    ls.field17_0x42 = 0;
+    Menu_UpdateMessageBox(managerNum, 0, 0);
+}
+
+static void FadeJoinPage(uchar managerNum, uint colour) {
+    M_MESSAGE fade = {};
+    fade.type = MESSAGE_PROCESS;
+    fade.arg1 = colour;
+    fade.arg2 = 0;
+    Process_Create(CONTROL_GET(managerNum, SUB_P_MPJOIN_FADE), &fade, 15, 0);
+}
+
+// Each player presses A to join (C_RBMPSTART), picks a codename (C_RBMPCNAME), whose settings are loaded, and says
+// it is ready; once everyone joined is, the scenarios. Meanwhile the codenames are listed and each player's loaded,
+// ls.mpPlayer saying whose; ls.returnPageArg is used as a flag: the codenames lists are to be filled again once the
+// listing is over.
+// AUTOINJECT
+bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    switch (message) {
+    case MessageType_PageEnter:
+        ls.returnPageArg = 0;
+        for (int i = 0; i < 2 * NUM_PLAYERS; i++)
+            menu_bonus[i] = 0;
+        ls.operation = LS_OPERATION_ENUM;
+        if (arg2 == P_MAIN) {
+            LABEL_SET_COLOUR(managerNum, SUB_P_MPJOIN_FADE, FADE_BLACK);
+            __Menu_SendMessage(&manager[managerNum].control, MessageType_LockInput, 1, 0);
+            __Menu_SendDelayedMessage(15, &manager[managerNum].control, MessageType_LockInput, 0, 0);
+            FadeJoinPage(managerNum, FADE_CLEAR);
+        } else {
+            LABEL_SET_COLOUR(managerNum, SUB_P_MPJOIN_FADE, FADE_CLEAR);
+        }
+        if (!ls.listStale)
+            ls.done = 1;
+        else
+            RelistCodenames(managerNum);
+        if (ls.operation != LS_OPERATION_LOAD) {
+            memset(mp_join_slots, 0, sizeof(mp_join_slots));
+            for (int i = 0; i < NUM_PLAYERS; i++)
+                mp_join_slots[i].skin = i;
+            ls.mpPlayer = 0;
+            for (int i = 0; i < NUM_PLAYERS; i++) {
+                mp_join_step[i] = JOIN_OUT;
+                mp_join_slots[i].joined = 0;
+                Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, i);
+            }
+            for (int i = 0; i < NUM_PLAYERS; i++)
+                PlayerInputs[i].controllerPort = (char)i;
+            __Menu_Send(managerNum, SUB_C_RBMPSETUP_TITLE, MessageType_SetText,
+                        (int)Txt_BindLabel(MP_PROMPT_START_GAME, 0), 0);
+        }
+        mp_join_slots[0].team = MI6;
+        mp_join_slots[2].team = MI6;
+        mp_join_slots[1].team = PHOENIX;
+        mp_join_slots[3].team = PHOENIX;
+        return true;
+
+    case MessageType_PageUpdate: {
+        uchar loading = ls.mpPlayer - 1;
+        int joined = mp_join_slots[2].joined + mp_join_slots[3].joined + mp_join_slots[1].joined +
+                     mp_join_slots[0].joined;
+        Menu_UpdateMessageBox(managerNum, joined == 1 ? LS_MASK_ALONE : LS_MASK_SHARED, loading);
+        if (ls.done && Menu_AllJoinedPlayersReady())
+            Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, 0);
+        if (!ls.busy && ls.done && ls.returnPageArg) {
+            for (uint i = 0; i < NUM_PLAYERS; i++) {
+                M_CONTROL *codenames =
+                    (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPCNAME, i, MessageType_GetControl, 0, 0);
+                __Menu_SendMessage(codenames, MessageType_ClearItems, 0, 0);
+                Menu_PutCodenamesIntoControl(codenames);
+            }
+            ls.returnPageArg = 0;
+        }
+        for (uchar i = 0; i < NUM_PLAYERS; i++)
+            Menu_UpdateMPControllers(managerNum, i, 1);
+        break;
+    }
+
+    case MessageType_SaveFlowDone: {
+        // A listing over (arg2 8), or a player's codename loaded: that player is ready
+        uchar player = ls.mpPlayer - 1;
+        if (ls.operation != LS_OPERATION_LOAD)
+            break;
+        if (arg2 == 8) {
+            if (!ls.listStale)
+                ls.done = 1;
+            else
+                RelistCodenames(managerNum);
+            ls.returnPageArg = 1;
+            return true;
+        }
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, C_RBMPSETUP, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        mp_join_step[player] = JOIN_READY;
+        ls.operation = LS_OPERATION_NONE;
+        if (mp_join_step[ls.mpPlayer - 1] == JOIN_READY)
+            Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, ls.mpPlayer - 1);
+        break;
+    }
+
+    case MessageType_QueryBack:
+        // Back to the main menu after the fade, the page kept meanwhile
+        __Menu_SendMessage(&manager[managerNum].control, MessageType_LockInput, 1, 0);
+        __Menu_SendDelayedMessage(19, &manager[managerNum].control, MessageType_Back, 1, 0);
+        __Menu_SendDelayedMessage(19, &manager[managerNum].control, MessageType_LockInput, 0, 0);
+        FadeJoinPage(managerNum, FADE_BLACK);
+        *(int *)arg2 = -2;
+        return true;
+    }
+    return true;
+}
+
+// The colour of a player's box while it has the player's focus
+#define MP_BOX_COLOUR 0xfa6e5aff
+#define ICON_MP_CODENAME ((HASHCODE)0x030001a0)
+
+// A player's first box on the join page: A joins (a codename is chosen next) or, once the codename is loaded, says
+// the player is ready. B on a ready player goes back to the codenames.
+// AUTOINJECT
+bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    uchar player = (uchar)control->id;
+    MPJoinSlot *slot = &mp_join_slots[player];
+    switch (message) {
+    case MessageType_PlayerFocusGained:
+        Process_Destroy(control);
+        __Menu_SendMessage(control, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+        __Menu_SendMessage(control, MessageType_SetColour, MP_BOX_COLOUR, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        if (mp_join_step[player] == JOIN_OUT) {
+            slot->joined = 0;
+            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), player);
+        } else if (mp_join_step[player] == JOIN_READY) {
+            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_WHEN_READY, 0), player);
+        }
+        break;
+
+    case MessageType_PlayerFocusLost:
+        slot->ready = 0;
+        break;
+
+    case MessageType_Select:
+        if (mp_join_step[player] == JOIN_OUT) {
+            slot->joined = 1;
+            slot->ready = 0;
+            mp_join_step[player] = JOIN_CHOOSE_CODENAME;
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetText,
+                          (int)Txt_BindLabel(CFG_CHOOSE_CODENAME, 0), 0);
+            Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPCNAME, player);
+            M_CONTROL *codenames =
+                (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_GetControl, 0, 0);
+            __Menu_SendMessage(codenames, MessageType_ClearItems, 0, 0);
+            Menu_PutCodenamesIntoControl(codenames);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetIcon, ICON_MP_CODENAME, 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetIconRect, 0, 0x7f003f);
+        } else if (mp_join_step[player] == JOIN_READY) {
+            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(CFG_PLAYER_READY, 0), 0);
+            Menu_MPFadeWhenReady(control);
+            slot->ready = 1;
+        }
+        break;
+
+    case MessageType_QueryBack:
+        if (mp_join_step[player] != JOIN_READY)
+            break;
+        Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPCNAME, player);
+        mp_join_step[player] = JOIN_CHOOSE_CODENAME;
+        __Menu_SendMessage(control, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+        *(int *)arg2 = -2;
+        break;
+    }
+    return true;
+}
+
+// A player's codenames on the join page: a default one is applied at once, a saved one loaded (P_MPJOIN hears when
+// it is). The player is named after the codename, or "Player <n>" for a default.
+// AUTOINJECT
+bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    uchar player = (uchar)control->id;
+    switch (message) {
+    case MessageType_QueryBack:
+        if (mp_join_step[player] != JOIN_CHOOSE_CODENAME)
+            break;
+        mp_join_step[player] = JOIN_OUT;
+        Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, player);
+        *(int *)arg2 = -2;
+        break;
+
+    case MessageType_PlayerFocusGained:
+        __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        __Menu_SendMessage(control, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+        break;
+
+    case MessageType_Select: {
+        if (mp_join_step[player] != JOIN_CHOOSE_CODENAME)
+            break;
+        uchar joined = mp_join_slots[3].joined + mp_join_slots[2].joined + mp_join_slots[1].joined +
+                       mp_join_slots[0].joined;
+        ushort mask = joined == 1 ? LS_MASK_ALONE : LS_MASK_SHARED;
+        ls.mpPlayer = player + 1;
+        int slot = __Menu_SendMessage(control, MessageType_GetSelectedIndex, 0, 0) + 1;
+        if (slot < CODENAME_SLOTS_DEFAULT) {
+            byte loading = ls.mpPlayer - 1;
+            ls.busy = 0;
+            ls.done = 1;
+            ls.slot = slot;
+            Menu_MapDefaultCodename(loading, (byte)slot, mask);
+            mp_join_step[loading] = JOIN_READY;
+            Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, loading);
+        } else {
+            char *codename = (char *)__Menu_SendMessage(control, MessageType_GetText, 0, 0);
+            _Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, ls.mpPlayer - 1, mask, slot, (HASHCODE)0, 0,
+                          NULL, 0);
+        }
+        if (ls.slot >= CODENAME_SLOTS_DEFAULT)
+            strcpy(MPSettings.Player[player].Name, ls.codename);
+        else
+            sprintf(MPSettings.Player[player].Name, "%s %d", Txt_BindLabel(PLAYER, 0), player + 1);
+        break;
+    }
+    }
+    return true;
+}
+
+// The agents' setup: each joined agent's radio (C_RBMPSETUP) starts at the team (team games) or the character. The
+// players' claims on the one-per-game characters are dropped, the bots' (10 and up) kept.
+// AUTOINJECT
+bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_PageEnter) {
+        if (mp_good_bot_taken < 10)
+            mp_good_bot_taken = 0;
+        if (mp_bond_bot_taken < 10)
+            mp_bond_bot_taken = 0;
+        for (int i = 0; i < NUM_PLAYERS; i++)
+            PlayerInputs[i].controllerPort = (char)i;
+        for (uint agent = 0; agent < NUM_PLAYERS; agent++) {
+            MPJoinSlot *slot = &mp_join_slots[agent];
+            slot->ready = 0;
+            M_CONTROL *radio = (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPSETUP, agent, MessageType_GetControl, 0, 0);
+            if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
+                mp_join_step[agent] = JOIN_CHOOSE_TEAM;
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
+                              (int)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
+                __Menu_SendMessage(radio, MessageType_ClearItems, 0, 0);
+                __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_PHOENIX, 0), PHOENIX);
+                __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_MI6, 0), MI6);
+                __Menu_SendMessage(radio, MessageType_SelectItemByValue, slot->team, 0);
+            } else {
+                mp_join_step[agent] = JOIN_CHOOSE_CHARACTER;
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
+                              (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+                if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK)
+                    slot->team = MI6;
+                else
+                    slot->team = (MPTeam)RADIO_GET_VALUE_OF(radio);
+                Menu_GetMPSkins(managerNum, (byte)agent, 0);
+                __Menu_SendMessage(radio, MessageType_SelectItemByValue, slot->skin, 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
+                              (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
+            }
+            if (!slot->joined) {
+                __Menu_SendEx(managerNum, C_RBMPFINISH, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_SendEx(managerNum, C_RBMPSETUP, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+            } else {
+                Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSETUP, agent);
+            }
+        }
+    } else if (message == MessageType_PageUpdate) {
+        for (uint agent = 0; agent < NUM_PLAYERS; agent++)
+            if (mp_join_slots[agent].joined)
+                Menu_UpdateMPControllers(managerNum, (uchar)agent, 0);
+    }
+    return true;
+}
+
+// A ready agent's box on the setup page. B goes back to the handicap, whose choices go to the title's control
+// rather than the radio.
+// AUTOINJECT
+bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    uchar agent = (uchar)control->id;
+    switch (message) {
+    case MessageType_PlayerFocusGained:
+        Process_Destroy(control);
+        __Menu_SendMessage(control, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
+        __Menu_SendMessage(control, MessageType_SetColour, MP_BOX_COLOUR, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, C_RBMPSETUP, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        if (mp_join_step[agent] == JOIN_READY)
+            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_WHEN_READY, 0), agent);
+        break;
+
+    case MessageType_PlayerFocusLost:
+        mp_join_slots[agent].ready = 0;
+        break;
+
+    case MessageType_QueryBack: {
+        if (mp_join_step[agent] != JOIN_READY)
+            break;
+        Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSETUP, agent);
+        mp_join_step[agent] = JOIN_CHOOSE_HANDICAP;
+        M_CONTROL *title =
+            (M_CONTROL *)__Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_GetControl, 0, 0);
+        __Menu_SendMessage(title, MessageType_ClearItems, 0, 0);
+        for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
+            __Menu_SendMessage(title, MessageType_AddItem, (int)handicaps[i].text, handicaps[i].value);
+        __Menu_SendMessage(title, MessageType_SelectItemByValue, MPSettings.Player[agent].HealthModifier, 0);
+        __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
+        *(int *)arg2 = -2;
+        break;
+    }
+    }
+    return true;
+}
+
+// The match's length in minutes (or unlimited, -1) and the score to win, or in Top Agent the lives
+static const struct { const char *text; int value; } mp_rule_durations[] = {
+    {"1", 1}, {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}, {"9", 9}, {"10", 10},
+    {"15", 15}, {"20", 20}, {"25", 25}, {"30", 30}, {"35", 35}, {"40", 40}, {"45", 45}, {"50", 50}, {"55", 55},
+    {"60", 60},
+};
+static const struct { const char *text; int value; } mp_rule_points[] = {
+    {"1", 1}, {"2", 2}, {"3", 3}, {"4", 4}, {"5", 5}, {"6", 6}, {"7", 7}, {"8", 8}, {"9", 9}, {"10", 10},
+    {"15", 15}, {"20", 20}, {"25", 25}, {"30", 30}, {"35", 35}, {"40", 40}, {"45", 45}, {"50", 50}, {"55", 55},
+    {"60", 60}, {"65", 65}, {"70", 70}, {"75", 75}, {"80", 80}, {"85", 85}, {"90", 90}, {"95", 95}, {"100", 100},
+    {"105", 105}, {"110", 110}, {"115", 115}, {"120", 120},
+};
+
+// AUTOINJECT
+bool P_MPRULES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_PageEnter) {
+        __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_ClearItems, 0, 0);
+        for (int i = 0; i < ARRAY_SIZE(mp_rule_durations); i++)
+            __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (int)mp_rule_durations[i].text,
+                        mp_rule_durations[i].value);
+        __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (int)Txt_BindLabel(CFG_UNLIMITED, 0), -1);
+        __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_SelectItemByValue, MPSettings.MaxDuration, 0);
+        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_ClearItems, 0, 0);
+        for (int i = 0; i < ARRAY_SIZE(mp_rule_points); i++)
+            __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_AddItem, (int)mp_rule_points[i].text,
+                        mp_rule_points[i].value);
+        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SelectItemByValue, MPSettings.MaxPoints, 0);
+        Action_TranslatedText title = MPSettings.GameMode == GM_TOPAGENT ? MP_RULES_LIVES : MP_RULES_POINTS;
+        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SetText, (int)Txt_BindLabel(title, 0), -1);
+        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SelectItemByValue, MPSettings.MaxPoints, 0);
+    } else if (message == MessageType_Select) {
+        MPSettings.MaxDuration = __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_GetSelectedItemValue, 0, 0);
+        MPSettings.MaxPoints = __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_GetSelectedItemValue, 0, 0);
+        Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
+    }
+    return true;
+}
+
+
 // XBE_GLOBAL(0x0025ed20, 0x1)
 static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
 #define mp_debrief_text       (*(char(*)[24][32])0x0025eaa0)     // the numbers on the debriefing
@@ -1016,8 +1469,6 @@ int Menu_GetMPScore(byte participant) {
             return 0;
     }
 }
-// AUTOGEN
-char* Menu_GetBotShortName(BotNum skin);
 
 static const char *DebriefNumber(int value) {
     char *text = mp_debrief_text[mp_debrief_text_count];
