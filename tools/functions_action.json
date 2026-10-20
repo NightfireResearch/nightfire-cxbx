@@ -6084,13 +6084,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002e440",
+        "name": "Creature_HurtPlayers",
         "address": "0x0002e440",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0002e440()",
+        "prototype_string": "undefined Creature_HurtPlayers()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -6116,7 +6116,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002e580",
+        "name": "Creature_SeekPlayer",
         "address": "0x0002e580",
         "calling_convention": "default",
         "has_custom_variable_storage": true,
@@ -6176,13 +6176,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0002ea90",
+        "name": "Creature_Move",
         "address": "0x0002ea90",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_0002ea90()",
+        "prototype_string": "undefined Creature_Move()",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

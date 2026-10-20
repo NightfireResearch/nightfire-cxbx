@@ -23,8 +23,12 @@
 // The originals, called by address: Ghidra's prototypes have untyped arguments
 #define DroneAnim_SetScript ((bool (__cdecl *)(HASHCODE script, ushort animState, ushort nextRow, uchar blend,                                              short endState, uint endMsg, uint flags, DCVars_tag *dcv))0x00034680)
 #define NDrone2_SlideToPosition ((void (__cdecl *)(_VECTOR *pos, float speed, char turn, DCVars_tag *dcv))0x00043b20)
-// FUN_0002faa0 in Ghidra (our name): Vec_Dist3D from the drone to obj, returned in ST0
-#define NDrone2_DistanceToObj ((double (__cdecl *)(DCVars_tag *dcv, obj_tag *obj))0x0002faa0)
+
+// How far obj is from the drone. Not named on PS2; the name is ours.
+// FUNC_AT(0x0002faa0)
+double NDrone2_DistanceToObj(DCVars_tag *dcv, obj_tag *obj) {
+    return Vec_Dist3D(&dcv->gameObj->position, &obj->position);
+}
 // Returns in ST0, unrounded
 
 // DroneInit.cpp

@@ -32,6 +32,7 @@
 #include "../game/obj/Cloud.h"
 #include "../game/obj/Copter.h"
 #include "../game/obj/Corona.h"
+#include "../game/obj/Creature.h"
 #include "../game/obj/Effect.h"
 #include "../game/obj/Emitter.h"
 #include "../game/obj/Env.h"
@@ -444,6 +445,15 @@ bool __cdecl FakeRay(_VECTOR *from, _VECTOR *to, cel_tag *cel, obj_tag *a, obj_t
     return *list != NULL;
 }
 
+float __cdecl FakePlayerHurt(obj_tag *player, float damage, _VECTOR *from) {
+    ShadowLog("hurt(%x,%08x,%x)", W(player), Bits(damage), W(from));
+    return damage;
+}
+
+void __cdecl FakeDeleteObject(obj_tag *obj) {
+    ShadowLog("delete(%x)", W(obj));
+}
+
 bool __cdecl FakeSphere(_VECTOR *pos, float radius, cel_tag *cel, obj_tag *a, obj_tag *b, HITDATA_tag **list,
                         char only, char oneSided, ushort mask, ushort flags) {
     ShadowLog("sphere(%08x,%x,%x,%x,%d,%d,%x,%x)", Bits(radius), W(cel), W(a), W(b), only, oneSided, mask, flags);
@@ -784,6 +794,8 @@ void InstallFakes(bool realLights) {
     ShadowHook_Install(0x000c3f40, (const void *)&FakeSPDelete);
     ShadowHook_Install(0x000d8df0, (const void *)&FakeSpline);
     ShadowHook_Install(0x0002c4e0, (const void *)&FakeRay);
+    ShadowHook_Install(0x000ae690, (const void *)&FakePlayerHurt);
+    ShadowHook_Install(0x0002d080, (const void *)&FakeDeleteObject);
     ShadowHook_Install(0x0002c610, (const void *)&FakeSphere);
     ShadowHook_Install(0x0002c5b0, (const void *)&FakeSight);
     ShadowHook_Install(0x000294d0, (const void *)&FakeFreeHits);
@@ -1749,6 +1761,131 @@ uint32_t RunDynamicObjectUpdate(bool original) {
     return 0;
 }
 
+// ---- creatures
+
+void WaterCels(void) {
+    for (int i = 0; i < 3; i++) {
+        if (R(2))
+            world.cels[i].bitsFromPlacementTag = (world.cels[i].bitsFromPlacementTag & 0xffff0000u) | 0xc023;
+    }
+}
+
+obj_tag *RandomCreature(void) {
+    obj_tag *obj = Subject(OBJECTTYPE_CREATURE);
+    Creature *c = (Creature *)obj->extraObjectData;
+    memset(c, 0, sizeof(*c));
+    for (int i = 0; i < CREATURE_WAYPOINTS; i++) {
+        PlainVector(&c->waypoints[i].pos, 20.0f);
+        c->waypoints[i].quat.q[0] = 1.0f;
+        c->waypoints[i].quat.q[1] = Plain(-0.3f, 0.3f);
+    }
+    PlainVector(&c->home, 20.0f);
+    c->splineMode = R(2) ? 0 : 2;
+    c->gameObj = obj;
+    c->range = R(4) ? Plain(1.0f, 15.0f) : 0.0f;
+    c->t = R(4) ? Plain(0.0f, 5.5f) : 5.0f;
+    c->speed = Plain(0.0f, 0.2f);
+    c->speedRange = Plain(0.0f, 2.0f);
+    c->size = Plain(0.1f, 2.0f);
+    c->kind = (ushort)R(3);
+    c->state = (short)(R(6) ? R(5) : R(0x10000));
+    c->seeks = (char)R(2);
+    c->hurts = (char)R(2);
+    // a fish's cel is read unchecked
+    obj->inCel = R(5) || c->kind == CREATURE_FISH ? &world.cels[R(3)] : NULL;
+    obj->hitList = NULL;
+    ChooseHits(&obj->hitList);
+    WaterCels();
+    return obj;
+}
+
+uint32_t RunCreatureCreate(bool original) {
+    CreaturePlacement *keys = (CreaturePlacement *)Placement();
+    keys->kind = R(3);
+    keys->range = R(4) ? R(20) : 0xfffffff0u;
+    keys->speed = R(200);
+    keys->seeks = R(2);
+    keys->hurts = R(2);
+    WaterCels();
+    obj_tag *obj = CDECL_RUN(0x0002e8c0, Creature_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, celglist_tag *, level_tag *),
+                             &world.v[0], &world.v[1], &world.glists[R(4)], Placement());
+    return W(obj);
+}
+
+uint32_t RunCreatureWaypoints(bool original) {
+    obj_tag *obj = RandomCreature();
+    CDECL_VOID(0x0002e600, Creature_CalcWaypoints, void (__cdecl *)(obj_tag *, Creature *), obj,
+               (Creature *)obj->extraObjectData);
+    return 0;
+}
+
+uint32_t RunCreatureUpdate(bool original) {
+    obj_tag *obj = R(10) ? RandomCreature() : NULL;
+    CDECL_VOID(0x0002eb40, Creature_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCreatureDelete(bool original) {
+    obj_tag *obj = RandomCreature();
+    CDECL_VOID(0x0002e410, Creature_Delete, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCreatureInit(bool original) {
+    CDECL_VOID(0x0002e3f0, Creature_Init, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunCreatureHurt(bool original) {
+    obj_tag *obj = RandomCreature();
+    Regs r = {0, 0, 0, 0, 0, P(obj)};
+    RegsRun(original, 0x0002e440, (const void *)&Creature_HurtPlayers, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunCreaturePoint(bool original) {
+    obj_tag *obj = RandomCreature();
+    Creature *c = (Creature *)obj->extraObjectData;
+    _VECTOR *angles = &world.v[2], *dir = &world.v[3];
+    PlainVector(angles, 3.2f);
+    PlainVector(dir, 1.0f);
+    float distance = R(3) ? Plain(0.0f, 10.0f) : 0.0f;
+    uint32_t args[3] = {P(&c->waypoints[2].pos), Bits(distance), Bits(c->size)};
+    Regs r = {0, P(&c->waypoints[1].pos), P(angles), 0, P(dir), P(obj)};
+    RegsRun(original, 0x0002e480, (const void *)&Creature_CalcPoint, r, 3, args);
+    return 0;
+}
+
+uint32_t RunCreatureSeek(bool original) {
+    obj_tag *obj = RandomCreature();
+    Creature *c = (Creature *)obj->extraObjectData;
+    if (glb_players[0] != NULL && R(2)) {   // close by, now and then
+        glb_players[0]->position = obj->position;
+        glb_players[0]->position.x += Plain(-3.0f, 3.0f);
+    }
+    Regs r = {P(c), 0, 0, P(obj), 0, P(&world.v[3])};
+    return RegsRun(original, 0x0002e580, (const void *)&Creature_SeekPlayer, r, 0, NULL) & 0xff;
+}
+
+uint32_t RunCreatureMove(bool original) {
+    obj_tag *obj = RandomCreature();
+    Regs r = {P(obj), 0, 0, 0, P(obj->extraObjectData), 0};
+    RegsRun(original, 0x0002ea90, (const void *)&Creature_Move, r, 0, NULL);
+    return 0;
+}
+
+const Case kCreatures[] = {
+    C("Creature_Init", RunCreatureInit),
+    C("Creature_Create", RunCreatureCreate),
+    C("Creature_Delete", RunCreatureDelete),
+    C("Creature_CalcWaypoints", RunCreatureWaypoints),
+    C("Creature_Update", RunCreatureUpdate),
+    C("Creature_HurtPlayers", RunCreatureHurt),
+    C("Creature_CalcPoint", RunCreaturePoint),
+    C("Creature_SeekPlayer", RunCreatureSeek),
+    C("Creature_Move", RunCreatureMove),
+};
+
 uint32_t RunApocalypseCreate(bool original) {
     obj_tag *obj = CDECL_RUN(0x000a4180, Apocalypse_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *),
                              &world.v[0], &world.v[1], Placement(), &world.glists[R(4)]);
@@ -2466,6 +2603,7 @@ void ObjectPortShadow_Run(void) {
     cases = differ = nanChoices = 0;
 
     Group("scenery and hazards", kScenery, COUNT(kScenery), 2500);
+    Group("creatures", kCreatures, COUNT(kCreatures), 3000);
     Group("the weather", kWeather, COUNT(kWeather), 1500);
     Group("lights and emitters", kLights, COUNT(kLights), 3000, true);
     Group("pickups and the aim", kPickups, COUNT(kPickups), 3000);

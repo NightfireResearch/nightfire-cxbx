@@ -1,3 +1,4 @@
+#include "game/obj/Creature.h"
 #include "actionhelpers.h"
 #include "input.h"
 #include "memory.h"
@@ -684,7 +685,6 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 #define Sound_SetLogSfxFile ((void (__cdecl *)(void))0x000e0ec0)
 #define build_MakeCelOverlapBox ((void (__cdecl *)(world_tag *world))0x000e0ec0)
 
-#define Creature_Init ((void (__cdecl *)(void))0x0002e3f0)
 #define maybeGetNextMissionInSequence ((HASHCODE (__cdecl *)(HASHCODE movie))0x000bdcd0)
 #define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
