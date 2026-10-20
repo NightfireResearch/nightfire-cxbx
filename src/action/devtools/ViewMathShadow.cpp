@@ -731,6 +731,35 @@ void RunAngleDifference(Buf &b, bool o) {
         b.d[0] = Vec_AngleDifference(b.f[0], b.f[1]);
     }
 }
+typedef float (*FloatOfThree)(float, float, float);
+typedef float (*FloatOfOne)(float);
+void MakeTowards(Buf &b) {
+    b.f[0] = Coordinate();
+    b.f[1] = R(4) ? Coordinate() : b.f[0];
+    b.f[2] = R(3) ? Uniform(1.0f) : (R(2) ? 1.0f : 2.0f);
+}
+void RunTowards(Buf &b, bool o) {
+    if (o) {
+        XbeOriginalScope scope(0x00024000);
+        b.f[3] = ((FloatOfThree)(uintptr_t)0x00024000)(b.f[0], b.f[1], b.f[2]);
+    } else {
+        b.f[3] = moveTowardsValue(b.f[0], b.f[1], b.f[2]);   // the adaptor, and the core under it
+    }
+}
+void MakeWrap(Buf &b) {
+    static const float scales[] = {1.0f, 3.0f, 100.0f, 0.5f};
+    static const float edges[] = {3.1415925f, 3.1415927f, -3.1415927f, 3.141593f, 3.14f, 3.1416f, 6.2831855f,
+                                  -6.2831855f, 9.424778f, -9.424778f, 0.0f, -0.0f};
+    b.f[0] = R(3) ? FiniteAngle() * scales[R(4)] : edges[R(12)];
+}
+void RunWrap(Buf &b, bool o) {
+    if (o) {
+        XbeOriginalScope scope(0x00024050);
+        b.f[1] = ((FloatOfOne)(uintptr_t)0x00024050)(b.f[0]);
+    } else {
+        b.f[1] = normaliseToPlusMinusPi(b.f[0]);
+    }
+}
 void MakeAtan(Buf &b) {
     b.f[0] = Coordinate();
     b.f[1] = R(4) ? Coordinate() : R(2) ? b.f[0] : -b.f[0];
@@ -802,6 +831,8 @@ const MathCase kExactCases[] = {
     {"vecutil_cartesian_to_spherical_acc", MakeVectors, RunCartesianAcc, 3},
     {"Vec_AngleDifference", MakeAnglePair, RunAngleDifference, 2},
     {"maybeAtan2", MakeAtan, RunAtan, 2},
+    {"moveTowardsValue", MakeTowards, RunTowards, 3},
+    {"normaliseToPlusMinusPi", MakeWrap, RunWrap, 1},
     {"View_RotTransMatrix", MakeRotTrans, RunViewRotTrans, 6},
     {"View_RotTransScaleMatrix", MakeRotTrans, RunViewRotTransScale, 9},
 };
@@ -1551,6 +1582,19 @@ obj_tag *s_obj;
 cel_tag *s_cel;
 
 uint32_t RunCameraSet(bool o) { CALL(o, 0x000240c0, Camera_Set, s_viewer, s_vecA, s_vecB); return 0; }
+uint32_t RunPlaceAround(bool o) { CALL(o, 0x000245a0, Camera_PlaceAround, s_vecA, s_viewer, s_float); return 0; }
+uint32_t RunPlaceAbove(bool o) { CALL(o, 0x00024610, Camera_PlaceAbove, s_vecA, s_viewer, s_float); return 0; }
+uint32_t RunPlaceOver(bool o) {
+    float posy = FLOAT_AT(0x001fec50);   // debug_cam_posy
+    FLOAT_AT(0x001fec50) = s_vecB->z;
+    CALL(o, 0x000246a0, Camera_PlaceOver, s_obj, s_viewer, s_float, s_vecB->y);
+    FLOAT_AT(0x001fec50) = posy;
+    return 0;
+}
+uint32_t RunPlaceBehind(bool o) {
+    CALL(o, 0x00024710, Camera_PlaceBehind, s_vecA, s_vecB, s_viewer, s_float, s_vecB->x);
+    return 0;
+}
 uint32_t RunCameraEnable(bool o) {
     CALL(o, 0x00024150, Camera_Enable, (ushort)s_view, s_flag, (undefined1)s_word, s_vecA);
     return 0;
@@ -1590,6 +1634,10 @@ void RunCamera(void) {
         WorldRun run;
     } cases[] = {
         {"Camera_Set", RunCameraSet},
+        {"Camera_PlaceAround", RunPlaceAround},
+        {"Camera_PlaceAbove", RunPlaceAbove},
+        {"Camera_PlaceOver", RunPlaceOver},
+        {"Camera_PlaceBehind", RunPlaceBehind},
         {"Camera_Enable", RunCameraEnable},
         {"Camera_SetFade", RunSetFade},
         {"Camera_UpdateGlbVars", RunUpdateGlbVars},
@@ -1623,6 +1671,13 @@ void RunCamera(void) {
             }
             if (c.run == RunViewerInit)
                 s_viewer = &world.views[R(VIEWS)];
+            if (c.run == RunPlaceAround || c.run == RunPlaceAbove || c.run == RunPlaceOver || c.run == RunPlaceBehind) {
+                s_vecA = &world.v[0];
+                s_vecB = &world.v[1];
+                s_obj = &world.objs[0];
+                s_viewer = &world.views[R(VIEWS)];
+                s_float = R(3) ? Positive(1.0f) : Coordinate();
+            }
             if (c.run == RunApplySwing)
                 s_float = R(3) ? Uniform(0.2f) : Coordinate();
             if (c.run == RunInBox) {

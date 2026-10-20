@@ -1485,25 +1485,7 @@ void __stdcall ReadTuningVars(void) {
 #define BONE_HEAD 0x80000005
 
 
-// The original's, called by address: ends in a bare RET, so caller-cleans whatever Ghidra's __stdcall says.
-static float moveTowardsValue(float current, float target, float speed) {
-    return reinterpret_cast<float (__cdecl *)(float, float, float)>(0x00024000)(current, target, speed);
-}
-
 // The debug cameras' placements, called by address: unnamed, and only these camera modes use them.
-static void CameraMode2_PlaceA(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer, float a, float b) {
-    reinterpret_cast<void (__cdecl *)(_VECTOR *, _VECTOR *, viewer_tag *, float, float)>(0x00024710)
-        (position, rotation, viewer, a, b);
-}
-static void CameraMode2_PlaceB(obj_tag *obj, viewer_tag *viewer, float a, float b) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *, float, float)>(0x000246a0)(obj, viewer, a, b);
-}
-static void CameraMode2_PlaceC(_VECTOR *position, viewer_tag *viewer, float a) {
-    reinterpret_cast<void (__cdecl *)(_VECTOR *, viewer_tag *, float)>(0x000245a0)(position, viewer, a);
-}
-static void CameraMode2_PlaceD(_VECTOR *position, viewer_tag *viewer, float a) {
-    reinterpret_cast<void (__cdecl *)(_VECTOR *, viewer_tag *, float)>(0x00024610)(position, viewer, a);
-}
 static void CameraMode3_Place(obj_tag *obj, viewer_tag *viewer) {
     reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024b10)(obj, viewer);
 }
@@ -1567,7 +1549,7 @@ void Player_PositionCamera(obj_tag *player) {
             if (weapon->weaponModelHashcode == 0)
                 View_SetDrawInNoViews(blData->weaponObject);
 
-            blData->headSwimOffset = moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
+            blData->headSwimOffset = _moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
 
             viewer->zoom = blData->zoom;
             // Not in the original: the player view's field of view comes from settings.ini, but a real scope
@@ -1595,10 +1577,10 @@ void Player_PositionCamera(obj_tag *player) {
         case 2:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
-            CameraMode2_PlaceA(&player->position, &player->rotation, viewer, 1.0f, 10.0f);
-            CameraMode2_PlaceB(player, viewer, 1.0f, 0.0f);
-            CameraMode2_PlaceC(&player->position, viewer, 1.0f);
-            CameraMode2_PlaceD(&player->position, viewer, 1.0f);
+            Camera_PlaceBehind(&player->position, &player->rotation, viewer, 1.0f, 10.0f);
+            Camera_PlaceOver(player, viewer, 1.0f, 0.0f);
+            Camera_PlaceAround(&player->position, viewer, 1.0f);
+            Camera_PlaceAbove(&player->position, viewer, 1.0f);
             viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
@@ -2488,7 +2470,7 @@ void _Player_MonitorAir(obj_tag *player, BLData *blData) {
     bool breathes = !(player->subState >= MovementType_ZeroG && player->subState <= MovementType_ZeroG_Anim);
     uint flags;
     if (player->inCel->shearHeight > head.y) {
-        blData->underwater = moveTowardsValue(blData->underwater, 1.0f, REC_FRAME_RATE);
+        blData->underwater = _moveTowardsValue(blData->underwater, 1.0f, REC_FRAME_RATE);
         flags = blData->waterFlags | WATER_HEAD_UNDER;
     }
     else {
@@ -3986,7 +3968,7 @@ void Player_Update(obj_tag *player) {
         player->tweakA = (uchar)Ftol(40.0f);
     else
         player->tweakA = (uchar)Ftol((double)blData->alpha * 255.0f);
-    float alpha = moveTowardsValue(blData->alpha, 2.0f, (float)((double)REC_FRAME_RATE * 0.05f));
+    float alpha = _moveTowardsValue(blData->alpha, 2.0f, (float)((double)REC_FRAME_RATE * 0.05f));
     blData->alpha = alpha;
     if (alpha < 0.0f)
         alpha = 0.0f;

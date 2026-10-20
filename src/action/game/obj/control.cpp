@@ -1,3 +1,4 @@
+#include "../../engine/Camera.h"
 #include "control.h"
 
 #include "../../actionhelpers.h"
@@ -49,7 +50,6 @@ static uint32_t DynamicObjCount;
 // XBE_GLOBAL(0x001df41c, 0xc)
 #define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
-#define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
 // The empty function the linker shares with others (nightfire-port calls it MP_DebugDraw)
 #define MP_DebugDraw ((void (__cdecl *)(void))0x000e0ec0)
 

@@ -1,3 +1,4 @@
+#include "../engine/Camera.h"
 #include "Spline.h"
 
 #include "../math/math.h"
@@ -9,7 +10,6 @@
 #pragma fp_contract(off)
 
 // Break.cpp's port is not patched in yet
-#define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -174,9 +174,9 @@ void KeyFrame_Interp(void *path, ushort first, ushort last, float t, _MATRIX *mt
     if (Vec_IsEqual(&KeyFromPos, &KeyToPos, 0.0f)) {
         KeyPos = KeyFromPos;
     } else {
-        KeyPos.x = moveTowardsValue(KeyFromPos.x, KeyToPos.x, KeyBlend);
-        KeyPos.y = moveTowardsValue(KeyFromPos.y, KeyToPos.y, KeyBlend);
-        KeyPos.z = moveTowardsValue(KeyFromPos.z, KeyToPos.z, KeyBlend);
+        KeyPos.x = _moveTowardsValue(KeyFromPos.x, KeyToPos.x, KeyBlend);
+        KeyPos.y = _moveTowardsValue(KeyFromPos.y, KeyToPos.y, KeyBlend);
+        KeyPos.z = _moveTowardsValue(KeyFromPos.z, KeyToPos.z, KeyBlend);
     }
     KeyFromRot = keys[KeyFrom].quat;
     KeyToRot = keys[KeyTo].quat;

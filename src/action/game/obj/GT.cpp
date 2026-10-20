@@ -1,3 +1,4 @@
+#include "../../engine/Camera.h"
 #include "GT.h"
 
 #include <math.h>
@@ -30,7 +31,6 @@
 #pragma fp_contract(off)
 
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
 
 // GT_Track's candidates
 #define TARGETS 64

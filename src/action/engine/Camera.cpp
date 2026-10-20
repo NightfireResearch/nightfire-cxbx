@@ -341,7 +341,94 @@ void Camera_CreateCameras(void) {
 
 
 
-#define normaliseToPlusMinusPi ((float (__cdecl *)(float angle))0x00024050)
+// Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap
+// stays unrounded, and a NaN gap counts as a fall.
+float _moveTowardsValue(float value, float target, float rate) {
+    Extended gap = Extended(target) - Extended(value);
+    float moved = (float)(Extended(rate) * gap + Extended(value));
+    double rising = (double)gap;
+    if (!(rising < 0.0) && rising == rising)
+        return moved > target ? target : moved;
+    return moved < target ? target : moved;
+}
+
+// The original's arguments on the stack and the result in ST0, the caller cleaning up
+// AUTOLTCG
+float __declspec(naked) moveTowardsValue(float value, float target, float rate) {
+    _asm {
+        push dword ptr [esp + 0xc]
+        push dword ptr [esp + 0xc]
+        push dword ptr [esp + 0xc]
+        call _moveTowardsValue
+        add esp, 0xc
+        ret
+    }
+}
+
+// The debug cameras' placements. Each eases one part of the view rate of the way to where it should be, then sets
+// the view to its own position and angles (Camera_Set).
+
+// Camera_PlaceBehind's offsets: a turn from the facing, and a distance
+// XBE_GLOBAL(0x0017c168, 0x4)
+static float CameraBehindYaw = std::bit_cast<float>(0xbfbba5e3u);   // -1.466
+// XBE_GLOBAL(0x0017c16c, 0x4)
+static float CameraBehindDistance = -7.0f;
+
+#define debug_cam_posy FLOAT_AT(0x001fec50)
+
+// The yaw, to face the target
+// AUTOINJECT
+void Camera_PlaceAround(_VECTOR *target, viewer_tag *viewer, float rate) {
+    Extended yaw = FPatan((double)target->x - viewer->pos.x, (double)target->z - viewer->pos.z);
+    viewer->someVec.y = (float)((yaw - Extended(viewer->someVec.y)) * Extended(rate) + Extended(viewer->someVec.y));
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// The pitch, to look at the target
+// AUTOINJECT
+void Camera_PlaceAbove(_VECTOR *target, viewer_tag *viewer, float rate) {
+    double dx = (double)target->x - viewer->pos.x;
+    double dz = (double)target->z - viewer->pos.z;
+    double dy = (double)target->y - viewer->pos.y;
+    Extended pitch = -FPatan(dy, sqrt(dz * dz + dx * dx));
+    viewer->someVec.x = (float)((pitch - Extended(viewer->someVec.x)) * Extended(rate) + Extended(viewer->someVec.x));
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// The height, to height above the object (and debug_cam_posy). Not named on PS2; the name is ours.
+// FUNC_AT(0x000246a0)
+void Camera_PlaceOver(obj_tag *obj, viewer_tag *viewer, float rate, float height) {
+    Extended y = Extended(debug_cam_posy) + Extended(obj->position.y) + Extended(height);
+    viewer->pos.y = (float)((y - Extended(viewer->pos.y)) * Extended(rate) + Extended(viewer->pos.y));
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// Across the ground, to distance (plus CameraBehindDistance) along the facing turned by CameraBehindYaw. The z's
+// step is rounded to a float before it is added. Not named on PS2; the name is ours.
+// FUNC_AT(0x00024710)
+void Camera_PlaceBehind(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer, float rate, float distance) {
+    Extended away = Extended(CameraBehindDistance) + Extended(distance);
+    Extended yaw = Extended(CameraBehindYaw) + Extended(rotation->y);
+    float stepZ = (float)((Extended(position->z) - FCos(yaw) * away - Extended(viewer->pos.z)) * Extended(rate));
+    viewer->pos.x = (float)((Extended(position->x) - FSin(yaw) * away - Extended(viewer->pos.x)) * Extended(rate)
+                            + Extended(viewer->pos.x));
+    viewer->pos.z = (float)(Extended(stepZ) + Extended(viewer->pos.z));
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// An angle brought within plus or minus pi: one at pi or past it, as a remainder of 2pi, and then a turn
+// towards zero if that is still outside.
+// AUTOINJECT
+float normaliseToPlusMinusPi(float angle) {
+    if (AbsFchs((double)angle) < 3.1415927f)
+        return angle;
+    double rest = fmod((double)angle, std::bit_cast<double>(0x401921fb60000000ull));
+    if (AbsFchs(rest) < 3.1415927f)
+        return (float)rest;
+    if (angle < 0.0f || angle != angle)
+        return (float)(rest + 6.2831855f);
+    return (float)(rest - 6.2831855f);
+}
 #define GlobalBlur U8_AT(0x001f667c)
 
 // Camera_Shear's working: the view's position kept while it is changed, the wobble's two scales, and the matrix

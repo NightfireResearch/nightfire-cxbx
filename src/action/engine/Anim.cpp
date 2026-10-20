@@ -1,3 +1,4 @@
+#include "Camera.h"
 #include "Anim.h"
 #include <math.h>
 #include <stdio.h>
@@ -117,7 +118,6 @@ typedef struct AnimSizes {
 
 // The originals, called by address
 #define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
-#define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 #define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
 #define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
@@ -2106,9 +2106,9 @@ void _AnimFrameBlend(float *out, float *a, float *b, obj_tag *obj, int numBones,
         if (out == a && out == b)
             return;
         for (int i = 0; i < numBones; i++) {
-            outTrans[i].x = moveTowardsValue(aTrans[i].x, bTrans[i].x, t);
-            outTrans[i].y = moveTowardsValue(aTrans[i].y, bTrans[i].y, t);
-            outTrans[i].z = moveTowardsValue(aTrans[i].z, bTrans[i].z, t);
+            outTrans[i].x = _moveTowardsValue(aTrans[i].x, bTrans[i].x, t);
+            outTrans[i].y = _moveTowardsValue(aTrans[i].y, bTrans[i].y, t);
+            outTrans[i].z = _moveTowardsValue(aTrans[i].z, bTrans[i].z, t);
             if (accurate)
                 Quat_Slerp_Acc(t, aQuats[i].q, bQuats[i].q, outQuats[i].q);
             else

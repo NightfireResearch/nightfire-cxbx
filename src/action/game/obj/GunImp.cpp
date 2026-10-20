@@ -22,7 +22,6 @@
 
 #pragma fp_contract(off)
 
-#define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 
 // The weapons with their own firing: a minigun's spin up and down, and two lasers
 #define GUNIMP_MINIGUN 0x61
@@ -224,8 +223,8 @@ void GunImp_Update(obj_tag *gunObj) {
     else
         pitchTarget = gunImp->pitchTarget;
     gunImp->pitchTarget = pitchTarget;
-    gunImp->pitch = moveTowardsValue(gunImp->pitch, pitchTarget, 0.15f);
-    gunImp->yaw = moveTowardsValue(gunImp->yaw, gunImp->yawTarget, 0.15f);
+    gunImp->pitch = _moveTowardsValue(gunImp->pitch, pitchTarget, 0.15f);
+    gunImp->yaw = _moveTowardsValue(gunImp->yaw, gunImp->yawTarget, 0.15f);
 
     // The emplacement turns in yaw from where it was placed, the gun in pitch from there
     _MATRIX yawMtx, pitchMtx;

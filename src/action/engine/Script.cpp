@@ -92,7 +92,6 @@ typedef struct {
 
 // The originals, called by address where Ghidra's prototypes do not fit
 // The originals: ours in Break.cpp are not patched in yet
-#define moveTowardsValue ((float (__cdecl *)(float current, float target, float speed))0x00024000)
 
 // AUTOGEN
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
@@ -423,9 +422,9 @@ void _Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, fl
         // Each channel moves from the first key's colour towards the second's by the first key's weight
         LightColourFrom = keys[InterpKeys[0]].colour;
         LightColourTo = keys[InterpKeys[1]].colour;
-        uint red = (int)moveTowardsValue(LightColourFrom[2], LightColourTo[2], InterpWeights[0]);
-        uint green = (int)moveTowardsValue(LightColourFrom[1], LightColourTo[1], InterpWeights[0]);
-        uint blue = (int)moveTowardsValue(LightColourFrom[0], LightColourTo[0], InterpWeights[0]);
+        uint red = (int)_moveTowardsValue(LightColourFrom[2], LightColourTo[2], InterpWeights[0]);
+        uint green = (int)_moveTowardsValue(LightColourFrom[1], LightColourTo[1], InterpWeights[0]);
+        uint blue = (int)_moveTowardsValue(LightColourFrom[0], LightColourTo[0], InterpWeights[0]);
         *colourOut = (((red << 8 | green) << 8 | blue) << 8) | 0xff;
         *scaleOut = InterpRes.scale * scriptInfo->scale;
         Vec_Copy(&InterpRes.pos, Mat_Position(*mtx));
