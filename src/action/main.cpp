@@ -22,7 +22,7 @@ void Game_Main(int argc, char **argv) {
     FS_Init();
     xboxInitTextures();
     xboxInitSound();
-    GetPTPData();
+    GetPTPData_Copy();
     Graphics_Init_LowLevel();
 
     while(1) {

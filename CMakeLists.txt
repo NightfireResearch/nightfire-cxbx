@@ -98,6 +98,7 @@ add_library(actioninject SHARED
   src/action/devtools/ShadowHarness.cpp
   src/action/devtools/TriggerShadow.cpp
   src/action/devtools/DoorShadow.cpp
+  src/action/devtools/BootShadow.cpp
   src/action/devtools/SecurityShadow.cpp
   src/action/devtools/PlrStatShadow.cpp
   src/action/devtools/DroneStateShadow.cpp

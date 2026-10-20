@@ -15,6 +15,8 @@ bool Graphics_IsWidescreen(void);
 bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);
 void bootup_bootup(void);
+void Boot_GetPTPData(void **data, uint *size);
+void __stdcall Boot_LoadPTPData(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
 
@@ -132,8 +134,27 @@ typedef struct {
 } MPGame_t;
 
 
+// The action engine's part of the page handed between the engines (Boot_GetPTPData and Boot_LoadPTPData): the
+// codename's settings, which the driving engine hands back
 typedef struct {
-    char unknown[0xc0];
+    char codename[32];          // 0x00 ls.codename
+    char unknown20[0x60];
+    uint codenameSlot;          // 0x80 ls.slot
+    uint canSave;               // 0x84 ls.canSave
+    uint crouchToggle;          // 0x88 player 1's PlayerInput settings
+    uint manualAimToggle;       // 0x8c
+    uint autoAim;               // 0x90
+    uint autoSwitchBetterWeapon; // 0x94
+    uint input05;               // 0x98 PlayerInput::field5_0x5
+    uint levelViewOnPace;       // 0x9c
+    uint rememberZoom;          // 0xa0
+    uint sfxLanguage;           // 0xa4
+    uint flashingObjects;       // 0xa8 PlayerInput::field12_0xc
+    int controlStyle;           // 0xac
+    uint mpSomeField2;          // 0xb0 MPSettings.Player[0]'s
+    int healthModifier;         // 0xb4
+    uint autoAimMultiplayer;    // 0xb8
+    uint splitScreenLayout;     // 0xbc MultiplayerLayout_LeftRightOrTopBtm
     undefined4 MP_MaxDuration;
     undefined4 MP_MaxPoints;
     undefined4 MP_FriendlyFire;
@@ -144,11 +165,22 @@ typedef struct {
     undefined4 MP_RespawnMode;
     undefined4 MP_GunEmplacements;
     undefined4 MP_ExplosiveScenery;
-    char unknown1[68];
-    undefined4 Cheat_Immortal;
+    int musicVolume;            // 0xe8
+    int sfxVolume;              // 0xec
+    char defaultCodename[0x38]; // 0xf0 the second default codename (def_codename[1]), whole
+    uint unlockEverything;      // 0x128 menu_unlock_everything
+    undefined4 Cheat_Immortal;  // 0x12c
     undefined4 Cheat_UnlimitedAmmo;
     undefined4 Cheat_AllWeapons;
-    undefined4 NightfireStatus;
+    undefined4 NightfireStatus; // 0x138
+    uint bonusHi;               // 0x13c Menu_GetBonus's, player 1's
+    uint bonusLo;               // 0x140
+    int difficulty;             // 0x144
+    uint mainMenuSound;         // 0x148 ls.relatedToMainMenuSound
+    HASHCODE level;             // 0x14c the level to go to
+    uint weaponUpgrade;         // 0x150 GameState.WeaponUpgradeRelated
+    uint bestScores[12];        // 0x154 PlrStats_GetDrivingData's
+    uint bondMoments[12];       // 0x184
 } PTP_Eurocom;
 
 typedef struct {
@@ -178,50 +210,28 @@ typedef struct { /* PTP Data */
     undefined4 fShouldRebootIOP;
     undefined4 fSkillLevel;
     undefined4 fLanguage;
-    short fControllerConfig;
-    undefined field14_0x98e;
-    undefined field15_0x98f;
-    bool fControllerPort;
-    undefined field17_0x991;
-    undefined field18_0x992;
-    undefined field19_0x993;
-    bool fVibration;
-    undefined field21_0x995;
-    undefined field22_0x996;
-    undefined field23_0x997;
+    int fControllerConfig;      // 0x98c
+    uint fControllerPort;
+    uint fVibration;
     undefined4 fHudAlwaysVisible;
     undefined4 fCrossHairOff;
     undefined4 fCheat;
     undefined4 fEasterEgg;
     undefined4 Scoring[9][3];
-    short fControllerConfigDriving;
-    undefined field30_0xa16;
-    undefined field31_0xa17;
+    int fControllerConfigDriving; // 0xa14
     undefined4 fLoadedFromMemCard;
     undefined4 TvType;
     undefined4 fLoadedFromCDOrDVD;
-    bool fControllerInvert;
-    undefined field36_0xa25;
-    undefined field37_0xa26;
-    undefined field38_0xa27;
+    uint fControllerInvert;     // 0xa24
     undefined4 fSoundMode;
     undefined4 fSubTitles;
     undefined4 fScreenAdjustX;
     undefined4 fScreenAdjustY;
     undefined4 fAntialiasMode;
     undefined4 fMedalAwarded;
-    bool fAutoAim;
-    undefined field46_0xa41;
-    undefined field47_0xa42;
-    undefined field48_0xa43;
-    bool fManualAimToggle;
-    undefined field50_0xa45;
-    undefined field51_0xa46;
-    undefined field52_0xa47;
-    bool fAutoSwitchWeapons;
-    undefined field54_0xa49;
-    undefined field55_0xa4a;
-    undefined field56_0xa4b;
+    uint fAutoAim;              // 0xa40
+    uint fManualAimToggle;
+    uint fAutoSwitchWeapons;
     undefined4 field57_0xa4c;
 } sNightFireShared_tag;
 
@@ -242,6 +252,12 @@ typedef struct {
 
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
+static_assert(sizeof(PTP_Eurocom) == 0x1b4, "PTP_Eurocom is 0x1b4 bytes");
+static_assert(offsetof(PTP_Eurocom, MP_MaxDuration) == 0xc0, "PTP_Eurocom MP_MaxDuration offset incorrect");
+static_assert(offsetof(PTP_Eurocom, Cheat_Immortal) == 0x12c, "PTP_Eurocom Cheat_Immortal offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fControllerConfig) == 0x98c, "fControllerConfig offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fControllerConfigDriving) == 0xa14, "fControllerConfigDriving offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fAutoAim) == 0xa40, "fAutoAim offset incorrect");
 
 typedef enum WeaponBaseNum {
     Weap_None=0,

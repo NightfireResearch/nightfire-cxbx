@@ -52,6 +52,10 @@
 #include "game/obj/control.h"
 #include "game/sp/Mission.h"
 #include "game/sp/SwitchChannels.h"
+#include "game/sp/PlayerStats.h"
+#include "ui/Menu.h"
+#include "engine/LoadSave.h"
+#include "sound/SFX.h"
 #include "gfx/LowLevel.h"
 #include "gfx/Sprite.h"
 #include <math.h>
@@ -199,10 +203,6 @@ uint32_t SoundInfo;
 // Maybe hashcode of playing FMV
 
 
-// AUTOGEN
-void __stdcall Boot_LoadPTPData(void);
-// AUTOGEN
-void Boot_GetPTPData(void **param_1,uint *param_2);
 
 // AUTOINJECT
 void psiStopBackgroundMovie(void) {
@@ -1261,6 +1261,212 @@ void bootup_bootup(void) {
   Input_Ready();
   SFXSetMode(1);
   NewScoresRef = &(PTPDATA.Scoring);
+}
+
+// ---- The page handed between the engines (PTPDATA): what the action engine passes to the driving engine and
+// ---- takes back from it
+
+#define GetSFXLanguage ((uint (__cdecl *)(void))0x000c53f0)
+#define SFXSetLanguage ((void (__cdecl *)(uint language))0x000c5400)
+#define SFXGetMode ((uint (__cdecl *)(void))0x000c5430)
+#define SFXSetVolume ((void (__cdecl *)(int volume))0x000c5060)
+#define menu_unlock_everything (*(char *)0x0025d79e)  // Menu.cpp
+#define LanguageToLoad (*(int *)0x0025d7a0)             // XboxSystem.cpp
+#define IsWidescreen U32_AT(0x001f6610)
+// What psiGetDrivingData fills: it writes 0xc00 bytes, past the page's 0xa50 into whatever follows
+#define PTPDataIn (*((sNightFireShared_tag *)0x001d88e0))
+
+#define PTP_VERSION 1
+#define PTP_LOADED_FROM_DVD 2
+#define PTP_CHEAT_PARIS_PLATINUM 8  // fCheat: Paris has its platinum medal
+#define MEDAL_PLATINUM 3
+
+// The driving engine's level states (LevelStatus) a return reports
+#define PTP_LEVEL_COMPLETED 0
+#define PTP_LEVEL_QUIT 4
+
+// The page for the driving level about to be played: the codename and its settings, the level, the medals
+// AUTOINJECT
+void Boot_GetPTPData(void **data, uint *size) {
+    Mission_SetMapHCode(GameState.NextLevelHashcode);
+    PTP_Eurocom *ec = &PTPDATA.ECDataBuf;
+    int difficulty;
+    // The mini mission after Paris is played at difficulty 1, and not as a codename's
+    if (Mission_BaseMapHCode() == HT_Level_Driving_Paris && ls.doMiniMission) {
+        difficulty = 1;
+        PTPDATA.fLoadedFromMemCard = 0;
+    } else {
+        difficulty = GameState.difficultyModifier;
+        PTPDATA.fLoadedFromMemCard = 1;
+    }
+    PTPDATA.fSkillLevel = difficulty;
+    ec->difficulty = difficulty;
+    ec->canSave = ls.canSave;
+    ec->crouchToggle = PlayerInputs[0].crouchToggle;
+    memcpy(ec->codename, ls.codename, sizeof(ec->codename));
+    ec->codenameSlot = ls.slot;
+    ec->manualAimToggle = PlayerInputs[0].manualAimToggle;
+    ec->autoAim = PlayerInputs[0].autoAim;
+    ec->autoSwitchBetterWeapon = PlayerInputs[0].autoSwitchBetterWeapon;
+    ec->input05 = PlayerInputs[0].field5_0x5;
+    ec->levelViewOnPace = PlayerInputs[0].levelViewOnPace;
+    ec->rememberZoom = PlayerInputs[0].rememberZoom;
+    ec->flashingObjects = PlayerInputs[0].field12_0xc;
+    ec->sfxLanguage = GetSFXLanguage();
+    ec->controlStyle = PlayerInputs[0].controlStyle;
+    ec->unlockEverything = menu_unlock_everything;
+    ec->Cheat_Immortal = CheatInfo.Immortal;
+    ec->Cheat_AllWeapons = CheatInfo.AllWeapons;
+    ec->Cheat_UnlimitedAmmo = CheatInfo.UnlimitedAmmo;
+    ec->mpSomeField2 = MPSettings.Player[0].SomeField2;
+    ec->healthModifier = MPSettings.Player[0].HealthModifier;
+    ec->autoAimMultiplayer = PlayerInputs[0].autoAimMultiplayer;
+    ec->splitScreenLayout = MultiplayerLayout_LeftRightOrTopBtm;
+    ec->NightfireStatus = Menu_GetNightfireStatus();
+    uint64_t bonus = Menu_GetBonus(0);
+    ec->bonusHi = (uint)(bonus >> 32);
+    ec->bonusLo = (uint)bonus;
+    ec->MP_MaxPoints = MPSettings.MaxPoints;
+    ec->weaponUpgrade = GameState.WeaponUpgradeRelated;
+    ec->MP_MaxDuration = MPSettings.MaxDuration;
+    ec->MP_ProfessionalModeDamage = MPSettings.TripleDamageModifierProfessionalMode;
+    ec->MP_FriendlyFire = MPSettings.FriendlyFire;
+    ec->MP_WeaponSet = MPSettings.weaponSet;
+    ec->MP_RespawnMode = MPSettings.RespawnSelectionMode;
+    ec->mainMenuSound = ls.relatedToMainMenuSound;
+    ec->MP_LocationDamage = MPSettings.LocationDamageEnabled;
+    ec->MP_ShowTeamAndName = MPSettings.ShowTeamAndNameOverhead;
+    ec->MP_GunEmplacements = MPSettings.GunEmplacementsEnabled;
+    ec->MP_ExplosiveScenery = MPSettings.ExplosiveSceneryEnabled;
+    memcpy(ec->defaultCodename, &def_codename[1], sizeof(ec->defaultCodename));
+    PlrStats_GetDrivingData(ec->bestScores, ec->bondMoments);
+    ec->level = GameState.NextLevelHashcode;
+    PTPDATA.LevelToLoad = GameState.NextLevelHashcode - 0x09000000;   // its number among the driving levels
+    PTPDATA.fLanguage = GetLanguage();
+    PTPDATA.Version = PTP_VERSION;
+    PTPDATA.TvType = GetTvType();
+    PTPDATA.fLoadedFromCDOrDVD = PTP_LOADED_FROM_DVD;
+    PTPDATA.fSoundMode = SFXGetMode();
+    PTPDATA.fControllerInvert = PlayerInputs[0].inverted;
+    PTPDATA.fSubTitles = SubtitlesEnabled;
+    PTPDATA.SoundVol = SFXGetVolume();
+    ec->sfxVolume = SFXGetVolume();
+    PTPDATA.MusicVol = SFXMusicGetVolume();
+    ec->musicVolume = SFXMusicGetVolume();
+    PTPDATA.fControllerConfig = PlayerInputs[0].controlStyle;
+    PTPDATA.fControllerPort = PlayerInputs[0].controllerPort;
+    PTPDATA.fControllerConfigDriving = PlayerInputs[0].controlStyleDriving;
+    PTPDATA.fVibration = PlayerInputs[0].vibrationEnabled;
+    PTPDATA.fCrossHairOff = PlayerInputs[0].crosshairsEnabled == 0;
+    PTPDATA.fAutoAim = PlayerInputs[0].autoAim;
+    PTPDATA.fManualAimToggle = PlayerInputs[0].manualAimToggle;
+    PTPDATA.fHudAlwaysVisible = PlayerInputs[0].hudVisibility == 0;
+    PTPDATA.fAutoSwitchWeapons = PlayerInputs[0].autoSwitchBetterWeapon;
+    PTPDATA.WideScreen = IsWidescreen == 1;
+    PTPDATA.fAntialiasMode = 0;
+    PTPDATA.fMedalAwarded = Menu_GetBestMedal(GameState.NextLevelHashcode, 0);
+    if (Menu_HasMedal(HT_Level_Driving_Paris, MEDAL_PLATINUM, 0))
+        PTPDATA.fCheat |= PTP_CHEAT_PARIS_PLATINUM;
+    else
+        PTPDATA.fCheat &= ~PTP_CHEAT_PARIS_PLATINUM;
+    *data = &PTPDATA;
+    *size = sizeof(PTPDATA);
+}
+
+// Back from the driving engine: its page, if it has one of this version and the codename's save loads from it,
+// gives the mission's state and the codename's settings back, and the front end opens on the results, the map
+// (the level failed or quit) or the title sequence (from the mini mission after Paris)
+// AUTOINJECT
+void __stdcall Boot_LoadPTPData(void) {
+    if (!psiGetDrivingData((uint32_t *)&PTPDataIn))
+        return;
+    PTPDATA = PTPDataIn;
+    if (PTPDataIn.Version != PTP_VERSION || LS_LoadFromBuffer((uchar *)&PTPDATA, 0x12c0) == 0)
+        return;
+    PTP_Eurocom *ec = &PTPDATA.ECDataBuf;
+    Mission_SetMapHCode(ec->level);
+    // The mission's status: 6 for a level completed, 3 quit, 2 failed
+    if (PTPDATA.LevelStatus == PTP_LEVEL_COMPLETED) {
+        GameState.BaseMapHashCode = Mission_BaseMapHCode();
+        Mission_SetStatus(6);
+    } else if (PTPDATA.LevelStatus == PTP_LEVEL_QUIT) {
+        Mission_SetStatus(3);
+    } else {
+        Mission_SetStatus(2);
+    }
+    GameState.difficultyModifier = ec->difficulty;
+    PTPDATA.fSkillLevel = ec->difficulty;
+    PlrStat_GetScore(0);
+    memcpy(ls.codename, ec->codename, sizeof(ls.codename));
+    ls.canSave = (uchar)ec->canSave;
+    ls.slot = ec->codenameSlot;
+    PlayerInputs[0].autoAim = (uchar)ec->autoAim;
+    PlayerInputs[0].crouchToggle = (uchar)ec->crouchToggle;
+    PlayerInputs[0].manualAimToggle = (uchar)ec->manualAimToggle;
+    PlayerInputs[0].levelViewOnPace = (uchar)ec->levelViewOnPace;
+    PlayerInputs[0].autoSwitchBetterWeapon = (uchar)ec->autoSwitchBetterWeapon;
+    PlayerInputs[0].field5_0x5 = (uchar)ec->input05;
+    PlayerInputs[0].rememberZoom = (uchar)ec->rememberZoom;
+    PlayerInputs[0].field12_0xc = (uchar)ec->flashingObjects;
+    SFXSetLanguage(ec->sfxLanguage);
+    CheatInfo.UnlimitedAmmo = ec->Cheat_UnlimitedAmmo;
+    menu_unlock_everything = (char)ec->unlockEverything;
+    CheatInfo.Immortal = ec->Cheat_Immortal;
+    MPSettings.Player[0].HealthModifier = ec->healthModifier;
+    CheatInfo.AllWeapons = ec->Cheat_AllWeapons;
+    MPSettings.Player[0].SomeField2 = ec->mpSomeField2;
+    PlayerInputs[0].autoAimMultiplayer = (uchar)ec->autoAimMultiplayer;
+    MultiplayerLayout_LeftRightOrTopBtm = ec->splitScreenLayout;
+    Menu_SetNightfireStatus(ec->NightfireStatus);
+    Menu_SetBonus(ec->bonusLo, ec->bonusHi, 0, 0);
+    GameState.WeaponUpgradeRelated = (uchar)ec->weaponUpgrade;
+    MPSettings.MaxDuration = ec->MP_MaxDuration;
+    MPSettings.MaxPoints = ec->MP_MaxPoints;
+    MPSettings.FriendlyFire = ec->MP_FriendlyFire;
+    MPSettings.weaponSet = (WeaponSet)ec->MP_WeaponSet;
+    MPSettings.TripleDamageModifierProfessionalMode = ec->MP_ProfessionalModeDamage;
+    MPSettings.LocationDamageEnabled = ec->MP_LocationDamage;
+    MPSettings.ShowTeamAndNameOverhead = ec->MP_ShowTeamAndName;
+    MPSettings.ExplosiveSceneryEnabled = ec->MP_ExplosiveScenery;
+    MPSettings.RespawnSelectionMode = (RespawnMode)ec->MP_RespawnMode;
+    MPSettings.GunEmplacementsEnabled = ec->MP_GunEmplacements;
+    ls.relatedToMainMenuSound = (uchar)ec->mainMenuSound;
+    memcpy(&def_codename[1], ec->defaultCodename, sizeof(ec->defaultCodename));
+    PlrStats_SetDrivingData(ec->bestScores, ec->bondMoments);
+    Txt_SetLanguage((tLANGUAGE)PTPDATA.fLanguage);
+    LanguageToLoad = PTPDATA.fLanguage;
+    PTPDATA.Version = PTP_VERSION;
+    SFXSetMode(PTPDATA.fSoundMode);
+    PlayerInputs[0].inverted = (uchar)PTPDATA.fControllerInvert;
+    SubtitlesEnabled = PTPDATA.fSubTitles;
+    SFXSetVolume(ec->sfxVolume);
+    SFXMusicSetVolume(ec->musicVolume);
+    PlayerInputs[0].controlStyle = (short)PTPDATA.fControllerConfig;
+    PlayerInputs[0].controllerPort = (uchar)PTPDATA.fControllerPort;
+    PlayerInputs[0].controlStyleDriving = (short)PTPDATA.fControllerConfigDriving;
+    PlayerInputs[0].vibrationEnabled = (uchar)PTPDATA.fVibration;
+    PlayerInputs[0].crosshairsEnabled = PTPDATA.fCrossHairOff == 0;
+    PlayerInputs[0].autoAim = (uchar)PTPDATA.fAutoAim;
+    PlayerInputs[0].manualAimToggle = (uchar)PTPDATA.fManualAimToggle;
+    PlayerInputs[0].autoSwitchBetterWeapon = (uchar)PTPDATA.fAutoSwitchWeapons;
+    PlayerInputs[0].hudVisibility = PTPDATA.fHudAlwaysVisible == 0;
+    IsWidescreen = PTPDATA.WideScreen != 0;
+    if (Mission_BaseMapHCode() == HT_Level_Driving_Paris && PTPDATA.fLoadedFromMemCard == 0) {
+        GameState.ReloadMenupage = P_ESTHERO;
+        ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
+        return;
+    }
+    switch (PTPDATA.LevelStatus) {
+    case PTP_LEVEL_COMPLETED:
+        GameState.ReloadMenupage = P_NFRESULTS;
+        break;
+    case 1:
+    case 2:
+    case PTP_LEVEL_QUIT:
+        GameState.ReloadMenupage = P_NFMAP;
+        break;
+    }
+    ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
 }
 
 // AUTOINJECT
