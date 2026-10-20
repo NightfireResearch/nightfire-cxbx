@@ -11484,7 +11484,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043900",
+        "name": "NDrone2_SetRunAnim",
         "address": "0x00043900",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11494,7 +11494,7 @@
             "uint",
             "char"
         ],
-        "prototype_string": "void __cdecl FUN_00043900(int param_1, uint param_2, char param_3)",
+        "prototype_string": "void __cdecl NDrone2_SetRunAnim(int param_1, uint param_2, char param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]",
@@ -11504,7 +11504,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043960",
+        "name": "NDrone2_ChooseRunAnim",
         "address": "0x00043960",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11513,7 +11513,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "uint __cdecl FUN_00043960(int param_1, float param_2)",
+        "prototype_string": "uint __cdecl NDrone2_ChooseRunAnim(int param_1, float param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"
@@ -11620,7 +11620,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043cf0",
+        "name": "NDrone2_FaceMoveTarget",
         "address": "0x00043cf0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11629,7 +11629,7 @@
             "int *",
             "float"
         ],
-        "prototype_string": "void __cdecl FUN_00043cf0(int * param_1, float param_2)",
+        "prototype_string": "void __cdecl NDrone2_FaceMoveTarget(int * param_1, float param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"

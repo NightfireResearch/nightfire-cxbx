@@ -47,6 +47,9 @@ struct World {
     MsgObject msg;
     Drone_tag *droneArg;
     obj_tag *gameObjArg;
+    uint uintArg;
+    char charArg;
+    float floatArg;
 
     // What the fakes answer: a sequence drawn per call, the same for both runs (the world is restored)
     uint32_t answers;
@@ -100,7 +103,24 @@ const FakeSpec kFakes[] = {
     {0x0001c2d0, "BOTSTATE_stopAnim", "p", 'v'},
     {0x0001b970, "BOTSTATE_chooseUnarmedAttackAnim", "p", 's'},
     {0x0001e3f0, "BOTSTATE_changeWeapon", "pdbb", 'u'},
-    {0x0001c8c0, "BOTSTATE_chooseCombatMove", "pd", 's'},
+    {0x0001c8c0, "BOTSTATE_chooseRandomMove", "pd", 's'},
+    {0x0001c820, "BOTSTATE_chooseCombatMove", "p", 's'},
+    {0x0001bab0, "BOTSTATE_EvasiveMove", "p", 's'},
+    {0x0001c240, "BOTSTATE_validateRoute", "pd", 'b'},
+    {0x0001e5b0, "BOTWEAP_canReload", "pd", 'b'},
+    {0x0001eeb0, "BOTWEAP_hasReloadAnim", "w", 'b'},
+    {0x00064910, "NDrone2_ReactToOpponentSighted", "pw", 's'},
+    {0x00046d90, "NDrone2_MoveToObject", "ppfb", 'r'},
+    {0x00046a10, "NDrone2_CoverAvailable", "pb", 'b'},
+    {0x000459a0, "NDrone2_CanBackoff", "p", 'b'},
+    {0x00043c60, "NDrone2_SetAngleToObj", "ppfb", 'v'},
+    {0x000675f0, "DroneWeap_Fire", "bp", 'v'},
+    {0x000330c0, "DroneAnim_CanDoAnimState", "pww", 'b'},
+    {0x0003cd80, "NDrone2_SendAttackMessage", "p", 'v'},
+    {0x00045720, "NDrone2_CanStrafeLeft", "p", 'b'},
+    {0x000457c0, "NDrone2_CanStrafeRight", "p", 'b'},
+    {0x00043fd0, "NDrone2_AtDest", "p", 'b'},
+    {0x0003cdf0, "NDrone2_NearDrone", "pf", 'b'},
     {0x0009e430, "MP_sendTeamBotMessage", "dddpp", 'v'},
     {0x0001b4f0, "BOT_respawn", "pdb", 'b'},
     {0x00037a10, "NDrone2_SetOpponent", "pp", 'v'},
@@ -156,6 +176,8 @@ uint32_t Respond(const FakeSpec &fake, const uint32_t *args) {
     }
     case 'u':
         return Answer(3);
+    case 'r':
+        return Answer(12);  // an AIROUTE status
     default:
         return 0;
     }
@@ -205,7 +227,8 @@ void InstallFakes() {
 // ---- the made-up world
 
 float RandomFloat() {
-    static const float edges[] = {0.0f, -0.0f, 1.5f, 1.4999999f, 1.5000001f, 3.0f, 4.0f, 1.0f, NAN};
+    static const float edges[] = {0.0f, -0.0f, 1.5f, 1.4999999f, 1.5000001f, 3.0f, 4.0f, 1.0f, NAN, 0.7853982f,
+                                  1.5707964f, -1.5707964f};
     switch (ShadowRand(3)) {
     case 0:
         return Pick(edges);
@@ -261,6 +284,25 @@ void RandomDrone(int i) {
     bot->weapon = (uchar)ShadowRand(0x53);
     bot->nextWeapon = (uchar)ShadowRand(0x53);
     bot->flags = ShadowRand(8);
+    bot->stats.traitFlags = (uchar)ShadowRand(0x20);
+    if (ShadowRand(4) == 0)
+        bot->weapon = 1;
+    for (int r = 0; r < 5; r++)
+        d->combatRanges[r] = ShadowRand(4) ? ShadowRandFloat(0.5f, 12.0f) : RandomFloat();
+    if (ShadowRand(4) == 0)
+        d->distanceToTarget = d->combatRanges[ShadowRand(2)];
+    d->unseenFrames = 13 + ShadowRand(5);
+    d->sightFlags = ShadowRand(0x10);
+    d->burstOver = (uchar)ShadowRand(2);
+    static const short anims[] = {4, 5, 8, 0xa, 0xc, 0xf, 0x1e, 0x52, 0x5a};
+    d->animState = Pick(anims);
+    d->route1.remaining = RandomFloat();
+    d->moveTarget.x = o->position.x + ShadowRandFloat(-3.0f, 3.0f);
+    d->moveTarget.y = o->position.y;
+    d->moveTarget.z = o->position.z + ShadowRandFloat(-3.0f, 3.0f);
+    d->unknown3f0 = ShadowRand(4) ? 0 : 0x8000000;
+    d->angleToSomePoint = 0.0f;
+    d->nodeReturnState = 0;
 }
 
 void RandomWorld() {
@@ -273,7 +315,8 @@ void RandomWorld() {
         world.drones[i].prev = i > 0 ? &world.drones[i - 1] : NULL;
     }
     memset(&world.player, 0, sizeof(world.player));
-    world.player.objectType = OBJECTTYPE_PLAYER;
+    static const uchar types[] = {OBJECTTYPE_PLAYER, OBJECTTYPE_DRONE, OBJECTTYPE_DEAD_DRONE};
+    world.player.objectType = Pick(types);
     memset(world.nodes, 0, sizeof(world.nodes));
     memset(&world.hit, 0, sizeof(world.hit));
     memset(&world.impact, 0, sizeof(world.impact));
@@ -285,6 +328,10 @@ void RandomWorld() {
     world.dcv.aiStateMachine = &world.drones[0].sm;
     world.droneArg = ShadowRand(5) ? &world.drones[0] : &world.drones[1];
     world.gameObjArg = &world.objs[0];
+    static const uint anims[] = {4, 5, 8, 0xa, 0xc, 0xf, 0x1e, 0x52, 0x5a, 0x1000a};
+    world.uintArg = Pick(anims);
+    world.charArg = (char)(ShadowRand(3) == 0 ? 0 : ShadowRand(3) == 0 ? 0x41 : 1);
+    world.floatArg = RandomFloat();
 
     GameState.NumFramesUnpaused = ShadowRand(100000);
     FRAME_RATE_INT = ShadowRand(2) ? 60 : 50;
@@ -295,7 +342,8 @@ void RandomWorld() {
 void RandomMessage() {
     memset(&world.msg, 0, sizeof(world.msg));
     // the messages the bot states handle, more often than the rest
-    static const uint types[] = {0, 1, 1, 1, 2, 3, 3, 4, 5, 5, 6, 8, 9, 0xc, 0xc, 0xd, 0xd, 0xf, 0x14, 0x18, 0x2e, 0x3a};
+    static const uint types[] = {0, 1, 1, 1, 2, 3, 3, 3, 3, 4, 5, 5, 6, 8, 9, 0xc, 0xc, 0xd, 0xd, 0xf, 0x14, 0x18,
+                                 0x1b, 0x1c, 0x2e, 0x3a};
     world.msg.msgType = ShadowRand(10) ? Pick(types) : ShadowRand(0x50);
     world.msg.sender = 101;
     world.msg.receiver = 100;
@@ -305,30 +353,46 @@ void RandomMessage() {
 
 // ---- running the two
 
+enum Kind {
+    K_STATE,            // (dcv, droneArg, gameObjArg, &msg), AL
+    K_DCV_UINT_CHAR,    // (dcv, uintArg, charArg)
+    K_DCV_FLOAT,        // (dcv, floatArg)
+};
+
 struct Case {
     const char *name;
     unsigned at;
     const void *ours;
+    Kind kind;
+    uint32_t mask;      // of the return register compared
 };
 
 const Case *current;
 
 uint32_t Call(const void *f) {
     World &w = world;
-    return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *))(
-        &w.dcv, w.droneArg, w.gameObjArg, &w.msg);
+    switch (current->kind) {
+    case K_DCV_UINT_CHAR:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, uint, char))(&w.dcv, w.uintArg, w.charArg);
+    case K_DCV_FLOAT:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, float))(&w.dcv, w.floatArg);
+    default:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *))(
+            &w.dcv, w.droneArg, w.gameObjArg, &w.msg);
+    }
 }
 
 uint32_t RunTheirs() {
     XbeOriginalScope o(current->at);
-    return Call((const void *)(uintptr_t)current->at) & 0xff;
+    return Call((const void *)(uintptr_t)current->at) & current->mask;
 }
 
 uint32_t RunOurs() {
-    return Call(current->ours) & 0xff;
+    return Call(current->ours) & current->mask;
 }
 
-#define CASE(name, at) {#name, at, (const void *)&name}
+#define CASE(name, at) {#name, at, (const void *)&name, K_STATE, 0xff}
+#define HELPER(name, at, kind, mask) {#name, at, (const void *)&name, kind, mask}
 
 const Case kLife[] = {
     CASE(NDrone2_DSTATE_BotInit, 0x00060390),
@@ -349,6 +413,23 @@ const Case kLife[] = {
     CASE(NDrone2_DSTATE_BotAttackRollRightCrouch, 0x00062560),
     CASE(NDrone2_DSTATE_BotAttackChangeWeapon, 0x00062900),
     CASE(NDrone2_DSTATE_BotAttackUnarmed, 0x000629a0),
+};
+
+const Case kAttack[] = {
+    CASE(NDrone2_DSTATE_BotAttack, 0x000614a0),
+    CASE(NDrone2_DSTATE_BotAttackRun, 0x00061690),
+    CASE(NDrone2_DSTATE_BotAttackFire, 0x000618f0),
+    CASE(NDrone2_DSTATE_BotAttackStrafeAimLeft, 0x00061b30),
+    CASE(NDrone2_DSTATE_BotAttackStrafeAimRight, 0x00061ca0),
+    CASE(NDrone2_DSTATE_BotAttackRunChangePosition, 0x00061e10),
+    CASE(NDrone2_DSTATE_BotAttackBackoff, 0x00061f40),
+    CASE(NDrone2_DSTATE_BotAttackCrouch, 0x00062190),
+    CASE(NDrone2_DSTATE_BotAttackStepAimLeft, 0x00062600),
+    CASE(NDrone2_DSTATE_BotAttackStepAimRight, 0x000626f0),
+    CASE(NDrone2_DSTATE_BotAttackReload, 0x000627e0),
+    HELPER(NDrone2_SetRunAnim, 0x00043900, K_DCV_UINT_CHAR, 0),
+    HELPER(NDrone2_ChooseRunAnim, 0x00043960, K_DCV_FLOAT, 0xffffffffu),
+    HELPER(NDrone2_FaceMoveTarget, 0x00043cf0, K_DCV_FLOAT, 0),
 };
 
 int Test(const Case *cases, int count, int trials, int *differ) {
@@ -394,6 +475,7 @@ void DroneBotShadow_Run(void) {
     };
     const Group groups[] = {
         {"life, death and impacts", kLife, sizeof(kLife) / sizeof(kLife[0]), 3000},
+        {"attack", kAttack, sizeof(kAttack) / sizeof(kAttack[0]), 6000},
     };
     const int n = sizeof(groups) / sizeof(groups[0]);
     int cases[n], differ[n];

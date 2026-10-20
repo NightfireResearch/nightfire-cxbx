@@ -65,6 +65,9 @@ NOT_POINTERS += [(0x00163100, 0x00163170, "the C runtime's initialiser tables, w
 NOT_POINTERS += [(a, a + 4, "two 16-bit values, not a pointer") for a in
                  (0x00179050, 0x00179224, 0x0017929C, 0x00179320, 0x0017A8E4, 0x0017AAFA, 0x0017BEBC, 0x0017BF4C,
                   0x001D5C90)]
+# NDrone2_DSTATE_AimCrouchReload's jump table (the function is ours at 0x4c320): Ghidra split its first case off as a
+# function of its own, switchD_0004c336::caseD_3 at 0x4c386, which nothing else reaches.
+NOT_POINTERS += [(0x0004C418, 0x0004C444, "NDrone2_DSTATE_AimCrouchReload's jump table")]
 # Generated entry-point tables of a seam that patches every library entry point it lists, implemented or stubbed
 # (src/common/xbeEntrySeam.cpp): each XBE_ENTRY's address counts as replaced. The action engine's seams sit above
 # its libraries instead, so it has none.
