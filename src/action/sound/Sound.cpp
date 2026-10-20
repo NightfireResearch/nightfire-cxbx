@@ -93,7 +93,6 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 #define SFXReset ((void (__stdcall *)(void))0x000c9c30)
 #define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
 #define SFXStart3D ((uint (__cdecl *)(uint sfxId, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int volume, int radiusInner, int radiusOuter))0x000caa90)
-#define SFXRemove ((void (__cdecl *)(DYNAMICSOUNDS *handle, int sfxId))0x000c9b10)
 
 // Set by Sound_Ready once the level's bank is loaded
 #define SoundInit U32_AT(0x0029a280)

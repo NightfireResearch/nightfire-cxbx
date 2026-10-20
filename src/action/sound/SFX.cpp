@@ -288,3 +288,195 @@ void SFXSuspendFileAccess(void) {
 void SFXUnSuspendFileAccess(void) {
     SFXFileAccessSuspended = 0;
 }
+
+// ---- the voices
+
+// AUTOINJECT
+int ES_FindFreeVoiceHandle(void) {
+    for (int i = 0; i < SFX_NUM_VOICE_HANDLES; i++) {
+        if (ES_VoiceHandleData[i].Status == 0) {
+            ES_VoiceHandleData[i].Status = 1;
+            return i;
+        }
+    }
+    return -1;
+}
+
+// AUTOINJECT
+void ES_UnlockVoiceHandle(int voiceIdx) {
+    if (voiceIdx == -1)
+        return;
+    ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+    if (voice->IsStream) {
+        voice->Status = 0;
+        Streams[voice->Handle].Status = STREAM_FREE;
+        return;
+    }
+    psiSFX_MarkInactive(voice->Handle);
+    voice->Status = 0;
+}
+
+// Whether a voice has finished: one not yet keyed on has not
+// AUTOINJECT
+int HasSampleEnded(int voiceIdx, SFXItem *Sfx) {
+    if (voiceIdx == -1)
+        return 1;
+    if (Sfx->KeyOnFrameDelay > 0)
+        return 0;
+    ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+    if (voice->IsStream)
+        return Streams[voice->Handle].Status == STREAM_STOPPED;
+    return !psiIsSamplePlaying(voice->Handle);
+}
+
+// A voice for a bank's sample, or for a stream (a FileRef below 0)
+// AUTOINJECT
+int ES_RequestVoiceHandle(SampleHeaderData *sampleHeader, int fileRefOrHashcode, int is3d, int unused) {
+    if (fileRefOrHashcode < 0) {
+        int stream = SFXInitialiseStream(fileRefOrHashcode, is3d);
+        if (stream == -1)
+            return -1;
+        int voiceIdx = ES_FindFreeVoiceHandle();
+        if (voiceIdx == -1)
+            return -1;
+        ES_VoiceHandleData[voiceIdx].IsStream = 1;
+        ES_VoiceHandleData[voiceIdx].Handle = stream;
+        return voiceIdx;
+    }
+    uint32_t voice = psiRequestVoiceHandle(&sampleHeader[fileRefOrHashcode], is3d);
+    if (voice == 0xffffffffu)
+        return -1;
+    int voiceIdx = ES_FindFreeVoiceHandle();
+    if (voiceIdx == -1)
+        return -1;
+    ES_VoiceHandleData[voiceIdx].IsStream = 0;
+    ES_VoiceHandleData[voiceIdx].Handle = voice;
+    return voiceIdx;
+}
+
+// Whether a voice is playing, or a stream ready to
+// AUTOINJECT
+int ES_SFXIsReady(int voiceIdx) {
+    if (voiceIdx == -1)
+        return 0;
+    ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+    if (voice->IsStream) {
+        StreamData *stream = &Streams[voice->Handle];
+        return stream->Status != STREAM_FREE && stream->Status != STREAM_WAITING &&
+               stream->Status != STREAM_STOPPED && stream->FinishedInitialise;
+    }
+    return psiIsSamplePlaying(voice->Handle);
+}
+
+// AUTOINJECT
+void ES_PauseSfx(SFXItem *Sfx) {
+    if (Sfx->Paused)
+        return;
+    for (int i = 0; i < SFX_MAX_VOICES; i++) {
+        int voiceIdx = Sfx->VoiceHandle[i];
+        if (voiceIdx == -1 || !ES_SFXIsReady(voiceIdx))
+            continue;
+        ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+        if (voice->IsStream)
+            psiSamplePause(Streams[voice->Handle].StreamHandle);
+        else
+            psiSamplePause(voice->Handle);
+    }
+    Sfx->Paused = 1;
+}
+
+// AUTOINJECT
+void SFXPause(void) {
+    SFXPaused = 1;
+    for (SFXItem *Sfx = BaseSFXActive; Sfx != NULL; Sfx = Sfx->Next)
+        ES_PauseSfx(Sfx);
+}
+
+// AUTOINJECT
+void ES_UnPauseSfx(SFXItem *Sfx) {
+    if (!Sfx->Paused)
+        return;
+    for (int i = 0; i < SFX_MAX_VOICES; i++) {
+        int voiceIdx = Sfx->VoiceHandle[i];
+        if (voiceIdx == -1 || !ES_SFXIsReady(voiceIdx))
+            continue;
+        ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+        if (voice->IsStream)
+            psiSFX_UnPause(Streams[voice->Handle].StreamHandle);
+        else
+            psiSFX_UnPause(voice->Handle);
+    }
+    Sfx->Paused = 0;
+}
+
+// AUTOINJECT
+void SFXUnPause(void) {
+    SFXPaused = 0;
+    for (SFXItem *Sfx = BaseSFXActive; Sfx != NULL; Sfx = Sfx->Next)
+        ES_UnPauseSfx(Sfx);
+}
+
+// Stops a sound's voices and puts it back in the free list
+// AUTOINJECT
+void KillSFX(SFXItem *Sfx) {
+    for (int i = 0; i < SFX_MAX_VOICES; i++) {
+        int voiceIdx = Sfx->VoiceHandle[i];
+        if (voiceIdx == -1)
+            continue;
+        ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
+        if (voice->IsStream)
+            SFXStopStream(&Streams[voice->Handle]);
+        else
+            psiSFXStop(voice->Handle);
+        ES_UnlockVoiceHandle(Sfx->VoiceHandle[i]);
+    }
+
+    SFXItem *next = Sfx->Next;
+    if (Sfx->Last != NULL)
+        Sfx->Last->Next = next;
+    else
+        BaseSFXActive = next;
+    if (next != NULL)
+        next->Last = Sfx->Last;
+    Sfx->Last = NULL;
+    Sfx->Next = SFXFreeList;
+    SFXFreeList = Sfx;
+}
+
+// Stops the sounds a handle (NULL for any) started as a number (-1 for any)
+// AUTOINJECT
+void SFXRemove(DYNAMICSOUNDS *handle, int hashCode) {
+    SFXItem *next;
+    for (SFXItem *Sfx = BaseSFXActive; Sfx != NULL; Sfx = next) {
+        next = Sfx->Next;
+        if ((Sfx->Handle == handle || handle == NULL) && (Sfx->HashCode == hashCode || hashCode == -1))
+            KillSFX(Sfx);
+    }
+}
+
+// What the psi layer is given for one of a sound's voices
+// AUTOINJECT
+void ES_FillpsiSFXData(psiSFX *SfxData, SFXItem *Sfx, int WhichVoice) {
+    SfxData->TrackingType = Sfx->SFXData->TrackingType;
+    ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[Sfx->VoiceHandle[WhichVoice]];
+    SfxData->Handle = voice->IsStream ? Streams[voice->Handle].StreamHandle : voice->Handle;
+    SfxData->InnerRadius = Sfx->InnerRadius;
+    SfxData->OuterRadius = Sfx->OuterRadius;
+    int volume = ES_CombineVolumes(Sfx->BaseVolume[WhichVoice], Sfx);
+    SfxData->Volume = volume;
+    SfxData->Specials = &Sfx->Specials;
+    SfxData->Frequency = Sfx->Pitch[WhichVoice];
+    SfxData->Pan = Sfx->Pan[WhichVoice];
+    if (Sfx->SFXData->TrackingType == SFX_TRACK_2D) {
+        SfxData->Is3d = 0;
+        SfxData->Positioned = 0;
+    } else {
+        SfxData->Is3d = 1;
+        SfxData->Positioned = 1;
+    }
+    SfxData->IsStreamed = voice->IsStream;
+    if (SfxData->IsStreamed)
+        SfxData->Volume = Streams[voice->Handle].ShutDownVolume * volume / 100;
+    SfxData->vel = &Sfx->vel;
+    SfxData->pos = &Sfx->pos;
+}

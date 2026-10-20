@@ -197,10 +197,6 @@ bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 
 // AUTOGEN
 bool __stdcall psiMovieFinished(void);
-// AUTOGEN
-void __stdcall SFXUnPause(void);
-// AUTOGEN
-void __stdcall SFXUnPauseAllStreams(void);
 
 // Which movie the attract page plays: flipped on every entry, so coming back to it from the main menu alternates
 // between the trailer and the title sequence. Only P_ATTRACT uses it (PS2: a function-local static, movie_291);

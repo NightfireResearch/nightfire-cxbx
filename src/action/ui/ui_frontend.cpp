@@ -19,8 +19,6 @@
 #include <string.h>
 
 // Not reimplemented, called by address
-#define SFXUnPause ((void (__cdecl *)(void))0x000c9a10)
-#define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
 #define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
 
 #define LanguageToLoad (*(int *)0x0025d7a0)     // tLANGUAGE (XboxSystem.cpp)

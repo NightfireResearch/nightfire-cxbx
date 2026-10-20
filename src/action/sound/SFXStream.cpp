@@ -40,3 +40,37 @@ void SFXMusicSetVolume(int Volume) {
 int SFXMusicGetVolume(void) {
     return MusicMasterVolume;
 }
+
+// A stream's voice keyed on: at once, or once the stream it waits for is initialised
+// AUTOINJECT
+void ES_StreamKeyOn(int Handle, int ReverbDepth) {
+    StreamData *stream = &Streams[Handle];
+    if (stream->BeenStolen) {
+        StreamIntialiseDetails *waiting = &StreamWaitingIntialise[stream->BeenStolenByInitialiseRef];
+        waiting->KeyOn = 1;
+        waiting->ReverbDepth = ReverbDepth;
+        return;
+    }
+    stream->KeyOn = 1;
+    stream->ReverbDepth = ReverbDepth;
+}
+
+// AUTOINJECT
+void SFXPauseAllStreams(void) {
+    AllStreamsPaused = 1;
+    StreamData *stream = &Streams[0];
+    if (StreamIsActive(stream) && stream->StartedPlaying) {
+        psiSamplePause(stream->StreamHandle);
+        stream->GamePausedMe = 1;
+    }
+}
+
+// AUTOINJECT
+void SFXUnPauseAllStreams(void) {
+    AllStreamsPaused = 0;
+    StreamData *stream = &Streams[0];
+    if (StreamIsActive(stream) && stream->GamePausedMe == 1) {
+        psiSFX_UnPause(stream->StreamHandle);
+        stream->GamePausedMe = 0;
+    }
+}

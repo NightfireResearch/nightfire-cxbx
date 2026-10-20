@@ -65,7 +65,7 @@ struct World {
     uint8_t handles[HANDLES][0x48];
     _VECTOR vectors[6];
     char path[64];
-    int intArg;
+    psiSFX psi;
 };
 World world;
 
@@ -160,6 +160,7 @@ struct Answers {
     int timerStep;
     uint32_t playingMask[2];    // psiIsSamplePlaying, by voice
     int requestVoice;           // psiRequestVoiceHandle: 0 to 63, or -1
+    int initialiseStream;       // SFXInitialiseStream: 0, or -1
     int playPos;
 };
 Answers answers;
@@ -294,6 +295,34 @@ void FakeSetVolume(uint32_t voice, int volume) {
 void FakeSFXUpdate(void) {
     ShadowLog("SFXUpdate\n");
 }
+void FakeMarkInactive(uint32_t voice) {
+    ShadowLog("inactive %d\n", voice);
+}
+uint32_t FakeIsSamplePlaying(uint32_t voice) {
+    ShadowLog("playing? %d\n", voice);
+    return voice < 64 ? (answers.playingMask[voice / 32] >> (voice % 32)) & 1 : voice & 1;
+}
+uint32_t FakeRequestVoiceHandle(SampleHeaderData *sample, int is3d) {
+    ShadowLog("request %x %d\n", W(sample), is3d);
+    return (uint32_t)answers.requestVoice;
+}
+void FakeSamplePause(uint32_t voice) {
+    ShadowLog("pause %d\n", voice);
+}
+void FakeUnPause(uint32_t voice) {
+    ShadowLog("unpause %d\n", voice);
+}
+uint32_t FakeSFXStop(uint32_t voice) {
+    ShadowLog("stop %d\n", voice);
+    return 0;
+}
+void FakeStopStream(StreamData *stream) {
+    ShadowLog("stop stream %x\n", W(stream));
+}
+int FakeInitialiseStream(int hashCode, int is3d) {
+    ShadowLog("initialise stream %d %d\n", hashCode, is3d);
+    return answers.initialiseStream;
+}
 
 void InstallFakes(void) {
     ShadowHook_Install(0x000e0a80, (const void *)&FakeGetTimer);
@@ -301,6 +330,14 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000e0b50, (const void *)&FakeSetupListener);
     ShadowHook_Install(0x000e0dc0, (const void *)&FakeSetVolume);
     ShadowHook_Install(0x000cad40, (const void *)&FakeSFXUpdate);
+    ShadowHook_Install(0x000e0a60, (const void *)&FakeMarkInactive);
+    ShadowHook_Install(0x000e0bc0, (const void *)&FakeIsSamplePlaying);
+    ShadowHook_Install(0x000e0a00, (const void *)&FakeRequestVoiceHandle);
+    ShadowHook_Install(0x000e0db0, (const void *)&FakeSamplePause);
+    ShadowHook_Install(0x000e0a70, (const void *)&FakeUnPause);
+    ShadowHook_Install(0x000e09c0, (const void *)&FakeSFXStop);
+    ShadowHook_Install(0x000c8c40, (const void *)&FakeStopStream);
+    ShadowHook_Install(0x000c8fa0, (const void *)&FakeInitialiseStream);
 }
 
 // ---- the made-up state
@@ -479,7 +516,7 @@ void RandomItems(void) {
         SFXItem *s = &SFXItems[order[i]];
         RandomItem(s);
         s->Next = SFXFreeList;
-        s->Last = (SFXItem *)(uintptr_t)R(0);
+        s->Last = NULL;
         SFXFreeList = s;
     }
 }
@@ -517,6 +554,8 @@ void RandomStream(void) {
     s->KeyOn = R(2);
     s->ReverbDepth = RI(0, 100);
     s->ShutDownVolume = RI(0, 100);
+    s->BeenStolen = R(3) == 0;
+    s->BeenStolenByInitialiseRef = RI(0, SFX_NUM_STREAM_REQUESTS - 1);
 }
 
 void RandomGlobals(void) {
@@ -580,6 +619,10 @@ void RandomWorld(void) {
     answers.playingMask[0] = R(0);
     answers.playingMask[1] = R(0);
     answers.requestVoice = R(4) == 0 ? -1 : RI(0, 63);
+    answers.initialiseStream = R(2) ? -1 : 0;
+    if (R(8) == 0)
+        for (int i = 0; i < SFX_NUM_VOICE_HANDLES; i++)
+            ES_VoiceHandleData[i].Status = R(30) != 0;
     answers.playPos = RI(0, 0x9000);
     if (R(2))
         FadeStartTimer = answers.timer - RI(-100, 2500);
@@ -779,6 +822,123 @@ const Case kSettings[] = {
     C("SFXMusicGetVolume", RunMusicGetVolume),
 };
 
+// ---- the voices and the sounds' list
+
+uint32_t RunFindFreeVoiceHandle(bool original) {
+    return CDECL_RUN(0x000c4ea0, ES_FindFreeVoiceHandle, int (__cdecl *)(void));
+}
+
+uint32_t RunUnlockVoiceHandle(bool original) {
+    int voice = SomeVoice();
+    CDECL_VOID(0x000c8810, ES_UnlockVoiceHandle, void (__cdecl *)(int), voice);
+    return 0;
+}
+
+uint32_t RunHasSampleEnded(bool original) {
+    int voice = SomeVoice();
+    SFXItem *s = SomeItem();
+    return CDECL_RUN(0x000c8870, HasSampleEnded, int (__cdecl *)(int, SFXItem *), voice, s);
+}
+
+uint32_t RunRequestVoiceHandle(bool original) {
+    int fileRef = RI(-3, SAMPLES - 1);
+    int is3d = (int)R(2);
+    SampleHeaderData *samples = world.samples[R(BANKS)];
+    // The original keeps the voice in EDX across ES_FindFreeVoiceHandle, whose original does not write it
+    if (original) {
+        XbeOriginalScope find(0x000c4ea0);
+        return CDECL_RUN(0x000c97f0, ES_RequestVoiceHandle, int (__cdecl *)(SampleHeaderData *, int, int, int),
+                         samples, fileRef, is3d, 0);
+    }
+    return CDECL_RUN(0x000c97f0, ES_RequestVoiceHandle, int (__cdecl *)(SampleHeaderData *, int, int, int), samples,
+                     fileRef, is3d, 0);
+}
+
+uint32_t RunSFXIsReady(bool original) {
+    int voice = SomeVoice();
+    return CDECL_RUN(0x000c9880, ES_SFXIsReady, int (__cdecl *)(int), voice);
+}
+
+uint32_t RunPauseSfx(bool original) {
+    SFXItem *s = SomeItem();
+    CDECL_VOID(0x000c98e0, ES_PauseSfx, void (__cdecl *)(SFXItem *), s);
+    return 0;
+}
+
+uint32_t RunPause(bool original) {
+    CDECL_VOID(0x000c9960, SFXPause, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunUnPauseSfx(bool original) {
+    SFXItem *s = SomeItem();
+    CDECL_VOID(0x000c9990, ES_UnPauseSfx, void (__cdecl *)(SFXItem *), s);
+    return 0;
+}
+
+uint32_t RunUnPause(bool original) {
+    CDECL_VOID(0x000c9a10, SFXUnPause, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunKillSFX(bool original) {
+    SFXItem *s = SomeItem();
+    if (s->Next == NULL && s->Last == NULL && s != BaseSFXActive)
+        return 0;
+    CDECL_VOID(0x000c9a40, KillSFX, void (__cdecl *)(SFXItem *), s);
+    return 0;
+}
+
+uint32_t RunRemove(bool original) {
+    DYNAMICSOUNDS *handle = SomeHandle();
+    int hashCode = R(2) ? -1 : SomeSound();
+    CDECL_VOID(0x000c9b10, SFXRemove, void (__cdecl *)(DYNAMICSOUNDS *, int), handle, hashCode);
+    return 0;
+}
+
+uint32_t RunFillpsiSFXData(bool original) {
+    SFXItem *s = SomeItem();
+    int n = RI(0, SFX_MAX_VOICES - 1);
+    if (s->VoiceHandle[n] == -1)
+        s->VoiceHandle[n] = RI(0, SFX_NUM_VOICE_HANDLES - 1);
+    CDECL_VOID(0x000c88d0, ES_FillpsiSFXData, void (__cdecl *)(psiSFX *, SFXItem *, int), &world.psi, s, n);
+    return 0;
+}
+
+uint32_t RunStreamKeyOn(bool original) {
+    int reverb = RI(0, 100);
+    CDECL_VOID(0x000c61b0, ES_StreamKeyOn, void (__cdecl *)(int, int), 0, reverb);
+    return 0;
+}
+
+uint32_t RunPauseAllStreams(bool original) {
+    CDECL_VOID(0x000c6200, SFXPauseAllStreams, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunUnPauseAllStreams(bool original) {
+    CDECL_VOID(0x000c6250, SFXUnPauseAllStreams, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kVoices[] = {
+    C("ES_FindFreeVoiceHandle", RunFindFreeVoiceHandle),
+    C("ES_UnlockVoiceHandle", RunUnlockVoiceHandle),
+    C("HasSampleEnded", RunHasSampleEnded),
+    C("ES_RequestVoiceHandle", RunRequestVoiceHandle),
+    C("ES_SFXIsReady", RunSFXIsReady),
+    C("ES_PauseSfx", RunPauseSfx),
+    C("SFXPause", RunPause),
+    C("ES_UnPauseSfx", RunUnPauseSfx),
+    C("SFXUnPause", RunUnPause),
+    C("KillSFX", RunKillSFX),
+    C("SFXRemove", RunRemove),
+    C("ES_FillpsiSFXData", RunFillpsiSFXData),
+    C("ES_StreamKeyOn", RunStreamKeyOn),
+    C("SFXPauseAllStreams", RunPauseAllStreams),
+    C("SFXUnPauseAllStreams", RunUnPauseAllStreams),
+};
+
 void Group(const char *name, const Case *list, int count, int trials) {
     const char *only = getenv("NIGHTFIRE_SFX_GROUP");
     if (only != NULL && strstr(name, only) == NULL)
@@ -804,6 +964,7 @@ void SFXShadow_Run(void) {
     cases = differ = 0;
 
     Group("the settings and the mixer", kSettings, COUNT(kSettings), 3000);
+    Group("the voices and the list", kVoices, COUNT(kVoices), 3000);
     ShadowHook_RemoveAll();
 
     NfWarnMuted--;

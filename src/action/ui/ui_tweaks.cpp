@@ -22,8 +22,6 @@
 #include <stdio.h>
 
 // Not reimplemented, called by address
-#define SFXPauseAllStreams ((void (__cdecl *)(void))0x000c6200)
-#define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
 
 // The player's damage modifiers (Player.cpp)
 #define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)

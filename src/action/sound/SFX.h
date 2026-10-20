@@ -386,6 +386,7 @@ enum MusicMarkerType {
 #define ListenerPositions (*(_VECTOR(*)[SFX_NUM_LISTENERS])0x0027aee0)
 #define MusicTrackInfo (*(int(*)[SFX_NUM_MUSIC_TRACKS])0x00286a90)
 #define SFXItems (*(SFXItem(*)[SFX_NUM_ITEMS])0x00286ce8)
+#define StreamWaitingIntialise (*(StreamIntialiseDetails(*)[SFX_NUM_STREAM_REQUESTS])0x00298448)
 #define SFXKeyOnFrameDelay I32_AT(0x002981e8)  // for the next SFXStart3D
 #define SBInfoList (*(int(*)[SFX_NUM_BANKS])0x002981f0)
 #define BaseSFXActive (*(SFXItem **)0x00298a4c)
@@ -399,6 +400,7 @@ enum MusicMarkerType {
 #define SFXFilePath (*(char(*)[200])0x00299388)
 #define SFXLanguage I32_AT(0x00299450)
 #define SFXFileAccessSuspendedToggle I32_AT(0x00299454)
+#define AllStreamsPaused I32_AT(0x00299460)
 #define SFXStartLoad I32_AT(0x00299458)        // 100 a sound started, decaying (the name is ours)
 #define DuckerStartTime I32_AT(0x0029945c)
 #define FadeStatus I32_AT(0x00299464)          // -1 fading down, 1 up, 0 not fading
@@ -441,6 +443,18 @@ void SFXSetMode(int mode);
 int SFXGetMode(void);
 void SFXSetupListener(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, _VECTOR *norm, int ListenerNumber);
 void SFXSetNumberOfListeners(int ListenerCount);
+int ES_FindFreeVoiceHandle(void);
+void ES_UnlockVoiceHandle(int voiceIdx);
+int HasSampleEnded(int voiceIdx, SFXItem *Sfx);
+int ES_RequestVoiceHandle(SampleHeaderData *sampleHeader, int fileRefOrHashcode, int is3d, int unused);
+int ES_SFXIsReady(int voiceIdx);
+void ES_PauseSfx(SFXItem *Sfx);
+void SFXPause(void);
+void ES_UnPauseSfx(SFXItem *Sfx);
+void SFXUnPause(void);
+void KillSFX(SFXItem *Sfx);
+void SFXRemove(DYNAMICSOUNDS *handle, int hashCode);
+void ES_FillpsiSFXData(psiSFX *SfxData, SFXItem *Sfx, int WhichVoice);
 void SFXSuspendFileAccess(void);
 void SFXUnSuspendFileAccess(void);
 
@@ -450,10 +464,15 @@ int FindMusicTrackNumber(int MusicHashCode);
 void ES_MusicSetVolume(void);
 void SFXMusicSetVolume(int Volume);
 int SFXMusicGetVolume(void);
+void ES_StreamKeyOn(int Handle, int ReverbDepth);
+void SFXPauseAllStreams(void);
+void SFXUnPauseAllStreams(void);
 
 // The originals still called by address
 #define SFXUpdate ((void (__cdecl *)(void))0x000cad40)
 #define SFXStartMusic ((void (__cdecl *)(int track, int section))0x000ca5e0)
 #define SFXStopMusic ((void (__cdecl *)(void))0x000c8ce0)
+#define SFXInitialiseStream ((int (__cdecl *)(int HashCode, int Is3d))0x000c8fa0)
+#define SFXStopStream ((void (__cdecl *)(StreamData *stream))0x000c8c40)
 
 #endif // SFX_H_
