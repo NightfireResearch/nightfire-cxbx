@@ -770,6 +770,9 @@ static bool g_targetIsBackBuffer = true;                      // kept by SetRend
 static IDirect3DSurface9 *g_readBackScaled = NULL;            // a game-sized copy for readbacks, default pool
 static inline bool ScalingTarget(void) { return g_renderScaled && g_targetIsBackBuffer; }
 static void ReleaseDefaultPoolResources(void);
+static void SetGameRenderState(D3DRENDERSTATETYPE state, DWORD value);
+static void ResetDevice(const char *why);
+static int ForcedResetEvery(void);
 static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
 static uint32_t g_xboxSamplesPerPixel = 1;   // from the game's MultiSampleType; scales visibility-test counts
 static bool g_hasStencil = true;
@@ -933,7 +936,7 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     if (SUCCEEDED(g_device->GetDeviceCaps(&caps))) {
         // D3D9 clamps point sprites to D3DRS_POINTSIZE_MAX, which defaults to 64 pixels - far smaller than the
         // game's overlay blobs. Raise it to whatever the hardware allows.
-        g_device->SetRenderState(D3DRS_POINTSIZE_MAX, *(DWORD*)&caps.MaxPointSize);
+        SetGameRenderState(D3DRS_POINTSIZE_MAX, *(DWORD*)&caps.MaxPointSize);
         D3D9Log("[d3d9] max point size %.0f\n", caps.MaxPointSize);
     }
     BeginSceneIfNeeded();
@@ -1271,15 +1274,10 @@ void D3D9_Swap(uint32_t type) {
         hr = g_device->Present(NULL, NULL, NULL, NULL);
     PaceFrame();
     if (hr == D3DERR_DEVICELOST) {
-        if (g_device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET) {
-            D3D9Log("[d3d9] device lost - resetting (device state is not restored yet at this checkpoint).\n");
-            ReleaseDefaultPoolResources(); // D3DPOOL_DEFAULT: must not exist across Reset
-            if (SUCCEEDED(g_device->Reset(&g_presentParams))) {
-                g_device->GetRenderTarget(0, &g_backBufferSurface);
-                g_device->GetDepthStencilSurface(&g_mainDepthSurface);
-                MarkAllConstantsDirty();   // Reset drops whatever the device was holding
-            }
-        }
+        if (g_device->TestCooperativeLevel() == D3DERR_DEVICENOTRESET)
+            ResetDevice("device lost");
+    } else if (ForcedResetEvery() > 0 && g_frameCount % (uint32_t)ForcedResetEvery() == (uint32_t)ForcedResetEvery() - 1) {
+        ResetDevice("forced (NIGHTFIRE_FORCE_DEVICE_RESET)");
     }
     g_frameCount++;
     if (g_frameCount == 1 || g_frameCount % 600 == 0)
@@ -1367,29 +1365,74 @@ static D3DBLENDOP GlBlendOpToD3D(uint32_t gl) {
     }
 }
 
+// The render states the game has set, through the entry points below, as they were last sent. A Reset puts every
+// state back to D3D's default, and the game sends a state again only when it changes it, so they are replayed
+// after one (ResetDevice): without that, text drawn after a lost device had no blending, its glyphs solid blocks.
+static DWORD g_gameRenderStates[256];
+static bool g_gameRenderStateSet[256];
+
+static void SetGameRenderState(D3DRENDERSTATETYPE state, DWORD value) {
+    if ((unsigned)state < 256) {
+        g_gameRenderStates[state] = value;
+        g_gameRenderStateSet[state] = true;
+    }
+    g_device->SetRenderState(state, value);
+}
+
+static void RestoreGameRenderStates(void) {
+    for (unsigned i = 0; i < 256; i++)
+        if (g_gameRenderStateSet[i])
+            g_device->SetRenderState((D3DRENDERSTATETYPE)i, g_gameRenderStates[i]);
+}
+
+// A lost device (the window losing focus, a display change) is Reset: the default pool's resources first, then the
+// back buffer and depth surface fetched again and the states the device dropped sent again
+static void ResetDevice(const char *why) {
+    ReleaseDefaultPoolResources(); // D3DPOOL_DEFAULT: must not exist across Reset
+    HRESULT hr = g_device->Reset(&g_presentParams);
+    D3D9Log("[d3d9] %s: Reset %s (0x%08lx)\n", why, SUCCEEDED(hr) ? "done, states restored" : "failed",
+            (unsigned long)hr);
+    if (FAILED(hr))
+        return;
+    g_device->GetRenderTarget(0, &g_backBufferSurface);
+    g_device->GetDepthStencilSurface(&g_mainDepthSurface);
+    MarkAllConstantsDirty();
+    RestoreGameRenderStates();
+}
+
+// For testing the above without losing the device: NIGHTFIRE_FORCE_DEVICE_RESET=<n> resets it every n frames
+static int ForcedResetEvery(void) {
+    static int every = -1;
+    if (every < 0) {
+        const char *value = getenv("NIGHTFIRE_FORCE_DEVICE_RESET");
+        every = value != NULL ? atoi(value) : 0;
+    }
+    return every;
+}
+
 void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value) {
     if (g_device == NULL)
         return;
     switch (nv2aMethod & 0xFFFF) {
-        case 0x300: g_device->SetRenderState(D3DRS_ALPHATESTENABLE, value != 0); break;
-        case 0x304: g_device->SetRenderState(D3DRS_ALPHABLENDENABLE, value != 0); break;
-        case 0x310: g_device->SetRenderState(D3DRS_DITHERENABLE, value != 0); break;
-        case 0x33c: g_device->SetRenderState(D3DRS_ALPHAFUNC, GlCompareToD3D(value)); break;
-        case 0x340: g_device->SetRenderState(D3DRS_ALPHAREF, value & 0xFF); break;
-        case 0x344: g_device->SetRenderState(D3DRS_SRCBLEND, GlBlendToD3D(value)); break;
-        case 0x348: g_device->SetRenderState(D3DRS_DESTBLEND, GlBlendToD3D(value)); break;
-        case 0x350: g_device->SetRenderState(D3DRS_BLENDOP, GlBlendOpToD3D(value)); break;
-        case 0x354: g_device->SetRenderState(D3DRS_ZFUNC, ReverseCompareIfNeeded(GlCompareToD3D(value))); break;
+        case 0x300: SetGameRenderState(D3DRS_ALPHATESTENABLE, value != 0); break;
+        case 0x304: SetGameRenderState(D3DRS_ALPHABLENDENABLE, value != 0); break;
+        case 0x310: SetGameRenderState(D3DRS_DITHERENABLE, value != 0); break;
+        case 0x33c: SetGameRenderState(D3DRS_ALPHAFUNC, GlCompareToD3D(value)); break;
+        case 0x340: SetGameRenderState(D3DRS_ALPHAREF, value & 0xFF); break;
+        case 0x344: SetGameRenderState(D3DRS_SRCBLEND, GlBlendToD3D(value)); break;
+        case 0x348: SetGameRenderState(D3DRS_DESTBLEND, GlBlendToD3D(value)); break;
+        case 0x350: SetGameRenderState(D3DRS_BLENDOP, GlBlendOpToD3D(value)); break;
+        case 0x354: SetGameRenderState(D3DRS_ZFUNC, ReverseCompareIfNeeded(GlCompareToD3D(value))); break;
         case 0x358: { // NV097_SET_COLOR_MASK: one byte per channel, A R G B from the top
             DWORD mask = 0;
             if (value & 0x00FF0000) mask |= D3DCOLORWRITEENABLE_RED;
             if (value & 0x0000FF00) mask |= D3DCOLORWRITEENABLE_GREEN;
             if (value & 0x000000FF) mask |= D3DCOLORWRITEENABLE_BLUE;
             if (value & 0xFF000000) mask |= D3DCOLORWRITEENABLE_ALPHA;
-            g_device->SetRenderState(D3DRS_COLORWRITEENABLE, mask);
+            SetGameRenderState(D3DRS_COLORWRITEENABLE, mask);
             break;
         }
-        case 0x35c: g_device->SetRenderState(D3DRS_ZWRITEENABLE, value != 0); break;
+        case 0x35c: SetGameRenderState(D3DRS_ZWRITEENABLE, value != 0); break;
         default: {
             static uint32_t warned[16]; static int warnedCount = 0;
             bool seen = false;
@@ -1403,20 +1446,20 @@ void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value) {
 void D3D9_SetCullMode(int xboxCullMode) {
     if (g_device == NULL) return;
     DWORD mode = (xboxCullMode == 0x901) ? D3DCULL_CCW : (xboxCullMode == 0x900) ? D3DCULL_CW : D3DCULL_NONE;
-    g_device->SetRenderState(D3DRS_CULLMODE, mode);
+    SetGameRenderState(D3DRS_CULLMODE, mode);
 }
 static uint32_t g_fogColour = 0;   // the pixel shader translation reads the fog register as this colour
 void D3D9_SetFogColor(uint32_t colour) {
     g_fogColour = colour;
-    if (g_device != NULL) g_device->SetRenderState(D3DRS_FOGCOLOR, colour);
+    if (g_device != NULL) SetGameRenderState(D3DRS_FOGCOLOR, colour);
 }
 void D3D9_SetZBias(int zBias) {
     if (g_device == NULL) return;
     float bias = (float)zBias * (g_reversedDepth ? 0.00001f : -0.00001f); // Xbox ZBias (0..16 towards the viewer) -> D3D9 depth bias
-    g_device->SetRenderState(D3DRS_DEPTHBIAS, *(DWORD*)&bias);
+    SetGameRenderState(D3DRS_DEPTHBIAS, *(DWORD*)&bias);
 }
 void D3D9_SetZEnable(uint32_t value) {
-    if (g_device != NULL) g_device->SetRenderState(D3DRS_ZENABLE, value != 0 ? D3DZB_TRUE : D3DZB_FALSE);
+    if (g_device != NULL) SetGameRenderState(D3DRS_ZENABLE, value != 0 ? D3DZB_TRUE : D3DZB_FALSE);
 }
 void D3D9_SetNormalizeNormals(uint32_t value) { (void)value; } // fixed-function lighting is never used
 void D3D9_SetVertexBlend(uint32_t value) { (void)value; }      // ditto
