@@ -88,22 +88,12 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 
 }
 
-// AUTOGEN
-void __stdcall SFXSuspendFileAccess(void);
-
-// AUTOGEN
-void __stdcall SFXUnSuspendFileAccess(void);
-
 // The originals, called by address
 #define SFXInitialise ((void (__cdecl *)(char *bankName))0x000c9d60)
 #define SFXReset ((void (__stdcall *)(void))0x000c9c30)
 #define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
 #define SFXStart3D ((uint (__cdecl *)(uint sfxId, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int volume, int radiusInner, int radiusOuter))0x000caa90)
 #define SFXRemove ((void (__cdecl *)(DYNAMICSOUNDS *handle, int sfxId))0x000c9b10)
-#define SFXSetPositionAndVelocity ((void (__cdecl *)(_VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int sfxId))0x000c5250)
-#define SFXSetupListener ((void (__cdecl *)(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, _VECTOR *norm, int listener))0x000c5cd0)
-#define SFXSetEnvironment ((void (__cdecl *)(int environment, int outdoors))0x000c4ed0)
-#define SFXUpdate ((void (__cdecl *)(void))0x000cad40)
 
 // Set by Sound_Ready once the level's bank is loaded
 #define SoundInit U32_AT(0x0029a280)

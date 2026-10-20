@@ -14,8 +14,6 @@
 #include <stdio.h>
 
 // Not reimplemented, called by address
-#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
-#define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
 
 #define LanguageToLoad (*(int *)0x0025d7a0)     // tLANGUAGE (XboxSystem.cpp)
 #define SubtitlesEnabled U32_AT(0x001f6614)

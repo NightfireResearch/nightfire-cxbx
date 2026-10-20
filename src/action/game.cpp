@@ -56,6 +56,7 @@
 #include "gfx/Sprite.h"
 #include <math.h>
 #include "devtools/MenuProbe.h"
+#include "sound/SFX.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -719,7 +720,6 @@ HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
     return (HASHCODE)((uint)GameState.NextLevelHashcode & 0xff00ffff);
 }
 #define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
-#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 #define MP_Start ((void (__cdecl *)(void))0x000a25f0)
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
 

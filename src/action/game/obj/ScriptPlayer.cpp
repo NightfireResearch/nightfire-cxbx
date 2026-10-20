@@ -7,6 +7,7 @@
 #include "../../input.h"
 #include "../../sound/music.h"
 #include "../../sound/Sound.h"
+#include "../../sound/SFX.h"
 #include "../sp/Mission.h"
 #include "../sp/PlayerStats.h"
 #include "../sp/SwitchChannels.h"

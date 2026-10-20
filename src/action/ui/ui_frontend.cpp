@@ -19,8 +19,6 @@
 #include <string.h>
 
 // Not reimplemented, called by address
-#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
-#define SFXSetLanguage ((void (__cdecl *)(int language))0x000c5400)
 #define SFXUnPause ((void (__cdecl *)(void))0x000c9a10)
 #define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
 #define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)

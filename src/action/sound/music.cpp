@@ -26,9 +26,6 @@
 #define MusicUnderAttackCount2 I32_AT(0x00182744)
 #define MusicUnderAttackCount I32_AT(0x00182740)
 
-#define SfxNisMusicTrigger I32_AT(0x00299328)
-#define NisPlaying I32_AT(0x0029932c)
-#define NisQuitten I32_AT(0x00299330)    // counts down 5 frames from a cut scene ending
 #define NisEndedNow I32_AT(0x00299334)
 #define MusicNowPlaying I32_AT(0x00299338)
 #define MusicUnderAttack I32_AT(0x0029933c)
@@ -46,7 +43,6 @@
 #define MusicTemp9 I32_AT(0x0029936c)
 #define WhichStealth I32_AT(0x00299370)
 #define WhichCombat I32_AT(0x00299374)
-#define SFXPaused U32_AT(0x00299378)
 
 // The level functions' own turns between two sections
 #define WhichAttack_MayhewA I32_AT(0x002999f8)
@@ -55,10 +51,6 @@
 #define WhichNonAttack_MayhewC I32_AT(0x00299a04)
 #define WhichAttack_MayhewC I32_AT(0x00299a08)
 
-// The stream's side: the section it jumps to at its next marker and whether at once, and the section it plays
-#define SFXJumpMarker I32_AT(0x00182b6c)
-#define SFXJumpInstant I32_AT(0x002997d8)
-#define SFXActiveMarker I32_AT(0x002997ac)
 // Frames before the stream's section is read back into MusicLastJump
 #define IOP_DelayUpdateTimer I32_AT(0x0027aed8)
 

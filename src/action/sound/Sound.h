@@ -73,8 +73,6 @@ void Sound_Stop_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
 bool Sound_Playing_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
 void Sound_LoadMapSounds(int *mapSoundBlock);
 void __fastcall Sound_DoSubtitle(Action_SFX sound);
-void __stdcall SFXSuspendFileAccess(void);
-void __stdcall SFXUnSuspendFileAccess(void);
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
 
