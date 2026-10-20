@@ -46,6 +46,7 @@
 #include "action/game/drone/DroneAnim.h"
 #include "action/game/drone/Behaviour.h"
 #include "action/game/drone/DroneWeapon.h"
+#include "action/game/drone/NDrone2_Bot.h"
 #include "action/game/drone/NDrone2_Civilian.h"
 #include "action/game/drone/NDrone2_Damage.h"
 #include "action/game/drone/NDrone2_States.h"
