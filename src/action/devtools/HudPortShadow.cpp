@@ -9,6 +9,7 @@
 // Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=hudport runs it alone.
 
 #include "HudPortShadow.h"
+#include "../engine/Camera.h"
 #include "../ui/Component.h"
 #include "ShadowHarness.h"
 
@@ -1255,6 +1256,11 @@ uint32_t RunSetTextNFmt(bool original) {
     return 0;
 }
 
+uint32_t RunCamerasPostLoad(bool original) {
+    CDECL_VOID(0x000252e0, Cameras_PostLoad, void (__cdecl *)(void));
+    return 0;
+}
+
 uint32_t RunSetParams(bool original) {
     sprite *spr = R(10) == 0 ? NULL : AnySprite();
     CDECL_VOID(0x000cec40, Sprite_SetParams, void (__cdecl *)(sprite *, uchar, short, short, HASHCODE, uint), spr,
@@ -1284,6 +1290,7 @@ const Case kSprites[] = {
     C("Sprite_SetFmt", RunSetFmt),
     C("Sprite_SetTextNFmt", RunSetTextNFmt),
     C("Sprite_SetParams", RunSetParams),
+    C("Cameras_PostLoad", RunCamerasPostLoad),
     C("View_DrawSprites", RunDrawSprites),
 };
 

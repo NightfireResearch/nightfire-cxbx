@@ -690,7 +690,6 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 #define MP_Start ((void (__cdecl *)(void))0x000a25f0)
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
-#define Cameras_PostLoad ((void (__cdecl *)(void))0x000252e0)
 #define LoadScreen_Draw ((void (__cdecl *)(void))0x000bf9f0)
 
 // The step ResetMap_Load is at (RESETMAP_)

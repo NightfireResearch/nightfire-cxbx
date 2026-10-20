@@ -95,12 +95,10 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 
         case CamMode_PostMPGameThirdPerson:
 
-            // Ghidra can't identify where these are read, but done
-            // for completeness anyway
-            player->someMPCameraThing1 = 1.5f;
-            player->someMPCameraThing2 = 0.15f;
-            player->someMPCameraThing3 = 1.5f;
-            player->someMPCameraThing4 = 0;
+            player->endCamera.range = 1.5f;
+            player->endCamera.distance = 0.15f;
+            player->endCamera.distanceWanted = 1.5f;
+            player->endCamera.angle = 0.0f;
 
             HUD_Reset(player);
             glb_viewer[player->playerNum]->nightVisionRelated = 0;
@@ -1485,22 +1483,6 @@ void __stdcall ReadTuningVars(void) {
 #define BONE_HEAD 0x80000005
 
 
-// The debug cameras' placements, called by address: unnamed, and only these camera modes use them.
-static void CameraMode3_Place(obj_tag *obj, viewer_tag *viewer) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024b10)(obj, viewer);
-}
-static void CameraMode4_Place(obj_tag *obj, viewer_tag *viewer) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024d40)(obj, viewer);
-}
-static void CameraMode5_Place(obj_tag *obj, viewer_tag *viewer) {
-    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024d70)(obj, viewer);
-}
-static void Camera_Follow(obj_tag *obj, viewer_tag *viewer) { // camera modes 6 and 10
-    reinterpret_cast<void (__cdecl *)(obj_tag *, viewer_tag *)>(0x00024880)(obj, viewer);
-}
-static void Camera_LookAtFrom(viewer_tag *viewer, _VECTOR *target) { // the end-of-match camera
-    reinterpret_cast<void (__cdecl *)(viewer_tag *, _VECTOR *)>(0x00025450)(viewer, target);
-}
 
 // AUTOINJECT
 void Player_PositionCamera(obj_tag *player) {
@@ -1566,11 +1548,11 @@ void Player_PositionCamera(obj_tag *player) {
 
         case CamMode_PostMPGameThirdPerson:
             viewer->zoom = 1.0f;
-            blData->thirdPersonSubject = player;
-            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &blData->thirdPersonTarget, NULL);
+            blData->endCamera.subject = player;
+            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &blData->endCamera.target, NULL);
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
-            Camera_LookAtFrom(viewer, &blData->thirdPersonTarget);
+            Camera_LookAtFrom(viewer, &blData->endCamera);
             viewer->someCel = NULL;
             return;
 
@@ -1588,7 +1570,7 @@ void Player_PositionCamera(obj_tag *player) {
         case 3:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
-            CameraMode3_Place(player, viewer);
+            Camera_Orbit(player, viewer);
             viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
@@ -1596,14 +1578,14 @@ void Player_PositionCamera(obj_tag *player) {
         case 4:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
-            CameraMode4_Place(player, viewer);
+            Camera_LookAtObject(player, viewer);
             viewer->zoom = 1.0f;
             return;
 
         case 5:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
-            CameraMode5_Place(player, viewer);
+            Camera_Trail(player, viewer);
             viewer->zoom = 1.0f;
             viewer->someCel = NULL;
             return;
@@ -3403,10 +3385,10 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     Vec_Zero(&blData->lastRotationDelta);
     Vec_Zero(&blData->rotationDelta);
     Vec_Zero(&blData->field_0x3c);
-    blData->someMPCameraThing1 = 1.5f;
-    blData->someMPCameraThing2 = 1.5f;
-    blData->someMPCameraThing3 = 1.5f;
-    blData->someMPCameraThing4 = 0;
+    blData->endCamera.range = 1.5f;
+    blData->endCamera.distance = 1.5f;
+    blData->endCamera.distanceWanted = 1.5f;
+    blData->endCamera.angle = 0.0f;
     blData->remoteControlDevice = NULL;
     blData->cameraFollowObject = NULL;
     blData->attachedToSpecialMovementItem = NULL;

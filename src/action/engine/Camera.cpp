@@ -13,6 +13,8 @@
 #include "../memory.h"
 #include "../game/view.h"
 #include "Vision.h"
+#include "../input.h"
+#include "../gfx/Sprite.h"
 
 #include <bit>
 #include <math.h>
@@ -414,6 +416,229 @@ void Camera_PlaceBehind(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer
                             + Extended(viewer->pos.x));
     viewer->pos.z = (float)(Extended(stepZ) + Extended(viewer->pos.z));
     Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// How far the follow camera can be from the head at the given angles: its trackDistance, or less where a ray from
+// the head that far hits something; 0.1 short of that, unrounded. Not named on PS2; the name is ours.
+// FUNC_AT(0x000247b0)
+double Camera_FollowRoom(obj_tag *obj, viewer_tag *viewer, float yaw, float pitch) {
+    HITDATA_tag *hits = NULL;
+    float room = viewer->trackDistance;
+    _VECTOR end, head;
+    Vec_Spherical_2_Cartesian(&end.x, room, yaw, -pitch);
+    Player_GetHeadPos(&head, obj, NULL);
+    end.x = head.x - end.x;
+    end.y = head.y - end.y;
+    end.z = head.z - end.z;
+    if (Collide_RayIntersect(&head, &end, obj->inCel, obj, NULL, &hits, 0, 8, 0)) {
+        room = Vec_Dist3D(&hits->hitPosition, &head);
+        Collide_FreeHitList(&hits);
+    }
+    return (double)room - 0.1f;
+}
+
+// Behind the player's head at the view's track angles, as far as the walls allow: the nearest of five rays (the
+// angles and 0.1 either way of both) is eased into an eighth of a frame, from the straight ray's room or the
+// distance last used, whichever is less. Then facing the head, rolled as the player is, the pitch taken from his
+// aim and kept within 1.5. Camera modes 6 and 10. Not named on PS2; the name is ours.
+// FUNC_AT(0x00024880)
+void Camera_Follow(obj_tag *obj, viewer_tag *viewer) {
+    BLData *blData = (BLData *)obj->extraObjectData;
+    float nearest = viewer->trackDistance;
+    float pitch = (float)((double)obj->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f);
+    if (pitch < -1.5f)
+        pitch = -1.5f;
+    else if (pitch > 1.5f)
+        pitch = 1.5f;
+
+    static const float sides[4][2] = {{0.1f, 0.1f}, {0.1f, -0.1f}, {-0.1f, 0.1f}, {-0.1f, -0.1f}};
+    for (int i = 0; i < 4; i++) {
+        double room = Camera_FollowRoom(obj, viewer, (float)((double)viewer->trackYaw + sides[i][0]),
+                                        (float)((double)viewer->trackPitch + sides[i][1]));
+        if (room < nearest)
+            nearest = (float)room;
+    }
+    double room = Camera_FollowRoom(obj, viewer, viewer->trackYaw, viewer->trackPitch);
+    if (room < nearest)
+        nearest = (float)room;
+    if (!(room < viewer->trackDistanceUsed))
+        room = viewer->trackDistanceUsed;
+    float distance = (float)(((double)nearest - room) * 0.125f + room);
+    viewer->trackDistanceUsed = distance;
+
+    _VECTOR offset, head;
+    Vec_Spherical_2_Cartesian(&offset.x, distance, viewer->trackYaw, -viewer->trackPitch);
+    Player_GetHeadPos(&head, obj, NULL);
+    viewer->pos.x = head.x - offset.x;
+    viewer->pos.y = head.y - offset.y;
+    viewer->pos.z = head.z - offset.z;
+    Camera_PlaceAround(&head, viewer, 1.0f);
+    Camera_PlaceAbove(&head, viewer, 1.0f);
+    viewer->someVec.z = obj->rotation.z;
+    viewer->trackYaw = obj->rotation.y;
+    viewer->trackPitch = pitch;
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// Facing the object from where the view is. Camera mode 4. Not named on PS2; the name is ours.
+// FUNC_AT(0x00024d40)
+void Camera_LookAtObject(obj_tag *obj, viewer_tag *viewer) {
+    Camera_PlaceAround(&obj->position, viewer, 1.0f);
+    Camera_PlaceAbove(&obj->position, viewer, 1.0f);
+}
+
+// A three-player match leaves the screen's fourth quarter to a picture: a 320 by 240 sprite in view 5
+#define TEX_FOURTH_QUARTER ((HASHCODE)0x0300013c)
+
+// AUTOINJECT
+void Cameras_PostLoad(void) {
+    if (MPSettings.numPlayers != 3 || !MPSettings.isMultiplayer)
+        return;
+    sprite *quarter = Sprite_CreateAndLink2Viewer(5);
+    if (quarter == NULL)
+        return;
+    Sprite_SetParams(quarter, 5, 320, 240, TEX_FOURTH_QUARTER, 0x7f7f7fff);
+    quarter->onscreenWidth = 320;
+    quarter->onscreenHeight = 240;
+}
+
+// Around the player's head at the view's track angles and distance, facing it. With a trackDistance, the right stick
+// turns it (the pitch kept within 1.5) and the distance eases a 32nd of the way there; without one it eases round
+// behind the player and in, and once close in (0.1) a camera mode is ended, back to the first person. Camera mode 3.
+// Not named on PS2; the name is ours.
+// FUNC_AT(0x00024b10)
+void Camera_Orbit(obj_tag *obj, viewer_tag *viewer) {
+    BLData *blData = glb_blokes[(uchar)viewer->idx];
+    _VECTOR offset, head;
+    Vec_Spherical_2_Cartesian(&offset.x, viewer->trackDistanceUsed, viewer->trackYaw, -viewer->trackPitch);
+    Player_GetHeadPos(&head, obj, NULL);
+    viewer->pos.x = head.x - offset.x;
+    viewer->pos.y = head.y - offset.y;
+    viewer->pos.z = head.z - offset.z;
+    Camera_PlaceAround(&head, viewer, 1.0f);
+    Camera_PlaceAbove(&head, viewer, 1.0f);
+    viewer->someVec.z = 0.0f;
+
+    if (viewer->trackDistance != 0.0f) {
+        float look = Input_Actionf((uchar)viewer->idx, ACTION_AIM_U_D, 1);
+        double pitch = viewer->trackPitch - (double)look * ((double)REC_FRAME_RATE * 1.5707964f);
+        viewer->trackPitch = (float)pitch;
+        if (pitch < -1.5f)
+            viewer->trackPitch = -1.5f;
+        else if (pitch > 1.5f)
+            viewer->trackPitch = 1.5f;
+        float turn = Input_Actionf((uchar)viewer->idx, ACTION_AIM_L_R, 1);
+        viewer->trackYaw = (float)(viewer->trackYaw - (double)REC_FRAME_RATE * 1.5707964f * turn);
+        viewer->trackDistanceUsed = (float)(((double)viewer->trackDistance - viewer->trackDistanceUsed) * 0.03125f
+                                            + viewer->trackDistanceUsed);
+    }
+    else {
+        viewer->trackPitch = (float)(Vec_AngleDifference(viewer->trackPitch, obj->rotation.x) * 0.03125f
+                                     + viewer->trackPitch);
+        viewer->trackYaw = (float)(Vec_AngleDifference(viewer->trackYaw, obj->rotation.y) * 0.03125f
+                                   + viewer->trackYaw);
+        double distance = (double)viewer->trackDistanceUsed - 0.13333334f;
+        viewer->trackDistanceUsed = (float)distance;
+        if (blData->camMode != 0 && distance <= 0.1f) {
+            blData->camMode = 0;
+            blData->pitchFromHorizontal = 0.0f;
+            viewer->trackDistanceUsed = 0.0f;
+        }
+    }
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// Behind the player's head at the track angles and distance used, pulled in to where a ray from his position meets
+// a wall and then a quarter in from that, facing the head; the view then moves a twelfth of the way from where it
+// was, and the distance used a 32nd of the way to trackDistance. Camera mode 5. Not named on PS2; the name is ours.
+// FUNC_AT(0x00024d70)
+void Camera_Trail(obj_tag *obj, viewer_tag *viewer) {
+    HITDATA_tag *hits = NULL;
+    _VECTOR oldPos, oldRot, head, offset, back;
+    Vec_Copy(&viewer->pos, &oldPos);
+    Vec_Copy(&viewer->someVec, &oldRot);
+    Player_GetHeadPos(&head, obj, NULL);
+    Vec_Spherical_2_Cartesian(&offset.x, viewer->trackDistanceUsed, viewer->trackYaw, -viewer->trackPitch);
+    viewer->pos.x = head.x - offset.x;
+    viewer->pos.z = head.z - offset.z;
+    viewer->pos.y = head.y - offset.y;
+    if (Collide_RayIntersect(&obj->position, &viewer->pos, obj->inCel, obj, NULL, &hits, 0, 8, 0)) {
+        Vec_Copy(&hits->hitPosition, &viewer->pos);
+        Collide_FreeHitList(&hits);
+    }
+    Vec_Subtract(&viewer->pos, &head, &back);
+    Vec_Normalise(&back, &back);
+    back.x = back.x * 0.25f;
+    back.y = back.y * 0.25f;
+    back.z = back.z * 0.25f;
+    Vec_Subtract(&viewer->pos, &back, &viewer->pos);
+    viewer->trackDistanceUsed = (float)((double)Vec_Dist3D(&viewer->pos, &head) + 0.25f);
+    Camera_PlaceAround(&head, viewer, 1.0f);
+    Camera_PlaceAbove(&head, viewer, 1.0f);
+
+    float pitch = viewer->someVec.x;
+    viewer->trackDistanceUsed = (float)(((double)viewer->trackDistance - viewer->trackDistanceUsed) * 0.03125f
+                                        + viewer->trackDistanceUsed);
+    viewer->pos.x = (float)(((double)viewer->pos.x - oldPos.x) * 0.083333336f + oldPos.x);
+    viewer->pos.y = (float)(((double)viewer->pos.y - oldPos.y) * 0.083333336f + oldPos.y);
+    viewer->pos.z = (float)(((double)viewer->pos.z - oldPos.z) * 0.083333336f + oldPos.z);
+    viewer->someVec.x = (float)(Vec_AngleDifference(oldRot.x, pitch) * 0.083333336f + oldRot.x);
+    viewer->someVec.y = (float)(Vec_AngleDifference(oldRot.y, viewer->someVec.y) * 0.083333336f + oldRot.y);
+    viewer->someVec.z = (float)(Vec_AngleDifference(oldRot.z, viewer->someVec.z) * 0.083333336f + oldRot.z);
+    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+}
+
+// The multiplayer end-of-match camera: circling the target 0.7 a second, distance out from it and up (at least 0.75
+// above it, at most range), looking at it. A 1.5 sphere at the view that meets something brings distanceWanted in
+// to the hit (0.1 at least); the distance moves five times its gap a second towards distanceWanted, never past it.
+// Not named on PS2; the name is ours.
+// FUNC_AT(0x00025450)
+void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam) {
+    if (cam == NULL)
+        return;
+    float c = (float)FCos(cam->angle);
+    float s = (float)FSin(cam->angle);
+    cam->angle = (float)((double)REC_FRAME_RATE * 0.7f + cam->angle);
+    _VECTOR eye;
+    Vec_Copy(&cam->target, &eye);
+    eye.y = (float)((double)eye.y + cam->distance);
+    double low = (double)cam->target.y + 0.75f;
+    if (eye.y < low) {
+        eye.y = (float)low;
+    }
+    else {
+        double high = (double)cam->range + cam->target.y;
+        if (eye.y > high)
+            eye.y = (float)high;
+    }
+    eye.x = (float)((double)s * cam->distance + eye.x);
+    eye.z = (float)((double)c * cam->distance + eye.z);
+
+    _MATRIX look;
+    Mat_LookAt(&look, &eye, &cam->target, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Copy(&look, &viewer->viewMatrix);
+    _VECTOR *at = Mat_Position(viewer->viewMatrix);
+    cel_tag *cel = build_FindCel(at, glb_world);
+    HITDATA_tag *hits;
+    Collide_SphereIntersect(at, 1.5f, cel, cam->subject, NULL, &hits, 0, 0, 3, 4);
+    if (hits == NULL) {
+        cam->distanceWanted = cam->range;
+    }
+    else {
+        double wanted = (double)cam->range - ((double)cam->range - hits->dist);
+        if (!(wanted > 0.1f))
+            wanted = 0.1f;
+        cam->distanceWanted = (float)wanted;
+        Collide_FreeHitList(&hits);
+    }
+
+    float wanted = cam->distanceWanted;
+    float gap = (float)((double)wanted - cam->distance);
+    double moved = (double)REC_FRAME_RATE * gap * 5.0f + cam->distance;
+    if (!(gap < 0.0f) && gap == gap)
+        cam->distance = moved > wanted ? wanted : (float)moved;
+    else
+        cam->distance = moved < wanted ? wanted : (float)moved;
 }
 
 // An angle brought within plus or minus pi: one at pi or past it, as a remainder of 2pi, and then a turn

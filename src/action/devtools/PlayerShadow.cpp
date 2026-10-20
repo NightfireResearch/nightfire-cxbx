@@ -316,6 +316,7 @@ bool __cdecl FakeSphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, ob
                                  HITDATA_tag **list, char p7, char p8, ushort flags, int p10) {
     ShadowLog("sphere(%08x,%x,%x,%x,%d,%d,%x,%d)", Bits(radius), W(cel), W(obj), W(ignore), p7, p8, flags, p10);
     LogVector("at", centre);
+    *list = NULL;   // as the real one does, first
     if (Next(3) == 0)
         return false;
     *list = Next(4) ? &world.hits[0] : NULL;
@@ -404,8 +405,9 @@ obj_tag *__cdecl FakeFeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *normal,
 void __cdecl FakeOtherViews(obj_tag *obj, char player) { ShadowLog("otherviewsonly(%x,%d)", W(obj), player); }
 void __cdecl FakeInitWeapon(BLData *bl, obj_tag *obj, void *p3) { ShadowLog("initweapon(%x,%x)", W(bl), W(obj)); }
 
-// The collision's tests fake getting onto a ladder and the feet's ray; their own tests do not
-bool fakeLadder = true;
+// The callers' tests fake getting onto a ladder, the feet's ray and Camera_Set (which the original has inlined
+// in the follow camera); the tests of those, and of the follow camera, do not
+bool fakeForCallers = true;
 
 void InstallFakes(void) {
     ShadowFakes_Install();
@@ -460,7 +462,8 @@ void InstallFakes(void) {
     ShadowHook_Install(0x00020c30, (const void *)&FakeFindCel);
     ShadowHook_Install(0x00020eb0, (const void *)&FakePointOnFloor);
     ShadowHook_Install(0x0002d050, (const void *)&FakeUnlink);
-    ShadowHook_Install(0x000240c0, (const void *)&FakeCameraSet);
+    if (fakeForCallers)
+        ShadowHook_Install(0x000240c0, (const void *)&FakeCameraSet);
     ShadowHook_Install(0x00024150, (const void *)&FakeCameraEnable);
     ShadowHook_Install(0x000243b0, (const void *)&FakeSetFade);
     ShadowHook_Install(0x00025190, (const void *)&FakeCalcViewAngles);
@@ -486,9 +489,9 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000ce4b0, (const void *)&FakeBodyGlow);
     ShadowHook_Install(0x0002e320, (const void *)&FakeCreateObjEx);
     ShadowHook_Install(0x0006b610, (const void *)&FakeCelglist);
-    if (fakeLadder)
+    if (fakeForCallers)
         ShadowHook_Install(0x000ab450, (const void *)&FakeFeetOnPoint);
-    if (fakeLadder)
+    if (fakeForCallers)
         ShadowHook_Install(0x000ae930, (const void *)&FakeObjCall2);    // PlayerCollLadder (the third argument unlogged)
     ShadowHook_Install(0x000c4000, (const void *)&FakeObjCall2);    // SP_Activate
     ShadowHook_Install(0x0002f1f0, (const void *)&FakeDoorActivate);
@@ -780,6 +783,7 @@ void RandomWorld(void) {
     viewer->trackPitch = PICK(0.5f, 2.0f);
     viewer->trackYaw = PICK(0.0f, 1.0f);
     viewer->trackDistance = PICK(4.0f, 0.0f, 2.5f);
+    viewer->trackDistanceUsed = PICK(4.0f, 1.0f, 3.9f, 0.0f);
     // Short of wrapping, and never NaN: normaliseToPlusMinusPi's fmodf needs the C runtime started, which it is not yet
     static const float shearAngles[] = {0.0f, 3.1f, -1.0f, -3.1f, -0.0f};
     viewer->shearAngle = shearAngles[ShadowRand(5)];
@@ -1055,6 +1059,39 @@ uint32_t RunFeetOnPoint(bool original) {
     float *normal = Arg(3) ? &Bl()->floorNormalY : NULL;
     return W(CDECL_RUN(0x000ab450, PlayerNotDrone_FeetOnPoint, obj_tag *(__cdecl *)(obj_tag *, HITTEST_tag *, float *, char),
                        Pl(), &Bl()->hitTest, normal, (char)Arg(2)));
+}
+uint32_t RunFollowRoom(bool original) {
+    float yaw = APICK(0.0f, 1.0f, -2.5f), pitch = APICK(0.5f, -0.3f, 1.4f);
+    double room = CDECL_RUN(0x000247b0, Camera_FollowRoom, double (__cdecl *)(obj_tag *, viewer_tag *, float, float),
+                            Pl(), Viewer(), yaw, pitch);
+    uint64_t bits;   // the whole double the original leaves in ST0
+    memcpy(&bits, &room, sizeof(bits));
+    return (uint32_t)bits ^ (uint32_t)(bits >> 32);
+}
+uint32_t RunOrbit(bool original) {
+    CDECL_RUN(0x00024b10, Camera_Orbit, void (__cdecl *)(obj_tag *, viewer_tag *), Pl(), Viewer());
+    return 0;
+}
+uint32_t RunTrail(bool original) {
+    CDECL_RUN(0x00024d70, Camera_Trail, void (__cdecl *)(obj_tag *, viewer_tag *), Pl(), Viewer());
+    return 0;
+}
+uint32_t RunLookAtFrom(bool original) {
+    EndCamera *cam = Arg(10) ? &Bl()->endCamera : NULL;
+    if (cam != NULL) {
+        cam->target = world.vectorArg;
+        cam->range = APICK(1.5f, 0.05f, 3.0f);
+        cam->distance = APICK(0.15f, 1.5f, 2.9f, 0.0f);
+        cam->distanceWanted = APICK(1.5f, 0.5f);
+        cam->angle = APICK(0.0f, 1.0f, -2.0f, 100.0f);
+        cam->subject = Pl();
+    }
+    CDECL_RUN(0x00025450, Camera_LookAtFrom, void (__cdecl *)(viewer_tag *, EndCamera *), Viewer(), cam);
+    return 0;
+}
+uint32_t RunFollow(bool original) {
+    CDECL_RUN(0x00024880, Camera_Follow, void (__cdecl *)(obj_tag *, viewer_tag *), Pl(), Viewer());
+    return 0;
 }
 uint32_t RunKill(bool original) {
     CDECL_RUN(0x000ae6c0, Player_Kill, void (__cdecl *)(obj_tag *), Pl());
@@ -1453,6 +1490,11 @@ const Case kInitUpdate[] = {
 const Case kLadder[] = {
     C("PlayerCollLadder", RunCollLadder),
     C("PlayerNotDrone_FeetOnPoint", RunFeetOnPoint),
+    C("Camera_FollowRoom", RunFollowRoom),
+    C("Camera_Follow", RunFollow),
+    C("Camera_Orbit", RunOrbit),
+    C("Camera_Trail", RunTrail),
+    C("Camera_LookAtFrom", RunLookAtFrom),
 };
 
 } // namespace
@@ -1527,11 +1569,11 @@ void PlayerShadow_Run(void) {
     Test("the placements, icons and third-person cameras", kObjects, COUNT(kObjects), trials);
     Test("Player_Init and Player_Update", kInitUpdate, COUNT(kInitUpdate), trials);
     ShadowHook_RemoveAll();
-    fakeLadder = false;
+    fakeForCallers = false;
     InstallFakes();
-    Test("getting onto a ladder and the feet", kLadder, COUNT(kLadder), trials);
+    Test("getting onto a ladder, the feet and the follow camera", kLadder, COUNT(kLadder), trials);
     ShadowHook_RemoveAll();
-    fakeLadder = true;
+    fakeForCallers = true;
 
     NfWarnMuted--;
     memcpy(&GameState, gameState, sizeof(gameState));

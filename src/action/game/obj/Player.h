@@ -40,6 +40,16 @@ static_assert(offsetof(WeaponStatus, variant) == 0x8, "Offset of variant not cor
 #define WATER_HEAD_UNDER     0x10   // the head is under water, or the player is on a wire
 
 // WIP
+// The multiplayer end-of-match camera's: it circles the target, above it, as far out as the walls allow
+typedef struct EndCamera {
+    _VECTOR target;         // 0x00 - the player's head (Player_PositionCamera)
+    float range;            // 0x0c - how far out it would be, and how high above the target at most
+    float distance;         // 0x10 - how far out and up it is
+    float distanceWanted;   // 0x14 - range, or where a sphere at the view meets something
+    float angle;            // 0x18 - round the target, 0.7 a second
+    obj_tag *subject;       // 0x1c - the player it is on
+} EndCamera;
+
 typedef struct BLData {
     _VECTOR lastPosition; // 0x00 - Player_Update copies the object's position here every frame
     // This frame's movement, in the object's local frame. Player_Move fills it in, Player_Update rotates it
@@ -62,13 +72,7 @@ typedef struct BLData {
     char _pad_0a0[0xac - 0xa0];
     short zeroGTurn;            // 0xac
     char _pad_0ae[0xb0 - 0xae];
-    // The point the multiplayer end-of-match camera looks at - the player's head (Player_PositionCamera).
-    _VECTOR thirdPersonTarget; // 0xb0
-    float someMPCameraThing1; // 0xbc
-    float someMPCameraThing2; // 0xc0
-    float someMPCameraThing3; // 0xc4
-    undefined4 someMPCameraThing4; // 0xc8
-    obj_tag *thirdPersonSubject; // 0xcc - the player the end-of-match camera is on
+    EndCamera endCamera; // 0xb0 - the multiplayer end-of-match camera's (Camera_LookAtFrom)
     float floorNormalY; // 0xd0 - the floor's slope: below 0.5 the player slides (Player_Collision)
     obj_tag *autoAimTarget; // 0xd4 - what Check_AutoAim last locked on to, whose cone is wider; NULL for none
     // Where the crosshair is aimed on the screen while aiming without a scope (Player_Aiming): within +-0.296 and
@@ -262,7 +266,6 @@ typedef struct BLData {
 
 static_assert(sizeof(BLData) == 0x8fc, "BLData is 0x8fc bytes (Player_Init)");
 
-static_assert(offsetof(BLData, someMPCameraThing1) == 0xbc, "Offset of someMPCameraThing1 not correct");
 static_assert(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
 static_assert(offsetof(BLData, muzzle) == 0x48, "Offset of muzzle not correct");
 static_assert(offsetof(BLData, zeroGQuat) == 0x90, "Offset of zeroGQuat not correct");
@@ -315,8 +318,8 @@ static_assert(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisi
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 static_assert(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
 static_assert(offsetof(BLData, field_0x3c) == 0x3c, "Offset of field_0x3c not correct");
-static_assert(offsetof(BLData, thirdPersonTarget) == 0xb0, "Offset of thirdPersonTarget not correct");
-static_assert(offsetof(BLData, thirdPersonSubject) == 0xcc, "Offset of thirdPersonSubject not correct");
+static_assert(offsetof(BLData, endCamera) == 0xb0, "Offset of endCamera not correct");
+static_assert(sizeof(EndCamera) == 0x20, "EndCamera is 0x20 bytes");
 static_assert(offsetof(BLData, cameraFollowObject) == 0x80c, "Offset of cameraFollowObject not correct");
 static_assert(offsetof(BLData, zoom) == 0x860, "Offset of zoom not correct");
 static_assert(offsetof(BLData, headSwimOffset) == 0x898, "Offset of headSwimOffset not correct");

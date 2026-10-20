@@ -29,6 +29,14 @@ float normaliseToPlusMinusPi(float angle);
 void Camera_PlaceAround(_VECTOR *target, viewer_tag *viewer, float rate);
 void Camera_PlaceAbove(_VECTOR *target, viewer_tag *viewer, float rate);
 void Camera_PlaceOver(obj_tag *obj, viewer_tag *viewer, float rate, float height);
+double Camera_FollowRoom(obj_tag *obj, viewer_tag *viewer, float yaw, float pitch);
+void Camera_Follow(obj_tag *obj, viewer_tag *viewer);
+void Camera_Orbit(obj_tag *obj, viewer_tag *viewer);
+void Camera_Trail(obj_tag *obj, viewer_tag *viewer);
+typedef struct EndCamera EndCamera;
+void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam);
+void Camera_LookAtObject(obj_tag *obj, viewer_tag *viewer);
+void Cameras_PostLoad(void);
 void Camera_PlaceBehind(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer, float rate, float distance);
 void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *position);
 

@@ -1591,6 +1591,7 @@ uint32_t RunPlaceOver(bool o) {
     FLOAT_AT(0x001fec50) = posy;
     return 0;
 }
+uint32_t RunLookAtObject(bool o) { CALL(o, 0x00024d40, Camera_LookAtObject, s_obj, s_viewer); return 0; }
 uint32_t RunPlaceBehind(bool o) {
     CALL(o, 0x00024710, Camera_PlaceBehind, s_vecA, s_vecB, s_viewer, s_float, s_vecB->x);
     return 0;
@@ -1638,6 +1639,7 @@ void RunCamera(void) {
         {"Camera_PlaceAbove", RunPlaceAbove},
         {"Camera_PlaceOver", RunPlaceOver},
         {"Camera_PlaceBehind", RunPlaceBehind},
+        {"Camera_LookAtObject", RunLookAtObject},
         {"Camera_Enable", RunCameraEnable},
         {"Camera_SetFade", RunSetFade},
         {"Camera_UpdateGlbVars", RunUpdateGlbVars},
@@ -1671,7 +1673,8 @@ void RunCamera(void) {
             }
             if (c.run == RunViewerInit)
                 s_viewer = &world.views[R(VIEWS)];
-            if (c.run == RunPlaceAround || c.run == RunPlaceAbove || c.run == RunPlaceOver || c.run == RunPlaceBehind) {
+            if (c.run == RunPlaceAround || c.run == RunPlaceAbove || c.run == RunPlaceOver || c.run == RunPlaceBehind ||
+                c.run == RunLookAtObject) {
                 s_vecA = &world.v[0];
                 s_vecB = &world.v[1];
                 s_obj = &world.objs[0];
