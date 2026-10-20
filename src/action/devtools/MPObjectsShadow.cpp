@@ -5,8 +5,8 @@
 //
 // - Pickup_Update: the pickup object, its PICKUPINFO and the RNG words. Its three callees that reach further
 //   (Pickup_Handler gives the pickup away; MP_RegisterPickup and MP_UnregisterPickup change MPpickups and the AI
-//   network's emitters) are caught by a jump over their entries for the length of both runs (and over our
-//   _Pickup_Handler, which ours calls by name): each call is recorded, not made, the two records are compared, and
+//   network's emitters) are caught by a jump over their entries for the length of both runs (and over our ports of
+//   all three, which ours calls by name): each call is recorded, not made, the two records are compared, and
 //   ours are then made for real, in order. They run after
 //   the rest of our Pickup_Update rather than at their place in it, which nothing in it reads back.
 // - GT_Track: the GUNTURRET, the RNG words and the returned target. Its sorted target list is scratch (the
@@ -159,7 +159,8 @@ void Unhook(CodeHook &h) {
 }
 
 CodeHook s_handlerHook = { kPickupHandler }, s_registerHook = { kRegisterPickup },
-         s_unregisterHook = { kUnregisterPickup }, s_ourHandlerHook = { 0 }, s_ourTrackHook = { 0 },
+         s_unregisterHook = { kUnregisterPickup }, s_ourHandlerHook = { 0 }, s_ourRegisterHook = { 0 },
+         s_ourUnregisterHook = { 0 }, s_ourTrackHook = { 0 },
          s_ourHUDUpdateHook = { 0 };
 
 } // namespace
@@ -279,9 +280,16 @@ void __cdecl ShadowPickupUpdate(obj_tag *obj) {
     r.Save(s_original);
     r.Load(s_before);
     s_log = &ourCalls;
+    // Ours calls the three by name: their entries are caught too
     s_ourHandlerHook.at = (unsigned)&_Pickup_Handler;
+    s_ourRegisterHook.at = (unsigned)&MP_RegisterPickup;
+    s_ourUnregisterHook.at = (unsigned)&MP_UnregisterPickup;
     Hook(s_ourHandlerHook, (const void *)&OurHandlerStub);
+    Hook(s_ourRegisterHook, (const void *)&RegisterStub);
+    Hook(s_ourUnregisterHook, (const void *)&UnregisterStub);
     Pickup_Update(obj);
+    Unhook(s_ourUnregisterHook);
+    Unhook(s_ourRegisterHook);
     Unhook(s_ourHandlerHook);
     s_log = NULL;
     Unhook(s_unregisterHook);
