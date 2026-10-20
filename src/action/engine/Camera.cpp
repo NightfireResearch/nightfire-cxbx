@@ -642,17 +642,17 @@ void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam) {
 }
 
 // An angle brought within plus or minus pi: one at pi or past it, as a remainder of 2pi, and then a turn
-// towards zero if that is still outside.
+// towards zero if that is still outside. Left unrounded, as the original leaves it on the x87.
 // AUTOINJECT
-float normaliseToPlusMinusPi(float angle) {
+double normaliseToPlusMinusPi(float angle) {
     if (AbsFchs((double)angle) < 3.1415927f)
         return angle;
     double rest = fmod((double)angle, std::bit_cast<double>(0x401921fb60000000ull));
     if (AbsFchs(rest) < 3.1415927f)
-        return (float)rest;
+        return rest;
     if (angle < 0.0f || angle != angle)
-        return (float)(rest + 6.2831855f);
-    return (float)(rest - 6.2831855f);
+        return rest + 6.2831855f;
+    return rest - 6.2831855f;
 }
 #define GlobalBlur U8_AT(0x001f667c)
 

@@ -755,9 +755,9 @@ void MakeWrap(Buf &b) {
 void RunWrap(Buf &b, bool o) {
     if (o) {
         XbeOriginalScope scope(0x00024050);
-        b.f[1] = ((FloatOfOne)(uintptr_t)0x00024050)(b.f[0]);
+        b.d[0] = ((double (*)(float))(uintptr_t)0x00024050)(b.f[0]);
     } else {
-        b.f[1] = normaliseToPlusMinusPi(b.f[0]);
+        b.d[0] = normaliseToPlusMinusPi(b.f[0]);
     }
 }
 void MakeAtan(Buf &b) {

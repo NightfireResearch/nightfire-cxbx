@@ -42,6 +42,7 @@
 #include "../game/obj/GT.h"
 #include "../game/obj/Gas.h"
 #include "../game/obj/GunImp.h"
+#include "../game/obj/car.h"
 #include "../game/obj/LeafGen.h"
 #include "../game/obj/Light.h"
 #include "../game/obj/Lightning.h"
@@ -327,6 +328,12 @@ DYNAMICSOUNDS *__cdecl FakeSound3D(uint sfx, _VECTOR *pos, float volume, float o
 
 void __cdecl FakeSoundStop(DYNAMICSOUNDS *handle) {
     ShadowLog("stop(%x)", W(handle));
+}
+
+bool __cdecl FakeSoundPos(DYNAMICSOUNDS *handle, _VECTOR *pos) {
+    ShadowLog("soundpos(%x)", W(handle));
+    LogVector("at", pos);
+    return R(2) != 0;
 }
 
 void __cdecl FakeMusic(uint event, uint value) {
@@ -857,6 +864,7 @@ void InstallFakes(bool realLights) {
     ShadowHook_Install(0x0006b500, (const void *)&FakeGetItem);
     ShadowHook_Install(0x000cb8c0, (const void *)&FakeSound3D);
     ShadowHook_Install(0x000cb9a0, (const void *)&FakeSoundStop);
+    ShadowHook_Install(0x000cb9e0, (const void *)&FakeSoundPos);
     ShadowHook_Install(0x000cbce0, (const void *)&FakeMusic);
     if (!realLights)
         ShadowHook_Install(0x0006d530, (const void *)&FakeLightCreate);
@@ -2865,6 +2873,126 @@ const Case kGunImps[] = {
     C("GunImp_Update", RunGunImpUpdate),
 };
 
+// ---- the remote-controlled tank and helicopter
+
+obj_tag *RandomCar(void) {
+    obj_tag *obj = Subject(OBJECTTYPE_CAR);
+    CAR_INFO *car = (CAR_INFO *)obj->extraObjectData;
+    int at = (int)(obj - world.objs) - 2;
+    car->turretGeom = &world.objs[2 + (at + 1) % (OBJS - 2)];
+    car->barrelGeom = &world.objs[2 + (at + 2) % (OBJS - 2)];
+    car->bodyGeom = R(2) ? NULL : &world.objs[1];
+    car->turretGeom->objGraphics = &world.glists[R(4)];
+    car->barrelGeom->objGraphics = &world.glists[R(4)];
+    obj->objGraphics = &world.glists[R(4)];
+    PlainVector(&car->velocity, R(2) ? 0.1f : 3.0f);
+    PlainVector(&car->fall, R(3) ? 2.0f : 60.0f);
+    for (int i = 0; i < 4; i++)
+        car->orientation.q[i] = Plain(-1.0f, 1.0f);
+    PlainVector(&car->aim, R(4) ? 1.0f : 4.0f);
+    car->playerController = AnyObjOrNull();
+    car->turnSpeed = R(3) ? 0.0f : Plain(-0.1f, 0.1f);
+    car->damageAmt = R(2) ? Plain(0.0f, 2.0f) : Plain(0.0f, 250.0f);
+    car->gunWait = R(2) ? 0.0f : Plain(-2.0f, 8.0f);
+    car->mainWait = R(2) ? 0.0f : Plain(-2.0f, 130.0f);
+    car->tankMachinegunTemperature = R(3) ? Plain(85.0f, 101.0f) : Plain(-5.0f, 50.0f);
+    car->soundHandle = R(2) ? NULL : (DYNAMICSOUNDS *)world.sounds;
+    car->onGround = (char)R(2);
+    car->tankNum = (short)R(8);
+    car->mainAmmo = (short)R(3);
+    car->isHeli = (char)R(2);
+    car->machineGunOverheated = (char)(R(4) == 0);
+    car->fireSide = (uchar)R(4);
+    static const ushort states[] = {CAR_IDLE, CAR_DRIVEN, CAR_DRIVEN, CAR_DRIVEN, CAR_STOPPED, CAR_TAKEN, CAR_DESTROYED, 7};
+    obj->curState = states[R(COUNT(states))];
+    obj->subState = (ushort)(obj->curState == CAR_DESTROYED ? (R(2) ? R(3) : R(1800)) : R(4));
+    if (obj->subState < 4)
+        glb_players[obj->subState] = &world.objs[0];
+    // What it touches: some through it, sometimes a hurt volume, its own missiles, floors under it
+    if (R(6) == 0 && &world.objs[OBJS - 1] != obj)
+        world.objs[OBJS - 1].objectType = R(2) ? OBJECTTYPE_HURT : OBJECTTYPE_CAR;
+    for (int i = 0; i < HITS; i++) {
+        HITDATA_tag *hit = &world.hits[i];
+        hit->flags = (char)(R(4) == 0 ? HIT_NO_CONTACT : 0);
+        if (R(5) == 0)
+            hit->hitObj = NULL;
+        if (hit->hitObj != NULL && hit->hitObj->objectType == OBJECTTYPE_BULLET && R(2))
+            ((BU_tag *)hit->hitObj->extraObjectData)->maybeProxyObjectShooter = obj;
+        if (R(2)) {
+            hit->surfaceNormal.normal.x = Plain(-0.3f, 0.3f);
+            hit->surfaceNormal.normal.y = Plain(0.4f, 1.0f);
+            hit->surfaceNormal.normal.z = Plain(-0.3f, 0.3f);
+        }
+        if (R(2))
+            hit->dmgAmt = R(2) ? 0.0f : Plain(0.0f, 0.6f);
+    }
+    obj->hitList = R(4) == 0 ? NULL : &world.hits[R(HITS)];
+    return obj;
+}
+
+uint32_t RunCarUpdate(bool original) {
+    obj_tag *obj = RandomCar();
+    CDECL_VOID(0x00026f50, Car_Update, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCarCollision(bool original) {
+    obj_tag *obj = RandomCar();
+    CDECL_VOID(0x00027d40, Car_CollisionHandler, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCarHeliDamage(bool original) {
+    obj_tag *obj = RandomCar();
+    CDECL_VOID(0x00027ca0, Car_MaybeHandleDamage, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCarSetBits(bool original) {
+    obj_tag *obj = RandomCar();
+    uint32_t args[1] = {P(obj)};
+    Regs r = {0, 0, 0, 0, P(obj->extraObjectData), 0};
+    RegsRun(original, 0x00026220, (const void *)&Car_SetBits, r, 1, args);
+    return 0;
+}
+
+uint32_t RunCarInherit(bool original) {
+    obj_tag *obj = RandomCar();
+    uint32_t args[1] = {P(obj)};
+    Regs r = {0, 0, P(AnyObjOrNull()), 0, 0, 0};
+    return RegsRun(original, 0x00026880, (const void *)&Car_InheritVelocity, r, 1, args) & 0xff;
+}
+
+uint32_t RunCarDelete(bool original) {
+    obj_tag *obj = RandomCar();
+    CDECL_VOID(0x00027fb0, Car_Delete, void (__cdecl *)(obj_tag *), obj);
+    return 0;
+}
+
+uint32_t RunCarActivate(bool original) {
+    obj_tag *obj = RandomCar();
+    CDECL_VOID(0x000268e0, Car_Activate, void (__cdecl *)(obj_tag *, obj_tag *), obj, &world.objs[0]);
+    return 0;
+}
+
+uint32_t RunCarPlayerDied(bool original) {
+    RandomCar();
+    firstObject = R(6) == 0 ? NULL : &world.objs[0];
+    CDECL_VOID(0x00026b60, Car_PlayerHasDied, void (__cdecl *)(obj_tag *), R(2) ? AnyObj() : &world.objs[0]);
+    return 0;
+}
+
+const Case kCars[] = {
+    C("Car_Update", RunCarUpdate),
+    C("Car_CollisionHandler", RunCarCollision),
+    C("Car_MaybeHandleDamage", RunCarHeliDamage),
+    C("Car_SetBits", RunCarSetBits),
+    C("Car_InheritVelocity", RunCarInherit),
+    C("Car_Delete", RunCarDelete),
+    C("Car_Activate", RunCarActivate),
+    C("Car_PlayerHasDied", RunCarPlayerDied),
+};
+
 void Group(const char *name, const Case *list, int count, int trials, bool realLights = false) {
     ShadowHook_RemoveAll();
     InstallFakes(realLights);
@@ -2935,6 +3063,7 @@ void ObjectPortShadow_Run(void) {
     Group("helicopters", kCopters, COUNT(kCopters), 3000);
     Group("gun turrets", kTurrets, COUNT(kTurrets), 3000);
     Group("gun emplacements", kGunImps, COUNT(kGunImps), 4000);
+    Group("the remote-controlled cars", kCars, COUNT(kCars), 4000);
     ShadowHook_RemoveAll();
     if (nanChoices != 0)
         printf("[objectport] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);

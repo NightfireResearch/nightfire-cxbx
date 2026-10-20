@@ -25,7 +25,7 @@ void Camera_ApplySwing(viewer_tag *viewer, float sway);
 void Camera_Shake(_VECTOR *pos, float amount);
 float _moveTowardsValue(float value, float target, float rate);
 float moveTowardsValue(float value, float target, float rate);   // the original's entry (AUTOLTCG)
-float normaliseToPlusMinusPi(float angle);
+double normaliseToPlusMinusPi(float angle);
 void Camera_PlaceAround(_VECTOR *target, viewer_tag *viewer, float rate);
 void Camera_PlaceAbove(_VECTOR *target, viewer_tag *viewer, float rate);
 void Camera_PlaceOver(obj_tag *obj, viewer_tag *viewer, float rate, float height);

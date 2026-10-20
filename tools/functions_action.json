@@ -4532,7 +4532,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00026880",
+        "name": "Car_InheritVelocity",
         "address": "0x00026880",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": true,
@@ -4541,7 +4541,7 @@
             "obj_tag *",
             "obj_tag *"
         ],
-        "prototype_string": "bool __cdecl FUN_00026880(obj_tag * param_1, obj_tag * param_2)",
+        "prototype_string": "bool __cdecl Car_InheritVelocity(obj_tag * param_1, obj_tag * param_2)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@ECX:4]"
@@ -4718,7 +4718,7 @@
         "namespace": "Global"
     },
     {
-        "name": "Car_Deactivate",
+        "name": "Car_Delete",
         "address": "0x00027fb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -4726,7 +4726,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl Car_Deactivate(obj_tag * param_1)",
+        "prototype_string": "void __cdecl Car_Delete(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
