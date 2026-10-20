@@ -5,6 +5,7 @@
 
 #include "../../actionhelpers.h"
 #include "BOT.h"
+#include "../mp/multiplayer.h"     // MP_PICKUP
 
 // BOT_goal_t.kind: what the goal's target is
 enum {
@@ -36,6 +37,36 @@ enum {
 bool BOTSTATE_isObjAlreadyAnotherTeamObjective(obj_tag *obj, int playerIndex);
 uchar BOTSTATE_getPreferredTraitOpponentObjIndex(Drone_tag *drone);    // a player index, 0xff none
 uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot);
+short BOTSTATE_chooseUnarmedAttackAnim(DCVars_tag *dc);
+short BOTSTATE_checkAttackMove(DCVars_tag *dc, short state);   // the state, or 0 when refused
+short BOTSTATE_EvasiveMove(DCVars_tag *dc);
+bool BOTSTATE_setNearestNavNode(DCVars_tag *dc);
+void BOTSTATE_uninitGoal(BOT_vars_t *bot, uint slot);
+void BOTSTATE_initGoal(BOT_vars_t *bot, int slot, uchar kind, CelPos_tag *pos, void *target, uchar subtype);
+uchar BOTSTATE_gotoGoal(DCVars_tag *dc, int slot, uint nextState);
+void BOTSTATE_setGoalComplete(DCVars_tag *dc, uint slot);
+BOT_goal_t* BOTSTATE_getActiveGoal(Drone_tag *drone);
+void BOTSTATE_setGoalPickPrefs(BOT_vars_t *bot, uint slot, float health, float ammo, float weapon, float objective,
+                               uchar maxEmitterDistance, uchar pickFlags);
+bool BOTSTATE_isPreferredWeapon(BOT_vars_t *bot, uint weapon);
+bool BOTSTATE_hasWeapon(BOT_vars_t *bot, uint weapon);
+uchar BOTSTATE_validateRoute(DCVars_tag *dc, uint routeStatus);
+void BOTSTATE_stopAnim(Drone_tag *drone);
+bool BOTSTATE_isPathWithinObjectRange(Drone_tag *drone, obj_tag *obj, float range, int segments);
+void BOTSTATE_setPickupVisitTime(Drone_tag *drone, MP_PICKUP *pickup);
+void BOTSTATE_startRecovery(DCVars_tag *dc);
+bool BOTSTATE_opponentIsMissile(Drone_tag *drone, obj_tag *obj);   // obj -1: the drone's opponent
+void BOTSTATE_reallyCloseCombatRange(Drone_tag *drone);
+void BOTSTATE_defaultCombatRange(Drone_tag *drone);
+uchar BOTSTATE_increaseDistraction(Drone_tag *drone, float amount);
+uchar BOTSTATE_isDistracted(Drone_tag *drone);
+void BOTSTATE_setStateChange(Drone_tag *drone, uint state);
+short BOTSTATE_chooseCombatMove(DCVars_tag *dc);
+short BOTSTATE_chooseDodgeMove(DCVars_tag *dc, uint directions);
+uchar BOTSTATE_removeGoalsForObject(DCVars_tag *dc, obj_tag *obj, uint state);
+short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, char keepCurrent, char noMessage);
+uint BOTSTATE_changeWeapon(BOT_vars_t *bot, uint weapon, char keepCurrent, char noChange);
+short BOTSTATE_pickupWeaponChangeChoice(Drone_tag *drone, short weapon, char checkHeld, char checkLoaded);
 void BOTSTATE_processGoals(DCVars_tag *dc);
 
 #endif // BOTSTATE_H

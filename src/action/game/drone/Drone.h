@@ -257,11 +257,12 @@ typedef struct Drone_tag {
     uchar targetStartedSeen;        // 0x192
     uchar targetStopped;            // 0x193 - for TargetFirstStopped_TimeToHit after it stops
     uchar targetStoppedSeen;        // 0x194
-    char _pad195[0x19c - 0x195];
+    char _pad195[0x198 - 0x195];
+    float unknown198;               // 0x198 - BOT_opponentTargetting: 40 while the opponent moves, else 0
     _VECTOR targetPos;              // 0x19c - where the drone aims: the opponent plus aimOffset
     _VECTOR aimError;               // 0x1a8 - DroneWeap_DoBulletAccuracy's miss, added to targetPos for each shot
     _VECTOR aimOffset;              // 0x1b4 - from the opponent's position to the point aimed at
-    char _pad1c0[0x1c4 - 0x1c0];
+    uint targetPosFrame;            // 0x1c0 - when BOT_opponentTargetting set targetPos
     uint targetChangeFrame;         // 0x1c4 - when targetMoving last changed (DroneWeap_DoOpponentTargetting)
     uint sightFlags;                // 0x1c8 - DRONE_SIGHT_*: 4 sees its opponent (DroneVision_HaveOpponentSight), 8 has
                                     //         reacted to its first sighting (set with message 0xf; also by HostageIdle)

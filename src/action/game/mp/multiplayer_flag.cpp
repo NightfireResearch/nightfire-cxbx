@@ -25,12 +25,7 @@ static int32_t Ftol(double x) {
 
 #pragma fp_contract(off)
 
-// Defined in multiplayer_modes.cpp's AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
-#define MP_setPlayerStatus ((void (__cdecl *)(obj_tag *obj, ushort status, uint msg, uint param4, obj_tag *target, bool clear))0x0009e490)
-#define MPSound_Play ((void (__cdecl *)(Action_SFX sfx))0x0009ec60)
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
 // A message to every player naming team. (Our helper; the original repeats it inline.)
 static void MP_TeamMessage(Action_TranslatedText format, ushort team) {

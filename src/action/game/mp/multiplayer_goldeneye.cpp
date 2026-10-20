@@ -27,13 +27,8 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-// Defined in multiplayer_modes.cpp's AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
-// AUTOGEN
-undefined MPSound_Play(Action_SFX sfx);
 
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 
 // The texts (Ghidra's names)
 #define NOTIF_X_CAPTURED_GOLDENEYE_KEY ((Action_TranslatedText)0x0200003e)

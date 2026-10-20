@@ -20,8 +20,6 @@ bool NDrone2_ProcessStateMachine(DCVars_tag *dcv, uint state, MsgObject *msg) {
     return NDrone2_StateFuncs[state](dcv, dcv->drone, dcv->gameObj, msg);
 }
 
-// AUTOGEN
-undefined4 __cdecl BOT_validateStateChange(int *param_1, uint param_2);
 
 // A message waiting for its frame: the head of one of Drone_SM_LLDelayed's lists, or one of its items
 typedef struct DroneSMItem {
@@ -337,7 +335,7 @@ bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, int param) {
     if (gameObj != NULL && ((Drone_tag *)gameObj->extraObjectData)->dtype == DTYPE_Bot) {
         DCVars_tag dcVars;
         // Only the low byte of BOT_validateStateChange's result is tested (test al, al).
-        if (Drone_DCVfromOBJ(gameObj, &dcVars) && !(uchar)BOT_validateStateChange((int *)&dcVars, next)) {
+        if (Drone_DCVfromOBJ(gameObj, &dcVars) && !(uchar)BOT_validateStateChange(&dcVars, next)) {
             // Refused: go where the bot says instead (BOT_validateStateChange writes it, 0 = nowhere). The u16
             // is read sign-extended (movsx), so a value of 0x8000 or more would become a negative state.
             short redirect = (short)dcVars.drone->botVars->redirectState;

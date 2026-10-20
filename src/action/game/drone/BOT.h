@@ -91,7 +91,7 @@ typedef struct BOT_playerInfo_t {
 
 // One weapon as a bot holds it (BOT_vars_t.weapons, indexed by weapon id). Invented name.
 typedef struct BOT_weapon_t {
-    uchar unknown0[4];          // 0x0 - sqrt(range)
+    float zoomRoot;             // 0x0 - sqrt of the weapon's maxZoom (BOTWEAP_resetWeapons)
     short rounds;               // 0x4 - rounds in clip
     uchar held;                 // 0x6
     uchar unknown7[5];
@@ -105,7 +105,7 @@ typedef struct BOT_vars_t {
     uchar _pad86[2];
     BOT_playerInfo_t players[NUM_AGENTS]; // 0x088 - what it knows of each MPGame player (BOT_setOtherPlayerInfo)
     _VECTOR opponentLastPos;        // 0x128
-    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
+    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(maxZoom), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
                                     //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
                                     //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
@@ -115,10 +115,10 @@ typedef struct BOT_vars_t {
     float savedCombatRanges[3];     // 0x710 - drone+0xd0, 0xd4, 0xe0
     float distraction;              // 0x71c
     uint goalReturnState;           // 0x720 - the DSTATE to go back to after a goal
-    ushort savedState[2];           // 0x724
+    uint goalFromState;             // 0x724 - the DSTATE the bot was in when it set off for its goal (BOTSTATE_gotoGoal)
     uint flags;                     // 0x728 - 2 recovering, 4 objective goal active
     uint regenTimer;                // 0x72c - trait 0x10
-    uint _unknown730;
+    DYNAMICSOUNDS *sound;           // 0x730 - the bot's last cry (BOT_soundEffect)
     uint lastImpactFrame;           // 0x734
     uint lastRouteFailFrame;        // 0x738
     uint recoveryEndFrame;          // 0x73c
@@ -194,5 +194,17 @@ double BOT_getAggressionMul(Drone_tag *drone);
 float BOT_getMovementSpeedMul(Drone_tag *drone);
 bool BOT_getMovePossibility(Drone_tag *drone, int odds);
 uint BOTSTATE_getStateType(uint state);   // a BOTSTATE_CLASS
+bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj);
+bool BOT_reactToDroneAlertMsg(uint msg, Drone_tag *drone, Drone_tag *from);
+uchar BOT_validateStateChange(DCVars_tag *dc, uint newState);   // false refuses; then BOT_vars_t.redirectState
+obj_tag* BOT_handleOpponentHistory(Drone_tag *drone, obj_tag *attacker);
+DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind);
+void BOT_setGender(Drone_tag *drone);
+void BOT_fellOutMap(obj_tag *obj);
+void BOT_opponentTargetting(DCVars_tag *dc);
+void BOT_SetHealth(Drone_tag *drone, float health);
+void BOT_setDroneStats(Drone_tag *drone, BOT_stats_t *stats);
+void BOT_handlePain(DCVars_tag *dc, float damage, ushort hitType, short location);
+void BOT_postLoadInit(Drone_tag *drone);
 
 #endif

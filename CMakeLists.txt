@@ -142,6 +142,7 @@ add_library(actioninject SHARED
   src/action/devtools/DroneMPShadow.cpp
   src/action/devtools/MPMatchShadow.cpp
   src/action/devtools/BotStateShadow.cpp
+  src/action/devtools/BotPortShadow.cpp
   src/action/devtools/MPObjectsShadow.cpp
   src/action/devtools/MPObjectivesShadow.cpp
   src/action/devtools/Teleport.cpp
@@ -261,6 +262,7 @@ add_library(actioninject SHARED
   src/action/game/view.cpp
   src/action/game/drone/BOT.cpp
   src/action/game/drone/BOTSTATE.cpp
+  src/action/game/drone/BOTWEAP.cpp
   src/action/game/drone/Behaviour.cpp
   src/action/game/drone/Drone.cpp
   src/action/game/drone/DroneAnim.cpp

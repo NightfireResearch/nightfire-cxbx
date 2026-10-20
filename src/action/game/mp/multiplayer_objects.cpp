@@ -11,6 +11,8 @@
 #include "../obj/ScriptPlayer.h"
 #include "../drone/Drone.h"
 #include "../drone/BOT.h"
+#include "../drone/BOTSTATE.h"
+#include "../drone/BOTWEAP.h"
 #include "../weapon_stats.h"
 #include "../../util/Random.h"
 #include <math.h>
@@ -41,17 +43,9 @@ static int32_t Ftol(double x) {
 #define HitByList (*(obj_tag*(*)[64])0x00261c58)
 
 
-#define MP_getObjExtObj ((obj_tag *(__cdecl *)(MP_OBJ_EXT *ext))0x0009e740)
-#define MP_sendTeamBotMessage ((void (__cdecl *)(MPTeam team, uint msg, obj_tag *obj, uint param4, uint senderId))0x0009e430)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 
-// Defined in multiplayer_modes.cpp's AUTOGEN
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
-// AUTOGEN
-bool __cdecl BOTWEAP_EquipWeapon(Drone_tag *param_1, short param_2, short param_3);
-// AUTOGEN
-ushort __cdecl BOTSTATE_pickupWeaponChangeChoice(Drone_tag *param_1, short param_2, char param_3, char param_4);
 
 constexpr Action_TranslatedText MP_SUPPOSED_TO_PROTECT_TARGET = (Action_TranslatedText)0x0200002b;
 constexpr Action_TranslatedText MP_MI6_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002c;
