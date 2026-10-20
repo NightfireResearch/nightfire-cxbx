@@ -1,4 +1,5 @@
 #include "Explode.h"
+#include "Sub.h"
 
 #include <bit>
 #include <math.h>
@@ -23,7 +24,6 @@
 #pragma fp_contract(off)
 
 #define MP_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage, obj_tag *from))0x000a12b0)
-#define Sub_ApplyDamage ((void (__cdecl *)(obj_tag *sub, float damage))0x000cf6a0)
 // On the Xbox both are the empty function the linker shares with others (0x000e0ec0)
 #define Sensor_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage))0x000e0ec0)
 #define Monitor_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage))0x000e0ec0)

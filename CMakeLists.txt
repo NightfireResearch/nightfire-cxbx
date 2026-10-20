@@ -315,6 +315,7 @@ add_library(actioninject SHARED
   src/action/game/obj/Ripples.cpp
   src/action/game/obj/BodyGlow.cpp
   src/action/game/obj/Creature.cpp
+  src/action/game/obj/Sub.cpp
   src/action/game/obj/Emitter.cpp
   src/action/game/obj/Flicker.cpp
   src/action/game/obj/Mine.cpp

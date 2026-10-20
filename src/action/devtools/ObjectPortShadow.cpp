@@ -33,6 +33,7 @@
 #include "../game/obj/Copter.h"
 #include "../game/obj/Corona.h"
 #include "../game/obj/Creature.h"
+#include "../game/obj/Sub.h"
 #include "../game/obj/Effect.h"
 #include "../game/obj/Emitter.h"
 #include "../game/obj/Env.h"
@@ -365,7 +366,8 @@ obj_tag *__cdecl FakeBullet(short player, obj_tag *from, obj_tag *owner, weapon_
     ShadowLog("bullet(%d,%x,%x,%x,%x)", player, W(from), W(owner), W(weapon), sound);
     LogVector("pos", pos);
     LogVector("dir", dir);
-    return NULL;
+    // the sub's torpedo is used unchecked
+    return sureCreate ? &world.objs[OBJS - 1] : NULL;
 }
 
 SCRIPTINFO *__cdecl FakeScriptLoad(HASHCODE hash, _VECTOR *pos, _VECTOR *rot, uint *buf, void *player,
@@ -452,6 +454,35 @@ float __cdecl FakePlayerHurt(obj_tag *player, float damage, _VECTOR *from) {
 
 void __cdecl FakeDeleteObject(obj_tag *obj) {
     ShadowLog("delete(%x)", W(obj));
+}
+
+bool __cdecl FakeLightDelete(light_tag *light) {
+    ShadowLog("lightdelete(%x)", W(light));
+    return true;
+}
+
+// AnimScriptPeekSeq's: a sequence whose first root translation is fixed
+uint8_t peekSeq[0x100];
+
+void *__cdecl FakePeekSeq(HASHCODE script) {
+    ShadowLog("peekseq(%x)", (uint)script);
+    float y = 1.75f;
+    memcpy(peekSeq + 0x1c, &y, 4);
+    return peekSeq;
+}
+
+void __cdecl FakeAnimSetDeleteAll(obj_tag *obj) {
+    ShadowLog("animsetdeleteall(%x)", W(obj));
+}
+
+void __cdecl FakeBoneTrans(obj_tag *obj, uint which, int datum, _VECTOR *pos, _MATRIX *mtx) {
+    ShadowLog("bone(%x,%u,%d)", W(obj), which, datum);
+    if (pos != NULL) {
+        *pos = obj->position;
+        pos->x += (float)which;
+    }
+    if (mtx != NULL)
+        *mtx = obj->transformMatrix;
 }
 
 bool __cdecl FakeSphere(_VECTOR *pos, float radius, cel_tag *cel, obj_tag *a, obj_tag *b, HITDATA_tag **list,
@@ -795,6 +826,10 @@ void InstallFakes(bool realLights) {
     ShadowHook_Install(0x000d8df0, (const void *)&FakeSpline);
     ShadowHook_Install(0x0002c4e0, (const void *)&FakeRay);
     ShadowHook_Install(0x000ae690, (const void *)&FakePlayerHurt);
+    ShadowHook_Install(0x0006d610, (const void *)&FakeLightDelete);
+    ShadowHook_Install(0x000125b0, (const void *)&FakePeekSeq);
+    ShadowHook_Install(0x00017820, (const void *)&FakeAnimSetDeleteAll);
+    ShadowHook_Install(0x00013070, (const void *)&FakeBoneTrans);
     ShadowHook_Install(0x0002d080, (const void *)&FakeDeleteObject);
     ShadowHook_Install(0x0002c610, (const void *)&FakeSphere);
     ShadowHook_Install(0x0002c5b0, (const void *)&FakeSight);
@@ -1886,6 +1921,116 @@ const Case kCreatures[] = {
     C("Creature_Move", RunCreatureMove),
 };
 
+// ---- the sub
+
+obj_tag *RandomSub(void) {
+    obj_tag *obj = Subject(OBJECTTYPE_SUB);
+    SubInfo *sub = (SubInfo *)obj->extraObjectData;
+    memset(sub, 0, sizeof(*sub));
+    sub->path = &world.paths[0];
+    sub->lastKey = (ushort)(R(4) ? R(KEYS) : 0);
+    sub->t = R(4) ? Plain(0.0f, (float)KEYS) : (float)sub->lastKey;
+    sub->speed = Plain(0.0f, 0.3f);
+    sub->sinkY = R(3) ? Plain(-10.0f, 10.0f) : Mat_Position(obj->transformMatrix)->y + Plain(-0.05f, 0.05f);
+    sub->health = R(4) ? Plain(-5.0f, 300.0f) : 0.0f;
+    sub->height = Plain(0.5f, 3.0f);
+    sub->seabedGap = R(4) ? -3.0f : Plain(-5.0f, 5.0f);
+    sub->missileTime = R(3) ? Plain(0.0f, 10.2f) : 10.0f;
+    sub->laserTime = R(3) ? Plain(0.0f, 2.0f) : 1.5f;
+    sub->torpedoTime = R(3) ? Plain(0.0f, 5.2f) : 5.0f;
+    sub->channel = (ushort)(R(2) ? 0 : R(256));
+    sub->lastHitFrame = R(3) ? (int)GameState.NumFramesUnpaused : (int)R(100);
+    sub->beam = R(2) ? &world.objs[1] : NULL;
+    sub->light = R(4) ? &world.lights[1] : NULL;
+    obj->curState = (ushort)(R(5) ? R(3) : R(10));
+    if (glb_players[0] == NULL)   // read unchecked once any player is close; in a level there always is one
+        glb_players[0] = &world.objs[0];
+    if (R(2)) {   // close by, now and then
+        glb_players[0]->position = obj->position;
+        glb_players[0]->position.z += Plain(-6.0f, 6.0f);
+    }
+    return obj;
+}
+
+uint32_t RunSubCreate(bool original) {
+    level_tag *keys = Placement();
+    keys->keys[0] = R(2) ? 0 : R(256);
+    keys->spline = &world.paths[0];
+    keys->splinePoints = (ushort)R(KEYS + 1);
+    keys->splineLength = (ushort)(R(8) ? 1 + R(400) : 0);
+    sureCreate = true;
+    obj_tag *obj = CDECL_RUN(0x000cef20, Sub_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *),
+                             &world.v[0], &world.v[1], keys);
+    sureCreate = false;
+    return W(obj);
+}
+
+uint32_t RunSubUpdate(bool original) {
+    obj_tag *obj = R(10) ? RandomSub() : NULL;
+    if (obj != NULL && obj->curState == 0 && ((SubInfo *)obj->extraObjectData)->light == NULL)
+        ((SubInfo *)obj->extraObjectData)->light = &world.lights[1];   // read unchecked afloat
+    sureCreate = true;
+    CDECL_VOID(0x000cf5c0, Sub_Update, void (__cdecl *)(obj_tag *), obj);
+    sureCreate = false;
+    return 0;
+}
+
+uint32_t RunSubDamage(bool original) {
+    obj_tag *obj = RandomSub();
+    float damage = R(3) ? Plain(0.0f, 100.0f) : 300.0f;
+    CDECL_VOID(0x000cf6a0, Sub_ApplyDamage, void (__cdecl *)(obj_tag *, float), obj, damage);
+    return 0;
+}
+
+uint32_t RunSubFollow(bool original) {
+    obj_tag *obj = RandomSub();
+    Regs r = {0, 0, 0, 0, P(obj->extraObjectData), P(obj)};
+    RegsRun(original, 0x000cf050, (const void *)&Sub_Follow, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunSubRam(bool original) {
+    obj_tag *obj = RandomSub();
+    uint32_t args[1] = {P(obj)};
+    Regs r = {P(obj->extraObjectData), 0, 0, 0, 0, 0};
+    RegsRun(original, 0x000cf0c0, (const void *)&Sub_Ram, r, 1, args);
+    return 0;
+}
+
+uint32_t RunSubLaser(bool original) {
+    obj_tag *obj = RandomSub();
+    Regs r = {0, P(obj), 0, 0, P(obj->extraObjectData), 0};
+    RegsRun(original, 0x000cf190, (const void *)&Sub_Laser, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunSubMissiles(bool original) {
+    obj_tag *obj = RandomSub();
+    Regs r = {0, 0, 0, 0, P(obj), P(obj->extraObjectData)};
+    RegsRun(original, 0x000cf2f0, (const void *)&Sub_FireMissiles, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunSubTorpedoes(bool original) {
+    obj_tag *obj = RandomSub();
+    Regs r = {P(obj), 0, 0, 0, 0, P(obj->extraObjectData)};
+    sureCreate = true;
+    RegsRun(original, 0x000cf3c0, (const void *)&Sub_DeployTorpedoes, r, 0, NULL);
+    sureCreate = false;
+    return 0;
+}
+
+const Case kSubs[] = {
+    C("Sub_Create", RunSubCreate),
+    C("Sub_Update", RunSubUpdate),
+    C("Sub_ApplyDamage", RunSubDamage),
+    C("Sub_Follow", RunSubFollow),
+    C("Sub_Ram", RunSubRam),
+    C("Sub_Laser", RunSubLaser),
+    C("Sub_FireMissiles", RunSubMissiles),
+    C("Sub_DeployTorpedoes", RunSubTorpedoes),
+};
+
 uint32_t RunApocalypseCreate(bool original) {
     obj_tag *obj = CDECL_RUN(0x000a4180, Apocalypse_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *),
                              &world.v[0], &world.v[1], Placement(), &world.glists[R(4)]);
@@ -2604,6 +2749,7 @@ void ObjectPortShadow_Run(void) {
 
     Group("scenery and hazards", kScenery, COUNT(kScenery), 2500);
     Group("creatures", kCreatures, COUNT(kCreatures), 3000);
+    Group("the sub", kSubs, COUNT(kSubs), 3000);
     Group("the weather", kWeather, COUNT(kWeather), 1500);
     Group("lights and emitters", kLights, COUNT(kLights), 3000, true);
     Group("pickups and the aim", kPickups, COUNT(kPickups), 3000);
