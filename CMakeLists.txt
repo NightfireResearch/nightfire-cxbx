@@ -128,6 +128,7 @@ add_library(actioninject SHARED
   src/action/devtools/EnginePortShadow.cpp
   src/action/devtools/HudPortShadow.cpp
   src/action/devtools/SoundPortShadow.cpp
+  src/action/devtools/SFXShadow.cpp
   src/action/devtools/MenuPortShadow.cpp
   src/action/devtools/MenuControlShadow.cpp
   src/action/devtools/MenuHandlerShadow.cpp
@@ -358,6 +359,7 @@ add_library(actioninject SHARED
   src/action/sound/xaudio2Backend.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
+  src/action/sound/SFXStream.cpp
   src/action/sound/Sound.cpp
 )
 

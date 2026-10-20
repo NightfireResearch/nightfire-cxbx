@@ -106,6 +106,7 @@
 #include "EnginePortShadow.h"
 #include "HudPortShadow.h"
 #include "SoundPortShadow.h"
+#include "SFXShadow.h"
 #include "MenuPortShadow.h"
 #include "MenuControlShadow.h"
 #include "MenuHandlerShadow.h"
@@ -607,7 +608,7 @@ void MenuProbe_Install(void) {
     }
     // The shadow tests need only the game's data, so they can run before it starts (and with no display): on the
     // shipped state, as a fresh codename would have it.
-    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, menuport, effectport, player: with the weapons) runs that suite alone
+    // NIGHTFIRE_SHADOW_ONLY=viewmath (or objectport, engineport, hudport, soundport, sfx, menuport, effectport, player: with the weapons) runs that suite alone
     const char *only = getenv("NIGHTFIRE_SHADOW_ONLY");
     // NIGHTFIRE_SHADOW_SEED=0x... starts the tests' random numbers there, to run a suite from another stream
     if (const char *seed = getenv("NIGHTFIRE_SHADOW_SEED"))
@@ -634,6 +635,11 @@ void MenuProbe_Install(void) {
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "soundport") == 0) {
         SoundPortShadow_Run();
+        SFXShadow_Run();
+        fflush(stdout);
+        _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "sfx") == 0) {
+        SFXShadow_Run();
         fflush(stdout);
         _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "menucontrols") == 0) {
@@ -705,6 +711,7 @@ void MenuProbe_Install(void) {
         EnginePortShadow_Run();
         HudPortShadow_Run();
         SoundPortShadow_Run();
+        SFXShadow_Run();
         MenuPortShadow_Run();
         MenuControlShadow_Run();
         MenuHandlerShadow_Run();

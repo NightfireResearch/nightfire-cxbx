@@ -11,6 +11,7 @@
 #include "../math/math.h"
 #include "../sound/music.h"
 #include "../sound/Sound.h"
+#include "../sound/SFX.h"
 #include "../game/drone/Drone.h"
 #include "../game/obj/Player.h"
 #include "../game/obj/Light.h"

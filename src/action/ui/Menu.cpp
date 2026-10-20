@@ -30,6 +30,7 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <string.h>
+#include "../sound/SFX.h"
 
 // XBE_GLOBAL(0x0025d7de, 0x1)
 uint8_t cn_secret_mode;
@@ -181,8 +182,6 @@ void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
 
 // ---- the front end's music: two loops, played together
 
-#define SFXRemove ((void (__cdecl *)(DYNAMICSOUNDS *handle, int sfxId))0x000c9b10)
-#define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
 
 // Starts it again, unless it is playing
 // AUTOINJECT

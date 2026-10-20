@@ -73,8 +73,9 @@ void Sound_Stop_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
 bool Sound_Playing_Ref(DYNAMICSOUNDS *handle, undefined4 ref);
 void Sound_LoadMapSounds(int *mapSoundBlock);
 void __fastcall Sound_DoSubtitle(Action_SFX sound);
-void __stdcall SFXSuspendFileAccess(void);
-void __stdcall SFXUnSuspendFileAccess(void);
+
+// Set by SFXLoadCorrectBank once the level's bank is loaded
+#define SoundInit U32_AT(0x0029a280)
 
 #define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
 

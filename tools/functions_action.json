@@ -38412,7 +38412,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c4b70",
+        "name": "SFXRememberRequest",
         "address": "0x000c4b70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38421,7 +38421,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c4b70(int param_1, int param_2)",
+        "prototype_string": "void __cdecl SFXRememberRequest(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -38430,13 +38430,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c4bc0",
+        "name": "SFXAgeRequests",
         "address": "0x000c4bc0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c4bc0(void)",
+        "prototype_string": "void __stdcall SFXAgeRequests(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -38690,7 +38690,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c52e0",
+        "name": "SFXSetFilePath",
         "address": "0x000c52e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38698,7 +38698,7 @@
         "param_types": [
             "char *"
         ],
-        "prototype_string": "void __cdecl FUN_000c52e0(char * param_1)",
+        "prototype_string": "void __cdecl SFXSetFilePath(char * param_1)",
         "parameters": [
             "[char * param_1@Stack[0x4]:4]"
         ],
@@ -38790,13 +38790,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5650",
+        "name": "SFXInitialiseItems",
         "address": "0x000c5650",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c5650(void)",
+        "prototype_string": "void __stdcall SFXInitialiseItems(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -38818,7 +38818,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5700",
+        "name": "SFXCountVoicesInUse",
         "address": "0x000c5700",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38826,7 +38826,7 @@
         "param_types": [
             "SFXItem *"
         ],
-        "prototype_string": "int __cdecl FUN_000c5700(SFXItem * param_1)",
+        "prototype_string": "int __cdecl SFXCountVoicesInUse(SFXItem * param_1)",
         "parameters": [
             "[SFXItem * param_1@Stack[0x4]:4]"
         ],
@@ -38850,7 +38850,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5a90",
+        "name": "ES_GetNearestListenerDistance",
         "address": "0x000c5a90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38858,7 +38858,7 @@
         "param_types": [
             "SFXItem *"
         ],
-        "prototype_string": "ulonglong __cdecl FUN_000c5a90(SFXItem * param_1)",
+        "prototype_string": "ulonglong __cdecl ES_GetNearestListenerDistance(SFXItem * param_1)",
         "parameters": [
             "[SFXItem * param_1@Stack[0x4]:4]"
         ],
@@ -38960,7 +38960,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c6080",
+        "name": "ES_SetFileBufferCount",
         "address": "0x000c6080",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38968,7 +38968,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c6080(int param_1)",
+        "prototype_string": "void __cdecl ES_SetFileBufferCount(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -39588,7 +39588,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c89e0",
+        "name": "ES_JumpToMusicMarker",
         "address": "0x000c89e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -39597,7 +39597,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c89e0(int param_1, int param_2)",
+        "prototype_string": "void __cdecl ES_JumpToMusicMarker(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"
@@ -39816,7 +39816,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c9b50",
+        "name": "SFXUnloadSoundBank",
         "address": "0x000c9b50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -39824,7 +39824,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c9b50(int param_1)",
+        "prototype_string": "void __cdecl SFXUnloadSoundBank(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],

@@ -16,14 +16,11 @@
 
 #include <stdio.h>
 #include <string.h>
+#include "../sound/SFX.h"
 
 #pragma fp_contract(off)
 
 // Not reimplemented, called by address
-#define SFXPause ((void (__cdecl *)(void))0x000c9960)
-#define SFXPauseAllStreams ((void (__cdecl *)(void))0x000c6200)
-#define SFXUnPause ((void (__cdecl *)(void))0x000c9a10)
-#define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
 #define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
 // Empty on the Xbox: the function the linker shares among empty ones
 #define Menu_StringInit ((void (__cdecl *)(int size))0x000e0ec0)

@@ -320,3 +320,52 @@ Extended operator-(const Extended &a) {
     result.bytes[9] ^= 0x80;
     return result;
 }
+
+static void __declspec(naked) SquareRoot(Extended *out, const Extended *x) {
+    __asm {
+        mov eax, dword ptr [esp + 8]
+        fld tbyte ptr [eax]
+        fsqrt
+        mov eax, dword ptr [esp + 4]
+        fstp tbyte ptr [eax]
+        ret
+    }
+}
+
+// FISTP to 64 bits, rounded as the control word says (to nearest) and truncated
+static void __declspec(naked) ToIntegers(int64_t *nearest, int64_t *truncated, const Extended *x) {
+    __asm {
+        mov eax, dword ptr [esp + 12]
+        fld tbyte ptr [eax]
+        fld st(0)
+        mov eax, dword ptr [esp + 4]
+        fistp qword ptr [eax]
+        sub esp, 4
+        fnstcw word ptr [esp]
+        mov cx, word ptr [esp]
+        or cx, 0x0c00
+        mov word ptr [esp + 2], cx
+        fldcw word ptr [esp + 2]
+        mov eax, dword ptr [esp + 12]
+        fistp qword ptr [eax]
+        fldcw word ptr [esp]
+        add esp, 4
+        ret
+    }
+}
+
+Extended FSqrt(const Extended &x) {
+    Extended result;
+    SquareRoot(&result, &x);
+    return result;
+}
+
+int32_t Ftol(const Extended &x) {
+    if (!(AbsFchs(x) < Extended(9223372036854775808.0)))
+        return 0;
+    int64_t nearest, truncated;
+    ToIntegers(&nearest, &truncated, &x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(truncated);
+}

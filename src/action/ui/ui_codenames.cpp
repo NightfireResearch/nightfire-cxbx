@@ -144,8 +144,6 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define saveflow_dashboard     U8_AT(0x0025edba)   // B on the box leaves for the dashboard
 #define saveflow_relist        U8_AT(0x0025edb9)   // a codenames page lists the codenames as it enters or resumes
 
-#define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
-#define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 
 // The option boxes the codenames page answers
 #define OPTIONBOX_DELETE_CODENAME 2

@@ -49,6 +49,11 @@ bool operator<(const Extended &a, const Extended &b);
 bool operator>(const Extended &a, const Extended &b);
 // |x| as the original takes it, comparing with 0 and FCHS when below or a NaN (AbsFchs, below, for a double)
 Extended AbsFchs(const Extended &x);
+// FSQRT
+Extended FSqrt(const Extended &x);
+// MSVC's __ftol2 of a value still on the x87 stack: the low word of its truncation to 64 bits, 0 where it is out of
+// that range or rounds to a multiple of 2^32 (as Ftol in src/driving/platform/X87.h has it for a double)
+int32_t Ftol(const Extended &x);
 
 // FCHS: the sign bit flipped, a NaN's too (the compiler may turn a plain -x + c into c - x, which keeps it)
 inline double Negate(double x) {
