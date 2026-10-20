@@ -36,6 +36,44 @@ Rules for adding a fix:
 - **Effect:** an empty slot keeps the colour it had. Nothing visible changes, since the slot shows no text; the fix
   removes the read past the list (which on the host may fall outside the allocation).
 
+## Candidates: bugs kept as the original has them
+
+Found while porting the last of the action engine (20 Oct 2026). None is fixed: each port does what the original
+does, and each would need its own entry above before a fix goes in.
+
+Sound (src/action/sound/SFX.cpp, SFXStream.cpp):
+- SFXStart3D ignores its volume argument: it always sets VolumeOverRide to 100, so the per-sound volume from
+  Sound_Play/Sound_SetVolume never reaches the mixer.
+- SFXReleaseStreamSystem frees the stream read buffers through an empty function, and ES_InitialStreamBuffer
+  allocates 8 x 0x4800 again on every SFXReset: every level load leaks them.
+- Streamed sounds (a FileRef below 0) can never play: SFXInitialiseStream gives them streams from index 1 and there
+  is one stream, and their lookup table pointer (0x2997cc) is never set.
+- ES_JumpToMusicMarker reads BaseMusicMarkerStart[-1] when no jump is pending; a multi-sample sound with SampleCount
+  0 reads CuedSamples[-1].
+
+Bots and multiplayer (src/action/game/drone/BOT*.cpp, src/action/game/mp/):
+- MP_RegisterPickup, taking over the pickup with the shortest life, sets mpIndex on the last pickup it looked at,
+  not on the one it takes.
+- BOTSTATE_checkAttackMove returns the move's state even when the move test says there is no room.
+- BOT_validateStateChange refuses the three impact states and BotHeardNoise.
+
+Drones (src/action/game/drone/):
+- NDrone2_HandleDroneAlert: the global alarm reads a bot's sender as a drone (a NULL or non-drone sender is a NULL
+  read); message 0x13's range test looks inverted; messages 0x11 and 0x12 count as handled out of shouting range.
+- NDrone2_MoveTestRelative reads drone->dtype when the drone is NULL and `unscaled` is 0.
+- NDrone2_DSTATE_BotGlobal messages 0x40/0x41 compare the objective getter's result with -1, not NULL, so
+  NDrone2_SetOpponent(NULL) can happen.
+- BotAttackStrafeAimLeft waits Rand_Rand(8) extra seconds, Right Rand_Rand(4).
+
+Menus and boot (src/action/ui/, src/action/game.cpp):
+- A Combo control's label stays blank: its list never answers GetSelectedItemText.
+- C_RBMPFINISH: B adds the handicap items to the title's control rather than the radio.
+- P_MPSETUP drops the players' claims on the one-per-game characters but keeps the bots'.
+- psiGetDrivingData writes 0xc00 bytes into Boot_LoadPTPData's 0xa50-byte buffer at 0x1d88e0 (the buffer stays at
+  the game's address, so the overrun lands where it always did); Boot_LoadPTPData then reads 0x12c0 bytes with
+  LS_LoadFromBuffer, past PTPDATA.
+- AnimDebugCreate (RefRoom) has no NULL check for a skin that is not loaded.
+
 ## Driving engine
 
 ### Scheduler::Run: a fractional timeScale loses its fraction

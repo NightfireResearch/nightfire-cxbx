@@ -4,8 +4,9 @@
 allies, the party girls and truck drivers, the ninjas and astronauts - and the multiplayer bots, which are drones
 too - the only non-human participants in a multiplayer match are bots; no single-player drone appears there. This
 folder documents how the system is built, as reviewed from the Xbox `default.xbe` (with the PS2 build's
-symbols for names and the GameCube build's debug messages), ahead of reimplementing it. Almost none of it is ours
-yet: 4 of the ~337 core functions, none of the bot or navigation ones.
+symbols for names and the GameCube build's debug messages), ahead of reimplementing it. All of it is ours now
+(20 Oct 2026): the drones, the bots' drone states and the navigation, each checked against the original by the
+shadow suites (devtools/Drone*Shadow.cpp) and the time demos.
 
 | document | covers |
 |---|---|
