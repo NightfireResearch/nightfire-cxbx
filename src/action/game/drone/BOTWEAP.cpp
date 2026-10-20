@@ -4,6 +4,7 @@
 // 0-82 are walked: the ones above are gadgets and vehicle weapons.
 
 #include "BOTWEAP.h"
+#include "BOTSTATE.h"
 #include "Drone.h"
 #include "DroneWeapon.h"
 #include "../mp/multiplayer.h"
@@ -16,11 +17,7 @@
 #include <math.h>
 #include <string.h>
 
-#define BOTSTATE_isPreferredWeapon ((uchar (__cdecl *)(BOT_vars_t *bot, uint weapon))0x0001c0d0)
-#define BOTSTATE_opponentIsMissile ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj))0x0001c600)
 
-// The weapon ids the bot code walks
-#define BOT_WEAPONS 0x53
 
 // Fists: a bot always holds them
 #define WEAPON_FISTS 1
@@ -37,7 +34,7 @@ short BOT_startWeapon = 6;
 void BOTWEAP_resetWeapons(obj_tag *obj) {
     BOT_vars_t *vars = ((Drone_tag *)obj->extraObjectData)->botVars;
     memset(vars->reserveAmmo, 0, sizeof(vars->reserveAmmo));
-    for (int i = 0; i < BOT_WEAPONS; i++) {
+    for (int i = 0; i < BOT_WEAPON_IDS; i++) {
         BOT_weapon_t *weapon = &vars->weapons[i];
         weapon->held = 0;
         weapon->rounds = 0;
@@ -162,7 +159,7 @@ bool BOTWEAP_EquipAmmo(Drone_tag *drone, short weapon, short count) {
 // AUTOINJECT
 void BOTWEAP_CheckWeaponsLoaded(Drone_tag *drone) {
     BOT_vars_t *vars = drone->botVars;
-    for (short i = 0; i < BOT_WEAPONS; i++) {
+    for (short i = 0; i < BOT_WEAPON_IDS; i++) {
         if (!weapon_data[i].isBaseWeapon)
             continue;
         HASHCODE model = weapon_data[i].weaponModelHashcode;
@@ -386,7 +383,7 @@ short BOTWEAP_getExplosiveWeapon(Drone_tag *drone, float distance) {
 // AUTOINJECT
 int BOTWEAP_listHeldLoadedWeapons(Drone_tag *drone, ushort *list, int *count, char preferredOnly) {
     BOT_vars_t *vars = drone->botVars;
-    ushort ownList[BOT_WEAPONS];
+    ushort ownList[BOT_WEAPON_IDS];
     int ownCount;
     int usable = 0;
 
@@ -395,7 +392,7 @@ int BOTWEAP_listHeldLoadedWeapons(Drone_tag *drone, ushort *list, int *count, ch
     if (count == NULL)
         count = &ownCount;
 
-    for (short weapon = 0; weapon < BOT_WEAPONS; weapon++) {
+    for (short weapon = 0; weapon < BOT_WEAPON_IDS; weapon++) {
         list[weapon] = (ushort)(weapon << 8) | 0xff;
         if (!vars->weapons[weapon].held || !BOTWEAP_isValidWeapon(weapon) || !BOTWEAP_hasAmmo(vars->drone, weapon))
             continue;
@@ -404,7 +401,7 @@ int BOTWEAP_listHeldLoadedWeapons(Drone_tag *drone, ushort *list, int *count, ch
         list[weapon] = (ushort)(weapon << 8) | (ushort)(0xfe - (uchar)BOTWEAP_getWeaponPriority(weapon));
         usable++;
     }
-    *count = BOT_WEAPONS;
+    *count = BOT_WEAPON_IDS;
     return usable;
 }
 
@@ -417,7 +414,7 @@ bool BOTWEAP_tooCloseForWeapon(Drone_tag *drone, short weapon, float distance) {
     if (drone->opponent != NULL && BOTSTATE_opponentIsMissile(drone, (obj_tag *)-1))
         return false;
 
-    ushort list[BOT_WEAPONS];
+    ushort list[BOT_WEAPON_IDS];
     int count = 0;
     BOTWEAP_listHeldLoadedWeapons(drone, list, &count, 0);
     uint i;

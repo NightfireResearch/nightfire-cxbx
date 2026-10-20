@@ -11,6 +11,7 @@
 #include "../obj/ScriptPlayer.h"
 #include "../drone/Drone.h"
 #include "../drone/BOT.h"
+#include "../drone/BOTSTATE.h"
 #include "../drone/BOTWEAP.h"
 #include "../weapon_stats.h"
 #include "../../util/Random.h"
@@ -49,8 +50,6 @@ static int32_t Ftol(double x) {
 // Defined in multiplayer_modes.cpp's AUTOGEN
 void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
-// AUTOGEN
-ushort __cdecl BOTSTATE_pickupWeaponChangeChoice(Drone_tag *param_1, short param_2, char param_3, char param_4);
 
 constexpr Action_TranslatedText MP_SUPPOSED_TO_PROTECT_TARGET = (Action_TranslatedText)0x0200002b;
 constexpr Action_TranslatedText MP_MI6_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002c;

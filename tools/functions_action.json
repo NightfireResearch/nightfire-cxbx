@@ -2482,7 +2482,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001c8c0",
+        "name": "BOTSTATE_chooseDodgeMove",
         "address": "0x0001c8c0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2491,7 +2491,7 @@
             "int *",
             "uint"
         ],
-        "prototype_string": "short __cdecl FUN_0001c8c0(int * param_1, uint param_2)",
+        "prototype_string": "short __cdecl BOTSTATE_chooseDodgeMove(int * param_1, uint param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"
@@ -2518,7 +2518,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001d6a0",
+        "name": "BOTSTATE_removeGoalsForObject",
         "address": "0x0001d6a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2528,7 +2528,7 @@
             "int",
             "uint"
         ],
-        "prototype_string": "undefined __cdecl FUN_0001d6a0(int param_1, int param_2, uint param_3)",
+        "prototype_string": "undefined __cdecl BOTSTATE_removeGoalsForObject(int param_1, int param_2, uint param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",

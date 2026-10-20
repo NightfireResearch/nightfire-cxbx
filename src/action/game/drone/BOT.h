@@ -115,7 +115,7 @@ typedef struct BOT_vars_t {
     float savedCombatRanges[3];     // 0x710 - drone+0xd0, 0xd4, 0xe0
     float distraction;              // 0x71c
     uint goalReturnState;           // 0x720 - the DSTATE to go back to after a goal
-    ushort savedState[2];           // 0x724
+    uint goalFromState;             // 0x724 - the DSTATE the bot was in when it set off for its goal (BOTSTATE_gotoGoal)
     uint flags;                     // 0x728 - 2 recovering, 4 objective goal active
     uint regenTimer;                // 0x72c - trait 0x10
     uint _unknown730;

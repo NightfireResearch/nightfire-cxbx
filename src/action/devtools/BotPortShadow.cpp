@@ -16,6 +16,7 @@
 #include "../engine/Anim.h"
 #include "../game/weapon_stats.h"
 #include "../game/drone/BOT.h"
+#include "../game/drone/BOTSTATE.h"
 #include "../game/drone/BOTWEAP.h"
 #include "../game/drone/Drone.h"
 #include "../game/mp/multiplayer.h"
@@ -40,6 +41,19 @@ struct World {
     int count;
     uint8_t item[16];           // what hashtable_getitem finds
     DCVars_tag dcv;
+    CelPos_tag pos;
+    obj_tag targetObj;          // the protection or demolition object
+    obj_tag *target;
+    MP_PICKUP pickups[2];
+    MP_OBJ_EXT exts[2];
+    AIRoute_tag route;
+    AIPath_tag path;
+    AINode_tag nodes[6];
+    MAPNODE_tag mapNodes[6];
+    sAnimScript_tag scripts[2];
+    ushort routeNodes[8];
+    uint32_t answers;           // the fakes' answers, a bit a call
+    int fakeCalls;
 };
 World world;
 
@@ -60,7 +74,17 @@ int Who(const void *p) {
     return 99;
 }
 
+uint32_t Bits(float f) {
+    uint32_t u;
+    memcpy(&u, &f, 4);
+    return u;
+}
+
 // ---- the fakes
+
+bool Answer() {
+    return (world.answers >> (world.fakeCalls++ & 31)) & 1;
+}
 
 void *__cdecl FakeGetItem(HASHCODE hash) {
     ShadowLog("getitem(%x)", hash);
@@ -89,14 +113,122 @@ uint32_t __cdecl FakeOpponentIsMissile(Drone_tag *drone, obj_tag *obj) {
     return drone->opponent != NULL && ((uintptr_t)drone->opponent & 4) != 0;
 }
 
-void InstallFakes() {
-    ShadowHook_RemoveAll();
-    ShadowHook_Install(0x0006b500, (const void *)&FakeGetItem);
-    ShadowHook_Install(0x0002fac0, (const void *)&FakeDCVfromOBJ);
-    ShadowHook_Install(0x00066b20, (const void *)&FakeChangeWeapon);
-    ShadowHook_Install(0x0001c0d0, (const void *)&FakeIsPreferred);
-    ShadowHook_Install(0x0001c600, (const void *)&FakeOpponentIsMissile);
+bool __cdecl FakeCanAltAttack(DCVars_tag *dc, short variant) {
+    ShadowLog("canalt(%d,%d)", Who(dc->drone), variant);
+    return Answer();
 }
+
+bool __cdecl FakeCallAnim(uint state, uint variant, short endState, uint endMsg, float speed, int unused,
+                          DCVars_tag *dc) {
+    ShadowLog("callanim(%x,%u,%d,%u,%08x,%d,%d)", state, variant, endState, endMsg, Bits(speed), unused,
+              Who(dc->drone));
+    return Answer();
+}
+
+#define FAKE_MOVE(name)                                   \
+    bool __cdecl Fake##name(DCVars_tag *dc) {             \
+        ShadowLog(#name "(%d)", Who(dc->drone));          \
+        return Answer();                                  \
+    }
+FAKE_MOVE(StrafeLeft)
+FAKE_MOVE(StrafeRight)
+FAKE_MOVE(StepLeft)
+FAKE_MOVE(StepRight)
+FAKE_MOVE(RollLeft)
+FAKE_MOVE(RollRight)
+FAKE_MOVE(Backoff)
+
+bool __cdecl FakeOnHill(_VECTOR *pos) {
+    ShadowLog("onhill(%d)", pos == (_VECTOR *)0x001ee420);
+    return Answer();
+}
+
+short __cdecl FakeEvasiveMove(DCVars_tag *dc) {
+    ShadowLog("evasive(%d)", Who(dc->drone));
+    static const short moves[] = {0, 50, 116, 117, 118, 119, 120, 121, 122, 123};
+    return moves[(world.answers >> 3) % 10];
+}
+
+void __cdecl FakeInvalidateRoute(DCVars_tag *dc) {
+    ShadowLog("invalidate(%d)", Who(dc->drone));
+}
+
+int Offset(const void *p) {
+    return (int)((const uint8_t *)p - (const uint8_t *)&world);
+}
+
+bool __cdecl FakeGoalToObj(AITarget_tag *target, AIPoint_tag *point, obj_tag *obj, float radius) {
+    ShadowLog("goalobj(%x,%x,%d,%08x)", Offset(target), Offset(point), Who(obj), Bits(radius));
+    return Answer();
+}
+
+void __cdecl FakeGoalPos(AITarget_tag *target, AIPoint_tag *point, CelPos_tag *pos, float radius) {
+    ShadowLog("goalpos(%x,%x,%x,%08x)", Offset(target), Offset(point), Offset(pos), Bits(radius));
+}
+
+bool __cdecl FakeFeetPos(obj_tag *obj, _VECTOR *feet) {
+    ShadowLog("feet(%d)", Who(obj));
+    feet->x = obj->position.x + 0.25f;
+    feet->y = obj->position.y - 1.0f;
+    feet->z = obj->position.z;
+    return true;
+}
+
+bool __cdecl FakeSetState(StateMachineInfo_tag *sm, DSTATE next, int param) {
+    ShadowLog("setstate(%x,%d,%d)", Offset(sm), next, param);
+    return Answer();
+}
+
+obj_tag *__cdecl FakeProtectionObj(void) {
+    ShadowLog("protection");
+    return world.target;
+}
+
+obj_tag *__cdecl FakeDemolitionObj(void) {
+    ShadowLog("demolition");
+    return world.target;
+}
+
+void __cdecl FakeScriptDelete(obj_tag *obj, sAnimScript_tag **slot) {
+    ShadowLog("scriptdelete(%d,%x,%x)", Who(obj), Offset(slot), Offset(*slot));
+}
+
+void __cdecl FakeBotMessage(obj_tag *obj, uint msg, uint param3, uint param4) {
+    ShadowLog("botmsg(%d,%x,%u,%u)", Who(obj), msg, param3, param4);
+}
+
+struct Fake {
+    unsigned at;
+    const void *fake;
+};
+
+const Fake kFakes[] = {
+    {0x0006b500, (const void *)&FakeGetItem},
+    {0x0002fac0, (const void *)&FakeDCVfromOBJ},
+    {0x00066b20, (const void *)&FakeChangeWeapon},
+    {0x0001c0d0, (const void *)&FakeIsPreferred},
+    {0x0001c600, (const void *)&FakeOpponentIsMissile},
+    {0x00043750, (const void *)&FakeCanAltAttack},
+    {0x000341c0, (const void *)&FakeCallAnim},
+    {0x00045720, (const void *)&FakeStrafeLeft},
+    {0x000457c0, (const void *)&FakeStrafeRight},
+    {0x000455f0, (const void *)&FakeStepLeft},
+    {0x00045680, (const void *)&FakeStepRight},
+    {0x00045a10, (const void *)&FakeRollLeft},
+    {0x00045aa0, (const void *)&FakeRollRight},
+    {0x000459a0, (const void *)&FakeBackoff},
+    {0x0009e650, (const void *)&FakeOnHill},
+    {0x00045d30, (const void *)&FakeEvasiveMove},
+    {0x00043fa0, (const void *)&FakeInvalidateRoute},
+    {0x00049a20, (const void *)&FakeGoalToObj},
+    {0x00049980, (const void *)&FakeGoalPos},
+    {0x00036dc0, (const void *)&FakeFeetPos},
+    {0x0004e320, (const void *)&FakeSetState},
+    {0x000a1600, (const void *)&FakeProtectionObj},
+    {0x000a1610, (const void *)&FakeDemolitionObj},
+    {0x0009e3e0, (const void *)&FakeBotMessage},
+    {0x00015b40, (const void *)&FakeScriptDelete},
+};
 
 // ---- the made-up world
 
@@ -141,6 +273,38 @@ void RandomBot(int i) {
     vars->skin = (uchar)(R(4) == 0 ? 0x1a : R(29));
     vars->stats.personality = (uchar)R(9);
     vars->ammoRegenTimer = R(1000);
+    static const float healths[] = {0.0f, -0.0f, 0.5f, 1.0f, 50.0f, 100.0f, 300.0f};
+    drone->health = R(3) ? healths[R(COUNT(healths))] : ShadowRandFloat(-10.0f, 400.0f);
+    drone->accuracy = (uchar)R(10);
+    drone->speed = (uchar)R(4);
+    drone->sm.curState = 195 + R(55);
+    drone->activeRoute = &world.route;
+    drone->recover = (uchar)R(256);
+    drone->sightFlags = R(16);
+    obj->position.x = ShadowRandFloat(-10.0f, 10.0f);
+    obj->position.y = ShadowRandFloat(-2.0f, 2.0f);
+    obj->position.z = ShadowRandFloat(-10.0f, 10.0f);
+    for (int k = 0; k < 5; k++)
+        drone->combatRanges[k] = ShadowRandFloat(0.0f, 30.0f);
+    for (int k = 0; k < 3; k++)
+        vars->savedCombatRanges[k] = ShadowRandFloat(0.0f, 30.0f);
+    vars->distraction = ShadowRandFloat(-5.0f, 1500.0f);
+    vars->stats.health = (ushort)(R(4) == 0 ? R(3) : 50 + R(260));
+    vars->stats.preferredWeaponClass = (uchar)R(7);
+    vars->flags = R(16);
+    vars->activeGoal = (uchar)(R(3) == 0 ? 0xff : R(2));
+    vars->routeFailCount = (uchar)(R(3) == 0 ? 0 : R(5));
+    vars->lastRouteFailFrame = GameState.NumFramesUnpaused - R(8);
+    for (int g = 0; g < 2; g++) {
+        BOT_goal_t *goal = &vars->goals[g];
+        uint8_t *bytes = (uint8_t *)goal;
+        for (size_t k = 0; k < sizeof(*goal); k++)
+            bytes[k] = (uint8_t)R(256);
+        goal->kind = (uchar)R(4);
+        goal->subtype = (uchar)R(11);
+        goal->target = R(3) ? (void *)&world.objs[R(BOTS)] : NULL;
+        goal->timeBudget = ShadowRandFloat(0.0f, 2000.0f);
+    }
     for (int w = 0; w < 114; w++) {
         BOT_weapon_t *weapon = &vars->weapons[w];
         weapon->zoomRoot = ShadowRandFloat(0.0f, 3.0f);
@@ -162,41 +326,84 @@ void RandomBot(int i) {
 }
 
 void RandomWorld() {
+    GameState.NumFramesUnpaused = R(4) == 0 ? 0 : R(100000);
     for (int i = 0; i < BOTS; i++)
         RandomBot(i);
+    for (int p = 0; p < NUM_AGENTS; p++) {
+        MPGame.players[p].playerObj = NULL;
+        MPGame.players[p].flags = (ushort)R(0x20);
+    }
+    for (int i = 0; i < BOTS; i++)
+        if (R(6) != 0)
+            MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
+    MPGame.TimeIncPaused = ShadowRandFloat(0.0f, 600.0f);
+    MPSettings.maybeIsTeamGame = R(2);
+    world.answers = R(0x10000) | (R(0x10000) << 16);
+    world.fakeCalls = 0;
+    world.pos.pos.x = ShadowRandFloat(-10.0f, 10.0f);
+    world.pos.cel = (cel_tag *)&world.item;
+
+    obj_tag *target = &world.targetObj;
+    memset(target, 0, sizeof(*target));
+    target->objectType = (char)(R(2) ? 0x20 : OBJECTTYPE_DRONE);
+    target->subState = (ushort)R(3);
+    target->position.x = ShadowRandFloat(-10.0f, 10.0f);
+    target->position.z = ShadowRandFloat(-10.0f, 10.0f);
+    world.target = R(5) == 0 ? NULL : R(5) == 0 ? &world.objs[R(BOTS)] : target;
+    for (int i = 0; i < 2; i++) {
+        memset(&world.pickups[i], 0, sizeof(world.pickups[i]));
+        memset(&world.exts[i], 0, sizeof(world.exts[i]));
+        world.exts[i].gameObj = R(3) ? &world.objs[R(BOTS)] : target;
+    }
+
+    // A route of up to six nodes, along x
+    AIRoute_tag *route = &world.route;
+    memset(route, 0, sizeof(*route));
+    memset(&world.path, 0, sizeof(world.path));
+    route->count = (ushort)(R(3) == 0 ? 0 : R(7));
+    route->path = &world.path;
+    route->nodes = world.routeNodes;
+    world.path.runtimeNodes = world.nodes;
+    for (int i = 0; i < 6; i++) {
+        memset(&world.nodes[i], 0, sizeof(world.nodes[i]));
+        memset(&world.mapNodes[i], 0, sizeof(world.mapNodes[i]));
+        world.nodes[i].fileNode = &world.mapNodes[i];
+        world.mapNodes[i].pos.x = ShadowRandFloat(-10.0f, 10.0f);
+        world.mapNodes[i].pos.y = ShadowRandFloat(-1.0f, 1.0f);
+        world.mapNodes[i].pos.z = ShadowRandFloat(-10.0f, 10.0f);
+    }
+    for (int i = 0; i < 8; i++)
+        world.routeNodes[i] = (ushort)R(6);
+    route->start.pos.x = ShadowRandFloat(-10.0f, 10.0f);
+    route->start.pos.z = ShadowRandFloat(-10.0f, 10.0f);
+    route->dest.pos.x = ShadowRandFloat(-10.0f, 10.0f);
+    route->dest.pos.z = ShadowRandFloat(-10.0f, 10.0f);
     for (int p = 0; p < NUM_AGENTS; p++)
         MPSettings.Player[p].TeamId = (MPTeam)R(3);
-    static const MultiplayerGameMode modes[] = {GM_ARENA, GM_PROTECTION, GM_DEMOLITION, GM_CTF, GM_ASSASSIN};
+    static const MultiplayerGameMode modes[] = {GM_ARENA, GM_PROTECTION, GM_DEMOLITION, GM_CTF, GM_ASSASSIN, GM_KOTH,
+                                                GM_TEAMKOTH};
     MPSettings.GameMode = modes[R(COUNT(modes))];
     MPSettings.weaponSet = (WeaponSet)R(PICKUP_SETS);
     static const short starts[] = {6, 1, 2, 0x10, 0x2d, 0x45};
     BOT_startWeapon = R(2) ? weapon_data[PickupMatrix[R(PICKUP_SETS)][0]].weaponBaseNum : starts[R(COUNT(starts))];
-    GameState.NumFramesUnpaused = R(4) == 0 ? 0 : R(100000);
     memset(world.list, 0x5a, sizeof(world.list));
     world.count = (int)R(1000);
 }
 
 // ---- running both sides
 
-// Every original of the group at once, so that they reach each other rather than ours
-struct OriginalBotWeapons {
-    XbeOriginalScope reset{0x0001e540}, reload{0x0001e5b0}, ammoInGun{0x0001e4d0}, equipWeapon{0x0001e6f0},
-        equipAmmo{0x0001e820}, checkLoaded{0x0001e920}, hasWeapon{0x0001e980}, decrRounds{0x0001e9a0},
-        ammoAmount{0x0001ea60}, clipSize{0x0001ead0}, isValid{0x0001eaf0}, priority{0x0001eb70},
-        animSet{0x0001edb0}, shouldChange{0x0001ee60}, reloadAnim{0x0001eeb0}, hasAmmo{0x0001ef30},
-        init{0x0001ef90}, change{0x0001f320}, hasLoaded{0x0001f410}, explosive{0x0001f450}, list{0x0001f5c0},
-        tooClose{0x0001f740};
-};
-
 uint32_t (*caseRun)(bool original);
+unsigned groupOriginals[64];
+int groupOriginalCount;
 
 uint32_t Theirs() {
     GameStartWeapon = BOT_startWeapon;
-    uint32_t result;
-    {
-        OriginalBotWeapons originals;
-        result = caseRun(true);
-    }
+    // Every original of the group at once, so that they reach each other rather than ours
+    for (int i = 0; i < groupOriginalCount; i++)
+        XbeOriginal_Restore(groupOriginals[i], true);
+    uint32_t result = caseRun(true);
+    for (int i = 0; i < groupOriginalCount; i++)
+        XbeOriginal_Restore(groupOriginals[i], false);
     BOT_startWeapon = GameStartWeapon;
     return result;
 }
@@ -235,6 +442,22 @@ float ArgDistance() {
 
 Drone_tag *ArgDrone() {
     return &world.drones[A(BOTS)];
+}
+
+DCVars_tag *ArgDc() {
+    Drone_tag *drone = ArgDrone();
+    memset(&world.dcv, 0, sizeof(world.dcv));
+    world.dcv.gameObj = drone->gameObj;
+    world.dcv.drone = drone;
+    world.dcv.aiStateMachine = &drone->sm;
+    return &world.dcv;
+}
+
+float ArgWeight() {
+    static const float edges[] = {0.0f, 0.0f, -0.0f, 1.0f, 25.0f, 30.0f, 0.5f};
+    if (A(2))
+        return edges[A(COUNT(edges))];
+    return (float)A(4000) / 100.0f;
 }
 
 #define CDECL(at, ours, type, ...) \
@@ -398,32 +621,324 @@ uint32_t RunTooClose(bool original) {
 
 struct Case {
     const char *name;
+    unsigned at;
     uint32_t (*run)(bool);
 };
 
 const Case kWeapons[] = {
-    {"BOTWEAP_resetWeapons", RunReset},
-    {"BOTWEAP_reload", RunReload},
-    {"BOTWEAP_AmmoInGun", RunAmmoInGun},
-    {"BOTWEAP_EquipWeapon", RunEquipWeapon},
-    {"BOTWEAP_EquipAmmo", RunEquipAmmo},
-    {"BOTWEAP_CheckWeaponsLoaded", RunCheckLoaded},
-    {"BOTWEAP_hasWeapon", RunHasWeapon},
-    {"BOTWEAP_decrRounds", RunDecrRounds},
-    {"BOTWEAP_getWeaponAmmoAmount", RunAmmoAmount},
-    {"BOTWEAP_getWeaponClipSize", RunClipSize},
-    {"BOTWEAP_isValidWeapon", RunIsValid},
-    {"BOTWEAP_getWeaponPriority", RunPriority},
-    {"BOTWEAP_getAnimSet", RunAnimSet},
-    {"BOTWEAP_shouldChangeWeapon", RunShouldChange},
-    {"BOTWEAP_hasReloadAnim", RunReloadAnim},
-    {"BOTWEAP_hasAmmo", RunHasAmmo},
-    {"BOTWEAP_InitWeapon", RunInit},
-    {"BOTWEAP_changeWeapon", RunChange},
-    {"BOTWEAP_hasLoadedWeapon", RunHasLoaded},
-    {"BOTWEAP_getExplosiveWeapon", RunExplosive},
-    {"BOTWEAP_listHeldLoadedWeapons", RunList},
-    {"BOTWEAP_tooCloseForWeapon", RunTooClose},
+    {"BOTWEAP_resetWeapons", 0x0001e540, RunReset},
+    {"BOTWEAP_reload", 0x0001e5b0, RunReload},
+    {"BOTWEAP_AmmoInGun", 0x0001e4d0, RunAmmoInGun},
+    {"BOTWEAP_EquipWeapon", 0x0001e6f0, RunEquipWeapon},
+    {"BOTWEAP_EquipAmmo", 0x0001e820, RunEquipAmmo},
+    {"BOTWEAP_CheckWeaponsLoaded", 0x0001e920, RunCheckLoaded},
+    {"BOTWEAP_hasWeapon", 0x0001e980, RunHasWeapon},
+    {"BOTWEAP_decrRounds", 0x0001e9a0, RunDecrRounds},
+    {"BOTWEAP_getWeaponAmmoAmount", 0x0001ea60, RunAmmoAmount},
+    {"BOTWEAP_getWeaponClipSize", 0x0001ead0, RunClipSize},
+    {"BOTWEAP_isValidWeapon", 0x0001eaf0, RunIsValid},
+    {"BOTWEAP_getWeaponPriority", 0x0001eb70, RunPriority},
+    {"BOTWEAP_getAnimSet", 0x0001edb0, RunAnimSet},
+    {"BOTWEAP_shouldChangeWeapon", 0x0001ee60, RunShouldChange},
+    {"BOTWEAP_hasReloadAnim", 0x0001eeb0, RunReloadAnim},
+    {"BOTWEAP_hasAmmo", 0x0001ef30, RunHasAmmo},
+    {"BOTWEAP_InitWeapon", 0x0001ef90, RunInit},
+    {"BOTWEAP_changeWeapon", 0x0001f320, RunChange},
+    {"BOTWEAP_hasLoadedWeapon", 0x0001f410, RunHasLoaded},
+    {"BOTWEAP_getExplosiveWeapon", 0x0001f450, RunExplosive},
+    {"BOTWEAP_listHeldLoadedWeapons", 0x0001f5c0, RunList},
+    {"BOTWEAP_tooCloseForWeapon", 0x0001f740, RunTooClose},
+};
+
+// ---- BOTSTATE: combat moves and goals
+
+uint32_t RunUnarmed(bool original) {
+    DCVars_tag *dc = ArgDc();
+    return CDECL(0x0001b970, BOTSTATE_chooseUnarmedAttackAnim, uint32_t (__cdecl *)(DCVars_tag *), dc) & 0xffff;
+}
+
+uint32_t RunCheckAttackMove(bool original) {
+    DCVars_tag *dc = ArgDc();
+    short state = (short)(205 + A(20));
+    return CDECL(0x0001b9c0, BOTSTATE_checkAttackMove, uint32_t (__cdecl *)(DCVars_tag *, short), dc, state) & 0xffff;
+}
+
+uint32_t RunEvasive(bool original) {
+    DCVars_tag *dc = ArgDc();
+    return CDECL(0x0001bab0, BOTSTATE_EvasiveMove, uint32_t (__cdecl *)(DCVars_tag *), dc) & 0xffff;
+}
+
+uint32_t RunNearestNode(bool original) {
+    DCVars_tag *dc = ArgDc();
+    return CDECL(0x0001bb30, BOTSTATE_setNearestNavNode, uint32_t (__cdecl *)(DCVars_tag *), dc) & 0xff;
+}
+
+uint32_t RunUninitGoal(bool original) {
+    BOT_vars_t *bot = ArgDrone()->botVars;
+    uint slot = A(4) == 0 ? 0xff : A(2);
+    CDECL_VOID(0x0001bb50, BOTSTATE_uninitGoal, void (__cdecl *)(BOT_vars_t *, uint), bot, slot);
+    return 0;
+}
+
+uint32_t RunInitGoal(bool original) {
+    BOT_vars_t *bot = ArgDrone()->botVars;
+    int slot = (int)A(4) - 1;
+    uchar kind = (uchar)A(4);
+    CelPos_tag *pos = A(3) ? &world.pos : NULL;
+    void *target = &world.objs[A(BOTS)];
+    uchar subtype = (uchar)A(10);
+    CDECL_VOID(0x0001bbc0, BOTSTATE_initGoal, void (__cdecl *)(BOT_vars_t *, int, uchar, CelPos_tag *, void *, uchar),
+               bot, slot, kind, pos, target, subtype);
+    return 0;
+}
+
+uint32_t RunGotoGoal(bool original) {
+    DCVars_tag *dc = ArgDc();
+    int slot = A(5) == 0 ? (int)A(4) - 1 : (int)A(2);
+    uint next = 195 + A(55);
+    return CDECL(0x0001bc30, BOTSTATE_gotoGoal, uint32_t (__cdecl *)(DCVars_tag *, int, uint), dc, slot, next) & 0xff;
+}
+
+uint32_t RunGoalComplete(bool original) {
+    DCVars_tag *dc = ArgDc();
+    uint slot = A(4);
+    CDECL_VOID(0x0001beb0, BOTSTATE_setGoalComplete, void (__cdecl *)(DCVars_tag *, uint), dc, slot);
+    return 0;
+}
+
+uint32_t RunActiveGoal(bool original) {
+    Drone_tag *drone = ArgDrone();
+    return CDECL(0x0001bed0, BOTSTATE_getActiveGoal, uint32_t (__cdecl *)(Drone_tag *), drone);
+}
+
+uint32_t RunPickPrefs(bool original) {
+    BOT_vars_t *bot = ArgDrone()->botVars;
+    uint slot = A(6) == 0 ? A(4) : A(2);
+    float health = ArgWeight(), ammo = ArgWeight(), weapon = ArgWeight(), objective = ArgWeight();
+    if (A(2))
+        health = ammo = weapon = 0.0f;
+    uchar distance = (uchar)(A(2) ? 0 : A(256));
+    uchar flags = (uchar)A(256);
+    CDECL_VOID(0x0001bef0, BOTSTATE_setGoalPickPrefs,
+               void (__cdecl *)(BOT_vars_t *, uint, float, float, float, float, uchar, uchar), bot, slot, health,
+               ammo, weapon, objective, distance, flags);
+    return 0;
+}
+
+uint32_t RunIsPreferred(bool original) {
+    BOT_vars_t *bot = ArgDrone()->botVars;
+    uint weapon = A(0x56);
+    return CDECL(0x0001c0d0, BOTSTATE_isPreferredWeapon, uint32_t (__cdecl *)(BOT_vars_t *, uint), bot, weapon) & 0xff;
+}
+
+uint32_t RunStateHasWeapon(bool original) {
+    BOT_vars_t *bot = ArgDrone()->botVars;
+    uint weapon = A(0x56);
+    return CDECL(0x0001c180, BOTSTATE_hasWeapon, uint32_t (__cdecl *)(BOT_vars_t *, uint), bot, weapon) & 0xff;
+}
+
+uint32_t RunValidateRoute(bool original) {
+    DCVars_tag *dc = ArgDc();
+    uint status = A(5) == 0 ? A(0) : A(14);
+    return CDECL(0x0001c240, BOTSTATE_validateRoute, uint32_t (__cdecl *)(DCVars_tag *, uint), dc, status) & 0xff;
+}
+
+const Case kStates[] = {
+    {"BOTSTATE_chooseUnarmedAttackAnim", 0x0001b970, RunUnarmed},
+    {"BOTSTATE_checkAttackMove", 0x0001b9c0, RunCheckAttackMove},
+    {"BOTSTATE_EvasiveMove", 0x0001bab0, RunEvasive},
+    {"BOTSTATE_setNearestNavNode", 0x0001bb30, RunNearestNode},
+    {"BOTSTATE_uninitGoal", 0x0001bb50, RunUninitGoal},
+    {"BOTSTATE_initGoal", 0x0001bbc0, RunInitGoal},
+    {"BOTSTATE_gotoGoal", 0x0001bc30, RunGotoGoal},
+    {"BOTSTATE_setGoalComplete", 0x0001beb0, RunGoalComplete},
+    {"BOTSTATE_getActiveGoal", 0x0001bed0, RunActiveGoal},
+    {"BOTSTATE_setGoalPickPrefs", 0x0001bef0, RunPickPrefs},
+    {"BOTSTATE_isPreferredWeapon", 0x0001c0d0, RunIsPreferred},
+    {"BOTSTATE_hasWeapon", 0x0001c180, RunStateHasWeapon},
+    {"BOTSTATE_validateRoute", 0x0001c240, RunValidateRoute},
+};
+
+// ---- BOTSTATE: routes, distraction, dodges and the choice of weapon
+
+uint32_t RunPathWithin(bool original) {
+    Drone_tag *drone = ArgDrone();
+    if (A(5) == 0)
+        drone->activeRoute = NULL;
+    obj_tag *obj = A(8) == 0 ? NULL : A(3) == 0 ? world.target : &world.objs[A(BOTS)];
+    float range = A(4) == 0 ? 0.0f : (float)A(800) / 100.0f;
+    int segments = (int)A(8) - 1;
+    return CDECL(0x0001c320, BOTSTATE_isPathWithinObjectRange, uint32_t (__cdecl *)(Drone_tag *, obj_tag *, float, int),
+                 drone, obj, range, segments) & 0xff;
+}
+
+uint32_t RunVisitTime(bool original) {
+    Drone_tag *drone = A(6) == 0 ? NULL : ArgDrone();
+    if (drone != NULL && A(4) == 0)
+        drone->gameObj->objectType = OBJECTTYPE_PLAYER;
+    MP_PICKUP *pickup = A(6) == 0 ? NULL : &world.pickups[A(2)];
+    if (A(4) == 0)
+        MPGame.TimeIncPaused = -45.0f;
+    CDECL_VOID(0x0001c550, BOTSTATE_setPickupVisitTime, void (__cdecl *)(Drone_tag *, MP_PICKUP *), drone, pickup);
+    return 0;
+}
+
+uint32_t RunRecovery(bool original) {
+    DCVars_tag *dc = ArgDc();
+    dc->drone->recover = (uchar)A(256);
+    CDECL_VOID(0x0001c5a0, BOTSTATE_startRecovery, void (__cdecl *)(DCVars_tag *), dc);
+    return 0;
+}
+
+uint32_t RunIsMissile(bool original) {
+    Drone_tag *drone = ArgDrone();
+    if (A(2))
+        drone->opponent = world.target;
+    obj_tag *obj = A(3) == 0 ? (obj_tag *)-1 : A(2) ? world.target : &world.objs[A(BOTS)];
+    return CDECL(0x0001c600, BOTSTATE_opponentIsMissile, uint32_t (__cdecl *)(Drone_tag *, obj_tag *), drone, obj) &
+           0xff;
+}
+
+uint32_t RunCloseRange(bool original) {
+    Drone_tag *drone = ArgDrone();
+    CDECL_VOID(0x0001c690, BOTSTATE_reallyCloseCombatRange, void (__cdecl *)(Drone_tag *), drone);
+    return 0;
+}
+
+uint32_t RunDefaultRange(bool original) {
+    Drone_tag *drone = ArgDrone();
+    CDECL_VOID(0x0001c6c0, BOTSTATE_defaultCombatRange, void (__cdecl *)(Drone_tag *), drone);
+    return 0;
+}
+
+void GoingToGoal(Drone_tag *drone) {
+    if (A(4) != 0)
+        drone->sm.curState = DSTATE_BotGotoGoalPosition;
+    BOT_vars_t *bot = drone->botVars;
+    static const float distractions[] = {0.0f, -0.0f, 5.0f, 100.0f, 1000.0f, -3.0f};
+    bot->distraction = distractions[A(COUNT(distractions))];
+}
+
+uint32_t RunIncreaseDistraction(bool original) {
+    Drone_tag *drone = ArgDrone();
+    GoingToGoal(drone);
+    float amount = A(3) == 0 ? -(float)A(200) : (float)A(2000) / 4.0f;
+    return CDECL(0x0001c6f0, BOTSTATE_increaseDistraction, uint32_t (__cdecl *)(Drone_tag *, float), drone, amount) &
+           0xff;
+}
+
+uint32_t RunIsDistracted(bool original) {
+    Drone_tag *drone = ArgDrone();
+    GoingToGoal(drone);
+    return CDECL(0x0001c790, BOTSTATE_isDistracted, uint32_t (__cdecl *)(Drone_tag *), drone) & 0xff;
+}
+
+uint32_t RunSetStateChange(bool original) {
+    Drone_tag *drone = ArgDrone();
+    uint state = 195 + A(55);
+    CDECL_VOID(0x0001c7f0, BOTSTATE_setStateChange, void (__cdecl *)(Drone_tag *, uint), drone, state);
+    return 0;
+}
+
+uint32_t RunCombatMove(bool original) {
+    DCVars_tag *dc = ArgDc();
+    return CDECL(0x0001c820, BOTSTATE_chooseCombatMove, uint32_t (__cdecl *)(DCVars_tag *), dc) & 0xffff;
+}
+
+uint32_t RunDodge(bool original) {
+    DCVars_tag *dc = ArgDc();
+    uint directions = A(8);
+    return CDECL(0x0001c8c0, BOTSTATE_chooseDodgeMove, uint32_t (__cdecl *)(DCVars_tag *, uint), dc, directions) &
+           0xffff;
+}
+
+uint32_t RunRemoveGoals(bool original) {
+    DCVars_tag *dc = ArgDc();
+    BOT_vars_t *bot = dc->drone->botVars;
+    obj_tag *obj = &world.objs[A(BOTS)];
+    for (int g = 0; g < 2; g++) {
+        if (bot->goals[g].kind == BOT_GOAL_OBJECTIVE)
+            bot->goals[g].target = A(4) == 0 ? NULL : &world.exts[A(2)];
+    }
+    uint state = 195 + A(55);
+    return CDECL(0x0001d6a0, BOTSTATE_removeGoalsForObject, uint32_t (__cdecl *)(DCVars_tag *, obj_tag *, uint), dc,
+                 obj, state) & 0xff;
+}
+
+void Armed(Drone_tag *drone) {
+    BOT_vars_t *bot = drone->botVars;
+    if (A(3) != 0)
+        drone->sightFlags |= DRONE_SIGHT_SEES_OPPONENT;
+    // some explosives and the satchel, so the special cases come up
+    static const short weapons[] = {1, 0x3b, 0x34, 0x2a, 0x2d, 0x10, 0x12, 0x06};
+    for (int i = 0; i < COUNT(weapons); i++)
+        if (A(2))
+            bot->weapons[weapons[i]].held = 1;
+    if (A(3) == 0)
+        bot->stats.personality = BOT_PERSONALITY_BERSERKER;
+}
+
+uint32_t RunCombatChoice(bool original) {
+    Drone_tag *drone = ArgDrone();
+    Armed(drone);
+    obj_tag *opponent = A(8) == 0 ? NULL : A(3) == 0 ? world.target : &world.objs[A(BOTS)];
+    char keep = (char)A(2), noMessage = (char)A(2);
+    return CDECL(0x0001d750, BOTSTATE_combatWeaponChangeChoice,
+                 uint32_t (__cdecl *)(Drone_tag *, obj_tag *, char, char), drone, opponent, keep, noMessage) & 0xffff;
+}
+
+uint32_t RunStateChangeWeapon(bool original) {
+    Drone_tag *drone = ArgDrone();
+    Armed(drone);
+    if (A(2))
+        drone->opponent = A(3) == 0 ? world.target : &world.objs[A(BOTS)];
+    uint weapon = A(2) ? 0 : (uint)ArgWeapon();
+    char keep = (char)A(2), noChange = (char)(A(3) == 0);
+    return CDECL(0x0001e3f0, BOTSTATE_changeWeapon, uint32_t (__cdecl *)(BOT_vars_t *, uint, char, char),
+                 drone->botVars, weapon, keep, noChange);
+}
+
+uint32_t RunPickupChoice(bool original) {
+    Drone_tag *drone = ArgDrone();
+    Armed(drone);
+    if (A(2))
+        drone->opponent = A(3) == 0 ? world.target : &world.objs[A(BOTS)];
+    short weapon = ArgWeapon();
+    char held = (char)A(2), loaded = (char)A(2);
+    return CDECL(0x0001e470, BOTSTATE_pickupWeaponChangeChoice, uint32_t (__cdecl *)(Drone_tag *, short, char, char),
+                 drone, weapon, held, loaded) & 0xffff;
+}
+
+uint32_t RunStopAnim(bool original) {
+    Drone_tag *drone = ArgDrone();
+    memset(world.scripts, 0, sizeof(world.scripts));
+    static const float frames[] = {0.0f, 1.0f, 1.5f, 12.75f, 30.0f, -2.5f, 70000.0f};
+    world.scripts[0].curFrame = A(3) ? frames[A(COUNT(frames))] : (float)A(4000) / 16.0f;
+    world.scripts[0].numFrames = (short)A(100);
+    world.scripts[1].ownerSlot = (sAnimScript_tag **)&drone->unknown434;
+    drone->animScript = &world.scripts[0];
+    drone->unknown434 = A(2) ? &world.scripts[1] : NULL;
+    CDECL_VOID(0x0001c2d0, BOTSTATE_stopAnim, void (__cdecl *)(Drone_tag *), drone);
+    return 0;
+}
+
+const Case kStates2[] = {
+    {"BOTSTATE_stopAnim", 0x0001c2d0, RunStopAnim},
+    {"BOTSTATE_isPathWithinObjectRange", 0x0001c320, RunPathWithin},
+    {"BOTSTATE_setPickupVisitTime", 0x0001c550, RunVisitTime},
+    {"BOTSTATE_startRecovery", 0x0001c5a0, RunRecovery},
+    {"BOTSTATE_opponentIsMissile", 0x0001c600, RunIsMissile},
+    {"BOTSTATE_reallyCloseCombatRange", 0x0001c690, RunCloseRange},
+    {"BOTSTATE_defaultCombatRange", 0x0001c6c0, RunDefaultRange},
+    {"BOTSTATE_increaseDistraction", 0x0001c6f0, RunIncreaseDistraction},
+    {"BOTSTATE_isDistracted", 0x0001c790, RunIsDistracted},
+    {"BOTSTATE_setStateChange", 0x0001c7f0, RunSetStateChange},
+    {"BOTSTATE_chooseCombatMove", 0x0001c820, RunCombatMove},
+    {"BOTSTATE_chooseDodgeMove", 0x0001c8c0, RunDodge},
+    {"BOTSTATE_removeGoalsForObject", 0x0001d6a0, RunRemoveGoals},
+    {"BOTSTATE_combatWeaponChangeChoice", 0x0001d750, RunCombatChoice},
+    {"BOTSTATE_changeWeapon", 0x0001e3f0, RunStateChangeWeapon},
+    {"BOTSTATE_pickupWeaponChangeChoice", 0x0001e470, RunPickupChoice},
 };
 
 const Case *currentCase;
@@ -431,11 +946,23 @@ uint32_t caseSeed;
 
 uint32_t RunCurrent(bool original) {
     caseGen = caseSeed;
+    world.fakeCalls = 0;
     return currentCase->run(original);
 }
 
+// The group's functions run as the originals on the original side; every fake but theirs stands in
 void Group(const char *group, const Case *list, int count, int trials) {
-    InstallFakes();
+    ShadowHook_RemoveAll();
+    groupOriginalCount = 0;
+    for (int c = 0; c < count; c++)
+        groupOriginals[groupOriginalCount++] = list[c].at;
+    for (const Fake &f : kFakes) {
+        bool tested = false;
+        for (int i = 0; i < groupOriginalCount; i++)
+            tested = tested || groupOriginals[i] == f.at;
+        if (!tested)
+            ShadowHook_Install(f.at, f.fake);
+    }
     int groupCases = cases, groupDiffer = differ;
     for (int c = 0; c < count; c++) {
         currentCase = &list[c];
@@ -462,6 +989,7 @@ void BotPortShadow_Run(void) {
     regions.Add(&MPGame, sizeof(MPGame));
     regions.Add(&GameState, sizeof(GameState));
     regions.Add(&BOT_startWeapon, sizeof(BOT_startWeapon));
+    regions.Add((void *)0x0018cdf8, 8);     // Rand_Random's state
     static MPSettings_t shippedSettings;
     static MPGameStruct shippedGame;
     static GameState_t shippedState;
@@ -471,6 +999,8 @@ void BotPortShadow_Run(void) {
     short shippedStart = GameStartWeapon, ourStart = BOT_startWeapon;
 
     Group("the bots' weapons", kWeapons, COUNT(kWeapons), 3000);
+    Group("the bots' combat moves and goals", kStates, COUNT(kStates), 3000);
+    Group("the bots' distraction, dodges and weapon choice", kStates2, COUNT(kStates2), 3000);
 
     ShadowHook_RemoveAll();
     MPSettings = shippedSettings;

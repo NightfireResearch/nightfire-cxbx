@@ -11,6 +11,9 @@
 // never runs out of ammo.
 extern short BOT_startWeapon;
 
+// The weapon ids the bot code walks (BOTWEAP_listHeldLoadedWeapons' list)
+#define BOT_WEAPON_IDS 0x53
+
 void BOTWEAP_resetWeapons(obj_tag *obj);
 bool BOTWEAP_reload(obj_tag *obj, char checkOnly);
 short BOTWEAP_AmmoInGun(Drone_tag *drone, short weapon);
