@@ -39588,7 +39588,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c89e0",
+        "name": "ES_JumpToMusicMarker",
         "address": "0x000c89e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -39597,7 +39597,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c89e0(int param_1, int param_2)",
+        "prototype_string": "void __cdecl ES_JumpToMusicMarker(int param_1, int param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]"

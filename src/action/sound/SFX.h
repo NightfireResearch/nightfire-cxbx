@@ -380,6 +380,7 @@ enum MusicMarkerType {
 #define FileBufferMask U32_AT(0x00182b68)      // the stream's file buffers less one
 #define SFXJumpMarker I32_AT(0x00182b6c)       // the section the music asks for, -1 for none
 #define InitialiseStatus I32_AT(0x00182b74)    // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
+#define SFXJumpState I32_AT(0x00182b78)        // why the last ask was not taken: 3 read, 0 playing, 1 jumping
 
 #define SoundBankData (*(SoundBankHeader(*)[SFX_NUM_BANKS])0x00279510)
 #define ES_VoiceHandleData (*(ES_VoiceHandleDetails(*)[SFX_NUM_VOICE_HANDLES])0x0027aa28)
@@ -390,6 +391,8 @@ enum MusicMarkerType {
 #define StreamWaitingIntialise (*(StreamIntialiseDetails(*)[SFX_NUM_STREAM_REQUESTS])0x00298448)
 #define SFXKeyOnFrameDelay I32_AT(0x002981e8)  // for the next SFXStart3D
 #define SBInfoList (*(int(*)[SFX_NUM_BANKS])0x002981f0)
+// Where software ADPCM would decode to (it never did on the Xbox)
+#define SoftwareAdpcmBuffer ((void *)0x00298a48)
 #define BaseSFXActive (*(SFXItem **)0x00298a4c)
 #define StreamMemCpyHandles (*(StreamMemCpyHandle(*)[SFX_NUM_STREAMS])0x00298a50)
 #define Streams (*(StreamData(*)[SFX_NUM_STREAMS])0x00298a70)
@@ -413,6 +416,7 @@ enum MusicMarkerType {
 #define SFXFileAccessSuspended I32_AT(0x00299478)
 #define SFXActiveCount I32_AT(0x00299480)
 #define SFXActiveData (*(SFXActive(*)[SFX_NUM_ITEMS])0x00299484)
+#define StreamLookupFileData (*(StreamLookupFileDetails **)0x002997cc)    // never set on the Xbox
 #define SFXLoadedMarker I32_AT(0x002997a4)     // the section the stream has read to (the name is ours)
 #define SFXActiveMarker I32_AT(0x002997ac)     // the section playing
 #define ListenerPos (*(_VECTOR *)0x002997b4)
@@ -421,8 +425,14 @@ enum MusicMarkerType {
 #define DoInitialStreamBuffer I32_AT(0x002997d4)
 #define SFXJumpInstant I32_AT(0x002997d8)
 #define MusicStartSection I32_AT(0x002997dc)
+#define SFXLastJumpMarker I32_AT(0x002997e0)
+#define StreamWaitingIntialiseMe I32_AT(0x002997e4)
 #define StreamWaitingIntialiseCount I32_AT(0x002997e8)
 #define HaveCalledOnce I32_AT(0x002997ec)      // MFXINFO.MXI is read
+#define MarkerFileName (*(char(*)[256])0x002997f0)
+#define StreamFileName (*(char(*)[256])0x002998f0)
+#define InitialisingHashCode I32_AT(0x002999f0)
+#define InitialisingStream (*(StreamData **)0x002999f4)
 #define SFXInitialised I32_AT(0x00299a0c)
 #define SFXZeroPoint (*(_VECTOR *)0x00299a10)
 
@@ -513,9 +523,13 @@ int SFXInitialiseStream(int HashCode, int Is3d);
 void SFXStopStream(StreamData *stream);
 void SFXStopMusic(void);
 void SFXStartMusic(int track, int section);
+void UpdateMusicMarkers(StreamData *stream, int restart);
+int ES_CheckFileBuffersForJumpMarkers(StreamData *Stream);
+void ES_JumpToMusicMarker(StreamData *stream, int instant);
+void SFXJumpToMusicMarkerUpdate(void);
+void SFXInitialiseStreamUpdate(void);
+void SFXUpdateStreams(void);
 
 // The originals still called by address
-#define SFXUpdateStreams ((void (__cdecl *)(void))0x000c9030)
-#define SFXInitialiseStreamUpdate ((void (__cdecl *)(void))0x000c63c0)
 
 #endif // SFX_H_
