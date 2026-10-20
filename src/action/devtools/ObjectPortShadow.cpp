@@ -34,6 +34,7 @@
 #include "../game/obj/Corona.h"
 #include "../game/obj/Creature.h"
 #include "../game/obj/Sub.h"
+#include "../game/obj/MiniSub.h"
 #include "../game/obj/Effect.h"
 #include "../game/obj/Emitter.h"
 #include "../game/obj/Env.h"
@@ -485,6 +486,57 @@ void __cdecl FakeBoneTrans(obj_tag *obj, uint which, int datum, _VECTOR *pos, _M
         *mtx = obj->transformMatrix;
 }
 
+// The AI network, for the mini sub: each logged, its answer from the case's numbers
+void __cdecl FakeResetRoute(AIRoute_tag *route, obj_tag *mover, obj_tag *target) {
+    ShadowLog("resetroute(%x,%x,%x)", W(route), W(mover), W(target));
+}
+AIPath_tag *__cdecl FakeNavPath(_VECTOR *pos, cel_tag *cel, char moveTest) {
+    ShadowLog("navpath(%x,%d)", W(cel), moveTest);
+    LogVector("at", pos);
+    return R(4) ? (AIPath_tag *)&world.paths[1] : NULL;
+}
+bool __cdecl FakeVerifyRoute(obj_tag *mover, obj_tag *target, AITarget_tag *aiTarget, AIPoint_tag *point, float radius,
+                             AIRoute_tag *route) {
+    ShadowLog("verifyroute(%x,%x,%x,%x,%08x,%x)", W(mover), W(target), W(aiTarget), W(point), Bits(radius), W(route));
+    return R(6) != 0;
+}
+uchar __cdecl FakeRouteValid(AIRoute_tag *route) {
+    ShadowLog("routevalid(%x)", W(route));
+    return (uchar)R(2);
+}
+uint __cdecl FakeCalcRoute(obj_tag *mover, obj_tag *target, AIRoute_tag *route, AITarget_tag *aiTarget,
+                           AIPoint_tag *point, float radius, uint unused) {
+    ShadowLog("calcroute(%x,%x,%x,%x,%x,%08x,%u)", W(mover), W(target), W(route), W(aiTarget), W(point), Bits(radius),
+              unused);
+    return R(3) ? R(2) : R(10);
+}
+bool __cdecl FakeCreepCalc(AIRoute_tag *route, char fromEnd) {
+    ShadowLog("creepcalc(%x,%d)", W(route), fromEnd);
+    return R(5) != 0;
+}
+bool __cdecl FakeCreepDest(AIRoute_tag *route, short offset, CelPos_tag *out) {
+    ShadowLog("creepdest(%x,%d,%x)", W(route), offset, W(out));
+    PlainVector(&out->pos, 10.0f);
+    out->cel = &world.cels[R(3)];
+    return true;
+}
+uint __cdecl FakeFollowRoute(AIRoute_tag *route, DCVars_tag *dcv) {
+    ShadowLog("followroute(%x,%x)", W(route), W(dcv));
+    return R(5);
+}
+double __cdecl FakeRouteDistance(AIRoute_tag *route) {
+    ShadowLog("routedistance(%x)", W(route));
+    return 3.5;
+}
+cel_tag *__cdecl FakeDroneFindCel(_VECTOR *pos) {
+    ShadowLog("dronefindcel");
+    LogVector("at", pos);
+    return &world.cels[2];
+}
+void __cdecl FakeNavNodeCache(void) {
+    ShadowLog("navnodecache");
+}
+
 bool __cdecl FakeSphere(_VECTOR *pos, float radius, cel_tag *cel, obj_tag *a, obj_tag *b, HITDATA_tag **list,
                         char only, char oneSided, ushort mask, ushort flags) {
     ShadowLog("sphere(%08x,%x,%x,%x,%d,%d,%x,%x)", Bits(radius), W(cel), W(a), W(b), only, oneSided, mask, flags);
@@ -830,6 +882,17 @@ void InstallFakes(bool realLights) {
     ShadowHook_Install(0x000125b0, (const void *)&FakePeekSeq);
     ShadowHook_Install(0x00017820, (const void *)&FakeAnimSetDeleteAll);
     ShadowHook_Install(0x00013070, (const void *)&FakeBoneTrans);
+    ShadowHook_Install(0x000482c0, (const void *)&FakeResetRoute);
+    ShadowHook_Install(0x00049650, (const void *)&FakeNavPath);
+    ShadowHook_Install(0x00049bf0, (const void *)&FakeVerifyRoute);
+    ShadowHook_Install(0x000479d0, (const void *)&FakeRouteValid);
+    ShadowHook_Install(0x0004adb0, (const void *)&FakeCalcRoute);
+    ShadowHook_Install(0x0004abb0, (const void *)&FakeCreepCalc);
+    ShadowHook_Install(0x0004a2e0, (const void *)&FakeCreepDest);
+    ShadowHook_Install(0x0004b370, (const void *)&FakeFollowRoute);
+    ShadowHook_Install(0x00047e60, (const void *)&FakeRouteDistance);
+    ShadowHook_Install(0x00036b80, (const void *)&FakeDroneFindCel);
+    ShadowHook_Install(0x00044de0, (const void *)&FakeNavNodeCache);
     ShadowHook_Install(0x0002d080, (const void *)&FakeDeleteObject);
     ShadowHook_Install(0x0002c610, (const void *)&FakeSphere);
     ShadowHook_Install(0x0002c5b0, (const void *)&FakeSight);
@@ -2031,6 +2094,121 @@ const Case kSubs[] = {
     C("Sub_DeployTorpedoes", RunSubTorpedoes),
 };
 
+// ---- the mini sub
+
+obj_tag *RandomMiniSub(void) {
+    obj_tag *obj = Subject(OBJECTTYPE_MINISUB);
+    MiniSubInfo *sub = (MiniSubInfo *)obj->extraObjectData;
+    memset(sub, 0, sizeof(*sub));
+    sub->gameObj = obj;
+    sub->health = 100.0f;
+    sub->turnRate = R(2) ? 0.005f : Plain(0.0f, 1.0f);
+    sub->channel = R(2) ? 0 : (int)R(256);
+    sub->speed = R(4) ? 0.03f : Plain(0.0f, 1.0f);
+    sub->target = R(6) ? &world.objs[R(OBJS)] : NULL;
+    sub->nextFireFrame = R(2) ? GameState.NumFramesUnpaused + R(3) - 1 : R(100);
+    sub->lastFireFrame = R(1000);
+    PlainVector(&sub->moveTarget.pos, 10.0f);
+    sub->moveTarget.cel = &world.cels[R(3)];
+    PlainVector(&sub->facing, 3.2f);
+    sub->activeRoute = R(4) ? &sub->route : NULL;
+    PlainVector(&sub->route.waypoint.pos, 10.0f);
+    sub->route.waypoint.cel = R(4) ? &world.cels[R(3)] : NULL;
+    obj->curState = (ushort)(R(4) ? (R(2) ? 0 : 3) : R(6));
+    obj->subState = (ushort)R(3);
+    PlainVector(&obj->rotation, 3.2f);
+    if (glb_players[0] == NULL)
+        glb_players[0] = &world.objs[0];
+    if (sub->target != NULL && R(2))   // close by, now and then
+        sub->target->position.x = obj->position.x + Plain(-14.0f, 14.0f);
+    return obj;
+}
+
+uint32_t RunMiniSubCreate(bool original) {
+    level_tag *keys = Placement();
+    keys->keys[0] = R(2) ? 0 : R(256);
+    obj_tag *obj = CDECL_RUN(0x0009bcd0, MiniSub_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, celglist_tag *, level_tag *),
+                             &world.v[0], &world.v[1], &world.glists[R(4)], keys);
+    return W(obj);
+}
+
+uint32_t RunMiniSubUpdate(bool original) {
+    obj_tag *obj = R(10) ? RandomMiniSub() : NULL;
+    sureCreate = true;
+    CDECL_VOID(0x0009bc50, MiniSub_Update, void (__cdecl *)(obj_tag *), obj);
+    sureCreate = false;
+    return 0;
+}
+
+uint32_t RunMiniSubSetTarget(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    CelPos_tag *at = (CelPos_tag *)&world.v[4];   // a position and the cel after it
+    PlainVector(&at->pos, 10.0f);
+    at->cel = R(3) ? &world.cels[R(3)] : NULL;
+    Regs r = {P(obj->extraObjectData), P(at), 0, 0, 0, 0};
+    RegsRun(original, 0x0009b7c0, (const void *)&MiniSub_SetTarget, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunMiniSubTurn(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    Regs r = {0, 0, 0, 0, P(obj->extraObjectData), 0};
+    RegsRun(original, 0x0009b840, (const void *)&MiniSubMove_Turn, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunMiniSubForward(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    Regs r = {P(obj->extraObjectData), 0, 0, 0, 0, 0};
+    RegsRun(original, 0x0009b910, (const void *)&MiniSubMove_Forward, r, 0, NULL);
+    return 0;
+}
+
+uint32_t RunMiniSubRoute(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    MiniSubInfo *sub = (MiniSubInfo *)obj->extraObjectData;
+    uint32_t args[2] = {P(R(6) ? sub->target : NULL), Bits(R(3) ? 10.0f : Plain(0.0f, 20.0f))};
+    Regs r = {0, 0, 0, 0, P(sub), 0};
+    return RegsRun(original, 0x0009b980, (const void *)&MiniSub_Route, r, 2, args);
+}
+
+uint32_t RunMiniSubFire(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    Regs r = {P(obj->extraObjectData), 0, 0, 0, 0, 0};
+    sureCreate = true;
+    RegsRun(original, 0x0009b6c0, (const void *)&MiniSub_FireTorpedo, r, 0, NULL);
+    sureCreate = false;
+    return 0;
+}
+
+uint32_t RunMiniSubAttack(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    Regs r = {P(obj->extraObjectData), 0, 0, 0, 0, 0};
+    sureCreate = true;
+    RegsRun(original, 0x0009ba80, (const void *)&MiniSubState_Attack, r, 0, NULL);
+    sureCreate = false;
+    return 0;
+}
+
+uint32_t RunMiniSubInit(bool original) {
+    obj_tag *obj = RandomMiniSub();
+    Regs r = {0, 0, 0, 0, P(obj->extraObjectData), 0};
+    RegsRun(original, 0x0009bbe0, (const void *)&MiniSubState_Init, r, 0, NULL);
+    return 0;
+}
+
+const Case kMiniSubs[] = {
+    C("MiniSub_Create", RunMiniSubCreate),
+    C("MiniSub_Update", RunMiniSubUpdate),
+    C("MiniSub_SetTarget", RunMiniSubSetTarget),
+    C("MiniSubMove_Turn", RunMiniSubTurn),
+    C("MiniSubMove_Forward", RunMiniSubForward),
+    C("MiniSub_Route", RunMiniSubRoute),
+    C("MiniSub_FireTorpedo", RunMiniSubFire),
+    C("MiniSubState_Attack", RunMiniSubAttack),
+    C("MiniSubState_Init", RunMiniSubInit),
+};
+
 uint32_t RunApocalypseCreate(bool original) {
     obj_tag *obj = CDECL_RUN(0x000a4180, Apocalypse_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *),
                              &world.v[0], &world.v[1], Placement(), &world.glists[R(4)]);
@@ -2750,6 +2928,7 @@ void ObjectPortShadow_Run(void) {
     Group("scenery and hazards", kScenery, COUNT(kScenery), 2500);
     Group("creatures", kCreatures, COUNT(kCreatures), 3000);
     Group("the sub", kSubs, COUNT(kSubs), 3000);
+    Group("the mini sub", kMiniSubs, COUNT(kMiniSubs), 3000);
     Group("the weather", kWeather, COUNT(kWeather), 1500);
     Group("lights and emitters", kLights, COUNT(kLights), 3000, true);
     Group("pickups and the aim", kPickups, COUNT(kPickups), 3000);

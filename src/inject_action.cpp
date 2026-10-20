@@ -77,6 +77,7 @@
 #include "action/game/obj/Ripples.h"
 #include "action/game/obj/Creature.h"
 #include "action/game/obj/Sub.h"
+#include "action/game/obj/MiniSub.h"
 #include "action/game/obj/BodyGlow.h"
 #include "action/game/obj/Emitter.h"
 #include "action/game/obj/Pickup.h"

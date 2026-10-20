@@ -30474,25 +30474,25 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009b7c0",
+        "name": "MiniSub_SetTarget",
         "address": "0x0009b7c0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0009b7c0(void)",
+        "prototype_string": "void __stdcall MiniSub_SetTarget(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009b840",
+        "name": "MiniSubMove_Turn",
         "address": "0x0009b840",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0009b840(void)",
+        "prototype_string": "void __stdcall MiniSubMove_Turn(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -30510,7 +30510,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009b980",
+        "name": "MiniSub_Route",
         "address": "0x0009b980",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -30519,7 +30519,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "uint __cdecl FUN_0009b980(int param_1, float param_2)",
+        "prototype_string": "uint __cdecl MiniSub_Route(int param_1, float param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"
@@ -30540,13 +30540,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0009bbe0",
+        "name": "MiniSubState_Init",
         "address": "0x0009bbe0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0009bbe0(void)",
+        "prototype_string": "void __stdcall MiniSubState_Init(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
