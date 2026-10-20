@@ -11310,7 +11310,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043510",
+        "name": "NDrone2_StepAllowed",
         "address": "0x00043510",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11318,7 +11318,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00043510(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_StepAllowed(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11326,7 +11326,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043560",
+        "name": "NDrone2_StrafeAllowed",
         "address": "0x00043560",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11334,7 +11334,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00043560(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_StrafeAllowed(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11342,7 +11342,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000435b0",
+        "name": "NDrone2_StrafeDodgeAllowed",
         "address": "0x000435b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11350,7 +11350,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000435b0(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_StrafeDodgeAllowed(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11358,7 +11358,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043600",
+        "name": "NDrone2_RollAllowed",
         "address": "0x00043600",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11366,7 +11366,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00043600(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_RollAllowed(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11390,7 +11390,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000436b0",
+        "name": "NDrone2_CanCrouchWalk",
         "address": "0x000436b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11398,7 +11398,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000436b0(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_CanCrouchWalk(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11406,7 +11406,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00043700",
+        "name": "NDrone2_CanMove8",
         "address": "0x00043700",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11414,7 +11414,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00043700(int param_1)",
+        "prototype_string": "undefined4 __cdecl NDrone2_CanMove8(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11440,19 +11440,19 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000437b0",
+        "name": "NDrone2_ChooseAimStand",
         "address": "0x000437b0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "byte",
         "param_types": [],
-        "prototype_string": "byte __stdcall FUN_000437b0(void)",
+        "prototype_string": "byte __stdcall NDrone2_ChooseAimStand(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000437d0",
+        "name": "NDrone2_ChooseAimCrouch",
         "address": "0x000437d0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11460,7 +11460,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "byte __cdecl FUN_000437d0(int param_1)",
+        "prototype_string": "byte __cdecl NDrone2_ChooseAimCrouch(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -11886,7 +11886,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00044250",
+        "name": "NDrone2_CornerCoverAnimOK",
         "address": "0x00044250",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11895,7 +11895,7 @@
             "int",
             "char *"
         ],
-        "prototype_string": "bool __cdecl FUN_00044250(int param_1, char * param_2)",
+        "prototype_string": "bool __cdecl NDrone2_CornerCoverAnimOK(int param_1, char * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[char * param_2@Stack[0x8]:4]"
@@ -11904,7 +11904,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000442e0",
+        "name": "NDrone2_LowCoverOK",
         "address": "0x000442e0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -11913,7 +11913,7 @@
             "int",
             "char *"
         ],
-        "prototype_string": "bool __cdecl FUN_000442e0(int param_1, char * param_2)",
+        "prototype_string": "bool __cdecl NDrone2_LowCoverOK(int param_1, char * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[char * param_2@Stack[0x8]:4]"
@@ -11968,7 +11968,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000445a0",
+        "name": "NDrone2_GetCoverPosForTarget",
         "address": "0x000445a0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
@@ -11977,7 +11977,7 @@
             "undefined4",
             "undefined4"
         ],
-        "prototype_string": "undefined FUN_000445a0(undefined4 param_1, undefined4 param_2)",
+        "prototype_string": "undefined NDrone2_GetCoverPosForTarget(undefined4 param_1, undefined4 param_2)",
         "parameters": [
             "[undefined4 param_1@Stack[0x4]:4]",
             "[undefined4 param_2@Stack[0x8]:4]"
@@ -12218,7 +12218,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045340",
+        "name": "NDrone2_CanWalkStraightTo",
         "address": "0x00045340",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -12229,7 +12229,7 @@
             "CelPos_tag *",
             "undefined4"
         ],
-        "prototype_string": "bool __stdcall FUN_00045340(Drone_tag * param_1, obj_tag * param_2, CelPos_tag * param_3, undefined4 param_4)",
+        "prototype_string": "bool __stdcall NDrone2_CanWalkStraightTo(Drone_tag * param_1, obj_tag * param_2, CelPos_tag * param_3, undefined4 param_4)",
         "parameters": [
             "[Drone_tag * param_1@Stack[0x4]:4]",
             "[obj_tag * param_2@Stack[0x8]:4]",
@@ -12240,7 +12240,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000453e0",
+        "name": "NDrone2_MoveTestRelative",
         "address": "0x000453e0",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
@@ -12252,7 +12252,7 @@
             "char",
             "undefined4"
         ],
-        "prototype_string": "bool __stdcall FUN_000453e0(_VECTOR * param_1, Drone_tag * param_2, obj_tag * param_3, char param_4, undefined4 param_5)",
+        "prototype_string": "bool __stdcall NDrone2_MoveTestRelative(_VECTOR * param_1, Drone_tag * param_2, obj_tag * param_3, char param_4, undefined4 param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[Drone_tag * param_2@Stack[0x8]:4]",
@@ -12448,7 +12448,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045b30",
+        "name": "NDrone2_ChooseRoll",
         "address": "0x00045b30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12456,7 +12456,7 @@
         "param_types": [
             "int *"
         ],
-        "prototype_string": "uint __cdecl FUN_00045b30(int * param_1)",
+        "prototype_string": "uint __cdecl NDrone2_ChooseRoll(int * param_1)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]"
         ],
@@ -12464,7 +12464,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045bc0",
+        "name": "NDrone2_ChooseStrafe",
         "address": "0x00045bc0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12472,7 +12472,7 @@
         "param_types": [
             "int *"
         ],
-        "prototype_string": "uint __cdecl FUN_00045bc0(int * param_1)",
+        "prototype_string": "uint __cdecl NDrone2_ChooseStrafe(int * param_1)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]"
         ],
@@ -12480,7 +12480,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045c30",
+        "name": "NDrone2_ChooseStrafeDodge",
         "address": "0x00045c30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12488,7 +12488,7 @@
         "param_types": [
             "int *"
         ],
-        "prototype_string": "uint __cdecl FUN_00045c30(int * param_1)",
+        "prototype_string": "uint __cdecl NDrone2_ChooseStrafeDodge(int * param_1)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]"
         ],
@@ -12496,7 +12496,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00045ca0",
+        "name": "NDrone2_ChooseStep",
         "address": "0x00045ca0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12504,7 +12504,7 @@
         "param_types": [
             "int *"
         ],
-        "prototype_string": "uint __cdecl FUN_00045ca0(int * param_1)",
+        "prototype_string": "uint __cdecl NDrone2_ChooseStep(int * param_1)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]"
         ],
@@ -12652,7 +12652,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000464a0",
+        "name": "NDrone2_TakeCover",
         "address": "0x000464a0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -12661,7 +12661,7 @@
             "undefined4 *",
             "byte"
         ],
-        "prototype_string": "void __cdecl FUN_000464a0(undefined4 * param_1, byte param_2)",
+        "prototype_string": "void __cdecl NDrone2_TakeCover(undefined4 * param_1, byte param_2)",
         "parameters": [
             "[undefined4 * param_1@Stack[0x4]:4]",
             "[byte param_2@Stack[0x8]:1]"

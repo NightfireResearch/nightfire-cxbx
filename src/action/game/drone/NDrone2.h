@@ -590,6 +590,10 @@ bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except);
 bool NDrone2_NearDrone(DCVars_tag *dcv, float radius);
 void NDrone2_NavNodeCache(void);
 bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z);
+bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, char checkBlocked);
+bool NDrone2_MoveTestRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, char checkBlocked);
+bool NDrone2_AtDest(DCVars_tag *dcv);
+void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target);
 
 // The state machine (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
 bool Drone_SM_Init(void);

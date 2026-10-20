@@ -28,8 +28,7 @@
 
 // Originals called by address
 // Returns in ST0, unrounded
-// Tests the walk from the object's feet to `offset` in its own frame (FUN_000453e0; our name, as in NDrone2_Nav.cpp)
-#define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
+
 
 
 constexpr float kDroneRadius = 0.404f;          // what NDrone2_Steer gives a drone

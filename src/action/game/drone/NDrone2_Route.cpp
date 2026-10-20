@@ -19,8 +19,7 @@
 
 // Originals called by address
 // Returns in ST0, unrounded
-// Steers moveTarget at a position (finding its cel), and works out the distance and the angle to it
-#define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
+
 
 // Path flag 0x10 (AIPath_tag.flags): a patrol from its first node takes the first link, not the second
 #define AIPATH_FIRST_LINK 0x10

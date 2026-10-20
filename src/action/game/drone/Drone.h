@@ -418,7 +418,8 @@ typedef struct Drone_tag {
     CelPos_tag goalFrom;            // 0x4cc - where route1 started when NDrone2_MoveToGoalPosition planned it
     char _pad4dc[0x518 - 0x4dc];
     float moveTargetDistance;       // 0x518 - Ghidra's dist2dtosomepoint (DroneMove_DistanceToNextRouteNode)
-    char _pad51c[0x520 - 0x51c];
+    float moveTargetRadius;         // 0x51c - NDrone2_AtDest: arrived within it (0.3 from
+                                    //         NDrone2_maybeCalcDistanceAndDirToTarget; our name)
     _VECTOR moveTarget;             // 0x520 - where it moves to: the route's waypoint, or where it floats to
     cel_tag *moveTargetCel;         // 0x52c - NDrone2_DefaultInit: the object's cel
     union {

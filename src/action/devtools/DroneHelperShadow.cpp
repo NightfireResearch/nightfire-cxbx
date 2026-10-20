@@ -55,7 +55,13 @@ struct World {
     uint uintArg;
     uint firstArg, lastArg;
     uchar ucharArg;
+    char charArg;
     _VECTOR posArg;
+    CelPos_tag celPosArg;
+    CoverNode_tag *nodeArg;
+    Drone_tag *droneOrNull;
+    _VECTOR outPos, outRot;
+    int rotWanted;
 
     // What the fakes answer: a sequence drawn per call, the same for both runs (the world is restored)
     uint32_t answers;
@@ -162,6 +168,49 @@ DYNAMICSOUNDS *__cdecl FakeSpeech(DCVars_tag *dcv, uint sfx, char force, char fa
     ShadowLog("speech(%x,%x,%d,%d,%d)", Who(dcv), sfx, force, face, needFace);
     return NULL;
 }
+uint32_t __cdecl FakeCanDoAnimState(DCVars_tag *dcv, short state, short variant) {
+    ShadowLog("candoanim(%x,%x,%x)", Who(dcv), state & 0xffff, variant & 0xffff);
+    return Yes();
+}
+// The side moves' and cover anims' tests, each told apart by its address
+template <unsigned AT> uint32_t __cdecl FakeDcvTest(DCVars_tag *dcv) {
+    ShadowLog("test%x(%x)", AT, Who(dcv));
+    return Yes();
+}
+template <unsigned AT> uint32_t __cdecl FakeNodeTest(DCVars_tag *dcv, CoverNode_tag *node) {
+    ShadowLog("test%x(%x,%x)", AT, Who(dcv), Who(node));
+    return Yes();
+}
+uint32_t __cdecl FakeCornerPos(CoverNode_tag *node, ushort kind, _VECTOR *pos, _VECTOR *rot, char step) {
+    ShadowLog("cornerpos(%x,%x,%x,%x,%d)", Who(node), kind, Who(pos), Who(rot), step);
+    return Yes();
+}
+uint32_t __cdecl FakeFeetPos(obj_tag *obj, _VECTOR *feet) {
+    ShadowLog("feet(%x,%x)", Who(obj), Who(feet));
+    if (obj == NULL)
+        return 0;
+    feet->x = obj->position.x;
+    feet->y = obj->position.y - 1.1f;
+    feet->z = obj->position.z;
+    return 1;
+}
+cel_tag *__cdecl FakeDroneFindCel(_VECTOR *pos) {
+    ShadowLog("dronecel(%x)", Who(pos));
+    LogVector("at", pos);
+    return world.cel;
+}
+uint32_t __cdecl FakeMoveTest(_VECTOR *from, cel_tag *fromCel, _VECTOR *to, cel_tag *toCel, obj_tag *objA,
+                              obj_tag *objB, _VECTOR *hit, char strict, char checkBlocked) {
+    ShadowLog("movetest(%x,%p,%x,%p,%x,%x,%x,%d,%d)", Who(from), fromCel, Who(to), toCel, Who(objA), Who(objB),
+              Who(hit), strict, checkBlocked);
+    LogVector("from", from);
+    LogVector("to", to);
+    return Answer(3);
+}
+float __cdecl FakeSpeedMul(Drone_tag *drone) {
+    ShadowLog("speedmul(%x)", Who(drone));
+    return 0.5f + 0.25f * Answer(4);
+}
 
 void InstallFakes() {
     ShadowFakes_InstallCreate();
@@ -179,6 +228,31 @@ void InstallFakes() {
     ShadowHook_Install(0x0006b5e0, (const void *)&FakeSetEntityGfx);
     ShadowHook_Install(0x0002d200, (const void *)&FakeLinkToCel);
     ShadowHook_Install(0x00037530, (const void *)&FakeSpeech);
+}
+
+// For the combat moves, cover and walking: what they call is faked; their own neighbours run for real
+void InstallMoveFakes() {
+    ShadowHook_Install(0x000330c0, (const void *)&FakeCanDoAnimState);
+    ShadowHook_Install(0x00045a10, (const void *)&FakeDcvTest<0x45a10>);
+    ShadowHook_Install(0x00045aa0, (const void *)&FakeDcvTest<0x45aa0>);
+    ShadowHook_Install(0x00045720, (const void *)&FakeDcvTest<0x45720>);
+    ShadowHook_Install(0x000457c0, (const void *)&FakeDcvTest<0x457c0>);
+    ShadowHook_Install(0x00045870, (const void *)&FakeDcvTest<0x45870>);
+    ShadowHook_Install(0x00045900, (const void *)&FakeDcvTest<0x45900>);
+    ShadowHook_Install(0x000455f0, (const void *)&FakeDcvTest<0x455f0>);
+    ShadowHook_Install(0x00045680, (const void *)&FakeDcvTest<0x45680>);
+    ShadowHook_Install(0x00043650, (const void *)&FakeDcvTest<0x43650>);
+    ShadowHook_Install(0x00033870, (const void *)&FakeNodeTest<0x33870>);
+    ShadowHook_Install(0x000338b0, (const void *)&FakeNodeTest<0x338b0>);
+    ShadowHook_Install(0x00033990, (const void *)&FakeNodeTest<0x33990>);
+    ShadowHook_Install(0x00033ac0, (const void *)&FakeNodeTest<0x33ac0>);
+    ShadowHook_Install(0x00033b70, (const void *)&FakeNodeTest<0x33b70>);
+    ShadowHook_Install(0x00033bf0, (const void *)&FakeNodeTest<0x33bf0>);
+    ShadowHook_Install(0x00044490, (const void *)&FakeCornerPos);
+    ShadowHook_Install(0x00036dc0, (const void *)&FakeFeetPos);
+    ShadowHook_Install(0x00036b80, (const void *)&FakeDroneFindCel);
+    ShadowHook_Install(0x00044030, (const void *)&FakeMoveTest);
+    ShadowHook_Install(0x0001ac30, (const void *)&FakeSpeedMul);
 }
 
 // ---- the made-up world
@@ -238,6 +312,28 @@ void RandomDrone(int i) {
     d->facialAnimDone = (uchar)ShadowRand(3);
     d->facialAnimPlaying = (uchar)ShadowRand(3);
     d->unknown37 = (uchar)ShadowRand(3);
+    d->dtype = ShadowRand(2) ? DTYPE_Bot : (uchar)ShadowRand(30);
+    d->flags |= ShadowRand(3) ? 0 : 0x10;
+    d->coverNode = &world.node;
+    d->coverFlags = (ushort)ShadowRand(0x10000);
+    d->targetSlot = (uchar)ShadowRand(MAX_DRONE_TARGETS);
+    d->moveTarget.x = o->position.x + ShadowRandFloat(-1.0f, 1.0f);
+    d->moveTarget.y = o->position.y + ShadowRandFloat(-1.0f, 1.0f);
+    d->moveTarget.z = o->position.z + ShadowRandFloat(-1.0f, 1.0f);
+    d->moveTargetRadius = RandomFloat();
+    if (ShadowRand(4) == 0) {
+        // exactly 5 m away in plan, at a radius of 5 now and then
+        o->position.x = (float)ShadowRand(8);
+        o->position.z = (float)ShadowRand(8);
+        d->moveTarget.x = o->position.x + 3.0f;
+        d->moveTarget.z = o->position.z - 4.0f;
+        if (ShadowRand(2))
+            d->moveTargetRadius = 5.0f;
+    }
+    d->moveTargetDistance = RandomFloat();
+    float *m = (float *)&o->transformMatrix;
+    for (size_t k = 0; k < sizeof(o->transformMatrix) / sizeof(float); k++)
+        m[k] = ShadowRandFloat(-1.0f, 1.0f);
 }
 
 void RandomWorld() {
@@ -261,13 +357,27 @@ void RandomWorld() {
     memset(&world.node, 0, sizeof(world.node));
     world.node.type = (uchar)ShadowRand(3);
     world.node.flags = ShadowRand(0x200);
+    world.node.cel = (cel_tag *)(uintptr_t)(0x3000 + ShadowRand(4));
+    world.node.occupant = NULL;
+    for (int t = 0; t < MAX_DRONE_TARGETS; t++)
+        world.node.usable[t] = ShadowRand(0x20);
+    world.nodeArg = ShadowRand(8) ? &world.node : NULL;
+    world.charArg = (char)(ShadowRand(4) == 0 ? 0x40 + ShadowRand(4) : ShadowRand(4));
+    world.celPosArg.pos.x = ShadowRandFloat(-10.0f, 10.0f);
+    world.celPosArg.pos.y = ShadowRandFloat(-2.0f, 2.0f);
+    world.celPosArg.pos.z = ShadowRandFloat(-10.0f, 10.0f);
+    world.celPosArg.cel = ShadowRand(2) ? (cel_tag *)(uintptr_t)0x4000 : NULL;
+    world.droneOrNull = ShadowRand(5) ? &world.drones[ShadowRand(DRONES)] : NULL;
+    memset(&world.outPos, 0x55, sizeof(world.outPos));
+    memset(&world.outRot, 0x55, sizeof(world.outRot));
+    world.rotWanted = ShadowRand(2);
     RandomBytes(&world.diVars, sizeof(world.diVars));
     world.cel = (cel_tag *)(uintptr_t)(0x2000 + ShadowRand(4));
 
     world.objs[1].extraObjectData = &world.drones[1];
     world.objs[1].animState = &world.anims[1];
     world.objs[2].animState = &world.anims[2];
-    world.dcv.gameObj = ShadowRand(10) ? &world.objs[0] : NULL;
+    world.dcv.gameObj = &world.objs[0];
     world.dcv.drone = &world.drones[0];
     world.dcv.cel = NULL;
     world.dcv.aiStateMachine = &world.drones[0].sm;
@@ -308,6 +418,12 @@ enum Kind {
     K_DRONE,            // (droneArg)
     K_DRONE_UINT,       // (droneArg, uintArg)
     K_SFX_ID,           // (droneArg, firstArg, lastArg)
+    K_DCV_NODE_OR_NULL, // (dcv, nodeArg)
+    K_DCV_CHAR,         // (dcv, charArg)
+    K_COVER_POS,        // (&node, uintArg, &outPos, &outRot or NULL, charArg)
+    K_WALK,             // (droneOrNull, objArg, &celPosArg, charArg)
+    K_RELATIVE,         // (&posArg, droneOrNull, objArg, unscaled, charArg); unscaled without a drone
+    K_DCV_CELPOS,       // (dcv, &celPosArg)
 };
 
 struct Case {
@@ -346,6 +462,21 @@ uint32_t Call(const void *f) {
         return ORIGINAL(f, uint32_t(__cdecl *)(Drone_tag *, uint))(w.droneArg, w.uintArg);
     case K_SFX_ID:
         return ORIGINAL(f, uint32_t(__cdecl *)(Drone_tag *, uint, uint))(w.droneArg, w.firstArg, w.lastArg);
+    case K_DCV_NODE_OR_NULL:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, CoverNode_tag *))(&w.dcv, w.nodeArg);
+    case K_DCV_CHAR:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, char))(&w.dcv, w.charArg);
+    case K_COVER_POS:
+        return ORIGINAL(f, uint32_t(__cdecl *)(CoverNode_tag *, uint, _VECTOR *, _VECTOR *, char))(
+            &w.node, w.uintArg % MAX_DRONE_TARGETS, &w.outPos, w.rotWanted ? &w.outRot : NULL, w.charArg);
+    case K_WALK:
+        return ORIGINAL(f, uint32_t(__cdecl *)(Drone_tag *, obj_tag *, CelPos_tag *, char))(w.droneOrNull, w.objArg,
+                                                                                          &w.celPosArg, w.charArg);
+    case K_RELATIVE:
+        return ORIGINAL(f, uint32_t(__cdecl *)(_VECTOR *, Drone_tag *, obj_tag *, char, char))(
+            &w.posArg, w.droneOrNull, w.objArg, w.droneOrNull == NULL ? 1 : w.ucharArg & 1, w.charArg);
+    case K_DCV_CELPOS:
+        return ORIGINAL(f, uint32_t(__cdecl *)(DCVars_tag *, CelPos_tag *))(&w.dcv, &w.celPosArg);
     default:
         return 0;
     }
@@ -392,6 +523,35 @@ const Case kCombat[] = {
     CASE(NDrone2_NearDrone, 0x0003cdf0, K_DCV_FLOAT, AL),
 };
 
+const Case kMoves[] = {
+    CASE(NDrone2_StepAllowed, 0x00043510, K_DCV, AL),
+    CASE(NDrone2_StrafeAllowed, 0x00043560, K_DCV, AL),
+    CASE(NDrone2_StrafeDodgeAllowed, 0x000435b0, K_DCV, AL),
+    CASE(NDrone2_RollAllowed, 0x00043600, K_DCV, AL),
+    CASE(NDrone2_CanCrouchWalk, 0x000436b0, K_DCV, AL),
+    CASE(NDrone2_CanMove8, 0x00043700, K_DCV, AL),
+    CASE(NDrone2_ChooseAimStand, 0x000437b0, K_VOID, AX),
+    CASE(NDrone2_ChooseAimCrouch, 0x000437d0, K_DCV, AX),
+    CASE(NDrone2_ChooseRoll, 0x00045b30, K_DCV, AX),
+    CASE(NDrone2_ChooseStrafe, 0x00045bc0, K_DCV, AX),
+    CASE(NDrone2_ChooseStrafeDodge, 0x00045c30, K_DCV, AX),
+    CASE(NDrone2_ChooseStep, 0x00045ca0, K_DCV, AX),
+};
+
+const Case kCover[] = {
+    CASE(NDrone2_CornerCoverAnimOK, 0x00044250, K_DCV_NODE_OR_NULL, AL),
+    CASE(NDrone2_LowCoverOK, 0x000442e0, K_DCV_NODE, AL),
+    CASE(NDrone2_GetCoverPosForTarget, 0x000445a0, K_COVER_POS, AL),
+    CASE(NDrone2_TakeCover, 0x000464a0, K_DCV_CHAR, 0),
+};
+
+const Case kWalking[] = {
+    CASE(NDrone2_AtDest, 0x00043fd0, K_DCV, AL),
+    CASE(NDrone2_CanWalkStraightTo, 0x00045340, K_WALK, AL),
+    CASE(NDrone2_MoveTestRelative, 0x000453e0, K_RELATIVE, AL),
+    CASE(NDrone2_maybeCalcDistanceAndDirToTarget, 0x00046080, K_DCV_CELPOS, 0),
+};
+
 int Test(const Case *cases, int count, int trials, int *differ) {
     int run = 0;
     for (int c = 0; c < count; c++) {
@@ -400,6 +560,8 @@ int Test(const Case *cases, int count, int trials, int *differ) {
             RandomWorld();
             if (current->at == 0x0003b6c0)
                 world.objArg = &world.objs[1 + ShadowRand(2)];
+            if (current->at == 0x00035f70 && ShadowRand(10) == 0)
+                world.dcv.gameObj = NULL;
             run++;
             if (!ShadowCompare(regions, "dronehelpers", current->name, trial, RunTheirs, RunOurs))
                 (*differ)++;
@@ -424,6 +586,7 @@ void DroneHelperShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(RandWords, 8);
     regions.Add(&FRAME_RATE_INT, 4);
+    regions.Add((void *)0x001ee420, 12);    // NDrone2_CanWalkStraightTo's target
     ShadowFakes_AddRegions(regions);
 
     InstallFakes();
@@ -439,10 +602,15 @@ void DroneHelperShadow_Run(void) {
         {"making drones and effects", kMaking, sizeof(kMaking) / sizeof(kMaking[0]), 3000},
         {"talk helpers", kTalk, sizeof(kTalk) / sizeof(kTalk[0]), 3000},
         {"combat helpers", kCombat, sizeof(kCombat) / sizeof(kCombat[0]), 3000},
+        {"combat moves", kMoves, sizeof(kMoves) / sizeof(kMoves[0]), 3000},
+        {"cover", kCover, sizeof(kCover) / sizeof(kCover[0]), 3000},
+        {"walking", kWalking, sizeof(kWalking) / sizeof(kWalking[0]), 3000},
     };
     const int n = sizeof(groups) / sizeof(groups[0]);
     int cases[n], differ[n];
     for (int g = 0; g < n; g++) {
+        if (groups[g].cases == kMoves)
+            InstallMoveFakes();
         differ[g] = 0;
         cases[g] = Test(groups[g].cases, groups[g].count, groups[g].trials, &differ[g]);
     }

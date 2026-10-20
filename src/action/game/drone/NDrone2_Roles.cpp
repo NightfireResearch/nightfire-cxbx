@@ -39,17 +39,10 @@
 // FUN_00046160 in Ghidra; nightfire-port's name
 #define NDrone2_MoveTo_RouteNode ((void (__cdecl *)(DCVars_tag *dcv, int node, AIRoute_tag *route))0x00046160)
 #define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char run))0x00046d90)
-// FUN_00044250 in Ghidra; nightfire-port's name
-#define NDrone2_CoverNodeOK ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00044250)
+
 #define NDrone2_GetPosForCornerCover ((void (__cdecl *)(CoverNode_tag *node, int side, _VECTOR *pos, _VECTOR *rot,  \
                                                         int unused))0x00044490)
-// FUN_000464a0 in Ghidra: takes the cover node the drone was given on the side given (our name)
-#define NDrone2_TakeCover ((void (__cdecl *)(DCVars_tag *dcv, uint side))0x000464a0)
 
-// FUN_00045340 in Ghidra: whether the drone can walk straight from its feet to pos (our name)
-#define NDrone2_CanWalkStraightTo ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos,          \
-                                                     char strict))0x00045340)
-#define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
 // Return in ST0, unrounded
 
 // What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
@@ -2001,7 +1994,7 @@ bool NDrone2_FindAmbushCover(DCVars_tag *dcv) {
     for (uint i = 0; i < NPCGlobals.numCoverNodes; i++, node++) {
         if (node->flags & kCoverNodeHeld)
             continue;
-        if (!NDrone2_CoverNodeOK(dcv, node))
+        if (!NDrone2_CornerCoverAnimOK(dcv, node))
             continue;
         if (node->type == COVER_LOW && behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
             continue;
