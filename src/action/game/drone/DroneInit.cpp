@@ -133,6 +133,27 @@ obj_tag* NDrone2_CreateObj(DIVars_tag *diVars) {
     return gameObj;
 }
 
+// A drone from its creation vars: the object, a random creation time, and the drone's own copy of the vars (all but
+// the glist), with its group and key 7. NULL when no object could be made.
+// AUTOINJECT
+obj_tag* NDrone2_CreateFromDIVars(DIVars_tag *diVars) {
+    if (diVars == NULL)
+        return NULL;
+    obj_tag *gameObj = NDrone2_CreateObj(diVars);
+    diVars->gameObj = gameObj;
+    if (gameObj == NULL)
+        return NULL;
+    Drone_tag *drone = (Drone_tag *)gameObj->extraObjectData;
+    gameObj->creationTimeFrames = Rand_Rand(10000);
+    drone->diVars.gameObj = gameObj;
+    Vec_Copy(&diVars->position, &drone->diVars.position);
+    Vec_Copy(&diVars->rotation, &drone->diVars.rotation);
+    drone->diVars.keys = diVars->keys;
+    drone->group = diVars->keys.group;
+    drone->key7 = diVars->keys.key7;
+    return gameObj;
+}
+
 // After the load: sets the drone up from its own creation vars, gives it an opponent, a path and its state machine
 // AUTOINJECT
 void NDrone2_PostLoad_Init(obj_tag *gameObj) {

@@ -2,6 +2,7 @@
 #include "build.h"
 #include "bullet.h"
 #include "control.h"
+#include "../drone/NDrone2.h"
 #include "Player.h"
 #include "../Spline.h"
 #include "../view.h"
@@ -78,9 +79,6 @@ static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigge
 // XBE_GLOBAL(0x0029b248, 0x84)
 static uint TmpParam[TRIGGER_PARAMS];
 
-// The originals, called by address. FUN_00030a10 is a drone's skin hashcode (Drone_tag::skinHashcode), or 0 without
-// drone data; the name is ours.
-#define Drone_GetSkin ((HASHCODE (__cdecl *)(obj_tag *drone))0x00030a10)
 
 // AUTOINJECT
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {

@@ -93,6 +93,7 @@
 #include "DroneAnimShadow.h"
 #include "DroneCoreShadow.h"
 #include "DroneCombatShadow.h"
+#include "DroneHelperShadow.h"
 #include "DroneCoverShadow.h"
 #include "DroneReactShadow.h"
 #include "DroneRoleShadow.h"
@@ -652,6 +653,10 @@ void MenuProbe_Install(void) {
         EffectPortShadow_Run();
         fflush(stdout);
         _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "dronehelpers") == 0) {
+        DroneHelperShadow_Run();
+        fflush(stdout);
+        _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "player") == 0) {
         PlayerShadow_Run();
         PlayerWeaponShadow_Run();
@@ -695,6 +700,7 @@ void MenuProbe_Install(void) {
         DroneCoverShadow_Run();
         DroneReactShadow_Run();
         DroneRoleShadow_Run();
+        DroneHelperShadow_Run();
         PlayerShadow_Run();
         PlayerWeaponShadow_Run();
         AnimPortShadow_Run();

@@ -6850,7 +6850,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00030a10",
+        "name": "Drone_GetSkin",
         "address": "0x00030a10",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -6858,7 +6858,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_00030a10(int param_1)",
+        "prototype_string": "int __cdecl Drone_GetSkin(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -7756,7 +7756,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00033a40",
+        "name": "DroneAnim_CanStandAtCover",
         "address": "0x00033a40",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -7765,7 +7765,7 @@
             "int",
             "char *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_00033a40(int param_1, char * param_2)",
+        "prototype_string": "undefined4 __cdecl DroneAnim_CanStandAtCover(int param_1, char * param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[char * param_2@Stack[0x8]:4]"
@@ -8278,7 +8278,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00035f70",
+        "name": "DroneFunc_WeaponInHand",
         "address": "0x00035f70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8286,7 +8286,7 @@
         "param_types": [
             "uint *"
         ],
-        "prototype_string": "bool __cdecl FUN_00035f70(uint * param_1)",
+        "prototype_string": "bool __cdecl DroneFunc_WeaponInHand(uint * param_1)",
         "parameters": [
             "[uint * param_1@Stack[0x4]:4]"
         ],
@@ -8408,7 +8408,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_00036290",
+        "name": "DroneFunc_ChooseSFXByID",
         "address": "0x00036290",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -8418,7 +8418,7 @@
             "int",
             "int"
         ],
-        "prototype_string": "int __cdecl FUN_00036290(int param_1, int param_2, int param_3)",
+        "prototype_string": "int __cdecl DroneFunc_ChooseSFXByID(int param_1, int param_2, int param_3)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[int param_2@Stack[0x8]:4]",
@@ -8737,7 +8737,7 @@
         "name": "NDrone2_PlayFacialAnim",
         "address": "0x000374e0",
         "calling_convention": "__cdecl",
-        "has_custom_variable_storage": true,
+        "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [
             "DCVars_tag *",
@@ -9468,7 +9468,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003a240",
+        "name": "NDrone2_LogHitByOpponent",
         "address": "0x0003a240",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9476,7 +9476,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_0003a240(int param_1)",
+        "prototype_string": "void __cdecl NDrone2_LogHitByOpponent(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -9484,7 +9484,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003a270",
+        "name": "NDrone2_LogHitByOpponentOrAlive",
         "address": "0x0003a270",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9492,7 +9492,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_0003a270(int param_1)",
+        "prototype_string": "void __cdecl NDrone2_LogHitByOpponentOrAlive(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],
@@ -9898,7 +9898,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0003b830",
+        "name": "DroneFunc_InjuredSFX",
         "address": "0x0003b830",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -9907,7 +9907,7 @@
             "int *",
             "uint"
         ],
-        "prototype_string": "bool __cdecl FUN_0003b830(int * param_1, uint param_2)",
+        "prototype_string": "bool __cdecl DroneFunc_InjuredSFX(int * param_1, uint param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[uint param_2@Stack[0x8]:4]"

@@ -119,6 +119,12 @@ static bool NearHeight(float y, float otherY) {
     return difference < 2.0f;
 }
 
+// Whether anyone but the drone stands within radius of it (NDrone2_DroneNearPos)
+// AUTOINJECT
+bool NDrone2_NearDrone(DCVars_tag *dcv, float radius) {
+    return NDrone2_DroneNearPos(&dcv->gameObj->position, radius, dcv->gameObj);
+}
+
 // Whether anyone stands near a point: the player within 0.55 m in plan, or a live, active drone (other than `except`)
 // within the radius; either within 2 m of its height
 // AUTOINJECT

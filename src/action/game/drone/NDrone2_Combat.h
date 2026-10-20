@@ -21,6 +21,11 @@ short DroneFunc_CombatState(DCVars_tag *dcv);
 
 // Talk
 uint DroneFunc_ChooseSFX(uint first, uint last);
+uint DroneFunc_ChooseSFXByID(Drone_tag *drone, uint first, uint last);
+bool DroneFunc_InRangeOfTarget(DCVars_tag *dcv, float range);
+char DroneFunc_WeaponInHand(DCVars_tag *dcv);
+bool NDrone2_CheckSurrender(DCVars_tag *dcv);
+void NDrone2_SendAttackMessage(DCVars_tag *dcv);
 bool NDrone2_AttackTalk(DCVars_tag *dcv);
 bool NDrone2_SeenPlayerTalk(DCVars_tag *dcv);
 
@@ -47,6 +52,7 @@ bool NDrone2_SetGoalToDroneWithLosToOpponent(DCVars_tag *dcv);
 bool NDrone2_SetGoalToCloserPosition(DCVars_tag *dcv);
 
 // Cover
+bool DroneAnim_CanStandAtCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_ForceCrouchCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_CanUseCornerAsLowCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_CanCrouchLean(DCVars_tag *dcv, struct CoverNode_tag *node);

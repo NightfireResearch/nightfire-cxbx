@@ -13,6 +13,7 @@ short NDrone2_ChangeToAttackMode(Drone_tag *drone);
 
 // The mode initialisers (DroneModeSettings.init). DeleteMe, Ninja and Bot have the game's shared empty function.
 void NDrone2_init_DMODE_Defaults(Drone_tag *drone);
+void NDrone2_init_DMODE_Normal(Drone_tag *drone);
 void NDrone2_init_DMODE_Sniper(Drone_tag *drone);
 void NDrone2_init_DMODE_Stealth(Drone_tag *drone);
 void NDrone2_init_DMODE_RunToPoint(Drone_tag *drone);

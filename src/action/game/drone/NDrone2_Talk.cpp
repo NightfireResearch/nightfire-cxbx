@@ -3,6 +3,8 @@
 // the game's), whose numbers index Drone_SfxInfo (docs/drone/behaviours/drone_sfx_info.csv).
 
 #include "NDrone2.h"
+#include "NDrone2_Combat.h"
+#include "../../engine/Anim.h"
 #include "DroneTables.h"
 #include "Behaviour.h"
 #include "../../game.h"                 // GameState
@@ -19,13 +21,6 @@
 #include <stdint.h>
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_PlayFacialAnim ((void (__cdecl *)(DCVars_tag *dcv, HASHCODE script))0x000374e0)
-#define Drone_maybeDisallowedFromSayingThisSfx ((bool (__cdecl *)(Drone_tag *drone, uint sfx))0x00036230)
-#define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
-// Our names. One of first..last, or of the run of as many after it for a drone with an odd id
-#define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
-// Says the line when Rand_Rand(0) gives 0 (it always does, but draws), and holds back the next for 5 s
-#define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
 // Returns in ST0, unrounded
 
@@ -93,6 +88,42 @@ static_assert(sizeof(PowerstationLine) == 8, "PowerstationLine is 8 bytes");
 // The frame `ticks` (at 60 a second) from now, worked out on the x87 and truncated (__ftol2)
 static uint TalkFrameAfter(double ticks) {
     return (uint)(long long)((double)FRAME_RATE_DIV * ticks + (double)(uint)GameState.NumFramesUnpaused);
+}
+
+// Whether the line is the one the drone is saying; with nothing said, whether its sound is 0xffffffff
+// AUTOINJECT
+bool Drone_maybeDisallowedFromSayingThisSfx(Drone_tag *drone, uint sfx) {
+    if (drone->speechChannel == NULL)
+        return Drone_SfxInfo[sfx].sfx == 0xffffffff;
+    return Drone_SfxInfo[sfx].sfx == (drone->speechChannel->sfxId & 0xfffff);
+}
+
+// Plays a facial script on the drone, which tells facialAnimDone when it stops and clears facialAnim when deleted
+// AUTOINJECT
+void NDrone2_PlayFacialAnim(DCVars_tag *dcv, HASHCODE script) {
+    Drone_tag *drone = dcv->drone;
+    sAnimScript_tag *anim = AnimFacialAppend(dcv->gameObj, script);
+    drone->facialAnim = anim;
+    if (anim != NULL) {
+        drone->facialAnimDone = 0;
+        drone->facialAnimPlaying = 1;
+        anim->doneFlag = &drone->facialAnimDone;
+        anim->ownerSlot = (sAnimScript_tag **)&drone->facialAnim;
+        anim->flags &= 0x7fffffff;
+        anim->playMode = ANIMPLAY_DELETE;
+    }
+    drone->unknown37 = 0;
+}
+
+// Says the line when Rand_Rand(0) gives 0 (it always does, but draws), and keeps the frame 5 s on. FUN_0003b830 in
+// Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool DroneFunc_InjuredSFX(DCVars_tag *dcv, uint sfx) {
+    if (Rand_Rand(0) != 0)
+        return false;
+    NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
+    NPCGlobals.injuredTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 5;
+    return true;
 }
 
 // Whether the drone is still saying something; a line that has finished is let go.

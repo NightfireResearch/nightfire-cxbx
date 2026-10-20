@@ -79,6 +79,7 @@ static_assert(offsetof(DroneSpawner_tag, initFrame) == 0x24, "Wrong offset for D
 static_assert(offsetof(DroneSpawner_tag, spawned) == 0x34, "Wrong offset for DroneSpawner_tag.spawned");
 
 void DroneSpawner_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
+void DroneSpawner_CreateBlank(void);
 void DroneSpawner_Init(obj_tag *spawner);
 void DroneSpawner_Delete(obj_tag *spawner);
 void DroneSpawner_DroneDelete(obj_tag *spawner, obj_tag *drone);

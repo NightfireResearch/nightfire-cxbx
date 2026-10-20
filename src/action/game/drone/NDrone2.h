@@ -486,7 +486,7 @@ typedef struct {
     uint32_t enabledFrame;     // +0x1ac - GameState.NumFramesUnpaused when Drone_EnableAll last enabled the drones
     uint32_t impactAnimFrame;   // +0x1b0 - when any drone last played an impact anim (Punch and BulletImpact)
     uint32_t nextPatrolTalkFrame;   // +0x1b4 - NDrone2_PatrolTalk: no drone mutters before
-    char _pad1b8[0x1bc - 0x1b8];
+    uint32_t injuredTalkFrame;  // +0x1b8 - DroneFunc_InjuredSFX: 5 s after its last line; nothing reads it
     uint32_t lastPowerstationChannel;   // +0x1bc - NDrone2_PowerstationTalk: the last channel whose line was said
     AITarget_tag playerTarget;  // +0x1c0 - the player's feet, shared by every route to the player
                                 //          (NDrone2_NavNodeCache rebuilds it each frame)
@@ -587,6 +587,7 @@ short NDrone2_NearestNode(CelPos_tag *pos, AIPath_tag *path, obj_tag *obj);
 bool NDrone2_DistanceToEmitter(CelPos_tag *pos, AIPath_tag *path, ushort *nearest, AIEmitter_tag *emitter,
                                obj_tag *obj, float *distance);
 bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except);
+bool NDrone2_NearDrone(DCVars_tag *dcv, float radius);
 void NDrone2_NavNodeCache(void);
 bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z);
 
@@ -618,6 +619,8 @@ void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv);
 uchar *Drone_AlertStatus(obj_tag *gameObj);
 void Drone_MessageObjVicinity(uint msgType, obj_tag *obj, float radius, void *extraData, uint delay);
 void Drone_FellOutMap(obj_tag *gameObj);
+void Drone_AddDynamicAwarePoint(uchar type, obj_tag *obj, _VECTOR *pos, cel_tag *cel, float radius);
+HASHCODE Drone_GetSkin(obj_tag *gameObj);
 
 // NDrone2.cpp
 bool NDrone2_ObjectIsArmed(obj_tag *gameObj);
@@ -662,6 +665,9 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv);
 bool NDrone2_HitTalkExtra(DCVars_tag *dcv);
 bool NDrone2_PainTalk(DCVars_tag *dcv);
 void DroneFunc_InjuredTalk(DCVars_tag *dcv);
+void NDrone2_PlayFacialAnim(DCVars_tag *dcv, HASHCODE script);
+bool Drone_maybeDisallowedFromSayingThisSfx(Drone_tag *drone, uint sfx);
+bool DroneFunc_InjuredSFX(DCVars_tag *dcv, uint sfx);
 bool DroneFunc_DoBondTalk(DCVars_tag *dcv, uint sfx, int trackTicks, uint waitTicks, char repeat);
 bool NDrone2_BondTalk(DCVars_tag *dcv);
 void Drone_MayhewTalk(uint sfx);

@@ -8,6 +8,7 @@ bool NDrone2_DSTATE_RunToAlarm(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 bool NDrone2_DSTATE_PressAlarm(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_DonePressAlarm(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_EnemyMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+void NDrone2_CreateNinjaEyes(obj_tag *gameObj);
 bool NDrone2_DSTATE_NinjaStand(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_NinjaAttack(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_NinjaAttackLongRange(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);

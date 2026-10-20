@@ -18,8 +18,6 @@
 
 #pragma fp_contract(off)
 
-// Originals called by address
-#define NDrone2_CreateFromDIVars ((obj_tag *(__cdecl *)(DIVars_tag *diVars))0x0002fc50)
 
 #define MALLOC_SPAWNER_SLOTS_ALIGN4 ((MallocFlags)0x3404)
 #define MALLOC_SPAWNER_ENTRIES_ALIGN4 ((MallocFlags)0x3504)
@@ -81,6 +79,24 @@ void DroneSpawner_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     spawner->running = 0;
     spawner->killing = 0;
     NPCGlobals.spawners[spawner->group] = obj;
+}
+
+// A spawner object with nothing to spawn, at the origin: the drones' dummy player (NPCGlobals.dummyPlayer), left
+// switched off. Made after every load (Drone_PostLoad_Init).
+// AUTOINJECT
+void DroneSpawner_CreateBlank(void) {
+    obj_tag *obj = control_create_object(sizeof(DroneSpawner_tag), NULL, NULL, NULL);
+    if (obj == NULL || obj->extraObjectData == NULL)
+        return;
+    control_init_object(obj);
+    _VECTOR pos = {0.0f, 0.0f, 0.0f};
+    _VECTOR rot = {0.0f, 0.0f, 0.0f};
+    Vec_Copy2(&pos, &obj->position, &obj->lastPosition);
+    Vec_Copy2(&rot, &obj->rotation, &obj->lastRotation);
+    obj->objectType = OBJECTTYPE_DRONE_SPAWNER;
+    obj->inCel = build_FindCel(&obj->position, glb_world);
+    NPCGlobals.dummyPlayerActive = 0;
+    NPCGlobals.dummyPlayer = obj;
 }
 
 // After the load (NDrone2_SetupGroups): the group's drones become the templates and leave the level. With no drones in
