@@ -80,8 +80,22 @@ typedef struct AnimSizes {
 #define AnimChannelType ((int *)0x001d6a34)
 
 // The facial scripts by alert status (four) and the blink, for skeleton 1 and for the others
-#define FacialAnims ((const HASHCODE *)0x00163468)
-#define FacialAnimsAltSkeleton ((const HASHCODE *)0x00163454)
+// XBE_GLOBAL(0x00163468, 0x14) readonly relocate
+const HASHCODE FacialAnims[5] = {
+    (HASHCODE)0x0600036d,
+    (HASHCODE)0x0600036f,
+    (HASHCODE)0x0600036a,
+    (HASHCODE)0x0600036b,
+    (HASHCODE)0x06000370,
+};
+// XBE_GLOBAL(0x00163454, 0x14) readonly relocate
+const HASHCODE FacialAnimsAltSkeleton[5] = {
+    (HASHCODE)0x060000f8,
+    (HASHCODE)0x060000f9,
+    (HASHCODE)0x060000f5,
+    (HASHCODE)0x060000f6,
+    (HASHCODE)0x060000f3,
+};
 
 // The hashcode type bytes AnimLoadFile dispatches on
 #define ANIM_HASHTYPE_SEQ 0x04000000
@@ -3643,8 +3657,46 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
 // Aiming and joint collision
 
 // The joint box tables, by skin, and the boxes AnimGetCollData builds from them
-#define HumanCollisionBones ((const AnimCollBone *)0x00163198)
-#define AstronautCollisionBones ((const AnimCollBone *)0x001632f0)
+// XBE_GLOBAL(0x00163198, 0x154) readonly relocate
+const AnimCollBone HumanCollisionBones[17] = {
+    {5, -1, 0.15625f, {0.11f, 0.11f, 0.11f}},
+    {4, 1, 0.203125f, {0.2f, 0.25f, 0.15f}},
+    {53, -1, 0.093759f, {0.12f, 0.1f, 0.12f}},
+    {54, -1, 0.17185f, {0.1f, 0.25f, 0.1f}},
+    {55, -1, 0.109375f, {0.1f, 0.22f, 0.1f}},
+    {56, -1, 0.078125f, {0.07f, 0.07f, 0.15f}},
+    {49, -1, 0.109375f, {0.12f, 0.1f, 0.12f}},
+    {50, -1, 0.17185f, {0.1f, 0.25f, 0.1f}},
+    {51, -1, 0.109375f, {0.1f, 0.22f, 0.1f}},
+    {52, -1, 0.078125f, {0.07f, 0.07f, 0.15f}},
+    {20, -1, 0.109375f, {0.2f, 0.07f, 0.07f}},
+    {21, -1, 0.0625f, {0.2f, 0.07f, 0.07f}},
+    {23, 21, 0.046875f, {0.1f, 0.05f, 0.05f}},
+    {32, -1, 0.109375f, {0.2f, 0.07f, 0.07f}},
+    {35, -1, 0.0625f, {0.2f, 0.07f, 0.07f}},
+    {39, 35, 0.046875f, {0.1f, 0.05f, 0.05f}},
+    {-1, -1, 0.0f, {0.0f, 0.0f, 0.0f}},
+};
+// XBE_GLOBAL(0x001632f0, 0x154) readonly relocate
+const AnimCollBone AstronautCollisionBones[17] = {
+    {5, -1, 0.15625f, {0.15f, 0.2f, 0.1f}},
+    {3, 1, 0.203125f, {0.2f, 0.25f, 0.15f}},
+    {46, -1, 0.093759f, {0.12f, 0.1f, 0.12f}},
+    {47, -1, 0.17185f, {0.1f, 0.25f, 0.1f}},
+    {48, -1, 0.109375f, {0.1f, 0.22f, 0.1f}},
+    {49, -1, 0.078125f, {0.07f, 0.07f, 0.15f}},
+    {42, -1, 0.109375f, {0.12f, 0.1f, 0.12f}},
+    {43, -1, 0.17185f, {0.1f, 0.25f, 0.1f}},
+    {44, -1, 0.109375f, {0.1f, 0.22f, 0.1f}},
+    {45, -1, 0.078125f, {0.07f, 0.07f, 0.15f}},
+    {16, -1, 0.109375f, {0.2f, 0.07f, 0.07f}},
+    {17, -1, 0.0625f, {0.2f, 0.07f, 0.07f}},
+    {19, 17, 0.046875f, {0.1f, 0.05f, 0.05f}},
+    {27, -1, 0.109375f, {0.2f, 0.07f, 0.07f}},
+    {29, -1, 0.0625f, {0.2f, 0.07f, 0.07f}},
+    {33, 29, 0.046875f, {0.1f, 0.05f, 0.05f}},
+    {-1, -1, 0.0f, {0.0f, 0.0f, 0.0f}},
+};
 #define HitList2 ((COLLJOINT_tag *)0x001d6bf0)
 
 // The skin that takes AstronautCollisionBones

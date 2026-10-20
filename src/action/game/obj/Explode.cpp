@@ -29,10 +29,20 @@
 #define Monitor_ApplyDamage ((void (__cdecl *)(obj_tag *obj, float damage))0x000e0ec0)
 
 // The debris an explosion throws: metal, and in 0x07000008 with channel 0x53 on, stone
-// XBE_GLOBAL(0x001780b8, 0x10)
-#define MetalDebris ((HASHCODE *)0x001780b8)
-// XBE_GLOBAL(0x001780a8, 0x10)
-#define StoneDebris ((HASHCODE *)0x001780a8)
+// XBE_GLOBAL(0x001780b8, 0x10) readonly relocate
+HASHCODE MetalDebris[4] = {
+    (HASHCODE)0x02000414,
+    (HASHCODE)0x02000415,
+    (HASHCODE)0x02000416,
+    (HASHCODE)0x0200041b,
+};
+// XBE_GLOBAL(0x001780a8, 0x10) readonly relocate
+HASHCODE StoneDebris[4] = {
+    (HASHCODE)0x02000664,
+    (HASHCODE)0x02000665,
+    (HASHCODE)0x02000666,
+    (HASHCODE)0x02000664,
+};
 
 // The effect script whose explosions throw debris
 #define EXPLODE_DEBRIS_SCRIPT ((HASHCODE)0x06000052)

@@ -34,7 +34,17 @@
 #define BOTSTATE_defaultCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c6c0)
 
 // The bones a drone's line of sight tries in turn (DroneVision_OpponentLOS)
-#define Drone_View_Bones (*(uint (*)[7])0x00178088)
+// XBE_GLOBAL(0x00178088, 0x20) readonly relocate
+uint Drone_View_Bones[8] = {
+    2,
+    3,
+    5,
+    49,
+    55,
+    19,
+    35,
+    0xffffffff,
+};
 // The "blind drones" cheat (C_CHCHBLIND)
 #define switch_BLIND_DRONES U32_AT(0x001df9a0)
 

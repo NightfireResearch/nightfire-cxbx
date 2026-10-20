@@ -49,4 +49,6 @@ void DroneVision_FindAlertedDrones(void);
 // Once a frame, from Drone_InitComms
 void DroneVision_ProcessDroneSight(void);
 
+extern uint Drone_View_Bones[8];
+
 #endif // DRONEVISION_H_

@@ -17,7 +17,7 @@ typedef struct {
 static_assert(sizeof(AmmoDataEntry) == 12, "Bad size for AmmoDataEntry");
 
 #define NUM_AMMO_TYPES 34
-#define ammo_data (*(AmmoDataEntry(*)[NUM_AMMO_TYPES])0x0018ce08)
+extern AmmoDataEntry ammo_data[NUM_AMMO_TYPES];
 
 // The table's static constructor (0x000f5530): fills it from WeaponTable.inc (weapon_stats.cpp)
 void __stdcall WeaponDataTableInit(void);

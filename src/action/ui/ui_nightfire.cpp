@@ -209,7 +209,7 @@ uint8_t results_saving;
 #define TXT_NFMAP_HINT_MAIN_MENU ((Action_TranslatedText)0x283)  // "~A Select  ~Y Dossier  ~V Scroll  ~B Main Menu"
 #define SUB_P_NFSTATS_LIST ((HASHCODE)0x10000022)
 // The format of the results' and the rewards' memos (the game's string, which a memo keeps)
-#define RESULTS_FORMAT ((const char *)0x0016167c)
+#define RESULTS_FORMAT FontFormat3
 
 // On from the results: to the rewards won, the end of the game, or the missions
 static void Results_GoOn(uchar managerNum) {

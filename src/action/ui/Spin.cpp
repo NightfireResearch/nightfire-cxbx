@@ -14,7 +14,8 @@
 #pragma fp_contract(off)
 
 // The game's "0", a spin's first text
-#define SpinZero ((char *)0x00161884)
+// XBE_GLOBAL(0x00161884, 0x2) readonly relocate
+char SpinZero[] = "0";
 
 // The scroll's width
 #define SPIN_SCROLL_WIDTH 8

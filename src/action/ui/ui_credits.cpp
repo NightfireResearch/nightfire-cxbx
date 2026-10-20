@@ -4,6 +4,7 @@
 #include "Process.h"
 
 #include "../engine/Text.h"
+#include "../gfx/Font.h"
 #include "../sound/SFX.h"
 #include "../game.h"
 
@@ -78,10 +79,8 @@ static uint credits_count;
 #define CREDITS_NUM_CONTROLS    26
 
 // Fonts per style: the name of the label's font plus these suffixes (MessageType_SetFont)
-// XBE_GLOBAL(0x0015eb18, 0x5)
-#define credits_format_name    ((const char *)0x0015eb18)
-// XBE_GLOBAL(0x00161954, 0x5)
-#define credits_format_company ((const char *)0x00161954)
+#define credits_format_name    FontFormat2Centred
+#define credits_format_company FontFormat1Centred
 // XBE_GLOBAL(0x0016195c, 0x5)
 static const char credits_format_role[] = "\xff\x03\xfe\x03"; // the renderer's formatting codes, byte for byte
 

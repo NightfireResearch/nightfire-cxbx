@@ -19,6 +19,17 @@
 
 #pragma fp_contract(off)
 
+// XBE_GLOBAL(0x0018ccf8, 0x38) readonly relocate
+TextMsgFormat TextMsgFormats[7] = {
+    {NULL, 0, 0},
+    {FontFormat2Centred, 540, 0},
+    {FontFormat2Centred, 540, 0},
+    {FontFormat1Centred, 540, 0},
+    {FontFormat2Centred, 540, 0},
+    {FontFormat2Centred, 575, 0},
+    {FontFormat2Centred, 320, 0},
+};
+
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {
@@ -60,15 +71,15 @@ void Txt_SetLanguage(tLANGUAGE languageId) {
 // Order must match the order in the enum
 // XBE_GLOBAL(0x0017c1f4, 0x24)
 const char* LanguageFileNames[] = {
-    "UKTxt.dat",
-    "FRTxt.dat",
-    "GRTxt.dat",
-    "SPTxt.dat",
-    "ITTxt.dat",
-    "DUTxt.dat",
-    "USATxt.dat",
-    "JAPTxt.dat",
-    "SWTxt.dat"
+    "UKTxt.Dat",
+    "FRTxt.Dat",
+    "GRTxt.Dat",
+    "SPTxt.Dat",
+    "ITTxt.Dat",
+    "DUTxt.Dat",
+    "USATxt.Dat",
+    "JAPTxt.Dat",
+    "SWTxt.Dat"
 };
 
 // AUTOINJECT
@@ -251,7 +262,7 @@ void Txt_UnlockString(char* text) {
 #define ReceivedMsgs (*(CIRBUF_INFO *)0x0029ae10)
 #define ReceivedBuf ((int *)0x0029ac10)
 // The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
-#define SubtitleFormat ((char *)0x0015eb18)
+#define SubtitleFormat FontFormat2Centred
 
 #define SUBTITLE_COLOUR 0x7d6d59ff
 #define SUBTITLE_VIEWERS 6  // the highest of the views that show sprites gets them

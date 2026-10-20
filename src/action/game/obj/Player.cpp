@@ -3301,8 +3301,13 @@ void Player_CollisionHandler(obj_tag *player) {
 // XBE_GLOBAL(0x001637c0, 0x1d0)
 #define MP_skins ((MP_skin*)0x001637c0)
 // The fists' models, by BLData::punchSkin
-// XBE_GLOBAL(0x0017e8e8, 0x10)
-#define PunchSkin (*(HASHCODE(*)[4])0x0017e8e8)
+// XBE_GLOBAL(0x0017e8e8, 0x10) readonly relocate
+HASHCODE PunchSkin[4] = {
+    (HASHCODE)0x050000ab,
+    (HASHCODE)0x05000099,
+    (HASHCODE)0x0500003d,
+    (HASHCODE)0x050000a1,
+};
 
 // The player's skins in single player, and the fists that go with them
 #define SKIN_BOND          ((HASHCODE)0x05000007)

@@ -983,7 +983,8 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // The bots' short names, one per mp_characters identifier from the first
 #define MP_BOT_SHORT_NAME_FIRST 0x10002e2
 #define MP_BOT_SHORT_NAMES      29
-#define BotString ((char *)0x0015d3c0)  // "Bot"
+// XBE_GLOBAL(0x0015d3c0, 0x4) readonly relocate
+char BotString[] = "Bot";
 
 // The parts of a codename's save a player loads; part 8 too when only one player has joined
 #define LS_MASK_ALONE  0x2d

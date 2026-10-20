@@ -53,7 +53,7 @@ enum {
 // 27 weapons after them
 #define PICKUP_SETS 11
 #define PickupMatrix (*(short (*)[PICKUP_SETS][5])0x0017e5d8)
-#define UseableGuns (*(short (*)[27])0x0017e648)
+extern short UseableGuns[27];
 
 obj_tag * Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *celgl, ushort kind, ushort item,
                         uint count, uint channel, uint sound, char placed, ushort respawn, ushort lifetime,

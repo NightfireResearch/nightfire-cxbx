@@ -45,19 +45,13 @@ static_assert(sizeof(DroneBehaviourLayout) == 2, "DroneBehaviourLayout is 2 byte
 #define NUM_DSTATES 250
 #define NUM_DRONE_PROPERTIES 91
 
-// The game's tables. Each stays the game's until every function reading it is ours.
-// XBE_GLOBAL(0x00177ca0, 0x3e8)
-#define NDrone2_StateFuncs (*(DroneStateFunc(*)[NUM_DSTATES])0x00177ca0)
-// XBE_GLOBAL(0x001776f8, 0x1b0)
-#define DroneModeSettings (*(DroneModeSetting(*)[DMODE_COUNT])0x001776f8)
-// XBE_GLOBAL(0x001778a0, 0x3fc)
-#define DroneTypeSettings (*(DroneTypeSetting(*)[DTYPE_COUNT])0x001778a0)
-// XBE_GLOBAL(0x001634e0, 0xb6)
-#define DroneBehaviourLayouts (*(const DroneBehaviourLayout(*)[NUM_DRONE_PROPERTIES])0x001634e0)
-// XBE_GLOBAL(0x00163598, 0x8c)
-#define DroneBehaviourMasks (*(const uint32_t(*)[35])0x00163598)
-// XBE_GLOBAL(0x00163628, 0x196)
-#define DefaultBotStats (*(const BOT_stats_t(*)[29])0x00163628)
+// The tables (DroneTables.cpp)
+extern const DroneStateFunc NDrone2_StateFuncs[NUM_DSTATES];
+extern const DroneModeSetting DroneModeSettings[DMODE_COUNT];
+extern const DroneTypeSetting DroneTypeSettings[DTYPE_COUNT];
+extern const DroneBehaviourLayout DroneBehaviourLayouts[NUM_DRONE_PROPERTIES];
+extern const uint32_t DroneBehaviourMasks[35];
+extern const BOT_stats_t DefaultBotStats[29];
 
 // The behaviour properties (docs/drone/behaviours/behaviour_properties.md). Numbered, not named: the meanings
 // are inferred and some are guesses.

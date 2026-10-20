@@ -6,8 +6,10 @@ static const double kUintToUnit = 1.0 / 4294967296.0;   // a 32-bit random numbe
 // half (the carry)
 #define RandStateA U32_AT(0x0018cdf8)
 #define RandStateB U32_AT(0x0018cdfc)
-#define RandMultiplierB U32_AT(0x0018ce00)
-#define RandMultiplierA U32_AT(0x0018ce04)
+// XBE_GLOBAL(0x0018ce00, 0x4) readonly relocate
+uint RandMultiplierB = 30903;
+// XBE_GLOBAL(0x0018ce04, 0x4) readonly relocate
+uint RandMultiplierA = 18000;
 
 // A 32-bit random number: A's state in the high half, B's in the low
 // AUTOINJECT

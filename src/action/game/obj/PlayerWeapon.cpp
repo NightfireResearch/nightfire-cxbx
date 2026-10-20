@@ -66,8 +66,32 @@
 #define HourHand   (*(obj_tag **)0x00279150)
 
 // The digits shown on a weapon's datums: the satchel charge's timer (Bullet_DoTrails too) and the decryptor's display
-#define SatchelDigits (*(HASHCODE(*)[10])0x00181a88)
-#define DecryptorDigits (*(HASHCODE(*)[10])0x00181ab0)
+// XBE_GLOBAL(0x00181a88, 0x28) readonly relocate
+HASHCODE SatchelDigits[10] = {
+    (HASHCODE)0x02000791,
+    (HASHCODE)0x02000792,
+    (HASHCODE)0x02000793,
+    (HASHCODE)0x02000794,
+    (HASHCODE)0x02000795,
+    (HASHCODE)0x02000796,
+    (HASHCODE)0x02000797,
+    (HASHCODE)0x02000798,
+    (HASHCODE)0x02000799,
+    (HASHCODE)0x0200079a,
+};
+// XBE_GLOBAL(0x00181ab0, 0x28) readonly relocate
+HASHCODE DecryptorDigits[10] = {
+    (HASHCODE)0x02000a09,
+    (HASHCODE)0x02000a0a,
+    (HASHCODE)0x02000a0b,
+    (HASHCODE)0x02000a0c,
+    (HASHCODE)0x02000a0d,
+    (HASHCODE)0x02000a0e,
+    (HASHCODE)0x02000a0f,
+    (HASHCODE)0x02000a10,
+    (HASHCODE)0x02000a11,
+    (HASHCODE)0x02000a12,
+};
 
 // The view cone's length (0x0017c110; Camera.cpp)
 #define MAX_VIEW_CONE 2000.0f

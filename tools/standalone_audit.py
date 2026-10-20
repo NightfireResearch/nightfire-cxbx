@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-"""Every raw Driving.xbe address left in the driving engine's source, classified: the worklist for a build that runs
-with no original code or data mapped (docs/driving/standalone.md).
+"""Every raw XBE address left in an engine's source, classified: the worklist for a build that runs with no original
+code or data mapped (docs/driving/standalone.md).
 
     python tools/standalone_audit.py                 counts by class, then by file
+    python tools/standalone_audit.py --action        the action engine's (default.xbe, src/action), with any of these
     python tools/standalone_audit.py --md            the same as the Markdown tables docs/driving/standalone.md keeps
     python tools/standalone_audit.py --list CLASS    every occurrence of one class (a prefix will do: "code.")
     python tools/standalone_audit.py --file PATH     every occurrence in the files whose path contains PATH
 
 It reads src/driving outside devtools/ and the generated files, and Driving.xbe's sections, functions
 (tools/functions_driving.json), vtables (tools/vtables_driving.json) and globals (tools/global_coverage.py's reading
-of our source). A literal is a hex number of five to eight digits whose value lies inside the image
-(0x00010000-0x00254f40); anything else is a constant, not an address, and is not counted. The classes:
+of our source); with --action, src/action and default.xbe's (no vtables file: the class is empty). A literal is a hex
+number of five to eight digits whose value lies inside the image (0x00010000-0x00254f40, the action engine's to
+0x0030b660); anything else is a constant, not an address, and is not counted. The classes:
 
   tag.func_at        the address in a // FUNC_AT(...) or AUTOGEN(...) tag: injection only
   tag.global         the address in a // XBE_GLOBAL(...) tag: the coverage tools' key, our definition follows
@@ -22,7 +24,7 @@ of our source). A literal is a hex number of five to eight digits whose value li
                      callback's address in the middle of what Ghidra calls one function)
   constant           a number that lands inside code by chance: written with fewer than eight digits (sizes, masks,
                      sizes), or a row of a data table
-  import.slot        a kernel import slot (the thunk table at 0x00189be0)
+  import.slot        a kernel import slot (the thunk table at 0x00189be0, the action engine's at 0x0015d160)
   vtable             the start of one of the game's vtables (or the word before it)
   rdata.string       a NUL-terminated string in .rdata
   rdata.constant     anything else in .rdata: constant tables, floats, the game's const objects
@@ -47,12 +49,19 @@ ROOT = os.path.dirname(HERE)
 sys.path.insert(0, HERE)
 import global_coverage as gc   # noqa: E402
 
-gc.use_engine("driving")
-SRC = os.path.join(ROOT, "src", "driving")
-IMAGE_START, IMAGE_END = 0x00010000, 0x00254F40
+ENGINE = "action" if "--action" in sys.argv else "driving"
+gc.use_engine(ENGINE)
+SRC = os.path.join(ROOT, "src", ENGINE)
 # Every section's "executable" flag is set but $$XTIMAGE's, so the code is told by name
-CODE_SECTIONS = {".text", "D3DX", "D3D", "XGRPH", "DSOUND", "XPP"}
-THUNKS = (0x00189BE0, 0x00189D70)   # the kernel import table: 99 slots and the terminating zero
+if ENGINE == "driving":
+    IMAGE_START, IMAGE_END = 0x00010000, 0x00254F40
+    CODE_SECTIONS = {".text", "D3DX", "D3D", "XGRPH", "DSOUND", "XPP"}
+    THUNKS = (0x00189BE0, 0x00189D70)   # the kernel import table: 99 slots and the terminating zero
+else:
+    IMAGE_START, IMAGE_END = 0x00010000, 0x0030B660
+    CODE_SECTIONS = {".text", "D3DX", "D3D", "XGRPH", "DSOUND", "XMV", "XPP"}
+    THUNKS = (0x0015D160, 0x0015D2E4)   # 96 slots and the terminating zero
+VTABLES = os.path.join(ROOT, "tools", "vtables_%s.json" % ENGINE)
 HEX = re.compile(r"(?<![\w.])0x([0-9a-fA-F]{5,8})(?:u|U|ul|UL)?\b")
 PATCH_CALLS = re.compile(r"\b(WriteJump|WriteJmpTo|WriteCall|PatchSite|WriteMemory|WriteFunctionPointerTo|"
                          r"XBE_ENTRY\w*|XbeOriginal_\w+|WriteBytes|FillBytes)\s*\(")
@@ -96,6 +105,13 @@ def injected_includes():
                 target = os.path.normpath(os.path.join(os.path.dirname(path), m.group(1)))
                 seen[target].append(injected)
     return {t for t, flags in seen.items() if all(flags)}
+
+
+def is_table_row(code):
+    """Whether a line is only numbers and k-constants between braces and commas: a row of a data table. (Split, not
+    one regular expression, which backtracks without end on a long row.)"""
+    words = [w for w in re.split(r"[\s{},]+", code) if w]
+    return bool(words) and all(re.fullmatch(r"0x[0-9a-fA-F]+u?|\d+|k\w+", w) for w in words)
 
 
 def xbe_sections():
@@ -186,8 +202,7 @@ def audit():
     data = next(s for s in sections if s["name"] == ".data")
     funcs = {int(f["address"], 16): f["name"] for f in json.load(open(gc.FUNCTIONS))}
     entries = sorted(funcs)
-    vt = json.load(open(os.path.join(ROOT, "tools", "vtables_driving.json")))["vtables"]
-    vtables = {int(a, 16) for a in vt}
+    vtables = {int(a, 16) for a in json.load(open(VTABLES))["vtables"]} if os.path.exists(VTABLES) else set()
     globals_, _ = gc.read_source()
     owned = sorted((g["address"], g["address"] + g["size"], g["name"]) for g in globals_ if g["owned"])
     owned_starts = [o[0] for o in owned]
@@ -231,7 +246,7 @@ def audit():
                 elif PATCH_CALLS.search(code):
                     cls = "patch.site"
                     detail = funcs.get(a, function_containing(a) + "+")
-                elif len(m.group(1)) < 8 or re.fullmatch(r"[\s{},]*((0x[0-9a-fA-F]+u?|\d+|k\w+)[\s{},]*)+", code):
+                elif len(m.group(1)) < 8 or is_table_row(code):
                     cls = "constant"   # 0x40350, 0x10000, a row of a data table: a number that lands in the image
                 elif any(lo <= a < hi for lo, hi in code_ranges):
                     if a in funcs:
@@ -295,11 +310,11 @@ def main():
             if total == 0:
                 continue
             other = total - sum(counts[c] for c in cols)
-            print("| %s | %s | %s |" % (path.replace("src/driving/", ""),
+            print("| %s | %s | %s |" % (path.replace("src/%s/" % ENGINE, ""),
                                         " | ".join(str(counts[c] or "") for c in cols), other or ""))
         return
 
-    print("%d address literals in src/driving (outside devtools and generated files)" % len(hits))
+    print("%d address literals in src/%s (outside devtools and generated files)" % (len(hits), ENGINE))
     for c in CLASSES:
         print("  %-15s %6d" % (c, by_class[c]))
     print("  %-15s %6d" % ("worklist", sum(by_class[c] for c in WORKLIST)))

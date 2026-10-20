@@ -132,6 +132,6 @@ void Copter_SeesPlayer(void);
 #define CopterAttackMode I16_AT(0x001fe6c8)
 // The difficulty's scale of a helicopter's endurance and how long it attacks
 #define DiffMod FLOAT_AT(0x0017c118)
-#define CopterBits (*(COPTERBIT (*)[9])0x0017c120)
+extern COPTERBIT CopterBits[9];
 
 #endif // COPTER_H_

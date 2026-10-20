@@ -23,6 +23,23 @@
 #pragma fp_contract(off)
 
 
+// The multiplayer weapon sets' guns, then single player's
+// XBE_GLOBAL(0x00163a30, 0x150) readonly relocate
+GUNTYPE GunTypes[12] = {
+    {{0.0f, 0.27f, 0.92f}, (HASHCODE)0x02000b05, 46, 180.0f, 268},
+    {{0.0f, 0.23f, 1.65f}, (HASHCODE)0x02000a3b, 96, 10.0f, 266},
+    {{0.17f, 0.23f, 0.94f}, (HASHCODE)0x02000b06, 97, 5.0f, 1255},
+    {{0.0f, 0.2f, 1.16f}, (HASHCODE)0x02000b08, 111, 180.0f, 1058},
+    {{0.0f, 0.27f, 0.92f}, (HASHCODE)0x02000b05, 45, 180.0f, 268},
+    {{0.0f, 0.21f, 0.51f}, (HASHCODE)0x02000b07, 42, 120.0f, 1036},
+    {{0.0f, 0.21f, 0.51f}, (HASHCODE)0x02000b07, 43, 120.0f, 1036},
+    {{0.0f, 0.33f, 1.61f}, (HASHCODE)0x02000565, 112, 1.0f, 1307},
+    {{0.0f, 0.33f, 1.61f}, (HASHCODE)0x02000565, 112, 1.0f, 1307},
+    {{0.0f, 0.33f, 1.61f}, (HASHCODE)0x02000565, 50, 180.0f, 1059},
+    {{0.0f, 0.33f, 1.61f}, (HASHCODE)0x02000565, 50, 180.0f, 1059},
+    {{0.0f, 0.0f, 1.71f}, (HASHCODE)0x02000b50, 103, 1.0f, 1307},
+};
+
 // The weapons with their own firing: a minigun's spin up and down, and two lasers
 #define GUNIMP_MINIGUN 0x61
 #define GUNIMP_LASER_A 0x67

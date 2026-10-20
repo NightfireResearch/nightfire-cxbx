@@ -21,6 +21,19 @@
 
 #pragma fp_contract(off)
 
+// XBE_GLOBAL(0x0017c120, 0x48) readonly relocate
+COPTERBIT CopterBits[9] = {
+    {0x0000, 0x0000, 2.0f},
+    {0x0000, 0x0000, 3.0f},
+    {0x0000, 0x0000, 1.0f},
+    {0x0000, 0x0000, 2.0f},
+    {0x0010, 0x0000, 100.0f},
+    {0x0000, 0x0000, 1.0f},
+    {0x0000, 0x0000, 0.0f},
+    {0x0000, 0x0000, 0.0f},
+    {0x0000, 0x0000, 0.0f},
+};
+
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {

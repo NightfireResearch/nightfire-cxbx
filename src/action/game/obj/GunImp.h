@@ -38,7 +38,7 @@ typedef struct GUNTYPE {
 
 static_assert(sizeof(GUNTYPE) == 0x1c, "Bad size for GUNTYPE");
 
-#define GunTypes (*(GUNTYPE (*)[12])0x00163a30)
+extern GUNTYPE GunTypes[12];
 
 static_assert(sizeof(GUNIMP) == 0x84, "Bad size for GUNIMP");
 static_assert(offsetof(GUNIMP, userOffset) == 0x50, "Bad offset of userOffset");

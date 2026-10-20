@@ -750,7 +750,7 @@ static int32_t Ftol(double x) {
 #define switch_NO_DRONES U32_AT(0x001df99c)
 // The loading screen's picture (LoadingGfx), its texture set to the level's
 #define LoadingGfx (*(SpriteInfo *)0x00181bb8)
-#define LoadScreenFont ((char *)0x0015eb18)
+#define LoadScreenFont FontFormat2Centred
 
 #define HT_MainMenu ((HASHCODE)0x07000048)
 #define HT_SharedFiles ((HASHCODE)0x07000500)

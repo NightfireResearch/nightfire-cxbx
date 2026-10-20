@@ -9,6 +9,7 @@
 #include "action/game/obj/bullet.h"
 #include "action/input.h"
 #include "action/util/crc.h"
+#include "action/util/Random.h"
 #include "action/memory.h"
 #include "action/sound/music.h"
 #include "action/ui/ui.h"
@@ -33,6 +34,8 @@
 #include "action/engine/Direct3D/xboxMatrix.h"
 #include "action/sound/dsndSeam.h"
 #include "action/sound/psiSound.h"
+#include "action/sound/Sound.h"
+#include "action/game/obj/GT.h"
 #include "action/sound/SFX.h"
 #include "action/game/view.h"
 #include "action/game/obj/car.h"
@@ -47,6 +50,7 @@
 #include "action/game/drone/BOTWEAP.h"
 #include "action/game/drone/NDrone2.h"
 #include "action/game/drone/DroneAnim.h"
+#include "action/game/drone/DroneTables.h"
 #include "action/game/drone/Behaviour.h"
 #include "action/game/drone/DroneWeapon.h"
 #include "action/game/drone/NDrone2_Bot.h"
@@ -85,6 +89,12 @@
 #include "action/game/obj/BodyGlow.h"
 #include "action/game/obj/Emitter.h"
 #include "action/game/obj/Pickup.h"
+#include "action/game/obj/GunImp.h"
+#include "action/game/obj/Copter.h"
+#include "action/game/obj/Player.h"
+#include "action/game/obj/PlayerWeapon.h"
+#include "action/engine/Text.h"
+#include "action/ui/HUD.h"
 #include "action/game/obj/Cloud.h"
 #include "action/game/obj/Corona.h"
 #include "action/game/obj/Apocalypse.h"
@@ -98,6 +108,7 @@
 #include "action/game/weapon_stats.h"
 #include "action/devtools/MenuProbe.h"
 #include "action/devtools/Demo.h"
+#include "action/devtools/DataWrites.h"
 #include "action/engine/LaunchOptions.h"
 #include "action/game/Spline.h"
 #include "action/util/Sort.h"
@@ -155,6 +166,7 @@ void Inject()
 {
   // -level and -difficulty; then a time demo picks its mode: a playback moves into its sandbox before settings.ini is
   // read, and takes the recording's launch options
+  DataWrites_Init();   // NIGHTFIRE_DATA_WRITES: the data as the loader left it, before anything here writes
   LaunchOptions_Read();
   Demo_Init();
 

@@ -782,7 +782,9 @@ void RandomHit(HITDATA_tag *hit) {
     UnitVector(&hit->unknown1);
     UnitVector(&hit->maybehitDirection);
     RandomVector(&hit->hitPosition, 6.0f);
-    hit->materialType = (char)(R(4) ? kMaterials[R(COUNT(kMaterials))] : R(0x100));
+    // Any flags in the top bits, but one of EffectInfo's materials: past them the original read the game's neighbouring
+    // data, ours reads ours (docs/action-standalone.md)
+    hit->materialType = (char)(R(4) ? kMaterials[R(COUNT(kMaterials))] : R(4) << 6 | R(EFFECT_INFO_COUNT));
     hit->flags = (char)R(8);
     switch (R(4)) {
     case 0: hit->hitCel = &world.cels[R(3)]; break;
@@ -1047,7 +1049,7 @@ void RandomWorld(void) {
         world.anims[i].animObj.boneMtxs = world.bones[i];
         world.anims[i].currentWeaponId = (char)R(115);
         world.anims[i].animFlags = (char)R(4);
-        world.anims[i].floor.materialType = (char)R(0x100);
+        world.anims[i].floor.materialType = (char)(R(4) << 6 | R(EFFECT_INFO_COUNT));
         for (int b = 0; b < 56; b++)
             RotTransMatrix(&world.cels[0].sphere, &world.cels[1].sphere, &world.bones[i][b]);
     }

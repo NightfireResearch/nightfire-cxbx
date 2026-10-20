@@ -7,4 +7,6 @@ void Spin_Init(M_SPIN *spin, NEW_CONTROL *create, M_CONTROL *parent);
 int Spin_SendMessage(M_SPIN *spin, uint message, int arg1, int arg2);
 void Spin_Update(M_MANAGER *mgr, M_PAGE *page, M_SPIN *spin);
 
+extern char SpinZero[2];
+
 #endif // UI_SPIN_H

@@ -10,17 +10,67 @@
 
 #pragma fp_contract(off)
 
+// Formats several places share: 0xff and a font, then options (0xfe an alignment, 0xfc and 0xfb a scale)
+// XBE_GLOBAL(0x0015eb18, 0x5) readonly relocate
+char FontFormat2Centred[] = "\xff\x02\xfe\x03";
+// XBE_GLOBAL(0x00161954, 0x5) readonly relocate
+char FontFormat1Centred[] = "\xff\x01\xfe\x03";
+// XBE_GLOBAL(0x0015eb20, 0x3) readonly relocate
+char FontFormat2[] = "\xff\x02";
+// XBE_GLOBAL(0x0016167c, 0x3) readonly relocate
+char FontFormat3[] = "\xff\x03";
+// XBE_GLOBAL(0x0016197c, 0x7) readonly relocate
+char FontFormat1Scaled[] = "\xff\x01\xfc""d\xfb""d";
+// XBE_GLOBAL(0x0015eb5c, 0x7) readonly relocate
+char FontFormat2Scaled[] = "\xff\x02\xfc""d\xfb""d";
+// XBE_GLOBAL(0x00161984, 0x7) readonly relocate
+char FontFormat3Scaled[] = "\xff\x03\xfc""d\xfb""d";
+// XBE_GLOBAL(0x00161964, 0x9) readonly relocate
+char FontFormat2CentredScaled[] = "\xff\x02\xfe\x03\xfc""d\xfb""d";
+// The letters a font's height is measured by
+// XBE_GLOBAL(0x0015eb24, 0x35) readonly relocate
+char FontAlphabet[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+// XBE_GLOBAL(0x0015d308, 0x1) readonly relocate
+char FontEmptyString[] = "";
+// XBE_GLOBAL(0x00160d8c, 0x2) readonly relocate
+char FontSpaceString[] = " ";
+
 // The fonts, by Font_ParseFormat's font number; 1 is the default
 #define FontTable (*(FONTTABLE_tag (*)[5])0x0017bd90)
 #define NUM_SPECIAL_CHARS 23
-#define SpecialChars (*(SPECIALCHAR_tag (*)[NUM_SPECIAL_CHARS])0x0017bdc0)
+// XBE_GLOBAL(0x0017bdc0, 0x228) readonly relocate
+SPECIALCHAR_tag SpecialChars[NUM_SPECIAL_CHARS] = {
+    {'A', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 1, 0, 17, 22, 17, 20},
+    {'B', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 25, 0, 17, 22, 17, 20},
+    {'C', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 92, 0, 17, 22, 17, 20},
+    {'D', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 116, 0, 17, 22, 17, 20},
+    {'E', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 54, 25, 21, 21, 17, 20},
+    {'F', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 77, 25, 21, 21, 17, 20},
+    {'H', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 26, 48, 22, 22, 17, 20},
+    {'I', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 198, 59, 7, 7, 7, 7},
+    {'J', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 176, 57, 16, 12, 16, 12},
+    {'K', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 142, 25, 13, 20, 13, 20},
+    {'L', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 52, 48, 14, 23, 13, 20},
+    {'M', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 156, 25, 13, 20, 13, 20},
+    {'N', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 171, 25, 13, 20, 13, 20},
+    {'O', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 185, 25, 13, 20, 13, 20},
+    {'P', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 198, 25, 13, 20, 13, 20},
+    {'Q', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 212, 25, 13, 20, 13, 20},
+    {'R', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 70, 48, 14, 23, 13, 20},
+    {'S', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 1, 24, 25, 22, 25, 22},
+    {'T', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 29, 24, 25, 22, 25, 22},
+    {'V', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 1, 48, 22, 22, 17, 20},
+    {'W', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 210, 1, 22, 22, 17, 20},
+    {'X', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 49, 0, 17, 22, 17, 20},
+    {'Y', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 71, 0, 17, 22, 17, 20},
+};
 // The font in use
 #define Font (*(FONT_tag **)0x001f64b0)
 // Every glyph's sprite, filled in and copied to the sprite list
 #define CharInfo (*(SPRITE_DRAW *)0x001f64b4)
 #define PInfo (*(PRINTINFO_tag *)0x001f64e8)
 // The line Font_WordWrapString hands back for a line break straight after the last one
-#define EmptyLine ((char *)0x0015d308)
+#define EmptyLine FontEmptyString
 
 // __Font_DrawText's statics (PS2 names)
 #define i_133 U32_AT(0x001f6528)            // characters read

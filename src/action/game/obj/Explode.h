@@ -31,4 +31,6 @@ void Explode_Propagate(_VECTOR *pos, float radius, cel_tag *cel, float damage, o
 void Explode_Delete(obj_tag *obj);
 void Explode_CollisionHandler(obj_tag *obj);
 
+extern HASHCODE MetalDebris[4], StoneDebris[4];
+
 #endif // EXPLODE_H_

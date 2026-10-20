@@ -548,4 +548,7 @@ void AnimObjectInitialPose(void);
 void AnimTagAllocAndGetUnique(void);
 void AnimSetInit(void);
 
+extern const HASHCODE FacialAnims[5], FacialAnimsAltSkeleton[5];
+extern const AnimCollBone HumanCollisionBones[17], AstronautCollisionBones[17];
+
 #endif // ANIM_H

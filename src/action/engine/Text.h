@@ -44,7 +44,7 @@ typedef struct TextMsgFormat {
 } TextMsgFormat;
 #pragma pack(pop)
 static_assert(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
-#define TextMsgFormats (*(TextMsgFormat (*)[7])0x0018ccf8)
+extern TextMsgFormat TextMsgFormats[7];
 
 #pragma pack(push, 1)
 // One line of a queued message (MsgQueue.activeList). Text_AddMsg word-wraps a long message into several of

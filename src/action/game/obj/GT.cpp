@@ -36,9 +36,11 @@
 #define TARGETS 64
 #define TargetList (*(TARGETOBJ (*)[TARGETS])0x0025fc20)
 // How far a turret sees (squared); a fifth of it in multiplayer
-#define TurretRange FLOAT_AT(0x0016199c)
+// XBE_GLOBAL(0x0016199c, 0x4) readonly relocate
+float TurretRange = 2500.0f;
 // Seconds between shots
-#define TurretRefire FLOAT_AT(0x00161998)
+// XBE_GLOBAL(0x00161998, 0x4) readonly relocate
+float TurretRefire = 0.1f;
 
 // GT_Update's states (obj_tag::curState)
 enum {

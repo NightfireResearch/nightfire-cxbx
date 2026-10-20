@@ -13,7 +13,8 @@ written by ghidra/NightfireSync.py) and our source:
   - a global we own keeps the tag, followed by our definition instead of the #define. The tag is what lets this
     go on checking it. A tag ending in `readonly` says our copy holds the same values as the game's and neither
     is ever written, so originals that still read the game's copy are harmless (a lookup table, say); a write
-    from live code is still an error.
+    from live code is still an error. A tag with `relocate` has every code reference to the game's copy pointed at
+    ours by the injector (src/common/xbeRelocate.h, tools/data_refs.py), so only references from data count.
   - every reference into a global's range comes from a function (or from data: a pointer in a table). The
     function is REPLACED when an AUTOINJECT (or inject_action.cpp) jumps from its entry to ours, DEAD when
     nothing that can still run reaches it any more, and LIVE otherwise.
@@ -254,7 +255,8 @@ def read_source():
         for i, line in enumerate(lines, 1):
             m = re.search(r"//\s*XBE_GLOBAL\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*\)(.*)", line)
             if m:
-                tag = (int(m.group(1), 16), int(m.group(2), 0), i, "readonly" in m.group(3).split())
+                words = m.group(3).split()
+                tag = (int(m.group(1), 16), int(m.group(2), 0), i, "readonly" in words, "relocate" in words)
                 continue
             d = re.match(r"\s*#define\s+(\w+)\s+(.*?)\s*(//.*)?$", line)
             parsed = parse_define(d.group(2), struct_sizes) if d else None
@@ -265,7 +267,7 @@ def read_source():
                 else:                                        # our own definition
                     n = re.search(r"(\w+)\s*(\[[^\]]*\])*\s*(=[^;]*)?[;{]", line)
                     globals_.append(dict(name=n.group(1) if n else "?", address=tag[0], size=tag[1], file=rel(path),
-                                         line=i, owned=True, tagged=True, readonly=tag[3]))
+                                         line=i, owned=True, tagged=True, readonly=tag[3], relocate=tag[4]))
                     code = line.split("//")[0]
                     if "=" in code:   # its initialiser's numbers are data, not addresses
                         depth = code.count("{") - code.count("}")
@@ -752,6 +754,9 @@ def main():
 
     def live_writes(g):
         return [x for x in g["refs"] if x[3] == "W" and status(x[2]) == "LIVE"]
+    for g in sized:
+        if g.get("relocate"):   # the code's references point at ours; a pointer in the game's data does not
+            g["live"] = [(fn, frm) for fn, frm in g["live"] if fn is None]
     owned_bad = [g for g in sized if g["owned"] and g["live"] and (not g.get("readonly") or live_writes(g))]
     # Our own code still reaching into an owned global at the game's address: a second #define of it (in another
     # file, or of one of its fields) that was not converted with it, or a raw address. That code reads and writes

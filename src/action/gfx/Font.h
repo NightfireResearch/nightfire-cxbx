@@ -113,4 +113,11 @@ bool Font_GetTextExtent(const char *text, const char *format, GPOINT *extent, co
 uint Font_GetTextCountExtent(const char *text, const char *format, const GPOINT *scale, float width);
 ushort Font_GetAlignment(const char *format);
 
+extern SPECIALCHAR_tag SpecialChars[23];
+
+// Formats and strings several places share (Font.cpp)
+extern char FontFormat2Centred[5], FontFormat1Centred[5], FontFormat2[3], FontFormat3[3];
+extern char FontFormat1Scaled[7], FontFormat2Scaled[7], FontFormat3Scaled[7], FontFormat2CentredScaled[9];
+extern char FontAlphabet[53], FontEmptyString[1], FontSpaceString[2];
+
 #endif // ACTION_GFX_FONT_H

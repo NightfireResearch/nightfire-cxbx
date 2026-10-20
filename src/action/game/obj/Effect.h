@@ -35,7 +35,7 @@ static_assert(sizeof(HEGAS_tag) == 0x1c, "HEGAS_tag is 0x1c bytes");
 
 // What a hit on a material (HITDATA_tag::materialType & 0x3f) leaves (0x88 bytes; 23 of them)
 typedef struct HEINFO_tag {
-    char unknown00[4];
+    const char *name;           // 0x00 - the material's
     HASHCODE decal;             // 0x04 - a bullet's mark (Effect_Bullet)
     HASHCODE footprint4;        // 0x08 - the footprint of a step with flag 4 (bone 55; Effect_Player)
     HASHCODE footprint8;        // 0x0c - with flag 8 (bone 51)
@@ -60,8 +60,7 @@ static_assert(sizeof(HEINFO_tag) == 0x88, "HEINFO_tag is 0x88 bytes");
 static_assert(offsetof(HEINFO_tag, gas) == 0x20 && offsetof(HEINFO_tag, debris) == 0x74, "HEINFO_tag layout");
 
 #define EFFECT_INFO_COUNT 23
-// XBE_GLOBAL(0x0015d798, 0xc38)
-#define EffectInfo (*(HEINFO_tag(*)[EFFECT_INFO_COUNT])0x0015d798)
+extern HEINFO_tag EffectInfo[EFFECT_INFO_COUNT];
 
 struct cel_tag;
 

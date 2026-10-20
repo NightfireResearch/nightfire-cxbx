@@ -110,5 +110,7 @@ static_assert(offsetof(MusicVars_t, countingStarted) == 0x20, "Wrong offset for 
 // XBE_GLOBAL(0x001ee260, 0x24)
 #define MusicVars (*(MusicVars_t *)0x001ee260)
 
+extern MUSICDATA MapMusic[35];
+extern MUSICAIVARS MapDroneData[12];
 
 #endif // MUSIC_H_

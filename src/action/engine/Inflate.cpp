@@ -30,8 +30,8 @@ static_assert(offsetof(HuffmanTables, lists) == 0x1688, "HuffmanTables layout");
 
 // The length and distance codes' bases and extra bits, the game's tables: indexed as the original does, so a symbol
 // past the 29 lengths or the 30 distances reads what follows them
-#define LengthBase ((const uchar *)0x0018cc5b)          // [257 + n]: 0, 1, 2 ... 224, 255
-#define LengthExtra ((const uchar *)0x0018cc7b)         // [257 + n]: eight 0s, then four each of 1 to 5, and 0
+#define LengthBase ((const uchar *)0x0018cd5c - 257)    // [257 + n]: 0, 1, 2 ... 224, 255
+#define LengthExtra ((const uchar *)0x0018cd7c - 257)   // [257 + n]: eight 0s, then four each of 1 to 5, and 0
 #define DistanceBase ((const ushort *)0x0018cd9c)       // 0, 1, 2, 3, 4, 6 ... 24576
 #define DistanceExtra ((const signed char *)0x0018cdd8) // 0, 0, 0, 0, 1, 1 ... 13, 13
 

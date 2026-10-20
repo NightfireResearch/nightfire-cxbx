@@ -68,6 +68,8 @@ typedef struct TARGETOBJ {
 
 #pragma pack(pop)
 
+extern float TurretRange, TurretRefire;
+
 void GT_LoseControl(obj_tag * gameObj);
 void GT_Activate(obj_tag *gameObj);
 void GT_ApplyDamage(obj_tag *obj, float damage);

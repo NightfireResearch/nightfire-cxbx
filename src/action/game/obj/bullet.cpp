@@ -40,8 +40,6 @@
 #define NextCasing (*(short *)0x001dc6f8)
 
 // A satchel's digits, 0 to 9
-// XBE_GLOBAL(0x00181a88, 0x28)
-#define SatchelDigits ((HASHCODE *)0x00181a88)
 
 // The explosions bullets set off
 #define BULLET_EXPLOSION ((HASHCODE)0x06000052)

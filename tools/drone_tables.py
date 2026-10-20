@@ -3,15 +3,15 @@
     python tools/drone_tables.py            write src/action/game/drone/DroneTables.h and DroneTables.inc
     python tools/drone_tables.py --check    fail if either is out of date
 
-Needs disc/default.xbe. The tables stay the game's, reached through the typed #defines in DroneTables.h, until every
-function that reads one is ours (then it becomes a definition from DroneTables.inc). Until then DroneTables.inc is
-compiled only into devtools/DroneTablesCheck.cpp, which compares it with the game's copies at start
-(MenuCheckLists=on). A function pointer is written as the original's address, or as our function when that is
-tagged AUTOINJECT in src/action - either way the same code runs, since the original's entry jumps to ours.
+Needs disc/default.xbe. The tables are ours: DroneTables.cpp defines each from its initialiser in DroneTables.inc,
+and the injector points the game's references at them (relocate, src/common/xbeRelocate.h). A function pointer is
+written as our function when one is tagged AUTOINJECT in src/action, else as the original's address.
+devtools/DroneTablesCheck.cpp compares ours with the game's copies at start (MenuCheckLists=on), as
+tools/driving_data_check.py --action does with the built DLL.
 
 Tables: NDrone2_StateFuncs (250 state handlers), DroneModeSettings (36), DroneTypeSettings (85), the behaviour
 property layout (91) and its masks (35), and default_bot_stats (29). The animation tables (DroneAnimStates,
-Drone_AnimInfo, Drone_AnimTables, the cover lists) are left for when the animation layer is reimplemented.
+Drone_AnimInfo, Drone_AnimTables, the cover lists) are not generated here.
 """
 import json
 import os
@@ -148,19 +148,13 @@ def generate():
          'static_assert(sizeof(DroneBehaviourLayout) == 2, "DroneBehaviourLayout is 2 bytes");', '',
          '#define NUM_DSTATES %d' % STATE_FUNCS[1],
          '#define NUM_DRONE_PROPERTIES %d' % PROP_LAYOUT[1], '',
-         '// The game\'s tables. Each stays the game\'s until every function reading it is ours.']
-    h += ['// XBE_GLOBAL(0x%08x, 0x%x)' % (STATE_FUNCS[0], 4 * STATE_FUNCS[1]),
-          '#define NDrone2_StateFuncs (*(DroneStateFunc(*)[NUM_DSTATES])0x%08x)' % STATE_FUNCS[0],
-          '// XBE_GLOBAL(0x%08x, 0x%x)' % (MODE_SETTINGS[0], 12 * MODE_SETTINGS[1]),
-          '#define DroneModeSettings (*(DroneModeSetting(*)[DMODE_COUNT])0x%08x)' % MODE_SETTINGS[0],
-          '// XBE_GLOBAL(0x%08x, 0x%x)' % (TYPE_SETTINGS[0], 12 * TYPE_SETTINGS[1]),
-          '#define DroneTypeSettings (*(DroneTypeSetting(*)[DTYPE_COUNT])0x%08x)' % TYPE_SETTINGS[0],
-          '// XBE_GLOBAL(0x%08x, 0x%x)' % (PROP_LAYOUT[0], 2 * PROP_LAYOUT[1]),
-          '#define DroneBehaviourLayouts (*(const DroneBehaviourLayout(*)[NUM_DRONE_PROPERTIES])0x%08x)' % PROP_LAYOUT[0],
-          '// XBE_GLOBAL(0x%08x, 0x%x)' % (PROP_MASKS[0], 4 * PROP_MASKS[1]),
-          '#define DroneBehaviourMasks (*(const uint32_t(*)[%d])0x%08x)' % (PROP_MASKS[1], PROP_MASKS[0]),
-          '// XBE_GLOBAL(0x%08x, 0x%x)' % (BOT_STATS[0], 14 * BOT_STATS[1]),
-          '#define DefaultBotStats (*(const BOT_stats_t(*)[%d])0x%08x)' % (BOT_STATS[1], BOT_STATS[0]), '',
+         '// The tables (DroneTables.cpp)']
+    h += ['extern const DroneStateFunc NDrone2_StateFuncs[NUM_DSTATES];',
+          'extern const DroneModeSetting DroneModeSettings[DMODE_COUNT];',
+          'extern const DroneTypeSetting DroneTypeSettings[DTYPE_COUNT];',
+          'extern const DroneBehaviourLayout DroneBehaviourLayouts[NUM_DRONE_PROPERTIES];',
+          'extern const uint32_t DroneBehaviourMasks[%d];' % PROP_MASKS[1],
+          'extern const BOT_stats_t DefaultBotStats[%d];' % BOT_STATS[1], '',
           '// The behaviour properties (docs/drone/behaviours/behaviour_properties.md). Numbered, not named: the meanings',
           '// are inferred and some are guesses.',
           'typedef enum {']
@@ -173,7 +167,7 @@ def generate():
 
     # ---------------------------------------------------------------- the initialisers
     inc = [HEADER,
-           '// The initialisers of the tables in DroneTables.h, as the XBE has them. Include once, where the table is defined.',
+           '// The initialisers of the tables in DroneTables.h, as the XBE has them, for DroneTables.cpp.',
            '']
     body = []
     ptrs = struct.unpack('<%dI' % STATE_FUNCS[1], read(STATE_FUNCS[0], 4 * STATE_FUNCS[1]))

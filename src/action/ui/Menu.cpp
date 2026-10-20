@@ -615,7 +615,7 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
 #define menu_text_scale FLOAT_AT(0x00223b38)
 #define menu_text_phase FLOAT_AT(0x00223b3c)
 // The text format of a sprite Menu_InitializeSprite gives a text (also List_Init's)
-#define MenuTextFormat ((char *)0x0015eb5c)
+#define MenuTextFormat FontFormat2Scaled
 
 // What Menu_GetFirstControl hands back when a page has nothing to focus on
 #define menu_no_control (*(M_BASECONTROL *)0x00224558)

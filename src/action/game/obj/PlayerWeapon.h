@@ -95,4 +95,6 @@ void Player_WeaponInitBullet(void); // EAX the player; the weapon
 sAnimScript_tag *_Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapon_definition_tag *weapon);
 void _Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon);
 
+extern HASHCODE SatchelDigits[10], DecryptorDigits[10];
+
 #endif // PLAYERWEAPON_H_

@@ -536,4 +536,6 @@ bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 // ui_score
 void SeparateNumber(uint score, char* scoreText);
 
+extern char BotString[4];   // ui_mp.cpp
+
 #endif // UI_H

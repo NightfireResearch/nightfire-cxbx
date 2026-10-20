@@ -14,16 +14,46 @@
 
 #define IsWarmReset U8_AT(0x00279250)
 
-// Each item's seven messages, by state: the text and the sound. Only the sound is played.
-typedef struct {
-    Action_TranslatedText label;
-    uint sound;
-} SSYSMSG;
-
-#define SSysMsgs1 (*(SSYSMSG(*)[7])0x0018cc50)
-#define SSysMsgs2 (*(SSYSMSG(*)[7])0x0018cc18)
-#define SSysMsgs3 (*(SSYSMSG(*)[7])0x0018ccc0)
-#define SSysMsgs4 (*(SSYSMSG(*)[7])0x0018cc88)
+// XBE_GLOBAL(0x0018cc50, 0x38) readonly relocate
+SSYSMSG SSysMsgs1[7] = {
+    {(Action_TranslatedText)0x0200001f, 676},
+    {(Action_TranslatedText)0x02000032, 675},
+    {(Action_TranslatedText)0x0200001c, 664},
+    {(Action_TranslatedText)0x0200001b, 663},
+    {(Action_TranslatedText)0x0200001a, 662},
+    {(Action_TranslatedText)0x02000019, 661},
+    {(Action_TranslatedText)0x02000017, 674},
+};
+// XBE_GLOBAL(0x0018cc18, 0x38) readonly relocate
+SSYSMSG SSysMsgs2[7] = {
+    {(Action_TranslatedText)0x02000020, 1073},
+    {(Action_TranslatedText)0x02000033, 1085},
+    {(Action_TranslatedText)0x0200001c, 664},
+    {(Action_TranslatedText)0x0200001b, 663},
+    {(Action_TranslatedText)0x0200001a, 662},
+    {(Action_TranslatedText)0x02000019, 661},
+    {(Action_TranslatedText)0x02000018, 1080},
+};
+// XBE_GLOBAL(0x0018ccc0, 0x38) readonly relocate
+SSYSMSG SSysMsgs3[7] = {
+    {(Action_TranslatedText)0x0200001d, 673},
+    {(Action_TranslatedText)0x02000030, 672},
+    {(Action_TranslatedText)0x0200001c, 664},
+    {(Action_TranslatedText)0x0200001b, 663},
+    {(Action_TranslatedText)0x0200001a, 662},
+    {(Action_TranslatedText)0x02000019, 661},
+    {(Action_TranslatedText)0x02000015, 667},
+};
+// XBE_GLOBAL(0x0018cc88, 0x38) readonly relocate
+SSYSMSG SSysMsgs4[7] = {
+    {(Action_TranslatedText)0x0200001e, 673},
+    {(Action_TranslatedText)0x02000031, 672},
+    {(Action_TranslatedText)0x0200001c, 664},
+    {(Action_TranslatedText)0x0200001b, 663},
+    {(Action_TranslatedText)0x0200001a, 662},
+    {(Action_TranslatedText)0x02000019, 661},
+    {(Action_TranslatedText)0x02000016, 667},
+};
 
 // In HT_Level_TowerC, only item 2 speaks, and only once this channel is set
 #define CHANNEL_SSYS_SPEAKS 0x76

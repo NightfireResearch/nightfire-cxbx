@@ -34,8 +34,8 @@ typedef struct LABEL_TEXT {
 // Frames a direction has been held (TextBox_Update): it repeats every 5th after 15
 #define TextBoxHeldFrames U32_AT(0x0025fc1c)
 // The format of the text and of the grid's measure: font 2
-#define TextBoxFormat ((char *)0x0015eb20)
-#define TextBoxAlphabet ((char *)0x0015eb24)
+#define TextBoxFormat FontFormat2
+#define TextBoxAlphabet FontAlphabet
 
 // The menu inputs a text box reads
 #define MENU_UP     0x1a

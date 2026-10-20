@@ -613,7 +613,7 @@ void HUD_InitPickupStatusFormats(void) {
 // XBE_GLOBAL(0x00180388, 0x1e4)
 SpriteInfo RedeemerSpriteInfo[] = {
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
-	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
+	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	255, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_4A, 5, 0, 0, 0}, // 1: Static lines
 	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_RLAUNCH_UI_5F, 5, 0, 0, 0}, // Flags mean just mirrored?
@@ -794,10 +794,10 @@ HUDPANECREATE_tag BloodPane = {
 
 
 // XBE_GLOBAL(0x0017fec8, 0x84)
-SpriteInfo SightSprInfo[] = { // Left bar, Scope (square fitted to SCREEN_HEIGHT), Right bar
+SpriteInfo SightSprInfo[] = { // Scope (square fitted to SCREEN_HEIGHT), left bar, right bar: the bars a pixel over it
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
-	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
-	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2,	0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill left
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2 - 1, 0, (SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Fill right
 };
 
 // XBE_GLOBAL(0x0017ff4c, 0x1c)
@@ -871,15 +871,43 @@ HUDPANECREATE_tag AmmoPane = {
 #define WEAPON_GRAPPLE_B 0x51
 #define GFX_RC_CAR       ((HASHCODE)0x02000194)
 
-// Each ammo type's round in the HUD's sheet: its texels, a column of them per round
-typedef struct AmmoImage {
-    float u;
-    float v;
-    float w;
-    float h;    // per round
-} AmmoImage;
-static_assert(sizeof(AmmoImage) == 16, "AmmoImage is 16 bytes");
-#define BulletImg (*(AmmoImage (*)[34])0x00181790)
+// XBE_GLOBAL(0x00181790, 0x220) readonly relocate
+AmmoImage BulletImg[34] = {
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {26.0f, 0.0f, 14.0f, 4.0f},
+    {26.0f, 0.0f, 14.0f, 4.0f},
+    {26.0f, 0.0f, 14.0f, 4.0f},
+    {0.0f, 0.0f, 0.0f, 4.0f},
+    {42.0f, 0.0f, 22.0f, 4.0f},
+    {0.0f, 0.0f, 0.0f, 4.0f},
+    {0.0f, 111.0f, 24.0f, 5.0f},
+    {0.0f, 162.0f, 24.0f, 5.0f},
+    {0.0f, 0.0f, 25.0f, 8.0f},
+    {0.0f, 0.0f, 0.0f, 4.0f},
+    {26.0f, 0.0f, 14.0f, 4.0f},
+    {32.0f, 179.0f, 17.0f, 6.0f},
+    {32.0f, 179.0f, 17.0f, 6.0f},
+    {0.0f, 223.0f, 38.0f, 8.0f},
+    {39.0f, 222.0f, 25.0f, 4.0f},
+    {0.0f, 0.0f, 0.0f, 4.0f},
+    {0.0f, 0.0f, 0.0f, 4.0f},
+    {45.0f, 222.0f, 19.0f, 4.0f},
+    {0.0f, 65.0f, 0.0f, 0.0f},
+    {62.0f, 121.0f, 1.0f, 1.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {55.0f, 121.0f, 1.0f, 0.2f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {58.0f, 121.0f, 1.0f, 1.0f},
+    {0.0f, 0.0f, 0.0f, 0.0f},
+    {0.0f, 0.0f, 6.0e-45f, 6.0e-45f},
+};
 
 // The ammo of the weapon in hand: the count, the fire mode, the clip as a column of rounds, the new weapon's name
 // for a second after a change; for an emplacement or Ronin their charge, for an RC vehicle its two counts; with a
@@ -2314,18 +2342,19 @@ void HUD_UpdateXRayPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
 // HUD_RadarUpdate's working: the view's inverse and the bearing of a radar object
 #define RadarInverse (*(_MATRIX *)0x002790e0)
 #define RadarTarget (*(_VECTOR *)0x002790d4)
-// The radar's icons in its texture, by RADAROBJ::icon
-typedef struct RadarIcon {
-    int u;
-    int v;
-    int w;
-    int h;
-    int unknown10;
-} RadarIcon;
-static_assert(sizeof(RadarIcon) == 0x14, "RadarIcon is 0x14 bytes");
-#define RadarIcons ((RadarIcon *)0x001819a0)
+// XBE_GLOBAL(0x001819a0, 0xa0) readonly relocate
+RadarIcon RadarIcons[8] = {
+    {0, 0, 4, 4, 1},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {8, 0, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+    {0, 8, 8, 8, 0},
+};
 // The format of the players' names over their heads: font 2
-#define PlayerNameFormat ((char *)0x0015eb20)
+#define PlayerNameFormat FontFormat2
 
 // In split screen, a pane's sprites move up and left by half their layout's offset in a view half the screen's size
 // (as HUD_CreateShrink, which also halves their size). Our name.

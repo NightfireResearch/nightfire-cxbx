@@ -34,7 +34,6 @@ namespace {
 // The game's RNG state (Rand_Random)
 #define RandWords ((uint32_t *)0x0018cdf8)
 #define switch_BLIND_DRONES U32_AT(0x001df9a0)
-#define Drone_View_Bones ((uint32_t *)0x00178088)
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 

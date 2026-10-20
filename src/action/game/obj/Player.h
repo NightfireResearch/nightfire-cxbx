@@ -520,4 +520,6 @@ void _Player_SSGrapple(BLData *blData, obj_tag *player);
 void _Player_GrappleSetRope(obj_tag *player);
 extern HASHCODE WireAnim; // the wire anim playing, which Player_Wire chooses the next one by
 
+extern HASHCODE PunchSkin[4];
+
 #endif // PLAYER_H_

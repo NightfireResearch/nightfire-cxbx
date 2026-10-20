@@ -55,7 +55,6 @@ namespace {
 #define GameListener (*(_VECTOR *)0x0029a140)
 #define GameSoundInit U32_AT(0x0029a280)
 #define GameMusicEvents ((uint32_t *)0x0029a180)
-#define GameMapMusic ((MUSICDATA *)0x00181cd0)
 #define GameMapMusicData (*(MUSICDATA **)0x00182734)
 #define GameMusicGlobals ((int32_t *)0x00182738)     // the request, the jump, the two counts
 #define GameMusicState ((int32_t *)0x00299328)       // 0x299328 to 0x29937c
@@ -1211,10 +1210,10 @@ uint32_t RunUpdateMusicalEvents(bool original) {
     RandomMusic();
     // The level: one of the table's, the menu, or none; and the first frame of one about half the time
     static const uint32_t others[] = {0x7000048, 0x7000017, 0x7000100, 0};
-    GameMusicEvents[MUSICEV_LEVEL] = R(3) ? GameMapMusic[R(35)].level : others[R(COUNT(others))];
+    GameMusicEvents[MUSICEV_LEVEL] = R(3) ? MapMusic[R(35)].level : others[R(COUNT(others))];
     GameMusicEvents[MUSICEV_NEW_LEVEL] = R(2);
     if (R(3))
-        GameMapMusicData = &GameMapMusic[R(35)];
+        GameMapMusicData = &MapMusic[R(35)];
     CDECL_VOID(0x000ca620, UpdateMusicalEvents, void (__cdecl *)(void));
     return 0;
 }

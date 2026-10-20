@@ -77,6 +77,7 @@ add_library(actioninject SHARED
   src/common/xbeRelocate.cpp
   src/action/devtools/MenuProbe.cpp
   src/action/devtools/SndTrace.cpp
+  src/action/devtools/DataWrites.cpp
   src/action/devtools/LoadScreenShadow.cpp
   src/action/devtools/FileDump.cpp
   src/action/devtools/SecretsShadow.cpp
@@ -271,6 +272,7 @@ add_library(actioninject SHARED
   src/action/game/drone/Drone.cpp
   src/action/game/drone/DroneAnim.cpp
   src/action/game/drone/DroneSM.cpp
+  src/action/game/drone/DroneTables.cpp
   src/action/game/drone/NDrone2.cpp
   src/action/game/drone/NDrone2_Death.cpp
   src/action/game/drone/NDrone2_Hostage.cpp
@@ -313,6 +315,7 @@ add_library(actioninject SHARED
   src/action/game/obj/bullet.cpp
   src/action/game/obj/car.cpp
   src/action/game/obj/control.cpp
+  src/action/game/obj/ControlFuncs.cpp
   src/action/game/obj/Copter.cpp
   src/action/game/obj/Gas.cpp
   src/action/game/obj/Destroy.cpp

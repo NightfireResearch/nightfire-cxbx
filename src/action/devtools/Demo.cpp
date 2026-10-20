@@ -1,4 +1,5 @@
 #include "Demo.h"
+#include "DataWrites.h"
 
 #include "../actionhelpers.h"
 #include "../game.h"
@@ -761,6 +762,7 @@ static void Checksums(uint32_t sums[SUM_COUNT]) {
 }
 
 void Demo_FrameEnd(void) {
+    DataWrites_Frame();
     if (g_mode == DEMO_OFF)
         return;
 

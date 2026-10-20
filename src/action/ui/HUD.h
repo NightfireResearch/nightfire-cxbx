@@ -159,4 +159,26 @@ void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 
+// Each ammo type's round in the HUD's sheet: its texels, a column of them per round
+typedef struct AmmoImage {
+    float u;
+    float v;
+    float w;
+    float h;    // per round
+} AmmoImage;
+static_assert(sizeof(AmmoImage) == 16, "AmmoImage is 16 bytes");
+extern AmmoImage BulletImg[34];
+
+// The radar's icons in its texture, by RADAROBJ::icon. BulletImg's last row is the first's u, v, w and h, as the
+// game's tables overlap.
+typedef struct RadarIcon {
+    int u;
+    int v;
+    int w;
+    int h;
+    int unknown10;
+} RadarIcon;
+static_assert(sizeof(RadarIcon) == 0x14, "RadarIcon is 0x14 bytes");
+extern RadarIcon RadarIcons[8];
+
 #endif // HUD_H

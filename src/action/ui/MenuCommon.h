@@ -7,6 +7,7 @@
 #include "Controls.h"
 #include "Menu.h"
 #include "MenuScript.h"
+#include "../gfx/Font.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -25,17 +26,17 @@ static inline int32_t Ftol(double x) {
 // A sprite's priority that hides it
 #define MENU_SPRITE_HIDDEN 0xff
 
-// The game's strings that controls keep pointers to
-#define MenuEmptyString ((char *)0x0015d308)    // ""
-#define MenuSpaceString ((char *)0x00160d8c)    // " "
-#define MenuAlphabet ((char *)0x0015eb24)       // the letters a font's height is measured by
-// Formats: a byte 0xff and a font, then options (0xfe an alignment, 0xfc and 0xfb a scale)
-#define ListFormat1 ((char *)0x0015eb5c)        // a list's at first (MessageType_SetFont 1)
-#define ListFormat2 ((char *)0x0016197c)        // MessageType_SetFont 2
-#define ListFormat3 ((char *)0x00161984)        // MessageType_SetFont 3
-#define PlainFormat ((char *)0x0015eb20)        // a memo's at first; a checkbox's text is measured in it
-#define CentredFormat ((char *)0x0015eb18)      // a button's and a radio's label
-#define LabelFormat ((char *)0x00161964)        // a label's at first, of 9 bytes
+// The strings that controls keep pointers to (gfx/Font.cpp)
+#define MenuEmptyString FontEmptyString
+#define MenuSpaceString FontSpaceString
+#define MenuAlphabet FontAlphabet
+// Formats
+#define ListFormat1 FontFormat2Scaled           // a list's at first (MessageType_SetFont 1)
+#define ListFormat2 FontFormat1Scaled           // MessageType_SetFont 2
+#define ListFormat3 FontFormat3Scaled           // MessageType_SetFont 3
+#define PlainFormat FontFormat2                 // a memo's at first; a checkbox's text is measured in it
+#define CentredFormat FontFormat2Centred        // a button's and a radio's label
+#define LabelFormat FontFormat2CentredScaled    // a label's at first, of 9 bytes
 
 // Font_GetAlignment's, and a list column's
 #define ALIGN_RIGHT  2

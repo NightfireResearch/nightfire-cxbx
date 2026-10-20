@@ -21,6 +21,37 @@
 
 #pragma fp_contract(off)
 
+// XBE_GLOBAL(0x0017e648, 0x36) readonly relocate
+short UseableGuns[27] = {
+    2,
+    6,
+    10,
+    12,
+    14,
+    16,
+    18,
+    20,
+    22,
+    25,
+    26,
+    28,
+    30,
+    36,
+    42,
+    44,
+    46,
+    51,
+    55,
+    53,
+    54,
+    52,
+    58,
+    59,
+    66,
+    17,
+    82,
+};
+
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {

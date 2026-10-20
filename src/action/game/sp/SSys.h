@@ -25,4 +25,13 @@ void SSys_Msg(void);
 void SSys_Monitor(void);
 void SSys_RamLoad(SSYSITEM *saved);
 
+// Each item's seven messages, by state: the text and the sound. Only the sound is played.
+typedef struct {
+    Action_TranslatedText label;
+    uint sound;
+} SSYSMSG;
+static_assert(sizeof(SSYSMSG) == 8, "SSYSMSG is 8 bytes");
+
+extern SSYSMSG SSysMsgs1[7], SSysMsgs2[7], SSysMsgs3[7], SSysMsgs4[7];
+
 #endif // SSYS_H_

@@ -36,7 +36,6 @@
 
 
 // The bones a drone's line of sight tests in turn (Drone_tag.viewBone)
-#define Drone_View_Bones (*(uint(*)[8])0x00178088)
 
 // A bone's world position rather than its parent-relative one (AnimGetBoneWorldTrans)
 #define WORLD_BONE(bone) (0x80000000 | (bone))
