@@ -44,6 +44,12 @@ void Menu_SetNightfireStatus(uint status) {
         ITEM_ENABLED(sp_level[i]) = (status & (1u << i)) != 0;
 }
 
+// A player's rewards (PS2 name)
+// AUTOINJECT
+uint64_t Menu_GetBonus(byte player) {
+    return (uint64_t)menu_bonus[player * 2 + 1] << 32 | menu_bonus[player * 2];
+}
+
 // Sets (or ORs in) a player's rewards and rebuilds their gadget upgrades from them.
 // AUTOINJECT
 void Menu_SetBonus(uint lo, uint hi, byte player, char orIn) {

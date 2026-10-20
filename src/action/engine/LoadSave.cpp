@@ -22,7 +22,6 @@
 #define SFXGetVolume ((uint (__cdecl *)(void))0x000c5090)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
 #define SFXGetMode ((uint (__cdecl *)(void))0x000c5430)
-#define Menu_GetBonus ((uint64_t (__cdecl *)(byte))0x0007c660) // a player's bonus word (PS2 name)
 
 #define SAVE_LABEL(a, b, c, d) ((uint)(a) | (uint)(b) << 8 | (uint)(c) << 16 | (uint)(d) << 24)
 #define SAVE_FIELDS_START 0x40   // the first field's bit, after the header

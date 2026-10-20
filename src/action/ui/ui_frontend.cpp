@@ -23,10 +23,7 @@
 #define SFXSetLanguage ((void (__cdecl *)(int language))0x000c5400)
 #define SFXUnPause ((void (__cdecl *)(void))0x000c9a10)
 #define SFXUnPauseAllStreams ((void (__cdecl *)(void))0x000c6250)
-#define psiMovieLoop ((bool (__cdecl *)(void))0x0007fe70)
-// Room for a new codename on the Xbox: false, with a box, without it; the box's B goes to the dashboard (names ours)
-#define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0)
-#define Menu_GoToDashboard ((void (__cdecl *)(void))0x0008fd90)
+#define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
 
 #define LanguageToLoad (*(int *)0x0025d7a0)     // tLANGUAGE (XboxSystem.cpp)
 #define AskForLanguage U8_AT(0x0017d5f9)        // the boot flow shows the language page
@@ -75,6 +72,17 @@ void Menu_StopMovie(char force) {
 void Menu_UpdateMovieCounter(void) {
     if (menu_movie_skip_delay > 0)
         menu_movie_skip_delay--;
+}
+
+// Once the movie is over: the front end's music again if it was stopped for it, and the input unlocked. True then.
+// AUTOINJECT
+bool psiMovieLoop(void) {
+    if (!psiMovieFinished())
+        return false;
+    if (menu_movie_stopped_music)
+        Menu_RestartFrontEndLoop();
+    Manager_SendMessage(&manager[0], MessageType_LockInput, 0, 0);
+    return true;
 }
 
 // ---- the language page ----

@@ -7,6 +7,7 @@
 #include "../engine/Text.h"
 #include "../input.h"
 #include "MenuManager.h"
+#include "Process.h"
 #include "../sound/SFX.h"
 #include "../game.h"
 #include "../util/Random.h"
@@ -15,6 +16,8 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <math.h>
+#include <stddef.h>
 
 // XBE_GLOBAL(0x0017c6a0, 0xc0)
 M_ITEM mp_level[8] = {
@@ -815,8 +818,33 @@ ulonglong Menu_GetMPSkins(int managerNum, byte agent, char taken) {
     }
     return (uint)__Menu_SendMessage(radio, MessageType_SelectIndex, 0, 0);
 }
-// AUTOGEN
-undefined4 __stdcall Menu_AllJoinedPlayersReady(void);
+// Every joined player has finished setting up, and one has joined at least. Each slot takes its number as its
+// controller's port on the way.
+// AUTOINJECT
+bool __stdcall Menu_AllJoinedPlayersReady(void) {
+    uchar ready = 1;    // 2 all so far, 4 one is not
+    for (uchar i = 0; i < NUM_PLAYERS; i++) {
+        MPJoinSlot *slot = &mp_join_slots[i];
+        slot->controllerPort = i;
+        if (!slot->joined)
+            continue;
+        if (!slot->ready)
+            ready = 4;
+        else if (ready != 4)
+            ready = 2;
+    }
+    return ready == 2;
+}
+
+// The start button's fade, once everyone is ready
+// AUTOINJECT
+void Menu_MPFadeWhenReady(M_CONTROL *control) {
+    M_MESSAGE fade = {};
+    fade.type = MESSAGE_PROCESS;
+    fade.arg1 = 0x60606080;
+    fade.arg2 = 0;
+    Process_Create(control, &fade, 30, 0);
+}
 
 static const struct { const char *text; int value; } handicaps[] = {
     { "-75", -75 }, { "-50", -50 }, { "-25", -25 }, { "0", 0 }, { "+25", 25 }, { "+50", 50 }, { "+75", 75 }, { "+100", 100 },
@@ -949,8 +977,45 @@ static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
 // XBE_GLOBAL(0x0025e9a0, 0x100)
 static char mp_debrief_result[0x100]; // "<name> wins the match."
 
-// AUTOGEN
-undefined4 Menu_GetMPScore(byte participant);
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+
+static_assert(offsetof(MPSettings_t, GameMode) == 0x204, "Offset of MPSettings.GameMode wrong");
+static_assert(offsetof(MPSettings_t, multiplayerLevelHashcode) == 0x208, "Offset of multiplayerLevelHashcode wrong");
+
+// A participant's score in the match's mode: victories in Arena and Team Arena, points in the scored modes, none in
+// the rest
+// AUTOINJECT
+int Menu_GetMPScore(byte participant) {
+    int points = Ftol(MPGame.players[participant].points);
+    int victories = (int)MPGame.players[participant].victories;
+    switch (MPSettings.GameMode) {
+        case GM_ARENA:
+        case GM_TEAMARENA:
+            return victories;
+        case GM_TOPAGENT:
+        case GM_ASSASSIN:
+        case GM_CTF:
+        case GM_DEMOLITION:
+        case GM_PROTECTION:
+        case GM_BLUEPRINT:
+        case GM_GOLDENEYE:
+        case GM_KOTH:
+        case GM_UPLINK:
+        case GM_TEAMKOTH:
+            return points;
+        default:
+            return 0;
+    }
+}
 // AUTOGEN
 char* Menu_GetBotShortName(BotNum skin);
 
@@ -1099,6 +1164,21 @@ void __stdcall Menu_RestoreMPSettings(void) {
         PlayerInputs[i] = mp_inputs_backup[i];
         PlayerInputs[i].controlStyle = style;
     }
+}
+
+// The debriefing's player rows: Select goes back to the scenario page with the match's settings; AltSelect1 plays
+// the same match again
+// AUTOINJECT
+bool C_MPDBG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_Select) {
+        Menu_RestoreMPSettings();
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, 1);
+    } else if (message == MessageType_AltSelect1) {
+        ResetMap_LevelToLoad((HASHCODE)MPSettings.multiplayerLevelHashcode, false, false);
+        GameFlow_PushState(7, 80.0f, 0xff);
+        MenuManager_Delete(managerNum);
+    }
+    return true;
 }
 
 // "<label> : <value>", the value looked up first, as the original does (a TXT_NULL value takes a heap string).

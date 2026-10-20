@@ -20,6 +20,7 @@
 #include "../engine/Text.h"
 #include "../game/Upgrade.h"
 #include "../game/mp/multiplayer.h"
+#include "../engine/psiSave.h"
 #include "../game/obj/Player.h"
 #include "../game/sp/Mission.h"
 #include "../game/sp/PlayerStats.h"
@@ -82,6 +83,8 @@ extern char records_upgrades_text[0x20];
 extern LEVEL_BONUSES level_bonuses;
 extern char timer_text[4][0x100];
 extern uint8_t timer_text_next;
+extern uint save_space_problem;
+extern char save_space_text[0x200];
 
 // The package's functions, as ours
 bool P_LANGUAGE_Handler(uchar, M_CONTROL *, uint, uint, int, int);
@@ -176,6 +179,7 @@ const Pair kPairs[] = {
     {0x0025d708, bonus_text, 0x84}, {0x0025dd58, bonus_text_before, 0x80}, {0x0025e378, records_best_text, 0x20},
     {0x0025e398, records_bond_moves_text, 0x20}, {0x0025e3b8, records_upgrades_text, 0x20},
     {0x00225080, &level_bonuses, 0x34}, {0x0029ae38, timer_text, 0x400}, {0x0029b238, &timer_text_next, 1},
+    {0x0025edbc, &save_space_problem, 4}, {0x0025efd0, save_space_text, 0x200},
 };
 
 // A word as the logs show it: an offset into the world, a string's text, or the number
@@ -254,6 +258,11 @@ const struct {
     {0x00164068, 0x80},     // the drones' tunables
     {0x0017e8cc, 0x1c},     // the player's damage modifiers
     {0x002251b8, 0x400},    // codename_buf
+    {0x00245240, 0x40},     // mp_join_slots
+    {0x00262738, 0x230},    // MPGame
+    {0x002245f8, 0x23c},    // mp_settings_backup
+    {0x00224838, 0x560},    // mp_inputs_backup
+    {0x002adf0c, 0x4},      // SavesListed
 };
 
 ShadowRegions regions;
@@ -479,9 +488,12 @@ uint __cdecl FakeSendDelayedMessage(uint delay, M_CONTROL *c, uint a1, int a2, i
     return 1;
 }
 
+// Labels without a %s in them, for a group whose formats take no strings
+bool plainLabels;
+
 const char *__cdecl FakeBindLabel(uint label, uint lock) {
     char *s = world.labels[world.labelNext++ % 16];
-    if (R(6) == 0)
+    if (R(6) == 0 && !plainLabels)
         sprintf(s, "L%x %%s", label);
     else
         sprintf(s, "L%x", label);
@@ -550,7 +562,12 @@ LOG3(FakeMapDefault, "mapdefault")
 LOG0(FakeDashboard, "dashboard")
 LOG0(FakeSaveChoice, "savechoice")
 LOG2(FakeChangeStyle, "changestyle")
-ANSWER1(FakeMPScore, "mpscore", R(40))
+// The original reads the participant's byte alone
+uint __cdecl FakeMPScore(uint participant) {
+    uint v = R(40);
+    ShadowLog("mpscore(%d)=%x", participant & 0xff, v);
+    return v;
+}
 LOG2(FakeRamLoad, "ramload")
 LOG3(FakePlayerEnable, "playerenable")
 LOG2(FakePlayerDisable, "playerdisable")
@@ -567,6 +584,16 @@ LOG3(FakeMemoUpdate, "memoupdate")
 LOG3(FakeListUpdate, "listupdate")
 LOG3(FakeButtonUpdate, "buttonupdate")
 ANSWER0(FakeNightfireStatus, "nightfirestatus", R(0x1000))
+LOG2(FakeSfxStart, "sfxstart")
+ANSWER0(FakeFreeBlocks, "freeblocks", R(3) == 0 ? 50000 : R(40))
+ANSWER1(FakeBlocksFor, "blocksfor", R(40))
+LOG3(FakeLaunch, "launch")
+
+uint __cdecl FakeSaveStuff(uint mask, uint slot) {
+    uint v = R(0x10000);
+    ShadowLog("savestuff(%x,%x)=%x", mask & 0xffff, slot & 0xffff, v);
+    return v;
+}
 
 // The XBE's sprintf: the host's (the XBE's C library cannot format a float before the game has started)
 int __cdecl FakeSprintf(char *buffer, const char *format, ...) {
@@ -727,11 +754,25 @@ const Fake kFakes[] = {
     {0x00070fe0, (const void *)&FakeButtonUpdate},
     {0x00076240, (const void *)&FakeNightfireStatus},
     {0x000ee382, (const void *)&FakeSprintf},
+    {0x000cb150, (const void *)&FakeSfxStart},
+    {0x000dfbc0, (const void *)&FakeFreeBlocks},
+    {0x000dfbd0, (const void *)&FakeBlocksFor},
+    {0x000e9350, (const void *)&FakeLaunch},
+    {0x0006ec10, (const void *)&FakeSaveStuff},
 };
 
+// The fakes but those of the functions a group tests
+const unsigned *fakeSkip;
+int fakeSkipCount;
+
 void InstallFakes(void) {
-    for (const Fake &f : kFakes)
-        ShadowHook_Install(f.at, f.fake);
+    for (const Fake &f : kFakes) {
+        bool skip = false;
+        for (int i = 0; i < fakeSkipCount; i++)
+            skip |= fakeSkip[i] == f.at;
+        if (!skip)
+            ShadowHook_Install(f.at, f.fake);
+    }
     // our _Menu_StartLS, which ours call by name
     ShadowHook_Install((unsigned)(uintptr_t)&_Menu_StartLS, (const void *)&FakeStartLSCore);
 }
@@ -919,6 +960,7 @@ HANDLER_CASE(P_CNMPOPTIONS, 0x0008d560)
 HANDLER_CASE(P_CNAVOPTIONS, 0x0008d7a0)
 HANDLER_CASE(C_RBDSRECORDS, 0x00086ed0)
 HANDLER_CASE(C_RBDSREWARDS, 0x00087140)
+HANDLER_CASE(C_MPDBG, 0x0008bdd0)
 
 typedef void (__cdecl *PlayMovieFn)(HASHCODE, uchar, int, uchar, char, uint);
 uint32_t Run_PlayMovie(bool original) {
@@ -1082,6 +1124,82 @@ uint32_t Run_StyleLabel(bool original) {
     return 0;
 }
 
+// ---- the front end's helpers: the music, the movie's end, the bonus, the codenames, the MP join and scores, the
+// ---- room for a save
+
+uint32_t Run_StopMusic(bool original) {
+    U8_AT(0x0025d7bc) = (uint8_t)R(2);
+    CALL_VOID(0x0007fd70, Menu_StopFrontEndMusic, void (__stdcall *)(void));
+    return 0;
+}
+uint32_t Run_RestartLoop(bool original) {
+    U8_AT(0x0025d7bc) = (uint8_t)R(2);
+    CALL_VOID(0x0007fda0, Menu_RestartFrontEndLoop, void (__stdcall *)(void));
+    return 0;
+}
+uint32_t Run_MovieLoop(bool original) {
+    U8_AT(0x0025d7bc) = (uint8_t)R(2);
+    U8_AT(0x0025d7be) = (uint8_t)R(2);
+    return CALL(0x0007fe70, psiMovieLoop, bool (__cdecl *)(void)) & 0xff;
+}
+uint32_t Run_GetBonus(bool original) {
+    for (int i = 0; i < 8; i++)
+        U32_AT((0x0025d6e8 + 4 * i)) = R(0);
+    byte player = (byte)R(4);
+    uint64_t bonus = original ? ([&]() { XbeOriginalScope scope_(0x0007c660); return ORIGINAL(0x0007c660, uint64_t (__cdecl *)(byte))(player); }())
+                              : Menu_GetBonus(player);
+    return (uint32_t)bonus ^ (uint32_t)(bonus >> 32) * 3;
+}
+uint32_t Run_CodenameExists(bool original) {
+    static const char *names[] = {"BOND", "Bond", "M", "QBRANCH", "ALURA", ""};
+    ls.numCodenames = R(8);
+    for (int i = 0; i < 8; i++) {
+        memset(codename_buf[i], 0, 0x20);
+        strcpy(codename_buf[i], names[R(COUNT(names))]);
+    }
+    strcpy(world.strings[0], names[R(COUNT(names))]);
+    return CALL(0x00075f40, Menu_CodenameExists, bool (__cdecl *)(const char *), world.strings[0]) & 0xff;
+}
+uint32_t Run_FadeWhenReady(bool original) {
+    CALL_VOID(0x00075480, Menu_MPFadeWhenReady, void (__cdecl *)(M_CONTROL *), Object(R(OBJECTS)));
+    return 0;
+}
+uint32_t Run_AllReady(bool original) {
+    for (int i = 0; i < NUM_PLAYERS; i++) {
+        mp_join_slots[i].joined = (char)(R(2) ? 0 : R(3));
+        mp_join_slots[i].ready = (char)(R(2) ? 0 : R(3));
+        mp_join_slots[i].controllerPort = (uchar)R(256);
+    }
+    return CALL(0x000753f0, Menu_AllJoinedPlayersReady, bool (__stdcall *)(void)) & 0xff;
+}
+uint32_t Run_MPScore(bool original) {
+    static const uint modes[] = {GM_QUICK, GM_ARENA, GM_TOPAGENT, GM_UNK3, GM_ASSASSIN, TEAMGAME, GM_TEAMARENA, GM_CTF,
+                                 GM_DEMOLITION, GM_PROTECTION, GM_BLUEPRINT, GM_GOLDENEYE, GM_KOTH, GM_UPLINK,
+                                 GM_TEAMKOTH, 0x20000001, 0x20000010, 0x20000400, 2};
+    byte p = (byte)R(NUM_AGENTS);
+    MPSettings.GameMode = (MultiplayerGameMode)modes[R(COUNT(modes))];
+    MPGame.players[p].victories = R(30);
+    uint32_t bits = R(4) == 0 ? R(0) : 0;
+    float points = (float)(int)R(300) - 50.0f + (float)R(4) * 0.25f;
+    if (bits != 0)
+        memcpy(&points, &bits, 4);
+    MPGame.players[p].points = points;
+    return CALL(0x0007ffa0, Menu_GetMPScore, int (__cdecl *)(byte), p);
+}
+uint32_t Run_SaveSize(bool original) {
+    return CALL(0x0006f950, LS_GetSaveSize, int (__stdcall *)(void)) & 0xffff;
+}
+uint32_t Run_CheckSpace(bool original) {
+    SavesListed = R(3) == 0 ? 0xffc + R(3) : R(100);
+    save_space_problem = U32_AT(0x0025edbc) = R(3);
+    return CALL(0x0008fcc0, Menu_CheckSaveSpace, bool (__cdecl *)(uchar, MENU_LS *), (uchar)R(2), &ls) & 0xff;
+}
+uint32_t Run_Dashboard(bool original) {
+    save_space_problem = U32_AT(0x0025edbc) = R(4);
+    CALL_VOID(0x0008fd90, Menu_GoToDashboard, void (__cdecl *)(void));
+    return 0;
+}
+
 // Messages: 0x49 Scroll, 0x4b Select, 0x4c Enter, 0x4d Leave, 0x4e GainFocus, 0x50 Update, 0x51 Created, 0x54 ValueSet,
 // 0x5d AltSelect1, 0x5e AltSelect2, 0x6a SaveFlowDone, 0x6b QueryBack, 0x6d BackOnControl, 0x6e Resume
 #define IRIS 0x0007f260, 0x00075c80, 0x0007f320
@@ -1163,6 +1281,22 @@ const Case kPause[] = {
     {"C_GCPAUSE", Run_C_GCPAUSE, {0x000d25d0, 0x000749c0, 0x00074910, 0x00075fb0, 0x0007f3a0}, {0x4e, 0x4b, 0x49, 0x5e}},
     {"P_ENDMISSION", Run_P_ENDMISSION, {0}, {0x4c, 0x4b}},
 };
+const Case kFrontEndHelpers[] = {
+    {"Menu_StopFrontEndMusic", Run_StopMusic, {0}, {0}},
+    {"Menu_RestartFrontEndLoop", Run_RestartLoop, {0}, {0}},
+    {"psiMovieLoop", Run_MovieLoop, {0}, {0}},
+    {"Menu_GetBonus", Run_GetBonus, {0}, {0}},
+    {"Menu_CodenameExists", Run_CodenameExists, {0}, {0}},
+    {"Menu_MPFadeWhenReady", Run_FadeWhenReady, {0}, {0}},
+    {"Menu_AllJoinedPlayersReady", Run_AllReady, {0}, {0}},
+    {"Menu_GetMPScore", Run_MPScore, {0}, {0}},
+    {"C_MPDBG", Run_C_MPDBG, {0}, {0x4b, 0x5d, 0x4c}},
+    {"LS_GetSaveSize", Run_SaveSize, {0}, {0}},
+    {"Menu_CheckSaveSpace", Run_CheckSpace, {0x00075fb0}, {0}},
+    {"Menu_GoToDashboard", Run_Dashboard, {0}, {0}},
+};
+const unsigned kFrontEndHelperFakes[] = {0x0007fda0, 0x0007ffa0, 0x0008fcc0, 0x0008fd90};
+
 const Case kDebug[] = {
     {"P_CHEATMEDAL", Run_P_CHEATMEDAL, {0}, {0x4b, 0x4c}},
     {"P_TWEAKS", Run_P_TWEAKS, {0}, {0x4c, 0x50, 0x4b, 0x5d}},
@@ -1217,6 +1351,14 @@ void MenuHandlerShadow_Run(void) {
     Test("the options pages and controller styles", kOptions, COUNT(kOptions), 3000);
     Test("the pause menu", kPause, COUNT(kPause), 4000);
     Test("the debug page's tools", kDebug, COUNT(kDebug), 3000);
+    ShadowHook_RemoveAll();
+    fakeSkip = kFrontEndHelperFakes;
+    fakeSkipCount = COUNT(kFrontEndHelperFakes);
+    InstallFakes();
+    plainLabels = true;
+    Test("the front end's helpers", kFrontEndHelpers, COUNT(kFrontEndHelpers), 3000);
+    plainLabels = false;
+    fakeSkipCount = 0;
     ShadowHook_RemoveAll();
     for (int i = 0; i < COUNT(kPackage); i++)
         if (XbeOriginal_Target(kPackage[i]) != jumps[i])

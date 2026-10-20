@@ -11,9 +11,6 @@
 // page and keyboard name a new codename otherwise.
 
 
-// AUTOGEN
-uint Menu_CodenameExists(byte *name);
-
 // XBE_GLOBAL(0x00245200, 0x40)
 static char kbd_text[0x40]; // the text being typed: 8 characters in secret mode
 // XBE_GLOBAL(0x0017d608, 0x1)
@@ -304,7 +301,7 @@ bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             }
             ls.slot = LS_SLOT_NEW;
             strcpy(ls.codename, kbd_text);
-            if ((uchar)Menu_CodenameExists((byte *)kbd_text)) {
+            if (Menu_CodenameExists(kbd_text)) {
                 Menu_CreateOptionBoxLabel(managerNum, CODENAME_EXISTS_OVERWRITE, OPTIONBOX_OVERWRITE_CODENAME, 0, 0);
                 break;
             }

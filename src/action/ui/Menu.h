@@ -37,12 +37,17 @@ bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
 void __stdcall Menu_StoreMPSettings(void);
 void __stdcall Menu_RestoreMPSettings(void);
+bool __stdcall Menu_AllJoinedPlayersReady(void);
+void Menu_MPFadeWhenReady(M_CONTROL *control);
+int Menu_GetMPScore(byte participant);
 bool Menu_HasMedal(HASHCODE level, uint medal, uchar player);
+uint64_t Menu_GetBonus(byte player);
 
 // The front end (ui_frontend.cpp): the movies a page plays, the language, the mini mission
 void Menu_PlayMovie(HASHCODE movie, uchar skippable, int looping, uchar stopMusic, char lockInput, uint skipDelay);
 void Menu_StopMovie(char force);
 void Menu_UpdateMovieCounter(void);
+bool psiMovieLoop(void);
 void Menu_SetSoundLanguage(int language);
 int Menu_GetLanguageButton(int language);
 uchar Menu_WillRunMiniMission(void);
@@ -57,6 +62,10 @@ uchar Menu_RunMiniMission(uchar managerNum);
 void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text, HASHCODE icon, HASHCODE description,
                               HASHCODE iris, char turning);
 void Menu_UpdateDefaultCodename(uchar player, uchar slot);
+bool Menu_CodenameExists(const char *name);
+int LS_GetSaveSize(void);
+bool Menu_CheckSaveSpace(uchar managerNum, struct MENU_LS *unused);     // false, with a box, without room for a codename
+void Menu_GoToDashboard(void);                                   // to make the room it asked for
 
 // The controller styles (ui_options.cpp)
 void Menu_DisplayControllerStyle(uchar managerNum, uint style);

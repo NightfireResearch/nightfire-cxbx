@@ -20,7 +20,6 @@
 #include <stdio.h>
 
 // Not reimplemented, called by address
-#define Menu_GetMPScore ((int (__cdecl *)(uint participant))0x0007ffa0)
 
 #define user_restarted_or_quit U8_AT(0x0025fb10)   // MenuManager.cpp
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))

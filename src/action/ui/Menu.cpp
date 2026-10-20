@@ -177,11 +177,29 @@ void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
 }
 
 
-// AUTOGEN
-void __stdcall Menu_RestartFrontEndLoop(void);
+// ---- the front end's music: two loops, played together
 
-// AUTOGEN
-void __stdcall Menu_StopFrontEndMusic(void);
+#define SFXRemove ((void (__cdecl *)(DYNAMICSOUNDS *handle, int sfxId))0x000c9b10)
+#define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
+
+// Starts it again, unless it is playing
+// AUTOINJECT
+void __stdcall Menu_RestartFrontEndLoop(void) {
+    if (menu_music_playing)
+        return;
+    SFXRemove(NULL, SFX_MUSIC_FRONT_END_LOOP_01);
+    SFXRemove(NULL, SFX_MUSIC_FRONT_END_LOOP_02);
+    SFXStart(SFX_MUSIC_FRONT_END_LOOP_01, NULL);
+    SFXStart(SFX_MUSIC_FRONT_END_LOOP_02, NULL);
+    menu_music_playing = 1;
+}
+
+// AUTOINJECT
+void __stdcall Menu_StopFrontEndMusic(void) {
+    SFXRemove(NULL, SFX_MUSIC_FRONT_END_LOOP_01);
+    SFXRemove(NULL, SFX_MUSIC_FRONT_END_LOOP_02);
+    menu_music_playing = 0;
+}
 
 // ---- option boxes: a message in a box over the page, with an answer to pick or none (PS2: menu_handlers.cpp)
 

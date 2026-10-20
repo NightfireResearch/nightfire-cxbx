@@ -7,6 +7,7 @@
 #include "../engine/Text.h"
 #include "../engine/LoadSave.h"
 #include "../engine/psiSave.h"
+#include "../engine/XboxSystem.h"
 #include "../game.h"
 #include "../input.h"
 #include "../game/mp/multiplayer.h"
@@ -140,16 +141,88 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define saveflow_relist        U8_AT(0x0025edb9)   // a codenames page lists the codenames as it enters or resumes
 
 #define XBox_DoSaveFlow ((void (__cdecl *)(M_MANAGER *, uint, MENU_LS *))0x0008f3f0)
-#define WriteStateFileAndLaunch ((void (__cdecl *)(int, void *, int))0x000e9350)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
-#define Menu_CheckSaveSpace ((bool (__cdecl *)(uchar, MENU_LS *))0x0008fcc0) // false, with a box, without room for a new codename (name ours)
-#define Menu_GoToDashboard ((void (__cdecl *)(void))0x0008fd90)    // to free the space Menu_CheckSaveSpace asked for (name ours)
 
 // The option boxes the codenames page answers
 #define OPTIONBOX_DELETE_CODENAME 2
 #define OPTIONBOX_3               3   // no code in the Xbox build makes a box of this type
 #define OPTIONBOX_SAVE_SPACE      5   // Menu_CheckSaveSpace's
+
+// ---- room on the save drive for a codename (names ours)
+
+#define TXT_SAVE_BLOCKS_SHORT ((Action_TranslatedText)0x31e)       // a format: the blocks still to be freed
+#define TXT_TOO_MANY_SAVES    ((Action_TranslatedText)0x10002df)
+#define MAX_SAVES             0xffd
+
+enum {
+    SAVE_SPACE_OK = 0,
+    SAVE_SPACE_BLOCKS = 1,      // the drive has fewer free blocks than a save takes
+    SAVE_SPACE_SAVES = 2,       // too many saves on it
+};
+
+// XBE_GLOBAL(0x0025edbc, 0x4)
+uint save_space_problem;
+// XBE_GLOBAL(0x0025efd0, 0x200)
+char save_space_text[0x200];
+
+// The size of a codename's whole save
+// AUTOINJECT
+int LS_GetSaveSize(void) {
+    return LS_GetSaveStuff(0xff, 0);
+}
+
+// Room for a new codename: true if there is, else false with a box saying why (OPTIONBOX_SAVE_SPACE)
+// AUTOINJECT
+bool Menu_CheckSaveSpace(uchar managerNum, MENU_LS *unused) {
+    save_space_problem = SAVE_SPACE_OK;
+    int size = LS_GetSaveSize();
+    int needed = SaveDrive_BlocksFor_Thunk(size);
+    bool short_of_blocks = needed > (int)SaveDrive_FreeBlocks_Thunk();
+    bool too_many = (int)SavesListed >= MAX_SAVES;
+    if (short_of_blocks)
+        save_space_problem = SAVE_SPACE_BLOCKS;
+    if (too_many)
+        save_space_problem = SAVE_SPACE_SAVES;
+    switch (save_space_problem) {
+        case SAVE_SPACE_BLOCKS: {
+            int blocks = SaveDrive_BlocksFor_Thunk(size);
+            blocks -= (int)SaveDrive_FreeBlocks_Thunk();
+            sprintf(save_space_text, Txt_BindLabel(TXT_SAVE_BLOCKS_SHORT, 0), blocks);
+            break;
+        }
+        case SAVE_SPACE_SAVES:
+            sprintf(save_space_text, Txt_BindLabel(TXT_TOO_MANY_SAVES, 0));
+            break;
+        default:
+            return true;
+    }
+    Menu_CreateOptionBox(managerNum, save_space_text, OPTIONBOX_SAVE_SPACE, 0, 0);
+    return false;
+}
+
+// To the dashboard to make the room Menu_CheckSaveSpace asked for: the blocks it needs, or none
+// AUTOINJECT
+void Menu_GoToDashboard(void) {
+    switch (save_space_problem) {
+        case SAVE_SPACE_BLOCKS:
+            WriteStateFileAndLaunch(SaveDrive_BlocksFor_Thunk(LS_GetSaveSize()), NULL, 0);
+            return;
+        case SAVE_SPACE_SAVES:
+            WriteStateFileAndLaunch(0, NULL, 0);
+            return;
+    }
+}
+
+// A codename among those listed
+// AUTOINJECT
+bool Menu_CodenameExists(const char *name) {
+    for (uint i = 0; i < ls.numCodenames; i++) {
+        if (strcmp(codename_buf[i], name) == 0)
+            return true;
+    }
+    return false;
+}
 
 #define ENUM_STATE_START   0
 #define ENUM_STATE_LISTING 1

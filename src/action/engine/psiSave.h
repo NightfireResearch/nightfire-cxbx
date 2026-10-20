@@ -10,6 +10,9 @@
 // no separate "still in progress" state is ever actually observed by the poller.
 #define psiInternalLoadingDataState U32_AT(0x002adf10)
 
+// The entries psiGetNextSave has handed out in this enumeration, skipped ones included
+#define SavesListed U32_AT(0x002adf0c)
+
 // Real signature: psiSaveData(dataPtr, size, profileName) - "profileName" is the current Codename's name: the
 // original threads it (as a char*) into FUN_000e3340 to build a per-profile folder on the "u:\" drive, so each
 // Codename gets its own save slot rather than sharing one.

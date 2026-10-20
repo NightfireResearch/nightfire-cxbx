@@ -20,8 +20,6 @@ bool C_RBMPSTART_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint 
 bool C_RBMPFINISH_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 // AUTOGEN
 bool C_RBMPCNAME_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
-// AUTOGEN
-bool C_MPDBG_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);
 
 // AUTOINJECT
 bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5)

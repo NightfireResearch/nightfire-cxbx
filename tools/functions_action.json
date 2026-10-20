@@ -23448,13 +23448,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0006f950",
+        "name": "LS_GetSaveSize",
         "address": "0x0006f950",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "char *",
         "param_types": [],
-        "prototype_string": "char * __stdcall FUN_0006f950(void)",
+        "prototype_string": "char * __stdcall LS_GetSaveSize(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -25360,7 +25360,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0007c660",
+        "name": "Menu_GetBonus",
         "address": "0x0007c660",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -25368,7 +25368,7 @@
         "param_types": [
             "byte"
         ],
-        "prototype_string": "undefined8 __cdecl FUN_0007c660(byte param_1)",
+        "prototype_string": "undefined8 __cdecl Menu_GetBonus(byte param_1)",
         "parameters": [
             "[byte param_1@Stack[0x4]:1]"
         ],
@@ -28758,7 +28758,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008fcc0",
+        "name": "Menu_CheckSaveSpace",
         "address": "0x0008fcc0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -28766,7 +28766,7 @@
         "param_types": [
             "uint"
         ],
-        "prototype_string": "bool __cdecl FUN_0008fcc0(uint param_1)",
+        "prototype_string": "bool __cdecl Menu_CheckSaveSpace(uint param_1)",
         "parameters": [
             "[uint param_1@Stack[0x4]:4]"
         ],
@@ -28774,13 +28774,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0008fd90",
+        "name": "Menu_GoToDashboard",
         "address": "0x0008fd90",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_0008fd90(void)",
+        "prototype_string": "void __stdcall Menu_GoToDashboard(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

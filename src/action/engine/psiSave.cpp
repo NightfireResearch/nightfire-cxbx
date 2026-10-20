@@ -125,8 +125,6 @@ static int32_t SaveGamesReturned;
 #define SAVE_NAME_SLOT 9                                                 // 8 characters + NUL
 #define SaveGameCache ((char(*)[SAVE_NAME_SLOT])0x002a2e68)                // no fixed length in the original
 
-// The entries psiGetNextSave has handed out in this enumeration, skipped ones included
-#define SavesListed U32_AT(0x002adf0c)
 // A save the walk could not read was found: the message box's B then leaves for the dashboard (ui_codenames.cpp)
 #define SaveFlowDashboard U8_AT(0x0025edba)
 
