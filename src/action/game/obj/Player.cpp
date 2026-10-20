@@ -3294,7 +3294,6 @@ void Player_CollisionHandler(obj_tag *player) {
 // Making the player (Player_Init)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define AnimDebugCreate ((void (__cdecl *)(void))0x00019180)
 
 // The camera updater, by its original address (which jumps to ours), as the game has it
 #define PLAYER_POSITION_CAMERA ((cameraUpdateFunc)0x000a8a60)

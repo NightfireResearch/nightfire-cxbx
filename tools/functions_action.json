@@ -14230,7 +14230,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0004b400",
+        "name": "DroneFunc_SetWeaponInHand",
         "address": "0x0004b400",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -14239,7 +14239,7 @@
             "int *",
             "undefined1"
         ],
-        "prototype_string": "void __cdecl FUN_0004b400(int * param_1, undefined1 param_2)",
+        "prototype_string": "void __cdecl DroneFunc_SetWeaponInHand(int * param_1, char param_2)",
         "parameters": [
             "[int * param_1@Stack[0x4]:4]",
             "[undefined1 param_2@Stack[0x8]:1]"
@@ -44650,7 +44650,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d8690",
+        "name": "Vec_SegmentSphereIntersect",
         "address": "0x000d8690",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44662,7 +44662,7 @@
             "float",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000d8690(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, float param_4, _VECTOR * param_5)",
+        "prototype_string": "int __cdecl Vec_SegmentSphereIntersect(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, float param_4, _VECTOR * param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",
@@ -56266,25 +56266,25 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5480",
+        "name": "HUD_InitMissionStatusFormats",
         "address": "0x000f5480",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f5480()",
+        "prototype_string": "void __cdecl HUD_InitMissionStatusFormats(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5490",
+        "name": "HUD_InitObjectiveStatusFormats",
         "address": "0x000f5490",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000f5490(void)",
+        "prototype_string": "void __cdecl HUD_InitObjectiveStatusFormats(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56302,13 +56302,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f54c0",
+        "name": "HUD_InitInfoStatusFormats",
         "address": "0x000f54c0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f54c0()",
+        "prototype_string": "void __cdecl HUD_InitInfoStatusFormats(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56326,13 +56326,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f54f0",
+        "name": "HUD_InitPickupStatusFormats",
         "address": "0x000f54f0",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f54f0()",
+        "prototype_string": "void __cdecl HUD_InitPickupStatusFormats(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -56350,13 +56350,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000f5520",
+        "name": "Text_InitSubtitlesFormat",
         "address": "0x000f5520",
         "calling_convention": "unknown",
         "has_custom_variable_storage": false,
         "return_type": "undefined",
         "param_types": [],
-        "prototype_string": "undefined FUN_000f5520()",
+        "prototype_string": "void __cdecl Text_InitSubtitlesFormat(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"

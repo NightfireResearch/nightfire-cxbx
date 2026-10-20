@@ -73,6 +73,7 @@ static_assert(sizeof(TXT_MSG) == 0x20, "TXT_MSG is 0x20 bytes");
 
 TXT_MSG* Text_TakeMsg(void);
 void Text_Init(uchar warmReset);
+void Text_InitSubtitlesFormat(void);
 void Text_AddMsg(char player, char priority, int type, char *text, int sprite, short frames);
 void Text_DelMsg(TXT_MSG *msg);
 void Text_FlushAllSubtitles(void);

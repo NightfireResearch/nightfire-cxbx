@@ -33,7 +33,6 @@ static const uint SubMissileDatums[2] = {4, 5};
 // XBE_GLOBAL(0x0018cbf4, 0x10)
 static const uint SubTorpedoDatums[4] = {0, 1, 2, 3};
 
-#define AnimScriptPeekSeq ((sAnimSeq_tag *(__cdecl *)(HASHCODE script))0x000125b0)
 
 // Waits for its switch channel, if it has one
 static bool Switched(SubInfo *sub) {
@@ -59,7 +58,7 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     AnimObjectNew(obj, SUB_SKIN);
     sAnimScript_tag *script = AnimScriptAdd(obj, SUB_ANIM_MOVE);
     script->flags |= ANIMSCRIPT_LOOP;
-    sub->height = AnimScriptPeekSeq(SUB_ANIM_MOVE)->firstTrans.y;
+    sub->height = AnimScriptPeekSeq(SUB_ANIM_MOVE)->boundSphere[3];
     sub->seabedGap = -3.0f;
     return obj;
 }

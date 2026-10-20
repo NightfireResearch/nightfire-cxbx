@@ -488,6 +488,11 @@ int AnimDatumGetWeaponInfo(obj_tag *obj, HASHCODE *gfx, HASHCODE *flash, ushort 
 int AnimObjectNew(obj_tag *obj, HASHCODE skin);
 void AnimObjectDelete(obj_tag *obj);
 int AnimObjectUpdate(obj_tag *obj);
+int AnimObjectUpdateThunk(obj_tag *obj);
+void Discrete_Delete(obj_tag *obj);
+sAnimRawSeq_tag* AnimScriptPeekSeq(HASHCODE script);
+void AnimDebugCreate(void);
+float _AnimObjectInitialPose(obj_tag *obj);
 bool AnimObjectIsClose(obj_tag *obj, uint limit);
 void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer);
 void AnimObjectSetSleeveType(obj_tag *obj, int sleeveNum);
@@ -512,6 +517,7 @@ bool AnimGetFirstTrans(sAnimScript_tag *script, _VECTOR *out);
 void AnimGetFrameTransRaw(HASHCODE hashcode, int frame, _VECTOR *out);
 
 void AnimSetDeleteAll(obj_tag *obj);
+void AnimSetDelete(obj_tag *obj, sAnimSet_tag **slot);
 sAnimSet_tag* AnimSetAppend(obj_tag *obj, HASHCODE *list, float a, float b);
 void AnimSetUpdate(obj_tag *obj, sAnimSet_tag *set, float speed, float forward, float maxForward, float side,
                    float maxSide);

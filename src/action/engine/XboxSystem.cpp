@@ -298,12 +298,13 @@ static void *ReadLaunchData(void) {
 }
 
 // FUNC_AT(000e90f0)
-void *GetPTPData(void) {
+void* GetPTPData(void) {
     return ReadLaunchData();
 }
 
+// The same, a second copy in the XBE: the one the game's main calls
 // FUNC_AT(000e9340)
-void *GetPTPData_Copy(void) {
+void* GetPTPData_Copy(void) {
     return ReadLaunchData();
 }
 

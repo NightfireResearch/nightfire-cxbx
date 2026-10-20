@@ -95,9 +95,6 @@ typedef struct {
 // The originals, called by address where Ghidra's prototypes do not fit
 // The originals: ours in Break.cpp are not patched in yet
 
-// AUTOGEN
-void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
-
 // Generated for Player.cpp
 void Player_RamSave(BLData *blData);
 // Generated for Player.cpp

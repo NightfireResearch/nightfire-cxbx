@@ -28,7 +28,6 @@
 #define MINISUB_START   0
 #define MINISUB_ATTACK  3
 
-#define AnimScriptPeekSeq ((sAnimSeq_tag *(__cdecl *)(HASHCODE script))0x000125b0)
 
 // AUTOINJECT
 obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
@@ -41,12 +40,12 @@ obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_t
     obj->subState = MINISUB_TURN;
     AnimObjectNew(obj, MINISUB_SKIN);
     AnimScriptAdd(obj, MINISUB_ANIM)->flags |= ANIMSCRIPT_LOOP;
-    sAnimSeq_tag *seq = AnimScriptPeekSeq(MINISUB_ANIM);
+    sAnimRawSeq_tag *seq = AnimScriptPeekSeq(MINISUB_ANIM);
     MiniSubInfo *sub = (MiniSubInfo *)obj->extraObjectData;
     sub->gameObj = obj;
     sub->channel = (int)lvl->keys[0];
     sub->health = 100.0f;
-    sub->height = seq->firstTrans.y;
+    sub->height = seq->boundSphere[3];
     sub->unknown18[1] = 0.0f;
     sub->unknown18[0] = 0.0f;
     sub->unknown24[2] = 0.0f;

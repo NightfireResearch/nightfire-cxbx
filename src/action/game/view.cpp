@@ -30,8 +30,18 @@
 #include <stdio.h>
 #include <string.h>
 
-// AUTOGEN
-void View_SetDrawInViews(obj_tag* o, short views);
+// The views (a bit per player's) the object is drawn in, and with it an animated object's rigid parts
+// AUTOINJECT
+void View_SetDrawInViews(obj_tag* o, short views) {
+    if (o == NULL)
+        return;
+    o->displayMask = views;
+    if (!(o->transformFlags & TRANSFORM_ANIMATED) || o->animState == NULL)
+        return;
+    AnimObj *animObj = &o->animState->animObj;
+    for (uint i = 0; i < animObj->skin->numDiscrete; i++)
+        animObj->discreteObj[i]->displayMask = views;
+}
 
 // Visible to everyone
 // AUTOINJECT

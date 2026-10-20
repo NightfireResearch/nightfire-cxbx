@@ -122,4 +122,6 @@ bool NDrone2_DSTATE_StrafeDodgeRight(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
 bool NDrone2_DSTATE_RollLeftCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_RollRightCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 
+void DroneFunc_SetWeaponInHand(DCVars_tag *dcv, char weapon);
+
 #endif // NDRONE2_COMBAT_H

@@ -577,6 +577,37 @@ void HUD_InitPickupStatusPaneWidth(void) {
     MsgPickupStatusPane.width = (short)TextMsgFormats[TXTMSG_PICKUP].wrapWidth;
 }
 
+// The message panes' sprites (still the game's), and the dynamic initialisers that give their text sprites the
+// messages' formats. Not named on PS2; the names are ours.
+#define MissionStatusSprInfo ((SpriteInfo *)0x00181408)
+#define ObjectiveStatusSprInfo ((SpriteInfo *)0x00181490)
+#define InfoStatusSprInfo ((SpriteInfo *)0x00181698)
+#define PickupStatusSprInfo ((SpriteInfo *)0x001815b8)
+
+// FUNC_AT(0x000f5480)
+void HUD_InitMissionStatusFormats(void) {
+    MissionStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+}
+
+// FUNC_AT(0x000f5490)
+void HUD_InitObjectiveStatusFormats(void) {
+    ObjectiveStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+    ObjectiveStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+    ObjectiveStatusSprInfo[5].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+}
+
+// FUNC_AT(0x000f54c0)
+void HUD_InitInfoStatusFormats(void) {
+    InfoStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_INFO].font;
+    InfoStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+}
+
+// FUNC_AT(0x000f54f0)
+void HUD_InitPickupStatusFormats(void) {
+    PickupStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+    PickupStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+}
+
 
 // TODO: Change from 640x480 to generic
 // XBE_GLOBAL(0x00180388, 0x1e4)

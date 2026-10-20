@@ -3,6 +3,7 @@
 #include "../actionhelpers.h"
 #include "../game/weapon_stats.h"   // WeaponDataTableInit
 #include "../ui/HUD.h"              // the HUD panes' static initialisers
+#include "Text.h"                   // the subtitles'
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -36,17 +37,6 @@
 // exactly the same shape. So this is an ordinary LPTHREAD_START_ROUTINE and the stack works out on its own.
 // ---------------------------------------------------------------------------------------------------------------
 
-// The game's own static initialisers (C++ constructors of globals) that are not ours yet
-// AUTOGEN
-undefined FUN_000f5480(void);
-// AUTOGEN
-void __stdcall FUN_000f5490(void);
-// AUTOGEN
-undefined FUN_000f54c0(void);
-// AUTOGEN
-undefined FUN_000f54f0(void);
-// AUTOGEN
-undefined FUN_000f5520(void);
 
 // The table of initialisers XapiInitProcess runs once the heap is made.
 #define InitTableBegin    ((void (**)(void))0x00163178u)
@@ -294,14 +284,14 @@ static void Xbox_cinit(void) {
     // The C++ constructors
     Copter_InitConeCos();
     Copter_InitConeSin();
-    FUN_000f5480();
-    FUN_000f5490();
+    HUD_InitMissionStatusFormats();
+    HUD_InitObjectiveStatusFormats();
     HUD_InitObjectiveStatusPaneWidth();
-    FUN_000f54c0();
+    HUD_InitInfoStatusFormats();
     HUD_InitInfoStatusPaneWidth();
-    FUN_000f54f0();
+    HUD_InitPickupStatusFormats();
     HUD_InitPickupStatusPaneWidth();
-    FUN_000f5520();
+    Text_InitSubtitlesFormat();
     WeaponDataTableInit();
 }
 

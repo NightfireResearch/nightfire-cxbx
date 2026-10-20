@@ -30,8 +30,6 @@
 #pragma fp_contract(off)
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-// Our name: setting the weapon in the object's hand
-#define DroneFunc_SetWeaponInHand ((void (__cdecl *)(DCVars_tag *dcv, char weapon))0x0004b400)
 // Whether a point at offset from the drone's feet, in its object's frame, can be walked to (scaled by a bot's
 // speed unless unscaled is set)
 
@@ -117,6 +115,14 @@ static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
 // The frame a second from now (at 60 a second), worked out on the x87
 static uint SecondFromNow(void) {
     return Ftol((double)FRAME_RATE_DIV * 60.0f + (double)GameState.NumFramesUnpaused);
+}
+
+// The weapon in the drone's object's hand, without an anim state none. Not named on PS2; the name is ours.
+// AUTOINJECT
+void DroneFunc_SetWeaponInHand(DCVars_tag *dcv, char weapon) {
+    if (dcv->gameObj == NULL || dcv->gameObj->animState == NULL)
+        return;
+    dcv->gameObj->animState->currentWeaponId = weapon;
 }
 
 // A captain with weapon 0x19 in hand changes to 0x18

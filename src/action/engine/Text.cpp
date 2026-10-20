@@ -288,6 +288,12 @@ TXT_MSG* Text_TakeMsg(void) {
     }
 }
 
+// The subtitles' sprite gets their format: a dynamic initialiser, run before main. Not named on PS2; the name is ours.
+// FUNC_AT(0x000f5520)
+void Text_InitSubtitlesFormat(void) {
+    SubtitlesInfo.maybeClippedText = TextMsgFormats[TXTMSG_SUBTITLE].font;
+}
+
 // The subtitles' sprites and an empty queue; at a cold start an empty history, at a warm one the history's strings
 // held again
 // FUNC_AT(0x000d1c90)
