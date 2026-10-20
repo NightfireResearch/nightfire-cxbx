@@ -4,6 +4,7 @@
 // a drone back on its mission path, and NDrone2_FindAmbushCover.
 
 #include "NDrone2_Roles.h"
+#include "NDrone2_Combat.h"
 #include "Behaviour.h"
 #include "DroneAnim.h"
 #include "DroneInit.h"                  // NDrone2_Enable
@@ -38,18 +39,10 @@
 // FUN_00046160 in Ghidra; nightfire-port's name
 #define NDrone2_MoveTo_RouteNode ((void (__cdecl *)(DCVars_tag *dcv, int node, AIRoute_tag *route))0x00046160)
 #define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char run))0x00046d90)
-// FUN_00044250 in Ghidra; nightfire-port's name
-#define NDrone2_CoverNodeOK ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00044250)
+
 #define NDrone2_GetPosForCornerCover ((void (__cdecl *)(CoverNode_tag *node, int side, _VECTOR *pos, _VECTOR *rot,  \
                                                         int unused))0x00044490)
-// FUN_000464a0 in Ghidra: takes the cover node the drone was given on the side given (our name)
-#define NDrone2_TakeCover ((void (__cdecl *)(DCVars_tag *dcv, uint side))0x000464a0)
-// FUN_00035f70 in Ghidra: the weapon in the object's hands, 0 without an anim state (our name)
-#define Drone_HeldWeapon ((char (__cdecl *)(DCVars_tag *dcv))0x00035f70)
-// FUN_00045340 in Ghidra: whether the drone can walk straight from its feet to pos (our name)
-#define NDrone2_CanWalkStraightTo ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos,          \
-                                                     char strict))0x00045340)
-#define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
+
 // Return in ST0, unrounded
 
 // What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
@@ -902,7 +895,7 @@ bool NDrone2_DSTATE_InterogateAssistWait(DCVars_tag *dcv, Drone_tag *drone, obj_
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
         DroneVision_SetInterogateAssist(dcv->drone);
-        if (Drone_HeldWeapon(dcv) > 1)
+        if (DroneFunc_WeaponInHand(dcv) > 1)
             DroneAnim_CallAnim(0xa, 0, 0, 0, 0.0f, 0, dcv);
         else
             DroneAnim_CallAnim(0x21, 0, 0, 0, 0.0f, 0, dcv);
@@ -982,7 +975,7 @@ bool NDrone2_DSTATE_Interogate(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         if (drone->opponent == NULL)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_NoOpponent, 0);
         // The original asks for the weapon in hand twice
-        if (NDrone2_IsCivilian(dcv) || Drone_HeldWeapon(dcv) <= 1 || Drone_HeldWeapon(dcv) <= 1)
+        if (NDrone2_IsCivilian(dcv) || DroneFunc_WeaponInHand(dcv) <= 1 || DroneFunc_WeaponInHand(dcv) <= 1)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         DroneVision_BeginInterogate(dcv->drone);
         dcv->drone->flags |= 0x10000;
@@ -2001,7 +1994,7 @@ bool NDrone2_FindAmbushCover(DCVars_tag *dcv) {
     for (uint i = 0; i < NPCGlobals.numCoverNodes; i++, node++) {
         if (node->flags & kCoverNodeHeld)
             continue;
-        if (!NDrone2_CoverNodeOK(dcv, node))
+        if (!NDrone2_CornerCoverAnimOK(dcv, node))
             continue;
         if (node->type == COVER_LOW && behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
             continue;

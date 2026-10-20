@@ -31,15 +31,16 @@
 #include "BOT.h"                    // BOT_fellOutMap
 #include "DroneModes.h"
 #include "DroneAnim.h"
+#include "NDrone2_Special.h"             // NDrone2_CreateNinjaEyes
 
 #include <math.h>
 #include "string.h"
 
 // Another package's, or still the game's
-#define NDrone2_CreateNinjaEyes ((void (__cdecl *)(obj_tag *gameObj))0x0003b6c0)
+
 #define NDrone2_DoorIsOpen ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f10)
 #define NDrone2_OpenDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039ec0)
-#define DroneSpawner_CreateBlank ((void (__cdecl *)(void))0x0002fb90)
+
 #define BOT_setOtherPlayerInfo ((void (__cdecl *)(DCVars_tag *dcv))0x0001a660)
 #include "../obj/BodyGlow.h"
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
@@ -239,8 +240,18 @@ void Drone_FellOutMap(obj_tag *gameObj) {
 
 // ---- once a frame, from Drone_InitComms (parcel 7: opponents)
 
-#define Drone_AddDynamicAwarePoint ((void (__cdecl *)(uchar type, obj_tag *obj, _VECTOR *pos, cel_tag *cel, float radius))0x00030e10)
-
+// A point drones take notice of this frame, while there is room for it
+// AUTOINJECT
+void Drone_AddDynamicAwarePoint(uchar type, obj_tag *obj, _VECTOR *pos, cel_tag *cel, float radius) {
+    if (NPCGlobals.numAwarePoints >= MAX_AWARE_POINTS)
+        return;
+    DroneAwarePoint *point = &NPCGlobals.awarePoints[NPCGlobals.numAwarePoints++];
+    point->type = type;
+    point->obj = obj;
+    point->pos = *pos;
+    point->cel = cel;
+    point->radius = radius;
+}
 
 // Outside multiplayer, the points drones take notice of this frame (NPCGlobals.awarePoints), each with the AI links
 // around it flagged. Type 0x2a objects: points of types 0 and 2, 3 m, AILINK_SMOKE. Bullets of weapon 0x36: type 1,
@@ -331,6 +342,16 @@ void Drone_ProcessOpponents(void) {
 // The dummy-player cheat (NPCGlobals.dummyPlayerActive) switched: on, the dummy player takes glb_players[0]'s place
 // and the drones after the player go after it; off, they go back to the player. Nothing without a dummy player. Our
 // name; nightfire-port has it inline in Drone_InitComms.
+// A drone's skin hashcode, or 0 for an object without drone data. FUN_00030a10 in Ghidra. Not named on PS2; the
+// name is ours.
+// AUTOINJECT
+HASHCODE Drone_GetSkin(obj_tag *gameObj) {
+    Drone_tag *drone = (Drone_tag *)gameObj->extraObjectData;
+    if (drone == NULL)
+        return (HASHCODE)0;
+    return drone->skinHashcode;
+}
+
 // FUNC_AT(0x00030950)
 void Drone_UpdateDummyPlayer(char active) {
     if (active == (char)NPCGlobals.dummyPlayerActive || NPCGlobals.dummyPlayer == NULL)

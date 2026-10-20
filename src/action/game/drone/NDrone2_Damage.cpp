@@ -31,10 +31,7 @@
 #define BOT_soundEffect ((void (__cdecl *)(DCVars_tag *dcv, int sound))0x0001aca0)
 #define BOT_handlePain ((void (__cdecl *)(DCVars_tag *dcv, float damage, ushort unknown, short location))0x0001b6b0)
 // Tells the drones around obj of something at pos (here, that the drone is hurt)
-// FUN_0003a240 and FUN_0003a270 in Ghidra (our names). An enemy's hit counts for the player (PlrStat_LogShotHitEnemy)
-// when its last attacker is its opponent; with the second, also while it lives.
-#define NDrone2_LogHitByOpponent ((void (__cdecl *)(DCVars_tag *dcv))0x0003a240)
-#define NDrone2_LogHitByOpponentOrAlive ((void (__cdecl *)(DCVars_tag *dcv))0x0003a270)
+
 
 // Drone_tag.armour bits
 #define ARMOUR_VEST 1
@@ -154,6 +151,25 @@ void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit) {
     drone->hitsTaken++;
     drone->lastAttacker = bullet->firedByObj;
     Drone_Message(obj, DRONE_MSG_ImpactBullet, hit, 0);
+}
+
+// An enemy's hit counts for the player (PlrStat_LogShotHitEnemy) when its last attacker is its opponent.
+// FUN_0003a240 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+void NDrone2_LogHitByOpponent(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (drone->lastAttacker == drone->opponent && drone->side == 1)
+        PlrStat_LogShotHitEnemy(0);
+}
+
+// The same, and also while the enemy lives. FUN_0003a270 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+void NDrone2_LogHitByOpponentOrAlive(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (drone->lastAttacker != drone->opponent && drone->health <= 0.0f)
+        return;
+    if (drone->side == 1)
+        PlrStat_LogShotHitEnemy(0);
 }
 
 // An explosion's hit: kept as the drone's last attacker, and the impact sent on, but for a skin class 16 its own

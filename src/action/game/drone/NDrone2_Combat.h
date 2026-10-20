@@ -21,10 +21,27 @@ short DroneFunc_CombatState(DCVars_tag *dcv);
 
 // Talk
 uint DroneFunc_ChooseSFX(uint first, uint last);
+uint DroneFunc_ChooseSFXByID(Drone_tag *drone, uint first, uint last);
+bool DroneFunc_InRangeOfTarget(DCVars_tag *dcv, float range);
+char DroneFunc_WeaponInHand(DCVars_tag *dcv);
+bool NDrone2_CheckSurrender(DCVars_tag *dcv);
+void NDrone2_SendAttackMessage(DCVars_tag *dcv);
 bool NDrone2_AttackTalk(DCVars_tag *dcv);
 bool NDrone2_SeenPlayerTalk(DCVars_tag *dcv);
 
 // What the drone can do
+bool NDrone2_StepAllowed(DCVars_tag *dcv);
+bool NDrone2_StrafeAllowed(DCVars_tag *dcv);
+bool NDrone2_StrafeDodgeAllowed(DCVars_tag *dcv);
+bool NDrone2_RollAllowed(DCVars_tag *dcv);
+bool NDrone2_CanCrouchWalk(DCVars_tag *dcv);
+bool NDrone2_CanMove8(DCVars_tag *dcv);
+short NDrone2_ChooseAimStand(void);
+short NDrone2_ChooseAimCrouch(DCVars_tag *dcv);
+short NDrone2_ChooseRoll(DCVars_tag *dcv);
+short NDrone2_ChooseStrafe(DCVars_tag *dcv);
+short NDrone2_ChooseStrafeDodge(DCVars_tag *dcv);
+short NDrone2_ChooseStep(DCVars_tag *dcv);
 bool NDrone2_HasOpponent(DCVars_tag *dcv);
 bool NDrone2_CanAltAttack(DCVars_tag *dcv, short variant);
 bool NDrone2_CanAimCrouch(DCVars_tag *dcv);
@@ -47,6 +64,7 @@ bool NDrone2_SetGoalToDroneWithLosToOpponent(DCVars_tag *dcv);
 bool NDrone2_SetGoalToCloserPosition(DCVars_tag *dcv);
 
 // Cover
+bool DroneAnim_CanStandAtCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_ForceCrouchCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_CanUseCornerAsLowCover(DCVars_tag *dcv, struct CoverNode_tag *node);
 bool DroneAnim_CanCrouchLean(DCVars_tag *dcv, struct CoverNode_tag *node);
@@ -56,6 +74,10 @@ bool DroneAnim_CanStandStepOut(DCVars_tag *dcv, struct CoverNode_tag *node);
 short NDrone2_CoverNodeOK(DCVars_tag *dcv, struct CoverNode_tag *node, ushort kind, char force);
 bool NDrone2_GetPosForCornerCover(struct CoverNode_tag *node, ushort kind, _VECTOR *pos, _VECTOR *rot, char step);
 void NDrone2_DisownCover(DCVars_tag *dcv);
+bool NDrone2_CornerCoverAnimOK(DCVars_tag *dcv, struct CoverNode_tag *node);
+bool NDrone2_LowCoverOK(DCVars_tag *dcv, struct CoverNode_tag *node);
+bool NDrone2_GetCoverPosForTarget(struct CoverNode_tag *node, uint target, _VECTOR *pos, _VECTOR *rot, char step);
+void NDrone2_TakeCover(DCVars_tag *dcv, char kind);
 bool NDrone2_FindCover(DCVars_tag *dcv, char force);
 bool NDrone2_CoverAvailable(DCVars_tag *dcv, char force);
 

@@ -120,6 +120,8 @@ add_library(actioninject SHARED
   src/action/devtools/DroneCoverShadow.cpp
   src/action/devtools/DroneReactShadow.cpp
   src/action/devtools/DroneRoleShadow.cpp
+  src/action/devtools/DroneHelperShadow.cpp
+  src/action/devtools/DroneBotShadow.cpp
   src/action/devtools/PlayerShadow.cpp
   src/action/devtools/PlayerWeaponShadow.cpp
   src/action/devtools/AnimPortShadow.cpp
@@ -291,6 +293,7 @@ add_library(actioninject SHARED
   src/action/game/drone/NDrone2_Special.cpp
   src/action/game/drone/NDrone2_Reactions.cpp
   src/action/game/drone/NDrone2_Roles.cpp
+  src/action/game/drone/NDrone2_Bot.cpp
   src/action/game/obj/DroneSpawner.cpp
   src/action/game/mp/multiplayer.cpp
   src/action/game/mp/multiplayer_goldeneye.cpp

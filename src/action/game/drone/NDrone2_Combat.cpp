@@ -9,6 +9,7 @@
 #include "DroneModes.h"                 // NDrone2_ChangeToAttackMode
 #include "DroneMove.h"
 #include "DroneTables.h"
+#include "DroneVision.h"                // NDrone2_CanSeeObject
 #include "DroneWeapon.h"
 #include "NDrone2_Damage.h"
 #include "NDrone2_Route.h"
@@ -29,38 +30,11 @@
 #pragma fp_contract(off)
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_CheckSurrender ((bool (__cdecl *)(DCVars_tag *dcv))0x00038bd0)
-#define NDrone2_SendAttackMessage ((void (__cdecl *)(DCVars_tag *dcv))0x0003cd80)
-#define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
-// Our names. One of first..last, or of the run of as many after it for a drone with an odd id
-#define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
-// Our names: the weapon in the object's hand (0 without an anim state), and setting it
-#define DroneFunc_WeaponInHand ((char (__cdecl *)(DCVars_tag *dcv))0x00035f70)
+// Our name: setting the weapon in the object's hand
 #define DroneFunc_SetWeaponInHand ((void (__cdecl *)(DCVars_tag *dcv, char weapon))0x0004b400)
 // Whether a point at offset from the drone's feet, in its object's frame, can be walked to (scaled by a bot's
 // speed unless unscaled is set)
-#define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
-// Our names: the behaviour property and the anim state each combat move needs, and the drone not frozen
-#define NDrone2_StrafeDodgeAllowed ((bool (__cdecl *)(DCVars_tag *dcv))0x000435b0)
-#define NDrone2_StrafeAllowed ((bool (__cdecl *)(DCVars_tag *dcv))0x00043560)
-#define NDrone2_RollAllowed ((bool (__cdecl *)(DCVars_tag *dcv))0x00043600)
-#define NDrone2_StepAllowed ((bool (__cdecl *)(DCVars_tag *dcv))0x00043510)
-// Our names: one of the pair of moves the drone can make, the side drawn at random (the other when it cannot), or 0
-#define NDrone2_ChooseStrafeDodge ((short (__cdecl *)(DCVars_tag *dcv))0x00045c30)
-#define NDrone2_ChooseStrafe ((short (__cdecl *)(DCVars_tag *dcv))0x00045bc0)
-#define NDrone2_ChooseRoll ((short (__cdecl *)(DCVars_tag *dcv))0x00045b30)
-#define NDrone2_ChooseStep ((short (__cdecl *)(DCVars_tag *dcv))0x00045ca0)
-// Our names: AimCrouchFire when NDrone2_CanAimCrouch agrees, else 0; AimStandFire three times in four, else 0
-#define NDrone2_ChooseAimCrouch ((short (__cdecl *)(DCVars_tag *dcv))0x000437d0)
-#define NDrone2_ChooseAimStand ((short (__cdecl *)(DCVars_tag *dcv))0x000437b0)
-// Our names: whether the drone could stand at the cover node (one of properties 0xa-0xd, and at a corner the side
-// flag 8); whether a corner has an anim the drone can use there; whether a low node may be used (property 0xf for
-// type 1)
-#define DroneAnim_CanStandAtCover ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033a40)
-#define NDrone2_CornerCoverAnimOK ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00044250)
-#define NDrone2_LowCoverOK ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x000442e0)
-// Our name: takes the cover NDrone2_FindCover chose, as the kind of use it found
-#define NDrone2_TakeCover ((void (__cdecl *)(DCVars_tag *dcv, char kind))0x000464a0)
+
 
 static_assert(offsetof(MPSettings_t, maybeDroneAIEnabled) == 0x1e4, "MPSettings.maybeDroneAIEnabled is 0x0026001c");
 
@@ -88,6 +62,8 @@ static_assert(offsetof(MPSettings_t, maybeDroneAIEnabled) == 0x1e4, "MPSettings.
 
 // The anim states these ask for (our names)
 #define DANIM_BACKOFF 4
+#define DANIM_MOVE_8 8
+#define DANIM_CROUCH_WALK 0xf
 #define DANIM_AIM_CROUCH 5
 #define DANIM_AIM_STAND 0xa
 #define DANIM_STRAFE_LEFT 0xc
@@ -295,6 +271,76 @@ uint DroneFunc_ChooseSFX(uint first, uint last) {
     return first + Rand_Rand(last - first + 1);
 }
 
+// One of the sounds first..last, or for a drone with an odd id the one as many further on. FUN_00036290 in Ghidra.
+// Not named on PS2; the name is ours.
+// AUTOINJECT
+uint DroneFunc_ChooseSFXByID(Drone_tag *drone, uint first, uint last) {
+    uint sfx = first + Rand_Rand(last - first + 1);
+    if (drone->sm.id & 1)
+        sfx += last - first + 1;
+    return sfx;
+}
+
+// Whether the opponent is nearer than range.
+// AUTOINJECT
+bool DroneFunc_InRangeOfTarget(DCVars_tag *dcv, float range) {
+    return dcv->drone->distanceToTarget < range;
+}
+
+// The weapon in the object's hand, 0 without an anim state. FUN_00035f70 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+char DroneFunc_WeaponInHand(DCVars_tag *dcv) {
+    if (dcv->gameObj == NULL || dcv->gameObj->animState == NULL)
+        return 0;
+    return dcv->gameObj->animState->currentWeaponId;
+}
+
+constexpr float kSurrenderAlertness = 0.66f;
+constexpr float kSurrenderRange = 2.0f;
+constexpr float kSurrenderBearing = 2.0943952f;     // 2pi/3
+constexpr float kSurrenderFacing = 45.0f;
+static_assert(std::bit_cast<uint32_t>(kSurrenderAlertness) == 0x3f28f5c3, "not the original's 0.66");
+static_assert(std::bit_cast<uint32_t>(kSurrenderBearing) == 0x40060a92, "not the original's 2pi/3");
+
+// A drone that may surrender (property 0x43) does, fully alerted, when it is not yet alert, its opponent is within
+// 2 m behind it (over 2pi/3 off its facing), in sight, armed and facing it.
+// AUTOINJECT
+bool NDrone2_CheckSurrender(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    obj_tag *opponent = drone->opponent;
+    if (opponent == NULL)
+        return false;
+    if (behaviour_util_getProperty(DRONE_PROP_43, drone->currentBehaviour) == 0)
+        return false;
+    drone = dcv->drone;
+    if (drone->alertness >= kSurrenderAlertness)        // NaN goes on
+        return false;
+    if (!(drone->distanceToTarget < kSurrenderRange))
+        return false;
+    if (!(fabsf(drone->opponentBearing) > kSurrenderBearing))
+        return false;
+    if (!NDrone2_CanSeeObject(drone, opponent, 5, 0))
+        return false;
+    if (!DroneWeap_OpponentHasWeapon(dcv))
+        return false;
+    if (!NDrone2_BondIsFacingMe(dcv, kSurrenderFacing))
+        return false;
+    dcv->drone->alertness = 1.0f;
+    return true;
+}
+
+// An enemy with an opponent, not yet alarmed, raises the alarm (DRONE_FLAG_ALARM_SENT, flags2 bit 4) and alerts the
+// drones within 20 m to its opponent (message 0x16).
+// AUTOINJECT
+void NDrone2_SendAttackMessage(DCVars_tag *dcv) {
+    Drone_tag *drone = dcv->drone;
+    if (drone->side != 1 || (drone->flags & DRONE_FLAG_ALARM_SENT) || drone->opponent == NULL)
+        return;
+    drone->flags2 |= 0x10;
+    dcv->drone->flags |= DRONE_FLAG_ALARM_SENT;
+    NDrone2_DroneAlertToObject(dcv, 0x16, dcv->drone->opponent, 20.0f, 20.0f, 1.0f);
+}
+
 // Shouted when attacking, by skin class (and level), now and then; the opponent's last sighting is passed on to the
 // others.
 // AUTOINJECT
@@ -453,6 +499,55 @@ bool NDrone2_CanAltAttack(DCVars_tag *dcv, short variant) {
     return can;
 }
 
+// The combat moves' tests: the behaviour property, the drone not frozen, and the anim state. FUN_00043510, 43560,
+// 435b0 and 43600 in Ghidra. Not named on PS2; the names are ours.
+// AUTOINJECT
+bool NDrone2_StepAllowed(DCVars_tag *dcv) {
+    return behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
+           !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STEP_LEFT, 0);
+}
+
+// AUTOINJECT
+bool NDrone2_StrafeAllowed(DCVars_tag *dcv) {
+    return behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) != 0 &&
+           !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_LEFT, 0);
+}
+
+// AUTOINJECT
+bool NDrone2_StrafeDodgeAllowed(DCVars_tag *dcv) {
+    return behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) != 0 &&
+           !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_DODGE, 0);
+}
+
+// AUTOINJECT
+bool NDrone2_RollAllowed(DCVars_tag *dcv) {
+    return behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) != 0 &&
+           !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_ROLL_LEFT, 0);
+}
+
+// Walking crouched (property 0 or 2, anim state 0xf). FUN_000436b0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_CanCrouchWalk(DCVars_tag *dcv) {
+    if (behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_02, dcv->drone->currentBehaviour) == 0)
+        return false;
+    return DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_WALK, 0);
+}
+
+// Anim state 8 (property 1 without 2). FUN_00043700 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_CanMove8(DCVars_tag *dcv) {
+    return behaviour_util_getProperty(DRONE_PROP_01, dcv->drone->currentBehaviour) != 0 &&
+           behaviour_util_getProperty(DRONE_PROP_02, dcv->drone->currentBehaviour) == 0 &&
+           DroneAnim_CanDoAnimState(dcv, DANIM_MOVE_8, 0);
+}
+
+// AimStand three times in four, else 0. FUN_000437b0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+short NDrone2_ChooseAimStand(void) {
+    return Rand_Rand(4) != 0 ? DSTATE_AimStand : 0;
+}
+
 // Crouching to aim (property 0x11, anim state 5), 6 m or more from the opponent, half the time.
 // AUTOINJECT
 bool NDrone2_CanAimCrouch(DCVars_tag *dcv) {
@@ -463,6 +558,12 @@ bool NDrone2_CanAimCrouch(DCVars_tag *dcv) {
     if (dcv->drone->distanceToTarget < 6.0f)
         return false;
     return Rand_Rand(2) == 0;
+}
+
+// AimCrouch when NDrone2_CanAimCrouch agrees, else 0. FUN_000437d0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+short NDrone2_ChooseAimCrouch(DCVars_tag *dcv) {
+    return NDrone2_CanAimCrouch(dcv) ? DSTATE_AimCrouch : 0;
 }
 
 // A step to the side, 1.8 m, aiming (property 0x42, anim state 0x5a; 0x5b too to the right).
@@ -594,6 +695,82 @@ bool NDrone2_CanRollRight(DCVars_tag *dcv) {
     return NDrone2_MoveTestRelative(&offset, dcv->drone, dcv->gameObj, 0, 1);
 }
 
+// One of the pair of moves the drone can make, the side drawn at random (the other when it cannot), or 0.
+// FUN_00045b30, 45bc0, 45c30 and 45ca0 in Ghidra. Not named on PS2; the names are ours.
+// AUTOINJECT
+short NDrone2_ChooseRoll(DCVars_tag *dcv) {
+    if (!NDrone2_RollAllowed(dcv))
+        return 0;
+    if (Rand_Rand(2) != 0) {
+        if (NDrone2_CanRollLeft(dcv))
+            return DSTATE_RollLeftCrouch;
+        if (NDrone2_CanRollRight(dcv))
+            return DSTATE_RollRightCrouch;
+    } else {
+        if (NDrone2_CanRollRight(dcv))
+            return DSTATE_RollRightCrouch;
+        if (NDrone2_CanRollLeft(dcv))
+            return DSTATE_RollLeftCrouch;
+    }
+    return 0;
+}
+
+// Only the property: the anim state and the frozen flag are not asked about
+// AUTOINJECT
+short NDrone2_ChooseStrafe(DCVars_tag *dcv) {
+    if (behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) == 0)
+        return 0;
+    if (Rand_Rand(2) != 0) {
+        if (NDrone2_CanStrafeLeft(dcv))
+            return DSTATE_StrafeAimLeft;
+        if (NDrone2_CanStrafeRight(dcv))
+            return DSTATE_StrafeAimRight;
+    } else {
+        if (NDrone2_CanStrafeRight(dcv))
+            return DSTATE_StrafeAimRight;
+        if (NDrone2_CanStrafeLeft(dcv))
+            return DSTATE_StrafeAimLeft;
+    }
+    return 0;
+}
+
+// The same
+// AUTOINJECT
+short NDrone2_ChooseStrafeDodge(DCVars_tag *dcv) {
+    if (behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) == 0)
+        return 0;
+    if (Rand_Rand(2) != 0) {
+        if (NDrone2_CanStrafeDodgeLeft(dcv))
+            return DSTATE_StrafeDodgeLeft;
+        if (NDrone2_CanStrafeDodgeRight(dcv))
+            return DSTATE_StrafeDodgeRight;
+    } else {
+        if (NDrone2_CanStrafeDodgeRight(dcv))
+            return DSTATE_StrafeDodgeRight;
+        if (NDrone2_CanStrafeDodgeLeft(dcv))
+            return DSTATE_StrafeDodgeLeft;
+    }
+    return 0;
+}
+
+// AUTOINJECT
+short NDrone2_ChooseStep(DCVars_tag *dcv) {
+    if (!NDrone2_StepAllowed(dcv))
+        return 0;
+    if (Rand_Rand(2) != 0) {
+        if (NDrone2_CanStepLeft(dcv))
+            return DSTATE_StepAimLeft;
+        if (NDrone2_CanStepRight(dcv))
+            return DSTATE_StepAimRight;
+    } else {
+        if (NDrone2_CanStepRight(dcv))
+            return DSTATE_StepAimRight;
+        if (NDrone2_CanStepLeft(dcv))
+            return DSTATE_StepAimLeft;
+    }
+    return 0;
+}
+
 // Backing off 1.8 m, aiming (property 6, anim state 4).
 // AUTOINJECT
 bool NDrone2_CanBackoff(DCVars_tag *dcv) {
@@ -666,7 +843,7 @@ short NDrone2_ChooseCombatMove(DCVars_tag *dcv) {
         if ((move = NDrone2_ChooseAimCrouch(dcv)) != 0)
             break;
     case COMBATMOVE_AIM_STAND:
-        if ((move = NDrone2_ChooseAimStand(dcv)) != 0)
+        if ((move = NDrone2_ChooseAimStand()) != 0)
             break;
         return 0;
     default:
@@ -837,6 +1014,18 @@ bool DroneAnim_CanUseCornerAsLowCover(DCVars_tag *dcv, CoverNode_tag *node) {
     return !(node->flags & COVERNODE_SIDE1) && (node->flags & COVERNODE_SIDE2);
 }
 
+// Whether the drone could stand at the cover node: one of properties 0xa, 0xc, 0xb or 0xd, and a low node or a corner
+// with COVERNODE_SIDE1. FUN_00033a40 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool DroneAnim_CanStandAtCover(DCVars_tag *dcv, CoverNode_tag *node) {
+    if (behaviour_util_getProperty(DRONE_PROP_0A, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_0C, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_0B, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_0D, dcv->drone->currentBehaviour) == 0)
+        return false;
+    return node->type != COVER_CORNER || (node->flags & COVERNODE_SIDE1);
+}
+
 // Leaning out crouched (property 0x10 or 0xf, at a corner side 2; property 0xa, 0xb or 0xd; a corner with
 // COVERNODE_STAND2 and anim state 0x13).
 // AUTOINJECT
@@ -993,6 +1182,63 @@ bool NDrone2_GetPosForCornerCover(CoverNode_tag *node, ushort kind, _VECTOR *pos
     pos->x = (float)(FCos(node->rot.y) * Extended(back) + FSin(node->rot.y) * across + Extended(pos->x));
     pos->z = (float)(FCos(node->rot.y) * across - FSin(node->rot.y) * Extended(back) + Extended(pos->z));
     return true;
+}
+
+// Whether a corner has an anim the drone can use there (when it must crouch there, a crouched one or the corner as
+// low cover); any other node does. False without a node. FUN_00044250 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_CornerCoverAnimOK(DCVars_tag *dcv, CoverNode_tag *node) {
+    if (node == NULL)
+        return false;
+    if (node->type != COVER_CORNER)
+        return true;
+    if (DroneAnim_ForceCrouchCover(dcv, node))
+        return DroneAnim_CanCrouchLean(dcv, node) || DroneAnim_CanCrouchStepOut(dcv, node) ||
+               DroneAnim_CanUseCornerAsLowCover(dcv, node);
+    return DroneAnim_CanCrouchLean(dcv, node) || DroneAnim_CanCrouchStepOut(dcv, node) ||
+           DroneAnim_CanStandLean(dcv, node) || DroneAnim_CanStandStepOut(dcv, node) ||
+           DroneAnim_CanUseCornerAsLowCover(dcv, node);
+}
+
+// Whether a low node may be used: property 0xf; any other node may. FUN_000442e0 in Ghidra. Not named on PS2; the
+// name is ours.
+// AUTOINJECT
+bool NDrone2_LowCoverOK(DCVars_tag *dcv, CoverNode_tag *node) {
+    if (node->type != COVER_LOW)
+        return true;
+    return behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) != 0;
+}
+
+// Where to stand at the node against a target slot: the kind of use its bits give (low cover over side 2 over side
+// 1), or false when it serves none. FUN_000445a0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_GetCoverPosForTarget(CoverNode_tag *node, uint target, _VECTOR *pos, _VECTOR *rot, char step) {
+    uint usable = node->usable[target];
+    ushort kind = 0;
+    if (usable & 2)
+        kind = 1;
+    if (usable & 4)
+        kind = 2;
+    if (usable & 8)
+        kind = 3;
+    if (kind == 0)
+        return false;
+    return NDrone2_GetPosForCornerCover(node, kind, pos, rot, step);
+}
+
+// Takes the cover node the drone was given, for the kind of use found (the low two bits of coverFlags): held by the
+// drone, the place to slide to worked out for its target, and the drone marked as having cover and seeking it.
+// FUN_000464a0 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+void NDrone2_TakeCover(DCVars_tag *dcv, char kind) {
+    Drone_tag *drone = dcv->drone;
+    drone->coverNode->occupant = dcv->gameObj;
+    drone->coverFlags = (drone->coverFlags & ~3) | (kind & 3);
+    drone->coverNode->flags |= COVERNODE_HELD;
+    NDrone2_GetCoverPosForTarget(drone->coverNode, drone->targetSlot, &drone->coverPos.pos, NULL, 0);
+    drone->coverPos.cel = drone->coverNode->cel;
+    dcv->drone->flags |= DRONE_FLAG_HAS_COVER;
+    dcv->drone->flags |= DRONE_FLAG_SEEKS_COVER;
 }
 
 // Lets go of its cover node.

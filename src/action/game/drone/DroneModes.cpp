@@ -31,6 +31,12 @@ void NDrone2_init_DMODE_Defaults(Drone_tag *drone) {
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
 }
 
+// The shared jump (a thunk, so tagged by address)
+// FUNC_AT(0x000408a0)
+void NDrone2_init_DMODE_Normal(Drone_tag *drone) {
+    NDrone2_init_DMODE_Defaults(drone);
+}
+
 // AUTOINJECT
 void NDrone2_init_DMODE_Sniper(Drone_tag *drone) {
     static const DRONE_PROP props[] = {

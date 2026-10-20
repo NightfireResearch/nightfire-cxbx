@@ -17,6 +17,8 @@ void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact);
 void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, char force);
 void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale);
 void DroneFunc_SendHurtMessage(DCVars_tag *dcv);
+void NDrone2_LogHitByOpponent(DCVars_tag *dcv);
+void NDrone2_LogHitByOpponentOrAlive(DCVars_tag *dcv);
 
 bool NDrone2_PunchImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, char anim);
 bool NDrone2_BulletImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, char anim);

@@ -3,6 +3,7 @@
 // explosive) or heard (a noise, through aware, suspect and alert).
 
 #include "NDrone2_Alert.h"
+#include "NDrone2_Combat.h"
 #include "DroneAnim.h"
 #include "DroneModes.h"                 // NDrone2_ChangeToAttackMode
 #include "DroneTables.h"
@@ -21,7 +22,7 @@
 #include <string.h>
 
 // The originals, called by address
-#define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
+
 // Return in ST0, unrounded
 
 // Anim states (our names)

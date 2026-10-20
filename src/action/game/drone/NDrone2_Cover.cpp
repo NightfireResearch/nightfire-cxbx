@@ -3,6 +3,7 @@
 // node starts (NDrone2_ReachedDestNode).
 
 #include "NDrone2_Cover.h"
+#include "NDrone2_Combat.h"
 #include "DroneAnim.h"
 #include "DroneTables.h"
 #include "DroneWeapon.h"
@@ -37,9 +38,8 @@
 #define NDrone2_AttackTalk ((bool (__cdecl *)(DCVars_tag *dcv))0x0003ba80)
 #define NDrone2_CanAltAttack ((bool (__cdecl *)(DCVars_tag *dcv, char flag))0x00043750)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
-#define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
-#define DroneFunc_InjuredSFX ((bool (__cdecl *)(DCVars_tag *dcv, uint sfx))0x0003b830)
-#define NDrone2_maybeCalcDistanceAndDirToTarget ((void (__cdecl *)(DCVars_tag *dcv, CelPos_tag *target))0x00046080)
+
+
 // Returns in ST0, unrounded
 
 // The corner anims, a list per step for each mode and side: the entry for mode m and side s is at m * 2 + s. The sides

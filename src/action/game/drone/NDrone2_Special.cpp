@@ -2,6 +2,11 @@
 // ninja, the space drake and the astronauts.
 
 #include "NDrone2_Special.h"
+#include "NDrone2_Combat.h"
+#include "../obj/control.h"
+#include "../obj/Effect.h"
+#include "../../engine/Anim.h"
+#include "../../util/hashtable.h"
 #include "NDrone2_Damage.h"
 #include "NDrone2_Route.h"               // NDrone2_AssignAIPath, NDrone2_UpdateMissionRoute, NDrone2_FindAlarmPoint
 #include "DroneAnim.h"
@@ -18,7 +23,7 @@
 // The originals, called by address
 #define NDrone2_IsCivilian ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f50)
 #define NDrone2_InvalidateAttackRoute ((void (__cdecl *)(DCVars_tag *dcv))0x00043fa0)
-#define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
+
 // FUN_00046d90 in Ghidra; the name is the PS2 build's. Moves the drone along a route to obj: below 3 still going,
 // 3 there, 10 waiting for the route (as the ninja states read it)
 #define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char follow))0x00046d90)
@@ -279,6 +284,35 @@ static bool Ninja_CanBackflip(DCVars_tag *dcv) {
 static bool Ninja_CanSomersault(DCVars_tag *dcv, Drone_tag *drone) {
     return NDrone2_CanMoveToRelativePos(dcv->drone, dcv->gameObj, 0.0f, 0.0f, 5.0f) &&
            drone->distanceToTarget > 5.0f && drone->distanceToTarget < 7.0f;
+}
+
+// The ninja's glowing eyes: an effect at each eye bone (the skin 0x500001e has its own), five frames long
+// AUTOINJECT
+void NDrone2_CreateNinjaEyes(obj_tag *gameObj) {
+    short eyes[2];
+    if (gameObj->animState->animObj.skin->hashcode == 0x500001e) {
+        eyes[0] = 0x60;
+        eyes[1] = 0x61;
+    } else {
+        eyes[0] = 0x54;
+        eyes[1] = 0x56;
+    }
+    for (short bone : eyes) {
+        _VECTOR pos;
+        AnimGetBoneWorldTrans(gameObj, bone, 0, &pos, NULL);
+        obj_tag *eye = control_create_object(sizeof(Effect_tag), &pos, NULL, NULL);
+        if (eye == NULL)
+            continue;
+        Effect_tag *effect = (Effect_tag *)eye->extraObjectData;
+        eye->objectType = OBJECTTYPE_EFFECT;
+        eye->tweakA = 0x80;
+        eye->curState = 1;
+        effect->life = 5;
+        effect->fade = 0x19;
+        hashtable_set_object_to_entity_gfx(eye, (HASHCODE)0x2000132);
+        eye->effectFlags |= 8;
+        control_link_object_to_cel(eye, gameObj->inCel);
+    }
 }
 
 // Standing with the sword in hand (the object's datum 100), attacking at once, or with the drones blinded once it

@@ -5,15 +5,25 @@
 #include "NDrone2.h"
 #include "../../math/math.h"    // Vec_* (ours)
 #include "../../math/X87Ops.h"
+#include "BOT.h"                        // BOT_getMovementSpeedMul
+#include "../obj/build.h"               // build_FindCel
+
+#include <bit>
+#include <stdint.h>
 
 #include <math.h>
 
 #pragma fp_contract(off)
 
 // Returns in ST0, unrounded
-// Tests the walk from the object's feet to `offset` in its own frame (FUN_000453e0; a bot's offset is scaled by its
-// speed unless `unscaled`; our name)
-#define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
+// The original, called by address
+#define Vec_Mul_F3 ((void (__cdecl *)(_VECTOR *out, _VECTOR *in, float x, float y, float z))0x000d72d0)
+
+// Where NDrone2_CanWalkStraightTo last tested a walk to (BOTSTATE_checkAttackMove reads it)
+#define WalkTestTarget (*(_VECTOR *)0x001ee420)
+
+constexpr float kMoveTargetRadius = 0.3f;
+static_assert(std::bit_cast<uint32_t>(kMoveTargetRadius) == 0x3e99999a, "not the original's 0.3");
 
 // How near (squared, in plan) the player counts as at a point in NDrone2_DroneNearPos: 0.55 m
 #define PLAYER_NEAR_SQ 0.3025f
@@ -119,6 +129,12 @@ static bool NearHeight(float y, float otherY) {
     return difference < 2.0f;
 }
 
+// Whether anyone but the drone stands within radius of it (NDrone2_DroneNearPos)
+// AUTOINJECT
+bool NDrone2_NearDrone(DCVars_tag *dcv, float radius) {
+    return NDrone2_DroneNearPos(&dcv->gameObj->position, radius, dcv->gameObj);
+}
+
 // Whether anyone stands near a point: the player within 0.55 m in plan, or a live, active drone (other than `except`)
 // within the radius; either within 2 m of its height
 // AUTOINJECT
@@ -155,6 +171,72 @@ void NDrone2_NavNodeCache(void) {
     target->obj = player;
     target->targetBit = AITARGET_PLAYER;
     AINetwork_BuildAITarget(target, NULL, 0.0f);
+}
+
+// Whether the drone could walk straight from its object's feet to pos (finding pos's cel when it has none); never
+// while it is frozen (0x10). FUN_00045340 in Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, char checkBlocked) {
+    if (drone != NULL && (drone->flags & 0x10))
+        return false;
+    CelPos_tag from;
+    NDrone2_FeetPos(obj, &from.pos);
+    from.cel = obj->inCel;
+    if (pos->cel == NULL)
+        pos->cel = NDrone2_FindCel(&pos->pos);
+    WalkTestTarget = pos->pos;
+    return NDrone2_MoveTest(&from.pos, from.cel, &pos->pos, pos->cel, NULL, obj, NULL, 0, checkBlocked) == 1;
+}
+
+// Whether the drone could walk from its object's feet to `offset` in the object's own frame (a bot's offset scaled by
+// its speed unless `unscaled`); the offset is left turned into the world. Never while it is frozen. FUN_000453e0 in
+// Ghidra. Not named on PS2; the name is ours.
+// AUTOINJECT
+bool NDrone2_MoveTestRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, char checkBlocked) {
+    if (drone != NULL && (drone->flags & 0x10))
+        return false;
+    CelPos_tag to;
+    NDrone2_FeetPos(obj, &to.pos);
+    if (!unscaled && drone->dtype == DTYPE_Bot) {
+        float speed = BOT_getMovementSpeedMul(drone);
+        Vec_Mul_F3(offset, offset, speed, 1.0f, speed);
+    }
+    ApplyMatrixLVI(&obj->transformMatrix, offset);
+    Vec_Add2(offset, &to.pos, &to.pos);
+    to.cel = build_FindCel(&to.pos, glb_world);
+    return NDrone2_CanWalkStraightTo(drone, obj, &to, checkBlocked);
+}
+
+// Whether the drone is within moveTargetRadius of moveTarget, in plan, from its feet (keeping the distance)
+// AUTOINJECT
+bool NDrone2_AtDest(DCVars_tag *dcv) {
+    _VECTOR feet;
+    NDrone2_FeetPos(dcv->gameObj, &feet);
+    dcv->drone->moveTargetDistance = Vec_Dist2D(&feet, &dcv->drone->moveTarget);
+    return dcv->drone->moveTargetDistance <= dcv->drone->moveTargetRadius;
+}
+
+// Steers moveTarget at a position (finding its cel), within 0.3 m, and works out the distance in plan and the
+// heading to it
+// AUTOINJECT
+void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target) {
+    CelPos_tag from;    // set up and not used
+    NDrone2_FeetPos(dcv->gameObj, &from.pos);
+    from.cel = dcv->gameObj->inCel;
+    Vec_Copy(&target->pos, &dcv->drone->moveTarget);
+    if (target->cel == NULL)
+        target->cel = NDrone2_FindCel(&target->pos);
+    dcv->drone->moveTargetCel = target->cel;
+    dcv->drone->moveTargetRadius = kMoveTargetRadius;
+    _VECTOR feet;
+    NDrone2_FeetPos(dcv->gameObj, &feet);
+    dcv->drone->moveTargetDistance = Vec_Dist2D(&feet, &dcv->drone->moveTarget);
+    Drone_tag *drone = dcv->drone;
+    _VECTOR delta;
+    Vec_Subtract(&drone->moveTarget, &dcv->gameObj->position, &delta);
+    drone->moveTargetRot.x = 0.0f;
+    drone->moveTargetRot.y = maybeAtan2(delta.x, delta.z);
+    drone->moveTargetRot.z = 0.0f;
 }
 
 // Whether the drone could walk to (x, y, z) in its object's own frame from its feet. Never while it is frozen (0x10).

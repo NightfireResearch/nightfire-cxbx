@@ -13,6 +13,7 @@
 #include "../sound/Sound.h"
 #include "../sound/SFX.h"
 #include "../game/drone/Drone.h"
+#include "../game/drone/NDrone2_Special.h"
 #include "../game/obj/Player.h"
 #include "../game/obj/Light.h"
 #include "../game/obj/control.h"
@@ -96,8 +97,7 @@ typedef struct {
 
 // AUTOGEN
 void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
-// AUTOGEN
-void NDrone2_CreateNinjaEyes(obj_tag *obj);
+
 // Generated for Player.cpp
 void Player_RamSave(BLData *blData);
 // Generated for Player.cpp
