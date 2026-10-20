@@ -88,6 +88,10 @@ extern char save_space_text[0x200];
 extern uint8_t mp_controller_missing[4];
 extern uint8_t mp_controller_missing_joined[4];
 extern char mp_controller_text[0x100];
+extern uint8_t saveflow_dashboard_offered;
+extern uint saveflow_hold_until;
+extern char saveflow_text_buffer[0x200];
+extern const char *saveflow_tip;
 
 // The package's functions, as ours
 bool P_LANGUAGE_Handler(uchar, M_CONTROL *, uint, uint, int, int);
@@ -184,7 +188,8 @@ const Pair kPairs[] = {
     {0x00225080, &level_bonuses, 0x34}, {0x0029ae38, timer_text, 0x400}, {0x0029b238, &timer_text_next, 1},
     {0x0025edbc, &save_space_problem, 4}, {0x0025efd0, save_space_text, 0x200},
     {0x0022507c, mp_controller_missing, 4}, {0x00225078, mp_controller_missing_joined, 4},
-    {0x00224f78, mp_controller_text, 0x100},
+    {0x00224f78, mp_controller_text, 0x100}, {0x0025edc0, &saveflow_dashboard_offered, 1},
+    {0x0025edc4, &saveflow_hold_until, 4}, {0x0025edc8, saveflow_text_buffer, 0x200}, {0x0025efc8, &saveflow_tip, 4},
 };
 
 // A word as the logs show it: an offset into the world, a string's text, or the number
@@ -265,6 +270,8 @@ const struct {
     {0x002251b8, 0x400},    // codename_buf
     {0x00245240, 0x40},     // mp_join_slots
     {0x00245698, 0x10},     // mp_join_step
+    {0x0025eda0, 0x1c},     // XBox_DoSaveFlow's state
+    {0x002adf10, 0x4},      // psiInternalLoadingDataState
     {0x00262738, 0x230},    // MPGame
     {0x002245f8, 0x23c},    // mp_settings_backup
     {0x00224838, 0x560},    // mp_inputs_backup
@@ -580,6 +587,10 @@ uint __cdecl FakeMPScore(uint participant) {
 LOG2(FakeRamLoad, "ramload")
 LOG1(FakeProcessDestroy, "processdestroy")
 LOG3(FakeGetMPSkins, "getmpskins")
+ANSWER0(FakeRandom, "random", R(0))
+ANSWER0(FakeLoadingState, "loadingstate", R(4) == 0 ? R(0x20) : R(14))
+LOG0(FakeLSFlushStates, "lsflush")
+LOG0(FakeFlushEnum, "flushenum")
 LOG3(FakePlayerEnable, "playerenable")
 LOG2(FakePlayerDisable, "playerdisable")
 LOG0(FakePushStates, "pushstates")
@@ -772,6 +783,10 @@ const Fake kFakes[] = {
     {0x0006ec10, (const void *)&FakeSaveStuff},
     {0x00096090, (const void *)&FakeProcessDestroy},
     {0x0007f3d0, (const void *)&FakeGetMPSkins},
+    {0x000d52c0, (const void *)&FakeRandom},
+    {0x000dfbb0, (const void *)&FakeLoadingState},
+    {0x0006eb20, (const void *)&FakeLSFlushStates},
+    {0x000755d0, (const void *)&FakeFlushEnum},
 };
 
 // The fakes but those of the functions a group tests
@@ -1365,6 +1380,28 @@ uint32_t Run_BotShortName(bool original) {
     return CALL(0x0007eb90, Menu_GetBotShortName, char *(__cdecl *)(BotNum), skin) == (uint32_t)0x0015d3c0 ? 1 : 2;
 }
 
+// A frame of the save flow: a state, a frame count near the tips' turn, the box open or not, a text or none
+uint32_t Run_SaveFlow(bool original) {
+    uchar m = (uchar)(in.a[0] % 2);
+    M_MANAGER *mgr = &((M_MANAGER *)0x0025f1d0)[m];
+    mgr->index = m;
+    uint state = in.a[1] % 12;
+    U32_AT(0x0025edb0) = in.a[2] % 4 ? (in.a[2] >> 8) % 4 == 0 ? 299 + in.a[2] % 3 : in.a[2] % 700 : in.a[2];
+    U8_AT(0x0025eda8) = (uint8_t)(in.a[3] & 1);
+    U8_AT(0x0025edba) = (uint8_t)((in.a[3] >> 1) & 1);
+    U32_AT(0x0025edac) = in.a[4] % 3 ? 0 : (uint32_t)(uintptr_t)world.strings[1];
+    saveflow_tip = in.a[5] % 3 ? NULL : world.strings[2];
+    U32_AT(0x0025efc8) = (uint32_t)(uintptr_t)saveflow_tip;
+    saveflow_hold_until = in.a[6] % 3 ? 0 : in.a[6] % 900;
+    U32_AT(0x0025edc4) = saveflow_hold_until;
+    ls.operation = (uchar)(in.a[7] % 6);
+    CALL_VOID(0x0008f3f0, XBox_DoSaveFlow, void (__cdecl *)(M_MANAGER *, uint, MENU_LS *), mgr, state, &ls);
+    // The text pointing at the buffer, the game's or ours
+    if (U32_AT(0x0025edac) == (original ? 0x0025edc8u : (uint32_t)(uintptr_t)saveflow_text_buffer))
+        U32_AT(0x0025edac) = 1;
+    return 0;
+}
+
 // Messages: 0x4b Select, 0x4c Enter, 0x50 Update, 0x5c PlayerFocusGained, 0x60 PlayerFocusLost, 0x6a SaveFlowDone,
 // 0x6b QueryBack
 const Case kJoin[] = {
@@ -1377,6 +1414,7 @@ const Case kJoin[] = {
     {"P_MPSETUP", Run_P_MPSETUP, {0x00075a60}, {0x4c, 0x50}},
     {"C_RBMPFINISH", Run_C_RBMPFINISH, {0}, {0x5c, 0x60, 0x6b}},
     {"P_MPRULES", Run_P_MPRULES, {0}, {0x4c, 0x4b}},
+    {"XBox_DoSaveFlow", Run_SaveFlow, {0}, {0}},
 };
 
 const Case kDebug[] = {
@@ -1401,7 +1439,7 @@ const unsigned kPackage[] = {
     0x00085780, 0x000858a0, 0x00085930, 0x000859c0, 0x00085cd0, 0x00085d50, 0x000861a0, 0x00086ed0, 0x00087140,
     0x0008ce70, 0x0008d000, 0x0008d0f0, 0x0008d560, 0x0008d7a0, 0x0008dca0, 0x0008ddd0, 0x000b1740, 0x000b19a0,
     0x000b9e30, 0x000b9e60, 0x000d25d0, 0x00075a60, 0x0007eb90, 0x00085a50, 0x00087880, 0x00087dd0, 0x000880a0,
-    0x000882c0, 0x00088530, 0x00089b20
+    0x000882c0, 0x00088530, 0x00089b20, 0x0008f3f0
 };
 
 void MenuHandlerShadow_Run(void) {

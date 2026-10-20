@@ -172,6 +172,7 @@ typedef struct MENU_LS {
 } MENU_LS;
 #pragma pack(pop)
 static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
+void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation);
 #define ls (*(MENU_LS *)0x0017d540)
 
 // The two default codenames, slots 0 and 1 of the codenames list (Menu_MapDefaultCodename applies one)

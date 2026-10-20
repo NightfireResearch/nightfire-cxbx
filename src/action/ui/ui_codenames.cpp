@@ -4,6 +4,9 @@
 #include "Manager.h"
 #include "Menu.h"
 #include "MenuCommon.h"
+#include "Button.h"
+#include "List.h"
+#include "Memo.h"
 #include "../engine/Text.h"
 #include "../engine/LoadSave.h"
 #include "../engine/psiSave.h"
@@ -13,6 +16,7 @@
 #include "../game/mp/multiplayer.h"
 #include "../game/sp/PlayerStats.h"
 #include "../sound/SFX.h"
+#include "../util/Random.h"
 #include "../util/Sort.h"
 
 #include <stdio.h>
@@ -140,7 +144,6 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define saveflow_dashboard     U8_AT(0x0025edba)   // B on the box leaves for the dashboard
 #define saveflow_relist        U8_AT(0x0025edb9)   // a codenames page lists the codenames as it enters or resumes
 
-#define XBox_DoSaveFlow ((void (__cdecl *)(M_MANAGER *, uint, MENU_LS *))0x0008f3f0)
 #define SFXSetVolume ((void (__cdecl *)(int))0x000c5060)
 #define SFXGetVolume ((int (__cdecl *)(void))0x000c5090)
 
@@ -148,6 +151,218 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 #define OPTIONBOX_DELETE_CODENAME 2
 #define OPTIONBOX_3               3   // no code in the Xbox build makes a box of this type
 #define OPTIONBOX_SAVE_SPACE      5   // Menu_CheckSaveSpace's
+
+// ---- the message box of a load, save or listing (XBox_DoSaveFlow)
+
+// The box: a page shown over the one under it, a button behind a memo and a list
+#define SAVEFLOW_PAGE          P_AFTERRESULTS
+#define SUB_SAVEFLOW_BUTTON    ((HASHCODE)0x100000fd)
+#define SUB_SAVEFLOW_MEMO      ((HASHCODE)0x100000fb)
+#define SUB_SAVEFLOW_244       ((HASHCODE)0x10000244)   // hidden when the box opens
+
+// The texts (names ours)
+#define TXT_SAVEFLOW_262       ((Action_TranslatedText)0x262)
+#define TXT_SAVEFLOW_264       ((Action_TranslatedText)0x264)
+#define TXT_SAVEFLOW_266       ((Action_TranslatedText)0x266)   // the error box's choice
+#define TXT_SAVEFLOW_397       ((Action_TranslatedText)0x397)
+#define TXT_SAVEFLOW_WORKING   ((Action_TranslatedText)0x398)   // over a tip while the operation runs
+#define TXT_SAVEFLOW_DASHBOARD ((Action_TranslatedText)0x3bb)
+
+// The tips shown under TXT_SAVEFLOW_WORKING, one picked at random every 300 frames
+static const Action_TranslatedText saveflow_tips[] = {
+    (Action_TranslatedText)0x1000111, (Action_TranslatedText)0x1000112, (Action_TranslatedText)0x1000113,
+    (Action_TranslatedText)0x1000114, (Action_TranslatedText)0x1000115, (Action_TranslatedText)0x1000116,
+    (Action_TranslatedText)0x1000117, (Action_TranslatedText)0x1000118, (Action_TranslatedText)0x1000119,
+    (Action_TranslatedText)0x100011a, (Action_TranslatedText)0x100011b, (Action_TranslatedText)0x100011c,
+    (Action_TranslatedText)0x100011d, (Action_TranslatedText)0x100011e, (Action_TranslatedText)0x100011f,
+    (Action_TranslatedText)0x1000120, (Action_TranslatedText)0x1000121, (Action_TranslatedText)0x1000122,
+    (Action_TranslatedText)0x1000123, (Action_TranslatedText)0x1000124, (Action_TranslatedText)0x1000125,
+    (Action_TranslatedText)0x1000126, (Action_TranslatedText)0x1000127, (Action_TranslatedText)0x1000128,
+    (Action_TranslatedText)0x100012a, (Action_TranslatedText)0x100012b, (Action_TranslatedText)0x100012c,
+    (Action_TranslatedText)0x100012d, (Action_TranslatedText)0x100012e, (Action_TranslatedText)0x100012f,
+    (Action_TranslatedText)0x1000130, (Action_TranslatedText)0x1000131, (Action_TranslatedText)0x1000132,
+    (Action_TranslatedText)0x1000133, (Action_TranslatedText)0x1000134, (Action_TranslatedText)0x1000135,
+    (Action_TranslatedText)0x1000136, (Action_TranslatedText)0x1000137, (Action_TranslatedText)0x1000138,
+    (Action_TranslatedText)0x1000139, (Action_TranslatedText)0x100013a, (Action_TranslatedText)0x100013b,
+    (Action_TranslatedText)0x100013c,
+};
+#define SAVEFLOW_TIP_FRAMES 300
+
+// XBE_GLOBAL(0x0025edc0, 0x1)
+uint8_t saveflow_dashboard_offered;     // once only
+// XBE_GLOBAL(0x0025edc4, 0x4)
+uint saveflow_hold_until;               // the frame count the box stays up to, or 0
+// XBE_GLOBAL(0x0025edc8, 0x200)
+char saveflow_text_buffer[0x200];
+// XBE_GLOBAL(0x0025efc8, 0x4)
+const char *saveflow_tip;
+
+// One frame of a load, save or listing's message box: the operation's state (Menu_UpdateMessageBox's) and the save
+// layer's (psiGetLoadingDataState) pick the text; an operation over (4, 6, or 7 and 8 once the box has been up long
+// enough) closes the box, if it has no choices, and tells the page (SaveFlowDone). The box is laid out around its
+// text and drawn here, without input.
+// AUTOINJECT
+void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
+    saveflow_ls = operation;
+    saveflow_manager = mgr;
+    int result = psiGetLoadingDataState();
+    saveflow_frames++;
+    bool over = false;
+    switch (state) {
+    case 0:
+    case 1:
+    case 2:
+    case 3:
+        switch (result) {
+        case 1:
+        case 8:
+        case 11:
+            saveflow_cancel = 0;
+            break;
+        case 2:
+        case 3:
+            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_264, 0);
+            operation->returnPage = (HASHCODE)0;
+            saveflow_cancel = 1;
+            break;
+        case 4:
+            Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
+            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_397, 0);
+            saveflow_cancel = 0;
+            break;
+        case 5:
+        case 6:
+        case 7:
+            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_262, 0);
+            operation->returnPage = (HASHCODE)0;
+            saveflow_cancel = 1;
+            break;
+        case 10:
+            if (saveflow_frames == 1) {
+                Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
+                saveflow_tip = NULL;
+            }
+            if (saveflow_frames > 10) {
+                if (saveflow_frames % SAVEFLOW_TIP_FRAMES == 0 || saveflow_tip == NULL)
+                    saveflow_tip = Txt_BindLabel(saveflow_tips[Rand_Random() % ARRAY_SIZE(saveflow_tips)], 0);
+                sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0), saveflow_tip);
+                saveflow_text = saveflow_text_buffer;
+            }
+            saveflow_cancel = 0;
+            break;
+        case 12:
+            saveflow_cancel = 1;
+            break;
+        }
+        break;
+    case 4:
+    case 6:
+        over = true;
+        break;
+    case 7:
+    case 8:
+        // Held a little (or to the tip's end, while the box is up) before it is over
+        if (saveflow_hold_until == 0) {
+            if (result == 4) {
+                saveflow_hold_until = 80;
+                saveflow_ls->listStale = 1;
+            } else if (result == 11) {
+                if (saveflow_tip != NULL)
+                    sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0), saveflow_tip);
+                else
+                    sprintf(saveflow_text_buffer, "%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0));
+                saveflow_text = saveflow_text_buffer;
+                if (saveflow_frames % SAVEFLOW_TIP_FRAMES != 0 && saveflow_box_open)
+                    saveflow_hold_until = saveflow_frames - saveflow_frames % SAVEFLOW_TIP_FRAMES + SAVEFLOW_TIP_FRAMES;
+            }
+        }
+        if (saveflow_frames < saveflow_hold_until)
+            break;
+        saveflow_hold_until = 0;
+        over = true;
+        break;
+    }
+
+    if (over) {
+        saveflow_result = state;
+        operation->busy = 0;
+        Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
+        if (__Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_GetNumItems, 0, 0) == 0) {
+            if (saveflow_box_open) {
+                Manager_SendMessage(mgr, MessageType_Back, 0, 0);
+                if (operation->returnPage != 0)
+                    __Menu_SendMessage(&mgr->control, MessageType_GoPage, operation->returnPage,
+                                       operation->returnPageArg);
+            }
+            saveflow_box_open = 0;
+        }
+        operation->done = 1;
+        saveflow_text = NULL;
+        saveflow_frames = 0;
+        Manager_SendMessage(mgr, MessageType_SaveFlowDone, (int)mgr->currentPage, 0);
+        Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
+        LS_FlushStates();
+        Menu_FlushEnum();
+        if (saveflow_dashboard && !saveflow_dashboard_offered && saveflow_ls->operation != LS_OPERATION_ENUM_FIRST) {
+            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_DASHBOARD, 0);
+            operation->returnPage = (HASHCODE)0;
+            saveflow_dashboard_offered = 1;
+            saveflow_cancel = 1;
+        }
+    }
+
+    if (saveflow_text != NULL) {
+        if (!saveflow_box_open) {
+            Manager_SendMessage(mgr, MessageType_GoPage, SAVEFLOW_PAGE, GOPAGE_OVERLAY);
+            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (int)saveflow_text, 0);
+            __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ClearItems, 0, 0);
+            __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
+            __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_SetPulse, 0, 0);
+            switch (result) {
+            case 2:
+            case 3:
+            case 5:
+            case 6:
+            case 7:
+            case 12:
+                // An error: a choice to take, and the codenames listed again after
+                Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
+                __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem, (int)Txt_BindLabel(TXT_SAVEFLOW_266, 0), 0);
+                __Menu_Send(mgr->index, SUB_SAVEFLOW_244, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                saveflow_relist = 1;
+                break;
+            default:
+                __Menu_Send(mgr->index, SUB_SAVEFLOW_244, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                saveflow_relist = 0;
+                break;
+            }
+            saveflow_box_open = 1;
+            saveflow_frames = 0;
+        } else {
+            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (int)saveflow_text, 0);
+        }
+    }
+
+    // The button as tall as the text and the choices, centred on the screen, the memo and the list on it
+    M_BUTTON *button = (M_BUTTON *)__Menu_Send(mgr->index, SUB_SAVEFLOW_BUTTON, MessageType_GetControl, 0, 0);
+    M_MEMO *memo = (M_MEMO *)__Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_GetControl, 0, 0);
+    M_LIST *list = (M_LIST *)__Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_GetControl, 0, 0);
+    __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
+    uchar lines = __Menu_SendMessage(&memo->control, MessageType_MemoGetNumLines, 0, 0);
+    uchar choices = __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_GetNumItems, 0, 0);
+    short height = (choices != 0 ? 24 : 0) + 30 + lines * 31 + choices * 21;
+    button->control.height = height;
+    short y = Ftol((SCREEN_HEIGHT - (double)height) * 0.5);
+    button->control.y = y;
+    memo->control.y = y + 10;
+    list->control.y = lines * 31 + y + 30;
+    manager[mgr->index].takingInput = 0;
+    Memo_Update(&manager[mgr->index], (M_PAGE *)memo->control.parent, memo);
+    List_Update(&manager[mgr->index], (M_PAGE *)list->control.parent, list);
+    Button_Update(&manager[mgr->index], (M_PAGE *)button->control.parent, button);
+    manager[mgr->index].takingInput = 1;
+}
+
 
 // ---- room on the save drive for a codename (names ours)
 

@@ -26,13 +26,6 @@
 // message log stands in front of it (devtools/MenuProbe.cpp)
 #define HandleMessage ((bool (__cdecl *)(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2))0x0008e320)
 
-// MessageType_GoPage's flags
-#define GOPAGE_NO_HISTORY   1   // the page left is not put on the history
-#define GOPAGE_OVERLAY      2   // the page left stays shown under the new one, which plays no movie
-#define GOPAGE_KEEP_HISTORY 4   // going to P_MAIN keeps the history
-#define GOPAGE_QUIET        8   // no PageLeave and PageEnter (a page come back to): PageResume
-#define GOPAGE_NO_RESUME    0x10
-
 // The history's entries: a page left and its focused control
 #pragma pack(push, 1)
 typedef struct PAGE_HISTORY {
