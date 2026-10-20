@@ -379,6 +379,7 @@ enum MusicMarkerType {
 #define ListenerUp (*(_VECTOR *)0x00182b5c)
 #define FileBufferMask U32_AT(0x00182b68)      // the stream's file buffers less one
 #define SFXJumpMarker I32_AT(0x00182b6c)       // the section the music asks for, -1 for none
+#define InitialiseStatus I32_AT(0x00182b74)    // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
 
 #define SoundBankData (*(SoundBankHeader(*)[SFX_NUM_BANKS])0x00279510)
 #define ES_VoiceHandleData (*(ES_VoiceHandleDetails(*)[SFX_NUM_VOICE_HANDLES])0x0027aa28)
@@ -390,6 +391,7 @@ enum MusicMarkerType {
 #define SFXKeyOnFrameDelay I32_AT(0x002981e8)  // for the next SFXStart3D
 #define SBInfoList (*(int(*)[SFX_NUM_BANKS])0x002981f0)
 #define BaseSFXActive (*(SFXItem **)0x00298a4c)
+#define StreamMemCpyHandles (*(StreamMemCpyHandle(*)[SFX_NUM_STREAMS])0x00298a50)
 #define Streams (*(StreamData(*)[SFX_NUM_STREAMS])0x00298a70)
 #define SFXRequestedActiveData (*(SFXRequest(*)[SFX_NUM_ITEMS])0x00298e74)
 #define SfxNisMusicTrigger I32_AT(0x00299328)
@@ -411,10 +413,16 @@ enum MusicMarkerType {
 #define SFXFileAccessSuspended I32_AT(0x00299478)
 #define SFXActiveCount I32_AT(0x00299480)
 #define SFXActiveData (*(SFXActive(*)[SFX_NUM_ITEMS])0x00299484)
+#define SFXLoadedMarker I32_AT(0x002997a4)     // the section the stream has read to (the name is ours)
 #define SFXActiveMarker I32_AT(0x002997ac)     // the section playing
 #define ListenerPos (*(_VECTOR *)0x002997b4)
 #define ListenerVel (*(_VECTOR *)0x002997c0)
+#define EnableReleaseAudioStreamSystem I32_AT(0x002997d0)
+#define DoInitialStreamBuffer I32_AT(0x002997d4)
 #define SFXJumpInstant I32_AT(0x002997d8)
+#define MusicStartSection I32_AT(0x002997dc)
+#define StreamWaitingIntialiseCount I32_AT(0x002997e8)
+#define HaveCalledOnce I32_AT(0x002997ec)      // MFXINFO.MXI is read
 #define SFXInitialised I32_AT(0x00299a0c)
 #define SFXZeroPoint (*(_VECTOR *)0x00299a10)
 
@@ -491,14 +499,23 @@ int SFXMusicGetVolume(void);
 void ES_StreamKeyOn(int Handle, int ReverbDepth);
 void SFXPauseAllStreams(void);
 void SFXUnPauseAllStreams(void);
+void SFXReleaseStreamSystem(void);
+void SFXInitialiseAudioStreamSystem(void);
+void ES_InitialStreamBuffer(void);
+void ES_SetFileBufferCount(StreamData *stream);
+void ES_StreamAsyncReadFile(int fileHandle, int filePos, int byteSize, char *buffer, StreamData *stream);
+void ES_GetStreamStates(StreamData *Stream);
+void ES_SetStreamStates(StreamData *Stream);
+void ES_StartStreamMemCpy(int streamHandle, int byteOffset, char *srcData, int byteSize, StreamData *Stream);
+int ES_CheckEndMarker(StreamData *Stream, TestMarker *marker);
+void ES_HandleStreamBufferLoaded(StreamData *Stream);
+int SFXInitialiseStream(int HashCode, int Is3d);
+void SFXStopStream(StreamData *stream);
+void SFXStopMusic(void);
+void SFXStartMusic(int track, int section);
 
 // The originals still called by address
 #define SFXUpdateStreams ((void (__cdecl *)(void))0x000c9030)
-#define SFXReleaseStreamSystem ((void (__cdecl *)(void))0x000c5ea0)
-#define SFXInitialiseAudioStreamSystem ((void (__cdecl *)(void))0x000c5f10)
-#define SFXStartMusic ((void (__cdecl *)(int track, int section))0x000ca5e0)
-#define SFXStopMusic ((void (__cdecl *)(void))0x000c8ce0)
-#define SFXInitialiseStream ((int (__cdecl *)(int HashCode, int Is3d))0x000c8fa0)
-#define SFXStopStream ((void (__cdecl *)(StreamData *stream))0x000c8c40)
+#define SFXInitialiseStreamUpdate ((void (__cdecl *)(void))0x000c63c0)
 
 #endif // SFX_H_

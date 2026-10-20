@@ -38960,7 +38960,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c6080",
+        "name": "ES_SetFileBufferCount",
         "address": "0x000c6080",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38968,7 +38968,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c6080(int param_1)",
+        "prototype_string": "void __cdecl ES_SetFileBufferCount(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],

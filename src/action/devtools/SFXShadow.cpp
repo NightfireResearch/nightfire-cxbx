@@ -52,6 +52,8 @@ const int BANKS = 3;
 const int BANK_SFX = 6;
 const int SAMPLES = 12;
 const int HANDLES = 4;
+const int STARTS = 8;
+const int MARKERS = 24;
 
 // A sound's settings and its samples, as a bank's .SFX file has them
 struct Def {
@@ -85,6 +87,14 @@ struct World {
     } shfFile;
     uint8_t sbfFile[0x100];
     int sbinfo[SFX_NUM_BANKS];
+    // A track's .SMF: the header, the sections' starts, the markers
+    struct {
+        StreamMarkerHeaderData header;
+        MusicMarkerStartData starts[STARTS];
+        MusicMarkerData markers[MARKERS];
+    } markerFile;
+    char readBuffers[STREAM_READ_BUFFERS][0x40];
+    char dataBuffer2[0x40];
 };
 World world;
 
@@ -187,6 +197,8 @@ struct Answers {
     int initialiseStream;       // SFXInitialiseStream: 0, or -1
     uint32_t loadFails;         // psiSFXLoadFile: a bit for each file asked for, NULL where set
     int loads;
+    int playbackBuffer;         // psiStreamCreatePlaybackBuffer
+    int buffers;                // psiAsyncCreateBuffer's so far
     int playPos;
 };
 Answers answers;
@@ -399,7 +411,7 @@ void *FakeLoadFile(char *fileName) {
         return &world.shfFile;
     if (strcmp(type, ".SBF") == 0)
         return world.sbfFile;
-    if (strcmp(type, ".SBI") == 0)
+    if (strcmp(type, ".SBI") == 0 || strcmp(type, ".MXI") == 0)
         return world.sbinfo;
     return NULL;
 }
@@ -411,6 +423,29 @@ void FakeReleaseStreamSystem(void) {
 }
 void FakeInitialiseStreamSystem(void) {
     ShadowLog("initialise streams\n");
+}
+void FakeDeleteChannel(uint32_t voice) {
+    ShadowLog("delete channel %d\n", voice);
+}
+int FakeCreatePlaybackBuffer(int frequency, int channels, int byteSize) {
+    ShadowLog("playback buffer %d %d %x\n", frequency, channels, byteSize);
+    return answers.playbackBuffer;
+}
+int FakeCreateBuffer(int size) {
+    ShadowLog("buffer %x\n", size);
+    return (int)(uintptr_t)world.readBuffers[answers.buffers++ & 7];
+}
+void FakeAsyncReadFile(int fileHandle, int byteOffset, int byteSize, void *destBuffer) {
+    ShadowLog("read %d %x %x %x\n", fileHandle, byteOffset, byteSize, W(destBuffer));
+}
+void FakeAsyncCloseFile(int fileHandle) {
+    ShadowLog("close %d\n", fileHandle);
+}
+void FakeStreamStop(uint32_t voice) {
+    ShadowLog("stream stop %d\n", voice);
+}
+void FakeInitialiseStreamUpdate(void) {
+    ShadowLog("initialise stream update\n");
 }
 int FakeInitialiseStream(int hashCode, int is3d) {
     ShadowLog("initialise stream %d %d\n", hashCode, is3d);
@@ -428,15 +463,25 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000e0db0, (const void *)&FakeSamplePause);
     ShadowHook_Install(0x000e0a70, (const void *)&FakeUnPause);
     ShadowHook_Install(0x000e09c0, (const void *)&FakeSFXStop);
-    ShadowHook_Install(0x000c8c40, (const void *)&FakeStopStream);
-    ShadowHook_Install(0x000c8fa0, (const void *)&FakeInitialiseStream);
     ShadowHook_Install(0x000e0ed0, (const void *)&FakeInitialiseSound);
     ShadowHook_Install(0x000e0e10, (const void *)&FakeUpdateSound);
     ShadowHook_Install(0x000e0b00, (const void *)&FakeSampleKeyOn);
-    ShadowHook_Install(0x000ca620, (const void *)&FakeUpdateMusicalEvents);
-    ShadowHook_Install(0x000c9030, (const void *)&FakeUpdateStreams);
     ShadowHook_Install(0x000e0a90, (const void *)&FakeLoadFile);
     ShadowHook_Install(0x000e09e0, (const void *)&FakeFreeFileMem);
+    ShadowHook_Install(0x000e0d30, (const void *)&FakeDeleteChannel);
+    ShadowHook_Install(0x000e0cd0, (const void *)&FakeCreatePlaybackBuffer);
+    ShadowHook_Install(0x000e0cb0, (const void *)&FakeCreateBuffer);
+    ShadowHook_Install(0x000e0c20, (const void *)&FakeAsyncReadFile);
+    ShadowHook_Install(0x000e0c00, (const void *)&FakeAsyncCloseFile);
+    ShadowHook_Install(0x000e0da0, (const void *)&FakeStreamStop);
+}
+
+// The rest of the layer, for the groups testing what calls it
+void InstallLayerFakes(void) {
+    ShadowHook_Install(0x000c8c40, (const void *)&FakeStopStream);
+    ShadowHook_Install(0x000c8fa0, (const void *)&FakeInitialiseStream);
+    ShadowHook_Install(0x000ca620, (const void *)&FakeUpdateMusicalEvents);
+    ShadowHook_Install(0x000c9030, (const void *)&FakeUpdateStreams);
     ShadowHook_Install(0x000c5ea0, (const void *)&FakeReleaseStreamSystem);
     ShadowHook_Install(0x000c5f10, (const void *)&FakeInitialiseStreamSystem);
 }
@@ -639,9 +684,143 @@ void RandomRequests(void) {
     }
 }
 
+void RandomMarker(TestMarker *m) {
+    m->CheckMe = R(2);
+    m->EndMustToggle = R(2);
+    m->EndHere = R(6) == 0 ? -1 : RI(0, 0x4800);
+}
+
+void RandomMarkerFile(void) {
+    StreamMarkerHeaderData *h = &world.markerFile.header;
+    h->StartMarkerCount = STARTS;
+    h->MarkerCount = MARKERS;
+    h->StartMarkerOffset = (int)((uintptr_t)world.markerFile.starts - (uintptr_t)h);
+    h->MarkerOffset = (int)((uintptr_t)world.markerFile.markers - (uintptr_t)h);
+    h->BaseVolume = RI(0, 100);
+    int pos = RI(0, 0x2000);
+    static const int types[] = {0, 1, 5, 6, 7, 9, 2, 2, 2, 2};
+    for (int i = 0; i < MARKERS; i++) {
+        MusicMarkerData *m = &world.markerFile.markers[i];
+        pos += RI(0, 0x3000);
+        m->Name = RI(0, STARTS - 1);
+        m->Pos = i == MARKERS - 1 ? 0x7fffffff : pos;
+        m->MType = types[R(COUNT(types))];
+        m->Flags = R(4);
+        m->Extra = R(4);
+        m->LoopStart = RI(0, pos);
+        m->MarkerCount = RI(0, MARKERS - 1);
+        m->LoopMarkerCount = RI(0, MARKERS - 2);
+    }
+    for (int i = 0; i < STARTS; i++) {
+        MusicMarkerStartData *s = &world.markerFile.starts[i];
+        s->Marker = world.markerFile.markers[R(MARKERS - 1)];
+        s->MarkerPos = RI(0, MARKERS - 2);
+        s->IsInstant = R(2);
+        s->InstantBuffer = R(2);
+        s->State[0] = (int)R(0);
+        s->State[1] = (int)R(0);
+    }
+}
+
 void RandomStream(void) {
     StreamData *s = &Streams[0];
-    static const int status[] = {0, 1, 2, 3, 4, 5, 9, 10};
+    static const int status[] = {0, 1, 2, 3, 4, 5, 9, 10, 2, 2, 4};
+    RandomMarkerFile();
+    FileBufferMask = R(2) ? 3 : 7;
+    s->FileHandle = RI(-1, 5);
+    s->StreamHandle2 = R(2) ? -1 : RI(0, 63);
+    s->BufferToggle = R(2);
+    s->Test1 = R(2);
+    s->SoftwareAdpcm = R(3) == 0;
+    s->Frequency = R(2) ? 44100 : 22050;
+    s->FileOffset = RI(0, 0x10000);
+    s->Is3d = R(2);
+    s->SetJumpRequestCompleteTimer = RI(0, 3);
+    s->SetEndMarker = R(2);
+    s->SetCanJumpMarker = R(2);
+    s->SetJumpRequestCompleteMarker = R(2);
+    RandomMarker(&s->EndMarker);
+    RandomMarker(&s->CanJumpMarker);
+    RandomMarker(&s->JumpRequestCompleteMarker);
+    RandomMarker(&s->DataEndMarker);
+    s->EndingSoon = R(3) == 0;
+    s->FilePos = RI(0, 0x40000);
+    s->LastFilePos = R(2) ? s->FilePos : RI(0, 0x40000);
+    s->TimedOut = R(4) == 0 ? RI(195, 210) : RI(0, 5);
+    s->DataBuffer2 = world.dataBuffer2;
+    s->BufferSize = R(2) ? 0x4800 : 0x2400;
+    s->PlayBackBufferSize = R(4) == 0 ? RI(0x100, 0x4800) : s->BufferSize;
+    s->PlayBackPos = RI(0, s->PlayBackBufferSize);
+    s->LastPlayBackPos = RI(0, s->PlayBackBufferSize);
+    for (int i = 0; i < STREAM_READ_BUFFERS; i++) {
+        StreamReadData *r = &s->Read[i];
+        r->DataBuffer = world.readBuffers[i];
+        r->FilePos = RI(0, 0x40000);
+        r->ByteOffset = R(4) == 0 ? s->PlayBackBufferSize : RI(0, s->PlayBackBufferSize);
+        r->ByteSize = R(5) == 0 ? 0 : RI(0, s->BufferSize);
+        r->SetToBlank = R(3) == 0;
+        r->NoDataToRead = R(3) == 0;
+        r->State[0] = (int)R(0);
+        r->State[1] = (int)R(0);
+        r->GetState[0] = (int)R(0);
+        r->GetState[1] = (int)R(0);
+        r->StateSet = R(2);
+        r->UseThisState = R(2);
+        RandomMarker(&r->EndMarker);
+        RandomMarker(&r->CanJumpMarker);
+        RandomMarker(&r->JumpRequestCompleteMarker);
+        r->MarkerPassed = R(3) == 0;
+        r->MarkerPassedByteSize = RI(0, 0x2400);
+    }
+    s->FileBufferCount = FileBufferMask + 1;
+    s->LastFileBuffersFull = RI(0, 7);
+    s->FileBuffersFull = RI(0, 7);
+    s->ReadBufferNumber = RI(0, (int)FileBufferMask);
+    s->TransferBufferNumber = R(4) == 0 ? s->ReadBufferNumber : RI(0, (int)FileBufferMask);
+    s->State[0] = (int)R(0);
+    s->State[1] = (int)R(0);
+    s->ShutDown = R(2);
+    s->ShutDownCounter = RI(25, 35);
+    s->StreamMarkerHeader = &world.markerFile.header;
+    s->MusicMarker = &world.markerFile.markers[R(MARKERS / 2)];
+    s->JumpMusicMarker = &world.markerFile.markers[R(MARKERS)];
+    s->MusicMarkerStart = &world.markerFile.starts[R(STARTS)];
+    s->BaseMusicMarker = world.markerFile.markers;
+    s->BaseMusicMarkerStart = world.markerFile.starts;
+    s->StreamJumpTo = R(2) ? -1 : RI(0, STARTS - 1);
+    s->HasJustJumped = R(2);
+    s->HasJustRequestedJump = R(2);
+    s->HasJustLoadedJump = R(2);
+    s->HasJustRequestedLoadedJump = R(2);
+    StreamMemCpyHandle *c = &StreamMemCpyHandles[0];
+    c->StreamHandle = RI(0, 63);
+    c->StreamByteOffset = RI(0, s->PlayBackBufferSize);
+    c->SrcData = world.readBuffers[R(STREAM_READ_BUFFERS)];
+    c->SrcByteSize = RI(0, 0x4800);
+    c->TransferPos = R(3) == 0 ? c->SrcByteSize : RI(0, c->SrcByteSize);
+    c->TransferedData = RI(0, 0x4800);
+    c->TransferStatus = R(2) ? STREAM_COPYING : RI(0, 9);
+    c->Stream = s;
+    for (int i = 0; i < SFX_NUM_STREAM_REQUESTS; i++) {
+        StreamIntialiseDetails *w = &StreamWaitingIntialise[i];
+        w->HashCode = RI(-3, 40);
+        w->ChannelNumber = 0;
+        w->Is3d = R(2);
+        w->Status = status[R(COUNT(status))];
+        w->KeyOn = R(2);
+        w->ReverbDepth = RI(0, 100);
+    }
+    StreamWaitingIntialiseCount = RI(0, SFX_NUM_STREAM_REQUESTS - 1);
+    InitialiseStatus = R(2) ? 2 : 3;
+    EnableReleaseAudioStreamSystem = R(2);
+    DoInitialStreamBuffer = R(2);
+    HaveCalledOnce = R(2);
+    MusicStartSection = RI(0, STARTS - 1);
+    SFXLoadedMarker = RI(-1, STARTS - 1);
+    SFXActiveMarker = RI(-1, STARTS - 1);
+    SFXJumpMarker = R(3) == 0 ? -1 : RI(0, STARTS - 1);
+    SFXJumpInstant = R(2);
+    AllStreamsPaused = R(2);
     s->IdNumber = 0;
     s->HashCode = RI(-5, 40);
     s->Status = status[R(COUNT(status))];
@@ -726,6 +905,8 @@ void RandomWorld(void) {
     answers.initialiseStream = R(2) ? -1 : 0;
     answers.loadFails = R(3) == 0 ? R(0) & R(0) : 0;
     answers.loads = 0;
+    answers.playbackBuffer = R(5) == 0 ? -1 : RI(0, 63);
+    answers.buffers = 0;
     world.sfxFile.count = RI(0, BANK_SFX);
     for (int i = 0; i < BANK_SFX; i++) {
         world.sfxFile.headers[i].HashCode = kSounds[R(COUNT(kSounds))];
@@ -1234,6 +1415,123 @@ const Case kBanks[] = {
     C("SFXLoadCorrectBank", RunLoadCorrectBank),
 };
 
+// ---- the stream's buffers, starting and stopping it
+
+TestMarker *SomeMarker(void) {
+    StreamData *s = &Streams[0];
+    switch (R(5)) {
+        case 0: return &s->EndMarker;
+        case 1: return &s->CanJumpMarker;
+        case 2: return &s->JumpRequestCompleteMarker;
+        case 3: return &s->DataEndMarker;
+        default: return &s->Read[R(STREAM_READ_BUFFERS)].EndMarker;
+    }
+}
+
+uint32_t RunReleaseStreamSystem(bool original) {
+    CDECL_VOID(0x000c5ea0, SFXReleaseStreamSystem, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunInitialiseAudioStreamSystem(bool original) {
+    CDECL_VOID(0x000c5f10, SFXInitialiseAudioStreamSystem, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunInitialStreamBuffer(bool original) {
+    CDECL_VOID(0x000c5fb0, ES_InitialStreamBuffer, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunSetFileBufferCount(bool original) {
+    CDECL_VOID(0x000c6080, ES_SetFileBufferCount, void (__cdecl *)(StreamData *), &Streams[0]);
+    return 0;
+}
+
+uint32_t RunStreamAsyncReadFile(bool original) {
+    int file = RI(-1, 5);
+    int pos = RI(-0x100, 0x40000);
+    int size = RI(-7, 0x4800);
+    char *buffer = world.readBuffers[R(STREAM_READ_BUFFERS)];
+    CDECL_VOID(0x000c60c0, ES_StreamAsyncReadFile, void (__cdecl *)(int, int, int, char *, StreamData *), file, pos,
+               size, buffer, &Streams[0]);
+    return 0;
+}
+
+uint32_t RunGetStreamStates(bool original) {
+    CDECL_VOID(0x000c6110, ES_GetStreamStates, void (__cdecl *)(StreamData *), &Streams[0]);
+    return 0;
+}
+
+uint32_t RunSetStreamStates(bool original) {
+    CDECL_VOID(0x000c6160, ES_SetStreamStates, void (__cdecl *)(StreamData *), &Streams[0]);
+    return 0;
+}
+
+uint32_t RunStartStreamMemCpy(bool original) {
+    int handle = RI(0, 63);
+    int offset = RI(0, 0x4800);
+    char *src = world.readBuffers[R(STREAM_READ_BUFFERS)];
+    int size = RI(0, 0x4800);
+    CDECL_VOID(0x000c6370, ES_StartStreamMemCpy, void (__cdecl *)(int, int, char *, int, StreamData *), handle,
+               offset, src, size, &Streams[0]);
+    return 0;
+}
+
+uint32_t RunCheckEndMarker(bool original) {
+    TestMarker *m = SomeMarker();
+    return CDECL_RUN(0x000c6890, ES_CheckEndMarker, int (__cdecl *)(StreamData *, TestMarker *), &Streams[0], m);
+}
+
+uint32_t RunHandleStreamBufferLoaded(bool original) {
+    CDECL_VOID(0x000c6910, ES_HandleStreamBufferLoaded, void (__cdecl *)(StreamData *), &Streams[0]);
+    return 0;
+}
+
+uint32_t RunInitialiseStream(bool original) {
+    int hashCode = RI(-3, 40);
+    int is3d = R(2);
+    return CDECL_RUN(0x000c8fa0, SFXInitialiseStream, int (__cdecl *)(int, int), hashCode, is3d);
+}
+
+uint32_t RunStopStream(bool original) {
+    CDECL_VOID(0x000c8c40, SFXStopStream, void (__cdecl *)(StreamData *), &Streams[0]);
+    return 0;
+}
+
+uint32_t RunStopMusic(bool original) {
+    CDECL_VOID(0x000c8ce0, SFXStopMusic, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunStartMusic(bool original) {
+    int track = RI(-1, 40);
+    int section = RI(0, STARTS - 1);
+    CDECL_VOID(0x000ca5e0, SFXStartMusic, void (__cdecl *)(int, int), track, section);
+    return 0;
+}
+
+const Case kStreamBuffers[] = {
+    C("SFXReleaseStreamSystem", RunReleaseStreamSystem),
+    C("SFXInitialiseAudioStreamSystem", RunInitialiseAudioStreamSystem),
+    C("ES_InitialStreamBuffer", RunInitialStreamBuffer),
+    C("ES_SetFileBufferCount", RunSetFileBufferCount),
+    C("ES_StreamAsyncReadFile", RunStreamAsyncReadFile),
+    C("ES_GetStreamStates", RunGetStreamStates),
+    C("ES_SetStreamStates", RunSetStreamStates),
+    C("ES_StartStreamMemCpy", RunStartStreamMemCpy),
+    C("ES_CheckEndMarker", RunCheckEndMarker),
+    C("ES_HandleStreamBufferLoaded", RunHandleStreamBufferLoaded),
+    C("SFXInitialiseStream", RunInitialiseStream),
+    C("SFXStopStream", RunStopStream),
+    C("SFXStopMusic", RunStopMusic),
+    C("SFXStartMusic", RunStartMusic),
+};
+
+void InstallStreamUpdateFake(void) {
+    ShadowHook_Install(0x000c63c0, (const void *)&FakeInitialiseStreamUpdate);
+}
+
 void Group(const char *name, const Case *list, int count, int trials, void (*more)(void) = NULL) {
     const char *only = getenv("NIGHTFIRE_SFX_GROUP");
     if (only != NULL && strstr(name, only) == NULL)
@@ -1262,9 +1560,10 @@ void SFXShadow_Run(void) {
 
     Group("the settings and the mixer", kSettings, COUNT(kSettings), 3000);
     Group("the file access", kSuspend, COUNT(kSuspend), 3000, InstallUpdateFake);
-    Group("the voices and the list", kVoices, COUNT(kVoices), 3000);
-    Group("starting the sounds and the frame", kStarting, COUNT(kStarting), 4000);
-    Group("the banks and the reset", kBanks, COUNT(kBanks), 3000);
+    Group("the voices and the list", kVoices, COUNT(kVoices), 3000, InstallLayerFakes);
+    Group("starting the sounds and the frame", kStarting, COUNT(kStarting), 4000, InstallLayerFakes);
+    Group("the banks and the reset", kBanks, COUNT(kBanks), 3000, InstallLayerFakes);
+    Group("the stream's buffers", kStreamBuffers, COUNT(kStreamBuffers), 3000, InstallStreamUpdateFake);
     ShadowHook_RemoveAll();
 
     NfWarnMuted--;
