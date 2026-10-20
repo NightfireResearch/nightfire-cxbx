@@ -11,6 +11,7 @@
 #include "../Upgrade.h"
 #include "../weapon_stats.h"
 #include "../drone/BOT.h"
+#include "../drone/BOTWEAP.h"
 #include "../mp/multiplayer.h"
 #include "../sp/PlayerStats.h"
 #include "build.h"
@@ -33,9 +34,6 @@ static int32_t Ftol(double x) {
 #define MP_RegisterPickup ((void (__cdecl *)(obj_tag *pickup))0x000a1310)
 #define MP_UnregisterPickup ((void (__cdecl *)(obj_tag *pickup))0x0009de20)
 #define MP_getMPpickup ((void *(__cdecl *)(PICKUPINFO *info))0x0009e870)
-#define BOTWEAP_EquipAmmo ((void (__cdecl *)(Drone_tag *drone, short weapon, short amount))0x0001e820)
-#define BOTWEAP_EquipWeapon ((bool (__cdecl *)(Drone_tag *drone, short weapon, short amount))0x0001e6f0)
-#define BOTWEAP_hasLoadedWeapon ((bool (__cdecl *)(Drone_tag *drone, short weapon))0x0001f410)
 #define BOTSTATE_pickupWeaponChangeChoice ((void (__cdecl *)(Drone_tag *drone, short weapon, int ammo, int unknown))0x0001e470)
 #define BOTSTATE_setPickupVisitTime ((void (__cdecl *)(Drone_tag *drone, void *mpPickup))0x0001c550)
 // The bot's armour shown: the shared empty function on the Xbox

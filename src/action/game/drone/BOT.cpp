@@ -1,4 +1,5 @@
 #include "BOT.h"
+#include "BOTWEAP.h"
 #include "Behaviour.h"
 #include "DroneTables.h"        // DefaultBotStats; also brings in NDrone2.h (DSTATE) and Drone.h (Drone_tag)
 #include "../mp/multiplayer.h"  // MPSettings, mpbots, MP_skins
@@ -18,8 +19,6 @@
 // XBE_GLOBAL(0x00163990, 0x37)
 #define BotStateClasses (*(const uchar(*)[DSTATE_BotIdle - DSTATE_BotInit + 1])0x00163990)
 
-// AUTOGEN
-void BOTWEAP_InitWeapon(Drone_tag *param_1);
 // AUTOGEN
 bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);
 

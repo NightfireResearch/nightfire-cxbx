@@ -2654,7 +2654,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001e540",
+        "name": "BOTWEAP_resetWeapons",
         "address": "0x0001e540",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2662,7 +2662,7 @@
         "param_types": [
             "obj_tag *"
         ],
-        "prototype_string": "void __cdecl FUN_0001e540(obj_tag * param_1)",
+        "prototype_string": "void __cdecl BOTWEAP_resetWeapons(obj_tag * param_1)",
         "parameters": [
             "[obj_tag * param_1@Stack[0x4]:4]"
         ],
@@ -2670,7 +2670,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001e5b0",
+        "name": "BOTWEAP_reload",
         "address": "0x0001e5b0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2679,7 +2679,7 @@
             "int",
             "char"
         ],
-        "prototype_string": "uint __cdecl FUN_0001e5b0(int param_1, char param_2)",
+        "prototype_string": "uint __cdecl BOTWEAP_reload(int param_1, char param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[char param_2@Stack[0x8]:1]"
@@ -2830,7 +2830,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001eb70",
+        "name": "BOTWEAP_getWeaponPriority",
         "address": "0x0001eb70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2838,7 +2838,7 @@
         "param_types": [
             "short"
         ],
-        "prototype_string": "int __cdecl FUN_0001eb70(short param_1)",
+        "prototype_string": "int __cdecl BOTWEAP_getWeaponPriority(short param_1)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]"
         ],
@@ -2846,7 +2846,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001edb0",
+        "name": "BOTWEAP_getAnimSet",
         "address": "0x0001edb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2854,7 +2854,7 @@
         "param_types": [
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0001edb0(short param_1)",
+        "prototype_string": "undefined4 __cdecl BOTWEAP_getAnimSet(short param_1)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]"
         ],
@@ -2862,7 +2862,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001ee60",
+        "name": "BOTWEAP_shouldChangeWeapon",
         "address": "0x0001ee60",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2870,7 +2870,7 @@
         "param_types": [
             "short"
         ],
-        "prototype_string": "uint __cdecl FUN_0001ee60(short param_1)",
+        "prototype_string": "uint __cdecl BOTWEAP_shouldChangeWeapon(short param_1)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]"
         ],
@@ -2878,7 +2878,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001eeb0",
+        "name": "BOTWEAP_hasReloadAnim",
         "address": "0x0001eeb0",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2886,7 +2886,7 @@
         "param_types": [
             "short"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_0001eeb0(short param_1)",
+        "prototype_string": "undefined4 __cdecl BOTWEAP_hasReloadAnim(short param_1)",
         "parameters": [
             "[short param_1@Stack[0x4]:2]"
         ],
@@ -2894,7 +2894,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001ef30",
+        "name": "BOTWEAP_hasAmmo",
         "address": "0x0001ef30",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2903,7 +2903,7 @@
             "int",
             "short"
         ],
-        "prototype_string": "bool __cdecl FUN_0001ef30(int param_1, short param_2)",
+        "prototype_string": "bool __cdecl BOTWEAP_hasAmmo(int param_1, short param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[short param_2@Stack[0x8]:2]"
@@ -2964,7 +2964,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001f450",
+        "name": "BOTWEAP_getExplosiveWeapon",
         "address": "0x0001f450",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -2973,7 +2973,7 @@
             "int",
             "float"
         ],
-        "prototype_string": "undefined2 __cdecl FUN_0001f450(int param_1, float param_2)",
+        "prototype_string": "undefined2 __cdecl BOTWEAP_getExplosiveWeapon(int param_1, float param_2)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]",
             "[float param_2@Stack[0x8]:4]"

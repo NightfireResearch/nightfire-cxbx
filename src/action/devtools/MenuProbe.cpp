@@ -113,6 +113,7 @@
 #include "MathExactShadow.h"
 #include "BotCoreShadow.h"
 #include "BotStateShadow.h"
+#include "BotPortShadow.h"
 #include "DroneMPShadow.h"
 #include "MPMatchShadow.h"
 #include "MPMenusShadow.h"
@@ -652,6 +653,10 @@ void MenuProbe_Install(void) {
         EffectPortShadow_Run();
         fflush(stdout);
         _exit(0);
+    } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "botport") == 0) {
+        BotPortShadow_Run();
+        fflush(stdout);
+        _exit(0);
     } else if (SettingOn("MenuShadowTests") && only != NULL && strcmp(only, "player") == 0) {
         PlayerShadow_Run();
         PlayerWeaponShadow_Run();
@@ -710,6 +715,7 @@ void MenuProbe_Install(void) {
         MenuHandlerShadow_Run();
         MathExactShadow_Run();
         MPMenusShadow_Run();
+        BotPortShadow_Run();
     }
     U32_AT(0x00300608) = mathErrors;
     g_logging = SettingOn("MenuLog");

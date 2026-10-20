@@ -11,6 +11,7 @@
 #include "../obj/ScriptPlayer.h"
 #include "../drone/Drone.h"
 #include "../drone/BOT.h"
+#include "../drone/BOTWEAP.h"
 #include "../weapon_stats.h"
 #include "../../util/Random.h"
 #include <math.h>
@@ -48,8 +49,6 @@ static int32_t Ftol(double x) {
 // Defined in multiplayer_modes.cpp's AUTOGEN
 void MP_sendBotMessage(obj_tag *obj, uint msg, uint param3, uint param4);
 
-// AUTOGEN
-bool __cdecl BOTWEAP_EquipWeapon(Drone_tag *param_1, short param_2, short param_3);
 // AUTOGEN
 ushort __cdecl BOTSTATE_pickupWeaponChangeChoice(Drone_tag *param_1, short param_2, char param_3, char param_4);
 

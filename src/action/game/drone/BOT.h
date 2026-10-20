@@ -91,7 +91,7 @@ typedef struct BOT_playerInfo_t {
 
 // One weapon as a bot holds it (BOT_vars_t.weapons, indexed by weapon id). Invented name.
 typedef struct BOT_weapon_t {
-    uchar unknown0[4];          // 0x0 - sqrt(range)
+    float zoomRoot;             // 0x0 - sqrt of the weapon's maxZoom (BOTWEAP_resetWeapons)
     short rounds;               // 0x4 - rounds in clip
     uchar held;                 // 0x6
     uchar unknown7[5];
@@ -105,7 +105,7 @@ typedef struct BOT_vars_t {
     uchar _pad86[2];
     BOT_playerInfo_t players[NUM_AGENTS]; // 0x088 - what it knows of each MPGame player (BOT_setOtherPlayerInfo)
     _VECTOR opponentLastPos;        // 0x128
-    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(range), rounds in clip, held. One slot per id
+    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(maxZoom), rounds in clip, held. One slot per id
                                     //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
                                     //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
                                     //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
