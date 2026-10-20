@@ -35,6 +35,7 @@ namespace {
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
 const int DRONES = 3;
+const uchar BOT_SKIN_1A_TEST = 0x1a;
 
 struct World {
     obj_tag objs[DRONES];
@@ -159,6 +160,25 @@ const FakeSpec kFakes[] = {
     {0x0001a260, "BOT_reactToDroneAlertMsg", "dpp", 'b'},
     {0x0009df20, "MP_areObjectsOnSameTeam", "pp", 'b'},
     {0x00036dc0, "NDrone2_FeetPos", "pp", 'b'},
+    {0x0001b950, "BOTSTATE_getStateType", "d", 'c'},
+    {0x0001b120, "BOT_SetHealth", "pf", 'v'},
+    {0x0001c6f0, "BOTSTATE_increaseDistraction", "pf", 'v'},
+    {0x0001df80, "BOTSTATE_processGoals", "p", 'G'},
+    {0x0001ef30, "FUN_0001ef30", "pw", 'b'},
+    {0x0001ee60, "FUN_0001ee60", "w", 'b'},
+    {0x0001f450, "FUN_0001f450", "pf", 's'},
+    {0x0001f740, "BOTWEAP_tooCloseForWeapon", "pwf", 'b'},
+    {0x0001b9c0, "BOTSTATE_checkAttackMove", "pw", 's'},
+    {0x0001c600, "BOTSTATE_opponentIsMissile", "pp", 'b'},
+    {0x0001c5a0, "BOTSTATE_startRecovery", "p", 'v'},
+    {0x0001beb0, "BOTSTATE_setGoalComplete", "pd", 'v'},
+    {0x0001d6a0, "FUN_0001d6a0", "ppd", 'v'},
+    {0x0001c6c0, "BOTSTATE_defaultCombatRange", "p", 'v'},
+    {0x0001c690, "BOTSTATE_reallyCloseCombatRange", "p", 'v'},
+    {0x0001a190, "MPDrone_MaybeIsDyingOrDead", "p", 'd'},
+    {0x00031d30, "Drone_AlertStatusSet", "bp", 'v'},
+    {0x00038ff0, "NDrone2_HandleDroneAlert", "ppw", 'b'},
+    {0x00064e90, "NDrone2_InShoutingRange", "pp", 'b'},
     {0x0009e430, "MP_sendTeamBotMessage", "dddpp", 'v'},
     {0x0001b4f0, "BOT_respawn", "pdb", 'b'},
     {0x00037a10, "NDrone2_SetOpponent", "pp", 'v'},
@@ -226,6 +246,14 @@ uint32_t Respond(const FakeSpec &fake, const uint32_t *args) {
         return Answer(4) ? Answer(NUM_AGENTS) : 0xffff;
     case 'P':
         return Answer(2) ? (uint32_t)(uintptr_t)&world.player : (uint32_t)(uintptr_t)&world.objs[2];
+    case 'c':
+        return Answer(3) == 0 ? BOTSTATE_CLASS_ATTACK : Answer(14);  // a BOTSTATE_CLASS, often an attack
+    case 'd':
+        return Answer(8) == 0;  // dying now and then
+    case 'G':
+        if (Answer(4) == 0)
+            world.drones[0].sm.curState++;      // the goals changed the state
+        return 0;
     case 'F': {
         float f = 3.5f + Answer(4);
         uint32_t u;
@@ -629,6 +657,57 @@ const Case kPlaces[] = {
     CASE(NDrone2_DSTATE_BotIdle, 0x00064100),
 };
 
+const Case kBrain[] = {
+    CASE(NDrone2_DSTATE_BotGlobal, 0x000603e0),
+};
+
+// The brain's world: the states, timers, weapons, traits and messages it tells apart
+void RandomBrain() {
+    static const uint types[] = {0, 3, 3, 3, 3, 3, 3, 6, 8, 9, 0x11, 0x12, 0x14, 0x16, 0x18, 0x1e, 0x2e, 0x2e, 0x2f,
+                                 0x3a, 0x3b, 0x3c, 0x3d, 0x40, 0x41, 0x42, 0x43, 0x44, 0x45, 0x46};
+    world.msg.msgType = Pick(types);
+    static void *const extras[] = {&world.hit, &world.impact, &world.player, &world.objs[2], (void *)(uintptr_t)1,
+                                   (void *)(uintptr_t)0x2a};
+    world.msg.extraData = Pick(extras);
+    world.msg.sender = ShadowRand(3) ? (uint)(uintptr_t)&world.player : (uint)(uintptr_t)&world.objs[0];
+    for (int i = 0; i < DRONES; i++) {
+        Drone_tag *d = &world.drones[i];
+        BOT_vars_t *bot = &world.bots[i];
+        static const uint states[] = {0, DSTATE_BotIdle, DSTATE_BotAttack, DSTATE_BotAttackRun, DSTATE_BotAttackFire,
+                                      DSTATE_BotAttackCrouch, DSTATE_BotAttackReload, DSTATE_BotAttackChangeWeapon,
+                                      DSTATE_BotAttackUnarmed, DSTATE_BotAttackBackoff, DSTATE_BotAttackStrafeAimLeft,
+                                      DSTATE_BotAttackStepAimRight, DSTATE_BotAttackRollRightCrouch,
+                                      DSTATE_BotGotoGoalPosition, DSTATE_BotCoverIdle, DSTATE_BotDead, 0x30};
+        d->sm.curState = Pick(states);
+        d->clip = (short)(ShadowRand(3) ? ShadowRand(10) : -ShadowRand(2));
+        d->opponentSeenFrame = GameState.NumFramesUnpaused - ShadowRand(600);
+        bot->skin = (uchar)(ShadowRand(2) ? BOT_SKIN_1A_TEST : ShadowRand(30));
+        bot->ammoRegenTimer = ShadowRand(3) ? 0 : GameState.NumFramesUnpaused - 700 + ShadowRand(1400);
+        bot->weapons[0x45].rounds = (short)ShadowRand(4);
+        bot->regenTimer = ShadowRand(3) ? GameState.NumFramesUnpaused - 30 + ShadowRand(60) :
+                                          0x80000000u + ShadowRand(100);
+        bot->recoveryEndFrame = GameState.NumFramesUnpaused - 30 + ShadowRand(60);
+        bot->stats.health = (ushort)(50 + ShadowRand(250));
+        bot->weapon = (uchar)(ShadowRand(3) ? ShadowRand(0x53) : ShadowRand(2) ? 1 : 0x3b);
+        world.objs[i].objectType = (char)(ShadowRand(10) ? OBJECTTYPE_DRONE : OBJECTTYPE_DEAD_DRONE);
+        static const float near[] = {0.5f, 1.0f, 1.5f, 1.5000001f, 2.5f, 2.9999998f, 3.0f};
+        if (ShadowRand(2))
+            d->distanceToTarget = Pick(near);
+        static const float bearings[] = {0.0f, 1.0f, -1.0f, 1.5707963f, 1.5707964f, -1.5707964f, 3.0f};
+        if (ShadowRand(2))
+            d->opponentBearing = Pick(bearings);
+        if (ShadowRand(3) == 0)
+            bot->stats.traitFlags &= ~BOT_TRAIT_FISTS_UP_CLOSE;
+    }
+    static const uchar types2[] = {OBJECTTYPE_PLAYER, OBJECTTYPE_DRONE, OBJECTTYPE_GFX};
+    world.player.objectType = Pick(types2);
+    for (int p = 0; p < NUM_AGENTS; p++) {
+        MPGame.players[p].flags = (ushort)(ShadowRand(0x20) | (ShadowRand(3) ? 0 : MPPLAYER_IN_HILL));
+        MPSettings.Player[p].TeamId = (MPTeam)ShadowRand(3);
+    }
+    GameState.NumFramesUnpaused += ShadowRand(2) ? 0 : 0x100000;
+}
+
 const Case kReactions[] = {
     HELPER(NDrone2_InShoutingRange, 0x00064e90, K_DCV_OBJ, 0xff),
     HELPER(NDrone2_HandleDroneAlert, 0x00038ff0, K_DCV_MSG_SHORT, 0xff),
@@ -697,6 +776,8 @@ int Test(const Case *cases, int count, int trials, int *differ) {
             RandomMessage();
             if (cases == kReactions)
                 RandomAlerts();
+            if (cases == kBrain)
+                RandomBrain();
             run++;
             if (!ShadowCompare(regions, "dronebots", current->name, trial, RunTheirs, RunOurs))
                 (*differ)++;
@@ -722,6 +803,11 @@ void DroneBotShadow_Run(void) {
     regions.Add(RandWords, 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&MPSettings.GameMode, 4);
+    regions.Add(&MPGame, sizeof(MPGame));
+    regions.Add(&MPSettings.Player, sizeof(MPSettings.Player));
+    static uint8_t mpGame[sizeof(MPGame)], mpPlayers[sizeof(MPSettings.Player)];
+    memcpy(mpGame, &MPGame, sizeof(mpGame));
+    memcpy(mpPlayers, &MPSettings.Player, sizeof(mpPlayers));
     MultiplayerGameMode gameMode = MPSettings.GameMode;
 
     InstallFakes();
@@ -739,6 +825,7 @@ void DroneBotShadow_Run(void) {
         {"cover", kCover, sizeof(kCover) / sizeof(kCover[0]), 6000},
         {"going places, guarding and idling", kPlaces, sizeof(kPlaces) / sizeof(kPlaces[0]), 8000},
         {"alerts and reactions", kReactions, sizeof(kReactions) / sizeof(kReactions[0]), 20000},
+        {"the brain", kBrain, sizeof(kBrain) / sizeof(kBrain[0]), 60000},
     };
     const int n = sizeof(groups) / sizeof(groups[0]);
     int cases[n], differ[n];
@@ -749,6 +836,10 @@ void DroneBotShadow_Run(void) {
             for (int c = 0; c < groups[g].count; c++)
                 tested[c] = kReactions[c].at;
             InstallFakes(tested, groups[g].count);
+        }
+        if (groups[g].cases == kBrain) {
+            ShadowHook_RemoveAll();
+            InstallFakes();
         }
         differ[g] = 0;
         cases[g] = Test(groups[g].cases, groups[g].count, groups[g].trials, &differ[g]);
@@ -761,6 +852,8 @@ void DroneBotShadow_Run(void) {
     memcpy(RandWords, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
     MPSettings.GameMode = gameMode;
+    memcpy(&MPGame, mpGame, sizeof(mpGame));
+    memcpy(&MPSettings.Player, mpPlayers, sizeof(mpPlayers));
 
     for (int g = 0; g < n; g++)
         printf("[dronebots] %s: %d cases, %d differ\n", groups[g].what, cases[g], differ[g]);

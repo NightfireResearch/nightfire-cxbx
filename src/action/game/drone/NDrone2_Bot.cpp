@@ -23,6 +23,7 @@
 #include "../../math/math.h"            // Vec_Subtract, maybeAtan2
 #include "../../math/X87Ops.h"          // Extended
 #include "../../util/Random.h"          // Rand_Rand
+#include "../weapon_stats.h"            // weapon_data
 
 #include <bit>
 #include <math.h>
@@ -54,6 +55,22 @@
 #define BOTSTATE_initGoal ((void (__cdecl *)(BOT_vars_t *bot, uint slot, uchar kind, void *pos, void *target, uchar flags))0x0001bbc0)
 #define BOTSTATE_gotoGoal ((uchar (__cdecl *)(DCVars_tag *dcv, int slot, uint nextState))0x0001bc30)
 #define BOTSTATE_combatWeaponChangeChoice ((ushort (__cdecl *)(Drone_tag *drone, obj_tag *opponent, char a, char b, char c))0x0001d750)
+#define BOTSTATE_increaseDistraction ((void (__cdecl *)(Drone_tag *drone, float amount))0x0001c6f0)
+#define BOTSTATE_startRecovery ((void (__cdecl *)(DCVars_tag *dcv))0x0001c5a0)
+#define BOTSTATE_setGoalComplete ((void (__cdecl *)(DCVars_tag *dcv, uint slot))0x0001beb0)
+#define BOTSTATE_checkAttackMove ((short (__cdecl *)(DCVars_tag *dcv, short state))0x0001b9c0)
+#define BOTSTATE_opponentIsMissile ((bool (__cdecl *)(Drone_tag *drone, obj_tag *missile))0x0001c600)
+#define BOTSTATE_defaultCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c6c0)
+#define BOTSTATE_reallyCloseCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c690)
+#define BOTWEAP_tooCloseForWeapon ((bool (__cdecl *)(Drone_tag *drone, ushort weapon, float distance))0x0001f740)
+#define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
+#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
+// Ghidra has no names for these: whether the bot can reload the weapon; whether it is one to fight hand to hand with;
+// the explosive to change to for the distance (0 none); dropping goals on an object (the state to go to)
+#define FUN_0001ef30 ((bool (__cdecl *)(Drone_tag *drone, ushort weapon))0x0001ef30)
+#define FUN_0001ee60 ((bool (__cdecl *)(ushort weapon))0x0001ee60)
+#define FUN_0001f450 ((short (__cdecl *)(Drone_tag *drone, float distance))0x0001f450)
+#define FUN_0001d6a0 ((void (__cdecl *)(DCVars_tag *dcv, void *object, uint state))0x0001d6a0)
 #define MP_getProtectionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1600)
 #define MP_getDemolitionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1610)
 // Sends a message to the bots of a team (2 every bot): extraData, after delay frames, from sender
@@ -140,6 +157,494 @@ static void SetTimerB(DCVars_tag *dcv, uint dueFrame) {
 
 static BOT_vars_t *Bot(DCVars_tag *dcv) {
     return dcv->drone->botVars;
+}
+
+// ---- the brain
+
+// The bot messages DSTATE_BotGlobal takes (our names; docs/drone/bots-and-navigation/README.md 5.5)
+#define BOT_MSG_OBJECTIVE_CHANGED 0x3a      // the objective changed: pick the objective goal
+#define BOT_MSG_GOAL_COMPLETE 0x3b          // extraData = the goal slot
+#define BOT_MSG_GOAL_UNINIT 0x3c            // extraData = the goal slot
+#define BOT_MSG_CANCEL_GOALS 0x3d           // extraData = the object
+#define BOT_MSG_CARRIER_40 0x40             // extraData = the objective's carrier
+#define BOT_MSG_CARRIER_41 0x41
+#define BOT_MSG_CHANGE_WEAPON 0x42          // extraData = the weapon
+#define BOT_MSG_PLAYER_DIED 0x43            // extraData = the player's object
+#define BOT_MSG_WEAPON_PICKED_UP 0x44       // sender = the object that picked it up
+#define BOT_MSG_WEAPON_PICKED_UP_SELF 0x45  // extraData = the weapon object
+
+// BOT_vars_t.skin: the one whose weapon 0x45 comes back every 10 s
+#define BOT_SKIN_1A 0x1a
+#define WEAPON_45 0x45
+
+constexpr float kRegenHealth = 5.0f;        // a second, with BOT_TRAIT_REGENERATE
+constexpr float kUnseenDistraction = -2.0f;
+constexpr float kCloseCombat = 3.0f;        // a random move within this
+
+// Whether the opponent is within 1.5 m and a quarter turn of the bot's facing
+static bool BotCanStrike(Drone_tag *drone) {
+    return drone->distanceToTarget <= kUnarmedRange && fabsf(drone->opponentBearing) < kHalfPi;
+}
+
+// The bot's state as a state class has it: alerts the bot is not attentive for (dying, initialising, attacking...)
+// pass it by.
+static bool BotHearsAlerts(uint stateClass) {
+    switch (stateClass) {
+    case BOTSTATE_CLASS_PERSONALITY:
+    case BOTSTATE_CLASS_MOVE:
+    case BOTSTATE_CLASS_ALERTED:
+    case BOTSTATE_CLASS_IMPACT:
+    case BOTSTATE_CLASS_DOOR:
+    case BOTSTATE_CLASS_IDLE:
+        return true;
+    default:
+        return stateClass > BOTSTATE_CLASS_DEATH;
+    }
+}
+
+// Each frame, for the attack states: reloading or changing weapon with an empty clip; hand to hand (or a change to the
+// fists) when the opponent is close and ahead; backing off; a random move within 3 m; then the weapon for the range
+// (in a hill, a check of the side move instead). What the state change answered, or BOT_CHECKS_NONE when there was
+// none.
+#define BOT_CHECKS_NONE -1
+static int BotAttackChecks(DCVars_tag *dcv, Drone_tag *drone, BOT_vars_t *bot) {
+    uint state = dcv->aiStateMachine->curState;
+    if (state != DSTATE_BotAttackReload && state != DSTATE_BotAttackChangeWeapon) {
+        if (dcv->drone->clip <= 0) {
+            if (FUN_0001ef30(dcv->drone, bot->weapon))
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackReload, 0);
+            bot->nextWeapon = (uchar)BOTSTATE_changeWeapon(bot, 0, 1, 1);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+        }
+        if (state != DSTATE_BotAttackUnarmed && !BOTSTATE_opponentIsMissile(drone, (obj_tag *)-1) &&
+            BotCanStrike(dcv->drone)) {
+            if ((dcv->drone->botVars->stats.traitFlags & BOT_TRAIT_FISTS_UP_CLOSE) ||
+                (bot->weapon != 1 && (Rand_Rand(200) == 199 || FUN_0001ee60(bot->weapon)))) {
+                if (bot->weapon != 1) {
+                    bot->nextWeapon = 1;
+                    return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+                }
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackUnarmed, 0);
+            }
+            if (bot->weapon == 1)
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackUnarmed, 0);
+        }
+        if (dcv->aiStateMachine->curState != DSTATE_BotAttackUnarmed && bot->weapon == 1 &&
+            dcv->drone->distanceToTarget > kUnarmedRange) {
+            bot->nextWeapon = (uchar)BOTSTATE_changeWeapon(bot, 0, 1, 1);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+        }
+        if (!(drone->opponent != NULL && BOTSTATE_opponentIsMissile(drone, (obj_tag *)-1)) &&
+            !(dcv->drone->botVars->stats.traitFlags & BOT_TRAIT_FISTS_UP_CLOSE) &&
+            !(bot->weapon == 1 && FUN_0001ee60(1))) {
+            if (dcv->aiStateMachine->curState != DSTATE_BotAttackBackoff &&
+                dcv->drone->distanceToTarget <= dcv->drone->combatRanges[0] && NDrone2_CanBackoff(dcv))
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackBackoff, 0);
+            if (dcv->drone->distanceToTarget < kCloseCombat) {
+                switch (dcv->aiStateMachine->curState) {
+                case DSTATE_BotAttackStrafeAimLeft:
+                case DSTATE_BotAttackStrafeAimRight:
+                case DSTATE_BotAttackRunChangePosition:
+                case DSTATE_BotAttackBackoff:
+                case DSTATE_BotAttackRollLeftCrouch:
+                case DSTATE_BotAttackRollRightCrouch:
+                case DSTATE_BotAttackStepAimLeft:
+                case DSTATE_BotAttackStepAimRight:
+                case DSTATE_BotAttackUnarmed:
+                    break;
+                default: {
+                    short move = BOTSTATE_chooseRandomMove(dcv, -1);
+                    if (move == 0) {
+                        if (!BotCanStrike(dcv->drone))
+                            break;
+                        move = DSTATE_BotAttackUnarmed;
+                    }
+                    return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)move, 0);
+                }
+                }
+            }
+        }
+    }
+
+    Drone_tag *self = dcv->drone;
+    if (self->opponent == NULL)
+        return BOT_CHECKS_NONE;
+    if (MPGame.players[self->botVars->playerIndex].flags & MPPLAYER_IN_HILL) {
+        int side;
+        switch (dcv->aiStateMachine->curState) {
+        case DSTATE_BotAttackStrafeAimLeft:
+        case DSTATE_BotAttackRollLeftCrouch:
+        case DSTATE_BotAttackStepAimLeft:
+            side = 2;
+            break;
+        case DSTATE_BotAttackStrafeAimRight:
+        case DSTATE_BotAttackRollRightCrouch:
+        case DSTATE_BotAttackStepAimRight:
+            side = 1;
+            break;
+        default:
+            return BOT_CHECKS_NONE;
+        }
+        if (BOTSTATE_checkAttackMove(dcv, (short)dcv->aiStateMachine->curState) != 0)
+            return BOT_CHECKS_NONE;
+        short move = BOTSTATE_chooseRandomMove(dcv, side);
+        if (move == 0)
+            move = DSTATE_BotAttack;
+        return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)move, 0);
+    }
+    state = dcv->aiStateMachine->curState;
+    if (state == DSTATE_BotAttackReload || state == DSTATE_BotAttackChangeWeapon)
+        return BOT_CHECKS_NONE;
+    uchar weapon = bot->weapon;
+    if (weapon_data[weapon].botWeaponClass != 4) {
+        short explosive = FUN_0001f450(self, self->distanceToTarget);
+        if (explosive == 0)
+            return BOT_CHECKS_NONE;
+        bot->nextWeapon = (uchar)explosive;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+    }
+    if (!BOTWEAP_tooCloseForWeapon(self, weapon, self->distanceToTarget))
+        return BOT_CHECKS_NONE;
+    bot->nextWeapon = (uchar)BOTSTATE_changeWeapon(bot, 0, 1, 1);
+    return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+}
+
+// Whether the protection / demolition objective has the bot inside (within 3 m of its box), for a bot of the side that
+// holds it: then it idles there
+static bool BotAtObjective(DCVars_tag *dcv) {
+    ushort team;
+    obj_tag *objective;
+    if (MPSettings.GameMode == GM_PROTECTION) {
+        team = 1;
+        objective = MP_getProtectionObj_NotExt();
+    } else if (MPSettings.GameMode == GM_DEMOLITION) {
+        team = 0;
+        objective = MP_getDemolitionObj_NotExt();
+    } else {
+        return false;
+    }
+    if (objective == NULL || team == 2 ||
+        (uint)MPSettings.Player[dcv->drone->botVars->playerIndex].TeamId != team || objective->objGraphics == NULL)
+        return false;
+    _VECTOR offset;
+    Vec_Subtract(&dcv->gameObj->centrePoint, Mat_Position(objective->transformMatrix), &offset);
+    celglist_tag *model = objective->objGraphics;
+    dcv->drone->botVars->insideObjective = Intersect_SphereBox(&offset, kObjectiveRadius, &model->extentMin,
+                                                               &model->extentMax);
+    return dcv->drone->botVars->insideObjective != 0;
+}
+
+// Each frame: dying (to BotDeathAnim), the state saved before a goal, recovering, weapon 0x45's regeneration (skin
+// 0x1a), seeing the opponent at once (BOT_TRAIT_ATTACK_ON_SIGHT), regenerating health, distraction while the opponent
+// is out of sight, and by state class: the objective's box, the goals, the attack checks, or (with the opponent seen
+// in the last 5 s) the reaction to it.
+static bool BotGlobalUpdate(DCVars_tag *dcv, Drone_tag *drone) {
+    StateMachineInfo_tag *sm = dcv->aiStateMachine;
+    if (sm->curState == 0)
+        return Drone_SM_SetState(sm, DSTATE_BotIdle, 0);
+    BOT_vars_t *bot = dcv->drone->botVars;
+    uint stateClass = BOTSTATE_getStateType(sm->curState);
+    dcv->drone->botVars->stateClass = (uchar)stateClass;
+    obj_tag *gameObj = drone->gameObj;
+    if (MPDrone_MaybeIsDyingOrDead(gameObj) || gameObj->objectType == OBJECTTYPE_DEAD_DRONE) {
+        MPGame.players[dcv->drone->botVars->playerIndex].flags = 0;
+        if (stateClass == BOTSTATE_CLASS_DEATH)
+            return false;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDeathAnim, 0);
+    }
+    if (bot->goalReturnState != 0) {
+        if (dcv->aiStateMachine->curState != bot->goalReturnState) {
+            Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)bot->goalReturnState, 0);
+            bot->goalReturnState = 0;
+            return true;
+        }
+        bot->goalReturnState = 0;
+    }
+    dcv->drone->flags |= 0x10000;
+    obj_tag *opponent = dcv->drone->opponent;
+    if (opponent != NULL && opponent->objectType == OBJECTTYPE_GFX)
+        NDrone2_SetOpponent(dcv->drone, NULL);
+
+    // Recovering from a hit: blind to everyone until it is over
+    BOT_vars_t *own = drone->botVars;
+    if (own->flags & BOT_FLAG_RECOVERING) {
+        if (GameState.NumFramesUnpaused > own->recoveryEndFrame) {
+            own->flags &= ~BOT_FLAG_RECOVERING;
+        } else if (drone->opponent != NULL) {
+            dcv->drone->flags &= ~0x10000;
+            dcv->drone->sightFlags &= ~DRONE_SIGHT_SEES_OPPONENT;
+            for (int i = 0; i < NUM_AGENTS; i++)
+                bot->players[i].flags &= ~(BOT_PLAYER_PRESENT | BOT_PLAYER_IN_SIGHT);
+        }
+    }
+
+    if (bot->skin == BOT_SKIN_1A && bot->ammoRegenTimer != 0) {
+        int elapsed = GameState.NumFramesUnpaused - bot->ammoRegenTimer;
+        if (elapsed < 0)
+            elapsed = bot->ammoRegenTimer - GameState.NumFramesUnpaused;
+        if ((double)_FRAME_RATE * 10.0f <= elapsed) {
+            if (bot->weapons[WEAPON_45].rounds < weapon_data[WEAPON_45].clipSize)
+                bot->weapons[WEAPON_45].rounds++;
+            bot->ammoRegenTimer = 0;
+            bot->nextWeapon = (uchar)BOTSTATE_changeWeapon(bot, 0, 1, 1);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+        }
+    }
+
+    Drone_tag *self = dcv->drone;
+    if (!(self->sightFlags & DRONE_SIGHT_SEES_OPPONENT) &&
+        (self->botVars->stats.traitFlags & BOT_TRAIT_ATTACK_ON_SIGHT) && self->opponent != NULL) {
+        short index = Control_Plr2Ind(self->opponent);
+        if (index != -1) {
+            uchar flags = bot->players[index].flags;
+            if ((flags & BOT_PLAYER_PRESENT) && (flags & BOT_PLAYER_IN_SIGHT))
+                dcv->drone->sightFlags |= DRONE_SIGHT_SEES_OPPONENT;
+        }
+    }
+
+    if (dcv->drone->botVars->stats.traitFlags & BOT_TRAIT_REGENERATE) {
+        uint due = bot->regenTimer;
+        uint now = GameState.NumFramesUnpaused;
+        if (due <= now || ((int)due < 0 && now < 0x100000)) {
+            dcv->drone->health = dcv->drone->health + kRegenHealth;
+            double maxHealth = (int)bot->stats.health;
+            if (maxHealth < dcv->drone->health)
+                dcv->drone->health = (float)maxHealth;
+            BOT_SetHealth(drone, drone->health);
+            bot->regenTimer = GameState.NumFramesUnpaused + FRAME_RATE_INT;
+        }
+    }
+
+    short index = Control_Plr2Ind(dcv->drone->opponent);
+    self = dcv->drone;
+    bool seen;
+    if (index >= 0) {
+        uchar flags = self->botVars->players[index].flags;
+        seen = (flags & BOT_PLAYER_PRESENT) && (flags & BOT_PLAYER_IN_SIGHT);
+    } else {
+        seen = (self->sightFlags & DRONE_SIGHT_SEES_OPPONENT) != 0;
+    }
+    if (!seen)
+        BOTSTATE_increaseDistraction(self, kUnseenDistraction);
+
+    if (stateClass == BOTSTATE_CLASS_MOVE && BotAtObjective(dcv))
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+
+    switch (stateClass) {
+    case BOTSTATE_CLASS_NONE:
+        return true;
+    case BOTSTATE_CLASS_INIT:
+    case BOTSTATE_CLASS_GLOBAL:
+        BOTSTATE_getStateType(dcv->aiStateMachine->curState);
+        return true;
+    case BOTSTATE_CLASS_DEATH:
+        MPGame.players[dcv->drone->botVars->playerIndex].flags = 0;
+        BOTSTATE_getStateType(dcv->aiStateMachine->curState);
+        return true;
+    default:
+        break;
+    }
+
+    bot = dcv->drone->botVars;
+    BOTSTATE_setNearestNavNode(dcv);
+    uint before = dcv->aiStateMachine->curState;
+    BOTSTATE_processGoals(dcv);
+    if (dcv->aiStateMachine->curState == before) {
+        if (stateClass == BOTSTATE_CLASS_ATTACK) {
+            int changed = BotAttackChecks(dcv, drone, bot);
+            if (changed != BOT_CHECKS_NONE)
+                return changed != 0;
+        } else {
+            if (dcv->drone->opponent != NULL) {
+                uint unseen = GameState.NumFramesUnpaused - drone->opponentSeenFrame;
+                if ((double)_FRAME_RATE * 5.0f > (double)unseen)
+                    dcv->drone->sightFlags |= DRONE_SIGHT_SEES_OPPONENT;
+            }
+            if (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT) {
+                short state = NDrone2_ReactToOpponentSighted(dcv, DSTATE_BotSeenOpponent);
+                return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)state, 0);
+            }
+        }
+    }
+    BOTSTATE_getStateType(dcv->aiStateMachine->curState);
+    return true;
+}
+
+// A new state was entered (its class kept, cover let go outside the cover states, the friend forgotten outside the
+// guard states and BotGotoGoalPosition): alert and status 1 in most, idle and status 3 dying or starting.
+static bool BotStateChanged(DCVars_tag *dcv) {
+    StateMachineInfo_tag *sm = dcv->aiStateMachine;
+    if (sm->curState == 0)
+        return Drone_SM_SetState(sm, DSTATE_BotIdle, 0);
+    uint stateClass = BOTSTATE_getStateType(sm->curState);
+    if (stateClass != BOTSTATE_CLASS_COVER)
+        NDrone2_DisownCover(dcv);
+    if (stateClass != BOTSTATE_CLASS_GUARD && dcv->aiStateMachine->curState != DSTATE_BotGotoGoalPosition)
+        dcv->drone->botVars->guardFriend = NULL;
+    uint alert = 1;
+    char status = 1;
+    switch (stateClass) {
+    case BOTSTATE_CLASS_NONE:
+        return true;
+    case BOTSTATE_CLASS_DEATH:
+        MPGame.players[dcv->drone->botVars->playerIndex].flags = 0;
+        // fall through
+    case BOTSTATE_CLASS_INIT:
+        alert = 0;
+        status = 3;
+        break;
+    }
+    dcv->drone->alertness = (float)alert;
+    Drone_AlertStatusSet(status, dcv);
+    dcv->drone->flags |= 0x10000;
+    dcv->drone->botVars->stateClass = (uchar)stateClass;
+    return true;
+}
+
+// The bots' global state: every message of a bot passes through it before its state's. Each frame, BotGlobalUpdate;
+// impacts (all but in death) taken, with the bot recovering; the drones' alerts for the classes that hear them; the stun
+// grenade; and the bot messages (goals, objectives, weapons, a player's death).
+// AUTOINJECT
+bool NDrone2_DSTATE_BotGlobal(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+
+    case DRONE_MSG_BotStateChanged:
+        return BotStateChanged(dcv);
+
+    case DRONE_MSG_Update:
+        return BotGlobalUpdate(dcv, drone);
+
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+    case DRONE_MSG_ImpactExplosive:
+        if (BOTSTATE_getStateType(dcv->aiStateMachine->curState) == BOTSTATE_CLASS_DEATH)
+            return true;
+        if (msg->msgType == DRONE_MSG_ImpactPunch)
+            NDrone2_PunchImpact(dcv, (HITDATA_tag *)msg->extraData, 0, 0);
+        else if (msg->msgType == DRONE_MSG_ImpactBullet)
+            NDrone2_BulletImpact(dcv, (HITDATA_tag *)msg->extraData, 0, 0);
+        else
+            NDrone2_ExplosiveImpact(dcv, (DroneImpact_tag *)msg->extraData, 0, 0);
+        drone->botVars->lastImpactFrame = GameState.NumFramesUnpaused;
+        BOTSTATE_startRecovery(dcv);
+        return true;
+
+    case 0x11:
+    case 0x12:
+    case 0x13:
+    case DRONE_MSG_HeardNoise:
+    case DRONE_MSG_DroneAlert:
+    case 0x16:
+    case DRONE_MSG_GlobalAlarm:
+        if (BotHearsAlerts(BOTSTATE_getStateType(dcv->aiStateMachine->curState)))
+            NDrone2_HandleDroneAlert(dcv, msg, 0);
+        return true;
+
+    case DRONE_MSG_ImpactStunGrenade:
+        if (BOTSTATE_getStateType(dcv->aiStateMachine->curState) == BOTSTATE_CLASS_DEATH)
+            return true;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactStunGrenade, 0);
+
+    case 0x2f: case 0x30: case 0x31: case 0x32: case 0x33: case 0x34:
+    case 0x35: case 0x36: case 0x37: case 0x38: case 0x39: case 0x3e: case 0x3f:
+        return true;
+
+    case BOT_MSG_OBJECTIVE_CHANGED:
+        if (BOTSTATE_getStateType(dcv->aiStateMachine->curState) == BOTSTATE_CLASS_ATTACK)
+            return true;
+        if (dcv->drone->opponent != NULL)
+            return true;
+        BOTSTATE_setGoalPickPrefs(dcv->drone->botVars, 1, 0.0f, 0.0f, 0.0f, 1.0f, 0, 0);
+        if (BOTSTATE_pickGoal(dcv, 1))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotGotoGoalPosition, 0);
+        return true;
+
+    case BOT_MSG_GOAL_COMPLETE:
+        BOTSTATE_setGoalComplete(dcv, (uint)(uintptr_t)msg->extraData);
+        return true;
+
+    case BOT_MSG_GOAL_UNINIT:
+        BOTSTATE_uninitGoal(dcv->drone->botVars, (uint)(uintptr_t)msg->extraData);
+        return true;
+
+    case BOT_MSG_CANCEL_GOALS:
+        FUN_0001d6a0(dcv, msg->extraData, DSTATE_BotIdle);
+        return true;
+
+    case BOT_MSG_CARRIER_40:
+    case BOT_MSG_CARRIER_41:
+        if (dcv->drone->opponent == msg->extraData) {
+            obj_tag *objective;
+            if (MPSettings.GameMode == GM_PROTECTION)
+                objective = MP_getProtectionObj_NotExt();
+            else if (MPSettings.GameMode == GM_DEMOLITION)
+                objective = MP_getDemolitionObj_NotExt();
+            else
+                return true;
+            if (objective != (obj_tag *)-1)
+                NDrone2_SetOpponent(dcv->drone, objective);
+        }
+        return true;
+
+    case BOT_MSG_CHANGE_WEAPON:
+        dcv->drone->botVars->nextWeapon = (uchar)(uintptr_t)msg->extraData;
+        dcv->drone->initialState = (short)dcv->aiStateMachine->curState;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackChangeWeapon, 0);
+
+    case BOT_MSG_PLAYER_DIED: {
+        obj_tag *self = dcv->gameObj;
+        if (MPDrone_MaybeIsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
+            return true;
+        obj_tag *dead = (obj_tag *)msg->extraData;
+        BOT_vars_t *bot = dcv->drone->botVars;
+        uchar index = (uchar)Control_Plr2Ind(dead);
+        if (dcv->drone->opponent == dead)
+            NDrone2_SetOpponent(dcv->drone, NULL);
+        if (bot->guardFriend == dead)
+            bot->guardFriend = NULL;
+        FUN_0001d6a0(dcv, dead, DSTATE_BotIdle);
+        if (BOTSTATE_getStateType(dcv->aiStateMachine->curState) == BOTSTATE_CLASS_GUARD)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotIdle, 0);
+        if (index == bot->preferredOpponent)
+            bot->preferredOpponent = 0xff;
+        return true;
+    }
+
+    case BOT_MSG_WEAPON_PICKED_UP: {
+        obj_tag *picker = (obj_tag *)(uintptr_t)msg->sender;    // the sender is an object here
+        obj_tag *self = dcv->gameObj;
+        if (picker == self)
+            return true;
+        if (MPDrone_MaybeIsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
+            return true;
+        if (dcv->drone->opponent == picker)
+            BOTSTATE_combatWeaponChangeChoice(dcv->drone, picker, 1, 0, 1);
+        return true;
+    }
+
+    case BOT_MSG_WEAPON_PICKED_UP_SELF:
+        BOTSTATE_combatWeaponChangeChoice(drone, (obj_tag *)msg->extraData, 1, 0, 0);
+        BOTSTATE_defaultCombatRange(drone);
+        if (drone->opponent == NULL)
+            return true;
+        if (BOTSTATE_opponentIsMissile(drone, (obj_tag *)-1)) {
+            BOT_goal_t *goal = BOTSTATE_getActiveGoal(drone);
+            if (goal != NULL)
+                goal->timeBudget = 0.0f;
+            if (drone->botVars->weapon == 0x3b)
+                BOTSTATE_reallyCloseCombatRange(drone);
+            return true;
+        }
+        if (drone->opponent == NULL || dcv->aiStateMachine->curState != DSTATE_BotIdle ||
+            !dcv->drone->botVars->insideObjective)
+            return true;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+
+    default:
+        return false;
+    }
 }
 
 // ---- life and death
