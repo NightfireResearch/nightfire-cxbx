@@ -121,6 +121,17 @@ const FakeSpec kFakes[] = {
     {0x000457c0, "NDrone2_CanStrafeRight", "p", 'b'},
     {0x00043fd0, "NDrone2_AtDest", "p", 'b'},
     {0x0003cdf0, "NDrone2_NearDrone", "pf", 'b'},
+    {0x00034750, "DroneAnim_CoverAnim", "pbw", 'b'},
+    {0x00043b20, "NDrone2_SlideToPosition", "pfbp", 'v'},
+    {0x00043e00, "NDrone2_SetAngleToCover", "pf", 'b'},
+    {0x00044310, "NDrone2_CoverNodeOK", "ppwb", 'u'},
+    {0x000445a0, "NDrone2_GetCoverPosForTarget", "pdppb", 'b'},
+    {0x0003e6a0, "DroneFunc_HandleImpact", "ppdb", 'b'},
+    {0x00038670, "DroneFunc_ConsiderExplosive", "ppw", 'v'},
+    {0x00044210, "NDrone2_DisownCover", "p", 'v'},
+    {0x00046f30, "NDrone2_MoveToGoalPosition", "ppfw", 'r'},
+    {0x00066640, "DroneWeap_OpponentIsAimingAtMe", "pf", 'b'},
+    {0x00043ee0, "NDrone2_BondIsFacingMe", "pf", 'b'},
     {0x0009e430, "MP_sendTeamBotMessage", "dddpp", 'v'},
     {0x0001b4f0, "BOT_respawn", "pdb", 'b'},
     {0x00037a10, "NDrone2_SetOpponent", "pp", 'v'},
@@ -275,7 +286,17 @@ void RandomDrone(int i) {
     for (int w = 0; w < 3; w++)
         d->behaviour1[w] = ShadowRand(4) ? ShadowRand(0x10000) | (ShadowRand(0x10000) << 16) : 0;
     d->currentBehaviour = d->behaviour1;
-    d->coverNode = ShadowRand(4) ? &world.nodes[ShadowRand(2)] : NULL;
+    d->coverNode = &world.nodes[ShadowRand(2)];
+    d->coverMode = (uchar)ShadowRand(5);
+    d->coverFlags = (ushort)ShadowRand(0x10000);
+    d->stateScratch = ShadowRand(5);
+    d->unknown854 = ShadowRand(3) ? 0.5f : RandomFloat();
+    d->aiPoint.set = (uchar)ShadowRand(2);
+    d->aiPoint.radius = ShadowRandFloat(0.2f, 2.0f);
+    d->aiPoint.pos.x = o->position.x + (ShadowRand(3) ? ShadowRandFloat(-1.0f, 1.0f) : 1.5f);
+    d->aiPoint.pos.y = o->position.y;
+    d->aiPoint.pos.z = o->position.z + (ShadowRand(3) ? ShadowRandFloat(-1.0f, 1.0f) : 0.0f);
+    d->targetSlot = (uchar)ShadowRand(MAX_DRONE_TARGETS);
     bot->drone = d;
     bot->playerIndex = (short)(4 + i);
     bot->botIndex = (short)i;
@@ -318,6 +339,8 @@ void RandomWorld() {
     static const uchar types[] = {OBJECTTYPE_PLAYER, OBJECTTYPE_DRONE, OBJECTTYPE_DEAD_DRONE};
     world.player.objectType = Pick(types);
     memset(world.nodes, 0, sizeof(world.nodes));
+    world.nodes[0].type = COVER_CORNER;
+    world.nodes[1].type = (uchar)(ShadowRand(2) ? COVER_LOW : 2);
     memset(&world.hit, 0, sizeof(world.hit));
     memset(&world.impact, 0, sizeof(world.impact));
     world.impact.source = ShadowRand(2) ? &world.player : &world.objs[2];
@@ -334,6 +357,7 @@ void RandomWorld() {
     world.floatArg = RandomFloat();
 
     GameState.NumFramesUnpaused = ShadowRand(100000);
+    NPCGlobals.unknown138c = ShadowRand(3) ? 0.5f : ShadowRandFloat(0.0f, 2.0f);
     FRAME_RATE_INT = ShadowRand(2) ? 60 : 50;
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -342,8 +366,8 @@ void RandomWorld() {
 void RandomMessage() {
     memset(&world.msg, 0, sizeof(world.msg));
     // the messages the bot states handle, more often than the rest
-    static const uint types[] = {0, 1, 1, 1, 2, 3, 3, 3, 3, 4, 5, 5, 6, 8, 9, 0xc, 0xc, 0xd, 0xd, 0xf, 0x14, 0x18,
-                                 0x1b, 0x1c, 0x2e, 0x3a};
+    static const uint types[] = {0, 1, 1, 1, 2, 3, 3, 3, 3, 4, 5, 5, 6, 7, 8, 9, 0xc, 0xc, 0xd, 0xd, 0xf, 0x14, 0x17,
+                                 0x18, 0x19, 0x1b, 0x1c, 0x21, 0x2e, 0x3a};
     world.msg.msgType = ShadowRand(10) ? Pick(types) : ShadowRand(0x50);
     world.msg.sender = 101;
     world.msg.receiver = 100;
@@ -432,6 +456,18 @@ const Case kAttack[] = {
     HELPER(NDrone2_FaceMoveTarget, 0x00043cf0, K_DCV_FLOAT, 0),
 };
 
+const Case kCover[] = {
+    CASE(NDrone2_DSTATE_BotCoverRunTo, 0x00062a20),
+    CASE(NDrone2_DSTATE_BotCoverInit, 0x0004dd30),
+    CASE(NDrone2_DSTATE_BotCoverIdle, 0x00062bc0),
+    CASE(NDrone2_DSTATE_BotCoverAim, 0x0004de70),
+    CASE(NDrone2_DSTATE_BotCoverFire, 0x00062ee0),
+    CASE(NDrone2_DSTATE_BotCoverReturn, 0x00063070),
+    CASE(NDrone2_DSTATE_BotCoverTypeChange, 0x000631c0),
+    CASE(NDrone2_DSTATE_BotCoverLeave, 0x000632c0),
+    CASE(NDrone2_DSTATE_BotCoverLeaveNow, 0x0004df50),
+};
+
 int Test(const Case *cases, int count, int trials, int *differ) {
     int run = 0;
     for (int c = 0; c < count; c++) {
@@ -476,6 +512,7 @@ void DroneBotShadow_Run(void) {
     const Group groups[] = {
         {"life, death and impacts", kLife, sizeof(kLife) / sizeof(kLife[0]), 3000},
         {"attack", kAttack, sizeof(kAttack) / sizeof(kAttack[0]), 6000},
+        {"cover", kCover, sizeof(kCover) / sizeof(kCover[0]), 6000},
     };
     const int n = sizeof(groups) / sizeof(groups[0]);
     int cases[n], differ[n];

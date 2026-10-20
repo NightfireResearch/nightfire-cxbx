@@ -25,6 +25,15 @@ bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
 bool NDrone2_DSTATE_BotAttackStepAimLeft(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_BotAttackStepAimRight(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_BotAttackReload(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverRunTo(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverAim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverReturn(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverTypeChange(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverLeave(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
+bool NDrone2_DSTATE_BotCoverLeaveNow(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_BotSeenDroneShot(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_BotHeardNoise(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_BotImpactBullet(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);

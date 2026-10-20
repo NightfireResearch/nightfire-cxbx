@@ -10,6 +10,8 @@
 #include "DroneTables.h"
 #include "DroneWeapon.h"
 #include "NDrone2_Combat.h"
+#include "NDrone2_Cover.h"
+#include "NDrone2_Route.h"              // NDrone2_MoveToGoalPosition
 #include "NDrone2_Damage.h"
 #include "NDrone2_Opponent.h"
 #include "../mp/multiplayer.h"          // MP_PlayerKilled, MP_ResetBotPickupTimes
@@ -81,6 +83,14 @@
 
 constexpr float kStunRecoverScale = -4.0f;      // the stun lasts four times the recover stat
 constexpr float kUnarmedRange = 1.5f;
+constexpr float kCoverSlide = 0.08f;           // NDrone2_SlideToPosition's share of the way a frame
+constexpr float kCoverDrift = 1.5f;            // how far from the cover position it may get
+constexpr float kCoverTooClose = 4.0f;         // an opponent in sight this near: no running to cover
+constexpr float kCoverAimedAt = 7.5f;          // DroneWeap_OpponentIsAimingAtMe's angle
+constexpr float kCoverWaitScale = 120.0f;
+constexpr float kPi = 3.1415927f;
+static_assert(std::bit_cast<uint32_t>(kCoverSlide) == 0x3da3d70a, "not the original's 0.08");
+static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's pi");
 constexpr float kAttackRouteRadius = 2.0f;
 constexpr float kQuarterPi = 0.7853982f;
 constexpr float kHalfPi = 1.5707964f;
@@ -897,6 +907,381 @@ bool NDrone2_DSTATE_BotAttackReload(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         DroneAnim_CallAnim(DANIM_RELOAD, 0, backoff ? DSTATE_BotAttackBackoff : DSTATE_BotAttack, 0, 0.0f, 0, dcv);
         return true;
     }
+    default:
+        return false;
+    }
+}
+
+// ---- cover
+
+// Whether the opponent is a player or a bot, and the drone has cover from it
+static bool BotCoverFromOpponent(DCVars_tag *dcv) {
+    obj_tag *opponent = dcv->drone->opponent;
+    return opponent != NULL &&
+           (opponent->objectType == OBJECTTYPE_PLAYER || opponent->objectType == OBJECTTYPE_DRONE) &&
+           NDrone2_CoverAvailable(dcv, 1);
+}
+
+// Whether the cover node still serves, the way the drone uses it (its low two bits of coverFlags)
+static short BotCoverStillOK(DCVars_tag *dcv, char force) {
+    return NDrone2_CoverNodeOK(dcv, dcv->drone->coverNode, (uchar)dcv->drone->coverFlags & DRONE_COVER_SIDE_MASK,
+                               force);
+}
+
+// The cover states take an impact or see an explosive in the state they are in
+static bool BotCoverImpact(DCVars_tag *dcv, MsgObject *msg, char anim) {
+    DroneFunc_HandleImpact(dcv, msg, dcv->aiStateMachine->curState, anim);
+    return true;
+}
+
+static bool BotCoverExplosive(DCVars_tag *dcv, MsgObject *msg) {
+    DroneFunc_ConsiderExplosive(dcv, (obj_tag *)msg->extraData, (short)dcv->aiStateMachine->curState);
+    return true;
+}
+
+static void SetAtCornerCover(DCVars_tag *dcv) {
+    dcv->drone->atCornerCover = dcv->drone->coverNode->type != COVER_LOW;
+}
+
+// How long to wait in cover before looking out: up to a share of 120 frames (NPCGlobals.unknown138c, unknown854),
+// and a second
+static void BotCoverWait(DCVars_tag *dcv) {
+    uint wait = Rand_Rand(Ftol((double)NPCGlobals.unknown138c * dcv->drone->unknown854 * kCoverWaitScale));
+    SetTimerA(dcv, wait + FRAME_RATE_INT + GameState.NumFramesUnpaused);
+}
+
+// Running to the cover node chosen (aiPoint), while it still serves and no opponent in sight is within 4 m; the attack
+// otherwise. There, BotCoverInit.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverRunTo(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        if (dcv->drone->aiPoint.set)
+            return true;
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+    case DRONE_MSG_Exit:
+        NDrone2_DisownCover(dcv);
+        return true;
+    case DRONE_MSG_Update: {
+        if (!dcv->drone->aiPoint.set || !BotCoverStillOK(dcv, 0))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        Drone_tag *self = dcv->drone;
+        if ((self->sightFlags & DRONE_SIGHT_SEES_OPPONENT) && self->distanceToTarget < kCoverTooClose)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        uint route = NDrone2_MoveToGoalPosition(dcv, (CelPos_tag *)&self->aiPoint.pos, self->aiPoint.radius, 0);
+        if (!BOTSTATE_validateRoute(dcv, route))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        switch (route) {
+        case AIROUTE_FOLLOWING:
+        case AIROUTE_PARTIAL:
+        case AIROUTE_DIRECT:
+            DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
+            return true;
+        case AIROUTE_ARRIVED:
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverInit, 0);
+        default:
+            return true;
+        }
+    }
+    case DRONE_MSG_1B:
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+    default:
+        return false;
+    }
+}
+
+// At the cover node: the anim into cover (BotCoverIdle after it), the place to slide to worked out again, sliding into
+// it and turning along the cover.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter: {
+        DroneAnim_CoverAnim(dcv, COVER_STEP_ARRIVE, DSTATE_BotCoverIdle);
+        SetAtCornerCover(dcv);
+        dcv->drone->flags &= ~0x800;
+        dcv->drone->unknown38 = 1;
+        Drone_tag *self = dcv->drone;
+        NDrone2_GetCoverPosForTarget(self->coverNode, self->targetSlot, &self->aiPoint.pos, NULL, 0);
+        return true;
+    }
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_Update:
+        NDrone2_SlideToPosition(&dcv->drone->aiPoint.pos, kCoverSlide, 0, dcv);
+        NDrone2_SetAngleToCover(dcv, kPi);
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Waiting in cover, kept in place: leaving when the node no longer serves or it has drifted 1.5 m. At each wait's end
+// (timer A), now and then running to other cover, aiming out when the node serves from its inner angles, running to
+// other cover, or after three waits the attack.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        DroneAnim_CoverAnim(dcv, COVER_STEP_IDLE, 0);
+        BotCoverWait(dcv);
+        SetAtCornerCover(dcv);
+        dcv->drone->unknown38 = 0;
+        dcv->drone->stateScratch = 0;
+        return true;
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_Update:
+        NDrone2_SlideToPosition(&dcv->drone->aiPoint.pos, kCoverSlide, 0, dcv);
+        NDrone2_SetAngleToCover(dcv, kPi);
+        if (!BotCoverStillOK(dcv, 0) || Vec_Dist2D(&dcv->gameObj->position, &dcv->drone->aiPoint.pos) > kCoverDrift)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
+        return true;
+    case DRONE_MSG_TimerA:
+        if (Rand_Rand(5) == 0 && BotCoverFromOpponent(dcv))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverRunTo, 0);
+        if (BotCoverStillOK(dcv, 1))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverAim, 0);
+        if (BotCoverFromOpponent(dcv))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverRunTo, 0);
+        BotCoverWait(dcv);
+        if (dcv->drone->stateScratch++ > 2)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttack, 0);
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Aiming out of cover, then firing (BotCoverFire).
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverAim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_Update:
+        return true;
+    case DRONE_MSG_Enter:
+        DroneAnim_CoverAnim(dcv, COVER_STEP_AIM, DSTATE_BotCoverFire);
+        SetAtCornerCover(dcv);
+        return true;
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Firing out of cover: when the node no longer serves, back into cover (crouched lean or standing lean) or leaving it;
+// between bursts back into cover when the opponent aims at it, or one time in three when it faces it.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        if (!dcv->drone->firing)
+            DroneWeap_Fire(1, dcv);
+        SetAtCornerCover(dcv);
+        return true;
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_Update:
+        if (!BotCoverStillOK(dcv, 0)) {
+            uchar mode = dcv->drone->coverMode;
+            if (mode == COVER_MODE_CROUCH_LEAN || mode == COVER_MODE_STAND_LEAN)
+                return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverReturn, 0);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
+        }
+        if (!dcv->drone->burstOver && drone->firing)
+            return true;
+        if (!DroneWeap_OpponentIsAimingAtMe(dcv, kCoverAimedAt)) {
+            if (!NDrone2_BondIsFacingMe(dcv, 45.0f))
+                return true;
+            if (Rand_Rand(3) != 0)
+                return true;
+        }
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverReturn, 0);
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Back into cover (BotCoverTypeChange after it; leaving when there is no anim for it); the cover is marked lost
+// (DRONE_COVER_LOST) once the node no longer serves or the drone has drifted 1.5 m.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverReturn(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        if (!DroneAnim_CoverAnim(dcv, COVER_STEP_RETURN, DSTATE_BotCoverTypeChange))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeave, 0);
+        SetAtCornerCover(dcv);
+        return true;
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_Update:
+        if (!BotCoverStillOK(dcv, 0) || Vec_Dist2D(&dcv->gameObj->position, &dcv->drone->aiPoint.pos) > kCoverDrift)
+            dcv->drone->coverFlags |= DRONE_COVER_LOST;
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Back in cover: leaving it once lost; running to other cover when the node no longer serves from its inner angles
+// and there is some; otherwise maybe another way of using the corner (back to BotCoverIdle).
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverTypeChange(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+    case DRONE_MSG_Update:
+        return true;
+    case DRONE_MSG_Enter: {
+        ushort coverFlags = dcv->drone->coverFlags;
+        if (coverFlags & DRONE_COVER_LOST)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
+        if (!NDrone2_CoverNodeOK(dcv, dcv->drone->coverNode, coverFlags & DRONE_COVER_SIDE_MASK, 1) &&
+            BotCoverFromOpponent(dcv))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverRunTo, 0);
+        if (!DroneAnim_CoverAnim(dcv, COVER_STEP_CHANGE, DSTATE_BotCoverIdle))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverIdle, 0);
+        SetAtCornerCover(dcv);
+        return true;
+    }
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    default:
+        return false;
+    }
+}
+
+// Leaving cover (BotCoverLeaveNow after the anim, or at once without one, or once it has left).
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverLeave(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        if (!DroneAnim_CoverAnim(dcv, COVER_STEP_LEAVE, DSTATE_BotCoverLeaveNow))
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
+        SetAtCornerCover(dcv);
+        return true;
+    case DRONE_MSG_Exit:
+        dcv->drone->atCornerCover = 0;
+        return true;
+    case DRONE_MSG_Update:
+        if (dcv->drone->coverFlags & DRONE_COVER_LEFT)
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
+    default:
+        return false;
+    }
+}
+
+// Out of cover: the node let go, aiming, into the attack; turning to the opponent meanwhile.
+// AUTOINJECT
+bool NDrone2_DSTATE_BotCoverLeaveNow(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
+    switch (msg->msgType) {
+    case DRONE_MSG_Null:
+        return true;
+    case DRONE_MSG_Enter:
+        dcv->drone->coverFlags |= DRONE_COVER_LEFT;
+        NDrone2_DisownCover(dcv);
+        dcv->drone->atCornerCover = 0;
+        DroneAnim_CallAnim(DANIM_AIM_STAND, 0, DSTATE_BotAttack, 0, 0.0f, 0, dcv);
+        return true;
+    case DRONE_MSG_Update:
+        NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, 0.0f, 0);
+        return true;
+    case DRONE_MSG_ImpactPunch:
+    case DRONE_MSG_ImpactBullet:
+        return BotCoverImpact(dcv, msg, 0);
+    case DRONE_MSG_ImpactTaser:
+    case DRONE_MSG_ImpactExplosive:
+    case DRONE_MSG_ImpactSmoke:
+    case DRONE_MSG_ImpactStunGrenade:
+    case DRONE_MSG_ImpactStunDart:
+        return BotCoverImpact(dcv, msg, 1);
+    case DRONE_MSG_ExplosiveSeen:
+        return BotCoverExplosive(dcv, msg);
     default:
         return false;
     }
