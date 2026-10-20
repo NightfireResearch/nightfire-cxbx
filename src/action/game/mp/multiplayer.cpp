@@ -28,8 +28,6 @@ static int32_t Ftol(double x) {
 
 #define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
 #define AssassinTarget (*(obj_tag **)0x00261788)
-// AUTOGEN
-bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj);
 #define BOT_init ((obj_tag* (__cdecl *)(short, _VECTOR *, _VECTOR *, obj_tag *, MPBOT *, char))0x0001b170)
 
 #define NUM_SKINS 29 // unique characters

@@ -28,6 +28,7 @@
 #include "DroneVision_Alerts.h"    // DroneFunc_HandleSoundAlerts
 #include "DroneWeapon.h"           // DroneWeap_HandleFiring
 #include "DroneInit.h"
+#include "BOT.h"                    // BOT_fellOutMap
 #include "DroneModes.h"
 #include "DroneAnim.h"
 
@@ -178,8 +179,6 @@ obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE p
     return gameObj;
 }
 
-// AUTOGEN
-void BOT_fellOutMap(obj_tag *param_1);
 
 // The drone's alert status (Drone_tag.alertStatus), or NULL for anything that is not a drone.
 // AUTOINJECT

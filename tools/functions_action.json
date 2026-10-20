@@ -1844,7 +1844,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_0001ad70",
+        "name": "BOT_setGender",
         "address": "0x0001ad70",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -1852,7 +1852,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_0001ad70(int param_1)",
+        "prototype_string": "void __cdecl BOT_setGender(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],

@@ -197,6 +197,48 @@ void __cdecl FakeBotMessage(obj_tag *obj, uint msg, uint param3, uint param4) {
     ShadowLog("botmsg(%d,%x,%u,%u)", Who(obj), msg, param3, param4);
 }
 
+bool __cdecl FakePlayerIsDead(obj_tag *obj) {
+    ShadowLog("isdead(%d)", Who(obj));
+    return (obj->tweakA & 3) == 0;
+}
+
+void __cdecl FakeSetOpponent(Drone_tag *drone, obj_tag *opponent) {
+    ShadowLog("setopponent(%d,%d)", Who(drone), Who(opponent));
+}
+
+bool __cdecl FakeSoundPlaying(DYNAMICSOUNDS *sound, uint ref) {
+    ShadowLog("playing(%x,%u)", Offset(sound), ref);
+    return Answer();
+}
+
+void __cdecl FakeSoundStop(DYNAMICSOUNDS *sound, uint ref) {
+    ShadowLog("stop(%x,%u)", Offset(sound), ref);
+}
+
+DYNAMICSOUNDS *__cdecl FakePlaySFX(DCVars_tag *dc, uint sfx, _VECTOR *pos, char check, float scale) {
+    ShadowLog("sfx(%d,%x,%d,%d,%08x)", Who(dc->drone), sfx, pos == NULL, check, Bits(scale));
+    return Answer() ? (DYNAMICSOUNDS *)world.item : NULL;
+}
+
+uint __cdecl FakeGetSpawnPoint(short team, obj_tag *obj) {
+    ShadowLog("spawnpoint(%d,%d,%d)", team, Who(obj), MPSettings.RespawnSelectionMode);
+    return (world.answers >> 8) % 6 | (world.answers & 0x10000);
+}
+
+bool __cdecl FakeLinkToRoom(obj_tag *obj, char straddle, world_tag *level) {
+    ShadowLog("linkroom(%d,%d,%p)", Who(obj), straddle, level);
+    return true;
+}
+
+void __cdecl FakeLogHealth(float health, uint player) {
+    ShadowLog("loghealth(%08x,%u)", Bits(health), player);
+}
+
+uint __cdecl FakeGameFlowState(void) {
+    ShadowLog("flowstate");
+    return (world.answers & 0x700) == 0 ? 3 : 2;
+}
+
 struct Fake {
     unsigned at;
     const void *fake;
@@ -228,6 +270,15 @@ const Fake kFakes[] = {
     {0x000a1610, (const void *)&FakeDemolitionObj},
     {0x0009e3e0, (const void *)&FakeBotMessage},
     {0x00015b40, (const void *)&FakeScriptDelete},
+    {0x0009e6a0, (const void *)&FakePlayerIsDead},
+    {0x00037a10, (const void *)&FakeSetOpponent},
+    {0x000cbdc0, (const void *)&FakeSoundPlaying},
+    {0x000cbda0, (const void *)&FakeSoundStop},
+    {0x00037340, (const void *)&FakePlaySFX},
+    {0x0009d3d0, (const void *)&FakeGetSpawnPoint},
+    {0x00021110, (const void *)&FakeLinkToRoom},
+    {0x000b0600, (const void *)&FakeLogHealth},
+    {0x0006aa70, (const void *)&FakeGameFlowState},
 };
 
 // ---- the made-up world
@@ -941,6 +992,194 @@ const Case kStates2[] = {
     {"BOTSTATE_pickupWeaponChangeChoice", 0x0001e470, RunPickupChoice},
 };
 
+// ---- BOT
+
+void Fighting(Drone_tag *drone) {
+    static const uint flags[] = {0x100, 0x100, 0x10100, 0x10100, 0x300, 0x500, 0, 0x10000};
+    drone->flags = flags[A(COUNT(flags))] | (A(2) ? 0x80000000 : 0);
+    drone->gameObj->flags = (char)(A(5) == 0);
+    if (A(6) == 0)
+        drone->gameObj->objectType = OBJECTTYPE_DEAD_DRONE;
+    static const float healths[] = {-1.0f, 0.0f, -0.0f, 0.5f, 1.0f, 30.0f, 100.0f};
+    drone->health = healths[A(COUNT(healths))];
+    drone->botVars->armour = (uchar)(A(3) == 0 ? 0 : A(256));
+    drone->botVars->perPlayerSettings = &MPSettings.Player[drone->botVars->playerIndex];
+}
+
+uint32_t RunDyingOrDead(bool original) {
+    Drone_tag *drone = ArgDrone();
+    Fighting(drone);
+    obj_tag *obj = A(8) == 0 ? NULL : drone->gameObj;
+    return CDECL(0x0001a190, MPDrone_MaybeIsDyingOrDead, uint32_t (__cdecl *)(obj_tag *), obj) & 0xff;
+}
+
+uint32_t RunAlertMsg(bool original) {
+    Drone_tag *drone = ArgDrone(), *from = A(4) == 0 ? NULL : ArgDrone();
+    drone->botVars->perPlayerSettings = &MPSettings.Player[drone->botVars->playerIndex];
+    if (from != NULL)
+        from->botVars->perPlayerSettings = &MPSettings.Player[from->botVars->playerIndex];
+    if (A(6) == 0)
+        drone->botVars = NULL;
+    else if (from != NULL && from != drone && A(6) == 0)
+        from->botVars = NULL;
+    uint msg = A(0x22);
+    return CDECL(0x0001a260, BOT_reactToDroneAlertMsg, uint32_t (__cdecl *)(uint, Drone_tag *, Drone_tag *), msg,
+                 drone, from) & 0xff;
+}
+
+uint32_t RunValidate(bool original) {
+    DCVars_tag *dc = ArgDc();
+    Drone_tag *drone = dc->drone;
+    static const uint states[] = {0, DSTATE_BotGotoGoalPosition, DSTATE_BotGotoGoalPosition, DSTATE_BotAttack,
+                                  DSTATE_BotDeathAnim, DSTATE_BotCoverIdle, DSTATE_BotImpactBullet, DSTATE_BotStuck,
+                                  DSTATE_BotIdle, DSTATE_BotSeenOpponent};
+    drone->sm.curState = A(3) ? states[A(COUNT(states))] : 195 + A(56);
+    drone->animRow = (ushort)(0x33 + A(8));
+    drone->distanceToTarget = A(3) == 0 ? (float)A(40) : (float)A(4000) / 100.0f;
+    if (A(2))
+        drone->opponent = A(3) ? &world.objs[A(BOTS)] : NULL;
+    if (A(2))
+        drone->botVars->weapon = 1;
+    GoingToGoal(drone);
+    static const uint news[] = {DSTATE_BotAttackRun, DSTATE_BotAttackRunChangePosition, DSTATE_BotImpactBullet,
+                                DSTATE_BotHeardNoise, DSTATE_BotAttackChangeWeapon, DSTATE_BotSeenOpponent,
+                                DSTATE_BotSeenOpponent, DSTATE_BotAttack, DSTATE_BotAttackFire, DSTATE_BotRespawn,
+                                DSTATE_BotDead, DSTATE_BotSeenDroneShot, DSTATE_BotCoverRunTo};
+    uint next = A(3) ? news[A(COUNT(news))] : 190 + A(64);
+    return CDECL(0x0001a2d0, BOT_validateStateChange, uint32_t (__cdecl *)(DCVars_tag *, uint), dc, next) & 0xff;
+}
+
+uint32_t RunOpponentHistory(bool original) {
+    Drone_tag *drone = ArgDrone();
+    BOT_vars_t *bot = drone->botVars;
+    static const uint flags[] = {0x10100, 0x10000, 0x100};
+    drone->flags = flags[A(3)];
+    for (int i = 0; i < 16; i++) {
+        uint pick = A(6);
+        bot->attackers[i] = pick < BOTS ? &world.objs[pick] : pick == BOTS ? &world.targetObj : NULL;
+    }
+    for (int i = 0; i < BOTS; i++)
+        world.objs[i].tweakA = (uchar)A(256);
+    world.targetObj.tweakA = (uchar)A(256);
+    bot->attackerCursor = (uchar)A(18);
+    if (A(2))
+        drone->opponent = &world.objs[A(BOTS)];
+    obj_tag *attacker = A(5) == 0 ? &world.targetObj : &world.objs[A(BOTS)];
+    return CDECL(0x0001a990, BOT_handleOpponentHistory, uint32_t (__cdecl *)(Drone_tag *, obj_tag *), drone,
+                 attacker);
+}
+
+uint32_t RunSoundEffect(bool original) {
+    DCVars_tag *dc = ArgDc();
+    dc->drone->unknown15 = (uchar)A(2);
+    dc->drone->botVars->sound = A(2) ? (DYNAMICSOUNDS *)world.item : NULL;
+    static const int kinds[] = {0, 1, 1, 29, 30, 30, 31, 31, 32};
+    int kind = kinds[A(COUNT(kinds))];
+    return CDECL(0x0001aca0, BOT_soundEffect, uint32_t (__cdecl *)(DCVars_tag *, int), dc, kind);
+}
+
+uint32_t RunSetGender(bool original) {
+    Drone_tag *drone = ArgDrone();
+    drone->botVars->skin = (uchar)A(30);
+    drone->unknown15 = (uchar)A(3);
+    CDECL_VOID(0x0001ad70, BOT_setGender, void (__cdecl *)(Drone_tag *), drone);
+    return 0;
+}
+
+uint32_t RunFellOut(bool original) {
+    Drone_tag *drone = ArgDrone();
+    MPSettings.RespawnSelectionMode = (RespawnMode)A(3);
+    for (int i = 0; i < 6; i++) {
+        SpawnPoints[i].spawnPos.x = (float)A(100);
+        SpawnPoints[i].facingDir.y = (float)A(7);
+    }
+    for (int i = 0; i < 16; i++)
+        drone->botVars->attackers[i] = &world.objs[A(BOTS)];
+    CDECL_VOID(0x0001adc0, BOT_fellOutMap, void (__cdecl *)(obj_tag *), drone->gameObj);
+    return 0;
+}
+
+uint32_t RunTargetting(bool original) {
+    DCVars_tag *dc = ArgDc();
+    Drone_tag *drone = dc->drone;
+    drone->opponent = A(6) == 0 ? NULL : &world.objs[A(BOTS)];
+    drone->distanceToTarget = A(4) == 0 ? (float)A(4) : (float)A(6000) / 100.0f;
+    drone->targetChangeFrame = GameState.NumFramesUnpaused - A(A(2) ? 300 : 20000);
+    drone->targetStartedMoving = (uchar)A(2);
+    BOT_vars_t *bot = drone->botVars;
+    if (drone->opponent != NULL) {
+        bot->opponentLastPos = drone->opponent->position;
+        if (A(2))
+            bot->opponentLastPos.x += (float)A(8) / 100.0f;
+    }
+    drone->aimOffset.x = (float)A(10) / 4.0f;
+    CDECL_VOID(0x0001aee0, BOT_opponentTargetting, void (__cdecl *)(DCVars_tag *), dc);
+    return 0;
+}
+
+uint32_t RunSetHealth(bool original) {
+    Drone_tag *drone = ArgDrone();
+    static const float healths[] = {-5.0f, 0.0f, -0.0f, 0.5f, 0.99f, 1.0f, 1.5f, 250.0f};
+    float health = A(3) ? healths[A(COUNT(healths))] : (float)A(30000) / 100.0f;
+    CDECL_VOID(0x0001b120, BOT_SetHealth, void (__cdecl *)(Drone_tag *, float), drone, health);
+    return 0;
+}
+
+uint32_t RunDroneStats(bool original) {
+    Drone_tag *drone = ArgDrone();
+    BOT_stats_t *stats = &drone->botVars->stats;
+    uint8_t *bytes = (uint8_t *)stats;
+    for (size_t i = 0; i < sizeof(*stats); i++)
+        bytes[i] = (uint8_t)A(256);
+    if (A(3) == 0)
+        stats->health = (ushort)A(2);
+    CDECL_VOID(0x0001b600, BOT_setDroneStats, void (__cdecl *)(Drone_tag *, BOT_stats_t *), drone, stats);
+    return 0;
+}
+
+uint32_t RunHandlePain(bool original) {
+    DCVars_tag *dc = ArgDc();
+    Fighting(dc->drone);
+    if (A(2)) {
+        dc->drone->flags = 0x10100;
+        dc->drone->gameObj->flags = 0;
+        dc->drone->gameObj->objectType = OBJECTTYPE_DRONE;
+        dc->drone->health = (float)(1 + A(150));
+    }
+    MPSettings.LocationDamageEnabled = A(2);
+    MPSettings.TripleDamageModifierProfessionalMode = A(3) == 0;
+    GoingToGoal(dc->drone);
+    static const float damages[] = {0.0f, -1.0f, 0.5f, 1.0f, 10.0f, 25.5f, 200.0f};
+    float damage = A(3) ? damages[A(COUNT(damages))] : (float)A(10000) / 64.0f;
+    ushort hitType = (ushort)A(10);
+    static const short locations[] = {-1, 0, 5, 5, 20, 21, 32, 35, 49, 56, 57, 4, 30};
+    short location = locations[A(COUNT(locations))];
+    CDECL_VOID(0x0001b6b0, BOT_handlePain, void (__cdecl *)(DCVars_tag *, float, ushort, short), dc, damage, hitType,
+               location);
+    return 0;
+}
+
+uint32_t RunPostLoad(bool original) {
+    Drone_tag *drone = ArgDrone();
+    CDECL_VOID(0x0001b8e0, BOT_postLoadInit, void (__cdecl *)(Drone_tag *), drone);
+    return 0;
+}
+
+const Case kBots[] = {
+    {"MPDrone_MaybeIsDyingOrDead", 0x0001a190, RunDyingOrDead},
+    {"BOT_reactToDroneAlertMsg", 0x0001a260, RunAlertMsg},
+    {"BOT_validateStateChange", 0x0001a2d0, RunValidate},
+    {"BOT_handleOpponentHistory", 0x0001a990, RunOpponentHistory},
+    {"BOT_soundEffect", 0x0001aca0, RunSoundEffect},
+    {"BOT_setGender", 0x0001ad70, RunSetGender},
+    {"BOT_fellOutMap", 0x0001adc0, RunFellOut},
+    {"BOT_opponentTargetting", 0x0001aee0, RunTargetting},
+    {"BOT_SetHealth", 0x0001b120, RunSetHealth},
+    {"BOT_setDroneStats", 0x0001b600, RunDroneStats},
+    {"BOT_handlePain", 0x0001b6b0, RunHandlePain},
+    {"BOT_postLoadInit", 0x0001b8e0, RunPostLoad},
+};
+
 const Case *currentCase;
 uint32_t caseSeed;
 
@@ -990,6 +1229,7 @@ void BotPortShadow_Run(void) {
     regions.Add(&GameState, sizeof(GameState));
     regions.Add(&BOT_startWeapon, sizeof(BOT_startWeapon));
     regions.Add((void *)0x0018cdf8, 8);     // Rand_Random's state
+    regions.Add(&SpawnPoints, sizeof(SpawnPoints));
     static MPSettings_t shippedSettings;
     static MPGameStruct shippedGame;
     static GameState_t shippedState;
@@ -997,10 +1237,15 @@ void BotPortShadow_Run(void) {
     shippedGame = MPGame;
     shippedState = GameState;
     short shippedStart = GameStartWeapon, ourStart = BOT_startWeapon;
+    static MPSpawnPoint shippedSpawns[64];
+    memcpy(shippedSpawns, SpawnPoints, sizeof(shippedSpawns));
+    uint8_t shippedRandom[8];
+    memcpy(shippedRandom, (void *)0x0018cdf8, 8);
 
     Group("the bots' weapons", kWeapons, COUNT(kWeapons), 3000);
     Group("the bots' combat moves and goals", kStates, COUNT(kStates), 3000);
     Group("the bots' distraction, dodges and weapon choice", kStates2, COUNT(kStates2), 3000);
+    Group("the bots' alerts, pain, aim and respawn", kBots, COUNT(kBots), 3000);
 
     ShadowHook_RemoveAll();
     MPSettings = shippedSettings;
@@ -1008,5 +1253,7 @@ void BotPortShadow_Run(void) {
     GameState = shippedState;
     GameStartWeapon = shippedStart;
     BOT_startWeapon = ourStart;
+    memcpy(SpawnPoints, shippedSpawns, sizeof(shippedSpawns));
+    memcpy((void *)0x0018cdf8, shippedRandom, 8);
     printf("[botport] %d cases, %d differ\n", cases, differ);
 }

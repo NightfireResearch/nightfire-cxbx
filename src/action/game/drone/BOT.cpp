@@ -7,11 +7,19 @@
 #include "../../game.h"         // MPGame, GameState
 
 #include <bit>
+#include <math.h>
 #include <string.h>
 #include "DroneInit.h"
 #include "DroneVision.h"
 #include "../../engine/Anim.h"
 #include "../obj/control.h"
+#include "BOTSTATE.h"
+#include "NDrone2_Opponent.h"   // NDrone2_SetOpponent
+#include "../obj/build.h"       // build_LinkToRoom
+#include "../sp/PlayerStats.h"  // PlrStat_LogHealth
+#include "../../math/X87Ops.h"
+#include "../../sound/Sound.h"
+#include "../../util/Random.h"
 
 // Each bot DSTATE's class (BOTSTATE_CLASS_*), one byte per state from DSTATE_BotInit (195) to DSTATE_BotIdle (249).
 // BOTSTATE_getStateType is its only reader (the original indexes it from 0x001638cd = 0x00163990 - 195), so it can
@@ -21,6 +29,47 @@
 
 // AUTOGEN
 bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);
+
+// The player's damage modifiers (Player.cpp)
+#define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)
+#define Plr_DMod_Head      FLOAT_AT(0x0017e8d0)
+#define Plr_DMod_LowerLimb FLOAT_AT(0x0017e8d4)
+#define Plr_DMod_UpperLimb FLOAT_AT(0x0017e8d8)
+
+// Drone_tag.flags (docs/drone README 4.3)
+#define DRONE_AI_RUNNING 0x100
+#define DRONE_DEAD 0x200
+#define DRONE_DYING 0x400
+
+// BOT_vars_t.flags: recovering from a hit (BOTSTATE_startRecovery)
+#define BOT_RECOVERING 2
+
+// BOTSTATE_chooseDodgeMove's directions
+#define DODGE_LEFT 1
+#define DODGE_RIGHT 2
+
+// BOT_soundEffect's cries
+#define BOT_SOUND_DEATH 1
+#define BOT_SOUND_PAIN 30
+#define BOT_SOUND_PAIN_UNLESS_PLAYING 31
+
+// How much a sighting nearer than 24 m distracts a bot, a metre closer
+constexpr float SightingDistraction = 0.16666667f;
+static_assert(std::bit_cast<uint32_t>(SightingDistraction) == 0x3e2aaaab, "not the original's 1/6");
+// How far from settled a bot's aim starts
+constexpr float SettleWobble = 0.099f;
+static_assert(std::bit_cast<uint32_t>(SettleWobble) == 0x3dcac083, "not the original's 0.099");
+
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+static int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
 
 // The MPBOT a bot gets when none is passed: Drake's default stats (BOT_init is its only user)
 // XBE_GLOBAL(0x001dc550, 0x12)
@@ -332,4 +381,436 @@ uint BOTSTATE_getStateType(uint state) {
     if (state < (uint)DSTATE_BotInit || state > (uint)DSTATE_BotIdle)
         return 0;
     return BotStateClasses[state - DSTATE_BotInit];
+}
+
+// Whether a multiplayer drone is out of play: none, dead or dying, not running its AI, without health (a NaN
+// counts as alive), a dead drone's object, or marked for deletion
+// AUTOINJECT
+bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj) {
+    if (obj == NULL)
+        return true;
+    Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
+    if (drone->flags & (DRONE_DYING | DRONE_DEAD))
+        return true;
+    if (!(drone->flags & DRONE_AI_RUNNING))
+        return true;
+    if (drone->health < 0.0f || drone->health == 0.0f)
+        return true;
+    if (obj->objectType == OBJECTTYPE_DEAD_DRONE)
+        return true;
+    if (obj->flags & 1)
+        return true;
+    return false;
+}
+
+// Whether a bot heeds a drone alert (messages 0x11-0x16 and 0x1e): one without a sender always, one from another
+// bot when they are on the same team, or in any game without teams but Assassin.
+// AUTOINJECT
+bool BOT_reactToDroneAlertMsg(uint msg, Drone_tag *drone, Drone_tag *from) {
+    if (msg < 0x11 || (msg > 0x16 && msg != 0x1e))
+        return false;
+    if (drone->botVars == NULL)
+        return false;
+    if (from == NULL)
+        return true;
+    if (from->botVars == NULL)
+        return false;
+    if (!MPSettings.maybeIsTeamGame && MPSettings.GameMode != GM_ASSASSIN)
+        return true;
+    return ((MPSettings_PerPlayer *)drone->botVars->perPlayerSettings)->TeamId ==
+           ((MPSettings_PerPlayer *)from->botVars->perPlayerSettings)->TeamId;
+}
+
+// Whether a bot takes up a state change (Drone_SM_SetState): false refuses it, and the state machine goes to
+// redirectState instead (0 for none). A bot in the hill dodges rather than run; impacts, a heard noise and cover
+// are refused; on the way to a goal an attack is taken up only once distracted enough or with the opponent in sight,
+// and sightings add to the distraction; a dying bot only dies or respawns.
+// AUTOINJECT
+uchar BOT_validateStateChange(DCVars_tag *dc, uint newState) {
+    uint current = dc->aiStateMachine->curState;
+    dc->drone->botVars->redirectState = 0;
+    if (current == 0)
+        return true;
+
+    BOT_vars_t *bot = dc->drone->botVars;
+    uchar allowed = true;
+    uint currentType = BOTSTATE_getStateType(current);
+    uint newType = BOTSTATE_getStateType(newState);
+    short playerIndex = Control_Plr2Ind(dc->gameObj);
+    Drone_tag *drone = dc->drone;
+    if (playerIndex < 0)
+        return false;
+
+    if ((MPGame.players[playerIndex].flags & MPPLAYER_IN_HILL) &&
+        (newState == DSTATE_BotAttackRun || newState == DSTATE_BotAttackRunChangePosition)) {
+        short dodge = BOTSTATE_chooseDodgeMove(dc, DODGE_LEFT | DODGE_RIGHT);
+        dc->drone->botVars->redirectState = dodge;
+        return false;
+    }
+    if (newState == DSTATE_BotImpactBullet || newState == DSTATE_BotImpactExplosive ||
+        newState == DSTATE_BotImpactPunch)
+        return false;
+    if (newState == DSTATE_BotHeardNoise) {
+        drone->heardNoiseStage = 4;
+        if (dc->drone->opponent == NULL)
+            dc->drone->botVars->atObjective = 1;
+        return false;
+    }
+    if (newType == BOTSTATE_CLASS_COVER)
+        return false;
+    if (newType == BOTSTATE_CLASS_ALERTED && current == DSTATE_BotGotoGoalPosition) {
+        BOT_goal_t *goal = BOTSTATE_getActiveGoal(drone);
+        if (goal != NULL && (goal->pickFlags & 0x10))
+            return false;
+    }
+    if ((drone->botVars->flags & BOT_RECOVERING) && newState == DSTATE_BotAttackRun)
+        return false;
+    if (newState == DSTATE_BotAttackChangeWeapon && bot->weapon == 1 && dc->drone->animRow >= 0x35 &&
+        dc->drone->animRow <= 0x38)
+        return false;
+
+    if (current == DSTATE_BotGotoGoalPosition) {
+        short opponentIndex = Control_Plr2Ind(dc->drone->opponent);
+        Drone_tag *seer = dc->drone;
+        bool inSight = seer->sightFlags & DRONE_SIGHT_SEES_OPPONENT;
+        if (opponentIndex >= 0) {
+            uchar flags = seer->botVars->players[opponentIndex].flags;
+            inSight = (flags & BOT_PLAYER_PRESENT) && (flags & BOT_PLAYER_IN_SIGHT);
+        }
+        if (newType == BOTSTATE_CLASS_ATTACK) {
+            if (BOTSTATE_isDistracted(seer) && !inSight)
+                return false;
+            if (drone->botVars->flags & 4)
+                return false;
+        }
+    } else if (newType == BOTSTATE_CLASS_ATTACK) {
+        if (drone->botVars->flags & 4)
+            return false;
+    }
+
+    switch (currentType) {
+        case BOTSTATE_CLASS_ATTACK:
+        case BOTSTATE_CLASS_IMPACT:
+        case BOTSTATE_CLASS_COVER:
+            if (newState == DSTATE_BotSeenOpponent)
+                allowed = false;
+            break;
+
+        case BOTSTATE_CLASS_DEATH:
+            if (newType != BOTSTATE_CLASS_DEATH && newState != DSTATE_BotRespawn)
+                return false;
+            break;
+
+        case BOTSTATE_CLASS_MOVE:
+            if (current != DSTATE_BotGotoGoalPosition)
+                break;
+            if (newState == DSTATE_BotSeenOpponent) {
+                // the nearer the opponent, the more a sighting distracts: 1.7 from 24 m out, up to 4.93 close up
+                float amount = 1.7f;
+                if (drone->opponent != NULL) {
+                    float distance = drone->distanceToTarget;
+                    if (distance > 30.0f)
+                        distance = 30.0f;
+                    else if (distance < 1.0f)
+                        distance = 1.0f;
+                    Extended closeness = (Extended(30.0f) - Extended(distance)) * Extended(SightingDistraction);
+                    if (closeness < Extended(1.0f))
+                        closeness = 1.0f;
+                    amount = (float)(closeness * Extended(1.7f));
+                }
+                if (amount != 0.0f) {
+                    if (!BOTSTATE_increaseDistraction(dc->drone, amount))
+                        allowed = false;
+                    break;
+                }
+            }
+            if (newType == BOTSTATE_CLASS_ATTACK && !BOTSTATE_increaseDistraction(dc->drone, 1.0f))
+                allowed = false;
+            break;
+    }
+    return allowed;
+}
+
+// Who a bot fights, from who has attacked it lately (the last 16 hits, BOT_vars_t.attackers): the attacker seen
+// most often - five times as much for its current opponent - or the new one. A dead attacker's later entries are
+// forgotten. Changing opponent resets the drone's sight frames. Only for a drone with flag 0x10000.
+// AUTOINJECT
+obj_tag* BOT_handleOpponentHistory(Drone_tag *drone, obj_tag *attacker) {
+    if (!(drone->flags & 0x10000))
+        return NULL;
+
+    BOT_vars_t *bot = drone->botVars;
+    int counts[16] = {0};
+    obj_tag *history[16];
+    memcpy(history, bot->attackers, sizeof(history));
+
+    uint cursor = bot->attackerCursor;
+    if (cursor >= 16)
+        cursor = 0;
+    bot->attackers[cursor] = attacker;
+    bot->attackerCursor = (uchar)(cursor + 1);
+
+    for (int i = 0; i < 16; i++) {
+        obj_tag *obj = history[i];
+        int count = 0;
+        if (obj != NULL) {
+            if (MP_playerIsDead(obj)) {
+                for (int j = i + 1; j < 16; j++) {
+                    if (history[j] == obj) {
+                        history[j] = NULL;
+                        bot->attackers[j] = NULL;
+                    }
+                }
+            } else {
+                for (int j = i + 1; j < 16; j++) {
+                    if (history[j] == obj) {
+                        count++;
+                        history[j] = NULL;
+                    }
+                }
+                if (obj == drone->opponent)
+                    count *= 5;
+            }
+        }
+        counts[i] = count;
+    }
+
+    int most = 0, best = -1;
+    for (int i = 0; i < 16; i++) {
+        if (counts[i] > most) {
+            most = counts[i];
+            best = i;
+        }
+    }
+    obj_tag *chosen = best != -1 ? history[best] : attacker;
+    if (chosen != drone->opponent) {
+        NDrone2_SetOpponent(drone, chosen);
+        drone->unseenFrames = 0;
+        drone->sightFrames = 1;
+    }
+    return chosen;
+}
+
+// A bot's cry: 1 on dying, 30 when hurt, 31 when hurt unless the last cry is still playing. Three death cries and
+// five (two in the other voice, BOT_setGender) pain cries, one at random. Returns the sound, or 0 for none.
+// AUTOINJECT
+DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
+    Drone_tag *drone = dc->drone;
+    uint first, count;
+    switch (kind) {
+        case BOT_SOUND_DEATH:
+            first = drone->unknown15 ? 0x157 : 0x154;
+            count = 3;
+            break;
+        case BOT_SOUND_PAIN_UNLESS_PLAYING:
+            if (Sound_Playing_Ref(drone->botVars->sound, drone->sm.id))
+                return NULL;
+            // fall through
+        case BOT_SOUND_PAIN:
+            if (drone->unknown15) {
+                first = 0x152;
+                count = 2;
+            } else {
+                first = 0x14d;
+                count = 5;
+            }
+            break;
+        default:
+            return NULL;
+    }
+    uint sfx = Rand_Rand(count) + first;
+    Sound_Stop_Ref(drone->botVars->sound, drone->sm.id);
+    drone->botVars->sound = NULL;
+    drone->botVars->sound = NDrone2_PlaySFX(dc, sfx, NULL, 1, 1.0f);
+    return drone->botVars->sound;
+}
+
+// The voice a bot's cries use (Drone_tag.unknown15) by its character: the other voice for characters 3-5 and 18-23.
+// nightfire-port's name.
+// AUTOINJECT
+void BOT_setGender(Drone_tag *drone) {
+    drone->unknown15 = 0;
+    switch (drone->botVars->skin) {
+        case 3: case 4: case 5: case 18: case 19: case 20: case 21: case 22: case 23:
+            drone->unknown15 = 1;
+            break;
+    }
+}
+
+// A bot that has fallen out of the map is put back at a spawn point far from the others, with its goals,
+// attackers and what it knows of the players cleared, and starts again idle with no opponent.
+// AUTOINJECT
+void BOT_fellOutMap(obj_tag *obj) {
+    RespawnMode respawnMode = MPSettings.RespawnSelectionMode;
+    Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
+    BOT_vars_t *bot = drone->botVars;
+
+    MPSettings.RespawnSelectionMode = RESPAWN_FAR;
+    uint spawn = MP_GetSpawnPoint((ushort)MPSettings.Player[bot->playerIndex].TeamId, obj);
+    MPSettings.RespawnSelectionMode = respawnMode;
+
+    MPSpawnPoint *point = &SpawnPoints[(ushort)spawn];
+    Vec_Copy2(&point->spawnPos, &obj->position, &obj->lastPosition);
+    Vec_Copy2(&point->facingDir, &obj->rotation, &obj->lastRotation);
+    Vec_Zero(&drone->velocity);
+    build_LinkToRoom(obj, 0, glb_world);
+
+    bot->goalFromState = DSTATE_BotIdle;
+    bot->nearestNavNode = -1;
+    bot->flags = 0;
+    bot->activeGoal = 0xff;
+    bot->stateClass = BOTSTATE_CLASS_IDLE;
+    memset(bot->players, 0, sizeof(bot->players));
+    bot->targeted = 0;
+    bot->redirectState = DSTATE_BotIdle;
+    bot->insideObjective = 0;
+    memset(bot->attackers, 0, sizeof(bot->attackers));
+    bot->attackerCursor = 0;
+    bot->routeFailCount = 0;
+    NDrone2_SetOpponent(drone, NULL);
+    Drone_SM_SetState(&drone->sm, DSTATE_BotIdle, 0);
+}
+
+// Where a bot aims (targetPos): at its opponent plus aimOffset, with a wobble in aimError while it is still finding
+// its aim after the opponent started or stopped moving. The wobble time grows with the bot's accuracy stat and the distance. Whether
+// the opponent moves (more than 2.5 cm a call) is decided every two seconds.
+// AUTOINJECT
+void BOT_opponentTargetting(DCVars_tag *dc) {
+    Drone_tag *drone = dc->drone;
+    uint frames = GameState.NumFramesUnpaused;
+
+    // as unsigned values
+    Extended period = (double)(uint)((drone->accuracy / 3 + 1) * (FRAME_RATE_INT / 2));
+    Extended scale = 1.0f;
+    if (drone->distanceToTarget > 2.0f)
+        scale = (Extended(drone->distanceToTarget) - Extended(2.0f)) * Extended(0.05f) + Extended(1.0f);
+    float settle = (float)(scale * period);
+
+    obj_tag *opponent = drone->opponent;
+    if (opponent == NULL)
+        return;
+
+    uint since = frames - drone->targetChangeFrame;
+    float wobble;
+    if (since < (uint)Ftol(settle)) {
+        Extended left = (Extended(settle) - Extended((double)since)) / Extended(settle);
+        wobble = (float)(Extended(0.1f) - left * Extended(SettleWobble));
+    } else {
+        wobble = 0.1f;
+    }
+
+    _VECTOR moved;
+    Vec_Subtract(&opponent->position, &drone->botVars->opponentLastPos, &moved);
+    drone->botVars->opponentLastPos = drone->opponent->position;
+    float distanceMoved = (float)Vec_Magnitude(&moved);
+
+    if (drone->targetChangeFrame + FRAME_RATE_INT * 2 < frames) {
+        if (!drone->targetStartedMoving) {
+            if (distanceMoved > 0.025f) {
+                drone->targetStartedMoving = 1;
+                drone->unknown198 = 40.0f;
+                drone->targetChangeFrame = frames;
+            }
+        } else if (distanceMoved < 0.025f) {
+            drone->targetStartedMoving = 0;
+            drone->unknown198 = 0.0f;
+        }
+    }
+
+    drone->aimError.z = 0.0f;
+    drone->aimError.x = 0.0f;
+    drone->aimError.y = 0.0f;
+    if (wobble != 0.1f) {
+        Extended angle = Extended((double)frames) * Extended(0.05f);
+        drone->aimError.x = (float)(FCos(angle) * Extended(1.2f));
+        drone->aimError.y = (float)(FSin(angle) * Extended(1.7f));
+    }
+    Vec_Add2(&drone->opponent->position, &drone->aimOffset, &drone->targetPos);
+    drone->targetPosFrame = frames;
+}
+
+// Below 1 a bot's health is 0
+// AUTOINJECT
+void BOT_SetHealth(Drone_tag *drone, float health) {
+    if (health < 1.0f)
+        health = 0.0f;
+    drone->health = X87Copy(health);
+    PlrStat_LogHealth(health, drone->botVars->playerIndex);
+}
+
+// A bot's stats in its drone: health (none below 1), accuracy, aggression, speed, reaction, recovery and side
+// AUTOINJECT
+void BOT_setDroneStats(Drone_tag *drone, BOT_stats_t *stats) {
+    float health = stats->health;
+    if (health < 1.0f)
+        health = 0.0f;
+    drone->health = health;
+    PlrStat_LogHealth(health, drone->botVars->playerIndex);
+    drone->accuracy = stats->accuracy;
+    drone->aggression = stats->baseAggression;
+    drone->speed = stats->speed;
+    drone->stat9b = 3;
+    drone->reaction = stats->reaction;
+    drone->recover = stats->recover;
+    drone->badSide = stats->isBad;
+    drone->accuracyF = drone->accuracy;
+}
+
+// A bot is hurt: the damage, scaled for where it hit (with location damage on) and tripled in professional mode,
+// comes first off its armour for hits of type 0 or above 7, and the rest off its health. Then a cry, and the bot is
+// distracted by eight times the damage. Nothing while it is out of play, unhurt or outside a match.
+// AUTOINJECT
+void BOT_handlePain(DCVars_tag *dc, float damage, ushort hitType, short location) {
+    Drone_tag *drone = dc->drone;
+    if (MPDrone_MaybeIsDyingOrDead(dc->gameObj))
+        return;
+    if (drone->health < 0.0f || drone->health == 0.0f)
+        return;
+    if (damage < 0.0f || damage == 0.0f)
+        return;
+    if (GameFlow_GetState() != 2)
+        return;
+
+    Extended hurt = location != -1 ? Extended(Plr_DMod_Multi) * Extended(damage) : Extended(damage);
+    if (MPSettings.LocationDamageEnabled) {
+        switch (location) {
+            case 5:
+                hurt = hurt * Extended(Plr_DMod_Head);
+                break;
+            case 20: case 21: case 32: case 35:
+                hurt = hurt * Extended(Plr_DMod_UpperLimb);
+                break;
+            case 49: case 50: case 51: case 52: case 53: case 54: case 55: case 56:
+                hurt = hurt * Extended(Plr_DMod_LowerLimb);
+                break;
+        }
+    }
+    if (MPSettings.TripleDamageModifierProfessionalMode)
+        hurt = hurt * Extended(3.0f);
+
+    Extended armourTakes = hitType > 0 && hitType <= 7 ? 0.0f : 1.0f;
+    BOT_vars_t *bot = drone->botVars;
+    float armour = bot->armour;
+    Extended absorbed = armourTakes * hurt;
+    if (Extended(armour) < absorbed)
+        absorbed = armour;
+    bot->armour = (uchar)Ftol((double)(Extended(armour) - absorbed));
+    float taken = (float)(hurt - absorbed);
+
+    BOT_SetHealth(drone, drone->health - taken);
+    PlrStat_LogHealth(drone->health, drone->botVars->playerIndex);
+    BOT_soundEffect(dc, drone->health > 0.0f ? BOT_SOUND_PAIN_UNLESS_PLAYING : BOT_SOUND_DEATH);
+    drone->lastDamage = taken;
+    BOTSTATE_increaseDistraction(drone, taken * 8.0f);
+}
+
+// A bot's drone once its level is loaded: its stats, flag 0x80000000, and its combat ranges kept for
+// BOTSTATE_defaultCombatRange
+// AUTOINJECT
+void BOT_postLoadInit(Drone_tag *drone) {
+    BOT_setDroneStats(drone, &drone->botVars->stats);
+    drone->flags |= 0x80000000;
+    drone->botVars->savedCombatRanges[0] = drone->combatRanges[0];
+    drone->botVars->savedCombatRanges[1] = drone->combatRanges[1];
+    drone->botVars->savedCombatRanges[2] = drone->combatRanges[4];
 }
