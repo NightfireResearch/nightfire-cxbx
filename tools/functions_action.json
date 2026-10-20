@@ -38818,7 +38818,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5700",
+        "name": "SFXCountVoicesInUse",
         "address": "0x000c5700",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38826,7 +38826,7 @@
         "param_types": [
             "SFXItem *"
         ],
-        "prototype_string": "int __cdecl FUN_000c5700(SFXItem * param_1)",
+        "prototype_string": "int __cdecl SFXCountVoicesInUse(SFXItem * param_1)",
         "parameters": [
             "[SFXItem * param_1@Stack[0x4]:4]"
         ],
@@ -38850,7 +38850,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5a90",
+        "name": "ES_GetNearestListenerDistance",
         "address": "0x000c5a90",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -38858,7 +38858,7 @@
         "param_types": [
             "SFXItem *"
         ],
-        "prototype_string": "ulonglong __cdecl FUN_000c5a90(SFXItem * param_1)",
+        "prototype_string": "ulonglong __cdecl ES_GetNearestListenerDistance(SFXItem * param_1)",
         "parameters": [
             "[SFXItem * param_1@Stack[0x4]:4]"
         ],

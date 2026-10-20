@@ -66,10 +66,15 @@ struct World {
     _VECTOR vectors[6];
     char path[64];
     psiSFX psi;
+    SFXItem *next;
 };
 World world;
 
-int cases, differ;
+int cases, differ, nanChoices;
+
+bool IsNaN(uint32_t u) {
+    return (u & 0x7f800000u) == 0x7f800000u && (u & 0x007fffffu) != 0;
+}
 uint32_t gen, caseSeed;
 
 uint32_t R(uint32_t n) {
@@ -119,10 +124,11 @@ uint32_t W(const void *p) {
     return 0x80000000u | (uint32_t)at;
 }
 
+// A float's bits for the log, any NaN the same
 uint32_t F(float f) {
     uint32_t u;
     memcpy(&u, &f, 4);
-    return u;
+    return IsNaN(u) ? 0x7fc0ffffu : u;
 }
 
 typedef uint32_t (*Runner)(bool original);
@@ -211,6 +217,22 @@ bool CompareCase(const char *what, int trial) {
         if (reported++ < 3)
             printf("[sfx] %s case %d: returns 0x%x, the original 0x%x\n", what, trial, ourResult, theirResult);
     }
+    // Two NaNs the x87 and SSE2 chose differently between (a float sum written in plain C++) count as the same
+    bool nans = false;
+    if (theirState != ourState && theirState.size() == ourState.size()) {
+        bool onlyNaNs = true;
+        for (size_t at = 0; at + 4 <= theirState.size() && onlyNaNs; at += 4) {
+            uint32_t a, b;
+            memcpy(&a, &theirState[at], 4);
+            memcpy(&b, &ourState[at], 4);
+            if (a != b)
+                onlyNaNs = IsNaN(a) && IsNaN(b);
+        }
+        if (onlyNaNs) {
+            nans = true;
+            ourState = theirState;
+        }
+    }
     if (theirState != ourState) {
         same = false;
         int region;
@@ -240,6 +262,8 @@ bool CompareCase(const char *what, int trial) {
                    (int)d, ourLog.c_str() + from, theirLog.c_str() + from);
         }
     }
+    if (same && nans)
+        nanChoices++;
     return same;
 }
 
@@ -319,6 +343,29 @@ uint32_t FakeSFXStop(uint32_t voice) {
 void FakeStopStream(StreamData *stream) {
     ShadowLog("stop stream %x\n", W(stream));
 }
+void LogSfx(const char *what, const psiSFX *s) {
+    ShadowLog("%s %d %d %d %d %d %d %d %d %d %x %x %x %d\n", what, s->Handle, s->InnerRadius, s->OuterRadius,
+              s->Volume, s->Frequency, s->Is3d, s->Positioned, s->IsStreamed, s->Pan, W(s->pos), W(s->vel),
+              W(s->Specials), s->TrackingType);
+    LogVector(" pos", s->pos);
+    LogVector(" vel", s->vel);
+}
+void FakeInitialiseSound(psiSFX *s) {
+    LogSfx("initialise", s);
+}
+void FakeUpdateSound(psiSFX *s) {
+    LogSfx("update", s);
+}
+int FakeSampleKeyOn(uint32_t voice, int reverb) {
+    ShadowLog("key on %d %d\n", voice, reverb);
+    return 1;
+}
+void FakeUpdateMusicalEvents(void) {
+    ShadowLog("music\n");
+}
+void FakeUpdateStreams(void) {
+    ShadowLog("streams\n");
+}
 int FakeInitialiseStream(int hashCode, int is3d) {
     ShadowLog("initialise stream %d %d\n", hashCode, is3d);
     return answers.initialiseStream;
@@ -329,7 +376,6 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000e0ab0, (const void *)&FakeSetReverb);
     ShadowHook_Install(0x000e0b50, (const void *)&FakeSetupListener);
     ShadowHook_Install(0x000e0dc0, (const void *)&FakeSetVolume);
-    ShadowHook_Install(0x000cad40, (const void *)&FakeSFXUpdate);
     ShadowHook_Install(0x000e0a60, (const void *)&FakeMarkInactive);
     ShadowHook_Install(0x000e0bc0, (const void *)&FakeIsSamplePlaying);
     ShadowHook_Install(0x000e0a00, (const void *)&FakeRequestVoiceHandle);
@@ -338,6 +384,11 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000e09c0, (const void *)&FakeSFXStop);
     ShadowHook_Install(0x000c8c40, (const void *)&FakeStopStream);
     ShadowHook_Install(0x000c8fa0, (const void *)&FakeInitialiseStream);
+    ShadowHook_Install(0x000e0ed0, (const void *)&FakeInitialiseSound);
+    ShadowHook_Install(0x000e0e10, (const void *)&FakeUpdateSound);
+    ShadowHook_Install(0x000e0b00, (const void *)&FakeSampleKeyOn);
+    ShadowHook_Install(0x000ca620, (const void *)&FakeUpdateMusicalEvents);
+    ShadowHook_Install(0x000c9030, (const void *)&FakeUpdateStreams);
 }
 
 // ---- the made-up state
@@ -381,7 +432,8 @@ void RandomDef(Def *d) {
     p->Polyphonic = (short)(R(3) == 0);
     p->Outdoors = (char)R(2);
     p->PauseInNis = (char)R(2);
-    p->SampleCount = RI(R(6) == 0 ? 0 : 1, POOL);
+    // A sequence of none would play the word before its cued samples, in the original too
+    p->SampleCount = RI(R(6) == 0 && !p->MultiSample ? 0 : 1, POOL);
     for (int i = 0; i < POOL; i++) {
         SFXSamplePoolFiles *s = &d->pool[i];
         s->FileRef = R(8) == 0 ? -RI(1, 4) : RI(0, SAMPLES - 1);
@@ -420,7 +472,8 @@ void RandomBanks(void) {
             s->NumberOfChannels = RI(1, 2);
             s->LoopOffset = RI(0, 0x100);
         }
-        int slot = (int)R(SFX_NUM_BANKS);
+        // The sounds' SoundBankSlot is 0 to 2, so the banks are there, but one is sometimes elsewhere
+        int slot = b == 2 && R(3) == 0 ? (int)R(SFX_NUM_BANKS) : b;
         SoundBankHeader *h = &SoundBankData[slot];
         h->Loaded = R(5) != 0;
         h->HashCode = SBInfoList[slot];
@@ -429,6 +482,7 @@ void RandomBanks(void) {
         h->SFXHeaderData = f->headers;
         h->SampleHeader = world.samples[b];
         h->SampleCount = SAMPLES;
+        SoundBankData[b].SampleHeader = world.samples[b];
     }
 }
 
@@ -814,7 +868,6 @@ const Case kSettings[] = {
     C("SFXGetMode", RunGetMode),
     C("SFXSetupListener", RunSetupListener),
     C("SFXSetNumberOfListeners", RunSetNumberOfListeners),
-    C("SFXSuspendFileAccess", RunSuspendFileAccess),
     C("SFXUnSuspendFileAccess", RunUnSuspendFileAccess),
     C("FindMusicTrackNumber", RunFindMusicTrack),
     C("ES_MusicSetVolume", RunMusicSetVolumeES),
@@ -921,6 +974,15 @@ uint32_t RunUnPauseAllStreams(bool original) {
     return 0;
 }
 
+// SFXUpdate itself a fake
+const Case kSuspend[] = {
+    C("SFXSuspendFileAccess", RunSuspendFileAccess),
+};
+
+void InstallUpdateFake(void) {
+    ShadowHook_Install(0x000cad40, (const void *)&FakeSFXUpdate);
+}
+
 const Case kVoices[] = {
     C("ES_FindFreeVoiceHandle", RunFindFreeVoiceHandle),
     C("ES_UnlockVoiceHandle", RunUnlockVoiceHandle),
@@ -939,12 +1001,107 @@ const Case kVoices[] = {
     C("SFXUnPauseAllStreams", RunUnPauseAllStreams),
 };
 
-void Group(const char *name, const Case *list, int count, int trials) {
+// ---- starting the sounds and the frame
+
+uint32_t RunUpdateDucker(bool original) {
+    if (R(2))
+        DuckerStartTime = answers.timer - RI(-100, 4000);
+    CDECL_VOID(0x000c8d00, ES_UpdateDucker, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunSetCueTimer(bool original) {
+    SFXParameters *p = SomeDef();
+    return CDECL_RUN(0x000c56b0, SetCueTimer, int (__cdecl *)(SFXParameters *), p);
+}
+
+uint32_t RunCountVoicesInUse(bool original) {
+    SFXItem *s = R(5) == 0 ? NULL : SomeItem();
+    return CDECL_RUN(0x000c5700, SFXCountVoicesInUse, int (__cdecl *)(SFXItem *), s);
+}
+
+uint32_t RunGetMyPos(bool original) {
+    SFXItem *s = SomeItem();
+    CDECL_VOID(0x000c5760, ES_GetMyPos, void (__cdecl *)(SFXItem *), s);
+    return 0;
+}
+
+uint32_t RunGetNearestListenerDistance(bool original) {
+    SFXItem *s = SomeItem();
+    if (R(2))
+        for (int i = 0; i < SFX_NUM_LISTENERS; i++)
+            RandomVector(&ListenerPositions[i], R(2) ? 3000.0f : 30.0f);
+    return CDECL_RUN(0x000c5a90, ES_GetNearestListenerDistance, int (__cdecl *)(SFXItem *), s);
+}
+
+uint32_t RunStartSample(bool original) {
+    SFXItem *s = SomeItem();
+    SFXSamplePoolFiles *sample = &((Def *)s->SFXData)->pool[R(POOL)];
+    int n = RI(0, SFX_MAX_VOICES - 1);
+    return CDECL_RUN(0x000c9e20, StartSample, int (__cdecl *)(SFXSamplePoolFiles *, int, SFXItem *, int), sample,
+                     s->SoundBankSlot, s, n);
+}
+
+uint32_t RunSoundPlay(bool original) {
+    SFXItem *s = SomeItem();
+    return CDECL_RUN(0x000ca050, maybeDXSoundPlay, int (__cdecl *)(SFXItem *), s);
+}
+
+uint32_t RunUpdateEnding(bool original) {
+    SFXItem *s = SomeItem();
+    world.next = s->Next;
+    CDECL_VOID(0x000ca590, SFXUpdateEnding, void (__cdecl *)(SFXItem *, SFXItem **), s, &world.next);
+    return 0;
+}
+
+uint32_t RunStart3D(bool original) {
+    int hashCode = R(10) == 0 ? SFX_NIS_MUSIC_TRIGGER : SomeSound();
+    _VECTOR *pos = R(5) == 0 ? NULL : &world.vectors[0];
+    _VECTOR *vel = R(5) == 0 ? NULL : &world.vectors[1];
+    DYNAMICSOUNDS *handle = SomeHandle();
+    int volume = RI(0, 100);
+    int inner = R(2) ? -1 : RI(0, 30);
+    int outer = R(2) ? -1 : RI(0, 60);
+    return CDECL_RUN(0x000caa90, SFXStart3D,
+                     uint32_t (__cdecl *)(int, _VECTOR *, _VECTOR *, DYNAMICSOUNDS *, int, int, int), hashCode, pos,
+                     vel, handle, volume, inner, outer);
+}
+
+uint32_t RunStart(bool original) {
+    int hashCode = SomeSound();
+    DYNAMICSOUNDS *handle = SomeHandle();
+    return CDECL_RUN(0x000cb150, SFXStart, uint32_t (__cdecl *)(int, DYNAMICSOUNDS *), hashCode, handle);
+}
+
+uint32_t RunUpdate(bool original) {
+    if (R(2))
+        DuckerStartTime = answers.timer - RI(-100, 4000);
+    CDECL_VOID(0x000cad40, SFXUpdate, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kStarting[] = {
+    C("ES_UpdateDucker", RunUpdateDucker),
+    C("SetCueTimer", RunSetCueTimer),
+    C("SFXCountVoicesInUse", RunCountVoicesInUse),
+    C("ES_GetMyPos", RunGetMyPos),
+    C("ES_GetNearestListenerDistance", RunGetNearestListenerDistance),
+    C("StartSample", RunStartSample),
+    C("maybeDXSoundPlay", RunSoundPlay),
+    C("SFXUpdateEnding", RunUpdateEnding),
+    C("SFXStart3D", RunStart3D),
+    C("SFXStart", RunStart),
+    C("SFXUpdate", RunUpdate),
+};
+
+void Group(const char *name, const Case *list, int count, int trials, void (*more)(void) = NULL) {
     const char *only = getenv("NIGHTFIRE_SFX_GROUP");
     if (only != NULL && strstr(name, only) == NULL)
         return;
     ShadowHook_RemoveAll();
     InstallFakes();
+    if (more != NULL)
+        more();
     Test(name, list, count, trials);
 }
 
@@ -961,15 +1118,19 @@ void SFXShadow_Run(void) {
         AddArea(at, g.size);
     }
     NfWarnMuted++;
-    cases = differ = 0;
+    cases = differ = nanChoices = 0;
 
     Group("the settings and the mixer", kSettings, COUNT(kSettings), 3000);
+    Group("the file access", kSuspend, COUNT(kSuspend), 3000, InstallUpdateFake);
     Group("the voices and the list", kVoices, COUNT(kVoices), 3000);
+    Group("starting the sounds and the frame", kStarting, COUNT(kStarting), 4000);
     ShadowHook_RemoveAll();
 
     NfWarnMuted--;
     for (int i = 0; i < COUNT(kGameState); i++)
         memcpy((void *)(uintptr_t)kGameState[i].at, saved[i].data(), kGameState[i].size);
+    if (nanChoices != 0)
+        printf("[sfx] %d cases matched with NaNs the x87 and SSE2 chose differently\n", nanChoices);
     printf("[sfx] %d cases, %d differ\n", cases, differ);
     fflush(stdout);
 }

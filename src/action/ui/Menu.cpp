@@ -180,7 +180,6 @@ void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
 
 // ---- the front end's music: two loops, played together
 
-#define SFXStart ((void (__cdecl *)(uint sfxId, DYNAMICSOUNDS *handle))0x000cb150)
 
 // Starts it again, unless it is playing
 // AUTOINJECT

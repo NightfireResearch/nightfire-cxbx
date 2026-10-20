@@ -455,6 +455,18 @@ void SFXUnPause(void);
 void KillSFX(SFXItem *Sfx);
 void SFXRemove(DYNAMICSOUNDS *handle, int hashCode);
 void ES_FillpsiSFXData(psiSFX *SfxData, SFXItem *Sfx, int WhichVoice);
+void ES_UpdateDucker(void);
+int SetCueTimer(SFXParameters *SFXData);
+int SFXCountVoicesInUse(SFXItem *except);
+void ES_GetMyPos(SFXItem *Sfx);
+int ES_GetNearestListenerDistance(SFXItem *Sfx);
+int StartSample(SFXSamplePoolFiles *sfxNum, int SoundBankSlot, SFXItem *Sfx, int WhichVoice);
+int maybeDXSoundPlay(SFXItem *Sfx);
+void SFXUpdateEnding(SFXItem *Sfx, SFXItem **next);
+uint32_t SFXStart3D(int HashCode, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *Handle, int VolumeOverRide,
+                    int InnerRadius, int OuterRadius);
+uint32_t SFXStart(int HashCode, DYNAMICSOUNDS *Handle);
+void SFXUpdate(void);
 void SFXSuspendFileAccess(void);
 void SFXUnSuspendFileAccess(void);
 
@@ -469,7 +481,7 @@ void SFXPauseAllStreams(void);
 void SFXUnPauseAllStreams(void);
 
 // The originals still called by address
-#define SFXUpdate ((void (__cdecl *)(void))0x000cad40)
+#define SFXUpdateStreams ((void (__cdecl *)(void))0x000c9030)
 #define SFXStartMusic ((void (__cdecl *)(int track, int section))0x000ca5e0)
 #define SFXStopMusic ((void (__cdecl *)(void))0x000c8ce0)
 #define SFXInitialiseStream ((int (__cdecl *)(int HashCode, int Is3d))0x000c8fa0)
