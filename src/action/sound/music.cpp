@@ -7,7 +7,6 @@
 // (Music_Event). UpdateMusicalEvents runs once a frame; the level's UpdateMFX_ function asks for sections from
 // the lists of its MapMusic row.
 
-#define MusicEventList (*(uint32_t(*)[0x40])0x0029a180)
 // The frame's events, kept after UpdateMusicalEvents clears them, and the last frame's
 #define BackupEventList (*(uint32_t(*)[0x40])0x002980e8)
 #define LastEventList (*(uint32_t(*)[0x40])0x00297fe8)

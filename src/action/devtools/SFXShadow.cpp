@@ -38,6 +38,12 @@ const struct {
     {0x00279510, 0x0027af28 - 0x00279510},
     {0x00286a90, 0x00297fe8 - 0x00286a90},
     {0x002981e8, 0x00299a20 - 0x002981e8},
+    {0x0017d581, 1},                    // ls.relatedToMainMenuSound
+    {0x001f658c, 4},                    // GameState.CurrentLevelHashcode
+    {0x00260018, 4},                    // MPSettings.isMultiplayer
+    {0x00260044, 4},                    // MPSettings.numPlayers
+    {0x0029a180, 8},                    // MusicEventList[0] and [1]
+    {0x0029a280, 4},                    // SoundInit
 };
 
 const int DEFS = 8;
@@ -67,6 +73,18 @@ struct World {
     char path[64];
     psiSFX psi;
     SFXItem *next;
+    // The files psiSFXLoadFile gives: a bank's three, SBINFO.SBI
+    struct {
+        int count;
+        SFXHeader headers[BANK_SFX];
+        Def defs[2];
+    } sfxFile;
+    struct {
+        int count;
+        SampleHeaderData samples[SAMPLES];
+    } shfFile;
+    uint8_t sbfFile[0x100];
+    int sbinfo[SFX_NUM_BANKS];
 };
 World world;
 
@@ -167,6 +185,8 @@ struct Answers {
     uint32_t playingMask[2];    // psiIsSamplePlaying, by voice
     int requestVoice;           // psiRequestVoiceHandle: 0 to 63, or -1
     int initialiseStream;       // SFXInitialiseStream: 0, or -1
+    uint32_t loadFails;         // psiSFXLoadFile: a bit for each file asked for, NULL where set
+    int loads;
     int playPos;
 };
 Answers answers;
@@ -366,6 +386,32 @@ void FakeUpdateMusicalEvents(void) {
 void FakeUpdateStreams(void) {
     ShadowLog("streams\n");
 }
+void *FakeLoadFile(char *fileName) {
+    ShadowLog("load %s\n", fileName);
+    int n = answers.loads++;
+    if ((answers.loadFails >> (n & 31)) & 1)
+        return NULL;
+    size_t length = strlen(fileName);
+    const char *type = length >= 4 ? fileName + length - 4 : "";
+    if (strcmp(type, ".SFX") == 0)
+        return &world.sfxFile;
+    if (strcmp(type, ".SHF") == 0)
+        return &world.shfFile;
+    if (strcmp(type, ".SBF") == 0)
+        return world.sbfFile;
+    if (strcmp(type, ".SBI") == 0)
+        return world.sbinfo;
+    return NULL;
+}
+void FakeFreeFileMem(void *data) {
+    ShadowLog("free %x\n", W(data));
+}
+void FakeReleaseStreamSystem(void) {
+    ShadowLog("release streams\n");
+}
+void FakeInitialiseStreamSystem(void) {
+    ShadowLog("initialise streams\n");
+}
 int FakeInitialiseStream(int hashCode, int is3d) {
     ShadowLog("initialise stream %d %d\n", hashCode, is3d);
     return answers.initialiseStream;
@@ -389,6 +435,10 @@ void InstallFakes(void) {
     ShadowHook_Install(0x000e0b00, (const void *)&FakeSampleKeyOn);
     ShadowHook_Install(0x000ca620, (const void *)&FakeUpdateMusicalEvents);
     ShadowHook_Install(0x000c9030, (const void *)&FakeUpdateStreams);
+    ShadowHook_Install(0x000e0a90, (const void *)&FakeLoadFile);
+    ShadowHook_Install(0x000e09e0, (const void *)&FakeFreeFileMem);
+    ShadowHook_Install(0x000c5ea0, (const void *)&FakeReleaseStreamSystem);
+    ShadowHook_Install(0x000c5f10, (const void *)&FakeInitialiseStreamSystem);
 }
 
 // ---- the made-up state
@@ -674,6 +724,36 @@ void RandomWorld(void) {
     answers.playingMask[1] = R(0);
     answers.requestVoice = R(4) == 0 ? -1 : RI(0, 63);
     answers.initialiseStream = R(2) ? -1 : 0;
+    answers.loadFails = R(3) == 0 ? R(0) & R(0) : 0;
+    answers.loads = 0;
+    world.sfxFile.count = RI(0, BANK_SFX);
+    for (int i = 0; i < BANK_SFX; i++) {
+        world.sfxFile.headers[i].HashCode = kSounds[R(COUNT(kSounds))];
+        world.sfxFile.headers[i].Offset = (int)((uintptr_t)&world.sfxFile.defs[R(2)] - (uintptr_t)&world.sfxFile);
+    }
+    RandomDef(&world.sfxFile.defs[0]);
+    RandomDef(&world.sfxFile.defs[1]);
+    world.shfFile.count = R(4) == 0 ? 0 : RI(1, SAMPLES);
+    for (int i = 0; i < SAMPLES; i++) {
+        SampleHeaderData *s = &world.shfFile.samples[i];
+        s->Flags = (int)R(2);
+        s->Address = (void *)(uintptr_t)R(0x100);
+        s->Size = RI(0, 0x10);
+        s->Frequency = RI(11025, 48000);
+        s->psi_SampleHeader = (char *)(uintptr_t)R(0x100);
+    }
+    for (int i = 0; i < SFX_NUM_BANKS; i++)
+        world.sbinfo[i] = R(4) == 0 ? -1 : (int)R(0x40);
+    static const int levels[] = {0x7000001, 0x7000002, 0x7000003, 0x7000004, 0x7000005, 0x7000006, 0x7000007,
+                                 0x7000008, 0x7000009, 0x700000a, 0x700000b, 0x700000c, 0x700000d, 0x700000e,
+                                 0x7000011, 0x7000012, 0x7000013, 0x7000014, 0x7000015, 0x7000016, 0x700001a,
+                                 0x700001b, 0x700001c, 0x7000021, 0x7000025, 0x7000029, 0x700002a, 0x7000041,
+                                 0x7000043, 0x7000048, 0x700004a, 0x700004b, 0x700004c, 0x700004d, 0x7000090, 0};
+    I32_AT(0x001f658c) = levels[R(COUNT(levels))];
+    I32_AT(0x00260018) = R(2);
+    I32_AT(0x00260044) = RI(1, 4);
+    U8_AT(0x0017d581) = (uint8_t)R(2);
+    SFXInitialised = R(5) == 0;
     if (R(8) == 0)
         for (int i = 0; i < SFX_NUM_VOICE_HANDLES; i++)
             ES_VoiceHandleData[i].Status = R(30) != 0;
@@ -1094,6 +1174,66 @@ const Case kStarting[] = {
     C("SFXUpdate", RunUpdate),
 };
 
+// ---- the banks and the reset
+
+int SomeBankIndex(void) {
+    return R(4) == 0 ? (int)R(0x40) : SBInfoList[R(SFX_NUM_BANKS)];
+}
+
+uint32_t RunInitialiseItems(bool original) {
+    CDECL_VOID(0x000c5650, SFXInitialiseItems, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunLoadSoundBank(bool original) {
+    int index = SomeBankIndex();
+    CDECL_VOID(0x000c5440, LoadSoundBank, void (__cdecl *)(int), index);
+    return 0;
+}
+
+uint32_t RunUnloadSoundBank(bool original) {
+    int index = SomeBankIndex();
+    if (R(2)) {
+        for (int b = 0; b < BANKS; b++)
+            SoundBankData[b].HashCode = SBInfoList[b];
+        index = SBInfoList[R(BANKS)];
+    }
+    CDECL_VOID(0x000c9b50, SFXUnloadSoundBank, void (__cdecl *)(int), index);
+    return 0;
+}
+
+uint32_t RunReset(bool original) {
+    for (int b = 0; b < BANKS; b++)
+        SoundBankData[b].HashCode = SBInfoList[b];
+    CDECL_VOID(0x000c9c30, SFXReset, void (__cdecl *)(void));
+    return 0;
+}
+
+uint32_t RunInitialise(bool original) {
+    char *path = R(3) == 0 ? NULL : world.path;
+    CDECL_VOID(0x000c9d60, SFXInitialise, void (__cdecl *)(char *), path);
+    return 0;
+}
+
+uint32_t RunLoadCorrectBank(bool original) {
+    for (int b = 0; b < BANKS; b++)
+        SoundBankData[b].HashCode = SBInfoList[b];
+    if (R(2))
+        for (int b = 0; b < SFX_NUM_BANKS; b++)
+            SBInfoList[b] = b;
+    CDECL_VOID(0x000cbdf0, SFXLoadCorrectBank, void (__cdecl *)(void));
+    return 0;
+}
+
+const Case kBanks[] = {
+    C("SFXInitialiseItems", RunInitialiseItems),
+    C("LoadSoundBank", RunLoadSoundBank),
+    C("SFXUnloadSoundBank", RunUnloadSoundBank),
+    C("SFXReset", RunReset),
+    C("SFXInitialise", RunInitialise),
+    C("SFXLoadCorrectBank", RunLoadCorrectBank),
+};
+
 void Group(const char *name, const Case *list, int count, int trials, void (*more)(void) = NULL) {
     const char *only = getenv("NIGHTFIRE_SFX_GROUP");
     if (only != NULL && strstr(name, only) == NULL)
@@ -1124,6 +1264,7 @@ void SFXShadow_Run(void) {
     Group("the file access", kSuspend, COUNT(kSuspend), 3000, InstallUpdateFake);
     Group("the voices and the list", kVoices, COUNT(kVoices), 3000);
     Group("starting the sounds and the frame", kStarting, COUNT(kStarting), 4000);
+    Group("the banks and the reset", kBanks, COUNT(kBanks), 3000);
     ShadowHook_RemoveAll();
 
     NfWarnMuted--;

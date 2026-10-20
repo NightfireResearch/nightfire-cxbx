@@ -719,7 +719,6 @@ HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
     }
     return (HASHCODE)((uint)GameState.NextLevelHashcode & 0xff00ffff);
 }
-#define SFXLoadCorrectBank ((void (__cdecl *)(void))0x000cbdf0)
 #define MP_Start ((void (__cdecl *)(void))0x000a25f0)
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
 

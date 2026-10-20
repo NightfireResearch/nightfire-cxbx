@@ -38790,13 +38790,13 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c5650",
+        "name": "SFXInitialiseItems",
         "address": "0x000c5650",
         "calling_convention": "__stdcall",
         "has_custom_variable_storage": false,
         "return_type": "void",
         "param_types": [],
-        "prototype_string": "void __stdcall FUN_000c5650(void)",
+        "prototype_string": "void __stdcall SFXInitialiseItems(void)",
         "parameters": [],
         "is_thunk": false,
         "namespace": "Global"
@@ -39816,7 +39816,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000c9b50",
+        "name": "SFXUnloadSoundBank",
         "address": "0x000c9b50",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -39824,7 +39824,7 @@
         "param_types": [
             "int"
         ],
-        "prototype_string": "void __cdecl FUN_000c9b50(int param_1)",
+        "prototype_string": "void __cdecl SFXUnloadSoundBank(int param_1)",
         "parameters": [
             "[int param_1@Stack[0x4]:4]"
         ],

@@ -418,6 +418,12 @@ enum MusicMarkerType {
 #define SFXInitialised I32_AT(0x00299a0c)
 #define SFXZeroPoint (*(_VECTOR *)0x00299a10)
 
+// Whether a stream is playing, or able to
+inline bool StreamIsActive(const StreamData *stream) {
+    return stream->Status != STREAM_FREE && stream->Status != STREAM_WAITING && stream->Status != STREAM_STOPPED &&
+           stream->FinishedInitialise;
+}
+
 // SFXSetEnvironment's environment for under water
 #define SFX_ENVIRONMENT_UNDERWATER (-0x6768)
 
@@ -467,6 +473,12 @@ uint32_t SFXStart3D(int HashCode, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *Han
                     int InnerRadius, int OuterRadius);
 uint32_t SFXStart(int HashCode, DYNAMICSOUNDS *Handle);
 void SFXUpdate(void);
+void SFXInitialiseItems(void);
+void LoadSoundBank(int index);
+void SFXUnloadSoundBank(int index);
+void SFXReset(void);
+void SFXInitialise(char *path);
+void SFXLoadCorrectBank(void);
 void SFXSuspendFileAccess(void);
 void SFXUnSuspendFileAccess(void);
 
@@ -482,6 +494,8 @@ void SFXUnPauseAllStreams(void);
 
 // The originals still called by address
 #define SFXUpdateStreams ((void (__cdecl *)(void))0x000c9030)
+#define SFXReleaseStreamSystem ((void (__cdecl *)(void))0x000c5ea0)
+#define SFXInitialiseAudioStreamSystem ((void (__cdecl *)(void))0x000c5f10)
 #define SFXStartMusic ((void (__cdecl *)(int track, int section))0x000ca5e0)
 #define SFXStopMusic ((void (__cdecl *)(void))0x000c8ce0)
 #define SFXInitialiseStream ((int (__cdecl *)(int HashCode, int Is3d))0x000c8fa0)

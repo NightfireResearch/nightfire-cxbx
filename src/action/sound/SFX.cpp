@@ -2,6 +2,10 @@
 #include "../assets.h"
 #include "../math/X87Ops.h"
 #include "music.h"
+#include "Sound.h"
+#include "../game.h"
+#include "../game/mp/multiplayer.h"
+#include "../ui/Menu.h"
 
 #include <stdio.h>
 
@@ -362,11 +366,8 @@ int ES_SFXIsReady(int voiceIdx) {
     if (voiceIdx == -1)
         return 0;
     ES_VoiceHandleDetails *voice = &ES_VoiceHandleData[voiceIdx];
-    if (voice->IsStream) {
-        StreamData *stream = &Streams[voice->Handle];
-        return stream->Status != STREAM_FREE && stream->Status != STREAM_WAITING &&
-               stream->Status != STREAM_STOPPED && stream->FinishedInitialise;
-    }
+    if (voice->IsStream)
+        return StreamIsActive(&Streams[voice->Handle]);
     return psiIsSamplePlaying(voice->Handle);
 }
 
@@ -1014,4 +1015,223 @@ void SFXUpdate(void) {
         SFXActiveData[SFXActiveCount].HashCode = Sfx->HashCode;
         SFXActiveCount++;
     }
+}
+
+// ---- the banks
+
+// The free list of all the SFXItems, in order. Not named on PS2; the name is ours.
+// AUTOINJECT
+void SFXInitialiseItems(void) {
+    BaseSFXActive = NULL;
+    SFXFreeList = &SFXItems[0];
+    for (int i = 0; i < SFX_NUM_ITEMS; i++) {
+        SFXItems[i].Next = i == SFX_NUM_ITEMS - 1 ? NULL : &SFXItems[i + 1];
+        SFXItems[i].Last = i > 0 ? &SFXItems[i - 1] : NULL;
+    }
+}
+
+// The SBInfoList slot of a bank, or -1 (inline in the original)
+static int FindSoundBankSlot(int index) {
+    for (int slot = 0; slot < SFX_NUM_BANKS; slot++) {
+        if (SBInfoList[slot] == index)
+            return slot;
+    }
+    return -1;
+}
+
+// Loads a bank, by its number in SBINFO.SBI, from the language's SB_<slot / 8> folder
+// AUTOINJECT
+void LoadSoundBank(int index) {
+    int slot = FindSoundBankSlot(index);
+    if (slot == -1)
+        return;
+    SoundBankHeader *bank = &SoundBankData[slot];
+    if (bank->Loaded)
+        return;
+
+    char sfxFilename[200], shfFilename[200], sbfFilename[200], shgFilename[200];
+    sprintf(sfxFilename, "%s%s/SB_%d/SB_%d.SFX", SFXFilePath, SFXLanguageName, slot / 8, slot);
+    sprintf(shfFilename, "%s%s/SB_%d/SB_%d.SHF", SFXFilePath, SFXLanguageName, slot / 8, slot);
+    sprintf(sbfFilename, "%s%s/SB_%d/SB_%d.SBF", SFXFilePath, SFXLanguageName, slot / 8, slot);
+    sprintf(shgFilename, "%s%s/SB_%d/SB_%d.SHG", SFXFilePath, SFXLanguageName, slot / 8, slot);
+
+    int *sfxFile = (int *)psiSFXLoadFile(sfxFilename);
+    bank->SFXBuffer = sfxFile;
+    if (sfxFile == NULL)
+        return;
+    bank->SFXHeaderData = (SFXHeader *)(sfxFile + 1);
+    bank->SFXCount = sfxFile[0];
+
+    int *shfFile = (int *)psiSFXLoadFile(shfFilename);
+    bank->SampleHeaderBuffer = shfFile;
+    if (shfFile == NULL) {
+        psiSFXFreeFileMem(bank->SFXBuffer);
+        return;
+    }
+    bank->SampleHeader = (SampleHeaderData *)(shfFile + 1);
+    bank->SampleCount = shfFile[0];
+
+    if (bank->SampleCount != 0) {
+        bank->psi_SampleHeaderBuffer = NULL;
+        char *samples = (char *)psiSFXLoadFile(sbfFilename);
+        if (samples == NULL) {
+            psiSFXFreeFileMem(bank->SFXBuffer);
+            psiSFXFreeFileMem(bank->SampleHeaderBuffer);
+            if (bank->psi_SampleHeaderBuffer != NULL)
+                psiSFXFreeFileMem(bank->psi_SampleHeaderBuffer);
+            return;
+        }
+        // The samples one after another in the .SBF file
+        SampleHeaderData *sample = bank->SampleHeader;
+        for (int i = 0; i < bank->SampleCount; i++, sample++) {
+            sample->Address = samples;
+            sample->psi_SampleHeader = (char *)((uintptr_t)sample->psi_SampleHeader + (uintptr_t)bank->psi_SampleHeaderBuffer);
+            samples += sample->Size;
+        }
+    }
+    bank->Loaded = 1;
+    bank->HashCode = index;
+}
+
+// Stops the bank's sounds and frees it. Not named on PS2; the name is ours.
+// AUTOINJECT
+void SFXUnloadSoundBank(int index) {
+    int slot = FindSoundBankSlot(index);
+    if (slot == -1)
+        return;
+    SoundBankHeader *bank = &SoundBankData[slot];
+    if (!bank->Loaded)
+        return;
+    SFXItem *next;
+    for (SFXItem *Sfx = BaseSFXActive; Sfx != NULL; Sfx = next) {
+        next = Sfx->Next;
+        if (Sfx->SoundBankSlot == slot)
+            KillSFX(Sfx);
+    }
+    psiSFXFreeFileMem(bank->SFXBuffer);
+    psiSFXFreeFileMem(bank->SampleHeaderBuffer);
+    if (bank->psi_SampleHeaderBuffer != NULL)
+        psiSFXFreeFileMem(bank->psi_SampleHeaderBuffer);
+    bank->Loaded = 0;
+}
+
+// Stops every sound and the stream, frees the banks, and puts the mixer back as it starts
+// AUTOINJECT
+void SFXReset(void) {
+    SFXItem *next;
+    for (SFXItem *Sfx = BaseSFXActive; Sfx != NULL; Sfx = next) {
+        next = Sfx->Next;
+        KillSFX(Sfx);
+    }
+    for (int slot = 0; slot < SFX_NUM_BANKS; slot++) {
+        if (SoundBankData[slot].Loaded)
+            SFXUnloadSoundBank(SoundBankData[slot].HashCode);
+    }
+    StreamData *stream = &Streams[0];
+    if (StreamIsActive(stream))
+        SFXStopStream(stream);
+    stream->Status = STREAM_FREE;
+    SFXReleaseStreamSystem();
+    SFXInitialiseAudioStreamSystem();
+
+    FadeVolume = 10000;
+    FadeMusicVolume = 10000;
+    DuckerDuration = 1;
+    DuckerTargetVolume = 100;
+    DuckerCurrentVolume = 100;
+    DuckerStartTime = 0;
+    SFXStartLoad = 0;
+    SFXFileAccessSuspendedToggle = 0;
+    FadeStatus = 0;
+    FadeRate = 120;
+    SFXPaused = 0;
+    for (int i = 0; i < SFX_NUM_VOICE_HANDLES; i++)
+        ES_VoiceHandleData[i].Status = 0;
+    ES_MuteMusic = 1;
+    ES_MuteSFX = 1;
+    SFXNewReverb = 0;
+    SFXReverb = 0;
+    psiSetReverb(0);
+    SFXNewIndoorsVolume = 100;
+    SFXIndoorsVolume = 100;
+    SFXUnderWater = 0;
+    for (int i = 0; i < SFX_NUM_ITEMS; i++)
+        SFXRequestedActiveData[i].Life = 0;
+}
+
+// Once: the language, the paths, and the list of banks from SBINFO.SBI
+// AUTOINJECT
+void SFXInitialise(char *path) {
+    if (SFXInitialised)
+        return;
+    UpdateLanguageName();
+    if (path != NULL)
+        SFXSetFilePath(path);
+    psiSFXInit();
+    SFXInitialised = 1;
+
+    char filename[200];
+    sprintf(filename, "%sSBINFO.SBI", SFXFilePath);
+    int *info = (int *)psiSFXLoadFile(filename);
+    if (info == NULL)
+        return;
+    for (int slot = 0; slot < SFX_NUM_BANKS; slot++) {
+        SoundBankData[slot].Loaded = 0;
+        SBInfoList[slot] = info[slot];
+    }
+    psiSFXFreeFileMem(info);
+    SFXInitialiseItems();
+    SFXReset();
+}
+
+// The level's bank, and the music's start. The front end's two banks take turns.
+// AUTOINJECT
+void SFXLoadCorrectBank(void) {
+    SFXReset();
+    SFXSetNumberOfListeners(MPSettings.isMultiplayer ? MPSettings.numPlayers : 1);
+    switch (GameState.CurrentLevelHashcode) {
+    case HT_Level_HendersonA: LoadSoundBank(1); break;
+    case HT_Level_HendersonB: LoadSoundBank(2); break;
+    case HT_Level_HendersonC: LoadSoundBank(3); break;
+    case HT_Level_HendersonD: LoadSoundBank(8); break;
+    case HT_Level_CastleExterior: LoadSoundBank(5); break;
+    case HT_Level_CastleCourtyard: LoadSoundBank(4); break;
+    case HT_Level_CastleIndoors1: LoadSoundBank(6); break;
+    case HT_Level_CastleIndoors2: LoadSoundBank(7); break;
+    case HT_Level_TowerA: LoadSoundBank(0x17); break;
+    case HT_Level_TowerB: LoadSoundBank(0x18); break;
+    case HT_Level_TowerC: LoadSoundBank(0x19); break;
+    case HT_Level_PowerStationA1: LoadSoundBank(0x1a); break;
+    case HT_Level_PowerStationA2: LoadSoundBank(0x37); break;
+    case HT_Level_Tower2A: LoadSoundBank(0x1e); break;
+    case HT_Level_Tower2B: LoadSoundBank(0x1f); break;
+    case HT_Level_Tower2C: LoadSoundBank(0x20); break;
+    case HT_Level_Tower2Elevator: LoadSoundBank(0x21); break;
+    case HT_Level_EvilBase: LoadSoundBank(0x27); break;
+    case HT_Level_EvilSilo: LoadSoundBank(0x28); break;
+    case HT_Level_EvilBaseC: LoadSoundBank(0x2b); break;
+    case (HASHCODE)0x700001a:
+    case HT_Level_SpaceStationD: LoadSoundBank(0x25); break;
+    case HT_Level_SpaceStation:
+    case HT_Level_Facility:
+    case HT_Level_Atlantis:
+    case HT_Level_SkyRail:
+    case HT_Level_SubPen:
+    case HT_Level_StealthShip:
+    case HT_Level_FortKnox:
+    case HT_Level_MissileSilo:
+    case HT_Level_SnowBlind:
+    case HT_Level_Ravine:
+    case (HASHCODE)0x700004c: LoadSoundBank(0x16); break;
+    case HT_Level_RefRoom: LoadSoundBank(0xb); break;
+    case HT_Level_Menu_Pre:
+        LoadSoundBank(ls.relatedToMainMenuSound ? 0x38 : 0xc);
+        ls.relatedToMainMenuSound = 1 - ls.relatedToMainMenuSound;
+        break;
+    default:
+        break;
+    }
+    SoundInit = 1;
+    MusicEventList[MUSICEV_LEVEL] = GameState.CurrentLevelHashcode;
+    MusicEventList[MUSICEV_NEW_LEVEL] = 1;
 }

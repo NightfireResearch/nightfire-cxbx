@@ -3,6 +3,7 @@
 #include <stdio.h>
 
 #include "SFX.h"
+#include "music.h"
 #include "../util/DList.h"
 #include "../math/math.h"
 #include "../engine/Text.h"
@@ -89,12 +90,7 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 }
 
 // The originals, called by address
-#define SFXInitialise ((void (__cdecl *)(char *bankName))0x000c9d60)
-#define SFXReset ((void (__stdcall *)(void))0x000c9c30)
 
-// Set by Sound_Ready once the level's bank is loaded
-#define SoundInit U32_AT(0x0029a280)
-#define MusicEventList (*(uint32_t(*)[0x40])0x0029a180)
 
 // Written by Sound_UpdateListeners, once per frame
 #define GlobalListenerPos (*(_VECTOR*)0x0029a140)
