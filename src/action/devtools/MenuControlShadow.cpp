@@ -18,6 +18,7 @@
 #include "../game/mp/multiplayer.h"
 #include "../ui/Button.h"
 #include "../ui/Checkbox.h"
+#include "../ui/Combo.h"
 #include "../ui/Component.h"
 #include "../ui/Label.h"
 #include "../ui/LinkedList.h"
@@ -30,6 +31,7 @@
 #include "../ui/Process.h"
 #include "../ui/Radio.h"
 #include "../ui/Scroll.h"
+#include "../ui/Spin.h"
 #include "../ui/Window.h"
 
 #include <math.h>
@@ -68,6 +70,8 @@ union Obj {
     M_LIST list;
     M_RADIO radio;
     M_MEMO memo;
+    M_COMBO combo;
+    M_SPIN spin;
     M_WINDOW window;
 };
 
@@ -1070,6 +1074,25 @@ void MakeRadio(M_RADIO *r, M_CONTROL *parent, int index) {
     r->selected = n && R(5) ? (LIST_ROW *)LinkedList_GetIndex(&r->items, R(n)) : NULL;
 }
 
+void MakeCombo(M_COMBO *c, M_CONTROL *parent, int index) {
+    MakeBase(&c->control, ControlType_Combo, parent, index);
+    MakeList(&c->list, &c->control, index);
+    MakeLabel(&c->label, &c->control, index);
+    c->labelHeight = Num(6.0f, 40.0f);
+    c->visibleRows = R(3) ? (int)R(10) : (int)R(0);
+    // Open, pressed and focused, in any mix
+    if (R(2))
+        c->control.drawState = (R(2) ? COMBO_OPEN : 0) | (R(2) ? 0x40 : 0) | (R(2) ? 0x20 : 0x10);
+}
+
+void MakeSpin(M_SPIN *s, M_CONTROL *parent, int index) {
+    MakeBase(&s->control, ControlType_Spin, parent, index);
+    MakeScroll(&s->scroll, &s->control, index);
+    MakeLabel(&s->label, &s->control, index);
+    Fill(s->text, sizeof(s->text));
+    s->labelHeight = Num(6.0f, 40.0f);
+}
+
 void MakeMemo(M_MEMO *m, M_CONTROL *parent, int index) {
     MakeBase(&m->control, ControlType_Memo, parent, index);
     MakeScroll(&m->scroll, &m->control, index);
@@ -1814,6 +1837,95 @@ uint32_t RunRadioSetIndex(bool original) {
     return W((void *)(uintptr_t)RegCall(original, 0x00096350, (const void *)&Radio_SetIndex, r, 1, args));
 }
 
+// ---- combos and spins
+
+M_COMBO *AnyCombo(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeCombo(&o->combo, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->combo;
+}
+
+M_SPIN *AnySpin(void) {
+    Obj *o = AnyObject();
+    Fill(o, sizeof(*o));
+    MakeSpin(&o->spin, &world.pages[R(PAGES)].control, (int)(o - world.objects));
+    return &o->spin;
+}
+
+// The page's focus on the control now and then, and the cursor over its label
+M_PAGE *FocusPage(M_MANAGER **mgr, M_CONTROL *c, short labelHeight) {
+    M_PAGE *page = AnyPage(mgr);
+    if (R(3))
+        page->focused->hashcode = c->hashcode;
+    if (R(2)) {
+        sprite *cursor = (*mgr)->cursorSprite;
+        cursor->positionX = (short)(c->x + (R(4) ? (int)R(c->width > 0 ? c->width + 1 : 1) : (int)R(5) - 2 + (R(2) ? c->width : 0)));
+        cursor->positionY = (short)(c->y + (R(4) ? (int)R(labelHeight > 0 ? labelHeight + 8 : 8) : (int)R(0x10000)));
+    }
+    return page;
+}
+
+uint32_t RunComboInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    o->combo.list.rowHeight = Num(6.0f, 40.0f);
+    CDECL_VOID(0x000716c0, Combo_Init, void (__cdecl *)(M_COMBO *, NEW_CONTROL *, M_CONTROL *), &o->combo,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunComboSend(bool original) {
+    M_COMBO *combo = AnyCombo();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    return CDECL_RUN(0x00071890, Combo_SendMessage, int (__cdecl *)(M_COMBO *, uint, int, int), combo, message, a1, a2);
+}
+
+uint32_t RunComboUpdate(bool original) {
+    M_COMBO *combo = AnyCombo();
+    M_MANAGER *mgr;
+    M_PAGE *page = FocusPage(&mgr, &combo->control, (short)combo->labelHeight);
+    CDECL_VOID(0x000719b0, Combo_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_COMBO *), mgr, page, combo);
+    return 0;
+}
+
+uint32_t RunSpinInit(bool original) {
+    Obj *o = AnyObject();
+    M_CONTROL *parent = &world.pages[R(PAGES)].control;
+    CDECL_VOID(0x00098550, Spin_Init, void (__cdecl *)(M_SPIN *, NEW_CONTROL *, M_CONTROL *), &o->spin,
+               &world.create, parent);
+    return 0;
+}
+
+uint32_t RunSpinSend(bool original) {
+    M_SPIN *spin = AnySpin();
+    uint message = Message();
+    int a1 = Arg(), a2 = Arg();
+    if (message == MessageType_SetScript && R(2))
+        a1 = (int)R(9) - 1;
+    if (message == MessageType_SetState && R(2))
+        a1 = (int)R(4);
+    return CDECL_RUN(0x000986f0, Spin_SendMessage, int (__cdecl *)(M_SPIN *, uint, int, int), spin, message, a1, a2);
+}
+
+uint32_t RunSpinUpdate(bool original) {
+    M_SPIN *spin = AnySpin();
+    M_MANAGER *mgr;
+    M_PAGE *page = FocusPage(&mgr, &spin->control, 20);
+    CDECL_VOID(0x000989c0, Spin_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, M_SPIN *), mgr, page, spin);
+    return 0;
+}
+
+const Case kCombos[] = {
+    {"Combo_Init", RunComboInit, {0x000716c0}},
+    {"Combo_SendMessage", RunComboSend, {0x00071890}},
+    {"Combo_Update", RunComboUpdate, {0x000719b0}},
+    {"Spin_Init", RunSpinInit, {0x00098550}},
+    {"Spin_SendMessage", RunSpinSend, {0x000986f0}},
+    {"Spin_Update", RunSpinUpdate, {0x000989c0}},
+};
+
 const Case kRadios[] = {
     {"Radio_Init", RunRadioInit, {0x000960e0}},
     {"Radio_SendMessage", RunRadioSend, {0x00096380}},
@@ -2342,6 +2454,7 @@ void MenuControlShadow_Run(void) {
     Group("lists", kLists2, COUNT(kLists2), 6000);
     Group("radios", kRadios, COUNT(kRadios), 8000);
     Group("memos", kMemos, COUNT(kMemos), 8000);
+    Group("combos and spins", kCombos, COUNT(kCombos), 8000);
     Group("pages, windows and processes", kPages, COUNT(kPages), 5000);
     Group("managers", kManagers, COUNT(kManagers), 4000);
     ShadowHook_RemoveAll();

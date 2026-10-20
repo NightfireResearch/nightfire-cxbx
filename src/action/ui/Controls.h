@@ -158,19 +158,25 @@ static_assert(sizeof(M_RADIO) == 0x308, "M_RADIO is 0x308 bytes");
 typedef struct M_COMBO {
     M_CONTROL control;          // type ControlType_Combo
     M_SCRIPT *defaultScripts[6]; // 0x7c
-    M_LIST list;                // 0x94
-    M_LABEL label;              // 0x600
-    char unknown714[8];
+    M_LIST list;                // 0x94 open under the label while drawState has COMBO_OPEN
+    M_LABEL label;              // 0x600 given the text the list answers GetSelectedItemText with: none
+    float labelHeight;          // 0x714 a line of the plain format and 2
+    int visibleRows;            // 0x718 MessageType_GetVisibleRows
 } M_COMBO;
 static_assert(sizeof(M_COMBO) == 0x71c, "M_COMBO is 0x71c bytes");
+
+#define COMBO_OPEN 0x80000000 // drawState: the list is open
+
 
 // A value picked with left and right and shown as a number (Spin_*)
 typedef struct M_SPIN {
     M_CONTROL control;          // type ControlType_Spin
     M_SCRIPT *defaultScripts[6]; // 0x7c
-    M_SCROLL scroll;            // 0x94
-    M_LABEL label;              // 0x1dc
-    char unknown2f0[0x28];
+    M_SCROLL scroll;            // 0x94 a thin one at its right; the value shown is max + min - its value
+    M_LABEL label;              // 0x1dc the value
+    char text[0x20];            // 0x2f0 the label's text
+    float labelHeight;          // 0x310 a line of the plain format and 2
+    char pad_314[4];
 } M_SPIN;
 static_assert(sizeof(M_SPIN) == 0x318, "M_SPIN is 0x318 bytes");
 
