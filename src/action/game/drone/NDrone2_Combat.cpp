@@ -34,9 +34,8 @@
 #define DroneFunc_InRangeOfTarget ((bool (__cdecl *)(DCVars_tag *dcv, float range))0x00035f50)
 // Our names. One of first..last, or of the run of as many after it for a drone with an odd id
 #define DroneFunc_ChooseSFXByID ((uint (__cdecl *)(Drone_tag *drone, uint first, uint last))0x00036290)
-// Our names: the weapon in the object's hand (0 without an anim state), and setting it
+// Our name: the weapon in the object's hand (0 without an anim state)
 #define DroneFunc_WeaponInHand ((char (__cdecl *)(DCVars_tag *dcv))0x00035f70)
-#define DroneFunc_SetWeaponInHand ((void (__cdecl *)(DCVars_tag *dcv, char weapon))0x0004b400)
 // Whether a point at offset from the drone's feet, in its object's frame, can be walked to (scaled by a bot's
 // speed unless unscaled is set)
 #define NDrone2_MoveTestRelative ((bool (__cdecl *)(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, int param5))0x000453e0)
@@ -141,6 +140,14 @@ static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
 // The frame a second from now (at 60 a second), worked out on the x87
 static uint SecondFromNow(void) {
     return Ftol((double)FRAME_RATE_DIV * 60.0f + (double)GameState.NumFramesUnpaused);
+}
+
+// The weapon in the drone's object's hand, without an anim state none. Not named on PS2; the name is ours.
+// AUTOINJECT
+void DroneFunc_SetWeaponInHand(DCVars_tag *dcv, char weapon) {
+    if (dcv->gameObj == NULL || dcv->gameObj->animState == NULL)
+        return;
+    dcv->gameObj->animState->currentWeaponId = weapon;
 }
 
 // A captain with weapon 0x19 in hand changes to 0x18

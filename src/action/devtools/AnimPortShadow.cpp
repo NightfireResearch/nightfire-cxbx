@@ -20,6 +20,10 @@
 #include "../engine/celglist.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/Player.h"
+#include "../game/drone/NDrone2_Combat.h"
+#include "../game/view.h"
+#include "../ui/HUD.h"
+#include "../engine/Text.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -1926,7 +1930,44 @@ uint32_t RunDebugCreate(bool original) {
     return 0;
 }
 
+// The views an object is drawn in, its rigid parts' too
+uint32_t RunSetDrawInViews(bool original) {
+    static obj_tag *parts[3];
+    for (int i = 0; i < 3; i++)
+        parts[i] = (obj_tag *)(ShadowCreatePool + 0x100 * i);
+    obj_tag *obj = Arg(10) ? Obj() : NULL;
+    world.obj.transformFlags = (ushort)Arg(0x10000);
+    world.obj.animState = Arg(5) ? &world.anim : NULL;
+    world.skin.numDiscrete = (uchar)Arg(4);
+    Ao()->skin = &world.skin;
+    Ao()->discreteObj = parts;
+    short views = Arg(4) ? (short)Arg(0x20) : (short)Arg(0x10000);
+    CDECL_RUN(0x000db320, View_SetDrawInViews, void (__cdecl *)(obj_tag *, short), obj, views);
+    return 0;
+}
+uint32_t RunSetWeaponInHand(bool original) {
+    DCVars_tag dcv = {};
+    dcv.gameObj = Arg(8) ? Obj() : NULL;
+    world.obj.animState = Arg(5) ? &world.anim : NULL;
+    CDECL_RUN(0x0004b400, DroneFunc_SetWeaponInHand, void (__cdecl *)(DCVars_tag *, char), &dcv, (char)Arg(0x100));
+    return 0;
+}
+// The message panes' and the subtitles' text formats, before main
+uint32_t RunInitFormats(bool original) {
+    static const struct { unsigned at; void (*ours)(void); } inits[] = {
+        {0x000f5480, HUD_InitMissionStatusFormats}, {0x000f5490, HUD_InitObjectiveStatusFormats},
+        {0x000f54c0, HUD_InitInfoStatusFormats}, {0x000f54f0, HUD_InitPickupStatusFormats},
+        {0x000f5520, Text_InitSubtitlesFormat},
+    };
+    int i = Arg(COUNT(inits));
+    CDECL_RUN(inits[i].at, inits[i].ours, void (__cdecl *)(void));
+    return 0;
+}
+
 const Case kDebug[] = {
+    C("View_SetDrawInViews", RunSetDrawInViews),
+    C("DroneFunc_SetWeaponInHand", RunSetWeaponInHand),
+    C("the text formats' initialisers", RunInitFormats),
     C("AnimSetDelete", RunSetDelete),
     C("AnimScriptPeekSeq", RunPeekSeq),
     C("Discrete_Delete", RunDiscreteDelete),
@@ -2008,7 +2049,22 @@ void AnimPortShadow_Run(void) {
     ShadowHook_Install(0x000190f0, (const void *)&FakeInitialPose);
     ShadowHook_Install((unsigned)(uintptr_t)&_AnimObjectInitialPose, (const void *)&FakeInitialPoseCore);
     ShadowFakes_AddRegions(regions);
+    // The sprites the formats' initialisers fill, garbled for the test and put back
+    static const struct { uint32_t at; size_t size; } kSprites[] = {
+        {0x00181408, 0x2c * 3}, {0x00181490, 0x2c * 6}, {0x00181698, 0x2c * 5}, {0x001815b8, 0x2c * 5},
+        {0x0018cd30, 0x2c},
+    };
+    std::vector<std::vector<uint8_t>> sprites;
+    for (const auto &k : kSprites) {
+        uint8_t *at = (uint8_t *)(uintptr_t)k.at;
+        sprites.emplace_back(at, at + k.size);
+        for (size_t b = 0; b < k.size; b++)
+            at[b] = (uint8_t)ShadowRand(0x100);
+        regions.Add(at, k.size);
+    }
     Test("the set's deletion, the peek, the parts and the debug displays", kDebug, COUNT(kDebug), 1500);
+    for (size_t i = 0; i < sprites.size(); i++)
+        memcpy((void *)(uintptr_t)kSprites[i].at, sprites[i].data(), sprites[i].size());
     fakeSetDelete = true;
     ShadowHook_RemoveAll();
 

@@ -66,6 +66,10 @@ static_assert(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c byte
 void HUD_InitObjectiveStatusPaneWidth(void);
 void HUD_InitInfoStatusPaneWidth(void);
 void HUD_InitPickupStatusPaneWidth(void);
+void HUD_InitMissionStatusFormats(void);
+void HUD_InitObjectiveStatusFormats(void);
+void HUD_InitInfoStatusFormats(void);
+void HUD_InitPickupStatusFormats(void);
 
 typedef struct HUDPANE_tag {
     HUDPANECREATE_tag *base;

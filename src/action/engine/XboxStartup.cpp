@@ -2,6 +2,7 @@
 #include "../actionhelpers.h"
 #include "../game/weapon_stats.h"   // WeaponDataTableInit
 #include "../ui/HUD.h"              // the HUD panes' static initialisers
+#include "Text.h"                   // the subtitles'
 #include <windows.h>
 #include <stdio.h>
 #include <string.h>
@@ -41,17 +42,6 @@
 #define CrtInitStdio         ((void (__cdecl *)(void))0x000f0e37u)   // ___initstdio
 #define CrtInitAtExit        ((void (__cdecl *)(void))0x000f4f52u)
 
-// The game's own static initialisers (C++ constructors of globals) that are not ours yet
-// AUTOGEN
-undefined FUN_000f5480(void);
-// AUTOGEN
-void __stdcall FUN_000f5490(void);
-// AUTOGEN
-undefined FUN_000f54c0(void);
-// AUTOGEN
-undefined FUN_000f54f0(void);
-// AUTOGEN
-undefined FUN_000f5520(void);
 
 // The XBE's own heap manager - RtlCreateHeap in all but name, and the allocator every malloc in the game
 // eventually reaches. It is left in place and simply given memory to work with: its heap blocks are the ones
@@ -293,14 +283,14 @@ static void Xbox_cinit(void) {
     // The C++ constructors
     Copter_InitConeCos();
     Copter_InitConeSin();
-    FUN_000f5480();
-    FUN_000f5490();
+    HUD_InitMissionStatusFormats();
+    HUD_InitObjectiveStatusFormats();
     HUD_InitObjectiveStatusPaneWidth();
-    FUN_000f54c0();
+    HUD_InitInfoStatusFormats();
     HUD_InitInfoStatusPaneWidth();
-    FUN_000f54f0();
+    HUD_InitPickupStatusFormats();
     HUD_InitPickupStatusPaneWidth();
-    FUN_000f5520();
+    Text_InitSubtitlesFormat();
     WeaponDataTableInit();
 }
 
