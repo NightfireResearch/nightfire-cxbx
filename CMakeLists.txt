@@ -237,6 +237,8 @@ add_library(actioninject SHARED
   src/action/ui/Checkbox.cpp
   src/action/ui/Scroll.cpp
   src/action/ui/List.cpp
+  src/action/ui/Combo.cpp
+  src/action/ui/Spin.cpp
   src/action/ui/Radio.cpp
   src/action/ui/Memo.cpp
   src/action/ui/Page.cpp

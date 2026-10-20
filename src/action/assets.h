@@ -458,6 +458,9 @@ typedef enum {
     SUB_P_START_LEGAL_TEXT = 0x10000197,
     SUB_P_START_PROMPT_TEXT = 0x100000fa,       // "Press START"
     SUB_P_MAIN_FADE = 0x100000ed,               // the black the main menu fades from and to
+    SUB_P_MPJOIN_FADE = 0x10000121,             // the black the join page fades from (from P_MAIN) and to (on B)
+    SUB_P_MPRULES_DURATION = 0x10000008,        // MPSettings.MaxDuration
+    SUB_P_MPRULES_POINTS = 0x100000f6,          // MPSettings.MaxPoints
     SUB_P_MAIN_TEXT_225 = 0x10000225,           // given a line spacing
     SUB_P_MESSAGEBOX_BOX = 0x1000011e,          // the box (a button) of an option box
     SUB_P_MESSAGEBOX_TEXT = 0x1000011f,         // its memo
@@ -688,7 +691,13 @@ typedef enum {
     MP_X_WINS_THE_MATCH = 0x0100029f,          // "%s wins the match."
     MP_MATCH_DRAW = 0x010002a0,                // "Match was a draw"
     CFG_HEALTH_HANDICAP = 0x00000296,          // "Health Handicap"
+    CFG_CHOOSE_CODENAME = 0x0000037b,          // "Choose Codename"
     CFG_CHOOSE_TEAM = 0x0000037c,              // "Choose Team"
+    PRESS_A_TO_JOIN = 0x000001e8,              // "Press ~A to join"
+    PRESS_A_WHEN_READY = 0x000001e9,           // "Press ~A when ready"
+    MP_PROMPT_START_GAME = 0x000001c1,         // "Start Multiplayer"
+    MP_RULES_POINTS = 0x0000024c,              // "Points" (name ours)
+    MP_RULES_LIVES = 0x000003d3,               // "Lives" (name ours)
     CFG_CHOOSE_CHARACTER = 0x0000037d,         // "Choose Character"
     CFG_PLAYER_READY = 0x0000039c,             // "Player Ready"
     MP_NO_PLAYERS_ON_TEAM = 0x00000389,        // "There are no players or bots on the %s team. You must form two teams"

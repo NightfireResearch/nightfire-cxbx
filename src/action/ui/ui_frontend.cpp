@@ -456,6 +456,52 @@ bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 
 // ---- the movie pages ----
 
+// P_FMVTEST's list (docs/ui/movie-selector.md)
+#define SUB_P_FMVTEST_LIST ((HASHCODE)0x10000229)
+
+// The movies P_FMVTEST lists. The space station's arrival names a movie not on the disc (the one played is
+// FMV_INTRO_SPACE_STATION).
+static const struct { const char *name; HASHCODE movie; } fmvtest_movies[] = {
+    {"Castle - Halo Jump", (HASHCODE)FMV_INTRO_STOLEN_HARDWARE},
+    {"Castle - Gondola", (HASHCODE)FMV_OUTRO_HELICOPTER_CRASH},
+    {"Estate - Meet Mayhew", (HASHCODE)FMV_INTRO_MAYHEW_ENTRY},
+    {"Estate - Mayhew Death", (HASHCODE)FMV_OUTRO_MAYHEW_DEAD},
+    {"Tower Infil - Intro", (HASHCODE)FMV_INTRO_PHOENIX_TOWER},
+    {"Tower Infil - Outro", (HASHCODE)FMV_OUTRO_PARACHUTE_OFF_TOWER},
+    {"Nuclear Plant - Interview", (HASHCODE)FMV_INTRO_POWERPLANT},
+    {"Nuclear Plant - Entering Vent", (HASHCODE)FMV_OUTRO_THROUGH_VENT_KIKO},
+    {"Tower Escape - Dom Death", (HASHCODE)FMV_INTRO_PHOENIX_TOWER_2},
+    {"Tower Escape - Lobby Rescue", (HASHCODE)FMV_OUTRO_LOBBY_ESCAPE},
+    {"Evil Base - Descent All", (HASHCODE)FMV_INTRO_ISLAND_RADIOTOWER},
+    {"Evil Base - Kiko Death", (HASHCODE)FMV_OUTRO_KIKO_ROCKETLAUNCH},
+    {"Space Station - Arrival", (HASHCODE)0x07100017},
+    {"Arrival - Happy Ending", (HASHCODE)FMV_OUTRO_ESCAPE_POD_END_GAME},
+    {"Menu - BG Loop", (HASHCODE)FMV_BACKGROUND_MAINMENU},
+    {"Menu - FE Loop", (HASHCODE)FMV_BACKGROUND_MAINMENU2},
+    {"Menu - EA Logo", (HASHCODE)FMV_IDENT_EAGAMES_EN},
+    {"Menu - MGM Logo", FMV_IDENT_0738},
+    {"Menu - DAD Trailer", (HASHCODE)FMV_TRAILER_DIEANOTHERDAY},
+    {"Menu - Attract Movie", (HASHCODE)FMV_TRAILER},
+    {"Menu - Esthero", (HASHCODE)FMV_TITLES},
+    {"Menu - Making Of", (HASHCODE)FMV_BTS_DOCUMENTARY},
+};
+
+// A list of movies, the one selected played on P_FMVPLAYER. No page leads here (docs/ui/movie-selector.md).
+// AUTOINJECT
+bool P_FMVTEST_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+    if (message == MessageType_PageEnter) {
+        __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_ClearItems, 0, 0);
+        for (int i = 0; i < ARRAY_SIZE(fmvtest_movies); i++)
+            __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_AddItem, (int)fmvtest_movies[i].name,
+                        fmvtest_movies[i].movie);
+    }
+    else if (message == MessageType_Select) {
+        movie_hashcode = __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_GetSelectedItemValue, 0, 0);
+        __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_FMVPLAYER, 0);
+    }
+    return true;
+}
+
 // XBE_GLOBAL(0x0025df6c, 0x4)
 uint fmvplayer_frame;
 

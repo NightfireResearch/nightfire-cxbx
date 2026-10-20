@@ -5,6 +5,7 @@
 #include "TextBox.h"
 #include "Button.h"
 #include "Checkbox.h"
+#include "Combo.h"
 #include "Label.h"
 #include "List.h"
 #include "Memo.h"
@@ -12,6 +13,7 @@
 #include "Page.h"
 #include "Radio.h"
 #include "Scroll.h"
+#include "Spin.h"
 #include "Window.h"
 
 #include "../game/drone/BOT.h"
@@ -596,11 +598,6 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
 
 #pragma fp_contract(off)
 
-// The control types' own functions, called by address
-#define Combo_SendMessage ((int (__cdecl *)(M_CONTROL *combo, uint message, int arg1, int arg2))0x00071890)
-#define Spin_SendMessage ((int (__cdecl *)(M_CONTROL *spin, uint message, int arg1, int arg2))0x000986f0)
-#define Combo_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *combo))0x000719b0)
-#define Spin_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *spin))0x000989c0)
 // On the Xbox the empty function the linker shares with others (0x000e0ec0)
 #define Window_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window))0x000e0ec0)
 
@@ -1116,7 +1113,7 @@ int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
     switch (control->type) {
         case ControlType_Button: return Button_SendMessage((M_BUTTON *)control, message, arg1, arg2);
         case ControlType_Checkbox: return Checkbox_SendMessage((M_CHECKBOX *)control, message, arg1, arg2);
-        case ControlType_Combo: return Combo_SendMessage(control, message, arg1, arg2);
+        case ControlType_Combo: return Combo_SendMessage((M_COMBO *)control, message, arg1, arg2);
         case ControlType_Label: return Label_SendMessage((M_LABEL *)control, message, arg1, arg2);
         case ControlType_List: return List_SendMessage((M_LIST *)control, message, arg1, arg2);
         case ControlType_Manager: return Manager_SendMessage((M_MANAGER *)control, (MessageType)message, arg1, arg2);
@@ -1124,7 +1121,7 @@ int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
         case ControlType_Page: return Page_SendMessage((M_PAGE *)control, message, arg1, arg2);
         case ControlType_Radio: return Radio_SendMessage((M_RADIO *)control, message, arg1, arg2);
         case ControlType_Scroll: return Scroll_SendMessage((M_SCROLL *)control, message, arg1, arg2);
-        case ControlType_Spin: return Spin_SendMessage(control, message, arg1, arg2);
+        case ControlType_Spin: return Spin_SendMessage((M_SPIN *)control, message, arg1, arg2);
         case ControlType_Text: return Text_SendMessage((M_TEXTBOX *)control, message, arg1, arg2);
         case ControlType_Window: return Window_SendMessage((M_WINDOW *)control, message, arg1, arg2);
     }
@@ -1136,14 +1133,14 @@ void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control) {
     switch (control->type) {
         case ControlType_Button: Button_Update(mgr, page, (M_BUTTON *)control); break;
         case ControlType_Checkbox: Checkbox_Update(mgr, page, (M_CHECKBOX *)control); break;
-        case ControlType_Combo: Combo_Update(mgr, page, control); break;
+        case ControlType_Combo: Combo_Update(mgr, page, (M_COMBO *)control); break;
         case ControlType_Label: Label_Update(mgr, page, (M_LABEL *)control, false); break;
         case ControlType_List: List_Update(mgr, page, (M_LIST *)control); break;
         case ControlType_Memo: Memo_Update(mgr, page, (M_MEMO *)control); break;
         case ControlType_Page: Page_Update(mgr, (M_PAGE *)control, 1); break;
         case ControlType_Radio: Radio_Update(mgr, page, (M_RADIO *)control); break;
         case ControlType_Scroll: Scroll_Update(mgr, page, (M_SCROLL *)control); break;
-        case ControlType_Spin: Spin_Update(mgr, page, control); break;
+        case ControlType_Spin: Spin_Update(mgr, page, (M_SPIN *)control); break;
         case ControlType_Text: TextBox_Update(mgr, page, (M_TEXTBOX *)control); break;
         case ControlType_Window: Window_Update(mgr, page, control); break;
     }

@@ -145,6 +145,8 @@ undefined4 Menu_GetObjectUpgradeLevel(uint objId, byte player);
 void Menu_UnlockMPSkins(byte player);
 void Menu_UnlockMPSettings(void);
 ulonglong Menu_GetMPSkins(int managerNum, byte agent, char param_3);
+void Menu_UpdateMPControllers(uchar managerNum, uchar player, char joinPage);
+char* Menu_GetBotShortName(BotNum skin);
 
 // The codename load/save in progress, which Menu_UpdateMessageBox runs from a page's update.
 #pragma pack(push, 1)
@@ -156,7 +158,7 @@ typedef struct MENU_LS {
     uint slot;                  // 0x10 the save slot; 999 = a new codename
     M_CONTROL *control;         // 0x14 the wheel an enumeration fills
     char codename[32];          // 0x18
-    char pad_38[1];
+    uchar mpPlayer;             // 0x38 P_MPJOIN: the player (from 1) whose codename is loading
     uchar operation;            // 0x39 LS_OPERATION_*
     uchar done;                 // 0x3a the operation is over (or, for a page, its list is ready)
     uchar listStale;            // 0x3b the codenames list must be enumerated again
@@ -170,6 +172,7 @@ typedef struct MENU_LS {
 } MENU_LS;
 #pragma pack(pop)
 static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
+void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation);
 #define ls (*(MENU_LS *)0x0017d540)
 
 // The two default codenames, slots 0 and 1 of the codenames list (Menu_MapDefaultCodename applies one)
@@ -232,6 +235,7 @@ extern uint8_t cn_secret_mode; // P_CNNAME was entered from the codename menu (S
 #define LS_OPERATION_ENUM 2         // list the saved codenames into ls.control
 #define LS_OPERATION_DELETE 3
 #define LS_OPERATION_ENUM_FIRST 4   // only the first short enough
+#define LS_OPERATION_NONE 5         // P_MPJOIN, once a player's codename is loaded
 
 #define LS_SLOT_NEW 999             // ls.slot: a codename not saved yet
 

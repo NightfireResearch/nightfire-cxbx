@@ -5,12 +5,14 @@
 #include "MenuCommon.h"
 #include "Button.h"
 #include "Checkbox.h"
+#include "Combo.h"
 #include "Label.h"
 #include "List.h"
 #include "Memo.h"
 #include "Page.h"
 #include "Radio.h"
 #include "Scroll.h"
+#include "Spin.h"
 #include "TextBox.h"
 #include "Window.h"
 #include "Component.h"
@@ -18,20 +20,11 @@
 #include "../game.h"
 #include "../input.h"
 
-// The control types not reimplemented, called by address
-#define Combo_Init ((void (__cdecl *)(M_COMBO *combo, NEW_CONTROL *create, M_CONTROL *parent))0x000716c0)
-#define Spin_Init ((void (__cdecl *)(M_SPIN *spin, NEW_CONTROL *create, M_CONTROL *parent))0x00098550)
+// Called by address
 #define Menu_PlayMovie ((void (__cdecl *)(HASHCODE movie, uchar onPage, char loop, char unknown4, char unknown5, int unknown6))0x0007fe00)
 // Through the game's entry point (patched to ours) rather than straight to ours, as the original calls it: MenuProbe's
 // message log stands in front of it (devtools/MenuProbe.cpp)
 #define HandleMessage ((bool (__cdecl *)(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2))0x0008e320)
-
-// MessageType_GoPage's flags
-#define GOPAGE_NO_HISTORY   1   // the page left is not put on the history
-#define GOPAGE_OVERLAY      2   // the page left stays shown under the new one, which plays no movie
-#define GOPAGE_KEEP_HISTORY 4   // going to P_MAIN keeps the history
-#define GOPAGE_QUIET        8   // no PageLeave and PageEnter (a page come back to): PageResume
-#define GOPAGE_NO_RESUME    0x10
 
 // The history's entries: a page left and its focused control
 #pragma pack(push, 1)

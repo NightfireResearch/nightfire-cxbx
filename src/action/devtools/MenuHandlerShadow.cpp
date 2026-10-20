@@ -85,6 +85,13 @@ extern char timer_text[4][0x100];
 extern uint8_t timer_text_next;
 extern uint save_space_problem;
 extern char save_space_text[0x200];
+extern uint8_t mp_controller_missing[4];
+extern uint8_t mp_controller_missing_joined[4];
+extern char mp_controller_text[0x100];
+extern uint8_t saveflow_dashboard_offered;
+extern uint saveflow_hold_until;
+extern char saveflow_text_buffer[0x200];
+extern const char *saveflow_tip;
 
 // The package's functions, as ours
 bool P_LANGUAGE_Handler(uchar, M_CONTROL *, uint, uint, int, int);
@@ -180,6 +187,9 @@ const Pair kPairs[] = {
     {0x0025e398, records_bond_moves_text, 0x20}, {0x0025e3b8, records_upgrades_text, 0x20},
     {0x00225080, &level_bonuses, 0x34}, {0x0029ae38, timer_text, 0x400}, {0x0029b238, &timer_text_next, 1},
     {0x0025edbc, &save_space_problem, 4}, {0x0025efd0, save_space_text, 0x200},
+    {0x0022507c, mp_controller_missing, 4}, {0x00225078, mp_controller_missing_joined, 4},
+    {0x00224f78, mp_controller_text, 0x100}, {0x0025edc0, &saveflow_dashboard_offered, 1},
+    {0x0025edc4, &saveflow_hold_until, 4}, {0x0025edc8, saveflow_text_buffer, 0x200}, {0x0025efc8, &saveflow_tip, 4},
 };
 
 // A word as the logs show it: an offset into the world, a string's text, or the number
@@ -259,6 +269,9 @@ const struct {
     {0x0017e8cc, 0x1c},     // the player's damage modifiers
     {0x002251b8, 0x400},    // codename_buf
     {0x00245240, 0x40},     // mp_join_slots
+    {0x00245698, 0x10},     // mp_join_step
+    {0x0025eda0, 0x1c},     // XBox_DoSaveFlow's state
+    {0x002adf10, 0x4},      // psiInternalLoadingDataState
     {0x00262738, 0x230},    // MPGame
     {0x002245f8, 0x23c},    // mp_settings_backup
     {0x00224838, 0x560},    // mp_inputs_backup
@@ -558,7 +571,10 @@ ANSWER0(FakeDoneBetter, "donebetter", in.a[7] & 1)   // the same all through a r
 LOG3(FakeUpdateMessageBox, "messagebox")
 LOG3(FakeSelectCodename, "selectcodename")
 LOG1(FakePutCodenames, "putcodenames")
-LOG3(FakeMapDefault, "mapdefault")
+// The player and the slot are bytes
+void __cdecl FakeMapDefault(uint player, uint slot, uint parts) {
+    ShadowLog("mapdefault(%x,%x,%x)", player & 0xff, slot & 0xff, parts);
+}
 LOG0(FakeDashboard, "dashboard")
 LOG0(FakeSaveChoice, "savechoice")
 LOG2(FakeChangeStyle, "changestyle")
@@ -569,6 +585,12 @@ uint __cdecl FakeMPScore(uint participant) {
     return v;
 }
 LOG2(FakeRamLoad, "ramload")
+LOG1(FakeProcessDestroy, "processdestroy")
+LOG3(FakeGetMPSkins, "getmpskins")
+ANSWER0(FakeRandom, "random", R(0))
+ANSWER0(FakeLoadingState, "loadingstate", R(4) == 0 ? R(0x20) : R(14))
+LOG0(FakeLSFlushStates, "lsflush")
+LOG0(FakeFlushEnum, "flushenum")
 LOG3(FakePlayerEnable, "playerenable")
 LOG2(FakePlayerDisable, "playerdisable")
 LOG0(FakePushStates, "pushstates")
@@ -759,6 +781,12 @@ const Fake kFakes[] = {
     {0x000dfbd0, (const void *)&FakeBlocksFor},
     {0x000e9350, (const void *)&FakeLaunch},
     {0x0006ec10, (const void *)&FakeSaveStuff},
+    {0x00096090, (const void *)&FakeProcessDestroy},
+    {0x0007f3d0, (const void *)&FakeGetMPSkins},
+    {0x000d52c0, (const void *)&FakeRandom},
+    {0x000dfbb0, (const void *)&FakeLoadingState},
+    {0x0006eb20, (const void *)&FakeLSFlushStates},
+    {0x000755d0, (const void *)&FakeFlushEnum},
 };
 
 // The fakes but those of the functions a group tests
@@ -1297,6 +1325,98 @@ const Case kFrontEndHelpers[] = {
 };
 const unsigned kFrontEndHelperFakes[] = {0x0007fda0, 0x0007ffa0, 0x0008fcc0, 0x0008fd90};
 
+// ---- the movie list, the multiplayer join and setup pages and the rules
+
+#define mp_join_step (*(int(*)[4])0x00245698)
+#define mp_good_bot_taken U8_AT(0x002456b0)
+
+HANDLER_CASE(P_FMVTEST, 0x00085a50)
+
+// The join pages' state made small: players 0-3 (now and then a byte with more above it), steps 0-5, the codename
+// loading a player's, a codename's end, the mode now and then Top Agent
+void SmallJoinState(void) {
+    M_CONTROL *c = Object(in.control);
+    c->id = (int)(in.a[0] % 4) | (in.a[0] % 7 == 0 ? 0x300 : 0);
+    ls.mpPlayer = (uchar)(1 + in.a[1] % 4);
+    ls.codename[in.a[1] % 32] = 0;
+    for (int i = 0; i < 4; i++) {
+        mp_join_step[i] = (int)((in.a[2] >> (4 * i)) % 6);
+        mp_join_slots[i].joined = (char)((in.a[3] >> i) & 1);
+        mp_join_slots[i].ready = (char)((in.a[3] >> (i + 4)) & 1);
+        PlayerInputs[i].controllerIsActive = ((in.a[3] >> (i + 8)) & 3) != 0;
+    }
+    if (in.a[4] % 3 == 0)
+        MPSettings.GameMode = GM_TOPAGENT;
+    if (in.a[4] % 5 == 0)
+        mp_good_bot_taken = (uint8_t)(in.a[5] % 14);
+}
+
+uint32_t RunJoinHandler(bool original, unsigned at, Handler ours) {
+    SmallJoinState();
+    M_CONTROL *c = Object(in.control);
+    int arg2 = in.message == MessageType_SaveFlowDone && in.a[6] % 2 ? 8 : in.arg2;
+    if (original) {
+        XbeOriginalScope scope_(at);
+        return ORIGINAL(at, Handler)(in.managerNum, c, c->hashcode, in.message, in.arg1, arg2) & 0xff;
+    }
+    return ours(in.managerNum, c, c->hashcode, in.message, in.arg1, arg2) & 0xff;
+}
+#define JOIN_CASE(name, at)                                                                                               uint32_t Run_##name(bool original) { return RunJoinHandler(original, at, name##_Handler); }
+JOIN_CASE(P_MPJOIN, 0x00087880)
+JOIN_CASE(C_RBMPSTART, 0x00087dd0)
+JOIN_CASE(C_RBMPCNAME, 0x000880a0)
+JOIN_CASE(P_MPSETUP, 0x000882c0)
+JOIN_CASE(C_RBMPFINISH, 0x00088530)
+JOIN_CASE(P_MPRULES, 0x00089b20)
+
+uint32_t Run_UpdateControllers(bool original) {
+    SmallJoinState();
+    CALL_VOID(0x00075a60, Menu_UpdateMPControllers, void (__cdecl *)(uchar, uchar, char), in.managerNum,
+              (uchar)(in.a[7] % 4), (char)(in.a[7] % 3 == 0 ? 0 : 1 + in.a[6] % 2));
+    return 0;
+}
+uint32_t Run_BotShortName(bool original) {
+    BotNum skin = in.a[0] % 4 == 0 ? in.a[1] : in.a[1] % 32;
+    return CALL(0x0007eb90, Menu_GetBotShortName, char *(__cdecl *)(BotNum), skin) == (uint32_t)0x0015d3c0 ? 1 : 2;
+}
+
+// A frame of the save flow: a state, a frame count near the tips' turn, the box open or not, a text or none
+uint32_t Run_SaveFlow(bool original) {
+    uchar m = (uchar)(in.a[0] % 2);
+    M_MANAGER *mgr = &((M_MANAGER *)0x0025f1d0)[m];
+    mgr->index = m;
+    uint state = in.a[1] % 12;
+    U32_AT(0x0025edb0) = in.a[2] % 4 ? (in.a[2] >> 8) % 4 == 0 ? 299 + in.a[2] % 3 : in.a[2] % 700 : in.a[2];
+    U8_AT(0x0025eda8) = (uint8_t)(in.a[3] & 1);
+    U8_AT(0x0025edba) = (uint8_t)((in.a[3] >> 1) & 1);
+    U32_AT(0x0025edac) = in.a[4] % 3 ? 0 : (uint32_t)(uintptr_t)world.strings[1];
+    saveflow_tip = in.a[5] % 3 ? NULL : world.strings[2];
+    U32_AT(0x0025efc8) = (uint32_t)(uintptr_t)saveflow_tip;
+    saveflow_hold_until = in.a[6] % 3 ? 0 : in.a[6] % 900;
+    U32_AT(0x0025edc4) = saveflow_hold_until;
+    ls.operation = (uchar)(in.a[7] % 6);
+    CALL_VOID(0x0008f3f0, XBox_DoSaveFlow, void (__cdecl *)(M_MANAGER *, uint, MENU_LS *), mgr, state, &ls);
+    // The text pointing at the buffer, the game's or ours
+    if (U32_AT(0x0025edac) == (original ? 0x0025edc8u : (uint32_t)(uintptr_t)saveflow_text_buffer))
+        U32_AT(0x0025edac) = 1;
+    return 0;
+}
+
+// Messages: 0x4b Select, 0x4c Enter, 0x50 Update, 0x5c PlayerFocusGained, 0x60 PlayerFocusLost, 0x6a SaveFlowDone,
+// 0x6b QueryBack
+const Case kJoin[] = {
+    {"P_FMVTEST", Run_P_FMVTEST, {0}, {0x4c, 0x4b}},
+    {"Menu_GetBotShortName", Run_BotShortName, {0}, {0}},
+    {"Menu_UpdateMPControllers", Run_UpdateControllers, {0}, {0}},
+    {"P_MPJOIN", Run_P_MPJOIN, {0x00075a60}, {0x4c, 0x50, 0x6a, 0x6b}},
+    {"C_RBMPSTART", Run_C_RBMPSTART, {0}, {0x5c, 0x60, 0x4b, 0x6b}},
+    {"C_RBMPCNAME", Run_C_RBMPCNAME, {0}, {0x6b, 0x5c, 0x4b}},
+    {"P_MPSETUP", Run_P_MPSETUP, {0x00075a60}, {0x4c, 0x50}},
+    {"C_RBMPFINISH", Run_C_RBMPFINISH, {0}, {0x5c, 0x60, 0x6b}},
+    {"P_MPRULES", Run_P_MPRULES, {0}, {0x4c, 0x4b}},
+    {"XBox_DoSaveFlow", Run_SaveFlow, {0}, {0}},
+};
+
 const Case kDebug[] = {
     {"P_CHEATMEDAL", Run_P_CHEATMEDAL, {0}, {0x4b, 0x4c}},
     {"P_TWEAKS", Run_P_TWEAKS, {0}, {0x4c, 0x50, 0x4b, 0x5d}},
@@ -1318,7 +1438,8 @@ const unsigned kPackage[] = {
     0x00084130, 0x000843e0, 0x00084600, 0x00084be0, 0x00084e10, 0x00085240, 0x000852f0, 0x000854c0, 0x00085630,
     0x00085780, 0x000858a0, 0x00085930, 0x000859c0, 0x00085cd0, 0x00085d50, 0x000861a0, 0x00086ed0, 0x00087140,
     0x0008ce70, 0x0008d000, 0x0008d0f0, 0x0008d560, 0x0008d7a0, 0x0008dca0, 0x0008ddd0, 0x000b1740, 0x000b19a0,
-    0x000b9e30, 0x000b9e60, 0x000d25d0
+    0x000b9e30, 0x000b9e60, 0x000d25d0, 0x00075a60, 0x0007eb90, 0x00085a50, 0x00087880, 0x00087dd0, 0x000880a0,
+    0x000882c0, 0x00088530, 0x00089b20, 0x0008f3f0
 };
 
 void MenuHandlerShadow_Run(void) {
@@ -1359,6 +1480,11 @@ void MenuHandlerShadow_Run(void) {
     Test("the front end's helpers", kFrontEndHelpers, COUNT(kFrontEndHelpers), 3000);
     plainLabels = false;
     fakeSkipCount = 0;
+    ShadowHook_RemoveAll();
+    InstallFakes();
+    plainLabels = true;
+    Test("the movie list, the multiplayer join and the rules", kJoin, COUNT(kJoin), 4000);
+    plainLabels = false;
     ShadowHook_RemoveAll();
     for (int i = 0; i < COUNT(kPackage); i++)
         if (XbeOriginal_Target(kPackage[i]) != jumps[i])
