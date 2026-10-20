@@ -118,9 +118,7 @@ typedef struct AnimSizes {
 
 // The originals, called by address
 #define AnimSetDelete ((void (__cdecl *)(obj_tag *obj, sAnimSet_tag **slot))0x000177a0)
-#define Vec4_MulAdd ((void (__cdecl *)(float scale, float *vIn, float *vAcc))0x000d7300)
 // INVENTED NAME: where the line from a through b meets the sphere about centre, in out; 0 if it misses
-#define Vec_LineSphereIntersect ((int (__cdecl *)(float *a, float *b, float *centre, float radius, float *out))0x000d8590)
 
 // The sequences' distance tables, made once each (AnimDistanceTableGet)
 #define NUM_DISTANCE_TABLES 32
@@ -3292,7 +3290,7 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
         float muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
         double targetDist = Vec_Dist3D(pelvis, &targetOn);
         if (targetDist >= muzzleDist) {
-            if (Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, (float)targetDist, &hit.x)) {
+            if (Vec_LineSphereIntersect(&muzzleOn, &farOn, pelvis, (float)targetDist, &hit)) {
                 Vec_UnitVector(&toTarget, pelvis, &targetOn);
                 Vec_UnitVector(&toHit, pelvis, &hit);
                 float cosine = (float)DotZYX(&toTarget, &toHit);
@@ -3326,7 +3324,7 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
             muzzleDist = Vec_Dist3D(pelvis, &muzzleOn);
             targetDist = Vec_Dist3D(pelvis, &targetOn);
             if (targetDist >= muzzleDist
-                && Vec_LineSphereIntersect(&muzzleOn.x, &farOn.x, &pelvis->x, (float)targetDist, &hit.x)) {
+                && Vec_LineSphereIntersect(&muzzleOn, &farOn, pelvis, (float)targetDist, &hit)) {
                 Vec_UnitVector(&toTarget, pelvis, &targetOn);
                 Vec_UnitVector(&toHit, pelvis, &hit);
                 float cosine = (float)DotZYX(&toTarget, &toHit);

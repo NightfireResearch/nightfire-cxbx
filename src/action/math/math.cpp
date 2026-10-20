@@ -1131,11 +1131,102 @@ void Mat_Normalize(_MATRIX *mtx) {
   mtx->m[2] = right.z;
 }
 
-// AUTOGEN
-void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
+// AUTOINJECT
+void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn) {
+  *posOut = *Mat_Position(*mtxIn);
+}
 
-// AUTOGEN
-void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+// AUTOINJECT
+void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut) {
+  vOut->x = scale * vIn->x;
+  vOut->y = scale * vIn->y;
+  vOut->z = scale * vIn->z;
+}
+
+// Each component by its own scale
+// AUTOINJECT
+void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ) {
+  vecOut->x = scaleX * vecIn->x;
+  vecOut->y = scaleY * vecIn->y;
+  vecOut->z = scaleZ * vecIn->z;
+}
+
+// vecOut += scale * vecIn, over four floats
+// AUTOINJECT
+void Vec4_MulAdd(float scale, float *vecIn, float *vecOut) {
+  for (int i = 0; i < 4; i++)
+    vecOut[i] = (float)((double)scale * vecIn[i] + vecOut[i]);
+}
+
+// Where the line from a through b, beyond a, leaves the sphere: the far root along the unit direction. 1 always
+// (the root is never below zero; a miss gives NaNs). On the x87: the projection squared is the unrounded one by
+// its float, and the root stays unrounded until the test.
+// AUTOINJECT
+int Vec_LineSphereIntersect(_VECTOR *a, _VECTOR *b, _VECTOR *centre, float radius, _VECTOR *out) {
+  _VECTOR dir, unit;
+  dir.x = b->x - a->x;
+  dir.y = b->y - a->y;
+  dir.z = b->z - a->z;
+  Vec_Normalise(&unit, &dir);
+  double cx = (double)centre->x - a->x;
+  double cy = (double)centre->y - a->y;
+  double cz = (double)centre->z - a->z;
+  double along = (double)unit.z * cz + (double)unit.y * cy + cx * unit.x;
+  float alongf = (float)along;
+  double root = sqrt(along * alongf - (cz * cz + cy * cy + cx * cx) + (double)radius * radius);
+  float rootf = (float)root;
+  if (root < 0.0)
+    return 0;
+  double nearT = (double)alongf - rootf;
+  float farT = (float)((double)rootf + alongf);
+  double t = nearT > farT ? nearT : farT;
+  out->x = (float)(unit.x * t + a->x);
+  out->y = (float)(unit.y * t + a->y);
+  out->z = (float)(unit.z * t + a->z);
+  return 1;
+}
+
+// Where the segment from p to q meets the sphere: at the first root along it, which lies at or before q. A segment
+// that starts inside the sphere (the second root not behind p) gives the first root too, behind p. 0 for a miss.
+// Not named on PS2; the name is ours.
+// AUTOINJECT
+int Vec_SegmentSphereIntersect(_VECTOR *p, _VECTOR *q, _VECTOR *centre, float radius, _VECTOR *out) {
+  double wx = (double)p->x - centre->x;
+  double wy = (double)p->y - centre->y;
+  double wz = (double)p->z - centre->z;
+  _VECTOR d;
+  d.x = q->x - p->x;
+  d.y = q->y - p->y;
+  double dz = (double)q->z - p->z;
+  d.z = (float)dz;
+  float a = (float)(dz * d.z + (double)d.y * d.y + (double)d.x * d.x);
+  double b = (double)d.z * wz + (double)d.x * wx + (double)d.y * wy;
+  float bf = (float)b;
+  float disc = (float)(b * bf - (wx * wx + wz * wz + wy * wy - (double)radius * radius) * a);
+  if (disc < 0.0f)
+    return 0;
+  double t;
+  if (disc > 0.0f) {
+    float root = (float)sqrt((double)disc);
+    float invA = 1.0f / a;
+    double t1 = (Negate((double)bf) - root) * invA;
+    double t2 = ((double)root - bf) * invA;
+    if (t1 > 1.0)
+      return 0;
+    if (t1 >= 0.0)
+      t = t1;
+    else if (t2 >= 0.0)
+      t = t1;
+    else
+      return 0;
+  } else {
+    t = Negate((double)bf / a);
+  }
+  out->x = (float)(d.x * t + p->x);
+  out->y = (float)(d.y * t + p->y);
+  out->z = (float)(d.z * t + p->z);
+  return 1;
+}
 
 // Turns current towards target by at most maxTurn, a rate's share of the way, and onto target within 0.0001. On the
 // x87: the turn added to current stays unrounded into the step, and the result into the last test.

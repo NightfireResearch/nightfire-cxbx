@@ -18,7 +18,6 @@
 #include <string.h>
 
 // Originals called by address
-#define Vec_Mul_F3 ((void (__cdecl *)(_VECTOR *out, _VECTOR *in, float x, float y, float z))0x000d72d0)
 // DroneWeap_PlaceTertiary: a jump to DroneWeap_ThrowGrenade, which Ghidra names the same
 #define DroneWeap_PlaceTertiary ((void (__cdecl *)(DCVars_tag *dcv))0x00067bf0)
 

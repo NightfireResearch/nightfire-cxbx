@@ -44650,7 +44650,7 @@
         "namespace": "Global"
     },
     {
-        "name": "FUN_000d8690",
+        "name": "Vec_SegmentSphereIntersect",
         "address": "0x000d8690",
         "calling_convention": "__cdecl",
         "has_custom_variable_storage": false,
@@ -44662,7 +44662,7 @@
             "float",
             "_VECTOR *"
         ],
-        "prototype_string": "undefined4 __cdecl FUN_000d8690(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, float param_4, _VECTOR * param_5)",
+        "prototype_string": "int __cdecl Vec_SegmentSphereIntersect(_VECTOR * param_1, _VECTOR * param_2, _VECTOR * param_3, float param_4, _VECTOR * param_5)",
         "parameters": [
             "[_VECTOR * param_1@Stack[0x4]:4]",
             "[_VECTOR * param_2@Stack[0x8]:4]",

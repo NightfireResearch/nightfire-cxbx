@@ -94,8 +94,6 @@ typedef struct {
 // The originals: ours in Break.cpp are not patched in yet
 
 // AUTOGEN
-void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
-// AUTOGEN
 void NDrone2_CreateNinjaEyes(obj_tag *obj);
 // Generated for Player.cpp
 void Player_RamSave(BLData *blData);

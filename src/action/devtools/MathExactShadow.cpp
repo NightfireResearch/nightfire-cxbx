@@ -32,6 +32,12 @@ const unsigned kVision_InView = 0x000dbc80;
 const unsigned kSearchlight_Update = 0x0006dcb0;
 const unsigned kMatrixMultiplyVector = 0x000d7500;
 const unsigned kApplyMatrixLV = 0x000d7560;
+const unsigned kMat_GetPosition = 0x000d5090;
+const unsigned kVec_Scalef = 0x000d73e0;
+const unsigned kVec_Mul_F3 = 0x000d72d0;
+const unsigned kVec4_MulAdd = 0x000d7300;
+const unsigned kVec_LineSphereIntersect = 0x000d8590;
+const unsigned kVec_SegmentSphereIntersect = 0x000d8690;
 
 typedef void(__cdecl *RotationFn)(_VECTOR *, _MATRIX *);
 typedef void(__cdecl *RotTransFn)(_VECTOR *, _VECTOR *, _MATRIX *);
@@ -584,9 +590,128 @@ void CheckTransform(const char *name, unsigned address, void (*ours)(_MATRIX *, 
     Summary(suite);
 }
 
+// ---- the vector helpers
+
+typedef void(__cdecl *GetPositionFn)(_VECTOR *, _MATRIX *);
+typedef void(__cdecl *ScalefFn)(_VECTOR *, float, _VECTOR *);
+typedef void(__cdecl *MulF3Fn)(_VECTOR *, _VECTOR *, float, float, float);
+typedef void(__cdecl *MulAddFn)(float, float *, float *);
+typedef int(__cdecl *SphereFn)(_VECTOR *, _VECTOR *, _VECTOR *, float, _VECTOR *);
+
+void CheckVectorHelpers(void) {
+    Suite position = {"Mat_GetPosition", 0, 0, 0}, scalef = {"Vec_Scalef", 0, 0, 0},
+          mulF3 = {"Vec_Mul_F3", 0, 0, 0}, mulAdd = {"Vec4_MulAdd", 0, 0, 0};
+    for (int t = 0; t < kTrials; t++) {
+        _MATRIX m;
+        for (int i = 0; i < 15; i++)
+            m.m[i] = NextWord() % 4 ? Coordinate() : FromBits(NextWord());
+        _VECTOR a[2], b[2];
+        Fill(a, sizeof(a));
+        Fill(b, sizeof(b));
+        Mat_GetPosition(&a[0], &m);
+        {
+            XbeOriginalScope original(kMat_GetPosition);
+            ((GetPositionFn)kMat_GetPosition)(&b[0], &m);
+        }
+        Check(position, a, b, sizeof(a), 0, 4, "vector", m.m + 12, 3);
+
+        // Apart, or in place
+        bool inPlace = NextWord() % 3 == 0;
+        float inputs[6];
+        _VECTOR v = Vector(Coordinate);
+        float scale = NextWord() % 3 ? Uniform(10.0f) : Coordinate();
+        memcpy(inputs, &v, 12);
+        inputs[3] = scale;
+        Fill(a, sizeof(a));
+        Fill(b, sizeof(b));
+        a[0] = b[0] = v;
+        Vec_Scalef(&a[0], scale, inPlace ? &a[0] : &a[1]);
+        {
+            XbeOriginalScope original(kVec_Scalef);
+            ((ScalefFn)kVec_Scalef)(&b[0], scale, inPlace ? &b[0] : &b[1]);
+        }
+        Check(scalef, a, b, sizeof(a), sizeof(a), 4, "vector", inputs, 4);
+
+        inputs[4] = Coordinate();
+        inputs[5] = Coordinate();
+        Fill(a, sizeof(a));
+        Fill(b, sizeof(b));
+        a[0] = b[0] = v;
+        Vec_Mul_F3(inPlace ? &a[0] : &a[1], &a[0], scale, inputs[4], inputs[5]);
+        {
+            XbeOriginalScope original(kVec_Mul_F3);
+            ((MulF3Fn)kVec_Mul_F3)(inPlace ? &b[0] : &b[1], &b[0], scale, inputs[4], inputs[5]);
+        }
+        Check(mulF3, a, b, sizeof(a), sizeof(a), 4, "vector", inputs, 6);
+
+        // Four lanes added into, sometimes into the vector scaled
+        float x[8], y[8];
+        for (int i = 0; i < 8; i++)
+            x[i] = y[i] = Coordinate();
+        Vec4_MulAdd(scale, x, inPlace ? x : x + 4);
+        {
+            XbeOriginalScope original(kVec4_MulAdd);
+            ((MulAddFn)kVec4_MulAdd)(scale, y, inPlace ? y : y + 4);
+        }
+        Check(mulAdd, x, y, sizeof(x), sizeof(x), 4, "lanes", inputs, 4);
+    }
+    Summary(position);
+    Summary(scalef);
+    Summary(mulF3);
+    Summary(mulAdd);
+}
+
+// A line or segment and a sphere: mostly crossing it, inside it or near it
+void CheckSphere(const char *name, unsigned address, int (*ours)(_VECTOR *, _VECTOR *, _VECTOR *, float, _VECTOR *)) {
+    Suite suite = {name, 0, 0, 0};
+    for (int t = 0; t < kTrials; t++) {
+        float inputs[10];
+        _VECTOR p, q, centre;
+        float radius;
+        if (NextWord() % 5 == 0) {
+            p = Vector(Coordinate);
+            q = Vector(Coordinate);
+            centre = Vector(Coordinate);
+            radius = Coordinate();
+        } else {
+            centre = Vector([]() { return Uniform(50.0f); });
+            radius = NextWord() % 8 ? 0.1f + (float)(NextWord() % 2000) * 0.01f : Uniform(5.0f);
+            p = Vector([]() { return Uniform(40.0f); });
+            q = Vector([]() { return Uniform(40.0f); });
+            if (NextWord() % 2) {
+                p.x += centre.x;
+                p.y += centre.y;
+                p.z += centre.z;
+            }
+            if (NextWord() % 6 == 0)
+                q = p;
+        }
+        memcpy(inputs, &p, 12);
+        memcpy(inputs + 3, &q, 12);
+        memcpy(inputs + 6, &centre, 12);
+        inputs[9] = radius;
+        struct Result {
+            _VECTOR out;
+            int hit;
+        } a, b;
+        Fill(&a, sizeof(a));
+        Fill(&b, sizeof(b));
+        a.hit = ours(&p, &q, &centre, radius, &a.out);
+        {
+            XbeOriginalScope original(address);
+            b.hit = ((SphereFn)address)(&p, &q, &centre, radius, &b.out);
+        }
+        Check(suite, &a, &b, sizeof(a), sizeof(a.out), 4, "point", inputs, 10);
+    }
+    Summary(suite);
+}
+
 } // namespace
 
 void MathExactShadow_Run(void) {
+    CheckVectorHelpers();
+    CheckSphere("Vec_LineSphereIntersect", kVec_LineSphereIntersect, Vec_LineSphereIntersect);
+    CheckSphere("Vec_SegmentSphereIntersect", kVec_SegmentSphereIntersect, Vec_SegmentSphereIntersect);
     CheckRotation("RotMatrix", kRotMatrix, RotMatrix);
     CheckRotation("RotMatrixZYX", kRotMatrixZYX, RotMatrixZYX);
     CheckRotTransMatrix();

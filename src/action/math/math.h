@@ -145,5 +145,9 @@ void ApplyMatrixLVI(_MATRIX *mtx, _VECTOR *v);
 // Not reimplemented yet: AUTOGEN stubs that call the original (math.cpp)
 void Mat_GetPosition(_VECTOR *posOut, _MATRIX *mtxIn);
 void Vec_Scalef(_VECTOR *vIn, float scale, _VECTOR *vOut);
+void Vec_Mul_F3(_VECTOR *vecOut, _VECTOR *vecIn, float scaleX, float scaleY, float scaleZ);
+void Vec4_MulAdd(float scale, float *vecIn, float *vecOut);
+int Vec_LineSphereIntersect(_VECTOR *a, _VECTOR *b, _VECTOR *centre, float radius, _VECTOR *out);
+int Vec_SegmentSphereIntersect(_VECTOR *p, _VECTOR *q, _VECTOR *centre, float radius, _VECTOR *out);
 
 #endif // MATH_H
