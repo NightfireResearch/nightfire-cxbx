@@ -372,13 +372,15 @@ void Sensor_Update(obj_tag *sensorObj) {
             return;
         }
 
-        Extended alert = Extended(REC_FRAME_RATE) + Extended(sensor->alertTimer);   // tested unrounded
-        sensor->alertTimer = (float)alert;
+        {
+            Extended alert = Extended(REC_FRAME_RATE) + Extended(sensor->alertTimer);   // tested unrounded
+            sensor->alertTimer = (float)alert;
 
-        // Trigger alert switch after 2 seconds
-        if (alert >= Extended(2.0f) && sensor->alertSwitchChannel != 0) {
-            switch_channels[sensor->alertSwitchChannel] = 1;
-            switch_channels_time[sensor->alertSwitchChannel] = GameState.NumFramesUnpaused;
+            // Trigger alert switch after 2 seconds
+            if (alert >= Extended(2.0f) && sensor->alertSwitchChannel != 0) {
+                switch_channels[sensor->alertSwitchChannel] = 1;
+                switch_channels_time[sensor->alertSwitchChannel] = GameState.NumFramesUnpaused;
+            }
         }
         break;
 
