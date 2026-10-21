@@ -156,11 +156,13 @@ void VertexTranslator::ReadSource(const VshDecoded &d, const VshSource &s, Vec r
     for (int c = 0; c < 4; c++) result[c] = s.negate ? ShaderBuilder::Negate(reg[s.swz[c]]) : reg[s.swz[c]];
 }
 
+const float kRccMin = 5.42101e-20f, kRccMax = 1.884467e19f;
+
 // RCC: the reciprocal, clamped away from zero and infinity with its sign kept.
 ShaderValue VertexTranslator::Rcc(ShaderValue x) {
     ShaderValue r = b.Rcp(x);
-    ShaderValue positive = b.Min(b.Max(r, Lit(5.42101e-20f)), Lit(1.884467e19f));
-    ShaderValue negative = b.Min(b.Max(r, Lit(-1.884467e19f)), Lit(-5.42101e-20f));
+    ShaderValue positive = b.Min(b.Max(r, Lit(kRccMin)), Lit(kRccMax));
+    ShaderValue negative = b.Min(b.Max(r, Lit(-kRccMax)), Lit(-kRccMin));
     return b.Lerp(negative, positive, b.Sge(r, Lit(0.0f)));
 }
 
@@ -168,7 +170,11 @@ ShaderValue VertexTranslator::Rcc(ShaderValue x) {
 // from the fog coordinate, and linear textures' coordinates scaled to 0..1.
 void VertexTranslator::Epilogue() {
     Vec &pos = R[12];
-    ShaderValue w = pos[3];
+    // The game's shaders divide xy by RCC(w). Below RCC's clamp (w = 0: a vertex on the eye plane) that
+    // divided by 1 / kRccMax, so that is the w which takes xy back to clip space; w itself would collapse
+    // xy to 0.
+    ShaderValue sign = b.Mad(b.Sge(b.Rcp(pos[3]), Lit(0.0f)), Lit(2.0f), Lit(-1.0f));
+    ShaderValue w = b.Mul(b.Max(b.Abs(pos[3]), Lit(1.0f / kRccMax)), sign);
     // xy back to clip space; z from w (the W-buffer depth) in the a + b/w form the rasteriser interpolates
     // exactly, mapped so the depth-clip planes land on D3D9's 0..1 z range (reversed when the float depth
     // buffer is in use) - which both clips where the NV2A clipped and keeps the depth ordering.

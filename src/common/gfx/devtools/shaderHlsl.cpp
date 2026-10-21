@@ -195,9 +195,11 @@ bool ShaderHlsl_Vertex(const uint8_t *function, const uint32_t *normPackedInputs
     // Position: xy back to clip space; z from w (the W-buffer depth) in the a + b/w form the rasteriser
     // interpolates exactly, mapped so the depth-clip planes land on D3D9's 0..1 z range (reversed when the
     // float depth buffer is in use) - which both clips where the NV2A clipped and keeps the depth ordering.
-    h.printf("    float zFromW = depthClip.x * (oPos.w - depthClip.y);\n");
-    h.printf("    float zFromShader = lerp(oPos.z, 1.0 - oPos.z, depthClip.w) * oPos.w;\n");
-    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * oPos.w, lerp(zFromW, zFromShader, depthClip.z), oPos.w);\n");
+    // A w below RCC's clamp becomes the w RCC divided by, as in the translation's epilogue.
+    h.printf("    float w = max(abs(oPos.w), 1.0 / 1.884467e19) * ((1.0 / oPos.w) >= 0 ? 1.0 : -1.0);\n");
+    h.printf("    float zFromW = depthClip.x * (w - depthClip.y);\n");
+    h.printf("    float zFromShader = lerp(oPos.z, 1.0 - oPos.z, depthClip.w) * w;\n");
+    h.printf("    o.oPos = float4((oPos.xy + hostAdjust.xy) * w, lerp(zFromW, zFromShader, depthClip.z), w);\n");
     h.printf("    o.oD0 = oD0;\n    o.oD1 = oD1;\n");
     // Fog: on the Xbox the shader's oFog is the fog coordinate (the game emits its normalised near..far
     // distance) and the fog table mode turns it into the factor; D3D9 takes the factor straight from the
