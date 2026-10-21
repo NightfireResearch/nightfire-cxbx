@@ -9,6 +9,8 @@
 #include "../game/sp/Locks.h"
 #include "../engine/Anim.h"
 #include "../ui/Menu.h"
+#include "../gfx/Sprite.h"
+#include "../engine/psiSprite.h"
 #include "../../common/xbeOriginal.h"
 #include "../../common/xbeRelocate.h"
 
@@ -56,6 +58,8 @@ static const void *const kKeep[] = {
     // The original's bugs our build fixes (FIX_ORIGINAL_GAME_BUGS, docs/original-bug-fixes.md)
     (const void *)&Locks_Init,                      // the keypads' codes have 9s
     (const void *)&Menu_UpdateWheel,                // an empty wheel slot keeps its colour
+    (const void *)&Sprite_Create2,                  // a whole-texture sprite spans all of it
+    (const void *)&psiDrawSprites,                  // and a sprite inside a wrapping texture clamps
     // A departure: the next frame's pose for the bones a skin does not use is uninitialised stack in the original's
     // AnimFrameSet, 0 in ours, and the original chain under AnimObjectUpdate blends it (docs/nightfire-port-lifts.md)
     (const void *)&AnimObjectUpdate,

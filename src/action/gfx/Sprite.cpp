@@ -210,8 +210,16 @@ sprite* Sprite_Create2(SpriteInfo *sprInfo) {
         spr->onscreenHeight = sprInfo->onscreenHeight != 0 ? sprInfo->onscreenHeight : spr->backupOnscreenHeight;
         spr->spritesheetX = sprInfo->spritesheetX;
         spr->spritesheetY = sprInfo->spritesheetY;
+        // With no box given, the original spans one texel less than the texture (DEC at 0x000ceed1, 0x000ceee8), so
+        // the whole-texture sprite loses its last column and row; the fix spans it all, as hashtable_set_sprite does
+        // (docs/original-bug-fixes.md).
+#if FIX_ORIGINAL_GAME_BUGS
+        spr->spritesheetWidth = sprInfo->maybeSpritesheetWidth != 0 ? sprInfo->maybeSpritesheetWidth : spr->backupOnscreenWidth;
+        spr->spritesheetHeight = sprInfo->maybeSpritesheetHeight != 0 ? sprInfo->maybeSpritesheetHeight : spr->backupOnscreenHeight;
+#else
         spr->spritesheetWidth = sprInfo->maybeSpritesheetWidth != 0 ? sprInfo->maybeSpritesheetWidth : (spr->backupOnscreenWidth - 1);
         spr->spritesheetHeight = sprInfo->maybeSpritesheetHeight != 0 ? sprInfo->maybeSpritesheetHeight : (spr->backupOnscreenHeight - 1);
+#endif
 
     } else { 
         

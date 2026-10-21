@@ -109,6 +109,7 @@ static uint32_t g_bookmarks = 0;
 static bool g_stopOnDivergence = false;
 static uint32_t g_untilFrame = 0;   // NIGHTFIRE_DEMO_UNTIL: a playback ends here, for bisecting a difference
 static std::vector<uint32_t> g_dumpFrames;
+static uint32_t g_shotEvery = 0;                   // NIGHTFIRE_DEMO_SHOT_EVERY
 static int g_presentEvery = 0;
 static uint32_t g_dumpStateFrame = 0xffffffffu;   // NIGHTFIRE_DEMO_DUMP_GAMESTATE
 static uint32_t g_dumpObjectsFrame = 0xffffffffu; // NIGHTFIRE_DEMO_DUMP_OBJECTS
@@ -443,6 +444,8 @@ static bool StartPlayback(const char *path) {
         g_dumpStateFrame = (uint32_t)strtoul(dumpState, NULL, 10);
     if (const char *dumpObjects = getenv("NIGHTFIRE_DEMO_DUMP_OBJECTS"))
         g_dumpObjectsFrame = (uint32_t)strtoul(dumpObjects, NULL, 10);
+    if (const char *shotEvery = getenv("NIGHTFIRE_DEMO_SHOT_EVERY"))
+        g_shotEvery = (uint32_t)strtoul(shotEvery, NULL, 10);
     const char *dumps = getenv("NIGHTFIRE_DEMO_DUMP");
     for (const char *p = dumps; p != NULL && *p != '\0';) {
         g_dumpFrames.push_back((uint32_t)strtoul(p, (char **)&p, 10));
@@ -696,6 +699,12 @@ void Demo_FrameStart(void) {
     for (uint32_t frame : g_dumpFrames) {
         if (frame == g_frame)
             printf("[demo] frame %u: dumping frame %u\n", g_frame, D3D9_RequestDump());
+    }
+    if (g_shotEvery != 0 && g_frame % g_shotEvery == 0) {
+        char name[64];
+        snprintf(name, sizeof(name), "demo_shots/%06u", g_frame);
+        CreateDirectoryA("demo_shots", NULL);   // in the sandbox
+        D3D9_RequestScreenshot(name);
     }
 }
 

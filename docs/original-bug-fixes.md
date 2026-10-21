@@ -36,6 +36,25 @@ Rules for adding a fix:
 - **Effect:** an empty slot keeps the colour it had. Nothing visible changes, since the slot shows no text; the fix
   removes the read past the list (which on the host may fall outside the allocation).
 
+### Sprite_Create2 and psiDrawSprites: a whole-texture sprite loses its last column and row
+
+- **Where:** `src/action/gfx/Sprite.cpp`, `Sprite_Create2` (default.xbe 0x000cedf0), and
+  `src/action/engine/psiSprite.cpp`, `psiDrawSprites` (0x000de3d0).
+- **Original:** a sprite whose SpriteInfo gives no box in its sheet is drawn at the texture's size, but spans one
+  texel less than it (`MOVZX EAX,word ptr [ESI + 0x28]; DEC EAX` at 0x000ceecd, and 0x000ceee4 for the height). The
+  draw takes the span as a count, so a W-texel texture is drawn from texels 0 to W - 1 over W pixels: the last
+  column and row barely show and the rest is stretched by 1/(W - 1). The final mission's Space pane shows it most:
+  its 16 x 16 missile rings lose their right and bottom edges. `hashtable_set_sprite` gives the full size, so a ring
+  the pane re-textures is drawn whole and one it has not is clipped.
+- **Fix:** `Sprite_Create2` spans the whole texture. With that alone, a sprite drawn larger than its texels on a
+  wrapping texture blends the texture's opposite edge into its far edge (a red line along the top of the screen
+  under the damage overlay, a stripe down the right of the vision overlay, a line under the Space pane's doors), so
+  `psiDrawSprites` also clamps a wrapping texture's sprite whose texels stay inside the texture. A sprite that runs
+  past an edge (the static's random scroll) keeps the texture's own addressing.
+- **Effect:** drawing only; no game state changes, and the recordings still match frame for frame. Across the
+  eleven recordings, every 900th frame compared: the Space pane's rings and doors, the 007 logo and the battery icon
+  are drawn whole.
+
 ## Candidates: bugs kept as the original has them
 
 Found while porting the last of the action engine (20 Oct 2026). None is fixed: each port does what the original
@@ -73,6 +92,16 @@ Menus and boot (src/action/ui/, src/action/game.cpp):
   the game's address, so the overrun lands where it always did); Boot_LoadPTPData then reads 0x12c0 bytes with
   LS_LoadFromBuffer, past PTPDATA.
 - AnimDebugCreate (RefRoom) has no NULL check for a skin that is not loaded.
+
+HUD (src/action/ui/HUD.cpp):
+- The zoomed crosshair's box in its sheet, HUDCrossCoords[1] (1, 2, 29 x 29), takes in row 30, the first row of
+  crosshair 6's box (0, 30): the tip of that icon's arrow (alpha 19 and 108 at x 5-6) is drawn as a red dot at the
+  reticle's bottom left. Row 30 also holds the reticle's own bottom edge (x 13-17), so the box cannot simply end a
+  row sooner. The dot shows whichever way a pixel centre maps to a texel (at 1:1 the last row samples v 30.5, or
+  30.03 with D3D8 pixel centres): it is in the original's data, not our texel mapping. Crosshairs 4-8 are never
+  chosen (Check_Target sets 2 or 3, HUD_UpdateCrossHair 1 when zoomed), so a replacement of the sheet
+  (textures/09c4f43a25829f60.dds, tools/texture_replacement.py) with crosshair 6's box cleared removes the dot
+  without a change to the core.
 
 ## Driving engine
 
