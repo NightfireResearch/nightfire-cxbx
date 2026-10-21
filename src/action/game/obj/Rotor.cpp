@@ -3,7 +3,7 @@
 #pragma pack(push, 1)
 typedef struct {
     _VECTOR axis;
-    char switchChannel;
+    uchar switchChannel;
     char switchPolarity; // Rotates when no switch channel, or switchPolarity == switch_channels[switchChannel]
     char _pad[2];
 } ObjData_Rotor;

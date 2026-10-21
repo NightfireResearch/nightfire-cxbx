@@ -1492,9 +1492,10 @@ void Player_PositionCamera(obj_tag *player) {
     if (!GS_IsPaused(-1)) {
         switch ((short)player->subState) {
             case MovementType_Crouch: {
-                double offset = (double)FRAME_RATE_MUL * 0.0225f + blData->headCrouchOffset;
+                // On the x87: the sum is stored, then compared unrounded
+                Extended offset = Extended(FRAME_RATE_MUL) * Extended(0.0225f) + Extended(blData->headCrouchOffset);
                 blData->headCrouchOffset = (float)offset;
-                if (offset > 0.45f)
+                if (offset > Extended(0.45f))
                     blData->headCrouchOffset = 0.45f;
                 break;
             }
@@ -1504,9 +1505,9 @@ void Player_PositionCamera(obj_tag *player) {
             case MovementType_Ronin:
                 break;
             default: {
-                double offset = blData->headCrouchOffset - (double)FRAME_RATE_MUL * 0.0225f;
+                Extended offset = Extended(blData->headCrouchOffset) - Extended(FRAME_RATE_MUL) * Extended(0.0225f);
                 blData->headCrouchOffset = (float)offset;
-                if (offset < 0.0)
+                if (offset < Extended(0.0f))
                     blData->headCrouchOffset = 0.0f;
                 break;
             }

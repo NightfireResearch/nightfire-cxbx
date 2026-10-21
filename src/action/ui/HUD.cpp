@@ -1696,171 +1696,114 @@ void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *unused) {
 
 // AUTOINJECT
 void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj) {
+	// Only players need the pane updated, not drones
+	if (gameObj != NULL && (gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_DEAD_DRONE))
+		return;
 
-	if(gameObj != NULL) {
-		// Only players need the hud pane to be updated, not drones
-		if(gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_DEAD_DRONE)
-			return;
-	}
-
-	// extraItems is a pointer to some memory, which contains an array of obj_tag* pointers
-	obj_tag** extraItemsAsObjList = (obj_tag**)hudPane->extraItems;
-
-	// Redeemer elements are actually game objects not just 2D sprites. This might be so that we can rotate elements, rather than just position them?
-	// These will only be created in single player mode, MP uses more basic graphics (performance, or reduced visual clutter?)
-	if(!hudPane->enabled) {
-
-		if(extraItemsAsObjList[0] != NULL)
-			extraItemsAsObjList[0]->effectFlags |= 0x10;
-
-		if(extraItemsAsObjList[1] != NULL)
-			extraItemsAsObjList[1]->effectFlags |= 0x10;
-
-		if(extraItemsAsObjList[2] != NULL)
-			extraItemsAsObjList[2]->effectFlags |= 0x10;
-
+	// The pane's three game objects (the single player screen's turning parts; NULL in multiplayer)
+	obj_tag **items = (obj_tag **)hudPane->extraItems;
+	if (!hudPane->enabled) {
+		if (items[0] != NULL)
+			items[0]->effectFlags |= 0x10;
+		if (items[1] != NULL)
+			items[1]->effectFlags |= 0x10;
+		if (items[2] != NULL)
+			items[2]->effectFlags |= 0x10;
 		return;
 	}
+	if (items[0] != NULL)
+		items[0]->effectFlags &= ~0x10;
+	if (items[1] != NULL)
+		items[1]->effectFlags &= ~0x10;
+	if (items[2] != NULL)
+		items[2]->effectFlags &= ~0x10;
 
-	// If we make it past here, the pane is enabled
-	
-	if(extraItemsAsObjList[0] != NULL)
-		extraItemsAsObjList[0]->effectFlags &= 0xffffffef;
-
-	if(extraItemsAsObjList[1] != NULL)
-		extraItemsAsObjList[1]->effectFlags &= 0xffffffef;
-
-	if(extraItemsAsObjList[2] != NULL)
-		extraItemsAsObjList[2]->effectFlags &= 0xffffffef;
-
-
-	// Return control if the player exits the remote-controlling substate
-	if(gameObj->subState != MovementType_RemoteControl) {
+	// The player has left the missile: control returns to them
+	if (gameObj->subState != MovementType_RemoteControl) {
 		Player_SetCamMode(blData, 0);
 		glb_viewer[blData->playerNum]->someCel = NULL;
-		if(		blData->hudInfo != NULL 
-			&& 	blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) {
-			
+		if (blData->hudInfo != NULL && blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) {
 			blData->hudInfo->pane[Redeemer].enabled = false;
 			blData->hudInfo->pane[Redeemer].state = 0;
-		
 		}
 	}
 
-	// Put targeting element over a copter if one exists
-	hudPane->spriteList[10]->maybeEnabled = 0xff; // Target marker overlay, shown on copter body
-	for(COPTER *c = (COPTER*)(CopterList.head); c != NULL; c = (COPTER*)c->node.next) {
+	short tint = (short)Rand_Rand(24) + 27;
+	viewer_tag *viewer = glb_viewer[blData->playerNum];
 
-		
+	// A target marker over each helicopter on screen, flashing when it is near the middle
+	hudPane->spriteList[10]->maybeEnabled = 0xff;
+	for (COPTER *c = (COPTER *)CopterList.head; c != NULL; c = (COPTER *)c->node.next) {
 		obj_tag *body = Copter_GetBody(c);
-
-		// Not spawned, no action
-		if(body == NULL)
+		_VECTOR at;
+		if (body == NULL || View_3DPoint2Screen(&body->position, &at, (uchar)viewer->idx) <= 0)
 			continue;
-
-		// If it's behind us or offscreen, no action
-		_VECTOR tmp;
-		if(View_3DPoint2Screen(&body->position, &tmp, glb_viewer[blData->playerNum]->idx) <= 0)
-			continue;
-
-		if(tmp.x > SCREEN_WIDTH)
-			tmp.x = SCREEN_WIDTH;
-		if(tmp.x < 0.0f)
-			tmp.x = 0.0f;
-		if(tmp.y > SCREEN_HEIGHT)
-			tmp.y = SCREEN_HEIGHT;
-		if(tmp.y < 0.0f)
-			tmp.y = 0.0f;
-
-		sprite *s = hudPane->spriteList[10];
-		s->positionX = tmp.x - s->backupOnscreenWidth;
-		s->positionY = glb_viewer[blData->playerNum]->height - tmp.y - s->backupOnscreenHeight;
-		s->maybeEnabled = 0x27;
-
-		printf("Copter sprite is visible at %i, %i\n", s->positionX, s->positionY);
-
-		// If target reticle is nearly centred in both X and Y (by 32px in both axes), blink it?
-		float dx = tmp.x - (SCREEN_WIDTH / 2.0f);
-		if(dx < 0.0f)
-			dx = -dx;
-		
-		float dy = tmp.y - (SCREEN_HEIGHT / 2.0f);
-		if(dy < 0.0f)
-			dy = -dy;
-
-		if(dx < 32.0f && dy < 32.0f && (GameState.NumFramesUnpaused & 8))
-			hudPane->spriteList[10]->maybeEnabled = 0xff;
-	
-	}
-	
-	// Turn off the pane if the camera mode changes
-	if(		blData->camMode != CamMode_Redeemer 
-		&& 	blData->hudInfo != NULL
-		&& 	blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) 
-	{	
-		blData->hudInfo->pane[Redeemer].enabled = false;
-		blData->hudInfo->pane[Redeemer].state = 0;	
-	}
-		
-	float lifetime;
-	
-	if(blData->remoteControlDevice == NULL) { // Missile has blown up, image lost for a short while
-
-		hudPane->spriteList[2]->maybeEnabled = 0x27; // Completely obscure the camera view, just static?
-		lifetime = 1.0f;
-	
-	} else { // Missile in flight
-
-		hudPane->spriteList[2]->maybeEnabled = 0xff; // Not completely obscured
-
-		// Find the missile that the player is controlling
-		BU_tag *missile = (BU_tag*)blData->remoteControlDevice->extraObjectData;
-		
-		// Max age of the missile is represented in the range field for the sentinel missile
-		lifetime = missile->distanceTravelled / missile->wpnDef->range;
-		
-		// Rotate UI elements (only available if in SP)
-		if(		extraItemsAsObjList[0] != NULL
-			&& 	extraItemsAsObjList[1] != NULL
-			&&  extraItemsAsObjList[2] != NULL) 
-		{
-				
-			extraItemsAsObjList[0]->rotation.z = (M_PI/2.0f) - blData->remoteControlDevice->rotation.z + M_PI;
-			extraItemsAsObjList[0]->transformFlags |= TRANSFORM_MOVED;
-
-			extraItemsAsObjList[1]->rotation.z = blData->remoteControlDevice->rotation.z - (M_PI/4.0f);
-			extraItemsAsObjList[1]->transformFlags |= TRANSFORM_MOVED;
-
-			extraItemsAsObjList[2]->rotation.z = (blData->remoteControlDevice->rotation.z + M_PI) - (M_PI/4.0f);
-			extraItemsAsObjList[2]->transformFlags |= TRANSFORM_MOVED;
-				
+		if (at.x >= 0.0f) {
+			if (at.x > 640.0f)
+				at.x = 640.0f;
+		} else {
+			at.x = 0.0f;
 		}
-		
+		if (at.y >= 0.0f) {
+			if (at.y > 480.0f)
+				at.y = 480.0f;
+		} else {
+			at.y = 0.0f;
+		}
+		sprite *marker = hudPane->spriteList[10];
+		short y = (short)Ftol(Extended(viewer->height) - Extended(at.y) -
+		                      Extended((double)(ushort)marker->backupOnscreenHeight));
+		marker->positionX = (short)Ftol(Extended(at.x) - Extended((double)(ushort)marker->backupOnscreenWidth));
+		hudPane->spriteList[10]->positionY = y;
+		hudPane->spriteList[10]->maybeEnabled = 0x27;
+		float dx = at.x - 320.0f;
+		if (dx < 0.0f)
+			dx = -dx;
+		if (dx < 32.0f) {
+			float dy = at.y - 240.0f;
+			if (dy < 0.0f)
+				dy = -dy;
+			if (dy < 32.0f && (GameState.NumFramesUnpaused & 8))
+				hudPane->spriteList[10]->maybeEnabled = 0xff;
+		}
 	}
 
-	// Modulate the alpha value according to lifetime and some noise factor?
-	int someRandNum = 27 + Rand_Rand(24);
+	// Turn the pane off once the camera has left the missile
+	if (blData->camMode != CamMode_Redeemer && blData->hudInfo != NULL &&
+	    blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) {
+		blData->hudInfo->pane[Redeemer].enabled = false;
+		blData->hudInfo->pane[Redeemer].state = 0;
+	}
 
-	int unsaturatedTintModifier;
-
-	if(lifetime <= 0.85f) {
-		unsaturatedTintModifier = someRandNum;
+	// The static: brighter as the missile nears the end of its flight, full while the picture is lost
+	Extended lifetime;
+	if (blData->remoteControlDevice == NULL) {
+		lifetime = Extended(1.0f);
+		hudPane->spriteList[2]->maybeEnabled = 0x27;
 	} else {
-		unsaturatedTintModifier = (someRandNum + (lifetime - 0.85f) * 3400.0f);
+		BU_tag *missile = (BU_tag *)blData->remoteControlDevice->extraObjectData;
+		lifetime = Extended(missile->distanceTravelled) / Extended(missile->wpnDef->range);
+		hudPane->spriteList[2]->maybeEnabled = 0xff;
+		if (items[0] != NULL && items[1] != NULL && items[2] != NULL) {
+			float yaw = blData->remoteControlDevice->rotation.z;
+			items[0]->rotation.z = (float)(Extended(1.5707964f) - Extended(yaw) + Extended(3.1415927f));
+			items[0]->transformFlags |= TRANSFORM_MOVED;
+			items[1]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) - Extended(0.7853982f));
+			items[1]->transformFlags |= TRANSFORM_MOVED;
+			items[2]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) + Extended(3.1415927f) -
+			                               Extended(0.7853982f));
+			items[2]->transformFlags |= TRANSFORM_MOVED;
+		}
 	}
-	
-	int tintModifier = (unsaturatedTintModifier > 0xff ? 0xff : unsaturatedTintModifier);
-	hudPane->spriteList[1]->colourTint = tintModifier | 0x7f000000;
-	
+	if (blData->remoteControlDevice == NULL || !(lifetime <= Extended(0.85f)))
+		tint = (short)Ftol((lifetime - Extended(0.85f)) * Extended(3400.0f) + Extended((double)tint));
+	hudPane->spriteList[1]->colourTint = (tint < 0x100 ? (uint)tint : 0xff) | 0x7f000000;
+
+	// The scan lines move every other frame
 	static uint8_t Scrl = 0;
-
-	if(Scrl & 1) {
-		// Some additional modulation (scrolling of the scanlines?)
-		hudPane->spriteList[1]->spritesheetY = Rand_Rand(hudPane->spriteList[1]->backupOnscreenHeight - 1);
-	}
-
-	Scrl++;
-
+	if (Scrl++ & 1)
+		hudPane->spriteList[1]->spritesheetY =
+			(ushort)Rand_Rand((ushort)hudPane->spriteList[1]->backupOnscreenHeight - 1);
 }
 
 // The four extra items HUD_CreateDefault allocates for each message pane (numExtraItems = 4), as the

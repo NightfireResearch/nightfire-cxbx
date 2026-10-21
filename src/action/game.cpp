@@ -61,6 +61,7 @@
 #include <math.h>
 #include "devtools/MenuProbe.h"
 #include "sound/SFX.h"
+#include "math/X87Ops.h"
 
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
@@ -1174,7 +1175,7 @@ void psiInitTimeIn100ths(void) {
 
 // AUTOINJECT
 ulonglong psiGetTimeIn100ths(void) {
-  return ((timestamp() - (float)INITIALISATION_TIME) * 0.1f);
+  return (ulonglong)Ftol64((Extended(timestamp()) - Extended(INITIALISATION_TIME)) * Extended(0.1));
 }
 
 
@@ -1592,11 +1593,13 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
   VIDEO_FRAME_RATE = videoFrameRate;
 
-  _FRAME_RATE = (float) gameFrameRate;
+  _FRAME_RATE = (float)(uint)gameFrameRate;
   FRAME_RATE_INT = gameFrameRate;
-  FRAME_RATE_DIV = _FRAME_RATE * 0.016666667f;
-  FRAME_RATE_MUL = (1.0f / _FRAME_RATE) * 60.0f;
-  REC_FRAME_RATE = 1.0f / _FRAME_RATE;
+  FRAME_RATE_DIV = _FRAME_RATE * 0.016666668f;
+  // The reciprocal stays on the x87 stack for the multiply: at 50 Hz FRAME_RATE_MUL is 1.2, not the float
+  // reciprocal's 1.1999999
+  FRAME_RATE_MUL = (float)(Extended(1.0) / Extended(_FRAME_RATE) * Extended(60.0));
+  REC_FRAME_RATE = (float)(Extended(1.0) / Extended(_FRAME_RATE));
 
 }
 

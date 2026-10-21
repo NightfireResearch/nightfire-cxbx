@@ -1015,9 +1015,13 @@ short View_3DPoint2Screen(_VECTOR *vecIn, _VECTOR *vecOut, ushort viewerNum) {
         tmp.z = -tmp.z;
     }
 
-    vecOut->x = viewer->width -  (viewer->width * 0.5f + (1.0f / tmp.z) * tmp.x * viewer->projectionScaleX);
-    vecOut->y =                   viewer->height * 0.5f + (1.0f / tmp.z) * tmp.y * viewer->projectionScaleY;
+    // On the x87, unrounded until each is stored
+    Extended width = Extended(viewer->width);
+    vecOut->x = (float)(width - (width * Extended(0.5f) +
+                                 Extended(1.0f) / Extended(tmp.z) * Extended(viewer->projectionScaleX) * Extended(tmp.x)));
     vecOut->z = tmp.z;
+    vecOut->y = (float)(Extended(viewer->height) * Extended(0.5f) +
+                        Extended(1.0f) / Extended(tmp.z) * Extended(viewer->projectionScaleY) * Extended(tmp.y));
 
     return returnValue;
 }

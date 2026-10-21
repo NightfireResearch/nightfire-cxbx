@@ -19,9 +19,9 @@ typedef struct {
     };
     obj_tag* volumetricCone;               // 0x20 - visible light cone beam effect
     obj_tag* lensFlare;                    // 0x24 - bright flare when looking at light
-    char enableSwitchChannel;              // 0x28 - switch channel to re-enable after being disabled
-    char disableSwitchChannel;             // 0x29 - switch channel to disable searchlight
-    char alertSwitchChannel;               // 0x2a - switch channel to trigger when player spotted
+    uchar enableSwitchChannel;             // 0x28 - switch channel to re-enable after being disabled
+    uchar disableSwitchChannel;            // 0x29 - switch channel to disable searchlight
+    uchar alertSwitchChannel;              // 0x2a - switch channel to trigger when player spotted
     uchar padding2b;                       // 0x2b
     float sweepHalfRange;                  // 0x2c - half the sweep angle range
     float sweepCenter;                     // 0x30 - center pitch angle of sweep

@@ -300,10 +300,12 @@ void Sensor_Update(obj_tag *sensorObj) {
             Spline_Interp(sensor->sweepSpline, 0, (ushort)sensor->sweepLastPoint, sensor->sweepPosition, &sensorObj->transformMatrix, NULL, 2);
             sensorObj->transformFlags |= TRANSFORM_MOVED;
 
-            sensor->sweepPosition += FRAME_RATE_MUL * sensor->sweepStep;
+            // On the x87: the new position is stored, and the half-way test made with it unrounded
+            Extended position = Extended(FRAME_RATE_MUL) * Extended(sensor->sweepStep) + Extended(sensor->sweepPosition);
+            sensor->sweepPosition = (float)position;
 
             // Play sound at halfway point
-            if ((((float)sensor->sweepLastPoint * 0.5f) < sensor->sweepPosition) && (sensor->alertBeepTimer == 0.0f)) {
+            if (Extended((float)sensor->sweepLastPoint) * Extended(0.5f) < position && sensor->alertBeepTimer == 0.0f) {
                 Sound_Play3D(SFX_ENV_CAMERA_CHANGE_DIRECTION, &sensorObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
                 sensor->alertBeepTimer = 1.0f;
             }
@@ -322,9 +324,8 @@ void Sensor_Update(obj_tag *sensorObj) {
             return;
         }
 
-        // Player detected - increment detection counter
-        sensorObj->subState++;
-        if (sensorObj->subState > 30) {
+        // Player detected - increment detection counter (the count before the increment is tested)
+        if ((short)sensorObj->subState++ > 30) {
             sensor->alertTimer = 0.0f;
             sensor->alertBeepTimer = 0.0f;
             sensorObj->curState = 1;
@@ -336,7 +337,8 @@ void Sensor_Update(obj_tag *sensorObj) {
 
     case 1:  // Alert state - player detected
         if (sensor->alertSwitchChannel != 0) {
-            sensor->alertBeepTimer += REC_FRAME_RATE;
+            Extended beep = Extended(REC_FRAME_RATE) + Extended(sensor->alertBeepTimer);   // tested unrounded
+            sensor->alertBeepTimer = (float)beep;
 
             // Determine beep interval based on alert level
             float beepInterval = 0.5f;
@@ -347,7 +349,7 @@ void Sensor_Update(obj_tag *sensorObj) {
                 beepInterval = 0.125f;
             }
 
-            if (sensor->alertBeepTimer >= beepInterval) {
+            if (beep >= Extended(beepInterval)) {
                 sensor->alertBeepTimer = 0.0f;
                 Sound_Play3D(SFX_ENV_CAMERA_DETECT_BEEP, &sensorObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             }
@@ -370,10 +372,11 @@ void Sensor_Update(obj_tag *sensorObj) {
             return;
         }
 
-        sensor->alertTimer += REC_FRAME_RATE;
+        Extended alert = Extended(REC_FRAME_RATE) + Extended(sensor->alertTimer);   // tested unrounded
+        sensor->alertTimer = (float)alert;
 
         // Trigger alert switch after 2 seconds
-        if ((sensor->alertTimer >= 2.0f) && (sensor->alertSwitchChannel != 0)) {
+        if (alert >= Extended(2.0f) && sensor->alertSwitchChannel != 0) {
             switch_channels[sensor->alertSwitchChannel] = 1;
             switch_channels_time[sensor->alertSwitchChannel] = GameState.NumFramesUnpaused;
         }

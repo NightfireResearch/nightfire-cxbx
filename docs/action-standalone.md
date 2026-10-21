@@ -133,13 +133,14 @@ What the first runs found (21 October 2026, CastleIndoors1):
 Then the whole of the game's code as the original matched every frame of CastleIndoors1 (635 frames). Each of the
 28 subsystems alone as the original matched too.
 
-### Pending: differences that change the game
+### Fixed: differences that changed the game
 
 A port that differs from the original in what the game does cannot be fixed without the recordings parting from
-what was played (a rebase of CastleIndoors1 onto the first one went another way at a door). Each is listed here,
-kept ours in the all-original runs (`kKeep`), and fixed all at once before the recordings are made again:
+what was played (a rebase of CastleIndoors1 onto the first one went another way at a door). These were kept ours
+in the all-original runs (`kKeep`) while they were found, then fixed all at once and the missions recorded again
+(21 October 2026, tests/demos/action/README.md); every recording now matches the all-original runs:
 
-| Function | Ours | The original |
+| Function | Ours, before | The original, and ours now |
 |---|---|---|
 | GS_SetRefreshRate | `FRAME_RATE_MUL = (1.0f / rate) * 60.0f` in float: 1.1999999 at 50 Hz | the reciprocal on the x87, unrounded: 1.2 |
 | Sensor_Update | the camera's sighting count tested after its increment, so it raises the alarm a frame early; its timers (the beeps, the two seconds to the alarm, the sweep's half-way sound) compared as stored floats | the count before the increment (`if (count++ > 30)`); the sums compared as the x87 holds them, unrounded |

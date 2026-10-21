@@ -9,10 +9,10 @@ typedef struct {
     Action_TranslatedText name;
     Action_TranslatedText failLabel;
     Action_TranslatedText description;
-    char completedChannel;
+    uchar completedChannel;     // switch channels: indexes 0-255, as the original reads them
     char markCompletionTimeAtInit;
     char unknown1; // ??
-    char revealedChannel;
+    uchar revealedChannel;      // 0 and 0xff for none
     char someFlags; // ??
     char unknown2[3];
     int status;

@@ -28,11 +28,11 @@ typedef struct {
     uchar padding00[0x2c];                 // 0x00-0x2b
     ushort searchlightType;                // 0x2c
     uchar padding2e[2];                    // 0x2e-0x2f (align to 0x30)
-    char reenableSwitchChannel;            // 0x30
+    uchar reenableSwitchChannel;           // 0x30
     uchar padding31[3];                    // 0x31-0x33 (align to 0x34)
-    char disableSwitchChannel;             // 0x34
+    uchar disableSwitchChannel;            // 0x34
     uchar padding35[3];                    // 0x35-0x37 (align to 0x38)
-    char alertSwitchChannel;               // 0x38
+    uchar alertSwitchChannel;              // 0x38
     uchar padding39[3];                    // 0x39-0x3b (align to 0x3c)
     uint minAngleFull;                     // 0x3c - actual min sweep angle
     uint maxAngleFull;                     // 0x40 - actual max sweep angle
@@ -78,11 +78,12 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     uint minVal = (minAngle <= maxAngle) ? minAngle : maxAngle;
     uint maxVal = (minAngle <= maxAngle) ? maxAngle : minAngle;
 
-    float minRadians = DEG2RAD(minVal);
-    float maxRadians = DEG2RAD(maxVal);
+    // On the x87: the radians unrounded until the half range and the centre are stored
+    Extended minRadians = Extended((double)minVal) * Extended(0.017453292f);
+    Extended maxRadians = Extended((double)maxVal) * Extended(0.017453292f);
 
-    spotlight->sweepHalfRange = (maxRadians - minRadians) * 0.5f;
-    spotlight->sweepCenter = (maxRadians + minRadians) * 0.5f;
+    spotlight->sweepHalfRange = (float)((maxRadians - minRadians) * Extended(0.5f));
+    spotlight->sweepCenter = (float)((maxRadians + minRadians) * Extended(0.5f));
 
     // Set up object
     obj->objectType = OBJECTTYPE_SPOTLIGHT;
