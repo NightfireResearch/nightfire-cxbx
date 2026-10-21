@@ -18,6 +18,8 @@ uint32_t MemType;
 // ---- The loader's globals. LoaderLoad was the last original touching any of them (the byte scan of the XBE
 // ---- finds each address only in LoaderLoad, LoaderProcess and psiFileLoad, and the last two are ours).
 
+// Where the next file starts in the batch buffer. psiFileLoad reads it too.
+// XBE_GLOBAL(0x00279168, 0x4)
 uint *dirFileBuf;
 // The end of the whole batch buffer. Written, never read by anything.
 // XBE_GLOBAL(0x00279170, 0x4)

@@ -260,8 +260,7 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
   if (glb_viewer[idx] == NULL) {
     world = param_2;
     viewer = build_alloc_viewer(idx);
-    build_link_world_to_viewer(viewer, world);
-    glb_viewer[idx] = viewer;
+    glb_viewer[idx] = build_link_world_to_viewer(viewer, world);
   }
   if (param_3 != 0) {
                     /* Linked list insert at front? */

@@ -18,11 +18,11 @@
 #define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
 // AUTOINJECT
-void build_link_world_to_viewer(viewer_tag *viewer, world_tag *world) {
+viewer_tag* build_link_world_to_viewer(viewer_tag *viewer, world_tag *world) {
     if (viewer == NULL)
-        return;
-        
+        return viewer;
     viewer->world = world;
+    return viewer;
 }
 
 // AUTOINJECT

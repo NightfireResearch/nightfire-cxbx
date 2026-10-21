@@ -1377,7 +1377,7 @@ uint32_t Run_UpdateControllers(bool original) {
 }
 uint32_t Run_BotShortName(bool original) {
     BotNum skin = in.a[0] % 4 == 0 ? in.a[1] : in.a[1] % 32;
-    return CALL(0x0007eb90, Menu_GetBotShortName, char *(__cdecl *)(BotNum), skin) == (uint32_t)0x0015d3c0 ? 1 : 2;
+    return CALL(0x0007eb90, Menu_GetBotShortName, char *(__cdecl *)(BotNum), skin) == (uint32_t)BotString ? 1 : 2;
 }
 
 // A frame of the save flow: a state, a frame count near the tips' turn, the box open or not, a text or none

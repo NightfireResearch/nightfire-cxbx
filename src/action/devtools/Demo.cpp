@@ -1,10 +1,12 @@
 #include "Demo.h"
 #include "DataWrites.h"
 #include "MemTrace.h"
+#include "AllOriginal.h"
 
 #include "../actionhelpers.h"
 #include "../game.h"
 #include "../game/obj/object.h"
+#include "../engine/viewer.h"
 #include "../game/sp/SwitchChannels.h"
 #include "../engine/XboxSettings.h"
 #include "../engine/LaunchOptions.h"
@@ -105,9 +107,11 @@ static bool g_staleObjects = false;
 static uint32_t g_firstDivergence = 0;
 static uint32_t g_bookmarks = 0;
 static bool g_stopOnDivergence = false;
+static uint32_t g_untilFrame = 0;   // NIGHTFIRE_DEMO_UNTIL: a playback ends here, for bisecting a difference
 static std::vector<uint32_t> g_dumpFrames;
 static int g_presentEvery = 0;
 static uint32_t g_dumpStateFrame = 0xffffffffu;   // NIGHTFIRE_DEMO_DUMP_GAMESTATE
+static uint32_t g_dumpObjectsFrame = 0xffffffffu; // NIGHTFIRE_DEMO_DUMP_OBJECTS
 static int32_t g_stampOffset = 0;                  // see StampOffsetMatches
 
 // The last state per port and of the mouse, both modes
@@ -430,11 +434,15 @@ static bool StartPlayback(const char *path) {
     atexit(PlaybackAtExit);
 
     g_stopOnDivergence = getenv("NIGHTFIRE_DEMO_STOP") != NULL;
+    if (const char *until = getenv("NIGHTFIRE_DEMO_UNTIL"))
+        g_untilFrame = (uint32_t)strtoul(until, NULL, 0);
     const char *fast = getenv("NIGHTFIRE_DEMO_FAST");
     g_presentEvery = fast != NULL ? atoi(fast) : 0;
     const char *dumpState = getenv("NIGHTFIRE_DEMO_DUMP_GAMESTATE");
     if (dumpState != NULL)
         g_dumpStateFrame = (uint32_t)strtoul(dumpState, NULL, 10);
+    if (const char *dumpObjects = getenv("NIGHTFIRE_DEMO_DUMP_OBJECTS"))
+        g_dumpObjectsFrame = (uint32_t)strtoul(dumpObjects, NULL, 10);
     const char *dumps = getenv("NIGHTFIRE_DEMO_DUMP");
     for (const char *p = dumps; p != NULL && *p != '\0';) {
         g_dumpFrames.push_back((uint32_t)strtoul(p, (char **)&p, 10));
@@ -557,6 +565,10 @@ void Demo_RestoreOriginals(void) {
     const char *list = getenv("NIGHTFIRE_ORIGINAL");
     if (list == NULL || list[0] == '\0')
         return;
+    if (strcmp(list, "game") == 0) {
+        AllOriginal_Install();
+        return;
+    }
     int restored = 0, unpatched = 0;
     for (const char *p = list; *p != '\0';) {
         char *end;
@@ -677,7 +689,7 @@ void Demo_FrameStart(void) {
         printf("[demo] bookmark %u (recorded at frame %u) at frame %u\n", ++g_bookmarks, frame, g_frame);
         fflush(stdout);
     }
-    if (PeekByte() < 0)
+    if (PeekByte() < 0 || (g_untilFrame != 0 && g_frame >= g_untilFrame))
         FinishPlayback("finished");
     if (PeekByte() == EV_DRIVING)
         FinishPlayback("reached the driving engine");
@@ -695,6 +707,21 @@ static void PrintGameState(void) {
     for (size_t i = 0; i < sizeof(GameState); i++)
         printf("%s%02x", i % 4 == 0 ? " " : "", bytes[i]);
     printf("\n");
+    fflush(stdout);
+}
+
+// What the objects' checksum covers, an object a line, for finding the object behind an "objects" difference:
+// printed at NIGHTFIRE_DEMO_DUMP_OBJECTS's frame, to compare with a run of the originals
+static void PrintObjects(void) {
+    int i = 0;
+    for (obj_tag *o = FirstObject; o != NULL; o = o->nextObject, i++) {
+        uint32_t p[3], r[3];
+        memcpy(p, &o->position, sizeof(p));
+        memcpy(r, &o->rotation, sizeof(r));
+        printf("[demo] frame %u object %d: type %u flags %02x state %u/%u pos %08x %08x %08x rot %08x %08x %08x\n",
+               g_frame, i, (uint)o->objectType, (uint)o->flags, (uint)o->curState, (uint)(ushort)o->subState, p[0],
+               p[1], p[2], r[0], r[1], r[2]);
+    }
     fflush(stdout);
 }
 
@@ -796,6 +823,16 @@ void Demo_FrameEnd(void) {
             diverged |= recorded[i] != sums[i];
         if (g_frame == g_dumpStateFrame)
             PrintGameState();
+        if (g_frame == g_dumpObjectsFrame)
+            PrintObjects();
+        if (getenv("NIGHTFIRE_DEMO_DUMP_VIEWER") != NULL && glb_viewer[0] != NULL) {
+            uint32_t v[7];
+            memcpy(v, &glb_viewer[0]->pos, 12);
+            memcpy(v + 3, &glb_viewer[0]->someVec, 12);
+            memcpy(v + 6, &glb_viewer[0]->zoom, 4);
+            printf("[demo] frame %u viewer: %08x %08x %08x %08x %08x %08x %08x\n", g_frame, v[0], v[1], v[2], v[3], v[4],
+                   v[5], v[6]);
+        }
         if (diverged) {
             if (g_divergedFrames == 0) {
                 g_firstDivergence = g_frame;

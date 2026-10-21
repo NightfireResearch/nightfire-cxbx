@@ -38,6 +38,14 @@ void XbeOriginal_Record(unsigned at) {
     memset(r->patched, 0, 5);
 }
 
+int XbeOriginal_Count(void) {
+    return g_numPatches;
+}
+
+unsigned XbeOriginal_At(int i) {
+    return i >= 0 && i < g_numPatches ? g_patches[i].at : 0;
+}
+
 static XbeOriginalWindowHook g_windowHook = NULL;
 
 void XbeOriginal_SetWindowHook(XbeOriginalWindowHook hook) {

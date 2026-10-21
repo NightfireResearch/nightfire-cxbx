@@ -1438,7 +1438,7 @@ const Case kMessages[] = {
 
 uint32_t RunDoSubtitle(bool original) {
     // A sound of the table most of the time
-    uint32_t sound = R(4) == 0 ? R(0x700) : *(uint32_t *)(0x0018bcbc + 8 * R(0x1e4));
+    uint32_t sound = R(4) == 0 ? R(0x700) : (uint32_t)Snd2Lbl[R(NUM_SND2LBL)].sound;
     Regs r = {R(0), R(0), sound, R(0), R(0), R(0)};
     return RegCall(original, 0x000cbd10, (const void *)&Sound_DoSubtitle, r, 0, NULL) & 0;
 }

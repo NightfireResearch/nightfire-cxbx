@@ -32,25 +32,37 @@ TAG = re.compile(r"//\s*XBE_GLOBAL\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d
 DEFINITION = re.compile(r"(\w+)\s*(\[[^\]]*\])*\s*(=[^;]*)?[;{=]")
 
 
-def relocated(side):
-    """[(name, address, size, path)] for every global of ours tagged `relocate`, in file order."""
+def owned(side):
+    """[(name, address, size, path, relocate)] for every global of ours with an XBE_GLOBAL tag (a definition after
+    the tag, not a #define), in file order; relocate is whether the tag says so."""
     out = []
     for root, dirs, files in sorted(os.walk(os.path.join(REPO, 'src', side))):
-        dirs.sort()
+        dirs[:] = sorted(x for x in dirs if x != 'devtools')
         for file in sorted(files):
-            if not file.endswith(('.c', '.cpp')):
+            if not file.endswith(('.c', '.cpp', '.h')):
                 continue
             path = os.path.join(root, file)
             lines = open(path, encoding='utf-8', errors='replace').read().splitlines()
             for i, line in enumerate(lines):
                 m = TAG.search(line)
-                if not m or 'relocate' not in m.group(3).split():
+                if not m:
                     continue
                 following = next((l for l in lines[i + 1:] if l.strip()), '')
-                d = DEFINITION.search(following.split('//')[0])
-                assert d, '%s:%d: a relocate tag must be followed by a definition' % (path, i + 1)
-                out.append((d.group(1), int(m.group(1), 16), int(m.group(2), 0), os.path.relpath(path, REPO)))
+                code = following.split('//')[0]
+                if not code.strip() or code.lstrip().startswith('#') or code.lstrip().startswith('extern'):
+                    continue
+                d = DEFINITION.search(code)
+                relocate = 'relocate' in m.group(3).split()
+                assert d or not relocate, '%s:%d: a relocate tag must be followed by a definition' % (path, i + 1)
+                if d:
+                    out.append((d.group(1), int(m.group(1), 16), int(m.group(2), 0), os.path.relpath(path, REPO),
+                                relocate))
     return out
+
+
+def relocated(side):
+    """[(name, address, size, path)] for every global of ours tagged `relocate`, in file order."""
+    return [(n, a, sz, p) for n, a, sz, p, r in owned(side) if r]
 
 
 def port_names(side):
@@ -65,7 +77,8 @@ def port_names(side):
 
 def source_words(side):
     """{function name: the set of identifiers its body uses} for every function defined in our source, outside
-    devtools; and {macro: what it expands to} for every one-word #define, for the names a block goes by."""
+    devtools; and {macro: the identifiers it expands to} for every object-like #define on one line, for the names a
+    block goes by (`#define DirFileHash ((HASHCODE)DirFileHashValue)` goes by DirFileHashValue)."""
     bodies, aliases = {}, {}
     definition = re.compile(r"^[A-Za-z_](?:[\w \t\*&:<>,]|__declspec\(\w+\))*?\b(?!__declspec\b)(\w+)\s*"
                             r"\([^;{}]*\)\s*(?:const\s*)?\{", re.M)
@@ -75,8 +88,9 @@ def source_words(side):
             if not file.endswith(('.c', '.cpp', '.h')):
                 continue
             text = open(os.path.join(root, file), encoding='utf-8', errors='replace').read()
-            for m in re.finditer(r"^\s*#\s*define\s+(\w+)\s+(\w+)\s*(?://.*)?$", text, re.M):
-                aliases[m.group(1)] = m.group(2)
+            for m in re.finditer(r"^\s*#\s*define\s+(\w+)[ \t]+([^\n]*?)\s*(?://[^\n]*)?$", text, re.M):
+                if not re.search(r"0x[0-9a-fA-F]{5,}", m.group(2)):   # not one of the game's addresses
+                    aliases.setdefault(m.group(1), set()).update(re.findall(r"[A-Za-z_]\w*", m.group(2)))
             for m in definition.finditer(text):
                 depth, i = 1, m.end()
                 while depth and i < len(text):
@@ -84,6 +98,18 @@ def source_words(side):
                     i += 1
                 bodies.setdefault(m.group(1), set()).update(re.findall(r"\w+", text[m.end():i]))
     return bodies, aliases
+
+
+def owned_blocks(side):
+    """Every owned global with a name, sorted by address; a second tag naming one already listed is left out."""
+    seen, out = set(), []
+    for name, address, size, path, relocate in owned(side):
+        if name in seen or not size:
+            continue
+        seen.add(name)
+        out.append({'name': name, 'lo': address, 'hi': address + size, 'relocate': relocate})
+    out.sort(key=lambda b: (b['lo'], -b['hi']))
+    return out
 
 
 def sections(d):
@@ -102,7 +128,7 @@ def main():
     import capstone
     import capstone.x86
     d = open(os.path.join(REPO, 'disc', XBE[side]), 'rb').read()
-    blocks = [{'name': n, 'address': hex(a), 'size': sz} for n, a, sz, _ in relocated(side)]
+    blocks = owned_blocks(side)
     funcs = sorted(int(f['address'], 16) for f in json.load(open(os.path.join(REPO, 'tools', 'functions_%s.json' % side))))
     code = [s for s in sections(d) if s[0] == '.text']   # the game's code; the libraries never name its data
     # Ghidra's data references, (instruction, target): an operand is only rewritten where Ghidra agrees it is an
@@ -130,7 +156,7 @@ def main():
     def goes_by(name):
         names = {name}
         while True:
-            more = {a for a, b in aliases.items() if b in names} - names
+            more = {a for a, b in aliases.items() if b & names} - names
             if not more:
                 return names
             names |= more
@@ -159,51 +185,56 @@ def main():
             break
         return None, None
 
+    starts = [b['lo'] for b in blocks]
+    ends = {}
     for b in blocks:
-        lo = int(b['address'], 16)
-        hi = lo + b['size']
-        sites, ends, users = [], [], set()
-        names = goes_by(b['name'])
-        for name, flags, sva, raw, size in code:
-            blob = d[raw:raw + size]
-            for off in range(len(blob) - 3):
-                v = struct.unpack_from('<I', blob, off)[0]
-                if not lo <= v <= hi:
-                    continue
-                site = sva + off
-                if v == hi:
-                    ends.append(site)
-                    continue
-                # Where two blocks overlap (a table that reads on into the next, as the game's does), an address
-                # belongs to the one starting nearest below it
-                if any(lo < int(o['address'], 16) <= v for o in blocks):
-                    continue
-                insn, fn = operand(site)
-                if insn is None:
-                    problems.append('%s: 0x%x (value 0x%x, in %s) does not decode as an operand - left alone' %
-                                    (b['name'], site, v, name))
-                elif not any(lo <= t < hi for t in xrefs.get(insn.address, [])):
-                    problems.append('%s: 0x%x (value 0x%x) has no reference from Ghidra into the block - left alone' %
-                                    (b['name'], site, v))
-                elif (v - lo) % 2 and any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index)
-                                          for op in insn.operands):
-                    # An odd offset through a register: a base folded from another table (Inflate's length tables
-                    # index 0x0018cc5b + 257 + n), not this one's field
-                    problems.append('%s: 0x%x (%s %s) indexes from inside the block at an odd offset - left alone' %
-                                    (b['name'], site, insn.mnemonic, insn.op_str))
-                elif not port_names_it(fn, names):
-                    problems.append('%s: 0x%x (%s %s) is in 0x%x, whose port does not name the block - left alone' %
-                                    (b['name'], site, insn.mnemonic, insn.op_str, fn))
-                else:
-                    sites.append(site)
-                    users.add(fn)
-        # The block's end, as a loop's bound: only a comparison, in a function that walks the block
-        for site in ends:
+        ends.setdefault(b['hi'], []).append(b)
+    for b in blocks:
+        b['sites'], b['ends'], b['users'], b['names'] = [], [], set(), goes_by(b['name'])
+    for name, flags, sva, raw, size in code:
+        blob = d[raw:raw + size]
+        for off in range(len(blob) - 3):
+            v = struct.unpack_from('<I', blob, off)[0]
+            if v in ends:
+                for b in ends[v]:
+                    b['ends'].append(sva + off)
+            # Where two blocks overlap (a table that reads on into the next, as the game's does), an address belongs
+            # to the one starting nearest below it
+            i = bisect.bisect_right(starts, v) - 1
+            if i < 0 or v >= blocks[i]['hi']:
+                continue
+            b = blocks[i]
+            lo, hi, site = b['lo'], b['hi'], sva + off
             insn, fn = operand(site)
-            if insn is not None and insn.mnemonic == 'cmp' and fn in users:
-                sites.append(site)
-        result[b['name']] = ['0x%x' % s for s in sorted(sites)]
-        print('%s 0x%x..0x%x: %d references' % (b['name'], lo, hi, len(sites)))
+            if insn is None:
+                problems.append('%s: 0x%x (value 0x%x, in %s) does not decode as an operand - left alone' %
+                                (b['name'], site, v, name))
+            elif not any(lo <= t < hi for t in xrefs.get(insn.address, [])):
+                problems.append('%s: 0x%x (value 0x%x) has no reference from Ghidra into the block - left alone' %
+                                (b['name'], site, v))
+            elif (v - lo) % 2 and any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index)
+                                      for op in insn.operands):
+                # An odd offset through a register: a base folded from another table (Inflate's length tables
+                # index 0x0018cc5b + 257 + n), not this one's field
+                problems.append('%s: 0x%x (%s %s) indexes from inside the block at an odd offset - left alone' %
+                                (b['name'], site, insn.mnemonic, insn.op_str))
+            elif not port_names_it(fn, b['names']):
+                problems.append('%s: 0x%x (%s %s) is in 0x%x, whose port does not name the block - left alone' %
+                                (b['name'], site, insn.mnemonic, insn.op_str, fn))
+            else:
+                b['sites'].append(site)
+                b['users'].add(fn)
+    for b in blocks:
+        # The block's end, as a loop's bound: only a comparison with it as the immediate (not a read of whatever
+        # follows the block), in a function that walks the block
+        for site in b['ends']:
+            insn, fn = operand(site)
+            if insn is not None and insn.mnemonic == 'cmp' and insn.imm_size == 4 and \
+                    insn.imm_offset == site - insn.address and fn in b['users']:
+                b['sites'].append(site)
+        result[b['name']] = ['0x%x' % x for x in sorted(b['sites'])]
+        print('%s 0x%x..0x%x: %d references%s' % (b['name'], b['lo'], b['hi'], len(b['sites']),
+                                                  '' if b['relocate'] else ' (the all-original runs only)'))
     for p in problems:
         print('  ' + p)
     out = os.path.join(REPO, 'tools', 'data_refs_%s.json' % side)

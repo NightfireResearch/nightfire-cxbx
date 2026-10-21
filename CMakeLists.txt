@@ -79,6 +79,7 @@ add_library(actioninject SHARED
   src/action/devtools/SndTrace.cpp
   src/action/devtools/DataWrites.cpp
   src/action/devtools/MemTrace.cpp
+  src/action/devtools/AllOriginal.cpp
   src/action/devtools/LoadScreenShadow.cpp
   src/action/devtools/FileDump.cpp
   src/action/devtools/SecretsShadow.cpp

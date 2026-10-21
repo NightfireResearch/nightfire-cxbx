@@ -146,6 +146,7 @@ void PlrStat_LogEnemySpawned(void) {
 
 #define ScoringTable (*(SCORETABLE(*)[12])0x0017f198)
 
+// XBE_GLOBAL(0x002790a4, 0x1)
 static bool DoneBetter;
 
 // The driving engine's results for a driving level: PTPDATA.Scoring, nine categories of {achieved, target,

@@ -40,6 +40,10 @@ unsigned XbeOriginal_Target(unsigned at);
 // The patched address whose jump leads to 'target' (the lowest, if several do); 0 if none.
 unsigned XbeOriginal_EntryOf(unsigned target);
 
+// The patched addresses, in the order they were patched: XbeOriginal_At(0 .. XbeOriginal_Count() - 1).
+int XbeOriginal_Count(void);
+unsigned XbeOriginal_At(int i);
+
 // Every patched address in [lo, hi) swapped at once; the number swapped.
 int XbeOriginal_RestoreRange(unsigned lo, unsigned hi, bool original);
 

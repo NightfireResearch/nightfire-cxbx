@@ -490,6 +490,7 @@ static_assert(sizeof(MapSound) == 0x20, "Bad size for MapSound");
 static_assert(offsetof(MapSound, position) == 0x08, "Bad offset of MapSound.position");
 static_assert(offsetof(MapSound, radiusOuter) == 0x18, "Bad offset of MapSound.radiusOuter");
 
+// XBE_GLOBAL(0x00299ae8, 0x640)
 static MapSound GMapSounds[MAX_MAP_SOUNDS];
 // XBE_GLOBAL(0x0029a14c, 0x32)
 static char GMapSoundActive[MAX_MAP_SOUNDS];

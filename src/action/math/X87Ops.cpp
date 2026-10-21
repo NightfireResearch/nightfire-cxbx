@@ -213,6 +213,28 @@ static int __declspec(naked) Below(const Extended *a, const Extended *b) {
     }
 }
 
+// 1 if a <= b (FCOMPP's C0 or C3, without C2, so not for a NaN), else 0
+static int __declspec(naked) BelowOrEqual(const Extended *a, const Extended *b) {
+    __asm {
+        mov eax, dword ptr [esp + 8]
+        fld tbyte ptr [eax]
+        mov eax, dword ptr [esp + 4]
+        fld tbyte ptr [eax]
+        fcompp
+        fnstsw ax
+        and eax, 0x4500
+        cmp eax, 0x0100
+        je below
+        cmp eax, 0x4000
+        je below
+        xor eax, eax
+        ret
+    below:
+        mov eax, 1
+        ret
+    }
+}
+
 Extended::Extended(float x) {
     LoadFloat(this, x);
 }
@@ -309,6 +331,14 @@ bool operator>(const Extended &a, const Extended &b) {
     return Below(&b, &a) != 0;
 }
 
+bool operator<=(const Extended &a, const Extended &b) {
+    return BelowOrEqual(&a, &b) != 0;
+}
+
+bool operator>=(const Extended &a, const Extended &b) {
+    return BelowOrEqual(&b, &a) != 0;
+}
+
 Extended AbsFchs(const Extended &x) {
     double rounded = (double)x;
     return x < Extended(0.0f) || rounded != rounded ? -x : x;
@@ -358,6 +388,16 @@ Extended FSqrt(const Extended &x) {
     Extended result;
     SquareRoot(&result, &x);
     return result;
+}
+
+int64_t Ftol64(const Extended &x) {
+    if (!(AbsFchs(x) < Extended(9223372036854775808.0)))
+        return INT64_MIN;
+    int64_t nearest, truncated;
+    ToIntegers(&nearest, &truncated, &x);
+    if (uint32_t(nearest) == 0)
+        return nearest;
+    return truncated;
 }
 
 int32_t Ftol(const Extended &x) {

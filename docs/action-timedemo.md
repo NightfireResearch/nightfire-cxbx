@@ -73,6 +73,7 @@ Environment variables for playback:
 | Variable | Effect |
 |---|---|
 | `NIGHTFIRE_DEMO_STOP=1` | stop at the first frame that differs, for bisecting |
+| `NIGHTFIRE_DEMO_UNTIL=<frame>` | end the playback at that frame, as if the recording ended there, for bisecting a difference that shows before it |
 | `NIGHTFIRE_DEMO_FAST=N` | present every Nth frame and do not pace, for unattended runs (many times real speed; leave it unset to watch and listen) |
 | `NIGHTFIRE_DEMO_DUMP=f1,f2,...` | dump those frames, as F7 does |
 | `NIGHTFIRE_DEMO_DUMP_GAMESTATE=f` | print `GameState`'s bytes at that frame (they are also printed at the first frame where `gamestate` differs) |

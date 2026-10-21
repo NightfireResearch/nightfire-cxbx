@@ -74,7 +74,7 @@ namespace {
 #define DynamicObjFirst (*(obj_tag **)0x001df34c)
 #define ForcedListInfo (*(LLISTINFO_tag *)0x001df41c)
 #define RoomCels (*(cel_tag ***)0x001f6664)
-#define ControlFuncs ((ControlFunction *)0x00163b98)
+#define ControlFuncs control_funcs   // ours (game/obj/ControlFuncs.cpp): the game's references read it
 #define GameGlobalVars (*(GlobalVars_t *)0x001f6568)
 #define GameStackIndex U16_AT(0x0017bfe8)
 #define GameStack (*(uint (*)[64])0x0017bff0)
