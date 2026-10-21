@@ -76,7 +76,7 @@ Environment variables for playback:
 | `NIGHTFIRE_DEMO_UNTIL=<frame>` | end the playback at that frame, as if the recording ended there, for bisecting a difference that shows before it |
 | `NIGHTFIRE_DEMO_FAST=N` | present every Nth frame and do not pace, for unattended runs (many times real speed; leave it unset to watch and listen) |
 | `NIGHTFIRE_DEMO_DUMP=f1,f2,...` | dump those frames, as F7 does |
-| `NIGHTFIRE_DEMO_SHOT_EVERY=N` | write every Nth frame to `demo_shots/<frame>.bmp` in the playback's folder, the picture alone, for comparing two builds frame for frame |
+| `NIGHTFIRE_DEMO_SHOT_EVERY=N` | write every Nth frame to `demo_shots/<frame>.bmp` in the playback's folder, the picture alone, for comparing two builds frame for frame; `NIGHTFIRE_DEMO_SHOT_FROM=<frame>` starts them there (with `NIGHTFIRE_DEMO_UNTIL`, a window) |
 | `NIGHTFIRE_DEMO_DUMP_GAMESTATE=f` | print `GameState`'s bytes at that frame (they are also printed at the first frame where `gamestate` differs) |
 | `NIGHTFIRE_ORIGINAL=0xADDR,...` | run those functions as the original, ports or not: to compare a parcel of ports with the originals, to bisect which one changed the game, or to measure what the original's code reaches |
 

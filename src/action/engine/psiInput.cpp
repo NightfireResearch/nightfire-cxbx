@@ -491,7 +491,7 @@ void psiInput_RumbleStart(ushort controllerNum, int time, int intensity) {
     if((intensity > 0) && (intensity <= 30))
         intensity = 30;
     
-    if(time >= 0)
+    if(time > 0)
         time = time + 3;
     
     psiInput_RumbleSetIntensity(controllerNum, intensity, intensity);

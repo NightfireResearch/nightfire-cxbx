@@ -3,6 +3,7 @@
 #include "../actionhelpers.h"
 #include "../assets.h"
 #include "../game.h"
+#include "../input.h"
 
 #include <windows.h>
 #include <shellapi.h>
@@ -152,9 +153,13 @@ uint32_t LaunchOptions_Level(void) {
     return g_level;
 }
 
+// A level asked for skips the codename, whose settings are the only thing that turns vibration on (Input_Init leaves
+// it off), so it is turned on here as a codename would.
 void LaunchOptions_Apply(void) {
-    if (g_level != 0)
+    if (g_level != 0) {
         GameState.NextLevelHashcode = (HASHCODE)g_level;
+        PlayerInputs[0].vibrationEnabled = 1;
+    }
     if (g_difficulty != 0)
         GameState.difficultyModifier = g_difficulty;
 }
