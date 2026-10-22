@@ -7,6 +7,7 @@ unsigned int Rand_Rand(unsigned int max);
 double Rand_FRandHalf(float range);
 void Rand_FRandHalf_Vec(_VECTOR *param_1, float param_2);
 uint __stdcall Rand_Random(void);
+extern uint32_t RandStateA, RandStateB;
 extern uint RandMultiplierA, RandMultiplierB;
 double Float_FRand(float range);
 double Rand_FRand_MVar2(float range, float offset);

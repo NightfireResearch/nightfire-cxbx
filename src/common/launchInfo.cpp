@@ -94,11 +94,19 @@ static bool StartLoaderFor(const char *executableName) {
     const char *slash = strrchr(executableName, '\\');
     const char *image = slash != NULL ? slash + 1 : executableName;
 
+    // A standalone engine starts the other's standalone executable; the injected builds, the other's loader
     const char *loader = NULL;
+#ifdef NIGHTFIRE_STANDALONE
+    if (_stricmp(image, "DRIVING.XBE") == 0)
+        loader = "driving_standalone.exe";
+    else if (_stricmp(image, "DEFAULT.XBE") == 0)
+        loader = "action_standalone.exe";
+#else
     if (_stricmp(image, "DRIVING.XBE") == 0)
         loader = "driving.exe";
     else if (_stricmp(image, "DEFAULT.XBE") == 0)
         loader = "action.exe";
+#endif
     if (loader == NULL) {
         printf("[launch] no loader is known for %s\n", image);
         return false;

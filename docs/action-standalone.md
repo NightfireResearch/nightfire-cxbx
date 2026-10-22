@@ -304,8 +304,39 @@ injected build's only; the standalone build gets the header's stack size as a co
 one entry is NULL), and the kernel's critical sections, KeBugCheck and contiguous memory over Win32, as the loader
 answers them. Xbox_Entry is what its main will call.
 
-## Left for the standalone target
+## The standalone executable (22 October 2026)
 
-- The target itself, as docs/driving/standalone.md did for the driving engine: a main that calls Xbox_Entry, the
-  devtools hooks answered without the devtools (MenuProbe_PollDevices, MenuProbe_HandleMessage, the Demo hooks), the
-  sources less the injection, and the `#else` branches above built.
+`action_standalone.exe` links our action code and nothing else of the game: no loader image at 0x10000, no injection
+DLL, no FUNC_AT patching, no default.xbe read at build or run time. `action_standalone_test.exe` is the same with the
+time demos' player (devtools/Demo.cpp). `cmake --build . --config Release --target action_standalone
+action_standalone_test`: action_standalone is in the default build, the test variant EXCLUDE_FROM_ALL. Both compile
+the game's sources as actioninject does (`nf_action_sources` in CMakeLists.txt, the same definitions, no inlining),
+with NIGHTFIRE_STANDALONE. The injected build (action + actioninject) is unchanged and stays the test build with the
+shadows and the all-original runs.
+
+src/action/standalone/StandaloneMain.cpp does what the loader and Inject() did, by calling our code: the launch options
+(`LaunchOptions_Read`), a time demo's mode (`Demo_Init`, a no-op in action_standalone), the disc root
+(`Xbox_SetDiscRoot` with settings.ini's DiscPath), FFmpeg (`Fmv_Init`), then the render window the D3D9 backend finds
+by its class, `Xbox_Entry` (the game's thread at mainXapiStartup with the XBE header's 0x10000 stack), and the window's
+messages on this thread. Closing the window ends the process. A fault nothing handles is reported with offsets into
+the executable for action_standalone.map, and `NIGHTFIRE_REPORT_AFTER=<seconds>` reports where every thread is then.
+
+Nothing is patched in it: the start-up's WBINVDs and notification hook, XAPI's heap, the per-thread data, the
+injection table, the relocation of the owned globals and the resolution patches of Inject() are the injected build's
+alone. src/action/standalone/NoDevtools.cpp answers the 19 devtools hooks game code calls as each devtool does when
+nothing asks it to: no demo (the game's own clock, pads, mouse and sound device), `MenuProbe_PollDevices` and
+`MenuProbe_HandleMessage` the game's own `psiInput_PollDevices` and `Handler_HandleMessage`, `Devtools_Tick`,
+`SndTrace` and `FileDump_Save` nothing. Demo.cpp names our globals (`control_first_object`, the random generator's
+four words in the game's order, so the checksums are the same) and leaves out, without the XBE, the kernel import slot
+it patched for the originals, `Demo_RestoreOriginals` and the data-write and memory traces.
+
+**Checked:** all 13 recordings match the game frame for frame on action_standalone_test.exe (tools/demo/play_demos.ps1 -Exe Release/action_standalone_test.exe), as on the injected build; action_standalone boots to the attract movies on the runner; both link in the Linux preset's MinGW build.
+
+The two engines launch each other (common/launchInfo.cpp): a standalone engine starts the other's standalone
+executable (action_standalone.exe, driving_standalone.exe), the injected builds the other's loader.
+
+## Next
+
+- 64-bit, then Linux, macOS and arm64, as the driving engine went (docs/driving/64-bit.md): the action engine's
+  window, input and sound are Win32, XInput and XAudio2 here, where the driving engine's go through its SDL3 host
+  layer.

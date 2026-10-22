@@ -1,19 +1,23 @@
 #include "Demo.h"
+#ifndef NIGHTFIRE_STANDALONE
 #include "DataWrites.h"
 #include "MemTrace.h"
 #include "AllOriginal.h"
+#include "../../common/xbeOriginal.h"
+#endif
 
 #include "../actionhelpers.h"
 #include "../game.h"
 #include "../game/obj/object.h"
 #include "../engine/viewer.h"
 #include "../game/sp/SwitchChannels.h"
+#include "../game/obj/control.h"
+#include "../util/Random.h"
 #include "../engine/XboxSettings.h"
 #include "../engine/LaunchOptions.h"
 #include "../../common/renderWindow.h"
 #include "../../common/fmv/FmvAudio.h"
 #include "../../common/gfx/d3d9Backend.h"
-#include "../../common/xbeOriginal.h"
 
 #include <windows.h>
 #include <direct.h>
@@ -74,13 +78,10 @@ static const char *const kSumNames[SUM_COUNT] = { "rng", "gamestate", "channels"
 #define MOUSE_BYTES 9
 #define SOUND_BUFFERS 256
 
-// The random generator's state and multipliers (Rand_Random, 0x000d52c0)
-#define RandState (GameSpan<uint8_t>{0x0018cdf8})
-#define RAND_STATE_BYTES 0x10
-// The head of the live object list (control_first_object)
-#define FirstObject (*(obj_tag **)XbeOurs(0x001df34c))
-// KeQuerySystemTime's slot in the XBE's kernel import table
+#ifndef NIGHTFIRE_STANDALONE
+// KeQuerySystemTime's slot in the XBE's kernel import table (the originals')
 #define KernelKeQuerySystemTime (*(void(__stdcall **)(LARGE_INTEGER *))0x0015d198)
+#endif
 
 #define VK_F6_ 0x75
 
@@ -271,10 +272,12 @@ static void MakeParentDirectories(const std::string &path) {
 // ---------------------------------------------------------------------------------------------------------------
 // The clock
 
+#ifndef NIGHTFIRE_STANDALONE
 static void __stdcall Demo_KeQuerySystemTime(LARGE_INTEGER *systemTime) {
     if (systemTime != NULL)
         systemTime->QuadPart = g_systemTimeBase + (int64_t)(g_frameMs * 10000.0);
 }
+#endif
 
 double Demo_TimestampMs(void) {
     return g_frameMs + 0.001 * g_readsThisFrame++;
@@ -562,11 +565,14 @@ void Demo_Init(void) {
     FILETIME epochTime;
     SystemTimeToFileTime(&epoch, &epochTime);
     g_systemTimeBase = ((int64_t)epochTime.dwHighDateTime << 32) | epochTime.dwLowDateTime;
+#ifndef NIGHTFIRE_STANDALONE
     KernelKeQuerySystemTime = Demo_KeQuerySystemTime;
+#endif
 
     FmvAudio::SetVirtualClock(MovieClockSeconds);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 void Demo_RestoreOriginals(void) {
     const char *list = getenv("NIGHTFIRE_ORIGINAL");
     if (list == NULL || list[0] == '\0')
@@ -592,6 +598,7 @@ void Demo_RestoreOriginals(void) {
     printf("[demo] NIGHTFIRE_ORIGINAL: %d functions run as the original, %d had no port\n", restored, unpatched);
     fflush(stdout);
 }
+#endif
 
 bool Demo_Active(void) {
     return g_mode != DEMO_OFF;
@@ -726,7 +733,7 @@ static void PrintGameState(void) {
 // printed at NIGHTFIRE_DEMO_DUMP_OBJECTS's frame, to compare with a run of the originals
 static void PrintObjects(void) {
     int i = 0;
-    for (obj_tag *o = FirstObject; o != NULL; o = o->nextObject, i++) {
+    for (obj_tag *o = control_first_object(); o != NULL; o = o->nextObject, i++) {
         uint32_t p[3], r[3];
         memcpy(p, &o->position, sizeof(p));
         memcpy(r, &o->rotation, sizeof(r));
@@ -765,8 +772,8 @@ static bool StampOffsetMatches(uint32_t recorded) {
 }
 
 static void Checksums(uint32_t sums[SUM_COUNT]) {
-    uint8_t rand[RAND_STATE_BYTES];
-    XbeOursRead(rand, RandState.at, sizeof(rand));
+    // The random generator's state and multipliers, in the game's order (Rand_Random)
+    const uint32_t rand[4] = {RandStateA, RandStateB, RandMultiplierB, RandMultiplierA};
     sums[SUM_RNG] = Fnv(kFnvBasis, rand, sizeof(rand));
     sums[SUM_GAMESTATE] = Fnv(kFnvBasis, &GameState, sizeof(GameState));
     sums[SUM_CHANNELS] = Fnv(Fnv(kFnvBasis, switch_channels, sizeof(switch_channels)), switch_channels_time,
@@ -779,7 +786,7 @@ static void Checksums(uint32_t sums[SUM_COUNT]) {
     }
 
     uint32_t objects = kFnvBasis;
-    for (obj_tag *o = FirstObject; o != NULL; o = o->nextObject) {
+    for (obj_tag *o = control_first_object(); o != NULL; o = o->nextObject) {
         objects = Fnv(objects, &o->objectType, 1);
         objects = Fnv(objects, &o->flags, 1);
         objects = Fnv(objects, &o->curState, 2);
@@ -804,8 +811,10 @@ static void Checksums(uint32_t sums[SUM_COUNT]) {
 }
 
 void Demo_FrameEnd(void) {
+#ifndef NIGHTFIRE_STANDALONE
     DataWrites_Frame();
     MemTrace_Frame();
+#endif
     if (g_mode == DEMO_OFF)
         return;
 
@@ -870,7 +879,7 @@ void Demo_FrameEnd(void) {
 
     if (g_frame % 1800 == 0) {
         int objects = 0;
-        for (obj_tag *o = g_staleObjects ? NULL : FirstObject; o != NULL; o = o->nextObject)
+        for (obj_tag *o = g_staleObjects ? NULL : control_first_object(); o != NULL; o = o->nextObject)
             objects++;
         printf("[demo] frame %u: level 0x%08x, %d objects\n", g_frame, (unsigned)GameState.CurrentLevelHashcode,
                objects);

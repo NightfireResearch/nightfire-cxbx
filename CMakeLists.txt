@@ -69,91 +69,9 @@ endif()
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 if(WIN32)   # the action engine and both loaders
-add_library(actioninject SHARED
-  src/dllmain.cpp
-  src/inject_action.cpp
-  src/inject.h
-  src/common/xbeOriginal.cpp
-  src/common/xbeRelocate.cpp
-  src/action/devtools/MenuProbe.cpp
-  src/action/devtools/SndTrace.cpp
-  src/action/devtools/DataWrites.cpp
-  src/action/devtools/MemTrace.cpp
-  src/action/devtools/AllOriginal.cpp
-  src/action/devtools/LoadScreenShadow.cpp
-  src/action/devtools/FileDump.cpp
-  src/action/devtools/SecretsShadow.cpp
-  src/action/devtools/UnlocksShadow.cpp
-  src/action/devtools/MPMenusShadow.cpp
-  src/action/devtools/UpgradeShadow.cpp
-  src/action/devtools/MemShadow.cpp
-  src/action/devtools/ScoreShadow.cpp
-  src/action/devtools/SaveShadow.cpp
-  src/action/devtools/CodenameShadow.cpp
-  src/action/devtools/DroneTablesCheck.cpp
-  src/action/devtools/DroneShadow.cpp
-  src/action/devtools/DroneAIShadow.cpp
-  src/action/devtools/AIHintsShadow.cpp
-  src/action/devtools/NavShadow.cpp
-  src/action/devtools/WeaponTableShadow.cpp
-  src/action/devtools/MatrixShadow.cpp
-  src/action/devtools/ScriptShadow.cpp
-  src/action/devtools/RandomShadow.cpp
-  src/action/devtools/CRuntimeShadow.cpp
-  src/action/devtools/ShadowHarness.cpp
-  src/action/devtools/TriggerShadow.cpp
-  src/action/devtools/DoorShadow.cpp
-  src/action/devtools/BootShadow.cpp
-  src/action/devtools/InflateShadow.cpp
-  src/action/devtools/SecurityShadow.cpp
-  src/action/devtools/PlrStatShadow.cpp
-  src/action/devtools/DroneStateShadow.cpp
-  src/action/devtools/DroneCivilianShadow.cpp
-  src/action/devtools/DroneDamageShadow.cpp
-  src/action/devtools/DroneWeaponShadow.cpp
-  src/action/devtools/DroneVisionShadow.cpp
-  src/action/devtools/DroneAlertShadow.cpp
-  src/action/devtools/DroneOpponentShadow.cpp
-  src/action/devtools/DroneMoveShadow.cpp
-  src/action/devtools/DroneCollisionShadow.cpp
-  src/action/devtools/DroneRouteShadow.cpp
-  src/action/devtools/DroneModeShadow.cpp
-  src/action/devtools/DroneInitShadow.cpp
-  src/action/devtools/DroneAnimShadow.cpp
-  src/action/devtools/DroneCoreShadow.cpp
-  src/action/devtools/DroneCombatShadow.cpp
-  src/action/devtools/DroneCoverShadow.cpp
-  src/action/devtools/DroneReactShadow.cpp
-  src/action/devtools/DroneRoleShadow.cpp
-  src/action/devtools/DroneHelperShadow.cpp
-  src/action/devtools/DroneBotShadow.cpp
-  src/action/devtools/PlayerShadow.cpp
-  src/action/devtools/PlayerWeaponShadow.cpp
-  src/action/devtools/AnimPortShadow.cpp
-  src/action/devtools/CollidePortShadow.cpp
-  src/action/devtools/EffectPortShadow.cpp
-  src/action/devtools/ViewMathShadow.cpp
-  src/action/devtools/ObjectPortShadow.cpp
-  src/action/devtools/EnginePortShadow.cpp
-  src/action/devtools/HudPortShadow.cpp
-  src/action/devtools/SoundPortShadow.cpp
-  src/action/devtools/SFXShadow.cpp
-  src/action/devtools/MenuPortShadow.cpp
-  src/action/devtools/MenuControlShadow.cpp
-  src/action/devtools/MenuHandlerShadow.cpp
-  src/action/devtools/CameraShadow.cpp
-  src/action/devtools/MathExactShadow.cpp
-  src/action/devtools/BotCoreShadow.cpp
-  src/action/devtools/MPFlagShadow.cpp
-  src/action/devtools/MPGoldenEyeShadow.cpp
-  src/action/devtools/DroneMPShadow.cpp
-  src/action/devtools/MPMatchShadow.cpp
-  src/action/devtools/BotStateShadow.cpp
-  src/action/devtools/BotPortShadow.cpp
-  src/action/devtools/MPObjectsShadow.cpp
-  src/action/devtools/MPObjectivesShadow.cpp
-  src/action/devtools/Teleport.cpp
-  src/action/devtools/Demo.cpp
+# The action engine's own sources, which both builds compile: actioninject.dll (with the devtools and the patching
+# of the XBE) and action_standalone.exe (with neither).
+set(nf_action_sources
   src/action/engine/LaunchOptions.cpp
   src/action/game.cpp
   src/action/main.cpp
@@ -383,6 +301,94 @@ add_library(actioninject SHARED
   src/action/sound/SFXStream.cpp
   src/action/sound/Sound.cpp
   src/action/sound/SFXOutputData.cpp
+)
+
+add_library(actioninject SHARED
+  src/dllmain.cpp
+  src/inject_action.cpp
+  src/inject.h
+  src/common/xbeOriginal.cpp
+  src/common/xbeRelocate.cpp
+  src/action/devtools/MenuProbe.cpp
+  src/action/devtools/SndTrace.cpp
+  src/action/devtools/DataWrites.cpp
+  src/action/devtools/MemTrace.cpp
+  src/action/devtools/AllOriginal.cpp
+  src/action/devtools/LoadScreenShadow.cpp
+  src/action/devtools/FileDump.cpp
+  src/action/devtools/SecretsShadow.cpp
+  src/action/devtools/UnlocksShadow.cpp
+  src/action/devtools/MPMenusShadow.cpp
+  src/action/devtools/UpgradeShadow.cpp
+  src/action/devtools/MemShadow.cpp
+  src/action/devtools/ScoreShadow.cpp
+  src/action/devtools/SaveShadow.cpp
+  src/action/devtools/CodenameShadow.cpp
+  src/action/devtools/DroneTablesCheck.cpp
+  src/action/devtools/DroneShadow.cpp
+  src/action/devtools/DroneAIShadow.cpp
+  src/action/devtools/AIHintsShadow.cpp
+  src/action/devtools/NavShadow.cpp
+  src/action/devtools/WeaponTableShadow.cpp
+  src/action/devtools/MatrixShadow.cpp
+  src/action/devtools/ScriptShadow.cpp
+  src/action/devtools/RandomShadow.cpp
+  src/action/devtools/CRuntimeShadow.cpp
+  src/action/devtools/ShadowHarness.cpp
+  src/action/devtools/TriggerShadow.cpp
+  src/action/devtools/DoorShadow.cpp
+  src/action/devtools/BootShadow.cpp
+  src/action/devtools/InflateShadow.cpp
+  src/action/devtools/SecurityShadow.cpp
+  src/action/devtools/PlrStatShadow.cpp
+  src/action/devtools/DroneStateShadow.cpp
+  src/action/devtools/DroneCivilianShadow.cpp
+  src/action/devtools/DroneDamageShadow.cpp
+  src/action/devtools/DroneWeaponShadow.cpp
+  src/action/devtools/DroneVisionShadow.cpp
+  src/action/devtools/DroneAlertShadow.cpp
+  src/action/devtools/DroneOpponentShadow.cpp
+  src/action/devtools/DroneMoveShadow.cpp
+  src/action/devtools/DroneCollisionShadow.cpp
+  src/action/devtools/DroneRouteShadow.cpp
+  src/action/devtools/DroneModeShadow.cpp
+  src/action/devtools/DroneInitShadow.cpp
+  src/action/devtools/DroneAnimShadow.cpp
+  src/action/devtools/DroneCoreShadow.cpp
+  src/action/devtools/DroneCombatShadow.cpp
+  src/action/devtools/DroneCoverShadow.cpp
+  src/action/devtools/DroneReactShadow.cpp
+  src/action/devtools/DroneRoleShadow.cpp
+  src/action/devtools/DroneHelperShadow.cpp
+  src/action/devtools/DroneBotShadow.cpp
+  src/action/devtools/PlayerShadow.cpp
+  src/action/devtools/PlayerWeaponShadow.cpp
+  src/action/devtools/AnimPortShadow.cpp
+  src/action/devtools/CollidePortShadow.cpp
+  src/action/devtools/EffectPortShadow.cpp
+  src/action/devtools/ViewMathShadow.cpp
+  src/action/devtools/ObjectPortShadow.cpp
+  src/action/devtools/EnginePortShadow.cpp
+  src/action/devtools/HudPortShadow.cpp
+  src/action/devtools/SoundPortShadow.cpp
+  src/action/devtools/SFXShadow.cpp
+  src/action/devtools/MenuPortShadow.cpp
+  src/action/devtools/MenuControlShadow.cpp
+  src/action/devtools/MenuHandlerShadow.cpp
+  src/action/devtools/CameraShadow.cpp
+  src/action/devtools/MathExactShadow.cpp
+  src/action/devtools/BotCoreShadow.cpp
+  src/action/devtools/MPFlagShadow.cpp
+  src/action/devtools/MPGoldenEyeShadow.cpp
+  src/action/devtools/DroneMPShadow.cpp
+  src/action/devtools/MPMatchShadow.cpp
+  src/action/devtools/BotStateShadow.cpp
+  src/action/devtools/BotPortShadow.cpp
+  src/action/devtools/MPObjectsShadow.cpp
+  src/action/devtools/MPObjectivesShadow.cpp
+  src/action/devtools/Teleport.cpp
+  src/action/devtools/Demo.cpp
+  ${nf_action_sources}
 )
 
 # The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)
@@ -1047,6 +1053,35 @@ target_compile_definitions(actioninject PRIVATE NIGHTFIRE_X87=1)
 if(MSVC)
   target_compile_options(actioninject PRIVATE /Ob0)
 endif()
+
+# The standalone action engine (docs/action-standalone.md): our code alone, no XBE mapped or read, and none of the
+# devtools (src/action/standalone/NoDevtools.cpp answers the hooks game code calls). Compiled as actioninject is.
+add_executable(action_standalone
+  ${nf_action_sources}
+  src/action/standalone/StandaloneMain.cpp
+  src/action/standalone/NoDevtools.cpp
+  src/res/res.rc
+)
+# action_standalone_test is the same with the time demos' player (devtools/Demo.cpp), to play the recordings without
+# the XBE.
+add_executable(action_standalone_test EXCLUDE_FROM_ALL
+  ${nf_action_sources}
+  src/action/standalone/StandaloneMain.cpp
+  src/action/standalone/NoDevtools.cpp
+  src/action/devtools/Demo.cpp
+  src/res/res.rc
+)
+target_compile_definitions(action_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+foreach(target action_standalone action_standalone_test)
+  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_X87=1 NIGHTFIRE_STANDALONE)
+  target_link_libraries(${target} PRIVATE d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
+  if(MSVC)
+    target_compile_options(${target} PRIVATE /Ob0)
+    target_link_options(${target} PRIVATE /MAP)
+  else()
+    target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
+  endif()
+endforeach()
 target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 endif()
 
@@ -1075,7 +1110,7 @@ add_executable(fmvaudiocheck EXCLUDE_FROM_ALL
   src/common/fmv/Ffmpeg.cpp
 )
 target_link_libraries(fmvaudiocheck PRIVATE user32)
-foreach(target actioninject drivinginject fmvaudiocheck)
+foreach(target actioninject action_standalone action_standalone_test drivinginject fmvaudiocheck)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
   add_custom_command(TARGET ${target} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
@@ -1113,6 +1148,8 @@ add_custom_target(preprocess
                   COMMENT "Generating injection tables (tools/preprocess.py)")
 if(WIN32)
 add_dependencies(actioninject preprocess)
+add_dependencies(action_standalone preprocess)
+add_dependencies(action_standalone_test preprocess)
 add_dependencies(drivinginject preprocess)
 endif()
 
@@ -1469,7 +1506,7 @@ endif()   # WIN32: gamewindow_test, standalone_poison, shadercheck
 # A 64-bit configuration (the windows-x64 preset) is for the standalone driving engine alone: the loaders and the
 # injection DLLs share the 32-bit XBE's address space by construction (docs/driving/64-bit.md).
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  foreach(target action actioninject driving drivinginject)
+  foreach(target action actioninject action_standalone action_standalone_test driving drivinginject)
     if(TARGET ${target})
       set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ON EXCLUDE_FROM_DEFAULT_BUILD ON)
     endif()
