@@ -131,8 +131,7 @@ object's (`Mem_GameAddress`).
 With the Xbox heap, all 13 recordings match the C baseline on 64-bit, every frame; on 32-bit, with the check, all 13
 match too and the Xbox heap agrees with the heap throughout.
 
-A cheaper way, for later: a drone placed by the level lies at the same address at every load of it (the heap is
-reset at each level load and the level built in one order), so a table by level and placement would give their bits
-without the shadow. Drones made by spawners during play lie where the play has left room, so a table cannot give
-theirs.
+Where the phase need not be the Xbox's (a mod, say), the Xbox heap can go and the breath phase can be drawn at
+random when the drone is made: that is the only alternative. A table of addresses would not be one - a drone placed
+by the level lies at the same address at every load, but the spawners' drones lie where the play has left room.
 
