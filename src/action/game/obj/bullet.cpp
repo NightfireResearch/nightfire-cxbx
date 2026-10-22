@@ -502,6 +502,7 @@ void _Bullet_trail_effect_smoke(obj_tag *obj) {
     Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, BULLET_SMOKE, 11, 0x404040ff, 0x404040ff, 0xff);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ESI
 // AUTOLTCG
 void __declspec(naked) Bullet_trail_effect_smoke(void) {
@@ -512,6 +513,7 @@ void __declspec(naked) Bullet_trail_effect_smoke(void) {
         ret
     }
 }
+#endif
 
 // Dust behind the projectile, every third frame in single player
 void _Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
@@ -524,6 +526,7 @@ void _Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, BULLET_DUST, 0, 0x7f7f7f7f, 0x80808000, 0x40);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ESI
 // AUTOLTCG
 void __declspec(naked) Bullet_SpawnSmokeDust_SomeOtherProbability(void) {
@@ -534,6 +537,7 @@ void __declspec(naked) Bullet_SpawnSmokeDust_SomeOtherProbability(void) {
         ret
     }
 }
+#endif
 
 // Finer dust, every other frame in single player
 void _Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
@@ -546,6 +550,7 @@ void _Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, BULLET_DUST, 7, 0x7f7f7f7f, 0x80808000, 0x20);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ESI
 // AUTOLTCG
 void __declspec(naked) Bullet_SpawnSmokeDust_SomeProbability(void) {
@@ -556,6 +561,7 @@ void __declspec(naked) Bullet_SpawnSmokeDust_SomeProbability(void) {
         ret
     }
 }
+#endif
 
 // A flash grenade going off: each player within 30 units is dazzled by how near it is (5 to 90 units), how directly
 // he faces it (30 to about 100 degrees) and, half as much, without a line of sight; drones are told, turrets disabled
@@ -782,6 +788,7 @@ void _Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, floa
     Bullet_SatchelDigit(obj, &rot, &units, seconds % 10);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ECX, the bullet in EAX
 // AUTOLTCG
 void __declspec(naked) Bullet_DoTrails(void) {
@@ -795,6 +802,7 @@ void __declspec(naked) Bullet_DoTrails(void) {
         ret
     }
 }
+#endif
 
 // On deletion: the sound stopped, a guided missile's player given back control, the grapple let go (and, stopped at
 // a grapple point, the player hung from it), the trip-bomb's beam deleted
@@ -859,6 +867,7 @@ bool _Bullet_heatseekable(obj_tag *obj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EDI
 // AUTOLTCG
 void __declspec(naked) Bullet_heatseekable(void) {
@@ -873,6 +882,7 @@ void __declspec(naked) Bullet_heatseekable(void) {
         ret
     }
 }
+#endif
 
 // A homing projectile's target: the nearest object it may chase (other than who fired it) within 1000, ahead of the
 // shooter (within about 49 degrees of where he faces) and in his line of sight.
@@ -935,6 +945,7 @@ void _Bullet_homing(BU_tag *bullet, obj_tag *obj) {
     Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The bullet in ESI, the object on the stack
 // AUTOLTCG
 void __declspec(naked) Bullet_homing(void) {
@@ -946,6 +957,7 @@ void __declspec(naked) Bullet_homing(void) {
         ret
     }
 }
+#endif
 
 // The level's 32 spent cases, hidden until used
 // AUTOINJECT

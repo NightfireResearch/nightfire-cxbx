@@ -600,6 +600,7 @@ static uint _MenuManager_GetStatus(void) {
     return MenuManager_HighestStatus();
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // Leaves EDX alone, which MenuManager_Monitor's original keeps across the call
 // AUTOLTCG
 uint __declspec(naked) MenuManager_GetStatus(void) {
@@ -612,6 +613,11 @@ uint __declspec(naked) MenuManager_GetStatus(void) {
         ret
     }
 }
+#else
+uint MenuManager_GetStatus(void) {
+    return _MenuManager_GetStatus();
+}
+#endif
 
 // AUTOINJECT
 void MenuManager_Enable(bool enable, uchar managerNum) {

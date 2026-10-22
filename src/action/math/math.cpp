@@ -115,6 +115,7 @@ void _Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   QuatRotation(param_1, param_2);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original (0x000d5800) only ever touches EAX and the x87 stack, and the game's own callers were compiled
 // knowing that: KeyFrame_Interp and Spline_Interp keep the output matrix in ECX across the call and then write
 // the translation through it (mov [ecx+0x30], ...). Our compiled body is entitled to clobber ECX and EDX, and
@@ -136,6 +137,11 @@ void __declspec(naked) Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2)
     ret
   }
 }
+#else
+void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+    _Quat_QuatToMat(param_1, param_2);
+}
+#endif
 
 // Convert a rotation matrix to a quaternion (Shepperd's method), summed on the x87
 // AUTOINJECT
@@ -435,6 +441,7 @@ static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
   vOut->z = (float)(rcpMag * vIn->z);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Mat_LookAt and
 // 0x000d8590 keep EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
 // AUTOINJECT
@@ -451,6 +458,11 @@ void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
         ret
     }
 }
+#else
+void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
+    Vec_NormaliseBody(vOut, vIn);
+}
+#endif
 
 // The length is the unrounded one
 static double Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
@@ -459,6 +471,7 @@ static double Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
   return len;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Cel_ObjectLeftCel keeps
 // EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
 // AUTOINJECT
@@ -475,6 +488,11 @@ double __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
         ret
     }
 }
+#else
+double Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
+    return Vec_NormaliseLenBody(output, input);
+}
+#endif
 
 // AUTOINJECT
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *vOut) {
@@ -1043,6 +1061,7 @@ static double maybeAtan2Body(float y, float x) {
   return result;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
 // game reaches this through an entry that keeps them (tools/caller_saved.py).
 // AUTOINJECT
@@ -1059,6 +1078,11 @@ double __declspec(naked) maybeAtan2(float y, float x) {
         ret
     }
 }
+#else
+double maybeAtan2(float y, float x) {
+    return maybeAtan2Body(y, x);
+}
+#endif
 
 // Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
 // "param_4" when direction is nearly parallel to param_3). The dot and cross products are taken on the x87.

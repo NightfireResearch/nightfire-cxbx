@@ -375,6 +375,7 @@ bool _AINetwork_NodeSearchCel(AINodeSearch_tag *search) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the search in ESI.
 // AUTOLTCG
 void __declspec(naked) AINetwork_NodeSearchCel(void) {
@@ -385,6 +386,7 @@ void __declspec(naked) AINetwork_NodeSearchCel(void) {
         ret
     }
 }
+#endif
 
 // AINetwork_NodeSearchCel, and while nothing is found, once more for each of the cel's portals whose height range
 // (2 m either way) holds the origin. The search stays in the origin's cel each time. False only without a cel.
@@ -1300,6 +1302,7 @@ bool _AINetwork_AlterDestFor_DROUTE_Nearest(AIRoute_tag *route) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in ESI.
 // AUTOLTCG
 void __declspec(naked) AINetwork_AlterDestFor_DROUTE_Nearest(void) {
@@ -1310,6 +1313,7 @@ void __declspec(naked) AINetwork_AlterDestFor_DROUTE_Nearest(void) {
         ret
     }
 }
+#endif
 
 // Whether a route may skip a node, going from the one before to the one after (-1 for none): not when the node and
 // either neighbour are both door nodes, nor both kick nodes. A node out of the path counts as one without flags, and
@@ -1376,6 +1380,7 @@ uint _AINetwork_OptimiseRoute(AIRoute_tag *route, char dropFirst, uint status, c
     return status;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in ESI and dropFirst in AL, then the status and dropLast on the stack.
 // AUTOLTCG
 void __declspec(naked) AINetwork_OptimiseRoute(void) {
@@ -1389,6 +1394,7 @@ void __declspec(naked) AINetwork_OptimiseRoute(void) {
         ret
     }
 }
+#endif
 
 // Sets a route up to an object: the target is the shared player target when the object is the player, otherwise
 // `target`, which is pointed at the object either way
@@ -1433,6 +1439,7 @@ bool _AINetwork_SetupRouteToPosition(AIRoute_tag *route, CelPos_tag *dest, obj_t
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in ESI and the destination in EDI, the rest on the stack.
 // AUTOLTCG
 void __declspec(naked) AINetwork_SetupRouteToPosition(void) {
@@ -1448,6 +1455,7 @@ void __declspec(naked) AINetwork_SetupRouteToPosition(void) {
         ret
     }
 }
+#endif
 
 // Keeps a route to an object while it is still good - the same object (any object in multiplayer), a target not
 // rebuilt since, and valid - and otherwise sets it up again
@@ -1508,6 +1516,7 @@ uint _AINetwork_CalcRoute(AIRoute_tag *route, obj_tag *mover, obj_tag *targetObj
     return result;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in ECX, the mover in EAX and the target object in EBX; the argument its callers push
 // is not read.
 // AUTOLTCG
@@ -1521,6 +1530,7 @@ void __declspec(naked) AINetwork_CalcRoute(void) {
         ret
     }
 }
+#endif
 
 // Plans a route to an object, keeping the one there is while it is good. A partial route has its destination moved
 // short of the bound in the way. The last argument is not read.
@@ -1717,6 +1727,7 @@ bool _AINetwork_SetupNextNode(AIRoute_tag *route, short direction) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in EAX and the direction on the stack (its callers push one more word, not read).
 // AUTOLTCG
 void __declspec(naked) AINetwork_SetupNextNode(void) {
@@ -1728,6 +1739,7 @@ void __declspec(naked) AINetwork_SetupNextNode(void) {
         ret
     }
 }
+#endif
 
 // Whether a creep step keeps clear of the bound corners: always without bounds or for a step under 1 m. The original
 // takes the step's ends in EBX and EDI and the blocked flag in ESI, which it clears.
@@ -1767,6 +1779,7 @@ bool _LinkCreep_Increment(AIRoute_tag *route, uchar *blocked) {
     return !(distance < 0.3f);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the blocked flag in EAX and the route on the stack.
 // AUTOLTCG
 void __declspec(naked) LinkCreep_Increment(void) {
@@ -1778,6 +1791,7 @@ void __declspec(naked) LinkCreep_Increment(void) {
         ret
     }
 }
+#endif
 
 // The creep's step back: at the start of the link, the previous node. The waypoint moves back if the step is clear of
 // the bound corners (or under 1 m). False only before the route's first node.
@@ -1802,6 +1816,7 @@ bool _LinkCreep_Decrement(AIRoute_tag *route) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in EAX (its caller pushes one more word, not read).
 // AUTOLTCG
 void __declspec(naked) LinkCreep_Decrement(void) {
@@ -1812,6 +1827,7 @@ void __declspec(naked) LinkCreep_Decrement(void) {
         ret
     }
 }
+#endif
 
 // One frame of creeping: tells the drone when it reaches a special node, steps back when the mover's way to the
 // current step passes a bound corner, and otherwise steps on. A blocked step marks the drone (unless its behaviour
@@ -1848,6 +1864,7 @@ bool _LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv) {
     return _LinkCreep_Increment(route, NULL);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the route in ESI and the DCVars in EAX.
 // AUTOLTCG
 void __declspec(naked) LinkCreep_Handler(void) {
@@ -1859,6 +1876,7 @@ void __declspec(naked) LinkCreep_Handler(void) {
         ret
     }
 }
+#endif
 
 // One frame of following a route: the distance left, the links counted as used, arrival (the end of a route that does
 // not loop, within its arrive radius) and otherwise a creep step. Returns the status.

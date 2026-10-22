@@ -227,6 +227,7 @@ void _Player_InitGrapple(BLData *blData, obj_tag *player) {
                                        1.0f, 0x30, 0xff, 0xff, 0xff);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_InitGrapple(void) {
     _asm {
@@ -237,6 +238,7 @@ void __declspec(naked) Player_InitGrapple(void) {
         ret
     }
 }
+#endif
 
 // The grapple has caught at point on grappleObj: the player is pulled towards it (the grapple substate), and the floor
 // cannot stop the pull for 15 frames.
@@ -312,6 +314,7 @@ void _Player_SSGrapple(BLData *blData, obj_tag *player) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_SSGrapple(void) {
     _asm {
@@ -322,6 +325,7 @@ void __declspec(naked) Player_SSGrapple(void) {
         ret
     }
 }
+#endif
 
 // The rope, every frame: hidden, unless the grapple is in hand (weapons 0x50 and 0x51) and pulling or in flight, when it
 // runs from the gun to the point, scaled to the length. The original takes the player in EDI.
@@ -350,6 +354,7 @@ void _Player_GrappleSetRope(obj_tag *player) {
     blData->rope->scale = Vec_Dist3D(&gun, point);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_GrappleSetRope(void) {
     _asm {
@@ -359,6 +364,7 @@ void __declspec(naked) Player_GrappleSetRope(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Wires: hanging from them, and ziplines

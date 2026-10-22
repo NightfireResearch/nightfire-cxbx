@@ -268,6 +268,7 @@ int _Script_FindKey(KEYED_POSROT *keys, int count, float frame) {
     return high;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the count in EAX and the keys in EBX, the frame on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_FindKey(void) {
@@ -280,6 +281,7 @@ void __declspec(naked) Script_FindKey(void) {
         ret
     }
 }
+#endif
 
 // The two keys around the whole frame of time (keys[0], keys[1]) and their weights for linear interpolation.
 // Outside the keys, the end key alone.
@@ -350,6 +352,7 @@ static void _Script_InterpLinear(int *keys, float *weights, KEYED_POSROT *base, 
     res->alpha = (float)((double)to->alpha * weights[1] + (double)from->alpha * weights[0]);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the keys in ECX, the weights in EBX and the base key in EDX; the result and a flag on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_InterpLinear(void) {
@@ -364,6 +367,7 @@ void __declspec(naked) Script_InterpLinear(void) {
         ret
     }
 }
+#endif
 
 // Interpolates four keys by spline (the position by Catmull-Rom, the rotation by slerp between the middle two).
 static void _Script_InterpSpline(int *keys, float *weights, KEYED_POSROT *base, InterpResult *res, char isCamera) {
@@ -379,6 +383,7 @@ static void _Script_InterpSpline(int *keys, float *weights, KEYED_POSROT *base, 
                           + (double)k3->alpha * weights[3]) + (double)k2->alpha * weights[2]);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the keys in EAX, the weights in ESI and the base key in ECX; the result and a flag on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_InterpSpline(void) {
@@ -393,6 +398,7 @@ void __declspec(naked) Script_InterpSpline(void) {
         ret
     }
 }
+#endif
 
 // The matrix (and scale, and alpha or colour) of a stream at its current frame, from keys firstKey to lastKey,
 // interpolated by mode. The position is scaled by posScale, and with concat put in the script's frame.
@@ -457,6 +463,7 @@ void _Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, fl
         Concat(&scriptInfo->maybeMatrix, mtx);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the mode in EAX, firstKey in DX and lastKey in CX, the rest on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_GetInterp(void) {
@@ -479,6 +486,7 @@ void __declspec(naked) Script_GetInterp(void) {
         ret
     }
 }
+#endif
 
 // Puts out in the frame of stream's parent, and of its parent in turn up to a stream with none, then of the
 // script. A chain that leads out of the script's streams stops there, without the script's frame.
@@ -507,6 +515,7 @@ static void _Script_ConcatParents(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATR
     Concat(&scriptInfo->maybeMatrix, out);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the stream in EAX and the script in EDI, the matrix on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_ConcatParents(void) {
@@ -519,6 +528,7 @@ void __declspec(naked) Script_ConcatParents(void) {
         ret
     }
 }
+#endif
 
 // Copies a camera stream's view to camera 4 and leaves the camera to find its room again.
 void _Script_UpdateCamera(SCRIPTCAMERA *camera) {
@@ -530,6 +540,7 @@ void _Script_UpdateCamera(SCRIPTCAMERA *camera) {
     glb_viewer[4]->someCel = NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the camera block in EAX.
 // AUTOLTCG
 void __declspec(naked) Script_UpdateCamera(void) {
@@ -540,6 +551,7 @@ void __declspec(naked) Script_UpdateCamera(void) {
         ret
     }
 }
+#endif
 
 // Puts what a stream drives where its keys say for the stream's current frame: an entity (its matrix, scale and
 // alpha), an animation (its frame, and the footstep it lands), the camera, a sound (its fade and position), a
@@ -725,6 +737,7 @@ void _Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     Light_Update();
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the stream in EAX and the script in ESI (link-time code generation; pops nothing). Only the
 // original script interpreter calls it; C callers call _Script_CameraStart.
 // AUTOLTCG
@@ -737,6 +750,7 @@ void __declspec(naked) Script_CameraStart(void) {
         ret
     }
 }
+#endif
 
 // The object an entity stream drives, made by the creator its placement type names (with tptr as the placement), or
 // a plain object showing hashcode. An object the stream already has is kept if it is of the type wanted - which only
@@ -830,6 +844,7 @@ obj_tag* _Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placemen
     return obj;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the stream on the stack, the hashcode in EDI and the placement type in BL.
 // AUTOLTCG
 void __declspec(naked) Script_CreateEntity(void) {
@@ -843,6 +858,7 @@ void __declspec(naked) Script_CreateEntity(void) {
         ret
     }
 }
+#endif
 
 // Command 7: an entity follows the stream's keys - hashcode, parent (if any), spline or not, placement type and
 // that placement's parameters. The object points back at the script player.
@@ -893,6 +909,7 @@ void _Script_LightStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     Script_Interp(scriptInfo, stream);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script on the stack and the stream in EDI.
 // AUTOLTCG
 void __declspec(naked) Script_LightStart(void) {
@@ -904,6 +921,7 @@ void __declspec(naked) Script_LightStart(void) {
         ret
     }
 }
+#endif
 
 // Command 20: a sprite on camera 4 - its rectangle, flags (2 and 4 select two of the sprite's own flags) and
 // image.
@@ -939,6 +957,7 @@ void _Script_SpriteStart(SSTREAM *stream) {
     stream->linkedGameOrSoundObject = spr;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the stream in EDI. Script_Run also pushes the script, which it does not read.
 // AUTOLTCG
 void __declspec(naked) Script_SpriteStart(void) {
@@ -949,6 +968,7 @@ void __declspec(naked) Script_SpriteStart(void) {
         ret
     }
 }
+#endif
 
 // Command 4, a stream's end at the frame that follows. Until then the command is read again; at it, a looping
 // script goes back to its loop start and any other stops.
@@ -970,6 +990,7 @@ void _Script_StreamEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     scriptInfo->playbackFlags |= ScriptPlayback_AtEnd;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script in EDI and the stream in ESI.
 // AUTOLTCG
 void __declspec(naked) Script_StreamEnd(void) {
@@ -981,6 +1002,7 @@ void __declspec(naked) Script_StreamEnd(void) {
         ret
     }
 }
+#endif
 
 // Command 22: a sound - its id, whether it is 2D, and the stream whose object a 3D sound follows (if not given, the
 // stream before this one). A 3D sound with no object to follow plays in 2D. Nothing plays while a fast-forward's
@@ -1009,6 +1031,7 @@ void _Script_SoundStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     stream->whatKindOfInterpolation = SStream_Sound;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script on the stack and the stream in EDI.
 // AUTOLTCG
 void __declspec(naked) Script_SoundStart(void) {
@@ -1020,6 +1043,7 @@ void __declspec(naked) Script_SoundStart(void) {
         ret
     }
 }
+#endif
 
 // Command 27: a sub-script, playing in a loop, follows the stream's keys - its hashcode and parent (if any).
 void _Script_SubScriptStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
@@ -1039,6 +1063,7 @@ void _Script_SubScriptStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     Script_Interp(scriptInfo, stream);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script on the stack and the stream in ESI.
 // AUTOLTCG
 void __declspec(naked) Script_SubScriptStart(void) {
@@ -1050,6 +1075,7 @@ void __declspec(naked) Script_SubScriptStart(void) {
         ret
     }
 }
+#endif
 
 // Command 18: an event - its number of arguments, its id and the arguments. Several act on the object of the
 // stream before this one (an entity or animation).
@@ -1172,6 +1198,7 @@ void _Script_EventHandler(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script in ESI and the stream on the stack.
 // AUTOLTCG
 void __declspec(naked) Script_EventHandler(void) {
@@ -1183,6 +1210,7 @@ void __declspec(naked) Script_EventHandler(void) {
         ret
     }
 }
+#endif
 
 // Command 10: an animated object on its own - the animation script, the skin and the frame to start at. The
 // script is held at the stream's frame (Script_Interp).
@@ -1228,6 +1256,7 @@ void _Script_AnimStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         build_LinkToRoom(obj, 0, glb_world);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script on the stack and the stream in EDI.
 // AUTOLTCG
 void __declspec(naked) Script_AnimStart(void) {
@@ -1239,6 +1268,7 @@ void __declspec(naked) Script_AnimStart(void) {
         ret
     }
 }
+#endif
 
 // Whether an object or sound a stream made at its first frame (startedAt 1) stays past the end of a looping script
 static bool KeptPastLoopEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream, ushort startedAt) {
@@ -1360,6 +1390,7 @@ void _Script_Run(SCRIPTINFO *scriptInfo) {
     } while (restart);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script in EBX. Script_Update is its only caller.
 // AUTOLTCG
 void __declspec(naked) Script_Run(void) {
@@ -1370,6 +1401,7 @@ void __declspec(naked) Script_Run(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Scripts

@@ -174,6 +174,7 @@ void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders) {
     _asm {
@@ -186,6 +187,7 @@ void __declspec(naked) MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort def
         ret
     }
 }
+#endif
 
 // The weapon a blueprint brings its holder: the first of the set's weapons[1..4] it does not hold, after the slot
 // of the one it gives up. With the professional option it gives up the first weapon it holds from id 2 up, other

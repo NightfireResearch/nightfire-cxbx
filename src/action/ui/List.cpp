@@ -92,6 +92,7 @@ int _List_GetIndex(M_LIST *list, LIST_ROW *row) {
     return -1;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the list, EDX the row (kept); the original's stack argument (the rows) is not read
 // AUTOLTCG
 __declspec(naked) void List_GetIndex(void) {
@@ -107,6 +108,7 @@ __declspec(naked) void List_GetIndex(void) {
         ret
     }
 }
+#endif
 
 // The row at an index
 LIST_ROW* _List_SetIndex(M_LIST *list, int index) {
@@ -119,6 +121,7 @@ LIST_ROW* _List_SetIndex(M_LIST *list, int index) {
     return row;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ECX the list, EDX the index (kept); the original's stack argument (the rows) is not read
 // AUTOLTCG
 __declspec(naked) void List_SetIndex(void) {
@@ -134,6 +137,7 @@ __declspec(naked) void List_SetIndex(void) {
         ret
     }
 }
+#endif
 
 // The index of a row among those a text began on (wrapped rows not counted); the first row is not tested for a
 // continuation, and a row not in the list reads past the last

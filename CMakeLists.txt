@@ -1072,8 +1072,20 @@ add_executable(action_standalone_test EXCLUDE_FROM_ALL
   src/res/res.rc
 )
 target_compile_definitions(action_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# Their x87 code (math/X87Ops.cpp, docs/action-64bit.md): on, the x87's own instructions, as actioninject always has
+# them, exact against the original and the recordings; off, C in double, which a 64-bit build always is. The
+# recordings stay in step with it off only against checksums rebased by a build with it off.
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(NIGHTFIRE_ACTION_X87 OFF CACHE BOOL "Action engine, standalone: keep the x87 instructions (off: C)" FORCE)
+endif()
+option(NIGHTFIRE_ACTION_X87 "Action engine, standalone: keep the x87 instructions (off: C)" ON)
 foreach(target action_standalone action_standalone_test)
-  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_X87=1 NIGHTFIRE_STANDALONE)
+  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
+  if(NIGHTFIRE_ACTION_X87)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
   target_link_libraries(${target} PRIVATE d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
   if(MSVC)
     target_compile_options(${target} PRIVATE /Ob0)

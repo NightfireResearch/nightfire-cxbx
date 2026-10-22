@@ -274,6 +274,7 @@ void _Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in ESI and the message on the stack, and its callers clean up.
 // AUTOLTCG
 void __declspec(naked) Drone_SM_RouteMsgDCV(void) {
@@ -285,6 +286,7 @@ void __declspec(naked) Drone_SM_RouteMsgDCV(void) {
         ret
     }
 }
+#endif
 
 // Starts a drone's state machine (once, from NDrone2_PostLoad_Init): gives it its id and sends it Enter.
 // AUTOINJECT

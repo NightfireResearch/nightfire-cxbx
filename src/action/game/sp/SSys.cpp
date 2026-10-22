@@ -102,6 +102,7 @@ void _SSys_Msg(ushort item, ushort msg) {
     Sound_PlayExt((Action_SFX)msgs[msg].sound, 100.0f, 0, 0);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the item on the stack and the message in SI.
 // AUTOLTCG
 void __declspec(naked) SSys_Msg(void) {
@@ -115,6 +116,7 @@ void __declspec(naked) SSys_Msg(void) {
         ret
     }
 }
+#endif
 
 // Once a frame, outside cutscenes: an item's channel being set starts its countdown, and clearing it stops the
 // countdown. At the end the item clears its channel. Item 2, starting, first ends item 1's countdown for good (setting

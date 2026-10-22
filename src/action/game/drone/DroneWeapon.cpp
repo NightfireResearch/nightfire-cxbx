@@ -131,6 +131,7 @@ bool _DroneWeap_DoFiring(DCVars_tag *dcv) {
     return _DroneWeap_ManageBurstCount(dcv);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in EDI.
 // AUTOLTCG
 void __declspec(naked) DroneWeap_DoFiring(void) {
@@ -141,6 +142,7 @@ void __declspec(naked) DroneWeap_DoFiring(void) {
         ret
     }
 }
+#endif
 
 // Asks for fire. Restarting, unless it already fires (bots always), the first shot waits for a burst's pause.
 // AUTOINJECT
@@ -241,6 +243,7 @@ void _DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
         drone->nextShotFrame = due;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in EDI, the two flags on the stack.
 // AUTOLTCG
 void __declspec(naked) DroneWeap_NextBulletTime(char newBurst, char start) {
@@ -253,6 +256,7 @@ void __declspec(naked) DroneWeap_NextBulletTime(char newBurst, char start) {
         ret
     }
 }
+#endif
 
 // The compiler's copy of DroneWeap_NextBulletTime for a new burst, which DroneWeap_DoFiring calls (Ghidra gives it
 // the same name; ours is invented).
@@ -274,6 +278,7 @@ bool _DroneWeap_ManageBurstCount(DCVars_tag *dcv) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in EAX.
 // AUTOLTCG
 void __declspec(naked) DroneWeap_ManageBurstCount(void) {
@@ -284,6 +289,7 @@ void __declspec(naked) DroneWeap_ManageBurstCount(void) {
         ret
     }
 }
+#endif
 
 // The pause before a burst, in frames: the normal delay scaled by aggression (0 the longest, 4 the shortest) and a
 // draw of 0.5 to 1, kept between the minimum and the maximum; the minimum when the opponent is nearer than MinDist,
@@ -319,6 +325,7 @@ uint _DroneWeap_BurstDelay(Drone_tag *drone) {
     return (uint)(int)(FRAME_RATE_DIV * frames);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in ESI.
 // AUTOLTCG
 void __declspec(naked) DroneWeap_BurstDelay(void) {
@@ -329,6 +336,7 @@ void __declspec(naked) DroneWeap_BurstDelay(void) {
         ret
     }
 }
+#endif
 
 // Whether the drone may shoot now: the opponent is alive (the player only while the mission counts, outside
 // multiplayer) and the drone is in an aiming anim (mode 4, or 2 with no anim script; close up that is enough). With

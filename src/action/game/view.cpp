@@ -286,6 +286,7 @@ void _View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The cel in EAX, the view on the stack (with a second argument the original does not read)
 // AUTOLTCG
 void __declspec(naked) View_AddObjects(viewer_tag *viewer, cel_tag *cel) {
@@ -297,6 +298,7 @@ void __declspec(naked) View_AddObjects(viewer_tag *viewer, cel_tag *cel) {
         ret
     }
 }
+#endif
 
 // The cels to draw this frame into list 0, in order (keys from -90000 up in tens), with their objects; then the cels
 // inside each that the view sees, by their distance squared from the eye, and their objects. Inside cels of kind
@@ -331,6 +333,7 @@ void _View_AddCels(viewer_tag *viewer) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The view in ESI
 // AUTOLTCG
 void __declspec(naked) View_AddCels(viewer_tag *viewer) {
@@ -341,6 +344,7 @@ void __declspec(naked) View_AddCels(viewer_tag *viewer) {
         ret
     }
 }
+#endif
 
 // The objects that cross cels (effectFlags 0x8000), from the world's list, that this view draws and sees. A drone
 // larger than 0.5 is drawn only if a cel it is in is drawn this frame.
@@ -411,6 +415,7 @@ void _View_CaptureScene(viewer_tag *viewer) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
     // The original function is provided with its parameter in EAX, but we need to call our reimplementation
@@ -423,6 +428,7 @@ void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
     }
 
 }
+#endif
 
 // An object's colour (tweakR, G, B) and alpha (tweakA) as the draw tweak: the alpha a quarter in night vision with
 // effectFlags 0x20000, the colour times its light's (light_related) with 0x800, and times FlashMod when it flashes
@@ -540,6 +546,7 @@ void _View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
     View_DrawAttachments(cel->attachments, viewer);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The view in EAX, the cel in ESI
 // AUTOLTCG
 void __declspec(naked) View_DrawCelGlist(cel_tag *cel, viewer_tag *viewer) {
@@ -551,6 +558,7 @@ void __declspec(naked) View_DrawCelGlist(cel_tag *cel, viewer_tag *viewer) {
         ret
     }
 }
+#endif
 
 // An object's model in its matrix: or facing the view (effectFlags 8; turned about z alone when it has a z rotation,
 // which clears its x and y), at its scale; shaken in scale (4)
@@ -1081,7 +1089,7 @@ void __stdcall Game_Draw(void) {
     Tots[2] = 0;
     for (int i = 0; i < 11; i++) {
         if (glb_viewer[i] != NULL)
-            View_CaptureScene(glb_viewer[i]);
+            _View_CaptureScene(glb_viewer[i]);
     }
     psiFog(1, 0.0f, 10.0f, 0xff, 0, 0);
 

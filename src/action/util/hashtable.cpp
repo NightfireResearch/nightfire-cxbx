@@ -63,6 +63,7 @@ hashtable_entry* _hashtable_getentry(HASHCODE hashcode) {
     return NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original (0x0006b370) takes its hashcode in EDI; no original calls it now. It clobbers only EAX, ECX and EDX (it saves ESI
 // itself), and neither caller keeps anything in ECX or EDX across the call, so a plain cdecl call is enough: our
 // compiled body preserves EBX, ESI, EDI and EBP.
@@ -75,6 +76,7 @@ __declspec(naked) hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
         ret
     }
 }
+#endif
 
 static void ResetTypeRanges(void) {
     for (int i = 0; i < NUM_RESET_TYPES; i++) {

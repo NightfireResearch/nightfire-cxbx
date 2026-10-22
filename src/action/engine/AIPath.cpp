@@ -172,6 +172,7 @@ void _AIPath_Prepare(AIPath_tag *path) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) AIPath_Prepare(void) {
     _asm {
@@ -181,6 +182,7 @@ void __declspec(naked) AIPath_Prepare(void) {
         ret
     }
 }
+#endif
 
 // Puts a bound node on its cel's list, and gives it the headroom up to the ceiling (at least 2 m). The original takes
 // the node in EAX and the bound's record (its name) on the stack.
@@ -203,6 +205,7 @@ void _AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record) {
     Collide_FreeHitList(&hits);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) AIBounds_Link2Cel(void) {
     _asm {
@@ -213,6 +216,7 @@ void __declspec(naked) AIBounds_Link2Cel(void) {
         ret
     }
 }
+#endif
 
 // Puts each bound link on the list of the cel of its end a, and of its end b when that is another cel. The original
 // takes the bound in EDI.
@@ -232,6 +236,7 @@ void _AIBounds_Prepare(AIBound_tag *bound) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) AIBounds_Prepare(void) {
     _asm {
@@ -241,6 +246,7 @@ void __declspec(naked) AIBounds_Prepare(void) {
         ret
     }
 }
+#endif
 
 // Once the level is loaded: every path node onto its cel's list (AIPath_Link2Cel in the PS2 build), the paths
 // prepared, and the same for the bounds

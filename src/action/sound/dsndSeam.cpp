@@ -496,6 +496,7 @@ uint32_t dsndCreateSoundBuffer(int numChannels, char is3d) {
     return bufferObj;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes its channel count in EDX and its 3D flag on the stack, and still leaves the stack cleanup
 // to the caller (plain RET) - confirmed via raw disassembly of both the function and its one call site in
 // xboxCreateSoundBuffers (0x000e1170: "PUSH EBX / MOV EDX,EBP / CALL 0x000e0f00 / ... / ADD ESP,0x4"). Ghidra
@@ -516,6 +517,7 @@ void __declspec(naked) dsndCreateSoundBufferWithSomeDefaultSettings(void) {
         ret                           // plain RET: the caller cleans up its own pushed argument
     }
 }
+#endif
 
 // 192 buffers: per voice slot, one mono 2D, one stereo 2D and one mono 3D, all Xbox ADPCM at 44032 Hz. They are
 // created once at boot and then re-bound to different sample data for the lifetime of the process - nothing ever

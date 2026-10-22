@@ -770,6 +770,7 @@ void _Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, 
     Menu_UpdateMessageBox(managerNum, mask, slot);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the codename in EAX, the operation in ECX and the stale flag in DL; the rest on the stack.
 // AUTOLTCG
 void __declspec(naked) Menu_StartLS(void) {
@@ -790,6 +791,7 @@ void __declspec(naked) Menu_StartLS(void) {
         ret
     }
 }
+#endif
 
 // ---- the Codenames page (P_CNSELECT) and its wheel
 

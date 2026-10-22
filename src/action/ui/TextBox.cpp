@@ -61,6 +61,7 @@ M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int 
     return box;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the box (kept), DL the character
 // AUTOLTCG
 void __declspec(naked) Text_SetupChar(void) {
@@ -81,6 +82,7 @@ void __declspec(naked) Text_SetupChar(void) {
         ret
     }
 }
+#endif
 
 // Leaves editing: the box closes to the text's line, and its page is told
 static void TextBox_EndEntry(M_TEXTBOX *box) {

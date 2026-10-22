@@ -182,6 +182,7 @@ short _DroneFunc_FirstSightState(DCVars_tag *dcv) {
     return behaviour_util_getProperty(DRONE_PROP_4A, dcv->drone->currentBehaviour) != 0 ? DSTATE_GrenadeThrow : 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneFunc_FirstSightState(void) {
     _asm {
@@ -191,6 +192,7 @@ void __declspec(naked) DroneFunc_FirstSightState(void) {
         ret
     }
 }
+#endif
 
 // The state for a drone alerted by another, or 0: one told of an interrogation goes to help with it, in the levels
 // that have one.
@@ -210,6 +212,7 @@ short _DroneFunc_FirstAlertState(DCVars_tag *dcv) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneFunc_FirstAlertState(void) {
     _asm {
@@ -219,6 +222,7 @@ void __declspec(naked) DroneFunc_FirstAlertState(void) {
         ret
     }
 }
+#endif
 
 // What a drone with no gun in hand does: draws its second weapon, if it has one, else is scared. An armed civilian
 // becomes an enemy, and attacks (0).

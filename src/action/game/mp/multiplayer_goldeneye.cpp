@@ -261,6 +261,7 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     _asm {
@@ -272,3 +273,4 @@ void __declspec(naked) MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag
         ret
     }
 }
+#endif

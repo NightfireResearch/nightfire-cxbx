@@ -38,6 +38,7 @@ void _Creature_HurtPlayers(obj_tag *obj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The creature in EDI. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Creature_HurtPlayers(void) {
@@ -48,6 +49,7 @@ void __declspec(naked) Creature_HurtPlayers(void) {
         ret
     }
 }
+#endif
 
 // The next waypoint: dir turned by the angles (and kept so), then distance and size along it from the last, or where a
 // ray that far first meets something, size out from it along its normal; there dir becomes the normal's.
@@ -73,6 +75,7 @@ void _Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angl
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ECX the angles, ESI dir, EBX the last waypoint, EDI the creature; the waypoint, distance and size on the stack
 // AUTOLTCG
 void __declspec(naked) Creature_CalcPoint(void) {
@@ -89,6 +92,7 @@ void __declspec(naked) Creature_CalcPoint(void) {
         ret
     }
 }
+#endif
 
 // With seeks set and player 1 within 4 sizes and 1.1, dir becomes the way to him
 bool _Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir) {
@@ -102,6 +106,7 @@ bool _Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the creature's data, EDX the creature, EDI dir; the answer in AL. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Creature_SeekPlayer(void) {
@@ -114,6 +119,7 @@ void __declspec(naked) Creature_SeekPlayer(void) {
         ret
     }
 }
+#endif
 
 // The first waypoint is where it is, turned as the last was; each of the rest is planned from the one before along
 // the way it faces, turned at random (up to a half turn either way, a fifth of that towards a player close by) and up
@@ -242,6 +248,7 @@ void _Creature_Move(obj_tag *obj, Creature *creature) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the creature, ESI its data. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Creature_Move(void) {
@@ -253,6 +260,7 @@ void __declspec(naked) Creature_Move(void) {
         ret
     }
 }
+#endif
 
 // Not while its cel is out of sight
 // AUTOINJECT

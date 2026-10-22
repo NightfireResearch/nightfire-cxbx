@@ -616,6 +616,7 @@ MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 }
 
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes mpObj in EDI
 // AUTOLTCG
 __declspec(naked) MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void) {
@@ -626,6 +627,7 @@ __declspec(naked) MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void) {
         ret
     }
 }
+#endif
 
 // Rebuilds a scenario object's AI emitter, which the bots path to: at the object's matrix and cel unless keepPos,
 // the cel looked up if it has none. Emitters exist only in a game with bots.
@@ -650,6 +652,7 @@ void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes ext in ESI and keepPos on the stack, removed by the caller (MP_getEsponageBaseObj).
 // AUTOLTCG
 __declspec(naked) void MP_recalcObjExtPaths(bool keepPos) {
@@ -661,6 +664,7 @@ __declspec(naked) void MP_recalcObjExtPaths(bool keepPos) {
         ret
     }
 }
+#endif
 
 // Puts a scenario object back at rest: at mpObj->resetMtx unless keepPlace, in state, relinked into the world,
 // shown in every view, with its AI emitter rebuilt. The original (0x9ecb0) takes mpObj in ECX, gameObj in EBX and
@@ -1116,6 +1120,7 @@ obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut)
     return NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original (0x0009c880) takes obj in EAX and team in CX, exclude and teamOut on the stack; its callers clean
 // the stack.
 // AUTOLTCG
@@ -1131,6 +1136,7 @@ __declspec(naked) obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude,
         ret
     }
 }
+#endif
 
 // A random agent on the team (NO_TEAM: either) other than exclude; with aliveOnly, only a drone not dying or dead or a player in
 // state 1. NULL when there is none.
@@ -1650,6 +1656,7 @@ void _MP_PostLoadInitObjExt(MP_OBJ_EXT *ext) {
         AINetwork_EmitPath(&ext->aiEmitter, 0);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes ext in EAX
 // AUTOLTCG
 __declspec(naked) void MP_PostLoadInitObjExt(void) {
@@ -1660,6 +1667,7 @@ __declspec(naked) void MP_PostLoadInitObjExt(void) {
         ret
     }
 }
+#endif
 
 // An uplink: by index (NULL past the last, or with no object), or for a negative idx the first from -1 - idx whose
 // object is not in state filterState
@@ -2033,6 +2041,7 @@ void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
         AINetwork_EmitPath(&ext->aiEmitter, 0.0f);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes ext in ECX and obj in EAX
 // AUTOLTCG
 __declspec(naked) void MP_initObjExt(void) {
@@ -2044,6 +2053,7 @@ __declspec(naked) void MP_initObjExt(void) {
         ret
     }
 }
+#endif
 
 // ---- the match's agents and objects coming into being
 

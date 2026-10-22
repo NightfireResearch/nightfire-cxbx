@@ -143,6 +143,7 @@ ushort _SS_Operate(obj_tag *obj, SIMPLESCRIPT *ss) {
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the object in EAX and the simple script in ESI.
 // AUTOLTCG
 void __declspec(naked) SS_Operate(void) {
@@ -154,6 +155,7 @@ void __declspec(naked) SS_Operate(void) {
         ret
     }
 }
+#endif
 
 // The player using it starts it, if its triggers allow and it is not stopped for good.
 // AUTOINJECT

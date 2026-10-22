@@ -202,6 +202,7 @@ void _HUD_UpdateCrossHair(BLData *player, sprite *spr) {
         spr->maybeEnabled = 0xff;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the player, ESI the crosshair
 // AUTOLTCG
 void __declspec(naked) HUD_UpdateCrossHair(void) {
@@ -217,6 +218,7 @@ void __declspec(naked) HUD_UpdateCrossHair(void) {
         ret
     }
 }
+#endif
 
 // The night vision goggles in single player: putting them on (the weapon 0x5d once it is in hand) turns night vision
 // on and goes back to the weapon before; after that their button steps night vision, x-ray and off. The battery runs
@@ -285,6 +287,7 @@ void _HUD_MonitorNightSight(BLData *player) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the player
 // AUTOLTCG
 void __declspec(naked) HUD_MonitorNightSight(void) {
@@ -299,6 +302,7 @@ void __declspec(naked) HUD_MonitorNightSight(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void HUD_Update(BLData *playerInfo, obj_tag *obj) {
@@ -2375,6 +2379,7 @@ void _HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float al
     ring->colourTint = alpha | 0xffffff00;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ESI the ring; the rest on the stack
 // AUTOLTCG
 void __declspec(naked) HUD_PlaceLensFlare(void) {
@@ -2397,6 +2402,7 @@ void __declspec(naked) HUD_PlaceLensFlare(void) {
         ret
     }
 }
+#endif
 
 // The lens flare: while the sun shows in the sky of the player's view, its seven rings along the line from the sun
 // through the centre, brighter (16 less than the first ring's alpha, plus 32) while the sun is on screen and in sight
@@ -3976,6 +3982,7 @@ void _HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *crea
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the player, EDI the pane, ESI the layout, the stack the object
 // AUTOLTCG
 void __declspec(naked) HUD_CreateShift(void) {
@@ -3993,6 +4000,7 @@ void __declspec(naked) HUD_CreateShift(void) {
         ret
     }
 }
+#endif
 
 // In multiplayer, keeps a sprite inside its player's view: 50 pixels in at the sides and 40 at the top and bottom,
 // but nothing at an edge another player's view meets

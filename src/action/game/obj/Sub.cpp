@@ -76,6 +76,7 @@ void _Sub_Follow(obj_tag *obj, SubInfo *sub) {
     sub->t = (float)((double)FRAME_RATE_MUL * sub->speed + sub->t);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EDI the sub, ESI its data. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Sub_Follow(void) {
@@ -87,6 +88,7 @@ void __declspec(naked) Sub_Follow(void) {
         ret
     }
 }
+#endif
 
 // Player 1 within 8 of it, between 0.9 behind and 0.25 ahead of its middle, is hurt by 1 a frame
 void _Sub_Ram(obj_tag *obj, SubInfo *sub) {
@@ -105,6 +107,7 @@ void _Sub_Ram(obj_tag *obj, SubInfo *sub) {
     Player_Hurt(glb_players[0], 1.0f, &at);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the sub's data; the sub on the stack. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Sub_Ram(void) {
@@ -116,6 +119,7 @@ void __declspec(naked) Sub_Ram(void) {
         ret
     }
 }
+#endif
 
 // With a beam: within 12 of a player, for 0.3 of every 1.8 seconds, a laser bolt at player 1's chest, a little off,
 // the beam drawn along it. Otherwise the beam is not drawn.
@@ -143,6 +147,7 @@ void _Sub_Laser(obj_tag *obj, SubInfo *sub) {
     View_SetDrawInNoViews(sub->beam);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EBX the sub, ESI its data
 // AUTOLTCG
 void __declspec(naked) Sub_Laser(void) {
@@ -154,6 +159,7 @@ void __declspec(naked) Sub_Laser(void) {
         ret
     }
 }
+#endif
 
 // Within 15 of a player, the music is told, and every 10 seconds a missile leaves from one of two datums
 void _Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
@@ -175,6 +181,7 @@ void _Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_MISSILE], &at, &dir, 0xffff);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ESI the sub, EDI its data. Not named on PS2; the name is ours.
 // AUTOLTCG
 void __declspec(naked) Sub_FireMissiles(void) {
@@ -186,6 +193,7 @@ void __declspec(naked) Sub_FireMissiles(void) {
         ret
     }
 }
+#endif
 
 // Within 25 of a player, the music is told, and every 5 seconds, if it can see him past its own bulk, a torpedo from
 // one of four datums that faces him, a little off; half of them home on player 1
@@ -228,6 +236,7 @@ void _Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the sub, EDI its data
 // AUTOLTCG
 void __declspec(naked) Sub_DeployTorpedoes(void) {
@@ -239,6 +248,7 @@ void __declspec(naked) Sub_DeployTorpedoes(void) {
         ret
     }
 }
+#endif
 
 // Afloat (state 0) it moves and attacks, its light with it; sinking (1, its light gone) it eases down to sinkY, a
 // frame's worth of the gap a frame, and lies there (2)

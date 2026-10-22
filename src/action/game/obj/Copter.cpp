@@ -202,6 +202,7 @@ COPTERPATH* _Copter_CreatePath(CopterPlacement *keys) {
     return path;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The placement in EBX
 // AUTOLTCG
 void __declspec(naked) Copter_CreatePath(void) {
@@ -216,6 +217,7 @@ void __declspec(naked) Copter_CreatePath(void) {
         ret
     }
 }
+#endif
 
 // Another route of the group at the end of one: the more it is hurt the further down the list, and past half of
 // what makes it leave, any at random
@@ -236,6 +238,7 @@ COPTERPATH* _Copter_NextPath(COPTER *copter) {
     return copter->path;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The helicopter in ESI
 // AUTOLTCG
 void __declspec(naked) Copter_NextPath(void) {
@@ -250,6 +253,7 @@ void __declspec(naked) Copter_NextPath(void) {
         ret
     }
 }
+#endif
 
 // Along its path (only the position with positionOnly), the script's models with it; at the path's end another
 // route, and true. True with no path.
@@ -279,6 +283,7 @@ bool _Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
     return ended;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The helicopter in EAX; the object and the flag on the stack
 // AUTOLTCG
 void __declspec(naked) Copter_Move(void) {
@@ -295,6 +300,7 @@ void __declspec(naked) Copter_Move(void) {
         ret
     }
 }
+#endif
 
 // The gun and its flash turn to just above player 0; every sixth frame a shot. Neither the player nor the flash is
 // checked before the turn.
@@ -330,6 +336,7 @@ bool _Copter_FireGun(COPTER *copter, obj_tag *obj) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The helicopter in EAX; the object on the stack
 // AUTOLTCG
 void __declspec(naked) Copter_FireGun(void) {
@@ -345,6 +352,7 @@ void __declspec(naked) Copter_FireGun(void) {
         ret
     }
 }
+#endif
 
 // A missile from either launcher, once a second at difficulty 1 (DiffMod's seconds); on one level now and then
 // straight at player 0
@@ -369,6 +377,7 @@ bool _Copter_FireMissile(COPTER *copter, obj_tag *obj) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The helicopter in EAX; the object on the stack
 // AUTOLTCG
 void __declspec(naked) Copter_FireMissile(void) {
@@ -384,6 +393,7 @@ void __declspec(naked) Copter_FireMissile(void) {
         ret
     }
 }
+#endif
 
 // Within 1000 of the helicopter, in its cone, and in sight of a point 4 ahead of it
 bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
@@ -402,6 +412,7 @@ bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
     return Collide_LineOfSight(&ahead, &player->centrePoint, cel, obj, player, 0x2e);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The player in EDI; the helicopter's object on the stack
 // AUTOLTCG
 void __declspec(naked) Copter_SeesPlayer(void) {
@@ -417,6 +428,7 @@ void __declspec(naked) Copter_SeesPlayer(void) {
         ret
     }
 }
+#endif
 
 // Shown and on its way once its channel is on; patrols, attacks while it sees player 0, takes its parts' shots, smokes
 // past half its endurance, and past all of it leaves (or is blown up on two levels)

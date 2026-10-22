@@ -155,6 +155,7 @@ extern const char DecimalPoint = '.';                         // __decimal_point
 
 // ---- the helpers
 
+#ifndef NIGHTFIRE_STANDALONE
 // ST0 truncated towards zero, as a 64-bit integer in EDX:EAX, ST0 popped: rounded by FISTP (to nearest), then
 // corrected by one where the rounding went away from zero - the sign of the difference, stored as a float, says
 // which. A value that rounds to 0, or to the integer indefinite (NaN, out of range), is given as rounded.
@@ -204,6 +205,7 @@ __declspec(naked) void Crt::_ftol2() {
         ret
     }
 }
+#endif
 
 // The runtime's memcpy copies overlapping blocks as memmove does: backwards when the destination starts inside the
 // source.

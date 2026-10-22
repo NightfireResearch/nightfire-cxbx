@@ -143,6 +143,7 @@ CHARDATA_tag* _Font_FindGlyph(uchar c) {
     return &chars[hi];
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AL the character
 // AUTOLTCG
 void __declspec(naked) Font_FindGlyph(void) {
@@ -157,6 +158,7 @@ void __declspec(naked) Font_FindGlyph(void) {
         ret
     }
 }
+#endif
 
 // The kerning of c after prev, from prev's list. The list is in ascending order and the search stops at the
 // first pair past c, so only a pair the list starts with ever counts (as the original).
@@ -178,6 +180,7 @@ float _Font_GetKernAdjust(char prev, char c) {
     return 0.0f;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AL the character before, the stack the character
 // AUTOLTCG
 float __declspec(naked) Font_GetKernAdjust(void) {
@@ -193,6 +196,7 @@ float __declspec(naked) Font_GetKernAdjust(void) {
         ret
     }
 }
+#endif
 
 // Applies a format: the default font, then its codes. Only the low byte of the flags is cleared for an alignment.
 // AUTOINJECT
@@ -407,6 +411,7 @@ GPOINT* Font_DrawGlyphs(uint colour, const GPOINT *scale, float x, float y, uint
     return &Size_126;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ECX the colour, EAX the scale
 // AUTOLTCG
 void __declspec(naked) __Font_DrawText(void) {
@@ -432,6 +437,7 @@ void __declspec(naked) __Font_DrawText(void) {
         ret
     }
 }
+#endif
 
 // The text in its format, aligned in width, with the copies the flags ask for drawn first, each with the low byte
 // of the flags and FONT_COPY. Returns the size of the last draw.

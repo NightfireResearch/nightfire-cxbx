@@ -187,6 +187,7 @@ ushort _DroneVision_AlertSound(DCVars_tag *dcv) {
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in ESI.
 // AUTOLTCG
 void __declspec(naked) DroneVision_AlertSound(void) {
@@ -197,6 +198,7 @@ void __declspec(naked) DroneVision_AlertSound(void) {
         ret
     }
 }
+#endif
 
 // The global alarm (DRONE_MSG_GlobalAlarm): every drone but the civilians and party girls attacks. A bot becomes
 // fully alert, and on a team (MP_areObjectsOnSameTeam with no other object) answers through
@@ -218,6 +220,7 @@ ushort _DroneVision_GlobalAlarm(DCVars_tag *dcv) {
     return DSTATE_Attack;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in EDX.
 // AUTOLTCG
 void __declspec(naked) DroneVision_GlobalAlarm(void) {
@@ -228,6 +231,7 @@ void __declspec(naked) DroneVision_GlobalAlarm(void) {
         ret
     }
 }
+#endif
 
 // Another drone's shout, heard by a drone with the property (nightfire-port's DroneVision_ShoutFromOtherDrone, inline
 // in each caller on the Xbox). The original finds the drone that shouted from the alert and goes no further: a shout
@@ -254,6 +258,7 @@ ushort _DroneVision_ShoutDroneAlert(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_29);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneVision_ShoutMsg11(void) {
     _asm {
@@ -293,6 +298,7 @@ void __declspec(naked) DroneVision_ShoutDroneAlert(void) {
         ret
     }
 }
+#endif
 
 // The alert messages a state passes on: the state to go to, or 0. First, unless unknown33 or explosiveSeen is set,
 // the drone keeps where it was (the state, its feet and cel) to come back to. Message 0x16 is a shout heard by all;

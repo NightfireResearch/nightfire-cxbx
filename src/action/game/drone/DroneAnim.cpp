@@ -364,6 +364,7 @@ ushort _DroneAnim_BaseCallState(ushort state) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_BaseCallState(void) {
     _asm {
@@ -374,6 +375,7 @@ void __declspec(naked) DroneAnim_BaseCallState(void) {
         ret
     }
 }
+#endif
 
 // Fills the drone's anim slot (animMode to animNextRow) from the row and the anim set's script.
 void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet) {
@@ -400,6 +402,7 @@ void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSe
 
 static_assert(offsetof(Drone_tag, animMode) == 0x464, "DroneAnim_SetDAnimVeryInternal's adaptor");
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the slot, &drone->animMode.
 // AUTOLTCG
 void __declspec(naked) DroneAnim_SetDAnimVeryInternal(void) {
@@ -415,6 +418,7 @@ void __declspec(naked) DroneAnim_SetDAnimVeryInternal(void) {
         ret
     }
 }
+#endif
 
 // Whether the row is passed over at once: it has no script, or it is in one of the modes not played while the
 // drone is not drawn.
@@ -436,6 +440,7 @@ bool _DroneAnim_SkipAnim(Drone_tag *drone) {
     return false;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_SkipAnim(void) {
     _asm {
@@ -445,6 +450,7 @@ void __declspec(naked) DroneAnim_SkipAnim(void) {
         ret
     }
 }
+#endif
 
 // Once the new row plays the anim state called for (or none), the call is taken: its speed kept, the call cleared.
 // False, after moving on to the next row, when the row is skipped.
@@ -461,6 +467,7 @@ bool _DroneAnim_TakeCall(Drone_tag *drone) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_TakeCall(void) {
     _asm {
@@ -470,6 +477,7 @@ void __declspec(naked) DroneAnim_TakeCall(void) {
         ret
     }
 }
+#endif
 
 // Plays a row: fills the slot, takes the call, ends the old row's functions, starts the script and the new row's
 // functions. False when it is skipped, or with bots while a script blends out and the drone animates.
@@ -670,6 +678,7 @@ short _DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant,
     return -1;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_GetDAnimForAnimState(void) {
     _asm {
@@ -686,6 +695,7 @@ void __declspec(naked) DroneAnim_GetDAnimForAnimState(void) {
         ret
     }
 }
+#endif
 
 // The row for the call from the anim state playing, else from state 0's list (for the drone's own call then,
 // blending over 8 frames). False for none, or for row 0.
@@ -704,6 +714,7 @@ bool _DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, u
     return *row != 0 && *row != 0xffff;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_GetDAnimForCall(void) {
     _asm {
@@ -720,6 +731,7 @@ void __declspec(naked) DroneAnim_GetDAnimForCall(void) {
         ret
     }
 }
+#endif
 
 // Whether the call may start now: there is one; with bots, no script blends out; a mode 5 row is left only for a
 // call made while it played, and in anim states 0xc, 0xd, 0x29 and 0x2a not for call 10.
@@ -742,6 +754,7 @@ bool _DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_CanSetAnimCall(void) {
     _asm {
@@ -751,6 +764,7 @@ void __declspec(naked) DroneAnim_CanSetAnimCall(void) {
         ret
     }
 }
+#endif
 
 // The call has played out: cleared, and its end action taken (DroneAnim_SetEndAIState).
 void _DroneAnim_CallFullyComplete(Drone_tag *drone) {
@@ -760,6 +774,7 @@ void _DroneAnim_CallFullyComplete(Drone_tag *drone) {
     drone->animEndMsg = 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) DroneAnim_CallFullyComplete(void) {
     _asm {
@@ -769,6 +784,7 @@ void __declspec(naked) DroneAnim_CallFullyComplete(void) {
         ret
     }
 }
+#endif
 
 // Once a frame (Drone_Control): a row that does not loop and has ended goes on to its next row; a call whose anim
 // state plays has its end action taken once its row is done (mode 1 once it has ended, modes 2 and 9 at once);

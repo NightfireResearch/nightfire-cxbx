@@ -1195,6 +1195,7 @@ void _NDrone2_HandleTalking(DCVars_tag *dcv) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the DCVars in EDI.
 // AUTOLTCG
 void __declspec(naked) NDrone2_HandleTalking(void) {
@@ -1205,6 +1206,7 @@ void __declspec(naked) NDrone2_HandleTalking(void) {
         ret
     }
 }
+#endif
 
 // A Powerstation guard (skin class 5 or 6) says it has seen its opponent, one of 0xd6 and 0xd7, and its target is
 // marked seen where the opponent was. Not with no player, in multiplayer, while it talks or once dead.

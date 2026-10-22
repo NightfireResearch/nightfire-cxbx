@@ -215,6 +215,7 @@ bool _Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The pickup in EAX, what it landed on in ECX
 // AUTOLTCG
 void __declspec(naked) Pickup_CanInheritPosition(void) {
@@ -230,6 +231,7 @@ void __declspec(naked) Pickup_CanInheritPosition(void) {
         ret
     }
 }
+#endif
 
 // Back after its respawn time; falling, to the floor under its model's base (riding what it lands on); spinning;
 // taken by the first player, then (with bots) the first bot, within its radius and 1.1 that can see it; gone at the end
@@ -567,6 +569,7 @@ void _Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The pickup's information in EDI; the pickup and who takes it on the stack
 // AUTOLTCG
 void __declspec(naked) Pickup_Handler(void) {
@@ -583,6 +586,7 @@ void __declspec(naked) Pickup_Handler(void) {
         ret
     }
 }
+#endif
 
 // Set 10 of PickupMatrix: five different weapons drawn from UseableGuns, the first from the first 26
 // AUTOINJECT

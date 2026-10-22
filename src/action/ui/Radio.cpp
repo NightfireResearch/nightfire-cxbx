@@ -60,6 +60,7 @@ int _Radio_GetIndex(M_RADIO *radio, LIST_ROW *item) {
     return -1;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the radio, EDX the item (kept); the original's stack argument (the items) is not read
 // AUTOLTCG
 __declspec(naked) void Radio_GetIndex(void) {
@@ -75,6 +76,7 @@ __declspec(naked) void Radio_GetIndex(void) {
         ret
     }
 }
+#endif
 
 // The item at an index, or the last for an index past the end; the radio must have an item
 LIST_ROW* _Radio_SetIndex(M_RADIO *radio, int index) {
@@ -84,6 +86,7 @@ LIST_ROW* _Radio_SetIndex(M_RADIO *radio, int index) {
     return item;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ECX the radio, ESI the index; the original's stack argument (the items) is not read
 // AUTOLTCG
 __declspec(naked) void Radio_SetIndex(void) {
@@ -99,6 +102,7 @@ __declspec(naked) void Radio_SetIndex(void) {
         ret
     }
 }
+#endif
 
 // What a radio does not handle itself goes to its label
 // AUTOINJECT

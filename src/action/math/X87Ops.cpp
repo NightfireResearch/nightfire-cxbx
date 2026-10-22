@@ -1,6 +1,7 @@
 #include "X87Ops.h"
 #include "../engine/CRuntime.h"
 
+#if NIGHTFIRE_X87
 // The x87 instructions behind Extended (X87Ops.h). Each loads its operands, does one operation and stores the
 // 80-bit result, so it is rounded only as the instruction itself rounds it.
 
@@ -409,3 +410,119 @@ int32_t Ftol(const Extended &x) {
         return 0;
     return int32_t(truncated);
 }
+
+#else
+// ---- the C forms, in double
+
+Extended::Extended(float x) : value(x) {}
+
+Extended::Extended(double x) : value(x) {}
+
+Extended::operator float() const {
+    return (float)value;
+}
+
+Extended::operator double() const {
+    return value;
+}
+
+static Extended Of(double x) {
+    Extended result;
+    result.value = x;
+    return result;
+}
+
+Extended FSin(double x) {
+    return Of(sin(x));
+}
+
+Extended FCos(double x) {
+    return Of(cos(x));
+}
+
+Extended FSin(const Extended &x) {
+    return Of(sin(x.value));
+}
+
+Extended FCos(const Extended &x) {
+    return Of(cos(x.value));
+}
+
+Extended CIAcos(double x) {
+    return Of(Crt::CIacos(x));
+}
+
+Extended FPatan(double y, double x) {
+    return Of(atan2(y, x));
+}
+
+Extended FPtan(double x) {
+    return Of(tan(x));
+}
+
+Extended FExp(double x) {
+    return Of(exp(x));
+}
+
+Extended operator+(const Extended &a, const Extended &b) {
+    return Of(a.value + b.value);
+}
+
+Extended operator-(const Extended &a, const Extended &b) {
+    return Of(a.value - b.value);
+}
+
+Extended operator*(const Extended &a, const Extended &b) {
+    return Of(a.value * b.value);
+}
+
+Extended operator/(const Extended &a, const Extended &b) {
+    return Of(a.value / b.value);
+}
+
+bool operator<(const Extended &a, const Extended &b) {
+    return a.value < b.value;
+}
+
+bool operator>(const Extended &a, const Extended &b) {
+    return a.value > b.value;
+}
+
+bool operator<=(const Extended &a, const Extended &b) {
+    return a.value <= b.value;
+}
+
+bool operator>=(const Extended &a, const Extended &b) {
+    return a.value >= b.value;
+}
+
+Extended AbsFchs(const Extended &x) {
+    return Of(AbsFchs(x.value));
+}
+
+Extended operator-(const Extended &a) {
+    return Of(Negate(a.value));
+}
+
+Extended FSqrt(const Extended &x) {
+    return Of(sqrt(x.value));
+}
+
+int32_t Ftol(const Extended &x) {
+    if (!(fabs(x.value) < 9223372036854775808.0))
+        return 0;
+    int64_t nearest = llrint(x.value);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x.value));
+}
+
+int64_t Ftol64(const Extended &x) {
+    if (!(fabs(x.value) < 9223372036854775808.0))
+        return INT64_MIN;
+    int64_t nearest = llrint(x.value);
+    if (uint32_t(nearest) == 0)
+        return nearest;
+    return int64_t(x.value);
+}
+#endif

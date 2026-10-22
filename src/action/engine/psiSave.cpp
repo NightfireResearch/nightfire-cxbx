@@ -328,6 +328,7 @@ int _SaveGame_Delete(const char *profileName) {
     return result;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the codename
 // AUTOLTCG
 int __declspec(naked) SaveGame_Delete(void) {
@@ -338,6 +339,7 @@ int __declspec(naked) SaveGame_Delete(void) {
         ret
     }
 }
+#endif
 
 // The menus' poll of the last load, save and delete: 2 done, 4 not (PS2 names)
 // AUTOINJECT

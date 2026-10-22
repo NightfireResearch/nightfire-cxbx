@@ -141,6 +141,7 @@ void _Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
     Debris_Create_Loop(coll, hit, obj);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ESI, the hit in EDI
 // AUTOLTCG
 void __declspec(naked) Break_Kill(void) {
@@ -152,6 +153,7 @@ void __declspec(naked) Break_Kill(void) {
         ret
     }
 }
+#endif
 
 // Every triangle of the window's model, shattered with its own texture
 // AUTOINJECT

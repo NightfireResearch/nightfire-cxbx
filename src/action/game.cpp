@@ -719,6 +719,7 @@ HASHCODE _ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiv
     return image;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original (0x000bedf0) takes the level in EAX, the hint pointer in ESI and the objective pointer in ECX, and
 // preserves ESI and EDI, which its caller relies on; the C++ core preserves them too.
 // AUTOLTCG
@@ -732,6 +733,7 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
         ret
     }
 }
+#endif
 
 // ---- Loading a level (ResetMap_Load), over several calls of the game flow's state 3
 

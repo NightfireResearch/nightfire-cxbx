@@ -8,12 +8,23 @@
 #include <stdint.h>
 #include <bit>
 
+// NIGHTFIRE_X87 (CMakeLists.txt, 1 or 0) chooses the forms: 1 the x87's own instructions, exact against the original
+// and the recordings; 0 C in double, for hosts without an x87 (docs/action-64bit.md).
+#if !defined(NIGHTFIRE_X87)
+#error "NIGHTFIRE_X87 must be defined as 1 or 0 (CMakeLists.txt)"
+#endif
+
 // A value on the x87 stack, in the FPU's own 80-bit format. FSIN and FCOS give a full 64-bit significand whatever
 // the precision control says, which no C++ type holds on MSVC, so code that uses their results before storing them
 // works in this type. Its arithmetic is the x87's (X87Ops.cpp): rounded as the precision control says, and an
 // operation on two NaNs gives the NaN the x87 chooses. A conversion to float or double is one FSTP, one rounding.
+// Without NIGHTFIRE_X87 it is a double, and each operation the C one.
 struct Extended {
+#if NIGHTFIRE_X87
     uint8_t bytes[10];
+#else
+    double value;
+#endif
 
     Extended() = default;
     Extended(float x);

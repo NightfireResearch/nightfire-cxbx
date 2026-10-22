@@ -246,6 +246,7 @@ void _Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
         _Effect_LinkToObject(mark, hit->hitObj);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the hit in ECX
 // AUTOLTCG
 void __declspec(naked) Effect_Bullet(void) {
@@ -259,6 +260,7 @@ void __declspec(naked) Effect_Bullet(void) {
         ret
     }
 }
+#endif
 
 // A step's sound, and with EFFECT_LEFT_FOOT or EFFECT_RIGHT_FOOT the footprint under that foot, facing where the
 // player faces (the foot, for anything else), if the foot is within 20 cm of the floor
@@ -304,6 +306,7 @@ void _Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, fl
         _Effect_LinkToObject(mark, hit->hitObj);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hit in EAX, the object in EBX
 // AUTOLTCG
 void __declspec(naked) Effect_Player(void) {
@@ -318,6 +321,7 @@ void __declspec(naked) Effect_Player(void) {
         ret
     }
 }
+#endif
 
 // The laser's sound and its material's smoke, with a spark six times in ten; every other frame a little dust near
 // the point
@@ -365,6 +369,7 @@ void _Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hit in EAX, the cel in EBX
 // AUTOLTCG
 void __declspec(naked) Effect_Laser(void) {
@@ -378,6 +383,7 @@ void __declspec(naked) Effect_Laser(void) {
         ret
     }
 }
+#endif
 
 // Only the sound, which makes the drones more watchful
 void _Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
@@ -388,6 +394,7 @@ void _Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hit in EAX
 // AUTOLTCG
 void __declspec(naked) Effect_Body(void) {
@@ -401,6 +408,7 @@ void __declspec(naked) Effect_Body(void) {
         ret
     }
 }
+#endif
 
 // Off its cel's or object's marks (it stays in use)
 void _Effect_UnLink(ATTACH_tag *mark) {
@@ -420,6 +428,7 @@ void _Effect_UnLink(ATTACH_tag *mark) {
     mark->prev = NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The mark in EAX
 // AUTOLTCG
 void __declspec(naked) Effect_UnLink(void) {
@@ -434,6 +443,7 @@ void __declspec(naked) Effect_UnLink(void) {
         ret
     }
 }
+#endif
 
 // A mark from EffectList; when they are all in use, the oldest is taken back
 // AUTOINJECT
@@ -459,6 +469,7 @@ void _Effect_LinkToCel(ATTACH_tag *mark, cel_tag *cel) {
     mark->cel = cel;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The mark in EAX, the cel in EDX
 // AUTOLTCG
 void __declspec(naked) Effect_LinkToCel(void) {
@@ -474,6 +485,7 @@ void __declspec(naked) Effect_LinkToCel(void) {
         ret
     }
 }
+#endif
 
 // On the object, in its space
 void _Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj) {
@@ -496,6 +508,7 @@ void _Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj) {
     mark->cel = NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The mark in ESI, the object in EDI
 // AUTOLTCG
 void __declspec(naked) Effect_LinkToObject(void) {
@@ -507,6 +520,7 @@ void __declspec(naked) Effect_LinkToObject(void) {
         ret
     }
 }
+#endif
 
 // Every mark on the object back to EffectList (it is deleted or broken)
 // AUTOINJECT

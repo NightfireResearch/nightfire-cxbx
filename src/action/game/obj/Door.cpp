@@ -147,6 +147,7 @@ void _Door_SetupSwing(obj_tag *obj) {
                celgl->name); // GC check (0x80082a74)
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the door in EAX, and the placement on the stack, unread.
 // AUTOLTCG
 void __declspec(naked) Door_SetupSwing(void) {
@@ -157,6 +158,7 @@ void __declspec(naked) Door_SetupSwing(void) {
         ret
     }
 }
+#endif
 
 // A sliding door. The hinge is the inverse of the path's first matrix, and then the path's last one in its place.
 void _Door_SetupSlide(obj_tag *obj) {
@@ -168,6 +170,7 @@ void _Door_SetupSlide(obj_tag *obj) {
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // FUN_0002eb80 in the original, which takes the door in EAX, and the placement on the stack, unread. The name is ours.
 // AUTOLTCG
 void __declspec(naked) Door_SetupSlide(void) {
@@ -178,6 +181,7 @@ void __declspec(naked) Door_SetupSlide(void) {
         ret
     }
 }
+#endif
 
 // Starting to open or close plays its sound. The door's channel follows whether it was open or opening.
 void _Door_SetState(obj_tag *obj, ushort state) {
@@ -196,6 +200,7 @@ void _Door_SetState(obj_tag *obj, ushort state) {
     door->openTime = 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the door in ESI and the state in BX.
 // AUTOLTCG
 void __declspec(naked) Door_SetState(void) {
@@ -208,6 +213,7 @@ void __declspec(naked) Door_SetState(void) {
         ret
     }
 }
+#endif
 
 // Puts the door where it is on its path and, with advance, moves it on a frame, stopping it at the end. Stopping
 // always moves it with Spline_Interp, even on a door that moves between keys.
@@ -262,6 +268,7 @@ void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
         Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the door in EAX and its data in EDI, then advance on the stack.
 // AUTOLTCG
 void __declspec(naked) Door_Interp(void) {
@@ -274,6 +281,7 @@ void __declspec(naked) Door_Interp(void) {
         ret
     }
 }
+#endif
 
 // A player, or a drone that is up and moving, hitting a moving door: a swing door turns back when it was swinging
 // into them, and a closing door of the second sliding kind opens again.
@@ -496,6 +504,7 @@ void _Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // FUN_0002f7e0 in the original, which takes the lead door's data in ESI and active in BL, then the lead door on the
 // stack. The name is ours.
 // AUTOLTCG
@@ -510,6 +519,7 @@ void __declspec(naked) Door_MoveGroup(void) {
         ret
     }
 }
+#endif
 
 // Closes the door unless a player, a dead player or a drone is near it: within twice the square of their radii
 // added together.
@@ -532,6 +542,7 @@ void _Door_CloseIfClear(obj_tag *obj) {
     door->openTime = 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // FUN_0002f850 in the original, which takes the door in EDI. The name is ours.
 // AUTOLTCG
 void __declspec(naked) Door_CloseIfClear(void) {
@@ -542,6 +553,7 @@ void __declspec(naked) Door_CloseIfClear(void) {
         ret
     }
 }
+#endif
 
 // Once a frame, before the doors' updates: the doors of each group follow its first door.
 // AUTOINJECT

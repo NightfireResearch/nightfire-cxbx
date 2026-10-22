@@ -204,6 +204,7 @@ void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
     _asm {
@@ -214,6 +215,7 @@ void __declspec(naked) MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void MP_PlayerKilled(obj_tag *obj) {

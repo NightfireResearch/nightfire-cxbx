@@ -2049,6 +2049,7 @@ int _Player_InWater(obj_tag *player, BLData *blData) {
     return player->subState == MovementType_Swim;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_InWater(void) {
     _asm {
@@ -2059,6 +2060,7 @@ void __declspec(naked) Player_InWater(void) {
         ret
     }
 }
+#endif
 
 // How well lit the player is: his own light (the average of the object's three) plus, for each of the closest
 // lights, an eighth of its colour scaled by distance over brightness; 255 is fully lit.
@@ -2185,6 +2187,7 @@ void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hit
     Player_SetHealth(blData, health);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_HandlePain(void) {
     _asm {
@@ -2200,6 +2203,7 @@ void __declspec(naked) Player_HandlePain(void) {
         ret
     }
 }
+#endif
 
 // True once the player is dead. The health is kept between 0 and 500; at 0, for a player whose object is still of
 // the given type, the death: the cars, emplacements and gun turrets he was using let go, the dropped weapon (in
@@ -2313,6 +2317,7 @@ void _Player_HandleDeath(obj_tag *player) {
     MP_ReSpawn(player, blData->playerNum);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_HandleDeath(void) {
     _asm {
@@ -2322,6 +2327,7 @@ void __declspec(naked) Player_HandleDeath(void) {
         ret
     }
 }
+#endif
 
 // Puts the player at a place, standing on the floor below it (searched for 3 below a point 0.1 above it) with his
 // eyes 1.1 above that, in the given substate (flying, with debug_scanmode), with everything he was doing cleared.
@@ -2450,6 +2456,7 @@ void _Player_SSWalk(obj_tag *player, BLData *blData) {
     TurnByRotationDelta(blData, player);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_SSWalk(void) {
     _asm {
@@ -2460,6 +2467,7 @@ void __declspec(naked) Player_SSWalk(void) {
         ret
     }
 }
+#endif
 
 // Crouching: as walking at three quarters of the speed, standing up (as the player's crouch option says: on letting
 // go of crouch, or on pressing crouch or jump) when there is room, 0.95 above the matrix's position. The player's
@@ -2494,6 +2502,7 @@ void _Player_SSCrouch(obj_tag *player, BLData *blData) {
     TurnByRotationDelta(blData, player);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_SSCrouch(void) {
     _asm {
@@ -2504,6 +2513,7 @@ void __declspec(naked) Player_SSCrouch(void) {
         ret
     }
 }
+#endif
 
 // Breath under water: the air pane shows swimming or on a wire; the head (its bone) under the cel's water eases
 // underwater towards 1 and, outside zero G, uses up air at 5 a second, with the going-under sound; above it the air
@@ -2575,6 +2585,7 @@ void _Player_MonitorAir(obj_tag *player, BLData *blData) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_MonitorAir(void) {
     _asm {
@@ -2585,6 +2596,7 @@ void __declspec(naked) Player_MonitorAir(void) {
         ret
     }
 }
+#endif
 
 // On the ground: crouch, or jump - by gravity times -0.4, with room above (0.95 over the matrix's position) - or, with
 // the wire icon showing, catch the nearest wire (within 1000). In CastleIndoors1, before channel 0x48, jumping only
@@ -2673,6 +2685,7 @@ void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_HandleJump(void) {
     _asm {
@@ -2684,6 +2697,7 @@ void __declspec(naked) Player_HandleJump(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Turning and aiming speeds, and the right stick (Player_Aiming)
@@ -2728,6 +2742,7 @@ double _AccelFunc0(float input, float *speed, float base, float mul, float steps
     return Accelerate(input, *speed, base, mul, steps, deadZone, magnitude >= fullZone);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original's caller keeps EDX across the call (Player_Aiming), and Ghidra has its return in ST0 as custom
 // storage; the adaptor keeps ECX and EDX.
 // AUTOLTCG
@@ -2750,6 +2765,7 @@ void __declspec(naked) AccelFunc0(void) {
         ret
     }
 }
+#endif
 
 // AccelFunc0 with the caller saying when the speed goes for base * mul. The name is ours.
 // FUNC_AT(0x000b7520)
@@ -3049,6 +3065,7 @@ void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
     Vec_Copy(&hit->hitPosition, &above->hitPosition);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the hit in ECX
 // AUTOLTCG
 void __declspec(naked) PlayerOrDrone_FeetOnPoint_DoCollision(void) {
@@ -3060,6 +3077,7 @@ void __declspec(naked) PlayerOrDrone_FeetOnPoint_DoCollision(void) {
         ret
     }
 }
+#endif
 
 // A ray from the position to 0.6 below the test's end. The first hit is stood on when its distance is within 0.1 of
 // the root height (*floorNormalY gets its normal's y); the first hit that may be stood on moves the player with it.
@@ -3663,6 +3681,7 @@ void _Player_ZeroG(BLData *blData, obj_tag *player) {
         UpdateWalkAnims(blData, player, Magnitude(blData->movement.z));
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_ZeroG(void) {
     _asm {
@@ -3673,6 +3692,7 @@ void __declspec(naked) Player_ZeroG(void) {
         ret
     }
 }
+#endif
 
 // Flying freely (substate 5): the right stick turns at pi a second, the left flies along the player's own axes (eased a
 // fifth of the way a frame, sideways up to 0.225 and forwards up to 0.5 a frame, a third and a fifth as much
@@ -3759,6 +3779,7 @@ void _Player_SSScanMode(BLData *blData, obj_tag *player) {
     player->animState->animObj.rootTravel = 0.0f;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_SSScanMode(void) {
     _asm {
@@ -3769,6 +3790,7 @@ void __declspec(naked) Player_SSScanMode(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Using things (Player_Activate)
@@ -3856,6 +3878,7 @@ uchar _Player_Activate(BLData *blData, obj_tag *player) {
     return used;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_Activate(void) {
     _asm {
@@ -3866,6 +3889,7 @@ void __declspec(naked) Player_Activate(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Every frame (Player_Update)
@@ -3903,6 +3927,7 @@ void _Player_Swim(obj_tag *player, BLData *blData) {
     ApplyMatrixLV(&inverse, &move, &blData->movement);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The player's object in ESI, his data in EAX
 // AUTOLTCG
 void __declspec(naked) Player_Swim(void) {
@@ -3914,6 +3939,7 @@ void __declspec(naked) Player_Swim(void) {
         ret
     }
 }
+#endif
 
 // Eases the pitch 7.5% of the way to pitchAutoLevelTarget a frame while aimAutoLevelState is 2 or 3, after
 // aimAutoLevelDelay frames, and not while jumping. Once the step is within 0.0002, state 2 becomes 3.
@@ -3939,6 +3965,7 @@ void _Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
         blData->aimAutoLevelState = 3;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The player's data in ECX, his object on the stack
 // AUTOLTCG
 void __declspec(naked) Player_ClampSomeAngles(void) {
@@ -3950,6 +3977,7 @@ void __declspec(naked) Player_ClampSomeAngles(void) {
         ret
     }
 }
+#endif
 
 // A flash bang's fade (Player_SetFlashBang): flashTimeLeft counts down a frame at a time. While flashTime is set,
 // single player blurs by flashBlur; over the first half of flashTime the fade is held, then it runs over the
@@ -3969,6 +3997,7 @@ void _Player_UpdateBlurAndFade(BLData *blData) {
     blData->flashTime = 0.0f;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The player's data in ESI
 // AUTOLTCG
 void __declspec(naked) Player_UpdateBlurAndFade(void) {
@@ -3979,6 +4008,7 @@ void __declspec(naked) Player_UpdateBlurAndFade(void) {
         ret
     }
 }
+#endif
 
 // The gadgets that recharge, a unit at a time, every so many frames: 0x4a and 0x4e every 4, 0x4c and 0x4f every 2,
 // 0x45 every 6 and 0x33 every 4

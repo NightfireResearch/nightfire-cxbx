@@ -517,6 +517,7 @@ TXT_MSG* _Text_NextMsg(TXT_MSG *msg, char player, int type) {
     return Text_FindMsg(player, type);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // EAX the line, BL the player, EDI the type
 // AUTOLTCG
 void __declspec(naked) Text_NextMsg(void) {
@@ -533,6 +534,7 @@ void __declspec(naked) Text_NextMsg(void) {
         ret
     }
 }
+#endif
 
 // Counts down the line *msg shows for player (-1 any) of type; when its time is up, or there is none, the next.
 // True when *msg changed (or was looked for), false while it shows on, or when the player's view shows no sprites.

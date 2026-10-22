@@ -294,6 +294,7 @@ bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the obstacle drone in EAX and the test in ESI, the drone on the stack.
 // AUTOLTCG
 void __declspec(naked) NDrone2_EvaluateObstacle(void) {
@@ -306,6 +307,7 @@ void __declspec(naked) NDrone2_EvaluateObstacle(void) {
         ret
     }
 }
+#endif
 
 // When two spheres moving straight in the plane, from1 to to1 and from2 to to2, come within their radii of each
 // other: the times (0 to 1 is the move) in first and second, both 0 when they already touch. With the first the
@@ -439,6 +441,7 @@ static Extended RouteTurn(DCVars_tag *dcv) {
     return CIAcos((float)dot);
 }
 
+#if NIGHTFIRE_X87
 static void StoreRouteTurn(DCVars_tag *dcv, Extended *turn) {
     *turn = RouteTurn(dcv);
 }
@@ -472,6 +475,15 @@ Extended DroneMove_RouteTurn(DCVars_tag *dcv) {
     }
     return turn;
 }
+#else
+double DroneMove_NextRouteAngle(DCVars_tag *dcv) {
+    return (double)RouteTurn(dcv);
+}
+
+Extended DroneMove_RouteTurn(DCVars_tag *dcv) {
+    return RouteTurn(dcv);
+}
+#endif
 
 // AUTOINJECT
 float DroneMove_DistanceToNextRouteNode(DCVars_tag *dcv) {

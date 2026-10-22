@@ -255,6 +255,7 @@ HASHCODE _AnimSleeveGetEntity(uint idx) {
     return (HASHCODE)0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The index in EAX
 // AUTOLTCG
 HASHCODE __declspec(naked) AnimSleeveGetEntity(void) {
@@ -265,6 +266,7 @@ HASHCODE __declspec(naked) AnimSleeveGetEntity(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum) {
@@ -315,6 +317,7 @@ void _loadAnimFileCapturingSize(MallocFlags tag, HASHCODE hashcode) {
     pAnimFileData = data;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The tag in EAX, the hashcode in ESI
 // AUTOLTCG
 void __declspec(naked) loadAnimFileCapturingSize(void) {
@@ -327,6 +330,7 @@ void __declspec(naked) loadAnimFileCapturingSize(void) {
         ret
     }
 }
+#endif
 
 static uint AnimData_ReadU16(void) {
     const uchar *p = (const uchar *)pAnimData;
@@ -456,6 +460,7 @@ void _AnimProcessScriptData(HASHCODE hashcode) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hashcode in EAX
 // AUTOLTCG
 void __declspec(naked) AnimProcessScriptData(void) {
@@ -466,6 +471,7 @@ void __declspec(naked) AnimProcessScriptData(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void AnimLoadFile(HASHCODE hashcode, char noProcess) {
@@ -655,6 +661,7 @@ void _AnimProcessSkinData(HASHCODE hashcode) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes hashcode in EAX (link-time code generation; pops nothing, preserves EBX/ESI/EDI/EBP).
 // AUTOLTCG
 void __declspec(naked) AnimProcessSkinData(HASHCODE hashcode) {
@@ -665,6 +672,7 @@ void __declspec(naked) AnimProcessSkinData(HASHCODE hashcode) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // The list of an object's scripts
@@ -766,6 +774,7 @@ sAnimSeq_tag* _AnimSeqNew(uint size, uint tag) {
     return seq;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The size in ESI, the tag on the stack
 // AUTOLTCG
 void __declspec(naked) AnimSeqNew(void) {
@@ -777,6 +786,7 @@ void __declspec(naked) AnimSeqNew(void) {
         ret
     }
 }
+#endif
 
 // Inline on the Xbox (their AnimSeqDelete)
 static void AnimSeqDelete(sAnimSeq_tag **slot) {
@@ -816,6 +826,7 @@ sAnimRawSeq_tag* _AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimS
     return raw;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The file in EAX, the hashcode in ECX, the sequence in ESI
 // AUTOLTCG
 void __declspec(naked) AnimSeqGetInfo(void) {
@@ -828,6 +839,7 @@ void __declspec(naked) AnimSeqGetInfo(void) {
         ret
     }
 }
+#endif
 
 // The distance the root walks, over the axes asked for, by the end of each frame of a sequence: frame 2 against 1
 // on to the last against the one before, then, unless noWrap, frame 2 against 1 again. A step is at least
@@ -883,6 +895,7 @@ AnimDistanceTable* _AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int no
     return table;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the axes in ECX and the hashcode in EDX
 // AUTOLTCG
 __declspec(naked) AnimDistanceTable* AnimDistanceTableCreate(void) {
@@ -899,6 +912,7 @@ __declspec(naked) AnimDistanceTable* AnimDistanceTableCreate(void) {
         ret
     }
 }
+#endif
 
 // The distance table of a sequence, made the first time; NULL once 32 are made
 AnimDistanceTable* _AnimDistanceTableGet(HASHCODE hashcode) {
@@ -915,6 +929,7 @@ AnimDistanceTable* _AnimDistanceTableGet(HASHCODE hashcode) {
     return table;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the hashcode in ESI
 // AUTOLTCG
 __declspec(naked) AnimDistanceTable* AnimDistanceTableGet(void) {
@@ -929,6 +944,7 @@ __declspec(naked) AnimDistanceTable* AnimDistanceTableGet(void) {
         ret
     }
 }
+#endif
 
 // Starts the sequence hashcode in the script's slot (0 the body, 1 the face) at frame start: its root motion and
 // its first translation start afresh. The body's sequence gives the object its bound sphere.
@@ -961,6 +977,7 @@ sAnimSeq_tag* _AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *o
     return seq;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The script in ECX, the hashcode in EBX
 // AUTOLTCG
 void __declspec(naked) AnimSeqSet(void) {
@@ -977,6 +994,7 @@ void __declspec(naked) AnimSeqSet(void) {
         ret
     }
 }
+#endif
 
 // An empty script with a body sequence (and a face sequence if the skin has morphs), linked in after after, or on
 // its own without after. NULL if an allocation fails.
@@ -1015,6 +1033,7 @@ sAnimScript_tag* _AnimScriptNew(obj_tag *obj, sAnimScript_tag *after) {
     return NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the script to follow on the stack
 // AUTOLTCG
 void __declspec(naked) AnimScriptNew(void) {
@@ -1026,6 +1045,7 @@ void __declspec(naked) AnimScriptNew(void) {
         ret
     }
 }
+#endif
 
 // Starts the 0x06 script hashcode in a new script: its frame count, end and play rate, playing from the start, or
 // backwards from the end after AnimScriptAddReverse
@@ -1082,6 +1102,7 @@ void _AnimScriptInit(obj_tag *obj, sAnimScript_tag *script, HASHCODE hashcode) {
     script->boneMask = NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the script in ESI, the hashcode in EDI
 // AUTOLTCG
 void __declspec(naked) AnimScriptInit(void) {
@@ -1094,6 +1115,7 @@ void __declspec(naked) AnimScriptInit(void) {
         ret
     }
 }
+#endif
 
 // Replaces all the object's scripts with hashcode
 // AUTOINJECT
@@ -1328,6 +1350,7 @@ double _AnimScriptEnd(sAnimScript_tag *script, obj_tag *obj, AnimObj *animObj, f
     return frame;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The script in ESI; the frame comes back in ST0
 // AUTOLTCG
 void __declspec(naked) AnimScriptEnd(void) {
@@ -1341,6 +1364,7 @@ void __declspec(naked) AnimScriptEnd(void) {
         ret
     }
 }
+#endif
 
 // How many frames the walk script must move for the distance the object walked this tick, by its sequence's
 // distance table (cumulative distance per frame). Sets the object's distance phase.
@@ -1392,6 +1416,7 @@ double _AnimDistanceTableDistanceToFrame2(obj_tag *obj, sAnimScript_tag *script,
     return ((double)count - current) + target;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the script in EBX, the anim object in EDI; the frames come back in ST0
 // AUTOLTCG
 void __declspec(naked) AnimDistanceTableDistanceToFrame2(void) {
@@ -1404,6 +1429,7 @@ void __declspec(naked) AnimDistanceTableDistanceToFrame2(void) {
         ret
     }
 }
+#endif
 
 // Whether frame f was passed going from from to to (going forwards or not, round the end): FUN_00012a20, which takes
 // its arguments in registers; only AnimProcessScriptCmds calls it. INVENTED NAME.
@@ -1701,6 +1727,7 @@ void _AnimScriptTick(AnimObj *animObj, obj_tag *obj, sAnimScript_tag *script) {
         AnimScriptDelete(obj, &script);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The anim object in ECX
 // AUTOLTCG
 void __declspec(naked) AnimScriptTick(void) {
@@ -1713,6 +1740,7 @@ void __declspec(naked) AnimScriptTick(void) {
         ret
     }
 }
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Datums
@@ -1857,6 +1885,7 @@ void _AnimFacialUpdate(AnimObj *animObj, obj_tag *obj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The anim object in ESI
 // AUTOLTCG
 void __declspec(naked) AnimFacialUpdate(void) {
@@ -1868,6 +1897,7 @@ void __declspec(naked) AnimFacialUpdate(void) {
         ret
     }
 }
+#endif
 
 static constexpr float kByteToUnit = 1.0f / 255.0f;
 static_assert(std::bit_cast<uint32_t>(kByteToUnit) == 0x3b808081, "1/255");
@@ -1921,6 +1951,7 @@ void _AnimFacialBlend(obj_tag *obj, AnimObj *animObj, sAnimSkin_tag *skin) {
         animObj->morphWeights[MORPH_EYES_Y_INV] = (float)eyes;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the anim object in ESI
 // AUTOLTCG
 void __declspec(naked) AnimFacialBlend(void) {
@@ -1933,6 +1964,7 @@ void __declspec(naked) AnimFacialBlend(void) {
         ret
     }
 }
+#endif
 
 // Whether any view has the object at lod limit or nearer; always in a scripted scene
 // AUTOINJECT
@@ -2207,6 +2239,7 @@ void _AnimFrameBlend(float *out, float *a, float *b, obj_tag *obj, int numBones,
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // out in ECX, a in EDX, b in EAX
 // AUTOLTCG
 void __declspec(naked) AnimFrameBlend(void) {
@@ -2223,6 +2256,7 @@ void __declspec(naked) AnimFrameBlend(void) {
         ret
     }
 }
+#endif
 
 // The sequence's frame into its pose, the next frame blended in by fraction
 void _AnimFrameSet(sAnimSeq_tag *seq, sAnimSkin_tag *skin, obj_tag *obj, float fraction) {
@@ -2249,6 +2283,7 @@ void _AnimFrameSet(sAnimSeq_tag *seq, sAnimSkin_tag *skin, obj_tag *obj, float f
     _AnimFrameBlend(seq->pose, seq->pose, nextPose, obj, numBones, fraction, NULL);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The sequence in ESI, the skin in EDI
 // AUTOLTCG
 void __declspec(naked) AnimFrameSet(void) {
@@ -2262,6 +2297,7 @@ void __declspec(naked) AnimFrameSet(void) {
         ret
     }
 }
+#endif
 
 // A walk script's sequence's frame callback (AnimSetUpdate): as AnimSeqTick samples, whatever the script's flags.
 // Their name; FUN_000171a0 on the Xbox.
@@ -2327,6 +2363,7 @@ void _AnimSeqTick(sAnimScript_tag *script, sAnimSeq_tag *seq, obj_tag *obj, Anim
     Vec_Zero(root);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The script in EAX, the sequence in ECX, the object in EDX, the anim object in EBX
 // AUTOLTCG
 void __declspec(naked) AnimSeqTick(void) {
@@ -2340,6 +2377,7 @@ void __declspec(naked) AnimSeqTick(void) {
         ret
     }
 }
+#endif
 
 // A full character's root height in multiplayer, but for the alternative skeletons
 static constexpr float kMultiplayerHeight = 0.8627321f;
@@ -2560,6 +2598,7 @@ HASHCODE _maybeFixupSkinHashcode(HASHCODE skin) {
     return skin;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The skin in EAX
 // AUTOLTCG
 HASHCODE __declspec(naked) maybeFixupSkinHashcode(void) {
@@ -2570,6 +2609,7 @@ HASHCODE __declspec(naked) maybeFixupSkinHashcode(void) {
         ret
     }
 }
+#endif
 
 // The height under the root of a full character, by its skeleton, before the skin's own (AnimObjectNew)
 static constexpr float kHeightAltSkeleton = -1.160398f;
@@ -2903,6 +2943,7 @@ float _AnimObjectInitialPose(obj_tag *obj) {
     return foot.y;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in ESI; the height comes back in ST0
 // AUTOLTCG
 void __declspec(naked) AnimObjectInitialPose(void) {
@@ -2913,6 +2954,7 @@ void __declspec(naked) AnimObjectInitialPose(void) {
         ret
     }
 }
+#endif
 
 // The control functions' thunk to AnimObjectUpdate (a lone JMP)
 // FUNC_AT(0x0002cf00)
@@ -3921,6 +3963,7 @@ sAnimSet_tag* _AnimTagAllocAndGetUnique(sAnimSet_tag *after) {
     return set;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The set to follow in ESI
 // AUTOLTCG
 void __declspec(naked) AnimTagAllocAndGetUnique(void) {
@@ -3931,6 +3974,7 @@ void __declspec(naked) AnimTagAllocAndGetUnique(void) {
         ret
     }
 }
+#endif
 
 // Starts a set on list (idle, walks slowest first, 0, then the strafes), deleting the object's scripts
 void _AnimSetInit(sAnimSet_tag *set, HASHCODE *list, obj_tag *obj, float a, float b) {
@@ -3965,6 +4009,7 @@ void _AnimSetInit(sAnimSet_tag *set, HASHCODE *list, obj_tag *obj, float a, floa
     GlbAnimListCount = 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The set in ECX, the list in EAX
 // AUTOLTCG
 void __declspec(naked) AnimSetInit(void) {
@@ -3979,6 +4024,7 @@ void __declspec(naked) AnimSetInit(void) {
         ret
     }
 }
+#endif
 
 // A set at the end of the object's, up to four
 // AUTOINJECT

@@ -161,6 +161,7 @@ void _Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
     blData->weaponObject->rotation.z = 0.0f;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The player in EAX
 // AUTOLTCG
 void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(void) {
@@ -171,8 +172,10 @@ void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(void) {
         ret
     }
 }
+#endif
 
 // The C runtime's x87 asin (__CIasin_default, Crt::CIasin): the argument in ST0, the result in ST0
+#if NIGHTFIRE_X87
 static double __declspec(naked) CIAsin(double x) {
     _asm {
         fld qword ptr [esp + 4]
@@ -180,6 +183,11 @@ static double __declspec(naked) CIAsin(double x) {
         ret
     }
 }
+#else
+static double CIAsin(double x) {
+    return Crt::CIasin(x);
+}
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // What the player carries
@@ -1065,6 +1073,7 @@ sAnimScript_tag *_Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapo
     return AnimScriptAdd(weaponObj, fire);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_SetFiringAnim(void) {
     _asm {
@@ -1076,6 +1085,7 @@ void __declspec(naked) Player_SetFiringAnim(void) {
         ret
     }
 }
+#endif
 
 // Moves ammo from the stock into the gun: as much as the clip takes, or one shell for a weapon that loads shells.
 // Returns whether there was any to move; with test set, only says so.
@@ -1283,6 +1293,7 @@ void _Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
         weapon->onFired(player);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Player_WeaponInitBullet(void) {
     _asm {
@@ -1293,6 +1304,7 @@ void __declspec(naked) Player_WeaponInitBullet(void) {
         ret
     }
 }
+#endif
 
 // Shows what the weapon in the hand shows on its datums: the satchel charge's timer, the decryptor's display, weapon
 // 0x33's charge (and its light), weapon 0x1a's lights, the rounds left in weapon 0x11; and the camera's and the remote

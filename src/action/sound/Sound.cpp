@@ -175,6 +175,7 @@ DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, fl
     return snd;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the sound in EAX, the rest on the stack
 // AUTOLTCG
 __declspec(naked) DYNAMICSOUNDS* Sound_Play(void) {
@@ -196,6 +197,7 @@ __declspec(naked) DYNAMICSOUNDS* Sound_Play(void) {
         ret
     }
 }
+#endif
 
 // Starts a sound. A 2D one always gives its subtitle. A 3D one past 1.1 times its outer radius does not start if
 // there is one listener and the table has it truly 3D and not looping; one within half its outer radius, in a cut
@@ -228,6 +230,7 @@ void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
         SFXStart3D(id & SFX_ID_MASK, &pos, &vel, snd, Ftol(snd->volume), -1, -1);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the sound in EDI
 // AUTOLTCG
 __declspec(naked) void Sound_ReqestPlaySfx(void) {
@@ -242,6 +245,7 @@ __declspec(naked) void Sound_ReqestPlaySfx(void) {
         ret
     }
 }
+#endif
 
 // Every sound in use, once a frame: a new one started, a playing one stopped once it ends (a looping one only when
 // stopped), a stopped one freed; a playing 3D one moved. The listener is not read.

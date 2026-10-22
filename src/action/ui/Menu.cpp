@@ -1315,6 +1315,7 @@ ushort _Menu_GetAction(short player, int action, uchar flags) {
     return value;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AX the player
 // AUTOLTCG
 __declspec(naked) void Menu_GetAction(void) {
@@ -1327,6 +1328,7 @@ __declspec(naked) void Menu_GetAction(void) {
         ret
     }
 }
+#endif
 
 // An action for the menus: select and start are ignored while back is held, back while either is; in a menu of
 // status above 3 start and select stand for each other.

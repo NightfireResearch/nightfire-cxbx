@@ -181,6 +181,7 @@ short _Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     return -1;  // Error: missing beam or target
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 short __declspec(naked) Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
     // Assembly wrapper for custom calling convention
@@ -194,6 +195,7 @@ short __declspec(naked) Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, S
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {

@@ -134,6 +134,7 @@ ushort _SP_Hit(SCRIPTPLAYER *scriptPlayer) {
     return hitFlags;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the script player in EBX. SP_Update is its only caller.
 // AUTOLTCG
 void __declspec(naked) SP_Hit(void) {
@@ -144,6 +145,7 @@ void __declspec(naked) SP_Hit(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void SP_Activate(obj_tag *activatorObj, obj_tag *param_2) {
@@ -575,6 +577,7 @@ void _SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the object on the stack and the script player in ESI.
 // AUTOLTCG
 void __declspec(naked) SP_LoadScript(void) {
@@ -586,6 +589,7 @@ void __declspec(naked) SP_LoadScript(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 obj_tag* SP_CreateScriptPlayer(_VECTOR *pos, _VECTOR *rot, level_tag *placementData, obj_tag *ownerObj, ScriptPlayerCallback *funcPtr, void *callbackContext) {

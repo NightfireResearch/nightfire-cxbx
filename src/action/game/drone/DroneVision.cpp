@@ -276,6 +276,7 @@ double _DroneVision_OpponentVisibility(Drone_tag *drone) {
     return visibility;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in ESI and returns in ST0.
 // AUTOLTCG
 void __declspec(naked) DroneVision_OpponentVisibility(void) {
@@ -286,6 +287,7 @@ void __declspec(naked) DroneVision_OpponentVisibility(void) {
         ret
     }
 }
+#endif
 
 // Whether the drone may see its opponent this frame: it has one, the drones are not blinded, it is alive, the
 // opponent is within range (when range is above 0) and well enough seen (0.7). Otherwise opponentVisibility is 0.
@@ -299,6 +301,7 @@ bool _DroneVision_OpponentInView(Drone_tag *drone, float range) {
     return false;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in EAX and the range on the stack.
 // AUTOLTCG
 void __declspec(naked) DroneVision_OpponentInView(float range) {
@@ -310,6 +313,7 @@ void __declspec(naked) DroneVision_OpponentInView(float range) {
         ret
     }
 }
+#endif
 
 // The line of sight to the opponent. Outside multiplayer, and for all but civilians, one of Drone_View_Bones a call,
 // in turn, back to the first as soon as it is seen; while aiming, whether the gun is through a wall. Our name (the
@@ -381,6 +385,7 @@ bool _DroneVision_SeekOpponentLOS(Drone_tag *drone) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in ESI.
 // AUTOLTCG
 void __declspec(naked) DroneVision_SeekOpponentLOS(void) {
@@ -391,6 +396,7 @@ void __declspec(naked) DroneVision_SeekOpponentLOS(void) {
         ret
     }
 }
+#endif
 
 // The first time an enemy (or, in TowerA and TowerB, a civilian) sees the player, it counts in the player's stats;
 // in CastleIndoors1 only while the player is armed
@@ -450,6 +456,7 @@ void _DroneVision_HaveOpponentSight(Drone_tag *drone) {
         DroneFunc_SetMissionFailReason(drone, 10);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in ESI.
 // AUTOLTCG
 void __declspec(naked) DroneVision_HaveOpponentSight(void) {
@@ -460,6 +467,7 @@ void __declspec(naked) DroneVision_HaveOpponentSight(void) {
         ret
     }
 }
+#endif
 
 // ---- drones alerting each other
 
@@ -476,6 +484,7 @@ Drone_tag *_DroneVision_FindDrone(Drone_tag *from, uint id) {
     return first;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes `from` in EAX and the id in EDX.
 // AUTOLTCG
 void __declspec(naked) DroneVision_FindDrone(void) {
@@ -487,6 +496,7 @@ void __declspec(naked) DroneVision_FindDrone(void) {
         ret
     }
 }
+#endif
 
 // The drone after the one with this id (looking from `from`, or the first, on); the first when that is the last or
 // none has it. Our name.
@@ -602,6 +612,7 @@ bool _DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     return inView;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in ESI and the alerter in EDI.
 // AUTOLTCG
 void __declspec(naked) DroneVision_ConsiderAlerted(void) {
@@ -613,6 +624,7 @@ void __declspec(naked) DroneVision_ConsiderAlerted(void) {
         ret
     }
 }
+#endif
 
 // A drone knows something it can pass on: running, not an ally, not alerted by another and some flags2
 static bool KnowsSomething(Drone_tag *drone) {
@@ -639,6 +651,7 @@ bool _DroneVision_DetermineAlertCheck(Drone_tag *a, Drone_tag *b) {
     return _DroneVision_ConsiderAlerted(a, b);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes a in EDX and b in EAX.
 // AUTOLTCG
 void __declspec(naked) DroneVision_DetermineAlertCheck(void) {
@@ -650,6 +663,7 @@ void __declspec(naked) DroneVision_DetermineAlertCheck(void) {
         ret
     }
 }
+#endif
 
 // Pairs of drones (each with those after it in the list) until five have been in each other's view; the next frame
 // goes on from the pair it stopped at (NPCGlobals.alertCursor), counting a row for each pair of that one, then

@@ -346,6 +346,7 @@ float _moveTowardsValue(float value, float target, float rate) {
     return moved < target ? target : moved;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original's arguments on the stack and the result in ST0, the caller cleaning up
 // AUTOLTCG
 float __declspec(naked) moveTowardsValue(float value, float target, float rate) {
@@ -358,6 +359,7 @@ float __declspec(naked) moveTowardsValue(float value, float target, float rate) 
         ret
     }
 }
+#endif
 
 // The debug cameras' placements. Each eases one part of the view rate of the way to where it should be, then sets
 // the view to its own position and angles (Camera_Set).

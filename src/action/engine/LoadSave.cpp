@@ -103,6 +103,7 @@ uchar* _LS_FindBlockByLabel(ushort slot, uint label, ushort *length) {
     return NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the slot in AX and the label in EDI.
 // AUTOLTCG
 void __declspec(naked) LS_FindBlockByLabel(void) {
@@ -116,6 +117,7 @@ void __declspec(naked) LS_FindBlockByLabel(void) {
         ret
     }
 }
+#endif
 
 // Takes a buffer handed over from outside (Boot_LoadPTPData's) as slot 0's last save, if its first word is not
 // zero. The length is not checked against the slot.
@@ -162,6 +164,7 @@ void _LS_GetLoadStuff(ushort mask, ushort slot) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the slot in BX.
 // AUTOLTCG
 void __declspec(naked) LS_GetLoadStuff(void) {
@@ -174,6 +177,7 @@ void __declspec(naked) LS_GetLoadStuff(void) {
         ret
     }
 }
+#endif
 
 // Saves the slot's masked blocks under the codename. Returns the state it found, so the caller sees the result a
 // call later.

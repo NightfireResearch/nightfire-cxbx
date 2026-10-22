@@ -329,6 +329,7 @@ bool _Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
     return tests != NPCGlobals.visionTests;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 void __declspec(naked) Drone_IsCoverNodeUsable(void) {
     _asm {
@@ -339,6 +340,7 @@ void __declspec(naked) Drone_IsCoverNodeUsable(void) {
         ret
     }
 }
+#endif
 
 // Every fifth call, looks at the cover nodes for each target in turn, going on from where it left off, until one
 // line-of-sight test per target

@@ -156,6 +156,7 @@ void _Collide_Sort(HITDATA_tag **list) {
     prev->next = NULL;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The list in EBX
 // AUTOLTCG
 void __declspec(naked) Collide_Sort(void) {
@@ -166,6 +167,7 @@ void __declspec(naked) Collide_Sort(void) {
         ret
     }
 }
+#endif
 
 // Whether the test passes through the hit's material (and marks it HIT_NONE): the mask's 0x800 the material's 0x40,
 // 1 surfaces 13 and 14, 2 surface 16, 8 a hit that makes no contact
@@ -385,6 +387,7 @@ bool _Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR 
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The vertices in EDX, ECX and ESI, the box in EDI and EBX
 // AUTOLTCG
 void __declspec(naked) Intersect_AABB_SweptVolume(void) {
@@ -399,6 +402,7 @@ void __declspec(naked) Intersect_AABB_SweptVolume(void) {
         ret
     }
 }
+#endif
 
 // Two spheres: whether they overlap, a - b, and the square of the distance between the centres
 bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq) {
@@ -409,6 +413,7 @@ bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radius
     return squared < reach * reach;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The spheres (a centre and its radius) in EBX and EDI, the difference to ESI
 // AUTOLTCG
 void __declspec(naked) Intersect_SphereSphere(void) {
@@ -424,6 +429,7 @@ void __declspec(naked) Intersect_SphereSphere(void) {
         ret
     }
 }
+#endif
 
 // The test's ray against its sphere
 bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq) {
@@ -434,6 +440,7 @@ bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq) {
     return squared < (double)test->sphereRadius * test->sphereRadius;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The test in ESI
 // AUTOLTCG
 void __declspec(naked) Intersect_RaySphere(void) {
@@ -445,6 +452,7 @@ void __declspec(naked) Intersect_RaySphere(void) {
         ret
     }
 }
+#endif
 
 // The test's cylinder against its sphere
 bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq) {
@@ -456,6 +464,7 @@ bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq) {
     return squared < reach * reach;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The test in ESI
 // AUTOLTCG
 void __declspec(naked) Intersect_CylSphere(void) {
@@ -467,6 +476,7 @@ void __declspec(naked) Intersect_CylSphere(void) {
         ret
     }
 }
+#endif
 
 // The cels a test reaches through the portals it crosses, from its own (which comes last), at most 127
 // AUTOINJECT
@@ -624,6 +634,7 @@ void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The test in EAX
 // AUTOLTCG
 void __declspec(naked) Collide_PickObj(void) {
@@ -636,6 +647,7 @@ void __declspec(naked) Collide_PickObj(void) {
         ret
     }
 }
+#endif
 
 // The broad phase: in each cel the test reaches, the cels chained from it (but with mask 0x80), its objects (but
 // with mask 0x10) and the cel itself (but with mask 0x40), then the forced objects. The candidates go to the
@@ -827,6 +839,7 @@ bool _Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hit in EAX
 // AUTOLTCG
 void __declspec(naked) Collide_Jointy(void) {
@@ -838,6 +851,7 @@ void __declspec(naked) Collide_Jointy(void) {
         ret
     }
 }
+#endif
 
 // The narrow phase of one candidate: the test goes into the cel's or object's space (none for a cel in world space),
 // meets the geometry, and the hit and the push come back out; false if the hit is rejected
@@ -977,6 +991,7 @@ bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The hit in EAX
 // AUTOLTCG
 void __declspec(naked) Collide_Intersect(void) {
@@ -989,6 +1004,7 @@ void __declspec(naked) Collide_Intersect(void) {
         ret
     }
 }
+#endif
 
 // A sphere (the test's sphere, in its geometry's space) against the triangles of the leaf boxes it touches: each
 // triangle within the radius pushes it out along its normal (DeltaP adds up the pushes); the hit is the nearest.
@@ -1368,6 +1384,7 @@ void _Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel) {
     _Collide_Sort(&test->tester->hitList);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The flags in EAX, the test in EDI. Our name (Ghidra had Collide_CylinderIntersect, which is 0x2c6f0).
 // AUTOLTCG
 void __declspec(naked) Collide_TestHits(void) {
@@ -1380,6 +1397,7 @@ void __declspec(naked) Collide_TestHits(void) {
         ret
     }
 }
+#endif
 
 // The hits along a ray, nearest first
 // AUTOINJECT

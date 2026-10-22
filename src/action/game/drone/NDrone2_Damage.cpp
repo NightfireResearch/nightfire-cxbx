@@ -339,6 +339,7 @@ void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     Drone_Message(obj, msgType, hit, 0);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the drone in EAX.
 // AUTOLTCG
 void __declspec(naked) NDrone2_DealWithObjHit(void) {
@@ -351,6 +352,7 @@ void __declspec(naked) NDrone2_DealWithObjHit(void) {
         ret
     }
 }
+#endif
 
 // ---- the damage
 

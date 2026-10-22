@@ -157,6 +157,7 @@ int _FS_MatchFilenameToHeader(char *filename) {
     return -1;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // AUTOLTCG
 int __declspec(naked) FS_MatchFilenameToHeader(char* filename) {
     // The original function is provided with its parameter in EAX, but we need to call our reimplementation
@@ -169,6 +170,7 @@ int __declspec(naked) FS_MatchFilenameToHeader(char* filename) {
     }
 
 }
+#endif
 
 
 // ---------------------------------------------------------------------------------------------------------------

@@ -928,6 +928,7 @@ static void _d3dRenderTargetSetup(int textureSlot) {
     Gfx_RenderTargetPushed = 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes its single parameter (a texture-slot index) in ESI, not on the stack - confirmed via raw
 // disassembly (its very first instruction reads ESI with no prologue setting it from the stack; Ghidra's own
 // decompile flags this exact gap with "unaff_ESI"/"extraout_EAX" warnings - the same class of hidden custom
@@ -944,6 +945,7 @@ void __declspec(naked) d3dRenderTargetSetup(void) {
         ret
     }
 }
+#endif
 
 // AUTOINJECT
 void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil) {

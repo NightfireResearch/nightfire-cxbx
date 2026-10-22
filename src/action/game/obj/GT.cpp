@@ -313,6 +313,7 @@ bool _GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
     return false;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The matrix to turn towards in EAX, the one turned from in ECX
 // AUTOLTCG
 void __declspec(naked) GT_maybeInterpolateAimDir(void) {
@@ -328,6 +329,7 @@ void __declspec(naked) GT_maybeInterpolateAimDir(void) {
         ret
     }
 }
+#endif
 
 // The body, and the barrel, the third part and the flash with it, turned a step towards a point
 void _GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
@@ -346,6 +348,7 @@ void _GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
         Mat_Copy(&look, &turret->muzzleFlash->transformMatrix);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The turret in EAX, the point on the stack
 // AUTOLTCG
 void __declspec(naked) GT_AimAt(void) {
@@ -361,6 +364,7 @@ void __declspec(naked) GT_AimAt(void) {
         ret
     }
 }
+#endif
 
 // Stunned: aimed at random about the way it faces
 void _GT_RandMove(GUNTURRET *turret) {
@@ -378,6 +382,7 @@ void _GT_RandMove(GUNTURRET *turret) {
     _GT_AimAt(turret, &at);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The turret in ESI; its object on the stack, not read
 // AUTOLTCG
 void __declspec(naked) GT_RandMove(void) {
@@ -392,6 +397,7 @@ void __declspec(naked) GT_RandMove(void) {
         ret
     }
 }
+#endif
 
 // A shot from the barrel's muzzle, with the flash and, every other shot, smoke
 static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX sound, obj_tag *from, int player) {

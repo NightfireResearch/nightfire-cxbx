@@ -141,6 +141,7 @@ void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // gameObj in EAX, mpObj in EDI, dropped on the stack, removed by the caller.
 // AUTOLTCG
 void __declspec(naked) MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
@@ -153,6 +154,7 @@ void __declspec(naked) MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dro
         ret
     }
 }
+#endif
 
 // An agent takes the blueprint. (Our helper; the original repeats it inline.)
 static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
@@ -235,6 +237,7 @@ void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // gameObj in EAX, the other two on the stack, removed by the caller.
 // AUTOLTCG
 void __declspec(naked) MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
@@ -247,3 +250,4 @@ void __declspec(naked) MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag
         ret
     }
 }
+#endif

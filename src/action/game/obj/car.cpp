@@ -394,6 +394,7 @@ void _Car_SetBits(CAR_INFO *car, obj_tag *obj) {
     }
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ESI the car's data; the car on the stack
 // AUTOLTCG
 void __declspec(naked) Car_SetBits(void) {
@@ -405,6 +406,7 @@ void __declspec(naked) Car_SetBits(void) {
         ret
     }
 }
+#endif
 
 // Carried along by what it touches, unless that is a drone, a player, a bullet, a dead drone or a rigid body. Not
 // named on PS2; the name is ours.
@@ -423,6 +425,7 @@ bool _Car_InheritVelocity(obj_tag *car, obj_tag *by) {
     return true;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ECX what it touched; the car on the stack
 // AUTOLTCG
 bool __declspec(naked) Car_InheritVelocity(void) {
@@ -434,6 +437,7 @@ bool __declspec(naked) Car_InheritVelocity(void) {
         ret
     }
 }
+#endif
 
 // The helicopter's update while it is driven: the sticks turn and roll it and move it about at its height, its nose
 // kept from pointing more than three quarters straight up or down; its gun and missiles fire from each side in turn

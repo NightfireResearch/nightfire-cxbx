@@ -75,6 +75,7 @@ ushort _Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt) {
     return hurt->armMask & touching;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The object in EAX, the hurt volume in ECX
 // AUTOLTCG
 void __declspec(naked) Hurt_IsTriggered(void) {
@@ -86,6 +87,7 @@ void __declspec(naked) Hurt_IsTriggered(void) {
         ret
     }
 }
+#endif
 
 // State 0 waits to go off; 1 runs the path (the sound at its start), and at its end starts it again or, one shot, goes
 // to 2, which deletes it. Shown while the channel is on; switched off part way, it waits again.

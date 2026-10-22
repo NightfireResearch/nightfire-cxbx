@@ -318,6 +318,7 @@ void _StickCompensation2(float *x, float *y) {
     *y = (float)(scale * *y);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes x in EDI and y in ESI
 // AUTOLTCG
 __declspec(naked) void StickCompensation2(void) {
@@ -333,6 +334,7 @@ __declspec(naked) void StickCompensation2(void) {
         ret
     }
 }
+#endif
 
 // With y near the centre, x past the diagonal goes to its end; then, with x as it was near the centre, y does
 // AUTOINJECT

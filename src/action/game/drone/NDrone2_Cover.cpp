@@ -115,6 +115,7 @@ ushort _DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state) {
     return state;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // The original takes the dcv in ESI and the anim state in DI.
 // AUTOLTCG
 void __declspec(naked) DroneAnim_ValidateCoverAnim(void) {
@@ -127,6 +128,7 @@ void __declspec(naked) DroneAnim_ValidateCoverAnim(void) {
         ret
     }
 }
+#endif
 
 // The anim state for the drone's cover step, in a mode at a corner (the mode's list for the corner's side), or at a
 // low node
