@@ -2,6 +2,7 @@
 #define TEXT_H_
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 typedef enum {
     Lang_UK = 0,
@@ -43,7 +44,7 @@ typedef struct TextMsgFormat {
     ushort pad;
 } TextMsgFormat;
 #pragma pack(pop)
-static_assert(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
+LAYOUT_32(sizeof(TextMsgFormat) == 8, "TextMsgFormat is 8 bytes");
 extern TextMsgFormat TextMsgFormats[7];
 
 #pragma pack(push, 1)
@@ -64,12 +65,12 @@ typedef struct TXT_MSG {
     char pad1f;
 } TXT_MSG;
 #pragma pack(pop)
-static_assert(offsetof(TXT_MSG, text) == 0x08, "TXT_MSG.text is at 0x08");
-static_assert(offsetof(TXT_MSG, spriteHash) == 0x10, "TXT_MSG.spriteHash is at 0x10");
-static_assert(offsetof(TXT_MSG, timer) == 0x18, "TXT_MSG.timer is at 0x18");
-static_assert(offsetof(TXT_MSG, type) == 0x1c, "TXT_MSG.type is at 0x1c");
-static_assert(offsetof(TXT_MSG, playerNum) == 0x1e, "TXT_MSG.playerNum is at 0x1e");
-static_assert(sizeof(TXT_MSG) == 0x20, "TXT_MSG is 0x20 bytes");
+LAYOUT_32(offsetof(TXT_MSG, text) == 0x08, "TXT_MSG.text is at 0x08");
+LAYOUT_32(offsetof(TXT_MSG, spriteHash) == 0x10, "TXT_MSG.spriteHash is at 0x10");
+LAYOUT_32(offsetof(TXT_MSG, timer) == 0x18, "TXT_MSG.timer is at 0x18");
+LAYOUT_32(offsetof(TXT_MSG, type) == 0x1c, "TXT_MSG.type is at 0x1c");
+LAYOUT_32(offsetof(TXT_MSG, playerNum) == 0x1e, "TXT_MSG.playerNum is at 0x1e");
+LAYOUT_32(sizeof(TXT_MSG) == 0x20, "TXT_MSG is 0x20 bytes");
 
 TXT_MSG* Text_TakeMsg(void);
 void Text_Init(uchar warmReset);

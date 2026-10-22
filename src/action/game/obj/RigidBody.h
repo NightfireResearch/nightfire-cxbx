@@ -2,6 +2,7 @@
 #define RIGIDBODY_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "../../engine/Collide.h"
 
 #pragma pack(push, 1)
@@ -44,11 +45,11 @@ typedef struct RIGIDBODY {
     uint sound;                 // 0x128 - Action_SFX of a bullet's hit; 0xffff for none
 } RIGIDBODY;
 
-static_assert(sizeof(RIGIDBODY) == 0x12c, "RIGIDBODY is 0x12c bytes");
-static_assert(offsetof(RIGIDBODY, quat) == 0x4c, "Bad offset of RIGIDBODY.quat");
-static_assert(offsetof(RIGIDBODY, kind) == 0x90, "Bad offset of RIGIDBODY.kind");
-static_assert(offsetof(RIGIDBODY, test) == 0x94, "Bad offset of RIGIDBODY.test");
-static_assert(offsetof(RIGIDBODY, light) == 0x120, "Bad offset of RIGIDBODY.light");
+LAYOUT_32(sizeof(RIGIDBODY) == 0x12c, "RIGIDBODY is 0x12c bytes");
+LAYOUT_32(offsetof(RIGIDBODY, quat) == 0x4c, "Bad offset of RIGIDBODY.quat");
+LAYOUT_32(offsetof(RIGIDBODY, kind) == 0x90, "Bad offset of RIGIDBODY.kind");
+LAYOUT_32(offsetof(RIGIDBODY, test) == 0x94, "Bad offset of RIGIDBODY.test");
+LAYOUT_32(offsetof(RIGIDBODY, light) == 0x120, "Bad offset of RIGIDBODY.light");
 
 // The placement's keys for a rigid body (level_tag)
 typedef struct RigidBodyPlacement {

@@ -2,6 +2,7 @@
 #define BOT_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "../../engine/AINetwork.h"
 
 #pragma pack(push, 1)
@@ -147,17 +148,17 @@ typedef struct BOT_vars_t {
     uchar _pad766[2];
 } BOT_vars_t;
 
-static_assert(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
+LAYOUT_32(sizeof(BOT_goal_t) == 0x3c, "BOT_goal_t is 0x3c bytes");
 static_assert(sizeof(BOT_playerInfo_t) == 0x10, "BOT_playerInfo_t is 0x10 bytes");
 static_assert(sizeof(BOT_weapon_t) == 0xc, "BOT_weapon_t is 0xc bytes");
 static_assert(offsetof(BOT_weapon_t, held) == 0x6, "Wrong offset for BOT_weapon_t.held");
-static_assert(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
-static_assert(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
-static_assert(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");
-static_assert(offsetof(BOT_vars_t, reserveAmmo) == 0x68c, "Wrong offset for BOT_vars_t.reserveAmmo");
-static_assert(offsetof(BOT_vars_t, attackers) == 0x6d0, "Wrong offset for BOT_vars_t.attackers");
-static_assert(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t.drone");
-static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
+LAYOUT_32(sizeof(BOT_vars_t) == 0x768, "BOT_vars_t is 0x768 bytes");
+LAYOUT_32(offsetof(BOT_vars_t, players) == 0x88, "Wrong offset for BOT_vars_t.players");
+LAYOUT_32(offsetof(BOT_vars_t, weapons) == 0x134, "Wrong offset for BOT_vars_t.weapons");
+LAYOUT_32(offsetof(BOT_vars_t, reserveAmmo) == 0x68c, "Wrong offset for BOT_vars_t.reserveAmmo");
+LAYOUT_32(offsetof(BOT_vars_t, attackers) == 0x6d0, "Wrong offset for BOT_vars_t.attackers");
+LAYOUT_32(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t.drone");
+LAYOUT_32(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
 
 // One per bot, indexed by BOT_vars_t.botIndex
 extern BOT_vars_t BOT_vars[NUM_BOTS];

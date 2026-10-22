@@ -1,4 +1,5 @@
 #include "Door.h"
+#include "../../../common/xbeClass.h"
 #include "build.h"
 #include "control.h"
 #include "../Spline.h"
@@ -45,8 +46,8 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(offsetof(Create_Door_Params, kind) == 0x2c, "Bad offset of kind");
-static_assert(offsetof(Create_Door_Params, noTouch) == 0x58, "Bad offset of noTouch");
+LAYOUT_32(offsetof(Create_Door_Params, kind) == 0x2c, "Bad offset of kind");
+LAYOUT_32(offsetof(Create_Door_Params, noTouch) == 0x58, "Bad offset of noTouch");
 
 // XBE_GLOBAL(0x001df98c, 0xc)
 LLISTINFO_tag TheDoors;

@@ -2,6 +2,7 @@
 #define VIEW_H_
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 // The sky's models (View_AddSkyObj), each a model or an object, and those that flash: lightning, in the sky's
@@ -22,7 +23,7 @@ struct SkyObj {
     char pad33;
 };
 #pragma pack(pop)
-static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
+LAYOUT_32(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
 
 #define SKY_OBJS 21
 extern SkyObj SkyObjs[SKY_OBJS];

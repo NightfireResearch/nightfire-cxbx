@@ -124,12 +124,12 @@ void ES_InitialStreamBuffer(void) {
         if (n == 0) {
             stream->StreamHandle = psiStreamCreatePlaybackBuffer(44100, 2, 0x4800);
             for (int i = 0; i < STREAM_READ_BUFFERS; i++)
-                stream->Read[i].DataBuffer = (char *)psiAsyncCreateBuffer(0x4800);
+                stream->Read[i].DataBuffer = psiAsyncCreateBuffer(0x4800);
         } else {
             stream->StreamHandle = psiStreamCreatePlaybackBuffer(22050, 1, 0x2400);
             for (int i = 0; i < 4; i++)
-                stream->Read[i].DataBuffer = (char *)psiAsyncCreateBuffer(0x2400);
-            stream->DataBuffer2 = (char *)psiAsyncCreateBuffer(0x2400);
+                stream->Read[i].DataBuffer = psiAsyncCreateBuffer(0x2400);
+            stream->DataBuffer2 = psiAsyncCreateBuffer(0x2400);
         }
     }
 }

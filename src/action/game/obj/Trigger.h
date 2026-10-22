@@ -2,6 +2,7 @@
 #define TRIGGER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 // What a trigger does (TRIGGER::mode). The placements' create functions each set one.
 enum TriggerMode {
@@ -48,11 +49,11 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(sizeof(TRIGGER) == 0x3c, "Bad size for TRIGGER");
-static_assert(offsetof(TRIGGER, channel) == 0x1c, "Bad offset of channel");
-static_assert(offsetof(TRIGGER, inputs) == 0x22, "Bad offset of inputs");
-static_assert(offsetof(TRIGGER, mode) == 0x34, "Bad offset of mode");
-static_assert(offsetof(TRIGGER, cooldown) == 0x38, "Bad offset of cooldown");
+LAYOUT_32(sizeof(TRIGGER) == 0x3c, "Bad size for TRIGGER");
+LAYOUT_32(offsetof(TRIGGER, channel) == 0x1c, "Bad offset of channel");
+LAYOUT_32(offsetof(TRIGGER, inputs) == 0x22, "Bad offset of inputs");
+LAYOUT_32(offsetof(TRIGGER, mode) == 0x34, "Bad offset of mode");
+LAYOUT_32(offsetof(TRIGGER, cooldown) == 0x38, "Bad offset of cooldown");
 
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 obj_tag * MusicTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

@@ -2,6 +2,7 @@
 #define MONITOR_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 // A monitor's state (obj_tag::curState); counting down from any other number back to MonitorState_Off
 enum MonitorState {
@@ -22,7 +23,7 @@ typedef struct {
 } MONITOR;
 #pragma pack(pop)
 
-static_assert(sizeof(MONITOR) == 0x14, "Bad size for MONITOR");
+LAYOUT_32(sizeof(MONITOR) == 0x14, "Bad size for MONITOR");
 
 obj_tag * Monitor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void Monitor_Activate(obj_tag *obj, obj_tag *user);

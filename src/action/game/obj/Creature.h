@@ -2,6 +2,7 @@
 #define CREATURE_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "../../math/math.h"
 #include "../../util/LList.h"
 
@@ -45,8 +46,8 @@ typedef struct Creature {
 } Creature;
 #pragma pack(pop)
 
-static_assert(sizeof(Creature) == 0xe0, "Creature is 0xe0 bytes");
-static_assert(offsetof(Creature, gameObj) == 0xc0, "Bad offset of Creature.gameObj");
+LAYOUT_32(sizeof(Creature) == 0xe0, "Creature is 0xe0 bytes");
+LAYOUT_32(offsetof(Creature, gameObj) == 0xc0, "Bad offset of Creature.gameObj");
 
 // The placement's keys (level_tag)
 typedef struct CreaturePlacement {

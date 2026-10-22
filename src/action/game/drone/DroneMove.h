@@ -2,6 +2,7 @@
 #define DRONEMOVE_H_
 
 #include "Drone.h"
+#include "../../../common/xbeClass.h"
 #include "../../math/X87Ops.h"
 
 // How the drones move (DroneMove.cpp): turning towards where they go while steering round each other and the players,
@@ -40,13 +41,13 @@ typedef struct ObstacleEval_tag {
 
 #pragma pack(pop)
 
-static_assert(sizeof(SteerBody) == 0x30, "SteerBody is 0x30 bytes");
-static_assert(offsetof(SteerBody, vel) == 0x18, "Wrong offset for SteerBody.vel");
-static_assert(sizeof(ObstacleEval_tag) == 0x90, "ObstacleEval_tag is 0x90 bytes");
-static_assert(offsetof(ObstacleEval_tag, radiusSum) == 0x60, "Wrong offset for radiusSum");
-static_assert(offsetof(ObstacleEval_tag, t) == 0x70, "Wrong offset for t");
-static_assert(offsetof(ObstacleEval_tag, delta) == 0x7c, "Wrong offset for delta");
-static_assert(offsetof(ObstacleEval_tag, angle) == 0x8c, "Wrong offset for angle");
+LAYOUT_32(sizeof(SteerBody) == 0x30, "SteerBody is 0x30 bytes");
+LAYOUT_32(offsetof(SteerBody, vel) == 0x18, "Wrong offset for SteerBody.vel");
+LAYOUT_32(sizeof(ObstacleEval_tag) == 0x90, "ObstacleEval_tag is 0x90 bytes");
+LAYOUT_32(offsetof(ObstacleEval_tag, radiusSum) == 0x60, "Wrong offset for radiusSum");
+LAYOUT_32(offsetof(ObstacleEval_tag, t) == 0x70, "Wrong offset for t");
+LAYOUT_32(offsetof(ObstacleEval_tag, delta) == 0x7c, "Wrong offset for delta");
+LAYOUT_32(offsetof(ObstacleEval_tag, angle) == 0x8c, "Wrong offset for angle");
 
 // Each frame (NDrone2_ControlSTANDARD)
 void NDrone2_Move(DCVars_tag *dcv);

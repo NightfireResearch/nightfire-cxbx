@@ -142,7 +142,7 @@ bool NDrone2_DSTATE_BulletImpact(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_ImpactExplosive:
-        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_ExplosiveImpact, (int)(uintptr_t)msg->extraData);
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_ExplosiveImpact, (intptr_t)msg->extraData);
         return true;
 
     default:

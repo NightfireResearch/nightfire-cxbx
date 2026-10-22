@@ -3,20 +3,21 @@
 
 #include <stdint.h>
 #include "../actionhelpers.h"
+#include "../../driving/platform/Ptr32.h"   // the bank file's pointer words
 
 // Eurocom's psiSFX layer (0x000e09c0-0x000e0f00): what the game's sound code (SFX*, ES_*) calls, a thin layer
 // over the dsnd* voices in dsndSeam.cpp. Streams are voices too: a looping buffer the stream code refills.
 
-// A sample bank entry, as LoadSoundBank leaves it
+// A sample bank entry, read in place from the .SHF file and as LoadSoundBank leaves it
 typedef struct SampleHeaderData {
     int Flags;              // 0x00 bit 0: loops
-    void *Address;          // 0x04 the sample data
+    Ptr32<void> Address;    // 0x04 the sample data
     int Size;               // 0x08
     int Frequency;          // 0x0c
     int RealSize;           // 0x10
     int NumberOfChannels;   // 0x14
     int BitsPerSample;      // 0x18
-    char *psi_SampleHeader; // 0x1c
+    Ptr32<char> psi_SampleHeader;   // 0x1c - in the file an offset, the bank's psi header buffer added at load
     int LoopOffset;         // 0x20 where the loop starts, when bit 0 is set
 } SampleHeaderData;
 
@@ -49,7 +50,7 @@ void psiSetReverb(int depth);
 int psiSampleKeyOn(uint32_t voice, int reverb);
 void psiSFXSetupListener(_VECTOR *pos, _VECTOR *vel, _VECTOR *dir, _VECTOR *up, _VECTOR *norm);
 uint32_t psiIsSamplePlaying(uint32_t voice);   // 0 or 1 in all of EAX: HasSampleEnded tests the whole register
-int psiAsyncCreateBuffer(int size);
+char *psiAsyncCreateBuffer(int size);
 int psiStreamCreatePlaybackBuffer(int frequency, int channels, int byteSize);
 void dsndDeleteChannel(uint32_t voice);
 void maybePsiStreamPlay(uint32_t stream, int reverbDepth);

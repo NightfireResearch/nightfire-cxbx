@@ -106,7 +106,7 @@ __declspec(naked) void Radio_SetIndex(void) {
 
 // What a radio does not handle itself goes to its label
 // AUTOINJECT
-int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
+intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_AddItem:
         case MessageType_AddItemLabel: {
@@ -130,7 +130,7 @@ int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
         case MessageType_AltSelect1:
         case MessageType_AltSelect2:
             radio->selected = _Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
-            __Menu_SendMessage(radio->control.parent, message, (int)radio, 0);
+            __Menu_SendMessage(radio->control.parent, message, (intptr_t)radio, 0);
             return 1;
         case MessageType_ClearItems:
             if (radio->items.count != 0) {
@@ -166,11 +166,11 @@ int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
         case MessageType_GetNumItems:
             return radio->items.count - 1;
         case MessageType_GetControl:
-            return (int)radio;
+            return (intptr_t)radio;
         case MessageType_GetSelectedItemText:
             if (radio->selected == NULL)
                 return 0;
-            return (int)radio->selected->cells[0].text;
+            return (intptr_t)radio->selected->cells[0].text;
         case MessageType_GetId:
             return radio->control.id;
         case MessageType_ScriptPlay:
@@ -181,7 +181,7 @@ int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
                 return 0;
             radio->selected = _Radio_SetIndex(radio, arg1);
             Scroll_SendMessage(&radio->scroll, MessageType_SetValue, arg1, arg2);
-            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (int)radio, 0);
+            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (intptr_t)radio, 0);
         case MessageType_SelectItemByValue:
             for (LIST_ROW *item = (LIST_ROW *)LinkedList_First(&radio->items); item != NULL; item = item->next) {
                 if (item->value == arg1) {
@@ -193,7 +193,7 @@ int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
             }
             if (arg2 != 0)
                 return 1;
-            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (int)radio, 0);
+            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (intptr_t)radio, 0);
         case MessageType_SetId:
             // The last item's value
             if (radio->selected == NULL)
@@ -209,7 +209,7 @@ int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2) {
             return 1;
         case MessageType_ValueSet:
             radio->selected = _Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
-            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (int)radio, 1);
+            return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (intptr_t)radio, 1);
         default:
             return Label_SendMessage(&radio->label, message, arg1, arg2);
     }

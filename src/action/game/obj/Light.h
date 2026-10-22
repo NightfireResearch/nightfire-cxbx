@@ -2,6 +2,7 @@
 #define LIGHT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 // light_tag structure - 61 bytes of actual data, padded to 64 for 4-byte alignment
@@ -30,7 +31,7 @@ struct light_tag {
 };
 #pragma pack(pop)
 
-static_assert(sizeof(light_tag) == 64, "light_tag must be 64 bytes");
+LAYOUT_32(sizeof(light_tag) == 64, "light_tag must be 64 bytes");
 
 #pragma pack(push, 1)
 // One of the level's ambient lights in its map

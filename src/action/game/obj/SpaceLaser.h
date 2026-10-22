@@ -2,6 +2,7 @@
 #define SPACELASER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -21,7 +22,7 @@ typedef struct {
     char unknown4[2];
 } ObjData_SpaceLaser;
 
-static_assert(sizeof(ObjData_SpaceLaser) == 0x40, "ObjData_SpaceLaser size incorrect");
+LAYOUT_32(sizeof(ObjData_SpaceLaser) == 0x40, "ObjData_SpaceLaser size incorrect");
 
 #pragma pack(pop)
 

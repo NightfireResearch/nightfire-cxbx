@@ -2,6 +2,7 @@
 #define DOOR_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 // A door's state (obj_tag::curState)
 enum DoorState {
@@ -52,12 +53,12 @@ typedef struct {
     uchar noTouch;          // 0x73 - does not open by being touched
 } DOORINFO;
 
-static_assert(sizeof(DOORINFO) == 0x74, "Size of DOOR_INFO not correct");
-static_assert(offsetof(DOORINFO, pathPos) == 0x4c, "Bad offset of pathPos");
-static_assert(offsetof(DOORINFO, openSound) == 0x5c, "Bad offset of openSound");
-static_assert(offsetof(DOORINFO, unlockSwitchChannel) == 0x64, "Bad offset of unlockSwitchChannel");
-static_assert(offsetof(DOORINFO, flags) == 0x6c, "Bad offset of flags");
-static_assert(offsetof(DOORINFO, oneWay) == 0x72, "Bad offset of oneWay");
+LAYOUT_32(sizeof(DOORINFO) == 0x74, "Size of DOOR_INFO not correct");
+LAYOUT_32(offsetof(DOORINFO, pathPos) == 0x4c, "Bad offset of pathPos");
+LAYOUT_32(offsetof(DOORINFO, openSound) == 0x5c, "Bad offset of openSound");
+LAYOUT_32(offsetof(DOORINFO, unlockSwitchChannel) == 0x64, "Bad offset of unlockSwitchChannel");
+LAYOUT_32(offsetof(DOORINFO, flags) == 0x6c, "Bad offset of flags");
+LAYOUT_32(offsetof(DOORINFO, oneWay) == 0x72, "Bad offset of oneWay");
 #pragma pack(pop)
 
 void Door_Init(void);

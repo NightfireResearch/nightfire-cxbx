@@ -3,6 +3,7 @@
 // message. See docs/drone/architecture/README.md section 3.
 
 #include "Drone.h"
+#include "../../../common/xbeClass.h"
 #include "NDrone2.h"
 #include "DroneTables.h"
 #include "BOT.h"
@@ -35,8 +36,8 @@ typedef struct DroneSMLists {
     DroneSMItem *free;      // 0xc - the head of the free list (item 1)
 } DroneSMLists;
 
-static_assert(sizeof(DroneSMItem) == 0x20, "DroneSMItem is 0x20 bytes");
-static_assert(sizeof(DroneSMLists) == 0x10, "DroneSMLists is 0x10 bytes");
+LAYOUT_32(sizeof(DroneSMItem) == 0x20, "DroneSMItem is 0x20 bytes");
+LAYOUT_32(sizeof(DroneSMLists) == 0x10, "DroneSMLists is 0x10 bytes");
 
 #define DRONE_SM_ITEMS 0x400
 
@@ -325,7 +326,7 @@ bool Drone_SM_InitObject(obj_tag *gameObj) {
 // Requests a change to state `next`; it happens when the current dispatch finishes (README 3.3/3.4). The only
 // writer of nextState. Returns false only when a bot refuses the change and has nowhere to redirect it.
 // AUTOINJECT
-bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, int param) {
+bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, intptr_t param) {
     // DSTATE_Global cannot be requested: nothing happens, and the caller is told it worked. The whole dword is
     // tested, although Ghidra types the argument as a 2-byte DSTATE.
     if (next == DSTATE_Global)

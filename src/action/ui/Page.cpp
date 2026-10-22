@@ -180,7 +180,7 @@ void Page_Init(M_PAGE *page, HASHCODE hashcode, M_MANAGER *mgr) {
 }
 
 // AUTOINJECT
-int Page_SendMessage(M_PAGE *page, uint message, int arg1, int arg2) {
+intptr_t Page_SendMessage(M_PAGE *page, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_CreateObject: {
             M_CONTROL *control = (M_CONTROL *)arg1;
@@ -194,7 +194,7 @@ int Page_SendMessage(M_PAGE *page, uint message, int arg1, int arg2) {
         case MessageType_AltSelect2:
         case MessageType_BackOnControl:
             if (arg2 == 0)
-                __Menu_SendMessage(page->control.parent, message, (int)page, arg1);
+                __Menu_SendMessage(page->control.parent, message, (intptr_t)page, arg1);
             // fall through
         case MessageType_Scroll:
         case MessageType_GainFocus:
@@ -247,8 +247,8 @@ void Page_Update(M_MANAGER *mgr, M_PAGE *page, int takingInput) {
         under->framesFocused = 0;
         if (mgr->takingInput) {
             Menu_AlphaReset();
-            __Menu_SendMessage(page->control.parent, MessageType_LoseFocus, (int)was, 0);
-            __Menu_SendMessage(page->control.parent, MessageType_GainFocus, (int)under, 0);
+            __Menu_SendMessage(page->control.parent, MessageType_LoseFocus, (intptr_t)was, 0);
+            __Menu_SendMessage(page->control.parent, MessageType_GainFocus, (intptr_t)under, 0);
             if (Menu_GetPage(was) == Menu_GetPage(under))
                 Menu_PlaySound(MENU_SFX_FOCUS);
         }
@@ -307,9 +307,9 @@ void Page_Update(M_MANAGER *mgr, M_PAGE *page, int takingInput) {
     }
     if (mgr->overlayMode && mgr->takingInput) {
         if (mgr->underPage != NULL)
-            __Menu_SendMessage(mgr->underPage->control.parent, MessageType_PageUpdate, (int)page, 0);
+            __Menu_SendMessage(mgr->underPage->control.parent, MessageType_PageUpdate, (intptr_t)page, 0);
     } else if (mgr->currentPage == page && mgr->takingInput) {
-        __Menu_SendMessage(page->control.parent, MessageType_PageUpdate, (int)page, 0);
+        __Menu_SendMessage(page->control.parent, MessageType_PageUpdate, (intptr_t)page, 0);
     }
 }
 
@@ -341,7 +341,7 @@ void Page_SetHelpText(M_PAGE *page) {
     for (int i = 0; i < HELP_TEXTS; i++) {
         if (help_texts[i].control == focused->hashcode &&
             (help_texts[i].value == value || help_texts[i].value == HELP_ANY_VALUE)) {
-            __Menu_SendMessage(help_control, MessageType_SetText, (int)Txt_BindLabel(help_texts[i].text, 0), 0);
+            __Menu_SendMessage(help_control, MessageType_SetText, (intptr_t)Txt_BindLabel(help_texts[i].text, 0), 0);
             return;
         }
     }

@@ -74,10 +74,10 @@ static void Memo_Refresh(M_MEMO *memo) {
 }
 
 // AUTOINJECT
-int Memo_SendMessage(M_MEMO *memo, uint message, int arg1, int arg2) {
+intptr_t Memo_SendMessage(M_MEMO *memo, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_Select:
-            return __Menu_SendMessage(memo->control.parent, MessageType_Select, (int)memo, 0);
+            return __Menu_SendMessage(memo->control.parent, MessageType_Select, (intptr_t)memo, 0);
         case MessageType_Destroy:
             Component_Free(&memo->control);
             Scroll_SendMessage(&memo->scroll, MessageType_Destroy, 0, arg2);
@@ -91,7 +91,7 @@ int Memo_SendMessage(M_MEMO *memo, uint message, int arg1, int arg2) {
                 Menu_Free((void **)&memo, 3);
             return 0;
         case MessageType_GetText:
-            return (int)memo->text;
+            return (intptr_t)memo->text;
         case MessageType_GetHighlightColour:
             return memo->highlightColour;
         case MessageType_GetNormalColour:
@@ -99,7 +99,7 @@ int Memo_SendMessage(M_MEMO *memo, uint message, int arg1, int arg2) {
         case MessageType_MemoGetNumLines:
             return memo->linesShown;
         case MessageType_GetControl:
-            return (int)memo;
+            return (intptr_t)memo;
         case MessageType_ScriptPlay:
             return Script_Play(&memo->control, arg1, (char)arg2);
         case MessageType_MemoSetOption280:
@@ -262,17 +262,17 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
 
     // Back from the first pad
     if (page->focused->hashcode == memo->control.hashcode && Menu_InputAction(0, ACTION_MENU_BACK, 4))
-        __Menu_SendMessage(memo->control.parent, MessageType_MemoBack, (int)memo, 0);
+        __Menu_SendMessage(memo->control.parent, MessageType_MemoBack, (intptr_t)memo, 0);
     if (!mgr->takingInput || mgr->inputLocked)
         return;
     if (pressed == 1) {
         Menu_PlaySound(MENU_SFX_SELECT);
-        __Menu_SendMessage(memo->control.parent, MessageType_Select, (int)memo, 0);
+        __Menu_SendMessage(memo->control.parent, MessageType_Select, (intptr_t)memo, 0);
     } else if (pressed == 2) {
         Menu_PlaySound(MENU_SFX_ALTSELECT_1);
-        __Menu_SendMessage(memo->control.parent, MessageType_AltSelect1, (int)memo, 0);
+        __Menu_SendMessage(memo->control.parent, MessageType_AltSelect1, (intptr_t)memo, 0);
     } else if (pressed == 3) {
         Menu_PlaySound(MENU_SFX_ALTSELECT_2);
-        __Menu_SendMessage(memo->control.parent, MessageType_AltSelect2, (int)memo, 0);
+        __Menu_SendMessage(memo->control.parent, MessageType_AltSelect2, (intptr_t)memo, 0);
     }
 }

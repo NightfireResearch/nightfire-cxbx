@@ -1,4 +1,5 @@
 #include "Sensor.h"
+#include "../../../common/xbeClass.h"
 
 #include <math.h>
 
@@ -42,9 +43,9 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset of beamHashcode");
-static_assert(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
-static_assert(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
+LAYOUT_32(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset of beamHashcode");
+LAYOUT_32(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
+LAYOUT_32(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
 
 // XBE_GLOBAL(0x0029aab0, 0xc)
 LLISTINFO_tag SwitchList;

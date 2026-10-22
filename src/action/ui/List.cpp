@@ -211,7 +211,7 @@ static void List_Refresh(M_LIST *list) {
 }
 
 // AUTOINJECT
-int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
+intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ListAddColumn:
             if (list->numColumns >= LIST_COLUMNS)
@@ -256,7 +256,7 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
             row->continued = 0;
             List_AddRow(list, row);
             if (text != NULL)
-                List_SendMessage(list, MessageType_ListSetCellText, (list->rows.count - 1) << 16, (int)text);
+                List_SendMessage(list, MessageType_ListSetCellText, (list->rows.count - 1) << 16, (intptr_t)text);
             List_Refresh(list);
             return list->rows.count - 1;
         }
@@ -344,10 +344,10 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
                     return 1;
                 memcpy(row->cells[column].text, text, cut);
                 row->cells[column].text[cut] = '\0';
-                List_SendMessage(list, MessageType_AddItem, (int)MenuSpaceString, 0);
+                List_SendMessage(list, MessageType_AddItem, (intptr_t)MenuSpaceString, 0);
                 _List_SetIndex(list, list->continuedRows + rowIndex + 1)->continued = 1;
                 List_SendMessage(list, MessageType_ListSetCellText, ((arg1 >> 16) + 1) << 16 | column,
-                                 (int)(text + cut + 1));
+                                 (intptr_t)(text + cut + 1));
                 list->continuedRows++;
             } else if (length != 0) {
                 strcpy(row->cells[column].text, text);
@@ -367,7 +367,7 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
             list->selected = List_SetIndex_RealItem(list, &list->rows, arg1);
             list->selectedIndex = (uchar)_List_GetIndex(list, list->selected);
             List_ShowSelected(list);
-            return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (int)list, 0);
+            return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (intptr_t)list, 0);
         case MessageType_SelectItemByValue:
             for (LIST_ROW *row = (LIST_ROW *)LinkedList_First(&list->rows); row != NULL; row = row->next) {
                 if (row->value == arg1) {
@@ -375,7 +375,7 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
                     Scroll_SendMessage(&list->scroll, MessageType_SetValue, _List_GetIndex(list, list->selected), 0);
                     if (arg2 != 0)
                         return 1;
-                    return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (int)list, 0);
+                    return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (intptr_t)list, 0);
                 }
             }
             return 0;
@@ -437,7 +437,7 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
                 return 0;
             return list->selected->value;
         case MessageType_GetControl:
-            return (int)list;
+            return (intptr_t)list;
         case MessageType_ListGetTopRow:
             return list->topRow;
         case MessageType_GetId:
@@ -472,14 +472,14 @@ int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2) {
             }
             list->selectedIndex = (uchar)value;
             List_ShowSelected(list);
-            __Menu_SendMessage(list->control.parent, message, (int)list, 0);
+            __Menu_SendMessage(list->control.parent, message, (intptr_t)list, 0);
             return 1;
         }
         case MessageType_Select:
         case MessageType_AltSelect1:
         case MessageType_AltSelect2:
         case MessageType_BackOnControl:
-            return __Menu_SendMessage(list->control.parent, message, (int)list, 0);
+            return __Menu_SendMessage(list->control.parent, message, (intptr_t)list, 0);
         case MessageType_ValueSet: {
             int value = Scroll_SendMessage(&list->scroll, MessageType_GetValue, 0, 0);
             if (value >= 0)

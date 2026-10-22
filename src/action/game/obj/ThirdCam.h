@@ -2,6 +2,7 @@
 #define THIRDCAM_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 // A third-person camera's obj_tag::extraObjectData (0xc bytes): a path the view follows while the player is on the
@@ -15,7 +16,7 @@ typedef struct THIRDCAM {
     uchar _pad0b;
 } THIRDCAM;
 #pragma pack(pop)
-static_assert(sizeof(THIRDCAM) == 0xc, "Bad size for THIRDCAM");
+LAYOUT_32(sizeof(THIRDCAM) == 0xc, "Bad size for THIRDCAM");
 
 // The third-person cameras by id (wires and creep walls name theirs, WIRE::thirdCam, CREEPWALL::thirdCam)
 extern obj_tag *ThirdPersonCameras[16];

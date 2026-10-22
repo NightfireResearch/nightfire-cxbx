@@ -2,6 +2,7 @@
 #define PLAYERSTATS_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -58,17 +59,17 @@ typedef struct SCORETABLE {
     char unknown3[3];
 } SCORETABLE;
 
-static_assert(sizeof(SCORETABLE) == 0x3c, "SCORETABLE size mismatch");
+LAYOUT_32(sizeof(SCORETABLE) == 0x3c, "SCORETABLE size mismatch");
 static_assert(offsetof(SCORETABLE, detectionPenalty) == 0x14, "SCORETABLE detectionPenalty offset");
 static_assert(offsetof(SCORETABLE, statsTable) == 0x18, "SCORETABLE statsTable offset");
-static_assert(offsetof(SCORETABLE, timeTaken) == 0x1c, "SCORETABLE timeTaken offset");
-static_assert(offsetof(SCORETABLE, parTime) == 0x20, "SCORETABLE parTime offset");
-static_assert(offsetof(SCORETABLE, difficultyMultiplier) == 0x24, "SCORETABLE difficultyMultiplier offset");
-static_assert(offsetof(SCORETABLE, difficultyBonus) == 0x28, "SCORETABLE difficultyBonus offset");
-static_assert(offsetof(SCORETABLE, baseScore) == 0x2c, "SCORETABLE baseScore offset");
-static_assert(offsetof(SCORETABLE, bestScore) == 0x30, "SCORETABLE bestScore offset");
-static_assert(offsetof(SCORETABLE, score) == 0x34, "SCORETABLE score offset");
-static_assert(offsetof(SCORETABLE, isAction) == 0x38, "SCORETABLE isAction offset");
+LAYOUT_32(offsetof(SCORETABLE, timeTaken) == 0x1c, "SCORETABLE timeTaken offset");
+LAYOUT_32(offsetof(SCORETABLE, parTime) == 0x20, "SCORETABLE parTime offset");
+LAYOUT_32(offsetof(SCORETABLE, difficultyMultiplier) == 0x24, "SCORETABLE difficultyMultiplier offset");
+LAYOUT_32(offsetof(SCORETABLE, difficultyBonus) == 0x28, "SCORETABLE difficultyBonus offset");
+LAYOUT_32(offsetof(SCORETABLE, baseScore) == 0x2c, "SCORETABLE baseScore offset");
+LAYOUT_32(offsetof(SCORETABLE, bestScore) == 0x30, "SCORETABLE bestScore offset");
+LAYOUT_32(offsetof(SCORETABLE, score) == 0x34, "SCORETABLE score offset");
+LAYOUT_32(offsetof(SCORETABLE, isAction) == 0x38, "SCORETABLE isAction offset");
 
 #pragma pack(pop)
 

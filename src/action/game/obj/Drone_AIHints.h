@@ -1,6 +1,7 @@
 // actionhelpers.h first, outside the guard: it includes this file after AINetwork.h, whose AIEmitter_tag the records
 // below need, so a file that includes this one first must still get that order
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #ifndef DRONE_AIHINTS_H_
 #define DRONE_AIHINTS_H_
@@ -100,10 +101,10 @@ typedef struct CoverNode_tag {
     AIEmitter_tag emitter;          // 0x30
     uint usable[8];                 // 0x58 - COVERUSE_*, per NPCGlobals.targets entry
 } CoverNode_tag;
-static_assert(sizeof(CoverNode_tag) == 0x78, "CoverNode_tag is 0x78 bytes");
+LAYOUT_32(sizeof(CoverNode_tag) == 0x78, "CoverNode_tag is 0x78 bytes");
 static_assert(offsetof(CoverNode_tag, cel) == 0x10, "Wrong offset for CoverNode_tag.cel");
-static_assert(offsetof(CoverNode_tag, emitter) == 0x30, "Wrong offset for CoverNode_tag.emitter");
-static_assert(offsetof(CoverNode_tag, usable) == 0x58, "Wrong offset for CoverNode_tag.usable");
+LAYOUT_32(offsetof(CoverNode_tag, emitter) == 0x30, "Wrong offset for CoverNode_tag.emitter");
+LAYOUT_32(offsetof(CoverNode_tag, usable) == 0x58, "Wrong offset for CoverNode_tag.usable");
 
 // An AI point (NPCGlobals.aiPoints). Its first 0x28 bytes have AIPoint_tag's layout (AINetwork.h).
 typedef struct DroneAIPoint_tag {
@@ -121,9 +122,9 @@ typedef struct DroneAIPoint_tag {
     _VECTOR rot;                    // 0x28
     AIEmitter_tag emitter;          // 0x34
 } DroneAIPoint_tag;
-static_assert(sizeof(DroneAIPoint_tag) == 0x5c, "DroneAIPoint_tag is 0x5c bytes");
+LAYOUT_32(sizeof(DroneAIPoint_tag) == 0x5c, "DroneAIPoint_tag is 0x5c bytes");
 static_assert(offsetof(DroneAIPoint_tag, cel) == 0x24, "Wrong offset for DroneAIPoint_tag.cel");
-static_assert(offsetof(DroneAIPoint_tag, emitter) == 0x34, "Wrong offset for DroneAIPoint_tag.emitter");
+LAYOUT_32(offsetof(DroneAIPoint_tag, emitter) == 0x34, "Wrong offset for DroneAIPoint_tag.emitter");
 
 // The tables Drone_PreLoad_Init points NPCGlobals at
 #define MAX_COVER_NODES 256
@@ -141,8 +142,8 @@ typedef struct DroneAIVolume_tag {
     uchar unknown24;                // 0x24
     uchar _unknown25[0xf4 - 0x25];
 } DroneAIVolume_tag;
-static_assert(sizeof(DroneAIVolume_tag) == 0xf4, "DroneAIVolume_tag is 0xf4 bytes");
-static_assert(offsetof(DroneAIVolume_tag, type) == 0x1c, "Wrong offset for DroneAIVolume_tag.type");
+LAYOUT_32(sizeof(DroneAIVolume_tag) == 0xf4, "DroneAIVolume_tag is 0xf4 bytes");
+LAYOUT_32(offsetof(DroneAIVolume_tag, type) == 0x1c, "Wrong offset for DroneAIVolume_tag.type");
 
 #pragma pack(pop)
 

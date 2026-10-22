@@ -127,9 +127,9 @@ uint32_t psiIsSamplePlaying(uint32_t voice) {
 
 // A stream's read buffer: 2 KB of slack either side, as the reads are rounded out to whole 2 KB sectors
 // AUTOINJECT
-int psiAsyncCreateBuffer(int size) {
+char* psiAsyncCreateBuffer(int size) {
     SndTrace("asyncbuffer %d", size);
-    return (int)(uintptr_t)allocateXboxSpecialMemory(size + 0x1000, 4) + 0x800;
+    return (char *)allocateXboxSpecialMemory(size + 0x1000, 4) + 0x800;
 }
 
 // A stream's playback buffer: a looping 2D voice over a buffer of its own, at full volume

@@ -1,5 +1,6 @@
 #pragma once
 #include <stddef.h>
+#include "../../../common/xbeClass.h"
 #include "../../actionhelpers.h"
 #include "../../math/math.h"
 #include "../../engine/AINetwork.h"
@@ -181,9 +182,9 @@ typedef struct {
                                 //        (MP_getObjExtObj)
 } MP_OBJ_EXT;
 
-static_assert(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
-static_assert(offsetof(MP_OBJ_EXT, aiEmitter) == 0x14, "Bad offset of MP_OBJ_EXT.aiEmitter");
-static_assert(offsetof(MP_OBJ_EXT, flags) == 0x3c, "Bad offset of MP_OBJ_EXT.flags");
+LAYOUT_32(sizeof(MP_OBJ_EXT) == 0x44, "MP_OBJ_EXT is wrong size");
+LAYOUT_32(offsetof(MP_OBJ_EXT, aiEmitter) == 0x14, "Bad offset of MP_OBJ_EXT.aiEmitter");
+LAYOUT_32(offsetof(MP_OBJ_EXT, flags) == 0x3c, "Bad offset of MP_OBJ_EXT.flags");
 
 typedef enum {
     CTF_FLAG = 0,
@@ -213,10 +214,10 @@ typedef struct MPOBJECT_tag {
     short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
-static_assert(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
-static_assert(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
-static_assert(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
-static_assert(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
+LAYOUT_32(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+LAYOUT_32(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
+LAYOUT_32(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
+LAYOUT_32(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
 
 typedef struct {
@@ -227,7 +228,7 @@ typedef struct {
     char unused2[64]; // Also seems unused
 } GoldenEyeStruct;
 
-static_assert(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
+LAYOUT_32(sizeof(GoldenEyeStruct) == 0x110, "GoldenEyeStruct is wrong size"); // Known from MP_Init
 
 // A scenario object's placement keys (level_tag.keys), as MP_CreateObject reads them
 enum {
@@ -246,7 +247,7 @@ typedef struct {
   celglist_tag *celgl;
 } SpawnPlace;
 
-static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known from MP_Init via size of DemolitionPlaces array
+LAYOUT_32(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known from MP_Init via size of DemolitionPlaces array
 
 #pragma pack(pop)
 
@@ -267,8 +268,8 @@ typedef struct {
     uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
 } MP_PICKUP;
 #pragma pack(pop)
-static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
-static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
+LAYOUT_32(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
+LAYOUT_32(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
 
 extern MP_PICKUP MPpickups[64];
 
@@ -347,7 +348,7 @@ obj_tag* MP_getAssassinTarget(void);
 struct PICKUPINFO;
 MP_PICKUP* MP_getMPpickup(struct PICKUPINFO *info);
 obj_tag* MP_getProtectionObj_NotExt(void);
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay);
+void MP_sendBotMessage(obj_tag *obj, uint msg, uintptr_t extra, uint delay);
 void MP_sendTeamBotMessage(MPTeam team, uint msg, void *extraData, uint delay, uint senderId);
 void MP_setPlayerStatus(obj_tag *obj, ushort status, uint msg, uint unused, obj_tag *target, bool clear);
 bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);

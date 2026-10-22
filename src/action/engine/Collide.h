@@ -3,6 +3,7 @@
 
 // The records come before actionhelpers.h, which includes Anim.h and Drone.h: both embed them.
 #include <stddef.h>
+#include "../../common/xbeClass.h"
 #include "../../helpers.h"
 #include "../math/math.h"
 
@@ -42,11 +43,11 @@ typedef struct HITDATA_tag {
   obj_tag* hitObj;
 } HITDATA_tag;
 
-static_assert(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
-static_assert(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
-static_assert(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
-static_assert(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
-static_assert(offsetof(HITDATA_tag, flags) == 0x45, "Bad offset of flags");
+LAYOUT_32(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
+LAYOUT_32(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
+LAYOUT_32(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
+LAYOUT_32(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
+LAYOUT_32(offsetof(HITDATA_tag, flags) == 0x45, "Bad offset of flags");
 
 // HITTEST_tag::type
 enum {
@@ -89,15 +90,15 @@ typedef struct HITTEST_tag {
   char _unknown8a[0x8c - 0x8a];
 } HITTEST_tag;
 
-static_assert(sizeof(HITTEST_tag) == 0x8c, "HITTEST_tag is 0x8c bytes");
+LAYOUT_32(sizeof(HITTEST_tag) == 0x8c, "HITTEST_tag is 0x8c bytes");
 static_assert(offsetof(HITTEST_tag, push) == 0x10, "Bad offset of HITTEST_tag.push");
 static_assert(offsetof(HITTEST_tag, sphereRadius) == 0x58, "Bad offset of HITTEST_tag.sphereRadius");
-static_assert(offsetof(HITTEST_tag, cel) == 0x6c, "Bad offset of HITTEST_tag.cel");
-static_assert(offsetof(HITTEST_tag, glist) == 0x74, "Bad offset of HITTEST_tag.glist");
-static_assert(offsetof(HITTEST_tag, radius) == 0x78, "Bad offset of HITTEST_tag.radius");
-static_assert(offsetof(HITTEST_tag, ignore) == 0x64, "Bad offset of HITTEST_tag.ignore");
-static_assert(offsetof(HITTEST_tag, type) == 0x80, "Bad offset of HITTEST_tag.type");
-static_assert(offsetof(HITTEST_tag, found) == 0x88, "Bad offset of HITTEST_tag.found");
+LAYOUT_32(offsetof(HITTEST_tag, cel) == 0x6c, "Bad offset of HITTEST_tag.cel");
+LAYOUT_32(offsetof(HITTEST_tag, glist) == 0x74, "Bad offset of HITTEST_tag.glist");
+LAYOUT_32(offsetof(HITTEST_tag, radius) == 0x78, "Bad offset of HITTEST_tag.radius");
+LAYOUT_32(offsetof(HITTEST_tag, ignore) == 0x64, "Bad offset of HITTEST_tag.ignore");
+LAYOUT_32(offsetof(HITTEST_tag, type) == 0x80, "Bad offset of HITTEST_tag.type");
+LAYOUT_32(offsetof(HITTEST_tag, found) == 0x88, "Bad offset of HITTEST_tag.found");
 
 // One of the boxes a search collects (ColBoxs): the box, and for a ray where it enters it
 typedef struct BOXENTRY_tag {

@@ -2,6 +2,7 @@
 #define BEHAVIOUR_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #define NUM_BEHAVIOUR_CLASSES 0x11  // Drone_tag.behaviourClass: 0-9 soldier ... 16 bot
 #define NUM_BEHAVIOUR_MODES 6       // attack modes per behaviour
@@ -44,10 +45,10 @@ typedef struct DroneStatsRecord {
 
 #pragma pack(pop)
 
-static_assert(sizeof(BehaviourStruct) == 0x1c, "BehaviourStruct is 0x1c bytes");
+LAYOUT_32(sizeof(BehaviourStruct) == 0x1c, "BehaviourStruct is 0x1c bytes");
 static_assert(offsetof(BehaviourStruct, words1) == 0x0c, "Wrong offset for words1");
-static_assert(offsetof(BehaviourStruct, mode2) == 0x10, "Wrong offset for mode2");
-static_assert(offsetof(BehaviourStruct, words2) == 0x18, "Wrong offset for words2");
+LAYOUT_32(offsetof(BehaviourStruct, mode2) == 0x10, "Wrong offset for mode2");
+LAYOUT_32(offsetof(BehaviourStruct, words2) == 0x18, "Wrong offset for words2");
 static_assert(sizeof(DroneStatsRecord) == 0x20, "DroneStatsRecord is 0x20 bytes");
 
 // drone_stats (BSS): per behaviour class, three stats records (only record 1 is ever used), filled by

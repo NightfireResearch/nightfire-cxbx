@@ -2,6 +2,7 @@
 #define STACK_H
 
 #include <stddef.h> // for offsetof
+#include "../../common/xbeClass.h"
 #include "../../helpers.h"
 
 #pragma pack(push, 1)
@@ -12,7 +13,7 @@ typedef struct {
     ushort size;
 } STACKINFO;
 
-static_assert(sizeof(STACKINFO) == 0x8, "STACKINFO size incorrect");
+LAYOUT_32(sizeof(STACKINFO) == 0x8, "STACKINFO size incorrect");
 
 #pragma pack(pop)
 

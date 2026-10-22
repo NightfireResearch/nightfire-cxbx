@@ -2,6 +2,7 @@
 #define SOUND_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -29,8 +30,8 @@ typedef struct DYNAMICSOUNDS {
     char _pad_6[0x2];
 } DYNAMICSOUNDS;
 
-static_assert(sizeof(DYNAMICSOUNDS) == 0x48, "Size of DYNAMICSOUNDS not correct");
-static_assert(offsetof(DYNAMICSOUNDS, playbackState) == 0x40, "Offset of playbackState not correct");
+LAYOUT_32(sizeof(DYNAMICSOUNDS) == 0x48, "Size of DYNAMICSOUNDS not correct");
+LAYOUT_32(offsetof(DYNAMICSOUNDS, playbackState) == 0x40, "Offset of playbackState not correct");
 
 typedef struct SFXOutputDataEntry {
     uint index;

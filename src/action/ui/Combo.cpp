@@ -63,14 +63,14 @@ void Combo_Init(M_COMBO *combo, NEW_CONTROL *create, M_CONTROL *parent) {
 }
 
 // AUTOINJECT
-int Combo_SendMessage(M_COMBO *combo, uint message, int arg1, int arg2) {
+intptr_t Combo_SendMessage(M_COMBO *combo, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&combo->control);
         case MessageType_GetNumItems:
             return List_SendMessage(&combo->list, MessageType_GetNumItems, arg1, arg2);
         case MessageType_GetControl:
-            return (int)combo;
+            return (intptr_t)combo;
         case MessageType_GetVisibleRows:
             return combo->visibleRows;
         case MessageType_Destroy:
@@ -82,7 +82,7 @@ int Combo_SendMessage(M_COMBO *combo, uint message, int arg1, int arg2) {
             return 0;
         case MessageType_Scroll:
         case MessageType_Select:
-            return __Menu_SendMessage(combo->control.parent, message, (int)combo, 0);
+            return __Menu_SendMessage(combo->control.parent, message, (intptr_t)combo, 0);
         default:
             return 0;
     }

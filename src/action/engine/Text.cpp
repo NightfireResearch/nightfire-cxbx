@@ -106,15 +106,15 @@ void Txt_LoadLanguage(void) {
     
     // Add 4 bytes even if the string ends on a word boundary already. Unclear why.
     if(bankSize % 4 == 0)
-        fileAt = (void*)(((int)fileAt + 4));
+        fileAt = (void*)((uintptr_t)fileAt + 4);
 
     // The file is padded to a multiple of 4 bytes
-    fileAt = (void*)(((int)fileAt + bankSize + 3) & ~3);
+    fileAt = (void*)(((uintptr_t)fileAt + bankSize + 3) & ~(uintptr_t)3);
 
     NumEntries = BIN_GetDWord((uchar **)&fileAt); // 2801 strings
     //printf("Num entries: %i\n", NumEntries);
 
-    Bank = (const char**)Mem_Malloc(NumEntries * 4, 0x3604, 0); // 4 bytes of offset (into the ASCII data array) per string
+    Bank = (const char**)Mem_Malloc(NumEntries * sizeof(*Bank), 0x3604, 0); // a pointer into the text per string
     
     // Looks like the first entry in the bank is hardcoded to be a blank string
     Bank[0] = "";
@@ -122,7 +122,7 @@ void Txt_LoadLanguage(void) {
     // "relocate", ie map from offset to memory address (ie so that we can access as char*)
     for(uint i = 1; i < NumEntries; i++) {
         uint32_t offset = BIN_GetDWord((uchar **)&fileAt);
-        Bank[i] = (const char*)((uint)BankData + offset);
+        Bank[i] = (const char*)BankData + offset;
         //printf("String %i: %s\n", i, Bank[i]);
     }
     
@@ -280,7 +280,7 @@ char *SubTitleStr2;
 // XBE_GLOBAL(0x0029ae10, 0x10)
 CIRBUF_INFO ReceivedMsgs;
 // XBE_GLOBAL(0x0029ac10, 0x200)
-static int ReceivedBuf[0x80];
+static intptr_t ReceivedBuf[0x80];
 // The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
 #define SubtitleFormat FontFormat2Centred
 
@@ -407,7 +407,7 @@ void Text_AddMsg(char player, char priority, int type, char *text, int sprite, s
 
     if (type != TXTMSG_INFO && !(type > TXTMSG_MISSION && type <= TXTMSG_PICKUP)) {
         Txt_LockString(text);
-        Txt_UnlockString((char *)CirBuf_Add(&ReceivedMsgs, (int)text));
+        Txt_UnlockString((char *)CirBuf_Add(&ReceivedMsgs, (intptr_t)text));
     }
 
     int length = (int)strlen(text);

@@ -2,7 +2,9 @@
 #define PSIGRAPHICS_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 #include "celglist.h"
+#include "../../driving/platform/Ptr32.h"   // the map file's pointer words
 
 #pragma pack(push, 1)
 
@@ -41,7 +43,7 @@ typedef struct {
     void *vertexData;     // Mem_Malloc'd vertices
     int framesToLive;
 } ParticleOverlayBuffer;
-static_assert(sizeof(ParticleOverlayBuffer) == 0xc, "Bad size for ParticleOverlayBuffer");
+LAYOUT_32(sizeof(ParticleOverlayBuffer) == 0xc, "Bad size for ParticleOverlayBuffer");
 
 #define PARTICLE_OVERLAY_RING_SIZE 64
 extern ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
@@ -54,7 +56,7 @@ typedef struct {
     ushort heightMinusOne;      // 0x4
     uchar animFrames;           // 0x6
     uchar someDivisor;          // 0x7
-    TextureInfo *textureInfo;   // 0x8
+    Ptr32<TextureInfo> textureInfo; // 0x8 - in the file a hashcode, made the header's address at load
 } bmpHeaderEntry;
 static_assert(sizeof(bmpHeaderEntry) == 0xc, "Bad size for bmpHeaderEntry");
 
@@ -74,7 +76,7 @@ struct map_tag {
     int numTexHeaderEntries;        // 0x0c
     texDataEntry *texData;          // 0x10
 };
-static_assert(sizeof(map_tag) == 0x14, "Bad size for map_tag");
+LAYOUT_32(sizeof(map_tag) == 0x14, "Bad size for map_tag");
 
 // An entity's geometry, in the map file: a celglist_tag's geom_idx points at it until psiCreateEntityGfx
 // registers its buffers, then holds its index in d3dGeometryObjs. The data follows the header: vertices, indices,
@@ -95,8 +97,8 @@ typedef struct {
     char unknown2c[0x20];
     int vtxBuffers;         // 0x4c - d3dCreateVertexBuffers' handle
     int idxBuffer;          // 0x50
-    uint primitives;        // 0x54 - address of the primitive records
-    uint afterPrimitives;   // 0x58 - address just past them
+    Ptr32<uint8_t> primitives;      // 0x54 - the primitive records
+    Ptr32<uint8_t> afterPrimitives; // 0x58 - just past them
     int batchVtxBuffers;    // 0x5c
     uchar data[4];          // 0x60 - the vertices start here
 } ModelData;

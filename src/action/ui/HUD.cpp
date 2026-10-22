@@ -1,4 +1,5 @@
 #include "HUD.h"
+#include "../../common/xbeClass.h"
 #include <math.h>
 #include "../input.h"
 #include "../game.h"
@@ -3480,7 +3481,7 @@ typedef struct StatusPaneData {
     int msgType;        // the Text_AddMsg type this pane shows: 1 info, 2 objective, 3 mission, 6 pickup
     int shrinkStep;     // pixels the bar sprite loses per frame while closing: 16, or 32 for the mission pane
 } StatusPaneData;
-static_assert(sizeof(StatusPaneData) == 4 * sizeof(void*), "StatusPaneData is the pane's four extra items");
+LAYOUT_32(sizeof(StatusPaneData) == 4 * sizeof(void*), "StatusPaneData is the pane's four extra items");
 
 // The life of a message on a status pane. PS2 has no names for these.
 #define STATUS_IDLE     0   // nothing shown; wait for a message of this pane's type

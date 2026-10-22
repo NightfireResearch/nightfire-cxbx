@@ -134,10 +134,10 @@ void RecurseAndDrawBoxes(int gfxEntityIdx) {
     d3dBindBuffers(model->vtxBuffers, model->idxBuffer);
 
     int startIndex = 0;
-    const PrimitiveRecord *prim = (const PrimitiveRecord *)(uintptr_t)model->primitives;
+    const PrimitiveRecord *prim = (const PrimitiveRecord *)(uint8_t *)model->primitives;
     for (int p = 0; p < model->primitiveCnt; p++, prim++) {
         if (prim->skinGroup != 0) {
-            const uint8_t *bones = (const uint8_t *)(uintptr_t)model->afterPrimitives +
+            const uint8_t *bones = (const uint8_t *)model->afterPrimitives +
                                    (prim->skinGroup - 1) * SKIN_GROUP_BYTES;
             for (int slot = 0; bones[slot] != 0xff; slot++) {
                 const float *m = (const float *)(SkinPalette + bones[slot] * SKIN_BONE_BYTES);
@@ -497,7 +497,7 @@ TriList* psiGetTriList(void *obj) {
 
     const short *indices = (const short *)d3dGetIndexBufferData(model->idxBuffer);
     int kept = 0, start = 0;
-    const PrimitiveRecord *prim = (const PrimitiveRecord *)(uintptr_t)model->primitives;
+    const PrimitiveRecord *prim = (const PrimitiveRecord *)(uint8_t *)model->primitives;
     for (int p = 0; p < d3dGeometryObjs[idx]->primitiveCnt; p++, prim++) {
         const short *s = indices + start;
         for (int i = 0; i < prim->indexCount; i++, s++) {

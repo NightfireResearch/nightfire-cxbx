@@ -2,6 +2,7 @@
 #define MENU_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 typedef uint MENU_IRISOPS;
 
@@ -26,10 +27,10 @@ uint Menu_UpdateOptionBox(uint *type);
 void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char hasAnswer, char canCancel);
 void Menu_CreateOptionBoxLabel(uchar managerNum, Action_TranslatedText text, uint type, char hasAnswer, char canCancel);
 
-int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int arg1, int arg2);
-int __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, int arg1, int arg2);
-int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2);
-uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, int arg2);
+intptr_t __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, intptr_t arg1, intptr_t arg2);
+intptr_t __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, intptr_t arg1, intptr_t arg2);
+intptr_t __Menu_SendMessage(M_CONTROL *control, uint message, intptr_t arg1, intptr_t arg2);
+uintptr_t __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, intptr_t arg1, intptr_t arg2);
 void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3);
 undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
 
@@ -171,7 +172,7 @@ typedef struct MENU_LS {
     char pad_43[5];
 } MENU_LS;
 #pragma pack(pop)
-static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
+LAYOUT_32(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
 void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation);
 extern MENU_LS ls;
 

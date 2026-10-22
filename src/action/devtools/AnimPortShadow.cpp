@@ -34,7 +34,7 @@
 namespace {
 
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
-#define AnimGlobals ((uint8_t *)(size_t)XbeOurs(0x001d69c0))     // from the channel store to ReverseFlag
+#define AnimGlobals GameSpan<uint8_t>{0x001d69c0}     // from the channel store to ReverseFlag, several of our globals
 #define ANIM_GLOBALS_SIZE (0x001d7830 - 0x001d69c0)
 #define GlbScriptDeleted U8_AT(XbeOurs(0x001d6a64))
 
@@ -803,7 +803,7 @@ void RandomWorld(void) {
     GameState.NumFrames = 1000 + ShadowRand(3);
     MPSettings.isMultiplayer = ShadowRand(4) == 0;
     ScriptCam = ShadowRand(6) == 0 ? (HASHCODE)0x0b000001 : (HASHCODE)0;
-    memset(AnimGlobals, 0, ANIM_GLOBALS_SIZE);
+    XbeOursFill(AnimGlobals.at, 0, ANIM_GLOBALS_SIZE);
     for (int i = 0; i < 0x40; i++)
         AnimGlobals[0x10 * i + 3] = (uint8_t)ShadowRand(256);
     U32_AT(XbeOurs(0x001d7570)) = ShadowRand(4);                 // AnimScriptTimeStamp
@@ -2009,7 +2009,7 @@ void AnimPortShadow_Run(void) {
     static HASHCODE scriptCam;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
-    memcpy(globals, AnimGlobals, sizeof(globals));
+    XbeOursRead(globals, AnimGlobals.at, sizeof(globals));
     XbeOursRead(rand, RandWords.at, sizeof(rand));
     memcpy(frameRates, (void *)XbeOurs(0x0017c0f0), sizeof(frameRates));
     scriptCam = ScriptCam;
@@ -2025,7 +2025,7 @@ void AnimPortShadow_Run(void) {
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
-    regions.Add(AnimGlobals, ANIM_GLOBALS_SIZE);
+    regions.Add(AnimGlobals.game(), ANIM_GLOBALS_SIZE);
     regions.Add(RandWords.game(), 8);
     regions.Add(&ScriptCam, 4);
     NfWarnMuted++;
@@ -2072,7 +2072,7 @@ void AnimPortShadow_Run(void) {
     NfWarnMuted--;
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
-    memcpy(AnimGlobals, globals, sizeof(globals));
+    XbeOursWrite(AnimGlobals.at, globals, sizeof(globals));
     XbeOursWrite(RandWords.at, rand, sizeof(rand));
     memcpy((void *)XbeOurs(0x0017c0f0), frameRates, sizeof(frameRates));
     ScriptCam = scriptCam;

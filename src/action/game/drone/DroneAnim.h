@@ -2,6 +2,7 @@
 #define DRONEANIM_H_
 
 #include "Drone.h"
+#include "../../../common/xbeClass.h"
 #include "../../engine/Anim.h"   // AnimObj, sAnimScript_tag
 
 #pragma pack(push, 1)
@@ -62,8 +63,8 @@ typedef struct DroneDataFunc {
 #pragma pack(pop)
 
 static_assert(sizeof(DroneAnimTransition) == 6, "DroneAnimTransition is 6 bytes");
-static_assert(sizeof(DroneDataFunc) == 8, "DroneDataFunc is 8 bytes");
-static_assert(sizeof(DroneAnimState) == 12, "DroneAnimState is 12 bytes");
+LAYOUT_32(sizeof(DroneDataFunc) == 8, "DroneDataFunc is 8 bytes");
+LAYOUT_32(sizeof(DroneAnimState) == 12, "DroneAnimState is 12 bytes");
 static_assert(sizeof(DroneAnimInfo) == 24, "DroneAnimInfo is 24 bytes");
 static_assert(sizeof(DroneAnimScript) == 4, "DroneAnimScript is 4 bytes");
 

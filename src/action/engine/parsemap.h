@@ -2,6 +2,7 @@
 #define PARSEMAP_H_
 
 #include "../actionhelpers.h"
+#include "../../driving/platform/Ptr32.h"
 
 
 typedef enum {
@@ -98,7 +99,7 @@ struct level_tag {
     ushort splinePoints;        // 0x02
     ushort splineLength;        // 0x04
     char _unknown06[2];
-    void *spline;               // 0x08 - the map's path
+    Ptr32<void> spline;         // 0x08 - the map's path (a word: the placement structs lay out their keys after it)
     char _unknown0c[0x2c - 0x0c];
     uint keys[33];              // 0x2c
 };

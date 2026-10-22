@@ -1,4 +1,5 @@
 #include "Menu.h"
+#include "../../common/xbeClass.h"
 #include "MenuCommon.h"
 #include "Component.h"
 #include "Manager.h"
@@ -360,7 +361,7 @@ void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char ha
     __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
     if (hasAnswer)
         __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_AddItem,
-                    (int)Txt_BindLabel(canCancel ? TXT_PRESS_A_OR_B_TO_CANCEL : TXT_PRESS_A_TO_CONTINUE, 0), 3);
+                    (intptr_t)Txt_BindLabel(canCancel ? TXT_PRESS_A_OR_B_TO_CANCEL : TXT_PRESS_A_TO_CONTINUE, 0), 3);
     M_MANAGER *mgr = &manager[managerNum];
     Manager_SendMessage(mgr, MessageType_GoPage, P_MESSAGEBOX, 2);
     M_BUTTON *box = (M_BUTTON *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_BOX);
@@ -401,7 +402,7 @@ uint Menu_UpdateOptionBox(uint *type) {
 
 // The box's answers: A or B closes it
 // AUTOINJECT
-bool C_LBMSGOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_LBMSGOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         optionbox_answer = optionbox_has_answer ? 3 : 1;
         Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
@@ -420,7 +421,7 @@ typedef struct {
   uint param2;
   uint param3;
 } DelayedMessage;
-static_assert(sizeof(DelayedMessage) == 0x14, "DelayedMessage is 0x14 bytes");
+LAYOUT_32(sizeof(DelayedMessage) == 0x14, "DelayedMessage is 0x14 bytes");
 
 // XBE_GLOBAL(0x00224540, 0x4)
 static uint32_t menu_delay_frame;
@@ -597,11 +598,11 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   strDown1 = (idxDown1 == 999) ? " " : Txt_BindLabel(itemList[idxDown1].title, 0);
   strDown2 = (idxDown2 == 999) ? " " : Txt_BindLabel(itemList[idxDown2].title, 0);
 
-  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetText, (int)strUp2, NULL);
-  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetText, (int)strUp1, NULL);
-  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetText, (int)strMid, NULL);
-  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetText, (int)strDown1, NULL);
-  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetText, (int)strDown2, NULL);
+  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetText, (intptr_t)strUp2, NULL);
+  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetText, (intptr_t)strUp1, NULL);
+  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetText, (intptr_t)strMid, NULL);
+  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetText, (intptr_t)strDown1, NULL);
+  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetText, (intptr_t)strDown2, NULL);
   
   // Handle greyed-out disabled items. 3 entries representing the distance from the middle (greys out gradually to the edge)
   const int colourDisabled[3] = {0x48484880, 0x48484840, 0x48484820};
@@ -696,7 +697,7 @@ void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItem
   for(int i = firstItemIdx; i < numItems; i++) {
     M_ITEM* item = &itemList[i];
     if(unlockEverything || menu_unlock_everything || item->enabled) {
-      __Menu_SendMessage(control, MessageType_AddItem, (int)Txt_BindLabel(item->title, 0), (int)item->identifier);
+      __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)Txt_BindLabel(item->title, 0), (int)item->identifier);
     }
   }
 
@@ -1095,7 +1096,7 @@ typedef struct MENU_NEIGHBOUR {
     short cost;
     char pad[2];
 } MENU_NEIGHBOUR;
-static_assert(sizeof(MENU_NEIGHBOUR) == 8, "MENU_NEIGHBOUR is 8 bytes");
+LAYOUT_32(sizeof(MENU_NEIGHBOUR) == 8, "MENU_NEIGHBOUR is 8 bytes");
 
 #define NO_NEIGHBOUR 9999
 #define MENU_NEIGHBOURS 64
@@ -1250,7 +1251,7 @@ M_PAGE* Menu_GetPage(M_CONTROL *control) {
 
 // To the control's type. Nothing is sent to a control about itself.
 // AUTOINJECT
-int __Menu_SendMessage(M_CONTROL *control, uint message, int arg1, int arg2) {
+intptr_t __Menu_SendMessage(M_CONTROL *control, uint message, intptr_t arg1, intptr_t arg2) {
     if (control == NULL || control == (M_CONTROL *)arg1)
         return 0;
     switch (control->type) {
@@ -1351,8 +1352,8 @@ ushort Menu_InputAction(short player, int action, int flags) {
 // To every control of every page of the manager with that hashcode (MENU_SEND_ALL: every control); the last result
 // that is not 0. After MENU_SEND_STEPS pages and controls it gives up and answers 0.
 // AUTOINJECT
-uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, int arg2) {
-    uint result = 0;
+uintptr_t __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, intptr_t arg1, intptr_t arg2) {
+    uintptr_t result = 0;
     uint steps = 0;
     for (M_PAGE *page = (M_PAGE *)LinkedList_First(&manager[managerNum].pages); page != NULL; page = Menu_NextPage(page)) {
         if (++steps > MENU_SEND_STEPS)
@@ -1361,7 +1362,7 @@ uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, in
             if (++steps > MENU_SEND_STEPS)
                 return 0;
             if (c->hashcode == hashcode || (uint)hashcode == MENU_SEND_ALL) {
-                uint answer = __Menu_SendMessage(c, message, arg1, arg2);
+                uintptr_t answer = __Menu_SendMessage(c, message, arg1, arg2);
                 if (answer != 0)
                     result = answer;
             }
@@ -1373,9 +1374,9 @@ uint __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, int arg1, in
 // To the controls with that hashcode and id on the current page; if the last of them answers 0, to those on the page
 // under an overlay. The last one's result.
 // AUTOINJECT
-int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int arg1, int arg2) {
+intptr_t __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, intptr_t arg1, intptr_t arg2) {
     M_MANAGER *m = &manager[managerNum];
-    int result = 0;
+    intptr_t result = 0;
     uint steps = 0;
     if (m->currentPage == NULL)
         return 0;
@@ -1401,11 +1402,11 @@ int __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message, int
 // To the controls with that hashcode on the current page whose id, read as a sum of the bits 0x80 down to 1, has the
 // bit
 // AUTOINJECT
-int __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, int arg1, int arg2) {
+intptr_t __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, intptr_t arg1, intptr_t arg2) {
     M_PAGE *page = manager[managerNum].currentPage;
     if (page == NULL)
         return 0;
-    int result = 0;
+    intptr_t result = 0;
     uint steps = 0;
     for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
         if (++steps > MENU_SEND_STEPS)

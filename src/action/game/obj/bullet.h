@@ -2,6 +2,7 @@
 #define BULLET_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -35,14 +36,14 @@ typedef struct {
     char unknownDd[0xe0-0xdd];
 } BU_tag;
 
-static_assert(sizeof(BU_tag) == 0xe0, "Bad size for BU_tag");
+LAYOUT_32(sizeof(BU_tag) == 0xe0, "Bad size for BU_tag");
 static_assert(offsetof(BU_tag, firedByObj) == 0x24, "Bad offset of firedByObj");
-static_assert(offsetof(BU_tag, wpnDef) == 0x38, "Bad offset of wpnDef");
-static_assert(offsetof(BU_tag, test) == 0x3c, "Bad offset of test");
-static_assert(offsetof(BU_tag, soundHandle) == 0xc8, "Bad offset of soundHandle");
-static_assert(offsetof(BU_tag, distanceTravelled) == 0xcc, "Bad offset of distanceTravelled");
-static_assert(offsetof(BU_tag, numRicochets) == 0xd8, "Bad offset of numRicochets");
-static_assert(offsetof(BU_tag, gravityOff) == 0xdc, "Bad offset of gravityOff");
+LAYOUT_32(offsetof(BU_tag, wpnDef) == 0x38, "Bad offset of wpnDef");
+LAYOUT_32(offsetof(BU_tag, test) == 0x3c, "Bad offset of test");
+LAYOUT_32(offsetof(BU_tag, soundHandle) == 0xc8, "Bad offset of soundHandle");
+LAYOUT_32(offsetof(BU_tag, distanceTravelled) == 0xcc, "Bad offset of distanceTravelled");
+LAYOUT_32(offsetof(BU_tag, numRicochets) == 0xd8, "Bad offset of numRicochets");
+LAYOUT_32(offsetof(BU_tag, gravityOff) == 0xdc, "Bad offset of gravityOff");
 
 // A spent case's extra data (OBJECTTYPE_CASING, 0x2c bytes): one of 32 kept for the whole level
 typedef struct {
@@ -56,7 +57,7 @@ typedef struct {
     char _pad2a[2];
 } CASING_tag;
 
-static_assert(sizeof(CASING_tag) == 0x2c, "CASING_tag is 0x2c bytes");
+LAYOUT_32(sizeof(CASING_tag) == 0x2c, "CASING_tag is 0x2c bytes");
 
 #pragma pack(pop)
 

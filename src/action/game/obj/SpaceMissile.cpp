@@ -1,4 +1,5 @@
 #include "SpaceMissile.h"
+#include "../../../common/xbeClass.h"
 
 #include "../../engine/Script.h"
 
@@ -18,7 +19,7 @@ typedef struct {
     SCRIPTINFO* animScriptInfo4;
 } ObjData_SpaceMissile;
 
-static_assert(sizeof(ObjData_SpaceMissile) == 0x28, "Bad size for ObjData_SpaceMissile");
+LAYOUT_32(sizeof(ObjData_SpaceMissile) == 0x28, "Bad size for ObjData_SpaceMissile");
 
 typedef struct {
     ObjectCreationData_Basic baseCreation; // 0x00-0x2b

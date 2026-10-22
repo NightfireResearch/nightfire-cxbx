@@ -24,7 +24,7 @@ void Window_Init(M_WINDOW *window, NEW_CONTROL *create, M_MANAGER *mgr) {
 }
 
 // AUTOINJECT
-int Window_SendMessage(M_WINDOW *window, uint message, int arg1, int arg2) {
+intptr_t Window_SendMessage(M_WINDOW *window, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&window->control);
@@ -33,7 +33,7 @@ int Window_SendMessage(M_WINDOW *window, uint message, int arg1, int arg2) {
         case MessageType_SetScript:
             return Control_SetScript(&window->control, arg1, arg2);
         case MessageType_GetControl:
-            return (int)window;
+            return (intptr_t)window;
         case MessageType_Destroy:
             Script_DelAllScripts(&window->control);
             Menu_Free((void **)&window, 3);

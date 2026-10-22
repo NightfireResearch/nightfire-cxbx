@@ -1,4 +1,6 @@
 #include <string.h>
+#include "../common/xbeClass.h"
+#include "../driving/platform/Ptr32.h"   // the heap's words, and its blocks' headers
 #include <stdio.h>
 #include "actionhelpers.h"
 #include "memory.h"
@@ -9,7 +11,8 @@
 uint32_t MemStats[7];
 
 // The game's one heap: a single block of HeapByteSize bytes at PtrHeap, carved into blocks that each start with a
-// MemBlock header. Mem_Init makes it one free block; ResetMap_Load calls Mem_Init again at every level load, which
+// MemBlock header. The heap lies in the game window (Ptr32.h), and its words and headers keep the game's sizes on
+// every host, so the blocks are where the game put them. Mem_Init makes it one free block; ResetMap_Load calls Mem_Init again at every level load, which
 // is how the game frees almost everything - most allocations are never passed to Mem_Free.
 // XBE_GLOBAL(0x00223a80, 0x4)
 uint32_t PtrHeap;     // not static: devtools/MemShadow.cpp points these at a scratch heap
@@ -30,7 +33,7 @@ static uint32_t MallocSize;
 // A heap block's header. The block's data follows it; the next block follows the data, at size bytes from here.
 #pragma pack(push, 1)
 typedef struct MemBlock {
-    struct MemBlock *prev;  // 0x0 - the previous block; the first block's is itself
+    Ptr32<struct MemBlock> prev;    // 0x0 - the previous block; the first block's is itself
     uint size;              // 0x4 - including this header
     ushort flags;           // 0x8 - the MallocFlags it was allocated with (low byte the alignment, high byte the
                             //       type); 4 once free
@@ -51,8 +54,8 @@ enum {
 };
 
 // The end of the walk over the blocks: every walk stops at the last header-sized slot of the heap
-static inline MemBlock* Mem_HeapStart(void) { return (MemBlock *)(uintptr_t)PtrHeap; }
-static inline MemBlock* Mem_HeapEnd(void) { return (MemBlock *)(uintptr_t)(PtrHeap + HeapByteSize - sizeof(MemBlock)); }
+static inline MemBlock* Mem_HeapStart(void) { return PtrFrom32<MemBlock>(PtrHeap); }
+static inline MemBlock* Mem_HeapEnd(void) { return PtrFrom32<MemBlock>(PtrHeap + HeapByteSize - (uint32_t)sizeof(MemBlock)); }
 static inline MemBlock* Mem_NextBlock(MemBlock *block) { return (MemBlock *)((char *)block + block->size); }
 static inline uint Mem_Distance(const void *from, const void *to) { return (uint)((const char *)to - (const char *)from); }
 static inline MemBlock* Mem_AlignDown(uintptr_t address, uint mask) { return (MemBlock *)(address & ~(uintptr_t)mask); }
@@ -71,7 +74,7 @@ void psiMem_Init(uint *pMem_out, uint *size_out) {
     NF_ASSERT(mem != NULL, "Could not allocate heap memory");
 
     // Align to 4KB boundary
-    *pMem_out = (int)mem + 0xfffU & 0xfffff000;
+    *pMem_out = PtrTo32(mem) + 0xfffU & 0xfffff000;
 
 }
 
@@ -94,7 +97,7 @@ void Mem_Init(void) {
 
     PtrHeapEnd = (HeapByteSize + PtrHeap);
 
-    memset((void*)(uintptr_t)PtrHeap, 0x98, HeapByteSize);
+    memset(PtrFrom32<void>(PtrHeap), 0x98, HeapByteSize);
 
     MemBlock *heap = Mem_HeapStart();
     heap->size = HeapByteSize - sizeof(MemBlock);
@@ -125,7 +128,7 @@ static MemBlock* Mem_FindFreeBlock(uint need) {
 
     switch (MallocMethod) {
     case MALLOC_NEXT_FIT: {
-        MemBlock *start = (MemBlock *)(uintptr_t)QuickBlock;
+        MemBlock *start = PtrFrom32<MemBlock>(QuickBlock);
         if (start->isFree && start->size >= need)
             return start; // QuickBlock stays as it is
 
@@ -146,7 +149,7 @@ static MemBlock* Mem_FindFreeBlock(uint need) {
                 }
             }
         }
-        QuickBlock = (uint32_t)(uintptr_t)found; // NULL too, when nothing fitted
+        QuickBlock = PtrTo32(found); // NULL too, when nothing fitted
         return found;
     }
 
@@ -188,7 +191,7 @@ void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
         alignment = (uint32_t)flags & 0xff;
     uint mask = (alignment - 1) | 3;
     // Room for the header, the alignment either side and a free block's header after it
-    uint need = size + mask * 2 + 0x18;
+    uint need = (uint)size + mask * 2 + 0x18;
 
     MemBlock *block = Mem_FindFreeBlock(need);
     if (block == NULL) {
@@ -285,9 +288,9 @@ void Mem_Free(void **ptr) {
     }
 
     // Next fit starts from here if QuickBlock was before it, or has just been merged into it
-    MemBlock *quick = (MemBlock *)(uintptr_t)QuickBlock;
+    MemBlock *quick = PtrFrom32<MemBlock>(QuickBlock);
     if (quick < block || (quick > block && quick < Mem_NextBlock(block)))
-        QuickBlock = (uint32_t)(uintptr_t)block;
+        QuickBlock = PtrTo32(block);
 
     *ptr = NULL;
 }
@@ -417,7 +420,7 @@ typedef struct {
     uint bytesMalloced;
     uint unused[7];
 } MemInfo_t;
-static_assert(sizeof(MemInfo_t) == 0x2a4, "Bad size for MemInfo_t");
+LAYOUT_32(sizeof(MemInfo_t) == 0x2a4, "Bad size for MemInfo_t");
 // XBE_GLOBAL(0x0017c298, 0x2a4)
 static MemInfo_t MemInfo = {
     {
@@ -508,7 +511,7 @@ static MemInfo_t MemInfo = {
 // passes it to an empty debug hook (0x000e0ec0).
 // AUTOINJECT
 void* Mem_Info(void) {
-    char *heap = (char *)(uintptr_t)PtrHeap;
+    char *heap = PtrFrom32<char>(PtrHeap);
     char *end = heap + HeapByteSize - 0xc;
     for (ushort type = 0; type <= 0x4f; type++) {
         MemInfo.typeBytes[type] = 0;

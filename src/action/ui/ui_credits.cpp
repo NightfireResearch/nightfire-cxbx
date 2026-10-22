@@ -94,7 +94,7 @@ static const char *CreditsFormat(uchar style) {
 
 
 // AUTOINJECT
-bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         credits_frame = 0;
@@ -134,14 +134,14 @@ bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             left->y = 0x200;
             right->y = 0x200;
             __Menu_SendMessage(left, MessageType_SetState, CONTROL_STATE_INERT, 0);
-            __Menu_SendMessage(left, MessageType_SetText, (int)entry->txt_left, 0);
-            __Menu_SendMessage(left, MessageType_SetFont, (int)CreditsFormat(entry->modifiers_left), 0);
-            __Menu_SendMessage(right, MessageType_SetFont, (int)CreditsFormat(entry->modifiers_right), 0);
+            __Menu_SendMessage(left, MessageType_SetText, (intptr_t)entry->txt_left, 0);
+            __Menu_SendMessage(left, MessageType_SetFont, (intptr_t)CreditsFormat(entry->modifiers_left), 0);
+            __Menu_SendMessage(right, MessageType_SetFont, (intptr_t)CreditsFormat(entry->modifiers_right), 0);
             if (!entry->centred) {
                 left->width = 0xfe;
                 right->width = 0xfe;
                 __Menu_SendMessage(right, MessageType_SetState, CONTROL_STATE_INERT, 0);
-                __Menu_SendMessage(right, MessageType_SetText, (int)entry->txt_right, 0);
+                __Menu_SendMessage(right, MessageType_SetText, (intptr_t)entry->txt_right, 0);
             } else {
                 left->width = 0x20c;
                 __Menu_SendMessage(right, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
@@ -206,7 +206,7 @@ static uint8_t attract_show_trailer;
 // The attract page: a full-screen movie over the front end. It goes back (MessageType_Back) when the movie ends
 // or a controller is newly connected (bSkipAttract, set by psiInput_MapInputs).
 // AUTOINJECT
-bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         // arg2 is the page it was entered from. The toggle flips whatever the page, but only matters from P_MAIN;
         // from anywhere else it is always the trailer. The original inlines Menu_PlayMovie here (the same six

@@ -822,7 +822,7 @@ void MenuProbe_PollDevices(void) {
         psiInput_PollDevices();
 }
 
-bool MenuProbe_HandleMessage(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2) {
+bool MenuProbe_HandleMessage(uchar managerNum, M_CONTROL *control, uint message, intptr_t arg1, intptr_t arg2) {
     if (g_messagesStandIn)
         return LoggedHandleMessage(managerNum, control, message, arg1, arg2);
     return Handler_HandleMessage(managerNum, control, message, arg1, arg2);

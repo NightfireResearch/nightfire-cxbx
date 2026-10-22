@@ -4,7 +4,7 @@
 #include "Controls.h"
 
 void List_Init(M_LIST *list, NEW_CONTROL *create, M_CONTROL *parent);
-int List_SendMessage(M_LIST *list, uint message, int arg1, int arg2);
+intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t arg2);
 void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list);
 
 int _List_GetIndex(M_LIST *list, LIST_ROW *row);

@@ -1,4 +1,5 @@
 #include "dsndSeam.h"
+#include "../../common/xbeClass.h"
 #include "xaudio2Backend.h"          // the native backend the entry-point wrappers dispatch to
 
 #include <stdint.h>
@@ -405,7 +406,7 @@ struct XboxVoice {
     uint8_t pad3b;                   // +0x3b
     uint32_t flags;                  // +0x3c see VOICE_* below
 };
-static_assert(sizeof(XboxVoice) == 0x40, "XboxVoice must be 0x40 bytes");
+LAYOUT_32(sizeof(XboxVoice) == 0x40, "XboxVoice must be 0x40 bytes");
 
 struct XboxAudioSystem {
     DSoundObject *directSoundInst;        // +0x000
@@ -421,7 +422,7 @@ struct XboxAudioSystem {
     uint32_t activeVoiceCount;            // +0x1328 recomputed by dsndUpdateVoices, informational
     int32_t volumeTable[101];             // +0x132c 0..100 -> hundredths of a dB, -10000..0
 };
-static_assert(sizeof(XboxAudioSystem) == 5312, "XboxAudioSystem must be 5312 bytes");
+LAYOUT_32(sizeof(XboxAudioSystem) == 5312, "XboxAudioSystem must be 5312 bytes");
 
 #pragma pack(pop)
 

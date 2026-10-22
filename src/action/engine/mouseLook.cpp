@@ -238,7 +238,7 @@ static bool HideCursorOverWindow(HWND window) {
         return false;
 
     SetLastError(0);
-    HCURSOR previous = (HCURSOR)(LONG_PTR)SetClassLongA(window, GCL_HCURSOR, (LONG)(LONG_PTR)blank);
+    HCURSOR previous = (HCURSOR)SetClassLongPtrA(window, GCLP_HCURSOR, (LONG_PTR)blank);
     if (previous == NULL && GetLastError() != 0) {
         printf("[mouse] could not set the window's cursor (error %lu)\n", GetLastError());
         return false;
@@ -253,7 +253,7 @@ static void RestoreCursorOverWindow(HWND window) {
     if (!g_cursorHidden)
         return;
     if (window != NULL && g_savedClassCursor != NULL)
-        SetClassLongA(window, GCL_HCURSOR, (LONG)(LONG_PTR)g_savedClassCursor);
+        SetClassLongPtrA(window, GCLP_HCURSOR, (LONG_PTR)g_savedClassCursor);
     g_cursorHidden = false;
     g_savedClassCursor = NULL;
 }

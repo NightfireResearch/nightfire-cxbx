@@ -2,6 +2,7 @@
 #define OBJECT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #include "../../math/math.h"
 
@@ -252,19 +253,19 @@ typedef enum {
 } ObjectTransformFlags;
 
 //char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
-static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
-static_assert(offsetof(obj_tag, lastPosition) == 0x30, "Offset of lastPosition not correct");
-static_assert(offsetof(obj_tag, rotation) == 0x3c, "Offset of rotation not correct");
-static_assert(offsetof(obj_tag, lastRotation) == 0x48, "Offset of lastRotation not correct");
-static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
-static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
-static_assert(offsetof(obj_tag, scriptPlayer) == 0xc0, "Offset of scriptPlayer not correct");
-static_assert(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
-static_assert(offsetof(obj_tag, transformFlags) == 0xd6, "Offset of transformFlags not correct");
-static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
-static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
-static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
+LAYOUT_32(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
+LAYOUT_32(offsetof(obj_tag, lastPosition) == 0x30, "Offset of lastPosition not correct");
+LAYOUT_32(offsetof(obj_tag, rotation) == 0x3c, "Offset of rotation not correct");
+LAYOUT_32(offsetof(obj_tag, lastRotation) == 0x48, "Offset of lastRotation not correct");
+LAYOUT_32(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
+LAYOUT_32(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
+LAYOUT_32(offsetof(obj_tag, scriptPlayer) == 0xc0, "Offset of scriptPlayer not correct");
+LAYOUT_32(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
+LAYOUT_32(offsetof(obj_tag, transformFlags) == 0xd6, "Offset of transformFlags not correct");
+LAYOUT_32(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
+LAYOUT_32(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
+LAYOUT_32(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
 
-static_assert(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
+LAYOUT_32(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
 
 #endif // OBJECT_H_

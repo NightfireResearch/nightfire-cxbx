@@ -2,6 +2,7 @@
 #define MISSION_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -29,7 +30,7 @@ typedef struct {
     char pad[20]; // There's some non-zero data here but it's not obvious where it's used, if anywhere
 } Mission;
 
-static_assert(sizeof(Mission) == 0x28, "Size of Mission not correct");
+LAYOUT_32(sizeof(Mission) == 0x28, "Size of Mission not correct");
 
 typedef struct {
     undefined4 status;

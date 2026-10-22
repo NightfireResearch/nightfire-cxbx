@@ -129,7 +129,7 @@ def generate_handler_switch():
 
     for _, name in ui_hashcodes.items():
         if not name in implemented:
-            output += f"// AUTOGEN\nbool {name}_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, int param_4, int param_5);\n"
+            output += f"// AUTOGEN\nbool {name}_Handler(uchar param_1, M_CONTROL *param_2, uint hashcode, uint param_3, intptr_t param_4, intptr_t param_5);\n"
 
     for name in implemented:
         if not name in ui_hashcodes.values():
@@ -138,7 +138,7 @@ def generate_handler_switch():
 
     output += """
 // AUTOINJECT
-bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, int param_4, int param_5)
+bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, intptr_t param_4, intptr_t param_5)
 {
     uint hashcode = param_2->hashcode;
     switch(hashcode) {

@@ -2,6 +2,7 @@
 #define SPRITE_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 
 #pragma pack(push, 1)
@@ -37,9 +38,9 @@ typedef struct sprite {
     GPOINT scale;
 } sprite;
 
-static_assert(sizeof(sprite) == 0x44, "Wrong size for sprite");
-static_assert(offsetof(sprite, unknown1) == 0x14, "Wrong offset for unknown1");
-static_assert(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedViewer");
+LAYOUT_32(sizeof(sprite) == 0x44, "Wrong size for sprite");
+LAYOUT_32(offsetof(sprite, unknown1) == 0x14, "Wrong offset for unknown1");
+LAYOUT_32(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedViewer");
 
 typedef struct SpriteInfo {
     uint colour;
@@ -61,9 +62,9 @@ typedef struct SpriteInfo {
     char pad[3]; // Unclear if this is a single u32, padding, or not needed?
 } SpriteInfo;
 
-static_assert(sizeof(SpriteInfo) == 0x2c, "Size of SpriteInfo is incorrect");
+LAYOUT_32(sizeof(SpriteInfo) == 0x2c, "Size of SpriteInfo is incorrect");
 static_assert(offsetof(SpriteInfo, maybeEnabled) == 0x8, "Offset of maybeEnabled is incorrect");
-static_assert(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureHashcode is incorrect");
+LAYOUT_32(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureHashcode is incorrect");
 
 #pragma pack(pop)
 

@@ -44,7 +44,7 @@ void Checkbox_Init(M_CHECKBOX *checkbox, NEW_CONTROL *create, M_CONTROL *parent)
 
 // What a checkbox does not handle itself goes to its label
 // AUTOINJECT
-int Checkbox_SendMessage(M_CHECKBOX *checkbox, uint message, int arg1, int arg2) {
+intptr_t Checkbox_SendMessage(M_CHECKBOX *checkbox, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&checkbox->control);
@@ -64,7 +64,7 @@ int Checkbox_SendMessage(M_CHECKBOX *checkbox, uint message, int arg1, int arg2)
         case MessageType_GetValue:
             return (char)checkbox->checked;
         case MessageType_GetControl:
-            return (int)checkbox;
+            return (intptr_t)checkbox;
         case MessageType_GetId:
             return checkbox->control.id;
         case MessageType_Destroy:
@@ -109,6 +109,6 @@ void Checkbox_Update(M_MANAGER *mgr, M_PAGE *page, M_CHECKBOX *checkbox) {
     Component_SetupInstance(&checkbox->control, checkbox->control.drawState, -1, -1, -1, -1);
     if (selected && mgr->takingInput && !mgr->inputLocked) {
         Menu_PlaySound(MENU_SFX_SELECT);
-        __Menu_SendMessage(checkbox->control.parent, MessageType_Select, (int)checkbox, 0);
+        __Menu_SendMessage(checkbox->control.parent, MessageType_Select, (intptr_t)checkbox, 0);
     }
 }

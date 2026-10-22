@@ -34,7 +34,7 @@ void Button_Init(M_BUTTON *button, NEW_CONTROL *create, M_CONTROL *parent) {
 
 // What a button does not handle itself goes to its label
 // AUTOINJECT
-int Button_SendMessage(M_BUTTON *button, uint message, int arg1, int arg2) {
+intptr_t Button_SendMessage(M_BUTTON *button, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&button->control);
@@ -54,9 +54,9 @@ int Button_SendMessage(M_BUTTON *button, uint message, int arg1, int arg2) {
             Label_SendMessage(&button->label, MessageType_SetState, arg1, arg2);
             return 1;
         case MessageType_GetText:
-            return (int)button->label.drawn->text;
+            return (intptr_t)button->label.drawn->text;
         case MessageType_GetControl:
-            return (int)button;
+            return (intptr_t)button;
         case MessageType_GetId:
             return button->control.id;
         case MessageType_Destroy:
@@ -116,15 +116,15 @@ void Button_Update(M_MANAGER *mgr, M_PAGE *page, M_BUTTON *button) {
         return;
     if (pressed == 1) {
         Menu_PlaySound(MENU_SFX_SELECT);
-        __Menu_SendMessage(button->control.parent, MessageType_Select, (int)button, 0);
+        __Menu_SendMessage(button->control.parent, MessageType_Select, (intptr_t)button, 0);
     } else if (pressed == 2) {
         Menu_PlaySound(MENU_SFX_SELECT);
-        __Menu_SendMessage(button->control.parent, MessageType_SelectRepeat, (int)button, 0);
+        __Menu_SendMessage(button->control.parent, MessageType_SelectRepeat, (intptr_t)button, 0);
     } else if (pressed == 3) {
         Menu_PlaySound(MENU_SFX_ALTSELECT_1);
-        __Menu_SendMessage(button->control.parent, MessageType_AltSelect1, (int)button, 0);
+        __Menu_SendMessage(button->control.parent, MessageType_AltSelect1, (intptr_t)button, 0);
     } else if (pressed == 4) {
         Menu_PlaySound(MENU_SFX_ALTSELECT_2);
-        __Menu_SendMessage(button->control.parent, MessageType_AltSelect2, (int)button, 0);
+        __Menu_SendMessage(button->control.parent, MessageType_AltSelect2, (intptr_t)button, 0);
     }
 }

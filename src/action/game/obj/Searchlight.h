@@ -2,6 +2,7 @@
 #define SEARCHLIGHT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #include <stddef.h>
 
@@ -27,17 +28,17 @@ typedef struct {
     float sweepCenter;                     // 0x30 - center pitch angle of sweep
 } ObjData_Spotlight;
 
-static_assert(sizeof(ObjData_Spotlight) == 0x34, "Wrong size for ObjData_Spotlight");
+LAYOUT_32(sizeof(ObjData_Spotlight) == 0x34, "Wrong size for ObjData_Spotlight");
 static_assert(offsetof(ObjData_Spotlight, phase) == 0x04, "Bad offset of phase");
 static_assert(offsetof(ObjData_Spotlight, rotationAngles) == 0x08, "Bad offset of rotationAngles");
 static_assert(offsetof(ObjData_Spotlight, standObject) == 0x14, "Bad offset of standObject");
-static_assert(offsetof(ObjData_Spotlight, unusedLinkedObject) == 0x18, "Bad offset of unusedLinkedObject");
-static_assert(offsetof(ObjData_Spotlight, projectionSpot) == 0x1c, "Bad offset of projectionSpot");
-static_assert(offsetof(ObjData_Spotlight, volumetricCone) == 0x20, "Bad offset of volumetricCone");
-static_assert(offsetof(ObjData_Spotlight, lensFlare) == 0x24, "Bad offset of lensFlare");
-static_assert(offsetof(ObjData_Spotlight, enableSwitchChannel) == 0x28, "Bad offset of enableSwitchChannel");
-static_assert(offsetof(ObjData_Spotlight, sweepHalfRange) == 0x2c, "Bad offset of sweepHalfRange");
-static_assert(offsetof(ObjData_Spotlight, sweepCenter) == 0x30, "Bad offset of sweepCenter");
+LAYOUT_32(offsetof(ObjData_Spotlight, unusedLinkedObject) == 0x18, "Bad offset of unusedLinkedObject");
+LAYOUT_32(offsetof(ObjData_Spotlight, projectionSpot) == 0x1c, "Bad offset of projectionSpot");
+LAYOUT_32(offsetof(ObjData_Spotlight, volumetricCone) == 0x20, "Bad offset of volumetricCone");
+LAYOUT_32(offsetof(ObjData_Spotlight, lensFlare) == 0x24, "Bad offset of lensFlare");
+LAYOUT_32(offsetof(ObjData_Spotlight, enableSwitchChannel) == 0x28, "Bad offset of enableSwitchChannel");
+LAYOUT_32(offsetof(ObjData_Spotlight, sweepHalfRange) == 0x2c, "Bad offset of sweepHalfRange");
+LAYOUT_32(offsetof(ObjData_Spotlight, sweepCenter) == 0x30, "Bad offset of sweepCenter");
 #pragma pack(pop)
 
 obj_tag* Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

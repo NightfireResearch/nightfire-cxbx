@@ -1,4 +1,5 @@
 #include "FS.h"
+#include "../../common/xbeClass.h"
 #include "XboxFile.h"
 #include "XboxError.h"
 #include "EDL.h"
@@ -65,7 +66,7 @@ typedef struct {
     char unknown4[4];
 } FileSystem_t;
 
-static_assert(sizeof(FileSystem_t) == 0x13a40, "Bad size for FileSystem_t");
+LAYOUT_32(sizeof(FileSystem_t) == 0x13a40, "Bad size for FileSystem_t");
 
 // One open file. The read is overlapped: the OVERLAPPED is Xbox's IO_STATUS_BLOCK under its Win32 name.
 struct FileOperationXbox {
@@ -85,7 +86,7 @@ struct FileOperationXbox {
     uint8_t field13_0x26;
     uint8_t field14_0x27;
 };
-static_assert(sizeof(FileOperationXbox) == 0x28, "FileOperationXbox must be 0x28 bytes");
+LAYOUT_32(sizeof(FileOperationXbox) == 0x28, "FileOperationXbox must be 0x28 bytes");
 
 
 

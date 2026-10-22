@@ -130,7 +130,7 @@ static const uint language_flags_default = 0x13f;   // English, French, German, 
 // starts on the language's button, and the buttons of the languages offered are spaced out down the middle of the
 // page from the first's place; the others are hidden. With no input for a while the language shown is taken.
 // AUTOINJECT
-bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         __Menu_Send(managerNum, C_LANGUAGE, MessageType_SetPulse, 1, 0);
         ls.done = 0;
@@ -147,7 +147,7 @@ bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         if (button == -1)
             button = 0;
         M_CONTROL *focus = (M_CONTROL *)__Menu_SendEx(managerNum, C_LANGUAGE, button, MessageType_GetControl, 0, 0);
-        __Menu_SendMessage(&manager[managerNum].control, MessageType_SetCursor, 0, (int)focus);
+        __Menu_SendMessage(&manager[managerNum].control, MessageType_SetCursor, 0, (intptr_t)focus);
         if ((uint)LanguageToLoad < ARRAY_SIZE(language_help_text) && language_help_text[LanguageToLoad] != NULL)
             LABEL_SET_TEXT(managerNum, SUB_P_LANGUAGE_HELP_TEXT, language_help_text[LanguageToLoad]);
 
@@ -184,7 +184,7 @@ bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
 // A language's button: the cursor on it shows the help line in its language and makes it the language; selecting it
 // takes the language
 // AUTOINJECT
-bool C_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_GainFocus) {
         if ((uint)control->id < ARRAY_SIZE(language_of_button)) {
             LanguageToLoad = language_of_button[control->id];
@@ -209,7 +209,7 @@ uint intro_step;
 
 // The two idents, one after the other, then the start page
 // AUTOINJECT
-bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         intro_step = 0;
     }
@@ -239,7 +239,7 @@ char start_legal_text[0x180];
 // The legal notice and "Press START". The first time, the page takes no input for 240 frames and the prompt
 // appears only then. With no input for a while, the attract movie.
 // AUTOINJECT
-bool P_START_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_START_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         for (int i = 0; i < 4; i++)
             PlayerInputs[i].controllerPort = (undefined1)i;
@@ -254,7 +254,7 @@ bool P_START_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
             LABEL_SET_TEXT(managerNum, SUB_P_START_PROMPT_TEXT, NULL);
             __Menu_SendMessage(control, MessageType_SetInputDelay, 240, 0);
             __Menu_SendDelayed(240, managerNum, SUB_P_START_PROMPT_TEXT, MessageType_SetText,
-                               (int)Txt_BindLabel(TXT_PRESS_START, 0), 0);
+                               (intptr_t)Txt_BindLabel(TXT_PRESS_START, 0), 0);
             start_shown = 1;
         } else {
             __Menu_SendMessage(control, MessageType_SetInputDelay, 0, 0);
@@ -327,7 +327,7 @@ uint8_t parisenum_countdown;
 // Between the start page and the title sequence: the first saved codename is looked for, then either the mini mission
 // runs (after the free space is checked: a box if there is too little) or the title sequence follows
 // AUTOINJECT
-bool P_PARISENUM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_PARISENUM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         ls.listStale = 1;
         ls.canSave = 1;
@@ -375,7 +375,7 @@ uint esthero_frame;
 
 // The title sequence, skippable after 180 frames, then the main menu
 // AUTOINJECT
-bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         esthero_frame = 0;
     }
@@ -402,7 +402,7 @@ static void Menu_FadeLabel(uchar managerNum, HASHCODE label, uint colour) {
 
 // The page fades in from black, without input meanwhile. With no input for a while, the attract movie.
 // AUTOINJECT
-bool P_MAIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MAIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         Menu_ResetNoInputCount();
         for (int i = 0; i < 4; i++)
@@ -431,21 +431,21 @@ static void Menu_GoFromMain(uchar managerNum, HASHCODE page) {
 }
 
 // AUTOINJECT
-bool C_GONIGHTFIRE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_GONIGHTFIRE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         Menu_GoFromMain(managerNum, P_NFSELECT);
     return true;
 }
 
 // AUTOINJECT
-bool C_GOMULTIPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_GOMULTIPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         Menu_GoFromMain(managerNum, P_MPJOIN);
     return true;
 }
 
 // AUTOINJECT
-bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         Menu_GoFromMain(managerNum, P_CNSELECT);
     return true;
@@ -485,11 +485,11 @@ static const struct { const char *name; HASHCODE movie; } fmvtest_movies[] = {
 
 // A list of movies, the one selected played on P_FMVPLAYER. No page leads here (docs/ui/movie-selector.md).
 // AUTOINJECT
-bool P_FMVTEST_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_FMVTEST_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_ClearItems, 0, 0);
         for (int i = 0; i < ARRAY_SIZE(fmvtest_movies); i++)
-            __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_AddItem, (int)fmvtest_movies[i].name,
+            __Menu_Send(managerNum, SUB_P_FMVTEST_LIST, MessageType_AddItem, (intptr_t)fmvtest_movies[i].name,
                         fmvtest_movies[i].movie);
     }
     else if (message == MessageType_Select) {
@@ -504,7 +504,7 @@ uint fmvplayer_frame;
 
 // The movie P_FMVTEST picked, then back (docs/ui/movie-selector.md)
 // AUTOINJECT
-bool P_FMVPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_FMVPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         fmvplayer_frame = 0;
     }
@@ -521,7 +521,7 @@ bool P_FMVPLAYER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // The trailer (a button of P_CNAVOPTIONS), back when it ends or on A. The original inlines Menu_PlayMovie,
 // psiMovieLoop and Menu_StopMovie here, store for store.
 // AUTOINJECT
-bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_Select:
             Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
@@ -541,7 +541,7 @@ bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 
 // After the last mission: its movie, then the credits. As P_TRAILER, the original inlines the movie functions.
 // AUTOINJECT
-bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         Menu_PlayMovie(FMV_BTS_DOCUMENTARY, 1, 0, 1, 1, 0);
     }

@@ -4,7 +4,7 @@
 #include "Controls.h"
 
 void Radio_Init(M_RADIO *radio, NEW_CONTROL *create, M_CONTROL *parent);
-int Radio_SendMessage(M_RADIO *radio, uint message, int arg1, int arg2);
+intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t arg2);
 void Radio_Update(M_MANAGER *mgr, M_PAGE *page, M_RADIO *radio);
 
 int _Radio_GetIndex(M_RADIO *radio, LIST_ROW *item);

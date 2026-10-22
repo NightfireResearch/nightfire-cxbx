@@ -2,6 +2,7 @@
 #define BREAK_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 struct TriListVertex;
 
@@ -46,7 +47,7 @@ typedef struct SHARD_tag {
     char _unknown48[0x84 - 0x48];
 } SHARD_tag;
 
-static_assert(sizeof(SHARD_tag) == 0x84, "SHARD_tag is 0x84 bytes");
+LAYOUT_32(sizeof(SHARD_tag) == 0x84, "SHARD_tag is 0x84 bytes");
 
 #pragma pack(pop)
 

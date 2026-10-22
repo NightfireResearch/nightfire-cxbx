@@ -2,6 +2,7 @@
 #define HUD_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 typedef enum {
     Ammo = 0,
@@ -51,7 +52,7 @@ typedef struct HUDPANECREATE_tag {
     char pad2;
 } HUDPANECREATE_tag;
 static_assert(offsetof(HUDPANECREATE_tag, width) == 4, "HUDPANECREATE_tag.width is at 4");
-static_assert(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c bytes");
+LAYOUT_32(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c bytes");
 
 // HUDPANECREATE_tag::flags: how HUD_ValidateXY keeps a pane in its player's view
 #define HUDPANE_KEEP_IN_X   0x0008
@@ -88,10 +89,10 @@ typedef struct HUDPANE_tag {
     char maybeCanBeEnabled;
 } HUDPANE_tag;
 
-static_assert(sizeof(HUDPANE_tag) == 0x20, "Size of HUDPANE_tag is incorrect");
-static_assert(offsetof(HUDPANE_tag, state) == 0x1a, "Offset of state is incorrect");
-static_assert(offsetof(HUDPANE_tag, enabled) == 0x1c, "Offset of enabled is incorrect");
-static_assert(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybeCanBeEnabled is incorrect");
+LAYOUT_32(sizeof(HUDPANE_tag) == 0x20, "Size of HUDPANE_tag is incorrect");
+LAYOUT_32(offsetof(HUDPANE_tag, state) == 0x1a, "Offset of state is incorrect");
+LAYOUT_32(offsetof(HUDPANE_tag, enabled) == 0x1c, "Offset of enabled is incorrect");
+LAYOUT_32(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybeCanBeEnabled is incorrect");
 
 typedef struct HUDINFO_tag {
     sprite* crosshairSprite;
@@ -99,8 +100,8 @@ typedef struct HUDINFO_tag {
     HUDPANE_tag pane[NUM_PANES]; // Index is HUD_PANE_IND::...
 } HUDINFO_tag;
 
-static_assert(sizeof(HUDINFO_tag) == 0x2c8, "Size of HUDINFO_tag is incorrect");
-static_assert(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect");
+LAYOUT_32(sizeof(HUDINFO_tag) == 0x2c8, "Size of HUDINFO_tag is incorrect");
+LAYOUT_32(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect");
 
 
 #pragma pack(pop)

@@ -4,6 +4,7 @@
 // The menus' skins (Component_*, Menu.cpp)
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 #include "../gfx/Sprite.h"
 
 #pragma pack(push, 1)
@@ -15,7 +16,7 @@ typedef struct MENU_COMPONENTPIECE {
     float stretchHeight;        // 0x30
     uint flags;                 // 0x34 PIECE_*, and the draw states (M_CONTROL::drawState) it shows in
 } MENU_COMPONENTPIECE;
-static_assert(sizeof(MENU_COMPONENTPIECE) == 0x38, "MENU_COMPONENTPIECE is 0x38 bytes");
+LAYOUT_32(sizeof(MENU_COMPONENTPIECE) == 0x38, "MENU_COMPONENTPIECE is 0x38 bytes");
 
 #define PIECE_BOTTOM            1       // placed from the bottom edge, else the top
 #define PIECE_RIGHT             2       // placed from the right edge, else the left
@@ -39,7 +40,7 @@ typedef struct MENU_COMPONENT {
     char pad_0e[2];
     MENU_COMPONENTPIECE *pieces; // 0x10
 } MENU_COMPONENT;
-static_assert(sizeof(MENU_COMPONENT) == 0x14, "MENU_COMPONENT is 0x14 bytes");
+LAYOUT_32(sizeof(MENU_COMPONENT) == 0x14, "MENU_COMPONENT is 0x14 bytes");
 
 #define COMPONENTS_PER_SET 14
 
@@ -52,7 +53,7 @@ typedef struct MENU_COMPONENTSET {
     uchar managerNum;           // 0x124
     char pad_125[3];
 } MENU_COMPONENTSET;
-static_assert(sizeof(MENU_COMPONENTSET) == 0x128, "MENU_COMPONENTSET is 0x128 bytes");
+LAYOUT_32(sizeof(MENU_COMPONENTSET) == 0x128, "MENU_COMPONENTSET is 0x128 bytes");
 
 #pragma pack(pop)
 

@@ -51,7 +51,7 @@ extern char menu_unlock_everything;
 static uint8_t nf_mission_countdown;
 
 // AUTOINJECT
-bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         if ((HASHCODE)arg2 == P_NFSELECT) {
             Menu_StartIris(0, managerNum, SUB_C_SBNFDFCTY_IRIS);
@@ -66,7 +66,7 @@ bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 }
 
 // AUTOINJECT
-bool C_SBNFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBNFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -89,7 +89,7 @@ bool C_SBNFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 }
 
 // AUTOINJECT
-bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         for (int i = 0; i < 4; i++)
             PlayerInputs[i].controllerPort = (undefined1)i;
@@ -124,7 +124,7 @@ bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
 }
 
 // AUTOINJECT
-bool C_SBNFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBNFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -228,7 +228,7 @@ static void Results_GoOn(uchar managerNum) {
 // back from the statistics or the dossier changes nothing. A then saves a better score (with a saved codename), and
 // goes on to the rewards won, the end of the game, or the missions.
 // AUTOINJECT
-bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter: {
         uint medal = MEDAL_NONE;
@@ -308,7 +308,7 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             }
             if (titleIsLabel)
                 strcpy(results_title_text, Txt_BindLabel(title, 0));
-            __Menu_Send(managerNum, SUB_P_NFRESULTS_TITLE_TEXT, MessageType_SetFont, (int)RESULTS_FORMAT, 0);
+            __Menu_Send(managerNum, SUB_P_NFRESULTS_TITLE_TEXT, MessageType_SetFont, (intptr_t)RESULTS_FORMAT, 0);
             __Menu_Send(managerNum, SUB_P_NFRESULTS_TITLE_TEXT, MessageType_MemoSetOption280, 1, 0);
             LABEL_SET_TEXT(managerNum, SUB_P_NFRESULTS_TITLE_TEXT, results_title_text);
             LABEL_SET_TEXT(managerNum, SUB_P_NFRESULTS_SCORE_TEXT, results_score_text);
@@ -372,11 +372,11 @@ char bonus_text_before[0x80];
 
 // The rewards just won, the first medal's pictured, the others' names after it from the best down (blank with none)
 // AUTOINJECT
-bool P_NFBONUS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFBONUS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter: {
         LEVEL_BONUSES *bonuses = Menu_GetLevelBonuses((HASHCODE)GameState.BaseMapHashCode);
-        __Menu_Send(managerNum, SUB_P_NFBONUS_TEXT, MessageType_SetFont, (int)RESULTS_FORMAT, 0);
+        __Menu_Send(managerNum, SUB_P_NFBONUS_TEXT, MessageType_SetFont, (intptr_t)RESULTS_FORMAT, 0);
         if (!menu_level_bonus_earned) {
             LABEL_SET_TEXT(managerNum, SUB_P_NFBONUS_TEXT, NULL);
             break;
@@ -437,7 +437,7 @@ void Menu_AddRow(uchar managerNum, Action_TranslatedText label, int achieved, in
         sprintf(text, "%s|%d|%d|%s", Txt_BindLabel(label, 0), achieved, target, pointsText);
     }
     Stats_SplitRow(&row, text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddRow, (int)&row, 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddRow, (intptr_t)&row, 0);
 }
 
 // The same with a percentage, and a second number or "----" (extra -1)
@@ -458,7 +458,7 @@ void Menu_AddRowPercentage(uchar managerNum, Action_TranslatedText label, uint p
     else
         sprintf(text, "%s|%d%%|%s|%s", Txt_BindLabel(label, 0), percent, extraText, pointsText);
     Stats_SplitRow(&row, text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddRow, (int)&row, 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddRow, (intptr_t)&row, 0);
 }
 
 #define TXT_STATS_CATEGORY      ((Action_TranslatedText)0x1000204)
@@ -486,7 +486,7 @@ static uint Stats_Percent(float rating) {
 // The statistics: each category's figures and points (the opponents subdued, surrendered and the stealth rating only
 // on a level on foot), then the subtotal, the difficulty bonus and the total
 // AUTOINJECT
-bool P_NFSTATS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFSTATS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_PageEnter)
         return true;
     uchar footRows = 0;
@@ -499,14 +499,14 @@ bool P_NFSTATS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddColumn, 21, ALIGN_RIGHT);
     __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddColumn, 21, ALIGN_RIGHT);
     __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddColumn, 24, ALIGN_RIGHT);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)Txt_BindLabel(TXT_STATS_CATEGORY, 0), 0);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 1, (int)Txt_BindLabel(TXT_STATS_CURRENT, 0));
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 2, (int)Txt_BindLabel(TXT_STATS_TARGET, 0));
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 3, (int)Txt_BindLabel(TXT_STATS_TOTAL, 0));
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_STATS_CATEGORY, 0), 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 1, (intptr_t)Txt_BindLabel(TXT_STATS_CURRENT, 0));
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 2, (intptr_t)Txt_BindLabel(TXT_STATS_TARGET, 0));
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, 3, (intptr_t)Txt_BindLabel(TXT_STATS_TOTAL, 0));
 
     ScoreCategory *cats = results_score->statsTable;
     Menu_AddRow(managerNum, TXT_STATS_BOND_MOVES, cats[0].achieved, cats[0].target, Ftol(cats[0].points), 0, 0);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)Txt_BindLabel(TXT_STATS_OPPONENTS, 0), 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_STATS_OPPONENTS, 0), 0);
     Menu_AddRow(managerNum, TXT_STATS_DISPATCHED, cats[1].achieved, cats[1].target, Ftol(cats[1].points), 1, 0);
     if (results_score->isAction) {
         Menu_AddRow(managerNum, TXT_STATS_SUBDUED, cats[2].achieved, cats[2].target, Ftol(cats[2].points), 1, 0);
@@ -520,17 +520,17 @@ bool P_NFSTATS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     Menu_AddRow(managerNum, TXT_STATS_TIME, results_score->timeTaken, results_score->parTime * 100, Ftol(cats[7].points),
                 0, 1);
     Menu_AddRow(managerNum, TXT_STATS_007_BONUS, cats[8].achieved, cats[8].target, Ftol(cats[8].points), 0, 0);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)MenuEmptyString, 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)MenuEmptyString, 0);
 
     char text[0x100];
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)Txt_BindLabel(TXT_STATS_SUBTOTAL, 0), 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_STATS_SUBTOTAL, 0), 0);
     SeparateNumber(results_score->baseScore, text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 9) << 16 | 3, (int)text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)Txt_BindLabel(TXT_STATS_DIFFICULTY, 0), 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 9) << 16 | 3, (intptr_t)text);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_STATS_DIFFICULTY, 0), 0);
     SeparateNumber(results_score->difficultyBonus, text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 10) << 16 | 3, (int)text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (int)Txt_BindLabel(TXT_STATS_TOTAL, 0), 0);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 10) << 16 | 3, (intptr_t)text);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_STATS_TOTAL, 0), 0);
     SeparateNumber(results_score->score, text);
-    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 11) << 16 | 3, (int)text);
+    __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListSetCellText, (footRows + 11) << 16 | 3, (intptr_t)text);
     return true;
 }

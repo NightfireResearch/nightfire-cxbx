@@ -2,6 +2,7 @@
 #define COPTER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 
 #pragma pack(push, 1)
@@ -20,7 +21,7 @@ typedef struct COPTERPATH {
     ushort _pad1a;
 } COPTERPATH;
 
-static_assert(sizeof(COPTERPATH) == 0x1c, "COPTERPATH is 0x1c bytes");
+LAYOUT_32(sizeof(COPTERPATH) == 0x1c, "COPTERPATH is 0x1c bytes");
 
 typedef struct {
     LLNODE_tag node;
@@ -56,15 +57,15 @@ typedef struct {
     char pad7a[2];
 } COPTER;
 
-static_assert(sizeof(COPTER) == 0x7c, "Copter size incorrect");
-static_assert(offsetof(COPTER, quat) == 0x1c, "Offset of quat incorrect");
-static_assert(offsetof(COPTER, scriptPlayer) == 0x2c, "Offset of scriptPlayer incorrect");
-static_assert(offsetof(COPTER, body) == 0x38, "Offset of body incorrect");
-static_assert(offsetof(COPTER, launchers) == 0x4c, "Offset of launchers incorrect");
-static_assert(offsetof(COPTER, path) == 0x54, "Offset of path incorrect");
-static_assert(offsetof(COPTER, attackDamage) == 0x6c, "Offset of attackDamage incorrect");
-static_assert(offsetof(COPTER, enableChannel) == 0x70, "Offset of enableChannel incorrect");
-static_assert(offsetof(COPTER, paths) == 0x78, "Offset of paths incorrect");
+LAYOUT_32(sizeof(COPTER) == 0x7c, "Copter size incorrect");
+LAYOUT_32(offsetof(COPTER, quat) == 0x1c, "Offset of quat incorrect");
+LAYOUT_32(offsetof(COPTER, scriptPlayer) == 0x2c, "Offset of scriptPlayer incorrect");
+LAYOUT_32(offsetof(COPTER, body) == 0x38, "Offset of body incorrect");
+LAYOUT_32(offsetof(COPTER, launchers) == 0x4c, "Offset of launchers incorrect");
+LAYOUT_32(offsetof(COPTER, path) == 0x54, "Offset of path incorrect");
+LAYOUT_32(offsetof(COPTER, attackDamage) == 0x6c, "Offset of attackDamage incorrect");
+LAYOUT_32(offsetof(COPTER, enableChannel) == 0x70, "Offset of enableChannel incorrect");
+LAYOUT_32(offsetof(COPTER, paths) == 0x78, "Offset of paths incorrect");
 
 // What a shot does to each part: the bullets that pass it by, and its damage's scale
 typedef struct COPTERBIT {
@@ -96,7 +97,7 @@ typedef struct CopterPlacement {
     uint length2;               // 0x54 - key 10: frames, 0 for the placement's own
 } CopterPlacement;
 
-static_assert(offsetof(CopterPlacement, length2) == 0x54, "Bad offset of CopterPlacement.length2");
+LAYOUT_32(offsetof(CopterPlacement, length2) == 0x54, "Bad offset of CopterPlacement.length2");
 
 #pragma pack(pop)
 

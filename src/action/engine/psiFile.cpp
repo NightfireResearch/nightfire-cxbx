@@ -4,16 +4,17 @@
 #include "Loader.h"
 #include "FS.h"
 #include "psiFile.h"
+#include "../../driving/platform/Ptr32.h"
 #include "../devtools/FileDump.h"
 
 
-static int allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
-	return (int)(uintptr_t)FS_AllocateAndLoadBlocking(a, (MallocFlags)b, c);
+static uint8_t *allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
+	return (uint8_t *)FS_AllocateAndLoadBlocking(a, (MallocFlags)b, c);
 }
 
 // The open file: psiFileOpen loads the whole of it, and reads walk through it
 struct PsiOpenFile {
-    uint32_t data;       // where it was loaded, 0 when none is open
+    uint8_t *data;       // where it was loaded, NULL when none is open
     uint32_t size;
     uint32_t position;   // how far reads have got
 };
@@ -25,17 +26,17 @@ int psiFileOpen(char* param_1)
 {
   printf("hooked psiFileOpen: %s\n", param_1);
 
-  CurrentFile.data = 0;
+  CurrentFile.data = NULL;
   CurrentFile.size = 0;
   CurrentFile.position = 0;
   CurrentFile.data = allocateAndLoadFileWithinArchive(param_1,0x1204,(int*)&CurrentFile.size);
   CurrentFile.position = 0;
-  return ((CurrentFile.data >> 8) << 8 | 1);
+  return (int)((PtrTo32(CurrentFile.data) >> 8) << 8 | 1);
 }
 
 // AUTOINJECT
 int psiFileClose(void) {
-    CurrentFile.data = 0;
+    CurrentFile.data = NULL;
     CurrentFile.size = 0;
     CurrentFile.position = 0;
     return 1;
@@ -46,12 +47,12 @@ int psiFileClose(void) {
 // 0x4104, 0x80, and 0 or LoaderLoad's fourth argument - allocation flags, from the look of them), which this
 // function never reads.
 // AUTOINJECT
-int maybePsiFileRead(int length) {
-    if (CurrentFile.data == 0)
-        return 0;
+void* maybePsiFileRead(int length) {
+    if (CurrentFile.data == NULL)
+        return NULL;
     uint32_t at = CurrentFile.position;
     CurrentFile.position += length;
-    return (int)(CurrentFile.data + at);
+    return CurrentFile.data + at;
 }
 
 // XBE_GLOBAL(0x002adf70, 0x1)

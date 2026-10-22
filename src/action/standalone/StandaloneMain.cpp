@@ -20,28 +20,47 @@
 #include "../../common/renderWindow.h"
 #include "../../common/xboxPath.h"
 #include "../../res/resource.h"
+#include "../../driving/platform/Ptr32.h"   // GameWindowOutOfRange
 
 // Where a thread is: its registers, and the words on its stack that are addresses in this executable, as offsets for
 // its map (action_standalone.map)
 static void ReportContext(const CONTEXT *c) {
     uintptr_t base = (uintptr_t)GetModuleHandleA(NULL);
+#if defined(_M_IX86) || defined(__i386__)
+    uintptr_t pc = c->Eip, sp = c->Esp;
     printf("[standalone]   eip action_standalone+0x%x  eax %08lx ebx %08lx ecx %08lx edx %08lx esi %08lx edi %08lx "
-           "ebp %08lx esp %08lx\n", (unsigned)(c->Eip - base), c->Eax, c->Ebx, c->Ecx, c->Edx, c->Esi, c->Edi, c->Ebp,
+           "ebp %08lx esp %08lx\n", (unsigned)(pc - base), c->Eax, c->Ebx, c->Ecx, c->Edx, c->Esi, c->Edi, c->Ebp,
            c->Esp);
+#else
+    uintptr_t pc = c->Rip, sp = c->Rsp;
+    printf("[standalone]   rip action_standalone+0x%x  rax %016llx rbx %016llx rcx %016llx rdx %016llx rsi %016llx "
+           "rdi %016llx rbp %016llx rsp %016llx\n", (unsigned)(pc - base), c->Rax, c->Rbx, c->Rcx, c->Rdx, c->Rsi,
+           c->Rdi, c->Rbp, c->Rsp);
+#endif
     MEMORY_BASIC_INFORMATION region;
-    if (VirtualQuery((const void *)(uintptr_t)c->Esp, &region, sizeof(region)) == 0)
+    if (VirtualQuery((const void *)sp, &region, sizeof(region)) == 0)
         return;
-    const uint32_t *stack = (const uint32_t *)(uintptr_t)c->Esp;
-    const uint32_t *top = (const uint32_t *)((const char *)region.BaseAddress + region.RegionSize);
+    const uintptr_t *stack = (const uintptr_t *)sp;
+    const uintptr_t *top = (const uintptr_t *)((const char *)region.BaseAddress + region.RegionSize);
     int shown = 0;
-    for (const uint32_t *word = stack; word < top && shown < 40; word++) {
+    for (const uintptr_t *word = stack; word < top && shown < 40; word++) {
         if (*word >= base && *word < base + 0x1000000) {
-            printf("[standalone]   stack +0x%04x: action_standalone+0x%x\n", (unsigned)((word - stack) * 4),
-                   (unsigned)(*word - base));
+            printf("[standalone]   stack +0x%04x: action_standalone+0x%x\n",
+                   (unsigned)((word - stack) * sizeof(*word)), (unsigned)(*word - base));
             shown++;
         }
     }
 }
+
+#if UINTPTR_MAX != 0xffffffffu
+// An address a 32-bit word of the game's data was to hold, outside the game window (driving/platform/Ptr32.h): the
+// executable is linked low and the game's memory comes from below 4 GB, so this is a bug
+void GameWindowOutOfRange(const void *pointer) {
+    printf("[standalone] %p is outside the game window\n", pointer);
+    fflush(stdout);
+    ExitProcess(3);
+}
+#endif
 
 // A fault nothing handles
 static LONG WINAPI ReportUnhandled(EXCEPTION_POINTERS *info) {

@@ -1800,7 +1800,7 @@ obj_tag* MP_getDemolitionObj_NotExt(void) {
 
 // A bot message (bot messages are DRONE_MSGs for the BotGlobal state) to one drone, after delay frames
 // AUTOINJECT
-void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay) {
+void MP_sendBotMessage(obj_tag *obj, uint msg, uintptr_t extra, uint delay) {
     if (obj->objectType != OBJECTTYPE_DRONE)
         return;
     DCVars_tag dc;

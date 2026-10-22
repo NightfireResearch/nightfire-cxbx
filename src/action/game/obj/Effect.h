@@ -2,6 +2,7 @@
 #define EFFECT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -56,8 +57,8 @@ typedef struct HEINFO_tag {
     HASHCODE emitter;           // 0x84 - Effect_Create's sparks
 } HEINFO_tag;
 
-static_assert(sizeof(HEINFO_tag) == 0x88, "HEINFO_tag is 0x88 bytes");
-static_assert(offsetof(HEINFO_tag, gas) == 0x20 && offsetof(HEINFO_tag, debris) == 0x74, "HEINFO_tag layout");
+LAYOUT_32(sizeof(HEINFO_tag) == 0x88, "HEINFO_tag is 0x88 bytes");
+LAYOUT_32(offsetof(HEINFO_tag, gas) == 0x20 && offsetof(HEINFO_tag, debris) == 0x74, "HEINFO_tag layout");
 
 #define EFFECT_INFO_COUNT 23
 extern HEINFO_tag EffectInfo[EFFECT_INFO_COUNT];
@@ -75,7 +76,7 @@ typedef struct ATTACH_tag {
     _MATRIX matrix;             // 0x1c - in the cel, or in the object's space
 } ATTACH_tag;
 
-static_assert(sizeof(ATTACH_tag) == 0x58, "ATTACH_tag is 0x58 bytes");
+LAYOUT_32(sizeof(ATTACH_tag) == 0x58, "ATTACH_tag is 0x58 bytes");
 
 #pragma pack(pop)
 

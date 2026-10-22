@@ -526,6 +526,17 @@ void RandomText(char *out, int most) {
     out[n] = '\0';
 }
 
+// A message's text: no character past the fonts' last glyph (252). For those the glyph search reads the entry after
+// the font's table, the game's as ours, and in a two-line subtitle a glyph wider than the line ends in
+// strcat(line, NULL): the original's crash, which no text of the game's reaches.
+void RandomMessage(char *out, int most) {
+    RandomText(out, most);
+    for (char *c = out; *c != '\0'; c++) {
+        if ((uchar)*c > 252)
+            *c = 'x';
+    }
+}
+
 // A format: a few codes, fonts 0 to 4 (4 is past the fonts)
 void RandomFormat(char *out) {
     int n = 0;
@@ -1329,7 +1340,7 @@ void RandomQueue(void) {
     CirBuf_Init(&GameReceived, 0x80, (int *)(size_t)XbeOurs(0x0029ac10));
     int n = (int)R(6);
     for (int i = 0; i < n; i++) {
-        RandomText(world.sources[i], 90);
+        RandomMessage(world.sources[i], 90);
         // A picture instead of text only off the subtitles, which always have text
         int type = (int)R(7);
         bool picture = R(6) == 0 && type != TXTMSG_SUBTITLE && type != TXTMSG_SUBTITLE_2LINE;
@@ -1370,7 +1381,7 @@ uint32_t RunTextInit(bool original) {
 
 uint32_t RunAddMsg(bool original) {
     RandomQueue();
-    RandomText(world.sources[7], 200);
+    RandomMessage(world.sources[7], 200);
     char *text = R(6) == 0 ? NULL : world.sources[7];
     CDECL_VOID(0x000d1d70, Text_AddMsg, void (__cdecl *)(char, char, int, char *, int, short),
                (char)((int)R(6) - 1), (char)(R(4) == 0 ? 0xff : R(256)), (int)R(7), text, (int)R(0),
@@ -1812,6 +1823,7 @@ void HudPortShadow_Run(void) {
         {XbeOurs(0x0029e810), 4},                    // SprCnt
         {XbeOurs(0x0029abf8), 0x18},                 // MsgQueue
         {0x0029ac10, 0x228},                // ReceivedBuf, ReceivedMsgs, the subtitles
+        {0x001fec80, 0x100 + 0x16800},      // StringHeapLock and StringHeap: the messages' lines, each case from the same
         {XbeOurs(0x001f6580), sizeof(GameState_t)},  // GameState
         {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
         {0x00262738, sizeof(MPGameStruct)}, // MPGame

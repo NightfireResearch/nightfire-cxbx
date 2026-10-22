@@ -1,4 +1,5 @@
 #include "Monitor.h"
+#include "../../../common/xbeClass.h"
 #include "build.h"
 #include "control.h"
 #include "Explode.h"
@@ -25,8 +26,8 @@ typedef struct {
 #pragma pack(pop)
 
 static_assert(offsetof(Create_Monitor_Params, unbreakable) == 0x30, "Bad offset of unbreakable");
-static_assert(offsetof(viewer_tag, someCel) == 0x4, "Bad offset of viewer_tag::someCel");
-static_assert(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::viewMatrix");
+LAYOUT_32(offsetof(viewer_tag, someCel) == 0x4, "Bad offset of viewer_tag::someCel");
+LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::viewMatrix");
 
 #define EXPLOSION_MONITOR ((HASHCODE)0x06000027)
 

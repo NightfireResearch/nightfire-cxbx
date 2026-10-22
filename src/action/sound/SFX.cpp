@@ -1256,7 +1256,8 @@ void LoadSoundBank(int index) {
         SampleHeaderData *sample = bank->SampleHeader;
         for (int i = 0; i < bank->SampleCount; i++, sample++) {
             sample->Address = samples;
-            sample->psi_SampleHeader = (char *)((uintptr_t)sample->psi_SampleHeader + (uintptr_t)bank->psi_SampleHeaderBuffer);
+            sample->psi_SampleHeader = (char *)((uintptr_t)PtrTo32(sample->psi_SampleHeader) +
+                                                (uintptr_t)bank->psi_SampleHeaderBuffer);
             samples += sample->Size;
         }
     }

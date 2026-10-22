@@ -2,6 +2,7 @@
 #define NDRONE2_H
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "Drone.h"
 
 // From PS2, we can see a table of function pointers with this name, and NDrone2_ProcessStateMachine just runs one according to the drone's current state
@@ -386,7 +387,7 @@ typedef struct DroneAwarePoint {
     cel_tag *cel;               // +0x18
     float radius;               // +0x1c
 } DroneAwarePoint;
-static_assert(sizeof(DroneAwarePoint) == 0x20, "DroneAwarePoint is 0x20 bytes");
+LAYOUT_32(sizeof(DroneAwarePoint) == 0x20, "DroneAwarePoint is 0x20 bytes");
 
 #define MAX_AWARE_POINTS 64
 
@@ -416,8 +417,8 @@ typedef struct DroneAlert_tag {
     _VECTOR velocity;           // +0x2c - the object's last position less its position (the same)
     float param[3];             // +0x38 - three values the sender passes
 } DroneAlert_tag;
-static_assert(sizeof(DroneAlert_tag) == 0x44, "DroneAlert_tag is 0x44 bytes");
-static_assert(sizeof(DroneTarget_tag) == 0x18, "DroneTarget_tag is 0x18 bytes");
+LAYOUT_32(sizeof(DroneAlert_tag) == 0x44, "DroneAlert_tag is 0x44 bytes");
+LAYOUT_32(sizeof(DroneTarget_tag) == 0x18, "DroneTarget_tag is 0x18 bytes");
 
 #define MAX_DRONE_TARGETS 8
 
@@ -433,7 +434,7 @@ typedef struct DroneSfxLog {
     uint sfx;
     DYNAMICSOUNDS *handle;
 } DroneSfxLog;
-static_assert(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
+LAYOUT_32(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
 
 #define DRONE_SFX_LOG 16
 
@@ -522,50 +523,50 @@ typedef struct {
     DroneSfxLog sfxLog[DRONE_SFX_LOG];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
     uint sfxLogNext;            // +0x1428 - the entry it writes next
 } NPCGlobals_t;
-static_assert(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
-static_assert(offsetof(NPCGlobals_t, sfxLog) == 0x13a8, "Wrong offset for sfxLog");
-static_assert(offsetof(NPCGlobals_t, sfxLogNext) == 0x1428, "Wrong offset for sfxLogNext");
-static_assert(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
-static_assert(offsetof(NPCGlobals_t, NDrone2Count) == 0xc, "Wrong offset for NDrone2Count");
-static_assert(offsetof(NPCGlobals_t, groups) == 0x10, "Wrong offset for groups");
-static_assert(offsetof(NPCGlobals_t, spawners) == 0x8c, "Wrong offset for spawners");
-static_assert(offsetof(NPCGlobals_t, groupCounts) == 0x108, "Wrong offset for groupCounts");
-static_assert(offsetof(NPCGlobals_t, unknown174) == 0x174, "Wrong offset for unknown174");
-static_assert(offsetof(NPCGlobals_t, seenOpponentCount) == 0x190, "Wrong offset for seenOpponentCount");
-static_assert(offsetof(NPCGlobals_t, lostSightSaid) == 0x199, "Wrong offset for lostSightSaid");
-static_assert(offsetof(NPCGlobals_t, postLoadFrame) == 0x1a8, "Wrong offset for postLoadFrame");
-static_assert(offsetof(NPCGlobals_t, sightCursor) == 0x234, "Wrong offset for sightCursor");
-static_assert(offsetof(NPCGlobals_t, alertCursor) == 0x238, "Wrong offset for alertCursor");
-static_assert(offsetof(NPCGlobals_t, unknown1390) == 0x1390, "Wrong offset for unknown1390");
-static_assert(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
-static_assert(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
-static_assert(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
-static_assert(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
-static_assert(offsetof(NPCGlobals_t, playerTarget) == 0x1c0, "Wrong offset for playerTarget");
-static_assert(offsetof(NPCGlobals_t, deadFrames) == 0x148, "Wrong offset for deadFrames");
-static_assert(offsetof(NPCGlobals_t, unknown14c) == 0x14c, "Wrong offset for unknown14c");
-static_assert(offsetof(NPCGlobals_t, unknown15c) == 0x15c, "Wrong offset for unknown15c");
-static_assert(offsetof(NPCGlobals_t, seenAttacking) == 0x18c, "Wrong offset for seenAttacking");
-static_assert(offsetof(NPCGlobals_t, nextPatrolTalkFrame) == 0x1b4, "Wrong offset for nextPatrolTalkFrame");
-static_assert(offsetof(NPCGlobals_t, impactAnimFrame) == 0x1b0, "Wrong offset for impactAnimFrame");
-static_assert(offsetof(NPCGlobals_t, lastPowerstationChannel) == 0x1bc, "Wrong offset for lastPowerstationChannel");
-static_assert(offsetof(NPCGlobals_t, numAwarePoints) == 0xb50, "Wrong offset for numAwarePoints");
-static_assert(offsetof(NPCGlobals_t, unknown1392) == 0x1392, "Wrong offset for unknown1392");
-static_assert(offsetof(NPCGlobals_t, visionTests) == 0x232, "Wrong offset for visionTests");
-static_assert(offsetof(NPCGlobals_t, coverCursor) == 0x284, "Wrong offset for coverCursor");
-static_assert(offsetof(NPCGlobals_t, numCoverNodes) == 0x288, "Wrong offset for numCoverNodes");
-static_assert(offsetof(NPCGlobals_t, coverNodes) == 0x28c, "Wrong offset for coverNodes");
-static_assert(offsetof(NPCGlobals_t, targets) == 0x290, "Wrong offset for targets");
-static_assert(offsetof(NPCGlobals_t, alertTarget) == 0x1f8, "Wrong offset for alertTarget");
-static_assert(offsetof(NPCGlobals_t, alert) == 0x240, "Wrong offset for alert");
-static_assert(offsetof(NPCGlobals_t, numAIPoints) == 0x137c, "Wrong offset for numAIPoints");
-static_assert(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints");
-static_assert(offsetof(NPCGlobals_t, safetyEmitter) == 0x1354, "Wrong offset for safetyEmitter");
-static_assert(offsetof(NPCGlobals_t, oldestDeadFrame) == 0x158, "Wrong offset for oldestDeadFrame");
-static_assert(offsetof(NPCGlobals_t, prevLostOpponentCount) == 0x178, "Wrong offset for prevLostOpponentCount");
-static_assert(offsetof(NPCGlobals_t, unknown188) == 0x188, "Wrong offset for unknown188");
-static_assert(offsetof(NPCGlobals_t, unknown138c) == 0x138c, "Wrong offset for unknown138c");
-static_assert(offsetof(NPCGlobals_t, alarmFrame) == 0x1394, "Wrong offset for alarmFrame");
+LAYOUT_32(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
+LAYOUT_32(offsetof(NPCGlobals_t, sfxLog) == 0x13a8, "Wrong offset for sfxLog");
+LAYOUT_32(offsetof(NPCGlobals_t, sfxLogNext) == 0x1428, "Wrong offset for sfxLogNext");
+LAYOUT_32(offsetof(NPCGlobals_t, NDrone2List) == 0x4, "Wrong offset for NDrone2List");
+LAYOUT_32(offsetof(NPCGlobals_t, NDrone2Count) == 0xc, "Wrong offset for NDrone2Count");
+LAYOUT_32(offsetof(NPCGlobals_t, groups) == 0x10, "Wrong offset for groups");
+LAYOUT_32(offsetof(NPCGlobals_t, spawners) == 0x8c, "Wrong offset for spawners");
+LAYOUT_32(offsetof(NPCGlobals_t, groupCounts) == 0x108, "Wrong offset for groupCounts");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown174) == 0x174, "Wrong offset for unknown174");
+LAYOUT_32(offsetof(NPCGlobals_t, seenOpponentCount) == 0x190, "Wrong offset for seenOpponentCount");
+LAYOUT_32(offsetof(NPCGlobals_t, lostSightSaid) == 0x199, "Wrong offset for lostSightSaid");
+LAYOUT_32(offsetof(NPCGlobals_t, postLoadFrame) == 0x1a8, "Wrong offset for postLoadFrame");
+LAYOUT_32(offsetof(NPCGlobals_t, sightCursor) == 0x234, "Wrong offset for sightCursor");
+LAYOUT_32(offsetof(NPCGlobals_t, alertCursor) == 0x238, "Wrong offset for alertCursor");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown1390) == 0x1390, "Wrong offset for unknown1390");
+LAYOUT_32(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
+LAYOUT_32(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
+LAYOUT_32(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
+LAYOUT_32(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
+LAYOUT_32(offsetof(NPCGlobals_t, playerTarget) == 0x1c0, "Wrong offset for playerTarget");
+LAYOUT_32(offsetof(NPCGlobals_t, deadFrames) == 0x148, "Wrong offset for deadFrames");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown14c) == 0x14c, "Wrong offset for unknown14c");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown15c) == 0x15c, "Wrong offset for unknown15c");
+LAYOUT_32(offsetof(NPCGlobals_t, seenAttacking) == 0x18c, "Wrong offset for seenAttacking");
+LAYOUT_32(offsetof(NPCGlobals_t, nextPatrolTalkFrame) == 0x1b4, "Wrong offset for nextPatrolTalkFrame");
+LAYOUT_32(offsetof(NPCGlobals_t, impactAnimFrame) == 0x1b0, "Wrong offset for impactAnimFrame");
+LAYOUT_32(offsetof(NPCGlobals_t, lastPowerstationChannel) == 0x1bc, "Wrong offset for lastPowerstationChannel");
+LAYOUT_32(offsetof(NPCGlobals_t, numAwarePoints) == 0xb50, "Wrong offset for numAwarePoints");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown1392) == 0x1392, "Wrong offset for unknown1392");
+LAYOUT_32(offsetof(NPCGlobals_t, visionTests) == 0x232, "Wrong offset for visionTests");
+LAYOUT_32(offsetof(NPCGlobals_t, coverCursor) == 0x284, "Wrong offset for coverCursor");
+LAYOUT_32(offsetof(NPCGlobals_t, numCoverNodes) == 0x288, "Wrong offset for numCoverNodes");
+LAYOUT_32(offsetof(NPCGlobals_t, coverNodes) == 0x28c, "Wrong offset for coverNodes");
+LAYOUT_32(offsetof(NPCGlobals_t, targets) == 0x290, "Wrong offset for targets");
+LAYOUT_32(offsetof(NPCGlobals_t, alertTarget) == 0x1f8, "Wrong offset for alertTarget");
+LAYOUT_32(offsetof(NPCGlobals_t, alert) == 0x240, "Wrong offset for alert");
+LAYOUT_32(offsetof(NPCGlobals_t, numAIPoints) == 0x137c, "Wrong offset for numAIPoints");
+LAYOUT_32(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints");
+LAYOUT_32(offsetof(NPCGlobals_t, safetyEmitter) == 0x1354, "Wrong offset for safetyEmitter");
+LAYOUT_32(offsetof(NPCGlobals_t, oldestDeadFrame) == 0x158, "Wrong offset for oldestDeadFrame");
+LAYOUT_32(offsetof(NPCGlobals_t, prevLostOpponentCount) == 0x178, "Wrong offset for prevLostOpponentCount");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown188) == 0x188, "Wrong offset for unknown188");
+LAYOUT_32(offsetof(NPCGlobals_t, unknown138c) == 0x138c, "Wrong offset for unknown138c");
+LAYOUT_32(offsetof(NPCGlobals_t, alarmFrame) == 0x1394, "Wrong offset for alarmFrame");
 extern NPCGlobals_t NPCGlobals;
 // NPCGlobals.NDrone2List and NDrone2Count are the head and count of a list of Drone_tags (LList_Init by
 // Drone_PreLoad_Init): the list's LLISTINFO_tag
@@ -602,7 +603,7 @@ void Drone_SM_QueueMsg(MsgObject *msg);
 void Drone_SM_SendDelayedMsgs(void);
 bool Drone_SM_InitObject(obj_tag *gameObj);
 bool NDrone2_ProcessStateMachine(DCVars_tag *dcv, uint state, MsgObject *msg);
-bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, int param);
+bool Drone_SM_SetState(StateMachineInfo_tag *sm, DSTATE next, intptr_t param);
 void Drone_SM_SendMsg(uint msgType, uint scope, uint sender, int receiver);
 void Drone_SM_SendMsgSelf(uint msgType, void *extraData, uint delay, uint scope, DCVars_tag *dcVars);
 void Drone_SM_BroadcastMsg(uint msgType, void *extraData, uint delay, uint sender);

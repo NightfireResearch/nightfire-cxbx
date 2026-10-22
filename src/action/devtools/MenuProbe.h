@@ -1,6 +1,8 @@
 #ifndef ACTION_DEVTOOLS_MENUPROBE_H_
 #define ACTION_DEVTOOLS_MENUPROBE_H_
 
+#include <stdint.h>
+
 // The menu message log and the scripted input replay (MenuProbe.cpp; settings.ini MenuLog / MenuScript).
 // Called at the end of Inject(), after the function patches it stands in front of.
 void MenuProbe_Install(void);
@@ -11,7 +13,7 @@ void Devtools_Tick(void);
 // script replays (the poll) or the messages are logged or sent to originals, else straight to ours. The originals'
 // calls reach the same stand-ins through their entries.
 void MenuProbe_PollDevices(void);
-bool MenuProbe_HandleMessage(unsigned char managerNum, struct M_CONTROL *control, unsigned message, int arg1,
-                             int arg2);
+bool MenuProbe_HandleMessage(unsigned char managerNum, struct M_CONTROL *control, unsigned message, intptr_t arg1,
+                             intptr_t arg2);
 
 #endif // ACTION_DEVTOOLS_MENUPROBE_H_

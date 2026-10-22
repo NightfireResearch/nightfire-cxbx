@@ -682,7 +682,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
 
     if (drone->health <= 0.0f) {
         if (MPSettings.maybeDroneAIEnabled != 0)
-            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDeathByExplosion, (int)(intptr_t)impact);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDeathByExplosion, (intptr_t)impact);
         switch (drone->dtype) {
         case DTYPE_Ninja:
             Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Death_Anim, 0);
@@ -695,7 +695,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
             Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AstronautDeath, 0);
             return true;
         default:
-            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_DeathByExplosion, (int)(intptr_t)impact);
+            return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_DeathByExplosion, (intptr_t)impact);
         }
     }
 
@@ -775,7 +775,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
         if (anim) {
             if (DroneFunc_CanResumeState(resume))
                 drone->sm.resumeState = resume;
-            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_PunchImpact, (int)(intptr_t)msg->extraData);
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_PunchImpact, (intptr_t)msg->extraData);
             return true;
         }
         NDrone2_PunchImpact(dcv, (HITDATA_tag *)msg->extraData, resume, 0);
@@ -790,7 +790,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
             if (DroneFunc_CanResumeState(resume))
                 drone->sm.resumeState = resume;
             DroneFunc_CalmOnImpact(dcv);
-            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Taser, (int)(intptr_t)msg->extraData);
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Taser, (intptr_t)msg->extraData);
         } else if (stunned->stunFrames == 1 && !(stunned->flags & DRONE_FLAG_ATTACK_MODE) && next != 0) {
             Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)next, 0);
         }
@@ -808,7 +808,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
             return true;
         if (resumable)
             drone->sm.resumeState = resume;
-        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BulletImpact, (int)(intptr_t)msg->extraData);
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BulletImpact, (intptr_t)msg->extraData);
         return true;
     }
 
@@ -816,7 +816,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
         if (anim) {
             if (DroneFunc_CanResumeState(resume))
                 drone->sm.resumeState = resume;
-            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_ExplosiveImpact, (int)(intptr_t)msg->extraData);
+            Drone_SM_SetState(dcv->aiStateMachine, DSTATE_ExplosiveImpact, (intptr_t)msg->extraData);
             return true;
         }
         NDrone2_ExplosiveImpact(dcv, (DroneImpact_tag *)msg->extraData, nextState, 0);
@@ -830,7 +830,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
         if (DroneFunc_CanResumeState(resume))
             drone->sm.resumeState = resume;
         DroneFunc_CalmOnImpact(dcv);
-        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SmokedOut, (int)(intptr_t)msg->extraData);
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SmokedOut, (intptr_t)msg->extraData);
         return true;
 
     case DRONE_MSG_ImpactStunGrenade:
@@ -848,7 +848,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
         if (DroneFunc_CanResumeState(resume))
             drone->sm.resumeState = resume;
         DroneFunc_CalmOnImpact(dcv);
-        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_StunGrenadeImpact, (int)(intptr_t)msg->extraData);
+        Drone_SM_SetState(dcv->aiStateMachine, DSTATE_StunGrenadeImpact, (intptr_t)msg->extraData);
         return true;
 
     case DRONE_MSG_ImpactStunDart:

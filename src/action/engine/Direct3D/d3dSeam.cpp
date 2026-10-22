@@ -1,6 +1,7 @@
 #include "d3dSeam.h"
 #include "d3dhelpers.h"
 #include "GraphicsSystem.h"
+#include "../../../driving/platform/Ptr32.h"
 #include "../../actionhelpers.h"
 #include "../XboxSettings.h" // GetVideoMode/XboxGetAVRegion, for xboxInitGraphics
 #include "../../../common/gfx/d3d9Backend.h"      // the native D3D9 backend the entry-point wrappers dispatch to
@@ -240,8 +241,12 @@ template<typename F> struct D3DSeam;
             return { name, backend };                                                                       \
         }                                                                                                   \
     };
+#if defined(_M_IX86) || defined(__i386__)
 D3DSEAM_TRACED_CALL_TYPE(__stdcall)
 D3DSEAM_TRACED_CALL_TYPE(__fastcall)
+#else
+D3DSEAM_TRACED_CALL_TYPE()   // x86-64 has the one convention
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sat directly on top of
@@ -576,7 +581,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         // "texture object" pointer IS the header struct pointer - no separate allocation), then
         // D3DResource_Register associates it with the actual pixel data buffer.
         XGSetTextureHeader(width, height, levels, 0, format, 0, texSlot, 0, pitch);
-        D3DResource_Register(texSlot, (uint32_t)data);
+        D3DResource_Register(texSlot, PtrTo32(data));
 
         // D3DResource_Register (real, untouched Xbox code, fully disassembled and confirmed to do nothing
         // else) computes header->Data = header->Data(0) + data, but ANDs the result with 0xFFFFFFF unless
@@ -587,7 +592,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         // Common=0x00040001 takes the masking branch, turning e.g. 0x8201A500 into 0x0201A500 - which
         // pointed nowhere valid, explaining the black background movie and mission-load hang. We know
         // exactly what Data should be, so just force it back to the real pointer afterward.
-        *(uint32_t*)((char*)texSlot + 4) = (uint32_t)data;
+        *(uint32_t*)((char*)texSlot + 4) = PtrTo32(data);
 
         texSlot->width = (uint16_t)width;
         texSlot->baseTexture = texSlot;

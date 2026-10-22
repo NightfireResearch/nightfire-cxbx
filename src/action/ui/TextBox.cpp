@@ -90,11 +90,11 @@ static void TextBox_EndEntry(M_TEXTBOX *box) {
     box->control.drawState &= ~0x80u;
     box->control.drawState |= 0x40;
     box->control.height = (short)(Ftol(box->lineHeight) + 5);
-    __Menu_SendMessage(box->control.parent, MessageType_TextEntryDone, (int)box, 0);
+    __Menu_SendMessage(box->control.parent, MessageType_TextEntryDone, (intptr_t)box, 0);
 }
 
 // AUTOINJECT
-int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2) {
+intptr_t Text_SendMessage(M_TEXTBOX *box, int message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return (char)Script_ExitLoop(&box->control);
@@ -109,9 +109,9 @@ int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2) {
             box->control.state = (uchar)arg1;
             return 1;
         case MessageType_GetControl:
-            return (int)box;
+            return (intptr_t)box;
         case MessageType_GetSelectedItemText:
-            return (int)TextOf(box)->text;
+            return (intptr_t)TextOf(box)->text;
         case MessageType_GetId:
             return box->control.id;
         case MessageType_Destroy:
@@ -208,7 +208,7 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
                     if (text->length != 0) {
                         text->length--;
                         TextOf(box)->text[TextOf(box)->length] = '\0';
-                        __Menu_SendMessage(box->control.parent, MessageType_TextChanged, (int)box, 0);
+                        __Menu_SendMessage(box->control.parent, MessageType_TextChanged, (intptr_t)box, 0);
                     }
                 } else if (c == '+') {
                     TextBox_EndEntry(box);
@@ -218,7 +218,7 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
                     if (TextOf(box)->length >= TEXTBOX_MAX_TEXT)
                         TextOf(box)->length--;
                     else
-                        __Menu_SendMessage(box->control.parent, MessageType_TextChanged, (int)box, 0);
+                        __Menu_SendMessage(box->control.parent, MessageType_TextChanged, (intptr_t)box, 0);
                     TextOf(box)->text[TextOf(box)->length] = '\0';
                 }
             }

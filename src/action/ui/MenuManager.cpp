@@ -252,8 +252,8 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
             }
             case RECORD_CONTROL: {
                 if (control != NULL) {
-                    Manager_SendMessage(mgr, MessageType_ControlCreated, (int)control, 0);
-                    Page_SendMessage(mgr->currentPage, MessageType_ControlCreated, (int)control, 1);
+                    Manager_SendMessage(mgr, MessageType_ControlCreated, (intptr_t)control, 0);
+                    Page_SendMessage(mgr->currentPage, MessageType_ControlCreated, (intptr_t)control, 1);
                 }
                 create.hashcode = (HASHCODE)BIN_GetDWord(&data);
                 create.type = BIN_GetByte(&data);
@@ -278,7 +278,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
                     create.y = 0xe2;
                 }
                 if (platform == PLATFORM_XBOX || platform == PLATFORM_ALL) {
-                    control = (M_CONTROL *)Manager_SendMessage(mgr, MessageType_CreateObject, (int)&create, 0);
+                    control = (M_CONTROL *)Manager_SendMessage(mgr, MessageType_CreateObject, (intptr_t)&create, 0);
                     if (control != NULL) {
                         memset(((M_BASECONTROL *)control)->defaultScripts, 0, sizeof(M_BASECONTROL::defaultScripts));
                         skipping = false;
@@ -308,7 +308,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
                             data[i] = data[i * 2];
                         data[0x1f] = '\0';
                     }
-                    __Menu_SendMessage(control, MessageType_SetFont, (int)data, 0);
+                    __Menu_SendMessage(control, MessageType_SetFont, (intptr_t)data, 0);
                 }
                 data += 0x20;
                 break;
@@ -349,8 +349,8 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
             }
             case RECORD_END:
                 if (control != NULL) {
-                    Manager_SendMessage(mgr, MessageType_ControlCreated, (int)control, 0);
-                    Page_SendMessage(mgr->currentPage, MessageType_ControlCreated, (int)control, 1);
+                    Manager_SendMessage(mgr, MessageType_ControlCreated, (intptr_t)control, 0);
+                    Page_SendMessage(mgr->currentPage, MessageType_ControlCreated, (intptr_t)control, 1);
                 }
                 result = managerNum;
                 reading = false;
@@ -387,7 +387,7 @@ void MenuManager_Delete(uchar managerNum) {
         if (mgr->closeAction == ACTION_PAUSE)
             GS_PauseGame(false);
     }
-    Manager_SendMessage(mgr, MessageType_PageLeave, (int)mgr->currentPage, 0);
+    Manager_SendMessage(mgr, MessageType_PageLeave, (intptr_t)mgr->currentPage, 0);
     Manager_SendMessage(mgr, MessageType_Destroy, 1, 0);
     memset(mgr, 0, sizeof(*mgr));
     psiStopBackgroundMovie();
@@ -536,14 +536,14 @@ void MenuManager_Monitor(void) {
                 GS_PauseGame(true);
                 MenuManager_Create(CONTROLLER_MENU, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1, 2);
                 Manager_SendMessage(&manager[0], MessageType_LockInput, 1, 0);
-                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (int)controller_text, 0);
+                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (intptr_t)controller_text, 0);
                 controller_state = 2;
                 break;
             case 2: {
                 // The box fitted round the text and the options
                 sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0),
                         PlayerInputs[controller_player].controllerPort + 1);
-                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (int)controller_text, 0);
+                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (intptr_t)controller_text, 0);
                 M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, CONTROLLER_BOX, MessageType_GetControl, 0, 0);
                 M_MEMO *memo = (M_MEMO *)__Menu_Send(0, CONTROLLER_MEMO, MessageType_GetControl, 0, 0);
                 __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);

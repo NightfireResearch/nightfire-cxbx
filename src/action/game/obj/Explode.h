@@ -2,6 +2,7 @@
 #define EXPLODE_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -20,7 +21,7 @@ typedef struct EXPLODE_tag {
     uchar _pad33;
 } EXPLODE_tag;
 
-static_assert(sizeof(EXPLODE_tag) == 0x34, "EXPLODE_tag is 0x34 bytes");
+LAYOUT_32(sizeof(EXPLODE_tag) == 0x34, "EXPLODE_tag is 0x34 bytes");
 
 #pragma pack(pop)
 

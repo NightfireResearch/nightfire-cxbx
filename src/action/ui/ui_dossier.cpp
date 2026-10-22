@@ -396,7 +396,7 @@ M_ITEM ds_weapons[27] = {
 };
 
 // AUTOINJECT
-bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
+bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
 
     MessageType event = (MessageType)eventType;
 
@@ -447,7 +447,7 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
 }
 
 // AUTOINJECT
-bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint messageType, int param_5, int param_6) {
+bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint messageType, intptr_t param_5, intptr_t param_6) {
 
     //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, eventType, param_5, param_6);
 
@@ -473,7 +473,7 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint mes
 }
 
 // AUTOINJECT
-bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, int param_5, int param_6) {
+bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, intptr_t param_5, intptr_t param_6) {
     switch(messageType) {
         case MessageType_PageEnter: {
             
@@ -494,7 +494,7 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uin
 }
 
 // AUTOINJECT
-bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
+bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
 
     MessageType event = (MessageType)eventType;
 
@@ -568,7 +568,7 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 }
 
 // AUTOINJECT
-bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
+bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
   
   switch((MessageType)eventType) {
     case MessageType_PageEnter: {
@@ -607,7 +607,7 @@ bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
 }
 
 // AUTOINJECT
-bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, int param_5, int param_6) {
+bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
 
     MessageType event = (MessageType)eventType;
 
@@ -666,7 +666,7 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 }
 
 // AUTOINJECT
-bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
+bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
   
     switch((MessageType)eventType) {
         case MessageType_PageEnter: {
@@ -683,7 +683,7 @@ bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
 }
 
 // AUTOINJECT
-bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, int param_5, int param_6) {
+bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
   
     switch((MessageType)eventType) {
         case MessageType_PageEnter: {
@@ -729,7 +729,7 @@ static const struct { Action_TranslatedText name; HASHCODE icon; } records_medal
 // A mission's records: its best score, the Bond moves of its first scoring category, the upgrades its medals have
 // given the first player, and the best medal held
 // AUTOINJECT
-bool C_RBDSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBDSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_Scroll)
         return true;
     HASHCODE level = (HASHCODE)RADIO_GET_VALUE_OF(control);
@@ -779,7 +779,7 @@ static const HASHCODE rewards_names[4] = {
 };
 
 // AUTOINJECT
-bool C_RBDSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBDSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_Scroll && message != MessageType_ValueSet)
         return true;
     LEVEL_BONUSES *bonuses = Menu_GetLevelBonuses((HASHCODE)RADIO_GET_VALUE_OF(control));

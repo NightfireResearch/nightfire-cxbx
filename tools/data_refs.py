@@ -55,6 +55,21 @@ CHECKED_SITES = {
     0x000e227e: 'FontCharToGlyph',    # FontCharToGlyph[i - 1]
     0x000e22a1: 'FontGlyphV',         # and FontGlyphV[i - 1]
     0x000c8e92: 'SoftwareAdpcmBuffer',  # SFXUpdateStreams' copy, ES_UpdateStreamMemCpy in the port
+    0x000c8b02: 'SFXFilePath',          # ES_JumpToMusicMarker's path
+    0x000bb52d: 'DecryptorDigits',      # Player_WeaponFiring's DecryptorDigits[digit - '0'], the base in RadarIcons
+    # PlayerAnimSetInitNormal's and PlayerAnimSetInitCrouch's lists by class (PlayerAnimSetList in the port)
+    0x000a9243: 'PlayerAnimSetClass1',
+    0x000a9263: 'PlayerAnimSetClass4',
+    0x000a9283: 'PlayerAnimSetClass6',
+    0x000a92a3: 'PlayerAnimSetClass2',
+    0x000a92c3: 'PlayerAnimSetClass3',
+    0x000a92e3: 'PlayerAnimSetClass5',
+    0x000a93b3: 'PlayerAnimSetClass1',  # the crouching halves
+    0x000a93d3: 'PlayerAnimSetClass4',
+    0x000a93f3: 'PlayerAnimSetClass6',
+    0x000a9413: 'PlayerAnimSetClass2',
+    0x000a9433: 'PlayerAnimSetClass3',
+    0x000a9453: 'PlayerAnimSetClass5',
 }
 
 TAG = re.compile(r"//\s*XBE_GLOBAL\(\s*(0x[0-9a-fA-F]+)\s*,\s*(0x[0-9a-fA-F]+|\d+)\s*\)(.*)")

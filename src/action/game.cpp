@@ -223,7 +223,6 @@ LAB_0006aafe:
 
 // XBE_GLOBAL(0x0017bfe8, 0x2)
 uint16_t StackIndex = 1;
-#define glb_viewer_6 ((uint)glb_viewer[6])
 // XBE_GLOBAL(0x001f6564, 0x1)
 static uint8_t SkipCodeFrame;
 // XBE_GLOBAL(0x0017bff0, 0x100)
@@ -805,9 +804,9 @@ cel_tag **gbl_room_cels;
 // XBE_GLOBAL(0x00274c58, 0x4)
 void *DynamicPtr;
 // XBE_GLOBAL(0x00274c74, 0x4)
-uint32_t FileLastBlock;
+uint8_t *FileLastBlock;
 // XBE_GLOBAL(0x00274c78, 0x4)
-uint32_t FileDiscard;
+uint8_t *FileDiscard;
 // XBE_GLOBAL(0x0025fb11, 0x1)
 uint8_t controller_mission_end;  // cleared at each level's start (nightfire-port: mf_menu)
 // XBE_GLOBAL(0x001df99c, 0x4)
@@ -1019,7 +1018,7 @@ void ResetMap_Load(void) {
         parsemap_block_map_data_dynamic(&DynamicBH, (uchar *)DynamicPtr, 1);
         build_LinkDoors2Portals(glb_world->firstCel, control_first_object());
         AIPath_BindNodes();
-        Mem_Shrink((void **)&FileDiscard, FileLastBlock - FileDiscard);
+        Mem_Shrink((void **)&FileDiscard, (uint)(FileLastBlock - FileDiscard));
         LoadingScreenMakeInvisible();
         bLevelLoaded = 1;
         ReadTuningVars();
@@ -1603,7 +1602,7 @@ void GameFlow_Main(void) {
     }
     break;
   case 8:
-    if ((glb_viewer_6 != 0) && (*(char *)(glb_viewer_6 + 0x205) != '\x01')) {
+    if (glb_viewer[6] != NULL && glb_viewer[6]->fadeState != VIEWFADE_FADING) {
       GameFlow_PopState();
     }
     break;
@@ -1622,9 +1621,9 @@ void GameFlow_Main(void) {
     Game_Draw();
     return;
   case 0xc:
-    if (glb_viewer_6 != 0) { // Cutscene camera?
-      if (*(float *)(glb_viewer_6 + 0x1fc) < 0.0f == (*(float *)(glb_viewer_6 + 0x1fc) == 0.0f)) {
-        *(float *)(glb_viewer_6 + 0x1fc) = *(float *)(glb_viewer_6 + 0x1fc) - 1.0f;
+    if (glb_viewer[6] != NULL) { // Cutscene camera?
+      if (!(glb_viewer[6]->fadeRate <= 0.0f)) {
+        glb_viewer[6]->fadeRate = glb_viewer[6]->fadeRate - 1.0f;
       }
       else {
         GameFlow_PopState();
@@ -1632,7 +1631,7 @@ void GameFlow_Main(void) {
     }
     break;
   case 0xe:
-    if ((glb_viewer_6 == 0) || (*(char *)(glb_viewer_6 + 0x205) == '\x01')) {
+    if (glb_viewer[6] == NULL || glb_viewer[6]->fadeState == VIEWFADE_FADING) {
       Camera_UpdateAll();
       SkipCodeFrame = '\x01';
       break;

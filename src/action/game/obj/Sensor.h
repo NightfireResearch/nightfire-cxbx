@@ -2,6 +2,7 @@
 #define SENSOR_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 // Sensors are kept in CameraList, so the list node has to remain first.
 #pragma pack(push, 1)
@@ -33,9 +34,9 @@ typedef struct SENSOR {
     uchar padding[3];
 } SENSOR;
 
-static_assert(sizeof(SENSOR) == 0x64, "Wrong size for SENSOR");
-static_assert(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
-static_assert(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
+LAYOUT_32(sizeof(SENSOR) == 0x64, "Wrong size for SENSOR");
+LAYOUT_32(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
+LAYOUT_32(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 #pragma pack(pop)
 
 extern LLISTINFO_tag CameraList;

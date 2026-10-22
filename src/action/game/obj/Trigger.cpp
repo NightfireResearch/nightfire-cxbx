@@ -1,4 +1,5 @@
 #include "Trigger.h"
+#include "../../../common/xbeClass.h"
 #include "build.h"
 #include "bullet.h"
 #include "control.h"
@@ -48,8 +49,8 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
-static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
+LAYOUT_32(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
+LAYOUT_32(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
 
 // Channels with fixed meanings here
 #define CHANNEL_BOND_MOMENT_FIRST 0x65  // ten channels, one per bond moment
@@ -573,7 +574,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(sizeof(SOUNDTRIGGER) == 0x14, "SOUNDTRIGGER is 0x14 bytes");
+LAYOUT_32(sizeof(SOUNDTRIGGER) == 0x14, "SOUNDTRIGGER is 0x14 bytes");
 static_assert(sizeof(MUSICTRIGGER) == 0xc, "MUSICTRIGGER is 0xc bytes");
 
 // The exclusive sound trigger's sound while one plays

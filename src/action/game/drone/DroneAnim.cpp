@@ -2,6 +2,7 @@
 // it. See docs/drone/behaviours/README.md section 6.
 
 #include "DroneAnim.h"
+#include "../../../common/xbeClass.h"
 #include "NDrone2.h"
 #include "DroneTables.h"
 #include "Behaviour.h"
@@ -400,7 +401,7 @@ void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSe
     drone->animCallFlag = 0;
 }
 
-static_assert(offsetof(Drone_tag, animMode) == 0x464, "DroneAnim_SetDAnimVeryInternal's adaptor");
+LAYOUT_32(offsetof(Drone_tag, animMode) == 0x464, "DroneAnim_SetDAnimVeryInternal's adaptor");
 
 #ifndef NIGHTFIRE_STANDALONE
 // The original takes the slot, &drone->animMode.

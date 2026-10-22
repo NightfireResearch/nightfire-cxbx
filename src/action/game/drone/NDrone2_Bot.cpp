@@ -733,9 +733,9 @@ bool NDrone2_DSTATE_BotImpactBullet(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
             BOTSTATE_stopAnim(dcv->drone);
         return true;
     case DRONE_MSG_ImpactBullet:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (intptr_t)msg->extraData);
     case DRONE_MSG_ImpactExplosive:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactExplosive, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactExplosive, (intptr_t)msg->extraData);
     case DRONE_MSG_TimerB: {
         BOTSTATE_stopAnim(dcv->drone);
         short next = BOTSTATE_chooseDodgeMove(dcv, -1);
@@ -758,9 +758,9 @@ bool NDrone2_DSTATE_BotImpactExplosive(DCVars_tag *dcv, Drone_tag *drone, obj_ta
         NDrone2_ExplosiveImpact(dcv, (DroneImpact_tag *)msg->extraData, 0, 1);
         return true;
     case DRONE_MSG_ImpactPunch:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactPunch, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactPunch, (intptr_t)msg->extraData);
     case DRONE_MSG_ImpactBullet:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (intptr_t)msg->extraData);
     default:
         return false;
     }
@@ -776,11 +776,11 @@ bool NDrone2_DSTATE_BotImpactPunch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         NDrone2_PunchImpact(dcv, (HITDATA_tag *)msg->extraData, 0, 1);
         return true;
     case DRONE_MSG_ImpactPunch:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactPunch, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactPunch, (intptr_t)msg->extraData);
     case DRONE_MSG_ImpactBullet:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactBullet, (intptr_t)msg->extraData);
     case DRONE_MSG_ImpactExplosive:
-        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactExplosive, (int)(uintptr_t)msg->extraData);
+        return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotImpactExplosive, (intptr_t)msg->extraData);
     default:
         return false;
     }

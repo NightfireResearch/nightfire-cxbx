@@ -2,6 +2,7 @@
 #define GAME_H
 
 #include "actionhelpers.h"
+#include "../common/xbeClass.h"
 
 void Game_Run(void);
 void GameFlow_Main(void);
@@ -380,7 +381,7 @@ typedef struct weapon_definition_tag {
     void (*onImpact)(obj_tag *bullet, plane_equ_tag *plane, _VECTOR *pos); // 0x108 always NULL
 } weapon_definition_tag;
 
-static_assert(sizeof(weapon_definition_tag) == 0x10c, "weapon_definition_tag size");
+LAYOUT_32(sizeof(weapon_definition_tag) == 0x10c, "weapon_definition_tag size");
 static_assert(offsetof(weapon_definition_tag, botWeaponClass) == 0x006, "botWeaponClass");
 static_assert(offsetof(weapon_definition_tag, damageClass) == 0x010, "damageClass");
 static_assert(offsetof(weapon_definition_tag, range) == 0x01c, "range");
@@ -397,7 +398,7 @@ static_assert(offsetof(weapon_definition_tag, clipSize) == 0x092, "clipSize");
 static_assert(offsetof(weapon_definition_tag, animIdle) == 0x0a0, "animIdle");
 static_assert(offsetof(weapon_definition_tag, weaponModelHashcode) == 0x0dc, "weaponModelHashcode");
 static_assert(offsetof(weapon_definition_tag, casingEjectVelocity) == 0x0f8, "casingEjectVelocity");
-static_assert(offsetof(weapon_definition_tag, onImpact) == 0x108, "onImpact");
+LAYOUT_32(offsetof(weapon_definition_tag, onImpact) == 0x108, "onImpact");
 
 typedef struct {
     uint paused;
@@ -425,10 +426,10 @@ enum MPGamePlayerFlags : ushort {
     MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
 };
 
-static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+LAYOUT_32(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
 static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
-static_assert(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
-static_assert(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
+LAYOUT_32(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
+LAYOUT_32(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
 
 // The marks over the assassin and the target a player sees
 typedef struct {
@@ -463,11 +464,11 @@ typedef struct {
   MPRadarMarks radarMarks[NUM_PLAYERS]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
 } MPGameStruct;
 
-static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
+LAYOUT_32(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
 
-static_assert(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
-static_assert(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaused wrong");
-static_assert(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
+LAYOUT_32(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
+LAYOUT_32(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaused wrong");
+LAYOUT_32(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
 
 #pragma pack(pop)
 

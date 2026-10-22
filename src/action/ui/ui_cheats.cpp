@@ -14,7 +14,7 @@ extern uint32_t switch_ForceDrawAll; // defined in view.cpp: draw every object, 
 
 // Music on/off: the checkbox shows whether the volume is non-zero, and selecting it sets 100 or 0.
 // AUTOINJECT
-bool C_CHCHMUSIC_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHMUSIC_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         ushort volume = __Menu_SendMessage(control, MessageType_GetValue, 0, 0) ? 100 : 0;
         SoundInfo = (SoundInfo & 0xffff0000) | volume;   // the original writes only the low word
@@ -27,7 +27,7 @@ bool C_CHCHMUSIC_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
 // Draw everything: the checkbox is the flag.
 // AUTOINJECT
-bool C_CHCHDRAWALL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHDRAWALL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         switch_ForceDrawAll = __Menu_SendMessage(control, MessageType_GetValue, 0, 0);
     } else if (message == MessageType_ControlCreated) {
@@ -43,7 +43,7 @@ extern uint32_t IsWidescreen;
 // Widescreen: the checkbox is the switch, and every viewer's projection is worked out again for the new shape -
 // the players' at their field of view, the rest at the game's own.
 // AUTOINJECT
-bool C_CHCHWS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHWS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         switch_CONFIG_WIDESCREEN = __Menu_SendMessage(control, MessageType_GetValue, 0, 0);
         IsWidescreen = switch_CONFIG_WIDESCREEN;
@@ -100,7 +100,7 @@ static void ShowChecked(M_CONTROL *control, int value) {
 
 // Fly: player 0 moves freely through the level.
 // AUTOINJECT
-bool C_CHCHFLY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHFLY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         uchar on = Checked(control);
         debug_scanmode = on;
@@ -114,7 +114,7 @@ bool C_CHCHFLY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 
 // Drones: ticked, they run; unticked sets switch_NO_DRONES.
 // AUTOINJECT
-bool C_CHCHDRONES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHDRONES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         switch_NO_DRONES = Checked(control) == 0;
     else if (message == MessageType_ControlCreated)
@@ -123,7 +123,7 @@ bool C_CHCHDRONES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_CHCHBLIND_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHBLIND_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         switch_BLIND_DRONES = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -134,7 +134,7 @@ bool C_CHCHBLIND_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // All weapons: ticked, player 0 is given every weapon and gadget with full ammo, and armour. The checkbox sets
 // the unlimited-ammo cheat too.
 // AUTOINJECT
-bool C_CHCHWEAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHWEAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         CheatInfo.UnlimitedAmmo = Checked(control);
         CheatInfo.AllWeapons = Checked(control);
@@ -153,7 +153,7 @@ bool C_CHCHWEAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
 }
 
 // AUTOINJECT
-bool C_CHCHHEALTH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHHEALTH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         CheatInfo.Immortal = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -163,7 +163,7 @@ bool C_CHCHHEALTH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 
 // HUD: each player's crosshair option, its multiplayer copy and all the player's HUD panes follow the checkbox.
 // AUTOINJECT
-bool C_CHCHHUD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHHUD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         hud_state = Checked(control);
         for (int player = 0; player < 4; player++) {
@@ -181,7 +181,7 @@ bool C_CHCHHUD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 }
 
 // AUTOINJECT
-bool C_CHCHDEBUG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHDEBUG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         Drone_DebugSpr = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -190,7 +190,7 @@ bool C_CHCHDEBUG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 }
 
 // AUTOINJECT
-bool C_CHCHCOORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHCOORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         switch_SHOW_COORDS = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -199,7 +199,7 @@ bool C_CHCHCOORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_CHCHALLOWFREEZE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHALLOWFREEZE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         switch_allowFreeze = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -208,7 +208,7 @@ bool C_CHCHALLOWFREEZE_Handler(uchar managerNum, M_CONTROL *control, uint hashco
 }
 
 // AUTOINJECT
-bool C_CHCHDUMMY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHDUMMY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         Drone_DummyPlayer = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -218,7 +218,7 @@ bool C_CHCHDUMMY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
 // Zero gravity: player 0 floats.
 // AUTOINJECT
-bool C_CHCHZEROG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHZEROG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         zero_gravity = Checked(control);
         Player_ChangeSubState(glb_players[0], zero_gravity ? PLAYER_SUBSTATE_ZEROG : PLAYER_SUBSTATE_NORMAL);
@@ -229,7 +229,7 @@ bool C_CHCHZEROG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 }
 
 // AUTOINJECT
-bool C_CHCHLOCKUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHLOCKUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         bDebugLockup = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -238,7 +238,7 @@ bool C_CHCHLOCKUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_CHCHBRIGHT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHBRIGHT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         bTweakBrightness = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -247,7 +247,7 @@ bool C_CHCHBRIGHT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_CHCHUNLOCK_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHUNLOCK_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         menu_unlock_everything = Checked(control);
     else if (message == MessageType_ControlCreated)
@@ -256,7 +256,7 @@ bool C_CHCHUNLOCK_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_CHCHCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_CHCHCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select)
         bDebugControls = Checked(control);
     else if (message == MessageType_ControlCreated)

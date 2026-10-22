@@ -2,6 +2,7 @@
 #define DESTROY_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -20,7 +21,7 @@ typedef struct DESTROY_tag {
     uchar smashed;              // 0x17
 } DESTROY_tag;
 
-static_assert(sizeof(DESTROY_tag) == 0x18, "DESTROY_tag is 0x18 bytes");
+LAYOUT_32(sizeof(DESTROY_tag) == 0x18, "DESTROY_tag is 0x18 bytes");
 
 // A destroyable's placement keys (level_tag)
 typedef struct DestroyPlacement {

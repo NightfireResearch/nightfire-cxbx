@@ -67,7 +67,7 @@ void Spin_Init(M_SPIN *spin, NEW_CONTROL *create, M_CONTROL *parent) {
 
 // Values in and out are the number shown; what a spin does not handle itself goes to its label
 // AUTOINJECT
-int Spin_SendMessage(M_SPIN *spin, uint message, int arg1, int arg2) {
+intptr_t Spin_SendMessage(M_SPIN *spin, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&spin->control);
@@ -92,7 +92,7 @@ int Spin_SendMessage(M_SPIN *spin, uint message, int arg1, int arg2) {
             return Scroll_SendMessage(&spin->scroll, MessageType_SetValue,
                                       spin->scroll.max + spin->scroll.min - arg1, arg2);
         case MessageType_GetControl:
-            return (int)spin;
+            return (intptr_t)spin;
         case MessageType_GetId:
             return spin->control.id;
         case MessageType_GetValue:
@@ -107,7 +107,7 @@ int Spin_SendMessage(M_SPIN *spin, uint message, int arg1, int arg2) {
         case MessageType_Scroll:
         case MessageType_Select:
         case MessageType_MemoBack:
-            return __Menu_SendMessage(spin->control.parent, message, (int)spin, 0);
+            return __Menu_SendMessage(spin->control.parent, message, (intptr_t)spin, 0);
         default:
             return Label_SendMessage(&spin->label, message, arg1, arg2);
     }
@@ -134,7 +134,7 @@ void Spin_Update(M_MANAGER *mgr, M_PAGE *page, M_SPIN *spin) {
                        spin->control.y, width, labelHeight);
     spin->control.drawState = page->focused->hashcode == spin->control.hashcode ? 0x20 : 0x10;
     sprintf(spin->text, "%d", spin->scroll.max - spin->scroll.value + spin->scroll.min);
-    Label_SendMessage(&spin->label, MessageType_SetText, (int)spin->text, 0);
+    Label_SendMessage(&spin->label, MessageType_SetText, (intptr_t)spin->text, 0);
     Label_Update(mgr, page, &spin->label, Menu_CursorOverMe(mgr, &spin->control));
     Component_SetupInstance(&spin->control, spin->control.drawState, -1, -1,
                             spin->control.width - SPIN_SCROLL_WIDTH, -1);

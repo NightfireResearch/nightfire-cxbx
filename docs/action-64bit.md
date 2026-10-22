@@ -34,3 +34,41 @@ EBX and calls `_Script_Run`; our code calls `_Script_Run`). The adaptors exist f
 
 After it: Linux, macOS and arm64, for which the action engine's window, input and sound (Win32, XInput, XAudio2 here)
 go through a host layer as the driving engine's do.
+
+## Done: packages 1 to 5 (22 October 2026)
+
+**1. Adaptors.** The 212 register adaptors are `#ifndef NIGHTFIRE_STANDALONE` with their comments and tags. Five that
+our code calls with ordinary arguments have C forms in the standalone build: `Quat_QuatToMat`, `Vec_Normalise`,
+`Vec_NormaliseLen`, `maybeAtan2` (adaptors that keep ECX and EDX for the original's callers) and
+`MenuManager_GetStatus`. `Game_Draw` called the `View_CaptureScene` adaptor, which reads its viewer from EAX, with
+the viewer on the stack; it calls `_View_CaptureScene`.
+
+**2. x87.** `NIGHTFIRE_ACTION_X87` (CMake, on; forced off on 64-bit) is the standalone targets' `NIGHTFIRE_X87`;
+actioninject keeps the instructions. Off, `Extended` is a double and every operation the C one (math/X87Ops.cpp),
+`CIAsin` and the drones' route turn too, and the shared C runtime takes its C forms. The 13 recordings rebased onto a
+32-bit build with it off (tools/demo/rebase_demos.sh) differ from the x87 recordings in no frame or a handful: the
+C forms change almost nothing.
+
+**3, 4. File structures.** Five loaders write addresses into the files they read: AIPath_Parse (`MAPNODE_tag.cel`,
+`AIBoundLink_tag.nextA`/`nextB`), the skins (hashcodes made glists, `sAnimSkin_tag::riggedBody`/`discreteObj` point at
+those words), the sequences (`sAnimRawSeq_tag.trackData`/`cursor`), the map (`bmpHeaderEntry.textureInfo`,
+`ModelData.primitives`/`afterPrimitives`, `PALHEADER_tag.data`, a model's address in `celglist_tag.geom_idx` until it
+is registered) and the sound banks (`SampleHeaderData.Address`/`psi_SampleHeader`). Those fields are `Ptr32`
+(driving/platform/Ptr32.h: `T *` on 32-bit, a word of the low game window on 64-bit); every other file structure has
+no address in it. `level_tag.spline` is a word too: the twenty placement structures lay their keys out at 0x2c after
+it. The heap keeps the game's layout: `MemBlock.prev` is a word, so every block and allocation is the size it is on
+32-bit, and the heap's words (`PtrHeap`, `QuickBlock`) decode through the window. The executable is linked at
+0x400000 without ASLR on 64-bit (`nf_game_window`), and `GameWindowOutOfRange` is StandaloneMain.cpp's.
+
+**5. Memory-only structures.** The 787 layout checks a 64-bit compile fails are `LAYOUT_32` (common/xbeClass.h): none
+of them on a file structure. Integers holding addresses became the right types: the open file (`PsiOpenFile.data`,
+`maybePsiFileRead`), `FileLastBlock`/`FileDiscard` (Mem_Shrink took the latter's address as a pointer's), the text
+bank's address arithmetic and allocation, `CIRBUF_INFO`'s words (the received messages), the drones'
+`stateParam` and `Drone_SM_SetState`'s argument (impacts), `MP_sendBotMessage`'s `extra`, `psiAsyncCreateBuffer`'s
+result, the menu messages' arguments and answers (`intptr_t`/`uintptr_t` through every handler, control, send function
+and tools/uihandler.py's generated switch; the same types on 32-bit) and `lastScriptResult`. GameFlow read the
+cutscene viewer through offsets on an integer; it names `fadeState` and `fadeRate`. The D3D seam's two texture words
+are `PtrTo32`; on x86-64 its calls have the one convention.
+
+The probe (a 64-bit clang syntax check of every standalone source, in the nf-cross image) has no errors left and no
+pointer-to-integer casts; MSVC x64 builds and links action_standalone and action_standalone_test.

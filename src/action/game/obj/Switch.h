@@ -2,6 +2,7 @@
 #define SWITCH_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -26,15 +27,15 @@ typedef struct ObjData_Switch {
     uchar unknown_0x1a[2];
 } ObjData_Switch;
 
-static_assert(sizeof(ObjData_Switch) == 0x1c, "Bad size for ObjData_Switch");
-static_assert(offsetof(ObjData_Switch, objectPtr) == 0x8, "Bad offset of objectPtr");
-static_assert(offsetof(ObjData_Switch, scriptPlayer) == 0xc, "Bad offset of scriptPlayer");
-static_assert(offsetof(ObjData_Switch, autoResetFrames) == 0x10, "Bad offset of autoResetFrames");
-static_assert(offsetof(ObjData_Switch, channelNum) == 0x12, "Bad offset of channelNum");
-static_assert(offsetof(ObjData_Switch, gateSwitchChannel) == 0x14, "Bad offset of gateSwitchChannel");
-static_assert(offsetof(ObjData_Switch, restState) == 0x16, "Bad offset of restState");
-static_assert(offsetof(ObjData_Switch, triggerCount) == 0x18, "Bad offset of triggerCount");
-static_assert(offsetof(ObjData_Switch, oneShot) == 0x19, "Bad offset of oneShot");
+LAYOUT_32(sizeof(ObjData_Switch) == 0x1c, "Bad size for ObjData_Switch");
+LAYOUT_32(offsetof(ObjData_Switch, objectPtr) == 0x8, "Bad offset of objectPtr");
+LAYOUT_32(offsetof(ObjData_Switch, scriptPlayer) == 0xc, "Bad offset of scriptPlayer");
+LAYOUT_32(offsetof(ObjData_Switch, autoResetFrames) == 0x10, "Bad offset of autoResetFrames");
+LAYOUT_32(offsetof(ObjData_Switch, channelNum) == 0x12, "Bad offset of channelNum");
+LAYOUT_32(offsetof(ObjData_Switch, gateSwitchChannel) == 0x14, "Bad offset of gateSwitchChannel");
+LAYOUT_32(offsetof(ObjData_Switch, restState) == 0x16, "Bad offset of restState");
+LAYOUT_32(offsetof(ObjData_Switch, triggerCount) == 0x18, "Bad offset of triggerCount");
+LAYOUT_32(offsetof(ObjData_Switch, oneShot) == 0x19, "Bad offset of oneShot");
 
 #pragma pack(pop)
 

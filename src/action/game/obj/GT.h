@@ -2,6 +2,7 @@
 #define GT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -39,13 +40,13 @@ typedef struct {
     char unknownE3;
 } GUNTURRET;
 
-static_assert(sizeof(GUNTURRET) == 0xe4, "Bad size for GUNTURRET");
+LAYOUT_32(sizeof(GUNTURRET) == 0xe4, "Bad size for GUNTURRET");
 static_assert(offsetof(GUNTURRET, body) == 0xa0, "Bad offset of body");
-static_assert(offsetof(GUNTURRET, muzzleFlash) == 0xb0, "Bad offset of muzzleFlash");
-static_assert(offsetof(GUNTURRET, owner) == 0xa8, "Bad offset of owner");
-static_assert(offsetof(GUNTURRET, health) == 0xbc, "Bad offset of health");
-static_assert(offsetof(GUNTURRET, enableChannel) == 0xd8, "Bad offset of enableChannel");
-static_assert(offsetof(GUNTURRET, controlled) == 0xe2, "Bad offset of controlled");
+LAYOUT_32(offsetof(GUNTURRET, muzzleFlash) == 0xb0, "Bad offset of muzzleFlash");
+LAYOUT_32(offsetof(GUNTURRET, owner) == 0xa8, "Bad offset of owner");
+LAYOUT_32(offsetof(GUNTURRET, health) == 0xbc, "Bad offset of health");
+LAYOUT_32(offsetof(GUNTURRET, enableChannel) == 0xd8, "Bad offset of enableChannel");
+LAYOUT_32(offsetof(GUNTURRET, controlled) == 0xe2, "Bad offset of controlled");
 
 // A turret's placement keys (level_tag)
 typedef struct GTPlacement {

@@ -64,8 +64,8 @@ static uint32_t MapHashCode;
 static uint32_t ParseMap_State;
 // XBE_GLOBAL(0x00274b58, 0x100)
 static char filename[0x100];
-extern uint32_t FileLastBlock;
-extern uint32_t FileDiscard;
+extern uint8_t *FileLastBlock;
+extern uint8_t *FileDiscard;
 // XBE_GLOBAL(0x00274c6c, 0x4)
 uchar *FileBase;
 // XBE_GLOBAL(0x00274c64, 0x4)
@@ -80,7 +80,7 @@ void psiFileLoadForParse(char *name) {
     uint *file = (uint *)psiFileLoad(name, 0x1704, &size);
     FileNextBlock = file;
     FileBase = (uchar *)file;
-    FileLastBlock = (uint)(uintptr_t)file + size;
+    FileLastBlock = (uint8_t *)file + size;
     BinFileVersion = *FileNextBlock++;
     pBinFileHeader = FileNextBlock;
 }
@@ -123,7 +123,7 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
         case 3: {
             // If in the second pass, shrink memory?
             if(!secondPass) {
-                Mem_Shrink((void**)&FileDiscard, FileLastBlock - FileDiscard);
+                Mem_Shrink((void**)&FileDiscard, (uint)(FileLastBlock - FileDiscard));
             }
             ParseMap_State = 0;
             break;
@@ -918,7 +918,7 @@ void parsemap_block_palette_data_psx(void) {
         hashtable_additem((HASHCODE)pPallHeader->data, pTexData);
     pTexData->width = pBmpHeader->widthMinusOne + 1;
     pTexData->height = pBmpHeader->heightMinusOne + 1;
-    pPallHeader->data = (uint)(uintptr_t)BlockData();
+    pPallHeader->data = PtrTo32(BlockData());
     pBmpHeader++;
     pPallHeader++;
     pTexData++;
@@ -928,7 +928,7 @@ void parsemap_block_palette_data_psx(void) {
 // at the data. The three tables move on. (Blocks 0x17 and 0x18 both come here.)
 // AUTOINJECT
 void parsemap_block_texture_data_Xbox(void) {
-    HASHCODE hashcode = (HASHCODE)(uintptr_t)pBmpHeader->textureInfo;
+    HASHCODE hashcode = (HASHCODE)PtrTo32(pBmpHeader->textureInfo);   // still the file's word
     if (hashcode != 0xffffffff)
         hashtable_additem(hashcode, pTexData);
     pTexData->width = pBmpHeader->widthMinusOne + 1;
@@ -1195,7 +1195,7 @@ bool parsemap_handle_block_id(char mainMap) {
         AIPath_Parse((AIPathBlock *)FileNextBlock);
         return false;
     case BLOCK_ENTITY_GEOMETRY:
-        pCurrCelList->geom_idx = (int)(uintptr_t)BlockData();
+        pCurrCelList->geom_idx = (int)PtrTo32(BlockData());
         return false;
     case BLOCK_MAP_HEADER:
         parsemap_block_map_header();
@@ -1229,7 +1229,7 @@ bool parsemap_handle_block_id(char mainMap) {
         parsemap_block_map_data_static();
         return false;
     case BLOCK_MEMORY_DISCARD:
-        FileDiscard = (uint)(uintptr_t)FileNextBlock;
+        FileDiscard = (uint8_t *)FileNextBlock;
         pFileDiscardHeader = pBinFileHeader;
         return false;
     case BLOCK_END:
@@ -1298,7 +1298,7 @@ void parsemap_reset_to_block_memory_discard(void) {
         pBinFileHeader = pFileDiscardHeader;
         FileNextBlock = (uint *)(FileBase + *pBinFileHeader + 4);
     } else {
-        FileNextBlock = (uint *)(uintptr_t)FileDiscard;
+        FileNextBlock = (uint *)FileDiscard;
     }
 }
 

@@ -1,4 +1,5 @@
 #include "CRuntime.h"
+#include "../../common/xbeClass.h"
 #include "XboxStartup.h"
 #ifndef NIGHTFIRE_STANDALONE
 #include "../../common/xbeOriginal.h"
@@ -24,7 +25,7 @@
 // The kernel's calls, as the loader answers them (src/loader/kernel.cpp): an Xbox critical section is 28 bytes in
 // the caller's record, where a Win32 one fits. A static section is entered without ever being initialised, so each
 // is initialised on its first entry unless it was before.
-static_assert(sizeof(CRITICAL_SECTION) <= 0x1c, "a Win32 critical section fits in an Xbox one");
+LAYOUT_32(sizeof(CRITICAL_SECTION) <= 0x1c, "a Win32 critical section fits in an Xbox one");
 static SRWLOCK KnownSectionsLock = SRWLOCK_INIT;
 static void *KnownSections[1024];
 static unsigned KnownSectionCount;

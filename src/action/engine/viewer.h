@@ -1,5 +1,6 @@
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 #include "../math/math.h"
 #include "../util/Stack.h"
@@ -108,7 +109,7 @@ struct portal_tag {
     _VECTOR boxMin;             // 0x64
     _VECTOR boxMax;             // 0x70
 };
-static_assert(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
+LAYOUT_32(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined field0_0x0;
@@ -151,14 +152,14 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined1 someSwitchChannel;      // 0x92 - the channel choosing its ambient light
     uchar blink;                       // 0x93 - its alpha: bits 0-1 the mode, 4-7 the speed (View_SetupCelRenderModes)
 };
-static_assert(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
-static_assert(offsetof(cel_tag, nextVisible) == 0x20, "Bad offset of cel_tag.nextVisible");
-static_assert(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
-static_assert(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
-static_assert(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
-static_assert(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
-static_assert(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
-static_assert(offsetof(cel_tag, soundEnvironment) == 0x88, "Bad offset of cel_tag.soundEnvironment");
+LAYOUT_32(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
+LAYOUT_32(offsetof(cel_tag, nextVisible) == 0x20, "Bad offset of cel_tag.nextVisible");
+LAYOUT_32(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
+LAYOUT_32(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
+LAYOUT_32(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
+LAYOUT_32(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
+LAYOUT_32(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
+LAYOUT_32(offsetof(cel_tag, soundEnvironment) == 0x88, "Bad offset of cel_tag.soundEnvironment");
 
 // cel_tag::bitsFromPlacementTag: a room, an object's cel (build_FindCel)
 #define CEL_ROOM 0x00040000
@@ -175,16 +176,16 @@ enum {
 
 
 
-static_assert(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
-static_assert(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw");
-static_assert(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");
-static_assert(offsetof(viewer_tag, move) == 0xac, "Bad offset of viewer_tag.move");
-static_assert(offsetof(viewer_tag, prevPos) == 0xc4, "Bad offset of viewer_tag.prevPos");
-static_assert(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag.viewMatrix");
-static_assert(offsetof(viewer_tag, mtx) == 0x180, "Bad offset of viewer_tag.mtx");
-static_assert(offsetof(viewer_tag, swingPhase) == 0x1e0, "Bad offset of viewer_tag.swingPhase");
-static_assert(offsetof(viewer_tag, fade) == 0x1f8, "Bad offset of viewer_tag.fade");
-static_assert(offsetof(viewer_tag, nightVisionRelated) == 0x206, "Bad offset of viewer_tag.nightVisionRelated");
+LAYOUT_32(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
+LAYOUT_32(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw");
+LAYOUT_32(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");
+LAYOUT_32(offsetof(viewer_tag, move) == 0xac, "Bad offset of viewer_tag.move");
+LAYOUT_32(offsetof(viewer_tag, prevPos) == 0xc4, "Bad offset of viewer_tag.prevPos");
+LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag.viewMatrix");
+LAYOUT_32(offsetof(viewer_tag, mtx) == 0x180, "Bad offset of viewer_tag.mtx");
+LAYOUT_32(offsetof(viewer_tag, swingPhase) == 0x1e0, "Bad offset of viewer_tag.swingPhase");
+LAYOUT_32(offsetof(viewer_tag, fade) == 0x1f8, "Bad offset of viewer_tag.fade");
+LAYOUT_32(offsetof(viewer_tag, nightVisionRelated) == 0x206, "Bad offset of viewer_tag.nightVisionRelated");
 
 #pragma pack(pop)
 

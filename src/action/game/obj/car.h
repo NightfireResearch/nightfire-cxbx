@@ -2,6 +2,7 @@
 #define CAR_H_
 
 #include "../../engine/Collide.h"
+#include "../../../common/xbeClass.h"
 
 // obj_tag::curState of a car (OBJECTTYPE_CAR). Its subState is the number of the player driving it, and once it is
 // destroyed the frames until it is back.
@@ -51,14 +52,14 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(sizeof(CAR_INFO) == 0xf8, "Size of CAR_INFO not correct");
-static_assert(offsetof(CAR_INFO, turretGeom) == 0xc0, "Offset of turretGeom not correct");
-static_assert(offsetof(CAR_INFO, turnSpeed) == 0xd4, "Offset of turnSpeed not correct");
-static_assert(offsetof(CAR_INFO, tankMachinegunTemperature) == 0xe4, "Offset of tankMachinegunTemperature not correct");
-static_assert(offsetof(CAR_INFO, onGround) == 0xec, "Offset of onGround not correct");
-static_assert(offsetof(CAR_INFO, tankNum) == 0xee, "Offset of tankNum not correct");
-static_assert(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct");
-static_assert(offsetof(CAR_INFO, fireSide) == 0xf4, "Offset of fireSide not correct");
+LAYOUT_32(sizeof(CAR_INFO) == 0xf8, "Size of CAR_INFO not correct");
+LAYOUT_32(offsetof(CAR_INFO, turretGeom) == 0xc0, "Offset of turretGeom not correct");
+LAYOUT_32(offsetof(CAR_INFO, turnSpeed) == 0xd4, "Offset of turnSpeed not correct");
+LAYOUT_32(offsetof(CAR_INFO, tankMachinegunTemperature) == 0xe4, "Offset of tankMachinegunTemperature not correct");
+LAYOUT_32(offsetof(CAR_INFO, onGround) == 0xec, "Offset of onGround not correct");
+LAYOUT_32(offsetof(CAR_INFO, tankNum) == 0xee, "Offset of tankNum not correct");
+LAYOUT_32(offsetof(CAR_INFO, isHeli) == 0xf2, "Offset of isHeli not correct");
+LAYOUT_32(offsetof(CAR_INFO, fireSide) == 0xf4, "Offset of fireSide not correct");
 
 void Car_Init(void);
 void Car_Reset(void);

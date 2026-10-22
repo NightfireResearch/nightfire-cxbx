@@ -2,6 +2,7 @@
 #define BODYGLOW_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #define BODYGLOW_BEAMS 15
 
@@ -16,7 +17,7 @@ typedef struct BODYGLOW_tag {
 } BODYGLOW_tag;
 #pragma pack(pop)
 
-static_assert(sizeof(BODYGLOW_tag) == 0x44, "BODYGLOW_tag is 0x44 bytes");
+LAYOUT_32(sizeof(BODYGLOW_tag) == 0x44, "BODYGLOW_tag is 0x44 bytes");
 
 obj_tag* BodyGlow_Create(obj_tag *owner);
 void BodyGlow_Delete(obj_tag *glow);

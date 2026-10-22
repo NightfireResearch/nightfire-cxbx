@@ -2,6 +2,7 @@
 #define HURT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -23,8 +24,8 @@ typedef struct Hurt_tag {
 
 #pragma pack(pop)
 
-static_assert(sizeof(Hurt_tag) == 0x1c, "Hurt_tag is 0x1c bytes");
-static_assert(offsetof(Hurt_tag, damage) == 0x10, "Wrong offset for Hurt_tag.damage");
+LAYOUT_32(sizeof(Hurt_tag) == 0x1c, "Hurt_tag is 0x1c bytes");
+LAYOUT_32(offsetof(Hurt_tag, damage) == 0x10, "Wrong offset for Hurt_tag.damage");
 
 // A hurt volume's placement (level_tag)
 typedef struct HurtPlacement {
@@ -42,7 +43,7 @@ typedef struct HurtPlacement {
     uint oneShotPath;               // 0x40 - key 5
 } HurtPlacement;
 
-static_assert(offsetof(HurtPlacement, oneShotPath) == 0x40, "Bad offset of HurtPlacement.oneShotPath");
+LAYOUT_32(offsetof(HurtPlacement, oneShotPath) == 0x40, "Bad offset of HurtPlacement.oneShotPath");
 
 obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 float Hurt_GetDamage(obj_tag *obj);

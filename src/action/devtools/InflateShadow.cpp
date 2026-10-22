@@ -19,7 +19,7 @@ namespace {
 
 const unsigned kInflateHuffman = 0x000d3a80;
 #define HuffTablesAt ((uint8_t *)(size_t)XbeOurs(0x0029b2d0))
-const size_t HUFF_TABLES_SIZE = 0x1688 + 4 * (288 + 288 + 512);
+const size_t HUFF_TABLES_SIZE = 0x1688 + 4 * (288 + 288 + 290);   // HuffmanTables (engine/Inflate.cpp)
 
 const int LEN_BASE[29] = {0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128,
                           160, 192, 224, 255};

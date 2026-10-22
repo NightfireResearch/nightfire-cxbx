@@ -2,6 +2,7 @@
 #define SCRIPT_H_
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 typedef enum {
     SStream_Entity = 1,
@@ -67,9 +68,9 @@ typedef struct SCRIPTDEF {
     char _pad_212[2];
 } SCRIPTDEF;
 
-static_assert(sizeof(SCRIPTDEF) == 0x214, "Bad size for SCRIPTDEF");
-static_assert(offsetof(SCRIPTDEF, keys) == 0x204, "Bad offset of keys");
-static_assert(offsetof(SCRIPTDEF, hasCamera) == 0x210, "Bad offset of hasCamera");
+LAYOUT_32(sizeof(SCRIPTDEF) == 0x214, "Bad size for SCRIPTDEF");
+LAYOUT_32(offsetof(SCRIPTDEF, keys) == 0x204, "Bad offset of keys");
+LAYOUT_32(offsetof(SCRIPTDEF, hasCamera) == 0x210, "Bad offset of hasCamera");
 
 // One stream of a script instance - an entity's motion, a camera, a sound and so on, each reading its own commands.
 typedef struct {
@@ -95,14 +96,14 @@ typedef struct {
     char _pad_26[2];
 } SSTREAM;
 
-static_assert(sizeof(SSTREAM) == 0x28, "Bad size for SSTREAM");
+LAYOUT_32(sizeof(SSTREAM) == 0x28, "Bad size for SSTREAM");
 static_assert(offsetof(SSTREAM, elapsedFrames) == 0x8, "Bad offset of elapsedFrames");
 static_assert(offsetof(SSTREAM, linkedGameOrSoundObject) == 0x10, "Bad offset of linkedGameOrSoundObject");
-static_assert(offsetof(SSTREAM, streamBuffer) == 0x14, "Bad offset of streamBuffer");
-static_assert(offsetof(SSTREAM, firstKey) == 0x1c, "Bad offset of firstKey");
-static_assert(offsetof(SSTREAM, startFrame) == 0x20, "Bad offset of startFrame");
-static_assert(offsetof(SSTREAM, whatKindOfInterpolation) == 0x24, "Bad offset of whatKindOfInterpolation");
-static_assert(offsetof(SSTREAM, parent) == 0x25, "Bad offset of parent");
+LAYOUT_32(offsetof(SSTREAM, streamBuffer) == 0x14, "Bad offset of streamBuffer");
+LAYOUT_32(offsetof(SSTREAM, firstKey) == 0x1c, "Bad offset of firstKey");
+LAYOUT_32(offsetof(SSTREAM, startFrame) == 0x20, "Bad offset of startFrame");
+LAYOUT_32(offsetof(SSTREAM, whatKindOfInterpolation) == 0x24, "Bad offset of whatKindOfInterpolation");
+LAYOUT_32(offsetof(SSTREAM, parent) == 0x25, "Bad offset of parent");
 
 // A camera stream's own block (Mem_Malloc'd by Script_CameraStart, kept in the stream's linkedGameOrSoundObject)
 typedef struct SCRIPTCAMERA {
@@ -192,24 +193,24 @@ typedef struct SCRIPTINFO {
     char unknown_0xaaf;
 } SCRIPTINFO;
 
-static_assert(sizeof(SCRIPTINFO) == 0xab0, "SCRIPTINFO is what Script_Load allocates");
+LAYOUT_32(sizeof(SCRIPTINFO) == 0xab0, "SCRIPTINFO is what Script_Load allocates");
 static_assert(offsetof(SCRIPTINFO, scriptPlayer) == 0x78, "Offset of scriptPlayer is bad");
-static_assert(offsetof(SCRIPTINFO, keys) == 0x84, "Offset of keys is bad");
-static_assert(offsetof(SCRIPTINFO, scale) == 0x8c, "Offset of scale is bad");
-static_assert(offsetof(SCRIPTINFO, scriptHashcode) == 0x90, "Offset of scriptHashcode is bad");
-static_assert(offsetof(SCRIPTINFO, waitFrames) == 0x94, "Offset of waitFrames is bad");
-static_assert(offsetof(SCRIPTINFO, maybeProgressFrames) == 0x98, "Offset of maybeProgressFrames is bad");
-static_assert(offsetof(SCRIPTINFO, fadeElapsedFrames) == 0x9c, "Offset of fadeElapsedFrames is bad");
-static_assert(offsetof(SCRIPTINFO, streamDataBuffer[0]) == 0xa0, "Offset of streamDataBuffer is bad");
-static_assert(offsetof(SCRIPTINFO, scriptFlags) == 0xaa0, "Offset of scriptFlags is bad");
-static_assert(offsetof(SCRIPTINFO, numElements) == 0xaa2, "Offset of numElements is bad");
-static_assert(offsetof(SCRIPTINFO, loopStart) == 0xaa6, "Offset of loopStart is bad");
-static_assert(offsetof(SCRIPTINFO, maybeNumFrames) == 0xaa8, "Offset of maybeNumFrames is bad");
-static_assert(offsetof(SCRIPTINFO, playbackFlags) == 0xaaa, "Offset of playbackFlags is bad");
-static_assert(offsetof(SCRIPTINFO, streamNum) == 0xaab, "Offset of streamNum is bad");
-static_assert(offsetof(SCRIPTINFO, fadeFrames) == 0xaac, "Offset of fadeFrames is bad");
-static_assert(offsetof(SCRIPTINFO, fadeFlags) == 0xaad, "Offset of fadeFlags is bad");
-static_assert(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playerEnableFlags is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, keys) == 0x84, "Offset of keys is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, scale) == 0x8c, "Offset of scale is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, scriptHashcode) == 0x90, "Offset of scriptHashcode is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, waitFrames) == 0x94, "Offset of waitFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, maybeProgressFrames) == 0x98, "Offset of maybeProgressFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, fadeElapsedFrames) == 0x9c, "Offset of fadeElapsedFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, streamDataBuffer[0]) == 0xa0, "Offset of streamDataBuffer is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, scriptFlags) == 0xaa0, "Offset of scriptFlags is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, numElements) == 0xaa2, "Offset of numElements is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, loopStart) == 0xaa6, "Offset of loopStart is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, maybeNumFrames) == 0xaa8, "Offset of maybeNumFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, playbackFlags) == 0xaaa, "Offset of playbackFlags is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, streamNum) == 0xaab, "Offset of streamNum is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, fadeFrames) == 0xaac, "Offset of fadeFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, fadeFlags) == 0xaad, "Offset of fadeFlags is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playerEnableFlags is bad");
 
 #pragma pack(pop)
 

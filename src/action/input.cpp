@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include "../common/xbeClass.h"
 #include <windows.h>
 
 #include "input.h"
@@ -197,7 +198,7 @@ typedef struct InputEvent {
     uint *target;           // 0x14 - flipped (0 <-> 1) each time the event completes
 } InputEvent;
 #pragma pack(pop)
-static_assert(sizeof(InputEvent) == 0x18, "InputEvent is InputEventList's entry size");
+LAYOUT_32(sizeof(InputEvent) == 0x18, "InputEvent is InputEventList's entry size");
 
 #define ACTION_HELD 1               // PlayerInput.actions bits the walker tests
 #define ACTION_PRESSED 4

@@ -327,7 +327,7 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
             Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(90.0f));
         drone->stateScratch = 1;
         DroneAnim_CallAnim(DANIM_DEATH_EXPLOSION,
-                           NDrone2_ExplosionDir(dcv, (DroneImpact_tag *)(uintptr_t)dcv->aiStateMachine->stateParam),
+                           NDrone2_ExplosionDir(dcv, (DroneImpact_tag *)dcv->aiStateMachine->stateParam),
                            DSTATE_Dead, 0, 0.0f, 0, dcv);
         return true;
 

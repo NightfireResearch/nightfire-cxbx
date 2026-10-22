@@ -1,4 +1,5 @@
 #include "FuseBox.h"
+#include "../../../common/xbeClass.h"
 #include "build.h"
 #include "control.h"
 #include "ScriptPlayer.h"
@@ -33,9 +34,9 @@ typedef struct {
 
 #pragma pack(pop)
 
-static_assert(sizeof(FUSEBOX) == 0x60, "Bad size for FUSEBOX");
-static_assert(offsetof(FUSEBOX, channelA) == 0x54, "Bad offset of channelA");
-static_assert(offsetof(FUSEBOX, channelB) == 0x5c, "Bad offset of channelB");
+LAYOUT_32(sizeof(FUSEBOX) == 0x60, "Bad size for FUSEBOX");
+LAYOUT_32(offsetof(FUSEBOX, channelA) == 0x54, "Bad offset of channelA");
+LAYOUT_32(offsetof(FUSEBOX, channelB) == 0x5c, "Bad offset of channelB");
 static_assert(offsetof(Create_FuseBox_Params, channelB) == 0x38, "Bad offset of channelB");
 
 // The script's play mode: run a tick, then wait (SP_LoadScript)

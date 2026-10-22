@@ -2,6 +2,7 @@
 #define LOCK_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -21,7 +22,7 @@ typedef struct LOCK_tag {
     uint pathFrames;            // 0x1c - the spline's points less one; 0 for none
 } LOCK_tag;
 
-static_assert(sizeof(LOCK_tag) == 0x20, "LOCK_tag is 0x20 bytes");
+LAYOUT_32(sizeof(LOCK_tag) == 0x20, "LOCK_tag is 0x20 bytes");
 
 // A lock's placement keys (level_tag)
 typedef struct LockPlacement {
@@ -40,7 +41,7 @@ typedef struct LockPlacement {
     uint easy;                  // 0x44 - unlocked from the start at difficulty 1
 } LockPlacement;
 
-static_assert(offsetof(LockPlacement, easy) == 0x44, "Bad offset of LockPlacement.easy");
+LAYOUT_32(offsetof(LockPlacement, easy) == 0x44, "Bad offset of LockPlacement.easy");
 
 #pragma pack(pop)
 

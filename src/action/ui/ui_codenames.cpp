@@ -40,7 +40,7 @@ M_ITEM cn_options[7] = {
 static char cn_menu_title_text[0x40]; // "Edit <codename>"
 
 // AUTOINJECT
-bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         // Coming back from one of its own pages (Secret Unlocks among them) keeps the changes made so far; arriving
@@ -80,7 +80,7 @@ bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 }
 
 // AUTOINJECT
-bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -304,7 +304,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
         operation->done = 1;
         saveflow_text = NULL;
         saveflow_frames = 0;
-        Manager_SendMessage(mgr, MessageType_SaveFlowDone, (int)mgr->currentPage, 0);
+        Manager_SendMessage(mgr, MessageType_SaveFlowDone, (intptr_t)mgr->currentPage, 0);
         Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
         LS_FlushStates();
         Menu_FlushEnum();
@@ -319,7 +319,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
     if (saveflow_text != NULL) {
         if (!saveflow_box_open) {
             Manager_SendMessage(mgr, MessageType_GoPage, SAVEFLOW_PAGE, GOPAGE_OVERLAY);
-            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (int)saveflow_text, 0);
+            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (intptr_t)saveflow_text, 0);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ClearItems, 0, 0);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_SetPulse, 0, 0);
@@ -332,7 +332,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             case 12:
                 // An error: a choice to take, and the codenames listed again after
                 Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
-                __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem, (int)Txt_BindLabel(TXT_SAVEFLOW_266, 0), 0);
+                __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_SAVEFLOW_266, 0), 0);
                 __Menu_Send(mgr->index, SUB_SAVEFLOW_244, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
                 saveflow_relist = 1;
                 break;
@@ -344,7 +344,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             saveflow_box_open = 1;
             saveflow_frames = 0;
         } else {
-            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (int)saveflow_text, 0);
+            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (intptr_t)saveflow_text, 0);
         }
     }
 
@@ -541,7 +541,7 @@ uint Menu_EnumSaves(uchar managerNum, char firstOnly) {
             if (firstOnly) {
                 if (strlen(name) <= CODENAME_FIRST_MAX) {
                     strcpy(codename_buf[ls.numCodenames], name);
-                    __Menu_SendMessage(ls.control, MessageType_AddItem, (int)codename_buf[ls.numCodenames], 0);
+                    __Menu_SendMessage(ls.control, MessageType_AddItem, (intptr_t)codename_buf[ls.numCodenames], 0);
                     ls.numCodenames++;
                     enum_state = ENUM_STATE_DONE;
                     psiEndSaveEnum();
@@ -549,7 +549,7 @@ uint Menu_EnumSaves(uchar managerNum, char firstOnly) {
                 }
             } else if (strlen(name) <= CODENAME_MAX) {
                 strcpy(codename_buf[ls.numCodenames], name);
-                __Menu_SendMessage(ls.control, MessageType_AddItem, (int)codename_buf[ls.numCodenames], 0);
+                __Menu_SendMessage(ls.control, MessageType_AddItem, (intptr_t)codename_buf[ls.numCodenames], 0);
                 ls.numCodenames++;
             }
         }
@@ -578,7 +578,7 @@ void Menu_PutCodenamesIntoControl(M_CONTROL *control) {
     case ControlType_List:
     case ControlType_Radio:
         for (ushort i = 1; i < ls.numCodenames; i++)
-            __Menu_SendMessage(control, MessageType_AddItem, (int)codename_buf[i], 0);
+            __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)codename_buf[i], 0);
         __Menu_SendMessage(control, MessageType_SelectIndex, __Menu_SendMessage(control, MessageType_GetSelectedIndex, 0, 0), 0);
         break;
     case ControlType_Scroll: {
@@ -727,7 +727,7 @@ void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text,
         slots[0] = slots[1] = slots[2] = slots[3] = slots[4] = LS_SLOT_NEW;
     for (int i = 0; i < 5; i++)
         __Menu_SendEx(managerNum, text, i, MessageType_SetText,
-                      (int)(slots[i] == LS_SLOT_NEW ? MenuSpaceString : codename_buf[slots[i]]), 0);
+                      (intptr_t)(slots[i] == LS_SLOT_NEW ? MenuSpaceString : codename_buf[slots[i]]), 0);
 
     if (turning)
         Menu_StartIris(2, managerNum, iris);
@@ -821,7 +821,7 @@ static void FadeMenuGroup(uchar managerNum, HASHCODE group, int arg1) {
 }
 
 // AUTOINJECT
-bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         ls.returnPage = (HASHCODE)0;
@@ -929,7 +929,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
 // The codenames wheel: 0 is a new codename, 1 the default one, the rest are loaded. Y makes a new one, X deletes
 // the one showing (after a box asking).
 // AUTOINJECT
-bool C_SBCNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBCNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -980,10 +980,10 @@ bool C_SBCNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 // closed, and the page to go to gone to (unless the flow was cancelled). B leaves for the dashboard when the box
 // offers it.
 // AUTOINJECT
-bool C_LBERROPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_LBERROPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         if (saveflow_manager->underPage != NULL)
-            Manager_SendMessage(saveflow_manager, MessageType_SaveFlowDone, (int)saveflow_manager->underPage,
+            Manager_SendMessage(saveflow_manager, MessageType_SaveFlowDone, (intptr_t)saveflow_manager->underPage,
                                 saveflow_result);
         if (saveflow_box_open)
             Manager_SendMessage(saveflow_manager, MessageType_Back, 0, 0);
@@ -1020,7 +1020,7 @@ uint8_t nfselect_from_main_menu = 1; // the wheel starts on "Default"
 // As P_CNSELECT, for the campaign: a codename is picked, then the difficulty. Entering puts the Codenames page's
 // wheel (not this page's) on the codename in hand, as the original does.
 // AUTOINJECT
-bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         ls.returnPage = (HASHCODE)0;
@@ -1112,7 +1112,7 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
 // The wheel: a new codename (room for it checked first), a default one (with a warning box: the page goes on to the
 // difficulty on its answer), or a saved one, loaded
 // AUTOINJECT
-bool C_SBNFCN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBNFCN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:

@@ -2,6 +2,7 @@
 #define SCRIPTPLAYER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 // Bits of SCRIPTPLAYER::triggerMask, and the values SP_Hit computes/returns each frame
 enum SP_TriggerFlags {
@@ -67,14 +68,14 @@ typedef struct SCRIPTPLAYER {
     char unknown_0x39[3];               // 0x39 - trailing bytes, never referenced by any function seen so far
 } SCRIPTPLAYER;
 
-static_assert(sizeof(SCRIPTPLAYER) == 60, "SCRIPTPLAYER should be 60 bytes (confirmed via Ghidra)");
-static_assert(offsetof(SCRIPTPLAYER, scriptInfos) == 0xc, "Bad offset of scriptInfos");
-static_assert(offsetof(SCRIPTPLAYER, scriptHashcodes) == 0x1c, "Bad offset of scriptHashcodes");
-static_assert(offsetof(SCRIPTPLAYER, scriptPlayModes) == 0x26, "Bad offset of scriptPlayModes");
-static_assert(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScript");
-static_assert(offsetof(SCRIPTPLAYER, triggerMask) == 0x2e, "Bad offset of triggerMask");
-static_assert(offsetof(SCRIPTPLAYER, someSwitchChannel) == 0x30, "Bad offset of someSwitchChannel");
-static_assert(offsetof(SCRIPTPLAYER, someCountdown) == 0x34, "Bad offset of someCountdown");
+LAYOUT_32(sizeof(SCRIPTPLAYER) == 60, "SCRIPTPLAYER should be 60 bytes (confirmed via Ghidra)");
+LAYOUT_32(offsetof(SCRIPTPLAYER, scriptInfos) == 0xc, "Bad offset of scriptInfos");
+LAYOUT_32(offsetof(SCRIPTPLAYER, scriptHashcodes) == 0x1c, "Bad offset of scriptHashcodes");
+LAYOUT_32(offsetof(SCRIPTPLAYER, scriptPlayModes) == 0x26, "Bad offset of scriptPlayModes");
+LAYOUT_32(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScript");
+LAYOUT_32(offsetof(SCRIPTPLAYER, triggerMask) == 0x2e, "Bad offset of triggerMask");
+LAYOUT_32(offsetof(SCRIPTPLAYER, someSwitchChannel) == 0x30, "Bad offset of someSwitchChannel");
+LAYOUT_32(offsetof(SCRIPTPLAYER, someCountdown) == 0x34, "Bad offset of someCountdown");
 
 #pragma pack(pop)
 

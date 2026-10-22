@@ -2,6 +2,7 @@
 #define SUB_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 typedef struct light_tag light_tag;
 
@@ -28,7 +29,7 @@ typedef struct SubInfo {
 } SubInfo;
 #pragma pack(pop)
 
-static_assert(sizeof(SubInfo) == 0x44, "SubInfo is 0x44 bytes");
+LAYOUT_32(sizeof(SubInfo) == 0x44, "SubInfo is 0x44 bytes");
 
 obj_tag * Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Sub_Update(obj_tag *obj);

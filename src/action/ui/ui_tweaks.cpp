@@ -36,7 +36,7 @@ extern float Plr_DMod_Hard;
 
 // Moving the cursor picks the level, selecting it loads it; the list starts on the level being played
 // AUTOINJECT
-bool C_LBPMMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_LBPMMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_Scroll:
             GameState.ReloadMenupage = P_START;
@@ -50,7 +50,7 @@ bool C_LBPMMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             MenuManager_Delete(managerNum);
             break;
         case MessageType_ControlCreated:
-            __Menu_SendMessage(control, MessageType_AddItem, (int)"Main Menu", HT_Level_Menu_Pre);
+            __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)"Main Menu", HT_Level_Menu_Pre);
             __Menu_SendMessage(control, MessageType_SelectItemByValue, GameState.CurrentLevelHashcode, 0);
             break;
     }
@@ -138,7 +138,7 @@ static void Tweak_Store(uchar managerNum, const TWEAK *tweak) {
 
 // The drones' damage and armour, and the player's damage modifiers. A saves them, Y goes on to P_TWEAKS2.
 // AUTOINJECT
-bool P_TWEAKS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_TWEAKS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_PageEnter:
             LABEL_SET_TEXT(managerNum, SUB_P_TWEAKS_HINT_TEXT, "~A Save changes ~Y More tweaks ~B Back");
@@ -167,7 +167,7 @@ bool P_TWEAKS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 
 // The drones' firing
 // AUTOINJECT
-bool P_TWEAKS2_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_TWEAKS2_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_PageEnter:
             LABEL_SET_TEXT(managerNum, SUB_P_TWEAKS2_HINT_TEXT, "~A Save changes  ~B Back");
@@ -203,7 +203,7 @@ SCRIPTINFO *nis_script;
 uint8_t nis_by_select;
 
 // AUTOINJECT
-bool P_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageUpdate && nis_script != NULL) {
         Script_Update(nis_script);
         control_movement_object_handler(0);
@@ -295,11 +295,11 @@ static const struct { const char *name; HASHCODE script; } nis_scenes[] = {
 // The list of scenes. A or Y plays the one picked, when none is playing: its file is loaded if it must be, and the
 // player and the camera are handed to it.
 // AUTOINJECT
-bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ControlCreated:
             for (int i = 0; i < ARRAY_SIZE(nis_scenes); i++)
-                __Menu_SendMessage(control, MessageType_AddItem, (int)nis_scenes[i].name, nis_scenes[i].script);
+                __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)nis_scenes[i].name, nis_scenes[i].script);
             nis_script = NULL;
             return true;
         case MessageType_Select:
@@ -342,7 +342,7 @@ uint cheat_medal;    // nothing reads it
 // The list's choice: switch channel 99 (item 0), or channel 100 with a medal (items 1 to 5: 999, then 1 to 4), each
 // with the frame it was set; the menu closes
 // AUTOINJECT
-bool P_CHEATMEDAL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CHEATMEDAL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         __Menu_SendMessage(CONTROL_GET(managerNum, SUB_P_CHEATMEDAL_LIST), MessageType_ClearItems, 0, 0);
     }

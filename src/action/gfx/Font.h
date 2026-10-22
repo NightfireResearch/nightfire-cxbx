@@ -2,6 +2,7 @@
 #define ACTION_GFX_FONT_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 #include "Sprite.h"
 
 // The game's fonts (PS2: font.cpp): measuring, word-wrapping and drawing text in the screen-space sprite list.
@@ -34,7 +35,7 @@ typedef struct CHARDATA_tag {
     ushort code;        // 0x14
     ushort pad;
 } CHARDATA_tag;
-static_assert(sizeof(CHARDATA_tag) == 0x18, "CHARDATA_tag is 0x18 bytes");
+LAYOUT_32(sizeof(CHARDATA_tag) == 0x18, "CHARDATA_tag is 0x18 bytes");
 
 typedef struct FONT_tag {
     uint kernCount;
@@ -46,14 +47,14 @@ typedef struct FONT_tag {
     float lineGap;          // 0x14
     float space;            // 0x18 the width of a space, before x 1.25
 } FONT_tag;
-static_assert(sizeof(FONT_tag) == 0x1c, "FONT_tag is 0x1c bytes");
+LAYOUT_32(sizeof(FONT_tag) == 0x1c, "FONT_tag is 0x1c bytes");
 extern FONT_tag *Font;   // the font in use (Font.cpp)
 
 typedef struct FONTTABLE_tag {
     HASHCODE texture;
     FONT_tag *font;
 } FONTTABLE_tag;
-static_assert(sizeof(FONTTABLE_tag) == 8, "FONTTABLE_tag is 8 bytes");
+LAYOUT_32(sizeof(FONTTABLE_tag) == 8, "FONTTABLE_tag is 8 bytes");
 
 // A button symbol, "~X" in a text
 typedef struct SPECIALCHAR_tag {
@@ -87,7 +88,7 @@ typedef struct PRINTINFO_tag {
     ushort unknown3c;
     ushort pad;
 } PRINTINFO_tag;
-static_assert(sizeof(PRINTINFO_tag) == 0x40, "PRINTINFO_tag is 0x40 bytes");
+LAYOUT_32(sizeof(PRINTINFO_tag) == 0x40, "PRINTINFO_tag is 0x40 bytes");
 #pragma pack(pop)
 
 // The flags of a draw: Font_ParseFormat's alignment in the low byte

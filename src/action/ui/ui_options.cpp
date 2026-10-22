@@ -83,12 +83,12 @@ void Menu_UpdateControllerLabelString(uchar managerNum, const char *button, Acti
                                       const char *button2, Action_TranslatedText line2) {
     char *text = style_list_text[style_list_next++];
     sprintf(text, "%s %s", button, Txt_BindLabel(line, 0));
-    uchar row = (uchar)__Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_AddItem, (int)text, 0);
+    uchar row = (uchar)__Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_AddItem, (intptr_t)text, 0);
     if (button2 == NULL)
         return;
     text = style_list_text[style_list_next++];
     sprintf(text, "%s %s", button2, Txt_BindLabel(line2, 0));
-    __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ListSetCellText, row << 16 | 1, (int)text);
+    __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ListSetCellText, row << 16 | 1, (intptr_t)text);
 }
 
 // The line under ~C of styles 3 and 5 is their ~D line too
@@ -128,7 +128,7 @@ uint8_t controls_inverted;
 #define SUB_P_CNCONTROLS_INVERTED_TEXT ((HASHCODE)0x100000c9)
 
 // AUTOINJECT
-bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_PageEnter)
         return true;
     RADIO_CLEAR(managerNum, C_RBCONTROL);
@@ -142,7 +142,7 @@ bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 }
 
 // AUTOINJECT
-bool C_RBCONTROL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBCONTROL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_Scroll:
             Menu_DisplayControllerStyle(managerNum, RADIO_GET_VALUE_OF(control));
@@ -195,7 +195,7 @@ static void Option_Fill(uchar managerNum, const OPTION_RADIO *option, int value)
 // The game options: vibration, auto-aim, crosshairs, crouch and aim (toggle or hold), switching to a better weapon,
 // the flashing of objects (2 for on), and the HUD (0 for on)
 // AUTOINJECT
-bool P_CNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         for (int i = 0; i < ARRAY_SIZE(game_options); i++)
             Option_Fill(managerNum, &game_options[i], PlayerInputs[0].*game_options[i].setting);
@@ -220,7 +220,7 @@ static const struct { const char *text; int value; } handicaps[8] = {
 
 // The multiplayer options: an on/off setting, the handicap, auto-aim
 // AUTOINJECT
-bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_RADIO_128);
         RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADIO_128, MP_ON, 1);
@@ -228,7 +228,7 @@ bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADIO_128, MPSettings.Player[0].SomeField2);
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_HANDICAP);
         for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
-            __Menu_Send(managerNum, SUB_P_CNMPOPTIONS_HANDICAP, MessageType_AddItem, (int)handicaps[i].text,
+            __Menu_Send(managerNum, SUB_P_CNMPOPTIONS_HANDICAP, MessageType_AddItem, (intptr_t)handicaps[i].text,
                         handicaps[i].value);
         RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_HANDICAP, MPSettings.Player[0].HealthModifier);
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_AUTOAIM);
@@ -270,7 +270,7 @@ uint8_t av_leaving;
 // The sound and picture options: the volumes (heard as they change), subtitles, the split screen's layout, and
 // buttons to the screen adjustment, the credits, the trailer and the defaults
 // AUTOINJECT
-bool P_CNAVOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNAVOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         av_leaving = 0;

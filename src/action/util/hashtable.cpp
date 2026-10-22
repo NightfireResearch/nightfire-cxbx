@@ -115,7 +115,7 @@ void hashtable_deleteitem(HASHCODE hashcode) {
     hashtable_entry *entry = _hashtable_getentry(hashcode);
 
     m_nhti--;
-    uint index = entry - t_hashtable;
+    uint index = (uint)(entry - t_hashtable);
     memmove(entry, entry + 1, (m_nhti - index) * sizeof(hashtable_entry));
 
     ResetTypeRanges();

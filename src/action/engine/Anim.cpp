@@ -606,7 +606,7 @@ void _AnimProcessSkinData(HASHCODE hashcode) {
         AnimData_AlignTo4();
 
         // The hashcodes are replaced in place by their celglists: discreteObj[i] is the dword just read
-        skin->discreteObj = (celglist_tag **)pAnimData;
+        skin->discreteObj = (Ptr32<celglist_tag> *)pAnimData;
         for (uint i = 0; i < skin->numDiscrete; i++) {
             HASHCODE hc = (HASHCODE)AnimData_ReadU32();
             skin->discreteObj[i] = (hc == (HASHCODE)0xffffffff) ? NULL : hashtable_hashcode_to_celglist(hc);
@@ -617,7 +617,7 @@ void _AnimProcessSkinData(HASHCODE hashcode) {
         AnimData_AlignTo4();
 
         // Converted in place like discreteObj
-        skin->riggedBody = (celglist_tag **)pAnimData;
+        skin->riggedBody = (Ptr32<celglist_tag> *)pAnimData;
         for (uint i = 0; i < skin->numRigged; i++) {
             HASHCODE hc = (HASHCODE)AnimData_ReadU32();
             celglist_tag *body;

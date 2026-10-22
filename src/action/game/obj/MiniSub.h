@@ -2,6 +2,7 @@
 #define MINISUB_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "../../engine/AINetwork.h"
 
 #pragma pack(push, 1)
@@ -37,8 +38,8 @@ typedef struct MiniSubInfo {
 } MiniSubInfo;
 #pragma pack(pop)
 
-static_assert(sizeof(MiniSubInfo) == 0x264, "MiniSubInfo is 0x264 bytes");
-static_assert(offsetof(MiniSubInfo, route) == 0x1c0, "Bad offset of MiniSubInfo.route");
+LAYOUT_32(sizeof(MiniSubInfo) == 0x264, "MiniSubInfo is 0x264 bytes");
+LAYOUT_32(offsetof(MiniSubInfo, route) == 0x1c0, "Bad offset of MiniSubInfo.route");
 
 obj_tag * MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
 void MiniSub_Update(obj_tag *obj);

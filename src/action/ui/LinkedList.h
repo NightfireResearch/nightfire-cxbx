@@ -2,6 +2,7 @@
 #define UI_LINKEDLIST_H
 
 #include <stddef.h>
+#include "../../common/xbeClass.h"
 
 // The menus' linked lists (LinkedList_*; not the engine's LList). The head, the tail and each element's links point at
 // an element's link, 'offset' words into it: the link's first word is the next element's link, its second the
@@ -14,7 +15,7 @@ typedef struct LINKEDLIST {
     unsigned int offset; // 0x0c of the link in its element, in words
 } LINKEDLIST;
 #pragma pack(pop)
-static_assert(sizeof(LINKEDLIST) == 0x10, "LINKEDLIST is 0x10 bytes");
+LAYOUT_32(sizeof(LINKEDLIST) == 0x10, "LINKEDLIST is 0x10 bytes");
 
 inline void *LinkedList_First(LINKEDLIST *list) {
     return list->head != NULL ? (char *)list->head - list->offset * 4 : NULL;

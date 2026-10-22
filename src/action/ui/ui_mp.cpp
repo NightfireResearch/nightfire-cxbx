@@ -149,7 +149,7 @@ M_ITEM mp_bots[17] = {
 };
 
 // AUTOINJECT
-bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
 
     switch((MessageType)message) {
         case MessageType_PageEnter: {
@@ -169,7 +169,7 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint messa
 extern char menu_unlock_everything;
 
 // AUTOINJECT
-bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
   
     MessageType event = (MessageType)message;
 
@@ -198,7 +198,7 @@ bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint mes
 }
 
 // AUTOINJECT
-bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
   
     switch(message) {
         case MessageType_PageEnter: {
@@ -223,7 +223,7 @@ bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, ui
 
 
 // AUTOINJECT
-bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
   
     switch(message) {
         case MessageType_PageEnter: {
@@ -286,7 +286,7 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 #define enviromods_explosive_scenery_unlocked mp_explosive_scenery_unlocked
 
 // AUTOINJECT
-bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
+bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
   
     switch(message) {
         case MessageType_PageEnter: {
@@ -349,7 +349,7 @@ uint8_t mp_editing_bot;  // the bot P_MPBOTCHOOSE / P_MPBOTSETUP are editing
 static char mp_bot_playing_text[0x40]; // "Playing : Yes"
 
 // AUTOINJECT
-bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         M_CONTROL *wheel = CONTROL_GET(managerNum, C_SBMPOPTIONS);
         if ((HASHCODE)arg2 == P_MPSETUP) {
@@ -367,7 +367,7 @@ bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 }
 
 // AUTOINJECT
-bool P_MPBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter || message == MessageType_PageResume) {
         Menu_StartIris((HASHCODE)arg2 == P_MPOPTIONS ? 0 : 4, managerNum, SUB_C_SBBOTS_IRIS);
         __Menu_Send(managerNum, C_SBBOTS, MessageType_SetValue, mp_editing_bot + 1, 0);
@@ -378,7 +378,7 @@ bool P_MPBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 }
 
 // AUTOINJECT
-bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet: {
@@ -391,7 +391,7 @@ bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
             const MPBOT *bot = &mpbots.bot[item - 1];
             sprintf(mp_bot_playing_text, "%s : %s", Txt_BindLabel(MP_BOT_PLAYING, 0), Txt_BindLabel(bot->isPlaying ? TXT_YES : TXT_NO, 0));
             __Menu_Send(managerNum, SUB_C_SBBOTS_PLAYING_TEXT, MessageType_SetState, CONTROL_STATE_INERT, 0);
-            __Menu_Send(managerNum, SUB_C_SBBOTS_PLAYING_TEXT, MessageType_SetText, (int)mp_bot_playing_text, 0);
+            __Menu_Send(managerNum, SUB_C_SBBOTS_PLAYING_TEXT, MessageType_SetText, (intptr_t)mp_bot_playing_text, 0);
             mp_bots[item].iconHashcode = Menu_GetItemFromHash(mp_characters, (uchar)bot->SkinNum, ARRAY_SIZE(mp_characters))->iconHashcode;
         }
         Menu_UpdateWheel(managerNum, control, mp_bots, SUB_C_SBBOTS_WHEEL_TEXT, SUB_C_SBBOTS_ICON, (HASHCODE)0,
@@ -431,7 +431,7 @@ static bool IsBondSkin(int skin) {
 }
 
 // AUTOINJECT
-bool P_MPBOTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPBOTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         Menu_UnlockMPSkins(0xff);
         Menu_StartIris((HASHCODE)arg2 == P_MPBOTS ? 0 : 4, managerNum, SUB_C_SBMPBTCHOOSE_IRIS);
@@ -459,7 +459,7 @@ static void TakeDefaultStats(M_CONTROL *wheel) {
 }
 
 // AUTOINJECT
-bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Scroll) {
         mpbots.bot[mp_editing_bot].statsEdited = 0;
         TakeDefaultStats(control);
@@ -499,13 +499,13 @@ static const struct { const char *text; int value; } bot_stat_values[] = {
 static void AddStatValues(uchar managerNum, HASHCODE radio, int count) {
     RADIO_CLEAR(managerNum, radio);
     for (int i = 0; i < count; i++)
-        __Menu_Send(managerNum, radio, MessageType_AddItem, (int)bot_stat_values[i].text, bot_stat_values[i].value);
+        __Menu_Send(managerNum, radio, MessageType_AddItem, (intptr_t)bot_stat_values[i].text, bot_stat_values[i].value);
 }
 
 // The editing bot's setup: whether it plays and, for the characters below 15, its stats (the others' are fixed).
 // A keeps them and goes back to the bot wheel.
 // AUTOINJECT
-bool P_MPBOTSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPBOTSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     static const HASHCODE stat_radios[] = { SUB_P_MPBOTSETUP_SPEED_SCROLL, SUB_P_MPBOTSETUP_ACCURACY_SCROLL,
         SUB_P_MPBOTSETUP_AGGRESSION_SCROLL, SUB_P_MPBOTSETUP_HEALTH_SCROLL, SUB_P_MPBOTSETUP_PERSONALITY_SCROLL,
         SUB_P_MPBOTSETUP_REACTION_SCROLL, SUB_P_MPBOTSETUP_RECOVER_SCROLL };
@@ -597,7 +597,7 @@ bool P_MPBOTSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
         AddStatValues(managerNum, SUB_P_MPBOTSETUP_RECOVER_SCROLL, 7);
         RADIO_SELECT_ITEM(managerNum, SUB_P_MPBOTSETUP_RECOVER_SCROLL, mpbots.bot[mp_editing_bot].stats.recover);
     } else if (message == MessageType_PageUpdate && (uchar)mpbots.bot[mp_editing_bot].SkinNum >= 15) {
-        __Menu_Send(managerNum, SUB_P_MPBOTSETUP_INFO_TEXT, MessageType_SetText, (int)Txt_BindLabel(BOT_STATS_FIXED, 0), 0);
+        __Menu_Send(managerNum, SUB_P_MPBOTSETUP_INFO_TEXT, MessageType_SetText, (intptr_t)Txt_BindLabel(BOT_STATS_FIXED, 0), 0);
     }
     return true;
 }
@@ -650,7 +650,7 @@ void __stdcall Menu_PrepareBots(void) {
 }
 
 // AUTOINJECT
-bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -709,7 +709,7 @@ bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
 }
 
 // AUTOINJECT
-bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -818,7 +818,7 @@ ulonglong Menu_GetMPSkins(int managerNum, byte agent, char taken) {
             if (IsBondSkin((int)mp_characters_small[i].identifier) && mp_bond_bot_taken != 0 && mp_bond_bot_taken != agent + 1)
                 continue;
         }
-        __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(mp_characters_small[i].title, 0), mp_characters_small[i].identifier);
+        __Menu_SendMessage(radio, MessageType_AddItem, (intptr_t)Txt_BindLabel(mp_characters_small[i].title, 0), mp_characters_small[i].identifier);
     }
     return (uint)__Menu_SendMessage(radio, MessageType_SelectIndex, 0, 0);
 }
@@ -879,7 +879,7 @@ static void RefreshCharacterChoices(uchar managerNum, uint except, bool taken) {
 }
 
 // AUTOINJECT
-bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uint agent = (uchar)control->id;
     MPJoinSlot *slot = &mp_join_slots[agent];
     bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
@@ -904,7 +904,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                 slot->team = (MPTeam)RADIO_GET_VALUE_OF(control);
             Menu_GetMPSkins(managerNum, (byte)agent, 0);
             __Menu_SendMessage(control, MessageType_SelectItemByValue, slot->skin, 0);
-            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
         } else if (mp_join_step[agent] == JOIN_CHOOSE_CHARACTER) {
             mp_join_step[agent] = JOIN_CHOOSE_HANDICAP;
@@ -916,9 +916,9 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                 mp_bond_bot_taken = (uchar)(agent + 1);
             __Menu_SendMessage(control, MessageType_ClearItems, 0, 0);
             for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
-                __Menu_SendMessage(control, MessageType_AddItem, (int)handicaps[i].text, handicaps[i].value);
+                __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)handicaps[i].text, handicaps[i].value);
             __Menu_SendMessage(control, MessageType_SelectItemByValue, MPSettings.Player[agent].HealthModifier, 0);
-            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (int)Txt_BindLabel(CFG_HEALTH_HANDICAP, 0), 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_HEALTH_HANDICAP, 0), 0);
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetIcon, ICON_MP_HANDICAP, 0);
             RefreshCharacterChoices(managerNum, agent, true);
         } else if (mp_join_step[agent] == JOIN_CHOOSE_HANDICAP) {
@@ -926,7 +926,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             mp_join_step[agent] = JOIN_READY;
             Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPFINISH, agent);
             M_CONTROL *finish = (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPFINISH, agent, MessageType_GetControl, 0, 0);
-            __Menu_SendMessage(finish, MessageType_SetText, (int)Txt_BindLabel(CFG_PLAYER_READY, 0), 0);
+            __Menu_SendMessage(finish, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_PLAYER_READY, 0), 0);
             slot->ready = 1;
             if ((uchar)Menu_AllJoinedPlayersReady())
                 __Menu_SendMessage((M_CONTROL *)&manager[managerNum], MessageType_GoPage, P_MPOPTIONS, 0);
@@ -946,16 +946,16 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             if (!teams)
                 break;
             __Menu_SendMessage(control, MessageType_ClearItems, 0, 0);
-            __Menu_SendMessage(control, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_PHOENIX, 0), PHOENIX);
-            __Menu_SendMessage(control, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_MI6, 0), MI6);
+            __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)Txt_BindLabel(MP_TEAM_PHOENIX, 0), PHOENIX);
+            __Menu_SendMessage(control, MessageType_AddItem, (intptr_t)Txt_BindLabel(MP_TEAM_MI6, 0), MI6);
             __Menu_SendMessage(control, MessageType_SelectItemByValue, slot->team, 0);
-            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (int)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
             ShowTeamIcon(managerNum, control, agent);
             mp_join_step[agent] = JOIN_CHOOSE_TEAM;
             *(int *)arg2 = -2;
         } else if (mp_join_step[agent] == JOIN_CHOOSE_HANDICAP) {
             mp_join_step[agent] = JOIN_CHOOSE_CHARACTER;
-            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+            __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
             Menu_GetMPSkins(managerNum, (byte)agent, 0);
             __Menu_SendMessage(control, MessageType_SelectItemByValue, slot->skin, 0);
@@ -1014,9 +1014,9 @@ void Menu_UpdateMPControllers(uchar managerNum, uchar player, char joinPage) {
                 mp_join_step[player] = JOIN_OUT;
                 Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, player);
                 __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetText,
-                              (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
+                              (intptr_t)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
                 __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetText,
-                              (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
+                              (intptr_t)Txt_BindLabel(PRESS_A_TO_JOIN, 0), 0);
             } else {
                 __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
                 __Menu_SendEx(managerNum, C_RBMPSETUP, player, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
@@ -1031,8 +1031,8 @@ void Menu_UpdateMPControllers(uchar managerNum, uchar player, char joinPage) {
     sprintf(mp_controller_text,
             Txt_BindLabel(mp_join_slots[player].joined ? MP_CONTROLLER_MISSING_JOINED : MP_CONTROLLER_MISSING, 0),
             player + 1);
-    __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetText, (int)mp_controller_text, 0);
-    __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetText, (int)mp_controller_text, 0);
+    __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetText, (intptr_t)mp_controller_text, 0);
+    __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetText, (intptr_t)mp_controller_text, 0);
     __Menu_SendEx(managerNum, C_RBMPSTART, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
     __Menu_SendEx(managerNum, C_RBMPFINISH, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
     __Menu_SendEx(managerNum, C_RBMPSETUP, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
@@ -1081,7 +1081,7 @@ static void FadeJoinPage(uchar managerNum, uint colour) {
 // ls.mpPlayer saying whose; ls.returnPageArg is used as a flag: the codenames lists are to be filled again once the
 // listing is over.
 // AUTOINJECT
-bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_PageEnter:
         ls.returnPageArg = 0;
@@ -1113,7 +1113,7 @@ bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
             for (int i = 0; i < NUM_PLAYERS; i++)
                 PlayerInputs[i].controllerPort = (char)i;
             __Menu_Send(managerNum, SUB_C_RBMPSETUP_TITLE, MessageType_SetText,
-                        (int)Txt_BindLabel(MP_PROMPT_START_GAME, 0), 0);
+                        (intptr_t)Txt_BindLabel(MP_PROMPT_START_GAME, 0), 0);
         }
         mp_join_slots[0].team = MI6;
         mp_join_slots[2].team = MI6;
@@ -1183,7 +1183,7 @@ bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 // A player's first box on the join page: A joins (a codename is chosen next) or, once the codename is loaded, says
 // the player is ready. B on a ready player goes back to the codenames.
 // AUTOINJECT
-bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uchar player = (uchar)control->id;
     MPJoinSlot *slot = &mp_join_slots[player];
     switch (message) {
@@ -1196,9 +1196,9 @@ bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         if (mp_join_step[player] == JOIN_OUT) {
             slot->joined = 0;
-            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_TO_JOIN, 0), player);
+            __Menu_SendMessage(control, MessageType_SetText, (intptr_t)Txt_BindLabel(PRESS_A_TO_JOIN, 0), player);
         } else if (mp_join_step[player] == JOIN_READY) {
-            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_WHEN_READY, 0), player);
+            __Menu_SendMessage(control, MessageType_SetText, (intptr_t)Txt_BindLabel(PRESS_A_WHEN_READY, 0), player);
         }
         break;
 
@@ -1212,7 +1212,7 @@ bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             slot->ready = 0;
             mp_join_step[player] = JOIN_CHOOSE_CODENAME;
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetText,
-                          (int)Txt_BindLabel(CFG_CHOOSE_CODENAME, 0), 0);
+                          (intptr_t)Txt_BindLabel(CFG_CHOOSE_CODENAME, 0), 0);
             Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPCNAME, player);
             M_CONTROL *codenames =
                 (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_GetControl, 0, 0);
@@ -1222,7 +1222,7 @@ bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetIcon, ICON_MP_CODENAME, 0);
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, player, MessageType_SetIconRect, 0, 0x7f003f);
         } else if (mp_join_step[player] == JOIN_READY) {
-            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(CFG_PLAYER_READY, 0), 0);
+            __Menu_SendMessage(control, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_PLAYER_READY, 0), 0);
             Menu_MPFadeWhenReady(control);
             slot->ready = 1;
         }
@@ -1245,7 +1245,7 @@ bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // A player's codenames on the join page: a default one is applied at once, a saved one loaded (P_MPJOIN hears when
 // it is). The player is named after the codename, or "Player <n>" for a default.
 // AUTOINJECT
-bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uchar player = (uchar)control->id;
     switch (message) {
     case MessageType_QueryBack:
@@ -1297,7 +1297,7 @@ bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // The agents' setup: each joined agent's radio (C_RBMPSETUP) starts at the team (team games) or the character. The
 // players' claims on the one-per-game characters are dropped, the bots' (10 and up) kept.
 // AUTOINJECT
-bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         if (mp_good_bot_taken < 10)
             mp_good_bot_taken = 0;
@@ -1312,15 +1312,15 @@ bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
                 mp_join_step[agent] = JOIN_CHOOSE_TEAM;
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
-                              (int)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
+                              (intptr_t)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
                 __Menu_SendMessage(radio, MessageType_ClearItems, 0, 0);
-                __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_PHOENIX, 0), PHOENIX);
-                __Menu_SendMessage(radio, MessageType_AddItem, (int)Txt_BindLabel(MP_TEAM_MI6, 0), MI6);
+                __Menu_SendMessage(radio, MessageType_AddItem, (intptr_t)Txt_BindLabel(MP_TEAM_PHOENIX, 0), PHOENIX);
+                __Menu_SendMessage(radio, MessageType_AddItem, (intptr_t)Txt_BindLabel(MP_TEAM_MI6, 0), MI6);
                 __Menu_SendMessage(radio, MessageType_SelectItemByValue, slot->team, 0);
             } else {
                 mp_join_step[agent] = JOIN_CHOOSE_CHARACTER;
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
-                              (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+                              (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
                 if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK)
                     slot->team = MI6;
                 else
@@ -1328,7 +1328,7 @@ bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                 Menu_GetMPSkins(managerNum, (byte)agent, 0);
                 __Menu_SendMessage(radio, MessageType_SelectItemByValue, slot->skin, 0);
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
-                              (int)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
+                              (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
             }
             if (!slot->joined) {
@@ -1351,7 +1351,7 @@ bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 // A ready agent's box on the setup page. B goes back to the handicap, whose choices go to the title's control
 // rather than the radio.
 // AUTOINJECT
-bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uchar agent = (uchar)control->id;
     switch (message) {
     case MessageType_PlayerFocusGained:
@@ -1362,7 +1362,7 @@ bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
         __Menu_SendEx(managerNum, C_RBMPSETUP, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         if (mp_join_step[agent] == JOIN_READY)
-            __Menu_SendMessage(control, MessageType_SetText, (int)Txt_BindLabel(PRESS_A_WHEN_READY, 0), agent);
+            __Menu_SendMessage(control, MessageType_SetText, (intptr_t)Txt_BindLabel(PRESS_A_WHEN_READY, 0), agent);
         break;
 
     case MessageType_PlayerFocusLost:
@@ -1378,7 +1378,7 @@ bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
             (M_CONTROL *)__Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_GetControl, 0, 0);
         __Menu_SendMessage(title, MessageType_ClearItems, 0, 0);
         for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
-            __Menu_SendMessage(title, MessageType_AddItem, (int)handicaps[i].text, handicaps[i].value);
+            __Menu_SendMessage(title, MessageType_AddItem, (intptr_t)handicaps[i].text, handicaps[i].value);
         __Menu_SendMessage(title, MessageType_SelectItemByValue, MPSettings.Player[agent].HealthModifier, 0);
         __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
         *(int *)arg2 = -2;
@@ -1402,21 +1402,21 @@ static const struct { const char *text; int value; } mp_rule_points[] = {
 };
 
 // AUTOINJECT
-bool P_MPRULES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPRULES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_ClearItems, 0, 0);
         for (int i = 0; i < ARRAY_SIZE(mp_rule_durations); i++)
-            __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (int)mp_rule_durations[i].text,
+            __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (intptr_t)mp_rule_durations[i].text,
                         mp_rule_durations[i].value);
-        __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (int)Txt_BindLabel(CFG_UNLIMITED, 0), -1);
+        __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_AddItem, (intptr_t)Txt_BindLabel(CFG_UNLIMITED, 0), -1);
         __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_SelectItemByValue, MPSettings.MaxDuration, 0);
         __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_ClearItems, 0, 0);
         for (int i = 0; i < ARRAY_SIZE(mp_rule_points); i++)
-            __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_AddItem, (int)mp_rule_points[i].text,
+            __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_AddItem, (intptr_t)mp_rule_points[i].text,
                         mp_rule_points[i].value);
         __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SelectItemByValue, MPSettings.MaxPoints, 0);
         Action_TranslatedText title = MPSettings.GameMode == GM_TOPAGENT ? MP_RULES_LIVES : MP_RULES_POINTS;
-        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SetText, (int)Txt_BindLabel(title, 0), -1);
+        __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SetText, (intptr_t)Txt_BindLabel(title, 0), -1);
         __Menu_Send(managerNum, SUB_P_MPRULES_POINTS, MessageType_SelectItemByValue, MPSettings.MaxPoints, 0);
     } else if (message == MessageType_Select) {
         MPSettings.MaxDuration = __Menu_Send(managerNum, SUB_P_MPRULES_DURATION, MessageType_GetSelectedItemValue, 0, 0);
@@ -1482,7 +1482,7 @@ static const char *DebriefNumber(int value) {
 
 // The debriefing after a match: the players and bots by score, four rows, and who won.
 // AUTOINJECT
-bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_PageEnter)
         return true;
 
@@ -1523,7 +1523,7 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
     for (int i = 0; i < MPSettings.numPlayersAndBots; i++) {
         if (i > 0 && entry[i * 2] != entry[i * 2 - 2])
             shown = i;
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_PLACE, i, MessageType_SetText, (int)Txt_BindLabel((Action_TranslatedText)place[shown], 0), 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_PLACE, i, MessageType_SetText, (intptr_t)Txt_BindLabel((Action_TranslatedText)place[shown], 0), 0);
     }
 
     static const HASHCODE row_controls[] = { SUB_P_MPDEBRIEFING_PLACE, SUB_P_MPDEBRIEFING_ICON, SUB_P_MPDEBRIEFING_NAME,
@@ -1544,14 +1544,14 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
         if (character != NULL)
             __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_ICON, row, MessageType_SetIcon, character->iconHashcode, 0);
         const char *name = who < NUM_PLAYERS ? MPSettings.Player[who].Name : Menu_GetBotShortName((BotNum)MPSettings.Player[who].SkinNum);
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_NAME, row, MessageType_SetText, (int)name, 0);
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_POINTS, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].points), 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_NAME, row, MessageType_SetText, (intptr_t)name, 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_POINTS, row, MessageType_SetText, (intptr_t)DebriefNumber((int)MPGame.players[who].points), 0);
         mp_debrief_text_count++;
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_VICTORIES, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].victories), 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_VICTORIES, row, MessageType_SetText, (intptr_t)DebriefNumber((int)MPGame.players[who].victories), 0);
         mp_debrief_text_count++;
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_DEATHS, row, MessageType_SetText, (int)DebriefNumber((int)MPGame.players[who].deaths), 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_DEATHS, row, MessageType_SetText, (intptr_t)DebriefNumber((int)MPGame.players[who].deaths), 0);
         mp_debrief_text_count++;
-        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_TOTAL, row, MessageType_SetText, (int)DebriefNumber((int)Menu_GetMPScore((byte)entry[row * 2 + 1])), 0);
+        __Menu_SendEx(managerNum, SUB_P_MPDEBRIEFING_TOTAL, row, MessageType_SetText, (intptr_t)DebriefNumber((int)Menu_GetMPScore((byte)entry[row * 2 + 1])), 0);
         mp_debrief_text_count++;
     }
 
@@ -1572,7 +1572,7 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
             sprintf(mp_debrief_result, Txt_BindLabel(MP_X_WINS_THE_MATCH, 0), MPSettings.Player[entry[1]].Name);
         result = mp_debrief_result;
     }
-    __Menu_Send(managerNum, SUB_P_MPDEBRIEFING_RESULT, MessageType_SetText, (int)result, 0);
+    __Menu_Send(managerNum, SUB_P_MPDEBRIEFING_RESULT, MessageType_SetText, (intptr_t)result, 0);
     return true;
 }
 
@@ -1627,7 +1627,7 @@ void __stdcall Menu_RestoreMPSettings(void) {
 // The debriefing's player rows: Select goes back to the scenario page with the match's settings; AltSelect1 plays
 // the same match again
 // AUTOINJECT
-bool C_MPDBG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_MPDBG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         Menu_RestoreMPSettings();
         Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, 1);
@@ -1664,7 +1664,7 @@ static Action_TranslatedText WeaponSetName(WeaponSet set) {
 
 // The last page before a multiplayer match: who is playing, on which side, and the rules. A starts it.
 // AUTOINJECT
-bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         // The joined controllers become players 0, 1... in order: each one's controls setup and name move down to
         // its player number, and its join slot is copied beside it. (As the original, a moved controller's port
@@ -1735,7 +1735,7 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     }
     bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
     // column headings: "MI6" and (shown) "Phoenix" from the menu data, or one column of everyone "Playing"
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_1, MessageType_SetText, (int)Txt_BindLabel(teams ? MP_TEAM_MI6 : MP_BOT_PLAYING, 0), 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_1, MessageType_SetText, (intptr_t)Txt_BindLabel(teams ? MP_TEAM_MI6 : MP_BOT_PLAYING, 0), 0);
     __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_2, MessageType_SetState, teams ? CONTROL_STATE_INERT : CONTROL_STATE_HIDDEN, 0);
 
     for (int i = 0; i < NUM_PLAYERS; i++) {
@@ -1752,11 +1752,11 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             row = mp_confirm_phoenix_players++;
         }
         __Menu_SendEx(managerNum, name, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
-        __Menu_SendEx(managerNum, name, row, MessageType_SetText, (int)MPSettings.Player[i].Name, 0);
+        __Menu_SendEx(managerNum, name, row, MessageType_SetText, (intptr_t)MPSettings.Player[i].Name, 0);
         __Menu_SendEx(managerNum, handicap, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
         int h = MPSettings.Player[i].HealthModifier;
         sprintf(mp_confirm_handicap_text[i], "%s%d", h >= 0 ? "+" : "", h);
-        __Menu_SendEx(managerNum, handicap, row, MessageType_SetText, (int)mp_confirm_handicap_text[i], 0);
+        __Menu_SendEx(managerNum, handicap, row, MessageType_SetText, (intptr_t)mp_confirm_handicap_text[i], 0);
         if (Menu_GetItemFromHash(mp_characters_small, slot->skin, ARRAY_SIZE(mp_characters_small)) != NULL) {
             __Menu_SendEx(managerNum, icon, row, MessageType_SetState, CONTROL_STATE_INERT, 0);
             __Menu_SendEx(managerNum, icon, row, MessageType_SetIcon, mp_characters_small[slot->skin].iconHashcode, 0);
@@ -1765,12 +1765,12 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
     M_ITEM *map = Menu_GetItemFromHash(mp_level, MPSettings.multiplayerLevelHashcode, ARRAY_SIZE(mp_level));
     ConfirmLine(mp_confirm_map_text, CFG_MAP, map != NULL ? map->title : TXT_NULL);
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_MAP, MessageType_SetText, (int)mp_confirm_map_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_MAP, MessageType_SetText, (intptr_t)mp_confirm_map_text, 0);
     M_ITEM *scenario = Menu_GetItemFromHash(mp_scenario, MPSettings.GameMode, ARRAY_SIZE(mp_scenario));
     ConfirmLine(mp_confirm_scenario_text, CFG_SCENARIO, scenario != NULL ? scenario->title : TXT_NULL);
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_SCENARIO, MessageType_SetText, (int)mp_confirm_scenario_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_SCENARIO, MessageType_SetText, (intptr_t)mp_confirm_scenario_text, 0);
     ConfirmLine(mp_confirm_weapons_text, CFG_WEAPON_SET, WeaponSetName(MPSettings.weaponSet));
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_WEAPONS, MessageType_SetText, (int)mp_confirm_weapons_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_WEAPONS, MessageType_SetText, (intptr_t)mp_confirm_weapons_text, 0);
 
     // Points (lives for Top Agent, minutes held for King of the Hill)
     if ((int)MPSettings.MaxPoints == MP_UNLIMITED) {
@@ -1784,14 +1784,14 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         sprintf(mp_confirm_points_text, "%s : %d", Txt_BindLabel(MPSettings.GameMode == GM_TOPAGENT ? CFG_LIVES : CFG_POINTS, 0),
                 (int)MPSettings.MaxPoints);
     }
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_POINTS, MessageType_SetText, (int)mp_confirm_points_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_POINTS, MessageType_SetText, (intptr_t)mp_confirm_points_text, 0);
     if ((int)MPSettings.MaxDuration == MP_UNLIMITED)
         ConfirmLine(mp_confirm_duration_text, CFG_DURATION, CFG_UNLIMITED);
     else
         sprintf(mp_confirm_duration_text, "%s : %d", Txt_BindLabel(CFG_DURATION, 0), (int)MPSettings.MaxDuration);
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_DURATION, MessageType_SetText, (int)mp_confirm_duration_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_DURATION, MessageType_SetText, (intptr_t)mp_confirm_duration_text, 0);
     ConfirmLine(mp_confirm_friendly_text, CFG_FRIENDLY_FIRE, MPSettings.FriendlyFire ? MP_ON : MP_OFF);
-    __Menu_Send(managerNum, SUB_P_MPCONFIRM_FRIENDLY_FIRE, MessageType_SetText, (int)mp_confirm_friendly_text, 0);
+    __Menu_Send(managerNum, SUB_P_MPCONFIRM_FRIENDLY_FIRE, MessageType_SetText, (intptr_t)mp_confirm_friendly_text, 0);
 
     for (uint row = 0; row < 10; row++) {
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_BOT, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);

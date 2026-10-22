@@ -88,7 +88,7 @@ static void Label_Refresh(M_LABEL *label) {
 }
 
 // AUTOINJECT
-int Label_SendMessage(M_LABEL *label, uint message, int arg1, int arg2) {
+intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScriptExitLoop:
             return Script_ExitLoop(&label->control);
@@ -178,7 +178,7 @@ int Label_SendMessage(M_LABEL *label, uint message, int arg1, int arg2) {
             label->alwaysHighlighted = (uchar)arg1;
             return 0;
         case MessageType_GetText:
-            return (int)label->text;
+            return (intptr_t)label->text;
         case MessageType_GetColour:
             return label->model.colourTint;
         case MessageType_GetHighlightColour:
@@ -186,7 +186,7 @@ int Label_SendMessage(M_LABEL *label, uint message, int arg1, int arg2) {
         case MessageType_GetNormalColour:
             return label->normalColour;
         case MessageType_GetControl:
-            return (int)label;
+            return (intptr_t)label;
         case MessageType_GetId:
             return label->control.id;
         case MessageType_GetIconSize:
@@ -315,13 +315,13 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
     if (mgr->takingInput && !mgr->inputLocked) {
         if (pressed == 1) {
             Menu_PlaySound(MENU_SFX_SELECT);
-            __Menu_SendMessage(label->control.parent, MessageType_Select, (int)label, 0);
+            __Menu_SendMessage(label->control.parent, MessageType_Select, (intptr_t)label, 0);
         } else if (pressed == 2) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_1);
-            __Menu_SendMessage(label->control.parent, MessageType_AltSelect1, (int)label, 0);
+            __Menu_SendMessage(label->control.parent, MessageType_AltSelect1, (intptr_t)label, 0);
         } else if (pressed == 3) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_2);
-            __Menu_SendMessage(label->control.parent, MessageType_AltSelect2, (int)label, 0);
+            __Menu_SendMessage(label->control.parent, MessageType_AltSelect2, (intptr_t)label, 0);
         }
     }
 

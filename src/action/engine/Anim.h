@@ -2,7 +2,9 @@
 #define ANIM_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 #include "Collide.h"    // HITDATA_tag
+#include "../../driving/platform/Ptr32.h"   // the anim files' pointer words
 
 #pragma pack(push, 1)
 
@@ -34,8 +36,8 @@ typedef struct AnimDatum {
 // Names from the Xbox Ghidra database (PS2 names in brackets; the PS2 struct is 0x40 bytes and laid out differently).
 typedef struct sAnimSkin_tag {
     HASHCODE hashcode;          // 0x00 written by AnimObjectNew, not at load
-    celglist_tag **riggedBody;  // 0x04 numRigged entries (riggedBodyList)
-    celglist_tag **discreteObj; // 0x08 numDiscrete entries (discreteObjList)
+    Ptr32<celglist_tag> *riggedBody;    // 0x04 numRigged entries in the file, its hashcodes made glists (riggedBodyList)
+    Ptr32<celglist_tag> *discreteObj;   // 0x08 numDiscrete entries, the same (discreteObjList)
     uchar *discreteBone;        // 0x0c numDiscrete bytes (glistToBoneLinkage)
     _VECTOR skinScale;          // 0x10
     AnimDatum *datums;          // 0x1c numDatums entries
@@ -170,9 +172,9 @@ static_assert(sizeof(AnimScriptStateMagicNumbers) == 4, "Compiler doing somethin
 // first three words. A track is a u32 head (its byte size | its first key word << 16), then key words
 // (frames << 6 | coefficient mask) taken from u32s low half first, each followed by its float coefficients.
 typedef struct sAnimRawSeq_tag {
-    uint *trackData;        // 0x00 - in the file: the file's hashcode
+    Ptr32<uint> trackData;  // 0x00 - in the file: the file's hashcode
     uint trackDataSize;     // 0x04
-    uint *cursor;           // 0x08
+    Ptr32<uint> cursor;     // 0x08
     uint flags;             // 0x0c - the low four bits are copied to sAnimSeq_tag::flags
     float boundSphere[4];   // 0x10
     float rootBox[6];       // 0x20
@@ -361,68 +363,68 @@ typedef struct COLLJOINT_tag {
 
 static_assert(sizeof(AnimCollBone) == 0x14, "Bad size for AnimCollBone");
 static_assert(sizeof(COLLJOINT_tag) == 0x4c, "Bad size for COLLJOINT_tag");
-static_assert(offsetof(AnimState, animObj) == 0x58, "Offset of animObj wrong");
-static_assert(offsetof(AnimState, animFlags) == 0x50, "Offset of animFlags wrong");
-static_assert(sizeof(AnimState) == 0xf0, "Bad size for AnimState");
-static_assert(sizeof(AnimObj) == 0x98, "Bad size for AnimObj");
-static_assert(offsetof(AnimObj, aimTarget) == 0x04, "Offset of aimTarget wrong");
-static_assert(offsetof(AnimObj, rootMotionCallback) == 0x18, "Offset of rootMotionCallback wrong");
-static_assert(offsetof(AnimObj, skin) == 0x1c, "Offset of skin wrong");
-static_assert(offsetof(AnimObj, firstScript) == 0x24, "Offset of firstScript wrong");
-static_assert(offsetof(AnimObj, sleeveGlist) == 0x30, "Offset of sleeveGlist wrong");
-static_assert(offsetof(AnimObj, pose) == 0x34, "Offset of pose wrong");
-static_assert(offsetof(AnimObj, boneMtxs) == 0x40, "Offset of boneMtxs wrong");
-static_assert(offsetof(AnimObj, discreteObj) == 0x48, "Offset of discreteObj wrong");
-static_assert(offsetof(AnimObj, flags) == 0x50, "Offset of flags wrong");
-static_assert(offsetof(AnimObj, rootHeight) == 0x54, "Offset of rootHeight wrong");
-static_assert(offsetof(AnimObj, distancePhase) == 0x64, "Offset of distancePhase wrong");
-static_assert(offsetof(AnimObj, aimRate) == 0x6c, "Offset of aimRate wrong");
-static_assert(offsetof(AnimObj, headTrackRange2) == 0x70, "Offset of headTrackRange2 wrong");
-static_assert(offsetof(AnimObj, aimRange2) == 0x74, "Offset of aimRange2 wrong");
-static_assert(offsetof(AnimObj, aimPitch) == 0x84, "Offset of aimPitch wrong");
-static_assert(offsetof(AnimObj, poseBufSize) == 0x88, "Offset of poseBufSize wrong");
-static_assert(offsetof(AnimObj, headTrackTargetBone) == 0x8c, "Offset of headTrackTargetBone wrong");
-static_assert(offsetof(AnimObj, aimTargetBone) == 0x8d, "Offset of aimTargetBone wrong");
-static_assert(offsetof(AnimObj, headTrackDelay) == 0x8e, "Offset of headTrackDelay wrong");
-static_assert(offsetof(AnimObj, facialState) == 0x91, "Offset of facialState wrong");
-static_assert(offsetof(AnimObj, lod) == 0x94, "Offset of lod wrong");
+LAYOUT_32(offsetof(AnimState, animObj) == 0x58, "Offset of animObj wrong");
+LAYOUT_32(offsetof(AnimState, animFlags) == 0x50, "Offset of animFlags wrong");
+LAYOUT_32(sizeof(AnimState) == 0xf0, "Bad size for AnimState");
+LAYOUT_32(sizeof(AnimObj) == 0x98, "Bad size for AnimObj");
+LAYOUT_32(offsetof(AnimObj, aimTarget) == 0x04, "Offset of aimTarget wrong");
+LAYOUT_32(offsetof(AnimObj, rootMotionCallback) == 0x18, "Offset of rootMotionCallback wrong");
+LAYOUT_32(offsetof(AnimObj, skin) == 0x1c, "Offset of skin wrong");
+LAYOUT_32(offsetof(AnimObj, firstScript) == 0x24, "Offset of firstScript wrong");
+LAYOUT_32(offsetof(AnimObj, sleeveGlist) == 0x30, "Offset of sleeveGlist wrong");
+LAYOUT_32(offsetof(AnimObj, pose) == 0x34, "Offset of pose wrong");
+LAYOUT_32(offsetof(AnimObj, boneMtxs) == 0x40, "Offset of boneMtxs wrong");
+LAYOUT_32(offsetof(AnimObj, discreteObj) == 0x48, "Offset of discreteObj wrong");
+LAYOUT_32(offsetof(AnimObj, flags) == 0x50, "Offset of flags wrong");
+LAYOUT_32(offsetof(AnimObj, rootHeight) == 0x54, "Offset of rootHeight wrong");
+LAYOUT_32(offsetof(AnimObj, distancePhase) == 0x64, "Offset of distancePhase wrong");
+LAYOUT_32(offsetof(AnimObj, aimRate) == 0x6c, "Offset of aimRate wrong");
+LAYOUT_32(offsetof(AnimObj, headTrackRange2) == 0x70, "Offset of headTrackRange2 wrong");
+LAYOUT_32(offsetof(AnimObj, aimRange2) == 0x74, "Offset of aimRange2 wrong");
+LAYOUT_32(offsetof(AnimObj, aimPitch) == 0x84, "Offset of aimPitch wrong");
+LAYOUT_32(offsetof(AnimObj, poseBufSize) == 0x88, "Offset of poseBufSize wrong");
+LAYOUT_32(offsetof(AnimObj, headTrackTargetBone) == 0x8c, "Offset of headTrackTargetBone wrong");
+LAYOUT_32(offsetof(AnimObj, aimTargetBone) == 0x8d, "Offset of aimTargetBone wrong");
+LAYOUT_32(offsetof(AnimObj, headTrackDelay) == 0x8e, "Offset of headTrackDelay wrong");
+LAYOUT_32(offsetof(AnimObj, facialState) == 0x91, "Offset of facialState wrong");
+LAYOUT_32(offsetof(AnimObj, lod) == 0x94, "Offset of lod wrong");
 static_assert(sizeof(AnimDatum) == 0x24, "Bad size for AnimDatum");
 static_assert(sizeof(_MATRIX) == 0x3c, "AnimProcessSkinData allocates invBind as numBones * 0x3c");
 static_assert(offsetof(SkeletonInfo, boneOffset) == 0x10, "Offset of boneOffset wrong");
 static_assert(offsetof(sAnimSkin_tag, riggedBody) == 0x04, "Bad offset of riggedBody");
-static_assert(offsetof(sAnimSkin_tag, skinScale) == 0x10, "Bad offset of skinScale");
-static_assert(offsetof(sAnimSkin_tag, datums) == 0x1c, "Bad offset of datums");
-static_assert(offsetof(sAnimSkin_tag, bones) == 0x20, "Bad offset of bones");
-static_assert(offsetof(sAnimSkin_tag, invBind) == 0x24, "Bad offset of invBind");
-static_assert(offsetof(sAnimSkin_tag, numRigged) == 0x28, "Bad offset of numRigged");
-static_assert(offsetof(sAnimSkin_tag, numMorphs) == 0x2a, "Bad offset of numMorphs");
-static_assert(offsetof(sAnimSkin_tag, skeletonNum) == 0x2c, "Bad offset of skeletonNum");
-static_assert(sizeof(sAnimSkin_tag) == 0x30, "Bad size for sAnimSkin_tag");
+LAYOUT_32(offsetof(sAnimSkin_tag, skinScale) == 0x10, "Bad offset of skinScale");
+LAYOUT_32(offsetof(sAnimSkin_tag, datums) == 0x1c, "Bad offset of datums");
+LAYOUT_32(offsetof(sAnimSkin_tag, bones) == 0x20, "Bad offset of bones");
+LAYOUT_32(offsetof(sAnimSkin_tag, invBind) == 0x24, "Bad offset of invBind");
+LAYOUT_32(offsetof(sAnimSkin_tag, numRigged) == 0x28, "Bad offset of numRigged");
+LAYOUT_32(offsetof(sAnimSkin_tag, numMorphs) == 0x2a, "Bad offset of numMorphs");
+LAYOUT_32(offsetof(sAnimSkin_tag, skeletonNum) == 0x2c, "Bad offset of skeletonNum");
+LAYOUT_32(sizeof(sAnimSkin_tag) == 0x30, "Bad size for sAnimSkin_tag");
 static_assert(sizeof(sAnimRawSeq_tag) == 0x40, "Bad size for sAnimRawSeq_tag");
 static_assert(offsetof(sAnimRawSeq_tag, numFrames) == 0x38, "Offset of numFrames wrong");
 static_assert(sizeof(AnimUnpakEntry) == 8, "Bad size for AnimUnpakEntry");
-static_assert(sizeof(sAnimSeq_tag) == 0x90, "Bad size for sAnimSeq_tag");
+LAYOUT_32(sizeof(sAnimSeq_tag) == 0x90, "Bad size for sAnimSeq_tag");
 static_assert(offsetof(sAnimSeq_tag, rootBox) == 0x3c, "Offset of rootBox wrong");
-static_assert(offsetof(sAnimSeq_tag, pose) == 0x68, "Offset of pose wrong");
-static_assert(offsetof(sAnimSeq_tag, rawSeq) == 0x74, "Offset of rawSeq wrong");
-static_assert(offsetof(sAnimSeq_tag, frame) == 0x80, "Offset of frame wrong");
-static_assert(offsetof(sAnimSeq_tag, numFrames) == 0x8a, "Offset of numFrames wrong");
-static_assert(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
+LAYOUT_32(offsetof(sAnimSeq_tag, pose) == 0x68, "Offset of pose wrong");
+LAYOUT_32(offsetof(sAnimSeq_tag, rawSeq) == 0x74, "Offset of rawSeq wrong");
+LAYOUT_32(offsetof(sAnimSeq_tag, frame) == 0x80, "Offset of frame wrong");
+LAYOUT_32(offsetof(sAnimSeq_tag, numFrames) == 0x8a, "Offset of numFrames wrong");
+LAYOUT_32(sizeof(sAnimScript_tag) == 0xb4, "Bad size for sAnimScript_tag");
 static_assert(offsetof(sAnimScript_tag, magicStateIndicator) == 0x3c, "Offset of magicStateIndicator wrong");
-static_assert(offsetof(sAnimScript_tag, boneAnimSeq) == 0x4c, "Offset of boneAnimSeq wrong");
-static_assert(offsetof(sAnimScript_tag, ownerSlot) == 0x60, "Offset of ownerSlot wrong");
-static_assert(offsetof(sAnimScript_tag, onStop) == 0x68, "Offset of onStop wrong");
-static_assert(offsetof(sAnimScript_tag, onEvent) == 0x6c, "Offset of onEvent wrong");
-static_assert(offsetof(sAnimScript_tag, flags) == 0x74, "Offset of flags wrong");
-static_assert(offsetof(sAnimScript_tag, curFrame) == 0x8c, "Offset of curFrame wrong");
-static_assert(offsetof(sAnimScript_tag, speed) == 0x94, "Offset of speed wrong");
-static_assert(offsetof(sAnimScript_tag, rotBaseYaw) == 0x9c, "Offset of rotBaseYaw wrong");
-static_assert(offsetof(sAnimScript_tag, fadeLen) == 0xa8, "Offset of fadeLen wrong");
-static_assert(offsetof(sAnimScript_tag, numFrames) == 0xac, "Offset of numFrames wrong");
-static_assert(offsetof(sAnimScript_tag, fadeDir) == 0xb2, "Offset of fadeDir wrong");
-static_assert(sizeof(sAnimSet_tag) == 0x34, "Bad size for sAnimSet_tag");
-static_assert(offsetof(sAnimSet_tag, tag) == 0x20, "Offset of tag wrong");
-static_assert(offsetof(sAnimSet_tag, oneShotState) == 0x33, "Offset of oneShotState wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, boneAnimSeq) == 0x4c, "Offset of boneAnimSeq wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, ownerSlot) == 0x60, "Offset of ownerSlot wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, onStop) == 0x68, "Offset of onStop wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, onEvent) == 0x6c, "Offset of onEvent wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, flags) == 0x74, "Offset of flags wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, curFrame) == 0x8c, "Offset of curFrame wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, speed) == 0x94, "Offset of speed wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, rotBaseYaw) == 0x9c, "Offset of rotBaseYaw wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, fadeLen) == 0xa8, "Offset of fadeLen wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, numFrames) == 0xac, "Offset of numFrames wrong");
+LAYOUT_32(offsetof(sAnimScript_tag, fadeDir) == 0xb2, "Offset of fadeDir wrong");
+LAYOUT_32(sizeof(sAnimSet_tag) == 0x34, "Bad size for sAnimSet_tag");
+LAYOUT_32(offsetof(sAnimSet_tag, tag) == 0x20, "Offset of tag wrong");
+LAYOUT_32(offsetof(sAnimSet_tag, oneShotState) == 0x33, "Offset of oneShotState wrong");
 
 // SkeletonInfo *SkeletonTable[128]
 extern SkeletonInfo *SkeletonTable[128];

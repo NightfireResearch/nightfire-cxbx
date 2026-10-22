@@ -1,6 +1,8 @@
 // actionhelpers.h first, outside the guard: it includes this file and then drone/Drone.h, which needs these types,
 // so a file that includes this one first must not get Drone.h before them
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
+#include "../../driving/platform/Ptr32.h"   // the map file's pointer words
 
 #ifndef AINETWORK_H_
 #define AINETWORK_H_
@@ -37,7 +39,7 @@ typedef struct MAPNODE_tag {
     ushort path;            // 0x02 - the path's (or bound's) index in its table
     uint flags;             // 0x04 - AINODE_*
     float headroom;         // 0x08 - bounds: how high the outline reaches above the node (AIBounds_Link2Cel)
-    cel_tag *cel;           // 0x0c - AIPath_BindNodes
+    Ptr32<cel_tag> cel;     // 0x0c - AIPath_BindNodes
     _VECTOR pos;            // 0x10 - y raised 0.4 at load
     float unknown1c;        // 0x1c - 1.0 in every file
 } MAPNODE_tag;
@@ -78,8 +80,8 @@ typedef struct AIBoundLink_tag {
     uint flags;                     // 0x04 - AIBOUND_*, 0 at load
     ushort a;                       // 0x08 - node indices
     ushort b;                       // 0x0a
-    struct AIBoundLink_tag *nextA;  // 0x0c - the next bound link in end a's cel (AIBounds_Prepare)
-    struct AIBoundLink_tag *nextB;  // 0x10 - and in end b's, when that is another cel
+    Ptr32<struct AIBoundLink_tag> nextA;    // 0x0c - the next bound link in end a's cel (AIBounds_Prepare)
+    Ptr32<struct AIBoundLink_tag> nextB;    // 0x10 - and in end b's, when that is another cel
 } AIBoundLink_tag;
 
 // A node of a path at run time (AIPath_tag.runtimeNodes)
@@ -281,23 +283,23 @@ static_assert(offsetof(MAPNODE_tag, pos) == 0x10, "Wrong offset for MAPNODE_tag.
 static_assert(sizeof(AIPathNodeRecord) == 0x40, "AIPathNodeRecord is 0x40 bytes");
 static_assert(sizeof(AILink_tag) == 0x10, "AILink_tag is 0x10 bytes");
 static_assert(sizeof(AIBoundLink_tag) == 0x14, "AIBoundLink_tag is 0x14 bytes");
-static_assert(sizeof(AINode_tag) == 0x30, "AINode_tag is 0x30 bytes");
-static_assert(offsetof(AINode_tag, nextInList) == 0x24, "Wrong offset for AINode_tag.nextInList");
-static_assert(offsetof(AINode_tag, door) == 0x28, "Wrong offset for AINode_tag.door");
-static_assert(sizeof(AIBoundNode_tag) == 0x8, "AIBoundNode_tag is 8 bytes");
-static_assert(sizeof(AIPath_tag) == 0x48, "AIPath_tag is 0x48 bytes");
-static_assert(offsetof(AIPath_tag, nodeCount) == 0x2c, "Wrong offset for AIPath_tag.nodeCount");
-static_assert(offsetof(AIPath_tag, reachMask) == 0x44, "Wrong offset for AIPath_tag.reachMask");
-static_assert(sizeof(AIBound_tag) == 0x40, "AIBound_tag is 0x40 bytes");
-static_assert(sizeof(AITarget_tag) == 0x30, "AITarget_tag is 0x30 bytes");
-static_assert(sizeof(AIRoute_tag) == 0xa0, "AIRoute_tag is 0xa0 bytes");
-static_assert(offsetof(AIRoute_tag, target) == 0x48, "Wrong offset for AIRoute_tag.target");
-static_assert(sizeof(AICreep_tag) == 0x38, "AICreep_tag is 0x38 bytes");
-static_assert(offsetof(AIRoute_tag, creep) == 0x58, "Wrong offset for AIRoute_tag.creep");
-static_assert(offsetof(AIRoute_tag, nodes) == 0x90, "Wrong offset for AIRoute_tag.nodes");
-static_assert(sizeof(AIPoint_tag) == 0x28, "AIPoint_tag is 0x28 bytes");
-static_assert(sizeof(AIEmitter_tag) == 0x28, "AIEmitter_tag is wrong size");
-static_assert(sizeof(AINodeSearch_tag) == 0x30, "AINodeSearch_tag is 0x30 bytes");
+LAYOUT_32(sizeof(AINode_tag) == 0x30, "AINode_tag is 0x30 bytes");
+LAYOUT_32(offsetof(AINode_tag, nextInList) == 0x24, "Wrong offset for AINode_tag.nextInList");
+LAYOUT_32(offsetof(AINode_tag, door) == 0x28, "Wrong offset for AINode_tag.door");
+LAYOUT_32(sizeof(AIBoundNode_tag) == 0x8, "AIBoundNode_tag is 8 bytes");
+LAYOUT_32(sizeof(AIPath_tag) == 0x48, "AIPath_tag is 0x48 bytes");
+LAYOUT_32(offsetof(AIPath_tag, nodeCount) == 0x2c, "Wrong offset for AIPath_tag.nodeCount");
+LAYOUT_32(offsetof(AIPath_tag, reachMask) == 0x44, "Wrong offset for AIPath_tag.reachMask");
+LAYOUT_32(sizeof(AIBound_tag) == 0x40, "AIBound_tag is 0x40 bytes");
+LAYOUT_32(sizeof(AITarget_tag) == 0x30, "AITarget_tag is 0x30 bytes");
+LAYOUT_32(sizeof(AIRoute_tag) == 0xa0, "AIRoute_tag is 0xa0 bytes");
+LAYOUT_32(offsetof(AIRoute_tag, target) == 0x48, "Wrong offset for AIRoute_tag.target");
+LAYOUT_32(sizeof(AICreep_tag) == 0x38, "AICreep_tag is 0x38 bytes");
+LAYOUT_32(offsetof(AIRoute_tag, creep) == 0x58, "Wrong offset for AIRoute_tag.creep");
+LAYOUT_32(offsetof(AIRoute_tag, nodes) == 0x90, "Wrong offset for AIRoute_tag.nodes");
+LAYOUT_32(sizeof(AIPoint_tag) == 0x28, "AIPoint_tag is 0x28 bytes");
+LAYOUT_32(sizeof(AIEmitter_tag) == 0x28, "AIEmitter_tag is wrong size");
+LAYOUT_32(sizeof(AINodeSearch_tag) == 0x30, "AINodeSearch_tag is 0x30 bytes");
 
 // The level's AI paths and bounds (AIPath_Parse, map block 0x05). Neither table's count is checked.
 extern uint32_t AIPathCount;

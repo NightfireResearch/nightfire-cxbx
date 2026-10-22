@@ -2,6 +2,7 @@
 #define LIGHTNING_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -16,7 +17,7 @@ typedef struct LIGHTNING_tag {
     short key2;                 // 0x3e - not read
 } LIGHTNING_tag;
 
-static_assert(sizeof(LIGHTNING_tag) == 0x40, "LIGHTNING_tag is 0x40 bytes");
+LAYOUT_32(sizeof(LIGHTNING_tag) == 0x40, "LIGHTNING_tag is 0x40 bytes");
 
 // The placement's keys (level_tag)
 typedef struct LightningPlacement {

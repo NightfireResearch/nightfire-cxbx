@@ -2,6 +2,7 @@
 #define EMITTER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -39,9 +40,9 @@ typedef struct EMITTER_DEF {
     char _pad3e[2];
 } EMITTER_DEF;
 
-static_assert(sizeof(EMITTER_DEF) == 0x40, "EMITTER_DEF is 0x40 bytes");
+LAYOUT_32(sizeof(EMITTER_DEF) == 0x40, "EMITTER_DEF is 0x40 bytes");
 
-static_assert(offsetof(EMITTER_DEF, perFrame) == 0x3a, "Bad offset of EMITTER_DEF.perFrame");
+LAYOUT_32(offsetof(EMITTER_DEF, perFrame) == 0x3a, "Bad offset of EMITTER_DEF.perFrame");
 
 // A particle's colour
 typedef struct EMITTER_COLOUR {
@@ -83,7 +84,7 @@ typedef struct EMITTER_tag {
     char _pad45[0x4c - 0x45];
 } EMITTER_tag;
 
-static_assert(sizeof(EMITTER_tag) == 0x4c, "EMITTER_tag is 0x4c bytes");
+LAYOUT_32(sizeof(EMITTER_tag) == 0x4c, "EMITTER_tag is 0x4c bytes");
 
 // An emitter's placement keys (level_tag)
 typedef struct EmitterPlacement {

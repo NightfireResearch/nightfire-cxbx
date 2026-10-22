@@ -2,6 +2,7 @@
 #define CELGLIST_H
 
 #include "../actionhelpers.h"
+#include "../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -50,9 +51,9 @@ typedef struct COLLDATA_tag {
     short countB;               // 0x12 - triangles
     ushort numCollBoxes;        // 0x14
 } COLLDATA_tag;
-static_assert(sizeof(COLLDATA_tag) == 0x16, "COLLDATA_tag is wrong size");
-static_assert(offsetof(COLLDATA_tag, sizeofC) == 0x10, "Bad offset of sizeofC");
-static_assert(offsetof(COLLDATA_tag, numCollBoxes) == 0x14, "Bad offset of numCollBoxes");
+LAYOUT_32(sizeof(COLLDATA_tag) == 0x16, "COLLDATA_tag is wrong size");
+LAYOUT_32(offsetof(COLLDATA_tag, sizeofC) == 0x10, "Bad offset of sizeofC");
+LAYOUT_32(offsetof(COLLDATA_tag, numCollBoxes) == 0x14, "Bad offset of numCollBoxes");
 
 typedef struct celglist_tag {
     char* name;
@@ -65,7 +66,7 @@ typedef struct celglist_tag {
     uint32_t applyFlagsToObject;
 } celglist_tag;
 
-static_assert(sizeof(celglist_tag) == 0x3c, "celglist_tag is wrong size");
+LAYOUT_32(sizeof(celglist_tag) == 0x3c, "celglist_tag is wrong size");
 
 #pragma pack(pop)
 

@@ -14,7 +14,7 @@
 char keypad_text[8];
 
 // AUTOINJECT
-bool C_KEYPAD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_KEYPAD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         // a full code starts again
         if (GlobalVars.DecoderDigitAt >= GlobalVars.DecoderNumDigits)

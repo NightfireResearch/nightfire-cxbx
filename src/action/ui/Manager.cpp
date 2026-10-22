@@ -2,6 +2,7 @@
 // menu_manager.cpp)
 
 #include "Manager.h"
+#include "../../common/xbeClass.h"
 #include "MenuCommon.h"
 #include "Button.h"
 #include "Checkbox.h"
@@ -32,7 +33,7 @@ typedef struct PAGE_HISTORY {
     M_CONTROL *focused;
 } PAGE_HISTORY;
 #pragma pack(pop)
-static_assert(sizeof(PAGE_HISTORY) == 8, "PAGE_HISTORY is 8 bytes");
+LAYOUT_32(sizeof(PAGE_HISTORY) == 8, "PAGE_HISTORY is 8 bytes");
 
 // What MessageType_QueryBack's answer is set to by a handler that keeps the page
 #define BACK_REFUSED 0xfffffffe
@@ -114,7 +115,7 @@ static M_CONTROL* Manager_CreateObject(M_MANAGER *mgr, NEW_CONTROL *create) {
         default:
             return NULL;
     }
-    if (!__Menu_SendMessage(&mgr->currentPage->control, MessageType_CreateObject, (int)control, 0))
+    if (!__Menu_SendMessage(&mgr->currentPage->control, MessageType_CreateObject, (intptr_t)control, 0))
         return NULL;
     return control;
 }
@@ -151,7 +152,7 @@ static void Manager_GoPage(M_MANAGER *mgr, HASHCODE hashcode, int flags) {
                     Menu_ClearDelayedMessages();
                 } else {
                     if (!(flags & GOPAGE_QUIET))
-                        Manager_SendMessage(mgr, MessageType_PageLeave, (int)mgr->currentPage, 0);
+                        Manager_SendMessage(mgr, MessageType_PageLeave, (intptr_t)mgr->currentPage, 0);
                     mgr->underPage = NULL;
                     mgr->overlayMode = false;
                     Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
@@ -169,7 +170,7 @@ static void Manager_GoPage(M_MANAGER *mgr, HASHCODE hashcode, int flags) {
                 mgr->currentMovie = mgr->currentPage->backgroundMovie;
             }
             if (!(flags & GOPAGE_QUIET)) {
-                Manager_SendMessage(mgr, MessageType_PageEnter, (int)mgr->currentPage, previous);
+                Manager_SendMessage(mgr, MessageType_PageEnter, (intptr_t)mgr->currentPage, previous);
                 if (!Script_PlayDefault(&mgr->currentPage->control, MessageType_PageEnter)) {
                     M_CONTROL *window = Window_Get(mgr->currentPage);
                     Script_Stop(window);
@@ -178,7 +179,7 @@ static void Manager_GoPage(M_MANAGER *mgr, HASHCODE hashcode, int flags) {
                     Page_Update(mgr, mgr->currentPage, 0);
                 }
             } else if (!(flags & GOPAGE_NO_RESUME)) {
-                Manager_SendMessage(mgr, MessageType_PageResume, (int)mgr->currentPage, previous);
+                Manager_SendMessage(mgr, MessageType_PageResume, (intptr_t)mgr->currentPage, previous);
             }
             if (mgr->underPage != NULL) {
                 if (flags & GOPAGE_OVERLAY) {
@@ -186,7 +187,7 @@ static void Manager_GoPage(M_MANAGER *mgr, HASHCODE hashcode, int flags) {
                     mgr->underPage->control.state = CONTROL_STATE_INERT;
                     Page_Update(mgr, mgr->underPage, 0);
                 } else if (!(flags & GOPAGE_QUIET)) {
-                    Manager_SendMessage(mgr, MessageType_PageLeave, (int)mgr->underPage, flags);
+                    Manager_SendMessage(mgr, MessageType_PageLeave, (intptr_t)mgr->underPage, flags);
                     if (!Script_PlayDefault(&mgr->underPage->control, MessageType_PageLeave)) {
                         M_CONTROL *window = Window_Get(mgr->underPage);
                         Script_Stop(window);
@@ -234,14 +235,14 @@ static void Manager_SetSidePage(M_MANAGER *mgr, HASHCODE hashcode) {
     if (mgr->sidePage != NULL) {
         mgr->sidePage->control.state = CONTROL_STATE_HIDDEN;
         mgr->sidePage->control.depth = 0;
-        Manager_SendMessage(mgr, MessageType_PageLeave, (int)page, 0);
+        Manager_SendMessage(mgr, MessageType_PageLeave, (intptr_t)page, 0);
         Script_PlayDefault(&page->control, MessageType_PageLeave);
         Page_Update(mgr, mgr->sidePage, 1);
     }
     mgr->sidePage = page;
     page->control.state = CONTROL_STATE_SHOWN;
     mgr->sidePage->control.depth = 0xfff6;
-    Manager_SendMessage(mgr, MessageType_PageEnter, (int)page, 0);
+    Manager_SendMessage(mgr, MessageType_PageEnter, (intptr_t)page, 0);
     Script_PlayDefault(&page->control, MessageType_PageEnter);
 }
 
@@ -256,9 +257,9 @@ static int Manager_SetPlayerFocus(M_MANAGER *mgr, HASHCODE hashcode, int player)
         for (M_CONTROL *c = (M_CONTROL *)LinkedList_First(&page->controls); c != NULL; c = c->next) {
             if (hashcode != 0 && c->hashcode == hashcode && c->id == player) {
                 if (page->playerFocus[player] != NULL)
-                    Manager_SendMessage(mgr, MessageType_PlayerFocusLost, (int)page->playerFocus[player], 0);
+                    Manager_SendMessage(mgr, MessageType_PlayerFocusLost, (intptr_t)page->playerFocus[player], 0);
                 page->playerFocus[player] = c;
-                Manager_SendMessage(mgr, MessageType_PlayerFocusGained, (int)c, 0);
+                Manager_SendMessage(mgr, MessageType_PlayerFocusGained, (intptr_t)c, 0);
                 return 1;
             }
         }
@@ -273,23 +274,23 @@ static int Manager_Back(M_MANAGER *mgr, int forced, int player) {
     if (!forced) {
         int answer = player;
         if (page->playerFocus[player] != NULL) {
-            Manager_SendMessage(mgr, MessageType_QueryBack, (int)page->playerFocus[player], (int)&answer);
+            Manager_SendMessage(mgr, MessageType_QueryBack, (intptr_t)page->playerFocus[player], (intptr_t)&answer);
             if (answer == (int)BACK_REFUSED)
                 return 1;
         }
-        Manager_SendMessage(mgr, MessageType_QueryBack, (int)page, (int)&answer);
+        Manager_SendMessage(mgr, MessageType_QueryBack, (intptr_t)page, (intptr_t)&answer);
         if (answer == (int)BACK_REFUSED)
             return 1;
     }
     if (Stack_IsEmpty(&mgr->stack)) {
-        Manager_SendMessage(mgr, MessageType_BackAtRoot, (int)page, page->control.hashcode);
+        Manager_SendMessage(mgr, MessageType_BackAtRoot, (intptr_t)page, page->control.hashcode);
         return 1;
     }
     PAGE_HISTORY *entry = (PAGE_HISTORY *)Stack_Top(&mgr->stack);
     if (page == NULL || !Script_PlayDefault(&page->control, MessageType_BackAtRoot)) {
         __Menu_SendMessage(&mgr->control, MessageType_GoPage, entry->page->control.hashcode,
                            GOPAGE_NO_HISTORY | GOPAGE_KEEP_HISTORY | (mgr->overlayMode ? GOPAGE_QUIET : 0));
-        __Menu_SendMessage(&mgr->control, MessageType_SetCursor, 0, (int)entry->focused);
+        __Menu_SendMessage(&mgr->control, MessageType_SetCursor, 0, (intptr_t)entry->focused);
     }
     Stack_Pop(&mgr->stack);
     Menu_Free((void **)&entry, 8);
@@ -323,17 +324,17 @@ static int Manager_SetCursor(M_MANAGER *mgr, HASHCODE hashcode, M_CONTROL *contr
 // The messages to the manager, and those no control or page handled: the handlers get them, and for some a control
 // plays its default script; one the handlers leave goes on to the page shown
 // AUTOINJECT
-int Manager_SendMessage(M_MANAGER *mgr, MessageType message, int arg1, int arg2) {
+intptr_t Manager_SendMessage(M_MANAGER *mgr, MessageType message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_CreateObject:
-            return (int)Manager_CreateObject(mgr, (NEW_CONTROL *)arg1);
+            return (intptr_t)Manager_CreateObject(mgr, (NEW_CONTROL *)arg1);
         case MessageType_CreatePage: {
             M_PAGE *page = (M_PAGE *)Menu_Malloc(sizeof(M_PAGE));
             Page_Init(page, (HASHCODE)arg1, mgr);
             LinkedList_Add(&mgr->pages, &page->pageLink[1], page->pageLink);
             __Menu_SendMessage(&mgr->control, MessageType_GoPage, arg1,
                                GOPAGE_NO_HISTORY | GOPAGE_QUIET | GOPAGE_NO_RESUME);
-            return (int)page;
+            return (intptr_t)page;
         }
         case MessageType_GoPage:
             Manager_GoPage(mgr, (HASHCODE)arg1, arg2);

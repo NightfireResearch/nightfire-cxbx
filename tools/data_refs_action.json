@@ -2303,16 +2303,34 @@
   "0xa9303",
   "0xa9473"
  ],
- "PlayerAnimSetClass3": [],
+ "PlayerAnimSetClass3": [
+  "0xa92c3",
+  "0xa9433"
+ ],
  "PlayerAnimSetDefault": [
   "0xa9323",
   "0xa9493"
  ],
- "PlayerAnimSetClass1": [],
- "PlayerAnimSetClass5": [],
- "PlayerAnimSetClass4": [],
- "PlayerAnimSetClass6": [],
- "PlayerAnimSetClass2": [],
+ "PlayerAnimSetClass1": [
+  "0xa9243",
+  "0xa93b3"
+ ],
+ "PlayerAnimSetClass5": [
+  "0xa92e3",
+  "0xa9453"
+ ],
+ "PlayerAnimSetClass4": [
+  "0xa9263",
+  "0xa93d3"
+ ],
+ "PlayerAnimSetClass6": [
+  "0xa9283",
+  "0xa93f3"
+ ],
+ "PlayerAnimSetClass2": [
+  "0xa92a3",
+  "0xa9413"
+ ],
  "Plr_DMod_Multi": [
   "0x1b759",
   "0x82a7d",
@@ -2669,7 +2687,9 @@
   "0xbb4a6",
   "0xbb4d5"
  ],
- "DecryptorDigits": [],
+ "DecryptorDigits": [
+  "0xbb52d"
+ ],
  "BestWeapons": [
   "0xb916b",
   "0xba207"
@@ -17579,6 +17599,7 @@
   "0xc54db",
   "0xc54fc",
   "0xc5f23",
+  "0xc8b02",
   "0xc9daf"
  ],
  "SFXLanguage": [

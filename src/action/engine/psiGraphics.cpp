@@ -333,7 +333,7 @@ static ushort MapTextureRef(ushort ref, int firstMapTex) {
 // AUTOINJECT
 void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
 
-    ModelData *model = (ModelData *)(uintptr_t)param_1->geom_idx;
+    ModelData *model = PtrFrom32<ModelData>(param_1->geom_idx);
     CacheFlushPending = 1;
     if (model == NULL || model->magicTag != MODELDATA_MAGIC || model->vtxCnt == 0 || model->idxCnt == 0 ||
         model->primitiveCnt == 0 || model->dataSize14 == 0) {
@@ -343,24 +343,24 @@ void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
 
     d3dGeometryObjs[NumXboxEntityGfxsCreated] = model;
 
-    uint data = (uint)(uintptr_t)model->data;
-    model->vtxBuffers = d3dCreateVertexBuffers(model->vtxCnt, data, model->maybeSkinned != 0, 0);
+    uint8_t *data = model->data;
+    model->vtxBuffers = d3dCreateVertexBuffers(model->vtxCnt, PtrTo32(data), model->maybeSkinned != 0, 0);
     data += d3dGetVertexDataSize(model->vtxCnt, model->maybeSkinned != 0, 0);
-    model->idxBuffer = d3dCreateIndexBuffer(model->idxCnt, data);
+    model->idxBuffer = d3dCreateIndexBuffer(model->idxCnt, PtrTo32(data));
     data += d3dGetIndexDataSize(model->idxCnt);
     model->afterPrimitives = data + model->primitiveCnt * 12;
     model->primitives = data;
 
     if (model->batchCnt != 0 && model->batchVtxCnt != 0) {
         model->batchVtxBuffers = d3dCreateVertexBuffers(model->batchVtxCnt,
-                                                        model->afterPrimitives + model->maybeSkinned * 0x36, 0,
+                                                        PtrTo32(model->afterPrimitives + model->maybeSkinned * 0x36), 0,
                                                         model->batchCnt);
         d3dGetVertexDataSize(model->batchVtxCnt, 0, model->batchCnt); // the original ignores this one's result
     }
 
     int firstMapTex = FirstMapTexIdx;
     for (int p = 0; p < model->primitiveCnt; p++) {
-        ushort *refs = (ushort *)(uintptr_t)(model->primitives + p * 12);
+        ushort *refs = (ushort *)(model->primitives + p * 12);
         refs[0] = MapTextureRef(refs[0], firstMapTex);
         refs[1] = MapTextureRef(refs[1], firstMapTex);
     }

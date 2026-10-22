@@ -5,6 +5,7 @@
 #define DRONETABLES_H_
 
 #include "NDrone2.h"
+#include "../../../common/xbeClass.h"
 #include "BOT.h"
 
 #pragma pack(push, 1)
@@ -38,8 +39,8 @@ typedef struct DroneBehaviourLayout {
 
 #pragma pack(pop)
 
-static_assert(sizeof(DroneModeSetting) == 12, "DroneModeSetting is 12 bytes");
-static_assert(sizeof(DroneTypeSetting) == 12, "DroneTypeSetting is 12 bytes");
+LAYOUT_32(sizeof(DroneModeSetting) == 12, "DroneModeSetting is 12 bytes");
+LAYOUT_32(sizeof(DroneTypeSetting) == 12, "DroneTypeSetting is 12 bytes");
 static_assert(sizeof(DroneBehaviourLayout) == 2, "DroneBehaviourLayout is 2 bytes");
 
 #define NUM_DSTATES 250

@@ -225,7 +225,7 @@ static void SaveNewCodename(uchar managerNum) {
 }
 
 // AUTOINJECT
-bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         cn_secret_mode = (HASHCODE)arg2 == P_CNMENU;
         ls.busy = 0;
@@ -239,14 +239,14 @@ bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         }
         LABEL_SET_TEXT(managerNum, SUB_P_CNNAME_TEXT, kbd_text);
         // the cursor starts on Done
-        int done = __Menu_SendEx(managerNum, C_KEYBOARD, KEY_DONE, MessageType_GetControl, 0, 0);
+        intptr_t done = __Menu_SendEx(managerNum, C_KEYBOARD, KEY_DONE, MessageType_GetControl, 0, 0);
         Manager_SendMessage(&manager[managerNum], MessageType_SetCursor, 0, done);
         kbd_accent_keys[0] = 0xc4;
         kbd_accent_keys[1] = 0xc2;
         kbd_accent_keys[2] = 0xc6;
         kbd_accent_keys[3] = 0xc0;
         for (int k = 0; k < 4; k++)
-            __Menu_SendEx(managerNum, C_KEYBOARD, KEY_ACCENT_FIRST + k, MessageType_SetText, (int)&kbd_accent_keys[k], 0);
+            __Menu_SendEx(managerNum, C_KEYBOARD, KEY_ACCENT_FIRST + k, MessageType_SetText, (intptr_t)&kbd_accent_keys[k], 0);
     } else if (message == MessageType_PageUpdate) {
         Menu_UpdateMessageBox(managerNum, 0xff, 0);
         undefined4 box = 0;
@@ -263,7 +263,7 @@ bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 
 // The on-screen keyboard: every key is a button whose id is its character, or one of the KEY_* commands.
 // AUTOINJECT
-bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_KEYBOARD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message != MessageType_Select && message != MessageType_SelectRepeat)
         return true;
 

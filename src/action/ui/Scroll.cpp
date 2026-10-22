@@ -79,7 +79,7 @@ void Scroll_Init(M_SCROLL *scroll, NEW_CONTROL *create, M_CONTROL *parent) {
 }
 
 // AUTOINJECT
-int Scroll_SendMessage(M_SCROLL *scroll, uint message, int arg1, int arg2) {
+intptr_t Scroll_SendMessage(M_SCROLL *scroll, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
         case MessageType_ScrollAddToMax:
             scroll->max += arg1;
@@ -132,12 +132,12 @@ int Scroll_SendMessage(M_SCROLL *scroll, uint message, int arg1, int arg2) {
             if (arg1 > scroll->max || arg1 < scroll->min)
                 return 0;
             scroll->value = arg1;
-            __Menu_SendMessage(scroll->control.parent, MessageType_ValueSet, (int)scroll, 0);
+            __Menu_SendMessage(scroll->control.parent, MessageType_ValueSet, (intptr_t)scroll, 0);
             return 1;
         case MessageType_GetMax:
             return scroll->max;
         case MessageType_GetControl:
-            return (int)scroll;
+            return (intptr_t)scroll;
         case MessageType_GetMin:
             return scroll->min;
         case MessageType_GetId:
@@ -183,7 +183,7 @@ static void Scroll_Step(M_SCROLL *scroll, bool more, bool repeat) {
             return;
         Menu_PlaySound(repeat ? MENU_SFX_NEXT_REPEAT : MENU_SFX_NEXT);
     }
-    __Menu_SendMessage(scroll->control.parent, MessageType_Scroll, (int)scroll, 0);
+    __Menu_SendMessage(scroll->control.parent, MessageType_Scroll, (intptr_t)scroll, 0);
 }
 
 // A press of a direction steps the value at once; held, it repeats
@@ -218,16 +218,16 @@ static void Scroll_Selects(M_MANAGER *mgr, M_PAGE *page, M_SCROLL *scroll) {
     if (page->focused->hashcode == scroll->control.hashcode && mgr->takingInput && !mgr->inputLocked) {
         if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4)) {
             Menu_PlaySound(MENU_SFX_SELECT);
-            __Menu_SendMessage(scroll->control.parent, MessageType_Select, (int)scroll, 0);
+            __Menu_SendMessage(scroll->control.parent, MessageType_Select, (intptr_t)scroll, 0);
         } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, 4)) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_1);
-            __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect1, (int)scroll, 0);
+            __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect1, (intptr_t)scroll, 0);
         } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, 4)) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_2);
-            __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect2, (int)scroll, 0);
+            __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect2, (intptr_t)scroll, 0);
         } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_BACK, 4)) {
             Menu_PlaySound(MENU_SFX_BACK_ON_CONTROL);
-            __Menu_SendMessage(scroll->control.parent, MessageType_BackOnControl, (int)scroll, 0);
+            __Menu_SendMessage(scroll->control.parent, MessageType_BackOnControl, (intptr_t)scroll, 0);
         }
     }
 }

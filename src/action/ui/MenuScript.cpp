@@ -341,7 +341,7 @@ void Script_RunFrame(M_MANAGER *mgr, M_CONTROL *control) {
                                     : (M_CONTROL *)__Menu_Send(mgr->index, (HASHCODE)msg->target, MessageType_GetControl, 0, 0);
             Process_Create(target, msg, frames, 0);
         } else {
-            int arg1 = msg->arg1 == MESSAGE_LAST_RESULT ? control->lastScriptResult : msg->arg1;
+            intptr_t arg1 = msg->arg1 == MESSAGE_LAST_RESULT ? control->lastScriptResult : msg->arg1;
             if (msg->target == MESSAGE_TO_MANAGER)
                 control->lastScriptResult = __Menu_SendMessage(&mgr->control, msg->type, arg1, msg->arg2);
             else if (msg->target == MESSAGE_TO_SELF)

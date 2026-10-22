@@ -2,6 +2,7 @@
 #define TEXTBOX_H
 
 #include "Controls.h"
+#include "../../common/xbeClass.h"
 
 // The menus' text box (ControlType_Text): a label showing what has been typed, and an on-screen grid of characters
 // the cursor moves over and picks from. PS2: text.cpp's second Text_Init.
@@ -39,7 +40,7 @@ typedef struct M_TEXTBOX {
     ushort selected;            // 0x9ac the key under the cursor (Text_SetupChar: the last key set up)
     char pad9ae[2];
 } M_TEXTBOX;
-static_assert(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
+LAYOUT_32(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
 #pragma pack(pop)
 
 // M_CONTROL::drawState bits of the text box
@@ -48,7 +49,7 @@ static_assert(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
 
 M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked);
 void Text_SetupChar(void);
-int Text_SendMessage(M_TEXTBOX *box, int message, int arg1, int arg2);
+intptr_t Text_SendMessage(M_TEXTBOX *box, int message, intptr_t arg1, intptr_t arg2);
 void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box);
 void Text_Init(M_TEXTBOX *box, NEW_CONTROL *create, M_CONTROL *parent);
 

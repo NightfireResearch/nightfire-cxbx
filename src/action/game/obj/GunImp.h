@@ -2,6 +2,7 @@
 #define GUNIMP_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #pragma pack(push, 1)
 
@@ -40,10 +41,10 @@ static_assert(sizeof(GUNTYPE) == 0x1c, "Bad size for GUNTYPE");
 
 extern GUNTYPE GunTypes[12];
 
-static_assert(sizeof(GUNIMP) == 0x84, "Bad size for GUNIMP");
-static_assert(offsetof(GUNIMP, userOffset) == 0x50, "Bad offset of userOffset");
-static_assert(offsetof(GUNIMP, firingSound) == 0x7c, "Bad offset of firingSound");
-static_assert(offsetof(GUNIMP, gunType) == 0x81, "Bad offset of gunType");
+LAYOUT_32(sizeof(GUNIMP) == 0x84, "Bad size for GUNIMP");
+LAYOUT_32(offsetof(GUNIMP, userOffset) == 0x50, "Bad offset of userOffset");
+LAYOUT_32(offsetof(GUNIMP, firingSound) == 0x7c, "Bad offset of firingSound");
+LAYOUT_32(offsetof(GUNIMP, gunType) == 0x81, "Bad offset of gunType");
 
 #pragma pack(pop)
 

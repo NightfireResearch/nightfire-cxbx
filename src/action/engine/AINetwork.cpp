@@ -2,6 +2,7 @@
 // the emitters, and following a route one creep step at a time. See docs/drone/bots-and-navigation/README.md.
 
 #include "AINetwork.h"
+#include "../../common/xbeClass.h"
 #include "Collide.h"
 #include "viewer.h"
 #include "../memory.h"
@@ -44,12 +45,12 @@ AIBound_tag AIBounds[50];
 
 #pragma fp_contract(off)
 
-static_assert(offsetof(cel_tag, aiNodes) == 0x24, "Wrong offset for cel_tag.aiNodes");
-static_assert(offsetof(cel_tag, portals) == 0x28, "Wrong offset for cel_tag.portals");
-static_assert(offsetof(cel_tag, boundNodes) == 0x30, "Wrong offset for cel_tag.boundNodes");
-static_assert(offsetof(cel_tag, boundLinks) == 0x34, "Wrong offset for cel_tag.boundLinks");
-static_assert(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
-static_assert(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_tag.corners");
+LAYOUT_32(offsetof(cel_tag, aiNodes) == 0x24, "Wrong offset for cel_tag.aiNodes");
+LAYOUT_32(offsetof(cel_tag, portals) == 0x28, "Wrong offset for cel_tag.portals");
+LAYOUT_32(offsetof(cel_tag, boundNodes) == 0x30, "Wrong offset for cel_tag.boundNodes");
+LAYOUT_32(offsetof(cel_tag, boundLinks) == 0x34, "Wrong offset for cel_tag.boundLinks");
+LAYOUT_32(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
+LAYOUT_32(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_tag.corners");
 
 // The cels the last ray of AINetwork_TestRayCels and of AINetwork_BoundsTest passed through
 // XBE_GLOBAL(0x001ee42c, 0x4)

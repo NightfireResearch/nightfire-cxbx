@@ -1,4 +1,5 @@
 #include "ThirdCam.h"
+#include "../../../common/xbeClass.h"
 #include "control.h"
 #include "../Spline.h"
 
@@ -17,7 +18,7 @@ typedef struct {
 } Create_ThirdCam_Params;
 #pragma pack(pop)
 static_assert(offsetof(Create_ThirdCam_Params, path) == 0x08, "Bad offset of path");
-static_assert(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of param");
+LAYOUT_32(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of param");
 
 // A path for the third-person view to follow, kept by its id. The object is used without a check that it was made.
 // AUTOINJECT

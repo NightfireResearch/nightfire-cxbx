@@ -2,6 +2,7 @@
 #define GRAPHICSSYSTEM_H_
 
 #include "d3dhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #include <stddef.h>
 #include <stdint.h>
@@ -29,7 +30,7 @@ struct D3DTextureSlotRaw {
     uint16_t nonSwizzled;   // +0x1e - the "param_6 != 0" flag from the caller
     uint32_t mipChainBytes; // +0x20 - total byte size of every mip level
 };
-static_assert(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");
+LAYOUT_32(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");
 
 // One of the 2048 vertex-buffer slots d3dCreateVertexBuffers hands out, and that d3dSetStreamSources and
 // d3dBindBuffers read. See d3dCreateVertexBuffers for how its two paths fill it differently.
@@ -48,7 +49,7 @@ struct D3DVertexBufferSlotRaw {
     uint32_t field1c;     // +0x1c - single-path: always 0; multi-path: streamCount (same value in every slot of the run)
     void    *alignedData; // +0x20 - single-path ONLY; never written by the multi-path
 };
-static_assert(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
+LAYOUT_32(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
 
 // One of the 2048 index-buffer slots d3dCreateIndexBuffer hands out.
 struct D3DIndexBufferSlotRaw {
@@ -61,7 +62,7 @@ struct D3DIndexBufferSlotRaw {
     uint32_t byteSize;   // +0x14 - indexCount * 2 (16-bit indices)
     void    *dataPtr2;   // +0x18 - same value as dataPtr
 };
-static_assert(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
+LAYOUT_32(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
 
 // One of the 256 small vertex buffers d3dRegisterOverlayBuffer hands out for d3dDrawOverlayQuad. The "is this
 // slot free" test is at +0xc, not +0x00: +0xc holds a copy of the caller's own data pointer (written directly
@@ -74,7 +75,7 @@ struct D3DOverlayQuadSlotRaw {
     void    *dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
     uint32_t vertexCount; // +0x10 - consumed by d3dDrawOverlayQuad's own D3DDevice_DrawVertices call
 };
-static_assert(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
+LAYOUT_32(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
 
 #define GFX_TEXTURE_SLOTS       2048
 #define GFX_VERTEX_BUFFER_SLOTS 2048
@@ -179,24 +180,24 @@ static_assert(offsetof(GraphicsSystem, currentlyLoadedTexture) == 0x1834, "Graph
 static_assert(offsetof(GraphicsSystem, colorConstant67Cache) == 0x1884, "GraphicsSystem layout");
 static_assert(offsetof(GraphicsSystem, totalTextureBytesUsed) == 0x1890, "GraphicsSystem layout");
 static_assert(offsetof(GraphicsSystem, overlayQuads) == 0x5898, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, fallbackOverlayTexture) == 0x6c98, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, textures) == 0x6c9c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, immediateModeItems) == 0x18c9c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, vertexBuffers) == 0x1959c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, indexBuffers) == 0x2b59c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, u8ToFloat01) == 0x3959c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, projMatrixCacheA) == 0x3999c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, activeMatrix) == 0x39adc, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, fogScale) == 0x39b1c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, lights) == 0x39b2c, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, lightDirection) == 0x39bbc, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, fogConstant66) == 0x39bec, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, streamStrideConstants) == 0x39c08, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, shaderConstant75) == 0x39c28, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, levelDirectionVector) == 0x39c48, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, miscModeFlags) == 0x39c54, "GraphicsSystem layout");
-static_assert(offsetof(GraphicsSystem, auxSavedViewMatrix) == 0x39c64, "GraphicsSystem layout");
-static_assert(sizeof(GraphicsSystem) == 0x39ce4, "Bad size for GraphicsSystem"); // xboxInitGraphics' clear
+LAYOUT_32(offsetof(GraphicsSystem, fallbackOverlayTexture) == 0x6c98, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, textures) == 0x6c9c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, immediateModeItems) == 0x18c9c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, vertexBuffers) == 0x1959c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, indexBuffers) == 0x2b59c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, u8ToFloat01) == 0x3959c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, projMatrixCacheA) == 0x3999c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, activeMatrix) == 0x39adc, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, fogScale) == 0x39b1c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, lights) == 0x39b2c, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, lightDirection) == 0x39bbc, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, fogConstant66) == 0x39bec, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, streamStrideConstants) == 0x39c08, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, shaderConstant75) == 0x39c28, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, levelDirectionVector) == 0x39c48, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, miscModeFlags) == 0x39c54, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, auxSavedViewMatrix) == 0x39c64, "GraphicsSystem layout");
+LAYOUT_32(sizeof(GraphicsSystem) == 0x39ce4, "Bad size for GraphicsSystem"); // xboxInitGraphics' clear
 
 extern GraphicsSystem Gfx;
 

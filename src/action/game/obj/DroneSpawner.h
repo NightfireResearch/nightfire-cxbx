@@ -2,6 +2,7 @@
 #define DRONESPAWNER_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 #include "../drone/Drone.h"
 
 // A drone spawner (OBJECTTYPE_DRONE_SPAWNER, placement 241): it takes the drones of its group out of the level as
@@ -72,8 +73,8 @@ typedef struct DroneSpawner_tag {
 
 static_assert(sizeof(DroneSpawnerPlacement) == 0xb0, "DroneSpawnerPlacement is 0xb0 bytes");
 static_assert(offsetof(DroneSpawnerPlacement, distance) == 0x4c, "Wrong offset for DroneSpawnerPlacement.distance");
-static_assert(sizeof(DroneSpawnEntry_tag) == 0xac, "DroneSpawnEntry_tag is 0xac bytes");
-static_assert(sizeof(DroneSpawner_tag) == 0x3c, "DroneSpawner_tag is 0x3c bytes");
+LAYOUT_32(sizeof(DroneSpawnEntry_tag) == 0xac, "DroneSpawnEntry_tag is 0xac bytes");
+LAYOUT_32(sizeof(DroneSpawner_tag) == 0x3c, "DroneSpawner_tag is 0x3c bytes");
 static_assert(offsetof(DroneSpawner_tag, distance) == 0x18, "Wrong offset for DroneSpawner_tag.distance");
 static_assert(offsetof(DroneSpawner_tag, initFrame) == 0x24, "Wrong offset for DroneSpawner_tag.initFrame");
 static_assert(offsetof(DroneSpawner_tag, spawned) == 0x34, "Wrong offset for DroneSpawner_tag.spawned");

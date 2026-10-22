@@ -78,7 +78,7 @@ static const Action_TranslatedText pause_style_names[8] = {
 // style radio is filled, every panel hidden. B with the confirmation showing goes back to the resume list instead of
 // closing the menu; an option box answered shows the panel list again.
 // AUTOINJECT
-bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uchar player = manager[managerNum].startPlayer;
     switch (message) {
     case MessageType_QueryBack: {
@@ -111,7 +111,7 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         }
         for (int style = 0; style < 8; style++)
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_STYLE_RADIO, MessageType_AddItem,
-                          (int)Txt_BindLabel(pause_style_names[style], 0), style);
+                          (intptr_t)Txt_BindLabel(pause_style_names[style], 0), style);
         __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_RESUME_LIST, MessageType_SelectIndex, 0, 0);
         __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_STYLE_RADIO, MessageType_SelectItemByValue,
                       PlayerInputs[player].controlStyle, 0);
@@ -132,11 +132,11 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         if (PlayerInputs[player].inverted) {
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetColour, 0x645a49d2, 0);
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetText,
-                          (int)Txt_BindLabel(TXT_INVERTED, 0), 0);
+                          (intptr_t)Txt_BindLabel(TXT_INVERTED, 0), 0);
         } else {
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetColour, 0x694646d2, 0);
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetText,
-                          (int)Txt_BindLabel(TXT_NORMAL, 0), 0);
+                          (intptr_t)Txt_BindLabel(TXT_NORMAL, 0), 0);
         }
         CheatInfo.pauseCleared = 0;
         __Menu_Send(managerNum, SUB_P_PAUSE_ICON_184, MessageType_SetIconSpriteFlags, 0x100, 0);
@@ -168,10 +168,10 @@ static void Pause_ShowObjectives(uchar managerNum) {
     for (short i = 0; i < numObjectives; i++) {
         OBJ_STATE state;
         Mission_ObjectiveState(&state, i);
-        __Menu_SendMessage(&list->control, MessageType_AddItem, (int)MenuEmptyString, 0);
-        __Menu_SendMessage(&list->control, MessageType_ListSetCellText, i << 16 | 1, (int)(state.status == 4 ? "~J" : "~I"));
+        __Menu_SendMessage(&list->control, MessageType_AddItem, (intptr_t)MenuEmptyString, 0);
+        __Menu_SendMessage(&list->control, MessageType_ListSetCellText, i << 16 | 1, (intptr_t)(state.status == 4 ? "~J" : "~I"));
         __Menu_SendMessage(&list->control, MessageType_ListSetCellText, i << 16 | 2,
-                           (int)Txt_BindLabel((Action_TranslatedText)state.name, 0));
+                           (intptr_t)Txt_BindLabel((Action_TranslatedText)state.name, 0));
     }
     __Menu_SendMessage(&list->control, MessageType_SelectIndex, numObjectives - 1, 0);
 }
@@ -191,10 +191,10 @@ static void Pause_ShowControls(uchar managerNum) {
     __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetColour,
                   PlayerInputs[player].inverted ? 0x645a49d2 : 0x694646d2, 0);
     __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetText,
-                  (int)Txt_BindLabel(PlayerInputs[player].inverted ? TXT_INVERTED : TXT_NORMAL, 0), 0);
+                  (intptr_t)Txt_BindLabel(PlayerInputs[player].inverted ? TXT_INVERTED : TXT_NORMAL, 0), 0);
 }
 
-static void Pause_PanelSend(uchar managerNum, uint message, int arg1, int arg2) {
+static void Pause_PanelSend(uchar managerNum, uint message, intptr_t arg1, intptr_t arg2) {
     __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_PANEL_LIST, message, arg1, arg2);
 }
 
@@ -207,12 +207,12 @@ static void Pause_AddScore(uchar managerNum, uint participant, uchar *mi6Row, uc
     bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
     MPSettings_PerPlayer *player = &MPSettings.Player[participant];
     if (player->TeamId == MI6 || !teams) {
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *mi6Row << 16, (int)player->Name);
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *mi6Row << 16 | 1, (int)text);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *mi6Row << 16, (intptr_t)player->Name);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *mi6Row << 16 | 1, (intptr_t)text);
         (*mi6Row)++;
     } else {
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *phoenixRow << 16 | 3, (int)player->Name);
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *phoenixRow << 16 | 4, (int)text);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *phoenixRow << 16 | 3, (intptr_t)player->Name);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, *phoenixRow << 16 | 4, (intptr_t)text);
         (*phoenixRow)++;
     }
     if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
@@ -241,8 +241,8 @@ static void Pause_ShowScores(uchar managerNum) {
         uchar mi6Row = 1, phoenixRow = 1;
         int mi6Total = 0, phoenixTotal = 0;
         if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 0, (int)Txt_BindLabel(MP_TEAM_MI6, 0));
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 3, (int)Txt_BindLabel(MP_TEAM_PHOENIX, 0));
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 0, (intptr_t)Txt_BindLabel(MP_TEAM_MI6, 0));
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 3, (intptr_t)Txt_BindLabel(MP_TEAM_PHOENIX, 0));
             mi6Row = 2;
             phoenixRow = 2;
         }
@@ -253,11 +253,11 @@ static void Pause_ShowScores(uchar managerNum) {
         if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
             char text[0x20];
             sprintf(text, "%d", mi6Total);
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16, (int)Txt_BindLabel(TXT_TOTAL, 0));
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 1, (int)text);
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16, (intptr_t)Txt_BindLabel(TXT_TOTAL, 0));
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 1, (intptr_t)text);
             sprintf(text, "%d", phoenixTotal);
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 3, (int)Txt_BindLabel(TXT_TOTAL, 0));
-            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 4, (int)text);
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 3, (intptr_t)Txt_BindLabel(TXT_TOTAL, 0));
+            Pause_PanelSend(managerNum, MessageType_ListSetCellText, 9 << 16 | 4, (intptr_t)text);
         }
         return;
     }
@@ -293,10 +293,10 @@ static void Pause_ShowScores(uchar managerNum) {
     Pause_PanelSend(managerNum, MessageType_ListAddColumn, 30, 0);
     Pause_PanelSend(managerNum, MessageType_ListSetColumnAlign, 1, ALIGN_RIGHT);
     Pause_PanelSend(managerNum, MessageType_ListSetColumnAlign, 2, ALIGN_RIGHT);
-    Pause_PanelSend(managerNum, MessageType_AddItem, (int)Txt_BindLabel((Action_TranslatedText)0x1000204, 0), 0); // "Category"
-    Pause_PanelSend(managerNum, MessageType_ListSetCellText, 1, (int)Txt_BindLabel((Action_TranslatedText)0x10001e1, 0));
-    Pause_PanelSend(managerNum, MessageType_ListSetCellText, 2, (int)Txt_BindLabel((Action_TranslatedText)0x10001e2, 0));
-    Pause_PanelSend(managerNum, MessageType_AddItem, (int)MenuEmptyString, 0);
+    Pause_PanelSend(managerNum, MessageType_AddItem, (intptr_t)Txt_BindLabel((Action_TranslatedText)0x1000204, 0), 0); // "Category"
+    Pause_PanelSend(managerNum, MessageType_ListSetCellText, 1, (intptr_t)Txt_BindLabel((Action_TranslatedText)0x10001e1, 0));
+    Pause_PanelSend(managerNum, MessageType_ListSetCellText, 2, (intptr_t)Txt_BindLabel((Action_TranslatedText)0x10001e2, 0));
+    Pause_PanelSend(managerNum, MessageType_AddItem, (intptr_t)MenuEmptyString, 0);
 
     // The rows from row 2: a label (indented by two spaces for the opponents' kinds) and two numbers
     static const struct { Action_TranslatedText label; uchar indent; uchar row; } rows[9] = {
@@ -315,14 +315,14 @@ static void Pause_ShowScores(uchar managerNum) {
         if (rows[i].indent) {
             char text[0x100];
             sprintf(text, "  %s", Txt_BindLabel(rows[i].label, 0));
-            Pause_PanelSend(managerNum, MessageType_AddItem, (int)text, 0);
+            Pause_PanelSend(managerNum, MessageType_AddItem, (intptr_t)text, 0);
         } else {
-            Pause_PanelSend(managerNum, MessageType_AddItem, (int)Txt_BindLabel(rows[i].label, 0), 0);
+            Pause_PanelSend(managerNum, MessageType_AddItem, (intptr_t)Txt_BindLabel(rows[i].label, 0), 0);
         }
         if (rows[i].row == 0)
             continue;
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, rows[i].row << 16 | 1, (int)numbers[number]);
-        Pause_PanelSend(managerNum, MessageType_ListSetCellText, rows[i].row << 16 | 2, (int)numbers[number + 1]);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, rows[i].row << 16 | 1, (intptr_t)numbers[number]);
+        Pause_PanelSend(managerNum, MessageType_ListSetCellText, rows[i].row << 16 | 2, (intptr_t)numbers[number + 1]);
         number += 2;
     }
 }
@@ -352,7 +352,7 @@ static void Pause_AskConfirm(uchar managerNum, Action_TranslatedText question) {
     LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_HINT_TEXT, Txt_BindLabel(TXT_PAUSE_HINT_CONFIRM, 0));
     Pause_SetState(managerNum, PAUSE_RESUME_LIST, CONTROL_STATE_HIDDEN);
     Pause_SetState(managerNum, PAUSE_CONFIRM_TEXT, CONTROL_STATE_INERT);
-    __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_CONFIRM_TEXT, MessageType_SetText, (int)Txt_BindLabel(question, 0), 0);
+    __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_CONFIRM_TEXT, MessageType_SetText, (intptr_t)Txt_BindLabel(question, 0), 0);
     __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_CONFIRM_LIST, MessageType_SelectIndex, 1, 0);
     Pause_SetState(managerNum, PAUSE_CONFIRM_LIST, CONTROL_STATE_SHOWN);
 }
@@ -361,7 +361,7 @@ static void Pause_AskConfirm(uchar managerNum, Action_TranslatedText question) {
 // resumes, or asks before restarting the mission or quitting to the front end; the style radio changes the style and
 // X inverts the look.
 // AUTOINJECT
-bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch (message) {
     case MessageType_GainFocus:
         Pause_SetState(managerNum, PAUSE_RESUME_LIST, CONTROL_STATE_HIDDEN);
@@ -458,7 +458,7 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetColour,
                           input->inverted ? 0x645a49c0 : 0x644646c0, 0);
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetText,
-                          (int)Txt_BindLabel(input->inverted ? TXT_INVERTED : TXT_NORMAL, 0), 0);
+                          (intptr_t)Txt_BindLabel(input->inverted ? TXT_INVERTED : TXT_NORMAL, 0), 0);
         }
         break;
     }
@@ -472,7 +472,7 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 #define SUB_P_ENDMISSION_ICON    ((HASHCODE)0x10000184)
 
 // AUTOINJECT
-bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, int arg1, int arg2) {
+bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         __Menu_Send(managerNum, SUB_P_ENDMISSION_TITLE, MessageType_SetTextFlag2000, 0, 0);
         __Menu_Send(managerNum, SUB_P_PAUSE_HINT_TEXT, MessageType_SetTextFlag2000, 0, 0);
