@@ -5,6 +5,7 @@
 // results must agree. Run at start with MenuShadowTests=on (MenuProbe.cpp).
 
 #include "MathExactShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../actionhelpers.h"
@@ -123,7 +124,7 @@ _VECTOR Vector(float (*component)(void)) {
 
 void Fill(void *p, size_t size) {
     for (size_t i = 0; i + 4 <= size; i += 4)
-        memcpy((uint8_t *)p + i, &kUntouched, 4);
+        XbeOursWrite((unsigned)(size_t)p + (unsigned)i, &kUntouched, 4);
 }
 
 struct Suite {

@@ -10,6 +10,7 @@
 // the floor. The drops from MP_PlayerKilled call our code directly and are not seen here.
 
 #include "MPFlagShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game.h"
@@ -46,7 +47,8 @@ Counts s_flag = { "Flag" }, s_bluePrint = { "BluePrint" };
 int CollectRegions(Region *regions, MPOBJECT *mpObj, obj_tag *gameObj) {
     int n = 0;
     regions[n++] = { "MPGame", &MPGame, sizeof(MPGameStruct) };
-    regions[n++] = { "rng", (void *)0x0018cdf8, 8 };
+    regions[n++] = { "rng", (void *)(size_t)XbeOurs(0x0018cdf8), 4 };
+    regions[n++] = { "rng", (void *)(size_t)XbeOurs(0x0018cdfc), 4 };
     regions[n++] = { "mpObj", mpObj, sizeof(MPOBJECT) };
     regions[n++] = { "gameObj", gameObj, kObjSize };
     return n;
@@ -105,7 +107,7 @@ void __declspec(naked) OriginalFlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, boo
 
 void __cdecl ShadowFlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
     static Snapshot before, original;
-    Region regions[4];
+    Region regions[5];
     int n = CollectRegions(regions, mpObj, gameObj);
 
     Save(regions, n, &before);
@@ -153,7 +155,7 @@ void __declspec(naked) OriginalBluePrintUpdate(MPOBJECT *mpObj, bool dropped, ob
 
 void __cdecl ShadowBluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     static Snapshot before, original;
-    Region regions[4];
+    Region regions[5];
     int n = CollectRegions(regions, mpObj, gameObj);
 
     Save(regions, n, &before);

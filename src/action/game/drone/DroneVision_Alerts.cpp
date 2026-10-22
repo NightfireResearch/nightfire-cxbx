@@ -31,7 +31,7 @@
 
 
 // While set, no drone sees or hears anything (the cheat)
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+extern uint32_t switch_BLIND_DRONES;
 
 // The target bit of a drone's soundTarget
 #define AITARGET_SOUND 0x4000000

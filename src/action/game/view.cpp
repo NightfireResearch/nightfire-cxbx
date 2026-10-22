@@ -30,6 +30,17 @@
 #include <stdio.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x0029d7a0, 0x444)
+SkyObj SkyObjs[SKY_OBJS];
+// XBE_GLOBAL(0x0029e81a, 0x1)
+uint8_t LightningFlash;
+// XBE_GLOBAL(0x0029e81b, 0x1)
+uint8_t ThunderNear;
+// XBE_GLOBAL(0x0029e81c, 0x1)
+uint8_t LightningOverhead;
+// XBE_GLOBAL(0x0029e820, 0x4)
+uint32_t SkyTurn;
+
 // The views (a bit per player's) the object is drawn in, and with it an animated object's rigid parts
 // AUTOINJECT
 void View_SetDrawInViews(obj_tag* o, short views) {
@@ -134,25 +145,28 @@ void View_DrawGlist(celglist_tag* celglist, _VECTOR *translation, _VECTOR *rotat
 }
 
 // The views an object is drawn in this pass, a bit each (View_CaptureSceneSub)
-#define object_display_mask U32_AT(0x0029e80c)
+// XBE_GLOBAL(0x0029e80c, 0x4)
+uint32_t object_display_mask;
 // XBE_GLOBAL(0x001dfa18, 0x4)
 uint32_t switch_ForceDrawAll;
 
 // XBE_GLOBAL(0x0029dbf0, 0xc)
-#define CamPos (*(_VECTOR*)(0x0029dbf0))
+_VECTOR CamPos;
 
 // Set for each object added to a view (the draw code reads them): its transformFlags' bit 0, and 0
-#define OnlyScaleZ U16_AT(0x0029e814)
-#define FlipScale U16_AT(0x0029e818)
+// XBE_GLOBAL(0x0029e814, 0x2)
+uint16_t OnlyScaleZ;
+// XBE_GLOBAL(0x0029e818, 0x2)
+uint16_t FlipScale;
 // Set for each object View_DrawObjList draws: its flags' bits 2 and 3
-#define bCharacterLight U8_AT(0x001d7824)
-#define bShadowCharacter U8_AT(0x001d7825)
+extern uint8_t bCharacterLight;
+extern uint8_t bShadowCharacter;
 // A codename option (P_CNOPTIONS_Handler): objects that want it flash, with FlashMod, near the view
 #define FlashOption U8_AT(0x001fe6dc)
-#define FlashMod FLOAT_AT(0x0027911c)
+extern float FlashMod;
 
 // The originals, called by address
-#define GlobalBlur U8_AT(0x001f667c)
+extern uint8_t GlobalBlur;
 
 // The empty function the linker shares, where the source called its profiling hooks
 #define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
@@ -379,7 +393,7 @@ void View_AddForcedObjects(viewer_tag *viewer) {
 }
 
 // XBE_GLOBAL(0x0029e800, 0xc)
-#define Tots (*(uint32_t (*)[3])0x0029e800)
+uint32_t Tots[3];
 
 void _View_CaptureScene(viewer_tag *viewer) {
     viewer->draw.counts[0] = 0;
@@ -746,11 +760,13 @@ void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot
 }
 
 
-#define SprCnt U32_AT(0x0029e810)
+// XBE_GLOBAL(0x0029e810, 0x4)
+uint32_t SprCnt;
 
 // A pointer to memory address 0x0029dc00 which contains 64 SPRITE_DRAW instances (not pointers)
 // We must preserve the original type for correct code generation
-#define SprBuffList (*(SPRITE_DRAW(*)[64])0x0029dc00)
+// XBE_GLOBAL(0x0029dc00, 0xc00)
+SPRITE_DRAW SprBuffList[64];
 
 static_assert(ARRAY_SIZE(SprBuffList) == 64, "Sprite buffer number of entries incorrect");
 static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
@@ -758,7 +774,8 @@ static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
 // A glyph of __Font_DrawText (gfx/Font.cpp) is the font's sprite template, CharInfo, copied into the slot
 // View_AddSprite hands out. So by the next call a slot that holds the template is a glyph, whose texture is then
 // known - which is when the font's glyph boxes can go out beside the dumped texture (DumpTextures in settings.ini).
-#define CharInfo (*(const SPRITE_DRAW *)0x001f64b4)
+// XBE_GLOBAL(0x001f64b4, 0x30)
+SPRITE_DRAW CharInfo;
 static int s_pendingGlyph = -1;
 static const uint8_t *s_pendingFont = NULL;   // the font current at that call - by the next it may not be
 

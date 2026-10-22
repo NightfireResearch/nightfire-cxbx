@@ -8,6 +8,7 @@
 // answers from a sequence drawn per case. What the callees would do in a match is not tested here.
 
 #include "DroneBotShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -30,7 +31,7 @@ extern "C" uint32_t __cdecl DroneBotShadow_Fake(int index, uint32_t callerReturn
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -794,13 +795,13 @@ void DroneBotShadow_Run(void) {
     uint32_t frameRate = FRAME_RATE_INT;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&MPSettings.GameMode, 4);
     regions.Add(&MPGame, sizeof(MPGame));
@@ -849,7 +850,7 @@ void DroneBotShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&NPCGlobals, npc, sizeof(npc));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
     MPSettings.GameMode = gameMode;
     memcpy(&MPGame, mpGame, sizeof(mpGame));

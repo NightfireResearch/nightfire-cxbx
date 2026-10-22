@@ -32,6 +32,17 @@
 #include <string.h>
 #include "../sound/SFX.h"
 
+// XBE_GLOBAL(0x0025d7bc, 0x1)
+uint8_t menu_music_playing;
+// XBE_GLOBAL(0x0025d7bd, 0x1)
+uint8_t menu_movie_skippable;
+// XBE_GLOBAL(0x0025d7be, 0x1)
+uint8_t menu_movie_stopped_music;
+// XBE_GLOBAL(0x0025d7c0, 0x4)
+uint32_t menu_movie_skip_delay;
+// XBE_GLOBAL(0x0025d7dd, 0x1)
+uint8_t cn_modified;
+
 // XBE_GLOBAL(0x0025d7de, 0x1)
 uint8_t cn_secret_mode;
 // Menu (Send, SendEx, SendMessage), Iris (Start, Play), Wheel etc
@@ -549,7 +560,7 @@ M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int value, uint numItems) {
 
 
 
-#define menu_unlock_everything U8_AT(0x0025d79e)
+extern char menu_unlock_everything;
 
 // AUTOINJECT
 void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything) { 
@@ -601,24 +612,34 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
 #define Window_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window))0x000e0ec0)
 
 // Every manager's skin sets
-#define component_list (*(LINKEDLIST *)0x00223a90)
+// XBE_GLOBAL(0x00223a90, 0x10)
+LINKEDLIST component_list;
 // Frames counted by Menu_AlphaUpdate, and the frame and controller of the last action Menu_GetAction reported
-#define menu_frame U32_AT(0x00223aa0)
-#define menu_last_action U32_AT(0x00223aa4)
-#define menu_last_controller U32_AT(0x0017c540)     // -1 at boot
+// XBE_GLOBAL(0x00223aa0, 0x4)
+uint32_t menu_frame;
+// XBE_GLOBAL(0x00223aa4, 0x4)
+uint32_t menu_last_action;
+// XBE_GLOBAL(0x0017c540, 0x4)
+uint32_t menu_last_controller = 4294967295;  // -1 at boot
 // The highlight's pulse (Menu_AlphaUpdate)
-#define menu_alpha I16_AT(0x00223b2c)
-#define menu_alpha_phase FLOAT_AT(0x00223b30)
+// XBE_GLOBAL(0x00223b2c, 0x2)
+int16_t menu_alpha;
+// XBE_GLOBAL(0x00223b30, 0x4)
+float menu_alpha_phase;
 // The sounds the page allows (Menu_EnableSounds): MENU_SOUND_*
-#define menu_sounds U32_AT(0x00223b34)
+// XBE_GLOBAL(0x00223b34, 0x4)
+uint32_t menu_sounds;
 // The text's throb (Menu_UpdateTextFmt). Nothing reads the scale.
-#define menu_text_scale FLOAT_AT(0x00223b38)
-#define menu_text_phase FLOAT_AT(0x00223b3c)
+// XBE_GLOBAL(0x00223b38, 0x4)
+float menu_text_scale;
+// XBE_GLOBAL(0x00223b3c, 0x4)
+float menu_text_phase;
 // The text format of a sprite Menu_InitializeSprite gives a text (also List_Init's)
 #define MenuTextFormat FontFormat2Scaled
 
 // What Menu_GetFirstControl hands back when a page has nothing to focus on
-#define menu_no_control (*(M_BASECONTROL *)0x00224558)
+// XBE_GLOBAL(0x00224558, 0x94)
+M_BASECONTROL menu_no_control;
 #define NO_CONTROL_HASHCODE ((HASHCODE)0x1fffffff)
 
 #define COMPONENTSET_NEXT_ID 999    // Component_AddSet: the next id free

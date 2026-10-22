@@ -425,13 +425,13 @@ static_assert(offsetof(sAnimSet_tag, tag) == 0x20, "Offset of tag wrong");
 static_assert(offsetof(sAnimSet_tag, oneShotState) == 0x33, "Offset of oneShotState wrong");
 
 // SkeletonInfo *SkeletonTable[128]
-#define SkeletonTable (*(SkeletonInfo*(*)[128])0x001d7578)
+extern SkeletonInfo *SkeletonTable[128];
 
 // The animation code's working list (AnimListBuild)
-#define GlbAnimListCount I32_AT(0x001d77a0)
-#define GlbAnimList (*(sAnimScript_tag *(*)[32])0x001d77a4)
+extern int32_t GlbAnimListCount;
+extern sAnimScript_tag *GlbAnimList[32];
 // The foot the last footstep command named (AnimProcessScriptCmds)
-#define FootstepFoot U8_AT(0x001d7827)
+extern uint8_t FootstepFoot;
 
 // AnimListBuild's criteria, tested on each of the object's scripts against value
 #define ANIMLIST_ALL            0x1

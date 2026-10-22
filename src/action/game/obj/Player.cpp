@@ -935,8 +935,10 @@ static float MAX_AUTO_AIM_DIST_NEAR = 12.0f;
 // XBE_GLOBAL(0x00181a44, 0x4)
 static float MAX_AUTO_AIM_DIST_MIDL = 18.0f;
 // The two hint flags the PS2 build calls CamHint and StickyHint; cleared at the start of every level.
-#define CamHint (*(uchar *)0x00279145)
-#define StickyHint (*(uchar *)0x00279144)
+// XBE_GLOBAL(0x00279145, 0x1)
+uchar CamHint;
+// XBE_GLOBAL(0x00279144, 0x1)
+uchar StickyHint;
 
 // Ammo counts passed to Player_EquipWeapon. 999 is "as much as the ammo type allows" - Player_EquipWeapon
 // caps it; 0 is for gadgets that have no ammo.
@@ -1232,44 +1234,70 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-#define Plr_AimSpeed_X             FLOAT_AT(0x00181a48)
-#define Plr_AimSpeed_Y             FLOAT_AT(0x00181a4c)
-#define Plr_AimTurnSpeed_X         FLOAT_AT(0x00181a50)
-#define Plr_AimTurnSpeed_Y         FLOAT_AT(0x00181a54)
-#define Plr_ScopeSpeed_X           FLOAT_AT(0x00181a58)
-#define Plr_ScopeSpeed_X_Mul       FLOAT_AT(0x00181a5c)
-#define Plr_ScopeSpeed_X_Steps     FLOAT_AT(0x00181a60)
-#define Plr_ScopeSpeed_Y           FLOAT_AT(0x00181a64)
-#define Plr_ScopeSpeed_Y_Mul       FLOAT_AT(0x00181a68)
-#define Plr_ScopeSpeed_Y_Steps     FLOAT_AT(0x00181a6c)
-#define Plr_NoAimTurnSpeed_Y       FLOAT_AT(0x00181a7c)
-#define Plr_NoAimTurnSpeed_Y_Mul   FLOAT_AT(0x00181a80)
-#define Plr_NoAimTurnSpeed_Y_Steps FLOAT_AT(0x00181a84)
+// XBE_GLOBAL(0x00181a48, 0x4)
+float Plr_AimSpeed_X = 0.15f;
+// XBE_GLOBAL(0x00181a4c, 0x4)
+float Plr_AimSpeed_Y = 0.16f;
+// XBE_GLOBAL(0x00181a50, 0x4)
+float Plr_AimTurnSpeed_X = 0.05f;
+// XBE_GLOBAL(0x00181a54, 0x4)
+float Plr_AimTurnSpeed_Y = 0.06f;
+// XBE_GLOBAL(0x00181a58, 0x4)
+float Plr_ScopeSpeed_X = 0.015f;
+// XBE_GLOBAL(0x00181a5c, 0x4)
+float Plr_ScopeSpeed_X_Mul = 3.0f;
+// XBE_GLOBAL(0x00181a60, 0x4)
+float Plr_ScopeSpeed_X_Steps = 120.0f;
+// XBE_GLOBAL(0x00181a64, 0x4)
+float Plr_ScopeSpeed_Y = 0.011f;
+// XBE_GLOBAL(0x00181a68, 0x4)
+float Plr_ScopeSpeed_Y_Mul = 3.0f;
+// XBE_GLOBAL(0x00181a6c, 0x4)
+float Plr_ScopeSpeed_Y_Steps = 120.0f;
+// XBE_GLOBAL(0x00181a7c, 0x4)
+float Plr_NoAimTurnSpeed_Y = 0.01f;
+// XBE_GLOBAL(0x00181a80, 0x4)
+float Plr_NoAimTurnSpeed_Y_Mul = 2.0f;
+// XBE_GLOBAL(0x00181a84, 0x4)
+float Plr_NoAimTurnSpeed_Y_Steps = 120.0f;
 
 // Health given back on continuing a mission, per difficulty (read by Player_RamLoad)
-#define ContinueHealthBoostEasy   FLOAT_AT(0x0017e680)
-#define ContinueHealthBoostMedium FLOAT_AT(0x0017e684)
-#define ContinueHealthBoostHard   FLOAT_AT(0x0017e688)
+// XBE_GLOBAL(0x0017e680, 0x4)
+float ContinueHealthBoostEasy = 50.0f;
+// XBE_GLOBAL(0x0017e684, 0x4)
+float ContinueHealthBoostMedium = 50.0f;
+// XBE_GLOBAL(0x0017e688, 0x4)
+float ContinueHealthBoostHard = 50.0f;
 
 // Autoaim (read by Check_AutoAim, and Autoaim_Range by Player_AutoAim). Autoaim_HardMul is in .bss, so it is
 // 0 until the first level loads anyway.
-#define Autoaim_Angle_H   FLOAT_AT(0x00181afc)
-#define Autoaim_Angle_V   FLOAT_AT(0x00181b00)
-#define Autoaim_Range     FLOAT_AT(0x00181b04)
-#define Autoaim_LockOnMul FLOAT_AT(0x00181b08)
-#define Autoaim_EasyMul   FLOAT_AT(0x00181b0c)
-#define Autoaim_NormalMul FLOAT_AT(0x00181b10)
-#define Autoaim_HardMul   FLOAT_AT(0x0027915c)
+// XBE_GLOBAL(0x00181afc, 0x4)
+float Autoaim_Angle_H = 0.17453f;
+// XBE_GLOBAL(0x00181b00, 0x4)
+float Autoaim_Angle_V = 0.17453f;
+// XBE_GLOBAL(0x00181b04, 0x4)
+float Autoaim_Range = 35.0f;
+// XBE_GLOBAL(0x00181b08, 0x4)
+float Autoaim_LockOnMul = 2.0f;
+// XBE_GLOBAL(0x00181b0c, 0x4)
+float Autoaim_EasyMul = 1.25f;
+// XBE_GLOBAL(0x00181b10, 0x4)
+float Autoaim_NormalMul = 1.0f;
+// XBE_GLOBAL(0x0027915c, 0x4)
+float Autoaim_HardMul;
 
 // Damage the player takes, per difficulty and per body part (read by Player_HandlePain; the body-part ones also by
 // BOT_handlePain; all editable in the P_TWEAKS debug menu)
-#define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)
-#define Plr_DMod_Head      FLOAT_AT(0x0017e8d0)
-#define Plr_DMod_LowerLimb FLOAT_AT(0x0017e8d4)
-#define Plr_DMod_UpperLimb FLOAT_AT(0x0017e8d8)
-#define Plr_DMod_Easy      FLOAT_AT(0x0017e8dc)
-#define Plr_DMod_Normal    FLOAT_AT(0x0017e8e0)
-#define Plr_DMod_Hard      FLOAT_AT(0x0017e8e4)
+extern float Plr_DMod_Multi;
+extern float Plr_DMod_Head;
+extern float Plr_DMod_LowerLimb;
+extern float Plr_DMod_UpperLimb;
+// XBE_GLOBAL(0x0017e8dc, 0x4)
+float Plr_DMod_Easy = 0.75f;
+// XBE_GLOBAL(0x0017e8e0, 0x4)
+float Plr_DMod_Normal = 1.0f;
+// XBE_GLOBAL(0x0017e8e4, 0x4)
+float Plr_DMod_Hard = 1.25f;
 
 
 // Level 0x700004C has no name in assets.h; it is scored like the late levels (the Ravine is 0x700004B).
@@ -1474,8 +1502,9 @@ void __stdcall ReadTuningVars(void) {
 // weapon's zoom on; every other view is drawn unzoomed.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define surfaced U8_AT(0x00276760)       // non-zero while swimming at the surface
-#define debug_cam_posy FLOAT_AT(0x001fec50) // height of camera mode 8's overhead view above the player
+// XBE_GLOBAL(0x00276760, 0x1)
+uint8_t surfaced;  // non-zero while swimming at the surface
+extern float debug_cam_posy;  // height of camera mode 8's overhead view above the player
 
 // The bone AnimGetBoneWorldTrans gives the head for (also Player_Update's breath effect).
 #define BONE_HEAD 0x80000005
@@ -1714,7 +1743,7 @@ void Player_PositionCamera(obj_tag *player) {
 #define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
-#define debug_scanmode U8_AT(0x001fec49)   // the player starts every level flying (MovementType_ScanMode)
+extern uint8_t debug_scanmode;  // the player starts every level flying (MovementType_ScanMode)
 // XBE_GLOBAL(0x001f6648, 0xc) is GRAVITY_VECTOR: in zero G its y is 0
 
 // BLData::jumpState
@@ -3811,8 +3840,9 @@ void __declspec(naked) Player_Activate(void) {
 
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 
-#define benchmark U8_AT(0x002adf32) // set, the player stands still
-#define GlobalBlur U8_AT(0x001f667c)
+// XBE_GLOBAL(0x002adf32, 0x1)
+uint8_t benchmark;  // set, the player stands still
+extern uint8_t GlobalBlur;
 
 // Swimming: the move, then walking out once the feet stand on something with the surface at least 0.3 below the
 // position, and the movement kept from taking the position above 0.3 below the surface.

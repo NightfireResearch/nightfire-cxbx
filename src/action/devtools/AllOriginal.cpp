@@ -18,6 +18,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -133,8 +134,10 @@ static std::unordered_map<std::string, unsigned> ReadMap(void) {
         if (sscanf(line, " %x:%x %511s %x %255s", &section, &offset, mangled, &value, obj) != 5)
             continue;
         std::string name;
-        if (mangled[0] == '?' && mangled[1] != '?' && mangled[1] != '$')
-            name = std::string(mangled + 1, strcspn(mangled + 1, "@"));
+        // a global variable is ?Name@@3<type>; a function's static (?Name@?1??Function...) is not one of ours
+        size_t length = strcspn(mangled + 1, "@");
+        if (mangled[0] == '?' && mangled[1] != '?' && mangled[1] != '$' && strncmp(mangled + 1 + length, "@@3", 3) == 0)
+            name = std::string(mangled + 1, length);
         else if (mangled[0] == '_')
             name = mangled + 1;
         else
@@ -148,21 +151,106 @@ static std::unordered_map<std::string, unsigned> ReadMap(void) {
     return out;
 }
 
-void AllOriginal_Install(void) {
-    // The owned globals: every reference the game's code makes to its copy points at ours
+// Every owned global's copy of ours, by the game's address
+struct OwnedCopy {
+    unsigned game, size, ours;
+};
+static std::vector<OwnedCopy> g_copies;
+
+// The copies found in the map, once: the shadow tests' tables can ask before the injection has run
+static void FindCopies(void) {
+    static bool found;
+    if (found)
+        return;
+    found = true;
     std::unordered_map<std::string, unsigned> symbols = ReadMap();
-    int globals = 0, sites = 0, missing = 0;
     for (const OwnedGlobal &g : kOwnedGlobals) {
         auto it = symbols.find(g.name);
-        if (it == symbols.end()) {
+        if (it == symbols.end())
             printf("[original] %s (0x%08x) is not in the map: the game's code keeps its own copy\n", g.name, g.address);
-            missing++;
-            continue;
-        }
-        globals++;
-        for (unsigned i = 0; i < g.count; i++)
-            sites += XbeRelocate(kOwnedSites[g.first + i], g.address, g.size, (const void *)(size_t)it->second);
+        else
+            g_copies.push_back({g.address, g.size, it->second});
     }
+    std::sort(g_copies.begin(), g_copies.end(), [](const OwnedCopy &a, const OwnedCopy &b) { return a.game < b.game; });
+}
+
+void AllOriginal_RelocateOwned(void) {
+    static bool relocated;
+    if (relocated)
+        return;
+    relocated = true;
+    FindCopies();
+    int sites = 0;
+    for (const OwnedGlobal &g : kOwnedGlobals) {
+        unsigned left;
+        unsigned ours = AllOriginal_Ours(g.address, &left);
+        for (unsigned i = 0; ours != 0 && i < g.count; i++)
+            sites += XbeRelocate(kOwnedSites[g.first + i], g.address, g.size, (const void *)(size_t)ours);
+    }
+    printf("[original] %d owned globals: the game's code uses ours (%d sites)\n", (int)g_copies.size(), sites);
+    fflush(stdout);
+}
+
+unsigned XbeOurs(unsigned game) {
+    unsigned left;
+    unsigned ours = AllOriginal_Ours(game, &left);
+    return ours != 0 ? ours : game;
+}
+
+void XbeOursRead(void *to, unsigned game, size_t size) {
+    while (size != 0) {
+        unsigned left;
+        unsigned ours = AllOriginal_Ours(game, &left);
+        size_t part = size < left ? size : left;
+        memcpy(to, (const void *)(size_t)(ours != 0 ? ours : game), part);
+        to = (uint8_t *)to + part;
+        game += (unsigned)part;
+        size -= part;
+    }
+}
+
+void XbeOursWrite(unsigned game, const void *from, size_t size) {
+    while (size != 0) {
+        unsigned left;
+        unsigned ours = AllOriginal_Ours(game, &left);
+        size_t part = size < left ? size : left;
+        memcpy((void *)(size_t)(ours != 0 ? ours : game), from, part);
+        from = (const uint8_t *)from + part;
+        game += (unsigned)part;
+        size -= part;
+    }
+}
+
+void XbeOursFill(unsigned game, int value, size_t size) {
+    while (size != 0) {
+        unsigned left;
+        unsigned ours = AllOriginal_Ours(game, &left);
+        size_t part = size < left ? size : left;
+        memset((void *)(size_t)(ours != 0 ? ours : game), value, part);
+        game += (unsigned)part;
+        size -= part;
+    }
+}
+
+unsigned AllOriginal_Ours(unsigned game, unsigned *left) {
+    if (game < 0x00010000 || game >= 0x00400000) {   // not in the game's image: the heap, the stack, our DLL
+        *left = 0xffffffffu - game;
+        return 0;
+    }
+    FindCopies();
+    auto it = std::upper_bound(g_copies.begin(), g_copies.end(), game,
+                               [](unsigned a, const OwnedCopy &c) { return a < c.game; });
+    if (it != g_copies.begin() && game < (it - 1)->game + (it - 1)->size) {
+        --it;
+        *left = it->game + it->size - game;
+        return it->ours + (game - it->game);
+    }
+    *left = it != g_copies.end() ? it->game - game : 0xffffffffu - game;
+    return 0;
+}
+
+void AllOriginal_Install(void) {
+    AllOriginal_RelocateOwned();
 
     // The game's functions: each original back in place, and our port leading to it
     std::vector<unsigned> keep;
@@ -219,8 +307,7 @@ void AllOriginal_Install(void) {
         redirected++;
     }
     FlushInstructionCache(GetCurrentProcess(), NULL, 0);
-    printf("[original] NIGHTFIRE_ORIGINAL=game: %d owned globals moved for the game's code (%d sites, %d not in the "
-           "map); %d functions run as the original, %d of our ports lead to them, %d left (shared or too close), "
-           "%d kept ours\n", globals, sites, missing, restored, redirected, shared, kept);
+    printf("[original] NIGHTFIRE_ORIGINAL=game: %d functions run as the original, %d of our ports lead to them, %d left "
+           "(shared or too close), %d kept ours\n", restored, redirected, shared, kept);
     fflush(stdout);
 }

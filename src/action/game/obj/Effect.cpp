@@ -113,7 +113,7 @@ HEINFO_tag EffectInfo[EFFECT_INFO_COUNT] = {
 
 // The marks of bullets and feet
 // XBE_GLOBAL(0x002237c0, 0x18)
-#define EffectList (*(DLISTINFO_tag *)0x002237c0)
+DLISTINFO_tag EffectList;
 
 // The platform's particle update, MSVC's shared `return false` on the Xbox
 #define psiParticleUpdate ((bool (__cdecl *)(void *particles))0x000de5e0)

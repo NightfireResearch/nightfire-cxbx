@@ -215,7 +215,7 @@ static_assert(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playe
 
 // Set by Script_Play when the playing script has ScriptFlag_IsCameraNIS set; read by whatever drives the
 // camera stack to know which script currently owns it.
-#define ScriptCam (*(HASHCODE*)0x001f6678)
+extern HASHCODE ScriptCam;
 
 void Script_Free(SCRIPTINFO *param_1);
 // The register-convention entries (Script.cpp says where each takes its arguments) and their C bodies

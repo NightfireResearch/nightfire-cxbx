@@ -9,6 +9,7 @@
 // the originals leave the rest of EAX as whatever the last load or call put there.
 
 #include "DroneCivilianShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -27,7 +28,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -471,14 +472,14 @@ void DroneCivilianShadow_Run(void) {
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(channels, switch_channels, sizeof(channels));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(switch_channels, 256);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
 
@@ -495,7 +496,7 @@ void DroneCivilianShadow_Run(void) {
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(switch_channels, channels, sizeof(channels));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_DIV = frameDiv;
 

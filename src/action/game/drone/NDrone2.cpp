@@ -691,9 +691,10 @@ void DroneFunc_HandleExplosives(DCVars_tag *dcv) {
 // The drones NDrone2_SeenAndAttacking has counted since the music code last started the count (only it uses them;
 // the PS2 build's names)
 // XBE_GLOBAL(0x001ee288, 0x190)
-#define pNPCPassed (*(Drone_tag *(*)[100])0x001ee288)
+Drone_tag *pNPCPassed[100];
 // XBE_GLOBAL(0x001ee418, 4)
-#define pDCVCount I32_AT(0x001ee418)
+// XBE_GLOBAL(0x001ee418, 0x4)
+int32_t pDCVCount;
 
 #define COMBAT_MUSIC 5      // the value with MUSIC_EVENT_ALARM
 

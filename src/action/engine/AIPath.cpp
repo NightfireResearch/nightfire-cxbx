@@ -28,7 +28,7 @@
 
 // The block's version, as read
 // XBE_GLOBAL(0x00274ca8, 0x4)
-#define AIPath_BlockVersion U32_AT(0x00274ca8)
+uint32_t AIPath_BlockVersion;
 
 // AUTOINJECT
 void AIPath_Init(void) {

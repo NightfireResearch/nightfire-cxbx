@@ -9,6 +9,21 @@
 #include "../../math/X87Ops.h"
 #include "control.h"
 
+// XBE_GLOBAL(0x002637e0, 0x1)
+uint8_t DropType;
+// XBE_GLOBAL(0x00263998, 0x1000)
+uchar DropState[MAX_DROPS];
+// XBE_GLOBAL(0x00264b18, 0x1)
+uint8_t InitBodge;
+// XBE_GLOBAL(0x00264b1c, 0x2)
+int16_t CurrentMax;
+// XBE_GLOBAL(0x00264b20, 0x4)
+obj_tag *RainBoxRoot;
+// XBE_GLOBAL(0x00264b28, 0x10000)
+DROP_tag DropVector[MAX_DROPS];
+// XBE_GLOBAL(0x00274b28, 0x2)
+int16_t Added;
+
 #pragma fp_contract(off)
 
 // The PS2's copy back from its scratchpad: the shared empty function on the Xbox

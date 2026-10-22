@@ -10,8 +10,13 @@
 
 #include <string.h>
 
-#define pWoman (*(void**)0x002ae2e0) // Current point in the buffer to which we have decoded
-#define WomanFrame U32_AT(0x002ae2e4) // Frame number
+// XBE_GLOBAL(0x002ae2dc, 0x4)
+void *MemoryForWoman;
+
+// XBE_GLOBAL(0x002ae2e0, 0x4)
+void *pWoman;  // Current point in the buffer to which we have decoded
+// XBE_GLOBAL(0x002ae2e4, 0x4)
+uint32_t WomanFrame;  // Frame number
 
 
 // Loads the pause menu background's RLE file whole and rewinds the decoder to its first frame
@@ -32,7 +37,8 @@ void LoadWoman_Thunk(void) {
     LoadWoman();
 }
 
-#define WomanFirePixel U32_AT(0x002ae4f0)   // where the next frame takes the fire texture from, in pixels
+// XBE_GLOBAL(0x002ae4f0, 0x4)
+uint32_t WomanFirePixel;  // where the next frame takes the fire texture from, in pixels
 
 #define WOMAN_FRAMES 348        // the frames in the file
 #define WOMAN_HELD_UNTIL 588    // the last is held until then, and the film starts again

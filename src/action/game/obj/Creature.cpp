@@ -14,7 +14,7 @@
 // were placed, turning towards a player close by, and fish, which keep below the water and are listed in FishList.
 
 // XBE_GLOBAL(0x001df8b0, 0xc)
-#define FishList (*(LLISTINFO_tag *)0x001df8b0)
+LLISTINFO_tag FishList;
 
 #define CEL_KIND_WATER 0xc023   // the low word of cel_tag::bitsFromPlacementTag where fish live
 

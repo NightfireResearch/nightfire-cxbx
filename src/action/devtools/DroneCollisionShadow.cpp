@@ -11,6 +11,7 @@
 // Rand_Random state, and it is compared afterwards.
 
 #include "DroneCollisionShadow.h"
+#include "AllOriginal.h"
 #include "../game/obj/Player.h"
 #include "ShadowHarness.h"
 
@@ -33,7 +34,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // AnimGetCollData's boxes (16 of them for either table)
 #define HitList2Block ((uint8_t *)0x001d6bf0)
 const int kHitList2Bytes = 16 * sizeof(COLLJOINT_tag);
@@ -663,7 +664,7 @@ void DroneCollisionShadow_Run(void) {
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(hitList2, HitList2Block, sizeof(hitList2));
     memcpy(players, glb_players, sizeof(players));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
     gravity = GRAVITY_VECTOR;
 
     regions.Clear();
@@ -673,7 +674,7 @@ void DroneCollisionShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(HitList2Block, kHitList2Bytes);
     regions.Add(glb_players, sizeof(players));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&REC_FRAME_RATE, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
@@ -698,7 +699,7 @@ void DroneCollisionShadow_Run(void) {
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(HitList2Block, hitList2, sizeof(hitList2));
     memcpy(glb_players, players, sizeof(players));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     GRAVITY_VECTOR = gravity;
     FRAME_RATE_INT = frameRateInt;
     REC_FRAME_RATE = recFrameRate;

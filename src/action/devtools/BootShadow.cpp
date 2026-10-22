@@ -5,6 +5,7 @@
 // MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=boot runs it alone.
 
 #include "BootShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -142,24 +143,23 @@ const struct {
     {0x0017d588, 0x70},     // def_codename
     {0x001fe6d0, 0x158},    // PlayerInputs[0]
     {0x001f65dc, 0x10},     // CheatInfo
-    {0x001f6580, sizeof(GameState_t)},
+    {XbeOurs(0x001f6580), sizeof(GameState_t)},
     {0x0025fe38, 0x23c},    // MPSettings
-    {0x0025d79e, 0x1},      // menu_unlock_everything
-    {0x0025d7a0, 0x4},      // LanguageToLoad
+    {XbeOurs(0x0025d79e), 0x1},      // menu_unlock_everything
+    {XbeOurs(0x0025d7a0), 0x4},      // LanguageToLoad
     {0x001f660c, 0xc},      // the split screen's layout, the widescreen, the subtitles
 };
 ShadowRegions regions;
 
 void Garble(void) {
     for (const auto &r : kRegions) {
-        uint8_t *at = (uint8_t *)(uintptr_t)r.at;
         for (size_t i = 0; i < r.size; i++)
-            at[i] = (uint8_t)ShadowRand(0x100);
+            *(uint8_t *)(size_t)XbeOurs(r.at + (unsigned)i) = (uint8_t)ShadowRand(0x100);
     }
     MENU_LS *l = (MENU_LS *)0x0017d540;
     l->doMiniMission = (uchar)ShadowRand(2);
-    U32_AT(0x001f6610) = ShadowRand(3);   // IsWidescreen, mostly 0 or 1
-    GameState_t *gs = (GameState_t *)0x001f6580;
+    U32_AT(XbeOurs(0x001f6610)) = ShadowRand(3);   // IsWidescreen, mostly 0 or 1
+    GameState_t *gs = (GameState_t *)XbeOurs(0x001f6580);
     gs->NextLevelHashcode = ShadowRand(3) ? kParis : (HASHCODE)(0x09000000 + ShadowRand(8));
 }
 
@@ -195,8 +195,10 @@ uint32_t RunOurs(void) { return Run(false); }
 
 void BootShadow_Run(void) {
     std::vector<std::vector<uint8_t>> saved;
-    for (const auto &r : kRegions)
-        saved.emplace_back((uint8_t *)(uintptr_t)r.at, (uint8_t *)(uintptr_t)r.at + r.size);
+    for (const auto &r : kRegions) {
+        saved.emplace_back(r.size);
+        XbeOursRead(saved.back().data(), r.at, r.size);
+    }
     regions.Clear();
     for (const auto &r : kRegions)
         regions.Add((void *)(uintptr_t)r.at, r.size);
@@ -219,7 +221,7 @@ void BootShadow_Run(void) {
     ShadowHook_RemoveAll();
     NfWarnMuted--;
     for (size_t i = 0; i < saved.size(); i++)
-        memcpy((void *)(uintptr_t)kRegions[i].at, saved[i].data(), saved[i].size());
+        XbeOursWrite(kRegions[i].at, saved[i].data(), saved[i].size());
     printf("[boot] Boot_GetPTPData, Boot_LoadPTPData: %d cases, %d differ\n", cases, differ);
     fflush(stdout);
 }

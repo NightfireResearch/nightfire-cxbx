@@ -10,6 +10,9 @@
 #include "../Spline.h"
 #include "../../math/X87Ops.h"
 
+// XBE_GLOBAL(0x0029aabc, 0xc)
+LLISTINFO_tag CameraList;
+
 // Scanning cameras with conical beams, eg in evil base and office, but NOT the lasers which trigger the alarm - presumably some kind of Trigger instead
 
 #pragma pack(push, 1)

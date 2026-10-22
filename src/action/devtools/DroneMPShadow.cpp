@@ -16,6 +16,7 @@
 // re-run from a snapshot. The replays cover it.
 
 #include "DroneMPShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game/drone/NDrone2.h"
@@ -33,7 +34,7 @@ const unsigned kFindOpponent = 0x00037c10;
 // The real sizes where our headers do not lay the whole thing out
 const size_t kObjSize = 0xe4;
 const unsigned kMsgPool = 0x001ee438, kMsgPoolSize = 0x1f6448 - 0x1ee438; // 1024 nodes, then the two list heads
-const unsigned kRandState = 0x0018cdf8;
+const unsigned kRandState = XbeOurs(0x0018cdf8);
 
 struct Region {
     const char *name;

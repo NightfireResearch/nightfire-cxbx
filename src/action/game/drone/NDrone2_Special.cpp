@@ -29,7 +29,7 @@
 #define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char follow))0x00046d90)
 
 // The cheat that blinds the drones (ui_cheats.cpp)
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+extern uint32_t switch_BLIND_DRONES;
 
 // Below this alertness an enemy on its mission path walks (and waits) idly
 #define ENEMY_ALERT_LOOK 0.66f

@@ -45,7 +45,7 @@ M_ITEM difficulty[3] = {
     {ICON_DIFFICULTY_00AGENT, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},
 };
 
-#define menu_unlock_everything U8_AT(0x0025d79e)
+extern char menu_unlock_everything;
 // Counts up a few frames once a mission is picked (0 = none), so the loading panel shows before the load starts.
 // XBE_GLOBAL(0x0025d7dc, 0x1)
 static uint8_t nf_mission_countdown;
@@ -178,7 +178,7 @@ char results_score_text[0x40];
 // XBE_GLOBAL(0x0025dd50, 0x1)
 uint8_t results_saving;
 
-#define menu_level_bonus_earned U8_AT(0x0025d78c)   // MenuUnlocks.cpp
+extern uint8_t menu_level_bonus_earned;  // MenuUnlocks.cpp
 
 #define SUB_P_NFRESULTS_TITLE_TEXT  ((HASHCODE)0x100001d1)
 #define SUB_P_NFRESULTS_SCORE_TEXT  ((HASHCODE)0x10000167)

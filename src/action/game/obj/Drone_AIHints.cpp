@@ -8,12 +8,15 @@
 #include <math.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x001dfa1c, 0xc)
+LLISTINFO_tag AIBoxList;
+
 #pragma fp_contract(off)
 
 
 // Drone_ProcessCoverNodes counts it down by 2 from 10
 // XBE_GLOBAL(0x001dfa2c, 0x4)
-#define iTimeToCalc I32_AT(0x001dfa2c)
+int32_t iTimeToCalc;
 
 // The script a kickable script player runs
 #define KICK_SCRIPT 0x060005bb

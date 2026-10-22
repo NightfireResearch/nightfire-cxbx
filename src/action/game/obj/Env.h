@@ -30,7 +30,7 @@ static_assert(offsetof(ENV_tag, windSpread) == 0x38, "Bad offset of ENV_tag.wind
 static_assert(offsetof(ENV_tag, windRising) == 0x41, "Bad offset of ENV_tag.windRising");
 
 // The last ENV_tag Env_Create made, whose dropType is the level's rain
-#define GlobalEnv (*(ENV_tag **)0x001f64ac)
+extern ENV_tag *GlobalEnv;
 
 // A wind's placement keys (level_tag)
 typedef struct EnvPlacement {

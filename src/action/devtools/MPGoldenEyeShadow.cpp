@@ -11,6 +11,7 @@
 // dropped path only from our MP_PlayerKilled; both are left to the replays.
 
 #include "MPGoldenEyeShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game.h"
@@ -25,7 +26,7 @@ namespace {
 const unsigned kGoldenEyeUpdate = 0x000a0370;
 
 const size_t kObjSize = 0xe4;
-const int kMaxRegions = 8;
+const int kMaxRegions = 10;
 
 struct Region {
     const char *name;
@@ -46,7 +47,8 @@ Counts s_counts;
 int CollectRegions(Region *regions, MPOBJECT *mpObj, obj_tag *gameObj) {
     int n = 0;
     regions[n++] = { "MPGame", &MPGame, sizeof(MPGameStruct) };
-    regions[n++] = { "rng", (void *)0x0018cdf8, 8 };
+    regions[n++] = { "rng", (void *)(size_t)XbeOurs(0x0018cdf8), 4 };
+    regions[n++] = { "rng", (void *)(size_t)XbeOurs(0x0018cdfc), 4 };
     regions[n++] = { "GoldenEye", &GoldenEye, sizeof(GoldenEyeStruct) };
     regions[n++] = { "mpObj", mpObj, sizeof(MPOBJECT) };
     regions[n++] = { "gameObj", gameObj, kObjSize };

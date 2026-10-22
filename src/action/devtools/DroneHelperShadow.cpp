@@ -7,6 +7,7 @@
 // Bool and char returns are compared in AL and short ones in AX: no original caller reads more (narrow_returns.py).
 
 #include "DroneHelperShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -29,7 +30,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -273,7 +274,7 @@ float RandomFloat() {
 void RandomBytes(void *at, size_t n) {
     uint8_t *b = (uint8_t *)at;
     for (size_t i = 0; i < n; i++)
-        b[i] = (uint8_t)ShadowRand(256);
+        *(uint8_t *)(size_t)XbeOurs((unsigned)(size_t)(b + i)) = (uint8_t)ShadowRand(256);
 }
 
 void RandomDrone(int i) {
@@ -578,13 +579,13 @@ void DroneHelperShadow_Run(void) {
     uint32_t frameRate = FRAME_RATE_INT;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add((void *)0x001ee420, 12);    // NDrone2_CanWalkStraightTo's target
     ShadowFakes_AddRegions(regions);
@@ -620,7 +621,7 @@ void DroneHelperShadow_Run(void) {
     ShadowFakes.createFails = false;
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&NPCGlobals, npc, sizeof(npc));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
 
     for (int g = 0; g < n; g++)

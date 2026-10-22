@@ -14,8 +14,11 @@
 
 #include <math.h>
 
+// XBE_GLOBAL(0x0029a280, 0x4)
+uint32_t SoundInit;
+
 // XBE_GLOBAL(0x0029a128, 0x18)
-#define DynamicSoundList ((DLISTINFO_tag*)(0x0029a128))
+static DLISTINFO_tag DynamicSoundList;
 
 // AUTOINJECT
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position) {
@@ -114,7 +117,7 @@ static int32_t Ftol(double x) {
 
 // AUTOINJECT
 void Sound_Init(void) {
-    DList_Init(DynamicSoundList, sizeof(DYNAMICSOUNDS), NUM_DYNAMIC_SOUNDS);
+    DList_Init(&DynamicSoundList, sizeof(DYNAMICSOUNDS), NUM_DYNAMIC_SOUNDS);
     SFXInitialise(NULL);
     memset(MusicEventList, 0, sizeof(MusicEventList));
 }
@@ -130,7 +133,7 @@ void Sound_Kill(void) {
 // sound's distance limited), any other the sound's own (10 and 20 past the table).
 DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref) {
 
-    DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(DynamicSoundList);
+    DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(&DynamicSoundList);
     if (snd == NULL) {
         NF_WARN("Summut hasnt freed there sound handle/or samples not finnished\n"); // GC check (0x800652cc)
         return NULL;
@@ -244,7 +247,7 @@ __declspec(naked) void Sound_ReqestPlaySfx(void) {
 // AUTOINJECT
 void Sound_UpdateSounds(_VECTOR *listener) {
     DYNAMICSOUNDS *next;
-    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList->activeList.head; snd != NULL; snd = next) {
+    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList.activeList.head; snd != NULL; snd = next) {
         next = snd->next;
         snd->age++;
 
@@ -267,7 +270,7 @@ void Sound_UpdateSounds(_VECTOR *listener) {
         }
         case 2:
             SFXRemove(snd, -1);
-            DList_RemoveFromInUse2Free(DynamicSoundList, (LLNODE_tag *)snd);
+            DList_RemoveFromInUse2Free(&DynamicSoundList, (LLNODE_tag *)snd);
             snd->playbackState = 3;
             snd->ref = 0;
             break;
@@ -350,7 +353,7 @@ float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest) {
         *loudest = NULL;
 
     DYNAMICSOUNDS *next;
-    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList->activeList.head; snd != NULL; snd = next) {
+    for (DYNAMICSOUNDS *snd = (DYNAMICSOUNDS *)DynamicSoundList.activeList.head; snd != NULL; snd = next) {
         next = snd->next;
         if (snd->playbackState == 2 || snd->playbackState == 3)
             continue;
@@ -450,7 +453,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
 void Sound_StopAllWithId(Action_SFX sfx) {
 
     // Iterate over the playback list
-    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList->activeList.head; ds != NULL; ds = ds->next) {
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList.activeList.head; ds != NULL; ds = ds->next) {
         // If it matches, set its status to 2
         if(ds->sfxId == sfx)
             ds->playbackState = 2;
@@ -461,7 +464,7 @@ void Sound_StopAllWithId(Action_SFX sfx) {
 // AUTOINJECT
 void Sound_ZeroAlertness(void) {
 
-    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList->activeList.head; ds != NULL; ds = ds->next) {
+    for(DYNAMICSOUNDS* ds = (DYNAMICSOUNDS*)DynamicSoundList.activeList.head; ds != NULL; ds = ds->next) {
         if ((ds->playbackState != 2) && // Not stopped
             (ds->playbackState != 3) && // Not in some other state
             ( (ds->sfxId >= ARRAY_SIZE(SFXOutputData)) || (!SFXOutputData[ds->sfxId].loopAlways) ) ) // Either an invalid SFX ID, or a non-loopAlways SFX
@@ -1055,7 +1058,7 @@ SND2LBL_tag Snd2Lbl[NUM_SND2LBL] = {
 // The subtitles' frames per second of their sound (PS2: g_fSubtitleDurationModification)
 // XBE_GLOBAL(0x0018cbd8, 0x4) readonly relocate
 float SubtitleDurationModification = 0.92f;
-#define SubtitlesEnabled U32_AT(0x001f6614)
+extern uint32_t SubtitlesEnabled;
 
 // The subtitle of a sound that has one, for its length (3 seconds for a sound past the table)
 // AUTOINJECT

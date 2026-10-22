@@ -8,6 +8,7 @@
 // ours. BOT_startWeapon is ours: the original side is given it at 0x001639c8 and what it leaves there is read back.
 
 #include "BotPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -33,18 +34,18 @@ namespace {
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
-#define GameStartWeapon I16_AT(0x001639c8)
+#define GameStartWeapon I16_AT(XbeOurs(0x001639c8))
 
 // The scenario objects (multiplayer.cpp)
-#define UplinkCount U16_AT(0x002637c8)
-#define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
-#define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
-#define Hill (*(MP_OBJ_EXT*)0x00261b88)
-#define Demolition (*(MP_OBJ_EXT*)0x00261af8)
-#define Protection (*(MP_OBJ_EXT*)0x00261b40)
-#define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
-#define DemolitionPlaceCount U16_AT(0x002637cc)
-#define ProtectionPlaceCount U16_AT(0x002637d0)
+#define UplinkCount U16_AT(XbeOurs(0x002637c8))
+#define Uplinks (*(MP_OBJ_EXT(*)[8])XbeOurs(0x002633d8))
+#define Flags (*(MP_OBJ_EXT(*)[2])XbeOurs(0x00263740))
+#define Hill (*(MP_OBJ_EXT*)XbeOurs(0x00261b88))
+#define Demolition (*(MP_OBJ_EXT*)XbeOurs(0x00261af8))
+#define Protection (*(MP_OBJ_EXT*)XbeOurs(0x00261b40))
+#define BluePrint (*(MP_OBJ_EXT*)XbeOurs(0x002635f8))
+#define DemolitionPlaceCount U16_AT(XbeOurs(0x002637cc))
+#define ProtectionPlaceCount U16_AT(XbeOurs(0x002637d0))
 
 const int BOTS = 3;
 const int MPOBJS = 6;
@@ -1455,7 +1456,7 @@ const Case kBots[] = {
 
 // ---- MP: the scenario objects
 
-#define MPBlock ((uint8_t *)0x00260078)
+#define MPBlock (GameSpan<uint8_t>{0x00260078})
 const size_t kMPBlock = 0x002637e0 - 0x00260078;
 
 void RandomObjExt(MP_OBJ_EXT *ext) {
@@ -1498,7 +1499,7 @@ void RandomMP() {
         world.mpObjects[i].num = (ushort)R(2);
     }
 
-    memset(MPBlock, 0, kMPBlock);
+    XbeOursFill(MPBlock.at, 0, kMPBlock);
     for (int i = 0; i < 2; i++) {
         RandomObjExt(&Flags[i]);
         RandomObjExt(&Bases[i]);
@@ -1659,8 +1660,8 @@ const Case kMPObjects[] = {
 
 // ---- MP: messages, status and pickups
 
-#define PickupNextAddIndex I32_AT(0x0025fe30)
-#define PickupLastDeletedIdx I32_AT(0x00261b84)
+#define PickupNextAddIndex I32_AT(XbeOurs(0x0025fe30))
+#define PickupLastDeletedIdx I32_AT(XbeOurs(0x00261b84))
 
 uint32_t RunSendBotMessage(bool original) {
     obj_tag *obj = A(4) == 0 ? &world.mpObjs[0] : &world.objs[A(BOTS)];
@@ -1987,9 +1988,9 @@ void BotPortShadow_Run(void) {
     regions.Add(&BOT_startWeapon, sizeof(BOT_startWeapon));
     regions.Add((void *)0x0018cdf8, 8);     // Rand_Random's state
     regions.Add(&SpawnPoints, sizeof(SpawnPoints));
-    regions.Add(MPBlock, kMPBlock);
+    regions.Add(MPBlock.game(), kMPBlock);
     regions.Add(&mpbots, sizeof(mpbots));
-    regions.Add((void *)0x0025fe30, 4);     // PickupNextAddIndex
+    regions.Add((void *)XbeOurs(0x0025fe30), 4);     // PickupNextAddIndex
     static MPSettings_t shippedSettings;
     static MPGameStruct shippedGame;
     static GameState_t shippedState;
@@ -1998,14 +1999,14 @@ void BotPortShadow_Run(void) {
     shippedState = GameState;
     short shippedStart = GameStartWeapon, ourStart = BOT_startWeapon;
     static uint8_t shippedBlock[0x002637e0 - 0x00260078];
-    memcpy(shippedBlock, MPBlock, kMPBlock);
+    XbeOursRead(shippedBlock, MPBlock.at, kMPBlock);
     static MPBOTS shippedBots;
     shippedBots = mpbots;
-    int shippedNextPickup = I32_AT(0x0025fe30);
+    int shippedNextPickup = I32_AT(XbeOurs(0x0025fe30));
     static MPSpawnPoint shippedSpawns[64];
     memcpy(shippedSpawns, SpawnPoints, sizeof(shippedSpawns));
     uint8_t shippedRandom[8];
-    memcpy(shippedRandom, (void *)0x0018cdf8, 8);
+    XbeOursRead(shippedRandom, 0x0018cdf8, 8);
 
     Group("the bots' weapons", kWeapons, COUNT(kWeapons), 3000);
     Group("the bots' combat moves and goals", kStates, COUNT(kStates), 3000);
@@ -2022,9 +2023,9 @@ void BotPortShadow_Run(void) {
     GameStartWeapon = shippedStart;
     BOT_startWeapon = ourStart;
     memcpy(SpawnPoints, shippedSpawns, sizeof(shippedSpawns));
-    memcpy(MPBlock, shippedBlock, kMPBlock);
+    XbeOursWrite(MPBlock.at, shippedBlock, kMPBlock);
     mpbots = shippedBots;
-    I32_AT(0x0025fe30) = shippedNextPickup;
-    memcpy((void *)0x0018cdf8, shippedRandom, 8);
+    I32_AT(XbeOurs(0x0025fe30)) = shippedNextPickup;
+    XbeOursWrite(0x0018cdf8, shippedRandom, 8);
     printf("[botport] %d cases, %d differ\n", cases, differ);
 }

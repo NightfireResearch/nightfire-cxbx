@@ -8,10 +8,10 @@
 // etc.) to know when a (normally async, hard-drive-latency-bound) operation has finished, and whether it
 // succeeded. Since our reimplementation completes synchronously, we just set the final result directly here -
 // no separate "still in progress" state is ever actually observed by the poller.
-#define psiInternalLoadingDataState U32_AT(0x002adf10)
+extern uint32_t psiInternalLoadingDataState;
 
 // The entries psiGetNextSave has handed out in this enumeration, skipped ones included
-#define SavesListed U32_AT(0x002adf0c)
+extern uint32_t SavesListed;
 
 // Real signature: psiSaveData(dataPtr, size, profileName) - "profileName" is the current Codename's name: the
 // original threads it (as a char*) into FUN_000e3340 to build a per-profile folder on the "u:\" drive, so each

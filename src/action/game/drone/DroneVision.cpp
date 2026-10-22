@@ -46,7 +46,8 @@ uint Drone_View_Bones[8] = {
     0xffffffff,
 };
 // The "blind drones" cheat (C_CHCHBLIND)
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+// XBE_GLOBAL(0x001df9a0, 0x4)
+uint32_t switch_BLIND_DRONES;
 
 #define HEAD_BONE 5
 

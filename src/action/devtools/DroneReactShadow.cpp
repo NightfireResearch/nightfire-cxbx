@@ -12,6 +12,7 @@
 // their only caller (NDrone2_ProcessStateMachine) reads them.
 
 #include "DroneReactShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -34,8 +35,8 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
+#define switch_BLIND_DRONES U32_AT(XbeOurs(0x001df9a0))
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -882,7 +883,7 @@ void DroneReactShadow_Run(void) {
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(mp, &MPSettings, sizeof(mp));
     memcpy(channels, switch_channels, sizeof(channels));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
     memcpy(players, glb_players, sizeof(players));
 
     regions.Clear();
@@ -891,7 +892,7 @@ void DroneReactShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(switch_channels, 256);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(glb_players, sizeof(players));
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
@@ -942,7 +943,7 @@ void DroneReactShadow_Run(void) {
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(&MPSettings, mp, sizeof(mp));
     memcpy(switch_channels, channels, sizeof(channels));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     memcpy(glb_players, players, sizeof(players));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_DIV = frameDiv;

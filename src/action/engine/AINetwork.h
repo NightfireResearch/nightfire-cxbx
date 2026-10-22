@@ -300,33 +300,22 @@ static_assert(sizeof(AIEmitter_tag) == 0x28, "AIEmitter_tag is wrong size");
 static_assert(sizeof(AINodeSearch_tag) == 0x30, "AINodeSearch_tag is 0x30 bytes");
 
 // The level's AI paths and bounds (AIPath_Parse, map block 0x05). Neither table's count is checked.
-// XBE_GLOBAL(0x00274cc8, 0x4)
-#define AIPathCount U32_AT(0x00274cc8)
-// XBE_GLOBAL(0x00274ccc, 0xe10)
-#define AIPaths (*(AIPath_tag(*)[50])0x00274ccc)
-// XBE_GLOBAL(0x00275adc, 0x4)
-#define AIBoundCount U32_AT(0x00275adc)
-// XBE_GLOBAL(0x00275ae0, 0xc80)
-#define AIBounds (*(AIBound_tag(*)[50])0x00275ae0)
+extern uint32_t AIPathCount;
+extern AIPath_tag AIPaths[50];
+extern uint32_t AIBoundCount;
+extern AIBound_tag AIBounds[50];
 
 // The largest node and link counts of the level's paths (AIPath_Parse): the drones' route node lists and the shared
 // safety emitter are sized from the first
-// XBE_GLOBAL(0x00274cc0, 0x4)
-#define AIPath_MaxNodes U32_AT(0x00274cc0)
-// XBE_GLOBAL(0x00274cc4, 0x4)
-#define AIPath_MaxLinks U32_AT(0x00274cc4)
+extern uint32_t AIPath_MaxNodes;
+extern uint32_t AIPath_MaxLinks;
 
 // The move test's limits (NDrone2_MoveTest; AIPath_Init clears the first, Drone_PostLoad_Init sets them per level)
-// XBE_GLOBAL(0x00274cac, 0x4)
-#define MoveTest_MaxSlope FLOAT_AT(0x00274cac)      // radians
-// XBE_GLOBAL(0x00274cb0, 0x4)
-#define MoveTest_StepHeight FLOAT_AT(0x00274cb0)    // a rise up to this is a step, whatever the slope
-// XBE_GLOBAL(0x00274cb4, 0x4)
-#define MoveTest_MaxRise FLOAT_AT(0x00274cb4)
-// XBE_GLOBAL(0x00274cb8, 0x4)
-#define MoveTest_UnknownB8 FLOAT_AT(0x00274cb8)     // only Drone_PostLoad_Init writes it (30), nothing reads it
-// XBE_GLOBAL(0x00274cbc, 0x4)
-#define MoveTest_MaxDistanceSq FLOAT_AT(0x00274cbc)
+extern float MoveTest_MaxSlope;  // radians
+extern float MoveTest_StepHeight;  // a rise up to this is a step, whatever the slope
+extern float MoveTest_MaxRise;
+extern float MoveTest_UnknownB8;  // only Drone_PostLoad_Init writes it (30), nothing reads it
+extern float MoveTest_MaxDistanceSq;
 
 // Routes and their state
 uchar AINetwork_RouteIsValid(AIRoute_tag *route);

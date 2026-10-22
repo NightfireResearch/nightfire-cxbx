@@ -21,7 +21,7 @@
 
 // Not reimplemented, called by address
 
-#define user_restarted_or_quit U8_AT(0x0025fb10)   // MenuManager.cpp
+extern uint8_t user_restarted_or_quit;  // MenuManager.cpp
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 
 // The pause menu's controls: instances of C_GCPAUSE told apart by their ids

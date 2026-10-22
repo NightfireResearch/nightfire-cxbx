@@ -22,7 +22,7 @@
 
 // XBE_GLOBAL(0x001dc740, 0x4)
 static uint32_t ScreenBlankerState;
-#define IsWidescreen U32_AT(0x001f6610)
+extern uint32_t IsWidescreen;
 
 // This doesn't seem to be written to anywhere - a constant that was incorrectly not marked as such?
 #define MAX_VIEW_CONE (2000.0f)
@@ -375,7 +375,8 @@ static float CameraBehindYaw = std::bit_cast<float>(0xbfbba5e3u);   // -1.466
 // XBE_GLOBAL(0x0017c16c, 0x4)
 static float CameraBehindDistance = -7.0f;
 
-#define debug_cam_posy FLOAT_AT(0x001fec50)
+// XBE_GLOBAL(0x001fec50, 0x4)
+float debug_cam_posy;
 
 // The yaw, to face the target
 // AUTOINJECT
@@ -653,7 +654,8 @@ double normaliseToPlusMinusPi(float angle) {
         return rest + 6.2831855f;
     return rest - 6.2831855f;
 }
-#define GlobalBlur U8_AT(0x001f667c)
+// XBE_GLOBAL(0x001f667c, 0x1)
+uint8_t GlobalBlur;
 
 // Camera_Shear's working: the view's position kept while it is changed, the wobble's two scales, and the matrix
 // XBE_GLOBAL(0x001dc744, 0x3c)

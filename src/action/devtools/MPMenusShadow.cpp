@@ -5,6 +5,7 @@
 // them can write is compared: mpbots, MPSettings, PlayerInputs and the backup. The live state is put back after.
 
 #include "MPMenusShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game/mp/multiplayer.h"
@@ -36,14 +37,14 @@ void Save(State *s) {
     s->bots = mpbots;
     s->settings = MPSettings;
     memcpy(s->inputs, PlayerInputs, sizeof(s->inputs));
-    memcpy(s->backup, (void *)kBackupAt, sizeof(s->backup));
+    XbeOursRead(s->backup, kBackupAt, sizeof(s->backup));
 }
 
 void Load(const State *s) {
     mpbots = s->bots;
     MPSettings = s->settings;
     memcpy(PlayerInputs, s->inputs, sizeof(s->inputs));
-    memcpy((void *)kBackupAt, s->backup, sizeof(s->backup));
+    XbeOursWrite(kBackupAt, s->backup, sizeof(s->backup));
 }
 
 unsigned g_seed;

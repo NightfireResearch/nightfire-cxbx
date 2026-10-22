@@ -12,6 +12,7 @@
 // step: both sides start from the same Rand_Random state, and it is compared afterwards.
 
 #include "DroneAlertShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -30,11 +31,11 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // Drone_SfxInfo (NDrone2_Talk.cpp): 0x15a entries of 0x20 bytes
 #define SfxInfoTable ((uint8_t *)0x00174b28)
 const int kSfxInfoBytes = 0x15a * 0x20;
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+#define switch_BLIND_DRONES U32_AT(XbeOurs(0x001df9a0))
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -775,7 +776,7 @@ void DroneAlertShadow_Run(void) {
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(sfxInfo, SfxInfoTable, sizeof(sfxInfo));
     memcpy(players, &glb_players, sizeof(players));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -784,7 +785,7 @@ void DroneAlertShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(SfxInfoTable, kSfxInfoBytes);
     regions.Add(&glb_players, sizeof(players));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&switch_BLIND_DRONES, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
     ShadowFakes_AddRegions(regions);
@@ -810,7 +811,7 @@ void DroneAlertShadow_Run(void) {
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(SfxInfoTable, sfxInfo, sizeof(sfxInfo));
     memcpy(&glb_players, players, sizeof(players));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     switch_BLIND_DRONES = blind;
     FRAME_RATE_DIV = frameDiv;
 

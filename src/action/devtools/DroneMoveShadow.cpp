@@ -15,6 +15,7 @@
 // starts it, and our Vec_AngleDifference, which NDrone2_Move calls first, zeroes it again for them.
 
 #include "DroneMoveShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -37,7 +38,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -925,7 +926,7 @@ void DroneMoveShadow_Run(void) {
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(mpPlayers, &MPGame.players, sizeof(mpPlayers));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -933,7 +934,7 @@ void DroneMoveShadow_Run(void) {
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(&MPGame.players, sizeof(MPGame.players));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
     regions.Add(&REC_FRAME_RATE, 4);
@@ -957,7 +958,7 @@ void DroneMoveShadow_Run(void) {
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(&MPGame.players, mpPlayers, sizeof(mpPlayers));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameInt;
     FRAME_RATE_DIV = frameDiv;
     REC_FRAME_RATE = frameRec;

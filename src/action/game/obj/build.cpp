@@ -79,7 +79,7 @@ static cel_tag *CelList[0x40];
 static ushort CelListCount;
 
 // The main world's rooms (cels with CEL_ROOM), NULL-terminated, made on the first search of a level
-#define gbl_room_cels (*(cel_tag ***)0x001f6664)
+extern cel_tag **gbl_room_cels;
 
 // Lists the rooms among the world's cels in gbl_room_cels (the name is ours)
 // AUTOINJECT

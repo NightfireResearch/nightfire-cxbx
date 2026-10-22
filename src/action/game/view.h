@@ -25,13 +25,13 @@ struct SkyObj {
 static_assert(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
 
 #define SKY_OBJS 21
-#define SkyObjs (*(SkyObj (*)[SKY_OBJS])0x0029d7a0)
+extern SkyObj SkyObjs[SKY_OBJS];
 // A flash shows this frame; this flash is overhead (Lightning_Update reads both); its thunder is near
-#define LightningFlash U8_AT(0x0029e81a)
-#define ThunderNear U8_AT(0x0029e81b)
-#define LightningOverhead U8_AT(0x0029e81c)
+extern uint8_t LightningFlash;
+extern uint8_t ThunderNear;
+extern uint8_t LightningOverhead;
 // The frames the sky has turned, on its level 0x0700001b, and where its sun goes
-#define SkyTurn U32_AT(0x0029e820)
+extern uint32_t SkyTurn;
 #define SkySunPos (*(_VECTOR *)0x001f6668)
 
 void View_SetDrawInAllViews(obj_tag* o);

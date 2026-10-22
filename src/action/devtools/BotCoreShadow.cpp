@@ -11,6 +11,7 @@
 // re-run from a snapshot. The MP replays cover them.
 
 #include "BotCoreShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game/drone/BOT.h"
@@ -31,7 +32,7 @@ struct Region {
     size_t size;
 };
 
-const int kMaxRegions = 5;
+const int kMaxRegions = 6;
 
 struct Snapshot {
     unsigned char bytes[kMaxRegions][sizeof(NPCGlobals_t)];
@@ -45,7 +46,8 @@ int CollectRegions(DCVars_tag *dcv, Region *regions) {
     regions[n++] = { "drone", dcv->drone, sizeof(Drone_tag) };
     regions[n++] = { "object", dcv->gameObj, kObjSize };
     regions[n++] = { "NPCGlobals", &NPCGlobals, sizeof(NPCGlobals_t) };
-    regions[n++] = { "RNG", (void *)0x0018cdf8, 8 };
+    regions[n++] = { "RNG", (void *)(size_t)XbeOurs(0x0018cdf8), 4 };
+    regions[n++] = { "RNG", (void *)(size_t)XbeOurs(0x0018cdfc), 4 };
     return n;
 }
 

@@ -3,6 +3,7 @@
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
+#include "AllOriginal.h"
 
 #include <windows.h>
 
@@ -13,6 +14,18 @@
 #include <string.h>
 
 // ---- regions
+
+void ShadowRegions::Add(void *at, size_t size) {
+    unsigned a = (unsigned)(size_t)at;
+    while (size != 0) {
+        unsigned left;
+        unsigned ours = AllOriginal_Ours(a, &left);
+        size_t part = size < left ? size : left;
+        regions.push_back({(uint8_t *)(size_t)(ours != 0 ? ours : a), part});
+        a += (unsigned)part;
+        size -= part;
+    }
+}
 
 void ShadowRegions::Save() {
     Capture(saved);

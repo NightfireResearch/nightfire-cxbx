@@ -12,8 +12,10 @@
 
 // XBE_GLOBAL(0x0025d6e8, 0x20)
 #define menu_bonus              ((ulong *)0x0025d6e8)   // 4 players x {lo, hi}
-#define menu_bonus_replace      U8_AT(0x0025d78d)       // Menu_SetBonus always replaces, never ORs
-#define menu_level_bonus_earned U8_AT(0x0025d78c)       // Menu_SetLevelBonus gave a new reward
+// XBE_GLOBAL(0x0025d78d, 0x1)
+uint8_t menu_bonus_replace;  // Menu_SetBonus always replaces, never ORs
+// XBE_GLOBAL(0x0025d78c, 0x1)
+uint8_t menu_level_bonus_earned;  // Menu_SetLevelBonus gave a new reward
 // XBE_GLOBAL(0x002456a8, 0x1)
 uint8_t mp_explosive_scenery_unlocked;
 

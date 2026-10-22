@@ -18,8 +18,7 @@ typedef struct THIRDCAM {
 static_assert(sizeof(THIRDCAM) == 0xc, "Bad size for THIRDCAM");
 
 // The third-person cameras by id (wires and creep walls name theirs, WIRE::thirdCam, CREEPWALL::thirdCam)
-// XBE_GLOBAL(0x001dc700, 0x40)
-#define ThirdPersonCameras (*(obj_tag *(*)[16])0x001dc700)
+extern obj_tag *ThirdPersonCameras[16];
 
 obj_tag * ThirdCam_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void ThirdCam_GetPos(obj_tag *camera, float along, _MATRIX *mtx);

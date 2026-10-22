@@ -20,6 +20,7 @@
 // accepted (and counted).
 
 #include "DroneStateShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -38,7 +39,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -402,13 +403,13 @@ void DroneStateShadow_Run(void) {
     uint32_t frameRate = FRAME_RATE_INT;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(channels, switch_channels, sizeof(channels));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(switch_channels, 256);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
 
     InstallFakes();
@@ -421,7 +422,7 @@ void DroneStateShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(switch_channels, channels, sizeof(channels));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
 
     printf("[dronestate] NDrone2_DSTATE_* (11 handlers): %d cases, %d differ (%d JustStand positions 1 ulp apart)\n",

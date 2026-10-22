@@ -18,6 +18,29 @@
 #include <math.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x00274cac, 0x4)
+float MoveTest_MaxSlope;
+// XBE_GLOBAL(0x00274cb0, 0x4)
+float MoveTest_StepHeight;
+// XBE_GLOBAL(0x00274cb4, 0x4)
+float MoveTest_MaxRise;
+// XBE_GLOBAL(0x00274cb8, 0x4)
+float MoveTest_UnknownB8;
+// XBE_GLOBAL(0x00274cbc, 0x4)
+float MoveTest_MaxDistanceSq;
+// XBE_GLOBAL(0x00274cc0, 0x4)
+uint32_t AIPath_MaxNodes;
+// XBE_GLOBAL(0x00274cc4, 0x4)
+uint32_t AIPath_MaxLinks;
+// XBE_GLOBAL(0x00274cc8, 0x4)
+uint32_t AIPathCount;
+// XBE_GLOBAL(0x00274ccc, 0xe10)
+AIPath_tag AIPaths[50];
+// XBE_GLOBAL(0x00275adc, 0x4)
+uint32_t AIBoundCount;
+// XBE_GLOBAL(0x00275ae0, 0xc80)
+AIBound_tag AIBounds[50];
+
 #pragma fp_contract(off)
 
 static_assert(offsetof(cel_tag, aiNodes) == 0x24, "Wrong offset for cel_tag.aiNodes");
@@ -35,9 +58,9 @@ static_assert(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_ta
 
 // The cels the last ray of AINetwork_TestRayCels and of AINetwork_BoundsTest passed through
 // XBE_GLOBAL(0x001ee42c, 0x4)
-#define TestRayCels_Cels (*(cel_tag ***)0x001ee42c)
+cel_tag **TestRayCels_Cels;
 // XBE_GLOBAL(0x001ee430, 0x4)
-#define BoundsTest_Cels (*(cel_tag ***)0x001ee430)
+cel_tag **BoundsTest_Cels;
 
 // An emitter's data: allocation type malloc_bot_path3 (0x4e00), aligned to 8 (Mem_Malloc takes the alignment from
 // the flags' low byte)

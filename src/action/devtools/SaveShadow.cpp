@@ -17,6 +17,7 @@
 // back afterwards.
 
 #include "SaveShadow.h"
+#include "AllOriginal.h"
 
 #include "ShadowHarness.h"
 #include "../../common/xbeOriginal.h"
@@ -71,11 +72,11 @@ typedef uint(__cdecl *LoadSaveFn)(char *, ushort, ushort);
 typedef int(__cdecl *LoadFromBufferFn)(uchar *, uint);
 
 // The game's copies of what LoadSave.cpp owns
-uchar (*const GameDstData)[LS_SLOT_SIZE] = (uchar(*)[LS_SLOT_SIZE])0x00215790;
-uchar (*const GameInBufData)[LS_SLOT_SIZE] = (uchar(*)[LS_SLOT_SIZE])0x00219790;
-#define GameLoadState U16_AT(0x0021d790)
-#define GameSaveState U16_AT(0x0021d794)
-#define GameLoadSlot U16_AT(0x002237b4)
+uchar (*const GameDstData)[LS_SLOT_SIZE] = (uchar(*)[LS_SLOT_SIZE])XbeOurs(0x00215790);
+uchar (*const GameInBufData)[LS_SLOT_SIZE] = (uchar(*)[LS_SLOT_SIZE])XbeOurs(0x00219790);
+#define GameLoadState U16_AT(XbeOurs(0x0021d790))
+#define GameSaveState U16_AT(XbeOurs(0x0021d794))
+#define GameLoadSlot U16_AT(XbeOurs(0x002237b4))
 
 // A save as the game wrote one (docs/savestate/blocks.md)
 const uchar kBondSave[166] = {
@@ -221,7 +222,7 @@ void InstallFakes(void) {
 
 void RandomBytes(void *at, size_t size) {
     for (size_t i = 0; i < size; i++)
-        ((uchar *)at)[i] = (uchar)ShadowRand(256);
+        *(uchar *)(size_t)XbeOurs((unsigned)(size_t)at + (unsigned)i) = (uchar)ShadowRand(256);
 }
 
 uint RandomWord(void) {
@@ -235,7 +236,7 @@ void AddSettings(ShadowRegions &regions) {
     regions.Add((void *)0x001f65dc, 0xc);   // CheatInfo: immortal, all weapons, unlimited ammo
     regions.Add((void *)0x001f660c, 0xc);   // the split-screen layout, widescreen, subtitles
     regions.Add(&GameState.WeaponUpgradeRelated, 1);
-    regions.Add((void *)0x002adf10, 4);     // psiInternalLoadingDataState
+    regions.Add((void *)XbeOurs(0x002adf10), 4);     // psiInternalLoadingDataState
 }
 
 void RandomSettings(void) {

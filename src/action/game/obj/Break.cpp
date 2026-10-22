@@ -21,7 +21,7 @@
 
 // The shards of every window broken
 // XBE_GLOBAL(0x001dc564, 0xc)
-#define ShardList (*(LLISTINFO_tag *)0x001dc564)
+LLISTINFO_tag ShardList;
 
 // The PS2's psiFinishedObjectShatter; on the Xbox a thunk to __WBINVD
 #define psiFinishedObjectShatter ((void (__cdecl *)(void))0x000dfb20)

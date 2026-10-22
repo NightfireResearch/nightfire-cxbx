@@ -18,6 +18,7 @@
 // message; those are left to the replays.
 
 #include "MPObjectivesShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game.h"
@@ -35,10 +36,10 @@ const unsigned kKOHUpdate = 0x0009f8b0;
 const unsigned kUplinkUpdate = 0x0009fb80;
 
 const size_t kObjSize = 0xe4;
-void *const kRandWords = (void *)0x0018cdf8;   // U32_AT(0x0018cdf8) and U32_AT(0x0018cdfc)
-void *const kHitByList = (void *)0x00261c58;   // obj_tag *[64]
-MP_OBJ_EXT *const kDemolition = (MP_OBJ_EXT *)0x00261af8;
-MP_OBJ_EXT *const kProtection = (MP_OBJ_EXT *)0x00261b40;
+void *const kRandWords = (void *)XbeOurs(0x0018cdf8);   // U32_AT(0x0018cdf8) and U32_AT(0x0018cdfc)
+void *const kHitByList = (void *)XbeOurs(0x00261c58);   // obj_tag *[64]
+MP_OBJ_EXT *const kDemolition = (MP_OBJ_EXT *)XbeOurs(0x00261af8);
+MP_OBJ_EXT *const kProtection = (MP_OBJ_EXT *)XbeOurs(0x00261b40);
 
 const int kMaxRegions = 8;
 

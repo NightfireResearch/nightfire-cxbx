@@ -12,6 +12,7 @@
 // start from and is compared afterwards.
 
 #include "DroneOpponentShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,7 +33,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -777,7 +778,7 @@ void DroneOpponentShadow_Run(void) {
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(mpGame, &MPGame, sizeof(mpGame));
     memcpy(players, &glb_players, sizeof(players));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -786,7 +787,7 @@ void DroneOpponentShadow_Run(void) {
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(&MPGame, sizeof(MPGameStruct));
     regions.Add(&glb_players, sizeof(players));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&_FRAME_RATE, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
     ShadowFakes_AddRegions(regions);
@@ -814,7 +815,7 @@ void DroneOpponentShadow_Run(void) {
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(&MPGame, mpGame, sizeof(mpGame));
     memcpy(&glb_players, players, sizeof(players));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     _FRAME_RATE = frameRate;
     FRAME_RATE_DIV = frameDiv;
     ShadowFakes.firstObject = firstObject;

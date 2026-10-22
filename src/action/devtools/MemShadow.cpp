@@ -9,6 +9,7 @@
 // the game has a heap.
 
 #include "MemShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../actionhelpers.h"
@@ -22,10 +23,10 @@
 extern uint32_t PtrHeap, HeapByteSize, MallocMethod, QuickBlock;
 
 // The game's
-#define GamePtrHeap      U32_AT(0x00223a80)
-#define GameHeapByteSize U32_AT(0x00223a88)
-#define GameMallocMethod U32_AT(0x00223a7c)
-#define GameQuickBlock   U32_AT(0x002237d8)
+#define GamePtrHeap      U32_AT(XbeOurs(0x00223a80))
+#define GameHeapByteSize U32_AT(XbeOurs(0x00223a88))
+#define GameMallocMethod U32_AT(XbeOurs(0x00223a7c))
+#define GameQuickBlock   U32_AT(XbeOurs(0x002237d8))
 
 static const unsigned kMemInit = 0x00070a40;
 static const unsigned kMemMalloc = 0x00070ae0;

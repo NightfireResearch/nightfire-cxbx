@@ -27,18 +27,23 @@
 #define Menu_StringKill ((void (__cdecl *)(void))0x000e0ec0)
 
 // The menu data (MenuManager_Load)
-#define menu_file (*(uchar **)0x0025fb08)
+// XBE_GLOBAL(0x0025fb08, 0x4)
+uchar *menu_file;
 // A player has chosen to quit or restart from a menu (Player_HandleDeath)
-#define user_restarted_or_quit U8_AT(0x0025fb10)
+// XBE_GLOBAL(0x0025fb10, 0x1)
+uint8_t user_restarted_or_quit;
 // What a manager's cursor sprite is made from
 #define menu_cursor (*(SpriteInfo *)0x0017d60c)
 
 // The message shown while a pad is out (MenuManager_Monitor): its state, the player whose pad it is, whether the
 // mission's end menu was showing, the frames it waits, its text
-#define controller_state U32_AT(0x0025fb0c)
-#define controller_player I32_AT(0x0017d638)
-#define controller_mission_end U8_AT(0x0025fb11)
-#define controller_wait I32_AT(0x0017d63c)
+// XBE_GLOBAL(0x0025fb0c, 0x4)
+uint32_t controller_state;
+// XBE_GLOBAL(0x0017d638, 0x4)
+int32_t controller_player = -1;
+extern uint8_t controller_mission_end;
+// XBE_GLOBAL(0x0017d63c, 0x4)
+int32_t controller_wait = 10;
 #define controller_text ((char *)0x0025fb18)
 
 #define CONTROLLER_WAIT 10

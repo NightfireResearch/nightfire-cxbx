@@ -8,6 +8,7 @@
 // full for Player_SetFiringAnim's script.
 
 #include "PlayerWeaponShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,22 +33,22 @@
 
 namespace {
 
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 #define GameCheatInfo ((uint8_t *)0x001f65dc)
-#define GameSurfaced U8_AT(0x00276760)
-#define GameWarmReset U8_AT(0x00279250)
-#define GameHints ((uint8_t *)0x00279144)          // StickyHint, CamHint
-#define GameHands ((obj_tag **)0x00279148)         // the watch's second, minute and hour hands
-#define GameRamSave ((uint8_t *)0x00276768)
-#define GameSSysItems ((uint8_t *)0x0029aacc)
+#define GameSurfaced U8_AT(XbeOurs(0x00276760))
+#define GameWarmReset U8_AT(XbeOurs(0x00279250))
+#define GameHints (GameSpan<uint8_t>{0x00279144})          // StickyHint, CamHint
+#define GameHands ((obj_tag **)XbeOurs(0x00279148))         // the watch's second, minute and hour hands
+#define GameRamSave (GameSpan<uint8_t>{0x00276768})
+#define GameSSysItems (GameSpan<uint8_t>{0x0029aacc})
 #define GameStats ((uint8_t *)0x00278e70)
-#define GameBondMoments ((uint8_t *)0x00278d8e)
+#define GameBondMoments (GameSpan<uint8_t>{0x00278d8e})
 #define GameGlobalVars ((uint8_t *)0x001f6568)
-#define GameBlur U8_AT(0x001f667c)
-#define GameFlashMod FLOAT_AT(0x0027911c)
-#define GameTuning ((float *)0x0017e680)           // ContinueHealthBoost*
-#define GameAutoaim ((float *)0x00181afc)          // Autoaim_Angle_H .. Autoaim_NormalMul
-#define GameAutoaimHard FLOAT_AT(0x0027915c)
+#define GameBlur U8_AT(XbeOurs(0x001f667c))
+#define GameFlashMod FLOAT_AT(XbeOurs(0x0027911c))
+#define GameTuning (GameSpan<float>{0x0017e680})           // ContinueHealthBoost*
+#define GameAutoaim (GameSpan<float>{0x00181afc})          // Autoaim_Angle_H .. Autoaim_NormalMul
+#define GameAutoaimHard FLOAT_AT(XbeOurs(0x0027915c))
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
@@ -478,7 +479,7 @@ void RandomWorld(void) {
         GameHands[i] = ShadowRand(2) ? &world.created : NULL;
     for (int i = 0; i < 0xd4d; i++)
         GameRamSave[i] = (uint8_t)ShadowRand(256);
-    ((float *)(GameRamSave + 0x5fc))[0] = PICK(100.0f, 10.0f, 49.0f, 50.0f, 300.0f);
+    *(float *)XbeOurs(GameRamSave.at + 0x5fc) = PICK(100.0f, 10.0f, 49.0f, 50.0f, 300.0f);
     for (int i = 0; i < 0x28; i++)
         GameSSysItems[i] = (uint8_t)ShadowRand(256);
     for (int i = 0; i < 0x38 * 10; i++)
@@ -1056,21 +1057,21 @@ void PlayerWeaponShadow_Run(void) {
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(cheats, GameCheatInfo, sizeof(cheats));
     memcpy(inputs, PlayerInputs, sizeof(inputs));
-    memcpy(ramSave, GameRamSave, sizeof(ramSave));
-    memcpy(ssys, GameSSysItems, sizeof(ssys));
+    XbeOursRead(ramSave, GameRamSave.at, sizeof(ramSave));
+    XbeOursRead(ssys, GameSSysItems.at, sizeof(ssys));
     memcpy(stats, GameStats, sizeof(stats));
-    memcpy(bond, GameBondMoments, sizeof(bond));
+    XbeOursRead(bond, GameBondMoments.at, sizeof(bond));
     memcpy(globalVars, GameGlobalVars, sizeof(globalVars));
-    memcpy(hints, GameHints, sizeof(hints));
+    XbeOursRead(hints, GameHints.at, sizeof(hints));
     memcpy(channels, switch_channels, 256);
     memcpy(hold, switch_channels_hold, 256);
     memcpy(prev, switch_channels_prev, 256);
     memcpy(times, switch_channels_time, 0x400);
-    memcpy(tuning, GameTuning, sizeof(tuning));
-    memcpy(autoaim, GameAutoaim, sizeof(autoaim));
+    XbeOursRead(tuning, GameTuning.at, sizeof(tuning));
+    XbeOursRead(autoaim, GameAutoaim.at, sizeof(autoaim));
     memcpy(hands, GameHands, sizeof(hands));
-    memcpy(rand, RandWords, sizeof(rand));
-    memcpy(frameRates, (void *)0x0017c0f0, sizeof(frameRates));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
+    memcpy(frameRates, (void *)XbeOurs(0x0017c0f0), sizeof(frameRates));
     memcpy(viewers, glb_viewer, sizeof(viewers));
     memcpy(players, glb_players, sizeof(players));
     memcpy(blokes, glb_blokes, sizeof(blokes));
@@ -1090,18 +1091,18 @@ void PlayerWeaponShadow_Run(void) {
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(GameCheatInfo, 0xc);
     regions.Add(PlayerInputs, 0x560);
-    regions.Add(GameRamSave, 0xd4d);
-    regions.Add(GameSSysItems, 0x28);
+    regions.Add(GameRamSave.game(), 0xd4d);
+    regions.Add(GameSSysItems.game(), 0x28);
     regions.Add(GameStats, 0x38 * 10);
-    regions.Add(GameBondMoments, 226);
+    regions.Add(GameBondMoments.game(), 226);
     regions.Add(GameGlobalVars, 0x18);
-    regions.Add(GameHints, 2);
+    regions.Add(GameHints.game(), 2);
     regions.Add(switch_channels, 256);
     regions.Add(switch_channels_hold, 256);
     regions.Add(switch_channels_prev, 256);
     regions.Add(switch_channels_time, 0x400);
     regions.Add(GameHands, 12);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(glb_players, sizeof(players));
     regions.Add(&NPCGlobals.NDrone2List, 4);
     regions.Add(&GameSurfaced, 1);
@@ -1129,21 +1130,21 @@ void PlayerWeaponShadow_Run(void) {
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(GameCheatInfo, cheats, sizeof(cheats));
     memcpy(PlayerInputs, inputs, sizeof(inputs));
-    memcpy(GameRamSave, ramSave, sizeof(ramSave));
-    memcpy(GameSSysItems, ssys, sizeof(ssys));
+    XbeOursWrite(GameRamSave.at, ramSave, sizeof(ramSave));
+    XbeOursWrite(GameSSysItems.at, ssys, sizeof(ssys));
     memcpy(GameStats, stats, sizeof(stats));
-    memcpy(GameBondMoments, bond, sizeof(bond));
+    XbeOursWrite(GameBondMoments.at, bond, sizeof(bond));
     memcpy(GameGlobalVars, globalVars, sizeof(globalVars));
-    memcpy(GameHints, hints, sizeof(hints));
+    XbeOursWrite(GameHints.at, hints, sizeof(hints));
     memcpy(switch_channels, channels, 256);
     memcpy(switch_channels_hold, hold, 256);
     memcpy(switch_channels_prev, prev, 256);
     memcpy(switch_channels_time, times, 0x400);
-    memcpy(GameTuning, tuning, sizeof(tuning));
-    memcpy(GameAutoaim, autoaim, sizeof(autoaim));
+    XbeOursWrite(GameTuning.at, tuning, sizeof(tuning));
+    XbeOursWrite(GameAutoaim.at, autoaim, sizeof(autoaim));
     memcpy(GameHands, hands, sizeof(hands));
-    memcpy(RandWords, rand, sizeof(rand));
-    memcpy((void *)0x0017c0f0, frameRates, sizeof(frameRates));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
+    memcpy((void *)XbeOurs(0x0017c0f0), frameRates, sizeof(frameRates));
     memcpy(glb_viewer, viewers, sizeof(viewers));
     memcpy(glb_players, players, sizeof(players));
     memcpy(glb_blokes, blokes, sizeof(blokes));

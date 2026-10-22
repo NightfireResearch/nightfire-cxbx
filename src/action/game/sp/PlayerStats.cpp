@@ -5,6 +5,9 @@
 
 #include "string.h"
 
+// XBE_GLOBAL(0x00278d8e, 0xe2)
+short BondMoments[113];
+
 
 // AUTOINJECT
 void PlrStat_ResetForMission(void) {

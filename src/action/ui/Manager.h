@@ -13,7 +13,6 @@ int Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, int param_3, in
 #define GOPAGE_NO_RESUME    0x10
 
 
-// XBE_GLOBAL(0x0025f1d0, 0x938)
-#define manager ((M_MANAGER *)0x0025f1d0)
+extern M_MANAGER manager[5];
 
 #endif // MANAGER_H_

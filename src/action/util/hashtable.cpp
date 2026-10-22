@@ -18,15 +18,17 @@ typedef struct{
 #define NUM_RESET_TYPES 7
 
 // XBE_GLOBAL(0x001fe688, 0x20)
-#define HashTypeRanges (*(HashTypeRange(*)[NUM_HASH_TYPES])0x001fe688)
-// XBE_GLOBAL(0x001f6680, 0x10)
-#define t_hashtable (*(hashtable_entry(*)[1000])0x001f6680)
+HashTypeRange HashTypeRanges[NUM_HASH_TYPES];
+// The table, sorted by key; nothing checks its count against its 4096 entries
+// XBE_GLOBAL(0x001f6680, 0x8000)
+hashtable_entry t_hashtable[4096];
 // Where the last failed lookup would have put the key. Only hashtable_getentry writes it and only
 // hashtable_additem reads it, both ours now.
 // XBE_GLOBAL(0x001fe680, 0x4)
 static uint32_t ht_insert_ind;
 // Number of entries in use, the two end keys (0 and 0xffffffff) included
-#define m_nhti U32_AT(0x001fe684)
+// XBE_GLOBAL(0x001fe684, 0x4)
+uint32_t m_nhti;
 
 // The binary search. On a miss it leaves the insertion point in ht_insert_ind; on a hit it leaves ht_insert_ind
 // untouched, which hashtable_additem relies on (see there).

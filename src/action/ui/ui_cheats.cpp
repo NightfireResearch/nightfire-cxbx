@@ -37,8 +37,8 @@ bool C_CHCHDRAWALL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 }
 
 // The widescreen switches: the menu's, and the copy the cameras read (Camera_CalcViewAngles).
-#define switch_CONFIG_WIDESCREEN U32_AT(0x001df9e8)
-#define IsWidescreen U32_AT(0x001f6610)
+extern uint32_t switch_CONFIG_WIDESCREEN;
+extern uint32_t IsWidescreen;
 
 // Widescreen: the checkbox is the switch, and every viewer's projection is worked out again for the new shape -
 // the players' at their field of view, the rest at the game's own.
@@ -56,14 +56,14 @@ bool C_CHCHWS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 }
 
 // The other switches the checkboxes set. A switch only the cheat menu reads is ours.
-#define switch_NO_DRONES       U32_AT(0x001df99c)
-#define switch_BLIND_DRONES    U32_AT(0x001df9a0)
-#define switch_SHOW_COORDS     U32_AT(0x001df9dc)
-#define Drone_DummyPlayer      (*(char *)0x001dfa29)
-#define switch_allowFreeze     (*(char *)0x0025d79c)  // Game_Run: the game may be frozen
-#define menu_unlock_everything (*(char *)0x0025d79e)
-#define debug_scanmode         U8_AT(0x001fec49)
-#define debug_clipmode         U8_AT(0x001fec4a)
+extern uint32_t switch_NO_DRONES;
+extern uint32_t switch_BLIND_DRONES;
+extern int switch_SHOW_COORDS;
+extern char Drone_DummyPlayer;
+extern char switch_allowFreeze;  // Game_Run: the game may be frozen
+extern char menu_unlock_everything;
+extern uint8_t debug_scanmode;
+extern uint8_t debug_clipmode;
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 // XBE_GLOBAL(0x0017d5f8, 0x1)
 char hud_state = 1;

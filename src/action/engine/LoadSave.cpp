@@ -16,8 +16,8 @@
 // table's order; a load finds each by its label.
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
-#define SubtitlesEnabled U32_AT(0x001f6614)
-#define IsWidescreen U32_AT(0x001f6610)
+extern uint32_t SubtitlesEnabled;
+extern uint32_t IsWidescreen;
 
 
 #define SAVE_LABEL(a, b, c, d) ((uint)(a) | (uint)(b) << 8 | (uint)(c) << 16 | (uint)(d) << 24)

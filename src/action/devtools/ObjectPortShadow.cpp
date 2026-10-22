@@ -12,6 +12,7 @@
 // compared on AL (tools/narrow_returns.py checks no caller reads more).
 
 #include "ObjectPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -68,7 +69,7 @@
 
 namespace {
 
-#define LightList (*(DLISTINFO_tag *)0x00215700)
+#define LightList (*(DLISTINFO_tag *)XbeOurs(0x00215700))
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
 #define COUNT(a) ((int)(sizeof(a) / sizeof((a)[0])))
@@ -2514,8 +2515,8 @@ uint32_t RunCheckTarget(bool original) {
                 world.hits[i].hitObj = hit;
         if (R(4) == 0)
             GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? 0x0700004a : 0x07000009);
-        U32_AT(0x00279158) = R(3) == 0 ? R(5) : 0;
-        U32_AT(0x00279154) = R(5);
+        U32_AT(XbeOurs(0x00279158)) = R(3) == 0 ? R(5) : 0;
+        U32_AT(XbeOurs(0x00279154)) = R(5);
     }
     CDECL_VOID(0x000b9580, Check_Target, void (__cdecl *)(obj_tag *), obj);
     return 0;
@@ -3012,28 +3013,28 @@ void ObjectPortShadow_Run(void) {
         uint32_t at;
         size_t size;
     } kGlobals[] = {
-        {0x001f6580, sizeof(GameState_t)},  // GameState
+        {XbeOurs(0x001f6580), sizeof(GameState_t)},  // GameState
         {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
         {0x00262738, sizeof(MPGameStruct)}, // MPGame
-        {0x001df138, 256},                  // switch_channels
-        {0x001df428, 1024},                 // switch_channels_time
+        {XbeOurs(0x001df138), 256},                  // switch_channels
+        {XbeOurs(0x001df428), 1024},                 // switch_channels_time
         {0x0018cdf8, 8},                    // the random words
         {0x001f6654, 16},                   // glb_players
         {0x002774b8, 16},                   // glb_blokes
-        {0x001f661c, 44},                   // glb_viewer
+        {XbeOurs(0x001f661c), 44},                   // glb_viewer
         {0x001f6674, 8},                    // glb_world, ScriptCam
-        {0x001f64ac, 4},                    // GlobalEnv
+        {XbeOurs(0x001f64ac), 4},                    // GlobalEnv
         {0x001f6668, 12},                   // the sun
-        {0x0029d7a0, 0x444},                // the sky's models
+        {XbeOurs(0x0029d7a0), 0x444},                // the sky's models
         {0x0029e81a, 3},                    // the lightning's flags
         {0x002637e0, 0x274b2c - 0x2637e0},  // the drops
         {0x001fe6a8, 0x22},                 // CopterList, CopterPaths, the cone, the attack mode
-        {0x0017c118, 4},                    // DiffMod
+        {XbeOurs(0x0017c118), 4},                    // DiffMod
         {0x0025fc20, 0x200},                // TargetList
         {0x0017e5d8, 0xa8},                 // PickupMatrix, UseableGuns
         {0x001f6448, 0x62},                 // the emitters' statics
-        {0x00215700, 0x18 + 0x78 + 0x18},   // LightList, ClosestLights
-        {0x0027911c, 4},                    // FlashMod
+        {XbeOurs(0x00215700), 0x18 + 0x78 + 0x18},   // LightList, ClosestLights
+        {XbeOurs(0x0027911c), 4},                    // FlashMod
         {0x00279154, 8},                    // the door and load trigger messages
         {0x001e5634, 4},                    // NPCGlobals.NDrone2List
     };
@@ -3042,7 +3043,8 @@ void ObjectPortShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), (unsigned)(uintptr_t)s.at, s.size);
         saved.push_back(s);
     }
 
@@ -3071,5 +3073,5 @@ void ObjectPortShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((unsigned)(uintptr_t)s.at, s.bytes.data(), s.size);
 }

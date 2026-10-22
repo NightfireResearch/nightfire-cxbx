@@ -146,8 +146,7 @@ static_assert(offsetof(DroneAIVolume_tag, type) == 0x1c, "Wrong offset for Drone
 
 #pragma pack(pop)
 
-// XBE_GLOBAL(0x001dfa1c, 0xc)
-#define AIBoxList (*(LLISTINFO_tag *)0x001dfa1c)
+extern LLISTINFO_tag AIBoxList;
 
 void Drone_CoverCornerNode(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Drone_CoverLowNode(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);

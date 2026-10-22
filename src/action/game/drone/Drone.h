@@ -737,7 +737,7 @@ static_assert(offsetof(StateMachineInfo_tag, pathDistance) == 0x20, "Wrong offse
 
 // Set by Drone_InitComms / ResetMap_GameInit (still the game's); while set, no drones are created and
 // Drone_SM_SendMsg / Drone_Message send nothing.
-#define Drone_bDisableSystem (*(uchar *)0x001dfa2a)
+extern uchar Drone_bDisableSystem;
 
 bool Drone_DCVfromOBJ(obj_tag* obj, DCVars_tag *dcVars);
 void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit);

@@ -180,6 +180,53 @@ then the smallest set of originals that makes it differ by a few frames later, b
 With the 12 kept, all 11 recordings matched every frame with the rest of the game's code as the original (21 October
 2026).
 
+## The game's state in our source (22 October 2026)
+
+Step 3 of the plan. tools/own_globals_action.py turns the address macros global_coverage.py calls ready to own
+(nothing live touches them) into definitions of ours: `#define Name U32_AT(0x...)` becomes an `XBE_GLOBAL` tag and
+`uint32_t Name;`, a header's macro an `extern` with the definition in the .cpp of the same name (or `--into=` one);
+`--initial` gives the ones with initial data in the XBE their values (scalars, a float in the fewest digits that give
+back its bits, strings). 439 globals this round: 939 of 1080 are ours, and tools/standalone_audit.py's worklist is
+778 literals (1312 before; the game's state 154, from 688).
+
+**The originals use our copies in every run.** `AllOriginal_RelocateOwned` (devtools/AllOriginal.cpp), called by the
+injector before anything runs an original, points every site tools/data_refs.py found at our copy, found by name in
+the DLL's map: so the shadow tests' originals read and write what our code does, as the all-original runs already
+did. The shadow tests name the game's state by its addresses; `XbeOurs(address)` is the same place in ours,
+`GameSpan<T>` a run of addresses that may cross several of our globals (element by element), `XbeOursRead/Write/Fill`
+a span copied or set, and `ShadowRegions::Add` splits a region the same way.
+
+What it found:
+
+| Found | Now |
+|---|---|
+| `t_hashtable`'s macro said 1000 entries and its tag 0x10 bytes; the table is the 0x8000 bytes up to `ht_insert_ind`, and nothing checks its count | `hashtable_entry t_hashtable[4096]` |
+| `menu_unlock_everything` and `switch_allowFreeze` declared `char` in one file and `uint8_t` in another; the original sign-extends both (MOVSX into PTPDATA's `unlockEverything`) | `char` everywhere |
+| 0x001d7824/5 named `bShadowCharacter`/`bCharacterLight` in Anim.cpp and the other way round where they are used (psiDraw.cpp, view.cpp: object flag bits 2 and 3) | `bCharacterLight` at 0x001d7824 |
+| Second macros for an owned global in other files (Player.cpp's and ui_tweaks.cpp's `Plr_DMod_*`, multiplayer.h's assassin pair, and 100 more): those files read the game's copy | `extern`s; aliases under another name joined (`nDistanceTables`, `controller_mission_end`, `saveflow_dashboard`) |
+| Switch.cpp read the security items 4 bytes past the table's start as its own 8-byte struct | `SSysItems[i].channel` |
+| Two file statics both called `CelList` (Collide.cpp, build.cpp), which the map cannot tell apart, and function statics the map reader took for globals | Collide.cpp's is `StraddleCels`; the reader takes only `?Name@@3` |
+
+tools/data_refs.py's rules, for state rather than constant tables: a plain `[address]` operand names its block
+itself, and only a register-indexed operand or an immediate has to be named by the port of the function it is in (an
+immediate can be the end of the table before a block, or an address the linker put inside one: WeaponDataTableInit
+stores 0x001820a0, inside MapMusic, into weapon_data, and relocating it changed the game); an odd offset is a byte
+field of an array of structures where the port names the block (manager[i]'s); a base folded for an index that starts
+at one lands just before the block it indexes (manager[i] through 0x0025f1c9) and goes to that block; a value past the
+nearest block's end inside an enclosing one goes to the enclosing one (BondMoments[0x65], after WireAnim inside it); a
+loop's bound may be a little past a block's end (MenuManager_Init's `cmp eax, 0x0025fcd4`, the sixth manager's field),
+given to the largest block it can end, and to one block only; and every entry the injection table patches is decoded
+from, with a plain `[address]` taken without Ghidra's reference where Ghidra never made a function (the drone controls
+at 0x0003f8a0, 0x0003f910 and 0x0003f930, whose original Ninja control read the game's switch channels: the long
+CastleExterior recording parted at frame 22784). XbeRelocate accepts a value 0x200 either side of its block for those.
+
+Not every global can move alone: the object list's head at 0x001df338 is used as if it were an object, its
+next-object field DynamicObjList_FirstObj (0x001df34c); owning the field alone emptied the list (every recording
+parted by frame 400), so the three stay at the game's address until the head moves whole.
+
+Checks: all 19 shadow suites as before (290 result lines, 0 differences); the 13 recordings, every frame, on our
+build and with the game's code as the original.
+
 ## Left for the standalone target
 
 - Table entries that are still the game's code: the drone mode table's `NDrone2_init_DMODE_Normal` (a jump to

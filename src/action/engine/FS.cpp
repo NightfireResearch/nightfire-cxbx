@@ -453,7 +453,8 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
     FileSystem.offsetOfFileWithinArchive = h->offsetOfFileWithinArchive;
 }
 
-#define TimeSpentLoadingFiles (*(double*)0x002adf38)
+// XBE_GLOBAL(0x002adf38, 0x8)
+double TimeSpentLoadingFiles;
 
 // Loads a whole file, allocating for it, with the loading screen up meanwhile. A missing file is fatal: it is
 // logged to the error screen. (0x000dc990)

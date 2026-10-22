@@ -9,6 +9,7 @@
 // NIGHTFIRE_MENUPORT_GROUP=<part of a name> one group.
 
 #include "MenuPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -85,16 +86,16 @@ struct World {
 World world;
 
 // The game's state the package reads and writes
-#define GameManagers ((M_MANAGER *)0x0025f1d0)
-#define GameComponentList (*(LINKEDLIST *)0x00223a90)
-#define GameMenuFrame U32_AT(0x00223aa0)
-#define GameLastAction U32_AT(0x00223aa4)
-#define GameLastController U32_AT(0x0017c540)
-#define GameAlpha I16_AT(0x00223b2c)
-#define GameAlphaPhase FLOAT_AT(0x00223b30)
-#define GameSounds U32_AT(0x00223b34)
-#define GameTextScale FLOAT_AT(0x00223b38)
-#define GameTextPhase FLOAT_AT(0x00223b3c)
+#define GameManagers (GameSpan<M_MANAGER>{0x0025f1d0})
+#define GameComponentList (*(LINKEDLIST *)XbeOurs(0x00223a90))
+#define GameMenuFrame U32_AT(XbeOurs(0x00223aa0))
+#define GameLastAction U32_AT(XbeOurs(0x00223aa4))
+#define GameLastController U32_AT(XbeOurs(0x0017c540))
+#define GameAlpha I16_AT(XbeOurs(0x00223b2c))
+#define GameAlphaPhase FLOAT_AT(XbeOurs(0x00223b30))
+#define GameSounds U32_AT(XbeOurs(0x00223b34))
+#define GameTextScale FLOAT_AT(XbeOurs(0x00223b38))
+#define GameTextPhase FLOAT_AT(XbeOurs(0x00223b3c))
 
 int cases, differ, nanChoices;
 uint32_t gen, caseSeed;
@@ -387,7 +388,7 @@ SEND_FAKE(FakeWindowSend, "window")
 
 #define UPDATE_FAKE(name, tag)                                                                                        \
     void __cdecl name(M_MANAGER *m, M_PAGE *page, M_CONTROL *c, int a4) {                                             \
-        ShadowLog(tag "(%x,%x,%x,%x)", (uint32_t)((uintptr_t)m - 0x0025f1d0), W(page), W(c), (uint32_t)a4);                                                                                      \
+        ShadowLog(tag "(%x,%x,%x,%x)", (uint32_t)((uintptr_t)m - XbeOurs(0x0025f1d0)), W(page), W(c), (uint32_t)a4);                                                                                      \
     }
 UPDATE_FAKE(FakeButtonUpdate, "buttonupd")
 UPDATE_FAKE(FakeCheckboxUpdate, "checkboxupd")
@@ -400,11 +401,11 @@ UPDATE_FAKE(FakeSpinUpdate, "spinupd")
 UPDATE_FAKE(FakeTextUpdate, "textupd")
 
 void __cdecl FakeLabelUpdate(M_MANAGER *m, M_PAGE *page, M_CONTROL *c, int cursorOver) {
-    ShadowLog("labelupd(%x,%x,%x,%x)", (uint32_t)((uintptr_t)m - 0x0025f1d0), W(page), W(c), cursorOver & 0xff);
+    ShadowLog("labelupd(%x,%x,%x,%x)", (uint32_t)((uintptr_t)m - XbeOurs(0x0025f1d0)), W(page), W(c), cursorOver & 0xff);
 }
 
 void __cdecl FakePageUpdate(M_MANAGER *m, M_PAGE *page, int takingInput) {
-    ShadowLog("pageupd(%x,%x,%x)", (uint32_t)((uintptr_t)m - 0x0025f1d0), W(page), (uint32_t)takingInput);
+    ShadowLog("pageupd(%x,%x,%x)", (uint32_t)((uintptr_t)m - XbeOurs(0x0025f1d0)), W(page), (uint32_t)takingInput);
 }
 
 uint __cdecl FakeStatus(void) {
@@ -773,7 +774,7 @@ void RandomWorld(void) {
     world.window = R(4) ? (int)R(CONTROLS) : -1;
 
     // The managers: pages through their links, the cursor, the current and under page
-    memset(GameManagers, 0, sizeof(M_MANAGER) * 5);
+    XbeOursFill(GameManagers.at, 0, sizeof(M_MANAGER) * 5);
     for (int m = 0; m < 5; m++) {
         M_MANAGER *mgr = &GameManagers[m];
         int first = (int)R(PAGES), n = (int)R(PAGES - first + 1);
@@ -1439,12 +1440,12 @@ void MenuPortShadow_Run(void) {
         uint32_t at;
         size_t size;
     } kGlobals[] = {
-        {0x0025f1d0, sizeof(M_MANAGER) * 5}, // manager
-        {0x00223a90, 0x10},                  // the component list
+        {XbeOurs(0x0025f1d0), sizeof(M_MANAGER) * 5}, // manager
+        {XbeOurs(0x00223a90), 0x10},                  // the component list
         {0x00223aa0, 8},                     // the frame and the last action
         {0x00223b2c, 0x14},                  // the pulse, the sounds, the text's throb
-        {0x00224558, 0x94},                  // Menu_GetFirstControl's stand-in
-        {0x0017c540, 4},                     // the last controller
+        {XbeOurs(0x00224558), 0x94},                  // Menu_GetFirstControl's stand-in
+        {XbeOurs(0x0017c540), 4},                     // the last controller
         {0x001fe6d0, 0x158 * 4},             // PlayerInputs
     };
     std::vector<Saved> saved;
@@ -1452,7 +1453,8 @@ void MenuPortShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), (unsigned)(uintptr_t)s.at, s.size);
         saved.push_back(s);
     }
 
@@ -1477,5 +1479,5 @@ void MenuPortShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((unsigned)(uintptr_t)s.at, s.bytes.data(), s.size);
 }

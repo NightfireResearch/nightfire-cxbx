@@ -34,6 +34,37 @@
 #include "../Upgrade.h"                 // Upgrade_MPWeapon
 #include "../weapon_stats.h"
 
+// XBE_GLOBAL(0x001f660c, 0x4)
+uint32_t MultiplayerLayout_LeftRightOrTopBtm;
+// XBE_GLOBAL(0x00245280, 0x6e)
+MPBOTS mpbots;
+// XBE_GLOBAL(0x00260078, 0x1600)
+MP_PICKUP MPpickups[64];
+// XBE_GLOBAL(0x00261a70, 0x88)
+MP_OBJ_EXT EsponageBase[2];
+// XBE_GLOBAL(0x00261bd0, 0x88)
+MP_OBJ_EXT Bases[2];
+// XBE_GLOBAL(0x00261d58, 0x700)
+MPSpawnPoint SpawnPoints[64];
+// XBE_GLOBAL(0x00262458, 0x2e0)
+SpawnPlace BluePrints[8];
+// XBE_GLOBAL(0x00262970, 0x2)
+uint16_t GoldenEyeKeyCount;
+// XBE_GLOBAL(0x00262972, 0x2)
+uint16_t GoldenEyeNonKeyCount;
+// XBE_GLOBAL(0x00262978, 0x5c0)
+SpawnPlace GoldenEyeSpawns[16];
+// XBE_GLOBAL(0x00263220, 0x1b8)
+RADAROBJ MPRadarObjects[22];
+// XBE_GLOBAL(0x00263640, 0x100)
+obj_tag *MPObjects[64];
+// XBE_GLOBAL(0x002637d4, 0x2)
+uint16_t BluePrintCount;
+// XBE_GLOBAL(0x002637d8, 0x4)
+sprite *TimeSpr;
+// XBE_GLOBAL(0x002637dc, 0x4)
+sprite *StatusSpr;
+
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {
@@ -45,8 +76,10 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
-#define AssassinTarget (*(obj_tag **)0x00261788)
+// XBE_GLOBAL(0x0026178c, 0x4)
+obj_tag *CurrentAssassinObjId;
+// XBE_GLOBAL(0x00261788, 0x4)
+obj_tag *AssassinTarget;
 #define BOT_init ((obj_tag* (__cdecl *)(short, _VECTOR *, _VECTOR *, obj_tag *, MPBOT *, char))0x0001b170)
 
 #define NUM_SKINS 29 // unique characters
@@ -349,13 +382,20 @@ void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
 
 }
 
-#define UplinkCount U16_AT(0x002637c8)
-#define Uplinks (*(MP_OBJ_EXT(*)[8])0x002633d8)
-#define Flags (*(MP_OBJ_EXT(*)[2])0x00263740)
-#define Hill (*(MP_OBJ_EXT*)0x00261b88)
-#define Demolition (*(MP_OBJ_EXT*)0x00261af8)
-#define Protection (*(MP_OBJ_EXT*)0x00261b40)
-#define BluePrint (*(MP_OBJ_EXT*)0x002635f8)
+// XBE_GLOBAL(0x002637c8, 0x2)
+uint16_t UplinkCount;
+// XBE_GLOBAL(0x002633d8, 0x220)
+MP_OBJ_EXT Uplinks[8];
+// XBE_GLOBAL(0x00263740, 0x88)
+MP_OBJ_EXT Flags[2];
+// XBE_GLOBAL(0x00261b88, 0x44)
+MP_OBJ_EXT Hill;
+// XBE_GLOBAL(0x00261af8, 0x44)
+MP_OBJ_EXT Demolition;
+// XBE_GLOBAL(0x00261b40, 0x44)
+MP_OBJ_EXT Protection;
+// XBE_GLOBAL(0x002635f8, 0x44)
+MP_OBJ_EXT BluePrint;
 
 
 // AUTOINJECT
@@ -721,10 +761,14 @@ void MP_SortOutWhoWon() {
     Sprite_SetText(StatusSpr, StatusSpr->text);
 }
 
-#define DemolitionPlaces (*(SpawnPlace(*)[8])(0x00262f40))
-#define DemolitionCount U16_AT(0x002637cc)
-#define ProtectionPlaces (*(SpawnPlace(*)[8])(0x00261790))
-#define ProtectionCount U16_AT(0x002637d0)
+// XBE_GLOBAL(0x00262f40, 0x2e0)
+SpawnPlace DemolitionPlaces[8];
+// XBE_GLOBAL(0x002637cc, 0x2)
+uint16_t DemolitionCount;
+// XBE_GLOBAL(0x00261790, 0x2e0)
+SpawnPlace ProtectionPlaces[8];
+// XBE_GLOBAL(0x002637d0, 0x2)
+uint16_t ProtectionCount;
 
 // AUTOINJECT
 void MP_RestartScenario(void) { 
@@ -892,8 +936,10 @@ void MP_Update(void) {
 }
 
 
-#define PickupNextAddIndex U32_AT(0x0025fe30)
-#define PickupLastDeletedIdx (*(int*)0x00261b84) // -1 = none
+// XBE_GLOBAL(0x0025fe30, 0x4)
+uint32_t PickupNextAddIndex;
+// XBE_GLOBAL(0x00261b84, 0x4)
+int PickupLastDeletedIdx;  // -1 = none
 
 // Game mode bits (see MultiplayerGameMode): bit 29 is set by every team mode, bit 30 by KOTH, team KOTH and
 // uplink.
@@ -1088,7 +1134,8 @@ obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly) {
 #define SW_MP_SCORE_REACHED 0xfd
 #define SW_MP_TIME_UP 0xfe
 
-#define switch_MP4EVER U32_AT(0x001dfa14)
+// XBE_GLOBAL(0x001dfa14, 0x4)
+uint32_t switch_MP4EVER;
 
 static void ShowTimeLeft(void) {
     int hundredths = Ftol(((double)MPGame.TimeLimit - MPGame.TimeUnpaused) * 100.0f);

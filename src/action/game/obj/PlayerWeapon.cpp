@@ -38,32 +38,36 @@
 
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 #define GlobalVars (*((GlobalVars_t *)0x001f6568))
-#define IsWarmReset U8_AT(0x00279250)
-#define SSysItems (*(SSYSITEM(*)[SSYS_ITEMS])0x0029aacc)
-#define surfaced U8_AT(0x00276760)
-#define GlobalBlur U8_AT(0x001f667c)
-#define FlashMod FLOAT_AT(0x0027911c)       // Check_Target's flashing, 0.5 to 1
-#define CamHint U8_AT(0x00279145)
-#define StickyHint U8_AT(0x00279144)
+extern uint8_t IsWarmReset;
+// XBE_GLOBAL(0x0029aacc, 0x28)
+SSYSITEM SSysItems[SSYS_ITEMS];
+extern uint8_t surfaced;
+extern uint8_t GlobalBlur;
+extern float FlashMod;  // Check_Target's flashing, 0.5 to 1
+extern uint8_t CamHint;
+extern uint8_t StickyHint;
 
 // Health given back on continuing a mission, per difficulty
-#define ContinueHealthBoostEasy   FLOAT_AT(0x0017e680)
-#define ContinueHealthBoostMedium FLOAT_AT(0x0017e684)
-#define ContinueHealthBoostHard   FLOAT_AT(0x0017e688)
+extern float ContinueHealthBoostEasy;
+extern float ContinueHealthBoostMedium;
+extern float ContinueHealthBoostHard;
 
 // Autoaim (ReadTuningVars sets them)
-#define Autoaim_Angle_H   FLOAT_AT(0x00181afc)
-#define Autoaim_Angle_V   FLOAT_AT(0x00181b00)
-#define Autoaim_Range     FLOAT_AT(0x00181b04)
-#define Autoaim_LockOnMul FLOAT_AT(0x00181b08)
-#define Autoaim_EasyMul   FLOAT_AT(0x00181b0c)
-#define Autoaim_NormalMul FLOAT_AT(0x00181b10)
-#define Autoaim_HardMul   FLOAT_AT(0x0027915c)
+extern float Autoaim_Angle_H;
+extern float Autoaim_Angle_V;
+extern float Autoaim_Range;
+extern float Autoaim_LockOnMul;
+extern float Autoaim_EasyMul;
+extern float Autoaim_NormalMul;
+extern float Autoaim_HardMul;
 
 // The watch's hands (WatchOrHands_Create clears them too)
-#define SecondHand (*(obj_tag **)0x00279148)
-#define MinuteHand (*(obj_tag **)0x0027914c)
-#define HourHand   (*(obj_tag **)0x00279150)
+// XBE_GLOBAL(0x00279148, 0x4)
+obj_tag *SecondHand;
+// XBE_GLOBAL(0x0027914c, 0x4)
+obj_tag *MinuteHand;
+// XBE_GLOBAL(0x00279150, 0x4)
+obj_tag *HourHand;
 
 // The digits shown on a weapon's datums: the satchel charge's timer (Bullet_DoTrails too) and the decryptor's display
 // XBE_GLOBAL(0x00181a88, 0x28) readonly relocate
@@ -123,7 +127,8 @@ static_assert(sizeof(RamSaveData_t) == 0xd4d, "RamSaveData_t size");
 static_assert(offsetof(RamSaveData_t, ssysItems) == 0x5d4, "RamSaveData_t ssysItems");
 static_assert(offsetof(RamSaveData_t, weaponTail) == 0xa1a, "RamSaveData_t weaponTail");
 
-#define RamSaveData (*(RamSaveData_t *)0x00276768)
+// XBE_GLOBAL(0x00276768, 0xd4d)
+RamSaveData_t RamSaveData;
 
 // The weapons by preference, best first (Player_IsBetterWeapon, Player_GetBestWeapon)
 // XBE_GLOBAL(0x00181ad8, 0x24)

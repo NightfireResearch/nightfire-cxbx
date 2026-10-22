@@ -20,7 +20,7 @@
 // 5 and a beam along each of 15 bones, from the bone's parent. It fades with distance and goes once the owner has
 // been dead for 0x100 frames. None while drones are switched off.
 
-#define switch_NO_DRONES U32_AT(0x001df99c)
+extern uint32_t switch_NO_DRONES;
 
 #define GFX_BODYGLOW      ((HASHCODE)0x0200025f)
 #define GFX_BODYGLOW_BEAM ((HASHCODE)0x0200055a)

@@ -7,12 +7,12 @@
 #pragma fp_contract(off)
 
 // XBE_GLOBAL(0x0029aacc, 0x28)
-#define SSysItems (*(SSYSITEM(*)[SSYS_ITEMS])0x0029aacc)
+extern SSYSITEM SSysItems[SSYS_ITEMS];
 // Seconds item 2 waits after it has cut item 1's countdown short
 // XBE_GLOBAL(0x0029aac8, 0x4)
-#define SSysDelayTimer FLOAT_AT(0x0029aac8)
+float SSysDelayTimer;
 
-#define IsWarmReset U8_AT(0x00279250)
+extern uint8_t IsWarmReset;
 
 // XBE_GLOBAL(0x0018cc50, 0x38) readonly relocate
 SSYSMSG SSysMsgs1[7] = {

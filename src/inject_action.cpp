@@ -107,6 +107,7 @@
 #include "action/gfx/Font.h"
 #include "action/game/weapon_stats.h"
 #include "action/devtools/MenuProbe.h"
+#include "action/devtools/AllOriginal.h"
 #include "action/devtools/Demo.h"
 #include "action/devtools/DataWrites.h"
 #include "action/engine/LaunchOptions.h"
@@ -286,6 +287,9 @@ void Inject()
   WriteJmpTo(0x000eb0fb, (size_t)&XLaunchNewImageA);
   WriteJmpTo(0x000eb050, (size_t)&XGetLaunchInfo);
 
+
+  // The game's code uses our copy of every global we own
+  AllOriginal_RelocateOwned();
 
   // Debug probes that stand in front of patched functions (off unless settings.ini asks for them)
   MenuProbe_Install();

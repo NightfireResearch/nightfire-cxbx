@@ -37,7 +37,7 @@
 static_assert(offsetof(MPSettings_t, maybeDroneAIEnabled) == 0x1e4, "MPSettings.maybeDroneAIEnabled is 0x0026001c");
 
 // Set by the BLIND_DRONES cheat (ui_cheats.cpp): drones ignore the player
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+extern uint32_t switch_BLIND_DRONES;
 
 // Drone_tag.flags (docs/drone/architecture/README.md 4.3)
 #define DRONE_FLAG_FROZEN 0x10              // makes no combat moves

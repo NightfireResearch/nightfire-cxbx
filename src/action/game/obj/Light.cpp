@@ -20,10 +20,12 @@
 
 #pragma fp_contract(off)
 
-#define LightList (*(DLISTINFO_tag*)0x00215700)
+// XBE_GLOBAL(0x00215700, 0x18)
+DLISTINFO_tag LightList;
 #define NUM_LIGHTS 32
 // Lights_CalcClosestLights' answer
-#define ClosestLights (*(light_tag *(*)[30])0x00215718)
+// XBE_GLOBAL(0x00215718, 0x78)
+light_tag *ClosestLights[30];
 
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range

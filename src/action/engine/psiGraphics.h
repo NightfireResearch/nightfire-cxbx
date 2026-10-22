@@ -44,7 +44,7 @@ typedef struct {
 static_assert(sizeof(ParticleOverlayBuffer) == 0xc, "Bad size for ParticleOverlayBuffer");
 
 #define PARTICLE_OVERLAY_RING_SIZE 64
-#define ParticleOverlayRing (*(ParticleOverlayBuffer(*)[PARTICLE_OVERLAY_RING_SIZE])0x002adf88)
+extern ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
 
 // One entry per texture in a map_tag: its header (a TextureInfo, or NULL / -1 for none)
 typedef struct {

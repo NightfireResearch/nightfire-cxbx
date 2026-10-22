@@ -45,7 +45,7 @@ static_assert(sizeof(DroneSMLists) == 0x10, "DroneSMLists is 0x10 bytes");
 // XBE_GLOBAL(0x001ee438, 0x8000)
 #define Drone_SM_LLItems (*(DroneSMItem(*)[DRONE_SM_ITEMS])0x001ee438)
 // XBE_GLOBAL(0x001f6438, 0x10)
-#define Drone_SM_LLDelayed (*(DroneSMLists *)0x001f6438)
+DroneSMLists Drone_SM_LLDelayed;
 
 // The drone whose state machine has this id, as FUN_0004e1b0 finds it (the id arrives in ECX there, so the
 // original is not patched; Drone_SM_SetState inlines the same walk). NULL if no drone on the list has it.

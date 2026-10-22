@@ -10,6 +10,7 @@
 // is compared on AL (tools/narrow_returns.py checks no caller reads more), a double on all its bits.
 
 #include "CollidePortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -35,11 +36,11 @@
 
 namespace {
 
-#define RandWords ((uint32_t *)0x0018cdf8)
-#define CollideGlobals ((uint8_t *)0x001dc9a0)    // ColBoxs to CelList
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
+#define CollideGlobals (GameSpan<uint8_t>{0x001dc9a0})    // ColBoxs to CelList
 #define COLLIDE_GLOBALS_SIZE (0x001dee38 - 0x001dc9a0)
 #define ForcedListInfo ((uint8_t *)0x001df41c)
-#define FrameRates ((uint8_t *)0x0017c100)       // FRAME_RATE_MUL, REC_FRAME_RATE
+#define FrameRates (GameSpan<uint8_t>{0x0017c100})       // FRAME_RATE_MUL, REC_FRAME_RATE
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
@@ -468,7 +469,7 @@ cel_tag *CollidingCel(void) {
 HITDATA_tag *RandomList(int n) {
     HITDATA_tag *head = NULL;
     for (int i = 0; i < n; i++) {
-        HITDATA_tag *hit = (HITDATA_tag *)LList_Cut(&*(LLISTINFO_tag *)0x001ddc60);
+        HITDATA_tag *hit = (HITDATA_tag *)LList_Cut(&*(LLISTINFO_tag *)XbeOurs(0x001ddc60));
         if (hit == NULL)
             break;
         memset(hit, 0, sizeof(*hit));
@@ -636,25 +637,25 @@ void RandomWorld(void) {
         world.objs[6].llNext = NULL;
     }
     // The hit heap: all the nodes
-    LLISTINFO_tag *heap = (LLISTINFO_tag *)0x001ddc60;
+    LLISTINFO_tag *heap = (LLISTINFO_tag *)XbeOurs(0x001ddc60);
     memset(heap, 0, sizeof(*heap));
     heap->elementSize = sizeof(HITDATA_tag);
     for (int i = 0; i < NODES; i++)
         LList_Add(heap, (LLNODE_tag *)&world.nodes[i]);
     // The box list: entries past any count are earlier searches' leaves
-    BOXENTRY_tag *boxes = (BOXENTRY_tag *)0x001dc9a0;
+    BOXENTRY_tag *boxes = (BOXENTRY_tag *)XbeOurs(0x001dc9a0);
     for (int i = 0; i < MAX_COLBOXES; i++) {
         boxes[i].box = &world.geom[R(2)].boxes[3 + R(4)];
         boxes[i].t = 0.0f;
     }
-    U32_AT(0x001ddc6c) = 0;
+    U32_AT(XbeOurs(0x001ddc6c)) = 0;
     // The triangle heap
-    U32_AT(0x001dec28) = 3 * (1 + R(8));
+    U32_AT(XbeOurs(0x001dec28)) = 3 * (1 + R(8));
     if (R(10) == 0)
-        U32_AT(0x001dec28) = 501 + R(2) * 99;
-    U32_AT(0x001dec2c) = R(3) ? 0 : 3 * R(4);
-    *(_VECTOR **)0x001dec30 = world.triHeap;
-    U8_AT(0x001dec1c) = (uint8_t)R(2);
+        U32_AT(XbeOurs(0x001dec28)) = 501 + R(2) * 99;
+    U32_AT(XbeOurs(0x001dec2c)) = R(3) ? 0 : 3 * R(4);
+    *(_VECTOR **)XbeOurs(0x001dec30) = world.triHeap;
+    U8_AT(XbeOurs(0x001dec1c)) = (uint8_t)R(2);
     DeltaP.x = Plain(-1.0f, 1.0f);
     // Joints
     world.jointCount = (ushort)R(JOINTS + 1);
@@ -677,8 +678,8 @@ void RandomWorld(void) {
     for (int i = 0; i < 64; i++)
         world.stream[i] = R(0);
     MPSettings.isMultiplayer = R(3) == 0;
-    FLOAT_AT(0x0017c100) = R(4) ? 1.0f : Plain(0.5f, 2.0f);
-    FLOAT_AT(0x0017c104) = R(4) ? 1.0f / 60.0f : Plain(0.0f, 0.1f);
+    FLOAT_AT(XbeOurs(0x0017c100)) = R(4) ? 1.0f : Plain(0.5f, 2.0f);
+    FLOAT_AT(XbeOurs(0x0017c104)) = R(4) ? 1.0f / 60.0f : Plain(0.0f, 0.1f);
     GameState.NumFramesUnpaused = R(64);
     RandWords[0] = R(0) | 1;
     RandWords[1] = R(0);
@@ -943,7 +944,7 @@ uint32_t RunSpheres(bool original) {
 uint32_t RunRecurse(bool original) {
     Geometry &g = world.geom[R(2)];
     COLLBOX_tag *box = &g.boxes[R(BOXES)];
-    U32_AT(0x001ddc6c) = R(4);
+    U32_AT(XbeOurs(0x001ddc6c)) = R(4);
     switch (R(3)) {
     case 0:
         CDECL_RUN(0x000291c0, RecurseBoxesSph, void (__cdecl *)(COLLDATA_tag *, COLLBOX_tag *, _VECTOR *, float),
@@ -1517,10 +1518,10 @@ void CollidePortShadow_Run(void) {
     static uint32_t rand[2];
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
-    memcpy(globals, CollideGlobals, sizeof(globals));
+    XbeOursRead(globals, CollideGlobals.at, sizeof(globals));
     memcpy(forced, ForcedListInfo, sizeof(forced));
-    memcpy(frameRates, FrameRates, sizeof(frameRates));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(frameRates, FrameRates.at, sizeof(frameRates));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     quietCount = 0;
     for (int t = 0; t < 0x55 && quietCount < COUNT(quietTypes); t++) {
@@ -1533,10 +1534,10 @@ void CollidePortShadow_Run(void) {
     AddArea(&world, sizeof(world));
     AddArea(&GameState, sizeof(GameState_t));
     AddArea(&MPSettings, sizeof(MPSettings_t));
-    AddArea(CollideGlobals, COLLIDE_GLOBALS_SIZE);
+    AddArea(CollideGlobals.game(), COLLIDE_GLOBALS_SIZE);
     AddArea(ForcedListInfo, 12);
-    AddArea(FrameRates, 8);
-    AddArea(RandWords, 8);
+    AddArea(FrameRates.game(), 8);
+    AddArea(RandWords.game(), 8);
     NfWarnMuted++;
     cases = differ = nanChoices = 0;
 
@@ -1553,8 +1554,8 @@ void CollidePortShadow_Run(void) {
     NfWarnMuted--;
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
-    memcpy(CollideGlobals, globals, sizeof(globals));
+    XbeOursWrite(CollideGlobals.at, globals, sizeof(globals));
     memcpy(ForcedListInfo, forced, sizeof(forced));
-    memcpy(FrameRates, frameRates, sizeof(frameRates));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(FrameRates.at, frameRates, sizeof(frameRates));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
 }

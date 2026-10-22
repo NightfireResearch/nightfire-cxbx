@@ -10,6 +10,7 @@
 // NIGHTFIRE_MENUHANDLERS_GROUP=<part of a name> one group.
 
 #include "MenuHandlerShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -158,9 +159,8 @@ uint32_t R(uint32_t n) {
 }
 
 void Fill(void *p, size_t n) {
-    uint8_t *b = (uint8_t *)p;
     for (size_t i = 0; i < n; i++)
-        b[i] = (uint8_t)R(0);
+        *(uint8_t *)(size_t)XbeOurs((unsigned)(size_t)p + (unsigned)i) = (uint8_t)R(0);
 }
 
 // ---- the globals the package owns, lent to the original as the game's copies
@@ -171,25 +171,25 @@ struct Pair {
     size_t size;
 };
 const Pair kPairs[] = {
-    {0x0025d7cc, &language_flags, 4}, {0x0025ddd8, &intro_step, 4}, {0x0025dde1, &start_shown, 1},
-    {0x0025dde8, start_legal_text, 0x180}, {0x0025df68, &parisenum_countdown, 1}, {0x0025dddc, &esthero_frame, 4},
-    {0x0025df6c, &fmvplayer_frame, 4}, {0x0025d828, tweaks_text, 0x240}, {0x0025da68, tweaks2_text, 0x1e0},
-    {0x002451f8, &nis_script, 4}, {0x0025d7c8, &nis_by_select, 1}, {0x002790a8, &cheat_medal, 4},
-    {0x002245f0, &style_list_next, 1}, {0x00224d98, style_list_text, 0x1c0}, {0x0025d7df, &controls_inverted, 1},
-    {0x0025ed70, &av_music_volume, 4}, {0x0025ed74, &av_sfx_volume, 4}, {0x0025ed78, &av_leaving, 1},
-    {0x0025d7e0, pause_build_text, 0x40}, {0x0025d820, &pause_quitting, 1}, {0x0025d821, &pause_confirm_closed, 1},
-    {0x0025d7ac, &iris_tick, 4}, {0x0025d7b0, &iris_frame, 4}, {0x0025d7b8, &iris_hold, 1}, {0x0025d7b9, &iris_active, 1},
-    {0x00224f5c, &optionbox_answer, 4}, {0x00224f60, &optionbox_type, 4}, {0x00224f64, &optionbox_has_answer, 1},
-    {0x0025df70, &nfselect_leaving, 1}, {0x0017d609, &nfselect_from_main_menu, 1}, {0x0025d7d0, &results_score, 4},
-    {0x0025d7d4, &results_last_mission, 1}, {0x0025dc50, results_title_text, 0x80},
-    {0x0025dcd0, results_target_text, 0x40}, {0x0025dd10, results_score_text, 0x40}, {0x0025dd50, &results_saving, 1},
-    {0x0025d708, bonus_text, 0x84}, {0x0025dd58, bonus_text_before, 0x80}, {0x0025e378, records_best_text, 0x20},
-    {0x0025e398, records_bond_moves_text, 0x20}, {0x0025e3b8, records_upgrades_text, 0x20},
-    {0x00225080, &level_bonuses, 0x34}, {0x0029ae38, timer_text, 0x400}, {0x0029b238, &timer_text_next, 1},
-    {0x0025edbc, &save_space_problem, 4}, {0x0025efd0, save_space_text, 0x200},
-    {0x0022507c, mp_controller_missing, 4}, {0x00225078, mp_controller_missing_joined, 4},
-    {0x00224f78, mp_controller_text, 0x100}, {0x0025edc0, &saveflow_dashboard_offered, 1},
-    {0x0025edc4, &saveflow_hold_until, 4}, {0x0025edc8, saveflow_text_buffer, 0x200}, {0x0025efc8, &saveflow_tip, 4},
+    {XbeOurs(0x0025d7cc), &language_flags, 4}, {XbeOurs(0x0025ddd8), &intro_step, 4}, {XbeOurs(0x0025dde1), &start_shown, 1},
+    {XbeOurs(0x0025dde8), start_legal_text, 0x180}, {XbeOurs(0x0025df68), &parisenum_countdown, 1}, {XbeOurs(0x0025dddc), &esthero_frame, 4},
+    {XbeOurs(0x0025df6c), &fmvplayer_frame, 4}, {XbeOurs(0x0025d828), tweaks_text, 0x240}, {XbeOurs(0x0025da68), tweaks2_text, 0x1e0},
+    {XbeOurs(0x002451f8), &nis_script, 4}, {XbeOurs(0x0025d7c8), &nis_by_select, 1}, {XbeOurs(0x002790a8), &cheat_medal, 4},
+    {XbeOurs(0x002245f0), &style_list_next, 1}, {XbeOurs(0x00224d98), style_list_text, 0x1c0}, {XbeOurs(0x0025d7df), &controls_inverted, 1},
+    {XbeOurs(0x0025ed70), &av_music_volume, 4}, {XbeOurs(0x0025ed74), &av_sfx_volume, 4}, {XbeOurs(0x0025ed78), &av_leaving, 1},
+    {XbeOurs(0x0025d7e0), pause_build_text, 0x40}, {XbeOurs(0x0025d820), &pause_quitting, 1}, {XbeOurs(0x0025d821), &pause_confirm_closed, 1},
+    {XbeOurs(0x0025d7ac), &iris_tick, 4}, {XbeOurs(0x0025d7b0), &iris_frame, 4}, {XbeOurs(0x0025d7b8), &iris_hold, 1}, {XbeOurs(0x0025d7b9), &iris_active, 1},
+    {XbeOurs(0x00224f5c), &optionbox_answer, 4}, {XbeOurs(0x00224f60), &optionbox_type, 4}, {XbeOurs(0x00224f64), &optionbox_has_answer, 1},
+    {XbeOurs(0x0025df70), &nfselect_leaving, 1}, {XbeOurs(0x0017d609), &nfselect_from_main_menu, 1}, {XbeOurs(0x0025d7d0), &results_score, 4},
+    {XbeOurs(0x0025d7d4), &results_last_mission, 1}, {XbeOurs(0x0025dc50), results_title_text, 0x80},
+    {XbeOurs(0x0025dcd0), results_target_text, 0x40}, {XbeOurs(0x0025dd10), results_score_text, 0x40}, {XbeOurs(0x0025dd50), &results_saving, 1},
+    {XbeOurs(0x0025d708), bonus_text, 0x84}, {XbeOurs(0x0025dd58), bonus_text_before, 0x80}, {XbeOurs(0x0025e378), records_best_text, 0x20},
+    {XbeOurs(0x0025e398), records_bond_moves_text, 0x20}, {XbeOurs(0x0025e3b8), records_upgrades_text, 0x20},
+    {XbeOurs(0x00225080), &level_bonuses, 0x34}, {XbeOurs(0x0029ae38), timer_text, 0x400}, {XbeOurs(0x0029b238), &timer_text_next, 1},
+    {XbeOurs(0x0025edbc), &save_space_problem, 4}, {XbeOurs(0x0025efd0), save_space_text, 0x200},
+    {XbeOurs(0x0022507c), mp_controller_missing, 4}, {XbeOurs(0x00225078), mp_controller_missing_joined, 4},
+    {XbeOurs(0x00224f78), mp_controller_text, 0x100}, {XbeOurs(0x0025edc0), &saveflow_dashboard_offered, 1},
+    {XbeOurs(0x0025edc4), &saveflow_hold_until, 4}, {XbeOurs(0x0025edc8), saveflow_text_buffer, 0x200}, {XbeOurs(0x0025efc8), &saveflow_tip, 4},
 };
 
 // A word as the logs show it: an offset into the world, a string's text, or the number
@@ -252,30 +252,30 @@ const struct {
     {0x001fe6d0, 0x560},    // PlayerInputs
     {0x001f6580, 0x100},    // GameState, the layout, subtitles, the players, ScriptCam
     {0x0025fe38, 0x23c},    // MPSettings
-    {0x0025f1d0, 0x938},    // manager
+    {XbeOurs(0x0025f1d0), 0x938},    // manager
     {0x0025d6e8, 0x20},     // menu_bonus
     {0x0025d78c, 0x2},
-    {0x0025d7a0, 0x4},      // LanguageToLoad
+    {XbeOurs(0x0025d7a0), 0x4},      // LanguageToLoad
     {0x0025d7bc, 0x8},      // the movies' state
-    {0x0025d7d8, 0x4},
-    {0x0025d7dd, 0x1},      // cn_modified
-    {0x0025edb9, 0x1},      // saveflow_relist
+    {XbeOurs(0x0025d7d8), 0x4},
+    {XbeOurs(0x0025d7dd), 0x1},      // cn_modified
+    {XbeOurs(0x0025edb9), 0x1},      // saveflow_relist
     {0x002456b0, 0x3},
-    {0x0025fb10, 0x1},
+    {XbeOurs(0x0025fb10), 0x1},
     {0x00279120, 0x24},     // Upgrades
-    {0x001df138, 0x100},    // switch_channels
-    {0x001df428, 0x400},    // switch_channels_time
+    {XbeOurs(0x001df138), 0x100},    // switch_channels
+    {XbeOurs(0x001df428), 0x400},    // switch_channels_time
     {0x00164068, 0x80},     // the drones' tunables
     {0x0017e8cc, 0x1c},     // the player's damage modifiers
     {0x002251b8, 0x400},    // codename_buf
     {0x00245240, 0x40},     // mp_join_slots
     {0x00245698, 0x10},     // mp_join_step
     {0x0025eda0, 0x1c},     // XBox_DoSaveFlow's state
-    {0x002adf10, 0x4},      // psiInternalLoadingDataState
+    {XbeOurs(0x002adf10), 0x4},      // psiInternalLoadingDataState
     {0x00262738, 0x230},    // MPGame
-    {0x002245f8, 0x23c},    // mp_settings_backup
+    {XbeOurs(0x002245f8), 0x23c},    // mp_settings_backup
     {0x00224838, 0x560},    // mp_inputs_backup
-    {0x002adf0c, 0x4},      // SavesListed
+    {XbeOurs(0x002adf0c), 0x4},      // SavesListed
 };
 
 ShadowRegions regions;
@@ -855,7 +855,7 @@ void RandomWorld(void) {
     // the game's state
     for (const auto &g : kGlobals)
         Fill((void *)(uintptr_t)g.at, g.size);
-    M_MANAGER *mgrs = (M_MANAGER *)0x0025f1d0;
+    M_MANAGER *mgrs = (M_MANAGER *)XbeOurs(0x0025f1d0);
     for (int m = 0; m < 5; m++) {
         mgrs[m].startPlayer = (uchar)R(4);
     }
@@ -867,8 +867,8 @@ void RandomWorld(void) {
         sprintf(((char (*)[0x20])0x002251b8)[i], "code%x", R(0x1000));
     for (int i = 0; i < 2; i++)
         ((DEFAULT_CODENAME *)0x0017d588)[i].name = (Action_TranslatedText)R(0x400);
-    U32_AT(0x0025d7a0) = R(4) == 0 ? R(0) : R(11);       // LanguageToLoad
-    U32_AT(0x0025d7c0) = R(3) == 0 ? 0 : R(200);         // the movie's skip delay
+    U32_AT(XbeOurs(0x0025d7a0)) = R(4) == 0 ? R(0) : R(11);       // LanguageToLoad
+    U32_AT(XbeOurs(0x0025d7c0)) = R(3) == 0 ? 0 : R(200);         // the movie's skip delay
     MPSettings.isMultiplayer = R(2);
     MPSettings.numPlayers = R(5);
     MPSettings.numBots = R(7);
@@ -882,8 +882,8 @@ void RandomWorld(void) {
         PlayerInputs[p].inverted = (uchar)R(3);
     }
     PTR_AT(0x001f6654) = world.player;                    // glb_players[0]
-    U32_AT(0x0017d604) = 0x13f;                           // the language page's flags at first: never written
-    U8_AT(0x0025d78c) = (uint8_t)R(2);                    // menu_level_bonus_earned
+    U32_AT(XbeOurs(0x0017d604)) = 0x13f;                           // the language page's flags at first: never written
+    U8_AT(XbeOurs(0x0025d78c)) = (uint8_t)R(2);                    // menu_level_bonus_earned
     if (R(2))
         GameState.BaseMapHashCode = kLevels[R(COUNT(kLevels))];
     if (R(2))
@@ -1063,7 +1063,7 @@ uint32_t Run_UpdateBox(bool original) {
 uint32_t Run_LevelBonuses(bool original) {
     HASHCODE level = in.a[0] % 5 ? kLevels[in.a[1] % COUNT(kLevels)] : (HASHCODE)in.a[2];
     uint32_t p = CALL(0x0007f500, Menu_GetLevelBonuses, LEVEL_BONUSES *(__cdecl *)(HASHCODE), level);
-    return p == (original ? 0x00225080u : (uint32_t)(uintptr_t)&level_bonuses) ? 1 : p;
+    return p == (original ? XbeOurs(0x00225080u) : (uint32_t)(uintptr_t)&level_bonuses) ? 1 : p;
 }
 uint32_t Run_HasMedal(bool original) {
     HASHCODE level = in.a[0] % 5 ? kLevels[in.a[1] % COUNT(kLevels)] : (HASHCODE)in.a[2];
@@ -1108,7 +1108,7 @@ uint32_t Run_Timer(bool original) {
     }
     char *text = (char *)(uintptr_t)CALL(0x000d25d0, Timer_Seconds2String, char *(__cdecl *)(int, int), hundredths,
                                          (int)(in.a[2] % 7) - 1);
-    char *base = original ? (char *)0x0029ae38 : timer_text[0];
+    char *base = original ? (char *)XbeOurs(0x0029ae38) : timer_text[0];
     return (uint32_t)(text - base);
 }
 uint32_t Run_AddRow(bool original) {
@@ -1144,7 +1144,7 @@ uint32_t Run_DisplayStyleList(bool original) {
 uint32_t Run_StyleLabel(bool original) {
     style_list_next = (uint8_t)(in.a[3] % 12);
     if (original)
-        U8_AT(0x002245f0) = style_list_next;
+        U8_AT(XbeOurs(0x002245f0)) = style_list_next;
     CALL_VOID(0x00074910, Menu_UpdateControllerLabelString,
               void (__cdecl *)(uchar, const char *, Action_TranslatedText, const char *, Action_TranslatedText),
               in.managerNum, world.strings[in.a[0] % 4], (Action_TranslatedText)(in.a[1] % 0x400),
@@ -1156,18 +1156,18 @@ uint32_t Run_StyleLabel(bool original) {
 // ---- room for a save
 
 uint32_t Run_StopMusic(bool original) {
-    U8_AT(0x0025d7bc) = (uint8_t)R(2);
+    U8_AT(XbeOurs(0x0025d7bc)) = (uint8_t)R(2);
     CALL_VOID(0x0007fd70, Menu_StopFrontEndMusic, void (__stdcall *)(void));
     return 0;
 }
 uint32_t Run_RestartLoop(bool original) {
-    U8_AT(0x0025d7bc) = (uint8_t)R(2);
+    U8_AT(XbeOurs(0x0025d7bc)) = (uint8_t)R(2);
     CALL_VOID(0x0007fda0, Menu_RestartFrontEndLoop, void (__stdcall *)(void));
     return 0;
 }
 uint32_t Run_MovieLoop(bool original) {
-    U8_AT(0x0025d7bc) = (uint8_t)R(2);
-    U8_AT(0x0025d7be) = (uint8_t)R(2);
+    U8_AT(XbeOurs(0x0025d7bc)) = (uint8_t)R(2);
+    U8_AT(XbeOurs(0x0025d7be)) = (uint8_t)R(2);
     return CALL(0x0007fe70, psiMovieLoop, bool (__cdecl *)(void)) & 0xff;
 }
 uint32_t Run_GetBonus(bool original) {
@@ -1219,11 +1219,11 @@ uint32_t Run_SaveSize(bool original) {
 }
 uint32_t Run_CheckSpace(bool original) {
     SavesListed = R(3) == 0 ? 0xffc + R(3) : R(100);
-    save_space_problem = U32_AT(0x0025edbc) = R(3);
+    save_space_problem = U32_AT(XbeOurs(0x0025edbc)) = R(3);
     return CALL(0x0008fcc0, Menu_CheckSaveSpace, bool (__cdecl *)(uchar, MENU_LS *), (uchar)R(2), &ls) & 0xff;
 }
 uint32_t Run_Dashboard(bool original) {
-    save_space_problem = U32_AT(0x0025edbc) = R(4);
+    save_space_problem = U32_AT(XbeOurs(0x0025edbc)) = R(4);
     CALL_VOID(0x0008fd90, Menu_GoToDashboard, void (__cdecl *)(void));
     return 0;
 }
@@ -1328,7 +1328,7 @@ const unsigned kFrontEndHelperFakes[] = {0x0007fda0, 0x0007ffa0, 0x0008fcc0, 0x0
 // ---- the movie list, the multiplayer join and setup pages and the rules
 
 #define mp_join_step (*(int(*)[4])0x00245698)
-#define mp_good_bot_taken U8_AT(0x002456b0)
+#define mp_good_bot_taken U8_AT(XbeOurs(0x002456b0))
 
 HANDLER_CASE(P_FMVTEST, 0x00085a50)
 
@@ -1383,22 +1383,22 @@ uint32_t Run_BotShortName(bool original) {
 // A frame of the save flow: a state, a frame count near the tips' turn, the box open or not, a text or none
 uint32_t Run_SaveFlow(bool original) {
     uchar m = (uchar)(in.a[0] % 2);
-    M_MANAGER *mgr = &((M_MANAGER *)0x0025f1d0)[m];
+    M_MANAGER *mgr = &((M_MANAGER *)XbeOurs(0x0025f1d0))[m];
     mgr->index = m;
     uint state = in.a[1] % 12;
-    U32_AT(0x0025edb0) = in.a[2] % 4 ? (in.a[2] >> 8) % 4 == 0 ? 299 + in.a[2] % 3 : in.a[2] % 700 : in.a[2];
-    U8_AT(0x0025eda8) = (uint8_t)(in.a[3] & 1);
-    U8_AT(0x0025edba) = (uint8_t)((in.a[3] >> 1) & 1);
-    U32_AT(0x0025edac) = in.a[4] % 3 ? 0 : (uint32_t)(uintptr_t)world.strings[1];
+    U32_AT(XbeOurs(0x0025edb0)) = in.a[2] % 4 ? (in.a[2] >> 8) % 4 == 0 ? 299 + in.a[2] % 3 : in.a[2] % 700 : in.a[2];
+    U8_AT(XbeOurs(0x0025eda8)) = (uint8_t)(in.a[3] & 1);
+    U8_AT(XbeOurs(0x0025edba)) = (uint8_t)((in.a[3] >> 1) & 1);
+    U32_AT(XbeOurs(0x0025edac)) = in.a[4] % 3 ? 0 : (uint32_t)(uintptr_t)world.strings[1];
     saveflow_tip = in.a[5] % 3 ? NULL : world.strings[2];
-    U32_AT(0x0025efc8) = (uint32_t)(uintptr_t)saveflow_tip;
+    U32_AT(XbeOurs(0x0025efc8)) = (uint32_t)(uintptr_t)saveflow_tip;
     saveflow_hold_until = in.a[6] % 3 ? 0 : in.a[6] % 900;
-    U32_AT(0x0025edc4) = saveflow_hold_until;
+    U32_AT(XbeOurs(0x0025edc4)) = saveflow_hold_until;
     ls.operation = (uchar)(in.a[7] % 6);
     CALL_VOID(0x0008f3f0, XBox_DoSaveFlow, void (__cdecl *)(M_MANAGER *, uint, MENU_LS *), mgr, state, &ls);
     // The text pointing at the buffer, the game's or ours
-    if (U32_AT(0x0025edac) == (original ? 0x0025edc8u : (uint32_t)(uintptr_t)saveflow_text_buffer))
-        U32_AT(0x0025edac) = 1;
+    if (U32_AT(XbeOurs(0x0025edac)) == (original ? XbeOurs(0x0025edc8u) : (uint32_t)(uintptr_t)saveflow_text_buffer))
+        U32_AT(XbeOurs(0x0025edac)) = 1;
     return 0;
 }
 
@@ -1447,8 +1447,10 @@ void MenuHandlerShadow_Run(void) {
     for (int i = 0; i < COUNT(kPackage); i++)
         jumps[i] = XbeOriginal_Target(kPackage[i]);
     std::vector<std::vector<uint8_t>> saved;
-    for (const auto &g : kGlobals)
-        saved.emplace_back((uint8_t *)(uintptr_t)g.at, (uint8_t *)(uintptr_t)g.at + g.size);
+    for (const auto &g : kGlobals) {
+        saved.emplace_back(g.size);
+        XbeOursRead(saved.back().data(), g.at, g.size);
+    }
     std::vector<uint8_t> savedOwned, savedGame;
     SaveAll(savedOwned, false);
     SaveAll(savedGame, true);
@@ -1492,7 +1494,7 @@ void MenuHandlerShadow_Run(void) {
 
     NfWarnMuted--;
     for (size_t i = 0; i < saved.size(); i++)
-        memcpy((void *)(uintptr_t)kGlobals[i].at, saved[i].data(), saved[i].size());
+        XbeOursWrite(kGlobals[i].at, saved[i].data(), saved[i].size());
     LoadAll(savedOwned, false);
     LoadAll(savedGame, true);
     U32_AT(0x001f6654) = savedPlayer;

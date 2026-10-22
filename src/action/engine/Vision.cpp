@@ -8,6 +8,9 @@
 
 #include <string.h>
 
+// XBE_GLOBAL(0x0029d79c, 0x4)
+cel_tag *GfxList;
+
 // What a view sees: the cels it is in or looks into through portals, each portal narrowing the view's pyramid to
 // the part of the opening still in sight.
 
@@ -17,14 +20,20 @@
 
 // The eye and the far corners of the view's pyramid (200 ahead), in the world
 #define ViewPoints (*(_VECTOR (*)[5])0x0029e828)
-#define PortalsOut (*(VisPortal *)0x0029e868)
-#define PortalsIn (*(VisPortal *)0x0029e900)
-#define NumPortalPlanes (*(int (*)[VISION_DEPTHS])0x0029e998)
-#define VisionRecurseCount U32_AT(0x0029ea58)
+// XBE_GLOBAL(0x0029e868, 0x94)
+VisPortal PortalsOut;
+// XBE_GLOBAL(0x0029e900, 0x94)
+VisPortal PortalsIn;
+// XBE_GLOBAL(0x0029e998, 0xc0)
+int NumPortalPlanes[VISION_DEPTHS];
+// XBE_GLOBAL(0x0029ea58, 0x4)
+uint32_t VisionRecurseCount;
 #define PortalPlanes (*(plane_equ_tag (*)[VISION_DEPTHS][VISION_PLANES])0x0029ea60)
-#define PortalPointIn (*(uchar (*)[16])0x002a0860)
+// XBE_GLOBAL(0x002a0860, 0x10)
+uchar PortalPointIn[16];
 #define VisCelList (*(VisCel (*)[64])0x002a0870)
-#define VisCelCount U16_AT(0x002a0a70)
+// XBE_GLOBAL(0x002a0a70, 0x2)
+uint16_t VisCelCount;
 
 
 // AUTOINJECT

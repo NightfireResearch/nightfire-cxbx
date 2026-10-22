@@ -193,27 +193,24 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
 // globals and constants
-#define glb_viewer (*(viewer_tag*(*)[11])0x001f661c)
-#define glb_world (*(world_tag**)0x001f6674)
+extern viewer_tag *glb_viewer[11];
+extern world_tag *glb_world;
 #define glb_blokes (*(BLData*(*)[NUM_PLAYERS])(0x002774b8))
 #define glb_players (*(obj_tag*(*)[NUM_PLAYERS])(0x001f6654))
 
-// XBE_GLOBAL(0x0029d71c, 0xc)
-#define CONST_UP_VECTOR (*(_VECTOR*)0x0029d71c)
-// XBE_GLOBAL(0x0029d728, 0xc)
-#define CONST_ZERO_VECTOR (*((_VECTOR*)0x0029d728))
+extern _VECTOR CONST_UP_VECTOR;
+extern _VECTOR CONST_ZERO_VECTOR;
 // XBE_GLOBAL(0x001f6648, 0xc)
 #define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
-// XBE_GLOBAL(0x0029d6d4, 0xc)
-#define MAYBE_CONST_FORWARD_VECTOR (*((_VECTOR*)0x0029d6d4))
-#define MAT_IDENTITY (*((_MATRIX*)0x0029d6e0))
+extern _VECTOR MAYBE_CONST_FORWARD_VECTOR;
+extern _MATRIX MAT_IDENTITY;
 
-#define VIDEO_FRAME_RATE U32_AT(0x0017c0f0)
+extern uint32_t VIDEO_FRAME_RATE;
 #define FRAME_RATE_INT U32_AT(0x0017c0f4)
-#define _FRAME_RATE FLOAT_AT(0x0017c0f8)
-#define FRAME_RATE_DIV FLOAT_AT(0x0017c0fc)
-#define FRAME_RATE_MUL FLOAT_AT(0x0017c100)
-#define REC_FRAME_RATE FLOAT_AT(0x0017c104)
+extern float _FRAME_RATE;
+extern float FRAME_RATE_DIV;
+extern float FRAME_RATE_MUL;
+extern float REC_FRAME_RATE;
 
 #include <stdio.h>
 

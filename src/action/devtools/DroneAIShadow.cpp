@@ -8,6 +8,7 @@
 // are kept in step: both sides start from the same Rand_Random state, and it is compared afterwards.
 
 #include "DroneAIShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,7 +33,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // Drone_SfxInfo's sfx field, per speech number (what Drone_maybeDisallowedFromSayingThisSfx compares)
 #define SfxInfoSound(n) U32_AT(0x00174b28 + (n) * 0x20)
 
@@ -514,10 +515,10 @@ void RandomWorld() {
     MusicVars.lastSeenFrame = 900 + ShadowRand(400);
     MusicVars.countingStarted = ShadowRand(2);
     int counted = ShadowRand(5);
-    I32_AT(0x001ee418) = counted;
+    I32_AT(XbeOurs(0x001ee418)) = counted;
     for (int k = 0; k < 100; k++)
-        ((Drone_tag **)0x001ee288)[k] = k < counted ? &world.drones[ShadowRand(DRONES)] : NULL;
-    I32_AT(0x001ee41c) = ShadowRand(3) - 1;
+        ((Drone_tag **)XbeOurs(0x001ee288))[k] = k < counted ? &world.drones[ShadowRand(DRONES)] : NULL;
+    I32_AT(XbeOurs(0x001ee41c)) = ShadowRand(3) - 1;
 }
 
 // The drones not set up for the bots are left as non-bots
@@ -1223,12 +1224,12 @@ void DroneAIShadow_Run(void) {
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(lists, (void *)0x001ee438, sizeof(lists));
-    memcpy(music, (void *)0x001ee260, sizeof(music));
+    memcpy(music, (void *)XbeOurs(0x001ee260), sizeof(music));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(mpGame, &MPGame, sizeof(mpGame));
     memcpy(channels, switch_channels, sizeof(channels));
     memcpy(times, switch_channels_time, sizeof(times));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
     memcpy(players, glb_players, sizeof(players));
 
     regions.Clear();
@@ -1236,12 +1237,12 @@ void DroneAIShadow_Run(void) {
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add((void *)0x001ee438, sizeof(lists));
-    regions.Add((void *)0x001ee260, sizeof(music));
+    regions.Add((void *)XbeOurs(0x001ee260), sizeof(music));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(&MPGame, sizeof(MPGameStruct));
     regions.Add(switch_channels, 256);
     regions.Add(switch_channels_time, 1024);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(glb_players, sizeof(players));
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
@@ -1264,12 +1265,12 @@ void DroneAIShadow_Run(void) {
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy((void *)0x001ee438, lists, sizeof(lists));
-    memcpy((void *)0x001ee260, music, sizeof(music));
+    memcpy((void *)XbeOurs(0x001ee260), music, sizeof(music));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(&MPGame, mpGame, sizeof(mpGame));
     memcpy(switch_channels, channels, sizeof(channels));
     memcpy(switch_channels_time, times, sizeof(times));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     memcpy(glb_players, players, sizeof(players));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_DIV = frameDiv;

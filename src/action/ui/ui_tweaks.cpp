@@ -24,13 +24,13 @@
 // Not reimplemented, called by address
 
 // The player's damage modifiers (Player.cpp)
-#define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)
-#define Plr_DMod_Head      FLOAT_AT(0x0017e8d0)
-#define Plr_DMod_LowerLimb FLOAT_AT(0x0017e8d4)
-#define Plr_DMod_UpperLimb FLOAT_AT(0x0017e8d8)
-#define Plr_DMod_Easy      FLOAT_AT(0x0017e8dc)
-#define Plr_DMod_Normal    FLOAT_AT(0x0017e8e0)
-#define Plr_DMod_Hard      FLOAT_AT(0x0017e8e4)
+extern float Plr_DMod_Multi;
+extern float Plr_DMod_Head;
+extern float Plr_DMod_LowerLimb;
+extern float Plr_DMod_UpperLimb;
+extern float Plr_DMod_Easy;
+extern float Plr_DMod_Normal;
+extern float Plr_DMod_Hard;
 
 // ---- the level list
 

@@ -5,6 +5,7 @@
 // codename is loaded; it puts everything back afterwards.
 
 #include "UnlocksShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game.h"
@@ -37,9 +38,9 @@ static void Save(UnlockState *s, bool game = false) {
     for (int i = 0; i < 29; i++) s->chars[i] = ITEM_ENABLED(Characters(game)[i]);
     for (int i = 0; i < 29; i++) s->charsSmall[i] = ITEM_ENABLED(CharactersSmall(game)[i]);
     for (int i = 0; i < 13; i++) s->scenarios[i] = ITEM_ENABLED(Scenarios(game)[i]);
-    s->replace = U8_AT(0x0025d78d);
-    s->earned = U8_AT(0x0025d78c);
-    s->scenery = game ? U8_AT(0x002456a8) : mp_explosive_scenery_unlocked;   // ours is our own variable now
+    s->replace = U8_AT(XbeOurs(0x0025d78d));
+    s->earned = U8_AT(XbeOurs(0x0025d78c));
+    s->scenery = game ? U8_AT(XbeOurs(0x002456a8)) : mp_explosive_scenery_unlocked;   // ours is our own variable now
     s->upgradeFlag = GameState.WeaponUpgradeRelated;
 }
 
@@ -52,9 +53,9 @@ static void Load(const UnlockState *s) {
         for (int i = 0; i < 29; i++) ITEM_ENABLED(CharactersSmall(game)[i]) = s->charsSmall[i];
         for (int i = 0; i < 13; i++) ITEM_ENABLED(Scenarios(game)[i]) = s->scenarios[i];
     }
-    U8_AT(0x0025d78d) = s->replace;
-    U8_AT(0x0025d78c) = s->earned;
-    U8_AT(0x002456a8) = s->scenery;   // both copies, as for the lists
+    U8_AT(XbeOurs(0x0025d78d)) = s->replace;
+    U8_AT(XbeOurs(0x0025d78c)) = s->earned;
+    U8_AT(XbeOurs(0x002456a8)) = s->scenery;   // both copies, as for the lists
     mp_explosive_scenery_unlocked = s->scenery;
     GameState.WeaponUpgradeRelated = s->upgradeFlag;
 }

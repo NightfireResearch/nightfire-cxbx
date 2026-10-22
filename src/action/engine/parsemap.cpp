@@ -29,11 +29,14 @@
 #include <string.h>
 
 
-#define pCurrCelList (*(celglist_tag**)(0x00274c80))
-#define FileNextBlock (*(uint**)(0x00274c70))
+// XBE_GLOBAL(0x00274c80, 0x4)
+celglist_tag *pCurrCelList;
+// XBE_GLOBAL(0x00274c70, 0x4)
+uint *FileNextBlock;
 // XBE_GLOBAL(0x00274c68, 0x1)
 static uint8_t StartingNewMap;
-#define m_pmap (*(map_tag**)0x00274b50)
+// XBE_GLOBAL(0x00274b50, 0x4)
+map_tag *m_pmap;
 
 
 typedef struct {
@@ -53,18 +56,21 @@ static_assert(sizeof(block_entity_data) == 0x54, "Bad size for block_entity_data
 
 // XBE_GLOBAL(0x00274b34, 0x8)
 #define DynamicBH (*(block_header_tag*)0x00274b34)
-#define DynamicPtr PTR_AT(0x00274c58)
+extern void *DynamicPtr;
 // XBE_GLOBAL(0x00274c88, 0x4)
 static uint32_t MapHashCode;
 // XBE_GLOBAL(0x00274ca4, 0x4)
 static uint32_t ParseMap_State;
 // XBE_GLOBAL(0x00274b58, 0x100)
 static char filename[0x100];
-#define FileLastBlock U32_AT(0x00274c74)
-#define FileDiscard U32_AT(0x00274c78)
-#define FileBase (*(uchar **)0x00274c6c)
-#define BinFileVersion U32_AT(0x00274c64)
-#define pBinFileHeader (*(uint **)0x00274c5c)
+extern uint32_t FileLastBlock;
+extern uint32_t FileDiscard;
+// XBE_GLOBAL(0x00274c6c, 0x4)
+uchar *FileBase;
+// XBE_GLOBAL(0x00274c64, 0x4)
+uint32_t BinFileVersion;
+// XBE_GLOBAL(0x00274c5c, 0x4)
+uint *pBinFileHeader;
 
 // A map file loaded whole for parsing: its first word, then its blocks
 // AUTOINJECT
@@ -764,18 +770,28 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
 // ---- Reading a map file's blocks. Each starts with a word: its identifier in the top byte, its size (the word
 // ---- included) in the rest. A version 1 file has a table of the blocks' offsets after its first word.
 
-#define pFileDiscardHeader (*(uint **)0x00274c94)
-#define prev_block (*(uint **)0x00274c9c)
-#define pBMH (*(MAPHEADER_tag **)0x00274c84)
-#define MapEntityCount U32_AT(0x00274c8c)
-#define pCelList (*(celglist_tag **)0x00274c7c)
-#define m_paths (*(void ***)0x00274b4c)
-#define m_ppaths (*(void ***)0x00274c60)
+// XBE_GLOBAL(0x00274c94, 0x4)
+uint *pFileDiscardHeader;
+// XBE_GLOBAL(0x00274c9c, 0x4)
+uint *prev_block;
+// XBE_GLOBAL(0x00274c84, 0x4)
+struct MAPHEADER_tag *pBMH;
+// XBE_GLOBAL(0x00274c8c, 0x4)
+uint32_t MapEntityCount;
+// XBE_GLOBAL(0x00274c7c, 0x4)
+celglist_tag *pCelList;
+// XBE_GLOBAL(0x00274b4c, 0x4)
+void **m_paths;
+// XBE_GLOBAL(0x00274c60, 0x4)
+void **m_ppaths;
 // The texture tables walked together, an entry a texture: the palette headers, psiCreateMapTextures's results and the
 // texture headers
-#define pPallHeader (*(PALHEADER_tag **)0x00274b30)
-#define pTexData (*(texDataEntry **)0x00274b3c)
-#define pBmpHeader (*(bmpHeaderEntry **)0x00274b48)
+// XBE_GLOBAL(0x00274b30, 0x4)
+struct PALHEADER_tag *pPallHeader;
+// XBE_GLOBAL(0x00274b3c, 0x4)
+texDataEntry *pTexData;
+// XBE_GLOBAL(0x00274b48, 0x4)
+bmpHeaderEntry *pBmpHeader;
 
 #define Sound_LoadMapSounds ((void (__cdecl *)(void *sounds))0x000cb870)
 

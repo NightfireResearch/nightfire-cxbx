@@ -10,6 +10,7 @@
 // heap. Drone_Control is tested with PreDroneControl and the controls faked (they are tested on their own).
 
 #include "DroneCoreShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -39,14 +40,14 @@ namespace {
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
-#define switch_NO_DRONES U32_AT(0x001df99c)
-#define Drone_DummyPlayer (*(char *)0x001dfa29)
-#define Drone_bDontDraw (*(uchar *)0x001dfa2b)
+#define switch_NO_DRONES U32_AT(XbeOurs(0x001df99c))
+#define Drone_DummyPlayer (*(char *)XbeOurs(0x001dfa29))
+#define Drone_bDontDraw (*(uchar *)XbeOurs(0x001dfa2b))
 // MoveTest_MaxSlope .. AIPath_MaxNodes
-#define MoveTestBlock ((uint8_t *)0x00274cac)
+#define MoveTestBlock (GameSpan<uint8_t>{0x00274cac})
 const int kMoveTestBytes = 0x18;
 // VIDEO_FRAME_RATE .. REC_FRAME_RATE
-#define FrameRateBlock ((uint8_t *)0x0017c0f0)
+#define FrameRateBlock (GameSpan<uint8_t>{0x0017c0f0})
 const int kFrameRateBytes = 0x18;
 
 const int kDrones = 4;
@@ -864,8 +865,8 @@ void DroneCoreShadow_Run(void) {
     add(&switch_channels_time, sizeof(switch_channels_time));
     add(&MusicVars, sizeof(MusicVars_t));
     add(&AIBoxList, sizeof(LLISTINFO_tag));
-    add(MoveTestBlock, kMoveTestBytes);
-    add(FrameRateBlock, kFrameRateBytes);
+    add(MoveTestBlock.game(), kMoveTestBytes);
+    add(FrameRateBlock.game(), kFrameRateBytes);
     add(&Drone_bDisableSystem, 1);
     add(&Drone_bDontDraw, 1);
     add(&Drone_DummyPlayer, 1);

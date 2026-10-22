@@ -48,7 +48,7 @@ static uint DirFileHashValue;
 #define DirFileHash ((HASHCODE)DirFileHashValue)
 
 // LoadableLoad, LoadableReload and ResetMap_Load (the game's still) use it too.
-#define bLevelLoaded (*(uchar*)0x00279251)
+extern uchar bLevelLoaded;
 
 // The flag's byte as it is
 // AUTOINJECT
@@ -285,7 +285,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
     }
 }
 
-#define LoadableIndex U8_AT(0x00279180)
+extern uint8_t LoadableIndex;
 
 
 #pragma pack(push, 1)

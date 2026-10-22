@@ -6,6 +6,7 @@
 // NIGHTFIRE_SFX_GROUP=<part of a name> runs one group.
 
 #include "SFXShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -39,11 +40,11 @@ const struct {
     {0x00286a90, 0x00297fe8 - 0x00286a90},
     {0x002981e8, 0x00299a20 - 0x002981e8},
     {0x0017d581, 1},                    // ls.relatedToMainMenuSound
-    {0x001f658c, 4},                    // GameState.CurrentLevelHashcode
+    {XbeOurs(0x001f658c), 4},                    // GameState.CurrentLevelHashcode
     {0x00260018, 4},                    // MPSettings.isMultiplayer
     {0x00260044, 4},                    // MPSettings.numPlayers
-    {0x0029a180, 8},                    // MusicEventList[0] and [1]
-    {0x0029a280, 4},                    // SoundInit
+    {XbeOurs(0x0029a180), 8},                    // MusicEventList[0] and [1]
+    {XbeOurs(0x0029a280), 4},                    // SoundInit
 };
 
 const int DEFS = 8;
@@ -985,7 +986,7 @@ void RandomWorld(void) {
                                  0x7000011, 0x7000012, 0x7000013, 0x7000014, 0x7000015, 0x7000016, 0x700001a,
                                  0x700001b, 0x700001c, 0x7000021, 0x7000025, 0x7000029, 0x700002a, 0x7000041,
                                  0x7000043, 0x7000048, 0x700004a, 0x700004b, 0x700004c, 0x700004d, 0x7000090, 0};
-    I32_AT(0x001f658c) = levels[R(COUNT(levels))];
+    I32_AT(XbeOurs(0x001f658c)) = levels[R(COUNT(levels))];
     I32_AT(0x00260018) = R(2);
     I32_AT(0x00260044) = RI(1, 4);
     U8_AT(0x0017d581) = (uint8_t)R(2);

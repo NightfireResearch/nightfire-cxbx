@@ -35,9 +35,9 @@
 // The spent cases, used in turn
 #define NUM_CASINGS 32
 // XBE_GLOBAL(0x001dc678, 0x80)
-#define CasingList ((obj_tag **)0x001dc678)
+static obj_tag *CasingList[NUM_CASINGS];
 // XBE_GLOBAL(0x001dc6f8, 0x2)
-#define NextCasing (*(short *)0x001dc6f8)
+short NextCasing;
 
 // A satchel's digits, 0 to 9
 

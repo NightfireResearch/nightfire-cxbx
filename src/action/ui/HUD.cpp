@@ -50,9 +50,11 @@ static int32_t Ftol(double x) {
 #define MP_GetRadarObjects ((ushort (__cdecl *)(obj_tag *obj, RADAROBJ **list))0x0009da80)
 
 // Sprite 3 of the multiplayer score pane is gone (no teams); the PS2 build's name
-#define FuckOffSprite3 U8_AT(0x002790b2)
+// XBE_GLOBAL(0x002790b2, 0x1)
+uint8_t FuckOffSprite3;
 // HUD_UpdateNightSightPane's frame count, every other frame its scanlines jump
-#define NightSightScanline U8_AT(0x002790d2)
+// XBE_GLOBAL(0x002790d2, 0x1)
+uint8_t NightSightScanline;
 
 
 // AUTOINJECT
@@ -1095,7 +1097,8 @@ static int16_t CrouchIconTimer;
 
 // Written by the menu's coordinates cheat (C_CHCHCOORDS_Handler) and read by HUD_UpdateMPHealthPane, both still
 // the game's
-#define switch_SHOW_COORDS (*(int*)0x001df9dc)
+// XBE_GLOBAL(0x001df9dc, 0x4)
+int switch_SHOW_COORDS;
 
 // The health pane's sprites (HealthSprInfo, 0x0017f9c8, 24 entries)
 #define HEALTH_ARMOUR_FIRST     0   // 0-7: the armour bar's segments
@@ -2283,7 +2286,8 @@ void HUD_UpdateXRayPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
 #define MPHEALTH_HIT_FIRST  4   // 4-7: the hit-direction overlays
 
 // HUD_RadarUpdate's working: the view's inverse and the bearing of a radar object
-#define RadarInverse (*(_MATRIX *)0x002790e0)
+// XBE_GLOBAL(0x002790e0, 0x3c)
+_MATRIX RadarInverse;
 #define RadarTarget (*(_VECTOR *)0x002790d4)
 // XBE_GLOBAL(0x001819a0, 0xa0) readonly relocate
 RadarIcon RadarIcons[8] = {

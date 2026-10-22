@@ -8,6 +8,11 @@
 #include <direct.h>
 #include <io.h>
 
+// XBE_GLOBAL(0x002adf0c, 0x4)
+uint32_t SavesListed;
+// XBE_GLOBAL(0x002adf10, 0x4)
+uint32_t psiInternalLoadingDataState;
+
 
 #define SAVE_DIR "saves"
 
@@ -121,16 +126,19 @@ static uint8_t SaveGamesCached;
 static int32_t SaveGamesReturned;
 
 // SaveGame_Delete takes a deleted save out of it
-#define NumberSaveGamesGot (*(int32_t*)0x002adf14)                       // PS2's name for the count
+// XBE_GLOBAL(0x002adf14, 0x4)
+int32_t NumberSaveGamesGot;  // PS2's name for the count
 #define SAVE_NAME_SLOT 9                                                 // 8 characters + NUL
 #define SaveGameCache ((char(*)[SAVE_NAME_SLOT])0x002a2e68)                // no fixed length in the original
 
 // A save the walk could not read was found: the message box's B then leaves for the dashboard (ui_codenames.cpp)
-#define SaveFlowDashboard U8_AT(0x0025edba)
+// XBE_GLOBAL(0x0025edba, 0x1)
+uint8_t saveflow_dashboard;
 
 // How many entries Menu_EnumSaves takes from psiGetNextSave per frame: 2 while the drive is being walked, then
 // 0x200 once the cache is complete. Menu_EnumSaves (original) reads it.
-#define SaveEnum_EntriesPerFrame (*(int32_t*)0x00194804)
+// XBE_GLOBAL(0x00194804, 0x4)
+int32_t SaveEnum_EntriesPerFrame = 2;
 #define SAVE_ENUM_ENTRIES_PER_FRAME_CACHED 0x200
 
 // A cache slot whose first byte is this was a "skip this entry" result, replayed as such
@@ -157,7 +165,7 @@ static char g_saveEnumNameBuf[16]; // matches the original's 9-byte (8 char + NU
 // AUTOINJECT
 void psiStartSaveEnum(void) {
     SavesListed = 0;
-    SaveFlowDashboard = 0;
+    saveflow_dashboard = 0;
     psiInternalLoadingDataState = 10;
     SaveGamesReturned = 0;
 
@@ -262,7 +270,7 @@ char* psiGetNextSave(void) {
     char *name = psiGetNextSaveName();
     if (name == SAVE_ENUM_SKIP) {
         SavesListed++;
-        SaveFlowDashboard = 1;
+        saveflow_dashboard = 1;
         return name;
     }
     if (name != NULL)

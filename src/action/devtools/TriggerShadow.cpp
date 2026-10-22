@@ -9,6 +9,7 @@
 // it reaches ours, so each is compared on its own.
 
 #include "TriggerShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -44,7 +45,7 @@ const unsigned kTriggerCalc = 0x000d3950;
 const unsigned kHintUpdate = 0x000d3190;
 const unsigned kDoneBondMoment = 0x000b0500;
 
-#define ProcessTouchByte U8_AT(0x0029b2cc)
+#define ProcessTouchByte U8_AT(XbeOurs(0x0029b2cc))
 
 typedef obj_tag *(__cdecl *CreateFn)(_VECTOR *, _VECTOR *, level_tag *, celglist_tag *);
 

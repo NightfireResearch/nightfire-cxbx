@@ -3,13 +3,20 @@
 #include <string.h>
 #include <stdio.h>
 
+// XBE_GLOBAL(0x001ee260, 0x24)
+MusicVars_t MusicVars;
+// XBE_GLOBAL(0x0029a180, 0x100)
+uint32_t MusicEventList[0x40];
+
 // The music: each level's track and the jumps between its sections, driven by the events of the frame
 // (Music_Event). UpdateMusicalEvents runs once a frame; the level's UpdateMFX_ function asks for sections from
 // the lists of its MapMusic row.
 
 // The frame's events, kept after UpdateMusicalEvents clears them, and the last frame's
-#define BackupEventList (*(uint32_t(*)[0x40])0x002980e8)
-#define LastEventList (*(uint32_t(*)[0x40])0x00297fe8)
+// XBE_GLOBAL(0x002980e8, 0x100)
+uint32_t BackupEventList[0x40];
+// XBE_GLOBAL(0x00297fe8, 0x100)
+uint32_t LastEventList[0x40];
 
 #define NUM_MAPMUSIC 35
 // XBE_GLOBAL(0x00181cd0, 0xa64) readonly relocate
@@ -70,39 +77,66 @@ MUSICAIVARS MapDroneData[NUM_MAPDRONEDATA] = {
 // The level's MapMusic row
 #define MapMusicData (*(MUSICDATA **)0x00182734)
 // The section asked for last, and the one the stream is playing
-#define MusicLastJumpRequest I32_AT(0x00182738)
-#define MusicLastJump I32_AT(0x0018273c)
+// XBE_GLOBAL(0x00182738, 0x4)
+int32_t MusicLastJumpRequest = -1;
+// XBE_GLOBAL(0x0018273c, 0x4)
+int32_t MusicLastJump = -1;
 // Frames of alert (event 2) before the combat music, and of calm before it ends
-#define MusicUnderAttackCount2 I32_AT(0x00182744)
-#define MusicUnderAttackCount I32_AT(0x00182740)
+// XBE_GLOBAL(0x00182744, 0x4)
+int32_t MusicUnderAttackCount2 = 10;
+// XBE_GLOBAL(0x00182740, 0x4)
+int32_t MusicUnderAttackCount = 160;
 
-#define NisEndedNow I32_AT(0x00299334)
-#define MusicNowPlaying I32_AT(0x00299338)
-#define MusicUnderAttack I32_AT(0x0029933c)
-#define MusicWaitForEnd I32_AT(0x00299340)
-#define MusicWaitForNisSfxTrigger I32_AT(0x00299344)
-#define MusicUnderAttackBonusCount I32_AT(0x00299348)
-#define MusicTemp1 I32_AT(0x0029934c)
-#define MusicTemp2 I32_AT(0x00299350)
-#define MusicTemp3 I32_AT(0x00299354)
-#define MusicTemp4 I32_AT(0x00299358)
-#define MusicTemp5 I32_AT(0x0029935c)
-#define MusicTemp6 I32_AT(0x00299360)
-#define MusicTemp7 I32_AT(0x00299364)
-#define MusicTemp8 I32_AT(0x00299368)
-#define MusicTemp9 I32_AT(0x0029936c)
-#define WhichStealth I32_AT(0x00299370)
-#define WhichCombat I32_AT(0x00299374)
+// XBE_GLOBAL(0x00299334, 0x4)
+int32_t NisEndedNow;
+// XBE_GLOBAL(0x00299338, 0x4)
+int32_t MusicNowPlaying;
+// XBE_GLOBAL(0x0029933c, 0x4)
+int32_t MusicUnderAttack;
+// XBE_GLOBAL(0x00299340, 0x4)
+int32_t MusicWaitForEnd;
+// XBE_GLOBAL(0x00299344, 0x4)
+int32_t MusicWaitForNisSfxTrigger;
+// XBE_GLOBAL(0x00299348, 0x4)
+int32_t MusicUnderAttackBonusCount;
+// XBE_GLOBAL(0x0029934c, 0x4)
+int32_t MusicTemp1;
+// XBE_GLOBAL(0x00299350, 0x4)
+int32_t MusicTemp2;
+// XBE_GLOBAL(0x00299354, 0x4)
+int32_t MusicTemp3;
+// XBE_GLOBAL(0x00299358, 0x4)
+int32_t MusicTemp4;
+// XBE_GLOBAL(0x0029935c, 0x4)
+int32_t MusicTemp5;
+// XBE_GLOBAL(0x00299360, 0x4)
+int32_t MusicTemp6;
+// XBE_GLOBAL(0x00299364, 0x4)
+int32_t MusicTemp7;
+// XBE_GLOBAL(0x00299368, 0x4)
+int32_t MusicTemp8;
+// XBE_GLOBAL(0x0029936c, 0x4)
+int32_t MusicTemp9;
+// XBE_GLOBAL(0x00299370, 0x4)
+int32_t WhichStealth;
+// XBE_GLOBAL(0x00299374, 0x4)
+int32_t WhichCombat;
 
 // The level functions' own turns between two sections
-#define WhichAttack_MayhewA I32_AT(0x002999f8)
-#define WhichNonAttack_MayhewA I32_AT(0x002999fc)
-#define WhichNonAttack_MayhewB I32_AT(0x00299a00)
-#define WhichNonAttack_MayhewC I32_AT(0x00299a04)
-#define WhichAttack_MayhewC I32_AT(0x00299a08)
+// XBE_GLOBAL(0x002999f8, 0x4)
+int32_t WhichAttack_MayhewA;
+// XBE_GLOBAL(0x002999fc, 0x4)
+int32_t WhichNonAttack_MayhewA;
+// XBE_GLOBAL(0x00299a00, 0x4)
+int32_t WhichNonAttack_MayhewB;
+// XBE_GLOBAL(0x00299a04, 0x4)
+int32_t WhichNonAttack_MayhewC;
+// XBE_GLOBAL(0x00299a08, 0x4)
+int32_t WhichAttack_MayhewC;
 
 // Frames before the stream's section is read back into MusicLastJump
-#define IOP_DelayUpdateTimer I32_AT(0x0027aed8)
+// XBE_GLOBAL(0x0027aed8, 0x4)
+int32_t IOP_DelayUpdateTimer;
 
 #define MUSIC_COMBAT_THRESHOLD_ALERT 1
 #define MUSIC_NO_LEVEL (-99)

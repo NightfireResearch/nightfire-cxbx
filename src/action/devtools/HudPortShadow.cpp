@@ -9,6 +9,7 @@
 // Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=hudport runs it alone.
 
 #include "HudPortShadow.h"
+#include "AllOriginal.h"
 #include "../engine/Camera.h"
 #include "../ui/Component.h"
 #include "ShadowHarness.h"
@@ -54,19 +55,19 @@ namespace {
 // The game's state the package reads and writes
 #define GameFont (*(FONT_tag **)0x001f64b0)
 #define GameFontTable (*(FONTTABLE_tag (*)[5])0x0017bd90)
-#define GameSprCnt U32_AT(0x0029e810)
-#define GameSprBuffList ((SPRITE_DRAW *)0x0029dc00)
-#define GameMsgQueue (*(DLISTINFO_tag *)0x0029abf8)
-#define GameSubTitleMsg (*(TXT_MSG **)0x0029ae20)
-#define GameSubTitleSpr ((sprite **)0x0029ae24)
-#define GameReceived (*(CIRBUF_INFO *)0x0029ae10)
-#define GameAssassin (*(obj_tag **)0x0026178c)
-#define GameTarget (*(obj_tag **)0x00261788)
-#define GameShowCoords U32_AT(0x001df9dc)
-#define GameSubtitlesOn U32_AT(0x001f6614)
-#define GameLayout U32_AT(0x001f660c)
-#define DynamicObjFirst (*(obj_tag **)0x001df34c)
-#define FuckOffSprite3 U8_AT(0x002790b2)
+#define GameSprCnt U32_AT(XbeOurs(0x0029e810))
+#define GameSprBuffList (GameSpan<SPRITE_DRAW>{0x0029dc00})
+#define GameMsgQueue (*(DLISTINFO_tag *)XbeOurs(0x0029abf8))
+#define GameSubTitleMsg (*(TXT_MSG **)XbeOurs(0x0029ae20))
+#define GameSubTitleSpr ((sprite **)XbeOurs(0x0029ae24))
+#define GameReceived (*(CIRBUF_INFO *)XbeOurs(0x0029ae10))
+#define GameAssassin (*(obj_tag **)XbeOurs(0x0026178c))
+#define GameTarget (*(obj_tag **)XbeOurs(0x00261788))
+#define GameShowCoords U32_AT(XbeOurs(0x001df9dc))
+#define GameSubtitlesOn U32_AT(XbeOurs(0x001f6614))
+#define GameLayout U32_AT(XbeOurs(0x001f660c))
+#define DynamicObjFirst (*(obj_tag **)XbeOurs(0x001df34c))
+#define FuckOffSprite3 U8_AT(XbeOurs(0x002790b2))
 
 const int SPRITES = 48;
 const int TEXTLEN = 0x168;
@@ -1688,7 +1689,7 @@ void RandomBox(void) {
     world.page.focused = &world.focused;
     world.focused.hashcode = R(2) ? box->control.hashcode : (HASHCODE)R(0);
     world.manager.whichPlayer = (short)R(4);
-    U32_AT(0x0025fc1c) = R(4) == 0 ? R(0) : R(25);
+    U32_AT(XbeOurs(0x0025fc1c)) = R(4) == 0 ? R(0) : R(25);
     ShadowLog_Clear();
 }
 
@@ -1807,23 +1808,23 @@ void HudPortShadow_Run(void) {
         size_t size;
     } kGlobals[] = {
         {0x001f64b0, 0xb4},                 // the fonts' state: Font, CharInfo, PInfo, __Font_DrawText's statics
-        {0x0029dc00, 0xc00},                // SprBuffList
-        {0x0029e810, 4},                    // SprCnt
-        {0x0029abf8, 0x18},                 // MsgQueue
+        {XbeOurs(0x0029dc00), 0xc00},                // SprBuffList
+        {XbeOurs(0x0029e810), 4},                    // SprCnt
+        {XbeOurs(0x0029abf8), 0x18},                 // MsgQueue
         {0x0029ac10, 0x228},                // ReceivedBuf, ReceivedMsgs, the subtitles
-        {0x001f6580, sizeof(GameState_t)},  // GameState
+        {XbeOurs(0x001f6580), sizeof(GameState_t)},  // GameState
         {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
         {0x00262738, sizeof(MPGameStruct)}, // MPGame
         {0x00261788, 8},                    // the assassin and the target
-        {0x001f661c, 44},                   // glb_viewer
+        {XbeOurs(0x001f661c), 44},                   // glb_viewer
         {0x001f6654, 16},                   // glb_players
         {0x001f660c, 12},                   // the split screen's layout, the subtitles' switch
         {0x002790ac, 0x70},                 // the HUD's statics
         {0x001e5634, 0xc},                  // NDrone2Info
-        {0x0025fc1c, 4},                    // the text box's held frames
+        {XbeOurs(0x0025fc1c), 4},                    // the text box's held frames
         {0x0018cdf8, 8},                    // the random words
-        {0x001df9dc, 4},                    // switch_SHOW_COORDS
-        {0x001df34c, 4},                    // the object list's first
+        {XbeOurs(0x001df9dc), 4},                    // switch_SHOW_COORDS
+        {XbeOurs(0x001df34c), 4},                    // the object list's first
         {0x001fe6d0, 0x158 * 4},            // PlayerInputs
         {0x001f6668, 12},                   // the sun
         {0x0017c0f0, 0x18},                 // the frame rates
@@ -1834,7 +1835,8 @@ void HudPortShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), (unsigned)(uintptr_t)s.at, s.size);
         saved.push_back(s);
     }
     uint32_t movie = BackgroundMovieHashcode;
@@ -1864,6 +1866,6 @@ void HudPortShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((unsigned)(uintptr_t)s.at, s.bytes.data(), s.size);
     BackgroundMovieHashcode = movie;
 }

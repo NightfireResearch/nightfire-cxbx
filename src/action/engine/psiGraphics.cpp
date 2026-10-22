@@ -12,6 +12,9 @@
 #include "XboxSystem.h"
 #include "psiDraw.h"
 
+// XBE_GLOBAL(0x002adf88, 0x300)
+ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
+
 
 
 // AUTOINJECT
@@ -79,16 +82,18 @@ static char LevelStartPending;
 // cache back) so the GPU saw the freshly loaded texture and vertex data. Only cleared now.
 // XBE_GLOBAL(0x002adf31, 0x1)
 static char CacheFlushPending;
-#define ScreenBlur (*(char*)0x002adf33)
-#define TimeSpentLoadingFiles (*(double*)0x002adf38)
+extern uint8_t ScreenBlur;
+extern double TimeSpentLoadingFiles;
 // XBE_GLOBAL(0x002adf40, 0x8)
 static double LevelLoadTime;
-#define debug_scanmode (*(char*)0x001fec49)
-#define debug_clipmode (*(char*)0x001fec4a)
+// XBE_GLOBAL(0x001fec49, 0x1)
+uint8_t debug_scanmode;
+// XBE_GLOBAL(0x001fec4a, 0x1)
+uint8_t debug_clipmode;
 
 // Level-scoped graphics bookkeeping, all reset here. The first index of Tex[] and d3dGeometryObjs[] is the
 // default entry, so the counts restart at 1 (and start there: 1 in the XBE's data).
-#define d3dGeometryObjs (*(ModelData*(*)[2048])0x002a0e68)
+extern ModelData *d3dGeometryObjs[2048];
 // XBE_GLOBAL(0x002ae4f8, 0x58)
 static TextureInfo DefaultTextureInfo;
 // XBE_GLOBAL(0x00194808, 0x4)

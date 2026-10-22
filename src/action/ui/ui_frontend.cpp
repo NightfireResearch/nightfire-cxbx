@@ -21,12 +21,15 @@
 // Not reimplemented, called by address
 #define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
 
-#define LanguageToLoad (*(int *)0x0025d7a0)     // tLANGUAGE (XboxSystem.cpp)
-#define AskForLanguage U8_AT(0x0017d5f9)        // the boot flow shows the language page
-#define SubtitlesEnabled U32_AT(0x001f6614)
-#define movie_hashcode U32_AT(0x0025d7d8)       // the movie P_FMVTEST picked
-#define mp_good_bot_taken U8_AT(0x002456b0)     // ui_mp.cpp
-#define mp_bond_bot_taken U8_AT(0x002456b1)
+extern int LanguageToLoad;  // tLANGUAGE (XboxSystem.cpp)
+extern uint8_t AskForLanguage;  // the boot flow shows the language page
+extern uint32_t SubtitlesEnabled;
+// XBE_GLOBAL(0x0025d7d8, 0x4)
+uint32_t movie_hashcode;  // the movie P_FMVTEST picked
+// XBE_GLOBAL(0x002456b0, 0x1)
+uint8_t mp_good_bot_taken;  // ui_mp.cpp
+// XBE_GLOBAL(0x002456b1, 0x1)
+uint8_t mp_bond_bot_taken;
 
 #define TXT_LEGAL_NOTICE ((Action_TranslatedText)0x375)
 #define TXT_PRESS_START ((Action_TranslatedText)0x2fb)

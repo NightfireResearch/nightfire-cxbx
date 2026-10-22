@@ -10,8 +10,9 @@ void* allocateAligned0x1000(int numBytes);
 int Language_Get(void);
 
 // The widescreen switches (read by the display-settings menu, C_CHCHWS_Handler) and the copy the cameras use
-#define switch_CONFIG_WIDESCREEN        U32_AT(0x001df9e8)
-#define IsWidescreen                    U32_AT(0x001f6610)
+// XBE_GLOBAL(0x001df9e8, 0x4)
+uint32_t switch_CONFIG_WIDESCREEN;
+extern uint32_t IsWidescreen;
 // Set from Graphics_IsSomeRegionBasedThing and never read
 // XBE_GLOBAL(0x001df9ec, 0x4)
 static uint switch_CONFIG_SOMEGRAPHICSTHING;

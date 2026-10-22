@@ -29,6 +29,15 @@
 #include "../game/obj/Light.h"
 #include "../game/obj/Effect.h"
 
+// XBE_GLOBAL(0x001d7578, 0x200)
+SkeletonInfo *SkeletonTable[128];
+// XBE_GLOBAL(0x001d77a0, 0x4)
+int32_t GlbAnimListCount;
+// XBE_GLOBAL(0x001d77a4, 0x80)
+sAnimScript_tag *GlbAnimList[32];
+// XBE_GLOBAL(0x001d7827, 0x1)
+uint8_t FootstepFoot;
+
 #pragma fp_contract(off)
 
 // The skeletal and facial animation of the action engine: loading skins, sequences and scripts, the scripts that play
@@ -50,28 +59,41 @@ typedef struct AnimSizes {
 } AnimSizes;
 #define AnimFileSizes (*(AnimSizes *)0x001d6a44)
 
-#define AnimScriptTimeStamp U32_AT(0x001d7570)
-#define AnimTagTimeStamp U32_AT(0x001d6a60)
+// XBE_GLOBAL(0x001d7570, 0x4)
+uint32_t AnimScriptTimeStamp;
+// XBE_GLOBAL(0x001d6a60, 0x4)
+uint32_t AnimTagTimeStamp;
 #define Glb_SkinScale (*(_VECTOR *)0x001d7794)
 #define Glb_InvSkinScale (*(_VECTOR *)0x001d6a28)
-#define nDistanceTables I16_AT(0x001d6ac4)
-#define Glb_AnimPostLoadDone U8_AT(0x001d6a65)
-#define ReverseFlag U8_AT(0x001d7828)
-#define Glb_pCurrentScript (*(sAnimScript_tag **)0x001d7778)
-#define Glb_bScriptDeleted U8_AT(0x001d6a64)
+// XBE_GLOBAL(0x001d6ac4, 0x2)
+int16_t nDistanceTables;
+// XBE_GLOBAL(0x001d6a65, 0x1)
+uint8_t Glb_AnimPostLoadDone;
+// XBE_GLOBAL(0x001d7828, 0x1)
+uint8_t ReverseFlag;
+// XBE_GLOBAL(0x001d7778, 0x4)
+sAnimScript_tag *Glb_pCurrentScript;
+// XBE_GLOBAL(0x001d6a64, 0x1)
+uint8_t Glb_bScriptDeleted;
 // The footstep a script command asked for: 1 for two of the player's scripts, 2 for the rest (AnimObjectUpdate)
-#define FootstepType U8_AT(0x001d6a24)
+// XBE_GLOBAL(0x001d6a24, 0x1)
+uint8_t FootstepType;
 // The morphs AnimObjectDraw hands the renderer: the strongest eight, in index order
-#define Morph_Count U8_AT(0x001d7826)
+// XBE_GLOBAL(0x001d7826, 0x1)
+uint8_t Morph_Count;
 #define Morph_Weight ((float *)0x001d6a68)
 #define Morph_Index ((uchar *)0x001d777c)
-#define bShadowCharacter U8_AT(0x001d7824)
-#define bCharacterLight U8_AT(0x001d7825)
+// XBE_GLOBAL(0x001d7824, 0x1)
+uint8_t bCharacterLight;   // characters get their own light
+// XBE_GLOBAL(0x001d7825, 0x1)
+uint8_t bShadowCharacter;  // draw this character's shadow
 
 // The file being loaded and the cursor the loaders read it with
 #define pAnimData (*(char **)0x001d6ac8)
-#define AnimFileSize I32_AT(0x001d6ac0)
-#define pAnimFileData PTR_AT(0x001d6a20)
+// XBE_GLOBAL(0x001d6ac0, 0x4)
+int32_t AnimFileSize;
+// XBE_GLOBAL(0x001d6a20, 0x4)
+void *pAnimFileData;
 
 // AnimFrameCopy's working store: the powers of the frame, and four channels evaluated together (coefficient i of
 // lane l at [i][l]; row 0 is the sum)
@@ -141,7 +163,6 @@ typedef struct AnimDistanceTableEntry {
     HASHCODE hashcode;
     AnimDistanceTable *table;
 } AnimDistanceTableEntry;
-#define DistanceTableCount I16_AT(0x001d6ac4)
 #define DistanceTables (*(AnimDistanceTableEntry(*)[NUM_DISTANCE_TABLES])0x001d6af0)
 
 // The axes AnimDistanceTableGet measures (AnimDistanceTableCreate's)
@@ -871,16 +892,16 @@ __declspec(naked) AnimDistanceTable* AnimDistanceTableCreate(void) {
 
 // The distance table of a sequence, made the first time; NULL once 32 are made
 AnimDistanceTable* _AnimDistanceTableGet(HASHCODE hashcode) {
-    for (int i = 0; i < DistanceTableCount; i++) {
+    for (int i = 0; i < nDistanceTables; i++) {
         if (DistanceTables[i].hashcode == hashcode)
             return DistanceTables[i].table;
     }
-    if (DistanceTableCount >= NUM_DISTANCE_TABLES)
+    if (nDistanceTables >= NUM_DISTANCE_TABLES)
         return NULL;
     AnimDistanceTable *table = _AnimDistanceTableCreate(DISTANCE_AXIS_Z, hashcode, 0);
-    DistanceTables[DistanceTableCount].hashcode = hashcode;
-    DistanceTables[DistanceTableCount].table = table;
-    DistanceTableCount++;
+    DistanceTables[nDistanceTables].hashcode = hashcode;
+    DistanceTables[nDistanceTables].table = table;
+    nDistanceTables++;
     return table;
 }
 

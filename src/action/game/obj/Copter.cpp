@@ -19,6 +19,18 @@
 #include "Gas.h"
 #include "ScriptPlayer.h"
 
+// XBE_GLOBAL(0x0017c118, 0x4)
+float DiffMod = 1.0f;
+
+// XBE_GLOBAL(0x001fe6a8, 0xc)
+LLISTINFO_tag CopterList;
+// XBE_GLOBAL(0x001fe6c0, 0x4)
+float CopterConeCos;
+// XBE_GLOBAL(0x001fe6c4, 0x4)
+float CopterConeSin;
+// XBE_GLOBAL(0x001fe6c8, 0x2)
+int16_t CopterAttackMode;
+
 #pragma fp_contract(off)
 
 // XBE_GLOBAL(0x0017c120, 0x48) readonly relocate

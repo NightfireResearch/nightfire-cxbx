@@ -3,6 +3,7 @@
 // compile to exactly the XBE's bytes with our struct layouts.
 
 #include "DroneTablesCheck.h"
+#include "AllOriginal.h"
 
 #include "../game/drone/DroneTables.h"
 #include "../../common/xbeOriginal.h"
@@ -11,12 +12,12 @@
 #include <string.h>
 
 // The game's copies
-#define GameStateFuncs 0x00177ca0
-#define GameModeSettings 0x001776f8
-#define GameTypeSettings 0x001778a0
-#define GameBehaviourLayouts 0x001634e0
-#define GameBehaviourMasks 0x00163598
-#define GameBotStats 0x00163628
+#define GameStateFuncs XbeOurs(0x00177ca0)
+#define GameModeSettings XbeOurs(0x001776f8)
+#define GameTypeSettings XbeOurs(0x001778a0)
+#define GameBehaviourLayouts XbeOurs(0x001634e0)
+#define GameBehaviourMasks XbeOurs(0x00163598)
+#define GameBotStats XbeOurs(0x00163628)
 
 // Word by word. A function the tables name by C++ name is ours once ported, while the game's copy holds its address,
 // whose jump leads to ours: the same function, so a word that differs only that way matches.

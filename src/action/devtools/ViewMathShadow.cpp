@@ -11,6 +11,7 @@
 // with their registers set, and so are our adaptors.
 
 #include "ViewMathShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -246,7 +247,7 @@ const int kTrials = 20000;
 
 void Fill(void *p, size_t size) {
     for (size_t i = 0; i + 4 <= size; i += 4)
-        memcpy((uint8_t *)p + i, &kUntouched, 4);
+        XbeOursWrite((unsigned)(size_t)p + (unsigned)i, &kUntouched, 4);
 }
 
 void PutVector(Buf &b, int at, float (*component)(void) = Coordinate) {
@@ -860,11 +861,11 @@ void RunExact(void) {
 
 // ---- the random numbers
 
-#define RandState ((uint8_t *)0x0018cdf8)   // the two states and the two multipliers
+#define RandState (GameSpan<uint8_t>{0x0018cdf8})   // the two states and the two multipliers
 
 void RunRandom(void) {
     uint8_t saved[16];
-    memcpy(saved, RandState, sizeof(saved));
+    XbeOursRead(saved, RandState.at, sizeof(saved));
     Suite suite = {"Rand_Random, Rand_Rand", 0, 0, 0};
     for (int t = 0; t < kTrials; t++) {
         uint32_t state[4];
@@ -881,21 +882,21 @@ void RunRandom(void) {
             uint32_t state[4];
             uint32_t value;
         } a, b;
-        memcpy(RandState, state, sizeof(state));
+        XbeOursWrite(RandState.at, state, sizeof(state));
         if (random)
             a.value = Rand_Random();
         else
             a.value = Rand_Rand(max);
-        memcpy(a.state, RandState, sizeof(a.state));
-        memcpy(RandState, state, sizeof(state));
+        XbeOursRead(a.state, RandState.at, sizeof(a.state));
+        XbeOursWrite(RandState.at, state, sizeof(state));
         if (random)
             CALLR(b.value, true, 0x000d52c0, Rand_Random);
         else
             CALLR(b.value, true, 0x000d5310, Rand_Rand, max);
-        memcpy(b.state, RandState, sizeof(b.state));
+        XbeOursRead(b.state, RandState.at, sizeof(b.state));
         Compare(suite, &a, &b, sizeof(a), 0, 0, random ? "Rand_Random" : "Rand_Rand", "");
     }
-    memcpy(RandState, saved, sizeof(saved));
+    XbeOursWrite(RandState.at, saved, sizeof(saved));
     Summary(suite);
 }
 
@@ -950,25 +951,25 @@ struct Area {
     unsigned size;
 };
 const Area kAreas[] = {
-    {0x001f661c, 11 * 4},       // glb_viewer
-    {0x001f6674, 4},            // glb_world
+    {XbeOurs(0x001f661c), 11 * 4},       // glb_viewer
+    {XbeOurs(0x001f6674), 4},            // glb_world
     {0x00260018, 4},            // MPSettings.isMultiplayer
     {0x0018cdf8, 16},           // the random states
-    {0x001f6580, 0x58},         // GameState
+    {XbeOurs(0x001f6580), 0x58},         // GameState
     {0x0029e828, 0x2a0a74 - 0x29e828},   // the vision's points, polygons, planes and cel list
-    {0x0029d79c, 4},            // GfxList
-    {0x0029dbf0, 12},           // CamPos
+    {XbeOurs(0x0029d79c), 4},            // GfxList
+    {XbeOurs(0x0029dbf0), 12},           // CamPos
     {0x0029e800, 0x24},         // Tots, object_display_mask, SprCnt, OnlyScaleZ, FlipScale, the lightning, SkyTurn
-    {0x0029d7a0, 21 * 0x34},    // the sky's models
+    {XbeOurs(0x0029d7a0), 21 * 0x34},    // the sky's models
     {0x001f6668, 12},           // the sun's position
     {0x001f667c, 4},            // GlobalBlur
-    {0x001dec38, 0x80 * 4},     // Collide_StraddleCels' list
+    {XbeOurs(0x001dec38), 0x80 * 4},     // Collide_StraddleCels' list
     {0x001fe6dc, 4},            // FlashOption
-    {0x0027911c, 4},            // FlashMod
+    {XbeOurs(0x0027911c), 4},            // FlashMod
     {0x001d7824, 4},            // bCharacterLight, bShadowCharacter
     {0x001f6654, 16},           // glb_players
-    {0x001df138, 256},          // switch_channels
-    {0x001f6610, 4},            // the widescreen flag
+    {XbeOurs(0x001df138), 256},          // switch_channels
+    {XbeOurs(0x001f6610), 4},            // the widescreen flag
 };
 
 std::string s_saved;
@@ -976,14 +977,18 @@ std::string s_saved;
 void SaveAll(std::string &out) {
     out.assign((const char *)&world, sizeof(world));
     for (const Area &a : kAreas)
-        out.append((const char *)(uintptr_t)a.at, a.size);
+        {
+        std::string part(a.size, 0);
+        XbeOursRead(&part[0], a.at, a.size);
+        out += part;
+    }
 }
 
 void RestoreAll(const std::string &in) {
     memcpy(&world, in.data(), sizeof(world));
     size_t at = sizeof(world);
     for (const Area &a : kAreas) {
-        memcpy((void *)(uintptr_t)a.at, in.data() + at, a.size);
+        XbeOursWrite(a.at, in.data() + at, a.size);
         at += a.size;
     }
 }
@@ -1528,16 +1533,16 @@ void MakeWorld(void) {
     GameState.SomeAlternatePauseState = (undefined)(R(4) == 0);
     GameState.CurrentLevelHashcode = (HASHCODE)(R(3) ? 0x0700001b : 0x07000002);
     GameState.maybeLoadingBlobs = NextWord();
-    U32_AT(0x0029e80c) = 1u << R(5);    // object_display_mask
-    *(_VECTOR *)0x0029dbf0 = RandomPoint(30.0f);   // CamPos
+    U32_AT(XbeOurs(0x0029e80c)) = 1u << R(5);    // object_display_mask
+    *(_VECTOR *)XbeOurs(0x0029dbf0) = RandomPoint(30.0f);   // CamPos
     U8_AT(0x001fe6dc) = (uint8_t)R(2);  // FlashOption
-    FLOAT_AT(0x0027911c) = R(6) ? 0.5f + Positive(0.5f) : Coordinate();   // FlashMod
-    U8_AT(0x001f667c) = (uint8_t)NextWord();   // GlobalBlur
-    U32_AT(0x0029e808) = R(2);          // Tots[2]
-    U8_AT(0x0029e81b) = (uint8_t)R(2);  // ThunderNear
-    U32_AT(0x0029e820) = R(4) ? R(2000) : NextWord();   // SkyTurn
+    FLOAT_AT(XbeOurs(0x0027911c)) = R(6) ? 0.5f + Positive(0.5f) : Coordinate();   // FlashMod
+    U8_AT(XbeOurs(0x001f667c)) = (uint8_t)NextWord();   // GlobalBlur
+    U32_AT(XbeOurs(0x0029e808)) = R(2);          // Tots[2]
+    U8_AT(XbeOurs(0x0029e81b)) = (uint8_t)R(2);  // ThunderNear
+    U32_AT(XbeOurs(0x0029e820)) = R(4) ? R(2000) : NextWord();   // SkyTurn
     for (int i = 0; i < 21; i++) {
-        uint8_t *sky = (uint8_t *)(uintptr_t)(0x0029d7a0 + i * 0x34);
+        uint8_t *sky = (uint8_t *)(uintptr_t)(XbeOurs(0x0029d7a0) + i * 0x34);
         memset(sky, 0, 0x34);
         *(celglist_tag **)(sky + 0x00) = R(3) ? NULL : RandomGlist();
         *(celglist_tag **)(sky + 0x04) = R(3) ? NULL : RandomGlist();
@@ -1555,8 +1560,8 @@ void MakeWorld(void) {
     // The vision's state: a frustum for depth 0 and a few cels found
     VisPortal *polygon = &world.polygons[0];
     polygon->count = (char)(R(4) + 1);
-    U32_AT(0x0029ea58) = R(4) ? R(10) : R(110);   // VisionRecurseCount
-    U16_AT(0x002a0a70) = (ushort)(R(3) ? R(10) : R(65));   // VisCelCount
+    U32_AT(XbeOurs(0x0029ea58)) = R(4) ? R(10) : R(110);   // VisionRecurseCount
+    U16_AT(XbeOurs(0x002a0a70)) = (ushort)(R(3) ? R(10) : R(65));   // VisCelCount
     for (int i = 0; i < 64; i++) {
         *(cel_tag **)(uintptr_t)(0x002a0870 + i * 8) = &world.cels[R(CELS)];
         *(ushort *)(uintptr_t)(0x002a0874 + i * 8) = (ushort)R(8);
@@ -1585,10 +1590,10 @@ uint32_t RunCameraSet(bool o) { CALL(o, 0x000240c0, Camera_Set, s_viewer, s_vecA
 uint32_t RunPlaceAround(bool o) { CALL(o, 0x000245a0, Camera_PlaceAround, s_vecA, s_viewer, s_float); return 0; }
 uint32_t RunPlaceAbove(bool o) { CALL(o, 0x00024610, Camera_PlaceAbove, s_vecA, s_viewer, s_float); return 0; }
 uint32_t RunPlaceOver(bool o) {
-    float posy = FLOAT_AT(0x001fec50);   // debug_cam_posy
-    FLOAT_AT(0x001fec50) = s_vecB->z;
+    float posy = FLOAT_AT(XbeOurs(0x001fec50));   // debug_cam_posy
+    FLOAT_AT(XbeOurs(0x001fec50)) = s_vecB->z;
     CALL(o, 0x000246a0, Camera_PlaceOver, s_obj, s_viewer, s_float, s_vecB->y);
-    FLOAT_AT(0x001fec50) = posy;
+    FLOAT_AT(XbeOurs(0x001fec50)) = posy;
     return 0;
 }
 uint32_t RunLookAtObject(bool o) { CALL(o, 0x00024d40, Camera_LookAtObject, s_obj, s_viewer); return 0; }
@@ -1741,7 +1746,7 @@ uint32_t RunDisplayList(bool o) { CALL(o, 0x000db4b0, vision_generate_display_li
 uint32_t RunCamPos(bool o) { CALL(o, 0x000db5a0, vision_GetCamPos, &world.v[2]); return 0; }
 
 #define VisionPlanes ((plane_equ_tag *)0x0029ea60)
-#define VisionPlaneCounts ((int *)0x0029e998)
+#define VisionPlaneCounts (GameSpan<int>{0x0029e998})
 
 void RunVision(void) {
     struct {
@@ -1985,19 +1990,19 @@ void RunGameMaths(void) {
 
     {
         Suite suite = {"Camera_CalcViewAngles", 0, 0, 0};
-        uint32_t widescreen = U32_AT(0x001f6610), layout = U32_AT(0x001f660c);
+        uint32_t widescreen = U32_AT(XbeOurs(0x001f6610)), layout = U32_AT(XbeOurs(0x001f660c));
         for (int t = 0; t < kWorldTrials; t++) {
             MakeWorld();
             s_view = R(13) < 11 ? R(11) : R(4);
             s_float = R(4) ? 0.3f + Positive(2.5f) : Angle();
             if (glb_viewer[s_view] != NULL && R(8) == 0)
                 glb_viewer[s_view]->width = R(2) ? 0.0f : -0.0f;
-            U32_AT(0x001f6610) = R(2);
-            U32_AT(0x001f660c) = R(3);
+            U32_AT(XbeOurs(0x001f6610)) = R(2);
+            U32_AT(XbeOurs(0x001f660c)) = R(3);
             WorldCase(suite, "Camera_CalcViewAngles", RunCalcViewAngles);
         }
-        U32_AT(0x001f6610) = widescreen;
-        U32_AT(0x001f660c) = layout;
+        U32_AT(XbeOurs(0x001f6610)) = widescreen;
+        U32_AT(XbeOurs(0x001f660c)) = layout;
         Summary(suite);
     }
     {

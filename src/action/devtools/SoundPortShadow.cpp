@@ -10,6 +10,7 @@
 // NIGHTFIRE_SOUNDPORT_GROUP=<part of a name> one group.
 
 #include "SoundPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -48,23 +49,23 @@ namespace {
 #endif
 
 // The game's state the package reads and writes
-#define GameHashtable ((hashtable_entry *)0x001f6680)
-#define GameHashCount U32_AT(0x001fe684)
-#define GameHashRanges ((ushort *)0x001fe688)
-#define GameSoundList (*(DLISTINFO_tag *)0x0029a128)
+#define GameHashtable (GameSpan<hashtable_entry>{0x001f6680})
+#define GameHashCount U32_AT(XbeOurs(0x001fe684))
+#define GameHashRanges (GameSpan<ushort>{0x001fe688})
+#define GameSoundList (*(DLISTINFO_tag *)XbeOurs(0x0029a128))
 #define GameListener (*(_VECTOR *)0x0029a140)
-#define GameSoundInit U32_AT(0x0029a280)
-#define GameMusicEvents ((uint32_t *)0x0029a180)
+#define GameSoundInit U32_AT(XbeOurs(0x0029a280))
+#define GameMusicEvents (GameSpan<uint32_t>{0x0029a180})
 #define GameMapMusicData (*(MUSICDATA **)0x00182734)
-#define GameMusicGlobals ((int32_t *)0x00182738)     // the request, the jump, the two counts
-#define GameMusicState ((int32_t *)0x00299328)       // 0x299328 to 0x29937c
-#define GameMusicStatics ((int32_t *)0x002999f8)     // the level functions' turns
-#define GameJumpMarker I32_AT(0x00182b6c)
-#define GameJumpInstant I32_AT(0x002997d8)
-#define GameActiveMarker I32_AT(0x002997ac)
-#define GameIOPTimer I32_AT(0x0027aed8)
-#define GameVoiceHandle (*(DYNAMICSOUNDS **)0x0029b240)
-#define GameDistanceCount I16_AT(0x001d6ac4)
+#define GameMusicGlobals (GameSpan<int32_t>{0x00182738})     // the request, the jump, the two counts
+#define GameMusicState (GameSpan<int32_t>{0x00299328})       // 0x299328 to 0x29937c
+#define GameMusicStatics (GameSpan<int32_t>{0x002999f8})     // the level functions' turns
+#define GameJumpMarker I32_AT(XbeOurs(0x00182b6c))
+#define GameJumpInstant I32_AT(XbeOurs(0x002997d8))
+#define GameActiveMarker I32_AT(XbeOurs(0x002997ac))
+#define GameIOPTimer I32_AT(XbeOurs(0x0027aed8))
+#define GameVoiceHandle (*(DYNAMICSOUNDS **)XbeOurs(0x0029b240))
+#define GameDistanceCount I16_AT(XbeOurs(0x001d6ac4))
 #define GameDistanceTables ((uint32_t *)0x001d6af0)
 
 const int NODES = 16;
@@ -1111,8 +1112,8 @@ void RandomMusic(void) {
     GameJumpInstant = (int)R(2);
     GameActiveMarker = SomeSection();
     GameIOPTimer = (int)R(4) - 2;
-    I32_AT(0x00299464) = R(3) == 0 ? -1 : (int)R(3);   // the fade's state
-    I32_AT(0x00182a9c) = (int)R(2);                    // the fade's volume
+    I32_AT(XbeOurs(0x00299464)) = R(3) == 0 ? -1 : (int)R(3);   // the fade's state
+    I32_AT(XbeOurs(0x00182a9c)) = (int)R(2);                    // the fade's volume
 }
 
 #define MUSIC_RUN(at, fn)                                                                                             \
@@ -1441,7 +1442,8 @@ void SoundPortShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), g.at, s.size);
         saved.push_back(s);
     }
 
@@ -1467,5 +1469,5 @@ void SoundPortShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((uint32_t)(uintptr_t)s.at, s.bytes.data(), s.size);
 }

@@ -11,6 +11,7 @@
 // is compared on AL (tools/narrow_returns.py checks no caller reads more).
 
 #include "EffectPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -78,17 +79,17 @@ __declspec(naked) void EffectPortShadow_FakePainRegs(void) {
 
 namespace {
 
-#define RandWords ((uint8_t *)0x0018cdf8)
-#define FrameRates ((uint8_t *)0x0017c0f0)       // VIDEO_FRAME_RATE to REC_FRAME_RATE
-#define ShardListAt ((uint8_t *)0x001dc564)
-#define EffectListAt ((uint8_t *)0x002237c0)
-#define CasingListAt ((uint8_t *)0x001dc678)     // the 32 cases and NextCasing after them
-#define CopterListAt ((uint8_t *)0x001fe6a8)
+#define RandWords (GameSpan<uint8_t>{0x0018cdf8})
+#define FrameRates (GameSpan<uint8_t>{0x0017c0f0})       // VIDEO_FRAME_RATE to REC_FRAME_RATE
+#define ShardListAt (GameSpan<uint8_t>{0x001dc564})
+#define EffectListAt (GameSpan<uint8_t>{0x002237c0})
+#define CasingListAt (GameSpan<uint8_t>{0x001dc678})     // the 32 cases and NextCasing after them
+#define CopterListAt (GameSpan<uint8_t>{0x001fe6a8})
 #define PlayersAt ((uint8_t *)0x001f6654)
-#define ViewersAt ((uint8_t *)0x001f661c)
-#define ScriptCamAt ((uint8_t *)0x001f6678)
+#define ViewersAt (GameSpan<uint8_t>{0x001f661c})
+#define ScriptCamAt (GameSpan<uint8_t>{0x001f6678})
 #define GravityAt ((uint8_t *)0x001f6648)
-#define DroneDisableAt ((uint8_t *)0x001dfa2a)
+#define DroneDisableAt (GameSpan<uint8_t>{0x001dfa2a})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
@@ -935,7 +936,7 @@ void RandomCollision(void) {
 }
 
 void RandomShardList(void) {
-    LLISTINFO_tag *list = (LLISTINFO_tag *)ShardListAt;
+    LLISTINFO_tag *list = (LLISTINFO_tag *)XbeOurs(ShardListAt.at);
     memset(list, 0, sizeof(*list));
     list->elementSize = sizeof(SHARD_tag);
     LLNODE_tag *prev = NULL;
@@ -964,7 +965,7 @@ void RandomShardList(void) {
 }
 
 void RandomMarks(void) {
-    DLISTINFO_tag *list = (DLISTINFO_tag *)EffectListAt;
+    DLISTINFO_tag *list = (DLISTINFO_tag *)XbeOurs(EffectListAt.at);
     memset(list, 0, sizeof(*list));
     list->freeList.elementSize = list->activeList.elementSize = sizeof(ATTACH_tag);
     LLNODE_tag *lastFree = NULL, *lastUsed = NULL;
@@ -1023,7 +1024,7 @@ void RandomWorld(void) {
     MPSettings.isMultiplayer = R(4) == 0;
     MPSettings.maybeDroneAIEnabled = R(3) == 0;
     MPSettings.ExplosiveSceneryEnabled = R(2);
-    *(uint32_t *)ScriptCamAt = R(4) == 0;
+    *(uint32_t *)XbeOurs(ScriptCamAt.at) = R(4) == 0;
     *DroneDisableAt = R(6) == 0;
     for (int i = 0; i < 256; i++)
         switch_channels[i] = (char)(R(3) == 0);
@@ -1103,7 +1104,7 @@ void RandomWorld(void) {
         RandomVector(&world.v[i], 6.0f);
 
     // The helicopters, the drone list, the players and the camera
-    LLISTINFO_tag *copters = (LLISTINFO_tag *)CopterListAt;
+    LLISTINFO_tag *copters = (LLISTINFO_tag *)XbeOurs(CopterListAt.at);
     memset(copters, 0, sizeof(*copters));
     for (int i = 0; i < 2; i++) {
         COPTER *c = &world.copters[i];
@@ -1132,8 +1133,8 @@ void RandomWorld(void) {
     for (int i = 0; i < MADE; i++)
         world.made[i].extraObjectData = world.madeExtra[i];
     for (int i = 0; i < 32; i++)
-        ((obj_tag **)CasingListAt)[i] = R(4) ? &world.made[R(MADE)] : NULL;
-    *(short *)(CasingListAt + 0x80) = (short)R(32);
+        CasingListAt.As<obj_tag *>()[i] = R(4) ? &world.made[R(MADE)] : NULL;
+    *(short *)XbeOurs(0x001dc6f8) = (short)R(32);   // NextCasing
 
     memset(world.placement, 0, sizeof(world.placement));
     for (int i = 0x2c; i < 0x48; i += 4)
@@ -1714,7 +1715,7 @@ struct GlowWorld {
     HUDINFO_tag huds[4];
 } glowWorld;
 
-#define NoDronesAt ((uint32_t *)0x001df99c)
+#define NoDronesAt (GameSpan<uint32_t>{0x001df99c})
 
 obj_tag *GlowOwner(void) {
     GlowWorld &g = glowWorld;
@@ -2219,17 +2220,17 @@ void EffectPortShadow_Run(void) {
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(channels, switch_channels, 256);
-    memcpy(rand, RandWords, 8);
-    memcpy(frameRates, FrameRates, 0x18);
-    memcpy(shardList, ShardListAt, 0xc);
-    memcpy(effectList, EffectListAt, 0x18);
-    memcpy(casings, CasingListAt, 0x82);
-    memcpy(copters, CopterListAt, 0xc);
+    XbeOursRead(rand, RandWords.at, 8);
+    XbeOursRead(frameRates, FrameRates.at, 0x18);
+    XbeOursRead(shardList, ShardListAt.at, 0xc);
+    XbeOursRead(effectList, EffectListAt.at, 0x18);
+    XbeOursRead(casings, CasingListAt.at, 0x82);
+    XbeOursRead(copters, CopterListAt.at, 0xc);
     memcpy(players, PlayersAt, 16);
-    memcpy(viewers, ViewersAt, 44);
-    memcpy(scriptCam, ScriptCamAt, 4);
+    XbeOursRead(viewers, ViewersAt.at, 44);
+    XbeOursRead(scriptCam, ScriptCamAt.at, 4);
     memcpy(gravity, GravityAt, 12);
-    memcpy(disable, DroneDisableAt, 1);
+    XbeOursRead(disable, DroneDisableAt.at, 1);
     memcpy(npc, &NPCGlobals.NDrone2List, 4);
 
     regions.Clear();
@@ -2238,20 +2239,20 @@ void EffectPortShadow_Run(void) {
     AddArea(&GameState, sizeof(GameState_t));
     AddArea(&MPSettings, sizeof(MPSettings_t));
     AddArea(switch_channels, 256);
-    AddArea(RandWords, 8);
-    AddArea(FrameRates, 0x18);
-    AddArea(ShardListAt, 0xc);
-    AddArea(EffectListAt, 0x18);
-    AddArea(CasingListAt, 0x82);
-    AddArea(CopterListAt, 0xc);
+    AddArea(RandWords.game(), 8);
+    AddArea(FrameRates.game(), 0x18);
+    AddArea(ShardListAt.game(), 0xc);
+    AddArea(EffectListAt.game(), 0x18);
+    AddArea(CasingListAt.game(), 0x82);
+    AddArea(CopterListAt.game(), 0xc);
     AddArea(PlayersAt, 16);
     AddArea(&glowWorld, sizeof(glowWorld));
     AddArea(glb_blokes, 16);
-    AddArea(NoDronesAt, 4);
-    AddArea(ViewersAt, 44);
-    AddArea(ScriptCamAt, 4);
+    AddArea(NoDronesAt.game(), 4);
+    AddArea(ViewersAt.game(), 44);
+    AddArea(ScriptCamAt.game(), 4);
     AddArea(GravityAt, 12);
-    AddArea(DroneDisableAt, 1);
+    AddArea(DroneDisableAt.game(), 1);
     AddArea(&NPCGlobals.NDrone2List, 4);
     NfWarnMuted++;
     cases = differ = nanChoices = 0;
@@ -2274,16 +2275,16 @@ void EffectPortShadow_Run(void) {
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(switch_channels, channels, 256);
-    memcpy(RandWords, rand, 8);
-    memcpy(FrameRates, frameRates, 0x18);
-    memcpy(ShardListAt, shardList, 0xc);
-    memcpy(EffectListAt, effectList, 0x18);
-    memcpy(CasingListAt, casings, 0x82);
-    memcpy(CopterListAt, copters, 0xc);
+    XbeOursWrite(RandWords.at, rand, 8);
+    XbeOursWrite(FrameRates.at, frameRates, 0x18);
+    XbeOursWrite(ShardListAt.at, shardList, 0xc);
+    XbeOursWrite(EffectListAt.at, effectList, 0x18);
+    XbeOursWrite(CasingListAt.at, casings, 0x82);
+    XbeOursWrite(CopterListAt.at, copters, 0xc);
     memcpy(PlayersAt, players, 16);
-    memcpy(ViewersAt, viewers, 44);
-    memcpy(ScriptCamAt, scriptCam, 4);
+    XbeOursWrite(ViewersAt.at, viewers, 44);
+    XbeOursWrite(ScriptCamAt.at, scriptCam, 4);
     memcpy(GravityAt, gravity, 12);
-    memcpy(DroneDisableAt, disable, 1);
+    XbeOursWrite(DroneDisableAt.at, disable, 1);
     memcpy(&NPCGlobals.NDrone2List, npc, 4);
 }

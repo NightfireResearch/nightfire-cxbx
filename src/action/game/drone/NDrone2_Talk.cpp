@@ -83,7 +83,8 @@ static_assert(sizeof(PowerstationLine) == 8, "PowerstationLine is 8 bytes");
 
 // HandleTalking's countdown between tries (only it uses it)
 // XBE_GLOBAL(0x001ee41c, 4)
-#define HandleTalkingDelay I32_AT(0x001ee41c)
+// XBE_GLOBAL(0x001ee41c, 0x4)
+int32_t HandleTalkingDelay;
 
 // The frame `ticks` (at 60 a second) from now, worked out on the x87 and truncated (__ftol2)
 static uint TalkFrameAfter(double ticks) {

@@ -9,6 +9,7 @@
 // nowhere.
 
 #include "DroneShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../actionhelpers.h"
@@ -27,8 +28,8 @@
 extern uint32_t PtrHeap, HeapByteSize, MallocMethod, QuickBlock;
 
 // The game's RNG state (Rand_Random)
-#define RandWord0 U32_AT(0x0018cdf8)
-#define RandWord1 U32_AT(0x0018cdfc)
+#define RandWord0 U32_AT(XbeOurs(0x0018cdf8))
+#define RandWord1 U32_AT(XbeOurs(0x0018cdfc))
 
 static int runs, mismatches, reported;
 static const char *current;

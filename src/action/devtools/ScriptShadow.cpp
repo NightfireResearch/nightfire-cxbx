@@ -12,6 +12,7 @@
 // them either (docs/nightfire-port-lifts.md).
 
 #include "ScriptShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../engine/Script.h"
@@ -21,7 +22,7 @@
 #include "../memory.h"
 
 // The number of entries in the game's hashtable
-#define HashtableCount U32_AT(0x001fe684)
+#define HashtableCount U32_AT(XbeOurs(0x001fe684))
 
 #include <stdio.h>
 #include <string.h>

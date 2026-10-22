@@ -9,6 +9,7 @@
 // three that answer in ST0 are compared on the value they leave there.
 
 #include "AnimPortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,10 +33,10 @@
 
 namespace {
 
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 #define AnimGlobals ((uint8_t *)0x001d69c0)     // from the channel store to ReverseFlag
 #define ANIM_GLOBALS_SIZE (0x001d7830 - 0x001d69c0)
-#define GlbScriptDeleted U8_AT(0x001d6a64)
+#define GlbScriptDeleted U8_AT(XbeOurs(0x001d6a64))
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
@@ -333,8 +334,8 @@ void __cdecl FakeFreeHitList(HITDATA_tag **list) {
 void __cdecl FakeRenderModes(viewer_tag *viewer, obj_tag *obj) { ShadowLog("rendermodes(%x,%x)", W(viewer), W(obj)); }
 void __cdecl FakeRenderModes2(viewer_tag *viewer, obj_tag *obj) { ShadowLog("rendermodes2(%x,%x)", W(viewer), W(obj)); }
 void __cdecl FakeDrawSkin(celglist_tag *gl, _MATRIX *unused, void *obj, void *palette) {
-    ShadowLog("drawskin(%x,%x,%x,%u)", W(gl), W(obj), W(palette), U8_AT(0x001d7826));
-    for (int i = 0; i < U8_AT(0x001d7826); i++)
+    ShadowLog("drawskin(%x,%x,%x,%u)", W(gl), W(obj), W(palette), U8_AT(XbeOurs(0x001d7826)));
+    for (int i = 0; i < U8_AT(XbeOurs(0x001d7826)); i++)
         ShadowLog("morph(%u,%08x)", ((uchar *)0x001d777c)[i], Bits(((float *)0x001d6a68)[i]));
 }
 void __cdecl FakeDrawObject(celglist_tag *gl, _MATRIX *m) {
@@ -805,16 +806,16 @@ void RandomWorld(void) {
     memset(AnimGlobals, 0, ANIM_GLOBALS_SIZE);
     for (int i = 0; i < 0x40; i++)
         AnimGlobals[0x10 * i + 3] = (uint8_t)ShadowRand(256);
-    U32_AT(0x001d7570) = ShadowRand(4);                 // AnimScriptTimeStamp
-    U32_AT(0x001d6a60) = ShadowRand(4) | (ShadowRand(2) << 31);  // AnimTagTimeStamp
+    U32_AT(XbeOurs(0x001d7570)) = ShadowRand(4);                 // AnimScriptTimeStamp
+    U32_AT(XbeOurs(0x001d6a60)) = ShadowRand(4) | (ShadowRand(2) << 31);  // AnimTagTimeStamp
     FLOAT_AT(0x001d7794) = PICK(1.0f, 1.25f);           // Glb_SkinScale
     FLOAT_AT(0x001d7798) = PICK(1.0f, 0.8f);
     FLOAT_AT(0x001d779c) = PICK(1.0f, 1.1f);
     FLOAT_AT(0x001d6a28) = 1.0f;                        // Glb_InvSkinScale
     FLOAT_AT(0x001d6a2c) = 1.0f;
     FLOAT_AT(0x001d6a30) = 1.0f;
-    U8_AT(0x001d7827) = (uint8_t)ShadowRand(2);        // FootstepFoot
-    U8_AT(0x001d7828) = (uint8_t)(ShadowRand(5) == 0); // ReverseFlag
+    U8_AT(XbeOurs(0x001d7827)) = (uint8_t)ShadowRand(2);        // FootstepFoot
+    U8_AT(XbeOurs(0x001d7828)) = (uint8_t)(ShadowRand(5) == 0); // ReverseFlag
     if (ShadowRand(2)) {
         FRAME_RATE_INT = 60;
         FRAME_RATE_MUL = 1.0f;
@@ -1314,7 +1315,7 @@ uint32_t RunProcessScriptData(bool original) {
 }
 uint32_t RunPostLoadInit(bool original) {
     world.skin.skeletonNum = Arg(2) ? 1 : 3;
-    U8_AT(0x001d6a65) = (uint8_t)(Arg(5) == 0);
+    U8_AT(XbeOurs(0x001d6a65)) = (uint8_t)(Arg(5) == 0);
     CDECL_RUN(0x00011200, AnimPostLoadInit, void (__cdecl *)(void));
     return 0;
 }
@@ -1345,9 +1346,9 @@ uint32_t RunListBuild(bool original) {
         value = (uint)kScriptHash[Arg(SCRIPT_FILES)];
     AnimListFunc callback = Arg(3) == 0 ? &FakeListCallback : NULL;
     uint mode = Arg(4);
-    I32_AT(0x001d77a0) = (int)Arg(6);
+    I32_AT(XbeOurs(0x001d77a0)) = (int)Arg(6);
     for (int i = 0; i < 6; i++)
-        (*(sAnimScript_tag *(*)[32])0x001d77a4)[i] = &world.scripts[Arg(SCRIPTS)];
+        (*(sAnimScript_tag *(*)[32])XbeOurs(0x001d77a4))[i] = &world.scripts[Arg(SCRIPTS)];
     obj_tag *obj = Arg(10) ? Obj() : NULL;
     return W(CDECL_RUN(0x000122e0, AnimListBuild,
                        sAnimScript_tag *(__cdecl *)(obj_tag *, uint, uint, AnimListFunc, uint), obj, criteria, value,
@@ -1416,7 +1417,7 @@ uint32_t RunScriptDelete(bool original) {
     obj_tag *obj = Arg(10) ? Obj() : NULL;
     world.slot = Arg(8) ? world.slot : NULL;
     sAnimScript_tag **slot = Arg(3) ? &world.slot : &world.scripts[Arg(SCRIPTS)].syncMaster;
-    U32_AT(0x001d7778) = P(Arg(2) ? world.slot : NULL);     // Glb_pCurrentScript
+    U32_AT(XbeOurs(0x001d7778)) = P(Arg(2) ? world.slot : NULL);     // Glb_pCurrentScript
     CDECL_RUN(0x00015b40, AnimScriptDelete, void (__cdecl *)(obj_tag *, sAnimScript_tag **), obj, slot);
     return 0;
 }
@@ -1449,7 +1450,7 @@ uint32_t RunScriptTick(bool original) {
     r.ecx = P(Ao());
     uint32_t args[2] = {P(Obj()), P(s)};
     GlbScriptDeleted = 0;
-    U32_AT(0x001d7778) = P(s);
+    U32_AT(XbeOurs(0x001d7778)) = P(s);
     Regs6(original, 0x00018450, (const void *)&AnimScriptTick, r, 2, args);
     return 0;
 }
@@ -1789,7 +1790,7 @@ uint32_t RunPlayerAnim(bool original) {
             world.table[world.tableCount++].data = world.scriptFiles[Arg(SCRIPT_FILES)];
         }
     }
-    U8_AT(0x001d7828) = (uint8_t)(Arg(3) == 0);     // ReverseFlag
+    U8_AT(XbeOurs(0x001d7828)) = (uint8_t)(Arg(3) == 0);     // ReverseFlag
     world.obj.extraObjectData = world.holderBl;
     world.obj.objectType = OBJECTTYPE_PLAYER;
     if (Arg(3) == 0)
@@ -2009,8 +2010,8 @@ void AnimPortShadow_Run(void) {
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(globals, AnimGlobals, sizeof(globals));
-    memcpy(rand, RandWords, sizeof(rand));
-    memcpy(frameRates, (void *)0x0017c0f0, sizeof(frameRates));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
+    memcpy(frameRates, (void *)XbeOurs(0x0017c0f0), sizeof(frameRates));
     scriptCam = ScriptCam;
 
     // The files, made once from the skeleton's translation mask
@@ -2025,7 +2026,7 @@ void AnimPortShadow_Run(void) {
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(AnimGlobals, ANIM_GLOBALS_SIZE);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&ScriptCam, 4);
     NfWarnMuted++;
     cases = differ = 0;
@@ -2072,7 +2073,7 @@ void AnimPortShadow_Run(void) {
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(AnimGlobals, globals, sizeof(globals));
-    memcpy(RandWords, rand, sizeof(rand));
-    memcpy((void *)0x0017c0f0, frameRates, sizeof(frameRates));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
+    memcpy((void *)XbeOurs(0x0017c0f0), frameRates, sizeof(frameRates));
     ScriptCam = scriptCam;
 }

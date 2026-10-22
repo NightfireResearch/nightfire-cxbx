@@ -2,6 +2,9 @@
 
 #include "../../util/Random.h"
 
+// XBE_GLOBAL(0x0029aaf8, 0xff)
+KeyCodeEntry KeyCodes[51];
+
 // The 51 keycodes, four digits each, none discovered, after a run of the random sequence that depends on the frame
 // AUTOINJECT
 void Locks_Init(void) {

@@ -11,6 +11,7 @@
 // their callers: the original side runs the originals throughout, ours the C++ bodies.
 
 #include "DroneAnimShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -28,7 +29,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -688,13 +689,13 @@ void DroneAnimShadow_Run(void) {
     uint32_t frameRateInt = FRAME_RATE_INT;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     ShadowFakes_AddRegions(regions);
 
@@ -712,7 +713,7 @@ void DroneAnimShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRateInt;
 
     printf("[droneanim] head tracking and script setters: %d cases, %d differ\n", scriptCases, scriptDiffer);

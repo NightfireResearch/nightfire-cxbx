@@ -129,7 +129,11 @@ def main():
     import capstone.x86
     d = open(os.path.join(REPO, 'disc', XBE[side]), 'rb').read()
     blocks = owned_blocks(side)
-    funcs = sorted(int(f['address'], 16) for f in json.load(open(os.path.join(REPO, 'tools', 'functions_%s.json' % side))))
+    # Ghidra's functions, and every entry the injection table patches: three drone controls a table points at were
+    # never made functions (NDrone2_ControlDTYPE_Ninja's 0x0003f910), and decoding them from the function before would
+    # miss their references
+    ghidra_funcs = set(int(f['address'], 16) for f in json.load(open(os.path.join(REPO, 'tools', 'functions_%s.json' % side))))
+    funcs = sorted(ghidra_funcs | set(port_names(side)))
     code = [s for s in sections(d) if s[0] == '.text']   # the game's code; the libraries never name its data
     # Ghidra's data references, (instruction, target): an operand is only rewritten where Ghidra agrees it is an
     # address, not a number that happens to fall inside the block
@@ -147,9 +151,13 @@ def main():
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_32)
     md.detail = True
     result, problems = {}, []
-    # A site is the block's only if our port of the function it is in names the block (or a macro for it): a base
-    # folded from another table can land inside it at any offset (Player_WeaponFiring's DecryptorDigits[digit - '0']
-    # is 0x001819f0, inside RadarIcons)
+    # A register-indexed operand is the block's only if our port of the function it is in names the block (or a macro
+    # for it): a base folded from another table can land inside it at any offset (Player_WeaponFiring's
+    # DecryptorDigits[digit - '0'] is 0x001819f0, inside RadarIcons); so is an immediate, which can be the end of the
+    # table before it (SFX's loop over 0x00298e7c.. stops at 0x00299338, MusicNowPlaying's start) or an address the
+    # linker happened to put inside it (WeaponDataTableInit stores 0x001820a0, inside MapMusic, into weapon_data). A
+    # plain [address] operand names the block itself, and a function with no port of its own (a chunk Ghidra split
+    # off) has nothing to check against.
     ports = port_names(side)
     bodies, aliases = source_words(side)
 
@@ -191,47 +199,79 @@ def main():
         ends.setdefault(b['hi'], []).append(b)
     for b in blocks:
         b['sites'], b['ends'], b['users'], b['names'] = [], [], set(), goes_by(b['name'])
+    his = sorted(ends)
     for name, flags, sva, raw, size in code:
         blob = d[raw:raw + size]
         for off in range(len(blob) - 3):
             v = struct.unpack_from('<I', blob, off)[0]
-            if v in ends:
-                for b in ends[v]:
+            # A loop's bound: the block's end, or a little past it where the loop walks a field (MenuManager_Init's
+            # manager[i].closeAction stops at 0x0025fcd4, the next element's field), when no block holds it
+            j = bisect.bisect_right(his, v) - 1
+            k = bisect.bisect_right(starts, v) - 1
+            outside = k < 0 or v >= blocks[k]['hi']
+            while j >= 0 and v - his[j] <= 0x200 and (v == his[j] or outside):
+                for b in ends[his[j]]:
                     b['ends'].append(sva + off)
+                j -= 1
             # Where two blocks overlap (a table that reads on into the next, as the game's does), an address belongs
             # to the one starting nearest below it
             i = bisect.bisect_right(starts, v) - 1
+            # past the nearest one's end but inside a block that starts before it and holds it (BondMoments[0x65],
+            # after WireAnim inside BondMoments)
+            while i >= 0 and v >= blocks[i]['hi'] and i > 0 and blocks[i - 1]['hi'] > blocks[i]['lo']:
+                i -= 1
             if i < 0 or v >= blocks[i]['hi']:
                 continue
             b = blocks[i]
-            lo, hi, site = b['lo'], b['hi'], sva + off
+            site = sva + off
             insn, fn = operand(site)
+            # A base folded for an index that starts at one lands just before the block it indexes (manager[i]'s
+            # through 0x0025f1c9, inside save_space_text): the next block, when the port names it and not this one
+            if insn is not None and fn in ports and i + 1 < len(blocks) and blocks[i + 1]['lo'] - v <= 0x200 \
+                    and not port_names_it(fn, b['names']) and port_names_it(fn, blocks[i + 1]['names']) \
+                    and any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index) for op in insn.operands):
+                b = blocks[i + 1]
+            lo, hi = b['lo'], b['hi']
             if insn is None:
                 problems.append('%s: 0x%x (value 0x%x, in %s) does not decode as an operand - left alone' %
                                 (b['name'], site, v, name))
-            elif not any(lo <= t < hi for t in xrefs.get(insn.address, [])):
+            elif not any(min(lo, v) <= t < hi for t in xrefs.get(insn.address, [])) and not (
+                    fn not in ghidra_funcs and not any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index)
+                                                       for op in insn.operands) and insn.disp_size == 4):
+                # (code Ghidra never made a function has no references from it; there a plain [address] operand,
+                # decoded from the patched entry, is taken as it is)
                 problems.append('%s: 0x%x (value 0x%x) has no reference from Ghidra into the block - left alone' %
                                 (b['name'], site, v))
             elif (v - lo) % 2 and any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index)
-                                      for op in insn.operands):
-                # An odd offset through a register: a base folded from another table (Inflate's length tables
-                # index 0x0018cc5b + 257 + n), not this one's field
+                                      for op in insn.operands) and fn in ports and not port_names_it(fn, b['names']):
+                # An odd offset through a register in a function whose port does not name the block: a base folded
+                # from another table (Inflate's length tables index 0x0018cc5b + 257 + n). Where the port names the
+                # block it is a byte field of an array of structures (manager[i]'s at +0x1d1).
                 problems.append('%s: 0x%x (%s %s) indexes from inside the block at an odd offset - left alone' %
                                 (b['name'], site, insn.mnemonic, insn.op_str))
-            elif not port_names_it(fn, b['names']):
+            elif (any(op.type == capstone.x86.X86_OP_MEM and (op.mem.base or op.mem.index) for op in insn.operands)
+                  or insn.imm_size == 4 and insn.imm_offset == site - insn.address) \
+                    and fn in ports and not port_names_it(fn, b['names']):
                 problems.append('%s: 0x%x (%s %s) is in 0x%x, whose port does not name the block - left alone' %
                                 (b['name'], site, insn.mnemonic, insn.op_str, fn))
             else:
                 b['sites'].append(site)
                 b['users'].add(fn)
+    # The block's end, or just past it, as a loop's bound: only a comparison with it as the immediate (not a read of
+    # whatever follows the block), in a function that walks the block, and not a site some block has already. Where
+    # several blocks could end there, the largest: the array the loop walks, not a scalar after it
+    taken = set(site for b in blocks for site in b['sites'])
+    bounds = {}
     for b in blocks:
-        # The block's end, as a loop's bound: only a comparison with it as the immediate (not a read of whatever
-        # follows the block), in a function that walks the block
         for site in b['ends']:
             insn, fn = operand(site)
-            if insn is not None and insn.mnemonic == 'cmp' and insn.imm_size == 4 and \
+            if site not in taken and insn is not None and insn.mnemonic == 'cmp' and insn.imm_size == 4 and \
                     insn.imm_offset == site - insn.address and fn in b['users']:
-                b['sites'].append(site)
+                if site not in bounds or b['hi'] - b['lo'] > bounds[site]['hi'] - bounds[site]['lo']:
+                    bounds[site] = b
+    for site, b in bounds.items():
+        b['sites'].append(site)
+    for b in blocks:
         result[b['name']] = ['0x%x' % x for x in sorted(b['sites'])]
         print('%s 0x%x..0x%x: %d references%s' % (b['name'], b['lo'], b['hi'], len(b['sites']),
                                                   '' if b['relocate'] else ' (the all-original runs only)'))

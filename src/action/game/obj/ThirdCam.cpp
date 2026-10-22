@@ -2,6 +2,9 @@
 #include "control.h"
 #include "../Spline.h"
 
+// XBE_GLOBAL(0x001dc700, 0x40)
+obj_tag *ThirdPersonCameras[16];
+
 // The placement's path and parameters as ThirdCam_Create reads them
 #pragma pack(push, 1)
 typedef struct {

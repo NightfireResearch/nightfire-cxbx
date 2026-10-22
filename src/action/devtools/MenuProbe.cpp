@@ -48,6 +48,7 @@
 // the same whatever is plugged in or whichever window is in front.
 
 #include "MenuProbe.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../../common/gfx/d3d9Backend.h"
@@ -279,8 +280,8 @@ static bool LoadScript(const char *path) {
             s.kind = Step::POKE; s.frames = (unsigned)strtoul(a, NULL, 0); s.button = (int)strtoul(b, NULL, 0); AddStep(s);
         } else if (_stricmp(cmd, "seed") == 0) {
             // Rand_Random's two multiply-with-carry words (value in the low half, carry in the high), as the XBE has them
-            s.kind = Step::POKE; s.frames = 0x0018cdf8; s.button = (int)0x1f123bb5; AddStep(s);
-            s.kind = Step::POKE; s.frames = 0x0018cdfc; s.button = (int)0x159a55e5; AddStep(s);
+            s.kind = Step::POKE; s.frames = XbeOurs(0x0018cdf8); s.button = (int)0x1f123bb5; AddStep(s);
+            s.kind = Step::POKE; s.frames = XbeOurs(0x0018cdfc); s.button = (int)0x159a55e5; AddStep(s);
         } else if (_stricmp(cmd, "unlockstest") == 0) {
             s.kind = Step::UNLOCKSTEST; AddStep(s);
         } else if (_stricmp(cmd, "loadscreentest") == 0) {
@@ -300,7 +301,7 @@ static bool LoadScript(const char *path) {
             // or attack (switch_BLIND_DRONES), "immortal" stops the player taking damage (CheatInfo.Immortal). Set
             // "immortal" after the level has loaded: loading a codename overwrites it.
             static const struct { const char *name; unsigned address; } cheats[] = {
-                {"nodrones", 0x001df99c}, {"blind", 0x001df9a0}, {"immortal", 0x001f65dc},
+                {"nodrones", XbeOurs(0x001df99c)}, {"blind", XbeOurs(0x001df9a0)}, {"immortal", 0x001f65dc},
             };
             bool known = false;
             for (size_t i = 0; i < sizeof(cheats) / sizeof(cheats[0]); i++)
@@ -331,7 +332,7 @@ static bool LoadScript(const char *path) {
 // (+0x34) and graphic (+0x44, set for gas types 9 and 10 only).
 static void ObjLog(int type) {
     int count = 0;
-    for (obj_tag *o = *(obj_tag **)(size_t)0x001df34c; o != NULL; o = o->nextObject) {
+    for (obj_tag *o = *(obj_tag **)(size_t)XbeOurs(0x001df34c); o != NULL; o = o->nextObject) {
         if (o->objectType != type)
             continue;
         const unsigned char *x = (const unsigned char *)o->extraObjectData;
@@ -351,11 +352,11 @@ static void ObjLog(int type) {
 }
 
 // The game's model table (psiDraw.cpp's d3dGeometryObjs, 0x002a0e68)
-#define d3dGeometryObjsProbe (*(ModelData *(*)[2048])0x002a0e68)
+#define d3dGeometryObjsProbe (*(ModelData *(*)[2048])XbeOurs(0x002a0e68))
 
 // The graphic of that name, as some live object holds it (NULL if no live object uses it)
 static celglist_tag *FindLiveGfx(const char *name) {
-    for (obj_tag *o = *(obj_tag **)(size_t)0x001df34c; o != NULL; o = o->nextObject)
+    for (obj_tag *o = *(obj_tag **)(size_t)XbeOurs(0x001df34c); o != NULL; o = o->nextObject)
         if (o->objGraphics != NULL && o->objGraphics->name != NULL && strcmp(o->objGraphics->name, name) == 0)
             return o->objGraphics;
     return NULL;

@@ -8,6 +8,7 @@
 // disabled, the button pressed and shots landing.
 
 #include "SecurityShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -33,9 +34,9 @@ const unsigned kMonitorCreate = 0x000d0f10;
 const unsigned kMonitorActivate = 0x000d12c0;
 const unsigned kMonitorUpdate = 0x000d0f90;
 
-#define Items ((uint8_t *)0x0029aac8)   // the delay timer, then the five items
+#define Items (GameSpan<uint8_t>{0x0029aac8})   // the delay timer, then the five items
 #define ITEMS_SIZE (4 + SSYS_ITEMS * 8)
-#define WarmReset U8_AT(0x00279250)
+#define WarmReset U8_AT(XbeOurs(0x00279250))
 
 // The original SSys_Msg takes the item on the stack and the message in SI
 __declspec(naked) void __cdecl OriginalMsg(unsigned item, unsigned msg) {
@@ -81,9 +82,9 @@ void Compare(const char *what, int trial, uint32_t (*theirs)(void), uint32_t (*o
 }
 
 void RandomItems() {
-    float *delay = (float *)Items;
+    float *delay = (float *)XbeOurs(Items.at);
     *delay = ShadowRand(3) ? 0.0f : ShadowRandFloat(-0.5f, 9.0f);
-    SSYSITEM *items = (SSYSITEM *)(Items + 4);
+    SSYSITEM *items = (SSYSITEM *)XbeOurs(Items.at + 4);
     for (int i = 0; i < SSYS_ITEMS; i++) {
         items[i].channel = ShadowRand(4) == 0 ? SSYS_NO_CHANNEL : (ShadowRand(6) == 0 ? 0 : 1 + ShadowRand(8));
         items[i].state = ShadowRand(3) ? 0 : ShadowRand(8);
@@ -310,7 +311,7 @@ void SecurityShadow_Run(void) {
     static uint8_t warmReset;
     memcpy(channels, switch_channels, sizeof(channels));
     memcpy(gameState, &GameState, sizeof(gameState));
-    memcpy(items, Items, sizeof(items));
+    XbeOursRead(items, Items.at, sizeof(items));
     memcpy(cameraList, &CameraList, sizeof(cameraList));
     viewers[0] = glb_viewer[0];
     viewers[1] = glb_viewer[1];
@@ -320,7 +321,7 @@ void SecurityShadow_Run(void) {
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(switch_channels, 256);
-    regions.Add(Items, ITEMS_SIZE);
+    regions.Add(Items.game(), ITEMS_SIZE);
     regions.Add(&CameraList, sizeof(LLISTINFO_tag));
     ShadowFakes_AddRegions(regions);
 
@@ -334,7 +335,7 @@ void SecurityShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(switch_channels, channels, sizeof(channels));
     memcpy(&GameState, gameState, sizeof(gameState));
-    memcpy(Items, items, sizeof(items));
+    XbeOursWrite(Items.at, items, sizeof(items));
     memcpy(&CameraList, cameraList, sizeof(cameraList));
     glb_viewer[0] = viewers[0];
     glb_viewer[1] = viewers[1];

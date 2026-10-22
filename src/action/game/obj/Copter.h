@@ -122,16 +122,15 @@ void Copter_FireMissile(void);
 bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj);
 void Copter_SeesPlayer(void);
 
-// XBE_GLOBAL(0x001fe6a8, 0xc)
-#define CopterList (*(LLISTINFO_tag*)0x001fe6a8)
+extern LLISTINFO_tag CopterList;
 #define CopterPaths (*(LLISTINFO_tag*)0x001fe6b4)
 // The cone the helicopters see the player in, 45 degrees about their direction (Copter_InitConeCos, _Sin)
-#define CopterConeCos FLOAT_AT(0x001fe6c0)
-#define CopterConeSin FLOAT_AT(0x001fe6c4)
+extern float CopterConeCos;
+extern float CopterConeSin;
 // Odd: the attack is with the gun; even, the missiles (Copter_Update)
-#define CopterAttackMode I16_AT(0x001fe6c8)
+extern int16_t CopterAttackMode;
 // The difficulty's scale of a helicopter's endurance and how long it attacks
-#define DiffMod FLOAT_AT(0x0017c118)
+extern float DiffMod;
 extern COPTERBIT CopterBits[9];
 
 #endif // COPTER_H_

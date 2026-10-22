@@ -8,6 +8,7 @@
 // NIGHTFIRE_MENUCONTROLS_GROUP=<part of a name> one group.
 
 #include "MenuControlShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -118,7 +119,7 @@ struct World {
 World world;
 
 // The game's state the package reads and writes
-#define GameManagers ((M_MANAGER *)0x0025f1d0)
+#define GameManagers (GameSpan<M_MANAGER>{0x0025f1d0})
 
 int cases, differ, nanChoices;
 uint32_t gen, caseSeed;
@@ -187,9 +188,8 @@ uint32_t F(float f) {
 }
 
 void Fill(void *p, size_t n) {
-    uint8_t *b = (uint8_t *)p;
     for (size_t i = 0; i < n; i++)
-        b[i] = (uint8_t)R(0x100);
+        *(uint8_t *)(size_t)XbeOurs((unsigned)(size_t)p + (unsigned)i) = (uint8_t)R(0x100);
 }
 
 // ---- calling originals with register arguments
@@ -406,7 +406,7 @@ uint32_t Answer(void) {
 }
 
 uint32_t ManagerOf(const void *m) {
-    return (uint32_t)((uintptr_t)m - 0x0025f1d0);
+    return (uint32_t)((uintptr_t)m - XbeOurs(0x0025f1d0));
 }
 
 #define SEND_FAKE(name, tag)                                                                                          \
@@ -1252,7 +1252,7 @@ void RandomWorld(void) {
     }
 
     // The managers: every page in each one's list, a page shown and some history
-    memset(GameManagers, 0, sizeof(M_MANAGER) * 5);
+    XbeOursFill(GameManagers.at, 0, sizeof(M_MANAGER) * 5);
     for (int m = 0; m < 5; m++) {
         M_MANAGER *mgr = &GameManagers[m];
         Fill(mgr, sizeof(*mgr));
@@ -2021,7 +2021,7 @@ uint32_t RunPageUpdate(bool original) {
         c->hashcode = (HASHCODE)0x10000225;
     }
     if (R(4) == 0)
-        U32_AT(0x0025fc18) = P(&world.objects[R(OBJECTS)]);
+        U32_AT(XbeOurs(0x0025fc18)) = P(&world.objects[R(OBJECTS)]);
     int input = (int)R(2);
     CDECL_VOID(0x00095a80, Page_Update, void (__cdecl *)(M_MANAGER *, M_PAGE *, int), mgr, page, input);
     return 0;
@@ -2040,7 +2040,7 @@ uint32_t RunFindHelp(bool original) {
 
 uint32_t RunSetHelp(bool original) {
     M_PAGE *page = &world.pages[R(PAGES)];
-    U32_AT(0x0025fc18) = R(4) ? P(&world.objects[R(OBJECTS)]) : 0;
+    U32_AT(XbeOurs(0x0025fc18)) = R(4) ? P(&world.objects[R(OBJECTS)]) : 0;
     if (R(8) == 0)
         page->focused = NULL;
     // A control of a help line's now and then (the lines are the game's data)
@@ -2297,7 +2297,7 @@ void MakeMenuData(uint menu) {
 uint32_t RunManagerCreate(bool original) {
     uint menu = 0x80000000u + R(5);
     MakeMenuData(menu);
-    U32_AT(0x0025fb08) = R(10) ? P(world.menuData) : 0;
+    U32_AT(XbeOurs(0x0025fb08)) = R(10) ? P(world.menuData) : 0;
     uchar m = (uchar)R(5);
     if (R(2))
         GameManagers[m].exists = false;
@@ -2333,12 +2333,12 @@ uint32_t RunManagerMonitor(bool original) {
         for (int m = 0; m < 5; m++)
             GameManagers[m].status = 0;
     }
-    U32_AT(0x0025fb0c) = R(6);
-    I32_AT(0x0017d638) = (int)R(4) - (R(4) == 0 ? 2 : 0);
-    if (I32_AT(0x0017d638) < 0 && U32_AT(0x0025fb0c) == 2)
-        I32_AT(0x0017d638) = 0;
-    I32_AT(0x0017d63c) = R(3) ? 1 : (int)R(12) - 1;
-    U8_AT(0x0025fb11) = (uint8_t)R(2);
+    U32_AT(XbeOurs(0x0025fb0c)) = R(6);
+    I32_AT(XbeOurs(0x0017d638)) = (int)R(4) - (R(4) == 0 ? 2 : 0);
+    if (I32_AT(XbeOurs(0x0017d638)) < 0 && U32_AT(XbeOurs(0x0025fb0c)) == 2)
+        I32_AT(XbeOurs(0x0017d638)) = 0;
+    I32_AT(XbeOurs(0x0017d63c)) = R(3) ? 1 : (int)R(12) - 1;
+    U8_AT(XbeOurs(0x0025fb11)) = (uint8_t)R(2);
     MPSettings.numPlayers = R(5);
     GameState.CurrentLevelHashcode = R(8) ? (HASHCODE)0x07000001 : HT_Level_Menu_Pre;
     GameState.maybePaused = R(2);
@@ -2375,7 +2375,7 @@ uint32_t RunManagerEnable(bool original) {
 }
 
 uint32_t RunQuitOrRestarted(bool original) {
-    U8_AT(0x0025fb10) = (uint8_t)R(3);
+    U8_AT(XbeOurs(0x0025fb10)) = (uint8_t)R(3);
     return CDECL_RUN(0x00092c30, Menu_PlayerHasQuitOrRestarted, uchar (__cdecl *)(void));
 }
 
@@ -2419,15 +2419,15 @@ void MenuControlShadow_Run(void) {
         uint32_t at;
         size_t size;
     } kGlobals[] = {
-        {0x0025f1d0, sizeof(M_MANAGER) * 5}, // manager
+        {XbeOurs(0x0025f1d0), sizeof(M_MANAGER) * 5}, // manager
         {0x0025fb08, 0x90},                  // the menu file, the pad's message and its text, the quit flag
         {0x0017d60c, 0x34},                  // the cursor's sprite info, the pad's player and wait
         {0x0017d540, 0x48},                  // ls
-        {0x0025fc18, 4},                     // the help memo
+        {XbeOurs(0x0025fc18), 4},                     // the help memo
         {0x0025d7bc, 4},                     // the front end's music
         {0x001fe6d0, 0x158 * 4},             // PlayerInputs
-        {0x001f6580, 0x58},                  // GameState
-        {0x001f6678, 4},                     // ScriptCam
+        {XbeOurs(0x001f6580), 0x58},                  // GameState
+        {XbeOurs(0x001f6678), 4},                     // ScriptCam
         {0x00260044, 4},                     // MPSettings.numPlayers
     };
     std::vector<Saved> saved;
@@ -2435,7 +2435,8 @@ void MenuControlShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), (unsigned)(uintptr_t)s.at, s.size);
         saved.push_back(s);
     }
 
@@ -2463,5 +2464,5 @@ void MenuControlShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((unsigned)(uintptr_t)s.at, s.bytes.data(), s.size);
 }

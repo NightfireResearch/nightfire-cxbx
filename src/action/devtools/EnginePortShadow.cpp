@@ -10,6 +10,7 @@
 // Run at start with MenuShadowTests=on (MenuProbe.cpp); NIGHTFIRE_SHADOW_ONLY=engineport runs it alone.
 
 #include "EnginePortShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -71,36 +72,36 @@ namespace {
 
 // The game's globals the package reads and writes
 #define DynamicObjHead ((obj_tag *)0x001df338)  // the list's head: its nextObject is the first object
-#define DynamicObjFirst (*(obj_tag **)0x001df34c)
+#define DynamicObjFirst (*(obj_tag **)XbeOurs(0x001df34c))
 #define ForcedListInfo (*(LLISTINFO_tag *)0x001df41c)
-#define RoomCels (*(cel_tag ***)0x001f6664)
+#define RoomCels (*(cel_tag ***)XbeOurs(0x001f6664))
 #define ControlFuncs control_funcs   // ours (game/obj/ControlFuncs.cpp): the game's references read it
 #define GameGlobalVars (*(GlobalVars_t *)0x001f6568)
-#define GameStackIndex U16_AT(0x0017bfe8)
+#define GameStackIndex U16_AT(XbeOurs(0x0017bfe8))
 #define GameStack (*(uint (*)[64])0x0017bff0)
-#define GameResetMapState U32_AT(0x00279284)
-#define GameKeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
+#define GameResetMapState U32_AT(XbeOurs(0x00279284))
+#define GameKeyCodes (*(KeyCodeEntry (*)[51])XbeOurs(0x0029aaf8))
 // parsemap's
-#define GameFileNextBlock (*(uint **)0x00274c70)
-#define GameFileBase (*(uchar **)0x00274c6c)
-#define GameBinFileVersion U32_AT(0x00274c64)
-#define GameBinFileHeader (*(uint **)0x00274c5c)
-#define GameFileDiscardHeader (*(uint **)0x00274c94)
-#define GameFileDiscard U32_AT(0x00274c78)
-#define GameFileLastBlock U32_AT(0x00274c74)
+#define GameFileNextBlock (*(uint **)XbeOurs(0x00274c70))
+#define GameFileBase (*(uchar **)XbeOurs(0x00274c6c))
+#define GameBinFileVersion U32_AT(XbeOurs(0x00274c64))
+#define GameBinFileHeader (*(uint **)XbeOurs(0x00274c5c))
+#define GameFileDiscardHeader (*(uint **)XbeOurs(0x00274c94))
+#define GameFileDiscard U32_AT(XbeOurs(0x00274c78))
+#define GameFileLastBlock U32_AT(XbeOurs(0x00274c74))
 #define GameCurrentBH (*(block_header_tag *)0x00274b40)
 #define GameDynamicBH (*(block_header_tag *)0x00274b34)
-#define GameDynamicPtr PTR_AT(0x00274c58)
-#define GameBMH (*(void **)0x00274c84)
-#define GameEntityCount U32_AT(0x00274c8c)
-#define GameCelList (*(celglist_tag **)0x00274c7c)
-#define GameCurrCelList (*(celglist_tag **)0x00274c80)
-#define GamePaths (*(void ***)0x00274b4c)
-#define GamePathsAt (*(void ***)0x00274c60)
-#define GameMap (*(map_tag **)0x00274b50)
-#define GamePallHeader (*(void **)0x00274b30)
-#define GameTexData (*(texDataEntry **)0x00274b3c)
-#define GameBmpHeader (*(bmpHeaderEntry **)0x00274b48)
+#define GameDynamicPtr PTR_AT(XbeOurs(0x00274c58))
+#define GameBMH (*(void **)XbeOurs(0x00274c84))
+#define GameEntityCount U32_AT(XbeOurs(0x00274c8c))
+#define GameCelList (*(celglist_tag **)XbeOurs(0x00274c7c))
+#define GameCurrCelList (*(celglist_tag **)XbeOurs(0x00274c80))
+#define GamePaths (*(void ***)XbeOurs(0x00274b4c))
+#define GamePathsAt (*(void ***)XbeOurs(0x00274c60))
+#define GameMap (*(map_tag **)XbeOurs(0x00274b50))
+#define GamePallHeader (*(void **)XbeOurs(0x00274b30))
+#define GameTexData (*(texDataEntry **)XbeOurs(0x00274b3c))
+#define GameBmpHeader (*(bmpHeaderEntry **)XbeOurs(0x00274b48))
 
 const int OBJS = 12;
 const int EXTRA = 0xa00;
@@ -245,7 +246,7 @@ void RandomMatrix(_MATRIX *m, float range) {
 
 void RandomBytes(void *at, size_t n) {
     for (size_t i = 0; i < n; i++)
-        ((uint8_t *)at)[i] = (uint8_t)R(256);
+        *(uint8_t *)(size_t)XbeOurs((unsigned)(size_t)at + (unsigned)i) = (uint8_t)R(256);
 }
 
 obj_tag *AnyObj(void) {
@@ -2123,9 +2124,9 @@ void LoadState(void) {
     GameState.CurrentLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
     GameState.MovieHashcode = kLevels[R(COUNT(kLevels))];
     GameState.isMultiplayerLevel = R(2);
-    U32_AT(0x001f6614) = R(2);                     // the subtitles
-    U8_AT(0x00279250) = (uint8_t)(R(3) == 0);      // IsWarmReset
-    U32_AT(0x001df99c) = R(3) == 0;                // switch_NO_DRONES
+    U32_AT(XbeOurs(0x001f6614)) = R(2);                     // the subtitles
+    U8_AT(XbeOurs(0x00279250)) = (uint8_t)(R(3) == 0);      // IsWarmReset
+    U32_AT(XbeOurs(0x001df99c)) = R(3) == 0;                // switch_NO_DRONES
     GameResetMapState = R(5);
 }
 
@@ -2159,12 +2160,12 @@ const Case kLoad[] = {
 // ---- the loader's leaves (parsemap.cpp, psiSave.cpp, Woman.cpp, view.cpp, game.cpp, Loader.cpp)
 
 #define SaveCacheNames ((char(*)[9])0x002a2e68)
-#define SaveCacheCount (*(int32_t *)0x002adf14)
-#define SaveState U32_AT(0x002adf10)
-#define WomanMemory (*(uint8_t **)0x002ae2dc)
-#define WomanAt (*(uint8_t **)0x002ae2e0)
-#define WomanFrameNo U32_AT(0x002ae2e4)
-#define WomanFire U32_AT(0x002ae4f0)
+#define SaveCacheCount (*(int32_t *)XbeOurs(0x002adf14))
+#define SaveState U32_AT(XbeOurs(0x002adf10))
+#define WomanMemory (*(uint8_t **)XbeOurs(0x002ae2dc))
+#define WomanAt (*(uint8_t **)XbeOurs(0x002ae2e0))
+#define WomanFrameNo U32_AT(XbeOurs(0x002ae2e4))
+#define WomanFire U32_AT(XbeOurs(0x002ae4f0))
 
 void *__cdecl FakeFileLoad(char *name, MallocFlags flags, int *size) {
     ShadowLog("fileload(%s,%x)", name, flags);
@@ -2264,7 +2265,7 @@ uint32_t RunLoadForParse(bool original) {
 }
 
 uint32_t RunLevelLoaded(bool original) {
-    U8_AT(0x00279251) = (uint8_t)(R(2) ? R(256) : R(2));
+    U8_AT(XbeOurs(0x00279251)) = (uint8_t)(R(2) ? R(256) : R(2));
     return (uint32_t)CDECL_RUN(0x000bff80, IsLevelLoaded, uchar (__cdecl *)(void));
 }
 
@@ -2447,40 +2448,40 @@ void EnginePortShadow_Run(void) {
         uint32_t at;
         size_t size;
     } kGlobals[] = {
-        {0x001f6580, sizeof(GameState_t)},  // GameState
+        {XbeOurs(0x001f6580), sizeof(GameState_t)},  // GameState
         {0x0025fe38, sizeof(MPSettings_t)}, // MPSettings
         {0x00262738, sizeof(MPGameStruct)}, // MPGame
-        {0x001dee38, 256},                  // switch_channels_prev
+        {XbeOurs(0x001dee38), 256},                  // switch_channels_prev
         {0x001df138, 0x200},                // switch_channels, switch_channels_hold
         {0x001df338, 0x1c},                 // the object list
         {0x001df41c, 0xc},                  // ForcedList
-        {0x001df428, 1024},                 // switch_channels_time
+        {XbeOurs(0x001df428), 1024},                 // switch_channels_time
         {0x0018cdf8, 8},                    // the random words
         {0x001f6568, 0x18},                 // GlobalVars
-        {0x001f661c, 44},                   // glb_viewer
+        {XbeOurs(0x001f661c), 44},                   // glb_viewer
         {0x001f6654, 16},                   // glb_players
-        {0x001f6664, 4},                    // the room list
+        {XbeOurs(0x001f6664), 4},                    // the room list
         {0x001f6668, 12},                   // the sun
-        {0x001f6674, 4},                    // glb_world
-        {0x001f64ac, 4},                    // GlobalEnv
+        {XbeOurs(0x001f6674), 4},                    // glb_world
+        {XbeOurs(0x001f64ac), 4},                    // GlobalEnv
         {0x002774b8, 16},                   // glb_blokes
-        {0x0029aaf8, 0xff},                 // KeyCodes
-        {0x0029d7a0, 0x444},                // the sky's models
+        {XbeOurs(0x0029aaf8), 0xff},                 // KeyCodes
+        {XbeOurs(0x0029d7a0), 0x444},                // the sky's models
         {0x0017bfe8, 0x108},                // the game flow's stack
         {0x00274b30, 0x178},                // the map file's
-        {0x00279180, 1},                    // LoadableIndex
+        {XbeOurs(0x00279180), 1},                    // LoadableIndex
         {0x00279250, 2},                    // IsWarmReset, bLevelLoaded
         {0x00279280, 8},                    // ResetMap_Load's level and step
-        {0x0025fb11, 1},                    // the menu flow latch
-        {0x001df99c, 4},                    // switch_NO_DRONES
-        {0x001dfa2a, 1},                    // Drone_bDisableSystem
+        {XbeOurs(0x0025fb11), 1},                    // the menu flow latch
+        {XbeOurs(0x001df99c), 4},                    // switch_NO_DRONES
+        {XbeOurs(0x001dfa2a), 1},                    // Drone_bDisableSystem
         {0x00181bb8, 0x40},                 // the loading screen's picture
-        {0x001f6614, 4},                    // the subtitles
+        {XbeOurs(0x001f6614), 4},                    // the subtitles
         {0x002a2e68, 9 * 8},                // the codenames' cache
         {0x002adf0c, 0xc},                  // the enumeration's count, the save state, the cache's count
-        {0x0025edba, 1},                    // the damaged-save message's way out
+        {XbeOurs(0x0025edba), 1},                    // the damaged-save message's way out
         {0x002ae2dc, 0xc},                  // the pause film's memory, place and frame
-        {0x002ae4f0, 4},                    // and its fire's offset
+        {XbeOurs(0x002ae4f0), 4},                    // and its fire's offset
         {0x002abe80, 0x10},                 // Tex, its first four
     };
     std::vector<Saved> saved;
@@ -2488,7 +2489,8 @@ void EnginePortShadow_Run(void) {
         Saved s;
         s.at = (void *)(uintptr_t)g.at;
         s.size = g.size;
-        s.bytes.assign((uint8_t *)s.at, (uint8_t *)s.at + s.size);
+        s.bytes.resize(s.size);
+        XbeOursRead(s.bytes.data(), (unsigned)(uintptr_t)s.at, s.size);
         saved.push_back(s);
     }
 
@@ -2521,5 +2523,5 @@ void EnginePortShadow_Run(void) {
 
     NfWarnMuted--;
     for (auto &s : saved)
-        memcpy(s.at, s.bytes.data(), s.size);
+        XbeOursWrite((unsigned)(uintptr_t)s.at, s.bytes.data(), s.size);
 }

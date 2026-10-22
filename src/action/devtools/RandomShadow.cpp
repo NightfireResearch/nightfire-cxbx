@@ -3,6 +3,7 @@
 // MenuShadowTests=on (MenuProbe.cpp).
 
 #include "RandomShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../util/Random.h"
@@ -14,7 +15,7 @@
 namespace {
 
 // The two seed words Rand_Random steps (its multipliers follow them)
-#define RandSeeds ((uint32_t *)0x0018cdf8)
+#define RandSeeds (GameSpan<uint32_t>{0x0018cdf8})
 
 const unsigned kFloat_FRand = 0x000d5360;
 const unsigned kRand_FRandHalf = 0x000d53d0;

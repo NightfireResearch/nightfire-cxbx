@@ -41,7 +41,7 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-#define SubtitlesEnabled U32_AT(0x001f6614)
+extern uint32_t SubtitlesEnabled;
 
 // XBE_GLOBAL(0x00215588, 0x4)
 static const char** Bank;
@@ -250,16 +250,24 @@ void Txt_UnlockString(char* text) {
 // ---- Messages: the HUD's message panes and the subtitles
 
 // The queue of message lines, the subtitles' sprites and the line each shows
-#define MsgQueue (*(DLISTINFO_tag *)0x0029abf8)
+// XBE_GLOBAL(0x0029abf8, 0x18)
+DLISTINFO_tag MsgQueue;
 #define SubtitlesInfo (*(SpriteInfo *)0x0018cd30)
-#define SubTitleMsg (*(TXT_MSG **)0x0029ae20)
-#define SubTitleSpr (*(sprite **)0x0029ae24)    // a one-line subtitle
-#define SubTitleSpr1 (*(sprite **)0x0029ae28)   // the two lines of the other kind
-#define SubTitleSpr2 (*(sprite **)0x0029ae2c)
-#define SubTitleStr (*(char **)0x0029ae30)      // their text, held while shown
-#define SubTitleStr2 (*(char **)0x0029ae34)
+// XBE_GLOBAL(0x0029ae20, 0x4)
+TXT_MSG *SubTitleMsg;
+// XBE_GLOBAL(0x0029ae24, 0x4)
+sprite *SubTitleSpr;  // a one-line subtitle
+// XBE_GLOBAL(0x0029ae28, 0x4)
+sprite *SubTitleSpr1;  // the two lines of the other kind
+// XBE_GLOBAL(0x0029ae2c, 0x4)
+sprite *SubTitleSpr2;
+// XBE_GLOBAL(0x0029ae30, 0x4)
+char *SubTitleStr;  // their text, held while shown
+// XBE_GLOBAL(0x0029ae34, 0x4)
+char *SubTitleStr2;
 // The last 128 messages of the kinds kept (Text_AddMsg), held in the string heap
-#define ReceivedMsgs (*(CIRBUF_INFO *)0x0029ae10)
+// XBE_GLOBAL(0x0029ae10, 0x10)
+CIRBUF_INFO ReceivedMsgs;
 #define ReceivedBuf ((int *)0x0029ac10)
 // The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
 #define SubtitleFormat FontFormat2Centred

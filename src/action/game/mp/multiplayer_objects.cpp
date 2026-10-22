@@ -36,11 +36,11 @@ static int32_t Ftol(double x) {
 #pragma fp_contract(off)
 
 // As multiplayer.cpp (not in the header: windows.h has parameters named Protection)
-#define Demolition (*(MP_OBJ_EXT*)0x00261af8)
-#define Protection (*(MP_OBJ_EXT*)0x00261b40)
+extern MP_OBJ_EXT Demolition;
+extern MP_OBJ_EXT Protection;
 
 // The objects that damaged the objective, from SP_GetHitDamage
-#define HitByList (*(obj_tag*(*)[64])0x00261c58)
+extern obj_tag *HitByList[64];
 
 
 #define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)

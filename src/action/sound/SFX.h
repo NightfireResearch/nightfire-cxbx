@@ -349,91 +349,91 @@ enum MusicMarkerType {
 
 // ---- the layer's state, at its addresses in the game
 
-#define ES_MuteMusic I32_AT(0x00182748)        // 1 plays the music, 0 mutes it
-#define ES_MuteSFX I32_AT(0x0018274c)
+extern int32_t ES_MuteMusic;  // 1 plays the music, 0 mutes it
+extern int32_t ES_MuteSFX;
 #define MFXFilePath (*(char(*)[200])0x00182750)
 #define MFXFilePath2 (*(char(*)[200])0x00182818)
 #define STRFilePath (*(char(*)[200])0x001828e0)
 #define STRFilePath2 (*(char(*)[200])0x001829a8)
-#define SFXLanguageName (*(char(*)[20])0x00182a70)
-#define SFXModeNumber I32_AT(0x00182a84)
-#define MusicMasterVolume I32_AT(0x00182a88)
-#define DuckerDuration I32_AT(0x00182a8c)
-#define DuckerTargetVolume I32_AT(0x00182a90)
-#define DuckerCurrentVolume I32_AT(0x00182a94)
-#define SFXVolume I32_AT(0x00182a98)
-#define FadeVolume I32_AT(0x00182a9c)          // 0 to 10000
-#define FadeMusicVolume I32_AT(0x00182aa0)
-#define FadeRate I32_AT(0x00182aa4)
-#define FadeMusic I32_AT(0x00182aa8)           // the fade takes the music too
-#define SFXNewIndoorsVolume I32_AT(0x00182aac)
-#define SFXIndoorsVolume I32_AT(0x00182ab0)
-#define sfx_randomseed1 U32_AT(0x00182b14)
-#define sfx_randomseed2 U32_AT(0x00182b18)
-#define SFXListenerCount I32_AT(0x00182b1c)
+extern char SFXLanguageName[20];
+extern int32_t SFXModeNumber;
+extern int32_t MusicMasterVolume;
+extern int32_t DuckerDuration;
+extern int32_t DuckerTargetVolume;
+extern int32_t DuckerCurrentVolume;
+extern int32_t SFXVolume;
+extern int32_t FadeVolume;  // 0 to 10000
+extern int32_t FadeMusicVolume;
+extern int32_t FadeRate;
+extern int32_t FadeMusic;  // the fade takes the music too
+extern int32_t SFXNewIndoorsVolume;
+extern int32_t SFXIndoorsVolume;
+extern uint32_t sfx_randomseed1;
+extern uint32_t sfx_randomseed2;
+extern int32_t SFXListenerCount;
 #define NormVector (*(_VECTOR *)0x00182b20)
 #define DirVector (*(_VECTOR *)0x00182b2c)
 #define UpVector (*(_VECTOR *)0x00182b38)
 #define ListenerNorm (*(_VECTOR *)0x00182b44)
 #define ListenerDir (*(_VECTOR *)0x00182b50)
 #define ListenerUp (*(_VECTOR *)0x00182b5c)
-#define FileBufferMask U32_AT(0x00182b68)      // the stream's file buffers less one
-#define SFXJumpMarker I32_AT(0x00182b6c)       // the section the music asks for, -1 for none
-#define InitialiseStatus I32_AT(0x00182b74)    // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
-#define SFXJumpState I32_AT(0x00182b78)        // why the last ask was not taken: 3 read, 0 playing, 1 jumping
+extern uint32_t FileBufferMask;  // the stream's file buffers less one
+extern int32_t SFXJumpMarker;  // the section the music asks for, -1 for none
+extern int32_t InitialiseStatus;  // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
+extern int32_t SFXJumpState;  // why the last ask was not taken: 3 read, 0 playing, 1 jumping
 
 #define SoundBankData (*(SoundBankHeader(*)[SFX_NUM_BANKS])0x00279510)
 #define ES_VoiceHandleData (*(ES_VoiceHandleDetails(*)[SFX_NUM_VOICE_HANDLES])0x0027aa28)
-#define SFXFreeList (*(SFXItem **)0x0027aedc)
+extern SFXItem *SFXFreeList;
 #define ListenerPositions (*(_VECTOR(*)[SFX_NUM_LISTENERS])0x0027aee0)
-#define MusicTrackInfo (*(int(*)[SFX_NUM_MUSIC_TRACKS])0x00286a90)
+extern int MusicTrackInfo[SFX_NUM_MUSIC_TRACKS];
 #define SFXItems (*(SFXItem(*)[SFX_NUM_ITEMS])0x00286ce8)
 #define StreamWaitingIntialise (*(StreamIntialiseDetails(*)[SFX_NUM_STREAM_REQUESTS])0x00298448)
-#define SFXKeyOnFrameDelay I32_AT(0x002981e8)  // for the next SFXStart3D
-#define SBInfoList (*(int(*)[SFX_NUM_BANKS])0x002981f0)
+extern int32_t SFXKeyOnFrameDelay;  // for the next SFXStart3D
+extern int SBInfoList[SFX_NUM_BANKS];
 // Where software ADPCM would decode to (it never did on the Xbox)
 #define SoftwareAdpcmBuffer ((void *)0x00298a48)
-#define BaseSFXActive (*(SFXItem **)0x00298a4c)
+extern SFXItem *BaseSFXActive;
 #define StreamMemCpyHandles (*(StreamMemCpyHandle(*)[SFX_NUM_STREAMS])0x00298a50)
 #define Streams (*(StreamData(*)[SFX_NUM_STREAMS])0x00298a70)
 #define SFXRequestedActiveData (*(SFXRequest(*)[SFX_NUM_ITEMS])0x00298e74)
-#define SfxNisMusicTrigger I32_AT(0x00299328)
-#define NisPlaying I32_AT(0x0029932c)
-#define NisQuitten I32_AT(0x00299330)          // counts down 5 frames from a cut scene ending
-#define SFXPaused U32_AT(0x00299378)
+extern int32_t SfxNisMusicTrigger;
+extern int32_t NisPlaying;
+extern int32_t NisQuitten;  // counts down 5 frames from a cut scene ending
+extern uint32_t SFXPaused;
 #define ZeroPos (*(_VECTOR *)0x0029937c)
-#define SFXFilePath (*(char(*)[200])0x00299388)
-#define SFXLanguage I32_AT(0x00299450)
-#define SFXFileAccessSuspendedToggle I32_AT(0x00299454)
-#define AllStreamsPaused I32_AT(0x00299460)
-#define SFXStartLoad I32_AT(0x00299458)        // 100 a sound started, decaying (the name is ours)
-#define DuckerStartTime I32_AT(0x0029945c)
-#define FadeStatus I32_AT(0x00299464)          // -1 fading down, 1 up, 0 not fading
-#define SFXNewReverb I32_AT(0x00299468)
-#define SFXReverb I32_AT(0x0029946c)
-#define SFXUnderWater I32_AT(0x00299470)
-#define FadeStartTimer I32_AT(0x00299474)
-#define SFXFileAccessSuspended I32_AT(0x00299478)
-#define SFXActiveCount I32_AT(0x00299480)
+extern char SFXFilePath[200];
+extern int32_t SFXLanguage;
+extern int32_t SFXFileAccessSuspendedToggle;
+extern int32_t AllStreamsPaused;
+extern int32_t SFXStartLoad;  // 100 a sound started, decaying (the name is ours)
+extern int32_t DuckerStartTime;
+extern int32_t FadeStatus;  // -1 fading down, 1 up, 0 not fading
+extern int32_t SFXNewReverb;
+extern int32_t SFXReverb;
+extern int32_t SFXUnderWater;
+extern int32_t FadeStartTimer;
+extern int32_t SFXFileAccessSuspended;
+extern int32_t SFXActiveCount;
 #define SFXActiveData (*(SFXActive(*)[SFX_NUM_ITEMS])0x00299484)
-#define StreamLookupFileData (*(StreamLookupFileDetails **)0x002997cc)    // never set on the Xbox
-#define SFXLoadedMarker I32_AT(0x002997a4)     // the section the stream has read to (the name is ours)
-#define SFXActiveMarker I32_AT(0x002997ac)     // the section playing
+extern StreamLookupFileDetails *StreamLookupFileData;  // never set on the Xbox
+extern int32_t SFXLoadedMarker;  // the section the stream has read to (the name is ours)
+extern int32_t SFXActiveMarker;  // the section playing
 #define ListenerPos (*(_VECTOR *)0x002997b4)
 #define ListenerVel (*(_VECTOR *)0x002997c0)
-#define EnableReleaseAudioStreamSystem I32_AT(0x002997d0)
-#define DoInitialStreamBuffer I32_AT(0x002997d4)
-#define SFXJumpInstant I32_AT(0x002997d8)
-#define MusicStartSection I32_AT(0x002997dc)
-#define SFXLastJumpMarker I32_AT(0x002997e0)
-#define StreamWaitingIntialiseMe I32_AT(0x002997e4)
-#define StreamWaitingIntialiseCount I32_AT(0x002997e8)
-#define HaveCalledOnce I32_AT(0x002997ec)      // MFXINFO.MXI is read
-#define MarkerFileName (*(char(*)[256])0x002997f0)
-#define StreamFileName (*(char(*)[256])0x002998f0)
-#define InitialisingHashCode I32_AT(0x002999f0)
-#define InitialisingStream (*(StreamData **)0x002999f4)
-#define SFXInitialised I32_AT(0x00299a0c)
+extern int32_t EnableReleaseAudioStreamSystem;
+extern int32_t DoInitialStreamBuffer;
+extern int32_t SFXJumpInstant;
+extern int32_t MusicStartSection;
+extern int32_t SFXLastJumpMarker;
+extern int32_t StreamWaitingIntialiseMe;
+extern int32_t StreamWaitingIntialiseCount;
+extern int32_t HaveCalledOnce;  // MFXINFO.MXI is read
+extern char MarkerFileName[256];
+extern char StreamFileName[256];
+extern int32_t InitialisingHashCode;
+extern StreamData *InitialisingStream;
+extern int32_t SFXInitialised;
 #define SFXZeroPoint (*(_VECTOR *)0x00299a10)
 
 // Whether a stream is playing, or able to

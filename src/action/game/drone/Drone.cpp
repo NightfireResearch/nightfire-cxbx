@@ -43,6 +43,9 @@
 
 #define BOT_setOtherPlayerInfo ((void (__cdecl *)(DCVars_tag *dcv))0x0001a660)
 #include "../obj/BodyGlow.h"
+
+// XBE_GLOBAL(0x001dfa2a, 0x1)
+uchar Drone_bDisableSystem;
 #define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 #define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 
@@ -51,14 +54,16 @@
 #define DRONE_BROKEN_OBJECT_SFX_LAST 0x43
 
 // The cheats' switches (ui_cheats.cpp)
-#define switch_NO_DRONES U32_AT(0x001df99c)
-#define Drone_DummyPlayer (*(char *)0x001dfa29)
+extern uint32_t switch_NO_DRONES;
+// XBE_GLOBAL(0x001dfa29, 0x1)
+char Drone_DummyPlayer;
 // Set while Drone_InitComms has the drones hidden (switch_NO_DRONES)
-#define Drone_bDontDraw (*(uchar *)0x001dfa2b)
+// XBE_GLOBAL(0x001dfa2b, 0x1)
+uchar Drone_bDontDraw;
 
 // The tables Drone_PreLoad_Init points NPCGlobals at
 // XBE_GLOBAL(0x001e6a60, 0x7800)
-#define CoverNodeTable (*(CoverNode_tag(*)[MAX_COVER_NODES])0x001e6a60)
+CoverNode_tag CoverNodeTable[MAX_COVER_NODES];
 // XBE_GLOBAL(0x001dfa30, 0x5c00)
 #define AIPointTable (*(DroneAIPoint_tag(*)[MAX_AI_POINTS])0x001dfa30)
 

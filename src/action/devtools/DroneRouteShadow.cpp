@@ -13,6 +13,7 @@
 // afterwards.
 
 #include "DroneRouteShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,7 +33,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -1010,7 +1011,7 @@ void DroneRouteShadow_Run(void) {
     memcpy(paths, &AIPaths, sizeof(paths));
     memcpy(channels, &switch_channels, sizeof(channels));
     memcpy(channelTimes, &switch_channels_time, sizeof(channelTimes));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -1020,7 +1021,7 @@ void DroneRouteShadow_Run(void) {
     regions.Add(&switch_channels, sizeof(channels));
     regions.Add(&switch_channels_time, sizeof(channelTimes));
     regions.Add(&Drone_bDisableSystem, 1);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     ShadowFakes_AddRegions(regions);
 
     InstallFakes();
@@ -1040,7 +1041,7 @@ void DroneRouteShadow_Run(void) {
     memcpy(&AIPaths, paths, sizeof(paths));
     memcpy(&switch_channels, channels, sizeof(channels));
     memcpy(&switch_channels_time, channelTimes, sizeof(channelTimes));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     Drone_bDisableSystem = disabled;
 
     printf("[droneroute] patrol and mission paths: %d cases, %d differ\n", pathCases, pathDiffer);

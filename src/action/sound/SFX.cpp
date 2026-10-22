@@ -9,6 +9,128 @@
 
 #include <stdio.h>
 
+// XBE_GLOBAL(0x00182748, 0x4)
+int32_t ES_MuteMusic = 1;
+// XBE_GLOBAL(0x0018274c, 0x4)
+int32_t ES_MuteSFX = 1;
+// XBE_GLOBAL(0x00182a70, 0x14)
+char SFXLanguageName[20] = "ENGLISH";
+// XBE_GLOBAL(0x00182a84, 0x4)
+int32_t SFXModeNumber = 1;
+// XBE_GLOBAL(0x00182a88, 0x4)
+int32_t MusicMasterVolume = 75;
+// XBE_GLOBAL(0x00182a8c, 0x4)
+int32_t DuckerDuration = 1;
+// XBE_GLOBAL(0x00182a90, 0x4)
+int32_t DuckerTargetVolume = 100;
+// XBE_GLOBAL(0x00182a94, 0x4)
+int32_t DuckerCurrentVolume = 100;
+// XBE_GLOBAL(0x00182a98, 0x4)
+int32_t SFXVolume = 100;
+// XBE_GLOBAL(0x00182a9c, 0x4)
+int32_t FadeVolume = 10000;
+// XBE_GLOBAL(0x00182aa0, 0x4)
+int32_t FadeMusicVolume = 10000;
+// XBE_GLOBAL(0x00182aa4, 0x4)
+int32_t FadeRate = 30;
+// XBE_GLOBAL(0x00182aa8, 0x4)
+int32_t FadeMusic = 1;
+// XBE_GLOBAL(0x00182aac, 0x4)
+int32_t SFXNewIndoorsVolume = 100;
+// XBE_GLOBAL(0x00182ab0, 0x4)
+int32_t SFXIndoorsVolume = 100;
+// XBE_GLOBAL(0x00182b14, 0x4)
+uint32_t sfx_randomseed1 = 12341234;
+// XBE_GLOBAL(0x00182b18, 0x4)
+uint32_t sfx_randomseed2 = 13123123;
+// XBE_GLOBAL(0x00182b1c, 0x4)
+int32_t SFXListenerCount = 1;
+// XBE_GLOBAL(0x00182b68, 0x4)
+uint32_t FileBufferMask = 7;
+// XBE_GLOBAL(0x00182b6c, 0x4)
+int32_t SFXJumpMarker = -1;
+// XBE_GLOBAL(0x00182b74, 0x4)
+int32_t InitialiseStatus = 2;
+// XBE_GLOBAL(0x00182b78, 0x4)
+int32_t SFXJumpState = -1;
+
+// XBE_GLOBAL(0x0027aedc, 0x4)
+SFXItem *SFXFreeList;
+// XBE_GLOBAL(0x00286a90, 0x258)
+int MusicTrackInfo[SFX_NUM_MUSIC_TRACKS];
+// XBE_GLOBAL(0x002981e8, 0x4)
+int32_t SFXKeyOnFrameDelay;
+// XBE_GLOBAL(0x002981f0, 0x258)
+int SBInfoList[SFX_NUM_BANKS];
+// XBE_GLOBAL(0x00298a4c, 0x4)
+SFXItem *BaseSFXActive;
+// XBE_GLOBAL(0x00299328, 0x4)
+int32_t SfxNisMusicTrigger;
+// XBE_GLOBAL(0x0029932c, 0x4)
+int32_t NisPlaying;
+// XBE_GLOBAL(0x00299330, 0x4)
+int32_t NisQuitten;
+// XBE_GLOBAL(0x00299378, 0x4)
+uint32_t SFXPaused;
+// XBE_GLOBAL(0x00299388, 0xc8)
+char SFXFilePath[200];
+// XBE_GLOBAL(0x00299450, 0x4)
+int32_t SFXLanguage;
+// XBE_GLOBAL(0x00299454, 0x4)
+int32_t SFXFileAccessSuspendedToggle;
+// XBE_GLOBAL(0x00299458, 0x4)
+int32_t SFXStartLoad;
+// XBE_GLOBAL(0x0029945c, 0x4)
+int32_t DuckerStartTime;
+// XBE_GLOBAL(0x00299460, 0x4)
+int32_t AllStreamsPaused;
+// XBE_GLOBAL(0x00299464, 0x4)
+int32_t FadeStatus;
+// XBE_GLOBAL(0x00299468, 0x4)
+int32_t SFXNewReverb;
+// XBE_GLOBAL(0x0029946c, 0x4)
+int32_t SFXReverb;
+// XBE_GLOBAL(0x00299470, 0x4)
+int32_t SFXUnderWater;
+// XBE_GLOBAL(0x00299474, 0x4)
+int32_t FadeStartTimer;
+// XBE_GLOBAL(0x00299478, 0x4)
+int32_t SFXFileAccessSuspended;
+// XBE_GLOBAL(0x00299480, 0x4)
+int32_t SFXActiveCount;
+// XBE_GLOBAL(0x002997a4, 0x4)
+int32_t SFXLoadedMarker;
+// XBE_GLOBAL(0x002997ac, 0x4)
+int32_t SFXActiveMarker;
+// XBE_GLOBAL(0x002997cc, 0x4)
+StreamLookupFileDetails *StreamLookupFileData;
+// XBE_GLOBAL(0x002997d0, 0x4)
+int32_t EnableReleaseAudioStreamSystem;
+// XBE_GLOBAL(0x002997d4, 0x4)
+int32_t DoInitialStreamBuffer;
+// XBE_GLOBAL(0x002997d8, 0x4)
+int32_t SFXJumpInstant;
+// XBE_GLOBAL(0x002997dc, 0x4)
+int32_t MusicStartSection;
+// XBE_GLOBAL(0x002997e0, 0x4)
+int32_t SFXLastJumpMarker;
+// XBE_GLOBAL(0x002997e4, 0x4)
+int32_t StreamWaitingIntialiseMe;
+// XBE_GLOBAL(0x002997e8, 0x4)
+int32_t StreamWaitingIntialiseCount;
+// XBE_GLOBAL(0x002997ec, 0x4)
+int32_t HaveCalledOnce;
+// XBE_GLOBAL(0x002997f0, 0x100)
+char MarkerFileName[256];
+// XBE_GLOBAL(0x002998f0, 0x100)
+char StreamFileName[256];
+// XBE_GLOBAL(0x002999f0, 0x4)
+int32_t InitialisingHashCode;
+// XBE_GLOBAL(0x002999f4, 0x4)
+StreamData *InitialisingStream;
+// XBE_GLOBAL(0x00299a0c, 0x4)
+int32_t SFXInitialised;
+
 // The sounds: each SFXStart3D takes an SFXItem from the free list and starts its samples on voices of the psi layer;
 // SFXUpdate runs them once a frame, moving, mixing, cueing the next sample and freeing those that end.
 

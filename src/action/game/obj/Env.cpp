@@ -16,6 +16,9 @@
 #include "../../engine/parsemap.h"
 #include "build.h"
 
+// XBE_GLOBAL(0x001f64ac, 0x4)
+ENV_tag *GlobalEnv;
+
 #pragma fp_contract(off)
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range

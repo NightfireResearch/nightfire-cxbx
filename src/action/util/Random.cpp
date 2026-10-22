@@ -4,8 +4,10 @@ static const double kUintToUnit = 1.0 / 4294967296.0;   // a 32-bit random numbe
 
 // Two multiply-with-carry generators, a 16-bit half each: the state's low half times the multiplier, plus the high
 // half (the carry)
-#define RandStateA U32_AT(0x0018cdf8)
-#define RandStateB U32_AT(0x0018cdfc)
+// XBE_GLOBAL(0x0018cdf8, 0x4)
+uint32_t RandStateA = 521288629;
+// XBE_GLOBAL(0x0018cdfc, 0x4)
+uint32_t RandStateB = 362436069;
 // XBE_GLOBAL(0x0018ce00, 0x4) readonly relocate
 uint RandMultiplierB = 30903;
 // XBE_GLOBAL(0x0018ce04, 0x4) readonly relocate

@@ -4,6 +4,7 @@
 // menu replay script ("secretstest", MenuProbe.cpp) once a codename is loaded; it puts the state back afterwards.
 
 #include "SecretsShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../ui/ui.h"
@@ -26,7 +27,7 @@ struct State {
 };
 
 // sp_level as the original code sees it (the game's copy, which nothing else uses now) or as ours does
-static M_ITEM *SpLevel(bool game) { return game ? (M_ITEM *)0x0017c580 : sp_level; }
+static M_ITEM *SpLevel(bool game) { return game ? (M_ITEM *)XbeOurs(0x0017c580) : sp_level; }
 
 static void Save(State *s, bool game = false) {
     s->bonus = cn_bonus;

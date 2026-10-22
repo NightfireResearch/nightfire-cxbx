@@ -18,21 +18,37 @@
 #include <math.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x001dc9a0, 0x12c0)
+BOXENTRY_tag ColBoxs[MAX_COLBOXES];
+
+// XBE_GLOBAL(0x001ddc6c, 0x4)
+uint32_t BoxCnt;
+// XBE_GLOBAL(0x001dec10, 0xc)
+_VECTOR DeltaP;
+// XBE_GLOBAL(0x001dec1c, 0x1)
+uint8_t Ident;
+// XBE_GLOBAL(0x001dec28, 0x4)
+uint32_t TriAllocCnt;
+// XBE_GLOBAL(0x001dec2c, 0x4)
+uint32_t TriOnCnt;
+// XBE_GLOBAL(0x001dec30, 0x4)
+_VECTOR *TriHeap;
+
 #pragma fp_contract(off)
 
 // XBE_GLOBAL(0x001ddc60, 0xc)
-#define HitHeap (*(LLISTINFO_tag*)0x001ddc60)
+LLISTINFO_tag HitHeap;
 // XBE_GLOBAL(0x001df41c, 0xc)
 #define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 // The hits Collide_Sort sorts
 // XBE_GLOBAL(0x001ddc70, 0xfa0)
-#define SrtList ((HITDATA_tag **)0x001ddc70)
+static HITDATA_tag *SrtList[1000];
 // The cels Collide_StraddleCels finds
 // XBE_GLOBAL(0x001dec38, 0x200)
-#define CelList ((cel_tag **)0x001dec38)
+static cel_tag *StraddleCels[128];
 // Intersect_Portal's triangle
 // XBE_GLOBAL(0x001dec34, 0x2)
-#define PortalTriangle U16_AT(0x001dec34)
+uint16_t PortalTriangle;
 
 
 // The vertices and planes of a leaf box's triangles: shorts, the normals times 2^-14
@@ -468,17 +484,17 @@ cel_tag** Collide_StraddleCels(HITTEST_tag *test, ushort *count) {
             if (!Intersect_Portal(test, portal))
                 continue;
             ushort i = 0;
-            while (i < *count && portal->cel != CelList[i])
+            while (i < *count && portal->cel != StraddleCels[i])
                 i++;
             if (i == *count)
-                CelList[(*count)++] = portal->cel;
+                StraddleCels[(*count)++] = portal->cel;
         }
-        cel = next < *count ? CelList[next++] : NULL;
+        cel = next < *count ? StraddleCels[next++] : NULL;
         if (*count >= 0x7e)
             break;
     }
-    CelList[(*count)++] = test->cel;
-    return CelList;
+    StraddleCels[(*count)++] = test->cel;
+    return StraddleCels;
 }
 
 // The portal's two triangles, and the same reversed

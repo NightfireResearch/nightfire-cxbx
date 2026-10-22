@@ -10,6 +10,7 @@
 // loop has it inline where ours calls it.
 
 #include "DroneVisionShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -32,8 +33,8 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
-#define switch_BLIND_DRONES U32_AT(0x001df9a0)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
+#define switch_BLIND_DRONES U32_AT(XbeOurs(0x001df9a0))
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -1104,7 +1105,7 @@ void DroneVisionShadow_Run(void) {
     memcpy(boxList, &AIBoxList, sizeof(boxList));
     memcpy(viewers, &glb_viewer, sizeof(viewers));
     memcpy(players, &glb_players, sizeof(players));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -1114,7 +1115,7 @@ void DroneVisionShadow_Run(void) {
     regions.Add(&AIBoxList, sizeof(LLISTINFO_tag));
     regions.Add(&glb_viewer, sizeof(viewers));
     regions.Add(&glb_players, sizeof(players));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&_FRAME_RATE, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
@@ -1142,7 +1143,7 @@ void DroneVisionShadow_Run(void) {
     memcpy(&AIBoxList, boxList, sizeof(boxList));
     memcpy(&glb_viewer, viewers, sizeof(viewers));
     memcpy(&glb_players, players, sizeof(players));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRateInt;
     _FRAME_RATE = frameRate;
     FRAME_RATE_DIV = frameDiv;

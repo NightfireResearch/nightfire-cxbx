@@ -10,6 +10,7 @@
 // for the float ones.
 
 #include "PlayerShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -41,13 +42,13 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
-#define GameWireAnim U32_AT(0x00278e54)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
+#define GameWireAnim U32_AT(XbeOurs(0x00278e54))
 #define GameCheatInfo ((uint8_t *)0x001f65dc)
-#define GameSurfaced U8_AT(0x00276760)
-#define GameScanMode U8_AT(0x001fec49)
-#define GameBenchmark U8_AT(0x002adf32)
-#define GameAssassin ((uint8_t *)0x00261788)
+#define GameSurfaced U8_AT(XbeOurs(0x00276760))
+#define GameScanMode U8_AT(XbeOurs(0x001fec49))
+#define GameBenchmark U8_AT(XbeOurs(0x002adf32))
+#define GameAssassin (GameSpan<uint8_t>{0x00261788})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 #ifndef COUNT
@@ -630,7 +631,7 @@ void RandomGlobals(void) {
     PlayerInputs[0].levelViewOnPace = (undefined)ShadowRand(2);
     PlayerInputs[0].hudVisibility = (undefined)ShadowRand(2);
     PlayerInputs[0].rememberZoom = (undefined)ShadowRand(2);
-    obj_tag **assassin = (obj_tag **)GameAssassin;
+    GameSpan<obj_tag *> assassin = GameAssassin.As<obj_tag *>();
     assassin[0] = ShadowRand(2) ? &world.player : NULL;     // AssassinTarget
     assassin[1] = ShadowRand(2) ? &world.shooter : NULL;    // CurrentAssassinObjId
     static const uint32_t wireAnims[] = {0x5e5, 0x5ec, 0x5ed, 0x5ee, 0x5ea, 0xb5, 0xb4, 0x96};
@@ -1517,9 +1518,9 @@ void PlayerShadow_Run(void) {
     memcpy(inputs, PlayerInputs, sizeof(inputs));
     memcpy(weapons, weapon_data, sizeof(weapons));
     memcpy(thirdCams, ThirdPersonCameras, sizeof(thirdCams));
-    memcpy(assassin, GameAssassin, sizeof(assassin));
-    memcpy(rand, RandWords, sizeof(rand));
-    memcpy(frameRates, (void *)0x0017c0f0, sizeof(frameRates));
+    XbeOursRead(assassin, GameAssassin.at, sizeof(assassin));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
+    memcpy(frameRates, (void *)XbeOurs(0x0017c0f0), sizeof(frameRates));
     memcpy(viewers, glb_viewer, sizeof(viewers));
     memcpy(players, glb_players, sizeof(players));
     memcpy(blokes, glb_blokes, sizeof(blokes));
@@ -1527,7 +1528,7 @@ void PlayerShadow_Run(void) {
     surfaced = GameSurfaced;
     scanMode = GameScanMode;
     bench = GameBenchmark;
-    blur = U8_AT(0x001f667c);
+    blur = U8_AT(XbeOurs(0x001f667c));
     wireAnim = (uint32_t)WireAnim;
     gameWireAnim = GameWireAnim;
 
@@ -1545,9 +1546,9 @@ void PlayerShadow_Run(void) {
     regions.Add(PlayerInputs, 0x560);
     regions.Add(weapon_data, sizeof(weapon_data));
     regions.Add(ThirdPersonCameras, 0x40);
-    regions.Add(GameAssassin, 8);
-    regions.Add(RandWords, 8);
-    regions.Add((void *)0x0017c0f0, sizeof(frameRates));
+    regions.Add(GameAssassin.game(), 8);
+    regions.Add(RandWords.game(), 8);
+    regions.Add((void *)XbeOurs(0x0017c0f0), sizeof(frameRates));
     regions.Add(glb_viewer, sizeof(viewers));
     regions.Add(glb_players, sizeof(players));
     regions.Add(glb_blokes, sizeof(blokes));
@@ -1555,7 +1556,7 @@ void PlayerShadow_Run(void) {
     regions.Add(&GameSurfaced, 1);
     regions.Add(&GameScanMode, 1);
     regions.Add(&GameBenchmark, 1);
-    regions.Add((void *)0x001f667c, 1);
+    regions.Add((void *)XbeOurs(0x001f667c), 1);
     ShadowFakes_AddRegions(regions);
     NfWarnMuted++;
     cases = differ = 0;
@@ -1584,9 +1585,9 @@ void PlayerShadow_Run(void) {
     memcpy(PlayerInputs, inputs, sizeof(inputs));
     memcpy(weapon_data, weapons, sizeof(weapons));
     memcpy(ThirdPersonCameras, thirdCams, sizeof(thirdCams));
-    memcpy(GameAssassin, assassin, sizeof(assassin));
-    memcpy(RandWords, rand, sizeof(rand));
-    memcpy((void *)0x0017c0f0, frameRates, sizeof(frameRates));
+    XbeOursWrite(GameAssassin.at, assassin, sizeof(assassin));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
+    memcpy((void *)XbeOurs(0x0017c0f0), frameRates, sizeof(frameRates));
     memcpy(glb_viewer, viewers, sizeof(viewers));
     memcpy(glb_players, players, sizeof(players));
     memcpy(glb_blokes, blokes, sizeof(blokes));
@@ -1594,7 +1595,7 @@ void PlayerShadow_Run(void) {
     GameSurfaced = surfaced;
     GameScanMode = scanMode;
     GameBenchmark = bench;
-    U8_AT(0x001f667c) = blur;
+    U8_AT(XbeOurs(0x001f667c)) = blur;
     WireAnim = (HASHCODE)wireAnim;
     GameWireAnim = gameWireAnim;
 }

@@ -36,23 +36,23 @@ enum {
 
 #define MAX_DROPS 0x1000
 
-#define DropType U8_AT(0x002637e0)
+extern uint8_t DropType;
 #define WindVector (*(_VECTOR *)0x002637e4)
 #define PrevPos (*(_VECTOR *)0x002637f0)
 // WindVector and the steps, this frame's (UpdateDrops)
 #define WindVector2 (*(_VECTOR *)0x002637fc)
 #define CubeCentre (*(_VECTOR *)0x00263808)
 #define RandTable2 (*(_VECTOR (*)[32])0x00263818)
-#define DropState (*(uchar (*)[MAX_DROPS])0x00263998)
+extern uchar DropState[MAX_DROPS];
 // 32 steps a frame at 60 Hz, a drop takes the one of its index
 #define RandTable1 (*(_VECTOR (*)[32])0x00264998)
 // Every drop starts at once about the view on the next update
-#define InitBodge U8_AT(0x00264b18)
-#define CurrentMax I16_AT(0x00264b1c)
-#define RainBoxRoot (*(obj_tag **)0x00264b20)
-#define DropVector (*(DROP_tag (*)[MAX_DROPS])0x00264b28)
+extern uint8_t InitBodge;
+extern int16_t CurrentMax;
+extern obj_tag *RainBoxRoot;
+extern DROP_tag DropVector[MAX_DROPS];
 // Drops AddDrop has tried this frame; 999 when nothing is to be drawn
-#define Added I16_AT(0x00274b28)
+extern int16_t Added;
 
 obj_tag * RainBox_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void InitRainBox(void);

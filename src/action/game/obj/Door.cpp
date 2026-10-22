@@ -48,10 +48,10 @@ static_assert(offsetof(Create_Door_Params, kind) == 0x2c, "Bad offset of kind");
 static_assert(offsetof(Create_Door_Params, noTouch) == 0x58, "Bad offset of noTouch");
 
 // XBE_GLOBAL(0x001df98c, 0xc)
-#define TheDoors (*(LLISTINFO_tag *)0x001df98c)
+LLISTINFO_tag TheDoors;
 // The states of each group's doors or'd together, built again every frame by Door_Update
 // XBE_GLOBAL(0x001df8c0, 0xca)
-#define DoorGroupsStates (*(ushort(*)[101])0x001df8c0)
+ushort DoorGroupsStates[101];
 
 // obj_tag::unknown_0xd9: build_LinkDoors2Portals links the door to the portals it covers
 #define DOOR_LINK_TO_PORTALS 0x8

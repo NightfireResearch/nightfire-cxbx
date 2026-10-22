@@ -13,6 +13,7 @@
 // MP_assassinReset (plays a sound).
 
 #include "MPMatchShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../actionhelpers.h"
@@ -90,8 +91,10 @@ void Collect(State *s) {
     Add(s, "MPpickups", -1, &MPpickups, sizeof(MPpickups));
     Add(s, "radar", -1, &MPRadarObjects, sizeof(MPRadarObjects));
     Add(s, "switch_channels", -1, &switch_channels, sizeof(switch_channels));
-    Add(s, "assassin", -1, (void *)0x00261788, 8);    // AssassinTarget, CurrentAssassinObjId
-    Add(s, "rand", -1, (void *)0x0018cdf8, 16);
+    for (unsigned i = 0; i < 2; i++)   // AssassinTarget, CurrentAssassinObjId
+        Add(s, "assassin", i, (void *)(size_t)XbeOurs(0x00261788 + 4 * i), 4);
+    for (unsigned i = 0; i < 4; i++)   // the random states and their multipliers
+        Add(s, "rand", i, (void *)(size_t)XbeOurs(0x0018cdf8 + 4 * i), 4);
     for (int i = 0; i < NUM_AGENTS; i++) {
         if (MPGame.players[i].playerObj != NULL)
             Add(s, "agent", i, MPGame.players[i].playerObj, kObjSize);

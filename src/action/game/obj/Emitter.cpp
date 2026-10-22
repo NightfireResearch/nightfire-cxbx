@@ -28,13 +28,20 @@ static int32_t Ftol(double x) {
 
 // ColourGetValue's answer and the keys and weights of its last interpolation, Emitter_Draw's particle counter and
 // matrix: statics of the original's
-#define ColourKey I32_AT(0x001f6450)
-#define ColourNextKey I32_AT(0x001f6454)
-#define ColourWeight FLOAT_AT(0x001f6448)
-#define ColourNextWeight FLOAT_AT(0x001f644c)
-#define ParticleColour (*(KEYED_CLR *)0x001f6458)
-#define DrawIndex U16_AT(0x001f64a8)
-#define DrawMatrix (*(_MATRIX *)0x001f646c)
+// XBE_GLOBAL(0x001f6450, 0x4)
+int32_t ColourKey;
+// XBE_GLOBAL(0x001f6454, 0x4)
+int32_t ColourNextKey;
+// XBE_GLOBAL(0x001f6448, 0x4)
+float ColourWeight;
+// XBE_GLOBAL(0x001f644c, 0x4)
+float ColourNextWeight;
+// XBE_GLOBAL(0x001f6458, 0x14)
+KEYED_CLR ParticleColour;
+// XBE_GLOBAL(0x001f64a8, 0x2)
+uint16_t DrawIndex;
+// XBE_GLOBAL(0x001f646c, 0x3c)
+_MATRIX DrawMatrix;
 
 // A slot never used
 #define PARTICLE_UNUSED 99999.0f

@@ -10,6 +10,7 @@
 // original calls another of these it reaches ours, so each is compared on its own.
 
 #include "DoorShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -43,8 +44,8 @@ const unsigned kCloseIfClear = 0x0002f850;
 const unsigned kDoorsCalc = 0x0002f8d0;
 const unsigned kDoorUpdate = 0x0002f930;
 
-#define TheDoorsList (*(LLISTINFO_tag *)0x001df98c)
-#define DoorGroups ((uint8_t *)0x001df8c0)
+#define TheDoorsList (*(LLISTINFO_tag *)XbeOurs(0x001df98c))
+#define DoorGroups (GameSpan<uint8_t>{0x001df8c0})
 #define DOOR_GROUPS_SIZE 0xca
 
 // The originals that take registers: these put them there
@@ -245,7 +246,7 @@ void RandomWorld() {
         switch_channels_time[ch] = ShadowRand(100);
     }
     for (int i = 0; i < DOOR_GROUPS_SIZE / 2; i++)
-        ((ushort *)DoorGroups)[i] = ShadowRand(3) ? (ushort)(2 << ShadowRand(4)) : (ushort)ShadowRand(0x20);
+        DoorGroups.As<ushort>()[i] = ShadowRand(3) ? (ushort)(2 << ShadowRand(4)) : (ushort)ShadowRand(0x20);
     static const HASHCODE levels[] = {HT_Level_EvilBase, HT_Level_Tower2Elevator, HT_Level_TowerC};
     GameState.CurrentLevelHashcode = levels[ShadowRand(3)];
     GameState.NumFramesUnpaused = 500 + ShadowRand(100);
@@ -504,7 +505,7 @@ void DoorShadow_Run(void) {
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(players, glb_players, sizeof(players));
     memcpy(doors, &TheDoorsList, sizeof(doors));
-    memcpy(groups, DoorGroups, sizeof(groups));
+    XbeOursRead(groups, DoorGroups.at, sizeof(groups));
     droneAI = MPSettings.maybeDroneAIEnabled;
 
     regions.Clear();
@@ -515,7 +516,7 @@ void DoorShadow_Run(void) {
     regions.Add(switch_channels_time, 1024);
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&TheDoorsList, sizeof(LLISTINFO_tag));
-    regions.Add(DoorGroups, DOOR_GROUPS_SIZE);
+    regions.Add(DoorGroups.game(), DOOR_GROUPS_SIZE);
     ShadowFakes_AddRegions(regions);
 
     memset(&ShadowFakes, 0, sizeof(ShadowFakes));
@@ -535,7 +536,7 @@ void DoorShadow_Run(void) {
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(glb_players, players, sizeof(players));
     memcpy(&TheDoorsList, doors, sizeof(doors));
-    memcpy(DoorGroups, groups, sizeof(groups));
+    XbeOursWrite(DoorGroups.at, groups, sizeof(groups));
     MPSettings.maybeDroneAIEnabled = droneAI;
 
     printf("[door] Door_*, Doors_Calc: %d cases, %d differ\n", cases, differ);

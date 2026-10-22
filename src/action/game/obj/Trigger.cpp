@@ -73,7 +73,7 @@ static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigge
 
 // Set while Trigger_Calc updates the touch triggers; at other times Trigger_Update leaves them alone.
 // XBE_GLOBAL(0x0029b2cc, 0x1)
-#define ProcessTouch U8_AT(0x0029b2cc)
+uint8_t ProcessTouch;
 
 // The placement's parameters as they were, while a create function rearranges them
 // XBE_GLOBAL(0x0029b248, 0x84)
@@ -577,7 +577,8 @@ static_assert(sizeof(SOUNDTRIGGER) == 0x14, "SOUNDTRIGGER is 0x14 bytes");
 static_assert(sizeof(MUSICTRIGGER) == 0xc, "MUSICTRIGGER is 0xc bytes");
 
 // The exclusive sound trigger's sound while one plays
-#define GlobalVoiceHandle (*(DYNAMICSOUNDS **)0x0029b240)
+// XBE_GLOBAL(0x0029b240, 0x4)
+DYNAMICSOUNDS *GlobalVoiceHandle;
 
 #define NO_SOUND 0xffff
 #define NO_MUSIC_EVENT 0xff

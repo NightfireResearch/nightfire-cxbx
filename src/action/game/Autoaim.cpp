@@ -9,11 +9,14 @@
 #pragma fp_contract(off)
 
 // Frames until a load trigger's message may show again
-#define LoadMsg U32_AT(0x00279158)
+// XBE_GLOBAL(0x00279158, 0x4)
+uint32_t LoadMsg;
 // The door messages shown: three in all
-#define DoorMsg U32_AT(0x00279154)
+// XBE_GLOBAL(0x00279154, 0x4)
+uint32_t DoorMsg;
 // A pulse once a second between 0.5 and 1, which pickups and other marked objects flash by
-#define FlashMod FLOAT_AT(0x0027911c)
+// XBE_GLOBAL(0x0027911c, 0x4)
+float FlashMod;
 
 // The levels whose crosshair is marked on any drone, the one with no door messages and the one with no load
 // trigger message

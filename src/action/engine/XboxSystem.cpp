@@ -33,10 +33,13 @@
 
 enum TextLanguage { ENGLISH, FRENCH, GERMAN, SPANISH, ITALIAN, DUTCH, AMERICAN, JAPANESE, SWEDISH };
 
-#define LanguageToLoad (*(int *)0x0025d7a0)            // the game's: the text code reads it
-#define AskForLanguage (*(uint8_t *)0x0017d5f9)        // the boot flow shows the language page when set
-#define DashboardLanguage (*(int *)0x002adf60)         // the language page's handlers read these two
-#define ChosenLanguage (*(int *)0x002adf64)
+extern int LanguageToLoad;  // the game's: the text code reads it
+// XBE_GLOBAL(0x0017d5f9, 0x1)
+uint8_t AskForLanguage = 1;  // the boot flow shows the language page when set
+// XBE_GLOBAL(0x002adf60, 0x4)
+int DashboardLanguage;  // the language page's handlers read these two
+// XBE_GLOBAL(0x002adf64, 0x4)
+int ChosenLanguage;
 
 // XBE_GLOBAL(0x002adf5c, 0x1)
 static uint8_t ConfigNamedLanguage;

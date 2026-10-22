@@ -10,6 +10,7 @@
 // it is compared afterwards.
 
 #include "DroneWeaponShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -33,9 +34,9 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // The DroneFiring_* tuning (DroneWeapon.cpp), 0x164094 to 0x1640d8
-#define DroneFiringBlock ((float *)0x00164094)
+#define DroneFiringBlock (GameSpan<float>{0x00164094})
 const int kDroneFiringFloats = 0x12;
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
@@ -945,15 +946,15 @@ void DroneWeaponShadow_Run(void) {
     float frameDiv = FRAME_RATE_DIV;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
-    memcpy(firing, DroneFiringBlock, sizeof(firing));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(firing, DroneFiringBlock.at, sizeof(firing));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
-    regions.Add(DroneFiringBlock, sizeof(firing));
-    regions.Add(RandWords, 8);
+    regions.Add(DroneFiringBlock.game(), sizeof(firing));
+    regions.Add(RandWords.game(), 8);
     regions.Add(&_FRAME_RATE, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
     ShadowFakes_AddRegions(regions);
@@ -974,8 +975,8 @@ void DroneWeaponShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
-    memcpy(DroneFiringBlock, firing, sizeof(firing));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(DroneFiringBlock.at, firing, sizeof(firing));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     _FRAME_RATE = frameRate;
     FRAME_RATE_DIV = frameDiv;
 

@@ -63,6 +63,33 @@
 #include "sound/SFX.h"
 #include "math/X87Ops.h"
 
+// XBE_GLOBAL(0x001f661c, 0x2c)
+viewer_tag *glb_viewer[11];
+// XBE_GLOBAL(0x001f6674, 0x4)
+world_tag *glb_world;
+// XBE_GLOBAL(0x0029d6d4, 0xc)
+_VECTOR MAYBE_CONST_FORWARD_VECTOR;
+// XBE_GLOBAL(0x0029d6e0, 0x3c)
+_MATRIX MAT_IDENTITY;
+// XBE_GLOBAL(0x0029d71c, 0xc)
+_VECTOR CONST_UP_VECTOR;
+// XBE_GLOBAL(0x0029d728, 0xc)
+_VECTOR CONST_ZERO_VECTOR;
+
+// XBE_GLOBAL(0x0017c0f0, 0x4)
+uint32_t VIDEO_FRAME_RATE = 60;
+// XBE_GLOBAL(0x0017c0f8, 0x4)
+float _FRAME_RATE = 60.0f;
+// XBE_GLOBAL(0x0017c0fc, 0x4)
+float FRAME_RATE_DIV = 1.0f;
+// XBE_GLOBAL(0x0017c100, 0x4)
+float FRAME_RATE_MUL = 1.0f;
+// XBE_GLOBAL(0x0017c104, 0x4)
+float REC_FRAME_RATE = 0.016666668f;
+
+// XBE_GLOBAL(0x001f6580, 0x58)
+GameState_t GameState;
+
 // XBE_GLOBAL(0x002ae288, 0x4)
 uint32_t BackgroundMovieHashcode;
 
@@ -114,7 +141,8 @@ uint8_t FreezeGame;
 // XBE_GLOBAL(0x001fec64, 0x2)
 static uint16_t sloflag;
 // ScriptCam is defined in engine/Script.h (same address, HASHCODE-typed)
-#define switch_allowFreeze U8_AT(0x0025d79c)   // a byte: C_CHCHALLOWFREEZE_Handler writes it
+// XBE_GLOBAL(0x0025d79c, 0x1)
+char switch_allowFreeze;  // a byte: C_CHCHALLOWFREEZE_Handler writes it
 
 
 void psiPreGame_Run(void) {} // No effect on XBox, does some PS2-specific stuff on PS2
@@ -182,7 +210,8 @@ LAB_0006aafe:
 
 }
 
-#define StackIndex U16_AT(0x0017bfe8)
+// XBE_GLOBAL(0x0017bfe8, 0x2)
+uint16_t StackIndex = 1;
 #define glb_viewer_6 ((uint)glb_viewer[6])
 // XBE_GLOBAL(0x001f6564, 0x1)
 static uint8_t SkipCodeFrame;
@@ -197,7 +226,8 @@ static uint8_t SkipCodeFrame;
 
 // XBE_GLOBAL(0x001f6618, 0x4)
 uint32_t HintsEnabled;
-#define SubtitlesEnabled U32_AT(0x001f6614)
+// XBE_GLOBAL(0x001f6614, 0x4)
+uint32_t SubtitlesEnabled;
 
 // XBE_GLOBAL(0x001f65d8, 0x4)
 uint32_t SoundInfo;
@@ -362,7 +392,8 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
     return (HASHCODE)param_1;
 }
 
-#define IsWarmReset U8_AT(0x00279250)
+// XBE_GLOBAL(0x00279250, 0x1)
+uint8_t IsWarmReset;
 
 
 // AUTOINJECT
@@ -724,7 +755,8 @@ HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
 #define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
 
 // The step ResetMap_Load is at (RESETMAP_)
-#define ResetMap_State U32_AT(0x00279284)
+// XBE_GLOBAL(0x00279284, 0x4)
+uint32_t ResetMap_State;
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -737,18 +769,27 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 // The level to load, while the shared files (0x07000500) load first
-#define ResetMap_SavedLevel (*(HASHCODE *)0x00279280)
+// XBE_GLOBAL(0x00279280, 0x4)
+HASHCODE ResetMap_SavedLevel;
 // Set once a level has finished loading (cleared while the loader runs)
-#define bLevelLoaded U8_AT(0x00279251)
-#define LoadableIndex U8_AT(0x00279180)
-#define gbl_room_cels (*(cel_tag ***)0x001f6664)
+// XBE_GLOBAL(0x00279251, 0x1)
+uint8_t bLevelLoaded;
+// XBE_GLOBAL(0x00279180, 0x1)
+uint8_t LoadableIndex;
+// XBE_GLOBAL(0x001f6664, 0x4)
+cel_tag **gbl_room_cels;
 // The map file's (parsemap.cpp)
 #define DynamicBH (*(block_header_tag *)0x00274b34)
-#define DynamicPtr PTR_AT(0x00274c58)
-#define FileLastBlock U32_AT(0x00274c74)
-#define FileDiscard U32_AT(0x00274c78)
-#define MenuFlowLatch U8_AT(0x0025fb11)          // cleared at each level's start (nightfire-port: mf_menu)
-#define switch_NO_DRONES U32_AT(0x001df99c)
+// XBE_GLOBAL(0x00274c58, 0x4)
+void *DynamicPtr;
+// XBE_GLOBAL(0x00274c74, 0x4)
+uint32_t FileLastBlock;
+// XBE_GLOBAL(0x00274c78, 0x4)
+uint32_t FileDiscard;
+// XBE_GLOBAL(0x0025fb11, 0x1)
+uint8_t controller_mission_end;  // cleared at each level's start (nightfire-port: mf_menu)
+// XBE_GLOBAL(0x001df99c, 0x4)
+uint32_t switch_NO_DRONES;
 // The loading screen's picture (LoadingGfx), its texture set to the level's
 #define LoadingGfx (*(SpriteInfo *)0x00181bb8)
 #define LoadScreenFont FontFormat2Centred
@@ -772,7 +813,7 @@ void ResetMap_GameInit(void) {
     GameState.maybePaused = 0;
     GameState.SomeAlternatePauseState = 0;
     GameState.VibrationEnabled = 1;
-    MenuFlowLatch = 0;
+    controller_mission_end = 0;
     if (switch_NO_DRONES != 0)
         Drone_bDisableSystem = 1;
     GS_PauseGame(0);
@@ -1270,9 +1311,12 @@ void bootup_bootup(void) {
 #define SFXSetLanguage ((void (__cdecl *)(uint language))0x000c5400)
 #define SFXGetMode ((uint (__cdecl *)(void))0x000c5430)
 #define SFXSetVolume ((void (__cdecl *)(int volume))0x000c5060)
-#define menu_unlock_everything (*(char *)0x0025d79e)  // Menu.cpp
-#define LanguageToLoad (*(int *)0x0025d7a0)             // XboxSystem.cpp
-#define IsWidescreen U32_AT(0x001f6610)
+// XBE_GLOBAL(0x0025d79e, 0x1)
+char menu_unlock_everything;  // Menu.cpp
+// XBE_GLOBAL(0x0025d7a0, 0x4)
+int LanguageToLoad;  // XboxSystem.cpp
+// XBE_GLOBAL(0x001f6610, 0x4)
+uint32_t IsWidescreen;
 // What psiGetDrivingData fills: it writes 0xc00 bytes, past the page's 0xa50 into whatever follows
 #define PTPDataIn (*((sNightFireShared_tag *)0x001d88e0))
 

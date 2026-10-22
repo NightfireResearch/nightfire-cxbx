@@ -22,7 +22,8 @@
 #pragma fp_contract(off)
 
 // The objects that damaged the dying agent, from its hit list
-#define HitByList (*(obj_tag*(*)[64])0x00261c58)
+// XBE_GLOBAL(0x00261c58, 0x100)
+obj_tag *HitByList[64];
 
 
 

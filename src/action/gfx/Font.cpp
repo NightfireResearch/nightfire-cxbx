@@ -67,17 +67,23 @@ SPECIALCHAR_tag SpecialChars[NUM_SPECIAL_CHARS] = {
 // The font in use
 #define Font (*(FONT_tag **)0x001f64b0)
 // Every glyph's sprite, filled in and copied to the sprite list
-#define CharInfo (*(SPRITE_DRAW *)0x001f64b4)
-#define PInfo (*(PRINTINFO_tag *)0x001f64e8)
+extern SPRITE_DRAW CharInfo;
+// XBE_GLOBAL(0x001f64e8, 0x40)
+PRINTINFO_tag PInfo;
 // The line Font_WordWrapString hands back for a line break straight after the last one
 #define EmptyLine FontEmptyString
 
 // __Font_DrawText's statics (PS2 names)
-#define i_133 U32_AT(0x001f6528)            // characters read
-#define fStartX_132 FLOAT_AT(0x001f652c)    // where a new line starts
-#define y_131 FLOAT_AT(0x001f6530)
-#define x_130 FLOAT_AT(0x001f6534)
-#define fd_129 (*(CHARDATA_tag **)0x001f6538)
+// XBE_GLOBAL(0x001f6528, 0x4)
+uint32_t i_133;  // characters read
+// XBE_GLOBAL(0x001f652c, 0x4)
+float fStartX_132;  // where a new line starts
+// XBE_GLOBAL(0x001f6530, 0x4)
+float y_131;
+// XBE_GLOBAL(0x001f6534, 0x4)
+float x_130;
+// XBE_GLOBAL(0x001f6538, 0x4)
+CHARDATA_tag *fd_129;
 #define Pos_128 (*(GPOINT *)0x001f653c)     // the pen
 #define Scale_127 (*(GPOINT *)0x001f6544)
 #define Size_126 (*(GPOINT *)0x001f654c)    // what it measured, and returns

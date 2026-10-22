@@ -105,7 +105,7 @@ static_assert(offsetof(MPSettings_t, RespawnSelectionMode) == 0x220, "RespawnSel
 static_assert(offsetof(MPSettings_t, ShowTeamAndNameOverhead) == 0x224, "ShowTeamAndNameOverhead is at wrong offset");
 
 #define MPSettings (*((MPSettings_t*)0x0025fe38))
-#define MultiplayerLayout_LeftRightOrTopBtm U32_AT(0x001f660c) // Part of a DrawInfo struct which also contains IsWidescreen?
+extern uint32_t MultiplayerLayout_LeftRightOrTopBtm;  // Part of a DrawInfo struct which also contains IsWidescreen?
 
 //char (*__kaboom)[sizeof(MPSettings_t)] = 1;
 
@@ -120,7 +120,7 @@ typedef struct {
 // True on Xbox, PS2 is larger due to padding of _VECTOR
 static_assert(sizeof(MPSpawnPoint) == 0x1c, "Size of MPSpawnPoint not correct");
 
-#define SpawnPoints (*(MPSpawnPoint(*)[64])0x00261d58)
+extern MPSpawnPoint SpawnPoints[64];
 
 typedef struct {
   HASHCODE skinHashcode; // ?
@@ -154,8 +154,7 @@ typedef struct {
 
 static_assert(sizeof(MPBOTS) == 0x6e, "MPBOTS is wrong size");
 
-// XBE_GLOBAL(0x00245280, 0x6e)
-#define mpbots (*(MPBOTS*)0x00245280)
+extern MPBOTS mpbots;
 
 // The controllers' places on the join page (P_MPJOIN)
 typedef struct {
@@ -253,9 +252,9 @@ static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known f
 #pragma pack(pop)
 
 #define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
-#define GoldenEyeSpawns (*(SpawnPlace(*)[16])0x00262978)
-#define GoldenEyeKeyCount U16_AT(0x00262970)
-#define GoldenEyeNonKeyCount U16_AT(0x00262972)
+extern SpawnPlace GoldenEyeSpawns[16];
+extern uint16_t GoldenEyeKeyCount;
+extern uint16_t GoldenEyeNonKeyCount;
 
 
 // One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from MP_Init's clear)
@@ -272,7 +271,7 @@ typedef struct {
 static_assert(sizeof(MP_PICKUP) == 0x58, "MP_PICKUP is wrong size");
 static_assert(offsetof(MP_PICKUP, aiEmitter) == 0x14, "Bad offset of MP_PICKUP.aiEmitter");
 
-#define MPpickups (*(MP_PICKUP(*)[64])0x00260078)
+extern MP_PICKUP MPpickups[64];
 
 // What a radar blip stands for (MP_GetRadarObjects); HUD_RadarUpdate picks its sprite by it
 typedef enum {
@@ -297,18 +296,18 @@ typedef struct RADAROBJ {
 static_assert(sizeof(RADAROBJ) == 0x14, "RADAROBJ is 0x14 bytes");
 
 // Room for 22 up to Uplinks (0x002633d8); MP_GetRadarObjects writes at most NUM_AGENTS + 8
-#define MPRadarObjects (*(RADAROBJ(*)[22])0x00263220)
+extern RADAROBJ MPRadarObjects[22];
 
-#define BluePrints (*(SpawnPlace(*)[8])0x00262458)
-#define BluePrintCount U16_AT(0x002637d4)
+extern SpawnPlace BluePrints[8];
+extern uint16_t BluePrintCount;
 
-#define CurrentAssassinObjId (*(obj_tag **)0x0026178c)
-#define AssassinTarget (*(obj_tag **)0x00261788)
-#define MPObjects (*(obj_tag*(*)[64])0x00263640)
-#define Bases (*(MP_OBJ_EXT(*)[2])0x00261bd0)
-#define EsponageBase (*(MP_OBJ_EXT(*)[2])0x00261a70)
-#define TimeSpr (*(sprite **)0x002637d8)
-#define StatusSpr (*(sprite **)0x002637dc)
+extern obj_tag *CurrentAssassinObjId;
+extern obj_tag *AssassinTarget;
+extern obj_tag *MPObjects[64];
+extern MP_OBJ_EXT Bases[2];
+extern MP_OBJ_EXT EsponageBase[2];
+extern sprite *TimeSpr;
+extern sprite *StatusSpr;
 
 void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);

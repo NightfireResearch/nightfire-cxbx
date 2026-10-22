@@ -13,6 +13,7 @@
 // Random draws are kept in step: both sides start from the same Rand_Random state, and it is compared afterwards.
 
 #include "DroneDamageShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -40,11 +41,11 @@ namespace {
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // The Assassin mode's two objects (MP_IsAssasin, MP_IsTarget)
-#define AssassinGlobals ((obj_tag **)0x00261788)
+#define AssassinGlobals ((obj_tag **)XbeOurs(0x00261788))
 // The drone damage and armour tuning (NDrone2_HitDamage), 11 floats
-#define DroneTuning ((float *)0x00164068)
+#define DroneTuning (GameSpan<float>{0x00164068})
 
 const int DRONES = 4;
 
@@ -811,10 +812,10 @@ void DroneDamageShadow_Run(void) {
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(channels, switch_channels, sizeof(channels));
     memcpy(times, switch_channels_time, sizeof(times));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
     memcpy(players, glb_players, sizeof(players));
     memcpy(assassins, AssassinGlobals, sizeof(assassins));
-    memcpy(tuning, DroneTuning, sizeof(tuning));
+    XbeOursRead(tuning, DroneTuning.at, sizeof(tuning));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -823,10 +824,10 @@ void DroneDamageShadow_Run(void) {
     regions.Add(&MPSettings, sizeof(MPSettings_t));
     regions.Add(switch_channels, 256);
     regions.Add(switch_channels_time, 1024);
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     regions.Add(glb_players, sizeof(players));
     regions.Add(AssassinGlobals, sizeof(assassins));
-    regions.Add(DroneTuning, sizeof(tuning));
+    regions.Add(DroneTuning.game(), sizeof(tuning));
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_MUL, 4);
 
@@ -861,10 +862,10 @@ void DroneDamageShadow_Run(void) {
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(switch_channels, channels, sizeof(channels));
     memcpy(switch_channels_time, times, sizeof(times));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     memcpy(glb_players, players, sizeof(players));
     memcpy(AssassinGlobals, assassins, sizeof(assassins));
-    memcpy(DroneTuning, tuning, sizeof(tuning));
+    XbeOursWrite(DroneTuning.at, tuning, sizeof(tuning));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_MUL = frameMul;
 

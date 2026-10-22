@@ -20,12 +20,15 @@
 // State shared by the functions here
 // ---------------------------------------------------------------------------------------------------------------
 
-#define d3dGeometryObjs (*(ModelData*(*)[2048])0x002a0e68)
-#define ScreenBlur (*(uint8_t *)0x002adf33)                   // psiGraphics.cpp clears it at a level change
-#define ParticleOverlayRingNext (*(int *)0x002adf80)          // the next ring entry psiDrawParticleList fills
-#define bCharacterLight (*(uint8_t *)0x001d7824)              // the game's: characters get their own light
-#define bShadowCharacter (*(uint8_t *)0x001d7825)             // the game's: draw this character's shadow
-#define Morph_Count (*(uint8_t *)0x001d7826)                  // the game's morph targets for the next model
+// XBE_GLOBAL(0x002a0e68, 0x2000)
+ModelData *d3dGeometryObjs[2048];
+// XBE_GLOBAL(0x002adf33, 0x1)
+uint8_t ScreenBlur;  // psiGraphics.cpp clears it at a level change
+// XBE_GLOBAL(0x002adf80, 0x4)
+int ParticleOverlayRingNext;  // the next ring entry psiDrawParticleList fills
+extern uint8_t bCharacterLight;
+extern uint8_t bShadowCharacter;
+extern uint8_t Morph_Count;  // the game's morph targets for the next model
 #define Morph_Weight ((const float *)0x001d6a68)
 #define Morph_Index ((const uint8_t *)0x001d777c)
 #define ObjectMatrix ((_MATRIX *)0x002ade8c)                  // the game's: the matrix models are drawn with

@@ -75,10 +75,10 @@ static const char *const kSumNames[SUM_COUNT] = { "rng", "gamestate", "channels"
 #define SOUND_BUFFERS 256
 
 // The random generator's state and multipliers (Rand_Random, 0x000d52c0)
-#define RandState ((const uint8_t *)0x0018cdf8)
+#define RandState (GameSpan<uint8_t>{0x0018cdf8})
 #define RAND_STATE_BYTES 0x10
 // The head of the live object list (control_first_object)
-#define FirstObject (*(obj_tag **)0x001df34c)
+#define FirstObject (*(obj_tag **)XbeOurs(0x001df34c))
 // KeQuerySystemTime's slot in the XBE's kernel import table
 #define KernelKeQuerySystemTime (*(void(__stdcall **)(LARGE_INTEGER *))0x0015d198)
 
@@ -765,7 +765,9 @@ static bool StampOffsetMatches(uint32_t recorded) {
 }
 
 static void Checksums(uint32_t sums[SUM_COUNT]) {
-    sums[SUM_RNG] = Fnv(kFnvBasis, RandState, RAND_STATE_BYTES);
+    uint8_t rand[RAND_STATE_BYTES];
+    XbeOursRead(rand, RandState.at, sizeof(rand));
+    sums[SUM_RNG] = Fnv(kFnvBasis, rand, sizeof(rand));
     sums[SUM_GAMESTATE] = Fnv(kFnvBasis, &GameState, sizeof(GameState));
     sums[SUM_CHANNELS] = Fnv(Fnv(kFnvBasis, switch_channels, sizeof(switch_channels)), switch_channels_time,
                              sizeof(switch_channels_time));

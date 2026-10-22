@@ -12,6 +12,7 @@
 // and read back from ours). Run at start with MenuShadowTests=on (MenuProbe.cpp); everything is put back afterwards.
 
 #include "CodenameShadow.h"
+#include "AllOriginal.h"
 
 #include "ShadowHarness.h"
 #include "../../common/xbeOriginal.h"
@@ -54,13 +55,13 @@ struct Lent {
     unsigned owner, owner2;   // the functions that use it: their originals use the game's copy
 };
 const Lent kLent[] = {
-    {0x0017d5f8, &hud_state, 1, 0x00081c60},        {0x001dfa28, &Drone_DebugSpr, 1, 0x00081d30},
-    {0x0025d822, &zero_gravity, 1, 0x00081f80},     {0x0017d5fc, &bDebugLockup, 4, 0x00081fe0},
-    {0x0025d7a4, &bTweakBrightness, 4, 0x00082030}, {0x0017d600, &bDebugControls, 4, 0x000820d0},
-    {0x00224f70, &ls_state, 4, 0x000757d0},         {0x00224f6c, &ls_delete_state, 4, 0x000757d0},
-    {0x00224f74, &ls_updating, 1, 0x000757d0},      {0x00224f58, &enum_state, 4, 0x000755e0, 0x000755d0},
-    {0x0025ed21, &cnselect_leaving, 1, 0x0008be40}, {0x0017d60a, &cnselect_from_main_menu, 1, 0x0008be40},
-    {0x0025dc48, keypad_text, 8, 0x00083fa0},
+    {XbeOurs(0x0017d5f8), &hud_state, 1, 0x00081c60},        {XbeOurs(0x001dfa28), &Drone_DebugSpr, 1, 0x00081d30},
+    {XbeOurs(0x0025d822), &zero_gravity, 1, 0x00081f80},     {XbeOurs(0x0017d5fc), &bDebugLockup, 4, 0x00081fe0},
+    {XbeOurs(0x0025d7a4), &bTweakBrightness, 4, 0x00082030}, {XbeOurs(0x0017d600), &bDebugControls, 4, 0x000820d0},
+    {XbeOurs(0x00224f70), &ls_state, 4, 0x000757d0},         {XbeOurs(0x00224f6c), &ls_delete_state, 4, 0x000757d0},
+    {XbeOurs(0x00224f74), &ls_updating, 1, 0x000757d0},      {XbeOurs(0x00224f58), &enum_state, 4, 0x000755e0, 0x000755d0},
+    {XbeOurs(0x0025ed21), &cnselect_leaving, 1, 0x0008be40}, {XbeOurs(0x0017d60a), &cnselect_from_main_menu, 1, 0x0008be40},
+    {XbeOurs(0x0025dc48), keypad_text, 8, 0x00083fa0},
 };
 const int kLentCount = sizeof(kLent) / sizeof(kLent[0]);
 
@@ -75,7 +76,7 @@ void Report(const char *what, int trial, const char *detail) {
 
 void RandomBytes(void *at, size_t size) {
     for (size_t i = 0; i < size; i++)
-        ((uchar *)at)[i] = (uchar)ShadowRand(256);
+        *(uchar *)(size_t)XbeOurs((unsigned)(size_t)at + (unsigned)i) = (uchar)ShadowRand(256);
 }
 
 uint RandomWord(void) {
@@ -331,14 +332,14 @@ void AddRegions(void) {
     g_regions.Add((void *)0x001f65dc, 0xc);     // CheatInfo
     g_regions.Add((void *)0x001f660c, 0xc);     // layout, widescreen, subtitles
     g_regions.Add(&GameState.WeaponUpgradeRelated, 1);
-    g_regions.Add((void *)0x0025d78d, 1);       // menu_bonus_replace
+    g_regions.Add((void *)XbeOurs(0x0025d78d), 1);       // menu_bonus_replace
     g_regions.Add((void *)0x001df99c, 8);       // the drones' switches
-    g_regions.Add((void *)0x001df9dc, 4);       // switch_SHOW_COORDS
-    g_regions.Add((void *)0x001dfa29, 1);       // Drone_DummyPlayer
+    g_regions.Add((void *)XbeOurs(0x001df9dc), 4);       // switch_SHOW_COORDS
+    g_regions.Add((void *)XbeOurs(0x001dfa29), 1);       // Drone_DummyPlayer
     g_regions.Add((void *)0x0025d79c, 4);       // switch_allowFreeze, menu_unlock_everything
     g_regions.Add((void *)0x001fec49, 2);       // debug_scanmode, debug_clipmode
     g_regions.Add((void *)0x001f6568, 0x18);    // GlobalVars
-    g_regions.Add((void *)0x00194804, 4);       // SaveEnum_EntriesPerFrame
+    g_regions.Add((void *)XbeOurs(0x00194804), 4);       // SaveEnum_EntriesPerFrame
     g_regions.Add(g_bloke, sizeof(g_bloke));
     g_regions.Add(g_controls, sizeof(g_controls));
     g_regions.Add(&g_controlCount, sizeof(g_controlCount));
@@ -512,12 +513,12 @@ void RandomGame(void) {
     }
     glb_players[0] = (obj_tag *)g_player;
     RandomBytes((void *)0x001df99c, 8);
-    RandomBytes((void *)0x001df9dc, 4);
-    RandomBytes((void *)0x001dfa29, 1);
+    RandomBytes((void *)XbeOurs(0x001df9dc), 4);
+    RandomBytes((void *)XbeOurs(0x001dfa29), 1);
     RandomBytes((void *)0x0025d79c, 4);
     RandomBytes((void *)0x001fec49, 2);
     RandomBytes((void *)0x001f65dc, 0xc);
-    U32_AT(0x00194804) = ShadowRand(4);
+    U32_AT(XbeOurs(0x00194804)) = ShadowRand(4);
 }
 
 const uint kMessages[] = {MessageType_Select, MessageType_ControlCreated, MessageType_PageEnter, MessageType_PageUpdate,
@@ -565,8 +566,8 @@ void HandlerCases(void) {
             memset(&g_fakeManager, 0, sizeof(g_fakeManager));
             g_fakeManager.underPage = ShadowRand(2) ? &g_fakePage : NULL;
             RandomBytes((void *)0x0025eda0, 0x20);
-            *(MENU_LS **)0x0025eda0 = &ls;
-            *(M_MANAGER **)0x0025eda4 = ShadowRand(2) ? &g_fakeManager : &manager[1];
+            *(MENU_LS **)XbeOurs(0x0025eda0) = &ls;
+            *(M_MANAGER **)XbeOurs(0x0025eda4) = ShadowRand(2) ? &g_fakeManager : &manager[1];
             manager[0].currentPage = NULL;
             uchar managerNum = (uchar)ShadowRand(2);
             uint message = kMessages[trial % kMessageCount];

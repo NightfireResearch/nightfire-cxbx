@@ -12,6 +12,7 @@
 // touches is put back afterwards (bestScore is save data).
 
 #include "ScoreShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../actionhelpers.h"
@@ -27,7 +28,7 @@ static const unsigned kPlrStatGetScore = 0x000b0900;
 
 // The game's copies
 #define GameNewScoresRef U32_AT(0x002790a0)
-#define GameDoneBetter U8_AT(0x002790a4)
+#define GameDoneBetter U8_AT(XbeOurs(0x002790a4))
 
 // The ScoringTable and the category tables it points at, as one block of the XBE's data
 #define SCORE_DATA_START 0x0017e8f8

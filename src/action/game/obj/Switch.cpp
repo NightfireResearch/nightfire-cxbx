@@ -6,22 +6,14 @@
 #include "../../math/math.h"
 #include "../../util/LList.h"
 #include "../../engine/celglist.h"
+#include "../sp/SSys.h"
 #include "../sp/SwitchChannels.h"
 #include "../../game.h"
 
 // Switches are kept in their own list, initialised (oddly) from Sensor_Init alongside CameraList - see Sensor.cpp
 extern LLISTINFO_tag SwitchList; // defined in Sensor.cpp
 
-// Stride confirmed via Switch_Create's raw disassembly; only the first byte (switchChannel) is understood so far.
-// Note this is addressed directly (index*8 + base), NOT via a +1 like Ghidra's decompiler shows for the one place
-// that touches it - that +1 is just an artifact of where Ghidra chose to anchor the symbol, not a real offset.
-typedef struct {
-    uchar switchChannel;
-    uchar unknown[7];
-} SSysItem;
-static_assert(sizeof(SSysItem) == 8, "Bad size for SSysItem");
-// XBE_GLOBAL(0x0029aad0, 0x28)
-#define SSysItems ((SSysItem*)0x0029aad0)
+extern SSYSITEM SSysItems[SSYS_ITEMS];  // PlayerWeapon.cpp
 
 #pragma pack(push, 1)
 typedef struct {
@@ -37,7 +29,7 @@ typedef struct {
     uchar pad_3d[3];
     ushort gateSwitchChannel;          // 0x40
     uchar pad_42[2];
-    int sysItemIndex;                  // 0x44 - if nonzero, SSysItems[this].switchChannel is set to channelNum
+    int sysItemIndex;                  // 0x44 - if nonzero, SSysItems[this].channel is set to channelNum
 } Create_Switch_Params;
 #pragma pack(pop)
 
@@ -66,7 +58,7 @@ obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     switchData->gateSwitchChannel = createParams->gateSwitchChannel;
 
     if (createParams->sysItemIndex != 0) {
-        SSysItems[createParams->sysItemIndex].switchChannel = (uchar)switchData->channelNum;
+        SSysItems[createParams->sysItemIndex].channel = (uchar)switchData->channelNum;
     }
 
     switchObj->curState = switchData->restState;

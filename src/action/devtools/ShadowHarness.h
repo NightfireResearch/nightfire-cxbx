@@ -20,7 +20,8 @@
 class ShadowRegions {
 public:
     void Clear() { regions.clear(); }
-    void Add(void *at, size_t size) { regions.push_back({(uint8_t *)at, size}); }
+    // A part inside a global we own is our copy, which the originals use too (AllOriginal_RelocateOwned)
+    void Add(void *at, size_t size);
     void Save();
     void Restore();
     void Capture(std::vector<uint8_t> &out) const;

@@ -105,10 +105,9 @@ static_assert(sizeof(MUSICAIVARS) == 0x10, "MUSICAIVARS is 0x10 bytes");
 static_assert(offsetof(MusicVars_t, countingStarted) == 0x20, "Wrong offset for countingStarted");
 
 // The frame's events, by id (Music_Event)
-#define MusicEventList (*(uint32_t(*)[0x40])0x0029a180)
+extern uint32_t MusicEventList[0x40];
 
-// XBE_GLOBAL(0x001ee260, 0x24)
-#define MusicVars (*(MusicVars_t *)0x001ee260)
+extern MusicVars_t MusicVars;
 
 extern MUSICDATA MapMusic[35];
 extern MUSICAIVARS MapDroneData[12];

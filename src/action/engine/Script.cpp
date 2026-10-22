@@ -38,6 +38,9 @@
 #include <string.h>
 
 #include "../game/obj/Effect.h"
+
+// XBE_GLOBAL(0x001f6678, 0x4)
+HASHCODE ScriptCam;
 #pragma fp_contract(off)
 
 // Two persistent letterbox-bar sprites: created and shown by Script_CameraStart, disabled (0xff) by Script_KillStream
@@ -86,7 +89,8 @@ typedef struct {
 #define tptr (*(ScriptPlacement *)0x002792a0)
 
 // The list Script_Load hands a script file back to when it has too many streams
-#define ScriptList (*(DLISTINFO_tag *)0x00279288)
+// XBE_GLOBAL(0x00279288, 0x18)
+DLISTINFO_tag ScriptList;
 
 // The letterbox bars' sprite info (the game's data)
 #define LetterboxSprInfo ((SpriteInfo *)0x00181be4)

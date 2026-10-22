@@ -18,6 +18,7 @@
 // shadows too, the jump taken off while the shadow runs ours.
 
 #include "MPObjectsShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game/obj/Pickup.h"
@@ -41,7 +42,7 @@ const unsigned kRegisterPickup = 0x000a1310;
 const unsigned kUnregisterPickup = 0x0009de20;
 
 const size_t kObjSize = 0xe4;
-void *const kRandWords = (void *)0x0018cdf8;   // U32_AT(0x0018cdf8) and U32_AT(0x0018cdfc)
+void *const kRandWords = (void *)XbeOurs(0x0018cdf8);   // U32_AT(0x0018cdf8) and U32_AT(0x0018cdfc)
 
 const int kMaxRegions = 40;
 const size_t kMaxBytes = 0x1000;

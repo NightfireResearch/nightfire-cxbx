@@ -166,7 +166,7 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint messa
     return true;  
 }
 
-#define menu_unlock_everything U8_AT(0x0025d79e)
+extern char menu_unlock_everything;
 
 // AUTOINJECT
 bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, int param_5, int param_6) {
@@ -343,7 +343,8 @@ bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
   return true;
 }
 
-#define mp_editing_bot U8_AT(0x002456b2)                // the bot P_MPBOTCHOOSE / P_MPBOTSETUP are editing
+// XBE_GLOBAL(0x002456b2, 0x1)
+uint8_t mp_editing_bot;  // the bot P_MPBOTCHOOSE / P_MPBOTSETUP are editing
 // XBE_GLOBAL(0x0025e960, 0x40)
 static char mp_bot_playing_text[0x40]; // "Playing : Yes"
 
@@ -420,8 +421,8 @@ bool C_SBBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
 static M_ITEM mp_stuff[29];
 // Who has the one-per-game characters: the editing bot's index + 10 (0 = nobody). In a game without teams only one
 // bot may be on MI6's side, and only one bot may be a Bond.
-#define mp_good_bot_taken U8_AT(0x002456b0)
-#define mp_bond_bot_taken U8_AT(0x002456b1)
+extern uint8_t mp_good_bot_taken;
+extern uint8_t mp_bond_bot_taken;
 // XBE_GLOBAL(0x002456ac, 0x4)
 static BOT_stats_t * mp_bot_default_stats; // the last stats copied into a bot
 
@@ -1598,7 +1599,8 @@ static char mp_confirm_friendly_text[0x40];
 #define MP_UNLIMITED ((int)-1)     // MaxPoints / MaxDuration
 
 // The settings and controls a match was started with (P_MPCONFIRM), for C_MPDBG to go back to.
-#define mp_settings_backup (*(MPSettings_t *)0x002245f8)
+// XBE_GLOBAL(0x002245f8, 0x23c)
+MPSettings_t mp_settings_backup;
 #define mp_inputs_backup (*(PlayerInput(*)[NUM_PLAYERS])0x00224838)
 
 // AUTOINJECT

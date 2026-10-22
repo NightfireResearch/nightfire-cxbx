@@ -129,20 +129,28 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 // ---------------------------------------------------------------------------------------------------------------
 
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
-#define SubtitlesEnabled U32_AT(0x001f6614)
-#define menu_bonus_replace U8_AT(0x0025d78d)      // MenuUnlocks.cpp
-#define SaveEnum_EntriesPerFrame I32_AT(0x00194804) // psiSave.cpp
+extern uint32_t SubtitlesEnabled;
+extern uint8_t menu_bonus_replace;  // MenuUnlocks.cpp
+extern int32_t SaveEnum_EntriesPerFrame;  // psiSave.cpp
 
 // XBox_DoSaveFlow's state, which its error box's list (C_LBERROPTIONS) winds up
-#define saveflow_ls            (*(MENU_LS **)0x0025eda0)
-#define saveflow_manager       (*(M_MANAGER **)0x0025eda4)
-#define saveflow_box_open      U8_AT(0x0025eda8)
-#define saveflow_text          (*(char **)0x0025edac)
-#define saveflow_frames        U32_AT(0x0025edb0)
-#define saveflow_result        U32_AT(0x0025edb4)  // the state it was last given
-#define saveflow_cancel        U8_AT(0x0025edb8)   // clear the delayed messages instead of going on
-#define saveflow_dashboard     U8_AT(0x0025edba)   // B on the box leaves for the dashboard
-#define saveflow_relist        U8_AT(0x0025edb9)   // a codenames page lists the codenames as it enters or resumes
+// XBE_GLOBAL(0x0025eda0, 0x4)
+MENU_LS *saveflow_ls;
+// XBE_GLOBAL(0x0025eda4, 0x4)
+M_MANAGER *saveflow_manager;
+// XBE_GLOBAL(0x0025eda8, 0x1)
+uint8_t saveflow_box_open;
+// XBE_GLOBAL(0x0025edac, 0x4)
+char *saveflow_text;
+// XBE_GLOBAL(0x0025edb0, 0x4)
+uint32_t saveflow_frames;
+// XBE_GLOBAL(0x0025edb4, 0x4)
+uint32_t saveflow_result;  // the state it was last given
+// XBE_GLOBAL(0x0025edb8, 0x1)
+uint8_t saveflow_cancel;  // clear the delayed messages instead of going on
+extern uint8_t saveflow_dashboard;  // B on the box leaves for the dashboard
+// XBE_GLOBAL(0x0025edb9, 0x1)
+uint8_t saveflow_relist;  // a codenames page lists the codenames as it enters or resumes
 
 
 // The option boxes the codenames page answers

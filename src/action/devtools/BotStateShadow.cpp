@@ -14,6 +14,7 @@
 // isObjAlreadyAnotherTeamObjective, so those are compared inside them too (ours calls ours directly).
 
 #include "BotStateShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game/drone/BOTSTATE.h"
@@ -31,7 +32,7 @@ const unsigned kGetPreferredTraitOpponentObjIndex = 0x0001da80;
 const unsigned kProcessGoals = 0x0001df80;
 const unsigned kPickGoal = 0x0001cb20;
 
-const unsigned kRandomState = 0x0018cdf8;  // Rand_Random's two words
+const unsigned kRandomState = XbeOurs(0x0018cdf8);  // Rand_Random's two words
 const size_t kObjSize = 0xe4;
 
 struct Region {

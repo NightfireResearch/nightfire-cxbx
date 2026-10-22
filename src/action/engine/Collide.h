@@ -112,23 +112,16 @@ typedef struct BOXENTRY_tag {
 
 #define MAX_COLBOXES 600
 
-// XBE_GLOBAL(0x001dc9a0, 0x12c0)
-#define ColBoxs ((BOXENTRY_tag *)0x001dc9a0)
-// XBE_GLOBAL(0x001ddc6c, 0x4)
-#define BoxCnt U32_AT(0x001ddc6c)
+extern BOXENTRY_tag ColBoxs[MAX_COLBOXES];
+extern uint32_t BoxCnt;
 // The push the geometry tests accumulate, in the cel's or object's space
-// XBE_GLOBAL(0x001dec10, 0xc)
-#define DeltaP (*(_VECTOR *)0x001dec10)
+extern _VECTOR DeltaP;
 // Collide_Intersect: the cel's geometry is in world space (no matrix)
-// XBE_GLOBAL(0x001dec1c, 0x1)
-#define Ident U8_AT(0x001dec1c)
+extern uint8_t Ident;
 // The triangles Intersect_CylTriGeom collects, three vertices each: TriOnCnt of TriAllocCnt vertices of 12 bytes
-// XBE_GLOBAL(0x001dec28, 0x4)
-#define TriAllocCnt U32_AT(0x001dec28)
-// XBE_GLOBAL(0x001dec2c, 0x4)
-#define TriOnCnt U32_AT(0x001dec2c)
-// XBE_GLOBAL(0x001dec30, 0x4)
-#define TriHeap (*(_VECTOR **)0x001dec30)
+extern uint32_t TriAllocCnt;
+extern uint32_t TriOnCnt;
+extern _VECTOR *TriHeap;
 
 // The hits, the hit heap and the narrow phase
 HITDATA_tag* Coll_GetFreeHit(void);

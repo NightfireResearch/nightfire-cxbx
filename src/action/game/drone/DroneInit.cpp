@@ -44,6 +44,65 @@
 #define BOT_setGender ((void (__cdecl *)(Drone_tag *drone))0x0001ad70)
 #include "../obj/BodyGlow.h"
 
+// XBE_GLOBAL(0x00164068, 0x4)
+float DroneDamage_Easy = 2.0f;
+// XBE_GLOBAL(0x0016406c, 0x4)
+float DroneDamage_Normal = 1.5f;
+// XBE_GLOBAL(0x00164070, 0x4)
+float DroneDamage_Hard = 0.5f;
+// XBE_GLOBAL(0x00164074, 0x4)
+float DroneDamage_Head = 100.0f;
+// XBE_GLOBAL(0x00164078, 0x4)
+float DroneDamage_Legs = 0.75f;
+// XBE_GLOBAL(0x00164080, 0x4)
+float DroneDamage_Torso = 1.0f;
+// XBE_GLOBAL(0x00164084, 0x4)
+float DroneArmour_Helmet = 0.5f;
+// XBE_GLOBAL(0x00164090, 0x4)
+float DroneArmour_Vest = 0.75f;
+// XBE_GLOBAL(0x00164094, 0x4)
+float DroneFiring_BurstDelay_Min = 15.0f;
+// XBE_GLOBAL(0x00164098, 0x4)
+float DroneFiring_BurstDelay_Normal = 45.0f;
+// XBE_GLOBAL(0x0016409c, 0x4)
+float DroneFiring_BurstDelay_Max = 60.0f;
+// XBE_GLOBAL(0x001640a0, 0x4)
+float DroneFiring_BurstDelay_MinDist = 4.0f;
+// XBE_GLOBAL(0x001640a4, 0x4)
+float DroneFiring_BurstDelay_MaxDist = 30.0f;
+// XBE_GLOBAL(0x001640a8, 0x4)
+float DroneFiring_Accuracy_Easy = 0.5f;
+// XBE_GLOBAL(0x001640ac, 0x4)
+float DroneFiring_Accuracy_Normal = 1.0f;
+// XBE_GLOBAL(0x001640b0, 0x4)
+float DroneFiring_Accuracy_Hard = 2.0f;
+// XBE_GLOBAL(0x001640b4, 0x4)
+float DroneFiring_NewSighting_TimeToHit = 2.0f;
+// XBE_GLOBAL(0x001640b8, 0x4)
+float DroneFiring_TargetFirstMoved_TimeToHit = 2.0f;
+// XBE_GLOBAL(0x001640bc, 0x4)
+float DroneFiring_TargetFirstMoved_Accuracy = 0.25f;
+// XBE_GLOBAL(0x001640c0, 0x4)
+float DroneFiring_TargetMoving_Accuracy = 0.75f;
+// XBE_GLOBAL(0x001640c4, 0x4)
+float DroneFiring_TargetFirstStopped_TimeToHit = 2.0f;
+// XBE_GLOBAL(0x001640c8, 0x4)
+float DroneFiring_TargetFirstStopped_Accuracy = 1.0f;
+// XBE_GLOBAL(0x001640cc, 0x4)
+float DroneFiring_TooClose_Distance = 4.0f;
+// XBE_GLOBAL(0x001640d0, 0x4)
+float DroneFiring_TooClose_Accuracy = 2.0f;
+// XBE_GLOBAL(0x001640d4, 0x4)
+float DroneFiring_TooClose_Damage = 2.0f;
+// XBE_GLOBAL(0x001640d8, 0x4)
+float DroneFiring_PlayerBackShot_Damage = 2.0f;
+// XBE_GLOBAL(0x001640dc, 0x4)
+float DroneCaptain_Mod_BulletDamage = 2.0f;
+// XBE_GLOBAL(0x001640e0, 0x4)
+float DroneCaptain_Mod_BulletAccuracy = 2.0f;
+// XBE_GLOBAL(0x001640e4, 0x4)
+float DroneCaptain_Mod_Health = 2.0f;
+
 // DroneAnim_PreTransCallback, the drones' root motion callback: stored, not called
 #define DroneAnim_RootMotion ((AnimRootMotionFunc)0x00033320)
 

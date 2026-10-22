@@ -11,6 +11,7 @@
 // behaviour words and AINetwork_ResetRoute.
 
 #include "DroneInitShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -34,7 +35,7 @@
 namespace {
 
 // The game's RNG state (Rand_Random)
-#define RandWords ((uint32_t *)0x0018cdf8)
+#define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
 
@@ -521,13 +522,13 @@ void DroneInitShadow_Run(void) {
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(channels, switch_channels, sizeof(channels));
-    memcpy(rand, RandWords, sizeof(rand));
+    XbeOursRead(rand, RandWords.at, sizeof(rand));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
     regions.Add(&GameState, sizeof(GameState_t));
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
-    regions.Add(RandWords, 8);
+    regions.Add(RandWords.game(), 8);
     ShadowFakes_AddRegions(regions);
 
     InstallFakes();
@@ -546,7 +547,7 @@ void DroneInitShadow_Run(void) {
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(switch_channels, channels, sizeof(channels));
-    memcpy(RandWords, rand, sizeof(rand));
+    XbeOursWrite(RandWords.at, rand, sizeof(rand));
     AIPath_MaxNodes = maxNodes;
     FRAME_RATE_DIV = frameDiv;
     DroneCaptain_Mod_BulletDamage = modDamage;

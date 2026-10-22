@@ -15,8 +15,8 @@
 
 // Not reimplemented, called by address
 
-#define LanguageToLoad (*(int *)0x0025d7a0)     // tLANGUAGE (XboxSystem.cpp)
-#define SubtitlesEnabled U32_AT(0x001f6614)
+extern int LanguageToLoad;  // tLANGUAGE (XboxSystem.cpp)
+extern uint32_t SubtitlesEnabled;
 
 #define TXT_INVERTED ((Action_TranslatedText)0x206)
 #define TXT_NORMAL   ((Action_TranslatedText)0x3bd)

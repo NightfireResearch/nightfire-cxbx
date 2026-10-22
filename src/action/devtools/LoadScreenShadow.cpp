@@ -6,6 +6,7 @@
 // it puts the generator back afterwards.
 
 #include "LoadScreenShadow.h"
+#include "AllOriginal.h"
 
 #include "../../common/xbeOriginal.h"
 #include "../game.h"
@@ -16,7 +17,7 @@
 namespace {
 
 // Rand_Random's state: two multiply-with-carry words and their multipliers.
-#define RandState ((uint32_t *)0x0018cdf8)   // [4]
+#define RandState (GameSpan<uint32_t>{0x0018cdf8})   // [4]
 
 const uint32_t kSeeds[][2] = {
     { 0x1f123bb5, 0x159a55e5 }, { 0x00000001, 0x00000001 }, { 0x12345678, 0x9abcdef0 }, { 0xffffffff, 0x00000000 },
@@ -66,7 +67,7 @@ void Run(bool original, HASHCODE level, const uint32_t seed[2], int outputs, Res
 
 void LoadScreenShadow_Run(void) {
     uint32_t saved[4];
-    memcpy(saved, RandState, sizeof(saved));
+    XbeOursRead(saved, RandState.at, sizeof(saved));
 
     HASHCODE levels[0x60];
     int count = 0;
@@ -97,7 +98,7 @@ void LoadScreenShadow_Run(void) {
             }
         }
     }
-    memcpy(RandState, saved, sizeof(saved));
+    XbeOursWrite(RandState.at, saved, sizeof(saved));
     printf("[loadscreen] ResetMap_LevelCode2Img vs the original: %d cases, %d differ\n", cases, differ);
     fflush(stdout);
 }

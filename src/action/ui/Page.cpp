@@ -20,7 +20,8 @@ static_assert(sizeof(HELP_TEXT) == 0xc, "HELP_TEXT is 0xc bytes");
 #define HELP_ANY_VALUE ((int)0xf0f0f0f0)
 
 // The memo of the page shown that the help lines go to
-#define help_control (*(M_CONTROL **)0x0025fc18)
+// XBE_GLOBAL(0x0025fc18, 0x4)
+M_CONTROL *help_control;
 #define HELP_MEMO ((HASHCODE)0x10000225)
 
 // AUTOINJECT

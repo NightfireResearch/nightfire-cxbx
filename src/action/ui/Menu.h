@@ -53,10 +53,10 @@ int Menu_GetLanguageButton(int language);
 uchar Menu_WillRunMiniMission(void);
 uchar Menu_RunMiniMission(uchar managerNum);
 // What Menu_PlayMovie keeps of the movie it started (psiMovieLoop and Menu_RestartFrontEndLoop still read them)
-#define menu_music_playing          U8_AT(0x0025d7bc)   // the front end's music has been started
-#define menu_movie_skippable        U8_AT(0x0025d7bd)   // Menu_StopMovie may stop it
-#define menu_movie_stopped_music    U8_AT(0x0025d7be)   // the front end's music was stopped for it
-#define menu_movie_skip_delay       U32_AT(0x0025d7c0)  // frames before it can be skipped
+extern uint8_t menu_music_playing;  // the front end's music has been started
+extern uint8_t menu_movie_skippable;  // Menu_StopMovie may stop it
+extern uint8_t menu_movie_stopped_music;  // the front end's music was stopped for it
+extern uint32_t menu_movie_skip_delay;  // frames before it can be skipped
 
 // The codename pages (ui_codenames.cpp)
 void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text, HASHCODE icon, HASHCODE description,
@@ -227,7 +227,7 @@ void _Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, 
 void Menu_StartLS(void);   // the original's register arguments, for _Menu_StartLS
 
 // The codename being edited
-#define cn_modified            U8_AT(0x0025d7dd)       // it has changes not yet saved
+extern uint8_t cn_modified;  // it has changes not yet saved
 extern uint8_t cn_secret_mode; // P_CNNAME was entered from the codename menu (Secret Unlocks)
 
 #define LS_OPERATION_LOAD 0

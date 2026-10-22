@@ -9,6 +9,7 @@
 // already ours before, PlarStat_LogTimerPause and PlarStat_LogTimerUnpause.
 
 #include "PlrStatShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -29,7 +30,7 @@ namespace {
 #define SCORE_DATA ((uchar *)SCORE_DATA_START)
 #define SCORE_DATA_SIZE (SCORE_DATA_END - SCORE_DATA_START)
 
-#define BondMomentsBlock ((uchar *)0x00278d8e)
+#define BondMomentsBlock (GameSpan<uchar>{0x00278d8e})
 #define BOND_MOMENTS_SIZE (113 * 2)
 #define MissionStatsBlock ((uchar *)0x00278e70)
 #define MISSION_STATS_SIZE (10 * 0x38)
@@ -249,14 +250,14 @@ void PlrStatShadow_Run(void) {
     static uchar scores[SCORE_DATA_SIZE], bondMoments[BOND_MOMENTS_SIZE], missionStats[MISSION_STATS_SIZE];
     static BLData *blokes[4];
     memcpy(scores, SCORE_DATA, sizeof(scores));
-    memcpy(bondMoments, BondMomentsBlock, sizeof(bondMoments));
+    XbeOursRead(bondMoments, BondMomentsBlock.at, sizeof(bondMoments));
     memcpy(missionStats, MissionStatsBlock, sizeof(missionStats));
     memcpy(blokes, glb_blokes, sizeof(blokes));
     undefined4 multiplayer = MPSettings.isMultiplayer;
 
     regions.Clear();
     regions.Add(SCORE_DATA, SCORE_DATA_SIZE);
-    regions.Add(BondMomentsBlock, BOND_MOMENTS_SIZE);
+    regions.Add(BondMomentsBlock.game(), BOND_MOMENTS_SIZE);
     regions.Add(MissionStatsBlock, MISSION_STATS_SIZE);
     regions.Add(&world, sizeof(world));
 
@@ -271,7 +272,7 @@ void PlrStatShadow_Run(void) {
     NfWarnMuted--;
     ShadowHook_RemoveAll();
     memcpy(SCORE_DATA, scores, sizeof(scores));
-    memcpy(BondMomentsBlock, bondMoments, sizeof(bondMoments));
+    XbeOursWrite(BondMomentsBlock.at, bondMoments, sizeof(bondMoments));
     memcpy(MissionStatsBlock, missionStats, sizeof(missionStats));
     memcpy(glb_blokes, blokes, sizeof(blokes));
     MPSettings.isMultiplayer = multiplayer;

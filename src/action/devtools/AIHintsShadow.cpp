@@ -4,6 +4,7 @@
 // Run at start with MenuShadowTests=on (MenuProbe.cpp), before any level exists.
 
 #include "AIHintsShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -20,7 +21,7 @@
 namespace {
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))
-#define TimeToCalc I32_AT(0x001dfa2c)
+#define TimeToCalc I32_AT(XbeOurs(0x001dfa2c))
 
 const int NODES = 16;
 const int POINTS = 8;

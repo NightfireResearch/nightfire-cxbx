@@ -29,10 +29,14 @@
 
 
 // The player's damage modifiers (Player.cpp)
-#define Plr_DMod_Multi     FLOAT_AT(0x0017e8cc)
-#define Plr_DMod_Head      FLOAT_AT(0x0017e8d0)
-#define Plr_DMod_LowerLimb FLOAT_AT(0x0017e8d4)
-#define Plr_DMod_UpperLimb FLOAT_AT(0x0017e8d8)
+// XBE_GLOBAL(0x0017e8cc, 0x4)
+float Plr_DMod_Multi = 4.0f;
+// XBE_GLOBAL(0x0017e8d0, 0x4)
+float Plr_DMod_Head = 4.0f;
+// XBE_GLOBAL(0x0017e8d4, 0x4)
+float Plr_DMod_LowerLimb = 0.8f;
+// XBE_GLOBAL(0x0017e8d8, 0x4)
+float Plr_DMod_UpperLimb = 0.8f;
 
 // Drone_tag.flags (docs/drone README 4.3)
 #define DRONE_AI_RUNNING 0x100

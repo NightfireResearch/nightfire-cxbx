@@ -20,6 +20,9 @@
 #include "../game.h"
 #include "../input.h"
 
+// XBE_GLOBAL(0x0025f1d0, 0x938)
+M_MANAGER manager[5];
+
 // Called by address
 #define Menu_PlayMovie ((void (__cdecl *)(HASHCODE movie, uchar onPage, char loop, char unknown4, char unknown5, int unknown6))0x0007fe00)
 // Through the game's entry point (patched to ours) rather than straight to ours, as the original calls it: MenuProbe's

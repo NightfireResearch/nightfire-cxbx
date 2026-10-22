@@ -38,8 +38,7 @@ static_assert(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
 static_assert(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 #pragma pack(pop)
 
-// XBE_GLOBAL(0x0029aabc, 0xc)
-#define CameraList (*(LLISTINFO_tag*)0x0029aabc)
+extern LLISTINFO_tag CameraList;
 
 // SENSOR::owner->curState of a camera its disable channel has turned off
 #define SENSOR_STATE_DISABLED 3

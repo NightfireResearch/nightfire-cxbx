@@ -94,7 +94,7 @@ static_assert(offsetof(PlayerMissionStats, timerPaused) == 0x34, "PlayerMissionS
 #pragma pack(pop)
 
 #define PlrMissionStats (*(PlayerMissionStats(*)[NUM_AGENTS])0x00278e70)
-#define BondMoments (*(short(*)[113])0x00278d8e)
+extern short BondMoments[113];
 
 bool PlrStat_OkToUpdate(void);
 void PlrStat_LogBondBonus(uint playerNum);

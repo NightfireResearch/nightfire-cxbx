@@ -4,7 +4,7 @@
 #include "../actionhelpers.h"
 
 // The cels to draw this frame, linked through cel_tag::nextVisible
-#define GfxList (*(cel_tag **)0x0029d79c)
+extern cel_tag *GfxList;
 
 #pragma pack(push, 1)
 // A cel to draw and how many portals deep it was found

@@ -10,6 +10,7 @@
 // order, or leaves its open and closed lists differently, shows up even when its answer is the same.
 
 #include "NavShadow.h"
+#include "AllOriginal.h"
 #include "ShadowHarness.h"
 
 #include "../../common/xbeOriginal.h"
@@ -1313,11 +1314,11 @@ void NavShadow_Run(void) {
     static obj_tag *players[4];
     memcpy(paths, &AIPaths, sizeof(paths));
     memcpy(bounds, &AIBounds, sizeof(bounds));
-    memcpy(globals, (void *)0x00274ca8, sizeof(globals));
+    memcpy(globals, (void *)XbeOurs(0x00274ca8), sizeof(globals));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(gameState, &GameState, sizeof(gameState));
-    memcpy(cels, (void *)0x001ee42c, sizeof(cels));
+    memcpy(cels, (void *)XbeOurs(0x001ee42c), sizeof(cels));
     memcpy(players, glb_players, sizeof(players));
     uint32_t boundCount = AIBoundCount;
 
@@ -1326,17 +1327,17 @@ void NavShadow_Run(void) {
     regions.Add(&AIPaths, sizeof(AIPaths));
     regions.Add(&AIBounds, sizeof(AIBounds));
     regions.Add(&AIBoundCount, 4);
-    regions.Add((void *)0x00274ca8, sizeof(globals));     // the block version to the path count
+    regions.Add((void *)XbeOurs(0x00274ca8), sizeof(globals));     // the block version to the path count
     regions.Add(&NPCGlobals, sizeof(NPCGlobals_t));
     regions.Add(&MPSettings, sizeof(MPSettings_t));
-    regions.Add((void *)0x001ee42c, sizeof(cels));
+    regions.Add((void *)XbeOurs(0x001ee42c), sizeof(cels));
     regions.Add(glb_players, sizeof(players));
     snapshot.Clear();
     snapshot.Add(&world, sizeof(world));
     snapshot.Add(&AIPaths, sizeof(AIPaths));
     snapshot.Add(&AIBounds, sizeof(AIBounds));
     snapshot.Add(&AIBoundCount, 4);
-    snapshot.Add((void *)0x00274ca8, sizeof(globals));
+    snapshot.Add((void *)XbeOurs(0x00274ca8), sizeof(globals));
 
     InstallFakes();
     NfWarnMuted++;
@@ -1360,11 +1361,11 @@ void NavShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&AIPaths, paths, sizeof(paths));
     memcpy(&AIBounds, bounds, sizeof(bounds));
-    memcpy((void *)0x00274ca8, globals, sizeof(globals));
+    memcpy((void *)XbeOurs(0x00274ca8), globals, sizeof(globals));
     memcpy(&NPCGlobals, npc, sizeof(npc));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(&GameState, gameState, sizeof(gameState));
-    memcpy((void *)0x001ee42c, cels, sizeof(cels));
+    memcpy((void *)XbeOurs(0x001ee42c), cels, sizeof(cels));
     memcpy(glb_players, players, sizeof(players));
     AIBoundCount = boundCount;
 
