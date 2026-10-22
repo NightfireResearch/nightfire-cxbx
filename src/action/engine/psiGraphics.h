@@ -32,7 +32,7 @@ static_assert(offsetof(TextureInfo, numFrames) == 0x24, "Bad offset of TextureIn
 static_assert(offsetof(TextureInfo, animSpeed) == 0x28, "Bad offset of TextureInfo.animSpeed");
 static_assert(offsetof(TextureInfo, baseIdx) == 0x54, "Bad offset of TextureInfo.baseIdx");
 
-#define Tex (*(TextureInfo*(*)[2048])0x002abe80)
+extern TextureInfo *Tex[2048];
 
 // A particle batch's overlay buffer, held until the GPU has finished with it (psiDrawParticleList fills one,
 // psiAgeParticleOverlayRing frees it when framesToLive runs out). Cleared, not freed, by maybePsiResetResources.

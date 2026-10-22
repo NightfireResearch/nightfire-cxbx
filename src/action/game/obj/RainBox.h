@@ -37,15 +37,15 @@ enum {
 #define MAX_DROPS 0x1000
 
 extern uint8_t DropType;
-#define WindVector (*(_VECTOR *)0x002637e4)
-#define PrevPos (*(_VECTOR *)0x002637f0)
+extern _VECTOR WindVector;
+extern _VECTOR PrevPos;
 // WindVector and the steps, this frame's (UpdateDrops)
-#define WindVector2 (*(_VECTOR *)0x002637fc)
-#define CubeCentre (*(_VECTOR *)0x00263808)
-#define RandTable2 (*(_VECTOR (*)[32])0x00263818)
+extern _VECTOR WindVector2;
+extern _VECTOR CubeCentre;
+extern _VECTOR RandTable2[32];
 extern uchar DropState[MAX_DROPS];
 // 32 steps a frame at 60 Hz, a drop takes the one of its index
-#define RandTable1 (*(_VECTOR (*)[32])0x00264998)
+extern _VECTOR RandTable1[32];
 // Every drop starts at once about the view on the next update
 extern uint8_t InitBodge;
 extern int16_t CurrentMax;

@@ -1732,7 +1732,6 @@ void Player_PositionCamera(obj_tag *player) {
 // Substates, health and death, and walking (the substate handlers Player_Update calls)
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 extern uint8_t debug_scanmode;  // the player starts every level flying (MovementType_ScanMode)
 // XBE_GLOBAL(0x001f6648, 0xc) is GRAVITY_VECTOR: in zero G its y is 0
 
@@ -1823,11 +1822,65 @@ void Player_GetHeadPos(_VECTOR *headPos, obj_tag *player, _MATRIX *mtx) {
 // The player's anim set lists by weapon_definition_tag::animSet (1 to 6), for any other, and in single player: each
 // the standing list, then the crouching one
 #define PLAYER_ANIMSET_LIST_SIZE 9
-#define PlayerAnimSetSinglePlayer ((HASHCODE *)0x0017e68c)
-#define PlayerAnimSetDefault ((HASHCODE *)0x0017e71c)
+// XBE_GLOBAL(0x0017e68c, 0x48)
+static HASHCODE PlayerAnimSetSinglePlayer[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0, (HASHCODE)0x6000a00,
+    (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0, (HASHCODE)0x60009ff,
+    (HASHCODE)0x60009ff, (HASHCODE)0x60009ff, (HASHCODE)0, (HASHCODE)0x60009ff, (HASHCODE)0x60009ff,
+    (HASHCODE)0x60009ff, (HASHCODE)0x60009ff,
+};
+// XBE_GLOBAL(0x0017e6d4, 0x48)
+static HASHCODE PlayerAnimSetClass3[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60001d4, (HASHCODE)0x60001db, (HASHCODE)0x60001d9, (HASHCODE)0, (HASHCODE)0x600097c,
+    (HASHCODE)0x600097c, (HASHCODE)0x600097d, (HASHCODE)0x600097d, (HASHCODE)0, (HASHCODE)0x60001d7,
+    (HASHCODE)0x60008f9, (HASHCODE)0x60008f9, (HASHCODE)0, (HASHCODE)0x6000914, (HASHCODE)0x6000914,
+    (HASHCODE)0x6000915, (HASHCODE)0x6000915,
+};
+// XBE_GLOBAL(0x0017e71c, 0x48)
+static HASHCODE PlayerAnimSetDefault[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60001f1, (HASHCODE)0x60001f2, (HASHCODE)0x60001f0, (HASHCODE)0, (HASHCODE)0x60009e4,
+    (HASHCODE)0x60009e4, (HASHCODE)0x60009e5, (HASHCODE)0x60009e5, (HASHCODE)0, (HASHCODE)0x60001ee,
+    (HASHCODE)0x6000931, (HASHCODE)0x6000931, (HASHCODE)0, (HASHCODE)0x6000930, (HASHCODE)0x6000930,
+    (HASHCODE)0x600092f, (HASHCODE)0x600092f,
+};
+// XBE_GLOBAL(0x0017e764, 0x48)
+static HASHCODE PlayerAnimSetClass1[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60009dc, (HASHCODE)0x60009de, (HASHCODE)0x60009db, (HASHCODE)0, (HASHCODE)0x60009d7,
+    (HASHCODE)0x60009d7, (HASHCODE)0x60009d8, (HASHCODE)0x60009d8, (HASHCODE)0, (HASHCODE)0x60009d9,
+    (HASHCODE)0x60009f5, (HASHCODE)0x60009f5, (HASHCODE)0, (HASHCODE)0x60009f3, (HASHCODE)0x60009f3,
+    (HASHCODE)0x60009f4, (HASHCODE)0x60009f4,
+};
+// XBE_GLOBAL(0x0017e7ac, 0x48)
+static HASHCODE PlayerAnimSetClass5[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60001e6, (HASHCODE)0x60001e7, (HASHCODE)0x60001e5, (HASHCODE)0, (HASHCODE)0x60009df,
+    (HASHCODE)0x60009df, (HASHCODE)0x60009e0, (HASHCODE)0x60009e0, (HASHCODE)0, (HASHCODE)0x60001e3,
+    (HASHCODE)0x600091f, (HASHCODE)0x600091f, (HASHCODE)0, (HASHCODE)0x600091e, (HASHCODE)0x600091e,
+    (HASHCODE)0x600091d, (HASHCODE)0x600091d,
+};
+// XBE_GLOBAL(0x0017e7f4, 0x48)
+static HASHCODE PlayerAnimSetClass4[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60001ce, (HASHCODE)0x60001cf, (HASHCODE)0x60001cd, (HASHCODE)0, (HASHCODE)0x60009fc,
+    (HASHCODE)0x60009fc, (HASHCODE)0x60009fd, (HASHCODE)0x60009fd, (HASHCODE)0, (HASHCODE)0x60001cb,
+    (HASHCODE)0x60009d2, (HASHCODE)0x60009d2, (HASHCODE)0, (HASHCODE)0x60009d1, (HASHCODE)0x60009d1,
+    (HASHCODE)0x60009d0, (HASHCODE)0x60009d0,
+};
+// XBE_GLOBAL(0x0017e83c, 0x48)
+static HASHCODE PlayerAnimSetClass6[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60009fe, (HASHCODE)0x60009b5, (HASHCODE)0x60009b7, (HASHCODE)0, (HASHCODE)0x60009ba,
+    (HASHCODE)0x60009ba, (HASHCODE)0x60009bb, (HASHCODE)0x60009bb, (HASHCODE)0, (HASHCODE)0x60009bc,
+    (HASHCODE)0x60009d3, (HASHCODE)0x60009d3, (HASHCODE)0, (HASHCODE)0x60009d4, (HASHCODE)0x60009d4,
+    (HASHCODE)0x60009d5, (HASHCODE)0x60009d5,
+};
+// XBE_GLOBAL(0x0017e884, 0x48)
+static HASHCODE PlayerAnimSetClass2[2 * PLAYER_ANIMSET_LIST_SIZE] = {
+    (HASHCODE)0x60009b0, (HASHCODE)0x60009b2, (HASHCODE)0x60009af, (HASHCODE)0, (HASHCODE)0x60009b3,
+    (HASHCODE)0x60009b3, (HASHCODE)0x60009b4, (HASHCODE)0x60009b4, (HASHCODE)0, (HASHCODE)0x60009ad,
+    (HASHCODE)0x60009aa, (HASHCODE)0x60009aa, (HASHCODE)0, (HASHCODE)0x60009ab, (HASHCODE)0x60009ab,
+    (HASHCODE)0x60009ac, (HASHCODE)0x60009ac,
+};
 static HASHCODE *const PlayerAnimSetByClass[6] = {
-    (HASHCODE *)0x0017e764, (HASHCODE *)0x0017e884, (HASHCODE *)0x0017e6d4,
-    (HASHCODE *)0x0017e7f4, (HASHCODE *)0x0017e7ac, (HASHCODE *)0x0017e83c,
+    PlayerAnimSetClass1, PlayerAnimSetClass2, PlayerAnimSetClass3,
+    PlayerAnimSetClass4, PlayerAnimSetClass5, PlayerAnimSetClass6,
 };
 
 // The player's walk speeds, as AnimSetAppend's distance phase and scale
@@ -3312,8 +3365,6 @@ void Player_CollisionHandler(obj_tag *player) {
 // Making the player (Player_Init)
 // ---------------------------------------------------------------------------------------------------------------
 
-// XBE_GLOBAL(0x001637c0, 0x1d0)
-#define MP_skins ((MP_skin*)0x001637c0)
 // The fists' models, by BLData::punchSkin
 // XBE_GLOBAL(0x0017e8e8, 0x10) readonly relocate
 HASHCODE PunchSkin[4] = {

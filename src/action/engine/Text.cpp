@@ -153,7 +153,8 @@ uint GetLanguage(void) {
 // 256 strings of 0x168 bytes that Txt_BindLabel and friends format into, each with a lock count
 // (StringHeapLock) - 0 means free. Handed out round-robin from StringHeapCnt; when none is free, everyone
 // shares one overflow buffer.
-#define StringHeap (*(char(*)[256][0x168])0x001fed80)
+// XBE_GLOBAL(0x001fed80, 0x16800)
+char StringHeap[256][0x168];
 // XBE_GLOBAL(0x00215598, 0x168)
 static char StringHeapOverflow[0x168];
 
@@ -252,7 +253,17 @@ void Txt_UnlockString(char* text) {
 // The queue of message lines, the subtitles' sprites and the line each shows
 // XBE_GLOBAL(0x0029abf8, 0x18)
 DLISTINFO_tag MsgQueue;
-#define SubtitlesInfo (*(SpriteInfo *)0x0018cd30)
+// XBE_GLOBAL(0x0018cd30, 0x2c)
+SpriteInfo SubtitlesInfo = {
+    .colour = 0x7d6d59ff,
+    .unknown1 = 0x1400ff,
+    .maybeEnabled = 0xffff,
+    .maybeFlags = 8192,
+    .posX = 320,
+    .posY = 434,
+    .textRef = (Action_TranslatedText)0x2000004,
+    .linkedViewer = 5,
+};
 // XBE_GLOBAL(0x0029ae20, 0x4)
 TXT_MSG *SubTitleMsg;
 // XBE_GLOBAL(0x0029ae24, 0x4)
@@ -268,7 +279,8 @@ char *SubTitleStr2;
 // The last 128 messages of the kinds kept (Text_AddMsg), held in the string heap
 // XBE_GLOBAL(0x0029ae10, 0x10)
 CIRBUF_INFO ReceivedMsgs;
-#define ReceivedBuf ((int *)0x0029ac10)
+// XBE_GLOBAL(0x0029ac10, 0x200)
+static int ReceivedBuf[0x80];
 // The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
 #define SubtitleFormat FontFormat2Centred
 

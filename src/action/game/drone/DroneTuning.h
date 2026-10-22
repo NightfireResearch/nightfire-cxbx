@@ -10,11 +10,11 @@ extern float DroneDamage_Normal;
 extern float DroneDamage_Hard;
 extern float DroneDamage_Head;
 extern float DroneDamage_Legs;
-#define DroneDamage_Arms                         FLOAT_AT(0x0016407c)
+extern float DroneDamage_Arms;
 extern float DroneDamage_Torso;
 extern float DroneArmour_Helmet;
-#define DroneArmour_Combat                       FLOAT_AT(0x00164088)
-#define DroneArmour_Jacket                       FLOAT_AT(0x0016408c)
+extern float DroneArmour_Combat;
+extern float DroneArmour_Jacket;
 extern float DroneArmour_Vest;
 extern float DroneFiring_BurstDelay_Min;
 extern float DroneFiring_BurstDelay_Normal;

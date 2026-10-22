@@ -173,7 +173,7 @@ FAKE_MOVE(RollRight)
 FAKE_MOVE(Backoff)
 
 bool __cdecl FakeOnHill(_VECTOR *pos) {
-    ShadowLog("onhill(%d)", pos == (_VECTOR *)0x001ee420);
+    ShadowLog("onhill(%d)", pos == (_VECTOR *)(size_t)XbeOurs(0x001ee420));
     return Answer();
 }
 

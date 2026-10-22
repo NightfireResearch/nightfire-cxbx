@@ -35,7 +35,7 @@ static int FontGlyphU[256];
 // XBE_GLOBAL(0x002b0828, 0x400)
 static int FontGlyphV[256];
 
-#define FontImage ((const uint16_t *)0x0019a9c0)   // game data: nonzero for a set pixel
+#include "XboxErrorImages.inc"   // FontImage, DiscErrorImage
 
 // Makes the debug font's texture and glyph tables, once (0x000e1e70)
 // AUTOINJECT
@@ -118,11 +118,9 @@ void ShowFatalErrorScreen(bool doSwap) {
 
 // ---------------------------------------------------------------------------------------------------------------
 // The disc error screen. A disc read that fails (or a disc file that will not open) ends here: one line of a
-// 512x512 picture of the message in each language, pulsing red, until the console is switched off. The picture
-// is game data at 0x001b52e8.
+// 512x512 picture of the message in each language, pulsing red, until the console is switched off.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define DiscErrorImage ((const void *)0x001b52e8)
 #define DISC_ERROR_IMAGE_BYTES 0x20000
 
 // XBE_GLOBAL(0x00300378, 0x4)

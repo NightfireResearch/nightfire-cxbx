@@ -15,7 +15,8 @@
 static char kbd_text[0x40]; // the text being typed: 8 characters in secret mode
 // XBE_GLOBAL(0x0017d608, 0x1)
 static uint8_t kbd_clear_on_key = 1; // the next key (other than Done) clears the text first
-#define cn_bonus               (*(uint64_t *)0x0025d6e8) // the codename's rewards, a bit each (docs/ui/secrets.md)
+extern ulong menu_bonus[8];   // MenuUnlocks.cpp
+#define cn_bonus (*(uint64_t *)menu_bonus) // the codename's rewards, a bit each (docs/ui/secrets.md): player 0's
 // XBE_GLOBAL(0x0025ed68, 0x8)
 static ushort kbd_accent_keys[4]; // the strings of keys 100-103: A-umlaut, A-circumflex, AE, A-grave
 

@@ -25,8 +25,9 @@ public:
     void Save();
     void Restore();
     void Capture(std::vector<uint8_t> &out) const;
-    // The region and offset of the first byte two captures differ at; false if they do not
-    bool Describe(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b, int *region, size_t *offset) const;
+    // The region and offset of the first byte two captures differ at, and its index in them; false if they do not
+    bool Describe(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b, int *region, size_t *offset,
+                  size_t *index = NULL) const;
 
 private:
     struct Region {

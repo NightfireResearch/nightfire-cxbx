@@ -26,13 +26,12 @@ namespace {
 #define SCORE_DATA_START 0x0017e8f8
 #define SCORING_TABLE_START 0x0017f198
 #define SCORE_DATA_END (SCORING_TABLE_START + 12 * 0x3c)
-#define SCORING_TABLE ((SCORETABLE *)SCORING_TABLE_START)
-#define SCORE_DATA ((uchar *)SCORE_DATA_START)
+#define SCORING_TABLE GameSpan<SCORETABLE>{SCORING_TABLE_START}
 #define SCORE_DATA_SIZE (SCORE_DATA_END - SCORE_DATA_START)
 
 #define BondMomentsBlock (GameSpan<uchar>{0x00278d8e})
 #define BOND_MOMENTS_SIZE (113 * 2)
-#define MissionStatsBlock ((uchar *)0x00278e70)
+#define MissionStatsBlock ((uchar *)(size_t)XbeOurs(0x00278e70))
 #define MISSION_STATS_SIZE (10 * 0x38)
 
 struct World {
@@ -67,7 +66,7 @@ void RandomStats() {
             if (field < 0x1c && field != 0x14)
                 continue;
         }
-        *(uchar *)at = (uchar)ShadowRand(256);
+        U8_AT(XbeOurs(at)) = (uchar)ShadowRand(256);
     }
     for (int i = 0; i < MISSION_STATS_SIZE; i += 4)
         *(uint *)(MissionStatsBlock + i) = RandomCount();
@@ -249,14 +248,14 @@ void TestLoggers() {
 void PlrStatShadow_Run(void) {
     static uchar scores[SCORE_DATA_SIZE], bondMoments[BOND_MOMENTS_SIZE], missionStats[MISSION_STATS_SIZE];
     static BLData *blokes[4];
-    memcpy(scores, SCORE_DATA, sizeof(scores));
+    XbeOursRead(scores, SCORE_DATA_START, sizeof(scores));
     XbeOursRead(bondMoments, BondMomentsBlock.at, sizeof(bondMoments));
     memcpy(missionStats, MissionStatsBlock, sizeof(missionStats));
     memcpy(blokes, glb_blokes, sizeof(blokes));
     undefined4 multiplayer = MPSettings.isMultiplayer;
 
     regions.Clear();
-    regions.Add(SCORE_DATA, SCORE_DATA_SIZE);
+    regions.Add((void *)SCORE_DATA_START, SCORE_DATA_SIZE);
     regions.Add(BondMomentsBlock.game(), BOND_MOMENTS_SIZE);
     regions.Add(MissionStatsBlock, MISSION_STATS_SIZE);
     regions.Add(&world, sizeof(world));
@@ -271,7 +270,7 @@ void PlrStatShadow_Run(void) {
 
     NfWarnMuted--;
     ShadowHook_RemoveAll();
-    memcpy(SCORE_DATA, scores, sizeof(scores));
+    XbeOursWrite(SCORE_DATA_START, scores, sizeof(scores));
     XbeOursWrite(BondMomentsBlock.at, bondMoments, sizeof(bondMoments));
     memcpy(MissionStatsBlock, missionStats, sizeof(missionStats));
     memcpy(glb_blokes, blokes, sizeof(blokes));

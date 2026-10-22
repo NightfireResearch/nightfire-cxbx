@@ -86,14 +86,27 @@ typedef struct {
     char header[0x2c];
     uint params[33];    // 0x2c
 } ScriptPlacement;
-#define tptr (*(ScriptPlacement *)0x002792a0)
+// XBE_GLOBAL(0x002792a0, 0xb0)
+ScriptPlacement tptr;
 
 // The list Script_Load hands a script file back to when it has too many streams
 // XBE_GLOBAL(0x00279288, 0x18)
 DLISTINFO_tag ScriptList;
 
 // The letterbox bars' sprite info (the game's data)
-#define LetterboxSprInfo ((SpriteInfo *)0x00181be4)
+// XBE_GLOBAL(0x00181be4, 0x2c)
+SpriteInfo LetterboxSprInfo[1] = {
+    {
+        .colour = 255,
+        .unknown1 = 0xffffffff,
+        .maybeEnabled = 0xffff,
+        .onscreenWidth = 640,
+        .onscreenHeight = 64,
+        .textRef = (Action_TranslatedText)0xffffffff,
+        .textureHashcode = (HASHCODE)0x3000002,
+        .linkedViewer = 4,
+    },
+};
 #define LETTERBOX_BOTTOM_Y 0x1a0
 
 // The originals, called by address where Ghidra's prototypes do not fit

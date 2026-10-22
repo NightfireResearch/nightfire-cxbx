@@ -63,7 +63,7 @@ uchar Drone_bDontDraw;
 // XBE_GLOBAL(0x001e6a60, 0x7800)
 CoverNode_tag CoverNodeTable[MAX_COVER_NODES];
 // XBE_GLOBAL(0x001dfa30, 0x5c00)
-#define AIPointTable (*(DroneAIPoint_tag(*)[MAX_AI_POINTS])0x001dfa30)
+DroneAIPoint_tag AIPointTable[MAX_AI_POINTS];
 
 // A cartridge case's extraObjectData; only what Drone_Delete reads
 typedef struct {

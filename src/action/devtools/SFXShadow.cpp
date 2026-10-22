@@ -987,9 +987,9 @@ void RandomWorld(void) {
                                  0x700001b, 0x700001c, 0x7000021, 0x7000025, 0x7000029, 0x700002a, 0x7000041,
                                  0x7000043, 0x7000048, 0x700004a, 0x700004b, 0x700004c, 0x700004d, 0x7000090, 0};
     I32_AT(XbeOurs(0x001f658c)) = levels[R(COUNT(levels))];
-    I32_AT(0x00260018) = R(2);
-    I32_AT(0x00260044) = RI(1, 4);
-    U8_AT(0x0017d581) = (uint8_t)R(2);
+    I32_AT(XbeOurs(0x00260018)) = R(2);
+    I32_AT(XbeOurs(0x00260044)) = RI(1, 4);
+    U8_AT(XbeOurs(0x0017d581)) = (uint8_t)R(2);
     SFXInitialised = R(5) == 0;
     if (R(8) == 0)
         for (int i = 0; i < SFX_NUM_VOICE_HANDLES; i++)

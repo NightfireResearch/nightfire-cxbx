@@ -104,7 +104,7 @@ static_assert(sizeof(MPSettings_t) == 572, "MPSettings_t is wrong size");
 static_assert(offsetof(MPSettings_t, RespawnSelectionMode) == 0x220, "RespawnSelectionMode is at wrong offset");
 static_assert(offsetof(MPSettings_t, ShowTeamAndNameOverhead) == 0x224, "ShowTeamAndNameOverhead is at wrong offset");
 
-#define MPSettings (*((MPSettings_t*)0x0025fe38))
+extern MPSettings_t MPSettings;
 extern uint32_t MultiplayerLayout_LeftRightOrTopBtm;  // Part of a DrawInfo struct which also contains IsWidescreen?
 
 //char (*__kaboom)[sizeof(MPSettings_t)] = 1;
@@ -132,8 +132,7 @@ typedef struct {
 
 static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
-// XBE_GLOBAL(0x001637c0, 0x1d0)
-#define MP_skins ((MP_skin*)0x001637c0)
+extern MP_skin MP_skins[29];
 
 
 typedef struct MPBOT {
@@ -168,7 +167,7 @@ typedef struct {
 } MPJoinSlot;
 static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 
-#define mp_join_slots (*(MPJoinSlot(*)[NUM_PLAYERS])0x00245240)
+extern MPJoinSlot mp_join_slots[NUM_PLAYERS];
 
 
 struct MPOBJECT_tag;
@@ -251,7 +250,7 @@ static_assert(sizeof(SpawnPlace) == 0x5c, "Bad size for SpawnPlace"); // Known f
 
 #pragma pack(pop)
 
-#define GoldenEye (*(GoldenEyeStruct(*))0x00261678)
+extern GoldenEyeStruct GoldenEye;
 extern SpawnPlace GoldenEyeSpawns[16];
 extern uint16_t GoldenEyeKeyCount;
 extern uint16_t GoldenEyeNonKeyCount;

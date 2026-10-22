@@ -1066,8 +1066,8 @@ Found along the way:
 - `P_NFRESULTS` on a failed mission passes medal 4 (platinum) to `Menu_SetLevelBonus`.
 - `Menu_UpdateCodenameWheel` indexes `codename_buf` with the wheel's item value unbounded.
 - `Menu_SetLevelBonus` (earlier work), for a level not in `sp_level`, marks `sp_level[-1]`: the byte at 0x17c578,
-  the last "8" of the build string P_PAUSE shows (0x17c560), which then reads "04:26:2" and a 0x01. P_PAUSE formats
-  the game's string, so ours shows the same.
+  the space after the time in the build string P_PAUSE shows (0x17c560), which then reads "04:26:28", a 0x01 and
+  "<!>". Ours writes the same byte of its own copy of the string (PauseBuildString), so it shows the same.
 
 ## Departures from the original
 

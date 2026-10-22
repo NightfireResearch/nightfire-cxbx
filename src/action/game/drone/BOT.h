@@ -160,7 +160,7 @@ static_assert(offsetof(BOT_vars_t, drone) == 0x748, "Wrong offset for BOT_vars_t
 static_assert(offsetof(BOT_vars_t, insideObjective) == 0x765, "Wrong offset for BOT_vars_t.insideObjective");
 
 // One per bot, indexed by BOT_vars_t.botIndex
-#define BOT_vars (*(BOT_vars_t(*)[NUM_BOTS])0x001d98e0)
+extern BOT_vars_t BOT_vars[NUM_BOTS];
 
 #pragma pack(pop)
 

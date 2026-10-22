@@ -351,10 +351,10 @@ enum MusicMarkerType {
 
 extern int32_t ES_MuteMusic;  // 1 plays the music, 0 mutes it
 extern int32_t ES_MuteSFX;
-#define MFXFilePath (*(char(*)[200])0x00182750)
-#define MFXFilePath2 (*(char(*)[200])0x00182818)
-#define STRFilePath (*(char(*)[200])0x001828e0)
-#define STRFilePath2 (*(char(*)[200])0x001829a8)
+extern char MFXFilePath[200];
+extern char MFXFilePath2[200];
+extern char STRFilePath[200];
+extern char STRFilePath2[200];
 extern char SFXLanguageName[20];
 extern int32_t SFXModeNumber;
 extern int32_t MusicMasterVolume;
@@ -371,37 +371,35 @@ extern int32_t SFXIndoorsVolume;
 extern uint32_t sfx_randomseed1;
 extern uint32_t sfx_randomseed2;
 extern int32_t SFXListenerCount;
-#define NormVector (*(_VECTOR *)0x00182b20)
-#define DirVector (*(_VECTOR *)0x00182b2c)
-#define UpVector (*(_VECTOR *)0x00182b38)
-#define ListenerNorm (*(_VECTOR *)0x00182b44)
-#define ListenerDir (*(_VECTOR *)0x00182b50)
-#define ListenerUp (*(_VECTOR *)0x00182b5c)
+extern _VECTOR NormVector;
+extern _VECTOR DirVector;
+extern _VECTOR UpVector;
+extern _VECTOR ListenerNorm;
+extern _VECTOR ListenerDir;
+extern _VECTOR ListenerUp;
 extern uint32_t FileBufferMask;  // the stream's file buffers less one
 extern int32_t SFXJumpMarker;  // the section the music asks for, -1 for none
 extern int32_t InitialiseStatus;  // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
 extern int32_t SFXJumpState;  // why the last ask was not taken: 3 read, 0 playing, 1 jumping
 
-#define SoundBankData (*(SoundBankHeader(*)[SFX_NUM_BANKS])0x00279510)
-#define ES_VoiceHandleData (*(ES_VoiceHandleDetails(*)[SFX_NUM_VOICE_HANDLES])0x0027aa28)
+extern SoundBankHeader SoundBankData[SFX_NUM_BANKS];
+extern ES_VoiceHandleDetails ES_VoiceHandleData[SFX_NUM_VOICE_HANDLES];
 extern SFXItem *SFXFreeList;
-#define ListenerPositions (*(_VECTOR(*)[SFX_NUM_LISTENERS])0x0027aee0)
+extern _VECTOR ListenerPositions[SFX_NUM_LISTENERS];
 extern int MusicTrackInfo[SFX_NUM_MUSIC_TRACKS];
-#define SFXItems (*(SFXItem(*)[SFX_NUM_ITEMS])0x00286ce8)
-#define StreamWaitingIntialise (*(StreamIntialiseDetails(*)[SFX_NUM_STREAM_REQUESTS])0x00298448)
+extern SFXItem SFXItems[SFX_NUM_ITEMS];
+extern StreamIntialiseDetails StreamWaitingIntialise[SFX_NUM_STREAM_REQUESTS];
 extern int32_t SFXKeyOnFrameDelay;  // for the next SFXStart3D
 extern int SBInfoList[SFX_NUM_BANKS];
-// Where software ADPCM would decode to (it never did on the Xbox)
-#define SoftwareAdpcmBuffer ((void *)0x00298a48)
 extern SFXItem *BaseSFXActive;
-#define StreamMemCpyHandles (*(StreamMemCpyHandle(*)[SFX_NUM_STREAMS])0x00298a50)
-#define Streams (*(StreamData(*)[SFX_NUM_STREAMS])0x00298a70)
-#define SFXRequestedActiveData (*(SFXRequest(*)[SFX_NUM_ITEMS])0x00298e74)
+extern StreamMemCpyHandle StreamMemCpyHandles[SFX_NUM_STREAMS];
+extern StreamData Streams[SFX_NUM_STREAMS];
+extern SFXRequest SFXRequestedActiveData[SFX_NUM_ITEMS];
 extern int32_t SfxNisMusicTrigger;
 extern int32_t NisPlaying;
 extern int32_t NisQuitten;  // counts down 5 frames from a cut scene ending
 extern uint32_t SFXPaused;
-#define ZeroPos (*(_VECTOR *)0x0029937c)
+extern _VECTOR ZeroPos;
 extern char SFXFilePath[200];
 extern int32_t SFXLanguage;
 extern int32_t SFXFileAccessSuspendedToggle;
@@ -415,12 +413,12 @@ extern int32_t SFXUnderWater;
 extern int32_t FadeStartTimer;
 extern int32_t SFXFileAccessSuspended;
 extern int32_t SFXActiveCount;
-#define SFXActiveData (*(SFXActive(*)[SFX_NUM_ITEMS])0x00299484)
+extern SFXActive SFXActiveData[SFX_NUM_ITEMS];
 extern StreamLookupFileDetails *StreamLookupFileData;  // never set on the Xbox
 extern int32_t SFXLoadedMarker;  // the section the stream has read to (the name is ours)
 extern int32_t SFXActiveMarker;  // the section playing
-#define ListenerPos (*(_VECTOR *)0x002997b4)
-#define ListenerVel (*(_VECTOR *)0x002997c0)
+extern _VECTOR ListenerPos;
+extern _VECTOR ListenerVel;
 extern int32_t EnableReleaseAudioStreamSystem;
 extern int32_t DoInitialStreamBuffer;
 extern int32_t SFXJumpInstant;
@@ -434,7 +432,7 @@ extern char StreamFileName[256];
 extern int32_t InitialisingHashCode;
 extern StreamData *InitialisingStream;
 extern int32_t SFXInitialised;
-#define SFXZeroPoint (*(_VECTOR *)0x00299a10)
+extern _VECTOR SFXZeroPoint;
 
 // Whether a stream is playing, or able to
 inline bool StreamIsActive(const StreamData *stream) {

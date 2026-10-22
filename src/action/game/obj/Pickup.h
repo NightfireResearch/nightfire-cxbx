@@ -52,7 +52,7 @@ enum {
 // The multiplayer weapon sets, five weapons each; set 10 is drawn at random (Pickup_MakeRandomWeaponSet) from the
 // 27 weapons after them
 #define PICKUP_SETS 11
-#define PickupMatrix (*(short (*)[PICKUP_SETS][5])0x0017e5d8)
+extern short PickupMatrix[PICKUP_SETS][5];
 extern short UseableGuns[27];
 
 obj_tag * Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *celgl, ushort kind, ushort item,

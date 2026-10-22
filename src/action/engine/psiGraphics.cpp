@@ -12,6 +12,9 @@
 #include "XboxSystem.h"
 #include "psiDraw.h"
 
+// XBE_GLOBAL(0x002abe80, 0x2000)
+TextureInfo *Tex[2048];
+
 // XBE_GLOBAL(0x002adf88, 0x300)
 ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
 

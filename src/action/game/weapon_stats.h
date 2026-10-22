@@ -4,8 +4,8 @@
 #include "../actionhelpers.h"
 #include "../game.h"
 
-// The table is at 0x0018cfa0 and consists of 115 entries
-#define weapon_data (*(weapon_definition_tag(*)[115])0x0018cfa0)
+// The weapon definitions, 115 entries (weapon_stats.cpp)
+extern weapon_definition_tag weapon_data[115];
 
 // One per ammo type (weapon_definition_tag::ammoType): 34 entries at 0x0018ce08
 typedef struct {

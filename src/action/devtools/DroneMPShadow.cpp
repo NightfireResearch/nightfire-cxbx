@@ -33,7 +33,8 @@ const unsigned kFindOpponent = 0x00037c10;
 
 // The real sizes where our headers do not lay the whole thing out
 const size_t kObjSize = 0xe4;
-const unsigned kMsgPool = 0x001ee438, kMsgPoolSize = 0x1f6448 - 0x1ee438; // 1024 nodes, then the two list heads
+const unsigned kMsgPool = 0x001ee438, kMsgPoolSize = 0x8000; // 1024 nodes
+const unsigned kMsgLists = 0x001f6438; // the two list heads
 const unsigned kRandState = XbeOurs(0x0018cdf8);
 
 struct Region {
@@ -94,7 +95,8 @@ int CollectRegions(Drone_tag *drone, Region *regions) {
     regions[n++] = { "BOT_vars", &BOT_vars, sizeof(BOT_vars) };
     regions[n++] = { "NPCGlobals", &NPCGlobals, sizeof(NPCGlobals) };
     regions[n++] = { "MPGame", &MPGame, sizeof(MPGame) };
-    regions[n++] = { "message pool", (void *)kMsgPool, kMsgPoolSize };
+    regions[n++] = { "message pool", (void *)(size_t)XbeOurs(kMsgPool), kMsgPoolSize };
+    regions[n++] = { "message lists", (void *)(size_t)XbeOurs(kMsgLists), 0x10 };
     regions[n++] = { "rand", (void *)kRandState, 8 };
     return n;
 }

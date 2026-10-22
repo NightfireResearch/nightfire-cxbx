@@ -17,23 +17,46 @@ typedef struct HuffmanTables {
     ushort literals[1024 + 512];    // 0x0088 a 10-bit root and its subtables
     uchar subtableLengths[1024];    // 0x0c88 the longest code under each root entry
     ushort distances[256 + 512];    // 0x1088 an 8-bit root and its subtables
-    // 0x1688 the lengths by symbol, then in code order; the codes, bit-reversed; the symbols in code order. The
-    // lengths of a tree of more than 288 symbols run on into the codes, as in the original.
-    uint lists[288 + 288 + 512];
+    // 0x1688 the lengths by symbol, then in code order; the codes, bit-reversed; the symbols in code order (290
+    // places, to the end of the block). The lengths of a tree of more than 288 symbols run on into the codes, as in
+    // the original.
+    uint lists[288 + 288 + 290];
 } HuffmanTables;
 #pragma pack(pop)
 static_assert(offsetof(HuffmanTables, lists) == 0x1688, "HuffmanTables layout");
-#define HuffTables (*(HuffmanTables *)0x0029b2d0)
+static_assert(sizeof(HuffmanTables) == 0x2410, "HuffmanTables is 0x2410 bytes");
+// XBE_GLOBAL(0x0029b2d0, 0x2410)
+HuffmanTables HuffTables;
 #define HuffLengths (HuffTables.lists)
 #define HuffCodes (HuffTables.lists + 288)
 #define HuffSymbols (HuffTables.lists + 576)
 
-// The length and distance codes' bases and extra bits, the game's tables: indexed as the original does, so a symbol
-// past the 29 lengths or the 30 distances reads what follows them
-#define LengthBase ((const uchar *)0x0018cd5c - 257)    // [257 + n]: 0, 1, 2 ... 224, 255
-#define LengthExtra ((const uchar *)0x0018cd7c - 257)   // [257 + n]: eight 0s, then four each of 1 to 5, and 0
-#define DistanceBase ((const ushort *)0x0018cd9c)       // 0, 1, 2, 3, 4, 6 ... 24576
-#define DistanceExtra ((const signed char *)0x0018cdd8) // 0, 0, 0, 0, 1, 1 ... 13, 13
+// The length and distance codes' bases and extra bits, one after another as the game has them: indexed as the
+// original does, so a symbol past the 29 lengths or the 30 distances reads what follows them
+typedef struct InflateCodes {
+    uchar lengthBase[32];
+    uchar lengthExtra[32];
+    ushort distanceBase[30];
+    signed char distanceExtra[32];
+} InflateCodes;
+static_assert(sizeof(InflateCodes) == 0x9c, "InflateCodes is 0x9c bytes");
+// XBE_GLOBAL(0x0018cd5c, 0x9c)
+static const InflateCodes InflateCodeTables = {
+    .lengthBase = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
+        192, 224, 255,
+    },
+    .lengthExtra = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5},
+    .distanceBase = {
+        0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536,
+        2048, 3072, 4096, 6144, 8192, 0x3000, 0x4000, 0x6000,
+    },
+    .distanceExtra = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13},
+};
+#define LengthBase (InflateCodeTables.lengthBase - 257)       // [257 + n]
+#define LengthExtra (InflateCodeTables.lengthExtra - 257)     // [257 + n]
+#define DistanceBase (InflateCodeTables.distanceBase)
+#define DistanceExtra (InflateCodeTables.distanceExtra)
 
 #define HUFFMAN_END_OF_BLOCK 0x100
 #define HUFFMAN_MIN_MATCH 3

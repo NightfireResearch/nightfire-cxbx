@@ -43,7 +43,7 @@ static_assert(sizeof(DroneSMLists) == 0x10, "DroneSMLists is 0x10 bytes");
 // Only the four functions below use these. They stay the game's while the shadow tests run the original and ours
 // on them.
 // XBE_GLOBAL(0x001ee438, 0x8000)
-#define Drone_SM_LLItems (*(DroneSMItem(*)[DRONE_SM_ITEMS])0x001ee438)
+DroneSMItem Drone_SM_LLItems[DRONE_SM_ITEMS];
 // XBE_GLOBAL(0x001f6438, 0x10)
 DroneSMLists Drone_SM_LLDelayed;
 

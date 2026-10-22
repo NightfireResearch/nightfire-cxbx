@@ -56,7 +56,7 @@ typedef struct {
 static_assert(sizeof(block_entity_data) == 0x54, "Bad size for block_entity_data");
 
 // XBE_GLOBAL(0x00274b34, 0x8)
-#define DynamicBH (*(block_header_tag*)0x00274b34)
+block_header_tag DynamicBH;
 extern void *DynamicPtr;
 // XBE_GLOBAL(0x00274c88, 0x4)
 static uint32_t MapHashCode;
@@ -177,7 +177,8 @@ void parsemap_block_entity_params(void) {
 }
 
 // The header of the block currently being parsed, filled in by parsemap_parsenextblock (still original).
-#define CurrentBH (*(block_header_tag*)0x00274b40)
+// XBE_GLOBAL(0x00274b40, 0x8)
+block_header_tag CurrentBH;
 
 // Running total of the "old style" (identifier 5) collision blocks' leading size word. Only this function touches it.
 // XBE_GLOBAL(0x00274ca0, 0x4)

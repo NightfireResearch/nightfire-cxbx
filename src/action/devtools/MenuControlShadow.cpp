@@ -2045,7 +2045,7 @@ uint32_t RunSetHelp(bool original) {
         page->focused = NULL;
     // A control of a help line's now and then (the lines are the game's data)
     if (page->focused != NULL && R(2)) {
-        const uint32_t *line = (const uint32_t *)(uintptr_t)(0x0017d640 + 0xc * R(130));
+        const uint32_t *line = (const uint32_t *)(uintptr_t)XbeOurs(0x0017d640 + 0xc * R(130));
         page->focused->hashcode = (HASHCODE)line[0];
     }
     CDECL_VOID(0x000959e0, Page_SetHelpText, void (__cdecl *)(M_PAGE *), page);

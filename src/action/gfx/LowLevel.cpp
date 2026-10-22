@@ -18,7 +18,8 @@ extern uint32_t IsWidescreen;
 static uint switch_CONFIG_SOMEGRAPHICSTHING;
 
 // An identity matrix that maybe_psiDrawShadow and psiDrawSkinObjectMatrix (both still the game's) point at
-#define LowLevelIdentityMatrix (*(_MATRIX *)0x002ade8c)
+// XBE_GLOBAL(0x002ade8c, 0x3c)
+_MATRIX LowLevelIdentityMatrix;
 
 // The loading screen's state. Only the functions in this file touch it.
 // XBE_GLOBAL(0x002adf50, 0x1)

@@ -11,6 +11,7 @@
 #include "../engine/psiLight.h"
 #include "../engine/psiGraphics.h"
 #include "../game.h"
+#include "../input.h"
 #include "../gfx/Font.h"
 #include "../gfx/Sprite.h"
 #include "../sound/Sound.h"
@@ -29,6 +30,9 @@
 
 #include <stdio.h>
 #include <string.h>
+
+// XBE_GLOBAL(0x001f6668, 0xc)
+_VECTOR SkySunPos;
 
 // XBE_GLOBAL(0x0029d7a0, 0x444)
 SkyObj SkyObjs[SKY_OBJS];
@@ -161,8 +165,6 @@ uint16_t FlipScale;
 // Set for each object View_DrawObjList draws: its flags' bits 2 and 3
 extern uint8_t bCharacterLight;
 extern uint8_t bShadowCharacter;
-// A codename option (P_CNOPTIONS_Handler): objects that want it flash, with FlashMod, near the view
-#define FlashOption U8_AT(0x001fe6dc)
 extern float FlashMod;
 
 // The originals, called by address
@@ -424,7 +426,7 @@ void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
 
 // An object's colour (tweakR, G, B) and alpha (tweakA) as the draw tweak: the alpha a quarter in night vision with
 // effectFlags 0x20000, the colour times its light's (light_related) with 0x800, and times FlashMod when it flashes
-// (effectFlags 0x80000 or its model's, with FlashOption, within 4 of the eye).
+// (effectFlags 0x80000 or its model's, with player 0's flashingObjects, within 4 of the eye).
 // AUTOINJECT
 void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
     short alpha = obj->tweakA;
@@ -433,7 +435,7 @@ void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
 
     bool flashes = (obj->effectFlags & 0x80000) ||
                    (obj->objGraphics != NULL && (obj->objGraphics->applyFlagsToObject & 0x80000));
-    if (flashes && FlashOption && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
+    if (flashes && PlayerInputs[0].flashingObjects && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
         double flash = FlashMod;
         if (obj->effectFlags & 0x800) {
             psiSetTweakARGB(alpha, Ftol((int)(obj->tweakR * obj->ambientR) * flash * (1.0f / 255.0f)),
@@ -780,13 +782,13 @@ static const uint8_t *s_pendingFont = NULL;   // the font current at that call -
 // animation frames (count at +0x24, slots from +0x54) through d3dSetTextureStage0, which takes a slot in the
 // D3D texture table, Gfx.textures - and a slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in
 // engine/Direct3D/GraphicsSystem.h). Gfx is ours, so the table is not at the game's address any more.
-#define TextureRecords         ((const uint8_t *const *)0x002abe80)
+#define TextureRecords         ((const uint8_t *const *)Tex)
 
 // The current font (__Font_DrawText's): its first and last character at +8 and +0xa, the number of glyphs at
 // +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout Font_FindGlyph and
 // __Font_DrawText read - the box in the sheet at +0 (u, v, width, height), the vertical offset at +8, the
 // extra advance at +0xa and the character at +0x14 (gfx/Font.h: FONT_tag, CHARDATA_tag).
-#define CurrentFont (*(const uint8_t *const *)0x001f64b0)
+#define CurrentFont ((const uint8_t *)Font)
 
 // With DumpTextures on, a font's glyph boxes go out beside its texture once, for making a replacement.
 static void DescribeFontOnce(const uint8_t *font, const void *xboxTexture) {

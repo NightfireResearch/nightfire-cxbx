@@ -71,17 +71,12 @@ static_assert(sizeof(DroneAnimScript) == 4, "DroneAnimScript is 4 bytes");
 #define NUM_DRONE_ANIM_ROWS 436
 #define NUM_DRONE_ANIM_SETS 27
 
-// XBE_GLOBAL(0x001664c0, 0x594)
-#define DroneAnimStates (*(const DroneAnimState(*)[NUM_DRONE_ANIM_STATES])0x001664c0)
-// XBE_GLOBAL(0x00166a58, 0x28e0)
-#define Drone_AnimInfo (*(const DroneAnimInfo(*)[NUM_DRONE_ANIM_ROWS])0x00166a58)
-// XBE_GLOBAL(0x00169338, 0xb7f0)
-#define Drone_AnimTables (*(const DroneAnimScript(*)[NUM_DRONE_ANIM_ROWS][NUM_DRONE_ANIM_SETS])0x00169338)
+extern const DroneAnimState DroneAnimStates[NUM_DRONE_ANIM_STATES];             // DroneTables.cpp
+extern const DroneAnimInfo Drone_AnimInfo[NUM_DRONE_ANIM_ROWS];                 // DroneAnimInfo.cpp
+extern const DroneAnimScript Drone_AnimTables[NUM_DRONE_ANIM_ROWS][NUM_DRONE_ANIM_SETS];   // DroneTables.cpp
 
-// XBE_GLOBAL(0x001640fc, 0x10)
-#define DroneData_AnimFunc (*(const DroneDataFunc(*)[2])0x001640fc)
-// XBE_GLOBAL(0x0016410c, 0x10)
-#define DroneData_DAStateFunc (*(const DroneDataFunc(*)[2])0x0016410c)
+extern const DroneDataFunc DroneData_AnimFunc[2];
+extern const DroneDataFunc DroneData_DAStateFunc[2];
 
 // DroneAnimInfo.htFlags (Drone_tag.unknown46c)
 #define DANIMFLAG_LOOP 0x1

@@ -39,7 +39,7 @@ _VECTOR *TriHeap;
 // XBE_GLOBAL(0x001ddc60, 0xc)
 LLISTINFO_tag HitHeap;
 // XBE_GLOBAL(0x001df41c, 0xc)
-#define ForcedList (*(LLISTINFO_tag*)0x001df41c)
+LLISTINFO_tag ForcedList;
 // The hits Collide_Sort sorts
 // XBE_GLOBAL(0x001ddc70, 0xfa0)
 static HITDATA_tag *SrtList[1000];

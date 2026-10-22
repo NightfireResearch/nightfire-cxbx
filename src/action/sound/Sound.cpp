@@ -96,7 +96,8 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 
 
 // Written by Sound_UpdateListeners, once per frame
-#define GlobalListenerPos (*(_VECTOR*)0x0029a140)
+// XBE_GLOBAL(0x0029a140, 0xc)
+_VECTOR GlobalListenerPos;
 
 // The sound ids' low 20 bits index SFXOutputData
 #define SFX_ID_MASK 0xfffff

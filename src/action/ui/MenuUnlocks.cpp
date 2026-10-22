@@ -10,8 +10,10 @@
 // - a 64-bit mask per player (docs/ui/secrets.md, "How the bonus bits work") - which open multiplayer characters,
 // scenarios and gadget upgrades.
 
+extern char PauseBuildString[29];   // ui_pause.cpp: sp_level[-1]'s byte, in the game's memory
+
 // XBE_GLOBAL(0x0025d6e8, 0x20)
-#define menu_bonus              ((ulong *)0x0025d6e8)   // 4 players x {lo, hi}
+ulong menu_bonus[8];  // 4 players x {lo, hi}
 // XBE_GLOBAL(0x0025d78d, 0x1)
 uint8_t menu_bonus_replace;  // Menu_SetBonus always replaces, never ORs
 // XBE_GLOBAL(0x0025d78c, 0x1)
@@ -83,10 +85,10 @@ bool Menu_SetLevelBonus(int level, uint medal, byte player) {
     while (index < ARRAY_SIZE(sp_level) && (int)sp_level[index].identifier != level)
         index++;
     if (index == ARRAY_SIZE(sp_level)) {
-        // As the original, which then marks sp_level[-1] - in the game's memory the byte at 0x17c578, which is what
-        // it still is, the last "8" of P_PAUSE's build string - and opens the first mission.
+        // As the original, which then marks sp_level[-1] - in the game's memory the space after the time in P_PAUSE's
+        // build string - and opens the first mission.
         index = -1;
-        U8_AT(0x0017c578) = 1;
+        PauseBuildString[0x18] = 1;
     } else {
         ITEM_ENABLED(sp_level[index]) = 1;
     }

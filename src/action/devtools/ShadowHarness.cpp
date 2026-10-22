@@ -46,13 +46,15 @@ void ShadowRegions::Capture(std::vector<uint8_t> &out) const {
 }
 
 bool ShadowRegions::Describe(const std::vector<uint8_t> &a, const std::vector<uint8_t> &b, int *region,
-                             size_t *offset) const {
+                             size_t *offset, size_t *index) const {
     size_t at = 0;
     for (size_t i = 0; i < regions.size(); i++) {
         for (size_t j = 0; j < regions[i].size; j++) {
             if (a[at + j] != b[at + j]) {
                 *region = (int)i;
                 *offset = j;
+                if (index != NULL)
+                    *index = at + j;
                 return true;
             }
         }
@@ -192,17 +194,17 @@ bool ShadowCompare(ShadowRegions &regions, const char *tag, const char *what, in
     static std::map<std::string, int> reports;
     int &reported = reports[std::string(tag) + what];
     int region;
-    size_t offset;
+    size_t offset, index;
     if (theirResult != ourResult) {
         same = false;
         if (reported++ < 3)
             printf("[%s] %s case %d: returns 0x%x, the original 0x%x\n", tag, what, trial, ourResult, theirResult);
     }
-    if (regions.Describe(theirState, ourState, &region, &offset)) {
+    if (regions.Describe(theirState, ourState, &region, &offset, &index)) {
         same = false;
         if (reported++ < 3)
-            printf("[%s] %s case %d: memory differs in region %d at +0x%x\n", tag, what, trial, region,
-                   (unsigned)offset);
+            printf("[%s] %s case %d: memory differs in region %d at +0x%x: %02x, the original %02x\n", tag, what,
+                   trial, region, (unsigned)offset, ourState[index], theirState[index]);
     }
     if (theirLog != ourLog) {
         same = false;
@@ -356,7 +358,9 @@ void __cdecl FakeExplodeCreate(obj_tag *obj, _VECTOR *pos, _VECTOR *up, float sc
 }
 
 void __cdecl FakeSetUpdator(ushort num, obj_tag *obj, void *func) {
-    ShadowLog("setupdator(%u,%p,%p)", num, obj, func);
+    // our port of a function as the game's entry it replaces, so ours and the original log the same updator
+    unsigned entry = XbeOriginal_EntryOf((unsigned)(uintptr_t)func);
+    ShadowLog("setupdator(%u,%p,%08x)", num, obj, entry != 0 ? entry : (unsigned)(uintptr_t)func);
 }
 
 void __cdecl FakePlayerEnable(obj_tag *player, _MATRIX *mtx, int checkAttach) {

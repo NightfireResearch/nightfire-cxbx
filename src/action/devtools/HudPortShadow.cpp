@@ -53,8 +53,8 @@ namespace {
 #endif
 
 // The game's state the package reads and writes
-#define GameFont (*(FONT_tag **)0x001f64b0)
-#define GameFontTable (*(FONTTABLE_tag (*)[5])0x0017bd90)
+#define GameFont (*(FONT_tag **)(size_t)XbeOurs(0x001f64b0))
+#define GameFontTable GameSpan<FONTTABLE_tag>{0x0017bd90}
 #define GameSprCnt U32_AT(XbeOurs(0x0029e810))
 #define GameSprBuffList (GameSpan<SPRITE_DRAW>{0x0029dc00})
 #define GameMsgQueue (*(DLISTINFO_tag *)XbeOurs(0x0029abf8))
@@ -1326,7 +1326,7 @@ void RandomQueue(void) {
         GameSubTitleSpr[i] = &world.sprites[i];
     GameSubTitleSpr[3] = R(2) ? (sprite *)world.strings[0] : NULL;
     GameSubTitleSpr[4] = R(2) ? (sprite *)world.strings[1] : NULL;
-    CirBuf_Init(&GameReceived, 0x80, (int *)0x0029ac10);
+    CirBuf_Init(&GameReceived, 0x80, (int *)(size_t)XbeOurs(0x0029ac10));
     int n = (int)R(6);
     for (int i = 0; i < n; i++) {
         RandomText(world.sources[i], 90);

@@ -32,6 +32,129 @@
 #include <string.h>
 #include "../sound/SFX.h"
 
+// XBE_GLOBAL(0x0017f478, 0x300)
+const LEVEL_REWARDS rewards_table[REWARDS_TABLE_SIZE] = {
+    {
+        .level = (HASHCODE)0x9000001,
+        .rewards = {{}, {.value = 30}, {.value = 0x1002b}, {.value = 0x40018}, {.value = 0x10034}},
+        .names = {
+            (Action_TranslatedText)726, (Action_TranslatedText)748, (Action_TranslatedText)0x10001f9,
+            (Action_TranslatedText)754,
+        },
+        .icons = {(HASHCODE)0x300012c, (HASHCODE)0x3000111, (HASHCODE)0x3000102, (HASHCODE)0x3000118},
+    },
+    {
+        .level = (HASHCODE)0x7000005,
+        .rewards = {{}, {.value = 26}, {.value = 0x10026}, {.value = 0x40000}, {.value = 0x1002d}},
+        .names = {(Action_TranslatedText)722, (Action_TranslatedText)745, (Action_TranslatedText)933, (Action_TranslatedText)753},
+        .icons = {(HASHCODE)0x3000134, (HASHCODE)0x3000116, (HASHCODE)0x30000f3, (HASHCODE)0x3000108},
+    },
+    {
+        .level = (HASHCODE)0x9000005,
+        .rewards = {{}, {.value = 27}, {.value = 0x20038}, {.value = 0x40003}, {.value = 0x10035}},
+        .names = {
+            (Action_TranslatedText)723, (Action_TranslatedText)734, (Action_TranslatedText)735,
+            (Action_TranslatedText)0x10001fc,
+        },
+        .icons = {(HASHCODE)0x3000131, (HASHCODE)0x30000a1, (HASHCODE)0x30000e2, (HASHCODE)0x3000196},
+    },
+    {
+        .level = (HASHCODE)0x9000006,
+        .rewards = {{}, {.value = 28}, {.value = 0x1002a}, {.value = 0x40006}, {.value = 0x10030}},
+        .names = {(Action_TranslatedText)724, (Action_TranslatedText)746, (Action_TranslatedText)934, (Action_TranslatedText)750},
+        .icons = {(HASHCODE)0x3000133, (HASHCODE)0x300011a, (HASHCODE)0x30000df, (HASHCODE)0x3000113},
+    },
+    {
+        .level = (HASHCODE)0x7000001,
+        .rewards = {{}, {.value = 29}, {.value = 0x20039}, {.value = 0x40009}, {.value = 0x1002e}},
+        .names = {(Action_TranslatedText)725, (Action_TranslatedText)736, (Action_TranslatedText)935, (Action_TranslatedText)749},
+        .icons = {(HASHCODE)0x300012f, (HASHCODE)0x30000a4, (HASHCODE)0x30000fa, (HASHCODE)0x300011d},
+    },
+    {
+        .level = (HASHCODE)0x7000009,
+        .rewards = {{}, {.value = 35}, {.value = 0x2003a}, {.value = 0x40000}, {.value = 0x10032}},
+        .names = {(Action_TranslatedText)731, (Action_TranslatedText)737, (Action_TranslatedText)933, (Action_TranslatedText)752},
+        .icons = {(HASHCODE)0x300012e, (HASHCODE)0x30000a3, (HASHCODE)0x30000f3, (HASHCODE)0x300010b},
+    },
+    {
+        .level = (HASHCODE)0x700000c,
+        .rewards = {{}, {.value = 31}, {.value = 0x10028}, {.value = 0x4000c}, {.value = 0x1002f}},
+        .names = {(Action_TranslatedText)727, (Action_TranslatedText)931, (Action_TranslatedText)936, (Action_TranslatedText)744},
+        .icons = {(HASHCODE)0x3000130, (HASHCODE)0x300011c, (HASHCODE)0x30000e0, (HASHCODE)0x3000110},
+    },
+    {
+        .level = (HASHCODE)0x7000011,
+        .rewards = {{}, {.value = 32}, {.value = 0x2003b}, {.value = 0x40000}, {.value = 0x10036}},
+        .names = {(Action_TranslatedText)728, (Action_TranslatedText)739, (Action_TranslatedText)933, (Action_TranslatedText)930},
+        .icons = {(HASHCODE)0x300012a, (HASHCODE)0x300009d, (HASHCODE)0x30000f3, (HASHCODE)0x3000148},
+    },
+    {
+        .level = (HASHCODE)0x9000002,
+        .rewards = {{}, {.value = 33}, {.value = 0x10029}, {.value = 0x4000f}, {.value = 0x10031}},
+        .names = {(Action_TranslatedText)729, (Action_TranslatedText)932, (Action_TranslatedText)937, (Action_TranslatedText)751},
+        .icons = {(HASHCODE)0x3000198, (HASHCODE)0x3000114, (HASHCODE)0x30000e1, (HASHCODE)0x300010f},
+    },
+    {
+        .level = (HASHCODE)0x9000003,
+        .rewards = {{}, {.value = 34}, {.value = 0x2003c}, {.value = 0x40012}, {.value = 0x10027}},
+        .names = {(Action_TranslatedText)730, (Action_TranslatedText)741, (Action_TranslatedText)938, (Action_TranslatedText)929},
+        .icons = {(HASHCODE)0x3000132, (HASHCODE)0x300009e, (HASHCODE)0x30000e6, (HASHCODE)0x300010a},
+    },
+    {
+        .level = (HASHCODE)0x7000014,
+        .rewards = {{}, {.value = 36}, {.value = 0x3003e}, {.value = 0x40015}, {.value = 0x10033}},
+        .names = {(Action_TranslatedText)732, (Action_TranslatedText)742, (Action_TranslatedText)939, (Action_TranslatedText)747},
+        .icons = {(HASHCODE)0x300012d, (HASHCODE)0x30000c4, (HASHCODE)0x30000c4, (HASHCODE)0x3000117},
+    },
+    {
+        .level = (HASHCODE)0x700001b,
+        .rewards = {{}, {.value = 37}, {.value = 0x2003d}, {.value = 0x40009}, {.value = 0x10037}},
+        .names = {
+            (Action_TranslatedText)0x10001ff, (Action_TranslatedText)743, (Action_TranslatedText)935,
+            (Action_TranslatedText)0x10001fb,
+        },
+        .icons = {(HASHCODE)0x300012b, (HASHCODE)0x30000a0, (HASHCODE)0x30000fa, (HASHCODE)0x3000194},
+    },
+};
+// XBE_GLOBAL(0x002251b8, 0x20040)
+char codename_buf[CODENAME_SLOTS_DEFAULT + 4096][0x20];
+// XBE_GLOBAL(0x0017d588, 0x70)
+DEFAULT_CODENAME def_codename[2] = {
+    {
+        .name = (Action_TranslatedText)667,
+        .musicVolume = 75,
+        .sfxVolume = 100,
+        .mpSomeField2 = 1,
+        .controlStyle = 7,
+        .autoAim = 1,
+        .crouchToggle = 1,
+        .vibrationEnabled = 1,
+        .crosshairsEnabled = 1,
+        .autoSwitchBetterWeapon = 1,
+        .input_0c = 1,
+        .respawnMode = 2,
+        .showNames = 1,
+    },
+    {
+        .name = (Action_TranslatedText)529,
+        .musicVolume = 75,
+        .sfxVolume = 100,
+        .mpSomeField2 = 1,
+        .controlStyle = 7,
+        .autoAim = 1,
+        .crouchToggle = 1,
+        .vibrationEnabled = 1,
+        .crosshairsEnabled = 1,
+        .autoSwitchBetterWeapon = 1,
+        .input_0c = 1,
+        .respawnMode = 2,
+        .showNames = 1,
+    },
+};
+
+// XBE_GLOBAL(0x0017d540, 0x48)
+MENU_LS ls = {.codename = {0, 0, 0, 1, 1, 1}};
+
 // XBE_GLOBAL(0x0025d7bc, 0x1)
 uint8_t menu_music_playing;
 // XBE_GLOBAL(0x0025d7bd, 0x1)

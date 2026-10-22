@@ -39,7 +39,7 @@ namespace {
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 #define CollideGlobals (GameSpan<uint8_t>{0x001dc9a0})    // ColBoxs to CelList
 #define COLLIDE_GLOBALS_SIZE (0x001dee38 - 0x001dc9a0)
-#define ForcedListInfo ((uint8_t *)0x001df41c)
+#define ForcedListInfo ((uint8_t *)(size_t)XbeOurs(0x001df41c))
 #define FrameRates (GameSpan<uint8_t>{0x0017c100})       // FRAME_RATE_MUL, REC_FRAME_RATE
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))

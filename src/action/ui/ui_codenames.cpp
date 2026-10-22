@@ -128,7 +128,6 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 // Menu_UpdateMessageBox from its update until XBox_DoSaveFlow, which shows the message boxes, says it is over.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 extern uint32_t SubtitlesEnabled;
 extern uint8_t menu_bonus_replace;  // MenuUnlocks.cpp
 extern int32_t SaveEnum_EntriesPerFrame;  // psiSave.cpp
@@ -614,7 +613,7 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
         MPSettings.RespawnSelectionMode = (RespawnMode)codename->respawnMode;
         SubtitlesEnabled = codename->subtitles;
         input->vibrationEnabled = codename->vibrationEnabled;
-        input->field12_0xc = codename->input_0c;
+        input->flashingObjects = codename->input_0c;
         input->hudVisibility = codename->input_0b;
     }
     if (parts & 2) {
@@ -643,7 +642,7 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
     Menu_SetBonus(codename->bonusLo, codename->bonusHi, player, 0);
 }
 
-#define menu_bonus ((ulong *)0x0025d6e8)     // MenuUnlocks.cpp
+extern ulong menu_bonus[8];   // MenuUnlocks.cpp
 
 // A default codename takes the player's settings, volumes, progress and rewards as they are now (the reverse of
 // Menu_MapDefaultCodename)
@@ -673,7 +672,7 @@ void Menu_UpdateDefaultCodename(uchar player, uchar slot) {
     codename->nightfireStatus = Menu_GetNightfireStatus();
     codename->bonusLo = menu_bonus[player * 2];
     codename->bonusHi = menu_bonus[player * 2 + 1];
-    codename->input_0c = input->field12_0xc;
+    codename->input_0c = input->flashingObjects;
     codename->input_0b = input->hudVisibility;
     codename->weaponUpgrade = GameState.WeaponUpgradeRelated;
 }

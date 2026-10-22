@@ -31,7 +31,21 @@ uchar *menu_file;
 // XBE_GLOBAL(0x0025fb10, 0x1)
 uint8_t user_restarted_or_quit;
 // What a manager's cursor sprite is made from
-#define menu_cursor (*(SpriteInfo *)0x0017d60c)
+// XBE_GLOBAL(0x0017d60c, 0x2c)
+SpriteInfo menu_cursor = {
+    .colour = 0x7f7f7f7f,
+    .unknown1 = 0x7f7f7f7f,
+    .maybeEnabled = 0xffff,
+    .maybeFlags = 2048,
+    .onscreenWidth = 128,
+    .onscreenHeight = 32,
+    .spritesheetX = 31,
+    .spritesheetY = 36,
+    .maybeSpritesheetWidth = 1,
+    .maybeSpritesheetHeight = 1,
+    .textRef = (Action_TranslatedText)0xffffffff,
+    .textureHashcode = (HASHCODE)0x3000042,
+};
 
 // The message shown while a pad is out (MenuManager_Monitor): its state, the player whose pad it is, whether the
 // mission's end menu was showing, the frames it waits, its text
@@ -42,7 +56,8 @@ int32_t controller_player = -1;
 extern uint8_t controller_mission_end;
 // XBE_GLOBAL(0x0017d63c, 0x4)
 int32_t controller_wait = 10;
-#define controller_text ((char *)0x0025fb18)
+// XBE_GLOBAL(0x0025fb18, 0x100)
+static char controller_text[256];
 
 #define CONTROLLER_WAIT 10
 #define CONTROLLER_REMOVED_TEXT ((Action_TranslatedText)0x10001ec)

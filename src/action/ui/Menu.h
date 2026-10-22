@@ -118,7 +118,7 @@ typedef struct LEVEL_REWARDS {
 static_assert(sizeof(LEVEL_REWARDS) == 0x40, "LEVEL_REWARDS is 0x40 bytes");
 
 #define REWARDS_TABLE_SIZE 12
-#define rewards_table ((const LEVEL_REWARDS *)0x0017f478)  // [REWARDS_TABLE_SIZE]
+extern const LEVEL_REWARDS rewards_table[REWARDS_TABLE_SIZE];
 
 // What Menu_GetLevelBonuses hands back: each medal's reward, and whether the first player has it
 typedef struct LEVEL_BONUSES {
@@ -173,7 +173,7 @@ typedef struct MENU_LS {
 #pragma pack(pop)
 static_assert(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
 void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation);
-#define ls (*(MENU_LS *)0x0017d540)
+extern MENU_LS ls;
 
 // The two default codenames, slots 0 and 1 of the codenames list (Menu_MapDefaultCodename applies one)
 #pragma pack(push, 1)
@@ -210,11 +210,12 @@ typedef struct DEFAULT_CODENAME {
 } DEFAULT_CODENAME;
 #pragma pack(pop)
 static_assert(sizeof(DEFAULT_CODENAME) == 0x38, "DEFAULT_CODENAME is 0x38 bytes");
-#define def_codename ((DEFAULT_CODENAME *)0x0017d588)  // [2]
+extern DEFAULT_CODENAME def_codename[2];
 #define CODENAME_SLOTS_DEFAULT 2
 
-// The codenames list: the two defaults, then the saved ones as Menu_EnumSaves found them (ls.numCodenames in all)
-#define codename_buf ((char (*)[0x20])0x002251b8)
+// The codenames list: the two defaults, then the saved ones as Menu_EnumSaves found them (ls.numCodenames in all).
+// The original has no fixed count: the room before the next global holds 4098.
+extern char codename_buf[CODENAME_SLOTS_DEFAULT + 4096][0x20];   // Menu.cpp
 
 uint Menu_EnumSaves(uchar managerNum, char firstOnly);
 void Menu_FlushEnum(void);

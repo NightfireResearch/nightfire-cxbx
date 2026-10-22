@@ -32,8 +32,8 @@ static M_ITEM *Scenarios(bool game) { return game ? GAME_LIST(0x17c7a8, 13) : mp
 
 static void Save(UnlockState *s, bool game = false) {
     memset(s, 0, sizeof(*s));   // padding too, since states are compared whole
-    memcpy(s->bonus, (void *)0x0025d6e8, sizeof(s->bonus));
-    s->spBefore = *(uchar *)0x0017c578;
+    memcpy(s->bonus, (void *)(size_t)XbeOurs(0x0025d6e8), sizeof(s->bonus));
+    s->spBefore = *(uchar *)(size_t)XbeOurs(0x0017c578);
     for (int i = 0; i < 12; i++) s->sp[i] = ITEM_ENABLED(SpLevel(game)[i]);
     for (int i = 0; i < 29; i++) s->chars[i] = ITEM_ENABLED(Characters(game)[i]);
     for (int i = 0; i < 29; i++) s->charsSmall[i] = ITEM_ENABLED(CharactersSmall(game)[i]);
@@ -45,8 +45,8 @@ static void Save(UnlockState *s, bool game = false) {
 }
 
 static void Load(const UnlockState *s) {
-    memcpy((void *)0x0025d6e8, s->bonus, sizeof(s->bonus));
-    *(uchar *)0x0017c578 = s->spBefore;
+    memcpy((void *)(size_t)XbeOurs(0x0025d6e8), s->bonus, sizeof(s->bonus));
+    *(uchar *)(size_t)XbeOurs(0x0017c578) = s->spBefore;
     for (int game = 0; game < 2; game++) {   // both copies: the original runs on the game's, ours on ours
         for (int i = 0; i < 12; i++) ITEM_ENABLED(SpLevel(game)[i]) = s->sp[i];
         for (int i = 0; i < 29; i++) ITEM_ENABLED(Characters(game)[i]) = s->chars[i];

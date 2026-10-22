@@ -22,7 +22,6 @@
 // Not reimplemented, called by address
 
 extern uint8_t user_restarted_or_quit;  // MenuManager.cpp
-#define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 
 // The pause menu's controls: instances of C_GCPAUSE told apart by their ids
 #define PAUSE_TAB_OBJECTIVES_TEXT   0   // the tabs: GainFocus shows their panel
@@ -64,9 +63,9 @@ static void Pause_SetState(uchar managerNum, int id, int state) {
 // XBE_GLOBAL(0x0025d7e0, 0x40)
 char pause_build_text[0x40];
 
-// The game's "<!> Oct 20 2002 04:26:28 <!>": Menu_SetLevelBonus, given a level not in sp_level, writes 1 over its
-// last "8"
-#define PAUSE_BUILD_STRING ((const char *)0x0017c560)
+// The game's build string: Menu_SetLevelBonus, given a level not in sp_level, writes 1 over the space after the time
+// XBE_GLOBAL(0x0017c560, 0x1d)
+char PauseBuildString[] = "<!> Oct 20 2002 04:26:28 <!>";
 
 // The styles' names, for the radio (as P_CNCONTROLS)
 static const Action_TranslatedText pause_style_names[8] = {
@@ -142,7 +141,7 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         CheatInfo.pauseCleared = 0;
         __Menu_Send(managerNum, SUB_P_PAUSE_ICON_184, MessageType_SetIconSpriteFlags, 0x100, 0);
         Manager_SendMessage(&manager[managerNum], MessageType_SetCursor, C_GCPAUSE, 0);
-        sprintf(pause_build_text, "%s", PAUSE_BUILD_STRING);
+        sprintf(pause_build_text, "%s", PauseBuildString);
         LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_BUILD_TEXT, pause_build_text);
         break;
     }

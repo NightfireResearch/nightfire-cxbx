@@ -19,7 +19,8 @@ cel_tag *GfxList;
 #define VISION_PLANES 10
 
 // The eye and the far corners of the view's pyramid (200 ahead), in the world
-#define ViewPoints (*(_VECTOR (*)[5])0x0029e828)
+// XBE_GLOBAL(0x0029e828, 0x3c)
+_VECTOR ViewPoints[5];
 // XBE_GLOBAL(0x0029e868, 0x94)
 VisPortal PortalsOut;
 // XBE_GLOBAL(0x0029e900, 0x94)
@@ -28,10 +29,12 @@ VisPortal PortalsIn;
 int NumPortalPlanes[VISION_DEPTHS];
 // XBE_GLOBAL(0x0029ea58, 0x4)
 uint32_t VisionRecurseCount;
-#define PortalPlanes (*(plane_equ_tag (*)[VISION_DEPTHS][VISION_PLANES])0x0029ea60)
+// XBE_GLOBAL(0x0029ea60, 0x1e00)
+plane_equ_tag PortalPlanes[VISION_DEPTHS][VISION_PLANES];
 // XBE_GLOBAL(0x002a0860, 0x10)
 uchar PortalPointIn[16];
-#define VisCelList (*(VisCel (*)[64])0x002a0870)
+// XBE_GLOBAL(0x002a0870, 0x200)
+VisCel VisCelList[64];
 // XBE_GLOBAL(0x002a0a70, 0x2)
 uint16_t VisCelCount;
 

@@ -129,7 +129,10 @@ static int32_t SaveGamesReturned;
 // XBE_GLOBAL(0x002adf14, 0x4)
 int32_t NumberSaveGamesGot;  // PS2's name for the count
 #define SAVE_NAME_SLOT 9                                                 // 8 characters + NUL
-#define SaveGameCache ((char(*)[SAVE_NAME_SLOT])0x002a2e68)                // no fixed length in the original
+// The saves' names as the walk found them. The original has no fixed count: the room before the next global holds
+// 4098.
+// XBE_GLOBAL(0x002a2e68, 0x9012)
+static char SaveGameCache[4098][SAVE_NAME_SLOT];
 
 // A save the walk could not read was found: the message box's B then leaves for the dashboard (ui_codenames.cpp)
 // XBE_GLOBAL(0x0025edba, 0x1)

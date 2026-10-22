@@ -75,7 +75,8 @@ MUSICAIVARS MapDroneData[NUM_MAPDRONEDATA] = {
 };
 
 // The level's MapMusic row
-#define MapMusicData (*(MUSICDATA **)0x00182734)
+// XBE_GLOBAL(0x00182734, 0x4)
+MUSICDATA *MapMusicData = MapMusic;
 // The section asked for last, and the one the stream is playing
 // XBE_GLOBAL(0x00182738, 0x4)
 int32_t MusicLastJumpRequest = -1;

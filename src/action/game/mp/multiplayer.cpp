@@ -33,6 +33,49 @@
 #include "../obj/PlayerWeapon.h"        // Player_EquipWeapon
 #include "../Upgrade.h"                 // Upgrade_MPWeapon
 #include "../weapon_stats.h"
+#include "../../gfx/Font.h"
+
+// XBE_GLOBAL(0x0025fe38, 0x23c)
+MPSettings_t MPSettings;
+
+// XBE_GLOBAL(0x00261678, 0x110)
+GoldenEyeStruct GoldenEye;
+
+// XBE_GLOBAL(0x00245240, 0x40)
+MPJoinSlot mp_join_slots[NUM_PLAYERS];
+
+// XBE_GLOBAL(0x001637c0, 0x1d0)
+MP_skin MP_skins[29] = {
+    {.skinHashcode = (HASHCODE)0x5000089, .fileHashcode = (HASHCODE)0x10001b4, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x50000a5, .fileHashcode = (HASHCODE)0x10001ec, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500008e, .fileHashcode = (HASHCODE)0x10001bc, .handType = 5},
+    {.skinHashcode = (HASHCODE)0x5000092, .fileHashcode = (HASHCODE)0x10001c5, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000095, .fileHashcode = (HASHCODE)0x10001c9, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000096, .fileHashcode = (HASHCODE)0x10001d5, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000097, .fileHashcode = (HASHCODE)0x10001dd, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x5000098, .fileHashcode = (HASHCODE)0x10001de, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500009a, .fileHashcode = (HASHCODE)0x10001e1, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x50000c6, .fileHashcode = (HASHCODE)0x100021b, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500009e, .fileHashcode = (HASHCODE)0x10001e5, .handType = 5},
+    {.skinHashcode = (HASHCODE)0x50000a0, .fileHashcode = (HASHCODE)0x10001e7, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x50000a4, .fileHashcode = (HASHCODE)0x10001eb, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500008b, .fileHashcode = (HASHCODE)0x10001b7, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x50000bb, .fileHashcode = (HASHCODE)0x100020b, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500001c, .fileHashcode = (HASHCODE)0x100012f, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500001d, .fileHashcode = (HASHCODE)0x100012a, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500001f, .fileHashcode = (HASHCODE)0x100012d, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x5000056, .fileHashcode = (HASHCODE)0x100015a, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000060, .fileHashcode = (HASHCODE)0x100016a, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000063, .fileHashcode = (HASHCODE)0x1000170, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000086, .fileHashcode = (HASHCODE)0x10001af, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000081, .fileHashcode = (HASHCODE)0x10001aa, .handType = 7},
+    {.skinHashcode = (HASHCODE)0x5000082, .fileHashcode = (HASHCODE)0x10001ab, .handType = 6},
+    {.skinHashcode = (HASHCODE)0x5000084, .fileHashcode = (HASHCODE)0x10001ad, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500006b, .fileHashcode = (HASHCODE)0x100017e, .handType = 5},
+    {.skinHashcode = (HASHCODE)0x5000085, .fileHashcode = (HASHCODE)0x10001ae, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x500007b, .fileHashcode = (HASHCODE)0x10001a1, .handType = 4},
+    {.skinHashcode = (HASHCODE)0x50000b9, .fileHashcode = (HASHCODE)0x1000208, .handType = 4},
+};
 
 // XBE_GLOBAL(0x001f660c, 0x4)
 uint32_t MultiplayerLayout_LeftRightOrTopBtm;
@@ -1422,9 +1465,39 @@ void MP_assassinReset(bool handOver) {
         MPSettings.Player[idx].TeamId = MI6;
 }
 
-#define AssassinSpriteInfo (*(SpriteInfo *)0x0017e5ac)
-#define MPTimeInfo (*(SpriteInfo *)0x0017e554)
-#define MPStatusInfo (*(SpriteInfo *)0x0017e580)
+// XBE_GLOBAL(0x0017e5ac, 0x2c)
+SpriteInfo AssassinSpriteInfo = {
+    .colour = 0xffffffff,
+    .unknown1 = 0xffffffff,
+    .maybeEnabled = 1,
+    .maybeFlags = 8192,
+    .posX = 320,
+    .posY = 72,
+    .textRef = (Action_TranslatedText)0xffffffff,
+    .linkedViewer = 5,
+};
+// XBE_GLOBAL(0x0017e554, 0x2c)
+SpriteInfo MPTimeInfo = {
+    .colour = 0xffffffff,
+    .unknown1 = 255,
+    .maybeEnabled = 1,
+    .maybeFlags = 8192,
+    .posX = 320,
+    .posY = 134,
+    .maybeClippedText = FontFormat1Centred,
+    .linkedViewer = 5,
+};
+// XBE_GLOBAL(0x0017e580, 0x2c)
+SpriteInfo MPStatusInfo = {
+    .colour = 0xffffffff,
+    .unknown1 = 255,
+    .maybeEnabled = 1,
+    .maybeFlags = 8192,
+    .posX = 320,
+    .posY = 72,
+    .maybeClippedText = FontFormat2Centred,
+    .linkedViewer = 5,
+};
 
 // The assassin sprites' textures (names ours)
 #define TEX_MP_ASSASSIN_180 ((HASHCODE)0x03000180)

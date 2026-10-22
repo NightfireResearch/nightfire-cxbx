@@ -12,4 +12,7 @@ void ShowLoadProgressScreen(void);
 void LoadingScreenMakeVisible(void);
 void LoadingScreenMakeInvisible(void);
 
+// An identity matrix of the low level drawing (LowLevel.cpp), also the matrix models are drawn with
+extern _MATRIX LowLevelIdentityMatrix;
+
 #endif // LOWLEVEL_H

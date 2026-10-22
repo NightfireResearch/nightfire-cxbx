@@ -40,9 +40,15 @@
 // ---------------------------------------------------------------------------------------------------------------
 
 
-// The table of initialisers XapiInitProcess runs once the heap is made.
+#ifndef NIGHTFIRE_STANDALONE
+// The table of initialisers XapiInitProcess runs once the heap is made. Its one entry is NULL in this XBE, so the
+// standalone build has none.
 #define InitTableBegin    ((void (**)(void))0x00163178u)
 #define InitTableEnd      ((void (**)(void))0x0016317cu)
+#endif
+
+// XBE_GLOBAL(0x0030093c, 0x4)
+HANDLE ProcessHeapHandle;
 
 // ---------------------------------------------------------------------------------------------------------------
 // XAPI's last-error pair.
@@ -108,10 +114,12 @@ void __stdcall Xbox_XapiInitProcess(void) {
     }
     printf("[startup] process heap at %p\n", ProcessHeapHandle);
 
+#ifndef NIGHTFIRE_STANDALONE
     for (void (**initialiser)(void) = InitTableBegin; initialiser < InitTableEnd; initialiser++) {
         if (*initialiser != NULL)
             (*initialiser)();
     }
+#endif
     fflush(stdout);
 }
 
@@ -129,15 +137,33 @@ void __stdcall Xbox_XapiInitProcess(void) {
 // thread is never at a raised IRQL, so there is nothing to check.
 // ---------------------------------------------------------------------------------------------------------------
 
-// XBE_GLOBAL(0x001d6538, 0x90)
-#define CrtDefaultLocaleInfo ((void *)0x001d6538u)
+// The C runtime's exception-action table (_XcptActTab: an exception, its signal and the action for it), which each
+// thread's data points at
+typedef struct XcptAction {
+    uint32_t exception;
+    int signal;
+    uintptr_t action;
+} XcptAction;
+// XBE_GLOBAL(0x001d6538, 0x78)
+static XcptAction XcptActTab[10] = {
+    {0xc0000005, 11, 0},
+    {0xc000001d, 4, 0},
+    {0xc0000096, 4, 0},
+    {0xc000008d, 8, 0},
+    {0xc000008e, 8, 0},
+    {0xc000008f, 8, 0},
+    {0xc0000090, 8, 0},
+    {0xc0000091, 8, 0},
+    {0xc0000092, 8, 0},
+    {0xc0000093, 8, 0},
+};
 
 // Offsets into _ptiddata, as the original writes them: the owning thread, the thread handle, an
-// initialised-flag, and the pointer to the default multibyte/locale information.
+// initialised-flag, and the exception-action table.
 #define PTD_THREAD_ID     0
 #define PTD_THREAD_HANDLE 1
 #define PTD_INITIALISED   5
-#define PTD_LOCALE_INFO   0x15
+#define PTD_XCPT_ACTIONS  0x15
 
 static DWORD g_perThreadSlot = TLS_OUT_OF_INDEXES;
 
@@ -159,7 +185,7 @@ void *__cdecl Xbox_getptd(void) {
         fields[PTD_THREAD_ID] = GetCurrentThreadId();
         fields[PTD_THREAD_HANDLE] = (uintptr_t)0xffffffffu;
         fields[PTD_INITIALISED] = 1;
-        fields[PTD_LOCALE_INFO] = (uintptr_t)CrtDefaultLocaleInfo;
+        fields[PTD_XCPT_ACTIONS] = (uintptr_t)XcptActTab;
 
         if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
             TlsSetValue(g_perThreadSlot, ptd);
@@ -201,6 +227,7 @@ int __cdecl Xbox_mtinit(void) {
     return 0;
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ---------------------------------------------------------------------------------------------------------------
 // The allocation-notification hook, patched out.
 //
@@ -257,6 +284,7 @@ static const unsigned WBINVD_SITES[] = {
 };
 
 static const unsigned char WBINVD_BYTES[2] = { 0x0f, 0x09 };
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // The C runtime's and the C++ constructors' initialisers, in place of _rtinit (0x000eddd3) and _cinit
@@ -293,18 +321,23 @@ static void Xbox_cinit(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// The XBE's entry point (0x000eb2ac), which the loader calls. Like the original it starts the game on a thread of
-// its own, with the XBE header's default stack size, and returns; the original rebooted to the dashboard if the
-// thread could not be made.
+// The XBE's entry point (0x000eb2ac), which the loader calls (the standalone build's main, too). Like the original
+// it starts the game on a thread of its own, with the XBE header's default stack size, and returns; the original
+// rebooted to the dashboard if the thread could not be made.
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE
 #define XbeSizeOfHeaders     (*(uint32_t *)0x00010108u)
 #define XbeCertificate       (*(uint32_t **)0x00010118u)   // its first word is the certificate's size
 #define XbeDefaultStackSize  (*(uint32_t *)0x00010130u)
 #define XbeTls               ((const uint32_t *)0x00162400u)   // the TLS directory
 #define XapiThreadTlsSize    (*(uint32_t *)0x00300934u)
+#else
+#define XbeDefaultStackSize  0x10000u   // the XBE header's
+#endif
 
-static void __cdecl Xbox_Entry(void) {
+void __cdecl Xbox_Entry(void) {
+#ifndef NIGHTFIRE_STANDALONE
     // The certificate's size, clamped to what the headers hold, and the per-thread TLS block's size: its
     // template (end - start), the zero fill, rounded to 16, and a word for the pointer; the TLS index is minus
     // that in words. Both as the original, though nothing of ours reads them.
@@ -314,6 +347,7 @@ static void __cdecl Xbox_Entry(void) {
     int32_t tlsSize = (int32_t)((XbeTls[4] - XbeTls[0] + XbeTls[1] + 0xf) & ~0xfu) + 4;
     XapiThreadTlsSize = (uint32_t)tlsSize;
     **(int32_t **)(XbeTls + 2) = tlsSize / -4;
+#endif
 
     HANDLE thread = CreateThread(NULL, XbeDefaultStackSize, mainXapiStartup, NULL, 0, NULL);
     if (thread == NULL) {
@@ -324,6 +358,7 @@ static void __cdecl Xbox_Entry(void) {
     CloseHandle(thread);
 }
 
+#ifndef NIGHTFIRE_STANDALONE
 // ---------------------------------------------------------------------------------------------------------------
 // Installing all of it
 //
@@ -380,6 +415,7 @@ void Inject_XboxStartup(void) {
         memset(site + 2, 0x90, sizeof(NOTIFICATION_HOOK_BYTES) - 2);   // nop
     }
 }
+#endif   // NIGHTFIRE_STANDALONE
 
 DWORD WINAPI mainXapiStartup(LPVOID unused) {
     (void)unused;

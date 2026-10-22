@@ -789,7 +789,8 @@ typedef enum {
     JOIN_CHOOSE_HANDICAP = 4,
     JOIN_READY = 5,
 } JoinStep;
-#define mp_join_step (*(int(*)[NUM_PLAYERS])0x00245698)
+// XBE_GLOBAL(0x00245698, 0x10)
+int mp_join_step[NUM_PLAYERS];
 
 // Fills an agent's character radio on the join page with the characters it may have: unlocked, and - in a game
 // without teams - only a good one if no other agent has one (taken = true: never), or in a team game one of its
@@ -976,7 +977,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
 // ---- the join page (P_MPJOIN), then each agent's setup (P_MPSETUP)
 
-#define menu_bonus ((ulong *)0x0025d6e8)    // MenuUnlocks.cpp
+extern ulong menu_bonus[8];   // MenuUnlocks.cpp
 
 // A missing controller's message, the player's number in it (names ours): for one that had joined, one that had not
 #define MP_CONTROLLER_MISSING_JOINED ((Action_TranslatedText)0x10002d5)
@@ -1428,7 +1429,8 @@ bool P_MPRULES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 
 // XBE_GLOBAL(0x0025ed20, 0x1)
 static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
-#define mp_debrief_text       (*(char(*)[24][32])0x0025eaa0)     // the numbers on the debriefing
+// XBE_GLOBAL(0x0025eaa0, 0x300)
+char mp_debrief_text[24][32];  // the numbers on the debriefing
 // XBE_GLOBAL(0x0025e9a0, 0x100)
 static char mp_debrief_result[0x100]; // "<name> wins the match."
 
@@ -1583,7 +1585,8 @@ static uint8_t mp_confirm_phoenix_players;
 static uint8_t mp_confirm_mi6_bots;
 // XBE_GLOBAL(0x0025e958, 0x1)
 static uint8_t mp_confirm_phoenix_bots;
-#define mp_confirm_handicap_text   (*(char(*)[NUM_PLAYERS][32])0x0025e8d8)
+// XBE_GLOBAL(0x0025e8d8, 0x80)
+char mp_confirm_handicap_text[NUM_PLAYERS][32];
 // XBE_GLOBAL(0x0025e4d8, 0x40)
 static char mp_confirm_map_text[0x40];
 // XBE_GLOBAL(0x0025e518, 0x40)
@@ -1601,7 +1604,8 @@ static char mp_confirm_friendly_text[0x40];
 // The settings and controls a match was started with (P_MPCONFIRM), for C_MPDBG to go back to.
 // XBE_GLOBAL(0x002245f8, 0x23c)
 MPSettings_t mp_settings_backup;
-#define mp_inputs_backup (*(PlayerInput(*)[NUM_PLAYERS])0x00224838)
+// XBE_GLOBAL(0x00224838, 0x560)
+PlayerInput mp_inputs_backup[NUM_PLAYERS];
 
 // AUTOINJECT
 void __stdcall Menu_StoreMPSettings(void) {

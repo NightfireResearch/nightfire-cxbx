@@ -25,6 +25,9 @@
 #include <stdint.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x001e5630, 0x142c)
+NPCGlobals_t NPCGlobals;
+
 // Music event 2 is the alarm music. Its value picks the cue: 3 for the castle's own alarm (channel 0xa4,
 // CastleExterior only), 1 for the generic "alarm raised" channels 0x37 and 0x61.
 #define MUSIC_EVENT_ALARM 2

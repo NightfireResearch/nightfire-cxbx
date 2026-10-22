@@ -34,7 +34,8 @@
 
 // GT_Track's candidates
 #define TARGETS 64
-#define TargetList (*(TARGETOBJ (*)[TARGETS])0x0025fc20)
+// XBE_GLOBAL(0x0025fc20, 0x200)
+TARGETOBJ TargetList[TARGETS];
 // How far a turret sees (squared); a fifth of it in multiplayer
 // XBE_GLOBAL(0x0016199c, 0x4) readonly relocate
 float TurretRange = 2500.0f;

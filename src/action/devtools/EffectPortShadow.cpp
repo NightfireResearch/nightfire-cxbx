@@ -85,10 +85,10 @@ namespace {
 #define EffectListAt (GameSpan<uint8_t>{0x002237c0})
 #define CasingListAt (GameSpan<uint8_t>{0x001dc678})     // the 32 cases and NextCasing after them
 #define CopterListAt (GameSpan<uint8_t>{0x001fe6a8})
-#define PlayersAt ((uint8_t *)0x001f6654)
+#define PlayersAt ((uint8_t *)(size_t)XbeOurs(0x001f6654))
 #define ViewersAt (GameSpan<uint8_t>{0x001f661c})
 #define ScriptCamAt (GameSpan<uint8_t>{0x001f6678})
-#define GravityAt ((uint8_t *)0x001f6648)
+#define GravityAt ((uint8_t *)(size_t)XbeOurs(0x001f6648))
 #define DroneDisableAt (GameSpan<uint8_t>{0x001dfa2a})
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))

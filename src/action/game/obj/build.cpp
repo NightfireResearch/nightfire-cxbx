@@ -15,7 +15,6 @@
 #include <string.h>
 
 // Game objects which span multiple cels (control.cpp)
-#define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
 // AUTOINJECT
 viewer_tag* build_link_world_to_viewer(viewer_tag *viewer, world_tag *world) {

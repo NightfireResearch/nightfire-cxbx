@@ -15,6 +15,8 @@
 
 #include <math.h>
 #include <string.h>
+#include "../gfx/LowLevel.h"
+#include "../devtools/MenuProbe.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // State shared by the functions here
@@ -29,9 +31,9 @@ int ParticleOverlayRingNext;  // the next ring entry psiDrawParticleList fills
 extern uint8_t bCharacterLight;
 extern uint8_t bShadowCharacter;
 extern uint8_t Morph_Count;  // the game's morph targets for the next model
-#define Morph_Weight ((const float *)0x001d6a68)
-#define Morph_Index ((const uint8_t *)0x001d777c)
-#define ObjectMatrix ((_MATRIX *)0x002ade8c)                  // the game's: the matrix models are drawn with
+extern float Morph_Weight[22];
+extern uchar Morph_Index[24];
+#define ObjectMatrix (&LowLevelIdentityMatrix)   // the matrix models are drawn with (gfx/LowLevel.cpp)
 
 // The tint every draw is multiplied by (d3dSetColorConstant67), as bytes A, R, G, B
 // XBE_GLOBAL(0x002adf2c, 0x4)
@@ -455,7 +457,7 @@ void psiClearZ(void) {
 // The Xbox layer's thunk to the pad polling (0x000de5c0), which Input_Update calls
 // FUNC_AT(000de5c0)
 void psiInput_PollDevices_Thunk(void) {
-    psiInput_PollDevices();
+    MenuProbe_PollDevices();    // psiInput_PollDevices, or a menu script's pads in its place
 }
 
 // ---------------------------------------------------------------------------------------------------------------

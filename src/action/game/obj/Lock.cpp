@@ -22,7 +22,6 @@
 
 #pragma fp_contract(off)
 
-#define GlobalVars (*((GlobalVars_t *)0x001f6568))
 
 
 // The weapons that open locks (weapon variants)

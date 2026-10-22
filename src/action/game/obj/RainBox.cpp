@@ -9,6 +9,19 @@
 #include "../../math/X87Ops.h"
 #include "control.h"
 
+// XBE_GLOBAL(0x002637e4, 0xc)
+_VECTOR WindVector;
+// XBE_GLOBAL(0x002637f0, 0xc)
+_VECTOR PrevPos;
+// XBE_GLOBAL(0x002637fc, 0xc)
+_VECTOR WindVector2;
+// XBE_GLOBAL(0x00263808, 0xc)
+_VECTOR CubeCentre;
+// XBE_GLOBAL(0x00263818, 0x180)
+_VECTOR RandTable2[32];
+// XBE_GLOBAL(0x00264998, 0x180)
+_VECTOR RandTable1[32];
+
 // XBE_GLOBAL(0x002637e0, 0x1)
 uint8_t DropType;
 // XBE_GLOBAL(0x00263998, 0x1000)

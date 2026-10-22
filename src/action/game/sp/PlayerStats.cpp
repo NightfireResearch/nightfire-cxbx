@@ -5,6 +5,9 @@
 
 #include "string.h"
 
+// XBE_GLOBAL(0x00278e70, 0x230)
+PlayerMissionStats PlrMissionStats[NUM_AGENTS];
+
 // XBE_GLOBAL(0x00278d8e, 0xe2)
 short BondMoments[113];
 
@@ -147,7 +150,270 @@ void PlrStat_LogEnemySpawned(void) {
     PlrMissionStats[0].enemiesSpawned++;
 }
 
-#define ScoringTable (*(SCORETABLE(*)[12])0x0017f198)
+// The levels' score categories and scoring, by level
+// XBE_GLOBAL(0x0017e8f8, 0x8a0)
+static LevelScoreCategories LevelScores[12] = {
+    {
+        .categories = {
+            {.target = 7, .maxPoints = 100000},
+            {.target = 1, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 60, .maxPoints = 50000},
+            {.target = 240, .maxPoints = 50000},
+            {.target = 4, .maxPoints = 100000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 2, .maxPoints = 50000},
+            {.target = 30, .maxPoints = 50000},
+            {.target = 3, .maxPoints = 25000},
+            {.target = 3, .maxPoints = 25000},
+            {.target = 30, .maxPoints = 25000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 540, .maxPoints = 25000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 5, .maxPoints = 100000},
+            {.target = 1, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 92, .maxPoints = 50000},
+            {.target = 250, .maxPoints = 50000},
+            {.target = 3, .maxPoints = 100000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 3, .maxPoints = 100000},
+            {.target = 1, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 90, .maxPoints = 50000},
+            {.target = 240, .maxPoints = 50000},
+            {.target = 5, .maxPoints = 100000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 2, .maxPoints = 50000},
+            {.target = 45, .maxPoints = 50000},
+            {.target = 3, .maxPoints = 25000},
+            {.target = 3, .maxPoints = 25000},
+            {.target = 38, .maxPoints = 25000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 480, .maxPoints = 25000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 2, .maxPoints = 50000},
+            {.target = 8, .maxPoints = 50000},
+            {},
+            {},
+            {.target = 10, .maxPoints = 50000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 270, .maxPoints = 50000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 2, .maxPoints = 50000},
+            {.target = 45, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 100000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 1200, .maxPoints = 25000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 2, .maxPoints = 50000},
+            {.target = 65, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 75000},
+            {.target = 100, .maxPoints = 75000},
+            {.target = 720, .maxPoints = 25000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 3, .maxPoints = 100000},
+            {.target = 1, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 90, .maxPoints = 50000},
+            {.target = 420, .maxPoints = 50000},
+            {.target = 6, .maxPoints = 100000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 7, .maxPoints = 100000},
+            {.target = 1, .maxPoints = 75000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 75, .maxPoints = 50000},
+            {.target = 609, .maxPoints = 50000},
+            {.target = 4, .maxPoints = 100000},
+        },
+    },
+    {
+        .categories = {
+            {.target = 1, .maxPoints = 50000},
+            {.target = 65, .maxPoints = 75000},
+            {},
+            {},
+            {.target = 68, .maxPoints = 25000},
+            {.target = 100, .maxPoints = 75000},
+            {.target = 100, .maxPoints = 50000},
+            {.target = 900, .maxPoints = 25000},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+    {
+        .categories = {
+            {},
+            {.target = 15, .maxPoints = 100000},
+            {},
+            {},
+            {},
+            {.target = 100, .maxPoints = 100000},
+            {.target = 100, .maxPoints = 100000},
+            {.target = 255},
+            {.target = 7, .maxPoints = 150000},
+        },
+    },
+};
+// XBE_GLOBAL(0x0017f198, 0x2d0)
+SCORETABLE ScoringTable[12] = {
+    {
+        .levelHashcode = (HASHCODE)0x9000001,
+        .thresholdScoreBronze = 50000,
+        .thresholdScoreSilver = 125000,
+        .thresholdScoreGold = 200000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[0].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x7000005,
+        .thresholdScoreBronze = 50000,
+        .thresholdScoreSilver = 125000,
+        .thresholdScoreGold = 200000,
+        .thresholdScorePlatinum = 1000000,
+        .detectionPenalty = 0.35f,
+        .statsTable = LevelScores[1].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x9000005,
+        .thresholdScoreBronze = 50000,
+        .thresholdScoreSilver = 125000,
+        .thresholdScoreGold = 200000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[2].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x9000006,
+        .thresholdScoreBronze = 50000,
+        .thresholdScoreSilver = 125000,
+        .thresholdScoreGold = 200000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[3].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x7000001,
+        .thresholdScoreBronze = 125000,
+        .thresholdScoreSilver = 250000,
+        .thresholdScoreGold = 500000,
+        .thresholdScorePlatinum = 1000000,
+        .detectionPenalty = 0.1f,
+        .statsTable = LevelScores[4].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x7000009,
+        .thresholdScoreBronze = 125000,
+        .thresholdScoreSilver = 250000,
+        .thresholdScoreGold = 500000,
+        .thresholdScorePlatinum = 1000000,
+        .detectionPenalty = 0.1f,
+        .statsTable = LevelScores[5].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x700000c,
+        .thresholdScoreBronze = 125000,
+        .thresholdScoreSilver = 250000,
+        .thresholdScoreGold = 500000,
+        .thresholdScorePlatinum = 1000000,
+        .detectionPenalty = 0.1f,
+        .statsTable = LevelScores[6].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x7000011,
+        .thresholdScoreBronze = 125000,
+        .thresholdScoreSilver = 250000,
+        .thresholdScoreGold = 500000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[7].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x9000002,
+        .thresholdScoreBronze = 250000,
+        .thresholdScoreSilver = 500000,
+        .thresholdScoreGold = 750000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[8].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x9000003,
+        .thresholdScoreBronze = 250000,
+        .thresholdScoreSilver = 500000,
+        .thresholdScoreGold = 750000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[9].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x7000014,
+        .thresholdScoreBronze = 250000,
+        .thresholdScoreSilver = 500000,
+        .thresholdScoreGold = 750000,
+        .thresholdScorePlatinum = 1000000,
+        .detectionPenalty = 0.1f,
+        .statsTable = LevelScores[10].categories,
+    },
+    {
+        .levelHashcode = (HASHCODE)0x700001b,
+        .thresholdScoreBronze = 250000,
+        .thresholdScoreSilver = 500000,
+        .thresholdScoreGold = 750000,
+        .thresholdScorePlatinum = 1000000,
+        .statsTable = LevelScores[11].categories,
+    },
+};
 
 // XBE_GLOBAL(0x002790a4, 0x1)
 static bool DoneBetter;

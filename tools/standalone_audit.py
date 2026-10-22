@@ -115,9 +115,10 @@ def is_table_row(code):
 
 
 def is_flags(code):
-    """Whether the number is a mask: a #define of a bare number, or a flags or mask field's initialiser"""
+    """Whether the number is a mask or a colour: a #define of a bare number, or a flags, mask or colour field's value"""
     return (re.fullmatch(r"\s*#\s*define\s+\w+\s+0x[0-9a-fA-F]+u?\s*(//.*)?", code) is not None
-            or re.search(r"\.\w*(?:[Ff]lags|[Mm]ask)\s*=\s*0x[0-9a-fA-F]+u?\s*,", code) is not None)
+            or re.search(r"\.\w*(?:[Ff]lags|[Mm]ask)\s*=\s*0x[0-9a-fA-F]+u?\s*,", code) is not None
+            or re.search(r"\w*[Cc]olou?r\w*\s*=\s*0x[0-9a-fA-F]+u?\s*[,;]", code) is not None)
 
 
 def xbe_sections():

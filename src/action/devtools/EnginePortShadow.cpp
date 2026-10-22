@@ -71,14 +71,14 @@ namespace {
 #endif
 
 // The game's globals the package reads and writes
-#define DynamicObjHead ((obj_tag *)0x001df338)  // the list's head: its nextObject is the first object
+#define DynamicObjHead ((obj_tag *)(size_t)XbeOurs(0x001df338))  // the list's head: its nextObject is the first object
 #define DynamicObjFirst (*(obj_tag **)XbeOurs(0x001df34c))
-#define ForcedListInfo (*(LLISTINFO_tag *)0x001df41c)
+#define ForcedListInfo (*(LLISTINFO_tag *)(size_t)XbeOurs(0x001df41c))
 #define RoomCels (*(cel_tag ***)XbeOurs(0x001f6664))
 #define ControlFuncs control_funcs   // ours (game/obj/ControlFuncs.cpp): the game's references read it
-#define GameGlobalVars (*(GlobalVars_t *)0x001f6568)
+#define GameGlobalVars (*(GlobalVars_t *)(size_t)XbeOurs(0x001f6568))
 #define GameStackIndex U16_AT(XbeOurs(0x0017bfe8))
-#define GameStack (*(uint (*)[64])0x0017bff0)
+#define GameStack GameSpan<uint>{0x0017bff0}
 #define GameResetMapState U32_AT(XbeOurs(0x00279284))
 #define GameKeyCodes (*(KeyCodeEntry (*)[51])XbeOurs(0x0029aaf8))
 // parsemap's
@@ -89,8 +89,8 @@ namespace {
 #define GameFileDiscardHeader (*(uint **)XbeOurs(0x00274c94))
 #define GameFileDiscard U32_AT(XbeOurs(0x00274c78))
 #define GameFileLastBlock U32_AT(XbeOurs(0x00274c74))
-#define GameCurrentBH (*(block_header_tag *)0x00274b40)
-#define GameDynamicBH (*(block_header_tag *)0x00274b34)
+#define GameCurrentBH (*(block_header_tag *)(size_t)XbeOurs(0x00274b40))
+#define GameDynamicBH (*(block_header_tag *)(size_t)XbeOurs(0x00274b34))
 #define GameDynamicPtr PTR_AT(XbeOurs(0x00274c58))
 #define GameBMH (*(void **)XbeOurs(0x00274c84))
 #define GameEntityCount U32_AT(XbeOurs(0x00274c8c))
@@ -2159,7 +2159,7 @@ const Case kLoad[] = {
 
 // ---- the loader's leaves (parsemap.cpp, psiSave.cpp, Woman.cpp, view.cpp, game.cpp, Loader.cpp)
 
-#define SaveCacheNames ((char(*)[9])0x002a2e68)
+#define SaveCacheNames ((char(*)[9])(size_t)XbeOurs(0x002a2e68))
 #define SaveCacheCount (*(int32_t *)XbeOurs(0x002adf14))
 #define SaveState U32_AT(XbeOurs(0x002adf10))
 #define WomanMemory (*(uint8_t **)XbeOurs(0x002ae2dc))

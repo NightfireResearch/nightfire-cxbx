@@ -47,6 +47,7 @@ typedef struct FONT_tag {
     float space;            // 0x18 the width of a space, before x 1.25
 } FONT_tag;
 static_assert(sizeof(FONT_tag) == 0x1c, "FONT_tag is 0x1c bytes");
+extern FONT_tag *Font;   // the font in use (Font.cpp)
 
 typedef struct FONTTABLE_tag {
     HASHCODE texture;

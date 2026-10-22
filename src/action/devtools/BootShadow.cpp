@@ -156,7 +156,7 @@ void Garble(void) {
         for (size_t i = 0; i < r.size; i++)
             *(uint8_t *)(size_t)XbeOurs(r.at + (unsigned)i) = (uint8_t)ShadowRand(0x100);
     }
-    MENU_LS *l = (MENU_LS *)0x0017d540;
+    MENU_LS *l = (MENU_LS *)(size_t)XbeOurs(0x0017d540);
     l->doMiniMission = (uchar)ShadowRand(2);
     U32_AT(XbeOurs(0x001f6610)) = ShadowRand(3);   // IsWidescreen, mostly 0 or 1
     GameState_t *gs = (GameState_t *)XbeOurs(0x001f6580);

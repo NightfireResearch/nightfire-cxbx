@@ -89,6 +89,7 @@ typedef struct block_header_tag {
     uint size;
     uint identifier;
 } block_header_tag;
+extern block_header_tag DynamicBH;   // parsemap.cpp
 
 // An object's placement keys as the create functions take them (0xb0 bytes): the placement's spline and the values
 // of its key pairs by key number. Each object's own placement struct names its keys.

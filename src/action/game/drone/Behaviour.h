@@ -52,11 +52,8 @@ static_assert(sizeof(DroneStatsRecord) == 0x20, "DroneStatsRecord is 0x20 bytes"
 
 // drone_stats (BSS): per behaviour class, three stats records (only record 1 is ever used), filled by
 // behaviour_util_get from each placement - last writer wins, zero at boot. Only behaviour_util_get and
-// behaviour_util_getStats reference it (scanned the XBE for every address in the range), so once both are ours it
-// could become our own variable; it stays the game's for now so the shadow test's original and ours write the same
-// array (see notes.md).
-// XBE_GLOBAL(0x001d7830, 0x660)
-#define drone_stats (*(DroneStatsRecord(*)[NUM_BEHAVIOUR_CLASSES][3])0x001d7830)
+// behaviour_util_getStats reference it (Behaviour.cpp).
+extern DroneStatsRecord drone_stats[NUM_BEHAVIOUR_CLASSES][3];
 
 uint behaviour_util_getProperty(int id, uint *words);
 void behaviour_util_setProperty(int id, uint *words, int value);

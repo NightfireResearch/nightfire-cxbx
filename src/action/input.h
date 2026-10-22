@@ -29,7 +29,7 @@ typedef struct {
     undefined1 vibrationEnabled; /* Created by retype action */
     undefined1 autoSwitchBetterWeapon; /* Created by retype action */
     undefined hudVisibility;    // 0xb - Ghidra's name; on, the health bars fade out (Player_Update)
-    undefined field12_0xc;
+    undefined flashingObjects;  // 0xc - a codename option: objects that want it flash near the view (view.cpp)
     undefined field13_0xd;
     short controlStyle;
     short controlStyleDriving; // 0x10 - the driving engine's control style (Boot_GetPTPData hands it over at +0xa14)
@@ -51,8 +51,7 @@ static_assert(offsetof(PlayerInput, actionLock) == 0x12c, "Bad offset of PlayerI
 static_assert(offsetof(PlayerInput, anyInput) == 0x154, "Bad offset of PlayerInput.anyInput");
 
 // PlayerInputs is an array of 4 PlayerInput structs, located at 001fe6d0
-// XBE_GLOBAL(0x001fe6d0, 0x560)
-#define PlayerInputs ((PlayerInput*)0x001fe6d0)
+extern PlayerInput PlayerInputs[4];
 
 void Input_ProcessEvents(void);
 

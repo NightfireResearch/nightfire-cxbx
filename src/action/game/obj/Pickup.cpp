@@ -19,6 +19,20 @@
 #include "control.h"
 #include "PlayerWeapon.h"
 
+// XBE_GLOBAL(0x0017e5d8, 0x6e)
+short PickupMatrix[PICKUP_SETS][5] = {
+    {6, 28, 30, 24, 44},
+    {2, 6, 10, 16, 66},
+    {18, 21, 24, 28, 82},
+    {14, 30, 17, 36, 50},
+    {42, 44, 58, 46, 26},
+    {53, 52, 58, 55, 59},
+    {2, 17, 55, 36, 66},
+    {10, 30, 82, 26, 50},
+    {26, 59, 50, 58, 44},
+    {21, 22, 55, 17, 36},
+};
+
 #pragma fp_contract(off)
 
 // XBE_GLOBAL(0x0017e648, 0x36) readonly relocate

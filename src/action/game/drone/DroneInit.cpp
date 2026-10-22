@@ -98,9 +98,13 @@ float DroneCaptain_Mod_BulletDamage = 2.0f;
 float DroneCaptain_Mod_BulletAccuracy = 2.0f;
 // XBE_GLOBAL(0x001640e4, 0x4)
 float DroneCaptain_Mod_Health = 2.0f;
+// XBE_GLOBAL(0x0016407c, 0x4)
+float DroneDamage_Arms = 1.0f;
+// XBE_GLOBAL(0x00164088, 0x4)
+float DroneArmour_Combat = 0.25f;
+// XBE_GLOBAL(0x0016408c, 0x4)
+float DroneArmour_Jacket = 0.5f;
 
-// Every live drone (NPCGlobals.NDrone2List is its head, NDrone2Count its count)
-#define NDrone2s (*(LLISTINFO_tag *)0x001e5634)
 
 // Drone_tag.flags
 #define DRONE_FLAG_FROZEN       0x10
@@ -181,7 +185,7 @@ obj_tag* NDrone2_CreateObj(DIVars_tag *diVars) {
     if (drone == NULL)
         return NULL;
     drone->gameObj = gameObj;
-    LList_Add(&NDrone2s, (LLNODE_tag *)drone);
+    LList_Add(&NDrone2Info, (LLNODE_tag *)drone);
     return gameObj;
 }
 

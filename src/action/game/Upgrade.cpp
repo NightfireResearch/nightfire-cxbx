@@ -1,6 +1,9 @@
 #include "../actionhelpers.h"
 #include "Upgrade.h"
 
+// XBE_GLOBAL(0x00279120, 0x24)
+uchar Upgrades[4][9];
+
 // XBE_GLOBAL(0x00181b14, 0x10)
 uint UpgradedHandguns[4] = {
     2,

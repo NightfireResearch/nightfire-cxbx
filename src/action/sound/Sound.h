@@ -78,7 +78,7 @@ void __fastcall Sound_DoSubtitle(Action_SFX sound);
 // Set by SFXLoadCorrectBank once the level's bank is loaded
 extern uint32_t SoundInit;
 
-#define SFXOutputData (*(SFXOutputDataEntry(*)[0x60d])0x00182b80)
+extern SFXOutputDataEntry SFXOutputData[0x60d];
 
 #pragma pack(push, 1)
 // A sound with a subtitle, and its label; the label's top bit shows it even with subtitles off

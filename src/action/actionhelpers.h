@@ -195,18 +195,17 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 // globals and constants
 extern viewer_tag *glb_viewer[11];
 extern world_tag *glb_world;
-#define glb_blokes (*(BLData*(*)[NUM_PLAYERS])(0x002774b8))
-#define glb_players (*(obj_tag*(*)[NUM_PLAYERS])(0x001f6654))
+extern BLData *glb_blokes[NUM_PLAYERS];
+extern obj_tag *glb_players[NUM_PLAYERS];
 
 extern _VECTOR CONST_UP_VECTOR;
 extern _VECTOR CONST_ZERO_VECTOR;
-// XBE_GLOBAL(0x001f6648, 0xc)
-#define GRAVITY_VECTOR (*((_VECTOR*)0x001f6648))
+extern _VECTOR GRAVITY_VECTOR;
 extern _VECTOR MAYBE_CONST_FORWARD_VECTOR;
 extern _MATRIX MAT_IDENTITY;
 
 extern uint32_t VIDEO_FRAME_RATE;
-#define FRAME_RATE_INT U32_AT(0x0017c0f4)
+extern uint32_t FRAME_RATE_INT;
 extern float _FRAME_RATE;
 extern float FRAME_RATE_DIV;
 extern float FRAME_RATE_MUL;

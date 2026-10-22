@@ -382,9 +382,25 @@ int psiGetLoadingDataState(void) {
 // import slot). It has to come from there rather than the heap: the D3D code treats the address as the
 // console's 0x8xxxxxxx alias and strips the top nibble, so it must sit below 0x10000000, which the loader
 // guarantees (src/loader/kernel.cpp).
+#ifndef NIGHTFIRE_STANDALONE
 typedef void *(__stdcall *MmAllocateContiguousMemoryExFn)(uint32_t size, uint32_t lowest, uint32_t highest,
                                                         uint32_t alignment, uint32_t protection);
 #define KernelMmAllocateContiguousMemoryEx (*(MmAllocateContiguousMemoryExFn *)0x0015d1dc)
+#else
+// The standalone build's, as the loader's: pages of their own below 0x10000000, the first room from 16 MB up (a
+// 64 KB granule is aligned enough)
+static void *KernelMmAllocateContiguousMemoryEx(uint32_t size, uint32_t lowest, uint32_t highest, uint32_t alignment,
+                                                uint32_t protection) {
+    uintptr_t limit = highest < 0x0fffffffu ? (uintptr_t)highest + 1 : 0x10000000u;
+    for (uintptr_t at = lowest > 0x01000000u ? lowest : 0x01000000u; at + size <= limit; at += 0x10000) {
+        void *block = VirtualAlloc((void *)at, size, MEM_RESERVE | MEM_COMMIT, protection);
+        if (block != NULL)
+            return block;
+    }
+    printf("[kernel] MmAllocateContiguousMemoryEx: %u bytes refused\n", size);
+    return NULL;
+}
+#endif
 
 // AUTOINJECT
 void* allocateAligned0x1000(int numBytes) {

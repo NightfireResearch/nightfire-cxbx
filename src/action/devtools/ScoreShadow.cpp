@@ -27,13 +27,13 @@
 static const unsigned kPlrStatGetScore = 0x000b0900;
 
 // The game's copies
-#define GameNewScoresRef U32_AT(0x002790a0)
+#define GameNewScoresRef U32_AT(XbeOurs(0x002790a0))
 #define GameDoneBetter U8_AT(XbeOurs(0x002790a4))
 
 // The ScoringTable and the category tables it points at, as one block of the XBE's data
 #define SCORE_DATA_START 0x0017e8f8
 #define SCORE_DATA_END (0x0017f198 + 12 * 0x3c)
-#define SCORING_TABLE ((SCORETABLE *)0x0017f198)
+#define SCORING_TABLE ((SCORETABLE *)(size_t)XbeOurs(0x0017f198))
 
 // PlrMissionStats[0], as PlayerStats.cpp lays it out
 #pragma pack(push, 1)
@@ -49,7 +49,7 @@ typedef struct {
 } MissionStats;
 #pragma pack(pop)
 static_assert(sizeof(MissionStats) == 0x38, "MissionStats is PlayerMissionStats");
-#define Stats (*(MissionStats *)0x00278e70)
+#define Stats (*(MissionStats *)(size_t)XbeOurs(0x00278e70))
 
 typedef undefined4 *(__cdecl *GetScoreFn)(char);
 
@@ -92,7 +92,7 @@ static void Fill(int kind, undefined4 (*driving)[9][3]) {
 void ScoreShadow_Run(void) {
     static uchar saved[SCORE_DATA_END - SCORE_DATA_START], start[SCORE_DATA_END - SCORE_DATA_START];
     static uchar theirs[SCORE_DATA_END - SCORE_DATA_START];
-    memcpy(saved, (void *)SCORE_DATA_START, sizeof(saved));
+    XbeOursRead(saved, SCORE_DATA_START, sizeof(saved));
     MissionStats savedStats = Stats;
     HASHCODE savedBaseMap = Mission_BaseMapHCode();
     undefined4 savedStatus = Mission_Status();
@@ -110,7 +110,7 @@ void ScoreShadow_Run(void) {
     // Some best scores to beat or not
     for (int i = 0; i < 12; i++)
         SCORING_TABLE[i].bestScore = Rand(3) ? Rand(20000) : 0;
-    memcpy(start, (void *)SCORE_DATA_START, sizeof(start));
+    XbeOursRead(start, SCORE_DATA_START, sizeof(start));
 
     static const undefined4 statuses[] = {1, 3, 6};
     int runs = 0;
@@ -127,23 +127,25 @@ void ScoreShadow_Run(void) {
                         uint32_t seed = rng;
                         Fill(fill, &driving);
 
-                        memcpy((void *)SCORE_DATA_START, start, sizeof(start));
+                        XbeOursWrite(SCORE_DATA_START, start, sizeof(start));
                         GameDoneBetter = 0xcc;
                         undefined4 *a;
                         {
                             XbeOriginalScope original(kPlrStatGetScore);
                             a = ((GetScoreFn)(uintptr_t)kPlrStatGetScore)(player);
                         }
-                        memcpy(theirs, (void *)SCORE_DATA_START, sizeof(theirs));
+                        XbeOursRead(theirs, SCORE_DATA_START, sizeof(theirs));
                         bool theirDone = GameDoneBetter != 0;
 
                         rng = seed;
                         Fill(fill, &driving);
-                        memcpy((void *)SCORE_DATA_START, start, sizeof(start));
+                        XbeOursWrite(SCORE_DATA_START, start, sizeof(start));
                         undefined4 *b = PlrStat_GetScore(player);
                         runs++;
 
-                        bool same = a == b && memcmp(theirs, (void *)SCORE_DATA_START, sizeof(theirs)) == 0;
+                        uchar ours[sizeof(theirs)];
+                        XbeOursRead(ours, SCORE_DATA_START, sizeof(ours));
+                        bool same = a == b && memcmp(theirs, ours, sizeof(theirs)) == 0;
                         // The original leaves DoneBetter alone for player 1 (0xcc stays); ours is not reset between
                         // calls either, so compare only where the original wrote it
                         if (GameDoneBetter != 0xcc && theirDone != PlrStats_DoneBetter())
@@ -153,12 +155,12 @@ void ScoreShadow_Run(void) {
                             if (reported++ < 10) {
                                 int at = -1;
                                 for (int k = 0; k < (int)sizeof(theirs); k++)
-                                    if (theirs[k] != ((uchar *)SCORE_DATA_START)[k]) { at = k; break; }
+                                    if (theirs[k] != GameSpan<uchar>{SCORE_DATA_START}[k]) { at = k; break; }
                                 printf("[score] level %d fill %d status %u difficulty %u player %d: differs at 0x%08x "
                                        "(theirs %02x, ours %02x), return %p/%p, DoneBetter %d/%d\n",
                                        level, fill, statuses[s], difficulty, player,
                                        at < 0 ? 0 : SCORE_DATA_START + at, at < 0 ? 0 : theirs[at],
-                                       at < 0 ? 0 : ((uchar *)SCORE_DATA_START)[at], (void *)a, (void *)b, theirDone,
+                                       at < 0 ? 0 : GameSpan<uchar>{SCORE_DATA_START}[at], (void *)a, (void *)b, theirDone,
                                        PlrStats_DoneBetter());
                             }
                         }
@@ -169,7 +171,7 @@ void ScoreShadow_Run(void) {
     }
     printf("[score] PlrStat_GetScore: %d runs, %d mismatches\n", runs, mismatches);
 
-    memcpy((void *)SCORE_DATA_START, saved, sizeof(saved));
+    XbeOursWrite(SCORE_DATA_START, saved, sizeof(saved));
     Stats = savedStats;
     Mission_SetMapHCode(savedBaseMap);
     Mission_SetStatus(savedStatus);

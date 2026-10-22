@@ -20,8 +20,8 @@ enum {
     SCORE_NUM_CATEGORIES = 9
 };
 
-// One category of a level's score (PlrStat_GetScore). The level tables (0x0017e8f8, 0xb8 apart: nine of these and
-// 4 bytes nobody uses) hold target and maxPoints; the rest is filled in each time the score is worked out.
+// One category of a level's score (PlrStat_GetScore). The level tables (LevelScores) hold target and maxPoints; the
+// rest is filled in each time the score is worked out.
 typedef struct ScoreCategory {
     uint target;      // 0x00 what earns full points (a count, a percentage, par seconds); 0 = not scored here
     uint maxPoints;   // 0x04
@@ -31,6 +31,13 @@ typedef struct ScoreCategory {
 } ScoreCategory;
 
 static_assert(sizeof(ScoreCategory) == 0x14, "ScoreCategory size mismatch");
+
+// A level's score categories (SCORETABLE.statsTable), and a word nobody uses
+typedef struct LevelScoreCategories {
+    ScoreCategory categories[SCORE_NUM_CATEGORIES];
+    uint unused;
+} LevelScoreCategories;
+static_assert(sizeof(LevelScoreCategories) == 0xb8, "LevelScoreCategories is 0xb8 bytes");
 
 typedef struct SCORETABLE {
     HASHCODE levelHashcode;
@@ -93,7 +100,7 @@ static_assert(offsetof(PlayerMissionStats, timerPaused) == 0x34, "PlayerMissionS
 
 #pragma pack(pop)
 
-#define PlrMissionStats (*(PlayerMissionStats(*)[NUM_AGENTS])0x00278e70)
+extern PlayerMissionStats PlrMissionStats[NUM_AGENTS];
 extern short BondMoments[113];
 
 bool PlrStat_OkToUpdate(void);

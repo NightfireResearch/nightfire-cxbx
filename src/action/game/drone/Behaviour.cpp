@@ -2,9 +2,12 @@
 // behaviour properties (docs/drone/behaviours/README.md section 2, behaviour_properties.md).
 
 #include "Behaviour.h"
-#include "DroneTables.h"   // DroneBehaviourLayouts, DroneBehaviourMasks (still the game's tables)
+#include "DroneTables.h"   // DroneBehaviourLayouts, DroneBehaviourMasks
 
 #include <string.h>
+
+// XBE_GLOBAL(0x001d7830, 0x660)
+DroneStatsRecord drone_stats[NUM_BEHAVIOUR_CLASSES][3];
 
 // A property's bits in the three behaviour words: DroneBehaviourLayouts[id] names the word (wordShift & 7), the
 // shift (wordShift >> 3) and the mask (DroneBehaviourMasks[maskIndex], already in place - it is not shifted).

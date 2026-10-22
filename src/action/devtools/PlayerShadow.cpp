@@ -44,7 +44,7 @@ namespace {
 // The game's RNG state (Rand_Random)
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 #define GameWireAnim U32_AT(XbeOurs(0x00278e54))
-#define GameCheatInfo ((uint8_t *)0x001f65dc)
+#define GameCheatInfo ((uint8_t *)(size_t)XbeOurs(0x001f65dc))
 #define GameSurfaced U8_AT(XbeOurs(0x00276760))
 #define GameScanMode U8_AT(XbeOurs(0x001fec49))
 #define GameBenchmark U8_AT(XbeOurs(0x002adf32))

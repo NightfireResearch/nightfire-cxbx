@@ -304,7 +304,7 @@ static bool LoadScript(const char *path) {
             // or attack (switch_BLIND_DRONES), "immortal" stops the player taking damage (CheatInfo.Immortal). Set
             // "immortal" after the level has loaded: loading a codename overwrites it.
             static const struct { const char *name; unsigned address; } cheats[] = {
-                {"nodrones", XbeOurs(0x001df99c)}, {"blind", XbeOurs(0x001df9a0)}, {"immortal", 0x001f65dc},
+                {"nodrones", XbeOurs(0x001df99c)}, {"blind", XbeOurs(0x001df9a0)}, {"immortal", XbeOurs(0x001f65dc)},
             };
             bool known = false;
             for (size_t i = 0; i < sizeof(cheats) / sizeof(cheats[0]); i++)

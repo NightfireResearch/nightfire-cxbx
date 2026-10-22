@@ -34,7 +34,7 @@
 namespace {
 
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
-#define AnimGlobals ((uint8_t *)0x001d69c0)     // from the channel store to ReverseFlag
+#define AnimGlobals ((uint8_t *)(size_t)XbeOurs(0x001d69c0))     // from the channel store to ReverseFlag
 #define ANIM_GLOBALS_SIZE (0x001d7830 - 0x001d69c0)
 #define GlbScriptDeleted U8_AT(XbeOurs(0x001d6a64))
 
@@ -336,7 +336,7 @@ void __cdecl FakeRenderModes2(viewer_tag *viewer, obj_tag *obj) { ShadowLog("ren
 void __cdecl FakeDrawSkin(celglist_tag *gl, _MATRIX *unused, void *obj, void *palette) {
     ShadowLog("drawskin(%x,%x,%x,%u)", W(gl), W(obj), W(palette), U8_AT(XbeOurs(0x001d7826)));
     for (int i = 0; i < U8_AT(XbeOurs(0x001d7826)); i++)
-        ShadowLog("morph(%u,%08x)", ((uchar *)0x001d777c)[i], Bits(((float *)0x001d6a68)[i]));
+        ShadowLog("morph(%u,%08x)", GameSpan<uchar>{0x001d777c}[i], Bits(GameSpan<float>{0x001d6a68}[i]));
 }
 void __cdecl FakeDrawObject(celglist_tag *gl, _MATRIX *m) {
     ShadowLog("drawobject(%x)", W(gl));
@@ -808,12 +808,12 @@ void RandomWorld(void) {
         AnimGlobals[0x10 * i + 3] = (uint8_t)ShadowRand(256);
     U32_AT(XbeOurs(0x001d7570)) = ShadowRand(4);                 // AnimScriptTimeStamp
     U32_AT(XbeOurs(0x001d6a60)) = ShadowRand(4) | (ShadowRand(2) << 31);  // AnimTagTimeStamp
-    FLOAT_AT(0x001d7794) = PICK(1.0f, 1.25f);           // Glb_SkinScale
-    FLOAT_AT(0x001d7798) = PICK(1.0f, 0.8f);
-    FLOAT_AT(0x001d779c) = PICK(1.0f, 1.1f);
-    FLOAT_AT(0x001d6a28) = 1.0f;                        // Glb_InvSkinScale
-    FLOAT_AT(0x001d6a2c) = 1.0f;
-    FLOAT_AT(0x001d6a30) = 1.0f;
+    FLOAT_AT(XbeOurs(0x001d7794)) = PICK(1.0f, 1.25f);           // Glb_SkinScale
+    FLOAT_AT(XbeOurs(0x001d7798)) = PICK(1.0f, 0.8f);
+    FLOAT_AT(XbeOurs(0x001d779c)) = PICK(1.0f, 1.1f);
+    FLOAT_AT(XbeOurs(0x001d6a28)) = 1.0f;                        // Glb_InvSkinScale
+    FLOAT_AT(XbeOurs(0x001d6a2c)) = 1.0f;
+    FLOAT_AT(XbeOurs(0x001d6a30)) = 1.0f;
     U8_AT(XbeOurs(0x001d7827)) = (uint8_t)ShadowRand(2);        // FootstepFoot
     U8_AT(XbeOurs(0x001d7828)) = (uint8_t)(ShadowRand(5) == 0); // ReverseFlag
     if (ShadowRand(2)) {

@@ -185,4 +185,7 @@ void Collide_Jointy(void);
 void Collide_Intersect(void);
 void Collide_TestHits(void);
 
+// Game objects which span several cels (Collide.cpp)
+extern LLISTINFO_tag ForcedList;
+
 #endif // COLLIDE_H

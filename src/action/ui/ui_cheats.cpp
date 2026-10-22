@@ -64,7 +64,6 @@ extern char switch_allowFreeze;  // Game_Run: the game may be frozen
 extern char menu_unlock_everything;
 extern uint8_t debug_scanmode;
 extern uint8_t debug_clipmode;
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 // XBE_GLOBAL(0x0017d5f8, 0x1)
 char hud_state = 1;
 // XBE_GLOBAL(0x001dfa28, 0x1)

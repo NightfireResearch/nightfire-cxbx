@@ -53,10 +53,10 @@ namespace {
 #define GameHashCount U32_AT(XbeOurs(0x001fe684))
 #define GameHashRanges (GameSpan<ushort>{0x001fe688})
 #define GameSoundList (*(DLISTINFO_tag *)XbeOurs(0x0029a128))
-#define GameListener (*(_VECTOR *)0x0029a140)
+#define GameListener (*(_VECTOR *)(size_t)XbeOurs(0x0029a140))
 #define GameSoundInit U32_AT(XbeOurs(0x0029a280))
 #define GameMusicEvents (GameSpan<uint32_t>{0x0029a180})
-#define GameMapMusicData (*(MUSICDATA **)0x00182734)
+#define GameMapMusicData (*(MUSICDATA **)(size_t)XbeOurs(0x00182734))
 #define GameMusicGlobals (GameSpan<int32_t>{0x00182738})     // the request, the jump, the two counts
 #define GameMusicState (GameSpan<int32_t>{0x00299328})       // 0x299328 to 0x29937c
 #define GameMusicStatics (GameSpan<int32_t>{0x002999f8})     // the level functions' turns
@@ -66,7 +66,7 @@ namespace {
 #define GameIOPTimer I32_AT(XbeOurs(0x0027aed8))
 #define GameVoiceHandle (*(DYNAMICSOUNDS **)XbeOurs(0x0029b240))
 #define GameDistanceCount I16_AT(XbeOurs(0x001d6ac4))
-#define GameDistanceTables ((uint32_t *)0x001d6af0)
+#define GameDistanceTables ((uint32_t *)(size_t)XbeOurs(0x001d6af0))
 
 const int NODES = 16;
 const int SOUNDS = 12;

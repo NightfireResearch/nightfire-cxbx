@@ -1,6 +1,8 @@
 #include "CRuntime.h"
 #include "XboxStartup.h"
+#ifndef NIGHTFIRE_STANDALONE
 #include "../../common/xbeOriginal.h"
+#endif
 #include "../../driving/platform/CRuntimeInternal.h"
 
 #include <windows.h>
@@ -12,11 +14,54 @@
 // this engine's code still calls. See CRuntime.h.
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE
 // The kernel's calls, through the XBE's import table (the loader fills it in)
 #define KernelRtlLeaveCriticalSection      (*(void (__stdcall **)(void *section))0x0015d21cu)   // ordinal 294
 #define KernelRtlEnterCriticalSection      (*(void (__stdcall **)(void *section))0x0015d220u)   // 277
 #define KernelRtlInitializeCriticalSection (*(void (__stdcall **)(void *section))0x0015d228u)   // 291
 #define KernelKeBugCheck                   (*(void (__stdcall **)(ULONG code))0x0015d2dcu)      // 95
+#else
+// The kernel's calls, as the loader answers them (src/loader/kernel.cpp): an Xbox critical section is 28 bytes in
+// the caller's record, where a Win32 one fits. A static section is entered without ever being initialised, so each
+// is initialised on its first entry unless it was before.
+static_assert(sizeof(CRITICAL_SECTION) <= 0x1c, "a Win32 critical section fits in an Xbox one");
+static SRWLOCK KnownSectionsLock = SRWLOCK_INIT;
+static void *KnownSections[1024];
+static unsigned KnownSectionCount;
+
+static bool IsNewSection(void *section) {
+    AcquireSRWLockExclusive(&KnownSectionsLock);
+    bool isNew = true;
+    for (unsigned i = 0; i < KnownSectionCount && isNew; i++)
+        isNew = KnownSections[i] != section;
+    if (isNew && KnownSectionCount < sizeof(KnownSections) / sizeof(KnownSections[0]))
+        KnownSections[KnownSectionCount++] = section;
+    ReleaseSRWLockExclusive(&KnownSectionsLock);
+    return isNew;
+}
+
+static void KernelRtlInitializeCriticalSection(void *section) {
+    IsNewSection(section);
+    InitializeCriticalSection((CRITICAL_SECTION *)section);
+}
+
+static void KernelRtlEnterCriticalSection(void *section) {
+    if (IsNewSection(section))
+        InitializeCriticalSection((CRITICAL_SECTION *)section);
+    EnterCriticalSection((CRITICAL_SECTION *)section);
+}
+
+static void KernelRtlLeaveCriticalSection(void *section) {
+    LeaveCriticalSection((CRITICAL_SECTION *)section);
+}
+
+// The console's panic: say which code it was and stop
+static void KernelKeBugCheck(ULONG code) {
+    printf("\n[kernel] the game called KeBugCheck(0x%lx) - it has decided it cannot continue\n", code);
+    fflush(stdout);
+    ExitProcess(1);
+}
+#endif
 
 namespace Crt {
 
@@ -169,6 +214,7 @@ void* Crt::memcpy(void *destination, const void *source, size_t count) {
 
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifndef NIGHTFIRE_STANDALONE
 static void WriteJump(unsigned address, const void *target) {
     unsigned char *site = (unsigned char *)address;
     DWORD previous = 0;
@@ -184,3 +230,4 @@ static void WriteJump(unsigned address, const void *target) {
 void Inject_CRuntime(void) {
     WriteJump(0x000ee382, (const void *)&Crt::sprintf);
 }
+#endif

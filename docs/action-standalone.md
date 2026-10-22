@@ -264,10 +264,48 @@ our ports call empty functions of their own there); the 13 recordings, every fra
 code as the original; MenuCheckLists' item lists and drone tables against the game's, 0 differ; and, for the D3D8
 state and the shaders, 78 frames of three recordings (every 300th) byte for byte the same as before them.
 
+## The rest of the game's data (22 October 2026)
+
+The last 232 literals of standalone_audit.py's worklist, to none: every global and table the action engine's code
+names is ours (global_coverage.py: 1033 of 1073 before the last hand-made ones), and what is left at the game's
+addresses is the injector's own work, `#ifndef NIGHTFIRE_STANDALONE`.
+
+**Tables with their data.** own_globals_action.py --initial writes a structure's or a table's initialiser from the
+XBE through tools/xbe_layout.py: clang (the nf-cross image, the Linux build's flags) compiles the file with a probe of
+the type and dumps its layout, and each field is written by name (designated initialisers, zero fields left out) -
+a pointer as the function, table or string of ours it points at. `--any NAME[=LENGTH]` takes macros global_coverage.py
+does not list, tools/tag_sizes_action.py tags the ones it cannot size, and driving_data_check.py --action compares
+every initialised one with the XBE (620 of 625, 0 differ; the other five are static constants). Generated alongside: the fonts (tools/font_tables.py,
+gfx/FontData.inc), the error screens' pictures (tools/error_images_action.py), and the drones' anim states, transition
+lists and scripts (tools/drone_tables.py). The HUD panes' 22 sprite tables are each the pane's count long; the big
+ones live in files of their own (sound/SFXOutputData.cpp, drone/DroneAnimInfo.cpp).
+
+What the work turned up:
+
+| Found | Now |
+|---|---|
+| HuffmanTables was 0x2788 bytes, over MAT_IDENTITY and a dozen globals after it: the symbols' list has 290 places, not 512 | 0x2410, the game's block |
+| The object list's head: the start of an object as far as its links (its nextObject the first object) | `OBJLIST_HEAD`, owned whole |
+| The anim states' transition lists are separate arrays, 4-aligned, some holding more than one list | one array per state's start |
+| The corner cover anims' table is read from 4 bytes before it (the sides are 1 and 2) | `DroneCoverCornerAnims[mode][side - 1]` |
+| The Inflate tables are read past their ends by an invalid symbol | one structure, in the game's order |
+| `CrtDefaultLocaleInfo` is the C runtime's exception-action table (_XcptActTab), the per-thread data's 0x54 | `XcptActTab` |
+| Menu_SetLevelBonus's stray write lands on the space after the time in the build string, not its last "8" | ours writes PauseBuildString[0x18] |
+| `field12_0xc` of PlayerInput is the flashing objects' codename option | `flashingObjects` |
+| Second names for one global: LastWalkTarget/WalkTestTarget, Font/CurrentFont, menu_bonus/cn_bonus, the drone list | one definition, the rest by name |
+| The generated tables' tags are in .inc files, which data_refs.py, global_coverage.py and driving_data_check.py did not read: the originals kept the XBE's weapon table (which the game writes), fonts, drone anims, shaders and error images | .inc read; 625 initialised globals checked, not 365 |
+| 18 operands Ghidra has no reference from (Boot_GetPTPData's `mov edi, 0x001d7e90` copy of the codename, the drone damage table's `fld`s, three font loops' bases folded for an index from one) | data_refs.py's CHECKED_SITES, each by hand |
+| 35 masks of 0x00200000 (a drone's alarm-sent flag) taken for StringHeap's start: the originals tested and set our heap's address | `test`/`and`/`or`/`xor` immediates are never sites |
+| Input_Update polled through psiInput_PollDevices, not the thunk at 0x000de5c0 the original calls | through the thunk |
+
+**The start-up.** XboxStartup.cpp's patching of the XBE (the entry, XAPI's heap, the per-thread data, the WBINVDs
+and the notification hook), its reads of the XBE header and TLS directory, and CRuntime.cpp's sprintf patch are the
+injected build's only; the standalone build gets the header's stack size as a constant, no XAPI initialiser table (its
+one entry is NULL), and the kernel's critical sections, KeBugCheck and contiguous memory over Win32, as the loader
+answers them. Xbox_Entry is what its main will call.
+
 ## Left for the standalone target
 
-- Tables read through a base outside them: the cover anims' pointer lists (NDrone2_Cover.cpp), the Inflate
-  length and distance tables (Inflate.cpp).
-- The language page's help lines (ui_frontend.cpp): our table of the game's string addresses, whose pointers labels
-  keep.
-- PAUSE_BUILD_STRING, which an original bug writes into (Menu_SetLevelBonus), and the menus' def_codename: state.
+- The target itself, as docs/driving/standalone.md did for the driving engine: a main that calls Xbox_Entry, the
+  devtools hooks answered without the devtools (MenuProbe_PollDevices, MenuProbe_HandleMessage, the Demo hooks), the
+  sources less the injection, and the `#else` branches above built.

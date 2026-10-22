@@ -83,11 +83,12 @@ bool psiMovieLoop(void) {
 
 // ---- the language page ----
 
-// The help line in each language, the game's strings (labels keep the pointer): English, French, German, Spanish,
-// Italian, Dutch, none for American and Japanese, Swedish
+// The help line in each language (labels keep the pointer): English, French, German, Spanish, Italian, Dutch, none
+// for American and Japanese, Swedish
 static const char *const language_help_text[9] = {
-    (const char *)0x0016166c, (const char *)0x00161640, (const char *)0x00161658, (const char *)0x00161608,
-    (const char *)0x0016162c, (const char *)0x0016161c, NULL, NULL, (const char *)0x001615f4,
+    "~A To Select", "~A pour s\xe9lectionner", "~A um auszuw\xe4hlen",
+    "~A Para Seleccionar", "~A Per Selezionare",
+    "~A Selecteren", NULL, NULL, "~A f\xf6r att v\xe4lja",
 };
 
 // The language of each C_LANGUAGE button (its id)

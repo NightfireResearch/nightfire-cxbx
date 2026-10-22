@@ -63,21 +63,32 @@
 #include "sound/SFX.h"
 #include "math/X87Ops.h"
 
+// XBE_GLOBAL(0x00262738, 0x230)
+MPGameStruct MPGame;
+
 // XBE_GLOBAL(0x001f661c, 0x2c)
 viewer_tag *glb_viewer[11];
 // XBE_GLOBAL(0x001f6674, 0x4)
 world_tag *glb_world;
+// XBE_GLOBAL(0x002774b8, 0x10)
+BLData *glb_blokes[NUM_PLAYERS];
+// XBE_GLOBAL(0x001f6654, 0x10)
+obj_tag *glb_players[NUM_PLAYERS];
 // XBE_GLOBAL(0x0029d6d4, 0xc)
 _VECTOR MAYBE_CONST_FORWARD_VECTOR;
 // XBE_GLOBAL(0x0029d6e0, 0x3c)
 _MATRIX MAT_IDENTITY;
 // XBE_GLOBAL(0x0029d71c, 0xc)
 _VECTOR CONST_UP_VECTOR;
+// XBE_GLOBAL(0x001f6648, 0xc)
+_VECTOR GRAVITY_VECTOR;
 // XBE_GLOBAL(0x0029d728, 0xc)
 _VECTOR CONST_ZERO_VECTOR;
 
 // XBE_GLOBAL(0x0017c0f0, 0x4)
 uint32_t VIDEO_FRAME_RATE = 60;
+// XBE_GLOBAL(0x0017c0f4, 0x4)
+uint32_t FRAME_RATE_INT = 60;
 // XBE_GLOBAL(0x0017c0f8, 0x4)
 float _FRAME_RATE = 60.0f;
 // XBE_GLOBAL(0x0017c0fc, 0x4)
@@ -215,13 +226,26 @@ uint16_t StackIndex = 1;
 #define glb_viewer_6 ((uint)glb_viewer[6])
 // XBE_GLOBAL(0x001f6564, 0x1)
 static uint8_t SkipCodeFrame;
-#define GameStateStack (*(uint (*)[64])0x0017bff0) // Not zero-initialised - first entry must be 1
+// XBE_GLOBAL(0x0017bff0, 0x100)
+uint GameStateStack[64] = {1};  // Not zero-initialised - first entry must be 1
 
 // XBE_GLOBAL(0x001f65dc, 0x30)
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
+CheatInfo_t CheatInfo;
 // XBE_GLOBAL(0x001f6568, 0x18)
-#define GlobalVars (*((GlobalVars_t*)0x001f6568))
-#define PTPDATA (*((sNightFireShared_tag*)0x001d7e90))
+GlobalVars_t GlobalVars;
+// The pages handed between the engines, one after the other as the game has them: LS_LoadFromBuffer reads 0x12c0
+// bytes from PTPDATA, on into the page coming back, and psiGetDrivingData fills that one with 0xc00 bytes, 0x1b0 past
+// its end
+typedef struct PTP_PAGES {
+    sNightFireShared_tag data;      // PTPDATA, what goes to the driving engine and is kept
+    sNightFireShared_tag in;        // PTPDataIn, what psiGetDrivingData fills
+    uint8_t past[0x1b0];
+} PTP_PAGES;
+static_assert(sizeof(PTP_PAGES) == 0x1650, "the pages are 0x1650 bytes");
+// XBE_GLOBAL(0x001d7e90, 0x1650)
+static PTP_PAGES PTPPages;
+#define PTPDATA (PTPPages.data)
+#define PTPDataIn (PTPPages.in)
 
 
 // XBE_GLOBAL(0x001f6618, 0x4)
@@ -776,7 +800,6 @@ uint8_t LoadableIndex;
 // XBE_GLOBAL(0x001f6664, 0x4)
 cel_tag **gbl_room_cels;
 // The map file's (parsemap.cpp)
-#define DynamicBH (*(block_header_tag *)0x00274b34)
 // XBE_GLOBAL(0x00274c58, 0x4)
 void *DynamicPtr;
 // XBE_GLOBAL(0x00274c74, 0x4)
@@ -788,7 +811,17 @@ uint8_t controller_mission_end;  // cleared at each level's start (nightfire-por
 // XBE_GLOBAL(0x001df99c, 0x4)
 uint32_t switch_NO_DRONES;
 // The loading screen's picture (LoadingGfx), its texture set to the level's
-#define LoadingGfx (*(SpriteInfo *)0x00181bb8)
+// XBE_GLOBAL(0x00181bb8, 0x2c)
+SpriteInfo LoadingGfx = {
+    .colour = 0x7f7f7fff,
+    .unknown1 = 0x7f7f7fff,
+    .maybeEnabled = 30,
+    .onscreenWidth = 640,
+    .onscreenHeight = 480,
+    .textRef = (Action_TranslatedText)0xffffffff,
+    .textureHashcode = (HASHCODE)0x3000061,
+    .linkedViewer = 99,
+};
 #define LoadScreenFont FontFormat2Centred
 
 #define HT_MainMenu ((HASHCODE)0x07000048)
@@ -1310,8 +1343,6 @@ char menu_unlock_everything;  // Menu.cpp
 int LanguageToLoad;  // XboxSystem.cpp
 // XBE_GLOBAL(0x001f6610, 0x4)
 uint32_t IsWidescreen;
-// What psiGetDrivingData fills: it writes 0xc00 bytes, past the page's 0xa50 into whatever follows
-#define PTPDataIn (*((sNightFireShared_tag *)0x001d88e0))
 
 #define PTP_VERSION 1
 #define PTP_LOADED_FROM_DVD 2
@@ -1348,7 +1379,7 @@ void Boot_GetPTPData(void **data, uint *size) {
     ec->input05 = PlayerInputs[0].field5_0x5;
     ec->levelViewOnPace = PlayerInputs[0].levelViewOnPace;
     ec->rememberZoom = PlayerInputs[0].rememberZoom;
-    ec->flashingObjects = PlayerInputs[0].field12_0xc;
+    ec->flashingObjects = PlayerInputs[0].flashingObjects;
     ec->sfxLanguage = GetSFXLanguage();
     ec->controlStyle = PlayerInputs[0].controlStyle;
     ec->unlockEverything = menu_unlock_everything;
@@ -1444,7 +1475,7 @@ void __stdcall Boot_LoadPTPData(void) {
     PlayerInputs[0].autoSwitchBetterWeapon = (uchar)ec->autoSwitchBetterWeapon;
     PlayerInputs[0].field5_0x5 = (uchar)ec->input05;
     PlayerInputs[0].rememberZoom = (uchar)ec->rememberZoom;
-    PlayerInputs[0].field12_0xc = (uchar)ec->flashingObjects;
+    PlayerInputs[0].flashingObjects = (uchar)ec->flashingObjects;
     SFXSetLanguage(ec->sfxLanguage);
     CheatInfo.UnlimitedAmmo = ec->Cheat_UnlimitedAmmo;
     menu_unlock_everything = (char)ec->unlockEverything;

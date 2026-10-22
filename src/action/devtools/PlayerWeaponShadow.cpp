@@ -34,16 +34,16 @@
 namespace {
 
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
-#define GameCheatInfo ((uint8_t *)0x001f65dc)
+#define GameCheatInfo ((uint8_t *)(size_t)XbeOurs(0x001f65dc))
 #define GameSurfaced U8_AT(XbeOurs(0x00276760))
 #define GameWarmReset U8_AT(XbeOurs(0x00279250))
 #define GameHints (GameSpan<uint8_t>{0x00279144})          // StickyHint, CamHint
 #define GameHands ((obj_tag **)XbeOurs(0x00279148))         // the watch's second, minute and hour hands
 #define GameRamSave (GameSpan<uint8_t>{0x00276768})
 #define GameSSysItems (GameSpan<uint8_t>{0x0029aacc})
-#define GameStats ((uint8_t *)0x00278e70)
+#define GameStats ((uint8_t *)(size_t)XbeOurs(0x00278e70))
 #define GameBondMoments (GameSpan<uint8_t>{0x00278d8e})
-#define GameGlobalVars ((uint8_t *)0x001f6568)
+#define GameGlobalVars ((uint8_t *)(size_t)XbeOurs(0x001f6568))
 #define GameBlur U8_AT(XbeOurs(0x001f667c))
 #define GameFlashMod FLOAT_AT(XbeOurs(0x0027911c))
 #define GameTuning (GameSpan<float>{0x0017e680})           // ContinueHealthBoost*

@@ -17,6 +17,15 @@
 #include <math.h>
 #include <string.h>
 
+// XBE_GLOBAL(0x001640fc, 0x10)
+const DroneDataFunc DroneData_AnimFunc[2] = {{.id = 220, .func = DAnimFunc_Run}, {.id = 0xffff, ._pad2 = 0xffff}};
+
+// Anim state 10's function: empty on the Xbox, where the linker shares one empty function among several
+static void DAStateFunc_Nothing(Drone_tag *drone, ushort phase) {}
+// XBE_GLOBAL(0x0016410c, 0x10)
+const DroneDataFunc DroneData_DAStateFunc[2] = {{.id = 10, .func = DAStateFunc_Nothing},
+                                                {.id = 0xffff, ._pad2 = 0xffff}};
+
 // The entity events 3 and 4 move between datums 0x28 and 100 (our name)
 #define ENTITY_SWAPPED ((HASHCODE)0x02000312)
 

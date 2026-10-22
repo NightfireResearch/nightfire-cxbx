@@ -710,7 +710,7 @@ char records_bond_moves_text[0x20];
 // XBE_GLOBAL(0x0025e3b8, 0x20)
 char records_upgrades_text[0x20];
 
-#define menu_bonus ((ulong *)0x0025d6e8)     // MenuUnlocks.cpp
+extern ulong menu_bonus[8];   // MenuUnlocks.cpp
 
 #define SUB_C_RBDSRECORDS_BEST_TEXT       ((HASHCODE)0x10000175)
 #define SUB_C_RBDSRECORDS_BOND_MOVES_TEXT ((HASHCODE)0x10000177)

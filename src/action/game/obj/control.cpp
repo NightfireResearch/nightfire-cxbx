@@ -34,13 +34,21 @@
 #include <stdio.h>
 #include <string.h>
 
-// Pointer to first game object
-#define DynamicObjList_FirstObj (*(obj_tag**)0x001df34c)
-#define DynamicObjList_Unknown350 U32_AT(0x001df350) // cleared with it by control_init_object_lists
-// Not a variable of its own: the list's head, used as if it were an object (control_add_object_to_list is given
-// its address), whose next-object field lands on DynamicObjList_FirstObj at +0x14. It moves into the DLL together
-// with the list's other fields or not at all.
-#define DynamicObjList (*(obj_tag**)0x001df338)
+// The game objects' list: its head is the start of an object, as far as the list's links (control_add_object_to_list
+// is given its address), and its nextObject the first object
+typedef struct OBJLIST_HEAD {
+    LLNODE_tag *llPrev;
+    LLNODE_tag *llNext;
+    obj_tag *nextInCel;
+    obj_tag *prevInCel;
+    struct ATTACH_tag *attachments;
+    obj_tag *nextObject;    // 0x14
+    obj_tag *prevObject;    // 0x18
+} OBJLIST_HEAD;
+static_assert(offsetof(OBJLIST_HEAD, nextObject) == offsetof(obj_tag, nextObject), "the head's links are an object's");
+static_assert(offsetof(OBJLIST_HEAD, prevObject) == offsetof(obj_tag, prevObject), "the head's links are an object's");
+// XBE_GLOBAL(0x001df338, 0x1c)
+static OBJLIST_HEAD DynamicObjList;
 
 // Number of game objects
 // XBE_GLOBAL(0x001df828, 0x4)
@@ -48,7 +56,6 @@ static uint32_t DynamicObjCount;
 
 // Game objects which span multiple cels
 // XBE_GLOBAL(0x001df41c, 0xc)
-#define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
 // Empty on the Xbox, where the linker shares one empty function among several (nightfire-port's name)
 static void MP_DebugDraw(void) {}
@@ -68,7 +75,7 @@ static void ClampInBox(float *x, float lo, float hi, float radius) {
 // AUTOINJECT
 obj_tag* Control_ReturnNextObjectOfType(ObjectType type, obj_tag* from) {
 
-    obj_tag* at = ((from == NULL) ? DynamicObjList_FirstObj : from);
+    obj_tag* at = ((from == NULL) ? DynamicObjList.nextObject : from);
 
     while(at != NULL) {
 
@@ -85,7 +92,7 @@ obj_tag* Control_ReturnNextObjectOfType(ObjectType type, obj_tag* from) {
 // AUTOINJECT
 void Control_DeleteAllObjectsOfType(ObjectType type) {
 
-    obj_tag *at = DynamicObjList_FirstObj;
+    obj_tag *at = DynamicObjList.nextObject;
 
     while (at != NULL) {
 
@@ -100,7 +107,7 @@ void Control_DeleteAllObjectsOfType(ObjectType type) {
 // AUTOINJECT
 obj_tag* control_first_object(void) {
 
-    return DynamicObjList_FirstObj;
+    return DynamicObjList.nextObject;
 
 }
 
@@ -282,8 +289,8 @@ void Control_SetGList(obj_tag *obj, celglist_tag *celgl) {
 // preallocated).
 // AUTOINJECT
 void control_init_object_lists(void) {
-    DynamicObjList_FirstObj = NULL;
-    DynamicObjList_Unknown350 = 0;
+    DynamicObjList.nextObject = NULL;
+    DynamicObjList.prevObject = NULL;
     DynamicObjCount = 0;
     LList_Init(&ForcedList, 0xe4, 0);
     Demo_ObjectListsReset();
@@ -484,7 +491,7 @@ void maybeControl_Switches_Update(void) {
 // What a deleted object may still be pointed at by: bullets' shooters and targets, explosions' sources, and the hits
 // in every object's hit list
 static void control_ForgetObject(obj_tag *deleted) {
-    for (obj_tag *obj = DynamicObjList_FirstObj; obj != NULL; obj = obj->nextObject) {
+    for (obj_tag *obj = DynamicObjList.nextObject; obj != NULL; obj = obj->nextObject) {
         if (obj->objectType == OBJECTTYPE_BULLET) {
             BU_tag *bullet = (BU_tag *)obj->extraObjectData;
             if (bullet->firedByObj == deleted)
@@ -533,7 +540,7 @@ void control_movement_object_handler(char) {
     memcpy(switch_channels_prev, switch_channels_hold, sizeof(switch_channels_prev));
     memcpy(switch_channels_hold, switch_channels, sizeof(switch_channels_hold));
 
-    for (obj_tag *obj = DynamicObjList_FirstObj, *next; obj != NULL; obj = next) {
+    for (obj_tag *obj = DynamicObjList.nextObject, *next; obj != NULL; obj = next) {
         next = obj->nextObject;
         if (obj->transformFlags & (TRANSFORM_MATRIX_PLACED | TRANSFORM_KEEP_ROTATION))
             Mat_GetDir(&obj->lastRotation, &obj->transformMatrix);
@@ -545,7 +552,7 @@ void control_movement_object_handler(char) {
     bool deleted;
     do {
         deleted = false;
-        for (obj_tag *obj = DynamicObjList_FirstObj, *next; obj != NULL; obj = next) {
+        for (obj_tag *obj = DynamicObjList.nextObject, *next; obj != NULL; obj = next) {
             next = obj->nextObject;
             if (obj->flags & 1) {
                 bool referenced = (obj->transformFlags & TRANSFORM_REFERENCED) != 0;
@@ -562,13 +569,13 @@ void control_movement_object_handler(char) {
         }
     } while (deleted);
 
-    for (obj_tag *obj = DynamicObjList_FirstObj; obj != NULL; obj = obj->nextObject)
+    for (obj_tag *obj = DynamicObjList.nextObject; obj != NULL; obj = obj->nextObject)
         control_SettleMoved(obj);
-    Collide_Update(DynamicObjList_FirstObj);
-    for (obj_tag *obj = DynamicObjList_FirstObj; obj != NULL; obj = obj->nextObject)
+    Collide_Update(DynamicObjList.nextObject);
+    for (obj_tag *obj = DynamicObjList.nextObject; obj != NULL; obj = obj->nextObject)
         control_SettleMoved(obj);
 
-    for (obj_tag *obj = DynamicObjList_FirstObj; obj != NULL; obj = obj->nextObject) {
+    for (obj_tag *obj = DynamicObjList.nextObject; obj != NULL; obj = obj->nextObject) {
         if (obj->drawnCountdown != 0)
             obj->drawnCountdown--;
         if (obj->animState != NULL && GameState.InhibitGameDraw == 0)

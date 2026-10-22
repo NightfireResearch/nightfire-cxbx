@@ -36,7 +36,7 @@ namespace {
 // The game's RNG state (Rand_Random)
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // AnimGetCollData's boxes (16 of them for either table)
-#define HitList2Block ((uint8_t *)0x001d6bf0)
+#define HitList2Block ((uint8_t *)(size_t)XbeOurs(0x001d6bf0))
 const int kHitList2Bytes = 16 * sizeof(COLLJOINT_tag);
 
 #define ORIGINAL(at, type) ((type)(uintptr_t)(at))

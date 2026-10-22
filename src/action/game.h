@@ -128,6 +128,7 @@ struct CheatInfo_t {
     undefined field37_0x2e;
     undefined field38_0x2f;
 };
+extern CheatInfo_t CheatInfo;   // game.cpp
 
 
 typedef struct {
@@ -150,7 +151,7 @@ typedef struct {
     uint levelViewOnPace;       // 0x9c
     uint rememberZoom;          // 0xa0
     uint sfxLanguage;           // 0xa4
-    uint flashingObjects;       // 0xa8 PlayerInput::field12_0xc
+    uint flashingObjects;       // 0xa8 PlayerInput::flashingObjects
     int controlStyle;           // 0xac
     uint mpSomeField2;          // 0xb0 MPSettings.Player[0]'s
     int healthModifier;         // 0xb4
@@ -250,6 +251,7 @@ typedef struct {
     undefined field10_0x16;
     undefined field11_0x17;
 } GlobalVars_t;
+extern GlobalVars_t GlobalVars;   // game.cpp
 
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
@@ -470,6 +472,6 @@ static_assert(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of te
 #pragma pack(pop)
 
 
-#define MPGame (*(MPGameStruct(*))0x00262738)
+extern MPGameStruct MPGame;
 
 #endif // GAME_H

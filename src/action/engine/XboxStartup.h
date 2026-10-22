@@ -13,8 +13,8 @@ DWORD __stdcall Xbox_GetLastError(void);
 void __stdcall Xbox_SetLastError(DWORD error);
 
 // The process heap, Win32's, which the C runtime's malloc allocates from (CRuntime.cpp). XAPI's GetProcessHeap
-// (0x000eb649) reads it here.
-#define ProcessHeapHandle (*(HANDLE *)0x0030093cu)
+// (0x000eb649) reads it.
+extern HANDLE ProcessHeapHandle;
 
 // Process initialisation: the process heap and the XAPI initialiser table, without the console-only parts.
 void __stdcall Xbox_XapiInitProcess(void);
@@ -24,7 +24,12 @@ void *__cdecl Xbox_getptd(void);
 void __cdecl Xbox_freeptd(void *ptd);
 int __cdecl Xbox_mtinit(void);
 
+// The XBE's entry point: starts the game's thread (the loader calls it, or the standalone build's main)
+void __cdecl Xbox_Entry(void);
+
+#ifndef NIGHTFIRE_STANDALONE
 // Installs everything above, and the instruction-level patches. Called from Inject().
 void Inject_XboxStartup(void);
+#endif
 
 #endif // ACTION_ENGINE_XBOXSTARTUP_H_

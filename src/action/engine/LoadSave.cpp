@@ -15,7 +15,6 @@
 // fields, packed a bit at a time (BIN_PushBits) from bit 0x40. A save is the blocks one after another, in the
 // table's order; a load finds each by its label.
 
-#define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 extern uint32_t SubtitlesEnabled;
 extern uint32_t IsWidescreen;
 
@@ -250,7 +249,7 @@ uchar* LS_MakePlrSettings(uint label, ushort slot, ushort *length) {
     BIN_PushBits(PlrSettingsBlock, &cursor, input->crouchToggle, 1);
     BIN_PushBits(PlrSettingsBlock, &cursor, input->vibrationEnabled, 1);
     BIN_PushBits(PlrSettingsBlock, &cursor, input->crosshairsEnabled, 1);
-    BIN_PushBits(PlrSettingsBlock, &cursor, input->field12_0xc, 2);
+    BIN_PushBits(PlrSettingsBlock, &cursor, input->flashingObjects, 2);
     BIN_PushBits(PlrSettingsBlock, &cursor, input->hudVisibility, 1);
     return EndBlock(PlrSettingsBlock, cursor, length);
 }
@@ -269,7 +268,7 @@ void LS_LoadPlrSettings(uchar *block, ushort slot) {
     BIN_PullBits_U8(block, &cursor, &input->crouchToggle, 1);
     BIN_PullBits_U8(block, &cursor, &input->vibrationEnabled, 1);
     BIN_PullBits_U8(block, &cursor, &input->crosshairsEnabled, 1);
-    BIN_PullBits_U8(block, &cursor, &input->field12_0xc, 2);
+    BIN_PullBits_U8(block, &cursor, &input->flashingObjects, 2);
     BIN_PullBits_U8(block, &cursor, &input->hudVisibility, 1);
 }
 

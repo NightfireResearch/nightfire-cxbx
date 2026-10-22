@@ -26,12 +26,32 @@
 
 // Returns in ST0, unrounded
 
-// The corner anims, a list per step for each mode and side: the entry for mode m and side s is at m * 2 + s. The sides
-// are 1 and 2, so the table proper starts at 0x00164030.
-// XBE_GLOBAL(0x0016402c, 0x2c)
-#define DroneCoverCornerAnims ((const ushort *const *)0x0016402c)
+// The corner anims: a list per step for each mode and side (DRONE_COVER_SIDE_MASK, 1 or 2)
+// XBE_GLOBAL(0x00163fc4, 0x6c)
+static const ushort CoverCornerAnimLists[9][6] = {
+    {16, 16, 19, 88, 16, 26},
+    {16, 16, 20, 88, 16, 26},
+    {16, 16, 21, 88, 16, 26},
+    {16, 16, 22, 88, 16, 26},
+    {26, 26, 23, 88, 26, 26},
+    {26, 26, 24, 88, 26, 26},
+    {26, 26, 27, 88, 26, 26},
+    {26, 26, 28, 88, 26, 26},
+    {17, 17, 10, 88, 17, 10},
+};
+// XBE_GLOBAL(0x00164030, 0x28)
+static const ushort *const DroneCoverCornerAnims[5][2] = {
+    {CoverCornerAnimLists[0], CoverCornerAnimLists[1]},
+    {CoverCornerAnimLists[2], CoverCornerAnimLists[3]},
+    {CoverCornerAnimLists[4], CoverCornerAnimLists[5]},
+    {CoverCornerAnimLists[6], CoverCornerAnimLists[7]},
+    {CoverCornerAnimLists[8], CoverCornerAnimLists[8]},
+};
 // The low nodes' anims, by step
-#define DroneCoverLowAnims (*(const ushort *const *)0x00164064)
+// XBE_GLOBAL(0x00164058, 0xc)
+static const ushort CoverLowAnimList[6] = {17, 17, 10, 88, 17, 10};
+// XBE_GLOBAL(0x00164064, 0x4)
+static const ushort *const DroneCoverLowAnims = CoverLowAnimList;
 
 // A node a drone waits at once (its wait flag), and a kick node whose object has been kicked (our names)
 #define AINODE_WAIT 0x1
@@ -114,7 +134,7 @@ void __declspec(naked) DroneAnim_ValidateCoverAnim(void) {
 ushort DroneAnim_CoverModeAnim(DCVars_tag *dcv, uchar mode) {
     Drone_tag *drone = dcv->drone;
     if (drone->coverNode->type == COVER_CORNER)
-        return DroneCoverCornerAnims[mode * 2 + (drone->coverFlags & DRONE_COVER_SIDE_MASK)][drone->coverStep];
+        return DroneCoverCornerAnims[mode][(drone->coverFlags & DRONE_COVER_SIDE_MASK) - 1][drone->coverStep];
     return DroneCoverLowAnims[drone->coverStep];
 }
 

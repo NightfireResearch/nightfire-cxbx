@@ -859,14 +859,14 @@ void RandomWorld(void) {
     for (int m = 0; m < 5; m++) {
         mgrs[m].startPlayer = (uchar)R(4);
     }
-    MENU_LS &l = *(MENU_LS *)0x0017d540;
+    MENU_LS &l = *(MENU_LS *)(size_t)XbeOurs(0x0017d540);
     l.slot = R(3) == 0 ? LS_SLOT_NEW : R(5);
     l.numCodenames = R(3) == 0 ? CODENAME_SLOTS_DEFAULT : R(32);
     l.operation = (uchar)R(5);
     for (int i = 0; i < 32; i++)
-        sprintf(((char (*)[0x20])0x002251b8)[i], "code%x", R(0x1000));
+        sprintf(((char (*)[0x20])(size_t)XbeOurs(0x002251b8))[i], "code%x", R(0x1000));
     for (int i = 0; i < 2; i++)
-        ((DEFAULT_CODENAME *)0x0017d588)[i].name = (Action_TranslatedText)R(0x400);
+        GameSpan<DEFAULT_CODENAME>{0x0017d588}[i].name = (Action_TranslatedText)R(0x400);
     U32_AT(XbeOurs(0x0025d7a0)) = R(4) == 0 ? R(0) : R(11);       // LanguageToLoad
     U32_AT(XbeOurs(0x0025d7c0)) = R(3) == 0 ? 0 : R(200);         // the movie's skip delay
     MPSettings.isMultiplayer = R(2);
@@ -881,7 +881,7 @@ void RandomWorld(void) {
         PlayerInputs[p].controlStyle = (short)(R(4) == 0 ? R(0) : R(10));
         PlayerInputs[p].inverted = (uchar)R(3);
     }
-    PTR_AT(0x001f6654) = world.player;                    // glb_players[0]
+    PTR_AT(XbeOurs(0x001f6654)) = world.player;                    // glb_players[0]
     U32_AT(XbeOurs(0x0017d604)) = 0x13f;                           // the language page's flags at first: never written
     U8_AT(XbeOurs(0x0025d78c)) = (uint8_t)R(2);                    // menu_level_bonus_earned
     if (R(2))
@@ -1172,7 +1172,7 @@ uint32_t Run_MovieLoop(bool original) {
 }
 uint32_t Run_GetBonus(bool original) {
     for (int i = 0; i < 8; i++)
-        U32_AT((0x0025d6e8 + 4 * i)) = R(0);
+        U32_AT(XbeOurs(0x0025d6e8 + 4 * i)) = R(0);
     byte player = (byte)R(4);
     uint64_t bonus = original ? ([&]() { XbeOriginalScope scope_(0x0007c660); return ORIGINAL(0x0007c660, uint64_t (__cdecl *)(byte))(player); }())
                               : Menu_GetBonus(player);
@@ -1327,7 +1327,7 @@ const unsigned kFrontEndHelperFakes[] = {0x0007fda0, 0x0007ffa0, 0x0008fcc0, 0x0
 
 // ---- the movie list, the multiplayer join and setup pages and the rules
 
-#define mp_join_step (*(int(*)[4])0x00245698)
+#define mp_join_step GameSpan<int>{0x00245698}
 #define mp_good_bot_taken U8_AT(XbeOurs(0x002456b0))
 
 HANDLER_CASE(P_FMVTEST, 0x00085a50)
@@ -1454,7 +1454,7 @@ void MenuHandlerShadow_Run(void) {
     std::vector<uint8_t> savedOwned, savedGame;
     SaveAll(savedOwned, false);
     SaveAll(savedGame, true);
-    uint32_t savedPlayer = U32_AT(0x001f6654);
+    uint32_t savedPlayer = U32_AT(XbeOurs(0x001f6654));
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -1497,5 +1497,5 @@ void MenuHandlerShadow_Run(void) {
         XbeOursWrite(kGlobals[i].at, saved[i].data(), saved[i].size());
     LoadAll(savedOwned, false);
     LoadAll(savedGame, true);
-    U32_AT(0x001f6654) = savedPlayer;
+    U32_AT(XbeOurs(0x001f6654)) = savedPlayer;
 }

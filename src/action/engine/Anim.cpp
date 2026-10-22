@@ -57,14 +57,17 @@ typedef struct AnimSizes {
     uint numScripts;
     uint seqFrames;
 } AnimSizes;
-#define AnimFileSizes (*(AnimSizes *)0x001d6a44)
+// XBE_GLOBAL(0x001d6a44, 0x1c)
+AnimSizes AnimFileSizes;
 
 // XBE_GLOBAL(0x001d7570, 0x4)
 uint32_t AnimScriptTimeStamp;
 // XBE_GLOBAL(0x001d6a60, 0x4)
 uint32_t AnimTagTimeStamp;
-#define Glb_SkinScale (*(_VECTOR *)0x001d7794)
-#define Glb_InvSkinScale (*(_VECTOR *)0x001d6a28)
+// XBE_GLOBAL(0x001d7794, 0xc)
+_VECTOR Glb_SkinScale;
+// XBE_GLOBAL(0x001d6a28, 0xc)
+_VECTOR Glb_InvSkinScale;
 // XBE_GLOBAL(0x001d6ac4, 0x2)
 int16_t nDistanceTables;
 // XBE_GLOBAL(0x001d6a65, 0x1)
@@ -81,15 +84,18 @@ uint8_t FootstepType;
 // The morphs AnimObjectDraw hands the renderer: the strongest eight, in index order
 // XBE_GLOBAL(0x001d7826, 0x1)
 uint8_t Morph_Count;
-#define Morph_Weight ((float *)0x001d6a68)
-#define Morph_Index ((uchar *)0x001d777c)
+// XBE_GLOBAL(0x001d6a68, 0x58)
+float Morph_Weight[22];
+// XBE_GLOBAL(0x001d777c, 0x18)
+uchar Morph_Index[24];
 // XBE_GLOBAL(0x001d7824, 0x1)
 uint8_t bCharacterLight;   // characters get their own light
 // XBE_GLOBAL(0x001d7825, 0x1)
 uint8_t bShadowCharacter;  // draw this character's shadow
 
 // The file being loaded and the cursor the loaders read it with
-#define pAnimData (*(char **)0x001d6ac8)
+// XBE_GLOBAL(0x001d6ac8, 0x4)
+char *pAnimData;
 // XBE_GLOBAL(0x001d6ac0, 0x4)
 int32_t AnimFileSize;
 // XBE_GLOBAL(0x001d6a20, 0x4)
@@ -97,9 +103,12 @@ void *pAnimFileData;
 
 // AnimFrameCopy's working store: the powers of the frame, and four channels evaluated together (coefficient i of
 // lane l at [i][l]; row 0 is the sum)
-#define AnimFramePoly ((float *)0x001d6acc)
-#define AnimChannelCoef (*(float (*)[6][4])0x001d69c0)
-#define AnimChannelType ((int *)0x001d6a34)
+// XBE_GLOBAL(0x001d6acc, 0x18)
+static float AnimFramePoly[6];
+// XBE_GLOBAL(0x001d69c0, 0x60)
+float AnimChannelCoef[6][4];
+// XBE_GLOBAL(0x001d6a34, 0x10)
+static int AnimChannelType[4];
 
 // The facial scripts by alert status (four) and the blink, for skeleton 1 and for the others
 // XBE_GLOBAL(0x00163468, 0x14) readonly relocate
@@ -163,7 +172,8 @@ typedef struct AnimDistanceTableEntry {
     HASHCODE hashcode;
     AnimDistanceTable *table;
 } AnimDistanceTableEntry;
-#define DistanceTables (*(AnimDistanceTableEntry(*)[NUM_DISTANCE_TABLES])0x001d6af0)
+// XBE_GLOBAL(0x001d6af0, 0x100)
+AnimDistanceTableEntry DistanceTables[NUM_DISTANCE_TABLES];
 
 // The axes AnimDistanceTableGet measures (AnimDistanceTableCreate's)
 #define DISTANCE_AXIS_X 1
@@ -3718,7 +3728,8 @@ const AnimCollBone AstronautCollisionBones[17] = {
     {33, 29, 0.046875f, {0.1f, 0.05f, 0.05f}},
     {-1, -1, 0.0f, {0.0f, 0.0f, 0.0f}},
 };
-#define HitList2 ((COLLJOINT_tag *)0x001d6bf0)
+// XBE_GLOBAL(0x001d6bf0, 0x980)
+static COLLJOINT_tag HitList2[32];
 
 // The skin that takes AstronautCollisionBones
 #define SKIN_ASTRONAUT ((HASHCODE)0x05000078)

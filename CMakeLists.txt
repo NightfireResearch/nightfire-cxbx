@@ -273,6 +273,7 @@ add_library(actioninject SHARED
   src/action/game/drone/Behaviour.cpp
   src/action/game/drone/Drone.cpp
   src/action/game/drone/DroneAnim.cpp
+  src/action/game/drone/DroneAnimInfo.cpp
   src/action/game/drone/DroneSM.cpp
   src/action/game/drone/DroneTables.cpp
   src/action/game/drone/NDrone2.cpp
@@ -381,6 +382,7 @@ add_library(actioninject SHARED
   src/action/sound/SFX.cpp
   src/action/sound/SFXStream.cpp
   src/action/sound/Sound.cpp
+  src/action/sound/SFXOutputData.cpp
 )
 
 # The seams' native backends (common/gfx/d3d9Backend.cpp, sound/xaudio2Backend.cpp)

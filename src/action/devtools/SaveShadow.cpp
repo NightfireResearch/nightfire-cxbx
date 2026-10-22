@@ -242,8 +242,8 @@ void AddSettings(ShadowRegions &regions) {
 void RandomSettings(void) {
     RandomBytes(PlayerInputs, 4 * sizeof(PlayerInput));
     RandomBytes(MPSettings.Player, sizeof(MPSettings.Player));
-    RandomBytes((void *)0x001f65dc, 0xc);
-    RandomBytes((void *)0x001f660c, 0xc);
+    RandomBytes((void *)(size_t)XbeOurs(0x001f65dc), 0xc);
+    RandomBytes((void *)(size_t)XbeOurs(0x001f660c), 0xc);
     GameState.WeaponUpgradeRelated = (uchar)ShadowRand(256);
     fake.status = RandomWord();
     fake.scoreCount = ShadowRand(13);

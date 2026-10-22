@@ -33,7 +33,7 @@ namespace {
 // The game's RNG state (Rand_Random)
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // Drone_SfxInfo (NDrone2_Talk.cpp): 0x15a entries of 0x20 bytes
-#define SfxInfoTable ((uint8_t *)0x00174b28)
+#define SfxInfoTable ((uint8_t *)(size_t)XbeOurs(0x00174b28))
 const int kSfxInfoBytes = 0x15a * 0x20;
 #define switch_BLIND_DRONES U32_AT(XbeOurs(0x001df9a0))
 

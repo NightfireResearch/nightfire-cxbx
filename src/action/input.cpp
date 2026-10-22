@@ -3,14 +3,17 @@
 
 #include "input.h"
 #include "engine/psiInput.h"
+#include "engine/psiDraw.h"           // psiInput_PollDevices_Thunk
 #include <string.h>
 #include "engine/mouseLook.h"
 #include "engine/mouseSteer.h"
 #include "devtools/Demo.h"
-#include "devtools/MenuProbe.h"
 #include "game/mp/multiplayer.h"
 #include "game.h"
 #include <math.h>
+
+// XBE_GLOBAL(0x001fe6d0, 0x560)
+PlayerInput PlayerInputs[4];
 
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
@@ -273,7 +276,14 @@ void Input_UpdateWithMouse(void) {
 }
 
 // The sticks' response: a length through the table, in 255ths, from 0 to 128 in 127ths
-#define AnalogStickMapping (*(uchar(*)[129])0x0017c170)
+// XBE_GLOBAL(0x0017c170, 0x81)
+uchar AnalogStickMapping[129] = {
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 10,
+    10, 10, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36,
+    37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 52, 54, 56, 58, 60, 62, 64, 66, 68, 70, 72, 74, 76, 78, 80,
+    82, 84, 86, 88, 90, 94, 98, 102, 106, 110, 114, 118, 122, 126, 130, 134, 138, 142, 146, 150, 160, 170, 180, 190,
+    200, 210, 220, 230, 240, 250, 255, 255, 255,
+};
 #define STICK_DEAD_ZONE 0.0002f
 // An axis within this of the centre sends the other, past it, to its end (StickCompensation3)
 #define STICK_DIAGONAL 0.707107f
@@ -351,7 +361,7 @@ void Input_Update(void) {
     for (int i = 0; i < 4; i++)
         memset(PlayerInputs[i].fChannels, 0, sizeof(PlayerInputs[i].fChannels));
 
-    MenuProbe_PollDevices();    // psiInput_PollDevices, or a menu script's pads in its place
+    psiInput_PollDevices_Thunk();
     int players = GameState.CurrentLevelHashcode == HT_Level_Menu_Pre ? 4 : MPSettings.numPlayers;
     psiInput_MapInputs((PlayerInput_tag *)PlayerInputs, players);
 
@@ -429,7 +439,7 @@ void Input_Init(void) {
         input->controlStyleDriving = 0;
         input->autoSwitchBetterWeapon = 1;
         input->hudVisibility = 0;
-        input->field12_0xc = 1;
+        input->flashingObjects = 1;
     }
 }
 

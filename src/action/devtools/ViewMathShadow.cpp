@@ -1535,7 +1535,7 @@ void MakeWorld(void) {
     GameState.maybeLoadingBlobs = NextWord();
     U32_AT(XbeOurs(0x0029e80c)) = 1u << R(5);    // object_display_mask
     *(_VECTOR *)XbeOurs(0x0029dbf0) = RandomPoint(30.0f);   // CamPos
-    U8_AT(0x001fe6dc) = (uint8_t)R(2);  // FlashOption
+    U8_AT(XbeOurs(0x001fe6dc)) = (uint8_t)R(2);  // FlashOption
     FLOAT_AT(XbeOurs(0x0027911c)) = R(6) ? 0.5f + Positive(0.5f) : Coordinate();   // FlashMod
     U8_AT(XbeOurs(0x001f667c)) = (uint8_t)NextWord();   // GlobalBlur
     U32_AT(XbeOurs(0x0029e808)) = R(2);          // Tots[2]
@@ -1563,9 +1563,9 @@ void MakeWorld(void) {
     U32_AT(XbeOurs(0x0029ea58)) = R(4) ? R(10) : R(110);   // VisionRecurseCount
     U16_AT(XbeOurs(0x002a0a70)) = (ushort)(R(3) ? R(10) : R(65));   // VisCelCount
     for (int i = 0; i < 64; i++) {
-        *(cel_tag **)(uintptr_t)(0x002a0870 + i * 8) = &world.cels[R(CELS)];
-        *(ushort *)(uintptr_t)(0x002a0874 + i * 8) = (ushort)R(8);
-        *(ushort *)(uintptr_t)(0x002a0876 + i * 8) = 0;
+        *(cel_tag **)(uintptr_t)XbeOurs(0x002a0870 + i * 8) = &world.cels[R(CELS)];
+        *(ushort *)(uintptr_t)XbeOurs(0x002a0874 + i * 8) = (ushort)R(8);
+        *(ushort *)(uintptr_t)XbeOurs(0x002a0876 + i * 8) = 0;
     }
 }
 
@@ -1745,7 +1745,7 @@ uint32_t RunAddCel(bool o) { CALL(o, 0x000db540, Vision_AddCelToDraw, s_cel, (us
 uint32_t RunDisplayList(bool o) { CALL(o, 0x000db4b0, vision_generate_display_list, s_viewer); return 0; }
 uint32_t RunCamPos(bool o) { CALL(o, 0x000db5a0, vision_GetCamPos, &world.v[2]); return 0; }
 
-#define VisionPlanes ((plane_equ_tag *)0x0029ea60)
+#define VisionPlanes ((plane_equ_tag *)(size_t)XbeOurs(0x0029ea60))
 #define VisionPlaneCounts (GameSpan<int>{0x0029e998})
 
 void RunVision(void) {

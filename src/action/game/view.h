@@ -32,7 +32,7 @@ extern uint8_t ThunderNear;
 extern uint8_t LightningOverhead;
 // The frames the sky has turned, on its level 0x0700001b, and where its sun goes
 extern uint32_t SkyTurn;
-#define SkySunPos (*(_VECTOR *)0x001f6668)
+extern _VECTOR SkySunPos;
 
 void View_SetDrawInAllViews(obj_tag* o);
 void View_SetDrawInNoViews(obj_tag* o);

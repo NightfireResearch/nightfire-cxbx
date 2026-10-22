@@ -16,7 +16,8 @@
 #pragma fp_contract(off)
 
 // Where NDrone2_CanWalkStraightTo last tested a walk to (BOTSTATE_checkAttackMove reads it)
-#define WalkTestTarget (*(_VECTOR *)0x001ee420)
+// XBE_GLOBAL(0x001ee420, 0xc)
+_VECTOR LastWalkTarget;
 
 constexpr float kMoveTargetRadius = 0.3f;
 static_assert(std::bit_cast<uint32_t>(kMoveTargetRadius) == 0x3e99999a, "not the original's 0.3");
@@ -180,7 +181,7 @@ bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, 
     from.cel = obj->inCel;
     if (pos->cel == NULL)
         pos->cel = NDrone2_FindCel(&pos->pos);
-    WalkTestTarget = pos->pos;
+    LastWalkTarget = pos->pos;
     return NDrone2_MoveTest(&from.pos, from.cel, &pos->pos, pos->cel, NULL, obj, NULL, 0, checkBlocked) == 1;
 }
 

@@ -20,7 +20,9 @@ void* memcpy(void *destination, const void *source, size_t count);   // 0x000ee4
 
 } // namespace Crt
 
+#ifndef NIGHTFIRE_STANDALONE
 // Points the runtime's entry points the game still calls at ours. Called from Inject().
 void Inject_CRuntime(void);
+#endif
 
 #endif // ACTION_ENGINE_CRUNTIME_H_

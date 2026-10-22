@@ -9,6 +9,55 @@
 
 #include <stdio.h>
 
+// XBE_GLOBAL(0x00182b20, 0xc)
+_VECTOR NormVector = {.x = 1.0f};
+// XBE_GLOBAL(0x00182b2c, 0xc)
+_VECTOR DirVector = {.y = 1.0f};
+// XBE_GLOBAL(0x00182b38, 0xc)
+_VECTOR UpVector = {.z = 1.0f};
+// XBE_GLOBAL(0x00182b44, 0xc)
+_VECTOR ListenerNorm = {.x = -1000.0f};
+// XBE_GLOBAL(0x00182b50, 0xc)
+_VECTOR ListenerDir = {.y = 1000.0f};
+// XBE_GLOBAL(0x00182b5c, 0xc)
+_VECTOR ListenerUp = {.z = 1000.0f};
+
+// XBE_GLOBAL(0x00279510, 0x1518)
+SoundBankHeader SoundBankData[SFX_NUM_BANKS];
+// XBE_GLOBAL(0x0027aa28, 0x4b0)
+ES_VoiceHandleDetails ES_VoiceHandleData[SFX_NUM_VOICE_HANDLES];
+// XBE_GLOBAL(0x0027aee0, 0x30)
+_VECTOR ListenerPositions[SFX_NUM_LISTENERS];
+// XBE_GLOBAL(0x00286ce8, 0x11300)
+SFXItem SFXItems[SFX_NUM_ITEMS];
+// XBE_GLOBAL(0x00298448, 0x600)
+StreamIntialiseDetails StreamWaitingIntialise[SFX_NUM_STREAM_REQUESTS];
+// XBE_GLOBAL(0x00298a50, 0x20)
+StreamMemCpyHandle StreamMemCpyHandles[SFX_NUM_STREAMS];
+// XBE_GLOBAL(0x00298a70, 0x3fc)
+StreamData Streams[SFX_NUM_STREAMS];
+// XBE_GLOBAL(0x00298e74, 0x4b0)
+SFXRequest SFXRequestedActiveData[SFX_NUM_ITEMS];
+// XBE_GLOBAL(0x0029937c, 0xc)
+_VECTOR ZeroPos;
+// XBE_GLOBAL(0x00299484, 0x320)
+SFXActive SFXActiveData[SFX_NUM_ITEMS];
+// XBE_GLOBAL(0x002997b4, 0xc)
+_VECTOR ListenerPos;
+// XBE_GLOBAL(0x002997c0, 0xc)
+_VECTOR ListenerVel;
+// XBE_GLOBAL(0x00299a10, 0xc)
+_VECTOR SFXZeroPoint;
+
+// XBE_GLOBAL(0x00182750, 0xc8)
+char MFXFilePath[200] = "music\\";
+// XBE_GLOBAL(0x00182818, 0xc8)
+char MFXFilePath2[200] = "music\\";
+// XBE_GLOBAL(0x001828e0, 0xc8)
+char STRFilePath[200] = "streams\\";
+// XBE_GLOBAL(0x001829a8, 0xc8)
+char STRFilePath2[200] = "streams\\";
+
 // XBE_GLOBAL(0x00182748, 0x4)
 int32_t ES_MuteMusic = 1;
 // XBE_GLOBAL(0x0018274c, 0x4)

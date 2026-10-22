@@ -181,7 +181,7 @@ static const OPTION_RADIO game_options[8] = {
     {(HASHCODE)0x10000125, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::crouchToggle},
     {(HASHCODE)0x10000126, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::manualAimToggle},
     {(HASHCODE)0x100001cb, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoSwitchBetterWeapon},
-    {(HASHCODE)0x10000226, MP_ON, 2, MP_OFF, 0, &PlayerInput::field12_0xc},
+    {(HASHCODE)0x10000226, MP_ON, 2, MP_OFF, 0, &PlayerInput::flashingObjects},
     {(HASHCODE)0x1000023b, MP_ON, 0, MP_OFF, 1, &PlayerInput::hudVisibility},
 };
 

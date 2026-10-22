@@ -32,8 +32,6 @@
 // the gun in the first-person view (its states, anims, sway and position), firing, the zoom, the auto-aim, the laser
 // sight, the muzzle flash and the watch on the wrist.
 
-#define CheatInfo (*((CheatInfo_t *)0x001f65dc))
-#define GlobalVars (*((GlobalVars_t *)0x001f6568))
 extern uint8_t IsWarmReset;
 // XBE_GLOBAL(0x0029aacc, 0x28)
 SSYSITEM SSysItems[SSYS_ITEMS];

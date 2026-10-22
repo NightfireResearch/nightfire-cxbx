@@ -566,10 +566,10 @@ static_assert(offsetof(NPCGlobals_t, prevLostOpponentCount) == 0x178, "Wrong off
 static_assert(offsetof(NPCGlobals_t, unknown188) == 0x188, "Wrong offset for unknown188");
 static_assert(offsetof(NPCGlobals_t, unknown138c) == 0x138c, "Wrong offset for unknown138c");
 static_assert(offsetof(NPCGlobals_t, alarmFrame) == 0x1394, "Wrong offset for alarmFrame");
-#define NPCGlobals (*(NPCGlobals_t *)0x001e5630)
+extern NPCGlobals_t NPCGlobals;
 // NPCGlobals.NDrone2List and NDrone2Count are the head and count of a list of Drone_tags (LList_Init by
-// Drone_PreLoad_Init)
-#define NDrone2Info (*(LLISTINFO_tag *)0x001e5634)
+// Drone_PreLoad_Init): the list's LLISTINFO_tag
+#define NDrone2Info (*(LLISTINFO_tag *)&NPCGlobals.NDrone2List)
 
 // Navigation (NDrone2.cpp, NDrone2_Nav.cpp; docs/drone/bots-and-navigation)
 obj_tag* NDrone2_Player(void);
@@ -591,6 +591,7 @@ bool NDrone2_NearDrone(DCVars_tag *dcv, float radius);
 void NDrone2_NavNodeCache(void);
 bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z);
 bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, char checkBlocked);
+extern _VECTOR LastWalkTarget;   // where it last tested a walk to (NDrone2_Nav.cpp)
 bool NDrone2_MoveTestRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, char checkBlocked);
 bool NDrone2_AtDest(DCVars_tag *dcv);
 void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target);

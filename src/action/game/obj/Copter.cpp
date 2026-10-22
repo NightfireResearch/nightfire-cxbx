@@ -19,6 +19,9 @@
 #include "Gas.h"
 #include "ScriptPlayer.h"
 
+// XBE_GLOBAL(0x001fe6b4, 0xc)
+LLISTINFO_tag CopterPaths;
+
 // XBE_GLOBAL(0x0017c118, 0x4)
 float DiffMod = 1.0f;
 

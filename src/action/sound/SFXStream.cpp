@@ -637,6 +637,11 @@ void SFXInitialiseStreamUpdate(void) {
 // The copy into the playback buffer, a piece (up to a file buffer) a frame, waiting while the play position is in
 // the piece. Its end is where the data ends; the last piece moves the copy on to the next read buffer. Part of
 // SFXUpdateStreams in the original; the name is ours.
+// Where software ADPCM would decode to: the game's four bytes. Nothing sets a stream's SoftwareAdpcm on the Xbox, so
+// nothing copies from it.
+// XBE_GLOBAL(0x00298a48, 0x4)
+uint32_t SoftwareAdpcmBuffer;
+
 static void ES_UpdateStreamMemCpy(void) {
     StreamMemCpyHandle *copy = &StreamMemCpyHandles[0];
     if (copy->TransferStatus != STREAM_COPYING)
@@ -669,7 +674,7 @@ static void ES_UpdateStreamMemCpy(void) {
         }
         // The decoder was never written for the Xbox: this copies the memory at its buffer's address
         if (size != 0)
-            psiStreamWrite(copy->StreamHandle, copy->StreamByteOffset + copy->TransferPos, SoftwareAdpcmBuffer, size);
+            psiStreamWrite(copy->StreamHandle, copy->StreamByteOffset + copy->TransferPos, &SoftwareAdpcmBuffer, size);
     }
     stream->DataEndMarker.EndHere = copy->StreamByteOffset + copy->TransferPos + size;
     stream->DataEndMarker.EndMustToggle = 1;

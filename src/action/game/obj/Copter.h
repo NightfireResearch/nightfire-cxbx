@@ -123,7 +123,7 @@ bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj);
 void Copter_SeesPlayer(void);
 
 extern LLISTINFO_tag CopterList;
-#define CopterPaths (*(LLISTINFO_tag*)0x001fe6b4)
+extern LLISTINFO_tag CopterPaths;
 // The cone the helicopters see the player in, 45 degrees about their direction (Copter_InitConeCos, _Sin)
 extern float CopterConeCos;
 extern float CopterConeSin;

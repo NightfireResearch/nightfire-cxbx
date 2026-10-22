@@ -8,6 +8,8 @@
 
 #include <string.h>
 
+#include "FontData.inc"
+
 #pragma fp_contract(off)
 
 // Formats several places share: 0xff and a font, then options (0xfe an alignment, 0xfc and 0xfb a scale)
@@ -36,7 +38,13 @@ char FontEmptyString[] = "";
 char FontSpaceString[] = " ";
 
 // The fonts, by Font_ParseFormat's font number; 1 is the default
-#define FontTable (*(FONTTABLE_tag (*)[5])0x0017bd90)
+// XBE_GLOBAL(0x0017bd90, 0x28)
+FONTTABLE_tag FontTable[5] = {
+    {.font = (FONT_tag *)0xfc},
+    {.texture = (HASHCODE)0x3000005, .font = &Font1},
+    {.texture = (HASHCODE)0x3000003, .font = &Font2},
+    {.texture = (HASHCODE)0x30000d8, .font = &Font3},
+};
 #define NUM_SPECIAL_CHARS 23
 // XBE_GLOBAL(0x0017bdc0, 0x228) readonly relocate
 SPECIALCHAR_tag SpecialChars[NUM_SPECIAL_CHARS] = {
@@ -65,7 +73,8 @@ SPECIALCHAR_tag SpecialChars[NUM_SPECIAL_CHARS] = {
     {'Y', {0, 0, 0}, (HASHCODE)0x03000075, 256, 128, 71, 0, 17, 22, 17, 20},
 };
 // The font in use
-#define Font (*(FONT_tag **)0x001f64b0)
+// XBE_GLOBAL(0x001f64b0, 0x4)
+FONT_tag *Font;
 // Every glyph's sprite, filled in and copied to the sprite list
 extern SPRITE_DRAW CharInfo;
 // XBE_GLOBAL(0x001f64e8, 0x40)
@@ -84,12 +93,17 @@ float y_131;
 float x_130;
 // XBE_GLOBAL(0x001f6538, 0x4)
 CHARDATA_tag *fd_129;
-#define Pos_128 (*(GPOINT *)0x001f653c)     // the pen
-#define Scale_127 (*(GPOINT *)0x001f6544)
-#define Size_126 (*(GPOINT *)0x001f654c)    // what it measured, and returns
+// XBE_GLOBAL(0x001f653c, 0x8)
+GPOINT Pos_128;  // the pen
+// XBE_GLOBAL(0x001f6544, 0x8)
+GPOINT Scale_127;
+// XBE_GLOBAL(0x001f654c, 0x8)
+GPOINT Size_126;  // what it measured, and returns
 // Font_DrawText's
-#define TScale_138 (*(GPOINT *)0x001f6554)
-#define Size_137 (*(GPOINT *)0x001f655c)
+// XBE_GLOBAL(0x001f6554, 0x8)
+GPOINT TScale_138;
+// XBE_GLOBAL(0x001f655c, 0x8)
+GPOINT Size_137;
 
 // The control codes of a format
 #define FMT_COLOUR      0xfa    // r g b, and a byte not read

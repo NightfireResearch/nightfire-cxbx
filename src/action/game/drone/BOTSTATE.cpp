@@ -24,9 +24,6 @@
 #include "NDrone2_Route.h"
 
 
-// The position NDrone2_CanWalkStraightTo (0x45340) last tested a walk to
-#define LastWalkTarget (*(_VECTOR *)0x001ee420)
-
 // The bots' unarmed attack anim state (our name)
 #define DANIM_UNARMED_ATTACK 0x3d
 

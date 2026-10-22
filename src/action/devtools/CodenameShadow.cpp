@@ -512,12 +512,12 @@ void RandomGame(void) {
         ((BLData *)g_bloke[i])->hudInfo = (HUDINFO_tag *)(0x1000 + i);
     }
     glb_players[0] = (obj_tag *)g_player;
-    RandomBytes((void *)0x001df99c, 8);
+    RandomBytes((void *)(size_t)XbeOurs(0x001df99c), 8);
     RandomBytes((void *)XbeOurs(0x001df9dc), 4);
     RandomBytes((void *)XbeOurs(0x001dfa29), 1);
-    RandomBytes((void *)0x0025d79c, 4);
-    RandomBytes((void *)0x001fec49, 2);
-    RandomBytes((void *)0x001f65dc, 0xc);
+    RandomBytes((void *)(size_t)XbeOurs(0x0025d79c), 4);
+    RandomBytes((void *)(size_t)XbeOurs(0x001fec49), 2);
+    RandomBytes((void *)(size_t)XbeOurs(0x001f65dc), 0xc);
     U32_AT(XbeOurs(0x00194804)) = ShadowRand(4);
 }
 
@@ -559,13 +559,13 @@ void HandlerCases(void) {
             static const uchar types[] = {ControlType_Scroll, ControlType_List, ControlType_Radio, ControlType_Button};
             control->type = types[ShadowRand(4)];
             // GlobalVars: the decoder's digit count and position
-            RandomBytes((void *)0x001f6568, 0x18);
-            U8_AT(0x001f657a) = (uchar)ShadowRand(5);
-            U8_AT(0x001f657b) = (uchar)ShadowRand(5);
+            RandomBytes((void *)(size_t)XbeOurs(0x001f6568), 0x18);
+            U8_AT(XbeOurs(0x001f657a)) = (uchar)ShadowRand(5);
+            U8_AT(XbeOurs(0x001f657b)) = (uchar)ShadowRand(5);
             // XBox_DoSaveFlow's state, for C_LBERROPTIONS
             memset(&g_fakeManager, 0, sizeof(g_fakeManager));
             g_fakeManager.underPage = ShadowRand(2) ? &g_fakePage : NULL;
-            RandomBytes((void *)0x0025eda0, 0x20);
+            RandomBytes((void *)(size_t)XbeOurs(0x0025eda0), 0x20);
             *(MENU_LS **)XbeOurs(0x0025eda0) = &ls;
             *(M_MANAGER **)XbeOurs(0x0025eda4) = ShadowRand(2) ? &g_fakeManager : &manager[1];
             manager[0].currentPage = NULL;

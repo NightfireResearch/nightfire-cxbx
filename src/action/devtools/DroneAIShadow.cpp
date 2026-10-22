@@ -35,7 +35,7 @@ namespace {
 // The game's RNG state (Rand_Random)
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
 // Drone_SfxInfo's sfx field, per speech number (what Drone_maybeDisallowedFromSayingThisSfx compares)
-#define SfxInfoSound(n) U32_AT(0x00174b28 + (n) * 0x20)
+#define SfxInfoSound(n) U32_AT(XbeOurs(0x00174b28 + (n) * 0x20))
 
 const int DRONES = 6;
 
@@ -625,7 +625,7 @@ void TestStateMachine() {
     for (int trial = 0; trial < 50; trial++) {
         RandomWorld();
         for (size_t i = 0; i < 0x8010; i++)
-            ((uint8_t *)0x001ee438)[i] = (uint8_t)ShadowRand(256);
+            GameSpan<uint8_t>{0x001ee438}[i] = (uint8_t)ShadowRand(256);
         Compare("Drone_SM_Init", trial,
                 [] {
                     OriginalStateMachine o;
@@ -1223,7 +1223,7 @@ void DroneAIShadow_Run(void) {
     uchar disabled = Drone_bDisableSystem;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
-    memcpy(lists, (void *)0x001ee438, sizeof(lists));
+    memcpy(lists, (void *)(size_t)XbeOurs(0x001ee438), sizeof(lists));
     memcpy(music, (void *)XbeOurs(0x001ee260), sizeof(music));
     memcpy(mpSettings, &MPSettings, sizeof(mpSettings));
     memcpy(mpGame, &MPGame, sizeof(mpGame));
@@ -1264,7 +1264,7 @@ void DroneAIShadow_Run(void) {
     ShadowHook_RemoveAll();
     memcpy(&GameState, gameState, sizeof(gameState));
     memcpy(&NPCGlobals, npc, sizeof(npc));
-    memcpy((void *)0x001ee438, lists, sizeof(lists));
+    memcpy((void *)(size_t)XbeOurs(0x001ee438), lists, sizeof(lists));
     memcpy((void *)XbeOurs(0x001ee260), music, sizeof(music));
     memcpy(&MPSettings, mpSettings, sizeof(mpSettings));
     memcpy(&MPGame, mpGame, sizeof(mpGame));

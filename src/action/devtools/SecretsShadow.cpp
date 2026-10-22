@@ -17,7 +17,7 @@ static const unsigned kSpecialCodenameCheck = 0x0007d110;
 static const unsigned kUpgradeCheat = 0x0007cfb0;
 static const unsigned kCodesFirst = 0x00160d90, kCodesEnd = 0x00160f68;   // the code strings in .rdata
 
-#define cn_bonus (*(uint64_t *)0x0025d6e8)
+#define cn_bonus (*(uint64_t *)(size_t)XbeOurs(0x0025d6e8))
 
 typedef uint64_t(__cdecl *CheckFn)(byte *);
 
