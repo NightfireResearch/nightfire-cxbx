@@ -238,8 +238,8 @@ void parsemap_block_Coll_Data_New(void) {
             cel->colldata = NULL;
             return;
         }
-        // 0x18, not sizeof(COLLDATA_tag) (0x16): the original rounds the allocation up
-        cel->colldata = (COLLDATA_tag *)Mem_Malloc(0x18, (MallocFlags)0x1a04, 0); // malloc_colldata
+        // Rounded up to 4 (0x18, not the 0x16 of COLLDATA_tag on 32-bit), as the original
+        cel->colldata = (COLLDATA_tag *)Mem_Malloc((sizeof(COLLDATA_tag) + 3) & ~(size_t)3, (MallocFlags)0x1a04, 0);
     }
 
     COLLDATA_tag *coll = cel->colldata;
@@ -782,10 +782,12 @@ struct MAPHEADER_tag *pBMH;
 uint32_t MapEntityCount;
 // XBE_GLOBAL(0x00274c7c, 0x4)
 celglist_tag *pCelList;
+// The map's paths, a word each as on the Xbox (the dynamic placements read entries before they are filled, and
+// the placements that read them are not made)
 // XBE_GLOBAL(0x00274b4c, 0x4)
-void **m_paths;
+Ptr32<void> *m_paths;
 // XBE_GLOBAL(0x00274c60, 0x4)
-void **m_ppaths;
+Ptr32<void> *m_ppaths;
 // The texture tables walked together, an entry a texture: the palette headers, psiCreateMapTextures's results and the
 // texture headers
 // XBE_GLOBAL(0x00274b30, 0x4)
@@ -858,7 +860,7 @@ void parsemap_block_map_header(void) {
     if (pBMH->pathCount == 0) {
         m_paths = NULL;
     } else {
-        m_paths = (void **)Mem_Malloc(pBMH->pathCount * sizeof(void *), (MallocFlags)0x1804, 0);
+        m_paths = (Ptr32<void> *)Mem_Malloc(pBMH->pathCount * sizeof(Ptr32<void>), (MallocFlags)0x1804, 0);
         if (m_paths != NULL)
             m_ppaths = m_paths;
     }

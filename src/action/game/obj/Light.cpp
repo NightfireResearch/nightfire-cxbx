@@ -103,7 +103,7 @@ light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefi
     }
 
     light->lightType = lightType;
-    light->field33_0x34 = param_9;
+    light->intensity = param_9;
     light->soundState = soundState;
     light->soundTimingBase = soundTimingBase >> 1;
 
@@ -239,7 +239,7 @@ light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) 
             distance = Vec_Dist2D(&light->maybeParentObject->position, sphere);
             if (distance > 4.0f)
                 continue;
-            light->field33_0x34 = (float)((1.0f - 0.25f * distance) * 50.0f);
+            light->intensity = (float)((1.0f - 0.25f * distance) * 50.0f);
         } else {
             distance = Vec_Dist3D(&light->position, sphere);
             if (distance > (double)light->brightness + ((sphere_equ_tag *)sphere)->r)

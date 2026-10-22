@@ -12,6 +12,7 @@
 #include "../engine/viewer.h"
 #include "../game/sp/SwitchChannels.h"
 #include "../game/obj/control.h"
+#include "../game/drone/Drone.h"
 #include "../util/Random.h"
 #include "../engine/XboxSettings.h"
 #include "../engine/LaunchOptions.h"
@@ -656,9 +657,108 @@ static void StreamBroken(const char *what) {
 // ---------------------------------------------------------------------------------------------------------------
 // Frames
 
+// Hardware watchpoints, for finding what writes a value a playback disagrees on. Each write is reported with the
+// frame, the value, the instruction after the write and the words on the stack that are code addresses (for the
+// map):
+//   NIGHTFIRE_DEMO_WATCH_CHANNEL=<n>          switch_channels[n], from the first frame
+//   NIGHTFIRE_DEMO_WATCH_DRONE=<frame>,<n>    the nth object's drone's next state (sm.nextState), from that frame
+//   NIGHTFIRE_DEMO_WATCH_OBJECT=<frame>,<n>   the nth object's curState, from that frame
+static const char *g_watchName;
+static const volatile uint8_t *g_watchAt;
+
+static LONG CALLBACK WatchHit(EXCEPTION_POINTERS *info) {
+    if (info->ExceptionRecord->ExceptionCode != EXCEPTION_SINGLE_STEP || (info->ContextRecord->Dr6 & 1) == 0)
+        return EXCEPTION_CONTINUE_SEARCH;
+    uintptr_t base = (uintptr_t)GetModuleHandleA(NULL);
+#if defined(_M_IX86)
+    uintptr_t pc = info->ContextRecord->Eip, sp = info->ContextRecord->Esp;
+#else
+    uintptr_t pc = info->ContextRecord->Rip, sp = info->ContextRecord->Rsp;
+#endif
+    printf("[demo] frame %u: %s write at +0x%x, now %u;", g_frame, g_watchName, (unsigned)(pc - base),
+           (unsigned)*g_watchAt);
+    const uintptr_t *stack = (const uintptr_t *)sp;
+    MEMORY_BASIC_INFORMATION region;
+    VirtualQuery(stack, &region, sizeof(region));
+    int words = (int)(((uintptr_t)region.BaseAddress + region.RegionSize - sp) / sizeof(uintptr_t));
+    for (int i = 0, shown = 0; i < 256 && i < words && shown < 12; i++) {
+        if (stack[i] >= base && stack[i] < base + 0x400000) {
+            printf(" +0x%x", (unsigned)(stack[i] - base));
+            shown++;
+        }
+    }
+    printf("\n");
+    fflush(stdout);
+    info->ContextRecord->Dr6 = 0;
+    return EXCEPTION_CONTINUE_EXECUTION;
+}
+
+struct WatchRequest {
+    HANDLE thread;
+    const volatile void *at;
+};
+
+static DWORD WINAPI SetWatch(void *param) {
+    WatchRequest *request = (WatchRequest *)param;
+    SuspendThread(request->thread);
+    CONTEXT context;
+    memset(&context, 0, sizeof(context));
+    context.ContextFlags = CONTEXT_DEBUG_REGISTERS;
+    GetThreadContext(request->thread, &context);
+    context.Dr0 = (uintptr_t)request->at;
+    context.Dr7 = (context.Dr7 & ~(uintptr_t)0xf0003) | 1 | (1 << 16);   // DR0 on, on writes, one byte
+    SetThreadContext(request->thread, &context);
+    ResumeThread(request->thread);
+    return 0;
+}
+
+static void Watch(const char *name, const volatile void *at) {
+    g_watchName = name;
+    g_watchAt = (const volatile uint8_t *)at;
+    AddVectoredExceptionHandler(1, WatchHit);
+    static WatchRequest request;
+    DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &request.thread, 0, FALSE,
+                    DUPLICATE_SAME_ACCESS);
+    request.at = at;
+    HANDLE helper = CreateThread(NULL, 0, SetWatch, &request, 0, NULL);
+    WaitForSingleObject(helper, INFINITE);
+    CloseHandle(helper);
+    printf("[demo] frame %u: watching %s\n", g_frame, name);
+}
+
+static void WatchStart(void) {
+    static bool done = false;
+    if (done)
+        return;
+    if (const char *channel = getenv("NIGHTFIRE_DEMO_WATCH_CHANNEL")) {
+        done = true;
+        Watch("channel", &switch_channels[atoi(channel)]);
+    } else {
+        const char *object = getenv("NIGHTFIRE_DEMO_WATCH_OBJECT");
+        const char *drone = getenv("NIGHTFIRE_DEMO_WATCH_DRONE");
+        unsigned frame = 0, index = 0;
+        if (sscanf(object != NULL ? object : drone != NULL ? drone : "", "%u,%u", &frame, &index) != 2 ||
+            g_frame != frame)
+            return;
+        done = true;
+        obj_tag *o = control_first_object();
+        for (unsigned i = 0; o != NULL && i < index; i++)
+            o = o->nextObject;
+        if (o == NULL || (object == NULL && o->objectType != OBJECTTYPE_DRONE)) {
+            printf("[demo] object %u is not there or not a drone\n", index);
+            return;
+        }
+        if (object != NULL)
+            Watch("object state", &o->curState);
+        else
+            Watch("next state", &((Drone_tag *)o->extraObjectData)->sm.nextState);
+    }
+}
+
 void Demo_FrameStart(void) {
     if (g_mode == DEMO_OFF)
         return;
+    WatchStart();
 
     if (g_frame != 0)
         g_frameMs += 1000.0 / (FRAME_RATE_INT > 0 ? FRAME_RATE_INT : 60);
@@ -740,6 +840,10 @@ static void PrintObjects(void) {
         printf("[demo] frame %u object %d: type %u flags %02x state %u/%u pos %08x %08x %08x rot %08x %08x %08x\n",
                g_frame, i, (uint)o->objectType, (uint)o->flags, (uint)o->curState, (uint)(ushort)o->subState, p[0],
                p[1], p[2], r[0], r[1], r[2]);
+    }
+    for (int c = 0; c < 256; c++) {
+        if (switch_channels[c] != 0 || switch_channels_time[c] != 0)
+            printf("[demo] frame %u channel %d: %d at %u\n", g_frame, c, switch_channels[c], switch_channels_time[c]);
     }
     fflush(stdout);
 }

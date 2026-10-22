@@ -29,7 +29,7 @@ typedef struct {
     ushort pathPointCount;      // 0x02
     ushort pathDuration;        // 0x04 - frames to cover the path; 0 is taken as one second
     uchar padding06[2];
-    void *path;                 // 0x08
+    Ptr32<void> path;           // 0x08
     uchar padding0c[0x20];
     uint kind;                  // 0x2c - DoorKind
     uint group;                 // 0x30
@@ -46,8 +46,8 @@ typedef struct {
 
 #pragma pack(pop)
 
-LAYOUT_32(offsetof(Create_Door_Params, kind) == 0x2c, "Bad offset of kind");
-LAYOUT_32(offsetof(Create_Door_Params, noTouch) == 0x58, "Bad offset of noTouch");
+static_assert(offsetof(Create_Door_Params, kind) == 0x2c, "Bad offset of kind");
+static_assert(offsetof(Create_Door_Params, noTouch) == 0x58, "Bad offset of noTouch");
 
 // XBE_GLOBAL(0x001df98c, 0xc)
 LLISTINFO_tag TheDoors;

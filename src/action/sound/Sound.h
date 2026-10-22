@@ -7,8 +7,8 @@
 #pragma pack(push, 1)
 
 typedef struct DYNAMICSOUNDS {
-    char _pad_1[0x4];
-    DYNAMICSOUNDS *next;
+    struct DYNAMICSOUNDS *prev;     // 0x00 - DynamicSoundList's links, an LLNODE_tag's
+    struct DYNAMICSOUNDS *next;     // 0x04
     _VECTOR location;
     _VECTOR velocity;
     unsigned int limitedDistance;   // 0x20 - its radii were given (Sound_Play): SFXStart3D takes them
@@ -31,6 +31,7 @@ typedef struct DYNAMICSOUNDS {
 } DYNAMICSOUNDS;
 
 LAYOUT_32(sizeof(DYNAMICSOUNDS) == 0x48, "Size of DYNAMICSOUNDS not correct");
+static_assert(offsetof(DYNAMICSOUNDS, next) == offsetof(LLNODE_tag, next), "a sound's links are its list node's");
 LAYOUT_32(offsetof(DYNAMICSOUNDS, playbackState) == 0x40, "Offset of playbackState not correct");
 
 typedef struct SFXOutputDataEntry {

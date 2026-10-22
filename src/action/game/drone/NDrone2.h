@@ -444,10 +444,10 @@ LAYOUT_32(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
 typedef struct {
     uchar enabled;              // +0x0 - Drone_EnableAll's last setting
     char _pad1[3];
-    Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next
-    char _pad8[0xc - 0x8];
-    ushort NDrone2Count;        // +0xc - how many are on NDrone2List
-    char _padE[0x10 - 0xe];
+    Drone_tag *NDrone2List;     // +0x4 - every live drone, linked through Drone_tag.next: NDrone2Info's head,
+    Drone_tag *NDrone2Tail;     // +0x8 - tail,
+    ushort NDrone2Count;        // +0xc - count (how many are on NDrone2List)
+    ushort NDrone2EntrySize;    // +0xe - and entry size
     Drone_tag *groups[DRONE_GROUPS];    // +0x10 - each group's first drone, linked through groupNext
     obj_tag *spawners[DRONE_GROUPS];    // +0x8c - the group's DroneSpawner (DroneSpawner_Create)
     ushort groupCounts[DRONE_GROUPS];   // +0x108 - drones in each group; 0xffff once DroneSpawner_Init has taken them
@@ -571,6 +571,12 @@ extern NPCGlobals_t NPCGlobals;
 // NPCGlobals.NDrone2List and NDrone2Count are the head and count of a list of Drone_tags (LList_Init by
 // Drone_PreLoad_Init): the list's LLISTINFO_tag
 #define NDrone2Info (*(LLISTINFO_tag *)&NPCGlobals.NDrone2List)
+static_assert(offsetof(NPCGlobals_t, NDrone2Tail) - offsetof(NPCGlobals_t, NDrone2List) == offsetof(LLISTINFO_tag, tail),
+              "NDrone2Info's tail");
+static_assert(offsetof(NPCGlobals_t, NDrone2Count) - offsetof(NPCGlobals_t, NDrone2List) == offsetof(LLISTINFO_tag, count),
+              "NDrone2Info's count");
+static_assert(offsetof(NPCGlobals_t, NDrone2EntrySize) - offsetof(NPCGlobals_t, NDrone2List) ==
+              offsetof(LLISTINFO_tag, elementSize), "NDrone2Info's entry size");
 
 // Navigation (NDrone2.cpp, NDrone2_Nav.cpp; docs/drone/bots-and-navigation)
 obj_tag* NDrone2_Player(void);

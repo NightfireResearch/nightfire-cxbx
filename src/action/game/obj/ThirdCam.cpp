@@ -12,13 +12,13 @@ typedef struct {
     ushort unknown00;           // 0x00
     ushort pathPointCount;      // 0x02
     uchar _unknown04[4];
-    void *path;                 // 0x08
+    Ptr32<void> path;           // 0x08
     uchar _unknown0c[0x2c - 0x0c];
     uint param[2];              // 0x2c
 } Create_ThirdCam_Params;
 #pragma pack(pop)
 static_assert(offsetof(Create_ThirdCam_Params, path) == 0x08, "Bad offset of path");
-LAYOUT_32(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of param");
+static_assert(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of param");
 
 // A path for the third-person view to follow, kept by its id. The object is used without a check that it was made.
 // AUTOINJECT

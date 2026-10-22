@@ -5,6 +5,7 @@
 #include "MenuScript.h"
 #include "Label.h"
 #include "../gfx/Font.h"
+#include "../gfx/Sprite.h"
 
 #include <math.h>
 #include <string.h>
@@ -22,14 +23,8 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-// The label's sprite: the text and its length
-typedef struct LABEL_TEXT {
-    char unknown00[0x18];
-    char *text;             // 0x18
-    char unknown1c[4];
-    ushort length;          // 0x20
-} LABEL_TEXT;
-#define TextOf(box) ((LABEL_TEXT *)(box)->label.drawn)
+// The label's sprite, which holds the text and its length
+#define TextOf(box) ((box)->label.drawn)
 
 // Frames a direction has been held (TextBox_Update): it repeats every 5th after 15
 // XBE_GLOBAL(0x0025fc1c, 0x4)
@@ -203,7 +198,7 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
 
             if (Menu_InputAction(player, MENU_SELECT, 4)) {
                 char c = box->keys[box->selected].c;
-                LABEL_TEXT *text = TextOf(box);
+                sprite *text = TextOf(box);
                 if (c == '-') {
                     if (text->length != 0) {
                         text->length--;

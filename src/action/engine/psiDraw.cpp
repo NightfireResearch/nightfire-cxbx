@@ -4,6 +4,7 @@
 #include "psiSprite.h"
 #include "Script.h"               // ScriptCam
 #include "Collide.h"              // Collide_CylinderTris
+#include "viewer.h"               // viewer_tag
 #include "Direct3D/d3dSeam.h"
 #include "Direct3D/xboxMatrix.h"
 #include "../sound/dsndSeam.h"    // dsndUpdateVoices
@@ -193,8 +194,7 @@ void psiDrawSkinObjectMatrix(celglist_tag *glist, _MATRIX *unused, void *obj, vo
     SkinPalette = (const uint8_t *)palette;
     psiDrawObjectMatrix(glist, ObjectMatrix);
     if (bShadowCharacter) {
-        const char *animState = *(const char **)((const char *)obj + 0xb8);
-        const char *bones = *(const char **)(animState + 0x58 + 0x40);
+        const char *bones = (const char *)((obj_tag *)obj)->animState->animObj.boneMtxs;
         maybe_psiDrawShadow(*(const float *)(bones + 0x30), *(const float *)(bones + 0xd18),
                             *(const float *)(bones + 0x38), obj, glist);
     }
@@ -331,33 +331,18 @@ void psiSetUpColourBlend(int opaque) {
     d3dSetupRenderStatesAndFog(opaque == 0);
 }
 
-#pragma pack(push, 1)
-struct Viewer {             // the part of the game's viewer_tag read here
-    char unknown00[0xdc];
-    float xMin, xMax;       // 0xdc the viewport, in pixels
-    float yMin, yMax;       // 0xe4
-    char unknownec[8];
-    float projScaleZ;       // 0xf4 zoom
-    char unknownf8[8];
-    float aspectRatio;      // 0x100
-    float fovRadians;       // 0x104
-    float viewMatrix[15];   // 0x108
-};
-#pragma pack(pop)
-static_assert(offsetof(Viewer, viewMatrix) == 0x108, "viewer_tag.viewMatrix is at 0x108");
-
 // Sets up the viewport, the projection and the view from a viewer (0x000dd950)
 // AUTOINJECT
 void psiUseCamera(void *viewer) {
-    const Viewer *v = (const Viewer *)viewer;
-    ProjScale = v->projScaleZ;
+    const viewer_tag *v = (const viewer_tag *)viewer;
+    ProjScale = v->zoom;
     if (ProjScale < 0.001f)
         ProjScale = 0.001f;
-    memcpy(ViewMatrix, v->viewMatrix, sizeof(ViewMatrix));
+    memcpy(ViewMatrix, &v->viewMatrix, sizeof(ViewMatrix));
     d3dSetupViewportDimensions((unsigned)(int)v->xMin, (unsigned)(int)v->yMin, (unsigned)(int)(v->xMax - v->xMin),
                                (unsigned)(int)(v->yMax - v->yMin));
     D3DMATRIX projection;
-    createProjectionMatrix(&projection, v->aspectRatio, 0.0f, (v->fovRadians / v->projScaleZ) * 57.2958f, 0.01f,
+    createProjectionMatrix(&projection, v->AspectRatio, 0.0f, (v->fovRadians / v->zoom) * 57.2958f, 0.01f,
                            3000.0f);
     d3dSetProjectionMatrix(&projection);
     const float *c = ViewMatrix;
@@ -479,7 +464,7 @@ static_assert(sizeof(ShardVertex) == 0x1c, "shard layout");
 TriList* psiGetTriList(void *obj) {
     if (obj == NULL)
         return NULL;
-    celglist_tag *gfx = *(celglist_tag **)((char *)obj + 0xb4);   // obj_tag.objGraphics
+    celglist_tag *gfx = ((obj_tag *)obj)->objGraphics;
     if (gfx == NULL || gfx->geom_idx == 0)
         return NULL;
     int idx = gfx->geom_idx;
@@ -614,7 +599,7 @@ void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *gli
     to.y = from.y - 2.0f;
     to.z = z;
     uint triangles = 0;
-    const float *ground = (const float *)Collide_CylinderTris(&from, &to, 1.0f, *(cel_tag **)((char *)obj + 0x20),
+    const float *ground = (const float *)Collide_CylinderTris(&from, &to, 1.0f, ((obj_tag *)obj)->inCel,
                                                               &triangles, 0x307, 4);
     if (ground == NULL || (int)triangles < 1)
         return;

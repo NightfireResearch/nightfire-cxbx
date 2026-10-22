@@ -452,5 +452,5 @@ void Input_Init(void) {
 void Input_Ready(void) {
     FreezeGame = 0;
     Input_ClearAllActions(-1);
-    DList_Init(&InputEventList, 0x18, 10);
+    DList_Init(&InputEventList, sizeof(InputEvent), 10);
 }

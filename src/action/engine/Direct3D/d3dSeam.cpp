@@ -479,7 +479,7 @@ void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContex
 // the XMV decoder writing a frame to 0x8b042700 when the surface it locked was at 0x0b042700. (CXBX mapped the
 // alias onto the same memory, which is why the helper once probed for it.)
 static inline void *D3D_UncachedAliasOf(uint32_t address) {
-    return (void*)(uintptr_t)address;
+    return PtrFrom32<void>(address);
 }
 
 // The extra-context line every table-full diagnostic prints (defined up here since RegisterTexture is the
@@ -1421,7 +1421,7 @@ void d3dBindBuffers(int streamBufferHandle, int indexBufferHandle) {
 
     {
         const uint32_t *indexBufferHeader = (const uint32_t*)Gfx.indexBuffers[indexBufferHandle].selfPtr;
-        g_d3dBoundIndexData = (indexBufferHeader != NULL) ? (const uint16_t*)(uintptr_t)indexBufferHeader[1] : NULL;
+        g_d3dBoundIndexData = (indexBufferHeader != NULL) ? PtrFrom32<const uint16_t>(indexBufferHeader[1]) : NULL;
     }
 
     uint8_t strideFlagByte = Gfx.vertexBuffers[streamBufferHandle].field18;

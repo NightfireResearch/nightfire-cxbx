@@ -56,8 +56,9 @@ those words), the sequences (`sAnimRawSeq_tag.trackData`/`cursor`), the map (`bm
 is registered) and the sound banks (`SampleHeaderData.Address`/`psi_SampleHeader`). Those fields are `Ptr32`
 (driving/platform/Ptr32.h: `T *` on 32-bit, a word of the low game window on 64-bit); every other file structure has
 no address in it. `level_tag.spline` is a word too: the twenty placement structures lay their keys out at 0x2c after
-it. The heap keeps the game's layout: `MemBlock.prev` is a word, so every block and allocation is the size it is on
-32-bit, and the heap's words (`PtrHeap`, `QuickBlock`) decode through the window. The executable is linked at
+it. The heap's headers keep the game's layout: `MemBlock.prev` is a word, and the heap's words (`PtrHeap`,
+`QuickBlock`) decode through the window. The allocations do not: about 30 sites ask for structures that hold pointers,
+so on 64-bit the blocks are bigger and lie elsewhere (see the heap addresses below). The executable is linked at
 0x400000 without ASLR on 64-bit (`nf_game_window`), and `GameWindowOutOfRange` is StandaloneMain.cpp's.
 
 **5. Memory-only structures.** The 787 layout checks a 64-bit compile fails are `LAYOUT_32` (common/xbeClass.h): none
@@ -72,3 +73,49 @@ are `PtrTo32`; on x86-64 its calls have the one convention.
 
 The probe (a 64-bit clang syntax check of every standalone source, in the nf-cross image) has no errors left and no
 pointer-to-integer casts; MSVC x64 builds and links action_standalone and action_standalone_test.
+
+## Bring-up (22 October 2026)
+
+The 64-bit action_standalone_test against the C baseline (the 13 recordings rebased onto a 32-bit build with
+`NIGHTFIRE_ACTION_X87=OFF`, on the runner). What stopped it, in the order it was found:
+
+| Found | Now |
+|---|---|
+| The heap walk looped: lists and allocations sized for 32-bit structures that hold pointers (InputEventList's 10 entries of 0x18, HitHeap's 0x50, ForcedList's 0xe4, the sensor and switch lists, a cel's 0x18 COLLDATA_tag, the rooms' `count * 4 + 4`) overran into the next block's header | `sizeof` (the same numbers on 32-bit) |
+| The dynamic placements read the map's path table before it is filled (the original's: on 32-bit too the entries are stale and those placements are not made); a stale entry stopped the window check | m_paths a table of words, the size it is on the Xbox, copied unread |
+| The placement structures laid over level_tag (doors, triggers, sensors, SS, hurt volumes, locks, copters, third cameras) held their spline as a `void *`, which moved every key after it: a door that starts open did not, and its channel stayed clear | `Ptr32<void>`, their checks unconditional again |
+| A cel heads its objects' list as an object would (the first object's prevInCel is the cel): cel_tag's first 8 bytes were bytes where an object has two pointers, so unlinking the first object wrote past the cel's firstObject, and the lists turned into loops | two pointer slots; checks that the cel's firstObject, headPrev and attachments lie where an object's nextInCel, prevInCel and attachments do |
+| psiAsyncReadFile added `start - byteOffset` (unsigned 32-bit, negative) to the buffer: 4 GB on | the difference signed |
+| The D3D seam's slots are the Xbox's resource headers, which the backend reads as words (`Data`); their `void *` members moved them | `Ptr32`, their checks unconditional; D3D_UncachedAliasOf and the index binding decode words |
+| psiDrawSkinObjectMatrix, psiGetTriList and a shadow test reached an object's fields through 32-bit offsets | the fields by name |
+| DYNAMICSOUNDS spelt its list node's prev as four bytes of padding | a `prev` pointer, checked against LLNODE_tag's |
+| NPCGlobals' drone list is an LLISTINFO_tag laid over NDrone2List onwards; its tail and entry size were padding, so on 64-bit the count the list kept was not NDrone2Count, and the drones never looked for each other (DroneVision_ProcessDroneSight) | the list's four fields named, checked against LLISTINFO_tag's |
+| psiUseCamera read the viewer through a structure of its own, with the view matrix at 0x108: on 64-bit it read other bytes, so every character seemed far from the camera and its shadow (whose ground test takes a collision stamp) was not drawn; the stamp fell two a frame behind | viewer_tag |
+| psiLight_SetLights read a light through a structure of its own, from 8 bytes in (its list node's two pointers) | light_tag, its 0x34 named `intensity` |
+| The text box reached its label's sprite through a structure of its own, the text at 0x18 | sprite |
+| Compare_MenuCtrl sorted Menu_FindControl's neighbours by a short at 4, the cost on 32-bit; on 64-bit the middle of the control's pointer, so the keypad's selection went to the wrong keys | MENU_NEIGHBOUR (ui/Menu.h) |
+| View_AddSprite's glyph dump (DumpTextures) read the font and texture records through offsets | FONT_tag, CHARDATA_tag, TextureInfo |
+
+The tools of the bring-up, in action_standalone_test: `NIGHTFIRE_DEMO_DUMP_OBJECTS=<frame>` also prints the switch
+channels; `NIGHTFIRE_DEMO_WATCH_CHANNEL=<n>`, `NIGHTFIRE_DEMO_WATCH_OBJECT=<frame>,<n>` and
+`NIGHTFIRE_DEMO_WATCH_DRONE=<frame>,<n>` put a hardware watchpoint on a channel, an object's curState or a drone's
+next state and report each write with the code addresses on the stack; StandaloneMain.cpp's crash report and
+`NIGHTFIRE_REPORT_AFTER` read RIP, and GameWindowOutOfRange prints the stack.
+
+## Heap addresses
+
+Drone_Update gives Env_Breath the drone's creation frame plus `(address & 0xfff) * 0x80`: each drone breathes on its
+own phase of a two-second cycle, set by where its object lies in the heap. A breath makes a smoke object and draws
+from the game's random generator (Gas_Init), so a breath on another frame changes the game from then on. On 64-bit
+the objects lie elsewhere (the allocations are bigger), and the CastleExterior recordings parted from frame 58.
+
+With each drone's address bits taken from a 32-bit run (an experiment, not kept), all 13 recordings match the C
+baseline on 64-bit. The way to the same bits without a 32-bit run is a shadow of the heap: on 64-bit, the game's own
+allocator run again on headers alone, with each allocation's Xbox size, giving every block the address it would have
+had; the drone asks for its object's. Being worked on.
+
+A cheaper way, for later: a drone placed by the level lies at the same address at every load of it (the heap is
+reset at each level load and the level built in one order), so a table by level and placement would give their bits
+without the shadow. Drones made by spawners during play lie where the play has left room, so a table cannot give
+theirs.
+

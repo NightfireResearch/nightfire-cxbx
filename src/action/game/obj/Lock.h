@@ -30,7 +30,7 @@ typedef struct LockPlacement {
     ushort splinePoints;        // 0x02
     ushort splineLength;        // 0x04 - frames
     char _unknown06[2];
-    void *spline;               // 0x08
+    Ptr32<void> spline;         // 0x08
     char _unknown0c[0x2c - 0x0c];
     uint kind;                  // 0x2c
     uint key;                   // 0x30
@@ -41,7 +41,7 @@ typedef struct LockPlacement {
     uint easy;                  // 0x44 - unlocked from the start at difficulty 1
 } LockPlacement;
 
-LAYOUT_32(offsetof(LockPlacement, easy) == 0x44, "Bad offset of LockPlacement.easy");
+static_assert(offsetof(LockPlacement, easy) == 0x44, "Bad offset of LockPlacement.easy");
 
 #pragma pack(pop)
 

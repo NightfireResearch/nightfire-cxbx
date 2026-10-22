@@ -56,7 +56,7 @@ typedef struct {
     ushort pathPointCount;      // 0x02
     ushort pathDuration;        // 0x04 - frames to cover the path; 0 is taken as 75
     uchar padding06[2];
-    void *path;                 // 0x08
+    Ptr32<void> path;           // 0x08
     uchar padding0c[0x20];
     uint mode;                  // 0x2c
     uint once;                  // 0x30
@@ -73,8 +73,8 @@ typedef struct {
 LAYOUT_32(sizeof(SIMPLESCRIPT) == 0x2c, "Bad size for SIMPLESCRIPT");
 LAYOUT_32(offsetof(SIMPLESCRIPT, lastKey) == 0x1c, "Bad offset of lastKey");
 LAYOUT_32(offsetof(SIMPLESCRIPT, water) == 0x2a, "Bad offset of water");
-LAYOUT_32(offsetof(Create_SS_Params, mode) == 0x2c, "Bad offset of mode");
-LAYOUT_32(offsetof(Create_SS_Params, water) == 0x48, "Bad offset of water");
+static_assert(offsetof(Create_SS_Params, mode) == 0x2c, "Bad offset of mode");
+static_assert(offsetof(Create_SS_Params, water) == 0x48, "Bad offset of water");
 
 // How close past the stop frame counts as at it
 #define SS_STOP_TOLERANCE 0.0002f

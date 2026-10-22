@@ -176,6 +176,16 @@ LAYOUT_32(sizeof(MENU_LS) == 0x48, "MENU_LS is 0x48 bytes");
 void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation);
 extern MENU_LS ls;
 
+#pragma pack(push, 1)
+// A control Menu_FindControl could move to, and how far it is (QuickSort's Compare_MenuCtrl sorts by the cost)
+typedef struct MENU_NEIGHBOUR {
+    M_CONTROL *control;
+    short cost;
+    char pad[2];
+} MENU_NEIGHBOUR;
+#pragma pack(pop)
+LAYOUT_32(sizeof(MENU_NEIGHBOUR) == 8, "MENU_NEIGHBOUR is 8 bytes");
+
 // The two default codenames, slots 0 and 1 of the codenames list (Menu_MapDefaultCodename applies one)
 #pragma pack(push, 1)
 typedef struct DEFAULT_CODENAME {

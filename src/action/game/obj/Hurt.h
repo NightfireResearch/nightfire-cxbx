@@ -33,7 +33,7 @@ typedef struct HurtPlacement {
     ushort pathCount;               // 0x02
     ushort pathDuration;            // 0x04
     ushort _unknown06;
-    void *path;                     // 0x08
+    Ptr32<void> path;               // 0x08
     char _unknown0c[0x2c - 0x0c];
     uint type;                      // 0x2c - key 0
     uint damage;                    // 0x30 - key 1
@@ -43,7 +43,7 @@ typedef struct HurtPlacement {
     uint oneShotPath;               // 0x40 - key 5
 } HurtPlacement;
 
-LAYOUT_32(offsetof(HurtPlacement, oneShotPath) == 0x40, "Bad offset of HurtPlacement.oneShotPath");
+static_assert(offsetof(HurtPlacement, oneShotPath) == 0x40, "Bad offset of HurtPlacement.oneShotPath");
 
 obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 float Hurt_GetDamage(obj_tag *obj);

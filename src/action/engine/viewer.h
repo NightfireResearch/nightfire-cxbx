@@ -112,14 +112,8 @@ struct portal_tag {
 LAYOUT_32(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
-    undefined field0_0x0;
-    undefined field1_0x1;
-    undefined field2_0x2;
-    undefined field3_0x3;
-    undefined field4_0x4;
-    undefined field5_0x5;
-    undefined field6_0x6;
-    undefined field7_0x7;
+    void *unusedLinks[2];      // 0x00 - where an object has llPrev and llNext, so that firstObject and headPrev lie
+                               //        where an object's nextInCel and prevInCel do
     obj_tag *firstObject;      // 0x08 - first object in this cel
     obj_tag *headPrev;         // 0x0c - kept NULL: the cel heads its objects' list as an object would (prevInCel)
     struct ATTACH_tag *attachments;     // 0x10 - the marks on it (Effect_Bullet, Effect_Player)

@@ -42,15 +42,15 @@ typedef struct {
     ushort pathPointCount;          // 0x02
     ushort pathDuration;            // 0x04 - frames to cover the path
     uchar padding06[2];
-    void *path;                     // 0x08
+    Ptr32<void> path;               // 0x08
     uchar padding0c[0x20];
     uint param[TRIGGER_PARAMS];     // 0x2c
 } Create_Trigger_Params;
 
 #pragma pack(pop)
 
-LAYOUT_32(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
-LAYOUT_32(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
+static_assert(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
+static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
 
 // Channels with fixed meanings here
 #define CHANNEL_BOND_MOMENT_FIRST 0x65  // ten channels, one per bond moment

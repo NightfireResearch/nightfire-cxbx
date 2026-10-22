@@ -57,6 +57,9 @@ static void ReportContext(const CONTEXT *c) {
 // executable is linked low and the game's memory comes from below 4 GB, so this is a bug
 void GameWindowOutOfRange(const void *pointer) {
     printf("[standalone] %p is outside the game window\n", pointer);
+    CONTEXT context;
+    RtlCaptureContext(&context);
+    ReportContext(&context);
     fflush(stdout);
     ExitProcess(3);
 }

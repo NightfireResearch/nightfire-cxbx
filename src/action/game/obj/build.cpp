@@ -88,7 +88,7 @@ void build_MakeRoomList(cel_tag *first) {
         if (cel->bitsFromPlacementTag & CEL_ROOM)
             count++;
     }
-    cel_tag **room = (cel_tag **)Mem_Malloc(count * 4 + 4, (MallocFlags)0x904, 0);
+    cel_tag **room = (cel_tag **)Mem_Malloc((count + 1) * sizeof(cel_tag *), (MallocFlags)0x904, 0);
     gbl_room_cels = room;
     for (cel_tag *cel = first; cel != NULL; cel = cel->nextCel) {
         if (cel->bitsFromPlacementTag & CEL_ROOM)

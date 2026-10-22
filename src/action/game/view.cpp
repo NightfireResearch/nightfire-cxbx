@@ -784,64 +784,52 @@ static_assert(sizeof(SPRITE_DRAW) == 0x30, "Sprite size incorrect");
 // XBE_GLOBAL(0x001f64b4, 0x30)
 SPRITE_DRAW CharInfo;
 static int s_pendingGlyph = -1;
-static const uint8_t *s_pendingFont = NULL;   // the font current at that call - by the next it may not be
+static const FONT_tag *s_pendingFont = NULL;   // the font current at that call - by the next it may not be
 
 // A sprite's textureIndex selects one of the game's texture records; psiDrawSprites binds one of the record's
-// animation frames (count at +0x24, slots from +0x54) through d3dSetTextureStage0, which takes a slot in the
-// D3D texture table, Gfx.textures - and a slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in
-// engine/Direct3D/GraphicsSystem.h). Gfx is ours, so the table is not at the game's address any more.
-#define TextureRecords         ((const uint8_t *const *)Tex)
-
-// The current font (__Font_DrawText's): its first and last character at +8 and +0xa, the number of glyphs at
-// +0xc, and at +0x10 a table of 24-byte glyph records sorted by character, whose layout Font_FindGlyph and
-// __Font_DrawText read - the box in the sheet at +0 (u, v, width, height), the vertical offset at +8, the
-// extra advance at +0xa and the character at +0x14 (gfx/Font.h: FONT_tag, CHARDATA_tag).
-#define CurrentFont ((const uint8_t *)Font)
+// animation frames through d3dSetTextureStage0, which takes a slot in the D3D texture table, Gfx.textures - and a
+// slot's Xbox texture header is the slot itself (see D3DTextureSlotRaw in engine/Direct3D/GraphicsSystem.h).
 
 // With DumpTextures on, a font's glyph boxes go out beside its texture once, for making a replacement.
-static void DescribeFontOnce(const uint8_t *font, const void *xboxTexture) {
+static void DescribeFontOnce(const FONT_tag *font, const void *xboxTexture) {
     static const void *described[32];
     static int describedCount = 0;
     for (int i = 0; i < describedCount; i++)
         if (described[i] == xboxTexture) return;
     if (font == NULL || describedCount >= 32)
         return;
-    uint16_t first = *(const uint16_t *)(font + 0x8), last = *(const uint16_t *)(font + 0xa);
-    uint32_t count = *(const uint32_t *)(font + 0xc);
-    const uint8_t *records = *(const uint8_t *const *)(font + 0x10);
-    if (records == NULL || count == 0 || count > 1024)
+    if (font->chars == NULL || font->count == 0 || font->count > 1024)
         return;
     static D3D9FontGlyph glyphs[1024];
     int kept = 0;
-    for (uint32_t i = 0; i < count; i++) {
-        const uint8_t *g = records + i * 24;
-        uint16_t code = *(const uint16_t *)(g + 0x14);
-        if (code < first || code > last)
+    for (uint32_t i = 0; i < font->count; i++) {
+        const CHARDATA_tag *g = &font->chars[i];
+        if (g->code < font->first || g->code > font->last)
             continue;
         D3D9FontGlyph *out = &glyphs[kept++];
-        out->u = *(const uint16_t *)(g + 0x0);
-        out->v = *(const uint16_t *)(g + 0x2);
-        out->w = *(const uint16_t *)(g + 0x4);
-        out->h = *(const uint16_t *)(g + 0x6);
-        out->yOffset = *(const int16_t *)(g + 0x8);
-        out->advance = *(const int16_t *)(g + 0xa);
-        out->code = code;
+        out->u = g->u;
+        out->v = g->v;
+        out->w = g->w;
+        out->h = g->h;
+        out->yOffset = g->yOffset;
+        out->advance = g->pre;
+        out->code = g->code;
     }
     if (D3D9_DescribeFont(xboxTexture, glyphs, kept))
         described[describedCount++] = xboxTexture;
 }
 
-static void NoteGlyphTexture(const SPRITE_DRAW *glyph, const uint8_t *font) {
+static void NoteGlyphTexture(const SPRITE_DRAW *glyph, const FONT_tag *font) {
     if (!D3D9_DumpingTextures() || glyph->textureIndex >= 0x1000)
         return;
-    const uint8_t *record = TextureRecords[glyph->textureIndex];
+    const TextureInfo *record = Tex[glyph->textureIndex];
     if (record == NULL)
         return;
-    uint32_t frames = *(const uint32_t *)(record + 0x24);
+    uint32_t frames = (uint32_t)record->numFrames;
     if (frames == 0 || frames > 8)
         frames = 1;
     for (uint32_t i = 0; i < frames; i++) {
-        uint32_t slot = *(const uint32_t *)(record + 0x54 + 4 * i);
+        uint32_t slot = (uint32_t)(&record->baseIdx)[i];   // the frames' slots follow the header
         if (slot == 0 || slot >= GFX_TEXTURE_SLOTS)
             continue;
         const void *header = &Gfx.textures[slot];
@@ -871,7 +859,7 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     // Return the buffer, starting at the number of sprites already buffered
     if (D3D9_DumpingTextures()) {
         s_pendingGlyph = (int)SprCnt;
-        s_pendingFont = CurrentFont;
+        s_pendingFont = Font;
     }
     return &SprBuffList[SprCnt++];
 }

@@ -21,7 +21,7 @@ struct light_tag {
     undefined4 psiLight;                   // 0x28
     float distanceShare;                   // 0x2c - its distance from the sphere over half its reach (Lights_CalcClosestLights)
     float brightness;                      // 0x30
-    float field33_0x34;                    // 0x34
+    float intensity;                       // 0x34 - psiLight_SetLights' scale for its colour; NaN when off
     uchar clr_r;                           // 0x38
     uchar clr_g;                           // 0x39
     uchar clr_b;                           // 0x3a

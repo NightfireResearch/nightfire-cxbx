@@ -7,17 +7,12 @@
 #include "../game/obj/GT.h"
 #include "../game/obj/Light.h"
 #include "../gfx/Sprite.h"
+#include "../ui/Menu.h"
 
 #include <string.h>
 
 // The order QuickSort sorts in: -1 to put a before b, 1 after, 0 for either. A NaN compares as neither less nor more
 // unless said.
-
-// The elements of a Compare_MenuCtrl sort (Menu_FindControl's neighbours, ui/Menu.cpp): a short at 4, the cost
-struct MenuCtrlKey {
-    char _unknown0[4];
-    short order;
-};
 
 // Sprites by maybeEnabled (as a signed byte), the highest first
 // AUTOINJECT
@@ -107,8 +102,8 @@ int CompTargetObj(const void *a, const void *b) {
 
 // AUTOINJECT
 int CompMenuCtrl(const void *a, const void *b) {
-    short x = ((const MenuCtrlKey *)a)->order;
-    short y = ((const MenuCtrlKey *)b)->order;
+    short x = ((const MENU_NEIGHBOUR *)a)->cost;
+    short y = ((const MENU_NEIGHBOUR *)b)->cost;
     if (x < y)
         return -1;
     return x > y;

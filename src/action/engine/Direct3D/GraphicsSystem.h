@@ -3,6 +3,7 @@
 
 #include "d3dhelpers.h"
 #include "../../../common/xbeClass.h"
+#include "../../../driving/platform/Ptr32.h"   // the slots' words: the Xbox's resource headers, which the backend reads
 
 #include <stddef.h>
 #include <stdint.h>
@@ -21,7 +22,7 @@
 // trailing bookkeeping fields Eurocom's own code touches are named.
 struct D3DTextureSlotRaw {
     uint8_t  opaqueHeader[20];
-    void    *baseTexture;   // +0x14 - set to point at this same slot once registered (Xbox convention)
+    Ptr32<void> baseTexture;   // +0x14 - set to point at this same slot once registered (Xbox convention)
     uint16_t width;         // +0x18
     uint16_t height;        // +0x1a
     uint16_t refCount;      // +0x1c - written 0 by RegisterTexture; FUN_000e4f00 (the slot-release function) tests it
@@ -30,7 +31,7 @@ struct D3DTextureSlotRaw {
     uint16_t nonSwizzled;   // +0x1e - the "param_6 != 0" flag from the caller
     uint32_t mipChainBytes; // +0x20 - total byte size of every mip level
 };
-LAYOUT_32(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");
+static_assert(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");
 
 // One of the 2048 vertex-buffer slots d3dCreateVertexBuffers hands out, and that d3dSetStreamSources and
 // d3dBindBuffers read. See d3dCreateVertexBuffers for how its two paths fill it differently.
@@ -38,31 +39,31 @@ struct D3DVertexBufferSlotRaw {
     uint32_t header;     // +0x00 - Common; 1 once allocated. header&0x70000 never equals 0x20000 for this value,
                           // so D3DResource_Register never takes its pointer-masking branch (unlike
                           // RegisterTexture's texture headers) - no "force the pointer back" workaround needed.
-    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
+    Ptr32<void> dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
     uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *selfPtr;    // +0x0c - Ghidra's Gfx.d3dstreamDataPtr; 0 marks the slot free
+    Ptr32<void> selfPtr;    // +0x0c - Ghidra's Gfx.d3dstreamDataPtr; 0 marks the slot free
     uint32_t field10;     // +0x10 - single-path: the ORIGINAL, unaligned data pointer; multi-path: vtxCnt
     uint32_t byteSize;    // +0x14 - total byte size (both paths, same role, different formula)
     uint8_t  field18;      // +0x18 - single-path: (nonSwizzled != 0); multi-path: always 0. Ghidra's
                           // Gfx.d3dstreamStrideRelated
     uint8_t  pad19, pad1a, pad1b;
     uint32_t field1c;     // +0x1c - single-path: always 0; multi-path: streamCount (same value in every slot of the run)
-    void    *alignedData; // +0x20 - single-path ONLY; never written by the multi-path
+    Ptr32<void> alignedData; // +0x20 - single-path ONLY; never written by the multi-path
 };
-LAYOUT_32(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
+static_assert(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
 
 // One of the 2048 index-buffer slots d3dCreateIndexBuffer hands out.
 struct D3DIndexBufferSlotRaw {
     uint32_t header;     // +0x00 - always 0x10001 once allocated; 0 marks the slot free
-    void    *dataPtr;    // +0x04
+    Ptr32<void> dataPtr;    // +0x04
     uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *selfPtr;    // +0x0c - points back to this same slot's own header (Xbox convention, same as
+    Ptr32<void> selfPtr;    // +0x0c - points back to this same slot's own header (Xbox convention, same as
                           // RegisterTexture's baseTexture); Ghidra's Gfx.d3dIndexBuffers
     uint32_t indexCount; // +0x10
     uint32_t byteSize;   // +0x14 - indexCount * 2 (16-bit indices)
-    void    *dataPtr2;   // +0x18 - same value as dataPtr
+    Ptr32<void> dataPtr2;   // +0x18 - same value as dataPtr
 };
-LAYOUT_32(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
+static_assert(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotRaw");
 
 // One of the 256 small vertex buffers d3dRegisterOverlayBuffer hands out for d3dDrawOverlayQuad. The "is this
 // slot free" test is at +0xc, not +0x00: +0xc holds a copy of the caller's own data pointer (written directly
@@ -70,12 +71,12 @@ LAYOUT_32(sizeof(D3DIndexBufferSlotRaw) == 28, "Bad size for D3DIndexBufferSlotR
 struct D3DOverlayQuadSlotRaw {
     uint32_t header;     // +0x00 - 1 once allocated. header&0x70000 never equals 0x20000 for this value, so
                           // D3DResource_Register never takes its pointer-masking branch here either.
-    void    *dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
+    Ptr32<void> dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
     uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
-    void    *dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
+    Ptr32<void> dataPtrCopy; // +0x0c - a copy of the caller's own data pointer; doubles as the "is this slot free" test
     uint32_t vertexCount; // +0x10 - consumed by d3dDrawOverlayQuad's own D3DDevice_DrawVertices call
 };
-LAYOUT_32(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
+static_assert(sizeof(D3DOverlayQuadSlotRaw) == 20, "Bad size for D3DOverlayQuadSlotRaw");
 
 #define GFX_TEXTURE_SLOTS       2048
 #define GFX_VERTEX_BUFFER_SLOTS 2048

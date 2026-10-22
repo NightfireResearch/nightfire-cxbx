@@ -549,7 +549,7 @@ void psiAsyncReadFile(int fileHandle, int byteOffset, int byteSize, void *destBu
         return;
     }
     uint32_t start = byteOffset & 0xfffff800;
-    FS_StreamRead(fileHandle, (char *)destBuffer + (start - byteOffset),
+    FS_StreamRead(fileHandle, (char *)destBuffer + (int32_t)(start - byteOffset),
                   ((byteOffset + 0x7ff + byteSize) & 0xfffff800u) - start, start, (uint32_t)(byteOffset >> 31));
 }
 

@@ -1,4 +1,5 @@
 #include "Sensor.h"
+#include "Switch.h"            // ObjData_Switch, SwitchList's entries
 #include "../../../common/xbeClass.h"
 
 #include <math.h>
@@ -23,7 +24,7 @@ typedef struct {
     ushort sweepPointCount;                // 0x02
     ushort sweepDuration;                  // 0x04
     uchar padding06[2];
-    void* sweepSpline;                     // 0x08
+    Ptr32<void> sweepSpline;               // 0x08
     uchar padding0c[0x20];
     HASHCODE beamHashcode;                 // 0x2c
     uint viewConeHalfAngle;                // 0x30
@@ -43,9 +44,9 @@ typedef struct {
 
 #pragma pack(pop)
 
-LAYOUT_32(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset of beamHashcode");
-LAYOUT_32(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
-LAYOUT_32(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
+static_assert(offsetof(Create_Sensor_Params, beamHashcode) == 0x2c, "Bad offset of beamHashcode");
+static_assert(offsetof(Create_Sensor_Params, bodyHashcode) == 0x48, "Bad offset of bodyHashcode");
+static_assert(sizeof(Create_Sensor_Params) == 0x50, "Wrong size for Create_Sensor_Params");
 
 // XBE_GLOBAL(0x0029aab0, 0xc)
 LLISTINFO_tag SwitchList;
@@ -55,8 +56,8 @@ static constexpr float HALF_DEGREES_TO_RADIANS = 0.008726646f;
 
 // AUTOINJECT
 void Sensor_Init(void) {
-    LList_Init(&CameraList, 100, 0);
-    LList_Init(&SwitchList, 28, 0);
+    LList_Init(&CameraList, sizeof(SENSOR), 0);
+    LList_Init(&SwitchList, sizeof(ObjData_Switch), 0);
 }
 
 // AUTOINJECT

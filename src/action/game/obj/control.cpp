@@ -292,7 +292,7 @@ void control_init_object_lists(void) {
     DynamicObjList.nextObject = NULL;
     DynamicObjList.prevObject = NULL;
     DynamicObjCount = 0;
-    LList_Init(&ForcedList, 0xe4, 0);
+    LList_Init(&ForcedList, sizeof(obj_tag), 0);
     Demo_ObjectListsReset();
 }
 
@@ -341,6 +341,11 @@ void Control_BuildWorldSph(obj_tag *obj) {
         return;
     obj->radius = (float)(AbsFchs(obj->scale) * sphere->r);
 }
+
+// A cel heads its objects' list, and its marks', as an object would: the first object's prevInCel is the cel
+static_assert(offsetof(cel_tag, firstObject) == offsetof(obj_tag, nextInCel), "a cel's firstObject is an object's nextInCel");
+static_assert(offsetof(cel_tag, headPrev) == offsetof(obj_tag, prevInCel), "a cel's headPrev is an object's prevInCel");
+static_assert(offsetof(cel_tag, attachments) == offsetof(obj_tag, attachments), "a cel's marks are where an object's are");
 
 // Links an object into a cel (at the head of its list), or with no cel into the room its position is in. An object
 // whose ambient light is still the initial white takes its cel's.

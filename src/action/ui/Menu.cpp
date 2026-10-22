@@ -1090,14 +1090,6 @@ M_CONTROL* Menu_GetControl(M_MANAGER *mgr) {
     return under[best];
 }
 
-// A control Menu_FindControl could move to, and how far it is (QuickSort's Compare_MenuCtrl sorts by the cost)
-typedef struct MENU_NEIGHBOUR {
-    M_CONTROL *control;
-    short cost;
-    char pad[2];
-} MENU_NEIGHBOUR;
-LAYOUT_32(sizeof(MENU_NEIGHBOUR) == 8, "MENU_NEIGHBOUR is 8 bytes");
-
 #define NO_NEIGHBOUR 9999
 #define MENU_NEIGHBOURS 64
 
