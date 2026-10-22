@@ -3437,7 +3437,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     if (glb_players[num] != NULL)
         return NULL;
 
-    obj_tag *player = control_create_object(sizeof(BLData), pos, NULL, NULL);
+    obj_tag *player = control_create_object_xbox(sizeof(BLData), XBOX_SIZEOF(BLData), pos, NULL, NULL);
     BLData *blData = (BLData *)player->extraObjectData;
     glb_players[num] = player;
     glb_blokes[num] = blData;

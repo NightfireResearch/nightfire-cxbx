@@ -110,9 +110,26 @@ from the game's random generator (Gas_Init), so a breath on another frame change
 the objects lie elsewhere (the allocations are bigger), and the CastleExterior recordings parted from frame 58.
 
 With each drone's address bits taken from a 32-bit run (an experiment, not kept), all 13 recordings match the C
-baseline on 64-bit. The way to the same bits without a 32-bit run is a shadow of the heap: on 64-bit, the game's own
-allocator run again on headers alone, with each allocation's Xbox size, giving every block the address it would have
-had; the drone asks for its object's. Being worked on.
+baseline on 64-bit. The same bits without a 32-bit run come from the Xbox heap (src/action/XboxHeap.h): on 64-bit,
+the game's own allocator run again on a heap of its own (the heap's globals point at it for each call), with each
+allocation's Xbox size, so that every allocation has the address it would have had. Drone_Update asks for its
+object's (`Mem_GameAddress`).
+
+- Mem_Malloc, Mem_Free and Mem_Shrink tell the Xbox heap what they did (memoryBlock.h has the allocator's steps
+  without that). Mem_Shrink splits the map file's buffer the same way on both, and the parts still allocated are
+  paired again.
+- A structure the heap allocates that holds pointers says its Xbox size beside it: `XBOX_SIZE(Type, size)`
+  (common/xbeClass.h), which was its LAYOUT_32 size check and still is one. The allocations of such structures ask
+  for it with `XBOX_SIZEOF`: `Mem_MallocXbox`, `Menu_MallocXbox`, `control_create_object_xbox` (which adds
+  obj_tag's), `LList_InitXbox`, `DList_InitXbox` and `LList_AllocnNodesXbox`. The plain functions take the Xbox size
+  to be the size.
+- The Xbox heap's pages are the host's, in the game window above where contiguous memory goes.
+- On 32-bit the addresses are the game's and the Xbox heap is off. `NIGHTFIRE_XBOX_HEAP_CHECK=1` runs it there with
+  the real sizes and stops if it puts an allocation anywhere but where the heap does: the check that it is the
+  game's allocator, and that the hooks keep it in step.
+
+With the Xbox heap, all 13 recordings match the C baseline on 64-bit, every frame; on 32-bit, with the check, all 13
+match too and the Xbox heap agrees with the heap throughout.
 
 A cheaper way, for later: a drone placed by the level lies at the same address at every load of it (the heap is
 reset at each level load and the level built in one order), so a table by level and placement would give their bits

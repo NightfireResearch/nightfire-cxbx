@@ -16,7 +16,7 @@ typedef struct MENU_COMPONENTPIECE {
     float stretchHeight;        // 0x30
     uint flags;                 // 0x34 PIECE_*, and the draw states (M_CONTROL::drawState) it shows in
 } MENU_COMPONENTPIECE;
-LAYOUT_32(sizeof(MENU_COMPONENTPIECE) == 0x38, "MENU_COMPONENTPIECE is 0x38 bytes");
+XBOX_SIZE(MENU_COMPONENTPIECE, 0x38);
 
 #define PIECE_BOTTOM            1       // placed from the bottom edge, else the top
 #define PIECE_RIGHT             2       // placed from the right edge, else the left
@@ -53,7 +53,7 @@ typedef struct MENU_COMPONENTSET {
     uchar managerNum;           // 0x124
     char pad_125[3];
 } MENU_COMPONENTSET;
-LAYOUT_32(sizeof(MENU_COMPONENTSET) == 0x128, "MENU_COMPONENTSET is 0x128 bytes");
+XBOX_SIZE(MENU_COMPONENTSET, 0x128);
 
 #pragma pack(pop)
 

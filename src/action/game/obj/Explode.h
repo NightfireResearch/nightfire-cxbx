@@ -21,7 +21,7 @@ typedef struct EXPLODE_tag {
     uchar _pad33;
 } EXPLODE_tag;
 
-LAYOUT_32(sizeof(EXPLODE_tag) == 0x34, "EXPLODE_tag is 0x34 bytes");
+XBOX_SIZE(EXPLODE_tag, 0x34);
 
 #pragma pack(pop)
 

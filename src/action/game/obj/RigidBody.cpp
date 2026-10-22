@@ -308,7 +308,7 @@ void RB_ApplyWind(RIGIDBODY *rb, obj_tag *obj) {
 // AUTOINJECT
 obj_tag* RB_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
     RigidBodyPlacement *keys = (RigidBodyPlacement *)lvl;
-    obj_tag *obj = control_create_object(sizeof(RIGIDBODY), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(RIGIDBODY), XBOX_SIZEOF(RIGIDBODY), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
     RIGIDBODY *rb = (RIGIDBODY *)obj->extraObjectData;

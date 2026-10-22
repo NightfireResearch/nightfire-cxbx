@@ -32,7 +32,7 @@ static sprite* SprActiveList[MAX_SPRITES];
 
 // AUTOINJECT
 void Sprite_InitLists(void) {
-    DList_Init(&SpriteList, sizeof(sprite), MAX_SPRITES);
+    DList_InitXbox(&SpriteList, sizeof(sprite), XBOX_SIZEOF(sprite), MAX_SPRITES);
 }
 
 // Collects the drawable sprites linked to one viewer into SprActiveList, sorts them, and returns the list.

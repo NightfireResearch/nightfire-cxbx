@@ -50,7 +50,8 @@ typedef enum {
 obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Searchlight_Params* createParams = (Create_Searchlight_Params*)lvl;
 
-    obj_tag* obj = control_create_object(sizeof(ObjData_Spotlight), pos, rot, NULL);
+    obj_tag* obj = control_create_object_xbox(sizeof(ObjData_Spotlight), XBOX_SIZEOF(ObjData_Spotlight),
+                                              pos, rot, NULL);
 
     if (obj == NULL) {
         return NULL;

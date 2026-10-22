@@ -19,6 +19,7 @@
 #include "../../engine/Anim.h"     // AnimGetBoneWorldTrans
 #include "../../math/X87Ops.h"     // FSin, FCos
 #include "../../memory.h"          // Mem_Free
+#include "../../XboxHeap.h"        // Mem_GameAddress
 #include "../../sound/Sound.h"     // Sound_ZeroAlertness
 #include "../../util/LList.h"
 #include "DroneTables.h"           // DroneTypeSettings
@@ -408,8 +409,8 @@ void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit) {
 // no alert, and no groups.
 // AUTOINJECT
 void Drone_PreLoad_Init(void) {
-    LList_Init(&NDrone2Info, sizeof(Drone_tag), 0);
-    LList_Init(&AIBoxList, sizeof(DroneAIVolume_tag), 0);
+    LList_InitXbox(&NDrone2Info, sizeof(Drone_tag), XBOX_SIZEOF(Drone_tag), 0);
+    LList_InitXbox(&AIBoxList, sizeof(DroneAIVolume_tag), XBOX_SIZEOF(DroneAIVolume_tag), 0);
     NPCGlobals.safetyEmitter.data = NULL;
     NPCGlobals.coverCursor = 0;
     NPCGlobals.numCoverNodes = 0;
@@ -806,7 +807,9 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
         _VECTOR forward = {0.0f, 0.0f, 1.0f};
         ApplyMatrixLV(&bone, &forward, &dir);
         auxVec_AddMulR32(&head, &dir, 0.12f, &breath);
-        Env_Breath(&breath, &dir, gameObj->inCel, gameObj->creationTimeFrames + ((uintptr_t)gameObj & 0xfff) * 0x80);
+        // in its own phase of the cycle, from where it lies in the heap
+        Env_Breath(&breath, &dir, gameObj->inCel,
+                   gameObj->creationTimeFrames + (Mem_GameAddress(gameObj) & 0xfff) * 0x80);
         NDrone2_DoTracking(1, dcv);
     } else {
         NDrone2_DoTracking(0, dcv);

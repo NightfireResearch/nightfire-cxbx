@@ -61,8 +61,9 @@ void AIPath_Parse(AIPathBlock *block) {
             path->nodeLinks = NULL;
             path->nodeCount = record->nodeCount;
             if (path->nodeCount != 0)
-                path->runtimeNodes = (AINode_tag *)Mem_Malloc(path->nodeCount * sizeof(AINode_tag),
-                                                              MALLOC_PATHPOINTERS_ALIGN4, 0);
+                path->runtimeNodes = (AINode_tag *)Mem_MallocXbox(path->nodeCount * sizeof(AINode_tag),
+                                                                  path->nodeCount * XBOX_SIZEOF(AINode_tag),
+                                                                  MALLOC_PATHPOINTERS_ALIGN4, 0);
             else
                 path->runtimeNodes = NULL;
             if (path->nodeCount > AIPath_MaxNodes)
@@ -103,8 +104,9 @@ void AIPath_Parse(AIPathBlock *block) {
             memcpy(bound->fromFile, record->fromFile, sizeof(bound->fromFile));
             bound->nodeCount = record->nodeCount;
             if (bound->nodeCount != 0)
-                bound->runtimeNodes = (AIBoundNode_tag *)Mem_Malloc(bound->nodeCount * sizeof(AIBoundNode_tag),
-                                                                    MALLOC_PATHPOINTERS_ALIGN4, 0);
+                bound->runtimeNodes = (AIBoundNode_tag *)Mem_MallocXbox(bound->nodeCount * sizeof(AIBoundNode_tag),
+                                                                        bound->nodeCount * XBOX_SIZEOF(AIBoundNode_tag),
+                                                                        MALLOC_PATHPOINTERS_ALIGN4, 0);
             else
                 bound->runtimeNodes = NULL;
 

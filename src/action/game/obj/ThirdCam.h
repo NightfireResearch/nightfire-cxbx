@@ -16,7 +16,7 @@ typedef struct THIRDCAM {
     uchar _pad0b;
 } THIRDCAM;
 #pragma pack(pop)
-LAYOUT_32(sizeof(THIRDCAM) == 0xc, "Bad size for THIRDCAM");
+XBOX_SIZE(THIRDCAM, 0xc);
 
 // The third-person cameras by id (wires and creep walls name theirs, WIRE::thirdCam, CREEPWALL::thirdCam)
 extern obj_tag *ThirdPersonCameras[16];

@@ -17,7 +17,7 @@ void Process_Init(M_CONTROL *control) {
 void Process_Create(M_CONTROL *control, M_MESSAGE *msg, uint frames, int unused) {
     if (control == NULL || msg == NULL)
         return;
-    M_PROCESS *process = (M_PROCESS *)Menu_Malloc(sizeof(M_PROCESS));
+    M_PROCESS *process = (M_PROCESS *)Menu_MallocXbox(sizeof(M_PROCESS), XBOX_SIZEOF(M_PROCESS));
     process->frame = 0;
     process->frames = frames;
     process->type = msg->type;

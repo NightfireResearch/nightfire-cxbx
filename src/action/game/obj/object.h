@@ -266,6 +266,6 @@ LAYOUT_32(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
 LAYOUT_32(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
 LAYOUT_32(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
 
-LAYOUT_32(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
+XBOX_SIZE(obj_tag, 0xe4);
 
 #endif // OBJECT_H_

@@ -20,7 +20,7 @@ LLISTINFO_tag FishList;
 
 // AUTOINJECT
 void Creature_Init(void) {
-    LList_Init(&FishList, sizeof(Creature), 0);
+    LList_InitXbox(&FishList, sizeof(Creature), XBOX_SIZEOF(Creature), 0);
 }
 
 // AUTOINJECT

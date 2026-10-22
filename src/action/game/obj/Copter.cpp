@@ -107,7 +107,7 @@ obj_tag* Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     if (keys->kind != 0)
         return NULL;
 
-    obj_tag *obj = control_create_object(sizeof(COPTER), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(COPTER), XBOX_SIZEOF(COPTER), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
     COPTER *copter = (COPTER *)obj->extraObjectData;
@@ -159,8 +159,8 @@ obj_tag* Copter_GetBody(COPTER* copter) {
 
 // AUTOINJECT
 void Copter_Init(void) {
-    LList_Init(&CopterList, sizeof(COPTER), 0);
-    LList_Init(&CopterPaths, sizeof(COPTERPATH), 0);
+    LList_InitXbox(&CopterList, sizeof(COPTER), XBOX_SIZEOF(COPTER), 0);
+    LList_InitXbox(&CopterPaths, sizeof(COPTERPATH), XBOX_SIZEOF(COPTERPATH), 0);
 }
 
 // The script's event 15 names its parts: shots pass through all but the body
@@ -186,7 +186,7 @@ void Copter_InitConeSin(void) {
 
 // A path's speed puts its frames into its length (key 10, or the placement's own), at 60 Hz
 COPTERPATH* _Copter_CreatePath(CopterPlacement *keys) {
-    COPTERPATH *path = (COPTERPATH *)Mem_Malloc(sizeof(COPTERPATH), 0x3304, 0);
+    COPTERPATH *path = (COPTERPATH *)Mem_MallocXbox(sizeof(COPTERPATH), XBOX_SIZEOF(COPTERPATH), 0x3304, 0);
     memset(path, 0, sizeof(COPTERPATH));
     uint length = keys->length2 != 0 ? keys->length2 : keys->length;
     path->kind = (ushort)keys->kind;

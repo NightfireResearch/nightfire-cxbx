@@ -214,7 +214,7 @@ typedef struct MPOBJECT_tag {
     short holderIdx;            // 0x4e uplink: the agent index that took it (Control_Plr2Ind), -1 none
 } MPOBJECT;
 
-LAYOUT_32(sizeof(MPOBJECT) == 0x50, "MPOBJECT is wrong size");
+XBOX_SIZE(MPOBJECT, 0x50);
 LAYOUT_32(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong offset");
 LAYOUT_32(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
 LAYOUT_32(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");

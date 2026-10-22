@@ -5,9 +5,16 @@
 #include <stdint.h>
 
 #include "actionhelpers.h"
+#include "../common/xbeClass.h"
 
 void Mem_Init(void);
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment);
+// Mem_Malloc of something that is xboxSize bytes on the Xbox (XboxHeap.h; XBOX_SIZEOF)
+#if XBOX_SIZES_DIFFER
+void* Mem_MallocXbox(size_t size, size_t xboxSize, MallocFlags flags, uint32_t alignment);
+#else
+#define Mem_MallocXbox(size, xboxSize, flags, alignment) Mem_Malloc(size, flags, alignment)
+#endif
 void Mem_Free(void **ptr);
 void Mem_Shrink(void **ptr, uint numBytes);
 void* allocateXboxSpecialMemory(int size, uint32_t alignment);   // Mem_Malloc of type 0x1204

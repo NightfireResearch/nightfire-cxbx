@@ -6,14 +6,32 @@
 #include <string.h>
 #include "../memory.h"
 
+static bool LList_InitSized(LLISTINFO_tag *list, unsigned short entrySize, unsigned short xboxEntrySize,
+                            unsigned short numEntries);
+static void LList_AllocnNodesSized(LLISTINFO_tag *list, int n, int xboxEntrySize);
+
 // numEntries nodes of entrySize bytes, zeroed, in one block
 // AUTOINJECT
 bool LList_Init(LLISTINFO_tag *list, unsigned short entrySize, unsigned short numEntries) {
+    return LList_InitSized(list, entrySize, entrySize, numEntries);
+}
+
+#if XBOX_SIZES_DIFFER
+bool LList_InitXbox(LLISTINFO_tag *list, unsigned short entrySize, unsigned short xboxEntrySize,
+                    unsigned short numEntries) {
+    return LList_InitSized(list, entrySize, xboxEntrySize, numEntries);
+}
+#endif
+
+static bool LList_InitSized(LLISTINFO_tag *list, unsigned short entrySize, unsigned short xboxEntrySize,
+                            unsigned short numEntries) {
 
     if (list == NULL)
         return false;
 
-    char *nodes = numEntries != 0 ? (char *)Mem_Malloc(numEntries * entrySize, 0x1B04, 0) : NULL;
+    char *nodes = NULL;
+    if (numEntries != 0)
+        nodes = (char *)Mem_MallocXbox(numEntries * entrySize, numEntries * xboxEntrySize, 0x1B04, 0);
 
     list->head = NULL;
     list->tail = NULL;
@@ -113,6 +131,17 @@ LLNODE_tag* LList_Cut(LLISTINFO_tag *list) {
 
 // AUTOINJECT
 void LList_AllocnNodes(LLISTINFO_tag *list, int n) {
+    if (list != NULL)
+        LList_AllocnNodesSized(list, n, list->elementSize);
+}
+
+#if XBOX_SIZES_DIFFER
+void LList_AllocnNodesXbox(LLISTINFO_tag *list, int n, int xboxEntrySize) {
+    LList_AllocnNodesSized(list, n, xboxEntrySize);
+}
+#endif
+
+static void LList_AllocnNodesSized(LLISTINFO_tag *list, int n, int xboxEntrySize) {
 
     if(list == NULL)
         return;
@@ -120,7 +149,7 @@ void LList_AllocnNodes(LLISTINFO_tag *list, int n) {
     if(n == 0)
         return;
 
-    void* mem = Mem_Malloc(n * list->elementSize, 0x1B04, 0);
+    void* mem = Mem_MallocXbox(n * list->elementSize, n * xboxEntrySize, 0x1B04, 0);
     memset(mem, 0, n * list->elementSize);
     
     for(int i = 0; i < n; i++) {

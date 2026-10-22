@@ -1442,7 +1442,7 @@ SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation
             return NULL;
         }
 
-        def = (SCRIPTDEF *)Mem_Malloc(sizeof(SCRIPTDEF), (MallocFlags)0x1404, 0);
+        def = (SCRIPTDEF *)Mem_MallocXbox(sizeof(SCRIPTDEF), XBOX_SIZEOF(SCRIPTDEF), (MallocFlags)0x1404, 0);
         hashtable_additem(hashcode, def);
         def->hasCamera = BIN_GetWord(&cursor);
         def->numStreams = BIN_GetWord(&cursor);
@@ -1471,7 +1471,8 @@ SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation
     if (def == (SCRIPTDEF *)-1 || fileBuf != NULL)
         return NULL;
 
-    SCRIPTINFO *scriptInfo = (SCRIPTINFO *)Mem_Malloc(sizeof(SCRIPTINFO), (MallocFlags)0x1404, 0);
+    SCRIPTINFO *scriptInfo = (SCRIPTINFO *)Mem_MallocXbox(sizeof(SCRIPTINFO), XBOX_SIZEOF(SCRIPTINFO),
+                                                          (MallocFlags)0x1404, 0);
     if (scriptInfo == NULL)
         return NULL;
 

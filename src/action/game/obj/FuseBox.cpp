@@ -34,7 +34,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-LAYOUT_32(sizeof(FUSEBOX) == 0x60, "Bad size for FUSEBOX");
+XBOX_SIZE(FUSEBOX, 0x60);
 LAYOUT_32(offsetof(FUSEBOX, channelA) == 0x54, "Bad offset of channelA");
 LAYOUT_32(offsetof(FUSEBOX, channelB) == 0x5c, "Bad offset of channelB");
 static_assert(offsetof(Create_FuseBox_Params, channelB) == 0x38, "Bad offset of channelB");
@@ -67,7 +67,7 @@ void FuseBox_Register(obj_tag *fuse, ushort list, void *fuseBox) {
 obj_tag * FuseBox_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_FuseBox_Params *params = (Create_FuseBox_Params *)lvl;
 
-    obj_tag *obj = control_create_object(sizeof(FUSEBOX), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(FUSEBOX), XBOX_SIZEOF(FUSEBOX), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

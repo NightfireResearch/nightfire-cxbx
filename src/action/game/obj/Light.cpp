@@ -41,14 +41,15 @@ static int32_t Ftol(double x) {
 
 // AUTOINJECT
 void Light_Init(void) {
-    DList_Init(&LightList, sizeof(light_tag), 0);
+    DList_InitXbox(&LightList, sizeof(light_tag), XBOX_SIZEOF(light_tag), 0);
     Light_AllocateEntries();
 }
 
 // AUTOINJECT
 void Light_AllocateEntries(void) {
     size_t allocSize = sizeof(light_tag) * NUM_LIGHTS;
-    light_tag* lightMemory = (light_tag*)Mem_Malloc(allocSize, (MallocFlags)0x3704, 0);
+    light_tag* lightMemory = (light_tag*)Mem_MallocXbox(allocSize, XBOX_SIZEOF(light_tag) * NUM_LIGHTS,
+                                                        (MallocFlags)0x3704, 0);
 
     memset(lightMemory, 0, allocSize);
 

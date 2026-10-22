@@ -265,7 +265,7 @@ typedef struct BLData {
     char _pad_end[0x8fc-0x8f9];
 } BLData;
 
-LAYOUT_32(sizeof(BLData) == 0x8fc, "BLData is 0x8fc bytes (Player_Init)");
+XBOX_SIZE(BLData, 0x8fc);
 
 LAYOUT_32(offsetof(BLData, crosshairOffsetX) == 0xe0, "Offset of crosshairOffsetX not correct");
 static_assert(offsetof(BLData, muzzle) == 0x48, "Offset of muzzle not correct");

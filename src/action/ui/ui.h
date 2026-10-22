@@ -221,7 +221,7 @@ typedef struct M_WINDOW {
     struct M_PAGE *page;        // 0x94
     char pad_98[4];
 } M_WINDOW;
-LAYOUT_32(sizeof(M_WINDOW) == 0x9c, "M_WINDOW is 0x9c bytes");
+XBOX_SIZE(M_WINDOW, 0x9c);
 
 // What MenuManager_Create hands a control's initialiser from the menu data, and what a control hands the parts it is
 // made of. The words at 0x04 and 0x08 are the type's own.
@@ -265,7 +265,7 @@ typedef struct M_PAGE {
     int framesShown;            // 0xc8
     int inputDelay;             // 0xcc SetInputDelay: no input until framesShown reaches it
 } M_PAGE;
-LAYOUT_32(sizeof(M_PAGE) == 0xd0, "M_PAGE is 0xd0 bytes");
+XBOX_SIZE(M_PAGE, 0xd0);
 
 // A menu instance (the front end, the pause menu...): manager[managerNum].
 typedef struct M_MANAGER {
@@ -306,7 +306,7 @@ typedef struct M_MESSAGE {
     int arg1;                   // 0x10 MESSAGE_LAST_RESULT: the control's lastScriptResult
     int arg2;                   // 0x14
 } M_MESSAGE;
-LAYOUT_32(sizeof(M_MESSAGE) == 0x18, "M_MESSAGE is 0x18 bytes");
+XBOX_SIZE(M_MESSAGE, 0x18);
 
 #define MESSAGE_TO_MANAGER  0xfffffffdu
 #define MESSAGE_TO_SELF     0xfffffffeu
@@ -325,7 +325,7 @@ typedef struct M_PROCESS {
     uint unknown1c;             // 0x1c
     uint frames;                // 0x20 how long it runs
 } M_PROCESS;
-LAYOUT_32(sizeof(M_PROCESS) == 0x24, "M_PROCESS is 0x24 bytes");
+XBOX_SIZE(M_PROCESS, 0x24);
 
 // A keyframe of a control's script: where the control is at that frame, and the messages it sends then
 typedef struct M_KEYFRAME {
@@ -339,7 +339,7 @@ typedef struct M_KEYFRAME {
     short width;
     short height;
 } M_KEYFRAME;
-LAYOUT_32(sizeof(M_KEYFRAME) == 0x28, "M_KEYFRAME is 0x28 bytes");
+XBOX_SIZE(M_KEYFRAME, 0x28);
 
 #define KEYFRAME_LOOP_START 2       // a later KEYFRAME_LOOP_BACK comes back here
 #define KEYFRAME_LOOP_BACK  4
@@ -353,7 +353,7 @@ typedef struct M_SCRIPT {
     int id;                     // 0x18
     uint flags;                 // 0x1c SCRIPT_*
 } M_SCRIPT;
-LAYOUT_32(sizeof(M_SCRIPT) == 0x20, "M_SCRIPT is 0x20 bytes");
+XBOX_SIZE(M_SCRIPT, 0x20);
 
 #define SCRIPT_SPLINE   1       // interpolated by spline, else by line
 #define SCRIPT_LOOPING  8       // a KEYFRAME_LOOP_START has been passed
@@ -473,7 +473,7 @@ typedef struct CreditsEntry {
     uchar centred;          // one line across the middle, the left text only
     uchar pad;
 } CreditsEntry;
-LAYOUT_32(sizeof(CreditsEntry) == 0xc, "CreditsEntry is 12 bytes");
+XBOX_SIZE(CreditsEntry, 0xc);
 void __stdcall Menu_InitCredits(void);
 CreditsEntry* Menu_SetupCredits(uint *numLines_out);
 bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);

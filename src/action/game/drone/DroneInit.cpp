@@ -169,7 +169,7 @@ static int32_t Ftol(double x) {
 obj_tag* NDrone2_CreateObj(DIVars_tag *diVars) {
     obj_tag *gameObj;
     if (diVars->glist == NULL) {
-        gameObj = control_create_object(sizeof(Drone_tag), NULL, NULL, NULL);
+        gameObj = control_create_object_xbox(sizeof(Drone_tag), XBOX_SIZEOF(Drone_tag), NULL, NULL, NULL);
         if (gameObj == NULL)
             return NULL;
         gameObj->objectType = OBJECTTYPE_DRONE;

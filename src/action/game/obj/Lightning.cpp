@@ -39,7 +39,7 @@ void FractalThing(obj_tag **segments, short first, short last, _VECTOR *start, _
 // Pairs with every lightning point already made: the segments between are made unchecked
 // AUTOINJECT
 obj_tag* Lightning_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
-    obj_tag *obj = control_create_object(sizeof(LIGHTNING_tag), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(LIGHTNING_tag), XBOX_SIZEOF(LIGHTNING_tag), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

@@ -34,7 +34,7 @@ typedef struct SENSOR {
     uchar padding[3];
 } SENSOR;
 
-LAYOUT_32(sizeof(SENSOR) == 0x64, "Wrong size for SENSOR");
+XBOX_SIZE(SENSOR, 0x64);
 LAYOUT_32(offsetof(SENSOR, beamObject) == 0x4c, "Bad offset of beamObject");
 LAYOUT_32(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 #pragma pack(pop)

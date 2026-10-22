@@ -239,7 +239,9 @@ void parsemap_block_Coll_Data_New(void) {
             return;
         }
         // Rounded up to 4 (0x18, not the 0x16 of COLLDATA_tag on 32-bit), as the original
-        cel->colldata = (COLLDATA_tag *)Mem_Malloc((sizeof(COLLDATA_tag) + 3) & ~(size_t)3, (MallocFlags)0x1a04, 0);
+        cel->colldata = (COLLDATA_tag *)Mem_MallocXbox((sizeof(COLLDATA_tag) + 3) & ~(size_t)3,
+                                                       (XBOX_SIZEOF(COLLDATA_tag) + 3) & ~(size_t)3,
+                                                       (MallocFlags)0x1a04, 0);
     }
 
     COLLDATA_tag *coll = cel->colldata;
@@ -853,7 +855,8 @@ void parsemap_block_map_header(void) {
     MapEntityCount = pBMH->entityCount;
     if (MapEntityCount == 0)
         return;
-    pCelList = (celglist_tag *)Mem_Malloc(MapEntityCount * sizeof(celglist_tag), (MallocFlags)0x904, 0);
+    pCelList = (celglist_tag *)Mem_MallocXbox(MapEntityCount * sizeof(celglist_tag),
+                                              MapEntityCount * XBOX_SIZEOF(celglist_tag), (MallocFlags)0x904, 0);
     memset(pCelList, 0, pBMH->entityCount * sizeof(celglist_tag));
     pCelList->colldata = NULL;
     pCurrCelList = pCelList;
@@ -864,7 +867,7 @@ void parsemap_block_map_header(void) {
         if (m_paths != NULL)
             m_ppaths = m_paths;
     }
-    m_pmap = (map_tag *)Mem_Malloc(sizeof(map_tag), (MallocFlags)0xa04, 0);
+    m_pmap = (map_tag *)Mem_MallocXbox(sizeof(map_tag), XBOX_SIZEOF(map_tag), (MallocFlags)0xa04, 0);
     m_pmap->paletteHeaderData = NULL;
     m_pmap->numPaletteHeaderEntries = 0;
     m_pmap->texHeaderData = NULL;

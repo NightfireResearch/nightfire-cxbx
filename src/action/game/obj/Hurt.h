@@ -24,7 +24,7 @@ typedef struct Hurt_tag {
 
 #pragma pack(pop)
 
-LAYOUT_32(sizeof(Hurt_tag) == 0x1c, "Hurt_tag is 0x1c bytes");
+XBOX_SIZE(Hurt_tag, 0x1c);
 LAYOUT_32(offsetof(Hurt_tag, damage) == 0x10, "Wrong offset for Hurt_tag.damage");
 
 // A hurt volume's placement (level_tag)

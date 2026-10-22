@@ -30,7 +30,7 @@ typedef struct DYNAMICSOUNDS {
     char _pad_6[0x2];
 } DYNAMICSOUNDS;
 
-LAYOUT_32(sizeof(DYNAMICSOUNDS) == 0x48, "Size of DYNAMICSOUNDS not correct");
+XBOX_SIZE(DYNAMICSOUNDS, 0x48);
 static_assert(offsetof(DYNAMICSOUNDS, next) == offsetof(LLNODE_tag, next), "a sound's links are its list node's");
 LAYOUT_32(offsetof(DYNAMICSOUNDS, playbackState) == 0x40, "Offset of playbackState not correct");
 

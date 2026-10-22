@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include "actionhelpers.h"
 #include "memory.h"
+#include "memoryBlock.h"
+#include "XboxHeap.h"
 #include "engine/XboxSystem.h"
 #include "devtools/Demo.h"
 
@@ -12,8 +14,9 @@ uint32_t MemStats[7];
 
 // The game's one heap: a single block of HeapByteSize bytes at PtrHeap, carved into blocks that each start with a
 // MemBlock header. The heap lies in the game window (Ptr32.h), and its words and headers keep the game's sizes on
-// every host, so the blocks are where the game put them. Mem_Init makes it one free block; ResetMap_Load calls Mem_Init again at every level load, which
-// is how the game frees almost everything - most allocations are never passed to Mem_Free.
+// every host; on 64-bit the structures that hold pointers are bigger, and XboxHeap.h keeps where the game would have
+// put them. Mem_Init makes it one free block; ResetMap_Load calls Mem_Init again at every level load, which is how the
+// game frees almost everything - most allocations are never passed to Mem_Free.
 // XBE_GLOBAL(0x00223a80, 0x4)
 uint32_t PtrHeap;     // not static: devtools/MemShadow.cpp points these at a scratch heap
 // XBE_GLOBAL(0x00223a84, 0x4)
@@ -30,21 +33,6 @@ uint32_t QuickBlock;
 // XBE_GLOBAL(0x00223a8c, 0x4)
 static uint32_t MallocSize;
 
-// A heap block's header. The block's data follows it; the next block follows the data, at size bytes from here.
-#pragma pack(push, 1)
-typedef struct MemBlock {
-    Ptr32<struct MemBlock> prev;    // 0x0 - the previous block; the first block's is itself
-    uint size;              // 0x4 - including this header
-    ushort flags;           // 0x8 - the MallocFlags it was allocated with (low byte the alignment, high byte the
-                            //       type); 4 once free
-    uchar slack;            // 0xa - bytes at the end of the block past what was asked for (Mem_Shrink uses it)
-    uchar isFree;           // 0xb
-} MemBlock;
-#pragma pack(pop)
-static_assert(sizeof(MemBlock) == 0xc, "MemBlock is 0xc bytes");
-
-#define MEM_FREE_FLAGS 4
-
 // tMallocMethod in Ghidra (Malloc_Type_0..3). ResetMap_Load and the loaders switch between them.
 enum {
     MALLOC_NEXT_FIT = 0,    // the first big enough block from QuickBlock back to the start, else on to the end
@@ -53,10 +41,6 @@ enum {
     MALLOC_LAST_FIT = 3,    // the last big enough block
 };
 
-// The end of the walk over the blocks: every walk stops at the last header-sized slot of the heap
-static inline MemBlock* Mem_HeapStart(void) { return PtrFrom32<MemBlock>(PtrHeap); }
-static inline MemBlock* Mem_HeapEnd(void) { return PtrFrom32<MemBlock>(PtrHeap + HeapByteSize - (uint32_t)sizeof(MemBlock)); }
-static inline MemBlock* Mem_NextBlock(MemBlock *block) { return (MemBlock *)((char *)block + block->size); }
 static inline uint Mem_Distance(const void *from, const void *to) { return (uint)((const char *)to - (const char *)from); }
 static inline MemBlock* Mem_AlignDown(uintptr_t address, uint mask) { return (MemBlock *)(address & ~(uintptr_t)mask); }
 
@@ -106,6 +90,7 @@ void Mem_Init(void) {
     heap->flags = MEM_FREE_FLAGS;
     QuickBlock = PtrHeap;
     MallocSize = 0;
+    XboxHeap_Init();
 
 }
 
@@ -182,6 +167,20 @@ static MemBlock* Mem_FindFreeBlock(uint need) {
 // flags' high byte is the allocation type, which only Mem_Info reads. Returns NULL when nothing fits.
 // AUTOINJECT
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
+    void *data = Mem_Allocate(size, flags, alignment);
+    XboxHeap_Malloc(data, size, size, flags, alignment);
+    return data;
+}
+
+#if XBOX_SIZES_DIFFER
+void* Mem_MallocXbox(size_t size, size_t xboxSize, MallocFlags flags, uint32_t alignment) {
+    void *data = Mem_Allocate(size, flags, alignment);
+    XboxHeap_Malloc(data, size, xboxSize, flags, alignment);
+    return data;
+}
+#endif
+
+void* Mem_Allocate(size_t size, MallocFlags flags, uint32_t alignment) {
 
     // GC check (0x80056700): an allocation type past the last one MemInfo names, or nothing to allocate
     NF_WARN_IF(((flags >> 8) & 0xff) > 0x4f || size == 0, "Mem_Malloc of bad type %d size %dk\n",
@@ -253,6 +252,12 @@ void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
 // Anything outside the heap is only cleared - which is also what happens to memory from anywhere else.
 // AUTOINJECT
 void Mem_Free(void **ptr) {
+    void *data = *ptr;
+    Mem_Release(ptr);
+    XboxHeap_Free(data);
+}
+
+void Mem_Release(void **ptr) {
 
     char *data = (char *)*ptr;
     MemBlock *end = Mem_HeapEnd();
@@ -295,7 +300,7 @@ void Mem_Free(void **ptr) {
     *ptr = NULL;
 }
 
-// Mem_Shrink's three cases, each of which splits the block and frees the part [data, data + numBytes) with Mem_Free.
+// Mem_Shrink's three cases, each of which splits the block and frees the part [data, data + numBytes) as Mem_Free does.
 // All three work from the caller's pointer as it was; Mem_Shrink's clamp to the block's data affects only which one
 // runs. (INVENTED NAMES: FUN_000706d0, FUN_00070750, FUN_000707b0.)
 
@@ -315,7 +320,7 @@ static void Mem_FreeFront(char *data, uint numBytes, MemBlock *block, MemBlock *
     if (next < Mem_HeapEnd())
         next->prev = tail;
     void *front = block + 1;
-    Mem_Free(&front);
+    Mem_Release(&front);
 }
 
 // The part runs to the end of the block: it becomes a block of its own, which is freed
@@ -330,7 +335,7 @@ static void Mem_FreeBack(char *data, MemBlock *block, MemBlock *next) {
     if (next < Mem_HeapEnd())
         next->prev = back;
     void *backData = back + 1;
-    Mem_Free(&backData);
+    Mem_Release(&backData);
 }
 
 // The part is in the middle: the block becomes three, and the middle one is freed. Nothing happens if the middle
@@ -356,7 +361,7 @@ static void Mem_FreeMiddle(char *data, uint numBytes, MemBlock *block, MemBlock 
     if (next < Mem_HeapEnd())
         next->prev = tail;
     void *midData = mid + 1;
-    Mem_Free(&midData);
+    Mem_Release(&midData);
 }
 
 // Frees numBytes of an allocation starting at *ptr, which may point anywhere inside it, keeping the rest allocated,
@@ -364,6 +369,10 @@ static void Mem_FreeMiddle(char *data, uint numBytes, MemBlock *block, MemBlock 
 // the only caller. There is also a thunk to this at 0x000bec80 with the same name, hence FUNC_AT.
 // FUNC_AT(00070850)
 void Mem_Shrink(void **ptr, uint numBytes) {
+    XboxHeap_Shrink(ptr, numBytes);
+}
+
+void Mem_ShrinkBlock(void **ptr, uint numBytes) {
 
     if (numBytes <= sizeof(MemBlock)) {
         NF_WARN("Too small to shrink\n"); // GC check (0x80056e44)

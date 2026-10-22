@@ -22,7 +22,7 @@ typedef struct LOCK_tag {
     uint pathFrames;            // 0x1c - the spline's points less one; 0 for none
 } LOCK_tag;
 
-LAYOUT_32(sizeof(LOCK_tag) == 0x20, "LOCK_tag is 0x20 bytes");
+XBOX_SIZE(LOCK_tag, 0x20);
 
 // A lock's placement keys (level_tag)
 typedef struct LockPlacement {

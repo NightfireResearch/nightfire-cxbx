@@ -40,7 +40,7 @@ typedef struct M_TEXTBOX {
     ushort selected;            // 0x9ac the key under the cursor (Text_SetupChar: the last key set up)
     char pad9ae[2];
 } M_TEXTBOX;
-LAYOUT_32(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
+XBOX_SIZE(M_TEXTBOX, 0x9b0);
 #pragma pack(pop)
 
 // M_CONTROL::drawState bits of the text box

@@ -12,6 +12,7 @@ struct DrawEntry {
     obj_tag *obj;
     cel_tag *cel;
 };
+XBOX_SIZE(DrawEntry, 0xc);
 
 // A view's three draw lists (opaque, sorted back to front, and last), each a ring of drawSizes entries in one block
 struct ViewDrawLists {
@@ -91,6 +92,7 @@ struct world_tag {
     cel_tag* firstCel;
     // ?
 };
+XBOX_SIZE(world_tag, 4);
 
 // An opening between two cels (0x7c bytes). Only the fields our code reads are named.
 typedef struct portal_tag portal_tag;
@@ -109,7 +111,7 @@ struct portal_tag {
     _VECTOR boxMin;             // 0x64
     _VECTOR boxMax;             // 0x70
 };
-LAYOUT_32(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
+XBOX_SIZE(portal_tag, 0x7c);
 
 struct cel_tag { /* Confirmed size in build_alloc_cel */
     void *unusedLinks[2];      // 0x00 - where an object has llPrev and llNext, so that firstObject and headPrev lie
@@ -146,6 +148,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     undefined1 someSwitchChannel;      // 0x92 - the channel choosing its ambient light
     uchar blink;                       // 0x93 - its alpha: bits 0-1 the mode, 4-7 the speed (View_SetupCelRenderModes)
 };
+XBOX_SIZE(cel_tag, 0x94);
 LAYOUT_32(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
 LAYOUT_32(offsetof(cel_tag, nextVisible) == 0x20, "Bad offset of cel_tag.nextVisible");
 LAYOUT_32(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
@@ -170,7 +173,7 @@ enum {
 
 
 
-LAYOUT_32(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
+XBOX_SIZE(viewer_tag, 0x208);
 LAYOUT_32(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw");
 LAYOUT_32(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");
 LAYOUT_32(offsetof(viewer_tag, move) == 0xac, "Bad offset of viewer_tag.move");

@@ -70,7 +70,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-LAYOUT_32(sizeof(SIMPLESCRIPT) == 0x2c, "Bad size for SIMPLESCRIPT");
+XBOX_SIZE(SIMPLESCRIPT, 0x2c);
 LAYOUT_32(offsetof(SIMPLESCRIPT, lastKey) == 0x1c, "Bad offset of lastKey");
 LAYOUT_32(offsetof(SIMPLESCRIPT, water) == 0x2a, "Bad offset of water");
 static_assert(offsetof(Create_SS_Params, mode) == 0x2c, "Bad offset of mode");
@@ -87,7 +87,7 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
     if (params->pathPointCount == 0)
         return NULL;
 
-    obj_tag *obj = control_create_object(sizeof(SIMPLESCRIPT), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(SIMPLESCRIPT), XBOX_SIZEOF(SIMPLESCRIPT), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

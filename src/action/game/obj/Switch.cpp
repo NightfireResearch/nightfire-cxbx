@@ -45,7 +45,8 @@ static_assert(offsetof(Create_Switch_Params, sysItemIndex) == 0x44, "Bad offset 
 obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Switch_Params *createParams = (Create_Switch_Params*)lvl;
 
-    obj_tag *switchObj = control_create_object(sizeof(ObjData_Switch), pos, rot, NULL);
+    obj_tag *switchObj = control_create_object_xbox(sizeof(ObjData_Switch), XBOX_SIZEOF(ObjData_Switch),
+                                                    pos, rot, NULL);
     if (switchObj == NULL)
         return NULL;
 

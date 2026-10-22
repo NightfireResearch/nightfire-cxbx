@@ -102,7 +102,7 @@ HITDATA_tag* Coll_GetFreeHit(void) {
 
         // Heap is empty but we haven't reached the maximum number of allocations yet
         HitAllocCnt += 0x40;
-        LList_AllocnNodes(&HitHeap, 0x40);
+        LList_AllocnNodesXbox(&HitHeap, 0x40, XBOX_SIZEOF(HITDATA_tag));
         node = (HITDATA_tag*)LList_Cut(&HitHeap);
     }
 
@@ -1705,7 +1705,7 @@ bool Intersect_ConeSphere(_VECTOR *apex, _VECTOR *dir, float cosA, float sinA, _
 // AUTOINJECT
 void Coll_ResetHitHeap(void) {
     HitAllocCnt = 0;
-    LList_Init(&HitHeap, sizeof(HITDATA_tag), 0);
+    LList_InitXbox(&HitHeap, sizeof(HITDATA_tag), XBOX_SIZEOF(HITDATA_tag), 0);
     TriAllocCnt = 100;
     TriHeap = (_VECTOR *)Mem_Malloc(0x4b0, (MallocFlags)0x1a04, 0);   // 100 * 12, as a constant in the original
     memset(TriHeap, 0, TriAllocCnt * 12);

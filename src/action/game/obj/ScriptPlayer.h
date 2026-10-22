@@ -68,7 +68,7 @@ typedef struct SCRIPTPLAYER {
     char unknown_0x39[3];               // 0x39 - trailing bytes, never referenced by any function seen so far
 } SCRIPTPLAYER;
 
-LAYOUT_32(sizeof(SCRIPTPLAYER) == 60, "SCRIPTPLAYER should be 60 bytes (confirmed via Ghidra)");
+XBOX_SIZE(SCRIPTPLAYER, 60);
 LAYOUT_32(offsetof(SCRIPTPLAYER, scriptInfos) == 0xc, "Bad offset of scriptInfos");
 LAYOUT_32(offsetof(SCRIPTPLAYER, scriptHashcodes) == 0x1c, "Bad offset of scriptHashcodes");
 LAYOUT_32(offsetof(SCRIPTPLAYER, scriptPlayModes) == 0x26, "Bad offset of scriptPlayModes");

@@ -142,7 +142,7 @@ typedef struct DroneAIVolume_tag {
     uchar unknown24;                // 0x24
     uchar _unknown25[0xf4 - 0x25];
 } DroneAIVolume_tag;
-LAYOUT_32(sizeof(DroneAIVolume_tag) == 0xf4, "DroneAIVolume_tag is 0xf4 bytes");
+XBOX_SIZE(DroneAIVolume_tag, 0xf4);
 LAYOUT_32(offsetof(DroneAIVolume_tag, type) == 0x1c, "Wrong offset for DroneAIVolume_tag.type");
 
 #pragma pack(pop)

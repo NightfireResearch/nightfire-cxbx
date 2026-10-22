@@ -173,7 +173,8 @@ obj_tag* Drone_AIVolume_Create(_VECTOR *pos, _VECTOR *rot, _VECTOR *scale, level
         at.y = (float)(scale->y * 1.5 + at.y);
     }
 
-    obj_tag *obj = control_create_object(sizeof(DroneAIVolume_tag), &at, &turn, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(DroneAIVolume_tag), XBOX_SIZEOF(DroneAIVolume_tag), &at, &turn,
+                                              NULL);
     if (obj == NULL)
         return NULL;
     obj->objGraphics = glist;

@@ -41,7 +41,8 @@ void DroneSpawner_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     DroneSpawnerPlacement *keys = (DroneSpawnerPlacement *)lvl;
     if (keys->kind < SPAWNER_KEEP_UP)
         return;
-    obj_tag *obj = control_create_object(sizeof(DroneSpawner_tag), NULL, NULL, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(DroneSpawner_tag), XBOX_SIZEOF(DroneSpawner_tag),
+                                              NULL, NULL, NULL);
     if (obj == NULL)
         return;
     DroneSpawner_tag *spawner = Spawner(obj);
@@ -85,7 +86,8 @@ void DroneSpawner_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
 // switched off. Made after every load (Drone_PostLoad_Init).
 // AUTOINJECT
 void DroneSpawner_CreateBlank(void) {
-    obj_tag *obj = control_create_object(sizeof(DroneSpawner_tag), NULL, NULL, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(DroneSpawner_tag), XBOX_SIZEOF(DroneSpawner_tag),
+                                              NULL, NULL, NULL);
     if (obj == NULL || obj->extraObjectData == NULL)
         return;
     control_init_object(obj);
@@ -122,9 +124,12 @@ void DroneSpawner_Init(obj_tag *obj) {
         if ((spawner->startChannel == 0 || switch_channels[spawner->startChannel])
             && (spawner->stopChannel == 0 || !switch_channels[spawner->stopChannel]))
             spawner->anywhere = 1;
-        spawner->spawned = (obj_tag **)Mem_Malloc(spawner->maxAlive * sizeof(obj_tag *), MALLOC_SPAWNER_SLOTS_ALIGN4, 0);
-        spawner->entries = (DroneSpawnEntry_tag *)Mem_Malloc(spawner->entryCount * sizeof(DroneSpawnEntry_tag),
-                                                             MALLOC_SPAWNER_ENTRIES_ALIGN4, 0);
+        spawner->spawned = (obj_tag **)Mem_MallocXbox(spawner->maxAlive * sizeof(obj_tag *),
+                                                      spawner->maxAlive * XBOX_SIZEOF(obj_tag *),
+                                                      MALLOC_SPAWNER_SLOTS_ALIGN4, 0);
+        spawner->entries = (DroneSpawnEntry_tag *)Mem_MallocXbox(spawner->entryCount * sizeof(DroneSpawnEntry_tag),
+                                                                 spawner->entryCount * XBOX_SIZEOF(DroneSpawnEntry_tag),
+                                                                 MALLOC_SPAWNER_ENTRIES_ALIGN4, 0);
         NF_WARN_IF(spawner->entries == NULL || spawner->spawned == NULL,
                    "Couldn't allocate memory for DroneSpawner (group %d)\n", spawner->group);  // GC check (0x80085400)
         memset(spawner->spawned, 0, spawner->maxAlive * sizeof(obj_tag *));

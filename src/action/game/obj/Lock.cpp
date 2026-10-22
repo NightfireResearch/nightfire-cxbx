@@ -53,7 +53,7 @@ static void PlayAt(ushort sound, obj_tag *obj) {
 // unlocked at difficulty 1.
 // AUTOINJECT
 obj_tag* Lock_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
-    obj_tag *obj = control_create_object(sizeof(LOCK_tag), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(LOCK_tag), XBOX_SIZEOF(LOCK_tag), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
     LockPlacement *keys = (LockPlacement *)lvl;

@@ -114,7 +114,8 @@ void Txt_LoadLanguage(void) {
     NumEntries = BIN_GetDWord((uchar **)&fileAt); // 2801 strings
     //printf("Num entries: %i\n", NumEntries);
 
-    Bank = (const char**)Mem_Malloc(NumEntries * sizeof(*Bank), 0x3604, 0); // a pointer into the text per string
+    // a pointer into the text per string
+    Bank = (const char**)Mem_MallocXbox(NumEntries * sizeof(*Bank), NumEntries * XBOX_SIZEOF(const char *), 0x3604, 0);
     
     // Looks like the first entry in the bank is hardcoded to be a blank string
     Bank[0] = "";
@@ -315,7 +316,7 @@ TXT_MSG* Text_TakeMsg(void) {
             if (((TXT_MSG *)node)->type == 0)
                 return (TXT_MSG *)LList_Remove(&MsgQueue.freeList, node);
         }
-        LList_AllocnNodes(&MsgQueue.freeList, 0x20);
+        LList_AllocnNodesXbox(&MsgQueue.freeList, 0x20, XBOX_SIZEOF(TXT_MSG));
     }
 }
 
@@ -333,7 +334,7 @@ void Text_Init(uchar warmReset) {
     SubTitleSpr = Sprite_Create2(&SubtitlesInfo);
     SubTitleSpr1 = Sprite_Create2(&SubtitlesInfo);
     SubTitleSpr2 = Sprite_Create2(&SubtitlesInfo);
-    DList_Init(&MsgQueue, sizeof(TXT_MSG), 0);
+    DList_InitXbox(&MsgQueue, sizeof(TXT_MSG), XBOX_SIZEOF(TXT_MSG), 0);
     if (warmReset) {
         for (ushort i = 0; i < ReceivedMsgs.size; i++)
             Txt_LockString((char *)ReceivedMsgs.buffer[i]);

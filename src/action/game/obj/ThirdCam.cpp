@@ -24,7 +24,7 @@ static_assert(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of pa
 // AUTOINJECT
 obj_tag * ThirdCam_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_ThirdCam_Params *params = (Create_ThirdCam_Params *)lvl;
-    obj_tag *obj = control_create_object(sizeof(THIRDCAM), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(THIRDCAM), XBOX_SIZEOF(THIRDCAM), pos, rot, NULL);
     THIRDCAM *camera = (THIRDCAM *)obj->extraObjectData;
     camera->id = (ushort)params->param[0];
     camera->lastKey = params->pathPointCount - 1;

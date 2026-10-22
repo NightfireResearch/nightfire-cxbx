@@ -283,10 +283,10 @@ static_assert(offsetof(MAPNODE_tag, pos) == 0x10, "Wrong offset for MAPNODE_tag.
 static_assert(sizeof(AIPathNodeRecord) == 0x40, "AIPathNodeRecord is 0x40 bytes");
 static_assert(sizeof(AILink_tag) == 0x10, "AILink_tag is 0x10 bytes");
 static_assert(sizeof(AIBoundLink_tag) == 0x14, "AIBoundLink_tag is 0x14 bytes");
-LAYOUT_32(sizeof(AINode_tag) == 0x30, "AINode_tag is 0x30 bytes");
+XBOX_SIZE(AINode_tag, 0x30);
 LAYOUT_32(offsetof(AINode_tag, nextInList) == 0x24, "Wrong offset for AINode_tag.nextInList");
 LAYOUT_32(offsetof(AINode_tag, door) == 0x28, "Wrong offset for AINode_tag.door");
-LAYOUT_32(sizeof(AIBoundNode_tag) == 0x8, "AIBoundNode_tag is 8 bytes");
+XBOX_SIZE(AIBoundNode_tag, 0x8);
 LAYOUT_32(sizeof(AIPath_tag) == 0x48, "AIPath_tag is 0x48 bytes");
 LAYOUT_32(offsetof(AIPath_tag, nodeCount) == 0x2c, "Wrong offset for AIPath_tag.nodeCount");
 LAYOUT_32(offsetof(AIPath_tag, reachMask) == 0x44, "Wrong offset for AIPath_tag.reachMask");

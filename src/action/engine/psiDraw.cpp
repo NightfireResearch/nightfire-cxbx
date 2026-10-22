@@ -469,7 +469,7 @@ TriList* psiGetTriList(void *obj) {
         return NULL;
     int idx = gfx->geom_idx;
     ModelData *model = d3dGeometryObjs[idx];
-    TriList *list = (TriList *)Mem_Malloc(sizeof(TriList), 0x1204, 4);
+    TriList *list = (TriList *)Mem_MallocXbox(sizeof(TriList), XBOX_SIZEOF(TriList), 0x1204, 4);
     if (list == NULL)
         return NULL;
     int allocated = model->dataSize14 - model->dataSize18;

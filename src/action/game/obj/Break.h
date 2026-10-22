@@ -47,7 +47,7 @@ typedef struct SHARD_tag {
     char _unknown48[0x84 - 0x48];
 } SHARD_tag;
 
-LAYOUT_32(sizeof(SHARD_tag) == 0x84, "SHARD_tag is 0x84 bytes");
+XBOX_SIZE(SHARD_tag, 0x84);
 
 #pragma pack(pop)
 

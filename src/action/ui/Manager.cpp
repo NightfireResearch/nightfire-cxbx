@@ -33,7 +33,7 @@ typedef struct PAGE_HISTORY {
     M_CONTROL *focused;
 } PAGE_HISTORY;
 #pragma pack(pop)
-LAYOUT_32(sizeof(PAGE_HISTORY) == 8, "PAGE_HISTORY is 8 bytes");
+XBOX_SIZE(PAGE_HISTORY, 8);
 
 // What MessageType_QueryBack's answer is set to by a handler that keeps the page
 #define BACK_REFUSED 0xfffffffe
@@ -47,67 +47,67 @@ static M_CONTROL* Manager_CreateObject(M_MANAGER *mgr, NEW_CONTROL *create) {
     M_CONTROL *control;
     switch (create->type) {
         case ControlType_Button: {
-            M_BUTTON *button = (M_BUTTON *)Menu_Malloc(sizeof(M_BUTTON));
+            M_BUTTON *button = (M_BUTTON *)Menu_MallocXbox(sizeof(M_BUTTON), XBOX_SIZEOF(M_BUTTON));
             Button_Init(button, create, &mgr->currentPage->control);
             control = &button->control;
             break;
         }
         case ControlType_Checkbox: {
-            M_CHECKBOX *checkbox = (M_CHECKBOX *)Menu_Malloc(sizeof(M_CHECKBOX));
+            M_CHECKBOX *checkbox = (M_CHECKBOX *)Menu_MallocXbox(sizeof(M_CHECKBOX), XBOX_SIZEOF(M_CHECKBOX));
             Checkbox_Init(checkbox, create, &mgr->currentPage->control);
             control = &checkbox->control;
             break;
         }
         case ControlType_Combo: {
-            M_COMBO *combo = (M_COMBO *)Menu_Malloc(sizeof(M_COMBO));
+            M_COMBO *combo = (M_COMBO *)Menu_MallocXbox(sizeof(M_COMBO), XBOX_SIZEOF(M_COMBO));
             Combo_Init(combo, create, &mgr->currentPage->control);
             control = &combo->control;
             break;
         }
         case ControlType_Label: {
-            M_LABEL *label = (M_LABEL *)Menu_Malloc(sizeof(M_LABEL));
+            M_LABEL *label = (M_LABEL *)Menu_MallocXbox(sizeof(M_LABEL), XBOX_SIZEOF(M_LABEL));
             Label_Init(label, create, &mgr->currentPage->control);
             control = &label->control;
             break;
         }
         case ControlType_List: {
-            M_LIST *list = (M_LIST *)Menu_Malloc(sizeof(M_LIST));
+            M_LIST *list = (M_LIST *)Menu_MallocXbox(sizeof(M_LIST), XBOX_SIZEOF(M_LIST));
             List_Init(list, create, &mgr->currentPage->control);
             control = &list->control;
             break;
         }
         case ControlType_Memo: {
-            M_MEMO *memo = (M_MEMO *)Menu_Malloc(sizeof(M_MEMO));
+            M_MEMO *memo = (M_MEMO *)Menu_MallocXbox(sizeof(M_MEMO), XBOX_SIZEOF(M_MEMO));
             Memo_Init(memo, create, &mgr->currentPage->control);
             control = &memo->control;
             break;
         }
         case ControlType_Radio: {
-            M_RADIO *radio = (M_RADIO *)Menu_Malloc(sizeof(M_RADIO));
+            M_RADIO *radio = (M_RADIO *)Menu_MallocXbox(sizeof(M_RADIO), XBOX_SIZEOF(M_RADIO));
             Radio_Init(radio, create, &mgr->currentPage->control);
             control = &radio->control;
             break;
         }
         case ControlType_Scroll: {
-            M_SCROLL *scroll = (M_SCROLL *)Menu_Malloc(sizeof(M_SCROLL));
+            M_SCROLL *scroll = (M_SCROLL *)Menu_MallocXbox(sizeof(M_SCROLL), XBOX_SIZEOF(M_SCROLL));
             Scroll_Init(scroll, create, &mgr->currentPage->control);
             control = &scroll->control;
             break;
         }
         case ControlType_Spin: {
-            M_SPIN *spin = (M_SPIN *)Menu_Malloc(sizeof(M_SPIN));
+            M_SPIN *spin = (M_SPIN *)Menu_MallocXbox(sizeof(M_SPIN), XBOX_SIZEOF(M_SPIN));
             Spin_Init(spin, create, &mgr->currentPage->control);
             control = &spin->control;
             break;
         }
         case ControlType_Text: {
-            M_TEXTBOX *box = (M_TEXTBOX *)Menu_Malloc(sizeof(M_TEXTBOX));
+            M_TEXTBOX *box = (M_TEXTBOX *)Menu_MallocXbox(sizeof(M_TEXTBOX), XBOX_SIZEOF(M_TEXTBOX));
             Text_Init(box, create, &mgr->currentPage->control);
             control = &box->control;
             break;
         }
         case ControlType_Window: {
-            M_WINDOW *window = (M_WINDOW *)Menu_Malloc(sizeof(M_WINDOW));
+            M_WINDOW *window = (M_WINDOW *)Menu_MallocXbox(sizeof(M_WINDOW), XBOX_SIZEOF(M_WINDOW));
             Window_Init(window, create, mgr);
             control = &window->control;
             break;
@@ -131,7 +131,7 @@ static void Manager_GoPage(M_MANAGER *mgr, HASHCODE hashcode, int flags) {
         if (page->control.hashcode == hashcode) {
             Menu_EnableSounds(page->control.hashcode);
             if (!(flags & GOPAGE_NO_HISTORY)) {
-                PAGE_HISTORY *entry = (PAGE_HISTORY *)Menu_Malloc(sizeof(PAGE_HISTORY));
+                PAGE_HISTORY *entry = (PAGE_HISTORY *)Menu_MallocXbox(sizeof(PAGE_HISTORY), XBOX_SIZEOF(PAGE_HISTORY));
                 entry->page = mgr->currentPage;
                 entry->focused = mgr->currentPage->focused;
                 Stack_Push(&mgr->stack, entry);
@@ -329,7 +329,7 @@ intptr_t Manager_SendMessage(M_MANAGER *mgr, MessageType message, intptr_t arg1,
         case MessageType_CreateObject:
             return (intptr_t)Manager_CreateObject(mgr, (NEW_CONTROL *)arg1);
         case MessageType_CreatePage: {
-            M_PAGE *page = (M_PAGE *)Menu_Malloc(sizeof(M_PAGE));
+            M_PAGE *page = (M_PAGE *)Menu_MallocXbox(sizeof(M_PAGE), XBOX_SIZEOF(M_PAGE));
             Page_Init(page, (HASHCODE)arg1, mgr);
             LinkedList_Add(&mgr->pages, &page->pageLink[1], page->pageLink);
             __Menu_SendMessage(&mgr->control, MessageType_GoPage, arg1,

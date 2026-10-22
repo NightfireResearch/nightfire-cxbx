@@ -600,7 +600,7 @@ obj_tag* SP_CreateScriptPlayer(_VECTOR *pos, _VECTOR *rot, level_tag *placementD
     if (params->scriptHashcode0 == 0 && params->scriptHashcode1 == 0)
         return NULL;
 
-    obj_tag* obj = control_create_object(sizeof(SCRIPTPLAYER), pos, rot, NULL);
+    obj_tag* obj = control_create_object_xbox(sizeof(SCRIPTPLAYER), XBOX_SIZEOF(SCRIPTPLAYER), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

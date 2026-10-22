@@ -85,7 +85,7 @@ static uint TmpParam[TRIGGER_PARAMS];
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Trigger_Params *params = (Create_Trigger_Params *)lvl;
 
-    obj_tag *obj = control_create_object(sizeof(TRIGGER), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(TRIGGER), XBOX_SIZEOF(TRIGGER), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 
@@ -574,7 +574,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-LAYOUT_32(sizeof(SOUNDTRIGGER) == 0x14, "SOUNDTRIGGER is 0x14 bytes");
+XBOX_SIZE(SOUNDTRIGGER, 0x14);
 static_assert(sizeof(MUSICTRIGGER) == 0xc, "MUSICTRIGGER is 0xc bytes");
 
 // The exclusive sound trigger's sound while one plays
@@ -611,7 +611,7 @@ obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
     if (only == SoundTriggerDifficulty_Only3 && difficulty != 3)
         return NULL;
 
-    obj_tag *obj = control_create_object(sizeof(SOUNDTRIGGER), pos, rot, NULL);
+    obj_tag *obj = control_create_object_xbox(sizeof(SOUNDTRIGGER), XBOX_SIZEOF(SOUNDTRIGGER), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

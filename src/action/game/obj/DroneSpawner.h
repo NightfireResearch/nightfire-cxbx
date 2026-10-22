@@ -73,8 +73,8 @@ typedef struct DroneSpawner_tag {
 
 static_assert(sizeof(DroneSpawnerPlacement) == 0xb0, "DroneSpawnerPlacement is 0xb0 bytes");
 static_assert(offsetof(DroneSpawnerPlacement, distance) == 0x4c, "Wrong offset for DroneSpawnerPlacement.distance");
-LAYOUT_32(sizeof(DroneSpawnEntry_tag) == 0xac, "DroneSpawnEntry_tag is 0xac bytes");
-LAYOUT_32(sizeof(DroneSpawner_tag) == 0x3c, "DroneSpawner_tag is 0x3c bytes");
+XBOX_SIZE(DroneSpawnEntry_tag, 0xac);
+XBOX_SIZE(DroneSpawner_tag, 0x3c);
 static_assert(offsetof(DroneSpawner_tag, distance) == 0x18, "Wrong offset for DroneSpawner_tag.distance");
 static_assert(offsetof(DroneSpawner_tag, initFrame) == 0x24, "Wrong offset for DroneSpawner_tag.initFrame");
 static_assert(offsetof(DroneSpawner_tag, spawned) == 0x34, "Wrong offset for DroneSpawner_tag.spawned");

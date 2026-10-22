@@ -42,7 +42,8 @@ void __stdcall Menu_InitCredits(void) {
 // AUTOINJECT
 CreditsEntry* Menu_SetupCredits(uint *numLines_out) {
     if (credits_table == NULL) {
-        CreditsEntry *table = (CreditsEntry *)Menu_Malloc(sizeof(CreditsEntry) * CREDITS_NUM_LINES);
+        CreditsEntry *table = (CreditsEntry *)Menu_MallocXbox(sizeof(CreditsEntry) * CREDITS_NUM_LINES,
+                                                              XBOX_SIZEOF(CreditsEntry) * CREDITS_NUM_LINES);
         for (int i = 0; i < CREDITS_NUM_LINES; i++) {
             const CreditsLine *line = &credits_lines[i];
             table[i].txt_left = line->llabel != TXT_NONE ? Txt_BindLabel((Action_TranslatedText)line->llabel, 0) : line->ltext;
