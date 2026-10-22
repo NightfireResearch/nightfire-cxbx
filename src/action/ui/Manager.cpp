@@ -19,15 +19,11 @@
 
 #include "../game.h"
 #include "../input.h"
+#include "Menu.h"
+#include "../devtools/MenuProbe.h"
 
 // XBE_GLOBAL(0x0025f1d0, 0x938)
 M_MANAGER manager[5];
-
-// Called by address
-#define Menu_PlayMovie ((void (__cdecl *)(HASHCODE movie, uchar onPage, char loop, char unknown4, char unknown5, int unknown6))0x0007fe00)
-// Through the game's entry point (patched to ours) rather than straight to ours, as the original calls it: MenuProbe's
-// message log stands in front of it (devtools/MenuProbe.cpp)
-#define HandleMessage ((bool (__cdecl *)(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2))0x0008e320)
 
 // The history's entries: a page left and its focused control
 #pragma pack(push, 1)
@@ -392,7 +388,8 @@ int Manager_SendMessage(M_MANAGER *mgr, MessageType message, int arg1, int arg2)
         default: {
             if (mgr->currentPage == NULL)
                 return 0;
-            bool handled = HandleMessage(mgr->index, (M_CONTROL *)arg1, message, arg1, arg2);
+            // Handler_HandleMessage, or the menu message log in front of it
+            bool handled = MenuProbe_HandleMessage(mgr->index, (M_CONTROL *)arg1, message, arg1, arg2);
             switch (message) {
                 case MessageType_Scroll:
                 case MessageType_TextChanged:

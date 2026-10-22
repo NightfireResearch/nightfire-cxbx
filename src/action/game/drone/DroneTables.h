@@ -26,7 +26,7 @@ typedef struct DroneTypeSetting {
     short initialState;         // Drone_tag.initialState; -1 = worked out (Idle, or InitPatrol for patrollers)
     short secondState;          // Drone_tag.secondState when switching to this type; 0 = the active type's
     void (*init)(Drone_tag *drone);
-    void (*control)(DCVars_tag *dcv);   // per frame, instead of NDrone2_ControlSTANDARD
+    bool (*control)(DCVars_tag *dcv);   // per frame, instead of NDrone2_ControlSTANDARD
 } DroneTypeSetting;
 
 // Where a behaviour property lives in the three behaviour words: behaviour_util_getProperty(id, words) =

@@ -50,8 +50,8 @@ static uint32_t DynamicObjCount;
 // XBE_GLOBAL(0x001df41c, 0xc)
 #define ForcedList (*(LLISTINFO_tag*)0x001df41c)
 
-// The empty function the linker shares with others (nightfire-port calls it MP_DebugDraw)
-#define MP_DebugDraw ((void (__cdecl *)(void))0x000e0ec0)
+// Empty on the Xbox, where the linker shares one empty function among several (nightfire-port's name)
+static void MP_DebugDraw(void) {}
 
 // x kept within lo + radius and hi - radius, each bound compared before it is rounded to a float
 static void ClampInBox(float *x, float lo, float hi, float radius) {

@@ -21,14 +21,9 @@
 
 #include <bit>
 #include <stdint.h>
+#include "BOT.h"
 
 #pragma fp_contract(off)
-
-// Originals called by address
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define BOT_reactToDroneAlertMsg ((bool (__cdecl *)(uint msgType, Drone_tag *drone, void *extra))0x0001a260)
-// Returns in ST0; the level and the loudest sound through the pointers
-
 
 // While set, no drone sees or hears anything (the cheat)
 extern uint32_t switch_BLIND_DRONES;

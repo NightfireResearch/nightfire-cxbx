@@ -13,6 +13,7 @@
 #include <bit>
 #include <math.h>
 #include <string.h>
+#include "../drone/BOT.h"
 
 #pragma fp_contract(off)
 
@@ -66,9 +67,6 @@ static_assert(std::bit_cast<uint32_t>(DOOR_CLEARANCE) == 0x3e99999a, "not the or
 // The texts shown here
 #define TXT_DOOR_MSG ((Action_TranslatedText)0x0200000b)
 #define TXT_DOOR_UNLOCKED ((Action_TranslatedText)0x02000003)
-
-// The originals, called by address
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *drone))0x0001a190)
 
 // AUTOINJECT
 void Door_Init(void) {

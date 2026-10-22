@@ -249,7 +249,6 @@ void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,floa
 
 }
 
-
 // AUTOINJECT
 void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushort posY, ushort width, ushort height) {
   viewer_tag *viewer;
@@ -284,9 +283,6 @@ void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushor
   Camera_ScreenCoords(idx, (float)posX, (float)posY, (float)width, (float)height);
   return;
 }
-
-
-
 
 // AUTOINJECT
 void Camera_CreateCameras(void) {
@@ -338,9 +334,6 @@ void Camera_CreateCameras(void) {
             break;
     }
 }
-
-
-
 
 // Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap
 // stays unrounded, and a NaN gap counts as a fall.
@@ -686,10 +679,6 @@ void Camera_Shear(viewer_tag *vwr) {
     Vec_Copy(&ShearPosition, Mat_Position(vwr->viewMatrix));
     GlobalBlur = 0x91;
 }
-
-// The originals, called by address: unnamed placements of the view (also Player_PositionCamera's camera mode 2)
-#define Camera_PlaceAround ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x000245a0)
-#define Camera_PlaceAbove ((void (__cdecl *)(_VECTOR *position, viewer_tag *viewer, float scale))0x00024610)
 
 #define HALF_PI 1.5707964f
 #define PI 3.1415927f

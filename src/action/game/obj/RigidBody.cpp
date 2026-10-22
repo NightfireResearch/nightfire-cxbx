@@ -17,9 +17,6 @@
 
 #pragma fp_contract(off)
 
-// On the Xbox the shared empty function that returns 0 (psiLight_Create): no rigid body ever finds its light
-#define Light_FindMapLight ((light_tag *(__cdecl *)(_VECTOR *pos, float radius))0x000de5f0)
-
 static const float kImpulseClamp = 4.0f;
 static const float kRestingEpsilon = 0.0002f;
 

@@ -19,11 +19,7 @@
 
 #include <math.h>
 #include <stdint.h>
-
-// The originals, called by address: Ghidra's prototypes have untyped arguments
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-// Returns in ST0, unrounded
-
+#include "BOT.h"
 
 // One entry of Drone_SfxInfo, per speech or sound number (docs/drone/behaviours/drone_sfx_info.csv)
 typedef struct DroneSfxInfo {

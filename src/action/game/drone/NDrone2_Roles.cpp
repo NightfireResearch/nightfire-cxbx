@@ -23,25 +23,10 @@
 
 #include <bit>
 #include <math.h>
+#include "NDrone2.h"
+#include "NDrone2_Alert.h"
+#include "NDrone2_Cover.h"
 
-// The originals, called by address: other packages' and not yet ported
-#define NDrone2_AttackTalk ((bool (__cdecl *)(DCVars_tag *dcv))0x0003ba80)
-#define NDrone2_LogDroneDeath ((void (__cdecl *)(DCVars_tag *dcv))0x0003a1d0)
-#define DroneAnim_SetScript ((bool (__cdecl *)(HASHCODE script, ushort animState, ushort nextRow, uchar blend,     \
-                                               short endState, uint endMsg, uint flags, DCVars_tag *dcv))0x00034680)
-// Returns in ST0
-#define NDrone2_DistanceToAIPoint ((double (__cdecl *)(DCVars_tag *dcv, AIPoint_tag *point))0x00044e70)
-#define NDrone2_IsCivilian ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f50)
-#define NDrone2_OpenDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039ec0)
-#define NDrone2_DoorIsOpen ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f10)
-// FUN_00039df0 in Ghidra; nightfire-port's name
-#define NDrone2_FindElevatorDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039df0)
-// FUN_00046160 in Ghidra; nightfire-port's name
-#define NDrone2_MoveTo_RouteNode ((void (__cdecl *)(DCVars_tag *dcv, int node, AIRoute_tag *route))0x00046160)
-#define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char run))0x00046d90)
-
-#define NDrone2_GetPosForCornerCover ((void (__cdecl *)(CoverNode_tag *node, int side, _VECTOR *pos, _VECTOR *rot,  \
-                                                        int unused))0x00044490)
 
 // Return in ST0, unrounded
 

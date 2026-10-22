@@ -608,8 +608,8 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
 
 #pragma fp_contract(off)
 
-// On the Xbox the empty function the linker shares with others (0x000e0ec0)
-#define Window_Update ((void (__cdecl *)(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window))0x000e0ec0)
+// Empty on the Xbox, where the linker shares one empty function among several
+static void Window_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *window) {}
 
 // Every manager's skin sets
 // XBE_GLOBAL(0x00223a90, 0x10)

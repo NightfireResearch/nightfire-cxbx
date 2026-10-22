@@ -4,6 +4,9 @@
 // The initialisers of the tables in DroneTables.h, as the XBE has them, for DroneTables.cpp.
 
 // The functions of ours the tables point at
+bool NDrone2_ControlDTYPE_Astronaut(DCVars_tag *);
+bool NDrone2_ControlDTYPE_Ninja(DCVars_tag *);
+bool NDrone2_ControlDTYPE_Zoe(DCVars_tag *);
 bool NDrone2_DSTATE_AbseilDeath(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_AbseilHang(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
 bool NDrone2_DSTATE_AbseilInit(DCVars_tag *, Drone_tag *, obj_tag *, MsgObject *);
@@ -257,6 +260,7 @@ void NDrone2_init_DMODE_HostageTied(Drone_tag *);
 void NDrone2_init_DMODE_JustStand4Demo(Drone_tag *);
 void NDrone2_init_DMODE_Mayhew(Drone_tag *);
 void NDrone2_init_DMODE_MissionFailer(Drone_tag *);
+void NDrone2_init_DMODE_Normal(Drone_tag *);
 void NDrone2_init_DMODE_PartyGirl(Drone_tag *);
 void NDrone2_init_DMODE_PartyGirlLooker(Drone_tag *);
 void NDrone2_init_DMODE_RunToPoint(Drone_tag *);
@@ -265,6 +269,9 @@ void NDrone2_init_DMODE_Sniper(Drone_tag *);
 void NDrone2_init_DMODE_SniperAlert(Drone_tag *);
 void NDrone2_init_DMODE_Stealth(Drone_tag *);
 void NDrone2_init_DMODE_Zoe(Drone_tag *);
+
+// The game's empty init functions, which the linker made one
+static void NDrone2_initNothing(Drone_tag *drone) {}
 
 #define DRONE_STATE_FUNCS_INIT { \
     /*   0 DSTATE_Global                      */ NDrone2_DSTATE_Global, \
@@ -520,31 +527,31 @@ void NDrone2_init_DMODE_Zoe(Drone_tag *);
 }
 
 #define DRONE_MODE_SETTINGS_INIT { \
-    /*  0 */ { 0, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
-    /*  1 */ { 1, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
-    /*  2 */ { 1, 1, 0, 1.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  0 */ { 0, 1, 0, 0.0f, NDrone2_init_DMODE_Normal }, \
+    /*  1 */ { 1, 1, 0, 0.0f, NDrone2_init_DMODE_Normal }, \
+    /*  2 */ { 1, 1, 0, 1.0f, NDrone2_init_DMODE_Normal }, \
     /*  3 */ { 2, 1, 0, 0.0f, NDrone2_init_DMODE_Sniper }, \
     /*  4 */ { 1, 1, 0, 0.0f, NDrone2_init_DMODE_Stealth }, \
-    /*  5 */ { 6, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  5 */ { 6, 1, 0, 0.0f, NDrone2_init_DMODE_Normal }, \
     /*  6 */ { 7, 1, 0, 1.0f, NDrone2_init_DMODE_RunToPoint }, \
-    /*  7 */ { 3, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /*  7 */ { 3, 1, 0, 0.0f, NDrone2_init_DMODE_Normal }, \
     /*  8 */ { 4, 1, 0, 0.0f, NDrone2_init_DMODE_HostageKiller }, \
     /*  9 */ { 5, 3, 0, 0.0f, NDrone2_init_DMODE_HostageTied }, \
     /* 10 */ { 5, 3, 0, 0.0f, NDrone2_init_DMODE_HostageTied }, \
     /* 11 */ { 8, 3, 0, 0.0f, NDrone2_init_DMODE_JustStand4Demo }, \
-    /* 12 */ { 21, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
+    /* 12 */ { 21, 1, 0, 0.0f, NDrone2_initNothing }, \
     /* 13 */ { 9, 3, 0, 0.0f, NDrone2_init_DMODE_Civilian }, \
     /* 14 */ { 10, 3, 0, 1.0f, NDrone2_init_DMODE_CivilianScared }, \
     /* 15 */ { 11, 1, 0, 0.0f, NDrone2_init_DMODE_MissionFailer }, \
     /* 16 */ { 12, 2, 0, 0.0f, NDrone2_init_DMODE_Mayhew }, \
-    /* 17 */ { 13, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
+    /* 17 */ { 13, 1, 0, 0.0f, NDrone2_initNothing }, \
     /* 18 */ { 14, 1, 0, 1.0f, NDrone2_init_DMODE_AlarmRaiser }, \
     /* 19 */ { 15, 1, 0, 0.0f, NDrone2_init_DMODE_SearchLight }, \
     /* 20 */ { 16, 1, 0, 0.0f, NDrone2_init_DMODE_Ambush }, \
     /* 21 */ { 17, 2, 0, 0.0f, NDrone2_init_DMODE_Zoe }, \
     /* 22 */ { 18, 3, 0, 0.0f, NDrone2_init_DMODE_PartyGirl }, \
     /* 23 */ { 19, 3, 0, 0.0f, NDrone2_init_DMODE_CivilianGuard }, \
-    /* 24 */ { 20, 1, 0, 0.0f, (void (*)(Drone_tag *))0x000408a0 /* NDrone2_init_DMODE_Normal */ }, \
+    /* 24 */ { 20, 1, 0, 0.0f, NDrone2_init_DMODE_Normal }, \
     /* 25 */ { 22, 3, 0, 0.0f, NDrone2_init_DMODE_CivDoorGuard }, \
     /* 26 */ { 23, 3, 0, 0.0f, NDrone2_init_DMODE_Mayhew }, \
     /* 27 */ { 24, 1, 0, 0.0f, NDrone2_init_DMODE_CastleChatGuard1 }, \
@@ -553,7 +560,7 @@ void NDrone2_init_DMODE_Zoe(Drone_tag *);
     /* 30 */ { 18, 3, 0, 0.0f, NDrone2_init_DMODE_PartyGirlLooker }, \
     /* 31 */ { 2, 1, 0, 0.0f, NULL }, \
     /* 32 */ { 26, 3, 0, 0.0f, NULL }, \
-    /* 33 */ { 30, 2, 0, 0.0f, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */ }, \
+    /* 33 */ { 30, 2, 0, 0.0f, NDrone2_initNothing }, \
     /* 34 */ { 8, 3, 0, 0.0f, NULL }, \
     /* 35 */ { 0, 0, 0, 9.18340949e-41f, NULL }, \
 }
@@ -572,11 +579,11 @@ void NDrone2_init_DMODE_Zoe(Drone_tag *);
     /* 10 */ { 18, 18, NULL, NULL }, \
     /* 11 */ { -1, 181, NULL, NULL }, \
     /* 12 */ { 28, 28, NULL, NULL }, \
-    /* 13 */ { 166, 167, NULL, (void (*)(DCVars_tag *))0x0003f910 /* no function in Ghidra */ }, \
+    /* 13 */ { 166, 167, NULL, NDrone2_ControlDTYPE_Ninja }, \
     /* 14 */ { 137, 137, NULL, NULL }, \
     /* 15 */ { 0, 0, NULL, NULL }, \
     /* 16 */ { 55, 86, NULL, NULL }, \
-    /* 17 */ { 4, 0, NULL, (void (*)(DCVars_tag *))0x0003f8a0 /* no function in Ghidra */ }, \
+    /* 17 */ { 4, 0, NULL, NDrone2_ControlDTYPE_Zoe }, \
     /* 18 */ { 46, 0, NULL, NULL }, \
     /* 19 */ { 48, 102, NULL, NULL }, \
     /* 20 */ { -1, 0, NULL, NULL }, \
@@ -588,8 +595,8 @@ void NDrone2_init_DMODE_Zoe(Drone_tag *);
     /* 26 */ { -1, 0, NULL, NULL }, \
     /* 27 */ { 142, 0, NULL, NULL }, \
     /* 28 */ { 142, 0, NULL, NULL }, \
-    /* 29 */ { 189, 0, NULL, (void (*)(DCVars_tag *))0x0003f930 /* no function in Ghidra */ }, \
-    /* 30 */ { 195, 0, (void (*)(Drone_tag *))0x000e0ec0 /* empty function */, NULL }, \
+    /* 29 */ { 189, 0, NULL, NDrone2_ControlDTYPE_Astronaut }, \
+    /* 30 */ { 195, 0, NDrone2_initNothing, NULL }, \
     /* 31 */ { 196, 0, NULL, NULL }, \
     /* 32 */ { 197, 0, NULL, NULL }, \
     /* 33 */ { 198, 0, NULL, NULL }, \

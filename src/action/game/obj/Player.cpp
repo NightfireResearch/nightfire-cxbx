@@ -71,7 +71,6 @@ void Player_ResetStartPos(void) {
     player_start_position = 0;
 }
 
-
 // AUTOINJECT
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl) {
     Vec_Copy(pos, &player_start[player_start_positions_index].pos);
@@ -483,7 +482,6 @@ void Player_WeaponNone(obj_tag* obj) {
     obj->animState->animFlags &= 0xfe;
 
 }
-
 
 // The game's own view pitch clamp, and the one place mouse look reaches the player.
 //
@@ -927,7 +925,6 @@ void Player_Weapon(obj_tag *player) {
     Player_AutoAim(player);
 }
 
-
 // How far away autoaim will snap to a target, in its two bands. Player_InitWeapon sets them per game mode
 // and difficulty; the XBE's initial values (12, 18) are the same as the normal-difficulty ones.
 // XBE_GLOBAL(0x00181a40, 0x4)
@@ -1299,7 +1296,6 @@ float Plr_DMod_Normal = 1.0f;
 // XBE_GLOBAL(0x0017e8e4, 0x4)
 float Plr_DMod_Hard = 1.25f;
 
-
 // Level 0x700004C has no name in assets.h; it is scored like the late levels (the Ravine is 0x700004B).
 #define HT_Level_Unnamed4C 0x700004C
 
@@ -1508,8 +1504,6 @@ extern float debug_cam_posy;  // height of camera mode 8's overhead view above t
 
 // The bone AnimGetBoneWorldTrans gives the head for (also Player_Update's breath effect).
 #define BONE_HEAD 0x80000005
-
-
 
 // AUTOINJECT
 void Player_PositionCamera(obj_tag *player) {
@@ -1738,10 +1732,6 @@ void Player_PositionCamera(obj_tag *player) {
 // Substates, health and death, and walking (the substate handlers Player_Update calls)
 // ---------------------------------------------------------------------------------------------------------------
 
-// The originals, called by address
-#define MP_PlayerKilled ((void (__cdecl *)(obj_tag *player))0x000a1fc0)
-#define MP_ReSpawn ((bool (__cdecl *)(obj_tag *player, short playerNum))0x0009f0b0)
-
 #define CheatInfo (*((CheatInfo_t*)0x001f65dc))
 extern uint8_t debug_scanmode;  // the player starts every level flying (MovementType_ScanMode)
 // XBE_GLOBAL(0x001f6648, 0xc) is GRAVITY_VECTOR: in zero G its y is 0
@@ -1755,13 +1745,11 @@ extern uint8_t debug_scanmode;  // the player starts every level flying (Movemen
 #define MATERIAL_0D 0x0d
 #define MATERIAL_0E 0x0e
 
-
 // The level and the original's text for a death in multiplayer
 #define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
 #define TXT_MP_KILLED ((Action_TranslatedText)0x02000038)  // with the killer's name
 
 void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
-
 
 // What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
 static float Magnitude(float x) {
@@ -3324,10 +3312,6 @@ void Player_CollisionHandler(obj_tag *player) {
 // Making the player (Player_Init)
 // ---------------------------------------------------------------------------------------------------------------
 
-
-// The camera updater, by its original address (which jumps to ours), as the game has it
-#define PLAYER_POSITION_CAMERA ((cameraUpdateFunc)0x000a8a60)
-
 // XBE_GLOBAL(0x001637c0, 0x1d0)
 #define MP_skins ((MP_skin*)0x001637c0)
 // The fists' models, by BLData::punchSkin
@@ -3495,7 +3479,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     HUD_Update(blData, player);
     Player_InitWeapon(blData, player);
     _Player_InitGrapple(blData, player);
-    Camera_SetUpdator(playerNum, player, PLAYER_POSITION_CAMERA);
+    Camera_SetUpdator(playerNum, player, (cameraUpdateFunc)Player_PositionCamera);
     player->effectFlags |= 0x800;
     blData->active = 1;
     blData->frozen = 0;
@@ -3539,7 +3523,6 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
 // ---------------------------------------------------------------------------------------------------------------
 // Zero G, and flying (Player_ZeroG, Player_SSScanMode)
 // ---------------------------------------------------------------------------------------------------------------
-
 
 // Zero G: turned at 0.4 pi a second (slowed by the zoom aiming), and moved along all three of the player's own axes by
 // the sticks and jump and crouch, the speed eased a fifth of a fifth of the way a frame towards a tenth, within +-0.05
@@ -3740,7 +3723,6 @@ void __declspec(naked) Player_SSScanMode(void) {
 // Using things (Player_Activate)
 // ---------------------------------------------------------------------------------------------------------------
 
-
 // What the player uses: with the standing icon showing, the nearest creep wall (true); otherwise whatever is within 1
 // of the point in front of his eyes - scripted objects, doors (true when one opens), switches, triggers, cars, gun
 // turrets and emplacements, monitors, the worm, and locks he is in front of. The original takes the player's data in
@@ -3837,8 +3819,6 @@ void __declspec(naked) Player_Activate(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // Every frame (Player_Update)
 // ---------------------------------------------------------------------------------------------------------------
-
-#define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
 
 // XBE_GLOBAL(0x002adf32, 0x1)
 uint8_t benchmark;  // set, the player stands still

@@ -37,12 +37,8 @@
 
 #pragma fp_contract(off)
 
-// The originals, called by address
-#define BOTWEAP_changeWeapon ((uint (__cdecl *)(Drone_tag *drone, short weapon))0x0001f320)
-#define BOT_postLoadInit ((void (__cdecl *)(Drone_tag *drone))0x0001b8e0)
-// FUN_0001ad70; nightfire-port's BOT_setGender
-#define BOT_setGender ((void (__cdecl *)(Drone_tag *drone))0x0001ad70)
 #include "../obj/BodyGlow.h"
+#include "BOTWEAP.h"
 
 // XBE_GLOBAL(0x00164068, 0x4)
 float DroneDamage_Easy = 2.0f;
@@ -102,9 +98,6 @@ float DroneCaptain_Mod_BulletDamage = 2.0f;
 float DroneCaptain_Mod_BulletAccuracy = 2.0f;
 // XBE_GLOBAL(0x001640e4, 0x4)
 float DroneCaptain_Mod_Health = 2.0f;
-
-// DroneAnim_PreTransCallback, the drones' root motion callback: stored, not called
-#define DroneAnim_RootMotion ((AnimRootMotionFunc)0x00033320)
 
 // Every live drone (NPCGlobals.NDrone2List is its head, NDrone2Count its count)
 #define NDrone2s (*(LLISTINFO_tag *)0x001e5634)
@@ -751,7 +744,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         DroneAnim_SetAnimD(DANIM_START, 0, drone);
     }
     if (gameObj->animState != NULL) {
-        gameObj->animState->animObj.rootMotionCallback = DroneAnim_RootMotion;
+        gameObj->animState->animObj.rootMotionCallback = DroneAnim_PreTransCallback;
         gameObj->animState->currentWeaponId = (char)weapon;
     }
 

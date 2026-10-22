@@ -26,13 +26,6 @@
 #include <stdint.h>
 #include "../obj/Env.h"
 
-// The originals, called by address: Ghidra's prototypes have untyped arguments
-// game.cpp's GameFlow_GetState is an unpatched draft
-#define BOT_soundEffect ((void (__cdecl *)(DCVars_tag *dcv, int sound))0x0001aca0)
-#define BOT_handlePain ((void (__cdecl *)(DCVars_tag *dcv, float damage, ushort unknown, short location))0x0001b6b0)
-// Tells the drones around obj of something at pos (here, that the drone is hurt)
-
-
 // Drone_tag.armour bits
 #define ARMOUR_VEST 1
 #define ARMOUR_JACKET 2

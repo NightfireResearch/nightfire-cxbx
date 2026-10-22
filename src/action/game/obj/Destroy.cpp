@@ -15,9 +15,6 @@
 
 #pragma fp_contract(off)
 
-// On the Xbox the shared empty function that returns 0 (psiLight_Create): no destroyable ever finds its light
-#define Light_FindMapLight ((light_tag *(__cdecl *)(_VECTOR *pos, float radius))0x000de5f0)
-
 // The explosions of the kinds of key 2: 1, 2 and the rest
 #define DESTROY_EXPLOSION_1 ((HASHCODE)0x06000027)
 #define DESTROY_EXPLOSION_2 ((HASHCODE)0x0600004f)

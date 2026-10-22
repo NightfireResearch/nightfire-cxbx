@@ -17,6 +17,7 @@
 #include <float.h>
 #include <math.h>
 #include <string.h>
+#include "../game/drone/NDrone2_Cover.h"
 
 // XBE_GLOBAL(0x00274cac, 0x4)
 float MoveTest_MaxSlope;
@@ -49,12 +50,6 @@ static_assert(offsetof(cel_tag, boundNodes) == 0x30, "Wrong offset for cel_tag.b
 static_assert(offsetof(cel_tag, boundLinks) == 0x34, "Wrong offset for cel_tag.boundLinks");
 static_assert(sizeof(portal_tag) == 0x7c, "portal_tag is 0x7c bytes");
 static_assert(offsetof(portal_tag, corners) == 0x28, "Wrong offset for portal_tag.corners");
-
-// The originals, called by address. These return in ST0, unrounded.
-// Writes the point of the line through a and b nearest p; its return value is not used
-// Where the segments a0-a1 and b0-b1 cross in plan (x and z); zero if they do not
-// The cels a query's ray passes through; the count goes in *count
-#define NDrone2_ReachedDestNode ((bool (__cdecl *)(AIRoute_tag *route, DCVars_tag *dcv))0x000446b0)
 
 // The cels the last ray of AINetwork_TestRayCels and of AINetwork_BoundsTest passed through
 // XBE_GLOBAL(0x001ee42c, 0x4)

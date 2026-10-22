@@ -18,19 +18,9 @@
 
 #include <bit>
 #include <math.h>
-
-// The originals, called by address: Ghidra's prototypes have untyped arguments
-#define NDrone2_ReFindMissionPath ((bool (__cdecl *)(DCVars_tag *dcv))0x00047290)
-// FUN_00046c20 and FUN_00046d40 in Ghidra; the names are the PS2 build's
-// Returns in ST0, unrounded
-#define NDrone2_SetDronePartner ((bool (__cdecl *)(uchar dtype, DCVars_tag *dcv))0x00037000)
-#define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
-#define DroneFunc_FirstAttack ((short (__cdecl *)(DCVars_tag *dcv))0x0003ec20)
-#define NDrone2_CivilianScaredTalk ((void (__cdecl *)(DCVars_tag *dcv))0x0003c6a0)
-// FUN_000371d0 in Ghidra; the name is the PS2 build's. Where the opponent is from the door the drone guards, 0-3
-// (Drone_tag.guardZone)
-#define NDrone2_DoorGuardHandler ((uint (__cdecl *)(DCVars_tag *dcv))0x000371d0)
-
+#include "NDrone2_Alert.h"
+#include "NDrone2_Combat.h"
+#include "NDrone2_Roles.h"
 
 // What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
 #define MISSION_ROUTE_DONE 3

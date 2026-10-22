@@ -24,22 +24,6 @@
 #include <math.h>
 #include <string.h>
 
-// The originals, called by address
-#define NDrone2_DisownCover ((void (__cdecl *)(DCVars_tag *dcv))0x00044210)
-#define NDrone2_CoverNodeOK ((ushort (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node, uint side, char flag))0x00044310)
-#define NDrone2_CoverAvailable ((bool (__cdecl *)(DCVars_tag *dcv, char flag))0x00046a10)
-#define DroneAnim_SetCombatMoveAnim ((void (__cdecl *)(DCVars_tag *dcv, float distance))0x000354c0)
-#define DroneAnim_ForceCrouchCover ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033870)
-#define DroneAnim_CanCrouchLean ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x000338b0)
-#define DroneAnim_CanCrouchStepOut ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033990)
-#define DroneAnim_CanStandLean ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033ac0)
-#define DroneAnim_CanStandStepOut ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033b70)
-#define DroneAnim_CanUseCornerAsLowCover ((bool (__cdecl *)(DCVars_tag *dcv, CoverNode_tag *node))0x00033bf0)
-#define NDrone2_AttackTalk ((bool (__cdecl *)(DCVars_tag *dcv))0x0003ba80)
-#define NDrone2_CanAltAttack ((bool (__cdecl *)(DCVars_tag *dcv, char flag))0x00043750)
-#define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
-
-
 // Returns in ST0, unrounded
 
 // The corner anims, a list per step for each mode and side: the entry for mode m and side s is at m * 2 + s. The sides

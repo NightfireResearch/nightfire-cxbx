@@ -27,7 +27,6 @@ obj_tag *HitByList[64];
 
 
 
-#define BOT_SetHealth ((void (__cdecl *)(Drone_tag *drone, float health))0x0001b120)
 
 // Bot messages sent here (docs/drone/bots-and-navigation, DSTATE_BotGlobal): 0x3a objective changed, 0x3b goal
 // complete, 0x3d cancel goals on an object, 0x43 a player died. 0x39, 0x3e and 0x3f are not in its table.

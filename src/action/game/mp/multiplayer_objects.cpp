@@ -43,7 +43,6 @@ extern MP_OBJ_EXT Protection;
 extern obj_tag *HitByList[64];
 
 
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 
 
 

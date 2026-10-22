@@ -19,10 +19,9 @@
 
 #include <bit>
 #include <math.h>
+#include "NDrone2_Cover.h"
 
 // The originals, called by address: Ghidra's prototypes have untyped arguments
-#define DroneAnim_SetScript ((bool (__cdecl *)(HASHCODE script, ushort animState, ushort nextRow, uchar blend,                                              short endState, uint endMsg, uint flags, DCVars_tag *dcv))0x00034680)
-#define NDrone2_SlideToPosition ((void (__cdecl *)(_VECTOR *pos, float speed, char turn, DCVars_tag *dcv))0x00043b20)
 
 // How far obj is from the drone. Not named on PS2; the name is ours.
 // FUNC_AT(0x0002faa0)

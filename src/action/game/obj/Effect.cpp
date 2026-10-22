@@ -116,9 +116,14 @@ HEINFO_tag EffectInfo[EFFECT_INFO_COUNT] = {
 DLISTINFO_tag EffectList;
 
 // The platform's particle update, MSVC's shared `return false` on the Xbox
-#define psiParticleUpdate ((bool (__cdecl *)(void *particles))0x000de5e0)
+static bool psiParticleUpdate(void *particles) {
+    return false;
+}
+
 // The platform's particle system: none on the Xbox (-1)
-#define psiCreateParticles ((int (__cdecl *)(int kind, _VECTOR *pos, plane_equ_tag *plane))0x000de5d0)
+static int psiCreateParticles(int kind, _VECTOR *pos, plane_equ_tag *plane) {
+    return -1;
+}
 
 // The laser's sparks
 static const HASHCODE kLaserSparks[5] = {(HASHCODE)0x020002d1, (HASHCODE)0x020002d2, (HASHCODE)0x020002d3,

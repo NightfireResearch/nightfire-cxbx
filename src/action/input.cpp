@@ -7,6 +7,7 @@
 #include "engine/mouseLook.h"
 #include "engine/mouseSteer.h"
 #include "devtools/Demo.h"
+#include "devtools/MenuProbe.h"
 #include "game/mp/multiplayer.h"
 #include "game.h"
 #include <math.h>
@@ -271,9 +272,6 @@ void Input_UpdateWithMouse(void) {
     Inject_KeyboardInput();
 }
 
-// The pads' poll, called by address: MenuProbe's scripts redirect it (devtools/MenuProbe.cpp)
-#define PollDevices ((void (__cdecl *)(void))0x000de5c0)
-
 // The sticks' response: a length through the table, in 255ths, from 0 to 128 in 127ths
 #define AnalogStickMapping (*(uchar(*)[129])0x0017c170)
 #define STICK_DEAD_ZONE 0.0002f
@@ -353,7 +351,7 @@ void Input_Update(void) {
     for (int i = 0; i < 4; i++)
         memset(PlayerInputs[i].fChannels, 0, sizeof(PlayerInputs[i].fChannels));
 
-    PollDevices();
+    MenuProbe_PollDevices();    // psiInput_PollDevices, or a menu script's pads in its place
     int players = GameState.CurrentLevelHashcode == HT_Level_Menu_Pre ? 4 : MPSettings.numPlayers;
     psiInput_MapInputs((PlayerInput_tag *)PlayerInputs, players);
 

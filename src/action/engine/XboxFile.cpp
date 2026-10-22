@@ -37,22 +37,13 @@
 #define FILE_LOG(...) ((void)0)
 #endif
 
-// The game does not read Win32's last-error value. XAPI keeps its own, in the XBE's TLS block:
-//
-//     XAPILIB::SetLastError(code)  ->  *(TLS[_tls_index] + 4) = code
-//     XAPILIB::GetLastError()      ->  return *(TLS[_tls_index] + 4)
-//
-// which is separate storage from the TEB slot Win32's SetLastError writes. That distinction is load bearing
-// rather than cosmetic: maybeReadFile decides whether an overlapped read is in flight or has failed by testing
+// The game reads the last error through XAPI's GetLastError, which XboxStartup.cpp makes Win32's (Xbox_GetLastError).
+// It is load bearing: maybeReadFile decides whether an overlapped read is in flight or has failed by testing
 // GetLastError() == ERROR_IO_PENDING, and if it reads a stale zero it concludes the read failed and calls
 // FS_FatalErrorHandler - the "disc may be dirty or damaged" screen, which never returns. So every Win32 call
-// below has its result mirrored into the XBE's slot.
-typedef void(__stdcall *XapiSetLastErrorFn)(uint32_t code);
-#define XapiSetLastError ((XapiSetLastErrorFn)0x000e9a4cu)
-
+// below leaves its result as the last error.
 static void PublishLastError(DWORD err) {
-    SetLastError(err);       // keep Win32's in step, for our own code and anything else that looks
-    XapiSetLastError(err);   // and the one the game actually reads
+    SetLastError(err);
 }
 
 // ---------------------------------------------------------------------------------------------------------------

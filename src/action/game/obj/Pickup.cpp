@@ -63,8 +63,8 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-// The bot's armour shown: the shared empty function on the Xbox
-#define BOTWEAP_setDroneArmour ((void (__cdecl *)(Drone_tag *drone))0x000e0ec0)
+// The bot's armour shown: empty on the Xbox, where the linker shares one empty function among several
+static void BOTWEAP_setDroneArmour(Drone_tag *drone) {}
 
 // The level whose ammo 0x2c pickups always hold 4
 #define PICKUP_LEVEL_FOUR 0x07000008

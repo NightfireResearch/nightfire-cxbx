@@ -1,4 +1,5 @@
 #include "NDrone2.h"
+#include "NDrone2_Cover.h"
 #include "../sp/SwitchChannels.h" // switch_channels, switch_channels_MusicVars
 #include "../../sound/music.h"    // Music_Event (ours, sound/music.cpp)
 #include "../../game.h"           // GameState
@@ -23,7 +24,6 @@
 #include <math.h>
 #include <stdint.h>
 #include <string.h>
-
 
 // Music event 2 is the alarm music. Its value picks the cue: 3 for the castle's own alarm (channel 0xa4,
 // CastleExterior only), 1 for the generic "alarm raised" channels 0x37 and 0x61.
@@ -192,9 +192,6 @@ void Drone_AlertStatusSet(char newStatus, DCVars_tag *dcv) {
 
 bool NDrone2_AttackTalk(DCVars_tag *dcv);   // NDrone2_Combat.cpp
 
-// The originals, called by address: Ghidra's prototypes have untyped arguments
-#define DroneAnim_SetScript ((void (__cdecl *)(HASHCODE script, short param_2, short param_3, char param_4, short param_5, int param_6, int param_7, DCVars_tag *dcv))0x00034680)
-
 // The drone plays its placement's script (Drone_tag::playScript) and then goes to its initial state. A few scripts
 // are handled on their own: 0x6000168 and 0x6000169 talk and attack at the end, 0x60007ac turns the drone round.
 // The ids used with DroneAnim_SetScript and friends are as the original passes them.
@@ -327,9 +324,6 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-
-// The originals, called by address: Ghidra's prototypes have untyped arguments
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
 
 // AnimGetBoneWorldTrans's bone argument, as these pass it: bit 31 set, and the bone
 #define WORLD_BONE(bone) (0x80000000 | (bone))

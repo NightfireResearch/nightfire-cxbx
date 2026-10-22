@@ -23,7 +23,7 @@ number of five to eight digits whose value lies inside the image (0x00010000-0x0
   code.other         an address inside code that is not a function's entry (D3D's state inside its section, a
                      callback's address in the middle of what Ghidra calls one function)
   constant           a number that lands inside code by chance: written with fewer than eight digits (sizes, masks,
-                     sizes), or a row of a data table
+                     sizes), a row of a data table, a #define of a bare number or a flags field's initialiser
   import.slot        a kernel import slot (the thunk table at 0x00189be0, the action engine's at 0x0015d160)
   vtable             the start of one of the game's vtables (or the word before it)
   rdata.string       a NUL-terminated string in .rdata
@@ -110,8 +110,14 @@ def injected_includes():
 def is_table_row(code):
     """Whether a line is only numbers and k-constants between braces and commas: a row of a data table. (Split, not
     one regular expression, which backtracks without end on a long row.)"""
-    words = [w for w in re.split(r"[\s{},]+", code) if w]
+    words = [w for w in re.split(r"[\s{},\\]+", code) if w]
     return bool(words) and all(re.fullmatch(r"0x[0-9a-fA-F]+u?|\d+|k\w+", w) for w in words)
+
+
+def is_flags(code):
+    """Whether the number is a mask: a #define of a bare number, or a flags or mask field's initialiser"""
+    return (re.fullmatch(r"\s*#\s*define\s+\w+\s+0x[0-9a-fA-F]+u?\s*(//.*)?", code) is not None
+            or re.search(r"\.\w*(?:[Ff]lags|[Mm]ask)\s*=\s*0x[0-9a-fA-F]+u?\s*,", code) is not None)
 
 
 def xbe_sections():
@@ -246,7 +252,7 @@ def audit():
                 elif PATCH_CALLS.search(code):
                     cls = "patch.site"
                     detail = funcs.get(a, function_containing(a) + "+")
-                elif len(m.group(1)) < 8 or is_table_row(code):
+                elif len(m.group(1)) < 8 or is_table_row(code) or is_flags(code):
                     cls = "constant"   # 0x40350, 0x10000, a row of a data table: a number that lands in the image
                 elif any(lo <= a < hi for lo, hi in code_ranges):
                     if a in funcs:

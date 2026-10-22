@@ -349,7 +349,7 @@ struct PICKUPINFO;
 MP_PICKUP* MP_getMPpickup(struct PICKUPINFO *info);
 obj_tag* MP_getProtectionObj_NotExt(void);
 void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay);
-void MP_sendTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint delay, uint senderId);
+void MP_sendTeamBotMessage(MPTeam team, uint msg, void *extraData, uint delay, uint senderId);
 void MP_setPlayerStatus(obj_tag *obj, ushort status, uint msg, uint unused, obj_tag *target, bool clear);
 bool MP_changeAssassinOrTarget(obj_tag *oldObj, obj_tag *newObj);
 void MPSound_Play(Action_SFX sfx);

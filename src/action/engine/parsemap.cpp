@@ -27,6 +27,7 @@
 #include "viewer.h"
 
 #include <string.h>
+#include "../sound/Sound.h"
 
 
 // XBE_GLOBAL(0x00274c80, 0x4)
@@ -793,7 +794,6 @@ texDataEntry *pTexData;
 // XBE_GLOBAL(0x00274b48, 0x4)
 bmpHeaderEntry *pBmpHeader;
 
-#define Sound_LoadMapSounds ((void (__cdecl *)(void *sounds))0x000cb870)
 
 // The map header block's data
 typedef struct MAPHEADER_tag {
@@ -1245,7 +1245,7 @@ bool parsemap_handle_block_id(char mainMap) {
         return false;
     case BLOCK_SOUNDS:
         if (mainMap)
-            Sound_LoadMapSounds(BlockData());
+            Sound_LoadMapSounds((int *)BlockData());
         return false;
     case BLOCK_TEXTURE_DATA_PCDX:
         pBmpHeader->textureInfo = (TextureInfo *)BlockData();

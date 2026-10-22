@@ -17,10 +17,6 @@
 #include <math.h>
 #include <string.h>
 
-// Originals called by address
-// DroneWeap_PlaceTertiary: a jump to DroneWeap_ThrowGrenade, which Ghidra names the same
-#define DroneWeap_PlaceTertiary ((void (__cdecl *)(DCVars_tag *dcv))0x00067bf0)
-
 // The entity events 3 and 4 move between datums 0x28 and 100 (our name)
 #define ENTITY_SWAPPED ((HASHCODE)0x02000312)
 

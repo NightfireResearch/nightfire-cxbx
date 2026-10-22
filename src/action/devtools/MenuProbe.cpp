@@ -161,6 +161,9 @@ typedef bool(__cdecl *HandlerFn)(uchar, M_CONTROL *, uint, uint, int, int);
 static struct { unsigned hashcode, address; } g_originals[32];
 static int g_originalCount = 0;
 static bool g_logging = false;
+// Whether MenuProbe_HandleMessage and MenuProbe_PollDevices go through the stand-ins
+static bool g_messagesStandIn = false;
+static bool g_pollStandIn = false;
 
 // A jump written over our replacement's entry to the original, so our code calling it by name runs the original too
 static void SendPortToOriginal(unsigned at) {
@@ -797,13 +800,30 @@ void MenuProbe_Install(void) {
         }
         printf("[menu] running the original 0x%x%s\n", address, colon ? " (handler)" : "");
     }
-    if ((g_logging || g_originalCount > 0) && XbeOriginal_Redirect(kHandlerHandleMessage, (const void *)&LoggedHandleMessage) && g_logging)
-        printf("[menu] logging every handler message (%d types skipped)\n", g_skipCount);
+    if (g_logging || g_originalCount > 0) {
+        g_messagesStandIn = XbeOriginal_Redirect(kHandlerHandleMessage, (const void *)&LoggedHandleMessage);
+        if (g_messagesStandIn && g_logging)
+            printf("[menu] logging every handler message (%d types skipped)\n", g_skipCount);
+    }
     char script[MAX_PATH] = "";
     GetPrivateProfileStringA("Settings", "MenuScript", "", script, sizeof(script), ".\\settings.ini");
     if (script[0] != 0 && LoadScript(script)) {
         CreateDirectoryA("menu_shots", NULL);
         XbeOriginal_Redirect(kPollDevices, (const void *)&ScriptedPollDevices);
         XbeOriginal_Redirect(kPollDevicesThunk, (const void *)&ScriptedPollDevices);
+        g_pollStandIn = true;
     }
+}
+
+void MenuProbe_PollDevices(void) {
+    if (g_pollStandIn)
+        ScriptedPollDevices();
+    else
+        psiInput_PollDevices();
+}
+
+bool MenuProbe_HandleMessage(uchar managerNum, M_CONTROL *control, uint message, int arg1, int arg2) {
+    if (g_messagesStandIn)
+        return LoggedHandleMessage(managerNum, control, message, arg1, arg2);
+    return Handler_HandleMessage(managerNum, control, message, arg1, arg2);
 }

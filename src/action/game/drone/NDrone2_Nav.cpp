@@ -15,10 +15,6 @@
 
 #pragma fp_contract(off)
 
-// Returns in ST0, unrounded
-// The original, called by address
-#define Vec_Mul_F3 ((void (__cdecl *)(_VECTOR *out, _VECTOR *in, float x, float y, float z))0x000d72d0)
-
 // Where NDrone2_CanWalkStraightTo last tested a walk to (BOTSTATE_checkAttackMove reads it)
 #define WalkTestTarget (*(_VECTOR *)0x001ee420)
 

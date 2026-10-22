@@ -20,7 +20,9 @@
 #define GameBotStats XbeOurs(0x00163628)
 
 // Word by word. A function the tables name by C++ name is ours once ported, while the game's copy holds its address,
-// whose jump leads to ours: the same function, so a word that differs only that way matches.
+// whose jump leads to ours: the same function, so a word that differs only that way matches. So does an empty function
+// of ours (a bare ret) where the game's copy has the linker's shared empty one.
+#define SHARED_EMPTY 0x000e0ec0u
 static int Compare(const char *name, const void *ours, const void *theirs, size_t size, size_t entry) {
     if (memcmp(ours, theirs, size) == 0)
         return 0;
@@ -29,7 +31,7 @@ static int Compare(const char *name, const void *ours, const void *theirs, size_
         size_t n = size - i < 4 ? size - i : 4;
         memcpy(&a, (const uchar *)ours + i, n);
         memcpy(&b, (const uchar *)theirs + i, n);
-        if (a != b && XbeOriginal_Target(b) != a) {
+        if (a != b && XbeOriginal_Target(b) != a && !(b == SHARED_EMPTY && *(const uchar *)(size_t)a == 0xc3)) {
             printf("[drone tables] %s differs from entry %u (byte 0x%x): ours %08x, the game's %08x\n", name,
                    (uint)(i / entry), (uint)i, a, b);
             return 1;

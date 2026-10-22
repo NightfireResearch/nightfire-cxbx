@@ -40,22 +40,12 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-// The multiplayer module's, called by address
-#define MP_GetTeamScore ((char *(__cdecl *)(ushort team))0x0009d840)
-#define MP_GetPlayerScore ((char *(__cdecl *)(short player))0x0009d8d0)
-#define MP_IsFlagParent ((bool (__cdecl *)(obj_tag *obj, ushort team))0x0009d980)
-#define MP_IsBluePrintParent ((bool (__cdecl *)(obj_tag *obj))0x0009d9b0)
-#define MP_ObjTeamHasGEObj ((bool (__cdecl *)(obj_tag *obj, int part))0x0009d9d0)
-#define MP_getUplinkStatus ((short (__cdecl *)(short uplink))0x0009e2a0)
-#define MP_GetRadarObjects ((ushort (__cdecl *)(obj_tag *obj, RADAROBJ **list))0x0009da80)
-
 // Sprite 3 of the multiplayer score pane is gone (no teams); the PS2 build's name
 // XBE_GLOBAL(0x002790b2, 0x1)
 uint8_t FuckOffSprite3;
 // HUD_UpdateNightSightPane's frame count, every other frame its scanlines jump
 // XBE_GLOBAL(0x002790d2, 0x1)
 uint8_t NightSightScanline;
-
 
 // AUTOINJECT
 void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort state) {
@@ -488,7 +478,6 @@ void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cre
     }
 }
 
-
 // AUTOINJECT
 void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4) {
 	  
@@ -521,6 +510,8 @@ static int16_t ttimer;
 // XBE_GLOBAL(0x002790bc, 0x2)
 static int16_t ctimer;
 
+// The update of the panes that have none: the linker's one empty function on the Xbox
+static void HUD_UpdateNothing(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {}
 
 // The mission-status pane: "mission failed" banners and the like (message type 3), with the reason for the
 // failure (Mission_FailLabel) as its second line. Its sprite info (3 sprites) is still the game's.
@@ -549,14 +540,13 @@ static HUDPANECREATE_tag SecCamPane = {0, 0, 640, 480, HUD_CreateDefault, HUD_Up
 // XBE_GLOBAL(0x00180a74, 0x1c)
 static HUDPANECREATE_tag OICWPane = {0, 0, 640, 480, HUD_CreateOICWPane, HUD_UpdateOICWPane, (SpriteInfo*)0x00180940 /* OICWSprInfo */, 7, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180b98, 0x1c)
-static HUDPANECREATE_tag RoninPane = {0, 0, 640, 480, HUD_CreateShrink, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180a90 /* RoninSprInfo */, 6, 0, 384, 0, 0};
+static HUDPANECREATE_tag RoninPane = {0, 0, 640, 480, HUD_CreateShrink, HUD_UpdateNothing, (SpriteInfo*)0x00180a90 /* RoninSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180cc0, 0x1c)
-static HUDPANECREATE_tag LaserPane = {0, 0, 640, 480, HUD_CreateShrink, (HUDPANE_updateFunc)0x000e0ec0 /* __profiling_or_debugging_hook_point */, (SpriteInfo*)0x00180bb8 /* LaserSprInfo */, 6, 0, 384, 0, 0};
+static HUDPANECREATE_tag LaserPane = {0, 0, 640, 480, HUD_CreateShrink, HUD_UpdateNothing, (SpriteInfo*)0x00180bb8 /* LaserSprInfo */, 6, 0, 384, 0, 0};
 // XBE_GLOBAL(0x00180ec4, 0x1c)
 static HUDPANECREATE_tag SpacePane = {0, 0, 640, 480, HUD_CreateDefault, HUD_UpdateSpacePane, (SpriteInfo*)0x00180ce0 /* SpaceSprInfo */, 11, 0, 0, 0, 0};
 // XBE_GLOBAL(0x00181774, 0x1c)
 static HUDPANECREATE_tag MsgPickupStatusPane = {160, 372, 0 /* HUD_InitPickupStatusPaneWidth */, 0, HUD_CreatePickupStatusPane, HUD_UpdateStatusPane, (SpriteInfo*)0x001815b8 /* PickupStatusSprInfo */, 5, 4, 24, 0, 0};
-
 
 // The three message panes are sized to the width their messages are wrapped to. That is not a constant, so the
 // compiler made each width a dynamic initialiser - these three, run by _cinit from the C++ initialiser table
@@ -610,7 +600,6 @@ void HUD_InitPickupStatusFormats(void) {
     PickupStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
 }
 
-
 // TODO: Change from 640x480 to generic
 // XBE_GLOBAL(0x00180388, 0x1e4)
 SpriteInfo RedeemerSpriteInfo[] = {
@@ -642,8 +631,6 @@ HUDPANECREATE_tag RedeemerPane = {
 	0, // Unused?
 	0 // Unused?
 };
-
-
 
 // The guided missile's sight's pieces
 #define GFX_REDEEMER_SIGHT      ((HASHCODE)0x0200045e)
@@ -777,7 +764,6 @@ SpriteInfo BloodSprInfo[] = {
 	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_COLOUR_FILL, 5, 0, 0, 0}, // Colour fill
 };
 
-
 // XBE_GLOBAL(0x0017f9a8, 0x1c)
 HUDPANECREATE_tag BloodPane = {
 	0,
@@ -794,7 +780,6 @@ HUDPANECREATE_tag BloodPane = {
 	0 // Unused?
 };
 
-
 // XBE_GLOBAL(0x0017fec8, 0x84)
 SpriteInfo SightSprInfo[] = { // Scope (square fitted to SCREEN_HEIGHT), left bar, right bar: the bars a pixel over it
 	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, SPRITE_SNIPER_SCOPE, 5, 0, 0, 0}, // Scope graphic centre
@@ -809,7 +794,7 @@ HUDPANECREATE_tag SightPane = {
 	SCREEN_WIDTH,
 	SCREEN_HEIGHT,
 	HUD_CreateShrink,
-	(HUDPANE_updateFunc)0x000e0ec0, // __profiling_or_debugging_hook_point
+	HUD_UpdateNothing,
 	SightSprInfo,
 	ARRAY_SIZE(SightSprInfo),
 	0,
@@ -823,7 +808,6 @@ void HUD_CreateAmmoPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag 
 	HUD_CalcWidthHeight(paneCreate, &paneCreate->width, &paneCreate->height);
 	HUD_CreateDefault(blData, hudPane, paneCreate, obj);
 }
-
 
 // Anchor point is bottom-right, hence negative coordinates
 // Also, all un-tested
@@ -1362,7 +1346,6 @@ HUDPANECREATE_tag HealthPane = {
 	0
 };
 
-
 // XBE_GLOBAL(0x00180ee0, 0x58)
 HUDPANECREATE_tag* PaneList[] = {
 	&AmmoPane,
@@ -1390,7 +1373,6 @@ HUDPANECREATE_tag* PaneList[] = {
 };
 
 static_assert(ARRAY_SIZE(PaneList) == NUM_PANES, "Bad size of pane list");
-
 
 // XBE_GLOBAL(0x00180fbc, 0x1c)
 static HUDPANECREATE_tag MPAmmoPane = {640, 480, 0, 26, HUD_CreateAmmoPane, HUD_UpdateAmmoPane, (SpriteInfo*)0x00180f38 /* MPAmmoSprInfo */, 3, 4, 24, 0, 0};
@@ -1431,7 +1413,6 @@ HUDPANECREATE_tag * MPPaneList[] = {
 
 static_assert(ARRAY_SIZE(MPPaneList) == NUM_PANES, "Bad size of pane list");
 
-
 // AUTOINJECT
 void HUD_Init(BLData *player, obj_tag *obj) {
 	
@@ -1450,7 +1431,6 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	ttimer = 0;
 	ctimer = 0;
 	player->hudInfo->crosshairSprite = NULL;
-
 
 	player->hudInfo->crosshairSprite = Sprite_Create2(&CrossHair);
 	if(player->hudInfo->crosshairSprite != NULL)
@@ -1481,7 +1461,6 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 		// If possible, also call the update function
 		if((*paneCreate->updateFunc) != NULL)
 			(*paneCreate->updateFunc)(player, &(player->hudInfo->pane[i]), obj);
-
 
 	}
 
@@ -1607,7 +1586,6 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 	}
 }
 
-
 // AUTOINJECT
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
@@ -1635,9 +1613,6 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		pane->spriteList[5]->maybeEnabled = 0xff;
 	}
 }
-
-
-
 
 // AUTOINJECT
 void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *unused) {

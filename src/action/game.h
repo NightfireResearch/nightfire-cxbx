@@ -6,6 +6,7 @@
 void Game_Run(void);
 void GameFlow_Main(void);
 bool movieFinished(void);
+void __profiling_or_debugging_hook_point(void);
 bool Graphics_IsPalI(void);
 bool IsNotPalI(void);
 bool Graphics_IsSomeGraphicsRegion(void);

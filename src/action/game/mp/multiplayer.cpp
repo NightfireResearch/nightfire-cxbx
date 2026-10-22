@@ -80,7 +80,6 @@ static int32_t Ftol(double x) {
 obj_tag *CurrentAssassinObjId;
 // XBE_GLOBAL(0x00261788, 0x4)
 obj_tag *AssassinTarget;
-#define BOT_init ((obj_tag* (__cdecl *)(short, _VECTOR *, _VECTOR *, obj_tag *, MPBOT *, char))0x0001b170)
 
 #define NUM_SKINS 29 // unique characters
 
@@ -1730,7 +1729,7 @@ void MP_sendBotMessage(obj_tag *obj, uint msg, uint extra, uint delay) {
 
 // A bot message to every bot of a team (any bot for NO_TEAM), after delay frames
 // AUTOINJECT
-void MP_sendTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint delay, uint senderId) {
+void MP_sendTeamBotMessage(MPTeam team, uint msg, void *extraData, uint delay, uint senderId) {
     MsgObject message;
     message.msgType = msg;
     message.scope = DSTATE_BotGlobal;
@@ -1738,7 +1737,7 @@ void MP_sendTeamBotMessage(MPTeam team, uint msg, obj_tag *obj, uint delay, uint
     message.receiver = team == NO_TEAM ? 0 : -1 - (int)team;
     message.createdFrame = GameState.NumFramesUnpaused;
     message.handleOnFrame = GameState.NumFramesUnpaused + delay;
-    message.extraData = obj;
+    message.extraData = extraData;
     Drone_SM_RouteMsg(&message);
 }
 

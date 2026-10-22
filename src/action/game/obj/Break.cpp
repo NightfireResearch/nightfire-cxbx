@@ -23,8 +23,8 @@
 // XBE_GLOBAL(0x001dc564, 0xc)
 LLISTINFO_tag ShardList;
 
-// The PS2's psiFinishedObjectShatter; on the Xbox a thunk to __WBINVD
-#define psiFinishedObjectShatter ((void (__cdecl *)(void))0x000dfb20)
+// The PS2's psiFinishedObjectShatter; on the Xbox a thunk to __WBINVD, which has nothing to do here
+static void psiFinishedObjectShatter(void) {}
 
 // The vertices and planes of a leaf box's triangles: shorts, the normals times 2^-14
 constexpr float kCollScale = 6.103888e-05f;

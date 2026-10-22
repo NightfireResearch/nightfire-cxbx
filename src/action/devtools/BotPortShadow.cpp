@@ -1209,7 +1209,8 @@ uint32_t RunCombatChoice(bool original) {
     obj_tag *opponent = A(8) == 0 ? NULL : A(3) == 0 ? world.target : &world.objs[A(BOTS)];
     char keep = (char)A(2), noMessage = (char)A(2);
     return CDECL(0x0001d750, BOTSTATE_combatWeaponChangeChoice,
-                 uint32_t (__cdecl *)(Drone_tag *, obj_tag *, char, char), drone, opponent, keep, noMessage) & 0xffff;
+                 uint32_t (__cdecl *)(Drone_tag *, obj_tag *, char, char, char), drone, opponent, keep, noMessage,
+                 (char)0) & 0xffff;
 }
 
 uint32_t RunStateChangeWeapon(bool original) {

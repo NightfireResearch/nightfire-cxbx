@@ -23,18 +23,14 @@
 #include "../../sound/Sound.h"
 #include <math.h>
 #include <string.h>
+#include "../../engine/Text.h"
+#include "../Autoaim.h"
 
 #pragma fp_contract(off)
 
 // The player's weapons: what he carries and carries over between the parts of a mission, choosing and cycling weapons,
 // the gun in the first-person view (its states, anims, sway and position), firing, the zoom, the auto-aim, the laser
 // sight, the muzzle flash and the watch on the wrist.
-
-// The originals, called by address
-#define Player_ResetZoom ((void (__cdecl *)(obj_tag *player))0x000b7100)
-#define Check_Target ((void (__cdecl *)(obj_tag *player))0x000b9580)
-#define Text_AddMsg ((void (__cdecl *)(char player, char p2, int p3, const char *text, int p5, short frames))0x000d1d70)
-#define MP_sendTeamBotMessage ((void (__cdecl *)(int p1, int message, int weapon, int p4, obj_tag *player))0x0009e430)
 
 #define CheatInfo (*((CheatInfo_t *)0x001f65dc))
 #define GlobalVars (*((GlobalVars_t *)0x001f6568))
@@ -922,7 +918,9 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 if (anim->switchingToWeaponId != anim->currentWeaponId) {
                     anim->currentWeaponId = anim->switchingToWeaponId;
                     if (MPSettings.maybeDroneAIEnabled)
-                        MP_sendTeamBotMessage(2, 0x44, player->animState->switchingToWeaponId, 0, player);
+                        MP_sendTeamBotMessage(NO_TEAM, 0x44,
+                                              (void *)(uintptr_t)player->animState->switchingToWeaponId, 0,
+                                              (uint)(uintptr_t)player);
                 }
                 blData->weaponObject->curState = GUN_RAISE;
             }
@@ -1379,7 +1377,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_Camera && blData->weaponObject->curState == GUN_IDLE && !CamHint) {
         CamHint = 1;
-        Text_AddMsg(blData->playerNum, 0, 1, Txt_BindLabel((Action_TranslatedText)0x1000216, 0), 0, 0xb4);
+        Text_AddMsg(blData->playerNum, 0, 1, (char *)Txt_BindLabel((Action_TranslatedText)0x1000216, 0), 0, 0xb4);
     }
 
     if (weapon->weaponVariantNum == Weap_Camera_Upgraded && blData->weaponObject->curState == GUN_IDLE) {
@@ -1433,7 +1431,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_RemoteMine && blData->weaponObject->curState == GUN_IDLE && !StickyHint) {
         StickyHint = 1;
-        Text_AddMsg(blData->playerNum, 0, 1, Txt_BindLabel((Action_TranslatedText)0x10002dc, 0), 0, 0xb4);
+        Text_AddMsg(blData->playerNum, 0, 1, (char *)Txt_BindLabel((Action_TranslatedText)0x10002dc, 0), 0, 0xb4);
     }
 }
 

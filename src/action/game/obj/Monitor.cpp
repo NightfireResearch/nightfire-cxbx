@@ -28,9 +28,6 @@ static_assert(offsetof(Create_Monitor_Params, unbreakable) == 0x30, "Bad offset 
 static_assert(offsetof(viewer_tag, someCel) == 0x4, "Bad offset of viewer_tag::someCel");
 static_assert(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::viewMatrix");
 
-// The player's own camera updater, handed back by its original address as Player_Init hands it over
-#define PLAYER_POSITION_CAMERA ((cameraUpdateFunc)0x000a8a60)
-
 #define EXPLOSION_MONITOR ((HASHCODE)0x06000027)
 
 // AUTOINJECT
@@ -68,7 +65,7 @@ static obj_tag *Monitor_FindCamera(LLNODE_tag *node, ushort group) {
 static void Monitor_GiveBack(MONITOR *monitor) {
     obj_tag *user = monitor->user;
     BLData *bloke = (BLData *)user->extraObjectData;
-    Camera_SetUpdator(monitor->viewerIndex, user, PLAYER_POSITION_CAMERA);
+    Camera_SetUpdator(monitor->viewerIndex, user, (cameraUpdateFunc)Player_PositionCamera);
     Player_Enable(user, NULL, 0);
     HUD_Enable(bloke->hudInfo, SecCam, 0, 0);
     HUD_Enable(bloke->hudInfo, Ammo, 1, 0);

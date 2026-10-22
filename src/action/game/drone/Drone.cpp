@@ -38,16 +38,14 @@
 
 // Another package's, or still the game's
 
-#define NDrone2_DoorIsOpen ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f10)
-#define NDrone2_OpenDoor ((void (__cdecl *)(DCVars_tag *dcv))0x00039ec0)
 
-#define BOT_setOtherPlayerInfo ((void (__cdecl *)(DCVars_tag *dcv))0x0001a660)
 #include "../obj/BodyGlow.h"
+#include "NDrone2_Combat.h"
+#include "NDrone2_Cover.h"
+#include "../obj/Env.h"
 
 // XBE_GLOBAL(0x001dfa2a, 0x1)
 uchar Drone_bDisableSystem;
-#define Env_Breath ((void (__cdecl *)(_VECTOR *pos, _VECTOR *dir, cel_tag *cel, int seed))0x00068db0)
-#define DroneFunc_ChooseSFX ((uint (__cdecl *)(uint first, uint last))0x00036270)
 
 // The lines Drone_BrokenObject picks from
 #define DRONE_BROKEN_OBJECT_SFX 0x40
@@ -911,7 +909,7 @@ void Drone_Control(obj_tag *gameObj) {
         if (MPSettings.maybeDroneAIEnabled
             && (gameObj->objectType == OBJECTTYPE_DEAD_DRONE || Control_Plr2Ind(gameObj) < 0))
             return;
-        void (*control)(DCVars_tag *dcv) = DroneTypeSettings[dcv.drone->dtype].control;
+        bool (*control)(DCVars_tag *dcv) = DroneTypeSettings[dcv.drone->dtype].control;
         if (control != NULL)
             control(&dcv);
         else

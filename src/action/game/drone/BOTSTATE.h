@@ -64,7 +64,8 @@ void BOTSTATE_setStateChange(Drone_tag *drone, uint state);
 short BOTSTATE_chooseCombatMove(DCVars_tag *dc);
 short BOTSTATE_chooseDodgeMove(DCVars_tag *dc, uint directions);
 uchar BOTSTATE_removeGoalsForObject(DCVars_tag *dc, obj_tag *obj, uint state);
-short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, char keepCurrent, char noMessage);
+short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, char keepCurrent, char noMessage,
+                                        char unused);
 uint BOTSTATE_changeWeapon(BOT_vars_t *bot, uint weapon, char keepCurrent, char noChange);
 short BOTSTATE_pickupWeaponChangeChoice(Drone_tag *drone, short weapon, char checkHeld, char checkLoaded);
 void BOTSTATE_processGoals(DCVars_tag *dc);

@@ -58,8 +58,8 @@
 #include "bullet.h"
 #include "car.h"
 
-// The linker's one empty function, which the game's empty Delete and Collide functions all became
-#define SHARED_EMPTY ((ObjectUpdateFunc)0x000e0ec0)
+// The game's empty Delete and Collide functions, which the linker made one
+static void SHARED_EMPTY(obj_tag *obj) {}
 
 // By ObjectType
 // XBE_GLOBAL(0x00163b98, 0x3fc) readonly relocate

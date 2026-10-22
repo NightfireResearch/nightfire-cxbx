@@ -9,6 +9,8 @@
 #include <string.h>
 #include <stdint.h>
 
+#include "../main.h"
+
 // ---------------------------------------------------------------------------------------------------------------
 // The game's startup, as run by the loader.
 //
@@ -41,11 +43,6 @@
 // The table of initialisers XapiInitProcess runs once the heap is made.
 #define InitTableBegin    ((void (**)(void))0x00163178u)
 #define InitTableEnd      ((void (**)(void))0x0016317cu)
-
-// The game's main, which AUTOINJECT has already replaced with the one in src/action/main.cpp. Called by
-// address so that this file does not have to declare a function named main, and so it goes through the same
-// patched entry point as everything else.
-#define GameMain        ((void (__stdcall *)(int, char **))0x000e8e90u)
 
 // ---------------------------------------------------------------------------------------------------------------
 // XAPI's last-error pair.
@@ -401,7 +398,7 @@ DWORD WINAPI mainXapiStartup(LPVOID unused) {
     printf("[startup] calling main\n");
     fflush(stdout);
 
-    GameMain(0, NULL);
+    Game_Main(0, NULL);
 
     // main loops forever, so this is only reached if it returns unexpectedly. The original would reboot here.
     printf("[startup] main returned - it is not supposed to\n");

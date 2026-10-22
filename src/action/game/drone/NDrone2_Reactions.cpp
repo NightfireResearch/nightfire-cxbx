@@ -17,9 +17,7 @@
 
 #include <bit>
 #include <math.h>
-
-// The originals, called by address
-#define NDrone2_IsCivilian ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f50)
+#include "NDrone2_Alert.h"
 
 // The anim state that gets a stunned drone back up
 #define DANIM_GET_UP 0x76

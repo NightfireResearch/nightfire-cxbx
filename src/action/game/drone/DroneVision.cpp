@@ -23,15 +23,9 @@
 #include <bit>
 #include <math.h>
 #include <stdint.h>
+#include "BOTSTATE.h"
 
 #pragma fp_contract(off)
-
-// Originals called by address
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
-#define BOTSTATE_combatWeaponChangeChoice ((ushort (__cdecl *)(Drone_tag *drone, obj_tag *opponent, char p3, char p4, char p5))0x0001d750)
-#define BOTSTATE_opponentIsMissile ((bool (__cdecl *)(Drone_tag *drone, obj_tag *obj))0x0001c600)
-#define BOTSTATE_reallyCloseCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c690)
-#define BOTSTATE_defaultCombatRange ((void (__cdecl *)(Drone_tag *drone))0x0001c6c0)
 
 // The bones a drone's line of sight tries in turn (DroneVision_OpponentLOS)
 // XBE_GLOBAL(0x00178088, 0x20) readonly relocate

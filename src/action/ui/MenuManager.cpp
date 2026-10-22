@@ -20,11 +20,9 @@
 
 #pragma fp_contract(off)
 
-// Not reimplemented, called by address
-#define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
-// Empty on the Xbox: the function the linker shares among empty ones
-#define Menu_StringInit ((void (__cdecl *)(int size))0x000e0ec0)
-#define Menu_StringKill ((void (__cdecl *)(void))0x000e0ec0)
+// Empty on the Xbox, where the linker shares one empty function among several
+static void Menu_StringInit(int size) {}
+static void Menu_StringKill(void) {}
 
 // The menu data (MenuManager_Load)
 // XBE_GLOBAL(0x0025fb08, 0x4)
@@ -392,7 +390,7 @@ void MenuManager_Update(void) {
     Menu_AlphaUpdate();
     Menu_UpdateTextFmt();
     Menu_ProcessDelayedMessages();
-    if (!psiMovieFinished()) {
+    if (!movieFinished()) {
         Menu_UpdateMovieCounter();
         if (Menu_InputAction(-1, ACTION_SKIP_CUTSCENE, 4))
             Menu_StopMovie(0);
@@ -495,7 +493,7 @@ void MenuManager_Monitor(void) {
     }
     if (GameState.CurrentLevelHashcode == HT_Level_Menu_Pre)
         return;
-    if (!psiMovieFinished() || (MenuManager_HighestStatus() == 0 && ScriptCam != 0)) {
+    if (!movieFinished() || (MenuManager_HighestStatus() == 0 && ScriptCam != 0)) {
         controller_wait = CONTROLLER_WAIT;
         return;
     }

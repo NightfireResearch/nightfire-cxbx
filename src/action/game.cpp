@@ -711,12 +711,11 @@ HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut
 
 // ---- Loading a level (ResetMap_Load), over several calls of the game flow's state 3
 
-// The empty function the linker shares with others, at the places nightfire-port calls View_Init, AnimCacheInit,
-// Sound_SetLogSfxFile and build_MakeCelOverlapBox
-#define View_Init ((void (__cdecl *)(void))0x000e0ec0)
-#define AnimCacheInit ((void (__cdecl *)(void))0x000e0ec0)
-#define Sound_SetLogSfxFile ((void (__cdecl *)(void))0x000e0ec0)
-#define build_MakeCelOverlapBox ((void (__cdecl *)(world_tag *world))0x000e0ec0)
+// Empty on the Xbox, where the linker shares one empty function among them (nightfire-port's names)
+static void View_Init(void) {}
+static void AnimCacheInit(void) {}
+static void Sound_SetLogSfxFile(void) {}
+static void build_MakeCelOverlapBox(world_tag *world) {}
 
 // The movie that follows a movie (0x072000xx to 0x071000xx), or the front end after one of the 0x073000xx ones;
 // otherwise the next level, its variant byte cleared
@@ -751,8 +750,6 @@ HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
     }
     return (HASHCODE)((uint)GameState.NextLevelHashcode & 0xff00ffff);
 }
-#define MP_Start ((void (__cdecl *)(void))0x000a25f0)
-#define MP_PostLoad_Init ((void (__cdecl *)(void))0x0009ed40)
 
 // The step ResetMap_Load is at (RESETMAP_)
 // XBE_GLOBAL(0x00279284, 0x4)
@@ -1307,10 +1304,6 @@ void bootup_bootup(void) {
 // ---- The page handed between the engines (PTPDATA): what the action engine passes to the driving engine and
 // ---- takes back from it
 
-#define GetSFXLanguage ((uint (__cdecl *)(void))0x000c53f0)
-#define SFXSetLanguage ((void (__cdecl *)(uint language))0x000c5400)
-#define SFXGetMode ((uint (__cdecl *)(void))0x000c5430)
-#define SFXSetVolume ((void (__cdecl *)(int volume))0x000c5060)
 // XBE_GLOBAL(0x0025d79e, 0x1)
 char menu_unlock_everything;  // Menu.cpp
 // XBE_GLOBAL(0x0025d7a0, 0x4)

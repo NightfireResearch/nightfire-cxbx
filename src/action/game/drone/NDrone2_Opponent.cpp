@@ -23,17 +23,9 @@
 #include <bit>
 #include <math.h>
 #include <stdint.h>
+#include "BOTSTATE.h"
 
 #pragma fp_contract(off)
-
-// Originals called by address
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *gameObj))0x0001a190)
-#define MP_sendBotMessage ((void (__cdecl *)(obj_tag *gameObj, uint msg, uintptr_t param, uint param2))0x0009e3e0)
-#define BOT_handleOpponentHistory ((obj_tag *(__cdecl *)(Drone_tag *drone, obj_tag *opponent))0x0001a990)
-#define BOTSTATE_increaseDistraction ((void (__cdecl *)(Drone_tag *drone, float amount))0x0001c6f0)
-#define MP_getProtectionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1600)
-#define MP_getDemolitionObj_NotExt ((obj_tag *(__cdecl *)(void))0x000a1610)
-
 
 // The bones a drone's line of sight tests in turn (Drone_tag.viewBone)
 

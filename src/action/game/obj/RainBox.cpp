@@ -26,8 +26,8 @@ int16_t Added;
 
 #pragma fp_contract(off)
 
-// The PS2's copy back from its scratchpad: the shared empty function on the Xbox
-#define psiCopyFromSP ((void (__cdecl *)(uint offset, void *dst, uint size))0x000e0ec0)
+// The PS2's copy back from its scratchpad: empty on the Xbox, where the linker shares one empty function
+static void psiCopyFromSP(uint offset, void *dst, uint size) {}
 
 // The levels whose drops barely drift, those with 0x80 model drops and their splashes, and those that start with
 // every drop falling (GameState.CurrentLevelHashcode)

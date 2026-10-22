@@ -227,11 +227,45 @@ parted by frame 400), so the three stay at the game's address until the head mov
 Checks: all 19 shadow suites as before (290 result lines, 0 differences); the 13 recordings, every frame, on our
 build and with the game's code as the original.
 
+## Calls and code pointers (22 October 2026)
+
+Every call our code made through an original's address, and every original's address it stored, is now a call to or
+the address of our function: standalone_audit.py's `code.called` 174 to 0 and `code.pointer` 77 to 0 (the worklist
+778 to 232, with `code.other`'s bit masks, which only looked like addresses, now counted as constants).
+
+- **Calls to ports.** 131 `#define Name ((type)0x...)` macros of functions already ours became their headers'
+  declarations. Where a macro's prototype differed from the port's, the original decided: BOTSTATE_combatWeaponChangeChoice
+  takes a fifth argument it never reads (every caller pushes five), MP_sendTeamBotMessage's third is the message's
+  `void *` payload (a weapon number for message 0x44), and the rest are casts the other callers already had.
+- **The functions the linker made one.** The linker folds identical functions into one: a bare `ret` at 0x000e0ec0
+  (View_Init, AnimCacheInit, Sensor_ApplyDamage, Window_Update, Menu_StringInit, the HUD panes and object types with
+  no update or delete, the drone modes with no init...), `return 0` (Light_FindMapLight with psiLight_Create),
+  `return false` and `return -1` (the particles). Each is now an empty function of its own where it is used.
+- **Tables.** tools/drone_tables.py names a `FUNC_AT` port as well as an `AUTOINJECT` one (NDrone2_init_DMODE_Normal,
+  the Zoe, Ninja and Astronaut controls, whose slot now returns `bool` as they do) and writes the shared empty
+  function as `NDrone2_initNothing`; devtools/DroneTablesCheck.cpp takes a bare `ret` of ours for it.
+- **Callbacks.** The player's camera updater (Player.cpp, Monitor.cpp) and the drones' root motion callback are ours;
+  nothing compares them with the originals'.
+- **The platform seams.** dsndSeam.cpp and d3dSeam.cpp named each library entry point's address only to give the
+  compiler its prototype; `DSoundSeam<Prototype>::Traced` and `D3DSeam<Prototype>::Traced` take the prototype as a type.
+  XboxFile.cpp's last error goes to Win32's alone (XboxStartup.cpp already points XAPI's at it), and XboxStartup.cpp
+  calls Game_Main (the macro also had it `__stdcall`, which it is not).
+- **The harness's stand-ins.** MenuProbe stood in front of the pads' poll and the handlers' messages by redirecting the
+  originals' entries, and our callers went through those entries to meet it. They call `MenuProbe_PollDevices` and
+  `MenuProbe_HandleMessage` (devtools/MenuProbe.h) instead, which go to the stand-ins while they are on and to ours
+  otherwise; the standalone build answers them with ours.
+- **D3D8's state.** The library's dirty flags, `D3DTextureState[4][32]` and `D3DRenderState[0xa6]` (0x001117cc to
+  0x00111c68, all zero in the XBE, the driving engine's layout) are ours in d3dSeam.cpp; only our ports wrote them,
+  and the library that read them is gone. The 128 vertex shader programs (0x0019cd08 to 0x001b4d78) are generated
+  by tools/vertex_shaders_action.py into Direct3D/VertexShaders.inc.
+
+Checks: the 19 shadow suites, 0 differences (effectport's fake for the cache flush thunk no longer logs its calls:
+our ports call empty functions of their own there); the 13 recordings, every frame, on our build and with the game's
+code as the original; MenuCheckLists' item lists and drone tables against the game's, 0 differ; and, for the D3D8
+state and the shaders, 78 frames of three recordings (every 300th) byte for byte the same as before them.
+
 ## Left for the standalone target
 
-- Table entries that are still the game's code: the drone mode table's `NDrone2_init_DMODE_Normal` (a jump to
-  `NDrone2_init_DMODE_Defaults`), three type-table controls Ghidra never made functions (0x0003f8a0, 0x0003f910,
-  0x0003f930), and the linker's shared empty function (0x000e0ec0) in it and in `control_funcs`.
 - Tables read through a base outside them: the cover anims' pointer lists (NDrone2_Cover.cpp), the Inflate
   length and distance tables (Inflate.cpp).
 - The language page's help lines (ui_frontend.cpp): our table of the game's string addresses, whose pointers labels

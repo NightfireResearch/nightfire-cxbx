@@ -4,6 +4,7 @@
 #include "mouseLook.h"
 #include "../input.h"
 #include "../devtools/Demo.h"
+#include "../devtools/MenuProbe.h"
 #include <string.h>
 #include <math.h>
 
@@ -857,10 +858,8 @@ void maybeInputShutdown(void) {
     double start = timestamp();
     int pending;
     do {
-        // Through the game's entry point (patched to ours) rather than straight to ours, as the original calls it:
-        // a test harness standing in front of psiInput_PollDevices (MenuProbe's scripted input, which also counts
-        // polls to time its scripts) then sees these polls too.
-        reinterpret_cast<void (*)(void)>(0x000e76a0)();
+        // psiInput_PollDevices, or a menu script's pads in its place (which also counts polls to time the script)
+        MenuProbe_PollDevices();
         pending = 0;
         for (int i = 0; i < 4; i++) {
             ControllerStateStruct *c = &XboxInputs.Controllers[i];

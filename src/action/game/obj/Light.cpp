@@ -57,6 +57,11 @@ void Light_AllocateEntries(void) {
     }
 }
 
+// None on the Xbox, where the linker shares psiLight_Create's `return 0` with it: no object finds its light
+light_tag *Light_FindMapLight(_VECTOR *pos, float radius) {
+    return NULL;
+}
+
 // AUTOINJECT
 bool Light_Delete(light_tag* light) {
     if (light == NULL) {

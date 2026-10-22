@@ -530,8 +530,9 @@ void __cdecl FakeTweakA(uint8_t a) {
     ShadowLog("tweaka(%d)", a);
 }
 
+// The thunk to __WBINVD (0x000dfb20), not logged: where the originals call it, our ports call empty functions of
+// their own
 void __cdecl FakeNothing(void) {
-    ShadowLog("wbinvd");
 }
 
 bool __cdecl FakePaused(short player) {

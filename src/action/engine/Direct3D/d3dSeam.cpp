@@ -201,11 +201,11 @@ struct D3DSeamTracedU32 {
     uint32_t operator|=(uint32_t v) const { return operator=(*ptr | v); }
     uint32_t operator&=(uint32_t v) const { return operator=(*ptr & v); }
 };
-#define D3D8_TRACED(name, addr) (D3DSeamTracedU32{ name, (uint32_t*)(addr) })
+#define D3D8_TRACED(name, word) (D3DSeamTracedU32{ name, &(word) })
 
 #else // !D3DSEAM_TRACE
 
-#define D3D8_TRACED(name, addr) U32_AT(addr)
+#define D3D8_TRACED(name, word) (word)
 static inline void D3DSeamTraceEndFrame(void) {}
 static inline void D3DSeamTraceLevelReset(void) {}
 template<typename... A> static inline void D3DSeamTraceCall(const char *, A...) {}
@@ -232,19 +232,21 @@ template<typename R, typename... A> struct D3DSeamTracedCall {
         return R();
     }
 };
+// An entry point by its Xbox prototype (F), and the backend that stands in for it, which takes the same arguments
+template<typename F> struct D3DSeam;
 #define D3DSEAM_TRACED_CALL_TYPE(CONV)                                                                      \
-    template<typename R, typename... A>                                                                     \
-    static inline D3DSeamTracedCall<R, A...> D3DSeamTraced(const char *name, R(CONV *)(A...),               \
-                                                           R(*backend)(A...)) {                             \
-        return { name, backend };                                                                           \
-    }
+    template<typename R, typename... A> struct D3DSeam<R(CONV *)(A...)> {                                   \
+        static D3DSeamTracedCall<R, A...> Traced(const char *name, R(*backend)(A...)) {                     \
+            return { name, backend };                                                                       \
+        }                                                                                                   \
+    };
 D3DSEAM_TRACED_CALL_TYPE(__stdcall)
 D3DSEAM_TRACED_CALL_TYPE(__fastcall)
 
 // ---------------------------------------------------------------------------------------------------------------
 // "Thin seam" reimplementation. These are Eurocom's own small wrapper functions that sat directly on top of
 // the statically-linked D3D8 library. Each D3D8::/XGRAPHC:: function they called is now a macro naming the
-// original's address and the D3D9 backend function that replaces it (see the dispatch wrapper above). The
+// original's prototype and the D3D9 backend function that replaces it (see the dispatch wrapper above). The
 // signatures below were taken from the originals, so they still matter: the backend function's signature has
 // to match.
 //
@@ -259,63 +261,30 @@ D3DSEAM_TRACED_CALL_TYPE(__fastcall)
 // added to this file later rather than trusting Ghidra's reported signature at face value.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define D3DDevice_SetRenderState_Simple_ADDR   0x00100580u
-#define D3DDevice_SetRenderState_CullMode_ADDR 0x001009b0u
-#define D3DResource_Register_ADDR              0x00105080u
-#define XGSetTextureHeader_ADDR                0x00112586u
-#define D3DDevice_SetGammaRamp_ADDR             0x001038f0u
-#define D3DDevice_SetViewport_ADDR              0x00103d50u
-#define D3DDevice_Clear_ADDR                    0x001043e0u
-#define D3DResource_Release_ADDR                0x00104fa0u
-#define D3DTexture_GetSurfaceLevel2_ADDR        0x00105130u
-#define D3DDevice_SetRenderState_FogColor_ADDR  0x00100960u
-#define D3DDevice_SetRenderState_YuvEnable_ADDR 0x00101c20u
-#define D3DDevice_Swap_ADDR                     0x00103730u
-#define D3DDevice_SetTexture_ADDR               0x00103eb0u
-#define D3DDevice_SetVertexShaderConstant1_ADDR 0x00102570u
-#define D3DDevice_SetDepthClipPlanes_ADDR       0x001019f0u
-#define D3DDevice_SetStreamSource_ADDR          0x001027a0u
-#define D3DDevice_SetIndices_ADDR               0x00104060u
-#define D3DDevice_SetVertexShader_ADDR          0x00102b50u
-#define D3DDevice_DrawVerticesUP_ADDR            0x00104860u
-#define D3DResource_BlockUntilNotBusy_ADDR      0x001050b0u
-#define D3D_KickOffAndWaitForIdle_ADDR          0x00103a90u
-#define D3DDevice_GetRenderTarget2_ADDR          0x00103d10u
-#define D3DDevice_GetDepthStencilSurface2_ADDR   0x00103d30u
-#define D3DDevice_SetRenderTarget_ADDR            0x001038d0u
-#define D3DDevice_DrawVertices_ADDR                0x001049c0u
-#define D3DDevice_SetRenderState_ZBias_ADDR         0x00100bf0u
-#define D3DDevice_SetTextureState_BorderColor_ADDR  0x00100fc0u
-#define D3DDevice_SetRenderState_ZEnable_ADDR              0x00101a90u
-#define D3DDevice_SetRenderState_NormalizeNormals_ADDR     0x00100a60u
-#define D3DDevice_SetRenderState_VertexBlend_ADDR          0x00100df0u
-#define D3DDevice_SetShaderConstantMode_ADDR               0x00102910u
-#define D3DDevice_SetVertexShaderConstantNotInline_ADDR    0x00102760u
-#define D3DDevice_GetBackBuffer2_ADDR                       0x00103c50u
 
 // D3DDevice_SetRenderState_CullMode(value) and D3DResource_Register(pTexture, data) are both plain __stdcall
 // functions taking their arguments on the stack in the normal way - confirmed via raw disassembly, unlike
 // D3DDevice_SetRenderState_Simple below.
 typedef void(__stdcall *D3DDevice_SetRenderState_CullModeFn)(int value);
-#define D3DDevice_SetRenderState_CullMode (D3DSeamTraced("D3DDevice_SetRenderState_CullMode", (D3DDevice_SetRenderState_CullModeFn)D3DDevice_SetRenderState_CullMode_ADDR, D3D9_SetCullMode))
+#define D3DDevice_SetRenderState_CullMode (D3DSeam<D3DDevice_SetRenderState_CullModeFn>::Traced("D3DDevice_SetRenderState_CullMode", D3D9_SetCullMode))
 
 typedef void(__stdcall *D3DResource_RegisterFn)(void *pTexture, uint32_t data);
-#define D3DResource_Register (D3DSeamTraced("D3DResource_Register", (D3DResource_RegisterFn)D3DResource_Register_ADDR, D3D9_ResourceRegister))
+#define D3DResource_Register (D3DSeam<D3DResource_RegisterFn>::Traced("D3DResource_Register", D3D9_ResourceRegister))
 
 typedef void(__stdcall *XGSetTextureHeaderFn)(uint32_t width, uint32_t height, uint32_t levels, uint32_t usage,
                                                int format, uint32_t pool, void *pTexture, uint32_t data, uint32_t pitch);
-#define XGSetTextureHeader (D3DSeamTraced("XGSetTextureHeader", (XGSetTextureHeaderFn)XGSetTextureHeader_ADDR, D3D9_XGSetTextureHeader))
+#define XGSetTextureHeader (D3DSeam<XGSetTextureHeaderFn>::Traced("XGSetTextureHeader", D3D9_XGSetTextureHeader))
 
 // D3DDevice_SetGammaRamp(flags, pRamp) and D3DResource_Release(pResource) - both confirmed plain __stdcall
 // via raw disassembly (RET 0x8 / RET 0x4 respectively, matching their param counts exactly).
 typedef void(__stdcall *D3DDevice_SetGammaRampFn)(uint32_t flags, void *pRamp);
-#define D3DDevice_SetGammaRamp (D3DSeamTraced("D3DDevice_SetGammaRamp", (D3DDevice_SetGammaRampFn)D3DDevice_SetGammaRamp_ADDR, D3D9_SetGammaRamp))
+#define D3DDevice_SetGammaRamp (D3DSeam<D3DDevice_SetGammaRampFn>::Traced("D3DDevice_SetGammaRamp", D3D9_SetGammaRamp))
 
 // Genuinely returns a value in EAX (a refcount-style result: either the resource's decremented reference
 // count, or 0 once it's fully destroyed) - confirmed via raw disassembly. Nothing called this before now, so
 // updating the typedef from void is safe (no existing callers relied on the wrong signature).
 typedef uint32_t(__stdcall *D3DResource_ReleaseFn)(void *pResource);
-#define D3DResource_Release (D3DSeamTraced("D3DResource_Release", (D3DResource_ReleaseFn)D3DResource_Release_ADDR, D3D9_ResourceRelease))
+#define D3DResource_Release (D3DSeam<D3DResource_ReleaseFn>::Traced("D3DResource_Release", D3D9_ResourceRelease))
 
 // D3DDevice_SetViewport(pViewport) - confirmed plain __stdcall (RET 0x4). D3DVIEWPORT here is the standard
 // D3D8 viewport struct (X, Y, Width, Height, MinZ, MaxZ), not something Eurocom-specific.
@@ -327,32 +296,32 @@ typedef void(__stdcall *D3DDevice_SetViewportFn)(D3DVIEWPORT *pViewport);
 static void D3D9Adapter_SetViewport(D3DVIEWPORT *pViewport) { // the backend takes plain fields, not this struct
     D3D9_SetViewport(pViewport->X, pViewport->Y, pViewport->Width, pViewport->Height, pViewport->MinZ, pViewport->MaxZ);
 }
-#define D3DDevice_SetViewport (D3DSeamTraced("D3DDevice_SetViewport", (D3DDevice_SetViewportFn)D3DDevice_SetViewport_ADDR, D3D9Adapter_SetViewport))
+#define D3DDevice_SetViewport (D3DSeam<D3DDevice_SetViewportFn>::Traced("D3DDevice_SetViewport", D3D9Adapter_SetViewport))
 
 // D3DDevice_Clear(rectCount, pRects, flags, colour, z, stencil) - Ghidra's own prototype only reports 5
 // params (20 bytes), but the function's own RET 0x18 cleans up 24 bytes, and the d3dClear call site (see
 // below) pushes exactly 6 dwords. It's a completely standard D3D8 Clear() signature - Ghidra just missed the
 // trailing stencil parameter (always 0 at this call site, which is likely why its analysis folded it away).
 typedef void(__stdcall *D3DDevice_ClearFn)(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil);
-#define D3DDevice_Clear (D3DSeamTraced("D3DDevice_Clear", (D3DDevice_ClearFn)D3DDevice_Clear_ADDR, D3D9_Clear))
+#define D3DDevice_Clear (D3DSeam<D3DDevice_ClearFn>::Traced("D3DDevice_Clear", D3D9_Clear))
 
 // All four below confirmed plain __stdcall via raw disassembly (RET immediate matches param count exactly).
 // Returns a surface pointer in EAX - the original d3dGetTextureSurfaceLevel0 caller discards it (called for
 // side effect only), but d3dRenderTargetSetup needs it, so the typedef reflects the real return value.
 typedef void *(__stdcall *D3DTexture_GetSurfaceLevel2Fn)(void *pTexture, uint32_t level);
-#define D3DTexture_GetSurfaceLevel2 (D3DSeamTraced("D3DTexture_GetSurfaceLevel2", (D3DTexture_GetSurfaceLevel2Fn)D3DTexture_GetSurfaceLevel2_ADDR, D3D9_GetSurfaceLevel2))
+#define D3DTexture_GetSurfaceLevel2 (D3DSeam<D3DTexture_GetSurfaceLevel2Fn>::Traced("D3DTexture_GetSurfaceLevel2", D3D9_GetSurfaceLevel2))
 
 typedef void(__stdcall *D3DDevice_SetRenderState_FogColorFn)(uint32_t colour);
-#define D3DDevice_SetRenderState_FogColor (D3DSeamTraced("D3DDevice_SetRenderState_FogColor", (D3DDevice_SetRenderState_FogColorFn)D3DDevice_SetRenderState_FogColor_ADDR, D3D9_SetFogColor))
+#define D3DDevice_SetRenderState_FogColor (D3DSeam<D3DDevice_SetRenderState_FogColorFn>::Traced("D3DDevice_SetRenderState_FogColor", D3D9_SetFogColor))
 
 typedef void(__stdcall *D3DDevice_SetRenderState_YuvEnableFn)(uint32_t enable);
-#define D3DDevice_SetRenderState_YuvEnable (D3DSeamTraced("D3DDevice_SetRenderState_YuvEnable", (D3DDevice_SetRenderState_YuvEnableFn)D3DDevice_SetRenderState_YuvEnable_ADDR, D3D9_SetYuvEnable))
+#define D3DDevice_SetRenderState_YuvEnable (D3DSeam<D3DDevice_SetRenderState_YuvEnableFn>::Traced("D3DDevice_SetRenderState_YuvEnable", D3D9_SetYuvEnable))
 
 typedef void(__stdcall *D3DDevice_SwapFn)(uint32_t type);
-#define D3DDevice_Swap (D3DSeamTraced("D3DDevice_Swap", (D3DDevice_SwapFn)D3DDevice_Swap_ADDR, D3D9_Swap))
+#define D3DDevice_Swap (D3DSeam<D3DDevice_SwapFn>::Traced("D3DDevice_Swap", D3D9_Swap))
 
 typedef void(__stdcall *D3DDevice_SetTextureFn)(uint32_t stage, void *pTexture);
-#define D3DDevice_SetTexture (D3DSeamTraced("D3DDevice_SetTexture", (D3DDevice_SetTextureFn)D3DDevice_SetTexture_ADDR, D3D9_SetTexture))
+#define D3DDevice_SetTexture (D3DSeam<D3DDevice_SetTextureFn>::Traced("D3DDevice_SetTexture", D3D9_SetTexture))
 
 // Eurocom's own frame-timing helper (Global namespace, not D3D8::) - reimplemented and injected in game.cpp,
 // where the comment explains why the original could not be used. Just a plain forward declaration here so
@@ -365,89 +334,89 @@ double timestamp(void);
 // (first two register-sized args in ECX/EDX, callee-cleans-up-nothing since nothing was pushed), so a plain
 // __fastcall function pointer works here without needing a hand-written asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant1Fn)(uint32_t constantIndex, float *pConstants);
-#define D3DDevice_SetVertexShaderConstant1 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant1", (D3DDevice_SetVertexShaderConstant1Fn)D3DDevice_SetVertexShaderConstant1_ADDR, D3D9_SetVertexShaderConstant1))
+#define D3DDevice_SetVertexShaderConstant1 (D3DSeam<D3DDevice_SetVertexShaderConstant1Fn>::Traced("D3DDevice_SetVertexShaderConstant1", D3D9_SetVertexShaderConstant1))
 
 // D3DDevice_SetVertexShaderConstant4(constant index in ECX, pointer to one D3DMATRIX - 16 floats - in EDX) -
 // confirmed via raw disassembly: reads exactly one MMX-copied D3DMATRIX through EDX, no stack args, plain RET.
 // Same genuine __fastcall match as SetVertexShaderConstant1 above.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstant4Fn)(uint32_t constantIndex, void *pMatrix);
-#define D3DDevice_SetVertexShaderConstant4 (D3DSeamTraced("D3DDevice_SetVertexShaderConstant4", (D3DDevice_SetVertexShaderConstant4Fn)0x001025d0u, D3D9_SetVertexShaderConstant4))
+#define D3DDevice_SetVertexShaderConstant4 (D3DSeam<D3DDevice_SetVertexShaderConstant4Fn>::Traced("D3DDevice_SetVertexShaderConstant4", D3D9_SetVertexShaderConstant4))
 
 // D3DDevice_SetTextureState_BorderColor(stage, colour) - confirmed plain __stdcall via raw disassembly (RET 0x8).
 typedef void(__stdcall *D3DDevice_SetTextureState_BorderColorFn)(uint32_t stage, uint32_t colour);
-#define D3DDevice_SetTextureState_BorderColor (D3DSeamTraced("D3DDevice_SetTextureState_BorderColor", (D3DDevice_SetTextureState_BorderColorFn)D3DDevice_SetTextureState_BorderColor_ADDR, D3D9_SetTextureBorderColor))
+#define D3DDevice_SetTextureState_BorderColor (D3DSeam<D3DDevice_SetTextureState_BorderColorFn>::Traced("D3DDevice_SetTextureState_BorderColor", D3D9_SetTextureBorderColor))
 
 // Four more plain __stdcall D3D8 render-state setters, only ever called from d3dSetup - confirmed via
 // functions_action.json (has_custom_variable_storage false, RET immediate matches param count).
 typedef void(__stdcall *D3DDevice_SetRenderState_ZEnableFn)(uint32_t value);
-#define D3DDevice_SetRenderState_ZEnable (D3DSeamTraced("D3DDevice_SetRenderState_ZEnable", (D3DDevice_SetRenderState_ZEnableFn)D3DDevice_SetRenderState_ZEnable_ADDR, D3D9_SetZEnable))
+#define D3DDevice_SetRenderState_ZEnable (D3DSeam<D3DDevice_SetRenderState_ZEnableFn>::Traced("D3DDevice_SetRenderState_ZEnable", D3D9_SetZEnable))
 typedef void(__stdcall *D3DDevice_SetRenderState_NormalizeNormalsFn)(uint32_t value);
-#define D3DDevice_SetRenderState_NormalizeNormals (D3DSeamTraced("D3DDevice_SetRenderState_NormalizeNormals", (D3DDevice_SetRenderState_NormalizeNormalsFn)D3DDevice_SetRenderState_NormalizeNormals_ADDR, D3D9_SetNormalizeNormals))
+#define D3DDevice_SetRenderState_NormalizeNormals (D3DSeam<D3DDevice_SetRenderState_NormalizeNormalsFn>::Traced("D3DDevice_SetRenderState_NormalizeNormals", D3D9_SetNormalizeNormals))
 typedef void(__stdcall *D3DDevice_SetRenderState_VertexBlendFn)(uint32_t value);
-#define D3DDevice_SetRenderState_VertexBlend (D3DSeamTraced("D3DDevice_SetRenderState_VertexBlend", (D3DDevice_SetRenderState_VertexBlendFn)D3DDevice_SetRenderState_VertexBlend_ADDR, D3D9_SetVertexBlend))
+#define D3DDevice_SetRenderState_VertexBlend (D3DSeam<D3DDevice_SetRenderState_VertexBlendFn>::Traced("D3DDevice_SetRenderState_VertexBlend", D3D9_SetVertexBlend))
 typedef void(__stdcall *D3DDevice_SetShaderConstantModeFn)(uint32_t value);
-#define D3DDevice_SetShaderConstantMode (D3DSeamTraced("D3DDevice_SetShaderConstantMode", (D3DDevice_SetShaderConstantModeFn)D3DDevice_SetShaderConstantMode_ADDR, D3D9_SetShaderConstantMode))
+#define D3DDevice_SetShaderConstantMode (D3DSeam<D3DDevice_SetShaderConstantModeFn>::Traced("D3DDevice_SetShaderConstantMode", D3D9_SetShaderConstantMode))
 
 // D3DDevice_SetVertexShaderConstantNotInline(constant index in ECX, pointer in EDX, count-in-dwords on the
 // stack) - confirmed via raw disassembly: exactly matches MSVC's own __fastcall ABI for a 3-argument function
 // (first two register args, third stacked, callee cleans up RET 0x4) - another case needing no asm trampoline.
 typedef void(__fastcall *D3DDevice_SetVertexShaderConstantNotInlineFn)(uint32_t constantIndex, void *pData, uint32_t countDwords);
-#define D3DDevice_SetVertexShaderConstantNotInline (D3DSeamTraced("D3DDevice_SetVertexShaderConstantNotInline", (D3DDevice_SetVertexShaderConstantNotInlineFn)0x00102760u, D3D9_SetVertexShaderConstantNotInline))
+#define D3DDevice_SetVertexShaderConstantNotInline (D3DSeam<D3DDevice_SetVertexShaderConstantNotInlineFn>::Traced("D3DDevice_SetVertexShaderConstantNotInline", D3D9_SetVertexShaderConstantNotInline))
 
 // D3DDevice_GetBackBuffer2(backBufferIndex) - confirmed plain __stdcall via functions_action.json (RET 0x4).
 // Returns a pointer to the backbuffer's own surface-header struct (not pixel data directly) - only its
 // second dword (an Xbox physical-memory byte offset, per psiBlurScreen's own use of it) is read here.
 typedef uint32_t*(__stdcall *D3DDevice_GetBackBuffer2Fn)(int32_t backBufferIndex);
-#define D3DDevice_GetBackBuffer2 (D3DSeamTraced("D3DDevice_GetBackBuffer2", (D3DDevice_GetBackBuffer2Fn)D3DDevice_GetBackBuffer2_ADDR, D3D9_GetBackBuffer2))
+#define D3DDevice_GetBackBuffer2 (D3DSeam<D3DDevice_GetBackBuffer2Fn>::Traced("D3DDevice_GetBackBuffer2", D3D9_GetBackBuffer2))
 
 // D3DDevice_SetDepthClipPlanes(uint, uint, uint) and D3DDevice_SetStreamSource(int streamNumber, void*
 // vertexBuffer, int stride) - both confirmed plain __stdcall via raw disassembly (RET 0xc, matching 3 params).
 typedef void(__stdcall *D3DDevice_SetDepthClipPlanesFn)(uint32_t param1, uint32_t param2, uint32_t param3);
-#define D3DDevice_SetDepthClipPlanes (D3DSeamTraced("D3DDevice_SetDepthClipPlanes", (D3DDevice_SetDepthClipPlanesFn)D3DDevice_SetDepthClipPlanes_ADDR, D3D9_SetDepthClipPlanes))
+#define D3DDevice_SetDepthClipPlanes (D3DSeam<D3DDevice_SetDepthClipPlanesFn>::Traced("D3DDevice_SetDepthClipPlanes", D3D9_SetDepthClipPlanes))
 
 typedef void(__stdcall *D3DDevice_SetStreamSourceFn)(int streamNumber, void *vertexBuffer, int stride);
-#define D3DDevice_SetStreamSource (D3DSeamTraced("D3DDevice_SetStreamSource", (D3DDevice_SetStreamSourceFn)D3DDevice_SetStreamSource_ADDR, D3D9_SetStreamSource))
+#define D3DDevice_SetStreamSource (D3DSeam<D3DDevice_SetStreamSourceFn>::Traced("D3DDevice_SetStreamSource", D3D9_SetStreamSource))
 
 // D3DDevice_SetIndices(pIndexBuffer, baseVertexIndex), D3DDevice_SetVertexShader(handle), and
 // D3DDevice_DrawVerticesUP(primitiveType, vertexCount, pVertexData, stride) - all confirmed plain __stdcall
 // via raw disassembly (RET 0x8 / RET 0x4 / RET 0x10 respectively, matching their param counts exactly).
 typedef void(__stdcall *D3DDevice_SetIndicesFn)(void *pIndexBuffer, uint32_t baseVertexIndex);
-#define D3DDevice_SetIndices (D3DSeamTraced("D3DDevice_SetIndices", (D3DDevice_SetIndicesFn)D3DDevice_SetIndices_ADDR, D3D9_SetIndices))
+#define D3DDevice_SetIndices (D3DSeam<D3DDevice_SetIndicesFn>::Traced("D3DDevice_SetIndices", D3D9_SetIndices))
 
 typedef void(__stdcall *D3DDevice_SetVertexShaderFn)(void *handle);
-#define D3DDevice_SetVertexShader (D3DSeamTraced("D3DDevice_SetVertexShader", (D3DDevice_SetVertexShaderFn)D3DDevice_SetVertexShader_ADDR, D3D9_SetVertexShader))
+#define D3DDevice_SetVertexShader (D3DSeam<D3DDevice_SetVertexShaderFn>::Traced("D3DDevice_SetVertexShader", D3D9_SetVertexShader))
 
 typedef void(__stdcall *D3DDevice_DrawVerticesUPFn)(uint32_t primitiveType, uint32_t vertexCount, void *pVertexData, uint32_t stride);
-#define D3DDevice_DrawVerticesUP (D3DSeamTraced("D3DDevice_DrawVerticesUP", (D3DDevice_DrawVerticesUPFn)D3DDevice_DrawVerticesUP_ADDR, D3D9_DrawVerticesUP))
+#define D3DDevice_DrawVerticesUP (D3DSeam<D3DDevice_DrawVerticesUPFn>::Traced("D3DDevice_DrawVerticesUP", D3D9_DrawVerticesUP))
 
 // A thunk (plain JMP) to the real implementation - confirmed RET 0x4, plain __stdcall, 1 param.
 typedef void(__stdcall *D3DResource_BlockUntilNotBusyFn)(void *pResource);
-#define D3DResource_BlockUntilNotBusy (D3DSeamTraced("D3DResource_BlockUntilNotBusy", (D3DResource_BlockUntilNotBusyFn)D3DResource_BlockUntilNotBusy_ADDR, D3D9_BlockUntilNotBusy))
+#define D3DResource_BlockUntilNotBusy (D3DSeam<D3DResource_BlockUntilNotBusyFn>::Traced("D3DResource_BlockUntilNotBusy", D3D9_BlockUntilNotBusy))
 
 // Submits the push buffer and waits for the GPU to finish it - plain __stdcall, no arguments.
 typedef void(__stdcall *D3D_KickOffAndWaitForIdleFn)(void);
-#define D3D_KickOffAndWaitForIdle (D3DSeamTraced("D3D_KickOffAndWaitForIdle", (D3D_KickOffAndWaitForIdleFn)D3D_KickOffAndWaitForIdle_ADDR, D3D9_KickOffAndWaitForIdle))
+#define D3D_KickOffAndWaitForIdle (D3DSeam<D3D_KickOffAndWaitForIdleFn>::Traced("D3D_KickOffAndWaitForIdle", D3D9_KickOffAndWaitForIdle))
 
 // D3DDevice_GetRenderTarget2()/GetDepthStencilSurface2() - niladic getters (plain RET, no immediate, no stack
 // args), confirmed via raw disassembly. D3DDevice_SetRenderTarget(pRenderTarget, pDepthStencil) - confirmed
 // plain __stdcall (RET 0x8).
 typedef void *(__stdcall *D3DDevice_GetRenderTarget2Fn)(void);
-#define D3DDevice_GetRenderTarget2 (D3DSeamTraced("D3DDevice_GetRenderTarget2", (D3DDevice_GetRenderTarget2Fn)D3DDevice_GetRenderTarget2_ADDR, D3D9_GetRenderTarget2))
+#define D3DDevice_GetRenderTarget2 (D3DSeam<D3DDevice_GetRenderTarget2Fn>::Traced("D3DDevice_GetRenderTarget2", D3D9_GetRenderTarget2))
 
 typedef void *(__stdcall *D3DDevice_GetDepthStencilSurface2Fn)(void);
-#define D3DDevice_GetDepthStencilSurface2 (D3DSeamTraced("D3DDevice_GetDepthStencilSurface2", (D3DDevice_GetDepthStencilSurface2Fn)D3DDevice_GetDepthStencilSurface2_ADDR, D3D9_GetDepthStencilSurface2))
+#define D3DDevice_GetDepthStencilSurface2 (D3DSeam<D3DDevice_GetDepthStencilSurface2Fn>::Traced("D3DDevice_GetDepthStencilSurface2", D3D9_GetDepthStencilSurface2))
 
 typedef void(__stdcall *D3DDevice_SetRenderTargetFn)(void *pRenderTarget, void *pDepthStencil);
-#define D3DDevice_SetRenderTarget (D3DSeamTraced("D3DDevice_SetRenderTarget", (D3DDevice_SetRenderTargetFn)D3DDevice_SetRenderTarget_ADDR, D3D9_SetRenderTarget))
+#define D3DDevice_SetRenderTarget (D3DSeam<D3DDevice_SetRenderTargetFn>::Traced("D3DDevice_SetRenderTarget", D3D9_SetRenderTarget))
 
 // D3DDevice_DrawVertices(primitiveType, startVertex, vertexCount) - confirmed plain __stdcall (RET 0xc).
 typedef void(__stdcall *D3DDevice_DrawVerticesFn)(uint32_t primitiveType, uint32_t startVertex, uint32_t vertexCount);
-#define D3DDevice_DrawVertices (D3DSeamTraced("D3DDevice_DrawVertices", (D3DDevice_DrawVerticesFn)D3DDevice_DrawVertices_ADDR, D3D9_DrawVertices))
+#define D3DDevice_DrawVertices (D3DSeam<D3DDevice_DrawVerticesFn>::Traced("D3DDevice_DrawVertices", D3D9_DrawVertices))
 
 // A normal D3D8 library function we call INTO - confirmed plain __stdcall (RET 0x4), 1 param. Its own
 // internals are irrelevant to us (it calls into further D3D8-internal functions, same as many others).
 typedef void(__stdcall *D3DDevice_SetRenderState_ZBiasFn)(int zBias);
-#define D3DDevice_SetRenderState_ZBias (D3DSeamTraced("D3DDevice_SetRenderState_ZBias", (D3DDevice_SetRenderState_ZBiasFn)D3DDevice_SetRenderState_ZBias_ADDR, D3D9_SetZBias))
+#define D3DDevice_SetRenderState_ZBias (D3DSeam<D3DDevice_SetRenderState_ZBiasFn>::Traced("D3DDevice_SetRenderState_ZBias", D3D9_SetZBias))
 
 // Eurocom's matrix helpers: ours, in xboxMatrix.cpp.
 #include "xboxMatrix.h"
@@ -651,14 +620,23 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // Render state wrappers
 // ---------------------------------------------------------------------------------------------------------------
 
-#define D3D_ZFuncLastValue      U32_AT(0x00111AB4)
-#define D3D_AlphaRefLastValue   U32_AT(0x00111AC4)
-#define D3D_DepthMaskLastValue  U32_AT(0x00111AD0)
-#define D3D_CullModeLastValue   U32_AT(0x00111C4C)
+// D3D8's state, which the wrappers below poke directly as the originals did, and the backend reads back at draw
+// time: the deferred-state dirty flags, the four texture stages' states and the render states (D3DRS_MAX of them)
+// XBE_GLOBAL(0x001117cc, 0x4)
+uint32_t D3DDirtyFlags;
+// XBE_GLOBAL(0x001117d0, 0x200)
+uint32_t D3DTextureState[4][32];
+// XBE_GLOBAL(0x001119d0, 0x298)
+uint32_t D3DRenderState[0xa6];
+
+#define D3D_ZFuncLastValue      D3DRenderState[0x39]
+#define D3D_AlphaRefLastValue   D3DRenderState[0x3d]
+#define D3D_DepthMaskLastValue  D3DRenderState[0x40]
+#define D3D_CullModeLastValue   D3DRenderState[0x9f]
 
 // The D3D8-internal globals Gfx.deferredTexStateA/B (maybeResetRenderState, d3dSetup) drive once changed.
-#define D3D8_Stage0_AddressU D3D8_TRACED("D3D8_Stage0_AddressU", 0x001117D0) // D3D8::D3D_g_DeferredTextureState
-#define D3D8_Stage0_AddressV D3D8_TRACED("D3D8_Stage0_AddressV", 0x001117D4) // not in the Gfx struct - a separate D3D8-internal global
+#define D3D8_Stage0_AddressU D3D8_TRACED("D3D8_Stage0_AddressU", D3DTextureState[0][0]) // D3D8::D3D_g_DeferredTextureState
+#define D3D8_Stage0_AddressV D3D8_TRACED("D3D8_Stage0_AddressV", D3DTextureState[0][1]) // not in the Gfx struct - a separate D3D8-internal global
 
 // Gfx.d3dDevice is null until xboxInitGraphics has created the device. Every function below that touches D3D8
 // guards on it exactly like the original did, and no-ops (while still updating any cache) if it's not ready yet.
@@ -666,21 +644,21 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
 // D3D8's own internal pushbuffer-dirty-flags word, and its own cached fog-enable flag - both plain globals
 // living inside the D3D8 library's static data (not the Gfx struct), poked directly by the original rather
 // than through an API call. Confirmed via raw disassembly to be ordinary memory, safe to preserve verbatim.
-#define D3D8_PushBufferDirtyFlags D3D8_TRACED("D3D8_PushBufferDirtyFlags", 0x001117CC)
-#define D3D8_RS_FogEnable D3D8_TRACED("D3D8_RS_FogEnable", 0x00111B40)
+#define D3D8_PushBufferDirtyFlags D3D8_TRACED("D3D8_PushBufferDirtyFlags", D3DDirtyFlags)
+#define D3D8_RS_FogEnable D3D8_TRACED("D3D8_RS_FogEnable", D3DRenderState[0x5c])
 
 // Opaque D3D8-internal texture-stage-1 configuration registers, poked directly with fixed constants by the
 // original depending on whether a real texture or NULL is being bound to stage 1 - untraced meaning, ported
 // verbatim rather than guessed at.
-#define D3D8_TexStage1_0x00 D3D8_TRACED("D3D8_TexStage1_0x00", 0x00111800)
-#define D3D8_TexStage1_0x08 D3D8_TRACED("D3D8_TexStage1_0x08", 0x00111808)
-#define D3D8_TexStage1_0x10 D3D8_TRACED("D3D8_TexStage1_0x10", 0x00111810)
-#define D3D8_TexStage1_0x80 D3D8_TRACED("D3D8_TexStage1_0x80", 0x00111880)
-#define D3D8_TexStage1_0x88 D3D8_TRACED("D3D8_TexStage1_0x88", 0x00111888)
-#define D3D8_TexStage1_0x8c D3D8_TRACED("D3D8_TexStage1_0x8c", 0x0011188C)
-#define D3D8_TexStage1_0x90 D3D8_TRACED("D3D8_TexStage1_0x90", 0x00111890)
-#define D3D8_TexStage1_0x98 D3D8_TRACED("D3D8_TexStage1_0x98", 0x00111898)
-#define D3D8_TexStage1_0x9c D3D8_TRACED("D3D8_TexStage1_0x9c", 0x0011189C)
+#define D3D8_TexStage1_0x00 D3D8_TRACED("D3D8_TexStage1_0x00", D3DTextureState[0][12])
+#define D3D8_TexStage1_0x08 D3D8_TRACED("D3D8_TexStage1_0x08", D3DTextureState[0][14])
+#define D3D8_TexStage1_0x10 D3D8_TRACED("D3D8_TexStage1_0x10", D3DTextureState[0][16])
+#define D3D8_TexStage1_0x80 D3D8_TRACED("D3D8_TexStage1_0x80", D3DTextureState[1][12])
+#define D3D8_TexStage1_0x88 D3D8_TRACED("D3D8_TexStage1_0x88", D3DTextureState[1][14])
+#define D3D8_TexStage1_0x8c D3D8_TRACED("D3D8_TexStage1_0x8c", D3DTextureState[1][15])
+#define D3D8_TexStage1_0x90 D3D8_TRACED("D3D8_TexStage1_0x90", D3DTextureState[1][16])
+#define D3D8_TexStage1_0x98 D3D8_TRACED("D3D8_TexStage1_0x98", D3DTextureState[1][18])
+#define D3D8_TexStage1_0x9c D3D8_TRACED("D3D8_TexStage1_0x9c", D3DTextureState[1][19])
 
 // XBE_GLOBAL(0x002ff450, 0x4)
 static uint32_t Gfx_FogColorCache; // not in the Gfx struct - a separate global
@@ -1697,14 +1675,14 @@ void d3dReleaseOverlayBuffer(int overlaySlot) {
 // XBE_GLOBAL(0x002c5748, 0x4)
 static uint32_t Gfx_OverlayVertexShaderHandle; // not in the Gfx struct - a dedicated single handle, not part of VtxShaderHandles[]
 
-#define D3D8_TexStage3_0x80 D3D8_TRACED("D3D8_TexStage3_0x80", 0x00111980)
-#define D3D8_TexStage3_0x88 D3D8_TRACED("D3D8_TexStage3_0x88", 0x00111988)
-#define D3D8_TexStage3_0x8c D3D8_TRACED("D3D8_TexStage3_0x8c", 0x0011198C)
-#define D3D8_TexStage3_0x90 D3D8_TRACED("D3D8_TexStage3_0x90", 0x00111990)
-#define D3D8_TexStage3_0x98 D3D8_TRACED("D3D8_TexStage3_0x98", 0x00111998)
-#define D3D8_TexStage3_0x9c D3D8_TRACED("D3D8_TexStage3_0x9c", 0x0011199C)
-#define D3D8_TexStage3_0xba8 D3D8_TRACED("D3D8_TexStage3_0xba8", 0x00111BA8)
-#define D3D8_TexStage3_0xbac D3D8_TRACED("D3D8_TexStage3_0xbac", 0x00111BAC)
+#define D3D8_TexStage3_0x80 D3D8_TRACED("D3D8_TexStage3_0x80", D3DTextureState[3][12])
+#define D3D8_TexStage3_0x88 D3D8_TRACED("D3D8_TexStage3_0x88", D3DTextureState[3][14])
+#define D3D8_TexStage3_0x8c D3D8_TRACED("D3D8_TexStage3_0x8c", D3DTextureState[3][15])
+#define D3D8_TexStage3_0x90 D3D8_TRACED("D3D8_TexStage3_0x90", D3DTextureState[3][16])
+#define D3D8_TexStage3_0x98 D3D8_TRACED("D3D8_TexStage3_0x98", D3DTextureState[3][18])
+#define D3D8_TexStage3_0x9c D3D8_TRACED("D3D8_TexStage3_0x9c", D3DTextureState[3][19])
+#define D3D8_TexStage3_0xba8 D3D8_TRACED("D3D8_TexStage3_0xba8", D3DRenderState[0x76])
+#define D3D8_TexStage3_0xbac D3D8_TRACED("D3D8_TexStage3_0xbac", D3DRenderState[0x77])
 
 // AUTOINJECT
 void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float param4, int param5) {
@@ -2022,7 +2000,7 @@ void d3dResetTransformCaches(void) {
 // disassembly (decompile can't show them at all, since it doesn't understand that function's ECX/EDX
 // convention) - param_1==1 and param_1==2 share a tail (constant 0x40348 method gets value 1); any other
 // param_1 value takes a separate, early-returning path (same method gets value 0x303 instead).
-#define D3D8_RS_BlendOp D3D8_TRACED("D3D8_RS_BlendOp", 0x00111AF8)
+#define D3D8_RS_BlendOp D3D8_TRACED("D3D8_RS_BlendOp", D3DRenderState[0x4a])
 
 // AUTOINJECT
 void d3dSetupRenderStatesAndFog(int param1) {
@@ -2414,10 +2392,10 @@ void maybeD3dShutdown(void) {
 // d3dSetup
 // ---------------------------------------------------------------------------------------------------------------
 
-#define D3D8_RS_0x4033c_LastValue D3D8_TRACED("D3D8_RS_0x4033c_LastValue", 0x00111AB8) // opaque, untraced; only ever written here
-#define D3D8_RS_AlphaBlendEnable D3D8_TRACED("D3D8_RS_AlphaBlendEnable", 0x00111ABC) // X_D3DRS_ALPHABLENDENABLE (render-state index 59); only ever written here
-#define D3D8_RS_0x40300_LastValue D3D8_TRACED("D3D8_RS_0x40300_LastValue", 0x00111AC0) // opaque, untraced; only ever written here
-#define D3D8_RS_DitherEnable D3D8_TRACED("D3D8_RS_DitherEnable", 0x00111AD4) // X_D3DRS_DITHERENABLE (render-state index 65), poked directly via D3D_SetRenderStateSimple
+#define D3D8_RS_0x4033c_LastValue D3D8_TRACED("D3D8_RS_0x4033c_LastValue", D3DRenderState[0x3a]) // opaque, untraced; only ever written here
+#define D3D8_RS_AlphaBlendEnable D3D8_TRACED("D3D8_RS_AlphaBlendEnable", D3DRenderState[0x3b]) // X_D3DRS_ALPHABLENDENABLE (render-state index 59); only ever written here
+#define D3D8_RS_0x40300_LastValue D3D8_TRACED("D3D8_RS_0x40300_LastValue", D3DRenderState[0x3c]) // opaque, untraced; only ever written here
+#define D3D8_RS_DitherEnable D3D8_TRACED("D3D8_RS_DitherEnable", D3DRenderState[0x41]) // X_D3DRS_DITHERENABLE (render-state index 65), poked directly via D3D_SetRenderStateSimple
 // XBE_GLOBAL(0x001b5208, 0xd4)
 static const int32_t D3D8_ShaderConstantSubIndexTable[53] = { // untraced - ~53 ints, each added to 0x60 to form a shader-constant register index
     -96, -93, -90, -87, -84, -81, -78, -75, -72, -69, -66, -63,
@@ -2430,30 +2408,30 @@ static const int32_t D3D8_ShaderConstantSubIndexTable[53] = { // untraced - ~53 
 // Per-texture-stage-like opaque D3D8-internal registers, four groups spaced 0x80 apart, written unconditionally
 // (given device ready) every time d3dSetup runs. Untraced overall meaning - ported verbatim from decompile
 // (cross-checked against raw disassembly's own store addresses/values one by one, all confirmed to match).
-#define D3D8_Stage0_0x00 D3D8_TRACED("D3D8_Stage0_0x00", 0x00111800)
-#define D3D8_Stage0_0x08 D3D8_TRACED("D3D8_Stage0_0x08", 0x00111808)
-#define D3D8_Stage0_0x0c D3D8_TRACED("D3D8_Stage0_0x0c", 0x0011180C)
-#define D3D8_Stage0_0x10 D3D8_TRACED("D3D8_Stage0_0x10", 0x00111810)
-#define D3D8_Stage0_0x18 D3D8_TRACED("D3D8_Stage0_0x18", 0x00111818)
-#define D3D8_Stage0_0x1c D3D8_TRACED("D3D8_Stage0_0x1c", 0x0011181C)
-#define D3D8_PreStage_0x00 D3D8_TRACED("D3D8_PreStage_0x00", 0x001117DC)
-#define D3D8_PreStage_0x04 D3D8_TRACED("D3D8_PreStage_0x04", 0x001117E0)
-#define D3D8_PreStage_0x08 D3D8_TRACED("D3D8_PreStage_0x08", 0x001117E4)
-#define D3D8_Stage1_0x5c D3D8_TRACED("D3D8_Stage1_0x5c", 0x0011185C)
-#define D3D8_Stage1_0x60 D3D8_TRACED("D3D8_Stage1_0x60", 0x00111860)
-#define D3D8_Stage1_0x64 D3D8_TRACED("D3D8_Stage1_0x64", 0x00111864)
-#define D3D8_Stage2_0x00 D3D8_TRACED("D3D8_Stage2_0x00", 0x00111900)
-#define D3D8_Stage2_0x10 D3D8_TRACED("D3D8_Stage2_0x10", 0x00111910)
-#define D3D8_Stage2_0xdc D3D8_TRACED("D3D8_Stage2_0xdc", 0x001118DC)
-#define D3D8_Stage2_0xe0 D3D8_TRACED("D3D8_Stage2_0xe0", 0x001118E0)
-#define D3D8_Stage2_0xe4 D3D8_TRACED("D3D8_Stage2_0xe4", 0x001118E4)
-#define D3D8_Stage2_0xe8 D3D8_TRACED("D3D8_Stage2_0xe8", 0x001118E8)
-#define D3D8_Stage3_0x00 D3D8_TRACED("D3D8_Stage3_0x00", 0x00111980)
-#define D3D8_Stage3_0x10 D3D8_TRACED("D3D8_Stage3_0x10", 0x00111990)
-#define D3D8_Stage3_0x5c D3D8_TRACED("D3D8_Stage3_0x5c", 0x0011195C)
-#define D3D8_Stage3_0x60 D3D8_TRACED("D3D8_Stage3_0x60", 0x00111960)
-#define D3D8_Stage3_0x64 D3D8_TRACED("D3D8_Stage3_0x64", 0x00111964)
-#define D3D8_Stage3_0x68 D3D8_TRACED("D3D8_Stage3_0x68", 0x00111968)
+#define D3D8_Stage0_0x00 D3D8_TRACED("D3D8_Stage0_0x00", D3DTextureState[0][12])
+#define D3D8_Stage0_0x08 D3D8_TRACED("D3D8_Stage0_0x08", D3DTextureState[0][14])
+#define D3D8_Stage0_0x0c D3D8_TRACED("D3D8_Stage0_0x0c", D3DTextureState[0][15])
+#define D3D8_Stage0_0x10 D3D8_TRACED("D3D8_Stage0_0x10", D3DTextureState[0][16])
+#define D3D8_Stage0_0x18 D3D8_TRACED("D3D8_Stage0_0x18", D3DTextureState[0][18])
+#define D3D8_Stage0_0x1c D3D8_TRACED("D3D8_Stage0_0x1c", D3DTextureState[0][19])
+#define D3D8_PreStage_0x00 D3D8_TRACED("D3D8_PreStage_0x00", D3DTextureState[0][3])
+#define D3D8_PreStage_0x04 D3D8_TRACED("D3D8_PreStage_0x04", D3DTextureState[0][4])
+#define D3D8_PreStage_0x08 D3D8_TRACED("D3D8_PreStage_0x08", D3DTextureState[0][5])
+#define D3D8_Stage1_0x5c D3D8_TRACED("D3D8_Stage1_0x5c", D3DTextureState[1][3])
+#define D3D8_Stage1_0x60 D3D8_TRACED("D3D8_Stage1_0x60", D3DTextureState[1][4])
+#define D3D8_Stage1_0x64 D3D8_TRACED("D3D8_Stage1_0x64", D3DTextureState[1][5])
+#define D3D8_Stage2_0x00 D3D8_TRACED("D3D8_Stage2_0x00", D3DTextureState[2][12])
+#define D3D8_Stage2_0x10 D3D8_TRACED("D3D8_Stage2_0x10", D3DTextureState[2][16])
+#define D3D8_Stage2_0xdc D3D8_TRACED("D3D8_Stage2_0xdc", D3DTextureState[2][3])
+#define D3D8_Stage2_0xe0 D3D8_TRACED("D3D8_Stage2_0xe0", D3DTextureState[2][4])
+#define D3D8_Stage2_0xe4 D3D8_TRACED("D3D8_Stage2_0xe4", D3DTextureState[2][5])
+#define D3D8_Stage2_0xe8 D3D8_TRACED("D3D8_Stage2_0xe8", D3DTextureState[2][6])
+#define D3D8_Stage3_0x00 D3D8_TRACED("D3D8_Stage3_0x00", D3DTextureState[3][12])
+#define D3D8_Stage3_0x10 D3D8_TRACED("D3D8_Stage3_0x10", D3DTextureState[3][16])
+#define D3D8_Stage3_0x5c D3D8_TRACED("D3D8_Stage3_0x5c", D3DTextureState[3][3])
+#define D3D8_Stage3_0x60 D3D8_TRACED("D3D8_Stage3_0x60", D3DTextureState[3][4])
+#define D3D8_Stage3_0x64 D3D8_TRACED("D3D8_Stage3_0x64", D3DTextureState[3][5])
+#define D3D8_Stage3_0x68 D3D8_TRACED("D3D8_Stage3_0x68", D3DTextureState[3][6])
 
 
 // One-time-per-call D3D8 device setup: resets the whole texture/stream/buffer cache block to -1, lazily enables
@@ -2534,13 +2512,13 @@ void d3dSetup(void) {
         D3D8_Stage3_0x64 = 2;
         D3D8_Stage3_0x68 = 0xbf800000u; // -1.0f
         D3D8_PushBufferDirtyFlags |= 0x280f;
-        U32_AT(0x00111B48) = 0;
-        U32_AT(0x00111B4C) = 0x3f800000u; // 1.0f
-        U32_AT(0x00111B50) = 0x3f800000u; // 1.0f
-        U32_AT(0x001117E8) = 0xbf800000u; // -1.0f
-        U32_AT(0x00111868) = 0xbf800000u; // -1.0f
-        U32_AT(0x00111B44) = 1;
-        U32_AT(0x00111B54) = 0;
+        D3DRenderState[0x5e] = 0;
+        D3DRenderState[0x5f] = 0x3f800000u; // 1.0f
+        D3DRenderState[0x60] = 0x3f800000u; // 1.0f
+        D3DTextureState[0][6] = 0xbf800000u; // -1.0f
+        D3DTextureState[1][6] = 0xbf800000u; // -1.0f
+        D3DRenderState[0x5d] = 1;
+        D3DRenderState[0x61] = 0;
     }
     Gfx.d3dLastError = 0;
 
@@ -2755,11 +2733,11 @@ void psiBlurScreen(int blurIntensity) {
 
     if (textureSlot != 0) {
         D3DTextureSlotRaw *texSlot = D3DTextureSlot((int)textureSlot);
-        texSlot->mipChainBytes = 0x0012C000u; // scratch pointer value passed through to XGSetTextureHeader/D3DResource_Register below, not a byte count here
+        texSlot->mipChainBytes = 640 * 480 * 4; // a 640x480 32-bit frame, passed through to XGSetTextureHeader/D3DResource_Register below
 
         uintptr_t alignedAddr = ((uintptr_t)backBufferAddr + 0x7Fu) & ~(uintptr_t)0x7Fu;
         if (alignedAddr != (uintptr_t)backBufferAddr) {
-            memmove((void*)alignedAddr, (void*)(uintptr_t)backBufferAddr, 0x0012C000u);
+            memmove((void*)alignedAddr, (void*)(uintptr_t)backBufferAddr, 640 * 480 * 4);
             backBufferAddr = (uint32_t)alignedAddr;
         }
 
@@ -3049,25 +3027,21 @@ void d3dInitFallbackOverlayTexture(void) {
 // The last game-side function that talked to D3D8 directly. Called once from main(). All four D3D8 entry
 // points confirmed plain __stdcall via raw disassembly (RET 0x18 / 0x8 / 0x10 / 0x4; the "push buffers supported"
 // query ignores its one argument and just returns 1).
-#define Direct3D_CreateDevice_ADDR         0x001004a0u
-#define D3D_SetPushBufferSize_ADDR         0x00100480u
-#define D3DDevice_CreateVertexShader_ADDR  0x00102430u
-#define D3D_ArePushBuffersSupported_ADDR   0x00105180u // Ghidra: FUN_00105180, a D3D8-internal "return 1"
 
 typedef uint32_t(__stdcall *Direct3D_CreateDeviceFn)(uint32_t adapter, uint32_t deviceType, void *hFocusWindow,
                                                      uint32_t behaviorFlags, void *pPresentationParameters, void **ppDevice);
-#define Direct3D_CreateDevice (D3DSeamTraced("Direct3D_CreateDevice", (Direct3D_CreateDeviceFn)Direct3D_CreateDevice_ADDR, D3D9_CreateDevice))
+#define Direct3D_CreateDevice (D3DSeam<Direct3D_CreateDeviceFn>::Traced("Direct3D_CreateDevice", D3D9_CreateDevice))
 
 typedef void(__stdcall *D3D_SetPushBufferSizeFn)(uint32_t pushBufferSize, uint32_t kickOffSize);
-#define D3D_SetPushBufferSize (D3DSeamTraced("D3D_SetPushBufferSize", (D3D_SetPushBufferSizeFn)D3D_SetPushBufferSize_ADDR, D3D9_SetPushBufferSize))
+#define D3D_SetPushBufferSize (D3DSeam<D3D_SetPushBufferSizeFn>::Traced("D3D_SetPushBufferSize", D3D9_SetPushBufferSize))
 
 typedef uint32_t(__stdcall *D3DDevice_CreateVertexShaderFn)(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage);
-#define D3DDevice_CreateVertexShader (D3DSeamTraced("D3DDevice_CreateVertexShader", (D3DDevice_CreateVertexShaderFn)D3DDevice_CreateVertexShader_ADDR, D3D9_CreateVertexShader))
+#define D3DDevice_CreateVertexShader (D3DSeam<D3DDevice_CreateVertexShaderFn>::Traced("D3DDevice_CreateVertexShader", D3D9_CreateVertexShader))
 
 // RET 0x4 - takes one (ignored) dword argument, which the original passes as 0. Declaring it with the argument
 // matters: as __stdcall the callee pops those 4 bytes, so calling it with none would unbalance the stack.
 typedef uint32_t(__stdcall *D3D_ArePushBuffersSupportedFn)(uint32_t unused);
-#define D3D_ArePushBuffersSupported (D3DSeamTraced("D3D_ArePushBuffersSupported", (D3D_ArePushBuffersSupportedFn)D3D_ArePushBuffersSupported_ADDR, D3D9_ArePushBuffersSupported))
+#define D3D_ArePushBuffersSupported (D3DSeam<D3D_ArePushBuffersSupportedFn>::Traced("D3D_ArePushBuffersSupported", D3D9_ArePushBuffersSupported))
 
 // Standard Xbox D3DPRESENT_PARAMETERS (17 dwords), zeroed and then only partially filled in by the original.
 struct D3DPRESENT_PARAMETERS_Xbox {
@@ -3102,137 +3076,9 @@ static const uint32_t VtxShaderDeclTokens_Bit0And1[23] = {
     0x20000002, 0x40350008, 0x20000003, 0x40350009, 0x20000004, 0x4035000a, 0x20000005, 0x4035000b,
     0x20000006, 0x4035000c, 0x20000007, 0x4035000d, 0x20000008, 0x4035000e, 0xffffffff
 };
+#include "VertexShaders.inc"
 // XBE_GLOBAL(0x001b4d78, 0x200)
-static const void* const VtxShaderFunctionTokenTable[128] = {// 128 pointers // the programs stay in the game's data
-    (const void*)0x0019cd08,
-    (const void*)0x0019cdc0,
-    (const void*)0x0019cef8,
-    (const void*)0x0019d080,
-    (const void*)0x0019d288,
-    (const void*)0x0019d430,
-    (const void*)0x0019d658,
-    (const void*)0x0019d8f0,
-    (const void*)0x0019dc08,
-    (const void*)0x0019de60,
-    (const void*)0x0019e138,
-    (const void*)0x0019e480,
-    (const void*)0x0019e848,
-    (const void*)0x0019eb80,
-    (const void*)0x0019ef38,
-    (const void*)0x0019f360,
-    (const void*)0x0019f808,
-    (const void*)0x0019f920,
-    (const void*)0x0019fab8,
-    (const void*)0x0019fcc0,
-    (const void*)0x0019ff48,
-    (const void*)0x001a0140,
-    (const void*)0x001a03b8,
-    (const void*)0x001a06a0,
-    (const void*)0x001a0a08,
-    (const void*)0x001a0cb0,
-    (const void*)0x001a0fd8,
-    (const void*)0x001a1370,
-    (const void*)0x001a1788,
-    (const void*)0x001a1b10,
-    (const void*)0x001a1f08,
-    (const void*)0x001a2380,
-    (const void*)0x001a2878,
-    (const void*)0x001a2960,
-    (const void*)0x001a2ac8,
-    (const void*)0x001a2ca0,
-    (const void*)0x001a2ef8,
-    (const void*)0x001a30c0,
-    (const void*)0x001a3308,
-    (const void*)0x001a35c0,
-    (const void*)0x001a38f8,
-    (const void*)0x001a3b60,
-    (const void*)0x001a3e48,
-    (const void*)0x001a41b0,
-    (const void*)0x001a4598,
-    (const void*)0x001a48e0,
-    (const void*)0x001a4ca8,
-    (const void*)0x001a50f0,
-    (const void*)0x001a55b8,
-    (const void*)0x001a56f0,
-    (const void*)0x001a58a8,
-    (const void*)0x001a5ad0,
-    (const void*)0x001a5d78,
-    (const void*)0x001a5f90,
-    (const void*)0x001a6228,
-    (const void*)0x001a6530,
-    (const void*)0x001a68b8,
-    (const void*)0x001a6b70,
-    (const void*)0x001a6ea8,
-    (const void*)0x001a7260,
-    (const void*)0x001a7698,
-    (const void*)0x001a7a30,
-    (const void*)0x001a7e48,
-    (const void*)0x001a82e0,
-    (const void*)0x001a87f8,
-    (const void*)0x001a88e0,
-    (const void*)0x001a8a48,
-    (const void*)0x001a8c00,
-    (const void*)0x001a8e38,
-    (const void*)0x001a9010,
-    (const void*)0x001a9268,
-    (const void*)0x001a9530,
-    (const void*)0x001a9878,
-    (const void*)0x001a9af0,
-    (const void*)0x001a9de8,
-    (const void*)0x001aa150,
-    (const void*)0x001aa538,
-    (const void*)0x001aa890,
-    (const void*)0x001aac68,
-    (const void*)0x001ab0b0,
-    (const void*)0x001ab578,
-    (const void*)0x001ab6c0,
-    (const void*)0x001ab888,
-    (const void*)0x001abac0,
-    (const void*)0x001abd78,
-    (const void*)0x001abfa0,
-    (const void*)0x001ac248,
-    (const void*)0x001ac560,
-    (const void*)0x001ac8f8,
-    (const void*)0x001acbc0,
-    (const void*)0x001acf08,
-    (const void*)0x001ad2c0,
-    (const void*)0x001ad6f8,
-    (const void*)0x001adaa0,
-    (const void*)0x001adec8,
-    (const void*)0x001ae360,
-    (const void*)0x001ae878,
-    (const void*)0x001ae990,
-    (const void*)0x001aeb28,
-    (const void*)0x001aed30,
-    (const void*)0x001aefb8,
-    (const void*)0x001af1b0,
-    (const void*)0x001af428,
-    (const void*)0x001af710,
-    (const void*)0x001afa78,
-    (const void*)0x001afd10,
-    (const void*)0x001b0028,
-    (const void*)0x001b03b0,
-    (const void*)0x001b07b8,
-    (const void*)0x001b0b30,
-    (const void*)0x001b0f28,
-    (const void*)0x001b1390,
-    (const void*)0x001b1878,
-    (const void*)0x001b19e0,
-    (const void*)0x001b1bc8,
-    (const void*)0x001b1e20,
-    (const void*)0x001b20f8,
-    (const void*)0x001b2340,
-    (const void*)0x001b2608,
-    (const void*)0x001b2940,
-    (const void*)0x001b2cf8,
-    (const void*)0x001b2fe0,
-    (const void*)0x001b3348,
-    (const void*)0x001b3720,
-    (const void*)0x001b3b78,
-    (const void*)0x001b3f40,
-    (const void*)0x001b4388,
-    (const void*)0x001b4840
-};
+static const void* const VtxShaderFunctionTokenTable[128] = VTX_SHADER_PROGRAMS_INIT;
 // XBE_GLOBAL(0x001b51d4, 0x14)
 static const uint32_t ImmediateModeVtxShaderDecl[5] = {
     0x20000000, 0x40220000, 0x40400002, 0x40220003, 0xffffffff
@@ -3279,11 +3125,10 @@ static uint32_t g_d3dDisplayFormat = 7;
 //
 // AUTOINJECT
 void xboxInitGraphics(void) {
-    // Where this XBE's D3D8 keeps the deferred state the backend reads, and the overlay quad table whose
-    // slots hold a vertex count instead of a byte size. Both are addresses in this build; the driving engine
-    // sets its own (src/driving/gfx/d3dSeam.cpp).
-    g_xboxTextureStateTable = 0x001117D0u;
-    g_xboxRenderStateTable = 0x001119D0u;
+    // The deferred state the backend reads, and the overlay quad table whose slots hold a vertex count instead
+    // of a byte size. The driving engine sets its own (src/driving/gfx/d3dSeam.cpp).
+    g_xboxTextureStateTable = (uintptr_t)D3DTextureState;
+    g_xboxRenderStateTable = (uintptr_t)D3DRenderState;
     g_overlayTableBase = (uintptr_t)&Gfx.overlayQuads[0];
     g_overlayTableEnd = g_overlayTableBase + sizeof(Gfx.overlayQuads);
 
@@ -3385,9 +3230,8 @@ void xboxInitGraphics(void) {
 // D3DDevice_DrawIndexedVertices straight from the bound index buffer's data, after the lazily-flushed
 // per-draw state (view-space light constants, the vertex shader permutation) has been brought up to date.
 
-#define D3DDevice_DrawIndexedVertices_ADDR 0x00104a60u // was undefined in Ghidra until now (hence invisible to the call graph); RET 0xc
 typedef void(__stdcall *D3DDevice_DrawIndexedVerticesFn)(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
-#define D3DDevice_DrawIndexedVertices (D3DSeamTraced("D3DDevice_DrawIndexedVertices", (D3DDevice_DrawIndexedVerticesFn)D3DDevice_DrawIndexedVertices_ADDR, D3D9_DrawIndexedVertices))
+#define D3DDevice_DrawIndexedVertices (D3DSeam<D3DDevice_DrawIndexedVerticesFn>::Traced("D3DDevice_DrawIndexedVertices", D3D9_DrawIndexedVertices))
 
 
 // FUN_000e86c0 in the original: rotates a 3-vector by the upper-left 3x3 of a row-major 4x4 matrix, optionally

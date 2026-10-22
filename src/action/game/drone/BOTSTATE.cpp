@@ -16,15 +16,13 @@
 #include "../weapon_stats.h"
 #include "../../engine/AINetwork.h"
 #include "../../engine/Anim.h"
+#include "../../math/math.h"
 #include "../../math/X87Ops.h"
 #include "../../util/Random.h"
 #include "../../util/Sort.h"
+#include "NDrone2_Alert.h"
+#include "NDrone2_Route.h"
 
-
-
-// FUN_000d8690: whether the segment from a to b passes within radius of centre, and the point it passes at (our
-// reading and name)
-#define SegmentNearPoint ((int (__cdecl *)(_VECTOR *a, _VECTOR *b, _VECTOR *centre, float radius, _VECTOR *at))0x000d8690)
 
 // The position NDrone2_CanWalkStraightTo (0x45340) last tested a walk to
 #define LastWalkTarget (*(_VECTOR *)0x001ee420)
@@ -52,9 +50,6 @@ static int32_t Ftol(double x) {
         return 0;
     return int32_t(int64_t(x));
 }
-#define NDrone2_DistanceToAIPoint ((float (__cdecl *)(DCVars_tag *dc, AIPoint_tag *point))0x00044e70)
-#define NDrone2_DistanceToEmitter ((uchar (__cdecl *)(CelPos_tag *from, AIPath_tag *path, ushort *nearestNode, AIEmitter_tag *emitter, obj_tag *mover, float *distance))0x00046260)
-#define NDrone2_MoveToGoalPosition ((uint (__cdecl *)(DCVars_tag *dc, _VECTOR *pos, float radius, ushort param4))0x00046f30)
 
 // Whether a bot other than playerIndex has obj as its objective goal. Every bot slot is asked, whatever its team;
 // a player on no team gets false.
@@ -534,7 +529,7 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
 
         Drone_tag *drone = dc->drone;
         NDrone2_DistanceToAIPoint(dc, &drone->aiPoint);
-        uint status = NDrone2_MoveToGoalPosition(dc, &drone->aiPoint.pos, drone->aiPoint.radius, 0);
+        uint status = NDrone2_MoveToGoalPosition(dc, (CelPos_tag *)&drone->aiPoint.pos, drone->aiPoint.radius, 0);
         if (!BOTSTATE_validateRoute(dc, status))
             return going;
         bool nearOpponent = BOTSTATE_isPathWithinObjectRange(dc->drone, dc->drone->opponent, 4.0f, 4);
@@ -1034,13 +1029,13 @@ bool BOTSTATE_isPathWithinObjectRange(Drone_tag *drone, obj_tag *obj, float rang
     if (route->count == 0) {
         Vec_Copy(&route->start.pos, &from);
         Vec_Copy(&route->dest.pos, &to);
-        return SegmentNearPoint(&from, &to, &pos, range, &nearest);
+        return Vec_SegmentSphereIntersect(&from, &to, &pos, range, &nearest);
     }
 
     AINode_tag *nodes = route->path->runtimeNodes;
     Vec_Copy(&route->start.pos, &from);
     Vec_Copy(&nodes[route->nodes[0]].fileNode->pos, &to);
-    near = SegmentNearPoint(&from, &to, &pos, range, &nearest);
+    near = Vec_SegmentSphereIntersect(&from, &to, &pos, range, &nearest);
     if (near)
         return near;
 
@@ -1049,12 +1044,12 @@ bool BOTSTATE_isPathWithinObjectRange(Drone_tag *drone, obj_tag *obj, float rang
         if (i < route->count - 1) {
             Vec_Copy(&nodes[route->nodes[i]].fileNode->pos, &from);
             Vec_Copy(&nodes[route->nodes[i + 1]].fileNode->pos, &to);
-            if (SegmentNearPoint(&from, &to, &pos, range, &nearest))
+            if (Vec_SegmentSphereIntersect(&from, &to, &pos, range, &nearest))
                 return true;
         } else {
             Vec_Copy(&nodes[route->nodes[i]].fileNode->pos, &from);
             Vec_Copy(&route->dest.pos, &to);
-            return SegmentNearPoint(&from, &to, &pos, range, &nearest);
+            return Vec_SegmentSphereIntersect(&from, &to, &pos, range, &nearest);
         }
     }
     return near;
@@ -1276,7 +1271,8 @@ static int __cdecl CompareWeaponEntries(const void *a, const void *b) {
 // noMessage, the bot is told of a change (bot message 0x42) - with keepCurrent, only when it differs from the weapon
 // in hand. Nothing without an opponent in sight.
 // AUTOINJECT
-short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, char keepCurrent, char noMessage) {
+short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, char keepCurrent, char noMessage,
+                                        char unused) {
     BOT_vars_t *bot = drone->botVars;
     ushort list[BOT_WEAPON_IDS];
     int count = 0;
@@ -1366,7 +1362,7 @@ short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, cha
 // AUTOINJECT
 uint BOTSTATE_changeWeapon(BOT_vars_t *bot, uint weapon, char keepCurrent, char noChange) {
     if (weapon == 0) {
-        weapon = BOTSTATE_combatWeaponChangeChoice(bot->drone, bot->drone->opponent, keepCurrent, 1);
+        weapon = BOTSTATE_combatWeaponChangeChoice(bot->drone, bot->drone->opponent, keepCurrent, 1, 0);
         if (weapon == 0)
             return 0;
     }
@@ -1387,7 +1383,7 @@ short BOTSTATE_pickupWeaponChangeChoice(Drone_tag *drone, short weapon, char che
     } else if (checkHeld && !BOTWEAP_hasWeapon(drone, weapon)) {
         return 0;
     }
-    return BOTSTATE_combatWeaponChangeChoice(drone, drone->opponent, 1, 0);
+    return BOTSTATE_combatWeaponChangeChoice(drone, drone->opponent, 1, 0, 0);
 }
 
 // Ends the drone's animation at the frame it has reached, and deletes its A3 script

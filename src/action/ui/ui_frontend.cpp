@@ -18,9 +18,6 @@
 #include <stdio.h>
 #include <string.h>
 
-// Not reimplemented, called by address
-#define psiMovieFinished ((bool (__cdecl *)(void))0x000dcd90)
-
 extern int LanguageToLoad;  // tLANGUAGE (XboxSystem.cpp)
 extern uint8_t AskForLanguage;  // the boot flow shows the language page
 extern uint32_t SubtitlesEnabled;
@@ -76,7 +73,7 @@ void Menu_UpdateMovieCounter(void) {
 // Once the movie is over: the front end's music again if it was stopped for it, and the input unlocked. True then.
 // AUTOINJECT
 bool psiMovieLoop(void) {
-    if (!psiMovieFinished())
+    if (!movieFinished())
         return false;
     if (menu_movie_stopped_music)
         Menu_RestartFrontEndLoop();

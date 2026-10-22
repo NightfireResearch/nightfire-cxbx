@@ -168,9 +168,6 @@ extern float FlashMod;
 // The originals, called by address
 extern uint8_t GlobalBlur;
 
-// The empty function the linker shares, where the source called its profiling hooks
-#define __profiling_or_debugging_hook_point ((void (__cdecl *)(void))0x000e0ec0)
-
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {

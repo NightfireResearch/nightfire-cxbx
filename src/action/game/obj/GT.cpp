@@ -27,10 +27,10 @@
 #include "Player.h"
 #include "PlayerWeapon.h"
 #include "../../util/Sort.h"
+#include "../drone/BOT.h"
 
 #pragma fp_contract(off)
 
-#define MPDrone_MaybeIsDyingOrDead ((bool (__cdecl *)(obj_tag *obj))0x0001a190)
 
 // GT_Track's candidates
 #define TARGETS 64

@@ -19,14 +19,9 @@
 #include "../../game.h"                  // GameState
 #include "../sp/SwitchChannels.h"
 #include "../../util/Random.h"
+#include "NDrone2_Alert.h"
 
 // The originals, called by address
-#define NDrone2_IsCivilian ((bool (__cdecl *)(DCVars_tag *dcv))0x00039f50)
-#define NDrone2_InvalidateAttackRoute ((void (__cdecl *)(DCVars_tag *dcv))0x00043fa0)
-
-// FUN_00046d90 in Ghidra; the name is the PS2 build's. Moves the drone along a route to obj: below 3 still going,
-// 3 there, 10 waiting for the route (as the ninja states read it)
-#define NDrone2_MoveToObject ((uint (__cdecl *)(DCVars_tag *dcv, obj_tag *obj, float radius, char follow))0x00046d90)
 
 // The cheat that blinds the drones (ui_cheats.cpp)
 extern uint32_t switch_BLIND_DRONES;
