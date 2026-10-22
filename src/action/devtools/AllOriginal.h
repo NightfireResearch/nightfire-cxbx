@@ -1,6 +1,8 @@
 #ifndef ACTION_DEVTOOLS_ALLORIGINAL_H_
 #define ACTION_DEVTOOLS_ALLORIGINAL_H_
 
+#include <stddef.h>
+
 // NIGHTFIRE_ORIGINAL=game: every function of the game's own code (tools/subsystems_action.txt: all but the platform
 // layer and the libraries) runs as the Xbox's original, for playing the time demos through the original game. Each
 // original's entry is swapped back in and a jump written over our port's, so a call from our code that stays (the
