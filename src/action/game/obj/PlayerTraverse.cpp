@@ -26,9 +26,6 @@
 #define PI 3.1415927f
 #define THREE_HALF_PI 4.712389f
 
-// The weapon id the player holds on a ladder (Player_LeaveLadder gives back the one before)
-#define WEAPON_LADDER 0x47
-
 // The wire anim playing, which Player_Wire chooses the next one by
 // XBE_GLOBAL(0x00278e54, 0x4)
 HASHCODE WireAnim;
@@ -152,7 +149,7 @@ void Player_LeaveLadder(obj_tag *player, BLData *blData) {
     Player_ChangeSubState(player, MovementType_Walk);
     AnimObjectUpdate(player);
     AnimState *animState = player->animState;
-    if (animState->currentWeaponId == WEAPON_LADDER)
+    if (animState->currentWeaponId == Weap_Hands)
         animState->switchingToWeaponId = animState->prevHeldWeaponId;
 }
 

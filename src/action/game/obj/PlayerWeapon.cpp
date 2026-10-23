@@ -496,7 +496,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
 
     AnimState *anim = player->animState;
     char current = anim->currentWeaponId;
-    if (current == Weap_MaybeHandsOnlyOrLadder)
+    if (current == Weap_Hands)
         return;
     if (current > 0x5c && current <= 0x5e)
         return;

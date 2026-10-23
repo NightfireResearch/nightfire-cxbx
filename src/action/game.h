@@ -268,7 +268,9 @@ typedef enum WeaponBaseNum {
     Weap_RemoteMine=55,
     Weap_Satchel=59,
     Weap_OddjobHat=69,
-    Weap_MaybeHandsOnlyOrLadder = 71,
+    Weap_Hands=71,              // nothing in hand (Player_WeaponNone); the last of the weapons the weapon button
+                                // cycles, 1-71
+    // 72 and 73 empty, then the gadgets the gadget button cycles, 74-94
     Weap_Ronin=82,
     Weap_Camera=84,
     Weap_Camera_Upgraded=85,
@@ -276,6 +278,8 @@ typedef enum WeaponBaseNum {
     Weap_Decryptor_Upgraded=87,
     Weap_QWorm = 88,
     Weap_MaybeNightvision = 0x5d,
+    // 95 on, which neither button reaches: the helicopters' guns and missiles, the sub's and the space laser, and
+    // second entries of some of the player's (smoke grenade, laser, satchel, AT-600, Phoenix Samurai)
     Weap_CopterGunCastle=97,
     Weap_CopterMissileCastle=98,
     Weap_Laser=103,

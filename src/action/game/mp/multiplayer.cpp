@@ -2012,8 +2012,8 @@ void MP_EquipPlayer(obj_tag *player) {
         Player_EquipWeapon(blData, Weap_Satchel, 1);
     Player_CheckWeaponsLoaded(blData);
 
-    player->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
-    player->animState->prevHeldWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    player->animState->currentWeaponId = Weap_Hands;
+    player->animState->prevHeldWeaponId = Weap_Hands;
     player->animState->switchingToWeaponId = (char)weapon;
     blData->weaponObject->curState = 0;
 }

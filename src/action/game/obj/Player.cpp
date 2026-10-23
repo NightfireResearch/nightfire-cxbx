@@ -472,8 +472,8 @@ void Player_WeaponNone(obj_tag* obj) {
     BLData* blData = (BLData*)obj->extraObjectData;
     
     obj->animState->prevHeldWeaponId = obj->animState->currentWeaponId;
-    obj->animState->switchingToWeaponId = Weap_MaybeHandsOnlyOrLadder;
-    obj->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    obj->animState->switchingToWeaponId = Weap_Hands;
+    obj->animState->currentWeaponId = Weap_Hands;
     
     blData->weaponObject->curState = 0;
     blData->muzzleFlashFrames = 0;
@@ -1017,8 +1017,8 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
     short gadget = (VIDEO_FRAME_RATE != 50) ? Weap_Unnamed5B : Weap_Unnamed59;
 
-    player->animState->currentWeaponId = Weap_MaybeHandsOnlyOrLadder;
-    player->animState->prevHeldWeaponId = Weap_MaybeHandsOnlyOrLadder;
+    player->animState->currentWeaponId = Weap_Hands;
+    player->animState->prevHeldWeaponId = Weap_Hands;
     blData->aimAutoLevelState = 3;
 
     if (MPSettings.isMultiplayer != 0) {
