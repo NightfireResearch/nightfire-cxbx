@@ -79,7 +79,8 @@
     { "name": "macos", "configurePreset": "macos" },
     { "name": "linux", "configurePreset": "linux" },
     { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] },
-    { "name": "linux-x64", "configurePreset": "linux-x64", "targets": [ "driving_standalone", "driving_standalone_test" ] },
+    { "name": "linux-x64", "configurePreset": "linux-x64",
+      "targets": [ "driving_standalone", "driving_standalone_test", "action_standalone", "action_standalone_test" ] },
     { "name": "macos-arm64", "configurePreset": "macos-arm64", "targets": [ "driving_standalone", "driving_standalone_test" ] }
   ]
 }

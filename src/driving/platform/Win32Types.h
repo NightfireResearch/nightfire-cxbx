@@ -71,6 +71,33 @@ typedef union _LARGE_INTEGER {
     LONGLONG QuadPart;
 } LARGE_INTEGER;
 
+typedef union _ULARGE_INTEGER {
+    struct {
+        DWORD LowPart;
+        DWORD HighPart;
+    };
+    ULONGLONG QuadPart;
+} ULARGE_INTEGER;
+
+typedef struct _FILETIME {
+    DWORD dwLowDateTime;
+    DWORD dwHighDateTime;
+} FILETIME;
+
+typedef struct _WIN32_FIND_DATAA {
+    DWORD dwFileAttributes;
+    FILETIME ftCreationTime;
+    FILETIME ftLastAccessTime;
+    FILETIME ftLastWriteTime;
+    DWORD nFileSizeHigh;
+    DWORD nFileSizeLow;
+    DWORD dwReserved0;
+    DWORD dwReserved1;
+    CHAR cFileName[260];
+    CHAR cAlternateFileName[14];
+} WIN32_FIND_DATAA;
+static_assert(sizeof(WIN32_FIND_DATAA) == 0x140, "WIN32_FIND_DATAA");
+
 typedef struct _SECURITY_ATTRIBUTES {
     DWORD nLength;
     LPVOID lpSecurityDescriptor;
@@ -119,8 +146,13 @@ typedef struct _TIME_ZONE_INFORMATION {
 #define ERROR_INVALID_HANDLE      6
 #define ERROR_NOT_ENOUGH_MEMORY   8
 #define ERROR_BAD_FORMAT          11
+#define ERROR_NO_MORE_FILES       18
 #define ERROR_READ_FAULT          30
+#define ERROR_HANDLE_EOF          38
 #define ERROR_BADNAME             161
+#define ERROR_FILENAME_EXCED_RANGE 206
+#define ERROR_IO_INCOMPLETE       996
+#define ERROR_IO_PENDING          997
 
 #define GENERIC_READ  0x80000000
 #define GENERIC_WRITE 0x40000000
@@ -131,7 +163,11 @@ typedef struct _TIME_ZONE_INFORMATION {
 #define OPEN_EXISTING     3
 #define OPEN_ALWAYS       4
 #define TRUNCATE_EXISTING 5
+#define FILE_ATTRIBUTE_DIRECTORY 0x00000010
 #define FILE_ATTRIBUTE_NORMAL 0x00000080
+#define INVALID_FILE_ATTRIBUTES ((DWORD)-1)
+#define FILE_FLAG_NO_BUFFERING 0x20000000
+#define FILE_FLAG_OVERLAPPED   0x40000000
 #define FILE_BEGIN   0
 #define FILE_CURRENT 1
 #define FILE_END     2

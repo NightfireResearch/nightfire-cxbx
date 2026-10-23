@@ -13,7 +13,7 @@
 extern char PauseBuildString[29];   // ui_pause.cpp: sp_level[-1]'s byte, in the game's memory
 
 // XBE_GLOBAL(0x0025d6e8, 0x20)
-ulong menu_bonus[8];  // 4 players x {lo, hi}
+uint32_t menu_bonus[8];  // 4 players x {lo, hi}
 // XBE_GLOBAL(0x0025d78d, 0x1)
 uint8_t menu_bonus_replace;  // Menu_SetBonus always replaces, never ORs
 // XBE_GLOBAL(0x0025d78c, 0x1)
@@ -57,7 +57,7 @@ uint64_t Menu_GetBonus(byte player) {
 // Sets (or ORs in) a player's rewards and rebuilds their gadget upgrades from them.
 // AUTOINJECT
 void Menu_SetBonus(uint lo, uint hi, byte player, char orIn) {
-    ulong *bonus = &menu_bonus[player * 2];
+    uint32_t *bonus = &menu_bonus[player * 2];
     if (!menu_bonus_replace && orIn) {
         bonus[0] |= lo;
         bonus[1] |= hi;
@@ -79,7 +79,7 @@ void Menu_SetBonus(uint lo, uint hi, byte player, char orIn) {
 // complete), and the rewards up to that medal are given. True for Equinox.
 // AUTOINJECT
 bool Menu_SetLevelBonus(int level, uint medal, byte player) {
-    ulong bonus[2] = { menu_bonus[0], menu_bonus[1] };   // the first player's, whoever finished it
+    uint32_t bonus[2] = { menu_bonus[0], menu_bonus[1] };   // the first player's, whoever finished it
     menu_level_bonus_earned = 0;
     int index = 0;
     while (index < ARRAY_SIZE(sp_level) && (int)sp_level[index].identifier != level)
@@ -126,7 +126,7 @@ undefined4 Menu_GetObjectUpgradeLevel(uint objId, byte player) {
 }
 
 // The rewards of one player, or of all four (0xff) OR-ed together.
-static void PlayerRewards(byte player, ulong out[2]) {
+static void PlayerRewards(byte player, uint32_t out[2]) {
     if (player == 0xff) {
         out[0] = menu_bonus[6] | menu_bonus[4] | menu_bonus[2] | menu_bonus[0];
         out[1] = menu_bonus[7] | menu_bonus[5] | menu_bonus[3] | menu_bonus[1];
@@ -146,7 +146,7 @@ static const struct { uint objId; uchar character; } reward_characters[] = {
 // Locks the reward characters (items 12-28) and opens those the player (or anyone, 0xff) has earned.
 // AUTOINJECT
 void Menu_UnlockMPSkins(byte player) {
-    ulong bonus[2];
+    uint32_t bonus[2];
     PlayerRewards(player, bonus);
     for (int i = 0; i < ARRAY_SIZE(reward_characters); i++) {
         ITEM_ENABLED(mp_characters[reward_characters[i].character]) = 0;
@@ -175,7 +175,7 @@ static const struct { uint objId; uchar scenario; } reward_scenarios[] = {
 // Opens the reward scenarios, and the Explosive Scenery option, that any player has earned.
 // AUTOINJECT
 void Menu_UnlockMPSettings(void) {
-    ulong bonus[2];
+    uint32_t bonus[2];
     PlayerRewards(0xff, bonus);
     for (int i = 0; i < ARRAY_SIZE(reward_scenarios); i++)
         ITEM_ENABLED(mp_scenario[reward_scenarios[i].scenario]) = 0;

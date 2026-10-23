@@ -59,7 +59,9 @@ no address in it. `level_tag.spline` is a word too: the twenty placement structu
 it. The heap's headers keep the game's layout: `MemBlock.prev` is a word, and the heap's words (`PtrHeap`,
 `QuickBlock`) decode through the window. The allocations do not: about 30 sites ask for structures that hold pointers,
 so on 64-bit the blocks are bigger and lie elsewhere (see the heap addresses below). The executable is linked at
-0x400000 without ASLR on 64-bit (`nf_game_window`), and `GameWindowOutOfRange` is StandaloneMain.cpp's.
+0x400000 without ASLR on 64-bit (`nf_game_window`), and `GameWindowOutOfRange` is the driving engine's
+(GameWindow.cpp, linked with the host layer, docs/action-portable.md), whose debug break reaches StandaloneMain.cpp's
+crash report.
 
 **5. Memory-only structures.** The 787 layout checks a 64-bit compile fails are `LAYOUT_32` (common/xbeClass.h): none
 of them on a file structure. Integers holding addresses became the right types: the open file (`PsiOpenFile.data`,
@@ -100,7 +102,7 @@ The tools of the bring-up, in action_standalone_test: `NIGHTFIRE_DEMO_DUMP_OBJEC
 channels; `NIGHTFIRE_DEMO_WATCH_CHANNEL=<n>`, `NIGHTFIRE_DEMO_WATCH_OBJECT=<frame>,<n>` and
 `NIGHTFIRE_DEMO_WATCH_DRONE=<frame>,<n>` put a hardware watchpoint on a channel, an object's curState or a drone's
 next state and report each write with the code addresses on the stack; StandaloneMain.cpp's crash report and
-`NIGHTFIRE_REPORT_AFTER` read RIP, and GameWindowOutOfRange prints the stack.
+`NIGHTFIRE_REPORT_AFTER` read RIP, and GameWindowOutOfRange's break is reported with the stack.
 
 ## Heap addresses
 

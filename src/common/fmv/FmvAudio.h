@@ -48,7 +48,7 @@ public:
     // The movie's time in seconds
     double Clock();
 
-    // For a time demo (src/action/devtools/Demo.h, XAudio2 build): the clock follows `clock`, in seconds, instead of
+    // For a time demo (src/action/devtools/Demo.h): the clock follows `clock`, in seconds, instead of
     // the samples played, and the audio has played out once that clock passes its length
     static void SetVirtualClock(double (*clock)(void));
 

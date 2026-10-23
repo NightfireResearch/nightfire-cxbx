@@ -906,7 +906,7 @@ uint PlrStarts_GetRewardsTableSize(void) {
 // upgrade has a bit for each mission that gives it (in the table's order, slots 1 to 4), and its level is the count of
 // those set. A slot of 5 or more, a mission not in the table or a reward of type 5 or more give type 5 and no bit.
 // AUTOINJECT
-void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE level, uint slot, char set, REWARDINFO_tag *op) {
+void PlrStarts_ProcessRewardCounter(uint32_t *bonus, HASHCODE level, uint slot, char set, REWARDINFO_tag *op) {
     op->hasMedal = 0;
     op->objType = 5;
     op->objId = 0;
@@ -952,8 +952,8 @@ void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE level, uint slot, cha
     ulonglong bit = RewardBit(offset + reward.bit);
     op->hasMedal = (((ulonglong)bonus[0] | (ulonglong)bonus[1] << 32) & bit) != 0;
     if (set) {
-        bonus[0] |= (ulong)bit;
-        bonus[1] |= (ulong)(bit >> 32);
+        bonus[0] |= (uint32_t)bit;
+        bonus[1] |= (uint32_t)(bit >> 32);
         count++;
     }
     if (reward.type == REWARD_UPGRADE)

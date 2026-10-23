@@ -36,7 +36,7 @@ int64_t Demo_CounterFrequency(void) {
 }
 
 void Demo_Pad(int, DemoPad *) {}
-void Demo_Mouse(bool *, long *, long *) {}
+void Demo_Mouse(bool *, int32_t *, int32_t *) {}
 void Demo_SoundAnswer(int, DemoSoundQuery, uint32_t *) {}
 void Demo_LeavingForDriving(void) {}
 void Demo_HeapReset(void) {}

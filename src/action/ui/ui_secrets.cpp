@@ -15,7 +15,7 @@
 static char kbd_text[0x40]; // the text being typed: 8 characters in secret mode
 // XBE_GLOBAL(0x0017d608, 0x1)
 static uint8_t kbd_clear_on_key = 1; // the next key (other than Done) clears the text first
-extern ulong menu_bonus[8];   // MenuUnlocks.cpp
+extern uint32_t menu_bonus[8];   // MenuUnlocks.cpp
 #define cn_bonus (*(uint64_t *)menu_bonus) // the codename's rewards, a bit each (docs/ui/secrets.md): player 0's
 // XBE_GLOBAL(0x0025ed68, 0x8)
 static ushort kbd_accent_keys[4]; // the strings of keys 100-103: A-umlaut, A-circumflex, AE, A-grave
@@ -42,17 +42,17 @@ uint64_t Menu_UpgradeCheat(uint64_t bonus, uint objId, byte count) {
     byte owned = 0;
     for (uint level = 0; level < 12; level++)
         for (uint slot = 1; slot < 5; slot++) {
-            PlrStarts_ProcessRewardCounter((ulong *)&bonus, LevelAt(level), slot, 0, &info);
+            PlrStarts_ProcessRewardCounter((uint32_t *)&bonus, LevelAt(level), slot, 0, &info);
             if (info.hasMedal && info.objType == 4 && info.objId == objId)
                 owned++;
         }
     if (owned < count)
         for (uint level = 0; level < 12; level++)
             for (uint slot = 1; slot < 5; slot++) {
-                PlrStarts_ProcessRewardCounter((ulong *)&bonus, LevelAt(level), slot, 0, &info);
+                PlrStarts_ProcessRewardCounter((uint32_t *)&bonus, LevelAt(level), slot, 0, &info);
                 if (info.objType == 4) {
                     if (!info.hasMedal && info.objId == objId) {
-                        PlrStarts_ProcessRewardCounter((ulong *)&bonus, LevelAt(level), slot, 1, &info);
+                        PlrStarts_ProcessRewardCounter((uint32_t *)&bonus, LevelAt(level), slot, 1, &info);
                         owned++;
                     }
                     if (owned == count)

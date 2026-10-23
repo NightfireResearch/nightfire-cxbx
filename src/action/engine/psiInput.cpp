@@ -1,10 +1,10 @@
 #include "psiInput.h"
 #include "../actionhelpers.h"
-#include "../../common/renderWindow.h"
 #include "mouseLook.h"
 #include "../input.h"
 #include "../devtools/Demo.h"
 #include "../devtools/MenuProbe.h"
+#include "../../driving/platform/HostInput.h"
 #include <string.h>
 #include <math.h>
 
@@ -12,62 +12,20 @@
 XboxInputs_struct XboxInputs;
 
 // ---------------------------------------------------------------------------------------------------------------
-// Real hardware polling - talks to the host's actual gamepads via Win32 XInput, instead of the original Xbox
-// XAPILIB device layer (XInitDevices/XGetDevices/XInputOpen/XGetDeviceChanges/XInputGetState/XInputSetState/
-// XInputClose - on real hardware, all backed by IOCTLs against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that
-// whole chain; everything else in this file (psiInput_GetJoystickLX and friends, psiInput_MapInputs, ...)
-// is unmodified and keeps reading/writing the same XboxInputs global exactly as before.
-//
-// We declare the real XInputGetState/XInputSetState ourselves against locally-named struct shapes rather
-// than including <xinput.h>, because the real Win32 XINPUT_STATE/XINPUT_GAMEPAD/XINPUT_VIBRATION names
-// collide with this codebase's Xbox-shaped versions of the same names (see xinput_xbox.h, included via
-// psiInput.h) - which differ in layout (the original Xbox pad exposed 6 analog buttons instead of 2 analog
+// Real hardware polling - the host's gamepads as XInput reports them (HostInput_ReadPad: XInput on Win32, SDL3's
+// gamepads with NIGHTFIRE_SDL), instead of the original Xbox XAPILIB device layer (XInitDevices/XGetDevices/
+// XInputOpen/XGetDeviceChanges/XInputGetState/XInputSetState/XInputClose - on real hardware, all backed by IOCTLs
+// against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that whole
+// chain; everything else in this file (psiInput_GetJoystickLX and friends, psiInput_MapInputs, ...) is unmodified
+// and keeps reading/writing the same XboxInputs global exactly as before. The host's pad is XInput's shape, which
+// differs from the Xbox one in xinput_xbox.h (the original Xbox pad exposed 6 analog buttons instead of 2 analog
 // triggers, among other things).
 // ---------------------------------------------------------------------------------------------------------------
-
-#pragma pack(push, 1)
-struct Win32_XINPUT_GAMEPAD {
-    unsigned short wButtons;
-    unsigned char  bLeftTrigger;
-    unsigned char  bRightTrigger;
-    short          sThumbLX;
-    short          sThumbLY;
-    short          sThumbRX;
-    short          sThumbRY;
-};
-
-struct Win32_XINPUT_STATE {
-    unsigned long        dwPacketNumber;
-    Win32_XINPUT_GAMEPAD Gamepad;
-};
-
-struct Win32_XINPUT_VIBRATION {
-    unsigned short wLeftMotorSpeed;
-    unsigned short wRightMotorSpeed;
-};
-#pragma pack(pop)
-
-#define WIN32_XINPUT_GAMEPAD_A              0x1000
-#define WIN32_XINPUT_GAMEPAD_B              0x2000
-#define WIN32_XINPUT_GAMEPAD_X              0x4000
-#define WIN32_XINPUT_GAMEPAD_Y              0x8000
-#define WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER  0x0100
-#define WIN32_XINPUT_GAMEPAD_RIGHT_SHOULDER 0x0200
-
-extern "C" __declspec(dllimport) unsigned long __stdcall XInputGetState(unsigned long dwUserIndex, Win32_XINPUT_STATE *pState);
-extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned long dwUserIndex, Win32_XINPUT_VIBRATION *pVibration);
-// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
-// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
-#ifdef _MSC_VER
-#pragma comment(lib, "xinput9_1_0.lib")
-#endif
-
-#define WIN32_ERROR_SUCCESS 0
 
 // ---------------------------------------------------------------------------------------------------------------
 // Keyboard fallback - a virtual Xbox pad on port 0, used only when no real pad is plugged into port 0.
 //
-// This deliberately synthesizes a Win32_XINPUT_STATE and lets it fall through the rest of psiInput_PollDevices
+// This deliberately synthesizes a pad's state and lets it fall through the rest of psiInput_PollDevices
 // untouched, rather than writing game action channels directly (which is what the older Inject_KeyboardInput in
 // input.cpp did). Everything downstream then behaves exactly as it does for a real pad: the deadzone and gain
 // curves, the analog-to-digital button thresholds, all four control styles, and - the part that matters most -
@@ -109,99 +67,60 @@ extern "C" __declspec(dllimport) unsigned long __stdcall XInputSetState(unsigned
 // 33% the same as a d-pad press), so WASD navigates menus as well as walking.
 // ---------------------------------------------------------------------------------------------------------------
 
-extern "C" __declspec(dllimport) short __stdcall GetAsyncKeyState(int vKey);
-extern "C" __declspec(dllimport) void *__stdcall GetForegroundWindow(void);
-extern "C" __declspec(dllimport) void *__stdcall FindWindowA(const char *lpClassName, const char *lpWindowName);
-extern "C" __declspec(dllimport) void *__stdcall GetAncestor(void *hWnd, unsigned int gaFlags);
-// MSVC acts on this; other linkers get the library from the CMake target instead. Guarded because
-// clang emits the directive into .drectve regardless, and GNU ld then warns that it cannot read it.
-#ifdef _MSC_VER
-#pragma comment(lib, "user32.lib")
-#endif
-
-#define VK_BACKSPACE 0x08
-#define VK_RETURN_   0x0D
-#define VK_SHIFT_    0x10
-#define VK_ESCAPE_   0x1B
-#define VK_SPACE_    0x20
-#define VK_LEFT_     0x25
-#define VK_UP_       0x26
-#define VK_RIGHT_    0x27
-#define VK_DOWN_     0x28
-#define VK_LCONTROL_ 0xA2
-#define GA_ROOT_     2
-
-// GetAsyncKeyState rather than GetKeyState: the game loop thread does not pump a message queue of its own, and
-// GetKeyState reports the state as of the calling thread's last message - which on this thread never updates.
-static inline bool KeyDown(int vk) {
-    return (GetAsyncKeyState(vk) & 0x8000) != 0;
-}
-
-// Only feed the keyboard in when the game's own window is in front, so keys typed into another application do
-// not drive Bond around. The window is the one the loader creates. If it cannot be found at all, fail open -
-// better to accept stray keystrokes than to leave someone with no working input and no way to tell why.
-static bool KeyboardPadHasFocus(void) {
-    void *render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
-    if (render == NULL)
-        return true;
-    void *root = GetAncestor(render, GA_ROOT_);
-    void *foreground = GetForegroundWindow();
-    return foreground != NULL && (foreground == render || foreground == root);
-}
-
 // Fills in state as though a pad were connected, and returns whether any key is actually being held. The state
 // is always fully written, so a caller can use it regardless of the return value.
-static bool BuildKeyboardPadState(Win32_XINPUT_STATE *state) {
+static bool BuildKeyboardPadState(HostPadState *state) {
     memset(state, 0, sizeof(*state));
 
-    if (!KeyboardPadHasFocus())
+    // Only when the game's window is in front, so keys typed into another application do not drive Bond around
+    if (!HostInput_WindowHasFocus())
         return false;
 
-    // A counter is enough for dwPacketNumber: the only thing that reads it is the original's own
+    // A counter is enough for the packet number: the only thing that reads it is the original's own
     // "has anything changed" bookkeeping, which just wants it to move when the state does.
-    static unsigned long packet = 0;
-    state->dwPacketNumber = ++packet;
+    static uint32_t packet = 0;
+    state->packetNumber = ++packet;
 
     const short kFull = 32767;
-    const short kLook = (short)(KeyDown(VK_SHIFT_) ? 32767 : 19660); // ~60% unless Shift is held
+    const short kLook = (short)(HostInput_KeyHeld(kKeyShift) ? 32767 : 19660); // ~60% unless Shift is held
 
     short moveX = 0, moveY = 0, lookX = 0, lookY = 0;
-    if (KeyDown('D')) moveX += kFull;
-    if (KeyDown('A')) moveX -= kFull;
-    if (KeyDown('W')) moveY += kFull;
-    if (KeyDown('S')) moveY -= kFull;
-    if (KeyDown(VK_RIGHT_)) lookX += kLook;
-    if (KeyDown(VK_LEFT_))  lookX -= kLook;
-    if (KeyDown(VK_UP_))    lookY += kLook;
-    if (KeyDown(VK_DOWN_))  lookY -= kLook;
+    if (HostInput_KeyHeld(kKeyD)) moveX += kFull;
+    if (HostInput_KeyHeld(kKeyA)) moveX -= kFull;
+    if (HostInput_KeyHeld(kKeyW)) moveY += kFull;
+    if (HostInput_KeyHeld(kKeyS)) moveY -= kFull;
+    if (HostInput_KeyHeld(kKeyRight)) lookX += kLook;
+    if (HostInput_KeyHeld(kKeyLeft))  lookX -= kLook;
+    if (HostInput_KeyHeld(kKeyUp))    lookY += kLook;
+    if (HostInput_KeyHeld(kKeyDown))  lookY -= kLook;
 
-    state->Gamepad.sThumbLX = moveX;
-    state->Gamepad.sThumbLY = moveY;
-    state->Gamepad.sThumbRX = lookX;
-    state->Gamepad.sThumbRY = lookY;
+    state->thumbLX = moveX;
+    state->thumbLY = moveY;
+    state->thumbRX = lookX;
+    state->thumbRY = lookY;
 
     unsigned short buttons = 0;
-    if (KeyDown('C') || KeyDown(VK_RETURN_)) buttons |= WIN32_XINPUT_GAMEPAD_A;
-    if (KeyDown(VK_BACKSPACE))               buttons |= WIN32_XINPUT_GAMEPAD_B;
-    if (KeyDown('R') || KeyDown('E'))        buttons |= WIN32_XINPUT_GAMEPAD_X;
-    if (KeyDown(VK_SPACE_))                  buttons |= WIN32_XINPUT_GAMEPAD_Y;
-    if (KeyDown('Z'))                        buttons |= WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER;
-    if (KeyDown('P') || KeyDown(VK_ESCAPE_)) buttons |= XINPUT_GAMEPAD_START;
-    if (KeyDown('N'))                        buttons |= XINPUT_GAMEPAD_BACK;
+    if (HostInput_KeyHeld(kKeyC) || HostInput_KeyHeld(kKeyEnter)) buttons |= kPadA;
+    if (HostInput_KeyHeld(kKeyBackspace))               buttons |= kPadB;
+    if (HostInput_KeyHeld(kKeyR) || HostInput_KeyHeld(kKeyE))        buttons |= kPadX;
+    if (HostInput_KeyHeld(kKeySpace))                  buttons |= kPadY;
+    if (HostInput_KeyHeld(kKeyZ))                        buttons |= kPadLeftShoulder;
+    if (HostInput_KeyHeld(kKeyP) || HostInput_KeyHeld(kKeyEscape)) buttons |= XINPUT_GAMEPAD_START;
+    if (HostInput_KeyHeld(kKeyN))                        buttons |= XINPUT_GAMEPAD_BACK;
     if (MouseLook_NextWeapon())              buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
-    if (KeyDown('Q') || MouseLook_PrevWeapon()) buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
-    if (KeyDown('2') || MouseLook_ZoomIn())   buttons |= XINPUT_GAMEPAD_DPAD_UP;
-    if (KeyDown('1') || MouseLook_ZoomOut())  buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
-    state->Gamepad.wButtons = buttons;
+    if (HostInput_KeyHeld(kKeyQ) || MouseLook_PrevWeapon()) buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
+    if (HostInput_KeyHeld(kKey2) || MouseLook_ZoomIn())   buttons |= XINPUT_GAMEPAD_DPAD_UP;
+    if (HostInput_KeyHeld(kKey1) || MouseLook_ZoomOut())  buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
+    state->buttons = buttons;
 
     // The mouse buttons come in here rather than being applied to the player directly, so that they go
     // through the same mapping as every other button - see the comment on MouseLook_FireHeld. Both are held
     // false unless the pointer is captured, so this cannot pick up a click meant for something else.
-    state->Gamepad.bRightTrigger = (KeyDown(VK_LCONTROL_) || MouseLook_FireHeld()) ? 0xFF : 0; // fire
-    state->Gamepad.bLeftTrigger  = (KeyDown('X') || MouseLook_ZoomHeld(PlayerInputs[0].manualAimToggle != 0)) ? 0xFF : 0;          // scope zoom
+    state->rightTrigger = (HostInput_KeyHeld(kKeyLeftCtrl) || MouseLook_FireHeld()) ? 0xFF : 0; // fire
+    state->leftTrigger  = (HostInput_KeyHeld(kKeyX) || MouseLook_ZoomHeld(PlayerInputs[0].manualAimToggle != 0)) ? 0xFF : 0;          // scope zoom
 
     return buttons != 0 || moveX != 0 || moveY != 0 || lookX != 0 || lookY != 0 ||
-           state->Gamepad.bLeftTrigger != 0 || state->Gamepad.bRightTrigger != 0;
+           state->leftTrigger != 0 || state->rightTrigger != 0;
 }
 
 // AUTOINJECT
@@ -259,9 +178,9 @@ void psiInput_PollDevices(void) {
     for (int i = 0; i < 4; i++) {
         ControllerStateStruct *c = &XboxInputs.Controllers[i];
 
-        Win32_XINPUT_STATE winState;
+        HostPadState winState;
         memset(&winState, 0, sizeof(winState));
-        bool connected = XInputGetState((unsigned long)i, &winState) == WIN32_ERROR_SUCCESS;
+        bool connected = HostInput_ReadPad(i, &winState);
 
         // No real pad on port 0: present the keyboard as one instead (see BuildKeyboardPadState above). Note
         // this claims "connected" whether or not a key is currently held - a pad that is plugged in but idle is
@@ -275,23 +194,23 @@ void psiInput_PollDevices(void) {
         if (Demo_Active()) {
             DemoPad pad;
             pad.connected = connected ? 1 : 0;
-            pad.buttons = winState.Gamepad.wButtons;
-            pad.leftTrigger = winState.Gamepad.bLeftTrigger;
-            pad.rightTrigger = winState.Gamepad.bRightTrigger;
-            pad.thumbLX = winState.Gamepad.sThumbLX;
-            pad.thumbLY = winState.Gamepad.sThumbLY;
-            pad.thumbRX = winState.Gamepad.sThumbRX;
-            pad.thumbRY = winState.Gamepad.sThumbRY;
+            pad.buttons = winState.buttons;
+            pad.leftTrigger = winState.leftTrigger;
+            pad.rightTrigger = winState.rightTrigger;
+            pad.thumbLX = winState.thumbLX;
+            pad.thumbLY = winState.thumbLY;
+            pad.thumbRX = winState.thumbRX;
+            pad.thumbRY = winState.thumbRY;
             Demo_Pad(i, &pad);
             connected = pad.connected != 0;
-            winState.dwPacketNumber = pad.packet;
-            winState.Gamepad.wButtons = pad.buttons;
-            winState.Gamepad.bLeftTrigger = pad.leftTrigger;
-            winState.Gamepad.bRightTrigger = pad.rightTrigger;
-            winState.Gamepad.sThumbLX = pad.thumbLX;
-            winState.Gamepad.sThumbLY = pad.thumbLY;
-            winState.Gamepad.sThumbRX = pad.thumbRX;
-            winState.Gamepad.sThumbRY = pad.thumbRY;
+            winState.packetNumber = pad.packet;
+            winState.buttons = pad.buttons;
+            winState.leftTrigger = pad.leftTrigger;
+            winState.rightTrigger = pad.rightTrigger;
+            winState.thumbLX = pad.thumbLX;
+            winState.thumbLY = pad.thumbLY;
+            winState.thumbRX = pad.thumbRX;
+            winState.thumbRY = pad.thumbRY;
         }
 
         if (!connected) {
@@ -302,11 +221,11 @@ void psiInput_PollDevices(void) {
             // Any nonzero value marks "connected" here - the original's real device handle is never
             // otherwise inspected by anything reimplemented in this file, only ever compared against 0.
             c->controllerIndex = (uint)(i + 1);
-            c->controllerState.dwPacketNumber = winState.dwPacketNumber;
+            c->controllerState.dwPacketNumber = winState.packetNumber;
 
             // The low 8 bits (D-pad/start/back/thumbstick-click) sit at the same bit positions in both the
             // real Win32 layout and the original Xbox one - see xinput_xbox.h.
-            c->controllerState.Gamepad.wButtons = winState.Gamepad.wButtons & 0x00FF;
+            c->controllerState.Gamepad.wButtons = winState.buttons & 0x00FF;
 
             // The original Xbox pad exposed A/B/X/Y/BLACK/WHITE/triggers as 6+2 analog bytes rather than
             // digital bits (see xinput_xbox.h) - synthesize those from the real pad's digital face buttons
@@ -315,19 +234,19 @@ void psiInput_PollDevices(void) {
             // original's unrolled per-button code) lost the alternate-fire button, which the game maps to
             // XBOXINPUT_GAMEPAD_LEFT_SHOULDER further down in this file.
             unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
-            analog[0] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_A) ? 0xFF : 0;
-            analog[1] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_B) ? 0xFF : 0;
-            analog[2] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_X) ? 0xFF : 0;
-            analog[3] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_Y) ? 0xFF : 0;
-            analog[4] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_RIGHT_SHOULDER) ? 0xFF : 0;
-            analog[5] = (winState.Gamepad.wButtons & WIN32_XINPUT_GAMEPAD_LEFT_SHOULDER) ? 0xFF : 0;
-            analog[6] = winState.Gamepad.bLeftTrigger;
-            analog[7] = winState.Gamepad.bRightTrigger;
+            analog[0] = (winState.buttons & kPadA) ? 0xFF : 0;
+            analog[1] = (winState.buttons & kPadB) ? 0xFF : 0;
+            analog[2] = (winState.buttons & kPadX) ? 0xFF : 0;
+            analog[3] = (winState.buttons & kPadY) ? 0xFF : 0;
+            analog[4] = (winState.buttons & kPadRightShoulder) ? 0xFF : 0;
+            analog[5] = (winState.buttons & kPadLeftShoulder) ? 0xFF : 0;
+            analog[6] = winState.leftTrigger;
+            analog[7] = winState.rightTrigger;
 
-            c->controllerState.Gamepad.sThumbLX = winState.Gamepad.sThumbLX;
-            c->controllerState.Gamepad.sThumbLY = winState.Gamepad.sThumbLY;
-            c->controllerState.Gamepad.sThumbRX = winState.Gamepad.sThumbRX;
-            c->controllerState.Gamepad.sThumbRY = winState.Gamepad.sThumbRY;
+            c->controllerState.Gamepad.sThumbLX = winState.thumbLX;
+            c->controllerState.Gamepad.sThumbLY = winState.thumbLY;
+            c->controllerState.Gamepad.sThumbRX = winState.thumbRX;
+            c->controllerState.Gamepad.sThumbRY = winState.thumbRY;
         }
 
         // --- from here down, faithfully transliterated from the original polling function (0x000e76a0) ---
@@ -408,15 +327,12 @@ void psiInput_PollDevices(void) {
         // status word checked against 0x3e5 (997, ERROR_IO_PENDING) to skip re-issuing a call that's still
         // in flight, followed by padding for the rest of the header, followed by the real rumble values -
         // confirmed from the raw disassembly of 0x000e76a0, not just its decompile, since the decompile's
-        // own account of this part doesn't hold together on its own). Win32's XInputSetState is
-        // synchronous and takes only the plain 4-byte rumble struct, so none of that header/pending-check
+        // own account of this part doesn't hold together on its own). The host's rumble is
+        // synchronous and takes only the two motor speeds, so none of that header/pending-check
         // machinery applies here - we just send the new values directly whenever they've changed.
         if (c->controllerIndex != 0 &&
             (c->lastRumbleA != c->rumbleA || c->lastRumbleB != c->rumbleB)) {
-            Win32_XINPUT_VIBRATION vibration;
-            vibration.wLeftMotorSpeed = (unsigned short)(c->rumbleA * 655);
-            vibration.wRightMotorSpeed = (unsigned short)(c->rumbleB * 655);
-            XInputSetState((unsigned long)i, &vibration);
+            HostInput_SetRumble(i, (unsigned short)(c->rumbleA * 655), (unsigned short)(c->rumbleB * 655));
 
             c->lastRumbleA = c->rumbleA;
             c->lastRumbleB = c->rumbleB;

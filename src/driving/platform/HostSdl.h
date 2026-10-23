@@ -5,7 +5,7 @@
 
 union SDL_Event;
 
-// An event from the window's loop: pads plugged in or pulled out
+// An event from the window's loop: pads plugged in or pulled out, the mouse
 void HostInputSdl_Event(const SDL_Event *event);
 // Whether the window has the keyboard (true before there is one)
 bool HostWindowSdl_HasKeyboard(void);

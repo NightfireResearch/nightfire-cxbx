@@ -27,8 +27,12 @@
 // The XAudio2 device itself, created on first use. The FMV player (engine/Fmv.cpp) needs it to make its own
 // source voice, and asking here rather than making a second device keeps every voice on one mastering voice.
 // Null if audio could not start at all.
+#ifdef NIGHTFIRE_SDL
+uint32_t XA2_GetDevice(void);   // SDL's device id (sdlAudioAction.cpp)
+#else
 struct IXAudio2;
 IXAudio2 *XA2_GetDevice(void);
+#endif
 
 // Device and global state
 void XA2_DirectSoundCreate(void *lpGuid, DSoundObject **ppDS, void *pUnknown);

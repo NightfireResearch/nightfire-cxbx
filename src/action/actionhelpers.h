@@ -15,11 +15,16 @@
 // #define SCREEN_HEIGHT 1080
 
 #include <stddef.h> // for offsetof
+#include <stdint.h>
 
-// Windows likes naming shit like this
+// Windows likes naming shit like this. ULONG is 32 bits, as driving/platform/Win32Types.h has it on every host.
 typedef void* HANDLE;
 typedef void* PVOID;
+#if defined(_WIN32) || UINTPTR_MAX == 0xffffffffu
 typedef unsigned long ULONG;
+#else
+typedef uint32_t ULONG;
+#endif
 
 typedef struct IO_STATUS_BLOCK IO_STATUS_BLOCK;
 
@@ -213,12 +218,18 @@ extern float REC_FRAME_RATE;
 
 #include <stdio.h>
 
+#ifdef _WIN32
+#define NF_DEBUG_BREAK() __debugbreak()
+#else
+#define NF_DEBUG_BREAK() __builtin_trap()
+#endif
+
 #define NF_ASSERT(expr, msg)                                                \
     do {                                                                    \
         if (!(expr)) {                                                      \
             printf("Assertion failed: %s (%s)\nFile: %s\nLine: %d\n",       \
                 #expr, #msg, __FILE__, __LINE__);                           \
-            __debugbreak();                                                 \
+            NF_DEBUG_BREAK();                                               \
             while(1);                                                       \
         }                                                                   \
     } while (0)

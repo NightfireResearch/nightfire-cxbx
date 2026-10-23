@@ -5,8 +5,11 @@
 #include "../../common/xbeOriginal.h"
 #endif
 #include "../../driving/platform/CRuntimeInternal.h"
+#include "../../driving/platform/Host.h"
 
+#ifndef NIGHTFIRE_STANDALONE
 #include <windows.h>
+#endif
 #include <stdio.h>
 #include <string.h>
 
@@ -22,45 +25,48 @@
 #define KernelRtlInitializeCriticalSection (*(void (__stdcall **)(void *section))0x0015d228u)   // 291
 #define KernelKeBugCheck                   (*(void (__stdcall **)(ULONG code))0x0015d2dcu)      // 95
 #else
-// The kernel's calls, as the loader answers them (src/loader/kernel.cpp): an Xbox critical section is 28 bytes in
-// the caller's record, where a Win32 one fits. A static section is entered without ever being initialised, so each
-// is initialised on its first entry unless it was before.
-LAYOUT_32(sizeof(CRITICAL_SECTION) <= 0x1c, "a Win32 critical section fits in an Xbox one");
-static SRWLOCK KnownSectionsLock = SRWLOCK_INIT;
+// The kernel's calls, as the loader answers them (src/loader/kernel.cpp), over the host layer as in the driving
+// engine (driving/platform/KernelImports.cpp): an Xbox critical section is 28 bytes in the caller's record, where a
+// host lock fits. A static section is entered without ever being initialised, so each is initialised on its first
+// entry unless it was before.
+static_assert(sizeof(HostLock) <= 0x1c, "a host lock fits where the game keeps an Xbox critical section");
+static HostLock KnownSectionsLock;
 static void *KnownSections[1024];
 static unsigned KnownSectionCount;
 
 static bool IsNewSection(void *section) {
-    AcquireSRWLockExclusive(&KnownSectionsLock);
+    static const bool lockMade = (HostInitLock(&KnownSectionsLock), true);
+    (void)lockMade;
+    HostEnterLock(&KnownSectionsLock);
     bool isNew = true;
     for (unsigned i = 0; i < KnownSectionCount && isNew; i++)
         isNew = KnownSections[i] != section;
     if (isNew && KnownSectionCount < sizeof(KnownSections) / sizeof(KnownSections[0]))
         KnownSections[KnownSectionCount++] = section;
-    ReleaseSRWLockExclusive(&KnownSectionsLock);
+    HostLeaveLock(&KnownSectionsLock);
     return isNew;
 }
 
 static void KernelRtlInitializeCriticalSection(void *section) {
     IsNewSection(section);
-    InitializeCriticalSection((CRITICAL_SECTION *)section);
+    HostInitLock((HostLock *)section);
 }
 
 static void KernelRtlEnterCriticalSection(void *section) {
     if (IsNewSection(section))
-        InitializeCriticalSection((CRITICAL_SECTION *)section);
-    EnterCriticalSection((CRITICAL_SECTION *)section);
+        HostInitLock((HostLock *)section);
+    HostEnterLock((HostLock *)section);
 }
 
 static void KernelRtlLeaveCriticalSection(void *section) {
-    LeaveCriticalSection((CRITICAL_SECTION *)section);
+    HostLeaveLock((HostLock *)section);
 }
 
 // The console's panic: say which code it was and stop
-static void KernelKeBugCheck(ULONG code) {
-    printf("\n[kernel] the game called KeBugCheck(0x%lx) - it has decided it cannot continue\n", code);
+static void KernelKeBugCheck(uint32_t code) {
+    printf("\n[kernel] the game called KeBugCheck(0x%x) - it has decided it cannot continue\n", code);
     fflush(stdout);
-    ExitProcess(1);
+    HostExitProcess(1);
 }
 #endif
 
@@ -72,21 +78,21 @@ PerThreadData* PerThread() {                                                // _
     return (PerThreadData *)Xbox_getptd();
 }
 
-// The process heap is Win32's (XboxStartup.cpp), as XAPI's heap calls are.
+// The process heap is the host's (XboxStartup.cpp), as XAPI's heap calls are.
 void* ProcessHeapAlloc(uint32_t flags, size_t size) {
-    return HeapAlloc(ProcessHeapHandle, flags, size);
+    return HostHeapAlloc(ProcessHeapHandle, flags, size);
 }
 
 void ProcessHeapFree(void *block) {
-    HeapFree(ProcessHeapHandle, 0, block);
+    HostHeapFree(ProcessHeapHandle, 0, block);
 }
 
 void* ProcessHeapReAlloc(void *block, size_t size) {
-    return HeapReAlloc(ProcessHeapHandle, 0, block, size);
+    return HostHeapReAlloc(ProcessHeapHandle, 0, block, size);
 }
 
 size_t ProcessHeapSize(void *block) {
-    return HeapSize(ProcessHeapHandle, 0, block);
+    return HostHeapSize(ProcessHeapHandle, 0, block);
 }
 
 void InitialiseSection(CriticalSection *section) {

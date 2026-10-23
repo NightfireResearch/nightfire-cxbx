@@ -8,7 +8,7 @@
 
 #include <map>
 
-#include <windows.h>
+#include "../driving/platform/Host.h"
 
 // The Xbox heap is the game's allocator run on a heap of its own: the heap's globals point at it for each call
 static bool Active;
@@ -57,14 +57,9 @@ static std::map<uint32_t, XboxAllocation>::iterator Containing(const void *data)
 // the heap through 32-bit words), so on 64-bit below 4 GB and above where contiguous memory goes
 static void *XboxHeapPages(uint32_t size) {
 #if UINTPTR_MAX > 0xffffffffu
-    for (uintptr_t at = 0x10000000; at + size <= ((uintptr_t)1 << 32); at += 0x1000000) {
-        void *pages = VirtualAlloc((void *)at, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
-        if (pages != NULL)
-            return pages;
-    }
-    return NULL;
+    return HostAllocatePages(size, 0x10000000, (uintptr_t)1 << 32);
 #else
-    return VirtualAlloc(NULL, size, MEM_RESERVE | MEM_COMMIT, PAGE_READWRITE);
+    return HostAllocatePages(size, 0, UINTPTR_MAX);
 #endif
 }
 

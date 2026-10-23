@@ -58,11 +58,15 @@ static void Closed(SDL_JoystickID id) {
     HostLeaveLock(PortsLock());
 }
 
+static void MouseEvent(const SDL_Event *event);
+
 void HostInputSdl_Event(const SDL_Event *event) {
     if (event->type == SDL_EVENT_GAMEPAD_ADDED)
         Opened(event->gdevice.which);
     else if (event->type == SDL_EVENT_GAMEPAD_REMOVED)
         Closed(event->gdevice.which);
+    else
+        MouseEvent(event);
 }
 
 // A trigger, 0..32767, back to XInput's byte (SDL makes it from the byte as byte * 257 over the full range)
@@ -150,10 +154,107 @@ bool HostInput_KeyHeld(HostKey key) {
         case kKeyQ:      return keys[SDL_SCANCODE_Q];
         case kKeyE:      return keys[SDL_SCANCODE_E];
         case kKeyR:      return keys[SDL_SCANCODE_R];
+        case kKeyC:      return keys[SDL_SCANCODE_C];
+        case kKeyZ:      return keys[SDL_SCANCODE_Z];
+        case kKeyX:      return keys[SDL_SCANCODE_X];
+        case kKeyP:      return keys[SDL_SCANCODE_P];
+        case kKeyN:      return keys[SDL_SCANCODE_N];
+        case kKey1:      return keys[SDL_SCANCODE_1];
+        case kKey2:      return keys[SDL_SCANCODE_2];
+        case kKeyBackspace: return keys[SDL_SCANCODE_BACKSPACE];
+        case kKeyLeftCtrl:  return keys[SDL_SCANCODE_LCTRL];
+        case kKeyF6:     return keys[SDL_SCANCODE_F6];
     }
     return false;
 }
 
 bool HostInput_WindowHasFocus(void) {
     return HostWindowSdl_HasKeyboard();
+}
+
+// ---- the mouse
+//
+// Its events arrive on the window's thread (HostInputSdl_Event) and are added up under a lock of their own until the
+// game's thread reads them. Captured, the window is in SDL's relative mouse mode: the pointer is hidden and held,
+// and the motion events carry the movement, unaccelerated where the platform allows.
+
+static struct {
+    int32_t dx, dy;
+    float wheel;          // notches, which SDL reports in fractions on some devices
+    bool left, right;
+    bool inWindow;
+} Mouse;
+
+static HostLock *MouseLock(void) {
+    static HostLock lock;
+    static bool ready = (HostInitLock(&lock), true);
+    (void)ready;
+    return &lock;
+}
+
+static void MouseEvent(const SDL_Event *event) {
+    HostEnterLock(MouseLock());
+    switch (event->type) {
+        case SDL_EVENT_MOUSE_MOTION:
+            Mouse.dx += (int32_t)event->motion.xrel;
+            Mouse.dy += (int32_t)event->motion.yrel;
+            break;
+        case SDL_EVENT_MOUSE_WHEEL:
+            Mouse.wheel += event->wheel.direction == SDL_MOUSEWHEEL_FLIPPED ? -event->wheel.y : event->wheel.y;
+            break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+        case SDL_EVENT_MOUSE_BUTTON_UP:
+            if (event->button.button == SDL_BUTTON_LEFT)
+                Mouse.left = event->button.down;
+            else if (event->button.button == SDL_BUTTON_RIGHT)
+                Mouse.right = event->button.down;
+            break;
+        case SDL_EVENT_WINDOW_MOUSE_ENTER:
+            Mouse.inWindow = true;
+            break;
+        case SDL_EVENT_WINDOW_MOUSE_LEAVE:
+            Mouse.inWindow = false;
+            break;
+    }
+    HostLeaveLock(MouseLock());
+}
+
+void HostMouse_Read(HostMouseState *state) {
+    HostEnterLock(MouseLock());
+    state->dx = Mouse.dx;
+    state->dy = Mouse.dy;
+    int32_t notches = (int32_t)(Mouse.wheel * 120.0f);
+    state->wheel = notches;
+    Mouse.wheel -= (float)notches / 120.0f;
+    state->left = Mouse.left;
+    state->right = Mouse.right;
+    Mouse.dx = Mouse.dy = 0;
+    HostLeaveLock(MouseLock());
+}
+
+bool HostMouse_HasWindow(void) {
+    return HostWindowSdl_Window() != NULL;
+}
+
+bool HostMouse_InWindow(void) {
+    HostEnterLock(MouseLock());
+    bool inside = Mouse.inWindow;
+    HostLeaveLock(MouseLock());
+    return inside;
+}
+
+static void SDLCALL ApplyCapture(void *data) {
+    SDL_SetWindowRelativeMouseMode(HostWindowSdl_Window(), *static_cast<bool *>(data));
+}
+
+bool HostMouse_Capture(bool capture) {
+    if (HostWindowSdl_Window() == NULL)
+        return false;
+    SDL_RunOnMainThread(ApplyCapture, &capture, true);
+    HostEnterLock(MouseLock());
+    Mouse.dx = Mouse.dy = 0;
+    if (!capture)
+        Mouse.wheel = 0.0f;
+    HostLeaveLock(MouseLock());
+    return capture;
 }

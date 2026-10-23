@@ -1,24 +1,30 @@
-#include <windows.h>
-
+#include "XboxFile.h"
 #include "../../common/xboxPath.h"
+#include "../../driving/platform/Host.h"
 #include "XboxSettings.h"
 #include "../actionhelpers.h"
-#include "../devtools/Demo.h"
+
+#include <stdio.h>
+#include <string.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The game's file I/O, on Win32 instead of the Xbox kernel.
+// The game's file I/O, on the host layer (driving/platform/Host.h) instead of the Xbox kernel.
 //
 // Stage B step 4.1 of docs/cxbx-removal-plan.md. This turned out to be far smaller than the plan assumed,
 // because the Xbox's XAPI is a Win32 clone and the game uses it exactly like Win32: the five functions below
 // are CreateFileA, ReadFile, GetFileSizeEx, GetOverlappedResult and CloseHandle with different names. Even the
 // struct the game calls IO_STATUS_BLOCK is a Win32 OVERLAPPED - Internal, InternalHigh, Offset, OffsetHigh,
-// hEvent, twenty bytes - which is why FS.cpp's async read loop is already correct Win32 logic and needs no
-// changes at all. Everything above this layer (openOrCreateFile, maybeReadFile, FS_OperationInProgress, and
-// the archive reader) is left exactly as it is; only the bottom is swapped out.
+// hEvent, twenty bytes - so FS.cpp's async read loop is Win32 logic and is left as it is. Everything above
+// this layer (openOrCreateFile, maybeReadFile, FS_OperationInProgress, and the archive reader) is left exactly
+// as it is; only the bottom is swapped out.
 //
-// With these in place, every file the game opens through createFile is resolved by common/xboxPath.cpp and read with
-// real Win32 handles, so disc data comes from the DiscPath folder. The one path still going through the kernel is the async reader at FUN_0010a6b0, which calls
-// NtCreateFile/NtReadFile directly rather than coming through here.
+// The host has no overlapped I/O, so an overlapped read or write is made there and then, at its offset, and is
+// complete when the call returns: the game's polls find it done the first time, as they do in a time demo,
+// which waited for every read (devtools/Demo.h).
+//
+// With these in place, every file the game opens through createFile is resolved by common/xboxPath.cpp and read
+// with host handles, so disc data comes from the DiscPath folder. The one path still going through the kernel is
+// the async reader at FUN_0010a6b0, which calls NtCreateFile/NtReadFile directly rather than coming through here.
 //
 // Calling conventions were taken from each function's RET immediate rather than from Ghidra's prototypes,
 // which is how createFile's seventh parameter turned up: Ghidra reports six, the function is RET 0x1c, and the
@@ -37,14 +43,20 @@
 #define FILE_LOG(...) ((void)0)
 #endif
 
-// The game reads the last error through XAPI's GetLastError, which XboxStartup.cpp makes Win32's (Xbox_GetLastError).
-// It is load bearing: maybeReadFile decides whether an overlapped read is in flight or has failed by testing
-// GetLastError() == ERROR_IO_PENDING, and if it reads a stale zero it concludes the read failed and calls
-// FS_FatalErrorHandler - the "disc may be dirty or damaged" screen, which never returns. So every Win32 call
-// below leaves its result as the last error.
+// The game reads the last error through XAPI's GetLastError, which XboxStartup.cpp makes the host's
+// (Xbox_GetLastError). It is load bearing: maybeReadFile decides whether an overlapped read is in flight or has
+// failed by testing GetLastError() == ERROR_IO_PENDING, and if it reads a stale zero it concludes the read failed
+// and calls FS_FatalErrorHandler - the "disc may be dirty or damaged" screen, which never returns. So every host
+// call below leaves its result as the last error.
 static void PublishLastError(DWORD err) {
-    SetLastError(err);
+    HostSetLastError(err);
 }
+
+// The overlapped structure's status words, NTSTATUS values as the Xbox's IO_STATUS_BLOCK holds them
+#define IO_STATUS_SUCCESS      0x00000000u
+#define IO_STATUS_PENDING      0x00000103u
+#define IO_STATUS_END_OF_FILE  0xc0000011u
+#define IO_STATUS_UNSUCCESSFUL 0xc0000001u
 
 // ---------------------------------------------------------------------------------------------------------------
 // Which file a handle belongs to, and saying so when a read fails.
@@ -100,7 +112,7 @@ static void ReportFatalFileError(const char *what, HANDLE handle, uint32_t offse
     printf("\n[file] ---------------------------------------------------------------\n");
     printf("[file] %s failed on %s\n", what, PathForHandle(handle));
     printf("[file]   handle 0x%08x, offset %u, length %u, error %lu\n",
-           (unsigned)(uintptr_t)handle, offset, length, err);
+           (unsigned)(uintptr_t)handle, offset, length, (unsigned long)err);
     printf("[file] The game treats this as a damaged disc and shows its fatal error\n"
            "[file] screen, which never returns. The error code above is the real cause.\n");
     printf("[file] ---------------------------------------------------------------\n\n");
@@ -109,8 +121,7 @@ static void ReportFatalFileError(const char *what, HANDLE handle, uint32_t offse
 
 // Streaming I/O accounting - see XboxFile_ReportStreamingIfDue at the end of this file for what these are
 // for. Declared here because the read path below is what increments them.
-static uint32_t g_readsPending = 0;      // deferred by the host, which is what the game is designed around
-static uint32_t g_readsSynchronous = 0;  // completed before ReadFile returned
+static uint32_t g_reads = 0;
 static uint32_t g_readsFailed = 0;
 static uint64_t g_readBytes = 0;
 
@@ -128,31 +139,31 @@ static bool ResolveForOpen(const char *filename, char *out, size_t outSize) {
     return true;
 }
 
-// CreateFileA. See the block comment above for the seventh parameter.
+// CreateFileA. See the block comment above for the seventh parameter; the game passes NULL for it and for the
+// security attributes.
 //
-// FILE_FLAG_NO_BUFFERING is stripped deliberately. The game asks for it on every file openOrCreateFile opens
-// (flags 0x60000000 = OVERLAPPED | NO_BUFFERING), which made sense for DVD reads on the real hardware. On a
-// host filesystem it only imposes the constraint that every offset, length and buffer address be sector
-// aligned - and the very first read the game makes, FS_Init pulling the archive header into
+// FILE_FLAG_NO_BUFFERING and FILE_FLAG_OVERLAPPED are stripped deliberately. The game asks for both on every
+// file openOrCreateFile opens (flags 0x60000000), which made sense for DVD reads on the real hardware. On a
+// host filesystem no buffering only imposes the constraint that every offset, length and buffer address be
+// sector aligned - and the very first read the game makes, FS_Init pulling the archive header into
 // FileSystem.ramCache at 0x002b0d28, is into a buffer that is not. (CXBX never honoured the flag either, which
-// is why it did not matter while the game ran there.)
+// is why it did not matter while the game ran there.) The overlapped reads are made synchronously (above).
 //
 // AUTOINJECT
 HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32_t shareMode,
                             void *securityAttributes, uint32_t creationDisposition,
                             uint32_t flagsAndAttributes, HANDLE templateFile) {
+    (void)securityAttributes, (void)templateFile;
     char hostPath[512];
     if (!ResolveForOpen(filename, hostPath, sizeof(hostPath))) {
         PublishLastError(ERROR_FILENAME_EXCED_RANGE);
         return INVALID_HANDLE_VALUE;
     }
 
-    SetLastError(0);
-    HANDLE handle = CreateFileA(hostPath, desiredAccess, shareMode,
-                                (LPSECURITY_ATTRIBUTES)securityAttributes, creationDisposition,
-                                flagsAndAttributes & ~(uint32_t)FILE_FLAG_NO_BUFFERING,
-                                templateFile);
-    DWORD openErr = GetLastError();   // CreateFileA also reports ERROR_ALREADY_EXISTS on a successful open
+    HostSetLastError(0);
+    HANDLE handle = HostCreateFile(hostPath, desiredAccess, shareMode, creationDisposition,
+                                   flagsAndAttributes & ~(uint32_t)(FILE_FLAG_NO_BUFFERING | FILE_FLAG_OVERLAPPED));
+    DWORD openErr = HostGetLastError();   // CreateFileA also reports ERROR_ALREADY_EXISTS on a successful open
     FILE_LOG("[file] open %s -> %s : handle 0x%08x access 0x%08x share %u disp %u flags 0x%08x err %lu\n",
              filename, hostPath, (unsigned)(uintptr_t)handle, desiredAccess, shareMode,
              creationDisposition, flagsAndAttributes, openErr);
@@ -161,9 +172,32 @@ HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32
     return handle;
 }
 
+// An overlapped read or write at its offset, made there and then. ReadFile and WriteFile fail an overlapped call
+// at or past the end of the file with ERROR_HANDLE_EOF, where a plain one succeeds with nothing moved: so does
+// this. The overlapped structure is left saying what happened, as on completion.
+static BOOL TransferAt(HANDLE fileHandle, void *buffer, uint32_t len, OVERLAPPED *overlapped, bool write,
+                       DWORD *done) {
+    *done = 0;
+    LONG high = (LONG)overlapped->OffsetHigh;
+    HostSetLastError(0);
+    BOOL ok = HostSetFilePointer(fileHandle, (LONG)overlapped->Offset, &high, FILE_BEGIN) != 0xffffffffu ||
+              HostGetLastError() == 0;
+    if (ok)
+        ok = write ? HostWriteFile(fileHandle, buffer, len, done) : HostReadFile(fileHandle, buffer, len, done);
+    if (ok && !write && *done == 0 && len != 0) {
+        HostSetLastError(ERROR_HANDLE_EOF);
+        ok = FALSE;
+    }
+    overlapped->Internal = ok ? IO_STATUS_SUCCESS
+                              : HostGetLastError() == ERROR_HANDLE_EOF ? IO_STATUS_END_OF_FILE : IO_STATUS_UNSUCCESSFUL;
+    overlapped->InternalHigh = (ULONG_PTR)*done;
+    return ok;
+}
+
 // ReadFile. Returns 1 on success and 0 on failure, and leaves the last-error code alone on the way out,
 // because the layer above distinguishes "failed" from "still in flight" by testing for ERROR_IO_PENDING -
-// see maybeReadFile, which treats pending as success and lets FS_OperationInProgress poll it.
+// see maybeReadFile, which treats pending as success and lets FS_OperationInProgress poll it. Here no read is
+// ever in flight.
 //
 // AUTOINJECT
 int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len,
@@ -173,9 +207,9 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
 
     if (overlapped == NULL) {
         DWORD read = 0;
-        SetLastError(0);
-        BOOL ok = ReadFile(fileHandle, buffer, len, &read, NULL);
-        DWORD err = GetLastError();
+        HostSetLastError(0);
+        BOOL ok = HostReadFile(fileHandle, buffer, len, &read);
+        DWORD err = HostGetLastError();
         FILE_LOG("[file] read sync handle 0x%08x len %u -> %s read %lu err %lu\n",
                  (unsigned)(uintptr_t)fileHandle, len, ok ? "ok" : "FAILED", read, err);
         PublishLastError(err);
@@ -190,41 +224,22 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
 
     // The caller has already filled in Offset/OffsetHigh. Marking it pending first matches the original and
     // means a caller inspecting the struct before the read returns sees the right thing.
-    overlapped->Internal = (ULONG_PTR)STATUS_PENDING;
+    overlapped->Internal = (ULONG_PTR)IO_STATUS_PENDING;
     overlapped->InternalHigh = 0;
 
     DWORD read = 0;
-    SetLastError(0);
-    BOOL ok = ReadFile(fileHandle, buffer, len, &read, overlapped);
-    DWORD err = GetLastError();
-    // A time demo needs every read to take the same number of frames each time: none (devtools/Demo.h)
-    if (!ok && err == ERROR_IO_PENDING && Demo_Active()) {
-        ok = GetOverlappedResult(fileHandle, overlapped, &read, TRUE);
-        err = ok ? 0 : GetLastError();
-    }
-    FILE_LOG("[file] read async handle 0x%08x len %u off %lu -> %s read %lu err %lu\n",
-             (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
-             ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), read, err);
+    BOOL ok = TransferAt(fileHandle, buffer, len, overlapped, false, &read);
+    DWORD err = ok ? 0 : HostGetLastError();
+    FILE_LOG("[file] read at handle 0x%08x len %u off %lu -> %s read %lu err %lu\n",
+             (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset, ok ? "ok" : "FAILED", read, err);
     PublishLastError(err);   // the logging above must not disturb what the caller tests
     if (!ok) {
-        if (err == ERROR_IO_PENDING) {
-            g_readsPending++;        // the host deferred it, which is what lets the game overlap
-            g_readBytes += len;      // requested rather than delivered: the count is not known yet
-        } else {
-            g_readsFailed++;
-            ReportFatalFileError("an overlapped read", fileHandle, overlapped->Offset, len, err);
-        }
-        return 0;            // including ERROR_IO_PENDING, which the caller checks for
+        g_readsFailed++;
+        ReportFatalFileError("an overlapped read", fileHandle, overlapped->Offset, len, err);
+        return 0;
     }
-    g_readsSynchronous++;
-    g_readBytes += read;     // known already, because it finished before returning
-
-    // The read completed there and then rather than going pending. Windows has already filled these in; some
-    // other host may not, and the caller reads the byte count out of this structure rather than from us, so
-    // make sure it says what happened. Writing them after a *pending* read would be a bug, which is why this
-    // is only on the synchronous-success path.
-    overlapped->Internal = 0;                      // STATUS_SUCCESS
-    overlapped->InternalHigh = (ULONG_PTR)read;
+    g_reads++;
+    g_readBytes += read;
 
     if (bytesRead != NULL)
         *bytesRead = (uint32_t)overlapped->InternalHigh;
@@ -232,7 +247,7 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
 }
 
 // GetOverlappedResult, which FS_OperationInProgress polls with wait = false. The out parameter is the
-// transferred byte count.
+// transferred byte count. Every read is complete by the time it is polled: the structure says how it went.
 //
 // Returns int, not bool, and that matters. The original ends in "XOR EAX,EAX / INC EAX" or a bare
 // "XOR EAX,EAX", i.e. it sets the whole of EAX - and its callers test the whole of EAX (Ghidra renders this as
@@ -244,32 +259,40 @@ int __stdcall readFromFileBlocking(HANDLE fileHandle, void *buffer, uint32_t len
 // FUNC_AT(000e9a91)
 int __stdcall Xbox_GetOverlappedResult(HANDLE fileHandle, OVERLAPPED *overlapped,
                                        uint32_t *bytesTransferred, int wait) {
-    DWORD transferred = 0;
-    SetLastError(0);
-    BOOL ok = GetOverlappedResult(fileHandle, overlapped, &transferred, wait ? TRUE : FALSE);
-    DWORD err = GetLastError();
+    (void)wait;
+    DWORD err;
+    switch ((uint32_t)overlapped->Internal) {
+    case IO_STATUS_SUCCESS:     err = 0; break;
+    case IO_STATUS_PENDING:     err = ERROR_IO_INCOMPLETE; break;
+    case IO_STATUS_END_OF_FILE: err = ERROR_HANDLE_EOF; break;
+    default:                    err = ERROR_READ_FAULT; break;
+    }
+    DWORD transferred = err == 0 ? (DWORD)overlapped->InternalHigh : 0;
     static int logged = 0;
     if (logged < 24) {           // polled every frame, so do not let it flood the log
         logged++;
         FILE_LOG("[file] overlapped handle 0x%08x -> %s transferred %lu err %lu internal 0x%08x\n",
-                 (unsigned)(uintptr_t)fileHandle, ok ? "complete" : "incomplete", transferred, err,
+                 (unsigned)(uintptr_t)fileHandle, err == 0 ? "complete" : "incomplete", transferred, err,
                  (unsigned)overlapped->Internal);
     }
     if (bytesTransferred != NULL)
         *bytesTransferred = transferred;
     PublishLastError(err);   // FS_OperationInProgress polls for ERROR_IO_INCOMPLETE here
-    if (!ok && err != ERROR_IO_INCOMPLETE && err != ERROR_IO_PENDING)
+    if (err != 0 && err != ERROR_IO_INCOMPLETE)
         ReportFatalFileError("waiting for an overlapped read", fileHandle, overlapped->Offset, 0, err);
-    return ok != FALSE ? 1 : 0;
+    return err == 0 ? 1 : 0;
 }
 
 // GetFileSizeEx.
 //
 // AUTOINJECT
 int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSize) {
-    SetLastError(0);
-    BOOL ok = GetFileSizeEx(fileHandle, fileSize);
-    PublishLastError(GetLastError());
+    HostSetLastError(0);
+    int64_t size = 0;
+    BOOL ok = HostGetFileSizeEx(fileHandle, &size);
+    if (ok)
+        fileSize->QuadPart = size;
+    PublishLastError(HostGetLastError());
     return ok != FALSE ? 1 : 0;
 }
 
@@ -279,20 +302,20 @@ int __stdcall getFileSize_LargeInteger(HANDLE fileHandle, LARGE_INTEGER *fileSiz
 int __stdcall DoNtClose(HANDLE handle) {
     ForgetHandle(handle);
 
-    // A directory enumeration handed out a Win32 find handle, which CloseHandle would reject - see
+    // A directory enumeration handed out a find handle, which closing as a file would reject - see
     // Xbox_FindFirstFileA. Everything else is an ordinary file handle.
     if (CloseIfFindHandle(handle)) {
         PublishLastError(0);
         return 1;
     }
 
-    SetLastError(0);
-    BOOL ok = CloseHandle(handle);
-    PublishLastError(GetLastError());
+    HostSetLastError(0);
+    BOOL ok = HostCloseHandle(handle);
+    PublishLastError(HostGetLastError());
     return ok != FALSE ? 1 : 0;
 }
 
-// WriteFile. Mirrors readFromFileBlocking exactly, including the pending case - see there.
+// WriteFile. Mirrors readFromFileBlocking, made there and then as the reads are.
 //
 // AUTOINJECT
 int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
@@ -302,9 +325,9 @@ int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
 
     if (overlapped == NULL) {
         DWORD written = 0;
-        SetLastError(0);
-        BOOL ok = WriteFile(fileHandle, buffer, len, &written, NULL);
-        DWORD err = GetLastError();
+        HostSetLastError(0);
+        BOOL ok = HostWriteFile(fileHandle, buffer, len, &written);
+        DWORD err = HostGetLastError();
         FILE_LOG("[file] write sync handle 0x%08x len %u -> %s written %lu err %lu\n",
                  (unsigned)(uintptr_t)fileHandle, len, ok ? "ok" : "FAILED", written, err);
         PublishLastError(err);
@@ -315,20 +338,14 @@ int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
         return 1;
     }
 
-    overlapped->Internal = (ULONG_PTR)STATUS_PENDING;
+    overlapped->Internal = (ULONG_PTR)IO_STATUS_PENDING;
     overlapped->InternalHigh = 0;
 
     DWORD written = 0;
-    SetLastError(0);
-    BOOL ok = WriteFile(fileHandle, buffer, len, &written, overlapped);
-    DWORD err = GetLastError();
-    if (!ok && err == ERROR_IO_PENDING && Demo_Active()) {   // as the read above
-        ok = GetOverlappedResult(fileHandle, overlapped, &written, TRUE);
-        err = ok ? 0 : GetLastError();
-    }
-    FILE_LOG("[file] write async handle 0x%08x len %u off %lu -> %s written %lu err %lu\n",
-             (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset,
-             ok ? "ok" : (err == ERROR_IO_PENDING ? "pending" : "FAILED"), written, err);
+    BOOL ok = TransferAt(fileHandle, buffer, len, overlapped, true, &written);
+    DWORD err = ok ? 0 : HostGetLastError();
+    FILE_LOG("[file] write at handle 0x%08x len %u off %lu -> %s written %lu err %lu\n",
+             (unsigned)(uintptr_t)fileHandle, len, overlapped->Offset, ok ? "ok" : "FAILED", written, err);
     PublishLastError(err);
     if (!ok)
         return 0;
@@ -342,9 +359,9 @@ int __stdcall FileWrite(HANDLE fileHandle, void *buffer, uint32_t len,
 //
 // AUTOINJECT
 int __stdcall file_flush(HANDLE fileHandle) {
-    SetLastError(0);
-    BOOL ok = FlushFileBuffers(fileHandle);
-    PublishLastError(GetLastError());
+    HostSetLastError(0);
+    BOOL ok = HostFlushFile(fileHandle);
+    PublishLastError(HostGetLastError());
     return ok != FALSE ? 1 : 0;
 }
 
@@ -353,9 +370,9 @@ int __stdcall file_flush(HANDLE fileHandle) {
 //
 // AUTOINJECT
 int __stdcall setSomeInfo(HANDLE fileHandle) {
-    SetLastError(0);
-    BOOL ok = SetEndOfFile(fileHandle);
-    PublishLastError(GetLastError());
+    HostSetLastError(0);
+    BOOL ok = HostSetEndOfFile(fileHandle);
+    PublishLastError(HostGetLastError());
     return ok != FALSE ? 1 : 0;
 }
 
@@ -366,33 +383,29 @@ int __stdcall setSomeInfo(HANDLE fileHandle) {
 // AUTOINJECT
 uint32_t __stdcall querySetSomeInfo(HANDLE fileHandle, uint32_t distanceLow, uint32_t *distanceHigh,
                                     uint32_t moveMethod) {
-    SetLastError(0);
-    DWORD result = SetFilePointer(fileHandle, (LONG)distanceLow, (PLONG)distanceHigh, moveMethod);
-    PublishLastError(GetLastError());
+    HostSetLastError(0);
+    DWORD result = HostSetFilePointer(fileHandle, (LONG)distanceLow, (HostLong *)distanceHigh, moveMethod);
+    PublishLastError(HostGetLastError());
     return result;
 }
 
-// SetFilePointerEx. The out parameter is a 64-bit position written as two dwords.
+// SetFilePointerEx. The out parameter is a 64-bit position written as two dwords. SetFilePointer with the high
+// word given moves the same way; it failed if it answers 0xFFFFFFFF with an error.
 //
 // FUNC_AT(000e9731)
 int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uint32_t distanceHigh,
                                     uint32_t *newPosition, uint32_t moveMethod) {
-    LARGE_INTEGER distance;
-    distance.LowPart = distanceLow;
-    distance.HighPart = (LONG)distanceHigh;
-
-    LARGE_INTEGER newPos;
-    newPos.QuadPart = 0;
-
-    SetLastError(0);
-    BOOL ok = SetFilePointerEx(fileHandle, distance, &newPos, moveMethod);
-    PublishLastError(GetLastError());
-    if (!ok)
+    LONG high = (LONG)distanceHigh;
+    HostSetLastError(0);
+    DWORD low = HostSetFilePointer(fileHandle, (LONG)distanceLow, &high, moveMethod);
+    DWORD err = HostGetLastError();
+    PublishLastError(err);
+    if (low == 0xffffffffu && err != 0)
         return 0;
 
     if (newPosition != NULL) {
-        newPosition[0] = newPos.LowPart;
-        newPosition[1] = (uint32_t)newPos.HighPart;
+        newPosition[0] = low;
+        newPosition[1] = (uint32_t)high;
     }
     return 1;
 }
@@ -408,9 +421,9 @@ int __stdcall MaybeFileCreateNew(const char *filename) {
         PublishLastError(ERROR_FILENAME_EXCED_RANGE);
         return 0;
     }
-    SetLastError(0);
-    BOOL ok = DeleteFileA(hostPath);
-    DWORD err = GetLastError();
+    HostSetLastError(0);
+    BOOL ok = HostDeleteFile(hostPath);
+    DWORD err = HostGetLastError();
     FILE_LOG("[file] delete %s -> %s : %s err %lu\n", filename, hostPath, ok ? "ok" : "FAILED", err);
     PublishLastError(err);
     return ok != FALSE ? 1 : 0;
@@ -450,9 +463,9 @@ uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename) {
         return INVALID_FILE_ATTRIBUTES;
     }
 
-    SetLastError(0);
-    DWORD attributes = GetFileAttributesA(hostPath);
-    DWORD err = GetLastError();
+    HostSetLastError(0);
+    DWORD attributes = HostGetFileAttributes(hostPath);
+    DWORD err = HostGetLastError();
     FILE_LOG("[file] attributes %s -> %s : 0x%08x err %lu\n", filename, hostPath, attributes, err);
 
     // A missing file is the expected answer here, not a failure - the caller is asking whether it exists -
@@ -469,46 +482,60 @@ uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename) {
 //
 // The originals split the path at its last backslash, open the directory with NtOpenFile and walk it with
 // NtQueryDirectoryFile, so they take paths in the Xbox object namespace and have to be replaced like the
-// rest of this file. What makes them easy is that the structure they fill in is Win32's: the conversion at
-// 0x000eb68a writes attributes at 0, three FILETIMEs at 4, 0xc and 0x14, the size high and low words at 0x1c
-// and 0x20, the name at 0x2c and a terminator at 0x130 - which is WIN32_FIND_DATAA exactly, reserved fields
-// and alternate name included. So the data goes straight across with no translation at all.
+// rest of this file. The structure they fill in is Win32's: the conversion at 0x000eb68a writes attributes at
+// 0, three FILETIMEs at 4, 0xc and 0x14, the size high and low words at 0x1c and 0x20, the name at 0x2c and a
+// terminator at 0x130 - which is WIN32_FIND_DATAA exactly, reserved fields and alternate name included. Their
+// one caller (0x000ea280) reads the name and the directory attribute, so those are
+// what is filled in; the times and sizes read zero.
 //
 // The one awkwardness is the handle. On the Xbox a find handle is an ordinary NT file handle, and the caller
-// closes it with NtClose - which arrives here as DoNtClose. A Win32 find handle is not a file handle and must
-// be closed with FindClose, so the ones handed out here are remembered and DoNtClose checks that list first.
+// closes it with NtClose - which arrives here as DoNtClose. A host find handle is not a file handle and must
+// be closed with HostFindClose, so the ones handed out here are remembered and DoNtClose checks that list
+// first.
 // ---------------------------------------------------------------------------------------------------------------
 
 #define TRACKED_FINDS 16
 
-static HANDLE g_findHandles[TRACKED_FINDS];
+static struct { HANDLE handle; char directory[512]; } g_finds[TRACKED_FINDS];
 
-static void RememberFind(HANDLE handle) {
+static void RememberFind(HANDLE handle, const char *directory) {
     for (int i = 0; i < TRACKED_FINDS; i++) {
-        if (g_findHandles[i] == NULL) { g_findHandles[i] = handle; return; }
+        if (g_finds[i].handle == NULL) {
+            g_finds[i].handle = handle;
+            snprintf(g_finds[i].directory, sizeof(g_finds[i].directory), "%s", directory);
+            return;
+        }
     }
+}
+
+static const char *FindDirectory(HANDLE handle) {
+    for (int i = 0; i < TRACKED_FINDS; i++) {
+        if (g_finds[i].handle == handle)
+            return g_finds[i].directory;
+    }
+    return "";
 }
 
 // True if this was one of ours, in which case it has also been closed and forgotten.
 static bool CloseIfFindHandle(HANDLE handle) {
     for (int i = 0; i < TRACKED_FINDS; i++) {
-        if (g_findHandles[i] == handle) {
-            g_findHandles[i] = NULL;
-            FindClose(handle);
+        if (g_finds[i].handle == handle) {
+            g_finds[i].handle = NULL;
+            HostFindClose(handle);
             return true;
         }
     }
     return false;
 }
 
-// A time demo's playback makes its files when it starts, so their times are not the recording's: in a demo they
-// read zero both times (devtools/Demo.h)
-static void HideFileTimes(WIN32_FIND_DATAA *findData) {
-    if (!Demo_Active())
-        return;
-    memset(&findData->ftCreationTime, 0, sizeof(FILETIME));
-    memset(&findData->ftLastAccessTime, 0, sizeof(FILETIME));
-    memset(&findData->ftLastWriteTime, 0, sizeof(FILETIME));
+// The entry's name and attributes; the rest zero
+static void FillFindData(WIN32_FIND_DATAA *findData, const char *directory, const char *name) {
+    memset(findData, 0, sizeof(*findData));
+    snprintf(findData->cFileName, sizeof(findData->cFileName), "%s", name);
+    char path[512 + HOST_MAX_PATH];
+    snprintf(path, sizeof(path), "%s%s", directory, name);
+    DWORD attributes = HostGetFileAttributes(path);
+    findData->dwFileAttributes = attributes != HOST_INVALID_FILE_ATTRIBUTES ? attributes : FILE_ATTRIBUTE_NORMAL;
 }
 
 // FUNC_AT(000eb6f6)
@@ -519,9 +546,10 @@ uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *f
         return 0xFFFFFFFFu;
     }
 
-    SetLastError(0);
-    HANDLE handle = FindFirstFileA(hostPath, findData);
-    DWORD err = GetLastError();
+    char name[HOST_MAX_PATH];
+    HostSetLastError(0);
+    HANDLE handle = HostFindFirstFile(hostPath, name);
+    DWORD err = HostGetLastError();
     FILE_LOG("[file] find first %s -> %s : handle 0x%08x err %lu\n", filename, hostPath,
              (unsigned)(uintptr_t)handle, err);
 
@@ -531,8 +559,20 @@ uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *f
         return 0xFFFFFFFFu;
     }
 
-    RememberFind(handle);
-    HideFileTimes(findData);
+    // The directory searched, with its separator, for the entries' attributes
+    char directory[512];
+    snprintf(directory, sizeof(directory), "%s", hostPath);
+    char *last = NULL;
+    for (char *c = directory; *c != '\0'; c++)
+        if (*c == '\\' || *c == '/')
+            last = c;
+    if (last != NULL)
+        last[1] = '\0';
+    else
+        directory[0] = '\0';
+
+    RememberFind(handle, directory);
+    FillFindData(findData, directory, name);
     PublishLastError(0);
     return (uint32_t)(uintptr_t)handle;
 }
@@ -542,11 +582,12 @@ uint32_t __stdcall Xbox_FindFirstFileA(const char *filename, WIN32_FIND_DATAA *f
 //
 // FUNC_AT(000eb803)
 int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) {
-    SetLastError(0);
-    BOOL ok = FindNextFileA(findHandle, findData);
-    DWORD err = GetLastError();
+    char name[HOST_MAX_PATH];
+    HostSetLastError(0);
+    BOOL ok = HostFindNextFile(findHandle, name);
+    DWORD err = HostGetLastError();
     if (ok)
-        HideFileTimes(findData);
+        FillFindData(findData, FindDirectory(findHandle), name);
     FILE_LOG("[file] find next handle 0x%08x -> %s err %lu\n",
              (unsigned)(uintptr_t)findHandle, ok ? "ok" : "end", err);
 
@@ -559,13 +600,9 @@ int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) 
 // Streaming I/O accounting, for "why is the frame rate like that".
 //
 // The game overlaps its disc reads with rendering: it issues an overlapped read, carries on drawing, and
-// polls with GetOverlappedResult until the data arrives. That only overlaps anything if the host actually
-// defers the read. Windows does. A host that completes every overlapped read synchronously is correct but
-// serialises the game - the main thread blocks for the whole read instead of rendering during it - and the
-// symptom is a frame rate that is low but perfectly steady, and only in the parts of the game that stream
-// continuously. A level that is entirely loaded, such as a multiplayer map with bots, looks fine.
-//
-// So the useful thing to know is the ratio, and it is two counters. Enabled by PerfLog in settings.ini.
+// polls with GetOverlappedResult until the data arrives. Here every read is made before the call returns (see
+// the top of this file), so the game thread waits for each one; the count and the bytes say how much it
+// reads. Enabled by PerfLog in settings.ini.
 // ---------------------------------------------------------------------------------------------------------------
 
 
@@ -574,24 +611,18 @@ void XboxFile_ReportStreamingIfDue(void) {
         return;
 
     static uint32_t lastTick = 0;
-    uint32_t now = GetTickCount();
+    uint32_t now = HostTimeMs();
     if (lastTick == 0)
         lastTick = now;
     if (now - lastTick < 5000)
         return;
     lastTick = now;
 
-    uint32_t total = g_readsPending + g_readsSynchronous;
-    if (total == 0)
+    if (g_reads + g_readsFailed == 0)
         return;
 
-    printf("[perf] disc reads: %u deferred, %u completed synchronously (%u%%), %u failed, %llu KB\n",
-           g_readsPending, g_readsSynchronous, (unsigned)((g_readsSynchronous * 100ull) / total),
-           g_readsFailed, (unsigned long long)(g_readBytes / 1024));
-    if (g_readsSynchronous > g_readsPending) {
-        printf("[perf]   most reads are not being deferred, so the game is not overlapping them with\n"
-               "[perf]   drawing - it stalls for each one. That is a host behaviour, not the game's.\n");
-    }
+    printf("[perf] disc reads: %u, %u failed, %llu KB\n", g_reads, g_readsFailed,
+           (unsigned long long)(g_readBytes / 1024));
     fflush(stdout);
 }
 
@@ -616,14 +647,13 @@ uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path) {
     }
 
     DWORD sectorsPerCluster = 0, bytesPerSector = 0, freeClusters = 0, totalClusters = 0;
-    SetLastError(0);
-    BOOL ok = GetDiskFreeSpaceA(hostPath, &sectorsPerCluster, &bytesPerSector,
-                                &freeClusters, &totalClusters);
+    HostSetLastError(0);
+    BOOL ok = HostGetDiskFreeSpace(hostPath, &sectorsPerCluster, &bytesPerSector, &freeClusters, &totalClusters);
     if (!ok)
-        ok = GetDiskFreeSpaceA(NULL, &sectorsPerCluster, &bytesPerSector, &freeClusters, &totalClusters);
+        ok = HostGetDiskFreeSpace(NULL, &sectorsPerCluster, &bytesPerSector, &freeClusters, &totalClusters);
 
     if (!ok) {
-        DWORD err = GetLastError();
+        DWORD err = HostGetLastError();
         // The original turns "no such file" into "no such path" here, and its caller only checks for a
         // non-positive result, so keep both behaviours.
         PublishLastError(err == ERROR_FILE_NOT_FOUND ? ERROR_PATH_NOT_FOUND : err);
@@ -642,7 +672,7 @@ uint32_t __stdcall Xbox_GetVolumeClusterSize(const char *path) {
 // cluster size for the capacity. Win32 computes exactly those, so this is a direct mapping.
 //
 // The three outputs are all optional and the Xbox writes the same free-space value to the first and third,
-// because a console has no per-user quotas to make them differ. Win32 can distinguish them; letting it is
+// because a console has no per-user quotas to make them differ. The host can distinguish them; letting it is
 // harmless and more truthful.
 //
 // Returns int rather than bool: the original ends "XOR EAX,EAX / INC EAX", so its callers see a full-width
@@ -657,27 +687,26 @@ int __stdcall Xbox_GetDiskFreeSpaceExA(const char *path, ULARGE_INTEGER *freeByt
         return 0;
     }
 
-    ULARGE_INTEGER available, capacity, free;
-    available.QuadPart = capacity.QuadPart = free.QuadPart = 0;
+    uint64_t available = 0, capacity = 0, free = 0;
 
-    SetLastError(0);
-    BOOL ok = GetDiskFreeSpaceExA(hostPath, &available, &capacity, &free);
+    HostSetLastError(0);
+    BOOL ok = HostGetDiskFreeSpaceEx(hostPath, &available, &capacity, &free);
     if (!ok)
-        ok = GetDiskFreeSpaceExA(NULL, &available, &capacity, &free);   // as above: fall back to this volume
+        ok = HostGetDiskFreeSpaceEx(NULL, &available, &capacity, &free);   // as above: fall back to this volume
 
     if (!ok) {
-        DWORD err = GetLastError();
+        DWORD err = HostGetLastError();
         PublishLastError(err == ERROR_FILE_NOT_FOUND ? ERROR_PATH_NOT_FOUND : err);
         FILE_LOG("[file] free space %s -> %s : FAILED err %lu\n", path, hostPath, err);
         return 0;
     }
 
-    if (freeBytesAvailable != NULL) *freeBytesAvailable = available;
-    if (totalBytes != NULL)         *totalBytes = capacity;
-    if (totalFreeBytes != NULL)     *totalFreeBytes = free;
+    if (freeBytesAvailable != NULL) freeBytesAvailable->QuadPart = available;
+    if (totalBytes != NULL)         totalBytes->QuadPart = capacity;
+    if (totalFreeBytes != NULL)     totalFreeBytes->QuadPart = free;
 
     PublishLastError(0);
     FILE_LOG("[file] free space %s -> %s : %llu free of %llu\n", path, hostPath,
-             (unsigned long long)available.QuadPart, (unsigned long long)capacity.QuadPart);
+             (unsigned long long)available, (unsigned long long)capacity);
     return 1;
 }

@@ -137,7 +137,7 @@ uint PlrStarts_GetRewardsTableSize(void);
 LEVEL_BONUSES* Menu_GetLevelBonuses(HASHCODE level);
 int Menu_GetBestMedal(HASHCODE level, uchar player);
 
-void PlrStarts_ProcessRewardCounter(ulong *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
+void PlrStarts_ProcessRewardCounter(uint32_t *bonus, HASHCODE hashcode, uint upgradeLevel, char set, REWARDINFO_tag *op);
 uint __stdcall Menu_GetNightfireStatus(void);
 void Menu_SetNightfireStatus(uint status);
 void Menu_SetBonus(uint lo, uint hi, byte player, char orIn);

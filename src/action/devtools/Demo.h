@@ -44,7 +44,7 @@ void Demo_Pad(int port, DemoPad *pad);
 
 // The mouse once MouseLook_Update has run: whether it holds the pointer, and the counts it has gathered and not yet
 // handed to the game. Recorded, or replaced by the recording.
-void Demo_Mouse(bool *captured, long *countsX, long *countsY);
+void Demo_Mouse(bool *captured, int32_t *countsX, int32_t *countsY);
 
 // A sound buffer's status or play cursor, as the device answered (xaudio2Backend.cpp): recorded, or replaced by
 // the recording. `buffer` is the buffer's index in creation order, -1 for none.

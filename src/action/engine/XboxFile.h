@@ -1,17 +1,17 @@
 #ifndef XBOXFILE_H_
 #define XBOXFILE_H_
 
-#include <windows.h>
+#include "../../driving/platform/Win32Types.h"
 #include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
-// The game's file I/O on Win32 - see XboxFile.cpp for why this is only five functions. The Xbox's XAPI is a
+// The game's file I/O over the host layer (driving/platform/Host.h) - see XboxFile.cpp. The Xbox's XAPI is a
 // Win32 clone, so these are CreateFileA, ReadFile, GetFileSizeEx, GetOverlappedResult and CloseHandle under
 // other names, and everything the game layers on top of them (openOrCreateFile, maybeReadFile,
-// FS_OperationInProgress, the archive reader) is already correct Win32 logic and is left untouched.
+// FS_OperationInProgress, the archive reader) is Win32 logic and is left untouched.
 //
 // Declared here so the generated injection table can see them. Not meant to be called from new code - use the
-// Win32 functions directly.
+// host's functions directly.
 // ---------------------------------------------------------------------------------------------------------------
 
 HANDLE __stdcall createFile(const char *filename, uint32_t desiredAccess, uint32_t shareMode,

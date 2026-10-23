@@ -4,7 +4,11 @@
 #include "../game/weapon_stats.h"   // WeaponDataTableInit
 #include "../ui/HUD.h"              // the HUD panes' static initialisers
 #include "Text.h"                   // the subtitles'
-#include <windows.h>
+#include "../../driving/platform/CRuntimeInternal.h"   // PerThreadData
+#include "../../driving/platform/Host.h"
+#ifndef NIGHTFIRE_STANDALONE
+#include <windows.h>                // VirtualProtect, for the patches
+#endif
 #include <stdio.h>
 #include <string.h>
 #include <stdint.h>
@@ -61,11 +65,11 @@ HANDLE ProcessHeapHandle;
 // ---------------------------------------------------------------------------------------------------------------
 
 DWORD __stdcall Xbox_GetLastError(void) {
-    return GetLastError();
+    return HostGetLastError();
 }
 
 void __stdcall Xbox_SetLastError(DWORD error) {
-    SetLastError(error);
+    HostSetLastError(error);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -74,10 +78,10 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 // The original does six things. Two of them still mean something here and are kept:
 //
 //  - it creates the process heap, with the reserve and commit sizes out of the XBE header, where the C runtime's
-//    malloc allocates. The heap is Win32's, as in the driving engine (src/driving/platform/XboxXapi.cpp): XAPI's
-//    heap (RtlCreateHeap and its siblings) is NT's, and so is Win32's, and only the C runtime uses this one - its
-//    per-thread blocks and locks, nothing of the game's. XAPI's entry points are pointed at Win32's below, so
-//    any original that still reaches them gets the same heap;
+//    malloc allocates. The heap is the host's, as in the driving engine (src/driving/platform/XboxXapi.cpp):
+//    XAPI's heap (RtlCreateHeap and its siblings) is NT's, and so is Win32's, and only the C runtime uses this
+//    one - its per-thread blocks and locks, nothing of the game's. XAPI's entry points are pointed at the host's
+//    below, so any original that still reaches them gets the same heap;
 //  - it runs the table of initialisers at 0x163178, which is how parts of XAPI register themselves.
 //
 // The other four are dropped. Mounting D:, the title's save directories and the utility drive is handled by
@@ -92,16 +96,16 @@ void __stdcall Xbox_SetLastError(DWORD error) {
 static HANDLE __stdcall Xbox_XapiCreateHeap(ULONG flags, void *base, ULONG reserve, ULONG commit, void *lock,
                                             void *parameters) {
     (void)base, (void)lock, (void)parameters;
-    return HeapCreate(0, commit, (flags & 2) ? 0 : reserve);
+    return HostHeapCreate(0, commit, (flags & 2) ? 0 : reserve);
 }
 
 // RtlAllocateHeap (0x000ec8c5) and RtlFreeHeap (0x000ed07c), whose flags are Win32's.
 static void *__stdcall Xbox_RtlAllocateHeap(HANDLE heap, ULONG flags, SIZE_T size) {
-    return HeapAlloc(heap, flags, size);
+    return HostHeapAlloc(heap, flags, size);
 }
 
 static BOOLEAN __stdcall Xbox_RtlFreeHeap(HANDLE heap, ULONG flags, void *block) {
-    return HeapFree(heap, flags, block) ? TRUE : FALSE;
+    return HostHeapFree(heap, flags, block) ? TRUE : FALSE;
 }
 
 void __stdcall Xbox_XapiInitProcess(void) {
@@ -130,7 +134,7 @@ void __stdcall Xbox_XapiInitProcess(void) {
 // and finds it through the Xbox TLS block, as *(*(FS:[0x4] + _tls_index * 4) + 8). That is the same FS:[0x4]
 // problem as the last-error pair, and it is where startup faulted next, at 0x000f4090 writing to address 8.
 //
-// These three keep everything about the original except where the pointer is kept, which becomes a Win32 TLS
+// These three keep everything about the original except where the pointer is kept, which becomes a host TLS
 // slot. The block itself is allocated by the C runtime's calloc, on the process heap.
 //
 // The original also guards on FS:[0x24], the Xbox's current IRQL, bug-checking above APC level. A Win32
@@ -158,40 +162,34 @@ static XcptAction XcptActTab[10] = {
     {0xc0000093, 8, 0},
 };
 
-// Offsets into _ptiddata, as the original writes them: the owning thread, the thread handle, an
-// initialised-flag, and the exception-action table.
-#define PTD_THREAD_ID     0
-#define PTD_THREAD_HANDLE 1
-#define PTD_INITIALISED   5
-#define PTD_XCPT_ACTIONS  0x15
+static DWORD g_perThreadSlot = HOST_TLS_OUT_OF_INDEXES;
 
-static DWORD g_perThreadSlot = TLS_OUT_OF_INDEXES;
-
+// The original writes the owning thread, the thread handle, rand's seed and the exception-action table.
 void *__cdecl Xbox_getptd(void) {
     // TlsGetValue clears the last error on success, and this is reached from __dosmaperr, whose whole job is
     // to turn the last error into errno. Losing it there would turn a specific failure into a silent one.
-    DWORD lastError = GetLastError();
+    DWORD lastError = HostGetLastError();
 
-    void *ptd = (g_perThreadSlot != TLS_OUT_OF_INDEXES) ? TlsGetValue(g_perThreadSlot) : NULL;
+    Crt::PerThreadData *ptd =
+        (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES) ? (Crt::PerThreadData *)HostTlsGetValue(g_perThreadSlot) : NULL;
     if (ptd == NULL) {
-        ptd = Crt::calloc(1, 0x84);
+        ptd = (Crt::PerThreadData *)Crt::calloc(1, sizeof(Crt::PerThreadData));
         if (ptd == NULL) {
-            SetLastError(lastError);
+            HostSetLastError(lastError);
             Crt::_amsg_exit(0x10);   // _RT_THREAD: no way to continue without per-thread state
             return NULL;
         }
 
-        uintptr_t *fields = (uintptr_t *)ptd;
-        fields[PTD_THREAD_ID] = GetCurrentThreadId();
-        fields[PTD_THREAD_HANDLE] = (uintptr_t)0xffffffffu;
-        fields[PTD_INITIALISED] = 1;
-        fields[PTD_XCPT_ACTIONS] = (uintptr_t)XcptActTab;
+        ptd->threadId = HostGetCurrentThreadId();
+        ptd->threadHandle = 0xffffffffu;
+        ptd->randomSeed = 1;
+        ptd->exceptionActions = XcptActTab;
 
-        if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
-            TlsSetValue(g_perThreadSlot, ptd);
+        if (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES)
+            HostTlsSetValue(g_perThreadSlot, ptd);
     }
 
-    SetLastError(lastError);
+    HostSetLastError(lastError);
     return ptd;
 }
 
@@ -204,16 +202,16 @@ void *__cdecl Xbox_getptd(void) {
 //
 void __cdecl Xbox_freeptd(void *ptd) {
     (void)ptd;
-    if (g_perThreadSlot != TLS_OUT_OF_INDEXES)
-        TlsSetValue(g_perThreadSlot, NULL);
+    if (g_perThreadSlot != HOST_TLS_OUT_OF_INDEXES)
+        HostTlsSetValue(g_perThreadSlot, NULL);
 }
 
 // Returns zero exactly as the original does - it is called from the _rtinit table, which ignores the result.
 //
 int __cdecl Xbox_mtinit(void) {
-    g_perThreadSlot = TlsAlloc();
-    if (g_perThreadSlot == TLS_OUT_OF_INDEXES) {
-        printf("[startup] no Win32 TLS slot for the C runtime's per-thread data\n");
+    g_perThreadSlot = HostTlsAlloc();
+    if (g_perThreadSlot == HOST_TLS_OUT_OF_INDEXES) {
+        printf("[startup] no host TLS slot for the C runtime's per-thread data\n");
         fflush(stdout);
         return 0;
     }
@@ -349,13 +347,13 @@ void __cdecl Xbox_Entry(void) {
     **(int32_t **)(XbeTls + 2) = tlsSize / -4;
 #endif
 
-    HANDLE thread = CreateThread(NULL, XbeDefaultStackSize, mainXapiStartup, NULL, 0, NULL);
+    HANDLE thread = HostCreateThread(XbeDefaultStackSize, mainXapiStartup, NULL, 0, NULL);
     if (thread == NULL) {
-        printf("[startup] the game's thread could not be created (error %lu)\n", GetLastError());
+        printf("[startup] the game's thread could not be created (error %lu)\n", (unsigned long)HostGetLastError());
         fflush(stdout);
-        ExitProcess(1);
+        HostExitProcess(1);
     }
-    CloseHandle(thread);
+    HostCloseHandle(thread);
 }
 
 #ifndef NIGHTFIRE_STANDALONE

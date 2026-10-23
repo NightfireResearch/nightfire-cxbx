@@ -1,6 +1,7 @@
 #include "FS.h"
 #include "../../common/xbeClass.h"
 #include "XboxFile.h"
+#include "XboxStartup.h"   // Xbox_GetLastError
 #include "XboxError.h"
 #include "EDL.h"
 #include "CRuntime.h"
@@ -80,7 +81,7 @@ struct FileOperationXbox {
     uint8_t field7_0x1d;
     uint8_t field8_0x1e;
     uint8_t field9_0x1f;
-    long fileSize;            // 0x20
+    int32_t fileSize;         // 0x20
     uint8_t fileReadMayFail;  // 0x24 not on the disc (a cache or save drive): failing is not fatal
     uint8_t field12_0x25;
     uint8_t field13_0x26;
@@ -207,7 +208,7 @@ int openOrCreateFile(char *nameRelated, char write) {
         }
     }
     LARGE_INTEGER size;
-    op->fileSize = getFileSize_LargeInteger(op->fileHandle, &size) ? (long)size.LowPart : -1;
+    op->fileSize = getFileSize_LargeInteger(op->fileHandle, &size) ? (int32_t)size.LowPart : -1;
     op->maybeStatus = 1;
     op->field1_0x1 = 1;
     return idx;
@@ -224,7 +225,7 @@ static bool FS_OperationInProgress(int idx) {
     op->readPending = done == 0;
     op->field1_0x1 = 1;
     if (op->readPending) {
-        DWORD err = GetLastError();
+        DWORD err = Xbox_GetLastError();
         if (err == ERROR_IO_PENDING || err == ERROR_IO_INCOMPLETE)
             return true;
         op->readPending = 0;
@@ -246,8 +247,8 @@ static void maybeReadFile(void *fileOut, uint32_t len, uint32_t offsetLow, uint3
     op->overlapped.Offset = offsetLow;
     op->overlapped.OffsetHigh = offsetHigh;
     int ok = readFromFileBlocking(op->fileHandle, fileOut, len, NULL, &op->overlapped);
-    op->readPending = !ok && GetLastError() == ERROR_IO_PENDING;
-    if (!op->fileReadMayFail && !ok && GetLastError() != ERROR_IO_PENDING)
+    op->readPending = !ok && Xbox_GetLastError() == ERROR_IO_PENDING;
+    if (!op->fileReadMayFail && !ok && Xbox_GetLastError() != ERROR_IO_PENDING)
         FS_FatalErrorHandler();
 }
 

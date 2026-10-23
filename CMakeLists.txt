@@ -68,7 +68,6 @@ endif()
 # We'll use the original unsafe versions, and tell the compiler to stop nagging us, because YOLO
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
-if(WIN32)   # the action engine and both loaders
 # The action engine's own sources, which both builds compile: actioninject.dll (with the devtools and the patching
 # of the XBE) and action_standalone.exe (with neither).
 set(nf_action_sources
@@ -119,6 +118,11 @@ set(nf_action_sources
   src/driving/platform/CRuntimeX87.cpp
   src/driving/platform/CRuntimeFormat.cpp
   src/driving/platform/CRuntimeFloat.cpp
+  # The driving engine's host layer (src/driving/platform/Host.h), which the platform code calls; on 64-bit its heaps
+  # are the game window's
+  src/driving/platform/HostWin32.cpp
+  src/driving/platform/GameWindow.cpp
+  src/driving/platform/HostInputWin32.cpp
   src/action/engine/Direct3D/d3dhelpers.cpp
   src/action/engine/Direct3D/d3dSeam.cpp
   src/action/engine/Direct3D/xboxMatrix.cpp
@@ -297,12 +301,15 @@ set(nf_action_sources
   src/action/sound/psiSound.cpp
   src/common/sound/xadpcm.cpp
   src/action/sound/xaudio2Backend.cpp
+  src/action/sound/pcmCache.cpp
   src/action/sound/music.cpp
   src/action/sound/SFX.cpp
   src/action/sound/SFXStream.cpp
   src/action/sound/Sound.cpp
   src/action/sound/SFXOutputData.cpp
 )
+
+if(WIN32)   # the action engine and both loaders
 
 add_library(actioninject SHARED
   src/dllmain.cpp
@@ -404,7 +411,7 @@ else()
   set(XAUDIO2_LIB xaudio2)
 endif()
 target_link_libraries(actioninject PRIVATE
-  d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
+  d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32 shell32)
 
 
 # The loader: maps the XBE itself and runs it in-process. This is "action.exe", the way to run the action
@@ -984,7 +991,7 @@ endif()
 # SDL3 is built from source, pinned to a release tag, so that every host (MSVC, the mingw cross build, a Linux -m32
 # build) gets the same version from the same place, with no prebuilt to keep per toolchain; NF_SDL3_DIR takes an
 # installed SDL3's CMake package instead (SDL3Config.cmake's directory), for a machine without network access.
-option(NIGHTFIRE_SDL "Driving engine window, input and sound output through SDL3" OFF)
+option(NIGHTFIRE_SDL "Window, input and sound output through SDL3 (the driving engine, and the standalone action engine)" OFF)
 if(NIGHTFIRE_SDL)
   set(NF_SDL3_DIR "" CACHE PATH "An installed SDL3's CMake package directory; empty to build the pinned release")
   if(NF_SDL3_DIR)
@@ -1010,6 +1017,7 @@ if(NIGHTFIRE_SDL)
     src/driving/platform/HostWindowSdl.cpp
     src/driving/platform/HostInputSdl.cpp
     src/driving/sound/sdlAudioDriving.cpp
+    src/common/sound/voiceMixer.cpp
     src/common/fmv/FmvAudioSdl.cpp)
 elseif(WIN32)
   set(nf_output_sources
@@ -1055,46 +1063,6 @@ if(MSVC)
   target_compile_options(actioninject PRIVATE /Ob0)
 endif()
 
-# The standalone action engine (docs/action-standalone.md): our code alone, no XBE mapped or read, and none of the
-# devtools (src/action/standalone/NoDevtools.cpp answers the hooks game code calls). Compiled as actioninject is.
-add_executable(action_standalone
-  ${nf_action_sources}
-  src/action/standalone/StandaloneMain.cpp
-  src/action/standalone/NoDevtools.cpp
-  src/res/res.rc
-)
-# action_standalone_test is the same with the time demos' player (devtools/Demo.cpp), to play the recordings without
-# the XBE.
-add_executable(action_standalone_test EXCLUDE_FROM_ALL
-  ${nf_action_sources}
-  src/action/standalone/StandaloneMain.cpp
-  src/action/standalone/NoDevtools.cpp
-  src/action/devtools/Demo.cpp
-  src/res/res.rc
-)
-target_compile_definitions(action_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
-# Their x87 code (math/X87Ops.cpp, docs/action-64bit.md): on, the x87's own instructions, as actioninject always has
-# them, exact against the original and the recordings; off, C in double, which a 64-bit build always is. The
-# recordings stay in step with it off only against checksums rebased by a build with it off.
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  set(NIGHTFIRE_ACTION_X87 OFF CACHE BOOL "Action engine, standalone: keep the x87 instructions (off: C)" FORCE)
-endif()
-option(NIGHTFIRE_ACTION_X87 "Action engine, standalone: keep the x87 instructions (off: C)" ON)
-foreach(target action_standalone action_standalone_test)
-  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
-  if(NIGHTFIRE_ACTION_X87)
-    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
-  else()
-    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
-  endif()
-  target_link_libraries(${target} PRIVATE d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32)
-  if(MSVC)
-    target_compile_options(${target} PRIVATE /Ob0)
-    target_link_options(${target} PRIVATE /MAP)
-  else()
-    target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
-  endif()
-endforeach()
 target_compile_definitions(drivinginject PRIVATE NF_ANTIALIASING)
 endif()
 
@@ -1123,7 +1091,7 @@ add_executable(fmvaudiocheck EXCLUDE_FROM_ALL
   src/common/fmv/Ffmpeg.cpp
 )
 target_link_libraries(fmvaudiocheck PRIVATE user32)
-foreach(target actioninject action_standalone action_standalone_test drivinginject fmvaudiocheck)
+foreach(target actioninject drivinginject fmvaudiocheck)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
   add_custom_command(TARGET ${target} POST_BUILD
                      COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
@@ -1161,8 +1129,6 @@ add_custom_target(preprocess
                   COMMENT "Generating injection tables (tools/preprocess.py)")
 if(WIN32)
 add_dependencies(actioninject preprocess)
-add_dependencies(action_standalone preprocess)
-add_dependencies(action_standalone_test preprocess)
 add_dependencies(drivinginject preprocess)
 endif()
 
@@ -1221,6 +1187,7 @@ if(NOT WIN32)
     src/driving/platform/HostWindowSdl.cpp
     src/driving/platform/HostInputSdl.cpp
     src/driving/sound/sdlAudioDriving.cpp
+    src/common/sound/voiceMixer.cpp
     src/common/fmv/Ffmpeg.cpp
     src/common/xboxPath.cpp
     src/common/gfx/nv2aPixelShader.cpp
@@ -1232,6 +1199,104 @@ if(NOT WIN32)
     list(REMOVE_ITEM nf_host_abi_sources src/common/linux/win32Calls.cpp)
   endif()
 endif()
+
+# The standalone action engine (docs/action-standalone.md): our code alone, no XBE mapped or read, and none of the
+# devtools (src/action/standalone/NoDevtools.cpp answers the hooks game code calls). Compiled as actioninject is,
+# with the driving engine's crash reporter and the host's window; with NIGHTFIRE_SDL the window, input and sound
+# output are SDL3's (docs/action-portable.md).
+# Only for Windows and 64-bit Linux: the action engine has no 32-bit Linux build (docs/action-portable.md).
+if(WIN32 OR (CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT APPLE))
+set(nf_action_standalone_sources ${nf_action_sources} src/driving/standalone/CrashReport.cpp)
+if(WIN32)
+  list(APPEND nf_action_standalone_sources src/driving/standalone/CrashReportWin32.cpp)
+  set(nf_action_resources src/res/res.rc)
+else()
+  list(REMOVE_ITEM nf_action_standalone_sources
+    src/driving/platform/HostWin32.cpp
+    src/common/gfx/devtools/shaderCheck.cpp
+    src/common/gfx/devtools/shaderHlsl.cpp)
+  list(APPEND nf_action_standalone_sources
+    src/driving/standalone/CrashReportPosix.cpp
+    src/driving/platform/HostPosix.cpp
+    src/common/linux/win32Calls.cpp)
+  set(nf_action_resources)
+endif()
+if(NIGHTFIRE_SDL)
+  list(REMOVE_ITEM nf_action_standalone_sources
+    src/action/sound/xaudio2Backend.cpp
+    src/common/fmv/FmvAudio.cpp
+    src/driving/platform/HostInputWin32.cpp)
+  list(APPEND nf_action_standalone_sources
+    src/action/sound/sdlAudioAction.cpp
+    src/common/sound/voiceMixer.cpp
+    src/common/fmv/FmvAudioSdl.cpp
+    src/driving/platform/HostWindowSdl.cpp
+    src/driving/platform/HostInputSdl.cpp)
+else()
+  list(APPEND nf_action_standalone_sources src/driving/platform/HostWindowWin32.cpp)
+endif()
+add_executable(action_standalone
+  ${nf_action_standalone_sources}
+  src/action/standalone/StandaloneMain.cpp
+  src/action/standalone/NoDevtools.cpp
+  ${nf_action_resources}
+)
+# action_standalone_test is the same with the time demos' player (devtools/Demo.cpp), to play the recordings without
+# the XBE.
+add_executable(action_standalone_test EXCLUDE_FROM_ALL
+  ${nf_action_standalone_sources}
+  src/action/standalone/StandaloneMain.cpp
+  src/action/standalone/NoDevtools.cpp
+  src/action/devtools/Demo.cpp
+  ${nf_action_resources}
+)
+target_compile_definitions(action_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# Their x87 code (math/X87Ops.cpp, docs/action-64bit.md): on, the x87's own instructions, as actioninject always has
+# them, exact against the original and the recordings; off, C in double, which a 64-bit build always is. The
+# recordings stay in step with it off only against checksums rebased by a build with it off.
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+  set(NIGHTFIRE_ACTION_X87 OFF CACHE BOOL "Action engine, standalone: keep the x87 instructions (off: C)" FORCE)
+endif()
+option(NIGHTFIRE_ACTION_X87 "Action engine, standalone: keep the x87 instructions (off: C)" ON)
+foreach(target action_standalone action_standalone_test)
+  target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
+  if(NIGHTFIRE_ACTION_X87)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
+  else()
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
+  add_dependencies(${target} preprocess)
+  target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
+  if(WIN32)
+    target_link_libraries(${target} PRIVATE d3d9 d3dcompiler winmm ${XAUDIO2_LIB} xinput9_1_0 user32 shell32)
+    add_custom_command(TARGET ${target} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+  else()
+    # As the 64-bit driving_standalone: ordinary Linux code with MSVC's <intrin.h> and C runtime names, and SDL3,
+    # dxvk-native and FFmpeg beside the executable
+    target_compile_options(${target} PRIVATE ${NF_XBOX_ABI_OPTIONS}
+                           -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+    target_link_libraries(${target} PRIVATE dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+    add_custom_command(TARGET ${target} POST_BUILD
+                       COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
+                               ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
+  endif()
+  if(NIGHTFIRE_SDL)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_SDL)
+    target_link_libraries(${target} PRIVATE SDL3::SDL3)
+    if(WIN32)
+      add_custom_command(TARGET ${target} POST_BUILD
+                         COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_FILE:SDL3::SDL3> $<TARGET_FILE_DIR:${target}>)
+    endif()
+  endif()
+  if(MSVC)
+    target_compile_options(${target} PRIVATE /Ob0)
+    target_link_options(${target} PRIVATE /MAP)
+  else()
+    target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
+  endif()
+endforeach()
+endif()   # Windows and 64-bit Linux: the standalone action engine
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
 # injection and no shadow tests - drivinginject's sources less the devtools, the injection and the XBE's patching
@@ -1325,12 +1390,6 @@ function(nf_game_window target)
     endif()
   endif()
 endfunction()
-# The action engine's standalone targets in the same window (docs/action-64bit.md)
-foreach(target action_standalone action_standalone_test)
-  if(TARGET ${target})
-    nf_game_window(${target})
-  endif()
-endforeach()
 if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32 AND NOT APPLE)
   foreach(file Scrt1.o crti.o crtbeginS.o crtendS.o crtn.o)
     execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=${file} OUTPUT_VARIABLE path
@@ -1342,6 +1401,13 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT WIN32 AND NOT APPLE)
     endif()
   endforeach()
 endif()
+
+# The action engine's standalone targets in the same window (docs/action-64bit.md), with the start-up files above
+foreach(target action_standalone action_standalone_test)
+  if(TARGET ${target})
+    nf_game_window(${target})
+  endif()
+endforeach()
 
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})

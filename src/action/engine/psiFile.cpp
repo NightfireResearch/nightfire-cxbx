@@ -1,5 +1,7 @@
 #include <stdio.h>
-#include <windows.h>
+#include <stdlib.h>
+#include <string.h>
+#include <new>
 #include "../actionhelpers.h"
 #include "Loader.h"
 #include "FS.h"
@@ -136,8 +138,9 @@ int ** __cdecl psiFileLoad(char *filename, unsigned short allocType, int *sizeOu
 
       // In multi-file mode, we allocate memory for the file content, and return a pointer to it
 
-      // Allocate memory to store the file content
-      char* fileContent = (char*)malloc(length);
+      // Allocate memory to store the file content: from new, which a 64-bit build serves from the game window, as
+      // the game's data may keep addresses into it
+      char* fileContent = new (std::nothrow) char[length];
       if (fileContent == NULL) {
           // Handle memory allocation failure
           fclose(file);

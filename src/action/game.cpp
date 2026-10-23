@@ -14,7 +14,8 @@
 #include "engine/Fmv.h"
 #include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads maybeStartBackgroundMovie draws
 
-#include <windows.h>
+#include "../driving/platform/Host.h"
+#include "../driving/platform/Win32Types.h"   // LARGE_INTEGER
 
 #include <cstring>
 #include <cstdio>
@@ -1144,7 +1145,7 @@ void GameFlow_QuickPushState(uint state) {
 // (Cxbx-Reloaded/src/core/kernel/support/PatchRdtsc.cpp). The loader executes the instruction
 // natively, so the arithmetic has to be corrected here instead.
 //
-// QueryPerformanceCounter rather than rdtsc scaled by a measured CPU frequency: it is already the fixed-rate
+// The host's QueryPerformanceCounter rather than rdtsc scaled by a measured CPU frequency: it is already the fixed-rate
 // monotonic counter that measuring rdtsc would be trying to approximate, and it does not drift when the CPU
 // changes speed. Every caller takes a difference between two of these, so the epoch is arbitrary and only the
 // rate matters - which is just as well, since the original counted from power-on and this counts from the
@@ -1160,28 +1161,27 @@ double timestamp(void) {
   if (Demo_Active())
     return Demo_TimestampMs();
 
-  static LARGE_INTEGER frequency = { 0 };
-  static LARGE_INTEGER origin = { 0 };
+  static int64_t frequency = 0;
+  static int64_t origin = 0;
 
-  if (frequency.QuadPart == 0) {
-    LARGE_INTEGER f, o;
-    if (!QueryPerformanceFrequency(&f) || f.QuadPart == 0) {
-      f.QuadPart = 10000000; // the usual value; being wrong beats dividing by zero
+  if (frequency == 0) {
+    int64_t f, o;
+    if (!HostQueryPerformanceFrequency(&f) || f == 0) {
+      f = 10000000; // the usual value; being wrong beats dividing by zero
     }
-    QueryPerformanceCounter(&o);
+    HostQueryPerformanceCounter(&o);
     origin = o;
     frequency = f; // published last, so nothing can see a frequency without an origin to go with it
   }
 
-  LARGE_INTEGER now;
-  QueryPerformanceCounter(&now);
-  long long ticks = now.QuadPart - origin.QuadPart;
+  int64_t now;
+  HostQueryPerformanceCounter(&now);
+  long long ticks = now - origin;
 
   // Split rather than (ticks * 1000000) / frequency, which overflows a 64-bit multiply after a few days of
   // uptime. Microseconds first, then scaled, to keep the original's quantisation - it truncated to whole
   // microseconds before converting to milliseconds and callers may compare small differences.
-  long long micros = (ticks / frequency.QuadPart) * 1000000
-                   + ((ticks % frequency.QuadPart) * 1000000) / frequency.QuadPart;
+  long long micros = (ticks / frequency) * 1000000 + ((ticks % frequency) * 1000000) / frequency;
   return (double)micros * 0.001;
 }
 
@@ -1211,7 +1211,9 @@ uint32_t __stdcall Xbox_QueryPerformanceCounter(LARGE_INTEGER *counter) {
     counter->QuadPart = Demo_Counter();
     return 1;
   }
-  QueryPerformanceCounter(counter);
+  int64_t now;
+  HostQueryPerformanceCounter(&now);
+  counter->QuadPart = now;
   return 1;
 }
 
@@ -1221,9 +1223,8 @@ uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
     frequency->QuadPart = Demo_CounterFrequency();
     return 1;
   }
-  if (!QueryPerformanceFrequency(frequency)) {
-    frequency->QuadPart = 10000000; // as in timestamp() above: being wrong beats a divide by zero
-  }
+  int64_t rate;
+  frequency->QuadPart = HostQueryPerformanceFrequency(&rate) ? rate : 10000000;   // as in timestamp() above
   return 1;
 }
 

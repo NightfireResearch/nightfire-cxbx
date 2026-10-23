@@ -5,8 +5,8 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
-#include <direct.h>
-#include <io.h>
+
+#include "../../driving/platform/Host.h"
 
 // XBE_GLOBAL(0x002adf0c, 0x4)
 uint32_t SavesListed;
@@ -51,7 +51,7 @@ undefined4 psiSaveData(void *data, uint32_t size, const char *profileName) {
         return 1;
     }
 
-    _mkdir(SAVE_DIR); // ignore error - EEXIST is fine
+    HostCreateDirectory(SAVE_DIR); // ignore error - ERROR_ALREADY_EXISTS is fine
 
     char path[256];
     BuildSavePath(path, sizeof(path), profileName);
@@ -161,7 +161,7 @@ void SaveDrive_Open(void) {
 void SaveDrive_Close(void) {
 }
 
-static intptr_t g_saveEnumHandle = -1;
+static HostHandle g_saveEnumHandle = HOST_INVALID_HANDLE;
 static bool g_saveEnumStarted = false;
 static char g_saveEnumNameBuf[16]; // matches the original's 9-byte (8 char + NUL) cache slot size
 
@@ -176,9 +176,9 @@ void psiStartSaveEnum(void) {
     NumberSaveGamesGot = 0;
     SaveDrive_Open();
 
-    if (g_saveEnumHandle != -1) {
-        _findclose(g_saveEnumHandle);
-        g_saveEnumHandle = -1;
+    if (g_saveEnumHandle != HOST_INVALID_HANDLE) {
+        HostFindClose(g_saveEnumHandle);
+        g_saveEnumHandle = HOST_INVALID_HANDLE;
     }
     g_saveEnumStarted = false;
 }
@@ -189,29 +189,29 @@ void psiStartSaveEnum(void) {
 //
 // AUTOINJECT
 char* SaveEnum_GetNextEntry(void) {
-    _finddata32_t findData;
+    char name[HOST_MAX_PATH];
     bool found;
 
     if (!g_saveEnumStarted) {
         g_saveEnumStarted = true;
-        g_saveEnumHandle = _findfirst32(SAVE_DIR "/*.dat", &findData);
-        found = g_saveEnumHandle != -1;
-    } else if (g_saveEnumHandle != -1) {
-        found = _findnext32(g_saveEnumHandle, &findData) == 0;
+        g_saveEnumHandle = HostFindFirstFile(SAVE_DIR "/*.dat", name);
+        found = g_saveEnumHandle != HOST_INVALID_HANDLE;
+    } else if (g_saveEnumHandle != HOST_INVALID_HANDLE) {
+        found = HostFindNextFile(g_saveEnumHandle, name) != 0;
     } else {
         found = false;
     }
 
     if (!found) {
-        if (g_saveEnumHandle != -1) {
-            _findclose(g_saveEnumHandle);
-            g_saveEnumHandle = -1;
+        if (g_saveEnumHandle != HOST_INVALID_HANDLE) {
+            HostFindClose(g_saveEnumHandle);
+            g_saveEnumHandle = HOST_INVALID_HANDLE;
         }
         return NULL;
     }
 
     // Recover the Codename by stripping the ".dat" extension back off the filename
-    strncpy(g_saveEnumNameBuf, findData.name, sizeof(g_saveEnumNameBuf) - 1);
+    strncpy(g_saveEnumNameBuf, name, sizeof(g_saveEnumNameBuf) - 1);
     g_saveEnumNameBuf[sizeof(g_saveEnumNameBuf) - 1] = '\0';
     char *dot = strrchr(g_saveEnumNameBuf, '.');
     if (dot != NULL)

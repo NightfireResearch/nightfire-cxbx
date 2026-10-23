@@ -16,12 +16,15 @@
 #include "../util/Random.h"
 #include "../engine/XboxSettings.h"
 #include "../engine/LaunchOptions.h"
-#include "../../common/renderWindow.h"
 #include "../../common/fmv/FmvAudio.h"
 #include "../../common/gfx/d3d9Backend.h"
 
-#include <windows.h>
-#include <direct.h>
+#include "../../driving/platform/Host.h"
+#include "../../driving/platform/HostInput.h"
+
+#ifdef _WIN32
+#include <windows.h>   // the hardware watchpoints
+#endif
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -84,7 +87,6 @@ static const char *const kSumNames[SUM_COUNT] = { "rng", "gamestate", "channels"
 #define KernelKeQuerySystemTime (*(void(__stdcall **)(LARGE_INTEGER *))0x0015d198)
 #endif
 
-#define VK_F6_ 0x75
 
 static DemoMode g_mode = DEMO_OFF;
 static std::string g_path;
@@ -192,11 +194,18 @@ static bool ReadWholeFile(const char *path, std::vector<uint8_t> *out) {
 }
 
 static bool GameWindowHasFocus(void) {
-    HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
-    if (render == NULL)
-        return false;
-    HWND foreground = GetForegroundWindow();
-    return foreground != NULL && (foreground == render || foreground == GetAncestor(render, GA_ROOT));
+    return HostMouse_HasWindow() && HostInput_WindowHasFocus();
+}
+
+// A path the recording names, as this host's file calls take it (they take either separator; the C library's take
+// only the host's own)
+static std::string NativePath(std::string path) {
+#ifndef _WIN32
+    for (char &c : path)
+        if (c == '\\')
+            c = '/';
+#endif
+    return path;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -226,47 +235,52 @@ static void WriteFileSection(const char *path) {
     printf("[demo]   %s (%u bytes)\n", path, (unsigned)data.size());
 }
 
+static bool IsDirectory(const std::string &path) {
+    HostDword attributes = HostGetFileAttributes(path.c_str());
+    return attributes != HOST_INVALID_FILE_ATTRIBUTES && (attributes & 0x10) != 0;   // FILE_ATTRIBUTE_DIRECTORY
+}
+
 static void WriteDirectorySections(const std::string &directory) {
-    WIN32_FIND_DATAA find;
-    HANDLE handle = FindFirstFileA((directory + "\\*").c_str(), &find);
-    if (handle == INVALID_HANDLE_VALUE)
+    char name[HOST_MAX_PATH];
+    HostHandle handle = HostFindFirstFile((directory + "\\*").c_str(), name);
+    if (handle == HOST_INVALID_HANDLE)
         return;
     do {
-        if (strcmp(find.cFileName, ".") == 0 || strcmp(find.cFileName, "..") == 0)
+        if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
             continue;
-        std::string path = directory + "\\" + find.cFileName;
-        if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+        std::string path = directory + "\\" + name;
+        if (IsDirectory(path))
             WriteDirectorySections(path);
         else
-            WriteFileSection(path.c_str());
-    } while (FindNextFileA(handle, &find));
-    FindClose(handle);
+            WriteFileSection(NativePath(path).c_str());
+    } while (HostFindNextFile(handle, name));
+    HostFindClose(handle);
 }
 
 // Removes everything under a directory of the playback sandbox, which this file made
 static void EmptyDirectory(const std::string &directory) {
-    WIN32_FIND_DATAA find;
-    HANDLE handle = FindFirstFileA((directory + "\\*").c_str(), &find);
-    if (handle == INVALID_HANDLE_VALUE)
+    char name[HOST_MAX_PATH];
+    HostHandle handle = HostFindFirstFile((directory + "\\*").c_str(), name);
+    if (handle == HOST_INVALID_HANDLE)
         return;
     do {
-        if (strcmp(find.cFileName, ".") == 0 || strcmp(find.cFileName, "..") == 0)
+        if (strcmp(name, ".") == 0 || strcmp(name, "..") == 0)
             continue;
-        std::string path = directory + "\\" + find.cFileName;
-        if (find.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+        std::string path = directory + "\\" + name;
+        if (IsDirectory(path)) {
             EmptyDirectory(path);
-            RemoveDirectoryA(path.c_str());
+            HostRemoveDirectory(path.c_str());
         } else {
-            DeleteFileA(path.c_str());
+            HostDeleteFile(path.c_str());
         }
-    } while (FindNextFileA(handle, &find));
-    FindClose(handle);
+    } while (HostFindNextFile(handle, name));
+    HostFindClose(handle);
 }
 
 static void MakeParentDirectories(const std::string &path) {
     for (size_t i = 0; i < path.size(); i++) {
         if (path[i] == '\\' || path[i] == '/')
-            _mkdir(path.substr(0, i).c_str());
+            HostCreateDirectory(path.substr(0, i).c_str());
     }
 }
 
@@ -320,10 +334,10 @@ static void StartRecording(const char *path) {
 
     Put("NFDEMO\0\2", 8);
     char info[256];
-    SYSTEMTIME now;
-    GetLocalTime(&now);
-    int infoLength = snprintf(info, sizeof(info), "recorded %04u-%02u-%02u %02u:%02u:%02u", now.wYear, now.wMonth,
-                              now.wDay, now.wHour, now.wMinute, now.wSecond);
+    HostSystemTime now;
+    HostGetLocalTime(&now);
+    int infoLength = snprintf(info, sizeof(info), "recorded %04u-%02u-%02u %02u:%02u:%02u", now.year, now.month,
+                              now.day, now.hour, now.minute, now.second);
     WriteSection("INFO", info, (uint32_t)infoLength);
     WriteSection("ARGS", LaunchOptions_Text(), (uint32_t)strlen(LaunchOptions_Text()));
     printf("[demo] recording to %s, starting from:\n", path);
@@ -387,11 +401,11 @@ static bool StartPlayback(const char *path) {
     size_t dot = name.find_last_of('.');
     if (dot != std::string::npos)
         name = name.substr(0, dot);
-    char fullPath[MAX_PATH];
-    GetFullPathNameA(path, MAX_PATH, fullPath, NULL);
+    char fullPath[HOST_MAX_PATH];
+    HostGetFullPathName(path, HOST_MAX_PATH, fullPath);
     std::string sandbox = std::string("demoplay\\") + name;
-    _mkdir("demoplay");
-    _mkdir(sandbox.c_str());
+    HostCreateDirectory("demoplay");
+    HostCreateDirectory(sandbox.c_str());
     EmptyDirectory(sandbox);
 
     size_t at = 8;
@@ -417,7 +431,7 @@ static bool StartPlayback(const char *path) {
             std::string relative((const char *)&file[at + 2], pathLength);
             std::string target = sandbox + "\\" + relative;
             MakeParentDirectories(target);
-            FILE *out = fopen(target.c_str(), "wb");
+            FILE *out = fopen(NativePath(target).c_str(), "wb");
             if (out != NULL) {
                 fwrite(&file[at + 2 + pathLength], 1, size - 2 - pathLength, out);
                 fclose(out);
@@ -430,7 +444,7 @@ static bool StartPlayback(const char *path) {
     g_stream.resize(WholeFrames(g_stream));
     g_at = 0;
 
-    if (!SetCurrentDirectoryA(sandbox.c_str())) {
+    if (!HostSetCurrentDirectory(sandbox.c_str())) {
         printf("[demo] cannot enter the sandbox %s\n", sandbox.c_str());
         return false;
     }
@@ -510,15 +524,15 @@ static void StartRebase(const char *outPath) {
     g_out = fopen(outPath, "wb");
     if (g_out == NULL) {
         printf("[demo] cannot write %s; not rebasing\n", outPath);
-        ExitProcess(4);
+        HostExitProcess(4);
     }
     setvbuf(g_out, NULL, _IOFBF, 1 << 16);
     Put("NFDEMO\0\2", 8);
     char info[256];
-    SYSTEMTIME now;
-    GetLocalTime(&now);
-    int infoLength = snprintf(info, sizeof(info), "rebased %04u-%02u-%02u %02u:%02u:%02u", now.wYear, now.wMonth,
-                              now.wDay, now.wHour, now.wMinute, now.wSecond);
+    HostSystemTime now;
+    HostGetLocalTime(&now);
+    int infoLength = snprintf(info, sizeof(info), "rebased %04u-%02u-%02u %02u:%02u:%02u", now.year, now.month,
+                              now.day, now.hour, now.minute, now.second);
     WriteSection("INFO", info, (uint32_t)infoLength);
     Put(g_header.data(), g_header.size());
     WriteSection("STRM", NULL, 0);
@@ -538,11 +552,11 @@ void Demo_Init(void) {
     if (play != NULL && play[0] != '\0') {
         // The rebase's output, before the playback moves into its sandbox
         const char *rebase = getenv("NIGHTFIRE_DEMO_REBASE");
-        char rebasePath[MAX_PATH] = "";
+        char rebasePath[HOST_MAX_PATH] = "";
         if (rebase != NULL && rebase[0] != '\0')
-            GetFullPathNameA(rebase, MAX_PATH, rebasePath, NULL);
+            HostGetFullPathName(rebase, HOST_MAX_PATH, rebasePath);
         if (!StartPlayback(play))
-            ExitProcess(4);
+            HostExitProcess(4);
         if (rebasePath[0] != '\0')
             StartRebase(rebasePath);
     } else {
@@ -550,11 +564,11 @@ void Demo_Init(void) {
         if (record != NULL && record[0] != '\0') {
             StartRecording(record);
         } else if (Settings_GetDemoRecord()) {
-            SYSTEMTIME now;
-            GetLocalTime(&now);
-            char path[MAX_PATH];
-            snprintf(path, sizeof(path), "demos\\%04u%02u%02u-%02u%02u%02u.nfdemo", now.wYear, now.wMonth, now.wDay,
-                     now.wHour, now.wMinute, now.wSecond);
+            HostSystemTime now;
+            HostGetLocalTime(&now);
+            char path[HOST_MAX_PATH];
+            snprintf(path, sizeof(path), "demos\\%04u%02u%02u-%02u%02u%02u.nfdemo", now.year, now.month, now.day,
+                     now.hour, now.minute, now.second);
             StartRecording(path);
         }
     }
@@ -562,10 +576,7 @@ void Demo_Init(void) {
         return;
 
     // 18 November 2002, midnight UTC, as KeQuerySystemTime's 100 ns units since 1601
-    SYSTEMTIME epoch = { 2002, 11, 1, 18, 0, 0, 0, 0 };
-    FILETIME epochTime;
-    SystemTimeToFileTime(&epoch, &epochTime);
-    g_systemTimeBase = ((int64_t)epochTime.dwHighDateTime << 32) | epochTime.dwLowDateTime;
+    g_systemTimeBase = 126820512000000000;
 #ifndef NIGHTFIRE_STANDALONE
     KernelKeQuerySystemTime = Demo_KeQuerySystemTime;
 #endif
@@ -638,7 +649,7 @@ static void PrintResult(const char *why) {
 
 static void FinishPlayback(const char *why) {
     PrintResult(why);
-    ExitProcess(g_streamBroken ? 3 : g_divergedFrames != 0 ? 2 : 0);
+    HostExitProcess(g_streamBroken ? 3 : g_divergedFrames != 0 ? 2 : 0);
 }
 
 // The game quitting by itself (a MenuProbe script's "quit", say) still gets the result said
@@ -663,6 +674,7 @@ static void StreamBroken(const char *what) {
 //   NIGHTFIRE_DEMO_WATCH_CHANNEL=<n>          switch_channels[n], from the first frame
 //   NIGHTFIRE_DEMO_WATCH_DRONE=<frame>,<n>    the nth object's drone's next state (sm.nextState), from that frame
 //   NIGHTFIRE_DEMO_WATCH_OBJECT=<frame>,<n>   the nth object's curState, from that frame
+#ifdef _WIN32
 static const char *g_watchName;
 static const volatile uint8_t *g_watchAt;
 
@@ -726,6 +738,15 @@ static void Watch(const char *name, const volatile void *at) {
     printf("[demo] frame %u: watching %s\n", g_frame, name);
 }
 
+#endif
+
+#ifndef _WIN32   // no hardware watchpoints off Windows
+static void Watch(const char *name, const volatile void *at) {
+    (void)at;
+    printf("[demo] frame %u: no watchpoint for %s on this host\n", g_frame, name);
+}
+#endif
+
 static void WatchStart(void) {
     static bool done = false;
     if (done)
@@ -770,7 +791,7 @@ void Demo_FrameStart(void) {
             printf("[demo] rebased %u frames to %s (%u of them differ from the old recording)\n", g_frame,
                    g_path.c_str(), g_divergedFrames);
             fflush(stdout);
-            ExitProcess(0);
+            HostExitProcess(0);
         }
         for (uint32_t mark : g_rebase[g_frame].bookmarks) {
             PutByte(EV_BOOKMARK);
@@ -784,7 +805,7 @@ void Demo_FrameStart(void) {
 
     if (g_mode == DEMO_RECORD) {
         static bool f6Down = false;
-        bool down = (GetAsyncKeyState(VK_F6_) & 0x8000) != 0;
+        bool down = HostInput_KeyHeld(kKeyF6);
         if (down && !f6Down && GameWindowHasFocus()) {
             PutByte(EV_BOOKMARK);
             PutU32(g_frame);
@@ -813,7 +834,7 @@ void Demo_FrameStart(void) {
     if (g_shotEvery != 0 && g_frame >= g_shotFrom && g_frame % g_shotEvery == 0) {
         char name[64];
         snprintf(name, sizeof(name), "demo_shots/%06u", g_frame);
-        CreateDirectoryA("demo_shots", NULL);   // in the sandbox
+        HostCreateDirectory("demo_shots");   // in the sandbox
         D3D9_RequestScreenshot(name);
     }
 }
@@ -1062,7 +1083,7 @@ void Demo_Pad(int port, DemoPad *pad) {
     pad->packet = g_padPacket[port];
 }
 
-void Demo_Mouse(bool *captured, long *countsX, long *countsY) {
+void Demo_Mouse(bool *captured, int32_t *countsX, int32_t *countsY) {
     if (g_mode == DEMO_OFF)
         return;
 
@@ -1079,7 +1100,7 @@ void Demo_Mouse(bool *captured, long *countsX, long *countsY) {
         *countsY = y;
     }
     if (Writing()) {
-        int32_t x = (int32_t)*countsX, y = (int32_t)*countsY;
+        int32_t x = *countsX, y = *countsY;
         packed[0] = *captured ? 1 : 0;
         memcpy(packed + 1, &x, 4);
         memcpy(packed + 5, &y, 4);
@@ -1164,7 +1185,7 @@ void Demo_LeavingForDriving(void) {
         fflush(stdout);
         g_mode = DEMO_OFF;
         if (rebasing)
-            ExitProcess(0);   // a rebase stops where the old session left; it does not launch the driving engine
+            HostExitProcess(0);   // a rebase stops where the old session left; it does not launch the driving engine
     } else if (g_mode == DEMO_PLAY) {
         FinishPlayback("reached the driving engine");
     }

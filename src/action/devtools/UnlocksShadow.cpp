@@ -17,7 +17,7 @@
 
 // Everything the functions write.
 struct UnlockState {
-    ulong bonus[8];
+    uint32_t bonus[8];
     uchar spBefore;                     // the byte before sp_level: Menu_SetLevelBonus of an unknown level marks it
     uchar sp[12], chars[29], charsSmall[29], scenarios[13];
     uchar replace, earned, scenery, upgradeFlag;

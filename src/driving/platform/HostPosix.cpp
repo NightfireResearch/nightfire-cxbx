@@ -20,6 +20,7 @@
 #include <strings.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
 #ifdef __APPLE__
@@ -70,6 +71,8 @@ enum : unsigned long {
     kTimeZoneUnknown = 0,
     kTimeZoneStandard = 1,
     kTimeZoneDaylight = 2,
+    kFileAttributeDirectory = 0x10,
+    kFileAttributeNormal = 0x80,
 };
 
 // ---- errors
@@ -980,6 +983,137 @@ int HostGetFileSizeEx(HostHandle handle, int64_t *size) {
         return 0;
     }
     *size = status.st_size;
+    return 1;
+}
+
+int HostFlushFile(HostHandle handle) {
+    File *file = static_cast<File *>(ObjectOf(handle, kFile));
+    if (file == NULL)
+        return 0;
+    if (fsync(file->fd) != 0) {
+        LastError = ErrorFromErrno(errno);
+        return 0;
+    }
+    return 1;
+}
+
+int HostSetEndOfFile(HostHandle handle) {
+    File *file = static_cast<File *>(ObjectOf(handle, kFile));
+    if (file == NULL)
+        return 0;
+    off_t position = lseek(file->fd, 0, SEEK_CUR);
+    if (position < 0 || ftruncate(file->fd, position) != 0) {
+        LastError = errno == ENOSPC ? kErrorDiskFull : ErrorFromErrno(errno);
+        return 0;
+    }
+    return 1;
+}
+
+HostDword HostGetFileAttributes(const char *path) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    struct stat status;
+    if (stat(host, &status) != 0) {
+        LastError = errno == ENOTDIR ? kErrorPathNotFound : ErrorFromErrno(errno);
+        return HOST_INVALID_FILE_ATTRIBUTES;
+    }
+    return S_ISDIR(status.st_mode) ? kFileAttributeDirectory : kFileAttributeNormal;
+}
+
+int HostCreateDirectory(const char *path) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    if (mkdir(host, 0755) != 0) {
+        LastError = errno == EEXIST ? kErrorAlreadyExists : ErrorFromErrno(errno);
+        return 0;
+    }
+    return 1;
+}
+
+int HostRemoveDirectory(const char *path) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    if (rmdir(host) != 0) {
+        LastError = ErrorFromErrno(errno);
+        return 0;
+    }
+    return 1;
+}
+
+int HostSetCurrentDirectory(const char *path) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    if (chdir(host) != 0) {
+        LastError = ErrorFromErrno(errno);
+        return 0;
+    }
+    return 1;
+}
+
+// Whether or not the path is there, as GetFullPathName answers
+HostDword HostGetFullPathName(const char *path, HostDword size, char *out) {
+    char host[HOST_MAX_PATH];
+    HostPath(path, host);
+    char full[HOST_MAX_PATH * 2];
+    if (host[0] == '/') {
+        snprintf(full, sizeof(full), "%s", host);
+    } else {
+        char current[HOST_MAX_PATH];
+        if (getcwd(current, sizeof(current)) == NULL)
+            return 0;
+        snprintf(full, sizeof(full), "%s/%s", current, host);
+    }
+    size_t length = strlen(full);
+    if (length + 1 > size)
+        return 0;
+    memcpy(out, full, length + 1);
+    return (HostDword)length;
+}
+
+// A volume's figures from statvfs, in units of its fragment size; Windows' sectors are 512 bytes
+static bool VolumeOf(const char *path, struct statvfs *volume) {
+    char host[HOST_MAX_PATH];
+    HostPath(path != NULL ? path : ".", host);
+    if (statvfs(host, volume) != 0) {
+        LastError = errno == ENOTDIR ? kErrorPathNotFound : ErrorFromErrno(errno);
+        return false;
+    }
+    return true;
+}
+
+static HostDword Clusters(uint64_t count) {
+    return count < 0xffffffffu ? (HostDword)count : 0xffffffffu;
+}
+
+int HostGetDiskFreeSpace(const char *path, HostDword *sectorsPerCluster, HostDword *bytesPerSector,
+                         HostDword *freeClusters, HostDword *totalClusters) {
+    struct statvfs volume;
+    if (!VolumeOf(path, &volume))
+        return 0;
+    uint64_t unit = volume.f_frsize != 0 ? volume.f_frsize : volume.f_bsize;
+    HostDword sector = unit >= 512 ? 512 : (HostDword)unit;
+    if (sectorsPerCluster != NULL)
+        *sectorsPerCluster = (HostDword)(unit / sector);
+    if (bytesPerSector != NULL)
+        *bytesPerSector = sector;
+    if (freeClusters != NULL)
+        *freeClusters = Clusters(volume.f_bavail);
+    if (totalClusters != NULL)
+        *totalClusters = Clusters(volume.f_blocks);
+    return 1;
+}
+
+int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t *totalBytes, uint64_t *freeBytes) {
+    struct statvfs volume;
+    if (!VolumeOf(path, &volume))
+        return 0;
+    uint64_t unit = volume.f_frsize != 0 ? volume.f_frsize : volume.f_bsize;
+    if (availableBytes != NULL)
+        *availableBytes = (uint64_t)volume.f_bavail * unit;
+    if (totalBytes != NULL)
+        *totalBytes = (uint64_t)volume.f_blocks * unit;
+    if (freeBytes != NULL)
+        *freeBytes = (uint64_t)volume.f_bfree * unit;
     return 1;
 }
 

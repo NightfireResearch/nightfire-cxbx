@@ -129,6 +129,23 @@ int HostWriteFile(HostHandle file, const void *buffer, HostDword bytes, HostDwor
 HostDword HostSetFilePointer(HostHandle file, HostLong distance, HostLong *distanceHigh, HostDword method);
 HostDword HostGetFileSize(HostHandle file, HostDword *sizeHigh);
 int HostGetFileSizeEx(HostHandle file, int64_t *size);
+int HostFlushFile(HostHandle file);       // FlushFileBuffers
+int HostSetEndOfFile(HostHandle file);    // SetEndOfFile: the file ends at its pointer
+
+// GetFileAttributes: FILE_ATTRIBUTE_DIRECTORY (0x10) or, for a file, Win32's own (FILE_ATTRIBUTE_NORMAL, 0x80, on
+// POSIX); HOST_INVALID_FILE_ATTRIBUTES if there is nothing there
+#define HOST_INVALID_FILE_ATTRIBUTES 0xffffffffu
+HostDword HostGetFileAttributes(const char *path);
+int HostCreateDirectory(const char *path);
+int HostRemoveDirectory(const char *path);        // an empty one
+int HostSetCurrentDirectory(const char *path);
+// GetFullPathName: the path made absolute against the current directory (its length, 0 if it does not fit)
+HostDword HostGetFullPathName(const char *path, HostDword size, char *out);
+
+// GetDiskFreeSpace and GetDiskFreeSpaceEx: the volume a path is on, or (NULL) the current directory's
+int HostGetDiskFreeSpace(const char *path, HostDword *sectorsPerCluster, HostDword *bytesPerSector,
+                         HostDword *freeClusters, HostDword *totalClusters);
+int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t *totalBytes, uint64_t *freeBytes);
 
 // A directory search: the pattern's last component may hold * and ?, matched without regard to case. Each call
 // gives the next entry's name (at most HOST_MAX_PATH bytes with its terminator).

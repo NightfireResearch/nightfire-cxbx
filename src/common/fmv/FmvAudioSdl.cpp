@@ -10,6 +10,12 @@
 
 #define FMV_AUDIO_AHEAD 0.5           // seconds kept queued
 
+double (*FmvAudio::virtualClock_)(void) = nullptr;
+
+void FmvAudio::SetVirtualClock(double (*clock)(void)) {
+    virtualClock_ = clock;
+}
+
 static double SecondsSince(uint64_t start) {
     return (double)(SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency();
 }
@@ -101,6 +107,8 @@ bool FmvAudio::WantsMore() {
 bool FmvAudio::PlayedOut() {
     if (voice_ == nullptr)
         return true;
+    if (virtualClock_ != nullptr)
+        return finished_ && Clock() >= (double)framesQueued_ / sampleRate_;
     return finished_ && SDL_GetAudioStreamQueued(voice_) == 0;
 }
 
@@ -117,9 +125,12 @@ void FmvAudio::Start() {
     }
     started_ = true;
     startWall_ = (int64_t)SDL_GetPerformanceCounter();
+    startVirtual_ = virtualClock_ != nullptr ? virtualClock_() : 0.0;
 }
 
 double FmvAudio::Clock() {
+    if (virtualClock_ != nullptr)
+        return started_ ? virtualClock_() - startVirtual_ : 0.0;
     if (voice_ == nullptr || !started_)
         return started_ ? SecondsSince((uint64_t)startWall_) : 0.0;
     if (drained_)

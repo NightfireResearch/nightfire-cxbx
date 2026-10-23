@@ -1,6 +1,7 @@
 #include "dsndSeam.h"
 #include "../../common/xbeClass.h"
 #include "xaudio2Backend.h"          // the native backend the entry-point wrappers dispatch to
+#include "../../driving/platform/Ptr32.h"   // the backend's buffers are words
 
 #include <stdint.h>
 #include <string.h>
@@ -536,11 +537,11 @@ void __cdecl xboxCreateSoundBuffers(void) {
         desc2D.dwSize = sizeof(desc2D);
         desc2D.lpwfxFormat = &format2D.wfx;
 
-        DSoundBuffer *buffer = NULL;
-        IDirectSound_CreateSoundBuffer(AudioSys.directSoundInst, &desc2D, (uint32_t *)&buffer, NULL);
-        AudioSys.buffersMono2D[slot] = buffer;
+        uint32_t word = 0;   // the backend's buffer, as the Xbox's DirectSound gives it
+        IDirectSound_CreateSoundBuffer(AudioSys.directSoundInst, &desc2D, &word, NULL);
+        AudioSys.buffersMono2D[slot] = PtrFrom32<DSoundBuffer>(word);
 
-        AudioSys.buffersStereo2D[slot] = (DSoundBuffer *)dsndCreateSoundBuffer(2, 0);
+        AudioSys.buffersStereo2D[slot] = PtrFrom32<DSoundBuffer>(dsndCreateSoundBuffer(2, 0));
 
         XBOXADPCMWAVEFORMAT_Xbox format3D;
         DSBUFFERDESC_Xbox desc3D;
@@ -550,8 +551,9 @@ void __cdecl xboxCreateSoundBuffers(void) {
         desc3D.dwFlags |= DSBCAPS_CTRL3D;
         desc3D.lpwfxFormat = &format3D.wfx;
 
-        buffer = NULL;
-        IDirectSound_CreateSoundBuffer(AudioSys.directSoundInst, &desc3D, (uint32_t *)&buffer, NULL);
+        word = 0;
+        IDirectSound_CreateSoundBuffer(AudioSys.directSoundInst, &desc3D, &word, NULL);
+        DSoundBuffer *buffer = PtrFrom32<DSoundBuffer>(word);
         AudioSys.buffers3D[slot] = buffer;
         IDirectSoundBuffer_SetRolloffCurve(buffer, RolloffCurve, RolloffCurvePoints, DS3D_IMMEDIATE);
 

@@ -642,7 +642,7 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
     Menu_SetBonus(codename->bonusLo, codename->bonusHi, player, 0);
 }
 
-extern ulong menu_bonus[8];   // MenuUnlocks.cpp
+extern uint32_t menu_bonus[8];   // MenuUnlocks.cpp
 
 // A default codename takes the player's settings, volumes, progress and rewards as they are now (the reverse of
 // Menu_MapDefaultCodename)

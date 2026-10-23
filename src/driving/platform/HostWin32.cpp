@@ -325,6 +325,46 @@ int HostGetFileSizeEx(HostHandle file, int64_t *size) {
     return TRUE;
 }
 
+int HostFlushFile(HostHandle file) {
+    return FlushFileBuffers(file);
+}
+
+int HostSetEndOfFile(HostHandle file) {
+    return SetEndOfFile(file);
+}
+
+unsigned long HostGetFileAttributes(const char *path) {
+    return GetFileAttributesA(path);
+}
+
+int HostCreateDirectory(const char *path) {
+    return CreateDirectoryA(path, NULL);
+}
+
+int HostRemoveDirectory(const char *path) {
+    return RemoveDirectoryA(path);
+}
+
+int HostSetCurrentDirectory(const char *path) {
+    return SetCurrentDirectoryA(path);
+}
+
+HostDword HostGetFullPathName(const char *path, HostDword size, char *out) {
+    HostDword length = GetFullPathNameA(path, size, out, NULL);
+    return length < size ? length : 0;
+}
+
+int HostGetDiskFreeSpace(const char *path, unsigned long *sectorsPerCluster, unsigned long *bytesPerSector,
+                         unsigned long *freeClusters, unsigned long *totalClusters) {
+    return GetDiskFreeSpaceA(path, sectorsPerCluster, bytesPerSector, freeClusters, totalClusters);
+}
+
+int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t *totalBytes, uint64_t *freeBytes) {
+    return GetDiskFreeSpaceExA(path, reinterpret_cast<ULARGE_INTEGER *>(availableBytes),
+                               reinterpret_cast<ULARGE_INTEGER *>(totalBytes),
+                               reinterpret_cast<ULARGE_INTEGER *>(freeBytes));
+}
+
 static void CopyFoundName(const WIN32_FIND_DATAA *found, char *name) {
     memcpy(name, found->cFileName, sizeof(found->cFileName));
 }

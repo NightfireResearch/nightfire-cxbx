@@ -1,8 +1,5 @@
 #include "Fmv.h"
 
-#define WIN32_LEAN_AND_MEAN
-#include <windows.h>
-#include <xaudio2.h>
 #include <math.h>
 #include <stdio.h>
 #include <string.h>
@@ -233,7 +230,7 @@ void BackgroundMoviePlayFile(char *filename) {
         memset(M.frameMemory[i], 0, FMV_FRAME_BYTES);
     }
 
-    char xboxPath[300], hostPath[MAX_PATH];
+    char xboxPath[300], hostPath[300];
     snprintf(xboxPath, sizeof(xboxPath), "d:\\eurocom\\%s%s", Graphics_IsPalI() ? "30_fps\\" : "25_fps\\", filename);
     if (!Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)) || ff.open_input(&M.format, hostPath, NULL, NULL) < 0) {
         printf("[fmv] cannot open %s\n", xboxPath);

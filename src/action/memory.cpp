@@ -62,6 +62,14 @@ void psiMem_Init(uint *pMem_out, uint *size_out) {
 
 }
 
+// The standalone build takes the heap's pages before the window opens: the window's libraries scatter allocations of
+// their own through the range contiguous memory comes from (below 256 MB), and 40 MB together is then not to be had.
+// Mem_Init otherwise takes them the first time.
+void Mem_TakeHeap(void) {
+    if (PtrHeap == 0)
+        psiMem_Init(&PtrHeap, &HeapByteSize);
+}
+
 // AUTOINJECT
 void Mem_Init(void) {
 

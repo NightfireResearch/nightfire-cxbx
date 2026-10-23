@@ -8,6 +8,7 @@
 #include "../common/xbeClass.h"
 
 void Mem_Init(void);
+void Mem_TakeHeap(void);   // before Mem_Init, the standalone build's (memory.cpp)
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment);
 // Mem_Malloc of something that is xboxSize bytes on the Xbox (XboxHeap.h; XBOX_SIZEOF)
 #if XBOX_SIZES_DIFFER

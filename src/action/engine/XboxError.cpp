@@ -7,7 +7,10 @@
 #include <stdarg.h>
 #include <stdio.h>
 #include <string.h>
-#include <windows.h>
+#include "../../driving/platform/Host.h"
+#ifdef _WIN32
+#include <windows.h>   // MessageBoxA
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // The error log: 40 lines of up to 55 characters, scrolled up when full, drawn by ShowFatalErrorScreen in the
@@ -163,6 +166,8 @@ void XboxError_Halt(const char *what, const char *detail) {
     fflush(stdout);
     char text[512];
     snprintf(text, sizeof(text), "The game stopped: %s\n\n%s", what, detail ? detail : "");
+#ifdef _WIN32
     MessageBoxA(NULL, text, "Nightfire", MB_OK | MB_ICONERROR);
-    ExitProcess(1);
+#endif
+    HostExitProcess(1);
 }

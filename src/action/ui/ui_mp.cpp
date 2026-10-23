@@ -977,7 +977,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
 // ---- the join page (P_MPJOIN), then each agent's setup (P_MPSETUP)
 
-extern ulong menu_bonus[8];   // MenuUnlocks.cpp
+extern uint32_t menu_bonus[8];   // MenuUnlocks.cpp
 
 // A missing controller's message, the player's number in it (names ours): for one that had joined, one that had not
 #define MP_CONTROLLER_MISSING_JOINED ((Action_TranslatedText)0x10002d5)

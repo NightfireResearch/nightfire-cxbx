@@ -121,7 +121,7 @@ struct World {
     ScoreCategory cats[SCORE_NUM_CATEGORIES];
     M_ITEM items[12];
     REWARDINFO_tag info;
-    ulong bonus[2];
+    uint32_t bonus[2];
     uint type;
     int queryAnswer;
     uint8_t player[0x200];
@@ -1082,7 +1082,7 @@ uint32_t Run_UpdateDefault(bool original) {
 uint32_t Run_RewardCounter(bool original) {
     HASHCODE level = in.a[0] % 5 ? kLevels[in.a[1] % COUNT(kLevels)] : (HASHCODE)in.a[2];
     CALL_VOID(0x000b1740, PlrStarts_ProcessRewardCounter,
-              void (__cdecl *)(ulong *, HASHCODE, uint, char, REWARDINFO_tag *), world.bonus, level,
+              void (__cdecl *)(uint32_t *, HASHCODE, uint, char, REWARDINFO_tag *), world.bonus, level,
               in.a[3] % 8 ? in.a[3] % 7 : in.a[4], (char)(in.a[5] % 3), &world.info);
     return 0;
 }

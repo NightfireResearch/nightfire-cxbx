@@ -12,6 +12,11 @@
 #include "LaunchOptions.h"
 #include "../util/crc.h"
 #include "../../common/launchInfo.h"
+#include "XboxStartup.h"     // Xbox_SetLastError
+#ifdef NIGHTFIRE_STANDALONE
+#include "../../driving/platform/Host.h"
+#include "../../driving/platform/Ptr32.h"
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -388,15 +393,16 @@ typedef void *(__stdcall *MmAllocateContiguousMemoryExFn)(uint32_t size, uint32_
 #define KernelMmAllocateContiguousMemoryEx (*(MmAllocateContiguousMemoryExFn *)0x0015d1dc)
 #else
 // The standalone build's, as the loader's: pages of their own below 0x10000000, the first room from 16 MB up (a
-// 64 KB granule is aligned enough)
+// 64 KB granule is aligned enough). The host places them elsewhere if there is no room there, which the D3D code's
+// addresses cannot take.
 static void *KernelMmAllocateContiguousMemoryEx(uint32_t size, uint32_t lowest, uint32_t highest, uint32_t alignment,
                                                 uint32_t protection) {
+    (void)alignment, (void)protection;
     uintptr_t limit = highest < 0x0fffffffu ? (uintptr_t)highest + 1 : 0x10000000u;
-    for (uintptr_t at = lowest > 0x01000000u ? lowest : 0x01000000u; at + size <= limit; at += 0x10000) {
-        void *block = VirtualAlloc((void *)at, size, MEM_RESERVE | MEM_COMMIT, protection);
-        if (block != NULL)
-            return block;
-    }
+    void *block = HostAllocatePages(size, lowest > 0x01000000u ? lowest : 0x01000000u, limit);
+    if (block != NULL && PtrTo32(block) + (uintptr_t)size <= limit)
+        return block;
+    HostFreePages(block);
     printf("[kernel] MmAllocateContiguousMemoryEx: %u bytes refused\n", size);
     return NULL;
 }
@@ -406,7 +412,7 @@ static void *KernelMmAllocateContiguousMemoryEx(uint32_t size, uint32_t lowest, 
 void* allocateAligned0x1000(int numBytes) {
     void *memory = KernelMmAllocateContiguousMemoryEx(numBytes, 0, 0xffffffffu, 0x1000, PAGE_READWRITE);
     if (memory == NULL)
-        SetLastError(ERROR_NOT_ENOUGH_MEMORY);
+        Xbox_SetLastError(ERROR_NOT_ENOUGH_MEMORY);
     return memory;
 }
 

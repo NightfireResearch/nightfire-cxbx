@@ -5,16 +5,13 @@
 #include "../game.h"
 #include "../input.h"
 
-#include <windows.h>
-#include <shellapi.h>
+#include "../../driving/platform/Host.h"
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <string>
 
-#ifdef _MSC_VER
-#pragma comment(lib, "shell32.lib")
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Booting straight into a level, the action engine's counterpart of the driving engine's -mission
@@ -120,20 +117,10 @@ static void ParseWords(int count, char **words) {
 
 void LaunchOptions_Read(void) {
     int count = 0;
-    wchar_t **wide = CommandLineToArgvW(GetCommandLineW(), &count);
-    if (wide == NULL)
+    char **words = HostCommandLine(&count);
+    if (words == NULL)
         return;
-    char **words = (char **)calloc(count + 1, sizeof(char *));
-    for (int i = 0; i < count; i++) {
-        int size = WideCharToMultiByte(CP_UTF8, 0, wide[i], -1, NULL, 0, NULL, NULL);
-        words[i] = (char *)malloc(size);
-        WideCharToMultiByte(CP_UTF8, 0, wide[i], -1, words[i], size, NULL, NULL);
-    }
-    LocalFree(wide);
     ParseWords(count, words);
-    for (int i = 0; i < count; i++)
-        free(words[i]);
-    free(words);
 }
 
 const char *LaunchOptions_Text(void) {

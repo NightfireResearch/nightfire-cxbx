@@ -1,7 +1,9 @@
 #ifndef COMMON_CONSOLE_H_
 #define COMMON_CONSOLE_H_
 
+#ifdef _WIN32
 #include <windows.h>
+#endif
 #include <stdio.h>
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -19,8 +21,11 @@
 // Testing the handle alone is not enough to tell the third case from the first, which is the mistake that
 // lost the output: a detached process has a perfectly valid stdout handle attached to a console window that
 // does not exist. Asking whether there is a console *window* is what actually distinguishes them.
+//
+// Elsewhere stdout is the terminal's, or wherever it was redirected, and there is nothing to do.
 // ---------------------------------------------------------------------------------------------------------------
 
+#ifdef _WIN32
 static inline void EnsureConsoleOutput(void) {
     HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
     DWORD type = (out != NULL && out != INVALID_HANDLE_VALUE) ? GetFileType(out) : FILE_TYPE_UNKNOWN;
@@ -46,5 +51,9 @@ static inline void EnsureConsoleOutput(void) {
     setvbuf(stdout, NULL, _IONBF, 0);
     setvbuf(stderr, NULL, _IONBF, 0);
 }
+#else
+static inline void EnsureConsoleOutput(void) {
+}
+#endif
 
 #endif // COMMON_CONSOLE_H_

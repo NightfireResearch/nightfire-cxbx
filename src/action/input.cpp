@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include "../common/xbeClass.h"
-#include <windows.h>
+#include "../driving/platform/HostInput.h"
 
 #include "input.h"
 #include "engine/psiInput.h"
@@ -38,7 +38,7 @@ void Inject_KeyboardInput(void) {
 
     // F9 dumps the multiplayer settings table. Edge-triggered, or it would print every frame it is held.
     static bool dumpHeld = false;
-    bool dumpDown = (GetAsyncKeyState(0x78) & 0x8000) != 0; // VK_F9
+    bool dumpDown = HostInput_KeyHeld(kKeyF9);
     if (dumpDown && !dumpHeld) {
       printf("MP settings:\n");
       for(int i = 0; i < NUM_AGENTS; i++) {

@@ -7,4 +7,13 @@
 
 #define _stricmp strcasecmp   // <string.h> declares it
 
+// In the C locale, a-z only
+static inline char *MsvcStrupr(char *text) {
+    for (char *c = text; *c != '\0'; c++)
+        if (*c >= 'a' && *c <= 'z')
+            *c = (char)(*c - 'a' + 'A');
+    return text;
+}
+#define _strupr MsvcStrupr
+
 #endif // COMMON_LINUX_MSVCNAMES_H_
