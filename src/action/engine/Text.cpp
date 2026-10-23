@@ -178,18 +178,18 @@ char* Txt_GetStringFromHeap(uchar lockCount) {
 }
 
 // AUTOINJECT
-const char* Txt_BindLabel(Action_TranslatedText a, unsigned int b) {
+const char* Txt_BindLabel(Action_TranslatedText label, unsigned int lockCount) {
 
-    if(a == 0xFFFFFFFF || FixupTable == NULL)
+    if(label == 0xFFFFFFFF || FixupTable == NULL)
         return NULL;
 
-    uint index = Txt_GetIndex(a);
+    uint index = Txt_GetIndex(label);
     
     if(index >= NumEntries)
         return "Invalid Text Label";
 
     if(index == 0) {
-        return (const char*)Txt_GetStringFromHeap((uchar)b);
+        return (const char*)Txt_GetStringFromHeap((uchar)lockCount);
     }
 
     if(Bank != NULL)

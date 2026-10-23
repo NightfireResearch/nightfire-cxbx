@@ -218,7 +218,7 @@ LAYOUT_32(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playerEna
 // camera stack to know which script currently owns it.
 extern HASHCODE ScriptCam;
 
-void Script_Free(SCRIPTINFO *param_1);
+void Script_Free(SCRIPTINFO *scriptInfo);
 void Script_Run(SCRIPTINFO *scriptInfo);
 void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
 obj_tag* Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placementType);
@@ -239,16 +239,16 @@ void Script_GetLinearWeights(int *keys, float *weights, float frame, KEYED_POSRO
 void Script_EntityStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
 void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream);
 void Script_RemoveObj(obj_tag *obj, SCRIPTINFO *scriptInfo);
-void Script_SetPosRot(SCRIPTINFO *param_1, _MATRIX *param_2);
-void Script_SetColour(SCRIPTINFO *param_1, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
+void Script_SetPosRot(SCRIPTINFO *scriptInfo, _MATRIX *mtx);
+void Script_SetColour(SCRIPTINFO *scriptInfo, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b);
 SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation, uint *fileBuf, void *scriptPlayer,
                         ScriptPlayerCallback *callback, void *callbackContext);
 void Script_FreeFromHashTable(HASHCODE hashcode);
 void Script_Set2Start(SCRIPTINFO *scriptInfo);
 void Script_Stop(SCRIPTINFO *scriptInfo);
-void Script_Update(SCRIPTINFO *param_1);
-bool Script_Play(SCRIPTINFO *param_1, char loop);
-bool Script_IsPlaying(SCRIPTINFO* param_1);
+void Script_Update(SCRIPTINFO *scriptInfo);
+bool Script_Play(SCRIPTINFO *scriptInfo, char loop);
+bool Script_IsPlaying(SCRIPTINFO* scriptInfo);
 obj_tag* Script_GetObj(SCRIPTINFO *scriptInfo, ushort streamIdx);
 void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd);
 void Script_HideObj(SCRIPTINFO *scriptInfo, char hide);

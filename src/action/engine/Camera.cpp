@@ -30,7 +30,7 @@ extern uint32_t IsWidescreen;
 // #define MAX_VIEW_CONE FLOAT_AT(0x0017c110)
 
 // AUTOINJECT
-void Camera_CalcViewAngles(ushort playerNum,float param_2) {
+void Camera_CalcViewAngles(ushort playerNum,float fovRadians) {
 
     viewer_tag *vwr = glb_viewer[playerNum];
 
@@ -40,7 +40,7 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
     if(vwr->width == 0.0f || vwr->height == 0.0f)
         return;
 
-    vwr->fovRadians = param_2;
+    vwr->fovRadians = fovRadians;
 
     int initialisedCameras = 0;
     for(int i = 0; i < 4; i++) {
@@ -62,7 +62,7 @@ void Camera_CalcViewAngles(ushort playerNum,float param_2) {
 
     // Calculate the projection scale factors: on the x87, the half angle's tangent by FPTAN and its reciprocal, and the
     // depth scale, stay unrounded
-    double reciprocal = (double)(Extended(1.0f) / FPtan(param_2 * 0.5));
+    double reciprocal = (double)(Extended(1.0f) / FPtan(fovRadians * 0.5));
     double scale = ((double)MAX_VIEW_CONE + 0.2f) / (0.2f - (double)MAX_VIEW_CONE);
     vwr->projectionScaleX = (float)-(scale * (vwr->width * 0.5) * reciprocal);
     vwr->zoom = 1.0f;
@@ -240,36 +240,36 @@ void Camera_ScreenCoords(ushort viewerNum,float PosX,float PosY,float Width,floa
 }
 
 // AUTOINJECT
-void Camera_Create(int idx, world_tag *param_2, char param_3, ushort posX, ushort posY, ushort width, ushort height) {
+void Camera_Create(int idx, world_tag *viewWorld, char enable, ushort posX, ushort posY, ushort width, ushort height) {
   viewer_tag *viewer;
-  cel_tag *pcVar1;
+  cel_tag *newCel;
   world_tag *world;
-  cel_tag *iVar1;
+  cel_tag *cel;
   
   if (glb_viewer[idx] == NULL) {
-    world = param_2;
+    world = viewWorld;
     viewer = build_alloc_viewer(idx);
     glb_viewer[idx] = build_link_world_to_viewer(viewer, world);
   }
-  if (param_3 != 0) {
+  if (enable != 0) {
                     /* Linked list insert at front? */
-    pcVar1 = build_alloc_cel(glb_viewer[idx]->world->firstCel);
-    glb_viewer[idx]->world->firstCel = pcVar1;
-    iVar1 = glb_viewer[idx]->world->firstCel;
-    iVar1->bitsFromPlacementTag |= 0x10040000;
-    (iVar1->someMin).z = -1000.0;
-    (iVar1->someMin).y = -1000.0;
-    (iVar1->someMin).x = -1000.0;
-    (iVar1->someMax).z = 1000.0;
-    (iVar1->someMax).y = 1000.0;
-    (iVar1->someMax).x = 1000.0;
+    newCel = build_alloc_cel(glb_viewer[idx]->world->firstCel);
+    glb_viewer[idx]->world->firstCel = newCel;
+    cel = glb_viewer[idx]->world->firstCel;
+    cel->bitsFromPlacementTag |= 0x10040000;
+    (cel->someMin).z = -1000.0;
+    (cel->someMin).y = -1000.0;
+    (cel->someMin).x = -1000.0;
+    (cel->someMax).z = 1000.0;
+    (cel->someMax).y = 1000.0;
+    (cel->someMax).x = 1000.0;
   }
-  glb_viewer[idx]->world = param_2;
-  glb_viewer[idx]->enabled = param_3;
+  glb_viewer[idx]->world = viewWorld;
+  glb_viewer[idx]->enabled = enable;
   glb_viewer[idx]->spritesShown = 1;
   glb_viewer[idx]->cameraUpdateObj = NULL;
   glb_viewer[idx]->cameraUpdateCallback = NULL;
-  Camera_Enable(idx, param_3, 1, NULL);
+  Camera_Enable(idx, enable, 1, NULL);
   Camera_ScreenCoords(idx, (float)posX, (float)posY, (float)width, (float)height);
   return;
 }
@@ -290,7 +290,7 @@ void Camera_CreateCameras(void) {
     Camera_Create(8, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
     Camera_Create(10, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    // Inlined and optimised for the fact that param_2==0
+    // Inlined and optimised for the fact that enable==0
     Camera_Enable(8, 0, 0, NULL);
 
     Camera_Create(9, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Specific to Xbox?

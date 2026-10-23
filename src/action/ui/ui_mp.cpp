@@ -170,17 +170,17 @@ M_ITEM mp_bots[17] = {
 };
 
 // AUTOINJECT
-bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
+bool P_MPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
 
     switch((MessageType)message) {
         case MessageType_PageEnter: {
-            Menu_StartIris(((param_6 == P_MPSCENARIO) ? 0 : 4), param_1, SUB_C_SBMPMAP_IRIS);
-            M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(param_1, C_SBMPMAP, 0x39, 0, 0);
+            Menu_StartIris(((arg2 == P_MPSCENARIO) ? 0 : 4), managerNum, SUB_C_SBMPMAP_IRIS);
+            M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(managerNum, C_SBMPMAP, 0x39, 0, 0);
             Menu_SelectItemInControl(ctrl, mp_level, ARRAY_SIZE(mp_level), MPSettings.multiplayerLevelHashcode);
             break;
         }
         case 0x50: {
-            Menu_PlayIris(1, param_1, SUB_C_SBMPMAP_IRIS);
+            Menu_PlayIris(1, managerNum, SUB_C_SBMPMAP_IRIS);
             break;
         }
     }
@@ -190,27 +190,27 @@ bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint messa
 extern char menu_unlock_everything;
 
 // AUTOINJECT
-bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
+bool C_SBMPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     MessageType event = (MessageType)message;
 
     switch(event) {
         case MessageType_Scroll:
         case MessageType_ValueSet: {
-            Menu_UpdateWheel(param_1, param_2, mp_level, SUB_C_SBMPMAP_WHEEL_TEXT, SUB_C_SBMPMAP_ICON,
+            Menu_UpdateWheel(managerNum, control, mp_level, SUB_C_SBMPMAP_WHEEL_TEXT, SUB_C_SBMPMAP_ICON,
                              SUB_C_SBMPMAP_DESCRIPTION_TEXT, SUB_C_SBMPMAP_IRIS, event == MessageType_Scroll);
             break;
         }
         case MessageType_Select: {
-            uchar idx = __Menu_SendMessage(param_2, MessageType_GetValue, 0, 0);
+            uchar idx = __Menu_SendMessage(control, MessageType_GetValue, 0, 0);
             if (menu_unlock_everything || mp_level[idx].enabled) {
                 GameState.NextLevelHashcode = (HASHCODE)mp_level[idx].identifier;
                 MPSettings.multiplayerLevelHashcode = GameState.NextLevelHashcode;
-                Menu_ChangePageCloseIris(P_MPSETUP, param_1, SUB_C_SBMPMAP_IRIS);
+                Menu_ChangePageCloseIris(P_MPSETUP, managerNum, SUB_C_SBMPMAP_IRIS);
             }
             break;
         }
         case 0x51: {
-            __Menu_SendMessage(param_2, 0x27, 0, 7);
+            __Menu_SendMessage(control, 0x27, 0, 7);
             break;
         }
     }
@@ -219,13 +219,13 @@ bool C_SBMPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint mes
 }
 
 // AUTOINJECT
-bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
+bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch(message) {
         case MessageType_PageEnter: {
-            Menu_StartIris((param_6 == P_MAIN) ? 0 : 4, managerNum, SUB_C_SBMPSCEN_IRIS);
+            Menu_StartIris((arg2 == P_MAIN) ? 0 : 4, managerNum, SUB_C_SBMPSCEN_IRIS);
             Menu_UnlockMPSettings();
-            M_CONTROL *pMVar1 = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, 0x39, 0, 0);
-            Menu_SelectItemInControl(pMVar1, mp_scenario, ARRAY_SIZE(mp_scenario), MPSettings.GameMode); // Start on the previously chosen game mode
+            M_CONTROL *ctrl = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, 0x39, 0, 0);
+            Menu_SelectItemInControl(ctrl, mp_scenario, ARRAY_SIZE(mp_scenario), MPSettings.GameMode); // Start on the previously chosen game mode
             break;
         }
         case 0x50: {
@@ -242,7 +242,7 @@ bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, ui
 }
 
 // AUTOINJECT
-bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
+bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch(message) {
         case MessageType_PageEnter: {
             
@@ -304,7 +304,7 @@ bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, 
 #define enviromods_explosive_scenery_unlocked mp_explosive_scenery_unlocked
 
 // AUTOINJECT
-bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6) {
+bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch(message) {
         case MessageType_PageEnter: {
             

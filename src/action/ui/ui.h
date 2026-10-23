@@ -387,7 +387,7 @@ extern const M_ITEM ds_options[4];        // ui_dossier.cpp, the game's at 0x17c
 extern M_ITEM ds_weapons[27];             // ui_dossier.cpp, the game's at 0x17d168
 extern M_ITEM ds_gadgets[14];             // ui_dossier.cpp, the game's at 0x17d3f0
 
-bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, intptr_t param_4, intptr_t param_5);
+bool Handler_HandleMessage(uchar managerNum, M_CONTROL *control, uint message, intptr_t arg1, intptr_t arg2);
 
 // In general, a handler seems to have either C_ or P_ prefix (PAGE and CONTROL?)
 // They all take (uchar, M_CONTROL*, uint, uint, int, int) as parameters
@@ -397,19 +397,20 @@ bool Handler_HandleMessage(uchar param_1, M_CONTROL *param_2, uint param_3, intp
 // Fourth: ??
 // Fifth: ??
 
-bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, intptr_t param_5, intptr_t param_6);
-bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint param_4, intptr_t param_5, intptr_t param_6);
-bool P_MPMAP_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint event, intptr_t param_5, intptr_t param_6);
-bool C_SBMPMAP_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,intptr_t param_5,intptr_t param_6);
-bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6);
-bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6);
-bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint message, intptr_t param_5, intptr_t param_6);
-bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, intptr_t param_5, intptr_t param_6);
-bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6);
-bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint param_4, intptr_t param_5, intptr_t param_6);
-bool C_SBDSWPSCROLL_Handler(uchar param_1,M_CONTROL *param_2,uint param_3,uint param_4,intptr_t param_5,intptr_t param_6);
-bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6);
-bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6);
+bool C_SBDOSSIER_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint eventType, intptr_t arg1, intptr_t arg2);
+bool P_DOSSIER_Handler(uchar managerNum, M_CONTROL* control, uint hashcode, uint messageType,
+                       intptr_t arg1, intptr_t arg2);
+bool P_MPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);
+bool C_SBMPMAP_Handler(uchar managerNum,M_CONTROL *control,uint hashcode,uint message,intptr_t arg1,intptr_t arg2);
+bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);
+bool P_MPPLAYERMODS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);
+bool P_MPENVIROMODS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);
+bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint messageType, intptr_t arg1, intptr_t arg2);
+bool C_SBDSGTSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint eventType, intptr_t arg1, intptr_t arg2);
+bool P_DSWEAPONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2);
+bool C_SBDSWPSCROLL_Handler(uchar managerNum,M_CONTROL *ctrl,uint control,uint eventType,intptr_t arg1,intptr_t arg2);
+bool P_DSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2);
+bool P_DSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2);
 
 // ui_nightfire, ui_mp, ui_codenames
 bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2);

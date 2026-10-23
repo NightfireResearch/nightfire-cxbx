@@ -504,12 +504,12 @@ bool Menu_IsBotGood(uint idx) {
 static char buf_171[0x100];
 
 // AUTOINJECT
-void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE descriptionLabel, HASHCODE param_7, bool doAnimation) {
+void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE wheel, HASHCODE icon, HASHCODE descriptionLabel, HASHCODE iris, bool doAnimation) {
 
   int iVar2;
-  const char *pcVar4;
-  const char *pcVar5;
-  const char *pcVar6;
+  const char *text;
+  const char *teamLabel;
+  const char *descText;
   Action_TranslatedText AVar7;
 
   // The index of the item in the list that is currently selected, and its 2 surrounding items
@@ -535,14 +535,14 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
 
   const int last_item_idx = __Menu_SendMessage(ctrl,MessageType_GetMax,0,0);
 
-  if (param_5 != 0) {
+  if (icon != 0) {
     if (doAnimation) {
-      __Menu_SendDelayed(10,managerNum, param_5, MessageType_SetIcon, itemList[idxMid].iconHashcode,0);
-      __Menu_SendDelayed(10,managerNum, param_5, MessageType_SetColour, itemList[idxMid].enabled ? 0x808080ff : 0x60606060,0);
+      __Menu_SendDelayed(10,managerNum, icon, MessageType_SetIcon, itemList[idxMid].iconHashcode,0);
+      __Menu_SendDelayed(10,managerNum, icon, MessageType_SetColour, itemList[idxMid].enabled ? 0x808080ff : 0x60606060,0);
     }
     else {
-      __Menu_Send(managerNum, param_5, MessageType_SetIcon, itemList[idxMid].iconHashcode, 0);
-      LABEL_SET_COLOUR(managerNum, param_5, itemList[idxMid].enabled ? 0x808080ff : 0x60606060);
+      __Menu_Send(managerNum, icon, MessageType_SetIcon, itemList[idxMid].iconHashcode, 0);
+      LABEL_SET_COLOUR(managerNum, icon, itemList[idxMid].enabled ? 0x808080ff : 0x60606060);
     }
   }
 
@@ -554,24 +554,24 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
 
       if (!itemList[idxMid].enabled) {
         // Use the disabled description
-        pcVar4 = Txt_BindLabel(itemList[idxMid].descriptionWhenDisabled,0);
+        text = Txt_BindLabel(itemList[idxMid].descriptionWhenDisabled,0);
       }
       else {
         // Merge their team name into the description
-        pcVar4 = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
-        pcVar5 = Txt_BindLabel(MP_TEAM, 0);
-        pcVar6 = Txt_BindLabel(itemList[idxMid].description, 0);
-        sprintf(buf_171, "%s\n%s : %s", pcVar6, pcVar5, pcVar4);
-        pcVar4 = buf_171;
+        text = Txt_BindLabel(Menu_IsBotGood(itemList[idxMid].identifier) ? MP_TEAM_MI6 : MP_TEAM_PHOENIX, 0);
+        teamLabel = Txt_BindLabel(MP_TEAM, 0);
+        descText = Txt_BindLabel(itemList[idxMid].description, 0);
+        sprintf(buf_171, "%s\n%s : %s", descText, teamLabel, text);
+        text = buf_171;
       }
     }
 
     // Every other menu uses the item list directly - either the normal or disabled description
     else {
-      pcVar4 = Txt_BindLabel(itemList[idxMid].enabled ? itemList[idxMid].description : itemList[idxMid].descriptionWhenDisabled, 0);
+      text = Txt_BindLabel(itemList[idxMid].enabled ? itemList[idxMid].description : itemList[idxMid].descriptionWhenDisabled, 0);
     }
 
-    LABEL_SET_TEXT(managerNum, descriptionLabel, pcVar4);
+    LABEL_SET_TEXT(managerNum, descriptionLabel, text);
 
   }
 
@@ -600,11 +600,11 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   strDown1 = (idxDown1 == 999) ? " " : Txt_BindLabel(itemList[idxDown1].title, 0);
   strDown2 = (idxDown2 == 999) ? " " : Txt_BindLabel(itemList[idxDown2].title, 0);
 
-  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetText, (intptr_t)strUp2, NULL);
-  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetText, (intptr_t)strUp1, NULL);
-  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetText, (intptr_t)strMid, NULL);
-  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetText, (intptr_t)strDown1, NULL);
-  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetText, (intptr_t)strDown2, NULL);
+  __Menu_SendEx(managerNum, wheel, 0, MessageType_SetText, (intptr_t)strUp2, NULL);
+  __Menu_SendEx(managerNum, wheel, 1, MessageType_SetText, (intptr_t)strUp1, NULL);
+  __Menu_SendEx(managerNum, wheel, 2, MessageType_SetText, (intptr_t)strMid, NULL);
+  __Menu_SendEx(managerNum, wheel, 3, MessageType_SetText, (intptr_t)strDown1, NULL);
+  __Menu_SendEx(managerNum, wheel, 4, MessageType_SetText, (intptr_t)strDown2, NULL);
   
   // Handle greyed-out disabled items. 3 entries representing the distance from the middle (greys out gradually to the edge)
   const int colourDisabled[3] = {0x48484880, 0x48484840, 0x48484820};
@@ -614,32 +614,32 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   // (docs/original-bug-fixes.md); the fix leaves an empty slot's colour as it was.
 #if FIX_ORIGINAL_GAME_BUGS
   if(idxUp2 != 999)
-    __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+    __Menu_SendEx(managerNum, wheel, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
   if(idxUp1 != 999)
-    __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+    __Menu_SendEx(managerNum, wheel, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
   if(idxDown1 != 999)
-    __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+    __Menu_SendEx(managerNum, wheel, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
   if(idxDown2 != 999)
-    __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+    __Menu_SendEx(managerNum, wheel, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
 #else
-  __Menu_SendEx(managerNum, param_4, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
-  __Menu_SendEx(managerNum, param_4, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
-  __Menu_SendEx(managerNum, param_4, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
-  __Menu_SendEx(managerNum, param_4, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+  __Menu_SendEx(managerNum, wheel, 0, MessageType_SetColour, itemList[idxUp2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
+  __Menu_SendEx(managerNum, wheel, 1, MessageType_SetColour, itemList[idxUp1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+  __Menu_SendEx(managerNum, wheel, 3, MessageType_SetColour, itemList[idxDown1].enabled ? colourEnabled[1] : colourDisabled[1], NULL);
+  __Menu_SendEx(managerNum, wheel, 4, MessageType_SetColour, itemList[idxDown2].enabled ? colourEnabled[2] : colourDisabled[2], NULL);
 #endif
 
   // The middle item can't be offscreen, no need to check
-  __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
+  __Menu_SendEx(managerNum, wheel, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
 
   if (doAnimation) {
-    // Inlined Menu_StartIris(2, param_1, param_7)
+    // Inlined Menu_StartIris(2, managerNum, iris)
     // DAT_0025d7b9 = '\0';
     // DAT_0025d7b8 = 0;
     // DAT_0025d7b0 = 1;
     // DAT_0025d7ac = 0;
-    // Menu_PlayIris('\0',managerNum,param_7);
+    // Menu_PlayIris('\0',managerNum,iris);
     // DAT_0025d7ac = 0xffffffff;
-    Menu_StartIris(2, managerNum, param_7);
+    Menu_StartIris(2, managerNum, iris);
   }
 
 }

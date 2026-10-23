@@ -27,7 +27,7 @@ LAYOUT_32(sizeof(ObjData_SpaceLaser) == 0x40, "ObjData_SpaceLaser size incorrect
 #pragma pack(pop)
 
 void SpaceLaser_Update(obj_tag *obj);
-void SpaceLaser_Register(obj_tag *obj, ushort param_2, _VECTOR *param_3);
+void SpaceLaser_Register(obj_tag *obj, ushort unused, _VECTOR *posOut);
 obj_tag * Create_SpaceLaser(_VECTOR* pos, _VECTOR* rot, level_tag* level);
 
 #endif // SPACELASER_H_

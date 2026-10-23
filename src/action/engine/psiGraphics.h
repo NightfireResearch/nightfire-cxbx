@@ -110,7 +110,7 @@ static_assert(offsetof(ModelData, vtxBuffers) == 0x4c, "Bad offset of ModelData.
 void psiPreDraw(void);
 void psiDrawObjectMatrix(celglist_tag* celglist, _MATRIX* matrix);
 void psiCreateMapTextures(map_tag *mapptr);
-void psiCreateEntityGfx(celglist_tag *param_1,map_tag *param_2,uint param_3);
+void psiCreateEntityGfx(celglist_tag *celglist,map_tag *mapptr,uint memType);
 void psiAgeParticleOverlayRing(void);
 void psiResetResources(void);
 

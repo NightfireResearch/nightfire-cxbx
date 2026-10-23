@@ -188,13 +188,13 @@ bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
 }
 
 // AUTOINJECT
-bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
+bool MP_isObjectOnTeam(obj_tag *obj,uint teamId) {
   
   if ((MPSettings.dronesAreBots) || (MPSettings.GameMode == GM_ASSASSIN)) {
-    short idx = Control_Plr2Ind(param_1);
-    MPTeam uVar1 = MPSettings.Player[idx].TeamId;
-    if (uVar1 != NO_TEAM) {
-      return uVar1 == teamId;
+    short idx = Control_Plr2Ind(obj);
+    MPTeam team = MPSettings.Player[idx].TeamId;
+    if (team != NO_TEAM) {
+      return team == teamId;
     }
   }
   
@@ -202,24 +202,24 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
 }
 
 // AUTOINJECT
-MPTeam MP_getObjectTeam(obj_tag* param_1) {
+MPTeam MP_getObjectTeam(obj_tag* obj) {
   
   if ((!MPSettings.dronesAreBots) && (MPSettings.GameMode != GM_ASSASSIN)) {
     return NO_TEAM;
   }
 
-  short idx = Control_Plr2Ind(param_1);
+  short idx = Control_Plr2Ind(obj);
   return MPSettings.Player[idx].TeamId;
 }
 
 // AUTOINJECT
-bool MP_IsAssasin(obj_tag *param_1) {
-  return ((CurrentAssassinObjId != NULL) && (CurrentAssassinObjId == param_1));
+bool MP_IsAssasin(obj_tag *obj) {
+  return ((CurrentAssassinObjId != NULL) && (CurrentAssassinObjId == obj));
 }
 
 // AUTOINJECT
-bool MP_IsTarget(obj_tag *param_1) {
-  return ((AssassinTarget != NULL) && (AssassinTarget == param_1));
+bool MP_IsTarget(obj_tag *obj) {
+  return ((AssassinTarget != NULL) && (AssassinTarget == obj));
 }
 
 // The friendly-fire messages: to the one who fired, and to the one hit, each with the other's name

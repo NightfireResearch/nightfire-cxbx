@@ -507,12 +507,13 @@ static D3DTextureSlotRaw *D3DTextureSlot(int index) {
 }
 
 // AUTOINJECT
-int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6) {
-    if (param_6 != 0 || (int)levels < 1)
+int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data,
+                    int nonSwizzled) {
+    if (nonSwizzled != 0 || (int)levels < 1)
         levels = 1;
 
     if (formatType == 9)
-        param_6 = 1;
+        nonSwizzled = 1;
 
     for (int slot = 1; slot < D3D_TEXTURE_TABLE_COUNT; slot++) {
         D3DTextureSlotRaw *texSlot = D3DTextureSlot(slot);
@@ -520,13 +521,13 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
             continue;
 
         // Found a free slot. Format enum per formatType (mirroring the original's own switch exactly -
-        // some formats have a "swizzled" and "non-swizzled" D3DFORMAT variant selected via param_6);
+        // some formats have a "swizzled" and "non-swizzled" D3DFORMAT variant selected via nonSwizzled);
         // isCompressed marks the DXT-style formats, whose mip levels are measured in 4x4 blocks below.
         int format;
         bool isCompressed = false;
         switch (formatType) {
-            case 1:  format = (param_6 != 0) ? 0x1d : 4;  break;
-            case 2:  format = (param_6 != 0) ? 0x12 : 6;  break;
+            case 1:  format = (nonSwizzled != 0) ? 0x1d : 4;  break;
+            case 2:  format = (nonSwizzled != 0) ? 0x12 : 6;  break;
             case 3:  format = 0xc;  isCompressed = true;  break;
             case 4:
             case 5:  format = 0xe;  isCompressed = true;  break;
@@ -534,8 +535,8 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
             case 7:  format = 0xf;  isCompressed = true;  break;
             case 8:  format = 0xb;  break;
             case 9:  format = 0x24; break; // D3DFMT_A16B16G16R16
-            case 10: format = (param_6 != 0) ? 0x1e : 7;  break;
-            default: format = (param_6 != 0) ? 0x10 : 2;  break;
+            case 10: format = (nonSwizzled != 0) ? 0x1e : 7;  break;
+            default: format = (nonSwizzled != 0) ? 0x10 : 2;  break;
         }
 
         // Sum the byte size of every mip level (DXT-compressed levels are measured in 4x4-pixel blocks,
@@ -602,7 +603,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         texSlot->baseTexture = texSlot;
         texSlot->height = (uint16_t)height;
         texSlot->refCount = 0;
-        texSlot->nonSwizzled = (uint16_t)(param_6 != 0);
+        texSlot->nonSwizzled = (uint16_t)(nonSwizzled != 0);
         Gfx.totalTextureBytesUsed += mipChainBytes;
 
         return slot;
@@ -1985,13 +1986,13 @@ void d3dResetTransformCaches(void) {
 // re-sends the current fog colour (shared logic with d3dSetFogEnable/d3dSetFogColor's own masking formula -
 // confirmed identical via raw disassembly). All SetRenderState_Simple method/value pairs confirmed via raw
 // disassembly (decompile can't show them at all, since it doesn't understand that function's ECX/EDX
-// convention) - param_1==1 and param_1==2 share a tail (constant 0x40348 method gets value 1); any other
-// param_1 value takes a separate, early-returning path (same method gets value 0x303 instead).
+// convention) - fogMode==1 and fogMode==2 share a tail (constant 0x40348 method gets value 1); any other
+// fogMode value takes a separate, early-returning path (same method gets value 0x303 instead).
 #define D3D8_RS_BlendOp D3D8_TRACED("D3D8_RS_BlendOp", D3DRenderState[0x4a])
 
 // AUTOINJECT
-void d3dSetupRenderStatesAndFog(int param1) {
-    if (Gfx.fogModeFlag == (uint32_t)param1) {
+void d3dSetupRenderStatesAndFog(int fogMode) {
+    if (Gfx.fogModeFlag == (uint32_t)fogMode) {
         if (Gfx.fogEnabledCache != 1)
             return;
         uint32_t maskedColor = ((Gfx.fogModeFlag != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
@@ -2005,23 +2006,23 @@ void d3dSetupRenderStatesAndFog(int param1) {
         return;
     }
 
-    Gfx.fogModeFlag = (uint32_t)param1;
+    Gfx.fogModeFlag = (uint32_t)fogMode;
     if (Gfx.fogEnabledCache == 1) {
-        uint32_t maskedColor = ((param1 != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
+        uint32_t maskedColor = ((fogMode != 0) ? 0u : 0xFFFFFFFFu) & Gfx_FogColorCache;
         Gfx.fogColorMasked = maskedColor;
         if (Gfx.d3dDevice != 0)
             D3DDevice_SetRenderState_FogColor(maskedColor);
         Gfx.d3dLastError = 0;
     }
 
-    if (param1 == 1) {
+    if (fogMode == 1) {
         if (Gfx.d3dDevice == 0) {
             Gfx.d3dLastError = 0;
             return;
         }
         D3D_SetRenderStateSimple(0x40350, 0x8006);
         D3D8_RS_BlendOp = 0x8006;
-    } else if (param1 != 2) {
+    } else if (fogMode != 2) {
         if (Gfx.d3dDevice == 0) {
             Gfx.d3dLastError = 0;
             return;
@@ -2043,7 +2044,7 @@ void d3dSetupRenderStatesAndFog(int param1) {
         Gfx.d3dLastError = 0;
         return;
     } else {
-        // param1 == 2
+        // fogMode == 2
         if (Gfx.d3dDevice == 0) {
             Gfx.d3dLastError = 0;
             return;
@@ -2052,7 +2053,7 @@ void d3dSetupRenderStatesAndFog(int param1) {
         D3D8_RS_BlendOp = 0x800b;
     }
 
-    // Shared tail: only reached for param1==1 or param1==2.
+    // Shared tail: only reached for fogMode==1 or fogMode==2.
     Gfx.d3dLastError = 0;
     if (Gfx.d3dDevice != 0) {
         D3D_SetRenderStateSimple(0x40344, 0x302);

@@ -339,50 +339,50 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
 
 // Only used for laser and taser beams
 // AUTOINJECT
-void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3) {
+void PositionBeam(obj_tag *beam, _VECTOR *start, _VECTOR *end) {
 
-    Vec_Copy(param_2, &param_1->position);
+    Vec_Copy(start, &beam->position);
 
-    param_1->transformFlags &= ~TRANSFORM_MOVED;
+    beam->transformFlags &= ~TRANSFORM_MOVED;
 
-    float distance = Vec_Dist3D(param_2, param_3);
+    float distance = Vec_Dist3D(start, end);
 
-    param_1->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
-    param_1->scale = distance;
+    beam->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
+    beam->scale = distance;
 
-    Vec_Copy(param_2, &param_1->centrePoint);
-    param_1->transformFlags |= TRANSFORM_MOVED;
-    param_1->radius = 2.0f * distance;
+    Vec_Copy(start, &beam->centrePoint);
+    beam->transformFlags |= TRANSFORM_MOVED;
+    beam->radius = 2.0f * distance;
 
-    float dx = param_2->x - param_3->x;
-    float dy = param_2->y - param_3->y;
-    float dz = param_2->z - param_3->z;
+    float dx = start->x - end->x;
+    float dy = start->y - end->y;
+    float dz = start->z - end->z;
 
-    vecutil_cartesian_to_spherical_acc(&param_1->rotation, dx, dy, dz);
+    vecutil_cartesian_to_spherical_acc(&beam->rotation, dx, dy, dz);
 
-    param_1->rotation.x *= -1;
-    param_1->rotation.z = 0.0f;
+    beam->rotation.x *= -1;
+    beam->rotation.z = 0.0f;
 
 }
 
 // AUTOINJECT
-void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
+void Player_SetupLaser(BLData *blData, _VECTOR *targetPos) {
   
     _VECTOR sourcePos;
 
-    AnimGetBoneWorldTrans(param_1->weaponObject, 0, 0, &sourcePos, (_MATRIX *)0x0);
+    AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &sourcePos, (_MATRIX *)0x0);
     
-    obj_tag* poVar1 = param_1->beamObjs[0];
+    obj_tag* beam = blData->beamObjs[0];
 
-    poVar1->tweakA = 0xff;
+    beam->tweakA = 0xff;
     
     // Strong or weak beam ("lazer" 0x2000131 or "uv_lazer" 0x20006c1)
-    HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e)
+    HASHCODE hc = (glb_players[blData->playerNum]->animState->currentWeaponId == 0x4e)
         ? HT_Entity_lazer : HT_Entity_uv_lazer;
 
-    hashtable_set_object_to_entity_gfx(poVar1, hc);
-    View_SetDrawInAllViews(poVar1);
-    PositionBeam(poVar1, &sourcePos, targetPos);
+    hashtable_set_object_to_entity_gfx(beam, hc);
+    View_SetDrawInAllViews(beam);
+    PositionBeam(beam, &sourcePos, targetPos);
 
 }
 

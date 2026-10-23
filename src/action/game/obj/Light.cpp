@@ -70,7 +70,8 @@ bool Light_Delete(light_tag* light) {
 // AUTOINJECT
 light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b,
                         float brightness, ushort switchChannel, short lifetimeFrames, undefined1 lightType,
-                        float param_9, ushort soundState, ushort soundTimingBase, undefined2 param_12, int soundID) {
+                        float intensity, ushort soundState, ushort soundTimingBase,
+                        undefined2 flickerMask, int soundID) {
     light_tag* light = (light_tag*)DList_MoveFromFree2InUse(&LightList);
 
     if (light == NULL) {
@@ -92,14 +93,14 @@ light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefi
     }
 
     light->lightType = lightType;
-    light->intensity = param_9;
+    light->intensity = intensity;
     light->soundState = soundState;
     light->soundTimingBase = soundTimingBase >> 1;
 
     uint randomValue = Rand_Rand(soundTimingBase);
     light->soundTimingCounter = (short)randomValue + soundTimingBase;
 
-    light->flickerMask = param_12;
+    light->flickerMask = flickerMask;
 
     if (soundID == 0) {
         light->soundID = 0xffff;

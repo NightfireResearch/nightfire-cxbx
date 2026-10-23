@@ -421,9 +421,9 @@ void PlayerAnimStand2Crouch(obj_tag *player);
 void __stdcall ReadTuningVars(void);
 void Player_ChangeState(obj_tag* obj, unsigned short newState);
 int Player_ChangeSubState(obj_tag *player, ushort newState); // returns the previous substate
-void Player_SetCamMode(BLData *param_1,unsigned short param_2);
+void Player_SetCamMode(BLData *player,unsigned short newMode);
 void Player_Disable(obj_tag *player, char freeze);
-void Player_WeaponNone(obj_tag *param_1);
+void Player_WeaponNone(obj_tag *obj);
 void Player_PositionCamera(obj_tag *player);
 void Player_ViewClamping(obj_tag *player);
 void Player_Move(BLData *blData, obj_tag *player, float speedScale);
@@ -441,17 +441,17 @@ uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount);
 ushort Player_AmmoInGun(BLData *playerInfo, ushort weaponIndex);
 void Player_CreateSight(obj_tag *playerObj, byte viewerNum);
 void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum);
-void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
+void Player_SetupLaser(BLData *blData, _VECTOR *targetPos);
 void Player_SetupTaser(BLData *blData, _VECTOR *target);
 void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder);
 obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying);
 void PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, struct HITDATA_tag *hit);
 void Player_Start(void);
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort enabled, level_tag *lvl);
-void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
+void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *mtx);
 void Player_InitWeapon(BLData *blData, obj_tag *player);
 
-void PositionBeam(obj_tag *param_1, _VECTOR *param_2, _VECTOR *param_3);
+void PositionBeam(obj_tag *beam, _VECTOR *start, _VECTOR *end);
 
 // Player.cpp
 obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *spawnPointData);

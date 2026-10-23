@@ -14,8 +14,8 @@ void __declspec(naked) Asm_Quat_QuatToMat(void) {
   _asm {
     push ecx
     push edx
-    push dword ptr [esp + 16]   // param_2
-    push dword ptr [esp + 16]   // param_1
+    push dword ptr [esp + 16]   // mOut
+    push dword ptr [esp + 16]   // quatIn
     call Quat_QuatToMat
     add esp, 8
     pop edx

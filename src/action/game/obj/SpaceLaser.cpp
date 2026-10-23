@@ -43,12 +43,12 @@ obj_tag * Create_SpaceLaser(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
 }
 
 // AUTOINJECT
-void SpaceLaser_Register(obj_tag *obj, ushort param_2, _VECTOR *param_3) {
+void SpaceLaser_Register(obj_tag *obj, ushort unused, _VECTOR *posOut) {
 
-    if(param_3 == NULL)
+    if(posOut == NULL)
         return;
 
-    Vec_Copy(Mat_Position(obj->transformMatrix), param_3);
+    Vec_Copy(Mat_Position(obj->transformMatrix), posOut);
 
 }
 

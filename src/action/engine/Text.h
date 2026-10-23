@@ -16,11 +16,11 @@ typedef enum {
     Lang_SW = 8
 } tLANGUAGE;
 
-const char * Txt_BindLabel(Action_TranslatedText param_1,undefined4 param_2);
+const char * Txt_BindLabel(Action_TranslatedText label,undefined4 lockCount);
 void Txt_SetLanguage(tLANGUAGE languageId);
 void Txt_LoadLanguage(void);
 void Txt_LanguageInit(void);
-char* Txt_GetStringFromHeap(uchar param_1);
+char* Txt_GetStringFromHeap(uchar lockCount);
 void Txt_UnlockString(char* text);
 void Txt_LockString(char* text);
 

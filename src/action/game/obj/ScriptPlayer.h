@@ -92,7 +92,7 @@ obj_tag* SP_Create(_VECTOR *pos, _VECTOR *rot, HASHCODE scriptHashcode0, HASHCOD
 ushort SP_GetState(obj_tag *obj);
 void SP_HideObj(obj_tag *obj, char hide);
 void SP_UnPause(obj_tag *obj);
-void SP_Activate(obj_tag *activatorObj, obj_tag *param_2);
+void SP_Activate(obj_tag *activatorObj, obj_tag *player);
 void SP_SwitchToScript(obj_tag *obj, short newScriptPlayMode, ScriptPlayerCallback *callback);
 float SP_GetHitDamage(obj_tag *obj, obj_tag **outHitObjects, ushort maxHitObjects, ushort *outHitObjectCount, uint bulletFilterFlags, bool *outPlayerWasHit);
 

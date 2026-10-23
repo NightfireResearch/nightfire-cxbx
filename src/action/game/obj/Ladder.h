@@ -14,7 +14,7 @@ typedef struct ObjData_Ladder {
 #pragma pack(pop)
 static_assert(sizeof(ObjData_Ladder) == 4, "Bad size for ObjData_Ladder");
 
-obj_tag * Ladder_Create(_VECTOR *param_1,_VECTOR *param_2,level_tag *param_3,celglist_tag *param_4);
+obj_tag * Ladder_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *celgl);
 
 
 

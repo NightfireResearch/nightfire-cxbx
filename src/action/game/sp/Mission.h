@@ -45,9 +45,9 @@ typedef struct {
 
 Action_TranslatedText Mission_FailLabel(void);
 void Mission_SetFailLabel(Action_TranslatedText text);
-void Mission_SetMapHCode(HASHCODE param_1);
+void Mission_SetMapHCode(HASHCODE hashcode);
 HASHCODE Mission_BaseMapHCode(void);
-void Mission_SetStatus(undefined4 param_1);
+void Mission_SetStatus(undefined4 status);
 undefined4 Mission_Status(void);
 int Mission_NumVisObjectives(void);
 void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum);

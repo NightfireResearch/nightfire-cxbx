@@ -12,12 +12,12 @@ typedef struct {
 #pragma pack(pop)
 
 // AUTOINJECT
-obj_tag * Ladder_Create(_VECTOR *param_1,_VECTOR *param_2,level_tag *param_3,celglist_tag *param_4) {
+obj_tag * Ladder_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *celgl) {
 
-    Create_Ladder_Params *params = (Create_Ladder_Params*)param_3;
+    Create_Ladder_Params *params = (Create_Ladder_Params*)lvl;
 
 
-    obj_tag *obj = control_create_object(sizeof(ObjData_Ladder), param_1, param_2, NULL);
+    obj_tag *obj = control_create_object(sizeof(ObjData_Ladder), pos, rot, NULL);
     if(obj == NULL)
         return NULL;
 
@@ -25,7 +25,7 @@ obj_tag * Ladder_Create(_VECTOR *param_1,_VECTOR *param_2,level_tag *param_3,cel
 
     ladder->unknown0 = 0;
     ladder->param1 = params->b;
-    obj->objGraphics = param_4;
+    obj->objGraphics = celgl;
     obj->objectType = OBJECTTYPE_LADDER;
     
     build_LinkToRoom(obj, '\0', glb_world);

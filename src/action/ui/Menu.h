@@ -11,7 +11,8 @@ bool Menu_IsDrivingLevel(HASHCODE level);
 void Menu_StartIris(MENU_IRISOPS op, uchar managerNum, uint label);
 void Menu_PlayIris(char tick, uchar managerNum, uint label);
 void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label);
-void Menu_UpdateWheel(uchar param_1, M_CONTROL *param_2, M_ITEM *param_3, HASHCODE param_4, HASHCODE param_5, HASHCODE param_6, HASHCODE param_7, bool param_8);
+void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE wheel, HASHCODE icon,
+                      HASHCODE descriptionLabel, HASHCODE iris, bool doAnimation);
 bool Menu_SelectItemInControl(M_CONTROL *control, M_ITEM *list, ushort size, int value);
 void Menu_DeleteSprite(sprite* spr);
 void Menu_ClearStack(M_MANAGER *mgr);
@@ -145,7 +146,7 @@ bool Menu_SetLevelBonus(int level, uint medal, byte player);
 undefined4 Menu_GetObjectUpgradeLevel(uint objId, byte player);
 void Menu_UnlockMPSkins(byte player);
 void Menu_UnlockMPSettings(void);
-ulonglong Menu_GetMPSkins(int managerNum, byte agent, char param_3);
+ulonglong Menu_GetMPSkins(int managerNum, byte agent, char taken);
 void Menu_UpdateMPControllers(uchar managerNum, uchar player, char joinPage);
 char* Menu_GetBotShortName(BotNum skin);
 

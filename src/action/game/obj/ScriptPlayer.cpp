@@ -134,7 +134,7 @@ ushort SP_Hit(SCRIPTPLAYER *scriptPlayer) {
 }
 
 // AUTOINJECT
-void SP_Activate(obj_tag *activatorObj, obj_tag *param_2) {
+void SP_Activate(obj_tag *activatorObj, obj_tag *player) {
     if (activatorObj == NULL || activatorObj->scriptPlayer == NULL)
         return;
 
@@ -147,13 +147,13 @@ void SP_Activate(obj_tag *activatorObj, obj_tag *param_2) {
         } else if (targetObj->objectType == OBJECTTYPE_SWITCH) {
             _VECTOR activatorDir, toTarget;
             Mat_GetDir(&activatorDir, &activatorObj->transformMatrix);
-            Vec_Subtract(Mat_Position(param_2->transformMatrix), Mat_Position(activatorObj->transformMatrix), &toTarget);
+            Vec_Subtract(Mat_Position(player->transformMatrix), Mat_Position(activatorObj->transformMatrix), &toTarget);
 
             // Only activate the switch if it's roughly in front of the activator
             if (Vec_Dot(&toTarget, &activatorDir) < 0.0f)
                 return;
 
-            Switch_Activate(targetObj, param_2);
+            Switch_Activate(targetObj, player);
             return;
         }
     }

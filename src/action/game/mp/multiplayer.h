@@ -311,10 +311,10 @@ extern sprite *StatusSpr;
 
 void MP_setLoadingSkins(void);
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b);
-bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId);
-MPTeam MP_getObjectTeam(obj_tag* param_1);
-bool MP_IsAssasin(obj_tag *param_1);
-bool MP_IsTarget(obj_tag *param_1);
+bool MP_isObjectOnTeam(obj_tag *obj,uint teamId);
+MPTeam MP_getObjectTeam(obj_tag* obj);
+bool MP_IsAssasin(obj_tag *obj);
+bool MP_IsTarget(obj_tag *obj);
 bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health);
 void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort teamId);
 uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer);

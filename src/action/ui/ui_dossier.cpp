@@ -396,46 +396,46 @@ M_ITEM ds_weapons[27] = {
 };
 
 // AUTOINJECT
-bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool C_SBDOSSIER_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint eventType, intptr_t arg1, intptr_t arg2) {
 
     MessageType event = (MessageType)eventType;
 
-    printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, control, eventType, param_5, param_6);
+    printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", managerNum, control, eventType, arg1, arg2);
     // Seems that param 3 is always C_SBDOSSIER, 4 is the action/event type, 5 is some unknown value (pointer?), 6 is 0
     switch (event) {
     
     case MessageType_Select: {
             
-            int lVar1 = SCROLL_GET_VALUE(param_2);
+            int lVar1 = SCROLL_GET_VALUE(ctrl);
 
             switch(lVar1) {
                 case 0:
                     // Option 0: Records
-                    Manager_SendMessage(&manager[param_1], MessageType_GoPage, P_DSRECORDS, 0);
+                    Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_DSRECORDS, 0);
                     return 1;
                 case 1:
                     // Option 1: Rewards
-                    Manager_SendMessage(&manager[param_1], MessageType_GoPage, P_DSREWARDS, 0);
+                    Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_DSREWARDS, 0);
                     return 1;
                 case 2:
                     // Option 2: Dossier - Gadgets submenu
-                    Menu_ChangePageCloseIris(P_DSGADGETS, param_1, SUB_C_SBDOSSIER_IRIS);
+                    Menu_ChangePageCloseIris(P_DSGADGETS, managerNum, SUB_C_SBDOSSIER_IRIS);
                     return 1;
                 case 3:
                     // Option 3: Dossier - Weapons submenu
-                    Menu_ChangePageCloseIris(P_DSWEAPONS, param_1, SUB_C_SBDOSSIER_IRIS);
+                    Menu_ChangePageCloseIris(P_DSWEAPONS, managerNum, SUB_C_SBDOSSIER_IRIS);
                     return 1;
             }
         }
 
         case MessageType_Scroll:
         case MessageType_ValueSet:
-            Menu_UpdateWheel(param_1, param_2, (M_ITEM*)ds_options, SUB_C_SBDOSSIER_WHEEL_TEXT, SUB_C_SBDOSSIER_ICON,
+            Menu_UpdateWheel(managerNum, ctrl, (M_ITEM*)ds_options, SUB_C_SBDOSSIER_WHEEL_TEXT, SUB_C_SBDOSSIER_ICON,
                              SUB_C_SBDOSSIER_DESCRIPTION_TEXT, SUB_C_SBDOSSIER_IRIS, event == MessageType_Scroll);
             return 1;
 
         case 0x51:
-            __Menu_SendMessage(param_2, 0x27, 0, 3);
+            __Menu_SendMessage(ctrl, 0x27, 0, 3);
             return 1;
 
         default:
@@ -448,22 +448,22 @@ bool C_SBDOSSIER_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint e
 }
 
 // AUTOINJECT
-bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint messageType, intptr_t param_5, intptr_t param_6) {
+bool P_DOSSIER_Handler(uchar managerNum, M_CONTROL* control, uint hashcode, uint messageType, intptr_t arg1, intptr_t arg2) {
 
-    //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", param_1, param_3, eventType, param_5, param_6);
+    //printf("In P_DOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", managerNum, hashcode, eventType, arg1, arg2);
 
     switch (messageType) {
         case MessageType_PageEnter:
-            if (param_6 != P_NFMAP && param_6 != P_NFRESULTS && param_6 != P_NFBONUS) {
-                Menu_StartIris(4, param_1, SUB_C_SBDOSSIER_IRIS);
+            if (arg2 != P_NFMAP && arg2 != P_NFRESULTS && arg2 != P_NFBONUS) {
+                Menu_StartIris(4, managerNum, SUB_C_SBDOSSIER_IRIS);
                 return true;
             }
-            Menu_StartIris(0, param_1, SUB_C_SBDOSSIER_IRIS);
-            __Menu_Send(param_1, C_SBDOSSIER, MessageType_SetValue, 0x0, 0x0);
+            Menu_StartIris(0, managerNum, SUB_C_SBDOSSIER_IRIS);
+            __Menu_Send(managerNum, C_SBDOSSIER, MessageType_SetValue, 0x0, 0x0);
             break;
 
         case 0x50: // Every frame
-            Menu_PlayIris(1, param_1, SUB_C_SBDOSSIER_IRIS);
+            Menu_PlayIris(1, managerNum, SUB_C_SBDOSSIER_IRIS);
             return true;
 
         default:
@@ -474,7 +474,7 @@ bool P_DOSSIER_Handler(uchar param_1, M_CONTROL* param_2, uint param_3, uint mes
 }
 
 // AUTOINJECT
-bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uint messageType, intptr_t param_5, intptr_t param_6) {
+bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint messageType, intptr_t arg1, intptr_t arg2) {
     switch(messageType) {
         case MessageType_PageEnter: {
             
@@ -496,7 +496,7 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *param_2, uint param_3, uin
 }
 
 // AUTOINJECT
-bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool C_SBDSGTSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint eventType, intptr_t arg1, intptr_t arg2) {
 
     MessageType event = (MessageType)eventType;
 
@@ -504,10 +504,10 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
         case MessageType_ValueSet:
         case MessageType_Scroll: {
             // TODO: Is this taking label_upper, label_middle, label_lower?
-            Menu_UpdateWheel(param_1, param_2, ds_gadgets, SUB_C_SBDSGTSCROLL_WHEEL_TEXT, SUB_C_SBDSGTSCROLL_ICON,
+            Menu_UpdateWheel(managerNum, ctrl, ds_gadgets, SUB_C_SBDSGTSCROLL_WHEEL_TEXT, SUB_C_SBDSGTSCROLL_ICON,
                              SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT, SUB_C_SBDSGTSCROLL_IRIS, event == MessageType_Scroll);
 
-            int gadgetNum = SCROLL_GET_VALUE(param_2);
+            int gadgetNum = SCROLL_GET_VALUE(ctrl);
             uint gadgetId = ds_gadgets[gadgetNum].identifier;
             int upgradeLevel = Menu_GetObjectUpgradeLevel(gadgetId, 0);
             const char* description = Txt_BindLabel(ds_gadgets[gadgetNum].description, 0);
@@ -555,13 +555,13 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
             }
 
             // Update the description
-            LABEL_SET_TEXT(param_1, SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT, ug_buf);
+            LABEL_SET_TEXT(managerNum, SUB_C_SBDSGTSCROLL_DESCRIPTION_TEXT, ug_buf);
 
             break;
         }
         case MessageType_ControlCreated: {
-            __Menu_SendMessage(param_2, 0x27, 0, ARRAY_SIZE(ds_gadgets) - 1);
-            __Menu_SendMessage(param_2, 0x2e, 0, 0);
+            __Menu_SendMessage(ctrl, 0x27, 0, ARRAY_SIZE(ds_gadgets) - 1);
+            __Menu_SendMessage(ctrl, 0x2e, 0, 0);
             break;
         }
     }
@@ -571,7 +571,7 @@ bool C_SBDSGTSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 }
 
 // AUTOINJECT
-bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool P_DSWEAPONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2) {
   switch((MessageType)eventType) {
     case MessageType_PageEnter: {
         switch(Menu_GetObjectUpgradeLevel(0, 0)) {
@@ -595,12 +595,12 @@ bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
         ds_weapons[0].title = WEAPON_P2K_GOLD_NAME;
         ds_weapons[0].description = WEAPON_P2K_GOLD_DESC;
         }
-        Menu_StartIris(0, param_1, SUB_C_SBDSWPSCROLL_IRIS);
-        __Menu_Send(param_1, C_SBDSWPSCROLL, 0x2e, 0, 0);
+        Menu_StartIris(0, managerNum, SUB_C_SBDSWPSCROLL_IRIS);
+        __Menu_Send(managerNum, C_SBDSWPSCROLL, 0x2e, 0, 0);
         break;
     }
     case 0x50: {
-        Menu_PlayIris(1, param_1, SUB_C_SBDSWPSCROLL_IRIS);
+        Menu_PlayIris(1, managerNum, SUB_C_SBDSWPSCROLL_IRIS);
         break;
     }
   }
@@ -609,7 +609,7 @@ bool P_DSWEAPONS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
 }
 
 // AUTOINJECT
-bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool C_SBDSWPSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint eventType, intptr_t arg1, intptr_t arg2) {
 
     MessageType event = (MessageType)eventType;
 
@@ -617,10 +617,10 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
         case MessageType_ValueSet:
         case MessageType_Scroll: {
             // TODO: Is this taking label_upper, label_middle, label_lower?
-            Menu_UpdateWheel(param_1, param_2, ds_weapons, SUB_C_SBDSWPSCROLL_WHEEL_TEXT, SUB_C_SBDSWPSCROLL_ICON,
+            Menu_UpdateWheel(managerNum, ctrl, ds_weapons, SUB_C_SBDSWPSCROLL_WHEEL_TEXT, SUB_C_SBDSWPSCROLL_ICON,
                              SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT, SUB_C_SBDSWPSCROLL_IRIS, event == MessageType_Scroll);
 
-            int weaponNum = SCROLL_GET_VALUE(param_2);
+            int weaponNum = SCROLL_GET_VALUE(ctrl);
             uint weaponId = ds_weapons[weaponNum].identifier;
             int upgradeLevel = Menu_GetObjectUpgradeLevel(weaponId, 0);
             const char* description = Txt_BindLabel(ds_weapons[weaponNum].description, 0);
@@ -654,13 +654,13 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
             }
 
             // Update the description
-            LABEL_SET_TEXT(param_1, SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT, wpn_upg_buf);
+            LABEL_SET_TEXT(managerNum, SUB_C_SBDSWPSCROLL_DESCRIPTION_TEXT, wpn_upg_buf);
 
             break;
         }
         case MessageType_ControlCreated: {
-            __Menu_SendMessage(param_2, 0x27, 0, ARRAY_SIZE(ds_weapons) - 1);
-            __Menu_SendMessage(param_2, 0x2e, 0, 0);
+            __Menu_SendMessage(ctrl, 0x27, 0, ARRAY_SIZE(ds_weapons) - 1);
+            __Menu_SendMessage(ctrl, 0x2e, 0, 0);
             break;
         }
     }
@@ -669,10 +669,10 @@ bool C_SBDSWPSCROLL_Handler(uchar param_1, M_CONTROL *param_2, uint control, uin
 }
 
 // AUTOINJECT
-bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool P_DSREWARDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2) {
     switch((MessageType)eventType) {
         case MessageType_PageEnter: {
-            M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSREWARDS);
+            M_CONTROL* rewardsControl = CONTROL_GET(managerNum, C_RBDSREWARDS);
             Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
 
             // Unclear why we use __Menu_SendMessage here rather than RADIO_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?
@@ -685,10 +685,10 @@ bool P_DSREWARDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint e
 }
 
 // AUTOINJECT
-bool P_DSRECORDS_Handler(uchar param_1, M_CONTROL *param_2, uint param_3, uint eventType, intptr_t param_5, intptr_t param_6) {
+bool P_DSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2) {
     switch((MessageType)eventType) {
         case MessageType_PageEnter: {
-            M_CONTROL* rewardsControl = CONTROL_GET(param_1, C_RBDSRECORDS);
+            M_CONTROL* rewardsControl = CONTROL_GET(managerNum, C_RBDSRECORDS);
             Menu_AddItemsToControl(rewardsControl, sp_level, ARRAY_SIZE(sp_level), 0, 1);
 
             // Unclear why we use __Menu_SendMessage here rather than RADIO_SELECT_ITEM / __Menu_Send. Immediate dispatch vs next frame vs delayed?

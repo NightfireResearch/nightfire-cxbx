@@ -38,52 +38,52 @@ uint8_t FuckOffSprite3;
 uint8_t NightSightScanline;
 
 // AUTOINJECT
-void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort state) {
+void HUD_Enable(HUDINFO_tag *hud, HUD_PANE_IND idx, char enable, ushort state) {
 
-	if(param_1 == NULL)
+	if(hud == NULL)
 		return;
 
 	if(idx >= NUM_PANES)
 		return;
 
-	if (param_1->pane[idx].canBeEnabled) {
-		param_1->pane[idx].enabled = enable;
-		param_1->pane[idx].state = state;
+	if (hud->pane[idx].canBeEnabled) {
+		hud->pane[idx].enabled = enable;
+		hud->pane[idx].state = state;
 	}
 
 }
 
 // AUTOINJECT
-void HUD_Reset(BLData *param_1) {
-	HUD_Enable(param_1->hudInfo, Sight, 0, 0);
-	HUD_Enable(param_1->hudInfo, NightSight, 0, 0);
-	HUD_Enable(param_1->hudInfo, Air, 0, 0);
-	HUD_Enable(param_1->hudInfo, Redeemer, 0, 0);
-	HUD_Enable(param_1->hudInfo, RCCar, 0, 0);
-	HUD_Enable(param_1->hudInfo, Camera, 0, 0);
-	HUD_Enable(param_1->hudInfo, Blood, 0, 0);
-	HUD_Enable(param_1->hudInfo, Xray, 0, 0);
-	HUD_Enable(param_1->hudInfo, SecCam, 0, 0);
-	HUD_Enable(param_1->hudInfo, OICW, 0, 0);
-	HUD_Enable(param_1->hudInfo, Ronin, 0, 0);
-	HUD_Enable(param_1->hudInfo, Laser, 0, 0);
-	HUD_Enable(param_1->hudInfo, Space, 0, 0);
+void HUD_Reset(BLData *blData) {
+	HUD_Enable(blData->hudInfo, Sight, 0, 0);
+	HUD_Enable(blData->hudInfo, NightSight, 0, 0);
+	HUD_Enable(blData->hudInfo, Air, 0, 0);
+	HUD_Enable(blData->hudInfo, Redeemer, 0, 0);
+	HUD_Enable(blData->hudInfo, RCCar, 0, 0);
+	HUD_Enable(blData->hudInfo, Camera, 0, 0);
+	HUD_Enable(blData->hudInfo, Blood, 0, 0);
+	HUD_Enable(blData->hudInfo, Xray, 0, 0);
+	HUD_Enable(blData->hudInfo, SecCam, 0, 0);
+	HUD_Enable(blData->hudInfo, OICW, 0, 0);
+	HUD_Enable(blData->hudInfo, Ronin, 0, 0);
+	HUD_Enable(blData->hudInfo, Laser, 0, 0);
+	HUD_Enable(blData->hudInfo, Space, 0, 0);
 }
 
 // AUTOINJECT
-void HUD_DisableAll(BLData *param_1) {
+void HUD_DisableAll(BLData *blData) {
 	for(int i = 0; i < NUM_PANES; i++) {
-	  	param_1->hudInfo->pane[i].enabled = 0;
+	  	blData->hudInfo->pane[i].enabled = 0;
 	}
 }
 
 // AUTOINJECT
-ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx) {
+ushort HUD_State(HUDINFO_tag *hud, HUD_PANE_IND idx) {
 
-	if(param_1 == NULL || idx >= NUM_PANES)
+	if(hud == NULL || idx >= NUM_PANES)
 		return 0;
 
-	return param_1->pane[idx].state;
+	return hud->pane[idx].state;
 
 }
 
@@ -438,10 +438,10 @@ void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cre
 }
 
 // AUTOINJECT
-void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4) {
+void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
 	  
-	HUD_CalcWidthHeight(param_3, &param_3->width, &param_3->height);
-	HUD_CreateDefault(playerInfo, pane, param_3, param_4);
+	HUD_CalcWidthHeight(create, &create->width, &create->height);
+	HUD_CreateDefault(playerInfo, pane, create, obj);
 	viewer_tag *vwr = glb_viewer[playerInfo->playerNum];
 
 	for(int i = 0; i < pane->numSprites; i++) {
@@ -451,12 +451,12 @@ void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *
 		// In a view narrower than the screen (split screen), half the size, and moved in by half the layout's offset
 		if (vwr->width < (float)SCREEN_WIDTH) {
 			s->onscreenWidth >>= 1;
-			s->positionX -= param_3->spriteInfo[i].posX >> 1;
+			s->positionX -= create->spriteInfo[i].posX >> 1;
 		}
 
 		if (vwr->height < (float)SCREEN_HEIGHT) {
 			s->onscreenHeight >>= 1;
-			s->positionY -= param_3->spriteInfo[i].posY >> 1;
+			s->positionY -= create->spriteInfo[i].posY >> 1;
 		}
 	}
 	
@@ -3110,9 +3110,9 @@ static int16_t OICW_timer;
 static uint8_t OICW_mode;
 
 // AUTOINJECT
-void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4) {
+void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *create,obj_tag *obj) {
   
-  HUD_CreateShrink(playerInfo,pane,param_3,param_4);
+  HUD_CreateShrink(playerInfo,pane,create,obj);
 
   if (MPSettings.isMultiplayer) {
     OICW_timer = -555; // 555 timer mentioned - this code was written by an electronics geek?
@@ -3250,7 +3250,7 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 }
 
 // AUTOINJECT
-void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *unused) {
+void HUD_UpdateSpacePane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
 
 	if(GameState.CurrentLevelHashcode != HT_Level_SpaceStationD) {
 		pane->enabled = false;

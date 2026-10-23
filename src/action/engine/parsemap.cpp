@@ -356,7 +356,8 @@ typedef struct {
 #pragma pack(pop)
 
 // AUTOINJECT
-void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* param_5, void* param_6, char doCreation) {
+void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type,
+                                     celglist_tag* celglist, void* spline, void* next, char doCreation) {
 
     // Create local copies that can be passed by reference, for some reason?
     _VECTOR pos;
@@ -616,7 +617,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
 
         case Place_Destroy:
             if (doCreation)
-                Destroy_Create(&pos, &rot, lvl, celglist, (celglist_tag*)param_6);
+                Destroy_Create(&pos, &rot, lvl, celglist, (celglist_tag*)next);
             return;
 
         case Place_SS:

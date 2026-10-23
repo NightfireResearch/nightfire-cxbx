@@ -107,12 +107,12 @@ LAYOUT_32(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect");
 #pragma pack(pop)
 
 void HUD_Init(BLData *player, obj_tag *obj);
-void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort state);
-void HUD_Reset(BLData *param_1);
-void HUD_DisableAll(BLData *param_1);
-ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
+void HUD_Enable(HUDINFO_tag *hud, HUD_PANE_IND idx, char enable, ushort state);
+void HUD_Reset(BLData *blData);
+void HUD_DisableAll(BLData *blData);
+ushort HUD_State(HUDINFO_tag *hud, HUD_PANE_IND idx);
 void HUD_Update(BLData *playerInfo, obj_tag *obj);
-void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4);
+void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj);
 
 void HUD_UpdateCrossHair(BLData *player, sprite *spr);
 void HUD_MonitorNightSight(BLData *player);
@@ -146,13 +146,13 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_CreateAmmoPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
 void HUD_CreateHealthPane(BLData* blData, HUDPANE_tag *hudPane, HUDPANECREATE_tag *paneCreate, obj_tag *obj);
-void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *param_3,obj_tag *param_4);
+void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *create,obj_tag *obj);
 
 void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused);
 void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj);
-void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *obj);
+void HUD_UpdateSpacePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameObj);
 void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj);
 

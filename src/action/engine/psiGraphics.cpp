@@ -331,13 +331,13 @@ static ushort MapTextureRef(ushort ref, int firstMapTex) {
 // vertices, then points its primitives' texture references at Tex[]. The cel's geom_idx, the ModelData's address
 // until now, becomes its index in d3dGeometryObjs - or 0 if it is not usable geometry.
 // AUTOINJECT
-void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
+void psiCreateEntityGfx(celglist_tag *celglist, map_tag *mapptr, uint memType) {
 
-    ModelData *model = PtrFrom32<ModelData>(param_1->geom_idx);
+    ModelData *model = PtrFrom32<ModelData>(celglist->geom_idx);
     CacheFlushPending = 1;
     if (model == NULL || model->magicTag != MODELDATA_MAGIC || model->vtxCnt == 0 || model->idxCnt == 0 ||
         model->primitiveCnt == 0 || model->dataSize14 == 0) {
-        param_1->geom_idx = 0;
+        celglist->geom_idx = 0;
         return;
     }
 
@@ -365,7 +365,7 @@ void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
         refs[1] = MapTextureRef(refs[1], firstMapTex);
     }
 
-    param_1->geom_idx = NumXboxEntityGfxsCreated;
+    celglist->geom_idx = NumXboxEntityGfxsCreated;
     EntityGfxStat_2adf20 += model->dataSize14 - model->dataSize18;
     NumXboxVtxsLoaded += model->vtxCnt;
     NumXboxEntityGfxsCreated++;

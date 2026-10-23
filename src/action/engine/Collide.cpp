@@ -1266,7 +1266,7 @@ void Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel) {
 
 // The hits along a ray, nearest first
 // AUTOINJECT
-bool Collide_RayIntersect(_VECTOR *startPosition, _VECTOR *endPosition, cel_tag *cel, obj_tag *obj, obj_tag *param_5, HITDATA_tag **hitDataOut, char onlyCel, ushort mask, ushort flags) {
+bool Collide_RayIntersect(_VECTOR *startPosition, _VECTOR *endPosition, cel_tag *cel, obj_tag *obj, obj_tag *ignore, HITDATA_tag **hitDataOut, char onlyCel, ushort mask, ushort flags) {
     HITTEST_tag test;
     obj_tag tester;
     memset(&test, 0, sizeof(test));
@@ -1274,7 +1274,7 @@ bool Collide_RayIntersect(_VECTOR *startPosition, _VECTOR *endPosition, cel_tag 
     test.cel = cel;
     test.tester = &tester;
     test.mask = mask;
-    test.ignore = param_5;
+    test.ignore = ignore;
     test.ignoreA = obj;
     *hitDataOut = NULL;
     test.type = HITTEST_RAY;
@@ -1510,9 +1510,9 @@ double Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, us
 }
 
 // AUTOINJECT
-bool Collide_LineOfSight(_VECTOR *param_1, _VECTOR *param_2, cel_tag *param_3, obj_tag *param_4, obj_tag *param_5, uint param_6) {
+bool Collide_LineOfSight(_VECTOR *start, _VECTOR *end, cel_tag *cel, obj_tag *obj, obj_tag *ignore, uint mask) {
   HITDATA_tag *hitData = NULL;
-  bool intersects = Collide_RayIntersect(param_1, param_2, param_3, param_4, param_5, &hitData, 0, param_6 | 4, 0x10);
+  bool intersects = Collide_RayIntersect(start, end, cel, obj, ignore, &hitData, 0, mask | 4, 0x10);
   if (intersects) {
     // Discard the results, we only care whether an intersection occurred
     Collide_FreeHitList(&hitData);

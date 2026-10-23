@@ -72,16 +72,16 @@ void View_SetDrawInNoViews(obj_tag* o) {
 
 // Visible to everyone except the specified player (eg 3rd person view of a gun model)
 // AUTOINJECT
-void View_SetDrawInOtherViewsOnly(obj_tag* param_1, char playerNum) {
+void View_SetDrawInOtherViewsOnly(obj_tag* obj, char playerNum) {
     char views = 0x1f & (~(1 << (playerNum & 0x1f)));
-    View_SetDrawInViews(param_1, views);
+    View_SetDrawInViews(obj, views);
 }
 
 // Visible to the specified player only (eg 1st person view of a gun model)
 // AUTOINJECT
-void View_SetDrawInThisViewOnly(obj_tag *param_1, char playerNum) {
+void View_SetDrawInThisViewOnly(obj_tag *obj, char playerNum) {
     char views = (1 << (playerNum & 0x1f));
-    View_SetDrawInViews(param_1, views);
+    View_SetDrawInViews(obj, views);
 }
 
 // The view's matrix from angles (z, then y, then x) and a position, with FSIN and FCOS. On the x87 the sines and

@@ -28,7 +28,7 @@ struct D3DTextureSlotRaw {
     uint16_t refCount;      // +0x1c - written 0 by RegisterTexture; FUN_000e4f00 (the slot-release function) tests it
                              // == 0 before freeing, confirming it really is a refcount despite RegisterTexture
                              // never incrementing it - nothing traced so far increments it either
-    uint16_t nonSwizzled;   // +0x1e - the "param_6 != 0" flag from the caller
+    uint16_t nonSwizzled;   // +0x1e - the "nonSwizzled != 0" flag from the caller
     uint32_t mipChainBytes; // +0x20 - total byte size of every mip level
 };
 static_assert(sizeof(D3DTextureSlotRaw) == 36, "Bad size for D3DTextureSlotRaw");

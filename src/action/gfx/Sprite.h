@@ -69,10 +69,10 @@ LAYOUT_32(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureHashc
 #pragma pack(pop)
 
 
-void Sprite_SetText(sprite *param_1,char *param_2);
+void Sprite_SetText(sprite *spr,char *text);
 void Sprite_SetFmt(sprite *spr, char *fmt);
 sprite* Sprite_Create(void);
-sprite* Sprite_Create2(SpriteInfo *param_1);
+sprite* Sprite_Create2(SpriteInfo *sprInfo);
 void Sprite_Link2Viewer(sprite *spr,ushort playerNum);
 sprite* Sprite_CreateAndLink2Viewer(char viewer);
 void Sprite_Delete(sprite* sprite);

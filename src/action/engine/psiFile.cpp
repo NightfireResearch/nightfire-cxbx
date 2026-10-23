@@ -24,14 +24,14 @@ struct PsiOpenFile {
 static PsiOpenFile CurrentFile;
 
 // AUTOINJECT
-int psiFileOpen(char* param_1)
+int psiFileOpen(char* filename)
 {
-  printf("hooked psiFileOpen: %s\n", param_1);
+  printf("hooked psiFileOpen: %s\n", filename);
 
   CurrentFile.data = NULL;
   CurrentFile.size = 0;
   CurrentFile.position = 0;
-  CurrentFile.data = allocateAndLoadFileWithinArchive(param_1,0x1204,(int*)&CurrentFile.size);
+  CurrentFile.data = allocateAndLoadFileWithinArchive(filename,0x1204,(int*)&CurrentFile.size);
   CurrentFile.position = 0;
   return (int)((PtrTo32(CurrentFile.data) >> 8) << 8 | 1);
 }

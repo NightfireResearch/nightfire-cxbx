@@ -110,8 +110,8 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
 }
 
 // The rotation of a quaternion (x, y, z, w), Quat_QuatTransToMat's
-void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
-  QuatRotation(param_1, param_2);
+void Quat_QuatToMat(quaternion_tag *quatIn, _MATRIX *mOut) {
+  QuatRotation(quatIn, mOut);
 }
 
 // Convert a rotation matrix to a quaternion (Shepperd's method), summed on the x87
@@ -476,10 +476,10 @@ void Vec_Copy2(_VECTOR* src, _VECTOR *dst1, _VECTOR *dst2) {
 
 // Each difference within epsilon: x's taken unrounded, y's and z's stored as floats; a NaN difference passes
 // AUTOINJECT
-bool Vec_IsEqual(_VECTOR *param_1,_VECTOR *param_2,float epsilon) {
-  double dx = (double)param_2->x - param_1->x;
-  float dy = param_2->y - param_1->y;
-  float dz = param_2->z - param_1->z;
+bool Vec_IsEqual(_VECTOR *a,_VECTOR *b,float epsilon) {
+  double dx = (double)b->x - a->x;
+  float dy = b->y - a->y;
+  float dz = b->z - a->z;
   if (fabs(dx) > epsilon || ABS(dy) > epsilon || ABS(dz) > epsilon)
     return false;
   return true;
@@ -986,15 +986,15 @@ double Atan2(float y, float x) {
   return result;
 }
 
-// Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
-// "param_4" when direction is nearly parallel to param_3). The dot and cross products are taken on the x87.
+// Align a matrix so its forward row faces "direction", with "upHint" as the preferred up hint (falling back to
+// "altHint" when direction is nearly parallel to upHint). The dot and cross products are taken on the x87.
 // AUTOINJECT
-void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4) {
+void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *upHint, _VECTOR *altHint) {
   _VECTOR dir;
   Vec_Normalise(&dir, direction);
 
-  double dot = ((double)dir.x * param_3->x + (double)dir.z * param_3->z) + (double)dir.y * param_3->y;
-  _VECTOR *hint = AbsFchs(dot) > 0.999f ? param_4 : param_3;
+  double dot = ((double)dir.x * upHint->x + (double)dir.z * upHint->z) + (double)dir.y * upHint->y;
+  _VECTOR *hint = AbsFchs(dot) > 0.999f ? altHint : upHint;
 
   _VECTOR right;
   right.x = (float)((double)dir.z * hint->y - (double)dir.y * hint->z);

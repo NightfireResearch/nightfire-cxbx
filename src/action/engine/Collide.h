@@ -127,7 +127,7 @@ extern _VECTOR *TriHeap;
 // The hits, the hit heap and the narrow phase
 HITDATA_tag* Coll_GetFreeHit(void);
 HITDATA_tag* Coll_AddHitToList(HITDATA_tag **list, float dist, cel_tag *cel, obj_tag *obj);
-void Collide_FreeHitList(HITDATA_tag **param_1);
+void Collide_FreeHitList(HITDATA_tag **hitList);
 void Coll_ResetHitHeap(void);
 void Collide_Sort(HITDATA_tag **list);
 bool Intersect_CheckIfFlagsMatch(uchar material, uchar hitFlags, ushort mask, float *dist);
@@ -165,12 +165,12 @@ bool Intersect_UnpackTrianglePlaneEq(uchar *vertexBlock, ushort normal, plane_eq
 void Intersect_UnpackTriangleVerticesToWorld(uchar *vertexBlock, ushort v0, ushort v1, ushort v2, _VECTOR *vertsOut, COLLQUANT_tag *quant);
 
 // The queries
-bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *param_5,HITDATA_tag **hitDataOut,char onlyCel,ushort mask,ushort flags);
+bool Collide_RayIntersect(_VECTOR *startPosition,_VECTOR *endPosition,cel_tag *cel,obj_tag *obj,obj_tag *ignore,HITDATA_tag **hitDataOut,char onlyCel,ushort mask,ushort flags);
 bool Collide_SphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_tag *ignoreA, obj_tag *ignoreB, HITDATA_tag **hitList, char onlyCel, char oneSided, ushort mask, ushort flags);
 bool Collide_CylinderIntersect(HITTEST_tag *test, HITDATA_tag **hitList, char onlyCel, ushort flags);
 _VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_tag *cel, uint *count, ushort mask, ushort flags);
 bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent, obj_tag *obj);
-bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_tag *param_4,obj_tag *param_5,uint param_6);
+bool Collide_LineOfSight(_VECTOR *start,_VECTOR *end,cel_tag *cel,obj_tag *obj,obj_tag *ignore,uint mask);
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
 bool Intersect_ConeSphere(_VECTOR *apex, _VECTOR *dir, float cosA, float sinA, _VECTOR *sphere);
 void Collide_Update(obj_tag *first);

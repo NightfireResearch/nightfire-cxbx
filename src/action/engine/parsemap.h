@@ -106,7 +106,7 @@ struct level_tag {
 #pragma pack(pop)
 static_assert(sizeof(level_tag) == 0xb0, "level_tag is 0xb0 bytes");
 
-bool parsemap_parsemap(uint hashcode, bool param_2);
+bool parsemap_parsemap(uint hashcode, bool secondPass);
 void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys);
 bool parsemap_parsenextblock(char mainMap);
 bool parsemap_handle_block_id(char mainMap);
@@ -123,7 +123,8 @@ void parsemap_reset_to_block_memory_discard(void);
 void parseentity_transform_bounding_box(cel_tag *cel);
 void parsemap_block_entity_params(void);
 void parsemap_block_Coll_Data_New(void);
-void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* a, void* b, char doCreation);
+void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type,
+                                     celglist_tag* celglist, void* spline, void* next, char doCreation);
 
 
 #endif // PARSEMAP_H_

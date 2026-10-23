@@ -10,7 +10,8 @@ typedef struct {
 #pragma pack(pop)
 
 // AUTOINJECT
-obj_tag * rotor_init(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, ushort param_4, uchar param_5, uchar switchChannel) {
+obj_tag * rotor_init(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, ushort unused,
+                     uchar unknown2c, uchar switchChannel) {
 
     obj_tag *gameObj = control_create_object(sizeof(ObjData_Rotor), pos, rot, NULL);
 

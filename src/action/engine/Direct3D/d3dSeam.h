@@ -15,7 +15,8 @@
 //
 // psiCreateMapTextures registers every one of a level's ~500 textures on entry; d3dReleaseResources (below) frees
 // every non-permanent slot on each level change.
-int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6);
+int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data,
+                    int nonSwizzled);
 
 // Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).
 void ReleaseTexture(int textureSlot);
@@ -149,7 +150,7 @@ void createProjectionMatrix(D3DMATRIX *mtxOut, float aspect, float fov, float pa
 void d3dResetTransformCaches(void);
 
 // A fog-mode state machine (param 0/1/2) that also re-sends the current fog colour.
-void d3dSetupRenderStatesAndFog(int param1);
+void d3dSetupRenderStatesAndFog(int fogMode);
 
 // Resets a batch of cached render state to known defaults (texture/transform/fog/depth/cull/alpha/blend).
 void resetRenderState(char param1);

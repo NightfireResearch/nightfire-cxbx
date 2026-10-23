@@ -316,100 +316,100 @@ bool IsMultiplayerMission(HASHCODE level) {
 }
 
 HASHCODE GetLevelWithFmv(HASHCODE level) {
-  int param_1 = 0;
+  int fmvLevel = 0;
   switch(level) {
     case HT_Level_HendersonA:
-      param_1 = HT_Level_HendersonA_Intro;
+      fmvLevel = HT_Level_HendersonA_Intro;
       break;
     case HT_Level_HendersonB:
-      param_1 = HT_Level_HendersonB_Intro;
+      fmvLevel = HT_Level_HendersonB_Intro;
       break;
     case HT_Level_HendersonC:
-      param_1 = HT_Level_HendersonC_Intro;
+      fmvLevel = HT_Level_HendersonC_Intro;
       break;
     case HT_Level_HendersonD:
-      param_1 = HT_Level_HendersonD_Intro;
+      fmvLevel = HT_Level_HendersonD_Intro;
       break;
     case HT_Level_CastleExterior:
-      param_1 = HT_Level_CastleExterior_Intro;
+      fmvLevel = HT_Level_CastleExterior_Intro;
       break;
     case HT_Level_CastleCourtyard:
-      param_1 = HT_Level_CastleCourtyard_Intro;
+      fmvLevel = HT_Level_CastleCourtyard_Intro;
       break;
     case HT_Level_CastleIndoors1:
-      param_1 = HT_Level_CastleIndoors1_Intro;
+      fmvLevel = HT_Level_CastleIndoors1_Intro;
       break;
     case HT_Level_CastleIndoors2:
-      param_1 = HT_Level_CastleIndoors2_Intro;
+      fmvLevel = HT_Level_CastleIndoors2_Intro;
       break;
     case HT_Level_TowerA:
-      param_1 = HT_Level_TowerA_Intro;
+      fmvLevel = HT_Level_TowerA_Intro;
       break;
     case HT_Level_TowerB:
-      param_1 = HT_Level_TowerB_Intro;
+      fmvLevel = HT_Level_TowerB_Intro;
       break;
     case HT_Level_TowerC:
-      param_1 = HT_Level_TowerC_Intro;
+      fmvLevel = HT_Level_TowerC_Intro;
       break;
     case HT_Level_PowerStationA1:
-      param_1 = HT_Level_PowerStationA1_Intro;
+      fmvLevel = HT_Level_PowerStationA1_Intro;
       break;
     case HT_Level_PowerStationA2:
-      param_1 = HT_Level_PowerStationA2_Intro;
+      fmvLevel = HT_Level_PowerStationA2_Intro;
       break;
     case HT_Level_Cut_Level1:
-      param_1 = HT_Level_Cut_Level1_Intro;
+      fmvLevel = HT_Level_Cut_Level1_Intro;
       break;
     case HT_Level_Cut_Level2:
-      param_1 = HT_Level_Cut_Level2_Intro;
+      fmvLevel = HT_Level_Cut_Level2_Intro;
       break;
     case HT_Level_Cut_Level3:
-      param_1 = HT_Level_Cut_Level3_Intro;
+      fmvLevel = HT_Level_Cut_Level3_Intro;
       break;
     case HT_Level_Tower2A:
-      param_1 = HT_Level_Tower2A_Intro;
+      fmvLevel = HT_Level_Tower2A_Intro;
       break;
     case HT_Level_Tower2B:
-      param_1 = HT_Level_Tower2B_Intro;
+      fmvLevel = HT_Level_Tower2B_Intro;
       break;
     case HT_Level_Tower2C:
-      param_1 = HT_Level_Tower2C_Intro;
+      fmvLevel = HT_Level_Tower2C_Intro;
       break;
     case HT_Level_EvilBase:
-      param_1 = HT_Level_EvilBase_Intro;
+      fmvLevel = HT_Level_EvilBase_Intro;
       break;
     case HT_Level_EvilSilo:
-      param_1 = HT_Level_EvilSilo_Intro;
+      fmvLevel = HT_Level_EvilSilo_Intro;
       break;
     case HT_Level_EvilBaseC:
-      param_1 = HT_Level_EvilBaseC_Intro;
+      fmvLevel = HT_Level_EvilBaseC_Intro;
       break;
     case HT_Level_SpaceStationD:
-      param_1 = HT_Level_SpaceStationD_Intro;
+      fmvLevel = HT_Level_SpaceStationD_Intro;
       break;
     case HT_Level_Tower2Elevator:
-      param_1 = HT_Level_Tower2Elevator_Intro;
+      fmvLevel = HT_Level_Tower2Elevator_Intro;
       break;
     default: // No FMV, just load the level
-      param_1 = level;
+      fmvLevel = level;
       break;
     }
-    return (HASHCODE)param_1;
+    return (HASHCODE)fmvLevel;
 }
 
 // XBE_GLOBAL(0x00279250, 0x1)
 uint8_t IsWarmReset;
 
 // AUTOINJECT
-void GS_PauseGame(bool param_1) {
+void GS_PauseGame(bool pause) {
 
-    GameState.SomeAlternatePauseState = param_1;
+    GameState.SomeAlternatePauseState = pause;
 
     for(int i = 0; i < ARRAY_SIZE(MPGame.players); i++) {
-        MPGame.players[i].paused = param_1;
+        MPGame.players[i].paused = pause;
     }
 
-    if (param_1) {
+    if (pause) {
         PlarStat_LogTimerPause(0);
     } else {
         PlarStat_LogTimerUnpause(0);

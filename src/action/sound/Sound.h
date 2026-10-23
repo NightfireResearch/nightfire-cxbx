@@ -49,8 +49,8 @@ static_assert(sizeof(SFXOutputDataEntry) == 0x18, "Size of SFXOutputDataEntry no
 
 #pragma pack(pop)
 
-DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 pitch,undefined4 param_7,int isLimitedRadius);
-DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 pitch, undefined4 param_4);
+DYNAMICSOUNDS* Sound_Play3D(Action_SFX sfxId,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 pitch,undefined4 ref,int isLimitedRadius);
+DYNAMICSOUNDS* Sound_PlayExt(Action_SFX sfxId, float volume, undefined2 pitch, undefined4 ref);
 void Sound_Stop(DYNAMICSOUNDS *handle);
 extern float SubtitleDurationModification;
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position);

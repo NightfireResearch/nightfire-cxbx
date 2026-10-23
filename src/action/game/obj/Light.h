@@ -54,7 +54,9 @@ static_assert(sizeof(AMBIENT_RADIATOR) == 0x20, "AMBIENT_RADIATOR is 0x20 bytes"
 
 void Light_Init(void);
 void Light_AllocateEntries(void);
-light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float brightness,ushort switchChannel,short lifetimeFrames,undefined1 lightType,float param_9,ushort soundState,ushort soundTimingBase,undefined2 param_12,int soundID);
+light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float brightness,
+                         ushort switchChannel,short lifetimeFrames,undefined1 lightType,
+                         float intensity,ushort soundState,ushort soundTimingBase,undefined2 flickerMask,int soundID);
 bool Light_Delete(light_tag* light);
 light_tag *Light_FindMapLight(_VECTOR *pos, float radius);
 void Light_Update(void);

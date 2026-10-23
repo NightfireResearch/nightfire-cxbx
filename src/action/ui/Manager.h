@@ -3,7 +3,7 @@
 
 #include "../actionhelpers.h"
 
-intptr_t Manager_SendMessage(M_MANAGER *param_1, MessageType msgType, intptr_t param_3, intptr_t param_4);
+intptr_t Manager_SendMessage(M_MANAGER *mgr, MessageType msgType, intptr_t arg1, intptr_t arg2);
 
 // MessageType_GoPage's flags
 #define GOPAGE_NO_HISTORY   1   // the page left is not put on the history
