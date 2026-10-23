@@ -195,9 +195,6 @@ bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     return true;
 }
 
-// AUTOGEN
-bool __stdcall psiMovieFinished(void);
-
 // Which movie the attract page plays: flipped on every entry, so coming back to it from the main menu alternates
 // between the trailer and the title sequence. Only P_ATTRACT uses it (PS2: a function-local static, movie_291);
 // zero at startup.
@@ -220,7 +217,7 @@ bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         Menu_PlayMovie(movie, 1, 0, 1, 1, 0);
     }
     else if (message == MessageType_PageUpdate) {
-        if (psiMovieFinished()) {
+        if (movieFinished()) {
             if (menu_movie_stopped_music)
                 Menu_RestartFrontEndLoop();
             Manager_SendMessage(&manager[0], MessageType_LockInput, 0, 0);

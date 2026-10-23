@@ -418,8 +418,8 @@ typedef struct {
   M_CONTROL* control;
   uint dispatchOnFrameNum;
   uint param1;
-  uint param2;
-  uint param3;
+  intptr_t param2;   // the message's arguments, which may be addresses (a text)
+  intptr_t param3;
 } DelayedMessage;
 LAYOUT_32(sizeof(DelayedMessage) == 0x14, "DelayedMessage is 0x14 bytes");
 
@@ -429,7 +429,7 @@ static uint32_t menu_delay_frame;
 static DelayedMessage menu_delay_msg[128];
 
 // AUTOINJECT
-undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3) {
+undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,intptr_t arg2,intptr_t arg3) {
 
   for(int i = 0; i < ARRAY_SIZE(menu_delay_msg); i++) {
 
@@ -453,7 +453,7 @@ undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,
 }
 
 // AUTOINJECT
-void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3) {
+void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, intptr_t arg2, intptr_t arg3) {
 
   M_CONTROL* control = CONTROL_GET(managerNum, controlHashcode);
   

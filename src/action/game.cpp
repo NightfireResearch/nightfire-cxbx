@@ -1229,9 +1229,6 @@ uint32_t __stdcall Xbox_QueryPerformanceFrequency(LARGE_INTEGER *frequency) {
 }
 
 
-// AUTOGEN
-void SFXSetMode(unsigned int mode);
-
 // Used to insert a CALL location within a larger function that a debugger or profiler can hook into
 void __profiling_or_debugging_hook_point(void) {
   return;

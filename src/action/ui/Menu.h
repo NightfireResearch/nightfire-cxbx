@@ -31,8 +31,8 @@ intptr_t __Menu_SendEx(byte managerNum, HASHCODE hashcode, uint id, uint message
 intptr_t __Menu_SendEx2(byte managerNum, HASHCODE hashcode, uint bit, uint message, intptr_t arg1, intptr_t arg2);
 intptr_t __Menu_SendMessage(M_CONTROL *control, uint message, intptr_t arg1, intptr_t arg2);
 uintptr_t __Menu_Send(uchar managerNum, HASHCODE hashcode, uint message, intptr_t arg1, intptr_t arg2);
-void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, undefined4 arg2, undefined4 arg3);
-undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,int arg2,int arg3);
+void __Menu_SendDelayed(int delayDuration, byte managerNum, HASHCODE controlHashcode, undefined4 arg1, intptr_t arg2, intptr_t arg3);
+undefined4 __Menu_SendDelayedMessage(uint duration,M_CONTROL *control,uint arg1,intptr_t arg2,intptr_t arg3);
 
 bool Menu_IsBotGood(uint idx);
 void __stdcall Menu_PrepareBots(void);
