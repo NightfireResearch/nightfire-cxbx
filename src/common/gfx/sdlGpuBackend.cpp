@@ -1352,6 +1352,8 @@ uint32_t D3D9_CreatePixelShader(const void *definition, uint32_t *handleOut) {
     memcpy(ps->def, definition, sizeof(ps->def));
     *handleOut = PS_HANDLE_TAG | (uint32_t)g_pixelShaderCount;
     g_pixelShaderCount++;
+    if (g_device != NULL)   // made now, while the game loads: Metal compiles a program in tens of ms
+        BuildPixelShader(ps, g_pixelShaderCount - 1);
     return 0;
 }
 
@@ -1658,6 +1660,8 @@ uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction
     vs->function = pFunction;
     *pHandle = (void*)(uintptr_t)(VS_HANDLE_TAG | (uint32_t)g_vertexShaderCount);
     g_vertexShaderCount++;
+    if (g_device != NULL)   // as D3D9_CreatePixelShader
+        BuildVertexShader(vs, g_vertexShaderCount - 1);
     return 0;
 }
 
