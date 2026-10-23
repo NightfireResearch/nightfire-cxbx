@@ -51,7 +51,7 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
 
 // AUTOINJECT
 viewer_tag* build_alloc_viewer(unsigned char idx) {
-    viewer_tag *viewer = (viewer_tag *)Mem_MallocXbox(sizeof(viewer_tag), XBOX_SIZEOF(viewer_tag), 0x504, 0);
+    viewer_tag *viewer = (viewer_tag *)Mem_Malloc(sizeof(viewer_tag), 0x504, 0);
     viewer->idx = idx;
     Viewer_Init(viewer);
     return viewer;
@@ -88,8 +88,7 @@ void build_MakeRoomList(cel_tag *first) {
         if (cel->bitsFromPlacementTag & CEL_ROOM)
             count++;
     }
-    cel_tag **room = (cel_tag **)Mem_MallocXbox((count + 1) * sizeof(cel_tag *), (count + 1) * XBOX_SIZEOF(cel_tag *),
-                                                (MallocFlags)0x904, 0);
+    cel_tag **room = (cel_tag **)Mem_Malloc((count + 1) * sizeof(cel_tag *), (MallocFlags)0x904, 0);
     gbl_room_cels = room;
     for (cel_tag *cel = first; cel != NULL; cel = cel->nextCel) {
         if (cel->bitsFromPlacementTag & CEL_ROOM)
@@ -287,14 +286,14 @@ void init_cel(cel_tag *cel, cel_tag *next) {
 
 // AUTOINJECT
 cel_tag* build_alloc_cel(cel_tag *next) {
-    cel_tag *cel = (cel_tag *)Mem_MallocXbox(sizeof(cel_tag), XBOX_SIZEOF(cel_tag), (MallocFlags)0x104, 0);
+    cel_tag *cel = (cel_tag *)Mem_Malloc(sizeof(cel_tag), (MallocFlags)0x104, 0);
     init_cel(cel, next);
     return cel;
 }
 
 // AUTOINJECT
 world_tag* build_alloc_world(void) {
-    world_tag *world = (world_tag *)Mem_MallocXbox(sizeof(world_tag), XBOX_SIZEOF(world_tag), (MallocFlags)0x604, 0);
+    world_tag *world = (world_tag *)Mem_Malloc(sizeof(world_tag), (MallocFlags)0x604, 0);
     world->firstCel = NULL;
     return world;
 }
@@ -316,8 +315,7 @@ static float Max4(float a, float b, float c, float d) {
 // original's order) and the box round them grown by 0.1.
 // AUTOINJECT
 portal_tag* build_alloc_portal(portal_tag *from, portal_tag *next, cel_tag *cel, char open) {
-    portal_tag *portal = (portal_tag *)Mem_MallocXbox(sizeof(portal_tag), XBOX_SIZEOF(portal_tag), (MallocFlags)0x804,
-                                                      0);
+    portal_tag *portal = (portal_tag *)Mem_Malloc(sizeof(portal_tag), (MallocFlags)0x804, 0);
     _VECTOR *c = portal->corners;
     memcpy(portal->corners, from->corners, sizeof(portal->corners));
     portal->plane = from->plane;

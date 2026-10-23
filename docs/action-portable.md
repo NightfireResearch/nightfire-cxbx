@@ -16,7 +16,7 @@ The game's code has no Windows calls; they are in about twenty files of platform
 | Area | Files | Becomes |
 |---|---|---|
 | Threads, TLS, heaps, locks, time | engine/XboxStartup.cpp, engine/CRuntime.cpp, game.cpp | the driving engine's host layer (src/driving/platform/Host.h), as KernelImports.cpp and XboxStartup.cpp there use it |
-| Pages | engine/XboxSystem.cpp (contiguous memory), XboxHeap.cpp | `HostAllocatePages` |
+| Pages | engine/XboxSystem.cpp (contiguous memory) | `HostAllocatePages` |
 | Files | engine/XboxFile.cpp and .h, FS.cpp (an `OVERLAPPED` read), psiSave.cpp, psiFile.cpp | Host files; the reads completed synchronously; `fsync`, `ftruncate`, `stat` and `statvfs` added to the host |
 | Command line, errors, console | LaunchOptions.cpp, XboxError.cpp, common/console.h | `HostCommandLine`, `HostExitProcess`, nothing |
 | Window and crash report | standalone/StandaloneMain.cpp | `HostWindow_*` (HostWindowSdl.cpp) and the driving engine's CrashReport |
@@ -58,7 +58,7 @@ has the file types the game's XAPI speaks. Every overlapped read and write compl
 `TransferAt`): a playback always waited for them anyway, and the game's polls see each one finished at once - in
 normal play a streaming read now holds up the game's thread for as long as it takes. `Xbox_getptd` fills the C
 runtime's per-thread block through `Crt::PerThreadData`: on 64-bit it had written 8-byte words past the block's end,
-which did no harm until the C runtime's heap moved into the game window and the XboxHeap's map lay beside it.
+which did no harm until the C runtime's heap moved into the game window, beside the C++ heap's own data.
 
 **2. LP64.** `ulong` is gone (glibc's <sys/types.h> has its own, `unsigned long`): its nine uses are `uint32_t`.
 `ULONG` is `uint32_t` on LP64, as Win32Types.h's; `FileOperationXbox.fileSize` and `Demo_Mouse`'s arguments are

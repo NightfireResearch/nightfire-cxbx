@@ -2,7 +2,6 @@
 #define COMMON_XBECLASS_H_
 
 #include <stddef.h>
-#include <stdint.h>
 
 // ---------------------------------------------------------------------------------------------------------------
 // Overlay classes: C++ classes that stand in for one of the game's, so that a replacement can be a member
@@ -39,19 +38,6 @@
 // A layout check that holds on 32-bit only. A structure that lives only in memory has native pointers, so on 64-bit
 // it grows; structures read in place from the game's files keep plain static_asserts (docs/driving/64-bit.md).
 #define LAYOUT_32(condition, message) static_assert(sizeof(void *) != 4 || (condition), message)
-
-// The size a memory-only structure is on the Xbox, for allocations that must lie where the game's did
-// (src/action/XboxHeap.h): XBOX_SIZE beside the structure says it (and checks it on 32-bit), XBOX_SIZEOF asks.
-template <typename T> struct XboxSizeOf;
-template <typename T> struct XboxSizeOf<T *> { static const size_t value = 4; };
-#define XBOX_SIZE(Type, size)                                                                               \
-    LAYOUT_32(sizeof(Type) == (size), #Type " is " #size " bytes on the Xbox");                             \
-    template <> struct XboxSizeOf<Type> { static const size_t value = (size); }
-#define XBOX_SIZEOF(Type) (XboxSizeOf<Type>::value)
-// On 64-bit those structures are bigger than on the Xbox, and the allocation functions named *Xbox take their Xbox
-// sizes as well; on 32-bit the sizes are the same and those names are the plain calls (the shadow tests' fakes stand
-// in for the plain functions)
-#define XBOX_SIZES_DIFFER (UINTPTR_MAX > 0xffffffffu)
 
 // Overlay classes are the game's objects in memory: their checks are LAYOUT_32's.
 #define XBE_CLASS_SIZE(Class, size)                                                                          \

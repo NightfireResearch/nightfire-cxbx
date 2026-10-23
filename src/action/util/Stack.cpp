@@ -61,7 +61,7 @@ bool Stack_Init(STACKINFO* stack, ushort size, int *mem) {
     stack->fillLevel = 0;
 
     if(mem == NULL && size > 0) {
-        stack->items = (void**)Mem_MallocXbox(size * sizeof(void*), size * XBOX_SIZEOF(void*), 0x1B04, 0);
+        stack->items = (void**)Mem_Malloc(size * sizeof(void*), 0x1B04, 0);
         memset(stack->items, 0, size * sizeof(void*));
     }
 

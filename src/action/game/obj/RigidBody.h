@@ -45,7 +45,7 @@ typedef struct RIGIDBODY {
     uint sound;                 // 0x128 - Action_SFX of a bullet's hit; 0xffff for none
 } RIGIDBODY;
 
-XBOX_SIZE(RIGIDBODY, 0x12c);
+LAYOUT_32(sizeof(RIGIDBODY) == 0x12c, "RIGIDBODY is 0x12c bytes");
 LAYOUT_32(offsetof(RIGIDBODY, quat) == 0x4c, "Bad offset of RIGIDBODY.quat");
 LAYOUT_32(offsetof(RIGIDBODY, kind) == 0x90, "Bad offset of RIGIDBODY.kind");
 LAYOUT_32(offsetof(RIGIDBODY, test) == 0x94, "Bad offset of RIGIDBODY.test");

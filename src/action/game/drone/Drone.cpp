@@ -19,7 +19,6 @@
 #include "../../engine/Anim.h"     // AnimGetBoneWorldTrans
 #include "../../math/X87Ops.h"     // FSin, FCos
 #include "../../memory.h"          // Mem_Free
-#include "../../XboxHeap.h"        // Mem_GameAddress
 #include "../../sound/Sound.h"     // Sound_ZeroAlertness
 #include "../../util/LList.h"
 #include "DroneTables.h"           // DroneTypeSettings
@@ -77,6 +76,11 @@ typedef struct {
 
 static const float kPi = 3.14159274f;
 static const float kHalfPi = 1.57079637f;
+
+// 0 to 0xfff for a drone, scattered by its state machine's id (its number in the level): Knuth's multiplicative hash
+static uint BreathPhase(const Drone_tag *drone) {
+    return (drone->sm.id * 2654435761u) >> 20;
+}
 
 
 // AUTOINJECT
@@ -409,8 +413,8 @@ void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit) {
 // no alert, and no groups.
 // AUTOINJECT
 void Drone_PreLoad_Init(void) {
-    LList_InitXbox(&NDrone2Info, sizeof(Drone_tag), XBOX_SIZEOF(Drone_tag), 0);
-    LList_InitXbox(&AIBoxList, sizeof(DroneAIVolume_tag), XBOX_SIZEOF(DroneAIVolume_tag), 0);
+    LList_Init(&NDrone2Info, sizeof(Drone_tag), 0);
+    LList_Init(&AIBoxList, sizeof(DroneAIVolume_tag), 0);
     NPCGlobals.safetyEmitter.data = NULL;
     NPCGlobals.coverCursor = 0;
     NPCGlobals.numCoverNodes = 0;
@@ -807,9 +811,9 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
         _VECTOR forward = {0.0f, 0.0f, 1.0f};
         ApplyMatrixLV(&bone, &forward, &dir);
         auxVec_AddMulR32(&head, &dir, 0.12f, &breath);
-        // in its own phase of the cycle, from where it lies in the heap
-        Env_Breath(&breath, &dir, gameObj->inCel,
-                   gameObj->creationTimeFrames + (Mem_GameAddress(gameObj) & 0xfff) * 0x80);
+        // in a phase of its own (docs/core-deviations.md): the original's is the low 12 bits of the object's address,
+        // which differs from host to host; here the same 12 bits of a hash of the drone's number in the level
+        Env_Breath(&breath, &dir, gameObj->inCel, gameObj->creationTimeFrames + BreathPhase(drone) * 0x80);
         NDrone2_DoTracking(1, dcv);
     } else {
         NDrone2_DoTracking(0, dcv);

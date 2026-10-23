@@ -792,8 +792,7 @@ void Component_InitComponents(void) {
 // A new set of skins for a manager
 // AUTOINJECT
 MENU_COMPONENTSET* Component_AddSet(uchar managerNum, ushort id) {
-    MENU_COMPONENTSET *set = (MENU_COMPONENTSET *)Menu_MallocXbox(sizeof(MENU_COMPONENTSET),
-                                                                  XBOX_SIZEOF(MENU_COMPONENTSET));
+    MENU_COMPONENTSET *set = (MENU_COMPONENTSET *)Menu_Malloc(sizeof(MENU_COMPONENTSET));
     if (id == COMPONENTSET_NEXT_ID)
         set->id = component_list.count + 1;
     else
@@ -831,8 +830,7 @@ MENU_COMPONENTPIECE* Component_AddComponent(MENU_COMPONENT *component, short lef
     component->texture = texture;
     component->count = count;
     if (count != 0)
-        component->pieces = (MENU_COMPONENTPIECE *)Menu_MallocXbox(count * sizeof(MENU_COMPONENTPIECE),
-                                                                   count * XBOX_SIZEOF(MENU_COMPONENTPIECE));
+        component->pieces = (MENU_COMPONENTPIECE *)Menu_Malloc(count * sizeof(MENU_COMPONENTPIECE));
     else
         component->pieces = NULL;
     return component->pieces;
@@ -912,8 +910,7 @@ void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int w
     if (control->sprites == NULL) {
         if (component->count == 0)
             return;
-        control->sprites = (sprite **)Menu_MallocXbox(component->count * sizeof(sprite *),
-                                                      component->count * XBOX_SIZEOF(sprite *));
+        control->sprites = (sprite **)Menu_Malloc(component->count * sizeof(sprite *));
         control->numSprites = component->count;
         for (int i = 0; i < control->numSprites; i++) {
             component->pieces[i].info.textureHashcode = component->texture;
@@ -1501,12 +1498,6 @@ sprite* Menu_CreateSprite(SpriteInfo *info) {
 void* Menu_Malloc(int size) {
     return Mem_Malloc(size, MENU_ALLOCATIONS, 0);
 }
-
-#if XBOX_SIZES_DIFFER
-void* Menu_MallocXbox(int size, int xboxSize) {
-    return Mem_MallocXbox(size, xboxSize, MENU_ALLOCATIONS, 0);
-}
-#endif
 
 // The callers' type is not used
 // AUTOINJECT

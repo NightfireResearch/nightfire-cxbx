@@ -133,7 +133,7 @@ static const HASHCODE kLaserSparks[5] = {(HASHCODE)0x020002d1, (HASHCODE)0x02000
 
 // AUTOINJECT
 void Effect_InitLists(void) {
-    DList_InitXbox(&EffectList, sizeof(ATTACH_tag), XBOX_SIZEOF(ATTACH_tag), 200);
+    DList_Init(&EffectList, sizeof(ATTACH_tag), 200);
 }
 
 // Whether a bullet glances off the material: a draw in its ricochet range, masked (0 without either). The material

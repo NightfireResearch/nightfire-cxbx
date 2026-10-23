@@ -531,7 +531,7 @@ LAYOUT_32(sizeof(DIVars_tag) == 0xa4, "DIVars is wrong size");
 LAYOUT_32(sizeof(DCVars_tag) == 0x10, "DCVars is wrong size");
 LAYOUT_32(sizeof(MsgObject) == 0x1c, "MsgObject is 0x1c bytes");
 static_assert(sizeof(DroneCreationData) == 0xb0, "DroneCreationData is 0xb0 bytes");
-XBOX_SIZE(Drone_tag, 0x978);
+LAYOUT_32(sizeof(Drone_tag) == 0x978, "Drone_tag is 0x978 bytes");
 LAYOUT_32(offsetof(Drone_tag, side) == 0x44, "Wrong offset for side");
 LAYOUT_32(offsetof(Drone_tag, oneBurst) == 0x3d, "Wrong offset for oneBurst");
 LAYOUT_32(offsetof(Drone_tag, hitDamageScale) == 0x130, "Wrong offset for hitDamageScale");

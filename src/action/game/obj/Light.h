@@ -31,7 +31,7 @@ struct light_tag {
 };
 #pragma pack(pop)
 
-XBOX_SIZE(light_tag, 64);
+LAYOUT_32(sizeof(light_tag) == 64, "light_tag must be 64 bytes");
 
 #pragma pack(push, 1)
 // One of the level's ambient lights in its map

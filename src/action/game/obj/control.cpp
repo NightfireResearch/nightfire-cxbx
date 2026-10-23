@@ -207,24 +207,11 @@ void control_add_object_to_list(obj_tag *list,obj_tag *obj) {
     tmp->prevObject = obj;
 }
 
-static obj_tag* control_create(int sizeBytes, int xboxSizeBytes, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat);
-
 // AUTOINJECT
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat) {
-    return control_create(sizeBytes, sizeBytes, pos, rot, quat);
-}
-
-#if XBOX_SIZES_DIFFER
-obj_tag* control_create_object_xbox(int sizeBytes, int xboxSizeBytes, _VECTOR *pos, _VECTOR *rot,
-                                    quaternion_tag *quat) {
-    return control_create(sizeBytes, xboxSizeBytes, pos, rot, quat);
-}
-#endif
-
-static obj_tag* control_create(int sizeBytes, int xboxSizeBytes, _VECTOR *pos, _VECTOR *rot, quaternion_tag *quat) {
 
     int totalSize = sizeBytes + sizeof(obj_tag);
-    obj_tag* obj = (obj_tag*)Mem_MallocXbox(totalSize, xboxSizeBytes + XBOX_SIZEOF(obj_tag), 0x0404, 0);
+    obj_tag* obj = (obj_tag*)Mem_Malloc(totalSize, 0x0404, 0);
     
     if(obj == NULL) {
         printf("Failed to allocate object of size %d bytes\n", sizeBytes);
@@ -305,7 +292,7 @@ void control_init_object_lists(void) {
     DynamicObjList.nextObject = NULL;
     DynamicObjList.prevObject = NULL;
     DynamicObjCount = 0;
-    LList_InitXbox(&ForcedList, sizeof(obj_tag), XBOX_SIZEOF(obj_tag), 0);
+    LList_Init(&ForcedList, sizeof(obj_tag), 0);
     Demo_ObjectListsReset();
 }
 

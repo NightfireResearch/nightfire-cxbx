@@ -28,7 +28,7 @@ typedef struct {
     float sweepCenter;                     // 0x30 - center pitch angle of sweep
 } ObjData_Spotlight;
 
-XBOX_SIZE(ObjData_Spotlight, 0x34);
+LAYOUT_32(sizeof(ObjData_Spotlight) == 0x34, "Wrong size for ObjData_Spotlight");
 static_assert(offsetof(ObjData_Spotlight, phase) == 0x04, "Bad offset of phase");
 static_assert(offsetof(ObjData_Spotlight, rotationAngles) == 0x08, "Bad offset of rotationAngles");
 static_assert(offsetof(ObjData_Spotlight, standObject) == 0x14, "Bad offset of standObject");

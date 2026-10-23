@@ -45,7 +45,6 @@ struct TriList {
     TriListTriangle *triangles;
     TriListVertex *vertices;
 };
-XBOX_SIZE(TriList, 0x10);
 #pragma pack(pop)
 static_assert(sizeof(TriListTriangle) == 0xc && sizeof(TriListVertex) == 0x28, "shard layouts");
 

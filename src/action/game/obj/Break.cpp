@@ -32,7 +32,7 @@ static_assert(std::bit_cast<uint32_t>(kCollScale) == 0x38800200, "the original's
 
 // AUTOINJECT
 void InitShards(void) {
-    LList_InitXbox(&ShardList, sizeof(SHARD_tag), XBOX_SIZEOF(SHARD_tag), 0);
+    LList_Init(&ShardList, sizeof(SHARD_tag), 0);
 }
 
 // The hits of the frame: bullets take their damage from the health, and in HendersonA a drone walking through a window
@@ -213,7 +213,7 @@ void ShatterPolyRecurse(int depth, TriListVertex *verts, obj_tag *obj, HITDATA_t
         for (int i = 0; i < 3; i++)
             Vec_Subtract(&verts[i].pos, &centre, &verts[i].pos);
 
-        SHARD_tag *shard = (SHARD_tag *)Mem_MallocXbox(sizeof(SHARD_tag), XBOX_SIZEOF(SHARD_tag), 0x3204, 0);
+        SHARD_tag *shard = (SHARD_tag *)Mem_Malloc(sizeof(SHARD_tag), 0x3204, 0);
         memset(shard, 0, sizeof(SHARD_tag));
         LList_Add(&ShardList, &shard->node);
 

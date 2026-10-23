@@ -76,7 +76,7 @@ typedef struct ATTACH_tag {
     _MATRIX matrix;             // 0x1c - in the cel, or in the object's space
 } ATTACH_tag;
 
-XBOX_SIZE(ATTACH_tag, 0x58);
+LAYOUT_32(sizeof(ATTACH_tag) == 0x58, "ATTACH_tag is 0x58 bytes");
 
 #pragma pack(pop)
 

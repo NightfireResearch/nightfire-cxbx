@@ -576,8 +576,7 @@ void _AnimProcessSkinData(HASHCODE hashcode) {
         return;
 
     // Not checked for NULL by the original either
-    sAnimSkin_tag *skin = (sAnimSkin_tag *)Mem_MallocXbox(sizeof(sAnimSkin_tag), XBOX_SIZEOF(sAnimSkin_tag),
-                                                          MALLOC_ANIM_SKIN_STRUCTS, 0);
+    sAnimSkin_tag *skin = (sAnimSkin_tag *)Mem_Malloc(sizeof(sAnimSkin_tag), MALLOC_ANIM_SKIN_STRUCTS, 0);
     hashtable_modify(hashcode, skin);
 
     // The first dword of the file is skipped (never read)
@@ -762,8 +761,7 @@ void AnimListDelete(obj_tag *obj) {
 
 // A sequence with a pose buffer of size bytes, both zeroed; NULL if either allocation fails
 sAnimSeq_tag* _AnimSeqNew(uint size, uint tag) {
-    sAnimSeq_tag *seq = (sAnimSeq_tag *)Mem_MallocXbox(sizeof(sAnimSeq_tag), XBOX_SIZEOF(sAnimSeq_tag),
-                                                       MALLOC_ANIM_SEQ_STRUCTS, 0);
+    sAnimSeq_tag *seq = (sAnimSeq_tag *)Mem_Malloc(sizeof(sAnimSeq_tag), MALLOC_ANIM_SEQ_STRUCTS, 0);
     if (seq == NULL)
         return NULL;
     memset(seq, 0, sizeof(sAnimSeq_tag));
@@ -1003,8 +1001,7 @@ void __declspec(naked) AnimSeqSet(void) {
 sAnimScript_tag* _AnimScriptNew(obj_tag *obj, sAnimScript_tag *after) {
     if (obj == NULL)
         return NULL;
-    sAnimScript_tag *script = (sAnimScript_tag *)Mem_MallocXbox(sizeof(sAnimScript_tag), XBOX_SIZEOF(sAnimScript_tag),
-                                                                MALLOC_ANIM_SCRIPT_STRUCTS, 0);
+    sAnimScript_tag *script = (sAnimScript_tag *)Mem_Malloc(sizeof(sAnimScript_tag), MALLOC_ANIM_SCRIPT_STRUCTS, 0);
     if (script == NULL)
         return NULL;
     memset(script, 0, sizeof(sAnimScript_tag));
@@ -2633,8 +2630,7 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
         return 0;
     }
 
-    AnimState *animState = (AnimState *)Mem_MallocXbox(sizeof(AnimState), XBOX_SIZEOF(AnimState),
-                                                       MALLOC_ANIM_OBJECT_STRUCTS, 0);
+    AnimState *animState = (AnimState *)Mem_Malloc(sizeof(AnimState), MALLOC_ANIM_OBJECT_STRUCTS, 0);
     if (animState == NULL)
         goto failed;
     obj->animState = animState;
@@ -2658,9 +2654,8 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
             memset(animObj->morphWeights, 0, skin->numMorphs * sizeof(float));
         }
         if (skin->numDatums != 0) {
-            animObj->datumGlist = (celglist_tag **)Mem_MallocXbox(skin->numDatums * sizeof(celglist_tag *),
-                                                                  skin->numDatums * XBOX_SIZEOF(celglist_tag *),
-                                                                  MALLOC_ANIM_OBJECT_STRUCTS, 0);
+            animObj->datumGlist = (celglist_tag **)Mem_Malloc(skin->numDatums * sizeof(celglist_tag *),
+                                                              MALLOC_ANIM_OBJECT_STRUCTS, 0);
             if (animObj->datumGlist == NULL)
                 goto freeParts;
             animObj->datumTimer = (uchar *)Mem_Malloc(skin->numDatums, MALLOC_ANIM_OBJECT_STRUCTS, 0);
@@ -2692,9 +2687,8 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
             obj->flags |= 4;
 
         if (skin->numDiscrete != 0) {
-            animObj->discreteObj = (obj_tag **)Mem_MallocXbox(skin->numDiscrete * sizeof(obj_tag *),
-                                                              skin->numDiscrete * XBOX_SIZEOF(obj_tag *),
-                                                              MALLOC_ANIM_OBJECT_STRUCTS, 0);
+            animObj->discreteObj = (obj_tag **)Mem_Malloc(skin->numDiscrete * sizeof(obj_tag *),
+                                                          MALLOC_ANIM_OBJECT_STRUCTS, 0);
             if (animObj->discreteObj == NULL)
                 goto freeParts;
             memset(animObj->discreteObj, 0, skin->numDiscrete * sizeof(obj_tag *));
@@ -3950,8 +3944,7 @@ static uint AnimTagGetUnique(void) {
 
 // A new set linked in after after (or on its own), with its tag; NULL if it cannot be allocated
 sAnimSet_tag* _AnimTagAllocAndGetUnique(sAnimSet_tag *after) {
-    sAnimSet_tag *set = (sAnimSet_tag *)Mem_MallocXbox(sizeof(sAnimSet_tag), XBOX_SIZEOF(sAnimSet_tag),
-                                                       MALLOC_ANIM_SET_STRUCTS, 0);
+    sAnimSet_tag *set = (sAnimSet_tag *)Mem_Malloc(sizeof(sAnimSet_tag), MALLOC_ANIM_SET_STRUCTS, 0);
     if (set == NULL)
         return NULL;
     memset(set, 0, sizeof(sAnimSet_tag));
@@ -4041,8 +4034,7 @@ sAnimSet_tag* AnimSetAppend(obj_tag *obj, HASHCODE *list, float a, float b) {
     AnimObj *animObj = &obj->animState->animObj;
     sAnimSet_tag *set = animObj->animSets;
     if (set == NULL) {
-        set = (sAnimSet_tag *)Mem_MallocXbox(sizeof(sAnimSet_tag), XBOX_SIZEOF(sAnimSet_tag), MALLOC_ANIM_SET_STRUCTS,
-                                             0);
+        set = (sAnimSet_tag *)Mem_Malloc(sizeof(sAnimSet_tag), MALLOC_ANIM_SET_STRUCTS, 0);
         if (set != NULL) {
             memset(set, 0, sizeof(sAnimSet_tag));
             set->prev = NULL;

@@ -146,8 +146,7 @@ void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *p
                 viewer->draw.sizes[i] = size;
                 total += size;
             }
-            DrawEntry *block = (DrawEntry *)Mem_MallocXbox(total * sizeof(DrawEntry), total * XBOX_SIZEOF(DrawEntry),
-                                                           0x504, 0);
+            DrawEntry *block = (DrawEntry *)Mem_Malloc(total * sizeof(DrawEntry), 0x504, 0);
             uint at = 0;
             for (int i = 0; i < 3; i++) {
                 viewer->draw.lists[i] = block + at;

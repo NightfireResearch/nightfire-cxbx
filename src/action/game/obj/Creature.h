@@ -46,7 +46,7 @@ typedef struct Creature {
 } Creature;
 #pragma pack(pop)
 
-XBOX_SIZE(Creature, 0xe0);
+LAYOUT_32(sizeof(Creature) == 0xe0, "Creature is 0xe0 bytes");
 LAYOUT_32(offsetof(Creature, gameObj) == 0xc0, "Bad offset of Creature.gameObj");
 
 // The placement's keys (level_tag)

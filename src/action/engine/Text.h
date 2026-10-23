@@ -70,7 +70,7 @@ LAYOUT_32(offsetof(TXT_MSG, spriteHash) == 0x10, "TXT_MSG.spriteHash is at 0x10"
 LAYOUT_32(offsetof(TXT_MSG, timer) == 0x18, "TXT_MSG.timer is at 0x18");
 LAYOUT_32(offsetof(TXT_MSG, type) == 0x1c, "TXT_MSG.type is at 0x1c");
 LAYOUT_32(offsetof(TXT_MSG, playerNum) == 0x1e, "TXT_MSG.playerNum is at 0x1e");
-XBOX_SIZE(TXT_MSG, 0x20);
+LAYOUT_32(sizeof(TXT_MSG) == 0x20, "TXT_MSG is 0x20 bytes");
 
 TXT_MSG* Text_TakeMsg(void);
 void Text_Init(uchar warmReset);

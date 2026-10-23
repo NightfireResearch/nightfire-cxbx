@@ -71,7 +71,7 @@ static_assert(std::bit_cast<uint32_t>(DOOR_CLEARANCE) == 0x3e99999a, "not the or
 
 // AUTOINJECT
 void Door_Init(void) {
-    LList_InitXbox(&TheDoors, sizeof(DOORINFO), XBOX_SIZEOF(DOORINFO), 0);
+    LList_Init(&TheDoors, sizeof(DOORINFO), 0);
     memset(DoorGroupsStates, 0, sizeof(DoorGroupsStates));
 }
 
@@ -80,7 +80,7 @@ void Door_Init(void) {
 obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag *celgl) {
     Create_Door_Params *params = (Create_Door_Params *)level;
 
-    obj_tag *obj = control_create_object_xbox(sizeof(DOORINFO), XBOX_SIZEOF(DOORINFO), pos, rot, NULL);
+    obj_tag *obj = control_create_object(sizeof(DOORINFO), pos, rot, NULL);
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     door->group = params->group;
     door->channel = params->channel;

@@ -118,7 +118,7 @@ static int32_t Ftol(double x) {
 
 // AUTOINJECT
 void Sound_Init(void) {
-    DList_InitXbox(&DynamicSoundList, sizeof(DYNAMICSOUNDS), XBOX_SIZEOF(DYNAMICSOUNDS), NUM_DYNAMIC_SOUNDS);
+    DList_Init(&DynamicSoundList, sizeof(DYNAMICSOUNDS), NUM_DYNAMIC_SOUNDS);
     SFXInitialise(NULL);
     memset(MusicEventList, 0, sizeof(MusicEventList));
 }

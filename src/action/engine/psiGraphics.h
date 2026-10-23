@@ -76,7 +76,7 @@ struct map_tag {
     int numTexHeaderEntries;        // 0x0c
     texDataEntry *texData;          // 0x10
 };
-XBOX_SIZE(map_tag, 0x14);
+LAYOUT_32(sizeof(map_tag) == 0x14, "Bad size for map_tag");
 
 // An entity's geometry, in the map file: a celglist_tag's geom_idx points at it until psiCreateEntityGfx
 // registers its buffers, then holds its index in d3dGeometryObjs. The data follows the header: vertices, indices,

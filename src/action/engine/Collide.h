@@ -43,7 +43,7 @@ typedef struct HITDATA_tag {
   obj_tag* hitObj;
 } HITDATA_tag;
 
-XBOX_SIZE(HITDATA_tag, 0x50);
+LAYOUT_32(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
 LAYOUT_32(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
 LAYOUT_32(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
 LAYOUT_32(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");

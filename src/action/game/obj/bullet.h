@@ -36,7 +36,7 @@ typedef struct {
     char unknownDd[0xe0-0xdd];
 } BU_tag;
 
-XBOX_SIZE(BU_tag, 0xe0);
+LAYOUT_32(sizeof(BU_tag) == 0xe0, "Bad size for BU_tag");
 static_assert(offsetof(BU_tag, firedByObj) == 0x24, "Bad offset of firedByObj");
 LAYOUT_32(offsetof(BU_tag, wpnDef) == 0x38, "Bad offset of wpnDef");
 LAYOUT_32(offsetof(BU_tag, test) == 0x3c, "Bad offset of test");
@@ -57,7 +57,7 @@ typedef struct {
     char _pad2a[2];
 } CASING_tag;
 
-XBOX_SIZE(CASING_tag, 0x2c);
+LAYOUT_32(sizeof(CASING_tag) == 0x2c, "CASING_tag is 0x2c bytes");
 
 #pragma pack(pop)
 

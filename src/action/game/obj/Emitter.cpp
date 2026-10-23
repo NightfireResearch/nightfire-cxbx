@@ -314,9 +314,8 @@ void parsemap_block_particles(uchar *data) {
         def.texture = textureItem != NULL ? *textureItem : 0;
         def.model = model != 0xffffffff ? (celglist_tag *)hashtable_getitem(model) : NULL;
 
-        size_t keys = def.keyCount * sizeof(KEYED_CLR);
-        EMITTER_DEF *made = (EMITTER_DEF *)Mem_MallocXbox(sizeof(EMITTER_DEF) + keys, XBOX_SIZEOF(EMITTER_DEF) + keys,
-                                                        (MallocFlags)0x4204, 0);
+        EMITTER_DEF *made = (EMITTER_DEF *)Mem_Malloc(sizeof(EMITTER_DEF) + def.keyCount * sizeof(KEYED_CLR),
+                                                    (MallocFlags)0x4204, 0);
         if (made == NULL)
             continue;
         *made = def;

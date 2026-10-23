@@ -100,7 +100,7 @@ typedef struct HUDINFO_tag {
     HUDPANE_tag pane[NUM_PANES]; // Index is HUD_PANE_IND::...
 } HUDINFO_tag;
 
-XBOX_SIZE(HUDINFO_tag, 0x2c8);
+LAYOUT_32(sizeof(HUDINFO_tag) == 0x2c8, "Size of HUDINFO_tag is incorrect");
 LAYOUT_32(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect");
 
 

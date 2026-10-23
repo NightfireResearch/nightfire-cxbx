@@ -2,7 +2,6 @@
 #define CONTROL_H_
 
 #include "../../actionhelpers.h"
-#include "../../../common/xbeClass.h"
 
 #include "object.h"
 
@@ -12,13 +11,6 @@ obj_tag* control_first_object(void);
 void control_delete_object(obj_tag* obj);
 void control_init_object(obj_tag* obj);
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat);
-// control_create_object of extra data that is xboxSizeBytes on the Xbox (XboxHeap.h; XBOX_SIZEOF)
-#if XBOX_SIZES_DIFFER
-obj_tag* control_create_object_xbox(int sizeBytes, int xboxSizeBytes, _VECTOR *pos, _VECTOR *rot,
-                                    quaternion_tag *quat);
-#else
-#define control_create_object_xbox(sizeBytes, xboxSizeBytes, pos, rot, quat) control_create_object(sizeBytes, pos, rot, quat)
-#endif
 void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float unused);
 void control_movement_object_handler(char);
 obj_tag* Control_CreateObjEx(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *glist, obj_tag *carrier,

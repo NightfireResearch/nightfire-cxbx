@@ -68,7 +68,7 @@ typedef struct SCRIPTDEF {
     char _pad_212[2];
 } SCRIPTDEF;
 
-XBOX_SIZE(SCRIPTDEF, 0x214);
+LAYOUT_32(sizeof(SCRIPTDEF) == 0x214, "Bad size for SCRIPTDEF");
 LAYOUT_32(offsetof(SCRIPTDEF, keys) == 0x204, "Bad offset of keys");
 LAYOUT_32(offsetof(SCRIPTDEF, hasCamera) == 0x210, "Bad offset of hasCamera");
 
@@ -193,7 +193,7 @@ typedef struct SCRIPTINFO {
     char unknown_0xaaf;
 } SCRIPTINFO;
 
-XBOX_SIZE(SCRIPTINFO, 0xab0);
+LAYOUT_32(sizeof(SCRIPTINFO) == 0xab0, "SCRIPTINFO is what Script_Load allocates");
 static_assert(offsetof(SCRIPTINFO, scriptPlayer) == 0x78, "Offset of scriptPlayer is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, keys) == 0x84, "Offset of keys is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, scale) == 0x8c, "Offset of scale is bad");

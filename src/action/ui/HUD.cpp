@@ -437,8 +437,8 @@ void HUD_ValidateXY(short *x, short *y, ushort width, ushort height, ushort play
 // AUTOINJECT
 void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *unused) {
     pane->numSprites = create->numSprites;
-    ushort entries = create->numExtraItems + (ushort)pane->numSprites;
-    pane->spriteList = (sprite **)Mem_MallocXbox(entries * sizeof(void *), entries * XBOX_SIZEOF(void *), 0x2704, 0);
+    pane->spriteList = (sprite **)Mem_Malloc((create->numExtraItems + (ushort)pane->numSprites) * sizeof(void *),
+                                             0x2704, 0);
     pane->extraItems = (void **)&pane->spriteList[(ushort)pane->numSprites];
     for (ushort i = 0; i < create->numExtraItems; i++)
         pane->extraItems[i] = NULL;
@@ -3108,7 +3108,7 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	if((obj != NULL) && (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
 		return;
 
-	player->hudInfo = (HUDINFO_tag*)Mem_MallocXbox(sizeof(HUDINFO_tag), XBOX_SIZEOF(HUDINFO_tag), 0x2704, 0);
+	player->hudInfo = (HUDINFO_tag*)Mem_Malloc(sizeof(HUDINFO_tag), 0x2704, 0);
 
 	if(player->hudInfo == NULL)
 		return;

@@ -142,7 +142,6 @@ set(nf_action_sources
   src/action/math/X87Ops.cpp
   src/action/input.cpp
   src/action/memory.cpp
-  src/action/XboxHeap.cpp
   src/action/util/bin.cpp
   src/action/util/crc.cpp
   src/action/util/hashtable.cpp

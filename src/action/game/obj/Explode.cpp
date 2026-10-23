@@ -80,7 +80,7 @@ void Explode_Create(obj_tag *obj, _VECTOR *pos, _VECTOR *unusedDir, float script
     Vec_Subtract(&toPlayer, pos, &toPlayer);
     Vec_Normalise(&toPlayer, &toPlayer);
 
-    obj_tag *explosion = control_create_object_xbox(sizeof(EXPLODE_tag), XBOX_SIZEOF(EXPLODE_tag), pos, NULL, NULL);
+    obj_tag *explosion = control_create_object(sizeof(EXPLODE_tag), pos, NULL, NULL);
     if (explosion == NULL)
         return;
 

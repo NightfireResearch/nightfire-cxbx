@@ -40,7 +40,7 @@ typedef struct EMITTER_DEF {
     char _pad3e[2];
 } EMITTER_DEF;
 
-XBOX_SIZE(EMITTER_DEF, 0x40);
+LAYOUT_32(sizeof(EMITTER_DEF) == 0x40, "EMITTER_DEF is 0x40 bytes");
 
 LAYOUT_32(offsetof(EMITTER_DEF, perFrame) == 0x3a, "Bad offset of EMITTER_DEF.perFrame");
 

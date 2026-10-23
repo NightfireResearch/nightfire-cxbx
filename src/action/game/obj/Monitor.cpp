@@ -34,7 +34,7 @@ LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::
 // AUTOINJECT
 obj_tag * Monitor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Monitor_Params *params = (Create_Monitor_Params *)lvl;
-    obj_tag *obj = control_create_object_xbox(sizeof(MONITOR), XBOX_SIZEOF(MONITOR), pos, rot, NULL);
+    obj_tag *obj = control_create_object(sizeof(MONITOR), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

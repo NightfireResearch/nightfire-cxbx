@@ -21,7 +21,7 @@ typedef struct COPTERPATH {
     ushort _pad1a;
 } COPTERPATH;
 
-XBOX_SIZE(COPTERPATH, 0x1c);
+LAYOUT_32(sizeof(COPTERPATH) == 0x1c, "COPTERPATH is 0x1c bytes");
 
 typedef struct {
     LLNODE_tag node;
@@ -57,7 +57,7 @@ typedef struct {
     char pad7a[2];
 } COPTER;
 
-XBOX_SIZE(COPTER, 0x7c);
+LAYOUT_32(sizeof(COPTER) == 0x7c, "Copter size incorrect");
 LAYOUT_32(offsetof(COPTER, quat) == 0x1c, "Offset of quat incorrect");
 LAYOUT_32(offsetof(COPTER, scriptPlayer) == 0x2c, "Offset of scriptPlayer incorrect");
 LAYOUT_32(offsetof(COPTER, body) == 0x38, "Offset of body incorrect");

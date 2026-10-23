@@ -27,7 +27,7 @@ typedef struct ObjData_Switch {
     uchar unknown_0x1a[2];
 } ObjData_Switch;
 
-XBOX_SIZE(ObjData_Switch, 0x1c);
+LAYOUT_32(sizeof(ObjData_Switch) == 0x1c, "Bad size for ObjData_Switch");
 LAYOUT_32(offsetof(ObjData_Switch, objectPtr) == 0x8, "Bad offset of objectPtr");
 LAYOUT_32(offsetof(ObjData_Switch, scriptPlayer) == 0xc, "Bad offset of scriptPlayer");
 LAYOUT_32(offsetof(ObjData_Switch, autoResetFrames) == 0x10, "Bad offset of autoResetFrames");

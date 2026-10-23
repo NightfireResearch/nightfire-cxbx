@@ -30,6 +30,13 @@ Taken out of the core, for the mod layer to bring back:
   (`NF_ANTIALIASING`); XAudio2 in place of DirectSound, with the reverb send switchable (settings.ini `Reverb`);
   host files in place of the Xbox's drives (settings.ini `DiscPath`, `XboxFile.cpp`); keyboard and host controllers
   through psiInput.
+- A drone's breath keeps its own phase of the two-second cycle from a hash of its state machine's id (its number in
+  the level), not from the low 12 bits of its object's address as the original does (`Drone_Update`, `BreathPhase`
+  in game/drone/Drone.cpp). The address is wherever the host's heap put the object, so the same game breathed at
+  other moments on 32-bit, 64-bit and other hosts, and a breath makes smoke that draws from the game's random numbers.
+  Decided 23 October 2026, after speedrunners confirmed no run relies on random-number manipulation. It replaced a
+  shadow of the Xbox heap that gave every host the Xbox's addresses. Recordings in which drones breathe (the
+  CastleExterior ones) diverge from those made before it.
 - Uninitialised stack the original leaves in a record is written as zero (docs/driving/original-quirks.md,
   docs/nightfire-port-lifts.md "Departures from the original").
 

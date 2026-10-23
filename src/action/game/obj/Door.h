@@ -53,7 +53,7 @@ typedef struct {
     uchar noTouch;          // 0x73 - does not open by being touched
 } DOORINFO;
 
-XBOX_SIZE(DOORINFO, 0x74);
+LAYOUT_32(sizeof(DOORINFO) == 0x74, "Size of DOOR_INFO not correct");
 LAYOUT_32(offsetof(DOORINFO, pathPos) == 0x4c, "Bad offset of pathPos");
 LAYOUT_32(offsetof(DOORINFO, openSound) == 0x5c, "Bad offset of openSound");
 LAYOUT_32(offsetof(DOORINFO, unlockSwitchChannel) == 0x64, "Bad offset of unlockSwitchChannel");

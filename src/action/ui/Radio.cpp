@@ -113,7 +113,7 @@ intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t
             // The scroll's maximum raised for each item after the first; the first selected
             char *text = message == MessageType_AddItemLabel ? (char *)Txt_BindLabel((Action_TranslatedText)arg1, 0)
                                                               : (char *)arg1;
-            LIST_ROW *item = (LIST_ROW *)Menu_MallocXbox(sizeof(LIST_ROW), XBOX_SIZEOF(LIST_ROW));
+            LIST_ROW *item = (LIST_ROW *)Menu_Malloc(sizeof(LIST_ROW));
             strcpy(item->cells[0].text, text);
             item->value = arg2;
             LinkedList_Add(&radio->items, &item->prev, item);

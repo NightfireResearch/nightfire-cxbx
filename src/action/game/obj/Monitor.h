@@ -23,7 +23,7 @@ typedef struct {
 } MONITOR;
 #pragma pack(pop)
 
-XBOX_SIZE(MONITOR, 0x14);
+LAYOUT_32(sizeof(MONITOR) == 0x14, "Bad size for MONITOR");
 
 obj_tag * Monitor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);
 void Monitor_Activate(obj_tag *obj, obj_tag *user);

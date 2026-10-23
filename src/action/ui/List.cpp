@@ -187,7 +187,7 @@ scroll:
 
 // A row, its cells cleared
 static LIST_ROW* List_NewRow(void) {
-    return (LIST_ROW *)Menu_MallocXbox(sizeof(LIST_ROW), XBOX_SIZEOF(LIST_ROW));
+    return (LIST_ROW *)Menu_Malloc(sizeof(LIST_ROW));
 }
 
 // A row added at the end: the first selected, and the scroll's maximum raised for each after the first

@@ -51,7 +51,7 @@ typedef struct COLLDATA_tag {
     short countB;               // 0x12 - triangles
     ushort numCollBoxes;        // 0x14
 } COLLDATA_tag;
-XBOX_SIZE(COLLDATA_tag, 0x16);
+LAYOUT_32(sizeof(COLLDATA_tag) == 0x16, "COLLDATA_tag is wrong size");
 LAYOUT_32(offsetof(COLLDATA_tag, sizeofC) == 0x10, "Bad offset of sizeofC");
 LAYOUT_32(offsetof(COLLDATA_tag, numCollBoxes) == 0x14, "Bad offset of numCollBoxes");
 
@@ -66,7 +66,7 @@ typedef struct celglist_tag {
     uint32_t applyFlagsToObject;
 } celglist_tag;
 
-XBOX_SIZE(celglist_tag, 0x3c);
+LAYOUT_32(sizeof(celglist_tag) == 0x3c, "celglist_tag is wrong size");
 
 #pragma pack(pop)
 

@@ -21,7 +21,7 @@ typedef struct DESTROY_tag {
     uchar smashed;              // 0x17
 } DESTROY_tag;
 
-XBOX_SIZE(DESTROY_tag, 0x18);
+LAYOUT_32(sizeof(DESTROY_tag) == 0x18, "DESTROY_tag is 0x18 bytes");
 
 // A destroyable's placement keys (level_tag)
 typedef struct DestroyPlacement {

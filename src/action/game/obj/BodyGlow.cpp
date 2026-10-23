@@ -45,8 +45,7 @@ static int32_t Ftol(double x) {
 obj_tag* BodyGlow_Create(obj_tag *owner) {
     if (owner == NULL || switch_NO_DRONES)
         return NULL;
-    obj_tag *glow = control_create_object_xbox(sizeof(BODYGLOW_tag), XBOX_SIZEOF(BODYGLOW_tag), &owner->position,
-                                               &owner->rotation, NULL);
+    obj_tag *glow = control_create_object(sizeof(BODYGLOW_tag), &owner->position, &owner->rotation, NULL);
     glow->objectType = OBJECTTYPE_BODYGLOW;
     hashtable_set_object_to_entity_gfx(glow, GFX_BODYGLOW);
     glow->effectFlags |= 0x2408;

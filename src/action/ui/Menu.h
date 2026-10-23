@@ -295,12 +295,6 @@ void Menu_ResizeControl(M_CONTROL *control, M_CONTROL *from);
 int Menu_ClipString(sprite *spr, int width, char *format);
 sprite* Menu_CreateSprite(SpriteInfo *info);
 void* Menu_Malloc(int size);
-// Menu_Malloc of something that is xboxSize bytes on the Xbox (XboxHeap.h; XBOX_SIZEOF)
-#if XBOX_SIZES_DIFFER
-void* Menu_MallocXbox(int size, int xboxSize);
-#else
-#define Menu_MallocXbox(size, xboxSize) Menu_Malloc(size)
-#endif
 void Menu_Free(void **data, undefined4 type);
 void Menu_SetAction(short player, int action, uchar state);
 uint Menu_GetLastController(void);

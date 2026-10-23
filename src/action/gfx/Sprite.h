@@ -38,7 +38,7 @@ typedef struct sprite {
     GPOINT scale;
 } sprite;
 
-XBOX_SIZE(sprite, 0x44);
+LAYOUT_32(sizeof(sprite) == 0x44, "Wrong size for sprite");
 LAYOUT_32(offsetof(sprite, unknown1) == 0x14, "Wrong offset for unknown1");
 LAYOUT_32(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedViewer");
 

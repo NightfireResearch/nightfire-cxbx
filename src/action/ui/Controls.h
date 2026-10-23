@@ -30,7 +30,7 @@ typedef struct M_LABEL {
     uchar alwaysHighlighted;    // 0x110 highlighted whenever its page's focused control has its hashcode
     char pad_111[3];
 } M_LABEL;
-XBOX_SIZE(M_LABEL, 0x114);
+LAYOUT_32(sizeof(M_LABEL) == 0x114, "M_LABEL is 0x114 bytes");
 LAYOUT_32(offsetof(M_LABEL, drawn) == 0xe8, "M_LABEL sprite offset incorrect");
 
 #define LABEL_OWN_COLOURS   1   // the highlight and normal colours are its own, else the model's tint
@@ -44,7 +44,7 @@ typedef struct M_BUTTON {
     uchar unknown1aa;           // 0x1aa
     char pad_1ab;
 } M_BUTTON;
-XBOX_SIZE(M_BUTTON, 0x1ac);
+LAYOUT_32(sizeof(M_BUTTON) == 0x1ac, "M_BUTTON is 0x1ac bytes");
 
 typedef struct M_CHECKBOX {
     M_CONTROL control;          // type ControlType_Checkbox
@@ -53,7 +53,7 @@ typedef struct M_CHECKBOX {
     uchar checked;              // 0x1a8
     char pad_1a9[3];
 } M_CHECKBOX;
-XBOX_SIZE(M_CHECKBOX, 0x1ac);
+LAYOUT_32(sizeof(M_CHECKBOX) == 0x1ac, "M_CHECKBOX is 0x1ac bytes");
 
 // A value between min and max: a bar with a thumb, moved with the d-pad while the scroll has the focus
 typedef struct M_SCROLL {
@@ -73,7 +73,7 @@ typedef struct M_SCROLL {
     uchar proportionalBar;      // 0x145 the thumb fills the track up to the value
     char pad_146[2];
 } M_SCROLL;
-XBOX_SIZE(M_SCROLL, 0x148);
+LAYOUT_32(sizeof(M_SCROLL) == 0x148, "M_SCROLL is 0x148 bytes");
 
 #define SCROLL_NO_BAR   1       // not drawn (MessageType_ScrollHideBar); the value still moves
 #define SCROLL_VERTICAL 2       // taller than wide: up and down move it
@@ -102,7 +102,7 @@ typedef struct LIST_ROW {
     char pad_2c9[3];
     sprite *stripe;             // 0x2cc its background (MessageType_ListSetSelectionColour)
 } LIST_ROW;
-XBOX_SIZE(LIST_ROW, 0x2d0);
+LAYOUT_32(sizeof(LIST_ROW) == 0x2d0, "LIST_ROW is 0x2d0 bytes");
 
 #define LIST_VISIBLE_ROWS 32    // the rows with sprites
 
@@ -135,7 +135,7 @@ typedef struct M_LIST {
     uchar continuedRows;        // 0x56a the rows added by wrapping
     uchar selectedIndex;        // 0x56b
 } M_LIST;
-XBOX_SIZE(M_LIST, 0x56c);
+LAYOUT_32(sizeof(M_LIST) == 0x56c, "M_LIST is 0x56c bytes");
 LAYOUT_32(offsetof(M_LIST, rows) == 0x270, "M_LIST rows offset incorrect");
 LAYOUT_32(offsetof(M_LIST, selected) == 0x560, "M_LIST selected offset incorrect");
 
@@ -152,7 +152,7 @@ typedef struct M_RADIO {
     char pad_300[4];
     LIST_ROW *selected;         // 0x304
 } M_RADIO;
-XBOX_SIZE(M_RADIO, 0x308);
+LAYOUT_32(sizeof(M_RADIO) == 0x308, "M_RADIO is 0x308 bytes");
 
 // A list that opens under a label (Combo_*): its size (MessageType_CreateObject) and its parts' places
 // (Process_RunFrame)
@@ -164,7 +164,7 @@ typedef struct M_COMBO {
     float labelHeight;          // 0x714 a line of the plain format and 2
     int visibleRows;            // 0x718 MessageType_GetVisibleRows
 } M_COMBO;
-XBOX_SIZE(M_COMBO, 0x71c);
+LAYOUT_32(sizeof(M_COMBO) == 0x71c, "M_COMBO is 0x71c bytes");
 
 #define COMBO_OPEN 0x80000000 // drawState: the list is open
 
@@ -179,7 +179,7 @@ typedef struct M_SPIN {
     float labelHeight;          // 0x310 a line of the plain format and 2
     char pad_314[4];
 } M_SPIN;
-XBOX_SIZE(M_SPIN, 0x318);
+LAYOUT_32(sizeof(M_SPIN) == 0x318, "M_SPIN is 0x318 bytes");
 
 #define MEMO_LINES 32           // the lines with sprites
 
@@ -203,7 +203,7 @@ typedef struct M_MEMO {
     uchar centredVertically;    // 0x282 MessageType_MemoSetOption282
     char pad_283;
 } M_MEMO;
-XBOX_SIZE(M_MEMO, 0x284);
+LAYOUT_32(sizeof(M_MEMO) == 0x284, "M_MEMO is 0x284 bytes");
 LAYOUT_32(offsetof(M_MEMO, visibleLines) == 0x264, "M_MEMO visibleLines offset incorrect");
 
 #pragma pack(pop)

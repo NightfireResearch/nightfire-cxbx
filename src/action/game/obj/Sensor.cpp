@@ -56,8 +56,8 @@ static constexpr float HALF_DEGREES_TO_RADIANS = 0.008726646f;
 
 // AUTOINJECT
 void Sensor_Init(void) {
-    LList_InitXbox(&CameraList, sizeof(SENSOR), XBOX_SIZEOF(SENSOR), 0);
-    LList_InitXbox(&SwitchList, sizeof(ObjData_Switch), XBOX_SIZEOF(ObjData_Switch), 0);
+    LList_Init(&CameraList, sizeof(SENSOR), 0);
+    LList_Init(&SwitchList, sizeof(ObjData_Switch), 0);
 }
 
 // AUTOINJECT
@@ -65,7 +65,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 
     Create_Sensor_Params* createParams = (Create_Sensor_Params*)lvl;
 
-    obj_tag* obj = control_create_object_xbox(sizeof(SENSOR), XBOX_SIZEOF(SENSOR), pos, rot, NULL);
+    obj_tag* obj = control_create_object(sizeof(SENSOR), pos, rot, NULL);
 
     if(obj == NULL)
         return NULL;

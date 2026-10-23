@@ -2238,7 +2238,7 @@ obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl) {
         return NULL;
 
     _VECTOR *pos = (_VECTOR *)&mtx->m[12];
-    obj_tag *obj = control_create_object_xbox(sizeof(MPOBJECT), XBOX_SIZEOF(MPOBJECT), pos, &CONST_ZERO_VECTOR, NULL);
+    obj_tag *obj = control_create_object(sizeof(MPOBJECT), pos, &CONST_ZERO_VECTOR, NULL);
     MPObjects[slot] = obj;
     if (obj == NULL)
         return NULL;

@@ -41,7 +41,7 @@ obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
     if (MPSettings.isMultiplayer && !MPSettings.ExplosiveSceneryEnabled)
         return NULL;
 
-    obj_tag *obj = control_create_object_xbox(sizeof(DESTROY_tag), XBOX_SIZEOF(DESTROY_tag), pos, rot, NULL);
+    obj_tag *obj = control_create_object(sizeof(DESTROY_tag), pos, rot, NULL);
     if (obj == NULL)
         return NULL;
 

@@ -49,7 +49,7 @@ typedef struct {
 
 #pragma pack(pop)
 
-XBOX_SIZE(TRIGGER, 0x3c);
+LAYOUT_32(sizeof(TRIGGER) == 0x3c, "Bad size for TRIGGER");
 LAYOUT_32(offsetof(TRIGGER, channel) == 0x1c, "Bad offset of channel");
 LAYOUT_32(offsetof(TRIGGER, inputs) == 0x22, "Bad offset of inputs");
 LAYOUT_32(offsetof(TRIGGER, mode) == 0x34, "Bad offset of mode");

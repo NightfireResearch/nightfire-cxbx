@@ -58,7 +58,7 @@ M_SCRIPT* Script_AddScript(M_CONTROL *control, int id) {
         return NULL;
     M_SCRIPT *script = Script_Find(control, id);
     if (script == NULL) {
-        script = (M_SCRIPT *)Menu_MallocXbox(sizeof(M_SCRIPT), XBOX_SIZEOF(M_SCRIPT));
+        script = (M_SCRIPT *)Menu_Malloc(sizeof(M_SCRIPT));
         LinkedList_Add(&control->scripts, &script->prev, script);
         LinkedList_Init(&script->keys, 0);
         script->id = id;
@@ -87,7 +87,7 @@ M_KEYFRAME* Script_AddKeyFrame(M_SCRIPT *script, M_KEYFRAME *key) {
         }
     }
 
-    M_KEYFRAME *added = (M_KEYFRAME *)Menu_MallocXbox(sizeof(M_KEYFRAME), XBOX_SIZEOF(M_KEYFRAME));
+    M_KEYFRAME *added = (M_KEYFRAME *)Menu_Malloc(sizeof(M_KEYFRAME));
     memcpy(added, key, sizeof(M_KEYFRAME));
     void *after = NULL;
     M_KEYFRAME *k = (M_KEYFRAME *)LinkedList_First(&script->keys);
@@ -108,7 +108,7 @@ M_KEYFRAME* Script_AddKeyFrame(M_SCRIPT *script, M_KEYFRAME *key) {
 M_MESSAGE* Script_AddMessage(M_KEYFRAME *key, M_MESSAGE *msg) {
     if (key == NULL || msg == NULL)
         return NULL;
-    M_MESSAGE *added = (M_MESSAGE *)Menu_MallocXbox(sizeof(M_MESSAGE), XBOX_SIZEOF(M_MESSAGE));
+    M_MESSAGE *added = (M_MESSAGE *)Menu_Malloc(sizeof(M_MESSAGE));
     memcpy(added, msg, sizeof(M_MESSAGE));
     LinkedList_Add(&key->messages, &added->prev, added);
     return added;

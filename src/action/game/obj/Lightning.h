@@ -17,7 +17,7 @@ typedef struct LIGHTNING_tag {
     short key2;                 // 0x3e - not read
 } LIGHTNING_tag;
 
-XBOX_SIZE(LIGHTNING_tag, 0x40);
+LAYOUT_32(sizeof(LIGHTNING_tag) == 0x40, "LIGHTNING_tag is 0x40 bytes");
 
 // The placement's keys (level_tag)
 typedef struct LightningPlacement {

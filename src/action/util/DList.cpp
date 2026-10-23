@@ -1,27 +1,15 @@
 #include "DList.h"
 
-static bool DList_InitSized(DLISTINFO_tag* dlist, ushort entrySize, ushort xboxEntrySize, ushort numEntries);
-
 // AUTOINJECT
 bool DList_Init(DLISTINFO_tag* dlist, ushort entrySize, ushort numEntries) {
-    return DList_InitSized(dlist, entrySize, entrySize, numEntries);
-}
-
-#if XBOX_SIZES_DIFFER
-bool DList_InitXbox(DLISTINFO_tag* dlist, ushort entrySize, ushort xboxEntrySize, ushort numEntries) {
-    return DList_InitSized(dlist, entrySize, xboxEntrySize, numEntries);
-}
-#endif
-
-static bool DList_InitSized(DLISTINFO_tag* dlist, ushort entrySize, ushort xboxEntrySize, ushort numEntries) {
 
     if (dlist == NULL)
         return false;
 
-    if (!LList_InitXbox(&dlist->freeList, entrySize, xboxEntrySize, numEntries))
+    if (!LList_Init(&dlist->freeList, entrySize, numEntries))
         return false;
 
-    return LList_InitXbox(&dlist->activeList, entrySize, xboxEntrySize, 0);
+    return LList_Init(&dlist->activeList, entrySize, 0);
 }
 
 // The node goes to the head of the free list

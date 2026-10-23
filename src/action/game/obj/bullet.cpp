@@ -114,7 +114,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
         return NULL;
     }
 
-    obj_tag *obj = control_create_object_xbox(sizeof(BU_tag), XBOX_SIZEOF(BU_tag), pos, NULL, NULL);
+    obj_tag *obj = control_create_object(sizeof(BU_tag), pos, NULL, NULL);
     if (obj == NULL)
         return NULL;
 
@@ -963,7 +963,7 @@ void __declspec(naked) Bullet_homing(void) {
 // AUTOINJECT
 void Bullet_InitCasingLists(void) {
     for (int i = 0; i < NUM_CASINGS; i++) {
-        CasingList[i] = control_create_object_xbox(sizeof(CASING_tag), XBOX_SIZEOF(CASING_tag), NULL, NULL, NULL);
+        CasingList[i] = control_create_object(sizeof(CASING_tag), NULL, NULL, NULL);
         View_SetDrawInNoViews(CasingList[i]);
         CasingList[i]->curState = 2;
     }
