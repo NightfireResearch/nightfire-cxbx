@@ -1204,8 +1204,8 @@ endif()
 # devtools (src/action/standalone/NoDevtools.cpp answers the hooks game code calls). Compiled as actioninject is,
 # with the driving engine's crash reporter and the host's window; with NIGHTFIRE_SDL the window, input and sound
 # output are SDL3's (docs/action-portable.md).
-# Only for Windows and 64-bit Linux: the action engine has no 32-bit Linux build (docs/action-portable.md).
-if(WIN32 OR (CMAKE_SIZEOF_VOID_P EQUAL 8 AND NOT APPLE))
+# For Windows, 64-bit Linux and macOS: the action engine has no 32-bit Linux build (docs/action-portable.md).
+if(WIN32 OR CMAKE_SIZEOF_VOID_P EQUAL 8)
 set(nf_action_standalone_sources ${nf_action_sources} src/driving/standalone/CrashReport.cpp)
 if(WIN32)
   list(APPEND nf_action_standalone_sources src/driving/standalone/CrashReportWin32.cpp)
@@ -1234,6 +1234,14 @@ if(NIGHTFIRE_SDL)
     src/driving/platform/HostInputSdl.cpp)
 else()
   list(APPEND nf_action_standalone_sources src/driving/platform/HostWindowWin32.cpp)
+endif()
+if(NIGHTFIRE_GFX STREQUAL "sdlgpu")   # the driving engine's backend choice (docs/driving/sdl-gpu.md)
+  list(REMOVE_ITEM nf_action_standalone_sources src/common/gfx/d3d9Backend.cpp src/common/gfx/fxaa.cpp
+                                                src/common/gfx/textureReplace.cpp)
+  list(APPEND nf_action_standalone_sources ${nf_gfx_backend})
+endif()
+if(APPLE)   # the D3D9 backend's Win32 calls, whose types are dxvk's
+  list(REMOVE_ITEM nf_action_standalone_sources src/common/linux/win32Calls.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
@@ -1276,7 +1284,10 @@ foreach(target action_standalone action_standalone_test)
     # dxvk-native and FFmpeg beside the executable
     target_compile_options(${target} PRIVATE ${NF_XBOX_ABI_OPTIONS}
                            -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
-    target_link_libraries(${target} PRIVATE dxvk_d3d9 ${CMAKE_DL_LIBS} Threads::Threads)
+    if(NOT APPLE)
+      target_link_libraries(${target} PRIVATE dxvk_d3d9)
+    endif()
+    target_link_libraries(${target} PRIVATE ${CMAKE_DL_LIBS} Threads::Threads)
     add_custom_command(TARGET ${target} POST_BUILD
                        COMMAND ${CMAKE_COMMAND} -E copy_if_different $<TARGET_SONAME_FILE:SDL3::SDL3> ${NF_DXVK_D3D9}
                                ${NF_FFMPEG_FILES} $<TARGET_FILE_DIR:${target}>)
@@ -1292,11 +1303,16 @@ foreach(target action_standalone action_standalone_test)
   if(MSVC)
     target_compile_options(${target} PRIVATE /Ob0)
     target_link_options(${target} PRIVATE /MAP)
+  elseif(APPLE)
+    # The game's 1-packed structures (#pragma pack(push, 1)) put some of their pointers off 8 bytes, and statics of
+    # them hold addresses; arm64 macOS's chained fixups refuse a pointer that is not aligned, the older rebasing
+    # takes it (with a warning for each)
+    target_link_options(${target} PRIVATE -Wl,-map,${target}.map -Wl,-no_fixup_chains)
   else()
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
 endforeach()
-endif()   # Windows and 64-bit Linux: the standalone action engine
+endif()   # Windows, 64-bit Linux and macOS: the standalone action engine
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
 # injection and no shadow tests - drivinginject's sources less the devtools, the injection and the XBE's patching
@@ -1498,7 +1514,10 @@ if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
   else()
     set(nf_msl_users drivinghost)
   endif()
-  foreach(target ${nf_msl_users})
+  foreach(target ${nf_msl_users} action_standalone action_standalone_test)
+    if(NOT TARGET ${target})
+      continue()
+    endif()
     target_link_libraries(${target} PRIVATE spirv-cross-msl)
   endforeach()
   # Every .spv of a folder (spirvdump's, or a run's NIGHTFIRE_SPIRVDUMP=1 spirv/) translated to MSL as the backend

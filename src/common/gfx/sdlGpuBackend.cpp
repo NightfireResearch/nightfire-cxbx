@@ -239,7 +239,7 @@ struct PassCommand {
 struct DrawCommand {
     SDL_GPUGraphicsPipeline *pipeline;
     uint32_t bufferCount;
-    uint32_t bufferOffset[8];
+    uint32_t bufferOffset[16];
     bool indexed;
     uint32_t indexOffset;
     uint32_t count, instances;
@@ -416,7 +416,7 @@ static void Flush(void) {
                     boundPipeline = d.pipeline;
                 }
                 SDL_SetGPUViewport(pass, &d.viewport);
-                SDL_GPUBufferBinding buffers[8];
+                SDL_GPUBufferBinding buffers[16];
                 for (uint32_t b = 0; b < d.bufferCount; b++) { buffers[b].buffer = g_ring; buffers[b].offset = d.bufferOffset[b]; }
                 if (d.bufferCount > 0)
                     SDL_BindGPUVertexBuffers(pass, 0, buffers, d.bufferCount);
@@ -1745,7 +1745,7 @@ struct PipelineKey {
     uint8_t attributeCount, bufferCount, pad[2];
     float depthBias;
     VertexElement attributes[16];   // stream holds the buffer slot here
-    uint16_t pitch[8];
+    uint16_t pitch[16];
 };
 static std::map<std::string, SDL_GPUGraphicsPipeline *> g_pipelines;
 enum { kTargetColour, kTargetMask };
@@ -1755,7 +1755,7 @@ static SDL_GPUGraphicsPipeline *PipelineFor(const PipelineKey &key) {
     std::map<std::string, SDL_GPUGraphicsPipeline *>::iterator found = g_pipelines.find(k);
     if (found != g_pipelines.end())
         return found->second;
-    SDL_GPUVertexBufferDescription buffers[8];
+    SDL_GPUVertexBufferDescription buffers[16];
     SDL_GPUVertexAttribute attributes[16];
     for (uint32_t b = 0; b < key.bufferCount; b++) {
         buffers[b].slot = b;

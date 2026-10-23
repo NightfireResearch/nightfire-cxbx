@@ -730,14 +730,79 @@ static void *MapLow(size_t length, uintptr_t lowest, int protection, int flags) 
 // Before main, Darwin puts mappings of its own (malloc's regions, the main thread's stack) at random in the window's
 // only free space, the 2 GB between the image and the shared cache, so that 1 GB in one piece is often not left. The
 // image holds the reservations instead, as a zero-fill section, whose pages cost nothing until they are used.
-alignas(0x4000) static char ImageReserve[size_t(1) << 30];
+// Contiguous memory goes below 256 MB of the window (KernelImports.cpp), where the image and so this section lie too.
+// The section's part below that serves it, a 64 KB granule at a time, inaccessible while free; the rest serves the
+// reservations, at least 1 GB. Given back, the low part would take the system's libraries: the window's frameworks
+// loaded there, among the game's own memory.
+const uintptr_t kContiguousEnd = 0x10000000;
+const size_t kGranule = 0x10000;
+alignas(0x4000) static char ImageReserve[(size_t(1) << 30) + kContiguousEnd];
+static char *ImageReserveStart;
 static size_t ImageReserveUsed;
+static uintptr_t LowPagesStart, LowPagesEnd;
+static bool LowPagesUsed[kContiguousEnd / kGranule];   // by the granule's window offset
+
+static void SplitReserve(void) {
+    static pthread_once_t once = PTHREAD_ONCE_INIT;
+    pthread_once(&once, [] {
+        uintptr_t start = (reinterpret_cast<uintptr_t>(ImageReserve) + kGranule - 1) & ~uintptr_t(kGranule - 1);
+        uintptr_t end = kGameWindowBase + kContiguousEnd;
+        ImageReserveStart = ImageReserve;
+        if (end > start && mprotect(reinterpret_cast<void *>(start), end - start, PROT_NONE) == 0) {
+            LowPagesStart = start;
+            LowPagesEnd = end;
+            ImageReserveStart = reinterpret_cast<char *>(end);
+        }
+    });
+}
+
+// `size` bytes of the low part from a 64 KB boundary in [lowest, limit), readable and writable; NULL if none
+static void *TakeLowPages(size_t size, uintptr_t lowest, uintptr_t limit) {
+    size_t count = (size + kGranule - 1) / kGranule;
+    uintptr_t from = lowest > LowPagesStart ? lowest : LowPagesStart;
+    uintptr_t to = limit < LowPagesEnd ? limit : LowPagesEnd;
+    from = (from + kGranule - 1) & ~uintptr_t(kGranule - 1);
+    void *block = NULL;
+    pthread_mutex_lock(&PageMappingsLock);
+    for (uintptr_t address = from; block == NULL && address < to && count * kGranule <= to - address;
+         address += kGranule) {
+        size_t first = (address - kGameWindowBase) / kGranule, i = 0;
+        while (i < count && !LowPagesUsed[first + i])
+            i++;
+        if (i < count) {
+            address += i * kGranule;   // past the granule in use
+            continue;
+        }
+        if (mprotect(reinterpret_cast<void *>(address), count * kGranule, PROT_READ | PROT_WRITE) != 0)
+            break;
+        for (i = 0; i < count; i++)
+            LowPagesUsed[first + i] = true;
+        block = reinterpret_cast<void *>(address);
+    }
+    pthread_mutex_unlock(&PageMappingsLock);
+    return block;
+}
+
+// Back to the low part, as fresh pages, if the block is one of its blocks; with PageMappingsLock held
+static bool ReturnLowPages(void *block, size_t length) {
+    uintptr_t address = reinterpret_cast<uintptr_t>(block);
+    if (address < LowPagesStart || address >= LowPagesEnd)
+        return false;
+    size_t count = (length + kGranule - 1) / kGranule;
+    mmap(block, count * kGranule, PROT_NONE, MAP_PRIVATE | MAP_ANONYMOUS | MAP_FIXED, -1, 0);
+    size_t first = (address - kGameWindowBase) / kGranule;
+    for (size_t i = 0; i < count; i++)
+        LowPagesUsed[first + i] = false;
+    return true;
+}
 #endif
 
 void *HostReserveLow(size_t size, uintptr_t lowest) {
 #ifdef __APPLE__
-    if (size <= sizeof(ImageReserve) - ImageReserveUsed) {
-        char *block = ImageReserve + ImageReserveUsed;
+    SplitReserve();
+    char *reserveEnd = ImageReserve + sizeof(ImageReserve);
+    if (size <= size_t(reserveEnd - ImageReserveStart) - ImageReserveUsed) {
+        char *block = ImageReserveStart + ImageReserveUsed;
         ImageReserveUsed += (size + 0x3fff) & ~size_t(0x3fff);   // in pages
         if (mprotect(block, size, PROT_NONE) == 0)
             return block;
@@ -763,7 +828,14 @@ static bool SetWindowStack(pthread_attr_t *attributes, size_t size) {
 
 void *HostAllocatePages(size_t size, uintptr_t lowest, uintptr_t limit) {
 #if UINTPTR_MAX > 0xffffffffu   // offsets in the game window, whose first 64 KB stays free; else anywhere in it
-    void *block = MapLowest(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowBase + limit);
+#ifdef __APPLE__
+    SplitReserve();
+    void *block = TakeLowPages(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowBase + limit);
+#else
+    void *block = NULL;
+#endif
+    if (block == NULL)
+        block = MapLowest(size, kGameWindowBase + (lowest > 0x10000 ? lowest : 0x10000), kGameWindowBase + limit);
     if (block == NULL) {
         block = MapLow(size, 0x10000, kPageProtection, 0);
         if (block == MAP_FAILED)
@@ -794,7 +866,12 @@ void HostFreePages(void *block) {
     pthread_mutex_lock(&PageMappingsLock);
     for (PageMapping &mapping : PageMappings) {
         if (mapping.block == block) {
+#ifdef __APPLE__
+            if (!ReturnLowPages(block, mapping.length))
+                munmap(block, mapping.length);
+#else
             munmap(block, mapping.length);
+#endif
             mapping.block = NULL;
             break;
         }

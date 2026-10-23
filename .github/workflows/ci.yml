@@ -72,7 +72,7 @@ jobs:
             build/macos/av*.dll
             build/macos/FFmpeg-*.txt
 
-  # The standalone driving engine as a native Apple Silicon program (docs/driving/macos.md): the macos-arm64 preset,
+  # The standalone driving and action engines as native Apple Silicon programs (docs/driving/macos.md): the macos-arm64 preset,
   # SDL's GPU API on Metal. FFmpeg's shared libraries are built from the third_party/ffmpeg submodule
   # (tools/fmv/build_ffmpeg.sh macos-arm64) and cached by its commit. The game itself needs the disc, so it is built
   # and checked, not run.
@@ -103,7 +103,8 @@ jobs:
       - name: Build
         run: >
           cmake --build --preset macos-arm64
-          --target driving_standalone driving_standalone_test gamewindow_test spirvmsl mslcompile
+          --target driving_standalone driving_standalone_test action_standalone action_standalone_test
+          gamewindow_test spirvmsl mslcompile
 
       # The game window at 4 GB (macos.md 2): the image, the heaps, the pages and a thread's stack inside it, and the
       # file structures' 32-bit layouts
@@ -112,7 +113,9 @@ jobs:
 
       # arm64 always has FMA, and clang would fuse a * b + c unless told not to (macos.md 4)
       - name: Check for fused multiply-adds
-        run: tools/fused_ops.sh build/macos-arm64/driving_standalone build/macos-arm64/driving_standalone_test
+        run: >
+          tools/fused_ops.sh build/macos-arm64/driving_standalone build/macos-arm64/driving_standalone_test
+          build/macos-arm64/action_standalone build/macos-arm64/action_standalone_test
 
       - uses: actions/upload-artifact@v7
         with:
@@ -120,6 +123,8 @@ jobs:
           path: |
             build/macos-arm64/driving_standalone
             build/macos-arm64/driving_standalone_test
+            build/macos-arm64/action_standalone
+            build/macos-arm64/action_standalone_test
             build/macos-arm64/*.dylib
             build/macos-arm64/FFmpeg-*.txt
 

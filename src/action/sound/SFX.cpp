@@ -1256,8 +1256,9 @@ void LoadSoundBank(int index) {
         SampleHeaderData *sample = bank->SampleHeader;
         for (int i = 0; i < bank->SampleCount; i++, sample++) {
             sample->Address = samples;
-            sample->psi_SampleHeader = (char *)((uintptr_t)PtrTo32(sample->psi_SampleHeader) +
-                                                (uintptr_t)bank->psi_SampleHeaderBuffer);
+            // In words: with no psi file the offset stays as it is (as the original's NULL plus the offset)
+            sample->psi_SampleHeader = PtrFrom32<char>(PtrTo32(sample->psi_SampleHeader) +
+                                                       PtrTo32(bank->psi_SampleHeaderBuffer));
             samples += sample->Size;
         }
     }

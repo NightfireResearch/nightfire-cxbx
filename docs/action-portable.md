@@ -1,7 +1,7 @@
 # The action engine on Linux
 
 Status (23 October 2026): done. The 13 recordings match the C baseline on Linux x86-64, every frame (Results,
-below). Follows the standalone executable (docs/action-standalone.md) and the 64-bit build (docs/action-64bit.md),
+below), and the x87 recordings on macOS arm64 (below). Follows the standalone executable (docs/action-standalone.md) and the 64-bit build (docs/action-64bit.md),
 which it assumes: our code alone, no XBE, 13 of 13 recordings matching the C baseline on Windows x64.
 
 The target is **Linux x86-64**, the driving engine's `linux-x64` preset (docs/driving/64-bit.md 7.11): clang, one ABI,
@@ -109,6 +109,37 @@ cmake --build --preset linux-x64
 
 The 19 shadow suites are clean. Every Windows target, the SDL variant of both engines' standalone executables, the
 mingw cross build and the 64-bit Linux driving executables build.
+
+## macOS on Apple Silicon (23 October 2026)
+
+action_standalone and action_standalone_test build with the driving engine's `macos-arm64` preset (docs/driving/macos.md)
+and run there: the host layer's Darwin rows, SDL3, and SDL's GPU API on Metal in place of Direct3D 9
+(docs/driving/sdl-gpu.md; the action standalone targets now take the backend `NIGHTFIRE_GFX` names, as the driving
+engine's do). The game's code compiled for arm64 as it was. What the Mac needed:
+
+- **The game window at 4 GB.** On Windows and Linux the window's base is 0, so a word and an address are the same
+  number and code that takes one for the other works by accident; on macOS the base is 0x1'0000'0000. Four places did:
+  the D3D seam's vertex and index buffers (their data word used as an address for the alignment shift, the move and
+  the slots' pointers), its overlay buffers, the back-buffer capture (a truncated address used as one), and the sound
+  banks' psi sample headers (offset plus a NULL buffer: an offset, which only base 0 can store). Each now goes through
+  `PtrFrom32`/`PtrTo32`, which gives the same values at base 0.
+- **Contiguous memory.** On macOS the arena lies in the image as a zero-fill section, which with the image just above
+  4 GB covered nearly all of the window's first 256 MB, where contiguous memory goes (Mem_TakeHeap's 40 MB was
+  refused). The section is 256 MB longer; its part below 256 MB of the window serves contiguous memory, a 64 KB
+  granule at a time (HostPosix.cpp). Given back to the system, that part took the window's frameworks.
+- **More vertex streams**: the SDL GPU backend held 8 streams per draw; the action engine draws with up to 9 (16, as
+  the NV2A).
+- **The linker**: the game's 1-packed structures put some pointers off 8 bytes, and arm64 macOS's chained fixups
+  refuse those in statics (`Font1`, `TextMsgFormats` and about 150 others); the action executables link with the
+  older rebasing (`-no_fixup_chains`), which takes them.
+- d3dSeam.cpp takes the Win32 types from Win32Types.h off Windows (it had dxvk-native's windows.h).
+
+Results on the M2 Max (macOS 27, Metal, headless: the window hidden, SDL's dummy audio): all 13 recordings in
+tests/demos/action, the x87 recordings, matched every frame - about 222,600 frames, EvilBase's 75,377 in under two
+minutes - twice. No C baseline was compared: that set (tools/demo/rebase_demos.sh's `tests/demos/action-c`) is not in
+the repository. The 64-bit builds of Windows and Linux are unchanged by the window fixes at base 0 (the same values),
+but untested here. CI builds both engines' Mac executables (the `macos-arm64` job). Not tried yet: a windowed run
+with sound, the mouse and pads by hand.
 
 Not tried: a windowed Linux run with sound (no X11, Wayland or ALSA development packages in this WSL2), and the mouse
 and pads on SDL by hand.

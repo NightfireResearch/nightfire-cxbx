@@ -9,8 +9,12 @@
 #include <stdint.h>
 #include <string.h>
 
+#ifdef _WIN32
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
+#else
+#include "../../../driving/platform/Win32Types.h"
+#endif
 #include <math.h>
 #include <stdio.h>
 #include <type_traits>
@@ -1495,20 +1499,20 @@ int d3dCreateIndexBuffer(int indexCount, unsigned int data) {
 
         // 4-byte alignment shift, same reverse-safe-overlap idea as RegisterTexture's 128-byte one - memmove
         // handles the direction correctly regardless of which way the shift goes.
-        uintptr_t dataAddr = (uintptr_t)data;
+        uintptr_t dataAddr = (uintptr_t)PtrFrom32<void>(data);
         uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
         if (alignedAddr != dataAddr) {
             memmove((void*)alignedAddr, (void*)dataAddr, byteSize);
-            data = (unsigned int)alignedAddr;
+            data = PtrTo32((void*)alignedAddr);
         }
 
         slotPtr->header = 0x10001;
-        slotPtr->dataPtr = (void*)(uintptr_t)data;
+        slotPtr->dataPtr = PtrFrom32<void>(data);
         slotPtr->reserved08 = 0;
         slotPtr->selfPtr = slotPtr;
         slotPtr->indexCount = (uint32_t)indexCount;
         slotPtr->byteSize = byteSize;
-        slotPtr->dataPtr2 = (void*)(uintptr_t)data;
+        slotPtr->dataPtr2 = PtrFrom32<void>(data);
 
         Gfx.indexBufferBytesUsed += byteSize;
         return slot;
@@ -1566,11 +1570,11 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
         uint32_t perStreamBytes = vtxCnt * 6;
         uint32_t totalBytes = perStreamBytes * streamCount;
 
-        uintptr_t dataAddr = (uintptr_t)data;
+        uintptr_t dataAddr = (uintptr_t)PtrFrom32<void>(data);
         uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
         if (alignedAddr != dataAddr) {
             memmove((void*)alignedAddr, (void*)dataAddr, totalBytes);
-            data = (unsigned int)alignedAddr;
+            data = PtrTo32((void*)alignedAddr);
         }
 
         for (unsigned int i = 0; i < streamCount; i++) {
@@ -1607,11 +1611,11 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
     uint32_t totalBytes = vtxCnt * stride;
 
     unsigned int originalData = data;
-    uintptr_t dataAddr = (uintptr_t)data;
+    uintptr_t dataAddr = (uintptr_t)PtrFrom32<void>(data);
     uintptr_t alignedAddr = (dataAddr + 3) & ~(uintptr_t)3;
     if (alignedAddr != dataAddr) {
         memmove((void*)alignedAddr, (void*)dataAddr, totalBytes);
-        data = (unsigned int)alignedAddr;
+        data = PtrTo32((void*)alignedAddr);
     }
 
     D3DVertexBufferSlotRaw *slotPtr = D3DVertexBufferSlot(slot);
@@ -1624,7 +1628,7 @@ int d3dCreateVertexBuffers(unsigned int vtxCnt, unsigned int data, int nonSwizzl
     slotPtr->byteSize = totalBytes;
     slotPtr->field18 = (nonSwizzled != 0) ? 1 : 0;
     slotPtr->field1c = 0;
-    slotPtr->alignedData = (void*)(uintptr_t)data;
+    slotPtr->alignedData = PtrFrom32<void>(data);
 
     Gfx.vertexBufferBytesUsed += totalBytes;
     return slot;
@@ -1656,7 +1660,7 @@ int d3dRegisterOverlayBuffer(void *data, unsigned int vertexCount) {
         slotPtr->header = 1;
         slotPtr->dataPtr = NULL;
         slotPtr->reserved08 = 0;
-        D3DResource_Register(slotPtr, (uint32_t)(uintptr_t)data);
+        D3DResource_Register(slotPtr, PtrTo32(data));
 
         return slot;
     }
@@ -2722,7 +2726,7 @@ void psiBlurScreen(int blurIntensity) {
     }
 
     uint32_t *backBuffer = D3DDevice_GetBackBuffer2(-1);
-    uint32_t backBufferAddr = (uint32_t)(uintptr_t)D3D_UncachedAliasOf(backBuffer[1]); // the live backbuffer pixel data - see D3D_UncachedAliasOf
+    uint8_t *backBufferPixels = (uint8_t *)D3D_UncachedAliasOf(backBuffer[1]); // the live backbuffer pixel data - see D3D_UncachedAliasOf
     D3DResource_Release(backBuffer);
 
     // Find a free texture slot (address-range-bounded scan, matching the original exactly - not just a plain
@@ -2742,16 +2746,16 @@ void psiBlurScreen(int blurIntensity) {
         D3DTextureSlotRaw *texSlot = D3DTextureSlot((int)textureSlot);
         texSlot->mipChainBytes = 640 * 480 * 4; // a 640x480 32-bit frame, passed through to XGSetTextureHeader/D3DResource_Register below
 
-        uintptr_t alignedAddr = ((uintptr_t)backBufferAddr + 0x7Fu) & ~(uintptr_t)0x7Fu;
-        if (alignedAddr != (uintptr_t)backBufferAddr) {
-            memmove((void*)alignedAddr, (void*)(uintptr_t)backBufferAddr, 640 * 480 * 4);
-            backBufferAddr = (uint32_t)alignedAddr;
+        uintptr_t alignedAddr = ((uintptr_t)backBufferPixels + 0x7Fu) & ~(uintptr_t)0x7Fu;
+        if (alignedAddr != (uintptr_t)backBufferPixels) {
+            memmove((void*)alignedAddr, backBufferPixels, 640 * 480 * 4);
+            backBufferPixels = (uint8_t *)alignedAddr;
         }
 
         XGSetTextureHeader(640, 480, 1, 0, 0x1e /* D3DFMT_X4R4G4B4 */, 0, texSlot, 0, 0);
-        D3DResource_Register(texSlot, backBufferAddr);
+        D3DResource_Register(texSlot, PtrTo32(backBufferPixels));
         // Same D3DResource_Register top-nibble-masking workaround as RegisterTexture - see its own comment.
-        *(uint32_t*)((char*)texSlot + 4) = backBufferAddr;
+        *(uint32_t*)((char*)texSlot + 4) = PtrTo32(backBufferPixels);
 
         uint32_t registeredBytes = texSlot->mipChainBytes; // re-read - D3DResource_Register overwrites this field internally
         texSlot->baseTexture = texSlot;
