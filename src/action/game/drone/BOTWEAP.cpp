@@ -115,13 +115,13 @@ bool BOTWEAP_EquipWeapon(Drone_tag *drone, short weapon, short count) {
         if (extra > 0)
             vars->reserveAmmo[wpn->ammoType] += extra;
     } else {
-        if (vars->reserveAmmo[wpn->ammoType] >= ammo_data[wpn->ammoType].maybeMaxNumPerPlayer || count == 0)
+        if (vars->reserveAmmo[wpn->ammoType] >= ammo_data[wpn->ammoType].maxNumPerPlayer || count == 0)
             return false;
         vars->reserveAmmo[wpn->ammoType] += count;
     }
 
     short *reserve = &vars->reserveAmmo[wpn->ammoType];
-    short most = ammo_data[wpn->ammoType].maybeMaxNumPerPlayer;
+    short most = ammo_data[wpn->ammoType].maxNumPerPlayer;
     *reserve = *reserve < most ? *reserve : most;
     return true;
 }
@@ -133,7 +133,7 @@ bool BOTWEAP_EquipAmmo(Drone_tag *drone, short weapon, short count) {
     const weapon_definition_tag *wpn = &weapon_data[weapon];
     BOT_vars_t *vars = drone->botVars;
 
-    if (vars->reserveAmmo[wpn->ammoType] >= ammo_data[wpn->ammoType].maybeMaxNumPerPlayer)
+    if (vars->reserveAmmo[wpn->ammoType] >= ammo_data[wpn->ammoType].maxNumPerPlayer)
         return false;
     if (count == 0)
         return false;
@@ -150,7 +150,7 @@ bool BOTWEAP_EquipAmmo(Drone_tag *drone, short weapon, short count) {
 
     short *reserve = &vars->reserveAmmo[wpn->ammoType];
     *reserve += count;
-    short most = ammo_data[wpn->ammoType].maybeMaxNumPerPlayer;
+    short most = ammo_data[wpn->ammoType].maxNumPerPlayer;
     *reserve = *reserve < most ? *reserve : most;
     return true;
 }

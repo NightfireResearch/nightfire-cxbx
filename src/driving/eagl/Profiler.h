@@ -56,7 +56,7 @@ struct ProfilerTimer {               // 0x14
     uint8_t pad11[3];
 
     ProfilerTimer* Construct(ProfilerRegion *timedRegion);                   // 0x000f5230 (invented)
-    ProfilerTimer* ConstructMaybeStarted(ProfilerRegion *timedRegion, bool startNow); // 0x000f5250 (invented)
+    ProfilerTimer* ConstructWithStartFlag(ProfilerRegion *timedRegion, bool startNow); // 0x000f5250 (invented)
     void Enter();                                                            // 0x000f5480 (invented)
     void Start();                                                            // 0x000f4ec0 (invented)
     void Stop();                                                             // 0x000f4ef0 (invented)

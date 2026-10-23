@@ -198,7 +198,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
 
     case LOADER_READ_DIRECTORY:
         if (!LoadFromDecompBuf) {
-            pDirHeader = (LoaderDirHeader *)maybePsiFileRead(sizeof(LoaderDirHeader));
+            pDirHeader = (LoaderDirHeader *)psiFileRead(sizeof(LoaderDirHeader));
         } else {
             pDirHeader = (LoaderDirHeader *)Euro_Decomp_Buf;
             Euro_Decomp_Buf += sizeof(LoaderDirHeader);
@@ -206,7 +206,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
         // With no files, the directory is not read and pDirData keeps its value (NULL, from LOADER_OPEN)
         if (pDirHeader->filesRemaining != 0) {
             if (!LoadFromDecompBuf) {
-                pDirData = (uchar *)maybePsiFileRead(pDirHeader->dirSize);
+                pDirData = (uchar *)psiFileRead(pDirHeader->dirSize);
             } else {
                 pDirData = Euro_Decomp_Buf;
                 Euro_Decomp_Buf += pDirHeader->dirSize;
@@ -239,7 +239,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
         if (FilesToLoadCount != 0) {
             if (!LoadFromDecompBuf) {
                 uint previousMethod = Mem_SetMallocMethod(LOADER_BATCH_MALLOC_METHOD);
-                dirFileBuf = (uint *)maybePsiFileRead(BatchByteSize);
+                dirFileBuf = (uint *)psiFileRead(BatchByteSize);
                 Mem_SetMallocMethod(previousMethod);
             } else {
                 dirFileBuf = (uint *)Euro_Decomp_Buf;

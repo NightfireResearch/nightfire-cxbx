@@ -110,10 +110,10 @@ void SpaceLaser_Update(obj_tag *obj) {
 
             {
                 // Half way into the script?? ProgressFrames > NumFrames / 2 ?
-                float maybeHalfWayFrameNum = (float) (spaceLaser->scriptInfo->maybeNumFrames / 2);
-                float maybeFrameAt = spaceLaser->scriptInfo->maybeProgressFrames;
+                float halfWayFrameNum = (float) (spaceLaser->scriptInfo->endFrame / 2);
+                float frameAt = spaceLaser->scriptInfo->elapsedFrames;
 
-                if((maybeFrameAt > maybeHalfWayFrameNum) && (spaceLaser->soundHandle == NULL)) {
+                if((frameAt > halfWayFrameNum) && (spaceLaser->soundHandle == NULL)) {
                     spaceLaser->soundHandle = Sound_PlayExt(SFX_ENV_SPACE_LASER_LOCK_WARNING_LOOP, 100.0f, 0, 0);
                 }
             }

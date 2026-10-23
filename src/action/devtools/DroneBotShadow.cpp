@@ -176,7 +176,7 @@ const FakeSpec kFakes[] = {
     {0x0001d6a0, "FUN_0001d6a0", "ppd", 'v'},
     {0x0001c6c0, "BOTSTATE_defaultCombatRange", "p", 'v'},
     {0x0001c690, "BOTSTATE_reallyCloseCombatRange", "p", 'v'},
-    {0x0001a190, "MPDrone_MaybeIsDyingOrDead", "p", 'd'},
+    {0x0001a190, "MPDrone_IsDyingOrDead", "p", 'd'},
     {0x00031d30, "Drone_AlertStatusSet", "bp", 'v'},
     {0x00038ff0, "NDrone2_HandleDroneAlert", "ppw", 'b'},
     {0x00064e90, "NDrone2_InShoutingRange", "pp", 'b'},

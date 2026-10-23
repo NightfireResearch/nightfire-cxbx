@@ -783,7 +783,7 @@ void RandomHit(HITDATA_tag *hit) {
     UnitVector(&hit->surfaceNormal.normal);
     hit->surfaceNormal.d = Plain(-3.0f, 3.0f);
     UnitVector(&hit->unknown1);
-    UnitVector(&hit->maybehitDirection);
+    UnitVector(&hit->hitDirection);
     RandomVector(&hit->hitPosition, 6.0f);
     // Any flags in the top bits, but one of EffectInfo's materials: past them the original read the game's neighbouring
     // data, ours reads ours (docs/action-standalone.md)
@@ -828,7 +828,7 @@ void RandomExtra(obj_tag *obj, uint8_t *extra) {
         b->firedByObj = R(4) ? AnyObj() : NULL;
         if (R(5) == 0)
             b->firedByObj = glb_players[0];
-        b->maybeProxyObjectShooter = R(2) ? AnyObj() : NULL;
+        b->firedFromObj = R(2) ? AnyObj() : NULL;
         b->swoosh = R(2) ? &world.made[MADE - 1] : NULL;
         b->occluder = R(3) ? NULL : &world.made[MADE - 2];
         b->heatseekTarget = R(2) ? AnyObj() : NULL;
@@ -1024,7 +1024,7 @@ void RandomWorld(void) {
     GameState.NumFramesUnpaused = 1000 + R(1000);
     GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? 0x07000001 : (R(2) ? 0x07000002 : 0x07000008));
     MPSettings.isMultiplayer = R(4) == 0;
-    MPSettings.maybeDroneAIEnabled = R(3) == 0;
+    MPSettings.dronesAreBots = R(3) == 0;
     MPSettings.ExplosiveSceneryEnabled = R(2);
     *(uint32_t *)XbeOurs(ScriptCamAt.at) = R(4) == 0;
     *DroneDisableAt = R(6) == 0;
@@ -1097,7 +1097,7 @@ void RandomWorld(void) {
         world.verts[i] = world.vertices[R(6)];
 
     world.script.scriptHashcode = (HASHCODE)(R(2) ? 0x06000052 : 0x06000027);
-    world.script.maybeNumFrames = (ushort)R(80);
+    world.script.endFrame = (ushort)R(80);
     PlainVector(&world.bonePos, 4.0f);
     _VECTOR r;
     PlainVector(&r, 3.2f);

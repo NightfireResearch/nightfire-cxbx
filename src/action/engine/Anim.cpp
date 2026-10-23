@@ -1328,7 +1328,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
             if (passed && !muted && !fired) {
                 // Some sounds have another for the holder's weapon
                 ushort sound = cmd[2];
-                obj_tag *holder = obj->maybeParent;
+                obj_tag *holder = obj->parent;
                 if (sound == 1) {
                     if (holder != NULL && (holder->animState->currentWeaponId == 7
                                            || holder->animState->currentWeaponId == 9))
@@ -1354,7 +1354,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                 }
 
                 _VECTOR pos;
-                holder = obj->maybeParent;
+                holder = obj->parent;
                 if (holder == NULL) {
                     Vec_Copy(&obj->position, &pos);
                 } else {
@@ -1401,8 +1401,8 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         FootstepType = 2;
                     break;
                 case ANIMEVENT_LASER:
-                    if (obj->maybeParent != NULL) {
-                        BLData *blData = (BLData *)obj->maybeParent->extraObjectData;
+                    if (obj->parent != NULL) {
+                        BLData *blData = (BLData *)obj->parent->extraObjectData;
                         blData->laserSight = blData->laserSight == 0;
                     }
                     break;
@@ -1417,7 +1417,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                     Effect_Create(&obj->animState->floor, obj, 0xc0, 1.0f);
                     break;
                 case ANIMEVENT_FIRE: {
-                    obj_tag *holder = obj->maybeParent != NULL ? obj->maybeParent : obj;
+                    obj_tag *holder = obj->parent != NULL ? obj->parent : obj;
                     weapon_definition_tag *weapon = &weapon_data[holder->animState->currentWeaponId];
                     HASHCODE flash;
                     ushort weaponSound;
@@ -2276,7 +2276,7 @@ void AnimFrameResolve(obj_tag *obj, AnimObj *animObj) {
 // The anim object
 
 // The skin the level uses in place of skin: some levels have their own versions of some characters
-HASHCODE maybeFixupSkinHashcode(HASHCODE skin) {
+HASHCODE FixupSkinHashcode(HASHCODE skin) {
     switch (GameState.CurrentLevelHashcode) {
     case HT_Level_HendersonA:
     case HT_Level_HendersonB:
@@ -2316,7 +2316,7 @@ static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.99520
 int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
     if ((skinHash & 0xff000000) != ANIM_HASHTYPE_SKIN || obj == NULL)
         return 0;
-    skinHash = maybeFixupSkinHashcode(skinHash);
+    skinHash = FixupSkinHashcode(skinHash);
     sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
     if (skin == NULL) {
         NF_WARN("Skin 0x%x not loaded", skinHash); // GC check (0x800452fc)

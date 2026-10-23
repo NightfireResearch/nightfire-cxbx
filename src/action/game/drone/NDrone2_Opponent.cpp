@@ -71,7 +71,7 @@ static int32_t Ftol(double x) {
 static double FacingDegrees(obj_tag *from, obj_tag *obj) {
     _VECTOR away;
     Vec_Subtract(&from->position, &obj->position, &away);
-    return Vec_AngleDifference(from->rotation.y, maybeAtan2(away.x, away.z) + kPi) * (double)kRadToDeg;
+    return Vec_AngleDifference(from->rotation.y, Atan2(away.x, away.z) + kPi) * (double)kRadToDeg;
 }
 
 // ---- the targets the drones share
@@ -166,7 +166,7 @@ void NDrone2_SetOpponentAimPos(Drone_tag *drone) {
     obj_tag *opponent = drone->opponent;
     if (opponent == NULL)
         return;
-    if (MPSettings.maybeDroneAIEnabled) {
+    if (MPSettings.dronesAreBots) {
         NDrone2_GetHeadPos(opponent, &drone->aimOffset, NULL);
         uint odds = (drone->botVars->stats.traitFlags & 1) ? 4 : drone->accuracy * 4;
         _VECTOR head;
@@ -202,7 +202,7 @@ bool NDrone2_AnglesToObj(Drone_tag *drone, obj_tag *obj, _VECTOR *rot) {
 void NDrone2_SetOpponent(Drone_tag *drone, obj_tag *opponent) {
     bool same = drone->opponent == opponent;
     drone->opponent = opponent;
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         MP_sendBotMessage(drone->gameObj, BOT_MSG_NEW_OPPONENT, (uintptr_t)opponent, 0);
     if (opponent == NULL) {
         Vec_Zero(&drone->aimOffset);
@@ -223,7 +223,7 @@ void NDrone2_SetOpponent(Drone_tag *drone, obj_tag *opponent) {
         break;
     default:
         Vec_Zero(&drone->aimOffset);
-        if (MPSettings.maybeDroneAIEnabled
+        if (MPSettings.dronesAreBots
             && (MPSettings.GameMode == GM_PROTECTION || MPSettings.GameMode == GM_DEMOLITION))
             drone->aimOffset.y = kObjectiveAimHeight;
         break;
@@ -249,7 +249,7 @@ void NDrone2_SetOpponent(Drone_tag *drone, obj_tag *opponent) {
 // and name).
 static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
     obj_tag *me = drone->gameObj;
-    if (MPDrone_MaybeIsDyingOrDead(me)) {
+    if (MPDrone_IsDyingOrDead(me)) {
         if (drone->opponent != NULL)
             NDrone2_SetOpponent(drone, NULL);
         return NULL;
@@ -281,7 +281,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
     obj_tag *opponent = drone->opponent;
     if (opponent != NULL) {
         bool lost = opponent->objectType == OBJECTTYPE_GFX
-                    || (opponent->objectType == OBJECTTYPE_DRONE && MPDrone_MaybeIsDyingOrDead(opponent));
+                    || (opponent->objectType == OBJECTTYPE_DRONE && MPDrone_IsDyingOrDead(opponent));
         if (!lost) {
             double patience = (double)_FRAME_RATE * 20.0f * BOT_getAggressionMul(drone);
             lost = drone->unseenFrames > (uint)Ftol(patience);
@@ -303,7 +303,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
         if (player == NULL || player == me)
             continue;
         char type = player->objectType;
-        if (type == OBJECTTYPE_DRONE && MPDrone_MaybeIsDyingOrDead(player))
+        if (type == OBJECTTYPE_DRONE && MPDrone_IsDyingOrDead(player))
             continue;
         if (type == OBJECTTYPE_DEAD_DRONE || type == OBJECTTYPE_DEAD_PLAYER || type == OBJECTTYPE_GFX)
             continue;
@@ -423,7 +423,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
 // AUTOINJECT
 obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
     ushort visionTests = NPCGlobals.visionTests;
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         return NDrone2_FindBotOpponent(drone);
 
     if (drone->side != 2) {
@@ -460,7 +460,7 @@ obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
         if (keep) {
             opponent = drone->opponent;
             if (opponent->objectType == OBJECTTYPE_DRONE)
-                keep = !MPDrone_MaybeIsDyingOrDead(opponent);
+                keep = !MPDrone_IsDyingOrDead(opponent);
             else if (opponent->objectType == OBJECTTYPE_COPTER)
                 keep = (short)opponent->curState < 4;
         }

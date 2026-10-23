@@ -1361,7 +1361,7 @@ uint32_t RunStartSample(bool original) {
 
 uint32_t RunSoundPlay(bool original) {
     SFXItem *s = SomeItem();
-    return CDECL_RUN(0x000ca050, maybeDXSoundPlay, int (__cdecl *)(SFXItem *), s);
+    return CDECL_RUN(0x000ca050, SFXPlay, int (__cdecl *)(SFXItem *), s);
 }
 
 uint32_t RunUpdateEnding(bool original) {
@@ -1404,7 +1404,7 @@ const Case kStarting[] = {
     C("ES_GetMyPos", RunGetMyPos),
     C("ES_GetNearestListenerDistance", RunGetNearestListenerDistance),
     C("StartSample", RunStartSample),
-    C("maybeDXSoundPlay", RunSoundPlay),
+    C("SFXPlay", RunSoundPlay),
     C("SFXUpdateEnding", RunUpdateEnding),
     C("SFXStart3D", RunStart3D),
     C("SFXStart", RunStart),

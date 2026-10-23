@@ -60,7 +60,7 @@ void xboxInitTextures(void) {
     }
 }
 
-// maybeImmediateModePushItem takes the colour's bits in a float argument
+// immediateModePushItem takes the colour's bits in a float argument
 static float ColourBits(uint32_t colour) {
     float bits;
     memcpy(&bits, &colour, sizeof(bits));
@@ -100,7 +100,7 @@ void ShowFatalErrorScreen(bool doSwap) {
         d3dBeginFrame();
         d3dClear(0, true, true);
     }
-    maybeResetRenderState(1);
+    resetRenderState(1);
     d3dSetDeferredTextureState(0, 0);
     d3dSetTextureStage0(FontTexture);
     int y = 0x1a;
@@ -109,11 +109,11 @@ void ShowFatalErrorScreen(bool doSwap) {
         for (const uint8_t *c = (const uint8_t *)ErrorLog[line]; *c != 0; c++, x += 10) {
             uint8_t glyph = FontCharToGlyph[*c];
             if (glyph != 0xff)
-                maybeImmediateModePushItem((float)x, (float)y, 8.0f, 8.0f, (float)FontGlyphU[glyph],
-                                           (float)FontGlyphV[glyph], 5.0f, 5.0f, ColourBits(0xffffffffu));
+                immediateModePushItem((float)x, (float)y, 8.0f, 8.0f, (float)FontGlyphU[glyph],
+                                      (float)FontGlyphV[glyph], 5.0f, 5.0f, ColourBits(0xffffffffu));
         }
     }
-    maybeImmediateModeFlush();
+    immediateModeFlush();
     d3dSetTextureStage0(0);
     if (doSwap)
         d3dSwap();
@@ -152,11 +152,11 @@ void FS_FatalErrorHandler(void) {
             level = 0x80;
         d3dBeginFrame();
         d3dClear(0, true, true);
-        maybeResetRenderState(1);
+        resetRenderState(1);
         d3dSetTextureStage0(texture);
         uint32_t colour = (((uint32_t)level | 0xffff8000u) << 8) | (uint32_t)level;
-        maybeImmediateModePushItem(64.0f, 188.0f, 512.0f, 64.0f, 0.0f, row, 512.0f, 64.0f, ColourBits(colour));
-        maybeImmediateModeFlush();
+        immediateModePushItem(64.0f, 188.0f, 512.0f, 64.0f, 0.0f, row, 512.0f, 64.0f, ColourBits(colour));
+        immediateModeFlush();
         d3dSwap();
     }
 }

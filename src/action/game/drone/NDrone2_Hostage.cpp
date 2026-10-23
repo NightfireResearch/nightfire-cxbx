@@ -10,7 +10,7 @@
 #include "NDrone2_Damage.h"
 #include "NDrone2_Route.h"
 #include "../../game.h"                 // GameState
-#include "../../math/math.h"            // Vec_Copy, Vec_Subtract, maybeAtan2, Vec_Dist3D (ours)
+#include "../../math/math.h"            // Vec_Copy, Vec_Subtract, Atan2, Vec_Dist3D (ours)
 #include "../../sound/music.h"          // Music_Event
 #include "../../util/Random.h"
 #include "../sp/SwitchChannels.h"
@@ -48,10 +48,10 @@ void NDrone2_SetupHostageExecute(DCVars_tag *dcv) {
     _VECTOR delta;
     Vec_Subtract(&killerObj->position, &hostageObj->position, &delta);
     killer->moveTargetRot.x = 0.0f;
-    killer->moveTargetRot.y = maybeAtan2(-delta.x, -delta.z);
+    killer->moveTargetRot.y = Atan2(-delta.x, -delta.z);
     killer->moveTargetRot.z = 0.0f;
     hostage->moveTargetRot.x = 0.0f;
-    hostage->moveTargetRot.y = maybeAtan2(delta.x, delta.z);
+    hostage->moveTargetRot.y = Atan2(delta.x, delta.z);
     hostage->moveTargetRot.z = 0.0f;
 }
 

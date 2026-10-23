@@ -6,7 +6,7 @@
 // Faked, so not tested here: the feet (NDrone2_FeetPos), the node searches (NDrone2_NearestNode), the creep along a
 // link (LinkCreep_Calc, LinkCreep_Dest), following and planning a route (AINetwork_FollowRoute,
 // AINetwork_CalcRouteToPosition, AINetwork_GetRouteDistance, AINetwork_SetupGoalPosition), the steering at the
-// waypoint (NDrone2_maybeCalcDistanceAndDirToTarget), NDrone2_CanReachGoalPosition (the move group's), the anims, the
+// waypoint (NDrone2_SetMoveTarget), NDrone2_CanReachGoalPosition (the move group's), the anims, the
 // heap, creating, enabling and deleting drones and objects, the cels, the player, the player's view of a position
 // (Drone_PositionVisible), the death channel and the speech. NDrone2_DistanceToEmitter runs for real on made-up
 // emitters. Random draws are kept in step: both sides start from the same Rand_Random state, and it is compared

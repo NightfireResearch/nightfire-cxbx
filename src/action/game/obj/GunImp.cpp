@@ -335,7 +335,7 @@ void GunImp_Update(obj_tag *gunObj) {
         if (Collide_RayIntersect(&from, &end, gunObj->inCel, gunObj, NULL, &hits, 0, 8, 0))
             Vec_Copy(&hits->hitPosition, &end);
         obj_tag *beam = GunImp_Flash(&from, GUNIMP_BEAM, 0, false, gunObj->inCel);
-        beam->maybeParent = gunObj;
+        beam->parent = gunObj;
         PositionBeam(beam, &from, &end);
         if (hits == NULL) {
             // Not used after

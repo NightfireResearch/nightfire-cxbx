@@ -106,7 +106,7 @@ struct GraphicsSystem {
     uint8_t  pad15[3];
     uint32_t pushBuffersEnabled;       // +0x18
     uint32_t d3dDevice;                // +0x1c - the D3D8 device; 0 until xboxInitGraphics has created it
-    float    immediateModeVertices[GFX_IMMEDIATE_ITEMS * 4][6]; // +0x20 - maybeImmediateModeFlush's quads, 4 vertices each
+    float    immediateModeVertices[GFX_IMMEDIATE_ITEMS * 4][6]; // +0x20 - immediateModeFlush's quads, 4 vertices each
     uint32_t immediateModeItemCount;   // +0x1820
     uint32_t viewportX;                // +0x1824
     uint32_t viewportY;                // +0x1828

@@ -257,8 +257,8 @@ DLISTINFO_tag MsgQueue;
 SpriteInfo SubtitlesInfo = {
     .colour = 0x7d6d59ff,
     .unknown1 = 0x1400ff,
-    .maybeEnabled = 0xffff,
-    .maybeFlags = 8192,
+    .depth = 0xffff,
+    .flags = 8192,
     .posX = 320,
     .posY = 434,
     .textRef = (Action_TranslatedText)0x2000004,
@@ -322,7 +322,7 @@ TXT_MSG* Text_TakeMsg(void) {
 // The subtitles' sprite gets their format: a dynamic initialiser, run before main. Not named on PS2; the name is ours.
 // FUNC_AT(0x000f5520)
 void Text_InitSubtitlesFormat(void) {
-    SubtitlesInfo.maybeClippedText = TextMsgFormats[TXTMSG_SUBTITLE].font;
+    SubtitlesInfo.format = TextMsgFormats[TXTMSG_SUBTITLE].font;
 }
 
 // The subtitles' sprites and an empty queue; at a cold start an empty history, at a warm one the history's strings
@@ -496,9 +496,9 @@ void Text_DelMsg(TXT_MSG *msg) {
 // AUTOINJECT
 void Text_FlushAllSubtitles(void) {
     SubTitleMsg = NULL;
-    SubTitleSpr->maybeEnabled = 0xff;
-    SubTitleSpr1->maybeEnabled = 0xff;
-    SubTitleSpr2->maybeEnabled = 0xff;
+    SubTitleSpr->depth = 0xff;
+    SubTitleSpr1->depth = 0xff;
+    SubTitleSpr2->depth = 0xff;
     TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head;
     while (msg != NULL) {
         TXT_MSG *next = (TXT_MSG *)msg->node.next;
@@ -545,11 +545,11 @@ bool Text_UpdateMsg(char player, int type, TXT_MSG **msg) {
 void Text_Update(void) {
     if (Text_UpdateMsg(-1, TXTMSG_SUBTITLE, &SubTitleMsg) && SubTitleMsg != NULL) {
         Sprite_SetText(SubTitleSpr, SubTitleMsg->text);
-        SubTitleSpr->maybeEnabled = 0;
+        SubTitleSpr->depth = 0;
         Text_LinkSubtitle(SubTitleSpr);
     }
     if (SubTitleMsg == NULL)
-        SubTitleSpr->maybeEnabled = 0xff;
+        SubTitleSpr->depth = 0xff;
 }
 
 // The two-line subtitle: the line wrapped again, its first 0.6 of the width on one sprite and the rest on the other
@@ -564,7 +564,7 @@ void Text_Update2Line(void) {
         Sprite_SetTextNFmt(SubTitleSpr1, SubTitleStr, SubtitleFormat);
         Text_LinkSubtitle(SubTitleSpr1);
         if (rest == NULL) {
-            SubTitleSpr2->maybeEnabled = 0xff;
+            SubTitleSpr2->depth = 0xff;
         } else {
             SubTitleStr2 = Font_WordWrapString(&rest, (int)strlen(rest), SubtitleFormat, width);
             if (SubTitleStr2 != NULL) {
@@ -576,8 +576,8 @@ void Text_Update2Line(void) {
         }
     }
     if (SubTitleMsg == NULL) {
-        SubTitleSpr1->maybeEnabled = 0xff;
-        SubTitleSpr2->maybeEnabled = 0xff;
+        SubTitleSpr1->depth = 0xff;
+        SubTitleSpr2->depth = 0xff;
     }
 }
 

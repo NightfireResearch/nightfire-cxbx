@@ -19,7 +19,7 @@ void AnimFacialBlend(obj_tag *obj, AnimObj *animObj, sAnimSkin_tag *skin);
 void AnimFrameBlend(float *out, float *a, float *b, obj_tag *obj, int numBones, float t, uchar *mask);
 void AnimFrameSet(sAnimSeq_tag *seq, sAnimSkin_tag *skin, obj_tag *obj, float fraction);
 void AnimSeqTick(sAnimScript_tag *script, sAnimSeq_tag *seq, obj_tag *obj, AnimObj *animObj);
-HASHCODE maybeFixupSkinHashcode(HASHCODE skin);
+HASHCODE FixupSkinHashcode(HASHCODE skin);
 sAnimSet_tag* AnimTagAllocAndGetUnique(sAnimSet_tag *after);
 void AnimSetInit(sAnimSet_tag *set, HASHCODE *list, obj_tag *obj, float a, float b);
 
@@ -279,11 +279,11 @@ void __declspec(naked) Asm_AnimSeqTick(void) {
 }
 
 // The skin in EAX
-// AUTOLTCG
-void __declspec(naked) Asm_maybeFixupSkinHashcode(void) {
+// FUNC_AT(0x00011350)
+void __declspec(naked) Asm_FixupSkinHashcode(void) {
     _asm {
         push eax
-        call maybeFixupSkinHashcode
+        call FixupSkinHashcode
         add esp, 4
         ret
     }

@@ -99,7 +99,7 @@ SpriteInfo LetterboxSprInfo[1] = {
     {
         .colour = 255,
         .unknown1 = 0xffffffff,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .onscreenWidth = 640,
         .onscreenHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -212,10 +212,10 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         Music_Event(0xc, scriptInfo->scriptHashcode);
 
         if (Borders[0] != NULL) {
-            Borders[0]->maybeEnabled = 0xff;
+            Borders[0]->depth = 0xff;
         }
         if (Borders[1] != NULL) {
-            Borders[1]->maybeEnabled = 0xff;
+            Borders[1]->depth = 0xff;
         }
         break;
     }
@@ -411,7 +411,7 @@ void Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, flo
     if (posScale != 1.0f)
         Vec_Mul_F3(Mat_Position(*mtx), Mat_Position(*mtx), posScale, posScale, posScale);
     if (concat)
-        Concat(&scriptInfo->maybeMatrix, mtx);
+        Concat(&scriptInfo->matrix, mtx);
 }
 
 // Puts out in the frame of stream's parent, and of its parent in turn up to a stream with none, then of the
@@ -438,7 +438,7 @@ void Script_ConcatParents(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *out)
         if (parent == -1 || depth > scriptInfo->numElements)
             break;
     }
-    Concat(&scriptInfo->maybeMatrix, out);
+    Concat(&scriptInfo->matrix, out);
 }
 
 // Copies a camera stream's view to camera 4 and leaves the camera to find its room again.
@@ -572,11 +572,11 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     case SStream_SubScript: {
         SCRIPTINFO *subScript = (SCRIPTINFO *)stream->linkedGameOrSoundObject;
         uint colour;
-        Script_GetInterp(scriptInfo, stream, &subScript->maybeMatrix, &subScript->scale, &colour,
+        Script_GetInterp(scriptInfo, stream, &subScript->matrix, &subScript->scale, &colour,
                          stream->parent == -1, subScript->scale, ScriptInterp_Linear, stream->firstKey,
                          stream->lastKey);
         if (stream->parent != -1)
-            Script_ConcatParents(scriptInfo, stream, &subScript->maybeMatrix);
+            Script_ConcatParents(scriptInfo, stream, &subScript->matrix);
         Script_Update(subScript);
         break;
     }
@@ -593,7 +593,7 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
 // original ends by jumping to Light_Update.
 void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     ScriptCam = scriptInfo->scriptHashcode;
-    Mat_IdentityT(&scriptInfo->maybeMatrix);
+    Mat_IdentityT(&scriptInfo->matrix);
     uchar spline = BIN_GetByte(&stream->streamBuffer);
     ushort firstKey = BIN_GetWord(&stream->streamBuffer);
     ushort lastKey = BIN_GetWord(&stream->streamBuffer);
@@ -628,9 +628,9 @@ void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         Borders[1]->positionY = LETTERBOX_BOTTOM_Y;   // not checked for NULL, as in the original
     }
     if (Borders[0] != NULL)
-        Borders[0]->maybeEnabled = 1;
+        Borders[0]->depth = 1;
     if (Borders[1] != NULL)
-        Borders[1]->maybeEnabled = 1;
+        Borders[1]->depth = 1;
 
     Light_Update();
 }
@@ -799,13 +799,13 @@ void Script_SpriteStart(SSTREAM *stream) {
     spr->positionY = y;
     spr->onscreenWidth = width;
     spr->onscreenHeight = height;
-    spr->maybeEnabled = 2;
+    spr->depth = 2;
     spr->colourTint = 0xffffffff;
     if (flags & 2)
-        spr->maybeFlags |= 0x40;
+        spr->flags |= 0x40;
     if (flags & 4)
-        spr->maybeFlags |= 0x80;
-    spr->maybeFlags |= 0x100;
+        spr->flags |= 0x80;
+    spr->flags |= 0x100;
     stream->whatKindOfInterpolation = SStream_Sprite;
     stream->linkedGameOrSoundObject = spr;
 }
@@ -814,7 +814,7 @@ void Script_SpriteStart(SSTREAM *stream) {
 // script goes back to its loop start and any other stops.
 void Script_StreamEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     stream->waitFrame = BIN_GetWord(&stream->streamBuffer);
-    if (stream->elapsedFrames <= stream->waitFrame && stream->elapsedFrames < scriptInfo->maybeNumFrames) {
+    if (stream->elapsedFrames <= stream->waitFrame && stream->elapsedFrames < scriptInfo->endFrame) {
         stream->streamBuffer -= 3;
         return;
     }
@@ -822,7 +822,7 @@ void Script_StreamEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     if (scriptInfo->playbackFlags & ScriptPlayback_Loop) {
         stream->streamBuffer = stream->streamBufferStart;
         stream->waitFrame = 0.0f;
-        scriptInfo->maybeProgressFrames = scriptInfo->loopStart;
+        scriptInfo->elapsedFrames = scriptInfo->loopStart;
         stream->elapsedFrames = scriptInfo->loopStart - FRAME_RATE_MUL;
     }
     if (!(scriptInfo->playbackFlags & ScriptPlayback_Loop))
@@ -1042,7 +1042,7 @@ void Script_AnimStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
 
 // Whether an object or sound a stream made at its first frame (startedAt 1) stays past the end of a looping script
 static bool KeptPastLoopEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream, ushort startedAt) {
-    return scriptInfo->maybeNumFrames <= stream->elapsedFrames && (scriptInfo->playbackFlags & ScriptPlayback_Loop) &&
+    return scriptInfo->endFrame <= stream->elapsedFrames && (scriptInfo->playbackFlags & ScriptPlayback_Loop) &&
            startedAt == 1;
 }
 
@@ -1055,7 +1055,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
 
     bool restart;
     do {
-        if (scriptInfo->maybeNumFrames >= stream->elapsedFrames)
+        if (scriptInfo->endFrame >= stream->elapsedFrames)
             Script_Interp(scriptInfo, stream);
 
         restart = false;
@@ -1075,7 +1075,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
 
             case ScriptCmd_MarkEnd:
                 BIN_GetWord(&stream->streamBuffer);
-                if (scriptInfo->maybeNumFrames <= stream->elapsedFrames)
+                if (scriptInfo->endFrame <= stream->elapsedFrames)
                     scriptInfo->playbackFlags |= ScriptPlayback_AtEnd;
                 break;
 
@@ -1104,7 +1104,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
                 break;
 
             case ScriptCmd_CameraEnd:
-                if (!(scriptInfo->maybeNumFrames <= stream->elapsedFrames &&
+                if (!(scriptInfo->endFrame <= stream->elapsedFrames &&
                       (scriptInfo->playbackFlags & ScriptPlayback_Loop))) {
                     Script_KillStream(scriptInfo, stream);
                     scriptInfo->fadeFlags &= ~ScriptFade_FFwdAllowed;
@@ -1166,7 +1166,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
 
 // AUTOINJECT
 void Script_SetPosRot(SCRIPTINFO *scriptInfo, _MATRIX *mtx) {
-    Mat_Copy(mtx, &scriptInfo->maybeMatrix);
+    Mat_Copy(mtx, &scriptInfo->matrix);
 
     if (scriptInfo->waitFrames != 0) {
         for (ushort i = 0; i < scriptInfo->numElements; i++) {
@@ -1236,20 +1236,20 @@ SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation
     scriptInfo->scriptHashcode = def->hashcode;
     scriptInfo->numElements = def->numStreams;
     scriptInfo->numKeys = def->numKeys;
-    scriptInfo->maybeNumFrames = def->endFrame;
+    scriptInfo->endFrame = def->endFrame;
     scriptInfo->keys = def->keys;
     scriptInfo->scriptPlayer = scriptPlayer;
     scriptInfo->waitFrames = 0;
     scriptInfo->fadeElapsedFrames = 0.0f;
     scriptInfo->fadeFrames = 0;
     scriptInfo->fadeFlags = 0;
-    scriptInfo->maybeProgressFrames = 0.0f;
+    scriptInfo->elapsedFrames = 0.0f;
     scriptInfo->loopStart = def->loopStart;
     scriptInfo->callback = callback;
     scriptInfo->scale = 1.0f;
     scriptInfo->callbackContext = callbackContext;
     scriptInfo->scriptFlags = def->hasCamera ? ScriptFlag_IsCameraNIS : 0;
-    View_RotTransMatrix(rotation, transform, &scriptInfo->maybeMatrix);
+    View_RotTransMatrix(rotation, transform, &scriptInfo->matrix);
     for (uint i = 0; i < def->numStreams; i++) {
         SSTREAM *stream = &scriptInfo->streamDataBuffer[i];
         memset(stream, 0, sizeof(SSTREAM));
@@ -1321,7 +1321,7 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
                 scriptInfo->streamNum++;
             }
 
-            scriptInfo->maybeProgressFrames += FRAME_RATE_MUL;
+            scriptInfo->elapsedFrames += FRAME_RATE_MUL;
 
             scriptInfo->streamNum = 0;
             while (scriptInfo->streamNum < scriptInfo->numElements) {
@@ -1331,7 +1331,7 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
 
             // Pre-emptively start fading out a scripted camera NIS once it's within 20 frames of its end
             if (ScriptCam != 0 && (scriptInfo->scriptFlags & ScriptFlag_IsCameraNIS) &&
-                (float)(int)(scriptInfo->maybeNumFrames - 20) <= scriptInfo->maybeProgressFrames &&
+                (float)(int)(scriptInfo->endFrame - 20) <= scriptInfo->elapsedFrames &&
                 glb_viewer[4]->fadeState != VIEWFADE_FADING) {
 
                 if (Script_IsDeathNIS(scriptInfo->scriptHashcode)) {
@@ -1405,7 +1405,7 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd) {
     }
 
     // Fade out over whatever's left of the script, capped at 45 frames
-    float framesRemaining = (float)scriptInfo->maybeNumFrames - scriptInfo->maybeProgressFrames;
+    float framesRemaining = (float)scriptInfo->endFrame - scriptInfo->elapsedFrames;
     if (framesRemaining > 45.0f)
         framesRemaining = 45.0f;
     scriptInfo->fadeFrames = (uchar)(int)framesRemaining;

@@ -9,8 +9,8 @@
 // devtools/MatrixShadow.cpp checks each against the original on random matrices.
 // ---------------------------------------------------------------------------------------------------------------
 
-// AUTOINJECT
-void maybeD3DMATRIXcopy(undefined4 *dest, undefined4 *src) {
+// FUNC_AT(0x000e81a0)
+void d3dMatrixCopy(undefined4 *dest, undefined4 *src) {
     memmove(dest, src, sizeof(D3DMATRIX));
 }
 
@@ -21,8 +21,8 @@ void d3dMatrixIdentity(D3DMATRIX *mtx) {
 }
 
 // The rotation transposed (inverted, for a pure rotation); the translation column and the bottom row are left.
-// AUTOINJECT
-void maybeTransposeRotationPart(D3DMATRIX *mtx) {
+// FUNC_AT(0x000e81f0)
+void transposeRotationPart(D3DMATRIX *mtx) {
     float t;
     t = mtx->_12; mtx->_12 = mtx->_21; mtx->_21 = t;
     t = mtx->_13; mtx->_13 = mtx->_31; mtx->_31 = t;
@@ -30,17 +30,17 @@ void maybeTransposeRotationPart(D3DMATRIX *mtx) {
 }
 
 // The inverse of a rigid transform: the rotation transposed, and the translation taken back through it.
-// AUTOINJECT
-void maybeInvertRigidTransform(D3DMATRIX *mtx) {
-    maybeTransposeRotationPart(mtx);
+// FUNC_AT(0x000e8920)
+void invertRigidTransform(D3DMATRIX *mtx) {
+    transposeRotationPart(mtx);
     float x = -mtx->_14, y = -mtx->_24, z = -mtx->_34;
     mtx->_34 = mtx->_32 * y + x * mtx->_31 + z * mtx->_33;
     mtx->_14 = y * mtx->_12 + x * mtx->_11 + z * mtx->_13;
     mtx->_24 = z * mtx->_23 + x * mtx->_21 + y * mtx->_22;
 }
 
-// AUTOINJECT
-void maybeMtxApplyTransform(D3DMATRIX *mtx, float dx, float dy, float dz) {
+// FUNC_AT(0x000e8470)
+void mtxTranslate(D3DMATRIX *mtx, float dx, float dy, float dz) {
     mtx->_14 = dx + mtx->_14;
     mtx->_24 = dy + mtx->_24;
     mtx->_34 = dz + mtx->_34;
@@ -48,8 +48,8 @@ void maybeMtxApplyTransform(D3DMATRIX *mtx, float dx, float dy, float dz) {
 
 // Scales the rotation part by axis: each column by its scale when columns is set, otherwise each row - except
 // _11, which is scaled by scaleX either way, as in the original.
-// AUTOINJECT
-void maybeMatrixAxisScale(D3DMATRIX *mtx, float scaleX, float scaleY, float scaleZ, char columns) {
+// FUNC_AT(0x000e83b0)
+void matrixAxisScale(D3DMATRIX *mtx, float scaleX, float scaleY, float scaleZ, char columns) {
     mtx->_11 = scaleX * mtx->_11;
     if (columns) {
         mtx->_21 = scaleX * mtx->_21;
@@ -121,14 +121,14 @@ D3DMATRIX *MatrixInverse(D3DMATRIX *out, float *determinant, const D3DMATRIX *in
     return out;
 }
 
-// AUTOINJECT
-void maybeMtxInverse(D3DMATRIX *mtx) {
+// FUNC_AT(0x000e83a0)
+void mtxInverse(D3DMATRIX *mtx) {
     MatrixInverse(mtx, 0, mtx);
 }
 
 // A camera-style basis looking from one point at another: row 3 the unit direction, row 1 up x direction, row 2
 // direction x row 1 (left unnormalised, as the original leaves it), translation the from point. Used by
-// maybe_psiDrawShadow for the shadow's projection.
+// psiDrawShadow for the shadow's projection.
 // FUNC_AT(000e8220)
 void MatrixLookAt(D3DMATRIX *out, float fromX, float fromY, float fromZ, float toX, float toY, float toZ,
                   float upX, float upY, float upZ) {

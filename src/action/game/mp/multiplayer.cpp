@@ -183,7 +183,7 @@ bool MP_NeedSkin(HASHCODE hc) {
 // AUTOINJECT
 bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
    
-    if ((!MPSettings.maybeDroneAIEnabled) && (MPSettings.GameMode != GM_ASSASSIN))
+    if ((!MPSettings.dronesAreBots) && (MPSettings.GameMode != GM_ASSASSIN))
         return false;
     
     short idx_a = Control_Plr2Ind(a);
@@ -205,7 +205,7 @@ bool MP_areObjectsOnSameTeam(obj_tag* a, obj_tag* b) {
 // AUTOINJECT
 bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
   
-  if ((MPSettings.maybeDroneAIEnabled) || (MPSettings.GameMode == GM_ASSASSIN)) {
+  if ((MPSettings.dronesAreBots) || (MPSettings.GameMode == GM_ASSASSIN)) {
     short idx = Control_Plr2Ind(param_1);
     MPTeam uVar1 = MPSettings.Player[idx].TeamId;
     if (uVar1 != NO_TEAM) {
@@ -219,7 +219,7 @@ bool MP_isObjectOnTeam(obj_tag *param_1,uint teamId) {
 // AUTOINJECT
 MPTeam MP_getObjectTeam(obj_tag* param_1) {
   
-  if ((!MPSettings.maybeDroneAIEnabled) && (MPSettings.GameMode != GM_ASSASSIN)) {
+  if ((!MPSettings.dronesAreBots) && (MPSettings.GameMode != GM_ASSASSIN)) {
     return NO_TEAM;
   }
 
@@ -268,8 +268,8 @@ bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health) {
   if (shooterIndex < 0)
     return false;
 
-  MPGame.players[playerIndex].maybeIdxOfLastInjurer = shooterIndex;
-  if (MPSettings.maybeIsTeamGame != 0 &&
+  MPGame.players[playerIndex].idxOfLastInjurer = shooterIndex;
+  if (MPSettings.isTeamGame != 0 &&
       MPSettings.Player[playerIndex].TeamId == MPSettings.Player[shooterIndex].TeamId &&
       shooterIndex != playerIndex) {
     if (MPSettings.FriendlyFire == 0)
@@ -303,7 +303,7 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
   int startIdx = 0;
   int endIdx = 64;
 
-  if ((MPSettings.maybeIsTeamGame) || (MPSettings.GameMode == GM_ASSASSIN)) {
+  if ((MPSettings.isTeamGame) || (MPSettings.GameMode == GM_ASSASSIN)) {
     // Spawn points are arranged in a list but for convenience (?) we don't interleave by team.
     // Values 0-31 are for team PHOENIX, values 32-63 are for MI6 
     switch(teamId) {
@@ -352,7 +352,7 @@ void MP_RegisterSpawnPoint(_VECTOR *position, _VECTOR *facingDirection, ushort t
 uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
     int startIdx = 0;
     int endIdx = ARRAY_SIZE(SpawnPoints);
-    if (MPSettings.maybeIsTeamGame || MPSettings.GameMode == GM_ASSASSIN) {
+    if (MPSettings.isTeamGame || MPSettings.GameMode == GM_ASSASSIN) {
         if (teamId == PHOENIX) {
             endIdx = 32;
         } else if (teamId == MI6) {
@@ -443,7 +443,7 @@ MP_OBJ_EXT BluePrint;
 // AUTOINJECT
 void MP_objectBeingDeleted(obj_tag* obj) {
 
-  if(!MPSettings.maybeDroneAIEnabled)
+  if(!MPSettings.dronesAreBots)
     return;
 
   if(obj == NULL)
@@ -650,7 +650,7 @@ void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keep
     control_unlink_object(gameObj);
     Control_BuildWorldSph(gameObj);
     build_LinkToRoom(gameObj, 0, glb_world);
-    gameObj->maybeParent = NULL;
+    gameObj->parent = NULL;
     MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
     if (ext != NULL)
         MP_recalcObjExtPaths(ext, false);
@@ -682,7 +682,7 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
   if(obj == NULL)
     return -1;
 
-  if(!MPSettings.maybeDroneAIEnabled) // Unclear why this is needed
+  if(!MPSettings.dronesAreBots) // Unclear why this is needed
     return -1; 
 
   // Search through MPGame player list
@@ -769,7 +769,7 @@ void MP_SortOutWhoWon() {
 
     if (MPSettings.GameMode == GM_TOPAGENT) {
         ShowTopAgentResult(StatusSpr);
-    } else if (MPSettings.maybeIsTeamGame) {
+    } else if (MPSettings.isTeamGame) {
         ShowTeamResult(StatusSpr);
         return; // The original returns here without calling Sprite_SetText.
     } else {
@@ -845,12 +845,12 @@ void MP_RestartScenario(void) {
       BOT_respawn(botObj, i, false);
   }
   
-  MPGame.unknown_maybe_capture_state = 0;
-  MPGame.unknown_maybe_unused = 0;
+  MPGame.phoenixObjectiveFlags = 0;
+  MPGame.mi6ObjectiveFlags = 0;
   
   for(int i = 0; i < NUM_AGENTS; i++) {
-    MPGame.players[i].maybeIdxOfLastInjurer = -1;
-    MPGame.players[i].maybeIdxOfMyAssassin = -1;
+    MPGame.players[i].idxOfLastInjurer = -1;
+    MPGame.players[i].idxOfMyKiller = -1;
   }
 
 }
@@ -916,7 +916,7 @@ void MP_Update(void) {
       
       if(MPGame.winStateTimeout >= 5.0f) {
         MPGame.EndGameFlowState = 4;
-        GameState.maybePaused = true;
+        GameState.LevelEnding = true;
       }
 
       break;
@@ -1006,7 +1006,7 @@ void MP_Init(void) {
     memset(&MPpickups, 0, sizeof(MPpickups));
 
     uint gameMode = MPSettings.GameMode;
-    MPSettings.maybeIsTeamGame = (gameMode >> GM_BIT_TEAMGAME) & 1;
+    MPSettings.isTeamGame = (gameMode >> GM_BIT_TEAMGAME) & 1;
     MPSettings.field53_0x190 = (gameMode >> GM_BIT_30) & 1;
 
     SpawnPntCount = 0;
@@ -1025,15 +1025,15 @@ void MP_Init(void) {
     MPGame.TimeLimit = (float)(int)MPSettings.MaxDuration; // FILD: a signed conversion
     MPGame.TimeUnpaused = 0;
     MPGame.TimeIncPaused = 0;
-    MPGame.unknown_maybe_capture_state = 0;
-    MPGame.unknown_maybe_unused = 0;
+    MPGame.phoenixObjectiveFlags = 0;
+    MPGame.mi6ObjectiveFlags = 0;
 
     if ((gameMode == GM_DEMOLITION || gameMode == GM_PROTECTION) && MPGame.TimeLimit < 0.0f)
         MPGame.TimeLimit = MP_DEFAULT_OBJECTIVE_TIME_LIMIT;
 
     for (int i = 0; i < NUM_AGENTS; i++) {
-        MPGame.players[i].maybeIdxOfLastInjurer = MP_INJURER_NONE;
-        MPGame.players[i].maybeIdxOfMyAssassin = MP_ASSASSIN_NONE;
+        MPGame.players[i].idxOfLastInjurer = MP_INJURER_NONE;
+        MPGame.players[i].idxOfMyKiller = MP_ASSASSIN_NONE;
         // Top Agent starts everyone on the points limit
         if (gameMode == GM_TOPAGENT)
             MPGame.players[i].points = (float)(int)MPSettings.MaxPoints;
@@ -1073,7 +1073,7 @@ obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) 
 
             char type = agent->objectType;
             if (type == OBJECTTYPE_DRONE || type == OBJECTTYPE_DEAD_DRONE) {
-                if (MPDrone_MaybeIsDyingOrDead(agent))
+                if (MPDrone_IsDyingOrDead(agent))
                     return NULL;
                 if (type == OBJECTTYPE_DEAD_DRONE)
                     return NULL;
@@ -1111,7 +1111,7 @@ obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly) {
         if (aliveOnly) {
             switch (agent->objectType) {
                 case OBJECTTYPE_DRONE:
-                    if (MPDrone_MaybeIsDyingOrDead(agent))
+                    if (MPDrone_IsDyingOrDead(agent))
                         continue;
                     break;
                 case OBJECTTYPE_PLAYER:
@@ -1178,7 +1178,7 @@ static void CheckTopAgentEliminations(void) {
         char type = agent->objectType;
         if (type == OBJECTTYPE_DEAD_PLAYER && deaths >= maxPoints)
             playersOut++;
-        if ((type == OBJECTTYPE_DEAD_DRONE || (type == OBJECTTYPE_DRONE && MPDrone_MaybeIsDyingOrDead(agent))) &&
+        if ((type == OBJECTTYPE_DEAD_DRONE || (type == OBJECTTYPE_DRONE && MPDrone_IsDyingOrDead(agent))) &&
             deaths >= maxPoints)
             botsOut++;
     }
@@ -1236,7 +1236,7 @@ void MP_CheckForEndCondition(void) {
         ShowTimeLeft();
     }
 
-    int best = HighestScore(roundMode || !MPSettings.maybeIsTeamGame);
+    int best = HighestScore(roundMode || !MPSettings.isTeamGame);
 
     int maxPoints = MPSettings.MaxPoints;
     if (MPSettings.GameMode != GM_TOPAGENT && maxPoints != -1)
@@ -1291,7 +1291,7 @@ void MP_Pickup_Process(void) {
             continue;
         found++;
         for (int bot = 0; bot < NUM_BOTS; bot++) {
-            float &visit = pickup->maybeBotPickupVisitTimes[bot];
+            float &visit = pickup->botPickupVisitTimes[bot];
             if (visit != 0.0f && visit < MPGame.TimeIncPaused)
                 visit = 0.0f;
         }
@@ -1301,7 +1301,7 @@ void MP_Pickup_Process(void) {
 // AUTOINJECT
 void MP_ResetBotPickupTimes(ushort botNum) {
     for (int i = 0; i < ARRAY_SIZE(MPpickups); i++)
-        MPpickups[i].maybeBotPickupVisitTimes[botNum] = 0.0f;
+        MPpickups[i].botPickupVisitTimes[botNum] = 0.0f;
 }
 
 // Blip colours, 0xRRGGBBAA
@@ -1336,7 +1336,7 @@ ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
         switch (agent->objectType) {
             case OBJECTTYPE_DRONE:
             case 4: // no name in ObjectType
-                if (MPDrone_MaybeIsDyingOrDead(agent))
+                if (MPDrone_IsDyingOrDead(agent))
                     continue;
                 break;
             case OBJECTTYPE_PLAYER:
@@ -1348,7 +1348,7 @@ ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
         }
 
         uint colour = RADAR_COLOUR_NEUTRAL;
-        if (MPSettings.maybeIsTeamGame)
+        if (MPSettings.isTeamGame)
             colour = MPSettings.Player[i].TeamId != PHOENIX ? RADAR_COLOUR_MI6 : RADAR_COLOUR_PHOENIX;
         AddRadarObject(&count, Mat_Position(agent->transformMatrix), MP_RADAR_AGENT, colour);
     }
@@ -1395,7 +1395,7 @@ ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
 }
 
 // Assassin: a new assassin, the agent with team MI6, every other agent PHOENIX. With handOver, the old assassin's
-// maybeIdxOfMyAssassin takes over; otherwise, or when there is none, a random agent. The target is a random agent
+// idxOfMyKiller takes over; otherwise, or when there is none, a random agent. The target is a random agent
 // other than the assassin (or, with no assassin yet, than the old target).
 // AUTOINJECT
 void MP_assassinReset(bool handOver) {
@@ -1410,7 +1410,7 @@ void MP_assassinReset(bool handOver) {
     if (handOver && oldAssassin != NULL) {
         short idx = Control_Plr2Ind(oldAssassin);
         if (idx >= 0) {
-            int next = MPGame.players[idx].maybeIdxOfMyAssassin;
+            int next = MPGame.players[idx].idxOfMyKiller;
             if (next >= 0)
                 CurrentAssassinObjId = MPGame.players[next].playerObj;
         }
@@ -1429,8 +1429,8 @@ void MP_assassinReset(bool handOver) {
 SpriteInfo AssassinSpriteInfo = {
     .colour = 0xffffffff,
     .unknown1 = 0xffffffff,
-    .maybeEnabled = 1,
-    .maybeFlags = 8192,
+    .depth = 1,
+    .flags = 8192,
     .posX = 320,
     .posY = 72,
     .textRef = (Action_TranslatedText)0xffffffff,
@@ -1440,22 +1440,22 @@ SpriteInfo AssassinSpriteInfo = {
 SpriteInfo MPTimeInfo = {
     .colour = 0xffffffff,
     .unknown1 = 255,
-    .maybeEnabled = 1,
-    .maybeFlags = 8192,
+    .depth = 1,
+    .flags = 8192,
     .posX = 320,
     .posY = 134,
-    .maybeClippedText = FontFormat1Centred,
+    .format = FontFormat1Centred,
     .linkedViewer = 5,
 };
 // XBE_GLOBAL(0x0017e580, 0x2c)
 SpriteInfo MPStatusInfo = {
     .colour = 0xffffffff,
     .unknown1 = 255,
-    .maybeEnabled = 1,
-    .maybeFlags = 8192,
+    .depth = 1,
+    .flags = 8192,
     .posX = 320,
     .posY = 72,
-    .maybeClippedText = FontFormat2Centred,
+    .format = FontFormat2Centred,
     .linkedViewer = 5,
 };
 
@@ -1471,7 +1471,7 @@ static void CreateAt(SpawnPlace *place) {
 // spawn points, the Assassin sprites, and the time and status sprites.
 // AUTOINJECT
 void MP_Start(void) {
-    MPSettings.maybeDroneAIEnabled = MPSettings.isMultiplayer;
+    MPSettings.dronesAreBots = MPSettings.isMultiplayer;
     MPSettings.Started = false;
     // The original calls the empty debug hook (0x000e0ec0) here
     if (!MPSettings.isMultiplayer)
@@ -1557,7 +1557,7 @@ void MP_Start(void) {
 // A team's score line for the HUD: its score and the other team's. NULL outside a team game.
 // AUTOINJECT
 char* MP_GetTeamScore(ushort team) {
-    if (!MPSettings.maybeIsTeamGame)
+    if (!MPSettings.isTeamGame)
         return NULL;
     char *text = Txt_GetStringFromHeap(0);
     // both settings of field53_0x190 print the same
@@ -1574,7 +1574,7 @@ char* MP_GetPlayerScore(ushort player) {
     MPGamePlayer *agent = &MPGame.players[player];
     if (MPSettings.GameMode == GM_ASSASSIN || MPSettings.GameMode == GM_KOTH)
         sprintf(text, "%d\n%d\n%d", Ftol(agent->points), agent->victories, agent->deaths);
-    else if (MPSettings.maybeIsTeamGame)
+    else if (MPSettings.isTeamGame)
         sprintf(text, "%d\n%d", agent->victories, agent->deaths);
     else
         sprintf(text, "\n%d\n%d", agent->victories, agent->deaths);
@@ -1585,23 +1585,23 @@ char* MP_GetPlayerScore(ushort player) {
 // AUTOINJECT
 bool MP_IsFlagParent(obj_tag *obj, ushort team) {
     obj_tag *flag = Flags[team].gameObj;
-    return flag != NULL && flag->maybeParent == obj;
+    return flag != NULL && flag->parent == obj;
 }
 
 // AUTOINJECT
 bool MP_IsBluePrintParent(obj_tag *obj) {
     obj_tag *blueprint = BluePrint.gameObj;
-    return blueprint != NULL && blueprint->maybeParent == obj;
+    return blueprint != NULL && blueprint->parent == obj;
 }
 
 // Whether the GoldenEye key or crystal (part 0 or 1) is carried by someone on obj's team
 // AUTOINJECT
 bool MP_ObjTeamHasGEObj(obj_tag *obj, int part) {
     MP_OBJ_EXT *ext = &GoldenEye.keys[part];
-    if (ext->gameObj == NULL || ext->gameObj->maybeParent == NULL)
+    if (ext->gameObj == NULL || ext->gameObj->parent == NULL)
         return false;
     MPTeam team = MPSettings.Player[Control_Plr2Ind(obj)].TeamId;
-    return team == MPSettings.Player[Control_Plr2Ind(ext->gameObj->maybeParent)].TeamId;
+    return team == MPSettings.Player[Control_Plr2Ind(ext->gameObj->parent)].TeamId;
 }
 
 // The bots' path to a scenario object, once the level is loaded
@@ -2108,7 +2108,7 @@ bool MP_ReSpawn(obj_tag *obj, ushort playerNum) {
     Vec_Copy(&point->facingDir, &obj->rotation);
     agent->unknown10 = 0;
     agent->flags = 0;
-    agent->maybeIdxOfLastInjurer = -2;
+    agent->idxOfLastInjurer = -2;
 
     char type = obj->objectType;
     if (type == OBJECTTYPE_DRONE || type == OBJECTTYPE_DEAD_DRONE) {
@@ -2154,7 +2154,7 @@ obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl) {
     ushort type = (ushort)keys[MP_KEY_TYPE];
     ushort num = (ushort)keys[MP_KEY_NUM];
     ushort first = 0, end = 64;
-    if ((MPSettings.maybeIsTeamGame || MPSettings.GameMode == GM_ASSASSIN) && num < 2) {
+    if ((MPSettings.isTeamGame || MPSettings.GameMode == GM_ASSASSIN) && num < 2) {
         first = num * 32;
         end = first + 32;
     }

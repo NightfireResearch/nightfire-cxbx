@@ -32,7 +32,7 @@ static void BuildSavePath(char *out, size_t outSize, const char *profileName) {
 }
 
 // Original: psiSaveData -> FUN_000dfc60 (which also maintains an MRU list of save names, unrelated to the
-// actual file write) -> maybeSaveFileRelated, which resolves a per-Codename folder on the "u:\" utility drive
+// actual file write) -> SaveFile_Write, which resolves a per-Codename folder on the "u:\" utility drive
 // (Xbox's hard drive save partition, named via FUN_000e3340 from the profileName below), creates a
 // "SaveMeta.xbx" sidecar file the Xbox dashboard needs to show save info outside the game, XOR-scrambles the
 // buffer with a timestamp-derived byte and signs it with XCalculateSignature (tamper protection), then writes
@@ -47,7 +47,7 @@ static void BuildSavePath(char *out, size_t outSize, const char *profileName) {
 // AUTOINJECT
 undefined4 psiSaveData(void *data, uint32_t size, const char *profileName) {
     if (profileName == NULL || data == NULL || (int32_t)size < 1) {
-        psiInternalLoadingDataState = 5; // matches maybeSaveFileRelated's "bad parameters" result
+        psiInternalLoadingDataState = 5; // matches SaveFile_Write's "bad parameters" result
         return 1;
     }
 

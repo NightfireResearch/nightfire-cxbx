@@ -440,7 +440,7 @@ void RandomWorld() {
         glb_players[k] = ShadowRand(3) == 0 ? NULL : (k == 0 ? &world.player : &world.other);
     GameState.NumFramesUnpaused = 1000;
     GameState.CurrentLevelHashcode = ShadowRand(3) == 0 ? HT_Level_Tower2Elevator : HT_Level_HendersonA;
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     NPCGlobals.enabled = (uchar)(ShadowRand(8) != 0);
     NPCGlobals.NDrone2List = ShadowRand(8) == 0 ? NULL : &world.drones[0];
     NPCGlobals.dummyPlayerActive = (uchar)(ShadowRand(5) == 0);

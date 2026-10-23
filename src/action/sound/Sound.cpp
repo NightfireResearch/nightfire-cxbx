@@ -160,7 +160,7 @@ DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, flo
     snd->volume = volume;
     snd->playbackState = 0;
     snd->is3d = is3d;
-    snd->maybePitchBend = pitch;
+    snd->pitch = pitch;
     snd->needsUpdate = true;
     snd->age = 0;
     snd->alertness = id < ARRAY_SIZE(SFXOutputData) ? SFXOutputData[id].alertnessRelated : 0.0f;
@@ -189,14 +189,14 @@ void Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
     uint listeners = MPSettings.isMultiplayer ? MPSettings.numPlayers : 1;
     uint id = snd->sfxId;
     bool inTable = id < ARRAY_SIZE(SFXOutputData);
-    if (!(inTable && SFXOutputData[id].loopAlways) && listeners == 1 && inTable && SFXOutputData[id].maybeTracked3d
+    if (!(inTable && SFXOutputData[id].loopAlways) && listeners == 1 && inTable && SFXOutputData[id].tracked3d
         && dist > (double)snd->radiusOuter * 1.1f)
         return;
 
     _VECTOR pos = snd->location;
     _VECTOR vel = snd->velocity;
     snd->audible = dist < 0.5f * (double)snd->radiusOuter;
-    if (ScriptCam != HASHCODE_NONE || !inTable || !SFXOutputData[id].maybeTracked3d)
+    if (ScriptCam != HASHCODE_NONE || !inTable || !SFXOutputData[id].tracked3d)
         snd->audible = 1;
 
     if (snd->limitedDistance)
@@ -375,7 +375,7 @@ bool Sound_Playing_Ref(DYNAMICSOUNDS *handle, undefined4 ref) {
 static uint32_t Sound_FrameDelay;
 
 // AUTOINJECT
-DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 maybePitchBend,undefined4 param_7,int isLimitedRadius) {
+DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 pitch,undefined4 param_7,int isLimitedRadius) {
   
     undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
     Sound_FrameDelay = 0;
@@ -387,7 +387,7 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,fl
         radiusInner = -1.0;
         radiusOuter = -1.0;
     }
-    DYNAMICSOUNDS *snd = Sound_Play(param_1,position,volume,radiusOuter,radiusInner,maybePitchBend,1,param_7);
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,position,volume,radiusOuter,radiusInner,pitch,1,param_7);
     if (snd != NULL) {
         snd->isLimitedRadius = (char)isLimitedRadius;
         snd->frameDelay = tmpFrameDelay;
@@ -397,7 +397,7 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,fl
 }
 
 // AUTOINJECT
-DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybePitchBend, undefined4 param_4) {
+DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 pitch, undefined4 param_4) {
       
     undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
     Sound_FrameDelay = 0;
@@ -405,7 +405,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
     if ((param_1 & 0xfffff) == 0xffff)
         return NULL;
 
-    DYNAMICSOUNDS *snd = Sound_Play(param_1,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,maybePitchBend,0,param_4);
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,pitch,0,param_4);
     if (snd != NULL) {
         snd->frameDelay = tmpFrameDelay;
     }
@@ -448,7 +448,7 @@ typedef struct {
     undefined4 unknown0;
     uint sfxId;           // 0x04 an Action_SFX; 0x?ffff in the low 20 bits means "none"
     _VECTOR position;     // 0x08
-    float pitch;          // 0x14 truncated to a short for Sound_Play's maybePitchBend
+    float pitch;          // 0x14 truncated to a short for Sound_Play's pitch
     float radiusOuter;    // 0x18 also the distance at which the sound starts (and 1.2x it, stops)
     float radiusInner;    // 0x1c
 } MapSound;

@@ -609,7 +609,7 @@ void RandomWorld() {
     NPCGlobals.coverNodes = ShadowRand(10) ? world.nodes : NULL;
     NPCGlobals.numCoverNodes = ShadowRand(NODES + 1);
     NPCGlobals.playerTarget.builtFrame = 100 + ShadowRand(3);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     switch_BLIND_DRONES = ShadowRand(6) == 0;
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -868,7 +868,7 @@ void DroneCombatShadow_Run(void) {
     static uint32_t rand[2];
     uint32_t frameRate = FRAME_RATE_INT;
     float frameDiv = FRAME_RATE_DIV;
-    uint32_t droneAI = MPSettings.maybeDroneAIEnabled;
+    uint32_t droneAI = MPSettings.dronesAreBots;
     uint32_t blind = switch_BLIND_DRONES;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
@@ -885,7 +885,7 @@ void DroneCombatShadow_Run(void) {
     regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
-    regions.Add(&MPSettings.maybeDroneAIEnabled, 4);
+    regions.Add(&MPSettings.dronesAreBots, 4);
     regions.Add(&switch_BLIND_DRONES, 4);
 
     InstallFakes();
@@ -920,7 +920,7 @@ void DroneCombatShadow_Run(void) {
     XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_DIV = frameDiv;
-    MPSettings.maybeDroneAIEnabled = droneAI;
+    MPSettings.dronesAreBots = droneAI;
     switch_BLIND_DRONES = blind;
 
     for (int g = 0; g < 6; g++)

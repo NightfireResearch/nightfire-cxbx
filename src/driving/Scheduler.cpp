@@ -481,7 +481,7 @@ void Scheduler::Reset() {
 // FUNC_AT(0x0005ba70)
 void Scheduler::ResetTime() {
     lastTickCount = (int32_t)Clock;
-    maybeElapsedTime = 0;
+    elapsedTime = 0;
 }
 
 // ---- Scheduler::Run

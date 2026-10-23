@@ -157,8 +157,8 @@ void dsndDeleteChannel(uint32_t voice) {
     dsndMarkInactive(voice);
 }
 
-// AUTOINJECT
-void maybePsiStreamPlay(uint32_t stream, int reverbDepth) {
+// FUNC_AT(0x000e0d60)
+void psiStreamPlay(uint32_t stream, int reverbDepth) {
     SndTrace("streamplay %u %d", stream, reverbDepth);
     SetVoiceReverb(stream, reverbDepth);
     psiSampleUnPause(stream);
@@ -228,6 +228,6 @@ void __cdecl psiDebugPrint(const char *format, ...) {
 void psiInitialiseSound(psiSFX *sfx) {
     SndTrace("initsound %d vol=%d freq=%d pan=%d 3d=%d placed=%d", sfx->Handle, sfx->Volume, sfx->Frequency, sfx->Pan, sfx->Is3d, sfx->Positioned);
     if (sfx->Is3d != 0)
-        maybeXboxSFXCalculate3D(sfx->Handle, sfx->Positioned != 0);
+        dsndSetPositioned(sfx->Handle, sfx->Positioned != 0);
     psiUpdateSound(sfx);
 }

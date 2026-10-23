@@ -53,7 +53,7 @@ uint32_t psiIsSamplePlaying(uint32_t voice);   // 0 or 1 in all of EAX: HasSampl
 char *psiAsyncCreateBuffer(int size);
 int psiStreamCreatePlaybackBuffer(int frequency, int channels, int byteSize);
 void dsndDeleteChannel(uint32_t voice);
-void maybePsiStreamPlay(uint32_t stream, int reverbDepth);
+void psiStreamPlay(uint32_t stream, int reverbDepth);
 void psiStreamStop(uint32_t stream);
 void psiSamplePause(uint32_t voice);
 void psiSFX_SetVolume(uint32_t voice, int volume);

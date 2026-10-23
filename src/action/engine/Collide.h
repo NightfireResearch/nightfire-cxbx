@@ -34,7 +34,7 @@ typedef struct HITDATA_tag {
   float dist;             // 0x0c - the hit list is sorted by it; HIT_NONE for a rejected hit
   plane_equ_tag surfaceNormal;
   _VECTOR unknown1;      // 0x20
-  _VECTOR maybehitDirection; // 0x2C - ray direction
+  _VECTOR hitDirection; // 0x2C - ray direction
   _VECTOR hitPosition;   // 0x38
   char materialType;     // 0x44 - the triangle's material byte: 0x3f the surface, 0x40 and 0x80 flags
   char flags;            // 0x45 - HIT_COPIED, HIT_NO_CONTACT, and the test's flags
@@ -45,7 +45,7 @@ typedef struct HITDATA_tag {
 
 LAYOUT_32(sizeof(HITDATA_tag) == 0x50, "HITDATA_tag is not the expected size");
 LAYOUT_32(offsetof(HITDATA_tag, surfaceNormal) == 0x10, "Bad offset of surfaceNormal");
-LAYOUT_32(offsetof(HITDATA_tag, maybehitDirection) == 0x2c, "Bad offset of maybehitDirection");
+LAYOUT_32(offsetof(HITDATA_tag, hitDirection) == 0x2c, "Bad offset of hitDirection");
 LAYOUT_32(offsetof(HITDATA_tag, hitPosition) == 0x38, "Bad offset of hitPosition");
 LAYOUT_32(offsetof(HITDATA_tag, flags) == 0x45, "Bad offset of flags");
 
@@ -83,7 +83,7 @@ typedef struct HITTEST_tag {
   float damage;         // 0x7c - copied to the hits (1 for a dead player's capsule, else 0)
   ushort type;          // 0x80 - HITTEST_ (0 for none)
   char _unknown82[0x84 - 0x82];
-  ushort mask;          // 0x84 - what the test passes through (Ghidra: maybeCollisionMaskTypes)
+  ushort mask;          // 0x84 - what the test passes through
   ushort flags;         // 0x86 - 0x10: stop at the first hit
   ushort found;         // 0x88 - bit 1: Intersect_CylGeom found a floor (Drone_FeetOnPoint counts the drone as on
                         //        the ground)

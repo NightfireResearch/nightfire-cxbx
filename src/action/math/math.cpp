@@ -953,14 +953,14 @@ void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch)
   out[1] = (float)(FSin(pitch) * radius);
 }
 
-// Coefficients for maybeAtan2's polynomial approximation of atan(ratio) over ratio in [0,1]
-#define MAYBE_ATAN2_COEFF_A 1.0596788f
-#define MAYBE_ATAN2_COEFF_B 0.27131295f
-static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_A) == 0x3f87a38e, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_B) == 0x3e8ae988, "not the original's constant");
+// Coefficients for Atan2's polynomial approximation of atan(ratio) over ratio in [0,1]
+#define ATAN2_COEFF_A 1.0596788f
+#define ATAN2_COEFF_B 0.27131295f
+static_assert(std::bit_cast<uint32_t>(ATAN2_COEFF_A) == 0x3f87a38e, "not the original's constant");
+static_assert(std::bit_cast<uint32_t>(ATAN2_COEFF_B) == 0x3e8ae988, "not the original's constant");
 
 // Fast rational atan2 approximation (max error ~0.28 degrees), on the x87 and left unrounded
-double maybeAtan2(float y, float x) {
+double Atan2(float y, float x) {
   double result;
 
   if (x == y) {
@@ -970,10 +970,10 @@ double maybeAtan2(float y, float x) {
     double absY = AbsFchs(y);
     if (absY < absX) {
       double ratio = absY / absX;
-      result = (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
+      result = (ATAN2_COEFF_A - ratio * ATAN2_COEFF_B) * ratio;
     } else {
       double ratio = absX / absY;
-      result = (float)M_PI_2 - (MAYBE_ATAN2_COEFF_A - ratio * MAYBE_ATAN2_COEFF_B) * ratio;
+      result = (float)M_PI_2 - (ATAN2_COEFF_A - ratio * ATAN2_COEFF_B) * ratio;
     }
   }
 
@@ -1636,14 +1636,14 @@ void Quat_MatrixToQuaternion(quaternion_tag *quat, _MATRIX *mtx) {
   }
 }
 
-// The pitch (x) and heading (y) of a direction by maybeAtan2, and its length (z). The square of its length in plan
+// The pitch (x) and heading (y) of a direction by Atan2, and its length (z). The square of its length in plan
 // goes into the pitch unrounded and into the length as a float.
 // AUTOINJECT
 void Vec_Cartesian_2_Spherical(_VECTOR *out, float x, float y, float z) {
   double planeSq = (double)x * x + (double)z * z;
   float planeSqStored = (float)planeSq;
-  out->x = maybeAtan2(y, (float)sqrt(planeSq));
-  out->y = maybeAtan2(x, z);
+  out->x = Atan2(y, (float)sqrt(planeSq));
+  out->y = Atan2(x, z);
   out->z = (float)sqrt((double)y * y + planeSqStored);
 }
 

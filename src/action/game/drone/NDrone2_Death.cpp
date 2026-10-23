@@ -8,7 +8,7 @@
 #include "Behaviour.h"
 #include "DroneAnim.h"                 // DroneAnim_CallAnim, DroneAnim_LocationDeathAnim (ours)
 #include "../../game.h"                 // GameState
-#include "../../math/math.h"            // Vec_Subtract, maybeAtan2, Vec_AngleDifference (ours)
+#include "../../math/math.h"            // Vec_Subtract, Atan2, Vec_AngleDifference (ours)
 #include "../obj/Switch.h"              // Switch_GetNearest, Switch_GetSwitchChannel (ours)
 #include "../sp/Mission.h"              // Mission_SetFailLabel (ours)
 #include "../sp/SwitchChannels.h"
@@ -144,7 +144,7 @@ bool DroneFunc_SetDeathChannel(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_LogDroneDeath(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    obj_tag *killer = MPSettings.maybeDroneAIEnabled == 0 ? NDrone2_Player() : drone->opponent;
+    obj_tag *killer = MPSettings.dronesAreBots == 0 ? NDrone2_Player() : drone->opponent;
     if (drone->lastAttacker == killer && !(drone->flags & 0x1000000) && drone->side == 1)
         PlrStat_LogEnemyDispatched(0);
 }
@@ -212,7 +212,7 @@ uint NDrone2_ExplosionDir(DCVars_tag *dcv, DroneImpact_tag *impact) {
         return 1;
     _VECTOR toBlast;
     Vec_Subtract(&impact->position, &gameObj->position, &toBlast);
-    float yaw = maybeAtan2(toBlast.x, toBlast.z);
+    float yaw = Atan2(toBlast.x, toBlast.z);
     double turn = Vec_AngleDifference(gameObj->rotation.y, yaw);
     if (fabs(turn) < (float)M_PI_4)
         return 1;

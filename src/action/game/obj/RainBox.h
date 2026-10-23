@@ -6,7 +6,7 @@
 #pragma pack(push, 1)
 
 // A rain box's extra data: its model's box where it was placed, cut to the 30-unit cube about CubeCentre each frame
-// (RainBox_Clip). Drops start only inside an active box. The boxes are linked through obj_tag::maybeParent.
+// (RainBox_Clip). Drops start only inside an active box. The boxes are linked through obj_tag::parent.
 typedef struct RAINBOX_tag {
     float min[3];               // 0x00
     float max[3];               // 0x0c

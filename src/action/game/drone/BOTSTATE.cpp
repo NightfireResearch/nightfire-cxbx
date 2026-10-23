@@ -145,7 +145,7 @@ uchar BOTSTATE_getPreferredTraitOpponentObjIndex(Drone_tag *drone) {
 
         case BOT_PERSONALITY_VENGEFUL: {
             // whoever killed the bot last
-            short killer = MPGame.players[drone->botVars->playerIndex].maybeIdxOfMyAssassin;
+            short killer = MPGame.players[drone->botVars->playerIndex].idxOfMyKiller;
             if (killer != -1) {
                 obj_tag *other = MPGame.players[killer].playerObj;
                 if (other != NULL && other != me && !MP_areObjectsOnSameTeam(other, me) && !MP_playerIsDead(other))
@@ -434,7 +434,7 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
                         continue;
                     float closeness = (float)((double)maxDistance + 1.0f - distance);
 
-                    float visited = pickup->maybeBotPickupVisitTimes[botIndex];
+                    float visited = pickup->botPickupVisitTimes[botIndex];
                     if (ignoreVisits)
                         visited = 0.0f;
                     if (pass == 3) {
@@ -877,7 +877,7 @@ uchar BOTSTATE_gotoGoal(DCVars_tag *dc, int slot, uint nextState) {
                 budget = (float)Rand_Rand(500) + 250.0f;
                 break;
         }
-        if (MPSettings.maybeIsTeamGame && dc->drone->botVars->stats.personality == BOT_PERSONALITY_TEAM_PLAYER)
+        if (MPSettings.isTeamGame && dc->drone->botVars->stats.personality == BOT_PERSONALITY_TEAM_PLAYER)
             budget += 1500.0f;
         else if (dc->drone->botVars->stats.personality == BOT_PERSONALITY_BERSERKER)
             budget = 0.0f;
@@ -1061,7 +1061,7 @@ void BOTSTATE_setPickupVisitTime(Drone_tag *drone, MP_PICKUP *pickup) {
     double time = (double)MPGame.TimeIncPaused + 45.0f;
     if (time == 0.0)
         time += 0.1f;
-    pickup->maybeBotPickupVisitTimes[drone->botVars->botIndex] = (float)time;
+    pickup->botPickupVisitTimes[drone->botVars->botIndex] = (float)time;
 }
 
 // The bot starts recovering from a hit: its recovery stat in frames, x2/3, back from now

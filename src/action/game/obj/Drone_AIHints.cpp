@@ -291,7 +291,7 @@ bool Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
         node->usable[target] |= COVERUSE_TOO_CLOSE;
         return false;
     }
-    double angle = Vec_AngleDifference(node->rot.y, maybeAtan2(toTarget.x, toTarget.z));
+    double angle = Vec_AngleDifference(node->rot.y, Atan2(toTarget.x, toTarget.z));
 
     // The bounds are not rounded to float
     if (node->type == COVER_CORNER) {

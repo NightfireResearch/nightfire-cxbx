@@ -209,7 +209,7 @@ static int Huff_BuildTree(HuffReader *r, uint count, ushort *table, int rootBits
 }
 
 // AUTOINJECT
-void Inflate_huffman(maybeEDLDecompressorState *state) {
+void Inflate_huffman(EDLDecompressorState *state) {
     uchar *out = (uchar *)state->dst;
     // After the EDL header
     const uint32_t *words = (const uint32_t *)(state->src + sizeof(EDLHeader));
@@ -298,7 +298,7 @@ static inline uint32_t br_get(BitReader *br, int n)
 }
 
 // AUTOINJECT
-void Inflate_bitwise(maybeEDLDecompressorState *st) {
+void Inflate_bitwise(EDLDecompressorState *st) {
     BitReader br;
     uint8_t *out = (uint8_t*)(st->dst);
 
@@ -352,7 +352,7 @@ void Inflate_bitwise(maybeEDLDecompressorState *st) {
 
 
 // AUTOINJECT
-void Inflate_directcopy(maybeEDLDecompressorState *state) {
+void Inflate_directcopy(EDLDecompressorState *state) {
 
     // The source and destination may overlap - this must be done with memmove for safety
     memmove(state->dst, state->src + sizeof(EDLHeader), state->compressedSize);

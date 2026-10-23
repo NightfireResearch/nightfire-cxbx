@@ -537,7 +537,7 @@ bool __cdecl FakeSetSprite(sprite *spr, HASHCODE hc) {
     ShadowLog("setsprite(%x,%x)", W(spr), (uint32_t)hc);
     spr->spritesheetWidth = (short)R(0x10000);
     spr->spritesheetHeight = (short)R(0x10000);
-    spr->maybeFlags = (short)R(0x10000);
+    spr->flags = (short)R(0x10000);
     return R(2) != 0;
 }
 
@@ -899,7 +899,7 @@ char *Format(void) {
 void MakeSprite(sprite *s) {
     Fill(s, sizeof(*s));
     s->text = R(4) ? Text() : NULL;
-    s->maybeClippedString = Format();
+    s->format = Format();
     s->scale.x = Num(0.0f, 2.0f);
     s->scale.y = Num(0.0f, 2.0f);
     s->positionX = S(700);
@@ -965,7 +965,7 @@ void MakeLabel(M_LABEL *l, M_CONTROL *parent, int index) {
     MakeBase(&l->control, ControlType_Label, parent, index);
     memcpy(l->format, world.formats[R(4)], sizeof(l->format));
     MakeSprite(&l->model);
-    l->model.maybeClippedString = R(3) ? l->format : Format();
+    l->model.format = R(3) ? l->format : Format();
     l->drawn = R(2) ? &world.sprites[R(SPRITES)] : NULL;
     l->iconFlags = R(0);
     l->textLabel = R(3) ? Action_TranslatedText_NULLVALUE : (Action_TranslatedText)R(16);
@@ -2342,7 +2342,7 @@ uint32_t RunManagerMonitor(bool original) {
     U8_AT(XbeOurs(0x0025fb11)) = (uint8_t)R(2);
     MPSettings.numPlayers = R(5);
     GameState.CurrentLevelHashcode = R(8) ? (HASHCODE)0x07000001 : HT_Level_Menu_Pre;
-    GameState.maybePaused = R(2);
+    GameState.LevelEnding = R(2);
     ScriptCam = R(2) ? (HASHCODE)0 : Hash();
     for (int p = 0; p < 4; p++) {
         PlayerInputs[p].controllerIsActive = (uchar)(R(3) != 0);

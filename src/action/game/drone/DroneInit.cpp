@@ -222,7 +222,7 @@ void NDrone2_PostLoad_Init(obj_tag *gameObj) {
     drone->headTarget = drone->opponent;
     drone->route1.path = AINetwork_NavPathForPosition(&gameObj->position, gameObj->inCel, 0);
     Drone_SM_InitObject(gameObj);
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         BOTWEAP_changeWeapon(drone, drone->botVars->weapon);
 }
 
@@ -274,7 +274,7 @@ void NDrone2_Enable(char enable, Drone_tag *drone) {
 void DroneInit_Collision(Drone_tag *drone) {
     obj_tag *gameObj = drone->gameObj;
     cel_tag *cel = gameObj->inCel;
-    if (MPSettings.maybeDroneAIEnabled || drone->deathScript != 0 || drone->flies || drone->skinClass == 0x13 ||
+    if (MPSettings.dronesAreBots || drone->deathScript != 0 || drone->flies || drone->skinClass == 0x13 ||
         drone->dtype == DTYPE_TruckDriver)
         return;
 
@@ -323,7 +323,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     Vec_Copy2(&diVars->position, &gameObj->position, &gameObj->lastPosition);
     Vec_Copy2(&diVars->rotation, &gameObj->rotation, &gameObj->lastRotation);
     gameObj->effectFlags &= ~OBJ_EFFECT_20;
-    gameObj->maybeCollision = &drone->collision;
+    gameObj->hitTest = &drone->collision;
     // Here the original calls an empty function with the object (nightfire-port's control_init_collision)
     Vec_Zero(&drone->velocity);
     build_LinkToRoom(gameObj, 0, glb_world);
@@ -481,7 +481,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         break;
     }
 
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         BOT_setGender(drone);
 
     // The weapon (key 9; with none, the skin's), its clip and the anim set it holds it with
@@ -811,7 +811,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     DroneInit_Collision(drone);
     drone->startHealth = drone->health;
 
-    if (MPSettings.maybeDroneAIEnabled) {
+    if (MPSettings.dronesAreBots) {
         BOT_postLoadInit(drone);
     } else {
         behaviour_util_setProperty(DRONE_PROP_17, drone->currentBehaviour, 0);

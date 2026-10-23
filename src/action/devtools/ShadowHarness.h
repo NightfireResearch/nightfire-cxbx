@@ -78,7 +78,7 @@ extern uint8_t ShadowCreatePool[SHADOW_CREATE_POOL];
 // KeyFrame_Interp (the same), Sound_Play3D, Sound_PlayExt, Text_AddMsg, Txt_BindLabel, GameFlow_PushState,
 // Music_Event, GS_PauseGame, ResetMap_LevelToLoad, Player_RamSave, LList_Add, Control_BuildWorldSph,
 // Controls_StraddleTest, Control_NextLOD, Explode_Create, Camera_SetUpdator, Player_Enable, Player_Disable,
-// HUD_Enable, Input_SetAction, Input_Action, Collide_GetDamageNObjects, MPDrone_MaybeIsDyingOrDead (true when the
+// HUD_Enable, Input_SetAction, Input_Action, Collide_GetDamageNObjects, MPDrone_IsDyingOrDead (true when the
 // drone's tweakA is odd), control_first_object, psiGetTimeIn100ths, Mission_Status.
 void ShadowFakes_Install(void);
 // control_create_object's fake alone, for a suite that tests some of the others

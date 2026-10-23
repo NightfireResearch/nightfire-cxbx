@@ -18,7 +18,7 @@ typedef struct DYNAMICSOUNDS {
     float radiusInner;
     float radiusOuter;
     float alertness;
-    short maybePitchBend;
+    short pitch;
     char is3d;
     char needsUpdate;
     char playbackState;             // 0x40 - 0 to start, 1 playing, 2 to stop, 3 free
@@ -41,7 +41,7 @@ typedef struct SFXOutputDataEntry {
     float alertnessRelated;
     float durationForSubtitles;
     char loopAlways;
-    char maybeTracked3d;
+    char tracked3d;
     char _pad_1[0x2];
 } SFXOutputDataEntry;
 
@@ -49,8 +49,8 @@ static_assert(sizeof(SFXOutputDataEntry) == 0x18, "Size of SFXOutputDataEntry no
 
 #pragma pack(pop)
 
-DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 maybePitchBend,undefined4 param_7,int isLimitedRadius);
-DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybePitchBend, undefined4 param_4);
+DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,float radiusOuter,float radiusInner, undefined2 pitch,undefined4 param_7,int isLimitedRadius);
+DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 pitch, undefined4 param_4);
 void Sound_Stop(DYNAMICSOUNDS *handle);
 extern float SubtitleDurationModification;
 bool Sound_SetPosition(DYNAMICSOUNDS *handle, _VECTOR *position);

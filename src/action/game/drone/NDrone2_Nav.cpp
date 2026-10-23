@@ -215,8 +215,8 @@ bool NDrone2_AtDest(DCVars_tag *dcv) {
 
 // Steers moveTarget at a position (finding its cel), within 0.3 m, and works out the distance in plan and the
 // heading to it
-// AUTOINJECT
-void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target) {
+// FUNC_AT(0x00046080)
+void NDrone2_SetMoveTarget(DCVars_tag *dcv, CelPos_tag *target) {
     CelPos_tag from;    // set up and not used
     NDrone2_FeetPos(dcv->gameObj, &from.pos);
     from.cel = dcv->gameObj->inCel;
@@ -232,7 +232,7 @@ void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target
     _VECTOR delta;
     Vec_Subtract(&drone->moveTarget, &dcv->gameObj->position, &delta);
     drone->moveTargetRot.x = 0.0f;
-    drone->moveTargetRot.y = maybeAtan2(delta.x, delta.z);
+    drone->moveTargetRot.y = Atan2(delta.x, delta.z);
     drone->moveTargetRot.z = 0.0f;
 }
 

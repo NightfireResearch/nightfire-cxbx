@@ -57,7 +57,7 @@ void HUD_Enable(HUDINFO_tag *param_1, HUD_PANE_IND idx, char enable, ushort stat
 	if(idx >= NUM_PANES)
 		return;
 
-	if (param_1->pane[idx].maybeCanBeEnabled) {
+	if (param_1->pane[idx].canBeEnabled) {
 		param_1->pane[idx].enabled = enable;
 		param_1->pane[idx].state = state;
 	}
@@ -140,7 +140,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     if (spr == NULL)
         return;
     if (player->hudInfo->pane[Blood].enabled || player->hudInfo->pane[SecCam].enabled) {
-        spr->maybeEnabled = 0xff;
+        spr->depth = 0xff;
         return;
     }
 
@@ -175,7 +175,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
                     HUD_Enable(player->hudInfo, Sight, 1, 0);
                     break;
             }
-            spr->maybeEnabled = 0xff;
+            spr->depth = 0xff;
             return;
         }
         crosshair = 1;
@@ -196,11 +196,11 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     double x = (double)player->crosshairOffsetX * 0.5f * viewer->width + (double)viewer->width * 0.5f;
     spr->positionX = (short)Ftol(x);
     spr->positionY = (short)Ftol(y);
-    spr->maybeEnabled = 0x31;
+    spr->depth = 0x31;
     if (!zoomed)
-        spr->maybeEnabled = PlayerInputs[player->playerNum].crosshairsEnabled ? 0x31 : 0xff;
+        spr->depth = PlayerInputs[player->playerNum].crosshairsEnabled ? 0x31 : 0xff;
     if (player->camMode)
-        spr->maybeEnabled = 0xff;
+        spr->depth = 0xff;
 }
 
 // The night vision goggles in single player: putting them on (the weapon 0x5d once it is in hand) turns night vision
@@ -286,12 +286,12 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 		if(!pane->enabled) {
 			// Hide all sprites on this pane
 			for(int j = 0; j < pane->numSprites; j++) {
-				pane->spriteList[j]->maybeEnabled = 0xff;
+				pane->spriteList[j]->depth = 0xff;
 			}
 		} else {
 			// Copy the sprite enablement state from the base pane
 			for(int j = 0; j < pane->base->numSprites; j++) {
-				pane->spriteList[j]->maybeEnabled = pane->base->spriteInfo[j].maybeEnabled;
+				pane->spriteList[j]->depth = pane->base->spriteInfo[j].depth;
 			}
 		}
 		// Run the update function (regardless of whether it's enabled)
@@ -309,7 +309,7 @@ void HUD_CalcWidthHeight(HUDPANECREATE_tag *create, short *width, short *height)
     short left = 0, top = 0, right = 0, bottom = 0;
     for (short i = 0; i < create->numSprites; i++) {
         SpriteInfo *info = &create->spriteInfo[i];
-        if (info->maybeFlags & SPRITEINFO_CLIP_TO_VIEW)
+        if (info->flags & SPRITEINFO_CLIP_TO_VIEW)
             continue;
         if (left >= info->posX)
             left = info->posX;
@@ -429,11 +429,11 @@ void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cre
             spr->backupOnscreenWidth = spr->positionX;
             spr->backupOnscreenHeight = spr->positionY;
         }
-        spr->maybeEnabled = (uchar)info->maybeEnabled;
+        spr->depth = (uchar)info->depth;
         if (info->textRef == 0)
             Txt_LockString(spr->text);
 
-        if (info->maybeFlags & SPRITEINFO_CLIP_TO_VIEW) {
+        if (info->flags & SPRITEINFO_CLIP_TO_VIEW) {
             int left = spr->positionX;
             if ((double)(spr->positionX + spr->onscreenWidth) > viewRight)
                 spr->onscreenWidth = (short)Ftol((double)viewRight - left);
@@ -486,44 +486,44 @@ static SpriteInfo AmmoSprInfo[8] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 4128,
+        .depth = 28,
+        .flags = 4128,
         .posY = 18,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 32,
+        .depth = 28,
+        .flags = 32,
         .posY = 38,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 4128,
+        .depth = 28,
+        .flags = 4128,
         .posY = 38,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 4128,
+        .depth = 0xffff,
+        .flags = 4128,
         .posX = -60,
-        .maybeClippedText = (char *)"\xff\x01",
+        .format = (char *)"\xff\x01",
         .linkedViewer = 5,
     },
     {
         .colour = 0x14507fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 4096,
+        .depth = 0xffff,
+        .flags = 4096,
         .posX = -62,
         .posY = -20,
         .onscreenWidth = 68,
@@ -535,15 +535,15 @@ static SpriteInfo AmmoSprInfo[8] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 28,
-        .maybeFlags = 4096,
+        .depth = 28,
+        .flags = 4096,
         .posX = -25,
         .posY = -64,
         .onscreenWidth = 25,
         .onscreenHeight = 64,
         .spritesheetX = 230,
-        .maybeSpritesheetWidth = 25,
-        .maybeSpritesheetHeight = 64,
+        .spritesheetWidth = 25,
+        .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000128,
         .linkedViewer = 5,
@@ -551,15 +551,15 @@ static SpriteInfo AmmoSprInfo[8] = {
     {
         .colour = 0x4040407f,
         .unknown1 = 0x7f7f7f7f,
-        .maybeEnabled = 29,
-        .maybeFlags = 4096,
+        .depth = 29,
+        .flags = 4096,
         .posX = -25,
         .posY = -64,
         .onscreenWidth = 25,
         .onscreenHeight = 64,
         .spritesheetX = 230,
-        .maybeSpritesheetWidth = 25,
-        .maybeSpritesheetHeight = 64,
+        .spritesheetWidth = 25,
+        .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000128,
         .linkedViewer = 5,
@@ -567,8 +567,8 @@ static SpriteInfo AmmoSprInfo[8] = {
     {
         .colour = 0xffffffff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 31,
-        .maybeFlags = 2304,
+        .depth = 31,
+        .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300004c,
         .linkedViewer = 5,
@@ -579,15 +579,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 19,
+        .depth = 19,
         .posX = 32,
         .posY = 30,
         .onscreenWidth = 32,
         .onscreenHeight = 32,
         .spritesheetX = 5,
         .spritesheetY = 219,
-        .maybeSpritesheetWidth = 32,
-        .maybeSpritesheetHeight = 32,
+        .spritesheetWidth = 32,
+        .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -595,15 +595,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 17,
+        .depth = 17,
         .posX = 26,
         .posY = 12,
         .onscreenWidth = 29,
         .onscreenHeight = 43,
         .spritesheetX = 47,
         .spritesheetY = 2,
-        .maybeSpritesheetWidth = 29,
-        .maybeSpritesheetHeight = 43,
+        .spritesheetWidth = 29,
+        .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -611,15 +611,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 16,
+        .depth = 16,
         .posX = 11,
         .posY = 18,
         .onscreenWidth = 30,
         .onscreenHeight = 44,
         .spritesheetX = 2,
         .spritesheetY = 173,
-        .maybeSpritesheetWidth = 30,
-        .maybeSpritesheetHeight = 44,
+        .spritesheetWidth = 30,
+        .spritesheetHeight = 44,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -627,15 +627,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 15,
+        .depth = 15,
         .posX = 12,
         .posY = 46,
         .onscreenWidth = 45,
         .onscreenHeight = 29,
         .spritesheetX = 1,
         .spritesheetY = 142,
-        .maybeSpritesheetWidth = 45,
-        .maybeSpritesheetHeight = 29,
+        .spritesheetWidth = 45,
+        .spritesheetHeight = 29,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -643,15 +643,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 14,
+        .depth = 14,
         .posX = 26,
         .posY = 49,
         .onscreenWidth = 38,
         .onscreenHeight = 34,
         .spritesheetX = 1,
         .spritesheetY = 105,
-        .maybeSpritesheetWidth = 38,
-        .maybeSpritesheetHeight = 34,
+        .spritesheetWidth = 38,
+        .spritesheetHeight = 34,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -659,14 +659,14 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 13,
+        .depth = 13,
         .posX = 57,
         .posY = 39,
         .onscreenWidth = 23,
         .onscreenHeight = 43,
         .spritesheetY = 63,
-        .maybeSpritesheetWidth = 23,
-        .maybeSpritesheetHeight = 43,
+        .spritesheetWidth = 23,
+        .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -674,15 +674,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 12,
+        .depth = 12,
         .posX = 47,
         .posY = 30,
         .onscreenWidth = 36,
         .onscreenHeight = 32,
         .spritesheetX = 1,
         .spritesheetY = 30,
-        .maybeSpritesheetWidth = 36,
-        .maybeSpritesheetHeight = 32,
+        .spritesheetWidth = 36,
+        .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -690,15 +690,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 11,
+        .depth = 11,
         .posX = 35,
         .posY = 12,
         .onscreenWidth = 43,
         .onscreenHeight = 27,
         .spritesheetX = 1,
         .spritesheetY = 1,
-        .maybeSpritesheetWidth = 43,
-        .maybeSpritesheetHeight = 27,
+        .spritesheetWidth = 43,
+        .spritesheetHeight = 27,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -706,15 +706,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 24,
+        .depth = 24,
         .posX = 26,
         .posY = 5,
         .onscreenWidth = 35,
         .onscreenHeight = 49,
         .spritesheetX = 101,
         .spritesheetY = 59,
-        .maybeSpritesheetWidth = 35,
-        .maybeSpritesheetHeight = 49,
+        .spritesheetWidth = 35,
+        .spritesheetHeight = 49,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -722,15 +722,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 23,
+        .depth = 23,
         .posX = 4,
         .posY = 11,
         .onscreenWidth = 37,
         .onscreenHeight = 51,
         .spritesheetX = 96,
         .spritesheetY = 3,
-        .maybeSpritesheetWidth = 37,
-        .maybeSpritesheetHeight = 51,
+        .spritesheetWidth = 37,
+        .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -738,15 +738,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 22,
+        .depth = 22,
         .posX = 5,
         .posY = 38,
         .onscreenWidth = 51,
         .onscreenHeight = 38,
         .spritesheetX = 47,
         .spritesheetY = 218,
-        .maybeSpritesheetWidth = 51,
-        .maybeSpritesheetHeight = 38,
+        .spritesheetWidth = 51,
+        .spritesheetHeight = 38,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -754,15 +754,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 21,
+        .depth = 21,
         .posX = 17,
         .posY = 49,
         .onscreenWidth = 47,
         .onscreenHeight = 42,
         .spritesheetX = 49,
         .spritesheetY = 176,
-        .maybeSpritesheetWidth = 47,
-        .maybeSpritesheetHeight = 42,
+        .spritesheetWidth = 47,
+        .spritesheetHeight = 42,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -770,15 +770,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 20,
+        .depth = 20,
         .posX = 51,
         .posY = 39,
         .onscreenWidth = 33,
         .onscreenHeight = 51,
         .spritesheetX = 48,
         .spritesheetY = 125,
-        .maybeSpritesheetWidth = 33,
-        .maybeSpritesheetHeight = 51,
+        .spritesheetWidth = 33,
+        .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -786,15 +786,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 19,
+        .depth = 19,
         .posX = 48,
         .posY = 30,
         .onscreenWidth = 42,
         .onscreenHeight = 39,
         .spritesheetX = 47,
         .spritesheetY = 84,
-        .maybeSpritesheetWidth = 42,
-        .maybeSpritesheetHeight = 39,
+        .spritesheetWidth = 42,
+        .spritesheetHeight = 39,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -802,15 +802,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 18,
+        .depth = 18,
         .posX = 36,
         .posY = 8,
         .onscreenWidth = 50,
         .onscreenHeight = 30,
         .spritesheetX = 46,
         .spritesheetY = 49,
-        .maybeSpritesheetWidth = 50,
-        .maybeSpritesheetHeight = 30,
+        .spritesheetWidth = 50,
+        .spritesheetHeight = 30,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -818,15 +818,15 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7fff7f40,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 9,
+        .depth = 9,
         .posX = 4,
         .posY = 4,
         .onscreenWidth = 87,
         .onscreenHeight = 86,
         .spritesheetX = 102,
         .spritesheetY = 113,
-        .maybeSpritesheetWidth = 85,
-        .maybeSpritesheetHeight = 86,
+        .spritesheetWidth = 85,
+        .spritesheetHeight = 86,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -834,8 +834,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 28,
-        .maybeFlags = 6144,
+        .depth = 28,
+        .flags = 6144,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300005b,
         .linkedViewer = 5,
@@ -843,16 +843,16 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x8e8e3cff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 4128,
-        .maybeClippedText = (char *)"\xff\x01",
+        .depth = 0xffff,
+        .flags = 4128,
+        .format = (char *)"\xff\x01",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 4096,
+        .depth = 0xffff,
+        .flags = 4096,
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -862,8 +862,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 4096,
+        .depth = 0xffff,
+        .flags = 4096,
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -873,8 +873,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 256,
+        .depth = 0xffff,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -884,8 +884,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 384,
+        .depth = 0xffff,
+        .flags = 384,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -895,8 +895,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 256,
+        .depth = 0xffff,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -906,8 +906,8 @@ static SpriteInfo HealthSprInfo[24] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 320,
+        .depth = 0xffff,
+        .flags = 320,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -920,13 +920,13 @@ static SpriteInfo AirSprInfo[3] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -934,14 +934,14 @@ static SpriteInfo AirSprInfo[3] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
         .spritesheetY = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -949,8 +949,8 @@ static SpriteInfo AirSprInfo[3] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 256,
+        .depth = 0xffff,
+        .flags = 256,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -963,8 +963,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 512,
+        .depth = 0xffff,
+        .flags = 512,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -974,12 +974,12 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 1536,
+        .depth = 39,
+        .flags = 1536,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
-        .maybeSpritesheetWidth = 255,
-        .maybeSpritesheetHeight = 127,
+        .spritesheetWidth = 255,
+        .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000055,
         .linkedViewer = 5,
@@ -987,8 +987,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 48,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -998,8 +998,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 320,
+        .depth = 39,
+        .flags = 320,
         .posX = 464,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1009,8 +1009,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 48,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1020,8 +1020,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 560,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1031,8 +1031,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 48,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1042,8 +1042,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 560,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1053,8 +1053,8 @@ static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 2304,
+        .depth = 34,
+        .flags = 2304,
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1067,12 +1067,12 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0x7f0020,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 38,
-        .maybeFlags = 256,
+        .depth = 38,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
-        .maybeSpritesheetWidth = 127,
-        .maybeSpritesheetHeight = 255,
+        .spritesheetWidth = 127,
+        .spritesheetHeight = 255,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300004a,
         .linkedViewer = 5,
@@ -1080,8 +1080,8 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0xffffff7f,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 41,
-        .maybeFlags = 256,
+        .depth = 41,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1091,8 +1091,8 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0xff00ffff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 512,
+        .depth = 40,
+        .flags = 512,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1102,13 +1102,13 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -1116,15 +1116,15 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0x7f00ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 31,
-        .maybeFlags = 256,
+        .depth = 31,
+        .flags = 256,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
         .spritesheetY = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -1132,8 +1132,8 @@ static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0x7f00ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 31,
-        .maybeFlags = 256,
+        .depth = 31,
+        .flags = 256,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1146,10 +1146,10 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 3328,
-        .maybeSpritesheetWidth = 31,
-        .maybeSpritesheetHeight = 31,
+        .depth = 0xffff,
+        .flags = 3328,
+        .spritesheetWidth = 31,
+        .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300004f,
         .linkedViewer = 5,
@@ -1157,10 +1157,10 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 3328,
-        .maybeSpritesheetWidth = 31,
-        .maybeSpritesheetHeight = 31,
+        .depth = 0xffff,
+        .flags = 3328,
+        .spritesheetWidth = 31,
+        .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000050,
         .linkedViewer = 5,
@@ -1168,8 +1168,8 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 2304,
+        .depth = 0xffff,
+        .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000051,
         .linkedViewer = 5,
@@ -1177,10 +1177,10 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 3328,
-        .maybeSpritesheetWidth = 63,
-        .maybeSpritesheetHeight = 63,
+        .depth = 0xffff,
+        .flags = 3328,
+        .spritesheetWidth = 63,
+        .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000052,
         .linkedViewer = 5,
@@ -1188,10 +1188,10 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 3328,
-        .maybeSpritesheetWidth = 31,
-        .maybeSpritesheetHeight = 31,
+        .depth = 0xffff,
+        .flags = 3328,
+        .spritesheetWidth = 31,
+        .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000050,
         .linkedViewer = 5,
@@ -1199,8 +1199,8 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 2304,
+        .depth = 0xffff,
+        .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000051,
         .linkedViewer = 5,
@@ -1208,8 +1208,8 @@ static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
         .unknown1 = 0xffffff00,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 2304,
+        .depth = 0xffff,
+        .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000082,
         .linkedViewer = 5,
@@ -1220,8 +1220,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0x2000ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 38,
-        .maybeFlags = 256,
+        .depth = 38,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1231,8 +1231,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0xff00ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 2432,
+        .depth = 39,
+        .flags = 2432,
         .posX = 320,
         .posY = 192,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1242,8 +1242,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0xff00ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 2304,
+        .depth = 39,
+        .flags = 2304,
         .posX = 320,
         .posY = 288,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1253,8 +1253,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0xffffffff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 39,
-        .maybeFlags = 2304,
+        .depth = 39,
+        .flags = 2304,
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1264,8 +1264,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0xffffff7f,
         .unknown1 = 0x7f7f7f7f,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 126,
         .posY = 176,
         .onscreenWidth = 2,
@@ -1277,8 +1277,8 @@ static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0xffffff7f,
         .unknown1 = 0x7f7f7f7f,
-        .maybeEnabled = 39,
-        .maybeFlags = 256,
+        .depth = 39,
+        .flags = 256,
         .posX = 512,
         .posY = 176,
         .onscreenWidth = 2,
@@ -1293,7 +1293,7 @@ static SpriteInfo RadarSprInfo[1] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 640,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000088,
@@ -1305,12 +1305,12 @@ static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0x7f0020,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 38,
-        .maybeFlags = 256,
+        .depth = 38,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
-        .maybeSpritesheetWidth = 511,
-        .maybeSpritesheetHeight = 511,
+        .spritesheetWidth = 511,
+        .spritesheetHeight = 511,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)50331800,
         .linkedViewer = 5,
@@ -1318,8 +1318,8 @@ static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0xffff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1329,13 +1329,13 @@ static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -1343,15 +1343,15 @@ static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 31,
-        .maybeFlags = 256,
+        .depth = 31,
+        .flags = 256,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
         .onscreenHeight = 16,
         .spritesheetY = 16,
-        .maybeSpritesheetWidth = 256,
-        .maybeSpritesheetHeight = 16,
+        .spritesheetWidth = 256,
+        .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300017f,
         .linkedViewer = 5,
@@ -1359,8 +1359,8 @@ static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 31,
-        .maybeFlags = 256,
+        .depth = 31,
+        .flags = 256,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1373,11 +1373,11 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0xffffffff,
         .unknown1 = 0xffffffff,
-        .maybeEnabled = 33,
+        .depth = 33,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
-        .maybeSpritesheetWidth = 16,
-        .maybeSpritesheetHeight = 320,
+        .spritesheetWidth = 16,
+        .spritesheetHeight = 320,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x30000ad,
         .linkedViewer = 5,
@@ -1385,8 +1385,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 100,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1396,8 +1396,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 384,
+        .depth = 34,
+        .flags = 384,
         .posX = 100,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1407,8 +1407,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 448,
+        .depth = 34,
+        .flags = 448,
         .posX = 476,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1418,8 +1418,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 320,
+        .depth = 34,
+        .flags = 320,
         .posX = 476,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1429,8 +1429,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 540,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1440,8 +1440,8 @@ static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 480,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1454,8 +1454,8 @@ static SpriteInfo OICWSprInfo[7] = {
     {
         .colour = 0xffffff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 512,
+        .depth = 40,
+        .flags = 512,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1465,16 +1465,16 @@ static SpriteInfo OICWSprInfo[7] = {
     {
         .colour = 0x7f7f7f40,
         .unknown1 = 0x7f7f7f40,
-        .maybeEnabled = 39,
-        .maybeFlags = 1280,
+        .depth = 39,
+        .flags = 1280,
         .posX = 256,
         .posY = 176,
         .onscreenWidth = 128,
         .onscreenHeight = 128,
         .spritesheetX = 1,
         .spritesheetY = 1,
-        .maybeSpritesheetWidth = 127,
-        .maybeSpritesheetHeight = 127,
+        .spritesheetWidth = 127,
+        .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000141,
         .linkedViewer = 5,
@@ -1482,46 +1482,46 @@ static SpriteInfo OICWSprInfo[7] = {
     {
         .colour = 0x7f7f7fc8,
         .unknown1 = 200,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 20,
         .posY = 452,
-        .maybeClippedText = FontFormat3,
+        .format = FontFormat3,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fc8,
         .unknown1 = 200,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 20,
         .posY = 459,
-        .maybeClippedText = FontFormat3,
+        .format = FontFormat3,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fc8,
         .unknown1 = 200,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 20,
         .posY = 466,
-        .maybeClippedText = FontFormat3,
+        .format = FontFormat3,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fc8,
         .unknown1 = 200,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 20,
         .posY = 473,
-        .maybeClippedText = FontFormat3,
+        .format = FontFormat3,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fc8,
         .unknown1 = 200,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 20,
         .posY = 480,
-        .maybeClippedText = FontFormat3,
+        .format = FontFormat3,
         .linkedViewer = 5,
     },
 };
@@ -1530,8 +1530,8 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x1000ff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1541,8 +1541,8 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posY = 58,
         .onscreenWidth = 67,
         .onscreenHeight = 36,
@@ -1553,8 +1553,8 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 70,
         .posY = 58,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1564,8 +1564,8 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 70,
         .posY = 78,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1575,8 +1575,8 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 202,
         .posY = 58,
         .onscreenWidth = 438,
@@ -1588,14 +1588,14 @@ static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 3328,
+        .depth = 34,
+        .flags = 3328,
         .posX = 320,
         .posY = 240,
         .spritesheetX = 1,
         .spritesheetY = 1,
-        .maybeSpritesheetWidth = 63,
-        .maybeSpritesheetHeight = 63,
+        .spritesheetWidth = 63,
+        .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000146,
         .linkedViewer = 5,
@@ -1606,8 +1606,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .posX = 140,
         .posY = 64,
         .onscreenWidth = 360,
@@ -1619,8 +1619,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 140,
         .posY = 416,
         .onscreenWidth = 360,
@@ -1632,8 +1632,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .posX = 256,
         .posY = 239,
         .onscreenWidth = 40,
@@ -1645,8 +1645,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .posX = 344,
         .posY = 239,
         .onscreenWidth = 40,
@@ -1658,8 +1658,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .posX = 319,
         .posY = 176,
         .onscreenWidth = 2,
@@ -1671,8 +1671,8 @@ static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 40,
-        .maybeFlags = 256,
+        .depth = 40,
+        .flags = 256,
         .posX = 319,
         .posY = 264,
         .onscreenWidth = 2,
@@ -1687,8 +1687,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7f7f,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 33,
-        .maybeFlags = 256,
+        .depth = 33,
+        .flags = 256,
         .posX = 470,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1698,8 +1698,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 497,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1709,8 +1709,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 555,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1720,8 +1720,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 497,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1731,8 +1731,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 555,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1742,8 +1742,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 497,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1753,8 +1753,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 555,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1764,8 +1764,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 497,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1775,8 +1775,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 555,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1786,8 +1786,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7f7f,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 497,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1797,8 +1797,8 @@ static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7f7f,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 34,
-        .maybeFlags = 256,
+        .depth = 34,
+        .flags = 256,
         .posX = 543,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1811,33 +1811,33 @@ static SpriteInfo MPAmmoSprInfo[3] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 32,
+        .depth = 28,
+        .flags = 32,
         .posX = 100,
         .posY = 18,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 32,
+        .depth = 28,
+        .flags = 32,
         .posX = 100,
         .posY = 38,
         .onscreenHeight = 4,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 28,
-        .maybeFlags = 32,
+        .depth = 28,
+        .flags = 32,
         .posX = 100,
         .posY = 38,
         .onscreenHeight = 4,
-        .maybeClippedText = (char *)"\xff\x02\xfe\x02",
+        .format = (char *)"\xff\x02\xfe\x02",
         .linkedViewer = 5,
     },
 };
@@ -1846,7 +1846,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 29,
+        .depth = 29,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000172,
@@ -1855,17 +1855,17 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0x8e8e3cff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 32,
+        .depth = 0xffff,
+        .flags = 32,
         .posX = 64,
         .posY = 330,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 28,
+        .depth = 28,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x3000171,
@@ -1874,7 +1874,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posX = 64,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1884,8 +1884,8 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 256,
+        .depth = 0xffff,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1895,8 +1895,8 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 384,
+        .depth = 0xffff,
+        .flags = 384,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1906,8 +1906,8 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 256,
+        .depth = 0xffff,
+        .flags = 256,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1917,8 +1917,8 @@ static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0xff0000ff,
         .unknown1 = 0xff0000ff,
-        .maybeEnabled = 0xffff,
-        .maybeFlags = 320,
+        .depth = 0xffff,
+        .flags = 320,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
@@ -1931,9 +1931,9 @@ static SpriteInfo MPInfoStatusSprInfo[1] = {
     {
         .colour = 0xffffffff,
         .unknown1 = 255,
-        .maybeEnabled = 29,
-        .maybeFlags = 32,
-        .maybeClippedText = FontFormat2,
+        .depth = 29,
+        .flags = 32,
+        .format = FontFormat2,
         .linkedViewer = 5,
     },
 };
@@ -1942,93 +1942,93 @@ static SpriteInfo MPScoreSprInfo[7] = {
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 29,
-        .maybeFlags = 8192,
-        .maybeClippedText = FontFormat2,
+        .depth = 29,
+        .flags = 8192,
+        .format = FontFormat2,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000182,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000182,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 30,
-        .maybeFlags = 256,
+        .depth = 30,
+        .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000188,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 30,
-        .maybeFlags = 256,
+        .depth = 30,
+        .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000187,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 30,
-        .maybeFlags = 256,
+        .depth = 30,
+        .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000186,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7fff,
         .unknown1 = 255,
-        .maybeEnabled = 0xffff,
+        .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .maybeClippedText = FontFormat2,
+        .format = FontFormat2,
         .textureHashcode = (HASHCODE)0x3000182,
         .linkedViewer = 5,
     },
 };
 // XBE_GLOBAL(0x00181408, 0x84)
 static SpriteInfo MissionStatusSprInfo[3] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 320, .posY = 42, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 42, .linkedViewer = 5},
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 29,
+        .depth = 29,
         .posX = 320,
         .posY = 64,
-        .maybeClippedText = FontFormat2Centred,
+        .format = FontFormat2Centred,
         .linkedViewer = 5,
     },
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .onscreenWidth = 640,
         .onscreenHeight = 103,
         .spritesheetX = 198,
-        .maybeSpritesheetWidth = 1,
-        .maybeSpritesheetHeight = 103,
+        .spritesheetWidth = 1,
+        .spritesheetHeight = 103,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2036,18 +2036,18 @@ static SpriteInfo MissionStatusSprInfo[3] = {
 };
 // XBE_GLOBAL(0x00181490, 0x108)
 static SpriteInfo ObjectiveStatusSprInfo[6] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 160, .posY = 40, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 40, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 50,
         .onscreenWidth = 540,
         .onscreenHeight = 56,
         .spritesheetX = 190,
-        .maybeSpritesheetWidth = 1,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 1,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2055,13 +2055,13 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
         .onscreenHeight = 56,
         .spritesheetX = 185,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2069,13 +2069,13 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
         .onscreenHeight = 56,
         .spritesheetX = 191,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2083,7 +2083,7 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
     {
         .colour = 0x7d6d59ff,
         .unknown1 = 255,
-        .maybeEnabled = 29,
+        .depth = 29,
         .posX = 160,
         .posY = 20,
         .textRef = (Action_TranslatedText)0x2000052,
@@ -2092,18 +2092,18 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
 };
 // XBE_GLOBAL(0x001815b8, 0xdc)
 static SpriteInfo PickupStatusSprInfo[5] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 160,
         .onscreenWidth = 320,
         .onscreenHeight = 26,
         .spritesheetX = 190,
-        .maybeSpritesheetWidth = 1,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 1,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2111,13 +2111,13 @@ static SpriteInfo PickupStatusSprInfo[5] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 160,
         .onscreenWidth = 5,
         .onscreenHeight = 26,
         .spritesheetX = 185,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2125,13 +2125,13 @@ static SpriteInfo PickupStatusSprInfo[5] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 160,
         .onscreenWidth = 5,
         .onscreenHeight = 26,
         .spritesheetX = 191,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2139,18 +2139,18 @@ static SpriteInfo PickupStatusSprInfo[5] = {
 };
 // XBE_GLOBAL(0x00181698, 0xdc)
 static SpriteInfo InfoStatusSprInfo[5] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .maybeEnabled = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
+    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 50,
         .onscreenWidth = 540,
         .onscreenHeight = 26,
         .spritesheetX = 190,
-        .maybeSpritesheetWidth = 1,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 1,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2158,13 +2158,13 @@ static SpriteInfo InfoStatusSprInfo[5] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
         .onscreenHeight = 26,
         .spritesheetX = 185,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2172,13 +2172,13 @@ static SpriteInfo InfoStatusSprInfo[5] = {
     {
         .colour = 0x7f7f7f8d,
         .unknown1 = 0x7f7f7fff,
-        .maybeEnabled = 30,
+        .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
         .onscreenHeight = 26,
         .spritesheetX = 191,
-        .maybeSpritesheetWidth = 5,
-        .maybeSpritesheetHeight = 56,
+        .spritesheetWidth = 5,
+        .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)0x300007a,
         .linkedViewer = 5,
@@ -2249,26 +2249,26 @@ void HUD_InitPickupStatusPaneWidth(void) {
 
 // FUNC_AT(0x000f5480)
 void HUD_InitMissionStatusFormats(void) {
-    MissionStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+    MissionStatusSprInfo[0].format = TextMsgFormats[TXTMSG_MISSION].font;
 }
 
 // FUNC_AT(0x000f5490)
 void HUD_InitObjectiveStatusFormats(void) {
-    ObjectiveStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
-    ObjectiveStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
-    ObjectiveStatusSprInfo[5].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+    ObjectiveStatusSprInfo[0].format = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+    ObjectiveStatusSprInfo[1].format = TextMsgFormats[TXTMSG_MISSION].font;
+    ObjectiveStatusSprInfo[5].format = TextMsgFormats[TXTMSG_OBJECTIVE].font;
 }
 
 // FUNC_AT(0x000f54c0)
 void HUD_InitInfoStatusFormats(void) {
-    InfoStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_INFO].font;
-    InfoStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+    InfoStatusSprInfo[0].format = TextMsgFormats[TXTMSG_INFO].font;
+    InfoStatusSprInfo[1].format = TextMsgFormats[TXTMSG_MISSION].font;
 }
 
 // FUNC_AT(0x000f54f0)
 void HUD_InitPickupStatusFormats(void) {
-    PickupStatusSprInfo[0].maybeClippedText = TextMsgFormats[TXTMSG_OBJECTIVE].font;
-    PickupStatusSprInfo[1].maybeClippedText = TextMsgFormats[TXTMSG_MISSION].font;
+    PickupStatusSprInfo[0].format = TextMsgFormats[TXTMSG_OBJECTIVE].font;
+    PickupStatusSprInfo[1].format = TextMsgFormats[TXTMSG_MISSION].font;
 }
 
 // TODO: Change from 640x480 to generic
@@ -2341,7 +2341,7 @@ void HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float alo
     ring->onscreenHeight = (short)Ftol((ushort)ring->backupOnscreenHeight * (double)scale);
     ring->positionX = (short)Ftol(((double)sun.x - cx) * along + cx);
     ring->positionY = (short)Ftol(((double)cy - sun.y) * along + cy);
-    ring->maybeEnabled = 0x31;
+    ring->depth = 0x31;
     ring->colourTint = alpha | 0xffffff00;
 }
 
@@ -2403,7 +2403,7 @@ void HUD_UpdateLensFlarePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         }
     }
     for (int i = 0; i < 7; i++)
-        pane->spriteList[i]->maybeEnabled = 0xff;
+        pane->spriteList[i]->depth = 0xff;
 }
 
 // XBE_GLOBAL(0x0017f950, 0x58)
@@ -2582,13 +2582,13 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             return;
         CAR_INFO *car = device->objGraphics == hashtable_hashcode_to_celglist(GFX_RC_CAR)
                             ? (CAR_INFO *)device->extraObjectData
-                            : (CAR_INFO *)device->maybeParent->extraObjectData;
+                            : (CAR_INFO *)device->parent->extraObjectData;
         sprintf(count->text, "%d", (ushort)car->mainAmmo);
         Sprite_SetText(count, count->text);
         sprintf(mode->text, "%d", Ftol(car->tankMachinegunTemperature));
         Sprite_SetText(mode, mode->text);
-        name->maybeEnabled = 0xff;
-        mode->maybeEnabled = 0x1c;
+        name->depth = 0xff;
+        mode->depth = 0x1c;
         return;
     }
 
@@ -2617,11 +2617,11 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             blData->weaponChangeTimer = (char)Ftol(_FRAME_RATE);
         if (blData->weaponChangeTimer != 0) {
             blData->weaponChangeTimer--;
-            name->maybeEnabled = 0x1c;
-            mode->maybeEnabled = 0xff;
+            name->depth = 0x1c;
+            mode->depth = 0xff;
         } else {
-            name->maybeEnabled = 0xff;
-            mode->maybeEnabled = 0x1c;
+            name->depth = 0xff;
+            mode->depth = 0x1c;
         }
         // The name is the format (as the original)
         weapon_definition_tag *next = &weapon_data[obj->animState->switchingToWeaponId];
@@ -2636,11 +2636,11 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     // The clip: a column of rounds, double width for a big clip, over the empty clip
     if (rounds != NULL && pane->numSprites > AMMO_ROUNDS) {
         if (blData->weaponChangeTimer != 0) {
-            rounds->maybeEnabled = 0xff;
+            rounds->depth = 0xff;
         } else {
             double scale = clip >= 0x58 ? 16.0f : 1.0f;
             AmmoImage *image = &BulletImg[ammoType];
-            rounds->maybeEnabled = 0x1c;
+            rounds->depth = 0x1c;
             float spent = (float)((clip - loaded) * (double)image->h);
             double height = loaded * (double)image->h;
             rounds->positionX = (short)Ftol(count->positionX - scale * image->w);
@@ -2656,11 +2656,11 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
     if (clipSprite != NULL && pane->numSprites > AMMO_CLIP) {
         if (blData->weaponChangeTimer != 0) {
-            clipSprite->maybeEnabled = 0xff;
+            clipSprite->depth = 0xff;
         } else {
             double scale = clip >= 0x58 ? 16.0f : 1.0f;
             AmmoImage *image = &BulletImg[ammoType];
-            clipSprite->maybeEnabled = 0x1d;
+            clipSprite->depth = 0x1d;
             double height = clip * (double)image->h;
             clipSprite->positionX = (short)Ftol(count->positionX - scale * image->w);
             clipSprite->positionY = (short)Ftol(pane->posY - height);
@@ -2675,7 +2675,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
 
     if (grapple != NULL && pane->numSprites > AMMO_GRAPPLE) {
-        grapple->maybeEnabled = 0xff;
+        grapple->depth = 0xff;
         char held = obj->animState->currentWeaponId;
         float nearest = 10000.0f;
         if (held != WEAPON_GRAPPLE_A && held != WEAPON_GRAPPLE_B)
@@ -2693,7 +2693,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             if (!(distance < nearest))
                 continue;
             nearest = (float)distance;
-            grapple->maybeEnabled = 0x1c;
+            grapple->depth = 0x1c;
             grapple->positionX = (short)Ftol(screen.x);
             grapple->positionY = (short)Ftol((double)glb_viewer[blData->playerNum]->height - screen.y);
             if (distance < weapon_data[WEAPON_GRAPPLE_A].range && blData->thirdIcon == 2)
@@ -2735,7 +2735,7 @@ int switch_SHOW_COORDS;
 #define HEALTH_COLOUR_MID   0xc6984e00
 #define HEALTH_COLOUR_LOW   0x9d191200
 
-#define HUD_ICON_ON         0x1d    // maybeEnabled of a shown icon
+#define HUD_ICON_ON         0x1d    // depth of a shown icon
 #define HUD_HIT_ON          0x1e
 
 // The third-person icons, indexed by BLData.thirdIcon
@@ -2784,14 +2784,14 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         return;
 
     for (int i = 0; i < HEALTH_NUM_HIT; i++)
-        pane->spriteList[HEALTH_HIT_FIRST + i]->maybeEnabled = 0xff;
+        pane->spriteList[HEALTH_HIT_FIRST + i]->depth = 0xff;
 
     // Flash the sides the player was hit from, fading by a frame's worth each frame
     uchar fade = (uchar)blData->hitDirectionFade;
     if (fade != 0) {
         for (int i = 0; i < HEALTH_NUM_HIT; i++) {
             if (blData->hitDirections & (1 << i)) {
-                pane->spriteList[HEALTH_HIT_FIRST + i]->maybeEnabled = HUD_HIT_ON;
+                pane->spriteList[HEALTH_HIT_FIRST + i]->depth = HUD_HIT_ON;
                 pane->spriteList[HEALTH_HIT_FIRST + i]->colourTint = (uint)(uchar)blData->hitDirectionFade | 0xff000000;
             }
         }
@@ -2819,14 +2819,14 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         // The x87 products below are exact (or all but) in double; float would round them differently.
         for (ushort i = 0; i < HEALTH_NUM_ARMOUR; i++) {
             if (armourSegments == 0.0f) {
-                pane->spriteList[HEALTH_ARMOUR_FIRST + i]->maybeEnabled = 0xff;
+                pane->spriteList[HEALTH_ARMOUR_FIRST + i]->depth = 0xff;
             } else {
                 // Full segments brighter than empty ones; the first (the armour icon) always full
                 float brightness = ((float)i < armourSegments) ? 0.75f : 0.35f;
                 if (i == 0)
                     brightness = 1.0f;
                 sprite *s = pane->spriteList[HEALTH_ARMOUR_FIRST + i];
-                s->maybeEnabled = (uchar)pane->base->spriteInfo[HEALTH_ARMOUR_FIRST + i].maybeEnabled;
+                s->depth = (uchar)pane->base->spriteInfo[HEALTH_ARMOUR_FIRST + i].depth;
                 s = pane->spriteList[HEALTH_ARMOUR_FIRST + i];
                 uchar a = (uchar)(int)((double)alpha * (double)brightness * 255.0);
                 s->colourTint = (s->colourTint & 0xffffff00) | a;
@@ -2849,8 +2849,8 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             colour = HEALTH_COLOUR_LOW;
 
         for (ushort i = 0; i < HEALTH_NUM_HEALTH; i++) {
-            pane->spriteList[HEALTH_HEALTH_FIRST + i]->maybeEnabled =
-                (uchar)pane->base->spriteInfo[HEALTH_HEALTH_FIRST + i].maybeEnabled;
+            pane->spriteList[HEALTH_HEALTH_FIRST + i]->depth =
+                (uchar)pane->base->spriteInfo[HEALTH_HEALTH_FIRST + i].depth;
             float brightness = (healthSegments > (double)i) ? 0.55f : 0.15f;
             // Nearly dead: the first segment blinks, half a second on and off
             if (i == 0 && healthSegments < 0.5)
@@ -2865,7 +2865,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
     } else {
         for (int i = 0; i < HEALTH_NUM_BARS; i++)
-            pane->spriteList[i]->maybeEnabled = 0xff;
+            pane->spriteList[i]->depth = 0xff;
     }
 
     // The Bond moment icon: spins in (a squashed, flipping card) over the first 100 frames of its 200, then sits
@@ -2875,7 +2875,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
         if (blData->bondMomentTimer <= 0) {
             blData->bondMomentTimer = 0;
-            bondMoment->maybeEnabled = 0xff;
+            bondMoment->depth = 0xff;
         } else {
             bondMoment->positionX = 320;
             bondMoment->positionY = 80;
@@ -2891,7 +2891,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                 bondMoment->spritesheetHeight = ((double)flip < 0.0) ? (short)-height : (short)height;
                 bondMoment->onscreenWidth = (short)(int)((double)(ushort)bondMoment->backupOnscreenWidth * scale);
             }
-            bondMoment->maybeEnabled = 0;
+            bondMoment->depth = 0;
             blData->bondMomentTimer = (short)(int)((double)blData->bondMomentTimer - (double)FRAME_RATE_MUL);
         }
     }
@@ -2899,12 +2899,12 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     // The coordinates cheat
     if (coords != NULL) {
         if (switch_SHOW_COORDS != 0) {
-            coords->maybeEnabled = HUD_ICON_ON;
+            coords->depth = HUD_ICON_ON;
             sprintf(coords->text, "%.2f %.2f %.2f\nFPS %.2f\n", (double)obj->position.x, (double)obj->position.y,
                     (double)obj->position.z, (double)_FRAME_RATE);
             Sprite_SetText(coords, coords->text);
         } else {
-            coords->maybeEnabled = 0xff;
+            coords->depth = 0xff;
         }
     }
 
@@ -2915,7 +2915,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         if (icon != 0xff) {
             // No bounds check, as in the original (whose table is on the stack)
             if (hashtable_set_sprite(thirdIcon, ThirdIconSprites[icon])) {
-                thirdIcon->maybeEnabled = HUD_ICON_ON;
+                thirdIcon->depth = HUD_ICON_ON;
                 thirdIcon->positionX = 528;
                 thirdIcon->positionY = 48;
                 thirdIcon->colourTint = 0x7f7f7fff;
@@ -2923,14 +2923,14 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                 shown = true;
             }
         } else if (ThirdIconTimer != 0) {
-            thirdIcon->maybeEnabled = HUD_ICON_ON;
+            thirdIcon->depth = HUD_ICON_ON;
             uchar a = (uchar)(int)((double)(ThirdIconTimer * 255) / ((double)_FRAME_RATE * 0.5));
             thirdIcon->colourTint = (uint)a | 0x7f7f7f00;
             ThirdIconTimer--;
             shown = true;
         }
         if (!shown)
-            thirdIcon->maybeEnabled = 0xff;
+            thirdIcon->depth = 0xff;
     }
 
     // The crouch icon: on while crouching, then the "stand up" icon for a second, fading over the last half
@@ -2939,14 +2939,14 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             hashtable_set_sprite(crouchIcon, ICON_CROUCHING);
             crouchIcon->positionX = 48;
             crouchIcon->positionY = 48;
-            crouchIcon->maybeEnabled = HUD_ICON_ON;
+            crouchIcon->depth = HUD_ICON_ON;
             crouchIcon->colourTint = 0x7f7f7fff;
             CrouchIconTimer = (int16_t)(int)_FRAME_RATE;
             return;
         }
         if (CrouchIconTimer != 0) {
             hashtable_set_sprite(crouchIcon, ICON_UNCROUCH);
-            crouchIcon->maybeEnabled = HUD_ICON_ON;
+            crouchIcon->depth = HUD_ICON_ON;
             uchar a = 0xff;
             double half = (double)_FRAME_RATE * 0.5;
             if ((double)CrouchIconTimer < half)
@@ -2955,7 +2955,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             CrouchIconTimer--;
             return;
         }
-        crouchIcon->maybeEnabled = 0xff;
+        crouchIcon->depth = 0xff;
     }
 }
 
@@ -3056,7 +3056,7 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	memset(player->hudInfo->pane, 0, sizeof(HUDPANE_tag) * NUM_PANES);
 
 	// These 4 lines are probably not needed?!
-	player->hudInfo->maybeUnused = 0;
+	player->hudInfo->field_0x4 = 0;
 	ttimer = 0;
 	ctimer = 0;
 	player->hudInfo->crosshairSprite = NULL;
@@ -3072,14 +3072,14 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 
 		if((paneCreate == NULL) || (paneCreate->createFunc == NULL)) {
 			player->hudInfo->pane[i].enabled = 0;
-			player->hudInfo->pane[i].maybeCanBeEnabled = 0;
+			player->hudInfo->pane[i].canBeEnabled = 0;
 			continue;
 		}
 
 		//printf("Processing pane %i, paneCreate = %p, createFunc = %p\n", i, paneCreate, paneCreate->createFunc);
 
 		player->hudInfo->pane[i].enabled = 1;
-		player->hudInfo->pane[i].maybeCanBeEnabled = 1;
+		player->hudInfo->pane[i].canBeEnabled = 1;
 		player->hudInfo->pane[i].field_0x1d = 0;
 		player->hudInfo->pane[i].field_0x1e = 0;
 		player->hudInfo->pane[i].base = paneCreate;
@@ -3168,12 +3168,12 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 				pane->spriteList[i+2]->positionX = 0x32;
 				pane->spriteList[i+2]->positionY = linePositionY;
 				linePositionY += 17;
-				pane->spriteList[i+2]->maybeEnabled = 0x1c;
+				pane->spriteList[i+2]->depth = 0x1c;
 
 				// 2nd line flickers slowly
 				if(i == 1 && numVisibleLines == 2) {
 					if(OICW_timer % 8 < 4) {
-						pane->spriteList[i+2]->maybeEnabled = 0xff;
+						pane->spriteList[i+2]->depth = 0xff;
 					}
 				}
 			}
@@ -3192,7 +3192,7 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 			OICW_timer--;
 			int value = (OICW_timer % 4 < 2) ? 0xff: 0x1c;
 			for(int i = 0; i < 5; i++) {
-				pane->spriteList[i+2]->maybeEnabled = value;
+				pane->spriteList[i+2]->depth = value;
 			}
 
 			if(OICW_timer <= 0) {
@@ -3205,11 +3205,11 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		case 2:
 		{
 			// Fully booted - hide all the labels
-			pane->spriteList[2]->maybeEnabled = 0xff;
-			pane->spriteList[3]->maybeEnabled = 0xff;
-			pane->spriteList[4]->maybeEnabled = 0xff;
-			pane->spriteList[5]->maybeEnabled = 0xff;
-			pane->spriteList[6]->maybeEnabled = 0xff;
+			pane->spriteList[2]->depth = 0xff;
+			pane->spriteList[3]->depth = 0xff;
+			pane->spriteList[4]->depth = 0xff;
+			pane->spriteList[5]->depth = 0xff;
+			pane->spriteList[6]->depth = 0xff;
 			break;
 		}
 	}
@@ -3227,19 +3227,19 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 	if(playerInfo->remoteControlDevice->objGraphics == hashtable_hashcode_to_celglist(GFX_LittleNellie_Body)) {
 		// Helicopter overlay
 		pane->spriteList[0]->colourTint = 0x000020ff; // Blue tint
-		pane->spriteList[1]->maybeEnabled = 0xff;
-		pane->spriteList[2]->maybeEnabled = 0xff;
-		pane->spriteList[3]->maybeEnabled = 0x27;
-		pane->spriteList[4]->maybeEnabled = 0x27;
-		pane->spriteList[5]->maybeEnabled = 0x27;
+		pane->spriteList[1]->depth = 0xff;
+		pane->spriteList[2]->depth = 0xff;
+		pane->spriteList[3]->depth = 0x27;
+		pane->spriteList[4]->depth = 0x27;
+		pane->spriteList[5]->depth = 0x27;
 	} else {
 		// Tank overlay
 		pane->spriteList[0]->colourTint = 0x002000ff; // Green tint
-		pane->spriteList[1]->maybeEnabled = 0x27;
-		pane->spriteList[2]->maybeEnabled = 0x27;
-		pane->spriteList[3]->maybeEnabled = 0xff;
-		pane->spriteList[4]->maybeEnabled =	0xff;
-		pane->spriteList[5]->maybeEnabled = 0xff;
+		pane->spriteList[1]->depth = 0x27;
+		pane->spriteList[2]->depth = 0x27;
+		pane->spriteList[3]->depth = 0xff;
+		pane->spriteList[4]->depth =	0xff;
+		pane->spriteList[5]->depth = 0xff;
 	}
 }
 
@@ -3329,7 +3329,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	if (gameObj->subState != MovementType_RemoteControl) {
 		Player_SetCamMode(blData, 0);
 		glb_viewer[blData->playerNum]->someCel = NULL;
-		if (blData->hudInfo != NULL && blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) {
+		if (blData->hudInfo != NULL && blData->hudInfo->pane[Redeemer].canBeEnabled) {
 			blData->hudInfo->pane[Redeemer].enabled = false;
 			blData->hudInfo->pane[Redeemer].state = 0;
 		}
@@ -3339,7 +3339,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	viewer_tag *viewer = glb_viewer[blData->playerNum];
 
 	// A target marker over each helicopter on screen, flashing when it is near the middle
-	hudPane->spriteList[10]->maybeEnabled = 0xff;
+	hudPane->spriteList[10]->depth = 0xff;
 	for (COPTER *c = (COPTER *)CopterList.head; c != NULL; c = (COPTER *)c->node.next) {
 		obj_tag *body = Copter_GetBody(c);
 		_VECTOR at;
@@ -3362,7 +3362,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		                      Extended((double)(ushort)marker->backupOnscreenHeight));
 		marker->positionX = (short)Ftol(Extended(at.x) - Extended((double)(ushort)marker->backupOnscreenWidth));
 		hudPane->spriteList[10]->positionY = y;
-		hudPane->spriteList[10]->maybeEnabled = 0x27;
+		hudPane->spriteList[10]->depth = 0x27;
 		float dx = at.x - 320.0f;
 		if (dx < 0.0f)
 			dx = -dx;
@@ -3371,13 +3371,13 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 			if (dy < 0.0f)
 				dy = -dy;
 			if (dy < 32.0f && (GameState.NumFramesUnpaused & 8))
-				hudPane->spriteList[10]->maybeEnabled = 0xff;
+				hudPane->spriteList[10]->depth = 0xff;
 		}
 	}
 
 	// Turn the pane off once the camera has left the missile
 	if (blData->camMode != CamMode_Redeemer && blData->hudInfo != NULL &&
-	    blData->hudInfo->pane[Redeemer].maybeCanBeEnabled) {
+	    blData->hudInfo->pane[Redeemer].canBeEnabled) {
 		blData->hudInfo->pane[Redeemer].enabled = false;
 		blData->hudInfo->pane[Redeemer].state = 0;
 	}
@@ -3386,11 +3386,11 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	Extended lifetime;
 	if (blData->remoteControlDevice == NULL) {
 		lifetime = Extended(1.0f);
-		hudPane->spriteList[2]->maybeEnabled = 0x27;
+		hudPane->spriteList[2]->depth = 0x27;
 	} else {
 		BU_tag *missile = (BU_tag *)blData->remoteControlDevice->extraObjectData;
 		lifetime = Extended(missile->distanceTravelled) / Extended(missile->wpnDef->range);
-		hudPane->spriteList[2]->maybeEnabled = 0xff;
+		hudPane->spriteList[2]->depth = 0xff;
 		if (items[0] != NULL && items[1] != NULL && items[2] != NULL) {
 			float yaw = blData->remoteControlDevice->rotation.z;
 			items[0]->rotation.z = (float)(Extended(1.5707964f) - Extended(yaw) + Extended(3.1415927f));
@@ -3496,7 +3496,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
             if (numSprites != 0) {
                 ushort i = 0;
                 do {
-                    pane->spriteList[i]->maybeEnabled = 0xff;
+                    pane->spriteList[i]->depth = 0xff;
                     i++;
                 } while (i < (ushort)pane->numSprites);
             }
@@ -3563,7 +3563,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                 }
                 // Only the text pointer is replaced (not its length) before the format is redone - as the original.
                 heading->text = (char*)label;
-                Sprite_SetFmt(heading, heading->maybeClippedString);
+                Sprite_SetFmt(heading, heading->format);
 
                 if (text != NULL)
                     text->colourTint = 0;   // the message itself waits until the heading has had its say
@@ -3796,19 +3796,19 @@ void HUD_UpdateAirPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         return;
     double level = (obj->subState == MovementType_Wire ? 100.0 - (double)blData->ropeFatigue : blData->air) * 0.01f;
     if (blData->waterFlags & WATER_HEAD_UNDER) {
-        bar->maybeEnabled = 0x1e;
-        frame->maybeEnabled = 0x1f;
+        bar->depth = 0x1e;
+        frame->depth = 0x1f;
         if (obj->subState == MovementType_Wire) {
             bar->colourTint = 0x68d6b1ff;
-            wire->maybeEnabled = 0x1f;
+            wire->depth = 0x1f;
         } else {
             bar->colourTint = 0x68b1d6ff;
-            wire->maybeEnabled = 0xff;
+            wire->depth = 0xff;
         }
     } else {
-        bar->maybeEnabled = 0xff;
-        frame->maybeEnabled = 0xff;
-        wire->maybeEnabled = 0xff;
+        bar->depth = 0xff;
+        frame->depth = 0xff;
+        wire->depth = 0xff;
     }
     HUD_SetBarWidth(bar, level);
 }
@@ -3824,7 +3824,7 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         *flashFrames = 10;
     else if (*flashFrames != 0)
         (*flashFrames)--;
-    pane->spriteList[0]->maybeEnabled = *flashFrames != 0 ? 0x28 : 0xff;
+    pane->spriteList[0]->depth = *flashFrames != 0 ? 0x28 : 0xff;
 
     for (Drone_tag *drone = (Drone_tag *)NDrone2Info.head; drone != NULL; drone = drone->next) {
         obj_tag *body = drone->gameObj;
@@ -3837,7 +3837,7 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         effect->fade = 0;
         hashtable_set_object_to_entity_gfx(mark, (HASHCODE)0x02000832);
         mark->effectFlags |= 0x2000;
-        mark->maybeParent = obj;
+        mark->parent = obj;
     }
 }
 
@@ -4021,12 +4021,12 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     sprite *bar = pane->spriteList[MPHEALTH_BAR];
     sprite *backing = pane->spriteList[MPHEALTH_BACKING];
     for (int i = 0; i < HEALTH_NUM_HIT; i++)
-        pane->spriteList[MPHEALTH_HIT_FIRST + i]->maybeEnabled = 0xff;
+        pane->spriteList[MPHEALTH_HIT_FIRST + i]->depth = 0xff;
 
     if (blData->hitDirectionFade != 0) {
         for (int i = 0; i < HEALTH_NUM_HIT; i++) {
             if (blData->hitDirections & (1 << i)) {
-                pane->spriteList[MPHEALTH_HIT_FIRST + i]->maybeEnabled = HUD_HIT_ON;
+                pane->spriteList[MPHEALTH_HIT_FIRST + i]->depth = HUD_HIT_ON;
                 pane->spriteList[MPHEALTH_HIT_FIRST + i]->colourTint = (uchar)blData->hitDirectionFade | 0xff000000;
             }
         }
@@ -4039,9 +4039,9 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     HUDINFO_tag *hud = blData->hudInfo;
     if (hud->pane[Camera].enabled || hud->pane[OICW].enabled || hud->pane[Ronin].enabled ||
         hud->pane[SecCam].enabled || hud->pane[Redeemer].enabled || hud->pane[RCCar].enabled) {
-        backing->maybeEnabled = 0xff;
-        bar->maybeEnabled = 0xff;
-        armour->maybeEnabled = 0xff;
+        backing->depth = 0xff;
+        bar->depth = 0xff;
+        armour->depth = 0xff;
         return;
     }
     if (bar != NULL) {
@@ -4056,26 +4056,26 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         if (left < 0.2f)
             colour = HEALTH_COLOUR_LOW;
         bar->colourTint = colour | 0xff;
-        bar->maybeEnabled = 0x1c;
-        backing->maybeEnabled = HUD_ICON_ON;
+        bar->depth = 0x1c;
+        backing->depth = HUD_ICON_ON;
     }
     if (armour != NULL) {
         if (blData->armor != 0.0f) {
-            armour->maybeEnabled = 0x1b;
+            armour->depth = 0x1b;
             armour->onscreenWidth = (short)Ftol(blData->armor * (double)2.56f);
             armour->spritesheetWidth = (short)Ftol(blData->armor * (double)2.56f);
         } else {
-            armour->maybeEnabled = 0xff;
+            armour->depth = 0xff;
         }
     }
     if (coords != NULL) {
         if (switch_SHOW_COORDS != 0) {
-            coords->maybeEnabled = HUD_ICON_ON;
+            coords->depth = HUD_ICON_ON;
             sprintf(coords->text, "%.2f %.2f %.2f\nFPS %.2f\n", (double)obj->position.x, (double)obj->position.y,
                     (double)obj->position.z, (double)_FRAME_RATE);
             Sprite_SetText(coords, coords->text);
         } else {
-            coords->maybeEnabled = 0xff;
+            coords->depth = 0xff;
         }
     }
 }
@@ -4091,12 +4091,12 @@ void HUD_MPUpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) 
     switch (data->state) {
         case STATUS_IDLE:
             for (ushort i = 0; i < (ushort)pane->numSprites; i++)
-                pane->spriteList[i]->maybeEnabled = 0xff;
+                pane->spriteList[i]->depth = 0xff;
             if (Text_UpdateMsg(blData->playerNum, data->msgType, &data->msg) && data->msg != NULL)
                 data->state = STATUS_SHOW;
             return;
         case STATUS_SHOW:
-            text->maybeEnabled = HUD_HIT_ON;
+            text->depth = HUD_HIT_ON;
             if (msg->spriteHash != HASHCODE_NONE) {
                 hashtable_set_sprite(text, msg->spriteHash);
                 text->text = NULL;
@@ -4117,7 +4117,7 @@ void HUD_MPUpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) 
                 data->state = data->msg == NULL ? STATUS_CLOSE : STATUS_SHOW;
             return;
         case STATUS_CLOSE:
-            text->maybeEnabled = 0xff;
+            text->depth = 0xff;
             data->state = STATUS_IDLE;
             return;
         default:
@@ -4153,8 +4153,8 @@ void HUD_CreateMPScorePane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag 
     s[0]->positionX += 0x18;
     s[0]->positionY -= 3;
     // Without teams sprite 3 goes, and the score takes its place
-    if (!MPSettings.maybeIsTeamGame && !MPSettings.field53_0x190 && MPSettings.GameMode != GM_ASSASSIN) {
-        s[3]->maybeEnabled = 0xff;
+    if (!MPSettings.isTeamGame && !MPSettings.field53_0x190 && MPSettings.GameMode != GM_ASSASSIN) {
+        s[3]->depth = 0xff;
         FuckOffSprite3 = 1;
         s[3]->positionY -= 0x11;
     } else {
@@ -4181,7 +4181,7 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     if (me != NULL && (me->objectType == OBJECTTYPE_DRONE || me->objectType == OBJECTTYPE_DEAD_DRONE))
         return;
     if (FuckOffSprite3)
-        pane->spriteList[3]->maybeEnabled = 0xff;
+        pane->spriteList[3]->depth = 0xff;
 
     char *teamScore = MP_GetTeamScore(team);
     char *playerScore = MP_GetPlayerScore(blData->playerNum);
@@ -4196,28 +4196,28 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         score->unknown1 = 0xff;
     }
     Sprite_SetText(score, score->text);
-    iconA->maybeEnabled = 0xff;
-    iconB->maybeEnabled = 0xff;
-    iconC->maybeEnabled = 0xff;
+    iconA->depth = 0xff;
+    iconB->depth = 0xff;
+    iconC->depth = 0xff;
 
     switch (MPSettings.GameMode) {
         case GM_CTF:
             if (MP_IsFlagParent(me, team == 0)) {
-                iconA->maybeEnabled = HUD_HIT_ON;
+                iconA->depth = HUD_HIT_ON;
                 hashtable_set_sprite(iconA, (HASHCODE)0x03000182);
                 iconA->colourTint = team != 0 ? 0xff0000ff : 0x0040ffff;
             }
             return;
         case GM_BLUEPRINT:
             if (MP_IsBluePrintParent(me)) {
-                iconA->maybeEnabled = HUD_HIT_ON;
+                iconA->depth = HUD_HIT_ON;
                 hashtable_set_sprite(iconA, (HASHCODE)0x0300018a);
             }
             return;
         case GM_UPLINK: {
-            iconA->maybeEnabled = HUD_HIT_ON;
-            iconB->maybeEnabled = HUD_HIT_ON;
-            iconC->maybeEnabled = HUD_HIT_ON;
+            iconA->depth = HUD_HIT_ON;
+            iconB->depth = HUD_HIT_ON;
+            iconC->depth = HUD_HIT_ON;
             sprite *uplinks[3] = {iconA, iconB, iconC};
             for (short i = 0; i < 3; i++) {
                 switch (MP_getUplinkStatus(i)) {
@@ -4236,11 +4236,11 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         }
         case GM_GOLDENEYE:
             if (MP_ObjTeamHasGEObj(me, 0)) {
-                iconA->maybeEnabled = HUD_HIT_ON;
+                iconA->depth = HUD_HIT_ON;
                 hashtable_set_sprite(iconA, (HASHCODE)0x0300018b);
             }
             if (MP_ObjTeamHasGEObj(me, 1)) {
-                iconB->maybeEnabled = HUD_HIT_ON;
+                iconB->depth = HUD_HIT_ON;
                 hashtable_set_sprite(iconB, (HASHCODE)0x0300018c);
             }
             break;
@@ -4250,11 +4250,11 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             return;
     }
     if (MP_IsAssasin(me)) {
-        iconA->maybeEnabled = HUD_HIT_ON;
+        iconA->depth = HUD_HIT_ON;
         hashtable_set_sprite(iconA, (HASHCODE)0x03000180);
     }
     if (MP_IsTarget(me)) {
-        iconB->maybeEnabled = HUD_HIT_ON;
+        iconB->depth = HUD_HIT_ON;
         hashtable_set_sprite(iconB, (HASHCODE)0x03000189);
     }
 }
@@ -4271,8 +4271,8 @@ void HUD_CreateRadar(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *creat
         Sprite_SetParams(dots[i], 0, pane->posX, pane->posY, (HASHCODE)0x0300016f, 0x005000ff);
         dots[i]->onscreenWidth = 2;
         dots[i]->onscreenHeight = 2;
-        dots[i]->maybeEnabled = 0xff;
-        dots[i]->maybeFlags |= 0x900;
+        dots[i]->depth = 0xff;
+        dots[i]->flags |= 0x900;
     }
 }
 
@@ -4291,7 +4291,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     Mat_Inverse(&viewer->viewMatrix, &RadarInverse);
     RADAROBJ *list = NULL;
     ushort count = MP_GetRadarObjects(obj, &list);
-    radar->maybeEnabled = MPSettings.Player[blData->playerNum].SomeField2 ? 0x1e : 0xff;
+    radar->depth = MPSettings.Player[blData->playerNum].SomeField2 ? 0x1e : 0xff;
 
     ushort used = 0;
     if (count != 0) {
@@ -4324,14 +4324,14 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             dot->spritesheetHeight = (short)icon->h;
             dot->onscreenHeight = dot->spritesheetHeight;
             dot->colourTint = thing->colour;
-            dot->maybeEnabled = 0x1c;
+            dot->depth = 0x1c;
             used++;
             if (used >= count)
                 break;
         }
     }
     for (; used < (ushort)(pane->base->numExtraItems >> 1); used++)
-        dots[used]->maybeEnabled = 0xff;
+        dots[used]->depth = 0xff;
 
     sprite *assassinMark = NULL;
     sprite *targetMark = NULL;
@@ -4339,9 +4339,9 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         assassinMark = MPGame.radarMarks[blData->playerNum].assassin;
         targetMark = MPGame.radarMarks[blData->playerNum].target;
         if (assassinMark != NULL)
-            assassinMark->maybeEnabled = 0xff;
+            assassinMark->depth = 0xff;
         if (targetMark != NULL)
-            targetMark->maybeEnabled = 0xff;
+            targetMark->depth = 0xff;
     }
 
     for (ushort i = 0; i < NUM_AGENTS; i++) {
@@ -4394,7 +4394,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         if (MPSettings.ShowTeamAndNameOverhead) {
             // The name, over the player, kept 12 pixels inside the view's top and bottom; in their team's colour
             sprite *label = dots[used];
-            label->maybeClippedString = PlayerNameFormat;
+            label->format = PlayerNameFormat;
             Sprite_SetText(label, name);
             label->positionX = (short)Ftol((double)screen.x - half + viewer->xMin);
             double y;
@@ -4406,8 +4406,8 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                     y = screen.y;
             }
             label->positionY = (short)Ftol((viewer->height - y) + viewer->yMin);
-            label->maybeEnabled = HUD_HIT_ON;
-            if (MPSettings.maybeIsTeamGame)
+            label->depth = HUD_HIT_ON;
+            if (MPSettings.isTeamGame)
                 label->colourTint = MPSettings.Player[i].TeamId != 0 ? 0x14145aff : 0x5a1414ff;
             else
                 label->colourTint = 0x1e504bff;
@@ -4442,11 +4442,11 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         // The y again where the x was meant (as the original)
         if (!((double)viewer->width - markWidth > markY))
             continue;
-        mark->maybeEnabled = HUD_HIT_ON;
+        mark->depth = HUD_HIT_ON;
     }
 
     for (; used < pane->base->numExtraItems; used++) {
         if (dots[used] != NULL)
-            dots[used]->maybeEnabled = 0xff;
+            dots[used]->depth = 0xff;
     }
 }

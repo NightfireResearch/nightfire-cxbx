@@ -60,14 +60,14 @@ void __declspec(naked) Asm_Vec_NormaliseLen(void) {
 
 // The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
 // game reaches this through an entry that keeps them (tools/caller_saved.py).
-// AUTOLTCG
-void __declspec(naked) Asm_maybeAtan2(void) {
+// FUNC_AT(0x000d6440)
+void __declspec(naked) Asm_Atan2(void) {
     _asm {
         push ecx
         push edx
         push dword ptr [esp + 16]
         push dword ptr [esp + 16]
-        call maybeAtan2
+        call Atan2
         add esp, 8
         pop edx
         pop ecx

@@ -572,7 +572,7 @@ void XA2_IDirectSoundBuffer_SetBufferData(DSoundBuffer *thisPtr, void *pvBufferD
     if (b == NULL)
         return;
 
-    // The unbind case: maybeSoundShutdown drops every buffer's reference to a level's sound bank before it is
+    // The unbind case: SoundShutdown drops every buffer's reference to a level's sound bank before it is
     // freed, so this has to actually stop the voice rather than leave it reading memory that is about to go.
     if (pvBufferData == NULL || dwBufferBytes == 0) {
         if (b->voice != NULL) {

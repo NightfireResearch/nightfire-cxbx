@@ -35,14 +35,14 @@ uint8_t user_restarted_or_quit;
 SpriteInfo menu_cursor = {
     .colour = 0x7f7f7f7f,
     .unknown1 = 0x7f7f7f7f,
-    .maybeEnabled = 0xffff,
-    .maybeFlags = 2048,
+    .depth = 0xffff,
+    .flags = 2048,
     .onscreenWidth = 128,
     .onscreenHeight = 32,
     .spritesheetX = 31,
     .spritesheetY = 36,
-    .maybeSpritesheetWidth = 1,
-    .maybeSpritesheetHeight = 1,
+    .spritesheetWidth = 1,
+    .spritesheetHeight = 1,
     .textRef = (Action_TranslatedText)0xffffffff,
     .textureHashcode = (HASHCODE)0x3000042,
 };
@@ -523,7 +523,7 @@ void MenuManager_Monitor(void) {
                     break;
                 controller_player = i;
                 controller_mission_end = MenuManager_GetStatus() == MENU_STATUS_MISSION_END;
-                if (!controller_mission_end && GameState.maybePaused)
+                if (!controller_mission_end && GameState.LevelEnding)
                     break;
                 sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0), input->controllerPort + 1);
                 controller_state = 1;

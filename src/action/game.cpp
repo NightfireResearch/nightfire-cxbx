@@ -12,7 +12,7 @@
 #include "engine/XboxSettings.h"
 #include "engine/Direct3D/GraphicsSystem.h" // Gfx
 #include "engine/Fmv.h"
-#include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads maybeStartBackgroundMovie draws
+#include "engine/Direct3D/d3dSeam.h" // the immediate-mode quads psiUpdateBackgroundMovie draws
 
 #include "../driving/platform/Host.h"
 #include "../driving/platform/Win32Types.h"   // LARGE_INTEGER
@@ -262,7 +262,7 @@ uint32_t SoundInfo;
 
 // AUTOINJECT
 void psiStopBackgroundMovie(void) {
-    maybeBackgroundMovieCleanup();
+    BackgroundMovieCleanup();
     BackgroundMovieHashcode = 0;
 }
 
@@ -301,7 +301,7 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
     }
   }
 
-  maybeBackgroundMovieCleanup();
+  BackgroundMovieCleanup();
   BackgroundMovieHashcode = 0;
 
   if (hashcode != 0x4e504c59) {
@@ -516,7 +516,7 @@ static void SetObjective(char **objectiveOut, uint32_t objective) {
 }
 
 // Half the time, and whenever the level gave no hint of its own, one of the shared hints instead.
-static void MaybeGeneralHint(char **hintOut) {
+static void PickGeneralHint(char **hintOut) {
     if ((Rand_Random() & 1) != 0 && (hintOut == NULL || *hintOut != NULL))
         return;
     PickHint(hintOut, kGeneralHints);
@@ -714,7 +714,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         return LOADSCREEN_UNKNOWN;
     }
 
-    MaybeGeneralHint(hintOut);
+    PickGeneralHint(hintOut);
     return image;
 }
 
@@ -728,8 +728,8 @@ static void build_MakeCelOverlapBox(world_tag *world) {}
 
 // The movie that follows a movie (0x072000xx to 0x071000xx), or the front end after one of the 0x073000xx ones;
 // otherwise the next level, its variant byte cleared
-// AUTOINJECT
-HASHCODE maybeGetNextMissionInSequence(HASHCODE movie) {
+// FUNC_AT(0x000bdcd0)
+HASHCODE ResetMap_LevelAfterMovie(HASHCODE movie) {
     switch ((uint)movie) {
         case 0x07200001: return (HASHCODE)0x07100002;
         case 0x07200002: return (HASHCODE)0x07100003;
@@ -800,7 +800,7 @@ uint32_t switch_NO_DRONES;
 SpriteInfo LoadingGfx = {
     .colour = 0x7f7f7fff,
     .unknown1 = 0x7f7f7fff,
-    .maybeEnabled = 30,
+    .depth = 30,
     .onscreenWidth = 640,
     .onscreenHeight = 480,
     .textRef = (Action_TranslatedText)0xffffffff,
@@ -825,7 +825,7 @@ void ResetMap_GameInit(void) {
     GameState.CurrentLevelHashcode = (HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff);
     MPSettings.isMultiplayer = GameState.isMultiplayerLevel;
     GameState.ReloadGame = 0;
-    GameState.maybePaused = 0;
+    GameState.LevelEnding = 0;
     GameState.SomeAlternatePauseState = 0;
     GameState.VibrationEnabled = 1;
     controller_mission_end = 0;
@@ -928,7 +928,7 @@ static HASHCODE ResetMap_MovieSubtitles(uint movie) {
 void ResetMap_Load(void) {
     switch (ResetMap_State) {
     case RESETMAP_START:
-        maybePsiResetResources();
+        psiResetResources();
         MenuManager_Load(0, 0);
         Sound_Kill();
         Mem_Init();
@@ -970,7 +970,7 @@ void ResetMap_Load(void) {
         return;
 
     case RESETMAP_AFTER_MOVIE:
-        GameState.NextLevelHashcode = maybeGetNextMissionInSequence((HASHCODE)GameState.MovieHashcode);
+        GameState.NextLevelHashcode = ResetMap_LevelAfterMovie((HASHCODE)GameState.MovieHashcode);
         GameState.CurrentLevelHashcode = GameState.NextLevelHashcode;
         if (GameState.NextLevelHashcode == HT_MainMenu)
             GameState.ReloadMenupage = 0x40000036;
@@ -982,7 +982,7 @@ void ResetMap_Load(void) {
             ResetMap_GenLoadScreen();
         LoadableIndex = 0;
         psiInitTimeIn100ths();
-        maybePsiResetResources();
+        psiResetResources();
         MenuManager_Load(0, 0);
         Sound_Kill();
         Mem_Init();
@@ -1178,8 +1178,8 @@ double timestamp(void) {
 // i.e. the counter is whatever the CPU is running at, and the frequency is a hard-coded claim that it is a
 // 733 MHz Xbox. Anything dividing one by the other therefore gets time that passes too fast by the ratio of
 // the real clock to that constant - the same 6.41x that made pickups pulse wrongly, arrived at by a different
-// route. The XMV video decoder is the caller that matters: maybeXmvDecoderCreate asks for the frequency once,
-// stores frequency/1000 as ticks-per-millisecond, and maybeXmvDecoderUpdate divides counter deltas by it to
+// route. The XMV video decoder is the caller that matters: XmvDecoderCreate asks for the frequency once,
+// stores frequency/1000 as ticks-per-millisecond, and XmvDecoderUpdate divides counter deltas by it to
 // decide when each frame of a background movie is due.
 //
 // Replacing both with the host's own pair keeps them consistent with each other, which is the only property
@@ -1546,7 +1546,7 @@ void GameFlow_Main(void) {
   if (0x1f < bVar2) {
     bVar2 = 0x3f - bVar2;
   }
-  GameState.maybeUnused = bVar2 << 1;
+  GameState.Pulse = bVar2 << 1;
 
   switch(GameFlow_GetState()) {
   case 1:
@@ -1554,7 +1554,7 @@ void GameFlow_Main(void) {
     GameState.NumFramesUnpaused = 1;
     GameState.NumFrames = 1;
     GameState.VideoFrames = 1;
-    GameState.maybeLoadingBlobs = 0;
+    GameState.NumDraws = 0;
     Mem_Init();
     bootup_bootup();
     GameFlow_QuickPushState(2);
@@ -1711,23 +1711,23 @@ void mainloop(void) {
 // Keeps the background movie going, called every frame: decodes and draws the next frame, masks the top and
 // bottom 66 lines to black for 0x073a0048 (letterboxed), and when the movie ends either replays it (looping,
 // through psiStartBackgroundMovie's 'NPLY' "same file again") or stops it.
-// AUTOINJECT
-void maybeStartBackgroundMovie(void) {
+// FUNC_AT(0x000dcda0)
+void psiUpdateBackgroundMovie(void) {
     if (BackgroundMovieHashcode == 0)
         return;
-    maybeDecodeMpgAudio();
+    BackgroundMovieUpdate();
     if (BackgroundMovieHashcode == 0x073a0048) {
-        maybeResetRenderState(1);
-        maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
-        maybeImmediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
-        maybeImmediateModeFlush();
+        resetRenderState(1);
+        immediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        immediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
+        immediateModeFlush();
     }
-    if (maybeBackgroundMovieIsPlaying())
+    if (BackgroundMovieIsPlaying())
         return;
     if (LoopingMovie != 0) {
         psiStartBackgroundMovie((HASHCODE)0x4e504c59, LoopingMovie, BackgroundMovieVolume);
         return;
     }
-    maybeBackgroundMovieCleanup();
+    BackgroundMovieCleanup();
     BackgroundMovieHashcode = 0;
 }

@@ -101,7 +101,7 @@ double Vec_Magnitude(_VECTOR *a);
 
 double Vec_AngleDifference(float angle1, float angle2);
 void Vec_Spherical_2_Cartesian(float *out, float radius, float yaw, float pitch);
-double maybeAtan2(float y, float x);
+double Atan2(float y, float x);
 void Mat_Align2Dir(_MATRIX *mtxOut, _VECTOR *direction, _VECTOR *param_3, _VECTOR *param_4);
 void Vec_Add2(_VECTOR *a, _VECTOR *b, _VECTOR *out);
 

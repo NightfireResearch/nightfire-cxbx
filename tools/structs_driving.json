@@ -20112,7 +20112,7 @@
    {
     "offset": 24,
     "size": 4,
-    "name": "maybeElapsedTime",
+    "name": "elapsedTime",
     "type": "undefined4",
     "bitfield": false
    },

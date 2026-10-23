@@ -173,7 +173,7 @@ typedef struct obj_tag {
     struct ATTACH_tag *attachments; // 0x10 - the marks on it (Effect_Bullet, Effect_Player)
     obj_tag *nextObject; // 0x14 - doubly-linked list
     obj_tag* prevObject; // 0x18
-    obj_tag* maybeParent; // 0x1c
+    obj_tag* parent; // 0x1c
     cel_tag* inCel; // 0x20 - cel_tag
     _VECTOR position; // 0x24
     _VECTOR lastPosition; // 0x30 - comment previously (incorrectly) said 0x28; confirmed via Ghidra's own struct
@@ -184,7 +184,7 @@ typedef struct obj_tag {
     float radius; // 0x6C
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
-    HITTEST_tag* maybeCollision; // 0xB0 - the test Collide_Update runs for the object
+    HITTEST_tag* hitTest; // 0xB0 - the test Collide_Update runs for the object
     celglist_tag* objGraphics; // 0xB4
     AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC

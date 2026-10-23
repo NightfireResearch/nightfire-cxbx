@@ -64,38 +64,38 @@ static void CheckUnary(const char *name, unsigned address, void (*ours)(D3DMATRI
 void MatrixShadow_Run(void) {
     s_failures = 0;
     CheckUnary("d3dMatrixIdentity", 0x000e81c0, d3dMatrixIdentity, false);
-    CheckUnary("maybeTransposeRotationPart", 0x000e81f0, maybeTransposeRotationPart, false);
-    CheckUnary("maybeInvertRigidTransform", 0x000e8920, maybeInvertRigidTransform, true);
-    CheckUnary("maybeMtxInverse", 0x000e83a0, maybeMtxInverse, false);
+    CheckUnary("transposeRotationPart", 0x000e81f0, transposeRotationPart, false);
+    CheckUnary("invertRigidTransform", 0x000e8920, invertRigidTransform, true);
+    CheckUnary("mtxInverse", 0x000e83a0, mtxInverse, false);
 
     for (int t = 0; t < 64; t++) {
         D3DMATRIX in, a, b;
         RandomMatrix(&in, false);
         memset(&a, 0, sizeof(a)); memset(&b, 0, sizeof(b));
-        maybeD3DMATRIXcopy((undefined4 *)&a, (undefined4 *)&in);
+        d3dMatrixCopy((undefined4 *)&a, (undefined4 *)&in);
         {
             XbeOriginalScope original(0x000e81a0);
             ((void(__cdecl *)(undefined4 *, undefined4 *))(uintptr_t)0x000e81a0)((undefined4 *)&b, (undefined4 *)&in);
         }
-        Compare("maybeD3DMATRIXcopy", t, &a, &b);
+        Compare("d3dMatrixCopy", t, &a, &b);
 
         float x = Random(-9, 9), y = Random(-9, 9), z = Random(-9, 9);
         a = in; b = in;
-        maybeMtxApplyTransform(&a, x, y, z);
+        mtxTranslate(&a, x, y, z);
         {
             XbeOriginalScope original(0x000e8470);
             ((void(__cdecl *)(D3DMATRIX *, float, float, float))(uintptr_t)0x000e8470)(&b, x, y, z);
         }
-        Compare("maybeMtxApplyTransform", t, &a, &b);
+        Compare("mtxTranslate", t, &a, &b);
 
         char columns = (char)(t & 1);
         a = in; b = in;
-        maybeMatrixAxisScale(&a, x, y, z, columns);
+        matrixAxisScale(&a, x, y, z, columns);
         {
             XbeOriginalScope original(0x000e83b0);
             ((void(__cdecl *)(D3DMATRIX *, float, float, float, char))(uintptr_t)0x000e83b0)(&b, x, y, z, columns);
         }
-        Compare("maybeMatrixAxisScale", t, &a, &b);
+        Compare("matrixAxisScale", t, &a, &b);
 
         float f[9];
         for (int i = 0; i < 9; i++)

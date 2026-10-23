@@ -110,7 +110,7 @@ void Language_SaveChoice(void) {
     ChosenLanguage = LanguageToLoad;
     Language_DeleteMarkers();
     sprintf(LanguageMarkerPath, LANGUAGE_MARKER, DashboardLanguage, ChosenLanguage);
-    MaybeFileWriteContents(LanguageMarkerPath, NULL, 0);
+    StateFile_Write(LanguageMarkerPath, NULL, 0);
 }
 
 // AUTOINJECT
@@ -187,8 +187,8 @@ static void StateFile_Scramble(uint8_t key, uint8_t *data, int len) {
 
 // Writes path: with data, signed and scrambled (the caller's buffer is scrambled and restored); without, empty.
 // (0x000e3450)
-// AUTOINJECT
-bool MaybeFileWriteContents(char *path, uint8_t *data, uint32_t len) {
+// FUNC_AT(0x000e3450)
+bool StateFile_Write(char *path, uint8_t *data, uint32_t len) {
     if (path == NULL)
         return false;
     HANDLE file = createFile(path, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
@@ -253,7 +253,7 @@ bool StateFile_Read(char *path, void *data, uint32_t len) {
 bool File_Delete(char *path) {
     if (path == NULL)
         return false;
-    return MaybeFileCreateNew(path) != 0;
+    return deleteFile(path) != 0;
 }
 
 // (0x000e36e0)
@@ -299,7 +299,7 @@ static void *ReadLaunchData(void) {
     }
     if (type == LAUNCH_TYPE_STATE_FILE) {
         HaveLaunchData = StateFile_Read((char *)"z:\\state.bin", LaunchInfoData, LAUNCH_DATA_BYTES);
-        MaybeFileCreateNew("z:\\state.bin");
+        deleteFile("z:\\state.bin");
         return HaveLaunchData ? LaunchInfoData : NULL;
     }
     return NULL;
@@ -316,12 +316,12 @@ void* GetPTPData_Copy(void) {
     return ReadLaunchData();
 }
 
-// AUTOINJECT
-void maybeCleanupSystem(void) {
-    maybeBackgroundMovieCleanup();
-    maybeD3dShutdown();
-    maybeSoundShutdown();
-    maybeInputShutdown();
+// FUNC_AT(0x000e8fc0)
+void cleanupSystem(void) {
+    BackgroundMovieCleanup();
+    d3dReleaseResources();
+    SoundShutdown();
+    InputShutdown();
 }
 
 // Launches d:\<executableName> with data as its launch page (if that returns, the action engine instead)
@@ -329,7 +329,7 @@ void maybeCleanupSystem(void) {
 void SetLaunchInfoAndLaunch(char *executableName, void *data, uint32_t len) {
     if (executableName == NULL)
         return;
-    maybeCleanupSystem();
+    cleanupSystem();
     char path[0x400];
     snprintf(path, sizeof(path), "d:\\%s", executableName);
     static uint8_t page[LAUNCH_DATA_BYTES];
@@ -342,10 +342,10 @@ void SetLaunchInfoAndLaunch(char *executableName, void *data, uint32_t len) {
 
 // AUTOINJECT
 void WriteStateFileAndLaunch(uint32_t reason, void *data, int len) {
-    MaybeFileCreateNew("z:\\state.bin");
+    deleteFile("z:\\state.bin");
     if (data != NULL && len > 0)
-        MaybeFileWriteContents((char *)"z:\\state.bin", (uint8_t *)data, len);
-    maybeCleanupSystem();
+        StateFile_Write((char *)"z:\\state.bin", (uint8_t *)data, len);
+    cleanupSystem();
     static uint32_t page[LAUNCH_DATA_BYTES / 4];
     memset(page, 0, sizeof(page));
     page[0] = LAUNCH_TYPE_STATE_FILE;

@@ -7,7 +7,7 @@
 // ---------------------------------------------------------------------------------------------------------------
 // The game's file I/O over the host layer (driving/platform/Host.h) - see XboxFile.cpp. The Xbox's XAPI is a
 // Win32 clone, so these are CreateFileA, ReadFile, GetFileSizeEx, GetOverlappedResult and CloseHandle under
-// other names, and everything the game layers on top of them (openOrCreateFile, maybeReadFile,
+// other names, and everything the game layers on top of them (openOrCreateFile, FS_ReadFile,
 // FS_OperationInProgress, the archive reader) is Win32 logic and is left untouched.
 //
 // Declared here so the generated injection table can see them. Not meant to be called from new code - use the
@@ -43,7 +43,7 @@ uint32_t __stdcall querySetSomeInfo(HANDLE fileHandle, uint32_t distanceLow, uin
 int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uint32_t distanceHigh,
                                     uint32_t *newPosition, uint32_t moveMethod);
 
-int __stdcall MaybeFileCreateNew(const char *filename);       // DeleteFile
+int __stdcall deleteFile(const char *filename);               // DeleteFile
 
 uint32_t __stdcall Xbox_GetFileAttributesA(const char *filename);   // GetFileAttributes
 

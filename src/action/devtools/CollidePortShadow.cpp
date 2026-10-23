@@ -483,7 +483,7 @@ HITDATA_tag *RandomList(int n) {
         hit->hitBoneIdx = (short)R(70);
         RandomVector(&hit->hitPosition, 6.0f);
         RandomVector(&hit->surfaceNormal.normal, 1.0f);
-        RandomVector(&hit->maybehitDirection, 1.0f);
+        RandomVector(&hit->hitDirection, 1.0f);
         int which = R(4);
         if (which == 0)
             hit->hitCel = CollidingCel();
@@ -526,7 +526,7 @@ void RandomObject(int i) {
     RandomTest(test);
     if (R(3))
         test->type = HITTEST_CYLINDER;
-    obj->maybeCollision = R(4) ? test : NULL;
+    obj->hitTest = R(4) ? test : NULL;
     obj->extraObjectData = world.extra[i];
     float *movement = (float *)(world.extra[i] + 0xc);         // BLData::movement
     movement[0] = Plain(-1.0f, 1.0f);
@@ -1128,7 +1128,7 @@ uint32_t RunIntersect(bool original) {
 uint32_t RunTestHits(bool original) {
     world.test.tester = AnyObj();
     world.test.tester->hitList = RandomList(R(3));
-    world.test.tester->maybeCollision = &world.test;
+    world.test.tester->hitTest = &world.test;
     uint32_t args[1] = {R(2)};
     Regs r = {R(0x40), 0, 0, 0, 0, P(&world.test)};
     Regs6(original, 0x0002c440, (const void *)&Asm_Collide_TestHits, r, 1, args);
@@ -1230,7 +1230,7 @@ RIGIDBODY *RandomBody(obj_tag *obj, int i) {
     rb->light = R(3) ? NULL : &world.light;
     rb->carriesLight = (uchar)R(2);
     rb->sound = R(0x200);
-    obj->maybeCollision = &rb->test;
+    obj->hitTest = &rb->test;
     return rb;
 }
 

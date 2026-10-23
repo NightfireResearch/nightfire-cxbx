@@ -84,7 +84,7 @@ void Check_Target(obj_tag* obj) {
 
     BLData* blData = (BLData*) obj->extraObjectData;
     uint team = 2;
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         team = MP_getObjectTeam(obj);
     blData->field_0xf2 = 0;
     blData->crosshairType = CROSSHAIR_PLAIN;
@@ -102,7 +102,7 @@ void Check_Target(obj_tag* obj) {
         blData->gadgetTarget = target;
         switch (target->objectType) {
         case OBJECTTYPE_PLAYER:
-            if (MPSettings.maybeDroneAIEnabled && MPSettings.FriendlyFire && MP_isObjectOnTeam(target, team)) {
+            if (MPSettings.dronesAreBots && MPSettings.FriendlyFire && MP_isObjectOnTeam(target, team)) {
                 blData->crosshairType = CROSSHAIR_MARKED;
                 blData->field_0xf2 = 1;
             }
@@ -111,7 +111,7 @@ void Check_Target(obj_tag* obj) {
         case OBJECTTYPE_DRONE: {
             Drone_tag *drone = (Drone_tag *)target->extraObjectData;
             bool spared;
-            if (MPSettings.maybeDroneAIEnabled)
+            if (MPSettings.dronesAreBots)
                 spared = !MPSettings.FriendlyFire || !MP_isObjectOnTeam(drone->gameObj, team);
             else
                 spared = drone->side == 1;

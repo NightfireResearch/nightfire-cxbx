@@ -31,7 +31,7 @@ LAYOUT_32(sizeof(Vector_Schedule) == 0x10, "Vector_Schedule is 16 bytes");
 
 // The game's scheduler (Ghidra: Scheduler, 36 bytes), an overlay class - see src/common/xbeClass.h. Its fields
 // are Ghidra's, generated from tools/structs_driving.json and checked: the four schedules, listOfSchedules,
-// lastTickCount, maybeElapsedTime, the cinematicModeSkipping byte at +0x1d, and timeScale. There is one, made by
+// lastTickCount, elapsedTime, the cinematicModeSkipping byte at +0x1d, and timeScale. There is one, made by
 // GameLoop_StartUp through Init and destroyed by GameLoop_CleanUp through Shutdown.
 class Scheduler {
 

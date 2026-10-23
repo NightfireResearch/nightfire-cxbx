@@ -126,10 +126,10 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     obj->scale = 1.0f;
     obj->objectType = OBJECTTYPE_BULLET;
     obj->unknown_0xd9 = 2;
-    obj->maybeCollision = &bullet->test;
+    obj->hitTest = &bullet->test;
     bullet->test.type = 0;
     bullet->occluder = NULL;
-    bullet->maybeProxyObjectShooter = owner;
+    bullet->firedFromObj = owner;
     bullet->firedByObj = playerObj;
     bullet->wpnDef = weaponDef;
     bullet->fuseTimer = 210.0f;
@@ -312,7 +312,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
         if (target != NULL) {
             if (target->effectFlags & 0x60)
                 passes = 1;
-            if (target != bullet->maybeProxyObjectShooter && target->objectType == OBJECTTYPE_CAR
+            if (target != bullet->firedFromObj && target->objectType == OBJECTTYPE_CAR
                 && !(bullet->wpnDef->impactFlags & ImpactFlag_Sticks))
                 passes = 0;
         }
@@ -589,7 +589,7 @@ static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
         case OBJECTTYPE_DRONE:
             if (bullet->firedByObj == NULL)
                 break;
-            if (MPSettings.maybeDroneAIEnabled || bullet->firedByObj->objectType == OBJECTTYPE_PLAYER)
+            if (MPSettings.dronesAreBots || bullet->firedByObj->objectType == OBJECTTYPE_PLAYER)
                 Drone_MessageObjVicinity(DRONE_MSG_ImpactStunGrenade, obj, 20.0f, NULL, 0);
             break;
 
@@ -1176,7 +1176,7 @@ static void Bullet_TripBombBeam(obj_tag *obj, BU_tag *bullet) {
         hashtable_set_object_to_entity_gfx(bullet->swoosh, (HASHCODE)0x2000133);
         bullet->swoosh->objectType = OBJECTTYPE_GFX;
         bullet->swoosh->effectFlags |= 0x20;
-        bullet->swoosh->maybeParent = obj;
+        bullet->swoosh->parent = obj;
         bullet->swoosh->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
         Sound_Play3D(SFX_WEAPON_GENERIC_LASER_SIGHT_ON, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     }
@@ -1394,7 +1394,7 @@ void Bullet_Update(obj_tag *obj) {
             }
         }
 
-        bullet->test.ignoreA = bullet->maybeProxyObjectShooter;
+        bullet->test.ignoreA = bullet->firedFromObj;
         bullet->test.ignore = 0;
         bullet->test.cel = obj->inCel;
 

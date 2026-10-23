@@ -589,7 +589,7 @@ void RandomWorld() {
     static const HASHCODE levels[] = {HT_Level_EvilBase, HT_Level_EvilBaseC, HT_Level_CastleIndoors2,
                                       HT_Level_HendersonA};
     GameState.CurrentLevelHashcode = levels[ShadowRand(4)];
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
 
     memset(&NPCGlobals, 0x11, sizeof(NPCGlobals));
     NPCGlobals.dummyPlayer = NULL;

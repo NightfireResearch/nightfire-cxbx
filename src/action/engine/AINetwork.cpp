@@ -1404,7 +1404,7 @@ bool AINetwork_SetupRouteToPosition(AIRoute_tag *route, CelPos_tag *dest, obj_ta
 bool AINetwork_VerifyRouteTarget(obj_tag *mover, obj_tag *targetObj, AITarget_tag *target, AIPoint_tag *point,
                                  float radius, AIRoute_tag *route) {
     AITarget_tag *current = route->target;
-    if (current != NULL && (MPSettings.maybeDroneAIEnabled != 0 || targetObj == current->obj)
+    if (current != NULL && (MPSettings.dronesAreBots != 0 || targetObj == current->obj)
         && current->builtFrame <= route->targetFrame && (route->flags & AIROUTE_VALID))
         return true;
     return AINetwork_SetupRouteToObject(mover, targetObj, target, point, radius, route);

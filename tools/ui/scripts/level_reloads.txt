@@ -8,7 +8,7 @@ press A                    # skip it
 waitpage 0x40000002        # P_MAIN
 wait 60
 # Into the first mission, then the same level loaded again eight times: the D3D resource tables must be
-# emptied at every level change (maybeD3dShutdown), or textures run out on the 4th-5th load.
+# emptied at every level change (d3dReleaseResources), or textures run out on the 4th-5th load.
 press A                    # NightFire
 waitpage 0x40000025        # P_NFSELECT
 wait 100

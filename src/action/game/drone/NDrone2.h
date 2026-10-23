@@ -601,7 +601,7 @@ bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, 
 extern _VECTOR LastWalkTarget;   // where it last tested a walk to (NDrone2_Nav.cpp)
 bool NDrone2_MoveTestRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, char checkBlocked);
 bool NDrone2_AtDest(DCVars_tag *dcv);
-void NDrone2_maybeCalcDistanceAndDirToTarget(DCVars_tag *dcv, CelPos_tag *target);
+void NDrone2_SetMoveTarget(DCVars_tag *dcv, CelPos_tag *target);
 
 // The state machine (DroneSM.cpp; docs/drone/architecture/README.md 3.2-3.4).
 bool Drone_SM_Init(void);
@@ -678,7 +678,7 @@ bool NDrone2_HitTalkExtra(DCVars_tag *dcv);
 bool NDrone2_PainTalk(DCVars_tag *dcv);
 void DroneFunc_InjuredTalk(DCVars_tag *dcv);
 void NDrone2_PlayFacialAnim(DCVars_tag *dcv, HASHCODE script);
-bool Drone_maybeDisallowedFromSayingThisSfx(Drone_tag *drone, uint sfx);
+bool Drone_IsSayingSfx(Drone_tag *drone, uint sfx);
 bool DroneFunc_InjuredSFX(DCVars_tag *dcv, uint sfx);
 bool DroneFunc_DoBondTalk(DCVars_tag *dcv, uint sfx, int trackTicks, uint waitTicks, char repeat);
 bool NDrone2_BondTalk(DCVars_tag *dcv);

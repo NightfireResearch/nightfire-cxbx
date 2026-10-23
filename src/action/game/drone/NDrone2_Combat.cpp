@@ -34,7 +34,7 @@
 // speed unless unscaled is set)
 
 
-static_assert(offsetof(MPSettings_t, maybeDroneAIEnabled) == 0x1e4, "MPSettings.maybeDroneAIEnabled is 0x0026001c");
+static_assert(offsetof(MPSettings_t, dronesAreBots) == 0x1e4, "MPSettings.dronesAreBots is 0x0026001c");
 
 // Set by the BLIND_DRONES cheat (ui_cheats.cpp): drones ignore the player
 extern uint32_t switch_BLIND_DRONES;
@@ -334,7 +334,7 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     uint chance = 0;
     uint sfx;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
     if (Drone_IsTalking(drone))
         return false;
@@ -475,7 +475,7 @@ bool NDrone2_HasOpponent(DCVars_tag *dcv) {
 // player's stats are kept (or in multiplayer).
 // AUTOINJECT
 bool NDrone2_CanAltAttack(DCVars_tag *dcv, short variant) {
-    if (MPSettings.maybeDroneAIEnabled == 0 && !PlrStat_OkToUpdate())
+    if (MPSettings.dronesAreBots == 0 && !PlrStat_OkToUpdate())
         return false;
     if (variant < 0 || variant > 3)
         variant = 0;
@@ -1273,7 +1273,7 @@ bool NDrone2_FindCover(DCVars_tag *dcv, char force) {
             continue;
         _VECTOR delta;
         Vec_Subtract(&node->pos, &gameObj->position, &delta);
-        Vec_AngleDifference(maybeAtan2(delta.x, delta.z), drone->opponentAngles.y);
+        Vec_AngleDifference(Atan2(delta.x, delta.z), drone->opponentAngles.y);
         if ((double)distance * distance > opponentDistance2)
             continue;
         short kind = NDrone2_CoverNodeOK(dcv, node, 0, force);
@@ -1405,9 +1405,9 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
     _VECTOR aimAt, toOpponent, toTarget;
     Vec_Add2(&drone->opponent->position, &drone->aimOffset, &aimAt);
     Vec_Subtract(&aimAt, &dcv->gameObj->position, &toOpponent);
-    float opponentAngle = maybeAtan2(toOpponent.x, toOpponent.z);
+    float opponentAngle = Atan2(toOpponent.x, toOpponent.z);
     Vec_Subtract(&drone->moveTarget, &dcv->gameObj->position, &toTarget);
-    float targetAngle = maybeAtan2(toTarget.x, toTarget.z);
+    float targetAngle = Atan2(toTarget.x, toTarget.z);
     if (!NDrone2_DoAnimation(dcv->drone) || dcv->drone->opponent == NULL) {
         DroneAnim_CallAnim(DANIM_RUN, 0, 0, 0, 0.0f, 0, dcv);
         return true;
@@ -2105,13 +2105,13 @@ bool NDrone2_DSTATE_NoOpponent(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
     case DRONE_MSG_Enter:
         Drone_AlertStatusSet(0, dcv);
         DroneAnim_CallAnim(DANIM_ALERT_STAND, 0, 0, 0, 0.0f, 0, dcv);
-        if (MPSettings.maybeDroneAIEnabled != 0)
+        if (MPSettings.dronesAreBots != 0)
             return true;
         SetTimerA(dcv, SecondFromNow());
         return true;
 
     case DRONE_MSG_Update:
-        if (MPSettings.maybeDroneAIEnabled != 0)
+        if (MPSettings.dronesAreBots != 0)
             return true;
         if (dcv->drone->opponent != NULL)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);

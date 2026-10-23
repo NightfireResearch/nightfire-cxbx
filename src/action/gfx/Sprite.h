@@ -15,13 +15,13 @@ typedef struct {
 typedef struct sprite {
     LLNODE_tag node;
     unsigned int createdOnFrame;
-    unsigned int unknownDataMaybeTexPtr;
+    unsigned int textureIndex;
     unsigned int colourTint;
     unsigned int unknown1;
     char *text;
-    char *maybeClippedString;
+    char *format;
     short length; // at 0x20
-    short maybeFlags;
+    short flags;
     short positionX;
     short positionY;
     short backupOnscreenWidth;
@@ -32,7 +32,7 @@ typedef struct sprite {
     short spritesheetY;
     short spritesheetWidth;
     short spritesheetHeight;
-    uchar maybeEnabled; // 0x27 or 0x31 results in it being visible, 0xff results in it being invisible? Unclear.
+    uchar depth; // the draw order, highest first: SPRITE_FOREGROUND_MIN and up in front, SPRITE_HIDDEN not drawn
     char linkedViewer;
     char unknown7[2];
     GPOINT scale;
@@ -45,25 +45,25 @@ LAYOUT_32(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedViewer
 typedef struct SpriteInfo {
     uint colour;
     uint unknown1;
-    ushort maybeEnabled;
-    short maybeFlags;
+    ushort depth;
+    short flags;
     short posX;
     short posY;
     short onscreenWidth;
     short onscreenHeight;
     ushort spritesheetX;
     ushort spritesheetY;
-    short maybeSpritesheetWidth;
-    short maybeSpritesheetHeight;
+    short spritesheetWidth;
+    short spritesheetHeight;
     Action_TranslatedText textRef;
-    char* maybeClippedText;
+    char* format;
     HASHCODE textureHashcode;
     char linkedViewer;
     char pad[3]; // Unclear if this is a single u32, padding, or not needed?
 } SpriteInfo;
 
 LAYOUT_32(sizeof(SpriteInfo) == 0x2c, "Size of SpriteInfo is incorrect");
-static_assert(offsetof(SpriteInfo, maybeEnabled) == 0x8, "Offset of maybeEnabled is incorrect");
+static_assert(offsetof(SpriteInfo, depth) == 0x8, "Offset of depth is incorrect");
 LAYOUT_32(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureHashcode is incorrect");
 
 #pragma pack(pop)

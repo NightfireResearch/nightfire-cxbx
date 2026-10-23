@@ -22,11 +22,11 @@ static DLISTINFO_tag SpriteList;
 // XBE_GLOBAL(0x0029a298, 0x800)
 static sprite* SprActiveList[MAX_SPRITES];
 
-// Values of sprite::maybeEnabled with special meaning to the list builder
+// Values of sprite::depth with special meaning to the list builder
 #define SPRITE_HIDDEN 0xff          // never drawn
 #define SPRITE_FOREGROUND_MIN 50    // sorted to the front; see Sprite_BuildList
 
-// The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of maybeFlags)
+// The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of flags)
 #define SPRITE_FLAGS_KEEP_MASK 0xfff0
 
 
@@ -41,7 +41,7 @@ void Sprite_InitLists(void) {
 // text or a texture.
 //
 // *startOut is always 0. *lastForegroundOut is left at the index of the LAST sprite, from the front of the sorted
-// list, whose maybeEnabled is at least 50 - an index, not a count, and 0 both when only the first sprite
+// list, whose depth is at least 50 - an index, not a count, and 0 both when only the first sprite
 // qualifies and when none does; the original has this ambiguity and so does this. The callers differ:
 // LoadScreen_Draw passes *startOut to View_DrawSprites as the first index to draw, but Game_Draw passes
 // *lastForegroundOut (it tests *startOut only in its viewer 4-9 loop, where it is always 0), so in the game's
@@ -54,7 +54,7 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
 
     for(sprite *spr = (sprite *)SpriteList.activeList.head; spr != NULL; spr = (sprite *)spr->node.next) {
 
-        if(spr->maybeEnabled == SPRITE_HIDDEN)
+        if(spr->depth == SPRITE_HIDDEN)
             continue;
 
         // The original widens the byte to 16 bits and compares with the whole ushort, so a viewer above 255
@@ -65,10 +65,10 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
         if((spr->colourTint & 0xff) == 0)
             continue;
 
-        if(spr->text == NULL && spr->unknownDataMaybeTexPtr == 0)
+        if(spr->text == NULL && spr->textureIndex == 0)
             continue;
 
-        spr->maybeFlags &= SPRITE_FLAGS_KEEP_MASK;
+        spr->flags &= SPRITE_FLAGS_KEEP_MASK;
         SprActiveList[count] = spr;
         count++;
     }
@@ -80,10 +80,10 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
     if(count != 0) {
         QuickSort(SprActiveList, count, sizeof(sprite*), Compare_Sprites, NULL);
 
-        // Signed compare in the original (JL): maybeEnabled is read as a signed char here, so 0x80-0xff count
+        // Signed compare in the original (JL): depth is read as a signed char here, so 0x80-0xff count
         // as below 50 - moot for 0xff, which never got into the list
         for(uint i = 0; i < count; i++) {
-            if((signed char)SprActiveList[i]->maybeEnabled < SPRITE_FOREGROUND_MIN)
+            if((signed char)SprActiveList[i]->depth < SPRITE_FOREGROUND_MIN)
                 break;
             *lastForegroundOut = i;
         }
@@ -108,11 +108,11 @@ static int32_t Ftol(double x) {
 // AUTOINJECT
 void Sprite_SetFmt(sprite *spr, char *fmt) {
     if (spr->text == NULL) {
-        spr->maybeClippedString = fmt;
+        spr->format = fmt;
         return;
     }
     GPOINT extent;
-    spr->maybeClippedString = fmt;
+    spr->format = fmt;
     Font_GetTextExtent(spr->text, fmt, &extent, &spr->scale, -1);
     spr->spritesheetWidth = (short)Ftol(extent.x);
     spr->spritesheetHeight = (short)Ftol(extent.y);
@@ -127,7 +127,7 @@ void Sprite_SetText(sprite *spr, char *text) {
     spr->text = text;
     spr->length = strlen(text);
 
-    Sprite_SetFmt(spr, spr->maybeClippedString);
+    Sprite_SetFmt(spr, spr->format);
 
 }
 
@@ -141,7 +141,7 @@ sprite* Sprite_Create(void) {
 
     spr->text = NULL;
     spr->length = 0;
-    spr->maybeClippedString = (char *)0xfcfcfcfc; // TODO: Some special signifier value?
+    spr->format = (char *)0xfcfcfcfc; // TODO: Some special signifier value?
     spr->positionX = 0;
     spr->positionY = 0;
     spr->spritesheetX = 0;
@@ -159,11 +159,11 @@ sprite* Sprite_Create(void) {
 // AUTOINJECT
 void Sprite_SetTextNFmt(sprite *spr, char *text, char *fmt) {
     spr->text = text;
-    spr->maybeClippedString = fmt;
+    spr->format = fmt;
     if (text == NULL || fmt == NULL)
         return;
     spr->length = (short)strlen(text);
-    spr->maybeClippedString = fmt;
+    spr->format = fmt;
     spr->text = text;
     Sprite_SetFmt(spr, fmt);
 }
@@ -173,13 +173,13 @@ void Sprite_SetTextNFmt(sprite *spr, char *text, char *fmt) {
 void Sprite_SetParams(sprite *spr, uchar enabled, short x, short y, HASHCODE texture, uint colour) {
     if (spr == NULL)
         return;
-    spr->maybeEnabled = enabled;
+    spr->depth = enabled;
     spr->positionX = x;
     spr->backupOnscreenWidth = x;
     spr->positionY = y;
     spr->backupOnscreenHeight = y;
     spr->colourTint = colour;
-    spr->maybeFlags = 0;
+    spr->flags = 0;
     if (texture != 0)
         hashtable_set_sprite(spr, texture);
 }
@@ -214,26 +214,26 @@ sprite* Sprite_Create2(SpriteInfo *sprInfo) {
         // the whole-texture sprite loses its last column and row; the fix spans it all, as hashtable_set_sprite does
         // (docs/original-bug-fixes.md).
 #if FIX_ORIGINAL_GAME_BUGS
-        spr->spritesheetWidth = sprInfo->maybeSpritesheetWidth != 0 ? sprInfo->maybeSpritesheetWidth : spr->backupOnscreenWidth;
-        spr->spritesheetHeight = sprInfo->maybeSpritesheetHeight != 0 ? sprInfo->maybeSpritesheetHeight : spr->backupOnscreenHeight;
+        spr->spritesheetWidth = sprInfo->spritesheetWidth != 0 ? sprInfo->spritesheetWidth : spr->backupOnscreenWidth;
+        spr->spritesheetHeight = sprInfo->spritesheetHeight != 0 ? sprInfo->spritesheetHeight : spr->backupOnscreenHeight;
 #else
-        spr->spritesheetWidth = sprInfo->maybeSpritesheetWidth != 0 ? sprInfo->maybeSpritesheetWidth : (spr->backupOnscreenWidth - 1);
-        spr->spritesheetHeight = sprInfo->maybeSpritesheetHeight != 0 ? sprInfo->maybeSpritesheetHeight : (spr->backupOnscreenHeight - 1);
+        spr->spritesheetWidth = sprInfo->spritesheetWidth != 0 ? sprInfo->spritesheetWidth : (spr->backupOnscreenWidth - 1);
+        spr->spritesheetHeight = sprInfo->spritesheetHeight != 0 ? sprInfo->spritesheetHeight : (spr->backupOnscreenHeight - 1);
 #endif
 
     } else { 
         
         // Text-based sprite
         
-        spr->maybeEnabled = sprInfo->maybeEnabled;
+        spr->depth = sprInfo->depth;
         spr->positionX = sprInfo->posX;
         spr->positionY = sprInfo->posY;
         spr->backupOnscreenWidth = sprInfo->posX;
         spr->backupOnscreenHeight = sprInfo->posY;
         spr->colourTint = sprInfo->colour;
-        spr->maybeFlags = 0;
+        spr->flags = 0;
         
-        Sprite_SetTextNFmt(spr, (char*)Txt_BindLabel(sprInfo->textRef, 0), sprInfo->maybeClippedText);
+        Sprite_SetTextNFmt(spr, (char*)Txt_BindLabel(sprInfo->textRef, 0), sprInfo->format);
         Txt_LockString(spr->text);
 
     }
@@ -241,8 +241,8 @@ sprite* Sprite_Create2(SpriteInfo *sprInfo) {
     // Common to both image and text-based sprites
     spr->colourTint = sprInfo->colour;
     spr->unknown1 = sprInfo->unknown1;
-    spr->maybeEnabled = sprInfo->maybeEnabled;
-    spr->maybeFlags = sprInfo->maybeFlags;
+    spr->depth = sprInfo->depth;
+    spr->flags = sprInfo->flags;
 
     if (sprInfo->linkedViewer > -1) {
         Sprite_Link2Viewer(spr, sprInfo->linkedViewer);

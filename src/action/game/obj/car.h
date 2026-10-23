@@ -70,7 +70,7 @@ void Car_Deactivate(obj_tag *carObj);
 void Car_Update(obj_tag *obj);
 void Car_CollisionHandler(obj_tag *obj);
 void Car_Delete(obj_tag *obj);
-void Car_MaybeHandleDamage(obj_tag *obj);
+void Car_HeliCollisionHandler(obj_tag *obj);
 void Car_SetBits(CAR_INFO *car, obj_tag *obj);
 bool Car_InheritVelocity(obj_tag *car, obj_tag *by);
 

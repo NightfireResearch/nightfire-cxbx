@@ -25,7 +25,7 @@ typedef struct {
     int numEntries;
     int numFilesysFiles;
     char unknown2[0x28-8-0x18];
-} MaybeArchiveHeader;
+} ArchiveHeader;
 
 typedef struct {
     uint32_t nameCrc;
@@ -35,27 +35,27 @@ typedef struct {
     uint32_t offsetHigh;
     uint32_t compressedLen;
     uint32_t uncompressedLen;
-    uint8_t maybeFlags; // size high?
+    uint8_t flags; // FLAG_IS_EDL_COMPRESSED
     uint8_t unknown2;
     uint32_t filesysIdx; // The filesys.dxx archive which contains this file
     uint32_t offsetOfFileWithinArchive;
-} MaybeFileHeader;
+} FileEntry;
 
-static_assert(sizeof(MaybeArchiveHeader) == 0x28, "Bad size for MaybeArchiveHeader");
-static_assert(sizeof(MaybeFileHeader) == 0x26, "Bad size for MaybeFileHeader");
+static_assert(sizeof(ArchiveHeader) == 0x28, "Bad size for ArchiveHeader");
+static_assert(sizeof(FileEntry) == 0x26, "Bad size for FileEntry");
 
 typedef struct {
     char PathNormalisationTable[256];
     char ramCache[SOME_BUFFER_SIZE];
-    MaybeArchiveHeader *maybeArchiveHeader;
-    MaybeFileHeader *maybeFileHeader;
+    ArchiveHeader *archiveHeader;
+    FileEntry *fileEntries;
     int filesysHandles[64];
     int CacheFileHandleIdx;
-    char maybeNoMorePending;
+    char readSucceeded;
     char unknown[3];
-    int maybeActiveFile;
-    int maybeFileLoadState;
-    int maybeActiveArchiveNum;   // the file being loaded: its index in maybeFileHeader
+    int activeSlot;
+    int fileLoadState;
+    int fileIdx;   // the file being loaded: its index in fileEntries
     void* compressedDataPtr;     // the caller's buffer, where the file ends up
     void* someDataPtr;           // where the file is read to: the buffer, or its tail when it is compressed
     int field_0x13a24;
@@ -71,7 +71,7 @@ LAYOUT_32(sizeof(FileSystem_t) == 0x13a40, "Bad size for FileSystem_t");
 
 // One open file. The read is overlapped: the OVERLAPPED is Xbox's IO_STATUS_BLOCK under its Win32 name.
 struct FileOperationXbox {
-    uint8_t maybeStatus;      // 0x00 the slot is open
+    uint8_t open;             // 0x00 the slot is open
     uint8_t field1_0x1;       // 0x01 the last operation succeeded
     uint8_t field2_0x2;
     uint8_t field3_0x3;
@@ -106,7 +106,7 @@ static FileOperationXbox XboxFileOperations[MAX_FILE_OPERATIONS];
 struct AsyncStream {
     uint8_t open;
     uint8_t pad[3];
-    int fileIdx;              // index in FileSystem.maybeFileHeader
+    int fileIdx;              // index in FileSystem.fileEntries
 };
 #define MAX_ASYNC_STREAMS 16
 // XBE_GLOBAL(0x002c5068, 0x80)
@@ -133,20 +133,20 @@ int FS_MatchFilenameToHeader(char *filename) {
 
     // Binary search for the normalised filename through the headers
     int low = 0;
-    int high = (FileSystem.maybeArchiveHeader)->numEntries - 1;
+    int high = (FileSystem.archiveHeader)->numEntries - 1;
     if (high >= 0) {
         do {
 
             int candidate = (high + low) / 2;
             
             // Match?
-            if (FileSystem.maybeFileHeader[candidate].nameCrc == crc) {
+            if (FileSystem.fileEntries[candidate].nameCrc == crc) {
                 //printf("FS_MatchFilenameToHeader: Located %s in %i\n", normalisedName, candidate);
                 return candidate;
             }
 
             // Adjust bounds and repeat
-            if (FileSystem.maybeFileHeader[candidate].nameCrc < crc) {
+            if (FileSystem.fileEntries[candidate].nameCrc < crc) {
                 low = candidate + 1;
             }
             else {
@@ -161,7 +161,7 @@ int FS_MatchFilenameToHeader(char *filename) {
 
 
 // ---------------------------------------------------------------------------------------------------------------
-// The open-file table (0x000e24a0-0x000e2900). Reads are overlapped: maybeReadFile issues one and
+// The open-file table (0x000e24a0-0x000e2900). Reads are overlapped: FS_ReadFile issues one and
 // FS_OperationInProgress polls it. The originals take their slot in a register (EAX, EDI); every caller is here
 // now, so these are plain functions and the originals are dead.
 // ---------------------------------------------------------------------------------------------------------------
@@ -171,7 +171,7 @@ int FS_MatchFilenameToHeader(char *filename) {
 // AUTOINJECT
 int openOrCreateFile(char *nameRelated, char write) {
     int idx = 1;
-    while (idx < MAX_FILE_OPERATIONS && XboxFileOperations[idx].maybeStatus != 0)
+    while (idx < MAX_FILE_OPERATIONS && XboxFileOperations[idx].open != 0)
         idx++;
     if (idx >= MAX_FILE_OPERATIONS)
         return 0;
@@ -194,7 +194,7 @@ int openOrCreateFile(char *nameRelated, char write) {
     }
     LARGE_INTEGER size;
     op->fileSize = getFileSize_LargeInteger(op->fileHandle, &size) ? (int32_t)size.LowPart : -1;
-    op->maybeStatus = 1;
+    op->open = 1;
     op->field1_0x1 = 1;
     return idx;
 }
@@ -203,7 +203,7 @@ int openOrCreateFile(char *nameRelated, char write) {
 // (0x000e2650)
 static bool FS_OperationInProgress(int idx) {
     FileOperationXbox *op = &XboxFileOperations[idx];
-    if (op->maybeStatus == 0 || op->readPending == 0)
+    if (op->open == 0 || op->readPending == 0)
         return false;
     uint32_t transferred = 0;
     int done = Xbox_GetOverlappedResult(op->fileHandle, &op->overlapped, &transferred, 0);
@@ -222,9 +222,9 @@ static bool FS_OperationInProgress(int idx) {
 }
 
 // Issues a read into the slot, after waiting out any read still in flight. (0x000e26e0)
-static void maybeReadFile(void *fileOut, uint32_t len, uint32_t offsetLow, uint32_t offsetHigh, int idx) {
+static void FS_ReadFile(void *fileOut, uint32_t len, uint32_t offsetLow, uint32_t offsetHigh, int idx) {
     FileOperationXbox *op = &XboxFileOperations[idx];
-    if (op->maybeStatus == 0)
+    if (op->open == 0)
         return;
     while (FS_OperationInProgress(idx))
         ;
@@ -261,9 +261,9 @@ void FS_Init(void) {
     FileSystem.PathNormalisationTable['/'] = '\\';
 
     // ??
-    FileSystem.maybeArchiveHeader = (MaybeArchiveHeader*)FileSystem.ramCache;
-    FileSystem.maybeFileHeader = (MaybeFileHeader*)(FileSystem.ramCache+0x20); // File list starts 32 bytes into the file 
-    FileSystem.maybeFileLoadState = 0;
+    FileSystem.archiveHeader = (ArchiveHeader*)FileSystem.ramCache;
+    FileSystem.fileEntries = (FileEntry*)(FileSystem.ramCache+0x20); // File list starts 32 bytes into the file 
+    FileSystem.fileLoadState = 0;
 
     // Open all the on-disc files
     int filesysAt = 0;
@@ -277,19 +277,19 @@ void FS_Init(void) {
         if(filesysAt == 0) {
             do {
                 // Load the KXF header / metadata (only found in the first of the files)
-                maybeReadFile(FileSystem.ramCache, 0x13800, 0, 0, FileSystem.filesysHandles[0]);
+                FS_ReadFile(FileSystem.ramCache, 0x13800, 0, 0, FileSystem.filesysHandles[0]);
                 
                 // Await completion of the file operation
                 while(FS_OperationInProgress(FileSystem.filesysHandles[0]))
                     ;
 
-            } while ((XboxFileOperations[FileSystem.filesysHandles[0]].maybeStatus == 0) ||
+            } while ((XboxFileOperations[FileSystem.filesysHandles[0]].open == 0) ||
                     (XboxFileOperations[FileSystem.filesysHandles[0]].field1_0x1 == 0));
 
             
         }
         filesysAt++;
-    } while(filesysAt < (FileSystem.maybeArchiveHeader)->numFilesysFiles);
+    } while(filesysAt < (FileSystem.archiveHeader)->numFilesysFiles);
 
     // TODO: Implement filesystem cache and anything else that follows
     // This seems to be a cache on the Z: drive to improve loading speed on Xbox hardware?
@@ -318,19 +318,19 @@ typedef enum {
 // that was what failed. (0x000e28a0)
 // AUTOINJECT
 bool FS_OpInProgressWithCleanup(void) {
-    if (FS_OperationInProgress(FileSystem.maybeActiveFile))
+    if (FS_OperationInProgress(FileSystem.activeSlot))
         return true;
-    FileOperationXbox *op = &XboxFileOperations[FileSystem.maybeActiveFile];
-    FileSystem.maybeNoMorePending = op->maybeStatus != 0 ? op->field1_0x1 : 0;
-    if (FileSystem.maybeNoMorePending == 0 && FileSystem.maybeActiveFile == FileSystem.CacheFileHandleIdx)
+    FileOperationXbox *op = &XboxFileOperations[FileSystem.activeSlot];
+    FileSystem.readSucceeded = op->open != 0 ? op->field1_0x1 : 0;
+    if (FileSystem.readSucceeded == 0 && FileSystem.activeSlot == FileSystem.CacheFileHandleIdx)
         FileSystem.CacheFileHandleIdx = 0;
     return false;
 }
 
 // The original takes its arguments in registers (0x000e2a80)
 static void FS_ReadFromActualFile(uint32_t len, void *fileOut, uint32_t offsetLow, uint32_t offsetHigh, int idx) {
-    FileSystem.maybeActiveFile = idx;
-    maybeReadFile(fileOut, len, offsetLow, offsetHigh, idx);
+    FileSystem.activeSlot = idx;
+    FS_ReadFile(fileOut, len, offsetLow, offsetHigh, idx);
 }
 
 // AUTOINJECT
@@ -348,47 +348,47 @@ bool FS_StateMachineIterate(void) {
     // in Ghidra, which is the reference for what this should do.
     bool opInProgress = FS_OpInProgressWithCleanup();
 
-    if(FileSystem.maybeFileLoadState == FLSM_FINISHED)
+    if(FileSystem.fileLoadState == FLSM_FINISHED)
         return false;
 
     // If no operation is in progress, but we're not in the FINISHED state, we need to set up
     // the next operation.
-    if((FileSystem.maybeFileLoadState == FLSM_BEGIN_LOADING) || !opInProgress) {
+    if((FileSystem.fileLoadState == FLSM_BEGIN_LOADING) || !opInProgress) {
 
         uint32_t crc;
 
-        switch(FileSystem.maybeFileLoadState) {
+        switch(FileSystem.fileLoadState) {
 
             case FLSM_BEGIN_LOADING:
                 // TODO: Cache checks would go here if we cared about caching
-                FileSystem.maybeFileLoadState = FLSM_LOAD_FROM_DISC;
+                FileSystem.fileLoadState = FLSM_LOAD_FROM_DISC;
                 return true;
 
             case FLSM_LOAD_FROM_DISC:
                 FS_ReadFromActualFile(FileSystem.someDataLen, FileSystem.someDataPtr, FileSystem.offsetOfFileWithinArchive, 0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
-                FileSystem.maybeFileLoadState = FLSM_CHECK_CRC;
+                FileSystem.fileLoadState = FLSM_CHECK_CRC;
                 return true;
             
             case FLSM_CHECK_CRC:
                 crc = crc32buf((uint8_t*)FileSystem.someDataPtr, FileSystem.someDataLen);
-                if (FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].dataCrc != crc) {
+                if (FileSystem.fileEntries[FileSystem.fileIdx].dataCrc != crc) {
                     NF_ASSERT(false, "CRC mismatch found in file loader state machine");
                     FS_FatalErrorHandler();
                 }
-                FileSystem.maybeFileLoadState = FileSystem.maybeNoMorePending ? FLSM_MAYBE_CACHE_FILE_WRITE : FLSM_LOAD_FROM_DISC;
+                FileSystem.fileLoadState = FileSystem.readSucceeded ? FLSM_MAYBE_CACHE_FILE_WRITE : FLSM_LOAD_FROM_DISC;
                 return true;
 
             case FLSM_MAYBE_CACHE_FILE_WRITE:
             case FLSM_MAYBE_CACHE_HEADER_WRITE: // Intentional fallthrough
                 // TODO: These cases need to be split and additional logic added if caching
-                FileSystem.maybeFileLoadState = FLSM_DECOMPRESS_IF_REQD;
+                FileSystem.fileLoadState = FLSM_DECOMPRESS_IF_REQD;
                 return true;
 
             case FLSM_DECOMPRESS_IF_REQD:
-                if ((FileSystem.maybeFileHeader[FileSystem.maybeActiveArchiveNum].maybeFlags & FLAG_IS_EDL_COMPRESSED)) {
-                    maybeEDL_DecompressSection((char*)FileSystem.compressedDataPtr, (edl_section_t*)FileSystem.someDataPtr);
+                if ((FileSystem.fileEntries[FileSystem.fileIdx].flags & FLAG_IS_EDL_COMPRESSED)) {
+                    EDL_DecompressSection((char*)FileSystem.compressedDataPtr, (edl_section_t*)FileSystem.someDataPtr);
                 }
-                FileSystem.maybeFileLoadState = FLSM_FINISHED;
+                FileSystem.fileLoadState = FLSM_FINISHED;
                 return true;
                             
 
@@ -414,7 +414,7 @@ int FS_GetFileSize(char *filename) {
         FS_FatalErrorHandler();
     }
 
-    return (FileSystem.maybeFileHeader[idx].uncompressedLen + (FileSystem.maybeFileHeader[idx].maybeFlags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
+    return (FileSystem.fileEntries[idx].uncompressedLen + (FileSystem.fileEntries[idx].flags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
 }
 
 
@@ -426,14 +426,14 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
     if (FS_StateMachineIterate())
         return;
     int idx = FS_MatchFilenameToHeader(fileName);
-    FileSystem.maybeActiveArchiveNum = idx;
+    FileSystem.fileIdx = idx;
     if (idx == -1)
         FS_FatalErrorHandler();
-    MaybeFileHeader *h = &FileSystem.maybeFileHeader[idx];
-    FileSystem.maybeFileLoadState = FLSM_BEGIN_LOADING;
+    FileEntry *h = &FileSystem.fileEntries[idx];
+    FileSystem.fileLoadState = FLSM_BEGIN_LOADING;
     FileSystem.compressedDataPtr = buffer;
     FileSystem.someDataPtr = buffer;
-    if (h->maybeFlags & FLAG_IS_EDL_COMPRESSED)
+    if (h->flags & FLAG_IS_EDL_COMPRESSED)
         FileSystem.someDataPtr = (char *)buffer + (h->uncompressedLen - h->compressedLen) + 0x800;
     FileSystem.someOffsetLow = h->offsetLow;
     FileSystem.someOffsetHigh = h->offsetHigh;
@@ -471,8 +471,8 @@ void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *siz
 // read in pieces with overlapped reads, while the game carries on.
 // ---------------------------------------------------------------------------------------------------------------
 
-static MaybeFileHeader *StreamHeader(int stream) {
-    return &FileSystem.maybeFileHeader[AsyncStreams[stream].fileIdx];
+static FileEntry *StreamHeader(int stream) {
+    return &FileSystem.fileEntries[AsyncStreams[stream].fileIdx];
 }
 
 // A free stream slot for the named file; running out is fatal. (0x000e3100)
@@ -513,17 +513,17 @@ void psiAsyncCloseFile(int stream) {
 static uint32_t FS_StreamLength(int stream) {
     if (stream < 1)
         return 0;
-    MaybeFileHeader *h = StreamHeader(stream);
-    return ((h->maybeFlags & FLAG_IS_EDL_COMPRESSED) ? 0x800 : 0) + h->uncompressedLen;
+    FileEntry *h = StreamHeader(stream);
+    return ((h->flags & FLAG_IS_EDL_COMPRESSED) ? 0x800 : 0) + h->uncompressedLen;
 }
 
 // Issues a read of part of the stream's file (0x000e31a0)
 static void FS_StreamRead(int stream, void *dest, uint32_t len, uint32_t offsetLow, uint32_t offsetHigh) {
     if (stream < 1)
         return;
-    MaybeFileHeader *h = StreamHeader(stream);
+    FileEntry *h = StreamHeader(stream);
     uint64_t offset = (uint64_t)h->offsetOfFileWithinArchive + ((uint64_t)offsetHigh << 32 | offsetLow);
-    maybeReadFile(dest, len, (uint32_t)offset, (uint32_t)(offset >> 32), FileSystem.filesysHandles[h->filesysIdx]);
+    FS_ReadFile(dest, len, (uint32_t)offset, (uint32_t)(offset >> 32), FileSystem.filesysHandles[h->filesysIdx]);
 }
 
 // Reads byteSize bytes at byteOffset into destBuffer, or the whole file for -1. The read is widened to whole 2 KB

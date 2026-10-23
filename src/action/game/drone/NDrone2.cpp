@@ -10,7 +10,7 @@
 #include "DroneAnim.h"
 #include "DroneTables.h"
 #include "../../engine/Anim.h"      // AnimGetBoneWorldTrans
-#include "../../math/math.h"        // Vec_*, maybeAtan2 (ours)
+#include "../../math/math.h"        // Vec_*, Atan2 (ours)
 #include "../mp/multiplayer.h"      // MPSettings
 #include "../obj/build.h"           // build_FindCel
 #include "BOT.h"                    // BOT_vars_t
@@ -476,7 +476,7 @@ bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle) {
         return false;
     _VECTOR toPlayer;
     Vec_Subtract(&player->position, &dcv->gameObj->position, &toPlayer);
-    float yaw = maybeAtan2(toPlayer.x, toPlayer.z);
+    float yaw = Atan2(toPlayer.x, toPlayer.z);
     double turn = Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
     return !(angle < fabs(turn));
 }
@@ -499,13 +499,13 @@ void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char for
     Drone_tag *drone = dcv->drone;
     if ((drone->unknown3f0 & 0x8000000) && !force)
         return;
-    if (MPSettings.maybeDroneAIEnabled && (drone->botVars->flags & 2) && !force)
+    if (MPSettings.dronesAreBots && (drone->botVars->flags & 2) && !force)
         return;
     if ((drone->unknown46c & 0x380) && !force)
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
-    dcv->drone->angleToSomePoint = maybeAtan2(toObj.x, toObj.z) + offset;
+    dcv->drone->angleToSomePoint = Atan2(toObj.x, toObj.z) + offset;
 }
 
 // Turns the drone's head to obj (NULL lets it go) for `ticks` (at 60 a second), at `speed` (0 for the usual 0.07).
@@ -529,12 +529,12 @@ bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv)
 // AUTOINJECT
 bool DroneFunc_DoForcedAttack(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && NPCGlobals.unknown1392 &&
         drone->dtype != DTYPE_CivilianGuard && drone->dtype != DTYPE_CivDoorGuard)
         return false;
-    if (MPDrone_MaybeIsDyingOrDead(dcv->gameObj))
+    if (MPDrone_IsDyingOrDead(dcv->gameObj))
         return false;
     if (!(drone->flags & 0x20000) || (drone->flags & 0x2000000))
         return false;
@@ -662,7 +662,7 @@ void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short next
 void DroneFunc_HandleExplosives(DCVars_tag *dcv) {
     obj_tag *gameObj = dcv->gameObj;
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0 || drone->explosiveSeen)
+    if (MPSettings.dronesAreBots != 0 || drone->explosiveSeen)
         return;
 
     for (uint i = 0; i < NPCGlobals.numAwarePoints; i++) {

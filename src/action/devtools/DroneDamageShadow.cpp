@@ -462,7 +462,7 @@ void RandomWorld() {
     world.hit.hitBoneIdx = bones[ShadowRand(sizeof(bones) / 2)];
     static const float hitDamages[] = {0.0f, -0.0f, -1.0f, 0.3f, 0.5f, 0.6f, 12.0f, 50.0f};
     world.hit.dmgAmt = hitDamages[ShadowRand(sizeof(hitDamages) / 4)];
-    RandomVector(&world.hit.maybehitDirection, 1.0f);
+    RandomVector(&world.hit.hitDirection, 1.0f);
     RandomVector(&world.hit.hitPosition, 6.0f);
     static obj_tag *const hitObjs[] = {NULL,           &world.shotObj, &world.shotObj, &world.shotObj, &world.shotObj,
                                        &world.player,  &world.hurtObj, &world.objs[1], &world.otherObj};
@@ -504,7 +504,7 @@ void RandomWorld() {
     }
     RandWords[0] = RandomWord();
     RandWords[1] = RandomWord();
-    MPSettings.maybeDroneAIEnabled = ShadowRand(3) == 0;
+    MPSettings.dronesAreBots = ShadowRand(3) == 0;
     MPSettings.FriendlyFire = ShadowRand(2);
     MPSettings.GameMode = ShadowRand(2) ? GM_ASSASSIN : (MultiplayerGameMode)0;
     for (int p = 0; p < 10; p++)
@@ -583,7 +583,7 @@ void TestImpactAnim() {
 void TestTalk() {
     for (int trial = 0; trial < 6000; trial++) {
         RandomWorld();
-        MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+        MPSettings.dronesAreBots = ShadowRand(4) == 0;
         if (ShadowRand(3) == 0)
             GameState.CurrentLevelHashcode = ShadowRand(2) ? HT_Level_EvilBase : HT_Level_EvilSilo;
         Compare("NDrone2_HitTalkExtra", trial,
@@ -598,7 +598,7 @@ void TestTalk() {
                     return ORIGINAL(0x0003bd80, uint(__cdecl *)(DCVars_tag *))(&world.dcv) & 0xff;
                 },
                 [] { return (uint32_t)NDrone2_PainTalk(&world.dcv); });
-        MPSettings.maybeDroneAIEnabled = ShadowRand(4) != 0;
+        MPSettings.dronesAreBots = ShadowRand(4) != 0;
         Compare("DroneFunc_InjuredTalk", trial,
                 [] {
                     OriginalDamage o;
@@ -640,12 +640,12 @@ void TestDamage() {
         RandomWorld();
         // (Any other object's data would be read as a bullet: the player has none)
         world.hit.hitObj = ShadowRand(8) ? &world.shotObj : (ShadowRand(2) ? &world.player : NULL);
-        if (MPSettings.maybeDroneAIEnabled && ShadowRand(2))
+        if (MPSettings.dronesAreBots && ShadowRand(2))
             world.bullet.firedByObj = &world.objs[1];
         // Without a weapon, the original reads its flags for the sound, and with bots on its id for a shot someone
         // fired: keep to shots it does neither with
         if (ShadowRand(8) == 0 && !(world.hit.dmgAmt > 0.5f) &&
-            !(MPSettings.maybeDroneAIEnabled && world.bullet.firedByObj != NULL))
+            !(MPSettings.dronesAreBots && world.bullet.firedByObj != NULL))
             world.bullet.wpnDef = NULL;
         if (ShadowRand(2))
             AssassinGlobals[1] = world.bullet.firedByObj;

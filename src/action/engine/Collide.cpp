@@ -536,7 +536,7 @@ void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
         Vec_Copy(&obj->centrePoint, &test->sphere);
         test->sphereRadius = obj->radius;
         if (Intersect_RaySphere(test, &dist))
-            Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, NULL, obj)->maybehitDirection);
+            Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, NULL, obj)->hitDirection);
         break;
     case HITTEST_SPHERE_ONE_SIDED:
     case HITTEST_SPHERE:
@@ -552,7 +552,7 @@ void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
         if (Intersect_CylSphere(test, &dist)) {
             HITDATA_tag *hit = Coll_AddHitToList(&tester->hitList, dist, NULL, obj);
             Vec_Copy(&test->plane.normal, &hit->surfaceNormal.normal);
-            Vec_Copy(&test->plane.normal, &hit->maybehitDirection);
+            Vec_Copy(&test->plane.normal, &hit->hitDirection);
         }
         break;
     }
@@ -598,7 +598,7 @@ void Collide_Pick(HITTEST_tag *test) {
                 case HITTEST_RAY:
                     if (cel->bitsFromPlacementTag & CEL_WORLD_SPACE) {
                         if (Intersect_RayBox(test, &cel->someMin, &cel->someMax, &dist))
-                            Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, cel, NULL)->maybehitDirection);
+                            Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, cel, NULL)->hitDirection);
                     } else {
                         Vec_Copy(&cel->sphere, &copy.sphere);
                         copy.sphereRadius = cel->sphereRadius;
@@ -668,7 +668,7 @@ bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
             Vec_Copy(&test->pos, &hit->hitPosition);
             Vec_Subtract(&test->pos, Mat_Position(joint->m), &hit->surfaceNormal.normal);
             Vec_Normalise(&hit->surfaceNormal.normal, &hit->surfaceNormal.normal);
-            Vec_Copy(&hit->surfaceNormal.normal, &hit->maybehitDirection);
+            Vec_Copy(&hit->surfaceNormal.normal, &hit->hitDirection);
             return true;
         }
         return false;
@@ -701,7 +701,7 @@ bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
         return false;
     case HITTEST_CYLINDER: {
         obj_tag *other = hit->hitObj;
-        if (other->maybeCollision == NULL || other->maybeCollision->type != HITTEST_CYLINDER)
+        if (other->hitTest == NULL || other->hitTest->type != HITTEST_CYLINDER)
             return false;
         obj_tag *self = test->tester;
         if (self->objectType == OBJECTTYPE_PLAYER && other->objectType == OBJECTTYPE_PLAYER) {
@@ -713,7 +713,7 @@ bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
         if (test->tester->objectType == OBJECTTYPE_DRONE && other->objectType == OBJECTTYPE_DRONE &&
             ((Drone_tag *)test->tester->extraObjectData)->moved < ((Drone_tag *)other->extraObjectData)->moved)
             return false;
-        HITTEST_tag *theirs = other->maybeCollision;
+        HITTEST_tag *theirs = other->hitTest;
         float share;
         if (MPSettings.isMultiplayer) {
             share = 0.5f;
@@ -882,7 +882,7 @@ bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
         ApplyMatrixLV(local.matrix, &v, &hit->surfaceNormal.normal);
     test->found |= local.found;
     if (test->type & HITTEST_RAY_BOXES)
-        Vec_Normalise(&hit->maybehitDirection, &test->dir);
+        Vec_Normalise(&hit->hitDirection, &test->dir);
     return true;
 }
 
@@ -1146,7 +1146,7 @@ done:
     hit->dist = best;
     hit->materialType = coll->dataStartD[bestTri];
     Intersect_UnpackTrianglePlaneEq(bestBlock, coll->dataStartB[bestTri].normal, &hit->surfaceNormal);
-    Vec_Negate(&hit->surfaceNormal.normal, &hit->maybehitDirection);
+    Vec_Negate(&hit->surfaceNormal.normal, &hit->hitDirection);
 }
 
 // HITTEST_CYLINDER_TRIS: the triangles within the cylinder's radius of its axis, into TriHeap in world space (by
@@ -1255,7 +1255,7 @@ void Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel) {
             hit->dist = HIT_NONE;
             continue;
         }
-        if (Collide_Intersect(test->tester->maybeCollision, hit, flags) && (flags & 0x10)) {
+        if (Collide_Intersect(test->tester->hitTest, hit, flags) && (flags & 0x10)) {
             for (hit = hit->next; hit != NULL; hit = hit->next)
                 hit->dist = HIT_NONE;
             break;
@@ -1279,7 +1279,7 @@ bool Collide_RayIntersect(_VECTOR *startPosition, _VECTOR *endPosition, cel_tag 
     *hitDataOut = NULL;
     test.type = HITTEST_RAY;
     test.radius = -10.0f;
-    tester.maybeCollision = &test;
+    tester.hitTest = &test;
     tester.hitList = NULL;
     Vec_Copy(startPosition, &test.rayStart);
     Vec_Copy(endPosition, &test.rayEnd);
@@ -1304,7 +1304,7 @@ bool Collide_SphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_ta
     test.mask = mask;
     test.flags = flags;
     *hitList = NULL;
-    tester.maybeCollision = &test;
+    tester.hitTest = &test;
     tester.hitList = NULL;
     Vec_Copy(centre, &test.pos);
     Collide_TestHits(&test, flags, onlyCel);
@@ -1322,7 +1322,7 @@ bool Collide_CylinderIntersect(HITTEST_tag *test, HITDATA_tag **hitList, char on
     *hitList = NULL;
     test->tester = &tester;
     test->type = HITTEST_CYLINDER;
-    tester.maybeCollision = test;
+    tester.hitTest = test;
     tester.hitList = *hitList;
     Collide_TestHits(test, flags, onlyCel);
     *hitList = tester.hitList;
@@ -1345,7 +1345,7 @@ _VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_ta
     test.ignore = NULL;
     test.mask = mask;
     test.flags = flags;
-    tester.maybeCollision = &test;
+    tester.hitTest = &test;
     tester.hitList = NULL;
     if (cel == NULL)
         test.cel = build_FindCel(start, glb_world);
@@ -1355,7 +1355,7 @@ _VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_ta
     Collide_Pick(&test);
     test.type = HITTEST_CYLINDER_TRIS;
     for (HITDATA_tag *hit = tester.hitList; hit != NULL; hit = hit->next)
-        Collide_Intersect(test.tester->maybeCollision, hit, flags);
+        Collide_Intersect(test.tester->hitTest, hit, flags);
     Collide_FreeHitList(&tester.hitList);
     uint tris = TriOnCnt / 3;
     *count = tris < 0xa6 ? tris : 0xa6;
@@ -1425,23 +1425,23 @@ bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent,
 void Collide_Update(obj_tag *first) {
     for (obj_tag *obj = first; obj != NULL; obj = obj->nextObject) {
         Collide_FreeHitList(&obj->hitList);
-        if (obj->maybeCollision != NULL) {
-            obj->maybeCollision->tester = obj;
-            Vec_Zero(&obj->maybeCollision->push);
+        if (obj->hitTest != NULL) {
+            obj->hitTest->tester = obj;
+            Vec_Zero(&obj->hitTest->push);
         }
     }
     // GC check (0x801071ec): every hit back on the heap
     NF_WARN_IF(HitHeap.count != HitAllocCnt,"Someone hasn't freed there hitlist!\n");
     for (obj_tag *obj = first; obj != NULL; obj = obj->nextObject) {
-        HITTEST_tag *test = obj->maybeCollision;
+        HITTEST_tag *test = obj->hitTest;
         if (test == NULL || test->type == 0)
             continue;
         test->found = 0;
-        Collide_Pick(obj->maybeCollision);
+        Collide_Pick(obj->hitTest);
         for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
             if (hit->flags & HIT_COPIED)
                 continue;
-            if (Collide_Intersect(obj->maybeCollision, hit, test->flags) && (test->flags & 0x10)) {
+            if (Collide_Intersect(obj->hitTest, hit, test->flags) && (test->flags & 0x10)) {
                 for (hit = hit->next; hit != NULL; hit = hit->next)
                     hit->dist = HIT_NONE;
                 break;
@@ -1453,12 +1453,12 @@ void Collide_Update(obj_tag *first) {
             if (other != NULL) {
                 HITDATA_tag *copy = Coll_AddHitToList(&other->hitList, hit->dist, NULL, obj);
                 copy->flags |= HIT_COPIED;
-                copy->dmgAmt = obj->maybeCollision->damage;
+                copy->dmgAmt = obj->hitTest->damage;
                 copy->materialType = hit->materialType;
                 copy->hitBoneIdx = hit->hitBoneIdx;
                 Vec_Copy(&hit->hitPosition, &copy->hitPosition);
                 Vec_Copy(&hit->surfaceNormal.normal, &copy->surfaceNormal.normal);
-                Vec_Copy(&hit->maybehitDirection, &copy->maybehitDirection);
+                Vec_Copy(&hit->hitDirection, &copy->hitDirection);
             }
             // The test passes through a hit without contact, material 0x40, at random material 0x80, and with its
             // flag 0x20 surface 16

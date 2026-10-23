@@ -70,7 +70,7 @@ typedef struct {
     bool manualAimToggle;
     bool crouchToggleOrHold;
     char _unknown000[3];
-    bool maybeCrosshairEnable;
+    bool crosshairsEnabled;
     bool vibrationEnabled;
     bool autoSwitchBetterWeapon;
     bool hudVisibility;
@@ -137,7 +137,7 @@ typedef enum {
 
 extern XboxInputs_struct XboxInputs;
 extern uint8_t bSkipAttract;
-extern int controller_maybeRumbleTimeout[4];
+extern int controller_rumbleTimeout[4];
 extern unsigned int controllerIsPresent[4];
 
 // Real signature: xboxInitInputDevices() - zeroes XboxInputs and marks it ready for polling. The original
@@ -147,7 +147,7 @@ extern unsigned int controllerIsPresent[4];
 void xboxInitInputDevices(void);
 
 // Real signature: psiInput_PollDevices() - called once per frame by Input_Update (through the thunk 0x000de5c0),
-// and again in a drain loop by maybeInputShutdown. Talks straight to the host's
+// and again in a drain loop by InputShutdown. Talks straight to the host's
 // real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through the original Xbox
 // XAPILIB device layer - see the block comment above its definition.
 void psiInput_PollDevices(void);
@@ -168,6 +168,6 @@ bool psiInput_ControllerIsActive(unsigned int i);
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers);
 
 
-void maybeInputShutdown(void);
+void InputShutdown(void);
 
 #endif // PSIINPUT_H_

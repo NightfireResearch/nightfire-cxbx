@@ -523,7 +523,7 @@ void RandomWorld() {
     memset(&world.hit, 0, sizeof(world.hit));
     static const float damages[] = {0.0f, -0.0f, 5.0f, 12.5f, 40.0f};
     world.hit.dmgAmt = damages[ShadowRand(5)];
-    RandomVector(&world.hit.maybehitDirection, 1.0f);
+    RandomVector(&world.hit.hitDirection, 1.0f);
     world.hit.hitObj = ShadowRand(8) ? &world.bulletObj : NULL;
     memset(&world.pickupObj, 0, sizeof(world.pickupObj));
     world.pickupObj.effectFlags = ShadowRand(4);
@@ -570,7 +570,7 @@ void RandomWorld() {
     }
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(5) == 0;
+    MPSettings.dronesAreBots = ShadowRand(5) == 0;
 
     // The standard tuning (Player.cpp), varied; now and then a negative delay, for the unsigned conversions
     static const float tuning[kDroneFiringFloats] = {15.0f, 45.0f, 60.0f, 4.0f, 30.0f, 0.5f, 0.7f, 1.0f, 2.0f,

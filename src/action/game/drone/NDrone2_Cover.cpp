@@ -268,7 +268,7 @@ bool NDrone2_SetAngleToCover(DCVars_tag *dcv, float unused) {
         dcv->drone->angleToSomePoint = yaw;
         return true;
     }
-    dcv->drone->angleToSomePoint = maybeAtan2(toOpponent.x, toOpponent.z);
+    dcv->drone->angleToSomePoint = Atan2(toOpponent.x, toOpponent.z);
     return false;
 }
 
@@ -291,7 +291,7 @@ void NDrone2_SlideToPosition(_VECTOR *pos, float fraction, char withHeight, DCVa
 // levels and the PowerStation ones, and for RunForCover the Evil levels too (none for skin class 16)
 // AUTOINJECT
 void DroneFunc_RunForCoverTalk(DCVars_tag *dcv) {
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         return;
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone) || drone->health <= 0.0f)
@@ -324,7 +324,7 @@ void DroneFunc_RunForCoverTalk(DCVars_tag *dcv) {
 
 // AUTOINJECT
 void DroneFunc_UnderCoverTalk(DCVars_tag *dcv) {
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         return;
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone) || drone->health <= 0.0f)
@@ -350,7 +350,7 @@ void DroneFunc_UnderCoverTalk(DCVars_tag *dcv) {
 
 // AUTOINJECT
 void DroneFunc_UnderCoverAimTalk(DCVars_tag *dcv) {
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         return;
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone) || drone->health <= 0.0f)
@@ -436,7 +436,7 @@ void NDrone2_MoveTo_RouteNode(DCVars_tag *dcv, short offset, AIRoute_tag *route)
         Vec_Copy(&node->pos, &target.pos);
         target.cel = node->cel;
     }
-    NDrone2_maybeCalcDistanceAndDirToTarget(dcv, &target);
+    NDrone2_SetMoveTarget(dcv, &target);
 }
 
 // A route reaching one of its special nodes (LinkCreep_Handler): Mayhew's lines, a wait (once per node, while calm),

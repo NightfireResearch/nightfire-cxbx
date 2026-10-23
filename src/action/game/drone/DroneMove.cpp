@@ -172,7 +172,7 @@ void NDrone2_Steer(DCVars_tag *dcv, float angle) {
         }
     }
 
-    if (!MPSettings.maybeDroneAIEnabled) {
+    if (!MPSettings.dronesAreBots) {
         obj_tag *player = NDrone2_Player();
         if (player != NULL && SteerRoundPlayer(drone, &eval, player)) {
             drone->avoidingPlayer = 1;
@@ -356,7 +356,7 @@ bool DroneMove_NoBunching(DCVars_tag *dcv) {
         return false;
     _VECTOR toNearest;
     Vec_Subtract(&nearest->gameObj->position, &obj->position, &toNearest);
-    float bearing = maybeAtan2(toNearest.x, toNearest.z);
+    float bearing = Atan2(toNearest.x, toNearest.z);
     float facing = obj->rotation.y;
     if (drone->unknown46c & 8)
         facing = facing + kHalfPi;
@@ -405,7 +405,7 @@ void DroneMove_TurnToObj(DCVars_tag *dcv, obj_tag *obj, float offset, float tole
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
-    float heading = maybeAtan2(toObj.x, toObj.z) + offset;
+    float heading = Atan2(toObj.x, toObj.z) + offset;
     if (ABS(Vec_AngleDifference(heading, drone->angleToSomePoint)) > tolerance)
         drone->angleToSomePoint = heading;
 }
@@ -601,11 +601,11 @@ void DroneMove_AstronautCombat(DCVars_tag *dcv) {
     obj_tag *obj = dcv->gameObj;
     if (drone->opponent == NULL)
         return;
-    if (!(drone->unknown3f0 & 0x8000000) && (!MPSettings.maybeDroneAIEnabled || !(drone->botVars->flags & 2)) &&
+    if (!(drone->unknown3f0 & 0x8000000) && (!MPSettings.dronesAreBots || !(drone->botVars->flags & 2)) &&
         !(drone->unknown46c & 0x380)) {
         _VECTOR toOpponent;
         Vec_Subtract(&drone->opponent->position, &obj->position, &toOpponent);
-        dcv->drone->angleToSomePoint = maybeAtan2(toOpponent.x, toOpponent.z);
+        dcv->drone->angleToSomePoint = Atan2(toOpponent.x, toOpponent.z);
     }
     drone->firing = (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT) != 0;
 
@@ -636,7 +636,7 @@ void DroneMove_AstronautAnim(DCVars_tag *dcv) {
     obj_tag *obj = dcv->gameObj;
     _VECTOR toTarget;
     Vec_Subtract(&dcv->drone->moveTarget, &obj->position, &toTarget);
-    float bearing = maybeAtan2(toTarget.x, toTarget.z);
+    float bearing = Atan2(toTarget.x, toTarget.z);
     double turn = Vec_AngleDifference(obj->rotation.y, bearing);
     ushort anim;
     if (AngleSize(turn) < kQuarterPi)
@@ -657,7 +657,7 @@ void DroneMove_AstronautHitMove(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     _VECTOR push;
     if (drone->lastHit != NULL) {
-        Vec_Copy(&drone->lastHit->maybehitDirection, &push);
+        Vec_Copy(&drone->lastHit->hitDirection, &push);
         Vec_Normalise(&push, &push);
         Vec_MulR32(&push, &push, 5.0f);
     } else {

@@ -13,7 +13,7 @@
 #include "DroneAnim.h"
 #include "DroneTables.h"
 #include "../../game.h"                 // GameState
-#include "../../math/math.h"            // Vec_*, maybeAtan2, Vec_AngleDifference (ours)
+#include "../../math/math.h"            // Vec_*, Atan2, Vec_AngleDifference (ours)
 #include "../mp/multiplayer.h"          // MPSettings, MP_areObjectsOnSameTeam, MP_IsAssasin, MP_IsTarget (ours)
 #include "../obj/Gas.h"
 #include "../obj/Hurt.h"                // Hurt_GetDamage, Hurt_GetType (ours)
@@ -210,7 +210,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
         Drone_Message(obj, DRONE_MSG_ObjectHit, NULL, 0);
         return;
     case OBJECTTYPE_HURT: {
-        if (MPSettings.maybeDroneAIEnabled == 0) {
+        if (MPSettings.dronesAreBots == 0) {
             NDrone2_HurtVolumeDamage(drone, hit);
             return;
         }
@@ -281,7 +281,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     obj_tag *shooter = bullet->firedByObj;
     if (shooter != NULL) {
         bool hurts = false;
-        if (MPSettings.maybeDroneAIEnabled != 0) {
+        if (MPSettings.dronesAreBots != 0) {
             if (shooter->objectType == OBJECTTYPE_PLAYER || shooter->objectType == OBJECTTYPE_DRONE) {
                 if (MPSettings.FriendlyFire != 0 || !MP_areObjectsOnSameTeam(shooter, drone->gameObj))
                     hurts = true;
@@ -307,7 +307,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
 
     NDrone2_BodyHitEffect(bullet, hit, obj);
     _VECTOR push;
-    Vec_MulR32(&push, &hit->maybehitDirection, PUSH_PER_SHOT);
+    Vec_MulR32(&push, &hit->hitDirection, PUSH_PER_SHOT);
     Vec_Add2(&drone->pushOffset, &push, &drone->pushOffset);
     double pushed = Vec_NormaliseLen(&drone->pushOffset, &drone->pushOffset);
     float length = (float)pushed;
@@ -347,7 +347,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
 // takes none unless forced. Bots take it through BOT_handlePain. A hit that leaves it alive makes it cry out.
 // AUTOINJECT
 void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, char force) {
-    if (MPSettings.maybeDroneAIEnabled != 0) {
+    if (MPSettings.dronesAreBots != 0) {
         BOT_handlePain(dcv, damage, 0, location);
         return;
     }
@@ -457,7 +457,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
     if (bullet == NULL)
         return;
 
-    if (MPSettings.maybeDroneAIEnabled != 0) {
+    if (MPSettings.dronesAreBots != 0) {
         if (Control_Plr2Ind(bullet->firedByObj) >= 4 && bullet->firedByObj != NULL) {
             BOT_vars_t *bot = ((Drone_tag *)bullet->firedByObj->extraObjectData)->botVars;
             switch (bullet->wpnDef->weaponVariantNum) {
@@ -477,7 +477,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
         if (MPSettings.GameMode == GM_ASSASSIN && MP_IsAssasin(bullet->firedByObj) && MP_IsTarget(gameObj)) {
             ushort bone = hit->hitBoneIdx;
             if (bone >= 1 && bone <= 4) {
-                float shotYaw = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
+                float shotYaw = Atan2(hit->hitDirection.x, hit->hitDirection.z);
                 double degrees = Vec_AngleDifference(shotYaw, dcv->gameObj->rotation.y) * (double)RAD_TO_DEG;
                 if (fabs(degrees) < 70.0f)
                     hit->dmgAmt = drone->health;
@@ -496,7 +496,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
     if (hit->dmgAmt > 0.5f && !(bullet->wpnDef->impactFlags & 0x180))
         Sound_Play3D(hit->hitBoneIdx == BONE_HEAD ? SFX_IMPACT_DRONE_HEAD_SHOT : SFX_IMPACT_DRONE_BODY,
                      &hit->hitPosition, 100.0f, -1.0f, -1.0f, 0, 0, 0);
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         MP_RegisterBulletHit((ushort)drone->botVars->playerIndex, hit->hitObj, drone->health);
 }
 
@@ -557,7 +557,7 @@ bool NDrone2_PunchImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, char
         DroneFunc_SendHurtMessage(dcv);
     }
 
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         NDrone2_PainTalk(dcv);
     if (anim) {
         DroneAnim_CallAnim(DANIM_IMPACT_PUNCH, 0, drone->sm.resumeState, 0, 0.0f, 0, dcv);
@@ -613,7 +613,7 @@ bool NDrone2_BulletImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, cha
     }
 
     DroneFunc_InjuredTalk(dcv);
-    if (MPSettings.maybeDroneAIEnabled == 0 && anim && NDrone2_ImpactAnimDue(dcv)) {
+    if (MPSettings.dronesAreBots == 0 && anim && NDrone2_ImpactAnimDue(dcv)) {
         if (DroneFunc_CanResumeState(resume))
             drone->sm.resumeState = resume;
         DroneAnim_LocationImpactAnim(dcv);
@@ -661,12 +661,12 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
     if (impact != NULL && impact->damage > 0.0f) {
         NDrone2_HitDamage(dcv, impact->damage, 0, -1, 0);
         NDrone2_LogHitByOpponentOrAlive(dcv);
-        if (MPSettings.maybeDroneAIEnabled != 0)
+        if (MPSettings.dronesAreBots != 0)
             MP_RegisterBulletHit((ushort)dcv->drone->botVars->playerIndex, impact->source, dcv->drone->health);
     }
 
     if (drone->health <= 0.0f) {
-        if (MPSettings.maybeDroneAIEnabled != 0)
+        if (MPSettings.dronesAreBots != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDeathByExplosion, (intptr_t)impact);
         switch (drone->dtype) {
         case DTYPE_Ninja:
@@ -708,7 +708,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
         return true;
     }
 
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         NDrone2_PainTalk(dcv);
     if (DroneFunc_CanResumeState(nextState))
         return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)nextState, 0);

@@ -186,7 +186,7 @@ void Player_InitAmmoWeapons(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
 
     for (int i = 0; i < 33; i++)
-        blData->ammo[i] = CheatInfo.AllWeapons ? ammo_data[i].maybeMaxNumPerPlayer : 0;
+        blData->ammo[i] = CheatInfo.AllWeapons ? ammo_data[i].maxNumPerPlayer : 0;
 
     for (int i = 0; i < NUM_WEAPONS; i++) {
         WeaponStatus *status = &blData->weaponStats[i];
@@ -256,14 +256,14 @@ bool Player_EquipWeapon(BLData *blData, short weapon, short amount) {
             blData->ammo[def->ammoType] += extra;
     }
     else {
-        if (blData->ammo[def->ammoType] >= ammo_data[def->ammoType].maybeMaxNumPerPlayer)
+        if (blData->ammo[def->ammoType] >= ammo_data[def->ammoType].maxNumPerPlayer)
             return false;
         if (amount == 0)
             return false;
         blData->ammo[def->ammoType] += amount;
     }
 
-    short most = ammo_data[def->ammoType].maybeMaxNumPerPlayer;
+    short most = ammo_data[def->ammoType].maxNumPerPlayer;
     if (blData->ammo[def->ammoType] >= most)
         blData->ammo[def->ammoType] = most;
 
@@ -910,7 +910,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 anim = player->animState;
                 if (anim->switchingToWeaponId != anim->currentWeaponId) {
                     anim->currentWeaponId = anim->switchingToWeaponId;
-                    if (MPSettings.maybeDroneAIEnabled)
+                    if (MPSettings.dronesAreBots)
                         MP_sendTeamBotMessage(NO_TEAM, 0x44,
                                               (void *)(uintptr_t)player->animState->switchingToWeaponId, 0,
                                               (uint)(uintptr_t)player);
@@ -1684,7 +1684,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
             return;
         if (target->curState == 1)
             return;
-        if (MPSettings.maybeDroneAIEnabled) {
+        if (MPSettings.dronesAreBots) {
             if (MP_areObjectsOnSameTeam(player, drone->gameObj))
                 return;
         }
@@ -1693,7 +1693,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
         }
     }
     else if (target->objectType == OBJECTTYPE_PLAYER) {
-        if (MPSettings.maybeDroneAIEnabled && MP_areObjectsOnSameTeam(player, target))
+        if (MPSettings.dronesAreBots && MP_areObjectsOnSameTeam(player, target))
             return;
         BLData *other = (BLData *)target->extraObjectData;
         if (other->playerNum == blData->playerNum)
@@ -1826,7 +1826,7 @@ obj_tag* WatchOrHands_Create(obj_tag *owner) {
         View_SetDrawInNoViews(obj);
         obj->curState = 0;
         obj->objectType = 0;
-        obj->maybeParent = owner;
+        obj->parent = owner;
         obj->effectFlags |= 0x2020;
     }
     return obj;
@@ -1844,7 +1844,7 @@ void Player_CreateBeams(obj_tag *player, char playerNum) {
         beam->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
         beam->objectType = OBJECTTYPE_GFX;
         beam->effectFlags |= 0x20;
-        beam->maybeParent = player;
+        beam->parent = player;
         beam->scale = 1.0f;
         View_SetDrawInThisViewOnly(beam, playerNum);
         blData->beamObjs[i] = beam;

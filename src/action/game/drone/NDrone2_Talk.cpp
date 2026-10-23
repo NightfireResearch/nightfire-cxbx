@@ -623,8 +623,8 @@ static uint TalkFrameAfter(double ticks) {
 }
 
 // Whether the line is the one the drone is saying; with nothing said, whether its sound is 0xffffffff
-// AUTOINJECT
-bool Drone_maybeDisallowedFromSayingThisSfx(Drone_tag *drone, uint sfx) {
+// FUNC_AT(0x00036230)
+bool Drone_IsSayingSfx(Drone_tag *drone, uint sfx) {
     if (drone->speechChannel == NULL)
         return Drone_SfxInfo[sfx].sfx == 0xffffffff;
     return Drone_SfxInfo[sfx].sfx == (drone->speechChannel->sfxId & 0xfffff);
@@ -674,7 +674,7 @@ bool Drone_IsTalking(Drone_tag *drone) {
 // AUTOINJECT
 bool NDrone2_DeathTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
 
     uint sfx = 1;
@@ -692,7 +692,7 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
     case 6:
         if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
             GameState.CurrentLevelHashcode == HT_Level_PowerStationA2) {
-            if (Drone_maybeDisallowedFromSayingThisSfx(drone, 0xcd) || Drone_maybeDisallowedFromSayingThisSfx(drone, 0xd2))
+            if (Drone_IsSayingSfx(drone, 0xcd) || Drone_IsSayingSfx(drone, 0xd2))
                 return false;
             sfx = Rand_Rand(2) != 0 ? 0xcd : 0xd2;
         }
@@ -719,7 +719,7 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
         break;
     }
 
-    if (Drone_maybeDisallowedFromSayingThisSfx(drone, sfx))
+    if (Drone_IsSayingSfx(drone, sfx))
         return false;
     NDrone2_SpeechSFX(dcv, sfx, 1, 0, 0);
     return true;
@@ -730,7 +730,7 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
 // AUTOINJECT
 bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
     if (Drone_IsTalking(drone))
         return false;
@@ -759,7 +759,7 @@ bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
 // AUTOINJECT
 bool NDrone2_PainTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
 
     uint sfx;
@@ -803,7 +803,7 @@ bool NDrone2_PainTalk(DCVars_tag *dcv) {
         break;
     }
 
-    if (Drone_maybeDisallowedFromSayingThisSfx(drone, sfx))
+    if (Drone_IsSayingSfx(drone, sfx))
         return false;
     NDrone2_SpeechSFX(dcv, sfx, 1, 0, 0);
     return true;
@@ -813,7 +813,7 @@ bool NDrone2_PainTalk(DCVars_tag *dcv) {
 // once dead. Skin class 16 says nothing in EvilBase, EvilSilo and EvilBaseC.
 // AUTOINJECT
 void DroneFunc_InjuredTalk(DCVars_tag *dcv) {
-    if (MPSettings.maybeDroneAIEnabled == 0)
+    if (MPSettings.dronesAreBots == 0)
         return;
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone))
@@ -1084,7 +1084,7 @@ void Drone_MayhewTalk(uint sfx) {
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
         if (drone->dtype != DTYPE_Mayhew)
             continue;
-        if (MPDrone_MaybeIsDyingOrDead(drone->gameObj))
+        if (MPDrone_IsDyingOrDead(drone->gameObj))
             return;
         DCVars_tag dcv;
         if (Drone_DCVfromOBJ(drone->gameObj, &dcv))
@@ -1097,7 +1097,7 @@ void Drone_MayhewTalk(uint sfx) {
 // AUTOINJECT
 bool NDrone2_PatrolTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
     if (drone->health <= 0.0f)
         return false;
@@ -1124,7 +1124,7 @@ bool NDrone2_PowerstationTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone))
         return false;
-    if (MPDrone_MaybeIsDyingOrDead(drone->gameObj) || !switch_channels[0x98])
+    if (MPDrone_IsDyingOrDead(drone->gameObj) || !switch_channels[0x98])
         return false;
     bool a1 = GameState.CurrentLevelHashcode == HT_Level_PowerStationA1;
     if (!a1 && GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
@@ -1200,7 +1200,7 @@ void NDrone2_HandleTalking(DCVars_tag *dcv) {
 // AUTOINJECT
 bool DroneFunc_NewSightTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (NDrone2_Player() == NULL || MPSettings.maybeDroneAIEnabled != 0)
+    if (NDrone2_Player() == NULL || MPSettings.dronesAreBots != 0)
         return false;
     if (Drone_IsTalking(drone))
         return false;
@@ -1224,7 +1224,7 @@ bool DroneFunc_NewSightTalk(DCVars_tag *dcv) {
 // AUTOINJECT
 bool DroneFunc_LostSightTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return false;
     if (Drone_IsTalking(drone))
         return false;
@@ -1293,7 +1293,7 @@ DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char che
 // speechChannel. Returns the sound, or NULL.
 // AUTOINJECT
 DYNAMICSOUNDS* NDrone2_SpeechSFX(DCVars_tag *dcv, uint sfx, char force, char face, char needFace) {
-    if (MPSettings.maybeDroneAIEnabled != 0)
+    if (MPSettings.dronesAreBots != 0)
         return NULL;
     Drone_tag *drone = dcv->drone;
     uint now = GameState.NumFramesUnpaused;

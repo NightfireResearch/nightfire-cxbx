@@ -17,7 +17,7 @@ struct light_tag {
     ushort flickerMask;                   // 0x1e
     ushort soundID;                        // 0x20 - sound ID (0xffff = no sound)
     uchar padding22[2];                    // 0x22-0x23
-    obj_tag* maybeParentObject;            // 0x24
+    obj_tag* parentObject;                 // 0x24
     undefined4 psiLight;                   // 0x28
     float distanceShare;                   // 0x2c - its distance from the sphere over half its reach (Lights_CalcClosestLights)
     float brightness;                      // 0x30

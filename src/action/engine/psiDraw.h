@@ -56,7 +56,7 @@ void psiSetShardRenderStates(void);
 void psiClearZ(void);
 void* psiCopyToSP(void *src, uint offset, uint size);
 
-void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist);
+void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist);
 void psiDrawSkinObjectMatrix(celglist_tag *glist, _MATRIX *unused, void *obj, void *palette);
 
 #endif // PSIDRAW_H

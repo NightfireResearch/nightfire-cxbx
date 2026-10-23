@@ -74,10 +74,10 @@ typedef struct { // on Xbox, starts at 0025fe38
     MPSettings_PerPlayer Player[NUM_AGENTS]; // Different on PS2 and Xbox.  1E0: Xbox
 
     undefined4 isMultiplayer; // on Xbox, at 00260018
-    undefined4 maybeDroneAIEnabled;
+    undefined4 dronesAreBots;
     bool Started; // a byte: MP_Start clears it, then sets it once the match is set up
     undefined _pad1e9[3];
-    undefined4 maybeIsTeamGame;
+    undefined4 isTeamGame;
     undefined4 field53_0x190;
     undefined4 numPlayersAndBots;
     undefined4 FriendlyFire;
@@ -263,7 +263,7 @@ typedef struct {
     obj_tag *gameObj;
     CelPos_tag celPos;                  // 0x04
     AIEmitter_tag aiEmitter;            // 0x14 so bots can path to it
-    float maybeBotPickupVisitTimes[NUM_BOTS]; // 0x3c one per bot: MP_Pickup_Process ages them all, MP_ResetBotPickupTimes
+    float botPickupVisitTimes[NUM_BOTS]; // 0x3c one per bot: MP_Pickup_Process ages them all, MP_ResetBotPickupTimes
                                         //      and BOTSTATE_pickGoal index it by bot
     uint32_t unknown_0x54;              // 0x54 no reference in the XBE (MP_Init's clear aside)
 } MP_PICKUP;

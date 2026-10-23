@@ -172,7 +172,7 @@ void NDrone2_SetAngleToAlert(DCVars_tag *dcv, float offset) {
         return;
     _VECTOR toSound;
     Vec_Subtract(&dcv->drone->soundTarget.goal.pos, &dcv->gameObj->position, &toSound);
-    dcv->drone->angleToSomePoint = maybeAtan2(toSound.x, toSound.z) + offset;
+    dcv->drone->angleToSomePoint = Atan2(toSound.x, toSound.z) + offset;
 }
 
 // How far the drone must turn to face the last sound heard
@@ -180,7 +180,7 @@ void NDrone2_SetAngleToAlert(DCVars_tag *dcv, float offset) {
 float NDrone2_GetAngleDifferenceToAlert(DCVars_tag *dcv) {
     _VECTOR toSound;
     Vec_Subtract(&dcv->drone->soundTarget.goal.pos, &dcv->gameObj->position, &toSound);
-    float yaw = maybeAtan2(toSound.x, toSound.z);
+    float yaw = Atan2(toSound.x, toSound.z);
     return Vec_AngleDifference(dcv->gameObj->rotation.y, yaw);
 }
 
@@ -269,7 +269,7 @@ bool NDrone2_SetDronePartner(uchar dtype, DCVars_tag *dcv) {
     _VECTOR dir;
     Vec_Subtract(partnerPos, &gameObj->position, &dir);
     Vec_Normalise(&dir, &dir);
-    float yaw = maybeAtan2(dir.x, dir.z);
+    float yaw = Atan2(dir.x, dir.z);
     if (Vec_AngleDifference(gameObj->rotation.y, yaw) < 0.0f) {
         dir.x = (float)Negate(dir.x);
         dir.y = (float)Negate(dir.y);
@@ -384,7 +384,7 @@ bool NDrone2_DSTATE_GoToGoalPosition(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
             if (behaviour_util_getProperty(DRONE_PROP_59, dcv->drone->currentBehaviour) != 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_DeleteMe, 0);
             dcv->drone->unknown33 = 0;
-            if (MPSettings.maybeDroneAIEnabled == 0 && dcv->drone->dtype == DTYPE_RunToPoint) {
+            if (MPSettings.dronesAreBots == 0 && dcv->drone->dtype == DTYPE_RunToPoint) {
                 if (DroneFunc_Using2ndBehaviour(dcv->drone)) {
                     DroneFunc_Set1stBehaviour(dcv->drone);
                     return true;

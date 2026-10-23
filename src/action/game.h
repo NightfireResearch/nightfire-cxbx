@@ -12,7 +12,7 @@ bool Graphics_IsPalI(void);
 bool IsNotPalI(void);
 bool Graphics_IsSomeGraphicsRegion(void);
 int GetTvType(void);
-HASHCODE maybeGetNextMissionInSequence(HASHCODE movie);
+HASHCODE ResetMap_LevelAfterMovie(HASHCODE movie);
 bool Graphics_IsWidescreen(void);
 bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);
@@ -45,7 +45,7 @@ void set_InhibitGameDrawIfRequired(void);
 // The loading screen's picture for a level and its hint and objective text
 HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut);
 void psiStopBackgroundMovie(void);
-void maybeStartBackgroundMovie(void);
+void psiUpdateBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
@@ -64,13 +64,13 @@ typedef struct {
     undefined4 ReloadGame;
     undefined4 ReloadMenupage;
     undefined4 ReloadMainMenu;
-    undefined4 maybePaused;
+    undefined4 LevelEnding;
     undefined4 difficultyModifier;
-    undefined maybeUnused; // no apparent sites where this is used
+    undefined Pulse; // no apparent sites where this is used
     undefined field12_0x2d;
     undefined field13_0x2e;
     undefined field14_0x2f;
-    undefined4 maybeLoadingBlobs;
+    undefined4 NumDraws;
     undefined4 NumFramesUnpaused;
     undefined4 VideoFrames;
     undefined4 NumFrames;
@@ -407,11 +407,11 @@ typedef struct {
     char unknown14[4];
     float points;           // the debriefing's "Points"
     obj_tag* playerObj;
-    short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
+    short idxOfLastInjurer; // the agent who last hurt this player, by index; negative for none
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
     ushort flags;           // 0x26 MPGamePlayerFlags; NDrone2_FindOpponent tests the low 4 bits
-    short maybeIdxOfMyAssassin;
+    short idxOfMyKiller;
     char unknown2a[2];
     float hillSoundTime;    // 0x2c MPGame.TimeIncPaused when MP_KOHUpdate last played the hill's entry sound
 } MPGamePlayer;
@@ -450,15 +450,15 @@ typedef struct {
   float lastTimePaused; // end conditions
   union {
     struct {
-      short unknown_maybe_capture_state; // player status / goals
-      short unknown_maybe_unused; // restart
+      short phoenixObjectiveFlags; // player status / goals
+      short mi6ObjectiveFlags; // restart
       short unknown_9; // uplink, goldeneye, blueprint timers?
     };
     ushort teamObjectiveFlags[3]; // by MPTeam: bits 1 and 2 match an objective's MP_OBJ_EXT.flags, and a bot drops
                                   // its goal for an objective whose bit is set (BOTSTATE_processGoals). BOTSTATE_pickGoal
                                   // reads it for NO_TEAM too, which is unknown_9
   };
-  short maybe_pad;
+  short _pad20e;
   MPRadarMarks radarMarks[NUM_PLAYERS]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
 } MPGameStruct;
 

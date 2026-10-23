@@ -96,6 +96,6 @@ void Lightning_Update(obj_tag *obj) {
         View_SetDrawInAllViews(segment);
         PositionBeam(segment, &segment->position, i < 7 ? &bolt->segments[i + 1]->position : &bolt->end);
         segment->transformFlags |= TRANSFORM_MOVED;
-        segment->maybeParent = glb_players[0];
+        segment->parent = glb_players[0];
     }
 }

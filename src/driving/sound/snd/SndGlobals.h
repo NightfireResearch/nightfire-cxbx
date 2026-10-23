@@ -41,7 +41,7 @@ extern SND::BankSlot *BankArray;                 // sndbanki_buffer: [NumBanks]
 extern SND::FxBus FxBuses[2];
 #define FxBusMainCpu FxBuses
 #define FxBusHardware (FxBuses + 1)
-// The hardware buffer nodes' lists by pool: Llist_MaybeActiveDsndBuffers[2], then LList_maybeFreeDsndBuffers[2]
+// The hardware buffer nodes' lists by pool: ActiveBufferLists[2], then FreeBufferLists[2]
 // - one block, as FUN_0013d550 can pop from the list before the free lists
 extern SND::BufferList BufferLists[4];
 #define ActiveBufferLists BufferLists

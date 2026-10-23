@@ -134,7 +134,7 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     if (spotlight->searchlightType == 2) {
         _VECTOR lightPos = obj->position;
         light_tag* light = Light_Create(&lightPos, 0xff, 0xff, 0xff, 500.0f, 0, -1, 2, 1.0f, 0, 0, 0, 0xffff);
-        light->maybeParentObject = obj;  // Back-reference to holder
+        light->parentObject = obj;       // Back-reference to holder
         spotlight->dynamicLight = light;  // Store the light_tag
 
         // Move the holder object far away (light position is managed separately)
@@ -320,8 +320,8 @@ void Searchlight_Update(obj_tag *searchlight) {
                 float normalY = hitData->surfaceNormal.normal.y;
                 float normalZ = hitData->surfaceNormal.normal.z;
                 componentObj->rotation.x =
-                    (float)(1.5707964f - maybeAtan2(normalY, (float)sqrt((double)normalX * normalX + (double)normalZ * normalZ)));
-                componentObj->rotation.y = maybeAtan2(normalX, normalZ);
+                    (float)(1.5707964f - Atan2(normalY, (float)sqrt((double)normalX * normalX + (double)normalZ * normalZ)));
+                componentObj->rotation.y = Atan2(normalX, normalZ);
                 componentObj->rotation.z = 0.0f;
 
                 // Offset slightly above surface to avoid z-fighting

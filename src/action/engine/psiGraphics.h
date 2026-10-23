@@ -9,7 +9,7 @@
 #pragma pack(push, 1)
 
 // A texture's header, in the map file (a map_tag's texHeaderData points at each). psiCreateMapTextures registers
-// its frames and keeps a pointer to it in Tex[]; Tex[0] points at the default entry maybePsiResetResources sets up.
+// its frames and keeps a pointer to it in Tex[]; Tex[0] points at the default entry psiResetResources sets up.
 // The frames' texture slots follow it, one per frame starting with baseIdx, then the frames' pixel data.
 #define TEXINFO_MAGIC 0x0654584b          // a texture of its own
 #define TEXINFO_DUPLICATE 0x44540000      // "DT" in the high half: the same frames as Tex[low half + 1]
@@ -37,7 +37,7 @@ static_assert(offsetof(TextureInfo, baseIdx) == 0x54, "Bad offset of TextureInfo
 extern TextureInfo *Tex[2048];
 
 // A particle batch's overlay buffer, held until the GPU has finished with it (psiDrawParticleList fills one,
-// psiAgeParticleOverlayRing frees it when framesToLive runs out). Cleared, not freed, by maybePsiResetResources.
+// psiAgeParticleOverlayRing frees it when framesToLive runs out). Cleared, not freed, by psiResetResources.
 typedef struct {
     int overlaySlot;      // from d3dRegisterOverlayBuffer; 0 = empty entry
     void *vertexData;     // Mem_Malloc'd vertices
@@ -50,7 +50,7 @@ extern ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
 
 // One entry per texture in a map_tag: its header (a TextureInfo, or NULL / -1 for none)
 typedef struct {
-    uchar maybeFlags;
+    uchar unknown0;
     uchar unknown1;
     ushort widthMinusOne;       // 0x2
     ushort heightMinusOne;      // 0x4
@@ -90,7 +90,7 @@ typedef struct {
     int primitiveCnt;       // 0x10
     int dataSize14;         // 0x14 - with dataSize18, what psiCreateEntityGfx adds to EntityGfxStat_2adf20
     int dataSize18;         // 0x18
-    int maybeSkinned;       // 0x1c
+    int skinGroupCnt;       // 0x1c
     uint unknown20;
     uint batchCnt;          // 0x24
     uint batchVtxCnt;       // 0x28
@@ -112,6 +112,6 @@ void psiDrawObjectMatrix(celglist_tag* celglist, _MATRIX* matrix);
 void psiCreateMapTextures(map_tag *mapptr);
 void psiCreateEntityGfx(celglist_tag *param_1,map_tag *param_2,uint param_3);
 void psiAgeParticleOverlayRing(void);
-void maybePsiResetResources(void);
+void psiResetResources(void);
 
 #endif // PSIGRAPHICS_H

@@ -895,7 +895,7 @@ void SFXUpdateStreams(void) {
 
 keyOn:
     if (stream->AllowStartedPlaying && !stream->StartedPlaying && stream->KeyOn) {
-        maybePsiStreamPlay(stream->StreamHandle, stream->ReverbDepth);
+        psiStreamPlay(stream->StreamHandle, stream->ReverbDepth);
         stream->StartedPlaying = 1;
     }
     ES_UpdateStreamMemCpy();

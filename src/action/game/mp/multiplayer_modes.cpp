@@ -97,7 +97,7 @@ void MP_KOHUpdate(obj_tag *hill) {
 
             int before = (int)player.points;
             player.points = (float)((double)REC_FRAME_RATE * 0.2f + player.points);
-            if (MPSettings.maybeIsTeamGame)
+            if (MPSettings.isTeamGame)
                 MP_SumTeamScore(MPSettings.Player[i].TeamId);
             int after = (int)player.points;
             if ((uint)after % 5 == 0 && after != before)
@@ -189,7 +189,7 @@ void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
         if (mpObj->holderIdx != -1) {
             MPGamePlayer &holder = MPGame.players[mpObj->holderIdx];
             holder.points = (float)(rate + holder.points);
-            if (MPSettings.maybeIsTeamGame)
+            if (MPSettings.isTeamGame)
                 MP_SumTeamScore((short)gameObj->curState);
         }
     }
@@ -226,7 +226,7 @@ void MP_PlayerKilled(obj_tag *obj) {
             Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
     }
 
-    short injurer = victimRec.maybeIdxOfLastInjurer;
+    short injurer = victimRec.idxOfLastInjurer;
     if (injurer != victim && injurer >= 0) {
         char *str = Txt_GetStringFromHeap(0);
         const char *format = Txt_BindLabel(NOTIF_KILLED_X, 0);
@@ -291,14 +291,14 @@ void MP_PlayerKilled(obj_tag *obj) {
                     if (killer == victim) {
                         victimRec.unknown10 = 0;
                         victimRec.victories--;
-                        victimRec.maybeIdxOfMyAssassin = -1;
+                        victimRec.idxOfMyKiller = -1;
                     } else {
-                        if (!MPSettings.maybeIsTeamGame ||
+                        if (!MPSettings.isTeamGame ||
                             MPSettings.Player[victim].TeamId != MPSettings.Player[killer].TeamId) {
                             killerRec.victories++;
                             killerRec.unknown10++;
                         }
-                        victimRec.maybeIdxOfMyAssassin = killer;
+                        victimRec.idxOfMyKiller = killer;
                     }
 
                     points = 1.0f;

@@ -250,7 +250,7 @@ static void BluePrintRewardBot(Drone_tag *drone, const short *weapons, short sta
 void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
     Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_TRUCK, 100.0f, 0, 0);
 
-    obj_tag *carrier = gameObj->maybeParent;
+    obj_tag *carrier = gameObj->parent;
     if (carrier != NULL) {
         short idx = Control_Plr2Ind(carrier);
         if (idx != -1) {
@@ -284,7 +284,7 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
                 BluePrintRewardPlayer(holder, weapons, startWeapon);
         }
         else if (holder->objectType == OBJECTTYPE_DRONE) {
-            if (!MPDrone_MaybeIsDyingOrDead(holder))
+            if (!MPDrone_IsDyingOrDead(holder))
                 BluePrintRewardBot((Drone_tag *)holder->extraObjectData, weapons, startWeapon);
         }
     }

@@ -195,7 +195,7 @@ double BOT_getAggressionMul(Drone_tag *drone);
 float BOT_getMovementSpeedMul(Drone_tag *drone);
 bool BOT_getMovePossibility(Drone_tag *drone, int odds);
 uint BOTSTATE_getStateType(uint state);   // a BOTSTATE_CLASS
-bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj);
+bool MPDrone_IsDyingOrDead(obj_tag *obj);
 bool BOT_reactToDroneAlertMsg(uint msg, Drone_tag *drone, Drone_tag *from);
 uchar BOT_validateStateChange(DCVars_tag *dc, uint newState);   // false refuses; then BOT_vars_t.redirectState
 obj_tag* BOT_handleOpponentHistory(Drone_tag *drone, obj_tag *attacker);

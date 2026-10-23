@@ -100,9 +100,9 @@ void Break_DoBreak(_VECTOR *pos) {
             RotMatrix(&obj->rotation, &mtx);
             Mat_GetDir(&hit.surfaceNormal.normal, &mtx);
             Vec_Copy(&obj->centrePoint, &hit.hitPosition);
-            hit.maybehitDirection.x = 0.0f;
-            hit.maybehitDirection.y = 0.0f;
-            hit.maybehitDirection.z = -0.5f;
+            hit.hitDirection.x = 0.0f;
+            hit.hitDirection.y = 0.0f;
+            hit.hitDirection.z = -0.5f;
             Break_Kill(obj, &hit);
             return;
         }
@@ -221,9 +221,9 @@ void ShatterPolyRecurse(int depth, TriListVertex *verts, obj_tag *obj, HITDATA_t
         double speed = 0.125f / (double)dist;
         if (speed > 0.1f)
             speed = 0.1f;
-        shard->vel.x = (float)(speed * hit->maybehitDirection.x);
-        shard->vel.y = (float)(speed * hit->maybehitDirection.y);
-        shard->vel.z = (float)(speed * hit->maybehitDirection.z);
+        shard->vel.x = (float)(speed * hit->hitDirection.x);
+        shard->vel.y = (float)(speed * hit->hitDirection.y);
+        shard->vel.z = (float)(speed * hit->hitDirection.z);
 
         shard->texture = texture;
         shard->life = REC_FRAME_RATE * 25.0f;

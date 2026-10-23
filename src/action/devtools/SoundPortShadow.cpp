@@ -454,7 +454,7 @@ void RandomSound(DYNAMICSOUNDS *s) {
     s->radiusInner = Num(-1.0f, 30.0f);
     s->radiusOuter = Num(-1.0f, 60.0f);
     s->alertness = R(3) == 0 ? 0.0f : Num(-2.0f, 10.0f);
-    s->maybePitchBend = (short)R(0);
+    s->pitch = (short)R(0);
     s->is3d = (char)R(2);
     s->needsUpdate = (char)R(2);
     s->playbackState = (char)R(5);

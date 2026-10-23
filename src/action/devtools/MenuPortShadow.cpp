@@ -587,7 +587,7 @@ void RandomSprite(sprite *s) {
     for (size_t i = 0; i < sizeof(sprite); i++)
         b[i] = (uint8_t)R(0x100);
     s->text = R(3) ? world.text[R(4)] : NULL;
-    s->maybeClippedString = R(2) ? world.format : NULL;
+    s->format = R(2) ? world.format : NULL;
     s->scale.x = Num(0.0f, 2.0f);
     s->scale.y = Num(0.0f, 2.0f);
     s->positionX = S(700);
@@ -640,7 +640,7 @@ void RandomPiece(MENU_COMPONENTPIECE *p) {
     p->info.posY = S(60);
     p->info.onscreenWidth = S(80);
     p->info.onscreenHeight = S(80);
-    p->info.maybeClippedText = NULL;
+    p->info.format = NULL;
     p->stretchWidth = R(2) ? 0.0f : Num(-0.5f, 1.5f);
     p->stretchHeight = R(2) ? 0.0f : Num(-0.5f, 1.5f);
     p->flags = R(0x4000) | (R(2) ? 0x10 : 0) | (R(2) ? 0x20 : 0);

@@ -72,10 +72,10 @@ void Player_ResetStartPos(void) {
 }
 
 // AUTOINJECT
-void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl) {
+void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort enabled, level_tag *lvl) {
     Vec_Copy(pos, &player_start[player_start_positions_index].pos);
     Vec_Copy(rot, &player_start[player_start_positions_index].rot);
-    player_start[player_start_positions_index].isEnabled = maybeEnabled;
+    player_start[player_start_positions_index].isEnabled = enabled;
     memcpy(&player_start[player_start_positions_index].levelData, lvl, sizeof(level_tag_PlayerStartPosition));
     player_start_positions_index++;
 }
@@ -282,7 +282,7 @@ uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount) {
         weaponIndex = (short)(UpgradedSilencedSnipers[sniperUpgrade] + 1);
 
     weapon_definition_tag *weapon = &weapon_data[weaponIndex];
-    if (playerInfo->ammo[weapon->ammoType] >= ammo_data[weapon->ammoType].maybeMaxNumPerPlayer)
+    if (playerInfo->ammo[weapon->ammoType] >= ammo_data[weapon->ammoType].maxNumPerPlayer)
         return 0;
     if (amount == 0)
         return 0;
@@ -298,7 +298,7 @@ uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount) {
 
     short before = playerInfo->ammo[weapon->ammoType];
     playerInfo->ammo[weapon->ammoType] = before + amount;
-    short max = ammo_data[weapon->ammoType].maybeMaxNumPerPlayer;
+    short max = ammo_data[weapon->ammoType].maxNumPerPlayer;
     if (playerInfo->ammo[weapon->ammoType] >= max)
         playerInfo->ammo[weapon->ammoType] = max;
     return (ushort)(playerInfo->ammo[weapon->ammoType] - (loaded + before));
@@ -321,7 +321,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     sightObj->transformFlags |= TRANSFORM_KEEP_ROTATION;
     sightObj->objectType = OBJECTTYPE_DELETED;
     sightObj->effectFlags |= 0x20;
-    sightObj->maybeParent = playerObj;
+    sightObj->parent = playerObj;
     sightObj->tweakR = 0x7f;
     sightObj->tweakG = 0;
     sightObj->tweakB = 0;
@@ -340,7 +340,7 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     if (muzzleFlashObj == NULL) 
         return;
     
-    muzzleFlashObj->maybeParent = playerObj;
+    muzzleFlashObj->parent = playerObj;
     muzzleFlashObj->objectType = OBJECTTYPE_DELETED;
     muzzleFlashObj->effectFlags |= 0x8221;
     View_SetDrawInThisViewOnly(muzzleFlashObj,viewerNum);
@@ -2083,7 +2083,7 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
         return;
     if (damage <= 0.0f)
         return;
-    if (MPSettings.maybeDroneAIEnabled != 0 && GameFlow_GetState() != 2)
+    if (MPSettings.dronesAreBots != 0 && GameFlow_GetState() != 2)
         return;
 
     blData->hudFadeIn = 1.0f;
@@ -2128,8 +2128,8 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
     double armourTakes;
     switch (painType) {
         case 5: case 6: case 7:
-            if (MPSettings.maybeDroneAIEnabled != 0)
-                MPGame.players[blData->playerNum].maybeIdxOfLastInjurer = -2;
+            if (MPSettings.dronesAreBots != 0)
+                MPGame.players[blData->playerNum].idxOfLastInjurer = -2;
             // fall through
         case 1: case 2: case 3: case 4:
             armourTakes = 0.0;
@@ -2231,7 +2231,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     if (MPSettings.isMultiplayer != 0) {
         char *text = Txt_GetStringFromHeap(0);
         short self = blData->playerNum;
-        short injurer = MPGame.players[self].maybeIdxOfLastInjurer;
+        short injurer = MPGame.players[self].idxOfLastInjurer;
         short killer = (injurer == self) ? -1 : injurer;
         if (killer == -2 || killer == -1)
             sprintf(text, Txt_BindLabel(TXT_MP_DIED, 0), MPSettings.Player[self].Name);
@@ -2785,7 +2785,7 @@ static void SetCapsule(BLData *blData, obj_tag *player, _VECTOR *up, float top, 
 void Player_Collision(obj_tag *player) {
     float rootHeight = player->animState->animObj.rootHeight;
     BLData *blData = (BLData *)player->extraObjectData;
-    MPGame.players[blData->playerNum].maybeIdxOfLastInjurer = -2;
+    MPGame.players[blData->playerNum].idxOfLastInjurer = -2;
     blData->hitTest.mask = 0;
     blData->hitTest.cel = player->inCel;
     _VECTOR up;
@@ -2940,7 +2940,7 @@ void PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
     HITDATA_tag *above = Coll_AddHitToList(&under->hitList, 1.0f, NULL, obj);
     above->dmgAmt = 0.0f;
     Vec_Copy(&CONST_UP_VECTOR, (_VECTOR *)&above->surfaceNormal);
-    Vec_Negate(&CONST_UP_VECTOR, &above->maybehitDirection);
+    Vec_Negate(&CONST_UP_VECTOR, &above->hitDirection);
     Vec_Copy(&hit->hitPosition, &above->hitPosition);
 }
 
@@ -3076,7 +3076,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
             return 0.0f;
     }
 
-    if (MPSettings.maybeDroneAIEnabled != 0) {
+    if (MPSettings.dronesAreBots != 0) {
         BU_tag *bullet = (BU_tag *)hitObj->extraObjectData;
         if (Control_Plr2Ind(bullet->firedByObj) >= 4 && bullet->firedByObj != NULL) {
             BOT_vars_t *bot = ((Drone_tag *)bullet->firedByObj->extraObjectData)->botVars;
@@ -3095,7 +3095,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
             int bone = (ushort)hit->hitBoneIdx;
             if (bone > 0) {
                 if (bone <= 4) {
-                    float from = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
+                    float from = Atan2(hit->hitDirection.x, hit->hitDirection.z);
                     double degrees = Vec_AngleDifference(from, player->rotation.y) * 57.295776f;
                     if (degrees < 0.0)
                         degrees = -degrees;
@@ -3119,7 +3119,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
     Player_HandlePain(player, hit->dmgAmt, blData, hit->hitBoneIdx, 0);
 
     _VECTOR direction;
-    Vec_Copy(&hit->maybehitDirection, &direction);
+    Vec_Copy(&hit->hitDirection, &direction);
     ApplyMatrixLVI(&glb_viewer[blData->playerNum]->worldMatrix, &direction);
     Vec_Normalise(&direction, &direction);
     blData->hitDirections = HitDirections(&direction);
@@ -3308,7 +3308,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     glb_blokes[num] = blData;
     blData->playerNum = (char)playerNum;
     blData->playerNum2 = (char)playerNum;
-    player->maybeCollision = &blData->hitTest;
+    player->hitTest = &blData->hitTest;
     Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_SHOOT);
     Sound_StopAllWithId(SFX_GADGET_WATCH_TASER_SHOOT);
     Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_BURN_LOOP);
@@ -3809,7 +3809,7 @@ static void Recharge(BLData *blData, int weapon) {
 // AUTOINJECT
 void Player_Update(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
-    if (Input_Action(blData->playerNum, ACTION_PAUSE, 4) && GameState.maybePaused == 0 && ScriptCam == 0) {
+    if (Input_Action(blData->playerNum, ACTION_PAUSE, 4) && GameState.LevelEnding == 0 && ScriptCam == 0) {
         blData->pauseMenu = (short)MenuManager_Create(0x80000002, 0x4000004b, blData->playerNum,
                                                       (uchar)blData->playerNum, ACTION_PAUSE, 1, 3);
         GS_PauseGame(1);

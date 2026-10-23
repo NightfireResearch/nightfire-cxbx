@@ -15,19 +15,19 @@ typedef struct {
     char unknown18[0x24-0x18];
     obj_tag *firedByObj;              // 0x24 the object that fired this bullet ("playerShooter"; eg. read by
                                       //      SP_GetHitDamage)
-    obj_tag *maybeProxyObjectShooter; // 0x28 Bullet_init's third argument: the collision test passes through it, and
+    obj_tag *firedFromObj; // 0x28 Bullet_init's third argument: the collision test passes through it, and
                                       //      a car that is not it stops the bullet
     obj_tag *swoosh;                  // 0x2c trail or, for the trip-bomb, its beam
     obj_tag *occluder;                // 0x30 a smoke grenade's cloud (Occlude_Create), kept where the bullet is
     obj_tag *heatseekTarget;          // 0x34 homing target; once stuck (state 3), what it is stuck to
     weapon_definition_tag *wpnDef;    // 0x38
-    // The frame's collision test (obj_tag::maybeCollision), which Bullet_Update sets up: a swept segment when the
+    // The frame's collision test (obj_tag::hitTest), which Bullet_Update sets up: a swept segment when the
     // bullet moves at least half its radius (HITTEST_RAY), a sphere at its position otherwise (HITTEST_SPHERE)
     HITTEST_tag test;                 // 0x3c
     DYNAMICSOUNDS *soundHandle;       // 0xc8 flight sound, moved with the bullet
-    float distanceTravelled;          // 0xcc compared with the weapon's range ("maybeAgeOrLifetime")
+    float distanceTravelled;          // 0xcc compared with the weapon's range
     float speed;                      // 0xd0 units per 60 Hz frame ("field100_0xd0")
-    float fuseTimer;                  // 0xd4 frames ("explosiveTimerOrMaybeRange")
+    float fuseTimer;                  // 0xd4 frames
     ushort numRicochets;              // 0xd8 also slows the tumble of a bouncing projectile; a satchel's count of
                                       //      quarter seconds
     short charge;                     // 0xda a satchel's: shots at it take it away, and at 0 its fuse is set again

@@ -514,7 +514,7 @@ void RandomWorld(bool bots) {
     }
     RandWords[0] = RandomWord();
     RandWords[1] = RandomWord();
-    MPSettings.maybeDroneAIEnabled = bots;
+    MPSettings.dronesAreBots = bots;
     static const MultiplayerGameMode modes[] = {GM_ARENA, GM_PROTECTION, GM_DEMOLITION, GM_CTF};
     MPSettings.GameMode = modes[ShadowRand(4)];
 }

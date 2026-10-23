@@ -72,7 +72,7 @@ static char HeldWeapon(DCVars_tag *dcv) {
 // Keeps targetPos on the opponent, or where it was last seen. Not with bots.
 // FUNC_AT(0x000666a0)
 void DroneWeap_AimAtOpponent(DCVars_tag *dcv) {
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         return;
     Drone_tag *drone = dcv->drone;
     if (drone->opponent != NULL)
@@ -90,7 +90,7 @@ void DroneWeap_HandleFiring(DCVars_tag *dcv) {
     if (!drone->firing) {
         if (drone->opponent != NULL) {
             DroneWeap_AimAtOpponent(dcv);
-            if (!MPSettings.maybeDroneAIEnabled)
+            if (!MPSettings.dronesAreBots)
                 DroneWeap_DoOpponentTargetting(dcv);
         }
         return;
@@ -104,7 +104,7 @@ void DroneWeap_HandleFiring(DCVars_tag *dcv) {
             DroneWeap_AimAtOpponent(dcv);
         return;
     }
-    if (!MPSettings.maybeDroneAIEnabled)
+    if (!MPSettings.dronesAreBots)
         DroneWeap_DoOpponentTargetting(dcv);
     if (!DroneWeap_DoFiring(dcv))
         drone->burstOver = 1;
@@ -114,7 +114,7 @@ void DroneWeap_HandleFiring(DCVars_tag *dcv) {
 // sight for 16 frames (unless DRONE_PROP_17).
 bool DroneWeap_DoFiring(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         BOT_opponentTargetting(dcv);
     if (drone->burstShots == 0)
         DroneWeap_NextBulletTime(dcv, 1, 0);
@@ -134,7 +134,7 @@ bool DroneWeap_DoFiring(DCVars_tag *dcv) {
 // Asks for fire. Restarting, unless it already fires (bots always), the first shot waits for a burst's pause.
 // AUTOINJECT
 void DroneWeap_Fire(char restart, DCVars_tag *dcv) {
-    if ((MPSettings.maybeDroneAIEnabled || !dcv->drone->firing) && restart)
+    if ((MPSettings.dronesAreBots || !dcv->drone->firing) && restart)
         DroneWeap_NextBulletTime(dcv, 0, 1);
     dcv->drone->firing = 1;
     dcv->drone->burstOver = 0;
@@ -164,7 +164,7 @@ short DroneWeap_FireDelay(DCVars_tag *dcv) {
 short DroneWeap_BurstLength(DCVars_tag *dcv) {
     char weapon = HeldWeapon(dcv);
     short shots = weapon_data[weapon].droneBurstLength;
-    if (!MPSettings.maybeDroneAIEnabled) {
+    if (!MPSettings.dronesAreBots) {
         switch (weapon) {
         case 6:
         case 10:
@@ -195,7 +195,7 @@ void DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
         drone->burstShots = DroneWeap_BurstLength(dcv);
         if (drone->burstShots < 1)
             drone->burstShots = 1;
-        if (MPSettings.maybeDroneAIEnabled) {
+        if (MPSettings.dronesAreBots) {
             float aggression = (float)BOT_getAggressionMul(drone);
             uint draw = Rand_Rand(15);
             wait = draw - (int)(-60.0f / (double)aggression);
@@ -301,13 +301,13 @@ bool DroneWeap_Ready2Fire(DCVars_tag *dcv) {
     } else if (opponent->objectType == OBJECTTYPE_PLAYER || opponent->objectType == OBJECTTYPE_DEAD_PLAYER) {
         if (((BLData *)opponent->extraObjectData)->health <= 0.0f)
             return false;
-        if (!MPSettings.maybeDroneAIEnabled && !PlrStat_OkToUpdate())
+        if (!MPSettings.dronesAreBots && !PlrStat_OkToUpdate())
             return false;
     }
 
     if (drone->animMode == 4)
         return true;
-    if (!MPSettings.maybeDroneAIEnabled) {
+    if (!MPSettings.dronesAreBots) {
         if (drone->animMode != 2 || drone->unknown434 != NULL)
             return false;
         if (drone->distanceToTarget < 2.0f)
@@ -409,7 +409,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
 
     Vec_Normalise(&dir, &dir);
     wpn = &weapon_data[HeldWeapon(dcv)];
-    if (drone->health > 0.0f && !MPDrone_MaybeIsDyingOrDead(obj) && drone->opponent != NULL) {
+    if (drone->health > 0.0f && !MPDrone_IsDyingOrDead(obj) && drone->opponent != NULL) {
         _VECTOR aimAt;
         Vec_Add2(&drone->targetPos, &drone->aimError, &aimAt);
         Vec_Subtract(&aimAt, &muzzle, &dir);
@@ -421,7 +421,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     drone->lastShotFrame = GameState.NumFramesUnpaused;
     drone->fired = 1;
     drone->unknown41 = 0;
-    if (!MPSettings.maybeDroneAIEnabled)
+    if (!MPSettings.dronesAreBots)
         Bullet_init_casing(obj);
     drone->clip--;
     if (dcv->drone->dtype == DTYPE_Bot)
@@ -552,7 +552,7 @@ bool DroneWeap_AimTarget_IsOpponent(char checkAngle, char keepTurning, DCVars_ta
     obj_tag *obj = dcv->gameObj;
     _VECTOR toOpponent;
     Vec_Subtract(&drone->opponent->position, &obj->position, &toOpponent);
-    float yaw = maybeAtan2(toOpponent.x, toOpponent.z);
+    float yaw = Atan2(toOpponent.x, toOpponent.z);
     float turn = Vec_AngleDifference(yaw, obj->rotation.y);
     if (checkAngle) {
         if (fabsf(turn) < 0.9f)
@@ -583,7 +583,7 @@ bool DroneWeap_OpponentIsAimingAtMe(DCVars_tag *dcv, float angle) {
         return false;
     if (dcv->drone->inPlayersSights)
         return true;
-    return MPSettings.maybeDroneAIEnabled && NDrone2_BondIsFacingMe(dcv, angle);
+    return MPSettings.dronesAreBots && NDrone2_BondIsFacingMe(dcv, angle);
 }
 
 // The opponent is the player or a drone, and armed
@@ -816,7 +816,7 @@ double Drone_ModBulletDamage(Drone_tag *drone, obj_tag *player, HITDATA_tag *hit
         return scaled;
     // From here on, the damage rounded to a float
     float rounded = (float)scaled;
-    float shotYaw = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
+    float shotYaw = Atan2(hit->hitDirection.x, hit->hitDirection.z);
     if (fabs(Vec_AngleDifference(shotYaw, player->rotation.y)) < kHalfPi)
         return (double)DroneFiring_PlayerBackShot_Damage * rounded;
     return rounded;
@@ -826,7 +826,7 @@ double Drone_ModBulletDamage(Drone_tag *drone, obj_tag *player, HITDATA_tag *hit
 // multiplayer. Always true.
 // AUTOINJECT
 bool Drone_ModPlayerHitDamage(obj_tag *player, HITDATA_tag *hit) {
-    if (MPSettings.maybeDroneAIEnabled || player == NULL || hit == NULL)
+    if (MPSettings.dronesAreBots || player == NULL || hit == NULL)
         return true;
     obj_tag *bullet = hit->hitObj;
     if (bullet == NULL || (bullet->flags & 1) || bullet->objectType != OBJECTTYPE_BULLET)

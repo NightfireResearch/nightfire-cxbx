@@ -15,7 +15,7 @@
 // are CreateFileA, ReadFile, GetFileSizeEx, GetOverlappedResult and CloseHandle with different names. Even the
 // struct the game calls IO_STATUS_BLOCK is a Win32 OVERLAPPED - Internal, InternalHigh, Offset, OffsetHigh,
 // hEvent, twenty bytes - so FS.cpp's async read loop is Win32 logic and is left as it is. Everything above
-// this layer (openOrCreateFile, maybeReadFile, FS_OperationInProgress, and the archive reader) is left exactly
+// this layer (openOrCreateFile, FS_ReadFile, FS_OperationInProgress, and the archive reader) is left exactly
 // as it is; only the bottom is swapped out.
 //
 // The host has no overlapped I/O, so an overlapped read or write is made there and then, at its offset, and is
@@ -44,7 +44,7 @@
 #endif
 
 // The game reads the last error through XAPI's GetLastError, which XboxStartup.cpp makes the host's
-// (Xbox_GetLastError). It is load bearing: maybeReadFile decides whether an overlapped read is in flight or has
+// (Xbox_GetLastError). It is load bearing: FS_ReadFile decides whether an overlapped read is in flight or has
 // failed by testing GetLastError() == ERROR_IO_PENDING, and if it reads a stale zero it concludes the read failed
 // and calls FS_FatalErrorHandler - the "disc may be dirty or damaged" screen, which never returns. So every host
 // call below leaves its result as the last error.
@@ -64,7 +64,7 @@ static void PublishLastError(DWORD err) {
 // The game's response to a failed read is FS_FatalErrorHandler - the "there's a problem with the disc you're
 // using, it may be dirty or damaged" screen, which never returns and says nothing about what went wrong. That
 // has now cost time twice, so the two places that can lead to it report themselves on the way past, whatever
-// the verbose setting. The conditions are not guesses: maybeReadFile calls the fatal handler when a read
+// the verbose setting. The conditions are not guesses: FS_ReadFile calls the fatal handler when a read
 // returns 0 with an error that is not ERROR_IO_PENDING, and FS_OperationInProgress does when
 // GetOverlappedResult fails with anything but ERROR_IO_INCOMPLETE or ERROR_IO_PENDING.
 //
@@ -196,7 +196,7 @@ static BOOL TransferAt(HANDLE fileHandle, void *buffer, uint32_t len, OVERLAPPED
 
 // ReadFile. Returns 1 on success and 0 on failure, and leaves the last-error code alone on the way out,
 // because the layer above distinguishes "failed" from "still in flight" by testing for ERROR_IO_PENDING -
-// see maybeReadFile, which treats pending as success and lets FS_OperationInProgress poll it. Here no read is
+// see FS_ReadFile, which treats pending as success and lets FS_OperationInProgress poll it. Here no read is
 // ever in flight.
 //
 // AUTOINJECT
@@ -414,8 +414,8 @@ int __stdcall Xbox_SetFilePointerEx(HANDLE fileHandle, uint32_t distanceLow, uin
 // what DeleteFile does. Takes an Xbox path, so it resolves like createFile - GetPTPData and
 // WriteStateFileAndLaunch both use it on "z:\\state.bin".
 //
-// AUTOINJECT
-int __stdcall MaybeFileCreateNew(const char *filename) {
+// FUNC_AT(0x000ea6d4)
+int __stdcall deleteFile(const char *filename) {
     char hostPath[512];
     if (!ResolveForOpen(filename, hostPath, sizeof(hostPath))) {
         PublishLastError(ERROR_FILENAME_EXCED_RANGE);

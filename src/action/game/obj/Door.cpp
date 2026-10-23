@@ -241,7 +241,7 @@ void Door_ReactToHit(obj_tag *obj) {
         obj_tag *other = hit->hitObj;
         if (other == NULL)
             continue;
-        if ((other->objectType == OBJECTTYPE_DRONE && !MPDrone_MaybeIsDyingOrDead(other)) ||
+        if ((other->objectType == OBJECTTYPE_DRONE && !MPDrone_IsDyingOrDead(other)) ||
             other->objectType == OBJECTTYPE_PLAYER) {
             pusher = other;
             break;
@@ -422,7 +422,7 @@ uchar Door_Link2Portal(obj_tag *obj) {
 // The door's message, once for each door, unless it is locked or open. None while MPSettings+0x1e4 is set.
 // AUTOINJECT
 char * Door_DoMsg(obj_tag *obj) {
-    if (obj == NULL || MPSettings.maybeDroneAIEnabled)
+    if (obj == NULL || MPSettings.dronesAreBots)
         return NULL;
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     if (door->msgShown)

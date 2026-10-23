@@ -733,7 +733,7 @@ void RandomObject(int i) {
     if (obj->animState == NULL && (obj->transformFlags & TRANSFORM_ANIMATED))
         obj->animState = &world.anims[0];
     obj->inCel = R(5) == 0 ? NULL : AnyCel();
-    obj->maybeParent = R(5) == 0 ? AnyObj() : NULL;
+    obj->parent = R(5) == 0 ? AnyObj() : NULL;
     obj->curState = (ushort)R(6);
     obj->subState = (ushort)R(5);
     obj->ambientR = R(3) ? 0xff : (uchar)R(256);
@@ -851,7 +851,7 @@ void RandomWorld(void) {
         switch_channels[i] = (char)(R(3) == 0);
     for (int i = 0; i < 256; i++)
         switch_channels_hold[i] = (char)(R(3) == 0);
-    MPSettings.maybeDroneAIEnabled = R(3) == 0;
+    MPSettings.dronesAreBots = R(3) == 0;
     for (int i = 0; i < 10; i++)
         MPGame.players[i].playerObj = R(3) == 0 ? NULL : AnyObj();
     GameState.InhibitGameDraw = (uchar)R(2);
@@ -1078,7 +1078,7 @@ uint32_t RunCelChange(bool original) {
 }
 
 uint32_t RunSwitches(bool original) {
-    CDECL_VOID(0x0002d640, maybeControl_Switches_Update, void (__cdecl *)(void));
+    CDECL_VOID(0x0002d640, Control_Switches_Update, void (__cdecl *)(void));
     return 0;
 }
 
@@ -1172,7 +1172,7 @@ const Case kControl[] = {
     C("control_link_object_to_cel", RunLinkToCel),
     C("Controls_StraddleTest", RunStraddle),
     C("control_handle_cel_change", RunCelChange),
-    C("maybeControl_Switches_Update", RunSwitches),
+    C("Control_Switches_Update", RunSwitches),
     C("control_movement_object_handler", RunHandler),
     C("Control_CreateObjEx", RunCreateEx),
     C("Control_NextLOD", RunNextLOD),
@@ -1652,7 +1652,7 @@ uint32_t SortArray(COMP_FUNC kind, uint *size, uint32_t least) {
     case Compare_Sprites:
         for (uint32_t i = 0; i < count; i++) {
             sprite *spr = (sprite *)(things + i * sizeof(sprite));
-            spr->maybeEnabled = (uchar)(R(3) == 0 ? R(256) : R(4));
+            spr->depth = (uchar)(R(3) == 0 ? R(256) : R(4));
             pointers[i] = spr;
         }
         *size = sizeof(void *);
@@ -2254,7 +2254,7 @@ uint32_t RunFixup(bool original) {
 
 uint32_t RunNextMovie(bool original) {
     uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? 0x07100000 : R(2) ? 0x07200000 : 0x07300000) + R(0x50);
-    return (uint32_t)CDECL_RUN(0x000bdcd0, maybeGetNextMissionInSequence, HASHCODE (__cdecl *)(HASHCODE), (HASHCODE)movie);
+    return (uint32_t)CDECL_RUN(0x000bdcd0, ResetMap_LevelAfterMovie, HASHCODE (__cdecl *)(HASHCODE), (HASHCODE)movie);
 }
 
 uint32_t RunLoadForParse(bool original) {
@@ -2396,7 +2396,7 @@ uint32_t RunWoman(bool original) {
 
 const Case kLeaves[] = {
     C("parseentityfixup_entity", RunFixup),
-    C("maybeGetNextMissionInSequence", RunNextMovie),
+    C("ResetMap_LevelAfterMovie", RunNextMovie),
     C("psiFileLoadForParse", RunLoadForParse),
     C("IsLevelLoaded", RunLevelLoaded),
     C("GetTvType", RunTvType),

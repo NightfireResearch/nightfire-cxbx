@@ -674,7 +674,7 @@ bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         MPSettings.MaxDuration = 10;
         MPSettings.field53_0x190 = 0;
         MPSettings.ExplosiveSceneryEnabled = 0;
-        MPSettings.maybeIsTeamGame = 0;
+        MPSettings.isTeamGame = 0;
         MPSettings.ShowTeamAndNameOverhead = 1;
         MPSettings.FriendlyFire = 0;
         MPSettings.isMultiplayer = 1;

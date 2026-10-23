@@ -61,7 +61,7 @@ static int TestEquipAmmo(int *runs) {
         Upgrades[0][WUG_Sniper] = level;
         for (short weapon = 0; weapon < NUM_WEAPONS; weapon++) {
             uchar type = weapon_data[weapon].ammoType;
-            short max = type < NUM_AMMO_TYPES ? ammo_data[type].maybeMaxNumPerPlayer : 0;
+            short max = type < NUM_AMMO_TYPES ? ammo_data[type].maxNumPerPlayer : 0;
             short stocks[] = {0, (short)(max / 2), (short)(max - 1), max};
             for (short stock : stocks)
                 for (short clip = 0; clip < 2; clip++)

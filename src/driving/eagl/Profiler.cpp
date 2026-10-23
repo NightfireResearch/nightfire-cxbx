@@ -495,7 +495,7 @@ EAGL::ProfilerTimer* EAGL::ProfilerTimer::Construct(ProfilerRegion *timedRegion)
 }
 
 // FUNC_AT(0x000f5250)
-EAGL::ProfilerTimer* EAGL::ProfilerTimer::ConstructMaybeStarted(ProfilerRegion *timedRegion, bool startNow) {
+EAGL::ProfilerTimer* EAGL::ProfilerTimer::ConstructWithStartFlag(ProfilerRegion *timedRegion, bool startNow) {
     region = timedRegion;
     if (startNow) {
         Enter();

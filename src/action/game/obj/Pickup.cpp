@@ -250,7 +250,7 @@ void Pickup_Update(obj_tag *obj) {
             for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next)
                 riding |= Pickup_CanInheritPosition(obj, hit->hitObj);
             _VECTOR base;
-            auxVec_AddMulR32(&hits->hitPosition, &hits->maybehitDirection,
+            auxVec_AddMulR32(&hits->hitPosition, &hits->hitDirection,
                              (float)-AbsFchs(obj->objGraphics->extentMin.y), &base);
             Vec_Add2(&base, &info->offset, at);
             Vec_Copy(at, &obj->position);
@@ -292,7 +292,7 @@ void Pickup_Update(obj_tag *obj) {
         }
     }
 
-    if (MPSettings.maybeDroneAIEnabled) {
+    if (MPSettings.dronesAreBots) {
         for (ushort i = 0; i < NUM_BOTS; i++) {
             obj_tag *bot = MPGame.players[NUM_PLAYERS + i].playerObj;
             if (bot == NULL || bot->objectType == OBJECTTYPE_DEAD_DRONE)
@@ -338,7 +338,7 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
     case PICKUP_KIND_WEAPON:
         if (!bot->weapons[item].held) {
             short drop = 0;
-            if (MPSettings.maybeDroneAIEnabled && MPSettings.TripleDamageModifierProfessionalMode) {
+            if (MPSettings.dronesAreBots && MPSettings.TripleDamageModifierProfessionalMode) {
                 // Weapon 0x3b is kept by team 0 in one mode and team 1 in another
                 bool keep59 = false;
                 if (MPSettings.GameMode == GAMEMODE_TEAM0_RULE)
@@ -429,7 +429,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
         case PICKUP_KIND_WEAPON:
             if (!blData->weaponStats[item].enabled) {
                 short drop = 0;
-                if (MPSettings.maybeDroneAIEnabled && MPSettings.TripleDamageModifierProfessionalMode) {
+                if (MPSettings.dronesAreBots && MPSettings.TripleDamageModifierProfessionalMode) {
                     short klass = weapon_data[PickupMatrix[MPSettings.weaponSet][0]].weaponBaseNum;
                     for (short k = 2; k < 0x48; k++) {
                         if (k != klass && blData->weaponStats[k].enabled) {
@@ -619,7 +619,7 @@ obj_tag* Pickup_CreateSimple(_MATRIX *mtx, short weapon, short count, ushort kin
     if (weapon <= 0 || weapon >= 0x72)
         return NULL;
     weapon_definition_tag *def = &weapon_data[weapon];
-    ushort lifetime = FRAME_RATE_INT * (MPSettings.maybeDroneAIEnabled ? 30 : 120);
+    ushort lifetime = FRAME_RATE_INT * (MPSettings.dronesAreBots ? 30 : 120);
     return Pickup_Create(NULL, NULL, mtx, hashtable_hashcode_to_celglist(def->worldModelGfx), kind,
                          def->weaponVariantNum, count, 0, PICKUP_SOUND, 0, 0, lifetime, 0);
 }

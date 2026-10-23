@@ -501,7 +501,7 @@ bool Menu_IsBotGood(uint idx) {
 static char buf_171[0x100];
 
 // AUTOINJECT
-void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE descriptionLabel, HASHCODE param_7, bool maybeDoAnimation) {
+void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE param_4, HASHCODE param_5, HASHCODE descriptionLabel, HASHCODE param_7, bool doAnimation) {
 
   int iVar2;
   const char *pcVar4;
@@ -533,7 +533,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   const int last_item_idx = __Menu_SendMessage(ctrl,MessageType_GetMax,0,0);
 
   if (param_5 != 0) {
-    if (maybeDoAnimation) {
+    if (doAnimation) {
       __Menu_SendDelayed(10,managerNum, param_5, MessageType_SetIcon, itemList[idxMid].iconHashcode,0);
       __Menu_SendDelayed(10,managerNum, param_5, MessageType_SetColour, itemList[idxMid].enabled ? 0x808080ff : 0x60606060,0);
     }
@@ -630,7 +630,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
 
 
-  if (maybeDoAnimation) {
+  if (doAnimation) {
     // Inlined Menu_StartIris(2, param_1, param_7)
     // DAT_0025d7b9 = '\0';
     // DAT_0025d7b8 = 0;
@@ -845,12 +845,12 @@ void Component_InitInstance(MENU_COMPONENTPIECE *piece, short x, short y, short 
     piece->info.onscreenHeight = height;
     piece->info.spritesheetX = u;
     piece->info.spritesheetY = v;
-    piece->info.maybeSpritesheetWidth = uw;
-    piece->info.maybeSpritesheetHeight = vh;
-    piece->info.maybeFlags = 0;
+    piece->info.spritesheetWidth = uw;
+    piece->info.spritesheetHeight = vh;
+    piece->info.flags = 0;
     piece->info.textRef = (Action_TranslatedText)-1;
-    piece->info.maybeEnabled = 0xffff;
-    piece->info.maybeClippedText = NULL;
+    piece->info.depth = 0xffff;
+    piece->info.format = NULL;
     piece->info.textureHashcode = (HASHCODE)0;
     piece->info.linkedViewer = 0;
     piece->info.colour = colour;
@@ -924,7 +924,7 @@ void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int w
         MENU_COMPONENTPIECE *piece = &component->pieces[i];
         if ((piece->flags & state) == 0) {
             if (control->sprites[i] != NULL)
-                control->sprites[i]->maybeEnabled = MENU_SPRITE_HIDDEN;
+                control->sprites[i]->depth = MENU_SPRITE_HIDDEN;
             continue;
         }
 
@@ -1011,8 +1011,8 @@ void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int w
 
         Menu_InitializeSprite(control->sprites[i], (uchar)(control->depth - page->control.depth), spriteX, spriteY,
                               pieceWidth, pieceHeight, NULL, component->texture, colour, 0, piece->info.spritesheetX,
-                              piece->info.spritesheetY, piece->info.maybeSpritesheetWidth,
-                              piece->info.maybeSpritesheetHeight, spriteFlags);
+                              piece->info.spritesheetY, piece->info.spritesheetWidth,
+                              piece->info.spritesheetHeight, spriteFlags);
     }
 }
 
@@ -1180,7 +1180,7 @@ M_CONTROL* Menu_FindControl(M_MANAGER *mgr, uchar direction) {
     cursor->positionY = (to->height >> 1) + to->y + mgr->currentPage->control.y;
     cursor->onscreenWidth = to->width + 10;
     cursor->onscreenHeight = to->height + 10;
-    cursor->maybeEnabled = (uchar)to->depth + 1;
+    cursor->depth = (uchar)to->depth + 1;
     return to;
 }
 
@@ -1417,14 +1417,14 @@ void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short 
         return;
     if (texture != 0)
         hashtable_set_sprite(spr, texture);
-    spr->maybeEnabled = priority;
+    spr->depth = priority;
     spr->positionX = x;
     spr->positionY = y;
     spr->onscreenWidth = width;
     spr->onscreenHeight = height;
-    spr->maybeClippedString = NULL;
+    spr->format = NULL;
     spr->linkedViewer = MENU_VIEWER;
-    spr->maybeFlags = flags;
+    spr->flags = flags;
     if (u != 0xffff) {
         spr->spritesheetX = u;
         spr->spritesheetY = v;
@@ -1433,7 +1433,7 @@ void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short 
     }
     if (text != NULL) {
         spr->text = text;
-        spr->maybeClippedString = MenuTextFormat;
+        spr->format = MenuTextFormat;
         spr->length = strlen(text);
     } else {
         spr->text = NULL;

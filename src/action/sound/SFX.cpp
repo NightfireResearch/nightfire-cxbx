@@ -816,8 +816,8 @@ int StartSample(SFXSamplePoolFiles *sfxNum, int SoundBankSlot, SFXItem *Sfx, int
 
 // Starts a sound's first sample, or cues its samples. A 3D sound too far off for its priority, or one over the
 // voices or its own limit that may not stop others, does not start. 0 if it did not.
-// AUTOINJECT
-int maybeDXSoundPlay(SFXItem *Sfx) {
+// FUNC_AT(0x000ca050)
+int SFXPlay(SFXItem *Sfx) {
     SFXSamplePoolFiles *pool = (SFXSamplePoolFiles *)(Sfx->SFXData + 1);
     for (int i = 0; i < SFX_MAX_VOICES; i++)
         Sfx->VoiceHandle[i] = -1;
@@ -968,7 +968,7 @@ void SFXUpdateEnding(SFXItem *Sfx, SFXItem **next) {
     }
     if (Sfx->CueSampleWaiting[0]-- > 0)
         return;
-    if (maybeDXSoundPlay(Sfx) && Sfx->UpdatedCounter < 2)
+    if (SFXPlay(Sfx) && Sfx->UpdatedCounter < 2)
         *next = Sfx;
 }
 
@@ -1055,7 +1055,7 @@ uint32_t SFXStart3D(int HashCode, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *Han
             Sfx->Counter = 0;
             Sfx->Paused = 0;
             Sfx->KeyOnFrameDelay = keyOnFrameDelay;
-            return !maybeDXSoundPlay(Sfx);
+            return !SFXPlay(Sfx);
         }
     }
     return 1;

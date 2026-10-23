@@ -195,8 +195,8 @@ void psiDrawSkinObjectMatrix(celglist_tag *glist, _MATRIX *unused, void *obj, vo
     psiDrawObjectMatrix(glist, ObjectMatrix);
     if (bShadowCharacter) {
         const char *bones = (const char *)((obj_tag *)obj)->animState->animObj.boneMtxs;
-        maybe_psiDrawShadow(*(const float *)(bones + 0x30), *(const float *)(bones + 0xd18),
-                            *(const float *)(bones + 0x38), obj, glist);
+        psiDrawShadow(*(const float *)(bones + 0x30), *(const float *)(bones + 0xd18),
+                      *(const float *)(bones + 0x38), obj, glist);
     }
 }
 
@@ -348,7 +348,7 @@ void psiUseCamera(void *viewer) {
     const float *c = ViewMatrix;
     D3DMATRIX view = {{{c[0], c[4], c[8], c[12], c[1], c[5], c[9], c[13], c[2], c[6], c[10], c[14],
                         0.0f, 0.0f, 0.0f, 1.0f}}};
-    maybeMatrixAxisScale(&view, -1.0f, 1.0f, 1.0f, 1);
+    matrixAxisScale(&view, -1.0f, 1.0f, 1.0f, 1);
     d3dSetViewMatrixFromRigidTransform(&view);
 }
 
@@ -582,7 +582,7 @@ void* psiCopyToSP(void *src, uint offset, uint size) {
 static ShardVertex ShadowVertices[SHADOW_MAX_TRIANGLES * 3];
 
 // Called only by psiDrawSkinObjectMatrix, so not injected (the original takes arguments in registers)
-void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
+void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     uint32_t level = (uint32_t)GameState.CurrentLevelHashcode;
     if (level == HT_Level_AllCharacters || level == HT_Level_AllCharacters2 || (uint32_t)ScriptCam == 0x0600068f)
         return;
@@ -645,7 +645,7 @@ void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *gli
     d3dSetTextureStage0(0);
     D3DMATRIX lift;
     d3dMatrixIdentity(&lift);
-    maybeMtxApplyTransform(&lift, 0.0f, 0.01f, 0.0f);
+    mtxTranslate(&lift, 0.0f, 0.01f, 0.0f);
     d3dSetMatrix(&lift);
     d3dSetupRenderStatesAndFog(0);
     uint8_t saved[4] = {Tweak[0], Tweak[1], Tweak[2], Tweak[3]};
@@ -658,8 +658,8 @@ void maybe_psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *gli
     d3dSetCullMode(0);
     d3dSetTextureWithBorderColor(shadowTexture, 0);
     createProjectionMatrix(&projection, 1.0f, (float)(rendered * 8 + 6), 0.0f, 1.0f, 200.0f);
-    maybeMatrixAxisScale(&lookDown, -1.0f, 1.0f, 1.0f, 1);
-    maybeBuildAndSetModelViewProjectionMtx(&lookDown, &projection);
+    matrixAxisScale(&lookDown, -1.0f, 1.0f, 1.0f, 1);
+    d3dSetTextureProjectionMatrix(&lookDown, &projection);
     drawShard(ShadowVertices, triangles);
     d3dSetTextureWithBorderColor(0, 0);
     psiSetTweakARGB(saved[0], saved[1], saved[2], saved[3]);

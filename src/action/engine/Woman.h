@@ -1,7 +1,7 @@
 #ifndef WOMAN_H_
 #define WOMAN_H_
 
-// The pause menu background's whole RLE file, loaded by LoadWoman; maybePsiResetResources drops it at each
+// The pause menu background's whole RLE file, loaded by LoadWoman; psiResetResources drops it at each
 // level change (the heap it lives in is about to be wiped).
 extern void *MemoryForWoman;
 

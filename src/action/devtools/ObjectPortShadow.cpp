@@ -1227,7 +1227,7 @@ void RandomWorld(void) {
     }
     for (int i = 0; i < 2; i++) {
         SCRIPTINFO *script = &world.scripts[i];
-        RandomMatrix(&script->maybeMatrix, 30.0f);
+        RandomMatrix(&script->matrix, 30.0f);
         script->waitFrames = R(2) ? 0 : (int)R(3) - 1;
         script->numElements = (ushort)R(5);
     }
@@ -1236,7 +1236,7 @@ void RandomWorld(void) {
         hit->dmgAmt = Value(-5.0f, 30.0f);
         hit->dist = Value(0.0f, 10.0f);
         PlainVector(&hit->hitPosition, 40.0f);
-        PlainVector(&hit->maybehitDirection, 1.0f);
+        PlainVector(&hit->hitDirection, 1.0f);
         PlainVector(&hit->surfaceNormal.normal, 1.0f);
         hit->hitObj = AnyObjOrNull();
         hit->next = i + 1 < HITS ? &world.hits[i + 1] : NULL;
@@ -1314,7 +1314,7 @@ void RandomWorld(void) {
         light->enabled = (uchar)R(2);
         light->lightType = (uchar)R(4);
         light->brightness = Value(0.0f, 20.0f);
-        light->maybeParentObject = AnyObj();
+        light->parentObject = AnyObj();
         PlainVector(&light->position, 30.0f);
         light->node.next = i == 0 ? (LLNODE_tag *)&world.lights[1] : NULL;
     }
@@ -1360,7 +1360,7 @@ void RandomWorld(void) {
     GameState.LoadTimeStart = R(100000);
     GameState.difficultyModifier = R(6);
     MPSettings.isMultiplayer = R(3) == 0;
-    MPSettings.maybeDroneAIEnabled = R(3) == 0;
+    MPSettings.dronesAreBots = R(3) == 0;
     MPSettings.FriendlyFire = R(2);
     MPSettings.GunEmplacementsEnabled = R(2);
     MPSettings.TripleDamageModifierProfessionalMode = R(2);
@@ -1723,7 +1723,7 @@ void RandomWeather(void) {
     for (int i = 4; i < 4 + (int)R(4); i++) {
         obj_tag *box = &world.objs[i];
         box->objGraphics = &world.glists[R(4)];
-        box->maybeParent = NULL;
+        box->parent = NULL;
         RAINBOX_tag *rain = (RAINBOX_tag *)box->extraObjectData;
         for (int k = 0; k < 3; k++) {
             rain->min[k] = Plain(-20.0f, 5.0f);
@@ -1733,7 +1733,7 @@ void RandomWeather(void) {
         if (last == NULL)
             RainBoxRoot = box;
         else
-            last->maybeParent = box;
+            last->parent = box;
         last = box;
     }
     DropType = R(5) == 0 ? 0xff : (uchar)R(3);
@@ -2743,7 +2743,7 @@ uint32_t RunGTTrack(bool original) {
 uint32_t RunGTInterpolate(bool original) {
     _MATRIX towards = world.mtx[0], from = world.mtx[1];
     Regs r = {P(&towards), 0, P(&from), 0, 0, 0};
-    RegsRun(original, 0x0009a530, (const void *)&Asm_GT_maybeInterpolateAimDir, r, 0, NULL);
+    RegsRun(original, 0x0009a530, (const void *)&Asm_GT_InterpolateAimDir, r, 0, NULL);
     uint32_t sum = 0;
     for (int i = 0; i < 15; i++)
         sum = sum * 31 + Bits(towards.m[i]);
@@ -2819,7 +2819,7 @@ const Case kTurrets[] = {
     C("GT_DeployMiniGun", RunGTDeploy),
     C("GT_Register", RunGTRegister),
     C("GT_Track", RunGTTrack),
-    C("GT_maybeInterpolateAimDir", RunGTInterpolate),
+    C("GT_InterpolateAimDir", RunGTInterpolate),
     C("GT_AimAt", RunGTAimAt),
     C("GT_RandMove", RunGTRandMove),
     C("GT_Update", RunGTUpdate),
@@ -2920,7 +2920,7 @@ obj_tag *RandomCar(void) {
         if (R(5) == 0)
             hit->hitObj = NULL;
         if (hit->hitObj != NULL && hit->hitObj->objectType == OBJECTTYPE_BULLET && R(2))
-            ((BU_tag *)hit->hitObj->extraObjectData)->maybeProxyObjectShooter = obj;
+            ((BU_tag *)hit->hitObj->extraObjectData)->firedFromObj = obj;
         if (R(2)) {
             hit->surfaceNormal.normal.x = Plain(-0.3f, 0.3f);
             hit->surfaceNormal.normal.y = Plain(0.4f, 1.0f);
@@ -2947,7 +2947,7 @@ uint32_t RunCarCollision(bool original) {
 
 uint32_t RunCarHeliDamage(bool original) {
     obj_tag *obj = RandomCar();
-    CDECL_VOID(0x00027ca0, Car_MaybeHandleDamage, void (__cdecl *)(obj_tag *), obj);
+    CDECL_VOID(0x00027ca0, Car_HeliCollisionHandler, void (__cdecl *)(obj_tag *), obj);
     return 0;
 }
 
@@ -2988,7 +2988,7 @@ uint32_t RunCarPlayerDied(bool original) {
 const Case kCars[] = {
     C("Car_Update", RunCarUpdate),
     C("Car_CollisionHandler", RunCarCollision),
-    C("Car_MaybeHandleDamage", RunCarHeliDamage),
+    C("Car_HeliCollisionHandler", RunCarHeliDamage),
     C("Car_SetBits", RunCarSetBits),
     C("Car_InheritVelocity", RunCarInherit),
     C("Car_Delete", RunCarDelete),

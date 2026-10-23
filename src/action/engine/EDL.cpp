@@ -13,14 +13,14 @@ typedef enum {
 
 
 // AUTOINJECT
-uint32_t fix_endianness32(maybeEDLDecompressorState *state, uint32_t dataIn) {
+uint32_t fix_endianness32(EDLDecompressorState *state, uint32_t dataIn) {
     if(state->ourEndianness == state->fileEndianness)
         return dataIn;
     return ((dataIn & 0xff00) + dataIn * 0x10000) * 0x100 + (dataIn >> 0x10 & 0xff) * 0x100 + (dataIn >> 0x18);
 }
 
 // AUTOINJECT
-void EDL_Header_Parse(maybeEDLDecompressorState *state) {
+void EDL_Header_Parse(EDLDecompressorState *state) {
    
     EDLHeader* header = (EDLHeader *)state->src;
 
@@ -48,10 +48,10 @@ void EDL_Header_Parse(maybeEDLDecompressorState *state) {
     
 }
 
-// AUTOINJECT
-uint32_t maybeEDL_GetCompressedSize(char* data) {
+// FUNC_AT(0x000d4b40)
+uint32_t EDL_GetCompressedSize(char* data) {
     
-    maybeEDLDecompressorState decompressor;
+    EDLDecompressorState decompressor;
     
     decompressor.ourEndianness = 0;
     decompressor.src = data;
@@ -65,9 +65,9 @@ uint32_t maybeEDL_GetCompressedSize(char* data) {
 
 }
 
-// AUTOINJECT
-uint32_t maybeEDL_GetDecompressedSize(char* data) {
-    maybeEDLDecompressorState decompressor;
+// FUNC_AT(0x000d4b80)
+uint32_t EDL_GetDecompressedSize(char* data) {
+    EDLDecompressorState decompressor;
 
     decompressor.ourEndianness = 0;
     decompressor.src = data;
@@ -80,10 +80,10 @@ uint32_t maybeEDL_GetDecompressedSize(char* data) {
     return decompressor.decompressedSize;
 }
 
-// AUTOINJECT
-bool maybeEDL_DecompressBlock(char* dst, char* src) {
+// FUNC_AT(0x000d4bc0)
+bool EDL_DecompressBlock(char* dst, char* src) {
 
-    maybeEDLDecompressorState state;
+    EDLDecompressorState state;
     state.ourEndianness = 0;
     state.src = src;
     state.dst = dst;
@@ -108,8 +108,8 @@ bool maybeEDL_DecompressBlock(char* dst, char* src) {
 
 }
 
-// AUTOINJECT
-void maybeEDL_DecompressSection(char* compressedData, edl_section_t *section) {
+// FUNC_AT(0x000e8e30)
+void EDL_DecompressSection(char* compressedData, edl_section_t *section) {
 
     if(compressedData == NULL)
         return;
@@ -125,10 +125,10 @@ void maybeEDL_DecompressSection(char* compressedData, edl_section_t *section) {
 
     for(int i = section->numBlocks; i != 0; i--) {
         
-        uint32_t sizeCompressed = maybeEDL_GetCompressedSize(dest);
-        uint32_t sizeDecompressed = maybeEDL_GetDecompressedSize(dest);
+        uint32_t sizeCompressed = EDL_GetCompressedSize(dest);
+        uint32_t sizeDecompressed = EDL_GetDecompressedSize(dest);
 
-        maybeEDL_DecompressBlock(src, dest);
+        EDL_DecompressBlock(src, dest);
         
         src += sizeCompressed;
         dest += sizeDecompressed;

@@ -118,7 +118,7 @@ static bool DSoundSeamTraceWantDetail(void) {
     return g_dsndTraceDetailFramesLeft > 0;
 }
 
-// Called from dsndUpdateVoices (frame boundary) and maybeSoundShutdown (level reset).
+// Called from dsndUpdateVoices (frame boundary) and SoundShutdown (level reset).
 static void DSoundSeamTraceEndFrame(void) {
     g_dsndTraceFrame++;
     if (g_dsndTraceDetailDelay > 0) {
@@ -393,7 +393,7 @@ typedef void(__stdcall *IDirectSoundBuffer_SetI3DL2SourceFn)(DSoundBuffer *thisP
 
 #pragma pack(push, 1)
 
-// "directSoundMaybeVoices" in Ghidra. One of these per voice slot; 64 slots.
+// One of these per voice slot; 64 slots.
 struct XboxVoice {
     DSoundBuffer *buffer;            // +0x00 whichever of the three pre-made buffers for this slot is bound
     DSI3DL2BUFFER_Xbox i3dl2source;  // +0x04 reverb send parameters, only lRoom is ever set
@@ -413,7 +413,7 @@ struct XboxAudioSystem {
     DSoundObject *directSoundInst;        // +0x000
     void *effectImageDesc;                // +0x004
     void *effectImageLocation;            // +0x008
-    uint32_t maybeInitialised;            // +0x00c
+    uint32_t initialised;                 // +0x00c
     DSoundBuffer *buffersMono2D[64];      // +0x010
     DSoundBuffer *buffersStereo2D[64];    // +0x110
     DSoundBuffer *buffers3D[64];          // +0x210 mono, DSBCAPS_CTRL3D
@@ -581,7 +581,7 @@ void xboxInitSound(void) {
     DirectSoundUseFullHRTF();
 
     AudioSys.effectImageLocation = NULL;
-    AudioSys.maybeInitialised = 1;
+    AudioSys.initialised = 1;
     IDirectSound_DownloadEffectsImage(AudioSys.directSoundInst, EffectsImage, EffectsImageSize,
                                       &AudioSys.effectImageLocation, &AudioSys.effectImageDesc);
 
@@ -655,7 +655,7 @@ static inline bool Voice3DInUse(uint32_t channel) {
 
 // Picks the first free voice slot, binds the pre-made buffer that matches the requested channel count and 2D/3D
 // mode, and points it at the caller's sample data. SetBufferData makes the buffer *reference* that memory - it
-// is not copied - which is why maybeSoundShutdown has to unbind every buffer before a level's sound bank is
+// is not copied - which is why SoundShutdown has to unbind every buffer before a level's sound bank is
 // freed. Returns the slot index, or -1.
 //
 // AUTOINJECT
@@ -691,7 +691,7 @@ int __cdecl dsndGetVoice(void *data, int size, uint32_t frequency, int numChanne
         voice->buffer = AudioSys.buffers3D[channel];
         dsndSetI3DL2Source((uint32_t)channel, 0.0f);
         dsndSetDistances((uint32_t)channel, 10.0f, 100.0f);
-        maybeXboxSFXCalculate3D((uint32_t)channel, 1); // inlined in the original, same guard and effect
+        dsndSetPositioned((uint32_t)channel, 1); // inlined in the original, same guard and effect
     }
 
     IDirectSoundBuffer_SetBufferData(voice->buffer, voice->data, voice->size);
@@ -904,8 +904,8 @@ void __cdecl dsndSetI3DL2Source(uint32_t channel, float volume) {
 // Marks a 3D voice as having its own world position (positioned != 0) or as following the listener
 // (positioned == 0, which is what dsndUpdateVoices's first loop implements). Called from psiInitialiseSound.
 //
-// AUTOINJECT
-void __cdecl maybeXboxSFXCalculate3D(uint32_t channel, uint8_t positioned) {
+// FUNC_AT(0x000e1630)
+void __cdecl dsndSetPositioned(uint32_t channel, uint8_t positioned) {
     if (Voice3DInUse(channel))
         AudioSys.voices[channel].positioned = positioned;
 }
@@ -989,8 +989,8 @@ void dsndUpdateVoices(void) {
 // the hardware reading freed memory. Requests a stop on every live voice, runs one final dsndUpdateVoices to actually
 // issue those stops, then clears the whole voice table.
 //
-// AUTOINJECT
-void __cdecl maybeSoundShutdown(void) {
+// FUNC_AT(0x000e1d80)
+void __cdecl SoundShutdown(void) {
     AudioSys.listenerPosition[0] = 0.0f;
     AudioSys.listenerPosition[1] = 0.0f;
     AudioSys.listenerPosition[2] = 0.0f;

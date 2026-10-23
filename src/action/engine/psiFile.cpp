@@ -48,8 +48,8 @@ int psiFileClose(void) {
 // already loaded the whole archive. The original passes three more arguments (0x20 or the size, 0x4004 or
 // 0x4104, 0x80, and 0 or LoaderLoad's fourth argument - allocation flags, from the look of them), which this
 // function never reads.
-// AUTOINJECT
-void* maybePsiFileRead(int length) {
+// FUNC_AT(0x000dca90)
+void* psiFileRead(int length) {
     if (CurrentFile.data == NULL)
         return NULL;
     uint32_t at = CurrentFile.position;

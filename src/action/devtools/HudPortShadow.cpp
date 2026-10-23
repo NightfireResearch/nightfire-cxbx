@@ -257,7 +257,7 @@ bool __cdecl FakeSetSprite(sprite *spr, HASHCODE hash) {
     ShadowLog("setsprite(%x,%x)", W(spr), hash);
     if (R(5) == 0)
         return false;
-    spr->unknownDataMaybeTexPtr = hash & 0xff;
+    spr->textureIndex = hash & 0xff;
     spr->backupOnscreenWidth = (short)(8 + R(64));
     spr->backupOnscreenHeight = (short)(8 + R(64));
     spr->onscreenWidth = spr->backupOnscreenWidth;
@@ -565,9 +565,9 @@ void RandomSprite(sprite *spr, int index) {
     spr->text = R(3) == 0 ? world.texts[index] : NULL;
     if (spr->text != NULL)
         RandomText(spr->text, 40);
-    spr->maybeClippedString = R(4) == 0 ? NULL : world.formats[R(4)];
+    spr->format = R(4) == 0 ? NULL : world.formats[R(4)];
     spr->length = (short)(spr->text != NULL ? strlen(spr->text) : 0);
-    spr->maybeFlags = (short)(R(0) & 0x7ef0);
+    spr->flags = (short)(R(0) & 0x7ef0);
     spr->positionX = (short)((int)R(800) - 80);
     spr->positionY = (short)((int)R(600) - 60);
     spr->backupOnscreenWidth = (short)(R(8) == 0 ? 0 : 1 + R(128));
@@ -582,7 +582,7 @@ void RandomSprite(sprite *spr, int index) {
     spr->spritesheetY = (short)R(256);
     spr->spritesheetWidth = (short)((int)R(300) - 10);
     spr->spritesheetHeight = (short)((int)R(300) - 10);
-    spr->maybeEnabled = (uchar)R(256);
+    spr->depth = (uchar)R(256);
     spr->linkedViewer = (char)R(6);
     spr->scale.x = R(3) == 0 ? Num(0.25f, 2.0f) : 1.0f;
     spr->scale.y = R(3) == 0 ? Num(0.25f, 2.0f) : 1.0f;
@@ -624,8 +624,8 @@ void RandomPane(int sprites, int extra) {
         SpriteInfo *s = &world.infos[i];
         memset(s, 0, sizeof(*s));
         s->colour = R(0);
-        s->maybeEnabled = (ushort)R(0x100);
-        s->maybeFlags = (short)(R(0) & 0x1ff0);
+        s->depth = (ushort)R(0x100);
+        s->flags = (short)(R(0) & 0x1ff0);
         s->posX = (short)((int)R(600) - 300);
         s->posY = (short)((int)R(400) - 200);
         s->onscreenWidth = (short)((int)R(300) - 20);
@@ -686,7 +686,7 @@ void RandomPlayer(void) {
     memset(&world.hud, 0, sizeof(world.hud));
     for (int i = 0; i < NUM_PANES; i++) {
         world.hud.pane[i].enabled = R(5) == 0;
-        world.hud.pane[i].maybeCanBeEnabled = R(4) != 0;
+        world.hud.pane[i].canBeEnabled = R(4) != 0;
         world.hud.pane[i].state = (ushort)R(3);
     }
 }
@@ -717,7 +717,7 @@ void RandomObjects(void) {
         o->drawnCountdown = (char)R(3);
         o->flags = (char)R(2);
         o->objGraphics = (celglist_tag *)&world.scratch[R(4)];
-        o->maybeParent = &world.objs[3];
+        o->parent = &world.objs[3];
         // Whatever the remote device is: a gun's heat, a turret's ammo, a car's counts, a drone's state
         float *f = (float *)world.extra[i];
         for (int k = 0; k < EXTRA / 4; k++)
@@ -793,7 +793,7 @@ void RandomWorld(void) {
     GameState.NumFramesUnpaused = R(0);
     MPSettings.isMultiplayer = R(2);
     MPSettings.numPlayers = 1 + R(4);
-    MPSettings.maybeIsTeamGame = R(2);
+    MPSettings.isTeamGame = R(2);
     MPSettings.field53_0x190 = R(2);
     MPSettings.ShowTeamAndNameOverhead = R(2);
     static const MultiplayerGameMode modes[] = {GM_ARENA, GM_ASSASSIN, GM_CTF, GM_BLUEPRINT, GM_GOLDENEYE,
@@ -1287,7 +1287,7 @@ uint32_t RunDrawSprites(bool original) {
     for (int i = 0; i < SPRITES; i++) {
         sprite *s = &world.sprites[i];
         if (R(4) == 0) {
-            s->maybeFlags |= 0x400;
+            s->flags |= 0x400;
             s->spritesheetWidth = (short)(s->backupOnscreenWidth * (1 + R(3)) - 1);
             s->spritesheetHeight = (short)(s->backupOnscreenHeight * (1 + R(3)) - 1);
         }

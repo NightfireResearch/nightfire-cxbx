@@ -64,7 +64,7 @@ static void MP_DropToFloor(MPOBJECT *mpObj, obj_tag *gameObj) {
     MP_ResetMPObject(mpObj, 2, gameObj, true);
 }
 
-// gameObj->curState: 0 at its base, 1 carried (by gameObj->maybeParent), 2 dropped. mpObj->num is the flag's team.
+// gameObj->curState: 0 at its base, 1 carried (by gameObj->parent), 2 dropped. mpObj->num is the flag's team.
 // The other team takes it from its base and scores by bringing it to its own; its own team returns it once
 // dropped, and it goes back by itself after 30 seconds on the floor.
 void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
@@ -78,14 +78,14 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
             return;
         MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, 0x2f, mpObj->num, gameObj, false);
         gameObj->curState = 1;
-        gameObj->maybeParent = mpObj->holder;
+        gameObj->parent = mpObj->holder;
         MP_TeamMessage(NOTIF_X_FLAG_CAPTURED, mpObj->num);
         Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
         break;
 
     case 1: {
         if (dropped) {
-            MP_ClearCarrier(gameObj->maybeParent, MPPLAYER_FLAG_1, 1, 0x3c, 0x30);
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 1, 0x3c, 0x30);
             MP_DropToFloor(mpObj, gameObj);
             gameObj->curState = 2;
             MP_TeamMessage(NOTIF_X_FLAG_DROPPED, mpObj->num);
@@ -99,9 +99,9 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
         if (!(Vec_SqDist3D(Mat_Position(gameObj->transformMatrix), &goal) < 2.0f))
             return;
 
-        MP_ClearCarrier(gameObj->maybeParent, MPPLAYER_FLAG_1, 3, 0x3b, 0x31);
+        MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 3, 0x3b, 0x31);
         MPGame.teamScore[other] += 1.0f;
-        short idx = Control_Plr2Ind(gameObj->maybeParent);
+        short idx = Control_Plr2Ind(gameObj->parent);
         if (idx != -1)
             MPGame.players[idx].points += 1.0f;
         MP_ResetMPObject(mpObj, 0, gameObj, false);
@@ -133,7 +133,7 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
 
         MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, 0x2f, mpObj->num, gameObj, false);
         gameObj->curState = 1;
-        gameObj->maybeParent = mpObj->holder;
+        gameObj->parent = mpObj->holder;
         MP_TeamMessage(NOTIF_X_FLAG_PICKED_UP, mpObj->num);
         Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
         break;
@@ -162,7 +162,7 @@ static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
     MP_sendBotMessage(taker, 0x32, 0, 0);
 }
 
-// gameObj->curState: 0 at its spawn place, 1 carried (by gameObj->maybeParent), 2 dropped. Either team takes it,
+// gameObj->curState: 0 at its spawn place, 1 carried (by gameObj->parent), 2 dropped. Either team takes it,
 // and mpObj->num becomes the taker's team, which scores by bringing it to its espionage base. Dropped, it goes
 // back after 30 seconds on the floor unless someone takes it.
 void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
@@ -175,13 +175,13 @@ void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         MP_BluePrintTaken(gameObj, mpObj->holder);
         MP_TeamMessage(NOTIF_X_PICKED_UP_BLUEPRINT, mpObj->num);
         gameObj->curState = 1;
-        gameObj->maybeParent = mpObj->holder;
+        gameObj->parent = mpObj->holder;
         Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
         break;
 
     case 1:
         if (dropped) {
-            MP_ClearCarrier(gameObj->maybeParent, MPPLAYER_FLAG_2, 1, 0x3c, 0x33);
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_2, 1, 0x3c, 0x33);
             MP_DropToFloor(mpObj, gameObj);
             MP_TeamMessage(NOTIF_X_DROPPED_BLUEPRINT, mpObj->num);
             gameObj->curState = 2;
@@ -215,7 +215,7 @@ void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
         MP_BluePrintTaken(gameObj, mpObj->holder);
         gameObj->curState = 1;
-        gameObj->maybeParent = mpObj->holder;
+        gameObj->parent = mpObj->holder;
         MP_TeamMessage(NOTIF_X_PICKED_UP_BLUEPRINT, mpObj->num);
         Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
         break;

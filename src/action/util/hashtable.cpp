@@ -218,7 +218,7 @@ HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl) {
 }
 
 typedef struct {
-    uint unknownDataMaybeTexPtr;
+    uint textureIndex;
     short defaultWidth;
     short defaultHeight;
 } SpriteInfoFromHashmap;
@@ -238,7 +238,7 @@ bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
     if(&sprInfo == NULL)
         return false;
 
-    sprOut->unknownDataMaybeTexPtr = sprInfo.unknownDataMaybeTexPtr;
+    sprOut->textureIndex = sprInfo.textureIndex;
     sprOut->backupOnscreenWidth = sprInfo.defaultWidth;
     sprOut->backupOnscreenHeight = sprInfo.defaultHeight;
     sprOut->onscreenWidth = sprInfo.defaultWidth;

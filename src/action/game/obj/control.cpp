@@ -124,7 +124,7 @@ void control_delete_object(obj_tag* obj) {
   Collide_FreeHitList(&obj->hitList);
 
   // Remove from multiplayer game
-  if (MPSettings.maybeDroneAIEnabled) {
+  if (MPSettings.dronesAreBots) {
     MP_objectBeingDeleted(obj);
   }
 
@@ -415,7 +415,7 @@ void control_handle_cel_change(obj_tag *obj) {
             Drone_FellOutMap(obj);
         return;
     }
-    if (obj->maybeParent != NULL)
+    if (obj->parent != NULL)
         return;
     if (Vec_IsEqual(&obj->centrePoint, &obj->lastCentrePoint, 0.0f))
         return;
@@ -453,7 +453,7 @@ void control_handle_cel_change(obj_tag *obj) {
         return;
     case OBJECTTYPE_DRONE:
         Drone_FellOutMap(obj);
-        if (MPSettings.maybeDroneAIEnabled)
+        if (MPSettings.dronesAreBots)
             return;
         // fall through
     default:
@@ -480,8 +480,8 @@ void control_handle_cel_change(obj_tag *obj) {
 
 // The rooms whose models change with a switch channel: a room (0xc047) with a channel and a second model takes that
 // model when its channel changes. The model is read before it is known there is one.
-// AUTOINJECT
-void maybeControl_Switches_Update(void) {
+// FUNC_AT(0x0002d640)
+void Control_Switches_Update(void) {
     for (cel_tag *cel = glb_world->firstCel; cel != NULL; cel = cel->nextCel) {
         uchar channel = cel->someSwitchChannel;
         if (channel == 0)
@@ -541,7 +541,7 @@ void control_movement_object_handler(char) {
     MP_DebugDraw();
     Doors_Calc();
     Trigger_Calc();
-    maybeControl_Switches_Update();
+    Control_Switches_Update();
     memcpy(switch_channels_prev, switch_channels_hold, sizeof(switch_channels_prev));
     memcpy(switch_channels_hold, switch_channels, sizeof(switch_channels_hold));
 
@@ -585,7 +585,7 @@ void control_movement_object_handler(char) {
             obj->drawnCountdown--;
         if (obj->animState != NULL && GameState.InhibitGameDraw == 0)
             memset(obj->animState->animObj.lod, 0xff, sizeof(obj->animState->animObj.lod));
-        obj_tag *carrier = obj->maybeParent;
+        obj_tag *carrier = obj->parent;
         if (carrier != NULL && obj->inCel != carrier->inCel) {
             control_unlink_object(obj);
             control_link_object_to_cel(obj, carrier->inCel);
@@ -627,7 +627,7 @@ obj_tag* Control_CreateObjEx(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *m
     }
     obj->transformFlags |= transformFlags;
     obj->scale = scale;
-    obj->maybeParent = carrier;
+    obj->parent = carrier;
     obj->objGraphics = glist;
     obj->effectFlags = effectFlags | (glist != NULL ? glist->applyFlagsToObject : 0);
     obj->tweakR = tweakR;
@@ -719,7 +719,7 @@ short Control_Plr2Ind(obj_tag *obj) {
     default:
         return -1;
     }
-    if (MPSettings.maybeDroneAIEnabled && MPGame.players[index].playerObj != obj)
+    if (MPSettings.dronesAreBots && MPGame.players[index].playerObj != obj)
         return -1;
     return index;
 }

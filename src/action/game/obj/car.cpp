@@ -184,7 +184,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     CAR_INFO *tankInfo = (CAR_INFO*)baseObj->extraObjectData;
 
     baseObj->objectType = OBJECTTYPE_CAR;
-    baseObj->maybeCollision = &tankInfo->hitTest;
+    baseObj->hitTest = &tankInfo->hitTest;
     Quat_MatToQuat(&tankInfo->orientation, &baseObj->transformMatrix);
 
     // Any value but 1 and 3 gives the helicopter, 0 included
@@ -623,8 +623,8 @@ void Car_Update(obj_tag *obj) {
 
 // The helicopter's collision: anything but a drone, a player or a bullet that it touches destroys it (a hurt volume
 // or another car at once), as does more than 1 damage. Its own missiles do not count.
-// AUTOINJECT
-void Car_MaybeHandleDamage(obj_tag *obj) {
+// FUNC_AT(0x00027ca0)
+void Car_HeliCollisionHandler(obj_tag *obj) {
     CAR_INFO *car = (CAR_INFO *)obj->extraObjectData;
     for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
         obj_tag *by = hit->hitObj;
@@ -635,7 +635,7 @@ void Car_MaybeHandleDamage(obj_tag *obj) {
         if (hit->flags & HIT_NO_CONTACT)
             continue;
         if (by != NULL && by->objectType == OBJECTTYPE_BULLET &&
-            ((BU_tag *)by->extraObjectData)->maybeProxyObjectShooter == obj)
+            ((BU_tag *)by->extraObjectData)->firedFromObj == obj)
             continue;
         car->damageAmt += hit->dmgAmt;
         by = hit->hitObj;
@@ -652,7 +652,7 @@ void Car_MaybeHandleDamage(obj_tag *obj) {
 // The tank's collision: pushed out of what it touches, it loses its speed into each surface; a floor under it stops
 // its fall, and the first fairly level one is what it turns upright towards. What it touches carries it along and
 // damages it; a hurt volume or another car, or more than 200 damage, destroys it. The helicopter's is
-// Car_MaybeHandleDamage.
+// Car_HeliCollisionHandler.
 // AUTOINJECT
 void Car_CollisionHandler(obj_tag *obj) {
     CAR_INFO *car = (CAR_INFO *)obj->extraObjectData;
@@ -660,7 +660,7 @@ void Car_CollisionHandler(obj_tag *obj) {
     if (obj->curState == CAR_STOPPED || obj->curState == CAR_DESTROYED)
         return;
     if (car->isHeli) {
-        Car_MaybeHandleDamage(obj);
+        Car_HeliCollisionHandler(obj);
         return;
     }
 

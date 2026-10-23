@@ -60,7 +60,7 @@ LAYOUT_32(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c bytes");
 #define HUDPANE_VIEW_X      0x0080  // the position is from the view's corner
 #define HUDPANE_VIEW_Y      0x0100
 
-// SpriteInfo::maybeFlags: HUD_CreateDefault cuts the sprite to the view, and HUD_CalcWidthHeight leaves it out
+// SpriteInfo::flags: HUD_CreateDefault cuts the sprite to the view, and HUD_CalcWidthHeight leaves it out
 #define SPRITEINFO_CLIP_TO_VIEW 0x1000
 
 // The C++ dynamic initialisers of the message panes' widths (HUD.cpp), run by _cinit.
@@ -86,17 +86,17 @@ typedef struct HUDPANE_tag {
     bool enabled;
     char field_0x1d;
     char field_0x1e;
-    char maybeCanBeEnabled;
+    char canBeEnabled;
 } HUDPANE_tag;
 
 LAYOUT_32(sizeof(HUDPANE_tag) == 0x20, "Size of HUDPANE_tag is incorrect");
 LAYOUT_32(offsetof(HUDPANE_tag, state) == 0x1a, "Offset of state is incorrect");
 LAYOUT_32(offsetof(HUDPANE_tag, enabled) == 0x1c, "Offset of enabled is incorrect");
-LAYOUT_32(offsetof(HUDPANE_tag, maybeCanBeEnabled) == 0x1f, "Offset of maybeCanBeEnabled is incorrect");
+LAYOUT_32(offsetof(HUDPANE_tag, canBeEnabled) == 0x1f, "Offset of canBeEnabled is incorrect");
 
 typedef struct HUDINFO_tag {
     sprite* crosshairSprite;
-    int maybeUnused;
+    int field_0x4;
     HUDPANE_tag pane[NUM_PANES]; // Index is HUD_PANE_IND::...
 } HUDINFO_tag;
 

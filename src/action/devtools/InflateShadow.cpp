@@ -36,7 +36,7 @@ const int IN_SIZE = 0x10000;
 struct World {
     uint8_t out[OUT_SIZE];
     uint8_t in[IN_SIZE];
-    maybeEDLDecompressorState state;
+    EDLDecompressorState state;
 };
 World world;
 ShadowRegions regions;
@@ -221,7 +221,7 @@ uint32_t Run(bool original) {
     world.state.errNum = 0;
     if (original) {
         XbeOriginalScope o(kInflateHuffman);
-        ((void (__cdecl *)(maybeEDLDecompressorState *))kInflateHuffman)(&world.state);
+        ((void (__cdecl *)(EDLDecompressorState *))kInflateHuffman)(&world.state);
     } else {
         Inflate_huffman(&world.state);
     }

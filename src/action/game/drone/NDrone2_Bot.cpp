@@ -20,7 +20,7 @@
 #include "../mp/multiplayer.h"          // MP_PlayerKilled, MP_ResetBotPickupTimes
 #include "../../game.h"                 // GameState
 #include "../../engine/Collide.h"       // Coll_AddHitToList
-#include "../../math/math.h"            // Vec_Subtract, maybeAtan2
+#include "../../math/math.h"            // Vec_Subtract, Atan2
 #include "../../math/X87Ops.h"          // Extended
 #include "../../util/Random.h"          // Rand_Rand
 #include "../weapon_stats.h"            // weapon_data
@@ -302,7 +302,7 @@ static bool BotGlobalUpdate(DCVars_tag *dcv, Drone_tag *drone) {
     uint stateClass = BOTSTATE_getStateType(sm->curState);
     dcv->drone->botVars->stateClass = (uchar)stateClass;
     obj_tag *gameObj = drone->gameObj;
-    if (MPDrone_MaybeIsDyingOrDead(gameObj) || gameObj->objectType == OBJECTTYPE_DEAD_DRONE) {
+    if (MPDrone_IsDyingOrDead(gameObj) || gameObj->objectType == OBJECTTYPE_DEAD_DRONE) {
         MPGame.players[dcv->drone->botVars->playerIndex].flags = 0;
         if (stateClass == BOTSTATE_CLASS_DEATH)
             return false;
@@ -551,7 +551,7 @@ bool NDrone2_DSTATE_BotGlobal(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
 
     case BOT_MSG_PLAYER_DIED: {
         obj_tag *self = dcv->gameObj;
-        if (MPDrone_MaybeIsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
+        if (MPDrone_IsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
             return true;
         obj_tag *dead = (obj_tag *)msg->extraData;
         BOT_vars_t *bot = dcv->drone->botVars;
@@ -573,7 +573,7 @@ bool NDrone2_DSTATE_BotGlobal(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         obj_tag *self = dcv->gameObj;
         if (picker == self)
             return true;
-        if (MPDrone_MaybeIsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
+        if (MPDrone_IsDyingOrDead(self) || self->objectType == OBJECTTYPE_DEAD_DRONE)
             return true;
         if (dcv->drone->opponent == picker)
             BOTSTATE_combatWeaponChangeChoice(dcv->drone, picker, 1, 0, 1);
@@ -970,7 +970,7 @@ void NDrone2_FaceMoveTarget(DCVars_tag *dcv, float offset) {
         return;
     _VECTOR delta;
     Vec_Subtract(&dcv->drone->moveTarget, &dcv->gameObj->position, &delta);
-    dcv->drone->angleToSomePoint = (float)(Extended(maybeAtan2(delta.x, delta.z)) + Extended(offset));
+    dcv->drone->angleToSomePoint = (float)(Extended(Atan2(delta.x, delta.z)) + Extended(offset));
 }
 
 // The route to the opponent, within 2 m (none while the bot is recovering): its status

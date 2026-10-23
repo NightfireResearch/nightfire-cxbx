@@ -129,7 +129,7 @@ bool DroneVision_CanSeeObjectFrom(Drone_tag *drone, obj_tag *obj, uint bone, _VE
     target.cel = obj->inCel;
     eye.cel = cel;
     if (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_PLAYER) {
-        if (!MPSettings.maybeDroneAIEnabled) {
+        if (!MPSettings.dronesAreBots) {
             DroneFunc_GetBonePos(obj, bone, &target.pos);
             DroneFunc_ClampPosToCollisionCylinder(obj, &target.pos);
         } else {
@@ -143,7 +143,7 @@ bool DroneVision_CanSeeObjectFrom(Drone_tag *drone, obj_tag *obj, uint bone, _VE
     }
 
     Vec_Copy(&obj->position, &target.pos);
-    if (MPSettings.maybeDroneAIEnabled &&
+    if (MPSettings.dronesAreBots &&
         (MPSettings.GameMode == GM_PROTECTION || MPSettings.GameMode == GM_DEMOLITION))
         target.pos.y = target.pos.y + 1.75f;
     // The mask is not passed on here
@@ -155,7 +155,7 @@ bool DroneVision_CanSeeObjectFrom(Drone_tag *drone, obj_tag *obj, uint bone, _VE
 bool NDrone2_CanSeeObject(Drone_tag *drone, obj_tag *obj, uint bone, uint mask) {
     _VECTOR eye;
     NDrone2_GetHeadPos(drone->gameObj, &eye, NULL);
-    if (!MPSettings.maybeDroneAIEnabled)
+    if (!MPSettings.dronesAreBots)
         DroneFunc_ClampPosToCollisionCylinder(drone->gameObj, &eye);
     return DroneVision_CanSeeObjectFrom(drone, obj, bone, &eye, drone->gameObj->inCel, mask);
 }
@@ -218,7 +218,7 @@ float DroneVision_ObjectVisibility(Drone_tag *drone, obj_tag *obj) {
     float distance = (float)length;
     if (length < 2.0f)
         return 1.0f;
-    double bearing = Vec_AngleDifference(drone->headYaw, maybeAtan2(toObj.x, toObj.z));
+    double bearing = Vec_AngleDifference(drone->headYaw, Atan2(toObj.x, toObj.z));
     if (distance > 50.0f)
         return 0.0f;
     if (drone->viewAngle != 0.0f && drone->viewAngle - AbsByCompare(bearing) < 0.0)
@@ -235,7 +235,7 @@ float DroneVision_ObjectVisibility(Drone_tag *drone, obj_tag *obj) {
 double DroneVision_OpponentVisibility(Drone_tag *drone) {
     float halfAngle = drone->viewAngle + kViewMargin;
     float yaw = drone->headYaw;
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         yaw = drone->gameObj->rotation.y;
     float bearing = Vec_AngleDifference(yaw, drone->opponentAngles.y);
     if (drone->opponent == NULL) {
@@ -296,7 +296,7 @@ bool DroneVision_OpponentLOS(Drone_tag *drone) {
     obj_tag *opponent = drone->opponent;
     if (opponent == NULL)
         return false;
-    if (MPSettings.maybeDroneAIEnabled || drone->side == 3)
+    if (MPSettings.dronesAreBots || drone->side == 3)
         return NDrone2_CanSeeObject(drone, opponent, HEAD_BONE, 0);
 
     bool seen = false;
@@ -337,7 +337,7 @@ bool DroneVision_SeekOpponentLOS(Drone_tag *drone) {
 
     bool seen = false;
     bool known = false;
-    if (MPSettings.maybeDroneAIEnabled) {
+    if (MPSettings.dronesAreBots) {
         short player = Control_Plr2Ind(drone->opponent);
         if (player != -1) {
             uchar record = drone->botVars->players[player].flags;
@@ -383,13 +383,13 @@ void DroneVision_HaveOpponentSight(Drone_tag *drone) {
     if (drone->opponent == NULL)
         return;
     uint now = GameState.NumFramesUnpaused;
-    if (!MPSettings.maybeDroneAIEnabled && drone->sightFrames < DroneFunc_ReactionTime(drone))
+    if (!MPSettings.dronesAreBots && drone->sightFrames < DroneFunc_ReactionTime(drone))
         return;
     DCVars_tag dcv;
     Drone_DCVfromOBJ(drone->gameObj, &dcv);
     drone->sightFlags |= DRONE_SIGHT_SEES_OPPONENT;
     DroneVision_LogSeenOpponent(drone);
-    if (MPSettings.maybeDroneAIEnabled && drone->sightFrames == 2) {
+    if (MPSettings.dronesAreBots && drone->sightFrames == 2) {
         BOTSTATE_combatWeaponChangeChoice(drone, drone->opponent, 1, 0, 0);
         if (drone->opponent != NULL && drone->botVars->weapon == Weap_Satchel &&
             BOTSTATE_opponentIsMissile(drone, (obj_tag *)-1))
@@ -495,7 +495,7 @@ bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     uint flags = drone->flags;
     char inView = 0;
     if (!(flags & 0x2000) || drone->side == 2 || drone->dtype == DTYPE_Hostage ||
-        MPDrone_MaybeIsDyingOrDead(drone->gameObj))
+        MPDrone_IsDyingOrDead(drone->gameObj))
         return false;
     HASHCODE level = GameState.CurrentLevelHashcode;
     switch (drone->sm.curState) {
@@ -642,7 +642,7 @@ void DroneVision_ProcessDroneSight(void) {
     ushort tests = NPCGlobals.visionTests;
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
         obj_tag *obj = drone->gameObj;
-        if (MPDrone_MaybeIsDyingOrDead(obj))
+        if (MPDrone_IsDyingOrDead(obj))
             continue;
         drone->positionVisibility = Drone_VisibilityForPosition(&obj->position, 0);
         if (drone->gameObj != NULL)
@@ -657,7 +657,7 @@ void DroneVision_ProcessDroneSight(void) {
             tested = NPCGlobals.NDrone2List;
         NPCGlobals.sightCursor = tested->sm.id;
         uint frame = GameState.NumFramesUnpaused;
-        if (!MPDrone_MaybeIsDyingOrDead(tested->gameObj) && (tested->flags & 0x10000) && tested->opponent != NULL) {
+        if (!MPDrone_IsDyingOrDead(tested->gameObj) && (tested->flags & 0x10000) && tested->opponent != NULL) {
             DroneVision_SeekOpponentLOS(tested);
             tested->sightTestFrame = frame;
         }
@@ -668,7 +668,7 @@ void DroneVision_ProcessDroneSight(void) {
     }
 
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
-        if (!MPDrone_MaybeIsDyingOrDead(drone->gameObj) && (drone->flags & 0x10000) && drone->opponent != NULL &&
+        if (!MPDrone_IsDyingOrDead(drone->gameObj) && (drone->flags & 0x10000) && drone->opponent != NULL &&
             (drone->sightFlags & DRONE_SIGHT_LOS)) {
             drone->unseenFrames = 0;
             drone->sightFrames++;

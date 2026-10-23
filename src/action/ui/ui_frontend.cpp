@@ -307,7 +307,7 @@ uchar Menu_RunMiniMission(uchar managerNum) {
             MPSettings.isMultiplayer = 0;
             MPSettings.numPlayers = 1;
             MPSettings.numPlayersAndBots = 1;
-            MPSettings.maybeIsTeamGame = 0;
+            MPSettings.isTeamGame = 0;
             ResetMap_LevelToLoad(HT_Level_Driving_Paris, false, false);
             GameState.BaseMapHashCode = 0;
             GameFlow_PushState(7, 80.0f, 0xff);

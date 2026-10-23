@@ -60,7 +60,7 @@ uchar NDrone2_AimTest(DCVars_tag *dcv) {
     sAnimScript_tag *script = drone->animScript;
     if (script == NULL)
         return 0;
-    if (MPSettings.maybeDroneAIEnabled) {
+    if (MPSettings.dronesAreBots) {
         if (drone->botVars->flags & BOT_RECOVERING)
             return 0;
     } else if (drone->aimMode == AIM_FROM_HALF_WAY && drone->aimByEvent) {

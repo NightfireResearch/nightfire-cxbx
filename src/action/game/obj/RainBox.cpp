@@ -125,7 +125,7 @@ void AddDrop(short index, int first, uchar *state, DROP_tag *drops) {
     drop->pos.y = (float)(height + drop->pos.y);
 
     bool inBox = false;
-    for (obj_tag *box = RainBoxRoot; box != NULL && !inBox; box = box->maybeParent) {
+    for (obj_tag *box = RainBoxRoot; box != NULL && !inBox; box = box->parent) {
         RAINBOX_tag *rain = (RAINBOX_tag *)box->extraObjectData;
         if (!rain->active)
             continue;
@@ -307,7 +307,7 @@ void DrawDrops(void) {
 // AUTOINJECT
 ushort RainBox_Clip(void) {
     ushort active = 0;
-    for (obj_tag *box = RainBoxRoot; box != NULL; box = box->maybeParent) {
+    for (obj_tag *box = RainBoxRoot; box != NULL; box = box->parent) {
         RAINBOX_tag *rain = (RAINBOX_tag *)box->extraObjectData;
         celglist_tag *glist = box->objGraphics;
         // The x bounds are compared unrounded, as the x87 keeps them
@@ -361,9 +361,9 @@ obj_tag* RainBox_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag
         return obj;
     }
     obj_tag *last = RainBoxRoot;
-    while (last->maybeParent != NULL)
-        last = last->maybeParent;
-    last->maybeParent = obj;
+    while (last->parent != NULL)
+        last = last->parent;
+    last->parent = obj;
     return obj;
 }
 

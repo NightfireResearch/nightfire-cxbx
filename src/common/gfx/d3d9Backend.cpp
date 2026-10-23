@@ -2809,7 +2809,7 @@ static uint32_t ModulateColour(uint32_t packed, const float *k) {
     return out;
 }
 
-// The immediate-mode quad path: maybeImmediateModeFlush hands us up to 64 quads of {x, y, colour, u, v, pad}
+// The immediate-mode quad path: immediateModeFlush hands us up to 64 quads of {x, y, colour, u, v, pad}
 // in screen pixels, and its shader (5 instructions) passes position through unchanged, multiplies the colour
 // by constant 103 and forwards the UVs. Drawn here as pre-transformed vertices, quads split into two
 // triangles, fixed-function texture stages from the deferred state arrays.
@@ -3074,7 +3074,7 @@ void D3D9_DrawVerticesUP(uint32_t primitiveType, uint32_t vertexCount, void *pVe
     g_statDraws++; g_statDrawsImmediate++; g_statVertices += vertexCount;
     if (g_device == NULL)
         return;
-    if (primitiveType == 8 && stride == 0x18) { // X_D3DPT_QUADLIST from maybeImmediateModeFlush
+    if (primitiveType == 8 && stride == 0x18) { // X_D3DPT_QUADLIST from immediateModeFlush
         DrawImmediateQuads(vertexCount, (const uint8_t*)pVertexData, stride);
         return;
     }

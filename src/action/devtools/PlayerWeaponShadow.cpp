@@ -460,7 +460,7 @@ void RandomWorld(void) {
     GameState.difficultyModifier = ShadowRand(5);
     GameState.LoadTimeStart = ShadowRand(200) - 20;
     MPSettings.isMultiplayer = ShadowRand(4) == 0;
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     memset(GameCheatInfo, 0, 0xc);
     GameCheatInfo[4] = ShadowRand(8) == 0;    // AllWeapons
     GameCheatInfo[8] = ShadowRand(8) == 0;    // UnlimitedAmmo

@@ -45,7 +45,7 @@ typedef struct sAnimSkin_tag {
     _MATRIX *invBind;           // 0x24 one per skeleton bone, only when numRigged != 0 (boneMatrixBuffer)
     uchar numRigged;            // 0x28 (numRiggedBodies)
     uchar numDiscrete;          // 0x29 (numDiscreteObjs)
-    uchar numMorphs;            // 0x2a (maybeNumMorphs)
+    uchar numMorphs;            // 0x2a
     uchar numDatums;            // 0x2b
     uchar skeletonNum;          // 0x2c index into SkeletonTable
     uchar _pad[3];              // 0x2d the allocation is 0x30 bytes

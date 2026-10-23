@@ -345,7 +345,7 @@ void SIGNAL_destroy(RealSignal *signal) {
     Xbox_CloseHandle(signal->event);
 }
 
-// Ghidra's iFILE_maybeExecCommand: FILESYS raises its worker's signal with it, IFeedback its own.
+// FILESYS raises its worker's signal with it, IFeedback its own.
 // FUNC_AT(0x0010a700)
 BOOL SIGNAL_post(RealSignal *signal) {
     return Xbox_SetEvent(signal->event);

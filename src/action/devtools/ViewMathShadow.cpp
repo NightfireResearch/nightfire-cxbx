@@ -771,7 +771,7 @@ void RunAtan(Buf &b, bool o) {
         XbeOriginalScope scope(0x000d6440);
         b.d[0] = ((DoubleAngles)(uintptr_t)0x000d6440)(b.f[0], b.f[1]);
     } else {
-        b.d[0] = maybeAtan2(b.f[0], b.f[1]);
+        b.d[0] = Atan2(b.f[0], b.f[1]);
     }
 }
 
@@ -832,7 +832,7 @@ const MathCase kExactCases[] = {
     {"Vec_Add2", MakeVectors, RunAdd2, 6},
     {"vecutil_cartesian_to_spherical_acc", MakeVectors, RunCartesianAcc, 3},
     {"Vec_AngleDifference", MakeAnglePair, RunAngleDifference, 2},
-    {"maybeAtan2", MakeAtan, RunAtan, 2},
+    {"Atan2", MakeAtan, RunAtan, 2},
     {"moveTowardsValue", MakeTowards, RunTowards, 3},
     {"normaliseToPlusMinusPi", MakeWrap, RunWrap, 1},
     {"View_RotTransMatrix", MakeRotTrans, RunViewRotTrans, 6},
@@ -1533,7 +1533,7 @@ void MakeWorld(void) {
     GameState.NumFramesUnpaused = NextWord();
     GameState.SomeAlternatePauseState = (undefined)(R(4) == 0);
     GameState.CurrentLevelHashcode = (HASHCODE)(R(3) ? 0x0700001b : 0x07000002);
-    GameState.maybeLoadingBlobs = NextWord();
+    GameState.NumDraws = NextWord();
     U32_AT(XbeOurs(0x0029e80c)) = 1u << R(5);    // object_display_mask
     *(_VECTOR *)XbeOurs(0x0029dbf0) = RandomPoint(30.0f);   // CamPos
     U8_AT(XbeOurs(0x001fe6dc)) = (uint8_t)R(2);  // FlashOption

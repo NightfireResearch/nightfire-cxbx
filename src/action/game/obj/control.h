@@ -26,7 +26,7 @@ void control_link_object_to_cel(obj_tag *obj, cel_tag *cel);
 void Control_GetObjMatrix(obj_tag *obj, _MATRIX *mtx);
 void Control_BuildWorldSph(obj_tag *obj);
 void control_handle_cel_change(obj_tag *obj);
-void maybeControl_Switches_Update(void);
+void Control_Switches_Update(void);
 void Control_ObjectReferenced(obj_tag *obj, char referenced);
 short Control_Plr2Ind(obj_tag *obj);
 

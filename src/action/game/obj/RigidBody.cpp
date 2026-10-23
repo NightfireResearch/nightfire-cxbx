@@ -149,7 +149,7 @@ void RB_RestingContactRot(obj_tag *obj, RIGIDBODY *rb, HITDATA_tag *hit) {
             continue;
         Sound_Play3D((Action_SFX)rb->sound, pivot, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         _VECTOR force, arm, torque;
-        Vec_MulR32(&force, &hit->maybehitDirection, hit->dmgAmt * 0.5f);
+        Vec_MulR32(&force, &hit->hitDirection, hit->dmgAmt * 0.5f);
         Vec_Subtract(&hit->hitPosition, Mat_Position(*rb->matrix), &arm);
         Vec_Cross(&arm, &force, &torque);
         if (rb->kind == RB_SWING_X) {
@@ -260,7 +260,7 @@ void RB_RestingContact(obj_tag *obj, RIGIDBODY *rb, HITDATA_tag *hit) {
         if (other->objectType == OBJECTTYPE_BULLET) {
             Sound_Play3D((Action_SFX)rb->sound, Mat_Position(obj->transformMatrix), 100.0f, -1.0f, -1.0f, 0, 0, 0);
             _VECTOR force;
-            Vec_MulR32(&force, &hit->maybehitDirection, hit->dmgAmt * 0.5f);
+            Vec_MulR32(&force, &hit->hitDirection, hit->dmgAmt * 0.5f);
             RB_AddImpulsiveForceAtPoint(rb, &force, &hit->hitPosition);
             break;
         }
@@ -315,7 +315,7 @@ obj_tag* RB_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *l
     RB_Init(rb, keys->kind);
     obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;
     obj->objectType = OBJECTTYPE_RIGIDBODY;
-    obj->maybeCollision = &rb->test;
+    obj->hitTest = &rb->test;
     obj->objGraphics = celgl;
     rb->matrix = &obj->transformMatrix;
     float mass = keys->mass != 0 ? keys->mass : 3.0f;

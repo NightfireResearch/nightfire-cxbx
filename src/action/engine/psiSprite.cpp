@@ -24,7 +24,7 @@ static bool InsideTexture(int start, int count, uint size) {
 // AUTOINJECT
 void psiDrawSprites(SPRITE_DRAW* spriteList, int numItems) {
     short count = (short)numItems;
-    maybeResetRenderState(1);
+    resetRenderState(1);
     int blend = 0;
 #if FIX_ORIGINAL_GAME_BUGS
     int wrapU = 1, wrapV = 1;           // the texture's own addressing (1 wraps), and what is set now
@@ -36,7 +36,7 @@ void psiDrawSprites(SPRITE_DRAW* spriteList, int numItems) {
         int texture = (int)sprite->textureIndex;
         if (i == 0 || spriteBlend != blend || texture != (int)spriteList[i - 1].textureIndex) {
             if (i > 0)
-                maybeImmediateModeFlush();
+                immediateModeFlush();
             TextureInfo *info = Tex[texture];
             if (info->registerParam6 != 0)
                 d3dSetDeferredTextureState(0, 0);
@@ -62,7 +62,7 @@ void psiDrawSprites(SPRITE_DRAW* spriteList, int numItems) {
         int u = wrapU && !InsideTexture(sprite->u0, sprite->u1, info->width);
         int v = wrapV && !InsideTexture(sprite->v0, sprite->v1, info->height);
         if (u != addressU || v != addressV) {
-            maybeImmediateModeFlush();
+            immediateModeFlush();
             d3dSetDeferredTextureState(u, v);
             addressU = u;
             addressV = v;
@@ -72,9 +72,9 @@ void psiDrawSprites(SPRITE_DRAW* spriteList, int numItems) {
                           sprite->clrB;
         float colourBits;
         memcpy(&colourBits, &colour, sizeof(colourBits));
-        maybeImmediateModePushItem(sprite->x, sprite->y, sprite->width, sprite->height, (float)sprite->u0,
-                                   (float)sprite->v0, (float)sprite->u1, (float)sprite->v1, colourBits);
+        immediateModePushItem(sprite->x, sprite->y, sprite->width, sprite->height, (float)sprite->u0,
+                              (float)sprite->v0, (float)sprite->u1, (float)sprite->v1, colourBits);
     }
-    maybeImmediateModeFlush();
+    immediateModeFlush();
     d3dSetDeferredTextureState(1, 1);
 }

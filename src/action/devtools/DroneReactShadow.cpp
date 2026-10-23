@@ -695,7 +695,7 @@ void RandomWorld(bool playerAlways) {
         glb_players[i] = Pick(players);
     if (playerAlways)
         glb_players[0] = &world.player;
-    MPSettings.maybeDroneAIEnabled = ShadowRand(3) == 0;
+    MPSettings.dronesAreBots = ShadowRand(3) == 0;
     switch_BLIND_DRONES = ShadowRand(2);
     switch_channels[10] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);

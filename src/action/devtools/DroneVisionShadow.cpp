@@ -5,8 +5,8 @@
 // Faked, so not tested here: the rays and lines of sight themselves (AINetwork_TestRayCels, Collide_LineOfSight,
 // Collide_RayIntersect), the skeleton (AnimGetBoneWorldTrans, AnimDatumGetWeaponInfo, DroneFunc_GetBonePos and both
 // NDrone2_GetHeadPos), the AI volumes' box test, the camera's view test, the bot state functions, the reaction time,
-// the state machine's messages, speech and the talk functions, the player stats and the music. MPDrone_MaybeIsDying-
-// OrDead, which the standard fakes answer from tweakA, is pointed back at a copy of the original: the original sight
+// the state machine's messages, speech and the talk functions, the player stats and the music. MPDrone_IsDyingOrDead,
+// which the standard fakes answer from tweakA, is pointed back at a copy of the original: the original sight
 // loop has it inline where ours calls it.
 
 #include "DroneVisionShadow.h"
@@ -328,7 +328,7 @@ bool __cdecl FakeInView(_VECTOR *point, float radius, viewer_tag *viewer) {
     return world.inViewAnswer != 0;
 }
 
-// MPDrone_MaybeIsDyingOrDead as the original has it (DroneVision_ProcessDroneSight's original inlines it)
+// MPDrone_IsDyingOrDead as the original has it (DroneVision_ProcessDroneSight's original inlines it)
 bool __cdecl DroneDying(obj_tag *obj) {
     if (obj == NULL)
         return true;
@@ -750,7 +750,7 @@ void RandomWorld() {
         _FRAME_RATE = 50.0f;
         FRAME_RATE_DIV = 1.2f;
     }
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     static const MultiplayerGameMode modes[] = {GM_PROTECTION, GM_DEMOLITION, (MultiplayerGameMode)0};
     MPSettings.GameMode = modes[ShadowRand(3)];
     switch_BLIND_DRONES = ShadowRand(10) == 0;

@@ -952,7 +952,7 @@ void RandomScene() {
     NPCGlobals.dummyPlayerActive = (uchar)(ShadowRand(6) == 0);
     NPCGlobals.dummyPlayer = &world.objs[4];
     glb_players[0] = ShadowRand(8) ? &world.objs[2] : NULL;
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     GameState.NumFramesUnpaused = 1010;
 }
 

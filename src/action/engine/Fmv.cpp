@@ -32,11 +32,11 @@
 //   - BackgroundMoviePlayFile(name): opens d:\eurocom\25_fps\<name> (30_fps on a PAL-60 TV), insists on 640x480,
 //     picks the audio track by language (2 -> 1, 3 -> 2, 6 -> 3, else 0, and 0 if there are fewer), decodes the
 //     first frame before returning, and plays the audio from there.
-//   - maybeDecodeMpgAudio(), every frame: decodes the next frame if one is due and draws the current one as a
+//   - BackgroundMovieUpdate(), every frame: decodes the next frame if one is due and draws the current one as a
 //     640x480 quad from a YUY2 texture (double-buffered); false once the movie has ended.
-//   - maybeBackgroundMovieIsPlaying(): whether it has not ended yet.
+//   - BackgroundMovieIsPlaying(): whether it has not ended yet.
 //   - BackgroundMovieSetVolume(0..100): through the game's volume table.
-//   - maybeBackgroundMovieCleanup(): stops and frees everything; called freely, also with nothing playing.
+//   - BackgroundMovieCleanup(): stops and frees everything; called freely, also with nothing playing.
 // The textures stay the game's kind (RegisterTexture format 9, Xbox YUY2, in memory from the game's allocator), so
 // the backend's existing YUY2 upload and the drawing calls are exactly the original's.
 //
@@ -193,8 +193,8 @@ static bool OpenDecoder(int stream, AVCodecContext **out) {
     return true;
 }
 
-// AUTOINJECT
-void maybeBackgroundMovieCleanup(void) {
+// FUNC_AT(0x000e8a00)
+void BackgroundMovieCleanup(void) {
     M.audio_.Close();
     for (AVPacket *p : M.videoPackets)
         ff.packet_free(&p);
@@ -218,13 +218,13 @@ void maybeBackgroundMovieCleanup(void) {
 
 // AUTOINJECT
 void BackgroundMoviePlayFile(char *filename) {
-    maybeBackgroundMovieCleanup();
+    BackgroundMovieCleanup();
 
     for (int i = 0; i < 2; i++) {
         M.frameMemory[i] = Mem_Malloc(FMV_FRAME_BYTES, (MallocFlags)0x1204, FMV_FRAME_ALIGN);
         M.texture[i] = M.frameMemory[i] ? RegisterTexture(FMV_WIDTH, FMV_HEIGHT, FMV_FORMAT_YUY2, 1, M.frameMemory[i], 0) : 0;
         if (M.frameMemory[i] == NULL || M.texture[i] == 0) {
-            maybeBackgroundMovieCleanup();
+            BackgroundMovieCleanup();
             return;
         }
         memset(M.frameMemory[i], 0, FMV_FRAME_BYTES);
@@ -234,7 +234,7 @@ void BackgroundMoviePlayFile(char *filename) {
     snprintf(xboxPath, sizeof(xboxPath), "d:\\eurocom\\%s%s", Graphics_IsPalI() ? "30_fps\\" : "25_fps\\", filename);
     if (!Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)) || ff.open_input(&M.format, hostPath, NULL, NULL) < 0) {
         printf("[fmv] cannot open %s\n", xboxPath);
-        maybeBackgroundMovieCleanup();
+        BackgroundMovieCleanup();
         return;
     }
     ff.find_stream_info(M.format, NULL);
@@ -266,7 +266,7 @@ void BackgroundMoviePlayFile(char *filename) {
     AVCodecParameters *vp = M.videoStream >= 0 ? M.format->streams[M.videoStream]->codecpar : NULL;
     if (vp == NULL || vp->width != FMV_WIDTH || vp->height != FMV_HEIGHT || !OpenDecoder(M.videoStream, &M.video)) {
         printf("[fmv] %s: no 640x480 video stream it can decode\n", xboxPath);
-        maybeBackgroundMovieCleanup();
+        BackgroundMovieCleanup();
         return;
     }
     AVRational tb = M.format->streams[M.videoStream]->time_base;
@@ -287,7 +287,7 @@ void BackgroundMoviePlayFile(char *filename) {
     M.nextFrameTime = 0.0;
     KeepAudioFed();
     if (!DecodeVideoFrame()) {
-        maybeBackgroundMovieCleanup();
+        BackgroundMovieCleanup();
         return;
     }
     PresentFrame();
@@ -295,8 +295,8 @@ void BackgroundMoviePlayFile(char *filename) {
     M.isPlaying = true;
 }
 
-// AUTOINJECT
-bool __stdcall maybeDecodeMpgAudio(void) {
+// FUNC_AT(0x000e8cf0)
+bool __stdcall BackgroundMovieUpdate(void) {
     if (M.format == NULL)
         return false;
 
@@ -317,15 +317,15 @@ bool __stdcall maybeDecodeMpgAudio(void) {
         PresentFrame();
 
     // The draw, exactly the original's
-    maybeResetRenderState(1);
+    resetRenderState(1);
     d3dSetYuvEnable(1);
     d3dSetDeferredTextureState(0, 0);
     d3dSetTextureStage0(M.texture[M.displayIndex]);
     uint32_t tint = 0xff808080u;
     float tintBits;
     memcpy(&tintBits, &tint, sizeof(tintBits));
-    maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, tintBits);
-    maybeImmediateModeFlush();
+    immediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, tintBits);
+    immediateModeFlush();
     d3dSetTextureStage0(0);
     d3dSetDeferredTextureState(1, 1);
     d3dSetYuvEnable(0);
@@ -336,8 +336,8 @@ bool __stdcall maybeDecodeMpgAudio(void) {
     return M.isPlaying;
 }
 
-// AUTOINJECT
-bool __stdcall maybeBackgroundMovieIsPlaying(void) {
+// FUNC_AT(0x000e8ce0)
+bool __stdcall BackgroundMovieIsPlaying(void) {
     return M.isPlaying;
 }
 

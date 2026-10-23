@@ -55,24 +55,24 @@ void Label_Init(M_LABEL *label, NEW_CONTROL *create, M_CONTROL *parent) {
     sprite *model = &label->model;
     model->text = NULL;
     model->onscreenWidth = create->width;
-    model->maybeEnabled = (uchar)label->control.depth;
+    model->depth = (uchar)label->control.depth;
     model->onscreenHeight = create->height;
     model->colourTint = 0x7f7f7fc0;
     model->unknown1 = 0x80;
     model->linkedViewer = 7;
-    model->maybeFlags = 0;
-    model->unknownDataMaybeTexPtr = 0;
+    model->flags = 0;
+    model->textureIndex = 0;
     model->scale.x = 1.0f;
     model->scale.y = 1.0f;
-    model->maybeClippedString = LabelFormat;
+    model->format = LabelFormat;
     label->drawn = NULL;
     Sprite_SetText(model, create->text != NULL ? create->text : MenuEmptyString);
-    Menu_ClipString(model, create->width, model->maybeClippedString);
+    Menu_ClipString(model, create->width, model->format);
     // By the label's width, which is only set below
-    if (Font_GetAlignment(model->maybeClippedString) == ALIGN_CENTRE)
-        model->positionX += Menu_ClipString(model, label->control.width, model->maybeClippedString) >> 1;
-    if (Font_GetAlignment(model->maybeClippedString) == ALIGN_RIGHT)
-        model->positionX += Menu_ClipString(model, label->control.width, model->maybeClippedString);
+    if (Font_GetAlignment(model->format) == ALIGN_CENTRE)
+        model->positionX += Menu_ClipString(model, label->control.width, model->format) >> 1;
+    if (Font_GetAlignment(model->format) == ALIGN_RIGHT)
+        model->positionX += Menu_ClipString(model, label->control.width, model->format);
     label->control.x = create->x;
     label->control.y = create->y;
     label->control.width = create->width;
@@ -137,7 +137,7 @@ intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t
             return Control_SetScript(&label->control, arg1, arg2);
         case MessageType_SetFont:
             sprintf(label->format, "%s%s", (char *)arg1, FONT_SCALE_100);
-            label->model.maybeClippedString = label->format;
+            label->model.format = label->format;
             return 1;
         case MessageType_SetIcon:
             if (arg1 == 0)
@@ -156,9 +156,9 @@ intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t
         case MessageType_SetState:
             label->control.state = (uchar)arg1;
             if (label->control.state & CONTROL_STATE_HIDDEN) {
-                label->model.maybeEnabled = MENU_SPRITE_HIDDEN;
+                label->model.depth = MENU_SPRITE_HIDDEN;
                 if (label->drawn != NULL)
-                    label->drawn->maybeEnabled = MENU_SPRITE_HIDDEN;
+                    label->drawn->depth = MENU_SPRITE_HIDDEN;
             }
             Label_Refresh(label);
             return 1;
@@ -214,7 +214,7 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
         label->control.state |= CONTROL_STATE_UNDRAWN;
         if (label->drawn == NULL)
             return;
-        label->drawn->maybeEnabled = MENU_SPRITE_HIDDEN;
+        label->drawn->depth = MENU_SPRITE_HIDDEN;
         Menu_DeleteSprite(label->drawn);
         label->drawn = NULL;
         return;
@@ -232,7 +232,7 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
     }
 
     sprite *model = &label->model;
-    model->maybeEnabled = (uchar)(label->control.depth - page->control.depth);
+    model->depth = (uchar)(label->control.depth - page->control.depth);
     uint alpha = model->colourTint & 0xff;
     if (alpha > 0x80)
         alpha = 0x80;
@@ -265,26 +265,26 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
     GPOINT extent;
     extent.x = 1.0f;
     extent.y = 1.0f;
-    Font_GetTextExtent(MenuAlphabet, model->maybeClippedString, &extent, NULL, -1);
+    Font_GetTextExtent(MenuAlphabet, model->format, &extent, NULL, -1);
     float lineHeight = extent.y;
     if (!(label->mode & LABEL_SHOWS_TEXT)) {
         short width = model->spritesheetWidth;
         short height = model->spritesheetHeight;
         hashtable_set_sprite(model, label->icon);
         model->spritesheetHeight = height;
-        model->maybeFlags = 0;
+        model->flags = 0;
         model->spritesheetWidth = width;
         model->text = NULL;
-        model->maybeClippedString = NULL;
+        model->format = NULL;
         model->positionX = page->control.x + label->control.x;
         model->positionY = page->control.y + label->control.y;
         model->onscreenWidth = label->control.width;
         model->onscreenHeight = label->control.height;
-        model->maybeFlags = (short)label->iconFlags;
+        model->flags = (short)label->iconFlags;
     } else {
-        if (Font_GetAlignment(model->maybeClippedString) == ALIGN_CENTRE)
+        if (Font_GetAlignment(model->format) == ALIGN_CENTRE)
             model->positionX = (label->control.width >> 1) + page->control.x + label->control.x;
-        else if (Font_GetAlignment(model->maybeClippedString) == ALIGN_RIGHT)
+        else if (Font_GetAlignment(model->format) == ALIGN_RIGHT)
             model->positionX = page->control.x + label->control.width + label->control.x;
         else
             model->positionX = page->control.x + label->control.x;
@@ -292,7 +292,7 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
         uchar oneLine = 1;
         if (strlen(label->text) != 0 && strstr(label->text, "\n") != NULL)
             oneLine = 0;
-        model->unknownDataMaybeTexPtr = 0;
+        model->textureIndex = 0;
         short y = Ftol((label->control.height >> 1) + label->control.y + oneLine * (double)lineHeight * 0.5 +
                        page->control.y - 1.0);
         model->positionY = y;
@@ -306,10 +306,10 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
         if (strlen(label->text) != 0)
             Sprite_SetText(model, label->text);
         if (label->textFlag2000)
-            model->maybeFlags |= 0x2000;
+            model->flags |= 0x2000;
         else
-            model->maybeFlags &= ~0x2000;
-        Menu_ClipString(model, label->control.width, model->maybeClippedString);
+            model->flags &= ~0x2000;
+        Menu_ClipString(model, label->control.width, model->format);
     }
 
     if (mgr->takingInput && !mgr->inputLocked) {

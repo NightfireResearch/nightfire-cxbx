@@ -145,7 +145,7 @@ void Drone_SM_RouteMsg(MsgObject *msg) {
         return;
     }
 
-    if (MPSettings.maybeDroneAIEnabled != 0 && msg->receiver < 0) {
+    if (MPSettings.dronesAreBots != 0 && msg->receiver < 0) {
         // The bots follow the human players. Worked out before the loop, which overwrites the receiver.
         int team = -1 - msg->receiver;
         for (int i = NUM_PLAYERS; i < NUM_AGENTS; i++) {

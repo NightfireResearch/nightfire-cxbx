@@ -221,7 +221,7 @@ void RandomWorld() {
         static const uchar types[] = {OBJECTTYPE_DRONE, OBJECTTYPE_DRONE, OBJECTTYPE_PLAYER, OBJECTTYPE_DEAD_PLAYER,
                                       OBJECTTYPE_BULLET};
         other->objectType = types[ShadowRand(sizeof(types))];
-        other->tweakA = ShadowRand(2);   // the faked MPDrone_MaybeIsDyingOrDead
+        other->tweakA = ShadowRand(2);   // the faked MPDrone_IsDyingOrDead
         other->effectFlags = ShadowRand(5) == 0 ? FLAG_HIDDEN : 0;
         other->centrePoint = RandomPoint();
         other->radius = ShadowRandFloat(0.1f, 1.5f);
@@ -250,7 +250,7 @@ void RandomWorld() {
     static const HASHCODE levels[] = {HT_Level_EvilBase, HT_Level_Tower2Elevator, HT_Level_TowerC};
     GameState.CurrentLevelHashcode = levels[ShadowRand(3)];
     GameState.NumFramesUnpaused = 500 + ShadowRand(100);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
 }
 
 void Compare(const char *what, int trial, uint32_t (*theirs)(void), uint32_t (*ours)(void)) {
@@ -506,7 +506,7 @@ void DoorShadow_Run(void) {
     memcpy(players, glb_players, sizeof(players));
     memcpy(doors, &TheDoorsList, sizeof(doors));
     XbeOursRead(groups, DoorGroups.at, sizeof(groups));
-    droneAI = MPSettings.maybeDroneAIEnabled;
+    droneAI = MPSettings.dronesAreBots;
 
     regions.Clear();
     regions.Add(&world, sizeof(world));
@@ -537,7 +537,7 @@ void DoorShadow_Run(void) {
     memcpy(glb_players, players, sizeof(players));
     memcpy(&TheDoorsList, doors, sizeof(doors));
     XbeOursWrite(DoorGroups.at, groups, sizeof(groups));
-    MPSettings.maybeDroneAIEnabled = droneAI;
+    MPSettings.dronesAreBots = droneAI;
 
     printf("[door] Door_*, Doors_Calc: %d cases, %d differ\n", cases, differ);
 }

@@ -17,7 +17,7 @@ extern uint32_t IsWidescreen;
 // XBE_GLOBAL(0x001df9ec, 0x4)
 static uint switch_CONFIG_SOMEGRAPHICSTHING;
 
-// An identity matrix that maybe_psiDrawShadow and psiDrawSkinObjectMatrix (both still the game's) point at
+// An identity matrix that psiDrawShadow and psiDrawSkinObjectMatrix (both still the game's) point at
 // XBE_GLOBAL(0x002ade8c, 0x3c)
 _MATRIX LowLevelIdentityMatrix;
 
@@ -97,7 +97,7 @@ void ShowLoadProgressScreen(void) {
         return;
 
     d3dBeginFrame();
-    maybeResetRenderState(1);
+    resetRenderState(1);
     d3dSetDeferredTextureState(0, 0);
     d3dSetTextureStage0(LoadingDotTexture);
 
@@ -106,10 +106,10 @@ void ShowLoadProgressScreen(void) {
         lit = 12 - lit;
     for (int i = 0; i < LOADING_DOT_COUNT; i++) {
         float x = LOADING_DOT_X + i * LOADING_DOT_SPACING;
-        maybeImmediateModePushItem(x, LOADING_DOT_Y, LOADING_DOT_SIZE, LOADING_DOT_SIZE, 0.0f, 0.0f,
-                                   LOADING_DOT_SIZE, LOADING_DOT_SIZE, ColourBits(i < lit ? LOADING_DOT_LIT : LOADING_DOT_UNLIT));
+        immediateModePushItem(x, LOADING_DOT_Y, LOADING_DOT_SIZE, LOADING_DOT_SIZE, 0.0f, 0.0f,
+                              LOADING_DOT_SIZE, LOADING_DOT_SIZE, ColourBits(i < lit ? LOADING_DOT_LIT : LOADING_DOT_UNLIT));
     }
-    maybeImmediateModeFlush();
+    immediateModeFlush();
 
     d3dSetTextureStage0(0);
     d3dSwap();

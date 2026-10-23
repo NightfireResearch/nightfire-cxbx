@@ -518,7 +518,7 @@ static void List_DrawRow(M_PAGE *page, M_PAGE *own, M_LIST *list, LIST_ROW *row,
         Font_GetTextExtent(text, list->format, &extent, &scale, strlen(text));
         short height = Ftol(extent.y);
 
-        (*cell)->maybeClippedString = list->format;
+        (*cell)->format = list->format;
         Menu_ClipString(*cell, Ftol(list->columnWidth[column] * (double)0.01f * list->control.width - 16.0),
                         list->format);
         ushort flags = list->textFlag2000 ? 0x2000 : 0;
@@ -532,7 +532,7 @@ static void List_DrawRow(M_PAGE *page, M_PAGE *own, M_LIST *list, LIST_ROW *row,
                               list->alpha, 0, 0, 0, 0, flags);
 
         sprite *spr = *cell;
-        spr->maybeClippedString = list->format;
+        spr->format = list->format;
         short columnWidth = Ftol(list->columnWidth[column] * (double)0.01f * list->control.width);
         GPOINT size;
         if (row == list->selected && !(list->control.state & CONTROL_STATE_INERT))
@@ -583,12 +583,12 @@ void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list) {
         Scroll_Update(mgr, page, &list->scroll);
         for (LIST_ROW *row = (LIST_ROW *)LinkedList_First(&list->rows); row != NULL; row = row->next) {
             if (row->stripe != NULL)
-                row->stripe->maybeEnabled = MENU_SPRITE_HIDDEN;
+                row->stripe->depth = MENU_SPRITE_HIDDEN;
         }
         for (ushort i = 0; i < List_SpriteRows(list); i++) {
             for (int j = 0; j < LIST_COLUMNS; j++) {
                 if (list->cells[i][j] != NULL)
-                    list->cells[i][j]->maybeEnabled = MENU_SPRITE_HIDDEN;
+                    list->cells[i][j]->depth = MENU_SPRITE_HIDDEN;
             }
         }
         return;
@@ -634,7 +634,7 @@ void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list) {
                 // The sprites of the next visible row's place
                 for (int i = 0; i < list->numColumns; i++) {
                     if (slot[i] != NULL)
-                        slot[i]->maybeEnabled = MENU_SPRITE_HIDDEN;
+                        slot[i]->depth = MENU_SPRITE_HIDDEN;
                 }
             }
             rowNum++;

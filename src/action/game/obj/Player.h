@@ -107,7 +107,7 @@ typedef struct BLData {
     char movementDisabled; // 0x110
     char _pad_11b[0x114-0x111];
     // How much of each ammo type the player carries, not counting what is loaded (weaponStats[].clipOrCooldown):
-    // indexed by weapon_definition_tag::ammoType, capped at ammo_data[].maybeMaxNumPerPlayer.
+    // indexed by weapon_definition_tag::ammoType, capped at ammo_data[].maxNumPerPlayer.
     short ammo[34]; // 0x114
     WeaponStatus weaponStats[114]; // 0x158
     char keys[0x6e4-0x6b0]; // 0x6b0 - a byte for each key held (Player_EquipKey); Player_RamSave carries the first 0x33 bytes with the weapons
@@ -451,7 +451,7 @@ void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder);
 obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying);
 void PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, struct HITDATA_tag *hit);
 void Player_Start(void);
-void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
+void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort enabled, level_tag *lvl);
 void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
 void Player_InitWeapon(BLData *blData, obj_tag *player);
 

@@ -140,7 +140,7 @@ intptr_t Memo_SendMessage(M_MEMO *memo, uint message, intptr_t arg1, intptr_t ar
                 for (int i = 0; i < MEMO_LINES; i++) {
                     if (memo->lines[i] == NULL)
                         break;
-                    memo->lines[i]->maybeEnabled = MENU_SPRITE_HIDDEN;
+                    memo->lines[i]->depth = MENU_SPRITE_HIDDEN;
                 }
             }
             Memo_Refresh(memo);
@@ -197,7 +197,7 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
         for (int i = 0; i <= MEMO_LINES; i++) {
             if (memo->lines[i] == NULL)
                 break;
-            memo->lines[i]->maybeEnabled = MENU_SPRITE_HIDDEN;
+            memo->lines[i]->depth = MENU_SPRITE_HIDDEN;
         }
         memo->topLine = Scroll_SendMessage(&memo->scroll, MessageType_GetValue, 0, 0);
         char *rest = memo->text;
@@ -227,7 +227,7 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
                 Menu_InitializeSprite(memo->lines[memo->linesShown], (uchar)(memo->control.depth - 5), x, y,
                                       memo->control.width - MEMO_BAR_WIDTH, 11, line, (HASHCODE)0, colour, memo->alpha,
                                       0, 0, 0, 0, 0x2000);
-                memo->lines[memo->linesShown]->maybeClippedString = memo->format;
+                memo->lines[memo->linesShown]->format = memo->format;
                 memo->linesShown++;
             }
             memo->numLines++;

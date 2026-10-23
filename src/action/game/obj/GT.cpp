@@ -191,7 +191,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
     if (turret->target != NULL && (turret->target->flags & 1))
         turret->target = NULL;
     if (turret->target != NULL && turret->target->objectType == OBJECTTYPE_DRONE &&
-        MPDrone_MaybeIsDyingOrDead(turret->target))
+        MPDrone_IsDyingOrDead(turret->target))
         turret->target = NULL;
 
     float range = TurretRange;
@@ -280,7 +280,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
     for (ushort i = 0; i < count; i++) {
         obj_tag *other = TargetList[i].obj;
         _VECTOR to;
-        Vec_Subtract(&other->centrePoint, (_VECTOR *)&turret->body->maybeMatrix.m[12], &to);
+        Vec_Subtract(&other->centrePoint, (_VECTOR *)&turret->body->matrix.m[12], &to);
         Vec_Normalise(&to, &to);
         double facing = (double)to.y * turret->facing.y + (double)to.z * turret->facing.z +
                         (double)to.x * turret->facing.x;
@@ -302,7 +302,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
 }
 
 // From one matrix's turn a step (4 x REC_FRAME_RATE) towards another's, into it, keeping the first's translation
-bool GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
+bool GT_InterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
     quaternion_tag start, end, step;
     Quat_MatToQuat(&start, from);
     Quat_MatToQuat(&end, towards);
@@ -320,7 +320,7 @@ void GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
     _MATRIX look;
     memset(&look, 0, sizeof(look));
     Mat_LookAt(&look, (_VECTOR *)&turret->aim.m[12], at, &up, &MAYBE_CONST_FORWARD_VECTOR);
-    GT_maybeInterpolateAimDir(&look, &turret->aim);
+    GT_InterpolateAimDir(&look, &turret->aim);
     Mat_Copy(&look, &turret->aim);
     if (turret->barrel != NULL)
         Mat_Copy(&look, &turret->barrel->transformMatrix);
@@ -452,8 +452,8 @@ void GT_Update(obj_tag *obj) {
 
     case GT_OPENING:
         if (turret->base->waitFrames != 0 && turret->body->waitFrames != 0) {
-            Mat_Copy(&turret->body->maybeMatrix, &turret->aim);
-            Mat_Copy(&turret->body->maybeMatrix, &turret->rest);
+            Mat_Copy(&turret->body->matrix, &turret->aim);
+            Mat_Copy(&turret->body->matrix, &turret->rest);
             obj->curState = GT_ACTIVE;
         }
         return;
@@ -461,7 +461,7 @@ void GT_Update(obj_tag *obj) {
     case GT_RETURNING: {
         _MATRIX mtx;
         Mat_Copy(&turret->rest, &mtx);
-        GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
+        GT_InterpolateAimDir(&mtx, &turret->body->matrix);
         double timer = (double)REC_FRAME_RATE + turret->timer;
         turret->timer = (float)timer;
         if (timer > 1.2f) {
@@ -514,7 +514,7 @@ void GT_Update(obj_tag *obj) {
 
         _MATRIX mtx;
         Mat_Copy(&turret->aim, &mtx);
-        GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
+        GT_InterpolateAimDir(&mtx, &turret->body->matrix);
         Script_SetPosRot(turret->body, &mtx);
         if (turret->kind != GT_KIND_CEILING)
             return;
@@ -585,7 +585,7 @@ void GT_Update(obj_tag *obj) {
         RotMatrixX(turret->control.x, &pitchMtx);
         Concat(&obj->transformMatrix, &yawMtx);
         Concat(&yawMtx, &pitchMtx);
-        GT_maybeInterpolateAimDir(&pitchMtx, &turret->body->maybeMatrix);
+        GT_InterpolateAimDir(&pitchMtx, &turret->body->matrix);
         Script_SetPosRot(turret->body, &pitchMtx);
         turret->spinSpeed = turret->spinSpeed * 0.9f;
         turret->fireTimer = REC_FRAME_RATE + turret->fireTimer;

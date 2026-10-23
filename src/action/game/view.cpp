@@ -808,7 +808,7 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     return &SprBuffList[SprCnt++];
 }
 
-// The sprite flags View_DrawSprites reads (sprite::maybeFlags)
+// The sprite flags View_DrawSprites reads (sprite::flags)
 #define SPRITE_SHADOW       0x0020  // a black copy where it was, the sprite a 64th of its size (1 to 5 pixels) on
 #define SPRITE_FLIP_X       0x0040
 #define SPRITE_FLIP_Y       0x0080
@@ -833,14 +833,14 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
 
         if (spr->text != NULL) {
             uint flags = 0;
-            if (spr->maybeFlags & SPRITE_TEXT_RING)
+            if (spr->flags & SPRITE_TEXT_RING)
                 flags = FONT_SHADOW_RING;
-            if (spr->maybeFlags & SPRITE_SHADOW)
+            if (spr->flags & SPRITE_SHADOW)
                 flags |= FONT_SHADOW;
-            if (spr->maybeFlags & SPRITE_TEXT_OUTLINE)
+            if (spr->flags & SPRITE_TEXT_OUTLINE)
                 flags |= FONT_OUTLINE;
             Font_DrawText(spr->positionX + viewer->xMin, spr->positionY + viewer->yMin, spr->colourTint,
-                          spr->unknown1, 0xffffffff, spr->text, spr->maybeClippedString, &spr->scale, flags,
+                          spr->unknown1, 0xffffffff, spr->text, spr->format, &spr->scale, flags,
                           (ushort)spr->length, spr->spritesheetWidth);
             continue;
         }
@@ -853,14 +853,14 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
             continue;
 
         uchar across = 1, down = 1;
-        if (spr->maybeFlags & SPRITE_TILED) {
+        if (spr->flags & SPRITE_TILED) {
             across = (uchar)((spr->spritesheetWidth + 1) / (ushort)spr->backupOnscreenWidth);
             down = (uchar)((spr->spritesheetHeight + 1) / (ushort)spr->backupOnscreenHeight);
         }
         // Toggled a tile at a time by its low bit: a flipped sprite's tiles stay flipped (0x80 and 0x81), a plain
         // one's alternate
-        uchar flipY = spr->maybeFlags & SPRITE_FLIP_Y;
-        uchar flipX = spr->maybeFlags & SPRITE_FLIP_X;
+        uchar flipY = spr->flags & SPRITE_FLIP_Y;
+        uchar flipX = spr->flags & SPRITE_FLIP_X;
         // A tile's size and texels: the whole's over the count, by 16-bit shifts
         float x = spr->positionX;
         double y = spr->positionY;
@@ -870,7 +870,7 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
         short v0 = spr->spritesheetY;
         short texelsX = (short)(spr->spritesheetWidth >> ((across - 1) & 31));
         short texelsY = (short)(spr->spritesheetHeight >> ((down - 1) & 31));
-        if (spr->maybeFlags & SPRITE_CENTRED) {
+        if (spr->flags & SPRITE_CENTRED) {
             x = x - (short)(spr->onscreenWidth >> 1);
             y = y - (short)(spr->onscreenHeight >> 1);
         }
@@ -880,7 +880,7 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
             float tileY = top;
             for (uchar row = down; row != 0; row--) {
                 SPRITE_DRAW *shadow = NULL;
-                if (spr->maybeFlags & SPRITE_SHADOW) {
+                if (spr->flags & SPRITE_SHADOW) {
                     if (SprCnt >= 0x3e) {
                         psiDrawSprites(SprBuffList, SprCnt);
                         SprCnt = 0;
@@ -893,8 +893,8 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
                 }
                 SPRITE_DRAW *draw = &SprBuffList[SprCnt++];
                 memcpy(draw->unknown08, &spr->createdOnFrame, sizeof(draw->unknown08));
-                draw->textureIndex = spr->unknownDataMaybeTexPtr;
-                draw->flags = spr->maybeFlags;
+                draw->textureIndex = spr->textureIndex;
+                draw->flags = spr->flags;
                 draw->invHeight = 1.0f / (ushort)spr->backupOnscreenHeight;
                 draw->clrR = r;
                 draw->clrG = g;
@@ -909,7 +909,7 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
                 draw->v0 = flipY ? texelsY : v0;
                 draw->u1 = flipX ? -texelsX : texelsX;
                 draw->v1 = flipY ? -texelsY : texelsY;
-                if (spr->maybeFlags & SPRITE_SHADOW) {
+                if (spr->flags & SPRITE_SHADOW) {
                     *shadow = *draw;
                     shadow->clrB = 0;
                     shadow->clrG = 0;
@@ -997,7 +997,7 @@ static void UseCamera(short *current, short num) {
 void LoadScreen_Draw(void) {
     undefined4 start = 0;
     uint lastForeground = 0, count = 0;
-    GameState.maybeLoadingBlobs++;
+    GameState.NumDraws++;
     psiPreDraw();
     psiUseCamera(glb_viewer[10]);
     sprite **list = Sprite_BuildList(99, &start, &lastForeground, &count);
@@ -1008,7 +1008,7 @@ void LoadScreen_Draw(void) {
 // AUTOINJECT
 void __stdcall Game_Draw(void) {
     short current = -1;
-    GameState.maybeLoadingBlobs++;
+    GameState.NumDraws++;
     psiSetScreenBlur(GlobalBlur);
     if (GlobalBlur >= 0x10)
         GlobalBlur -= 0x10;

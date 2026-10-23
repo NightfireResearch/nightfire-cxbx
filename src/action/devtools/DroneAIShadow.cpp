@@ -34,7 +34,7 @@ namespace {
 
 // The game's RNG state (Rand_Random)
 #define RandWords (GameSpan<uint32_t>{0x0018cdf8})
-// Drone_SfxInfo's sfx field, per speech number (what Drone_maybeDisallowedFromSayingThisSfx compares)
+// Drone_SfxInfo's sfx field, per speech number (what Drone_IsSayingSfx compares)
 #define SfxInfoSound(n) U32_AT(XbeOurs(0x00174b28 + (n) * 0x20))
 
 const int DRONES = 6;
@@ -438,7 +438,7 @@ void RandomWorld() {
     memset(&world.hit, 0, sizeof(world.hit));
     static const short bones[] = {4, 5, 3, 0};
     world.hit.hitBoneIdx = bones[ShadowRand(4)];
-    RandomVector(&world.hit.maybehitDirection, 1.0f);
+    RandomVector(&world.hit.hitDirection, 1.0f);
     RandomVector(&world.impact.position, 6.0f);
 
     memset(world.sound, 0, sizeof(world.sound));
@@ -477,7 +477,7 @@ void RandomWorld() {
     }
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(6) == 0;
+    MPSettings.dronesAreBots = ShadowRand(6) == 0;
     Drone_bDisableSystem = (uchar)(ShadowRand(10) == 0);
 
     NPCGlobals.NDrone2List = &world.drones[0];

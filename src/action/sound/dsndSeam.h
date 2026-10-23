@@ -113,7 +113,7 @@ void __cdecl SetListenerPosition(float x, float y, float z);
 void __cdecl SetListenerVelocity(void);
 void __cdecl SetListenerOrientation(float xDir, float yDir, float zDir, float xUp, float yUp, float zUp);
 
-// Voice allocation. A "voice" is one of 64 slots in AudioSystem.maybeVoices; dsndGetVoice picks the first free
+// Voice allocation. A "voice" is one of 64 slots in AudioSystem.voices; dsndGetVoice picks the first free
 // one, binds the matching pre-made buffer (mono 2D / stereo 2D / mono 3D), points it at the caller's own sample
 // data (SetBufferData references that memory, it is not copied) and marks the slot in use. Returns the slot
 // index, or -1 if nothing is free or the arguments are unusable.
@@ -139,7 +139,7 @@ void __cdecl dsndSetPosition(uint32_t channel, float x, float y, float z);
 void __cdecl dsndClearVelocity(uint32_t channel);
 void __cdecl dsndSetDistances(uint32_t channel, float minDist, float maxDist);
 void __cdecl dsndSetI3DL2Source(uint32_t channel, float volume); // reverb send, 0..100 into the volume table
-void __cdecl maybeXboxSFXCalculate3D(uint32_t channel, uint8_t positioned); // 0 = follow the listener
+void __cdecl dsndSetPositioned(uint32_t channel, uint8_t positioned); // 0 = follow the listener
 
 
 // Called once per frame: pushes deferred 3D settings, services DSOUND's own work queue, then starts/stops
@@ -152,7 +152,7 @@ void dsndUpdateVoices(void);
 
 // Level change / shutdown: parks the listener, drops every buffer's reference to the game's sample data (which
 // is about to be freed), stops every voice through one last dsndUpdateVoices, and clears the voice table.
-void __cdecl maybeSoundShutdown(void);
+void __cdecl SoundShutdown(void);
 
 // The game's volume table: 0..100 to hundredths of a dB, -10000..0
 int32_t DSound_VolumeMillibels(int volume);

@@ -3,14 +3,14 @@
 #include "../game/obj/GT.h"
 
 // The matrix to turn towards in EAX, the one turned from in ECX
-// AUTOLTCG
-void __declspec(naked) Asm_GT_maybeInterpolateAimDir(void) {
+// FUNC_AT(0x0009a530)
+void __declspec(naked) Asm_GT_InterpolateAimDir(void) {
     _asm {
         push ecx
         push edx
         push ecx
         push eax
-        call GT_maybeInterpolateAimDir
+        call GT_InterpolateAimDir
         add esp, 8
         pop edx
         pop ecx

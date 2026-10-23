@@ -100,7 +100,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
         sensor->beamObject->effectFlags |= 0x20;
         sensor->beamObject->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY | TRANSFORM_MATRIX_PLACED;
         sensor->beamObject->scale = sensor->beamLength;
-        sensor->beamObject->maybeParent = obj;
+        sensor->beamObject->parent = obj;
         Mat_Copy(&obj->transformMatrix, &sensor->beamObject->transformMatrix);
         hashtable_set_object_to_entity_gfx(sensor->beamObject, createParams->beamHashcode);
     }
@@ -112,7 +112,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
         sensor->bodyObject = control_create_object(0, pos, rot, NULL);
         sensor->bodyObject->objectType = OBJECTTYPE_GFX;
         sensor->bodyObject->transformFlags |= TRANSFORM_MATRIX_PLACED;
-        sensor->bodyObject->maybeParent = obj;
+        sensor->bodyObject->parent = obj;
         Mat_Align2Up(sensor->bodyObject->transformMatrix.m, &CONST_UP_VECTOR.x, &direction.x);
         hashtable_set_object_to_entity_gfx(sensor->bodyObject, createParams->bodyHashcode);
     }

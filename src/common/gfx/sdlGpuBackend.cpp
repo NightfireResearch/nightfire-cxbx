@@ -2301,7 +2301,7 @@ static uint32_t ModulateColour(uint32_t packed, const float *k) {
     return out;
 }
 
-// maybeImmediateModeFlush's quads (the action engine): {x, y, colour, u, v, pad} in screen pixels.
+// immediateModeFlush's quads (the action engine): {x, y, colour, u, v, pad} in screen pixels.
 static void DrawImmediateQuads(uint32_t vertexCount, const uint8_t *data, uint32_t stride) {
     static RhwVertex vertices[64 * 4];
     if (vertexCount > 64 * 4) vertexCount = 64 * 4;

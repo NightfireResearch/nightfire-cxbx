@@ -899,7 +899,7 @@ void RandomWorld(void) {
     obj->animState = &world.anim;
     obj->objGraphics = &world.celgl[0];
     obj->inCel = (cel_tag *)world.cel;
-    obj->maybeParent = ShadowRand(3) ? NULL : &world.holder;
+    obj->parent = ShadowRand(3) ? NULL : &world.holder;
     memset(world.drone, 0, sizeof(world.drone));
     world.drone[0x418] = (uint8_t)ShadowRand(4);
     world.drone[0x41a] = (uint8_t)ShadowRand(2);
@@ -1634,7 +1634,7 @@ uint32_t RunFixupSkin(bool original) {
                                      (HASHCODE)0x05000018, (HASHCODE)0x0500003b, (HASHCODE)0x0500005e, kSkinHash};
     Regs r = {};
     r.eax = (uint32_t)skins[Arg(COUNT(skins))];
-    return Regs6(original, 0x00011350, (const void *)&Asm_maybeFixupSkinHashcode, r, 0, NULL);
+    return Regs6(original, 0x00011350, (const void *)&Asm_FixupSkinHashcode, r, 0, NULL);
 }
 uint32_t RunObjectDelete(bool original) {
     obj_tag *obj = Arg(10) ? Obj() : NULL;
@@ -1978,7 +1978,7 @@ const Case kDebug[] = {
 
 const Case kObjects[] = {
     C("AnimObjectNew", RunObjectNew),
-    C("maybeFixupSkinHashcode", RunFixupSkin),
+    C("FixupSkinHashcode", RunFixupSkin),
     C("AnimObjectDelete", RunObjectDelete),
     C("AnimObjectUpdate", RunObjectUpdate),
     C("AnimObjectInitialPose", RunInitialPose),

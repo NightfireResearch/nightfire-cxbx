@@ -13,7 +13,7 @@
 // is a pointer to the pixel data buffer to associate with the new texture (see the caller in
 // Graphics_Init_LowLevel for an example - it passes a freshly-allocated buffer, not existing pixel data).
 //
-// psiCreateMapTextures registers every one of a level's ~500 textures on entry; maybeD3dShutdown (below) frees
+// psiCreateMapTextures registers every one of a level's ~500 textures on entry; d3dReleaseResources (below) frees
 // every non-permanent slot on each level change.
 int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data, int param_6);
 
@@ -87,14 +87,14 @@ void d3dBeginFrame(void);
 // the fog Z-scale and depth-clip planes from the projection matrix; d3dSetWorldMatrix splits a world matrix
 // into translation (via d3dSetMatrix) and rotation-only (shader constant 0) parts.
 //
-// maybeBuildAndSetModelViewProjectionMtx (constant 0x77) builds an inverse-MVP-style matrix from a rigid
+// d3dSetTextureProjectionMatrix (constant 0x77) builds an inverse-MVP-style matrix from a rigid
 // transform and a base matrix - like d3dSetMatrix, it computes its combine steps directly (Multiply4x4RowMajor)
-// rather than through maybeMultiplyMatrixChain, since the original's own call sequence aliases dest with base
+// rather than through multiplyMatrixChain, since the original's own call sequence aliases dest with base
 // and/or chain in all three of its multiply steps.
 void d3dSetProjectionMatrix(D3DMATRIX *projMtx);
 void d3dSetMatrix(D3DMATRIX *d3dMtx);
 void d3dSetWorldMatrix(D3DMATRIX *worldMtx);
-void maybeBuildAndSetModelViewProjectionMtx(D3DMATRIX *rigidTransform, D3DMATRIX *base);
+void d3dSetTextureProjectionMatrix(D3DMATRIX *rigidTransform, D3DMATRIX *base);
 void d3dSetStreamSources(int baseIndex, int stream1Offset, float stream1Stride, int stream2Offset, float stream2Stride,
                           int stream3Offset, float stream3Stride, int stream4Offset, float stream4Stride,
                           int stream5Offset, float stream5Stride, int stream6Offset, float stream6Stride,
@@ -135,11 +135,11 @@ void d3dResetRenderTargetAndBuffers(void);
 
 // Transforms up to 64 pending immediate-mode quads into a vertex buffer and draws them in one
 // D3DDevice_DrawVerticesUP call. See its own comment in d3dSeam.cpp.
-void maybeImmediateModeFlush(void);
+void immediateModeFlush(void);
 
 // Appends a 9-float item (position rect, UV rect, packed colour as the raw bits of param9) to the immediate-
-// mode buffer, flushing first (via maybeImmediateModeFlush) if it's full.
-void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
+// mode buffer, flushing first (via immediateModeFlush) if it's full.
+void immediateModePushItem(float param1, float param2, float param3, float param4, float param5,
                                  float param6, float param7, float param8, float param9);
 
 // Standard D3D-style perspective projection matrix builder.
@@ -152,11 +152,11 @@ void d3dResetTransformCaches(void);
 void d3dSetupRenderStatesAndFog(int param1);
 
 // Resets a batch of cached render state to known defaults (texture/transform/fog/depth/cull/alpha/blend).
-void maybeResetRenderState(char param1);
+void resetRenderState(char param1);
 
-// Calls maybeResetRenderState(1), unbinds everything, then frees every level-scoped texture/vertex-buffer/
+// Calls resetRenderState(1), unbinds everything, then frees every level-scoped texture/vertex-buffer/
 // index-buffer slot. Called on a level change and on an XLaunchNewImage relaunch.
-void maybeD3dShutdown(void);
+void d3dReleaseResources(void);
 
 // Caches a pair of "deferred texture state" values, pushing them into two D3D8-internal globals once changed.
 void d3dSetDeferredTextureState(int param1, int param2);
@@ -181,7 +181,7 @@ unsigned int d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3D
 void d3dSetup(void);
 
 // Closes an aux render pass and runs a two-pass box blur on a character shadow texture. See its own comment
-// in d3dSeam.cpp. Only ever called from maybe_psiDrawShadow (not yet reimplemented).
+// in d3dSeam.cpp. Only ever called from psiDrawShadow (not yet reimplemented).
 void psiBlurCharacterShadow(void);
 
 // Captures the current backbuffer into a round-robin "history" texture (3 slots) and draws it back as a
@@ -195,7 +195,7 @@ void psiBlurScreen(int blurIntensity);
 void d3dInitShadowBlurTextures(void);
 
 // Sets a 3-float "level direction vector" plus a matrix-regen flag - only ever called from
-// maybePsiResetResources (not yet reimplemented) with a mission-specific hardcoded axis vector. Untraced
+// psiResetResources (not yet reimplemented) with a mission-specific hardcoded axis vector. Untraced
 // consumer - see its own comment in d3dSeam.cpp.
 void d3dSetLevelDirectionVector(float x, float y, float z);
 
@@ -203,7 +203,7 @@ void d3dSetLevelDirectionVector(float x, float y, float z);
 // psiDecompressWoman - none reimplemented yet). No D3D8 calls - pure reads of the same tables the allocators
 // above fill in.
 void *Texture_GetRawDataPtr(int textureSlot);
-int d3dGetVertexDataSize(int vtxCnt, char maybeSkinned, int streamCount);
+int d3dGetVertexDataSize(int vtxCnt, char skinned, int streamCount);
 int d3dGetIndexDataSize(int indexCount);
 void d3dGetStreamBuffer(int streamSlot, int vtxNum, uint32_t *posOut, uint32_t *uvOut, uint32_t *dword10Out);
 void *d3dGetIndexBufferData(int indexSlot);

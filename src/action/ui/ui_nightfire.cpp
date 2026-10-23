@@ -138,7 +138,7 @@ bool C_SBNFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             MPSettings.isMultiplayer = 0;
             MPSettings.numPlayers = 1;
             MPSettings.numPlayersAndBots = 1;
-            MPSettings.maybeIsTeamGame = 0;
+            MPSettings.isTeamGame = 0;
             GameState.BaseMapHashCode = 0;
             PlayerInputs[0].controllerPort = (undefined1)Menu_GetLastController();
             ResetMap_LevelToLoad(GameState.NextLevelHashcode, false, false);

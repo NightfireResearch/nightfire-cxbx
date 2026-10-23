@@ -564,7 +564,7 @@ void RandomHits(void) {
         h->surfaceNormal.b = PICK(1.0f, 0.7f, 0.2f);
         if (ShadowRand(2))
             h->hitPosition.y = world.player.position.y + ShadowRandFloat(-1.0f, 1.0f);
-        RandomVector(&h->maybehitDirection, 1.0f);
+        RandomVector(&h->hitDirection, 1.0f);
         static const char materials[] = {0, 0xd, 0xe, 0x4d, 0x0e, 3};
         h->materialType = materials[ShadowRand(6)];
         h->flags = (char)ShadowRand(4);
@@ -582,15 +582,15 @@ void RandomGlobals(void) {
     GameState.CurrentLevelHashcode = levels[ShadowRand(8)];
     GameState.difficultyModifier = ShadowRand(5);
     GameState.NumFramesUnpaused = ShadowRand(0x7fff);
-    GameState.maybePaused = ShadowRand(5) == 0;
+    GameState.LevelEnding = ShadowRand(5) == 0;
     MPSettings.isMultiplayer = ShadowRand(3) == 0;
-    MPSettings.maybeDroneAIEnabled = ShadowRand(3) == 0;
+    MPSettings.dronesAreBots = ShadowRand(3) == 0;
     MPSettings.LocationDamageEnabled = ShadowRand(2);
     MPSettings.TripleDamageModifierProfessionalMode = ShadowRand(3) == 0;
     static const MultiplayerGameMode modes[] = {GM_QUICK, GM_TOPAGENT, GM_ASSASSIN, GM_TEAMARENA};
     MPSettings.GameMode = modes[ShadowRand(4)];
     MPSettings.MaxPoints = ShadowRand(4);
-    MPSettings.maybeIsTeamGame = ShadowRand(2);
+    MPSettings.isTeamGame = ShadowRand(2);
     MPSettings.FriendlyFire = ShadowRand(2);
     for (int i = 0; i < 10; i++) {
         snprintf(MPSettings.Player[i].Name, sizeof(MPSettings.Player[i].Name), "agent%d", i);
@@ -599,7 +599,7 @@ void RandomGlobals(void) {
         MPSettings.Player[i].HealthModifier = ShadowRand(5) * 25 - 50;
         MPGame.players[i].deaths = ShadowRand(5);
         static const short injurers[] = {-2, -1, 0, 1, 4};
-        MPGame.players[i].maybeIdxOfLastInjurer = injurers[ShadowRand(5)];
+        MPGame.players[i].idxOfLastInjurer = injurers[ShadowRand(5)];
         MPGame.players[i].friendlyFireLabelTimer = (short)(ShadowRand(2) * ShadowRand(100));
     }
     for (int i = 0; i < 256; i++)

@@ -188,13 +188,13 @@ obj_tag* BOT_init(short playerNum, _VECTOR *pos, _VECTOR *rot, obj_tag *gameObj,
     drone->diVars.keys.weapon = vars->weapon;
     vars->goals[0].unknown39 = 0;
     vars->goals[1].unknown39 = 1;
-    if (!MPSettings.maybeIsTeamGame)
+    if (!MPSettings.isTeamGame)
         MPSettings.Player[playerNum].TeamId = NO_TEAM;
     if (MPSettings.GameMode == GM_ASSASSIN)
         MPSettings.Player[playerNum].TeamId = PHOENIX;
 
     // The original tests only Started's low byte
-    if (MPSettings.maybeDroneAIEnabled && (uchar)MPSettings.Started && !noSpawn)
+    if (MPSettings.dronesAreBots && (uchar)MPSettings.Started && !noSpawn)
         NDrone2_PostLoad_Init(drone->gameObj);
     AnimObjectUpdate(gameObj);
     return gameObj;
@@ -257,7 +257,7 @@ void BOT_setOtherPlayerInfo(DCVars_tag *dcv) {
 
     // 3 matches no agent's team
     int myTeam = MPSettings.Player[myIndex].TeamId;
-    if (myTeam == NO_TEAM || (!MPSettings.maybeIsTeamGame && MPSettings.GameMode != GM_ASSASSIN))
+    if (myTeam == NO_TEAM || (!MPSettings.isTeamGame && MPSettings.GameMode != GM_ASSASSIN))
         myTeam = 3;
 
     uint sightCursor = vars->visibilityCursor;
@@ -307,7 +307,7 @@ void BOT_setOtherPlayerInfo(DCVars_tag *dcv) {
 
         _VECTOR toOther;
         Vec_Subtract(&other->position, &me->position, &toOther);
-        info->facing = Vec_AngleDifference(other->rotation.y, maybeAtan2(toOther.x, toOther.z) + Pi) * RadToDeg;
+        info->facing = Vec_AngleDifference(other->rotation.y, Atan2(toOther.x, toOther.z) + Pi) * RadToDeg;
 
         BOT_vars_t *otherVars;
         if (i > myIndex && i >= NUM_PLAYERS && (otherVars = ((Drone_tag *)other->extraObjectData)->botVars) != NULL &&
@@ -361,7 +361,7 @@ double BOT_getAggressionMul(Drone_tag *drone) {
         default: mul = 1.0f; break;     // no stat above 4 exists; the original's starting value
     }
 
-    if (MPSettings.maybeDroneAIEnabled && drone->opponent != NULL && drone->distanceToTarget < 2.5f) {
+    if (MPSettings.dronesAreBots && drone->opponent != NULL && drone->distanceToTarget < 2.5f) {
         // 1 at 2.5 m, rising as the opponent closes in, capped at 3 (reached from 0.5 m in)
         double closeness = (2.5f - (double)drone->distanceToTarget) + 1.0f;
         if (!(closeness <= 3.0f))
@@ -402,8 +402,8 @@ uint BOTSTATE_getStateType(uint state) {
 
 // Whether a multiplayer drone is out of play: none, dead or dying, not running its AI, without health (a NaN
 // counts as alive), a dead drone's object, or marked for deletion
-// AUTOINJECT
-bool MPDrone_MaybeIsDyingOrDead(obj_tag *obj) {
+// FUNC_AT(0x0001a190)
+bool MPDrone_IsDyingOrDead(obj_tag *obj) {
     if (obj == NULL)
         return true;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
@@ -432,7 +432,7 @@ bool BOT_reactToDroneAlertMsg(uint msg, Drone_tag *drone, Drone_tag *from) {
         return true;
     if (from->botVars == NULL)
         return false;
-    if (!MPSettings.maybeIsTeamGame && MPSettings.GameMode != GM_ASSASSIN)
+    if (!MPSettings.isTeamGame && MPSettings.GameMode != GM_ASSASSIN)
         return true;
     return ((MPSettings_PerPlayer *)drone->botVars->perPlayerSettings)->TeamId ==
            ((MPSettings_PerPlayer *)from->botVars->perPlayerSettings)->TeamId;
@@ -779,7 +779,7 @@ void BOT_setDroneStats(Drone_tag *drone, BOT_stats_t *stats) {
 // AUTOINJECT
 void BOT_handlePain(DCVars_tag *dc, float damage, ushort hitType, short location) {
     Drone_tag *drone = dc->drone;
-    if (MPDrone_MaybeIsDyingOrDead(dc->gameObj))
+    if (MPDrone_IsDyingOrDead(dc->gameObj))
         return;
     if (drone->health < 0.0f || drone->health == 0.0f)
         return;

@@ -16,10 +16,10 @@ void SetLaunchInfoAndLaunch(char *executableName, void *data, uint32_t len);
 void WriteStateFileAndLaunch(uint32_t reason, void *data, int len);
 void psiLaunchDriving(void *data, uint32_t len);
 bool psiGetDrivingData(uint32_t *out);
-void maybeCleanupSystem(void);
+void cleanupSystem(void);
 int psiGetLoadingDataState(void);
 
-bool MaybeFileWriteContents(char *path, uint8_t *data, uint32_t len);
+bool StateFile_Write(char *path, uint8_t *data, uint32_t len);
 bool StateFile_Read(char *path, void *data, uint32_t len);
 bool File_Delete(char *path);
 bool File_Exists(char *path);

@@ -203,8 +203,8 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
     Vec_NormToRot(normal, &surfaceRot);
     _VECTOR faceRot;
     double x = -normal->x, z = -normal->z;
-    faceRot.x = -maybeAtan2(-normal->y, (float)sqrt(x * x + z * z));
-    faceRot.y = maybeAtan2(-normal->x, -normal->z);
+    faceRot.x = -Atan2(-normal->y, (float)sqrt(x * x + z * z));
+    faceRot.y = Atan2(-normal->x, -normal->z);
     faceRot.z = 0.0f;
 
     HEINFO_tag *info = &EffectInfo[hit->materialType & 0x3f];
@@ -302,8 +302,8 @@ void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
 
         _VECTOR rot;
         double x = normal->x, z = normal->z;
-        rot.x = -maybeAtan2(normal->y, (float)sqrt(x * x + z * z));
-        rot.y = maybeAtan2(normal->x, normal->z);
+        rot.x = -Atan2(normal->y, (float)sqrt(x * x + z * z));
+        rot.y = Atan2(normal->x, normal->z);
         rot.z = 0.0f;
         _VECTOR at;
         auxVec_AddMulR32(&hit->hitPosition, normal, 0.005f, &at);

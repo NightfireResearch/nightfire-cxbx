@@ -7,7 +7,7 @@
 // where (build_FindCel), the sounds themselves (Sound_Play3D, Sound_IsFinnished), the facial scripts
 // (hashtable_getitem, NDrone2_PlayFacialAnim), which line DroneFunc_ChooseSFX picks, the target table
 // (DroneFunc_TargetSeen), the message queue (Drone_SM_SendMsgSelf) and the bots' answers (BOT_reactToDroneAlertMsg,
-// MP_areObjectsOnSameTeam). MPDrone_MaybeIsDyingOrDead, which NDrone2_NearArmedDrone's original has inline, is
+// MP_areObjectsOnSameTeam). MPDrone_IsDyingOrDead, which NDrone2_NearArmedDrone's original has inline, is
 // answered by a copy of its test. Drone_SfxInfo entries are made up and put back afterwards. Random draws are kept in
 // step: both sides start from the same Rand_Random state, and it is compared afterwards.
 
@@ -215,7 +215,7 @@ void *__cdecl FakePlay3D(uint sfx, _VECTOR *pos, float volume, float outer, floa
     return world.playOk ? &world.handle : NULL;
 }
 
-// MPDrone_MaybeIsDyingOrDead's own test, without a log: NDrone2_NearArmedDrone's original has it inline
+// MPDrone_IsDyingOrDead's own test, without a log: NDrone2_NearArmedDrone's original has it inline
 bool __cdecl FakeDying(obj_tag *obj) {
     if (obj == NULL)
         return true;
@@ -503,7 +503,7 @@ void RandomWorld() {
     NPCGlobals.postLoadFrame = ShadowRand(5) == 0 ? RandomFrame() : now - ShadowRand(60);
     NPCGlobals.sfxLogNext = ShadowRand(5) == 0 ? 15 : ShadowRand(16);
     NPCGlobals.unknown1392 = (uchar)ShadowRand(2);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(5) == 0;
+    MPSettings.dronesAreBots = ShadowRand(5) == 0;
     switch_BLIND_DRONES = ShadowRand(8) == 0;
     switch (ShadowRand(20)) {
     case 0:

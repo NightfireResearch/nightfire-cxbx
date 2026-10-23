@@ -198,7 +198,7 @@ struct ActionQueueManager {
 };
 LAYOUT_32(sizeof(ActionQueueManager) == 0x10, "the manager is a vector, 16 bytes");
 
-// std::fill over a range of pointers (Ghidra: maybe_memset_ptr2, 0x0004f3e0).
+// std::fill over a range of pointers (0x0004f3e0).
 void FillQueuePointers(ActionQueue **first, ActionQueue **last, ActionQueue *const *value);
 
 // GetActionQueueManager's static (ActionQueue.cpp).

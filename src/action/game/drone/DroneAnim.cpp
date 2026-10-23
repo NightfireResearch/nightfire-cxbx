@@ -13,7 +13,7 @@
 #include "DroneWeapon.h"            // DroneWeap_FireWeapon
 #include "BOT.h"                    // BOT_getMovementSpeedMul
 #include "../mp/multiplayer.h"     // MPSettings
-#include "../../math/math.h"        // maybeAtan2, Mat_GetDir, RotMatrix, ApplyMatrixLV
+#include "../../math/math.h"        // Atan2, Mat_GetDir, RotMatrix, ApplyMatrixLV
 
 #include <math.h>
 #include <string.h>
@@ -233,7 +233,7 @@ bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState) {
     Drone_tag *drone = dcv->drone;
     HITDATA_tag *hit = drone->lastHit;
     if (hit != NULL && (glb_players[0]->animState->animFlags & 1) && (hit->hitBoneIdx == 5 || hit->hitBoneIdx == 4)) {
-        float shotYaw = maybeAtan2(hit->maybehitDirection.x, hit->maybehitDirection.z);
+        float shotYaw = Atan2(hit->hitDirection.x, hit->hitDirection.z);
         double turn = Vec_AngleDifference(shotYaw, dcv->gameObj->rotation.y);
         DroneAnim_CallAnim(DANIM_DEATH_SHOT, fabs(turn) > (float)M_PI_2 ? 0 : 1, endState, 0, 0.0f, 0, dcv);
         return true;
@@ -429,7 +429,7 @@ bool DroneAnim_TakeCall(Drone_tag *drone) {
 // functions. False when it is skipped, or with bots while a script blends out and the drone animates.
 // AUTOINJECT
 bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_tag *drone) {
-    if (MPSettings.maybeDroneAIEnabled && drone->unknown434 != NULL && NDrone2_DoAnimation(drone))
+    if (MPSettings.dronesAreBots && drone->unknown434 != NULL && NDrone2_DoAnimation(drone))
         return false;
 
     ushort animSet = drone->animSet;
@@ -646,7 +646,7 @@ bool DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, us
 bool DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     if (drone->animCall.state == 0)
         return false;
-    if (MPSettings.maybeDroneAIEnabled && drone->unknown434 != NULL)
+    if (MPSettings.dronesAreBots && drone->unknown434 != NULL)
         return false;
     if ((ushort)drone->animState != drone->animCall.fromState && drone->animMode == 5)
         return false;

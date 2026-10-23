@@ -305,7 +305,7 @@ typedef struct {
 
 typedef struct {
     ObjectCreationData_Basic basicCreation;
-    int maybeBrightness;// 0x2c
+    int range;// 0x2c
     uchar r;
     char _pad_1[3];
     uchar g;
@@ -552,7 +552,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation) {
                 Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
                 Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b,
-                            (float)lightParams->maybeBrightness,
+                            (float)lightParams->range,
                             lightParams->unknown1, -1, 0, 1.0f,
                             lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
             }

@@ -404,9 +404,9 @@ void RandomWorld() {
     GameState.NumFramesUnpaused = 1000 + ShadowRand(100);
     GameState.CurrentLevelHashcode = (HASHCODE)kLevels[ShadowRand(10)];
     GameState.difficultyModifier = 1 + ShadowRand(3);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(6) == 0;
+    MPSettings.dronesAreBots = ShadowRand(6) == 0;
     // Without bots NDrone2_DefaultInit reads the anim state untested
-    if (MPSettings.maybeDroneAIEnabled && ShadowRand(3) == 0)
+    if (MPSettings.dronesAreBots && ShadowRand(3) == 0)
         world.objs[0].animState = NULL;
     AIPath_MaxNodes = ShadowRand(4) == 0 ? 0 : ShadowRand(kNodes) + 1;
     for (int c = 0; c < 256; c++)

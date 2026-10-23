@@ -105,7 +105,7 @@ static void MP_GoldenEyeTaken(MPOBJECT *mpObj, obj_tag *gameObj) {
     else
         MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x36);
     gameObj->curState = 1;
-    gameObj->maybeParent = mpObj->holder;
+    gameObj->parent = mpObj->holder;
     MP_GoldenEyeMsg(mpObj, NOTIF_X_CAPTURED_GOLDENEYE_KEY, NOTIF_X_CAPTURED_GOLDENEYE_CRYSTAL);
     Sound_PlayExt(SFX_PICKUP_DM_COLLECT_GOLDEN_GUN_PART, 100.0f, 0, 0);
 }
@@ -149,7 +149,7 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
                 short idx = Control_Plr2Ind(GoldenEye.targetedPlayer);
                 if (idx != -1) {
                     MPGame.teamScore[MPSettings.Player[idx].TeamId == PHOENIX ? MI6 : PHOENIX] += 1.0f;
-                    MPGame.players[idx].maybeIdxOfLastInjurer = -2;
+                    MPGame.players[idx].idxOfLastInjurer = -2;
                 }
             }
             GoldenEye.deathRay = NULL;
@@ -218,9 +218,9 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
         // Dropped (MP_PlayerKilled, when its holder dies): onto the floor below it
         if (mpObj->type == GOLDENEYE_KEY)
-            MP_GoldenEyeLetGo(gameObj->maybeParent, MPPLAYER_GOLDENEYE_KEY, 1, 0x37);
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_KEY, 1, 0x37);
         else
-            MP_GoldenEyeLetGo(gameObj->maybeParent, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x38);
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x38);
         {
             _VECTOR *pos = Mat_Position(gameObj->transformMatrix);
             build_PointOnFloor(gameObj->inCel, gameObj, pos, gameObj->objGraphics->extentMin.y, NULL);

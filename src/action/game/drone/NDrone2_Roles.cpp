@@ -1840,7 +1840,7 @@ bool NDrone2_ReFindMissionPath(DCVars_tag *dcv) {
         route->current = (short)reachable;
         if (LinkCreep_Calc(route, 0)) {
             LinkCreep_Dest(route, 0, &route->waypoint);
-            NDrone2_maybeCalcDistanceAndDirToTarget(dcv, &route->waypoint);
+            NDrone2_SetMoveTarget(dcv, &route->waypoint);
         }
         dcv->drone->activeRoute = NULL;
         AINetwork_InvalidateRoute(&dcv->drone->route1);
@@ -1854,7 +1854,7 @@ bool NDrone2_ReFindMissionPath(DCVars_tag *dcv) {
         route->current = (short)nearest;
         if (LinkCreep_Calc(route, 0)) {
             LinkCreep_Dest(route, 0, &route->waypoint);
-            NDrone2_maybeCalcDistanceAndDirToTarget(dcv, &route->waypoint);
+            NDrone2_SetMoveTarget(dcv, &route->waypoint);
         }
         if (drone->skinClass == 9)
             drone->route1.path = AINetwork_NavPathForPosition(&gameObj->position, gameObj->inCel, 1);

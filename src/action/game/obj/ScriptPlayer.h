@@ -59,7 +59,7 @@ typedef struct SCRIPTPLAYER {
                                          //        SP_Hit checks and the unpause bit while counting down
     char playOnce;                      // 0x35 - 0 = loop/toggle between the two scripts forever; nonzero = finish
                                          //        (state=5, delete) after the active script finishes once
-    char maybeHideState;                // 0x36 - set by SP_HideObj; nonzero makes SP_Update skip entirely
+    char hideState;                     // 0x36 - set by SP_HideObj; nonzero makes SP_Update skip entirely
     char requiredBulletType;            // 0x37 - bullet-hit filter used by SP_Hit: 0 = any bullet counts,
                                          //        otherwise only bullets whose type matches this value count
     char loadingScreenShown;            // 0x38 - always zeroed on creation, not sourced from placement data;

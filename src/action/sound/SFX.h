@@ -483,7 +483,7 @@ int SFXCountVoicesInUse(SFXItem *except);
 void ES_GetMyPos(SFXItem *Sfx);
 int ES_GetNearestListenerDistance(SFXItem *Sfx);
 int StartSample(SFXSamplePoolFiles *sfxNum, int SoundBankSlot, SFXItem *Sfx, int WhichVoice);
-int maybeDXSoundPlay(SFXItem *Sfx);
+int SFXPlay(SFXItem *Sfx);
 void SFXUpdateEnding(SFXItem *Sfx, SFXItem **next);
 uint32_t SFXStart3D(int HashCode, _VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *Handle, int VolumeOverRide,
                     int InnerRadius, int OuterRadius);

@@ -583,7 +583,7 @@ void RandomBot(int i) {
         weapon->unknown7[2] = (uchar)R(256);
     }
     for (int a = 0; a < 33; a++) {
-        short most = ammo_data[a].maybeMaxNumPerPlayer;
+        short most = ammo_data[a].maxNumPerPlayer;
         switch (R(5)) {
             case 0: vars->reserveAmmo[a] = 0; break;
             case 1: vars->reserveAmmo[a] = most; break;
@@ -607,7 +607,7 @@ void RandomWorld() {
         if (R(6) != 0)
             MPGame.players[NUM_PLAYERS + i].playerObj = &world.objs[i];
     MPGame.TimeIncPaused = ShadowRandFloat(0.0f, 600.0f);
-    MPSettings.maybeIsTeamGame = R(2);
+    MPSettings.isTeamGame = R(2);
     world.answers = R(0x10000) | (R(0x10000) << 16);
     world.fakeCalls = 0;
     world.pos.pos.x = ShadowRandFloat(-10.0f, 10.0f);
@@ -1286,7 +1286,7 @@ uint32_t RunDyingOrDead(bool original) {
     Drone_tag *drone = ArgDrone();
     Fighting(drone);
     obj_tag *obj = A(8) == 0 ? NULL : drone->gameObj;
-    return CDECL(0x0001a190, MPDrone_MaybeIsDyingOrDead, uint32_t (__cdecl *)(obj_tag *), obj) & 0xff;
+    return CDECL(0x0001a190, MPDrone_IsDyingOrDead, uint32_t (__cdecl *)(obj_tag *), obj) & 0xff;
 }
 
 uint32_t RunAlertMsg(bool original) {
@@ -1442,7 +1442,7 @@ uint32_t RunPostLoad(bool original) {
 }
 
 const Case kBots[] = {
-    {"MPDrone_MaybeIsDyingOrDead", 0x0001a190, RunDyingOrDead},
+    {"MPDrone_IsDyingOrDead", 0x0001a190, RunDyingOrDead},
     {"BOT_reactToDroneAlertMsg", 0x0001a260, RunAlertMsg},
     {"BOT_validateStateChange", 0x0001a2d0, RunValidate},
     {"BOT_handleOpponentHistory", 0x0001a990, RunOpponentHistory},
@@ -1476,7 +1476,7 @@ void RandomMP() {
         memset(obj, 0, sizeof(*obj));
         obj->extraObjectData = world.mpExtra[i];
         obj->curState = (ushort)R(4);
-        obj->maybeParent = R(3) == 0 ? NULL : &world.objs[R(BOTS)];
+        obj->parent = R(3) == 0 ? NULL : &world.objs[R(BOTS)];
         obj->rotation.y = ShadowRandFloat(-3.2f, 3.2f);
         obj->radius = ShadowRandFloat(0.0f, 3.0f);
         obj->centrePoint.x = ShadowRandFloat(-10.0f, 10.0f);
@@ -1896,7 +1896,7 @@ uint32_t RunCreateObject(bool original) {
         for (int i = 0; i < 64; i++)
             MPObjects[i] = &world.mpObjs[0];
     }
-    MPSettings.maybeIsTeamGame = A(2);
+    MPSettings.isTeamGame = A(2);
     MPSettings.GameMode = A(4) == 0 ? GM_ASSASSIN : GM_ARENA;
     _MATRIX *mtx = &world.mtx;
     for (int k = 0; k < 15; k++)

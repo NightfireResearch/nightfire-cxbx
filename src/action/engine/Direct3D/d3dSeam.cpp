@@ -115,7 +115,7 @@ static bool D3DSeamTraceWantDetail(void) {
     return g_d3dTraceDetailFramesLeft > 0;
 }
 
-// Called from d3dSwap (frame boundary) and maybeD3dShutdown (level reset).
+// Called from d3dSwap (frame boundary) and d3dReleaseResources (level reset).
 static void D3DSeamTraceEndFrame(void) {
     g_d3dTraceFrame++;
     if (g_d3dTraceDetailDelay > 0) {
@@ -489,7 +489,7 @@ static inline void *D3D_UncachedAliasOf(uint32_t address) {
 // The extra-context line every table-full diagnostic prints (defined up here since RegisterTexture is the
 // first user). See D3DSeamTableExhaustedWarning's own comment for the history.
 #define D3DSEAM_TABLE_LEAK_CONTEXT \
-    "Level-scoped slots are freed on every level change by maybeD3dShutdown, so this means something " \
+    "Level-scoped slots are freed on every level change by d3dReleaseResources, so this means something " \
     "is allocating outside a level's lifetime, or a new allocator caller has appeared - see " \
     "D3DSeamTableExhaustedWarning's comment in d3dSeam.cpp."
 #define D3DSEAM_VTX_IDX_LEAK_CONTEXT D3DSEAM_TABLE_LEAK_CONTEXT
@@ -608,7 +608,7 @@ int RegisterTexture(unsigned int width, unsigned int height, int formatType, uns
         return slot;
     }
 
-    // Should not be reachable in normal play: every load registers ~500 textures, and maybeD3dShutdown frees
+    // Should not be reachable in normal play: every load registers ~500 textures, and d3dReleaseResources frees
     // all non-permanent slots on every level change. If this does fire, the occupied count below tells a real accumulation (near D3D_TEXTURE_TABLE_COUNT - something
     // registering textures outside a level's lifetime, or a new allocator caller) apart from a corrupted
     // free-slot scan (far lower).
@@ -643,7 +643,7 @@ uint32_t D3DRenderState[0xa6];
 #define D3D_DepthMaskLastValue  D3DRenderState[0x40]
 #define D3D_CullModeLastValue   D3DRenderState[0x9f]
 
-// The D3D8-internal globals Gfx.deferredTexStateA/B (maybeResetRenderState, d3dSetup) drive once changed.
+// The D3D8-internal globals Gfx.deferredTexStateA/B (resetRenderState, d3dSetup) drive once changed.
 #define D3D8_Stage0_AddressU D3D8_TRACED("D3D8_Stage0_AddressU", D3DTextureState[0][0]) // D3D8::D3D_g_DeferredTextureState
 #define D3D8_Stage0_AddressV D3D8_TRACED("D3D8_Stage0_AddressV", D3DTextureState[0][1]) // not in the Gfx struct - a separate D3D8-internal global
 
@@ -713,8 +713,8 @@ static inline uint32_t FloatToBits(float f) {
 
 // Printed when one of the 2048-entry texture/vertex-buffer/index-buffer tables (or the 256-entry overlay quad
 // table) has no free slot. Every level load registers ~500 textures and one vertex + one index buffer per
-// entity model, and maybeD3dShutdown frees them all again on each level change, so this should not fire in
-// normal play. (It once did, after 4-5 loads: our maybeD3dShutdown had been written from Ghidra's view of it,
+// entity model, and d3dReleaseResources frees them all again on each level change, so this should not fire in
+// normal play. (It once did, after 4-5 loads: our d3dReleaseResources had been written from Ghidra's view of it,
 // which a stale flow override cut short just before the release loops, so they were never ported.) It prints
 // clearly (rather than just returning 0 and letting some unrelated caller crash on the failure later) so any
 // remaining or new leak is immediately attributable.
@@ -725,11 +725,11 @@ void D3DSeamTableExhaustedWarning(const char *tableName, const char *extraContex
 }
 
 // Standard row-major 4x4 matrix product (out = base * chain), verified term-by-term against
-// maybeMultiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
+// multiplyMatrixChain's own decompiled single-link arithmetic. See d3dSetMatrix's comment for why this is
 // implemented directly rather than calling that function.
 // Alias-safe: computes fully into a local temporary before copying to *out, since some callers pass the same
-// D3DMATRIX for out and base and/or out and chain (the original's own maybeMultiplyMatrixChain call sequence
-// in maybeBuildAndSetModelViewProjectionMtx does exactly this) - writing into *out mid-computation would read
+// D3DMATRIX for out and base and/or out and chain (the original's own multiplyMatrixChain call sequence
+// in d3dSetTextureProjectionMatrix does exactly this) - writing into *out mid-computation would read
 // back partially-overwritten data for later rows/columns.
 static void Multiply4x4RowMajor(const D3DMATRIX *base, const D3DMATRIX *chain, D3DMATRIX *out) {
     D3DMATRIX result;
@@ -1241,7 +1241,7 @@ void d3dSetProjectionMatrix(D3DMATRIX *projMtx) {
 // Sets the active matrix (shader constant 0x60, combined with the cached "view" matrix), plus a secondary
 // half-scaled 2x3 basis constant (register 100) derived from a separately-cached matrix.
 //
-// The combine step deliberately does NOT call maybeMultiplyMatrixChain, despite that being what the original
+// The combine step deliberately does NOT call multiplyMatrixChain, despite that being what the original
 // decompile shows. That function casts its third argument to MatrixChainNode* and, for anything beyond a
 // single link, walks a "next chain link" pointer read from a local scratch/ping-pong buffer table whose exact
 // construction we were never able to fully verify from disassembly alone - and empirically, feeding it a
@@ -1267,7 +1267,7 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
     Gfx.d3dLastError = 0;
 
     D3DMATRIX secondaryBasis;
-    maybeD3DMATRIXcopy((undefined4 *)&secondaryBasis, (undefined4 *)&Gfx.secondaryBasisMatrix);
+    d3dMatrixCopy((undefined4 *)&secondaryBasis, (undefined4 *)&Gfx.secondaryBasisMatrix);
 
     float constants[8];
     constants[0] = secondaryBasis.f[0] * 0.5f;
@@ -1291,7 +1291,7 @@ void d3dSetMatrix(D3DMATRIX *d3dMtx) {
 // AUTOINJECT
 void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
     // No MatrixChainNode padding needed here - d3dSetMatrix computes its combine step directly rather than
-    // going through maybeMultiplyMatrixChain (see its own comment for why), so a plain D3DMATRIX is safe.
+    // going through multiplyMatrixChain (see its own comment for why), so a plain D3DMATRIX is safe.
     D3DMATRIX translationOnly;
     d3dMatrixIdentity(&translationOnly);
     translationOnly.f[3] = worldMtx->f[3];
@@ -1311,30 +1311,30 @@ void d3dSetWorldMatrix(D3DMATRIX *worldMtx) {
 }
 
 // Builds an inverse-model-view-projection-style matrix (shader constant 0x77) from a rigid-transform matrix
-// and a base matrix. Like d3dSetMatrix, this deliberately does NOT call maybeMultiplyMatrixChain - the
+// and a base matrix. Like d3dSetMatrix, this deliberately does NOT call multiplyMatrixChain - the
 // original's own call sequence here aliases dest with base and/or chain in every one of its three multiply
 // steps (dest==chain twice, dest==base once), which is exactly the kind of construction that made verifying
-// maybeMultiplyMatrixChain's internals so unreliable in the first place. Multiply4x4RowMajor is alias-safe
+// multiplyMatrixChain's internals so unreliable in the first place. Multiply4x4RowMajor is alias-safe
 // (computes into a temporary before writing *out), so it sidesteps that risk entirely rather than needing to
 // reconstruct a real MatrixChainNode - this is the same fix that unblocked d3dSetMatrix, applied to the other
 // deferred caller.
 //
-// AUTOINJECT
-void maybeBuildAndSetModelViewProjectionMtx(D3DMATRIX *rigidTransform, D3DMATRIX *base) {
+// FUNC_AT(0x000e5b20)
+void d3dSetTextureProjectionMatrix(D3DMATRIX *rigidTransform, D3DMATRIX *base) {
     D3DMATRIX workingMatrix;
     D3DMATRIX tempMatrix;
 
-    maybeD3DMATRIXcopy((undefined4 *)&workingMatrix, (undefined4 *)rigidTransform);
-    maybeTransposeRotationPart(&workingMatrix);
-    maybeInvertRigidTransform(&workingMatrix);
+    d3dMatrixCopy((undefined4 *)&workingMatrix, (undefined4 *)rigidTransform);
+    transposeRotationPart(&workingMatrix);
+    invertRigidTransform(&workingMatrix);
     Multiply4x4RowMajor(base, &workingMatrix, &workingMatrix);
 
     d3dMatrixIdentity(&tempMatrix);
-    maybeMtxApplyTransform(&tempMatrix, 0.5f, 0.5f, 0.0f);
+    mtxTranslate(&tempMatrix, 0.5f, 0.5f, 0.0f);
     Multiply4x4RowMajor(&tempMatrix, &workingMatrix, &workingMatrix);
 
-    maybeD3DMATRIXcopy((undefined4 *)&tempMatrix, (undefined4 *)&Gfx.viewMatrixCache);
-    maybeMtxInverse(&tempMatrix);
+    d3dMatrixCopy((undefined4 *)&tempMatrix, (undefined4 *)&Gfx.viewMatrixCache);
+    mtxInverse(&tempMatrix);
     Multiply4x4RowMajor(&workingMatrix, &tempMatrix, &workingMatrix);
 
     if (Gfx.d3dDevice != 0)
@@ -1459,7 +1459,7 @@ void drawShard(void *data, int countTris) {
 // No D3D8 calls at all - purely a linear-scan slot allocator and bookkeeping struct (Gfx.indexBuffers,
 // D3DIndexBufferSlotRaw in GraphicsSystem.h), matching RegisterTexture's own free-slot-scan/alignment-shift
 // pattern. Its selfPtr (+0xc) is the field d3dBindBuffers reads, not a separate table, and the free-slot test
-// (selfPtr NULL, as maybeD3dShutdown's release leaves it - the header stays set).
+// (selfPtr NULL, as d3dReleaseResources's release leaves it - the header stays set).
 #define D3D_INDEX_BUFFER_TABLE_COUNT GFX_INDEX_BUFFER_SLOTS
 
 static D3DIndexBufferSlotRaw *D3DIndexBufferSlot(int index) {
@@ -1751,7 +1751,7 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
 }
 
 // Resets the render target/texture-stage-1/current-texture/stream-buffer bindings to a clean default state,
-// then waits for the GPU to go idle. maybeD3dShutdown calls it, before it releases every resource.
+// then waits for the GPU to go idle. d3dReleaseResources calls it, before it releases every resource.
 // AUTOINJECT
 void d3dResetRenderTargetAndBuffers(void) {
     d3dRenderTargetSetup(0);
@@ -1771,7 +1771,7 @@ void d3dResetRenderTargetAndBuffers(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// maybeImmediateModePushItem
+// immediateModePushItem
 // ---------------------------------------------------------------------------------------------------------------
 
 // XBE_GLOBAL(0x002c574c, 0x4)
@@ -1783,13 +1783,13 @@ static void* Gfx_ImmediateModeVertexShader; // untraced - a global holding a ver
 // warning, decompile's actual data movements (which value goes to which output offset) are correct; every
 // offset below was cross-checked against the raw byte offsets in the compiled function, not just trusted from
 // decompile. Transforms up to 64 pending "immediate mode" quads (position rect + UV rect + packed colour, see
-// maybeImmediateModePushItem) into an axis-aligned textured-quad vertex buffer (4 vertices per item, 6 floats
+// immediateModePushItem) into an axis-aligned textured-quad vertex buffer (4 vertices per item, 6 floats
 // per vertex - the 6th is left untouched/stale, matching the original exactly) and draws them in one
 // D3DDevice_DrawVerticesUP call. UVs are normalized by the currently-loaded texture's own width/height unless
 // its nonSwizzled flag is set, in which case they're used as-is (fWidth/fHeight forced to 1.0).
 //
-// AUTOINJECT
-void maybeImmediateModeFlush(void) {
+// FUNC_AT(0x000e6030)
+void immediateModeFlush(void) {
     if ((int32_t)Gfx.immediateModeItemCount < 1)
         return;
 
@@ -1805,7 +1805,7 @@ void maybeImmediateModeFlush(void) {
         fHeight = 1.0f;
     }
 
-    float *src = (&Gfx.immediateModeItems[0][0]) + 1;       // matches the original's pfVar14 = maybeImmediateModeBuffer[0]+1
+    float *src = (&Gfx.immediateModeItems[0][0]) + 1;
     float *dst = (&Gfx.immediateModeVertices[0][0]) + 2;  // matches the original's pfVar13 = &Gfx.field22_0x28
 
     for (uint32_t i = 0; i < Gfx.immediateModeItemCount; i++) {
@@ -1875,11 +1875,11 @@ void maybeImmediateModeFlush(void) {
     Gfx.immediateModeItemCount = 0;
 }
 
-// AUTOINJECT
-void maybeImmediateModePushItem(float param1, float param2, float param3, float param4, float param5,
+// FUNC_AT(0x000e6790)
+void immediateModePushItem(float param1, float param2, float param3, float param4, float param5,
                                  float param6, float param7, float param8, float param9) {
     if (Gfx.immediateModeItemCount > 63)
-        maybeImmediateModeFlush();
+        immediateModeFlush();
 
     float *item = (&Gfx.immediateModeItems[0][0]) + (size_t)Gfx.immediateModeItemCount * 9;
     item[0] = param1;
@@ -2064,7 +2064,7 @@ void d3dSetupRenderStatesAndFog(int param1) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// maybeResetRenderState, maybeD3dShutdown
+// resetRenderState, d3dReleaseResources
 // ---------------------------------------------------------------------------------------------------------------
 
 // Resets a batch of cached render state to known defaults - texture stage 0, the transform caches
@@ -2075,8 +2075,8 @@ void d3dSetupRenderStatesAndFog(int param1) {
 // d3dSetRenderState1 directly, same reasoning), and one more opaque D3D8 register (method 0x40358, shared with
 // d3dSetup's own use of it), then unbinds the buffers and streams and the border-colour texture.
 //
-// AUTOINJECT
-void maybeResetRenderState(char param1) {
+// FUNC_AT(0x000e6550)
+void resetRenderState(char param1) {
     if (Gfx.currentlyLoadedTexture != 0) {
         Gfx.currentlyLoadedTexture = 0;
         if (Gfx.d3dDevice != 0)
@@ -2150,7 +2150,7 @@ void maybeResetRenderState(char param1) {
 
 // Caches a pair of "deferred texture state" values and, once changed, pushes them into the two D3D8-internal
 // globals as a {1 if nonzero, 3 if zero} encoding - untraced overall meaning, ported verbatim. Shares its cache
-// fields with maybeResetRenderState's own use of the same pair (which resets both to 1).
+// fields with resetRenderState's own use of the same pair (which resets both to 1).
 //
 // AUTOINJECT
 void d3dSetDeferredTextureState(int param1, int param2) {
@@ -2222,7 +2222,7 @@ void d3dSetTextureWithBorderColor(int textureSlot, int borderColour) {
 // Rebuilds Gfx.viewMatrixCache from a rigid transform: caches the transform itself (Gfx.secondaryBasisMatrix),
 // inverts a copy of it, then combines that inverse with Gfx.projMatrixCacheB (the "not yet ported" reader this
 // cache's own comment anticipated - this is that reader) via Multiply4x4RowMajor rather than
-// maybeMultiplyMatrixChain (same alias-safety reasoning as d3dSetMatrix/maybeBuildAndSetModelViewProjectionMtx).
+// multiplyMatrixChain (same alias-safety reasoning as d3dSetMatrix/d3dSetTextureProjectionMatrix).
 //
 // AUTOINJECT
 void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
@@ -2233,7 +2233,7 @@ void d3dSetViewMatrixFromRigidTransform(D3DMATRIX *rigidTransform) {
 
     D3DMATRIX inverted;
     memcpy(&inverted, &Gfx.secondaryBasisMatrix, sizeof(D3DMATRIX));
-    maybeInvertRigidTransform(&inverted);
+    invertRigidTransform(&inverted);
 
     Multiply4x4RowMajor(&Gfx.projMatrixCacheB, &inverted, &Gfx.viewMatrixCache);
 }
@@ -2245,7 +2245,7 @@ static uint8_t Gfx_AuxRenderPassActive; // not in the Gfx struct (which ends at 
 // likely case, going by the call pattern) into whatever d3dRenderTargetSetup's own single-level stack has
 // pushed. begin != 0 pushes: saves the current view/projection matrices, zeroes shader constant 0x75's first
 // two floats (same fields d3dBeginFrame zeroes each frame), pushes the render target, clears it, then rebuilds
-// the view matrix from rigidTransform (rotation-only, via maybeTransposeRotationPart) combined with projMtx.
+// the view matrix from rigidTransform (rotation-only, via transposeRotationPart) combined with projMtx.
 // begin == 0 pops: restores the saved matrices and render target/viewport, but only if a pass is actually active
 // (matching the original's own latch check exactly). Returns Gfx.auxRenderPassResult either way.
 //
@@ -2273,7 +2273,7 @@ uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATR
 
         D3DMATRIX rotationOnly;
         memcpy(&rotationOnly, rigidTransform, sizeof(D3DMATRIX));
-        maybeTransposeRotationPart(&rotationOnly);
+        transposeRotationPart(&rotationOnly);
         d3dSetViewMatrixFromRigidTransform(&rotationOnly);
 
         d3dSetMatrix(&Gfx.activeMatrix);
@@ -2320,13 +2320,13 @@ static void D3D_ReleaseVertexBuffer(int slot) {
 }
 
 // Unbinds everything and frees every level-scoped D3D resource: reached on a level change (ResetMap_Load ->
-// maybePsiResetResources -> maybeCleanupSystem -> here) and on the two relaunch paths (SetLaunchInfoAndLaunch /
+// psiResetResources -> cleanupSystem -> here) and on the two relaunch paths (SetLaunchInfoAndLaunch /
 // WriteStateFileAndLaunch). The blur history, then every texture slot (ReleaseTexture refuses the permanent
 // ones), then every vertex buffer and every index buffer.
 //
-// AUTOINJECT
-void maybeD3dShutdown(void) {
-    maybeResetRenderState(1);
+// FUNC_AT(0x000e7370)
+void d3dReleaseResources(void) {
+    resetRenderState(1);
 
     if (Gfx.currentlyLoadedTexture != 0) {
         Gfx.currentlyLoadedTexture = 0;
@@ -2607,7 +2607,7 @@ void d3dSetup(void) {
 // ---------------------------------------------------------------------------------------------------------------
 
 
-// Called (only ever from maybe_psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
+// Called (only ever from psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
 // into the aux render target via d3dBeginEndAuxRenderPass(1, ...). First closes that render pass (begin=0,
 // NULL/NULL - restores the normal view/projection/viewport), then runs a two-pass box blur that ping-pongs
 // between two externally-chosen texture slots (Gfx.auxRenderPassResult/Gfx.shadowBlurTargetB, both maintained
@@ -2634,8 +2634,8 @@ void psiBlurCharacterShadow(void) {
     if (Gfx.d3dDevice != 0)
         D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
     Gfx.d3dLastError = 0;
-    maybeImmediateModePushItem(0.0f, 0.0f, 128.0f, 128.0f, 0.0f, 0.0f, 256.0f, 256.0f, BitsToFloat(0xff808080u));
-    maybeImmediateModeFlush();
+    immediateModePushItem(0.0f, 0.0f, 128.0f, 128.0f, 0.0f, 0.0f, 256.0f, 256.0f, BitsToFloat(0xff808080u));
+    immediateModeFlush();
 
     // Pass 2: upsample Gfx.shadowBlurTargetB -> Gfx.auxRenderPassResult.
     d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
@@ -2649,8 +2649,8 @@ void psiBlurCharacterShadow(void) {
     if (Gfx.d3dDevice != 0)
         D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
     Gfx.d3dLastError = 0;
-    maybeImmediateModePushItem(0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 0.0f, 128.0f, 128.0f, BitsToFloat(0xff808080u));
-    maybeImmediateModeFlush();
+    immediateModePushItem(0.0f, 0.0f, 256.0f, 256.0f, 0.0f, 0.0f, 128.0f, 128.0f, BitsToFloat(0xff808080u));
+    immediateModeFlush();
 
     // Pop back to the backbuffer and unbind stage 0.
     d3dRenderTargetSetup(0);
@@ -2761,8 +2761,8 @@ void psiBlurScreen(int blurIntensity) {
     }
 
     uint32_t blurColour = ((uint32_t)blurIntensity << 24) | 0x808080u;
-    maybeImmediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, BitsToFloat(blurColour));
-    maybeImmediateModeFlush();
+    immediateModePushItem(0.0f, 0.0f, 640.0f, 480.0f, 0.0f, 0.0f, 640.0f, 480.0f, BitsToFloat(blurColour));
+    immediateModeFlush();
 
     if (Gfx.deferredTexStateA != 1 || Gfx.deferredTexStateB != 1) {
         Gfx.deferredTexStateA = 1;
@@ -2776,7 +2776,7 @@ void psiBlurScreen(int blurIntensity) {
     }
 }
 
-// psiBlurScreen's three history slots, released and forgotten (maybeD3dShutdown)
+// psiBlurScreen's three history slots, released and forgotten (d3dReleaseResources)
 static void D3D_ReleaseBlurHistory(void) {
     for (int i = 0; i < 3; i++) {
         if (Gfx_BlurHistoryTextureSlots[i] != 0)
@@ -2810,7 +2810,7 @@ void d3dInitShadowBlurTextures(void) {
 
 // Sets Gfx.levelDirectionVector plus the same "matrix needs regen" flag d3dSetMatrix/d3dSetViewMatrixFromRigid
 // Transform use (Gfx.levelDirectionDirty, though those two always set it to -1, not 1 - a different value for a
-// different purpose reusing the same flag). Only ever called from maybePsiResetResources (not yet
+// different purpose reusing the same flag). Only ever called from psiResetResources (not yet
 // reimplemented) with one of 4 hardcoded axis vectors selected by GameState.NextLevelHashcode - looks like a
 // per-mission override of some directional value (lighting? wind/particle direction?), but no reader of
 // Gfx.levelDirectionVector was found anywhere in the binary to confirm which.
@@ -2847,8 +2847,8 @@ void * Texture_GetRawDataPtr(int textureSlot) {
 // for a multi-stream (streamCount > 0) set, matching the allocator's own two formulas exactly.
 //
 // AUTOINJECT
-int d3dGetVertexDataSize(int vtxCnt, char maybeSkinned, int streamCount) {
-    int stride = (maybeSkinned != 0) ? 0x20 : 0x1c;
+int d3dGetVertexDataSize(int vtxCnt, char skinned, int streamCount) {
+    int stride = (skinned != 0) ? 0x20 : 0x1c;
     if (streamCount > 0)
         stride = 6;
     return stride * vtxCnt + 3;
@@ -3242,7 +3242,7 @@ static void TransformVector3(float *out, const float *m, const float *v, bool tr
 void d3dsetVertexShaderConstant(void) {
     D3DMATRIX inverseActive;
     memcpy(&inverseActive, &Gfx.activeMatrix, sizeof(D3DMATRIX));
-    maybeInvertRigidTransform(&inverseActive);
+    invertRigidTransform(&inverseActive);
     const float *m = (const float*)&inverseActive;
 
     bool anyLight = false;

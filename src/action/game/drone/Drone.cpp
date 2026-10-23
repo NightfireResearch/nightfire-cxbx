@@ -237,7 +237,7 @@ bool Drone_PositionVisible(_VECTOR *pos, cel_tag *cel) {
 // A drone that has left every room: switched off and marked for deletion; in multiplayer the bot code deals with it.
 // AUTOINJECT
 void Drone_FellOutMap(obj_tag *gameObj) {
-    if (MPSettings.maybeDroneAIEnabled != 0) {
+    if (MPSettings.dronesAreBots != 0) {
         BOT_fellOutMap(gameObj);
         return;
     }
@@ -267,7 +267,7 @@ void Drone_AddDynamicAwarePoint(uchar type, obj_tag *obj, _VECTOR *pos, cel_tag 
 // again while the fuse is under 180 (alone for 0x3b-0x40); 8 m for a remote mine not in state 3.
 // AUTOINJECT
 void Drone_BuildDynamicAwarePoints(void) {
-    if (MPSettings.maybeDroneAIEnabled)
+    if (MPSettings.dronesAreBots)
         return;
     NPCGlobals.numAwarePoints = 0;
     memset(NPCGlobals.awarePoints, 0, sizeof(NPCGlobals.awarePoints));
@@ -660,7 +660,7 @@ void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
     Vec_Subtract(&drone->opponentLastPos, &gameObj->position, &drone->opponentDelta);
     drone->distanceToTarget = Vec_Magnitude(&drone->opponentDelta);
     drone->opponentAngles.x = 0.0f;
-    double yaw = maybeAtan2(drone->opponentDelta.x, drone->opponentDelta.z);
+    double yaw = Atan2(drone->opponentDelta.x, drone->opponentDelta.z);
     drone->opponentAngles.y = (float)yaw;
     drone->opponentAngles.z = 0.0f;
     drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, (float)(yaw + kPi));
@@ -902,7 +902,7 @@ bool NDrone2_DoAnimation(Drone_tag *drone) {
 void Drone_Control(obj_tag *gameObj) {
     if (!NPCGlobals.enabled || Drone_bDisableSystem)
         return;
-    if (MPSettings.maybeDroneAIEnabled
+    if (MPSettings.dronesAreBots
         && (gameObj->objectType == OBJECTTYPE_DEAD_DRONE || Control_Plr2Ind(gameObj) < 0))
         return;
 
@@ -913,7 +913,7 @@ void Drone_Control(obj_tag *gameObj) {
     dcv.cel = gameObj->inCel;
     dcv.aiStateMachine = &drone->sm;
     if (NDrone2_PreDroneControl(&dcv)) {
-        if (MPSettings.maybeDroneAIEnabled
+        if (MPSettings.dronesAreBots
             && (gameObj->objectType == OBJECTTYPE_DEAD_DRONE || Control_Plr2Ind(gameObj) < 0))
             return;
         bool (*control)(DCVars_tag *dcv) = DroneTypeSettings[dcv.drone->dtype].control;

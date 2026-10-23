@@ -167,7 +167,7 @@ static float ApplyDeadzoneAndRescale(float raw, float threshold) {
 }
 
 // Real signature/behaviour: see the block comment above. Called once per frame by the original (untouched)
-// Input_Update, and again in a drain loop by maybeInputShutdown to let rumble
+// Input_Update, and again in a drain loop by InputShutdown to let rumble
 // motors spin down before handing off to another engine.
 //
 // AUTOINJECT
@@ -342,7 +342,7 @@ void psiInput_PollDevices(void) {
 
 // Frames of rumble left per controller; -1 = none running. All -1 in the XBE's data.
 // XBE_GLOBAL(0x0019481c, 0x10)
-int controller_maybeRumbleTimeout[4] = {-1, -1, -1, -1};
+int controller_rumbleTimeout[4] = {-1, -1, -1, -1};
 
 // AUTOINJECT
 bool psiInput_ControllerIsActive(uint i) {
@@ -413,8 +413,8 @@ void psiInput_RumbleStart(ushort controllerNum, int time, int intensity) {
     
     psiInput_RumbleSetIntensity(controllerNum, intensity, intensity);
     
-    if(controller_maybeRumbleTimeout[controllerNum] < time)
-        controller_maybeRumbleTimeout[controllerNum] = time;
+    if(controller_rumbleTimeout[controllerNum] < time)
+        controller_rumbleTimeout[controllerNum] = time;
 
     // Weird self-assignment - ternary operator of some sort?
     
@@ -426,11 +426,11 @@ void psiInput_RumbleUpdate(void) {
     for(int i = 0; i < 4; i++) {
 
         // Skip if timeout has already been hit
-        if(controller_maybeRumbleTimeout[i] <= -1)
+        if(controller_rumbleTimeout[i] <= -1)
             continue;
 
         // Decrement then check if timeout has been hit
-        if(--controller_maybeRumbleTimeout[i] < 0)
+        if(--controller_rumbleTimeout[i] < 0)
             psiInput_RumbleSetIntensity(i, 0, 0);
     }
     
@@ -456,7 +456,7 @@ void psiInput_ResetRumble(unsigned int i) {
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     psiInput_RumbleSetIntensity(i, 0, 0);
-    controller_maybeRumbleTimeout[i] = -1;
+    controller_rumbleTimeout[i] = -1;
 
 }
 
@@ -507,7 +507,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
         // If in some pause state, stop rumble
         if(GameState.SomeAlternatePauseState) {
             psiInput_RumbleSetIntensity(i, 0, 0);
-            controller_maybeRumbleTimeout[i] = -1;
+            controller_rumbleTimeout[i] = -1;
         }
     }
 
@@ -758,8 +758,8 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
 // Before handing over to another engine: stops every controller's rumble and clears its sticks and buttons
 // (prevButtons all set, so nothing held now counts as a new press), then keeps polling until no connected
 // controller's rumble is still changing or its last feedback write is still in flight - at most a second.
-// AUTOINJECT
-void maybeInputShutdown(void) {
+// FUNC_AT(0x000e8030)
+void InputShutdown(void) {
     for (int i = 0; i < 4; i++) {
         ControllerStateStruct *c = &XboxInputs.Controllers[i];
         c->rumbleA = 0;

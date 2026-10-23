@@ -392,7 +392,7 @@ void RandomWorld() {
     GameState.NumFramesUnpaused = 1000 + ShadowRand(10);
     static const HASHCODE levels[] = {HT_Level_TowerA, HT_Level_TowerB, HT_Level_TowerC, HT_Level_HendersonA};
     GameState.CurrentLevelHashcode = levels[ShadowRand(4)];
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     FRAME_RATE_INT = ShadowRand(2) ? 60 : 50;
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);

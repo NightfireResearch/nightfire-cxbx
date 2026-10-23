@@ -108,7 +108,7 @@ const StackEntry StackEntries[] = {
     {Asm_Quat_QuatToMat, (const void *)&Quat_QuatToMat},
     {Asm_Vec_Normalise, (const void *)&Vec_Normalise},
     {Asm_Vec_NormaliseLen, (const void *)&Vec_NormaliseLen},
-    {Asm_maybeAtan2, (const void *)&maybeAtan2},
+    {Asm_Atan2, (const void *)&Atan2},
     {Asm_MenuManager_GetStatus, (const void *)&MenuManager_GetStatus},
 };
 

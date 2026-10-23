@@ -119,7 +119,7 @@ bool NDrone2_StartRouteCreep(int unused, AIRoute_tag *route, DCVars_tag *dcv, ch
     if (!LinkCreep_Calc(route, fromEnd))
         return false;
     LinkCreep_Dest(route, 0, &route->waypoint);
-    NDrone2_maybeCalcDistanceAndDirToTarget(dcv, &route->waypoint);
+    NDrone2_SetMoveTarget(dcv, &route->waypoint);
     return true;
 }
 
@@ -191,7 +191,7 @@ uint NDrone2_FollowRoute(AIRoute_tag *route, DCVars_tag *dcv) {
     uint status = AINetwork_FollowRoute(route, dcv);
     if (status == AIROUTE_FOLLOWING && route->count == 0)
         status = AIROUTE_DIRECT;
-    NDrone2_maybeCalcDistanceAndDirToTarget(dcv, &route->waypoint);
+    NDrone2_SetMoveTarget(dcv, &route->waypoint);
     return status;
 }
 

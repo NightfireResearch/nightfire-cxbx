@@ -157,7 +157,7 @@ enum ScriptFadeFlags {
 };
 
 typedef struct SCRIPTINFO {
-    _MATRIX maybeMatrix;
+    _MATRIX matrix;
     _MATRIX otherMatrix;      // 0x3c - where script event 6 asks Script_Free to put the player back
     void *scriptPlayer;       // 0x78 - the SCRIPTPLAYER given to Script_Load; its entity streams' objects point
                               //        back at it (obj_tag::scriptPlayer), its anim streams' at extraObjectData
@@ -171,9 +171,9 @@ typedef struct SCRIPTINFO {
                               // Script_Free/Script_Play/SP_Update
     int waitFrames; // 0x94 - Script_Update waits while non-zero, counting it down when positive; script event 3
                     // sets it to its argument - 1, so 0 gives -1: wait until SP_UnPause clears it
-    float maybeProgressFrames; // 0x98 - elapsed playback frames for the whole script (vs SSTREAM::elapsedFrames,
+    float elapsedFrames; // 0x98 - elapsed playback frames for the whole script (vs SSTREAM::elapsedFrames,
                                 // which is per-stream); advanced by FRAME_RATE_MUL in Script_Update, compared
-                                // against maybeNumFrames to detect "near the end"
+                                // against endFrame to detect "near the end"
     float fadeElapsedFrames;   // 0x9c - 0.0 means no fade-out running. Script_FFwd kicks this off (sets it to
                                 // FRAME_RATE_MUL); Script_Update advances it by FRAME_RATE_MUL each tick until it
                                 // passes fadeFrames, then leaves it capped (see ScriptFade_ThresholdHit) until
@@ -183,11 +183,11 @@ typedef struct SCRIPTINFO {
     ushort numElements; // 0xaa2 - number of live entries in streamDataBuffer (see Script_GetObj/Script_HideObj)
     ushort numKeys;     // 0xaa4
     ushort loopStart;   // 0xaa6 - the frame a looping script goes back to
-    ushort maybeNumFrames; // at 0xaa8 - the script's end frame
+    ushort endFrame; // at 0xaa8 - the script's end frame
     char playbackFlags; // 0xaaa - see ScriptPlaybackFlags
     uchar streamNum; // at 0xaab - the stream Script_Run is running
     uchar fadeFrames;  // 0xaac - target frame count for the Script_FFwd-triggered fade-out (compared against
-                       // fadeElapsedFrames); unrelated to maybeNumFrames
+                       // fadeElapsedFrames); unrelated to endFrame
     char fadeFlags;    // 0xaad - see ScriptFadeFlags
     char playerEnableFlags; // 0xaae - passed as Player_Enable's int param by Script_Free (ScriptFlag_EnablePlayerOnFree)
     char unknown_0xaaf;
@@ -199,13 +199,13 @@ LAYOUT_32(offsetof(SCRIPTINFO, keys) == 0x84, "Offset of keys is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, scale) == 0x8c, "Offset of scale is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, scriptHashcode) == 0x90, "Offset of scriptHashcode is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, waitFrames) == 0x94, "Offset of waitFrames is bad");
-LAYOUT_32(offsetof(SCRIPTINFO, maybeProgressFrames) == 0x98, "Offset of maybeProgressFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, elapsedFrames) == 0x98, "Offset of elapsedFrames is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, fadeElapsedFrames) == 0x9c, "Offset of fadeElapsedFrames is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, streamDataBuffer[0]) == 0xa0, "Offset of streamDataBuffer is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, scriptFlags) == 0xaa0, "Offset of scriptFlags is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, numElements) == 0xaa2, "Offset of numElements is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, loopStart) == 0xaa6, "Offset of loopStart is bad");
-LAYOUT_32(offsetof(SCRIPTINFO, maybeNumFrames) == 0xaa8, "Offset of maybeNumFrames is bad");
+LAYOUT_32(offsetof(SCRIPTINFO, endFrame) == 0xaa8, "Offset of endFrame is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, playbackFlags) == 0xaaa, "Offset of playbackFlags is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, streamNum) == 0xaab, "Offset of streamNum is bad");
 LAYOUT_32(offsetof(SCRIPTINFO, fadeFrames) == 0xaac, "Offset of fadeFrames is bad");

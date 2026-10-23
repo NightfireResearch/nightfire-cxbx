@@ -557,7 +557,7 @@ void RandomWorld() {
     if (d->nearestDrone != NULL)
         d->nearestDrone->gameObj = &world.objs[nearest];    // NoBunching does not check it
     memset(&world.hit, 0, sizeof(world.hit));
-    RandomVector(&world.hit.maybehitDirection, 1.0f);
+    RandomVector(&world.hit.hitDirection, 1.0f);
     d->lastHit = ShadowRand(2) ? &world.hit : NULL;
     memset(&world.node, 0, sizeof(world.node));
     RandomVector(&world.node.pos, 10.0f);
@@ -598,7 +598,7 @@ void RandomWorld() {
     }
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    MPSettings.maybeDroneAIEnabled = ShadowRand(4) == 0;
+    MPSettings.dronesAreBots = ShadowRand(4) == 0;
     MPSettings.numPlayers = ShadowRand(kPlayers + 1);
     for (int i = 0; i < kPlayers; i++)
         MPGame.players[i].playerObj = ShadowRand(4) == 0 ? NULL : &world.players[i];

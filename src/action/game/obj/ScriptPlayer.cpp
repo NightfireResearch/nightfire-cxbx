@@ -73,7 +73,7 @@ void SP_HideObj(obj_tag *obj, char hide) {
         return;
 
     SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER*)obj->extraObjectData;
-    scriptPlayer->maybeHideState = hide;
+    scriptPlayer->hideState = hide;
     Script_HideObj(scriptPlayer->scriptInfos[scriptPlayer->nthScript], hide);
 }
 
@@ -252,7 +252,7 @@ float SP_GetHitDamage(obj_tag *obj, obj_tag **outHitObjects, ushort maxHitObject
 void SP_Update(obj_tag* obj) {
     SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER*)obj->extraObjectData;
 
-    if (scriptPlayer->maybeHideState != 0)
+    if (scriptPlayer->hideState != 0)
         return;
 
     if (scriptPlayer->disableSwitchChannel != 0 && switch_channels[scriptPlayer->disableSwitchChannel] == 0)
@@ -467,9 +467,9 @@ void SP_SetPos(obj_tag *gameObj, _VECTOR *newPos) {
   if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL)
     return;
 
-  Vec_Copy(newPos, Mat_Position(scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix));
+  Vec_Copy(newPos, Mat_Position(scriptPlayer->scriptInfos[scriptPlayer->nthScript]->matrix));
 
-  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->matrix);
     
 }
 
@@ -484,9 +484,9 @@ void SP_SetPosRot(obj_tag *gameObj, _MATRIX *newMtx) {
   if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] == NULL)
     return;
 
-  Mat_Copy(newMtx, &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+  Mat_Copy(newMtx, &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->matrix);
 
-  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->maybeMatrix);
+  Script_SetPosRot(scriptPlayer->scriptInfos[scriptPlayer->nthScript], &scriptPlayer->scriptInfos[scriptPlayer->nthScript]->matrix);
     
 }
 

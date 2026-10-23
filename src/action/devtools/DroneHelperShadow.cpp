@@ -507,7 +507,7 @@ const Case kMaking[] = {
 };
 
 const Case kTalk[] = {
-    CASE(Drone_maybeDisallowedFromSayingThisSfx, 0x00036230, K_DRONE_UINT, AL),
+    CASE(Drone_IsSayingSfx, 0x00036230, K_DRONE_UINT, AL),
     CASE(DroneFunc_ChooseSFXByID, 0x00036290, K_SFX_ID, ALL),
     CASE(NDrone2_PlayFacialAnim, 0x000374e0, K_DCV_UINT, 0),
     CASE(DroneFunc_InjuredSFX, 0x0003b830, K_DCV_UINT, AL),
@@ -550,7 +550,7 @@ const Case kWalking[] = {
     CASE(NDrone2_AtDest, 0x00043fd0, K_DCV, AL),
     CASE(NDrone2_CanWalkStraightTo, 0x00045340, K_WALK, AL),
     CASE(NDrone2_MoveTestRelative, 0x000453e0, K_RELATIVE, AL),
-    CASE(NDrone2_maybeCalcDistanceAndDirToTarget, 0x00046080, K_DCV_CELPOS, 0),
+    CASE(NDrone2_SetMoveTarget, 0x00046080, K_DCV_CELPOS, 0),
 };
 
 int Test(const Case *cases, int count, int trials, int *differ) {

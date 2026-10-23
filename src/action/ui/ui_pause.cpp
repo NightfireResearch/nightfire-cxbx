@@ -426,7 +426,7 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                 SFXFadeDown(1);
                 GameFlow_PushState(7, 80.0f, 0xff);
                 MenuManager_Delete(managerNum);
-                GameState.maybePaused = 1;
+                GameState.LevelEnding = 1;
                 user_restarted_or_quit = 1;
                 break;
             case 1:     // no

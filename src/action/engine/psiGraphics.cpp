@@ -3,7 +3,7 @@
 #include "Direct3D/d3dhelpers.h"
 #include "Direct3D/d3dSeam.h" // d3dSetMatrix is reimplemented there now, not called through an AUTOGEN passthrough
 #include "Woman.h"                // MemoryForWoman
-#include "psiInput.h"             // controllerIsPresent, controller_maybeRumbleTimeout
+#include "psiInput.h"             // controllerIsPresent, controller_rumbleTimeout
 #include "../memory.h"            // Mem_Free
 #include "psiSave.h"              // psiInternalLoadingDataState
 #include "Fmv.h"
@@ -72,7 +72,7 @@ void psiAgeParticleOverlayRing(void) {
 }
 
 // ---------------------------------------------------------------------------------------------------------------
-// maybePsiResetResources
+// psiResetResources
 // ---------------------------------------------------------------------------------------------------------------
 
 
@@ -132,8 +132,8 @@ static int someThirdTexBytes;
 // Called from ResetMap_Load at every level change: returns the psi layer (the Xbox platform glue) to its
 // just-booted state before the next level's data is loaded.
 //
-// AUTOINJECT
-void maybePsiResetResources(void) {
+// FUNC_AT(0x000e02e0)
+void psiResetResources(void) {
 
     // Assume every controller is present, so the first psiInput_MapInputs after the load sees no "controller
     // just plugged in" edge (which would skip the attract movie) for a pad that was already there
@@ -150,13 +150,13 @@ void maybePsiResetResources(void) {
     psiInternalLoadingDataState = 0;
     ScreenBlur = 0;
 
-    maybeBackgroundMovieCleanup();
+    BackgroundMovieCleanup();
     BackgroundMovieHashcode = 0; // as psiStopBackgroundMovie does after the same call
 
-    maybeCleanupSystem(); // releases the level's D3D resources (see d3dSeam.cpp's maybeD3dShutdown notes)
+    cleanupSystem(); // releases the level's D3D resources (see d3dSeam.cpp's d3dReleaseResources notes)
 
     for (int i = 0; i < 4; i++)
-        controller_maybeRumbleTimeout[i] = -1; // no rumble running
+        controller_rumbleTimeout[i] = -1; // no rumble running
 
     // REP STOSD clears in the original
     memset(&d3dGeometryObjs, 0, sizeof(d3dGeometryObjs));
@@ -228,7 +228,7 @@ void psiPreDraw(void) {
     psiAgeParticleOverlayRing();
     d3dBeginFrame();
     d3dClear(0, GameState.CurrentLevelHashcode == HT_Level_Menu_Pre, true);
-    maybeStartBackgroundMovie();
+    psiUpdateBackgroundMovie();
 }
 
 // RegisterTexture's format for a texture: by depth for formatType 0, one of four for 2..5, else 3
@@ -288,7 +288,7 @@ void psiCreateMapTextures(map_tag *mapptr) {
         int *frames = &tex->baseIdx;
         if (duplicate) {
             // The index is taken as Tex[index + 1] whatever FirstMapTexIdx is - right for the first map loaded after
-            // maybePsiResetResources, whose textures start at 1
+            // psiResetResources, whose textures start at 1
             TextureInfo *original = Tex[(magic & 0xffff) + 1];
             for (int f = 0; f < tex->numFrames; f++)
                 frames[f] = (&original->baseIdx)[f];
@@ -344,8 +344,8 @@ void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
     d3dGeometryObjs[NumXboxEntityGfxsCreated] = model;
 
     uint8_t *data = model->data;
-    model->vtxBuffers = d3dCreateVertexBuffers(model->vtxCnt, PtrTo32(data), model->maybeSkinned != 0, 0);
-    data += d3dGetVertexDataSize(model->vtxCnt, model->maybeSkinned != 0, 0);
+    model->vtxBuffers = d3dCreateVertexBuffers(model->vtxCnt, PtrTo32(data), model->skinGroupCnt != 0, 0);
+    data += d3dGetVertexDataSize(model->vtxCnt, model->skinGroupCnt != 0, 0);
     model->idxBuffer = d3dCreateIndexBuffer(model->idxCnt, PtrTo32(data));
     data += d3dGetIndexDataSize(model->idxCnt);
     model->afterPrimitives = data + model->primitiveCnt * 12;
@@ -353,7 +353,7 @@ void psiCreateEntityGfx(celglist_tag *param_1, map_tag *param_2, uint param_3) {
 
     if (model->batchCnt != 0 && model->batchVtxCnt != 0) {
         model->batchVtxBuffers = d3dCreateVertexBuffers(model->batchVtxCnt,
-                                                        PtrTo32(model->afterPrimitives + model->maybeSkinned * 0x36), 0,
+                                                        PtrTo32(model->afterPrimitives + model->skinGroupCnt * 0x36), 0,
                                                         model->batchCnt);
         d3dGetVertexDataSize(model->batchVtxCnt, 0, model->batchCnt); // the original ignores this one's result
     }

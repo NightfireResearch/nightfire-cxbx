@@ -491,7 +491,7 @@ void Mission_Update(void) {
             break;
 
         case 2: // Fail screen
-            GameState.maybePaused = true;
+            GameState.LevelEnding = true;
             MissionState = 2;
             LevelToEndTo = HT_Level_Menu_Pre;
             InternalState = 7;
@@ -502,7 +502,7 @@ void Mission_Update(void) {
 
         case 3: // Quit mission
             TimeOut_148 = 1.0f;
-            GameState.maybePaused = true;
+            GameState.LevelEnding = true;
             MissionState = 3;
             InternalState = 7;
             LevelToEndTo = HT_Level_Menu_Pre;
@@ -533,7 +533,7 @@ void Mission_Update(void) {
         case 6: // Mission complete, exit to FMV / main menu
             MissionState = 6;
             InternalState = 7;
-            GameState.maybePaused = true;
+            GameState.LevelEnding = true;
             LevelToEndTo = Mission_GetEndTo(GameState.CurrentLevelHashcode);
             Text_AddMsg(0, 0, 3, (char*)Txt_BindLabel(TXT_MISSION_COMPLETE, 0), 0, 4 * (short)VIDEO_FRAME_RATE); // 4 seconds
             TimeOut_148 = 4 * VIDEO_FRAME_RATE;

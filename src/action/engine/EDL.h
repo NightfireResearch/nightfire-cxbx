@@ -27,17 +27,17 @@ typedef struct {
     int ourEndianness; // Endianness of the host machine performing the decompression
     int fileEndianness; // Endianness of the file we've been provided
     int errNum;
-} maybeEDLDecompressorState;
+} EDLDecompressorState;
 
-uint32_t fix_endianness32(maybeEDLDecompressorState *state, uint32_t dataIn);
-void maybeEDL_DecompressSection(char* compressedData, edl_section_t* decompressedData);
-uint32_t maybeEDL_GetCompressedSize(char* data);
-uint32_t maybeEDL_GetDecompressedSize(char* data);
-void EDL_Header_Parse(maybeEDLDecompressorState *state);
-bool maybeEDL_DecompressBlock(char* src, char* dest);
+uint32_t fix_endianness32(EDLDecompressorState *state, uint32_t dataIn);
+void EDL_DecompressSection(char* compressedData, edl_section_t* decompressedData);
+uint32_t EDL_GetCompressedSize(char* data);
+uint32_t EDL_GetDecompressedSize(char* data);
+void EDL_Header_Parse(EDLDecompressorState *state);
+bool EDL_DecompressBlock(char* src, char* dest);
 
 // The decompression algorithms
-void Inflate_directcopy(maybeEDLDecompressorState *state);
+void Inflate_directcopy(EDLDecompressorState *state);
 
 
 #endif // EDL_H_

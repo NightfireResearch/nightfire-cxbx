@@ -296,7 +296,7 @@ void Page_Update(M_MANAGER *mgr, M_PAGE *page, int takingInput) {
         cursor->positionY = (page->focused->height >> 1) + page->focused->y + mgr->currentPage->control.y;
         cursor->onscreenWidth = page->focused->width;
         cursor->onscreenHeight = page->focused->height;
-        cursor->maybeEnabled = (uchar)page->focused->depth + 1;
+        cursor->depth = (uchar)page->focused->depth + 1;
     }
     if (page->control.extraControlHash != 0) {
         M_CONTROL *focused = page->focused;

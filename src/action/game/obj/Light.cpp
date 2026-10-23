@@ -236,7 +236,7 @@ light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) 
         if (type == 2) {
             if (!(mask & 0x80))
                 continue;
-            distance = Vec_Dist2D(&light->maybeParentObject->position, sphere);
+            distance = Vec_Dist2D(&light->parentObject->position, sphere);
             if (distance > 4.0f)
                 continue;
             light->intensity = (float)((1.0f - 0.25f * distance) * 50.0f);

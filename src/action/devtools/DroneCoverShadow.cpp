@@ -714,7 +714,7 @@ void RandomWorld() {
         FRAME_RATE_INT = 50;
         FRAME_RATE_DIV = 1.2f;
     }
-    MPSettings.maybeDroneAIEnabled = ShadowRand(3) == 0;
+    MPSettings.dronesAreBots = ShadowRand(3) == 0;
     NPCGlobals.NDrone2List = &world.drones[0];
     NPCGlobals.unknown174 = ShadowRand(3) == 0;
     switch_channels[0x99] = (char)ShadowRand(2);
@@ -1040,7 +1040,7 @@ void DroneCoverShadow_Run(void) {
     static uint32_t rand[2];
     uint32_t frameRate = FRAME_RATE_INT;
     float frameDiv = FRAME_RATE_DIV;
-    uint32_t droneAI = MPSettings.maybeDroneAIEnabled;
+    uint32_t droneAI = MPSettings.dronesAreBots;
     memcpy(gameState, &GameState, sizeof(gameState));
     memcpy(npc, &NPCGlobals, sizeof(npc));
     memcpy(channels, switch_channels, sizeof(channels));
@@ -1054,7 +1054,7 @@ void DroneCoverShadow_Run(void) {
     regions.Add(RandWords.game(), 8);
     regions.Add(&FRAME_RATE_INT, 4);
     regions.Add(&FRAME_RATE_DIV, 4);
-    regions.Add(&MPSettings.maybeDroneAIEnabled, sizeof(MPSettings.maybeDroneAIEnabled));
+    regions.Add(&MPSettings.dronesAreBots, sizeof(MPSettings.dronesAreBots));
 
     InstallFakes();
     NfWarnMuted++;
@@ -1080,5 +1080,5 @@ void DroneCoverShadow_Run(void) {
     XbeOursWrite(RandWords.at, rand, sizeof(rand));
     FRAME_RATE_INT = frameRate;
     FRAME_RATE_DIV = frameDiv;
-    MPSettings.maybeDroneAIEnabled = droneAI;
+    MPSettings.dronesAreBots = droneAI;
 }

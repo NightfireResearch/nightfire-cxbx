@@ -93,7 +93,7 @@ bool NDrone2_NearArmedDrone(DCVars_tag *dcv, float radius, char check) {
         if (other == self)
             continue;
         obj_tag *obj = other->gameObj;
-        if (obj == NULL || MPDrone_MaybeIsDyingOrDead(obj))
+        if (obj == NULL || MPDrone_IsDyingOrDead(obj))
             continue;
         if (other->flags & 0x4200)
             continue;

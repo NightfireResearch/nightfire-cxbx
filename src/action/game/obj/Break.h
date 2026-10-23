@@ -18,7 +18,7 @@ typedef struct {
     BreakType breakType;        // 0x00 - key 0
     float health;               // 0x04 - key 1; broken below 0
     ushort mask;                // 0x08 - the damage classes it ignores: the complement of key 2 (0 for none)
-    ushort unknown_maybe_pad;
+    ushort _pad0a;
 } ObjData_Break;
 
 static_assert(sizeof(ObjData_Break) == 0xc, "Size of ObjData_Break is wrong");

@@ -14,11 +14,11 @@
 // The order QuickSort sorts in: -1 to put a before b, 1 after, 0 for either. A NaN compares as neither less nor more
 // unless said.
 
-// Sprites by maybeEnabled (as a signed byte), the highest first
+// Sprites by depth (as a signed byte), the highest first
 // AUTOINJECT
 int CompSpr(const void *a, const void *b) {
-    char x = (char)(*(sprite *const *)a)->maybeEnabled;
-    char y = (char)(*(sprite *const *)b)->maybeEnabled;
+    char x = (char)(*(sprite *const *)a)->depth;
+    char y = (char)(*(sprite *const *)b)->depth;
     if (x > y)
         return -1;
     return x < y;
