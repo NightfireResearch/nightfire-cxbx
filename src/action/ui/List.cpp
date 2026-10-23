@@ -15,8 +15,6 @@
 
 // The bar at the right
 #define LIST_BAR_WIDTH 16
-// The texture and rectangle of a row's stripe
-#define STRIPE_TEXTURE ((HASHCODE)0x3000042)
 
 // AUTOINJECT
 void List_Init(M_LIST *list, NEW_CONTROL *create, M_CONTROL *parent) {
@@ -496,7 +494,8 @@ static void List_DrawRow(M_PAGE *page, M_PAGE *own, M_LIST *list, LIST_ROW *row,
         short y = Ftol(Component_GetHandle(&list->control)->top + (rowNum - list->topRow) * (double)list->rowHeight +
                        list->control.y + 3.0);
         Menu_InitializeSprite(row->stripe, 0x28, own->control.x + list->control.x, y + own->control.y,
-                              list->control.width, Ftol(list->rowHeight), NULL, STRIPE_TEXTURE, list->stripeColour,
+                              list->control.width, Ftol(list->rowHeight), NULL, HT_Texture_StripeTexture,
+                                  list->stripeColour,
                               list->stripeColour, 0x26, 0x13, 1, 1, 0);
     }
 

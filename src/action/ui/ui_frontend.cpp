@@ -31,8 +31,6 @@ uint8_t mp_bond_bot_taken;
 #define TXT_LEGAL_NOTICE ((Action_TranslatedText)0x375)
 #define TXT_PRESS_START ((Action_TranslatedText)0x2fb)
 
-#define FMV_IDENT_0738 ((HASHCODE)0x07380048)  // the second ident P_INTRO plays
-
 #define MENU_IDLE_ATTRACT 0xa8c     // frames without input before the start page and the main menu show P_ATTRACT
 #define MENU_IDLE_LANGUAGE 600      // frames without input before the language page takes the language shown
 
@@ -149,7 +147,7 @@ bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         M_CONTROL *focus = (M_CONTROL *)__Menu_SendEx(managerNum, C_LANGUAGE, button, MessageType_GetControl, 0, 0);
         __Menu_SendMessage(&manager[managerNum].control, MessageType_SetCursor, 0, (intptr_t)focus);
         if ((uint)LanguageToLoad < ARRAY_SIZE(language_help_text) && language_help_text[LanguageToLoad] != NULL)
-            LABEL_SET_TEXT(managerNum, SUB_P_LANGUAGE_HELP_TEXT, language_help_text[LanguageToLoad]);
+            LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_HINT_TEXT, language_help_text[LanguageToLoad]);
 
         M_CONTROL *shown[16];
         int numShown = 0;
@@ -188,7 +186,7 @@ bool C_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
     if (message == MessageType_GainFocus) {
         if ((uint)control->id < ARRAY_SIZE(language_of_button)) {
             LanguageToLoad = language_of_button[control->id];
-            LABEL_SET_TEXT(managerNum, SUB_P_LANGUAGE_HELP_TEXT, language_help_text[LanguageToLoad]);
+            LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_HINT_TEXT, language_help_text[LanguageToLoad]);
         }
     }
     else if (message == MessageType_Select) {
@@ -218,10 +216,10 @@ bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
             return true;
         switch (intro_step++) {
             case 0:
-                Menu_PlayMovie(FMV_IDENT_EAGAMES_EN, 0, 0, 1, 1, 0);
+                Menu_PlayMovie(HT_Level_FmvIdentEagamesEn, 0, 0, 1, 1, 0);
                 break;
             case 1:
-                Menu_PlayMovie(FMV_IDENT_0738, 0, 0, 1, 1, 0);
+                Menu_PlayMovie(HT_Level_FmvIdent0738, 0, 0, 1, 1, 0);
                 break;
             default:
                 Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_START, 1);
@@ -381,7 +379,7 @@ bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     }
     else if (message == MessageType_PageUpdate) {
         if (esthero_frame == 1)
-            Menu_PlayMovie(FMV_TITLES, 1, 0, 1, 1, 180);
+            Menu_PlayMovie(HT_Level_FmvTitles, 1, 0, 1, 1, 180);
         esthero_frame++;
         if (esthero_frame > 1 && psiMovieLoop())
             __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_MAIN, 1);
@@ -412,7 +410,7 @@ bool P_MAIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint me
         M_CONTROL *mgr = &manager[managerNum].control;
         __Menu_SendMessage(mgr, MessageType_LockInput, 1, 0);
         __Menu_SendDelayedMessage(15, mgr, MessageType_LockInput, 0, 0);
-        __Menu_Send(managerNum, SUB_P_MAIN_TEXT_225, MessageType_SetLineSpacing, 100, 0);
+        __Menu_Send(managerNum, HT_MenuControl_HelpMemo, MessageType_SetLineSpacing, 100, 0);
         Menu_FadeLabel(managerNum, SUB_P_MAIN_FADE, 0);
         ls.canSave = 1;
     }
@@ -453,34 +451,31 @@ bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 
 // ---- the movie pages ----
 
-// P_FMVTEST's list (docs/ui/movie-selector.md)
-#define SUB_P_FMVTEST_LIST ((HASHCODE)0x10000229)
-
 // The movies P_FMVTEST lists. The space station's arrival names a movie not on the disc (the one played is
-// FMV_INTRO_SPACE_STATION).
+// HT_Level_FmvIntroSpaceStation).
 static const struct { const char *name; HASHCODE movie; } fmvtest_movies[] = {
-    {"Castle - Halo Jump", (HASHCODE)FMV_INTRO_STOLEN_HARDWARE},
-    {"Castle - Gondola", (HASHCODE)FMV_OUTRO_HELICOPTER_CRASH},
-    {"Estate - Meet Mayhew", (HASHCODE)FMV_INTRO_MAYHEW_ENTRY},
-    {"Estate - Mayhew Death", (HASHCODE)FMV_OUTRO_MAYHEW_DEAD},
-    {"Tower Infil - Intro", (HASHCODE)FMV_INTRO_PHOENIX_TOWER},
-    {"Tower Infil - Outro", (HASHCODE)FMV_OUTRO_PARACHUTE_OFF_TOWER},
-    {"Nuclear Plant - Interview", (HASHCODE)FMV_INTRO_POWERPLANT},
-    {"Nuclear Plant - Entering Vent", (HASHCODE)FMV_OUTRO_THROUGH_VENT_KIKO},
-    {"Tower Escape - Dom Death", (HASHCODE)FMV_INTRO_PHOENIX_TOWER_2},
-    {"Tower Escape - Lobby Rescue", (HASHCODE)FMV_OUTRO_LOBBY_ESCAPE},
-    {"Evil Base - Descent All", (HASHCODE)FMV_INTRO_ISLAND_RADIOTOWER},
-    {"Evil Base - Kiko Death", (HASHCODE)FMV_OUTRO_KIKO_ROCKETLAUNCH},
-    {"Space Station - Arrival", (HASHCODE)0x07100017},
-    {"Arrival - Happy Ending", (HASHCODE)FMV_OUTRO_ESCAPE_POD_END_GAME},
-    {"Menu - BG Loop", (HASHCODE)FMV_BACKGROUND_MAINMENU},
-    {"Menu - FE Loop", (HASHCODE)FMV_BACKGROUND_MAINMENU2},
-    {"Menu - EA Logo", (HASHCODE)FMV_IDENT_EAGAMES_EN},
-    {"Menu - MGM Logo", FMV_IDENT_0738},
-    {"Menu - DAD Trailer", (HASHCODE)FMV_TRAILER_DIEANOTHERDAY},
-    {"Menu - Attract Movie", (HASHCODE)FMV_TRAILER},
-    {"Menu - Esthero", (HASHCODE)FMV_TITLES},
-    {"Menu - Making Of", (HASHCODE)FMV_BTS_DOCUMENTARY},
+    {"Castle - Halo Jump", (HASHCODE)HT_Level_FmvIntroStolenHardware},
+    {"Castle - Gondola", (HASHCODE)HT_Level_FmvOutroHelicopterCrash},
+    {"Estate - Meet Mayhew", (HASHCODE)HT_Level_FmvIntroMayhewEntry},
+    {"Estate - Mayhew Death", (HASHCODE)HT_Level_FmvOutroMayhewDead},
+    {"Tower Infil - Intro", (HASHCODE)HT_Level_FmvIntroPhoenixTower},
+    {"Tower Infil - Outro", (HASHCODE)HT_Level_FmvOutroParachuteOffTower},
+    {"Nuclear Plant - Interview", (HASHCODE)HT_Level_FmvIntroPowerplant},
+    {"Nuclear Plant - Entering Vent", (HASHCODE)HT_Level_FmvOutroThroughVentKiko},
+    {"Tower Escape - Dom Death", (HASHCODE)HT_Level_FmvIntroPhoenixTower2},
+    {"Tower Escape - Lobby Rescue", (HASHCODE)HT_Level_FmvOutroLobbyEscape},
+    {"Evil Base - Descent All", (HASHCODE)HT_Level_FmvIntroIslandRadiotower},
+    {"Evil Base - Kiko Death", (HASHCODE)HT_Level_FmvOutroKikoRocketlaunch},
+    {"Space Station - Arrival", HT_Level_100017},
+    {"Arrival - Happy Ending", (HASHCODE)HT_Level_FmvOutroEscapePodEndGame},
+    {"Menu - BG Loop", (HASHCODE)HT_Level_FmvBackgroundMainmenu},
+    {"Menu - FE Loop", (HASHCODE)HT_Level_FmvBackgroundMAINMENU2},
+    {"Menu - EA Logo", (HASHCODE)HT_Level_FmvIdentEagamesEn},
+    {"Menu - MGM Logo", HT_Level_FmvIdent0738},
+    {"Menu - DAD Trailer", (HASHCODE)HT_Level_FmvTrailerDieanotherday},
+    {"Menu - Attract Movie", (HASHCODE)HT_Level_FmvTrailer},
+    {"Menu - Esthero", (HASHCODE)HT_Level_FmvTitles},
+    {"Menu - Making Of", (HASHCODE)HT_Level_FmvBtsDocumentary},
 };
 
 // A list of movies, the one selected played on P_FMVPLAYER. No page leads here (docs/ui/movie-selector.md).
@@ -527,7 +522,7 @@ bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
             break;
         case MessageType_PageEnter:
-            Menu_PlayMovie(FMV_TRAILER_DIEANOTHERDAY, 1, 0, 1, 1, 0);
+            Menu_PlayMovie(HT_Level_FmvTrailerDieanotherday, 1, 0, 1, 1, 0);
             break;
         case MessageType_PageUpdate:
             if (psiMovieLoop()) {
@@ -543,7 +538,7 @@ bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 // AUTOINJECT
 bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
-        Menu_PlayMovie(FMV_BTS_DOCUMENTARY, 1, 0, 1, 1, 0);
+        Menu_PlayMovie(HT_Level_FmvBtsDocumentary, 1, 0, 1, 1, 0);
     }
     else if (message == MessageType_PageUpdate && psiMovieLoop()) {
         Menu_StopMovie(1);

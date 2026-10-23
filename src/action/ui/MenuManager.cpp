@@ -44,7 +44,7 @@ SpriteInfo menu_cursor = {
     .spritesheetWidth = 1,
     .spritesheetHeight = 1,
     .textRef = (Action_TranslatedText)0xffffffff,
-    .textureHashcode = (HASHCODE)0x3000042,
+    .textureHashcode = HT_Texture_StripeTexture,
 };
 
 // The message shown while a pad is out (MenuManager_Monitor): its state, the player whose pad it is, whether the
@@ -61,17 +61,12 @@ static char controller_text[256];
 
 #define CONTROLLER_WAIT 10
 #define CONTROLLER_REMOVED_TEXT ((Action_TranslatedText)0x10001ec)
-#define CONTROLLER_MENU 0x80000002
-#define CONTROLLER_PAGE ((HASHCODE)0x4000002f)
-#define CONTROLLER_BOX ((HASHCODE)0x1000011e)
-#define CONTROLLER_MEMO ((HASHCODE)0x1000011f)
-#define CONTROLLER_OPTIONS ((HASHCODE)0x10000120)
+#define CONTROLLER_PAGE P_MESSAGEBOX
+#define CONTROLLER_OPTIONS C_LBMSGOPTIONS
 
 // The pause menu and the mission's end menu, made again once the pad is back
-#define PAUSE_MENU 0x80000002
-#define PAUSE_PAGE ((HASHCODE)0x4000004b)
-#define MISSION_END_MENU 0x80000004
-#define MISSION_END_PAGE ((HASHCODE)0x40000042)
+#define PAUSE_PAGE P_PAUSE
+#define MISSION_END_PAGE P_ENDMISSION
 #define MENU_STATUS_PAUSE 3
 #define MENU_STATUS_MISSION_END 4
 
@@ -100,9 +95,6 @@ static char controller_text[256];
 
 // Script_PlayDefault's event for back
 #define SCRIPT_EVENT_BACK 0x5b
-
-// A control the Xbox puts in a place of its own
-#define MOVED_CONTROL ((HASHCODE)0x10000224)
 
 // The status shown: the highest of the managers' (inline in the original's frame and watch, as here)
 static uint MenuManager_HighestStatus(void) {
@@ -273,7 +265,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
                     create.height >= SCREEN_HEIGHT) {
                     create.width = SCREEN_WIDTH;
                     create.height = SCREEN_HEIGHT;
-                } else if (create.hashcode == MOVED_CONTROL) {
+                } else if (create.hashcode == HT_MenuControl_MovedControl) {
                     create.x = 0x181;
                     create.y = 0xe2;
                 }
@@ -366,7 +358,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
     menu_cursor.textRef = (Action_TranslatedText)(uintptr_t)MenuEmptyString;
     mgr->cursorSprite = Menu_CreateSprite(&menu_cursor);
     Manager_SendMessage(mgr, MessageType_GoPage, startPage, 1);
-    Manager_SendMessage(mgr, MessageType_SetCursor, 0x10000002, 0);
+    Manager_SendMessage(mgr, MessageType_SetCursor, C_GONIGHTFIRE, 0);
     return result;
 }
 
@@ -534,18 +526,19 @@ void MenuManager_Monitor(void) {
                 MenuManager_Delete(2);
                 MenuManager_Delete(3);
                 GS_PauseGame(true);
-                MenuManager_Create(CONTROLLER_MENU, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1, 2);
+                MenuManager_Create(HT_Menu_ControllerMenu, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1, 2);
                 Manager_SendMessage(&manager[0], MessageType_LockInput, 1, 0);
-                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (intptr_t)controller_text, 0);
+                __Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_SetText, (intptr_t)controller_text, 0);
                 controller_state = 2;
                 break;
             case 2: {
                 // The box fitted round the text and the options
                 sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0),
                         PlayerInputs[controller_player].controllerPort + 1);
-                __Menu_Send(0, CONTROLLER_MEMO, MessageType_SetText, (intptr_t)controller_text, 0);
-                M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, CONTROLLER_BOX, MessageType_GetControl, 0, 0);
-                M_MEMO *memo = (M_MEMO *)__Menu_Send(0, CONTROLLER_MEMO, MessageType_GetControl, 0, 0);
+                __Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_SetText, (intptr_t)controller_text, 0);
+                M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, HT_MenuControl_ControllerBox, MessageType_GetControl, 0,
+                                                          0);
+                M_MEMO *memo = (M_MEMO *)__Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_GetControl, 0, 0);
                 __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
                 __Menu_SendMessage(&memo->control, MessageType_SetLineSpacing, 100, 0);
                 uchar lines = __Menu_SendMessage(&memo->control, MessageType_MemoGetNumLines, 0, 0);
@@ -573,10 +566,11 @@ void MenuManager_Monitor(void) {
                 if (controller_player == -1)
                     controller_player = 0;
                 if (controller_mission_end)
-                    MenuManager_Create(MISSION_END_MENU, MISSION_END_PAGE, controller_player, 0, MENU_NO_CLOSE_ACTION,
+                    MenuManager_Create(HT_Menu_MissionEndMenu, MISSION_END_PAGE, controller_player, 0,
+                    MENU_NO_CLOSE_ACTION,
                                        1, MENU_STATUS_MISSION_END);
                 else
-                    MenuManager_Create(PAUSE_MENU, PAUSE_PAGE, controller_player, 0, ACTION_PAUSE, 1,
+                    MenuManager_Create(HT_Menu_ControllerMenu, PAUSE_PAGE, controller_player, 0, ACTION_PAUSE, 1,
                                        MENU_STATUS_PAUSE);
                 controller_state = 0;
                 controller_player = -1;

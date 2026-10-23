@@ -808,8 +808,8 @@ void InstallFakes(void) {
 // ---- the made-up world
 
 const HASHCODE kHashcodes[] = {
-    (HASHCODE)0x10000137, (HASHCODE)0x10000138, (HASHCODE)0x100001a3, (HASHCODE)0x10000222, (HASHCODE)0x10000028,
-    (HASHCODE)0x1000015e, (HASHCODE)0x10000025, (HASHCODE)0x100000e5, (HASHCODE)0x1000011a, (HASHCODE)0x10000120,
+    SUB_P_CNAVOPTIONS_SCREEN_ADJUST, SUB_P_CNAVOPTIONS_CREDITS, SUB_P_CNAVOPTIONS_DEFAULTS, SUB_P_CNAVOPTIONS_TRAILER,
+    C_GCPAUSE, C_LANGUAGE, C_RBCONTROL, C_SBNFCN, HT_MenuControl_00011a, C_LBMSGOPTIONS,
 };
 const HASHCODE kPages[] = {P_MAIN, P_CNMENU, P_NFSTATS, P_DOSSIER, P_NFSELECT, P_WINGAME, P_NFDFCTY, P_START};
 
@@ -1127,8 +1127,11 @@ uint32_t Run_CodenameWheel(bool original) {
     M_CONTROL *wheel = in.a[0] % 10 ? Object(in.control) : NULL;
     CALL_VOID(0x0007fb20, Menu_UpdateCodenameWheel,
               void (__cdecl *)(uchar, M_CONTROL *, HASHCODE, HASHCODE, HASHCODE, HASHCODE, char), in.managerNum, wheel,
-              (HASHCODE)0x100000e4, (HASHCODE)(in.a[1] % 3 ? 0x100001cc : 0), (HASHCODE)(in.a[2] % 3 ? 0x100001f2 : 0),
-              (HASHCODE)0x10000103, (char)(in.a[3] % 2));
+              SUB_C_SBNFCN_WHEEL_TEXT, (HASHCODE)(in.a[1] % 3 ? SUB_C_SBNFCN_ICON : 0), (HASHCODE)(in.a[2] % 3
+
+
+                                                                                                           ? SUB_C_SBNFCN_DESCRIPTION_TEXT : 0),
+              SUB_C_SBNFCN_IRIS, (char)(in.a[3] % 2));
     return 0;
 }
 uint32_t Run_DisplayStyle(bool original) {

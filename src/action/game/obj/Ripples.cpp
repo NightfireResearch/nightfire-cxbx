@@ -24,9 +24,8 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-#define RIPPLE_GAS ((HASHCODE)0x02000129)
-
-// A ring's Gas_Init(cel, &pos, NULL, NULL, size, size * 2, RIPPLE_GAS, 1, 0x7f7f7fff, 0x00000006, 42), inline in
+// A ring's Gas_Init(cel, &pos, NULL, NULL, size, size * 2, HT_Entity_RippleGas, 1, 0x7f7f7fff, 0x00000006, 42), inline
+// in
 // Ripples_Update with the compiler's constants: a frame's share of the life is 1/42 as a float
 static constexpr float RippleLife = 42.0f;
 static constexpr float RipplePerFrame = 1.0f / 42.0f;
@@ -106,7 +105,7 @@ void Ripples_Update(obj_tag *obj) {
     if (Rand_Rand(0x100) > 0x7f)
         gas->spin = gas->spin * -1.0f;
 
-    hashtable_set_object_to_entity_gfx(ring, RIPPLE_GAS);
+    hashtable_set_object_to_entity_gfx(ring, HT_Entity_RippleGas);
     ring->effectFlags |= 0x20020120;
     if (!build_LinkToRoom(ring, 0, glb_world))
         control_link_object_to_cel(ring, cel);

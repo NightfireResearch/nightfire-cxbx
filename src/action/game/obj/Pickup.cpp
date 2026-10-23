@@ -81,8 +81,7 @@ static int32_t Ftol(double x) {
 static void BOTWEAP_setDroneArmour(Drone_tag *drone) {}
 
 // The level whose ammo 0x2c pickups always hold 4
-#define PICKUP_LEVEL_FOUR 0x07000008
-#define AMMO_PICKUP_MODEL ((HASHCODE)0x020007c4)
+#define PICKUP_LEVEL_FOUR HT_Level_CastleIndoors2
 
 // What the multiplayer game modes and their teams change about bots' weapons (MPSettings.GameMode)
 #define GAMEMODE_TEAM0_RULE 0x20000080
@@ -587,7 +586,7 @@ obj_tag* Pickup_CreateFromSet(_VECTOR *pos, _VECTOR *rot, ushort kind) {
         beside.x = beside.x + 0.1f;
         beside.z = beside.z + 0.1f;
         weapon_definition_tag *ammo = &weapon_data[0x1b];
-        model = hashtable_hashcode_to_celglist(AMMO_PICKUP_MODEL);
+        model = hashtable_hashcode_to_celglist(HT_Entity_AmmoPickupModel);
         obj = Pickup_Create(&beside, rot, NULL, model, PICKUP_KIND_AMMO, ammo->weaponVariantNum, ammo->clipSize, 0,
                             0xffff, 1, 3, 0, 0);
         if (obj == NULL)

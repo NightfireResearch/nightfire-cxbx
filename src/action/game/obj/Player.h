@@ -212,7 +212,7 @@ typedef struct BLData {
     short previousSubState; //0x8d2
     short remoteControlTimer; // 0x8d4 - frames before a remote-controlled device lets go, when set
     short pauseMenu; // 0x8d6 - the menu manager Player_Update opened for the pause menu
-    // Frames left of the "Bond moment" icon (TEX_GOLD007BONUS, the health pane's sprite 16): it spins in while
+    // Frames left of the "Bond moment" icon (HT_Texture_GOLD007BONUS, the health pane's sprite 16): it spins in while
     // above 100, then sits at the top of the screen; HUD_UpdateHealthPane counts it down by FRAME_RATE_MUL.
     short bondMomentTimer; // 0x8d8
     // 0 while Player_Disable has the player out of play, 2 from Player_Enable; HUD_MonitorNightSight does
@@ -315,7 +315,6 @@ LAYOUT_32(offsetof(BLData, hitDirections) == 0x8f7, "Offset of hitDirections not
 LAYOUT_32(offsetof(BLData, hitDirectionFade) == 0x8f8, "Offset of hitDirectionFade not correct");
 LAYOUT_32(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionActive not correct");
 
-
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 LAYOUT_32(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
 static_assert(offsetof(BLData, field_0x3c) == 0x3c, "Offset of field_0x3c not correct");
@@ -369,7 +368,6 @@ LAYOUT_32(offsetof(BLData, keys) == 0x6b0, "Offset of keys not correct");
 LAYOUT_32(offsetof(BLData, field_0x8e6) == 0x8e6, "Offset of field_0x8e6 not correct");
 LAYOUT_32(offsetof(BLData, twinGunHand) == 0x8e8, "Offset of twinGunHand not correct");
 
-
 typedef enum {
     MovementType_Walk = 0,
     MovementType_Climb = 1, // Ladder
@@ -390,7 +388,6 @@ typedef enum {
     MovementType_Ronin = 16,
 } MovementType;
 
-
 typedef struct {
     char unknown[0x2c];
     short requiredSwitch;
@@ -406,7 +403,6 @@ typedef struct {
 } PlayerStartPosition;
 
 static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosition");
-
 
 // BLData::thirdIcon: the HUD's third-person action icons (HUD.cpp's ThirdIconSprites)
 #define THIRDICON_GRAPPLE  2

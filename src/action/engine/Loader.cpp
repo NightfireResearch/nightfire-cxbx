@@ -117,7 +117,6 @@ static uint LoaderFilesPerBatch = 0xffffffff;
 // MALLOC_LOW_END (memory.cpp): the batch goes at the low end of a free block
 #define LOADER_BATCH_MALLOC_METHOD 2
 
-
 // Reads one directory entry at *cursor and advances *cursor past it: a 32-bit little-endian size, a type byte
 // and a NUL-terminated name whose last component is the file's hashcode in hex.
 //
@@ -174,7 +173,7 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
     switch (LoaderState) {
     case LOADER_OPEN: {
         // GC check (0x8005c5ec): levels are 0x07xxxxxx (it loads the archive anyway)
-        NF_WARN_IF((fileHash & 0xff000000) != 0x07000000, "Loader : Invalid level 0x%x\n", fileHash);
+        NF_WARN_IF((fileHash & 0xff000000) != HT_Level_HASHCODE_BASE, "Loader : Invalid level 0x%x\n", fileHash);
         uint hash = fileHash & LOADER_VARIANT_MASK;
         if (variant != 0)
             hash |= (uint)(variant + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT; // may spill past bit 23, as in the original
@@ -287,7 +286,6 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
 
 extern uint8_t LoadableIndex;
 
-
 #pragma pack(push, 1)
 typedef struct {
   HASHCODE hashcode;
@@ -367,7 +365,7 @@ uint isLoadable(HASHCODE hashcode) {
 bool LoadableLoad(HASHCODE hashcode, uint loadable) {
     __profiling_or_debugging_hook_point();
     uint method = Mem_SetMallocMethod(1);
-    hashtable_delete_hashtype(0x04000000);
+    hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);
     bLevelLoaded = 0;
     hashtable_create_sections();
     Mem_SetMallocMethod(method);
@@ -380,7 +378,7 @@ bool LoadableReload(HASHCODE hashcode) {
     uint method = Mem_SetMallocMethod(1);
     Script_FreeFromHashTable(hashcode);
     __profiling_or_debugging_hook_point();
-    hashtable_delete_hashtype(0x04000000);
+    hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);
     bLevelLoaded = 0;
     hashtable_create_sections();
     AnimPreLoadInit(1);

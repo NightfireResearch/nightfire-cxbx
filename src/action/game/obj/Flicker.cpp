@@ -42,8 +42,8 @@ static_assert(std::bit_cast<uint32_t>(SparkGreenStep) == 0xc00b4b4b, "not the or
 static_assert(std::bit_cast<uint32_t>(SparkBlueStep) == 0xc0400000, "not the original's blue step");
 static_assert(std::bit_cast<uint32_t>(SparkAlphaStep) == 0xc03dbdbe, "not the original's alpha step");
 
-static const HASHCODE SparkModels[5] = {(HASHCODE)0x020002d1, (HASHCODE)0x020002d2, (HASHCODE)0x020002d3,
-                                        (HASHCODE)0x020002d4, (HASHCODE)0x020002d5};
+static const HASHCODE SparkModels[5] = {HT_Entity_0002d1, HT_Entity_0002d2, HT_Entity_0002d3,
+                                        HT_Entity_0002d4, HT_Entity_0002d5};
 
 // AUTOINJECT
 obj_tag* Flicker_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {

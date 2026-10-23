@@ -105,7 +105,6 @@ float DroneArmour_Combat = 0.25f;
 // XBE_GLOBAL(0x0016408c, 0x4)
 float DroneArmour_Jacket = 0.5f;
 
-
 // Drone_tag.flags
 #define DRONE_FLAG_FROZEN       0x10
 #define DRONE_FLAG_COLLIDES     0x20
@@ -137,13 +136,6 @@ float DroneArmour_Jacket = 0.5f;
 #define DANIM_START_SKINCLASS_18 0x82
 #define DANIM_START_DTYPE_2 0x7d
 #define DANIM_START_DTYPE_19 0x32
-
-// A placement's play script for none (DroneKeys.playScript), and the two that make an abseiler
-#define SCRIPT_NONE 0x06000000
-#define SCRIPT_ABSEIL_1C 0x06000892
-#define SCRIPT_ABSEIL_1B 0x0600089c
-// The death script that leaves the drone unfrozen
-#define SCRIPT_DEATH_UNFROZEN 0x0600021f
 
 constexpr float kHalfPi = 1.5707964f;
 constexpr float kQuarterPi = 0.7853982f;
@@ -361,116 +353,116 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     drone->turnRate = 0.1f / FRAME_RATE_DIV;
 
     // The skin's class and anim set, and what else the skin says. The skin may be changed in the placement's own keys.
-    if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && keys->skin == 0x050000b1)
-        keys->skin = (HASHCODE)0x0500008c;
+    if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && keys->skin == HT_Skin_0000b1)
+        keys->skin = HT_Skin_00008c;
     drone->skinHashcode = keys->skin;
     ushort weapon = 1;
     switch (drone->skinHashcode) {
-    case 0x05000036: case 0x05000037: case 0x05000038: case 0x05000039: case 0x0500003a:
+    case HT_Skin_000036: case HT_Skin_000037: case HT_Skin_000038: case HT_Skin_000039: case HT_Skin_00003a:
         drone->skinClass = 1;
         drone->animSet = 0xc;
         break;
-    case 0x0500002e: case 0x0500002f: case 0x05000030:
+    case HT_Skin_AnimdebugRefSkin: case HT_Skin_SkinOwnDatums: case HT_Skin_000030:
         drone->skinClass = 2;
         drone->animSet = 0xc;
         break;
-    case 0x05000004: case 0x05000006: case 0x05000008: case 0x0500004c:
+    case HT_Skin_000004: case HT_Skin_000006: case HT_Skin_000008: case HT_Skin_00004c:
         drone->skinClass = 3;
         drone->animSet = 0xc;
         break;
-    case 0x05000054: case 0x0500006d: case 0x0500006e: case 0x0500007e:
+    case HT_Skin_000054: case HT_Skin_00006d: case HT_Skin_00006e: case HT_Skin_00007e:
         drone->skinClass = 4;
         drone->animSet = 0xc;
         break;
-    case 0x05000025:
+    case HT_Skin_000025:
         drone->skinClass = 5;
         drone->animSet = 0xc;
         break;
-    case 0x05000087: case 0x05000090: case 0x05000093:
+    case HT_Skin_000087: case HT_Skin_000090: case HT_Skin_000093:
         drone->skinClass = 6;
         drone->animSet = 0xc;
         break;
-    case 0x0500008c: case 0x050000b1: case 0x050000b2:
+    case HT_Skin_00008c: case HT_Skin_0000b1: case HT_Skin_0000b2:
         drone->skinClass = 7;
         drone->animSet = 0xc;
         break;
-    case 0x0500002b: case 0x0500002d: case 0x05000034:
+    case HT_Skin_00002b: case HT_Skin_00002d: case HT_Skin_000034:
         drone->skinClass = 8;
         drone->animSet = 1;
         drone->unknown15 = 1;
         break;
-    case 0x0500001b: case 0x0500004f:
+    case HT_Skin_00001b: case HT_Skin_00004f:
         drone->animSet = 3;
         drone->skinClass = 9;
         break;
-    case 0x0500001e:
+    case HT_Skin_00001e:
         drone->animSet = 7;
         drone->skinClass = 0xb;
         weapon = 0;
         break;
-    case 0x0500003b: case 0x0500003c:
+    case HT_Skin_00003b: case HT_Skin_00003c:
         drone->skinClass = 0xc;
         drone->animSet = 0xe;
         drone->vulnerable = 0;
         drone->unknown15 = 1;
         break;
-    case 0x05000015: case 0x05000020: case 0x05000022: case 0x05000023: case 0x05000024:
+    case HT_Skin_000015: case HT_Skin_000020: case HT_Skin_000022: case HT_Skin_000023: case HT_Skin_000024:
         drone->skinClass = 0xd;
         drone->animSet = 0xe;
         drone->unknown15 = 1;
         break;
-    case 0x05000019: case 0x05000021:
+    case HT_Skin_000019: case HT_Skin_000021:
         drone->skinClass = 0xe;
         drone->animSet = 0xc;
         break;
-    case 0x05000035:
+    case HT_Skin_000035:
         drone->skinClass = 0xf;
         drone->dtype = DTYPE_TruckDriver;
         drone->animSet = 0xc;
         break;
-    case 0x05000026: case 0x05000066:
+    case HT_Skin_000026: case HT_Skin_000066:
         keys->drawWeapon = 6;
         drone->skinClass = 0x10;
         drone->animSet = 0xc;
         break;
-    case 0x05000012: case 0x05000013: case 0x05000014:
+    case HT_Skin_000012: case HT_Skin_000013: case HT_Skin_000014:
         drone->skinClass = 0x11;
         drone->animSet = 0xa;
         break;
-    case 0x05000017: case 0x05000018:
+    case HT_Skin_000017: case HT_Skin_000018:
         drone->animSet = 0xe;
         drone->skinClass = 0x12;
         drone->unknown15 = 1;
         break;
-    case 0x0500005e:
+    case HT_Skin_00005e:
         drone->animSet = 0xd;
         drone->skinClass = 0x13;
         drone->unknown15 = 1;
         break;
-    case 0x05000016: case 0x0500008f: case 0x050000ac:
+    case HT_Skin_000016: case HT_Skin_00008f: case HT_Skin_0000ac:
         drone->skinClass = 0x14;
         drone->animSet = 0xc;
         break;
-    case 0x0500000e: case 0x0500000f:
+    case HT_Skin_00000e: case HT_Skin_00000f:
         drone->skinClass = 0x15;
         drone->animSet = 2;
         drone->unknown15 = 1;
         break;
-    case 0x05000010: case 0x05000011: case 0x05000052:
+    case HT_Skin_000010: case HT_Skin_000011: case HT_Skin_000052:
         drone->skinClass = 0x16;
         drone->animSet = 2;
         drone->unknown15 = 1;
         break;
-    case 0x05000053:
+    case HT_Skin_000053:
         drone->vulnerable = 0;
         drone->impactImmune = 1;
         // fall through
-    case 0x05000027: case 0x05000028: case 0x05000029: case 0x0500002a: case 0x05000031: case 0x05000032:
-    case 0x05000033:
+    case HT_Skin_000027: case HT_Skin_000028: case HT_Skin_000029: case HT_Skin_00002a: case HT_Skin_000031:
+    case HT_Skin_000032: case HT_Skin_000033:
         drone->skinClass = 0x17;
         drone->animSet = 0xb;
         break;
-    case 0x05000078: case 0x05000094: case 0x050000ba:
+    case HT_Skin_SkinAstronaut: case HT_Skin_000094: case HT_Skin_Skin50000BA:
         drone->flies = 1;
         drone->skinClass = 0x18;
         drone->animSet = 0x10;
@@ -627,7 +619,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->deathScript != 0) {
         drone->scriptedMoveRot = gameObj->rotation;
         drone->scriptedMovePos = gameObj->position;
-        if (drone->deathScript != SCRIPT_DEATH_UNFROZEN)
+        if (drone->deathScript != HT_Script_DeathScript21F)
             drone->flags |= DRONE_FLAG_FROZEN;
     }
 
@@ -647,20 +639,20 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->captain) {
         switch (drone->skinClass) {
         case 1:
-            drone->skinHashcode = (HASHCODE)0x05000038;
+            drone->skinHashcode = HT_Skin_000038;
             break;
         case 2:
-            drone->skinHashcode = (HASHCODE)0x0500002f;
+            drone->skinHashcode = HT_Skin_SkinOwnDatums;
             drone->ninjaEyes = 1;
             break;
         case 3:
-            drone->skinHashcode = (HASHCODE)0x05000006;
+            drone->skinHashcode = HT_Skin_000006;
             break;
         case 6:
-            drone->skinHashcode = (HASHCODE)0x05000093;
+            drone->skinHashcode = HT_Skin_000093;
             break;
         case 7:
-            drone->skinHashcode = (HASHCODE)0x050000b2;
+            drone->skinHashcode = HT_Skin_0000b2;
             break;
         default:
             drone->captain = 0;
@@ -713,14 +705,15 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
 
     // The play script (key 1); two of them make the drone an abseiler instead
     drone->playScript = (HASHCODE)0;
-    if (keys->playScript != SCRIPT_NONE) {
+    // A placement's play script for none (DroneKeys.playScript), and the two that make an abseiler
+    if (keys->playScript != HT_Script_HASHCODE_BASE) {
         drone->playScript = keys->playScript;
-        if (keys->playScript == SCRIPT_ABSEIL_1C) {
+        if (keys->playScript == HT_Script_ScriptAbseil1C) {
             drone->dtype = DTYPE_Abseil28;
             drone->playScript = (HASHCODE)0;
             drone->savedAnimSet = drone->animSet;
             drone->animSet = 0xf;
-        } else if (keys->playScript == SCRIPT_ABSEIL_1B) {
+        } else if (keys->playScript == HT_Script_ScriptAbseil1B) {
             drone->playScript = (HASHCODE)0;
             drone->dtype = DTYPE_Abseil27;
             drone->savedAnimSet = drone->animSet;
@@ -789,7 +782,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         // DroneInit_TakeXHits on the PS2, inline here: as much health as one or two hits of this weapon take
         float hits = GameState.difficultyModifier == 1 ? 1.0f : 2.0f;
         drone->health = weapon_data[Weap_LaserBeamFromSamurai].damage * hits;
-        if (drone->skinHashcode == 0x050000ba)
+        if (drone->skinHashcode == HT_Skin_Skin50000BA)
             drone->health = drone->health * 3.0f;
     }
     if (drone->dtype == DTYPE_Ninja) {

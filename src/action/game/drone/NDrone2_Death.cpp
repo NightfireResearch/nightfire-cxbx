@@ -353,9 +353,6 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
     }
 }
 
-// The death script whose death is played only 2 m or more from the player, with sound 0x148 at its end; a drone
-// that surrenders drops it
-#define DEATH_SCRIPT_21F 0x0600021f
 #define SFX_DEATH_SCRIPT_21F 0x148
 
 // The row played after a death script
@@ -381,7 +378,7 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         gameObj->effectFlags |= 0x20;
         Drone_AlertStatusSet(3, dcv);
         // A NaN distance plays the script; NDrone2_Player() is not checked for NULL
-        if (!(drone->deathScript == DEATH_SCRIPT_21F && NDrone2_DistanceToObj(dcv, NDrone2_Player()) < 2.0f) &&
+        if (!(drone->deathScript == HT_Script_DeathScript21F && NDrone2_DistanceToObj(dcv, NDrone2_Player()) < 2.0f) &&
             Vec_Dist2D(&dcv->gameObj->position, &dcv->drone->scriptedMovePos) < 1.0f &&
             ABS(Vec_AngleDifference(dcv->drone->scriptedMoveRot.y, dcv->gameObj->rotation.y)) < (float)M_PI_2 &&
             dcv->drone->deathScript != 0) {
@@ -400,7 +397,7 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
             Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(60.0f));
             return true;
         }
-        if (drone->deathScript == DEATH_SCRIPT_21F)
+        if (drone->deathScript == HT_Script_DeathScript21F)
             drone->deathSwitchChannel = 0;
         drone->deathScript = (HASHCODE)0;
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Death_Anim, 0);
@@ -412,7 +409,7 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         return true;
 
     case DRONE_MSG_ScriptEnd:
-        if (drone->deathScript == DEATH_SCRIPT_21F && glb_players[0] != NULL)
+        if (drone->deathScript == HT_Script_DeathScript21F && glb_players[0] != NULL)
             Sound_Play3D((Action_SFX)SFX_DEATH_SCRIPT_21F, &glb_players[0]->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         if (dcv->drone->dtype == DTYPE_Hostage)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageDead, 0);

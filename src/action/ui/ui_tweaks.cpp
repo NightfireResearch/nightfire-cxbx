@@ -71,44 +71,48 @@ typedef struct {
 } TWEAK;
 
 static const TWEAK tweaks[18] = {
-    {(HASHCODE)0x100001a6, "Drone Easy", &DroneDamage_Easy, 2.0f, 0.5f, (HASHCODE)0x100001b9},
-    {(HASHCODE)0x100001a7, "Drone Normal", &DroneDamage_Normal, 2.0f, 0.5f, (HASHCODE)0x100001ba},
-    {(HASHCODE)0x100001a8, "Drone Hard", &DroneDamage_Hard, 2.0f, 0.5f, (HASHCODE)0x100001ca},
-    {(HASHCODE)0x100001a9, "Drone Head", &DroneDamage_Head, 4.0f, 0.25f, (HASHCODE)0x100001bb},
-    {(HASHCODE)0x100001aa, "Drone Arms", &DroneDamage_Arms, 4.0f, 0.25f, (HASHCODE)0x100001bd},
-    {(HASHCODE)0x100001ab, "Drone Legs", &DroneDamage_Legs, 4.0f, 0.25f, (HASHCODE)0x100001bc},
-    {(HASHCODE)0x100001ac, "Drone Torso", &DroneDamage_Torso, 4.0f, 0.25f, (HASHCODE)0x100001be},
-    {(HASHCODE)0x100001ad, "Armour Helmet", &DroneArmour_Helmet, 5.0f, 0.2f, (HASHCODE)0x100001bf},
-    {(HASHCODE)0x100001ae, "Armour Combat", &DroneArmour_Combat, 5.0f, 0.2f, (HASHCODE)0x100001c0},
-    {(HASHCODE)0x100001af, "Armour Jacket", &DroneArmour_Jacket, 5.0f, 0.2f, (HASHCODE)0x100001c1},
-    {(HASHCODE)0x100001b0, "Armour Vest", &DroneArmour_Vest, 5.0f, 0.2f, (HASHCODE)0x100001c2},
-    {(HASHCODE)0x100001b2, "Multiplayer", &Plr_DMod_Multi, 10.0f, 0.1f, (HASHCODE)0x100001c3},
-    {(HASHCODE)0x100001b8, "MP Head", &Plr_DMod_Head, 10.0f, 0.1f, (HASHCODE)0x100001c4},
-    {(HASHCODE)0x100001b3, "MP L Limb", &Plr_DMod_LowerLimb, 10.0f, 0.1f, (HASHCODE)0x100001c5},
-    {(HASHCODE)0x100001b4, "MP U Limb", &Plr_DMod_UpperLimb, 10.0f, 0.1f, (HASHCODE)0x100001c6},
-    {(HASHCODE)0x100001b5, "Diff Easy", &Plr_DMod_Easy, 20.0f, 0.05f, (HASHCODE)0x100001c7},
-    {(HASHCODE)0x100001b6, "Diff Normal", &Plr_DMod_Normal, 20.0f, 0.05f, (HASHCODE)0x100001c8},
-    {(HASHCODE)0x100001b7, "Diff Hard", &Plr_DMod_Hard, 20.0f, 0.05f, (HASHCODE)0x100001c9},
+    {HT_MenuControl_0001a6, "Drone Easy", &DroneDamage_Easy, 2.0f, 0.5f, HT_MenuControl_0001b9},
+    {HT_MenuControl_0001a7, "Drone Normal", &DroneDamage_Normal, 2.0f, 0.5f, HT_MenuControl_0001ba},
+    {HT_MenuControl_0001a8, "Drone Hard", &DroneDamage_Hard, 2.0f, 0.5f, HT_MenuControl_0001ca},
+    {HT_MenuControl_0001a9, "Drone Head", &DroneDamage_Head, 4.0f, 0.25f, HT_MenuControl_0001bb},
+    {HT_MenuControl_0001aa, "Drone Arms", &DroneDamage_Arms, 4.0f, 0.25f, HT_MenuControl_0001bd},
+    {HT_MenuControl_0001ab, "Drone Legs", &DroneDamage_Legs, 4.0f, 0.25f, HT_MenuControl_0001bc},
+    {HT_MenuControl_0001ac, "Drone Torso", &DroneDamage_Torso, 4.0f, 0.25f, HT_MenuControl_0001be},
+    {HT_MenuControl_0001ad, "Armour Helmet", &DroneArmour_Helmet, 5.0f, 0.2f, HT_MenuControl_0001bf},
+    {HT_MenuControl_0001ae, "Armour Combat", &DroneArmour_Combat, 5.0f, 0.2f, HT_MenuControl_0001c0},
+    {HT_MenuControl_0001af, "Armour Jacket", &DroneArmour_Jacket, 5.0f, 0.2f, HT_MenuControl_0001c1},
+    {HT_MenuControl_0001b0, "Armour Vest", &DroneArmour_Vest, 5.0f, 0.2f, HT_MenuControl_0001c2},
+    {HT_MenuControl_0001b2, "Multiplayer", &Plr_DMod_Multi, 10.0f, 0.1f, HT_MenuControl_0001c3},
+    {HT_MenuControl_0001b8, "MP Head", &Plr_DMod_Head, 10.0f, 0.1f, HT_MenuControl_0001c4},
+    {HT_MenuControl_0001b3, "MP L Limb", &Plr_DMod_LowerLimb, 10.0f, 0.1f, HT_MenuControl_0001c5},
+    {HT_MenuControl_0001b4, "MP U Limb", &Plr_DMod_UpperLimb, 10.0f, 0.1f, HT_MenuControl_0001c6},
+    {HT_MenuControl_0001b5, "Diff Easy", &Plr_DMod_Easy, 20.0f, 0.05f, HT_MenuControl_0001c7},
+    {HT_MenuControl_0001b6, "Diff Normal", &Plr_DMod_Normal, 20.0f, 0.05f, HT_MenuControl_0001c8},
+    {HT_MenuControl_0001b7, "Diff Hard", &Plr_DMod_Hard, 20.0f, 0.05f, HT_MenuControl_0001c9},
 };
 
 // The order P_TWEAKS sets its scrolls in as it enters: Drone Legs before Drone Arms
 static const uchar tweaks_enter_order[18] = {0, 1, 2, 3, 5, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17};
 
 static const TWEAK tweaks2[14] = {
-    {(HASHCODE)0x100001df, "Drone Delay Min", &DroneFiring_BurstDelay_Min, 1.0f, 1.0f, (HASHCODE)0x100001e4},
-    {(HASHCODE)0x100001e0, "Drone Delay Norm", &DroneFiring_BurstDelay_Normal, 1.0f, 1.0f, (HASHCODE)0x100001e6},
-    {(HASHCODE)0x100001e1, "Drone Delay Max", &DroneFiring_BurstDelay_Max, 1.0f, 1.0f, (HASHCODE)0x100001e7},
-    {(HASHCODE)0x100001e2, "Drone Dist Min", &DroneFiring_BurstDelay_MinDist, 1.0f, 1.0f, (HASHCODE)0x100001e8},
-    {(HASHCODE)0x100001e3, "Drone Dist Max", &DroneFiring_BurstDelay_MaxDist, 1.0f, 1.0f, (HASHCODE)0x100001e9},
-    {(HASHCODE)0x100001fe, "Firing acc easy", &DroneFiring_Accuracy_Easy, 4.0f, 0.25f, (HASHCODE)0x100001ff},
-    {(HASHCODE)0x10000200, "Firing acc norm", &DroneFiring_Accuracy_Normal, 4.0f, 0.25f, (HASHCODE)0x10000202},
-    {(HASHCODE)0x10000201, "Firing acc hard", &DroneFiring_Accuracy_Hard, 4.0f, 0.25f, (HASHCODE)0x10000203},
-    {(HASHCODE)0x10000205, "New Sight time to acc", &DroneFiring_NewSighting_TimeToHit, 4.0f, 0.25f, (HASHCODE)0x10000209},
-    {(HASHCODE)0x10000206, "Move target time to acc", &DroneFiring_TargetFirstMoved_TimeToHit, 4.0f, 0.25f, (HASHCODE)0x1000020a},
-    {(HASHCODE)0x10000207, "Move target accuracy", &DroneFiring_TargetFirstMoved_Accuracy, 4.0f, 0.25f, (HASHCODE)0x1000020b},
-    {(HASHCODE)0x10000208, "Move target acc move", &DroneFiring_TargetMoving_Accuracy, 4.0f, 0.25f, (HASHCODE)0x1000020c},
-    {(HASHCODE)0x1000020f, "Too close distance", &DroneFiring_TooClose_Distance, 4.0f, 0.25f, (HASHCODE)0x10000211},
-    {(HASHCODE)0x10000210, "Too close accuracy", &DroneFiring_TooClose_Accuracy, 4.0f, 0.25f, (HASHCODE)0x10000212},
+    {HT_MenuControl_0001df, "Drone Delay Min", &DroneFiring_BurstDelay_Min, 1.0f, 1.0f, HT_MenuControl_0001e4},
+    {HT_MenuControl_0001e0, "Drone Delay Norm", &DroneFiring_BurstDelay_Normal, 1.0f, 1.0f, HT_MenuControl_0001e6},
+    {HT_MenuControl_0001e1, "Drone Delay Max", &DroneFiring_BurstDelay_Max, 1.0f, 1.0f, HT_MenuControl_0001e7},
+    {HT_MenuControl_0001e2, "Drone Dist Min", &DroneFiring_BurstDelay_MinDist, 1.0f, 1.0f, HT_MenuControl_0001e8},
+    {HT_MenuControl_0001e3, "Drone Dist Max", &DroneFiring_BurstDelay_MaxDist, 1.0f, 1.0f, HT_MenuControl_0001e9},
+    {HT_MenuControl_0001fe, "Firing acc easy", &DroneFiring_Accuracy_Easy, 4.0f, 0.25f, HT_MenuControl_0001ff},
+    {HT_MenuControl_000200, "Firing acc norm", &DroneFiring_Accuracy_Normal, 4.0f, 0.25f, HT_MenuControl_000202},
+    {HT_MenuControl_000201, "Firing acc hard", &DroneFiring_Accuracy_Hard, 4.0f, 0.25f, HT_MenuControl_000203},
+    {HT_MenuControl_000205, "New Sight time to acc", &DroneFiring_NewSighting_TimeToHit, 4.0f, 0.25f,
+        HT_MenuControl_000209},
+    {HT_MenuControl_000206, "Move target time to acc", &DroneFiring_TargetFirstMoved_TimeToHit, 4.0f, 0.25f,
+        HT_MenuControl_00020a},
+    {HT_MenuControl_000207, "Move target accuracy", &DroneFiring_TargetFirstMoved_Accuracy, 4.0f, 0.25f,
+        HT_MenuControl_00020b},
+    {HT_MenuControl_000208, "Move target acc move", &DroneFiring_TargetMoving_Accuracy, 4.0f, 0.25f,
+        HT_MenuControl_00020c},
+    {HT_MenuControl_00020f, "Too close distance", &DroneFiring_TooClose_Distance, 4.0f, 0.25f, HT_MenuControl_000211},
+    {HT_MenuControl_000210, "Too close accuracy", &DroneFiring_TooClose_Accuracy, 4.0f, 0.25f, HT_MenuControl_000212},
 };
 
 // The values as text, which the labels keep. P_TWEAKS2 shows a fifteenth that nothing writes.
@@ -116,11 +120,6 @@ static const TWEAK tweaks2[14] = {
 char tweaks_text[18][0x20];
 // XBE_GLOBAL(0x0025da68, 0x1e0)
 char tweaks2_text[15][0x20];
-#define TWEAKS2_TEXT_UNSET ((HASHCODE)0x1000020e)
-
-#define SUB_P_TWEAKS_HINT_TEXT ((HASHCODE)0x100001de)
-#define SUB_P_TWEAKS2_HINT_TEXT ((HASHCODE)0x100001ea)
-#define SUB_P_TWEAKS2_HIDDEN ((HASHCODE)0x1000020d)
 
 static void Tweak_SetScroll(uchar managerNum, const TWEAK *tweak) {
     __Menu_Send(managerNum, tweak->scroll, MessageType_SetValue, Ftol((double)*tweak->tunable * tweak->sliderScale), 0);
@@ -182,7 +181,7 @@ bool P_TWEAKS2_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                 Tweak_Print(managerNum, &tweaks2[i], tweaks2_text[i]);
             for (int i = 0; i < ARRAY_SIZE(tweaks2); i++)
                 LABEL_SET_TEXT(managerNum, tweaks2[i].valueText, tweaks2_text[i]);
-            LABEL_SET_TEXT(managerNum, TWEAKS2_TEXT_UNSET, tweaks2_text[14]);
+            LABEL_SET_TEXT(managerNum, HT_MenuControl_TWEAKS2TextUnset, tweaks2_text[14]);
             break;
         case MessageType_Select:
             for (int i = 0; i < ARRAY_SIZE(tweaks2); i++)
@@ -221,74 +220,74 @@ bool P_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint mes
 // The scenes of each level, by script; a level's own line has none
 static const struct { const char *name; HASHCODE script; } nis_scenes[] = {
     {"Castle Exterior", (HASHCODE)0},
-    {"  Halo Jump", (HASHCODE)0x06000074},
-    {"  Van Jump", (HASHCODE)0x060008c8},
-    {"  Cliff Fall", (HASHCODE)0x06000952},
+    {"  Halo Jump", HT_Script_000074},
+    {"  Van Jump", HT_Script_0008c8},
+    {"  Cliff Fall", HT_Script_000952},
     {"Castle Courtyards", (HASHCODE)0},
-    {"  Castle_tux_change", (HASHCODE)0x06000071},
+    {"  Castle_tux_change", HT_Script_000071},
     {"Castle Indoors 1", (HASHCODE)0},
-    {"  M1_library", (HASHCODE)0x06000073},
-    {"  Engagement", (HASHCODE)0x06000072},
+    {"  M1_library", HT_Script_000073},
+    {"  Engagement", HT_Script_000072},
     {"Castle Indoors 2", (HASHCODE)0},
-    {"  Castle Meeting", (HASHCODE)0x06000077},
-    {"  Castle Rook", (HASHCODE)0x06000078},
-    {"  Gondola", (HASHCODE)0x06000076},
-    {"  Cliff Fall 2", (HASHCODE)0x06000991},
+    {"  Castle Meeting", HT_Script_000077},
+    {"  Castle Rook", HT_Script_000078},
+    {"  Gondola", HT_Script_000076},
+    {"  Cliff Fall 2", HT_Script_000991},
     {"Estate A", (HASHCODE)0},
-    {"  Meet Mayhew", (HASHCODE)0x06000087},
-    {"  Yakuza Ambush", (HASHCODE)0x06000086},
-    {"  Meet Mayhew Intro", (HASHCODE)0x0600065d},
+    {"  Meet Mayhew", HT_Script_000087},
+    {"  Yakuza Ambush", HT_Script_000086},
+    {"  Meet Mayhew Intro", HT_Script_00065d},
     {"Estate B", (HASHCODE)0},
-    {"  Bath House", (HASHCODE)0x0600007f},
-    {"  Bunker Objectives", (HASHCODE)0x06000084},
+    {"  Bath House", HT_Script_00007f},
+    {"  Bunker Objectives", HT_Script_000084},
     {"Estate C", (HASHCODE)0},
-    {"  Yakuza Sniper", (HASHCODE)0x06000080},
+    {"  Yakuza Sniper", HT_Script_000080},
     {"Estate D", (HASHCODE)0},
-    {"  Mayhew Death", (HASHCODE)0x06000081},
-    {"  Ninja Attack", (HASHCODE)0x06000082},
-    {"  Second Bunker", (HASHCODE)0x06000083},
-    {"  Meet Mayhew Intro", (HASHCODE)0x0600065d},
+    {"  Mayhew Death", HT_Script_000081},
+    {"  Ninja Attack", HT_Script_000082},
+    {"  Second Bunker", HT_Script_000083},
+    {"  Meet Mayhew Intro", HT_Script_00065d},
     {"Tower A", (HASHCODE)0},
-    {"  Infiltrate Intro", (HASHCODE)0x060004f8},
+    {"  Infiltrate Intro", HT_Script_0004f8},
     {"  Infiltrate Noname", (HASHCODE)0},
     {"Tower B", (HASHCODE)0},
     {"Tower C", (HASHCODE)0},
-    {"  Infiltrate Fall", (HASHCODE)0x0600098a},
-    {"  Infiltrate Intro", (HASHCODE)0x060004f8},
-    {"  Infiltrate Stair", (HASHCODE)0x060004fa},
-    {"  Infiltrate Buzz", (HASHCODE)0x060004f9},
-    {"  Infiltrate Outro", (HASHCODE)0x060004fb},
+    {"  Infiltrate Fall", HT_Script_00098a},
+    {"  Infiltrate Intro", HT_Script_0004f8},
+    {"  Infiltrate Stair", HT_Script_0004fa},
+    {"  Infiltrate Buzz", HT_Script_0004f9},
+    {"  Infiltrate Outro", HT_Script_0004fb},
     {"Powerstation A1", (HASHCODE)0},
-    {"  Drake Interview", (HASHCODE)0x06000726},
+    {"  Drake Interview", HT_Script_000726},
     {"Powerstation A2", (HASHCODE)0},
-    {"  Rook Retreat", (HASHCODE)0x0600068f},
-    {"  Enter Vent", (HASHCODE)0x0600073a},
+    {"  Rook Retreat", HT_Script_00068f},
+    {"  Enter Vent", HT_Script_00073a},
     {"Tower2 A", (HASHCODE)0},
-    {"  Infiltrate Fall", (HASHCODE)0x0600098a},
-    {"  Dominique Death", (HASHCODE)0x06000655},
+    {"  Infiltrate Fall", HT_Script_00098a},
+    {"  Dominique Death", HT_Script_000655},
     {"Tower2 B", (HASHCODE)0},
-    {"  Infiltrate Fall", (HASHCODE)0x0600098a},
+    {"  Infiltrate Fall", HT_Script_00098a},
     {"  Suitcase Gun", (HASHCODE)0},
     {"  Enter Shaft", (HASHCODE)0},
     {"Tower2 C", (HASHCODE)0},
-    {"  Lobby Rescue", (HASHCODE)0x06000646},
-    {"  Elevator Exit", (HASHCODE)0x060006d7},
+    {"  Lobby Rescue", HT_Script_000646},
+    {"  Elevator Exit", HT_Script_0006d7},
     {"Tower2 Elevator", (HASHCODE)0},
-    {"  Shaft Attack", (HASHCODE)0x060006cf},
-    {"  Elevator Plummet", (HASHCODE)0x060006d3},
+    {"  Shaft Attack", HT_Script_0006cf},
+    {"  Elevator Plummet", HT_Script_0006d3},
     {"Evil Base", (HASHCODE)0},
-    {"  Kiko Command Centre", (HASHCODE)0x0600062f},
-    {"  Kiko Arrival", (HASHCODE)0x06000833},
-    {"  Rook Reveal", (HASHCODE)0x06000848},
+    {"  Kiko Command Centre", HT_Script_00062f},
+    {"  Kiko Arrival", HT_Script_000833},
+    {"  Rook Reveal", HT_Script_000848},
     {"Evil Silo", (HASHCODE)0},
     {"Evil Base C", (HASHCODE)0},
-    {"  Bond Dropped", (HASHCODE)0x06000631},
-    {"  Kiko Flees", (HASHCODE)0x06000632},
-    {"  Kiko Death", (HASHCODE)0x06000633},
+    {"  Bond Dropped", HT_Script_000631},
+    {"  Kiko Flees", HT_Script_000632},
+    {"  Kiko Death", HT_Script_000633},
     {"Space Station D", (HASHCODE)0},
-    {"  Laser Taunt", (HASHCODE)0x0600085c},
-    {"  Drake Explosion", (HASHCODE)0x0600085f},
-    {"  Drake Killed", (HASHCODE)0x0600098f},
+    {"  Laser Taunt", HT_Script_00085c},
+    {"  Drake Explosion", HT_Script_00085f},
+    {"  Drake Killed", HT_Script_00098f},
     {"Unknown", (HASHCODE)0},
 };
 
@@ -336,8 +335,6 @@ bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint mes
 
 // XBE_GLOBAL(0x002790a8, 0x4)
 uint cheat_medal;    // nothing reads it
-
-#define SUB_P_CHEATMEDAL_LIST ((HASHCODE)0x1000021c)
 
 // The list's choice: switch channel 99 (item 0), or channel 100 with a medal (items 1 to 5: 999, then 1 to 4), each
 // with the frame it was set; the menu closes

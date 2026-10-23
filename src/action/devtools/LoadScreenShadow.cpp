@@ -71,11 +71,11 @@ void LoadScreenShadow_Run(void) {
 
     HASHCODE levels[0x60];
     int count = 0;
-    for (uint32_t level = 0x07000000; level <= 0x07000050; level++)
+    for (uint32_t level = 0x07000000; level <= HT_Level_000050; level++)
         levels[count++] = (HASHCODE)level;
     levels[count++] = (HASHCODE)0;
     levels[count++] = (HASHCODE)0xffffffff;
-    levels[count++] = (HASHCODE)0x06ffffff;
+    levels[count++] = HT_Script_ffffff;
 
     int cases = 0, differ = 0;
     for (int l = 0; l < count; l++) {

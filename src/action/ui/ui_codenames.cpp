@@ -27,13 +27,13 @@
 // cn_options (ui.h). The last item's title is "Codenames" for a default codename, which cannot be saved, else "Save Codename".
 // XBE_GLOBAL(0x0017cec8, 0xa8)
 M_ITEM cn_options[7] = {
-    {ICON_CNOPTIONS_SECRETUNLOCKS, SECRET_UNLOCKS, SECRET_UNLOCKS_DESC, 0, 1, TXT_NULL}, // Secret Unlocks
-    {ICON_CNOPTIONS_CONTROLLER, CONTROLLER_SETUP, CONTROL_SCHEME_ACTION_DESC, 1, 1, TXT_NULL}, // Controller Setup
-    {ICON_CNOPTIONS_CONTROLLER, CN_DRIVING_CONTROLLER, CONTROL_SCHEME_DRIVING_DESC, 2, 1, TXT_NULL}, // Driving Controller
-    {ICON_CNOPTIONS_ADVANCED, CN_ADVANCED_OPTIONS, ADV_SETTINGS_DESC, 3, 1, TXT_NULL}, // Advanced Options
-    {ICON_CNOPTIONS_MULTIPLAYER, CN_MULTIPLAYER_OPTIONS, MULTIPLAYER_SETTINGS_DESC, 4, 1, TXT_NULL}, // Multiplayer Options
-    {ICON_CNOPTIONS_AV, CN_AV_OPTIONS, AV_SETTINGS_DESC, 5, 1, TXT_NULL}, // AV Options
-    {ICON_CNOPTIONS_SAVE, SAVE_CODENAME, ACCEPT_CHANGES_DESC, 6, 1, TXT_NULL}, // Save Codename
+    {HT_Texture_IconCnoptionsSecretunlocks, SECRET_UNLOCKS, SECRET_UNLOCKS_DESC, 0, 1, TXT_NULL}, // Secret Unlocks
+    {HT_Texture_IconCnoptionsController, CONTROLLER_SETUP, CONTROL_SCHEME_ACTION_DESC, 1, 1, TXT_NULL}, // Controller Setup
+    {HT_Texture_IconCnoptionsController, CN_DRIVING_CONTROLLER, CONTROL_SCHEME_DRIVING_DESC, 2, 1, TXT_NULL}, // Driving Controller
+    {HT_Texture_IconCnoptionsAdvanced, CN_ADVANCED_OPTIONS, ADV_SETTINGS_DESC, 3, 1, TXT_NULL}, // Advanced Options
+    {HT_Texture_IconCnoptionsMultiplayer, CN_MULTIPLAYER_OPTIONS, MULTIPLAYER_SETTINGS_DESC, 4, 1, TXT_NULL}, // Multiplayer Options
+    {HT_Texture_IconCnoptionsAv, CN_AV_OPTIONS, AV_SETTINGS_DESC, 5, 1, TXT_NULL}, // AV Options
+    {HT_Texture_IconCnoptionsSave, SAVE_CODENAME, ACCEPT_CHANGES_DESC, 6, 1, TXT_NULL}, // Save Codename
 };
 
 // XBE_GLOBAL(0x0025ed28, 0x40)
@@ -151,7 +151,6 @@ extern uint8_t saveflow_dashboard;  // B on the box leaves for the dashboard
 // XBE_GLOBAL(0x0025edb9, 0x1)
 uint8_t saveflow_relist;  // a codenames page lists the codenames as it enters or resumes
 
-
 // The option boxes the codenames page answers
 #define OPTIONBOX_DELETE_CODENAME 2
 #define OPTIONBOX_3               3   // no code in the Xbox build makes a box of this type
@@ -161,9 +160,6 @@ uint8_t saveflow_relist;  // a codenames page lists the codenames as it enters o
 
 // The box: a page shown over the one under it, a button behind a memo and a list
 #define SAVEFLOW_PAGE          P_AFTERRESULTS
-#define SUB_SAVEFLOW_BUTTON    ((HASHCODE)0x100000fd)
-#define SUB_SAVEFLOW_MEMO      ((HASHCODE)0x100000fb)
-#define SUB_SAVEFLOW_244       ((HASHCODE)0x10000244)   // hidden when the box opens
 
 // The texts (names ours)
 #define TXT_SAVEFLOW_262       ((Action_TranslatedText)0x262)
@@ -367,7 +363,6 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
     Button_Update(&manager[mgr->index], (M_PAGE *)button->control.parent, button);
     manager[mgr->index].takingInput = 1;
 }
-
 
 // ---- room on the save drive for a codename (names ours)
 
@@ -694,15 +689,15 @@ void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text,
     switch (selected) {
         case 0:
             about = CODENAME_NEW_DESC;
-            picture = ICON_CODENAME_NEW;
+            picture = HT_Texture_IconCnoptionsSecretunlocks;
             break;
         case 1:
             about = CODENAME_DEFAULT_DESC;
-            picture = ICON_CODENAME;
+            picture = HT_Texture_IconCodename;
             break;
         default:
             about = CODENAME_SAVED_DESC;
-            picture = ICON_CODENAME;
+            picture = HT_Texture_IconCodename;
             break;
     }
     if (icon != 0) {

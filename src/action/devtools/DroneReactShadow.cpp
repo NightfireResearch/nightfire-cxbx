@@ -578,7 +578,7 @@ void RandomDrone(int i) {
     d->stateScratch = Pick(scratches);
     d->stateScratch2 = Pick(scratches);
     d->stateScratch3 = ShadowRand(1000);
-    static const HASHCODE scripts[] = {(HASHCODE)0, (HASHCODE)0x0600021f, (HASHCODE)0x06000300};
+    static const HASHCODE scripts[] = {(HASHCODE)0, HT_Script_DeathScript21F, HT_Script_000300};
     d->deathScript = Pick(scripts);
     d->deathSwitchChannel = (uchar)ShadowRand(256);
     d->secondState = (short)(ShadowRand(3) == 0 ? 0 : ShadowRand(250));

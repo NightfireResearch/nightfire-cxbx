@@ -50,12 +50,11 @@ static const Action_TranslatedText style_names[CONTROLLER_STYLES] = {
 
 // The labels round the controller's picture, and the line of the style each shows
 static const struct { HASHCODE label; uchar line; } style_picture_labels[16] = {
-    {(HASHCODE)0x10000047, 2}, {(HASHCODE)0x10000048, 3}, {(HASHCODE)0x10000051, 4}, {(HASHCODE)0x10000049, 5},
-    {(HASHCODE)0x10000050, 6}, {(HASHCODE)0x1000004a, 7}, {(HASHCODE)0x1000003f, 8}, {(HASHCODE)0x10000040, 9},
-    {(HASHCODE)0x10000041, 10}, {(HASHCODE)0x10000042, 11}, {(HASHCODE)0x10000043, 12}, {(HASHCODE)0x10000044, 13},
-    {(HASHCODE)0x10000045, 14}, {(HASHCODE)0x10000046, 15}, {(HASHCODE)0x10000094, 0}, {(HASHCODE)0x10000095, 1},
+    {HT_MenuControl_000047, 2}, {HT_MenuControl_000048, 3}, {HT_MenuControl_000051, 4}, {HT_MenuControl_000049, 5},
+    {HT_MenuControl_000050, 6}, {HT_MenuControl_00004a, 7}, {HT_MenuControl_00003f, 8}, {HT_MenuControl_000040, 9},
+    {HT_MenuControl_000041, 10}, {HT_MenuControl_000042, 11}, {HT_MenuControl_000043, 12}, {HT_MenuControl_000044, 13},
+    {HT_MenuControl_000045, 14}, {HT_MenuControl_000046, 15}, {HT_MenuControl_000094, 0}, {HT_MenuControl_000095, 1},
 };
-#define SUB_P_CNCONTROLS_PICTURES ((HASHCODE)0x1000004f)   // a picture per style, by bit
 
 // A style shown round the controller's picture: its lines in the labels, and its own picture
 // AUTOINJECT
@@ -125,7 +124,6 @@ void Menu_DisplayControllerStyleList(uchar managerNum, uint style) {
 // The style being chosen is drawn as the radio turns; X inverts the look (shown, kept until A)
 // XBE_GLOBAL(0x0025d7df, 0x1)
 uint8_t controls_inverted;
-#define SUB_P_CNCONTROLS_INVERTED_TEXT ((HASHCODE)0x100000c9)
 
 // AUTOINJECT
 bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
@@ -175,14 +173,14 @@ typedef struct {
 } OPTION_RADIO;
 
 static const OPTION_RADIO game_options[8] = {
-    {(HASHCODE)0x1000011a, MP_ON, 1, MP_OFF, 0, &PlayerInput::vibrationEnabled},
-    {(HASHCODE)0x1000011b, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoAim},
-    {(HASHCODE)0x10000124, MP_ON, 1, MP_OFF, 0, &PlayerInput::crosshairsEnabled},
-    {(HASHCODE)0x10000125, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::crouchToggle},
-    {(HASHCODE)0x10000126, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::manualAimToggle},
-    {(HASHCODE)0x100001cb, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoSwitchBetterWeapon},
-    {(HASHCODE)0x10000226, MP_ON, 2, MP_OFF, 0, &PlayerInput::flashingObjects},
-    {(HASHCODE)0x1000023b, MP_ON, 0, MP_OFF, 1, &PlayerInput::hudVisibility},
+    {HT_MenuControl_00011a, MP_ON, 1, MP_OFF, 0, &PlayerInput::vibrationEnabled},
+    {HT_MenuControl_00011b, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoAim},
+    {HT_MenuControl_000124, MP_ON, 1, MP_OFF, 0, &PlayerInput::crosshairsEnabled},
+    {HT_MenuControl_000125, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::crouchToggle},
+    {HT_MenuControl_000126, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::manualAimToggle},
+    {HT_MenuControl_0001cb, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoSwitchBetterWeapon},
+    {HT_MenuControl_000226, MP_ON, 2, MP_OFF, 0, &PlayerInput::flashingObjects},
+    {HT_MenuControl_00023b, MP_ON, 0, MP_OFF, 1, &PlayerInput::hudVisibility},
 };
 
 static void Option_Fill(uchar managerNum, const OPTION_RADIO *option, int value) {
@@ -208,10 +206,6 @@ bool P_CNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     }
     return true;
 }
-
-#define SUB_P_CNMPOPTIONS_RADIO_128   ((HASHCODE)0x10000128)   // MPSettings.Player[0].SomeField2
-#define SUB_P_CNMPOPTIONS_HANDICAP    ((HASHCODE)0x1000011c)
-#define SUB_P_CNMPOPTIONS_AUTOAIM     ((HASHCODE)0x10000129)
 
 // The handicaps offered, in quarters
 static const struct { const char *text; int value; } handicaps[8] = {
@@ -245,17 +239,6 @@ bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
     }
     return true;
 }
-
-#define SUB_P_CNAVOPTIONS_SFX_VOLUME    ((HASHCODE)0x10000134)
-#define SUB_P_CNAVOPTIONS_MUSIC_VOLUME  ((HASHCODE)0x10000135)
-#define SUB_P_CNAVOPTIONS_SUBTITLES     ((HASHCODE)0x10000136)
-#define SUB_P_CNAVOPTIONS_SPLIT_SCREEN  ((HASHCODE)0x1000019a)
-#define SUB_P_CNAVOPTIONS_RADIO_198     ((HASHCODE)0x10000198)   // emptied and hidden
-#define SUB_P_CNAVOPTIONS_HIDDEN_223    ((HASHCODE)0x10000223)
-#define SUB_P_CNAVOPTIONS_SCREEN_ADJUST ((HASHCODE)0x10000137)
-#define SUB_P_CNAVOPTIONS_CREDITS       ((HASHCODE)0x10000138)   // its pages follow from the menu data's scripts
-#define SUB_P_CNAVOPTIONS_DEFAULTS      ((HASHCODE)0x100001a3)
-#define SUB_P_CNAVOPTIONS_TRAILER       ((HASHCODE)0x10000222)
 
 #define AV_VOLUME_STEPS 20      // the volume scrolls' range, a fifth of the volume each
 

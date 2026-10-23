@@ -325,7 +325,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     sightObj->tweakR = 0x7f;
     sightObj->tweakG = 0;
     sightObj->tweakB = 0;
-    hashtable_set_object_to_entity_gfx(sightObj, (HASHCODE)0x2000132);
+    hashtable_set_object_to_entity_gfx(sightObj, HT_Entity_000132);
     View_SetDrawInThisViewOnly(sightObj, viewerNum);
     blData->sightObj = sightObj;
   
@@ -388,7 +388,8 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     poVar1->tweakA = 0xff;
     
     // Strong or weak beam ("lazer" 0x2000131 or "uv_lazer" 0x20006c1)
-    HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e) ? (HASHCODE)0x2000131 : (HASHCODE)0x20006c1;
+    HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e)
+        ? HT_Entity_LaserBeamGlistNightvision : HT_Entity_0006c1;
 
     hashtable_set_object_to_entity_gfx(poVar1, hc);
     View_SetDrawInAllViews(poVar1);
@@ -424,13 +425,13 @@ void Player_SetupTaser(BLData *blData, _VECTOR *target) {
     FractalThing(blData->beamObjs, 0, segments, &start, target, 1);
     for (short i = 0; i < segments - 1; i++) {
         obj_tag *beam = blData->beamObjs[i];
-        hashtable_set_object_to_entity_gfx(beam, (HASHCODE)0x0200026d);
+        hashtable_set_object_to_entity_gfx(beam, HT_Entity_00026d);
         View_SetDrawInAllViews(beam);
         PositionBeam(beam, &beam->position, &blData->beamObjs[i + 1]->position);
         beam->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
     }
     obj_tag *last = blData->beamObjs[segments - 1];
-    hashtable_set_object_to_entity_gfx(last, (HASHCODE)0x0200026d);
+    hashtable_set_object_to_entity_gfx(last, HT_Entity_00026d);
     View_SetDrawInAllViews(last);
     PositionBeam(last, &last->position, target);
     last->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
@@ -1135,7 +1136,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         case HT_Level_EvilSilo:
         case HT_Level_EvilBaseC:
-        case 0x7000017:
+        case HT_Level_000017:
             Player_RamLoad(blData, 0);
             player->animState->switchingToWeaponId = (char)blData->ramLoadedWeaponId;
             if (blData->weaponStats[handgun].enabled)
@@ -1156,9 +1157,9 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         // The space station levels (0x7000018-0x700001a have no HT_Level_ names yet): no RamLoad, only weapon 0x33,
         // and the armour set to 50
-        case 0x7000018:
-        case 0x7000019:
-        case 0x700001a:
+        case HT_Level_000018:
+        case HT_Level_000019:
+        case HT_Level_00001a:
         case HT_Level_SpaceStationD:
             Player_InitAmmoWeapons(player);
             Player_EquipWeapon(blData, Weap_LaserBeamFromSamurai, EQUIP_FULL_AMMO);
@@ -1295,9 +1296,6 @@ float Plr_DMod_Easy = 0.75f;
 float Plr_DMod_Normal = 1.0f;
 // XBE_GLOBAL(0x0017e8e4, 0x4)
 float Plr_DMod_Hard = 1.25f;
-
-// Level 0x700004C has no name in assets.h; it is scored like the late levels (the Ravine is 0x700004B).
-#define HT_Level_Unnamed4C 0x700004C
 
 // The drone settings most single-player levels start from (Henderson's, and the Evil Base's); the level cases
 // below override the few that differ. The original writes each level's full set, the compiler merging the common
@@ -1694,7 +1692,7 @@ void Player_PositionCamera(obj_tag *player) {
 
             celglist_tag *model = device->objGraphics;
             float height;
-            if (model == hashtable_hashcode_to_celglist(GFX_LittleNellie_Body)) {
+            if (model == hashtable_hashcode_to_celglist(HT_Entity_LittleNellieBody)) {
                 height = 0.1f;
             }
             else {
@@ -1824,59 +1822,60 @@ void Player_GetHeadPos(_VECTOR *headPos, obj_tag *player, _MATRIX *mtx) {
 #define PLAYER_ANIMSET_LIST_SIZE 9
 // XBE_GLOBAL(0x0017e68c, 0x48)
 static HASHCODE PlayerAnimSetSinglePlayer[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0, (HASHCODE)0x6000a00,
-    (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0x6000a00, (HASHCODE)0, (HASHCODE)0x60009ff,
-    (HASHCODE)0x60009ff, (HASHCODE)0x60009ff, (HASHCODE)0, (HASHCODE)0x60009ff, (HASHCODE)0x60009ff,
-    (HASHCODE)0x60009ff, (HASHCODE)0x60009ff,
+    // The anims Player_Init starts with
+    HT_Script_AnimStart, HT_Script_AnimStart, HT_Script_AnimStart, (HASHCODE)0, HT_Script_AnimStart,
+    HT_Script_AnimStart, HT_Script_AnimStart, HT_Script_AnimStart, (HASHCODE)0, HT_Script_AnimStartCrouch,
+    HT_Script_AnimStartCrouch, HT_Script_AnimStartCrouch, (HASHCODE)0, HT_Script_AnimStartCrouch,
+    HT_Script_AnimStartCrouch, HT_Script_AnimStartCrouch, HT_Script_AnimStartCrouch,
 };
 // XBE_GLOBAL(0x0017e6d4, 0x48)
 static HASHCODE PlayerAnimSetClass3[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60001d4, (HASHCODE)0x60001db, (HASHCODE)0x60001d9, (HASHCODE)0, (HASHCODE)0x600097c,
-    (HASHCODE)0x600097c, (HASHCODE)0x600097d, (HASHCODE)0x600097d, (HASHCODE)0, (HASHCODE)0x60001d7,
-    (HASHCODE)0x60008f9, (HASHCODE)0x60008f9, (HASHCODE)0, (HASHCODE)0x6000914, (HASHCODE)0x6000914,
-    (HASHCODE)0x6000915, (HASHCODE)0x6000915,
+    HT_Script_AnimStartMp, HT_Script_0001db, HT_Script_0001d9, (HASHCODE)0, HT_Script_00097c,
+    HT_Script_00097c, HT_Script_00097d, HT_Script_00097d, (HASHCODE)0, HT_Script_0001d7,
+    HT_Script_0008f9, HT_Script_0008f9, (HASHCODE)0, HT_Script_000914, HT_Script_000914,
+    HT_Script_000915, HT_Script_000915,
 };
 // XBE_GLOBAL(0x0017e71c, 0x48)
 static HASHCODE PlayerAnimSetDefault[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60001f1, (HASHCODE)0x60001f2, (HASHCODE)0x60001f0, (HASHCODE)0, (HASHCODE)0x60009e4,
-    (HASHCODE)0x60009e4, (HASHCODE)0x60009e5, (HASHCODE)0x60009e5, (HASHCODE)0, (HASHCODE)0x60001ee,
-    (HASHCODE)0x6000931, (HASHCODE)0x6000931, (HASHCODE)0, (HASHCODE)0x6000930, (HASHCODE)0x6000930,
-    (HASHCODE)0x600092f, (HASHCODE)0x600092f,
+    HT_Script_0001f1, HT_Script_0001f2, HT_Script_0001f0, (HASHCODE)0, HT_Script_0009e4,
+    HT_Script_0009e4, HT_Script_0009e5, HT_Script_0009e5, (HASHCODE)0, HT_Script_0001ee,
+    HT_Script_000931, HT_Script_000931, (HASHCODE)0, HT_Script_000930, HT_Script_000930,
+    HT_Script_00092f, HT_Script_00092f,
 };
 // XBE_GLOBAL(0x0017e764, 0x48)
 static HASHCODE PlayerAnimSetClass1[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60009dc, (HASHCODE)0x60009de, (HASHCODE)0x60009db, (HASHCODE)0, (HASHCODE)0x60009d7,
-    (HASHCODE)0x60009d7, (HASHCODE)0x60009d8, (HASHCODE)0x60009d8, (HASHCODE)0, (HASHCODE)0x60009d9,
-    (HASHCODE)0x60009f5, (HASHCODE)0x60009f5, (HASHCODE)0, (HASHCODE)0x60009f3, (HASHCODE)0x60009f3,
-    (HASHCODE)0x60009f4, (HASHCODE)0x60009f4,
+    HT_Script_0009dc, HT_Script_0009de, HT_Script_0009db, (HASHCODE)0, HT_Script_0009d7,
+    HT_Script_0009d7, HT_Script_0009d8, HT_Script_0009d8, (HASHCODE)0, HT_Script_0009d9,
+    HT_Script_0009f5, HT_Script_0009f5, (HASHCODE)0, HT_Script_0009f3, HT_Script_0009f3,
+    HT_Script_0009f4, HT_Script_0009f4,
 };
 // XBE_GLOBAL(0x0017e7ac, 0x48)
 static HASHCODE PlayerAnimSetClass5[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60001e6, (HASHCODE)0x60001e7, (HASHCODE)0x60001e5, (HASHCODE)0, (HASHCODE)0x60009df,
-    (HASHCODE)0x60009df, (HASHCODE)0x60009e0, (HASHCODE)0x60009e0, (HASHCODE)0, (HASHCODE)0x60001e3,
-    (HASHCODE)0x600091f, (HASHCODE)0x600091f, (HASHCODE)0, (HASHCODE)0x600091e, (HASHCODE)0x600091e,
-    (HASHCODE)0x600091d, (HASHCODE)0x600091d,
+    HT_Script_0001e6, HT_Script_0001e7, HT_Script_0001e5, (HASHCODE)0, HT_Script_0009df,
+    HT_Script_0009df, HT_Script_0009e0, HT_Script_0009e0, (HASHCODE)0, HT_Script_0001e3,
+    HT_Script_00091f, HT_Script_00091f, (HASHCODE)0, HT_Script_00091e, HT_Script_00091e,
+    HT_Script_00091d, HT_Script_00091d,
 };
 // XBE_GLOBAL(0x0017e7f4, 0x48)
 static HASHCODE PlayerAnimSetClass4[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60001ce, (HASHCODE)0x60001cf, (HASHCODE)0x60001cd, (HASHCODE)0, (HASHCODE)0x60009fc,
-    (HASHCODE)0x60009fc, (HASHCODE)0x60009fd, (HASHCODE)0x60009fd, (HASHCODE)0, (HASHCODE)0x60001cb,
-    (HASHCODE)0x60009d2, (HASHCODE)0x60009d2, (HASHCODE)0, (HASHCODE)0x60009d1, (HASHCODE)0x60009d1,
-    (HASHCODE)0x60009d0, (HASHCODE)0x60009d0,
+    HT_Script_0001ce, HT_Script_0001cf, HT_Script_0001cd, (HASHCODE)0, HT_Script_0009fc,
+    HT_Script_0009fc, HT_Script_0009fd, HT_Script_0009fd, (HASHCODE)0, HT_Script_0001cb,
+    HT_Script_0009d2, HT_Script_0009d2, (HASHCODE)0, HT_Script_0009d1, HT_Script_0009d1,
+    HT_Script_0009d0, HT_Script_0009d0,
 };
 // XBE_GLOBAL(0x0017e83c, 0x48)
 static HASHCODE PlayerAnimSetClass6[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60009fe, (HASHCODE)0x60009b5, (HASHCODE)0x60009b7, (HASHCODE)0, (HASHCODE)0x60009ba,
-    (HASHCODE)0x60009ba, (HASHCODE)0x60009bb, (HASHCODE)0x60009bb, (HASHCODE)0, (HASHCODE)0x60009bc,
-    (HASHCODE)0x60009d3, (HASHCODE)0x60009d3, (HASHCODE)0, (HASHCODE)0x60009d4, (HASHCODE)0x60009d4,
-    (HASHCODE)0x60009d5, (HASHCODE)0x60009d5,
+    HT_Script_0009fe, HT_Script_0009b5, HT_Script_0009b7, (HASHCODE)0, HT_Script_0009ba,
+    HT_Script_0009ba, HT_Script_0009bb, HT_Script_0009bb, (HASHCODE)0, HT_Script_0009bc,
+    HT_Script_0009d3, HT_Script_0009d3, (HASHCODE)0, HT_Script_0009d4, HT_Script_0009d4,
+    HT_Script_0009d5, HT_Script_0009d5,
 };
 // XBE_GLOBAL(0x0017e884, 0x48)
 static HASHCODE PlayerAnimSetClass2[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    (HASHCODE)0x60009b0, (HASHCODE)0x60009b2, (HASHCODE)0x60009af, (HASHCODE)0, (HASHCODE)0x60009b3,
-    (HASHCODE)0x60009b3, (HASHCODE)0x60009b4, (HASHCODE)0x60009b4, (HASHCODE)0, (HASHCODE)0x60009ad,
-    (HASHCODE)0x60009aa, (HASHCODE)0x60009aa, (HASHCODE)0, (HASHCODE)0x60009ab, (HASHCODE)0x60009ab,
-    (HASHCODE)0x60009ac, (HASHCODE)0x60009ac,
+    HT_Script_0009b0, HT_Script_0009b2, HT_Script_0009af, (HASHCODE)0, HT_Script_0009b3,
+    HT_Script_0009b3, HT_Script_0009b4, HT_Script_0009b4, (HASHCODE)0, HT_Script_0009ad,
+    HT_Script_0009aa, HT_Script_0009aa, (HASHCODE)0, HT_Script_0009ab, HT_Script_0009ab,
+    HT_Script_0009ac, HT_Script_0009ac,
 };
 static HASHCODE *const PlayerAnimSetByClass[6] = {
     PlayerAnimSetClass1, PlayerAnimSetClass2, PlayerAnimSetClass3,
@@ -1925,12 +1924,12 @@ void PlayerAnimSetInit(obj_tag *player) {
 // The scripts that stand up from a crouch and crouch down, by weapon_definition_tag::animSet (1 to 6), and for any
 // other; class 3 in single player
 static const HASHCODE PlayerCrouch2StandScripts[7] = {
-    (HASHCODE)0x060009da, (HASHCODE)0x060009ae, (HASHCODE)0x060001dd,
-    (HASHCODE)0x060001d1, (HASHCODE)0x060001e9, (HASHCODE)0x060009b6, (HASHCODE)0x060001f4,
+    HT_Script_0009da, HT_Script_0009ae, HT_Script_0001dd,
+    HT_Script_0001d1, HT_Script_0001e9, HT_Script_0009b6, HT_Script_0001f4,
 };
 static const HASHCODE PlayerStand2CrouchScripts[7] = {
-    (HASHCODE)0x060009dd, (HASHCODE)0x060009b1, (HASHCODE)0x060001dc,
-    (HASHCODE)0x060001d0, (HASHCODE)0x060001e8, (HASHCODE)0x060009b9, (HASHCODE)0x060001f3,
+    HT_Script_0009dd, HT_Script_0009b1, HT_Script_0001dc,
+    HT_Script_0001d0, HT_Script_0001e8, HT_Script_0009b9, HT_Script_0001f3,
 };
 
 // Plays the change of stance for the held weapon, at four frames a tick
@@ -1962,9 +1961,9 @@ void PlayerAnimSetInitDead(obj_tag *player) {
     ((BLData *)player->extraObjectData)->animSet = NULL;
     AnimSetDeleteAll(player);
     if (GRAVITY_VECTOR.y == 0.0f)
-        AnimScriptAdd(player, (HASHCODE)0x060008e0);
+        AnimScriptAdd(player, HT_Script_0008e0);
     else
-        AnimScriptAdd(player, (HASHCODE)0x06000151);
+        AnimScriptAdd(player, HT_Script_000151);
 }
 
 // Returns the substate the player was in. Flying and zero G keep the matrix's rotation; everything else stands the
@@ -3251,23 +3250,11 @@ void Player_CollisionHandler(obj_tag *player) {
 // The fists' models, by BLData::punchSkin
 // XBE_GLOBAL(0x0017e8e8, 0x10) readonly relocate
 HASHCODE PunchSkin[4] = {
-    (HASHCODE)0x050000ab,
-    (HASHCODE)0x05000099,
-    (HASHCODE)0x0500003d,
-    (HASHCODE)0x050000a1,
+    HT_Skin_0000ab,
+    HT_Skin_000099,
+    HT_Skin_00003d,
+    HT_Skin_0000a1,
 };
-
-// The player's skins in single player, and the fists that go with them
-#define SKIN_BOND          ((HASHCODE)0x05000007)
-#define SKIN_LEVELS_1_TO_4 ((HASHCODE)0x05000009)
-#define SKIN_LEVELS_7_8    ((HASHCODE)0x0500000d)
-#define SKIN_LEVEL_1B      ((HASHCODE)0x0500007c)
-#define SKIN_MP_FISTS      ((HASHCODE)0x050000b0)
-
-// The anims Player_Init starts with
-#define ANIM_START_MP      ((HASHCODE)0x060001d4)
-#define ANIM_START_CROUCH  ((HASHCODE)0x060009ff)
-#define ANIM_START         ((HASHCODE)0x06000a00)
 
 // The start position's parameters as Player_Init reads them
 #pragma pack(push, 1)
@@ -3353,20 +3340,21 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     char punchSkin;
     if (MPSettings.isMultiplayer == 0) {
         switch (GameState.CurrentLevelHashcode) {
-            case 0x07000001: case 0x07000002: case 0x07000003: case 0x07000004:
-                skin = SKIN_LEVELS_1_TO_4;
+            case HT_Level_HendersonA: case HT_Level_HendersonB: case HT_Level_HendersonC: case HT_Level_HendersonD:
+                // The player's skins in single player, and the fists that go with them
+                skin = HT_Skin_SkinLevels1To4;
                 punchSkin = 1;
                 break;
-            case 0x07000007: case 0x07000008:
-                skin = SKIN_LEVELS_7_8;
+            case HT_Level_CastleIndoors1: case HT_Level_CastleIndoors2:
+                skin = HT_Skin_SkinLevels78;
                 punchSkin = 2;
                 break;
-            case 0x0700001b:
-                skin = SKIN_LEVEL_1B;
+            case HT_Level_SpaceStationD:
+                skin = HT_Skin_SkinLevel1B;
                 punchSkin = 3;
                 break;
             default:
-                skin = SKIN_BOND;
+                skin = HT_Skin_SkinBond;
                 punchSkin = 0;
                 break;
         }
@@ -3377,7 +3365,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
         MP_skin *mpSkin = &MP_skins[MPSettings.Player[num].SkinNum];
         skin = mpSkin->skinHashcode;
         punchSkin = (char)mpSkin->handType;
-        weapon_data[1].weaponModelHashcode = SKIN_MP_FISTS;
+        weapon_data[1].weaponModelHashcode = HT_Skin_SkinMpFists;
         weapon_data[0x37].offsetToNextAltFireVariant = 2;
     }
     blData->punchSkin = punchSkin;
@@ -3423,27 +3411,27 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     GRAVITY_VECTOR.z = 0.0f;
     if (MPSettings.isMultiplayer != 0) {
         Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Walk);
-        AnimScriptAdd(player, ANIM_START_MP);
+        AnimScriptAdd(player, HT_Script_AnimStartMp);
     }
     else {
         switch (params->startState) {
             case PlayerStart_Swimming:
                 Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Swim);
-                AnimScriptAdd(player, ANIM_START);
+                AnimScriptAdd(player, HT_Script_AnimStart);
                 break;
             case PlayerStart_ZeroG:
                 Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_ZeroG);
-                AnimScriptAdd(player, ANIM_START);
+                AnimScriptAdd(player, HT_Script_AnimStart);
                 Vec_Zero(&GRAVITY_VECTOR);
                 break;
             case PlayerStart_Crouching:
                 Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Crouch);
-                AnimScriptAdd(player, ANIM_START_CROUCH);
+                AnimScriptAdd(player, HT_Script_AnimStartCrouch);
                 blData->headCrouchOffset = 0.45f;
                 break;
             default:
                 Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Walk);
-                AnimScriptAdd(player, ANIM_START);
+                AnimScriptAdd(player, HT_Script_AnimStart);
                 break;
         }
     }
@@ -3810,7 +3798,7 @@ static void Recharge(BLData *blData, int weapon) {
 void Player_Update(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     if (Input_Action(blData->playerNum, ACTION_PAUSE, 4) && GameState.LevelEnding == 0 && ScriptCam == 0) {
-        blData->pauseMenu = (short)MenuManager_Create(0x80000002, 0x4000004b, blData->playerNum,
+        blData->pauseMenu = (short)MenuManager_Create(HT_Menu_ControllerMenu, P_PAUSE, blData->playerNum,
                                                       (uchar)blData->playerNum, ACTION_PAUSE, 1, 3);
         GS_PauseGame(1);
     }

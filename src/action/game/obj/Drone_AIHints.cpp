@@ -13,13 +13,9 @@ LLISTINFO_tag AIBoxList;
 
 #pragma fp_contract(off)
 
-
 // Drone_ProcessCoverNodes counts it down by 2 from 10
 // XBE_GLOBAL(0x001dfa2c, 0x4)
 int32_t iTimeToCalc;
-
-// The script a kickable script player runs
-#define KICK_SCRIPT 0x060005bb
 
 constexpr float kDegToRad = 0.017453292f;
 static_assert(std::bit_cast<uint32_t>(kDegToRad) == 0x3c8efa35);
@@ -419,7 +415,7 @@ void NDrone_InitKickNodes(void) {
                 if (obj->objectType != OBJECTTYPE_SCRIPTPLAYER)
                     continue;
                 SCRIPTINFO *info = SP_getScriptInfo(obj);
-                if (info == NULL || info->scriptHashcode != KICK_SCRIPT)
+                if (info == NULL || info->scriptHashcode != HT_Script_KickScript)
                     continue;
                 double distanceSq = DistanceSq(&obj->position, &node->fileNode->pos);
                 if (kickable == NULL || distanceSq < nearest) {

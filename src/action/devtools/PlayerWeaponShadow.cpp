@@ -186,7 +186,7 @@ int __cdecl FakeDatumGetWeaponInfo(obj_tag *obj, HASHCODE *gfx, HASHCODE *flash,
     ShadowLog("weaponinfo(%x,%x,%x,%x)", W(obj), W(gfx), W(flash), W(sound));
     int datum = (int)Next(4) - 1;
     if (datum >= 0 && flash != NULL)
-        *flash = (HASHCODE)(0x2000100 + datum);
+        *flash = (HASHCODE)(HT_Entity_000100 + datum);
     return datum;
 }
 void __cdecl FakeBone(obj_tag *obj, uint which, int datum, _VECTOR *pos, _MATRIX *mtx) {
@@ -455,7 +455,7 @@ void RandomWorld(void) {
     // Globals
     static const HASHCODE levels[] = {HT_Level_HendersonA, HT_Level_CastleIndoors1, HT_Level_TowerB,
                                       HT_Level_PowerStationA1, HT_Level_Tower2Elevator, HT_Level_EvilSilo,
-                                      HT_Level_SpaceStationD, (HASHCODE)0x7000021};
+                                      HT_Level_SpaceStationD, HT_Level_SpaceStation};
     GameState.CurrentLevelHashcode = levels[ShadowRand(8)];
     GameState.difficultyModifier = ShadowRand(5);
     GameState.LoadTimeStart = ShadowRand(200) - 20;
@@ -601,7 +601,7 @@ void RandomWorld(void) {
     memset(&world.skin, 0, sizeof(world.skin));
     ((AnimState *)world.gunAnim)->animObj.skin = &world.skin;
     world.skin.numDatums = (uchar)(ShadowRand(3) ? 4 : 0);
-    world.skin.hashcode = ShadowRand(2) ? (HASHCODE)0x500004b : (HASHCODE)0x5000050;
+    world.skin.hashcode = ShadowRand(2) ? HT_Skin_00004b : HT_Skin_000050;
     static const ushort gunStates[] = {0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 10, 11, 12, 12, 13, 14, 15, 16, 17};
     world.gun.curState = gunStates[ShadowRand(COUNT(gunStates))];
     world.gun.subState = (ushort)ShadowRand(70);

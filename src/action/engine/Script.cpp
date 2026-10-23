@@ -103,7 +103,7 @@ SpriteInfo LetterboxSprInfo[1] = {
         .onscreenWidth = 640,
         .onscreenHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = (HASHCODE)0x3000002,
+        .textureHashcode = HT_Texture_ColourFill,
         .linkedViewer = 4,
     },
 };
@@ -502,7 +502,7 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         }
         AnimObjectUpdate(obj);
         obj->transformFlags |= TRANSFORM_MOVED;
-        if (animObj->skin->hashcode == 0x500001e)
+        if (animObj->skin->hashcode == HT_Skin_00001e)
             NDrone2_CreateNinjaEyes(obj);
 
         // A footstep this frame: a ray 4 down from the object finds the ground under it
@@ -1181,7 +1181,7 @@ void Script_SetPosRot(SCRIPTINFO *scriptInfo, _MATRIX *mtx) {
 // AUTOINJECT
 SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation, uint *fileBuf, void *scriptPlayer,
                         ScriptPlayerCallback *callback, void *callbackContext) {
-    if ((hashcode & 0xff000000) != 0x6000000)
+    if ((hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
         return NULL;
 
     SCRIPTDEF *def = (SCRIPTDEF *)hashtable_getitem(hashcode);
@@ -1340,8 +1340,9 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
 
                 // A handful of specific scripts (hashcode-identified) either skip this automatic fade entirely,
                 // or opt out of it - exact reason for each isn't confirmed
-                if (scriptInfo->scriptHashcode != 0x60008c8 && scriptInfo->scriptHashcode != 0x6000080) {
-                    if (scriptInfo->scriptHashcode != 0x60004fa && scriptInfo->scriptHashcode != 0x6000994) {
+                if (scriptInfo->scriptHashcode != HT_Script_0008c8 && scriptInfo->scriptHashcode != HT_Script_000080) {
+                    if (scriptInfo->scriptHashcode != HT_Script_0004fa
+                        && scriptInfo->scriptHashcode != HT_Script_000994) {
                         Camera_SetFade(4, 40.0f, 0xff, 0);
                     }
                 }
@@ -1433,7 +1434,7 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd) {
 
 // AUTOINJECT
 bool Script_IsDeathNIS(HASHCODE hashcode) {
-    return hashcode == 0x6000952 || hashcode == 0x600098a || hashcode == 0x6000991;
+    return hashcode == HT_Script_000952 || hashcode == HT_Script_00098a || hashcode == HT_Script_000991;
 }
 
 // AUTOINJECT

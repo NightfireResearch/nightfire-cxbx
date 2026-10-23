@@ -1677,7 +1677,7 @@ void RandomBox(void) {
     M_TEXTBOX *box = &world.box;
     memset(box, 0, sizeof(*box));
     memset(&world.newControl, 0, sizeof(world.newControl));
-    world.newControl.hashcode = (HASHCODE)(0x10000000 | R(0x100));
+    world.newControl.hashcode = (HASHCODE)(HT_MenuControl_HASHCODE_BASE | R(0x100));
     world.newControl.id = (int)R(0);
     world.newControl.skin = (ushort)R(8);
     world.newControl.depth = (ushort)R(100);

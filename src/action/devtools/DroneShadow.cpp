@@ -269,8 +269,10 @@ static void TestReactionTime(void) {
     memset(&drone, 0, sizeof(drone));
     uint savedLevel = GameState.CurrentLevelHashcode;
     float savedDiv = FRAME_RATE_DIV;
-    static const uint levels[] = {0x7000001, 0x7000002, 0x7000003, 0x7000004, 0x7000005, 0x7000006, 0x7000007,
-                                  0x7000008, 0x7000009, 0x700000a, 0x700000b, 0x700000c, 0, 0x7000011};
+    static const uint levels[] = {HT_Level_HendersonA, HT_Level_HendersonB, HT_Level_HendersonC, HT_Level_HendersonD,
+                                  HT_Level_CastleExterior, HT_Level_CastleCourtyard, HT_Level_CastleIndoors1,
+                                  HT_Level_CastleIndoors2, HT_Level_TowerA, HT_Level_TowerB, HT_Level_TowerC,
+                                  HT_Level_PowerStationA1, 0, HT_Level_Tower2A};
     static const float divs[] = {1.0f, 0.5f, 2.0f, 1.0f / 3.0f};
     static const uint flags[] = {0, 4, 8, 0xfffffff7, 0xffffffff};
     float alerts[24] = {0, 0.25f, 0.5f, 0.66f, 0.75f, 0.9999999f, 1.0f, 1.5f, -0.5f, -0.0f};

@@ -11,7 +11,6 @@
 // The credits: a table of 578 lines (data/credits.csv, generated into CreditsData.inc - see docs/ui/credits.md)
 // that P_CREDITS scrolls up the screen through 26 recycled pairs of text controls, one new line every 14 frames.
 
-
 // A line of the credits as written in the source: a text label, or a literal where the label is TXT_NONE (the
 // names are not translated, and not in the text banks).
 #define TXT_NONE 0xffffffffu
@@ -91,7 +90,6 @@ static const char *CreditsFormat(uchar style) {
         return credits_format_role;
     return credits_format_name;
 }
-
 
 // AUTOINJECT
 bool P_CREDITS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
@@ -209,9 +207,9 @@ bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         // from anywhere else it is always the trailer. The original inlines Menu_PlayMovie here (the same six
         // stores and calls, argument for argument), so calling it is the same thing.
         attract_show_trailer = (attract_show_trailer == 0);
-        HASHCODE movie = FMV_TRAILER;
+        HASHCODE movie = HT_Level_FmvTrailer;
         if (arg2 == P_MAIN && !attract_show_trailer)
-            movie = FMV_TITLES;
+            movie = HT_Level_FmvTitles;
         // stops the front-end music, not looped, locks input
         Menu_PlayMovie(movie, 1, 0, 1, 1, 0);
     }

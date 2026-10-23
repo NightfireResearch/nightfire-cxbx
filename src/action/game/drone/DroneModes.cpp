@@ -682,20 +682,20 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
     if (diVars == NULL)
         return;
     switch (diVars->keys.playScript) {
-    case 0x600011d:
+    case HT_Script_00011d:
         behaviour_util_setProperty(DRONE_PROP_1D, drone->currentBehaviour, 1);
         drone->dtype = DTYPE_TruckDriver;
         break;
-    case 0x600011f:
+    case HT_Script_00011f:
         drone->chatSwitchChannel = 0x19;
         drone->dtype = DTYPE_CastleChatGuard;
         break;
-    case 0x6000124:
-    case 0x6000126:
+    case HT_Script_000124:
+    case HT_Script_000126:
         drone->chatSwitchChannel = 0x11;
         drone->dtype = DTYPE_CastleChatGuard;
         break;
-    case 0x600021f:
+    case HT_Script_DeathScript21F:
         behaviour_util_setProperty(DRONE_PROP_38, drone->currentBehaviour, 0);
         drone->flags |= DRONE_FLAG_FROZEN;
         break;

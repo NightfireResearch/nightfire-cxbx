@@ -20,10 +20,10 @@ float FlashMod;
 
 // The levels whose crosshair is marked on any drone, the one with no door messages and the one with no load
 // trigger message
-#define MARK_ALL_FIRST 0x07000005
-#define MARK_ALL_LAST 0x07000008
-#define NO_DOOR_MSG_LEVEL 0x0700004a
-#define NO_LOAD_MSG_LEVEL 0x07000009
+#define MARK_ALL_FIRST HT_Level_CastleExterior
+#define MARK_ALL_LAST HT_Level_CastleIndoors2
+#define NO_DOOR_MSG_LEVEL HT_Level_Tower2Elevator
+#define NO_LOAD_MSG_LEVEL HT_Level_TowerA
 
 #define TEXT_PRESS_ACTION ((Action_TranslatedText)0x02000009)
 

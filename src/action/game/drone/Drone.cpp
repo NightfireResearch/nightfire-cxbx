@@ -38,7 +38,6 @@
 
 // Another package's, or still the game's
 
-
 #include "../obj/BodyGlow.h"
 #include "NDrone2_Combat.h"
 #include "NDrone2_Cover.h"
@@ -82,7 +81,6 @@ static uint BreathPhase(const Drone_tag *drone) {
     return (drone->sm.id * 2654435761u) >> 20;
 }
 
-
 // AUTOINJECT
 bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
 
@@ -102,7 +100,6 @@ bool Drone_DCVfromOBJ(obj_tag* gameObj, DCVars_tag* dcVars) {
     return true;
 
 }
-
 
 // AUTOINJECT
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
@@ -147,10 +144,10 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
         return;
 
     NPCGlobals.enabledFrame = GameState.NumFramesUnpaused;
-    if (hashcode == 0x600001b) {
+    if (hashcode == HT_Script_00001b) {
         Drone_Message(NULL, DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8);
         Music_Event(0xf, 1);
-    } else if (hashcode == 0x600002e) {
+    } else if (hashcode == HT_Script_00002e) {
         for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
             obj_tag *gameObj = drone->gameObj;
             if (gameObj == NULL)
@@ -187,7 +184,6 @@ obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE p
     }
     return gameObj;
 }
-
 
 // The drone's alert status (Drone_tag.alertStatus), or NULL for anything that is not a drone.
 // AUTOINJECT
@@ -1029,7 +1025,8 @@ void Drone_Delete(obj_tag *gameObj) {
             GUNTURRET *turret = (GUNTURRET *)obj->extraObjectData;
             if (turret != NULL && turret->owner == gameObj) {
                 obj->flags |= 1;
-                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, (HASHCODE)0x6000052, 50.0f, 0xff,
+                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BulletExplosion, 50.0f,
+                               0xff,
                                0xff, 100, NULL, 0);
             }
             break;

@@ -23,26 +23,34 @@
 // finishing the mission before (Menu_SetLevelBonus) and by secret codes (Menu_SpecialCodenameCheck).
 // XBE_GLOBAL(0x0017c580, 0x120)
 M_ITEM sp_level[12] = {
-    {ICON_SPMAP_PARISPRELUDE, SPMAP_PARISPRELUDE_NAME, SPMAP_PARISPRELUDE_DESC, HT_Level_Driving_Paris, 1, TXT_NULL},
-    {ICON_SPMAP_EXCHANGE, SPMAP_EXCHANGE_NAME, SPMAP_EXCHANGE_DESC, HT_Level_CastleExterior, 1, TXT_NULL},
-    {ICON_SPMAP_ALPINEESCAPE, SPMAP_ALPINEESCAPE_NAME, SPMAP_ALPINEESCAPE_DESC, HT_Level_Driving_SnowMobile, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_ENEMIESVANQUISHED, SPMAP_ENEMIESVANQUISHED_NAME, SPMAP_ENEMIESVANQUISHED_DESC, HT_Level_Driving_Alps, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_DOUBLECROSS, SPMAP_DOUBLECROSS_NAME, SPMAP_DOUBLECROSS_DESC, HT_Level_HendersonA, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_NIGHTSHIFT, SPMAP_NIGHTSHIFT_NAME, SPMAP_NIGHTSHIFT_DESC, HT_Level_TowerA, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_CHAINREACTION, SPMAP_CHAINREACTION_NAME, SPMAP_CHAINREACTION_DESC, HT_Level_PowerStationA1, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_PHOENIXFIRE, SPMAP_PHOENIXFIRE_NAME, SPMAP_PHOENIXFIRE_DESC, HT_Level_Tower2A, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_DEEPDESCENT, SPMAP_DEEPDESCENT_NAME, SPMAP_DEEPDESCENT_DESC, HT_Level_Driving_Underwater, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_ISLANDINFILTRATION, SPMAP_ISLANDINFILTRATION_NAME, SPMAP_ISLANDINFILTRATION_DESC, HT_Level_Driving_JungleA, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_COUNTDOWN, SPMAP_COUNTDOWN_NAME, SPMAP_COUNTDOWN_DESC, HT_Level_EvilBase, 0, SPMAP_LOCKED},
-    {ICON_SPMAP_EQUINOX, SPMAP_EQUINOX_NAME, SPMAP_EQUINOX_DESC, HT_Level_SpaceStationD, 0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapParisprelude, SPMAP_PARISPRELUDE_NAME, SPMAP_PARISPRELUDE_DESC, HT_Level_Driving_Paris, 1,
+        TXT_NULL},
+    {HT_Texture_IconSpmapExchange, SPMAP_EXCHANGE_NAME, SPMAP_EXCHANGE_DESC, HT_Level_CastleExterior, 1, TXT_NULL},
+    {HT_Texture_IconSpmapAlpineescape, SPMAP_ALPINEESCAPE_NAME, SPMAP_ALPINEESCAPE_DESC, HT_Level_Driving_SnowMobile,
+        0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapEnemiesvanquished, SPMAP_ENEMIESVANQUISHED_NAME, SPMAP_ENEMIESVANQUISHED_DESC,
+        HT_Level_Driving_Alps, 0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapDoublecross, SPMAP_DOUBLECROSS_NAME, SPMAP_DOUBLECROSS_DESC, HT_Level_HendersonA, 0,
+        SPMAP_LOCKED},
+    {HT_Texture_IconSpmapNightshift, SPMAP_NIGHTSHIFT_NAME, SPMAP_NIGHTSHIFT_DESC, HT_Level_TowerA, 0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapChainreaction, SPMAP_CHAINREACTION_NAME, SPMAP_CHAINREACTION_DESC, HT_Level_PowerStationA1, 0,
+        SPMAP_LOCKED},
+    {HT_Texture_IconSpmapPhoenixfire, SPMAP_PHOENIXFIRE_NAME, SPMAP_PHOENIXFIRE_DESC, HT_Level_Tower2A, 0,
+        SPMAP_LOCKED},
+    {HT_Texture_IconSpmapDeepdescent, SPMAP_DEEPDESCENT_NAME, SPMAP_DEEPDESCENT_DESC, HT_Level_Driving_Underwater, 0,
+        SPMAP_LOCKED},
+    {HT_Texture_IconSpmapIslandinfiltration, SPMAP_ISLANDINFILTRATION_NAME, SPMAP_ISLANDINFILTRATION_DESC,
+        HT_Level_Driving_JungleA, 0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapCountdown, SPMAP_COUNTDOWN_NAME, SPMAP_COUNTDOWN_DESC, HT_Level_EvilBase, 0, SPMAP_LOCKED},
+    {HT_Texture_IconSpmapEquinox, SPMAP_EQUINOX_NAME, SPMAP_EQUINOX_DESC, HT_Level_SpaceStationD, 0, SPMAP_LOCKED},
 };
 
 // difficulty (ui.h): the identifier is GameState.difficultyModifier.
 // XBE_GLOBAL(0x0017c760, 0x48)
 M_ITEM difficulty[3] = {
-    {ICON_DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE_DESC, 1, 1, TXT_NULL},
-    {ICON_DIFFICULTY_AGENT, DIFFICULTY_AGENT, DIFFICULTY_AGENT_DESC, 2, 1, TXT_NULL},
-    {ICON_DIFFICULTY_00AGENT, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},
+    {HT_Texture_IconDifficultyOperative, DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE_DESC, 1, 1, TXT_NULL},
+    {HT_Texture_IconDifficultyAgent, DIFFICULTY_AGENT, DIFFICULTY_AGENT_DESC, 2, 1, TXT_NULL},
+    {HT_Texture_IconDifficulty00AGENT, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},
 };
 
 extern char menu_unlock_everything;
@@ -180,13 +188,6 @@ uint8_t results_saving;
 
 extern uint8_t menu_level_bonus_earned;  // MenuUnlocks.cpp
 
-#define SUB_P_NFRESULTS_TITLE_TEXT  ((HASHCODE)0x100001d1)
-#define SUB_P_NFRESULTS_SCORE_TEXT  ((HASHCODE)0x10000167)
-#define SUB_P_NFRESULTS_TARGET_NAME ((HASHCODE)0x1000002b)
-#define SUB_P_NFRESULTS_TARGET_TEXT ((HASHCODE)0x10000168)
-#define SUB_P_NFRESULTS_MEDAL_ICON  ((HASHCODE)0x10000166)
-#define SUB_P_NFRESULTS_FIRST       ((HASHCODE)0x10000165)   // the cursor starts on it
-
 #define TXT_PLATINUM_WON    ((Action_TranslatedText)0x2c7)
 #define TXT_GOLD_WON        ((Action_TranslatedText)0x2c8)
 #define TXT_SILVER_WON      ((Action_TranslatedText)0x2c9)
@@ -199,15 +200,9 @@ extern uint8_t menu_level_bonus_earned;  // MenuUnlocks.cpp
 #define TXT_KILLED_IN_ACTION ((Action_TranslatedText)0x2fe)
 #define TXT_NICE_WORK       ((Action_TranslatedText)0x10001fd)  // "Nice work %s. You completed the mission."
 #define TXT_AGENT           ((Action_TranslatedText)0x10001fe)
-#define ICON_MEDAL_PLATINUM ((HASHCODE)0x0300013f)
-#define ICON_MEDAL_GOLD     ((HASHCODE)0x0300013e)
-#define ICON_MEDAL_SILVER   ((HASHCODE)0x03000140)
-#define ICON_MEDAL_BRONZE   ((HASHCODE)0x0300013d)
-#define ICON_NO_MEDAL       ((HASHCODE)0x0300019a)
 
 #define MEDAL_NONE 5    // Menu_SetLevelBonus's medal for none
 #define TXT_NFMAP_HINT_MAIN_MENU ((Action_TranslatedText)0x283)  // "~A Select  ~Y Dossier  ~V Scroll  ~B Main Menu"
-#define SUB_P_NFSTATS_LIST ((HASHCODE)0x10000022)
 // The format of the results' and the rewards' memos (the game's string, which a memo keeps)
 #define RESULTS_FORMAT FontFormat3
 
@@ -269,32 +264,32 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                     medal = 4;
                     title = TXT_PLATINUM_WON;
                     targetName = TXT_PLATINUM_TARGET;
-                    icon = ICON_MEDAL_PLATINUM;
+                    icon = HT_Texture_IconMedalPlatinum;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreGold) {
                     medal = 3;
                     title = TXT_GOLD_WON;
                     targetName = TXT_PLATINUM_TARGET;
-                    icon = ICON_MEDAL_GOLD;
+                    icon = HT_Texture_IconMedalGold;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreSilver) {
                     medal = 2;
                     title = TXT_SILVER_WON;
                     targetName = TXT_GOLD_TARGET;
-                    icon = ICON_MEDAL_SILVER;
+                    icon = HT_Texture_IconMedalSilver;
                     SeparateNumber(results_score->thresholdScoreGold, results_target_text);
                 } else if (score >= results_score->thresholdScoreBronze) {
                     medal = 1;
                     title = TXT_BRONZE_WON;
                     targetName = TXT_SILVER_TARGET;
-                    icon = ICON_MEDAL_BRONZE;
+                    icon = HT_Texture_IconMedalBronze;
                     SeparateNumber(results_score->thresholdScoreSilver, results_target_text);
                 } else {
                     // no medal: the title names the codename instead
                     SeparateNumber(results_score->thresholdScoreBronze, results_target_text);
                     medal = MEDAL_NONE;
                     targetName = TXT_BRONZE_TARGET;
-                    icon = ICON_NO_MEDAL;
+                    icon = HT_Texture_IconNoMedal;
                     if (ls.slot < CODENAME_SLOTS_DEFAULT) {
                         const char *agent = Txt_BindLabel(TXT_AGENT, 0);
                         sprintf(results_title_text, Txt_BindLabel(TXT_NICE_WORK, 0), agent);
@@ -366,9 +361,6 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 char bonus_text[0x84];
 // XBE_GLOBAL(0x0025dd58, 0x80)
 char bonus_text_before[0x80];
-
-#define SUB_P_NFBONUS_TEXT ((HASHCODE)0x100001d0)
-#define SUB_P_NFBONUS_ICON ((HASHCODE)0x100001cf)
 
 // The rewards just won, the first medal's pictured, the others' names after it from the best down (blank with none)
 // AUTOINJECT

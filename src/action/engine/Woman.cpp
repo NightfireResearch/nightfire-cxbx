@@ -18,7 +18,6 @@ void *pWoman;  // Current point in the buffer to which we have decoded
 // XBE_GLOBAL(0x002ae2e4, 0x4)
 uint32_t WomanFrame;  // Frame number
 
-
 // Loads the pause menu background's RLE file whole and rewinds the decoder to its first frame
 // AUTOINJECT
 void LoadWoman(void) {
@@ -73,10 +72,10 @@ void psiDecompressWoman(void) {
         WomanFrame = 0;
         pWoman = MemoryForWoman;
     }
-    uint32_t *fire = (uint32_t *)WomanTextureFrame(TEX_FIRE_FOR_WOMAN);
+    uint32_t *fire = (uint32_t *)WomanTextureFrame(HT_Texture_FireForWoman);
     if (fire == NULL)
         return;
-    uint32_t *out = (uint32_t *)WomanTextureFrame(TEX_DISCOWOMAN);
+    uint32_t *out = (uint32_t *)WomanTextureFrame(HT_Texture_Discowoman);
     if (out == NULL)
         return;
 

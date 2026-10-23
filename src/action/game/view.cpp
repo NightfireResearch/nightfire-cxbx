@@ -577,7 +577,7 @@ void View_DrawObjList(viewer_tag *viewer, ushort list) {
     bShadowCharacter = 0;
 }
 
-#define SKY_TURNING_LEVEL 0x0700001b
+#define SKY_TURNING_LEVEL HT_Level_SpaceStationD
 #define SKY_SUN_YAW 4.9741883f
 #define SKY_SUN_PITCH -0.6632251f
 static_assert(std::bit_cast<uint32_t>(SKY_SUN_YAW) == 0x409f2c8d, "not the original's constant");
@@ -676,7 +676,6 @@ void View_DrawSky(viewer_tag *viewer, char pass) {
     psiFog(1, 0.0f, 20.0f, 0x64, 0x64, 0x96);
 }
 
-
 // One of the sky's models (at most SKY_OBJS): a model or an object, or with 'flash' one that flashes, for 'length'
 // frames at random within 'interval' seconds. An object given is hidden from the ordinary drawing.
 // AUTOINJECT
@@ -709,7 +708,6 @@ void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot
     else
         Vec_Zero(&sky->rot);
 }
-
 
 // XBE_GLOBAL(0x0029e810, 0x4)
 uint32_t SprCnt;

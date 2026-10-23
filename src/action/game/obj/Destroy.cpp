@@ -15,14 +15,6 @@
 
 #pragma fp_contract(off)
 
-// The explosions of the kinds of key 2: 1, 2 and the rest
-#define DESTROY_EXPLOSION_1 ((HASHCODE)0x06000027)
-#define DESTROY_EXPLOSION_2 ((HASHCODE)0x0600004f)
-#define DESTROY_EXPLOSION_OTHER ((HASHCODE)0x06000052)
-
-// The model whose destruction counts as a shot at the scenery in 0x07000002
-#define DESTROY_SCENERY_MODEL ((HASHCODE)0x020001d9)
-
 // MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
 // and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
 static int32_t Ftol(double x) {
@@ -149,8 +141,8 @@ void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags) {
     } else if (destroy->delay == 0) {
         switch_channels[destroy->channelOut] = 1;
         obj->objectType = OBJECTTYPE_DELETED;
-        if (GameState.CurrentLevelHashcode == (HASHCODE)0x07000002 && obj->objGraphics != NULL
-            && obj->objGraphics == hashtable_getitem(DESTROY_SCENERY_MODEL)) {
+        if (GameState.CurrentLevelHashcode == HT_Level_HendersonB && obj->objGraphics != NULL
+            && obj->objGraphics == hashtable_getitem(HT_Entity_DestroySceneryModel)) {
             PlrStat_LogShotHitScenery(0);
         }
     }
@@ -162,13 +154,14 @@ void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags) {
     HASHCODE script;
     uint size;
     if (kind == 1) {
-        script = DESTROY_EXPLOSION_1;
+        // The explosions of the kinds of key 2: 1, 2 and the rest
+        script = HT_Script_DestroyExplosion1;
         size = 4;
     } else if (kind == 2) {
-        script = DESTROY_EXPLOSION_2;
+        script = HT_Script_DestroyExplosion2;
         size = 2;
     } else {
-        script = DESTROY_EXPLOSION_OTHER;
+        script = HT_Script_BulletExplosion;
         size = 3;
     }
     Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, (float)size * obj->radius, destroy->blastRadius, script,

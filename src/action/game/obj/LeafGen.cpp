@@ -20,8 +20,6 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-#define LEAF_MODEL ((HASHCODE)0x020002ca)
-
 // AUTOINJECT
 obj_tag* LeafGen_Create(_VECTOR *pos, _VECTOR *rot, level_tag* lvl, celglist_tag *celgl) {
     obj_tag *obj = control_create_object(0, pos, rot, NULL);
@@ -77,7 +75,7 @@ void Leaf_Create(obj_tag *gen, ushort count) {
         Vec_Scalef(&leaf->vel, FRAME_RATE_MUL, &leaf->vel);
         Rand_FRandHalf_Vec(&leaf->spin, 0.1f);
         Vec_Scalef(&leaf->spin, FRAME_RATE_MUL, &leaf->spin);
-        hashtable_set_object_to_entity_gfx(leafObj, LEAF_MODEL);
+        hashtable_set_object_to_entity_gfx(leafObj, HT_Entity_LeafModel);
         leafObj->effectFlags |= 0x20000020;
         if (!build_LinkToRoom(leafObj, 0, glb_world))
             control_link_object_to_cel(leafObj, gen->inCel);

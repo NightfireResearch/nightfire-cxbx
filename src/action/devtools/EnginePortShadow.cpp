@@ -567,7 +567,7 @@ void __cdecl FakeMovie(HASHCODE hash, char loop, int volume) {
 
 HASHCODE __cdecl FakeNextMission(HASHCODE movie) {
     ShadowLog("nextmission(%x)", movie);
-    static const uint32_t kNext[] = {0x07000048, 0x07000012, 0x07100005};
+    static const uint32_t kNext[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_FmvIntroStolenHardware};
     return (HASHCODE)kNext[R(3)];
 }
 
@@ -2117,10 +2117,15 @@ void InstallLoadFakes(void) {
 }
 
 void LoadState(void) {
-    static const uint32_t kLevels[] = {0x07000048, 0x07000012, 0x07010018, 0x07000018, 0x07000030, 0x07100001,
-                                       0x07100002, 0x07100005, 0x07100009, 0x0710000c, 0x07100011, 0x07100014,
-                                       0x07100018, 0x07300004, 0x07300008, 0x0730000b, 0x0730000d, 0x07300013,
-                                       0x07300017, 0x0730001b, 0x07300009, 0x07400001};
+    static const uint32_t kLevels[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_010018, HT_Level_000018,
+                                       HT_Level_000030, HT_Level_FmvIntroMayhewEntry, HT_Level_100002,
+                                       HT_Level_FmvIntroStolenHardware, HT_Level_FmvIntroPhoenixTower,
+                                       HT_Level_FmvIntroPowerplant, HT_Level_FmvIntroPhoenixTower2,
+                                       HT_Level_FmvIntroIslandRadiotower, HT_Level_FmvIntroSpaceStation,
+                                       HT_Level_FmvOutroMayhewDead, HT_Level_FmvOutroHelicopterCrash,
+                                       HT_Level_FmvOutroParachuteOffTower, HT_Level_FmvOutroThroughVentKiko,
+                                       HT_Level_FmvOutroLobbyEscape, HT_Level_FmvOutroKikoRocketlaunch,
+                                       HT_Level_FmvOutroEscapePodEndGame, HT_Level_300009, 0x07400001};
     GameState.NextLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
     GameState.CurrentLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
     GameState.MovieHashcode = kLevels[R(COUNT(kLevels))];
@@ -2253,7 +2258,7 @@ uint32_t RunFixup(bool original) {
 }
 
 uint32_t RunNextMovie(bool original) {
-    uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? 0x07100000 : R(2) ? 0x07200000 : 0x07300000) + R(0x50);
+    uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? HT_Level_100000 : R(2) ? HT_Level_200000 : HT_Level_300000) + R(0x50);
     return (uint32_t)CDECL_RUN(0x000bdcd0, ResetMap_LevelAfterMovie, HASHCODE (__cdecl *)(HASHCODE), (HASHCODE)movie);
 }
 

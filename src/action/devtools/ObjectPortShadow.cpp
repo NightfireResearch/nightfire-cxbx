@@ -1355,8 +1355,8 @@ void RandomWorld(void) {
     world.level.firstCel = &world.cels[0];
     glb_world = &world.level;
     GameState.NumFramesUnpaused = R(4) == 0 ? R(64) : R(0);
-    GameState.CurrentLevelHashcode = (HASHCODE)(0x07000000 + R(0x14));
-    GameState.NextLevelHashcode = (HASHCODE)(R(4) == 0 ? 0x07000043 : 0x07000001);
+    GameState.CurrentLevelHashcode = (HASHCODE)(HT_Level_HASHCODE_BASE + R(0x14));
+    GameState.NextLevelHashcode = (HASHCODE)(R(4) == 0 ? HT_Level_AllCharacters : HT_Level_HendersonA);
     GameState.LoadTimeStart = R(100000);
     GameState.difficultyModifier = R(6);
     MPSettings.isMultiplayer = R(3) == 0;
@@ -1666,7 +1666,7 @@ uint32_t RunEnvBreath(bool original) {
 }
 
 uint32_t RunTreeCreate(bool original) {
-    uint32_t script = R(2) ? 0x0600008c : R(0);
+    uint32_t script = R(2) ? HT_Script_TreeScriptA : R(0);
     memcpy(&world.placement[0x30], &script, 4);
     sureCreate = true;
     obj_tag *obj = CDECL_RUN(0x00068fc0, Env_Tree_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *),
@@ -2373,7 +2373,7 @@ uint32_t RunColour(bool original) {
 
 uint32_t RunEmitterCreate(bool original) {
     sureCreate = true;
-    HASHCODE hc = (HASHCODE)(R(8) == 0 ? 0 : 0x0c000001);
+    HASHCODE hc = (HASHCODE)(R(8) == 0 ? 0 : HT_Emitter_000001);
     _VECTOR dir;
     PlainVector(&dir, 1.0f);
     Vec_Normalise(&dir, &dir);
@@ -2429,7 +2429,8 @@ uint32_t RunPickupCreate(bool original) {
                              obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, ushort, ushort, uint,
                                                   uint, uint, char, ushort, ushort, uint),
                              pos, R(2) ? &world.v[1] : NULL, mtx, glist, kind, item, R(30), R(2) ? 0 : R(8),
-                             R(3) == 0 ? 0 : R(0x200), (char)R(2), (ushort)R(4), (ushort)R(100), R(2) ? 0 : 0x02000444);
+                             R(3) == 0 ? 0 : R(0x200), (char)R(2), (ushort)R(4), (ushort)R(100), R(2) ? 0
+                                 : HT_Entity_000444);
     return W(obj);
 }
 
@@ -2515,7 +2516,7 @@ uint32_t RunCheckTarget(bool original) {
             if (R(2))
                 world.hits[i].hitObj = hit;
         if (R(4) == 0)
-            GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? 0x0700004a : 0x07000009);
+            GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? HT_Level_Tower2Elevator : HT_Level_TowerA);
         U32_AT(XbeOurs(0x00279158)) = R(3) == 0 ? R(5) : 0;
         U32_AT(XbeOurs(0x00279154)) = R(5);
     }
@@ -2641,7 +2642,7 @@ uint32_t RunCopterFireMissile(bool original) {
     if (R(2))
         GameState.NumFramesUnpaused = 60 * R(10);
     if (R(2))
-        GameState.CurrentLevelHashcode = (HASHCODE)0x07000008;
+        GameState.CurrentLevelHashcode = HT_Level_CastleIndoors2;
     uint32_t args[1] = {P(obj)};
     Regs r = {P(copter), 0, 0, 0, 0, 0};
     return RegsRun(original, 0x0006be70, (const void *)&Asm_Copter_FireMissile, r, 1, args) & 0xff;
@@ -2709,7 +2710,7 @@ obj_tag *Turret(void) {
 }
 
 uint32_t RunGTCreate(bool original) {
-    uint32_t keys[2] = {R(6) == 0 ? 0u : 0x06000045u, R(6) == 0 ? 0u : 0x06000044u};
+    uint32_t keys[2] = {R(6) == 0 ? 0u : HT_Script_MinigunBody, R(6) == 0 ? 0u : HT_Script_MinigunBase};
     memcpy(&world.placement[0x34], keys, 8);
     uint32_t kind = R(2);
     memcpy(&world.placement[0x2c], &kind, 4);
@@ -2906,7 +2907,8 @@ obj_tag *RandomCar(void) {
     car->isHeli = (char)R(2);
     car->machineGunOverheated = (char)(R(4) == 0);
     car->fireSide = (uchar)R(4);
-    static const ushort states[] = {CAR_IDLE, CAR_DRIVEN, CAR_DRIVEN, CAR_DRIVEN, CAR_STOPPED, CAR_TAKEN, CAR_DESTROYED, 7};
+    static const ushort states[] = {CAR_IDLE, CAR_DRIVEN, CAR_DRIVEN, CAR_DRIVEN, CAR_STOPPED, CAR_TAKEN, CAR_DESTROYED,
+                                    7};
     obj->curState = states[R(COUNT(states))];
     obj->subState = (ushort)(obj->curState == CAR_DESTROYED ? (R(2) ? R(3) : R(1800)) : R(4));
     if (obj->subState < 4)

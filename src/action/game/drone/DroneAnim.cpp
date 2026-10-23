@@ -27,9 +27,6 @@ static void DAStateFunc_Nothing(Drone_tag *drone, ushort phase) {}
 const DroneDataFunc DroneData_DAStateFunc[2] = {{.id = 10, .func = DAStateFunc_Nothing},
                                                 {.id = 0xffff, ._pad2 = 0xffff}};
 
-// The entity events 3 and 4 move between datums 0x28 and 100 (our name)
-#define ENTITY_SWAPPED ((HASHCODE)0x02000312)
-
 // The DAnim of a shot fired through the anim (DroneAnim_PlayFiringAnim)
 #define DANIM_NOW_FIRE 0x5c
 
@@ -375,7 +372,7 @@ void DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet
     drone->animNextRow = info->nextRow == row ? 0 : info->nextRow;
     drone->animMode = info->mode;
     drone->animPriority = DroneAnimStates[info->animState].priority;
-    drone->animHashcode = (HASHCODE)(0x06000000 + script->scriptLo);
+    drone->animHashcode = (HASHCODE)(HT_Script_HASHCODE_BASE + script->scriptLo);
     drone->animState = info->animState;
     drone->animOnce = 0;
     drone->animPlaying = 0;
@@ -393,7 +390,7 @@ LAYOUT_32(offsetof(Drone_tag, animMode) == 0x464, "Asm_DroneAnim_SetDAnimVeryInt
 // Whether the row is passed over at once: it has no script, or it is in one of the modes not played while the
 // drone is not drawn.
 bool DroneAnim_SkipAnim(Drone_tag *drone) {
-    if (drone->animHashcode == 0x06000000)
+    if (drone->animHashcode == HT_Script_HASHCODE_BASE)
         return true;
     if (drone->gameObj->drawnCountdown == 0 && (drone->unknown46c & DANIMFLAG_SKIP_UNSEEN)) {
         switch (drone->animMode) {
@@ -724,12 +721,12 @@ void DroneAnim_EventFunc(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script
         DroneWeap_ChangeWeapon(&dcv, secondWeapon);
         break;
     case 3:
-        AnimDatumSetEntity(obj, 0x28, ENTITY_SWAPPED, 0xff);
+        AnimDatumSetEntity(obj, 0x28, HT_Entity_EntitySwapped, 0xff);
         AnimDatumSetEntity(obj, 100, HASHCODE_NONE, 0xff);
         break;
     case 4:
         AnimDatumSetEntity(obj, 0x28, HASHCODE_NONE, 0xff);
-        AnimDatumSetEntity(obj, 100, ENTITY_SWAPPED, 0xff);
+        AnimDatumSetEntity(obj, 100, HT_Entity_EntitySwapped, 0xff);
         break;
     case 5:
     case 10:

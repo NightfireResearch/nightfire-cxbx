@@ -30,21 +30,18 @@ static void Monitor_ApplyDamage(obj_tag *obj, float damage) {}
 // The debris an explosion throws: metal, and in 0x07000008 with channel 0x53 on, stone
 // XBE_GLOBAL(0x001780b8, 0x10) readonly relocate
 HASHCODE MetalDebris[4] = {
-    (HASHCODE)0x02000414,
-    (HASHCODE)0x02000415,
-    (HASHCODE)0x02000416,
-    (HASHCODE)0x0200041b,
+    HT_Entity_000414,
+    HT_Entity_000415,
+    HT_Entity_000416,
+    HT_Entity_00041b,
 };
 // XBE_GLOBAL(0x001780a8, 0x10) readonly relocate
 HASHCODE StoneDebris[4] = {
-    (HASHCODE)0x02000664,
-    (HASHCODE)0x02000665,
-    (HASHCODE)0x02000666,
-    (HASHCODE)0x02000664,
+    HT_Entity_000664,
+    HT_Entity_000665,
+    HT_Entity_000666,
+    HT_Entity_000664,
 };
-
-// The effect script whose explosions throw debris
-#define EXPLODE_DEBRIS_SCRIPT ((HASHCODE)0x06000052)
 
 constexpr float kOneFifteenth = 0.06666667f;
 static_assert(std::bit_cast<uint32_t>(kOneFifteenth) == 0x3d888889, "the original's constant at 0x0015d434");
@@ -131,7 +128,7 @@ void Explode_Update(obj_tag *obj) {
 
     if (MPSettings.isMultiplayer == 1 || data->material == 0)
         return;
-    if (data->script != NULL && data->script->scriptHashcode != EXPLODE_DEBRIS_SCRIPT)
+    if (data->script != NULL && data->script->scriptHashcode != HT_Script_BulletExplosion)
         return;
     if ((uint)(GameState.NumFramesUnpaused - obj->creationTimeFrames) > data->frames / 4)
         return;
@@ -147,7 +144,7 @@ void Explode_Update(obj_tag *obj) {
     case 8:
     case 10:
     case 11:
-        if (GameState.CurrentLevelHashcode != (HASHCODE)0x07000008 || !switch_channels[0x53])
+        if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors2 || !switch_channels[0x53])
             return;
         debris = StoneDebris;
         break;

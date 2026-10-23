@@ -307,7 +307,7 @@ void ConfigureGammaForLevel(void) {
     case HT_Level_SnowBlind: ConfigureGammaRamp(1.17f, 1.0625f, 17.0f); return;
     case HT_Level_MissileSilo: ConfigureGammaRamp(0.89f, 1.4f, 10.0f); return;
     case HT_Level_RefRoom:
-    case 0x0700004c: ConfigureGammaRamp(1.01f, 1.175f, 22.0f); return;
+    case HT_Level_Unnamed4C: ConfigureGammaRamp(1.01f, 1.175f, 22.0f); return;
     case HT_Level_Tower2Elevator: ConfigureGammaRamp(0.93f, 1.25f, 22.0f); return;
     default: ConfigureGammaRamp(0.71f, 1.12f, 1.0f); return;
     }
@@ -371,8 +371,8 @@ void psiFog(char enable, float nearDist, float farDist, uint8_t r, uint8_t g, ui
         {HT_Level_TowerB, 10.0f, 100.0f, 0x86, 0x7f, 0x84},
         {HT_Level_PowerStationA1, 45.0f, 145.0f, 0xd2, 0xd2, 0xc1},
         {HT_Level_PowerStationA2, 20.0f, 196.0f, 0x99, 0x8b, 0x70},
-        {0x0700000f, 0.0f, 20.0f, 0x59, 0xab, 0x5a},
-        {0x07000010, 10.0f, 86.0f, 0x89, 0x98, 0xaf},
+        {HT_Level_Cut_Level2, 0.0f, 20.0f, 0x59, 0xab, 0x5a},
+        {HT_Level_Cut_Level3, 10.0f, 86.0f, 0x89, 0x98, 0xaf},
         {HT_Level_EvilBase, 4.0f, 77.0f, 0x80, 0x80, 0xbe},
         {HT_Level_EvilBaseC, 7.0f, 151.0f, 0x80, 0x80, 0xdb},
         {HT_Level_SkyRail, 10.0f, 179.0f, 0x18, 0x2f, 0x53},
@@ -584,7 +584,7 @@ static ShardVertex ShadowVertices[SHADOW_MAX_TRIANGLES * 3];
 // Called only by psiDrawSkinObjectMatrix, so not injected (the original takes arguments in registers)
 void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     uint32_t level = (uint32_t)GameState.CurrentLevelHashcode;
-    if (level == HT_Level_AllCharacters || level == HT_Level_AllCharacters2 || (uint32_t)ScriptCam == 0x0600068f)
+    if (level == HT_Level_AllCharacters || level == HT_Level_AllCharacters2 || (uint32_t)ScriptCam == HT_Script_00068f)
         return;
     float dx = ViewMatrix[12] - x, dy = ViewMatrix[13] - y, dz = ViewMatrix[14] - z;
     float distance2 = dz * dz + dy * dy + dx * dx;
@@ -607,7 +607,7 @@ void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     D3DMATRIX lookDown, projection;
     MatrixLookAt(&lookDown, from.x, from.y + 20.0f, from.z, from.x, from.y, from.z, 1.0f, 0.0f, 0.0f);
     createProjectionMatrix(&projection, 1.0f, 7.0f, 0.0f, 1.0f, 200.0f);
-    void *blob = hashtable_getitem((HASHCODE)0x03000047);
+    void *blob = hashtable_getitem(HT_Texture_000047);
     int blobTexture = blob != NULL ? *(int *)blob : 0;
     int shadowTexture = CurrentFrameSlot(blobTexture);
     bool rendered = false;

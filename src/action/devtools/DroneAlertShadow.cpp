@@ -498,7 +498,7 @@ void RandomWorld() {
     GameState.NumFramesUnpaused = now;
     static const HASHCODE levels[] = {HT_Level_PowerStationA1, HT_Level_PowerStationA2, HT_Level_EvilBase,
                                       HT_Level_CastleIndoors1, HT_Level_TowerA, HT_Level_TowerB, HT_Level_HendersonA,
-                                      (HASHCODE)0x700000b, (HASHCODE)0x700000e};
+                                      HT_Level_TowerC, HT_Level_Cut_Level1};
     GameState.CurrentLevelHashcode = levels[ShadowRand(sizeof(levels) / sizeof(levels[0]))];
     NPCGlobals.postLoadFrame = ShadowRand(5) == 0 ? RandomFrame() : now - ShadowRand(60);
     NPCGlobals.sfxLogNext = ShadowRand(5) == 0 ? 15 : ShadowRand(16);

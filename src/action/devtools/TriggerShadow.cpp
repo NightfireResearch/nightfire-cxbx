@@ -93,8 +93,8 @@ void SetChannels() {
     switch_channels[0xa4] = ShadowRand(2);
     switch_channels[0x34] = ShadowRand(2);
     GameState.NumFramesUnpaused = 300 + ShadowRand(100);
-    static const HASHCODE levels[] = {(HASHCODE)0x07001500, HT_Level_TowerC, HT_Level_CastleExterior,
-                                      (HASHCODE)0x07000001};
+    static const HASHCODE levels[] = {HT_Level_Level7001500, HT_Level_TowerC, HT_Level_CastleExterior,
+                                      HT_Level_HendersonA};
     GameState.CurrentLevelHashcode = levels[ShadowRand(4)];
     ProcessTouchByte = ShadowRand(2);
 }

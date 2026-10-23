@@ -8,12 +8,6 @@
 
 #pragma fp_contract(off)
 
-// The models of Occlude_Create's kinds 1 to 3, and of any other
-#define OCCLUDE_MODEL_1 ((HASHCODE)0x02000273)
-#define OCCLUDE_MODEL_2 ((HASHCODE)0x02000274)
-#define OCCLUDE_MODEL_3 ((HASHCODE)0x02000275)
-#define OCCLUDE_MODEL_OTHER ((HASHCODE)0x0200026b)
-
 // Hidden while its channel is off
 // AUTOINJECT
 obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
@@ -137,10 +131,11 @@ obj_tag* Occlude_Create(_VECTOR *pos, ushort life, ushort kind) {
     obj->curState = life;
     HASHCODE model;
     switch (kind) {
-    case 1: model = OCCLUDE_MODEL_1; break;
-    case 2: model = OCCLUDE_MODEL_2; break;
-    case 3: model = OCCLUDE_MODEL_3; break;
-    default: model = OCCLUDE_MODEL_OTHER; break;
+    // The models of Occlude_Create's kinds 1 to 3, and of any other
+    case 1: model = HT_Entity_OccludeModel1; break;
+    case 2: model = HT_Entity_OccludeModel2; break;
+    case 3: model = HT_Entity_OccludeModel3; break;
+    default: model = HT_Entity_OccludeModelOther; break;
     }
     hashtable_set_object_to_entity_gfx(obj, model);
     build_LinkToRoom(obj, 0, glb_world);

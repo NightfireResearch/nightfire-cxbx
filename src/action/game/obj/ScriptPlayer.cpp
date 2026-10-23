@@ -35,7 +35,6 @@ enum SP_State {
     SP_State_DeferredLoad = 7,   // One-shot: load the script on the next update, then fall into the normal flow
 };
 
-
 // Defined further down, next to Create_ScriptPlayer_Params
 void SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer);
 
@@ -288,7 +287,7 @@ void SP_Update(obj_tag* obj) {
                     okToStart = false;
                 }
 
-                if ((scriptPlayer->scriptHashcodes[0] == 0x6000994 && Get_Music_Event(2) != 0) || !okToStart) {
+                if ((scriptPlayer->scriptHashcodes[0] == HT_Script_000994 && Get_Music_Event(2) != 0) || !okToStart) {
                     scriptPlayer->state = SP_State_Finished;
                     break;
                 }
@@ -404,8 +403,8 @@ void SP_Update(obj_tag* obj) {
             scriptPlayer->accumulatedDamage += damage;
 
             HASHCODE primaryHashcode = scriptPlayer->scriptHashcodes[0];
-            if (wasPlayerHit && (primaryHashcode == 0x60007e2 ||
-                (primaryHashcode > 0x60007e3 && primaryHashcode < 0x60007eb))) {
+            if (wasPlayerHit && (primaryHashcode == HT_Script_0007e2 ||
+                (primaryHashcode > HT_Script_0007e3 && primaryHashcode < HT_Script_0007eb))) {
                 PlrStat_LogShotHitScenery(0);
             }
 

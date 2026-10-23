@@ -31,7 +31,7 @@ uint32_t Answer(uint32_t n) {
 }
 
 // A mission's base map now and then Paris, where the mini mission and the title sequence come in
-HASHCODE kParis = (HASHCODE)0x09000001;
+HASHCODE kParis = HT_Level_Driving_Paris;
 
 void __cdecl FakeSetMap(HASHCODE level) { ShadowLog("setmap(%x)", (uint)level); }
 HASHCODE __cdecl FakeBaseMap(void) {

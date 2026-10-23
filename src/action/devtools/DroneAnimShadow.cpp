@@ -336,7 +336,7 @@ void RandomDrone(int i) {
     static const uint animFlags[] = {0, 1, 4, 5, 0x80, 0x100, 0x101, 0x200, 0x384, 0x105};
     d->unknown46c = animFlags[ShadowRand(10)];
     d->prevAnimFlags = animFlags[ShadowRand(10)];
-    d->animHashcode = (HASHCODE)(0x06000000 + ShadowRand(3) * 0x123);
+    d->animHashcode = (HASHCODE)(HT_Script_HASHCODE_BASE + ShadowRand(3) * 0x123);
     d->animSpeed = SpecialOr(0.5f, 1.5f);
     d->animMoveSpeed = SpecialOr(0.0f, 2.0f);
     d->animCallSpeed = SpecialOr(0.0f, 2.0f);
@@ -531,7 +531,7 @@ void TestRows() {
                     DroneAnim_SetAnimD(rowArg, blendArg, &world.drones[1]);
                     return 0u;
                 });
-        hashArg = (HASHCODE)(0x06000000 + ShadowRand(0x800));
+        hashArg = (HASHCODE)(HT_Script_HASHCODE_BASE + ShadowRand(0x800));
         static const uint htFlags[] = {0, 1, 4, 0x100, 0x101};
         flagsArg = htFlags[ShadowRand(5)];
         static const ushort frames[] = {0, 1, 5, 999, 998};

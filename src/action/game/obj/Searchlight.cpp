@@ -267,7 +267,8 @@ void Searchlight_Update(obj_tag *searchlight) {
             gasVec.x = 0.0f;
             gasVec.y = 0.0f;
             gasVec.z = Float_FRand(M_2PI);
-            Gas_Init(searchlight->inCel, &searchlight->position, &gasVec, NULL, 0.05f, 0.25f, (HASHCODE)0x2000039, 7, 0x48403080, 1, 0x80);
+            Gas_Init(searchlight->inCel, &searchlight->position, &gasVec, NULL, 0.05f, 0.25f, HT_Entity_BulletDust, 7,
+                     0x48403080, 1, 0x80);
         }
 
         // Gradually tilt down

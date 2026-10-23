@@ -12,7 +12,6 @@
 #include <string.h>
 #include <string>
 
-
 // ---------------------------------------------------------------------------------------------------------------
 // Booting straight into a level, the action engine's counterpart of the driving engine's -mission
 // (src/driving/platform/LaunchOptions.cpp).
@@ -62,7 +61,7 @@ static void ListLevels(void) {
     printf("[launch] -level takes one of:");
     for (size_t i = 0; i < sizeof(kLevels) / sizeof(kLevels[0]); i++)
         printf("%s %s (0x%08x)", i % 4 == 0 ? "\n[launch]  " : ",", kLevels[i].name, (unsigned)kLevels[i].hash);
-    printf("\n[launch] or any level's hashcode, as 0x07000005\n");
+    printf("\n[launch] or any level's hashcode, as HT_Level_CastleExterior\n");
 }
 
 static uint32_t ParseLevel(const char *text) {

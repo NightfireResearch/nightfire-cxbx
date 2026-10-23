@@ -2019,7 +2019,7 @@ uint32_t RunPageUpdate(bool original) {
     if (R(3) == 0) {
         M_CONTROL *c = &world.objects[R(OBJECTS)].c;
         c->type = ControlType_Memo;
-        c->hashcode = (HASHCODE)0x10000225;
+        c->hashcode = HT_MenuControl_HelpMemo;
     }
     if (R(4) == 0)
         U32_AT(XbeOurs(0x0025fc18)) = P(&world.objects[R(OBJECTS)]);
@@ -2033,7 +2033,7 @@ uint32_t RunFindHelp(bool original) {
     if (page != NULL && R(2)) {
         M_CONTROL *c = (M_CONTROL *)LinkedList_GetIndex(&page->controls, R(3));
         c->type = ControlType_Memo;
-        c->hashcode = (HASHCODE)0x10000225;
+        c->hashcode = HT_MenuControl_HelpMemo;
     }
     CDECL_VOID(0x00095990, Page_FindHelpControl, void (__cdecl *)(M_PAGE *), page);
     return 0;
@@ -2247,7 +2247,7 @@ void MakeMenuData(uint menu) {
                 // Sometimes a label over the whole screen
                 bool screen = R(8) == 0;
                 dword(0xfffffff9);
-                dword(R(4) ? 0x10000001u + R(6) : (R(2) ? 0x10000224u : R(0)));
+                dword(R(4) ? 0x10000001u + R(6) : (R(2) ? HT_MenuControl_MovedControl : R(0)));
                 byte((uint8_t)(screen ? ControlType_Label : R(4) ? R(14) : R(0x100)));
                 byte((uint8_t)R(4));
                 word((uint16_t)(screen ? -(int)R(2) : S(100)));
@@ -2341,7 +2341,7 @@ uint32_t RunManagerMonitor(bool original) {
     I32_AT(XbeOurs(0x0017d63c)) = R(3) ? 1 : (int)R(12) - 1;
     U8_AT(XbeOurs(0x0025fb11)) = (uint8_t)R(2);
     MPSettings.numPlayers = R(5);
-    GameState.CurrentLevelHashcode = R(8) ? (HASHCODE)0x07000001 : HT_Level_Menu_Pre;
+    GameState.CurrentLevelHashcode = R(8) ? HT_Level_HendersonA : HT_Level_Menu_Pre;
     GameState.LevelEnding = R(2);
     ScriptCam = R(2) ? (HASHCODE)0 : Hash();
     for (int p = 0; p < 4; p++) {

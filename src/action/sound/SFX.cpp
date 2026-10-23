@@ -1383,7 +1383,7 @@ void SFXLoadCorrectBank(void) {
     case HT_Level_EvilBase: LoadSoundBank(0x27); break;
     case HT_Level_EvilSilo: LoadSoundBank(0x28); break;
     case HT_Level_EvilBaseC: LoadSoundBank(0x2b); break;
-    case (HASHCODE)0x700001a:
+    case HT_Level_00001a:
     case HT_Level_SpaceStationD: LoadSoundBank(0x25); break;
     case HT_Level_SpaceStation:
     case HT_Level_Facility:
@@ -1395,7 +1395,7 @@ void SFXLoadCorrectBank(void) {
     case HT_Level_MissileSilo:
     case HT_Level_SnowBlind:
     case HT_Level_Ravine:
-    case (HASHCODE)0x700004c: LoadSoundBank(0x16); break;
+    case HT_Level_Unnamed4C: LoadSoundBank(0x16); break;
     case HT_Level_RefRoom: LoadSoundBank(0xb); break;
     case HT_Level_Menu_Pre:
         LoadSoundBank(ls.relatedToMainMenuSound ? 0x38 : 0xc);

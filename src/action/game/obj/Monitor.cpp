@@ -29,8 +29,6 @@ static_assert(offsetof(Create_Monitor_Params, unbreakable) == 0x30, "Bad offset 
 LAYOUT_32(offsetof(viewer_tag, someCel) == 0x4, "Bad offset of viewer_tag::someCel");
 LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::viewMatrix");
 
-#define EXPLOSION_MONITOR ((HASHCODE)0x06000027)
-
 // AUTOINJECT
 obj_tag * Monitor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_Monitor_Params *params = (Create_Monitor_Params *)lvl;
@@ -117,7 +115,7 @@ void Monitor_Update(obj_tag *obj) {
             if (monitor->user != NULL)
                 Monitor_GiveBack(monitor);
             Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, obj->radius * 6.0f, obj->radius,
-                           EXPLOSION_MONITOR, 0.5f, 200, 200, 0, NULL, 0);
+                           HT_Script_DestroyExplosion1, 0.5f, 200, 200, 0, NULL, 0);
         }
     }
 

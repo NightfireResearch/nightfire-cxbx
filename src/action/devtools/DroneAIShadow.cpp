@@ -335,7 +335,7 @@ void RandomDrone(int i) {
     d->animSet = (short)ShadowRand(NUM_DRONE_ANIM_SETS);
     static const uchar dtypes[] = {0, 1, 2, 12, 12, 19, 22, 13, 30, 30, 5};
     d->dtype = dtypes[ShadowRand(sizeof(dtypes))];
-    static const uint skins[] = {0x5000020, 0x5000022, 0x5000023, 0x5000015, 0x50000ba};
+    static const uint skins[] = {HT_Skin_000020, HT_Skin_000022, HT_Skin_000023, HT_Skin_000015, HT_Skin_Skin50000BA};
     d->skinHashcode = (HASHCODE)skins[ShadowRand(5)];
     d->distanceToTarget = RandomFloat(0.0f, 6.0f);
     d->opponentBearing = RandomFloat(-3.5f, 3.5f);
@@ -431,7 +431,8 @@ void RandomWorld() {
     world.explosive.inCel = (cel_tag *)world.cel;
     RandomVector(&world.explosive.position, 6.0f);
     world.bullet.wpnDef = ShadowRand(6) ? &world.wpn : NULL;
-    static const short variants[] = {0x2a, 0x2b, 0x2c, 0x2f, 0x30, 0x34, 0x35, 0x36, 0x37, 0x3b, 0x40, 0x41, 0x6c, 0x6b};
+    static const short variants[] = {0x2a, 0x2b, 0x2c, 0x2f, 0x30, 0x34, 0x35, 0x36, 0x37, 0x3b, 0x40, 0x41, 0x6c,
+                                     0x6b};
     world.wpn.weaponVariantNum = variants[ShadowRand(sizeof(variants) / 2)];
     world.bullet.fuseTimer = ShadowRandFloat(0, 200);
 

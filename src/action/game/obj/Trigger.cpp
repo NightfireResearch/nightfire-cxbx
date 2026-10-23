@@ -63,8 +63,6 @@ static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigge
 #define CHANNEL_PLAYER_DEAD 0x62
 #define CHANNEL_STEALTH_BROKEN 0x63
 
-#define LEVEL_7001500 ((HASHCODE)0x07001500)
-
 // The GameFlow states pushed here
 #define GAMEFLOW_MOVIE 6
 #define GAMEFLOW_FADE 7
@@ -79,7 +77,6 @@ uint8_t ProcessTouch;
 // The placement's parameters as they were, while a create function rearranges them
 // XBE_GLOBAL(0x0029b248, 0x84)
 static uint TmpParam[TRIGGER_PARAMS];
-
 
 // AUTOINJECT
 obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
@@ -410,7 +407,7 @@ void Trigger_Update(obj_tag *obj) {
         }
         // fall through
     case TriggerMode_Touch:
-        if (GameState.CurrentLevelHashcode != LEVEL_7001500 && channel == CHANNEL_TOUCH_ONLY_7001500)
+        if (GameState.CurrentLevelHashcode != HT_Level_Level7001500 && channel == CHANNEL_TOUCH_ONLY_7001500)
             return;
         if (channel == 0)
             return;

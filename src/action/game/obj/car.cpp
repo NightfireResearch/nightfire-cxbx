@@ -76,7 +76,6 @@ void Car_Reset(void) {
 
 }
 
-
 // Only used in here, no need to inject once we've reimplemented Car_Create
 // + we cannot inject, LTCG has used special registers
 // UNINJECTABLE - custom calling convention
@@ -86,11 +85,11 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
     HASHCODE barrelHashcode;
 
     if(tankInfo->isHeli == 0) {
-        turretHashcode = GFX_RCCar_Turret;
-        barrelHashcode = GFX_RCCar_Barrel;
+        turretHashcode = HT_Entity_RCCarTurret;
+        barrelHashcode = HT_Entity_RCCarBarrel;
     } else {
-        turretHashcode = GFX_LittleNellie_Blades;
-        barrelHashcode = GFX_LittleNellie_Prop;
+        turretHashcode = HT_Entity_LittleNellieBlades;
+        barrelHashcode = HT_Entity_LittleNellieProp;
     }
 
     tankInfo->turretGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, hashtable_hashcode_to_celglist(turretHashcode), baseObj, 0, 4, 1.0, 0x00, 0xff, 0xff, 0xff);
@@ -102,7 +101,6 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
 
     Mat_Copy(&baseObj->transformMatrix, &tankInfo->turretGeom->transformMatrix);
     Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix)); // This is pointless, it's the same matrix, but the game code does this?
-
 
 }
 
@@ -204,7 +202,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
         // Flying above the ground at the given location0
         baseObj->transformMatrix.m[0xd] += 1.5f;
         baseObj->position.y += 1.5f;
-        hashtable_set_object_to_entity_gfx(baseObj, GFX_LittleNellie_Body);
+        hashtable_set_object_to_entity_gfx(baseObj, HT_Entity_LittleNellieBody);
     }
 
     Car_InitBits(tankInfo, baseObj);
@@ -229,7 +227,6 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     tankInfo->machineGunOverheated = 0;
     tankInfo->tankMachinegunTemperature = 0.0f;
 
-
     return baseObj;
 }
 
@@ -242,7 +239,6 @@ void Car_Init(void) {
     NumTanks = 0;
 
 }
-
 
 // AUTOINJECT
 void Car_Deactivate(obj_tag *carObj) {
@@ -276,13 +272,13 @@ void Car_Deactivate(obj_tag *carObj) {
       carInfo->soundHandle = NULL;
     }
 
-    Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, (HASHCODE)0x6000052, 50.0, 0xff, 0xff, 100, carObj, 6);
+    Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, HT_Script_BulletExplosion, 50.0, 0xff,
+                   0xff, 100, carObj, 6);
     Vec_Zero(&carInfo->aim);
     Vec_Zero(&carInfo->fall);
     Vec_Zero(&carInfo->velocity);
     Mat_Copy(&TankSpawns[carInfo->tankNum], &carObj->transformMatrix);
     build_LinkToRoom(carObj, 0, glb_world);
-
 
     carObj->subState = 1800; // Respawn timer
 

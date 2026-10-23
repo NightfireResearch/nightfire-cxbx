@@ -30,25 +30,6 @@
 // XBE_GLOBAL(0x00278e54, 0x4)
 HASHCODE WireAnim;
 
-#define ANIM_ROPE_GRAB        ((HASHCODE)0x060005e5)
-#define ANIM_ROPE_HANG_A      ((HASHCODE)0x060005ec)
-#define ANIM_ROPE_HANG_B      ((HASHCODE)0x060005ed)
-#define ANIM_ROPE_TURN_A      ((HASHCODE)0x060005ee)
-#define ANIM_ROPE_TURN_B      ((HASHCODE)0x060005ea)
-#define ANIM_ROPE_MOVE_A      ((HASHCODE)0x060000b5)
-#define ANIM_ROPE_MOVE_B      ((HASHCODE)0x060000b4)
-#define ANIM_ROPE_GRAB_MOTION ((HASHCODE)0x04000536)   // the grab's root motion
-#define ANIM_ZIPLINE_GRAB     ((HASHCODE)0x06000095)
-#define ANIM_ZIPLINE_SLIDE    ((HASHCODE)0x06000096)
-#define ANIM_ZIPLINE_LAND     ((HASHCODE)0x06000094)
-#define ANIM_CREEP_START      ((HASHCODE)0x06000476)
-#define ANIM_CREEP_STOP_1     ((HASHCODE)0x0600046c)
-#define ANIM_CREEP_STOP_2     ((HASHCODE)0x0600046e)
-#define ANIM_CREEP_START_1    ((HASHCODE)0x0600046d)
-#define ANIM_CREEP_STEP_1     ((HASHCODE)0x06000471)
-#define ANIM_CREEP_START_2    ((HASHCODE)0x0600046f)
-#define ANIM_CREEP_STEP_2     ((HASHCODE)0x06000475)
-
 // How far below the wire the player hangs, and the grab's root motion's x off the hand
 #define ROPE_HANG_DROP 1.0207f
 #define ZIPLINE_HANG_DROP 1.17363f
@@ -215,12 +196,11 @@ void Player_Climb(BLData *blData, obj_tag *player) {
 #define GRAPPLE_HOLDING 2   // arrived, held while fire is
 #define GRAPPLE_LET_GO  4
 
-#define ROPE_ENTITY ((HASHCODE)0x02000138)
-
 // Clears the grapple and makes its rope. The original takes the player's data in ESI.
 void Player_InitGrapple(BLData *blData, obj_tag *player) {
     memset(&blData->grapplePoint, 0, 0x20);
-    blData->rope = Control_CreateObjEx(0, NULL, NULL, NULL, hashtable_hashcode_to_celglist(ROPE_ENTITY), player, 0, 5,
+    blData->rope = Control_CreateObjEx(0, NULL, NULL, NULL, hashtable_hashcode_to_celglist(HT_Entity_RopeEntity),
+                                       player, 0, 5,
                                        1.0f, 0x30, 0xff, 0xff, 0xff);
 }
 
@@ -376,14 +356,14 @@ void Player_CollWire(obj_tag *player, BLData *blData, obj_tag *wire) {
     switch (wireData->type) {
         case WIRE_ROPE:
             blData->traverseStep = 0xc;
-            WireAnim = ANIM_ROPE_GRAB;
-            AnimScriptAdd(player, ANIM_ROPE_GRAB);
-            AnimGetFrameTransRaw(ANIM_ROPE_GRAB_MOTION, 0, &grabStart);
-            AnimGetFrameTransRaw(ANIM_ROPE_GRAB_MOTION, 0x170, &grabEnd);
+            WireAnim = HT_Script_AnimRopeGrab;
+            AnimScriptAdd(player, HT_Script_AnimRopeGrab);
+            AnimGetFrameTransRaw(HT_AnimSeq_AnimRopeGrabMotion, 0, &grabStart);
+            AnimGetFrameTransRaw(HT_AnimSeq_AnimRopeGrabMotion, 0x170, &grabEnd);
             break;
         case WIRE_ZIPLINE:
-            WireAnim = ANIM_ZIPLINE_GRAB;
-            AnimScriptAdd(player, ANIM_ZIPLINE_GRAB);
+            WireAnim = HT_Script_AnimZiplineGrab;
+            AnimScriptAdd(player, HT_Script_AnimZiplineGrab);
             break;
     }
 
@@ -563,36 +543,37 @@ void Player_Wire(obj_tag *player) {
     if (blData->traverseStep == ROPE_STILL && step == ROPE_STILL) {
         if (!AnimScriptIsStopped(player))
             return;
-        if (WireAnim == ANIM_ROPE_GRAB || WireAnim == ANIM_ROPE_HANG_A || WireAnim == ANIM_ROPE_MOVE_B ||
-            WireAnim == ANIM_ROPE_TURN_A)
-            RopeAnim(player, &at, false, ANIM_ROPE_HANG_A);
+        if (WireAnim == HT_Script_AnimRopeGrab || WireAnim == HT_Script_AnimRopeHangA
+            || WireAnim == HT_Script_AnimRopeMoveB ||
+            WireAnim == HT_Script_AnimRopeTurnA)
+            RopeAnim(player, &at, false, HT_Script_AnimRopeHangA);
         else
-            RopeAnim(player, &at, true, ANIM_ROPE_HANG_B);
+            RopeAnim(player, &at, true, HT_Script_AnimRopeHangB);
         return;
     }
     if (blData->traverseStep != ROPE_STILL && !AnimScriptIsStopped(player))
         return;
 
     if (step == ROPE_LEFT || step == ROPE_RIGHT) {
-        bool handB = WireAnim == ANIM_ROPE_MOVE_A || WireAnim == ANIM_ROPE_HANG_B;
-        if (AngleBetween(facing, player->rotation.y) > 0.0002f && WireAnim != ANIM_ROPE_TURN_A &&
-            WireAnim != ANIM_ROPE_TURN_B) {
+        bool handB = WireAnim == HT_Script_AnimRopeMoveA || WireAnim == HT_Script_AnimRopeHangB;
+        if (AngleBetween(facing, player->rotation.y) > 0.0002f && WireAnim != HT_Script_AnimRopeTurnA &&
+            WireAnim != HT_Script_AnimRopeTurnB) {
             if (handB)
-                script = RopeAnim(player, &at, true, ANIM_ROPE_TURN_B);
+                script = RopeAnim(player, &at, true, HT_Script_AnimRopeTurnB);
             else
-                script = RopeAnim(player, &at, false, ANIM_ROPE_TURN_A);
+                script = RopeAnim(player, &at, false, HT_Script_AnimRopeTurnA);
         }
         else {
             player->rotation.y = facing;
             if (handB)
-                script = RopeAnim(player, &at, true, ANIM_ROPE_MOVE_B);
+                script = RopeAnim(player, &at, true, HT_Script_AnimRopeMoveB);
             else
-                script = RopeAnim(player, &at, false, ANIM_ROPE_MOVE_A);
+                script = RopeAnim(player, &at, false, HT_Script_AnimRopeMoveA);
         }
     }
     else if (blData->traverseStep >= ROPE_LEFT && blData->traverseStep <= ROPE_RIGHT) {
         // Stopped after turning to move: face the wire again
-        if (WireAnim == ANIM_ROPE_TURN_B || WireAnim == ANIM_ROPE_TURN_A) {
+        if (WireAnim == HT_Script_AnimRopeTurnB || WireAnim == HT_Script_AnimRopeTurnA) {
             obj_tag *attached = blData->attachedToSpecialMovementItem;
             if (AngleBetween(player->rotation.y, attached->rotation.y + HALF_PI) < 0.0002f)
                 player->rotation.y = blData->attachedToSpecialMovementItem->rotation.y + THREE_HALF_PI;
@@ -634,8 +615,8 @@ void Player_Zipline(obj_tag *player) {
     if (lineData->channel != 0)
         switch_channels[lineData->channel] = 1;
     if (AnimScriptIsStopped(player)) {
-        WireAnim = ANIM_ZIPLINE_SLIDE;
-        AnimScriptAdd(player, ANIM_ZIPLINE_SLIDE);
+        WireAnim = HT_Script_AnimZiplineSlide;
+        AnimScriptAdd(player, HT_Script_AnimZiplineSlide);
     }
 
     _VECTOR endA, endB, offset, at;
@@ -658,8 +639,8 @@ void Player_Zipline(obj_tag *player) {
         Vec_Copy(&endB, &at);
     if (Vec_Dist3D(&player->position, &at) < 1.0f) {
         blData->traverseStep = 9;
-        WireAnim = ANIM_ZIPLINE_LAND;
-        AnimScriptAdd(player, ANIM_ZIPLINE_LAND);
+        WireAnim = HT_Script_AnimZiplineLand;
+        AnimScriptAdd(player, HT_Script_AnimZiplineLand);
     }
     vecutil_calculate_closest_point_on_line(&at, &endA, &endB, &player->position);
     player->position.x = at.x;
@@ -728,7 +709,7 @@ void Player_CollCreepWall(obj_tag *player, BLData *blData, obj_tag *wall) {
     viewer->trackDistance = 4.0f;
     viewer->trackPitch = blData->pitchFromHorizontal * -HALF_PI;
     viewer->trackYaw = rotationBefore + PI;
-    AnimScriptAdd(player, ANIM_CREEP_START);
+    AnimScriptAdd(player, HT_Script_AnimCreepStart);
     blData->attachedToSpecialMovementItem = wall;
 }
 
@@ -809,24 +790,24 @@ void Player_Creep(BLData *blData, obj_tag *player) {
         case CREEP_STILL:
             switch (blData->traverseStep) {
                 case CREEP_1:
-                    AnimScriptAppendBlend(player, ANIM_CREEP_STOP_1);
+                    AnimScriptAppendBlend(player, HT_Script_AnimCreepStop1);
                     break;
                 case CREEP_2:
-                    AnimScriptAppendBlend(player, ANIM_CREEP_STOP_2);
+                    AnimScriptAppendBlend(player, HT_Script_AnimCreepStop2);
                     break;
             }
             break;
         case CREEP_1:
             if (blData->traverseStep == CREEP_2 || blData->traverseStep == CREEP_STILL)
-                script = AnimScriptAdd(player, ANIM_CREEP_START_1);
+                script = AnimScriptAdd(player, HT_Script_AnimCreepStart1);
             else if (AnimScriptIsStopped(player))
-                script = AnimScriptAdd(player, ANIM_CREEP_STEP_1);
+                script = AnimScriptAdd(player, HT_Script_AnimCreepStep1);
             break;
         case CREEP_2:
             if (blData->traverseStep == CREEP_1 || blData->traverseStep == CREEP_STILL)
-                script = AnimScriptAdd(player, ANIM_CREEP_START_2);
+                script = AnimScriptAdd(player, HT_Script_AnimCreepStart2);
             else if (AnimScriptIsStopped(player))
-                script = AnimScriptAdd(player, ANIM_CREEP_STEP_2);
+                script = AnimScriptAdd(player, HT_Script_AnimCreepStep2);
             break;
     }
 

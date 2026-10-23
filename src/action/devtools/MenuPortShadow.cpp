@@ -673,7 +673,8 @@ void RandomScripts(void) {
             void *mel[3];
             for (int j = 0; j < m; j++) {
                 M_MESSAGE *e = &world.messages[msg + j];
-                static const uint32_t kTargets[] = {MESSAGE_TO_MANAGER, MESSAGE_TO_SELF, 0x10000001, 0x10000003, 0};
+                static const uint32_t kTargets[] = {MESSAGE_TO_MANAGER, MESSAGE_TO_SELF, SUB_P_ENDMISSION_TITLE,
+                                                    C_GOMULTIPLAYER, 0};
                 e->target = (HASHCODE)kTargets[R(COUNT(kTargets))];
                 e->type = R(4) ? R(0x80) : (R(2) ? 0xe1 : R(0));
                 e->arg1 = R(3) ? (int)R(100) : -4;
@@ -1207,10 +1208,11 @@ uint32_t RunAlphaGet(bool original) {
 }
 
 uint32_t RunEnableSounds(bool original) {
-    static const uint32_t kPages[] = {0x40000002, 0x40000009, 0x40000015, 0x40000022, 0x40000033, 0x40000036,
-                                      0x40000038, 0x40000037, 0x4000003a, 0x4000003b, 0x4000003c, 0x4000003d,
-                                      0x4000003e, 0x40000005, 0x4000001c, 0x40000025, 0x4000004b, 0x40000001,
-                                      0x40000003, 0x4000004c, 0x4000004d, 0x40000000, 0x10000002};
+    static const uint32_t kPages[] = {P_MAIN, P_START, HT_MenuPage_000015, P_CNCONTROLS, P_MPDEBRIEFING, P_NFRESULTS,
+                                      P_NFBONUS, P_NFSTATS, P_DSRECORDS, P_DSREWARDS, P_DSGADGETS, P_DSWEAPONS,
+                                      P_CNDRIVINGCONTROLS, HT_MenuPage_000005, P_NFMAP, P_NFSELECT, P_PAUSE,
+                                      HT_MenuPage_000001, HT_MenuPage_000003, P_CHEATMEDAL, P_FMV, 0x40000000,
+                                      C_GONIGHTFIRE};
     HASHCODE page = (HASHCODE)(R(5) ? kPages[R(COUNT(kPages))] : R(0));
     CDECL_VOID(0x00073010, Menu_EnableSounds, void (__cdecl *)(HASHCODE), page);
     return 0;

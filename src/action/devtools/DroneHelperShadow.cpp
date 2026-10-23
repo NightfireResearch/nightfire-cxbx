@@ -293,7 +293,7 @@ void RandomDrone(int i) {
     world.anims[i].animObj.skin = &world.skins[ShadowRand(2)];
     d->gameObj = o;
     d->sm.id = ShadowRand(1000);
-    d->skinHashcode = (HASHCODE)(0x5000000 + ShadowRand(0x100));
+    d->skinHashcode = (HASHCODE)(HT_Skin_HASHCODE_BASE + ShadowRand(0x100));
     d->side = (uchar)ShadowRand(4);
     d->flags = (ShadowRand(2) ? 0x200000 : 0) | ShadowRand(0x100000);
     d->flags2 = ShadowRand(0x40);
@@ -348,8 +348,8 @@ void RandomWorld() {
     }
     memset(&world.player, 0, sizeof(world.player));
     world.player.objectType = OBJECTTYPE_PLAYER;
-    world.skins[0].hashcode = (HASHCODE)0x500001e;
-    world.skins[1].hashcode = (HASHCODE)(0x5000000 + ShadowRand(0x30));
+    world.skins[0].hashcode = HT_Skin_00001e;
+    world.skins[1].hashcode = (HASHCODE)(HT_Skin_HASHCODE_BASE + ShadowRand(0x30));
     memset(&world.script, 0, sizeof(world.script));
     world.script.flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     world.script.playMode = (uchar)ShadowRand(4);

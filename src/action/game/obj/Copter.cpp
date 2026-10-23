@@ -70,14 +70,12 @@ enum {
     COPTER_DESTROYED = 6,
 };
 
-#define COPTER_SMOKE ((HASHCODE)0x0200001f)
-#define COPTER_EXPLOSION ((HASHCODE)0x06000052)
 #define COPTER_GUN_SOUND ((Action_SFX)0x5df)
 // The level whose helicopter fires other weapons and now and then a missile straight at the player, and the two
 // whose helicopters are blown up rather than leave
-#define COPTER_LEVEL_A 0x07000008
-#define COPTER_EXPLODES_A 0x07000012
-#define COPTER_EXPLODES_B 0x0700000b
+#define COPTER_LEVEL_A HT_Level_CastleIndoors2
+#define COPTER_EXPLODES_A HT_Level_Tower2B
+#define COPTER_EXPLODES_B HT_Level_TowerC
 
 // The cone's half angle, a double
 static constexpr double CopterConeAngle = 0.78539818525314331;
@@ -415,7 +413,8 @@ void Copter_Update(obj_tag *obj) {
 
     case COPTER_DESTROYED:
         SetChannel(copter->doneChannel);
-        Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 10.0f, 10.0f, COPTER_EXPLOSION, 67.4f, 0xff, 0xff, 100,
+        Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 10.0f, 10.0f, HT_Script_BulletExplosion, 67.4f, 0xff,
+                       0xff, 100,
                        NULL, 6);
         obj->flags |= 1;
         return;
@@ -457,7 +456,7 @@ void Copter_Update(obj_tag *obj) {
         vel.y = 0.0f;
         float size = (float)(Float_FRand(2.0f) + 3.0f);
         uint colour = ((grey << 8 | grey) << 8 | grey) << 8;
-        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, COPTER_SMOKE, 3,
+        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, HT_Entity_BulletSmoke, 3,
                  colour | (uchar)(0xbf - grey), colour, 0x1a4);
     }
 

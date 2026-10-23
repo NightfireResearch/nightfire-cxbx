@@ -4,8 +4,6 @@
 #include "control.h"
 #include "Player.h"
 
-#define LIGHTNING_MODEL ((HASHCODE)0x0200032c)
-
 #include "../../util/Random.h"
 
 #include <math.h>
@@ -92,7 +90,7 @@ void Lightning_Update(obj_tag *obj) {
     }
     for (int i = 0; i < 8; i++) {
         obj_tag *segment = bolt->segments[i];
-        hashtable_set_object_to_entity_gfx(segment, LIGHTNING_MODEL);
+        hashtable_set_object_to_entity_gfx(segment, HT_Entity_LightningModel);
         View_SetDrawInAllViews(segment);
         PositionBeam(segment, &segment->position, i < 7 ? &bolt->segments[i + 1]->position : &bolt->end);
         segment->transformFlags |= TRANSFORM_MOVED;

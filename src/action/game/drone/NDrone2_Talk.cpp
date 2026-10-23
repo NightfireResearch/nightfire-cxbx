@@ -105,7 +105,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     {.sfx = 198, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
         .sfx = 721,
-        .facialAnim = (HASHCODE)0x60006c4,
+        .facialAnim = HT_Script_0006c4,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -113,7 +113,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 719,
-        .facialAnim = (HASHCODE)0x60006c7,
+        .facialAnim = HT_Script_0006c7,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -121,7 +121,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 720,
-        .facialAnim = (HASHCODE)0x60006ca,
+        .facialAnim = HT_Script_0006ca,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -129,7 +129,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 718,
-        .facialAnim = (HASHCODE)0x60006cc,
+        .facialAnim = HT_Script_0006cc,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -148,7 +148,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     {.sfx = 178, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
         .sfx = 428,
-        .facialAnim = (HASHCODE)0x6000104,
+        .facialAnim = HT_Script_000104,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -156,7 +156,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 430,
-        .facialAnim = (HASHCODE)0x60000fa,
+        .facialAnim = HT_Script_0000fa,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -164,7 +164,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 429,
-        .facialAnim = (HASHCODE)0x6000108,
+        .facialAnim = HT_Script_000108,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -172,7 +172,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 440,
-        .facialAnim = (HASHCODE)0x6000375,
+        .facialAnim = HT_Script_000375,
         .interval = 960,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -180,7 +180,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 442,
-        .facialAnim = (HASHCODE)0x6000374,
+        .facialAnim = HT_Script_000374,
         .interval = 240,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -189,7 +189,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     {.sfx = 443, .interval = 960, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
         .sfx = 444,
-        .facialAnim = (HASHCODE)0x6000372,
+        .facialAnim = HT_Script_000372,
         .interval = 280,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -198,40 +198,40 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     {.sfx = 445, .interval = 240, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
         .sfx = 441,
-        .facialAnim = (HASHCODE)0x6000373,
+        .facialAnim = HT_Script_000373,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 463, .facialAnim = (HASHCODE)0x600038e, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 374, .facialAnim = (HASHCODE)0x6000377, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 375, .facialAnim = (HASHCODE)0x6000378, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 376, .facialAnim = (HASHCODE)0x6000379, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 377, .facialAnim = (HASHCODE)0x600037a, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 378, .facialAnim = (HASHCODE)0x600037b, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 379, .facialAnim = (HASHCODE)0x600037c, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 380, .facialAnim = (HASHCODE)0x600037d, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 381, .facialAnim = (HASHCODE)0x600037e, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 382, .facialAnim = (HASHCODE)0x600037f, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 383, .facialAnim = (HASHCODE)0x6000380, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 384, .facialAnim = (HASHCODE)0x6000381, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 385, .facialAnim = (HASHCODE)0x6000382, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 386, .facialAnim = (HASHCODE)0x6000383, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 387, .facialAnim = (HASHCODE)0x6000384, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 388, .facialAnim = (HASHCODE)0x6000385, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 389, .facialAnim = (HASHCODE)0x6000386, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 390, .facialAnim = (HASHCODE)0x6000387, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 391, .facialAnim = (HASHCODE)0x6000388, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 392, .facialAnim = (HASHCODE)0x6000389, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 393, .facialAnim = (HASHCODE)0x600038a, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 394, .facialAnim = (HASHCODE)0x600038b, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 395, .facialAnim = (HASHCODE)0x600038c, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 396, .facialAnim = (HASHCODE)0x600038d, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 397, .facialAnim = (HASHCODE)0x6000978, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 398, .facialAnim = (HASHCODE)0x6000376, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 399, .facialAnim = (HASHCODE)0x6000979, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 400, .facialAnim = (HASHCODE)0x6000977, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 463, .facialAnim = HT_Script_00038e, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 374, .facialAnim = HT_Script_000377, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 375, .facialAnim = HT_Script_000378, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 376, .facialAnim = HT_Script_000379, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 377, .facialAnim = HT_Script_00037a, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 378, .facialAnim = HT_Script_00037b, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 379, .facialAnim = HT_Script_00037c, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 380, .facialAnim = HT_Script_00037d, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 381, .facialAnim = HT_Script_00037e, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 382, .facialAnim = HT_Script_00037f, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 383, .facialAnim = HT_Script_000380, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 384, .facialAnim = HT_Script_000381, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 385, .facialAnim = HT_Script_000382, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 386, .facialAnim = HT_Script_000383, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 387, .facialAnim = HT_Script_000384, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 388, .facialAnim = HT_Script_000385, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 389, .facialAnim = HT_Script_000386, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 390, .facialAnim = HT_Script_000387, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 391, .facialAnim = HT_Script_000388, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 392, .facialAnim = HT_Script_000389, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 393, .facialAnim = HT_Script_00038a, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 394, .facialAnim = HT_Script_00038b, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 395, .facialAnim = HT_Script_00038c, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 396, .facialAnim = HT_Script_00038d, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 397, .facialAnim = HT_Script_000978, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 398, .facialAnim = HT_Script_000376, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 399, .facialAnim = HT_Script_000979, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 400, .facialAnim = HT_Script_000977, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.sfx = 401, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.sfx = 402, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.sfx = 403, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
@@ -248,19 +248,19 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     {.sfx = 414, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.sfx = 415, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.sfx = 416, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 418, .facialAnim = (HASHCODE)0x6000105, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 419, .facialAnim = (HASHCODE)0x60000fb, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 420, .facialAnim = (HASHCODE)0x6000112, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 421, .facialAnim = (HASHCODE)0x6000113, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 422, .facialAnim = (HASHCODE)0x6000114, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 423, .facialAnim = (HASHCODE)0x6000115, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 424, .facialAnim = (HASHCODE)0x6000116, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 425, .facialAnim = (HASHCODE)0x6000117, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 426, .facialAnim = (HASHCODE)0x600010f, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 418, .facialAnim = HT_Script_000105, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 419, .facialAnim = HT_Script_0000fb, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 420, .facialAnim = HT_Script_000112, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 421, .facialAnim = HT_Script_000113, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 422, .facialAnim = HT_Script_000114, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 423, .facialAnim = HT_Script_000115, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 424, .facialAnim = HT_Script_000116, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 425, .facialAnim = HT_Script_000117, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = 426, .facialAnim = HT_Script_00010f, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.interval = 900, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
         .sfx = 427,
-        .facialAnim = (HASHCODE)0x6000103,
+        .facialAnim = HT_Script_000103,
         .interval = 900,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -268,7 +268,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 432,
-        .facialAnim = (HASHCODE)0x60000fd,
+        .facialAnim = HT_Script_0000fd,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -276,7 +276,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 433,
-        .facialAnim = (HASHCODE)0x60000fe,
+        .facialAnim = HT_Script_0000fe,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -284,7 +284,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 435,
-        .facialAnim = (HASHCODE)0x60000ff,
+        .facialAnim = HT_Script_0000ff,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -292,7 +292,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 437,
-        .facialAnim = (HASHCODE)0x6000100,
+        .facialAnim = HT_Script_000100,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -300,7 +300,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 438,
-        .facialAnim = (HASHCODE)0x6000107,
+        .facialAnim = HT_Script_000107,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -308,7 +308,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 439,
-        .facialAnim = (HASHCODE)0x6000106,
+        .facialAnim = HT_Script_000106,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -316,7 +316,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 450,
-        .facialAnim = (HASHCODE)0x600011a,
+        .facialAnim = HT_Script_00011a,
         .interval = 900,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -324,7 +324,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 453,
-        .facialAnim = (HASHCODE)0x6000119,
+        .facialAnim = HT_Script_000119,
         .interval = 900,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -332,7 +332,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 454,
-        .facialAnim = (HASHCODE)0x600010a,
+        .facialAnim = HT_Script_00010a,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -340,7 +340,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 455,
-        .facialAnim = (HASHCODE)0x600010b,
+        .facialAnim = HT_Script_00010b,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -348,7 +348,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 456,
-        .facialAnim = (HASHCODE)0x600010c,
+        .facialAnim = HT_Script_00010c,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -356,7 +356,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
     },
     {
         .sfx = 457,
-        .facialAnim = (HASHCODE)0x600010e,
+        .facialAnim = HT_Script_00010e,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
@@ -946,13 +946,13 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
             return true;
         ushort voice;
         switch ((uint)drone->skinHashcode) {
-        case 0x5000020:
+        case HT_Skin_000020:
             voice = 0;
             break;
-        case 0x5000022:
+        case HT_Skin_000022:
             voice = 1;
             break;
-        case 0x5000023:
+        case HT_Skin_000023:
             voice = 2;
             break;
         default:

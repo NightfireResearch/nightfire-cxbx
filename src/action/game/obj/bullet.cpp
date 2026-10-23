@@ -31,7 +31,6 @@
 
 #pragma fp_contract(off)
 
-
 // The spent cases, used in turn
 #define NUM_CASINGS 32
 // XBE_GLOBAL(0x001dc678, 0x80)
@@ -40,18 +39,6 @@ static obj_tag *CasingList[NUM_CASINGS];
 short NextCasing;
 
 // A satchel's digits, 0 to 9
-
-// The explosions bullets set off
-#define BULLET_EXPLOSION ((HASHCODE)0x06000052)
-#define BULLET_BEAM_EXPLOSION ((HASHCODE)0x060007c4)
-// Trails: the beam weapons' (bases 0x33, 0x6a and 0x6e) and the others', first and later segments
-#define SWOOSH_BEAM ((HASHCODE)0x020005cd)
-#define SWOOSH_TRAIL_FIRST ((HASHCODE)0x02000918)
-#define SWOOSH_TRAIL ((HASHCODE)0x02000481)
-#define BULLET_SMOKE ((HASHCODE)0x0200001f)
-#define BULLET_DUST ((HASHCODE)0x02000039)
-#define SHOTGUN_CASING ((HASHCODE)0x02000548)
-#define SATCHEL_SHOT_SPARKS ((HASHCODE)0x0c00000a)
 
 // Sounds without a name in assets.h
 #define SFX_BULLET_WHIZZ ((Action_SFX)0x1dc)
@@ -140,9 +127,10 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
 
     if (bullet->wpnDef->projectileFlags & ProjectileFlag_Swoosh) {
         if (Bullet_IsBeamWeapon(bullet->wpnDef->weaponBaseNum))
-            bullet->swoosh = Swoosh_Create(pos, pos, bullet->wpnDef->swooshLifetime, SWOOSH_BEAM, 0);
+            // Trails: the beam weapons' (bases 0x33, 0x6a and 0x6e) and the others', first and later segments
+            bullet->swoosh = Swoosh_Create(pos, pos, bullet->wpnDef->swooshLifetime, HT_Entity_SwooshBeam, 0);
         else
-            bullet->swoosh = Swoosh_Create(pos, pos, bullet->wpnDef->swooshLifetime, SWOOSH_TRAIL_FIRST, 1);
+            bullet->swoosh = Swoosh_Create(pos, pos, bullet->wpnDef->swooshLifetime, HT_Entity_SwooshTrailFirst, 1);
     } else {
         bullet->swoosh = NULL;
     }
@@ -260,8 +248,9 @@ bool Bullet_handle_object_destruction(obj_tag *obj, obj_tag *from) {
 
     obj->flags |= 1;
     weapon_definition_tag *weapon = bullet->wpnDef;
+    // The explosions bullets set off
     Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, weapon->explodeRadius, weapon->explodeRadius,
-                   BULLET_EXPLOSION, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj, 0);
+                   HT_Script_BulletExplosion, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj, 0);
     if ((bullet->wpnDef->impactFlags & ImpactFlag_TripBomb) && bullet->swoosh != NULL)
         bullet->swoosh->flags |= 1;
     return true;
@@ -344,19 +333,20 @@ void Bullet_CollisionHandler(obj_tag *obj) {
         if ((bullet->wpnDef->impactFlags & ImpactFlag_Explodes) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, weapon->explodeRadius,
-                           weapon->explodeRadius, BULLET_EXPLOSION, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
+                           weapon->explodeRadius, HT_Script_BulletExplosion, weapon->damage, 0xff, 0xff, 100,
+                               bullet->firedByObj,
                            hit->materialType & 0x3f);
         }
         if ((bullet->wpnDef->impactFlags & ImpactFlag_BeamExplodes) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, 1.0f, weapon->explodeRadius,
-                           BULLET_BEAM_EXPLOSION, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
+                           HT_Script_BulletBeamExplosion, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
                            hit->materialType & 0x3f);
         }
         if ((bullet->wpnDef->impactFlags & ImpactFlag_BeamExplodes2) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, 1.0f, weapon->explodeRadius,
-                           BULLET_BEAM_EXPLOSION, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
+                           HT_Script_BulletBeamExplosion, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
                            hit->materialType & 0x3f);
         }
 
@@ -489,7 +479,8 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
         if (MPSettings.isMultiplayer || ((obj->creationTimeFrames + GameState.NumFramesUnpaused) & 3))
             return;
         rot.z = (float)Float_FRand(6.2831855f);
-        Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.1f, 0.5f, BULLET_SMOKE, 7, 0x404040ff, 0x40404001, 0x78);
+        Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.1f, 0.5f, HT_Entity_BulletSmoke, 7, 0x404040ff, 0x40404001,
+                 0x78);
         return;
     }
 
@@ -499,7 +490,8 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
     vel.z = (float)(Rand_FRand_MVar2(0.3f, 0.15f) + 0.3f);
     vel.y = (float)(Rand_FRand_MVar2(0.1f, 0.05f) + 0.5f);
     rot.z = (float)Float_FRand(6.2831855f);
-    Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, BULLET_SMOKE, 11, 0x404040ff, 0x404040ff, 0xff);
+    Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, HT_Entity_BulletSmoke, 11, 0x404040ff, 0x404040ff,
+             0xff);
 }
 
 // Dust behind the projectile, every third frame in single player
@@ -510,7 +502,7 @@ void Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     rot.x = 0.0f;
     rot.y = 0.0f;
     rot.z = (float)Float_FRand(6.2831855f);
-    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, BULLET_DUST, 0, 0x7f7f7f7f, 0x80808000, 0x40);
+    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, HT_Entity_BulletDust, 0, 0x7f7f7f7f, 0x80808000, 0x40);
 }
 
 // Finer dust, every other frame in single player
@@ -521,7 +513,8 @@ void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     rot.x = 0.0f;
     rot.y = 0.0f;
     rot.z = (float)Float_FRand(6.2831855f);
-    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, BULLET_DUST, 7, 0x7f7f7f7f, 0x80808000, 0x20);
+    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, HT_Entity_BulletDust, 7, 0x7f7f7f7f, 0x80808000,
+             0x20);
 }
 
 // A flash grenade going off: each player within 30 units is dazzled by how near it is (5 to 90 units), how directly
@@ -529,7 +522,8 @@ void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
 static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
 
     _VECTOR *pos = &obj->position;
-    Gas_Init(obj->inCel, pos, &obj->rotation, NULL, 0.5f, 1.67f, BULLET_SMOKE, 11, 0xffffff7f, 0x80808000, 0x7f);
+    Gas_Init(obj->inCel, pos, &obj->rotation, NULL, 0.5f, 1.67f, HT_Entity_BulletSmoke, 11, 0xffffff7f, 0x80808000,
+             0x7f);
     Camera_Shake(pos, 2.0f);
     Bullet_PlaySound(SFX_FLASH_GRENADE, pos);
     Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, 1, 5.0f, 0, 0, 0, 0xffff);
@@ -653,9 +647,11 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
         SWOOSH_tag *last = (SWOOSH_tag *)bullet->swoosh->extraObjectData;
         if ((uint)(GameState.NumFramesUnpaused - obj->creationTimeFrames) % (uint)(int)weapon->swooshInterval == 0) {
             if (Bullet_IsBeamWeapon(weapon->weaponBaseNum))
-                bullet->swoosh = Swoosh_Create(&obj->position, &last->from, weapon->swooshLifetime, SWOOSH_BEAM, 0);
+                bullet->swoosh = Swoosh_Create(&obj->position, &last->from, weapon->swooshLifetime,
+                                               HT_Entity_SwooshBeam, 0);
             else
-                bullet->swoosh = Swoosh_Create(&obj->position, &last->from, weapon->swooshLifetime, SWOOSH_TRAIL, 1);
+                bullet->swoosh = Swoosh_Create(&obj->position, &last->from, weapon->swooshLifetime,
+                                               HT_Entity_SwooshTrail, 1);
         } else {
             Vec_Copy(&obj->position, &last->from);
         }
@@ -702,7 +698,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
             } else {
                 weapon = bullet->wpnDef;
                 Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, weapon->explodeRadius, weapon->explodeRadius,
-                               BULLET_EXPLOSION, weapon->damage, 200, 200, 0, bullet->firedByObj, 0);
+                               HT_Script_BulletExplosion, weapon->damage, 200, 200, 0, bullet->firedByObj, 0);
             }
         }
     }
@@ -734,7 +730,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
             if (shot == 0)
                 continue;
             bullet->charge -= shot;
-            Emitter_Create(SATCHEL_SHOT_SPARKS, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0, 0.0f);
+            Emitter_Create(HT_Emitter_LockSparks, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0, 0.0f);
             if (bullet->charge <= 0)
                 Bullet_PlaySound(SFX_SATCHEL_DISARMED, &obj->position);
         }
@@ -1006,7 +1002,7 @@ void Bullet_init_casing_ex(obj_tag *casing) {
 
 // The sound a case lands with on the material
 static Action_SFX Bullet_CasingSound(CASING_tag *data) {
-    if (data->model == SHOTGUN_CASING && data->material != 13 && data->material != 14)
+    if (data->model == HT_Entity_ShotgunCasing && data->material != 13 && data->material != 14)
         return SFX_WEAPON_SHELL_SHOTGUN;
     switch (data->material) {
     case 1: case 20:
@@ -1173,7 +1169,7 @@ static void Bullet_TripBombBeam(obj_tag *obj, BU_tag *bullet) {
 
     if (bullet->swoosh == NULL) {
         bullet->swoosh = control_create_object(0, &obj->position, NULL, NULL);
-        hashtable_set_object_to_entity_gfx(bullet->swoosh, (HASHCODE)0x2000133);
+        hashtable_set_object_to_entity_gfx(bullet->swoosh, HT_Entity_LaserBeamGlist);
         bullet->swoosh->objectType = OBJECTTYPE_GFX;
         bullet->swoosh->effectFlags |= 0x20;
         bullet->swoosh->parent = obj;
@@ -1348,7 +1344,7 @@ void Bullet_Update(obj_tag *obj) {
             else if ((bullet->firedByObj != NULL && bullet->firedByObj->objectType == OBJECTTYPE_DRONE)
                      || (bullet->wpnDef->projectileFlags & ProjectileFlag_Tracer)) {
                 View_SetDrawInAllViews(obj);
-                hashtable_set_object_to_entity_gfx(obj, (HASHCODE)0x2000123);
+                hashtable_set_object_to_entity_gfx(obj, HT_Entity_000123);
                 obj->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
                 obj->scale = bullet->speed;
             }

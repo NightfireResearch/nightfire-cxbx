@@ -39,13 +39,9 @@ static_assert(std::bit_cast<uint32_t>(WindDrawScale) == 0x37810e36, "not the ori
 // The water materials a step or a shot ripples
 #define MATERIAL_WATER_A 13
 #define MATERIAL_WATER_B 14
-#define ENV_RIPPLE_GAS ((HASHCODE)0x02000129)
-#define ENV_BREATH_GAS ((HASHCODE)0x0200021d)
 
 // The tree script that has a second version, and the level where trees do not loop
-#define TREE_SCRIPT_A ((HASHCODE)0x0600008c)
-#define TREE_SCRIPT_B ((HASHCODE)0x0600008d)
-#define TREE_STILL_LEVEL ((HASHCODE)0x07000043)
+#define TREE_STILL_LEVEL HT_Level_AllCharacters
 
 #define ScriptLoops 0x80000000u     // sAnimScript_tag::flags
 
@@ -129,7 +125,7 @@ void Env_WaterRipple(HITDATA_tag *hit) {
             return;
         cel = hit->hitObj->inCel;
     }
-    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, ENV_RIPPLE_GAS, 1, 0x7f7f7f7f, 2, 0x3f);
+    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, HT_Entity_RippleGas, 1, 0x7f7f7f7f, 2, 0x3f);
 }
 
 // A breath from the mouth, on the first third of every two seconds, a puff each tenth of one, in a cel seen this
@@ -149,7 +145,7 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     if (GlobalEnv != NULL && GlobalEnv->dropType == 0 && !(cel->bitsFromPlacementTag & CEL_NO_SKY)) {
         _VECTOR pos;
         auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, ENV_BREATH_GAS, 0, 0xffffff80, 0xffffff01, 40);
+        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, HT_Entity_EnvBreathGas, 0, 0xffffff80, 0xffffff01, 40);
         return;
     }
 
@@ -161,7 +157,7 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     rot.z = (float)Float_FRand(6.2831855f);
     _VECTOR pos;
     auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, ENV_BREATH_GAS, 0, 0xffffffc8, 0xffffff01, 40);
+    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_EnvBreathGas, 0, 0xffffffc8, 0xffffff01, 40);
     gas->effectFlags |= 0x400;
 }
 
@@ -176,8 +172,8 @@ obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     AnimObjectNew(obj, keys->skin);
 
     HASHCODE script = keys->script;
-    if (script == TREE_SCRIPT_A && (Rand_Random() & 1))
-        script = TREE_SCRIPT_B;
+    if (script == HT_Script_TreeScriptA && (Rand_Random() & 1))
+        script = HT_Script_TreeScriptB;
     sAnimScript_tag *anim = AnimScriptAdd(obj, script);
     if (GameState.NextLevelHashcode == TREE_STILL_LEVEL) {
         anim->flags &= ~ScriptLoops;

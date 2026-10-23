@@ -27,9 +27,6 @@ static int32_t Ftol(double x) {
     return int32_t(int64_t(x));
 }
 
-
-
-
 // The texts (Ghidra's names)
 #define NOTIF_X_CAPTURED_GOLDENEYE_KEY ((Action_TranslatedText)0x0200003e)
 #define NOTIF_X_CAPTURED_GOLDENEYE_CRYSTAL ((Action_TranslatedText)0x0200003f)
@@ -38,9 +35,6 @@ static int32_t Ftol(double x) {
 #define NOTIF_X_ACTIVATED_GOLDENEYE ((Action_TranslatedText)0x02000042)
 #define NOTIF_GOLDENEYE_KEY_RETURNED ((Action_TranslatedText)0x02000043)
 #define NOTIF_GOLDENEYE_CRYSTAL_RETURNED ((Action_TranslatedText)0x02000044)
-
-// The ray's script (name ours)
-#define HT_Script_GoldenEyeRay ((HASHCODE)0x0600003e)
 
 // Bot messages sent here: 0x35 / 0x36 when the key / the crystal is taken, after 0x3b and 0x3d (see
 // multiplayer_modes.cpp); 0x37 / 0x38 when it is let go, after 0x3c.

@@ -1022,7 +1022,8 @@ void LinkDrones(void) {
 void RandomWorld(void) {
     memset(&world, 0, sizeof(world));
     GameState.NumFramesUnpaused = 1000 + R(1000);
-    GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? 0x07000001 : (R(2) ? 0x07000002 : 0x07000008));
+    GameState.CurrentLevelHashcode = (HASHCODE)(R(2) ? HT_Level_HendersonA : (R(2) ? HT_Level_HendersonB
+                                                                              : HT_Level_CastleIndoors2));
     MPSettings.isMultiplayer = R(4) == 0;
     MPSettings.dronesAreBots = R(3) == 0;
     MPSettings.ExplosiveSceneryEnabled = R(2);
@@ -1096,7 +1097,7 @@ void RandomWorld(void) {
     for (int i = 0; i < 3; i++)
         world.verts[i] = world.vertices[R(6)];
 
-    world.script.scriptHashcode = (HASHCODE)(R(2) ? 0x06000052 : 0x06000027);
+    world.script.scriptHashcode = (HASHCODE)(R(2) ? HT_Script_BulletExplosion : HT_Script_DestroyExplosion1);
     world.script.endFrame = (ushort)R(80);
     PlainVector(&world.bonePos, 4.0f);
     _VECTOR r;
@@ -1851,7 +1852,7 @@ obj_tag *Casing(void) {
     data->floorY = Value(-5.0f, 5.0f);
     data->timer = R(4) ? Value(-2.0f, 260.0f) : (R(2) ? 240.0f : Plain(3.5f, 6.5f));
     data->owner = R(6) ? AnyObj() : NULL;
-    data->model = (HASHCODE)(R(2) ? 0x02000548 : R(10));
+    data->model = (HASHCODE)(R(2) ? HT_Entity_ShotgunCasing : R(10));
     data->material = (ushort)(R(4) ? R(24) : R(0x10000));
     casing->curState = (ushort)R(4);
     return casing;
@@ -2082,7 +2083,7 @@ uint32_t RunExplodeCreate(bool original) {
               void (__cdecl *)(obj_tag *, _VECTOR *, _VECTOR *, float, float, HASHCODE, float, uchar, uchar, uchar,
                                obj_tag *, ushort),
               AnyObj(), &world.v[0], &world.v[1], Value(0.0f, 6.0f), R(4) ? Value(0.0f, 6.0f) : 0.5f,
-              (HASHCODE)0x06000052, Value(0.0f, 50.0f), 200, 200, 0, R(2) ? AnyObj() : NULL, (ushort)R(12));
+              HT_Script_BulletExplosion, Value(0.0f, 50.0f), 200, 200, 0, R(2) ? AnyObj() : NULL, (ushort)R(12));
     return 0;
 }
 
@@ -2108,7 +2109,7 @@ obj_tag *Explosion(void) {
 
 uint32_t RunExplodeUpdate(bool original) {
     if (R(3) == 0) {
-        GameState.CurrentLevelHashcode = (HASHCODE)0x07000008;
+        GameState.CurrentLevelHashcode = HT_Level_CastleIndoors2;
         switch_channels[0x53] = 1;
     }
     if (R(3) == 0)

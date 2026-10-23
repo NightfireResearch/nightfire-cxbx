@@ -19,7 +19,6 @@ typedef struct {
     uint laserStartupSwitchChannel;
 } SpaceLaserCreationData;
 
-
 // AUTOINJECT
 obj_tag * Create_SpaceLaser(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
     
@@ -154,7 +153,7 @@ void SpaceLaser_Update(obj_tag *obj) {
             hitEffect->objectType = OBJECTTYPE_EFFECT;
             effectInfo->life = 5;
             effectInfo->fade = 0;
-            hashtable_set_object_to_entity_gfx(hitEffect, (HASHCODE)0x20005cd);
+            hashtable_set_object_to_entity_gfx(hitEffect, HT_Entity_SwooshBeam);
             hitEffect->tweakA = 127 + Rand_Rand(128);
             control_link_object_to_cel(hitEffect, build_FindCel(&spaceLaser->emitterPnt, glb_world));
 
@@ -162,7 +161,7 @@ void SpaceLaser_Update(obj_tag *obj) {
             PositionBeam(hitEffect, &spaceLaser->emitterPnt, &spaceLaser->targetPnt);
 
             // Spawn an Emitter
-            Emitter_Create((HASHCODE)0xc000010, &spaceLaser->targetPnt, &CONST_UP_VECTOR, 0.0f, 0, 0, 0, 0.0f);
+            Emitter_Create(HT_Emitter_000010, &spaceLaser->targetPnt, &CONST_UP_VECTOR, 0.0f, 0, 0, 0, 0.0f);
 
             // Return to the idle state
             spaceLaser->someTimerBeforeRunningScript = 10.0f;

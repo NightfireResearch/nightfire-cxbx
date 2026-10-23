@@ -576,9 +576,9 @@ void RandomHits(void) {
 }
 
 void RandomGlobals(void) {
-    static const HASHCODE levels[] = {HT_Level_CastleIndoors1, HT_Level_Tower2B, (HASHCODE)0x07000001,
-                                      (HASHCODE)0x07000004, (HASHCODE)0x07000007, (HASHCODE)0x0700001b,
-                                      HT_Level_HendersonA, (HASHCODE)0x07000013};
+    static const HASHCODE levels[] = {HT_Level_CastleIndoors1, HT_Level_Tower2B, HT_Level_HendersonA,
+                                      HT_Level_HendersonD, HT_Level_CastleIndoors1, HT_Level_SpaceStationD,
+                                      HT_Level_HendersonA, HT_Level_Tower2C};
     GameState.CurrentLevelHashcode = levels[ShadowRand(8)];
     GameState.difficultyModifier = ShadowRand(5);
     GameState.NumFramesUnpaused = ShadowRand(0x7fff);

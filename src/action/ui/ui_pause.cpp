@@ -35,10 +35,6 @@ extern uint8_t user_restarted_or_quit;  // MenuManager.cpp
 #define PAUSE_CONFIRM_TEXT          12
 #define PAUSE_CONFIRM_LIST          13  // yes, no
 #define PAUSE_INVERTED_TEXT         14
-#define SUB_P_PAUSE_HINT_TEXT       ((HASHCODE)0x1000006f)
-#define SUB_P_PAUSE_INVERTED        ((HASHCODE)0x100000c9)
-#define SUB_P_PAUSE_ICON_184        ((HASHCODE)0x10000184)
-#define SUB_P_PAUSE_BUILD_TEXT      ((HASHCODE)0x100000d6)
 
 #define TXT_PAUSE_HINT          ((Action_TranslatedText)0x1000217)  // "~A Select  ~V Scroll  ~H Next  ~S Continue"
 #define TXT_PAUSE_HINT_OBJECTIVES ((Action_TranslatedText)0x1000218)
@@ -126,8 +122,8 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         __Menu_Send(managerNum, C_GCPAUSE, MessageType_SetPulseColour, 0x806d59ff, 0);
         __Menu_Send(managerNum, C_GCPAUSE, MessageType_SetTextFlag2000, 0, 0);
         __Menu_Send(managerNum, SUB_P_PAUSE_HINT_TEXT, MessageType_SetTextFlag2000, 0, 0);
-        __Menu_Send(managerNum, SUB_P_PAUSE_INVERTED, MessageType_SetTextFlag2000, 0, 0);
-        __Menu_Send(managerNum, SUB_P_PAUSE_INVERTED, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_Send(managerNum, SUB_P_CNCONTROLS_INVERTED_TEXT, MessageType_SetTextFlag2000, 0, 0);
+        __Menu_Send(managerNum, SUB_P_CNCONTROLS_INVERTED_TEXT, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_HINT_TEXT, Txt_BindLabel(TXT_PAUSE_HINT, 0));
         if (PlayerInputs[player].inverted) {
             __Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_INVERTED_TEXT, MessageType_SetColour, 0x645a49d2, 0);
@@ -139,7 +135,7 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
                           (intptr_t)Txt_BindLabel(TXT_NORMAL, 0), 0);
         }
         CheatInfo.pauseCleared = 0;
-        __Menu_Send(managerNum, SUB_P_PAUSE_ICON_184, MessageType_SetIconSpriteFlags, 0x100, 0);
+        __Menu_Send(managerNum, SUB_P_ENDMISSION_ICON, MessageType_SetIconSpriteFlags, 0x100, 0);
         Manager_SendMessage(&manager[managerNum], MessageType_SetCursor, C_GCPAUSE, 0);
         sprintf(pause_build_text, "%s", PauseBuildString);
         LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_BUILD_TEXT, pause_build_text);
@@ -399,8 +395,8 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                 pause_confirm_closed = 0;
                 break;
             }
-            switch ((uchar)__Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_RESUME_LIST, MessageType_GetSelectedIndex, 0, 0)) {
-            case 0:
+            switch ((uchar)__Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_RESUME_LIST, MessageType_GetSelectedIndex, 0,
+                                         0)) {case 0:
                 MenuManager_Delete(managerNum);
                 break;
             case 1:
@@ -466,10 +462,6 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 }
 
 // ---- the end of a failed mission
-
-#define SUB_P_ENDMISSION_TITLE   ((HASHCODE)0x10000001)
-#define SUB_P_ENDMISSION_LIST    ((HASHCODE)0x100001a4)   // restart from the checkpoint, restart, quit
-#define SUB_P_ENDMISSION_ICON    ((HASHCODE)0x10000184)
 
 // AUTOINJECT
 bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {

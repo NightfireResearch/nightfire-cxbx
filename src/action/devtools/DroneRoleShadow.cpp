@@ -517,8 +517,8 @@ void RandomDrone(int i) {
     d->velocity.y = ShadowRandFloat(-1.0f, 1.0f);
     d->velocity.z = ShadowRandFloat(-1.0f, 1.0f);
     d->floatAcceleration = ShadowRandFloat(0.0f, 1.0f);
-    d->playScript = (HASHCODE)(ShadowRand(2) ? 0x0600021f : 0);
-    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : 0x06000220);
+    d->playScript = (HASHCODE)(ShadowRand(2) ? HT_Script_DeathScript21F : 0);
+    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : HT_Script_000220);
     d->chatSwitchChannel = (uchar)(ShadowRand(2) ? 0x19 : 0x11);
     d->modeChangeSwitchChannel = (uchar)(ShadowRand(3) == 0 ? ShadowRand(256) : 0);
     d->secondState = (short)(ShadowRand(3) == 0 ? 0 : ShadowRand(250));

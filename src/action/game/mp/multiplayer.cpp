@@ -46,35 +46,35 @@ MPJoinSlot mp_join_slots[NUM_PLAYERS];
 
 // XBE_GLOBAL(0x001637c0, 0x1d0)
 MP_skin MP_skins[29] = {
-    {.skinHashcode = (HASHCODE)0x5000089, .fileHashcode = (HASHCODE)0x10001b4, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x50000a5, .fileHashcode = (HASHCODE)0x10001ec, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500008e, .fileHashcode = (HASHCODE)0x10001bc, .handType = 5},
-    {.skinHashcode = (HASHCODE)0x5000092, .fileHashcode = (HASHCODE)0x10001c5, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000095, .fileHashcode = (HASHCODE)0x10001c9, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000096, .fileHashcode = (HASHCODE)0x10001d5, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000097, .fileHashcode = (HASHCODE)0x10001dd, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x5000098, .fileHashcode = (HASHCODE)0x10001de, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500009a, .fileHashcode = (HASHCODE)0x10001e1, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x50000c6, .fileHashcode = (HASHCODE)0x100021b, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500009e, .fileHashcode = (HASHCODE)0x10001e5, .handType = 5},
-    {.skinHashcode = (HASHCODE)0x50000a0, .fileHashcode = (HASHCODE)0x10001e7, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x50000a4, .fileHashcode = (HASHCODE)0x10001eb, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500008b, .fileHashcode = (HASHCODE)0x10001b7, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x50000bb, .fileHashcode = (HASHCODE)0x100020b, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500001c, .fileHashcode = (HASHCODE)0x100012f, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500001d, .fileHashcode = (HASHCODE)0x100012a, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500001f, .fileHashcode = (HASHCODE)0x100012d, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x5000056, .fileHashcode = (HASHCODE)0x100015a, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000060, .fileHashcode = (HASHCODE)0x100016a, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000063, .fileHashcode = (HASHCODE)0x1000170, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000086, .fileHashcode = (HASHCODE)0x10001af, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000081, .fileHashcode = (HASHCODE)0x10001aa, .handType = 7},
-    {.skinHashcode = (HASHCODE)0x5000082, .fileHashcode = (HASHCODE)0x10001ab, .handType = 6},
-    {.skinHashcode = (HASHCODE)0x5000084, .fileHashcode = (HASHCODE)0x10001ad, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500006b, .fileHashcode = (HASHCODE)0x100017e, .handType = 5},
-    {.skinHashcode = (HASHCODE)0x5000085, .fileHashcode = (HASHCODE)0x10001ae, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x500007b, .fileHashcode = (HASHCODE)0x10001a1, .handType = 4},
-    {.skinHashcode = (HASHCODE)0x50000b9, .fileHashcode = (HASHCODE)0x1000208, .handType = 4},
+    {.skinHashcode = HT_Skin_000089, .fileHashcode = HT_File_0001b4, .handType = 4},
+    {.skinHashcode = HT_Skin_0000a5, .fileHashcode = HT_File_0001ec, .handType = 4},
+    {.skinHashcode = HT_Skin_00008e, .fileHashcode = HT_File_0001bc, .handType = 5},
+    {.skinHashcode = HT_Skin_000092, .fileHashcode = HT_File_0001c5, .handType = 6},
+    {.skinHashcode = HT_Skin_000095, .fileHashcode = HT_File_0001c9, .handType = 6},
+    {.skinHashcode = HT_Skin_000096, .fileHashcode = HT_File_0001d5, .handType = 6},
+    {.skinHashcode = HT_Skin_000097, .fileHashcode = HT_File_0001dd, .handType = 4},
+    {.skinHashcode = HT_Skin_000098, .fileHashcode = HT_File_0001de, .handType = 4},
+    {.skinHashcode = HT_Skin_00009a, .fileHashcode = HT_File_0001e1, .handType = 4},
+    {.skinHashcode = HT_Skin_0000c6, .fileHashcode = HT_File_00021b, .handType = 4},
+    {.skinHashcode = HT_Skin_00009e, .fileHashcode = HT_File_0001e5, .handType = 5},
+    {.skinHashcode = HT_Skin_0000a0, .fileHashcode = HT_File_0001e7, .handType = 4},
+    {.skinHashcode = HT_Skin_0000a4, .fileHashcode = HT_File_0001eb, .handType = 4},
+    {.skinHashcode = HT_Skin_00008b, .fileHashcode = HT_File_0001b7, .handType = 4},
+    {.skinHashcode = HT_Skin_0000bb, .fileHashcode = HT_File_00020b, .handType = 4},
+    {.skinHashcode = HT_Skin_00001c, .fileHashcode = HT_File_00012f, .handType = 4},
+    {.skinHashcode = HT_Skin_00001d, .fileHashcode = HT_File_00012a, .handType = 4},
+    {.skinHashcode = HT_Skin_00001f, .fileHashcode = HT_File_00012d, .handType = 4},
+    {.skinHashcode = HT_Skin_000056, .fileHashcode = HT_File_00015a, .handType = 6},
+    {.skinHashcode = HT_Skin_000060, .fileHashcode = HT_File_00016a, .handType = 6},
+    {.skinHashcode = HT_Skin_000063, .fileHashcode = HT_File_000170, .handType = 6},
+    {.skinHashcode = HT_Skin_000086, .fileHashcode = HT_File_0001af, .handType = 6},
+    {.skinHashcode = HT_Skin_000081, .fileHashcode = HT_File_0001aa, .handType = 7},
+    {.skinHashcode = HT_Skin_000082, .fileHashcode = HT_File_0001ab, .handType = 6},
+    {.skinHashcode = HT_Skin_000084, .fileHashcode = HT_File_0001ad, .handType = 4},
+    {.skinHashcode = HT_Skin_00006b, .fileHashcode = HT_File_00017e, .handType = 5},
+    {.skinHashcode = HT_Skin_SkinOddjobHat, .fileHashcode = HT_File_0001ae, .handType = 4},
+    {.skinHashcode = HT_Skin_00007b, .fileHashcode = HT_File_0001a1, .handType = 4},
+    {.skinHashcode = HT_Skin_0000b9, .fileHashcode = HT_File_000208, .handType = 4},
 };
 
 // XBE_GLOBAL(0x001f660c, 0x4)
@@ -128,7 +128,6 @@ obj_tag *AssassinTarget;
 
 #define WEAPON_FISTS 1
 
-
 // Bot messages (docs/drone/bots-and-navigation): 0x3b goal complete, 0x3d cancel goals on an object, 0x40 the
 // demolition or protection object has gone (MP_getObjExtObj)
 #define BOT_MSG_GOAL_COMPLETE 0x3b
@@ -138,7 +137,6 @@ obj_tag *AssassinTarget;
 
 constexpr float HalfPi = 1.5707964f;
 static_assert(std::bit_cast<uint32_t>(HalfPi) == 0x3fc90fdb, "not the original's pi / 2");
-
 
 // AUTOINJECT
 void MP_setLoadingSkins(void) {
@@ -411,7 +409,6 @@ uint MP_GetSpawnPoint(short teamId, obj_tag *respawningPlayer) {
     }
 }
 
-
 void MP_CleanupMPObjExt(MP_OBJ_EXT *mp_obj) {
   if(mp_obj == NULL)
     return;
@@ -438,7 +435,6 @@ MP_OBJ_EXT Demolition;
 MP_OBJ_EXT Protection;
 // XBE_GLOBAL(0x002635f8, 0x44)
 MP_OBJ_EXT BluePrint;
-
 
 // AUTOINJECT
 void MP_objectBeingDeleted(obj_tag* obj) {
@@ -615,7 +611,6 @@ MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
   return NULL;
 }
 
-
 // Rebuilds a scenario object's AI emitter, which the bots path to: at the object's matrix and cel unless keepPos,
 // the cel looked up if it has none. Emitters exist only in a game with bots.
 void MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
@@ -675,7 +670,6 @@ void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
         View_SetDrawInOtherViewsOnly(gameObj, ((BLData *)holder->extraObjectData)->playerNum);
 }
 
-
 // AUTOINJECT
 short MP_PlayerOrBotInd(obj_tag *obj) {
   
@@ -693,7 +687,6 @@ short MP_PlayerOrBotInd(obj_tag *obj) {
 
   return -1;
 }
-
 
 static void ShowTopAgentResult(sprite *status) {
     int fewestDeaths = 30000;
@@ -855,7 +848,6 @@ void MP_RestartScenario(void) {
 
 }
 
-
 // AUTOINJECT
 void MP_Update(void) {
 
@@ -950,9 +942,7 @@ void MP_Update(void) {
 
   }
 
-
 }
-
 
 // XBE_GLOBAL(0x0025fe30, 0x4)
 uint32_t PickupNextAddIndex;
@@ -1459,10 +1449,6 @@ SpriteInfo MPStatusInfo = {
     .linkedViewer = 5,
 };
 
-// The assassin sprites' textures (names ours)
-#define TEX_MP_ASSASSIN_180 ((HASHCODE)0x03000180)
-#define TEX_MP_ASSASSIN_189 ((HASHCODE)0x03000189)
-
 static void CreateAt(SpawnPlace *place) {
     MP_CreateObject(&place->mtx, place->keys, place->celgl);
 }
@@ -1521,9 +1507,10 @@ void MP_Start(void) {
             if (MPGame.players[i].playerObj == NULL)
                 continue;
             AssassinSpriteInfo.linkedViewer = 5;
-            AssassinSpriteInfo.textureHashcode = TEX_MP_ASSASSIN_180;
+            // The assassin sprites' textures (names ours)
+            AssassinSpriteInfo.textureHashcode = HT_Texture_MpAssassin180;
             MPGame.radarMarks[i].assassin = Sprite_Create2(&AssassinSpriteInfo);
-            AssassinSpriteInfo.textureHashcode = TEX_MP_ASSASSIN_189;
+            AssassinSpriteInfo.textureHashcode = HT_Texture_MpAssassin189;
             MPGame.radarMarks[i].target = Sprite_Create2(&AssassinSpriteInfo);
         }
     }
@@ -1984,9 +1971,6 @@ void MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
 
 // ---- the match's agents and objects coming into being
 
-// The skin whose players throw Weap_OddjobHat
-#define SKIN_ODDJOB_HAT ((HASHCODE)0x05000085)
-
 // A player's weapons at the start of a match or after respawning: fists, the weapon set's first weapon (as the
 // player's upgrades have it) with two clips, the grapple when the rules allow it, Weap_OddjobHat for the skin that
 // throws it and a satchel for the side that plants it; then the hands are the weapon in use.
@@ -2003,7 +1987,7 @@ void MP_EquipPlayer(obj_tag *player) {
         Player_EquipAmmo(blData, 0x1b, (ushort)weapon_data[0x1b].clipSize);
     if (MPSettings.GrappleEnabled)
         Player_EquipWeapon(blData, (short)Upgrade_MPWeapon(blData->playerNum, 0x50), 0);
-    if (player->animState->animObj.skin->hashcode == SKIN_ODDJOB_HAT)
+    if (player->animState->animObj.skin->hashcode == HT_Skin_SkinOddjobHat)
         Player_EquipWeapon(blData, Weap_OddjobHat, 1);
 
     MPTeam team = MPSettings.Player[blData->playerNum].TeamId;

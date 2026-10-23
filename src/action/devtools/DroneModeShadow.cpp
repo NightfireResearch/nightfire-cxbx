@@ -126,9 +126,9 @@ void RandomWorld() {
     static const uint keyModes[] = {0, 5, 100};
     d->diVars.keys.mode = Pick(keyModes, 3);
 
-    static const HASHCODE scripts[] = {(HASHCODE)0x600011d, (HASHCODE)0x600011f, (HASHCODE)0x6000124,
-                                       (HASHCODE)0x6000126, (HASHCODE)0x600021f, (HASHCODE)0x6000000,
-                                       (HASHCODE)0x6000125};
+    static const HASHCODE scripts[] = {HT_Script_00011d, HT_Script_00011f, HT_Script_000124,
+                                       HT_Script_000126, HT_Script_DeathScript21F, HT_Script_HASHCODE_BASE,
+                                       HT_Script_000125};
     world.diVars.keys.playScript = Pick(scripts, 7);
 
     static const HASHCODE levels[] = {HT_Level_CastleIndoors1, HT_Level_CastleIndoors2, HT_Level_TowerA,

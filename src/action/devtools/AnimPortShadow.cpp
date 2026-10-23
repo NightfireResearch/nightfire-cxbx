@@ -55,15 +55,15 @@ const int HEAP = 0x6000;
 
 // The made-up files: three body sequences (one a walk with a distance table), a morph sequence, scripts
 enum { SEQ_A, SEQ_LONG, SEQ_WALK, SEQ_MORPH, SEQ_FILES };
-const HASHCODE kSeqHash[SEQ_FILES] = {(HASHCODE)0x04000011, (HASHCODE)0x04000012, (HASHCODE)0x040000e9,
-                                      (HASHCODE)0x04000014};
+const HASHCODE kSeqHash[SEQ_FILES] = {HT_AnimSeq_000011, HT_AnimSeq_000012, HT_AnimSeq_0000e9,
+                                      HT_AnimSeq_000014};
 const int kSeqFrames[SEQ_FILES] = {30, 300, 20, 12};
 const int SCRIPT_FILES = 8;
 const int SCRIPT_SIZE = 160;
-const HASHCODE kScriptHash[SCRIPT_FILES] = {(HASHCODE)0x06000101, (HASHCODE)0x06000102, (HASHCODE)0x06000099,
-                                            (HASHCODE)0x06000104, (HASHCODE)0x060000ae, (HASHCODE)0x06000106,
-                                            (HASHCODE)0x06000107, (HASHCODE)0x06000108};
-const HASHCODE kSkinHash = (HASHCODE)0x05000020;
+const HASHCODE kScriptHash[SCRIPT_FILES] = {HT_Script_000101, HT_Script_000102, HT_Script_AnimScriptFootstep1,
+                                            HT_Script_000104, HT_Script_AnimScriptFootstep1B, HT_Script_000106,
+                                            HT_Script_000107, HT_Script_000108};
+const HASHCODE kSkinHash = HT_Skin_000020;
 const int MORPHS = 15;
 
 struct Entry {
@@ -244,7 +244,7 @@ celglist_tag *__cdecl FakeCelglist(HASHCODE hc) {
 }
 HASHCODE __cdecl FakeGlistHash(celglist_tag *gl) {
     ShadowLog("glisthash(%x)", W(gl));
-    return (HASHCODE)0x02000123;
+    return HT_Entity_000123;
 }
 void __cdecl FakeSetGfx(obj_tag *obj, HASHCODE hc) { ShadowLog("setgfx(%x,%x)", W(obj), (uint)hc); }
 int **__cdecl FakeFileLoad(char *name, ushort tag, int *size) {
@@ -264,7 +264,7 @@ int **__cdecl FakeFileLoad(char *name, ushort tag, int *size) {
             n = SCRIPT_SIZE;
         }
     }
-    if ((hc & 0xff000000) == 0x05000000) {
+    if ((hc & 0xff000000) == HT_Skin_HASHCODE_BASE) {
         file = world.skinFile;
         n = sizeof(world.skinFile);
     }
@@ -574,7 +574,7 @@ void BuildFiles(void) {
         memcpy(pristineSeq[f], rawSeq[f], rawSeqSize[f]);
         sAnimRawSeq_tag *done = (sAnimRawSeq_tag *)pristineSeq[f];
         done->flags &= 0xf;
-        if (kSeqHash[f] == (HASHCODE)0x040000e9)
+        if (kSeqHash[f] == HT_AnimSeq_0000e9)
             done->flags |= ANIMSEQ_DISTANCE_AXES;
         done->trackData = (uint *)(world.seqFiles[f] + 0x40);
         done->trackDataSize = (uint32_t)tracks.size();
@@ -695,7 +695,7 @@ void RandomObj(obj_tag *o, int type, void *data) {
     o->scale = 1.0f;
 }
 
-const HASHCODE kTags[] = {(HASHCODE)0, (HASHCODE)0x80000003, (HASHCODE)ANIMTAG_FACE_MOOD,
+const HASHCODE kTags[] = {(HASHCODE)0, HT_Menu_000003, (HASHCODE)ANIMTAG_FACE_MOOD,
                           (HASHCODE)ANIMTAG_FACE_BLINK, (HASHCODE)ANIMTAG_FACE_SPEECH};
 
 uint RandomScriptFlags(void) {
@@ -797,9 +797,9 @@ void RandomWorld(void) {
     memcpy(world.scriptFiles, pristineScript, sizeof(world.scriptFiles));
 
     // Globals
-    static const HASHCODE levels[] = {HT_Level_HendersonA, HT_Level_HendersonC, HT_Level_Tower2A, HT_Level_CastleIndoors1,
-                                      HT_Level_CastleIndoors2, HT_Level_EvilBase, HT_Level_EvilBaseC,
-                                      HT_Level_TowerB, HT_Level_SpaceStationD};
+    static const HASHCODE levels[] = {HT_Level_HendersonA, HT_Level_HendersonC, HT_Level_Tower2A,
+                                      HT_Level_CastleIndoors1, HT_Level_CastleIndoors2, HT_Level_EvilBase,
+                                      HT_Level_EvilBaseC, HT_Level_TowerB, HT_Level_SpaceStationD};
     GameState.CurrentLevelHashcode = levels[ShadowRand(COUNT(levels))];
     GameState.NumFrames = 1000 + ShadowRand(3);
     MPSettings.isMultiplayer = ShadowRand(4) == 0;
@@ -1080,7 +1080,7 @@ void RandomWorld(void) {
             world.table[world.tableCount++].data = world.scriptFiles[s];
         }
     }
-    static const HASHCODE skins[] = {kSkinHash, (HASHCODE)0x050000c3, (HASHCODE)0x050000bd, (HASHCODE)0x0500002f};
+    static const HASHCODE skins[] = {kSkinHash, HT_Skin_0000c3, HT_Skin_0000bd, HT_Skin_SkinOwnDatums};
     for (HASHCODE hc : skins) {
         if (ShadowRand(5)) {
             world.table[world.tableCount].hashcode = hc;
@@ -1088,12 +1088,12 @@ void RandomWorld(void) {
         }
     }
     if (ShadowRand(4)) {
-        world.table[world.tableCount].hashcode = (HASHCODE)0x05000007;
+        world.table[world.tableCount].hashcode = HT_Skin_SkinBond;
         world.table[world.tableCount++].data = &world.bondSkin;
     }
-    static const HASHCODE sleeves[] = {(HASHCODE)0x020009d0, (HASHCODE)0x02000900, (HASHCODE)0x020001f7,
-                                       (HASHCODE)0x02000929, (HASHCODE)0x020009e6, (HASHCODE)0x020009ff,
-                                       (HASHCODE)0x02000a14, (HASHCODE)0x02000a13};
+    static const HASHCODE sleeves[] = {HT_Entity_0009d0, HT_Entity_000900, HT_Entity_0001f7,
+                                       HT_Entity_000929, HT_Entity_0009e6, HT_Entity_0009ff,
+                                       HT_Entity_000a14, HT_Entity_000a13};
     for (HASHCODE hc : sleeves) {
         if (ShadowRand(5) == 0) {
             world.table[world.tableCount].hashcode = hc;
@@ -1101,7 +1101,7 @@ void RandomWorld(void) {
         }
     }
     if (ShadowRand(2)) {
-        world.table[world.tableCount].hashcode = (HASHCODE)0x02000133;
+        world.table[world.tableCount].hashcode = HT_Entity_LaserBeamGlist;
         world.table[world.tableCount++].data = &world.celgl[1];
     }
 
@@ -1260,7 +1260,7 @@ obj_tag *Obj() { return &world.obj; }
 AnimObj *Ao() { return &world.anim.animObj; }
 sAnimScript_tag *AnyScript() { return &world.scripts[Arg(SCRIPTS)]; }
 HASHCODE AnyScriptHash() {
-    static const HASHCODE extra[] = {(HASHCODE)0x06000555, (HASHCODE)0x05000020};
+    static const HASHCODE extra[] = {HT_Script_000555, HT_Skin_000020};
     return Arg(6) ? kScriptHash[Arg(SCRIPT_FILES)] : extra[Arg(2)];
 }
 
@@ -1283,7 +1283,7 @@ uint32_t RunPreLoadInit(bool original) {
 }
 uint32_t RunLoadFile(bool original) {
     static const HASHCODE files[] = {kSeqHash[0], kSeqHash[2], kSeqHash[3], kScriptHash[0], kScriptHash[3],
-                                     kSkinHash, (HASHCODE)0x07000001};
+                                     kSkinHash, HT_Level_HendersonA};
     HASHCODE hc = files[Arg(COUNT(files))];
     char noProcess = (char)(Arg(4) == 0);
     world.tableCount = (int)Arg(3);         // a few entries kept, the loaded file usually not among them
@@ -1293,11 +1293,11 @@ uint32_t RunLoadFile(bool original) {
 uint32_t RunProcessSeqData(bool original) {
     int f = (int)Arg(SEQ_FILES);
     memcpy(world.seqFiles[f], rawSeq[f], rawSeqSize[f]);
-    static const HASHCODE walks[] = {(HASHCODE)0x0400015c, (HASHCODE)0x04000168, (HASHCODE)0x0400079c,
-                                     (HASHCODE)0x040007b0, (HASHCODE)0x040007b3, (HASHCODE)0x040007b6,
-                                     (HASHCODE)0x040007e5, (HASHCODE)0x04000804, (HASHCODE)0x0400084f,
-                                     (HASHCODE)0x04000167, (HASHCODE)0x040007a0, (HASHCODE)0x04000900};
-    HASHCODE hc = Arg(8) ? kSeqHash[f] : (HASHCODE)0x06000001;
+    static const HASHCODE walks[] = {HT_AnimSeq_00015c, HT_AnimSeq_000168, HT_AnimSeq_00079c,
+                                     HT_AnimSeq_0007b0, HT_AnimSeq_0007b3, HT_AnimSeq_0007b6,
+                                     HT_AnimSeq_0007e5, HT_AnimSeq_000804, HT_AnimSeq_00084f,
+                                     HT_AnimSeq_000167, HT_AnimSeq_0007a0, HT_AnimSeq_000900};
+    HASHCODE hc = Arg(8) ? kSeqHash[f] : HT_Script_000001;
     if (Arg(2)) {
         hc = walks[Arg(COUNT(walks))];
         world.table[0].hashcode = hc;
@@ -1327,7 +1327,7 @@ uint32_t RunSleeveGetEntity(bool original) {
 }
 uint32_t RunLoadCapturing(bool original) {
     static const uint tags[] = {0x1c04, 0x1e04, 0x1f04, 0x2004};
-    static const HASHCODE files[] = {kSeqHash[1], kScriptHash[2], kSkinHash, (HASHCODE)0x04000999};
+    static const HASHCODE files[] = {kSeqHash[1], kScriptHash[2], kSkinHash, HT_AnimSeq_000999};
     Regs r = {};
     r.eax = tags[Arg(4)];
     r.esi = (uint32_t)files[Arg(4)];
@@ -1486,7 +1486,7 @@ uint32_t RunSeqSet(bool original) {
     int f = (int)Arg(SEQ_FILES);
     Regs r = {};
     r.ecx = P(s);
-    r.ebx = (uint32_t)(Arg(8) ? kSeqHash[f] : (HASHCODE)0x06000001);
+    r.ebx = (uint32_t)(Arg(8) ? kSeqHash[f] : HT_Script_000001);
     uint32_t args[5] = {P(Obj()), P(Ao()), Arg(3) ? P(world.seqFiles[f]) : 0, Arg(40), Arg(2)};
     return W((void *)Regs6(original, 0x00017960, (const void *)&Asm_AnimSeqSet, r, 5, args));
 }
@@ -1494,7 +1494,7 @@ uint32_t RunSeqGetInfo(bool original) {
     int f = (int)Arg(SEQ_FILES);
     Regs r = {};
     r.eax = Arg(3) ? P(world.seqFiles[f]) : 0;
-    r.ecx = (uint32_t)(Arg(8) ? kSeqHash[f] : (HASHCODE)0x06000001);
+    r.ecx = (uint32_t)(Arg(8) ? kSeqHash[f] : HT_Script_000001);
     r.esi = P(&world.seqs[Arg(SEQS)]);
     return W((void *)Regs6(original, 0x00014420, (const void *)&Asm_AnimSeqGetInfo, r, 0, NULL));
 }
@@ -1619,8 +1619,8 @@ uint32_t RunDatums(bool original) {
 
 uint32_t RunObjectNew(bool original) {
     world.mallocFails = 6;
-    static const HASHCODE skins[] = {kSkinHash, (HASHCODE)0x05000036, (HASHCODE)0x05000015, (HASHCODE)0x05000099,
-                                     (HASHCODE)0x0400000f};
+    static const HASHCODE skins[] = {kSkinHash, HT_Skin_000036, HT_Skin_000015, HT_Skin_000099,
+                                     HT_AnimSeq_00000f};
     HASHCODE hc = skins[Arg(COUNT(skins))];
     obj_tag *obj = Arg(10) ? Obj() : NULL;
     if (Arg(2))
@@ -1630,8 +1630,8 @@ uint32_t RunObjectNew(bool original) {
     return CDECL_RUN(0x00011440, AnimObjectNew, int (__cdecl *)(obj_tag *, HASHCODE), obj, hc);
 }
 uint32_t RunFixupSkin(bool original) {
-    static const HASHCODE skins[] = {(HASHCODE)0x05000036, (HASHCODE)0x05000038, (HASHCODE)0x05000015,
-                                     (HASHCODE)0x05000018, (HASHCODE)0x0500003b, (HASHCODE)0x0500005e, kSkinHash};
+    static const HASHCODE skins[] = {HT_Skin_000036, HT_Skin_000038, HT_Skin_000015,
+                                     HT_Skin_000018, HT_Skin_00003b, HT_Skin_00005e, kSkinHash};
     Regs r = {};
     r.eax = (uint32_t)skins[Arg(COUNT(skins))];
     return Regs6(original, 0x00011350, (const void *)&Asm_FixupSkinHashcode, r, 0, NULL);
@@ -1783,8 +1783,10 @@ uint32_t RunPlayerAnim(bool original) {
     BoundDatums();
     MPSettings.isMultiplayer = Arg(2);
     // The changes of stance, loaded
-    static const uint stances[] = {0x060009da, 0x060001d1, 0x060009b6, 0x060009ae, 0x060001dd, 0x060001e9, 0x060001f4,
-                                   0x060009dd, 0x060001d0, 0x060009b9, 0x060009b1, 0x060001dc, 0x060001e8, 0x060001f3};
+    static const uint stances[] = {HT_Script_0009da, HT_Script_0001d1, HT_Script_0009b6, HT_Script_0009ae,
+                                   HT_Script_0001dd, HT_Script_0001e9, HT_Script_0001f4, HT_Script_0009dd,
+                                   HT_Script_0001d0, HT_Script_0009b9, HT_Script_0009b1, HT_Script_0001dc,
+                                   HT_Script_0001e8, HT_Script_0001f3};
     for (uint hc : stances) {
         if (Arg(4) && world.tableCount < TABLE) {
             world.table[world.tableCount].hashcode = (HASHCODE)hc;
@@ -1909,17 +1911,17 @@ uint32_t RunDiscreteDelete(bool original) {
 }
 uint32_t RunDebugCreate(bool original) {
     static const HASHCODE levels[] = {HT_Level_AllCharacters, HT_Level_AllCharacters2, HT_Level_RefRoom,
-                                      (HASHCODE)0x07000042};
+                                      HT_Level_000042};
     GameState.CurrentLevelHashcode = levels[Arg(COUNT(levels))];
     world.mallocFails = 0;
     // RefRoom's character, as the made-up skin (the original takes its script without checking it was made)
     void *skin = FakeGetItem(kSkinHash);
-    if (skin != NULL && FakeGetItem((HASHCODE)0x0500002e) == NULL && world.tableCount < TABLE) {
-        world.table[world.tableCount].hashcode = (HASHCODE)0x0500002e;
+    if (skin != NULL && FakeGetItem(HT_Skin_AnimdebugRefSkin) == NULL && world.tableCount < TABLE) {
+        world.table[world.tableCount].hashcode = HT_Skin_AnimdebugRefSkin;
         world.table[world.tableCount].data = skin;
         world.tableCount++;
     }
-    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom && FakeGetItem((HASHCODE)0x0500002e) == NULL)
+    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom && FakeGetItem(HT_Skin_AnimdebugRefSkin) == NULL)
         return 0;
     // Skeleton 0 or 1, or (for the ring, which leaves it out) 3
     SkeletonTable[0] = SkeletonTable[1] = (SkeletonInfo *)world.skel;

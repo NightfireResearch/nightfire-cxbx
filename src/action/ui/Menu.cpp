@@ -26,7 +26,6 @@
 #include "../sound/Sound.h"
 #include "../util/Sort.h"
 
-
 #include <math.h>
 #include <stddef.h>
 #include <stdio.h>
@@ -36,85 +35,97 @@
 // XBE_GLOBAL(0x0017f478, 0x300)
 const LEVEL_REWARDS rewards_table[REWARDS_TABLE_SIZE] = {
     {
-        .level = (HASHCODE)0x9000001,
+        .level = HT_Level_Driving_Paris,
         .rewards = {{}, {.value = 30}, {.value = 0x1002b}, {.value = 0x40018}, {.value = 0x10034}},
         .names = {
             (Action_TranslatedText)726, (Action_TranslatedText)748, (Action_TranslatedText)0x10001f9,
             (Action_TranslatedText)754,
         },
-        .icons = {(HASHCODE)0x300012c, (HASHCODE)0x3000111, (HASHCODE)0x3000102, (HASHCODE)0x3000118},
+        .icons = {HT_Texture_00012c, HT_Texture_IconMpcharJaws, HT_Texture_IconDsWeaponCarmissiles,
+            HT_Texture_IconMpcharRenard},
     },
     {
-        .level = (HASHCODE)0x7000005,
+        .level = HT_Level_CastleExterior,
         .rewards = {{}, {.value = 26}, {.value = 0x10026}, {.value = 0x40000}, {.value = 0x1002d}},
         .names = {(Action_TranslatedText)722, (Action_TranslatedText)745, (Action_TranslatedText)933, (Action_TranslatedText)753},
-        .icons = {(HASHCODE)0x3000134, (HASHCODE)0x3000116, (HASHCODE)0x30000f3, (HASHCODE)0x3000108},
+        .icons = {HT_Texture_000134, HT_Texture_IconMpcharOddjob, HT_Texture_IconDsWeaponPP7,
+            HT_Texture_IconMpcharBaronsamedi},
     },
     {
-        .level = (HASHCODE)0x9000005,
+        .level = HT_Level_Driving_SnowMobile,
         .rewards = {{}, {.value = 27}, {.value = 0x20038}, {.value = 0x40003}, {.value = 0x10035}},
         .names = {
             (Action_TranslatedText)723, (Action_TranslatedText)734, (Action_TranslatedText)735,
             (Action_TranslatedText)0x10001fc,
         },
-        .icons = {(HASHCODE)0x3000131, (HASHCODE)0x30000a1, (HASHCODE)0x30000e2, (HASHCODE)0x3000196},
+        .icons = {HT_Texture_000131, HT_Texture_IconMpscenarioAssassin, HT_Texture_IconDsGadgetGrapple,
+            HT_Texture_IconMpcharMaxzorin},
     },
     {
-        .level = (HASHCODE)0x9000006,
+        .level = HT_Level_Driving_Alps,
         .rewards = {{}, {.value = 28}, {.value = 0x1002a}, {.value = 0x40006}, {.value = 0x10030}},
         .names = {(Action_TranslatedText)724, (Action_TranslatedText)746, (Action_TranslatedText)934, (Action_TranslatedText)750},
-        .icons = {(HASHCODE)0x3000133, (HASHCODE)0x300011a, (HASHCODE)0x30000df, (HASHCODE)0x3000113},
+        .icons = {HT_Texture_000133, HT_Texture_IconMpcharScaramanga, HT_Texture_IconDsGadgetCamera,
+            HT_Texture_IconMpcharMayday},
     },
     {
-        .level = (HASHCODE)0x7000001,
+        .level = HT_Level_HendersonA,
         .rewards = {{}, {.value = 29}, {.value = 0x20039}, {.value = 0x40009}, {.value = 0x1002e}},
         .names = {(Action_TranslatedText)725, (Action_TranslatedText)736, (Action_TranslatedText)935, (Action_TranslatedText)749},
-        .icons = {(HASHCODE)0x300012f, (HASHCODE)0x30000a4, (HASHCODE)0x30000fa, (HASHCODE)0x300011d},
+        .icons = {HT_Texture_00012f, HT_Texture_IconMpscenarioUplink, HT_Texture_IconDsWeaponTacticalsniper,
+            HT_Texture_IconMpcharXeniaonatopp},
     },
     {
-        .level = (HASHCODE)0x7000009,
+        .level = HT_Level_TowerA,
         .rewards = {{}, {.value = 35}, {.value = 0x2003a}, {.value = 0x40000}, {.value = 0x10032}},
         .names = {(Action_TranslatedText)731, (Action_TranslatedText)737, (Action_TranslatedText)933, (Action_TranslatedText)752},
-        .icons = {(HASHCODE)0x300012e, (HASHCODE)0x30000a3, (HASHCODE)0x30000f3, (HASHCODE)0x300010b},
+        .icons = {HT_Texture_00012e, HT_Texture_IconMpscenarioTeamkoth, HT_Texture_IconDsWeaponPP7,
+            HT_Texture_IconMpcharChristmasjones},
     },
     {
-        .level = (HASHCODE)0x700000c,
+        .level = HT_Level_PowerStationA1,
         .rewards = {{}, {.value = 31}, {.value = 0x10028}, {.value = 0x4000c}, {.value = 0x1002f}},
         .names = {(Action_TranslatedText)727, (Action_TranslatedText)931, (Action_TranslatedText)936, (Action_TranslatedText)744},
-        .icons = {(HASHCODE)0x3000130, (HASHCODE)0x300011c, (HASHCODE)0x30000e0, (HASHCODE)0x3000110},
+        .icons = {HT_Texture_000130, HT_Texture_IconMpcharWailin, HT_Texture_IconDsGadgetDartgun,
+            HT_Texture_IconMpcharGoldfinger},
     },
     {
-        .level = (HASHCODE)0x7000011,
+        .level = HT_Level_Tower2A,
         .rewards = {{}, {.value = 32}, {.value = 0x2003b}, {.value = 0x40000}, {.value = 0x10036}},
         .names = {(Action_TranslatedText)728, (Action_TranslatedText)739, (Action_TranslatedText)933, (Action_TranslatedText)930},
-        .icons = {(HASHCODE)0x300012a, (HASHCODE)0x300009d, (HASHCODE)0x30000f3, (HASHCODE)0x3000148},
+        .icons = {HT_Texture_00012a, HT_Texture_IconMpscenarioDemolition, HT_Texture_IconDsWeaponPP7,
+            HT_Texture_IconMpcharDrakesuit},
     },
     {
-        .level = (HASHCODE)0x9000002,
+        .level = HT_Level_Driving_Underwater,
         .rewards = {{}, {.value = 33}, {.value = 0x10029}, {.value = 0x4000f}, {.value = 0x10031}},
         .names = {(Action_TranslatedText)729, (Action_TranslatedText)932, (Action_TranslatedText)937, (Action_TranslatedText)751},
-        .icons = {(HASHCODE)0x3000198, (HASHCODE)0x3000114, (HASHCODE)0x30000e1, (HASHCODE)0x300010f},
+        .icons = {HT_Texture_000198, HT_Texture_IconMpcharNicknack, HT_Texture_IconDsGadgetDecoder,
+            HT_Texture_IconMpcharElektraking},
     },
     {
-        .level = (HASHCODE)0x9000003,
+        .level = HT_Level_Driving_JungleA,
         .rewards = {{}, {.value = 34}, {.value = 0x2003c}, {.value = 0x40012}, {.value = 0x10027}},
         .names = {(Action_TranslatedText)730, (Action_TranslatedText)741, (Action_TranslatedText)938, (Action_TranslatedText)929},
-        .icons = {(HASHCODE)0x3000132, (HASHCODE)0x300009e, (HASHCODE)0x30000e6, (HASHCODE)0x300010a},
+        .icons = {HT_Texture_000132, HT_Texture_IconMpscenarioProtection, HT_Texture_IconDsGadgetTaser,
+            HT_Texture_IconMpcharBond},
     },
     {
-        .level = (HASHCODE)0x7000014,
+        .level = HT_Level_EvilBase,
         .rewards = {{}, {.value = 36}, {.value = 0x3003e}, {.value = 0x40015}, {.value = 0x10033}},
         .names = {(Action_TranslatedText)732, (Action_TranslatedText)742, (Action_TranslatedText)939, (Action_TranslatedText)747},
-        .icons = {(HASHCODE)0x300012d, (HASHCODE)0x30000c4, (HASHCODE)0x30000c4, (HASHCODE)0x3000117},
+        .icons = {HT_Texture_00012d, HT_Texture_IconDossierGadgets, HT_Texture_IconDossierGadgets,
+            HT_Texture_IconMpcharPussygalore},
     },
     {
-        .level = (HASHCODE)0x700001b,
+        .level = HT_Level_SpaceStationD,
         .rewards = {{}, {.value = 37}, {.value = 0x2003d}, {.value = 0x40009}, {.value = 0x10037}},
         .names = {
             (Action_TranslatedText)0x10001ff, (Action_TranslatedText)743, (Action_TranslatedText)935,
             (Action_TranslatedText)0x10001fb,
         },
-        .icons = {(HASHCODE)0x300012b, (HASHCODE)0x30000a0, (HASHCODE)0x30000fa, (HASHCODE)0x3000194},
+        .icons = {HT_Texture_00012b, HT_Texture_IconMpscenarioGoldeneye, HT_Texture_IconDsWeaponTacticalsniper,
+            HT_Texture_IconMpcharBondspacesuit},
     },
 };
 // XBE_GLOBAL(0x002251b8, 0x20040)
@@ -171,7 +182,6 @@ uint8_t cn_modified;
 uint8_t cn_secret_mode;
 // Menu (Send, SendEx, SendMessage), Iris (Start, Play), Wheel etc
 
-
 // AUTOINJECT
 int Menu_GetLevelIndex(HASHCODE level) {
 
@@ -210,13 +220,6 @@ uint8_t iris_hold;
 uint8_t iris_active;
 
 #define IRIS_FRAMES 10
-
-// Its pictures (MessageType_SetIcon): frames 1 to 5 close it to the middle, 6 to 9 open it again
-#define ICON_IRIS_1 ((HASHCODE)0x030000bf)
-#define ICON_IRIS_2 ((HASHCODE)0x030000c0)
-#define ICON_IRIS_3 ((HASHCODE)0x030000c1)
-#define ICON_IRIS_4 ((HASHCODE)0x030000c2)
-#define ICON_IRIS_5 ((HASHCODE)0x030000c3)
 
 // Starts the iris: 0 from the middle; 1 the whole of it; 2 the whole of it unless one is running, without marking it
 // running (a wheel's turn); 3 held at the middle; 4 its last frame. Its first frame is drawn.
@@ -274,30 +277,31 @@ void Menu_PlayIris(char tick, uchar managerNum, uint label) {
     switch (iris_frame) {
         case 1:
         case 9:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_1, 0);
+            // Its pictures (MessageType_SetIcon): frames 1 to 5 close it to the middle, 6 to 9 open it again
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris1, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
             break;
         case 2:
         case 8:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_2, 0);
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris2, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
             break;
         case 3:
         case 7:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_3, 0);
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris3, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
             break;
         case 4:
         case 6:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_4, 0);
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris4, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
             break;
         case 5:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_5, 0);
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris5, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0, 0x800080);
             break;
         case 10:
-            __Menu_SendMessage(iris, MessageType_SetIcon, ICON_IRIS_1, 0);
+            __Menu_SendMessage(iris, MessageType_SetIcon, HT_Texture_IconIris1, 0);
             __Menu_SendMessage(iris, MessageType_SetIconRect, 0x400040, 0x10001);
             break;
     }
@@ -314,9 +318,7 @@ void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
     __Menu_SendDelayedMessage(10, mgr, MessageType_GoPage, page, ls.returnPageArg);
 }
 
-
 // ---- the front end's music: two loops, played together
-
 
 // Starts it again, unless it is playing
 // AUTOINJECT
@@ -356,7 +358,7 @@ uint8_t optionbox_has_answer;
 void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char hasAnswer, char canCancel) {
     optionbox_has_answer = hasAnswer;
     optionbox_type = type;
-    LABEL_SET_TEXT(managerNum, SUB_P_MESSAGEBOX_TEXT, text);
+    LABEL_SET_TEXT(managerNum, HT_MenuControl_ControllerMemo, text);
     __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_ClearItems, 0, 0);
     __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
     if (hasAnswer)
@@ -364,8 +366,8 @@ void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char ha
                     (intptr_t)Txt_BindLabel(canCancel ? TXT_PRESS_A_OR_B_TO_CANCEL : TXT_PRESS_A_TO_CONTINUE, 0), 3);
     M_MANAGER *mgr = &manager[managerNum];
     Manager_SendMessage(mgr, MessageType_GoPage, P_MESSAGEBOX, 2);
-    M_BUTTON *box = (M_BUTTON *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_BOX);
-    M_MEMO *memo = (M_MEMO *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_TEXT);
+    M_BUTTON *box = (M_BUTTON *)CONTROL_GET(managerNum, HT_MenuControl_ControllerBox);
+    M_MEMO *memo = (M_MEMO *)CONTROL_GET(managerNum, HT_MenuControl_ControllerMemo);
     M_LIST *answers = (M_LIST *)CONTROL_GET(managerNum, C_LBMSGOPTIONS);
     __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
     __Menu_SendMessage(&memo->control, MessageType_SetLineSpacing, 100, 0);
@@ -543,7 +545,6 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
     }
   }
 
-
   if (descriptionLabel != 0) { 
 
     if (manager[managerNum].currentPage->control.hashcode == P_MPBOTCHOOSE) {
@@ -629,7 +630,6 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   // The middle item can't be offscreen, no need to check
   __Menu_SendEx(managerNum, param_4, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
 
-
   if (doAnimation) {
     // Inlined Menu_StartIris(2, param_1, param_7)
     // DAT_0025d7b9 = '\0';
@@ -682,12 +682,11 @@ M_ITEM* Menu_GetItemFromHash(M_ITEM *list, int value, uint numItems) {
     return NULL;
 }
 
-
-
 extern char menu_unlock_everything;
 
 // AUTOINJECT
-void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx, uchar unlockEverything) { 
+void Menu_AddItemsToControl(M_CONTROL *control, M_ITEM *itemList, ushort numItems, ushort firstItemIdx,
+                            uchar unlockEverything) {
 
   if(itemList == NULL)
     return;
@@ -726,7 +725,6 @@ void Menu_ChangeControllerStyle(ushort playerNum, int controllerStyle) {
     Input_ChangeControllerStyle(playerNum, controllerStyle);
   }
 }
-
 
 // ---- the framework: skins, finding controls, dispatch, input, sprites, sounds (PS2: menu.cpp)
 
@@ -1544,7 +1542,7 @@ void Menu_EnableSounds(HASHCODE page) {
     switch ((uint)page) {
         case P_MAIN:
         case P_START:
-        case 0x40000015:
+        case HT_MenuPage_000015:
             menu_sounds = MENU_SOUND_SELECT;
             break;
         case P_CNCONTROLS:
@@ -1565,7 +1563,7 @@ void Menu_EnableSounds(HASHCODE page) {
         case P_CNDRIVINGCONTROLS:
             menu_sounds = MENU_SOUND_BACK;
             break;
-        case 0x40000005:
+        case HT_MenuPage_000005:
         case P_NFMAP:
         case P_NFSELECT:
         case P_PAUSE:

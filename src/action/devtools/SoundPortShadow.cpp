@@ -550,7 +550,7 @@ void RandomWorld(void) {
     RandomObjects();
     MPSettings.isMultiplayer = R(3) == 0;
     MPSettings.numPlayers = R(6);
-    ScriptCam = R(3) == 0 ? (HASHCODE)0x06000010 : HASHCODE_NONE;
+    ScriptCam = R(3) == 0 ? HT_Script_000010 : HASHCODE_NONE;
     static const HASHCODE levels[] = {HT_Level_TowerA, HT_Level_TowerB, HT_Level_Menu_Pre, HT_Level_HendersonA};
     GameState.CurrentLevelHashcode = levels[R(COUNT(levels))];
     GameState.difficultyModifier = R(5);
@@ -1042,9 +1042,11 @@ int SomeSection(void) {
 
 // A cut scene one of the level functions looks for
 uint32_t SomeScene(void) {
-    static const uint32_t scenes[] = {0x6000087, 0x6000084, 0x600007f, 0x6000082, 0x6000994, 0x6000071, 0x6000072,
-                                      0x6000073, 0x6000077, 0x60004f9, 0x60004fa, 0x600068f, 0x60006d3, 0x6000848,
-                                      0x600062f, 0x6000833, 0x6000631, 0x6000632, 0x600085c};
+    static const uint32_t scenes[] = {HT_Script_000087, HT_Script_000084, HT_Script_00007f, HT_Script_000082,
+                                      HT_Script_000994, HT_Script_000071, HT_Script_000072, HT_Script_000073,
+                                      HT_Script_000077, HT_Script_0004f9, HT_Script_0004fa, HT_Script_00068f,
+                                      HT_Script_0006d3, HT_Script_000848, HT_Script_00062f, HT_Script_000833,
+                                      HT_Script_000631, HT_Script_000632, HT_Script_00085c};
     return scenes[R(COUNT(scenes))];
 }
 
@@ -1060,7 +1062,7 @@ uint32_t SomeEvent(void) {
 
 void RandomRow(void) {
     MUSICDATA *row = &world.row;
-    row->level = (HASHCODE)(0x7000001 + R(0x20));
+    row->level = (HASHCODE)(HT_Level_HendersonA + R(0x20));
     row->track = (int)R(4);
     row->startSection = (int)R(8);
     row->deathSection = (int)R(0x40);
@@ -1211,7 +1213,7 @@ const Case kLevelMusic[] = {
 uint32_t RunUpdateMusicalEvents(bool original) {
     RandomMusic();
     // The level: one of the table's, the menu, or none; and the first frame of one about half the time
-    static const uint32_t others[] = {0x7000048, 0x7000017, 0x7000100, 0};
+    static const uint32_t others[] = {HT_Level_Menu_Pre, HT_Level_000017, HT_Level_000100, 0};
     GameMusicEvents[MUSICEV_LEVEL] = R(3) ? MapMusic[R(35)].level : others[R(COUNT(others))];
     GameMusicEvents[MUSICEV_NEW_LEVEL] = R(2);
     if (R(3))

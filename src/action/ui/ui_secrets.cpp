@@ -10,7 +10,6 @@
 // secret mode, and a code typed on its keyboard is checked against a table of 52 when Done is pressed. The same
 // page and keyboard name a new codename otherwise.
 
-
 // XBE_GLOBAL(0x00245200, 0x40)
 static char kbd_text[0x40]; // the text being typed: 8 characters in secret mode
 // XBE_GLOBAL(0x0017d608, 0x1)
@@ -237,7 +236,7 @@ bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
             LABEL_SET_TEXT(managerNum, SUB_P_CNNAME_TITLE, Txt_BindLabel(ENTER_NEW_CODENAME, 0));
             memcpy(kbd_text, "BOND\0\0\0", 8);
         }
-        LABEL_SET_TEXT(managerNum, SUB_P_CNNAME_TEXT, kbd_text);
+        LABEL_SET_TEXT(managerNum, SUB_C_KEYPAD_ENTRY_TEXT, kbd_text);
         // the cursor starts on Done
         intptr_t done = __Menu_SendEx(managerNum, C_KEYBOARD, KEY_DONE, MessageType_GetControl, 0, 0);
         Manager_SendMessage(&manager[managerNum], MessageType_SetCursor, 0, done);

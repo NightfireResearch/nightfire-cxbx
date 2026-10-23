@@ -22,15 +22,12 @@
 
 #pragma fp_contract(off)
 
-
-
 // The weapons that open locks (weapon variants)
 #define WEAPON_LASER 78
 #define WEAPON_LASER_2 79
 #define WEAPON_DECRYPTOR 86
 #define WEAPON_DECRYPTOR_2 87
 
-#define LOCK_SPARKS ((HASHCODE)0x0c00000a)      // the laser's emitter
 #define SFX_LOCK_CUT 0x249
 #define SFX_DECRYPT_DIGIT 0x5db
 #define SFX_DECRYPT_DONE 0x5da
@@ -128,7 +125,8 @@ void Lock_Update(obj_tag *obj) {
                 else
                     continue;
                 obj->subState = 2;
-                Emitter_Create(LOCK_SPARKS, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0, 0.0f);
+                Emitter_Create(HT_Emitter_LockSparks, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0,
+                               0.0f);
                 obj->tweakG = ClampByte(obj->tweakG - heat);
                 obj->tweakB = ClampByte(obj->tweakB - heat);
                 if (obj->tweakB <= 3) {
@@ -195,7 +193,8 @@ void Lock_Update(obj_tag *obj) {
         GlobalVars.DecoderDigitAt = 0;
         GlobalVars.keypadBLData->active = 0;
         obj->curState = LOCKSTATE_KEYPAD_OPEN;
-        lock->menu = (ushort)MenuManager_Create(0x80000003, 0x40000021, GlobalVars.keypadBLData->playerNum, 1, 0x22, 0,
+        lock->menu = (ushort)MenuManager_Create(HT_Menu_000003, HT_MenuPage_000021, GlobalVars.keypadBLData->playerNum,
+                                                1, 0x22, 0,
                                                 1);
         KeyCodeEntry *code = &KeyCodes[lock->key];
         if (code->discovered) {

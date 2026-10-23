@@ -467,9 +467,6 @@ void Camera_LookAtObject(obj_tag *obj, viewer_tag *viewer) {
     Camera_PlaceAbove(&obj->position, viewer, 1.0f);
 }
 
-// A three-player match leaves the screen's fourth quarter to a picture: a 320 by 240 sprite in view 5
-#define TEX_FOURTH_QUARTER ((HASHCODE)0x0300013c)
-
 // AUTOINJECT
 void Cameras_PostLoad(void) {
     if (MPSettings.numPlayers != 3 || !MPSettings.isMultiplayer)
@@ -477,7 +474,7 @@ void Cameras_PostLoad(void) {
     sprite *quarter = Sprite_CreateAndLink2Viewer(5);
     if (quarter == NULL)
         return;
-    Sprite_SetParams(quarter, 5, 320, 240, TEX_FOURTH_QUARTER, 0x7f7f7fff);
+    Sprite_SetParams(quarter, 5, 320, 240, HT_Texture_FourthQuarter, 0x7f7f7fff);
     quarter->onscreenWidth = 320;
     quarter->onscreenHeight = 240;
 }

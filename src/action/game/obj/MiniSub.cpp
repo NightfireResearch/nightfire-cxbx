@@ -14,8 +14,6 @@
 
 // The mini sub (OBJECTTYPE_MINISUB). No level places one.
 
-#define MINISUB_SKIN        ((HASHCODE)0x05000074)
-#define MINISUB_ANIM        ((HASHCODE)0x06000741)
 #define WEAPON_SUB_TORPEDO  0x30
 
 #define EIGHTH_TURN 0.7853982f   // pi/4, the most it banks
@@ -28,7 +26,6 @@
 #define MINISUB_START   0
 #define MINISUB_ATTACK  3
 
-
 // AUTOINJECT
 obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
     obj_tag *obj = Control_CreateObjEx(sizeof(MiniSubInfo), pos, rot, NULL, NULL, NULL, 1, 0, 1.0f, 0, 0xff, 0xff,
@@ -38,9 +35,9 @@ obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_t
     obj->objectType = OBJECTTYPE_MINISUB;
     obj->curState = MINISUB_START;
     obj->subState = MINISUB_TURN;
-    AnimObjectNew(obj, MINISUB_SKIN);
-    AnimScriptAdd(obj, MINISUB_ANIM)->flags |= ANIMSCRIPT_LOOP;
-    sAnimRawSeq_tag *seq = AnimScriptPeekSeq(MINISUB_ANIM);
+    AnimObjectNew(obj, HT_Skin_MinisubSkin);
+    AnimScriptAdd(obj, HT_Script_MinisubAnim)->flags |= ANIMSCRIPT_LOOP;
+    sAnimRawSeq_tag *seq = AnimScriptPeekSeq(HT_Script_MinisubAnim);
     MiniSubInfo *sub = (MiniSubInfo *)obj->extraObjectData;
     sub->gameObj = obj;
     sub->channel = (int)lvl->keys[0];

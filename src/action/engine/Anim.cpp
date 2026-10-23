@@ -113,25 +113,20 @@ static int AnimChannelType[4];
 // The facial scripts by alert status (four) and the blink, for skeleton 1 and for the others
 // XBE_GLOBAL(0x00163468, 0x14) readonly relocate
 const HASHCODE FacialAnims[5] = {
-    (HASHCODE)0x0600036d,
-    (HASHCODE)0x0600036f,
-    (HASHCODE)0x0600036a,
-    (HASHCODE)0x0600036b,
-    (HASHCODE)0x06000370,
+    HT_Script_00036d,
+    HT_Script_00036f,
+    HT_Script_00036a,
+    HT_Script_00036b,
+    HT_Script_000370,
 };
 // XBE_GLOBAL(0x00163454, 0x14) readonly relocate
 const HASHCODE FacialAnimsAltSkeleton[5] = {
-    (HASHCODE)0x060000f8,
-    (HASHCODE)0x060000f9,
-    (HASHCODE)0x060000f5,
-    (HASHCODE)0x060000f6,
-    (HASHCODE)0x060000f3,
+    HT_Script_0000f8,
+    HT_Script_0000f9,
+    HT_Script_0000f5,
+    HT_Script_0000f6,
+    HT_Script_0000f3,
 };
-
-// The hashcode type bytes AnimLoadFile dispatches on
-#define ANIM_HASHTYPE_SEQ 0x04000000
-#define ANIM_HASHTYPE_SKIN 0x05000000
-#define ANIM_HASHTYPE_SCRIPT 0x06000000
 
 // Mem_Malloc tags (Ghidra's MallocFlags, with the Unknown bit every tag in the game carries)
 #define MALLOC_ANIM_SKIN_DATA           ((MallocFlags)0x1c04)
@@ -149,8 +144,6 @@ const HASHCODE FacialAnimsAltSkeleton[5] = {
 
 // The bone (by index) the laser sight's beam leaves from, and its datum
 #define WEAPON_LASER_PISTOL 0x18
-#define LASER_BEAM_GLIST ((HASHCODE)0x02000133)
-#define LASER_BEAM_GLIST_NIGHTVISION ((HASHCODE)0x02000131)
 
 // A morph sequence's pose: fixed size whatever the skin's morph count
 #define ANIM_MORPH_POSE_SIZE 0x58
@@ -233,14 +226,14 @@ static uint AnimObjectNearestLod(obj_tag *obj) {
 
 // XBE_GLOBAL(0x001634c0, 0x20)
 HASHCODE SleeveEnts_SleeveTable[] = {
-    (HASHCODE) 0x020009d0, // Watch_BlackGloves
-    (HASHCODE) 0x02000900, // Watch_BareHands
-    (HASHCODE) 0x020001f7, // Watch3_MP
-    (HASHCODE) 0x02000929, // spacesuit_hands1
-    (HASHCODE) 0x020009e6, // Bond_hands_malewhite
-    (HASHCODE) 0x020009ff, // Bond_hands_maleblack
-    (HASHCODE) 0x02000a14, // Bond_hands_femwhite
-    (HASHCODE) 0x02000a13, // Bond_hands_femblack
+    HT_Entity_0009d0, // Watch_BlackGloves
+    HT_Entity_000900, // Watch_BareHands
+    HT_Entity_0001f7, // Watch3_MP
+    HT_Entity_000929, // spacesuit_hands1
+    HT_Entity_0009e6, // Bond_hands_malewhite
+    HT_Entity_0009ff, // Bond_hands_maleblack
+    HT_Entity_000a14, // Bond_hands_femwhite
+    HT_Entity_000a13, // Bond_hands_femblack
 };
 
 // The first sleeve entity that is loaded, from idx on and round to the start: 0 if none is
@@ -356,7 +349,8 @@ static uint AnimData_ReadHalf(uint *pending, uint *half) {
 // walk sequences measured by distance get their axes.
 // AUTOINJECT
 void AnimProcessSeqData(HASHCODE hashcode) {
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+    // The hashcode type bytes AnimLoadFile dispatches on
+    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
         return;
     sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
     pAnimData = (char *)raw;
@@ -393,12 +387,14 @@ void AnimProcessSeqData(HASHCODE hashcode) {
 
     raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
     switch ((uint)hashcode) {
-    case 0x040000e9: case 0x04000125: case 0x04000144: case 0x04000145: case 0x04000150: case 0x04000151:
-    case 0x04000154: case 0x04000155: case 0x0400015c: case 0x0400015d: case 0x04000167: case 0x04000168:
-    case 0x0400079c: case 0x040007b0: case 0x040007b3: case 0x040007b6: case 0x040007e4: case 0x040007e5:
-    case 0x04000804: case 0x04000809: case 0x0400080c: case 0x0400080f: case 0x04000811: case 0x0400082c:
-    case 0x0400082d: case 0x04000831: case 0x04000832: case 0x04000835: case 0x04000838: case 0x04000847:
-    case 0x0400084e: case 0x0400084f:
+    case HT_AnimSeq_0000e9: case HT_AnimSeq_000125: case HT_AnimSeq_000144: case HT_AnimSeq_000145:
+    case HT_AnimSeq_000150: case HT_AnimSeq_000151: case HT_AnimSeq_000154: case HT_AnimSeq_000155:
+    case HT_AnimSeq_00015c: case HT_AnimSeq_00015d: case HT_AnimSeq_000167: case HT_AnimSeq_000168:
+    case HT_AnimSeq_00079c: case HT_AnimSeq_0007b0: case HT_AnimSeq_0007b3: case HT_AnimSeq_0007b6:
+    case HT_AnimSeq_0007e4: case HT_AnimSeq_0007e5: case HT_AnimSeq_000804: case HT_AnimSeq_000809:
+    case HT_AnimSeq_00080c: case HT_AnimSeq_00080f: case HT_AnimSeq_000811: case HT_AnimSeq_00082c:
+    case HT_AnimSeq_00082d: case HT_AnimSeq_000831: case HT_AnimSeq_000832: case HT_AnimSeq_000835:
+    case HT_AnimSeq_000838: case HT_AnimSeq_000847: case HT_AnimSeq_00084e: case HT_AnimSeq_00084f:
         raw->flags |= ANIMSEQ_DISTANCE_AXES;
         break;
     }
@@ -411,7 +407,7 @@ void AnimProcessSeqData(HASHCODE hashcode) {
 
 // Steps over a script's commands; nothing is kept but the cursor
 void AnimProcessScriptData(HASHCODE hashcode) {
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+    if ((hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
         return;
     pAnimData = (char *)hashtable_getitem(hashcode);
     if (pAnimData == NULL)
@@ -435,7 +431,7 @@ void AnimProcessScriptData(HASHCODE hashcode) {
 // AUTOINJECT
 void AnimLoadFile(HASHCODE hashcode, char noProcess) {
     switch (hashcode & 0xff000000) {
-    case ANIM_HASHTYPE_SEQ:
+    case HT_AnimSeq_HASHCODE_BASE:
         loadAnimFileCapturingSize(MALLOC_ANIM_SEQ_DATA, hashcode);
         AnimFileSizes.seqBytes += AnimFileSize;
         AnimFileSizes.numSeqs++;
@@ -443,13 +439,13 @@ void AnimLoadFile(HASHCODE hashcode, char noProcess) {
             AnimProcessSeqData(hashcode);
         AnimFileSizes.seqFrames += ((sAnimRawSeq_tag *)hashtable_getitem(hashcode))->numFrames;
         break;
-    case ANIM_HASHTYPE_SKIN:
+    case HT_Skin_HASHCODE_BASE:
         loadAnimFileCapturingSize(MALLOC_ANIM_SKIN_DATA, hashcode);
         AnimFileSizes.skinBytes += AnimFileSize;
         AnimFileSizes.numSkins++;
         AnimProcessSkinData(hashcode);
         break;
-    case ANIM_HASHTYPE_SCRIPT:
+    case HT_Script_HASHCODE_BASE:
         loadAnimFileCapturingSize(MALLOC_ANIM_SCRIPT_DATA, hashcode);
         AnimFileSizes.scriptBytes += AnimFileSize;
         AnimFileSizes.numScripts++;
@@ -461,11 +457,6 @@ void AnimLoadFile(HASHCODE hashcode, char noProcess) {
     }
 }
 
-// The skin every human skeleton (0 and 1) takes its datums from
-#define SKIN_BOND ((HASHCODE)0x05000007)
-// The one skin that keeps its own datums, after the shared ones
-#define SKIN_OWN_DATUMS ((HASHCODE)0x0500002f)
-
 // Once a load: the human skins share the Bond skin's datums
 // AUTOINJECT
 void AnimPostLoadInit(void) {
@@ -474,20 +465,20 @@ void AnimPostLoadInit(void) {
     if (Glb_AnimPostLoadDone)
         return;
     Glb_AnimPostLoadDone = 1;
-    uint count = hashtable_get_hashtype_count(ANIM_HASHTYPE_SKIN);
+    uint count = hashtable_get_hashtype_count(HT_Skin_HASHCODE_BASE);
     if (count == 0)
         return;
-    sAnimSkin_tag *bond = (sAnimSkin_tag *)hashtable_getitem(SKIN_BOND);
+    sAnimSkin_tag *bond = (sAnimSkin_tag *)hashtable_getitem(HT_Skin_SkinBond);
     if (bond == NULL) {
         NF_WARN("***** FATAL : Bondcombat skin must be loaded on all levels! *****"); // GC check (0x80044a38)
         return;
     }
-    hashtable_get_hashtype_data(ANIM_HASHTYPE_SKIN, skins);
+    hashtable_get_hashtype_data(HT_Skin_HASHCODE_BASE, skins);
     for (uint i = 0; i < count; i++) {
         sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skins[i]);
         if (skin->skeletonNum > 1)
             continue;
-        if (skins[i] == SKIN_OWN_DATUMS) {
+        if (skins[i] == HT_Skin_SkinOwnDatums) {
             AnimDatum *own = skin->datums;
             uint numOwn = skin->numDatums;
             skin->numDatums = bond->numDatums + numOwn;
@@ -526,7 +517,7 @@ void AnimSkeletonProcess(char *data) {
 // Called only by AnimLoadFile, straight after loading a 0x05xxxxxx file.
 void AnimProcessSkinData(HASHCODE hashcode) {
 
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SKIN)
+    if ((hashcode & 0xff000000) != HT_Skin_HASHCODE_BASE)
         return;
 
     pAnimData = (char *)hashtable_getitem(hashcode);
@@ -735,7 +726,7 @@ static void AnimSeqDelete(sAnimSeq_tag **slot) {
 // header. NULL when hashcode is not a loaded sequence.
 sAnimRawSeq_tag* AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimSeq_tag *seq) {
     seq->hashcode = hashcode;
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ) {
+    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE) {
         NF_WARN("Can't use animation hash 0x%x", hashcode); // GC check (0x8004dda8)
         return NULL;
     }
@@ -763,7 +754,7 @@ sAnimRawSeq_tag* AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimSe
 AnimDistanceTable* AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int noWrap) {
     sAnimSeq_tag seq;
     memset(&seq, 0, sizeof(seq));
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
         return NULL;
     AnimSeqGetInfo(NULL, hashcode, &seq);
 
@@ -830,7 +821,7 @@ AnimDistanceTable* AnimDistanceTableGet(HASHCODE hashcode) {
 // its first translation start afresh. The body's sequence gives the object its bound sphere.
 sAnimSeq_tag* AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *obj, AnimObj *animObj,
                          sAnimRawSeq_tag *raw, int start, int slot) {
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SEQ)
+    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
         return NULL;
     sAnimSeq_tag *seq = (&script->boneAnimSeq)[slot];
     if (seq == NULL)
@@ -899,7 +890,7 @@ sAnimScript_tag* AnimScriptNew(obj_tag *obj, sAnimScript_tag *after) {
 void AnimScriptInit(obj_tag *obj, sAnimScript_tag *script, HASHCODE hashcode) {
     char reverse = ReverseFlag;
     ReverseFlag = 0;
-    if (obj == NULL || obj->animState == NULL || script == NULL || (hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+    if (obj == NULL || obj->animState == NULL || script == NULL || (hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
         return;
     AnimObj *animObj = &obj->animState->animObj;
     uchar *data = (uchar *)hashtable_getitem(hashcode);
@@ -989,12 +980,12 @@ sAnimRawSeq_tag* AnimScriptPeekSeq(HASHCODE script) {
         return NULL;
     // The data is not aligned: the hashcode a byte at a time
     uint hashcode = data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24;
-    if ((hashcode & 0xff000000) != ANIM_HASHTYPE_SCRIPT)
+    if ((hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
         return NULL;
     if ((*(ushort *)(data + 6) & 0xff00) != ANIMSCRIPT_INFO_ONCE_60)
         return NULL;
     ushort *cmd = (ushort *)(data + 8);
-    return (sAnimRawSeq_tag *)hashtable_getitem((HASHCODE)(cmd[3] | ANIM_HASHTYPE_SEQ));
+    return (sAnimRawSeq_tag *)hashtable_getitem((HASHCODE)(cmd[3] | HT_AnimSeq_HASHCODE_BASE));
 }
 
 // Adds hashcode after the object's other scripts, up to 32 of them
@@ -1270,10 +1261,6 @@ enum {
     ANIMEVENT_FIRE = 7,             // the holder's weapon fires
 };
 
-// The two scripts whose footsteps are of type 1
-#define ANIM_SCRIPT_FOOTSTEP_1 ((HASHCODE)0x06000099)
-#define ANIM_SCRIPT_FOOTSTEP_1B ((HASHCODE)0x060000ae)
-
 // Carries out the commands whose frames the script passed between from and to, once each until it leaves them
 // AUTOINJECT
 void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script, int from, int to) {
@@ -1292,7 +1279,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
         case ANIMCMD_SEQUENCE: {
             passed = AnimFramesPassed(from, to, cmd[1], cmd[2], forward);
             if (passed && !fired) {
-                HASHCODE hashcode = (HASHCODE)(cmd[3] | ANIM_HASHTYPE_SEQ);
+                HASHCODE hashcode = (HASHCODE)(cmd[3] | HT_AnimSeq_HASHCODE_BASE);
                 sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
                 if (raw == NULL) {
                     NF_WARN("Anim Seq 0x%x not loaded", hashcode); // GC check (0x80048f98)
@@ -1395,7 +1382,9 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         FootstepFoot = !FootstepFoot;
                     else
                         FootstepFoot = cmd[2] == ANIMEVENT_STEP_RIGHT;
-                    if (script->hashcode == ANIM_SCRIPT_FOOTSTEP_1 || script->hashcode == ANIM_SCRIPT_FOOTSTEP_1B)
+                    // The two scripts whose footsteps are of type 1
+                    if (script->hashcode == HT_Script_AnimScriptFootstep1
+                        || script->hashcode == HT_Script_AnimScriptFootstep1B)
                         FootstepType = 1;
                     else
                         FootstepType = 2;
@@ -1444,7 +1433,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         spin.y = 0.0f;
                         spin.z = 0.0f;
                         spin.z = (float)Float_FRand(6.2831855f);
-                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, (HASHCODE)0x02000039, 7, 0x48403080,
+                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_BulletDust, 7, 0x48403080,
                                  1, 0x80);
                     }
                     break;
@@ -2282,20 +2271,20 @@ HASHCODE FixupSkinHashcode(HASHCODE skin) {
     case HT_Level_HendersonB:
     case HT_Level_HendersonC:
     case HT_Level_Tower2A:
-        if (skin == (HASHCODE)0x05000036)
-            return (HASHCODE)0x050000c3;
-        if (skin == (HASHCODE)0x05000038)
-            return (HASHCODE)0x050000c2;
+        if (skin == HT_Skin_000036)
+            return HT_Skin_0000c3;
+        if (skin == HT_Skin_000038)
+            return HT_Skin_0000c2;
         break;
     case HT_Level_CastleIndoors1:
     case HT_Level_CastleIndoors2:
     case HT_Level_EvilBase:
     case HT_Level_EvilBaseC:
         switch ((uint)skin) {
-        case 0x05000015: return (HASHCODE)0x050000bd;
-        case 0x05000018: return (HASHCODE)0x050000c5;
-        case 0x0500003b: return (HASHCODE)0x050000bf;
-        case 0x0500005e: return (HASHCODE)0x050000be;
+        case HT_Skin_000015: return HT_Skin_0000bd;
+        case HT_Skin_000018: return HT_Skin_0000c5;
+        case HT_Skin_00003b: return HT_Skin_0000bf;
+        case HT_Skin_00005e: return HT_Skin_0000be;
         }
         break;
     default:
@@ -2314,7 +2303,7 @@ static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.99520
 // not loaded or anything fails.
 // AUTOINJECT
 int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
-    if ((skinHash & 0xff000000) != ANIM_HASHTYPE_SKIN || obj == NULL)
+    if ((skinHash & 0xff000000) != HT_Skin_HASHCODE_BASE || obj == NULL)
         return 0;
     skinHash = FixupSkinHashcode(skinHash);
     sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
@@ -2614,9 +2603,6 @@ int AnimObjectUpdate(obj_tag *obj) {
     return 1;
 }
 
-// The scripts a full character is posed by, standing, for the skeletons
-#define ANIM_STAND_ALT_SKELETON ((HASHCODE)0x06000259)
-#define ANIM_STAND ((HASHCODE)0x0600035e)
 // A full character's foot
 #define ANIM_BONE_FOOT 0x37
 
@@ -2626,7 +2612,9 @@ float AnimObjectInitialPose(obj_tag *obj) {
     Vec_Zero(&foot);
     uint flags = obj->animState->animObj.flags;
     if (flags & ANIMOBJ_FULL_CHARACTER) {
-        sAnimScript_tag *script = AnimScriptAdd(obj, (flags & ANIMOBJ_ALT_SKELETON) ? ANIM_STAND_ALT_SKELETON : ANIM_STAND);
+        // The scripts a full character is posed by, standing, for the skeletons
+        sAnimScript_tag *script = AnimScriptAdd(obj, (flags & ANIMOBJ_ALT_SKELETON) ? HT_Script_AnimStandAltSkeleton
+                                                : HT_Script_AnimStand);
         script->speed = 0.0f;
         script->flags &= ~ANIMSCRIPT_LOOP;
         AnimObjectUpdate(obj);
@@ -2650,9 +2638,6 @@ static constexpr float kPi = 3.14159274f;
 static constexpr float kTwoPi = 6.28318548f;
 static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi");
 static_assert(std::bit_cast<uint32_t>(kTwoPi) == 0x40c90fdb, "2 pi");
-#define ANIMDEBUG_REF_SKIN ((HASHCODE)0x0500002e)
-#define ANIMDEBUG_REF_STAND ((HASHCODE)0x0600011b)
-#define ANIMDEBUG_REF_TALK ((HASHCODE)0x06000128)
 static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_RING_SPACING) == 0x3e747645, "0.23873241");
 static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_FLOOR) == 0x3db851ec, "0.09");
 
@@ -2662,8 +2647,8 @@ void AnimDebugCreate(void) {
         GameState.CurrentLevelHashcode == HT_Level_AllCharacters2) {
         // The skins of skeletons 0 and 1
         HASHCODE skins[256];
-        int count = hashtable_get_hashtype_count(ANIM_HASHTYPE_SKIN);
-        hashtable_get_hashtype_data(ANIM_HASHTYPE_SKIN, skins);
+        int count = hashtable_get_hashtype_count(HT_Skin_HASHCODE_BASE);
+        hashtable_get_hashtype_data(HT_Skin_HASHCODE_BASE, skins);
         for (int i = count - 1; i >= 0; i--) {
             sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skins[i]);
             if (skin->skeletonNum != 0 && skin->skeletonNum != 1) {
@@ -2707,10 +2692,10 @@ void AnimDebugCreate(void) {
         obj->rotation.y = yaw + kPi;
         build_LinkToRoom(obj, 0, glb_world);
         obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
-        AnimObjectNew(obj, ANIMDEBUG_REF_SKIN);
-        AnimScriptAdd(obj, ANIMDEBUG_REF_STAND)->flags |= ANIMSCRIPT_NO_MORPH | ANIMSCRIPT_LOOP;
+        AnimObjectNew(obj, HT_Skin_AnimdebugRefSkin);
+        AnimScriptAdd(obj, HT_Script_AnimdebugRefStand)->flags |= ANIMSCRIPT_NO_MORPH | ANIMSCRIPT_LOOP;
         AnimObj *animObj = &obj->animState->animObj;
-        sAnimScript_tag *talk = AnimScriptAppend(obj, ANIMDEBUG_REF_TALK);
+        sAnimScript_tag *talk = AnimScriptAppend(obj, HT_Script_AnimdebugRefTalk);
         talk->playMode = ANIMPLAY_DELETE;
         talk->groupTag = ANIMTAG_FACE_SPEECH;
         animObj->facialState = FACIAL_TALKING;
@@ -3369,7 +3354,8 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
             Vec_Copy(&hitList->hitPosition, &to);
         Collide_FreeHitList(&hitList);
         celglist_tag *beam = (celglist_tag *)hashtable_getitem(viewer->nightVisionRelated == 1
-                                                               ? LASER_BEAM_GLIST_NIGHTVISION : LASER_BEAM_GLIST);
+                                                               ? HT_Entity_LaserBeamGlistNightvision
+                                                                   : HT_Entity_LaserBeamGlist);
         if (beam != NULL) {
             to.x = from.x - to.x;
             to.y = from.y - to.y;
@@ -3452,9 +3438,6 @@ const AnimCollBone AstronautCollisionBones[17] = {
 };
 // XBE_GLOBAL(0x001d6bf0, 0x980)
 static COLLJOINT_tag HitList2[32];
-
-// The skin that takes AstronautCollisionBones
-#define SKIN_ASTRONAUT ((HASHCODE)0x05000078)
 
 // Whether the object aims (AnimObjectSetAiming)
 // AUTOINJECT
@@ -3540,7 +3523,7 @@ COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count) {
 
     psiBuildMatrixPalette(obj, animObj, 0);
     sAnimSkin_tag *skin = animObj->skin;
-    const AnimCollBone *row = skin->hashcode == SKIN_ASTRONAUT ? AstronautCollisionBones : HumanCollisionBones;
+    const AnimCollBone *row = skin->hashcode == HT_Skin_SkinAstronaut ? AstronautCollisionBones : HumanCollisionBones;
     ushort n = 0;
     for (; row->bone >= 0; row++) {
         int other = row->other;

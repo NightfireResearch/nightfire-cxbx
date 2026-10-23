@@ -859,7 +859,6 @@ void RunExact(void) {
     }
 }
 
-
 // ---- the random numbers
 
 #define RandState (GameSpan<uint8_t>{0x0018cdf8})   // the two states and the two multipliers
@@ -1532,7 +1531,7 @@ void MakeWorld(void) {
     MPSettings.isMultiplayer = R(2);
     GameState.NumFramesUnpaused = NextWord();
     GameState.SomeAlternatePauseState = (undefined)(R(4) == 0);
-    GameState.CurrentLevelHashcode = (HASHCODE)(R(3) ? 0x0700001b : 0x07000002);
+    GameState.CurrentLevelHashcode = (HASHCODE)(R(3) ? HT_Level_SpaceStationD : HT_Level_HendersonB);
     GameState.NumDraws = NextWord();
     U32_AT(XbeOurs(0x0029e80c)) = 1u << R(5);    // object_display_mask
     *(_VECTOR *)XbeOurs(0x0029dbf0) = RandomPoint(30.0f);   // CamPos
@@ -2014,8 +2013,8 @@ void RunGameMaths(void) {
                 *(uint32_t *)&s_params[i] = R(3) ? R(200) : NextWord();
             *(ushort *)&s_params[2] = (ushort)(R(4) ? R(10) : NextWord());
             *(ushort *)&s_params[4] = (ushort)(R(4) ? R(600) : NextWord());
-            *(uint32_t *)&s_params[0x2c] = R(2) ? 0x05001234 : 0;
-            *(uint32_t *)&s_params[0x48] = R(2) ? 0x05004321 : 0;
+            *(uint32_t *)&s_params[0x2c] = R(2) ? HT_Skin_001234 : 0;
+            *(uint32_t *)&s_params[0x48] = R(2) ? HT_Skin_004321 : 0;
             *(uint32_t *)&s_params[0x30] = R(4) ? R(360) : NextWord();
             s_params[0x40] = (uint8_t)R(2);
             world.v[0] = RandomPoint(30.0f);

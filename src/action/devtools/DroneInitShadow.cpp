@@ -265,14 +265,17 @@ uint Random32() {
 
 // The skins NDrone2_DefaultInit tells apart, and some it does not
 const uint kSkins[] = {
-    0x05000036, 0x05000037, 0x05000038, 0x05000039, 0x0500003a, 0x0500002e, 0x0500002f, 0x05000030, 0x05000004,
-    0x05000006, 0x05000008, 0x0500004c, 0x05000025, 0x05000087, 0x05000090, 0x05000093, 0x05000054, 0x0500006d,
-    0x0500006e, 0x0500007e, 0x0500008c, 0x050000b1, 0x050000b2, 0x0500001b, 0x0500004f, 0x0500000e, 0x0500000f,
-    0x05000015, 0x05000020, 0x05000022, 0x05000023, 0x05000024, 0x0500003b, 0x0500003c, 0x05000019, 0x05000021,
-    0x0500002b, 0x0500002d, 0x05000034, 0x0500005e, 0x05000017, 0x05000018, 0x0500001e, 0x05000035, 0x05000012,
-    0x05000013, 0x05000014, 0x05000016, 0x0500008f, 0x050000ac, 0x05000026, 0x05000066, 0x05000010, 0x05000011,
-    0x05000052, 0x05000053, 0x05000027, 0x05000028, 0x05000029, 0x0500002a, 0x05000031, 0x05000032, 0x05000033,
-    0x05000078, 0x05000094, 0x050000ba, 0x05000001, 0x05000003, 0x050000bb, 0x05000005, 0x06000000,
+    HT_Skin_000036, HT_Skin_000037, HT_Skin_000038, HT_Skin_000039, HT_Skin_00003a, HT_Skin_AnimdebugRefSkin,
+    HT_Skin_SkinOwnDatums, HT_Skin_000030, HT_Skin_000004, HT_Skin_000006, HT_Skin_000008, HT_Skin_00004c,
+    HT_Skin_000025, HT_Skin_000087, HT_Skin_000090, HT_Skin_000093, HT_Skin_000054, HT_Skin_00006d, HT_Skin_00006e,
+    HT_Skin_00007e, HT_Skin_00008c, HT_Skin_0000b1, HT_Skin_0000b2, HT_Skin_00001b, HT_Skin_00004f, HT_Skin_00000e,
+    HT_Skin_00000f, HT_Skin_000015, HT_Skin_000020, HT_Skin_000022, HT_Skin_000023, HT_Skin_000024, HT_Skin_00003b,
+    HT_Skin_00003c, HT_Skin_000019, HT_Skin_000021, HT_Skin_00002b, HT_Skin_00002d, HT_Skin_000034, HT_Skin_00005e,
+    HT_Skin_000017, HT_Skin_000018, HT_Skin_00001e, HT_Skin_000035, HT_Skin_000012, HT_Skin_000013, HT_Skin_000014,
+    HT_Skin_000016, HT_Skin_00008f, HT_Skin_0000ac, HT_Skin_000026, HT_Skin_000066, HT_Skin_000010, HT_Skin_000011,
+    HT_Skin_000052, HT_Skin_000053, HT_Skin_000027, HT_Skin_000028, HT_Skin_000029, HT_Skin_00002a, HT_Skin_000031,
+    HT_Skin_000032, HT_Skin_000033, HT_Skin_SkinAstronaut, HT_Skin_000094, HT_Skin_Skin50000BA, HT_Skin_000001,
+    HT_Skin_000003, HT_Skin_0000bb, HT_Skin_000005, 0x06000000,
 };
 const int kNumSkins = sizeof(kSkins) / sizeof(kSkins[0]);
 
@@ -319,7 +322,7 @@ void RandomDrone(int i) {
     d->viewRange = PickFloat(ranges, 6);
     d->combatRanges[4] = PickFloat(ranges, 6);
     d->alertedFrame = ShadowRand(2) ? 0 : Random32();
-    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : ShadowRand(2) ? 0x0600021f : 0x06000100);
+    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : ShadowRand(2) ? HT_Script_DeathScript21F : HT_Script_000100);
     d->flies = (uchar)(ShadowRand(4) == 0);
     static const uint classes[] = {0, 1, 0x13, 0x13, 0x18};
     d->skinClass = (short)Pick(classes, 5);
@@ -335,7 +338,8 @@ void RandomDrone(int i) {
     v->glist = ShadowRand(3) == 0 ? (celglist_tag *)world.glist : NULL;
     DroneKeys *k = &v->keys;
     k->skin = (HASHCODE)kSkins[ShadowRand(kNumSkins)];
-    static const uint scripts[] = {0x06000000, 0x06000000, 0x06000892, 0x0600089c, 0x06000123};
+    static const uint scripts[] = {0x06000000, 0x06000000, HT_Script_ScriptAbseil1C, HT_Script_ScriptAbseil1B,
+                                   HT_Script_000123};
     k->playScript = (HASHCODE)Pick(scripts, 5);
     k->waitSwitchChannel = Random32();
     k->modeChangeSwitchChannel = Random32();
@@ -348,7 +352,7 @@ void RandomDrone(int i) {
     k->weapon = kWeapons[ShadowRand(kNumWeapons)];
     k->drawWeapon = Random32();
     k->grenades = (ShadowRand(9) << 4) | ShadowRand(16) | (ShadowRand(4) == 0 ? 0x100000 : 0);
-    static const uint deathScripts[] = {0, 0, 0x0600021f, 0x06000300};
+    static const uint deathScripts[] = {0, 0, HT_Script_DeathScript21F, HT_Script_000300};
     k->deathScript = (HASHCODE)Pick(deathScripts, 4);
     k->combatRange = ShadowRand(7);
 }

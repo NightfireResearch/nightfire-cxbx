@@ -44,17 +44,12 @@ static void psiCopyFromSP(uint offset, void *dst, uint size) {}
 
 // The levels whose drops barely drift, those with 0x80 model drops and their splashes, and those that start with
 // every drop falling (GameState.CurrentLevelHashcode)
-#define STILL_RAIN_FIRST 0x07000007
-#define STILL_RAIN_LAST 0x07000008
-#define HEAVY_RAIN_FIRST 0x07000009
-#define HEAVY_RAIN_LAST 0x0700000b
-#define BODGE_FIRST 0x07000005
-#define BODGE_LAST 0x07000006
-
-#define RAIN_TEXTURE ((HASHCODE)0x03000045)
-#define RISING_TEXTURE ((HASHCODE)0x03000087)
-#define DROP_MODEL ((HASHCODE)0x02000290)
-#define SPLASH_MODEL ((HASHCODE)0x02000039)
+#define STILL_RAIN_FIRST HT_Level_CastleIndoors1
+#define STILL_RAIN_LAST HT_Level_CastleIndoors2
+#define HEAVY_RAIN_FIRST HT_Level_TowerA
+#define HEAVY_RAIN_LAST HT_Level_TowerC
+#define BODGE_FIRST HT_Level_CastleExterior
+#define BODGE_LAST HT_Level_CastleCourtyard
 
 // The drops moved in one batch
 #define DROPS_A_BATCH 1000
@@ -269,7 +264,8 @@ void DrawDrops(void) {
         return;
 
     if (DropType != DROP_MODELS) {
-        int texture = *(int *)hashtable_getitem(DropType == DROP_PARTICLES ? RAIN_TEXTURE : RISING_TEXTURE);
+        int texture = *(int *)hashtable_getitem(DropType == DROP_PARTICLES ? HT_Texture_RainTexture
+                                                : HT_Texture_RisingTexture);
         psiDrawParticleList((const float *)DropVector, CurrentMax, 0xff808080, texture, NULL, 1, 0.2f);
         return;
     }
@@ -282,7 +278,7 @@ void DrawDrops(void) {
     _MATRIX mtx;
     memset(&mtx, 0, sizeof(mtx));
     Mat_Identity(&mtx);
-    celglist_tag *dropModel = hashtable_hashcode_to_celglist(DROP_MODEL);
+    celglist_tag *dropModel = hashtable_hashcode_to_celglist(HT_Entity_DropModel);
     for (short i = 0; i < CurrentMax; i++) {
         if (DropState[i] != 1)
             continue;
@@ -294,7 +290,7 @@ void DrawDrops(void) {
         return;
     Mat_CopyRot(&glb_viewer[0]->mtx, &mtx);
     psiSetTweakARGB(0x24, 0x20, 0x20, 0x20);
-    celglist_tag *splash = hashtable_hashcode_to_celglist(SPLASH_MODEL);
+    celglist_tag *splash = hashtable_hashcode_to_celglist(HT_Entity_BulletDust);
     for (short i = 0; i < CurrentMax; i++) {
         if (DropState[i] != 1)
             continue;

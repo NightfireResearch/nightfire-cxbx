@@ -981,11 +981,16 @@ void RandomWorld(void) {
     }
     for (int i = 0; i < SFX_NUM_BANKS; i++)
         world.sbinfo[i] = R(4) == 0 ? -1 : (int)R(0x40);
-    static const int levels[] = {0x7000001, 0x7000002, 0x7000003, 0x7000004, 0x7000005, 0x7000006, 0x7000007,
-                                 0x7000008, 0x7000009, 0x700000a, 0x700000b, 0x700000c, 0x700000d, 0x700000e,
-                                 0x7000011, 0x7000012, 0x7000013, 0x7000014, 0x7000015, 0x7000016, 0x700001a,
-                                 0x700001b, 0x700001c, 0x7000021, 0x7000025, 0x7000029, 0x700002a, 0x7000041,
-                                 0x7000043, 0x7000048, 0x700004a, 0x700004b, 0x700004c, 0x700004d, 0x7000090, 0};
+    static const int levels[] = {HT_Level_HendersonA, HT_Level_HendersonB, HT_Level_HendersonC, HT_Level_HendersonD,
+                                 HT_Level_CastleExterior, HT_Level_CastleCourtyard, HT_Level_CastleIndoors1,
+                                 HT_Level_CastleIndoors2, HT_Level_TowerA, HT_Level_TowerB, HT_Level_TowerC,
+                                 HT_Level_PowerStationA1, HT_Level_PowerStationA2, HT_Level_Cut_Level1,
+                                 HT_Level_Tower2A, HT_Level_Tower2B, HT_Level_Tower2C, HT_Level_EvilBase,
+                                 HT_Level_EvilSilo, HT_Level_EvilBaseC, HT_Level_00001a, HT_Level_SpaceStationD,
+                                 HT_Level_00001c, HT_Level_SpaceStation, HT_Level_SubPen, HT_Level_SnowBlind,
+                                 HT_Level_MultiplayerLevelsAbove, HT_Level_RefRoom, HT_Level_AllCharacters,
+                                 HT_Level_Menu_Pre, HT_Level_Tower2Elevator, HT_Level_Ravine, HT_Level_Unnamed4C,
+                                 HT_Level_00004d, HT_Level_MovieMap, 0};
     I32_AT(XbeOurs(0x001f658c)) = levels[R(COUNT(levels))];
     I32_AT(XbeOurs(0x00260018)) = R(2);
     I32_AT(XbeOurs(0x00260044)) = RI(1, 4);

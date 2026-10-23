@@ -29,7 +29,6 @@
 #include <string.h>
 #include "../sound/Sound.h"
 
-
 // XBE_GLOBAL(0x00274c80, 0x4)
 celglist_tag *pCurrCelList;
 // XBE_GLOBAL(0x00274c70, 0x4)
@@ -38,7 +37,6 @@ uint *FileNextBlock;
 static uint8_t StartingNewMap;
 // XBE_GLOBAL(0x00274b50, 0x4)
 map_tag *m_pmap;
-
 
 typedef struct {
     uint32_t size; // maybe block_header_tag?
@@ -108,7 +106,6 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
                 complete = parsemap_parsenextblock(secondPass);
             } while(!complete);
 
-
             ParseMap_State = 2;
             return true;
         }
@@ -133,7 +130,6 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
 
     return false; // Nothing more to do
 }
-
 
 // AUTOINJECT
 void parsemap_block_entity_params(void) {
@@ -268,7 +264,6 @@ void parsemap_block_Coll_Data_New(void) {
     MemStats[0] = MemStats[0] + CurrentBH.size - 4;
 }
 
-
 #pragma pack(push, 1)
 
 typedef struct TARGET_PLACEMENT {
@@ -359,7 +354,6 @@ typedef struct {
 
 #pragma pack(pop)
 
-
 // AUTOINJECT
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type, celglist_tag* celglist, void* param_5, void* param_6, char doCreation) {
 
@@ -373,7 +367,6 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
     Vec_Copy(&placement->rot, &rot);
     Quat_Copy(&quat, &placement->quat);
     Vec_Copy(&placement->unknown, &unknown);
-
 
     // Almost all are just dependent on doCreation
     // Exceptions:
@@ -765,9 +758,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             return;
     }
 
-
 }
-
 
 // ---- Reading a map file's blocks. Each starts with a word: its identifier in the top byte, its size (the word
 // ---- included) in the rest. A version 1 file has a table of the blocks' offsets after its first word.
@@ -796,7 +787,6 @@ struct PALHEADER_tag *pPallHeader;
 texDataEntry *pTexData;
 // XBE_GLOBAL(0x00274b48, 0x4)
 bmpHeaderEntry *pBmpHeader;
-
 
 // The map header block's data
 typedef struct MAPHEADER_tag {
@@ -878,10 +868,11 @@ void parsemap_block_hashlist(void) {
     uchar *data = (uchar *)BlockData();
     for (uint count = (CurrentBH.size - 4) / 4; count != 0; count--) {
         HASHCODE hashcode = (HASHCODE)BIN_GetDWord(&data);
-        if (hashcode != 0x06000000 && hashtable_getitem(hashcode) == NULL) {
+        if (hashcode != HT_Script_HASHCODE_BASE && hashtable_getitem(hashcode) == NULL) {
             uint loadable = isLoadable(hashcode);
             // GC check (0x80058e5c): one neither loaded nor loadable (the Xbox does not keep the answer)
-            NF_WARN_IF(loadable == 0 && (hashcode & 0xff000000) != 0x03000000 && hashcode != 0x05000000,
+            NF_WARN_IF(loadable == 0 && (hashcode & 0xff000000) != HT_Texture_HASHCODE_BASE
+                       && hashcode != HT_Skin_HASHCODE_BASE,
                        "HT_Script / HT_Skin 0x%x not loaded in HT_Level %x\n", hashcode,
                        GameState.CurrentLevelHashcode);
         }

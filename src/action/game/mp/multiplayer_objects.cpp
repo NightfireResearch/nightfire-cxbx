@@ -42,10 +42,6 @@ extern MP_OBJ_EXT Protection;
 // The objects that damaged the objective, from SP_GetHitDamage
 extern obj_tag *HitByList[64];
 
-
-
-
-
 constexpr Action_TranslatedText MP_SUPPOSED_TO_PROTECT_TARGET = (Action_TranslatedText)0x0200002b;
 constexpr Action_TranslatedText MP_MI6_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002c;
 constexpr Action_TranslatedText MP_PHOENIX_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002d;
@@ -53,7 +49,6 @@ constexpr Action_TranslatedText MP_MI6_DESTROYED = (Action_TranslatedText)0x0200
 constexpr Action_TranslatedText MP_PHOENIX_DESTROYED = (Action_TranslatedText)0x0200002f;
 constexpr Action_TranslatedText NOTIF_X_GOT_BLUEPRINT_TECH = (Action_TranslatedText)0x02000047;
 
-constexpr HASHCODE EXPLOSION_OBJECTIVE = (HASHCODE)0x0600004f;    // our name
 constexpr short EQUIP_FULL_AMMO = 999;                              // as Player.cpp
 
 // The update of every scenario object; control_funcs[OBJECTTYPE_MPOBJECT] points at it. Flags and bases share
@@ -157,7 +152,7 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     gameObj->subState = 1;
     gameObj->creationTimeFrames = GameState.NumFramesUnpaused;
     SP_UnPause(mpObj->scriptPlayer);
-    Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, EXPLOSION_OBJECTIVE, 500.0f,
+    Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_DestroyExplosion2, 500.0f,
                    0xff, 0xff, 100, NULL, 0);
     if (attacker >= 0) {
         Action_TranslatedText label = MPSettings.Player[attacker].TeamId == PHOENIX ? MP_PHOENIX_DESTROYED : MP_MI6_DESTROYED;

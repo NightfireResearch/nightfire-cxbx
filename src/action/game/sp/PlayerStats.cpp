@@ -11,7 +11,6 @@ PlayerMissionStats PlrMissionStats[NUM_AGENTS];
 // XBE_GLOBAL(0x00278d8e, 0xe2)
 short BondMoments[113];
 
-
 // AUTOINJECT
 void PlrStat_ResetForMission(void) {
 
@@ -138,8 +137,6 @@ void PlarStat_LogTimerUnpause(uint playerNum) {
     PlrMissionStats[playerNum].timerUnpauseTime = (int)psiGetTimeIn100ths();
     PlrMissionStats[playerNum].timerPaused = 0;
 }
-
-
 
 // AUTOINJECT
 void PlrStat_LogEnemySpawned(void) {
@@ -313,7 +310,7 @@ static LevelScoreCategories LevelScores[12] = {
 // XBE_GLOBAL(0x0017f198, 0x2d0)
 SCORETABLE ScoringTable[12] = {
     {
-        .levelHashcode = (HASHCODE)0x9000001,
+        .levelHashcode = HT_Level_Driving_Paris,
         .thresholdScoreBronze = 50000,
         .thresholdScoreSilver = 125000,
         .thresholdScoreGold = 200000,
@@ -321,7 +318,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[0].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x7000005,
+        .levelHashcode = HT_Level_CastleExterior,
         .thresholdScoreBronze = 50000,
         .thresholdScoreSilver = 125000,
         .thresholdScoreGold = 200000,
@@ -330,7 +327,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[1].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x9000005,
+        .levelHashcode = HT_Level_Driving_SnowMobile,
         .thresholdScoreBronze = 50000,
         .thresholdScoreSilver = 125000,
         .thresholdScoreGold = 200000,
@@ -338,7 +335,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[2].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x9000006,
+        .levelHashcode = HT_Level_Driving_Alps,
         .thresholdScoreBronze = 50000,
         .thresholdScoreSilver = 125000,
         .thresholdScoreGold = 200000,
@@ -346,7 +343,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[3].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x7000001,
+        .levelHashcode = HT_Level_HendersonA,
         .thresholdScoreBronze = 125000,
         .thresholdScoreSilver = 250000,
         .thresholdScoreGold = 500000,
@@ -355,7 +352,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[4].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x7000009,
+        .levelHashcode = HT_Level_TowerA,
         .thresholdScoreBronze = 125000,
         .thresholdScoreSilver = 250000,
         .thresholdScoreGold = 500000,
@@ -364,7 +361,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[5].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x700000c,
+        .levelHashcode = HT_Level_PowerStationA1,
         .thresholdScoreBronze = 125000,
         .thresholdScoreSilver = 250000,
         .thresholdScoreGold = 500000,
@@ -373,7 +370,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[6].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x7000011,
+        .levelHashcode = HT_Level_Tower2A,
         .thresholdScoreBronze = 125000,
         .thresholdScoreSilver = 250000,
         .thresholdScoreGold = 500000,
@@ -381,7 +378,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[7].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x9000002,
+        .levelHashcode = HT_Level_Driving_Underwater,
         .thresholdScoreBronze = 250000,
         .thresholdScoreSilver = 500000,
         .thresholdScoreGold = 750000,
@@ -389,7 +386,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[8].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x9000003,
+        .levelHashcode = HT_Level_Driving_JungleA,
         .thresholdScoreBronze = 250000,
         .thresholdScoreSilver = 500000,
         .thresholdScoreGold = 750000,
@@ -397,7 +394,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[9].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x7000014,
+        .levelHashcode = HT_Level_EvilBase,
         .thresholdScoreBronze = 250000,
         .thresholdScoreSilver = 500000,
         .thresholdScoreGold = 750000,
@@ -406,7 +403,7 @@ SCORETABLE ScoringTable[12] = {
         .statsTable = LevelScores[10].categories,
     },
     {
-        .levelHashcode = (HASHCODE)0x700001b,
+        .levelHashcode = HT_Level_SpaceStationD,
         .thresholdScoreBronze = 250000,
         .thresholdScoreSilver = 500000,
         .thresholdScoreGold = 750000,

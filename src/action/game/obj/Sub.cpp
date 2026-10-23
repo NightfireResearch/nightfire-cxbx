@@ -18,10 +18,6 @@
 
 // The sub (OBJECTTYPE_SUB). No level places one.
 
-#define SUB_SKIN        ((HASHCODE)0x05000068)
-#define SUB_ANIM_MOVE   ((HASHCODE)0x060006d9)
-#define SUB_ANIM_SINK   ((HASHCODE)0x0600075e)
-
 // Its weapons (weapon_data)
 #define WEAPON_SUB_LASER    0x67
 #define WEAPON_SUB_MISSILE  0x68
@@ -32,7 +28,6 @@
 static const uint SubMissileDatums[2] = {4, 5};
 // XBE_GLOBAL(0x0018cbf4, 0x10)
 static const uint SubTorpedoDatums[4] = {0, 1, 2, 3};
-
 
 // Waits for its switch channel, if it has one
 static bool Switched(SubInfo *sub) {

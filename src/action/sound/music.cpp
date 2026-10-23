@@ -21,56 +21,56 @@ uint32_t LastEventList[0x40];
 #define NUM_MAPMUSIC 35
 // XBE_GLOBAL(0x00181cd0, 0xa64) readonly relocate
 MUSICDATA MapMusic[NUM_MAPMUSIC] = {
-    {(HASHCODE)0x07000001, 19, 0, 21, 20, 19, 18, 10, 160, {3, 11, 14, -1, 0}, {5, 7, 9, -1, 0}},
-    {(HASHCODE)0x07000002, 20, 0, 27, 26, 24, 25, 10, 160, {12, 14, 16, -1, 0}, {2, 20, 22, 8, -1}},
-    {(HASHCODE)0x07000003, 21, 0, 19, 18, 16, 17, 10, 160, {2, 4, 14, -1, 0}, {0, 6, 8, -1, 0}},
-    {(HASHCODE)0x07000004, 22, 0, 12, 11, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000005, 15, 0, 11, 10, 8, 9, 10, 160, {4, 12, 14, -1, 0}, {6, 16, 18, -1, 0}},
-    {(HASHCODE)0x07000006, 16, 0, 11, 10, 8, 6, 10, 160, {2, 15, 17, -1, 0}, {4, 19, 21, -1, 0}},
-    {(HASHCODE)0x07000007, 17, 0, 18, 17, 16, 16, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000008, 18, 0, 12, 11, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000009, 23, 0, 25, 24, 23, 18, 10, 160, {10, 8, 6, -1, 0}, {12, 2, -1, 0, 0}},
-    {(HASHCODE)0x0700000a, 23, 26, 25, 24, 23, 22, 10, 160, {8, 6, 10, -1, 0}, {19, 14, -1, 0, 0}},
-    {(HASHCODE)0x0700000b, 24, 0, 16, 15, 17, 17, 30, 240, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x0700000c, 36, 0, 4, 3, 38, 38, 10, 160, {7, 9, 10, -1, 0}, {0, 15, 19, 0, 0}},
-    {(HASHCODE)0x0700000d, 36, 32, 4, 3, 26, 26, 10, 160, {41, 43, -1, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000011, 24, 18, 16, 15, 14, 14, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000012, 22, 13, 12, 11, 10, 10, 10, 320, {20, 24, 26, -1, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x0700004a, 25, 5, 8, 7, 4, 4, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000013, 30, 3, 6, 5, 2, 2, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000014, 36, 5, 4, 3, 26, 26, 10, 160, {7, 9, -1, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000015, 36, 27, 4, 3, 17, 14, 10, 320, {7, 9, -1, 0, 0}, {30, 12, -1, 0, 0}},
-    {(HASHCODE)0x07000016, 34, 28, 19, 18, 43, 43, 10, 160, {10, 12, -1, 0, 0}, {34, 32, -1, 0, 0}},
-    {(HASHCODE)0x0700001b, 35, 4, 3, 2, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000023, 30, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000024, 25, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000025, 34, 12, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000026, 22, 4, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000027, 36, 24, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000028, 35, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000029, 16, 2, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x0700004b, 18, 4, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x0700004c, 17, 14, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000048, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000041, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000043, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000046, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
-    {(HASHCODE)0x07000049, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_HendersonA, 19, 0, 21, 20, 19, 18, 10, 160, {3, 11, 14, -1, 0}, {5, 7, 9, -1, 0}},
+    {HT_Level_HendersonB, 20, 0, 27, 26, 24, 25, 10, 160, {12, 14, 16, -1, 0}, {2, 20, 22, 8, -1}},
+    {HT_Level_HendersonC, 21, 0, 19, 18, 16, 17, 10, 160, {2, 4, 14, -1, 0}, {0, 6, 8, -1, 0}},
+    {HT_Level_HendersonD, 22, 0, 12, 11, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_CastleExterior, 15, 0, 11, 10, 8, 9, 10, 160, {4, 12, 14, -1, 0}, {6, 16, 18, -1, 0}},
+    {HT_Level_CastleCourtyard, 16, 0, 11, 10, 8, 6, 10, 160, {2, 15, 17, -1, 0}, {4, 19, 21, -1, 0}},
+    {HT_Level_CastleIndoors1, 17, 0, 18, 17, 16, 16, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_CastleIndoors2, 18, 0, 12, 11, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_TowerA, 23, 0, 25, 24, 23, 18, 10, 160, {10, 8, 6, -1, 0}, {12, 2, -1, 0, 0}},
+    {HT_Level_TowerB, 23, 26, 25, 24, 23, 22, 10, 160, {8, 6, 10, -1, 0}, {19, 14, -1, 0, 0}},
+    {HT_Level_TowerC, 24, 0, 16, 15, 17, 17, 30, 240, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_PowerStationA1, 36, 0, 4, 3, 38, 38, 10, 160, {7, 9, 10, -1, 0}, {0, 15, 19, 0, 0}},
+    {HT_Level_PowerStationA2, 36, 32, 4, 3, 26, 26, 10, 160, {41, 43, -1, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Tower2A, 24, 18, 16, 15, 14, 14, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Tower2B, 22, 13, 12, 11, 10, 10, 10, 320, {20, 24, 26, -1, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Tower2Elevator, 25, 5, 8, 7, 4, 4, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Tower2C, 30, 3, 6, 5, 2, 2, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_EvilBase, 36, 5, 4, 3, 26, 26, 10, 160, {7, 9, -1, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_EvilSilo, 36, 27, 4, 3, 17, 14, 10, 320, {7, 9, -1, 0, 0}, {30, 12, -1, 0, 0}},
+    {HT_Level_EvilBaseC, 34, 28, 19, 18, 43, 43, 10, 160, {10, 12, -1, 0, 0}, {34, 32, -1, 0, 0}},
+    {HT_Level_SpaceStationD, 35, 4, 3, 2, 10, 10, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Atlantis, 30, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_SkyRail, 25, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_SubPen, 34, 12, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_StealthShip, 22, 4, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_FortKnox, 36, 24, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_MissileSilo, 35, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_SnowBlind, 16, 2, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Ravine, 18, 4, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Unnamed4C, 17, 14, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_Menu_Pre, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_RefRoom, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_AllCharacters, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_TestRoom2, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
+    {HT_Level_AllCharacters2, 24, 0, 0, 0, 0, 0, 10, 160, {-1, 0, 0, 0, 0}, {-1, 0, 0, 0, 0}},
 };
 #define NUM_MAPDRONEDATA 12
 // XBE_GLOBAL(0x00181c10, 0xc0) readonly relocate
 MUSICAIVARS MapDroneData[NUM_MAPDRONEDATA] = {
-    {(HASHCODE)0x07000005, 2, 0, 2, 35.0f},
-    {(HASHCODE)0x07000001, 2, 0, 8, 10.0f},
-    {(HASHCODE)0x07000002, 2, 0, 8, 30.0f},
-    {(HASHCODE)0x07000003, 2, 0, 8, 10.0f},
-    {(HASHCODE)0x07000012, 1, 0, 8, 20.0f},
-    {(HASHCODE)0x0700000b, 1, 0, 8, 60.0f},
-    {(HASHCODE)0x0700000c, 2, 0, 12, 65.0f},
-    {(HASHCODE)0x0700000d, 1, 0, 100, 100.0f},
-    {(HASHCODE)0x07000014, 2, 0, 10, 40.0f},
-    {(HASHCODE)0x07000015, 2, 0, 10, 40.0f},
-    {(HASHCODE)0x07000016, 2, 0, 10, 40.0f},
+    {HT_Level_CastleExterior, 2, 0, 2, 35.0f},
+    {HT_Level_HendersonA, 2, 0, 8, 10.0f},
+    {HT_Level_HendersonB, 2, 0, 8, 30.0f},
+    {HT_Level_HendersonC, 2, 0, 8, 10.0f},
+    {HT_Level_Tower2B, 1, 0, 8, 20.0f},
+    {HT_Level_TowerC, 1, 0, 8, 60.0f},
+    {HT_Level_PowerStationA1, 2, 0, 12, 65.0f},
+    {HT_Level_PowerStationA2, 1, 0, 100, 100.0f},
+    {HT_Level_EvilBase, 2, 0, 10, 40.0f},
+    {HT_Level_EvilSilo, 2, 0, 10, 40.0f},
+    {HT_Level_EvilBaseC, 2, 0, 10, 40.0f},
     {(HASHCODE)0xffffff9d, 1, 0, 10, 50.0f},
 };
 
@@ -293,7 +293,7 @@ void UpdateMFX_02MayhewA(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicUnderAttack == 0 && MusicEventList[MUSICEV_NIS_ENDED] != 0x6000087) {
+    if (MusicUnderAttack == 0 && MusicEventList[MUSICEV_NIS_ENDED] != HT_Script_000087) {
         if (MusicTemp3 < 0) {
             if (Music_PlayingCombat() && MusicTemp1 == 0) {
                 Music_JumpTo(5, 0);
@@ -333,7 +333,7 @@ void UpdateMFX_02MayhewB(void) {
         return;
 
     if (MusicLastJump == 0) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000084 || MusicEventList[36] != 0)
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000084 || MusicEventList[36] != 0)
             Music_JumpTo(2, 0);
         return;
     }
@@ -343,13 +343,13 @@ void UpdateMFX_02MayhewB(void) {
     else
         MusicVars.closeRange = 1.0f;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x600007f) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_00007f) {
         MusicTemp7 = 0;
         Music_JumpTo(6, 1);
         MusicTemp4 = 1;
     }
     if (MusicTemp4 != 0) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == 0x600007f) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00007f) {
             Music_JumpTo(8, 1);
             MusicTemp4 = 0;
         }
@@ -483,7 +483,7 @@ void UpdateMFX_MayhewD(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000082) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000082) {
         Music_JumpTo(2, 1);
         MusicTemp2 = 1;
     }
@@ -513,7 +513,7 @@ void UpdateMFX_01CastleA(void) {
         MusicTemp3--;
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000994) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000994) {
         MusicTemp1 = 0;
         MusicTemp2 = 65;
         return;
@@ -523,7 +523,7 @@ void UpdateMFX_01CastleA(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000994 || MusicTemp1 != 0) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000994 || MusicTemp1 != 0) {
         Music_JumpTo(Music_PlayingCombat() ? 6 : 2, 0);
         MusicTemp1 = 1;
         return;
@@ -554,7 +554,7 @@ void UpdateMFX_01CastleB(void) {
         }
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000071) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000071) {
         MusicFadeDown();
         MusicWaitForNisSfxTrigger = 1;
     }
@@ -572,20 +572,20 @@ void UpdateMFX_01CastleC(void) {
         return;
 
     if (MusicTemp1 == 0) {
-        if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000072)
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000072)
             Music_JumpTo(2, 0);
-        if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000072 || SfxNisMusicTrigger != 0) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000072 || SfxNisMusicTrigger != 0) {
             Music_JumpTo(5, 0);
             SfxNisMusicTrigger = 0;
             MusicTemp1 = 1;
         }
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000073) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000073) {
         Music_JumpTo(7, 0);
         MusicTemp4 = 1;
     }
-    if (MusicTemp4 != 0 && (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000073 || SfxNisMusicTrigger != 0)) {
+    if (MusicTemp4 != 0 && (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000073 || SfxNisMusicTrigger != 0)) {
         Music_JumpTo(10, 0);
         SfxNisMusicTrigger = 0;
         MusicTemp1 = 10;
@@ -601,9 +601,9 @@ void UpdateMFX_01CastleC(void) {
 
 // AUTOINJECT
 void UpdateMFX_01CastleD(void) {
-    if (MusicLastJump == 0 && MusicEventList[MUSICEV_NIS_STARTED] == 0x6000077)
+    if (MusicLastJump == 0 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000077)
         Music_JumpTo(2, 1);
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000077)
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000077)
         Music_JumpTo(4, 1);
 
     if (Music_MissionEnded())
@@ -673,7 +673,7 @@ void UpdateMFX_03TowerB(void) {
 void UpdateMFX_03TowerC(void) {
     switch (MusicTemp1) {
     case 0:
-        if (MusicEventList[MUSICEV_NIS_STARTED] == 0x60004f9) {
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0004f9) {
             MusicTemp1 = 1;
             Music_JumpTo(2, 0);
         }
@@ -703,13 +703,13 @@ void UpdateMFX_03TowerC(void) {
         } else if (MusicTemp2 != 0) {
             Music_JumpTo(0x15, 0);
         }
-        if (MusicEventList[MUSICEV_NIS_STARTED] == 0x60004fa) {
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0004fa) {
             Music_JumpTo(MusicUnderAttack != 0 ? 10 : 0x17, 0);
             MusicTemp1 = 5;
         }
         break;
     case 5:
-        if (MusicEventList[MUSICEV_NIS_ENDED] == 0x60004fa) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_0004fa) {
             Music_JumpTo(0xc, 1);
             MusicTemp1 = 6;
         }
@@ -769,7 +769,7 @@ void UpdateMFX_PowerStationA2(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x600068f || SfxNisMusicTrigger != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00068f || SfxNisMusicTrigger != 0) {
         MusicTemp1 = 1;
         MusicTemp2 = 600;
         Music_JumpTo(0x2b, 1);
@@ -835,7 +835,7 @@ void UpdateMFX_HT_Level_Tower2B(void) {
 void UpdateMFX_HT_Level_Tower2Elevator(void) {
     if (Music_MissionEnded())
         return;
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x60006d3)
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0006d3)
         Music_JumpTo(4, 0);
 }
 
@@ -851,17 +851,17 @@ void UpdateMFX_HT_Level_EvilBase(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000848 || MusicTemp3 != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000848 || MusicTemp3 != 0) {
         MusicTemp3 = 1;
         Music_JumpTo(0x18, 1);
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000848 || MusicTemp6 != 0) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000848 || MusicTemp6 != 0) {
         MusicTemp6 = 1;
         Music_JumpTo(0x22, 1);
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x600062f) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_00062f) {
         if (MusicTemp2 != 0)
             return;
         MusicTemp1 = 0;
@@ -874,7 +874,7 @@ void UpdateMFX_HT_Level_EvilBase(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000833 || MusicTemp1 != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000833 || MusicTemp1 != 0) {
         MusicTemp1++;
         if (MusicUnderAttack == 0) {
             if (Music_PlayingCombat()) {
@@ -891,7 +891,7 @@ void UpdateMFX_HT_Level_EvilBase(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000833) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000833) {
         if (MusicTemp4 == 0) {
             MusicTemp4 = 1;
             if (MusicLastJump == 0x2e)
@@ -923,7 +923,7 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == 0x6000631) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000631) {
         Music_JumpTo(0x24, 1);
         MusicTemp1 = 1;
     } else if (MusicTemp1 == 0) {
@@ -935,11 +935,11 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
     }
 
     if (MusicTemp1 == 1) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == 0x6000631) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000631) {
             Music_JumpTo(0x27, 1);
             MusicTemp1 = 2;
         }
-    } else if (MusicTemp1 == 2 && MusicEventList[MUSICEV_NIS_STARTED] == 0x6000632) {
+    } else if (MusicTemp1 == 2 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000632) {
         Music_JumpTo(0x29, 0);
         MusicTemp1 = 3;
     }
@@ -949,7 +949,7 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
 void UpdateMFX_HT_Level_SpaceStationD(void) {
     if (Music_MissionEnded())
         return;
-    if (MusicEventList[MUSICEV_NIS_ENDED] == 0x600085c)
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00085c)
         Music_JumpTo(0, 0);
 }
 

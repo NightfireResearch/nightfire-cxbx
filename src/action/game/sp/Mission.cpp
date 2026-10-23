@@ -174,7 +174,6 @@ static Mission MissionData[24] = {
     {HT_Level_SpaceStationD, HT_Level_SpaceStationD, 0, Space_Station_D, 2, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x56, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00}},
 };
 
-
 // AUTOINJECT
 Action_TranslatedText Mission_FailLabel(void) {
     return (Action_TranslatedText)FailLabel;
@@ -233,7 +232,6 @@ int Mission_NumVisObjectives(void) {
     return count;
 }
 
-
 // AUTOINJECT
 void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 
@@ -265,7 +263,6 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
                 objWithinLevel++;
             }
         }
-
 
     }
 
@@ -408,28 +405,28 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
             return HT_Level_Menu_Pre;
 
         case HT_Level_HendersonD:
-            return FMV_OUTRO_MAYHEW_DEAD;
+            return HT_Level_FmvOutroMayhewDead;
 
         case HT_Level_CastleIndoors2:
-            return FMV_OUTRO_HELICOPTER_CRASH;
+            return HT_Level_FmvOutroHelicopterCrash;
 
         case HT_Level_TowerC:
-            return FMV_OUTRO_PARACHUTE_OFF_TOWER;
+            return HT_Level_FmvOutroParachuteOffTower;
 
         case HT_Level_PowerStationA2:
-            return FMV_OUTRO_THROUGH_VENT_KIKO;
+            return HT_Level_FmvOutroThroughVentKiko;
 
         case HT_Level_Tower2C:
-            return FMV_OUTRO_LOBBY_ESCAPE;
+            return HT_Level_FmvOutroLobbyEscape;
         
         case HT_Level_EvilBaseC:
-            return FMV_OUTRO_KIKO_ROCKETLAUNCH;
+            return HT_Level_FmvOutroKikoRocketlaunch;
 
         case HT_Level_SpaceStationD:
-            return FMV_OUTRO_ESCAPE_POD_END_GAME;
+            return HT_Level_FmvOutroEscapePodEndGame;
 
-        case 0x700000f: // Removed level?
-            return (HASHCODE)0x730000f;
+        case HT_Level_Cut_Level2: // Removed level?
+            return HT_Level_30000f;
     }
 }
 
@@ -520,7 +517,7 @@ void Mission_Update(void) {
                 GameFlow_PushState(7, 60.0, FadeClr_147);
                 InternalState = 5;
             } else { // Show retry/quit menu
-                MenuManager_Create(0x80000004, 0x40000042, 0, '\0', 40, 0, 4);
+                MenuManager_Create(HT_Menu_MissionEndMenu, P_ENDMISSION, 0, '\0', 40, 0, 4);
                 GS_PauseGame(true);
                 InternalState = 5;
             }
@@ -553,10 +550,7 @@ void Mission_Update(void) {
             break;
     }
 
-
 }
-
-
 
 // AUTOINJECT
 void Mission_Init(HASHCODE hashcode, short warmReset) {
@@ -598,7 +592,6 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
         }
     }
 
-
     for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
 
         if(MissionData[i].baseLevel != BaseMap)
@@ -631,6 +624,5 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
         }
     }
     
-
 
 }
