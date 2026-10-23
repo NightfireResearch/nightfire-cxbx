@@ -47,8 +47,7 @@ LAYOUT_32(sizeof(M_TEXTBOX) == 0x9b0, "M_TEXTBOX is 0x9b0 bytes");
 #define TEXTBOX_EDITING     0x80000000u
 #define TEXTBOX_HELD        0x40000000u // a direction has been held since the last frame
 
-M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked);
-void Text_SetupChar(void);
+M_TEXTBOX* Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked);
 intptr_t Text_SendMessage(M_TEXTBOX *box, int message, intptr_t arg1, intptr_t arg2);
 void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box);
 void Text_Init(M_TEXTBOX *box, NEW_CONTROL *create, M_CONTROL *parent);

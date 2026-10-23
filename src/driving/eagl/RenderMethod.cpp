@@ -68,7 +68,6 @@ uint8_t ResourceRegistered;
 
 namespace {
 
-
 // The handlers, called by opcode
 typedef void (*OpcodeHandler)();
 // XBE_GLOBAL(0x001ce700, 0x94)
@@ -551,25 +550,6 @@ void EAGL_RenderMethodDestructor(EAGL::RenderMethod *method) {
         method->DeleteShaders();
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// 0x000f13b0, Transform::Invert's and Determinant's determinant (EAX = matrix, answered in ST0, other registers
-// kept): the same instructions as the maths library's Determinant4x4, which is ours (Transform.cpp says so too).
-// A register argument, so an adaptor tagged AUTOLTCG under Ghidra's name (FUNC_AT refuses EAX inputs).
-// AUTOLTCG
-__declspec(naked) void FUN_000f13b0() {
-    __asm {
-        push ecx
-        push edx
-        push eax
-        call Determinant4x4
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // a3 a4 / a6 a7 ... the 3x3 determinant of nine floats on the stack, by the first row's cofactors (x87 order, all
 // in double: each product of two floats is exact there)
 // FUNC_AT(0x000f1490)
@@ -682,19 +662,6 @@ void EAGL_DrawIndexedVertices(uint32_t start, uint32_t count) {
 int EAGL_RoundToInt(float value) {
     return RoundToInt(value);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// Unreferenced code taking EAX, ECX and EDX: [EDX + ECX * 4 + 0x20] = EAX, answers true. In its own instructions:
-// no C++ convention passes EAX.
-// FUNC_AT(0x000f4540)
-__declspec(naked) void EAGL_StoreRegisterArgs() {
-    __asm {
-        mov dword ptr [edx + ecx * 4 + 0x20], eax
-        mov al, 1
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x000f4550)
 EAGL::PairedArrays32* EAGL::PairedArrays32::Construct() {
@@ -1132,20 +1099,6 @@ void EAGL_SkinAndUpload(const EAGL::SkinVertex *vertices, int count, int reg0, i
     if (n1 > 0)
         EAGL_SetVertexShaderConstant(reg1, scratch + n0 * 16, count1);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// Unreferenced code taking EAX (an object whose +4 is a data pointer) and EDX (the output): [EDX] = [EAX + 4] +
-// the first stack argument, RET 0xc. In its own instructions.
-// FUNC_AT(0x000f6b90)
-__declspec(naked) void EAGL_LockRegisterArgs() {
-    __asm {
-        mov ecx, dword ptr [eax + 4]
-        add ecx, dword ptr [esp + 4]
-        mov dword ptr [edx], ecx
-        ret 0xc
-    }
-}
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // The opcode handlers (3.3)

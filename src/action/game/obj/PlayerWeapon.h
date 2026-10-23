@@ -67,7 +67,6 @@ void Player_PositionGun(obj_tag *player, BLData *blData);
 void Player_ResetWalkAnim(obj_tag *player);
 obj_tag *WatchOrHands_Create(obj_tag *owner);
 void Player_CreateBeams(obj_tag *player, char playerNum);
-void Player_TiltWeaponTowardsCrosshairs(void);   // EAX player
 void Player_WeaponRecoil(obj_tag *player);
 void Player_WeaponSelect(obj_tag *player);
 bool Player_WeaponUsable(BLData *blData, short weapon);
@@ -89,11 +88,8 @@ void Player_AutoAim(obj_tag *player);
 void Player_WeaponFiring(obj_tag *player, char fire);
 void Player_MuzzleFlash(obj_tag *player, _VECTOR *target);
 void Draw_MuzzleFlash(obj_tag *player);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void Player_SetFiringAnim(void);    // EDI the weapon; the player's data, the weapon object
-void Player_WeaponInitBullet(void); // EAX the player; the weapon
-sAnimScript_tag *_Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapon_definition_tag *weapon);
-void _Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon);
+sAnimScript_tag *Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapon_definition_tag *weapon);
+void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon);
 
 extern HASHCODE SatchelDigits[10], DecryptorDigits[10];
 

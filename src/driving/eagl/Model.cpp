@@ -1060,7 +1060,7 @@ typedef void (__stdcall *RenderStateEntry)(uint32_t value);
 
 // D3DDevice_SetRenderState by index, inlined: the simple states through SetRenderState_Simple and D3D8's table,
 // the deferred ones into the table with their dirty bits, the rest through their own entry points.
-static void ModelSetRenderStateBody(uint32_t state, uint32_t value) {
+void ModelSetRenderState(uint32_t state, uint32_t value) {
     if ((int32_t)state < 0x5c) {
         D3DDevice_SetRenderState_Simple(D3DSimpleStateMethods[state], value);
         D3DRenderState[state] = value;
@@ -1111,7 +1111,7 @@ static void ModelSetRenderStateBody(uint32_t state, uint32_t value) {
 // D3DDevice_SetTextureStageState, inlined: the deferred states into D3D8's texture-stage table with their dirty
 // bits, texture-coordinate index, border and colour-key colours and the bump-environment states through their
 // entry points.
-static void ModelSetTextureStateBody(uint32_t state, uint32_t stage, uint32_t value) {
+void ModelSetTextureState(uint32_t state, uint32_t stage, uint32_t value) {
     if ((int32_t)state < 0x16) {
         uint32_t dirty = (int32_t)state < 0xc ? 1u << (stage & 31) : D3DTextureStateDirty[state - kD3DFirstDirtyTextureState];
         D3DDirtyFlags |= dirty;
@@ -1128,194 +1128,37 @@ static void ModelSetTextureStateBody(uint32_t state, uint32_t stage, uint32_t va
         D3DDevice_SetTextureState_BumpEnv(stage, state, value);
 }
 
-static uint32_t ModelCreatePaletteBody(uint32_t size, D3DResource **out) {
+uint32_t ModelCreatePalette(uint32_t size, D3DResource **out) {
     D3DResource *palette = D3DDevice_CreatePalette2(size);
     *out = palette;
     return palette != NULL ? 0 : kOutOfMemory;
 }
 
-static void ModelRegisterBody(D3DResource *resource, void *base) {
+void ModelRegister(D3DResource *resource, void *base) {
     D3DResource_Register(resource, base);
 }
 
-static uint32_t ModelGet2DSurfaceDescBody(D3DPixelContainer *container, uint32_t level, D3DSurfaceDesc *desc) {
+uint32_t ModelGet2DSurfaceDesc(D3DPixelContainer *container, uint32_t level, D3DSurfaceDesc *desc) {
     D3D_Get2DSurfaceDesc(container, level, desc);
     return 0;
 }
 
-static uint32_t ModelGetSurfaceLevelBody(D3DPixelContainer *texture, uint32_t level, D3DPixelContainer **out) {
+uint32_t ModelGetSurfaceLevel(D3DPixelContainer *texture, uint32_t level, D3DPixelContainer **out) {
     D3DPixelContainer *surface = D3DTexture_GetSurfaceLevel2(texture, level);
     *out = surface;
     return surface != NULL ? 0 : kOutOfMemory;
 }
 
-static uint32_t ModelReleaseBody(D3DResource *resource) {
+uint32_t ModelRelease(D3DResource *resource) {
     return D3DResource_Release(resource);
 }
 
-static uint32_t ModelSurfaceGetDescBody(D3DPixelContainer *surface, D3DSurfaceDesc *desc) {
+uint32_t ModelSurfaceGetDesc(D3DPixelContainer *surface, D3DSurfaceDesc *desc) {
     D3DSurface_GetDesc(surface, desc);
     return 0;
 }
 
-static uint32_t ModelLockRectBody(D3DPixelContainer *surface, D3DLockedRect *locked, const D3DRect *rect, uint32_t flags) {
+uint32_t ModelLockRect(D3DPixelContainer *surface, D3DLockedRect *locked, const D3DRect *rect, uint32_t flags) {
     D3DSurface_LockRect(surface, locked, rect, flags);
     return 0;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000e8b20() {
-    __asm {
-        mov eax, dword ptr [eax + 8]
-        ret
-    }
-}
-
-// AUTOLTCG
-__declspec(naked) void FUN_000e8b30() {
-    __asm {
-        mov eax, dword ptr [ecx + eax * 8 + 0x14]
-        add eax, ecx
-        ret
-    }
-}
-
-// FUNC_AT(0x000eaca0)
-__declspec(naked) void EAGL::ModelSetRenderStateRegs() {
-    __asm {
-        push edi
-        push esi
-        call ModelSetRenderStateBody
-        add esp, 8
-        ret
-    }
-}
-
-// FUNC_AT(0x000eaea0)
-__declspec(naked) void EAGL::ModelSetTextureStateRegs() {
-    __asm {
-        push edx
-        push ecx
-        push eax
-        call ModelSetTextureStateBody
-        add esp, 0xc
-        ret
-    }
-}
-
-// FUNC_AT(0x000eaf20)
-__declspec(naked) void EAGL::ModelCreatePaletteRegs() {
-    __asm {
-        push dword ptr [esp + 8]
-        push eax
-        call ModelCreatePaletteBody
-        add esp, 8
-        ret 8
-    }
-}
-
-// FUNC_AT(0x000eaf40)
-__declspec(naked) void EAGL::ModelRegisterRegs() {
-    __asm {
-        push eax
-        push ecx
-        call ModelRegisterBody
-        add esp, 8
-        ret
-    }
-}
-
-// FUNC_AT(0x000eaf50)
-__declspec(naked) void EAGL::ModelGet2DSurfaceDescRegs() {
-    __asm {
-        push eax
-        push ecx
-        push edx
-        call ModelGet2DSurfaceDescBody
-        add esp, 0xc
-        ret
-    }
-}
-
-// FUNC_AT(0x000eaf60)
-__declspec(naked) void EAGL::ModelGetSurfaceLevelRegs() {
-    __asm {
-        push dword ptr [esp + 4]
-        push eax
-        push ecx
-        call ModelGetSurfaceLevelBody
-        add esp, 0xc
-        ret 4
-    }
-}
-
-// FUNC_AT(0x000eaf90)
-__declspec(naked) void EAGL::ModelReleaseRegsA() {
-    __asm {
-        push eax
-        call ModelReleaseBody
-        add esp, 4
-        ret
-    }
-}
-
-// FUNC_AT(0x000eafb0)
-__declspec(naked) void EAGL::ModelReleaseRegsB() {
-    __asm {
-        push eax
-        call ModelReleaseBody
-        add esp, 4
-        ret
-    }
-}
-
-// FUNC_AT(0x000eafc0)
-__declspec(naked) void EAGL::ModelSurfaceGetDescRegs() {
-    __asm {
-        push eax
-        push ecx
-        call ModelSurfaceGetDescBody
-        add esp, 8
-        ret
-    }
-}
-
-// FUNC_AT(0x000eafd0)
-__declspec(naked) void EAGL::ModelLockRectRegs() {
-    __asm {
-        push eax
-        push ecx
-        push edx
-        push dword ptr [esp + 0x10]
-        call ModelLockRectBody
-        add esp, 0x10
-        ret 4
-    }
-}
-
-// FUNC_AT(0x000eb000)
-__declspec(naked) void EAGL::ModelWordAt4Regs() {
-    __asm {
-        movsx eax, word ptr [eax + 4]
-        ret
-    }
-}
-
-// FUNC_AT(0x000eb010)
-__declspec(naked) void EAGL::ModelWordAt6Regs() {
-    __asm {
-        movsx eax, word ptr [eax + 6]
-        ret
-    }
-}
-
-// FUNC_AT(0x000eb060)
-__declspec(naked) void EAGL::ModelShapeEntryRegs() {
-    __asm {
-        mov eax, dword ptr [ecx + eax * 8 + 0x14]
-        add eax, ecx
-        ret
-    }
-}
-#endif

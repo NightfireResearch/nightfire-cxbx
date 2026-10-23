@@ -301,21 +301,6 @@ void SniperRingPoint(Coord4 *position, Coord4 *uv, float radius, float turns) {
     uv->y = float(position->y / double(fgRenderer->screenHeight));
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000a68f0() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push edi
-        push esi
-        call SniperRingPoint
-        add esp, 0x10
-        ret
-    }
-}
-#endif
-
 // FUNC_AT(0x000a69a0)
 RSniperZoom* RSniperZoom::Construct() {
     vtable = kSniperZoomVtable;
@@ -410,16 +395,3 @@ void ParticleTextureRect(uint32_t texture, float *rect) {
     rect[1] = float((double(v) + kHalf) * kOneIn256);
     rect[2] = float((size - 1.0) * kOneIn256);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000a6cd0() {
-    __asm {
-        push ecx
-        push eax
-        call ParticleTextureRect
-        add esp, 8
-        ret
-    }
-}
-#endif

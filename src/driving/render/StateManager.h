@@ -50,7 +50,6 @@ const Entry *FindStateEntry(const char *name, const Entry *table) {
 }
 
 // The adaptor under Ghidra's name: EDX the name, the table on the stack (the caller pops it); EDX kept.
-void FUN_000914f0();
 const StateKeyword *FindStateKeyword(const char *name, const StateKeyword *table);   // its body
 
 // The handlers, by the tag each serves (the names are ours)

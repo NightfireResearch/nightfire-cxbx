@@ -302,7 +302,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
 }
 
 // From one matrix's turn a step (4 x REC_FRAME_RATE) towards another's, into it, keeping the first's translation
-bool _GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
+bool GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
     quaternion_tag start, end, step;
     Quat_MatToQuat(&start, from);
     Quat_MatToQuat(&end, towards);
@@ -313,32 +313,14 @@ bool _GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from) {
     return false;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The matrix to turn towards in EAX, the one turned from in ECX
-// AUTOLTCG
-void __declspec(naked) GT_maybeInterpolateAimDir(void) {
-    _asm {
-        push ecx
-        push edx
-        push ecx
-        push eax
-        call _GT_maybeInterpolateAimDir
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The body, and the barrel, the third part and the flash with it, turned a step towards a point
-void _GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
+void GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
     _VECTOR up;
     Mat_GetUp(&up, &turret->aim);
     _MATRIX look;
     memset(&look, 0, sizeof(look));
     Mat_LookAt(&look, (_VECTOR *)&turret->aim.m[12], at, &up, &MAYBE_CONST_FORWARD_VECTOR);
-    _GT_maybeInterpolateAimDir(&look, &turret->aim);
+    GT_maybeInterpolateAimDir(&look, &turret->aim);
     Mat_Copy(&look, &turret->aim);
     if (turret->barrel != NULL)
         Mat_Copy(&look, &turret->barrel->transformMatrix);
@@ -348,26 +330,8 @@ void _GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
         Mat_Copy(&look, &turret->muzzleFlash->transformMatrix);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The turret in EAX, the point on the stack
-// AUTOLTCG
-void __declspec(naked) GT_AimAt(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push eax
-        call _GT_AimAt
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Stunned: aimed at random about the way it faces
-void _GT_RandMove(GUNTURRET *turret) {
+void GT_RandMove(GUNTURRET *turret) {
     _VECTOR turn;
     turn.x = (float)Rand_FRandHalf(3.1415927f);
     turn.y = (float)Rand_FRandHalf(6.2831855f);
@@ -379,25 +343,8 @@ void _GT_RandMove(GUNTURRET *turret) {
     _VECTOR at;
     ApplyMatrixLV(&mtx, &turret->facing, &at);
     Vec_Add2(&at, (_VECTOR *)&turret->aim.m[12], &at);
-    _GT_AimAt(turret, &at);
+    GT_AimAt(turret, &at);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The turret in ESI; its object on the stack, not read
-// AUTOLTCG
-void __declspec(naked) GT_RandMove(void) {
-    _asm {
-        push ecx
-        push edx
-        push esi
-        call _GT_RandMove
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // A shot from the barrel's muzzle, with the flash and, every other shot, smoke
 static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX sound, obj_tag *from, int player) {
@@ -514,7 +461,7 @@ void GT_Update(obj_tag *obj) {
     case GT_RETURNING: {
         _MATRIX mtx;
         Mat_Copy(&turret->rest, &mtx);
-        _GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
+        GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
         double timer = (double)REC_FRAME_RATE + turret->timer;
         turret->timer = (float)timer;
         if (timer > 1.2f) {
@@ -549,7 +496,7 @@ void GT_Update(obj_tag *obj) {
         if (turret->target != NULL) {
             Music_Event(2, 1);
             turret->timer = 0.0f;
-            _GT_AimAt(turret, &turret->target->position);
+            GT_AimAt(turret, &turret->target->position);
             double fireTimer = (double)REC_FRAME_RATE + turret->fireTimer;
             turret->fireTimer = (float)fireTimer;
             if (fireTimer > TurretRefire) {
@@ -567,7 +514,7 @@ void GT_Update(obj_tag *obj) {
 
         _MATRIX mtx;
         Mat_Copy(&turret->aim, &mtx);
-        _GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
+        GT_maybeInterpolateAimDir(&mtx, &turret->body->maybeMatrix);
         Script_SetPosRot(turret->body, &mtx);
         if (turret->kind != GT_KIND_CEILING)
             return;
@@ -585,7 +532,7 @@ void GT_Update(obj_tag *obj) {
 
     case GT_STUNNED:
         turret->timer = REC_FRAME_RATE + turret->timer;
-        _GT_RandMove(turret);
+        GT_RandMove(turret);
         if (turret->timer > 3.0f)
             obj->curState = obj->subState;
         return;
@@ -638,7 +585,7 @@ void GT_Update(obj_tag *obj) {
         RotMatrixX(turret->control.x, &pitchMtx);
         Concat(&obj->transformMatrix, &yawMtx);
         Concat(&yawMtx, &pitchMtx);
-        _GT_maybeInterpolateAimDir(&pitchMtx, &turret->body->maybeMatrix);
+        GT_maybeInterpolateAimDir(&pitchMtx, &turret->body->maybeMatrix);
         Script_SetPosRot(turret->body, &pitchMtx);
         turret->spinSpeed = turret->spinSpeed * 0.9f;
         turret->fireTimer = REC_FRAME_RATE + turret->fireTimer;

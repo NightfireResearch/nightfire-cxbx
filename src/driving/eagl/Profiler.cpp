@@ -147,31 +147,6 @@ int EAGL::PrintMessage(int level, const char *format, ...) {
     return written;
 }
 
-// D3DDevice_SetVertexShaderConstant with the count in EAX, the register (less 0x60) in ECX and the data in EDX,
-// the three entry points' own register convention (the seam's __fastcall functions, ../gfx/D3D8.h): one and four
-// constants go straight to their inline versions.
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// FUNC_AT(0x000f4310)
-__declspec(naked) void EAGL::ProfilerSetVertexShaderConstantRegs() {
-    __asm {
-        add ecx, 0x60
-        cmp eax, 1
-        jne NotOne
-        jmp D3DDevice_SetVertexShaderConstant1
-    NotOne:
-        cmp eax, 4
-        jne NotFour
-        jmp D3DDevice_SetVertexShaderConstant4
-    NotFour:
-        shl eax, 2
-        push eax
-        call D3DDevice_SetVertexShaderConstantNotInline
-        ret
-    }
-}
-#endif
-
 // FUNC_AT(0x000f4580)
 void EAGL::ProfilerHistory::SetHistoryValue(uint32_t cycleCount, float value, int index) {
     cycleSum = cycleSum - cycles[index];

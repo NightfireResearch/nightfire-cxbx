@@ -204,19 +204,6 @@ void __stdcall ModelIgnore4b(uint32_t unused);                               // 
 uint32_t __stdcall ModelReturnZero4(uint32_t unused);                        // 0x000eaff0 (invented)
 
 // Register-argument code (out-of-line copies of XDK inlines, all unreferenced): naked, registers as the original.
-void ModelSetRenderStateRegs();      // 0x000eaca0 ESI = state index, EDI = value
-void ModelSetTextureStateRegs();     // 0x000eaea0 EAX = state, ECX = stage, EDX = value
-void ModelCreatePaletteRegs();       // 0x000eaf20 EAX = size, [esp+8] = out; RET 8
-void ModelRegisterRegs();            // 0x000eaf40 ECX = resource, EAX = base
-void ModelGet2DSurfaceDescRegs();    // 0x000eaf50 EDX, ECX, EAX
-void ModelGetSurfaceLevelRegs();     // 0x000eaf60 ECX = texture, EAX = level, [esp+4] = out; RET 4
-void ModelReleaseRegsA();            // 0x000eaf90 EAX = resource
-void ModelReleaseRegsB();            // 0x000eafb0 EAX = resource
-void ModelSurfaceGetDescRegs();      // 0x000eafc0 ECX = surface, EAX = desc
-void ModelLockRectRegs();            // 0x000eafd0 [esp+4] = surface, EDX, ECX, EAX; RET 4
-void ModelWordAt4Regs();             // 0x000eb000 EAX = object
-void ModelWordAt6Regs();             // 0x000eb010 EAX = object
-void ModelShapeEntryRegs();          // 0x000eb060 ECX = shapes, EAX = index
 
 }  // namespace EAGL
 
@@ -228,7 +215,5 @@ void ModelSetScale(const float *scale, const float *offset);                 // 
 
 // 0x000e8b20 (EAX = object, returns +8) and 0x000e8b30 (ECX = shapes, EAX = index): Ghidra functions reading EAX,
 // which FUNC_AT's ABI check refuses, so they are tagged AUTOLTCG under Ghidra's names. Unreferenced.
-void FUN_000e8b20();
-void FUN_000e8b30();
 
 #endif // DRIVING_EAGL_MODEL_H_

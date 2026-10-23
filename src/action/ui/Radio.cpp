@@ -50,7 +50,7 @@ void Radio_Init(M_RADIO *radio, NEW_CONTROL *create, M_CONTROL *parent) {
 }
 
 // An item's index
-int _Radio_GetIndex(M_RADIO *radio, LIST_ROW *item) {
+int Radio_GetIndex(M_RADIO *radio, LIST_ROW *item) {
     int index = 0;
     for (LIST_ROW *i = (LIST_ROW *)LinkedList_First(&radio->items); i != NULL; i = i->next) {
         if (i == item)
@@ -60,49 +60,13 @@ int _Radio_GetIndex(M_RADIO *radio, LIST_ROW *item) {
     return -1;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the radio, EDX the item (kept); the original's stack argument (the items) is not read
-// AUTOLTCG
-__declspec(naked) void Radio_GetIndex(void) {
-    __asm {
-        push ecx
-        push edx
-        push edx
-        push eax
-        call _Radio_GetIndex
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The item at an index, or the last for an index past the end; the radio must have an item
-LIST_ROW* _Radio_SetIndex(M_RADIO *radio, int index) {
+LIST_ROW* Radio_SetIndex(M_RADIO *radio, int index) {
     LIST_ROW *item = (LIST_ROW *)LinkedList_First(&radio->items);
     for (int i = 0; i < index && item->next != NULL; i++)
         item = item->next;
     return item;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ECX the radio, ESI the index; the original's stack argument (the items) is not read
-// AUTOLTCG
-__declspec(naked) void Radio_SetIndex(void) {
-    __asm {
-        push ecx
-        push edx
-        push esi
-        push ecx
-        call _Radio_SetIndex
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // What a radio does not handle itself goes to its label
 // AUTOINJECT
@@ -129,7 +93,7 @@ intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t
         case MessageType_MemoBack:
         case MessageType_AltSelect1:
         case MessageType_AltSelect2:
-            radio->selected = _Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
+            radio->selected = Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
             __Menu_SendMessage(radio->control.parent, message, (intptr_t)radio, 0);
             return 1;
         case MessageType_ClearItems:
@@ -177,16 +141,16 @@ intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t
             return Script_Play(&radio->control, arg1, (char)arg2);
         case MessageType_SelectIndex:
             // The scroll goes to the item selected before, then the index's item is selected and the scroll put on it
-            if (!Scroll_SendMessage(&radio->scroll, MessageType_SetValue, _Radio_GetIndex(radio, radio->selected), 0))
+            if (!Scroll_SendMessage(&radio->scroll, MessageType_SetValue, Radio_GetIndex(radio, radio->selected), 0))
                 return 0;
-            radio->selected = _Radio_SetIndex(radio, arg1);
+            radio->selected = Radio_SetIndex(radio, arg1);
             Scroll_SendMessage(&radio->scroll, MessageType_SetValue, arg1, arg2);
             return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (intptr_t)radio, 0);
         case MessageType_SelectItemByValue:
             for (LIST_ROW *item = (LIST_ROW *)LinkedList_First(&radio->items); item != NULL; item = item->next) {
                 if (item->value == arg1) {
                     radio->selected = item;
-                    Scroll_SendMessage(&radio->scroll, MessageType_SetValue, _Radio_GetIndex(radio, radio->selected),
+                    Scroll_SendMessage(&radio->scroll, MessageType_SetValue, Radio_GetIndex(radio, radio->selected),
                                        0);
                     break;
                 }
@@ -208,7 +172,7 @@ intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t
             Scroll_SendMessage(&radio->scroll, MessageType_SetState, arg1, arg2);
             return 1;
         case MessageType_ValueSet:
-            radio->selected = _Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
+            radio->selected = Radio_SetIndex(radio, Scroll_SendMessage(&radio->scroll, MessageType_GetValue, 0, 0));
             return __Menu_SendMessage(radio->control.parent, MessageType_Scroll, (intptr_t)radio, 1);
         default:
             return Label_SendMessage(&radio->label, message, arg1, arg2);

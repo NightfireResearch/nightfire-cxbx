@@ -231,7 +231,7 @@ void Player_Cam2Mode(ushort playerNum, uint mode) {
 // AUTOINJECT
 float Player_Hurt(obj_tag *player, float damage, _VECTOR *from) {
     BLData *blData = (BLData *)player->extraObjectData;
-    _Player_HandlePain(player, damage, blData, -1, 0);
+    Player_HandlePain(player, damage, blData, -1, 0);
     return blData->health;
 }
 
@@ -686,7 +686,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     float moveZ = (float)(forwards * speed);
     float moveX = (float)(sideways * speed);
 
-    double accel = _AccelFunc0(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
+    double accel = AccelFunc0(turn, &blData->turnAccelState, Plr_NoAimTurnSpeed_X,
                              Plr_NoAimTurnSpeed_X_Mul, Plr_NoAimTurnSpeed_X_Steps, 0.05f, 0.95f);
     blData->turnAccelState = (float)accel;
     float yaw = (float)(accel * FRAME_RATE_MUL * turn);
@@ -1553,7 +1553,7 @@ void Player_PositionCamera(obj_tag *player) {
             if (weapon->weaponModelHashcode == 0)
                 View_SetDrawInNoViews(blData->weaponObject);
 
-            blData->headSwimOffset = _moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
+            blData->headSwimOffset = moveTowardsValue(blData->headSwimOffset, surfaced ? 0.7f : 0.0f, 0.1f);
 
             viewer->zoom = blData->zoom;
             // Not in the original: the player view's field of view comes from settings.ini, but a real scope
@@ -1748,7 +1748,7 @@ extern uint8_t debug_scanmode;  // the player starts every level flying (Movemen
 #define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
 #define TXT_MP_KILLED ((Action_TranslatedText)0x02000038)  // with the killer's name
 
-void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
+void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
 
 // What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
 static float Magnitude(float x) {
@@ -2024,7 +2024,7 @@ int Player_ChangeSubState(obj_tag *player, ushort newState) {
 
 // Whether the player swims: in a cel with water above the feet (0.3 below the position), and not dying. Going in
 // changes to the swimming substate and clears the movement. The player's object in ESI, his data in EDI.
-int _Player_InWater(obj_tag *player, BLData *blData) {
+int Player_InWater(obj_tag *player, BLData *blData) {
     cel_tag *cel = player->inCel;
     if (cel == NULL)
         return 0;
@@ -2048,19 +2048,6 @@ int _Player_InWater(obj_tag *player, BLData *blData) {
     }
     return player->subState == MovementType_Swim;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_InWater(void) {
-    _asm {
-        push edi
-        push esi
-        call _Player_InWater
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // How well lit the player is: his own light (the average of the object's three) plus, for each of the closest
 // lights, an eighth of its colour scaled by distance over brightness; 255 is fully lit.
@@ -2089,7 +2076,7 @@ void Player_InShadow(BLData *blData, obj_tag *player) {
 // rumble. Pain types 5 to 7 come from the level, not a player; 7 is drowning, which the immortality cheat stops
 // rumbling. hitLocation is the bone hit, or -1. The original takes the player's data in ESI, the hit location in DI
 // and the pain type in BX.
-void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType) {
+void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType) {
     if (switch_channels[0x5f] != 0)
         return;
     if (blData->health <= 0.0f)
@@ -2187,24 +2174,6 @@ void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hit
     Player_SetHealth(blData, health);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_HandlePain(void) {
-    _asm {
-        movzx eax, bx
-        push eax
-        movsx eax, di
-        push eax
-        push esi
-        push dword ptr [esp + 0x14]
-        push dword ptr [esp + 0x14]
-        call _Player_HandlePain
-        add esp, 0x14
-        ret
-    }
-}
-#endif
-
 // True once the player is dead. The health is kept between 0 and 500; at 0, for a player whose object is still of
 // the given type, the death: the cars, emplacements and gun turrets he was using let go, the dropped weapon (in
 // multiplayer, with its ammo, and the grenade launcher's grenades as well) or the death music, the death message in
@@ -2281,9 +2250,9 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
 // The dead player, every frame. In zero G the body tumbles. In single player the death channel (0x62) goes up once the
 // blood pane has run and skip is pressed; in multiplayer the player comes back after five seconds, unless he has used
 // up his lives (game mode 0x10).
-void _Player_HandleDeath(obj_tag *player) {
+void Player_HandleDeath(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
-    _Player_InWater(player, blData);
+    Player_InWater(player, blData);
     if (GRAVITY_VECTOR.y == 0.0f) {
         player->rotation.x = (float)((double)player->rotation.x + 0.001f);
         player->rotation.y = (float)((double)player->rotation.y + 0.001f);
@@ -2316,18 +2285,6 @@ void _Player_HandleDeath(obj_tag *player) {
         return;
     MP_ReSpawn(player, blData->playerNum);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_HandleDeath(void) {
-    _asm {
-        push eax
-        call _Player_HandleDeath
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Puts the player at a place, standing on the floor below it (searched for 3 below a point 0.1 above it) with his
 // eyes 1.1 above that, in the given substate (flying, with debug_scanmode), with everything he was doing cleared.
@@ -2443,8 +2400,8 @@ static void UpdateWalkAnims(BLData *blData, obj_tag *player, float speed) {
 
 // Walking: into the water, the stick, the anims, the pace (by twice the speed), jumping and crouching. The player's
 // object in EAX, his data in ECX.
-void _Player_SSWalk(obj_tag *player, BLData *blData) {
-    if (_Player_InWater(player, blData))
+void Player_SSWalk(obj_tag *player, BLData *blData) {
+    if (Player_InWater(player, blData))
         return;
     WaitForAnimSet(blData, player, PlayerAnimSetInitNormal);
     Player_Move(blData, player, 1.0f);
@@ -2452,28 +2409,15 @@ void _Player_SSWalk(obj_tag *player, BLData *blData) {
     if (blData->animWait == 0)
         UpdateWalkAnims(blData, player, speed);
     Player_UpdateWalkClass(player, speed + speed, 0.0f);
-    _Player_HandleJump(blData, player, &GRAVITY_VECTOR);
+    Player_HandleJump(blData, player, &GRAVITY_VECTOR);
     TurnByRotationDelta(blData, player);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_SSWalk(void) {
-    _asm {
-        push ecx
-        push eax
-        call _Player_SSWalk
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // Crouching: as walking at three quarters of the speed, standing up (as the player's crouch option says: on letting
 // go of crouch, or on pressing crouch or jump) when there is room, 0.95 above the matrix's position. The player's
 // object in EAX, his data in ECX.
-void _Player_SSCrouch(obj_tag *player, BLData *blData) {
-    if (_Player_InWater(player, blData))
+void Player_SSCrouch(obj_tag *player, BLData *blData) {
+    if (Player_InWater(player, blData))
         return;
     WaitForAnimSet(blData, player, PlayerAnimSetInitCrouch);
     Player_Move(blData, player, 0.75f);
@@ -2502,24 +2446,11 @@ void _Player_SSCrouch(obj_tag *player, BLData *blData) {
     TurnByRotationDelta(blData, player);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_SSCrouch(void) {
-    _asm {
-        push ecx
-        push eax
-        call _Player_SSCrouch
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Breath under water: the air pane shows swimming or on a wire; the head (its bone) under the cel's water eases
 // underwater towards 1 and, outside zero G, uses up air at 5 a second, with the going-under sound; above it the air
 // comes back at 20 a second, with the coming-up sound. Out of air, the player is hurt twice a second. The player's
 // object in EAX, his data in ECX.
-void _Player_MonitorAir(obj_tag *player, BLData *blData) {
+void Player_MonitorAir(obj_tag *player, BLData *blData) {
     short subState = (short)player->subState;
     HUD_Enable(blData->hudInfo, Air, subState == MovementType_Swim || subState == MovementType_Wire, 0);
     _VECTOR head;
@@ -2531,7 +2462,7 @@ void _Player_MonitorAir(obj_tag *player, BLData *blData) {
     bool breathes = !(player->subState >= MovementType_ZeroG && player->subState <= MovementType_ZeroG_Anim);
     uint flags;
     if (player->inCel->shearHeight > head.y) {
-        blData->underwater = _moveTowardsValue(blData->underwater, 1.0f, REC_FRAME_RATE);
+        blData->underwater = moveTowardsValue(blData->underwater, 1.0f, REC_FRAME_RATE);
         flags = blData->waterFlags | WATER_HEAD_UNDER;
     }
     else {
@@ -2581,28 +2512,15 @@ void _Player_MonitorAir(obj_tag *player, BLData *blData) {
     blData->air = air;
     if (air < 1.0f && GameState.NumFramesUnpaused % (uint)Ftol((double)_FRAME_RATE * 0.5f) == 0) {
         Sound_PlayExt((Action_SFX)0x60b, 100.0f, 0, 0);
-        _Player_HandlePain(player, 2.0f, blData, -1, 7);
+        Player_HandlePain(player, 2.0f, blData, -1, 7);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_MonitorAir(void) {
-    _asm {
-        push ecx
-        push eax
-        call _Player_MonitorAir
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // On the ground: crouch, or jump - by gravity times -0.4, with room above (0.95 over the matrix's position) - or, with
 // the wire icon showing, catch the nearest wire (within 1000). In CastleIndoors1, before channel 0x48, jumping only
 // makes a sound. In the air: hitting something above starts the fall; after jumpWait frames, landing ends the jump.
 // The player's data in EAX, his object in ECX.
-void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
+void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
     switch (blData->jumpState) {
         case JUMP_NONE: {
             if ((uchar)Input_Action(blData->playerNum, ACTION_CROUCH, 4) && blData->animWait == 0) {
@@ -2685,20 +2603,6 @@ void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_HandleJump(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push ecx
-        push eax
-        call _Player_HandleJump
-        add esp, 0xc
-        ret
-    }
-}
-#endif
-
 // ---------------------------------------------------------------------------------------------------------------
 // Turning and aiming speeds, and the right stick (Player_Aiming)
 // ---------------------------------------------------------------------------------------------------------------
@@ -2737,35 +2641,10 @@ static double Accelerate(float input, float speed, float base, float mul, float 
 }
 
 // The speed goes for base * mul once the stick is at least fullZone over
-double _AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone) {
+double AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone) {
     float magnitude = input < 0.0f ? -input : input;
     return Accelerate(input, *speed, base, mul, steps, deadZone, magnitude >= fullZone);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original's caller keeps EDX across the call (Player_Aiming), and Ghidra has its return in ST0 as custom
-// storage; the adaptor keeps ECX and EDX.
-// AUTOLTCG
-void __declspec(naked) AccelFunc0(void) {
-    _asm {
-        push ecx
-        push edx
-        mov eax, esp
-        push dword ptr [eax + 0x24]
-        push dword ptr [eax + 0x20]
-        push dword ptr [eax + 0x1c]
-        push dword ptr [eax + 0x18]
-        push dword ptr [eax + 0x14]
-        push dword ptr [eax + 0x10]
-        push dword ptr [eax + 0x0c]
-        call _AccelFunc0
-        add esp, 0x1c
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // AccelFunc0 with the caller saying when the speed goes for base * mul. The name is ours.
 // FUNC_AT(0x000b7520)
@@ -2787,7 +2666,7 @@ void Player_Aiming(obj_tag *player) {
     AnimState *anim = player->animState;
     if (!(anim->animFlags & 1)) {
         float look = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
-        double accel = _AccelFunc0(look, &blData->lookAccel, Plr_NoAimTurnSpeed_Y, Plr_NoAimTurnSpeed_Y_Mul,
+        double accel = AccelFunc0(look, &blData->lookAccel, Plr_NoAimTurnSpeed_Y, Plr_NoAimTurnSpeed_Y_Mul,
                                   Plr_NoAimTurnSpeed_Y_Steps, 0.05f, 0.95f);
         blData->lookAccel = (float)accel;
         double pitch = accel * FRAME_RATE_MUL * look;
@@ -2802,10 +2681,10 @@ void Player_Aiming(obj_tag *player) {
     if (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_SIGHTED_SCOPE) {
         float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
         float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
-        float accelX = (float)_AccelFunc0(turn, &blData->scopeAccelX, Plr_ScopeSpeed_X, Plr_ScopeSpeed_X_Mul,
+        float accelX = (float)AccelFunc0(turn, &blData->scopeAccelX, Plr_ScopeSpeed_X, Plr_ScopeSpeed_X_Mul,
                                          Plr_ScopeSpeed_X_Steps, 0.05f, 0.95f);
         blData->scopeAccelX = accelX;
-        double accelY = _AccelFunc0(pitch, &blData->scopeAccelY, Plr_ScopeSpeed_Y, Plr_ScopeSpeed_Y_Mul,
+        double accelY = AccelFunc0(pitch, &blData->scopeAccelY, Plr_ScopeSpeed_Y, Plr_ScopeSpeed_Y_Mul,
                                    Plr_ScopeSpeed_Y_Steps, 0.05f, 0.95f);
         blData->scopeAccelY = (float)accelY;
         double turnBy = (double)accelX * FRAME_RATE_MUL * turn;
@@ -3041,7 +2920,7 @@ void Player_Collision(obj_tag *player) {
 
 // What the feet stand on moves the player or drone with it (unless it is a drone, player, bullet, body or rigid
 // body), and is given a hit from above at the same point.
-void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
+void PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
     obj_tag *under = hit->hitObj;
     if (under == NULL)
         return;
@@ -3064,20 +2943,6 @@ void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, HITDATA_tag *hit) {
     Vec_Negate(&CONST_UP_VECTOR, &above->maybehitDirection);
     Vec_Copy(&hit->hitPosition, &above->hitPosition);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The object in EAX, the hit in ECX
-// AUTOLTCG
-void __declspec(naked) PlayerOrDrone_FeetOnPoint_DoCollision(void) {
-    _asm {
-        push ecx
-        push eax
-        call _PlayerOrDrone_FeetOnPoint_DoCollision
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // A ray from the position to 0.6 below the test's end. The first hit is stood on when its distance is within 0.1 of
 // the root height (*floorNormalY gets its normal's y); the first hit that may be stood on moves the player with it.
@@ -3109,7 +2974,7 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
                 continue;
             if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
                 continue;
-            _PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
+            PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
             break;
         }
     }
@@ -3200,7 +3065,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
         case OBJECTTYPE_HURT: {
             ushort painType = Hurt_GetType(hitObj);
             float damage = (float)((double)Hurt_GetDamage(hit->hitObj) + hit->dmgAmt);
-            _Player_HandlePain(player, damage, blData, -1, painType);
+            Player_HandlePain(player, damage, blData, -1, painType);
             return 0.0f;
         }
 
@@ -3251,7 +3116,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
     BU_tag *bullet = (BU_tag *)hit->hitObj->extraObjectData;
     if (!Drone_ModPlayerHitDamage(player, hit))
         return 0.0f;
-    _Player_HandlePain(player, hit->dmgAmt, blData, hit->hitBoneIdx, 0);
+    Player_HandlePain(player, hit->dmgAmt, blData, hit->hitBoneIdx, 0);
 
     _VECTOR direction;
     Vec_Copy(&hit->maybehitDirection, &direction);
@@ -3307,7 +3172,7 @@ void Player_CollisionHandler(obj_tag *player) {
                     over = 0.0;
                 short frames = (short)Ftol(over);
                 if (frames >= FALL_HURT_FRAMES)
-                    _Player_HandlePain(player, frames, blData, -1, 6);
+                    Player_HandlePain(player, frames, blData, -1, 6);
             }
             blData->fallFrames = 0.0f;
         }
@@ -3375,7 +3240,7 @@ void Player_CollisionHandler(obj_tag *player) {
         View_SetDrawInNoViews(blData->muzzleFlashObj);
     else
         Draw_MuzzleFlash(player);
-    _Player_GrappleSetRope(player);
+    Player_GrappleSetRope(player);
     Player_SetWatch(player);
 }
 
@@ -3547,7 +3412,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     HUD_Init(blData, player);
     HUD_Update(blData, player);
     Player_InitWeapon(blData, player);
-    _Player_InitGrapple(blData, player);
+    Player_InitGrapple(blData, player);
     Camera_SetUpdator(playerNum, player, (cameraUpdateFunc)Player_PositionCamera);
     player->effectFlags |= 0x800;
     blData->active = 1;
@@ -3618,7 +3483,7 @@ static void ZeroGAxis(float *last, float *movement, float target) {
     *movement = *last + *movement;
 }
 
-void _Player_ZeroG(BLData *blData, obj_tag *player) {
+void Player_ZeroG(BLData *blData, obj_tag *player) {
     Vec_Zero(&blData->field_0x3c);
     blData->aimAutoLevelState = 2;
     blData->aimAutoLevelDelay = 0;
@@ -3681,19 +3546,6 @@ void _Player_ZeroG(BLData *blData, obj_tag *player) {
         UpdateWalkAnims(blData, player, Magnitude(blData->movement.z));
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_ZeroG(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Player_ZeroG
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Flying freely (substate 5): the right stick turns at pi a second, the left flies along the player's own axes (eased a
 // fifth of the way a frame, sideways up to 0.225 and forwards up to 0.5 a frame, a third and a fifth as much
 // backwards), jump and crouch climb and drop 3 a second. Aiming, the zoom stick changes the field of view (0.2 to
@@ -3706,7 +3558,7 @@ static double ScanEase(float previous, float target) {
     return (eased > target) ? target : eased;
 }
 
-void _Player_SSScanMode(BLData *blData, obj_tag *player) {
+void Player_SSScanMode(BLData *blData, obj_tag *player) {
     if (!(player->animState->animFlags & 1)) {
         blData->aimAutoLevelState = 2;
         blData->movement.y = 0.0f;
@@ -3779,19 +3631,6 @@ void _Player_SSScanMode(BLData *blData, obj_tag *player) {
     player->animState->animObj.rootTravel = 0.0f;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_SSScanMode(void) {
-    _asm {
-        push ebx
-        push eax
-        call _Player_SSScanMode
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // ---------------------------------------------------------------------------------------------------------------
 // Using things (Player_Activate)
 // ---------------------------------------------------------------------------------------------------------------
@@ -3800,7 +3639,7 @@ void __declspec(naked) Player_SSScanMode(void) {
 // of the point in front of his eyes - scripted objects, doors (true when one opens), switches, triggers, cars, gun
 // turrets and emplacements, monitors, the worm, and locks he is in front of. The original takes the player's data in
 // EAX and the player in EDI.
-uchar _Player_Activate(BLData *blData, obj_tag *player) {
+uchar Player_Activate(BLData *blData, obj_tag *player) {
     HITDATA_tag *hitList = NULL;
     uchar used = 0;
     if (blData->thirdIcon == THIRDICON_STANDING) {
@@ -3878,19 +3717,6 @@ uchar _Player_Activate(BLData *blData, obj_tag *player) {
     return used;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_Activate(void) {
-    _asm {
-        push edi
-        push eax
-        call _Player_Activate
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // ---------------------------------------------------------------------------------------------------------------
 // Every frame (Player_Update)
 // ---------------------------------------------------------------------------------------------------------------
@@ -3901,7 +3727,7 @@ extern uint8_t GlobalBlur;
 
 // Swimming: the move, then walking out once the feet stand on something with the surface at least 0.3 below the
 // position, and the movement kept from taking the position above 0.3 below the surface.
-void _Player_Swim(obj_tag *player, BLData *blData) {
+void Player_Swim(obj_tag *player, BLData *blData) {
     Player_Move(blData, player, 1.0f);
     if (player->inCel == NULL)
         return;
@@ -3927,23 +3753,9 @@ void _Player_Swim(obj_tag *player, BLData *blData) {
     ApplyMatrixLV(&inverse, &move, &blData->movement);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The player's object in ESI, his data in EAX
-// AUTOLTCG
-void __declspec(naked) Player_Swim(void) {
-    _asm {
-        push eax
-        push esi
-        call _Player_Swim
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Eases the pitch 7.5% of the way to pitchAutoLevelTarget a frame while aimAutoLevelState is 2 or 3, after
 // aimAutoLevelDelay frames, and not while jumping. Once the step is within 0.0002, state 2 becomes 3.
-void _Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
+void Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
     char state = blData->aimAutoLevelState;
     if (state < 2 || state > 3)
         return;
@@ -3965,24 +3777,10 @@ void _Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
         blData->aimAutoLevelState = 3;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The player's data in ECX, his object on the stack
-// AUTOLTCG
-void __declspec(naked) Player_ClampSomeAngles(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push ecx
-        call _Player_ClampSomeAngles
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // A flash bang's fade (Player_SetFlashBang): flashTimeLeft counts down a frame at a time. While flashTime is set,
 // single player blurs by flashBlur; over the first half of flashTime the fade is held, then it runs over the
 // frames left and flashTime is cleared.
-void _Player_UpdateBlurAndFade(BLData *blData) {
+void Player_UpdateBlurAndFade(BLData *blData) {
     if (blData->flashTimeLeft != 0.0f)
         blData->flashTimeLeft -= 1.0f;
     if (blData->flashTime == 0.0f)
@@ -3996,19 +3794,6 @@ void _Player_UpdateBlurAndFade(BLData *blData) {
     Camera_SetFade(blData->playerNum, -blData->flashTimeLeft, blData->flashBlur | 0xffffff00, 0);
     blData->flashTime = 0.0f;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The player's data in ESI
-// AUTOLTCG
-void __declspec(naked) Player_UpdateBlurAndFade(void) {
-    _asm {
-        push esi
-        call _Player_UpdateBlurAndFade
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // The gadgets that recharge, a unit at a time, every so many frames: 0x4a and 0x4e every 4, 0x4c and 0x4f every 2,
 // 0x45 every 6 and 0x33 every 4
@@ -4044,7 +3829,7 @@ void Player_Update(obj_tag *player) {
         player->tweakA = (uchar)Ftol(40.0f);
     else
         player->tweakA = (uchar)Ftol((double)blData->alpha * 255.0f);
-    float alpha = _moveTowardsValue(blData->alpha, 2.0f, (float)((double)REC_FRAME_RATE * 0.05f));
+    float alpha = moveTowardsValue(blData->alpha, 2.0f, (float)((double)REC_FRAME_RATE * 0.05f));
     blData->alpha = alpha;
     if (alpha < 0.0f)
         alpha = 0.0f;
@@ -4097,10 +3882,10 @@ void Player_Update(obj_tag *player) {
             if (!blData->frozen) {
                 switch ((short)player->subState) {
                     case MovementType_Walk:
-                        _Player_SSWalk(player, blData);
+                        Player_SSWalk(player, blData);
                         break;
                     case MovementType_Crouch:
-                        _Player_SSCrouch(player, blData);
+                        Player_SSCrouch(player, blData);
                         break;
                     case MovementType_Climb:
                         Player_Climb(blData, player);
@@ -4116,7 +3901,7 @@ void Player_Update(obj_tag *player) {
                         break;
                     case MovementType_ZeroG:
                     case MovementType_ZeroG_Anim:
-                        _Player_ZeroG(blData, player);
+                        Player_ZeroG(blData, player);
                         break;
                     case MovementType_RemoteControl:
                         // The device lets go when the timer runs out, or straight away without one once the device
@@ -4135,19 +3920,19 @@ void Player_Update(obj_tag *player) {
                         Player_ChangeSubState(player, blData->previousSubState);
                         break;
                     case MovementType_Grapple:
-                        _Player_SSGrapple(blData, player);
+                        Player_SSGrapple(blData, player);
                         break;
                     case MovementType_Swim:
-                        _Player_Swim(player, blData);
+                        Player_Swim(player, blData);
                         break;
                     case MovementType_ScanMode:
-                        _Player_SSScanMode(blData, player);
+                        Player_SSScanMode(blData, player);
                         break;
                 }
             }
 
-            _Player_MonitorAir(player, blData);
-            _Player_ClampSomeAngles(blData, player);
+            Player_MonitorAir(player, blData);
+            Player_ClampSomeAngles(blData, player);
             Player_Aiming(player);
             Player_ViewClamping(player);
 
@@ -4163,12 +3948,12 @@ void Player_Update(obj_tag *player) {
         case 2:
         case 3:
             AnimObjectUpdate(player);
-            _Player_HandleDeath(player);
+            Player_HandleDeath(player);
             break;
     }
 
     Player_InShadow(blData, player);
-    _Player_UpdateBlurAndFade(blData);
+    Player_UpdateBlurAndFade(blData);
     if (blData->field_0x8cc <= 0)
         blData->field_0x8cc = (short)((Rand_Random() & 0x3ff) + 0xff);
     AnimObjectUpdate(player);

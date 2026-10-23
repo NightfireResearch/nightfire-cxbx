@@ -351,7 +351,7 @@ void DroneAnim_SetAnimD(ushort row, ushort blend, Drone_tag *drone) {
 }
 
 // The call states that play as DANIM_DEATH: 0x41-0x44, 0x50 and 0x6f.
-ushort _DroneAnim_BaseCallState(ushort state) {
+ushort DroneAnim_BaseCallState(ushort state) {
     switch (state) {
     case 0x41:
     case 0x42:
@@ -365,21 +365,8 @@ ushort _DroneAnim_BaseCallState(ushort state) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_BaseCallState(void) {
-    _asm {
-        movzx eax, ax
-        push eax
-        call _DroneAnim_BaseCallState
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Fills the drone's anim slot (animMode to animNextRow) from the row and the anim set's script.
-void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet) {
+void DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet) {
     const DroneAnimInfo *info = &Drone_AnimInfo[row];
     const DroneAnimScript *script = &Drone_AnimTables[row][animSet];
     drone->prevAnimFlags = drone->unknown46c;
@@ -401,29 +388,11 @@ void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSe
     drone->animCallFlag = 0;
 }
 
-LAYOUT_32(offsetof(Drone_tag, animMode) == 0x464, "DroneAnim_SetDAnimVeryInternal's adaptor");
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the slot, &drone->animMode.
-// AUTOLTCG
-void __declspec(naked) DroneAnim_SetDAnimVeryInternal(void) {
-    _asm {
-        movzx ecx, word ptr [esp + 4]
-        push ecx
-        movzx edx, dx
-        push edx
-        sub eax, 0x464
-        push eax
-        call _DroneAnim_SetDAnimVeryInternal
-        add esp, 0xc
-        ret
-    }
-}
-#endif
+LAYOUT_32(offsetof(Drone_tag, animMode) == 0x464, "Asm_DroneAnim_SetDAnimVeryInternal passes &drone->animMode");
 
 // Whether the row is passed over at once: it has no script, or it is in one of the modes not played while the
 // drone is not drawn.
-bool _DroneAnim_SkipAnim(Drone_tag *drone) {
+bool DroneAnim_SkipAnim(Drone_tag *drone) {
     if (drone->animHashcode == 0x06000000)
         return true;
     if (drone->gameObj->drawnCountdown == 0 && (drone->unknown46c & DANIMFLAG_SKIP_UNSEEN)) {
@@ -441,44 +410,20 @@ bool _DroneAnim_SkipAnim(Drone_tag *drone) {
     return false;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_SkipAnim(void) {
-    _asm {
-        push eax
-        call _DroneAnim_SkipAnim
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Once the new row plays the anim state called for (or none), the call is taken: its speed kept, the call cleared.
 // False, after moving on to the next row, when the row is skipped.
-bool _DroneAnim_TakeCall(Drone_tag *drone) {
+bool DroneAnim_TakeCall(Drone_tag *drone) {
     if (drone->animState == 0 || (ushort)drone->animState == drone->animCall.state) {
         drone->animCallTaken = 1;
         drone->animCallSpeedTaken = drone->animCallSpeed;
         memset(&drone->animCall, 0, sizeof(drone->animCall));
     }
-    if (_DroneAnim_SkipAnim(drone)) {
+    if (DroneAnim_SkipAnim(drone)) {
         DroneAnim_SetEndAnim(drone, 30);
         return false;
     }
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_TakeCall(void) {
-    _asm {
-        push esi
-        call _DroneAnim_TakeCall
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Plays a row: fills the slot, takes the call, ends the old row's functions, starts the script and the new row's
 // functions. False when it is skipped, or with bots while a script blends out and the drone animates.
@@ -490,10 +435,10 @@ bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_
     ushort animSet = drone->animSet;
     if (Drone_AnimTables[row][animSet].scriptLo == 0)
         animSet = 0;
-    _DroneAnim_SetDAnimVeryInternal(drone, row, animSet);
+    DroneAnim_SetDAnimVeryInternal(drone, row, animSet);
     drone->animCallFlag = callFlag;
-    drone->animCall.state = _DroneAnim_BaseCallState(drone->animCall.state);
-    if (!_DroneAnim_TakeCall(drone))
+    drone->animCall.state = DroneAnim_BaseCallState(drone->animCall.state);
+    if (!DroneAnim_TakeCall(drone))
         return false;
 
     if (drone->animStateFunc != NULL)
@@ -657,7 +602,7 @@ void DroneAnim_SnapRotate(Drone_tag *drone) {
 
 // The row for a call from anim state `state`: the first transition to the call, or to any (toState 0), with the
 // variant's row when it has that many. -1 for none.
-short _DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant, ushort *blend, uchar *callFlag) {
+short DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant, ushort *blend, uchar *callFlag) {
     if (state >= NUM_DRONE_ANIM_STATES)
         state = 0;
     const DroneAnimTransition *t = DroneAnimStates[state].transitions;
@@ -679,30 +624,11 @@ short _DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant,
     return -1;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_GetDAnimForAnimState(void) {
-    _asm {
-        push edi
-        push esi
-        movzx ecx, word ptr [esp + 0xc]
-        push ecx
-        movzx edx, dx
-        push edx
-        movzx eax, ax
-        push eax
-        call _DroneAnim_GetDAnimForAnimState
-        add esp, 0x14
-        ret
-    }
-}
-#endif
-
 // The row for the call from the anim state playing, else from state 0's list (for the drone's own call then,
 // blending over 8 frames). False for none, or for row 0.
-bool _DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, ushort *row, ushort *blend,
-                                uchar *callFlag) {
-    *row = _DroneAnim_GetDAnimForAnimState(drone->animState, call, variant, blend, callFlag);
+bool DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, ushort *row, ushort *blend,
+                               uchar *callFlag) {
+    *row = DroneAnim_GetDAnimForAnimState(drone->animState, call, variant, blend, callFlag);
     if (*row == 0)
         return false;
     if (*row != 0xffff)
@@ -711,32 +637,13 @@ bool _DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, u
         *blend = 8;
     if (callFlag != NULL)
         *callFlag = 0;
-    *row = _DroneAnim_GetDAnimForAnimState(0, drone->animCall.state, drone->animCall.variant, blend, callFlag);
+    *row = DroneAnim_GetDAnimForAnimState(0, drone->animCall.state, drone->animCall.variant, blend, callFlag);
     return *row != 0 && *row != 0xffff;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_GetDAnimForCall(void) {
-    _asm {
-        push ecx
-        push dword ptr [esp + 0xc]
-        push dword ptr [esp + 0xc]
-        movzx eax, ax
-        push eax
-        movzx edx, dx
-        push edx
-        push ebx
-        call _DroneAnim_GetDAnimForCall
-        add esp, 0x18
-        ret
-    }
-}
-#endif
-
 // Whether the call may start now: there is one; with bots, no script blends out; a mode 5 row is left only for a
 // call made while it played, and in anim states 0xc, 0xd, 0x29 and 0x2a not for call 10.
-bool _DroneAnim_CanSetAnimCall(Drone_tag *drone) {
+bool DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     if (drone->animCall.state == 0)
         return false;
     if (MPSettings.maybeDroneAIEnabled && drone->unknown434 != NULL)
@@ -755,37 +662,13 @@ bool _DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_CanSetAnimCall(void) {
-    _asm {
-        push eax
-        call _DroneAnim_CanSetAnimCall
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The call has played out: cleared, and its end action taken (DroneAnim_SetEndAIState).
-void _DroneAnim_CallFullyComplete(Drone_tag *drone) {
+void DroneAnim_CallFullyComplete(Drone_tag *drone) {
     memset(&drone->animCall, 0, sizeof(drone->animCall));
     DroneAnim_SetEndAIState(drone, drone->animEndState, drone->animEndMsg);
     drone->animEndState = 0;
     drone->animEndMsg = 0;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneAnim_CallFullyComplete(void) {
-    _asm {
-        push esi
-        call _DroneAnim_CallFullyComplete
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Once a frame (Drone_Control): a row that does not loop and has ended goes on to its next row; a call whose anim
 // state plays has its end action taken once its row is done (mode 1 once it has ended, modes 2 and 9 at once);
@@ -804,18 +687,18 @@ void DroneAnim_CallHandler(DCVars_tag *dcv) {
 
     if (drone->animCallTaken && !drone->animCallFlag) {
         if ((drone->animMode == 1 && !drone->animOnce) || drone->animMode == 2 || drone->animMode == 9) {
-            _DroneAnim_CallFullyComplete(drone);
+            DroneAnim_CallFullyComplete(drone);
             drone->animCallTaken = 0;
             return;
         }
     }
 
-    if (!_DroneAnim_CanSetAnimCall(drone))
+    if (!DroneAnim_CanSetAnimCall(drone))
         return;
     ushort row = 0;
     ushort blend = 8;
     uchar callFlag = 0;
-    if (!_DroneAnim_GetDAnimForCall(drone, drone->animCall.state, drone->animCall.variant, &row, &blend, &callFlag))
+    if (!DroneAnim_GetDAnimForCall(drone, drone->animCall.state, drone->animCall.variant, &row, &blend, &callFlag))
         return;
     dcv->drone->animCallSpeedTaken = dcv->drone->animCallSpeed;
     DroneAnim_SetDAnimInternal(row, blend, callFlag, dcv->drone);

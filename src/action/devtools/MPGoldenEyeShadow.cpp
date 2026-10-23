@@ -161,7 +161,7 @@ void __cdecl ShadowGoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameO
     }
     Save(regions, n, &original);
     Load(regions, n, &before);
-    _MP_GoldenEyeUpdate(mpObj, dropped, gameObj);
+    MP_GoldenEyeUpdate(mpObj, dropped, gameObj);
     Compare(regions, n, &original);
     Count();
 }

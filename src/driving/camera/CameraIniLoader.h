@@ -331,7 +331,6 @@ float ClampCameraValue(float value, float min, float max);              // 0x000
 
 // FUN_00078590: whether `name` is the first of the names in `list` it is found in, ended by a space, a comma or the
 // end. The original takes the list in EDI: FUN_00078590 is the adaptor, CarListContains the C++ under it.
-void FUN_00078590();
 bool CarListContains(const char *list, const char *name);
 
 #endif // DRIVING_CAMERA_CAMERAINILOADER_H_

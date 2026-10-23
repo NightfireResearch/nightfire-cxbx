@@ -38,18 +38,12 @@ bool NDrone2_InShoutingRange(DCVars_tag *dcv, obj_tag *obj);
 bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state);
 short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state);
 
-// The originals take the DCVars in a register: the game reaches the adaptors, C++ calls the cores
-ushort _DroneVision_AlertSound(DCVars_tag *dcv);
-void DroneVision_AlertSound(void);
-ushort _DroneVision_GlobalAlarm(DCVars_tag *dcv);
-void DroneVision_GlobalAlarm(void);
-ushort _DroneVision_ShoutMsg11(DCVars_tag *dcv);
-void DroneVision_ShoutMsg11(void);
-ushort _DroneVision_ShoutMsg12(DCVars_tag *dcv);
-void DroneVision_ShoutMsg12(void);
-ushort _DroneVision_ShoutMsg13(DCVars_tag *dcv);
-void DroneVision_ShoutMsg13(void);
-ushort _DroneVision_ShoutDroneAlert(DCVars_tag *dcv);
-void DroneVision_ShoutDroneAlert(void);
+// The alert states' sounds
+ushort DroneVision_AlertSound(DCVars_tag *dcv);
+ushort DroneVision_GlobalAlarm(DCVars_tag *dcv);
+ushort DroneVision_ShoutMsg11(DCVars_tag *dcv);
+ushort DroneVision_ShoutMsg12(DCVars_tag *dcv);
+ushort DroneVision_ShoutMsg13(DCVars_tag *dcv);
+ushort DroneVision_ShoutDroneAlert(DCVars_tag *dcv);
 
 #endif // DRONEVISION_ALERTS_H_

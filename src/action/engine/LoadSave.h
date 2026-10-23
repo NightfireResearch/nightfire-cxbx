@@ -32,11 +32,8 @@ extern ushort Save_State;
 extern ushort LoadSlot;   // the slot a load in progress is for
 
 void LS_FlushStates(void);
-// The originals take register arguments; these adaptors call the C++ cores (LoadSave.cpp)
-uchar* _LS_FindBlockByLabel(ushort slot, uint label, ushort *length);
-void LS_FindBlockByLabel(void);
-void _LS_GetLoadStuff(ushort mask, ushort slot);
-void LS_GetLoadStuff(void);
+uchar* LS_FindBlockByLabel(ushort slot, uint label, ushort *length);
+void LS_GetLoadStuff(ushort mask, ushort slot);
 int LS_LoadFromBuffer(uchar *data, uint length);
 ushort LS_GetSaveStuff(ushort mask, ushort slot);
 uint LS_Save(char *codename, uint slot, ushort mask);

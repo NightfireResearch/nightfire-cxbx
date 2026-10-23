@@ -482,7 +482,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
 
 // Smoke behind the projectile: a puff every fourth frame in single player; once it has gone off (a smoke grenade's
 // substate 1), a cloud every fifteenth
-void _Bullet_trail_effect_smoke(obj_tag *obj) {
+void Bullet_trail_effect_smoke(obj_tag *obj) {
 
     _VECTOR vel = {}, rot = {};
     if (obj->subState == 0) {
@@ -502,21 +502,8 @@ void _Bullet_trail_effect_smoke(obj_tag *obj) {
     Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, BULLET_SMOKE, 11, 0x404040ff, 0x404040ff, 0xff);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The object in ESI
-// AUTOLTCG
-void __declspec(naked) Bullet_trail_effect_smoke(void) {
-    _asm {
-        push esi
-        call _Bullet_trail_effect_smoke
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Dust behind the projectile, every third frame in single player
-void _Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
+void Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     if (MPSettings.isMultiplayer || ((obj->creationTimeFrames & 0xff) + GameState.NumFramesUnpaused) % 3 != 0)
         return;
     _VECTOR rot;
@@ -526,21 +513,8 @@ void _Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, BULLET_DUST, 0, 0x7f7f7f7f, 0x80808000, 0x40);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The object in ESI
-// AUTOLTCG
-void __declspec(naked) Bullet_SpawnSmokeDust_SomeOtherProbability(void) {
-    _asm {
-        push esi
-        call _Bullet_SpawnSmokeDust_SomeOtherProbability
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Finer dust, every other frame in single player
-void _Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
+void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     if (MPSettings.isMultiplayer || ((obj->creationTimeFrames + GameState.NumFramesUnpaused) & 1))
         return;
     _VECTOR rot;
@@ -549,19 +523,6 @@ void _Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     rot.z = (float)Float_FRand(6.2831855f);
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, BULLET_DUST, 7, 0x7f7f7f7f, 0x80808000, 0x20);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The object in ESI
-// AUTOLTCG
-void __declspec(naked) Bullet_SpawnSmokeDust_SomeProbability(void) {
-    _asm {
-        push esi
-        call _Bullet_SpawnSmokeDust_SomeProbability
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // A flash grenade going off: each player within 30 units is dazzled by how near it is (5 to 90 units), how directly
 // he faces it (30 to about 100 degrees) and, half as much, without a line of sight; drones are told, turrets disabled
@@ -661,7 +622,7 @@ static void Bullet_SatchelDigit(obj_tag *obj, _MATRIX *rot, _VECTOR *offset, int
 
 // What goes with the flight: the grapple's point, acceleration, smoke and dust above water, the trail, the whizz near
 // the camera, the fuse (a flash, a smoke cloud or an explosion), and a satchel's count and its digits
-void _Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float step) {
+void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float step) {
 
     if (obj == NULL || bullet == NULL || bullet->wpnDef == NULL)
         return;
@@ -679,11 +640,11 @@ void _Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, floa
     // Out of water, by where it started the frame
     if (startPosition != NULL) {
         if ((weapon->projectileFlags & ProjectileFlag_Smoke) && !(cel->shearHeight > startPosition->y))
-            _Bullet_trail_effect_smoke(obj);
+            Bullet_trail_effect_smoke(obj);
         if ((bullet->wpnDef->projectileFlags & ProjectileFlag_Dust) && !(cel->shearHeight > startPosition->y))
-            _Bullet_SpawnSmokeDust_SomeOtherProbability(obj);
+            Bullet_SpawnSmokeDust_SomeOtherProbability(obj);
         if ((bullet->wpnDef->projectileFlags & ProjectileFlag_FineDust) && !(cel->shearHeight > startPosition->y))
-            _Bullet_SpawnSmokeDust_SomeProbability(obj);
+            Bullet_SpawnSmokeDust_SomeProbability(obj);
     }
 
     // A new segment of trail every swooshInterval frames; the newest follows the bullet
@@ -788,22 +749,6 @@ void _Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, floa
     Bullet_SatchelDigit(obj, &rot, &units, seconds % 10);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The object in ECX, the bullet in EAX
-// AUTOLTCG
-void __declspec(naked) Bullet_DoTrails(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push eax
-        push ecx
-        call _Bullet_DoTrails
-        add esp, 16
-        ret
-    }
-}
-#endif
-
 // On deletion: the sound stopped, a guided missile's player given back control, the grapple let go (and, stopped at
 // a grapple point, the player hung from it), the trip-bomb's beam deleted
 // AUTOINJECT
@@ -844,7 +789,7 @@ void Bullet_Delete(obj_tag *obj) {
 
 // Whether a homing projectile may chase the object: a helicopter's body drawn lately, a live drone drawn lately and
 // not in state 1, a live player, a car drawn lately
-bool _Bullet_heatseekable(obj_tag *obj) {
+bool Bullet_heatseekable(obj_tag *obj) {
     switch (obj->objectType) {
     case 0:
         if (!obj->drawnCountdown)
@@ -867,23 +812,6 @@ bool _Bullet_heatseekable(obj_tag *obj) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The object in EDI
-// AUTOLTCG
-void __declspec(naked) Bullet_heatseekable(void) {
-    _asm {
-        push ecx
-        push edx
-        push edi
-        call _Bullet_heatseekable
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // A homing projectile's target: the nearest object it may chase (other than who fired it) within 1000, ahead of the
 // shooter (within about 49 degrees of where he faces) and in his line of sight.
 // AUTOINJECT
@@ -891,7 +819,7 @@ void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter) {
     float nearest = 1000.0f;
     bullet->heatseekTarget = NULL;
     for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
-        if (!_Bullet_heatseekable(obj) || obj == bullet->firedByObj)
+        if (!Bullet_heatseekable(obj) || obj == bullet->firedByObj)
             continue;
         float distance = Vec_Dist3D(&obj->position, &shooter->position);
         if (!(distance < nearest))
@@ -911,7 +839,7 @@ void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter) {
 }
 
 // Turns a homing projectile a little towards its target (finding one first), by at most 0.01 on each axis a frame
-void _Bullet_homing(BU_tag *bullet, obj_tag *obj) {
+void Bullet_homing(BU_tag *bullet, obj_tag *obj) {
 
     if (bullet->heatseekTarget != NULL && (bullet->heatseekTarget->flags & 1))
         bullet->heatseekTarget = NULL;
@@ -944,20 +872,6 @@ void _Bullet_homing(BU_tag *bullet, obj_tag *obj) {
     Vec_Normalise(&bullet->direction, &bullet->direction);
     Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The bullet in ESI, the object on the stack
-// AUTOLTCG
-void __declspec(naked) Bullet_homing(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Bullet_homing
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The level's 32 spent cases, hidden until used
 // AUTOINJECT
@@ -1443,7 +1357,7 @@ void Bullet_Update(obj_tag *obj) {
     }
 
     if (obj->curState == BulletState_Stuck) {
-        _Bullet_DoTrails(obj, bullet, &startPosition, step);
+        Bullet_DoTrails(obj, bullet, &startPosition, step);
         obj->transformFlags |= TRANSFORM_MOVED;
         return;
     }
@@ -1513,10 +1427,10 @@ void Bullet_Update(obj_tag *obj) {
     obj->position.z = (float)((double)distance * bullet->direction.z + obj->position.z);
     obj->transformFlags |= TRANSFORM_MOVED;
 
-    _Bullet_DoTrails(obj, bullet, &startPosition, step);
+    Bullet_DoTrails(obj, bullet, &startPosition, step);
 
     if (bullet->wpnDef->projectileFlags & ProjectileFlag_Homing)
-        _Bullet_homing(bullet, obj);
+        Bullet_homing(bullet, obj);
 
     obj->transformFlags |= TRANSFORM_MOVED;
 

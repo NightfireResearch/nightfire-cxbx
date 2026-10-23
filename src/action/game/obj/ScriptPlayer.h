@@ -79,10 +79,7 @@ LAYOUT_32(offsetof(SCRIPTPLAYER, someCountdown) == 0x34, "Bad offset of someCoun
 
 #pragma pack(pop)
 
-// The register-convention entries (ScriptPlayer.cpp)
-void SP_LoadScript(void);
-void SP_Hit(void);
-ushort _SP_Hit(SCRIPTPLAYER *scriptPlayer);
+ushort SP_Hit(SCRIPTPLAYER *scriptPlayer);
 void SP_RemoveObj(obj_tag* obj, void* scriptPlayer);
 void SP_Delete(obj_tag *obj);
 void SP_Update(obj_tag *obj);

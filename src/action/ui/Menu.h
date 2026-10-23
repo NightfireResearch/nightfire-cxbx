@@ -234,9 +234,8 @@ void Menu_PutCodenamesIntoControl(M_CONTROL *control);
 void Menu_MapDefaultCodename(byte player, byte slot, uint parts);
 void Menu_SelectCodenameInControl(byte managerNum, char *codename, HASHCODE control);
 Action_TranslatedText Menu_IsValidCodename(char *name);
-void _Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, byte slot, ushort mask, uint lsSlot,
-                   HASHCODE returnPage, int returnPageArg, M_CONTROL *control, uchar done);
-void Menu_StartLS(void);   // the original's register arguments, for _Menu_StartLS
+void Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, byte slot, ushort mask, uint lsSlot,
+                  HASHCODE returnPage, int returnPageArg, M_CONTROL *control, uchar done);
 
 // The codename being edited
 extern uint8_t cn_modified;  // it has changes not yet saved
@@ -284,8 +283,7 @@ M_CONTROL* Menu_FindControl(M_MANAGER *mgr, uchar direction);
 M_CONTROL* Menu_GetFirstControl(M_MANAGER *mgr);
 M_PAGE* Menu_GetPage(M_CONTROL *control);
 void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control);
-ushort _Menu_GetAction(short player, int action, uchar flags);
-void Menu_GetAction(void);     // the original's register arguments, for _Menu_GetAction
+ushort Menu_GetAction(short player, int action, uchar flags);
 ushort Menu_InputAction(short player, int action, int flags);
 void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short width, short height, char *text,
                            HASHCODE texture, uint colour, uint colour2, ushort u, ushort v, ushort uw, ushort vh,

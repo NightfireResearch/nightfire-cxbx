@@ -121,23 +121,14 @@ const DroneDataFunc* DroneData_GetAnimFuncInfo(ushort row);
 const DroneDataFunc* DroneData_GetDAStateFuncInfo(ushort state);
 void DAnimFunc_Run(Drone_tag *drone, ushort phase);
 
-// Register-argument originals: the adaptors patched over them (never call these from C), and their C bodies
-void DroneAnim_CanSetAnimCall(void);            // EAX drone
-void DroneAnim_CallFullyComplete(void);         // ESI drone
-void DroneAnim_BaseCallState(void);             // AX state, the result in AX
-void DroneAnim_SkipAnim(void);                  // EAX drone
-void DroneAnim_TakeCall(void);                  // ESI drone
-void DroneAnim_GetDAnimForAnimState(void);      // AX state, DX call, ESI blend, EDI flag, the variant on the stack
-void DroneAnim_GetDAnimForCall(void);           // EBX drone, DX call, AX variant, ECX flag, row and blend on the stack
-void DroneAnim_SetDAnimVeryInternal(void);      // EAX &drone->animMode, DX row, the anim set on the stack
-bool _DroneAnim_CanSetAnimCall(Drone_tag *drone);
-void _DroneAnim_CallFullyComplete(Drone_tag *drone);
-ushort _DroneAnim_BaseCallState(ushort state);
-bool _DroneAnim_SkipAnim(Drone_tag *drone);
-bool _DroneAnim_TakeCall(Drone_tag *drone);
-short _DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant, ushort *blend, uchar *callFlag);
-bool _DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, ushort *row, ushort *blend,
-                                uchar *callFlag);
-void _DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet);
+bool DroneAnim_CanSetAnimCall(Drone_tag *drone);
+void DroneAnim_CallFullyComplete(Drone_tag *drone);
+ushort DroneAnim_BaseCallState(ushort state);
+bool DroneAnim_SkipAnim(Drone_tag *drone);
+bool DroneAnim_TakeCall(Drone_tag *drone);
+short DroneAnim_GetDAnimForAnimState(ushort state, ushort call, ushort variant, ushort *blend, uchar *callFlag);
+bool DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, ushort *row, ushort *blend,
+                               uchar *callFlag);
+void DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet);
 
 #endif // DRONEANIM_H_

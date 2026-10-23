@@ -63,10 +63,10 @@ LAYOUT_32(offsetof(DOORINFO, oneWay) == 0x72, "Bad offset of oneWay");
 
 void Door_Init(void);
 obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag *celgl);
-void _Door_SetupSwing(obj_tag *obj);
-void _Door_SetupSlide(obj_tag *obj);
-void _Door_SetState(obj_tag *obj, ushort state);
-void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance);
+void Door_SetupSwing(obj_tag *obj);
+void Door_SetupSlide(obj_tag *obj);
+void Door_SetState(obj_tag *obj, ushort state);
+void Door_Interp(obj_tag *obj, DOORINFO *door, char advance);
 void Door_ReactToHit(obj_tag *obj);
 bool Door_Activate(obj_tag *obj, obj_tag *user, char touched);
 bool Door_IsLocked(obj_tag* obj);
@@ -74,17 +74,9 @@ bool Door_IsClosed(obj_tag *obj);
 bool Door_IsOpen(obj_tag *obj);
 uchar Door_Link2Portal(obj_tag *obj);
 char * Door_DoMsg(obj_tag *obj);
-void _Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active);
-void _Door_CloseIfClear(obj_tag *obj);
+void Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active);
+void Door_CloseIfClear(obj_tag *obj);
 void Doors_Calc(void);
 void Door_Update(obj_tag *obj);
-
-// The register-argument entries (see Door.cpp)
-void Door_SetupSwing(void);
-void Door_SetupSlide(void);
-void Door_SetState(void);
-void Door_Interp(void);
-void Door_MoveGroup(void);
-void Door_CloseIfClear(void);
 
 #endif // DOOR_H

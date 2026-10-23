@@ -97,19 +97,6 @@ void SndStream_ReleaseBytes(StrmInternal *s, int bytes) {
         FILESYS_priorityop(s->operation, s->priorityGreedy);
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0014aba0() {
-    __asm {
-        push dword ptr [esp + 4]
-        push esi
-        call SndStream_ReleaseBytes
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 StrmRequest* SndStream_PopFree(StrmInternal *s) {
     MUTEX_lock(&s->mutex);
     StrmRequest *request = s->freeList;
@@ -126,18 +113,6 @@ StrmRequest* SndStream_PopFree(StrmInternal *s) {
     MUTEX_unlock(&s->mutex);
     return request;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0014ac00() {
-    __asm {
-        push edi
-        call SndStream_PopFree
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 void SndStream_Append(StrmInternal *s, StrmRequest *request) {
     request->state = 1;
@@ -157,19 +132,6 @@ void SndStream_Append(StrmInternal *s, StrmRequest *request) {
     MUTEX_unlock(&s->mutex);
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0014ac70() {
-    __asm {
-        push esi
-        push edi
-        call SndStream_Append
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // unlink a request (no lock: the caller holds it) and put it on the free list
 void SndStream_FreeRequest(StrmRequest *request, StrmInternal *s) {
     if (request == s->head)
@@ -186,23 +148,6 @@ void SndStream_FreeRequest(StrmRequest *request, StrmInternal *s) {
     request->next = s->freeList;
     s->freeList = request;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void freerequest() {
-    __asm {
-        push eax
-        push ecx
-        push ecx
-        push eax
-        call SndStream_FreeRequest
-        add esp, 8
-        pop ecx
-        pop eax
-        ret
-    }
-}
-#endif
 
 // Deliver the chunks the last read completed: each whole chunk between parsePos and writePos is matched against
 // the filters and counted to its reader, or marked skipped; the request's end chunk is padded to 128 bytes and
@@ -276,18 +221,6 @@ int SndStream_Deliver(StrmInternal *s) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0014ad20() {
-    __asm {
-        push eax
-        call SndStream_Deliver
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Start the next queued request: a memory request is copied at once; a file already open is read on; otherwise
 // open it, closing the open one first (the open continues from FUN_0014af10). No request left: idle.
 void SndStream_NextRequest(StrmInternal *s, int priority) {
@@ -347,19 +280,6 @@ void SndStream_NextRequest(StrmInternal *s, int priority) {
     if (operation != 0)
         FILESYS_callbackop(operation, CloseDone);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0014af50() {
-    __asm {
-        push dword ptr [esp + 4]
-        push esi
-        call SndStream_NextRequest
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // ---- the FILESYS callbacks and the read loop
 

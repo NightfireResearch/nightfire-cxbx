@@ -1283,7 +1283,7 @@ void Menu_Update(M_MANAGER *mgr, M_PAGE *page, M_CONTROL *control) {
 }
 
 // A player's action (-1: any player's) as Input_Action reports it, noting the frame and controller of one reported
-ushort _Menu_GetAction(short player, int action, uchar flags) {
+ushort Menu_GetAction(short player, int action, uchar flags) {
     if (player == -1) {
         ushort pressed = 0;
         for (ushort i = 0; i < 4; i++) {
@@ -1308,37 +1308,22 @@ ushort _Menu_GetAction(short player, int action, uchar flags) {
     return value;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AX the player
-// AUTOLTCG
-__declspec(naked) void Menu_GetAction(void) {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push eax
-        call _Menu_GetAction
-        add esp, 12
-        ret
-    }
-}
-#endif
-
 // An action for the menus: select and start are ignored while back is held, back while either is; in a menu of
 // status above 3 start and select stand for each other.
 // AUTOINJECT
 ushort Menu_InputAction(short player, int action, int flags) {
     if (action == ACTION_MENU_SELECT || action == ACTION_PAUSE) {
-        if (_Menu_GetAction(player, ACTION_MENU_BACK, 1))
+        if (Menu_GetAction(player, ACTION_MENU_BACK, 1))
             return 0;
     }
     if (action == ACTION_MENU_BACK) {
-        if (_Menu_GetAction(player, ACTION_MENU_SELECT, 1) || _Menu_GetAction(player, ACTION_PAUSE, 1))
+        if (Menu_GetAction(player, ACTION_MENU_SELECT, 1) || Menu_GetAction(player, ACTION_PAUSE, 1))
             return 0;
     } else if ((action == ACTION_MENU_SELECT || action == ACTION_PAUSE) && MenuManager_GetStatus() > 3) {
-        if (_Menu_GetAction(player, ACTION_MENU_SELECT, flags) || _Menu_GetAction(player, ACTION_PAUSE, flags))
+        if (Menu_GetAction(player, ACTION_MENU_SELECT, flags) || Menu_GetAction(player, ACTION_PAUSE, flags))
             return 1;
     }
-    return _Menu_GetAction(player, action, flags);
+    return Menu_GetAction(player, action, flags);
 }
 
 // To every control of every page of the manager with that hashcode (MENU_SEND_ALL: every control); the last result

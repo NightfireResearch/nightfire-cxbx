@@ -696,9 +696,7 @@ uint8_t* EAGL::RenderContext::OffsetSelf() {
     return reinterpret_cast<uint8_t *>(this) + uint32_t(frontBufferDepth);
 }
 
-namespace {
-
-// The register adapters' bodies: the RenderContext's words from +0x20 by index, and a pointer's shorts.
+// The RenderContext's words from +0x20 by index, and a pointer's shorts
 uint32_t __cdecl RenderContextWordAt(const uint8_t *self, int index) {
     return *reinterpret_cast<const uint32_t *>(self + index * 4 + 0x20);
 }
@@ -715,91 +713,6 @@ float __cdecl RenderContextFloatAt(const uint8_t *self, int index) {
 int32_t __cdecl ShortAt(const uint8_t *p, int offset) {
     return *reinterpret_cast<const int16_t *>(p + offset);
 }
-
-}  // namespace
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000ee130() {
-    __asm {
-        push ecx
-        push edx
-        push eax
-        push ecx
-        call RenderContextWordAt
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-
-// The original leaves EAX's upper bytes (the index) under AL = 1.
-// AUTOLTCG
-__declspec(naked) void FUN_000ee140() {
-    __asm {
-        push ecx
-        push edx
-        push eax
-        push dword ptr [esp + 0x10]
-        push eax
-        push ecx
-        call RenderContextSetFloatAt
-        add esp, 0xc
-        mov ecx, eax
-        pop eax
-        mov al, cl
-        pop edx
-        pop ecx
-        ret
-    }
-}
-
-// AUTOLTCG
-__declspec(naked) void FUN_000ee150() {
-    __asm {
-        push ecx
-        push edx
-        push eax
-        push ecx
-        call RenderContextFloatAt
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-
-// AUTOLTCG
-__declspec(naked) void FUN_000ee170() {
-    __asm {
-        push ecx
-        push edx
-        push 4
-        push eax
-        call ShortAt
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-
-// AUTOLTCG
-__declspec(naked) void FUN_000ee180() {
-    __asm {
-        push ecx
-        push edx
-        push 6
-        push eax
-        call ShortAt
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // TextureRenderContext

@@ -130,7 +130,6 @@ static_assert(offsetof(RHighLevelLightManager, lightCount) == 0x80 &&
 
 // FUN_0007e520: an effect light's brightness, blinking (the original takes the effect in ESI: FUN_0007e520 is the
 // adaptor, LightEffectBrightness the C++ under it). Unrounded, as the original leaves it on the x87 stack.
-void FUN_0007e520();
 double LightEffectBrightness(const ArticleEffect *effect);
 
 // ---- RLightManager
@@ -192,7 +191,6 @@ LAYOUT_32(offsetof(RLightManager, specularMatrix) == 0x20 && offsetof(RLightMana
 
 // FUN_0007eed0: a light set's first three directions from its angles (the original takes the set in EAX and the
 // angles in EBX: FUN_0007eed0 is the adaptor, SetLightDirections the C++ under it)
-void FUN_0007eed0();
 void SetLightDirections(LightBlock *info, const RLightAngles *angles);
 
 // The instance (RLightManager::Init makes it)

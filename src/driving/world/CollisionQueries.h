@@ -54,6 +54,5 @@ void MakeStripFace(StripTriangle *face, const StripVertex *triangle, const MATRI
 void StripTriangleNormal(const StripVertex *triangle, Coord3 *normal);
 
 extern StripVertex LargeStripScratch[402];
-void FUN_000beff0();
 
 #endif // DRIVING_WORLD_COLLISIONQUERIES_H_

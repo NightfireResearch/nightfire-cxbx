@@ -18,16 +18,11 @@ short DroneWeap_FireDelay(DCVars_tag *dcv);
 short DroneWeap_BurstLength(DCVars_tag *dcv);
 void DroneWeap_NextBulletTimeNewBurst(DCVars_tag *dcv);
 
-// The originals take the DCVars in EDI (DoFiring, NextBulletTime), EAX (ManageBurstCount) or the drone in ESI
-// (BurstDelay): the game reaches the adaptors, C++ calls the cores.
-bool _DroneWeap_DoFiring(DCVars_tag *dcv);
-void DroneWeap_DoFiring(void);
-void _DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start);
-void DroneWeap_NextBulletTime(char newBurst, char start);
-bool _DroneWeap_ManageBurstCount(DCVars_tag *dcv);
-void DroneWeap_ManageBurstCount(void);
-uint _DroneWeap_BurstDelay(Drone_tag *drone);
-void DroneWeap_BurstDelay(void);
+// Firing
+bool DroneWeap_DoFiring(DCVars_tag *dcv);
+void DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start);
+bool DroneWeap_ManageBurstCount(DCVars_tag *dcv);
+uint DroneWeap_BurstDelay(Drone_tag *drone);
 
 // The opponent
 bool DroneWeap_AimTarget_IsOpponent(char checkAngle, char keepTurning, DCVars_tag *dcv);

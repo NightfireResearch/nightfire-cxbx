@@ -167,8 +167,6 @@ void DrawArticleModel(CARP::Instance *instance, const WorldArticle *article, con
 // The article's effects that draw with its model (its glares): the core of DrawGroupDrawEffects, which takes the
 // article in EAX and the transform in EDI (the name is ours)
 void DrawArticleEffects(const WorldArticle *article, const MATRIX4 *transform, float distance);
-void DrawGroupDrawModel();              // naked: EDX instance, EDI article, the rest on the stack
-void DrawGroupDrawEffects();            // naked: EAX article, EDI transform, the distance on the stack
 // A draw group's kept draw; `unused` is passed 0
 void DrawGroupDrawInstance(const MATRIX4 *transform, CARP::Instance *instance, uint32_t distance,
                            RSceneObj *sceneObj, int unused);                                    // 0x0007ddd0
@@ -234,6 +232,5 @@ void RInstanceRender_SetShadowInformation(const ShadowMapInfo *info);           
 void RInstanceRender_SetDefaultShadowInformation();                                             // 0x0007dbc0
 // A shadow map's bilinear sample at (u, v) in pixels, mapped to (sample - 1) / 14; unrounded
 double GetTextureVal(float u, float v, const ShadowMapImage *image);                            // 0x0007e040
-
 
 #endif // DRIVING_RENDER_RENDERER_H_

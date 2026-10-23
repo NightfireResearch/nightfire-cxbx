@@ -2,8 +2,8 @@
 #define FS_H_
 
 #include "../actionhelpers.h"
-
 int FS_MatchFilenameToHeader(char* filename);
+
 void FS_Init(void);
 bool FS_StateMachineIterate(void);
 int FS_GetFileSize(char *filename);

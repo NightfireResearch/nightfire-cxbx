@@ -109,19 +109,12 @@ void Copter_Register(obj_tag *obj, ushort part, void *context);
 void Copter_Update(obj_tag *obj);
 void Copter_InitConeCos(void);
 void Copter_InitConeSin(void);
-// The register-argument originals' entries, and the C++ under them
-COPTERPATH* _Copter_CreatePath(CopterPlacement *keys);
-void Copter_CreatePath(void);
-COPTERPATH* _Copter_NextPath(COPTER *copter);
-void Copter_NextPath(void);
-bool _Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly);
-void Copter_Move(void);
-bool _Copter_FireGun(COPTER *copter, obj_tag *obj);
-void Copter_FireGun(void);
-bool _Copter_FireMissile(COPTER *copter, obj_tag *obj);
-void Copter_FireMissile(void);
-bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj);
-void Copter_SeesPlayer(void);
+COPTERPATH* Copter_CreatePath(CopterPlacement *keys);
+COPTERPATH* Copter_NextPath(COPTER *copter);
+bool Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly);
+bool Copter_FireGun(COPTER *copter, obj_tag *obj);
+bool Copter_FireMissile(COPTER *copter, obj_tag *obj);
+bool Copter_SeesPlayer(obj_tag *player, obj_tag *obj);
 
 extern LLISTINFO_tag CopterList;
 extern LLISTINFO_tag CopterPaths;

@@ -303,7 +303,7 @@ uchar AnalogStickMapping[129] = {
 #define CONTROLSTYLE_GOLDENEYE_STICK 5
 
 // The stick (x, y) with its length passed through AnalogStickMapping, its direction kept
-void _StickCompensation2(float *x, float *y) {
+void StickCompensation2(float *x, float *y) {
     double length = sqrt((double)*y * *y + (double)*x * *x);
     if (length <= STICK_DEAD_ZONE && length >= -STICK_DEAD_ZONE)
         return;
@@ -318,24 +318,6 @@ void _StickCompensation2(float *x, float *y) {
     *x = (float)(scale * *x);
     *y = (float)(scale * *y);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes x in EDI and y in ESI
-// AUTOLTCG
-__declspec(naked) void StickCompensation2(void) {
-    _asm {
-        push ecx
-        push edx
-        push esi
-        push edi
-        call _StickCompensation2
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // With y near the centre, x past the diagonal goes to its end; then, with x as it was near the centre, y does
 // AUTOINJECT
@@ -372,11 +354,11 @@ void Input_Update(void) {
         PlayerInput *input = &PlayerInputs[p];
         float *channel = input->fChannels;
         if (input->controlStyle == CONTROLSTYLE_DRNO_STICK || input->controlStyle == CONTROLSTYLE_GOLDENEYE_STICK) {
-            _StickCompensation2(&channel[3], &channel[4]);
+            StickCompensation2(&channel[3], &channel[4]);
             StickCompensation3(&channel[2], &channel[0]);
         } else {
-            _StickCompensation2(&channel[3], &channel[4]);
-            _StickCompensation2(&channel[0], &channel[5]);
+            StickCompensation2(&channel[3], &channel[4]);
+            StickCompensation2(&channel[0], &channel[5]);
             StickCompensation3(&channel[2], &channel[1]);
         }
         if (input->inverted) {

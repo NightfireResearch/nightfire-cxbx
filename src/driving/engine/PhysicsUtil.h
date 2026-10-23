@@ -88,7 +88,6 @@ bool Util_CollideRayWithStretchedSphere(const Coord4 *origin, const Coord4 *dire
 // 1.1 x (radius + the movement's length, at most 1).
 void Util_FitColliderRegion(uint8_t moved, const Coord4 *position, Coord4 *centre, float *regionRadius,
                             float radius, const Coord4 *previous);
-void FUN_000bd690();
 
 // std::allocator<T>::deallocate for the barrier lists' 40-byte entries (0x000bd730, BarrierList::InsertN's): back to
 // the fast pool. Called as a member of the (empty) allocator; it never reads ECX.

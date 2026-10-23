@@ -55,10 +55,8 @@ void NDrone2_Steer(DCVars_tag *dcv, float angle);
 bool DroneMove_NoBunching(DCVars_tag *dcv);
 void DroneMove_SetBoundryFlags(DCVars_tag *dcv);
 
-// The obstacle test. The original takes the obstacle drone in EAX and the test in ESI: the game reaches the adaptor,
-// C++ calls the core.
-bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_tag *eval);
-void NDrone2_EvaluateObstacle(void);
+// The obstacle test
+bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_tag *eval);
 bool SphereSphereSweep(float radius1, _VECTOR *from1, _VECTOR *to1, float radius2, _VECTOR *from2, _VECTOR *to2,
                        float *first, float *second);
 bool SolveQuadratic(float a, float b, float c, float *root1, float *root2);

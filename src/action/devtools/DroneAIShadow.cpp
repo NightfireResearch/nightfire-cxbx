@@ -678,7 +678,7 @@ void TestStateMachine() {
                     return 0u;
                 },
                 [] {
-                    _Drone_SM_RouteMsgDCV(&world.dcv, &world.msg);
+                    Drone_SM_RouteMsgDCV(&world.dcv, &world.msg);
                     return 0u;
                 });
     }
@@ -1056,7 +1056,7 @@ void TestTalk() {
                     return 0u;
                 },
                 [] {
-                    _NDrone2_HandleTalking(&world.dcv);
+                    NDrone2_HandleTalking(&world.dcv);
                     return 0u;
                 });
     }

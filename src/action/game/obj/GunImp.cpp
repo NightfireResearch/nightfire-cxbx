@@ -240,8 +240,8 @@ void GunImp_Update(obj_tag *gunObj) {
     else
         pitchTarget = gunImp->pitchTarget;
     gunImp->pitchTarget = pitchTarget;
-    gunImp->pitch = _moveTowardsValue(gunImp->pitch, pitchTarget, 0.15f);
-    gunImp->yaw = _moveTowardsValue(gunImp->yaw, gunImp->yawTarget, 0.15f);
+    gunImp->pitch = moveTowardsValue(gunImp->pitch, pitchTarget, 0.15f);
+    gunImp->yaw = moveTowardsValue(gunImp->yaw, gunImp->yawTarget, 0.15f);
 
     // The emplacement turns in yaw from where it was placed, the gun in pitch from there
     _MATRIX yawMtx, pitchMtx;

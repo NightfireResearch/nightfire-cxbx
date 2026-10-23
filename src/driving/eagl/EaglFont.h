@@ -33,7 +33,6 @@ extern FontDriverTable EaglFontDriver;
 
 // 0x000eea50, unreferenced: D3DDevice_SetRenderState inlined as a routine of its own, the state in ESI and the
 // value in EDI (one of the three "render-state dump blocks").
-void EAGLFont_SetRenderStateEsiEdi();
 
 namespace EAGL {
 

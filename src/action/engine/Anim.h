@@ -462,11 +462,8 @@ void AnimLoadFile(HASHCODE hashcode, char noProcess);
 void AnimProcessSeqData(HASHCODE hashcode);
 void AnimPostLoadInit(void);
 void AnimSkeletonProcess(char *data);
-// Register-argument adaptor (hashcode in EAX) patched over the original; never call it from C.
 void AnimProcessSkinData(HASHCODE hashcode);
-// The C body of AnimProcessSkinData
-void _AnimProcessSkinData(HASHCODE hashcode);
-HASHCODE _AnimSleeveGetEntity(uint idx);
+HASHCODE AnimSleeveGetEntity(uint idx);
 
 sAnimScript_tag* AnimListBuild(obj_tag *obj, uint criteria, uint value, AnimListFunc callback, uint mode);
 void AnimListDelete(obj_tag *obj);
@@ -494,7 +491,7 @@ int AnimObjectUpdateThunk(obj_tag *obj);
 void Discrete_Delete(obj_tag *obj);
 sAnimRawSeq_tag* AnimScriptPeekSeq(HASHCODE script);
 void AnimDebugCreate(void);
-float _AnimObjectInitialPose(obj_tag *obj);
+float AnimObjectInitialPose(obj_tag *obj);
 bool AnimObjectIsClose(obj_tag *obj, uint limit);
 void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer);
 void AnimObjectSetSleeveType(obj_tag *obj, int sleeveNum);
@@ -524,31 +521,8 @@ sAnimSet_tag* AnimSetAppend(obj_tag *obj, HASHCODE *list, float a, float b);
 void AnimSetUpdate(obj_tag *obj, sAnimSet_tag *set, float speed, float forward, float maxForward, float side,
                    float maxSide);
 
-// Register-argument adaptors patched over the originals (the registers in Anim.cpp); never call them from C.
-HASHCODE AnimSleeveGetEntity(void);
-void loadAnimFileCapturingSize(void);
-void AnimProcessScriptData(void);
-void AnimSeqNew(void);
-void AnimSeqGetInfo(void);
-void AnimSeqSet(void);
-void AnimScriptNew(void);
-void AnimScriptInit(void);
-void AnimScriptEnd(void);
-void AnimDistanceTableDistanceToFrame2(void);
-AnimDistanceTable* _AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int noWrap);
-AnimDistanceTable* _AnimDistanceTableGet(HASHCODE hashcode);
-AnimDistanceTable* AnimDistanceTableCreate(void);
-AnimDistanceTable* AnimDistanceTableGet(void);
-void AnimScriptTick(void);
-void AnimFacialUpdate(void);
-void AnimFacialBlend(void);
-void AnimFrameBlend(void);
-void AnimFrameSet(void);
-void AnimSeqTick(void);
-HASHCODE maybeFixupSkinHashcode(void);
-void AnimObjectInitialPose(void);
-void AnimTagAllocAndGetUnique(void);
-void AnimSetInit(void);
+AnimDistanceTable* AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int noWrap);
+AnimDistanceTable* AnimDistanceTableGet(HASHCODE hashcode);
 
 extern const HASHCODE FacialAnims[5], FacialAnimsAltSkeleton[5];
 extern const AnimCollBone HumanCollisionBones[17], AstronautCollisionBones[17];

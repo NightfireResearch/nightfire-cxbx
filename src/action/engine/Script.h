@@ -219,37 +219,20 @@ LAYOUT_32(offsetof(SCRIPTINFO, playerEnableFlags) == 0xaae, "Offset of playerEna
 extern HASHCODE ScriptCam;
 
 void Script_Free(SCRIPTINFO *param_1);
-// The register-convention entries (Script.cpp says where each takes its arguments) and their C bodies
-void Script_Run(void);
-void _Script_Run(SCRIPTINFO *scriptInfo);
-void Script_CameraStart(void);
-void _Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_CreateEntity(void);
-obj_tag* _Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placementType);
-void Script_LightStart(void);
-void _Script_LightStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_SpriteStart(void);
-void _Script_SpriteStart(SSTREAM *stream);
-void Script_StreamEnd(void);
-void _Script_StreamEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_GetInterp(void);
-void _Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, float *scaleOut, uint *colourOut,
-                       char concat, float posScale, ushort mode, ushort firstKey, ushort lastKey);
-void Script_UpdateCamera(void);
-void _Script_UpdateCamera(SCRIPTCAMERA *camera);
-void Script_SoundStart(void);
-void _Script_SoundStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_SubScriptStart(void);
-void _Script_SubScriptStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_EventHandler(void);
-void _Script_EventHandler(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_AnimStart(void);
-void _Script_AnimStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
-void Script_FindKey(void);
-int _Script_FindKey(KEYED_POSROT *keys, int count, float frame);
-void Script_InterpLinear(void);
-void Script_InterpSpline(void);
-void Script_ConcatParents(void);
+void Script_Run(SCRIPTINFO *scriptInfo);
+void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+obj_tag* Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placementType);
+void Script_LightStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_SpriteStart(SSTREAM *stream);
+void Script_StreamEnd(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_GetInterp(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *mtx, float *scaleOut, uint *colourOut,
+                      char concat, float posScale, ushort mode, ushort firstKey, ushort lastKey);
+void Script_UpdateCamera(SCRIPTCAMERA *camera);
+void Script_SoundStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_SubScriptStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_EventHandler(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+void Script_AnimStart(SCRIPTINFO *scriptInfo, SSTREAM *stream);
+int Script_FindKey(KEYED_POSROT *keys, int count, float frame);
 
 void GetSplineWeights(int *keys, float *weights, float frame, KEYED_POSROT *base, int count);
 void Script_GetLinearWeights(int *keys, float *weights, float frame, KEYED_POSROT *base, int count);

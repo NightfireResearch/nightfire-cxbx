@@ -29,12 +29,9 @@ static_assert(sizeof(AIPathRecord) == 0xac, "AIPathRecord is 0xac bytes");
 
 void AIPath_Init(void);
 void AIPath_Parse(AIPathBlock *block);
-void _AIPath_Prepare(AIPath_tag *path);
-void AIPath_Prepare(void);
-void _AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record);
-void AIBounds_Link2Cel(void);
-void _AIBounds_Prepare(AIBound_tag *bound);
-void AIBounds_Prepare(void);
+void AIPath_Prepare(AIPath_tag *path);
+void AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record);
+void AIBounds_Prepare(AIBound_tag *bound);
 void AIPath_BindNodes(void);
 
 #endif // AIPATH_H_

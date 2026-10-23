@@ -63,23 +63,23 @@ void MP_ObjectUpdate(obj_tag *gameObj) {
     MPOBJECT *mpObj = (MPOBJECT *)gameObj->extraObjectData;
     switch (mpObj->type) {
     case CTF_FLAG:
-        _MP_FlagUpdate(gameObj, mpObj, false);
+        MP_FlagUpdate(gameObj, mpObj, false);
         break;
     case UPLINK:
-        _MP_UplinkUpdate(mpObj, gameObj);
+        MP_UplinkUpdate(mpObj, gameObj);
         break;
     case DEMOLITION:
-        _MP_DemolitionProtectionUpdate(mpObj, PHOENIX, gameObj);
+        MP_DemolitionProtectionUpdate(mpObj, PHOENIX, gameObj);
         break;
     case BLUEPRINT:
-        _MP_BluePrintUpdate(mpObj, false, gameObj);
+        MP_BluePrintUpdate(mpObj, false, gameObj);
         break;
     case GOLDENEYE_KEY:
     case GOLDENEYE_CRYSTAL:
-        _MP_GoldenEyeUpdate(mpObj, false, gameObj);
+        MP_GoldenEyeUpdate(mpObj, false, gameObj);
         break;
     case PROTECTION:
-        _MP_DemolitionProtectionUpdate(mpObj, MI6, gameObj);
+        MP_DemolitionProtectionUpdate(mpObj, MI6, gameObj);
         break;
     case KOH:
         MP_KOHUpdate(gameObj);
@@ -96,7 +96,7 @@ void MP_ObjectUpdate(obj_tag *gameObj) {
 // The demolition or protection objective: its script player takes the damage and curState is its health.
 // defenders (our name) is the team that must keep it whole; it scores if the time runs out, the other team if it
 // is destroyed. subState 1 once either has happened.
-void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj) {
+void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj) {
     MP_OBJ_EXT *ext = &Demolition;
     if (mpObj->type != DEMOLITION)
         ext = &Protection;
@@ -173,21 +173,6 @@ void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *
         MP_sendTeamBotMessage(attackers, 0x41, obj, 0, 0);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders) {
-    _asm {
-        push ebx                    // gameObj
-        movzx eax, ax               // defenders
-        push eax
-        push dword ptr [esp + 12]   // mpObj
-        call _MP_DemolitionProtectionUpdate
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // The weapon a blueprint brings its holder: the first of the set's weapons[1..4] it does not hold, after the slot
 // of the one it gives up. With the professional option it gives up the first weapon it holds from id 2 up, other
@@ -288,7 +273,7 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
         MPGame.players[holderIdx].points += 1.0f;
 
     Mat_Copy(&BluePrints[(ushort)Rand_Rand(BluePrintCount)].mtx, &mpObj->resetMtx);
-    _MP_ResetMPObject(mpObj, 0, gameObj, false);
+    MP_ResetMPObject(mpObj, 0, gameObj, false);
 
     const short *weapons = PickupMatrix[MPSettings.weaponSet];
     obj_tag *holder = mpObj->holder;

@@ -34,16 +34,10 @@ LAYOUT_32(sizeof(SubInfo) == 0x44, "SubInfo is 0x44 bytes");
 obj_tag * Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 void Sub_Update(obj_tag *obj);
 void Sub_ApplyDamage(obj_tag *obj, float damage);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void _Sub_Follow(obj_tag *obj, SubInfo *sub);
-void Sub_Follow(void);              // EDI the sub, ESI its data
-void _Sub_Ram(obj_tag *obj, SubInfo *sub);
-void Sub_Ram(void);                 // EAX the sub's data; the sub
-void _Sub_Laser(obj_tag *obj, SubInfo *sub);
-void Sub_Laser(void);               // EBX the sub, ESI its data
-void _Sub_FireMissiles(obj_tag *obj, SubInfo *sub);
-void Sub_FireMissiles(void);        // ESI the sub, EDI its data
-void _Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub);
-void Sub_DeployTorpedoes(void);     // EAX the sub, EDI its data
+void Sub_Follow(obj_tag *obj, SubInfo *sub);
+void Sub_Ram(obj_tag *obj, SubInfo *sub);
+void Sub_Laser(obj_tag *obj, SubInfo *sub);
+void Sub_FireMissiles(obj_tag *obj, SubInfo *sub);
+void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub);
 
 #endif // SUB_H_

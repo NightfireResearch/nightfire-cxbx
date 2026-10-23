@@ -109,39 +109,10 @@ void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {
   mOut->m[14] = vecIn[2];
 }
 
-// The rotation of a quaternion (x, y, z, w), Quat_QuatTransToMat's: the body of Quat_QuatToMat - see the wrapper below
-// for why the two are split.
-void _Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
+// The rotation of a quaternion (x, y, z, w), Quat_QuatTransToMat's
+void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
   QuatRotation(param_1, param_2);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original (0x000d5800) only ever touches EAX and the x87 stack, and the game's own callers were compiled
-// knowing that: KeyFrame_Interp and Spline_Interp keep the output matrix in ECX across the call and then write
-// the translation through it (mov [ecx+0x30], ...). Our compiled body is entitled to clobber ECX and EDX, and
-// clang leaves the quaternion pointer in ECX - so the translation went 0x30 bytes past a stack local instead,
-// onto Spline_Interp's own return address, and loading a level with a swinging door (Door_Create ->
-// Door_SetupSwing -> Spline_Interp) jumped to a float. ECX and EDX are saved here so any caller keeps what it
-// had.
-// AUTOLTCG
-void __declspec(naked) Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
-  _asm {
-    push ecx
-    push edx
-    push dword ptr [esp + 16]   // param_2
-    push dword ptr [esp + 16]   // param_1
-    call _Quat_QuatToMat
-    add esp, 8
-    pop edx
-    pop ecx
-    ret
-  }
-}
-#else
-void Quat_QuatToMat(quaternion_tag *param_1, _MATRIX *param_2) {
-    _Quat_QuatToMat(param_1, param_2);
-}
-#endif
 
 // Convert a rotation matrix to a quaternion (Shepperd's method), summed on the x87
 // AUTOINJECT
@@ -426,7 +397,7 @@ void Matrix_SetTrans(_VECTOR *vec, _MATRIX *mtx) {
 
 // To unit length by the reciprocal of the length (both unrounded on the x87); a zero length gives zero (a NaN one
 // goes through)
-static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
+void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
   double magnitude = Vec_Magnitude(vIn);
   if (magnitude == 0.0) {
     vOut->z = 0.0;
@@ -441,58 +412,12 @@ static void Vec_NormaliseBody(_VECTOR *vOut, _VECTOR *vIn) {
   vOut->z = (float)(rcpMag * vIn->z);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Mat_LookAt and
-// 0x000d8590 keep EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
-// AUTOINJECT
-void __declspec(naked) Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        call Vec_NormaliseBody
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#else
-void Vec_Normalise(_VECTOR *vOut, _VECTOR *vIn) {
-    Vec_NormaliseBody(vOut, vIn);
-}
-#endif
-
 // The length is the unrounded one
-static double Vec_NormaliseLenBody(_VECTOR *output, _VECTOR *input) {
+double Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
   double len = Vec_Magnitude(input);
   Vec_Normalise(output,input);
   return len;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original writes no EDX (only ECX, with the input's address), and its callers rely on it: Cel_ObjectLeftCel keeps
-// EDX across the call. So the game reaches this through an entry that keeps both (tools/caller_saved.py).
-// AUTOINJECT
-double __declspec(naked) Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        call Vec_NormaliseLenBody
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#else
-double Vec_NormaliseLen(_VECTOR *output, _VECTOR *input) {
-    return Vec_NormaliseLenBody(output, input);
-}
-#endif
 
 // AUTOINJECT
 void Vec_Subtract(const _VECTOR *a, const _VECTOR *b, _VECTOR *vOut) {
@@ -1035,7 +960,7 @@ static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_A) == 0x3f87a38e, "not t
 static_assert(std::bit_cast<uint32_t>(MAYBE_ATAN2_COEFF_B) == 0x3e8ae988, "not the original's constant");
 
 // Fast rational atan2 approximation (max error ~0.28 degrees), on the x87 and left unrounded
-static double maybeAtan2Body(float y, float x) {
+double maybeAtan2(float y, float x) {
   double result;
 
   if (x == y) {
@@ -1060,29 +985,6 @@ static double maybeAtan2Body(float y, float x) {
   }
   return result;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original writes neither ECX nor EDX, and its callers rely on it: Vec_Cartesian_2_Spherical keeps ECX across the call. So the
-// game reaches this through an entry that keeps them (tools/caller_saved.py).
-// AUTOINJECT
-double __declspec(naked) maybeAtan2(float y, float x) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        call maybeAtan2Body
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#else
-double maybeAtan2(float y, float x) {
-    return maybeAtan2Body(y, x);
-}
-#endif
 
 // Align a matrix so its forward row faces "direction", with "param_3" as the preferred up hint (falling back to
 // "param_4" when direction is nearly parallel to param_3). The dot and cross products are taken on the x87.

@@ -103,7 +103,7 @@ void Copter_Delete(obj_tag *obj) {
 // AUTOINJECT
 obj_tag* Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     CopterPlacement *keys = (CopterPlacement *)lvl;
-    COPTERPATH *path = _Copter_CreatePath(keys);
+    COPTERPATH *path = Copter_CreatePath(keys);
     if (keys->kind != 0)
         return NULL;
 
@@ -185,7 +185,7 @@ void Copter_InitConeSin(void) {
 }
 
 // A path's speed puts its frames into its length (key 10, or the placement's own), at 60 Hz
-COPTERPATH* _Copter_CreatePath(CopterPlacement *keys) {
+COPTERPATH* Copter_CreatePath(CopterPlacement *keys) {
     COPTERPATH *path = (COPTERPATH *)Mem_Malloc(sizeof(COPTERPATH), 0x3304, 0);
     memset(path, 0, sizeof(COPTERPATH));
     uint length = keys->length2 != 0 ? keys->length2 : keys->length;
@@ -202,26 +202,9 @@ COPTERPATH* _Copter_CreatePath(CopterPlacement *keys) {
     return path;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The placement in EBX
-// AUTOLTCG
-void __declspec(naked) Copter_CreatePath(void) {
-    _asm {
-        push ecx
-        push edx
-        push ebx
-        call _Copter_CreatePath
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Another route of the group at the end of one: the more it is hurt the further down the list, and past half of
 // what makes it leave, any at random
-COPTERPATH* _Copter_NextPath(COPTER *copter) {
+COPTERPATH* Copter_NextPath(COPTER *copter) {
     double hurt = copter->damage / ((double)copter->maxDamage - (double)copter->maxDamage * 0.1f);
     float pick = (float)(copter->paths * hurt);
     uint next = !(hurt >= 0.5f) ? Ftol((double)pick + 0.5f) : Rand_Rand(copter->paths);
@@ -238,26 +221,9 @@ COPTERPATH* _Copter_NextPath(COPTER *copter) {
     return copter->path;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The helicopter in ESI
-// AUTOLTCG
-void __declspec(naked) Copter_NextPath(void) {
-    _asm {
-        push ecx
-        push edx
-        push esi
-        call _Copter_NextPath
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Along its path (only the position with positionOnly), the script's models with it; at the path's end another
 // route, and true. True with no path.
-bool _Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
+bool Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
     COPTERPATH *path = copter->path;
     bool ended = false;
     if (path == NULL)
@@ -277,34 +243,15 @@ bool _Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
         ended = true;
         if (copter->channel == 100)
             obj->flags |= 1;
-        copter->path = _Copter_NextPath(copter);
+        copter->path = Copter_NextPath(copter);
     }
     SP_SetPosRot(copter->scriptPlayer, &obj->transformMatrix);
     return ended;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The helicopter in EAX; the object and the flag on the stack
-// AUTOLTCG
-void __declspec(naked) Copter_Move(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        push eax
-        call _Copter_Move
-        add esp, 12
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The gun and its flash turn to just above player 0; every sixth frame a shot. Neither the player nor the flash is
 // checked before the turn.
-bool _Copter_FireGun(COPTER *copter, obj_tag *obj) {
+bool Copter_FireGun(COPTER *copter, obj_tag *obj) {
     obj_tag *gun = copter->gun;
     obj_tag *flash = copter->flash;
     _VECTOR target;
@@ -336,27 +283,9 @@ bool _Copter_FireGun(COPTER *copter, obj_tag *obj) {
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The helicopter in EAX; the object on the stack
-// AUTOLTCG
-void __declspec(naked) Copter_FireGun(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push eax
-        call _Copter_FireGun
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // A missile from either launcher, once a second at difficulty 1 (DiffMod's seconds); on one level now and then
 // straight at player 0
-bool _Copter_FireMissile(COPTER *copter, obj_tag *obj) {
+bool Copter_FireMissile(COPTER *copter, obj_tag *obj) {
     obj_tag *launcher = (Rand_Rand(0x86e6) & 1) ? copter->launchers[0] : copter->launchers[1];
     if (launcher == NULL)
         return false;
@@ -377,26 +306,8 @@ bool _Copter_FireMissile(COPTER *copter, obj_tag *obj) {
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The helicopter in EAX; the object on the stack
-// AUTOLTCG
-void __declspec(naked) Copter_FireMissile(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push eax
-        call _Copter_FireMissile
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Within 1000 of the helicopter, in its cone, and in sight of a point 4 ahead of it
-bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
+bool Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
     if (player == NULL)
         return false;
     _VECTOR *at = (_VECTOR *)&obj->transformMatrix.m[12];
@@ -411,24 +322,6 @@ bool _Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
     cel_tag *cel = build_FindCel(&ahead, glb_world);
     return Collide_LineOfSight(&ahead, &player->centrePoint, cel, obj, player, 0x2e);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The player in EDI; the helicopter's object on the stack
-// AUTOLTCG
-void __declspec(naked) Copter_SeesPlayer(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push edi
-        call _Copter_SeesPlayer
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Shown and on its way once its channel is on; patrols, attacks while it sees player 0, takes its parts' shots, smokes
 // past half its endurance, and past all of it leaves (or is blown up on two levels)
@@ -470,13 +363,13 @@ void Copter_Update(obj_tag *obj) {
         break;
 
     case COPTER_PATROL:
-        _Copter_Move(copter, obj, 0);
+        Copter_Move(copter, obj, 0);
         if (copter->channel == 100)
             break;
         obj->subState++;
         if ((double)(short)FRAME_RATE_INT * 4 / DiffMod > (double)(short)obj->subState)
             break;
-        if (_Copter_SeesPlayer(player, obj)) {
+        if (Copter_SeesPlayer(player, obj)) {
             obj->curState = COPTER_ATTACK;
             obj->subState = 0;
             copter->attackDamage = 0.0f;
@@ -486,16 +379,16 @@ void Copter_Update(obj_tag *obj) {
 
     case COPTER_ATTACK: {
         Music_Event(2, 1);
-        _Copter_Move(copter, obj, 0);
+        Copter_Move(copter, obj, 0);
         obj->subState++;
         if (CopterAttackMode & 1)
-            _Copter_FireGun(copter, obj);
+            Copter_FireGun(copter, obj);
         else
-            _Copter_FireMissile(copter, obj);
+            Copter_FireMissile(copter, obj);
         bool stay = false;
         if (player != NULL && !((double)((short)FRAME_RATE_INT * 5) * DiffMod < (double)(short)obj->subState) &&
             !(copter->attackDamage > 100.0f))
-            stay = _Copter_SeesPlayer(player, obj);
+            stay = Copter_SeesPlayer(player, obj);
         if (!stay) {
             obj->subState = 0;
             obj->curState = COPTER_PATROL;
@@ -505,7 +398,7 @@ void Copter_Update(obj_tag *obj) {
     }
 
     case COPTER_LEAVING:
-        if (!_Copter_Move(copter, obj, 0))
+        if (!Copter_Move(copter, obj, 0))
             break;
         copter->path = copter->exitPath;
         copter->pathFrame = 0.0f;
@@ -514,7 +407,7 @@ void Copter_Update(obj_tag *obj) {
         break;
 
     case COPTER_GOING:
-        if (!_Copter_Move(copter, obj, 0))
+        if (!Copter_Move(copter, obj, 0))
             return;
         SetChannel(copter->doneChannel);
         obj->flags |= 1;

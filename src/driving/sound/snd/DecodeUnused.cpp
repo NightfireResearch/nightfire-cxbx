@@ -241,20 +241,6 @@ void MutLpcCoefficients(float *b, const float *k) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// 0x00146e00: EBX = out, [esp+4] = the coefficients; keeps EBX, ESI, EDI and EBP, as the original does.
-// AUTOLTCG
-__declspec(naked) void FUN_00146e00() {
-    __asm {
-        push dword ptr [esp + 4]
-        push ebx
-        call MutLpcCoefficients
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // groups x 12 samples of the frame from output index `first`, through the 12-pole filter in place; the filter's
 // memory is a ring of 12 in `synth`, each output overwriting the oldest.
 void MutSynthesise(int first, SND::MutState *s, int groups) {
@@ -688,21 +674,6 @@ void MutSynthesise(int first, SND::MutState *s, int groups) {
         } while (--left != 0);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// 0x00146f00: EAX = first output index, ESI = the state, [esp+4] = groups of 12; keeps EBX, ESI, EDI and EBP.
-// AUTOLTCG
-__declspec(naked) void FUN_00146f00() {
-    __asm {
-        push dword ptr [esp + 4]
-        push esi
-        push eax
-        call MutSynthesise
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // One frame: the coefficients, four subframes of excitation into signal[324..755], the history moved down, then
 // the synthesis filter over the frame in four steps.

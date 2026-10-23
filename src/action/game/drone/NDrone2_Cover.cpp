@@ -109,26 +109,11 @@ static void SetTimer(DroneTimer *timer, uint dueFrame) {
 }
 
 // Anim state 5 the drone has no script for becomes 7, or failing that 10; any other is kept as it is
-ushort _DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state) {
+ushort DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state) {
     if (!DroneAnim_CanDoAnimState(dcv, state, 0) && state == DANIM_CROUCH_AIM)
         return DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_AIM_ALT, 0) ? DANIM_CROUCH_AIM_ALT : DANIM_STAND_AIM;
     return state;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the dcv in ESI and the anim state in DI.
-// AUTOLTCG
-void __declspec(naked) DroneAnim_ValidateCoverAnim(void) {
-    _asm {
-        movzx eax, di
-        push eax
-        push esi
-        call _DroneAnim_ValidateCoverAnim
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The anim state for the drone's cover step, in a mode at a corner (the mode's list for the corner's side), or at a
 // low node
@@ -158,16 +143,16 @@ bool DroneAnim_CoverAnim(DCVars_tag *dcv, uchar step, short endState) {
             drone->coverFlags &= DRONE_COVER_SIDE_MASK;
             dcv->drone->coverMode = 0;
             dcv->drone->coverStep = COVER_STEP_ENTER;
-            anim = _DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim1);
+            anim = DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim1);
             break;
         case COVER_STEP_IDLE:
         case COVER_STEP_RETURN:
             drone->coverStep = step;
-            anim = _DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim1);
+            anim = DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim1);
             break;
         case COVER_STEP_AIM:
             drone->coverStep = step;
-            anim = _DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim2);
+            anim = DroneAnim_ValidateCoverAnim(dcv, drone->coverNode->lowAnim2);
             break;
         case COVER_STEP_FIRE:
             drone->coverStep = step;

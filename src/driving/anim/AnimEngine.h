@@ -98,7 +98,6 @@ void EvaluateInstance(CARP::Instance *instance, MATRIX4 *out);                  
 
 // DeactivateSystem (register arguments: EDI the active list's index, ECX the frame, the flag on the stack; EAX the
 // index - 1): the adaptor over DeactivateActiveSystem
-void DeactivateSystem();                                                                        // 0x00077b60
 
 } // namespace RAnimEngine
 
@@ -216,7 +215,6 @@ void Sort(uint8_t *first, uint8_t *last, int ideal);                            
 CARP::AnimInfo* AnimInfoLowerBound(CARP::AnimInfo *first, CARP::AnimInfo *last, const CARP::AnimInfo *value,
                                    int *);                                                      // 0x00076c60
 // FUN_000776d0 (register arguments: EAX the count of animations, EDX the article): the adaptor over FindAnimInfo
-void FUN_000776d0();                                                                            // 0x000776d0
 // The article's animation for (stimulus, state) among its first `count`, or NULL
 CARP::AnimInfo* FindAnimInfo(const WorldArticle *article, uint32_t count, uint8_t state, uint8_t stimulus);
 

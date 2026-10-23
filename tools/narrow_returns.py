@@ -46,13 +46,13 @@ def narrow_ports(by_name=None):
                 found[int(m.group(1), 16)] = (gc.rel(path), lines[i + 1].strip())
             if by_name is None or not re.match(r"\s*//\s*(AUTOINJECT|AUTOLTCG)\b", lines[i]):
                 continue
-            # The definition follows the tag, perhaps after more comment lines; an AUTOLTCG adaptor's C body is
-            # the same name with a leading underscore
+            # The definition follows the tag, perhaps after more comment lines; an entry in src/<engine>/inject
+            # (Asm_<name>) patches its name
             for j in range(i + 1, min(i + 4, len(lines))):
                 if lines[j].strip().startswith("//"):
                     continue
                 d = re.match(r"\s*(?:static\s+)?(?:inline\s+)?(?:__declspec\(naked\)\s+)?" + NARROW +
-                             r"\s+(?:__\w+\s+)?_?(\w+)\s*\(", lines[j])
+                             r"\s+(?:__\w+\s+)?(?:Asm_)?(\w+)\s*\(", lines[j])
                 if d and d.group(2) in by_name:
                     found[by_name[d.group(2)]] = (gc.rel(path), lines[j].strip())
                 break

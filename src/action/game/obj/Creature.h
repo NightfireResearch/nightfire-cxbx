@@ -64,15 +64,10 @@ void Creature_Delete(obj_tag *obj);
 obj_tag * Creature_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
 void Creature_CalcWaypoints(obj_tag *obj, Creature *creature);
 void Creature_Update(obj_tag *obj);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void _Creature_HurtPlayers(obj_tag *obj);
-void Creature_HurtPlayers(void);    // EDI the creature
-void _Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angles, _VECTOR *dir, _VECTOR *from,
-                         obj_tag *obj);
-void Creature_CalcPoint(void);      // ECX angles, ESI dir, EBX from, EDI the creature; out, distance, size
-bool _Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir);
-void Creature_SeekPlayer(void);     // EAX its data, EDX the creature, EDI dir
-void _Creature_Move(obj_tag *obj, Creature *creature);
-void Creature_Move(void);           // EAX the creature, ESI its data
+void Creature_HurtPlayers(obj_tag *obj);
+void Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angles, _VECTOR *dir, _VECTOR *from,
+                        obj_tag *obj);
+bool Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir);
+void Creature_Move(obj_tag *obj, Creature *creature);
 
 #endif // CREATURE_H_

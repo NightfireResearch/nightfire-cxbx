@@ -185,7 +185,6 @@ extern uint32_t SwitchEffectIndex;          // the switch effects' tuning index 
 extern int32_t ClearEmpVictim;              // 1: RenderFX clears empVictim (nothing sets it; the name is ours)
 
 // FUN_00095f90: a switch effect's fade, EAX the tick now, ECX its start tick (the adaptor, under Ghidra's name)
-void FUN_00095f90();
 // ... its C++: 1 at the start falling to 0 over 30 ticks; 0 before the start or for a start of 0 or less (the name
 // is ours)
 float SwitchEffectFade(uint32_t now, int32_t start);

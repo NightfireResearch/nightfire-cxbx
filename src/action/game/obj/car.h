@@ -71,10 +71,7 @@ void Car_Update(obj_tag *obj);
 void Car_CollisionHandler(obj_tag *obj);
 void Car_Delete(obj_tag *obj);
 void Car_MaybeHandleDamage(obj_tag *obj);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void _Car_SetBits(CAR_INFO *car, obj_tag *obj);
-void Car_SetBits(void);             // ESI the car's data; the car
-bool _Car_InheritVelocity(obj_tag *car, obj_tag *by);
-bool Car_InheritVelocity(void);     // ECX what it touched; the car
+void Car_SetBits(CAR_INFO *car, obj_tag *obj);
+bool Car_InheritVelocity(obj_tag *car, obj_tag *by);
 
 #endif // CAR_H_

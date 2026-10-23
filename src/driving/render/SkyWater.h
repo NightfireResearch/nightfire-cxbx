@@ -91,7 +91,6 @@ public:
 // `flush`, only the batch drawn. The core of FUN_000a87e0, which takes `a` in EAX (the name is ours).
 void QueueBrokenWindowQuad(const Coord4 *a, const Coord4 *b, const Coord4 *c, const Coord4 *d, uint32_t colour,
                            const Coord4 *uvs, bool flush);
-void FUN_000a87e0();                    // naked: EAX a, the rest on the stack
 
 // The window batch: its vertex arrays, its count, and the texture
 constexpr int kWindowVertices = 0x80;

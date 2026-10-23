@@ -31,30 +31,17 @@ void Creature_Delete(obj_tag *obj) {
 }
 
 // Hurts any player it touches, by 2
-void _Creature_HurtPlayers(obj_tag *obj) {
+void Creature_HurtPlayers(obj_tag *obj) {
     for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
         if (hit->hitObj != NULL && hit->hitObj->objectType == OBJECTTYPE_PLAYER)
             Player_Hurt(hit->hitObj, 2.0f, &obj->position);
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The creature in EDI. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Creature_HurtPlayers(void) {
-    _asm {
-        push edi
-        call _Creature_HurtPlayers
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The next waypoint: dir turned by the angles (and kept so), then distance and size along it from the last, or where a
 // ray that far first meets something, size out from it along its normal; there dir becomes the normal's.
-void _Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angles, _VECTOR *dir, _VECTOR *from,
-                         obj_tag *obj) {
+void Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angles, _VECTOR *dir, _VECTOR *from,
+                        obj_tag *obj) {
     HITDATA_tag *hits = NULL;
     _MATRIX turn;
     RotMatrix(angles, &turn);
@@ -75,27 +62,8 @@ void _Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angl
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// ECX the angles, ESI dir, EBX the last waypoint, EDI the creature; the waypoint, distance and size on the stack
-// AUTOLTCG
-void __declspec(naked) Creature_CalcPoint(void) {
-    _asm {
-        push edi
-        push ebx
-        push esi
-        push ecx
-        push dword ptr [esp + 0x1c]
-        push dword ptr [esp + 0x1c]
-        push dword ptr [esp + 0x1c]
-        call _Creature_CalcPoint
-        add esp, 0x1c
-        ret
-    }
-}
-#endif
-
 // With seeks set and player 1 within 4 sizes and 1.1, dir becomes the way to him
-bool _Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir) {
+bool Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir) {
     if (!creature->seeks || glb_players[0] == NULL)
         return false;
     float reach = (float)((double)creature->size * 4.0f + 1.1f);
@@ -105,21 +73,6 @@ bool _Creature_SeekPlayer(Creature *creature, obj_tag *obj, _VECTOR *dir) {
     Vec_Normalise(dir, dir);
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the creature's data, EDX the creature, EDI dir; the answer in AL. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Creature_SeekPlayer(void) {
-    _asm {
-        push edi
-        push edx
-        push eax
-        call _Creature_SeekPlayer
-        add esp, 0xc
-        ret
-    }
-}
-#endif
 
 // The first waypoint is where it is, turned as the last was; each of the rest is planned from the one before along
 // the way it faces, turned at random (up to a half turn either way, a fifth of that towards a player close by) and up
@@ -139,7 +92,7 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
     for (ushort i = 1; i < CREATURE_WAYPOINTS; i++) {
         _VECTOR *at = &creature->waypoints[i].pos;
         float turnX = 1.0f, turnY = 1.0f;
-        if (i > 1 && _Creature_SeekPlayer(creature, obj, &dir)) {
+        if (i > 1 && Creature_SeekPlayer(creature, obj, &dir)) {
             turnX = 0.2f;
             turnY = 0.2f;
         }
@@ -149,7 +102,7 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
             float distance = (float)(Float_FRand(creature->range * 0.5f) + (double)creature->range * 0.5f);
             angles.x = (float)(Rand_FRandHalf(3.1415927f) * turnX);
             angles.y = (float)(Rand_FRandHalf(3.1415927f) * turnY);
-            _Creature_CalcPoint(at, distance, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos, obj);
+            Creature_CalcPoint(at, distance, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos, obj);
             _VECTOR away;
             Vec_Subtract(at, &creature->home, &away);
             if ((double)creature->range * creature->range < Vec_SqMagnitude(&away)) {
@@ -160,8 +113,8 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
         else {
             angles.y = (float)Rand_FRandHalf(1.5707964f);
             angles.x = (float)Rand_FRandHalf(0.19634955f);
-            _Creature_CalcPoint(at, creature->size, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos,
-                                obj);
+            Creature_CalcPoint(at, creature->size, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos,
+                               obj);
             if ((double)cel->shearHeight - creature->size < at->y)
                 at->y = (float)((double)cel->someMax.y - creature->size);
         }
@@ -224,7 +177,7 @@ obj_tag* Creature_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_
 }
 
 // Planning, moving along the spline (planning again at its end), and dying: hidden (effect flag 0x20) the frame after
-void _Creature_Move(obj_tag *obj, Creature *creature) {
+void Creature_Move(obj_tag *obj, Creature *creature) {
     switch ((ushort)creature->state) {
         case CREATURE_PLAN:
             Creature_CalcWaypoints(obj, creature);
@@ -248,20 +201,6 @@ void _Creature_Move(obj_tag *obj, Creature *creature) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the creature, ESI its data. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Creature_Move(void) {
-    _asm {
-        push esi
-        push eax
-        call _Creature_Move
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Not while its cel is out of sight
 // AUTOINJECT
 void Creature_Update(obj_tag *obj) {
@@ -271,6 +210,6 @@ void Creature_Update(obj_tag *obj) {
     if (obj->inCel != NULL && !obj->inCel->addedToDraw)
         return;
     if (creature->hurts)
-        _Creature_HurtPlayers(obj);
-    _Creature_Move(obj, creature);
+        Creature_HurtPlayers(obj);
+    Creature_Move(obj, creature);
 }

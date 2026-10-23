@@ -61,19 +61,19 @@ static void MP_DropToFloor(MPOBJECT *mpObj, obj_tag *gameObj) {
     _VECTOR *pos = Mat_Position(gameObj->transformMatrix);
     build_PointOnFloor(gameObj->inCel, gameObj, pos, gameObj->objGraphics->extentMin.y, NULL);
     Vec_Copy(pos, &gameObj->position);
-    _MP_ResetMPObject(mpObj, 2, gameObj, true);
+    MP_ResetMPObject(mpObj, 2, gameObj, true);
 }
 
 // gameObj->curState: 0 at its base, 1 carried (by gameObj->maybeParent), 2 dropped. mpObj->num is the flag's team.
 // The other team takes it from its base and scores by bringing it to its own; its own team returns it once
 // dropped, and it goes back by itself after 30 seconds on the floor.
-void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
+void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
     MPTeam other = mpObj->num == PHOENIX ? MI6 : PHOENIX;
 
     View_SetDrawInAllViews(gameObj);
     switch (gameObj->curState) {
     case 0:
-        mpObj->holder = _MP_HitBy(gameObj, other, NULL, NULL);
+        mpObj->holder = MP_HitBy(gameObj, other, NULL, NULL);
         if (mpObj->holder == NULL)
             return;
         MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, 0x2f, mpObj->num, gameObj, false);
@@ -93,7 +93,7 @@ void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
             return;
         }
 
-        _MP_SetUpPlayerSomehow(gameObj, mpObj->holder, 0x15);
+        MP_SetUpPlayerSomehow(gameObj, mpObj->holder, 0x15);
         _VECTOR goal = *Mat_Position(Bases[other].gameObj->transformMatrix);
         goal.y += 1.0f;
         if (!(Vec_SqDist3D(Mat_Position(gameObj->transformMatrix), &goal) < 2.0f))
@@ -104,28 +104,28 @@ void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
         short idx = Control_Plr2Ind(gameObj->maybeParent);
         if (idx != -1)
             MPGame.players[idx].points += 1.0f;
-        _MP_ResetMPObject(mpObj, 0, gameObj, false);
+        MP_ResetMPObject(mpObj, 0, gameObj, false);
         MP_TeamMessage(NOTIF_X_TEAM_SCORED, other);
         Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_TRUCK, 100.0f, 0, 0);
         break;
     }
 
     case 2: {
-        if (_MP_HitBy(gameObj, mpObj->num, NULL, NULL) != NULL) {
+        if (MP_HitBy(gameObj, mpObj->num, NULL, NULL) != NULL) {
             mpObj->unknown04 = 0;
-            _MP_ResetMPObject(mpObj, 0, gameObj, false);
+            MP_ResetMPObject(mpObj, 0, gameObj, false);
             MP_TeamMessage(NOTIF_X_FLAG_RETURNED, mpObj->num);
             Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
             return;
         }
 
-        mpObj->holder = _MP_HitBy(gameObj, other, NULL, NULL);
+        mpObj->holder = MP_HitBy(gameObj, other, NULL, NULL);
         if (mpObj->holder == NULL) {
             ushort frames = mpObj->unknown04++;
             if (frames <= FRAME_RATE_INT * 30)
                 return;
             mpObj->unknown04 = 0;
-            _MP_ResetMPObject(mpObj, 0, gameObj, false);
+            MP_ResetMPObject(mpObj, 0, gameObj, false);
             MP_TeamMessage(NOTIF_X_FLAG_RETURNED, mpObj->num);
             MPSound_Play(SFX_BOND_MOMENT_BM_CAS_BEAM);
             return;
@@ -140,21 +140,6 @@ void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
     }
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// gameObj in EAX, mpObj in EDI, dropped on the stack, removed by the caller.
-// AUTOLTCG
-void __declspec(naked) MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
-    _asm {
-        push dword ptr [esp + 4]    // dropped
-        push edi                    // mpObj
-        push eax                    // gameObj
-        call _MP_FlagUpdate
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // An agent takes the blueprint. (Our helper; the original repeats it inline.)
 static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
@@ -180,11 +165,11 @@ static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
 // gameObj->curState: 0 at its spawn place, 1 carried (by gameObj->maybeParent), 2 dropped. Either team takes it,
 // and mpObj->num becomes the taker's team, which scores by bringing it to its espionage base. Dropped, it goes
 // back after 30 seconds on the floor unless someone takes it.
-void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
+void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     View_SetDrawInAllViews(gameObj);
     switch (gameObj->curState) {
     case 0:
-        mpObj->holder = _MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
         if (mpObj->holder == NULL)
             return;
         MP_BluePrintTaken(gameObj, mpObj->holder);
@@ -204,7 +189,7 @@ void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             return;
         }
 
-        _MP_SetUpPlayerSomehow(gameObj, mpObj->holder, 0x15);
+        MP_SetUpPlayerSomehow(gameObj, mpObj->holder, 0x15);
         for (HITDATA_tag *hit = EsponageBase[mpObj->num].gameObj->hitList; hit != NULL; hit = hit->next) {
             if (hit->hitObj == mpObj->holder) {
                 MP_BluePrintReachedBase(gameObj, mpObj);
@@ -214,13 +199,13 @@ void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         break;
 
     case 2:
-        mpObj->holder = _MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
         if (mpObj->holder == NULL) {
             ushort frames = mpObj->unknown04++;
             if (frames <= FRAME_RATE_INT * 30)
                 return;
             mpObj->unknown04 = 0;
-            _MP_ResetMPObject(mpObj, 0, gameObj, false);
+            MP_ResetMPObject(mpObj, 0, gameObj, false);
             char *str = Txt_GetStringFromHeap(0);
             sprintf(str, Txt_BindLabel(NOTIF_BLUEPRINT_RETURNED, 0));
             Text_AddMsg(-1, 0, 4, str, 0, Ftol(FRAME_RATE_INT * 1.5));
@@ -236,18 +221,3 @@ void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         break;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// gameObj in EAX, the other two on the stack, removed by the caller.
-// AUTOLTCG
-void __declspec(naked) MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
-    _asm {
-        push eax                    // gameObj
-        push dword ptr [esp + 12]   // dropped
-        push dword ptr [esp + 12]   // mpObj (12 again: the push moved it along)
-        call _MP_BluePrintUpdate
-        add esp, 12
-        ret
-    }
-}
-#endif

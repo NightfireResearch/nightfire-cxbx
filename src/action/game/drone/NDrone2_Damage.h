@@ -8,9 +8,7 @@
 // NDrone2_DoHitEffects) and how a state takes an impact message (DroneFunc_HandleImpact and the three impacts).
 // See docs/drone/architecture/README.md.
 
-// The original takes the drone in EAX: the game reaches the adaptor, C++ calls the core
-void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit);
-void NDrone2_DealWithObjHit(void);
+void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit);
 void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit);
 void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact);
 

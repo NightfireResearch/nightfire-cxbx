@@ -123,7 +123,7 @@ void __cdecl ShadowFlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
     }
     Save(regions, n, &original);
     Load(regions, n, &before);
-    _MP_FlagUpdate(gameObj, mpObj, dropped);
+    MP_FlagUpdate(gameObj, mpObj, dropped);
     Compare(s_flag, regions, n, &original);
     Count(s_flag);
 }
@@ -171,7 +171,7 @@ void __cdecl ShadowBluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameO
     }
     Save(regions, n, &original);
     Load(regions, n, &before);
-    _MP_BluePrintUpdate(mpObj, dropped, gameObj);
+    MP_BluePrintUpdate(mpObj, dropped, gameObj);
     Compare(s_bluePrint, regions, n, &original);
     Count(s_bluePrint);
 }

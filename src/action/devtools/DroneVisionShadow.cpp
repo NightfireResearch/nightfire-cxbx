@@ -910,7 +910,7 @@ void TestSeeing() {
                     return DoubleBits(theirVisibility);
                 },
                 [] {
-                    double visibility = _DroneVision_OpponentVisibility(droneArg);
+                    double visibility = DroneVision_OpponentVisibility(droneArg);
                     if (AcceptUlp(&visibility, theirVisibility, 2) | AcceptUlp(&droneArg->opponentVisibility,
                                                                             theirStoredVisibility))
                         ulpAccepted++;
@@ -923,7 +923,7 @@ void TestSeeing() {
                     OriginalVision o;
                     return OriginalOpponentInView(droneArg, floatArg) & 0xff;
                 },
-                [] { return (uint32_t)_DroneVision_OpponentInView(droneArg, floatArg); });
+                [] { return (uint32_t)DroneVision_OpponentInView(droneArg, floatArg); });
     }
     for (int trial = 0; trial < 8000; trial++) {
         RandomWorld();
@@ -939,7 +939,7 @@ void TestSeeing() {
                     OriginalVision o;
                     return OriginalSeekOpponentLOS(droneArg) & 0xff;
                 },
-                [] { return (uint32_t)_DroneVision_SeekOpponentLOS(droneArg); });
+                [] { return (uint32_t)DroneVision_SeekOpponentLOS(droneArg); });
         Compare("DroneVision_LogSeenOpponent", trial,
                 [] {
                     OriginalVision o;
@@ -959,7 +959,7 @@ void TestSeeing() {
                     return 0u;
                 },
                 [] {
-                    _DroneVision_HaveOpponentSight(droneArg);
+                    DroneVision_HaveOpponentSight(droneArg);
                     return 0u;
                 });
         uintArg = ShadowRand(3) == 0;
@@ -983,7 +983,7 @@ void TestAlerts() {
                     OriginalVision o;
                     return OriginalFindDrone(droneArg, uintArg);
                 },
-                [] { return (uint32_t)(uintptr_t)_DroneVision_FindDrone(droneArg, uintArg); });
+                [] { return (uint32_t)(uintptr_t)DroneVision_FindDrone(droneArg, uintArg); });
         Compare("DroneVision_DroneAfter", trial,
                 [] {
                     OriginalVision o;
@@ -1016,13 +1016,13 @@ void TestAlerts() {
                     OriginalVision o;
                     return OriginalConsiderAlerted(droneArg, otherArg) & 0xff;
                 },
-                [] { return (uint32_t)_DroneVision_ConsiderAlerted(droneArg, otherArg); });
+                [] { return (uint32_t)DroneVision_ConsiderAlerted(droneArg, otherArg); });
         Compare("DroneVision_DetermineAlertCheck", trial,
                 [] {
                     OriginalVision o;
                     return OriginalDetermineAlertCheck(droneArg, otherArg) & 0xff;
                 },
-                [] { return (uint32_t)_DroneVision_DetermineAlertCheck(droneArg, otherArg); });
+                [] { return (uint32_t)DroneVision_DetermineAlertCheck(droneArg, otherArg); });
     }
     for (int trial = 0; trial < 8000; trial++) {
         RandomWorld();

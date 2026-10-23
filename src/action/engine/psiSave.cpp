@@ -310,7 +310,7 @@ int SaveDrive_Delete(const char *profileName) {
 }
 
 // A codename's save deleted, and once it is, taken out of the cache (matched without case). The name is ours.
-int _SaveGame_Delete(const char *profileName) {
+int SaveGame_Delete(const char *profileName) {
     int result = SaveDrive_Delete(profileName);
     if (result != SAVE_DELETED)
         return result;
@@ -327,19 +327,6 @@ int _SaveGame_Delete(const char *profileName) {
     }
     return result;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the codename
-// AUTOLTCG
-int __declspec(naked) SaveGame_Delete(void) {
-    _asm {
-        push eax
-        call _SaveGame_Delete
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // The menus' poll of the last load, save and delete: 2 done, 4 not (PS2 names)
 // AUTOINJECT
@@ -361,7 +348,7 @@ int psiDeletingData(void) {
 // Deletes a codename's save, its result left for the polls; true if it was deleted. The name is ours.
 // AUTOINJECT
 bool psiDeleteSave(const char *profileName) {
-    psiInternalLoadingDataState = _SaveGame_Delete(profileName);
+    psiInternalLoadingDataState = SaveGame_Delete(profileName);
     return psiInternalLoadingDataState == SAVE_DELETED;
 }
 

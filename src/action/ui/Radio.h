@@ -7,9 +7,7 @@ void Radio_Init(M_RADIO *radio, NEW_CONTROL *create, M_CONTROL *parent);
 intptr_t Radio_SendMessage(M_RADIO *radio, uint message, intptr_t arg1, intptr_t arg2);
 void Radio_Update(M_MANAGER *mgr, M_PAGE *page, M_RADIO *radio);
 
-int _Radio_GetIndex(M_RADIO *radio, LIST_ROW *item);
-void Radio_GetIndex(void);  // the original's register arguments, for _Radio_GetIndex
-LIST_ROW* _Radio_SetIndex(M_RADIO *radio, int index);
-void Radio_SetIndex(void);  // the original's register arguments, for _Radio_SetIndex
+int Radio_GetIndex(M_RADIO *radio, LIST_ROW *item);
+LIST_ROW* Radio_SetIndex(M_RADIO *radio, int index);
 
 #endif // UI_RADIO_H

@@ -78,12 +78,9 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
 obj_tag* GT_DeployMiniGun(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner);
 void GT_Register(obj_tag *obj, ushort stream, void *context);
 obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj);
-void _GT_RandMove(GUNTURRET *turret);
-void GT_RandMove(void);
-bool _GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from);
-void GT_maybeInterpolateAimDir(void);
-void _GT_AimAt(GUNTURRET *turret, _VECTOR *at);
-void GT_AimAt(void);
+void GT_RandMove(GUNTURRET *turret);
+bool GT_maybeInterpolateAimDir(_MATRIX *towards, _MATRIX *from);
+void GT_AimAt(GUNTURRET *turret, _VECTOR *at);
 void GT_Update(obj_tag *obj);
 bool GT_TakeControl(obj_tag *gameObj, obj_tag *player);
 void GT_Delete(obj_tag *obj);

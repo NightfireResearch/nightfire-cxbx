@@ -75,7 +75,7 @@ void SSys_Init(void) {
 }
 
 // Item 3 says nothing in HT_Level_TowerB.
-void _SSys_Msg(ushort item, ushort msg) {
+void SSys_Msg(ushort item, ushort msg) {
     bool quiet = GameState.CurrentLevelHashcode == HT_Level_TowerC && !switch_channels[CHANNEL_SSYS_SPEAKS];
 
     SSYSMSG *msgs;
@@ -102,22 +102,6 @@ void _SSys_Msg(ushort item, ushort msg) {
     Sound_PlayExt((Action_SFX)msgs[msg].sound, 100.0f, 0, 0);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the item on the stack and the message in SI.
-// AUTOLTCG
-void __declspec(naked) SSys_Msg(void) {
-    _asm {
-        movzx eax, si
-        push eax
-        movzx eax, word ptr [esp + 8]
-        push eax
-        call _SSys_Msg
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Once a frame, outside cutscenes: an item's channel being set starts its countdown, and clearing it stops the
 // countdown. At the end the item clears its channel. Item 2, starting, first ends item 1's countdown for good (setting
 // item 1's channel) and waits eight seconds.
@@ -134,7 +118,7 @@ void SSys_Monitor(void) {
         if (!switch_channels[item->channel]) {
             if (item->state != 0) {
                 item->state = 0;
-                _SSys_Msg(i, 0);
+                SSys_Msg(i, 0);
                 item->timer = -1.0f;
             }
             continue;
@@ -148,7 +132,7 @@ void SSys_Monitor(void) {
                 }
                 SSYSITEM *item1 = &SSysItems[1];
                 if (item1->channel != SSYS_NO_CHANNEL) {
-                    _SSys_Msg(1, 0);
+                    SSys_Msg(1, 0);
                     switch_channels[item1->channel] = 1;
                     item1->channel = SSYS_NO_CHANNEL;
                     item1->state = 0;
@@ -159,7 +143,7 @@ void SSys_Monitor(void) {
             }
             item->state = 6;
             item->timer = SSYS_COUNTDOWN;
-            _SSys_Msg(i, 6);
+            SSys_Msg(i, 6);
         } else {
             item->timer = item->timer - REC_FRAME_RATE;
         }
@@ -168,31 +152,31 @@ void SSys_Monitor(void) {
         case 6:
             if (item->timer < 180.0f) {
                 item->state = 5;
-                _SSys_Msg(i, 5);
+                SSys_Msg(i, 5);
             }
             break;
         case 5:
             if (item->timer < 120.0f) {
                 item->state = 4;
-                _SSys_Msg(i, 4);
+                SSys_Msg(i, 4);
             }
             break;
         case 4:
             if (item->timer < 60.0f) {
                 item->state = 3;
-                _SSys_Msg(i, 3);
+                SSys_Msg(i, 3);
             }
             break;
         case 3:
             if (item->timer < 6.0f) {
                 item->state = 2;
-                _SSys_Msg(i, 2);
+                SSys_Msg(i, 2);
             }
             break;
         case 2:
             if (item->timer <= 0.0f) {
                 item->state = 1;
-                _SSys_Msg(i, 1);
+                SSys_Msg(i, 1);
                 if (item->channel != 0)
                     switch_channels[item->channel] = 0;
                 item->state = 0;

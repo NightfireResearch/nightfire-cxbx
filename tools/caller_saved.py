@@ -55,7 +55,7 @@ def ports(by_name=None):
             for j in range(i + 1, min(i + 4, len(lines))):
                 if lines[j].strip().startswith("//"):
                     continue
-                d = re.search(r"\b_?(\w+)\s*\(", lines[j])
+                d = re.search(r"\b(?:Asm_)?(\w+)\s*\(", lines[j])   # an entry in inject/ patches its name
                 if d and d.group(1) in by_name:
                     found[by_name[d.group(1)]] = (gc.rel(path), lines[j].strip())
                 break

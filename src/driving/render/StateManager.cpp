@@ -61,21 +61,6 @@ const StateKeyword *FindStateKeyword(const char *name, const StateKeyword *table
     return FindStateEntry(name, table);
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000914f0() {
-    __asm {
-        push edx
-        push dword ptr [esp + 8]
-        push edx
-        call FindStateKeyword
-        add esp, 8
-        pop edx
-        ret
-    }
-}
-#endif
-
 // The tables (each ends with a null name)
 
 // XBE_GLOBAL(0x001f2660, 0x58) readonly

@@ -522,8 +522,7 @@ static void MaybeGeneralHint(char **hintOut) {
     PickHint(hintOut, kGeneralHints);
 }
 
-// The C++ under the register-argument entry below (not static: only the entry's inline assembly calls it).
-HASHCODE _ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut) {
+HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut) {
     if (hintOut != NULL)
         *hintOut = NULL;
     if (objectiveOut != NULL)
@@ -719,22 +718,6 @@ HASHCODE _ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiv
     return image;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original (0x000bedf0) takes the level in EAX, the hint pointer in ESI and the objective pointer in ECX, and
-// preserves ESI and EDI, which its caller relies on; the C++ core preserves them too.
-// AUTOLTCG
-HASHCODE __declspec(naked) ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut) {
-    _asm {
-        push ecx
-        push esi
-        push eax
-        call _ResetMap_LevelCode2Img
-        add esp, 12
-        ret
-    }
-}
-#endif
-
 // ---- Loading a level (ResetMap_Load), over several calls of the game flow's state 3
 
 // Empty on the Xbox, where the linker shares one empty function among them (nightfire-port's names)
@@ -892,7 +875,7 @@ void ResetMap_GameInit(void) {
 void ResetMap_GenLoadScreen(void) {
     char *label = (char *)Txt_BindLabel((Action_TranslatedText)0x3c1, 0);
     char *hint, *objective;
-    LoadingGfx.textureHashcode = _ResetMap_LevelCode2Img((HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff), &hint,
+    LoadingGfx.textureHashcode = ResetMap_LevelCode2Img((HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff), &hint,
                                                              &objective);
     Sprite_Create2(&LoadingGfx);
     Txt_GetStringFromHeap(0);

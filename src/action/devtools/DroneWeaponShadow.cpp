@@ -613,7 +613,7 @@ void TestFiring() {
                     OriginalWeapons o;
                     return OriginalDoFiring(&world.dcv) & 0xff;
                 },
-                [] { return (uint32_t)_DroneWeap_DoFiring(&world.dcv); });
+                [] { return (uint32_t)DroneWeap_DoFiring(&world.dcv); });
     }
     for (int trial = 0; trial < 3000; trial++) {
         RandomWorld();
@@ -640,7 +640,7 @@ void TestFiring() {
                     return 0u;
                 },
                 [] {
-                    _DroneWeap_NextBulletTime(&world.dcv, charA, charB);
+                    DroneWeap_NextBulletTime(&world.dcv, charA, charB);
                     return 0u;
                 });
         Compare("DroneWeap_NextBulletTimeNewBurst", trial,
@@ -661,7 +661,7 @@ void TestFiring() {
                     OriginalWeapons o;
                     return OriginalManageBurstCount(&world.dcv) & 0xff;
                 },
-                [] { return (uint32_t)_DroneWeap_ManageBurstCount(&world.dcv); });
+                [] { return (uint32_t)DroneWeap_ManageBurstCount(&world.dcv); });
         Compare("DroneWeap_FireDelay", trial,
                 [] {
                     OriginalWeapons o;
@@ -692,7 +692,7 @@ void TestFiring() {
                     OriginalWeapons o;
                     return OriginalBurstDelay(&world.drones[0]);
                 },
-                [] { return (uint32_t)_DroneWeap_BurstDelay(&world.drones[0]); });
+                [] { return (uint32_t)DroneWeap_BurstDelay(&world.drones[0]); });
     }
     for (int trial = 0; trial < 6000; trial++) {
         RandomWorld();

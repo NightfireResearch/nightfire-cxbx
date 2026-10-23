@@ -801,8 +801,8 @@ void InstallFakes(void) {
         if (!skip)
             ShadowHook_Install(f.at, f.fake);
     }
-    // our _Menu_StartLS, which ours call by name
-    ShadowHook_Install((unsigned)(uintptr_t)&_Menu_StartLS, (const void *)&FakeStartLSCore);
+    // our Menu_StartLS, which ours call by name
+    ShadowHook_Install((unsigned)(uintptr_t)&Menu_StartLS, (const void *)&FakeStartLSCore);
 }
 
 // ---- the made-up world

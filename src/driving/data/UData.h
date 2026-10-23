@@ -61,7 +61,6 @@ uint32_t UDataGroupDecodeTag(const char *text);
 // UGroup's binary search over a sorted run of records (0x00117840): EBX = count, (records **, tag). Moves
 // *records to the first record with the tag and answers the tag, or to where it would go and answers 0. The
 // adaptor is under Ghidra's name; UDataFindTag is the C++ under it.
-void FUN_00117840();
 uint32_t UDataFindTag(uint32_t count, UData **records, uint32_t tag);
 
 #endif // DRIVING_DATA_UDATA_H_

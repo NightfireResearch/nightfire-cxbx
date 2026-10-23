@@ -3,8 +3,7 @@
 void Input_Update(void);
 void Input_UpdateWithMouse(void);
 void Input_RumbleStop(ushort playerNum);
-void _StickCompensation2(float *x, float *y);
-void StickCompensation2(void);
+void StickCompensation2(float *x, float *y);
 void __fastcall StickCompensation3(float *x, float *y);
 unsigned short Input_Action(short player, GameActions_tag action,unsigned char flags);
 float __cdecl Input_Actionf(short playerNum, GameActions_tag action,unsigned char flags);

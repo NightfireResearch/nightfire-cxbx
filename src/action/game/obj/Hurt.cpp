@@ -48,7 +48,7 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
 
 // Whether it goes off: its channel if it has one, else whether something of the kinds in armMask touches it (8 the
 // player, 0x10 a drone, 2 a bullet); with no mask, at once
-ushort _Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt) {
+ushort Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt) {
 
     HITDATA_tag *hit = obj->hitList;
     if (hurt->enableSwitchChannel != 0)
@@ -75,20 +75,6 @@ ushort _Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt) {
     return hurt->armMask & touching;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The object in EAX, the hurt volume in ECX
-// AUTOLTCG
-void __declspec(naked) Hurt_IsTriggered(void) {
-    _asm {
-        push ecx
-        push eax
-        call _Hurt_IsTriggered
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // State 0 waits to go off; 1 runs the path (the sound at its start), and at its end starts it again or, one shot, goes
 // to 2, which deletes it. Shown while the channel is on; switched off part way, it waits again.
 // AUTOINJECT
@@ -107,7 +93,7 @@ void Hurt_Update(obj_tag *obj) {
     case 0:
         if (hurt->enableSwitchChannel != 0 && !switch_channels[hurt->enableSwitchChannel])
             return;
-        if (_Hurt_IsTriggered(obj, hurt))
+        if (Hurt_IsTriggered(obj, hurt))
             obj->curState = 1;
         return;
 

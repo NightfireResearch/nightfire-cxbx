@@ -101,7 +101,7 @@ void TestWeights() {
             time = keys[NextRandom() % (count + 1)].frame;   // exactly on a key
         s_cases++;
 
-        int ours = _Script_FindKey(keys, count, time);
+        int ours = Script_FindKey(keys, count, time);
         int theirs;
         {
             XbeOriginalScope original(kFindKey);
@@ -224,7 +224,7 @@ void TestSPHit() {
             theirs = OriginalSPHit(&world.scriptPlayer);
         }
         after = world;
-        ushort ours = _SP_Hit(&world.scriptPlayer);
+        ushort ours = SP_Hit(&world.scriptPlayer);
         Check("SP_Hit", trial, &ours, &theirs, sizeof(ours));
         Check("SP_Hit (original) writes", trial, &after, &before, sizeof(world));
         Check("SP_Hit writes", trial, &world, &before, sizeof(world));

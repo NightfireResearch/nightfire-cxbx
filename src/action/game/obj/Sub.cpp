@@ -64,7 +64,7 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
 }
 
 // Along the path while there is path left
-void _Sub_Follow(obj_tag *obj, SubInfo *sub) {
+void Sub_Follow(obj_tag *obj, SubInfo *sub) {
     AnimObjectUpdate(obj);
     if (!Switched(sub))
         return;
@@ -76,22 +76,8 @@ void _Sub_Follow(obj_tag *obj, SubInfo *sub) {
     sub->t = (float)((double)FRAME_RATE_MUL * sub->speed + sub->t);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EDI the sub, ESI its data. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Sub_Follow(void) {
-    _asm {
-        push esi
-        push edi
-        call _Sub_Follow
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Player 1 within 8 of it, between 0.9 behind and 0.25 ahead of its middle, is hurt by 1 a frame
-void _Sub_Ram(obj_tag *obj, SubInfo *sub) {
+void Sub_Ram(obj_tag *obj, SubInfo *sub) {
     if (!Switched(sub) || glb_players[0] == NULL)
         return;
     _VECTOR at, local;
@@ -107,23 +93,9 @@ void _Sub_Ram(obj_tag *obj, SubInfo *sub) {
     Player_Hurt(glb_players[0], 1.0f, &at);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub's data; the sub on the stack. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Sub_Ram(void) {
-    _asm {
-        push eax
-        push dword ptr [esp + 8]
-        call _Sub_Ram
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // With a beam: within 12 of a player, for 0.3 of every 1.8 seconds, a laser bolt at player 1's chest, a little off,
 // the beam drawn along it. Otherwise the beam is not drawn.
-void _Sub_Laser(obj_tag *obj, SubInfo *sub) {
+void Sub_Laser(obj_tag *obj, SubInfo *sub) {
     if (sub->beam == NULL || !Switched(sub))
         return;
     sub->laserTime = (float)((double)REC_FRAME_RATE + sub->laserTime);
@@ -147,22 +119,8 @@ void _Sub_Laser(obj_tag *obj, SubInfo *sub) {
     View_SetDrawInNoViews(sub->beam);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EBX the sub, ESI its data
-// AUTOLTCG
-void __declspec(naked) Sub_Laser(void) {
-    _asm {
-        push esi
-        push ebx
-        call _Sub_Laser
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Within 15 of a player, the music is told, and every 10 seconds a missile leaves from one of two datums
-void _Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
+void Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     if (!Switched(sub))
         return;
     sub->missileTime = (float)((double)REC_FRAME_RATE + sub->missileTime);
@@ -181,23 +139,9 @@ void _Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_MISSILE], &at, &dir, 0xffff);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the sub, EDI its data. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) Sub_FireMissiles(void) {
-    _asm {
-        push edi
-        push esi
-        call _Sub_FireMissiles
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Within 25 of a player, the music is told, and every 5 seconds, if it can see him past its own bulk, a torpedo from
 // one of four datums that faces him, a little off; half of them home on player 1
-void _Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
+void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
     if (!Switched(sub))
         return;
     _VECTOR *at = Mat_Position(obj->transformMatrix);
@@ -236,20 +180,6 @@ void _Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub, EDI its data
-// AUTOLTCG
-void __declspec(naked) Sub_DeployTorpedoes(void) {
-    _asm {
-        push edi
-        push eax
-        call _Sub_DeployTorpedoes
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Afloat (state 0) it moves and attacks, its light with it; sinking (1, its light gone) it eases down to sinkY, a
 // frame's worth of the gap a frame, and lies there (2)
 // AUTOINJECT
@@ -259,11 +189,11 @@ void Sub_Update(obj_tag *obj) {
     SubInfo *sub = (SubInfo *)obj->extraObjectData;
     switch ((short)obj->curState) {
         case 0:
-            _Sub_Follow(obj, sub);
-            _Sub_Ram(obj, sub);
-            _Sub_Laser(obj, sub);
-            _Sub_FireMissiles(obj, sub);
-            _Sub_DeployTorpedoes(obj, sub);
+            Sub_Follow(obj, sub);
+            Sub_Ram(obj, sub);
+            Sub_Laser(obj, sub);
+            Sub_FireMissiles(obj, sub);
+            Sub_DeployTorpedoes(obj, sub);
             Vec_Copy(&obj->centrePoint, &sub->light->position);
             break;
         case 1: {
@@ -271,7 +201,7 @@ void Sub_Update(obj_tag *obj) {
                 Light_Delete(sub->light);
             sub->light = NULL;
             _VECTOR *at = Mat_Position(obj->transformMatrix);
-            at->y = _moveTowardsValue(at->y, sub->sinkY, REC_FRAME_RATE);
+            at->y = moveTowardsValue(at->y, sub->sinkY, REC_FRAME_RATE);
             obj->transformFlags |= TRANSFORM_MOVED;
             AnimObjectUpdate(obj);
             if (AbsFchs((double)at->y - sub->sinkY) < 0.02f)

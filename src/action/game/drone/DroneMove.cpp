@@ -114,7 +114,7 @@ static bool SteerRoundPlayer(Drone_tag *drone, ObstacleEval_tag *eval, obj_tag *
     eval->self.flags = 0;
     eval->other->speed = 0.0f;
     eval->other->radius = kPlayerRadius;
-    return _NDrone2_EvaluateObstacle(drone, NULL, eval);
+    return NDrone2_EvaluateObstacle(drone, NULL, eval);
 }
 
 // Turns the heading by turnRate of angle, and finds the nearest drone within 3 m (nearestDrone). Unless the drone is
@@ -166,7 +166,7 @@ void NDrone2_Steer(DCVars_tag *dcv, float angle) {
         obstacle.rot = &other->moveRotation;
         obstacle.speed = other->moved;
         obstacle.radius = kDroneRadius;
-        if (_NDrone2_EvaluateObstacle(drone, other, &eval)) {
+        if (NDrone2_EvaluateObstacle(drone, other, &eval)) {
             sum = eval.steer + sum;
             count++;
         }
@@ -202,7 +202,7 @@ void NDrone2_Steer(DCVars_tag *dcv, float angle) {
 // One obstacle for the drone in eval->self: notes the nearest drone (other, NULL for a player); then, within 3 m, if
 // a frame's walk brings them into contact, and before kHorizon over their closing speed, the turn away (steer): up to
 // a quarter turn of the drone's share, less the further off the contact. True with a turn.
-bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_tag *eval) {
+bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_tag *eval) {
     SteerBody *self = &eval->self;
     SteerBody *obstacle = eval->other;
     _VECTOR apart;
@@ -293,21 +293,6 @@ bool _NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_
         eval->steer = -eval->steer;
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the obstacle drone in EAX and the test in ESI, the drone on the stack.
-// AUTOLTCG
-void __declspec(naked) NDrone2_EvaluateObstacle(void) {
-    _asm {
-        push esi
-        push eax
-        push dword ptr [esp + 12]
-        call _NDrone2_EvaluateObstacle
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // When two spheres moving straight in the plane, from1 to to1 and from2 to to2, come within their radii of each
 // other: the times (0 to 1 is the move) in first and second, both 0 when they already touch. With the first the

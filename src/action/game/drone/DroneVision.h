@@ -22,28 +22,20 @@ bool DroneVision_GunThroughWall(Drone_tag *drone);
 
 // How well a drone sees
 float DroneVision_ObjectVisibility(Drone_tag *drone, obj_tag *obj);
-// The originals take the drone in ESI (and the range in EAX's case, see DroneVision.cpp): the game reaches the
-// adaptors, C++ calls the cores
-double _DroneVision_OpponentVisibility(Drone_tag *drone);
-void DroneVision_OpponentVisibility(void);
-bool _DroneVision_OpponentInView(Drone_tag *drone, float range);
-void DroneVision_OpponentInView(float range);
+// The opponent
+double DroneVision_OpponentVisibility(Drone_tag *drone);
+bool DroneVision_OpponentInView(Drone_tag *drone, float range);
 bool DroneVision_OpponentLOS(Drone_tag *drone);
-bool _DroneVision_SeekOpponentLOS(Drone_tag *drone);
-void DroneVision_SeekOpponentLOS(void);
+bool DroneVision_SeekOpponentLOS(Drone_tag *drone);
 void DroneVision_LogSeenOpponent(Drone_tag *drone);
-void _DroneVision_HaveOpponentSight(Drone_tag *drone);
-void DroneVision_HaveOpponentSight(void);
+void DroneVision_HaveOpponentSight(Drone_tag *drone);
 
 // Drones alerting each other
-Drone_tag *_DroneVision_FindDrone(Drone_tag *from, uint id);
-void DroneVision_FindDrone(void);
+Drone_tag *DroneVision_FindDrone(Drone_tag *from, uint id);
 Drone_tag *__fastcall DroneVision_DroneAfter(Drone_tag *from, uint id);
 bool DroneVision_DroneCanSeeDrone(Drone_tag *drone, Drone_tag *other, char *inView);
-bool _DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter);
-void DroneVision_ConsiderAlerted(void);
-bool _DroneVision_DetermineAlertCheck(Drone_tag *a, Drone_tag *b);
-void DroneVision_DetermineAlertCheck(void);
+bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter);
+bool DroneVision_DetermineAlertCheck(Drone_tag *a, Drone_tag *b);
 void DroneVision_FindAlertedDrones(void);
 
 // Once a frame, from Drone_InitComms

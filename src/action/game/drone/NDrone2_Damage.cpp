@@ -182,7 +182,7 @@ void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact) {
 // or a shot from someone who may hurt it - the player and gun turrets always, a drone of the other side, and with bots
 // anyone off its team or with friendly fire on. A shot puffs smoke, pushes the drone and sends it the punch, taser,
 // stun dart or bullet impact by the weapon; a few weapons do nothing at all.
-void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
+void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     if (hit == NULL)
         return;
 
@@ -338,21 +338,6 @@ void _NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     drone->hitsTaken++;
     Drone_Message(obj, msgType, hit, 0);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in EAX.
-// AUTOLTCG
-void __declspec(naked) NDrone2_DealWithObjHit(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push eax
-        call _NDrone2_DealWithObjHit
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // ---- the damage
 

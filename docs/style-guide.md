@@ -108,11 +108,15 @@ What Ghidra and MSVC produce is not what anyone wrote. Undo it wherever behaviou
 ## 7. Tooling in game code: minimal and unobtrusive
 
 - **One tag line above a definition** is all the injection needs: `// FUNC_AT(0xADDR)` (or `// AUTOINJECT`,
-  `// AUTOLTCG` for a register-argument adaptor, `// AUTOGEN` above a declaration of an original we still call).
-  The definition line keeps the shape the preprocessor parses: fully qualified, `T* Name(` for pointer returns,
-  no function-pointer types spelled out on it. Details: `docs/driving-injection-framework.md`.
-- **Register-argument originals** get a small naked adaptor named as Ghidra names the function, over a plain C++
-  core; nothing else in the code should know about registers.
+  `// AUTOLTCG` for an assembly entry or a `__fastcall` port of an original that takes ECX and EDX, `// AUTOGEN`
+  above a declaration of an original we still call). The definition line keeps the shape the preprocessor parses:
+  fully qualified, `T* Name(` for pointer returns, no function-pointer types spelled out on it. Details:
+  `docs/driving-injection-framework.md`.
+- **Register-argument originals:** the port is an ordinary C++ function under the original's name. The original's
+  callers reach it through a naked entry, `void Asm_<name>(void)`, in `src/<engine>/inject/<File>Asm.cpp`, which
+  only the injected build compiles: it moves the arguments from the registers to the stack and calls the port.
+  `AUTOLTCG` on an entry patches the original of the name after `Asm_`; one for an original whose name is not the
+  port's takes `FUNC_AT`. Nothing outside `inject/` knows about registers.
 - **Calls to originals not yet ported:** one named macro per callee near the top of the file, cast and address on
   one line (the coverage tools read that line); calls to anything already ported go to ours, directly.
 - **No settings checks, logging or test branches inside reimplemented functions.** A devtools hook that must sit
@@ -142,5 +146,6 @@ What Ghidra and MSVC produce is not what anyone wrote. Undo it wherever behaviou
 - One subsystem per file or small group of files, named after the game's classes or modules; each injected
   function declared in the header named like its `.cpp`.
 - Both builds must compile: MSVC and clang for i686-w64-mingw32 (no MSVC-only library calls, `constexpr` for
-  constants used in `static_assert`, inline assembly only as MSVC `__asm` blocks in naked adaptors).
+  constants used in `static_assert`, inline assembly only as MSVC `__asm` blocks in naked functions: the entries
+  in `inject/` and the x87 forms).
 - Preserve a file's existing line endings.

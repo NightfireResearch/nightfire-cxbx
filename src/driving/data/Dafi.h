@@ -46,8 +46,6 @@ int DAFI_setsection(DAFI *dafi, const char *name);        // 0x0011a6d0: the sec
 char* DAFI_getvalue(DAFI *dafi, const char *key);         // 0x0011a700: null if none
 
 // The two register-argument helpers DAFI_open calls: adaptors under Ghidra's names (AUTOLTCG), the C++ under them.
-void FUN_0011a1b0();   // EAX = line, EDX = end -> EAX: the next line's first non-blank character, null at the end
-void FUN_0011a200();   // EAX = string -> EAX: trimmed of spaces and tabs, in place
 char* DafiNextLine(char *line, char *end);
 char* DafiTrim(char *string);
 

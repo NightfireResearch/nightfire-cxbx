@@ -36,7 +36,7 @@ uint32_t m_nhti;
 // Keys are compared as unsigned (the original's JNC/JBE): HASHCODE is an int-sized enum, so without the casts a
 // hashcode with the top bit set (0xFFFFFFFF, the "none" value callers pass) would sort below every key and leave a
 // different ht_insert_ind than the original's.
-hashtable_entry* _hashtable_getentry(HASHCODE hashcode) {
+hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
 
     uint32_t key = (uint32_t)hashcode;
     uint32_t type = key >> 24;
@@ -63,21 +63,6 @@ hashtable_entry* _hashtable_getentry(HASHCODE hashcode) {
     return NULL;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original (0x0006b370) takes its hashcode in EDI; no original calls it now. It clobbers only EAX, ECX and EDX (it saves ESI
-// itself), and neither caller keeps anything in ECX or EDX across the call, so a plain cdecl call is enough: our
-// compiled body preserves EBX, ESI, EDI and EBP.
-// AUTOLTCG
-__declspec(naked) hashtable_entry* hashtable_getentry(HASHCODE hashcode) {
-    _asm {
-        push edi
-        call _hashtable_getentry
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 static void ResetTypeRanges(void) {
     for (int i = 0; i < NUM_RESET_TYPES; i++) {
         HashTypeRanges[i].lowerLimit = 0;
@@ -95,7 +80,7 @@ static void ResetTypeRanges(void) {
 // AUTOINJECT
 void hashtable_additem(HASHCODE hashcode, void* data) {
 
-    _hashtable_getentry(hashcode);
+    hashtable_getentry(hashcode);
 
     uint32_t ind = ht_insert_ind;
     memmove(&t_hashtable[ind + 1], &t_hashtable[ind], (m_nhti - ind) * sizeof(hashtable_entry));
@@ -112,7 +97,7 @@ void hashtable_additem(HASHCODE hashcode, void* data) {
 // AUTOINJECT
 void hashtable_deleteitem(HASHCODE hashcode) {
 
-    hashtable_entry *entry = _hashtable_getentry(hashcode);
+    hashtable_entry *entry = hashtable_getentry(hashcode);
 
     m_nhti--;
     uint index = (uint)(entry - t_hashtable);
@@ -184,7 +169,7 @@ void hashtable_get_hashtype_data(uint hashtype, HASHCODE *out) {
 
 // AUTOINJECT
 void hashtable_modify(HASHCODE hashcode, void* newData) {
-    hashtable_entry *entry = _hashtable_getentry(hashcode);
+    hashtable_entry *entry = hashtable_getentry(hashcode);
     if(entry != NULL) {
         entry->data = newData;
     }
@@ -192,7 +177,7 @@ void hashtable_modify(HASHCODE hashcode, void* newData) {
 
 // AUTOINJECT
 void* hashtable_getitem(HASHCODE hashcode) {
-    hashtable_entry *entry = _hashtable_getentry(hashcode);
+    hashtable_entry *entry = hashtable_getentry(hashcode);
     return entry ? entry->data : NULL;
 }
 
@@ -241,7 +226,7 @@ typedef struct {
 // AUTOINJECT
 bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc) {
 
-    hashtable_entry* entry = _hashtable_getentry(hc);
+    hashtable_entry* entry = hashtable_getentry(hc);
 
     if(entry == NULL) {
         NF_WARN("FYI : SPRITE HASHCODE %08x NOT FOUND\n", hc); // GC check (0x80051da4)
@@ -271,7 +256,7 @@ void hashtable_set_sub_object_to_entity_gfx(ATTACH_tag *mark, HASHCODE hc) {
     if(hc == 0xFFFFFFFF)
         return;
 
-    hashtable_entry *entry = _hashtable_getentry(hc);
+    hashtable_entry *entry = hashtable_getentry(hc);
 
     if((entry == NULL) || (entry->data == NULL))
         return;
@@ -285,7 +270,7 @@ void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hc) {
     if(hc == 0xFFFFFFFF)
         return;
 
-    hashtable_entry *entry = _hashtable_getentry(hc);
+    hashtable_entry *entry = hashtable_getentry(hc);
 
     if((entry == NULL) || (entry->data == NULL))
         return;

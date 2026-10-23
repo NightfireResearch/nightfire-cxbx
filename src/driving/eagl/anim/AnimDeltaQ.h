@@ -240,7 +240,6 @@ void DeltaQRecoverW(int sign, float *q);                         // 0x00104030 (
 int AnimTruncateSingleQ(float value);                            // 0x00101f30 (invented name, no callers)
 int AnimTruncateQFast(float value);                              // 0x001033a0 (invented name, no callers)
 int AnimTruncateQ(float value);                                  // 0x001042a0 (invented name, no callers)
-void AnimVec2LengthEax();                                        // 0x001042b0 (invented name, no callers;
                                                                  // the vector in EAX, the length in ST0)
 
 #endif // DRIVING_EAGL_ANIM_ANIMDELTAQ_H_

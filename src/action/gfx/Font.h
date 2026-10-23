@@ -100,14 +100,11 @@ LAYOUT_32(sizeof(PRINTINFO_tag) == 0x40, "PRINTINFO_tag is 0x40 bytes");
 #define FONT_OUTLINE        0x2000  // a copy at (-1, -1) in the outline colour
 #define FONT_SHADOW_RING    0x4000  // without FONT_SHADOW: four copies at (+-1, +-1) in the shadow colour
 
-CHARDATA_tag* _Font_FindGlyph(uchar c);
-void Font_FindGlyph(void);
-float _Font_GetKernAdjust(char prev, char c);
-float Font_GetKernAdjust(void);
+CHARDATA_tag* Font_FindGlyph(uchar c);
+float Font_GetKernAdjust(char prev, char c);
 void Font_ParseFormat(const char *format, uint *flags);
 GPOINT* Font_DrawGlyphs(uint colour, const GPOINT *scale, float x, float y, uint unused3, uint unused4,
                         const char *text, const char *format, uint flags, int count, float width, uint *fit);
-void __Font_DrawText(void);
 GPOINT* Font_DrawText(float x, float y, uint colour, uint shadow, uint outline, const char *text, const char *format,
                       const GPOINT *scale, uint flags, int count, float width);
 char* Font_WordWrapString(char **text, int length, const char *format, uint width);

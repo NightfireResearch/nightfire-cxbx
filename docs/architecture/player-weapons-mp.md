@@ -356,7 +356,7 @@ Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KO
   An object script on the object is moved with it. The carried-object updates call `MP_HitBy` and
   `MP_SetUpPlayerSomehow`, and put an object back with `MP_ResetMPObject`; the originals of all three take
   register arguments. Every caller of the last two is ours, so their originals (0x9c7e0, 0x9ecb0) are not patched
-  over and ours go by `_MP_SetUpPlayerSomehow` and `_MP_ResetMPObject`. `MP_KOHUpdate`, `MP_UplinkUpdate`, the flag, blueprint and GoldenEye updates and
+  over and ours go by `MP_SetUpPlayerSomehow` and `MP_ResetMPObject`. `MP_KOHUpdate`, `MP_UplinkUpdate`, the flag, blueprint and GoldenEye updates and
   `MP_BluePrintReachedBase` clear the word at MPGame+0x20c (`unknown_9`); `MP_Init` and `MP_RestartScenario` clear
   +0x208 and +0x20a.
 - **Scoring** happens in `MP_PlayerKilled` 0xa1fc0, called from `Player_CheckForDeath` and the two bot death

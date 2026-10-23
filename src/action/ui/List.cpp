@@ -82,7 +82,7 @@ void List_Init(M_LIST *list, NEW_CONTROL *create, M_CONTROL *parent) {
 }
 
 // A row's index
-int _List_GetIndex(M_LIST *list, LIST_ROW *row) {
+int List_GetIndex(M_LIST *list, LIST_ROW *row) {
     int index = 0;
     for (LIST_ROW *r = (LIST_ROW *)LinkedList_First(&list->rows); r != NULL; r = r->next) {
         if (r == row)
@@ -92,26 +92,8 @@ int _List_GetIndex(M_LIST *list, LIST_ROW *row) {
     return -1;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the list, EDX the row (kept); the original's stack argument (the rows) is not read
-// AUTOLTCG
-__declspec(naked) void List_GetIndex(void) {
-    __asm {
-        push ecx
-        push edx
-        push edx
-        push eax
-        call _List_GetIndex
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The row at an index
-LIST_ROW* _List_SetIndex(M_LIST *list, int index) {
+LIST_ROW* List_SetIndex(M_LIST *list, int index) {
     LIST_ROW *row = (LIST_ROW *)LinkedList_First(&list->rows);
     for (int i = 0; i < index; i++) {
         if (row == NULL)
@@ -120,24 +102,6 @@ LIST_ROW* _List_SetIndex(M_LIST *list, int index) {
     }
     return row;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ECX the list, EDX the index (kept); the original's stack argument (the rows) is not read
-// AUTOLTCG
-__declspec(naked) void List_SetIndex(void) {
-    __asm {
-        push ecx
-        push edx
-        push edx
-        push ecx
-        call _List_SetIndex
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // The index of a row among those a text began on (wrapped rows not counted); the first row is not tested for a
 // continuation, and a row not in the list reads past the last
@@ -261,7 +225,7 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
             return list->rows.count - 1;
         }
         case MessageType_ListRemoveItem: {
-            LIST_ROW *row = _List_SetIndex(list, arg1);
+            LIST_ROW *row = List_SetIndex(list, arg1);
             if (row == NULL)
                 return 0;
             if (row == list->selected)
@@ -316,7 +280,7 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
         case MessageType_ListSetCellText: {
             // Of the row and the column in arg1, counting rows from those a text began on
             uint rowIndex = (uint)arg1 >> 16;
-            LIST_ROW *row = _List_SetIndex(list, list->continuedRows + rowIndex);
+            LIST_ROW *row = List_SetIndex(list, list->continuedRows + rowIndex);
             if (row == NULL)
                 return 0;
             int column = arg1 & 0xffff;
@@ -345,7 +309,7 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
                 memcpy(row->cells[column].text, text, cut);
                 row->cells[column].text[cut] = '\0';
                 List_SendMessage(list, MessageType_AddItem, (intptr_t)MenuSpaceString, 0);
-                _List_SetIndex(list, list->continuedRows + rowIndex + 1)->continued = 1;
+                List_SetIndex(list, list->continuedRows + rowIndex + 1)->continued = 1;
                 List_SendMessage(list, MessageType_ListSetCellText, ((arg1 >> 16) + 1) << 16 | column,
                                  (intptr_t)(text + cut + 1));
                 list->continuedRows++;
@@ -362,17 +326,17 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
             return 1;
         case MessageType_SelectIndex:
             // The scroll goes to the row selected before, then the row a text began on at the index is selected
-            if (!Scroll_SendMessage(&list->scroll, MessageType_SetValue, _List_GetIndex(list, list->selected), 0))
+            if (!Scroll_SendMessage(&list->scroll, MessageType_SetValue, List_GetIndex(list, list->selected), 0))
                 return 0;
             list->selected = List_SetIndex_RealItem(list, &list->rows, arg1);
-            list->selectedIndex = (uchar)_List_GetIndex(list, list->selected);
+            list->selectedIndex = (uchar)List_GetIndex(list, list->selected);
             List_ShowSelected(list);
             return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (intptr_t)list, 0);
         case MessageType_SelectItemByValue:
             for (LIST_ROW *row = (LIST_ROW *)LinkedList_First(&list->rows); row != NULL; row = row->next) {
                 if (row->value == arg1) {
                     list->selected = row;
-                    Scroll_SendMessage(&list->scroll, MessageType_SetValue, _List_GetIndex(list, list->selected), 0);
+                    Scroll_SendMessage(&list->scroll, MessageType_SetValue, List_GetIndex(list, list->selected), 0);
                     if (arg2 != 0)
                         return 1;
                     return __Menu_SendMessage(list->control.parent, MessageType_Scroll, (intptr_t)list, 0);
@@ -462,12 +426,12 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
             list->selected = NULL;
             if (list->rows.count != 0) {
                 int step = list->selectedIndex < value ? 1 : -1;
-                list->selected = _List_SetIndex(list, value);
+                list->selected = List_SetIndex(list, value);
                 while (list->selected->continued) {
                     if (step + value > max)
                         step = -(step < 0 ? -step : step);
                     value += step;
-                    list->selected = _List_SetIndex(list, value);
+                    list->selected = List_SetIndex(list, value);
                 }
             }
             list->selectedIndex = (uchar)value;
@@ -483,7 +447,7 @@ intptr_t List_SendMessage(M_LIST *list, uint message, intptr_t arg1, intptr_t ar
         case MessageType_ValueSet: {
             int value = Scroll_SendMessage(&list->scroll, MessageType_GetValue, 0, 0);
             if (value >= 0)
-                _List_SetIndex(list, value);
+                List_SetIndex(list, value);
             return 1;
         }
         case MessageType_SetAlpha:
@@ -651,7 +615,7 @@ void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list) {
     }
 
     if (list->selected != NULL) {
-        int index = _List_GetIndex(list, list->selected);
+        int index = List_GetIndex(list, list->selected);
         if (index >= list->topRow + list->visibleRows)
             list->topRow = index + 1 - list->visibleRows;
         else if (index < list->topRow)

@@ -126,21 +126,6 @@ CARP::AnimInfo* FindAnimInfo(const WorldArticle *article, uint32_t count, uint8_
     return found;
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_000776d0() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push eax
-        push edx
-        call FindAnimInfo
-        add esp, 16
-        ret
-    }
-}
-#endif
-
 // FUNC_AT(0x00076a60)
 void RAnimEngine::EvaluateInstance(CARP::Instance *instance, MATRIX4 *out) {
     const WorldArticle *article = ArticleOf(instance);
@@ -380,21 +365,6 @@ uint32_t DeactivateActiveSystem(uint32_t index, uint32_t frame, bool next) {
     ActiveSystemCount--;
     return index - 1;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void RAnimEngine::DeactivateSystem() {
-    __asm {
-        movzx eax, byte ptr [esp + 4]
-        push eax
-        push ecx
-        push edi
-        call DeactivateActiveSystem
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x00078190)
 void RAnimEngine::Update(uint32_t tick) {

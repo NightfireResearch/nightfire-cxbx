@@ -124,7 +124,7 @@ GPOINT Size_137;
 
 // The glyph of c, by binary search of the font's glyphs; NULL outside the font's range. A character between two
 // glyphs gets the one below it. The search does not stop at the table's end (as the original).
-CHARDATA_tag* _Font_FindGlyph(uchar c) {
+CHARDATA_tag* Font_FindGlyph(uchar c) {
     FONT_tag *font = Font;
     if (c < font->first || c > font->last)
         return NULL;
@@ -143,27 +143,10 @@ CHARDATA_tag* _Font_FindGlyph(uchar c) {
     return &chars[hi];
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AL the character
-// AUTOLTCG
-void __declspec(naked) Font_FindGlyph(void) {
-    _asm {
-        push ecx
-        push edx
-        push eax
-        call _Font_FindGlyph
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The kerning of c after prev, from prev's list. The list is in ascending order and the search stops at the
 // first pair past c, so only a pair the list starts with ever counts (as the original).
-float _Font_GetKernAdjust(char prev, char c) {
-    CHARDATA_tag *glyph = _Font_FindGlyph(prev);
+float Font_GetKernAdjust(char prev, char c) {
+    CHARDATA_tag *glyph = Font_FindGlyph(prev);
     if (glyph == NULL)
         return 0.0f;
     int code = c;
@@ -179,24 +162,6 @@ float _Font_GetKernAdjust(char prev, char c) {
     }
     return 0.0f;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AL the character before, the stack the character
-// AUTOLTCG
-float __declspec(naked) Font_GetKernAdjust(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push eax
-        call _Font_GetKernAdjust
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Applies a format: the default font, then its codes. Only the low byte of the flags is cleared for an alignment.
 // AUTOINJECT
@@ -355,14 +320,14 @@ GPOINT* Font_DrawGlyphs(uint colour, const GPOINT *scale, float x, float y, uint
                         c = '\'';
                     else if ((uchar)c == CHAR_ELLIPSIS)
                         c = '.';
-                    fd_129 = _Font_FindGlyph(c);
+                    fd_129 = Font_FindGlyph(c);
                     if (fd_129 == NULL)
                         goto next;  // not even the fit is counted
                     if (fd_129->code == CHAR_TRADEMARK) {
                         if (trademark == 0)
-                            fd_129 = _Font_FindGlyph('T');
+                            fd_129 = Font_FindGlyph('T');
                         else if (trademark == 1)
-                            fd_129 = _Font_FindGlyph('M');
+                            fd_129 = Font_FindGlyph('M');
                         trademark++;
                     }
                     CHARDATA_tag *glyph = fd_129;
@@ -372,7 +337,7 @@ GPOINT* Font_DrawGlyphs(uint colour, const GPOINT *scale, float x, float y, uint
                         w = w * 0.5f;
                         h = h * 0.5f;
                     }
-                    Pos_128.x = (float)((double)_Font_GetKernAdjust(prev, c) * Scale_127.x + Pos_128.x);
+                    Pos_128.x = (float)((double)Font_GetKernAdjust(prev, c) * Scale_127.x + Pos_128.x);
                     Pos_128.x = (float)((prev != '\0' ? (double)glyph->pre * Scale_127.x : 0.0) + Pos_128.x);
                     if ((flags & FONT_MEASURE_ONLY) == 0) {
                         CHARDATA_tag *first = &Font->chars[0];
@@ -410,34 +375,6 @@ GPOINT* Font_DrawGlyphs(uint colour, const GPOINT *scale, float x, float y, uint
                          (((double)Font->chars[0].h * Scale_127.y + Font->lineGap) + 1.0f));
     return &Size_126;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ECX the colour, EAX the scale
-// AUTOLTCG
-void __declspec(naked) __Font_DrawText(void) {
-    _asm {
-        push edx
-        push ecx
-        push dword ptr [esp + 48]   // fit
-        push dword ptr [esp + 48]   // width
-        push dword ptr [esp + 48]   // count
-        push dword ptr [esp + 48]   // flags
-        push dword ptr [esp + 48]   // format
-        push dword ptr [esp + 48]   // text
-        push dword ptr [esp + 48]
-        push dword ptr [esp + 48]
-        push dword ptr [esp + 48]   // y
-        push dword ptr [esp + 48]   // x
-        push eax
-        push ecx
-        call Font_DrawGlyphs
-        add esp, 48
-        pop ecx
-        pop edx
-        ret
-    }
-}
-#endif
 
 // The text in its format, aligned in width, with the copies the flags ask for drawn first, each with the low byte
 // of the flags and FONT_COPY. Returns the size of the last draw.
@@ -536,9 +473,9 @@ char* Font_WordWrapString(char **text, int length, const char *format, uint widt
                 default: {
                     if ((uchar)c == CHAR_QUOTE)
                         c = '\'';
-                    CHARDATA_tag *glyph = _Font_FindGlyph(c);
+                    CHARDATA_tag *glyph = Font_FindGlyph(c);
                     if (glyph != NULL)
-                        extent = (float)(((((double)_Font_GetKernAdjust(prev, c) + extent) + glyph->pre) +
+                        extent = (float)(((((double)Font_GetKernAdjust(prev, c) + extent) + glyph->pre) +
                                           glyph->post + glyph->w) + 1.0f);
                     break;
                 }

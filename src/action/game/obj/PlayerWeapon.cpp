@@ -151,7 +151,7 @@ static bool IsGadget(int weapon) {
 
 // Turns the gun towards the crosshairs: by their offset over the view's zoom, pi/6 at an offset of 1, across scaled
 // by the aspect ratio and less the recoil's.
-void _Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
+void Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     viewer_tag *viewer = glb_viewer[blData->playerNum];
     Extended zoom = viewer->zoom;
@@ -160,19 +160,6 @@ void _Player_TiltWeaponTowardsCrosshairs(obj_tag *player) {
         - Extended(blData->crosshairOffsetX) / zoom * Extended(0.5235988f) * Extended(viewer->AspectRatio));
     blData->weaponObject->rotation.z = 0.0f;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The player in EAX
-// AUTOLTCG
-void __declspec(naked) Player_TiltWeaponTowardsCrosshairs(void) {
-    _asm {
-        push eax
-        call _Player_TiltWeaponTowardsCrosshairs
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // The C runtime's x87 asin (__CIasin_default, Crt::CIasin): the argument in ST0, the result in ST0
 #if NIGHTFIRE_X87
@@ -694,7 +681,7 @@ void Player_WeaponRecoil(obj_tag *player) {
     sway.x = (float)(FSin(idle) * Extended(0.001f) + Extended(sway.x));
     sway.y = (float)(FCos(idle * 1.7f) * Extended(0.001f) + walkLift);
 
-    _Player_TiltWeaponTowardsCrosshairs(player);
+    Player_TiltWeaponTowardsCrosshairs(player);
     Player_SetWeaponAnimObj(player, &sway);
 }
 
@@ -723,7 +710,7 @@ static void SpawnAtFrame(obj_tag *player, BLData *blData, weapon_definition_tag 
         frame = script->curFrame;
     if (!(frame < (float)weapon->bulletSpawnFrame) && !blData->bulletSpawned) {
         blData->bulletSpawned = 1;
-        _Player_WeaponInitBullet(player, weapon);
+        Player_WeaponInitBullet(player, weapon);
     }
 }
 
@@ -819,7 +806,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
             }
             if ((current->weaponFlags & WPNFLAG_REFIRE_HELD) && Input_Action(playerNum, ACTION_FIRE, 1) &&
                 AnimScriptIsStopped(blData->weaponObject)) {
-                _Player_SetFiringAnim(blData, blData->weaponObject, current);
+                Player_SetFiringAnim(blData, blData->weaponObject, current);
             }
             if (current->weaponModelHashcode == 0) {
                 blData->weaponObject->curState = GUN_IDLE;
@@ -1051,7 +1038,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
 // Plays a fire anim on the gun and puts it in the firing state: the alternative one for the last round of a slide-locked
 // gun (or weapon base 0x11 empty), half the time for weapons that pick at random, and each other shot for twin guns.
 // Returns the anim's script, or NULL when there is no model or no anim.
-sAnimScript_tag *_Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapon_definition_tag *weapon) {
+sAnimScript_tag *Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapon_definition_tag *weapon) {
     short loaded = Player_AmmoIndex(glb_players[blData->playerNum]->animState->currentWeaponId);
     HASHCODE fire = (HASHCODE)0;
 
@@ -1072,20 +1059,6 @@ sAnimScript_tag *_Player_SetFiringAnim(BLData *blData, obj_tag *weaponObj, weapo
     blData->weaponObject->curState = GUN_FIRING;
     return AnimScriptAdd(weaponObj, fire);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_SetFiringAnim(void) {
-    _asm {
-        push edi
-        push dword ptr [esp + 0xc]
-        push dword ptr [esp + 0xc]
-        call _Player_SetFiringAnim
-        add esp, 0xc
-        ret
-    }
-}
-#endif
 
 // Moves ammo from the stock into the gun: as much as the clip takes, or one shell for a weapon that loads shells.
 // Returns whether there was any to move; with test set, only says so.
@@ -1174,7 +1147,7 @@ void Player_ResetWalkAnim(obj_tag *player) {
 // it; weapon 0x53 takes control of the turret he set down. Otherwise each projectile flies from the eyes (half way
 // between them and the muzzle, for weapons that say so) at what is under the crosshair; the muzzle flash goes there
 // too. A taser that reaches no drone or player within its range gives its charge back instead.
-void _Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
+void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
     BLData *blData = (BLData *)player->extraObjectData;
     int playerNum = blData->playerNum;
 
@@ -1292,19 +1265,6 @@ void _Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
     if (weapon->ammoType == 0 && weapon->onFired != NULL)
         weapon->onFired(player);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_WeaponInitBullet(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push eax
-        call _Player_WeaponInitBullet
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // Shows what the weapon in the hand shows on its datums: the satchel charge's timer, the decryptor's display, weapon
 // 0x33's charge (and its light), weapon 0x1a's lights, the rounds left in weapon 0x11; and the camera's and the remote
@@ -1528,7 +1488,7 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
     // Reload, or use whatever is in front of the player
     if (!Input_Action(blData->playerNum, ACTION_FIRE, 1) && Input_Action(blData->playerNum, ACTION_RELOAD, 4) &&
         player->subState != MovementType_RemoteControl) {
-        uchar used = _Player_Activate(blData, player);
+        uchar used = Player_Activate(blData, player);
         AnimState *anim = player->animState;
         if (!((anim->animFlags & 1) && (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE)) && !used &&
             blData->weaponObject->curState == GUN_IDLE && Player_ReloadAmmoType(player, true)) {
@@ -1617,7 +1577,7 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
 
     sAnimScript_tag *script = NULL;
     if (!(blData->weaponObject->curState == GUN_FIRING && (weapon->weaponFlags & (WPNFLAG_CONTINUOUS | WPNFLAG_REFIRE_HELD))))
-        script = _Player_SetFiringAnim(blData, blData->weaponObject, weapon);
+        script = Player_SetFiringAnim(blData, blData->weaponObject, weapon);
     if (weapon->projectileFlags & PROJFLAG_THROWN) {
         if (weapon->animFireAlt != 0) {
             blData->weaponObject->curState = GUN_THROW_WINDUP;
@@ -1631,7 +1591,7 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
 
     if (weapon->bulletSpawnFrame == 0) {
         blData->bulletSpawned = 1;
-        _Player_WeaponInitBullet(player, weapon);
+        Player_WeaponInitBullet(player, weapon);
         return;
     }
     blData->bulletSpawned = 0;

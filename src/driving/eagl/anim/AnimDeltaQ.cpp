@@ -241,28 +241,12 @@ int AnimTruncateQ(float value) {
     return Truncate(value);
 }
 
-// sqrt(x * x + y * y) of the 2-vector in EAX, answered in ST0 (other registers kept).
-static double __cdecl Vec2Length(const float *v) {
-    EAGL_UNTESTED("AnimVec2LengthEax");
+// sqrt(x * x + y * y) of the 2-vector
+double __cdecl Vec2Length(const float *v) {
+    EAGL_UNTESTED("Vec2Length");
     double y = v[1], x = v[0];
     return sqrt(x * x + y * y);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// FUNC_AT(0x001042b0)
-__declspec(naked) void AnimVec2LengthEax() {
-    __asm {
-        push ecx
-        push edx
-        push eax
-        call Vec2Length
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // FnDeltaSingleQ. Data: DeltaSingleQData, then the bins: per bone a DeltaSingleQPhysical (the axis component and

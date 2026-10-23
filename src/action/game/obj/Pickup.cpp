@@ -200,7 +200,7 @@ obj_tag* Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *c
 }
 
 // Riding what it lands on, but for drones, bullets, dead drones and rigid bodies
-bool _Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from) {
+bool Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from) {
     if (from == NULL)
         return false;
     switch (from->objectType) {
@@ -214,24 +214,6 @@ bool _Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from) {
     Vec_Copy(&pickup->position, (_VECTOR *)&pickup->transformMatrix.m[12]);
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The pickup in EAX, what it landed on in ECX
-// AUTOLTCG
-void __declspec(naked) Pickup_CanInheritPosition(void) {
-    _asm {
-        push ecx
-        push edx
-        push ecx
-        push eax
-        call _Pickup_CanInheritPosition
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Back after its respawn time; falling, to the floor under its model's base (riding what it lands on); spinning;
 // taken by the first player, then (with bots) the first bot, within its radius and 1.1 that can see it; gone at the end
@@ -266,7 +248,7 @@ void Pickup_Update(obj_tag *obj) {
         if (below < 0.0f) {
             bool riding = false;
             for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next)
-                riding |= _Pickup_CanInheritPosition(obj, hit->hitObj);
+                riding |= Pickup_CanInheritPosition(obj, hit->hitObj);
             _VECTOR base;
             auxVec_AddMulR32(&hits->hitPosition, &hits->maybehitDirection,
                              (float)-AbsFchs(obj->objGraphics->extentMin.y), &base);
@@ -305,7 +287,7 @@ void Pickup_Update(obj_tag *obj) {
         if (!(Vec_SqDist3D(&obj->centrePoint, &player->position) >= reachSq) &&
             Collide_LineOfSight(&glb_players[i]->centrePoint, &obj->centrePoint, glb_players[i]->inCel, obj, NULL,
                                 0x721)) {
-            _Pickup_Handler(obj, info, glb_players[i]);
+            Pickup_Handler(obj, info, glb_players[i]);
             return;
         }
     }
@@ -322,7 +304,7 @@ void Pickup_Update(obj_tag *obj) {
                 continue;
             if (!(Vec_SqDist3D(&obj->centrePoint, &bot->position) >= reachSq) &&
                 Collide_LineOfSight(&bot->position, &obj->centrePoint, bot->inCel, obj, NULL, 0x721)) {
-                _Pickup_Handler(obj, info, bot);
+                Pickup_Handler(obj, info, bot);
                 return;
             }
         }
@@ -420,7 +402,7 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
 // A player takes it: the weapon (upgraded; in multiplayer as the character has it), and with one-weapon rules the
 // first other one is dropped; ammo; a key; armour up to 50; invisibility; the bonus. The message and the channel,
 // then for everyone the sound, and the pickup goes, comes back later, or stays. Left when nothing of it was taken.
-void _Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
+void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
     ushort shown = info->kind;
     if (by->objectType == OBJECTTYPE_DRONE) {
         if (!BotTakes(info, by))
@@ -568,25 +550,6 @@ void _Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
         obj->creationTimeFrames = GameState.NumFramesUnpaused;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The pickup's information in EDI; the pickup and who takes it on the stack
-// AUTOLTCG
-void __declspec(naked) Pickup_Handler(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 16]
-        push edi
-        push dword ptr [esp + 20]
-        call _Pickup_Handler
-        add esp, 12
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Set 10 of PickupMatrix: five different weapons drawn from UseableGuns, the first from the first 26
 // AUTOINJECT

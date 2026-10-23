@@ -316,6 +316,68 @@ add_library(actioninject SHARED
   src/inject.h
   src/common/xbeOriginal.cpp
   src/common/xbeRelocate.cpp
+  # the entries through which the original's code calls ours, with its arguments in registers
+  src/action/inject/AINetworkAsm.cpp
+  src/action/inject/AIPathAsm.cpp
+  src/action/inject/AnimAsm.cpp
+  src/action/inject/BreakAsm.cpp
+  src/action/inject/CameraAsm.cpp
+  src/action/inject/CollideAsm.cpp
+  src/action/inject/CopterAsm.cpp
+  src/action/inject/CreatureAsm.cpp
+  src/action/inject/DoorAsm.cpp
+  src/action/inject/DroneAnimAsm.cpp
+  src/action/inject/DroneMoveAsm.cpp
+  src/action/inject/DroneSMAsm.cpp
+  src/action/inject/DroneVisionAsm.cpp
+  src/action/inject/DroneVision_AlertsAsm.cpp
+  src/action/inject/DroneWeaponAsm.cpp
+  src/action/inject/Drone_AIHintsAsm.cpp
+  src/action/inject/EffectAsm.cpp
+  src/action/inject/FSAsm.cpp
+  src/action/inject/FontAsm.cpp
+  src/action/inject/GTAsm.cpp
+  src/action/inject/HUDAsm.cpp
+  src/action/inject/HurtAsm.cpp
+  src/action/inject/ListAsm.cpp
+  src/action/inject/LoadSaveAsm.cpp
+  src/action/inject/MenuAsm.cpp
+  src/action/inject/MenuManagerAsm.cpp
+  src/action/inject/MiniSubAsm.cpp
+  src/action/inject/NDrone2_CombatAsm.cpp
+  src/action/inject/NDrone2_CoverAsm.cpp
+  src/action/inject/NDrone2_DamageAsm.cpp
+  src/action/inject/NDrone2_TalkAsm.cpp
+  src/action/inject/PickupAsm.cpp
+  src/action/inject/PlayerAsm.cpp
+  src/action/inject/PlayerTraverseAsm.cpp
+  src/action/inject/PlayerWeaponAsm.cpp
+  src/action/inject/RadioAsm.cpp
+  src/action/inject/SSAsm.cpp
+  src/action/inject/SSysAsm.cpp
+  src/action/inject/ScriptAsm.cpp
+  src/action/inject/ScriptPlayerAsm.cpp
+  src/action/inject/SensorAsm.cpp
+  src/action/inject/SoundAsm.cpp
+  src/action/inject/SubAsm.cpp
+  src/action/inject/TextAsm.cpp
+  src/action/inject/TextBoxAsm.cpp
+  src/action/inject/bulletAsm.cpp
+  src/action/inject/carAsm.cpp
+  src/action/inject/d3dSeamAsm.cpp
+  src/action/inject/dsndSeamAsm.cpp
+  src/action/inject/gameAsm.cpp
+  src/action/inject/hashtableAsm.cpp
+  src/action/inject/inputAsm.cpp
+  src/action/inject/mathAsm.cpp
+  src/action/inject/multiplayerAsm.cpp
+  src/action/inject/multiplayer_flagAsm.cpp
+  src/action/inject/multiplayer_goldeneyeAsm.cpp
+  src/action/inject/multiplayer_modesAsm.cpp
+  src/action/inject/multiplayer_objectsAsm.cpp
+  src/action/inject/psiSaveAsm.cpp
+  src/action/inject/ui_codenamesAsm.cpp
+  src/action/inject/viewAsm.cpp
   src/action/devtools/MenuProbe.cpp
   src/action/devtools/SndTrace.cpp
   src/action/devtools/DataWrites.cpp
@@ -582,6 +644,31 @@ set(nf_driving_sources
   src/driving/autofunc.cpp
   src/inject_driving.cpp
   src/inject.h
+  # the entries through which the original's code calls ours, with its arguments in registers (injected build only)
+  src/driving/inject/AnimDeltaQAsm.cpp
+  src/driving/inject/AnimEngineAsm.cpp
+  src/driving/inject/CameraIniLoaderAsm.cpp
+  src/driving/inject/CollisionQueriesAsm.cpp
+  src/driving/inject/DafiAsm.cpp
+  src/driving/inject/DecodeUnusedAsm.cpp
+  src/driving/inject/EaglFontAsm.cpp
+  src/driving/inject/FiltersUnusedAsm.cpp
+  src/driving/inject/GameLoopAsm.cpp
+  src/driving/inject/LightsAsm.cpp
+  src/driving/inject/ModelAsm.cpp
+  src/driving/inject/PhysicsUtilAsm.cpp
+  src/driving/inject/ProfilerAsm.cpp
+  src/driving/inject/RenderMethodAsm.cpp
+  src/driving/inject/RendererAsm.cpp
+  src/driving/inject/SkyWaterAsm.cpp
+  src/driving/inject/StateManagerAsm.cpp
+  src/driving/inject/StreamAsm.cpp
+  src/driving/inject/TarAsm.cpp
+  src/driving/inject/UDataAsm.cpp
+  src/driving/inject/UGroupAsm.cpp
+  src/driving/inject/VehicleRenderAsm.cpp
+  src/driving/inject/ViewAsm.cpp
+  src/driving/inject/WeaponCamerasAsm.cpp
   src/driving/logging.cpp
   src/common/launchInfo.cpp
   src/driving/main.cpp
@@ -1333,7 +1420,8 @@ if(NOT NIGHTFIRE_SDL)
   list(APPEND nf_standalone_sources src/driving/platform/HostWindowWin32.cpp)   # the SDL build's is in drivinginject
 endif()
 foreach(source ${nf_driving_sources} ${nf_output_sources})
-  if(source MATCHES "src/(driving|common/gfx)/devtools/" OR source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
+  if(source MATCHES "src/(driving|common/gfx)/devtools/" OR source MATCHES "src/driving/inject/" OR
+     source MATCHES "src/(inject_driving|dllmain)\.cpp$" OR
      source MATCHES "src/common/(xbeOriginal|xbeEntrySeam|xbeProfiler)\.cpp$")
     continue()
   endif()

@@ -59,10 +59,8 @@ obj_tag * Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *
                         uint count, uint channel, uint sound, char placed, ushort respawn, ushort lifetime,
                         uint label);
 void Pickup_Update(obj_tag *obj);
-void _Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by);
-void Pickup_Handler(void);
-bool _Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from);
-void Pickup_CanInheritPosition(void);
+void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by);
+bool Pickup_CanInheritPosition(obj_tag *pickup, obj_tag *from);
 void __stdcall Pickup_MakeRandomWeaponSet(void);
 obj_tag * Pickup_CreateFromSet(_VECTOR *pos, _VECTOR *rot, ushort kind);
 obj_tag * Pickup_CreateSimple(_MATRIX *mtx, short weapon, short count, ushort kind);

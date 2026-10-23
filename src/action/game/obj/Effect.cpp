@@ -183,18 +183,18 @@ void Effect_Create(HITDATA_tag *hit, obj_tag *obj, uint flags, float volume) {
 
     hit->surfaceNormal = plane;
     if (flags & EFFECT_BULLET)
-        _Effect_Bullet(obj, hit, cel, flags);
+        Effect_Bullet(obj, hit, cel, flags);
     else if (flags & EFFECT_STEP)
-        _Effect_Player(hit, obj, cel, flags, volume);
+        Effect_Player(hit, obj, cel, flags, volume);
     else if (flags & EFFECT_LASER)
-        _Effect_Laser(hit, cel, obj, flags);
+        Effect_Laser(hit, cel, obj, flags);
     else if (flags & EFFECT_BODY)
-        _Effect_Body(hit, obj, cel, flags);
+        Effect_Body(hit, obj, cel, flags);
 }
 
 // A bullet's sound; its material's smoke (always for the player's bullets, half the time for others'); and its mark,
 // a centimetre out from the surface, facing out
-void _Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
+void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
 
     BU_tag *bullet = (BU_tag *)obj->extraObjectData;
     _VECTOR *normal = &hit->surfaceNormal.normal;
@@ -241,30 +241,14 @@ void _Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
     mark->parent = hit->hitObj;
     hashtable_set_sub_object_to_entity_gfx(mark, EffectInfo[hit->materialType & 0x3f].decal);
     if (hit->hitCel != NULL)
-        _Effect_LinkToCel(mark, cel);
+        Effect_LinkToCel(mark, cel);
     else
-        _Effect_LinkToObject(mark, hit->hitObj);
+        Effect_LinkToObject(mark, hit->hitObj);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The object in EAX, the hit in ECX
-// AUTOLTCG
-void __declspec(naked) Effect_Bullet(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push ecx
-        push eax
-        call _Effect_Bullet
-        add esp, 16
-        ret
-    }
-}
-#endif
 
 // A step's sound, and with EFFECT_LEFT_FOOT or EFFECT_RIGHT_FOOT the footprint under that foot, facing where the
 // player faces (the foot, for anything else), if the foot is within 20 cm of the floor
-void _Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, float volume) {
+void Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, float volume) {
 
     if (flags & EFFECT_SOUND) {
         DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundStep,
@@ -301,31 +285,14 @@ void _Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, fl
     mark->matrix.m[13] = hit->hitPosition.y + 0.05f;
     hashtable_set_sub_object_to_entity_gfx(mark, footprint);
     if (hit->hitCel != NULL)
-        _Effect_LinkToCel(mark, cel);
+        Effect_LinkToCel(mark, cel);
     else
-        _Effect_LinkToObject(mark, hit->hitObj);
+        Effect_LinkToObject(mark, hit->hitObj);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The hit in EAX, the object in EBX
-// AUTOLTCG
-void __declspec(naked) Effect_Player(void) {
-    _asm {
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push ebx
-        push eax
-        call _Effect_Player
-        add esp, 20
-        ret
-    }
-}
-#endif
 
 // The laser's sound and its material's smoke, with a spark six times in ten; every other frame a little dust near
 // the point
-void _Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
+void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
 
     if (flags & EFFECT_SOUND)
         Sound_PlayExt((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundStep, 100.0f, 0, 0);
@@ -369,24 +336,8 @@ void _Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The hit in EAX, the cel in EBX
-// AUTOLTCG
-void __declspec(naked) Effect_Laser(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push ebx
-        push eax
-        call _Effect_Laser
-        add esp, 16
-        ret
-    }
-}
-#endif
-
 // Only the sound, which makes the drones more watchful
-void _Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
+void Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
     if (flags & EFFECT_SOUND) {
         DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundBody,
                                             &hit->hitPosition, 100.0f, -1.0f, -1.0f, 0, 0, 0);
@@ -394,24 +345,8 @@ void _Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The hit in EAX
-// AUTOLTCG
-void __declspec(naked) Effect_Body(void) {
-    _asm {
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push eax
-        call _Effect_Body
-        add esp, 16
-        ret
-    }
-}
-#endif
-
 // Off its cel's or object's marks (it stays in use)
-void _Effect_UnLink(ATTACH_tag *mark) {
+void Effect_UnLink(ATTACH_tag *mark) {
     if (mark == NULL)
         return;
     ATTACH_tag *next = mark->next;
@@ -428,37 +363,20 @@ void _Effect_UnLink(ATTACH_tag *mark) {
     mark->prev = NULL;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The mark in EAX
-// AUTOLTCG
-void __declspec(naked) Effect_UnLink(void) {
-    _asm {
-        push ecx
-        push edx
-        push eax
-        call _Effect_UnLink
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // A mark from EffectList; when they are all in use, the oldest is taken back
 // AUTOINJECT
 ATTACH_tag* Effect_NewMark(void) {
     ATTACH_tag *mark = (ATTACH_tag *)DList_MoveFromFree2InUse(&EffectList);
     if (mark == NULL) {
         ATTACH_tag *oldest = (ATTACH_tag *)EffectList.activeList.head;
-        _Effect_UnLink(oldest);
+        Effect_UnLink(oldest);
         DList_RemoveFromInUse2Free(&EffectList, &oldest->node);
         mark = (ATTACH_tag *)DList_MoveFromFree2InUse(&EffectList);
     }
     return mark;
 }
 
-void _Effect_LinkToCel(ATTACH_tag *mark, cel_tag *cel) {
+void Effect_LinkToCel(ATTACH_tag *mark, cel_tag *cel) {
     ATTACH_tag *first = cel->attachments;
     mark->next = first;
     mark->prev = NULL;
@@ -469,26 +387,8 @@ void _Effect_LinkToCel(ATTACH_tag *mark, cel_tag *cel) {
     mark->cel = cel;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The mark in EAX, the cel in EDX
-// AUTOLTCG
-void __declspec(naked) Effect_LinkToCel(void) {
-    _asm {
-        push ecx
-        push edx
-        push edx
-        push eax
-        call _Effect_LinkToCel
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // On the object, in its space
-void _Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj) {
+void Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj) {
     if (mark == NULL || obj == NULL)
         return;
     _MATRIX inverse;
@@ -508,20 +408,6 @@ void _Effect_LinkToObject(ATTACH_tag *mark, obj_tag *obj) {
     mark->cel = NULL;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The mark in ESI, the object in EDI
-// AUTOLTCG
-void __declspec(naked) Effect_LinkToObject(void) {
-    _asm {
-        push edi
-        push esi
-        call _Effect_LinkToObject
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Every mark on the object back to EffectList (it is deleted or broken)
 // AUTOINJECT
 void Effect_RemoveSObjs(obj_tag *obj) {
@@ -529,7 +415,7 @@ void Effect_RemoveSObjs(obj_tag *obj) {
     obj->attachments = NULL;
     while (mark != NULL) {
         ATTACH_tag *next = mark->next;
-        _Effect_UnLink(mark);
+        Effect_UnLink(mark);
         DList_RemoveFromInUse2Free(&EffectList, &mark->node);
         mark = next;
     }

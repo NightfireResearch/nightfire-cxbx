@@ -17,8 +17,7 @@
 //    guess was unobservable either way);
 //  - the single exception is dsndCreateSoundBufferWithSomeDefaultSettings, which takes its channel count in
 //    EDX and its 3D flag on the stack, and still leaves cleanup to the caller - a hidden custom convention of
-//    the same class as D3DDevice_SetRenderState_Simple in the D3D seam. It needs the naked entry trampoline in
-//    dsndSeam.cpp; do not call it directly from new C++ code.
+//    the same class as D3DDevice_SetRenderState_Simple in the D3D seam (inject/dsndSeamAsm.cpp).
 //
 // The same applies in the other direction, to the DSOUND entry points the seam *calls*: a typedef with the
 // wrong parameter count silently unbalances the stack, because these are all callee-cleans __stdcall. Every
@@ -105,11 +104,7 @@ void __cdecl xboxCreateSoundBuffers(void);
 
 // Creates one Xbox ADPCM sound buffer with the game's default settings (44032 Hz, 4 bits/sample, 64 samples per
 // block), 3D-capable if numChannels == 1 and is3d != 0. Returns the new buffer, 0 on failure.
-//
-// NOTE: naked entry trampoline - the original takes numChannels in EDX. Never call this from new C++ code; call
-// dsndCreateSoundBuffer() below instead.
-void dsndCreateSoundBufferWithSomeDefaultSettings(void);
-uint32_t dsndCreateSoundBuffer(int numChannels, char is3d); // the real implementation behind the trampoline
+uint32_t dsndCreateSoundBuffer(int numChannels, char is3d);
 
 // The 3D listener. SetListenerPosition/SetListenerOrientation also cache their values in AudioSystem,
 // because dsndUpdateVoices reads them back to park non-positioned 3D voices on top of the listener.

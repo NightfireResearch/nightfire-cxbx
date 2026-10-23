@@ -64,11 +64,8 @@ void Sound_ZeroAlertness(void);
 void HandleMapSoundAllocation(void);
 void Sound_Init(void);
 void Sound_Kill(void);
-DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref);
-void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd);
-// The register adaptors (Sound.cpp)
-DYNAMICSOUNDS* Sound_Play(void);
-void Sound_ReqestPlaySfx(void);
+DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref);
+void Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd);
 void Sound_UpdateSounds(_VECTOR *listener);
 bool Sound_IsFinnished(DYNAMICSOUNDS *handle);
 float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest);

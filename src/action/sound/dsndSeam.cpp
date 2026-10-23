@@ -480,8 +480,8 @@ static void FillAdpcmFormat(XBOXADPCMWAVEFORMAT_Xbox *fmt, int numChannels) {
     fmt->wSamplesPerBlock = ADPCM_SAMPLES_PER_BLOCK;
 }
 
-// The real body of dsndCreateSoundBufferWithSomeDefaultSettings (0x000e0f00), reached through the naked
-// trampoline below. Note the original ignores ECX entirely - it only ever reads EDX and one stack argument.
+// dsndCreateSoundBufferWithSomeDefaultSettings (0x000e0f00). The original ignores ECX: it reads only EDX and one
+// stack argument.
 uint32_t dsndCreateSoundBuffer(int numChannels, char is3d) {
     XBOXADPCMWAVEFORMAT_Xbox waveFormat;
     DSBUFFERDESC_Xbox bufferDesc;
@@ -497,29 +497,6 @@ uint32_t dsndCreateSoundBuffer(int numChannels, char is3d) {
     IDirectSound_CreateSoundBuffer(AudioSys.directSoundInst, &bufferDesc, &bufferObj, NULL);
     return bufferObj;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes its channel count in EDX and its 3D flag on the stack, and still leaves the stack cleanup
-// to the caller (plain RET) - confirmed via raw disassembly of both the function and its one call site in
-// xboxCreateSoundBuffers (0x000e1170: "PUSH EBX / MOV EDX,EBP / CALL 0x000e0f00 / ... / ADD ESP,0x4"). Ghidra
-// reports it as __fastcall, which would be a callee-cleans RET 4 if compiled as such - hence a hand-written
-// entry trampoline rather than an AUTOINJECT of a __fastcall function. Same pattern as d3dRenderTargetSetup.
-//
-// AUTOLTCG
-void __declspec(naked) dsndCreateSoundBufferWithSomeDefaultSettings(void) {
-    _asm {
-        push ebp
-        mov  ebp, esp
-        movzx eax, byte ptr [ebp + 8] // the single stack argument: is3d
-        push eax
-        push edx                      // numChannels
-        call dsndCreateSoundBuffer
-        add  esp, 8
-        pop  ebp
-        ret                           // plain RET: the caller cleans up its own pushed argument
-    }
-}
-#endif
 
 // 192 buffers: per voice slot, one mono 2D, one stereo 2D and one mono 3D, all Xbox ADPCM at 44032 Hz. They are
 // created once at boot and then re-bound to different sample data for the lifetime of the process - nothing ever

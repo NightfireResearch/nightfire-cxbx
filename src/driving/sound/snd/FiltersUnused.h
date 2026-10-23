@@ -142,10 +142,6 @@ void SFILTER_timestretchsetratio(SND::SFilterStretch *node, int ratio);         
 int stretch(SND::SFilterStretch *node, int frames, float *in, float *out);                                // 0x001441a0
 int stretchframesneeded(SND::SFilterStretch *node, int frames);                                           // 0x001440b0
 // The register-argument helpers: adaptors under Ghidra's names (AUTOLTCG), the cores beside them in the .cpp
-void FUN_00143be0();   // EAX = shift, (a, b, out, window): the crossfade
-void FUN_00143e10();   // EBX = &data, ESI = &error, (window, ratio): the next segment's shift
-void FUN_00143f20();   // EBX = node, (&in, shift): one segment into the output buffer
-void FUN_00144050();   // EDX = node, (&frames, &out): drain the output buffer
 
 // The cores, for the shadow test
 void SndStretch_Crossfade(int shift, const float *a, const float *b, float *out, int window);

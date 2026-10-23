@@ -117,12 +117,12 @@ void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char
     ushort set = mpObj->type != GOLDENEYE_KEY;
     ushort place = Rand_Rand(set ? GoldenEyeNonKeyCount : GoldenEyeKeyCount);
     Mat_Copy(&GoldenEyeSpawns[place + set * 8].mtx, &mpObj->resetMtx);
-    _MP_ResetMPObject(mpObj, state, gameObj, false);
+    MP_ResetMPObject(mpObj, state, gameObj, false);
 }
 
 // gameObj->curState: 0 at its place, 1 carried (3 while the ray is out), 2 dropped, 99 to be put back to 0.
 // gameObj->subState is the part's index in GoldenEye.keys; mpObj->num the team of whoever last took it.
-void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
+void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
     MPOBJECT *other = (MPOBJECT *)GoldenEye.keys[gameObj->subState == 0].gameObj->extraObjectData;
 
     if (GoldenEye.deathRay != NULL) {
@@ -169,7 +169,7 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
     switch (gameObj->curState) {
     case 0:
-        mpObj->holder = _MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
         if (mpObj->holder == NULL)
             return;
         MP_GoldenEyeTaken(mpObj, gameObj);
@@ -177,7 +177,7 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
     case 1:
         if (!dropped) {
-            _MP_SetUpPlayerSomehow(gameObj, mpObj->holder, gameObj->subState != 0 ? 0x23 : 0x15);
+            MP_SetUpPlayerSomehow(gameObj, mpObj->holder, gameObj->subState != 0 ? 0x23 : 0x15);
 
             // Both parts held by one team, and no ray out yet: fire it at an agent of the other team
             if (GoldenEye.keys[gameObj->subState == 0].gameObj->curState != 1)
@@ -233,7 +233,7 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         return;
 
     case 2: {
-        mpObj->holder = _MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
         if (mpObj->holder != NULL) {
             MP_GoldenEyeTaken(mpObj, gameObj);
             return;
@@ -260,17 +260,3 @@ void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
         break;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
-    _asm {
-        push eax                    // gameObj
-        push dword ptr [esp + 12]   // dropped
-        push dword ptr [esp + 12]   // mpObj
-        call _MP_GoldenEyeUpdate
-        add esp, 12
-        ret
-    }
-}
-#endif

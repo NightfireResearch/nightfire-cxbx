@@ -114,7 +114,7 @@ void TestSSys() {
                     return 0u;
                 },
                 [] {
-                    _SSys_Msg(item, msg);
+                    SSys_Msg(item, msg);
                     return 0u;
                 });
     }

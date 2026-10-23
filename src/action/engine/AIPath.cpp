@@ -136,7 +136,7 @@ void AIPath_Parse(AIPathBlock *block) {
 }
 
 // Each link's length, and each node's list of links. The original takes the path in ESI.
-void _AIPath_Prepare(AIPath_tag *path) {
+void AIPath_Prepare(AIPath_tag *path) {
     for (int i = 0; i < (int)path->linkCount; i++) {
         AILink_tag *link = &path->links[i];
         _VECTOR along;
@@ -172,21 +172,9 @@ void _AIPath_Prepare(AIPath_tag *path) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) AIPath_Prepare(void) {
-    _asm {
-        push esi
-        call _AIPath_Prepare
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Puts a bound node on its cel's list, and gives it the headroom up to the ceiling (at least 2 m). The original takes
 // the node in EAX and the bound's record (its name) on the stack.
-void _AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record) {
+void AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record) {
     cel_tag *cel = build_FindCel(&node->fileNode->pos, glb_world);
     if (cel == NULL)
         return;
@@ -205,22 +193,9 @@ void _AIBounds_Link2Cel(AIBoundNode_tag *node, uchar *record) {
     Collide_FreeHitList(&hits);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) AIBounds_Link2Cel(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push eax
-        call _AIBounds_Link2Cel
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Puts each bound link on the list of the cel of its end a, and of its end b when that is another cel. The original
 // takes the bound in EDI.
-void _AIBounds_Prepare(AIBound_tag *bound) {
+void AIBounds_Prepare(AIBound_tag *bound) {
     for (uint i = 0; i < bound->linkCount; i++) {
         AIBoundLink_tag *link = &bound->links[i];
         cel_tag *celA = bound->runtimeNodes[link->a].fileNode->cel;
@@ -235,18 +210,6 @@ void _AIBounds_Prepare(AIBound_tag *bound) {
         }
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) AIBounds_Prepare(void) {
-    _asm {
-        push edi
-        call _AIBounds_Prepare
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Once the level is loaded: every path node onto its cel's list (AIPath_Link2Cel in the PS2 build), the paths
 // prepared, and the same for the bounds
@@ -267,13 +230,13 @@ void AIPath_BindNodes(void) {
             node->fileNode->cel = cel;
             cel->aiNodes = node;
         }
-        _AIPath_Prepare(path);
+        AIPath_Prepare(path);
     }
 
     for (uint b = 0; b < AIBoundCount; b++) {
         AIBound_tag *bound = &AIBounds[b];
         for (uint i = 0; i < bound->nodeCount; i++)
-            _AIBounds_Link2Cel(&bound->runtimeNodes[i], bound->record);
-        _AIBounds_Prepare(bound);
+            AIBounds_Link2Cel(&bound->runtimeNodes[i], bound->record);
+        AIBounds_Prepare(bound);
     }
 }

@@ -509,32 +509,13 @@ void Text_FlushAllSubtitles(void) {
 }
 
 // Drops a line and gives the one after: the message's next line, or the first queued for player of type. Our name.
-TXT_MSG* _Text_NextMsg(TXT_MSG *msg, char player, int type) {
+TXT_MSG* Text_NextMsg(TXT_MSG *msg, char player, int type) {
     TXT_MSG *next = msg != NULL ? msg->nextLine : NULL;
     Text_DelMsg(msg);
     if (next != NULL)
         return next;
     return Text_FindMsg(player, type);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the line, BL the player, EDI the type
-// AUTOLTCG
-void __declspec(naked) Text_NextMsg(void) {
-    _asm {
-        push ecx
-        push edx
-        push edi
-        push ebx
-        push eax
-        call _Text_NextMsg
-        add esp, 12
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Counts down the line *msg shows for player (-1 any) of type; when its time is up, or there is none, the next.
 // True when *msg changed (or was looked for), false while it shows on, or when the player's view shows no sprites.
@@ -555,7 +536,7 @@ bool Text_UpdateMsg(char player, int type, TXT_MSG **msg) {
         line->timer = line->timer - FRAME_RATE_MUL;
     if (!(line->timer <= 0.0f))
         return false;
-    *msg = _Text_NextMsg(line, player, type);
+    *msg = Text_NextMsg(line, player, type);
     return true;
 }
 

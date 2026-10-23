@@ -100,19 +100,7 @@ typedef RLightManager *(RLightManager::*DeleteMethod)(unsigned flags);
 }  // namespace
 
 // ---------------------------------------------------------------------------------------------------------------
-// The blink and the light directions (register-argument helpers)
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0007e520() {
-    __asm {
-        push esi
-        call LightEffectBrightness
-        add esp, 4
-        ret
-    }
-}
-#endif
+// The blink and the light directions
 
 // The blink is a phase in [0, 1) that advances at blinkRate per tick from blinkStartTick. The light is dark once
 // the phase passes blinkDuty; before that its brightness is blinkBase + blinkAmplitude * shape(phase), where the
@@ -143,19 +131,6 @@ double LightEffectBrightness(const ArticleEffect *effect) {
     }
     return shape * effect->light.blinkAmplitude + effect->light.blinkBase;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_0007eed0() {
-    __asm {
-        push ebx
-        push eax
-        call SetLightDirections
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 void SetLightDirections(LightBlock *info, const RLightAngles *angles) {
     const Coord4 forward = { 0.0f, 0.0f, 1.0f, 0.0f };

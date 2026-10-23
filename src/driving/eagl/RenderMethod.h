@@ -456,7 +456,6 @@ void EAGL_VertexBufferDestructor(EAGL::LoadedVertexBuffer *buffer);            /
 void EAGL_RenderMethodConstructor(EAGL::RenderMethod *method);                 // 0x000f11c0
 void EAGL_ReleaseDynamicBuffers(EAGL::RenderMethod *method);                   // 0x000f1210 (invented)
 void EAGL_RenderMethodDestructor(EAGL::RenderMethod *method);                  // 0x000f1390
-void FUN_000f13b0();                                                           // 0x000f13b0 determinant, EAX = matrix
 double EAGL_Determinant3x3(float a0, float a1, float a2, float a3, float a4, float a5, float a6, float a7,
                            float a8);                                          // 0x000f1490 (invented, unreferenced)
 
@@ -474,7 +473,6 @@ void EAGL_DrawVertices(uint32_t start, uint32_t count);                        /
 void EAGL_DrawIndexedVerticesPushBuffer(uint32_t unused0, uint32_t unused1, uint32_t start, uint32_t count);  // 0x000f44e0
 void EAGL_DrawIndexedVertices(uint32_t start, uint32_t count);                 // 0x000f4500
 int EAGL_RoundToInt(float value);                                              // 0x000f4530 (invented, unreferenced)
-void EAGL_StoreRegisterArgs();                                                 // 0x000f4540 (EAX, ECX, EDX; unreferenced)
 
 // ---- helpers
 void __stdcall EAGL_ModelCallFence(const char *name);                          // 0x000f5d70 (Model::Call's)
@@ -486,7 +484,6 @@ uint32_t EAGL_RMPacketStride();                                                /
 uint8_t *EAGL_RMVariationData();                                               // 0x000f5ff0 (unreferenced)
 void EAGL_SkinAndUpload(const EAGL::SkinVertex *vertices, int count, int reg0, int count0, int reg1, int count1,
                         const float *palette);                                 // 0x000f6aa0
-void EAGL_LockRegisterArgs();                                                  // 0x000f6b90 (EAX, EDX; unreferenced)
 
 // ---- the opcode handlers (table at 0x001ce700, which still points at the originals' addresses)
 void EAGL_RMOp_Skip();                    // 0x000f6010 ops 0, 10, 12, 13

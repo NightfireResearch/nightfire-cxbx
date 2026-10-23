@@ -52,7 +52,6 @@ constexpr float kRatioScale = 1.0f / 4096;   // the time stretch's 4.12 ratio
 #define UnpackFAt (reinterpret_cast<SFilterProcess>(SFILTER_unpackf))            // SFILTER_unpackf
 #define TimeStretchAt (reinterpret_cast<SFilterProcess>(SFILTER_timestretch))        // SFILTER_timestretch
 
-
 // The original's REP MOVSD: count floats, front to back (a float copy keeps the bits)
 void CopyForward(float *to, const float *from, uint32_t count) {
     for (uint32_t i = 0; i < count; i++)
@@ -491,22 +490,6 @@ void SndStretch_Crossfade(int shift, const float *a, const float *b, float *out,
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_00143be0() {
-    __asm {
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        push dword ptr [esp + 16]
-        push eax
-        call SndStretch_Crossfade
-        add esp, 20
-        ret
-    }
-}
-#endif
-
 // The next segment's shift from the data byte and the error: 0 (one byte consumed) when keeping the window as it
 // is leaves the smaller error, else the byte's offset (+ or -, two bytes consumed when stretching below 1).
 int SndStretch_NextShift(const uint8_t **data, float *error, int window, float ratio) {
@@ -541,21 +524,6 @@ int SndStretch_NextShift(const uint8_t **data, float *error, int window, float r
     *error = float(e);
     return c;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_00143e10() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push esi
-        push ebx
-        call SndStretch_NextShift
-        add esp, 16
-        ret
-    }
-}
-#endif
 
 // One segment of input into the output buffer at the shift: answers 0.
 int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
@@ -601,20 +569,6 @@ int SndStretch_Segment(SND::SFilterStretch *node, const float **in, int shift) {
     return 0;
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_00143f20() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push ebx
-        call SndStretch_Segment
-        add esp, 12
-        ret
-    }
-}
-#endif
-
 // Up to *frames of what the output buffer holds, into *out; both advanced. Answers the frames taken.
 int SndStretch_Drain(SND::SFilterStretch *node, int *frames, float **out) {
     const float *from = OutputBuffer(node) + node->readPosition;
@@ -628,20 +582,6 @@ int SndStretch_Drain(SND::SFilterStretch *node, int *frames, float **out) {
     *out += count;
     return count;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_00144050() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push edx
-        call SndStretch_Drain
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // With no input left it passes the upstream node's answer for 200 frames (into 'scratch') straight back - the
 // original's, not a typo here. Otherwise pulls the frames the stretch needs (unless the packet player has fewer

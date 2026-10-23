@@ -1281,8 +1281,8 @@ bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, loading);
         } else {
             char *codename = (char *)__Menu_SendMessage(control, MessageType_GetText, 0, 0);
-            _Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, ls.mpPlayer - 1, mask, slot, (HASHCODE)0, 0,
-                          NULL, 0);
+            Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, ls.mpPlayer - 1, mask, slot, (HASHCODE)0, 0,
+                         NULL, 0);
         }
         if (ls.slot >= CODENAME_SLOTS_DEFAULT)
             strcpy(MPSettings.Player[player].Name, ls.codename);

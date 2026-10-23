@@ -243,7 +243,7 @@ bool Drone_PointInAnyAIBox(_VECTOR *pos, ushort type) {
 
 // Whether the node gives cover from the target, recorded in node->usable[target]. True when it ran a line-of-sight
 // test, which Drone_ProcessCoverNodes allows one of per target.
-bool _Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
+bool Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
     if (node == NULL || target >= MAX_DRONE_TARGETS)
         return false;
     DroneTarget_tag *info = &NPCGlobals.targets[target];
@@ -329,19 +329,6 @@ bool _Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
     return tests != NPCGlobals.visionTests;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Drone_IsCoverNodeUsable(void) {
-    _asm {
-        push esi
-        push edi
-        call _Drone_IsCoverNodeUsable
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Every fifth call, looks at the cover nodes for each target in turn, going on from where it left off, until one
 // line-of-sight test per target
 // AUTOINJECT
@@ -353,7 +340,7 @@ void Drone_ProcessCoverNodes(void) {
 
     for (uint target = 0; target < MAX_DRONE_TARGETS; target++) {
         for (uint tried = 0; tried < NPCGlobals.numCoverNodes;) {
-            bool tested = _Drone_IsCoverNodeUsable(target, &NPCGlobals.coverNodes[NPCGlobals.coverCursor]);
+            bool tested = Drone_IsCoverNodeUsable(target, &NPCGlobals.coverNodes[NPCGlobals.coverCursor]);
             NPCGlobals.coverCursor++;
             if (NPCGlobals.coverCursor >= NPCGlobals.numCoverNodes)
                 NPCGlobals.coverCursor = 0;

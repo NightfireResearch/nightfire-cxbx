@@ -287,7 +287,7 @@ void HookControlCallees() {
     Hook(0x0003ac10, (const void *)&FakeTracking);
     Hook(0x0003c430, (const void *)&DroneCoreShadow_FakeTalking);
     // Our NDrone2_ControlSTANDARD calls the adaptor's core
-    Hook((unsigned)(uintptr_t)&_NDrone2_HandleTalking, (const void *)&FakeTalkingCore);
+    Hook((unsigned)(uintptr_t)&NDrone2_HandleTalking, (const void *)&FakeTalkingCore);
     Hook(0x00043400, (const void *)&FakeMove);
     Hook(0x000454e0, (const void *)&FakeBoundryFlags);
     Hook(0x000437f0, (const void *)&FakeNoBunching);

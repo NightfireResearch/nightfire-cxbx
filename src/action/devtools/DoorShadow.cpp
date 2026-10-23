@@ -310,7 +310,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_SetupSwing(obj);
+                    Door_SetupSwing(obj);
                     return 0u;
                 });
         Compare("Door_SetupSlide", trial,
@@ -320,7 +320,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_SetupSlide(obj);
+                    Door_SetupSlide(obj);
                     return 0u;
                 });
     }
@@ -337,7 +337,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_SetState(obj, state);
+                    Door_SetState(obj, state);
                     return 0u;
                 });
     }
@@ -353,7 +353,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_Interp(obj, (DOORINFO *)obj->extraObjectData, flag);
+                    Door_Interp(obj, (DOORINFO *)obj->extraObjectData, flag);
                     return 0u;
                 });
     }
@@ -441,7 +441,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_MoveGroup(obj, (DOORINFO *)obj->extraObjectData, flag);
+                    Door_MoveGroup(obj, (DOORINFO *)obj->extraObjectData, flag);
                     return 0u;
                 });
         Compare("Doors_Calc", trial,
@@ -466,7 +466,7 @@ void TestDoors() {
                     return 0u;
                 },
                 [] {
-                    _Door_CloseIfClear(obj);
+                    Door_CloseIfClear(obj);
                     return 0u;
                 });
     }

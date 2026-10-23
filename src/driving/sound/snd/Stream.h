@@ -130,12 +130,6 @@ bool FUN_001503c0(char *p);                                                     
 
 // The register-argument helpers (sound.md 7.1): adaptors under Ghidra's names (AUTOLTCG), and the C++ under them,
 // which the ports call directly.
-void FUN_0014aba0();   // ESI = s, (bytes): bytes released; greedy again when that drops below the level
-void FUN_0014ac00();   // EDI = s -> EAX: pop a free request, new generation in its id
-void FUN_0014ac70();   // EDI = s, ESI = request: append to the queue as queued
-void freerequest();    // EAX = request, ECX = s: unlink, back to the free list (EAX, ECX survive)
-void FUN_0014ad20();   // EAX = s -> EAX: deliver the chunks read; 1 = the request's end tag was delivered
-void FUN_0014af50();   // ESI = s, (priority): start the next request: read on, open, or close and reopen
 void SndStream_ReleaseBytes(SND::StrmInternal *s, int bytes);
 SND::StrmRequest* SndStream_PopFree(SND::StrmInternal *s);
 void SndStream_Append(SND::StrmInternal *s, SND::StrmRequest *request);

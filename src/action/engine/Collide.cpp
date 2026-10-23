@@ -127,7 +127,7 @@ HITDATA_tag* Coll_AddHitToList(HITDATA_tag **list, float dist, cel_tag *cel, obj
 }
 
 // Gives the rejected hits (HIT_NONE) back to the heap and sorts the others by distance
-void _Collide_Sort(HITDATA_tag **list) {
+void Collide_Sort(HITDATA_tag **list) {
     HITDATA_tag *hit = *list;
     if (hit == NULL)
         return;
@@ -155,19 +155,6 @@ void _Collide_Sort(HITDATA_tag **list) {
     }
     prev->next = NULL;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The list in EBX
-// AUTOLTCG
-void __declspec(naked) Collide_Sort(void) {
-    _asm {
-        push ebx
-        call _Collide_Sort
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Whether the test passes through the hit's material (and marks it HIT_NONE): the mask's 0x800 the material's 0x40,
 // 1 surfaces 13 and 14, 2 surface 16, 8 a hit that makes no contact
@@ -365,7 +352,7 @@ void Intersect_UnpackTriangleVerticesToWorld(uchar *vertexBlock, ushort v0, usho
 }
 
 // Whether the triangle's bounds meet the box: x, then z, then y
-bool _Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR *boxMin, _VECTOR *boxMax) {
+bool Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR *boxMin, _VECTOR *boxMax) {
     float most = v0->x > v1->x ? v0->x : v1->x;
     if ((most > v2->x ? most : v2->x) < boxMin->x)
         return false;
@@ -387,25 +374,8 @@ bool _Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR 
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The vertices in EDX, ECX and ESI, the box in EDI and EBX
-// AUTOLTCG
-void __declspec(naked) Intersect_AABB_SweptVolume(void) {
-    _asm {
-        push ebx
-        push edi
-        push esi
-        push ecx
-        push edx
-        call _Intersect_AABB_SweptVolume
-        add esp, 20
-        ret
-    }
-}
-#endif
-
 // Two spheres: whether they overlap, a - b, and the square of the distance between the centres
-bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq) {
+bool Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq) {
     Vec_Subtract(a, b, difference);
     double squared = Vec_SqMagnitude(difference);
     *distSq = (float)squared;
@@ -413,26 +383,8 @@ bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radius
     return squared < reach * reach;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The spheres (a centre and its radius) in EBX and EDI, the difference to ESI
-// AUTOLTCG
-void __declspec(naked) Intersect_SphereSphere(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        push dword ptr [edi + 12]
-        push edi
-        push dword ptr [ebx + 12]
-        push ebx
-        call _Intersect_SphereSphere
-        add esp, 24
-        ret
-    }
-}
-#endif
-
 // The test's ray against its sphere
-bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq) {
+bool Intersect_RaySphere(HITTEST_tag *test, float *distSq) {
     _VECTOR closest;
     vecutil_calculate_closest_point_on_line(&closest, &test->rayStart, &test->rayEnd, &test->sphere);
     double squared = Vec_SqDist3D(&test->sphere, &closest);
@@ -440,22 +392,8 @@ bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq) {
     return squared < (double)test->sphereRadius * test->sphereRadius;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The test in ESI
-// AUTOLTCG
-void __declspec(naked) Intersect_RaySphere(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Intersect_RaySphere
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // The test's cylinder against its sphere
-bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq) {
+bool Intersect_CylSphere(HITTEST_tag *test, float *distSq) {
     _VECTOR closest;
     vecutil_calculate_closest_point_on_line(&closest, &test->rayStart, &test->rayEnd, &test->sphere);
     double squared = Vec_SqDist3D(&test->sphere, &closest);
@@ -463,20 +401,6 @@ bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq) {
     double reach = (double)test->radius + test->sphereRadius;
     return squared < reach * reach;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The test in ESI
-// AUTOLTCG
-void __declspec(naked) Intersect_CylSphere(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Intersect_CylSphere
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The cels a test reaches through the portals it crosses, from its own (which comes last), at most 127
 // AUTOINJECT
@@ -582,7 +506,7 @@ bool Intersect_Portal(HITTEST_tag *test, portal_tag *portal) {
 
 // The broad phase against an object: the candidates go to the tester's hit list. A sphere leaves the difference of
 // the centres in the test's plane, a ray or cylinder the object's sphere in the test's.
-void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
+void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
     if (tester == obj || obj == test->ignoreA || obj == test->ignore)
         return;
     if (test->tester != NULL && (test->tester->unknown_0xd9 & 1) && (obj->unknown_0xd9 & 2))
@@ -611,21 +535,21 @@ void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
     case HITTEST_RAY:
         Vec_Copy(&obj->centrePoint, &test->sphere);
         test->sphereRadius = obj->radius;
-        if (_Intersect_RaySphere(test, &dist))
+        if (Intersect_RaySphere(test, &dist))
             Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, NULL, obj)->maybehitDirection);
         break;
     case HITTEST_SPHERE_ONE_SIDED:
     case HITTEST_SPHERE:
     case HITTEST_POINT:
     case HITTEST_SPHERE_BOXES:
-        if (_Intersect_SphereSphere(&test->sphere, test->sphereRadius, &obj->centrePoint, obj->radius,
-                                    &test->plane.normal, &dist))
+        if (Intersect_SphereSphere(&test->sphere, test->sphereRadius, &obj->centrePoint, obj->radius,
+                                   &test->plane.normal, &dist))
             Coll_AddHitToList(&tester->hitList, dist, NULL, obj);
         break;
     case HITTEST_CYLINDER:
         Vec_Copy(&obj->centrePoint, &test->sphere);
         test->sphereRadius = obj->radius * 1.5f;
-        if (_Intersect_CylSphere(test, &dist)) {
+        if (Intersect_CylSphere(test, &dist)) {
             HITDATA_tag *hit = Coll_AddHitToList(&tester->hitList, dist, NULL, obj);
             Vec_Copy(&test->plane.normal, &hit->surfaceNormal.normal);
             Vec_Copy(&test->plane.normal, &hit->maybehitDirection);
@@ -633,21 +557,6 @@ void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
         break;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The test in EAX
-// AUTOLTCG
-void __declspec(naked) Collide_PickObj(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push eax
-        call _Collide_PickObj
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // The broad phase: in each cel the test reaches, the cels chained from it (but with mask 0x80), its objects (but
 // with mask 0x10) and the cel itself (but with mask 0x40), then the forced objects. The candidates go to the
@@ -693,14 +602,14 @@ void Collide_Pick(HITTEST_tag *test) {
                     } else {
                         Vec_Copy(&cel->sphere, &copy.sphere);
                         copy.sphereRadius = cel->sphereRadius;
-                        if (_Intersect_RaySphere(&copy, &dist))
+                        if (Intersect_RaySphere(&copy, &dist))
                             Coll_AddHitToList(&tester->hitList, dist, cel, NULL);
                     }
                     break;
                 case HITTEST_CYLINDER:
                     Vec_Copy(&cel->sphere, &copy.sphere);
                     copy.sphereRadius = cel->sphereRadius * 1.5f;
-                    if (_Intersect_CylSphere(&copy, &dist))
+                    if (Intersect_CylSphere(&copy, &dist))
                         Coll_AddHitToList(&tester->hitList, dist, cel, NULL);
                     break;
                 case HITTEST_SPHERE_ONE_SIDED:
@@ -711,8 +620,8 @@ void Collide_Pick(HITTEST_tag *test) {
                             Coll_AddHitToList(&tester->hitList, 1.0f, cel, NULL);
                     } else {
                         _VECTOR difference;
-                        if (_Intersect_SphereSphere(&test->sphere, test->sphereRadius, &cel->sphere, cel->sphereRadius,
-                                                    &difference, &dist))
+                        if (Intersect_SphereSphere(&test->sphere, test->sphereRadius, &cel->sphere, cel->sphereRadius,
+                                                   &difference, &dist))
                             Coll_AddHitToList(&tester->hitList, dist, cel, NULL);
                     }
                     break;
@@ -722,7 +631,7 @@ void Collide_Pick(HITTEST_tag *test) {
         if (!(test->mask & 0x10)) {
             for (obj_tag *obj = room->firstObject; obj != NULL; obj = obj->nextInCel) {
                 if (!(obj->effectFlags & FLAG_IN_FORCEDLIST))
-                    _Collide_PickObj(test, obj, tester);
+                    Collide_PickObj(test, obj, tester);
             }
         }
         // The cel's own geometry sorts first, in the order the cels were found
@@ -731,14 +640,14 @@ void Collide_Pick(HITTEST_tag *test) {
     }
     if (!(test->mask & 0x10)) {
         for (LLNODE_tag *node = ForcedList.head; node != NULL && node != node->next; node = node->next)
-            _Collide_PickObj(test, (obj_tag *)node, tester);
+            Collide_PickObj(test, (obj_tag *)node, tester);
     }
 }
 
 // The narrow phase against a skinned object without collision geometry of its own: a ray or a sphere against the
 // joints' boxes, a cylinder against the other's cylinder, pushing this one out (all the way in single player, half
 // in multiplayer)
-bool _Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
+bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
     hit->dist = HIT_NONE;
     float t = HIT_NONE;
     COLLJOINT_tag *joints = NULL;
@@ -839,23 +748,9 @@ bool _Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The hit in EAX
-// AUTOLTCG
-void __declspec(naked) Collide_Jointy(void) {
-    _asm {
-        push eax
-        push dword ptr [esp + 8]
-        call _Collide_Jointy
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // The narrow phase of one candidate: the test goes into the cel's or object's space (none for a cel in world space),
 // meets the geometry, and the hit and the push come back out; false if the hit is rejected
-bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
+bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
     _MATRIX mtx;
     Ident = 0;
     cel_tag *cel = hit->hitCel;
@@ -876,7 +771,7 @@ bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
             hit->flags |= HIT_NO_CONTACT;
         if (test->type != HITTEST_SPHERE_ONE_SIDED && (obj->transformFlags & TRANSFORM_ANIMATED) &&
             obj->objGraphics->colldata == NULL)
-            return _Collide_Jointy(test, hit);
+            return Collide_Jointy(test, hit);
         Mat_Copy(&obj->transformMatrix, &mtx);
         test->glist = hit->hitObj->objGraphics;
         if ((hit->hitObj->unknown_0xd9 & 4) && test->type == HITTEST_SPHERE) {
@@ -990,21 +885,6 @@ bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
         Vec_Normalise(&hit->maybehitDirection, &test->dir);
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The hit in EAX
-// AUTOLTCG
-void __declspec(naked) Collide_Intersect(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push eax
-        push dword ptr [esp + 12]
-        call _Collide_Intersect
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // A sphere (the test's sphere, in its geometry's space) against the triangles of the leaf boxes it touches: each
 // triangle within the radius pushes it out along its normal (DeltaP adds up the pushes); the hit is the nearest.
@@ -1185,7 +1065,7 @@ void Intersect_CylGeom(HITTEST_tag *test, HITDATA_tag *hit) {
                 continue;
             if (startSide > test->radius && endSide > test->radius)
                 continue;
-            if (!_Intersect_AABB_SweptVolume(&verts[0], &verts[1], &verts[2], &boxMin, &boxMax))
+            if (!Intersect_AABB_SweptVolume(&verts[0], &verts[1], &verts[2], &boxMin, &boxMax))
                 continue;
             float towards = (float)(((double)dir.y * test->plane.b + (double)dir.x * test->plane.a) +
                                     (double)dir.z * test->plane.c);
@@ -1305,7 +1185,7 @@ void Intersect_CylTriGeom(HITTEST_tag *test, HITDATA_tag *hit) {
             _VECTOR verts[3];
             Intersect_UnpackTriangleVerticesToWorld(block, tri->v[0], tri->v[1], tri->v[2], verts,
                                                     &ColBoxs[b].box->quant);
-            if (!_Intersect_AABB_SweptVolume(&verts[0], &verts[1], &verts[2], &boxMin, &boxMax))
+            if (!Intersect_AABB_SweptVolume(&verts[0], &verts[1], &verts[2], &boxMin, &boxMax))
                 continue;
             if (!Intersect_UnpackTrianglePlaneEq(block, tri->normal, &test->plane))
                 continue;
@@ -1368,36 +1248,21 @@ void Intersect_CylTriGeom(HITTEST_tag *test, HITDATA_tag *hit) {
 
 // Collide_Intersect on each candidate of the tester's list (only the test's own cel's with onlyCel); with flags
 // 0x10 the first hit ends the list. Then the list is sorted.
-void _Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel) {
+void Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel) {
     Collide_Pick(test);
     for (HITDATA_tag *hit = test->tester->hitList; hit != NULL; hit = hit->next) {
         if (hit->hitCel != NULL && hit->hitCel != test->cel && onlyCel) {
             hit->dist = HIT_NONE;
             continue;
         }
-        if (_Collide_Intersect(test->tester->maybeCollision, hit, flags) && (flags & 0x10)) {
+        if (Collide_Intersect(test->tester->maybeCollision, hit, flags) && (flags & 0x10)) {
             for (hit = hit->next; hit != NULL; hit = hit->next)
                 hit->dist = HIT_NONE;
             break;
         }
     }
-    _Collide_Sort(&test->tester->hitList);
+    Collide_Sort(&test->tester->hitList);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The flags in EAX, the test in EDI. Our name (Ghidra had Collide_CylinderIntersect, which is 0x2c6f0).
-// AUTOLTCG
-void __declspec(naked) Collide_TestHits(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push eax
-        push edi
-        call _Collide_TestHits
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // The hits along a ray, nearest first
 // AUTOINJECT
@@ -1418,7 +1283,7 @@ bool Collide_RayIntersect(_VECTOR *startPosition, _VECTOR *endPosition, cel_tag 
     tester.hitList = NULL;
     Vec_Copy(startPosition, &test.rayStart);
     Vec_Copy(endPosition, &test.rayEnd);
-    _Collide_TestHits(&test, flags, onlyCel);
+    Collide_TestHits(&test, flags, onlyCel);
     *hitDataOut = tester.hitList;
     return tester.hitList != NULL;
 }
@@ -1442,7 +1307,7 @@ bool Collide_SphereIntersect(_VECTOR *centre, float radius, cel_tag *cel, obj_ta
     tester.maybeCollision = &test;
     tester.hitList = NULL;
     Vec_Copy(centre, &test.pos);
-    _Collide_TestHits(&test, flags, onlyCel);
+    Collide_TestHits(&test, flags, onlyCel);
     Vec_Add2(&test.push, centre, centre);
     *hitList = tester.hitList;
     return tester.hitList != NULL;
@@ -1459,7 +1324,7 @@ bool Collide_CylinderIntersect(HITTEST_tag *test, HITDATA_tag **hitList, char on
     test->type = HITTEST_CYLINDER;
     tester.maybeCollision = test;
     tester.hitList = *hitList;
-    _Collide_TestHits(test, flags, onlyCel);
+    Collide_TestHits(test, flags, onlyCel);
     *hitList = tester.hitList;
     return tester.hitList != NULL;
 }
@@ -1490,7 +1355,7 @@ _VECTOR* Collide_CylinderTris(_VECTOR *start, _VECTOR *end, float radius, cel_ta
     Collide_Pick(&test);
     test.type = HITTEST_CYLINDER_TRIS;
     for (HITDATA_tag *hit = tester.hitList; hit != NULL; hit = hit->next)
-        _Collide_Intersect(test.tester->maybeCollision, hit, flags);
+        Collide_Intersect(test.tester->maybeCollision, hit, flags);
     Collide_FreeHitList(&tester.hitList);
     uint tris = TriOnCnt / 3;
     *count = tris < 0xa6 ? tris : 0xa6;
@@ -1576,13 +1441,13 @@ void Collide_Update(obj_tag *first) {
         for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
             if (hit->flags & HIT_COPIED)
                 continue;
-            if (_Collide_Intersect(obj->maybeCollision, hit, test->flags) && (test->flags & 0x10)) {
+            if (Collide_Intersect(obj->maybeCollision, hit, test->flags) && (test->flags & 0x10)) {
                 for (hit = hit->next; hit != NULL; hit = hit->next)
                     hit->dist = HIT_NONE;
                 break;
             }
         }
-        _Collide_Sort(&obj->hitList);
+        Collide_Sort(&obj->hitList);
         for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
             obj_tag *other = hit->hitObj;
             if (other != NULL) {
@@ -1626,7 +1491,7 @@ void Collide_FilterBullets(HITDATA_tag **hitList, ushort flags) {
         }
     }
     if (filtered)
-        _Collide_Sort(hitList);
+        Collide_Sort(hitList);
 }
 
 // The damage of the hits, and (with objectList) the objects hit, up to maxObjectsInList

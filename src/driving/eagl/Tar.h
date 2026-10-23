@@ -171,8 +171,6 @@ EAGL::TAR* EAGL_TARDepthSurface(int32_t width, int32_t height, int32_t depth);  
 void EAGL_TARConstructor(void *object, DynamicLoader *loader);               // 0x000ed070 EAGLInternal::TARConstructor
 void EAGL_TARDestructor(void *object);                                       // 0x000ed2b0 EAGLInternal::TARDestructor
 void EAGL_TARDestructor2(void *object);                                      // 0x000ed2c0 (the same, unreferenced)
-void EAGL_ShapeCountEax();                                                   // 0x000ede20 (EAX = SHPX file)
-void EAGL_ShapeImageEax();                                                   // 0x000ede30 (ECX = SHPX, EAX = index)
 int EAGL_AddSymbolAnswerZero(const char *name, void *value);                 // 0x000ede40 (invented)
 
 #endif // DRIVING_EAGL_TAR_H_

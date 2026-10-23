@@ -290,7 +290,7 @@ void Car_Deactivate(obj_tag *carObj) {
 
 // Eased rate of the way to target, and stopped once nearly still with the stick let go
 static float Car_Ease(float speed, float target, float rate) {
-    float eased = _moveTowardsValue(speed, target, rate);
+    float eased = moveTowardsValue(speed, target, rate);
     if (target <= 0.0002f && target >= -0.0002f && AbsFchs((double)eased) < 0.01f)
         return 0.0f;
     return eased;
@@ -321,7 +321,7 @@ static void Car_HeatGun(CAR_INFO *car) {
 
 // The tank's turret and barrel, turned by the player driving it, and its gun and shell fired from the barrel's end.
 // The barrel dips less far the further the turret is turned from straight ahead.
-void _Car_SetBits(CAR_INFO *car, obj_tag *obj) {
+void Car_SetBits(CAR_INFO *car, obj_tag *obj) {
     obj_tag *barrel = car->barrelGeom;
     obj_tag *turret = car->turretGeom;
     bool fireGun = false;
@@ -394,23 +394,9 @@ void _Car_SetBits(CAR_INFO *car, obj_tag *obj) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the car's data; the car on the stack
-// AUTOLTCG
-void __declspec(naked) Car_SetBits(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Car_SetBits
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Carried along by what it touches, unless that is a drone, a player, a bullet, a dead drone or a rigid body. Not
 // named on PS2; the name is ours.
-bool _Car_InheritVelocity(obj_tag *car, obj_tag *by) {
+bool Car_InheritVelocity(obj_tag *car, obj_tag *by) {
     if (by == NULL)
         return false;
     switch ((uchar)by->objectType) {
@@ -424,20 +410,6 @@ bool _Car_InheritVelocity(obj_tag *car, obj_tag *by) {
     Control_InheritVelocity(car, by, 3.0f);
     return true;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ECX what it touched; the car on the stack
-// AUTOLTCG
-bool __declspec(naked) Car_InheritVelocity(void) {
-    _asm {
-        push ecx
-        push dword ptr [esp + 8]
-        call _Car_InheritVelocity
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The helicopter's update while it is driven: the sticks turn and roll it and move it about at its height, its nose
 // kept from pointing more than three quarters straight up or down; its gun and missiles fire from each side in turn
@@ -729,7 +701,7 @@ void Car_CollisionHandler(obj_tag *obj) {
             levelled = true;
             Quat_MatToQuat(&car->orientation, &level);
         }
-        _Car_InheritVelocity(obj, hit->hitObj);
+        Car_InheritVelocity(obj, hit->hitObj);
         by = hit->hitObj;
         if (by != NULL && (by->objectType == OBJECTTYPE_HURT || by->objectType == OBJECTTYPE_CAR))
             Car_Deactivate(obj);
@@ -738,7 +710,7 @@ void Car_CollisionHandler(obj_tag *obj) {
     Mat_InverseSelf(&level);
     ApplyMatrixLV(&level, &move, &car->velocity);
     obj->transformFlags |= TRANSFORM_MOVED;
-    _Car_SetBits(car, obj);
+    Car_SetBits(car, obj);
     if (car->damageAmt > 200.0f)
         Car_Deactivate(obj);
 }

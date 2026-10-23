@@ -6,14 +6,14 @@
 // flying drone only drifts by its velocity.
 
 #include "DroneCollision.h"
-#include "NDrone2_Damage.h"            // _NDrone2_DealWithObjHit
+#include "NDrone2_Damage.h"            // NDrone2_DealWithObjHit
 #include "../../game.h"                // GameState
 #include "../../engine/AINetwork.h"    // AINetwork_GetBoundsPushVectorForSphere
 #include "../../engine/Anim.h"         // AnimGetBoneWorldTrans, ANIM_CONTACT_*
 #include "../../engine/Collide.h"      // Collide_RayIntersect, Collide_FreeHitList
 #include "../../engine/viewer.h"       // cel_tag
 #include "../../math/math.h"
-#include "../obj/Player.h"           // _PlayerOrDrone_FeetOnPoint_DoCollision
+#include "../obj/Player.h"           // PlayerOrDrone_FeetOnPoint_DoCollision
 
 #include <string.h>
 
@@ -203,7 +203,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
                         continue;
                     if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
                         continue;
-                    _PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
+                    PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
                     break;
                 }
             }
@@ -229,7 +229,7 @@ static HITDATA_tag *Drone_DealWithHits(obj_tag *obj, Drone_tag *drone) {
         return NULL;
     Vec_Add2(&drone->collision.push, &obj->position, &obj->position);
     for (; hit != NULL; hit = hit->next) {
-        _NDrone2_DealWithObjHit(drone, obj, hit);
+        NDrone2_DealWithObjHit(drone, obj, hit);
         if (!(hit->flags & HIT_NO_CONTACT) && contact == NULL)
             contact = hit;
     }

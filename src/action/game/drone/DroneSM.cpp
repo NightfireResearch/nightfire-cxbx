@@ -140,7 +140,7 @@ void Drone_SM_RouteMsg(MsgObject *msg) {
             dcv.aiStateMachine = &drone->sm;
             dcv.cel = drone->gameObj->inCel;
             msg->receiver = drone->sm.id;
-            _Drone_SM_RouteMsgDCV(&dcv, msg);
+            Drone_SM_RouteMsgDCV(&dcv, msg);
         }
         return;
     }
@@ -165,7 +165,7 @@ void Drone_SM_RouteMsg(MsgObject *msg) {
                 continue;
             }
             msg->receiver = dcv.aiStateMachine->id;
-            _Drone_SM_RouteMsgDCV(&dcv, msg);
+            Drone_SM_RouteMsgDCV(&dcv, msg);
         }
         return;
     }
@@ -183,14 +183,14 @@ void Drone_SM_RouteMsg(MsgObject *msg) {
     case DSTATE_FadeFast:
         return;
     }
-    _Drone_SM_RouteMsgDCV(&dcv, msg);
+    Drone_SM_RouteMsgDCV(&dcv, msg);
 }
 
 // Delivers a message to the drone's state machine (README 3.3), when it is for any state, for BotGlobal or for the
 // current one: the current state's handler gets it, and if it does not handle it, DSTATE_Global (BotGlobal for a bot,
 // whose BotGlobal sees every Update first anyway). Then the state changes asked for meanwhile happen, one after
 // another: Exit to the old state, the drone's per-state fields reset, Enter to the new one.
-void _Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
+void Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
     StateMachineInfo_tag *sm = dcv->aiStateMachine;
     if (msg->scope != 0 && msg->scope != DSTATE_BotGlobal && msg->scope != sm->curState)
         return;
@@ -274,20 +274,6 @@ void _Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
             sm->processFunction(dcv, sm->curState, &own);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in ESI and the message on the stack, and its callers clean up.
-// AUTOLTCG
-void __declspec(naked) Drone_SM_RouteMsgDCV(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Drone_SM_RouteMsgDCV
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // Starts a drone's state machine (once, from NDrone2_PostLoad_Init): gives it its id and sends it Enter.
 // AUTOINJECT
@@ -391,7 +377,7 @@ void Drone_SM_SendMsgSelf(uint msgType, void *extraData, uint delay, uint scope,
     if (delay != 0)
         Drone_SM_RouteMsg(&msg);
     else
-        _Drone_SM_RouteMsgDCV(dcVars, &msg);
+        Drone_SM_RouteMsgDCV(dcVars, &msg);
 }
 
 // Sends a message to every drone (receiver 0, any state), after `delay` frames. Not stopped by

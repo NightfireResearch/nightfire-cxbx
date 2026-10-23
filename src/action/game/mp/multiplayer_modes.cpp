@@ -156,14 +156,14 @@ static void MP_UplinkTaken(MPOBJECT *mpObj, obj_tag *gameObj, obj_tag *taker, MP
 }
 
 // gameObj->curState is the team holding the uplink, or NO_TEAM.
-void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
+void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
     short state = gameObj->curState;
     if (state < 0)
         return;
 
     if (state <= MI6) {
-        if (_MP_HitBy(gameObj, gameObj->curState, NULL, NULL) == NULL) {
-            obj_tag *taker = _MP_HitBy(gameObj, gameObj->curState == PHOENIX, NULL, NULL);
+        if (MP_HitBy(gameObj, gameObj->curState, NULL, NULL) == NULL) {
+            obj_tag *taker = MP_HitBy(gameObj, gameObj->curState == PHOENIX, NULL, NULL);
             if (taker != NULL) {
                 gameObj->subState = 0;
                 gameObj->curState = gameObj->curState == PHOENIX;
@@ -195,27 +195,14 @@ void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
     }
     else if (state == NO_TEAM) {
         mpObj->holderIdx = -1;
-        obj_tag *taker = _MP_HitBy(gameObj, PHOENIX, NULL, NULL);
+        obj_tag *taker = MP_HitBy(gameObj, PHOENIX, NULL, NULL);
         if (taker != NULL)
             MP_UplinkTaken(mpObj, gameObj, taker, PHOENIX);
-        taker = _MP_HitBy(gameObj, MI6, NULL, NULL);
+        taker = MP_HitBy(gameObj, MI6, NULL, NULL);
         if (taker != NULL)
             MP_UplinkTaken(mpObj, gameObj, taker, MI6);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
-    _asm {
-        push eax                    // gameObj
-        push dword ptr [esp + 8]    // mpObj
-        call _MP_UplinkUpdate
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // AUTOINJECT
 void MP_PlayerKilled(obj_tag *obj) {
@@ -395,14 +382,14 @@ void MP_PlayerKilled(obj_tag *obj) {
             mpObj->unknown04 = FRAME_RATE_INT * 30;
         switch (mpObj->type) {
         case CTF_FLAG:
-            _MP_FlagUpdate(MPObjects[i], mpObj, true);
+            MP_FlagUpdate(MPObjects[i], mpObj, true);
             break;
         case BLUEPRINT:
-            _MP_BluePrintUpdate(mpObj, true, MPObjects[i]);
+            MP_BluePrintUpdate(mpObj, true, MPObjects[i]);
             break;
         case GOLDENEYE_KEY:
         case GOLDENEYE_CRYSTAL:
-            _MP_GoldenEyeUpdate(mpObj, true, MPObjects[i]);
+            MP_GoldenEyeUpdate(mpObj, true, MPObjects[i]);
             break;
         }
     }

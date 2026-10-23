@@ -56,7 +56,6 @@ RRenderer *fgRenderer;
 
 // ---- the game's globals
 
-
 // XBE_GLOBAL(0x001caf5c, 4)
 const MATRIX4 *ViewProjectionMatrixPointer = reinterpret_cast<const MATRIX4 *>(ViewProjectionMatrix);
 // XBE_GLOBAL(0x00241c0c, 4)
@@ -520,20 +519,6 @@ void DrawArticleEffects(const WorldArticle *article, const MATRIX4 *transform, f
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void DrawGroupDrawEffects() {
-    __asm {
-        push dword ptr [esp + 4]
-        push edi
-        push eax
-        call DrawArticleEffects
-        add esp, 12
-        ret
-    }
-}
-#endif
-
 // Beyond the last model's distance nothing is drawn; kInstanceNoFarCull draws the nearest model at any distance.
 void DrawArticleModel(CARP::Instance *instance, const WorldArticle *article, const MATRIX4 *transform,
                       float distance, RSceneObj *sceneObj) {
@@ -552,22 +537,6 @@ void DrawArticleModel(CARP::Instance *instance, const WorldArticle *article, con
     if (noFog)
         Fog->EnableFog();
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void DrawGroupDrawModel() {
-    __asm {
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push dword ptr [esp + 12]
-        push edi
-        push edx
-        call DrawArticleModel
-        add esp, 20
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x0007ddd0)
 void DrawGroupDrawInstance(const MATRIX4 *transform, CARP::Instance *instance, uint32_t distance,

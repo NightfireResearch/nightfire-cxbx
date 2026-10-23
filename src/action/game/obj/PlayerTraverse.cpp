@@ -221,24 +221,11 @@ void Player_Climb(BLData *blData, obj_tag *player) {
 #define ROPE_ENTITY ((HASHCODE)0x02000138)
 
 // Clears the grapple and makes its rope. The original takes the player's data in ESI.
-void _Player_InitGrapple(BLData *blData, obj_tag *player) {
+void Player_InitGrapple(BLData *blData, obj_tag *player) {
     memset(&blData->grapplePoint, 0, 0x20);
     blData->rope = Control_CreateObjEx(0, NULL, NULL, NULL, hashtable_hashcode_to_celglist(ROPE_ENTITY), player, 0, 5,
                                        1.0f, 0x30, 0xff, 0xff, 0xff);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_InitGrapple(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push esi
-        call _Player_InitGrapple
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The grapple has caught at point on grappleObj: the player is pulled towards it (the grapple substate), and the floor
 // cannot stop the pull for 15 frames.
@@ -256,7 +243,7 @@ void Player_SetGrapplePoint(BLData *blData, _VECTOR *point, obj_tag *grappleObj)
 // losing sight of it lets go) and held there within 2 of it while fire is held. Landing lets go once the wait is
 // over. The point moves with what it caught on, and the player with it. The original takes the player's data in EAX
 // and the player in EDI.
-void _Player_SSGrapple(BLData *blData, obj_tag *player) {
+void Player_SSGrapple(BLData *blData, obj_tag *player) {
     _VECTOR *point = &blData->grapplePoint;
     Player_Move(blData, player, 1.0f);
     if (blData->grappleWait != 0)
@@ -314,22 +301,9 @@ void _Player_SSGrapple(BLData *blData, obj_tag *player) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_SSGrapple(void) {
-    _asm {
-        push edi
-        push eax
-        call _Player_SSGrapple
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // The rope, every frame: hidden, unless the grapple is in hand (weapons 0x50 and 0x51) and pulling or in flight, when it
 // runs from the gun to the point, scaled to the length. The original takes the player in EDI.
-void _Player_GrappleSetRope(obj_tag *player) {
+void Player_GrappleSetRope(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     if (blData->rope == NULL)
         return;
@@ -353,18 +327,6 @@ void _Player_GrappleSetRope(obj_tag *player) {
     Mat_Align2Dir(&blData->rope->transformMatrix, &direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
     blData->rope->scale = Vec_Dist3D(&gun, point);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) Player_GrappleSetRope(void) {
-    _asm {
-        push edi
-        call _Player_GrappleSetRope
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // Wires: hanging from them, and ziplines

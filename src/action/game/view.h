@@ -48,13 +48,13 @@ void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot
                     ushort interval, ushort length, char pass);
 SPRITE_DRAW * View_AddSprite(ushort someNum);
 void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last);
-void View_AddObjects(viewer_tag *viewer, cel_tag *cel);
+void View_AddObjects(cel_tag *cel, viewer_tag *viewer);
 void View_AddCels(viewer_tag *viewer);
 void View_AddForcedObjects(viewer_tag *viewer);
 void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj);
 void View_SetupRenderModes(viewer_tag *viewer, obj_tag *obj);
 void View_SetupRenderModes2(viewer_tag *viewer, obj_tag *obj);
-void View_DrawCelGlist(cel_tag *cel, viewer_tag *viewer);
+void View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel);
 void View_DrawObjectGlist(obj_tag *obj, viewer_tag *viewer);
 void View_DrawObjList(viewer_tag *viewer, ushort list);
 void View_DrawSky(viewer_tag *viewer, char pass);

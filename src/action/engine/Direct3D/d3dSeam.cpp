@@ -892,7 +892,7 @@ static void ReleaseSavedSurface(void **slot) {
     *slot = NULL;
 }
 
-static void _d3dRenderTargetSetup(int textureSlot) {
+void d3dRenderTargetSetup(int textureSlot) {
     if (textureSlot != 0) {
         if (Gfx_RenderTargetPushed == 0) {
             Gfx.shaderConstant75[0] = 0.0f;
@@ -936,25 +936,6 @@ static void _d3dRenderTargetSetup(int textureSlot) {
     ReleaseSavedSurface(&Gfx_SavedDepthStencil);
     Gfx_RenderTargetPushed = 0;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes its single parameter (a texture-slot index) in ESI, not on the stack - confirmed via raw
-// disassembly (its very first instruction reads ESI with no prologue setting it from the stack; Ghidra's own
-// decompile flags this exact gap with "unaff_ESI"/"extraout_EAX" warnings - the same class of hidden custom
-// calling convention as D3DDevice_SetRenderState_Simple at the top of this file, but on a function we're
-// REPLACING rather than one we call into, so it needs a callee-side entry trampoline instead of a caller-side
-// one. Matches the established View_CaptureScene/View_AddCels pattern (see view.cpp) for this exact situation.
-//
-// AUTOLTCG
-void __declspec(naked) d3dRenderTargetSetup(void) {
-    _asm {
-        push esi
-        call _d3dRenderTargetSetup
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // AUTOINJECT
 void d3dClear(unsigned int colour, bool clearTarget, bool clearZStencil) {
@@ -1771,14 +1752,9 @@ void d3dDrawOverlayQuad(int overlaySlot, float sizeParam, int textureSlot, float
 
 // Resets the render target/texture-stage-1/current-texture/stream-buffer bindings to a clean default state,
 // then waits for the GPU to go idle. maybeD3dShutdown calls it, before it releases every resource.
-//
-// Calls _d3dRenderTargetSetup(0) directly (the real implementation, same translation unit) rather than the
-// public d3dRenderTargetSetup() - that's a __declspec(naked) entry trampoline expecting its parameter in ESI
-// from the original's own callers, which a normal C++ call site can't set correctly.
-//
 // AUTOINJECT
 void d3dResetRenderTargetAndBuffers(void) {
-    _d3dRenderTargetSetup(0);
+    d3dRenderTargetSetup(0);
     d3dSetTextureStage1(0, 0);
 
     if (Gfx.currentlyLoadedTexture != 0) {
@@ -2283,10 +2259,8 @@ uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATR
             D3DDevice_SetVertexShaderConstant1(0x75, Gfx.shaderConstant75);
         Gfx.d3dLastError = 0;
 
-        // Confirmed via raw disassembly: the original loads ESI from Gfx.auxRenderPassResult (not a fixed 0/nonzero
-        // constant) before this particular push - calling the real implementation directly with that same value,
-        // per the naked-trampoline warning in d3dSeam.h (never call the public d3dRenderTargetSetup() from new code).
-        _d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
+        // Gfx.auxRenderPassResult, not a fixed 0 or nonzero constant
+        d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
 
         if (Gfx.d3dDevice != 0)
             D3DDevice_Clear(0, NULL, 0xf3, 0, 1.0f, 0);
@@ -2317,7 +2291,7 @@ uint32_t d3dBeginEndAuxRenderPass(char begin, D3DMATRIX *rigidTransform, D3DMATR
         d3dSetProjectionMatrix(&Gfx.auxSavedProjMatrix);
         d3dSetViewMatrixFromRigidTransform(&Gfx.auxSavedViewMatrix);
 
-        _d3dRenderTargetSetup(0); // pop back to the saved render target
+        d3dRenderTargetSetup(0); // pop back to the saved render target
         d3dSetupViewportDimensions(Gfx.viewportX, Gfx.viewportY, Gfx.viewportWidth, Gfx.viewportHeight);
     }
     return Gfx.auxRenderPassResult;
@@ -2649,7 +2623,7 @@ void psiBlurCharacterShadow(void) {
     d3dSetColorConstant67(0xFFFFFFFFu);
 
     // Pass 1: downsample Gfx.auxRenderPassResult -> Gfx.shadowBlurTargetB.
-    _d3dRenderTargetSetup((int)Gfx.shadowBlurTargetB);
+    d3dRenderTargetSetup((int)Gfx.shadowBlurTargetB);
     if (Gfx.currentlyLoadedTexture != Gfx.auxRenderPassResult) {
         Gfx.currentlyLoadedTexture = Gfx.auxRenderPassResult;
         if (Gfx.d3dDevice != 0) {
@@ -2664,7 +2638,7 @@ void psiBlurCharacterShadow(void) {
     maybeImmediateModeFlush();
 
     // Pass 2: upsample Gfx.shadowBlurTargetB -> Gfx.auxRenderPassResult.
-    _d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
+    d3dRenderTargetSetup((int)Gfx.auxRenderPassResult);
     if (Gfx.currentlyLoadedTexture != Gfx.shadowBlurTargetB) {
         Gfx.currentlyLoadedTexture = Gfx.shadowBlurTargetB;
         if (Gfx.d3dDevice != 0) {
@@ -2679,7 +2653,7 @@ void psiBlurCharacterShadow(void) {
     maybeImmediateModeFlush();
 
     // Pop back to the backbuffer and unbind stage 0.
-    _d3dRenderTargetSetup(0);
+    d3dRenderTargetSetup(0);
     if (Gfx.currentlyLoadedTexture != 0) {
         Gfx.currentlyLoadedTexture = 0;
         if (Gfx.d3dDevice != 0)

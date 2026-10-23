@@ -174,9 +174,9 @@ void KeyFrame_Interp(void *path, ushort first, ushort last, float t, _MATRIX *mt
     if (Vec_IsEqual(&KeyFromPos, &KeyToPos, 0.0f)) {
         KeyPos = KeyFromPos;
     } else {
-        KeyPos.x = _moveTowardsValue(KeyFromPos.x, KeyToPos.x, KeyBlend);
-        KeyPos.y = _moveTowardsValue(KeyFromPos.y, KeyToPos.y, KeyBlend);
-        KeyPos.z = _moveTowardsValue(KeyFromPos.z, KeyToPos.z, KeyBlend);
+        KeyPos.x = moveTowardsValue(KeyFromPos.x, KeyToPos.x, KeyBlend);
+        KeyPos.y = moveTowardsValue(KeyFromPos.y, KeyToPos.y, KeyBlend);
+        KeyPos.z = moveTowardsValue(KeyFromPos.z, KeyToPos.z, KeyBlend);
     }
     KeyFromRot = keys[KeyFrom].quat;
     KeyToRot = keys[KeyTo].quat;

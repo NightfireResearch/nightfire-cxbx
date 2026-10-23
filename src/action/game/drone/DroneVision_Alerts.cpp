@@ -142,7 +142,7 @@ bool NDrone2_NotNearArmedDrone(DCVars_tag *dcv, float radius) {
 // in DSTATE_EnemyMission. The Powerstation guards (skin classes 5 and 6), at any distance, and the civilians and party
 // girls past 0.7 alertness, attack; the civilians and party girls do nothing else. The rest go to DSTATE_HeardNoise
 // for a loud enough sound or past 0.66 alertness.
-ushort _DroneVision_AlertSound(DCVars_tag *dcv) {
+ushort DroneVision_AlertSound(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     bool attack = false;
     NDrone2_Player();
@@ -187,23 +187,10 @@ ushort _DroneVision_AlertSound(DCVars_tag *dcv) {
     return 0;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in ESI.
-// AUTOLTCG
-void __declspec(naked) DroneVision_AlertSound(void) {
-    _asm {
-        push esi
-        call _DroneVision_AlertSound
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The global alarm (DRONE_MSG_GlobalAlarm): every drone but the civilians and party girls attacks. A bot becomes
 // fully alert, and on a team (MP_areObjectsOnSameTeam with no other object) answers through
 // BOT_reactToDroneAlertMsg. Our name.
-ushort _DroneVision_GlobalAlarm(DCVars_tag *dcv) {
+ushort DroneVision_GlobalAlarm(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (drone->flags & DRONE_FLAG_NO_ALERTS)
         return 0;
@@ -220,19 +207,6 @@ ushort _DroneVision_GlobalAlarm(DCVars_tag *dcv) {
     return DSTATE_Attack;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in EDX.
-// AUTOLTCG
-void __declspec(naked) DroneVision_GlobalAlarm(void) {
-    _asm {
-        push edx
-        call _DroneVision_GlobalAlarm
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Another drone's shout, heard by a drone with the property (nightfire-port's DroneVision_ShoutFromOtherDrone, inline
 // in each caller on the Xbox). The original finds the drone that shouted from the alert and goes no further: a shout
 // changes nothing.
@@ -242,63 +216,21 @@ static ushort HearShout(DCVars_tag *dcv, DRONE_PROP property) {
 }
 
 // The four shouts EnemyAlerts tells apart (our names). Each original takes the DCVars in EAX and the alert in ESI.
-ushort _DroneVision_ShoutMsg11(DCVars_tag *dcv) {
+ushort DroneVision_ShoutMsg11(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_28);
 }
 
-ushort _DroneVision_ShoutMsg12(DCVars_tag *dcv) {
+ushort DroneVision_ShoutMsg12(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_27);
 }
 
-ushort _DroneVision_ShoutMsg13(DCVars_tag *dcv) {
+ushort DroneVision_ShoutMsg13(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_4F);
 }
 
-ushort _DroneVision_ShoutDroneAlert(DCVars_tag *dcv) {
+ushort DroneVision_ShoutDroneAlert(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_29);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneVision_ShoutMsg11(void) {
-    _asm {
-        push eax
-        call _DroneVision_ShoutMsg11
-        add esp, 4
-        ret
-    }
-}
-
-// AUTOLTCG
-void __declspec(naked) DroneVision_ShoutMsg12(void) {
-    _asm {
-        push eax
-        call _DroneVision_ShoutMsg12
-        add esp, 4
-        ret
-    }
-}
-
-// AUTOLTCG
-void __declspec(naked) DroneVision_ShoutMsg13(void) {
-    _asm {
-        push eax
-        call _DroneVision_ShoutMsg13
-        add esp, 4
-        ret
-    }
-}
-
-// AUTOLTCG
-void __declspec(naked) DroneVision_ShoutDroneAlert(void) {
-    _asm {
-        push eax
-        call _DroneVision_ShoutDroneAlert
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // The alert messages a state passes on: the state to go to, or 0. First, unless unknown33 or explosiveSeen is set,
 // the drone keeps where it was (the state, its feet and cel) to come back to. Message 0x16 is a shout heard by all;
@@ -318,17 +250,17 @@ ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg) {
 
     switch (msg->msgType) {
     case 0x11:
-        return _DroneVision_ShoutMsg11(dcv);
+        return DroneVision_ShoutMsg11(dcv);
     case 0x12:
-        return _DroneVision_ShoutMsg12(dcv);
+        return DroneVision_ShoutMsg12(dcv);
     case 0x13:
-        return _DroneVision_ShoutMsg13(dcv);
+        return DroneVision_ShoutMsg13(dcv);
     case DRONE_MSG_HeardNoise:
-        return _DroneVision_AlertSound(dcv);
+        return DroneVision_AlertSound(dcv);
     case DRONE_MSG_DroneAlert:
-        return _DroneVision_ShoutDroneAlert(dcv);
+        return DroneVision_ShoutDroneAlert(dcv);
     case DRONE_MSG_GlobalAlarm:
-        return _DroneVision_GlobalAlarm(dcv);
+        return DroneVision_GlobalAlarm(dcv);
     default:
         return 0;
     }

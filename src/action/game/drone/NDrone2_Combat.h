@@ -11,12 +11,8 @@ struct CoverNode_tag;
 // The first attack
 short DroneFunc_FirstAttack(DCVars_tag *dcv);
 short DroneFunc_AttackNoWeapon(DCVars_tag *dcv);
-// The originals take dcv in ESI (FirstSightState) and EAX (FirstAlertState): the game reaches the adaptors, C++ calls
-// the cores
-short _DroneFunc_FirstSightState(DCVars_tag *dcv);
-void DroneFunc_FirstSightState(void);
-short _DroneFunc_FirstAlertState(DCVars_tag *dcv);
-void DroneFunc_FirstAlertState(void);
+short DroneFunc_FirstSightState(DCVars_tag *dcv);
+short DroneFunc_FirstAlertState(DCVars_tag *dcv);
 short DroneFunc_CombatState(DCVars_tag *dcv);
 
 // Talk

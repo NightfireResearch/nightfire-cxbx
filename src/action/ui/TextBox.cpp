@@ -44,7 +44,7 @@ uint32_t TextBoxHeldFrames;
 #define GRID_HEIGHT 0x7e
 
 // The next key of the grid
-M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked) {
+M_TEXTBOX* Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int height, uchar blocked) {
     box->selected++;
     TEXTBOX_KEY *key = &box->keys[box->selected];
     key->c = c;
@@ -55,29 +55,6 @@ M_TEXTBOX* _Text_SetupChar(M_TEXTBOX *box, char c, int x, int y, int width, int 
     key->blocked = blocked;
     return box;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the box (kept), DL the character
-// AUTOLTCG
-void __declspec(naked) Text_SetupChar(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 28]
-        push dword ptr [esp + 28]
-        push dword ptr [esp + 28]
-        push dword ptr [esp + 28]
-        push dword ptr [esp + 28]
-        push edx
-        push eax
-        call _Text_SetupChar
-        add esp, 28
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // Leaves editing: the box closes to the text's line, and its page is told
 static void TextBox_EndEntry(M_TEXTBOX *box) {
@@ -312,7 +289,7 @@ void Text_Init(M_TEXTBOX *box, NEW_CONTROL *create, M_CONTROL *parent) {
         {'+', 175, 112, 50, 8},
     };
     for (int i = 0; i < TEXTBOX_KEYS; i++)
-        _Text_SetupChar(box, kKeys[i].c, kKeys[i].x, kKeys[i].y, kKeys[i].width, 16, kKeys[i].blocked);
+        Text_SetupChar(box, kKeys[i].c, kKeys[i].x, kKeys[i].y, kKeys[i].width, 16, kKeys[i].blocked);
     box->control.drawState = 0;
     Script_PrepareScripting(&box->control);
 }

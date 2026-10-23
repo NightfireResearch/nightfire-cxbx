@@ -33,7 +33,7 @@ enum SSTrigger {
 
 #pragma pack(push, 1)
 
-typedef struct {
+typedef struct SIMPLESCRIPT {
     float frame;            // 0x00 - where on the path, in keys
     float speed;            // 0x04 - keys a frame
     float stopFrame;        // 0x08 - a stop on the way: the object waits there for another trigger
@@ -119,7 +119,7 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
 }
 
 // Whether it has been set off: touched by a kind of object its triggers name, or its switch channel set.
-ushort _SS_Operate(obj_tag *obj, SIMPLESCRIPT *ss) {
+ushort SS_Operate(obj_tag *obj, SIMPLESCRIPT *ss) {
     ushort touched = 0;
     for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
         if (hit->hitObj == NULL)
@@ -143,20 +143,6 @@ ushort _SS_Operate(obj_tag *obj, SIMPLESCRIPT *ss) {
         return 1;
     return 0;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the object in EAX and the simple script in ESI.
-// AUTOLTCG
-void __declspec(naked) SS_Operate(void) {
-    _asm {
-        push esi
-        push eax
-        call _SS_Operate
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The player using it starts it, if its triggers allow and it is not stopped for good.
 // AUTOINJECT
@@ -189,7 +175,7 @@ void SS_Update(obj_tag *obj) {
         return;
 
     SIMPLESCRIPT *ss = (SIMPLESCRIPT *)obj->extraObjectData;
-    ushort setOff = _SS_Operate(obj, ss);
+    ushort setOff = SS_Operate(obj, ss);
     if (!(ss->triggers & SSTrigger_KeepChannel) && ss->switchChannel != 0 && switch_channels[ss->switchChannel] == 0)
         switch_channels[ss->switchChannel] = (char)setOff;
     if (ss->moved)

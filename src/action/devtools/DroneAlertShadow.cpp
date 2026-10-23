@@ -622,13 +622,13 @@ void TestAlerts() {
                     OriginalAlerts o;
                     return OriginalAlertSound(&world.dcv) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_AlertSound(&world.dcv); });
+                [] { return (uint32_t)DroneVision_AlertSound(&world.dcv); });
         Compare("DroneVision_GlobalAlarm", trial,
                 [] {
                     OriginalAlerts o;
                     return OriginalGlobalAlarm(&world.dcv) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_GlobalAlarm(&world.dcv); });
+                [] { return (uint32_t)DroneVision_GlobalAlarm(&world.dcv); });
     }
     for (int trial = 0; trial < 2000; trial++) {
         RandomWorld();
@@ -637,25 +637,25 @@ void TestAlerts() {
                     OriginalAlerts o;
                     return OriginalShout(0x00065120, &world.dcv, world.msg.extraData) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_ShoutMsg11(&world.dcv); });
+                [] { return (uint32_t)DroneVision_ShoutMsg11(&world.dcv); });
         Compare("DroneVision_ShoutMsg12", trial,
                 [] {
                     OriginalAlerts o;
                     return OriginalShout(0x00065160, &world.dcv, world.msg.extraData) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_ShoutMsg12(&world.dcv); });
+                [] { return (uint32_t)DroneVision_ShoutMsg12(&world.dcv); });
         Compare("DroneVision_ShoutMsg13", trial,
                 [] {
                     OriginalAlerts o;
                     return OriginalShout(0x000651a0, &world.dcv, world.msg.extraData) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_ShoutMsg13(&world.dcv); });
+                [] { return (uint32_t)DroneVision_ShoutMsg13(&world.dcv); });
         Compare("DroneVision_ShoutDroneAlert", trial,
                 [] {
                     OriginalAlerts o;
                     return OriginalShout(0x000651e0, &world.dcv, world.msg.extraData) & 0xffff;
                 },
-                [] { return (uint32_t)_DroneVision_ShoutDroneAlert(&world.dcv); });
+                [] { return (uint32_t)DroneVision_ShoutDroneAlert(&world.dcv); });
     }
     for (int trial = 0; trial < 10000; trial++) {
         RandomWorld();

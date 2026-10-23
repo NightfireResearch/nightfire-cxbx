@@ -195,7 +195,7 @@ void InstallFakes() {
     ShadowHook_Install(0x00068f20, (const void *)&FakeWaterRipple);
     ShadowHook_Install(0x000ab390, (const void *)&DroneCollisionShadow_FakeFeetCollision);
     // our Drone_FeetOnPoint calls the port's core by name
-    ShadowHook_Install((unsigned)(uintptr_t)&_PlayerOrDrone_FeetOnPoint_DoCollision,
+    ShadowHook_Install((unsigned)(uintptr_t)&PlayerOrDrone_FeetOnPoint_DoCollision,
                        (const void *)&DroneCollisionShadow_LogFeetCollision);
 }
 

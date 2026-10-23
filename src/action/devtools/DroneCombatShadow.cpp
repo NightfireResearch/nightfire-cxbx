@@ -732,8 +732,8 @@ uint32_t RunOurs() {
 
 const Case kFirst[] = {
     CASE(DroneFunc_FirstAttack, 0x0003ec20, K_DCV, AX),
-    {"DroneFunc_FirstSightState", 0x0003ea80, K_SIGHT_STATE, (const void *)&_DroneFunc_FirstSightState, AX},
-    {"DroneFunc_FirstAlertState", 0x0003ad70, K_ALERT_STATE, (const void *)&_DroneFunc_FirstAlertState, AX},
+    {"DroneFunc_FirstSightState", 0x0003ea80, K_SIGHT_STATE, (const void *)&DroneFunc_FirstSightState, AX},
+    {"DroneFunc_FirstAlertState", 0x0003ad70, K_ALERT_STATE, (const void *)&DroneFunc_FirstAlertState, AX},
     CASE(DroneFunc_AttackNoWeapon, 0x0003add0, K_DCV, AX),
     CASE(DroneFunc_ChooseSFX, 0x00036270, K_SFX, ALL),
     CASE(NDrone2_AttackTalk, 0x0003ba80, K_DCV, AL),

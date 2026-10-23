@@ -583,7 +583,7 @@ MP_OBJ_EXT* MP_getHillObj(void) {
 }
 
 // The scenario object's MP_OBJ_EXT, by its type: an uplink's is looked up by its object
-MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
+MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 
   switch(mpObj->type) {
     case CTF_FLAG:
@@ -616,22 +616,9 @@ MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj) {
 }
 
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes mpObj in EDI
-// AUTOLTCG
-__declspec(naked) MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void) {
-    _asm {
-        push edi
-        call _MP_getObjExtFromMPOBJECT
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Rebuilds a scenario object's AI emitter, which the bots path to: at the object's matrix and cel unless keepPos,
 // the cel looked up if it has none. Emitters exist only in a game with bots.
-void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
+void MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
     if (ext == NULL)
         return;
     if (mpbots.NumBots && ext->aiEmitter.data != NULL)
@@ -652,24 +639,10 @@ void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes ext in ESI and keepPos on the stack, removed by the caller (MP_getEsponageBaseObj).
-// AUTOLTCG
-__declspec(naked) void MP_recalcObjExtPaths(bool keepPos) {
-    _asm {
-        push dword ptr [esp + 4]    // keepPos
-        push esi                    // ext
-        call _MP_recalcObjExtPaths
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Puts a scenario object back at rest: at mpObj->resetMtx unless keepPlace, in state, relinked into the world,
 // shown in every view, with its AI emitter rebuilt. The original (0x9ecb0) takes mpObj in ECX, gameObj in EBX and
-// keepPlace in AL; every caller is ours, so it is not patched over and goes by our name.
-void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace) {
+// keepPlace in AL; every caller is ours, so it is not patched over.
+void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace) {
     if (!keepPlace)
         Mat_Copy(&mpObj->resetMtx, &gameObj->transformMatrix);
     gameObj->transformFlags |= TRANSFORM_MOVED;
@@ -678,9 +651,9 @@ void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool kee
     Control_BuildWorldSph(gameObj);
     build_LinkToRoom(gameObj, 0, glb_world);
     gameObj->maybeParent = NULL;
-    MP_OBJ_EXT *ext = _MP_getObjExtFromMPOBJECT(mpObj);
+    MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
     if (ext != NULL)
-        _MP_recalcObjExtPaths(ext, false);
+        MP_recalcObjExtPaths(ext, false);
     gameObj->effectFlags &= ~0x21;
     gameObj->tweakA = 0xff;
     View_SetDrawInAllViews(gameObj);
@@ -688,9 +661,8 @@ void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool kee
 
 // Puts a carried object on its holder, at the holder's attach point (an AnimGetBoneWorldTrans one), facing along
 // it; a player's own view does not draw it. The original (0x9c7e0) takes attach in EAX, holder in EBX and the
-// object in ESI and on the stack; every caller is ours and passes the same object, so it is not patched over and
-// goes by our name.
-void _MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
+// object in ESI and on the stack; every caller is ours and passes the same object, so it is not patched over.
+void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
     _VECTOR dir, pos;
     _MATRIX mtx;
     AnimGetBoneWorldTrans(holder, attach | 0x80000000, 0, &pos, &mtx);
@@ -1075,7 +1047,7 @@ void MP_Init(void) {
 
 // The first agent on the team (NO_TEAM: either) whose object is in obj's hit list, unless that agent is dead,
 // dying or spawned within the last 4 frames - then none. The agent's team goes to teamOut.
-obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) {
+obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) {
 
     for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
         obj_tag *hitObj = hit->hitObj;
@@ -1119,24 +1091,6 @@ obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut)
 
     return NULL;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original (0x0009c880) takes obj in EAX and team in CX, exclude and teamOut on the stack; its callers clean
-// the stack.
-// AUTOLTCG
-__declspec(naked) obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        movzx ecx, cx
-        push ecx
-        push eax
-        call _MP_HitBy
-        add esp, 16
-        ret
-    }
-}
-#endif
 
 // A random agent on the team (NO_TEAM: either) other than exclude; with aliveOnly, only a drone not dying or dead or a player in
 // state 1. NULL when there is none.
@@ -1651,23 +1605,10 @@ bool MP_ObjTeamHasGEObj(obj_tag *obj, int part) {
 }
 
 // The bots' path to a scenario object, once the level is loaded
-void _MP_PostLoadInitObjExt(MP_OBJ_EXT *ext) {
+void MP_PostLoadInitObjExt(MP_OBJ_EXT *ext) {
     if (ext != NULL && mpbots.NumBots && ext->aiEmitter.path != NULL)
         AINetwork_EmitPath(&ext->aiEmitter, 0);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes ext in EAX
-// AUTOLTCG
-__declspec(naked) void MP_PostLoadInitObjExt(void) {
-    _asm {
-        push eax
-        call _MP_PostLoadInitObjExt
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // An uplink: by index (NULL past the last, or with no object), or for a negative idx the first from -1 - idx whose
 // object is not in state filterState
@@ -1721,7 +1662,7 @@ MP_OBJ_EXT* MP_getEsponageBaseObj(uint team, int quadrant) {
     ext->celPos.pos.z = (float)(FCos(angle) * reach + Extended(base->centrePoint.z));
     ext->celPos.cel = build_FindCel(&ext->celPos.pos, glb_world);
     build_PointOnFloor(ext->celPos.cel, NULL, &ext->celPos.pos, 1.25f, NULL);
-    _MP_recalcObjExtPaths(ext, true);
+    MP_recalcObjExtPaths(ext, true);
     return ext;
 }
 
@@ -2025,7 +1966,7 @@ int MP_RegisterPickup(obj_tag *pickup) {
 }
 
 // A scenario object's MP_OBJ_EXT: the object, where it stands, and its path for the bots
-void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
+void MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
     if (ext == NULL)
         return;
     ext->gameObj = obj;
@@ -2040,20 +1981,6 @@ void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj) {
     if (IsLevelLoaded() && mpbots.NumBots && ext->aiEmitter.path != NULL)
         AINetwork_EmitPath(&ext->aiEmitter, 0.0f);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes ext in ECX and obj in EAX
-// AUTOLTCG
-__declspec(naked) void MP_initObjExt(void) {
-    _asm {
-        push eax
-        push ecx
-        call _MP_initObjExt
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // ---- the match's agents and objects coming into being
 
@@ -2110,52 +2037,52 @@ void MP_PostLoad_Init(void) {
         case GM_CTF:
             for (int i = 0; i < 2; i++) {
                 if (Flags[i].gameObj != NULL)
-                    _MP_PostLoadInitObjExt(&Flags[i]);
+                    MP_PostLoadInitObjExt(&Flags[i]);
             }
             for (int i = 0; i < 2; i++) {
                 if (Bases[i].gameObj != NULL)
-                    _MP_PostLoadInitObjExt(&Bases[i]);
+                    MP_PostLoadInitObjExt(&Bases[i]);
             }
             break;
 
         case GM_DEMOLITION:
             if (Demolition.mpObj != NULL)
                 Demolition.gameObj = Script_GetObj(SP_getScriptInfo(Demolition.mpObj->scriptPlayer), 0);
-            _MP_PostLoadInitObjExt(&Demolition);
+            MP_PostLoadInitObjExt(&Demolition);
             break;
 
         case GM_PROTECTION:
             if (Protection.mpObj != NULL)
                 Protection.gameObj = Script_GetObj(SP_getScriptInfo(Protection.mpObj->scriptPlayer), 0);
-            _MP_PostLoadInitObjExt(&Protection);
+            MP_PostLoadInitObjExt(&Protection);
             break;
 
         case GM_BLUEPRINT:
             if (BluePrint.gameObj != NULL)
-                _MP_PostLoadInitObjExt(&BluePrint);
+                MP_PostLoadInitObjExt(&BluePrint);
             for (int i = 0; i < 2; i++) {
                 if (EsponageBase[i].gameObj != NULL)
-                    _MP_PostLoadInitObjExt(&EsponageBase[i]);
+                    MP_PostLoadInitObjExt(&EsponageBase[i]);
             }
             break;
 
         case GM_GOLDENEYE:
             for (int i = 0; i < 2; i++) {
                 if (GoldenEye.keys[i].gameObj != NULL && GoldenEye.keys[i].gameObj->curState == 0)
-                    _MP_PostLoadInitObjExt(&GoldenEye.keys[i]);
+                    MP_PostLoadInitObjExt(&GoldenEye.keys[i]);
             }
             break;
 
         case GM_KOTH:
         case GM_TEAMKOTH:
             if (Hill.gameObj != NULL)
-                _MP_PostLoadInitObjExt(&Hill);
+                MP_PostLoadInitObjExt(&Hill);
             break;
 
         case GM_UPLINK:
             for (uint i = 0; i < UplinkCount; i++) {
                 if (Uplinks[i].gameObj != NULL)
-                    _MP_PostLoadInitObjExt(&Uplinks[i]);
+                    MP_PostLoadInitObjExt(&Uplinks[i]);
             }
             break;
     }
@@ -2258,42 +2185,42 @@ obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl) {
 
     switch (mpObj->type) {
         case CTF_FLAG:
-            _MP_initObjExt(&Flags[mpObj->num], obj);
+            MP_initObjExt(&Flags[mpObj->num], obj);
             break;
         case CTF_BASE:
-            _MP_initObjExt(&Bases[mpObj->num], obj);
+            MP_initObjExt(&Bases[mpObj->num], obj);
             break;
         case UPLINK:
-            _MP_initObjExt(&Uplinks[UplinkCount++], obj);
+            MP_initObjExt(&Uplinks[UplinkCount++], obj);
             obj->curState = 2;
             break;
         case DEMOLITION:
-            _MP_initObjExt(&Demolition, obj);
+            MP_initObjExt(&Demolition, obj);
             obj->curState = 2000;
             break;
         case PROTECTION:
-            _MP_initObjExt(&Protection, obj);
+            MP_initObjExt(&Protection, obj);
             obj->curState = 2000;
             break;
         case ESPIONAGEBASE:
-            _MP_initObjExt(&EsponageBase[mpObj->num], obj);
+            MP_initObjExt(&EsponageBase[mpObj->num], obj);
             break;
         case BLUEPRINT:
-            _MP_initObjExt(&BluePrint, obj);
+            MP_initObjExt(&BluePrint, obj);
             break;
         case GOLDENEYE_KEY:
-            _MP_initObjExt(&GoldenEye.keys[0], obj);
+            MP_initObjExt(&GoldenEye.keys[0], obj);
             obj->subState = 0;
             break;
         case GOLDENEYE_CRYSTAL:
-            _MP_initObjExt(&GoldenEye.keys[1], obj);
+            MP_initObjExt(&GoldenEye.keys[1], obj);
             obj->subState = 1;
             break;
         case KOH:
-            _MP_initObjExt(&Hill, obj);
+            MP_initObjExt(&Hill, obj);
             break;
     }
-    MP_OBJ_EXT *ext = _MP_getObjExtFromMPOBJECT(mpObj);
+    MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
     if (ext != NULL)
         ext->mpObj = mpObj;
 

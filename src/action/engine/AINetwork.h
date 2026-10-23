@@ -331,8 +331,7 @@ double AINetwork_GetRouteDistance3D(AIRoute_tag *route);
 double AINetwork_GetRouteDistanceBetweenNodes(AIRoute_tag *route, short from, short to);
 
 // Searches
-bool _AINetwork_NodeSearchCel(AINodeSearch_tag *search);
-void AINetwork_NodeSearchCel(void);
+bool AINetwork_NodeSearchCel(AINodeSearch_tag *search);
 bool AINetwork_NodeSearch(AINodeSearch_tag *search);
 uint AINetwork_DoAStarPath(AIRoute_tag *route, obj_tag *objA, obj_tag *objB, uint targetBit);
 AIPath_tag* AINetwork_NavPathForPosition(_VECTOR *pos, cel_tag *cel, char moveTest);
@@ -369,21 +368,17 @@ bool AINetwork_InitEmitter(obj_tag *obj, _VECTOR *pos, cel_tag *cel, AIEmitter_t
 bool AINetwork_InitEmitter2(obj_tag *obj, _VECTOR *pos, cel_tag *cel, AIEmitter_tag *emitter, AIPath_tag *path);
 
 // Planning a route
-bool _AINetwork_AlterDestFor_DROUTE_Nearest(AIRoute_tag *route);
-void AINetwork_AlterDestFor_DROUTE_Nearest(void);
-uint _AINetwork_OptimiseRoute(AIRoute_tag *route, char dropFirst, uint status, char dropLast);
-void AINetwork_OptimiseRoute(void);
+bool AINetwork_AlterDestFor_DROUTE_Nearest(AIRoute_tag *route);
+uint AINetwork_OptimiseRoute(AIRoute_tag *route, char dropFirst, uint status, char dropLast);
 bool AINetwork_SetupRouteToObject(obj_tag *mover, obj_tag *targetObj, AITarget_tag *target, AIPoint_tag *point,
                                   float radius, AIRoute_tag *route);
-bool _AINetwork_SetupRouteToPosition(AIRoute_tag *route, CelPos_tag *dest, obj_tag *mover, AITarget_tag *target,
-                                     AIPoint_tag *point, float radius);
-void AINetwork_SetupRouteToPosition(void);
+bool AINetwork_SetupRouteToPosition(AIRoute_tag *route, CelPos_tag *dest, obj_tag *mover, AITarget_tag *target,
+                                    AIPoint_tag *point, float radius);
 bool AINetwork_VerifyRouteTarget(obj_tag *mover, obj_tag *targetObj, AITarget_tag *target, AIPoint_tag *point,
                                  float radius, AIRoute_tag *route);
 bool AINetwork_VerifyRouteToPosition(obj_tag *mover, CelPos_tag *dest, AITarget_tag *target, AIPoint_tag *point,
                                      float radius, AIRoute_tag *route);
-uint _AINetwork_CalcRoute(AIRoute_tag *route, obj_tag *mover, obj_tag *targetObj);
-void AINetwork_CalcRoute(void);
+uint AINetwork_CalcRoute(AIRoute_tag *route, obj_tag *mover, obj_tag *targetObj);
 uint AINetwork_CalcRouteToObject(obj_tag *mover, obj_tag *targetObj, AIRoute_tag *route, AITarget_tag *target,
                                  AIPoint_tag *point, float radius, uint unused);
 uint AINetwork_CalcRouteToPosition(obj_tag *mover, CelPos_tag *dest, AIRoute_tag *route, AITarget_tag *target,
@@ -391,19 +386,15 @@ uint AINetwork_CalcRouteToPosition(obj_tag *mover, CelPos_tag *dest, AIRoute_tag
 
 // Following a route
 uint AINetwork_FollowRoute(AIRoute_tag *route, DCVars_tag *dcv);
-bool _AINetwork_SetupNextNode(AIRoute_tag *route, short direction);
-void AINetwork_SetupNextNode(void);
+bool AINetwork_SetupNextNode(AIRoute_tag *route, short direction);
 bool LinkCreep_Setup(AIRoute_tag *route, _VECTOR *from, _VECTOR *to, char fromEnd);
 bool LinkCreep_ForNodes(AIRoute_tag *route, int from, int to, char fromEnd);
 bool LinkCreep_Calc(AIRoute_tag *route, char fromEnd);
 uint LinkCreep_CalcToRouteEnd(AIRoute_tag *route);
 bool LinkCreep_Dest(AIRoute_tag *route, short offset, CelPos_tag *out);
 bool LinkCreep_AtSpecialNode(AIRoute_tag *route);
-bool _LinkCreep_Increment(AIRoute_tag *route, uchar *blocked);
-void LinkCreep_Increment(void);
-bool _LinkCreep_Decrement(AIRoute_tag *route);
-void LinkCreep_Decrement(void);
-bool _LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv);
-void LinkCreep_Handler(void);
+bool LinkCreep_Increment(AIRoute_tag *route, uchar *blocked);
+bool LinkCreep_Decrement(AIRoute_tag *route);
+bool LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv);
 
 #endif // AINETWORK_H_

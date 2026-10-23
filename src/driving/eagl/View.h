@@ -251,10 +251,5 @@ void EAGL_EmptyE51C0();
 // ECX = the context, or a pointer in EAX) and touch nothing but EAX, so they are naked adapters under Ghidra's
 // names (AUTOLTCG: the injection table's ABI check refuses an EAX argument under FUNC_AT). 0x000ee160 reads only
 // ECX and is RenderContext::OffsetSelf.
-void FUN_000ee130();                    // EAX = [ECX + EAX * 4 + 0x20]
-void FUN_000ee140();                    // [ECX + EAX * 4 + 0x20] = the float argument (caller pops), AL = 1
-void FUN_000ee150();                    // ST0 = [ECX + EAX * 4 + 0x20]
-void FUN_000ee170();                    // EAX = (short) [EAX + 4]
-void FUN_000ee180();                    // EAX = (short) [EAX + 6]
 
 #endif // DRIVING_EAGL_VIEW_H_

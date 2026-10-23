@@ -326,17 +326,13 @@ MP_OBJ_EXT* MP_getBaseObj(uint i);
 MP_OBJ_EXT* MP_getDemolitionObj(void);
 MP_OBJ_EXT* MP_getProtectionObj(void);
 MP_OBJ_EXT* MP_getHillObj(void);
-MP_OBJ_EXT* _MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
-// The original takes mpObj in EDI: MP_getObjExtFromMPOBJECT is the entry for that, _MP_getObjExtFromMPOBJECT the C++
-MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(void);
+MP_OBJ_EXT* MP_getObjExtFromMPOBJECT(MPOBJECT *mpObj);
 char* MP_GetTeamScore(ushort team);
 char* MP_GetPlayerScore(ushort player);
 bool MP_IsFlagParent(obj_tag *obj, ushort team);
 bool MP_IsBluePrintParent(obj_tag *obj);
 bool MP_ObjTeamHasGEObj(obj_tag *obj, int part);
-void _MP_PostLoadInitObjExt(MP_OBJ_EXT *ext);
-// The original takes ext in EAX
-void MP_PostLoadInitObjExt(void);
+void MP_PostLoadInitObjExt(MP_OBJ_EXT *ext);
 MP_OBJ_EXT* MP_getUplinkObj(int idx, int filterState);
 ushort MP_getUplinkStatus(short uplink);
 MP_OBJ_EXT* MP_getBlueprintObj(void);
@@ -356,15 +352,11 @@ void MPSound_Play(Action_SFX sfx);
 void MP_ApplyDamage(obj_tag *obj, float damage, obj_tag *from);
 void MP_UnregisterPickup(obj_tag *pickup);
 int MP_RegisterPickup(obj_tag *pickup);
-void _MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj);
-// The original takes ext in ECX and obj in EAX
-void MP_initObjExt(void);
+void MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj);
 obj_tag* MP_getDemolitionObj_NotExt(void);
-void _MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
-// The original takes ext in ESI: MP_recalcObjExtPaths is the entry for that, _MP_recalcObjExtPaths the C++ under it.
-void MP_recalcObjExtPaths(bool keepPos);
-void _MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace);
-void _MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach);
+void MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
+void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace);
+void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach);
 short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);
@@ -375,9 +367,7 @@ obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl);
 void MP_EquipPlayer(obj_tag *player);
 void MP_PostLoad_Init(void);
 bool MP_ReSpawn(obj_tag* obj, ushort idx);
-// The original takes obj in EAX and team in CX: MP_HitBy is the entry for that, _MP_HitBy the C++ under it
 obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
-obj_tag* _MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut);
 obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly);
 bool MP_playerIsDead(obj_tag *obj);
 void MP_ResetBotPickupTimes(ushort botNum);
@@ -387,29 +377,18 @@ void MP_Start(void);
 
 // multiplayer_modes.cpp
 void MP_KOHUpdate(obj_tag *hill);
-// The original takes gameObj in EAX: MP_UplinkUpdate is the entry for that, _MP_UplinkUpdate the C++ under it.
 void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
-void _MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj);
 void MP_PlayerKilled(obj_tag *obj);
 
 // multiplayer_flag.cpp
-// The originals take gameObj in EAX (and MP_FlagUpdate mpObj in EDI): the plain names are the entries for that,
-// the _ names the C++ under them.
 void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
-void _MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped);
 void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
-void _MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 // multiplayer_goldeneye.cpp
 void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char state);
-// The original takes gameObj in EAX: MP_GoldenEyeUpdate is the entry for that, _MP_GoldenEyeUpdate the C++ under it.
 void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
-void _MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj);
 // multiplayer_objects.cpp
 void MP_ObjectUpdate(obj_tag *gameObj);
-// The original takes defenders in AX and gameObj in EBX: MP_DemolitionProtectionUpdate is the entry for that,
-// _MP_DemolitionProtectionUpdate the C++ under it.
-void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders);
-void _MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj);
+void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *gameObj);
 void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj);
 
 // FIXME move to a separate file

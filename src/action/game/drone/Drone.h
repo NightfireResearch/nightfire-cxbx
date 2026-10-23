@@ -745,9 +745,8 @@ void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit);
 obj_tag* Drone_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl);
 bool Drone_PositionVisible(_VECTOR *pos, cel_tag *cel);
 void Drone_SM_RouteMsg(MsgObject *msg);
-// The dispatcher. The original takes dcVars in ESI: the game reaches the adaptor, C++ calls the core (DroneSM.cpp).
-void _Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
-void Drone_SM_RouteMsgDCV(void);
+// The dispatcher (DroneSM.cpp)
+void Drone_SM_RouteMsgDCV(DCVars_tag *dcVars, MsgObject *msg);
 void Drone_EnableAll(char enable, HASHCODE hashcode);
 obj_tag* Drone_CoderCreate(_VECTOR *pos, _VECTOR *rot, HASHCODE skin, HASHCODE playScript, uint unused, uint weapon, ushort initialState);
 void Drone_PreLoad_Init(void);

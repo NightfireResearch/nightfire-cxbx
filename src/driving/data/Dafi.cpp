@@ -10,7 +10,6 @@
 // of the text, exactly where the original does; names compare with _stricmp.
 // ---------------------------------------------------------------------------------------------------------------
 
-
 static bool IsLineEnd(char c) {
     return c == '\n' || c == '\r' || c == 0;
 }
@@ -45,33 +44,6 @@ char *DafiTrim(char *string) {
     }
     return string;
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// EAX = line, EDX = end -> EAX; EDX kept, as the original keeps it.
-// AUTOLTCG
-__declspec(naked) void FUN_0011a1b0() {
-    __asm {
-        push edx
-        push edx
-        push eax
-        call DafiNextLine
-        add esp, 8
-        pop edx
-        ret
-    }
-}
-
-// EAX = string -> EAX.
-// AUTOLTCG
-__declspec(naked) void FUN_0011a200() {
-    __asm {
-        push eax
-        call DafiTrim
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x0011a240)
 DAFI* DAFI_open(const char *text, int size) {

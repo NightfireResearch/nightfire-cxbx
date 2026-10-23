@@ -43,20 +43,12 @@ LAYOUT_32(offsetof(MiniSubInfo, route) == 0x1c0, "Bad offset of MiniSubInfo.rout
 
 obj_tag * MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl);
 void MiniSub_Update(obj_tag *obj);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void _MiniSub_SetTarget(MiniSubInfo *sub, CelPos_tag *at);
-void MiniSub_SetTarget(void);       // EAX the sub's data, EBX where
-void _MiniSubMove_Turn(MiniSubInfo *sub);
-void MiniSubMove_Turn(void);        // ESI the sub's data
-void _MiniSubMove_Forward(MiniSubInfo *sub);
-void MiniSubMove_Forward(void);     // EAX the sub's data
-uint _MiniSub_Route(MiniSubInfo *sub, obj_tag *targetObj, float radius);
-void MiniSub_Route(void);           // ESI the sub's data; target, radius
-void _MiniSub_FireTorpedo(MiniSubInfo *sub);
-void MiniSub_FireTorpedo(void);     // EAX the sub's data
-void _MiniSubState_Attack(MiniSubInfo *sub);
-void MiniSubState_Attack(void);     // EAX the sub's data
-void _MiniSubState_Init(MiniSubInfo *sub);
-void MiniSubState_Init(void);       // ESI the sub's data
+void MiniSub_SetTarget(MiniSubInfo *sub, CelPos_tag *at);
+void MiniSubMove_Turn(MiniSubInfo *sub);
+void MiniSubMove_Forward(MiniSubInfo *sub);
+uint MiniSub_Route(MiniSubInfo *sub, obj_tag *targetObj, float radius);
+void MiniSub_FireTorpedo(MiniSubInfo *sub);
+void MiniSubState_Attack(MiniSubInfo *sub);
+void MiniSubState_Init(MiniSubInfo *sub);
 
 #endif // MINISUB_H_

@@ -685,8 +685,6 @@ bool NDrone2_BondTalk(DCVars_tag *dcv);
 void Drone_MayhewTalk(uint sfx);
 bool NDrone2_PatrolTalk(DCVars_tag *dcv);
 bool NDrone2_PowerstationTalk(DCVars_tag *dcv);
-// The original takes dcv in EDI: the game reaches the adaptor, C++ calls the core
-void _NDrone2_HandleTalking(DCVars_tag *dcv);
-void NDrone2_HandleTalking(void);
+void NDrone2_HandleTalking(DCVars_tag *dcv);
 
 #endif // NDRONE2_H

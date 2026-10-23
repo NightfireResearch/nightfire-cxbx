@@ -232,7 +232,7 @@ float DroneVision_ObjectVisibility(Drone_tag *drone, obj_tag *obj) {
 // alertness, more nearer; outside the view angle plus pi/8 nothing, and towards its edge less, as a sine; times
 // the AI volumes' scale at the opponent unless the drone knows something and is fully alert. Within 2 m a line of
 // sight is enough. The value is returned unrounded, as the original leaves it in ST0.
-double _DroneVision_OpponentVisibility(Drone_tag *drone) {
+double DroneVision_OpponentVisibility(Drone_tag *drone) {
     float halfAngle = drone->viewAngle + kViewMargin;
     float yaw = drone->headYaw;
     if (MPSettings.maybeDroneAIEnabled)
@@ -276,44 +276,17 @@ double _DroneVision_OpponentVisibility(Drone_tag *drone) {
     return visibility;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in ESI and returns in ST0.
-// AUTOLTCG
-void __declspec(naked) DroneVision_OpponentVisibility(void) {
-    _asm {
-        push esi
-        call _DroneVision_OpponentVisibility
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Whether the drone may see its opponent this frame: it has one, the drones are not blinded, it is alive, the
 // opponent is within range (when range is above 0) and well enough seen (0.7). Otherwise opponentVisibility is 0.
 // Clears DRONE_SIGHT_SEES_OPPONENT either way. Our name.
-bool _DroneVision_OpponentInView(Drone_tag *drone, float range) {
+bool DroneVision_OpponentInView(Drone_tag *drone, float range) {
     drone->sightFlags &= ~DRONE_SIGHT_SEES_OPPONENT;
     if (drone->opponent != NULL && !switch_BLIND_DRONES && !(drone->health <= 0.0f) && !NPCGlobals.unknown1390 &&
-        !(range > 0.0f && drone->distanceToTarget > range) && !(_DroneVision_OpponentVisibility(drone) < 0.7f))
+        !(range > 0.0f && drone->distanceToTarget > range) && !(DroneVision_OpponentVisibility(drone) < 0.7f))
         return true;
     drone->opponentVisibility = 0.0f;
     return false;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in EAX and the range on the stack.
-// AUTOLTCG
-void __declspec(naked) DroneVision_OpponentInView(float range) {
-    _asm {
-        push dword ptr [esp + 4]
-        push eax
-        call _DroneVision_OpponentInView
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The line of sight to the opponent. Outside multiplayer, and for all but civilians, one of Drone_View_Bones a call,
 // in turn, back to the first as soon as it is seen; while aiming, whether the gun is through a wall. Our name (the
@@ -352,7 +325,7 @@ bool DroneVision_OpponentLOS(Drone_tag *drone) {
 // frame's in DRONE_SIGHT_HAD_LOS. A bot takes BOT_PLAYER_IN_SIGHT from what it knows of the opponent's player, while
 // that is BOT_PLAYER_PRESENT. With secondEyeFlags 0x30000000 it looks from secondEyePos too, and ignores what it
 // sees.
-bool _DroneVision_SeekOpponentLOS(Drone_tag *drone) {
+bool DroneVision_SeekOpponentLOS(Drone_tag *drone) {
     uint flags = drone->sightFlags;
     if (flags & DRONE_SIGHT_LOS)
         flags |= DRONE_SIGHT_HAD_LOS;
@@ -385,19 +358,6 @@ bool _DroneVision_SeekOpponentLOS(Drone_tag *drone) {
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in ESI.
-// AUTOLTCG
-void __declspec(naked) DroneVision_SeekOpponentLOS(void) {
-    _asm {
-        push esi
-        call _DroneVision_SeekOpponentLOS
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The first time an enemy (or, in TowerA and TowerB, a civilian) sees the player, it counts in the player's stats;
 // in CastleIndoors1 only while the player is armed
 // AUTOINJECT
@@ -419,7 +379,7 @@ void DroneVision_LogSeenOpponent(Drone_tag *drone) {
 // where it was seen. The first sighting (with DRONE_PROP_3C) sends the drone DRONE_MSG_OpponentSighted; a
 // DTYPE_HostageKiller also DRONE_MSG_AttackNow 8 seconds later and the music; with DRONE_PROP_55 the mission fails
 // (reason 10). A bot's second frame of sight chooses its weapon and range.
-void _DroneVision_HaveOpponentSight(Drone_tag *drone) {
+void DroneVision_HaveOpponentSight(Drone_tag *drone) {
     if (drone->opponent == NULL)
         return;
     uint now = GameState.NumFramesUnpaused;
@@ -456,23 +416,10 @@ void _DroneVision_HaveOpponentSight(Drone_tag *drone) {
         DroneFunc_SetMissionFailReason(drone, 10);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in ESI.
-// AUTOLTCG
-void __declspec(naked) DroneVision_HaveOpponentSight(void) {
-    _asm {
-        push esi
-        call _DroneVision_HaveOpponentSight
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // ---- drones alerting each other
 
 // The drone with this state machine id, looking from `from` (or the first) on; the first if none has it. Our name.
-Drone_tag *_DroneVision_FindDrone(Drone_tag *from, uint id) {
+Drone_tag *DroneVision_FindDrone(Drone_tag *from, uint id) {
     if (NPCGlobals.NDrone2Count == 0)
         return NULL;
     Drone_tag *first = NPCGlobals.NDrone2List;
@@ -483,20 +430,6 @@ Drone_tag *_DroneVision_FindDrone(Drone_tag *from, uint id) {
             return drone;
     return first;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes `from` in EAX and the id in EDX.
-// AUTOLTCG
-void __declspec(naked) DroneVision_FindDrone(void) {
-    _asm {
-        push edx
-        push eax
-        call _DroneVision_FindDrone
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // The drone after the one with this id (looking from `from`, or the first, on); the first when that is the last or
 // none has it. Our name.
@@ -558,7 +491,7 @@ static bool AlertedByWhatItKnows(Drone_tag *drone, uint known) {
 // what the alerter knows and see it. Alerted: flag 0x20000, the alerter's flags2 moved up 16 bits into its own
 // (in CastleIndoors1 its high half too), alertedBy and DRONE_MSG_ConsideredAlerted. Returns whether the alerter was
 // in view.
-bool _DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
+bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     uint flags = drone->flags;
     char inView = 0;
     if (!(flags & 0x2000) || drone->side == 2 || drone->dtype == DTYPE_Hostage ||
@@ -612,20 +545,6 @@ bool _DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     return inView;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in ESI and the alerter in EDI.
-// AUTOLTCG
-void __declspec(naked) DroneVision_ConsiderAlerted(void) {
-    _asm {
-        push edi
-        push esi
-        call _DroneVision_ConsiderAlerted
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // A drone knows something it can pass on: running, not an ally, not alerted by another and some flags2
 static bool KnowsSomething(Drone_tag *drone) {
     if (drone->flags & 0x20000)
@@ -638,32 +557,18 @@ static bool KnowsSomething(Drone_tag *drone) {
 }
 
 // Of the two, the one that knows something may alert the other (not when both do)
-bool _DroneVision_DetermineAlertCheck(Drone_tag *a, Drone_tag *b) {
+bool DroneVision_DetermineAlertCheck(Drone_tag *a, Drone_tag *b) {
     bool aKnows = KnowsSomething(a);
     bool bKnows = KnowsSomething(b);
     if (aKnows) {
         if (bKnows)
             return false;
-        return _DroneVision_ConsiderAlerted(b, a);
+        return DroneVision_ConsiderAlerted(b, a);
     }
     if (!bKnows)
         return false;
-    return _DroneVision_ConsiderAlerted(a, b);
+    return DroneVision_ConsiderAlerted(a, b);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes a in EDX and b in EAX.
-// AUTOLTCG
-void __declspec(naked) DroneVision_DetermineAlertCheck(void) {
-    _asm {
-        push eax
-        push edx
-        call _DroneVision_DetermineAlertCheck
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // Pairs of drones (each with those after it in the list) until five have been in each other's view; the next frame
 // goes on from the pair it stopped at (NPCGlobals.alertCursor), counting a row for each pair of that one, then
@@ -686,9 +591,9 @@ void DroneVision_FindAlertedDrones(void) {
     if (NPCGlobals.alertCursor[0] == 0 && NPCGlobals.alertCursor[1] == 0) {
         b = a->next;
     } else {
-        a = _DroneVision_FindDrone(a, NPCGlobals.alertCursor[0]);
-        for (b = _DroneVision_FindDrone(a->next, NPCGlobals.alertCursor[1]); b != NULL && !stop; b = b->next) {
-            if (_DroneVision_DetermineAlertCheck(a, b))
+        a = DroneVision_FindDrone(a, NPCGlobals.alertCursor[0]);
+        for (b = DroneVision_FindDrone(a->next, NPCGlobals.alertCursor[1]); b != NULL && !stop; b = b->next) {
+            if (DroneVision_DetermineAlertCheck(a, b))
                 found++;
             if (found > 4)
                 stop = true;
@@ -703,7 +608,7 @@ void DroneVision_FindAlertedDrones(void) {
         if (stop)
             break;
         for (b = a->next; b != NULL && !stop; b = b->next) {
-            if (_DroneVision_DetermineAlertCheck(a, b))
+            if (DroneVision_DetermineAlertCheck(a, b))
                 found++;
             if (found > 4)
                 stop = true;
@@ -743,7 +648,7 @@ void DroneVision_ProcessDroneSight(void) {
         if (drone->gameObj != NULL)
             NDrone2_GetHeadPosOld(drone->gameObj, &drone->headPos, &drone->headYaw);
         if ((drone->flags & 0x10000) && drone->opponent != NULL)
-            _DroneVision_OpponentInView(drone, 0.0f);
+            DroneVision_OpponentInView(drone, 0.0f);
     }
 
     Drone_tag *tested = DroneVision_DroneAfter(NPCGlobals.NDrone2List, NPCGlobals.sightCursor);
@@ -753,7 +658,7 @@ void DroneVision_ProcessDroneSight(void) {
         NPCGlobals.sightCursor = tested->sm.id;
         uint frame = GameState.NumFramesUnpaused;
         if (!MPDrone_MaybeIsDyingOrDead(tested->gameObj) && (tested->flags & 0x10000) && tested->opponent != NULL) {
-            _DroneVision_SeekOpponentLOS(tested);
+            DroneVision_SeekOpponentLOS(tested);
             tested->sightTestFrame = frame;
         }
         left--;
@@ -767,7 +672,7 @@ void DroneVision_ProcessDroneSight(void) {
             (drone->sightFlags & DRONE_SIGHT_LOS)) {
             drone->unseenFrames = 0;
             drone->sightFrames++;
-            _DroneVision_HaveOpponentSight(drone);
+            DroneVision_HaveOpponentSight(drone);
             NPCGlobals.seenOpponentCount++;
             if (drone->sightFrames > FRAME_RATE_INT && !NPCGlobals.newSightSaid) {
                 DCVars_tag dcv;

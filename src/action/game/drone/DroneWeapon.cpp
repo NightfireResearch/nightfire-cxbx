@@ -40,7 +40,7 @@
 #pragma fp_contract(off)
 
 // The weapons with at least a second between shots and bursts of their own length (DroneWeap_FireDelay,
-// DroneWeap_BurstLength, _DroneWeap_NextBulletTime)
+// DroneWeap_BurstLength, DroneWeap_NextBulletTime)
 #define SLOW_WEAPON_CASES case 6: case 10: case 14: case 15: case 16
 
 // Where a grenade leaves the drone's hand
@@ -106,18 +106,18 @@ void DroneWeap_HandleFiring(DCVars_tag *dcv) {
     }
     if (!MPSettings.maybeDroneAIEnabled)
         DroneWeap_DoOpponentTargetting(dcv);
-    if (!_DroneWeap_DoFiring(dcv))
+    if (!DroneWeap_DoFiring(dcv))
         drone->burstOver = 1;
 }
 
 // A shot when one is due and the drone is ready. False when the burst is over: its last shot, or the opponent out of
 // sight for 16 frames (unless DRONE_PROP_17).
-bool _DroneWeap_DoFiring(DCVars_tag *dcv) {
+bool DroneWeap_DoFiring(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (MPSettings.maybeDroneAIEnabled)
         BOT_opponentTargetting(dcv);
     if (drone->burstShots == 0)
-        _DroneWeap_NextBulletTime(dcv, 1, 0);
+        DroneWeap_NextBulletTime(dcv, 1, 0);
     if (dcv->drone->unseenFrames > 15 && behaviour_util_getProperty(DRONE_PROP_17, drone->currentBehaviour) == 0)
         return false;
     if (GameState.NumFramesUnpaused < drone->nextShotFrame)
@@ -128,27 +128,14 @@ bool _DroneWeap_DoFiring(DCVars_tag *dcv) {
     if (drone->firesByAnim)
         return true;
     DroneWeap_FireWeapon(dcv);
-    return _DroneWeap_ManageBurstCount(dcv);
+    return DroneWeap_ManageBurstCount(dcv);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in EDI.
-// AUTOLTCG
-void __declspec(naked) DroneWeap_DoFiring(void) {
-    _asm {
-        push edi
-        call _DroneWeap_DoFiring
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Asks for fire. Restarting, unless it already fires (bots always), the first shot waits for a burst's pause.
 // AUTOINJECT
 void DroneWeap_Fire(char restart, DCVars_tag *dcv) {
     if ((MPSettings.maybeDroneAIEnabled || !dcv->drone->firing) && restart)
-        _DroneWeap_NextBulletTime(dcv, 0, 1);
+        DroneWeap_NextBulletTime(dcv, 0, 1);
     dcv->drone->firing = 1;
     dcv->drone->burstOver = 0;
     dcv->drone->oneBurst = 0;
@@ -197,7 +184,7 @@ short DroneWeap_BurstLength(DCVars_tag *dcv) {
 // its length - more aggressive drones fire shorter bursts of the fast weapons, at least 3 shots - and adds the pause
 // before it to the last shot. Bots fire bursts scaled by their aggression and wait a draw of 0 to 14 frames plus 60
 // over the aggression.
-void _DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
+void DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
     uint now = GameState.NumFramesUnpaused;
     Drone_tag *drone = dcv->drone;
     short delay = DroneWeap_FireDelay(dcv);
@@ -219,7 +206,7 @@ void _DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
             NDrone2_SetOpponentAimPos(drone);
         } else {
             float aggression = (float)BOT_getAggressionMul(drone);
-            pause = _DroneWeap_BurstDelay(drone);
+            pause = DroneWeap_BurstDelay(drone);
             switch (HeldWeapon(dcv)) {
             SLOW_WEAPON_CASES:
                 break;
@@ -243,31 +230,16 @@ void _DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
         drone->nextShotFrame = due;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in EDI, the two flags on the stack.
-// AUTOLTCG
-void __declspec(naked) DroneWeap_NextBulletTime(char newBurst, char start) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push edi
-        call _DroneWeap_NextBulletTime
-        add esp, 12
-        ret
-    }
-}
-#endif
-
 // The compiler's copy of DroneWeap_NextBulletTime for a new burst, which DroneWeap_DoFiring calls (Ghidra gives it
 // the same name; ours is invented).
 // FUNC_AT(0x00067c00)
 void DroneWeap_NextBulletTimeNewBurst(DCVars_tag *dcv) {
-    _DroneWeap_NextBulletTime(dcv, 1, 0);
+    DroneWeap_NextBulletTime(dcv, 1, 0);
 }
 
 // One shot fewer in the burst. False when that was the last; otherwise the next is due a fire delay after the last,
 // and not before now.
-bool _DroneWeap_ManageBurstCount(DCVars_tag *dcv) {
+bool DroneWeap_ManageBurstCount(DCVars_tag *dcv) {
     dcv->drone->burstShots--;
     uint now = GameState.NumFramesUnpaused;
     Drone_tag *drone = dcv->drone;
@@ -278,23 +250,10 @@ bool _DroneWeap_ManageBurstCount(DCVars_tag *dcv) {
     return true;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in EAX.
-// AUTOLTCG
-void __declspec(naked) DroneWeap_ManageBurstCount(void) {
-    _asm {
-        push eax
-        call _DroneWeap_ManageBurstCount
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The pause before a burst, in frames: the normal delay scaled by aggression (0 the longest, 4 the shortest) and a
 // draw of 0.5 to 1, kept between the minimum and the maximum; the minimum when the opponent is nearer than MinDist,
 // the maximum beyond MaxDist.
-uint _DroneWeap_BurstDelay(Drone_tag *drone) {
+uint DroneWeap_BurstDelay(Drone_tag *drone) {
     float delay = DroneFiring_BurstDelay_Normal;
     switch (drone->aggression) {
     case 0:
@@ -324,19 +283,6 @@ uint _DroneWeap_BurstDelay(Drone_tag *drone) {
         frames = DroneFiring_BurstDelay_Max;
     return (uint)(int)(FRAME_RATE_DIV * frames);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the drone in ESI.
-// AUTOLTCG
-void __declspec(naked) DroneWeap_BurstDelay(void) {
-    _asm {
-        push esi
-        call _DroneWeap_BurstDelay
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // Whether the drone may shoot now: the opponent is alive (the player only while the mission counts, outside
 // multiplayer) and the drone is in an aiming anim (mode 4, or 2 with no anim script; close up that is enough). With
@@ -487,7 +433,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
         float pitch = (float)(uint)(Rand_Rand(500) - 250);
         Sound_Play3D((Action_SFX)sound, &obj->position, 25.0f, 100.0f, pitch, 0, 0, 0);
     }
-    if (drone->firesByAnim && !_DroneWeap_ManageBurstCount(dcv))
+    if (drone->firesByAnim && !DroneWeap_ManageBurstCount(dcv))
         drone->burstOver = 1;
 }
 

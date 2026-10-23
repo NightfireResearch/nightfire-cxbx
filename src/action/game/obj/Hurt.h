@@ -49,8 +49,7 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
 float Hurt_GetDamage(obj_tag *obj);
 ushort Hurt_GetType(obj_tag *obj);
 void Hurt_Update(obj_tag *obj);
-ushort _Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt);
-void Hurt_IsTriggered(void);
+ushort Hurt_IsTriggered(obj_tag *obj, Hurt_tag *hurt);
 obj_tag* Occlude_Create(_VECTOR *pos, ushort life, ushort kind);
 void Occlude_Update(obj_tag *obj);
 

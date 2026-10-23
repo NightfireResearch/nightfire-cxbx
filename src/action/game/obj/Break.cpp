@@ -70,7 +70,7 @@ void Break_Update(obj_tag *obj) {
     }
 
     if (breakData->health < 0.0f)
-        _Break_Kill(obj, last);
+        Break_Kill(obj, last);
 }
 
 // An explosion's damage (Explode_Propagate)
@@ -79,7 +79,7 @@ void Break_ApplyDamage(obj_tag *obj, HITDATA_tag *hit) {
     ObjData_Break *breakData = (ObjData_Break *)obj->extraObjectData;
     breakData->health -= hit->dmgAmt;
     if (breakData->health < 0.0f)
-        _Break_Kill(obj, hit);
+        Break_Kill(obj, hit);
 }
 
 // Breaks the first breakable whose sphere holds pos (a script's), hit at its centre from in front
@@ -103,7 +103,7 @@ void Break_DoBreak(_VECTOR *pos) {
             hit.maybehitDirection.x = 0.0f;
             hit.maybehitDirection.y = 0.0f;
             hit.maybehitDirection.z = -0.5f;
-            _Break_Kill(obj, &hit);
+            Break_Kill(obj, &hit);
             return;
         }
     }
@@ -111,7 +111,7 @@ void Break_DoBreak(_VECTOR *pos) {
 
 // Marks the object deleted and, if its model has collision, smashes it: a window into shards, anything else into
 // debris of the hit's material (10 for none)
-void _Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
+void Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
 
     COLLDATA_tag *coll = obj->objGraphics->colldata;
     obj->flags |= 1;
@@ -140,20 +140,6 @@ void _Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
     Vec_Zero(&hit->unknown1);
     Debris_Create_Loop(coll, hit, obj);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The object in ESI, the hit in EDI
-// AUTOLTCG
-void __declspec(naked) Break_Kill(void) {
-    _asm {
-        push edi
-        push esi
-        call _Break_Kill
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // Every triangle of the window's model, shattered with its own texture
 // AUTOINJECT

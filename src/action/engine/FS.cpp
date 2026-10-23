@@ -123,7 +123,7 @@ void FS_NormalisePath(char* src, char* dst) {
 }
 
 // Custom calling convention, can't inject
-int _FS_MatchFilenameToHeader(char *filename) {
+int FS_MatchFilenameToHeader(char *filename) {
 
     // Prevent slashes or capitalisation from resulting in a non-match
     char normalisedName[256];
@@ -141,7 +141,7 @@ int _FS_MatchFilenameToHeader(char *filename) {
             
             // Match?
             if (FileSystem.maybeFileHeader[candidate].nameCrc == crc) {
-                //printf("_FS_MatchFilenameToHeader: Located %s in %i\n", normalisedName, candidate);
+                //printf("FS_MatchFilenameToHeader: Located %s in %i\n", normalisedName, candidate);
                 return candidate;
             }
 
@@ -155,24 +155,9 @@ int _FS_MatchFilenameToHeader(char *filename) {
 
         } while (low <= high);
     }
-    printf("_FS_MatchFilenameToHeader: %s not found!\n", normalisedName);
+    printf("FS_MatchFilenameToHeader: %s not found!\n", normalisedName);
     return -1;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-int __declspec(naked) FS_MatchFilenameToHeader(char* filename) {
-    // The original function is provided with its parameter in EAX, but we need to call our reimplementation
-    // which doesn't have custom calling convention
-    _asm {
-        push eax
-        call _FS_MatchFilenameToHeader
-        add esp, 4
-        ret
-    }
-
-}
-#endif
 
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -424,7 +409,7 @@ bool FS_StateMachineIterate(void) {
 // AUTOINJECT
 int FS_GetFileSize(char *filename) {
 
-    int idx = _FS_MatchFilenameToHeader(filename);
+    int idx = FS_MatchFilenameToHeader(filename);
     if (idx == -1) {
         FS_FatalErrorHandler();
     }
@@ -440,7 +425,7 @@ int FS_GetFileSize(char *filename) {
 void FS_LoadFileIfReady(char *fileName, void *buffer) {
     if (FS_StateMachineIterate())
         return;
-    int idx = _FS_MatchFilenameToHeader(fileName);
+    int idx = FS_MatchFilenameToHeader(fileName);
     FileSystem.maybeActiveArchiveNum = idx;
     if (idx == -1)
         FS_FatalErrorHandler();
@@ -497,7 +482,7 @@ static int FS_StreamOpen(char *fileName) {
         stream++;
     if (stream >= MAX_ASYNC_STREAMS)
         FS_FatalErrorHandler();
-    int idx = _FS_MatchFilenameToHeader(fileName);
+    int idx = FS_MatchFilenameToHeader(fileName);
     if (idx == -1)
         FS_FatalErrorHandler();
     AsyncStreams[stream].fileIdx = idx;

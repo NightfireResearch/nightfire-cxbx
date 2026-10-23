@@ -51,8 +51,6 @@ void readsamples(SND::MutState *state, int mode, float *out);              // 0x
 void decode16x87(uint32_t count, const int16_t *in, float *out);           // 0x0014a1e0
 
 // The two register-argument helpers: the adaptors (AUTOLTCG, Ghidra's names) and the C++ under them.
-void FUN_00146e00(); // EBX = out (12 floats), one stack argument: the 12 coefficients
-void FUN_00146f00(); // EAX = first output index, ESI = state, one stack argument: groups of 12
 void MutLpcCoefficients(float *out, const float *coefs);                   // FUN_00146e00's work
 void MutSynthesise(int first, SND::MutState *state, int groups);           // FUN_00146f00's work
 

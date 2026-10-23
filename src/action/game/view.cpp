@@ -256,7 +256,7 @@ static void View_SetDetail(obj_tag *obj, viewer_tag *viewer, double distanceSq) 
 // Adds a cel's objects that this view draws and sees: those with a model, particles (transformFlags 0x10) and
 // emitters (0x100); not hidden (effectFlags 0x10) or crossing cels (0x8000, View_AddForcedObjects); with 0x400, only
 // in night vision (view mode 2). Particles sort 2000 further back.
-void _View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
+void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
     for (obj_tag *obj = cel->firstObject; obj != NULL; obj = obj->nextInCel) {
         OnlyScaleZ = 0;
         FlipScale = 0;
@@ -286,24 +286,10 @@ void _View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The cel in EAX, the view on the stack (with a second argument the original does not read)
-// AUTOLTCG
-void __declspec(naked) View_AddObjects(viewer_tag *viewer, cel_tag *cel) {
-    _asm {
-        push dword ptr [esp + 4]
-        push eax
-        call _View_AddObjects
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // The cels to draw this frame into list 0, in order (keys from -90000 up in tens), with their objects; then the cels
 // inside each that the view sees, by their distance squared from the eye, and their objects. Inside cels of kind
 // 0x8018 are not drawn from a cel of kind 0xc023; those flagged 0x40000 not in view 4's pass (mask 0x10).
-void _View_AddCels(viewer_tag *viewer) {
+void View_AddCels(viewer_tag *viewer) {
     float key = -90000.0f;
     for (cel_tag *cel = GfxList; cel != NULL; cel = cel->nextVisible) {
         if (cel->glist != NULL && !(cel->glist->applyFlagsToObject & 0x10)) {
@@ -311,7 +297,7 @@ void _View_AddCels(viewer_tag *viewer) {
             entry->key = key;
             key = key + 10.0f;
         }
-        _View_AddObjects(cel, viewer);
+        View_AddObjects(cel, viewer);
 
         for (cel_tag *inside = cel->childCel; inside != NULL; inside = inside->childCel) {
             if (inside->glist == NULL || (inside->glist->applyFlagsToObject & 0x10))
@@ -328,23 +314,10 @@ void _View_AddCels(viewer_tag *viewer) {
             int list = View_ListFor(inside->flags84, &sign);
             DrawEntry *entry = View_AddToList(viewer, list, NULL, inside);
             entry->key = (float)(Vec_SqDist3D(&inside->sphere, &CamPos) * sign);
-            _View_AddObjects(inside, viewer);
+            View_AddObjects(inside, viewer);
         }
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The view in ESI
-// AUTOLTCG
-void __declspec(naked) View_AddCels(viewer_tag *viewer) {
-    _asm {
-        push esi
-        call _View_AddCels
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // The objects that cross cels (effectFlags 0x8000), from the world's list, that this view draws and sees. A drone
 // larger than 0.5 is drawn only if a cel it is in is drawn this frame.
@@ -398,14 +371,14 @@ void View_AddForcedObjects(viewer_tag *viewer) {
 // XBE_GLOBAL(0x0029e800, 0xc)
 uint32_t Tots[3];
 
-void _View_CaptureScene(viewer_tag *viewer) {
+void View_CaptureScene(viewer_tag *viewer) {
     viewer->draw.counts[0] = 0;
     viewer->draw.counts[1] = 0;
     viewer->draw.counts[2] = 0;
     if (viewer->enabled && viewer->draw.lists[0]) {
 
         View_CaptureSceneSub(viewer->idx, viewer);
-        _View_AddCels(viewer);
+        View_AddCels(viewer);
         View_AddForcedObjects(viewer);
 
         // Log statistics
@@ -414,21 +387,6 @@ void _View_CaptureScene(viewer_tag *viewer) {
         Tots[2] += viewer->draw.counts[2]; // This handles first-person weapon models intersecting level geometry. Non-zero value causes camera 5 to be drawn in Game_Draw
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) View_CaptureScene(viewer_tag* viewer) {
-    // The original function is provided with its parameter in EAX, but we need to call our reimplementation
-    // which doesn't have custom calling convention
-    _asm {
-        push eax
-        call _View_CaptureScene
-        add esp, 4
-        ret
-    }
-
-}
-#endif
 
 // An object's colour (tweakR, G, B) and alpha (tweakA) as the draw tweak: the alpha a quarter in night vision with
 // effectFlags 0x20000, the colour times its light's (light_related) with 0x800, and times FlashMod when it flashes
@@ -527,7 +485,7 @@ static void View_DrawAttachments(ATTACH_tag *attachment, viewer_tag *viewer) {
 }
 
 // A cel's geometry: turned by its rotation (or facing the view, flags84 8), shaken in scale (4), at its position
-void _View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
+void View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
     View_SetupCelRenderModes(cel);
     _MATRIX mtx;
     if (cel->flags84 & 8) {
@@ -545,20 +503,6 @@ void _View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
     psiDrawObjectMatrix(cel->glist, &mtx);
     View_DrawAttachments(cel->attachments, viewer);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The view in EAX, the cel in ESI
-// AUTOLTCG
-void __declspec(naked) View_DrawCelGlist(cel_tag *cel, viewer_tag *viewer) {
-    _asm {
-        push esi
-        push eax
-        call _View_DrawCelGlist
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // An object's model in its matrix: or facing the view (effectFlags 8; turned about z alone when it has a z rotation,
 // which clears its x and y), at its scale; shaken in scale (4)
@@ -606,7 +550,7 @@ void View_DrawObjList(viewer_tag *viewer, ushort list) {
         bCharacterLight = 0;
         bShadowCharacter = 0;
         if (cel != NULL) {
-            _View_DrawCelGlist(viewer, cel);
+            View_DrawCelGlist(viewer, cel);
             continue;
         }
 
@@ -1077,7 +1021,7 @@ void __stdcall Game_Draw(void) {
     Tots[2] = 0;
     for (int i = 0; i < 11; i++) {
         if (glb_viewer[i] != NULL)
-            _View_CaptureScene(glb_viewer[i]);
+            View_CaptureScene(glb_viewer[i]);
     }
     psiFog(1, 0.0f, 10.0f, 0xff, 0, 0);
 

@@ -114,18 +114,14 @@ ushort HUD_State(HUDINFO_tag *param_1, HUD_PANE_IND idx);
 void HUD_Update(BLData *playerInfo, obj_tag *obj);
 void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *param_3, obj_tag *param_4);
 
-void _HUD_UpdateCrossHair(BLData *player, sprite *spr);
-void HUD_UpdateCrossHair(void);
-void _HUD_MonitorNightSight(BLData *player);
-void HUD_MonitorNightSight(void);
+void HUD_UpdateCrossHair(BLData *player, sprite *spr);
+void HUD_MonitorNightSight(BLData *player);
 void HUD_CalcWidthHeight(HUDPANECREATE_tag *create, short *width, short *height);
 void HUD_ValidateXY(short *x, short *y, ushort width, ushort height, ushort player, uint flags);
 void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *unused);
-void _HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj);
-void HUD_CreateShift(void);
+void HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj);
 void HUD_FixMP(sprite *spr, short player);
-void _HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float along, float scale, uchar alpha);
-void HUD_PlaceLensFlare(void);
+void HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float along, float scale, uchar alpha);
 
 // Implementations of individual HUD panes
 void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj);

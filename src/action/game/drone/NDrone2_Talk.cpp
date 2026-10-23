@@ -1146,7 +1146,7 @@ bool NDrone2_PowerstationTalk(DCVars_tag *dcv) {
 // Each frame, per drone: the Powerstation loudspeakers, or in CastleIndoors2 the guards' (skin class 12) talk to a
 // player within 3 m they can see, tried every 30 frames at most: three lines in turn (5 s after the first, 15 s
 // after the others), or once channel 0x4a is on, a last one that ends it.
-void _NDrone2_HandleTalking(DCVars_tag *dcv) {
+void NDrone2_HandleTalking(DCVars_tag *dcv) {
     if (Drone_bDisableSystem)
         return;
     Drone_tag *drone = dcv->drone;
@@ -1194,19 +1194,6 @@ void _NDrone2_HandleTalking(DCVars_tag *dcv) {
         break;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the DCVars in EDI.
-// AUTOLTCG
-void __declspec(naked) NDrone2_HandleTalking(void) {
-    _asm {
-        push edi
-        call _NDrone2_HandleTalking
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // A Powerstation guard (skin class 5 or 6) says it has seen its opponent, one of 0xd6 and 0xd7, and its target is
 // marked seen where the opponent was. Not with no player, in multiplayer, while it talks or once dead.

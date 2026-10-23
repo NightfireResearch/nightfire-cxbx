@@ -80,7 +80,6 @@ typedef int (*PrintHookFn)(const char *format, va_list arguments);
 extern PrintHookFn PrintHook;     // PrintMessage's hook: when set, it takes the message
 
 int PrintMessage(int level, const char *format, ...);                        // 0x000f42b0
-void ProfilerSetVertexShaderConstantRegs();  // 0x000f4310 naked: EAX = count, ECX = register, EDX = data (invented)
 void ProfilerResetMaxima();                                                  // 0x000f45f0 (invented)
 void ProfilerAdvancePage(uint32_t count);                                    // 0x000f4620 (invented)
 void ProfilerClearCycles();                                                  // 0x000f4680 (invented)

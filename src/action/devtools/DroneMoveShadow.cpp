@@ -675,7 +675,7 @@ void TestSteering() {
                 },
                 [] {
                     Drone_tag *other = world.objArg == NULL ? NULL : &world.drones[1];
-                    return (uint32_t)_NDrone2_EvaluateObstacle(&world.drones[0], other, &world.eval);
+                    return (uint32_t)NDrone2_EvaluateObstacle(&world.drones[0], other, &world.eval);
                 });
     }
     for (int trial = 0; trial < 8000; trial++) {

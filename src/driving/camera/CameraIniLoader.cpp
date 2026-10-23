@@ -138,19 +138,6 @@ float ClampCameraValue(float value, float min, float max) {
     return value;
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AUTOLTCG
-__declspec(naked) void FUN_00078590() {
-    __asm {
-        push dword ptr [esp + 4]
-        push edi
-        call CarListContains
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 bool CarListContains(const char *list, const char *name) {
     size_t length = strlen(name);
     if (length > strlen(list))

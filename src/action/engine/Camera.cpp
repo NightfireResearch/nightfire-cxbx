@@ -337,7 +337,7 @@ void Camera_CreateCameras(void) {
 
 // Eases value towards target by rate of the gap, stopping there rather than overshooting it. On the x87 the gap
 // stays unrounded, and a NaN gap counts as a fall.
-float _moveTowardsValue(float value, float target, float rate) {
+float moveTowardsValue(float value, float target, float rate) {
     Extended gap = Extended(target) - Extended(value);
     float moved = (float)(Extended(rate) * gap + Extended(value));
     double rising = (double)gap;
@@ -345,21 +345,6 @@ float _moveTowardsValue(float value, float target, float rate) {
         return moved > target ? target : moved;
     return moved < target ? target : moved;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original's arguments on the stack and the result in ST0, the caller cleaning up
-// AUTOLTCG
-float __declspec(naked) moveTowardsValue(float value, float target, float rate) {
-    _asm {
-        push dword ptr [esp + 0xc]
-        push dword ptr [esp + 0xc]
-        push dword ptr [esp + 0xc]
-        call _moveTowardsValue
-        add esp, 0xc
-        ret
-    }
-}
-#endif
 
 // The debug cameras' placements. Each eases one part of the view rate of the way to where it should be, then sets
 // the view to its own position and angles (Camera_Set).

@@ -106,9 +106,9 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
     door->noTouch = params->noTouch;
     Control_SetGList(obj, celgl);
     if (obj->subState == DoorKind_Swing)
-        _Door_SetupSwing(obj);
+        Door_SetupSwing(obj);
     else
-        _Door_SetupSlide(obj);
+        Door_SetupSlide(obj);
 
     build_LinkToRoom(obj, 1, glb_world);
     LList_Add(&TheDoors, &door->node);
@@ -123,7 +123,7 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
 
 // A swing door: closed halfway along its path, with its speed rounded to take a whole number of frames to get there.
 // The hinge is the inverse of the closed matrix; side is which way along the path it swings open.
-void _Door_SetupSwing(obj_tag *obj) {
+void Door_SetupSwing(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     int framesToHalf = (int)(int64_t)(0.5 / ((double)door->speed * 2.0));
     door->speed = (float)(0.5 / framesToHalf);
@@ -148,21 +148,8 @@ void _Door_SetupSwing(obj_tag *obj) {
                celgl->name); // GC check (0x80082a74)
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the door in EAX, and the placement on the stack, unread.
-// AUTOLTCG
-void __declspec(naked) Door_SetupSwing(void) {
-    _asm {
-        push eax
-        call _Door_SetupSwing
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // A sliding door. The hinge is the inverse of the path's first matrix, and then the path's last one in its place.
-void _Door_SetupSlide(obj_tag *obj) {
+void Door_SetupSlide(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     door->pathPos = (obj->curState & DoorState_Open) ? 1.0f : 0.0f;
     Spline_Interp(door->path, 0, door->lastKey, 0.0f, &door->hinge, NULL, 2);
@@ -171,21 +158,8 @@ void _Door_SetupSlide(obj_tag *obj) {
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// FUN_0002eb80 in the original, which takes the door in EAX, and the placement on the stack, unread. The name is ours.
-// AUTOLTCG
-void __declspec(naked) Door_SetupSlide(void) {
-    _asm {
-        push eax
-        call _Door_SetupSlide
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Starting to open or close plays its sound. The door's channel follows whether it was open or opening.
-void _Door_SetState(obj_tag *obj, ushort state) {
+void Door_SetState(obj_tag *obj, ushort state) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     if ((state & DoorState_Opening) && !(obj->curState & DoorState_Opening))
         Sound_Play3D((Action_SFX)door->openSound, Mat_Position(obj->transformMatrix), 100.0f, -1.0f, -1.0f, 0, 0, 0);
@@ -201,24 +175,9 @@ void _Door_SetState(obj_tag *obj, ushort state) {
     door->openTime = 0;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the door in ESI and the state in BX.
-// AUTOLTCG
-void __declspec(naked) Door_SetState(void) {
-    _asm {
-        movzx eax, bx
-        push eax
-        push esi
-        call _Door_SetState
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Puts the door where it is on its path and, with advance, moves it on a frame, stopping it at the end. Stopping
 // always moves it with Spline_Interp, even on a door that moves between keys.
-void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
+void Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
     if (door->flags & DoorFlag_Spline)
         Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
     else
@@ -238,7 +197,7 @@ void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
         if ((state & DoorState_Opening) && (pathPos > 1.0f || pathPos < 0.0f)) {
             // Swung fully open, one way or the other
             door->pathPos = pathPos < 0.0f ? 0.0f : (pathPos > 1.0f ? 1.0f : pathPos);
-            _Door_SetState(obj, DoorState_Open);
+            Door_SetState(obj, DoorState_Open);
             stopped = true;
         } else if (state & DoorState_Closing) {
             double fromClosed = 0.5 - pathPos;
@@ -247,7 +206,7 @@ void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
             if (!(fromClosed <= step))
                 return;
             door->pathPos = 0.5f;
-            _Door_SetState(obj, DoorState_Closed);
+            Door_SetState(obj, DoorState_Closed);
             stopped = true;
         } else {
             return;
@@ -255,12 +214,12 @@ void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
     } else if (kind > 0 && kind <= DoorKind_Slide2) {
         if (pathPos < 0.0f) {
             door->pathPos = 0.0f;
-            _Door_SetState(obj, DoorState_Closed);
+            Door_SetState(obj, DoorState_Closed);
             stopped = true;
         }
         if (door->pathPos > 1.0f) {
             door->pathPos = 1.0f;
-            _Door_SetState(obj, DoorState_Open);
+            Door_SetState(obj, DoorState_Open);
             stopped = true;
         }
     }
@@ -268,21 +227,6 @@ void _Door_Interp(obj_tag *obj, DOORINFO *door, char advance) {
     if (stopped)
         Spline_Interp(door->path, 0, door->lastKey, door->lastKey * door->pathPos, &obj->transformMatrix, NULL, 2);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the door in EAX and its data in EDI, then advance on the stack.
-// AUTOLTCG
-void __declspec(naked) Door_Interp(void) {
-    _asm {
-        push dword ptr [esp + 4]
-        push edi
-        push eax
-        call _Door_Interp
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // A player, or a drone that is up and moving, hitting a moving door: a swing door turns back when it was swinging
 // into them, and a closing door of the second sliding kind opens again.
@@ -328,7 +272,7 @@ void Door_ReactToHit(obj_tag *obj) {
             else
                 return;
             door->direction = -door->direction;
-            _Door_SetState(obj, reverse);
+            Door_SetState(obj, reverse);
         }
         break;
 
@@ -339,12 +283,12 @@ void Door_ReactToHit(obj_tag *obj) {
         if (!(obj->curState & DoorState_Closing))
             return;
         door->direction = -door->direction;
-        _Door_SetState(obj, DoorState_Opening);
-        _Door_Interp(obj, door, 0);
+        Door_SetState(obj, DoorState_Opening);
+        Door_Interp(obj, door, 0);
         break;
     }
 
-    _Door_Interp(obj, door, 0);
+    Door_Interp(obj, door, 0);
     door->flags |= DoorFlag_Moved;
     door->cooldown = 2;
 }
@@ -401,21 +345,21 @@ bool Door_Activate(obj_tag *obj, obj_tag *user, char touched) {
             _VECTOR local;
             RotPreTransVec(&door->hinge, &user->centrePoint, &local);
             door->direction = (local.z <= 0.0f ? -1.0f : 1.0f) * door->side;
-            _Door_SetState(obj, DoorState_Opening);
+            Door_SetState(obj, DoorState_Opening);
             started = true;
         } else if (state & (DoorState_Open | DoorState_Opening)) {
             door->direction = door->pathPos > 0.5f ? -1.0f : 1.0f;
-            _Door_SetState(obj, DoorState_Closing);
+            Door_SetState(obj, DoorState_Closing);
             started = true;
         }
     } else if (kind > 0 && kind <= DoorKind_Slide2) {
         started = true;
         if (obj->curState & (DoorState_Closed | DoorState_Closing)) {
             door->direction = 1.0f;
-            _Door_SetState(obj, DoorState_Opening);
+            Door_SetState(obj, DoorState_Opening);
         } else if (obj->curState & (DoorState_Open | DoorState_Opening)) {
             door->direction = -1.0f;
-            _Door_SetState(obj, DoorState_Closing);
+            Door_SetState(obj, DoorState_Closing);
         }
     }
 
@@ -491,7 +435,7 @@ char * Door_DoMsg(obj_tag *obj) {
 
 // The other doors of the lead door's group, not yet moved this frame, take its movement and state. Doors_Calc always
 // passes active as 1.
-void _Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active) {
+void Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active) {
     for (LLNODE_tag *node = TheDoors.head; node != NULL && active; node = node->next) {
         DOORINFO *door = (DOORINFO *)node;
         if (door == lead || door->group != lead->group || (door->flags & DoorFlag_Moved))
@@ -501,30 +445,13 @@ void _Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active) {
         door->flags |= DoorFlag_Moved;
         door->openTime = lead->openTime;
         door->obj->curState = leadObj->curState;
-        _Door_Interp(door->obj, door, 0);
+        Door_Interp(door->obj, door, 0);
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// FUN_0002f7e0 in the original, which takes the lead door's data in ESI and active in BL, then the lead door on the
-// stack. The name is ours.
-// AUTOLTCG
-void __declspec(naked) Door_MoveGroup(void) {
-    _asm {
-        movzx eax, bl
-        push eax
-        push esi
-        push dword ptr [esp + 12]
-        call _Door_MoveGroup
-        add esp, 12
-        ret
-    }
-}
-#endif
 
 // Closes the door unless a player, a dead player or a drone is near it: within twice the square of their radii
 // added together.
-void _Door_CloseIfClear(obj_tag *obj) {
+void Door_CloseIfClear(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     for (obj_tag *other = control_first_object(); other != NULL; other = other->nextObject) {
         if (other->effectFlags & FLAG_HIDDEN)
@@ -543,19 +470,6 @@ void _Door_CloseIfClear(obj_tag *obj) {
     door->openTime = 0;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// FUN_0002f850 in the original, which takes the door in EDI. The name is ours.
-// AUTOLTCG
-void __declspec(naked) Door_CloseIfClear(void) {
-    _asm {
-        push edi
-        call _Door_CloseIfClear
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Once a frame, before the doors' updates: the doors of each group follow its first door.
 // AUTOINJECT
 void Doors_Calc(void) {
@@ -563,7 +477,7 @@ void Doors_Calc(void) {
     for (LLNODE_tag *node = TheDoors.head; node != NULL; node = node->next) {
         DOORINFO *door = (DOORINFO *)node;
         if (door->group != 0)
-            _Door_MoveGroup(door->obj, door, 1);
+            Door_MoveGroup(door->obj, door, 1);
     }
     for (LLNODE_tag *node = TheDoors.head; node != NULL; node = node->next)
         ((DOORINFO *)node)->flags &= ~DoorFlag_Moved;
@@ -585,7 +499,7 @@ void Door_Update(obj_tag *obj) {
             if (!(state & DoorState_Open))
                 Door_Activate(obj, glb_players[0], 0);
         } else if (!(state & DoorState_Closed)) {
-            _Door_CloseIfClear(obj);
+            Door_CloseIfClear(obj);
         }
     }
 
@@ -601,11 +515,11 @@ void Door_Update(obj_tag *obj) {
 
     if ((obj->curState & DoorState_Open) && !(door->flags & DoorFlag_StayOpen)) {
         if (door->openTime++ >= FRAME_RATE_INT * 6)
-            _Door_CloseIfClear(obj);
+            Door_CloseIfClear(obj);
     }
 
     if (obj->curState & (DoorState_Opening | DoorState_Closing))
-        _Door_Interp(obj, door, 1);
+        Door_Interp(obj, door, 1);
     else
         Vec_Copy(&obj->position, &obj->lastPosition);
 

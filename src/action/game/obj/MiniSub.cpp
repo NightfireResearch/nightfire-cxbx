@@ -58,7 +58,7 @@ obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_t
 }
 
 // Heads for at, facing it. A place with no cel is given the one it is in.
-void _MiniSub_SetTarget(MiniSubInfo *sub, CelPos_tag *at) {
+void MiniSub_SetTarget(MiniSubInfo *sub, CelPos_tag *at) {
     Vec_Copy(&at->pos, &sub->moveTarget.pos);
     if (at->cel == NULL)
         at->cel = NDrone2_FindCel(&at->pos);
@@ -70,23 +70,9 @@ void _MiniSub_SetTarget(MiniSubInfo *sub, CelPos_tag *at) {
     Vec_DirToRot(&dir, &sub->facing);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub's data, EBX where. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) MiniSub_SetTarget(void) {
-    _asm {
-        push ebx
-        push eax
-        call _MiniSub_SetTarget
-        add esp, 8
-        ret
-    }
-}
-#endif
-
 // Turns turnRate of the way to its facing, and eases its roll the same way towards a bank against the turn, at most
 // pi/4
-void _MiniSubMove_Turn(MiniSubInfo *sub) {
+void MiniSubMove_Turn(MiniSubInfo *sub) {
     double exact = Vec_AngleDifference(sub->gameObj->rotation.y, sub->facing.y);
     float gap = (float)exact;
     float bank;
@@ -107,22 +93,9 @@ void _MiniSubMove_Turn(MiniSubInfo *sub) {
     sub->gameObj->rotation.y = (float)((double)gap * sub->turnRate + sub->gameObj->rotation.y);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the sub's data. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) MiniSubMove_Turn(void) {
-    _asm {
-        push esi
-        call _MiniSubMove_Turn
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Turning, and moving speed along the level towards moveTarget
-void _MiniSubMove_Forward(MiniSubInfo *sub) {
-    _MiniSubMove_Turn(sub);
+void MiniSubMove_Forward(MiniSubInfo *sub) {
+    MiniSubMove_Turn(sub);
     _VECTOR dir;
     Vec_Subtract(&sub->moveTarget.pos, &sub->gameObj->position, &dir);
     Vec_Normalise(&dir, &dir);
@@ -132,23 +105,10 @@ void _MiniSubMove_Forward(MiniSubInfo *sub) {
     Vec_Add2(&obj->position, &dir, &obj->position);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub's data
-// AUTOLTCG
-void __declspec(naked) MiniSubMove_Forward(void) {
-    _asm {
-        push eax
-        call _MiniSubMove_Forward
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // A step of its route to targetObj within radius, planned afresh (and its first waypoint taken as moveTarget)
 // whenever it is no longer good: AINetwork_CalcRouteToObject's status, 3 once the route is done, 6 with no target
 // and 8 when the target cannot be reached
-uint _MiniSub_Route(MiniSubInfo *sub, obj_tag *targetObj, float radius) {
+uint MiniSub_Route(MiniSubInfo *sub, obj_tag *targetObj, float radius) {
     if (targetObj == NULL)
         return 6;
     sub->activeRoute = &sub->route;
@@ -172,23 +132,8 @@ uint _MiniSub_Route(MiniSubInfo *sub, obj_tag *targetObj, float radius) {
     return status;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the sub's data; the target and radius on the stack. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) MiniSub_Route(void) {
-    _asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push esi
-        call _MiniSub_Route
-        add esp, 0xc
-        ret
-    }
-}
-#endif
-
 // Once its time has come: a torpedo from its nose, 0.8 ahead, a little off; half of them home on player 1
-void _MiniSub_FireTorpedo(MiniSubInfo *sub) {
+void MiniSub_FireTorpedo(MiniSubInfo *sub) {
     if (sub->nextFireFrame > GameState.NumFramesUnpaused)
         return;
     sub->lastFireFrame = GameState.NumFramesUnpaused;
@@ -208,40 +153,27 @@ void _MiniSub_FireTorpedo(MiniSubInfo *sub) {
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub's data
-// AUTOLTCG
-void __declspec(naked) MiniSub_FireTorpedo(void) {
-    _asm {
-        push eax
-        call _MiniSub_FireTorpedo
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Within 12 of its target it turns to face him and fires, again in 3 to 5 seconds; further off it follows its route
 // to him and fires, again in 5 to 8 seconds, or, with no route, turns towards him
-void _MiniSubState_Attack(MiniSubInfo *sub) {
+void MiniSubState_Attack(MiniSubInfo *sub) {
     if (sub->target == NULL)
         return;
     CelPos_tag at;
     if (Vec_Dist3D(&sub->gameObj->position, &sub->target->position) < 12.0f) {
         at.pos = sub->target->position;
         at.cel = sub->target->inCel;
-        _MiniSub_SetTarget(sub, &at);
-        _MiniSubMove_Turn(sub);
+        MiniSub_SetTarget(sub, &at);
+        MiniSubMove_Turn(sub);
         sub->gameObj->subState = MINISUB_TURN;
         uint wait = Rand_Rand(FRAME_RATE_INT * 2);
         sub->nextFireFrame = sub->lastFireFrame + wait + FRAME_RATE_INT * 3;
     }
     else {
-        switch (_MiniSub_Route(sub, sub->target, 10.0f)) {
+        switch (MiniSub_Route(sub, sub->target, 10.0f)) {
             case 0:
             case 1:
             case 2: {
-                _MiniSub_SetTarget(sub, &sub->activeRoute->waypoint);
+                MiniSub_SetTarget(sub, &sub->activeRoute->waypoint);
                 sub->gameObj->subState = MINISUB_FORWARD;
                 uint wait = Rand_Rand(FRAME_RATE_INT * 3);
                 sub->nextFireFrame = sub->lastFireFrame + wait + FRAME_RATE_INT * 5;
@@ -250,30 +182,17 @@ void _MiniSubState_Attack(MiniSubInfo *sub) {
             default:
                 at.pos = sub->target->position;
                 at.cel = sub->target->inCel;
-                _MiniSub_SetTarget(sub, &at);
+                MiniSub_SetTarget(sub, &at);
                 sub->gameObj->subState = MINISUB_TURN;
                 return;
         }
     }
-    _MiniSub_FireTorpedo(sub);
+    MiniSub_FireTorpedo(sub);
     Music_Event(2, 1);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the sub's data
-// AUTOLTCG
-void __declspec(naked) MiniSubState_Attack(void) {
-    _asm {
-        push eax
-        call _MiniSubState_Attack
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // Player 1 as its target, a fresh route over the AI network from where it is, never straight there; then attacking
-void _MiniSubState_Init(MiniSubInfo *sub) {
+void MiniSubState_Init(MiniSubInfo *sub) {
     sub->target = glb_players[0];
     sub->activeRoute = NULL;
     AINetwork_ResetRoute(&sub->route, sub->gameObj, NULL);
@@ -284,19 +203,6 @@ void _MiniSubState_Init(MiniSubInfo *sub) {
     sub->route.creepReach = 8.0f;
     sub->gameObj->curState = MINISUB_ATTACK;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the sub's data. Not named on PS2; the name is ours.
-// AUTOLTCG
-void __declspec(naked) MiniSubState_Init(void) {
-    _asm {
-        push esi
-        call _MiniSubState_Init
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // While its switch channel is on
 // AUTOINJECT
@@ -309,16 +215,16 @@ void MiniSub_Update(obj_tag *obj) {
     NDrone2_NavNodeCache();
     switch ((short)obj->curState) {
         case MINISUB_START:
-            _MiniSubState_Init(sub);
+            MiniSubState_Init(sub);
             break;
         case MINISUB_ATTACK:
-            _MiniSubState_Attack(sub);
+            MiniSubState_Attack(sub);
             break;
     }
     if ((short)obj->subState == MINISUB_FORWARD)
-        _MiniSubMove_Forward(sub);
+        MiniSubMove_Forward(sub);
     else
-        _MiniSubMove_Turn(sub);
+        MiniSubMove_Turn(sub);
     obj->transformFlags |= TRANSFORM_MOVED;
     AnimObjectUpdate(obj);
 }

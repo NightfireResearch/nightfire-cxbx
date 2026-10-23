@@ -818,7 +818,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
     } else {
         NDrone2_DoTracking(0, dcv);
     }
-    _NDrone2_HandleTalking(dcv);
+    NDrone2_HandleTalking(dcv);
 
     if (drone->flies) {
         NDrone2_Move(dcv);

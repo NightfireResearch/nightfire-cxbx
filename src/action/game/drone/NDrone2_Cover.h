@@ -68,8 +68,6 @@ bool NDrone2_DSTATE_KickObject(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 bool NDrone2_DSTATE_ActionAnim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 bool NDrone2_DSTATE_StandFiddle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg);
 
-// Register-argument original: the adaptor patched over it (DI the anim state, ESI dcv, the result in AX), and its body
-void DroneAnim_ValidateCoverAnim(void);
-ushort _DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state);
+ushort DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state);
 
 #endif // NDRONE2_COVER_H

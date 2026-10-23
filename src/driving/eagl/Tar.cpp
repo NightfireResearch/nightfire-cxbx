@@ -14,7 +14,6 @@
 #include <stdint.h>
 #include <string.h>
 
-
 constexpr DxtBlock kFill = { 0xe800, 0xe801, 0x00000000 };   // one colour, 0xe800
 // XBE_GLOBAL(0x001cbdd0, 0xba0)
 alignas(16) BuiltInShapeFile BuiltInShapes = {   // EaglGlobals.h
@@ -1117,29 +1116,6 @@ void EAGL::TARProperties::Destruct() {
     }
     EaglFree(buffer, length + 1);
 }
-
-// ---- unreferenced helpers after it (register arguments: the original instructions)
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// The image count of a SHPX file in EAX.
-// FUNC_AT(0x000ede20)
-__declspec(naked) void EAGL_ShapeCountEax() {
-    __asm {
-        mov eax, dword ptr [eax + 8]
-        ret
-    }
-}
-
-// Image EAX of the SHPX file in ECX.
-// FUNC_AT(0x000ede30)
-__declspec(naked) void EAGL_ShapeImageEax() {
-    __asm {
-        mov eax, dword ptr [ecx + eax * 8 + 0x14]
-        add eax, ecx
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x000ede40)
 int EAGL_AddSymbolAnswerZero(const char *name, void *value) {

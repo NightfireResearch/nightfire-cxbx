@@ -189,7 +189,7 @@ static obj_tag* __cdecl ShadowHitBy(obj_tag *obj, ushort team, obj_tag *exclude,
     }
     Save(&s, &g_original);
     Load(&s, &g_before);
-    obj_tag *ours = _MP_HitBy(obj, team, exclude, teamOut != NULL ? &ourTeam : NULL);
+    obj_tag *ours = MP_HitBy(obj, team, exclude, teamOut != NULL ? &ourTeam : NULL);
 
     bool differs = Compare(g_hitBy, &s, &g_original);
     if (original != ours) {

@@ -449,7 +449,7 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos);
 void Player_SetupTaser(BLData *blData, _VECTOR *target);
 void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder);
 obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floorNormalY, char dying);
-void _PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, struct HITDATA_tag *hit);
+void PlayerOrDrone_FeetOnPoint_DoCollision(obj_tag *obj, struct HITDATA_tag *hit);
 void Player_Start(void);
 void Player_AddNewStartPos(_VECTOR *pos, _VECTOR *rot, ushort maybeEnabled, level_tag *lvl);
 void Player_GetHeadPos(_VECTOR *headPosOut, obj_tag *player, _MATRIX *param_3);
@@ -466,7 +466,7 @@ void Player_SetFlashBang(BLData *blData, float time, uchar blur);
 bool Player_CheckForDeath(obj_tag *player, uint objectType);
 void Player_Update(obj_tag *player);
 void Player_InShadow(BLData *blData, obj_tag *player);
-double _AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone);
+double AccelFunc0(float input, float *speed, float base, float mul, float steps, float deadZone, float fullZone);
 double AccelFunc0Flag(float input, float *speed, float base, float mul, float steps, float deadZone, int full);
 void Player_Aiming(obj_tag *player);
 void Player_Collision(obj_tag *player);
@@ -474,36 +474,17 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit);
 void Player_CollisionHandler(obj_tag *player);
 void PlayerAnimSetInitDead(obj_tag *player);
 void Player_UpdateWalkClass(obj_tag *player, float speed, float levelTarget);
-// The register-argument originals' adaptors (AUTOLTCG), and the cores behind them
-void Player_InWater(void);          // ESI player, EDI his data
-void Player_HandlePain(void);       // ESI the player's data, DI hit location, BX pain type; player, damage
-void Player_HandleDeath(void);      // EAX player
-void Player_SSWalk(void);           // EAX player, ECX his data
-void Player_SSCrouch(void);         // EAX player, ECX his data
-void Player_MonitorAir(void);       // EAX player, ECX his data
-void Player_HandleJump(void);       // EAX the player's data, ECX player; gravity
-void Player_ZeroG(void);            // ESI the player's data; player
-void Player_SSScanMode(void);       // EAX the player's data, EBX player
-void Player_Activate(void);         // EAX the player's data, EDI player
-void AccelFunc0(void);              // the stack's arguments, keeping ECX and EDX
-void Player_InitGrapple(void);      // ESI the player's data; player
-void Player_SSGrapple(void);        // EAX the player's data, EDI player
-void Player_GrappleSetRope(void);   // EDI player
-void Player_Swim(void);             // ESI player, EAX his data
-void Player_ClampSomeAngles(void);  // ECX the player's data; player
-void Player_UpdateBlurAndFade(void); // ESI the player's data
-void PlayerOrDrone_FeetOnPoint_DoCollision(void); // EAX the object, ECX the hit
-int _Player_InWater(obj_tag *player, BLData *blData);
-void _Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
+int Player_InWater(obj_tag *player, BLData *blData);
+void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType);
 float Player_Hurt(obj_tag *player, float damage, _VECTOR *from);
-void _Player_HandleDeath(obj_tag *player);
-void _Player_SSWalk(obj_tag *player, BLData *blData);
-void _Player_SSCrouch(obj_tag *player, BLData *blData);
-void _Player_MonitorAir(obj_tag *player, BLData *blData);
-void _Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
-void _Player_ZeroG(BLData *blData, obj_tag *player);
-void _Player_SSScanMode(BLData *blData, obj_tag *player);
-uchar _Player_Activate(BLData *blData, obj_tag *player);
+void Player_HandleDeath(obj_tag *player);
+void Player_SSWalk(obj_tag *player, BLData *blData);
+void Player_SSCrouch(obj_tag *player, BLData *blData);
+void Player_MonitorAir(obj_tag *player, BLData *blData);
+void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
+void Player_ZeroG(BLData *blData, obj_tag *player);
+void Player_SSScanMode(BLData *blData, obj_tag *player);
+uchar Player_Activate(BLData *blData, obj_tag *player);
 
 // PlayerTraverse.cpp
 void Player_LeaveLadder(obj_tag *player, BLData *blData);
@@ -516,9 +497,9 @@ void Player_Wire(obj_tag *player);
 void Player_Zipline(obj_tag *player);
 void Player_CollCreepWall(obj_tag *player, BLData *blData, obj_tag *wall);
 void Player_Creep(BLData *blData, obj_tag *player);
-void _Player_InitGrapple(BLData *blData, obj_tag *player);
-void _Player_SSGrapple(BLData *blData, obj_tag *player);
-void _Player_GrappleSetRope(obj_tag *player);
+void Player_InitGrapple(BLData *blData, obj_tag *player);
+void Player_SSGrapple(BLData *blData, obj_tag *player);
+void Player_GrappleSetRope(obj_tag *player);
 extern HASHCODE WireAnim; // the wire anim playing, which Player_Wire chooses the next one by
 
 extern HASHCODE PunchSkin[4];

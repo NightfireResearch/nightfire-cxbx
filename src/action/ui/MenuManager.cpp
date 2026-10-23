@@ -596,28 +596,9 @@ uchar MenuManager_Exists(uchar managerNum) {
 }
 
 // The highest status of the managers
-static uint _MenuManager_GetStatus(void) {
+uint MenuManager_GetStatus(void) {
     return MenuManager_HighestStatus();
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// Leaves EDX alone, which MenuManager_Monitor's original keeps across the call
-// AUTOLTCG
-uint __declspec(naked) MenuManager_GetStatus(void) {
-    _asm {
-        push ecx
-        push edx
-        call _MenuManager_GetStatus
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#else
-uint MenuManager_GetStatus(void) {
-    return _MenuManager_GetStatus();
-}
-#endif
 
 // AUTOINJECT
 void MenuManager_Enable(bool enable, uchar managerNum) {

@@ -143,7 +143,7 @@ void NDrone2_InvalidateAttackRoute(DCVars_tag *dcv) {
 // The state for a drone first seeing its opponent, or 0 to attack: it surrenders when caught (NDrone2_CheckSurrender);
 // with property 0x33 it tells the drones within 20 m, once; with 0x1a it interrogates or challenges in the levels that
 // have one; then it shouts, and with 0x1b, 0x19 or 0x4a makes a combat move or throws a grenade.
-short _DroneFunc_FirstSightState(DCVars_tag *dcv) {
+short DroneFunc_FirstSightState(DCVars_tag *dcv) {
     if (NDrone2_CheckSurrender(dcv)) {
         dcv->drone->alertness = 1.0f;
         return DSTATE_Surrender_Anim;
@@ -182,21 +182,9 @@ short _DroneFunc_FirstSightState(DCVars_tag *dcv) {
     return behaviour_util_getProperty(DRONE_PROP_4A, dcv->drone->currentBehaviour) != 0 ? DSTATE_GrenadeThrow : 0;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneFunc_FirstSightState(void) {
-    _asm {
-        push esi
-        call _DroneFunc_FirstSightState
-        add esp, 4
-        ret
-    }
-}
-#endif
-
 // The state for a drone alerted by another, or 0: one told of an interrogation goes to help with it, in the levels
 // that have one.
-short _DroneFunc_FirstAlertState(DCVars_tag *dcv) {
+short DroneFunc_FirstAlertState(DCVars_tag *dcv) {
     uint flags2 = dcv->drone->flags2;
     if (flags2 & (2 | 0x10 | 0x20 | 0x20000 | 0x40000 | 0x80000 | 0x100000))
         return 0;
@@ -211,18 +199,6 @@ short _DroneFunc_FirstAlertState(DCVars_tag *dcv) {
         return 0;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// AUTOLTCG
-void __declspec(naked) DroneFunc_FirstAlertState(void) {
-    _asm {
-        push eax
-        call _DroneFunc_FirstAlertState
-        add esp, 4
-        ret
-    }
-}
-#endif
 
 // What a drone with no gun in hand does: draws its second weapon, if it has one, else is scared. An armed civilian
 // becomes an enemy, and attacks (0).
@@ -249,13 +225,13 @@ short DroneFunc_FirstAttack(DCVars_tag *dcv) {
         return 0;
 
     if (drone->flags & DRONE_FLAG_SAW_OPPONENT) {
-        short state = _DroneFunc_FirstSightState(dcv);
+        short state = DroneFunc_FirstSightState(dcv);
         if (state != 0) {
             DroneFunc_SetAsAttacking(drone);
             return state;
         }
     } else if (drone->flags & DRONE_FLAG_ALERTED) {
-        short state = _DroneFunc_FirstAlertState(dcv);
+        short state = DroneFunc_FirstAlertState(dcv);
         if (state != 0)
             return state;
     }

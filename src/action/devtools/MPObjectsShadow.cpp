@@ -206,7 +206,7 @@ __declspec(naked) void __cdecl MPObjectsShadow_CallHandler(obj_tag *obj, PICKUPI
 
 namespace {
 
-// Stands in for our _Pickup_Handler, which our Pickup_Update calls directly
+// Stands in for our Pickup_Handler, which our Pickup_Update calls directly
 void __cdecl OurHandlerStub(obj_tag *obj, PICKUPINFO *pickup, obj_tag *picker) {
     MPObjectsShadow_RecordHandler(obj, pickup, picker);
 }
@@ -282,7 +282,7 @@ void __cdecl ShadowPickupUpdate(obj_tag *obj) {
     r.Load(s_before);
     s_log = &ourCalls;
     // Ours calls the three by name: their entries are caught too
-    s_ourHandlerHook.at = (unsigned)&_Pickup_Handler;
+    s_ourHandlerHook.at = (unsigned)&Pickup_Handler;
     s_ourRegisterHook.at = (unsigned)&MP_RegisterPickup;
     s_ourUnregisterHook.at = (unsigned)&MP_UnregisterPickup;
     Hook(s_ourHandlerHook, (const void *)&OurHandlerStub);

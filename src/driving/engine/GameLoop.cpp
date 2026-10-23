@@ -183,7 +183,6 @@ static const DiscErrorText DiscErrorMessages[7] = {   // English, French, German
     {"Er is een probleem met de cd", "die je gebruikt. De cd is", "mogelijk vuil of beschadigd."},
 };
 
-
 // The car's type name (a virtual method of the player's vehicle).
 static const char *PlayerCarTypeName() {
     return fgSimulation.cars.first[0]->GetCarType();
@@ -636,20 +635,6 @@ void GameLoop_PlayMovie(const char *movie, const char *subtitles) {
 #endif
     Crt::_clearfp();
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// The original's entry: the movie on the stack, the subtitle file in EBX (RunTheGame's two calls).
-// AUTOLTCG
-__declspec(naked) void FUN_0005a6b0(const char *movie) {
-    __asm {
-        push ebx
-        push dword ptr [esp + 8]
-        call GameLoop_PlayMovie
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x0005a870)
 void GameLoop_CleanUp() {

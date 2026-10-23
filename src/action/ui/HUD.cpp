@@ -136,7 +136,7 @@ static CrosshairInfo HUDCrossCoords[9] = {
 // (weaponFlags 0x40), that sight's pane instead (the upgraded camera turned into the plain one); otherwise the
 // crosshair the player's aim asks for (the zoomed one when zoomed), at the aim's offset in the view, green in night
 // vision, unless the player turned crosshairs off or a camera mode is on.
-void _HUD_UpdateCrossHair(BLData *player, sprite *spr) {
+void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     if (spr == NULL)
         return;
     if (player->hudInfo->pane[Blood].enabled || player->hudInfo->pane[SecCam].enabled) {
@@ -203,28 +203,10 @@ void _HUD_UpdateCrossHair(BLData *player, sprite *spr) {
         spr->maybeEnabled = 0xff;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the player, ESI the crosshair
-// AUTOLTCG
-void __declspec(naked) HUD_UpdateCrossHair(void) {
-    _asm {
-        push ecx
-        push edx
-        push esi
-        push eax
-        call _HUD_UpdateCrossHair
-        add esp, 8
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // The night vision goggles in single player: putting them on (the weapon 0x5d once it is in hand) turns night vision
 // on and goes back to the weapon before; after that their button steps night vision, x-ray and off. The battery runs
 // down while on and charges three times as fast while off, to 1800 frames; empty, both go off.
-void _HUD_MonitorNightSight(BLData *player) {
+void HUD_MonitorNightSight(BLData *player) {
     obj_tag *obj = glb_players[player->playerNum];
     if (!player->active || obj->curState != 1 || MPSettings.isMultiplayer || obj->objectType == OBJECTTYPE_DEAD_PLAYER)
         return;
@@ -288,31 +270,14 @@ void _HUD_MonitorNightSight(BLData *player) {
     }
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the player
-// AUTOLTCG
-void __declspec(naked) HUD_MonitorNightSight(void) {
-    _asm {
-        push ecx
-        push edx
-        push eax
-        call _HUD_MonitorNightSight
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // AUTOINJECT
 void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 
 	if(playerInfo == NULL || obj == NULL || playerInfo->hudInfo == NULL)
 		return;
 
-	_HUD_UpdateCrossHair(playerInfo, playerInfo->hudInfo->crosshairSprite);
-	_HUD_MonitorNightSight(playerInfo);
+	HUD_UpdateCrossHair(playerInfo, playerInfo->hudInfo->crosshairSprite);
+	HUD_MonitorNightSight(playerInfo);
 
 	for(int i = 0; i < NUM_PANES; i++) {
 	
@@ -2371,7 +2336,7 @@ void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cr
 
 // One of the lens flare's rings: at along of the way from the centre of the view (cx, cy) to the sun on the screen,
 // scale times its picture's size, in the flare's alpha. Our name.
-void _HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float along, float scale, uchar alpha) {
+void HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float along, float scale, uchar alpha) {
     ring->onscreenWidth = (short)Ftol((ushort)ring->backupOnscreenWidth * (double)scale);
     ring->onscreenHeight = (short)Ftol((ushort)ring->backupOnscreenHeight * (double)scale);
     ring->positionX = (short)Ftol(((double)sun.x - cx) * along + cx);
@@ -2379,31 +2344,6 @@ void _HUD_PlaceLensFlare(sprite *ring, _VECTOR sun, float cx, float cy, float al
     ring->maybeEnabled = 0x31;
     ring->colourTint = alpha | 0xffffff00;
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// ESI the ring; the rest on the stack
-// AUTOLTCG
-void __declspec(naked) HUD_PlaceLensFlare(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 40]   // alpha
-        push dword ptr [esp + 40]   // scale
-        push dword ptr [esp + 40]   // along
-        push dword ptr [esp + 40]   // cy
-        push dword ptr [esp + 40]   // cx
-        push dword ptr [esp + 40]   // the sun, by value
-        push dword ptr [esp + 40]
-        push dword ptr [esp + 40]
-        push esi
-        call _HUD_PlaceLensFlare
-        add esp, 36
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // The lens flare: while the sun shows in the sky of the player's view, its seven rings along the line from the sun
 // through the centre, brighter (16 less than the first ring's alpha, plus 32) while the sun is on screen and in sight
@@ -2447,18 +2387,18 @@ void HUD_UpdateLensFlarePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             float cx = viewer->width * 0.5f;
             float cy = viewer->height * 0.5f;
             uchar a = (uchar)alpha;
-            _HUD_PlaceLensFlare(pane->spriteList[0], sun, cx, cy, 0.7f, 3.0f, a);
-            _HUD_PlaceLensFlare(pane->spriteList[1], sun, cx, cy, 0.5f, 4.0f, a);
-            _HUD_PlaceLensFlare(pane->spriteList[2], sun, cx, cy, 0.3f, 1.0f, a);
-            _HUD_PlaceLensFlare(pane->spriteList[3], sun, cx, cy, -0.1f, 5.0f, a);
-            _HUD_PlaceLensFlare(pane->spriteList[4], sun, cx, cy, -0.2f, 2.0f, a);
-            _HUD_PlaceLensFlare(pane->spriteList[5], sun, cx, cy, -0.4f, 0.5f, a);
+            HUD_PlaceLensFlare(pane->spriteList[0], sun, cx, cy, 0.7f, 3.0f, a);
+            HUD_PlaceLensFlare(pane->spriteList[1], sun, cx, cy, 0.5f, 4.0f, a);
+            HUD_PlaceLensFlare(pane->spriteList[2], sun, cx, cy, 0.3f, 1.0f, a);
+            HUD_PlaceLensFlare(pane->spriteList[3], sun, cx, cy, -0.1f, 5.0f, a);
+            HUD_PlaceLensFlare(pane->spriteList[4], sun, cx, cy, -0.2f, 2.0f, a);
+            HUD_PlaceLensFlare(pane->spriteList[5], sun, cx, cy, -0.4f, 0.5f, a);
             double dy = (double)sun.y - cy;
             double dx = (double)sun.x - cx;
             double size = 256.0f - sqrt(dx * dx + dy * dy);
             if (!(0.0 <= size))
                 size = 0.0;
-            _HUD_PlaceLensFlare(pane->spriteList[6], sun, cx, cy, 1.0f, (float)(size * 0.015625f), a);
+            HUD_PlaceLensFlare(pane->spriteList[6], sun, cx, cy, 1.0f, (float)(size * 0.015625f), a);
             return;
         }
     }
@@ -3970,7 +3910,7 @@ RadarIcon RadarIcons[8] = {
 
 // In split screen, a pane's sprites move up and left by half their layout's offset in a view half the screen's size
 // (as HUD_CreateShrink, which also halves their size). Our name.
-void _HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
+void HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
     HUD_CalcWidthHeight(create, &create->width, &create->height);
     HUD_CreateDefault(blData, pane, create, obj);
     viewer_tag *viewer = glb_viewer[blData->playerNum];
@@ -3982,26 +3922,6 @@ void _HUD_CreateShift(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *crea
             spr->positionY -= create->spriteInfo[i].posY >> 1;
     }
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// EAX the player, EDI the pane, ESI the layout, the stack the object
-// AUTOLTCG
-void __declspec(naked) HUD_CreateShift(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 12]
-        push esi
-        push edi
-        push eax
-        call _HUD_CreateShift
-        add esp, 16
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
 
 // In multiplayer, keeps a sprite inside its player's view: 50 pixels in at the sides and 40 at the top and bottom,
 // but nothing at an edge another player's view meets
@@ -4073,7 +3993,7 @@ void HUD_FixMP(sprite *spr, short player) {
 // hit-direction overlays (4-7) halved in a small view
 // AUTOINJECT
 void HUD_CreateMPHealthPane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
-    _HUD_CreateShift(blData, pane, create, obj);
+    HUD_CreateShift(blData, pane, create, obj);
     HUD_FixMP(pane->spriteList[MPHEALTH_BACKING], blData->playerNum);
     HUD_FixMP(pane->spriteList[MPHEALTH_BAR], blData->playerNum);
     pane->spriteList[MPHEALTH_ARMOUR]->positionX = pane->spriteList[MPHEALTH_BACKING]->positionX + 8;
@@ -4208,7 +4128,7 @@ void HUD_MPUpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) 
 // The multiplayer score pane: every sprite kept in the view, and laid out for the game's mode
 // AUTOINJECT
 void HUD_CreateMPScorePane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
-    _HUD_CreateShift(blData, pane, create, obj);
+    HUD_CreateShift(blData, pane, create, obj);
     for (int i = 0; i < 7; i++)
         HUD_FixMP(pane->spriteList[i], blData->playerNum);
     sprite **s = pane->spriteList;
@@ -4343,7 +4263,7 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 // AUTOINJECT
 void HUD_CreateRadar(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *obj) {
     HUD_CalcWidthHeight(create, &create->width, &create->height);
-    _HUD_CreateShift(blData, pane, create, obj);
+    HUD_CreateShift(blData, pane, create, obj);
     HUD_FixMP(pane->spriteList[0], blData->playerNum);
     sprite **dots = (sprite **)pane->extraItems;
     for (ushort i = 0; i < create->numExtraItems; i++) {

@@ -743,7 +743,7 @@ def scan_asm(sources):
                 kind = "asm.injected"
             elif x87:
                 kind = "asm.x87"
-            elif "AUTOLTCG" in tag or re.search(r"Regs?[AB]?$|Eax$|EsiEdi$|^FUN_|RegisterArgs$", name):
+            elif "AUTOLTCG" in tag or re.search(r"^Asm_|Regs?[AB]?$|Eax$|EsiEdi$|^FUN_|RegisterArgs$", name):
                 kind = "asm.adaptor"
             else:
                 kind = "asm.other"

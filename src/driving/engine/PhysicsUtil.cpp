@@ -317,26 +317,6 @@ void Util_FitColliderRegion(uint8_t moved, const Coord4 *position, Coord4 *centr
     VU0_v3add(position, &movement, centre);
 }
 
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// AL = moved, ESI = position, EDI = centre, EBX = the radius out; on the stack the radius, the previous position
-// and a word nothing reads. EBX, ESI, EDI and EBP kept, as the original keeps them.
-// AUTOLTCG
-__declspec(naked) void FUN_000bd690() {
-    __asm {
-        push dword ptr [esp + 8]
-        push dword ptr [esp + 8]
-        push ebx
-        push edi
-        push esi
-        movzx eax, al
-        push eax
-        call Util_FitColliderRegion
-        add esp, 24
-        ret
-    }
-}
-#endif
-
 // FUNC_AT(0x000bd730)
 void __stdcall BarrierList_Deallocate(void *block, int count) {
     if (block != NULL)

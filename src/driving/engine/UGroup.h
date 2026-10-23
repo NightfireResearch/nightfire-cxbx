@@ -57,7 +57,6 @@ public:
     // A data item by type and index, falling back to index 0 (0x0008d6e0: EAX the tag, ESI the
     // group, the index on the stack). `something` is the register adaptor under Ghidra's name.
     UData* DataLocateIndexed(uint32_t tag, int index);
-    static void something();
 };
 static_assert(sizeof(UGroup) == 0x10, "a data group record is 16 bytes");
 

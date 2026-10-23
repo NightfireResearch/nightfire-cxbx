@@ -750,8 +750,8 @@ void Menu_SelectCodenameInControl(byte managerNum, char *codename, HASHCODE cont
 
 // Sets up ls for an operation and runs its first step (name ours). stale marks the list to be enumerated again;
 // a listing with nothing stale only marks ls done.
-void _Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, byte slot, ushort mask, uint lsSlot,
-                   HASHCODE returnPage, int returnPageArg, M_CONTROL *control, uchar done) {
+void Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, byte slot, ushort mask, uint lsSlot,
+                  HASHCODE returnPage, int returnPageArg, M_CONTROL *control, uchar done) {
     if (operation == LS_OPERATION_ENUM && (ls.listStale | stale) == 0) {
         ls.done = 1;
         return;
@@ -769,29 +769,6 @@ void _Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, 
         strcpy(ls.codename, codename);
     Menu_UpdateMessageBox(managerNum, mask, slot);
 }
-
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the codename in EAX, the operation in ECX and the stale flag in DL; the rest on the stack.
-// AUTOLTCG
-void __declspec(naked) Menu_StartLS(void) {
-    _asm {
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push dword ptr [esp + 0x20]
-        push edx
-        push ecx
-        push eax
-        call _Menu_StartLS
-        add esp, 0x2c
-        ret
-    }
-}
-#endif
 
 // ---- the Codenames page (P_CNSELECT) and its wheel
 
@@ -951,8 +928,8 @@ bool C_SBCNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
             Menu_MapDefaultCodename(0, value, 0xff);
             Menu_ChangePageCloseIris(P_CNMENU, managerNum, SUB_C_SBCNSELECT_IRIS);
         } else {
-            _Menu_StartLS(codename_buf[SCROLL_GET_VALUE(control)], LS_OPERATION_LOAD, 0, managerNum, 0, 0xff, value,
-                          (HASHCODE)0, 0, control, 0);
+            Menu_StartLS(codename_buf[SCROLL_GET_VALUE(control)], LS_OPERATION_LOAD, 0, managerNum, 0, 0xff, value,
+                         (HASHCODE)0, 0, control, 0);
         }
         // the codename menu comes back here
         __Menu_Send(managerNum, C_SBCNOPTIONS, MessageType_SetId, P_CNSELECT, 0);
@@ -1137,7 +1114,7 @@ bool C_SBNFCN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         } else {
             char *codename = codename_buf[SCROLL_GET_VALUE(control)];
             uint slot = SCROLL_GET_VALUE(control);
-            _Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, 0, 0xff, slot, (HASHCODE)0, 0, control, 0);
+            Menu_StartLS(codename, LS_OPERATION_LOAD, 0, managerNum, 0, 0xff, slot, (HASHCODE)0, 0, control, 0);
         }
         break;
     }

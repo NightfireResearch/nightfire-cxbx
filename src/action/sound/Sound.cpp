@@ -132,7 +132,7 @@ void Sound_Kill(void) {
 
 // A node of DynamicSoundList, to start next frame (Sound_UpdateSounds). A radius above zero is taken (and the
 // sound's distance limited), any other the sound's own (10 and 20 past the table).
-DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref) {
+DYNAMICSOUNDS* Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, float radiusOuter, float radiusInner, short pitch, char is3d, undefined4 ref) {
 
     DYNAMICSOUNDS* snd = (DYNAMICSOUNDS *)DList_MoveFromFree2InUse(&DynamicSoundList);
     if (snd == NULL) {
@@ -175,34 +175,10 @@ DYNAMICSOUNDS* _Sound_Play(Action_SFX sfxId, _VECTOR *position, float volume, fl
     return snd;
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the sound in EAX, the rest on the stack
-// AUTOLTCG
-__declspec(naked) DYNAMICSOUNDS* Sound_Play(void) {
-    _asm {
-        push ecx
-        push edx
-        push dword ptr [esp + 36]   // ref
-        push dword ptr [esp + 36]   // is3d
-        push dword ptr [esp + 36]   // pitch
-        push dword ptr [esp + 36]   // radiusInner
-        push dword ptr [esp + 36]   // radiusOuter
-        push dword ptr [esp + 36]   // volume
-        push dword ptr [esp + 36]   // position
-        push eax
-        call _Sound_Play
-        add esp, 32
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Starts a sound. A 2D one always gives its subtitle. A 3D one past 1.1 times its outer radius does not start if
 // there is one listener and the table has it truly 3D and not looping; one within half its outer radius, in a cut
 // scene, or not truly 3D, gives its subtitle.
-void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
+void Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
     if (!snd->is3d) {
         SFXStart(snd->sfxId & SFX_ID_MASK, snd);
         snd->audible = 1;
@@ -230,23 +206,6 @@ void _Sound_ReqestPlaySfx(DYNAMICSOUNDS *snd) {
         SFXStart3D(id & SFX_ID_MASK, &pos, &vel, snd, Ftol(snd->volume), -1, -1);
 }
 
-#ifndef NIGHTFIRE_STANDALONE
-// The original takes the sound in EDI
-// AUTOLTCG
-__declspec(naked) void Sound_ReqestPlaySfx(void) {
-    _asm {
-        push ecx
-        push edx
-        push edi
-        call _Sound_ReqestPlaySfx
-        add esp, 4
-        pop edx
-        pop ecx
-        ret
-    }
-}
-#endif
-
 // Every sound in use, once a frame: a new one started, a playing one stopped once it ends (a looping one only when
 // stopped), a stopped one freed; a playing 3D one moved. The listener is not read.
 // AUTOINJECT
@@ -258,7 +217,7 @@ void Sound_UpdateSounds(_VECTOR *listener) {
 
         switch (snd->playbackState) {
         case 0:
-            _Sound_ReqestPlaySfx(snd);
+            Sound_ReqestPlaySfx(snd);
             snd->playbackState = 1;
             if (snd->audible)
                 Sound_DoSubtitle((Action_SFX)snd->sfxId);
@@ -428,7 +387,7 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX param_1,_VECTOR *position,float volume,fl
         radiusInner = -1.0;
         radiusOuter = -1.0;
     }
-    DYNAMICSOUNDS *snd = _Sound_Play(param_1,position,volume,radiusOuter,radiusInner,maybePitchBend,1,param_7);
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,position,volume,radiusOuter,radiusInner,maybePitchBend,1,param_7);
     if (snd != NULL) {
         snd->isLimitedRadius = (char)isLimitedRadius;
         snd->frameDelay = tmpFrameDelay;
@@ -446,7 +405,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX param_1, float volume, undefined2 maybeP
     if ((param_1 & 0xfffff) == 0xffff)
         return NULL;
 
-    DYNAMICSOUNDS *snd = _Sound_Play(param_1,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,maybePitchBend,0,param_4);
+    DYNAMICSOUNDS *snd = Sound_Play(param_1,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,maybePitchBend,0,param_4);
     if (snd != NULL) {
         snd->frameDelay = tmpFrameDelay;
     }

@@ -312,7 +312,7 @@ FontDriverTable EaglFontDriver = {
 
 typedef void (__stdcall *RenderStateEntry)(uint32_t value);
 
-static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
+void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
     if (state < 0x5c) {
         D3DDevice_SetRenderState_Simple(D3DSimpleStateMethods[state], value);
         D3DRenderState[state] = value;
@@ -359,19 +359,6 @@ static void EAGLFont_SetRenderState(int32_t state, uint32_t value) {
     }
     entry(value);
 }
-
-#ifndef NIGHTFIRE_STANDALONE   // the injected build: for the originals that pass arguments in registers
-// FUNC_AT(0x000eea50)
-__declspec(naked) void EAGLFont_SetRenderStateEsiEdi() {
-    __asm {
-        push edi
-        push esi
-        call EAGLFont_SetRenderState
-        add esp, 8
-        ret
-    }
-}
-#endif
 
 // FUNC_AT(0x000eec50)
 EAGL::GeoPrimStateCopy* EAGL::GeoPrimStateCopy::Assign(const GeoPrimState *other) {

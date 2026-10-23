@@ -20,8 +20,7 @@ typedef struct {
 static_assert(sizeof(SSYSITEM) == 8, "Bad size for SSYSITEM");
 
 void SSys_Init(void);
-void _SSys_Msg(ushort item, ushort msg);
-void SSys_Msg(void);
+void SSys_Msg(ushort item, ushort msg);
 void SSys_Monitor(void);
 void SSys_RamLoad(SSYSITEM *saved);
 

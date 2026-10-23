@@ -106,7 +106,6 @@ extern int32_t SniperOuterShade;        // the grey of the outer ring's outer ed
 // centre) at `turns`, z and w 1, and the same over the screen's size (the name is ours). The core of
 // FUN_000a68f0, which takes the outputs in ESI and EDI.
 void SniperRingPoint(Coord4 *position, Coord4 *uv, float radius, float turns);
-void FUN_000a68f0();                    // naked: ESI position, EDI uv, then radius and turns on the stack
 
 // ---- the vehicle particles' sprite rectangles
 
@@ -116,6 +115,5 @@ void FUN_000a68f0();                    // naked: ESI position, EDI uv, then rad
 // fourth word 0.
 // (The name is ours.) The core of FUN_000a6cd0, which takes the texture in EAX and the rectangle in ECX.
 void ParticleTextureRect(uint32_t texture, float *rect);
-void FUN_000a6cd0();                    // naked: EAX texture, ECX rectangle
 
 #endif // DRIVING_GAME_WEAPONCAMERAS_H_

@@ -129,7 +129,7 @@ HITDATA_tag* Coll_GetFreeHit(void);
 HITDATA_tag* Coll_AddHitToList(HITDATA_tag **list, float dist, cel_tag *cel, obj_tag *obj);
 void Collide_FreeHitList(HITDATA_tag **param_1);
 void Coll_ResetHitHeap(void);
-void _Collide_Sort(HITDATA_tag **list);
+void Collide_Sort(HITDATA_tag **list);
 bool Intersect_CheckIfFlagsMatch(uchar material, uchar hitFlags, ushort mask, float *dist);
 void Collide_FilterBullets(HITDATA_tag **hitData, ushort flags);
 double Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, ushort *objectListCountOut, ushort maxObjectsInList);
@@ -138,15 +138,15 @@ double Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, us
 cel_tag** Collide_StraddleCels(HITTEST_tag *test, ushort *count);
 bool Intersect_Portal(HITTEST_tag *test, portal_tag *portal);
 void Collide_Pick(HITTEST_tag *test);
-void _Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester);
-bool _Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq);
-bool _Intersect_RaySphere(HITTEST_tag *test, float *distSq);
-bool _Intersect_CylSphere(HITTEST_tag *test, float *distSq);
+void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester);
+bool Intersect_SphereSphere(_VECTOR *a, float radiusA, _VECTOR *b, float radiusB, _VECTOR *difference, float *distSq);
+bool Intersect_RaySphere(HITTEST_tag *test, float *distSq);
+bool Intersect_CylSphere(HITTEST_tag *test, float *distSq);
 
 // The narrow phase
-bool _Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags);
-bool _Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit);
-void _Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel);
+bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags);
+bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit);
+void Collide_TestHits(HITTEST_tag *test, ushort flags, char onlyCel);
 void Intersect_PointGeom(HITTEST_tag *test, HITDATA_tag *hit);
 void Intersect_RayGeom(HITTEST_tag *test, HITDATA_tag *hit);
 void Intersect_CylGeom(HITTEST_tag *test, HITDATA_tag *hit);
@@ -157,7 +157,7 @@ bool Intersect_SphereBox(_VECTOR *centre, float radius, _VECTOR *boxMin, _VECTOR
 bool Intersect_BoxBox(_VECTOR *min1, _VECTOR *max1, _VECTOR *min2, _VECTOR *max2);
 bool Intersect_RayBox(HITTEST_tag *test, _VECTOR *boxMin, _VECTOR *boxMax, float *t);
 bool Intersect_PointOOBox(_MATRIX *mtx, _VECTOR *halfSize, _VECTOR *point, float radius);
-bool _Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR *boxMin, _VECTOR *boxMax);
+bool Intersect_AABB_SweptVolume(_VECTOR *v0, _VECTOR *v1, _VECTOR *v2, _VECTOR *boxMin, _VECTOR *boxMax);
 void RecurseBoxesSph(COLLDATA_tag *coll, COLLBOX_tag *box, _VECTOR *centre, float radius);
 void ASH_RecurseBoxesBox(COLLDATA_tag *coll, COLLBOX_tag *box, _VECTOR *boxMin, _VECTOR *boxMax);
 void ASH_RecurseBoxesRay(COLLDATA_tag *coll, COLLBOX_tag *box, HITTEST_tag *test);
@@ -174,17 +174,6 @@ bool Collide_LineOfSight(_VECTOR *param_1,_VECTOR *param_2,cel_tag *param_3,obj_
 bool Collide_RayTriangle(_VECTOR *ptStart,_VECTOR *ptEnd,_VECTOR *vtx1,_VECTOR *vtx2,_VECTOR *vtx3, float *distanceOut);
 bool Intersect_ConeSphere(_VECTOR *apex, _VECTOR *dir, float cosA, float sinA, _VECTOR *sphere);
 void Collide_Update(obj_tag *first);
-
-// Register-argument adaptors patched over the originals (the registers in Collide.cpp); never call them from C.
-void Collide_Sort(void);
-void Intersect_AABB_SweptVolume(void);
-void Intersect_SphereSphere(void);
-void Intersect_RaySphere(void);
-void Intersect_CylSphere(void);
-void Collide_PickObj(void);
-void Collide_Jointy(void);
-void Collide_Intersect(void);
-void Collide_TestHits(void);
 
 // Game objects which span several cels (Collide.cpp)
 extern LLISTINFO_tag ForcedList;
