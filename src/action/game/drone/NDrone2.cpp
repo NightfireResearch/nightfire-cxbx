@@ -214,27 +214,27 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         drone->stateScratch = 0;
         drone->stateScratch2 = 1;
         switch ((uint)dcv->drone->playScript) {
-        case HT_Script_0005e6:
-        case HT_Script_0008ae:
+        case HT_Script_HendersonCDroneIntroAttack:
+        case HT_Script_Tower2BDroneIntroAttack:
             drone->stateScratch = DSTATE_Attack;
             DroneAnim_SetScript(dcv->drone->playScript, 0x21, 0, 0, 0, 0, 1, dcv);
             return true;
 
-        case HT_Script_000168:
+        case HT_Script_DroneAttackTalkA:
             drone->stateScratch = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 8, 0, 5, 0, dcv);
             NDrone2_AttackTalk(dcv);
             dcv->drone->flags |= 0x400000;
             return true;
 
-        case HT_Script_000169:
+        case HT_Script_DroneAttackTalkB:
             drone->stateScratch = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 5, 0x32, 0x1e, 0, 5, 0, dcv);
             NDrone2_AttackTalk(dcv);
             dcv->drone->flags |= 0x400000;
             return true;
 
-        case HT_Script_0007ac:
+        case HT_Script_Tower2BDronePlay:
             drone->stateScratch = 0;
             drone->stateScratch2 = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 0xf, 0, 5, 0, dcv);
@@ -259,27 +259,28 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         if (dcv->drone->alertness >= 1.0f)
             NDrone2_SeenAndAttacking(dcv);
         if (drone->sm.stateEnteredFrame + 30 < GameState.NumFramesUnpaused &&
-            dcv->drone->playScript >= HT_Script_000168 && dcv->drone->playScript <= HT_Script_000169)
+            dcv->drone->playScript >= HT_Script_DroneAttackTalkA
+                && dcv->drone->playScript <= HT_Script_DroneAttackTalkB)
             NDrone2_AttackTalk(dcv);
         return true;
 
     case DRONE_MSG_ScriptEnd:
         switch ((uint)dcv->drone->playScript) {
-        case HT_Script_000168:
+        case HT_Script_DroneAttackTalkA:
             dcv->drone->flags &= ~0x400000;
             dcv->drone->playScript = (HASHCODE)0;
             DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
             NDrone2_AttackTalk(dcv);
             return true;
 
-        case HT_Script_000169:
+        case HT_Script_DroneAttackTalkB:
             dcv->drone->flags &= ~0x400000;
             DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
             dcv->drone->playScript = (HASHCODE)0;
             NDrone2_AttackTalk(dcv);
             return true;
 
-        case HT_Script_0007ac:
+        case HT_Script_Tower2BDronePlay:
             dcv->drone->flags &= ~0x400000;
             drone->unknown448 = 3.14159274f;
             DroneAnim_SetDAnimNow(0xf4, 0, 1, dcv);

@@ -113,19 +113,19 @@ static int AnimChannelType[4];
 // The facial scripts by alert status (four) and the blink, for skeleton 1 and for the others
 // XBE_GLOBAL(0x00163468, 0x14) readonly relocate
 const HASHCODE FacialAnims[5] = {
-    HT_Script_00036d,
-    HT_Script_00036f,
-    HT_Script_00036a,
-    HT_Script_00036b,
-    HT_Script_000370,
+    HT_Script_FemaleFaceAlert0,
+    HT_Script_FemaleFaceAlert1,
+    HT_Script_FemaleFaceAlert2,
+    HT_Script_FemaleFaceAlert3,
+    HT_Script_FemaleFaceBlink,
 };
 // XBE_GLOBAL(0x00163454, 0x14) readonly relocate
 const HASHCODE FacialAnimsAltSkeleton[5] = {
-    HT_Script_0000f8,
-    HT_Script_0000f9,
-    HT_Script_0000f5,
-    HT_Script_0000f6,
-    HT_Script_0000f3,
+    HT_Script_MaleFaceAlert0,
+    HT_Script_MaleFaceAlert1,
+    HT_Script_MaleFaceAlert2,
+    HT_Script_MaleFaceAlert3,
+    HT_Script_MaleFaceBlink,
 };
 
 // Mem_Malloc tags (Ghidra's MallocFlags, with the Unknown bit every tag in the game carries)
@@ -226,14 +226,14 @@ static uint AnimObjectNearestLod(obj_tag *obj) {
 
 // XBE_GLOBAL(0x001634c0, 0x20)
 HASHCODE SleeveEnts_SleeveTable[] = {
-    HT_Entity_0009d0, // Watch_BlackGloves
-    HT_Entity_000900, // Watch_BareHands
-    HT_Entity_0001f7, // Watch3_MP
-    HT_Entity_000929, // spacesuit_hands1
-    HT_Entity_0009e6, // Bond_hands_malewhite
-    HT_Entity_0009ff, // Bond_hands_maleblack
-    HT_Entity_000a14, // Bond_hands_femwhite
-    HT_Entity_000a13, // Bond_hands_femblack
+    HT_Entity_Watch_BlackGloves, // Watch_BlackGloves
+    HT_Entity_Watch_BareHands, // Watch_BareHands
+    HT_Entity_Watch3_MP, // Watch3_MP
+    HT_Entity_spacesuit_hands1, // spacesuit_hands1
+    HT_Entity_Bond_hands_malewhite, // Bond_hands_malewhite
+    HT_Entity_Bond_hands_maleblack, // Bond_hands_maleblack
+    HT_Entity_Bond_hands_femwhite, // Bond_hands_femwhite
+    HT_Entity_Bond_hands_femblack, // Bond_hands_femblack
 };
 
 // The first sleeve entity that is loaded, from idx on and round to the start: 0 if none is
@@ -387,14 +387,16 @@ void AnimProcessSeqData(HASHCODE hashcode) {
 
     raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
     switch ((uint)hashcode) {
-    case HT_AnimSeq_0000e9: case HT_AnimSeq_000125: case HT_AnimSeq_000144: case HT_AnimSeq_000145:
-    case HT_AnimSeq_000150: case HT_AnimSeq_000151: case HT_AnimSeq_000154: case HT_AnimSeq_000155:
-    case HT_AnimSeq_00015c: case HT_AnimSeq_00015d: case HT_AnimSeq_000167: case HT_AnimSeq_000168:
-    case HT_AnimSeq_00079c: case HT_AnimSeq_0007b0: case HT_AnimSeq_0007b3: case HT_AnimSeq_0007b6:
-    case HT_AnimSeq_0007e4: case HT_AnimSeq_0007e5: case HT_AnimSeq_000804: case HT_AnimSeq_000809:
-    case HT_AnimSeq_00080c: case HT_AnimSeq_00080f: case HT_AnimSeq_000811: case HT_AnimSeq_00082c:
-    case HT_AnimSeq_00082d: case HT_AnimSeq_000831: case HT_AnimSeq_000832: case HT_AnimSeq_000835:
-    case HT_AnimSeq_000838: case HT_AnimSeq_000847: case HT_AnimSeq_00084e: case HT_AnimSeq_00084f:
+    case HT_AnimSeq_0000e9: case HT_AnimSeq_Walk: case HT_AnimSeq_MpMagnumRun: case HT_AnimSeq_MpMagnumWalk:
+    case HT_AnimSeq_MpRifleRun: case HT_AnimSeq_MpRifleWalk: case HT_AnimSeq_MpRifleIdle2:
+    case HT_AnimSeq_MpRifleCrouch: case HT_AnimSeq_MpLauncherRun: case HT_AnimSeq_MpLauncherWalk:
+    case HT_AnimSeq_MpUnarmedRun: case HT_AnimSeq_MpUnarmedWalk: case HT_AnimSeq_MpRifleCrouchWalk:
+    case HT_AnimSeq_0007b0: case HT_AnimSeq_MpLauncherCrouchWalk: case HT_AnimSeq_MpUnarmedCrouchWalk:
+    case HT_AnimSeq_MpRifleStrafeRight: case HT_AnimSeq_MpRifleStrafeLeft: case HT_AnimSeq_MpSmgCrouchWalk:
+    case HT_AnimSeq_MpSmgRun: case HT_AnimSeq_MpSmgWalk: case HT_AnimSeq_MpDualWalk: case HT_AnimSeq_MpDualRun:
+    case HT_AnimSeq_MpMagnumCrouchWalk: case HT_AnimSeq_MpDualCrouchWalk: case HT_AnimSeq_MpPistolStrafeRight:
+    case HT_AnimSeq_MpPistolStrafeLeft: case HT_AnimSeq_MpPistolRun: case HT_AnimSeq_MpPistolWalk:
+    case HT_AnimSeq_MpPistolCrouchWalk: case HT_AnimSeq_StartCrouch: case HT_AnimSeq_Start:
         raw->flags |= ANIMSEQ_DISTANCE_AXES;
         break;
     }
@@ -468,7 +470,7 @@ void AnimPostLoadInit(void) {
     uint count = hashtable_get_hashtype_count(HT_Skin_HASHCODE_BASE);
     if (count == 0)
         return;
-    sAnimSkin_tag *bond = (sAnimSkin_tag *)hashtable_getitem(HT_Skin_SkinBond);
+    sAnimSkin_tag *bond = (sAnimSkin_tag *)hashtable_getitem(HT_Skin_Bond_Combat);
     if (bond == NULL) {
         NF_WARN("***** FATAL : Bondcombat skin must be loaded on all levels! *****"); // GC check (0x80044a38)
         return;
@@ -478,7 +480,7 @@ void AnimPostLoadInit(void) {
         sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skins[i]);
         if (skin->skeletonNum > 1)
             continue;
-        if (skins[i] == HT_Skin_SkinOwnDatums) {
+        if (skins[i] == HT_Skin_SnowGuard_Camera) {
             AnimDatum *own = skin->datums;
             uint numOwn = skin->numDatums;
             skin->numDatums = bond->numDatums + numOwn;
@@ -1433,7 +1435,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         spin.y = 0.0f;
                         spin.z = 0.0f;
                         spin.z = (float)Float_FRand(6.2831855f);
-                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_BulletDust, 7, 0x48403080,
+                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080,
                                  1, 0x80);
                     }
                     break;
@@ -2271,20 +2273,20 @@ HASHCODE FixupSkinHashcode(HASHCODE skin) {
     case HT_Level_HendersonB:
     case HT_Level_HendersonC:
     case HT_Level_Tower2A:
-        if (skin == HT_Skin_000036)
-            return HT_Skin_0000c3;
-        if (skin == HT_Skin_000038)
-            return HT_Skin_0000c2;
+        if (skin == HT_Skin_Yakuza_Trenchcoat)
+            return HT_Skin_Yakuza_TrenchcoatSpec;
+        if (skin == HT_Skin_Yakuza_RedTrenchcoat)
+            return HT_Skin_Yakuza_RedTrenchcoatSpec;
         break;
     case HT_Level_CastleIndoors1:
     case HT_Level_CastleIndoors2:
     case HT_Level_EvilBase:
     case HT_Level_EvilBaseC:
         switch ((uint)skin) {
-        case HT_Skin_000015: return HT_Skin_0000bd;
-        case HT_Skin_000018: return HT_Skin_0000c5;
-        case HT_Skin_00003b: return HT_Skin_0000bf;
-        case HT_Skin_00005e: return HT_Skin_0000be;
+        case HT_Skin_Dominique: return HT_Skin_Dominique_Spec;
+        case HT_Skin_Kiko_Dress: return HT_Skin_Kiko_DressSpec;
+        case HT_Skin_Zoe_PartyDress: return HT_Skin_Zoe_PartyDressSpec;
+        case HT_Skin_Kiko_Combat: return HT_Skin_Kiko_CombatSpec;
         }
         break;
     default:
@@ -2613,8 +2615,8 @@ float AnimObjectInitialPose(obj_tag *obj) {
     uint flags = obj->animState->animObj.flags;
     if (flags & ANIMOBJ_FULL_CHARACTER) {
         // The scripts a full character is posed by, standing, for the skeletons
-        sAnimScript_tag *script = AnimScriptAdd(obj, (flags & ANIMOBJ_ALT_SKELETON) ? HT_Script_AnimStandAltSkeleton
-                                                : HT_Script_AnimStand);
+        sAnimScript_tag *script = AnimScriptAdd(obj, (flags & ANIMOBJ_ALT_SKELETON) ? HT_Script_StandMale
+                                                : HT_Script_StandFemale);
         script->speed = 0.0f;
         script->flags &= ~ANIMSCRIPT_LOOP;
         AnimObjectUpdate(obj);
@@ -2692,10 +2694,10 @@ void AnimDebugCreate(void) {
         obj->rotation.y = yaw + kPi;
         build_LinkToRoom(obj, 0, glb_world);
         obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
-        AnimObjectNew(obj, HT_Skin_AnimdebugRefSkin);
-        AnimScriptAdd(obj, HT_Script_AnimdebugRefStand)->flags |= ANIMSCRIPT_NO_MORPH | ANIMSCRIPT_LOOP;
+        AnimObjectNew(obj, HT_Skin_SnowGuard_Head4);
+        AnimScriptAdd(obj, HT_Script_Speech_M1_DRIVER_TALK_GUARD02)->flags |= ANIMSCRIPT_NO_MORPH | ANIMSCRIPT_LOOP;
         AnimObj *animObj = &obj->animState->animObj;
-        sAnimScript_tag *talk = AnimScriptAppend(obj, HT_Script_AnimdebugRefTalk);
+        sAnimScript_tag *talk = AnimScriptAppend(obj, HT_Script_Speech_M1_GUARD_CHATTER_SOLDA17);
         talk->playMode = ANIMPLAY_DELETE;
         talk->groupTag = ANIMTAG_FACE_SPEECH;
         animObj->facialState = FACIAL_TALKING;
@@ -3354,8 +3356,8 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
             Vec_Copy(&hitList->hitPosition, &to);
         Collide_FreeHitList(&hitList);
         celglist_tag *beam = (celglist_tag *)hashtable_getitem(viewer->nightVisionRelated == 1
-                                                               ? HT_Entity_LaserBeamGlistNightvision
-                                                                   : HT_Entity_LaserBeamGlist);
+                                                               ? HT_Entity_lazer
+                                                                   : HT_Entity_watch_lazer);
         if (beam != NULL) {
             to.x = from.x - to.x;
             to.y = from.y - to.y;
@@ -3523,7 +3525,7 @@ COLLJOINT_tag* AnimGetCollData(obj_tag *obj, ushort *count) {
 
     psiBuildMatrixPalette(obj, animObj, 0);
     sAnimSkin_tag *skin = animObj->skin;
-    const AnimCollBone *row = skin->hashcode == HT_Skin_SkinAstronaut ? AstronautCollisionBones : HumanCollisionBones;
+    const AnimCollBone *row = skin->hashcode == HT_Skin_Astronaut ? AstronautCollisionBones : HumanCollisionBones;
     ushort n = 0;
     for (; row->bone >= 0; row++) {
         int other = row->other;

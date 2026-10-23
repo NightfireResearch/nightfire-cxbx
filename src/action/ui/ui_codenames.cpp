@@ -27,13 +27,13 @@
 // cn_options (ui.h). The last item's title is "Codenames" for a default codename, which cannot be saved, else "Save Codename".
 // XBE_GLOBAL(0x0017cec8, 0xa8)
 M_ITEM cn_options[7] = {
-    {HT_Texture_IconCnoptionsSecretunlocks, SECRET_UNLOCKS, SECRET_UNLOCKS_DESC, 0, 1, TXT_NULL}, // Secret Unlocks
-    {HT_Texture_IconCnoptionsController, CONTROLLER_SETUP, CONTROL_SCHEME_ACTION_DESC, 1, 1, TXT_NULL}, // Controller Setup
-    {HT_Texture_IconCnoptionsController, CN_DRIVING_CONTROLLER, CONTROL_SCHEME_DRIVING_DESC, 2, 1, TXT_NULL}, // Driving Controller
-    {HT_Texture_IconCnoptionsAdvanced, CN_ADVANCED_OPTIONS, ADV_SETTINGS_DESC, 3, 1, TXT_NULL}, // Advanced Options
-    {HT_Texture_IconCnoptionsMultiplayer, CN_MULTIPLAYER_OPTIONS, MULTIPLAYER_SETTINGS_DESC, 4, 1, TXT_NULL}, // Multiplayer Options
-    {HT_Texture_IconCnoptionsAv, CN_AV_OPTIONS, AV_SETTINGS_DESC, 5, 1, TXT_NULL}, // AV Options
-    {HT_Texture_IconCnoptionsSave, SAVE_CODENAME, ACCEPT_CHANGES_DESC, 6, 1, TXT_NULL}, // Save Codename
+    {HT_Texture_icon_newcodename, SECRET_UNLOCKS, SECRET_UNLOCKS_DESC, 0, 1, TXT_NULL}, // Secret Unlocks
+    {HT_Texture_icon_controllerxbox, CONTROLLER_SETUP, CONTROL_SCHEME_ACTION_DESC, 1, 1, TXT_NULL}, // Controller Setup
+    {HT_Texture_icon_controllerxbox, CN_DRIVING_CONTROLLER, CONTROL_SCHEME_DRIVING_DESC, 2, 1, TXT_NULL}, // Driving Controller
+    {HT_Texture_icon_options, CN_ADVANCED_OPTIONS, ADV_SETTINGS_DESC, 3, 1, TXT_NULL}, // Advanced Options
+    {HT_Texture_icon_mpoptions, CN_MULTIPLAYER_OPTIONS, MULTIPLAYER_SETTINGS_DESC, 4, 1, TXT_NULL}, // Multiplayer Options
+    {HT_Texture_icon_avoptions, CN_AV_OPTIONS, AV_SETTINGS_DESC, 5, 1, TXT_NULL}, // AV Options
+    {HT_Texture_icon_savecodename, SAVE_CODENAME, ACCEPT_CHANGES_DESC, 6, 1, TXT_NULL}, // Save Codename
 };
 
 // XBE_GLOBAL(0x0025ed28, 0x40)
@@ -315,7 +315,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
     if (saveflow_text != NULL) {
         if (!saveflow_box_open) {
             Manager_SendMessage(mgr, MessageType_GoPage, SAVEFLOW_PAGE, GOPAGE_OVERLAY);
-            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (intptr_t)saveflow_text, 0);
+            __Menu_Send(mgr->index, SUB_P_AFTERRESULTS_TEXT, MessageType_SetText, (intptr_t)saveflow_text, 0);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ClearItems, 0, 0);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_SetPulse, 0, 0);
@@ -329,24 +329,24 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
                 // An error: a choice to take, and the codenames listed again after
                 Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
                 __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_SAVEFLOW_266, 0), 0);
-                __Menu_Send(mgr->index, SUB_SAVEFLOW_244, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_Send(mgr->index, SUB_P_AFTERRESULTS_HINT_TEXT, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
                 saveflow_relist = 1;
                 break;
             default:
-                __Menu_Send(mgr->index, SUB_SAVEFLOW_244, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+                __Menu_Send(mgr->index, SUB_P_AFTERRESULTS_HINT_TEXT, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
                 saveflow_relist = 0;
                 break;
             }
             saveflow_box_open = 1;
             saveflow_frames = 0;
         } else {
-            __Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_SetText, (intptr_t)saveflow_text, 0);
+            __Menu_Send(mgr->index, SUB_P_AFTERRESULTS_TEXT, MessageType_SetText, (intptr_t)saveflow_text, 0);
         }
     }
 
     // The button as tall as the text and the choices, centred on the screen, the memo and the list on it
-    M_BUTTON *button = (M_BUTTON *)__Menu_Send(mgr->index, SUB_SAVEFLOW_BUTTON, MessageType_GetControl, 0, 0);
-    M_MEMO *memo = (M_MEMO *)__Menu_Send(mgr->index, SUB_SAVEFLOW_MEMO, MessageType_GetControl, 0, 0);
+    M_BUTTON *button = (M_BUTTON *)__Menu_Send(mgr->index, SUB_P_AFTERRESULTS_BOX, MessageType_GetControl, 0, 0);
+    M_MEMO *memo = (M_MEMO *)__Menu_Send(mgr->index, SUB_P_AFTERRESULTS_TEXT, MessageType_GetControl, 0, 0);
     M_LIST *list = (M_LIST *)__Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_GetControl, 0, 0);
     __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
     uchar lines = __Menu_SendMessage(&memo->control, MessageType_MemoGetNumLines, 0, 0);
@@ -689,15 +689,15 @@ void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text,
     switch (selected) {
         case 0:
             about = CODENAME_NEW_DESC;
-            picture = HT_Texture_IconCnoptionsSecretunlocks;
+            picture = HT_Texture_icon_newcodename;
             break;
         case 1:
             about = CODENAME_DEFAULT_DESC;
-            picture = HT_Texture_IconCodename;
+            picture = HT_Texture_icon_codename;
             break;
         default:
             about = CODENAME_SAVED_DESC;
-            picture = HT_Texture_IconCodename;
+            picture = HT_Texture_icon_codename;
             break;
     }
     if (icon != 0) {

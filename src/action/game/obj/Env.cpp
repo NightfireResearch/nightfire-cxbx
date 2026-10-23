@@ -125,7 +125,7 @@ void Env_WaterRipple(HITDATA_tag *hit) {
             return;
         cel = hit->hitObj->inCel;
     }
-    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, HT_Entity_RippleGas, 1, 0x7f7f7f7f, 2, 0x3f);
+    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, HT_Entity_watereffect, 1, 0x7f7f7f7f, 2, 0x3f);
 }
 
 // A breath from the mouth, on the first third of every two seconds, a puff each tenth of one, in a cel seen this
@@ -145,7 +145,7 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     if (GlobalEnv != NULL && GlobalEnv->dropType == 0 && !(cel->bitsFromPlacementTag & CEL_NO_SKY)) {
         _VECTOR pos;
         auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, HT_Entity_EnvBreathGas, 0, 0xffffff80, 0xffffff01, 40);
+        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, HT_Entity_smoke, 0, 0xffffff80, 0xffffff01, 40);
         return;
     }
 
@@ -157,7 +157,7 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     rot.z = (float)Float_FRand(6.2831855f);
     _VECTOR pos;
     auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_EnvBreathGas, 0, 0xffffffc8, 0xffffff01, 40);
+    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_smoke, 0, 0xffffffc8, 0xffffff01, 40);
     gas->effectFlags |= 0x400;
 }
 

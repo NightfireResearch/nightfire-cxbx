@@ -103,7 +103,7 @@ SpriteInfo LetterboxSprInfo[1] = {
         .onscreenWidth = 640,
         .onscreenHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 4,
     },
 };
@@ -502,7 +502,7 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         }
         AnimObjectUpdate(obj);
         obj->transformFlags |= TRANSFORM_MOVED;
-        if (animObj->skin->hashcode == HT_Skin_00001e)
+        if (animObj->skin->hashcode == HT_Skin_Ninja)
             NDrone2_CreateNinjaEyes(obj);
 
         // A footstep this frame: a ray 4 down from the object finds the ground under it
@@ -1340,9 +1340,10 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
 
                 // A handful of specific scripts (hashcode-identified) either skip this automatic fade entirely,
                 // or opt out of it - exact reason for each isn't confirmed
-                if (scriptInfo->scriptHashcode != HT_Script_0008c8 && scriptInfo->scriptHashcode != HT_Script_000080) {
-                    if (scriptInfo->scriptHashcode != HT_Script_0004fa
-                        && scriptInfo->scriptHashcode != HT_Script_000994) {
+                if (scriptInfo->scriptHashcode != HT_Script_NIS_VanJump
+                    && scriptInfo->scriptHashcode != HT_Script_NIS_YakuzaSniper) {
+                    if (scriptInfo->scriptHashcode != HT_Script_NIS_InfiltrateStair
+                        && scriptInfo->scriptHashcode != HT_Script_Scriptplayer_SC10) {
                         Camera_SetFade(4, 40.0f, 0xff, 0);
                     }
                 }
@@ -1434,7 +1435,8 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd) {
 
 // AUTOINJECT
 bool Script_IsDeathNIS(HASHCODE hashcode) {
-    return hashcode == HT_Script_000952 || hashcode == HT_Script_00098a || hashcode == HT_Script_000991;
+    return hashcode == HT_Script_NIS_CliffFall || hashcode == HT_Script_NIS_InfiltrateFall
+        || hashcode == HT_Script_NIS_CliffFall2;
 }
 
 // AUTOINJECT

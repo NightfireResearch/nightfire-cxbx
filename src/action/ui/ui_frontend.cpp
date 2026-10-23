@@ -216,10 +216,10 @@ bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
             return true;
         switch (intro_step++) {
             case 0:
-                Menu_PlayMovie(HT_Level_FmvIdentEagamesEn, 0, 0, 1, 1, 0);
+                Menu_PlayMovie(HT_Level_Menu_EALogo, 0, 0, 1, 1, 0);
                 break;
             case 1:
-                Menu_PlayMovie(HT_Level_FmvIdent0738, 0, 0, 1, 1, 0);
+                Menu_PlayMovie(HT_Level_Menu_MGMLogo, 0, 0, 1, 1, 0);
                 break;
             default:
                 Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_START, 1);
@@ -379,7 +379,7 @@ bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     }
     else if (message == MessageType_PageUpdate) {
         if (esthero_frame == 1)
-            Menu_PlayMovie(HT_Level_FmvTitles, 1, 0, 1, 1, 180);
+            Menu_PlayMovie(HT_Level_Menu_Esthero, 1, 0, 1, 1, 180);
         esthero_frame++;
         if (esthero_frame > 1 && psiMovieLoop())
             __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_MAIN, 1);
@@ -410,7 +410,7 @@ bool P_MAIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint me
         M_CONTROL *mgr = &manager[managerNum].control;
         __Menu_SendMessage(mgr, MessageType_LockInput, 1, 0);
         __Menu_SendDelayedMessage(15, mgr, MessageType_LockInput, 0, 0);
-        __Menu_Send(managerNum, HT_MenuControl_HelpMemo, MessageType_SetLineSpacing, 100, 0);
+        __Menu_Send(managerNum, SUB_MENU_HELP_MEMO, MessageType_SetLineSpacing, 100, 0);
         Menu_FadeLabel(managerNum, SUB_P_MAIN_FADE, 0);
         ls.canSave = 1;
     }
@@ -452,30 +452,30 @@ bool C_GOCODENAMES_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
 // ---- the movie pages ----
 
 // The movies P_FMVTEST lists. The space station's arrival names a movie not on the disc (the one played is
-// HT_Level_FmvIntroSpaceStation).
+// HT_Level_SpaceStationD_Intro).
 static const struct { const char *name; HASHCODE movie; } fmvtest_movies[] = {
-    {"Castle - Halo Jump", (HASHCODE)HT_Level_FmvIntroStolenHardware},
-    {"Castle - Gondola", (HASHCODE)HT_Level_FmvOutroHelicopterCrash},
-    {"Estate - Meet Mayhew", (HASHCODE)HT_Level_FmvIntroMayhewEntry},
-    {"Estate - Mayhew Death", (HASHCODE)HT_Level_FmvOutroMayhewDead},
-    {"Tower Infil - Intro", (HASHCODE)HT_Level_FmvIntroPhoenixTower},
-    {"Tower Infil - Outro", (HASHCODE)HT_Level_FmvOutroParachuteOffTower},
-    {"Nuclear Plant - Interview", (HASHCODE)HT_Level_FmvIntroPowerplant},
-    {"Nuclear Plant - Entering Vent", (HASHCODE)HT_Level_FmvOutroThroughVentKiko},
-    {"Tower Escape - Dom Death", (HASHCODE)HT_Level_FmvIntroPhoenixTower2},
-    {"Tower Escape - Lobby Rescue", (HASHCODE)HT_Level_FmvOutroLobbyEscape},
-    {"Evil Base - Descent All", (HASHCODE)HT_Level_FmvIntroIslandRadiotower},
-    {"Evil Base - Kiko Death", (HASHCODE)HT_Level_FmvOutroKikoRocketlaunch},
-    {"Space Station - Arrival", HT_Level_100017},
-    {"Arrival - Happy Ending", (HASHCODE)HT_Level_FmvOutroEscapePodEndGame},
-    {"Menu - BG Loop", (HASHCODE)HT_Level_FmvBackgroundMainmenu},
-    {"Menu - FE Loop", (HASHCODE)HT_Level_FmvBackgroundMAINMENU2},
-    {"Menu - EA Logo", (HASHCODE)HT_Level_FmvIdentEagamesEn},
-    {"Menu - MGM Logo", HT_Level_FmvIdent0738},
-    {"Menu - DAD Trailer", (HASHCODE)HT_Level_FmvTrailerDieanotherday},
-    {"Menu - Attract Movie", (HASHCODE)HT_Level_FmvTrailer},
-    {"Menu - Esthero", (HASHCODE)HT_Level_FmvTitles},
-    {"Menu - Making Of", (HASHCODE)HT_Level_FmvBtsDocumentary},
+    {"Castle - Halo Jump", (HASHCODE)HT_Level_CastleExterior_Intro},
+    {"Castle - Gondola", (HASHCODE)HT_Level_CastleIndoors2_Outro},
+    {"Estate - Meet Mayhew", (HASHCODE)HT_Level_HendersonA_Intro},
+    {"Estate - Mayhew Death", (HASHCODE)HT_Level_HendersonD_Outro},
+    {"Tower Infil - Intro", (HASHCODE)HT_Level_TowerA_Intro},
+    {"Tower Infil - Outro", (HASHCODE)HT_Level_TowerC_Outro},
+    {"Nuclear Plant - Interview", (HASHCODE)HT_Level_PowerStationA1_Intro},
+    {"Nuclear Plant - Entering Vent", (HASHCODE)HT_Level_PowerStationA2_Outro},
+    {"Tower Escape - Dom Death", (HASHCODE)HT_Level_Tower2A_Intro},
+    {"Tower Escape - Lobby Rescue", (HASHCODE)HT_Level_Tower2C_Outro},
+    {"Evil Base - Descent All", (HASHCODE)HT_Level_EvilBase_Intro},
+    {"Evil Base - Kiko Death", (HASHCODE)HT_Level_EvilBaseC_Outro},
+    {"Space Station - Arrival", HT_Level_SpaceStationD_IntroOld},
+    {"Arrival - Happy Ending", (HASHCODE)HT_Level_SpaceStationD_Outro},
+    {"Menu - BG Loop", (HASHCODE)HT_Level_Menu_BGLoop},
+    {"Menu - FE Loop", (HASHCODE)HT_Level_Menu_FELoop},
+    {"Menu - EA Logo", (HASHCODE)HT_Level_Menu_EALogo},
+    {"Menu - MGM Logo", HT_Level_Menu_MGMLogo},
+    {"Menu - DAD Trailer", (HASHCODE)HT_Level_Menu_DADTrailer},
+    {"Menu - Attract Movie", (HASHCODE)HT_Level_Menu_AttractMovie},
+    {"Menu - Esthero", (HASHCODE)HT_Level_Menu_Esthero},
+    {"Menu - Making Of", (HASHCODE)HT_Level_Menu_MakingOf},
 };
 
 // A list of movies, the one selected played on P_FMVPLAYER. No page leads here (docs/ui/movie-selector.md).
@@ -522,7 +522,7 @@ bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
             break;
         case MessageType_PageEnter:
-            Menu_PlayMovie(HT_Level_FmvTrailerDieanotherday, 1, 0, 1, 1, 0);
+            Menu_PlayMovie(HT_Level_Menu_DADTrailer, 1, 0, 1, 1, 0);
             break;
         case MessageType_PageUpdate:
             if (psiMovieLoop()) {
@@ -538,7 +538,7 @@ bool P_TRAILER_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 // AUTOINJECT
 bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
-        Menu_PlayMovie(HT_Level_FmvBtsDocumentary, 1, 0, 1, 1, 0);
+        Menu_PlayMovie(HT_Level_Menu_MakingOf, 1, 0, 1, 1, 0);
     }
     else if (message == MessageType_PageUpdate && psiMovieLoop()) {
         Menu_StopMovie(1);

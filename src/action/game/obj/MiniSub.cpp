@@ -35,7 +35,7 @@ obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_t
     obj->objectType = OBJECTTYPE_MINISUB;
     obj->curState = MINISUB_START;
     obj->subState = MINISUB_TURN;
-    AnimObjectNew(obj, HT_Skin_MinisubSkin);
+    AnimObjectNew(obj, HT_Skin_Minisub);
     AnimScriptAdd(obj, HT_Script_MinisubAnim)->flags |= ANIMSCRIPT_LOOP;
     sAnimRawSeq_tag *seq = AnimScriptPeekSeq(HT_Script_MinisubAnim);
     MiniSubInfo *sub = (MiniSubInfo *)obj->extraObjectData;

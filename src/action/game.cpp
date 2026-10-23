@@ -264,17 +264,17 @@ void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume) {
   if(scaledVolume > 100)
     scaledVolume = 100;
 
-  if(hashcode == HT_Level_FmvIdentEagamesEn) {
+  if(hashcode == HT_Level_Menu_EALogo) {
     if(!IsNotPalI()) {
       switch(Language_Get()) {
         case 2:
-          hashcode = HT_Level_FmvIdentEagamesFr;
+          hashcode = HT_Level_Menu_EALogo_FR;
           break;
         case 3:
-          hashcode = HT_Level_FmvIdentEagamesDe;
+          hashcode = HT_Level_Menu_EALogo_DE;
           break;
         case 6:
-          hashcode = HT_Level_FmvIdentEagamesEs;
+          hashcode = HT_Level_Menu_EALogo_ES;
           break;
         default:
           break;
@@ -319,76 +319,76 @@ HASHCODE GetLevelWithFmv(HASHCODE level) {
   int param_1 = 0;
   switch(level) {
     case HT_Level_HendersonA:
-      param_1 = HT_Level_FmvIntroMayhewEntry;
+      param_1 = HT_Level_HendersonA_Intro;
       break;
     case HT_Level_HendersonB:
-      param_1 = HT_Level_100002;
+      param_1 = HT_Level_HendersonB_Intro;
       break;
     case HT_Level_HendersonC:
-      param_1 = HT_Level_100003;
+      param_1 = HT_Level_HendersonC_Intro;
       break;
     case HT_Level_HendersonD:
-      param_1 = HT_Level_100004;
+      param_1 = HT_Level_HendersonD_Intro;
       break;
     case HT_Level_CastleExterior:
-      param_1 = HT_Level_FmvIntroStolenHardware;
+      param_1 = HT_Level_CastleExterior_Intro;
       break;
     case HT_Level_CastleCourtyard:
-      param_1 = HT_Level_100006;
+      param_1 = HT_Level_CastleCourtyard_Intro;
       break;
     case HT_Level_CastleIndoors1:
-      param_1 = HT_Level_100007;
+      param_1 = HT_Level_CastleIndoors1_Intro;
       break;
     case HT_Level_CastleIndoors2:
-      param_1 = HT_Level_100008;
+      param_1 = HT_Level_CastleIndoors2_Intro;
       break;
     case HT_Level_TowerA:
-      param_1 = HT_Level_FmvIntroPhoenixTower;
+      param_1 = HT_Level_TowerA_Intro;
       break;
     case HT_Level_TowerB:
-      param_1 = HT_Level_10000a;
+      param_1 = HT_Level_TowerB_Intro;
       break;
     case HT_Level_TowerC:
-      param_1 = HT_Level_10000b;
+      param_1 = HT_Level_TowerC_Intro;
       break;
     case HT_Level_PowerStationA1:
-      param_1 = HT_Level_FmvIntroPowerplant;
+      param_1 = HT_Level_PowerStationA1_Intro;
       break;
     case HT_Level_PowerStationA2:
-      param_1 = HT_Level_10000d;
+      param_1 = HT_Level_PowerStationA2_Intro;
       break;
     case HT_Level_Cut_Level1:
-      param_1 = HT_Level_10000e;
+      param_1 = HT_Level_Cut_Level1_Intro;
       break;
     case HT_Level_Cut_Level2:
-      param_1 = HT_Level_10000f;
+      param_1 = HT_Level_Cut_Level2_Intro;
       break;
     case HT_Level_Cut_Level3:
-      param_1 = HT_Level_100010;
+      param_1 = HT_Level_Cut_Level3_Intro;
       break;
     case HT_Level_Tower2A:
-      param_1 = HT_Level_FmvIntroPhoenixTower2;
+      param_1 = HT_Level_Tower2A_Intro;
       break;
     case HT_Level_Tower2B:
-      param_1 = HT_Level_100012;
+      param_1 = HT_Level_Tower2B_Intro;
       break;
     case HT_Level_Tower2C:
-      param_1 = HT_Level_100013;
+      param_1 = HT_Level_Tower2C_Intro;
       break;
     case HT_Level_EvilBase:
-      param_1 = HT_Level_FmvIntroIslandRadiotower;
+      param_1 = HT_Level_EvilBase_Intro;
       break;
     case HT_Level_EvilSilo:
-      param_1 = HT_Level_100015;
+      param_1 = HT_Level_EvilSilo_Intro;
       break;
     case HT_Level_EvilBaseC:
-      param_1 = HT_Level_100016;
+      param_1 = HT_Level_EvilBaseC_Intro;
       break;
     case HT_Level_SpaceStationD:
-      param_1 = HT_Level_FmvIntroSpaceStation;
+      param_1 = HT_Level_SpaceStationD_Intro;
       break;
     case HT_Level_Tower2Elevator:
-      param_1 = HT_Level_10004a;
+      param_1 = HT_Level_Tower2Elevator_Intro;
       break;
     default: // No FMV, just load the level
       param_1 = level;
@@ -523,7 +523,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
     case HT_Level_Ravine:
     case HT_Level_Unnamed4C: {
         PickHint(hintOut, kMultiplayerHints);
-        return HT_Texture_LoadscreenMultiplayer;
+        return HT_Texture_load_MP;
     }
 
     // The castle exterior keeps its one hint: no shared hint.
@@ -531,27 +531,27 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         static const uint32_t hints[] = { 0x1000126 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000000);
-        return HT_Texture_LoadscreenCastle;
+        return HT_Texture_Castle;
     }
     case HT_Level_CastleCourtyard: {
         static const uint32_t hints[] = { 0x10000c0, 0x10000c1 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000001);
-        image = HT_Texture_LoadscreenCastle;
+        image = HT_Texture_Castle;
         break;
     }
     case HT_Level_CastleIndoors1: {
         static const uint32_t hints[] = { 0x10000c2 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000002);
-        image = HT_Texture_LoadscreenCastle;
+        image = HT_Texture_Castle;
         break;
     }
     case HT_Level_CastleIndoors2: {
         static const uint32_t hints[] = { 0x10000c3, 0x10000c4, 0x10000c5, 0x10000c6 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000003);
-        image = HT_Texture_LoadscreenCastle;
+        image = HT_Texture_Castle;
         break;
     }
 
@@ -559,28 +559,28 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         static const uint32_t hints[] = { 0x10000d3, 0x10000d4 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000006);
-        image = HT_Texture_LoadscreenHenderson;
+        image = HT_Texture_Henderson;
         break;
     }
     case HT_Level_HendersonB: {
         static const uint32_t hints[] = { 0x10000c7, 0x10000c8, 0x10000cb, 0x10000d1 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000008);
-        image = HT_Texture_LoadscreenHenderson;
+        image = HT_Texture_Henderson;
         break;
     }
     case HT_Level_HendersonC: {
         static const uint32_t hints[] = { 0x10000ca, 0x10000cd, 0x10000ce, 0x10000c9, 0x10000d2 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400000a);
-        image = HT_Texture_LoadscreenHenderson;
+        image = HT_Texture_Henderson;
         break;
     }
     case HT_Level_HendersonD: {
         static const uint32_t hints[] = { 0x10000cf, 0x10000d0 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400000d);
-        image = HT_Texture_LoadscreenHenderson;
+        image = HT_Texture_Henderson;
         break;
     }
 
@@ -588,21 +588,21 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         static const uint32_t hints[] = { 0x10000d5, 0x10000d8, 0x10000df, 0x10000e2 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000016);
-        image = HT_Texture_LoadscreenTower;
+        image = HT_Texture_Tower;
         break;
     }
     case HT_Level_TowerB: {
         static const uint32_t hints[] = { 0x10000d7, 0x10000d9, 0x10000db, 0x10000e0, 0x10000e3, 0x10000e4, 0x10000e6 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000019);
-        image = HT_Texture_LoadscreenTower;
+        image = HT_Texture_Tower;
         break;
     }
     case HT_Level_TowerC: {
         static const uint32_t hints[] = { 0x10000dc, 0x10000da, 0x10000dd, 0x10000de, 0x10000e1, 0x10000e5 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400001d);
-        image = HT_Texture_LoadscreenTower;
+        image = HT_Texture_Tower;
         break;
     }
 
@@ -610,7 +610,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         static const uint32_t hints[] = { 0x10000e7, 0x10000e9, 0x10000eb, 0x10000ed, 0x10000ef, 0x10000f1, 0x10000f4 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400002c);
-        image = HT_Texture_LoadscreenPowerstation;
+        image = HT_Texture_Power;
         break;
     }
     case HT_Level_PowerStationA2: {
@@ -618,7 +618,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
                                           0x10000f5 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400002f);
-        image = HT_Texture_LoadscreenPowerstation;
+        image = HT_Texture_Power;
         break;
     }
 
@@ -628,48 +628,48 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         static const uint32_t hints[] = { 0x10000f6, 0x10000f8, 0x10000f8 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000036);
-        image = HT_Texture_LoadscreenTOWER2;
+        image = HT_Texture_Tower2;
         break;
     }
     case HT_Level_Tower2B: {
         static const uint32_t hints[] = { 0x10000fe, 0x10000f9, 0x10000fa, 0x10000fc, 0x10000fd };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000037);
-        image = HT_Texture_LoadscreenTOWER2;
+        image = HT_Texture_Tower2;
         break;
     }
     case HT_Level_Tower2C:
         if (hintOut != NULL)
             *hintOut = NULL;
         SetObjective(objectiveOut, 0x400003a);
-        image = HT_Texture_LoadscreenTOWER2;
+        image = HT_Texture_Tower2;
         break;
     case HT_Level_Tower2Elevator: {
         static const uint32_t hints[] = { 0x10000fb };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000039);
-        return HT_Texture_LoadscreenTOWER2;
+        return HT_Texture_Tower2;
     }
 
     case HT_Level_EvilBase: {
         static const uint32_t hints[] = { 0x1000103, 0x1000104, 0x1000105, 0x1000106 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x4000049);
-        image = HT_Texture_LoadscreenEvilbase;
+        image = HT_Texture_Evil;
         break;
     }
     case HT_Level_EvilSilo: {
         static const uint32_t hints[] = { 0x10000ff };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400004d);
-        image = HT_Texture_LoadscreenEvilbase;
+        image = HT_Texture_Evil;
         break;
     }
     case HT_Level_EvilBaseC: {
         static const uint32_t hints[] = { 0x1000100, 0x1000101, 0x1000102 };
         PickHint(hintOut, hints);
         SetObjective(objectiveOut, 0x400004f);
-        image = HT_Texture_LoadscreenEvilbase;
+        image = HT_Texture_Evil;
         break;
     }
 
@@ -682,7 +682,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
         if (hintOut != NULL)
             *objectiveOut = LoadText(hints[Rand_Random() % ARRAY_SIZE(hints)]);
         SetObjective(objectiveOut, 0x400005a);
-        image = HT_Texture_LoadscreenSpacestation;
+        image = HT_Texture_Space;
         break;
     }
 
@@ -691,7 +691,7 @@ HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objective
             *hintOut = NULL;
         if (objectiveOut != NULL)
             *objectiveOut = NULL;
-        return HT_Texture_LoadscreenUnknown;
+        return HT_Texture_General;
     }
 
     PickGeneralHint(hintOut);
@@ -711,30 +711,30 @@ static void build_MakeCelOverlapBox(world_tag *world) {}
 // FUNC_AT(0x000bdcd0)
 HASHCODE ResetMap_LevelAfterMovie(HASHCODE movie) {
     switch ((uint)movie) {
-        case HT_Level_200001: return HT_Level_100002;
-        case HT_Level_200002: return HT_Level_100003;
-        case HT_Level_200003: return HT_Level_100004;
-        case HT_Level_200005: return HT_Level_100006;
-        case HT_Level_200006: return HT_Level_100007;
-        case HT_Level_200007: return HT_Level_100008;
-        case HT_Level_200009: return HT_Level_10000a;
-        case HT_Level_20000a: return HT_Level_10000b;
-        case HT_Level_20000c: return HT_Level_10000d;
-        case HT_Level_20000e: return HT_Level_10000f;
-        case HT_Level_200011: return HT_Level_100012;
-        case HT_Level_200012: return HT_Level_10004a;
-        case HT_Level_200014: return HT_Level_100015;
-        case HT_Level_200015: return HT_Level_100016;
-        case HT_Level_20004a: return HT_Level_100013;
-        case HT_Level_FmvOutroMayhewDead:
-        case HT_Level_FmvOutroHelicopterCrash:
-        case HT_Level_FmvOutroParachuteOffTower:
-        case HT_Level_FmvOutroThroughVentKiko:
-        case HT_Level_30000f:
-        case HT_Level_300010:
-        case HT_Level_FmvOutroLobbyEscape:
-        case HT_Level_FmvOutroKikoRocketlaunch:
-        case HT_Level_FmvOutroEscapePodEndGame:
+        case HT_Level_HendersonA_Next: return HT_Level_HendersonB_Intro;
+        case HT_Level_HendersonB_Next: return HT_Level_HendersonC_Intro;
+        case HT_Level_HendersonC_Next: return HT_Level_HendersonD_Intro;
+        case HT_Level_CastleExterior_Next: return HT_Level_CastleCourtyard_Intro;
+        case HT_Level_CastleCourtyard_Next: return HT_Level_CastleIndoors1_Intro;
+        case HT_Level_CastleIndoors1_Next: return HT_Level_CastleIndoors2_Intro;
+        case HT_Level_TowerA_Next: return HT_Level_TowerB_Intro;
+        case HT_Level_TowerB_Next: return HT_Level_TowerC_Intro;
+        case HT_Level_PowerStationA1_Next: return HT_Level_PowerStationA2_Intro;
+        case HT_Level_Cut_Level1_Next: return HT_Level_Cut_Level2_Intro;
+        case HT_Level_Tower2A_Next: return HT_Level_Tower2B_Intro;
+        case HT_Level_Tower2B_Next: return HT_Level_Tower2Elevator_Intro;
+        case HT_Level_EvilBase_Next: return HT_Level_EvilSilo_Intro;
+        case HT_Level_EvilSilo_Next: return HT_Level_EvilBaseC_Intro;
+        case HT_Level_Tower2Elevator_Next: return HT_Level_Tower2C_Intro;
+        case HT_Level_HendersonD_Outro:
+        case HT_Level_CastleIndoors2_Outro:
+        case HT_Level_TowerC_Outro:
+        case HT_Level_PowerStationA2_Outro:
+        case HT_Level_Cut_Level2_Outro:
+        case HT_Level_Cut_Level3_Outro:
+        case HT_Level_Tower2C_Outro:
+        case HT_Level_EvilBaseC_Outro:
+        case HT_Level_SpaceStationD_Outro:
             return HT_Level_Menu_Pre;
     }
     return (HASHCODE)((uint)GameState.NextLevelHashcode & 0xff00ffff);
@@ -784,7 +784,7 @@ SpriteInfo LoadingGfx = {
     .onscreenWidth = 640,
     .onscreenHeight = 480,
     .textRef = (Action_TranslatedText)0xffffffff,
-    .textureHashcode = HT_Texture_000061,
+    .textureHashcode = HT_Texture_LoadingGfxDefault,
     .linkedViewer = 99,
 };
 #define LoadScreenFont FontFormat2Centred
@@ -882,20 +882,20 @@ void ResetMap_GenLoadScreen(void) {
 // The subtitles of the movie before a level, or 0 for none
 static HASHCODE ResetMap_MovieSubtitles(uint movie) {
     switch (movie) {
-    case HT_Level_FmvIntroMayhewEntry: return HT_Script_00095a;
-    case HT_Level_FmvIntroStolenHardware: return HT_Script_000961;
-    case HT_Level_FmvIntroPhoenixTower: return HT_Script_000963;
-    case HT_Level_FmvIntroPowerplant: return HT_Script_000965;
-    case HT_Level_FmvIntroPhoenixTower2: return HT_Script_000967;
-    case HT_Level_FmvIntroIslandRadiotower: return HT_Script_000969;
-    case HT_Level_FmvIntroSpaceStation: return HT_Script_00096b;
-    case HT_Level_FmvOutroMayhewDead: return HT_Script_00095d;
-    case HT_Level_FmvOutroHelicopterCrash: return HT_Script_000962;
-    case HT_Level_FmvOutroParachuteOffTower: return HT_Script_000964;
-    case HT_Level_FmvOutroThroughVentKiko: return HT_Script_000966;
-    case HT_Level_FmvOutroLobbyEscape: return HT_Script_000968;
-    case HT_Level_FmvOutroKikoRocketlaunch: return HT_Script_00097a;
-    case HT_Level_FmvOutroEscapePodEndGame: return HT_Script_00096c;
+    case HT_Level_HendersonA_Intro: return HT_Script_Subtitles_IntroMayhewEntry;
+    case HT_Level_CastleExterior_Intro: return HT_Script_Subtitles_IntroStolenHardware;
+    case HT_Level_TowerA_Intro: return HT_Script_Subtitles_IntroPhoenixTower;
+    case HT_Level_PowerStationA1_Intro: return HT_Script_Subtitles_IntroPowerplant;
+    case HT_Level_Tower2A_Intro: return HT_Script_Subtitles_IntroPhoenixTower2;
+    case HT_Level_EvilBase_Intro: return HT_Script_Subtitles_IntroIslandRadiotower;
+    case HT_Level_SpaceStationD_Intro: return HT_Script_Subtitles_IntroSpaceStation;
+    case HT_Level_HendersonD_Outro: return HT_Script_Subtitles_OutroMayhewDead;
+    case HT_Level_CastleIndoors2_Outro: return HT_Script_Subtitles_OutroHelicopterCrash;
+    case HT_Level_TowerC_Outro: return HT_Script_Subtitles_OutroParachuteOffTower;
+    case HT_Level_PowerStationA2_Outro: return HT_Script_Subtitles_OutroThroughVentKiko;
+    case HT_Level_Tower2C_Outro: return HT_Script_Subtitles_OutroLobbyEscape;
+    case HT_Level_EvilBaseC_Outro: return HT_Script_Subtitles_OutroKikoRocketlaunch;
+    case HT_Level_SpaceStationD_Outro: return HT_Script_Subtitles_OutroEscapePodEndGame;
     default: return (HASHCODE)0;
     }
 }
@@ -917,7 +917,7 @@ void ResetMap_Load(void) {
         if (GameState.NextLevelHashcode != HT_MainMenu) {
             ResetMap_GameInit();
             ResetMap_SavedLevel = GameState.NextLevelHashcode;
-            GameState.NextLevelHashcode = HT_Level_HtSharedFiles;
+            GameState.NextLevelHashcode = HT_Level_SharedFiles;
             bLevelLoaded = 0;
             while (LoaderLoad(1, GameState.NextLevelHashcode, 0, 0))
                 ;
@@ -937,7 +937,7 @@ void ResetMap_Load(void) {
         GameState.MovieHashcode = GameState.NextLevelHashcode;
         GameState.NextLevelHashcode = (HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff);
         GameState.field5_0x14 = 0;
-        if (GameState.NextLevelHashcode == HT_Level_000018)
+        if (GameState.NextLevelHashcode == HT_Level_SpaceStationA)
             GameState.NextLevelHashcode = HT_Level_SpaceStationD;
         Mem_SetMallocMethod(0);
         psiStartBackgroundMovie((HASHCODE)GameState.MovieHashcode, 0, SFXGetVolume());
@@ -1690,7 +1690,7 @@ void psiUpdateBackgroundMovie(void) {
     if (BackgroundMovieHashcode == 0)
         return;
     BackgroundMovieUpdate();
-    if (BackgroundMovieHashcode == HT_Level_FmvTrailer) {
+    if (BackgroundMovieHashcode == HT_Level_Menu_AttractMovie) {
         resetRenderState(1);
         immediateModePushItem(0.0f, 0.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);
         immediateModePushItem(0.0f, 414.0f, 640.0f, 66.0f, 0, 0, 0.0f, 0.0f, 0xff000000);

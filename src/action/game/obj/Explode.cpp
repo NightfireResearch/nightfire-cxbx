@@ -30,17 +30,17 @@ static void Monitor_ApplyDamage(obj_tag *obj, float damage) {}
 // The debris an explosion throws: metal, and in 0x07000008 with channel 0x53 on, stone
 // XBE_GLOBAL(0x001780b8, 0x10) readonly relocate
 HASHCODE MetalDebris[4] = {
-    HT_Entity_000414,
-    HT_Entity_000415,
-    HT_Entity_000416,
-    HT_Entity_00041b,
+    HT_Entity_Metal_Debris_1,
+    HT_Entity_Metal_Debris_2,
+    HT_Entity_Metal_Debris_3,
+    HT_Entity_Metal_Debris_4,
 };
 // XBE_GLOBAL(0x001780a8, 0x10) readonly relocate
 HASHCODE StoneDebris[4] = {
-    HT_Entity_000664,
-    HT_Entity_000665,
-    HT_Entity_000666,
-    HT_Entity_000664,
+    HT_Entity_STONE_Debris_1,
+    HT_Entity_STONE_Debris2,
+    HT_Entity_STONE_Debris3,
+    HT_Entity_STONE_Debris_1,
 };
 
 constexpr float kOneFifteenth = 0.06666667f;
@@ -128,7 +128,7 @@ void Explode_Update(obj_tag *obj) {
 
     if (MPSettings.isMultiplayer == 1 || data->material == 0)
         return;
-    if (data->script != NULL && data->script->scriptHashcode != HT_Script_BulletExplosion)
+    if (data->script != NULL && data->script->scriptHashcode != HT_Script_ExplosionBlastRadius)
         return;
     if ((uint)(GameState.NumFramesUnpaused - obj->creationTimeFrames) > data->frames / 4)
         return;

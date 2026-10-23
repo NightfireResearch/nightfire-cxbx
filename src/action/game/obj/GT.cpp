@@ -144,7 +144,7 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
                 ((GUNTURRET *)other->extraObjectData)->owner != turret->owner)
                 continue;
             other->flags |= 1;
-            Explode_Create(other, &other->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BulletExplosion, 50.0f,
+            Explode_Create(other, &other->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                            0xff, 0xff,
                            100, NULL, 0);
         }
@@ -169,11 +169,11 @@ obj_tag* GT_DeployMiniGun(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner) {
     keys.kind = GT_KIND_MINIGUN;
     keys.enableChannel = 0;
     keys.key1 = 2;
-    keys.bodyScript = HT_Script_MinigunBody;
-    keys.baseScript = HT_Script_MinigunBase;
+    keys.bodyScript = HT_Script_SuitcaseMinigun;
+    keys.baseScript = HT_Script_SuitcaseFrame;
     quaternion_tag quat;
     Quat_MatToQuat(&quat, mtx);
-    return GT_Create(pos, &rot, &quat, (level_tag *)&keys, hashtable_hashcode_to_celglist(HT_Entity_MinigunModel),
+    return GT_Create(pos, &rot, &quat, (level_tag *)&keys, hashtable_hashcode_to_celglist(HT_Entity_SuitCase_Frame),
                      owner);
 }
 
@@ -358,7 +358,7 @@ static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX
     flash->curState = 2;
     flash->effectFlags &= ~FLAG_HIDDEN;
     if (flash->subState != 0)
-        Gas_Init(obj->inCel, &at, &dir, NULL, 0.05f, 0.1f, HT_Entity_BulletDust, 7, 0x48403080, 1, 0x80);
+        Gas_Init(obj->inCel, &at, &dir, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1, 0x80);
 }
 
 // The barrel turned on by step, about its length
@@ -423,7 +423,7 @@ void GT_Update(obj_tag *obj) {
         turret->timer = 0.0f;
         _VECTOR up;
         Mat_GetUp(&up, &barrel->transformMatrix);
-        Emitter_Create(HT_Emitter_TurretFireEmitter, (_VECTOR *)&barrel->transformMatrix.m[12], &up, 10.0f, 0, 0, 0,
+        Emitter_Create(HT_Emitter_TurretFire, (_VECTOR *)&barrel->transformMatrix.m[12], &up, 10.0f, 0, 0, 0,
                        0.0f);
     }
 
@@ -478,7 +478,7 @@ void GT_Update(obj_tag *obj) {
             GT_LoseControl(obj);
         if (turret->kind == GT_KIND_MINIGUN) {
             Pickup_Create((_VECTOR *)&obj->transformMatrix.m[12], NULL, &obj->transformMatrix,
-                          hashtable_hashcode_to_celglist(HT_Entity_MinigunPickupModel), 0, MINIGUN_WEAPON, 1, 0, 0xf5,
+                          hashtable_hashcode_to_celglist(HT_Entity_Suitcase_Pickup), 0, MINIGUN_WEAPON, 1, 0, 0xf5,
                           1, 0, 0,
                           0);
             obj->flags |= 1;
@@ -537,7 +537,7 @@ void GT_Update(obj_tag *obj) {
         if (!(turret->timer < 10.0f)) {
             if (MPSettings.isMultiplayer && turret->kind != GT_KIND_CEILING) {
                 obj->flags |= 1;
-                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BulletExplosion, 50.0f,
+                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                                0xff, 0xff,
                                100, NULL, 0);
             }
@@ -549,7 +549,7 @@ void GT_Update(obj_tag *obj) {
             rot.y = 0.0f;
             rot.x = 0.0f;
             rot.z = (float)Float_FRand(6.2831855f);
-            Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.25f, HT_Entity_BulletDust, 7, 0x48403080, 1,
+            Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1,
                      0x3c);
         }
         return;

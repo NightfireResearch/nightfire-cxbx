@@ -413,7 +413,7 @@ void Copter_Update(obj_tag *obj) {
 
     case COPTER_DESTROYED:
         SetChannel(copter->doneChannel);
-        Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 10.0f, 10.0f, HT_Script_BulletExplosion, 67.4f, 0xff,
+        Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 10.0f, 10.0f, HT_Script_ExplosionBlastRadius, 67.4f, 0xff,
                        0xff, 100,
                        NULL, 6);
         obj->flags |= 1;
@@ -456,7 +456,7 @@ void Copter_Update(obj_tag *obj) {
         vel.y = 0.0f;
         float size = (float)(Float_FRand(2.0f) + 3.0f);
         uint colour = ((grey << 8 | grey) << 8 | grey) << 8;
-        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, HT_Entity_BulletSmoke, 3,
+        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, HT_Entity_smoke_3_blacksmoke, 3,
                  colour | (uchar)(0xbf - grey), colour, 0x1a4);
     }
 

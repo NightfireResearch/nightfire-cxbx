@@ -1818,7 +1818,7 @@ void RandomPlayer() {
     obj->extraObjectData = blData;
     obj->animState = &world.playerAnim;
     world.playerAnim.animObj.skin = &world.skin;
-    world.skin.hashcode = (HASHCODE)(A(3) == 0 ? HT_Skin_SkinOddjobHat : 0x05000080 + A(8));
+    world.skin.hashcode = (HASHCODE)(A(3) == 0 ? HT_Skin_Mp_odd_job : 0x05000080 + A(8));
     obj->objectType = (char)(A(5) == 0 ? OBJECTTYPE_DEAD_PLAYER : OBJECTTYPE_PLAYER);
     obj->effectFlags = (int)A(0);
     obj->hitList = (HITDATA_tag *)world.item;

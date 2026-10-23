@@ -152,7 +152,7 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     gameObj->subState = 1;
     gameObj->creationTimeFrames = GameState.NumFramesUnpaused;
     SP_UnPause(mpObj->scriptPlayer);
-    Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_DestroyExplosion2, 500.0f,
+    Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BlastFrames, 500.0f,
                    0xff, 0xff, 100, NULL, 0);
     if (attacker >= 0) {
         Action_TranslatedText label = MPSettings.Player[attacker].TeamId == PHOENIX ? MP_PHOENIX_DESTROYED : MP_MI6_DESTROYED;

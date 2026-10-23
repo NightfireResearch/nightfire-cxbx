@@ -415,7 +415,7 @@ void NDrone_InitKickNodes(void) {
                 if (obj->objectType != OBJECTTYPE_SCRIPTPLAYER)
                     continue;
                 SCRIPTINFO *info = SP_getScriptInfo(obj);
-                if (info == NULL || info->scriptHashcode != HT_Script_KickScript)
+                if (info == NULL || info->scriptHashcode != HT_Script_TableFall)
                     continue;
                 double distanceSq = DistanceSq(&obj->position, &node->fileNode->pos);
                 if (kickable == NULL || distanceSq < nearest) {

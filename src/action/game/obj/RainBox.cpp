@@ -264,8 +264,8 @@ void DrawDrops(void) {
         return;
 
     if (DropType != DROP_MODELS) {
-        int texture = *(int *)hashtable_getitem(DropType == DROP_PARTICLES ? HT_Texture_RainTexture
-                                                : HT_Texture_RisingTexture);
+        int texture = *(int *)hashtable_getitem(DropType == DROP_PARTICLES ? HT_Texture_Snowflake_2
+                                                : HT_Texture_BUB2);
         psiDrawParticleList((const float *)DropVector, CurrentMax, 0xff808080, texture, NULL, 1, 0.2f);
         return;
     }
@@ -278,7 +278,7 @@ void DrawDrops(void) {
     _MATRIX mtx;
     memset(&mtx, 0, sizeof(mtx));
     Mat_Identity(&mtx);
-    celglist_tag *dropModel = hashtable_hashcode_to_celglist(HT_Entity_DropModel);
+    celglist_tag *dropModel = hashtable_hashcode_to_celglist(HT_Entity_Raindrop);
     for (short i = 0; i < CurrentMax; i++) {
         if (DropState[i] != 1)
             continue;
@@ -290,7 +290,7 @@ void DrawDrops(void) {
         return;
     Mat_CopyRot(&glb_viewer[0]->mtx, &mtx);
     psiSetTweakARGB(0x24, 0x20, 0x20, 0x20);
-    celglist_tag *splash = hashtable_hashcode_to_celglist(HT_Entity_BulletDust);
+    celglist_tag *splash = hashtable_hashcode_to_celglist(HT_Entity_smoke_1_dust);
     for (short i = 0; i < CurrentMax; i++) {
         if (DropState[i] != 1)
             continue;

@@ -466,7 +466,7 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 // AUTOINJECT
 bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
-        __Menu_Send(managerNum, SUB_P_ENDMISSION_TITLE, MessageType_SetTextFlag2000, 0, 0);
+        __Menu_Send(managerNum, SUB_MENU_STATIC, MessageType_SetTextFlag2000, 0, 0);
         __Menu_Send(managerNum, SUB_P_PAUSE_HINT_TEXT, MessageType_SetTextFlag2000, 0, 0);
         __Menu_Send(managerNum, SUB_P_ENDMISSION_LIST, MessageType_SetTextFlag2000, 0, 0);
         __Menu_Send(managerNum, SUB_P_ENDMISSION_LIST, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);

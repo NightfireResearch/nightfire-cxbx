@@ -50,7 +50,7 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     sub->beam = NULL;
     sub->speed = (float)((double)_FRAME_RATE / lvl->splineLength * keys);
     sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, 1, 1.0f, 0, 0, 0, 0xffff);
-    AnimObjectNew(obj, SUB_SKIN);
+    AnimObjectNew(obj, HT_Skin_Sub);
     sAnimScript_tag *script = AnimScriptAdd(obj, SUB_ANIM_MOVE);
     script->flags |= ANIMSCRIPT_LOOP;
     sub->height = AnimScriptPeekSeq(SUB_ANIM_MOVE)->boundSphere[3];

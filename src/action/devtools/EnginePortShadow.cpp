@@ -567,7 +567,7 @@ void __cdecl FakeMovie(HASHCODE hash, char loop, int volume) {
 
 HASHCODE __cdecl FakeNextMission(HASHCODE movie) {
     ShadowLog("nextmission(%x)", movie);
-    static const uint32_t kNext[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_FmvIntroStolenHardware};
+    static const uint32_t kNext[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_CastleExterior_Intro};
     return (HASHCODE)kNext[R(3)];
 }
 
@@ -2117,15 +2117,15 @@ void InstallLoadFakes(void) {
 }
 
 void LoadState(void) {
-    static const uint32_t kLevels[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_010018, HT_Level_000018,
-                                       HT_Level_000030, HT_Level_FmvIntroMayhewEntry, HT_Level_100002,
-                                       HT_Level_FmvIntroStolenHardware, HT_Level_FmvIntroPhoenixTower,
-                                       HT_Level_FmvIntroPowerplant, HT_Level_FmvIntroPhoenixTower2,
-                                       HT_Level_FmvIntroIslandRadiotower, HT_Level_FmvIntroSpaceStation,
-                                       HT_Level_FmvOutroMayhewDead, HT_Level_FmvOutroHelicopterCrash,
-                                       HT_Level_FmvOutroParachuteOffTower, HT_Level_FmvOutroThroughVentKiko,
-                                       HT_Level_FmvOutroLobbyEscape, HT_Level_FmvOutroKikoRocketlaunch,
-                                       HT_Level_FmvOutroEscapePodEndGame, HT_Level_300009, 0x07400001};
+    static const uint32_t kLevels[] = {HT_Level_Menu_Pre, HT_Level_Tower2B, HT_Level_010018, HT_Level_SpaceStationA,
+                                       HT_Level_000030, HT_Level_HendersonA_Intro, HT_Level_HendersonB_Intro,
+                                       HT_Level_CastleExterior_Intro, HT_Level_TowerA_Intro,
+                                       HT_Level_PowerStationA1_Intro, HT_Level_Tower2A_Intro,
+                                       HT_Level_EvilBase_Intro, HT_Level_SpaceStationD_Intro,
+                                       HT_Level_HendersonD_Outro, HT_Level_CastleIndoors2_Outro,
+                                       HT_Level_TowerC_Outro, HT_Level_PowerStationA2_Outro,
+                                       HT_Level_Tower2C_Outro, HT_Level_EvilBaseC_Outro,
+                                       HT_Level_SpaceStationD_Outro, HT_Level_TowerA_Outro, 0x07400001};
     GameState.NextLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
     GameState.CurrentLevelHashcode = (HASHCODE)kLevels[R(COUNT(kLevels))];
     GameState.MovieHashcode = kLevels[R(COUNT(kLevels))];
@@ -2258,7 +2258,8 @@ uint32_t RunFixup(bool original) {
 }
 
 uint32_t RunNextMovie(bool original) {
-    uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? HT_Level_100000 : R(2) ? HT_Level_200000 : HT_Level_300000) + R(0x50);
+    uint movie = R(4) == 0 ? R(0) : (R(3) == 0 ? HT_Level_IntroBase : R(2) ? HT_Level_NextBase
+                                     : HT_Level_OutroBase) + R(0x50);
     return (uint32_t)CDECL_RUN(0x000bdcd0, ResetMap_LevelAfterMovie, HASHCODE (__cdecl *)(HASHCODE), (HASHCODE)movie);
 }
 

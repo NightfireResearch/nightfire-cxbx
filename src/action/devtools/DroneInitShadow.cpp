@@ -265,17 +265,20 @@ uint Random32() {
 
 // The skins NDrone2_DefaultInit tells apart, and some it does not
 const uint kSkins[] = {
-    HT_Skin_000036, HT_Skin_000037, HT_Skin_000038, HT_Skin_000039, HT_Skin_00003a, HT_Skin_AnimdebugRefSkin,
-    HT_Skin_SkinOwnDatums, HT_Skin_000030, HT_Skin_000004, HT_Skin_000006, HT_Skin_000008, HT_Skin_00004c,
-    HT_Skin_000025, HT_Skin_000087, HT_Skin_000090, HT_Skin_000093, HT_Skin_000054, HT_Skin_00006d, HT_Skin_00006e,
-    HT_Skin_00007e, HT_Skin_00008c, HT_Skin_0000b1, HT_Skin_0000b2, HT_Skin_00001b, HT_Skin_00004f, HT_Skin_00000e,
-    HT_Skin_00000f, HT_Skin_000015, HT_Skin_000020, HT_Skin_000022, HT_Skin_000023, HT_Skin_000024, HT_Skin_00003b,
-    HT_Skin_00003c, HT_Skin_000019, HT_Skin_000021, HT_Skin_00002b, HT_Skin_00002d, HT_Skin_000034, HT_Skin_00005e,
-    HT_Skin_000017, HT_Skin_000018, HT_Skin_00001e, HT_Skin_000035, HT_Skin_000012, HT_Skin_000013, HT_Skin_000014,
-    HT_Skin_000016, HT_Skin_00008f, HT_Skin_0000ac, HT_Skin_000026, HT_Skin_000066, HT_Skin_000010, HT_Skin_000011,
-    HT_Skin_000052, HT_Skin_000053, HT_Skin_000027, HT_Skin_000028, HT_Skin_000029, HT_Skin_00002a, HT_Skin_000031,
-    HT_Skin_000032, HT_Skin_000033, HT_Skin_SkinAstronaut, HT_Skin_000094, HT_Skin_Skin50000BA, HT_Skin_000001,
-    HT_Skin_000003, HT_Skin_0000bb, HT_Skin_000005, 0x06000000,
+    HT_Skin_Yakuza_Trenchcoat, HT_Skin_Yakcoatopen, HT_Skin_Yakuza_RedTrenchcoat, HT_Skin_Yakuza_Leather,
+    HT_Skin_Yakuza_Suit, HT_Skin_SnowGuard_Head4, HT_Skin_SnowGuard_Camera, HT_Skin_SnowGuard_Hat, HT_Skin_BlackOps,
+    HT_Skin_BlackOps_RedVest, HT_Skin_BlackOps_GasMask, HT_Skin_00004c, HT_Skin_Sniper, HT_Skin_Elite, HT_Skin_Elite_B,
+    HT_Skin_Elite_Beret, HT_Skin_HazMat_body, HT_Skin_Hazmat_heavy_1, HT_Skin_Hazmat_NoMask, HT_Skin_Hazmat_heavy_3,
+    HT_Skin_EliteCombat, HT_Skin_EliteCombat_B, HT_Skin_EliteCaptain, HT_Skin_Mayhew_Tux, HT_Skin_Mayhew_Shirt,
+    HT_Skin_BusinessWoman_A, HT_Skin_BusinessWoman_B, HT_Skin_Dominique, HT_Skin_PartyGirl01, HT_Skin_PartyGirl02,
+    HT_Skin_PartyGirl03, HT_Skin_PartyGirl04, HT_Skin_Zoe_PartyDress, HT_Skin_zoe_partydress_b,
+    HT_Skin_PartyGuest_OldMan, HT_Skin_PartyGuest_Male, HT_Skin_Servant, HT_Skin_00002d, HT_Skin_TowelGirl,
+    HT_Skin_Kiko_Combat, HT_Skin_Kiko_Jacket, HT_Skin_Kiko_Dress, HT_Skin_Ninja, HT_Skin_TruckDriver,
+    HT_Skin_CastleGuard_2, HT_Skin_CastleGuard, HT_Skin_CastleGuard_3, HT_Skin_Drake_Tux, HT_Skin_Drake_Spacesuit,
+    HT_Skin_Drake_SpacesuitBurnt, HT_Skin_Rook, HT_Skin_Rook_Scarred, HT_Skin_000010, HT_Skin_000011,
+    HT_Skin_Dominique_Jacket, HT_Skin_Drake_SuitA, HT_Skin_Guard_1, HT_Skin_Guard_2, HT_Skin_Guard_3, HT_Skin_Guard_4,
+    HT_Skin_Tech_a, HT_Skin_000032, HT_Skin_000033, HT_Skin_Astronaut, HT_Skin_000094, HT_Skin_Drake_Astronaut,
+    HT_Skin_000001, HT_Skin_Tree, HT_Skin_Mp_bond_spacesuit, HT_Skin_WineTruck, 0x06000000,
 };
 const int kNumSkins = sizeof(kSkins) / sizeof(kSkins[0]);
 
@@ -322,7 +325,8 @@ void RandomDrone(int i) {
     d->viewRange = PickFloat(ranges, 6);
     d->combatRanges[4] = PickFloat(ranges, 6);
     d->alertedFrame = ShadowRand(2) ? 0 : Random32();
-    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : ShadowRand(2) ? HT_Script_DeathScript21F : HT_Script_000100);
+    d->deathScript = (HASHCODE)(ShadowRand(3) ? 0 : ShadowRand(2) ? HT_Script_DeathScriptIcyQuip
+                                : HT_Script_Speech_CAS_IG_INT_GUARD13);
     d->flies = (uchar)(ShadowRand(4) == 0);
     static const uint classes[] = {0, 1, 0x13, 0x13, 0x18};
     d->skinClass = (short)Pick(classes, 5);
@@ -352,7 +356,7 @@ void RandomDrone(int i) {
     k->weapon = kWeapons[ShadowRand(kNumWeapons)];
     k->drawWeapon = Random32();
     k->grenades = (ShadowRand(9) << 4) | ShadowRand(16) | (ShadowRand(4) == 0 ? 0x100000 : 0);
-    static const uint deathScripts[] = {0, 0, HT_Script_DeathScript21F, HT_Script_000300};
+    static const uint deathScripts[] = {0, 0, HT_Script_DeathScriptIcyQuip, HT_Script_000300};
     k->deathScript = (HASHCODE)Pick(deathScripts, 4);
     k->combatRange = ShadowRand(7);
 }

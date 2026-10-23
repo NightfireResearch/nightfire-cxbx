@@ -2019,7 +2019,7 @@ uint32_t RunPageUpdate(bool original) {
     if (R(3) == 0) {
         M_CONTROL *c = &world.objects[R(OBJECTS)].c;
         c->type = ControlType_Memo;
-        c->hashcode = HT_MenuControl_HelpMemo;
+        c->hashcode = SUB_MENU_HELP_MEMO;
     }
     if (R(4) == 0)
         U32_AT(XbeOurs(0x0025fc18)) = P(&world.objects[R(OBJECTS)]);
@@ -2033,7 +2033,7 @@ uint32_t RunFindHelp(bool original) {
     if (page != NULL && R(2)) {
         M_CONTROL *c = (M_CONTROL *)LinkedList_GetIndex(&page->controls, R(3));
         c->type = ControlType_Memo;
-        c->hashcode = HT_MenuControl_HelpMemo;
+        c->hashcode = SUB_MENU_HELP_MEMO;
     }
     CDECL_VOID(0x00095990, Page_FindHelpControl, void (__cdecl *)(M_PAGE *), page);
     return 0;
@@ -2247,7 +2247,7 @@ void MakeMenuData(uint menu) {
                 // Sometimes a label over the whole screen
                 bool screen = R(8) == 0;
                 dword(0xfffffff9);
-                dword(R(4) ? 0x10000001u + R(6) : (R(2) ? HT_MenuControl_MovedControl : R(0)));
+                dword(R(4) ? 0x10000001u + R(6) : (R(2) ? SUB_MENU_BARS_SWEEP : R(0)));
                 byte((uint8_t)(screen ? ControlType_Label : R(4) ? R(14) : R(0x100)));
                 byte((uint8_t)R(4));
                 word((uint16_t)(screen ? -(int)R(2) : S(100)));

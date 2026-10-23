@@ -371,7 +371,7 @@ void RB_Update(obj_tag *obj) {
         float depth = (float)AbsFchs((double)Mat_Position(obj->transformMatrix)->y - cel->someMax.y);
         double random = Float_FRand(0.15f);
         lift.y = (float)((double)depth * rb->mass * 0.4f + random);
-        Gas_Init(obj->inCel, Mat_Position(obj->transformMatrix), NULL, NULL, 0.5f, 1.0f, HT_Entity_RippleGas, 1,
+        Gas_Init(obj->inCel, Mat_Position(obj->transformMatrix), NULL, NULL, 0.5f, 1.0f, HT_Entity_watereffect, 1,
                  0x40008080, 0x80808008, 0x10);
         Vec_Add2(&lift, &rb->impulse, &rb->impulse);    // RB_AddImpulsiveForce
     }

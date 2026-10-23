@@ -23,34 +23,34 @@
 // finishing the mission before (Menu_SetLevelBonus) and by secret codes (Menu_SpecialCodenameCheck).
 // XBE_GLOBAL(0x0017c580, 0x120)
 M_ITEM sp_level[12] = {
-    {HT_Texture_IconSpmapParisprelude, SPMAP_PARISPRELUDE_NAME, SPMAP_PARISPRELUDE_DESC, HT_Level_Driving_Paris, 1,
+    {HT_Texture_prev_paris, SPMAP_PARISPRELUDE_NAME, SPMAP_PARISPRELUDE_DESC, HT_Level_Driving_Paris, 1,
         TXT_NULL},
-    {HT_Texture_IconSpmapExchange, SPMAP_EXCHANGE_NAME, SPMAP_EXCHANGE_DESC, HT_Level_CastleExterior, 1, TXT_NULL},
-    {HT_Texture_IconSpmapAlpineescape, SPMAP_ALPINEESCAPE_NAME, SPMAP_ALPINEESCAPE_DESC, HT_Level_Driving_SnowMobile,
+    {HT_Texture_prev_castle, SPMAP_EXCHANGE_NAME, SPMAP_EXCHANGE_DESC, HT_Level_CastleExterior, 1, TXT_NULL},
+    {HT_Texture_prev_snowmobile, SPMAP_ALPINEESCAPE_NAME, SPMAP_ALPINEESCAPE_DESC, HT_Level_Driving_SnowMobile,
         0, SPMAP_LOCKED},
-    {HT_Texture_IconSpmapEnemiesvanquished, SPMAP_ENEMIESVANQUISHED_NAME, SPMAP_ENEMIESVANQUISHED_DESC,
+    {HT_Texture_prev_vanquish, SPMAP_ENEMIESVANQUISHED_NAME, SPMAP_ENEMIESVANQUISHED_DESC,
         HT_Level_Driving_Alps, 0, SPMAP_LOCKED},
-    {HT_Texture_IconSpmapDoublecross, SPMAP_DOUBLECROSS_NAME, SPMAP_DOUBLECROSS_DESC, HT_Level_HendersonA, 0,
+    {HT_Texture_prev_henderson, SPMAP_DOUBLECROSS_NAME, SPMAP_DOUBLECROSS_DESC, HT_Level_HendersonA, 0,
         SPMAP_LOCKED},
-    {HT_Texture_IconSpmapNightshift, SPMAP_NIGHTSHIFT_NAME, SPMAP_NIGHTSHIFT_DESC, HT_Level_TowerA, 0, SPMAP_LOCKED},
-    {HT_Texture_IconSpmapChainreaction, SPMAP_CHAINREACTION_NAME, SPMAP_CHAINREACTION_DESC, HT_Level_PowerStationA1, 0,
+    {HT_Texture_prev_tower1, SPMAP_NIGHTSHIFT_NAME, SPMAP_NIGHTSHIFT_DESC, HT_Level_TowerA, 0, SPMAP_LOCKED},
+    {HT_Texture_prev_powerstation, SPMAP_CHAINREACTION_NAME, SPMAP_CHAINREACTION_DESC, HT_Level_PowerStationA1, 0,
         SPMAP_LOCKED},
-    {HT_Texture_IconSpmapPhoenixfire, SPMAP_PHOENIXFIRE_NAME, SPMAP_PHOENIXFIRE_DESC, HT_Level_Tower2A, 0,
+    {HT_Texture_prev_tower2, SPMAP_PHOENIXFIRE_NAME, SPMAP_PHOENIXFIRE_DESC, HT_Level_Tower2A, 0,
         SPMAP_LOCKED},
-    {HT_Texture_IconSpmapDeepdescent, SPMAP_DEEPDESCENT_NAME, SPMAP_DEEPDESCENT_DESC, HT_Level_Driving_Underwater, 0,
+    {HT_Texture_prev_infiltration, SPMAP_DEEPDESCENT_NAME, SPMAP_DEEPDESCENT_DESC, HT_Level_Driving_Underwater, 0,
         SPMAP_LOCKED},
-    {HT_Texture_IconSpmapIslandinfiltration, SPMAP_ISLANDINFILTRATION_NAME, SPMAP_ISLANDINFILTRATION_DESC,
+    {HT_Texture_prev_jungle, SPMAP_ISLANDINFILTRATION_NAME, SPMAP_ISLANDINFILTRATION_DESC,
         HT_Level_Driving_JungleA, 0, SPMAP_LOCKED},
-    {HT_Texture_IconSpmapCountdown, SPMAP_COUNTDOWN_NAME, SPMAP_COUNTDOWN_DESC, HT_Level_EvilBase, 0, SPMAP_LOCKED},
-    {HT_Texture_IconSpmapEquinox, SPMAP_EQUINOX_NAME, SPMAP_EQUINOX_DESC, HT_Level_SpaceStationD, 0, SPMAP_LOCKED},
+    {HT_Texture_prev_countdown, SPMAP_COUNTDOWN_NAME, SPMAP_COUNTDOWN_DESC, HT_Level_EvilBase, 0, SPMAP_LOCKED},
+    {HT_Texture_prev_equinox, SPMAP_EQUINOX_NAME, SPMAP_EQUINOX_DESC, HT_Level_SpaceStationD, 0, SPMAP_LOCKED},
 };
 
 // difficulty (ui.h): the identifier is GameState.difficultyModifier.
 // XBE_GLOBAL(0x0017c760, 0x48)
 M_ITEM difficulty[3] = {
-    {HT_Texture_IconDifficultyOperative, DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE_DESC, 1, 1, TXT_NULL},
-    {HT_Texture_IconDifficultyAgent, DIFFICULTY_AGENT, DIFFICULTY_AGENT_DESC, 2, 1, TXT_NULL},
-    {HT_Texture_IconDifficulty00AGENT, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},
+    {HT_Texture_dt_operative, DIFFICULTY_OPERATIVE, DIFFICULTY_OPERATIVE_DESC, 1, 1, TXT_NULL},
+    {HT_Texture_dt_agent, DIFFICULTY_AGENT, DIFFICULTY_AGENT_DESC, 2, 1, TXT_NULL},
+    {HT_Texture_dt_00agent, DIFFICULTY_00AGENT, DIFFICULTY_00AGENT_DESC, 3, 1, TXT_NULL},
 };
 
 extern char menu_unlock_everything;
@@ -264,32 +264,32 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                     medal = 4;
                     title = TXT_PLATINUM_WON;
                     targetName = TXT_PLATINUM_TARGET;
-                    icon = HT_Texture_IconMedalPlatinum;
+                    icon = HT_Texture_medal_platinum;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreGold) {
                     medal = 3;
                     title = TXT_GOLD_WON;
                     targetName = TXT_PLATINUM_TARGET;
-                    icon = HT_Texture_IconMedalGold;
+                    icon = HT_Texture_medal_gold;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreSilver) {
                     medal = 2;
                     title = TXT_SILVER_WON;
                     targetName = TXT_GOLD_TARGET;
-                    icon = HT_Texture_IconMedalSilver;
+                    icon = HT_Texture_medal_silver;
                     SeparateNumber(results_score->thresholdScoreGold, results_target_text);
                 } else if (score >= results_score->thresholdScoreBronze) {
                     medal = 1;
                     title = TXT_BRONZE_WON;
                     targetName = TXT_SILVER_TARGET;
-                    icon = HT_Texture_IconMedalBronze;
+                    icon = HT_Texture_medal_bronze;
                     SeparateNumber(results_score->thresholdScoreSilver, results_target_text);
                 } else {
                     // no medal: the title names the codename instead
                     SeparateNumber(results_score->thresholdScoreBronze, results_target_text);
                     medal = MEDAL_NONE;
                     targetName = TXT_BRONZE_TARGET;
-                    icon = HT_Texture_IconNoMedal;
+                    icon = HT_Texture_medal_none;
                     if (ls.slot < CODENAME_SLOTS_DEFAULT) {
                         const char *agent = Txt_BindLabel(TXT_AGENT, 0);
                         sprintf(results_title_text, Txt_BindLabel(TXT_NICE_WORK, 0), agent);

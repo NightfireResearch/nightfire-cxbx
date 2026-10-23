@@ -44,7 +44,7 @@ SpriteInfo menu_cursor = {
     .spritesheetWidth = 1,
     .spritesheetHeight = 1,
     .textRef = (Action_TranslatedText)0xffffffff,
-    .textureHashcode = HT_Texture_StripeTexture,
+    .textureHashcode = HT_Texture_final_controls_complete,
 };
 
 // The message shown while a pad is out (MenuManager_Monitor): its state, the player whose pad it is, whether the
@@ -265,7 +265,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
                     create.height >= SCREEN_HEIGHT) {
                     create.width = SCREEN_WIDTH;
                     create.height = SCREEN_HEIGHT;
-                } else if (create.hashcode == HT_MenuControl_MovedControl) {
+                } else if (create.hashcode == SUB_MENU_BARS_SWEEP) {
                     create.x = 0x181;
                     create.y = 0xe2;
                 }
@@ -528,17 +528,17 @@ void MenuManager_Monitor(void) {
                 GS_PauseGame(true);
                 MenuManager_Create(HT_Menu_ControllerMenu, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1, 2);
                 Manager_SendMessage(&manager[0], MessageType_LockInput, 1, 0);
-                __Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_SetText, (intptr_t)controller_text, 0);
+                __Menu_Send(0, SUB_P_MESSAGEBOX_TEXT, MessageType_SetText, (intptr_t)controller_text, 0);
                 controller_state = 2;
                 break;
             case 2: {
                 // The box fitted round the text and the options
                 sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0),
                         PlayerInputs[controller_player].controllerPort + 1);
-                __Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_SetText, (intptr_t)controller_text, 0);
-                M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, HT_MenuControl_ControllerBox, MessageType_GetControl, 0,
+                __Menu_Send(0, SUB_P_MESSAGEBOX_TEXT, MessageType_SetText, (intptr_t)controller_text, 0);
+                M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, SUB_P_MESSAGEBOX_BOX, MessageType_GetControl, 0,
                                                           0);
-                M_MEMO *memo = (M_MEMO *)__Menu_Send(0, HT_MenuControl_ControllerMemo, MessageType_GetControl, 0, 0);
+                M_MEMO *memo = (M_MEMO *)__Menu_Send(0, SUB_P_MESSAGEBOX_TEXT, MessageType_GetControl, 0, 0);
                 __Menu_SendMessage(&memo->control, MessageType_MemoSetOption282, 0, 0);
                 __Menu_SendMessage(&memo->control, MessageType_SetLineSpacing, 100, 0);
                 uchar lines = __Menu_SendMessage(&memo->control, MessageType_MemoGetNumLines, 0, 0);

@@ -142,7 +142,7 @@ void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags) {
         switch_channels[destroy->channelOut] = 1;
         obj->objectType = OBJECTTYPE_DELETED;
         if (GameState.CurrentLevelHashcode == HT_Level_HendersonB && obj->objGraphics != NULL
-            && obj->objGraphics == hashtable_getitem(HT_Entity_DestroySceneryModel)) {
+            && obj->objGraphics == hashtable_getitem(HT_Entity_Computer2)) {
             PlrStat_LogShotHitScenery(0);
         }
     }
@@ -155,13 +155,13 @@ void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags) {
     uint size;
     if (kind == 1) {
         // The explosions of the kinds of key 2: 1, 2 and the rest
-        script = HT_Script_DestroyExplosion1;
+        script = HT_Script_ExplosionSmallElectrical;
         size = 4;
     } else if (kind == 2) {
-        script = HT_Script_DestroyExplosion2;
+        script = HT_Script_BlastFrames;
         size = 2;
     } else {
-        script = HT_Script_BulletExplosion;
+        script = HT_Script_ExplosionBlastRadius;
         size = 3;
     }
     Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, (float)size * obj->radius, destroy->blastRadius, script,

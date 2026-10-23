@@ -721,12 +721,12 @@ void DroneAnim_EventFunc(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script
         DroneWeap_ChangeWeapon(&dcv, secondWeapon);
         break;
     case 3:
-        AnimDatumSetEntity(obj, 0x28, HT_Entity_EntitySwapped, 0xff);
+        AnimDatumSetEntity(obj, 0x28, HT_Entity_Ninja_sword_3rd_LOD0, 0xff);
         AnimDatumSetEntity(obj, 100, HASHCODE_NONE, 0xff);
         break;
     case 4:
         AnimDatumSetEntity(obj, 0x28, HASHCODE_NONE, 0xff);
-        AnimDatumSetEntity(obj, 100, HT_Entity_EntitySwapped, 0xff);
+        AnimDatumSetEntity(obj, 100, HT_Entity_Ninja_sword_3rd_LOD0, 0xff);
         break;
     case 5:
     case 10:

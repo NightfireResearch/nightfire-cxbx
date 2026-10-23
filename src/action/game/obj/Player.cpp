@@ -325,7 +325,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     sightObj->tweakR = 0x7f;
     sightObj->tweakG = 0;
     sightObj->tweakB = 0;
-    hashtable_set_object_to_entity_gfx(sightObj, HT_Entity_000132);
+    hashtable_set_object_to_entity_gfx(sightObj, HT_Entity_gunsight3d);
     View_SetDrawInThisViewOnly(sightObj, viewerNum);
     blData->sightObj = sightObj;
   
@@ -389,7 +389,7 @@ void Player_SetupLaser(BLData *param_1, _VECTOR *targetPos) {
     
     // Strong or weak beam ("lazer" 0x2000131 or "uv_lazer" 0x20006c1)
     HASHCODE hc = (glb_players[param_1->playerNum]->animState->currentWeaponId == 0x4e)
-        ? HT_Entity_LaserBeamGlistNightvision : HT_Entity_0006c1;
+        ? HT_Entity_lazer : HT_Entity_uv_lazer;
 
     hashtable_set_object_to_entity_gfx(poVar1, hc);
     View_SetDrawInAllViews(poVar1);
@@ -425,13 +425,13 @@ void Player_SetupTaser(BLData *blData, _VECTOR *target) {
     FractalThing(blData->beamObjs, 0, segments, &start, target, 1);
     for (short i = 0; i < segments - 1; i++) {
         obj_tag *beam = blData->beamObjs[i];
-        hashtable_set_object_to_entity_gfx(beam, HT_Entity_00026d);
+        hashtable_set_object_to_entity_gfx(beam, HT_Entity_taser);
         View_SetDrawInAllViews(beam);
         PositionBeam(beam, &beam->position, &blData->beamObjs[i + 1]->position);
         beam->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
     }
     obj_tag *last = blData->beamObjs[segments - 1];
-    hashtable_set_object_to_entity_gfx(last, HT_Entity_00026d);
+    hashtable_set_object_to_entity_gfx(last, HT_Entity_taser);
     View_SetDrawInAllViews(last);
     PositionBeam(last, &last->position, target);
     last->tweakA = (uchar)(Rand_Rand(0x80) + 0x7f);
@@ -1157,9 +1157,9 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
         // The space station levels (0x7000018-0x700001a have no HT_Level_ names yet): no RamLoad, only weapon 0x33,
         // and the armour set to 50
-        case HT_Level_000018:
-        case HT_Level_000019:
-        case HT_Level_00001a:
+        case HT_Level_SpaceStationA:
+        case HT_Level_SpaceStationB:
+        case HT_Level_SpaceStationC:
         case HT_Level_SpaceStationD:
             Player_InitAmmoWeapons(player);
             Player_EquipWeapon(blData, Weap_LaserBeamFromSamurai, EQUIP_FULL_AMMO);
@@ -1692,7 +1692,7 @@ void Player_PositionCamera(obj_tag *player) {
 
             celglist_tag *model = device->objGraphics;
             float height;
-            if (model == hashtable_hashcode_to_celglist(HT_Entity_LittleNellieBody)) {
+            if (model == hashtable_hashcode_to_celglist(HT_Entity_LittleNellie)) {
                 height = 0.1f;
             }
             else {
@@ -1830,52 +1830,65 @@ static HASHCODE PlayerAnimSetSinglePlayer[2 * PLAYER_ANIMSET_LIST_SIZE] = {
 };
 // XBE_GLOBAL(0x0017e6d4, 0x48)
 static HASHCODE PlayerAnimSetClass3[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_AnimStartMp, HT_Script_0001db, HT_Script_0001d9, (HASHCODE)0, HT_Script_00097c,
-    HT_Script_00097c, HT_Script_00097d, HT_Script_00097d, (HASHCODE)0, HT_Script_0001d7,
-    HT_Script_0008f9, HT_Script_0008f9, (HASHCODE)0, HT_Script_000914, HT_Script_000914,
-    HT_Script_000915, HT_Script_000915,
+    HT_Script_PlayerRifle_Idle, HT_Script_PlayerRifle_Walk, HT_Script_PlayerRifle_Run, (HASHCODE)0,
+    HT_Script_PlayerRifle_Strafe1, HT_Script_PlayerRifle_Strafe1, HT_Script_PlayerRifle_Strafe2,
+    HT_Script_PlayerRifle_Strafe2, (HASHCODE)0, HT_Script_PlayerRifle_CrouchIdle, HT_Script_PlayerRifle_CrouchWalk,
+    HT_Script_PlayerRifle_CrouchWalk, (HASHCODE)0, HT_Script_PlayerRifle_CrouchStrafe1,
+    HT_Script_PlayerRifle_CrouchStrafe1, HT_Script_PlayerRifle_CrouchStrafe2, HT_Script_PlayerRifle_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e71c, 0x48)
 static HASHCODE PlayerAnimSetDefault[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0001f1, HT_Script_0001f2, HT_Script_0001f0, (HASHCODE)0, HT_Script_0009e4,
-    HT_Script_0009e4, HT_Script_0009e5, HT_Script_0009e5, (HASHCODE)0, HT_Script_0001ee,
-    HT_Script_000931, HT_Script_000931, (HASHCODE)0, HT_Script_000930, HT_Script_000930,
-    HT_Script_00092f, HT_Script_00092f,
+    HT_Script_PlayerUnarmed_Idle, HT_Script_PlayerUnarmed_Walk, HT_Script_PlayerUnarmed_Run, (HASHCODE)0,
+    HT_Script_PlayerUnarmed_Strafe1, HT_Script_PlayerUnarmed_Strafe1, HT_Script_PlayerUnarmed_Strafe2,
+    HT_Script_PlayerUnarmed_Strafe2, (HASHCODE)0, HT_Script_PlayerUnarmed_CrouchIdle,
+    HT_Script_PlayerUnarmed_CrouchWalk, HT_Script_PlayerUnarmed_CrouchWalk, (HASHCODE)0,
+    HT_Script_PlayerUnarmed_CrouchStrafe1, HT_Script_PlayerUnarmed_CrouchStrafe1, HT_Script_PlayerUnarmed_CrouchStrafe2,
+    HT_Script_PlayerUnarmed_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e764, 0x48)
 static HASHCODE PlayerAnimSetClass1[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0009dc, HT_Script_0009de, HT_Script_0009db, (HASHCODE)0, HT_Script_0009d7,
-    HT_Script_0009d7, HT_Script_0009d8, HT_Script_0009d8, (HASHCODE)0, HT_Script_0009d9,
-    HT_Script_0009f5, HT_Script_0009f5, (HASHCODE)0, HT_Script_0009f3, HT_Script_0009f3,
-    HT_Script_0009f4, HT_Script_0009f4,
+    HT_Script_PlayerHandgun_Idle, HT_Script_PlayerHandgun_Walk, HT_Script_PlayerHandgun_Run, (HASHCODE)0,
+    HT_Script_PlayerHandgun_Strafe1, HT_Script_PlayerHandgun_Strafe1, HT_Script_PlayerHandgun_Strafe2,
+    HT_Script_PlayerHandgun_Strafe2, (HASHCODE)0, HT_Script_PlayerHandgun_CrouchIdle,
+    HT_Script_PlayerHandgun_CrouchWalk, HT_Script_PlayerHandgun_CrouchWalk, (HASHCODE)0,
+    HT_Script_PlayerHandgun_CrouchStrafe1, HT_Script_PlayerHandgun_CrouchStrafe1, HT_Script_PlayerHandgun_CrouchStrafe2,
+    HT_Script_PlayerHandgun_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e7ac, 0x48)
 static HASHCODE PlayerAnimSetClass5[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0001e6, HT_Script_0001e7, HT_Script_0001e5, (HASHCODE)0, HT_Script_0009df,
-    HT_Script_0009df, HT_Script_0009e0, HT_Script_0009e0, (HASHCODE)0, HT_Script_0001e3,
-    HT_Script_00091f, HT_Script_00091f, (HASHCODE)0, HT_Script_00091e, HT_Script_00091e,
-    HT_Script_00091d, HT_Script_00091d,
+    HT_Script_PlayerLauncher_Idle, HT_Script_PlayerLauncher_Walk, HT_Script_PlayerLauncher_Run, (HASHCODE)0,
+    HT_Script_PlayerLauncher_Strafe1, HT_Script_PlayerLauncher_Strafe1, HT_Script_PlayerLauncher_Strafe2,
+    HT_Script_PlayerLauncher_Strafe2, (HASHCODE)0, HT_Script_PlayerLauncher_CrouchIdle,
+    HT_Script_PlayerLauncher_CrouchWalk, HT_Script_PlayerLauncher_CrouchWalk, (HASHCODE)0,
+    HT_Script_PlayerLauncher_CrouchStrafe1, HT_Script_PlayerLauncher_CrouchStrafe1,
+    HT_Script_PlayerLauncher_CrouchStrafe2, HT_Script_PlayerLauncher_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e7f4, 0x48)
 static HASHCODE PlayerAnimSetClass4[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0001ce, HT_Script_0001cf, HT_Script_0001cd, (HASHCODE)0, HT_Script_0009fc,
-    HT_Script_0009fc, HT_Script_0009fd, HT_Script_0009fd, (HASHCODE)0, HT_Script_0001cb,
-    HT_Script_0009d2, HT_Script_0009d2, (HASHCODE)0, HT_Script_0009d1, HT_Script_0009d1,
-    HT_Script_0009d0, HT_Script_0009d0,
+    HT_Script_PlayerTwoHandedHandgun_Idle, HT_Script_PlayerTwoHandedHandgun_Walk, HT_Script_PlayerTwoHandedHandgun_Run,
+    (HASHCODE)0, HT_Script_PlayerTwoHandedHandgun_Strafe1, HT_Script_PlayerTwoHandedHandgun_Strafe1,
+    HT_Script_PlayerTwoHandedHandgun_Strafe2, HT_Script_PlayerTwoHandedHandgun_Strafe2, (HASHCODE)0,
+    HT_Script_PlayerTwoHandedHandgun_CrouchIdle, HT_Script_PlayerTwoHandedHandgun_CrouchWalk,
+    HT_Script_PlayerTwoHandedHandgun_CrouchWalk, (HASHCODE)0, HT_Script_PlayerTwoHandedHandgun_CrouchStrafe1,
+    HT_Script_PlayerTwoHandedHandgun_CrouchStrafe1, HT_Script_PlayerTwoHandedHandgun_CrouchStrafe2,
+    HT_Script_PlayerTwoHandedHandgun_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e83c, 0x48)
 static HASHCODE PlayerAnimSetClass6[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0009fe, HT_Script_0009b5, HT_Script_0009b7, (HASHCODE)0, HT_Script_0009ba,
-    HT_Script_0009ba, HT_Script_0009bb, HT_Script_0009bb, (HASHCODE)0, HT_Script_0009bc,
-    HT_Script_0009d3, HT_Script_0009d3, (HASHCODE)0, HT_Script_0009d4, HT_Script_0009d4,
-    HT_Script_0009d5, HT_Script_0009d5,
+    HT_Script_PlayerTwinHandguns_Idle, HT_Script_PlayerTwinHandguns_Walk, HT_Script_PlayerTwinHandguns_Run, (HASHCODE)0,
+    HT_Script_PlayerTwinHandguns_Strafe1, HT_Script_PlayerTwinHandguns_Strafe1, HT_Script_PlayerTwinHandguns_Strafe2,
+    HT_Script_PlayerTwinHandguns_Strafe2, (HASHCODE)0, HT_Script_PlayerTwinHandguns_CrouchIdle,
+    HT_Script_PlayerTwinHandguns_CrouchWalk, HT_Script_PlayerTwinHandguns_CrouchWalk, (HASHCODE)0,
+    HT_Script_PlayerTwinHandguns_CrouchStrafe1, HT_Script_PlayerTwinHandguns_CrouchStrafe1,
+    HT_Script_PlayerTwinHandguns_CrouchStrafe2, HT_Script_PlayerTwinHandguns_CrouchStrafe2,
 };
 // XBE_GLOBAL(0x0017e884, 0x48)
 static HASHCODE PlayerAnimSetClass2[2 * PLAYER_ANIMSET_LIST_SIZE] = {
-    HT_Script_0009b0, HT_Script_0009b2, HT_Script_0009af, (HASHCODE)0, HT_Script_0009b3,
-    HT_Script_0009b3, HT_Script_0009b4, HT_Script_0009b4, (HASHCODE)0, HT_Script_0009ad,
-    HT_Script_0009aa, HT_Script_0009aa, (HASHCODE)0, HT_Script_0009ab, HT_Script_0009ab,
-    HT_Script_0009ac, HT_Script_0009ac,
+    HT_Script_PlayerSMG_Idle, HT_Script_PlayerSMG_Walk, HT_Script_PlayerSMG_Run, (HASHCODE)0,
+    HT_Script_PlayerSMG_Strafe1, HT_Script_PlayerSMG_Strafe1, HT_Script_PlayerSMG_Strafe2, HT_Script_PlayerSMG_Strafe2,
+    (HASHCODE)0, HT_Script_PlayerSMG_CrouchIdle, HT_Script_PlayerSMG_CrouchWalk, HT_Script_PlayerSMG_CrouchWalk,
+    (HASHCODE)0, HT_Script_PlayerSMG_CrouchStrafe1, HT_Script_PlayerSMG_CrouchStrafe1,
+    HT_Script_PlayerSMG_CrouchStrafe2, HT_Script_PlayerSMG_CrouchStrafe2,
 };
 static HASHCODE *const PlayerAnimSetByClass[6] = {
     PlayerAnimSetClass1, PlayerAnimSetClass2, PlayerAnimSetClass3,
@@ -1924,12 +1937,14 @@ void PlayerAnimSetInit(obj_tag *player) {
 // The scripts that stand up from a crouch and crouch down, by weapon_definition_tag::animSet (1 to 6), and for any
 // other; class 3 in single player
 static const HASHCODE PlayerCrouch2StandScripts[7] = {
-    HT_Script_0009da, HT_Script_0009ae, HT_Script_0001dd,
-    HT_Script_0001d1, HT_Script_0001e9, HT_Script_0009b6, HT_Script_0001f4,
+    HT_Script_PlayerHandgun_CrouchToStand, HT_Script_PlayerSMG_CrouchToStand, HT_Script_PlayerRifle_CrouchToStand,
+    HT_Script_PlayerTwoHandedHandgun_CrouchToStand, HT_Script_PlayerLauncher_CrouchToStand,
+    HT_Script_PlayerTwinHandguns_CrouchToStand, HT_Script_PlayerUnarmed_CrouchToStand,
 };
 static const HASHCODE PlayerStand2CrouchScripts[7] = {
-    HT_Script_0009dd, HT_Script_0009b1, HT_Script_0001dc,
-    HT_Script_0001d0, HT_Script_0001e8, HT_Script_0009b9, HT_Script_0001f3,
+    HT_Script_PlayerHandgun_StandToCrouch, HT_Script_PlayerSMG_StandToCrouch, HT_Script_PlayerRifle_StandToCrouch,
+    HT_Script_PlayerTwoHandedHandgun_StandToCrouch, HT_Script_PlayerLauncher_StandToCrouch,
+    HT_Script_PlayerTwinHandguns_StandToCrouch, HT_Script_PlayerUnarmed_StandToCrouch,
 };
 
 // Plays the change of stance for the held weapon, at four frames a tick
@@ -1961,9 +1976,9 @@ void PlayerAnimSetInitDead(obj_tag *player) {
     ((BLData *)player->extraObjectData)->animSet = NULL;
     AnimSetDeleteAll(player);
     if (GRAVITY_VECTOR.y == 0.0f)
-        AnimScriptAdd(player, HT_Script_0008e0);
+        AnimScriptAdd(player, HT_Script_PlayerDeadZeroG);
     else
-        AnimScriptAdd(player, HT_Script_000151);
+        AnimScriptAdd(player, HT_Script_PlayerDead);
 }
 
 // Returns the substate the player was in. Flying and zero G keep the matrix's rotation; everything else stands the
@@ -3250,10 +3265,10 @@ void Player_CollisionHandler(obj_tag *player) {
 // The fists' models, by BLData::punchSkin
 // XBE_GLOBAL(0x0017e8e8, 0x10) readonly relocate
 HASHCODE PunchSkin[4] = {
-    HT_Skin_0000ab,
-    HT_Skin_000099,
-    HT_Skin_00003d,
-    HT_Skin_0000a1,
+    HT_Skin_Fists_Combat,
+    HT_Skin_Fists_BlueSuit,
+    HT_Skin_Fists_Tux,
+    HT_Skin_Fists_Spacesuit,
 };
 
 // The start position's parameters as Player_Init reads them
@@ -3342,19 +3357,19 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
         switch (GameState.CurrentLevelHashcode) {
             case HT_Level_HendersonA: case HT_Level_HendersonB: case HT_Level_HendersonC: case HT_Level_HendersonD:
                 // The player's skins in single player, and the fists that go with them
-                skin = HT_Skin_SkinLevels1To4;
+                skin = HT_Skin_Bond_BlueSuit;
                 punchSkin = 1;
                 break;
             case HT_Level_CastleIndoors1: case HT_Level_CastleIndoors2:
-                skin = HT_Skin_SkinLevels78;
+                skin = HT_Skin_Bond_Tux;
                 punchSkin = 2;
                 break;
             case HT_Level_SpaceStationD:
-                skin = HT_Skin_SkinLevel1B;
+                skin = HT_Skin_Bond_Spacesuit;
                 punchSkin = 3;
                 break;
             default:
-                skin = HT_Skin_SkinBond;
+                skin = HT_Skin_Bond_Combat;
                 punchSkin = 0;
                 break;
         }
@@ -3365,7 +3380,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
         MP_skin *mpSkin = &MP_skins[MPSettings.Player[num].SkinNum];
         skin = mpSkin->skinHashcode;
         punchSkin = (char)mpSkin->handType;
-        weapon_data[1].weaponModelHashcode = HT_Skin_SkinMpFists;
+        weapon_data[1].weaponModelHashcode = HT_Skin_Bond_hands_malewhite;
         weapon_data[0x37].offsetToNextAltFireVariant = 2;
     }
     blData->punchSkin = punchSkin;
@@ -3411,7 +3426,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     GRAVITY_VECTOR.z = 0.0f;
     if (MPSettings.isMultiplayer != 0) {
         Player_StandAtNewPosition(player, &player->position, &player->rotation, MovementType_Walk);
-        AnimScriptAdd(player, HT_Script_AnimStartMp);
+        AnimScriptAdd(player, HT_Script_PlayerRifle_Idle);
     }
     else {
         switch (params->startState) {

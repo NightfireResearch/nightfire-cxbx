@@ -1042,11 +1042,15 @@ int SomeSection(void) {
 
 // A cut scene one of the level functions looks for
 uint32_t SomeScene(void) {
-    static const uint32_t scenes[] = {HT_Script_000087, HT_Script_000084, HT_Script_00007f, HT_Script_000082,
-                                      HT_Script_000994, HT_Script_000071, HT_Script_000072, HT_Script_000073,
-                                      HT_Script_000077, HT_Script_0004f9, HT_Script_0004fa, HT_Script_00068f,
-                                      HT_Script_0006d3, HT_Script_000848, HT_Script_00062f, HT_Script_000833,
-                                      HT_Script_000631, HT_Script_000632, HT_Script_00085c};
+    static const uint32_t scenes[] = {HT_Script_NIS_MeetMayhew, HT_Script_NIS_BunkerObjectives, HT_Script_NIS_BathHouse,
+                                      HT_Script_NIS_NinjaAttack, HT_Script_Scriptplayer_SC10,
+                                      HT_Script_NIS_Castle_tux_change, HT_Script_NIS_Engagement,
+                                      HT_Script_NIS_M1_library, HT_Script_NIS_CastleMeeting,
+                                      HT_Script_NIS_InfiltrateBuzz, HT_Script_NIS_InfiltrateStair,
+                                      HT_Script_NIS_RookRetreat, HT_Script_NIS_ElevatorPlummet,
+                                      HT_Script_NIS_RookReveal, HT_Script_NIS_KikoCommandCentre,
+                                      HT_Script_NIS_KikoArrival, HT_Script_NIS_BondDropped, HT_Script_NIS_KikoFlees,
+                                      HT_Script_NIS_LaserTaunt};
     return scenes[R(COUNT(scenes))];
 }
 

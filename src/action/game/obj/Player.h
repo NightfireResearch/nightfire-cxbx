@@ -212,7 +212,7 @@ typedef struct BLData {
     short previousSubState; //0x8d2
     short remoteControlTimer; // 0x8d4 - frames before a remote-controlled device lets go, when set
     short pauseMenu; // 0x8d6 - the menu manager Player_Update opened for the pause menu
-    // Frames left of the "Bond moment" icon (HT_Texture_GOLD007BONUS, the health pane's sprite 16): it spins in while
+    // Frames left of the "Bond moment" icon (HT_Texture_gold007, the health pane's sprite 16): it spins in while
     // above 100, then sits at the top of the screen; HUD_UpdateHealthPane counts it down by FRAME_RATE_MUL.
     short bondMomentTimer; // 0x8d8
     // 0 while Player_Disable has the player out of play, 2 from Player_Enable; HUD_MonitorNightSight does

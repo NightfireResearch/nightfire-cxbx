@@ -287,7 +287,8 @@ void SP_Update(obj_tag* obj) {
                     okToStart = false;
                 }
 
-                if ((scriptPlayer->scriptHashcodes[0] == HT_Script_000994 && Get_Music_Event(2) != 0) || !okToStart) {
+                if ((scriptPlayer->scriptHashcodes[0] == HT_Script_Scriptplayer_SC10 && Get_Music_Event(2) != 0)
+                    || !okToStart) {
                     scriptPlayer->state = SP_State_Finished;
                     break;
                 }
@@ -403,8 +404,9 @@ void SP_Update(obj_tag* obj) {
             scriptPlayer->accumulatedDamage += damage;
 
             HASHCODE primaryHashcode = scriptPlayer->scriptHashcodes[0];
-            if (wasPlayerHit && (primaryHashcode == HT_Script_0007e2 ||
-                (primaryHashcode > HT_Script_0007e3 && primaryHashcode < HT_Script_0007eb))) {
+            if (wasPlayerHit && (primaryHashcode == HT_Script_MissileDissarm ||
+                (primaryHashcode > HT_Script_BigLaserBeamFire
+                 && primaryHashcode < HT_Script_PhoenixSamurai_Beam_Fire))) {
                 PlrStat_LogShotHitScenery(0);
             }
 

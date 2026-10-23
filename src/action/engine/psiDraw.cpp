@@ -584,7 +584,8 @@ static ShardVertex ShadowVertices[SHADOW_MAX_TRIANGLES * 3];
 // Called only by psiDrawSkinObjectMatrix, so not injected (the original takes arguments in registers)
 void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     uint32_t level = (uint32_t)GameState.CurrentLevelHashcode;
-    if (level == HT_Level_AllCharacters || level == HT_Level_AllCharacters2 || (uint32_t)ScriptCam == HT_Script_00068f)
+    if (level == HT_Level_AllCharacters || level == HT_Level_AllCharacters2
+        || (uint32_t)ScriptCam == HT_Script_NIS_RookRetreat)
         return;
     float dx = ViewMatrix[12] - x, dy = ViewMatrix[13] - y, dz = ViewMatrix[14] - z;
     float distance2 = dz * dz + dy * dy + dx * dx;
@@ -607,7 +608,7 @@ void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     D3DMATRIX lookDown, projection;
     MatrixLookAt(&lookDown, from.x, from.y + 20.0f, from.z, from.x, from.y, from.z, 1.0f, 0.0f, 0.0f);
     createProjectionMatrix(&projection, 1.0f, 7.0f, 0.0f, 1.0f, 200.0f);
-    void *blob = hashtable_getitem(HT_Texture_000047);
+    void *blob = hashtable_getitem(HT_Texture_shadow);
     int blobTexture = blob != NULL ? *(int *)blob : 0;
     int shadowTexture = CurrentFrameSlot(blobTexture);
     bool rendered = false;

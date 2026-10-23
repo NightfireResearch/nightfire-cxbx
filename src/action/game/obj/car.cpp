@@ -88,8 +88,8 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
         turretHashcode = HT_Entity_RCCarTurret;
         barrelHashcode = HT_Entity_RCCarBarrel;
     } else {
-        turretHashcode = HT_Entity_LittleNellieBlades;
-        barrelHashcode = HT_Entity_LittleNellieProp;
+        turretHashcode = HT_Entity_NellieBlades;
+        barrelHashcode = HT_Entity_NellieProp;
     }
 
     tankInfo->turretGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, hashtable_hashcode_to_celglist(turretHashcode), baseObj, 0, 4, 1.0, 0x00, 0xff, 0xff, 0xff);
@@ -202,7 +202,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
         // Flying above the ground at the given location0
         baseObj->transformMatrix.m[0xd] += 1.5f;
         baseObj->position.y += 1.5f;
-        hashtable_set_object_to_entity_gfx(baseObj, HT_Entity_LittleNellieBody);
+        hashtable_set_object_to_entity_gfx(baseObj, HT_Entity_LittleNellie);
     }
 
     Car_InitBits(tankInfo, baseObj);
@@ -272,7 +272,7 @@ void Car_Deactivate(obj_tag *carObj) {
       carInfo->soundHandle = NULL;
     }
 
-    Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, HT_Script_BulletExplosion, 50.0, 0xff,
+    Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, HT_Script_ExplosionBlastRadius, 50.0, 0xff,
                    0xff, 100, carObj, 6);
     Vec_Zero(&carInfo->aim);
     Vec_Zero(&carInfo->fall);

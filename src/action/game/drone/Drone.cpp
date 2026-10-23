@@ -144,10 +144,10 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
         return;
 
     NPCGlobals.enabledFrame = GameState.NumFramesUnpaused;
-    if (hashcode == HT_Script_00001b) {
+    if (hashcode == HT_Script_DronesAttackAfter) {
         Drone_Message(NULL, DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8);
         Music_Event(0xf, 1);
-    } else if (hashcode == HT_Script_00002e) {
+    } else if (hashcode == HT_Script_DronesEnableAfter) {
         for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
             obj_tag *gameObj = drone->gameObj;
             if (gameObj == NULL)
@@ -1025,7 +1025,7 @@ void Drone_Delete(obj_tag *gameObj) {
             GUNTURRET *turret = (GUNTURRET *)obj->extraObjectData;
             if (turret != NULL && turret->owner == gameObj) {
                 obj->flags |= 1;
-                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BulletExplosion, 50.0f,
+                Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                                0xff,
                                0xff, 100, NULL, 0);
             }

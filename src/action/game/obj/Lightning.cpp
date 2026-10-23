@@ -90,7 +90,7 @@ void Lightning_Update(obj_tag *obj) {
     }
     for (int i = 0; i < 8; i++) {
         obj_tag *segment = bolt->segments[i];
-        hashtable_set_object_to_entity_gfx(segment, HT_Entity_LightningModel);
+        hashtable_set_object_to_entity_gfx(segment, HT_Entity_Lightning);
         View_SetDrawInAllViews(segment);
         PositionBeam(segment, &segment->position, i < 7 ? &bolt->segments[i + 1]->position : &bolt->end);
         segment->transformFlags |= TRANSFORM_MOVED;

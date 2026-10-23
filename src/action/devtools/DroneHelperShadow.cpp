@@ -348,7 +348,7 @@ void RandomWorld() {
     }
     memset(&world.player, 0, sizeof(world.player));
     world.player.objectType = OBJECTTYPE_PLAYER;
-    world.skins[0].hashcode = HT_Skin_00001e;
+    world.skins[0].hashcode = HT_Skin_Ninja;
     world.skins[1].hashcode = (HASHCODE)(HT_Skin_HASHCODE_BASE + ShadowRand(0x30));
     memset(&world.script, 0, sizeof(world.script));
     world.script.flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);

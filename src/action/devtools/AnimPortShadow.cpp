@@ -55,15 +55,17 @@ const int HEAP = 0x6000;
 
 // The made-up files: three body sequences (one a walk with a distance table), a morph sequence, scripts
 enum { SEQ_A, SEQ_LONG, SEQ_WALK, SEQ_MORPH, SEQ_FILES };
-const HASHCODE kSeqHash[SEQ_FILES] = {HT_AnimSeq_000011, HT_AnimSeq_000012, HT_AnimSeq_0000e9,
-                                      HT_AnimSeq_000014};
+const HASHCODE kSeqHash[SEQ_FILES] = {HT_AnimSeq_TestSeqA, HT_AnimSeq_TestSeqLong, HT_AnimSeq_0000e9,
+                                      HT_AnimSeq_TestSeqMorph};
 const int kSeqFrames[SEQ_FILES] = {30, 300, 20, 12};
 const int SCRIPT_FILES = 8;
 const int SCRIPT_SIZE = 160;
 const HASHCODE kScriptHash[SCRIPT_FILES] = {HT_Script_000101, HT_Script_000102, HT_Script_AnimScriptFootstep1,
-                                            HT_Script_000104, HT_Script_AnimScriptFootstep1B, HT_Script_000106,
-                                            HT_Script_000107, HT_Script_000108};
-const HASHCODE kSkinHash = HT_Skin_000020;
+                                            HT_Script_Speech_CAS_IG_INT_GUARD6, HT_Script_AnimScriptFootstep1B,
+                                            HT_Script_Speech_CAS_IG_INT_GUARD19_B,
+                                            HT_Script_Speech_CAS_IG_INT_GUARD18_B,
+                                            HT_Script_Speech_CAS_IG_INT_GUARD8_B};
+const HASHCODE kSkinHash = HT_Skin_PartyGirl01;
 const int MORPHS = 15;
 
 struct Entry {
@@ -244,7 +246,7 @@ celglist_tag *__cdecl FakeCelglist(HASHCODE hc) {
 }
 HASHCODE __cdecl FakeGlistHash(celglist_tag *gl) {
     ShadowLog("glisthash(%x)", W(gl));
-    return HT_Entity_000123;
+    return HT_Entity_GUN_BULLET_TRAIL;
 }
 void __cdecl FakeSetGfx(obj_tag *obj, HASHCODE hc) { ShadowLog("setgfx(%x,%x)", W(obj), (uint)hc); }
 int **__cdecl FakeFileLoad(char *name, ushort tag, int *size) {
@@ -695,7 +697,7 @@ void RandomObj(obj_tag *o, int type, void *data) {
     o->scale = 1.0f;
 }
 
-const HASHCODE kTags[] = {(HASHCODE)0, HT_Menu_000003, (HASHCODE)ANIMTAG_FACE_MOOD,
+const HASHCODE kTags[] = {(HASHCODE)0, HT_Menu_Keypad, (HASHCODE)ANIMTAG_FACE_MOOD,
                           (HASHCODE)ANIMTAG_FACE_BLINK, (HASHCODE)ANIMTAG_FACE_SPEECH};
 
 uint RandomScriptFlags(void) {
@@ -1080,7 +1082,8 @@ void RandomWorld(void) {
             world.table[world.tableCount++].data = world.scriptFiles[s];
         }
     }
-    static const HASHCODE skins[] = {kSkinHash, HT_Skin_0000c3, HT_Skin_0000bd, HT_Skin_SkinOwnDatums};
+    static const HASHCODE skins[] = {kSkinHash, HT_Skin_Yakuza_TrenchcoatSpec, HT_Skin_Dominique_Spec,
+                                     HT_Skin_SnowGuard_Camera};
     for (HASHCODE hc : skins) {
         if (ShadowRand(5)) {
             world.table[world.tableCount].hashcode = hc;
@@ -1088,12 +1091,13 @@ void RandomWorld(void) {
         }
     }
     if (ShadowRand(4)) {
-        world.table[world.tableCount].hashcode = HT_Skin_SkinBond;
+        world.table[world.tableCount].hashcode = HT_Skin_Bond_Combat;
         world.table[world.tableCount++].data = &world.bondSkin;
     }
-    static const HASHCODE sleeves[] = {HT_Entity_0009d0, HT_Entity_000900, HT_Entity_0001f7,
-                                       HT_Entity_000929, HT_Entity_0009e6, HT_Entity_0009ff,
-                                       HT_Entity_000a14, HT_Entity_000a13};
+    static const HASHCODE sleeves[] = {HT_Entity_Watch_BlackGloves, HT_Entity_Watch_BareHands, HT_Entity_Watch3_MP,
+                                       HT_Entity_spacesuit_hands1, HT_Entity_Bond_hands_malewhite,
+                                       HT_Entity_Bond_hands_maleblack, HT_Entity_Bond_hands_femwhite,
+                                       HT_Entity_Bond_hands_femblack};
     for (HASHCODE hc : sleeves) {
         if (ShadowRand(5) == 0) {
             world.table[world.tableCount].hashcode = hc;
@@ -1101,7 +1105,7 @@ void RandomWorld(void) {
         }
     }
     if (ShadowRand(2)) {
-        world.table[world.tableCount].hashcode = HT_Entity_LaserBeamGlist;
+        world.table[world.tableCount].hashcode = HT_Entity_watch_lazer;
         world.table[world.tableCount++].data = &world.celgl[1];
     }
 
@@ -1260,7 +1264,7 @@ obj_tag *Obj() { return &world.obj; }
 AnimObj *Ao() { return &world.anim.animObj; }
 sAnimScript_tag *AnyScript() { return &world.scripts[Arg(SCRIPTS)]; }
 HASHCODE AnyScriptHash() {
-    static const HASHCODE extra[] = {HT_Script_000555, HT_Skin_000020};
+    static const HASHCODE extra[] = {HT_Script_000555, HT_Skin_PartyGirl01};
     return Arg(6) ? kScriptHash[Arg(SCRIPT_FILES)] : extra[Arg(2)];
 }
 
@@ -1293,10 +1297,10 @@ uint32_t RunLoadFile(bool original) {
 uint32_t RunProcessSeqData(bool original) {
     int f = (int)Arg(SEQ_FILES);
     memcpy(world.seqFiles[f], rawSeq[f], rawSeqSize[f]);
-    static const HASHCODE walks[] = {HT_AnimSeq_00015c, HT_AnimSeq_000168, HT_AnimSeq_00079c,
-                                     HT_AnimSeq_0007b0, HT_AnimSeq_0007b3, HT_AnimSeq_0007b6,
-                                     HT_AnimSeq_0007e5, HT_AnimSeq_000804, HT_AnimSeq_00084f,
-                                     HT_AnimSeq_000167, HT_AnimSeq_0007a0, HT_AnimSeq_000900};
+    static const HASHCODE walks[] = {HT_AnimSeq_MpLauncherRun, HT_AnimSeq_MpUnarmedWalk, HT_AnimSeq_MpRifleCrouchWalk,
+                                     HT_AnimSeq_0007b0, HT_AnimSeq_MpLauncherCrouchWalk, HT_AnimSeq_MpUnarmedCrouchWalk,
+                                     HT_AnimSeq_MpRifleStrafeLeft, HT_AnimSeq_MpSmgCrouchWalk, HT_AnimSeq_Start,
+                                     HT_AnimSeq_MpUnarmedRun, HT_AnimSeq_TestNotDistance1, HT_AnimSeq_TestNotDistance2};
     HASHCODE hc = Arg(8) ? kSeqHash[f] : HT_Script_000001;
     if (Arg(2)) {
         hc = walks[Arg(COUNT(walks))];
@@ -1327,7 +1331,7 @@ uint32_t RunSleeveGetEntity(bool original) {
 }
 uint32_t RunLoadCapturing(bool original) {
     static const uint tags[] = {0x1c04, 0x1e04, 0x1f04, 0x2004};
-    static const HASHCODE files[] = {kSeqHash[1], kScriptHash[2], kSkinHash, HT_AnimSeq_000999};
+    static const HASHCODE files[] = {kSeqHash[1], kScriptHash[2], kSkinHash, HT_AnimSeq_TestLoad};
     Regs r = {};
     r.eax = tags[Arg(4)];
     r.esi = (uint32_t)files[Arg(4)];
@@ -1619,8 +1623,8 @@ uint32_t RunDatums(bool original) {
 
 uint32_t RunObjectNew(bool original) {
     world.mallocFails = 6;
-    static const HASHCODE skins[] = {kSkinHash, HT_Skin_000036, HT_Skin_000015, HT_Skin_000099,
-                                     HT_AnimSeq_00000f};
+    static const HASHCODE skins[] = {kSkinHash, HT_Skin_Yakuza_Trenchcoat, HT_Skin_Dominique, HT_Skin_Fists_BlueSuit,
+                                     HT_AnimSeq_TestWrongType};
     HASHCODE hc = skins[Arg(COUNT(skins))];
     obj_tag *obj = Arg(10) ? Obj() : NULL;
     if (Arg(2))
@@ -1630,8 +1634,8 @@ uint32_t RunObjectNew(bool original) {
     return CDECL_RUN(0x00011440, AnimObjectNew, int (__cdecl *)(obj_tag *, HASHCODE), obj, hc);
 }
 uint32_t RunFixupSkin(bool original) {
-    static const HASHCODE skins[] = {HT_Skin_000036, HT_Skin_000038, HT_Skin_000015,
-                                     HT_Skin_000018, HT_Skin_00003b, HT_Skin_00005e, kSkinHash};
+    static const HASHCODE skins[] = {HT_Skin_Yakuza_Trenchcoat, HT_Skin_Yakuza_RedTrenchcoat, HT_Skin_Dominique,
+                                     HT_Skin_Kiko_Dress, HT_Skin_Zoe_PartyDress, HT_Skin_Kiko_Combat, kSkinHash};
     Regs r = {};
     r.eax = (uint32_t)skins[Arg(COUNT(skins))];
     return Regs6(original, 0x00011350, (const void *)&Asm_FixupSkinHashcode, r, 0, NULL);
@@ -1783,10 +1787,15 @@ uint32_t RunPlayerAnim(bool original) {
     BoundDatums();
     MPSettings.isMultiplayer = Arg(2);
     // The changes of stance, loaded
-    static const uint stances[] = {HT_Script_0009da, HT_Script_0001d1, HT_Script_0009b6, HT_Script_0009ae,
-                                   HT_Script_0001dd, HT_Script_0001e9, HT_Script_0001f4, HT_Script_0009dd,
-                                   HT_Script_0001d0, HT_Script_0009b9, HT_Script_0009b1, HT_Script_0001dc,
-                                   HT_Script_0001e8, HT_Script_0001f3};
+    static const uint stances[] = {HT_Script_PlayerHandgun_CrouchToStand,
+                                   HT_Script_PlayerTwoHandedHandgun_CrouchToStand,
+                                   HT_Script_PlayerTwinHandguns_CrouchToStand, HT_Script_PlayerSMG_CrouchToStand,
+                                   HT_Script_PlayerRifle_CrouchToStand, HT_Script_PlayerLauncher_CrouchToStand,
+                                   HT_Script_PlayerUnarmed_CrouchToStand, HT_Script_PlayerHandgun_StandToCrouch,
+                                   HT_Script_PlayerTwoHandedHandgun_StandToCrouch,
+                                   HT_Script_PlayerTwinHandguns_StandToCrouch, HT_Script_PlayerSMG_StandToCrouch,
+                                   HT_Script_PlayerRifle_StandToCrouch, HT_Script_PlayerLauncher_StandToCrouch,
+                                   HT_Script_PlayerUnarmed_StandToCrouch};
     for (uint hc : stances) {
         if (Arg(4) && world.tableCount < TABLE) {
             world.table[world.tableCount].hashcode = (HASHCODE)hc;
@@ -1916,12 +1925,12 @@ uint32_t RunDebugCreate(bool original) {
     world.mallocFails = 0;
     // RefRoom's character, as the made-up skin (the original takes its script without checking it was made)
     void *skin = FakeGetItem(kSkinHash);
-    if (skin != NULL && FakeGetItem(HT_Skin_AnimdebugRefSkin) == NULL && world.tableCount < TABLE) {
-        world.table[world.tableCount].hashcode = HT_Skin_AnimdebugRefSkin;
+    if (skin != NULL && FakeGetItem(HT_Skin_SnowGuard_Head4) == NULL && world.tableCount < TABLE) {
+        world.table[world.tableCount].hashcode = HT_Skin_SnowGuard_Head4;
         world.table[world.tableCount].data = skin;
         world.tableCount++;
     }
-    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom && FakeGetItem(HT_Skin_AnimdebugRefSkin) == NULL)
+    if (GameState.CurrentLevelHashcode == HT_Level_RefRoom && FakeGetItem(HT_Skin_SnowGuard_Head4) == NULL)
         return 0;
     // Skeleton 0 or 1, or (for the ring, which leaves it out) 3
     SkeletonTable[0] = SkeletonTable[1] = (SkeletonInfo *)world.skel;

@@ -2430,7 +2430,7 @@ uint32_t RunPickupCreate(bool original) {
                                                   uint, uint, char, ushort, ushort, uint),
                              pos, R(2) ? &world.v[1] : NULL, mtx, glist, kind, item, R(30), R(2) ? 0 : R(8),
                              R(3) == 0 ? 0 : R(0x200), (char)R(2), (ushort)R(4), (ushort)R(100), R(2) ? 0
-                                 : HT_Entity_000444);
+                                 : HT_Entity_OBJECT_SHELL_300Magnum);
     return W(obj);
 }
 
@@ -2710,7 +2710,7 @@ obj_tag *Turret(void) {
 }
 
 uint32_t RunGTCreate(bool original) {
-    uint32_t keys[2] = {R(6) == 0 ? 0u : HT_Script_MinigunBody, R(6) == 0 ? 0u : HT_Script_MinigunBase};
+    uint32_t keys[2] = {R(6) == 0 ? 0u : HT_Script_SuitcaseMinigun, R(6) == 0 ? 0u : HT_Script_SuitcaseFrame};
     memcpy(&world.placement[0x34], keys, 8);
     uint32_t kind = R(2);
     memcpy(&world.placement[0x2c], &kind, 4);

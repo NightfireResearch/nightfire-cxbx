@@ -405,28 +405,28 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
             return HT_Level_Menu_Pre;
 
         case HT_Level_HendersonD:
-            return HT_Level_FmvOutroMayhewDead;
+            return HT_Level_HendersonD_Outro;
 
         case HT_Level_CastleIndoors2:
-            return HT_Level_FmvOutroHelicopterCrash;
+            return HT_Level_CastleIndoors2_Outro;
 
         case HT_Level_TowerC:
-            return HT_Level_FmvOutroParachuteOffTower;
+            return HT_Level_TowerC_Outro;
 
         case HT_Level_PowerStationA2:
-            return HT_Level_FmvOutroThroughVentKiko;
+            return HT_Level_PowerStationA2_Outro;
 
         case HT_Level_Tower2C:
-            return HT_Level_FmvOutroLobbyEscape;
+            return HT_Level_Tower2C_Outro;
         
         case HT_Level_EvilBaseC:
-            return HT_Level_FmvOutroKikoRocketlaunch;
+            return HT_Level_EvilBaseC_Outro;
 
         case HT_Level_SpaceStationD:
-            return HT_Level_FmvOutroEscapePodEndGame;
+            return HT_Level_SpaceStationD_Outro;
 
         case HT_Level_Cut_Level2: // Removed level?
-            return HT_Level_30000f;
+            return HT_Level_Cut_Level2_Outro;
     }
 }
 

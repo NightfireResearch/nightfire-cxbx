@@ -293,7 +293,7 @@ void UpdateMFX_02MayhewA(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicUnderAttack == 0 && MusicEventList[MUSICEV_NIS_ENDED] != HT_Script_000087) {
+    if (MusicUnderAttack == 0 && MusicEventList[MUSICEV_NIS_ENDED] != HT_Script_NIS_MeetMayhew) {
         if (MusicTemp3 < 0) {
             if (Music_PlayingCombat() && MusicTemp1 == 0) {
                 Music_JumpTo(5, 0);
@@ -333,7 +333,7 @@ void UpdateMFX_02MayhewB(void) {
         return;
 
     if (MusicLastJump == 0) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000084 || MusicEventList[36] != 0)
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_BunkerObjectives || MusicEventList[36] != 0)
             Music_JumpTo(2, 0);
         return;
     }
@@ -343,13 +343,13 @@ void UpdateMFX_02MayhewB(void) {
     else
         MusicVars.closeRange = 1.0f;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_00007f) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_BathHouse) {
         MusicTemp7 = 0;
         Music_JumpTo(6, 1);
         MusicTemp4 = 1;
     }
     if (MusicTemp4 != 0) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00007f) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_BathHouse) {
             Music_JumpTo(8, 1);
             MusicTemp4 = 0;
         }
@@ -483,7 +483,7 @@ void UpdateMFX_MayhewD(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000082) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_NinjaAttack) {
         Music_JumpTo(2, 1);
         MusicTemp2 = 1;
     }
@@ -513,7 +513,7 @@ void UpdateMFX_01CastleA(void) {
         MusicTemp3--;
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000994) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_Scriptplayer_SC10) {
         MusicTemp1 = 0;
         MusicTemp2 = 65;
         return;
@@ -523,7 +523,7 @@ void UpdateMFX_01CastleA(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000994 || MusicTemp1 != 0) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_Scriptplayer_SC10 || MusicTemp1 != 0) {
         Music_JumpTo(Music_PlayingCombat() ? 6 : 2, 0);
         MusicTemp1 = 1;
         return;
@@ -554,7 +554,7 @@ void UpdateMFX_01CastleB(void) {
         }
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000071) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_Castle_tux_change) {
         MusicFadeDown();
         MusicWaitForNisSfxTrigger = 1;
     }
@@ -572,20 +572,20 @@ void UpdateMFX_01CastleC(void) {
         return;
 
     if (MusicTemp1 == 0) {
-        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000072)
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_Engagement)
             Music_JumpTo(2, 0);
-        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000072 || SfxNisMusicTrigger != 0) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_Engagement || SfxNisMusicTrigger != 0) {
             Music_JumpTo(5, 0);
             SfxNisMusicTrigger = 0;
             MusicTemp1 = 1;
         }
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000073) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_M1_library) {
         Music_JumpTo(7, 0);
         MusicTemp4 = 1;
     }
-    if (MusicTemp4 != 0 && (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000073 || SfxNisMusicTrigger != 0)) {
+    if (MusicTemp4 != 0 && (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_M1_library || SfxNisMusicTrigger != 0)) {
         Music_JumpTo(10, 0);
         SfxNisMusicTrigger = 0;
         MusicTemp1 = 10;
@@ -601,9 +601,9 @@ void UpdateMFX_01CastleC(void) {
 
 // AUTOINJECT
 void UpdateMFX_01CastleD(void) {
-    if (MusicLastJump == 0 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000077)
+    if (MusicLastJump == 0 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_CastleMeeting)
         Music_JumpTo(2, 1);
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000077)
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_CastleMeeting)
         Music_JumpTo(4, 1);
 
     if (Music_MissionEnded())
@@ -673,7 +673,7 @@ void UpdateMFX_03TowerB(void) {
 void UpdateMFX_03TowerC(void) {
     switch (MusicTemp1) {
     case 0:
-        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0004f9) {
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_InfiltrateBuzz) {
             MusicTemp1 = 1;
             Music_JumpTo(2, 0);
         }
@@ -703,13 +703,13 @@ void UpdateMFX_03TowerC(void) {
         } else if (MusicTemp2 != 0) {
             Music_JumpTo(0x15, 0);
         }
-        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0004fa) {
+        if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_InfiltrateStair) {
             Music_JumpTo(MusicUnderAttack != 0 ? 10 : 0x17, 0);
             MusicTemp1 = 5;
         }
         break;
     case 5:
-        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_0004fa) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_InfiltrateStair) {
             Music_JumpTo(0xc, 1);
             MusicTemp1 = 6;
         }
@@ -769,7 +769,7 @@ void UpdateMFX_PowerStationA2(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00068f || SfxNisMusicTrigger != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_RookRetreat || SfxNisMusicTrigger != 0) {
         MusicTemp1 = 1;
         MusicTemp2 = 600;
         Music_JumpTo(0x2b, 1);
@@ -835,7 +835,7 @@ void UpdateMFX_HT_Level_Tower2B(void) {
 void UpdateMFX_HT_Level_Tower2Elevator(void) {
     if (Music_MissionEnded())
         return;
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_0006d3)
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_ElevatorPlummet)
         Music_JumpTo(4, 0);
 }
 
@@ -851,17 +851,17 @@ void UpdateMFX_HT_Level_EvilBase(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000848 || MusicTemp3 != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_RookReveal || MusicTemp3 != 0) {
         MusicTemp3 = 1;
         Music_JumpTo(0x18, 1);
         return;
     }
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000848 || MusicTemp6 != 0) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_RookReveal || MusicTemp6 != 0) {
         MusicTemp6 = 1;
         Music_JumpTo(0x22, 1);
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_00062f) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_KikoCommandCentre) {
         if (MusicTemp2 != 0)
             return;
         MusicTemp1 = 0;
@@ -874,7 +874,7 @@ void UpdateMFX_HT_Level_EvilBase(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000833 || MusicTemp1 != 0) {
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_KikoArrival || MusicTemp1 != 0) {
         MusicTemp1++;
         if (MusicUnderAttack == 0) {
             if (Music_PlayingCombat()) {
@@ -891,7 +891,7 @@ void UpdateMFX_HT_Level_EvilBase(void) {
         return;
     }
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000833) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_KikoArrival) {
         if (MusicTemp4 == 0) {
             MusicTemp4 = 1;
             if (MusicLastJump == 0x2e)
@@ -923,7 +923,7 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000631) {
+    if (MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_BondDropped) {
         Music_JumpTo(0x24, 1);
         MusicTemp1 = 1;
     } else if (MusicTemp1 == 0) {
@@ -935,11 +935,11 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
     }
 
     if (MusicTemp1 == 1) {
-        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_000631) {
+        if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_BondDropped) {
             Music_JumpTo(0x27, 1);
             MusicTemp1 = 2;
         }
-    } else if (MusicTemp1 == 2 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_000632) {
+    } else if (MusicTemp1 == 2 && MusicEventList[MUSICEV_NIS_STARTED] == HT_Script_NIS_KikoFlees) {
         Music_JumpTo(0x29, 0);
         MusicTemp1 = 3;
     }
@@ -949,7 +949,7 @@ void UpdateMFX_HT_Level_EvilBaseC(void) {
 void UpdateMFX_HT_Level_SpaceStationD(void) {
     if (Music_MissionEnded())
         return;
-    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_00085c)
+    if (MusicEventList[MUSICEV_NIS_ENDED] == HT_Script_NIS_LaserTaunt)
         Music_JumpTo(0, 0);
 }
 

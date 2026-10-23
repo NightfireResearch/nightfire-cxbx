@@ -986,7 +986,7 @@ void RandomWorld(void) {
                                  HT_Level_CastleIndoors2, HT_Level_TowerA, HT_Level_TowerB, HT_Level_TowerC,
                                  HT_Level_PowerStationA1, HT_Level_PowerStationA2, HT_Level_Cut_Level1,
                                  HT_Level_Tower2A, HT_Level_Tower2B, HT_Level_Tower2C, HT_Level_EvilBase,
-                                 HT_Level_EvilSilo, HT_Level_EvilBaseC, HT_Level_00001a, HT_Level_SpaceStationD,
+                                 HT_Level_EvilSilo, HT_Level_EvilBaseC, HT_Level_SpaceStationC, HT_Level_SpaceStationD,
                                  HT_Level_00001c, HT_Level_SpaceStation, HT_Level_SubPen, HT_Level_SnowBlind,
                                  HT_Level_MultiplayerLevelsAbove, HT_Level_RefRoom, HT_Level_AllCharacters,
                                  HT_Level_Menu_Pre, HT_Level_Tower2Elevator, HT_Level_Ravine, HT_Level_Unnamed4C,

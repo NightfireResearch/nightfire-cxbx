@@ -114,13 +114,13 @@ static void NDrone2_BodyHitEffect(BU_tag *bullet, HITDATA_tag *hit, obj_tag *obj
         break;
     case 0x32:
     case 0x33:
-        Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 1.0f, 16.0f, HT_Entity_GunimpSpark, 5, 0xffffffff,
+        Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 1.0f, 16.0f, HT_Entity_taser_muzzle, 5, 0xffffffff,
                  0xffffff00,
                  0x3c);
         break;
     default:
         if (bullet->wpnDef->damage > 0.0f) {
-            obj_tag *smoke = Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 3.0f, 6.0f, HT_Entity_0008bc, 5,
+            obj_tag *smoke = Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 3.0f, 6.0f, HT_Entity_BodyHit, 5,
                                       0xffffffff, 0xffffff00, 0x3c);
             smoke->effectFlags |= 8;
         }
@@ -369,7 +369,7 @@ void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, 
 
     switch (location) {
     case BONE_HEAD:
-        if (drone->dtype == DTYPE_Ninja || drone->skinHashcode == HT_Skin_Skin50000BA ||
+        if (drone->dtype == DTYPE_Ninja || drone->skinHashcode == HT_Skin_Drake_Astronaut ||
             (drone->skinClass == 16 && GameState.CurrentLevelHashcode == HT_Level_EvilBase)) {
             damage = (float)(DroneDamage_Torso * (double)damage * 2);
         } else {
@@ -647,7 +647,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
     if (nextState == drone->sm.curState)
         nextState = 0;
 
-    if (impact->source == drone->gameObj && drone->skinHashcode == HT_Skin_Skin50000BA) {
+    if (impact->source == drone->gameObj && drone->skinHashcode == HT_Skin_Drake_Astronaut) {
         if (DroneFunc_CanResumeState(nextState))
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)nextState, 0);
         return true;

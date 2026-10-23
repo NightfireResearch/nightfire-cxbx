@@ -406,7 +406,7 @@ void RandomWorld() {
     world.botVars.flags = ShadowRand(4);
 
     memset(&world.skin, 0, sizeof(world.skin));
-    world.skin.hashcode = ShadowRand(2) ? HT_Skin_SkinAstronaut : HT_Skin_000077;
+    world.skin.hashcode = ShadowRand(2) ? HT_Skin_Astronaut : HT_Skin_Dominique_B;
     world.skin.bones = world.skinBones;
     world.skin.skinScale.x = SpecialOr(0.5f, 1.5f);
     world.skin.skinScale.y = SpecialOr(0.5f, 1.5f);

@@ -353,116 +353,118 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     drone->turnRate = 0.1f / FRAME_RATE_DIV;
 
     // The skin's class and anim set, and what else the skin says. The skin may be changed in the placement's own keys.
-    if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && keys->skin == HT_Skin_0000b1)
-        keys->skin = HT_Skin_00008c;
+    if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && keys->skin == HT_Skin_EliteCombat_B)
+        keys->skin = HT_Skin_EliteCombat;
     drone->skinHashcode = keys->skin;
     ushort weapon = 1;
     switch (drone->skinHashcode) {
-    case HT_Skin_000036: case HT_Skin_000037: case HT_Skin_000038: case HT_Skin_000039: case HT_Skin_00003a:
+    case HT_Skin_Yakuza_Trenchcoat: case HT_Skin_Yakcoatopen: case HT_Skin_Yakuza_RedTrenchcoat:
+    case HT_Skin_Yakuza_Leather: case HT_Skin_Yakuza_Suit:
         drone->skinClass = 1;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_AnimdebugRefSkin: case HT_Skin_SkinOwnDatums: case HT_Skin_000030:
+    case HT_Skin_SnowGuard_Head4: case HT_Skin_SnowGuard_Camera: case HT_Skin_SnowGuard_Hat:
         drone->skinClass = 2;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000004: case HT_Skin_000006: case HT_Skin_000008: case HT_Skin_00004c:
+    case HT_Skin_BlackOps: case HT_Skin_BlackOps_RedVest: case HT_Skin_BlackOps_GasMask: case HT_Skin_00004c:
         drone->skinClass = 3;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000054: case HT_Skin_00006d: case HT_Skin_00006e: case HT_Skin_00007e:
+    case HT_Skin_HazMat_body: case HT_Skin_Hazmat_heavy_1: case HT_Skin_Hazmat_NoMask: case HT_Skin_Hazmat_heavy_3:
         drone->skinClass = 4;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000025:
+    case HT_Skin_Sniper:
         drone->skinClass = 5;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000087: case HT_Skin_000090: case HT_Skin_000093:
+    case HT_Skin_Elite: case HT_Skin_Elite_B: case HT_Skin_Elite_Beret:
         drone->skinClass = 6;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_00008c: case HT_Skin_0000b1: case HT_Skin_0000b2:
+    case HT_Skin_EliteCombat: case HT_Skin_EliteCombat_B: case HT_Skin_EliteCaptain:
         drone->skinClass = 7;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_00002b: case HT_Skin_00002d: case HT_Skin_000034:
+    case HT_Skin_Servant: case HT_Skin_00002d: case HT_Skin_TowelGirl:
         drone->skinClass = 8;
         drone->animSet = 1;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_00001b: case HT_Skin_00004f:
+    case HT_Skin_Mayhew_Tux: case HT_Skin_Mayhew_Shirt:
         drone->animSet = 3;
         drone->skinClass = 9;
         break;
-    case HT_Skin_00001e:
+    case HT_Skin_Ninja:
         drone->animSet = 7;
         drone->skinClass = 0xb;
         weapon = 0;
         break;
-    case HT_Skin_00003b: case HT_Skin_00003c:
+    case HT_Skin_Zoe_PartyDress: case HT_Skin_zoe_partydress_b:
         drone->skinClass = 0xc;
         drone->animSet = 0xe;
         drone->vulnerable = 0;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_000015: case HT_Skin_000020: case HT_Skin_000022: case HT_Skin_000023: case HT_Skin_000024:
+    case HT_Skin_Dominique: case HT_Skin_PartyGirl01: case HT_Skin_PartyGirl02: case HT_Skin_PartyGirl03:
+    case HT_Skin_PartyGirl04:
         drone->skinClass = 0xd;
         drone->animSet = 0xe;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_000019: case HT_Skin_000021:
+    case HT_Skin_PartyGuest_OldMan: case HT_Skin_PartyGuest_Male:
         drone->skinClass = 0xe;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000035:
+    case HT_Skin_TruckDriver:
         drone->skinClass = 0xf;
         drone->dtype = DTYPE_TruckDriver;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000026: case HT_Skin_000066:
+    case HT_Skin_Rook: case HT_Skin_Rook_Scarred:
         keys->drawWeapon = 6;
         drone->skinClass = 0x10;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_000012: case HT_Skin_000013: case HT_Skin_000014:
+    case HT_Skin_CastleGuard_2: case HT_Skin_CastleGuard: case HT_Skin_CastleGuard_3:
         drone->skinClass = 0x11;
         drone->animSet = 0xa;
         break;
-    case HT_Skin_000017: case HT_Skin_000018:
+    case HT_Skin_Kiko_Jacket: case HT_Skin_Kiko_Dress:
         drone->animSet = 0xe;
         drone->skinClass = 0x12;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_00005e:
+    case HT_Skin_Kiko_Combat:
         drone->animSet = 0xd;
         drone->skinClass = 0x13;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_000016: case HT_Skin_00008f: case HT_Skin_0000ac:
+    case HT_Skin_Drake_Tux: case HT_Skin_Drake_Spacesuit: case HT_Skin_Drake_SpacesuitBurnt:
         drone->skinClass = 0x14;
         drone->animSet = 0xc;
         break;
-    case HT_Skin_00000e: case HT_Skin_00000f:
+    case HT_Skin_BusinessWoman_A: case HT_Skin_BusinessWoman_B:
         drone->skinClass = 0x15;
         drone->animSet = 2;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_000010: case HT_Skin_000011: case HT_Skin_000052:
+    case HT_Skin_000010: case HT_Skin_000011: case HT_Skin_Dominique_Jacket:
         drone->skinClass = 0x16;
         drone->animSet = 2;
         drone->unknown15 = 1;
         break;
-    case HT_Skin_000053:
+    case HT_Skin_Drake_SuitA:
         drone->vulnerable = 0;
         drone->impactImmune = 1;
         // fall through
-    case HT_Skin_000027: case HT_Skin_000028: case HT_Skin_000029: case HT_Skin_00002a: case HT_Skin_000031:
+    case HT_Skin_Guard_1: case HT_Skin_Guard_2: case HT_Skin_Guard_3: case HT_Skin_Guard_4: case HT_Skin_Tech_a:
     case HT_Skin_000032: case HT_Skin_000033:
         drone->skinClass = 0x17;
         drone->animSet = 0xb;
         break;
-    case HT_Skin_SkinAstronaut: case HT_Skin_000094: case HT_Skin_Skin50000BA:
+    case HT_Skin_Astronaut: case HT_Skin_000094: case HT_Skin_Drake_Astronaut:
         drone->flies = 1;
         drone->skinClass = 0x18;
         drone->animSet = 0x10;
@@ -619,7 +621,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->deathScript != 0) {
         drone->scriptedMoveRot = gameObj->rotation;
         drone->scriptedMovePos = gameObj->position;
-        if (drone->deathScript != HT_Script_DeathScript21F)
+        if (drone->deathScript != HT_Script_DeathScriptIcyQuip)
             drone->flags |= DRONE_FLAG_FROZEN;
     }
 
@@ -639,20 +641,20 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->captain) {
         switch (drone->skinClass) {
         case 1:
-            drone->skinHashcode = HT_Skin_000038;
+            drone->skinHashcode = HT_Skin_Yakuza_RedTrenchcoat;
             break;
         case 2:
-            drone->skinHashcode = HT_Skin_SkinOwnDatums;
+            drone->skinHashcode = HT_Skin_SnowGuard_Camera;
             drone->ninjaEyes = 1;
             break;
         case 3:
-            drone->skinHashcode = HT_Skin_000006;
+            drone->skinHashcode = HT_Skin_BlackOps_RedVest;
             break;
         case 6:
-            drone->skinHashcode = HT_Skin_000093;
+            drone->skinHashcode = HT_Skin_Elite_Beret;
             break;
         case 7:
-            drone->skinHashcode = HT_Skin_0000b2;
+            drone->skinHashcode = HT_Skin_EliteCaptain;
             break;
         default:
             drone->captain = 0;
@@ -782,7 +784,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         // DroneInit_TakeXHits on the PS2, inline here: as much health as one or two hits of this weapon take
         float hits = GameState.difficultyModifier == 1 ? 1.0f : 2.0f;
         drone->health = weapon_data[Weap_LaserBeamFromSamurai].damage * hits;
-        if (drone->skinHashcode == HT_Skin_Skin50000BA)
+        if (drone->skinHashcode == HT_Skin_Drake_Astronaut)
             drone->health = drone->health * 3.0f;
     }
     if (drone->dtype == DTYPE_Ninja) {

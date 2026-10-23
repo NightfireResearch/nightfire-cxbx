@@ -66,29 +66,29 @@ obj_tag *HourHand;
 // The digits shown on a weapon's datums: the satchel charge's timer (Bullet_DoTrails too) and the decryptor's display
 // XBE_GLOBAL(0x00181a88, 0x28) readonly relocate
 HASHCODE SatchelDigits[10] = {
-    HT_Entity_000791,
-    HT_Entity_000792,
-    HT_Entity_000793,
-    HT_Entity_000794,
-    HT_Entity_000795,
-    HT_Entity_000796,
-    HT_Entity_000797,
-    HT_Entity_000798,
-    HT_Entity_000799,
-    HT_Entity_00079a,
+    HT_Entity_OBJECT_LED_0,
+    HT_Entity_OBJECT_LED_1,
+    HT_Entity_OBJECT_LED_2,
+    HT_Entity_OBJECT_LED_3,
+    HT_Entity_OBJECT_LED_4,
+    HT_Entity_OBJECT_LED_5,
+    HT_Entity_OBJECT_LED_6,
+    HT_Entity_OBJECT_LED_7,
+    HT_Entity_OBJECT_LED_8,
+    HT_Entity_OBJECT_LED_9,
 };
 // XBE_GLOBAL(0x00181ab0, 0x28) readonly relocate
 HASHCODE DecryptorDigits[10] = {
-    HT_Entity_000a09,
-    HT_Entity_000a0a,
-    HT_Entity_000a0b,
-    HT_Entity_000a0c,
-    HT_Entity_000a0d,
-    HT_Entity_000a0e,
-    HT_Entity_000a0f,
-    HT_Entity_000a10,
-    HT_Entity_000a11,
-    HT_Entity_000a12,
+    HT_Entity_OBJECT_LED_0_Decryptor,
+    HT_Entity_OBJECT_LED_1_Decryptor,
+    HT_Entity_OBJECT_LED_2_Decryptor,
+    HT_Entity_OBJECT_LED_3_Decryptor,
+    HT_Entity_OBJECT_LED_4_Decryptor,
+    HT_Entity_OBJECT_LED_5_Decryptor,
+    HT_Entity_OBJECT_LED_6_Decryptor,
+    HT_Entity_OBJECT_LED_7_Decryptor,
+    HT_Entity_OBJECT_LED_8_Decryptor,
+    HT_Entity_OBJECT_LED_9_Decryptor,
 };
 
 // The view cone's length (0x0017c110; Camera.cpp)
@@ -1340,9 +1340,9 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
             }
         }
         for (int datum = 0x1e; datum < 0x26; datum++)
-            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_0008e9, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_Dynamo_GLOW, 0xff);
         for (int datum = 5; datum < 0x19; datum++)
-            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_0008e8, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_Pulse_GLOW, 0xff);
     }
 
     if (weapon->weaponVariantNum == Weap_Camera && blData->weaponObject->curState == GUN_IDLE && !CamHint) {
@@ -1358,7 +1358,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponBaseNum == 0x1a) {
         for (int datum = 8; datum < 12; datum++)
-            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_000132, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, datum, HT_Entity_gunsight3d, 0xff);
         // After 15 seconds idle datum 8 flashes; after 45 they all go out
         if ((double)_FRAME_RATE * 15.0f < (double)blData->idleTicks && (int)GameState.LoadTimeStart % 40 > 20)
             AnimDatumSetEntity(blData->weaponObject, 8, 0, 0xff);
@@ -1392,11 +1392,11 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
         for (int datum = 4; datum < 7; datum++)
             AnimDatumSetEntity(blData->weaponObject, datum, 0, 0xff);
         if (rounds > 0 && blData->weaponObject->curState != GUN_FIRING)
-            AnimDatumSetEntity(blData->weaponObject, 4, HT_Entity_000816, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, 4, HT_Entity_Bolt, 0xff);
         if (rounds > 1)
-            AnimDatumSetEntity(blData->weaponObject, 5, HT_Entity_000816, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, 5, HT_Entity_Bolt, 0xff);
         if (rounds > 2)
-            AnimDatumSetEntity(blData->weaponObject, 6, HT_Entity_000816, 0xff);
+            AnimDatumSetEntity(blData->weaponObject, 6, HT_Entity_Bolt, 0xff);
     }
 
     if (weapon->weaponVariantNum == Weap_RemoteMine && blData->weaponObject->curState == GUN_IDLE && !StickyHint) {
@@ -1436,7 +1436,7 @@ static bool GadgetCanFire(obj_tag *player, BLData *blData, weapon_definition_tag
                 lockReady = true;
         }
         if (!(target->objectType == 0 &&
-              blData->gadgetTarget->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_0002f8)) &&
+              blData->gadgetTarget->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_terminal_keyboard)) &&
             !lockReady)
             return false;
         if (Vec_Dist3D(&player->position, &blData->gadgetTarget->position) > weapon->range)
@@ -1892,12 +1892,12 @@ void Player_LaserPointer(obj_tag *player) {
     beam->position = from;
     beam->transformFlags &= ~TRANSFORM_MOVED;
     if (glb_viewer[playerNum]->nightVisionRelated == 1) {
-        hashtable_set_object_to_entity_gfx(beam, HT_Entity_LaserBeamGlistNightvision);
+        hashtable_set_object_to_entity_gfx(beam, HT_Entity_lazer);
         double flicker = Float_FRand(128.0f);
         beam->tweakA = (uchar)Ftol((flicker + (beam->tweakA + 0x3f)) * 0.5f);
     }
     else {
-        hashtable_set_object_to_entity_gfx(beam, HT_Entity_LaserBeamGlist);
+        hashtable_set_object_to_entity_gfx(beam, HT_Entity_watch_lazer);
         uchar alpha = beam->tweakA + (uchar)(Rand_Rand(9) - 4);
         beam->tweakA = alpha;
         if (alpha < 0x10)
@@ -1955,7 +1955,7 @@ void Player_MuzzleFlash(obj_tag *player, _VECTOR *target) {
         if (!MPSettings.isMultiplayer && !(weapon->weaponFlags & WPNFLAG_NO_SMOKE)) {
             _VECTOR spin = {0.0f, 0.0f, 0.0f};
             spin.z = (float)Float_FRand(TWO_PI);
-            Gas_Init(player->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_BulletDust, 7, 0x48403080, 1, 0x80);
+            Gas_Init(player->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1, 0x80);
         }
     }
 
@@ -2076,7 +2076,7 @@ void Player_SetWatch(obj_tag *player) {
             break;
     }
 
-    if (gun->animState->animObj.skin->hashcode != HT_Skin_00004b) {
+    if (gun->animState->animObj.skin->hashcode != HT_Skin_Watch) {
         if (HourHand != NULL) {
             HourHand->flags |= 1;
             HourHand = NULL;
@@ -2092,20 +2092,21 @@ void Player_SetWatch(obj_tag *player) {
         return;
     }
 
-    AnimDatumSetEntity(gun, 2, HT_Entity_0008f9, 0xff);
+    AnimDatumSetEntity(gun, 2, HT_Entity_bits_Hands_GLOW, 0xff);
     time = (float)((double)PlrMissionStats[0].timeElapsed + time);
     _VECTOR face;
     _MATRIX faceMtx;
     AnimGetBoneWorldTrans(blData->weaponObject, 2, 0, &face, &faceMtx);
 
     if (HourHand == NULL)
-        HourHand = Control_CreateObjEx(0, &face, NULL, &faceMtx, hashtable_hashcode_to_celglist(HT_Entity_000876),
+        HourHand = Control_CreateObjEx(0, &face, NULL, &faceMtx, hashtable_hashcode_to_celglist(HT_Entity_Little_hand),
                                        player, 1, 0, 1.0f, 0, 0xff, 0xff, 0xff);
     if (MinuteHand == NULL)
-        MinuteHand = Control_CreateObjEx(0, &face, NULL, &faceMtx, hashtable_hashcode_to_celglist(HT_Entity_000877),
+        MinuteHand = Control_CreateObjEx(0, &face, NULL, &faceMtx, hashtable_hashcode_to_celglist(HT_Entity_Big_hand),
                                          player, 1, 0, 1.0f, 0, 0xff, 0xff, 0xff);
     if (SecondHand == NULL)
-        SecondHand = Control_CreateObjEx(0, &face, NULL, &faceMtx, hashtable_hashcode_to_celglist(HT_Entity_000878),
+        SecondHand = Control_CreateObjEx(0, &face, NULL, &faceMtx,
+                                         hashtable_hashcode_to_celglist(HT_Entity_Second_hand),
                                          player, 1, 0, 1.0f, 0, 0xff, 0xff, 0xff);
 
     // A turn every 12 hours, every hour and every minute

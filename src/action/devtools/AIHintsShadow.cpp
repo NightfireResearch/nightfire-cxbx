@@ -175,7 +175,7 @@ void RandomObjects() {
         RandomVector(&obj.position, 12.0f);
         obj.nextObject = i + 1 < OBJS && ShadowRand(10) != 0 ? &world.objs[i + 1] : NULL;
         world.infoOf[i] = ShadowRand(4) == 0 ? -1 : (int)ShadowRand(OBJS);
-        world.infos[i].scriptHashcode = (HASHCODE)(ShadowRand(3) == 0 ? HT_Script_000001 : HT_Script_KickScript);
+        world.infos[i].scriptHashcode = (HASHCODE)(ShadowRand(3) == 0 ? HT_Script_000001 : HT_Script_TableFall);
         if (obj.objectType == OBJECTTYPE_DRONE)
             obj.extraObjectData = ShadowRand(5) == 0 ? NULL : &world.drones[ShadowRand(DRONES)];
     }

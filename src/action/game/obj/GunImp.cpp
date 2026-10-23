@@ -25,18 +25,18 @@
 // The multiplayer weapon sets' guns, then single player's
 // XBE_GLOBAL(0x00163a30, 0x150) readonly relocate
 GUNTYPE GunTypes[12] = {
-    {{0.0f, 0.27f, 0.92f}, HT_Entity_000b05, 46, 180.0f, 268},
-    {{0.0f, 0.23f, 1.65f}, HT_Entity_000a3b, 96, 10.0f, 266},
-    {{0.17f, 0.23f, 0.94f}, HT_Entity_000b06, 97, 5.0f, 1255},
-    {{0.0f, 0.2f, 1.16f}, HT_Entity_000b08, 111, 180.0f, 1058},
-    {{0.0f, 0.27f, 0.92f}, HT_Entity_000b05, 45, 180.0f, 268},
-    {{0.0f, 0.21f, 0.51f}, HT_Entity_000b07, 42, 120.0f, 1036},
-    {{0.0f, 0.21f, 0.51f}, HT_Entity_000b07, 43, 120.0f, 1036},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_000565, 112, 1.0f, 1307},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_000565, 112, 1.0f, 1307},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_000565, 50, 180.0f, 1059},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_000565, 50, 180.0f, 1059},
-    {{0.0f, 0.0f, 1.71f}, HT_Entity_000b50, 103, 1.0f, 1307},
+    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 46, 180.0f, 268},
+    {{0.0f, 0.23f, 1.65f}, HT_Entity_50calBarrel, 96, 10.0f, 266},
+    {{0.17f, 0.23f, 0.94f}, HT_Entity_MinigunBarrels, 97, 5.0f, 1255},
+    {{0.0f, 0.2f, 1.16f}, HT_Entity_FAMAS, 111, 180.0f, 1058},
+    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 45, 180.0f, 268},
+    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 42, 120.0f, 1036},
+    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 43, 120.0f, 1036},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, 1307},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, 1307},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, 1059},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, 1059},
+    {{0.0f, 0.0f, 1.71f}, HT_Entity_PowerStationGunImpBarrel, 103, 1.0f, 1307},
 };
 
 // The weapons with their own firing: a minigun's spin up and down, and two lasers
@@ -277,7 +277,7 @@ void GunImp_Update(obj_tag *gunObj) {
         rot.y = 0.0f;
         rot.x = 0.0f;
         rot.z = (float)Float_FRand(6.2831855f);
-        Gas_Init(gunObj->inCel, &at, &rot, NULL, 0.05f, 0.25f, HT_Entity_BulletDust, 7, 0x484030e4, 1, 0x80);
+        Gas_Init(gunObj->inCel, &at, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x484030e4, 1, 0x80);
     }
 
     if (Input_Action(gunObj->subState, ACTION_FIRE, 1) && gunImp->refireTimer <= 0.0f && !gunImp->overheated) {
@@ -316,12 +316,12 @@ void GunImp_Update(obj_tag *gunObj) {
 
         int weapon = GunTypes[gunImp->gunType].weapon;
         if (weapon != GUNIMP_LASER_A && weapon != GUNIMP_LASER_B) {
-            GunImp_Flash(&muzzle, HT_Entity_GunimpFlash, 1, true, gunObj->inCel);
+            GunImp_Flash(&muzzle, HT_Entity_Generic_muzzle, 1, true, gunObj->inCel);
             Light_Create(&from, 0xff, 0x60, 0, 9.0f, 0, 0, 1, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0, 0xffff);
             return;
         }
 
-        GunImp_Flash(&from, HT_Entity_GunimpSpark, 1, true, gunObj->inCel);
+        GunImp_Flash(&from, HT_Entity_taser_muzzle, 1, true, gunObj->inCel);
         Light_Create(&from, 0, 0xff, 0xff, 9.0f, 0, 0, 1, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0, 0xffff);
         _VECTOR end;
         auxVec_AddMulR32(&from, &dir, 1000.0f, &end);
@@ -329,7 +329,7 @@ void GunImp_Update(obj_tag *gunObj) {
         HITDATA_tag *hits = NULL;
         if (Collide_RayIntersect(&from, &end, gunObj->inCel, gunObj, NULL, &hits, 0, 8, 0))
             Vec_Copy(&hits->hitPosition, &end);
-        obj_tag *beam = GunImp_Flash(&from, HT_Entity_SwooshBeam, 0, false, gunObj->inCel);
+        obj_tag *beam = GunImp_Flash(&from, HT_Entity_lazer_Big, 0, false, gunObj->inCel);
         beam->parent = gunObj;
         PositionBeam(beam, &from, &end);
         if (hits == NULL) {
@@ -339,7 +339,7 @@ void GunImp_Update(obj_tag *gunObj) {
             // Nor is this
             Vec_Add2(&end, &hits->surfaceNormal.normal, &end);
             auxVec_AddMulR32(&hits->hitPosition, &dir, -0.2f, &from);
-            obj_tag *spark = GunImp_Flash(&from, HT_Entity_GunimpSpark, 0, true, gunObj->inCel);
+            obj_tag *spark = GunImp_Flash(&from, HT_Entity_taser_muzzle, 0, true, gunObj->inCel);
             if (GunTypes[gunImp->gunType].weapon == GUNIMP_LASER_A) {
                 Explode_Propagate(&hits->hitPosition, 4.0f, spark->inCel, 5.0f, gunObj);
                 Collide_FreeHitList(&hits);

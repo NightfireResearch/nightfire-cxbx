@@ -285,7 +285,7 @@ static bool Ninja_CanSomersault(DCVars_tag *dcv, Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_CreateNinjaEyes(obj_tag *gameObj) {
     short eyes[2];
-    if (gameObj->animState->animObj.skin->hashcode == HT_Skin_00001e) {
+    if (gameObj->animState->animObj.skin->hashcode == HT_Skin_Ninja) {
         eyes[0] = 0x60;
         eyes[1] = 0x61;
     } else {
@@ -304,7 +304,7 @@ void NDrone2_CreateNinjaEyes(obj_tag *gameObj) {
         eye->curState = 1;
         effect->life = 5;
         effect->fade = 0x19;
-        hashtable_set_object_to_entity_gfx(eye, HT_Entity_000132);
+        hashtable_set_object_to_entity_gfx(eye, HT_Entity_gunsight3d);
         eye->effectFlags |= 8;
         control_link_object_to_cel(eye, gameObj->inCel);
     }
@@ -324,7 +324,7 @@ bool NDrone2_DSTATE_NinjaStand(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         dcv->drone->combatRanges[1] = 3.0f;
         dcv->drone->combatRanges[4] = 5.0f;
         AnimDatumSetEntity(dcv->gameObj, 0, (HASHCODE)0, 0xff);
-        AnimDatumSetEntity(dcv->gameObj, 100, HT_Entity_EntitySwapped, 0xff);
+        AnimDatumSetEntity(dcv->gameObj, 100, HT_Entity_Ninja_sword_3rd_LOD0, 0xff);
         if (switch_BLIND_DRONES == 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_NinjaAttack, 0);
         DroneAnim_CallAnim(0x6b, 0, 0, 0, 0.0f, 0, dcv);

@@ -196,7 +196,7 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             GoldenEye.keys[1].gameObj->effectFlags |= FLAG_HIDDEN;
             GoldenEye.keys[0].gameObj->curState = 3;
             GoldenEye.keys[0].gameObj->effectFlags |= FLAG_HIDDEN;
-            GoldenEye.deathRay = SP_Create(&gameObj->position, NULL, HT_Script_GoldenEyeRay, (HASHCODE)0, 1, 1, NULL,
+            GoldenEye.deathRay = SP_Create(&gameObj->position, NULL, HT_Script_GoldenEyeBeam, (HASHCODE)0, 1, 1, NULL,
                                            NULL, NULL, 0);
 
             char *str = Txt_GetStringFromHeap(0);

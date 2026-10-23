@@ -207,9 +207,9 @@ bool P_ATTRACT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         // from anywhere else it is always the trailer. The original inlines Menu_PlayMovie here (the same six
         // stores and calls, argument for argument), so calling it is the same thing.
         attract_show_trailer = (attract_show_trailer == 0);
-        HASHCODE movie = HT_Level_FmvTrailer;
+        HASHCODE movie = HT_Level_Menu_AttractMovie;
         if (arg2 == P_MAIN && !attract_show_trailer)
-            movie = HT_Level_FmvTitles;
+            movie = HT_Level_Menu_Esthero;
         // stops the front-end music, not looped, locks input
         Menu_PlayMovie(movie, 1, 0, 1, 1, 0);
     }

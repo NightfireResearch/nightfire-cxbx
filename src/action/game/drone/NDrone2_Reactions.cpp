@@ -743,7 +743,7 @@ bool NDrone2_DSTATE_Surrender_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         DroneWeap_ChangeWeapon(dcv, 1);
         Reactions_SetTimer(&dcv->drone->timerA, Reactions_FramesFromNow(15.0f), 1);
         PlrStat_LogEnemySurrender(0);
-        if (drone->deathScript == HT_Script_DeathScript21F) {
+        if (drone->deathScript == HT_Script_DeathScriptIcyQuip) {
             drone->deathSwitchChannel = 0;
             drone->deathScript = (HASHCODE)0;
         }

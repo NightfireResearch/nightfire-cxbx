@@ -360,7 +360,7 @@ void RandomDrone(int i) {
     d->dtype = dtypes[ShadowRand(sizeof(dtypes))];
     d->skinClass = (short)(ShadowRand(4) == 0 ? (ShadowRand(2) ? 12 : 16) : ShadowRand(22));
     d->animSet = (short)(ShadowRand(3) == 0 ? 5 : ShadowRand(NUM_DRONE_ANIM_SETS));
-    d->skinHashcode = (HASHCODE)(ShadowRand(5) == 0 ? HT_Skin_Skin50000BA : HT_Skin_000020);
+    d->skinHashcode = (HASHCODE)(ShadowRand(5) == 0 ? HT_Skin_Drake_Astronaut : HT_Skin_PartyGirl01);
     static const float scales[] = {1.0f, 0.5f, 2.5f};
     d->hitDamageScale = scales[ShadowRand(3)];
     d->lastDamage = RandomFloat(0.0f, 80.0f);

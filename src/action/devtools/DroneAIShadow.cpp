@@ -335,7 +335,8 @@ void RandomDrone(int i) {
     d->animSet = (short)ShadowRand(NUM_DRONE_ANIM_SETS);
     static const uchar dtypes[] = {0, 1, 2, 12, 12, 19, 22, 13, 30, 30, 5};
     d->dtype = dtypes[ShadowRand(sizeof(dtypes))];
-    static const uint skins[] = {HT_Skin_000020, HT_Skin_000022, HT_Skin_000023, HT_Skin_000015, HT_Skin_Skin50000BA};
+    static const uint skins[] = {HT_Skin_PartyGirl01, HT_Skin_PartyGirl02, HT_Skin_PartyGirl03, HT_Skin_Dominique,
+                                 HT_Skin_Drake_Astronaut};
     d->skinHashcode = (HASHCODE)skins[ShadowRand(5)];
     d->distanceToTarget = RandomFloat(0.0f, 6.0f);
     d->opponentBearing = RandomFloat(-3.5f, 3.5f);

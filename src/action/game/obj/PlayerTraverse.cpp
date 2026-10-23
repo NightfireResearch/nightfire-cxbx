@@ -199,7 +199,7 @@ void Player_Climb(BLData *blData, obj_tag *player) {
 // Clears the grapple and makes its rope. The original takes the player's data in ESI.
 void Player_InitGrapple(BLData *blData, obj_tag *player) {
     memset(&blData->grapplePoint, 0, 0x20);
-    blData->rope = Control_CreateObjEx(0, NULL, NULL, NULL, hashtable_hashcode_to_celglist(HT_Entity_RopeEntity),
+    blData->rope = Control_CreateObjEx(0, NULL, NULL, NULL, hashtable_hashcode_to_celglist(HT_Entity_rope),
                                        player, 0, 5,
                                        1.0f, 0x30, 0xff, 0xff, 0xff);
 }

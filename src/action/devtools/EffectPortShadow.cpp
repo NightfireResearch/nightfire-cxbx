@@ -1097,7 +1097,8 @@ void RandomWorld(void) {
     for (int i = 0; i < 3; i++)
         world.verts[i] = world.vertices[R(6)];
 
-    world.script.scriptHashcode = (HASHCODE)(R(2) ? HT_Script_BulletExplosion : HT_Script_DestroyExplosion1);
+    world.script.scriptHashcode = (HASHCODE)(R(2) ? HT_Script_ExplosionBlastRadius
+                                             : HT_Script_ExplosionSmallElectrical);
     world.script.endFrame = (ushort)R(80);
     PlainVector(&world.bonePos, 4.0f);
     _VECTOR r;
@@ -1852,7 +1853,7 @@ obj_tag *Casing(void) {
     data->floorY = Value(-5.0f, 5.0f);
     data->timer = R(4) ? Value(-2.0f, 260.0f) : (R(2) ? 240.0f : Plain(3.5f, 6.5f));
     data->owner = R(6) ? AnyObj() : NULL;
-    data->model = (HASHCODE)(R(2) ? HT_Entity_ShotgunCasing : R(10));
+    data->model = (HASHCODE)(R(2) ? HT_Entity_GaugeRound : R(10));
     data->material = (ushort)(R(4) ? R(24) : R(0x10000));
     casing->curState = (ushort)R(4);
     return casing;
@@ -2083,7 +2084,7 @@ uint32_t RunExplodeCreate(bool original) {
               void (__cdecl *)(obj_tag *, _VECTOR *, _VECTOR *, float, float, HASHCODE, float, uchar, uchar, uchar,
                                obj_tag *, ushort),
               AnyObj(), &world.v[0], &world.v[1], Value(0.0f, 6.0f), R(4) ? Value(0.0f, 6.0f) : 0.5f,
-              HT_Script_BulletExplosion, Value(0.0f, 50.0f), 200, 200, 0, R(2) ? AnyObj() : NULL, (ushort)R(12));
+              HT_Script_ExplosionBlastRadius, Value(0.0f, 50.0f), 200, 200, 0, R(2) ? AnyObj() : NULL, (ushort)R(12));
     return 0;
 }
 

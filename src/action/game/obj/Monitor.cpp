@@ -115,7 +115,7 @@ void Monitor_Update(obj_tag *obj) {
             if (monitor->user != NULL)
                 Monitor_GiveBack(monitor);
             Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, obj->radius * 6.0f, obj->radius,
-                           HT_Script_DestroyExplosion1, 0.5f, 200, 200, 0, NULL, 0);
+                           HT_Script_ExplosionSmallElectrical, 0.5f, 200, 200, 0, NULL, 0);
         }
     }
 

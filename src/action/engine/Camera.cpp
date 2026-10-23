@@ -474,7 +474,7 @@ void Cameras_PostLoad(void) {
     sprite *quarter = Sprite_CreateAndLink2Viewer(5);
     if (quarter == NULL)
         return;
-    Sprite_SetParams(quarter, 5, 320, 240, HT_Texture_FourthQuarter, 0x7f7f7fff);
+    Sprite_SetParams(quarter, 5, 320, 240, HT_Texture_medal_platinum_mp, 0x7f7f7fff);
     quarter->onscreenWidth = 320;
     quarter->onscreenHeight = 240;
 }

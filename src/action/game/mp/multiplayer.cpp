@@ -46,35 +46,35 @@ MPJoinSlot mp_join_slots[NUM_PLAYERS];
 
 // XBE_GLOBAL(0x001637c0, 0x1d0)
 MP_skin MP_skins[29] = {
-    {.skinHashcode = HT_Skin_000089, .fileHashcode = HT_File_0001b4, .handType = 4},
-    {.skinHashcode = HT_Skin_0000a5, .fileHashcode = HT_File_0001ec, .handType = 4},
-    {.skinHashcode = HT_Skin_00008e, .fileHashcode = HT_File_0001bc, .handType = 5},
-    {.skinHashcode = HT_Skin_000092, .fileHashcode = HT_File_0001c5, .handType = 6},
-    {.skinHashcode = HT_Skin_000095, .fileHashcode = HT_File_0001c9, .handType = 6},
-    {.skinHashcode = HT_Skin_000096, .fileHashcode = HT_File_0001d5, .handType = 6},
-    {.skinHashcode = HT_Skin_000097, .fileHashcode = HT_File_0001dd, .handType = 4},
-    {.skinHashcode = HT_Skin_000098, .fileHashcode = HT_File_0001de, .handType = 4},
-    {.skinHashcode = HT_Skin_00009a, .fileHashcode = HT_File_0001e1, .handType = 4},
-    {.skinHashcode = HT_Skin_0000c6, .fileHashcode = HT_File_00021b, .handType = 4},
-    {.skinHashcode = HT_Skin_00009e, .fileHashcode = HT_File_0001e5, .handType = 5},
-    {.skinHashcode = HT_Skin_0000a0, .fileHashcode = HT_File_0001e7, .handType = 4},
-    {.skinHashcode = HT_Skin_0000a4, .fileHashcode = HT_File_0001eb, .handType = 4},
-    {.skinHashcode = HT_Skin_00008b, .fileHashcode = HT_File_0001b7, .handType = 4},
-    {.skinHashcode = HT_Skin_0000bb, .fileHashcode = HT_File_00020b, .handType = 4},
-    {.skinHashcode = HT_Skin_00001c, .fileHashcode = HT_File_00012f, .handType = 4},
-    {.skinHashcode = HT_Skin_00001d, .fileHashcode = HT_File_00012a, .handType = 4},
-    {.skinHashcode = HT_Skin_00001f, .fileHashcode = HT_File_00012d, .handType = 4},
-    {.skinHashcode = HT_Skin_000056, .fileHashcode = HT_File_00015a, .handType = 6},
-    {.skinHashcode = HT_Skin_000060, .fileHashcode = HT_File_00016a, .handType = 6},
-    {.skinHashcode = HT_Skin_000063, .fileHashcode = HT_File_000170, .handType = 6},
-    {.skinHashcode = HT_Skin_000086, .fileHashcode = HT_File_0001af, .handType = 6},
-    {.skinHashcode = HT_Skin_000081, .fileHashcode = HT_File_0001aa, .handType = 7},
-    {.skinHashcode = HT_Skin_000082, .fileHashcode = HT_File_0001ab, .handType = 6},
-    {.skinHashcode = HT_Skin_000084, .fileHashcode = HT_File_0001ad, .handType = 4},
-    {.skinHashcode = HT_Skin_00006b, .fileHashcode = HT_File_00017e, .handType = 5},
-    {.skinHashcode = HT_Skin_SkinOddjobHat, .fileHashcode = HT_File_0001ae, .handType = 4},
-    {.skinHashcode = HT_Skin_00007b, .fileHashcode = HT_File_0001a1, .handType = 4},
-    {.skinHashcode = HT_Skin_0000b9, .fileHashcode = HT_File_000208, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_bond_combat, .fileHashcode = HT_File_Mp_bond_combat, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_drake_suit, .fileHashcode = HT_File_Mp_drake_suit, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_rook_scarred, .fileHashcode = HT_File_Mp_rook_scarred, .handType = 5},
+    {.skinHashcode = HT_Skin_Mp_kiko_combat, .fileHashcode = HT_File_Mp_kiko_combat, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_alura_combat, .fileHashcode = HT_File_Mp_alura_combat, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_domanique, .fileHashcode = HT_File_Mp_domanique, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_snow_guard, .fileHashcode = HT_File_Mp_snow_guard, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_black_ops, .fileHashcode = HT_File_Mp_black_ops, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_yakuza_suit, .fileHashcode = HT_File_Mp_yakuza_suit, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_EliteCombat, .fileHashcode = HT_File_Mp_phoenix_commando, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_phoenix_soldier, .fileHashcode = HT_File_Mp_phoenix_soldier, .handType = 5},
+    {.skinHashcode = HT_Skin_Mp_ninja, .fileHashcode = HT_File_Mp_ninja, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_bond_tux, .fileHashcode = HT_File_Mp_bond_tux, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_drake, .fileHashcode = HT_File_Mp_drake, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_bond_spacesuit, .fileHashcode = HT_File_Mp_bond_spacesuit, .handType = 4},
+    {.skinHashcode = HT_Skin_MP_Goldfinger, .fileHashcode = HT_File_MP_Goldfinger, .handType = 4},
+    {.skinHashcode = HT_Skin_MP_Renard, .fileHashcode = HT_File_MP_Renard, .handType = 4},
+    {.skinHashcode = HT_Skin_MP_Scaramanga, .fileHashcode = HT_File_MP_Scaramanga, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_pussy_galore, .fileHashcode = HT_File_Mp_pussy_galore, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_christmas_jones, .fileHashcode = HT_File_Mp_christmas_jones, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_wai_lin, .fileHashcode = HT_File_Mp_wai_lin, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_xenia_onatopp, .fileHashcode = HT_File_Mp_xenia_onatopp, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_mayday, .fileHashcode = HT_File_Mp_mayday, .handType = 7},
+    {.skinHashcode = HT_Skin_Elektra_pants, .fileHashcode = HT_File_Elektra_pants, .handType = 6},
+    {.skinHashcode = HT_Skin_Mp_jaws, .fileHashcode = HT_File_Mp_jaws, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_baron_samedi, .fileHashcode = HT_File_Mp_baron_samedi, .handType = 5},
+    {.skinHashcode = HT_Skin_Mp_odd_job, .fileHashcode = HT_File_Mp_odd_job, .handType = 4},
+    {.skinHashcode = HT_Skin_Mp_nick_nack, .fileHashcode = HT_File_Mp_nick_nack, .handType = 4},
+    {.skinHashcode = HT_Skin_MP_Zorin, .fileHashcode = HT_File_MP_Zorin, .handType = 4},
 };
 
 // XBE_GLOBAL(0x001f660c, 0x4)
@@ -1508,9 +1508,9 @@ void MP_Start(void) {
                 continue;
             AssassinSpriteInfo.linkedViewer = 5;
             // The assassin sprites' textures (names ours)
-            AssassinSpriteInfo.textureHashcode = HT_Texture_MpAssassin180;
+            AssassinSpriteInfo.textureHashcode = HT_Texture_MP_icon_assassin;
             MPGame.radarMarks[i].assassin = Sprite_Create2(&AssassinSpriteInfo);
-            AssassinSpriteInfo.textureHashcode = HT_Texture_MpAssassin189;
+            AssassinSpriteInfo.textureHashcode = HT_Texture_MP_icon_target2;
             MPGame.radarMarks[i].target = Sprite_Create2(&AssassinSpriteInfo);
         }
     }
@@ -1987,7 +1987,7 @@ void MP_EquipPlayer(obj_tag *player) {
         Player_EquipAmmo(blData, 0x1b, (ushort)weapon_data[0x1b].clipSize);
     if (MPSettings.GrappleEnabled)
         Player_EquipWeapon(blData, (short)Upgrade_MPWeapon(blData->playerNum, 0x50), 0);
-    if (player->animState->animObj.skin->hashcode == HT_Skin_SkinOddjobHat)
+    if (player->animState->animObj.skin->hashcode == HT_Skin_Mp_odd_job)
         Player_EquipWeapon(blData, Weap_OddjobHat, 1);
 
     MPTeam team = MPSettings.Player[blData->playerNum].TeamId;

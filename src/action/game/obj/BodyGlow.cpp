@@ -44,7 +44,7 @@ obj_tag* BodyGlow_Create(obj_tag *owner) {
         return NULL;
     obj_tag *glow = control_create_object(sizeof(BODYGLOW_tag), &owner->position, &owner->rotation, NULL);
     glow->objectType = OBJECTTYPE_BODYGLOW;
-    hashtable_set_object_to_entity_gfx(glow, HT_Entity_Bodyglow);
+    hashtable_set_object_to_entity_gfx(glow, HT_Entity_lazer_muzzle);
     glow->effectFlags |= 0x2408;
     glow->scale = 6.0f;
     build_LinkToRoom(glow, 0, glb_world);
@@ -55,7 +55,7 @@ obj_tag* BodyGlow_Create(obj_tag *owner) {
     data->life = 0x100;
     for (int i = 0; i < BODYGLOW_BEAMS; i++) {
         obj_tag *beam = control_create_object(0, &owner->position, &owner->rotation, NULL);
-        hashtable_set_object_to_entity_gfx(beam, HT_Entity_BodyglowBeam);
+        hashtable_set_object_to_entity_gfx(beam, HT_Entity_BoneGlow);
         data->beams[i] = beam;
         beam->effectFlags |= 0x2400;
         beam->objectType = OBJECTTYPE_GFX;

@@ -601,7 +601,7 @@ void RandomWorld(void) {
     memset(&world.skin, 0, sizeof(world.skin));
     ((AnimState *)world.gunAnim)->animObj.skin = &world.skin;
     world.skin.numDatums = (uchar)(ShadowRand(3) ? 4 : 0);
-    world.skin.hashcode = ShadowRand(2) ? HT_Skin_00004b : HT_Skin_000050;
+    world.skin.hashcode = ShadowRand(2) ? HT_Skin_Watch : HT_Skin_DeutscheM9K;
     static const ushort gunStates[] = {0, 0, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 9, 9, 10, 11, 12, 12, 13, 14, 15, 16, 17};
     world.gun.curState = gunStates[ShadowRand(COUNT(gunStates))];
     world.gun.subState = (ushort)ShadowRand(70);

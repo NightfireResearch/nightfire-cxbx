@@ -475,7 +475,7 @@ void HUD_CreateShrink(BLData *playerInfo, HUDPANE_tag *pane, HUDPANECREATE_tag *
 
 // XBE_GLOBAL(0x0017f778, 0x2c)
 static SpriteInfo CrossHair = {0xff0000ff, 0x7f7f7fff, 0x001f, 0x0800, 0, 0, 0, 0, 0, 0, 0, 0,
-    (Action_TranslatedText)0xffffffff, NULL, HT_Texture_000026, 5, {0, 0, 0}};
+    (Action_TranslatedText)0xffffffff, NULL, HT_Texture_gunsight, 5, {0, 0, 0}};
 // XBE_GLOBAL(0x002790b8, 0x2)
 static int16_t ttimer;
 // XBE_GLOBAL(0x002790bc, 0x2)
@@ -530,7 +530,7 @@ static SpriteInfo AmmoSprInfo[8] = {
         .onscreenWidth = 68,
         .onscreenHeight = 22,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -546,7 +546,7 @@ static SpriteInfo AmmoSprInfo[8] = {
         .spritesheetWidth = 25,
         .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000128,
+        .textureHashcode = HT_Texture_AmmoTypes,
         .linkedViewer = 5,
     },
     {
@@ -562,7 +562,7 @@ static SpriteInfo AmmoSprInfo[8] = {
         .spritesheetWidth = 25,
         .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000128,
+        .textureHashcode = HT_Texture_AmmoTypes,
         .linkedViewer = 5,
     },
     {
@@ -571,7 +571,7 @@ static SpriteInfo AmmoSprInfo[8] = {
         .depth = 31,
         .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_CrosshairSamurai,
+        .textureHashcode = HT_Texture_Sight_temp2,
         .linkedViewer = 5,
     },
 };
@@ -590,7 +590,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 32,
         .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -606,7 +606,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 29,
         .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -622,7 +622,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 30,
         .spritesheetHeight = 44,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -638,7 +638,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 45,
         .spritesheetHeight = 29,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -654,7 +654,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 38,
         .spritesheetHeight = 34,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -669,7 +669,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 23,
         .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -685,7 +685,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 36,
         .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -701,7 +701,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 43,
         .spritesheetHeight = 27,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -717,7 +717,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 35,
         .spritesheetHeight = 49,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -733,7 +733,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 37,
         .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -749,7 +749,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 51,
         .spritesheetHeight = 38,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -765,7 +765,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 47,
         .spritesheetHeight = 42,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -781,7 +781,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 33,
         .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -797,7 +797,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 42,
         .spritesheetHeight = 39,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -813,7 +813,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 50,
         .spritesheetHeight = 30,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -829,7 +829,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetWidth = 85,
         .spritesheetHeight = 86,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -838,7 +838,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .depth = 28,
         .flags = 6144,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_GOLD007BONUS,
+        .textureHashcode = HT_Texture_gold007,
         .linkedViewer = 5,
     },
     {
@@ -857,7 +857,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconStanding,
+        .textureHashcode = HT_Texture_640_wallhug_icon,
         .linkedViewer = 5,
     },
     {
@@ -868,7 +868,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconCrouching,
+        .textureHashcode = HT_Texture_Crouch,
         .linkedViewer = 5,
     },
     {
@@ -879,7 +879,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018d,
+        .textureHashcode = HT_Texture_HitDirection,
         .linkedViewer = 5,
     },
     {
@@ -890,7 +890,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018d,
+        .textureHashcode = HT_Texture_HitDirection,
         .linkedViewer = 5,
     },
     {
@@ -901,7 +901,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018e,
+        .textureHashcode = HT_Texture_HitDirectionH,
         .linkedViewer = 5,
     },
     {
@@ -912,7 +912,7 @@ static SpriteInfo HealthSprInfo[24] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018e,
+        .textureHashcode = HT_Texture_HitDirectionH,
         .linkedViewer = 5,
     },
 };
@@ -929,7 +929,7 @@ static SpriteInfo AirSprInfo[3] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -944,7 +944,7 @@ static SpriteInfo AirSprInfo[3] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -955,7 +955,7 @@ static SpriteInfo AirSprInfo[3] = {
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017d,
+        .textureHashcode = HT_Texture_SP_grip_meter_hand,
         .linkedViewer = 5,
     },
 };
@@ -969,7 +969,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -982,7 +982,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .spritesheetWidth = 255,
         .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000055,
+        .textureHashcode = HT_Texture_Frame,
         .linkedViewer = 5,
     },
     {
@@ -993,7 +993,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 48,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000056,
+        .textureHashcode = HT_Texture_Axis_bar,
         .linkedViewer = 5,
     },
     {
@@ -1004,7 +1004,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 464,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000056,
+        .textureHashcode = HT_Texture_Axis_bar,
         .linkedViewer = 5,
     },
     {
@@ -1015,7 +1015,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 48,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000057,
+        .textureHashcode = HT_Texture_Height_scroll_bars,
         .linkedViewer = 5,
     },
     {
@@ -1026,7 +1026,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 560,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000057,
+        .textureHashcode = HT_Texture_Height_scroll_bars,
         .linkedViewer = 5,
     },
     {
@@ -1037,7 +1037,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 48,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000057,
+        .textureHashcode = HT_Texture_Height_scroll_bars,
         .linkedViewer = 5,
     },
     {
@@ -1048,7 +1048,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 560,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000057,
+        .textureHashcode = HT_Texture_Height_scroll_bars,
         .linkedViewer = 5,
     },
     {
@@ -1059,7 +1059,7 @@ static SpriteInfo CameraSprInfo[9] = {
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000090,
+        .textureHashcode = HT_Texture_Cam_viewfinder,
         .linkedViewer = 5,
     },
 };
@@ -1075,7 +1075,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .spritesheetWidth = 127,
         .spritesheetHeight = 255,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_RlaunchUi4A,
+        .textureHashcode = HT_Texture_Static_1_test,
         .linkedViewer = 5,
     },
     {
@@ -1086,7 +1086,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1097,7 +1097,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1111,7 +1111,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -1127,7 +1127,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -1138,7 +1138,7 @@ static SpriteInfo NightSightSprInfo[6] = {
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017e,
+        .textureHashcode = HT_Texture_SP_power_gauge_battery,
         .linkedViewer = 5,
     },
 };
@@ -1152,7 +1152,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00004f,
+        .textureHashcode = HT_Texture_Flare1,
         .linkedViewer = 5,
     },
     {
@@ -1163,7 +1163,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000050,
+        .textureHashcode = HT_Texture_Flare2,
         .linkedViewer = 5,
     },
     {
@@ -1172,7 +1172,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .depth = 0xffff,
         .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000051,
+        .textureHashcode = HT_Texture_Flare3,
         .linkedViewer = 5,
     },
     {
@@ -1183,7 +1183,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .spritesheetWidth = 63,
         .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000052,
+        .textureHashcode = HT_Texture_Flare4,
         .linkedViewer = 5,
     },
     {
@@ -1194,7 +1194,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000050,
+        .textureHashcode = HT_Texture_Flare2,
         .linkedViewer = 5,
     },
     {
@@ -1203,7 +1203,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .depth = 0xffff,
         .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000051,
+        .textureHashcode = HT_Texture_Flare3,
         .linkedViewer = 5,
     },
     {
@@ -1212,7 +1212,7 @@ static SpriteInfo LensFlareSprInfo[7] = {
         .depth = 0xffff,
         .flags = 2304,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000082,
+        .textureHashcode = HT_Texture_flaresun2,
         .linkedViewer = 5,
     },
 };
@@ -1226,7 +1226,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1237,7 +1237,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .posX = 320,
         .posY = 192,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000176,
+        .textureHashcode = HT_Texture_bz,
         .linkedViewer = 5,
     },
     {
@@ -1248,7 +1248,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .posX = 320,
         .posY = 288,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000176,
+        .textureHashcode = HT_Texture_bz,
         .linkedViewer = 5,
     },
     {
@@ -1259,7 +1259,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_CrosshairSamurai,
+        .textureHashcode = HT_Texture_Sight_temp2,
         .linkedViewer = 5,
     },
     {
@@ -1272,7 +1272,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .onscreenWidth = 2,
         .onscreenHeight = 128,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1285,7 +1285,7 @@ static SpriteInfo RCCarSprInfo[6] = {
         .onscreenWidth = 2,
         .onscreenHeight = 128,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
 };
@@ -1297,7 +1297,7 @@ static SpriteInfo RadarSprInfo[1] = {
         .depth = 30,
         .posX = 640,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_RadarBg,
+        .textureHashcode = HT_Texture_MPradar,
         .linkedViewer = 5,
     },
 };
@@ -1324,7 +1324,7 @@ static SpriteInfo XraySprInfo[5] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1338,7 +1338,7 @@ static SpriteInfo XraySprInfo[5] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -1354,7 +1354,7 @@ static SpriteInfo XraySprInfo[5] = {
         .spritesheetWidth = 256,
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017f,
+        .textureHashcode = HT_Texture_SP_meter_bar,
         .linkedViewer = 5,
     },
     {
@@ -1365,7 +1365,7 @@ static SpriteInfo XraySprInfo[5] = {
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017e,
+        .textureHashcode = HT_Texture_SP_power_gauge_battery,
         .linkedViewer = 5,
     },
 };
@@ -1380,7 +1380,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .spritesheetWidth = 16,
         .spritesheetHeight = 320,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000ad,
+        .textureHashcode = HT_Texture_Lines,
         .linkedViewer = 5,
     },
     {
@@ -1391,7 +1391,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 100,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000aa,
+        .textureHashcode = HT_Texture_Corner,
         .linkedViewer = 5,
     },
     {
@@ -1402,7 +1402,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 100,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000aa,
+        .textureHashcode = HT_Texture_Corner,
         .linkedViewer = 5,
     },
     {
@@ -1413,7 +1413,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 476,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000aa,
+        .textureHashcode = HT_Texture_Corner,
         .linkedViewer = 5,
     },
     {
@@ -1424,7 +1424,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 476,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000aa,
+        .textureHashcode = HT_Texture_Corner,
         .linkedViewer = 5,
     },
     {
@@ -1435,7 +1435,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 540,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000ab,
+        .textureHashcode = HT_Texture_REC,
         .linkedViewer = 5,
     },
     {
@@ -1446,7 +1446,7 @@ static SpriteInfo SecCamSprInfo[7] = {
         .posX = 480,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000ac,
+        .textureHashcode = HT_Texture_ON_light,
         .linkedViewer = 5,
     },
 };
@@ -1460,7 +1460,7 @@ static SpriteInfo OICWSprInfo[7] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1477,7 +1477,7 @@ static SpriteInfo OICWSprInfo[7] = {
         .spritesheetWidth = 127,
         .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000141,
+        .textureHashcode = HT_Texture_T800R,
         .linkedViewer = 5,
     },
     {
@@ -1536,7 +1536,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1548,7 +1548,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .onscreenWidth = 67,
         .onscreenHeight = 36,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1559,7 +1559,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .posX = 70,
         .posY = 58,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000dc,
+        .textureHashcode = HT_Texture_ronin_s,
         .linkedViewer = 5,
     },
     {
@@ -1570,7 +1570,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .posX = 70,
         .posY = 78,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_0000de,
+        .textureHashcode = HT_Texture_v20,
         .linkedViewer = 5,
     },
     {
@@ -1583,7 +1583,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .onscreenWidth = 438,
         .onscreenHeight = 36,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1598,7 +1598,7 @@ static SpriteInfo RoninSprInfo[6] = {
         .spritesheetWidth = 63,
         .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000146,
+        .textureHashcode = HT_Texture_thing2,
         .linkedViewer = 5,
     },
 };
@@ -1614,7 +1614,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 360,
         .onscreenHeight = 4,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1627,7 +1627,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 360,
         .onscreenHeight = 4,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1640,7 +1640,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 40,
         .onscreenHeight = 2,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1653,7 +1653,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 40,
         .onscreenHeight = 2,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1666,7 +1666,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 2,
         .onscreenHeight = 40,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
     {
@@ -1679,7 +1679,7 @@ static SpriteInfo LaserSprInfo[6] = {
         .onscreenWidth = 2,
         .onscreenHeight = 40,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_ColourFill,
+        .textureHashcode = HT_Texture_Square,
         .linkedViewer = 5,
     },
 };
@@ -1693,7 +1693,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 470,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000179,
+        .textureHashcode = HT_Texture_SpaceMap_Main2,
         .linkedViewer = 5,
     },
     {
@@ -1704,7 +1704,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 497,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1715,7 +1715,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 555,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1726,7 +1726,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 497,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1737,7 +1737,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 555,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1748,7 +1748,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 497,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1759,7 +1759,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 555,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1770,7 +1770,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 497,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1781,7 +1781,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 555,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000178,
+        .textureHashcode = HT_Texture_SpaceMap_Idle,
         .linkedViewer = 5,
     },
     {
@@ -1792,7 +1792,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 497,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017b,
+        .textureHashcode = HT_Texture_SpaceMap_Iris,
         .linkedViewer = 5,
     },
     {
@@ -1803,7 +1803,7 @@ static SpriteInfo SpaceSprInfo[11] = {
         .posX = 543,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00017b,
+        .textureHashcode = HT_Texture_SpaceMap_Iris,
         .linkedViewer = 5,
     },
 };
@@ -1850,7 +1850,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .depth = 29,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000172,
+        .textureHashcode = HT_Texture_MPhealth_back,
         .linkedViewer = 5,
     },
     {
@@ -1869,7 +1869,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .depth = 28,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000171,
+        .textureHashcode = HT_Texture_MPhealth_bar,
         .linkedViewer = 5,
     },
     {
@@ -1879,7 +1879,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .posX = 64,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_000170,
+        .textureHashcode = HT_Texture_MParmor,
         .linkedViewer = 5,
     },
     {
@@ -1890,7 +1890,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018d,
+        .textureHashcode = HT_Texture_HitDirection,
         .linkedViewer = 5,
     },
     {
@@ -1901,7 +1901,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018d,
+        .textureHashcode = HT_Texture_HitDirection,
         .linkedViewer = 5,
     },
     {
@@ -1912,7 +1912,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018e,
+        .textureHashcode = HT_Texture_HitDirectionH,
         .linkedViewer = 5,
     },
     {
@@ -1923,7 +1923,7 @@ static SpriteInfo MPHealthSprInfo[8] = {
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_00018e,
+        .textureHashcode = HT_Texture_HitDirectionH,
         .linkedViewer = 5,
     },
 };
@@ -1955,7 +1955,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000182,
+        .textureHashcode = HT_Texture_MP_icon_flag,
         .linkedViewer = 5,
     },
     {
@@ -1965,7 +1965,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000182,
+        .textureHashcode = HT_Texture_MP_icon_flag,
         .linkedViewer = 5,
     },
     {
@@ -1975,7 +1975,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000188,
+        .textureHashcode = HT_Texture_MP_score_points,
         .linkedViewer = 5,
     },
     {
@@ -1985,7 +1985,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000187,
+        .textureHashcode = HT_Texture_MP_score_kills,
         .linkedViewer = 5,
     },
     {
@@ -1995,7 +1995,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .flags = 256,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000186,
+        .textureHashcode = HT_Texture_MP_score_deaths,
         .linkedViewer = 5,
     },
     {
@@ -2005,7 +2005,7 @@ static SpriteInfo MPScoreSprInfo[7] = {
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
-        .textureHashcode = HT_Texture_000182,
+        .textureHashcode = HT_Texture_MP_icon_flag,
         .linkedViewer = 5,
     },
 };
@@ -2031,7 +2031,7 @@ static SpriteInfo MissionStatusSprInfo[3] = {
         .spritesheetWidth = 1,
         .spritesheetHeight = 103,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
 };
@@ -2050,7 +2050,7 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetWidth = 1,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2064,7 +2064,7 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2078,7 +2078,7 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2106,7 +2106,7 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetWidth = 1,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2120,7 +2120,7 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2134,7 +2134,7 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
 };
@@ -2153,7 +2153,7 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetWidth = 1,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2167,7 +2167,7 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
     {
@@ -2181,7 +2181,7 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetWidth = 5,
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
-        .textureHashcode = HT_Texture_IconSpHudArmorAmmoOverlay,
+        .textureHashcode = HT_Texture_Hud2Gfx,
         .linkedViewer = 5,
     },
 };
@@ -2287,22 +2287,22 @@ void HUD_InitPickupStatusFormats(void) {
 // TODO: Change from 640x480 to generic
 // XBE_GLOBAL(0x00180388, 0x1e4)
 SpriteInfo RedeemerSpriteInfo[] = {
-	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_RlaunchUi5E, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
-	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	255, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_RlaunchUi4A, 5, 0, 0, 0}, // 1: Static lines
-	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_ColourFill, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128, 			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Main_centre, 5, 0, 0, 0}, // 0: Central reticle. The image is only 1/4 of the whole - repeats mirrored in H and V?
+	{0xffffff40, 0x7f7f7fff, 0x0022, 0x0100, 0,		0,		SCREEN_WIDTH, 	SCREEN_HEIGHT,	0, 	0, 	127, 	255, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Static_1_test, 5, 0, 0, 0}, // 1: Static lines
+	{0x7f7f7fff, 0x7f7f7fff, 0xffff, 0x0200, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0, 	0, 	0, 		0,		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Square, 5, 0, 0, 0}, // 2: Blackout on missile destroyed
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 0,		144, 	0,				0,				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE, NULL,
-     HT_Texture_RlaunchUi5F, 5, 0, 0, 0},
-	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_RlaunchUi5F, 5, 0, 0, 0}, // Flags mean just mirrored?
+     HT_Texture_Main_sides, 5, 0, 0, 0},
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	144,	0,				0,				0, 	0, 	0,		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Main_sides, 5, 0, 0, 0}, // Flags mean just mirrored?
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 0, 	336, 	0, 				0, 				0, 	0, 	0,		0,		Action_TranslatedText_NULLVALUE,
-     NULL, HT_Texture_RlaunchUi5C, 5, 0, 0, 0},
+     NULL, HT_Texture_Bottom_Strip1, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 384, 	336, 	0, 				0, 				0, 	0,	0,		0,		Action_TranslatedText_NULLVALUE,
-     NULL, HT_Texture_RlaunchUi5C, 5, 0, 0, 0},
+     NULL, HT_Texture_Bottom_Strip1, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0100, 174, 	282, 	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL,
-     HT_Texture_RlaunchUi5D, 5, 0, 0, 0},
+     HT_Texture_Bottom_Strip2, 5, 0, 0, 0},
 	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0140, 402,	282,	0,				0,				0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL,
-     HT_Texture_RlaunchUi5D, 5, 0, 0, 0},
-	{0x300000ff, 0x7f7f7fff, 0x0023, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_ColourFill, 5, 0, 0, 0}, // 9: Red colour tint?
-	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_RlaunchUi59, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
+     HT_Texture_Bottom_Strip2, 5, 0, 0, 0},
+	{0x300000ff, 0x7f7f7fff, 0x0023, 0x0100, 0,		0,		SCREEN_WIDTH,	SCREEN_HEIGHT, 	0,	0,	0,		0,		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Square, 5, 0, 0, 0}, // 9: Red colour tint?
+	{0x7f7f7f78, 0x7f7f7fff, 0x0022, 0x0500, 256, 	176, 	128,			128, 			1, 	1, 	127, 	127, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_scope2, 5, 0, 0, 0} // 10: Target designator on chopper. The image is only 1/4 of the whole - repeats mirrored in H and V?
 };
 
 // XBE_GLOBAL(0x0018056c, 0x1c)
@@ -2334,7 +2334,7 @@ void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cr
         }
         // The guided missile's sight's pieces
         parts[i] = Control_CreateObjEx(0, &CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, NULL,
-                                       hashtable_hashcode_to_celglist(HT_Entity_RedeemerSight), NULL, 0, 0x20, 2.0f, 0,
+                                       hashtable_hashcode_to_celglist(HT_Entity_Horizon_centre), NULL, 0, 0x20, 2.0f, 0,
                                        0xff, 0xff, 0xff);
         parts[i]->position.z = 1.0f;
         parts[i]->displayMask = 0x20;
@@ -2342,11 +2342,11 @@ void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cr
         build_LinkToRoom(parts[i], 0, glb_viewer[5]->world);
     }
     if (parts[0] != NULL)
-        hashtable_set_object_to_entity_gfx(parts[0], HT_Entity_RedeemerSight);
+        hashtable_set_object_to_entity_gfx(parts[0], HT_Entity_Horizon_centre);
     if (parts[1] != NULL)
-        hashtable_set_object_to_entity_gfx(parts[1], HT_Entity_RedeemerSightArm);
+        hashtable_set_object_to_entity_gfx(parts[1], HT_Entity_Outer_Horizon);
     if (parts[2] != NULL)
-        hashtable_set_object_to_entity_gfx(parts[2], HT_Entity_RedeemerSightArm);
+        hashtable_set_object_to_entity_gfx(parts[2], HT_Entity_Outer_Horizon);
 }
 
 // One of the lens flare's rings: at along of the way from the centre of the view (cx, cy) to the sun on the screen,
@@ -2423,8 +2423,8 @@ void HUD_UpdateLensFlarePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
 // XBE_GLOBAL(0x0017f950, 0x58)
 SpriteInfo BloodSprInfo[] = {
-	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_BloodDrip, 5, 0, 0, 0}, // Drippy edge
-	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_ColourFill, 5, 0, 0, 0}, // Colour fill
+	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0, 	0, 		SCREEN_WIDTH, 	32,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Blood, 5, 0, 0, 0}, // Drippy edge
+	{0x007f7fff, 0x7f7f7fff, 0x0009, 0x0200, 0,		0,		SCREEN_WIDTH, 	64,	0, 	0, 	0, 	0, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Square, 5, 0, 0, 0}, // Colour fill
 };
 
 // XBE_GLOBAL(0x0017f9a8, 0x1c)
@@ -2445,9 +2445,9 @@ HUDPANECREATE_tag BloodPane = {
 
 // XBE_GLOBAL(0x0017fec8, 0x84)
 SpriteInfo SightSprInfo[] = { // Scope (square fitted to SCREEN_HEIGHT), left bar, right bar: the bars a pixel over it
-	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_SniperScope, 5, 0, 0, 0}, // Scope graphic centre
-	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_ColourFill, 5, 0, 0, 0}, // Fill left
-	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2 - 1, 0, (SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_ColourFill, 5, 0, 0, 0}, // Fill right
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0600, (SCREEN_WIDTH-SCREEN_HEIGHT)/2, 	0, 		SCREEN_HEIGHT, 						SCREEN_HEIGHT,	0, 	0, 	0x1FF,	0x1FF, 	Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Scope, 5, 0, 0, 0}, // Scope graphic centre
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, 0,									0,		(SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Square, 5, 0, 0, 0}, // Fill left
+	{0x7f7f7fff, 0x7f7f7fff, 0x0027, 0x0200, (SCREEN_WIDTH+SCREEN_HEIGHT)/2 - 1, 0, (SCREEN_WIDTH-SCREEN_HEIGHT)/2 + 1, SCREEN_HEIGHT,	0, 	0, 	0, 		0, 		Action_TranslatedText_NULLVALUE, NULL, HT_Texture_Square, 5, 0, 0, 0}, // Fill right
 };
 
 // XBE_GLOBAL(0x0017ff4c, 0x1c)
@@ -2594,7 +2594,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         obj_tag *device = blData->remoteControlDevice;
         if (device == NULL)
             return;
-        CAR_INFO *car = device->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_LittleNellieBody)
+        CAR_INFO *car = device->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_LittleNellie)
                             ? (CAR_INFO *)device->extraObjectData
                             : (CAR_INFO *)device->parent->extraObjectData;
         sprintf(count->text, "%d", (ushort)car->mainAmmo);
@@ -2737,7 +2737,7 @@ int switch_SHOW_COORDS;
 #define HEALTH_NUM_HEALTH       7
 #define HEALTH_BACKING          15  // the tinted panel behind both bars
 #define HEALTH_NUM_BARS         16  // 0-15, hidden together when a full-screen pane is up
-#define HEALTH_BOND_MOMENT      16  // HT_Texture_GOLD007BONUS, spun in at the top of the screen
+#define HEALTH_BOND_MOMENT      16  // HT_Texture_gold007, spun in at the top of the screen
 #define HEALTH_COORDS           17  // the coordinates cheat's text
 #define HEALTH_THIRD_ICON       18  // what the player can do here (grapple, wire, ...)
 #define HEALTH_CROUCH_ICON      19
@@ -2754,8 +2754,8 @@ int switch_SHOW_COORDS;
 
 // The third-person icons, indexed by BLData.thirdIcon
 static const HASHCODE ThirdIconSprites[7] = {
-    HT_Texture_000064, HT_Texture_000065, HT_Texture_IconGrapple, HT_Texture_IconWire,
-    HT_Texture_000068, HT_Texture_000069, HT_Texture_IconStanding
+    HT_Texture_ThirdIcon0, HT_Texture_ThirdIcon1, HT_Texture_640_grapple_icon, HT_Texture_640_handoverhand_icon,
+    HT_Texture_ThirdIcon4, HT_Texture_ThirdIcon5, HT_Texture_640_wallhug_icon
 };
 
 // AUTOINJECT
@@ -2948,7 +2948,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     // The crouch icon: on while crouching, then the "stand up" icon for a second, fading over the last half
     if (crouchIcon != NULL) {
         if (obj->subState == MovementType_Crouch) {
-            hashtable_set_sprite(crouchIcon, HT_Texture_IconCrouching);
+            hashtable_set_sprite(crouchIcon, HT_Texture_Crouch);
             crouchIcon->positionX = 48;
             crouchIcon->positionY = 48;
             crouchIcon->depth = HUD_ICON_ON;
@@ -2957,7 +2957,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             return;
         }
         if (CrouchIconTimer != 0) {
-            hashtable_set_sprite(crouchIcon, HT_Texture_IconUncrouch);
+            hashtable_set_sprite(crouchIcon, HT_Texture_Stand);
             crouchIcon->depth = HUD_ICON_ON;
             uchar a = 0xff;
             double half = (double)_FRAME_RATE * 0.5;
@@ -3241,7 +3241,7 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 	if(playerInfo->remoteControlDevice == NULL)
 		return;
 
-	if(playerInfo->remoteControlDevice->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_LittleNellieBody)) {
+	if(playerInfo->remoteControlDevice->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_LittleNellie)) {
 		// Helicopter overlay
 		pane->spriteList[0]->colourTint = 0x000020ff; // Blue tint
 		pane->spriteList[1]->depth = 0xff;
@@ -3279,20 +3279,20 @@ void HUD_UpdateSpacePane(BLData *param_1, HUDPANE_tag *pane, obj_tag *unused) {
 		
 		// Deploying - solid dot sprite, flashing green/white
 		if(deployState == 1) {
-			hashtable_set_sprite(spr, HT_Texture_000177);
+			hashtable_set_sprite(spr, HT_Texture_SpaceMap_Fail);
 			spr->colourTint = blink_state ? 0x00ff00ff : 0xffffffff;
 		}
 
 		// Destroyed - cross sprite, solid red
 		if (switchActive && deployState != 3) {
-			hashtable_set_sprite(spr, HT_Texture_00017a);
+			hashtable_set_sprite(spr, HT_Texture_SpaceMap_Success);
 			// Bright red when not yet fired, dimmer red once fired
 			spr->colourTint = (deployState == 2) ? 0xff000080: 0xff0000ff;
 		}
 
 		// Failed to disrupt the launch - solid green, faded a bit
 		if (deployState == 3) {
-			hashtable_set_sprite(spr, HT_Texture_000177);
+			hashtable_set_sprite(spr, HT_Texture_SpaceMap_Fail);
 			spr->colourTint = 0x00ff0080;
 		}
 	}
@@ -3852,7 +3852,7 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         mark->objectType = OBJECTTYPE_EFFECT;
         effect->life = 0;
         effect->fade = 0;
-        hashtable_set_object_to_entity_gfx(mark, HT_Entity_000832);
+        hashtable_set_object_to_entity_gfx(mark, HT_Entity_DroneScan);
         mark->effectFlags |= 0x2000;
         mark->parent = obj;
     }
@@ -4159,9 +4159,9 @@ void HUD_CreateMPScorePane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag 
         s[6]->positionY -= 0x30;
         s[2]->positionX = s[1]->positionX + 0x10;
         s[6]->positionX = s[2]->positionX + 0x10;
-        hashtable_set_sprite(s[1], HT_Texture_000185);
-        hashtable_set_sprite(s[2], HT_Texture_000185);
-        hashtable_set_sprite(s[6], HT_Texture_000185);
+        hashtable_set_sprite(s[1], HT_Texture_MP_icon_uplink);
+        hashtable_set_sprite(s[2], HT_Texture_MP_icon_uplink);
+        hashtable_set_sprite(s[6], HT_Texture_MP_icon_uplink);
     } else {
         s[1]->positionY -= 0x18;
         s[2]->positionY -= 0x18;
@@ -4221,14 +4221,14 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         case GM_CTF:
             if (MP_IsFlagParent(me, team == 0)) {
                 iconA->depth = HUD_HIT_ON;
-                hashtable_set_sprite(iconA, HT_Texture_000182);
+                hashtable_set_sprite(iconA, HT_Texture_MP_icon_flag);
                 iconA->colourTint = team != 0 ? 0xff0000ff : 0x0040ffff;
             }
             return;
         case GM_BLUEPRINT:
             if (MP_IsBluePrintParent(me)) {
                 iconA->depth = HUD_HIT_ON;
-                hashtable_set_sprite(iconA, HT_Texture_00018a);
+                hashtable_set_sprite(iconA, HT_Texture_MP_icon_disc);
             }
             return;
         case GM_UPLINK: {
@@ -4254,11 +4254,11 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         case GM_GOLDENEYE:
             if (MP_ObjTeamHasGEObj(me, 0)) {
                 iconA->depth = HUD_HIT_ON;
-                hashtable_set_sprite(iconA, HT_Texture_00018b);
+                hashtable_set_sprite(iconA, HT_Texture_MP_icon_goldeneye_left);
             }
             if (MP_ObjTeamHasGEObj(me, 1)) {
                 iconB->depth = HUD_HIT_ON;
-                hashtable_set_sprite(iconB, HT_Texture_00018c);
+                hashtable_set_sprite(iconB, HT_Texture_MP_icon_goldeneye_right);
             }
             break;
         case GM_ASSASSIN:
@@ -4268,11 +4268,11 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
     if (MP_IsAssasin(me)) {
         iconA->depth = HUD_HIT_ON;
-        hashtable_set_sprite(iconA, HT_Texture_MpAssassin180);
+        hashtable_set_sprite(iconA, HT_Texture_MP_icon_assassin);
     }
     if (MP_IsTarget(me)) {
         iconB->depth = HUD_HIT_ON;
-        hashtable_set_sprite(iconB, HT_Texture_MpAssassin189);
+        hashtable_set_sprite(iconB, HT_Texture_MP_icon_target2);
     }
 }
 
@@ -4285,7 +4285,7 @@ void HUD_CreateRadar(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *creat
     sprite **dots = (sprite **)pane->extraItems;
     for (ushort i = 0; i < create->numExtraItems; i++) {
         dots[i] = Sprite_CreateAndLink2Viewer(5);
-        Sprite_SetParams(dots[i], 0, pane->posX, pane->posY, HT_Texture_00016f, 0x005000ff);
+        Sprite_SetParams(dots[i], 0, pane->posX, pane->posY, HT_Texture_RadarLove, 0x005000ff);
         dots[i]->onscreenWidth = 2;
         dots[i]->onscreenHeight = 2;
         dots[i]->depth = 0xff;

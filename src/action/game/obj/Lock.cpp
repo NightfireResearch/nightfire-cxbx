@@ -125,7 +125,7 @@ void Lock_Update(obj_tag *obj) {
                 else
                     continue;
                 obj->subState = 2;
-                Emitter_Create(HT_Emitter_LockSparks, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0,
+                Emitter_Create(HT_Emitter_LaserSparks, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0,
                                0.0f);
                 obj->tweakG = ClampByte(obj->tweakG - heat);
                 obj->tweakB = ClampByte(obj->tweakB - heat);
@@ -193,7 +193,7 @@ void Lock_Update(obj_tag *obj) {
         GlobalVars.DecoderDigitAt = 0;
         GlobalVars.keypadBLData->active = 0;
         obj->curState = LOCKSTATE_KEYPAD_OPEN;
-        lock->menu = (ushort)MenuManager_Create(HT_Menu_000003, HT_MenuPage_000021, GlobalVars.keypadBLData->playerNum,
+        lock->menu = (ushort)MenuManager_Create(HT_Menu_Keypad, P_KEYPAD, GlobalVars.keypadBLData->playerNum,
                                                 1, 0x22, 0,
                                                 1);
         KeyCodeEntry *code = &KeyCodes[lock->key];

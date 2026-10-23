@@ -153,7 +153,7 @@ void SpaceLaser_Update(obj_tag *obj) {
             hitEffect->objectType = OBJECTTYPE_EFFECT;
             effectInfo->life = 5;
             effectInfo->fade = 0;
-            hashtable_set_object_to_entity_gfx(hitEffect, HT_Entity_SwooshBeam);
+            hashtable_set_object_to_entity_gfx(hitEffect, HT_Entity_lazer_Big);
             hitEffect->tweakA = 127 + Rand_Rand(128);
             control_link_object_to_cel(hitEffect, build_FindCel(&spaceLaser->emitterPnt, glb_world));
 
@@ -161,7 +161,7 @@ void SpaceLaser_Update(obj_tag *obj) {
             PositionBeam(hitEffect, &spaceLaser->emitterPnt, &spaceLaser->targetPnt);
 
             // Spawn an Emitter
-            Emitter_Create(HT_Emitter_000010, &spaceLaser->targetPnt, &CONST_UP_VECTOR, 0.0f, 0, 0, 0, 0.0f);
+            Emitter_Create(HT_Emitter_SpaceLaserHit, &spaceLaser->targetPnt, &CONST_UP_VECTOR, 0.0f, 0, 0, 0, 0.0f);
 
             // Return to the idle state
             spaceLaser->someTimerBeforeRunningScript = 10.0f;

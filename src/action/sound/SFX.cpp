@@ -1383,7 +1383,7 @@ void SFXLoadCorrectBank(void) {
     case HT_Level_EvilBase: LoadSoundBank(0x27); break;
     case HT_Level_EvilSilo: LoadSoundBank(0x28); break;
     case HT_Level_EvilBaseC: LoadSoundBank(0x2b); break;
-    case HT_Level_00001a:
+    case HT_Level_SpaceStationC:
     case HT_Level_SpaceStationD: LoadSoundBank(0x25); break;
     case HT_Level_SpaceStation:
     case HT_Level_Facility:

@@ -72,10 +72,10 @@ void psiDecompressWoman(void) {
         WomanFrame = 0;
         pWoman = MemoryForWoman;
     }
-    uint32_t *fire = (uint32_t *)WomanTextureFrame(HT_Texture_FireForWoman);
+    uint32_t *fire = (uint32_t *)WomanTextureFrame(HT_Texture_Fire2);
     if (fire == NULL)
         return;
-    uint32_t *out = (uint32_t *)WomanTextureFrame(HT_Texture_Discowoman);
+    uint32_t *out = (uint32_t *)WomanTextureFrame(HT_Texture_WomanBack);
     if (out == NULL)
         return;
 

@@ -586,7 +586,7 @@ obj_tag* Pickup_CreateFromSet(_VECTOR *pos, _VECTOR *rot, ushort kind) {
         beside.x = beside.x + 0.1f;
         beside.z = beside.z + 0.1f;
         weapon_definition_tag *ammo = &weapon_data[0x1b];
-        model = hashtable_hashcode_to_celglist(HT_Entity_AmmoPickupModel);
+        model = hashtable_hashcode_to_celglist(HT_Entity_Magazine2);
         obj = Pickup_Create(&beside, rot, NULL, model, PICKUP_KIND_AMMO, ammo->weaponVariantNum, ammo->clipSize, 0,
                             0xffff, 1, 3, 0, 0);
         if (obj == NULL)

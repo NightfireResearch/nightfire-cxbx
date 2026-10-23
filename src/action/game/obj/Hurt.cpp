@@ -132,10 +132,10 @@ obj_tag* Occlude_Create(_VECTOR *pos, ushort life, ushort kind) {
     HASHCODE model;
     switch (kind) {
     // The models of Occlude_Create's kinds 1 to 3, and of any other
-    case 1: model = HT_Entity_OccludeModel1; break;
-    case 2: model = HT_Entity_OccludeModel2; break;
-    case 3: model = HT_Entity_OccludeModel3; break;
-    default: model = HT_Entity_OccludeModelOther; break;
+    case 1: model = HT_Entity_OccludeSphere2; break;
+    case 2: model = HT_Entity_OccludeSphere3; break;
+    case 3: model = HT_Entity_OccludeSphere4; break;
+    default: model = HT_Entity_OccludeSphere1; break;
     }
     hashtable_set_object_to_entity_gfx(obj, model);
     build_LinkToRoom(obj, 0, glb_world);

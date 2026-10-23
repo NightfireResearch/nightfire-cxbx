@@ -50,10 +50,14 @@ static const Action_TranslatedText style_names[CONTROLLER_STYLES] = {
 
 // The labels round the controller's picture, and the line of the style each shows
 static const struct { HASHCODE label; uchar line; } style_picture_labels[16] = {
-    {HT_MenuControl_000047, 2}, {HT_MenuControl_000048, 3}, {HT_MenuControl_000051, 4}, {HT_MenuControl_000049, 5},
-    {HT_MenuControl_000050, 6}, {HT_MenuControl_00004a, 7}, {HT_MenuControl_00003f, 8}, {HT_MenuControl_000040, 9},
-    {HT_MenuControl_000041, 10}, {HT_MenuControl_000042, 11}, {HT_MenuControl_000043, 12}, {HT_MenuControl_000044, 13},
-    {HT_MenuControl_000045, 14}, {HT_MenuControl_000046, 15}, {HT_MenuControl_000094, 0}, {HT_MenuControl_000095, 1},
+    {SUB_P_CNCONTROLS_LINE_2, 2}, {SUB_P_CNCONTROLS_LINE_3, 3}, {SUB_P_CNCONTROLS_LINE_4, 4}, {SUB_P_CNCONTROLS_LINE_5,
+        5},
+    {SUB_P_CNCONTROLS_LINE_6, 6}, {SUB_P_CNCONTROLS_LINE_7, 7}, {SUB_P_CNCONTROLS_LINE_8, 8}, {SUB_P_CNCONTROLS_LINE_9,
+        9},
+    {SUB_P_CNCONTROLS_LINE_10, 10}, {SUB_P_CNCONTROLS_LINE_11, 11}, {SUB_P_CNCONTROLS_LINE_12, 12},
+        {SUB_P_CNCONTROLS_LINE_13, 13},
+    {SUB_P_CNCONTROLS_LINE_14, 14}, {SUB_P_CNCONTROLS_LINE_15, 15}, {SUB_P_CNCONTROLS_LINE_0, 0},
+        {SUB_P_CNCONTROLS_LINE_1, 1},
 };
 
 // A style shown round the controller's picture: its lines in the labels, and its own picture
@@ -173,14 +177,14 @@ typedef struct {
 } OPTION_RADIO;
 
 static const OPTION_RADIO game_options[8] = {
-    {HT_MenuControl_00011a, MP_ON, 1, MP_OFF, 0, &PlayerInput::vibrationEnabled},
-    {HT_MenuControl_00011b, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoAim},
-    {HT_MenuControl_000124, MP_ON, 1, MP_OFF, 0, &PlayerInput::crosshairsEnabled},
-    {HT_MenuControl_000125, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::crouchToggle},
-    {HT_MenuControl_000126, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::manualAimToggle},
-    {HT_MenuControl_0001cb, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoSwitchBetterWeapon},
-    {HT_MenuControl_000226, MP_ON, 2, MP_OFF, 0, &PlayerInput::flashingObjects},
-    {HT_MenuControl_00023b, MP_ON, 0, MP_OFF, 1, &PlayerInput::hudVisibility},
+    {SUB_P_CNOPTIONS_VIBRATION, MP_ON, 1, MP_OFF, 0, &PlayerInput::vibrationEnabled},
+    {SUB_P_CNOPTIONS_AUTOAIM, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoAim},
+    {SUB_P_CNOPTIONS_CROSSHAIRS, MP_ON, 1, MP_OFF, 0, &PlayerInput::crosshairsEnabled},
+    {SUB_P_CNOPTIONS_CROUCH, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::crouchToggle},
+    {SUB_P_CNOPTIONS_MANUAL_AIM, TXT_TOGGLE, 1, TXT_HOLD, 0, &PlayerInput::manualAimToggle},
+    {SUB_P_CNOPTIONS_WEAPON_AUTO_SWITCH, MP_ON, 1, MP_OFF, 0, &PlayerInput::autoSwitchBetterWeapon},
+    {SUB_P_CNOPTIONS_FLASHING_OBJECTS, MP_ON, 2, MP_OFF, 0, &PlayerInput::flashingObjects},
+    {SUB_P_CNOPTIONS_HUD_ALWAYS_ON, MP_ON, 0, MP_OFF, 1, &PlayerInput::hudVisibility},
 };
 
 static void Option_Fill(uchar managerNum, const OPTION_RADIO *option, int value) {
@@ -216,10 +220,10 @@ static const struct { const char *text; int value; } handicaps[8] = {
 // AUTOINJECT
 bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
-        RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_RADIO_128);
-        RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADIO_128, MP_ON, 1);
-        RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADIO_128, MP_OFF, 0);
-        RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADIO_128, MPSettings.Player[0].SomeField2);
+        RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_RADAR);
+        RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MP_ON, 1);
+        RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MP_OFF, 0);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MPSettings.Player[0].SomeField2);
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_HANDICAP);
         for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
             __Menu_Send(managerNum, SUB_P_CNMPOPTIONS_HANDICAP, MessageType_AddItem, (intptr_t)handicaps[i].text,
@@ -232,7 +236,7 @@ bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
     }
     else if (message == MessageType_Select) {
         cn_modified = 1;
-        MPSettings.Player[0].SomeField2 = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_RADIO_128);
+        MPSettings.Player[0].SomeField2 = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_RADAR);
         MPSettings.Player[0].HealthModifier = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_HANDICAP);
         PlayerInputs[0].autoAimMultiplayer = (uchar)RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_AUTOAIM);
         Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
@@ -275,9 +279,9 @@ bool P_CNAVOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_HORIZONTAL, 0);
         RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_VERTICAL, 1);
         RADIO_SELECT_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, MultiplayerLayout_LeftRightOrTopBtm);
-        RADIO_CLEAR(managerNum, SUB_P_CNAVOPTIONS_RADIO_198);
-        __Menu_Send(managerNum, SUB_P_CNAVOPTIONS_RADIO_198, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
-        __Menu_Send(managerNum, SUB_P_CNAVOPTIONS_HIDDEN_223, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        RADIO_CLEAR(managerNum, SUB_P_CNAVOPTIONS_SPEAKER);
+        __Menu_Send(managerNum, SUB_P_CNAVOPTIONS_SPEAKER, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
+        __Menu_Send(managerNum, SUB_P_CNAVOPTIONS_WIDESCREEN, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         break;
     case MessageType_PageLeave:
         if (!av_leaving) {
