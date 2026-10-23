@@ -24,7 +24,7 @@ void OneSided_Update(obj_tag *obj) {
     Vec_Subtract(&obj->position, &glb_viewer[0]->pos, &toObj);
     Mat_GetDir(&facing, &obj->transformMatrix);
     if (Vec_Dot(&facing, &toObj) < 0.0)
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
     else
-        obj->effectFlags &= ~FLAG_HIDDEN;
+        obj->effectFlags &= ~EFFECT_HIDDEN;
 }

@@ -18,11 +18,6 @@
 
 // The sub (OBJECTTYPE_SUB). No level places one.
 
-// Its weapons (weapon_data)
-#define WEAPON_SUB_LASER    0x67
-#define WEAPON_SUB_MISSILE  0x68
-#define WEAPON_SUB_TORPEDO  0x30
-
 // The datums its missiles and torpedoes leave from
 // XBE_GLOBAL(0x0018cbec, 0x8)
 static const uint SubMissileDatums[2] = {4, 5};
@@ -104,7 +99,7 @@ void Sub_Laser(obj_tag *obj, SubInfo *sub) {
         Vec_Subtract(&target, &obj->centrePoint, &dir);
         Rand_FRand_MVar2_Vec(&dir, 0.2f, 0.1f);
         sub->beam->scale = (float)Negate(Vec_NormaliseLen(&dir, &dir));
-        Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_LASER], &obj->centrePoint, &dir, 0x12);
+        Bullet_init(-1, obj, obj, &weapon_data[Weap_SubLaser], &obj->centrePoint, &dir, 0x12);
         Mat_Align2Dir(&sub->beam->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
         Vec_Copy(&obj->centrePoint, Mat_Position(sub->beam->transformMatrix));
         sub->beam->transformFlags |= TRANSFORM_MOVED;
@@ -131,7 +126,7 @@ void Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     _MATRIX datum;
     AnimGetBoneWorldTrans(obj, SubMissileDatums[which], 0, &at, &datum);
     Mat_GetDir(&dir, &datum);
-    Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_MISSILE], &at, &dir, 0xffff);
+    Bullet_init(-1, obj, obj, &weapon_data[Weap_SubMissile], &at, &dir, 0xffff);
 }
 
 // Within 25 of a player, the music is told, and every 5 seconds, if it can see him past its own bulk, a torpedo from
@@ -170,7 +165,7 @@ void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
     dir.x = (float)(Rand_FRandHalf(0.25f) + dir.x);
     dir.y = (float)(Rand_FRandHalf(0.25f) + dir.y);
     Vec_Normalise(&dir, &dir);
-    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_TORPEDO], &from, &dir, 0xffff);
+    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[Weap_SubTorpedo], &from, &dir, 0xffff);
     if (Rand_Rand(0x5b7f) & 1)
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }

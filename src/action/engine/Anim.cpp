@@ -1423,7 +1423,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         spin.x = 0.0f;
                         spin.y = 0.0f;
                         spin.z = 0.0f;
-                        spin.z = (float)Float_FRand(6.2831855f);
+                        spin.z = (float)Float_FRand(TWO_PI);
                         Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080,
                                  1, 0x80);
                     }
@@ -2372,7 +2372,7 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
                     goto freeParts;
                 part->extraObjectData = obj;
                 part->objectType = OBJECTTYPE_ANIMOBJECT;
-                part->effectFlags = (part->effectFlags & ~0x20) | 0x8000;
+                part->effectFlags = (part->effectFlags & ~EFFECT_NO_COLLISION) | EFFECT_STRADDLES_CELS;
                 if (rigged)
                     part->flags |= 4;
                 animObj->discreteObj[i] = part;
@@ -2381,7 +2381,7 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
 
         skin->hashcode = skinHash;
         if (animObj->flags & ANIMOBJ_FULL_CHARACTER) {
-            obj->effectFlags &= ~0x20;
+            obj->effectFlags &= ~EFFECT_NO_COLLISION;
             float base = (animObj->flags & ANIMOBJ_ALT_SKELETON) ? kHeightAltSkeleton : kHeightSkeleton1;
             animObj->heightOffset = (float)(((double)base - (double)obj->objGraphics->extentMin.y / skin->skinScale.y)
                                             + 0.02f);
@@ -2586,7 +2586,7 @@ int AnimObjectUpdate(obj_tag *obj) {
         for (uint i = 0; i < skin->numDiscrete; i++) {
             obj_tag *part = animObj->discreteObj[i];
             part->transformFlags |= TRANSFORM_MOVED;
-            part->effectFlags |= obj->effectFlags & 0x1a030;
+            part->effectFlags |= obj->effectFlags & (EFFECT_HIDDEN | EFFECT_NO_COLLISION | EFFECT_DRAW_LAST | EFFECT_STRADDLES_CELS | EFFECT_SUNLIT);
             part->displayMask = obj->displayMask;
             Mat_Copy(&animObj->boneMtxs[skin->discreteBone[i]], &part->transformMatrix);
         }
@@ -2661,7 +2661,7 @@ void AnimDebugCreate(void) {
             Vec_Add2(&centre, &at, &at);
             obj_tag *obj = control_create_object(0, &at, NULL, NULL);
             double yaw = (double)FPatan(facingX, facingZ);
-            obj->effectFlags |= 0x20;
+            obj->effectFlags |= EFFECT_NO_COLLISION;
             obj->rotation.y = (float)yaw;
             build_LinkToRoom(obj, 0, glb_world);
             obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
@@ -2673,7 +2673,7 @@ void AnimDebugCreate(void) {
         float yaw = glb_players[0]->rotation.y - 0.3f;   // 0x3e99999a
         obj_tag *obj = control_create_object(0, &glb_players[0]->position, NULL, NULL);
         Extended sine = FSin(yaw);
-        obj->effectFlags |= 0x20;
+        obj->effectFlags |= EFFECT_NO_COLLISION;
         obj->position.x = (float)(sine * Extended(3.3f) + Extended(obj->position.x));
         obj->position.z = (float)(FCos(yaw) * Extended(3.3f) + Extended(obj->position.z));
         obj->rotation.y = yaw + PI;
@@ -2995,8 +2995,8 @@ void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQu
         pitch = animObj->headPitch;
     }
 
-    float newYaw = (float)Ang_RotateToBearing(animObj->headYaw, yaw, animObj->headTrackSpeed, 3.1415927f);
-    float newPitch = (float)Ang_RotateToBearing(animObj->headPitch, pitch, animObj->headTrackSpeed, 3.1415927f);
+    float newYaw = (float)Ang_RotateToBearing(animObj->headYaw, yaw, animObj->headTrackSpeed, PI);
+    float newPitch = (float)Ang_RotateToBearing(animObj->headPitch, pitch, animObj->headTrackSpeed, PI);
     animObj->headPitch = newPitch;
     animObj->headYaw = newYaw;
 
@@ -3044,7 +3044,7 @@ void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQu
 }
 
 // The aim's limits: the player's pitch, and everyone else's yaw and pitch
-static constexpr float kPlayerPitchMin = -1.5707963705062866f;
+static constexpr float kPlayerPitchMin = -HALF_PI;
 static constexpr float kPlayerPitchMax = 1.2707963f;
 static constexpr float kAimLimit = 0.9f;
 static_assert(std::bit_cast<uint32_t>(kPlayerPitchMin) == 0xbfc90fdb, "-pi/2");
@@ -3202,8 +3202,8 @@ void AnimObjectAimAt(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQuats,
             yaw = 0.0f;
     }
 
-    float newYaw = (float)Ang_RotateToBearing(animObj->aimYaw, yaw, animObj->aimRate, 3.1415927f);
-    float newPitch = (float)Ang_RotateToBearing(animObj->aimPitch, pitch, animObj->aimRate, 3.1415927f);
+    float newYaw = (float)Ang_RotateToBearing(animObj->aimYaw, yaw, animObj->aimRate, PI);
+    float newPitch = (float)Ang_RotateToBearing(animObj->aimPitch, pitch, animObj->aimRate, PI);
     animObj->aimPitch = newPitch;
     animObj->aimYaw = newYaw;
 

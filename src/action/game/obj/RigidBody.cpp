@@ -390,15 +390,18 @@ void RB_Update(obj_tag *obj) {
     obj->transformFlags |= TRANSFORM_MOVED;
 }
 
-// A cuboid of the mass and sides, about its centre
+static_assert(1.0f / 12.0f == 0.083333336f, "not the original's constant");
+
+// A cuboid of the mass and sides, about its centre: about each axis, the mass times the sum of the other two sides'
+// squares, over 12
 // AUTOINJECT
 void RB_CuboidMomentsOfInertia(float *out, float mass, float sizeX, float sizeY, float sizeZ) {
     double y2 = (double)sizeY * sizeY;
     double z2 = (double)sizeZ * sizeZ;
     double x2 = (double)sizeX * sizeX;
-    out[0] = (float)((z2 + y2) * mass * 0.083333336f);
-    out[1] = (float)((x2 + z2) * mass * 0.083333336f);
-    out[2] = (float)(((float)x2 + y2) * mass * 0.083333336f);     // x2 stored over sizeY, and read back
+    out[0] = (float)((z2 + y2) * mass * (1.0f / 12.0f));
+    out[1] = (float)((x2 + z2) * mass * (1.0f / 12.0f));
+    out[2] = (float)(((float)x2 + y2) * mass * (1.0f / 12.0f));     // x2 stored over sizeY, and read back
 }
 
 // v by the matrix's rotation, body to world

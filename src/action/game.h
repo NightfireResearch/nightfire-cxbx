@@ -282,8 +282,8 @@ typedef enum WeaponBaseNum {
     // second entries of some of the player's (smoke grenade, laser, satchel, AT-600, Phoenix Samurai)
     Weap_CopterGunCastle=97,
     Weap_CopterMissileCastle=98,
-    Weap_Laser=103,
-    Weap_SubLaser=104,
+    Weap_SubLaser=103,          // the sub's laser, and its missiles (names ours: Sub.cpp is all that fires them)
+    Weap_SubMissile=104,
     Weap_SmokeGrenade=105,
     Weap_LaserBurst1=106,
     Weap_SpaceLaser=107,

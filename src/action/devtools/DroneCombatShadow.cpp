@@ -23,6 +23,7 @@
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/Drone_AIHints.h"
 #include "../game/sp/SwitchChannels.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -521,7 +522,7 @@ void RandomNode(int i) {
     n->pos.x = ShadowRandFloat(-8.0f, 8.0f);
     n->pos.y = ShadowRandFloat(-1.0f, 1.0f);
     n->pos.z = ShadowRandFloat(-8.0f, 8.0f);
-    n->rot.y = ShadowRand(10) ? ShadowRandFloat(-3.2f, 3.2f) : (ShadowRand(2) ? 0.0f : 1.5707964f);
+    n->rot.y = ShadowRand(10) ? ShadowRandFloat(-3.2f, 3.2f) : (ShadowRand(2) ? 0.0f : HALF_PI);
     n->emitter.path = ShadowRand(6) ? &world.path : (ShadowRand(2) ? NULL : &world.otherPath);
     n->emitter.data = ShadowRand(6) ? world.flood[i < NODES ? i : 0] : NULL;
     for (int t = 0; t < 8; t++)
@@ -824,7 +825,7 @@ const Case kStates[] = {
 
 // The quarter test also takes the angles at its boundaries and either side of them
 void RandomQuadAngle() {
-    static const float edges[] = {2.3561945f, 0.9250245f, 2.495821f, 0.7853982f, 2.2165682f, 0.0f, -0.0f, 3.1415927f};
+    static const float edges[] = {THREE_QUARTER_PI, 0.9250245f, 2.495821f, QUARTER_PI, 2.2165682f, 0.0f, -0.0f, PI};
     switch (ShadowRand(4)) {
     case 0: {
         float e = Pick(edges);

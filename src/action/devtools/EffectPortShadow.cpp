@@ -894,7 +894,7 @@ void RandomObject(int i) {
     obj->curState = (ushort)R(5);
     obj->subState = (ushort)(R(3) ? 0 : R(12));
     obj->flags = (char)(R(4) == 0);
-    obj->effectFlags = (int)(R(0x80) | (R(2) ? 0x2000 : 0));
+    obj->effectFlags = (int)(R(EFFECT_PLACED_LIGHTS) | (R(2) ? EFFECT_DRAW_LAST : 0));
     obj->drawnCountdown = (char)R(3);
     obj->tweakR = (uchar)R(256);
     obj->tweakG = (uchar)R(256);
@@ -1489,7 +1489,7 @@ uint32_t RunDestroyCollision(bool original) {
             world.hits[i].hitObj = NULL;
     }
     if (R(2))
-        world.weapons[R(3)].weaponBaseNum = Weap_Laser;
+        world.weapons[R(3)].weaponBaseNum = Weap_SubLaser;
     CDECL_RUN(0x00020310, Destroy_CollisionHandler, void (__cdecl *)(obj_tag *), obj);
     return 0;
 }
@@ -1783,7 +1783,7 @@ uint32_t RunBodyGlowUpdate(bool original) {
     g.data.life = lives[R(4)];
     for (int i = 0; i < BODYGLOW_BEAMS; i++) {
         memset(&g.beams[i], 0, sizeof(obj_tag));
-        g.beams[i].effectFlags = (int)R(0x10000);
+        g.beams[i].effectFlags = (int)R(EFFECT_SUNLIT);
         g.data.beams[i] = &g.beams[i];
     }
     for (int i = 0; i < 4; i++) {

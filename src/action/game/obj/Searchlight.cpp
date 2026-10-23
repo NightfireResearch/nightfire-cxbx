@@ -79,8 +79,8 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     uint maxVal = (minAngle <= maxAngle) ? maxAngle : minAngle;
 
     // On the x87: the radians unrounded until the half range and the centre are stored
-    Extended minRadians = Extended((double)minVal) * Extended(0.017453292f);
-    Extended maxRadians = Extended((double)maxVal) * Extended(0.017453292f);
+    Extended minRadians = Extended((double)minVal) * Extended(DEG_TO_RAD);
+    Extended maxRadians = Extended((double)maxVal) * Extended(DEG_TO_RAD);
 
     spotlight->sweepHalfRange = (float)((maxRadians - minRadians) * Extended(0.5f));
     spotlight->sweepCenter = (float)((maxRadians + minRadians) * Extended(0.5f));
@@ -321,7 +321,8 @@ void Searchlight_Update(obj_tag *searchlight) {
                 float normalY = hitData->surfaceNormal.normal.y;
                 float normalZ = hitData->surfaceNormal.normal.z;
                 componentObj->rotation.x =
-                    (float)(1.5707964f - Atan2(normalY, (float)sqrt((double)normalX * normalX + (double)normalZ * normalZ)));
+                    (float)(HALF_PI - Atan2(normalY,
+                                            (float)sqrt((double)normalX * normalX + (double)normalZ * normalZ)));
                 componentObj->rotation.y = Atan2(normalX, normalZ);
                 componentObj->rotation.z = 0.0f;
 
@@ -410,10 +411,10 @@ void Searchlight_Update(obj_tag *searchlight) {
                 if (componentObj->tweakA != 0) {
                     bool lineOfSight = Collide_LineOfSight(&glb_viewer[0]->pos, &componentObj->position, player->inCel, componentObj, player, 8);
                     if (lineOfSight) {
-                        componentObj->effectFlags |= 0x2000;
+                        componentObj->effectFlags |= EFFECT_DRAW_LAST;
                         componentObj->scale *= 1.5f;
                     } else {
-                        componentObj->effectFlags &= ~0x2000;
+                        componentObj->effectFlags &= ~EFFECT_DRAW_LAST;
                     }
                 }
             } else {

@@ -92,7 +92,7 @@ static_assert(std::bit_cast<uint32_t>(0.7f) == 0x3f333333, "not the original's 0
 static_assert(std::bit_cast<uint32_t>(-0.7f) == 0xbf333333, "not the original's -0.7");
 static_assert(std::bit_cast<uint32_t>(-0.3f) == 0xbe99999a, "not the original's -0.3");
 static_assert(std::bit_cast<uint32_t>(-1.1f) == 0xbf8ccccd, "not the original's -1.1");
-static_assert(std::bit_cast<uint32_t>(1.5707964f) == 0x3fc90fdb, "not the original's pi/2");
+static_assert(std::bit_cast<uint32_t>(HALF_PI) == 0x3fc90fdb, "not the original's pi/2");
 
 // Starts timer A, to run out at the frame given
 static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
@@ -1139,7 +1139,7 @@ bool NDrone2_GetPosForCornerCover(CoverNode_tag *node, ushort kind, _VECTOR *pos
         across = Extended((double)(int)node->unknown5) * Extended(-0.1f);
         back = 0.1f;
         if (rot != NULL)
-            rot->y = rot->y - 1.5707964f;
+            rot->y = rot->y - HALF_PI;
         if (step)
             back = -0.7f;
         break;
@@ -1329,7 +1329,7 @@ int DroneAnim_GetMoveQuad(float angle, ushort prev) {
     float size = angle < 0.0f ? -angle : angle;
     switch (prev) {
     case 0:
-        if (size > 2.3561945f)
+        if (size > THREE_QUARTER_PI)
             return 2;
         if (size > 0.9250245f)
             return angle > 0.0f ? 3 : 1;
@@ -1337,7 +1337,7 @@ int DroneAnim_GetMoveQuad(float angle, ushort prev) {
     case 1:
         if (size > 2.495821f)
             return 2;
-        if (angle > 0.7853982f)
+        if (angle > QUARTER_PI)
             return 3;
         if (angle < -0.9250245f)
             return 1;
@@ -1345,7 +1345,7 @@ int DroneAnim_GetMoveQuad(float angle, ushort prev) {
     case 2:
         if (size > 2.2165682f)
             return 2;
-        if (size > 0.7853982f)
+        if (size > QUARTER_PI)
             return angle > 0.0f ? 3 : 1;
         return 0;
     case 3:
@@ -1353,7 +1353,7 @@ int DroneAnim_GetMoveQuad(float angle, ushort prev) {
             return 2;
         if (angle > 0.9250245f)
             return 3;
-        if (angle < -0.7853982f)
+        if (angle < -QUARTER_PI)
             return 1;
         return 0;
     default:
@@ -1417,7 +1417,7 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
                 anim = DANIM_STRAFE_LEFT;
             else
                 break;
-            yawOffset = 1.5707964f;
+            yawOffset = HALF_PI;
             fire = seen;
             drone->moveQuad = quad;
             if (distance > 2.0f && distance < 2.5f &&
@@ -1434,7 +1434,7 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
             Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
             if (turn < Extended(limit)) {
                 anim = DANIM_STEP_LEFT;
-                yawOffset = 1.5707964f;
+                yawOffset = HALF_PI;
                 drone->moveQuad = quad;
                 fire = 0;
             }
@@ -1448,7 +1448,7 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
              behaviour_util_getProperty(DRONE_PROP_BACK_OFF, dcv->drone->currentBehaviour) != 0) &&
             DroneAnim_CanDoAnimState(dcv, DANIM_BACKOFF, 0)) {
             anim = DANIM_BACKOFF;
-            yawOffset = 3.1415927f;
+            yawOffset = PI;
             fire = seen;
             drone->moveQuad = quad;
         }
@@ -1465,7 +1465,7 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
                 anim = DANIM_STRAFE_RIGHT;
             else
                 break;
-            yawOffset = -1.5707964f;
+            yawOffset = -HALF_PI;
             fire = seen;
             drone->moveQuad = quad;
             if (distance > 2.0f && distance < 2.5f &&
@@ -1482,7 +1482,7 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
             Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
             if (turn < Extended(limit)) {
                 anim = DANIM_STEP_RIGHT;
-                yawOffset = -1.5707964f;
+                yawOffset = -HALF_PI;
                 drone->moveQuad = quad;
                 fire = 0;
             }

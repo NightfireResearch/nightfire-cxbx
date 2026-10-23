@@ -689,7 +689,7 @@ void RandomObj(obj_tag *o, int type, void *data) {
     o->rotation.y = ShadowRandFloat(-3.2f, 3.2f);
     RandomMatrix(&o->transformMatrix, &o->position);
     o->transformFlags = (ushort)ShadowRand(0x80);
-    o->effectFlags = (int)ShadowRand(0x40000);
+    o->effectFlags = (int)ShadowRand(EFFECT_NOT_IN_VIEW_4);
     o->displayMask = (ushort)ShadowRand(16);
     o->tweakA = (uchar)ShadowRand(256);
     o->tweakR = (uchar)ShadowRand(256);

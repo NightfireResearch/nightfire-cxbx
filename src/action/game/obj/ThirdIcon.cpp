@@ -35,7 +35,7 @@ obj_tag * ThirdIcon_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_
     obj->curState = icon->onChannel == 0;
     obj->effectFlags = celgl->applyFlagsToObject;
     obj->objectType = OBJECTTYPE_THIRDICON;
-    obj->effectFlags |= 0x1000;
+    obj->effectFlags |= EFFECT_MASKABLE;
     build_LinkToRoom(obj, 0, glb_world);
     return obj;
 }

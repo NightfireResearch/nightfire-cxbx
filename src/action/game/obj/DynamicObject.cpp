@@ -27,7 +27,7 @@ obj_tag* DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
     data->fadeDistance = (short)keys->unknown34;
     data->hideOnly = (uchar)keys->unknown38;
     if (data->showChannel != 0)
-        obj->effectFlags |= 0x30;
+        obj->effectFlags |= EFFECT_HIDDEN | EFFECT_NO_COLLISION;
     build_LinkToRoom(obj, 0, glb_world);
     return obj;
 }
@@ -45,7 +45,7 @@ void DynamicObject_Update(obj_tag *obj) {
     bool hide = data->hideChannel != 0 && switch_channels[data->hideChannel];
     if (data->hideOnly) {
         if (hide)
-            obj->effectFlags |= 0x30;
+            obj->effectFlags |= EFFECT_HIDDEN | EFFECT_NO_COLLISION;
         else
             obj->effectFlags = data->effectFlags;
     }

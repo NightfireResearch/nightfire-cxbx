@@ -164,7 +164,7 @@ bool NDrone2_DSTATE_KnockedOut_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        gameObj->effectFlags |= 0x20;
+        gameObj->effectFlags |= EFFECT_NO_COLLISION;
         Drone_AlertStatusSet(3, dcv);
         drone->health = 0.0f;
         DroneAnim_CallAnim(0x50, 0, DSTATE_Dead, 0, 0.0f, 0, dcv);

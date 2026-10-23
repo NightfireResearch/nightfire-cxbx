@@ -426,7 +426,7 @@ void RandomDrone(int i) {
     RandomVector(&o->rotation, 4.0f);
     o->drawnCountdown = (char)(ShadowRand(3) == 0 ? 0 : ShadowRand(3));
     o->transformFlags = (ushort)ShadowRand(0x100);
-    o->effectFlags = ShadowRand(4) == 0 ? 0x50 : ShadowRand(0x40);
+    o->effectFlags = ShadowRand(4) == 0 ? (EFFECT_HIDDEN | EFFECT_NO_CONTACT) : ShadowRand(EFFECT_NO_CONTACT);
     o->flags = (char)ShadowRand(4);
     o->creationTimeFrames = ShadowRand(5000);
     o->nextObject = i + 1 < kDrones ? &world.objs[i + 1] : &world.others[0];

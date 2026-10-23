@@ -28,6 +28,7 @@
 #include "PlayerWeapon.h"
 #include "../../util/Sort.h"
 #include "../drone/BOT.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -96,7 +97,7 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
     GUNTURRET *turret = (GUNTURRET *)obj->extraObjectData;
     memset(turret, 0, sizeof(GUNTURRET));
     obj->objectType = OBJECTTYPE_GUNTURRET;
-    obj->effectFlags |= 0x810;
+    obj->effectFlags |= EFFECT_HIDDEN | EFFECT_CEL_LIT;
     turret->kind = (short)keys->kind;
     turret->key1 = (ushort)keys->key1;
     turret->health = 100.0f;
@@ -236,7 +237,8 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
                     continue;
                 if (data->health <= 0.0f)
                     continue;
-                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & 1) || (other->effectFlags & FLAG_HIDDEN))
+                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & 1)
+                    || (other->effectFlags & EFFECT_HIDDEN))
                     continue;
                 Vec_Subtract(&other->position, &obj->position, &offset);
                 double distSq = Vec_SqMagnitude(&offset);
@@ -327,8 +329,8 @@ void GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
 // Stunned: aimed at random about the way it faces
 void GT_RandMove(GUNTURRET *turret) {
     _VECTOR turn;
-    turn.x = (float)Rand_FRandHalf(3.1415927f);
-    turn.y = (float)Rand_FRandHalf(6.2831855f);
+    turn.x = (float)Rand_FRandHalf(PI);
+    turn.y = (float)Rand_FRandHalf(TWO_PI);
     turn.z = 0.0f;
     // Its w column and translation are uninitialised stack in the original
     _MATRIX mtx;
@@ -348,7 +350,7 @@ static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX
     Sound_Play3D(sound, &at, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     Bullet_init(-1, from, barrel, &weapon_data[TURRET_WEAPON], &at, &dir, 0xffff);
     // dir, done with, is the smoke's turn
-    dir.z = (float)Float_FRand(6.2831855f);
+    dir.z = (float)Float_FRand(TWO_PI);
     if (player >= 0)
         PlrStat_LogShotFired(player);
     obj_tag *flash = turret->muzzleFlash;
@@ -356,7 +358,7 @@ static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX
         return;
     flash->subState ^= 1;
     flash->curState = 2;
-    flash->effectFlags &= ~FLAG_HIDDEN;
+    flash->effectFlags &= ~EFFECT_HIDDEN;
     if (flash->subState != 0)
         Gas_Init(obj->inCel, &at, &dir, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1, 0x80);
 }
@@ -407,7 +409,7 @@ void GT_Update(obj_tag *obj) {
         if (flash->curState != 0)
             flash->curState--;
         if (flash->curState == 0)
-            flash->effectFlags |= FLAG_HIDDEN;
+            flash->effectFlags |= EFFECT_HIDDEN;
     }
 
     bool stunned = false;
@@ -548,7 +550,7 @@ void GT_Update(obj_tag *obj) {
             _VECTOR rot;
             rot.y = 0.0f;
             rot.x = 0.0f;
-            rot.z = (float)Float_FRand(6.2831855f);
+            rot.z = (float)Float_FRand(TWO_PI);
             Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1,
                      0x3c);
         }
@@ -568,10 +570,10 @@ void GT_Update(obj_tag *obj) {
         else if (turret->control.x > 0.5f)
             turret->control.x = 0.5f;
         float yaw;
-        if (turret->control.y < -1.5707964f)
-            yaw = -1.5707964f;
-        else if (turret->control.y > 1.5707964f)
-            yaw = 1.5707964f;
+        if (turret->control.y < -HALF_PI)
+            yaw = -HALF_PI;
+        else if (turret->control.y > HALF_PI)
+            yaw = HALF_PI;
         else
             yaw = turret->control.y;
         turret->control.y = yaw;

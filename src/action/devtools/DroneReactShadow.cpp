@@ -27,6 +27,7 @@
 #include "../game/drone/NDrone2_Special.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/sp/SwitchChannels.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -563,7 +564,7 @@ void RandomDrone(int i) {
         d->combatRanges[r] = ShadowRandFloat(0.0f, 10.0f);
     static const float healths[] = {50.0f, 0.0f, 10.0f};
     d->health = Pick(healths);
-    static const float facings[] = {0.0f, -0.0f, 1.5707963f, 1.5707964f, -1.5707964f, 3.0f, NAN};
+    static const float facings[] = {0.0f, -0.0f, 1.5707963f, HALF_PI, -HALF_PI, 3.0f, NAN};
     d->opponentFacing = Pick(facings);
     d->opponent = ShadowRand(4) ? &world.player : NULL;
     static obj_tag *const attackers[] = {NULL, &world.player, &world.objs[1], &world.explosive};
@@ -592,7 +593,7 @@ void RandomDrone(int i) {
     d->aiPointRot.y = ShadowRandFloat(-3.0f, 3.0f);
     // The special death's tests: the script's start near the drone (1 m in plan) and its facing (90 degrees)
     static const float offsets[] = {0.5f, 0.99f, 1.0f, 2.0f};
-    static const float turns[] = {0.0f, 1.5f, 1.5707964f, -1.6f, 3.0f};
+    static const float turns[] = {0.0f, 1.5f, HALF_PI, -1.6f, 3.0f};
     d->scriptedMovePos = o->position;
     d->scriptedMovePos.x += Pick(offsets);
     d->scriptedMoveRot.y = o->rotation.y + Pick(turns);

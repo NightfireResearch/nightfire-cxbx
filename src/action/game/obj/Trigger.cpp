@@ -114,7 +114,7 @@ obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
 
     // A level-load trigger is seen
     if (t->mode == TriggerMode_LoadLevel)
-        obj->effectFlags &= ~FLAG_HIDDEN;
+        obj->effectFlags &= ~EFFECT_HIDDEN;
     return obj;
 }
 
@@ -309,7 +309,7 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
             switch_channels[t->channel] = 1;
             switch_channels_time[t->channel] = GameState.NumFramesUnpaused;
         }
-        if (obj->effectFlags & FLAG_HIDDEN)
+        if (obj->effectFlags & EFFECT_HIDDEN)
             obj->flags |= 1;
         return;
 
@@ -381,7 +381,7 @@ void Trigger_Update(obj_tag *obj) {
     Control_SetEffectType(obj, obj->objGraphics != NULL ? obj->objGraphics->applyFlagsToObject : obj->effectFlags);
     if (t->lock != 0 && switch_channels[t->lock]) {
         if (t->hideOnLock)
-            obj->effectFlags |= FLAG_HIDDEN | 0x20;
+            obj->effectFlags |= EFFECT_HIDDEN | EFFECT_NO_COLLISION;
         return;
     }
 
@@ -401,7 +401,7 @@ void Trigger_Update(obj_tag *obj) {
     switch (t->mode) {
     case TriggerMode_TouchOnce:
         if (switch_channels[channel]) {
-            if (obj->effectFlags & FLAG_HIDDEN)
+            if (obj->effectFlags & EFFECT_HIDDEN)
                 obj->flags |= 1;
             return;
         }
@@ -428,7 +428,7 @@ void Trigger_Update(obj_tag *obj) {
         switch_channels_time[channel] = now;
         // A bond moment's hidden trigger goes once it is done
         if (channel >= CHANNEL_BOND_MOMENT_FIRST && channel <= CHANNEL_BOND_MOMENT_LAST &&
-            (obj->effectFlags & FLAG_HIDDEN))
+            (obj->effectFlags & EFFECT_HIDDEN))
             obj->flags |= 1;
         return;
     }

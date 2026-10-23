@@ -49,7 +49,7 @@ obj_tag* Lightning_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     bolt->key2 = (short)keys->key2;
     obj->curState = 0;
     obj->objectType = OBJECTTYPE_LIGHTNING;
-    obj->effectFlags |= 0x8000;
+    obj->effectFlags |= EFFECT_STRADDLES_CELS;
 
     for (obj_tag *other = control_first_object(); other != NULL; other = other->nextObject) {
         if (other == obj || other->objectType != OBJECTTYPE_LIGHTNING)
@@ -61,7 +61,7 @@ obj_tag* Lightning_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
             obj_tag *segment = control_create_object(0, pos, rot, NULL);
             segment->objectType = OBJECTTYPE_GFX;
             bolt->segments[i] = segment;
-            segment->effectFlags |= 0x8000;
+            segment->effectFlags |= EFFECT_STRADDLES_CELS;
         }
         bolt->segments[7] = other;
         other->objectType = OBJECTTYPE_GFX;

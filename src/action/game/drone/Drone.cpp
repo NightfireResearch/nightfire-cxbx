@@ -496,9 +496,9 @@ static void Drone_PauseNoDraw(bool pause) {
     Drone_bDontDraw = pause;
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
         if (pause)
-            drone->gameObj->effectFlags |= FLAG_HIDDEN;
+            drone->gameObj->effectFlags |= EFFECT_HIDDEN;
         else
-            drone->gameObj->effectFlags &= ~FLAG_HIDDEN;
+            drone->gameObj->effectFlags &= ~EFFECT_HIDDEN;
     }
 }
 

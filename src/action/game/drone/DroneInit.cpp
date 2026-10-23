@@ -124,8 +124,8 @@ float DroneArmour_Jacket = 0.5f;
 #define DRONE_FLAG2_10 0x10
 
 // obj_tag.effectFlags
-#define OBJ_EFFECT_20 0x20
-#define OBJ_EFFECT_400 0x400
+#define EFFECT_NO_COLLISION 0x20
+#define EFFECT_XRAY_ONLY 0x400
 
 // The heap types of the two route node lists (our names)
 #define MALLOC_ROUTE1_NODES_ALIGN8 ((MallocFlags)0x1508)
@@ -234,14 +234,14 @@ void NDrone2_Enable(char enable, Drone_tag *drone) {
             return;
         if (drone->animScript != NULL)
             drone->animScript->speed = 1.0f;
-        drone->gameObj->effectFlags &= ~FLAG_HIDDEN;
-        drone->gameObj->effectFlags &= ~OBJ_EFFECT_20;
+        drone->gameObj->effectFlags &= ~EFFECT_HIDDEN;
+        drone->gameObj->effectFlags &= ~EFFECT_NO_COLLISION;
         drone->flags |= DRONE_FLAGS_ACTIVE;
     } else {
         if (drone->animScript != NULL)
             drone->animScript->speed = 0.0f;
-        drone->gameObj->effectFlags |= FLAG_HIDDEN;
-        drone->gameObj->effectFlags |= OBJ_EFFECT_20;
+        drone->gameObj->effectFlags |= EFFECT_HIDDEN;
+        drone->gameObj->effectFlags |= EFFECT_NO_COLLISION;
         drone->flags &= ~(DRONE_FLAGS_ACTIVE | DRONE_FLAG_ANIM_UPDATED);
     }
 }
@@ -300,7 +300,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     control_init_object(gameObj);
     Vec_Copy2(&diVars->position, &gameObj->position, &gameObj->lastPosition);
     Vec_Copy2(&diVars->rotation, &gameObj->rotation, &gameObj->lastRotation);
-    gameObj->effectFlags &= ~OBJ_EFFECT_20;
+    gameObj->effectFlags &= ~EFFECT_NO_COLLISION;
     gameObj->hitTest = &drone->collision;
     // Here the original calls an empty function with the object (nightfire-port's control_init_collision)
     Vec_Zero(&drone->velocity);
@@ -686,7 +686,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     }
     memset(&drone->goalTarget, 0, sizeof(drone->goalTarget));
 
-    gameObj->effectFlags &= ~(FLAG_HIDDEN | OBJ_EFFECT_20);
+    gameObj->effectFlags &= ~(EFFECT_HIDDEN | EFFECT_NO_COLLISION);
     drone->flags |= DRONE_FLAG_COLLIDES | DRONE_FLAG_FALLS | DRONE_FLAG_AI_RUNNING;
     if (drone->side == 1)
         PlrStat_LogEnemySpawned();
@@ -742,7 +742,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         gameObj->flags |= 1;
         return NULL;
     }
-    gameObj->effectFlags &= ~OBJ_EFFECT_400;
+    gameObj->effectFlags &= ~EFFECT_XRAY_ONLY;
 
     if (drone->initialState == DSTATE_Attack || drone->initialState == DSTATE_CivilianScared) {
         DroneFunc_SetAsAttacking(drone);

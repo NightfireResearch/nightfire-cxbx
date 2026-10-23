@@ -22,6 +22,7 @@
 #include "../game/obj/Drone_AIHints.h"
 #include "../game/obj/DroneSpawner.h"
 #include "../sound/Sound.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -260,7 +261,7 @@ void InstallMoveFakes() {
 
 float RandomFloat() {
     static const float edges[] = {0.0f, -0.0f, 0.66f, 0.65999997f, 2.0f, 1.9999999f, 2.0943952f, -2.0943952f,
-                                  2.0943954f, -2.0943954f, 1.0f, NAN, -NAN, 3.1415927f, -3.1415927f};
+                                  2.0943954f, -2.0943954f, 1.0f, NAN, -NAN, PI, -PI};
     switch (ShadowRand(3)) {
     case 0:
         return Pick(edges);

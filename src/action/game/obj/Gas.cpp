@@ -9,6 +9,7 @@
 #include "Effect.h"
 #include "Env.h"
 #include "../../math/X87Ops.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -55,7 +56,7 @@ obj_tag* Gas_Init(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float 
     gas->kind = (uchar)kind;
     gas->life = life;
     double perFrame = 1.0f / (double)life;
-    obj->effectFlags |= 0x200;
+    obj->effectFlags |= EFFECT_BIT9;
     obj->scale = scale0;
     obj->tweakR = colour0 >> 24;
     obj->tweakB = colour0 >> 8;
@@ -73,7 +74,7 @@ obj_tag* Gas_Init(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float 
     gas->colour[2] = obj->tweakB;
     gas->colour[3] = obj->tweakA;
 
-    double spin = Float_FRand(REC_FRAME_RATE * 1.5707964f);
+    double spin = Float_FRand(REC_FRAME_RATE * HALF_PI);
     gas->spin = (float)spin;
     if (kind == GAS_FADING)
         gas->spin = (float)(spin * 0.25f);
@@ -81,7 +82,7 @@ obj_tag* Gas_Init(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float 
         gas->spin = gas->spin * -1.0f;
 
     hashtable_set_object_to_entity_gfx(obj, entity);
-    obj->effectFlags |= 0x20020120;
+    obj->effectFlags |= EFFECT_NO_COLLISION | EFFECT_NO_TRANSIENT_LIGHTS | EFFECT_DIM_IN_NIGHT_VISION | EFFECT_ALWAYS_FORCED;
     if (!build_LinkToRoom(obj, 0, glb_world))
         control_link_object_to_cel(obj, cel);
 
@@ -110,7 +111,7 @@ obj_tag* Gas_Init(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float 
         // fall through
     case GAS_SOURCE:
         Vec_Copy(pos, &gas->vel);
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
         break;
     default:
         gas->vel.x = 0.0f;
@@ -202,7 +203,7 @@ void gases_smoke(obj_tag *obj) {
         break;
 
     case GAS_SOURCE:
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
         if ((double)(uint)(GameState.NumFramesUnpaused - obj->creationTimeFrames) < (double)FRAME_RATE_MUL * 20.0f)
             return;
         if ((GameState.NumFramesUnpaused & 3) == 3) {
@@ -213,7 +214,7 @@ void gases_smoke(obj_tag *obj) {
         break;
 
     case GAS_WIND_SOURCE: {
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
         uint every = (ushort)Ftol((double)FRAME_RATE_MUL * 7.0f);
         if (every != (every & GameState.NumFramesUnpaused))
             break;
@@ -281,7 +282,7 @@ void Debris_Create(HITDATA_tag *hit, struct HEINFO_tag *info, cel_tag *cel, usho
         Rand_FRandHalf_Vec(&debris->spin, info->debrisSpin);
 
         hashtable_set_object_to_entity_gfx(obj, info->debris);
-        obj->effectFlags |= 0x20000020;
+        obj->effectFlags |= EFFECT_NO_COLLISION | EFFECT_ALWAYS_FORCED;
         if (!build_LinkToRoom(obj, 0, glb_world))
             control_link_object_to_cel(obj, cel);
     }
@@ -316,7 +317,7 @@ void Debris_CreateEx(_VECTOR *pos, _VECTOR *dir, _VECTOR *side, float speed, uin
         Rand_FRandHalf_Vec(&debris->spin, 0.23561947f);
 
         hashtable_set_object_to_entity_gfx(obj, entities[Rand_Rand(numEntities - 1)]);
-        obj->effectFlags |= 0x20000020;
+        obj->effectFlags |= EFFECT_NO_COLLISION | EFFECT_ALWAYS_FORCED;
         if (!build_LinkToRoom(obj, 0, glb_world))
             control_link_object_to_cel(obj, cel);
     }

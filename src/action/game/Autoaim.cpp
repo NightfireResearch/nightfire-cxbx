@@ -4,6 +4,7 @@
 #include "obj/Trigger.h"
 #include "sp/SwitchChannels.h"
 #include "../math/X87Ops.h"
+#include "../math/math.h"
 #include <math.h>
 
 #pragma fp_contract(off)
@@ -77,7 +78,7 @@ void Check_Target(obj_tag* obj) {
     }
 
     // FCOS and the sums kept on the x87, unrounded
-    double pulse = (double)(FCos((double)(int32_t)GameState.LoadTimeStart * 0.01f * 6.2831855f) + Extended(1.0f));
+    double pulse = (double)(FCos((double)(int32_t)GameState.LoadTimeStart * 0.01f * TWO_PI) + Extended(1.0f));
     FlashMod = (float)((pulse * 0.5f + 1.0f) * 0.5f);
     if (GameState.NumFramesUnpaused % 6 != 0)
         return;

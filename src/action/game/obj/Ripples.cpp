@@ -81,7 +81,7 @@ void Ripples_Update(obj_tag *obj) {
     ring->tweakB = 0x7f;
     ring->tweakA = 0xff;
     ring->objectType = OBJECTTYPE_GAS;
-    ring->effectFlags |= 0x200;
+    ring->effectFlags |= EFFECT_BIT9;      // the model's flags replace it below
     gas->colourStep[0] = RippleColourStep;
     gas->scaleStep = (float)(((double)scale1 - scale0) * RipplePerFrame);
     gas->colourStep[1] = RippleColourStep;
@@ -92,12 +92,12 @@ void Ripples_Update(obj_tag *obj) {
     gas->colour[2] = ring->tweakB;
     gas->colour[3] = ring->tweakA;
 
-    gas->spin = (float)Float_FRand(REC_FRAME_RATE * 1.5707964f);
+    gas->spin = (float)Float_FRand(REC_FRAME_RATE * HALF_PI);
     if (Rand_Rand(0x100) > 0x7f)
         gas->spin = gas->spin * -1.0f;
 
     hashtable_set_object_to_entity_gfx(ring, HT_Entity_watereffect);
-    ring->effectFlags |= 0x20020120;
+    ring->effectFlags |= EFFECT_NO_COLLISION | EFFECT_NO_TRANSIENT_LIGHTS | EFFECT_DIM_IN_NIGHT_VISION | EFFECT_ALWAYS_FORCED;
     if (!build_LinkToRoom(ring, 0, glb_world))
         control_link_object_to_cel(ring, cel);
 

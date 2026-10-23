@@ -22,6 +22,7 @@
 #include "../engine/viewer.h"
 #include "../game/drone/NDrone2.h"
 #include "../game/mp/multiplayer.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -547,7 +548,7 @@ void BuildBlock() {
     AIPathNodeRecord *patrol = (AIPathNodeRecord *)at;
     for (int i = 0; i < PATROL_NODES; i++) {
         memset(&patrol[i], 0, sizeof(patrol[i]));
-        float angle = 6.2831853f * i / PATROL_NODES;
+        float angle = TWO_PI * i / PATROL_NODES;
         FileNode(&patrol[i].node, 14.0f * cosf(angle), 0.2f, 9.0f * sinf(angle), ShadowRand(4) == 0 ? 0x1 : 0);
     }
     at = (uint8_t *)(patrol + PATROL_NODES);

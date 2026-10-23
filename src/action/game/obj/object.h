@@ -192,7 +192,7 @@ typedef struct obj_tag {
                          // object ends
     float scale;
     int creationTimeFrames;
-    int effectFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
+    int effectFlags;       // 0xCC - EFFECT_*
     unsigned short curState; // 0xD0
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort displayMask;
@@ -213,13 +213,32 @@ typedef struct obj_tag {
 } obj_tag;
 #pragma pack(pop)
 
-typedef enum{
-    FLAG_HIDDEN = 0x10, // Set/cleared by Script_HideObj
-    FLAG_UNKNOWN_40 = 0x40,
-    FLAG_STRADDLES_CELS = 0x8000,       // set while it straddles cels (Controls_StraddleTest), and on one always forced
-    FLAG_FORCED_LISTED = 0x10000000,    // in ForcedList
-    FLAG_ALWAYS_FORCED = 0x20000000,    // in no cel: always in ForcedList (build_LinkToRoom)
-    FLAG_IN_FORCEDLIST = 0x30000000,
+// obj_tag::effectFlags: how it is drawn, lit and collided with. The low bits come from its model
+// (celglist_tag::applyFlagsToObject, which Control_SetGList copies over all but EFFECT_STRADDLES_CELS and the two
+// forced-list bits); the same word gives a cel its flags (cel_tag::flags84, CEL_*). EFFECT_BITn: no reader.
+typedef enum {
+    EFFECT_BACK_TO_FRONT = 0x1,                 // drawn in list 1, sorted far to near
+    EFFECT_SKY_AT_EYE = 0x2,                    // a sky model: placed at the eye
+    EFFECT_JITTER = 0x4,                        // its scale shaken at random each draw
+    EFFECT_BILLBOARD = 0x8,                     // drawn facing the view
+    EFFECT_HIDDEN = 0x10,                       // not drawn, and no line of sight stops at it (Script_HideObj)
+    EFFECT_NO_COLLISION = 0x20,                 // never a collision candidate, never in ForcedList
+    EFFECT_NO_CONTACT = 0x40,                   // its hits are HIT_NO_CONTACT: bullets pass, nothing stands on it
+    EFFECT_PLACED_LIGHTS = 0x80,                // lit by light types 0 and 2: the map's, and the searchlight's
+    EFFECT_NO_TRANSIENT_LIGHTS = 0x100,         // not lit by type 1: muzzle flashes, explosions, night vision's
+    EFFECT_BIT9 = 0x200,
+    EFFECT_XRAY_ONLY = 0x400,                   // drawn only in vision mode 2 (the HUD's xray)
+    EFFECT_CEL_LIT = 0x800,                     // its ambient eases to its cel's, and tints it
+    EFFECT_MASKABLE = 0x1000,                   // skipped by the tests whose mask has 0x20
+    EFFECT_DRAW_LAST = 0x2000,                  // drawn in list 2, after lists 0 and 1
+    EFFECT_STRADDLES_CELS = 0x8000,             // drawn by View_AddForcedObjects (Controls_StraddleTest)
+    EFFECT_SUNLIT = 0x10000,                    // its ambient doubled while player 0 can see the sun
+    EFFECT_DIM_IN_NIGHT_VISION = 0x20000,       // its alpha a quarter in vision mode 1 (night vision)
+    EFFECT_NOT_IN_VIEW_4 = 0x40000,             // the model's: Control_SetGList takes view 4 out of displayMask
+    EFFECT_FLASHES = 0x80000,                   // its tint times FlashMod
+    EFFECT_FORCED_LISTED = 0x10000000,          // in ForcedList
+    EFFECT_ALWAYS_FORCED = 0x20000000,          // in no cel: always in ForcedList (build_LinkToRoom)
+    EFFECT_IN_FORCED_LIST = 0x30000000,         // either of the two
 } ObjectEffectFlags;
 
 // obj_tag::transformFlags bits: how the game's update derives an object's matrix and bounds each frame - in

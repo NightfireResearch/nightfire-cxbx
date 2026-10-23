@@ -89,7 +89,7 @@ void NDrone2_SetAsDead(DCVars_tag *dcv) {
         dcv->drone->flags &= ~0x20;
         dcv->drone->flags &= ~0x80;
     }
-    dcv->gameObj->effectFlags |= 0x20;
+    dcv->gameObj->effectFlags |= EFFECT_NO_COLLISION;
     if (!(dcv->drone->flags & 0x1000000))
         dcv->drone->health = 0.0f;
 }
@@ -252,7 +252,7 @@ bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Enter:
-        gameObj->effectFlags |= 0x20;
+        gameObj->effectFlags |= EFFECT_NO_COLLISION;
         if (GameState.CurrentLevelHashcode == HT_Level_Tower2Elevator)
             dcv->drone->flags |= 4;
         switch (dcv->drone->dtype) {
@@ -318,7 +318,7 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
         return true;
 
     case DRONE_MSG_Enter:
-        gameObj->effectFlags |= 0x20;
+        gameObj->effectFlags |= EFFECT_NO_COLLISION;
         Drone_AlertStatusSet(3, dcv);
         if (dcv->drone->deathScript != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpecialDeath_Anim, 0);
@@ -375,7 +375,7 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         return true;
 
     case DRONE_MSG_Enter:
-        gameObj->effectFlags |= 0x20;
+        gameObj->effectFlags |= EFFECT_NO_COLLISION;
         Drone_AlertStatusSet(3, dcv);
         // A NaN distance plays the script; NDrone2_Player() is not checked for NULL
         if (!(drone->deathScript == HT_Script_DeathScriptIcyQuip && NDrone2_DistanceToObj(dcv,
@@ -437,7 +437,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         return true;
 
     case DRONE_MSG_Enter:
-        gameObj->effectFlags |= 0x20;
+        gameObj->effectFlags |= EFFECT_NO_COLLISION;
         NDrone2_SetAsDead(dcv);
         Drone_AlertStatusSet(3, dcv);
         Death_SetTimer(&dcv->drone->timerA, NPCGlobals.deadFrames + GameState.NumFramesUnpaused);

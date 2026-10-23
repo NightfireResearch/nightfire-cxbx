@@ -282,7 +282,7 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
         case HT_Script_Tower2BDronePlay:
             dcv->drone->flags &= ~0x400000;
-            drone->unknown448 = 3.14159274f;
+            drone->unknown448 = PI;
             DroneAnim_SetDAnimNow(0xf4, 0, 1, dcv);
             break;
         }

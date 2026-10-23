@@ -253,11 +253,11 @@ void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
             continue;
         if (!(obj->displayMask & object_display_mask))
             continue;
-        if (obj->effectFlags & 0x8010)
+        if (obj->effectFlags & (EFFECT_HIDDEN | EFFECT_STRADDLES_CELS))
             continue;
         if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
             continue;
-        if ((obj->effectFlags & 0x400) && viewer->nightVisionRelated != 2)
+        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->nightVisionRelated != 2)
             continue;
 
         OnlyScaleZ = obj->transformFlags & TRANSFORM_SCALE_LENGTH_ONLY;
@@ -317,11 +317,11 @@ void View_AddForcedObjects(viewer_tag *viewer) {
             continue;
         if (obj->objGraphics == NULL)
             continue;
-        if (!(obj->effectFlags & 0x8000) || (obj->effectFlags & FLAG_HIDDEN))
+        if (!(obj->effectFlags & EFFECT_STRADDLES_CELS) || (obj->effectFlags & EFFECT_HIDDEN))
             continue;
         if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
             continue;
-        if ((obj->effectFlags & 0x400) && viewer->nightVisionRelated != 2)
+        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->nightVisionRelated != 2)
             continue;
 
         if (obj->objectType == OBJECTTYPE_DRONE && obj->radius > 0.5f) {
@@ -383,14 +383,14 @@ void View_CaptureScene(viewer_tag *viewer) {
 // AUTOINJECT
 void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
     short alpha = obj->tweakA;
-    if ((obj->effectFlags & 0x20000) && viewer->nightVisionRelated == 1)
+    if ((obj->effectFlags & EFFECT_DIM_IN_NIGHT_VISION) && viewer->nightVisionRelated == 1)
         alpha = alpha / 4;
 
-    bool flashes = (obj->effectFlags & 0x80000) ||
+    bool flashes = (obj->effectFlags & EFFECT_FLASHES) ||
                    (obj->objGraphics != NULL && (obj->objGraphics->applyFlagsToObject & 0x80000));
     if (flashes && PlayerInputs[0].flashingObjects && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
         double flash = FlashMod;
-        if (obj->effectFlags & 0x800) {
+        if (obj->effectFlags & EFFECT_CEL_LIT) {
             psiSetTweakARGB(alpha, Ftol((int)(obj->tweakR * obj->ambientR) * flash * (1.0f / 255.0f)),
                             Ftol((int)(obj->tweakG * obj->ambientG) * flash * (1.0f / 255.0f)),
                             Ftol((int)(obj->tweakB * obj->ambientB) * flash * (1.0f / 255.0f)));
@@ -398,7 +398,7 @@ void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
             psiSetTweakARGB(alpha, Ftol((int)obj->tweakR * flash), Ftol((int)obj->tweakG * flash),
                             Ftol((int)obj->tweakB * flash));
         }
-    } else if (obj->effectFlags & 0x800) {
+    } else if (obj->effectFlags & EFFECT_CEL_LIT) {
         psiSetTweakARGB(alpha, (obj->tweakR * obj->ambientR) >> 8, (obj->tweakG * obj->ambientG) >> 8,
                         (obj->tweakB * obj->ambientB) >> 8);
     } else {
@@ -687,7 +687,7 @@ void View_AddSkyObj(ushort slot, celglist_tag *glist, _VECTOR *pos, _VECTOR *rot
     sky->thunderDelay = 0;
     sky->pass = pass;
     if (obj != NULL)
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
     if (pos != NULL)
         Vec_Copy(pos, &sky->pos);
     else

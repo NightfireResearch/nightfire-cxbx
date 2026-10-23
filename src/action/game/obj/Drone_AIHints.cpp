@@ -167,7 +167,7 @@ obj_tag* Drone_AIVolume_Create(_VECTOR *pos, _VECTOR *rot, _VECTOR *scale, level
         return NULL;
     obj->objGraphics = glist;
     DroneAIVolume_tag *volume = (DroneAIVolume_tag *)obj->extraObjectData;
-    obj->effectFlags = glist->applyFlagsToObject | 0x30;
+    obj->effectFlags = glist->applyFlagsToObject | (EFFECT_HIDDEN | EFFECT_NO_COLLISION);
     obj->objectType = OBJECTTYPE_DRONE_AIVOLUME;
     volume->obj = obj;
     volume->visibility = (float)(keys->visibilityPercent * (double)0.01f);

@@ -93,7 +93,7 @@ void Explode_Create(obj_tag *obj, _VECTOR *pos, _VECTOR *unusedDir, float script
     }
 
     explosion->objectType = OBJECTTYPE_EXPLODE;
-    explosion->effectFlags = 0x30;
+    explosion->effectFlags = EFFECT_HIDDEN | EFFECT_NO_COLLISION;
     explosion->scale = radius * kOneFifteenth;
     Vec_Copy(pos, &explosion->position);
     if (from != NULL)

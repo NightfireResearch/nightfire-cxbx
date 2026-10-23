@@ -18,6 +18,7 @@
 #include "Explode.h"
 #include "Gas.h"
 #include "ScriptPlayer.h"
+#include "../../math/math.h"
 
 // XBE_GLOBAL(0x001fe6b4, 0xc)
 LLISTINFO_tag CopterPaths;
@@ -157,7 +158,7 @@ void Copter_Register(obj_tag *obj, ushort part, void *context) {
         return;
     ((COPTER *)context)->parts[part] = obj;
     if (part != 2)
-        obj->effectFlags |= 0x20;
+        obj->effectFlags |= EFFECT_NO_COLLISION;
 }
 
 // The static initialisers of the cone
@@ -265,7 +266,7 @@ bool Copter_FireGun(COPTER *copter, obj_tag *obj) {
     gun->curState = 0;
     if (flash != NULL) {
         flash->curState = 2;
-        flash->effectFlags &= ~FLAG_HIDDEN;
+        flash->effectFlags &= ~EFFECT_HIDDEN;
     }
     return true;
 }
@@ -333,7 +334,7 @@ void Copter_Update(obj_tag *obj) {
         if (flash->curState != 0)
             flash->curState--;
         if (flash->curState == 0)
-            flash->effectFlags |= FLAG_HIDDEN;
+            flash->effectFlags |= EFFECT_HIDDEN;
     }
 
     switch ((short)obj->curState) {
@@ -438,7 +439,7 @@ void Copter_Update(obj_tag *obj) {
         _VECTOR rot;
         rot.y = 0.0f;
         rot.x = 0.0f;
-        rot.z = (float)Float_FRand(6.2831855f);
+        rot.z = (float)Float_FRand(TWO_PI);
         _VECTOR vel;
         vel.x = 0.0f;
         vel.z = 0.0f;

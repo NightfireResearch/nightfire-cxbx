@@ -21,6 +21,7 @@
 #include "../assets.h"
 #include "../game/mp/multiplayer.h"
 #include "../game/obj/Drone_AIHints.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -375,8 +376,8 @@ void InstallFakes(const unsigned *tested = NULL, int count = 0) {
 // ---- the made-up world
 
 float RandomFloat() {
-    static const float edges[] = {0.0f, -0.0f, 1.5f, 1.4999999f, 1.5000001f, 3.0f, 4.0f, 1.0f, NAN, 0.7853982f,
-                                  1.5707964f, -1.5707964f};
+    static const float edges[] = {0.0f, -0.0f, 1.5f, 1.4999999f, 1.5000001f, 3.0f, 4.0f, 1.0f, NAN, QUARTER_PI,
+                                  HALF_PI, -HALF_PI};
     switch (ShadowRand(3)) {
     case 0:
         return Pick(edges);
@@ -694,7 +695,7 @@ void RandomBrain() {
         static const float near[] = {0.5f, 1.0f, 1.5f, 1.5000001f, 2.5f, 2.9999998f, 3.0f};
         if (ShadowRand(2))
             d->distanceToTarget = Pick(near);
-        static const float bearings[] = {0.0f, 1.0f, -1.0f, 1.5707963f, 1.5707964f, -1.5707964f, 3.0f};
+        static const float bearings[] = {0.0f, 1.0f, -1.0f, 1.5707963f, HALF_PI, -HALF_PI, 3.0f};
         if (ShadowRand(2))
             d->opponentBearing = Pick(bearings);
         if (ShadowRand(3) == 0)

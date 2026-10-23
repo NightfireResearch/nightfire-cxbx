@@ -11,6 +11,7 @@
 #include "control.h"
 #include "Emitter.h"
 #include "Gas.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -56,7 +57,7 @@ HEINFO_tag EffectInfo[EFFECT_INFO_COUNT] = {
         0x0130, 0x0000,
      0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000,
      0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}}, HT_Entity_spark_leaves,
-     2.2f, 0.7853982f, 1, 55, 1, 5, HASHCODE_NONE},
+     2.2f, QUARTER_PI, 1, 55, 1, 5, HASHCODE_NONE},
     {"EARTH", HT_Entity_BulletHole_scar, HT_Entity_FootPrint_Left, HT_Entity_FootPrint_Right, HASHCODE_NONE, 0x0121,
         0xffff, 0x0131,
      0x0000, 0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000,
@@ -66,17 +67,17 @@ HEINFO_tag EffectInfo[EFFECT_INFO_COUNT] = {
         0xffff, 0x0132,
      0x0000, 0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000,
      0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}},
-     HT_Entity_spark_sand, 2.2f, 0.7853982f, 1, 55, 1, 5, HT_Emitter_SandHit},
+     HT_Entity_spark_sand, 2.2f, QUARTER_PI, 1, 55, 1, 5, HT_Emitter_SandHit},
     {"STONE", HT_Entity_DefaultBulletHole, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right,
         HT_Entity_lazerhotspot, 0x0008, 0x000d,
      0x0133, 0x001f, 0.5f, {{HT_Entity_smoke_1_dust, 9, 0x7f7f7f7f, 0x00000000, 0.005f, 0.02f, 32, 1, 0},
      {HT_Entity_smoke_1_dust, 10, 0x5050507f, 0x00000000, 0.025f, 0.15f, 42, 1, 0}, {HT_Entity_hit_floor, 5, 0x7f7f007f,
-     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, 0.7853982f, 1, 55, 1, 5, HT_Emitter_StoneHit},
+     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, QUARTER_PI, 1, 55, 1, 5, HT_Emitter_StoneHit},
     {"GRAVEL", HT_Entity_BulletHole_scar, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right, HASHCODE_NONE,
         0x0008, 0x0082, 0x0134,
      0x0000, 0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000,
      0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HT_Entity_hit_floor, 5, 0x7f7f007f, 0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}},
-     HT_Entity_spark_concrete, 2.2f, 0.7853982f, 1, 55, 1, 5, HT_Emitter_GravelHit},
+     HT_Entity_spark_concrete, 2.2f, QUARTER_PI, 1, 55, 1, 5, HT_Emitter_GravelHit},
     {"SNOW", HASHCODE_NONE, HT_Entity_FootPrint_Left, HT_Entity_FootPrint_Right, HASHCODE_NONE, 0x0124, 0x007b, 0x0135,
         0x0000,
      0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HT_Entity_smoke_1_dust, 10, 0xffffff7f,
@@ -94,26 +95,26 @@ HEINFO_tag EffectInfo[EFFECT_INFO_COUNT] = {
         0x00ed, 0x0082,
      0x0138, 0x0000, 0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0,
      0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}},
-     HT_Entity_spark_glass, 2.2f, 0.7853982f, 1, 55, 1, 5, HT_Emitter_IceHit},
+     HT_Entity_spark_glass, 2.2f, QUARTER_PI, 1, 55, 1, 5, HT_Emitter_IceHit},
     {"GLASS", HT_Entity_GlassBulletHole, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right,
         HT_Entity_lazerhotspot, 0x0005, 0x0084,
      0x0139, 0x0000, 0.5f, {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0,
      0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HT_Entity_hit_floor, 5, 0x7f7f007f, 0x7f7f0040, 1.5f, 2.5f, 4, 0,
-     1}}, HT_Entity_spark_glass, 6.2f, 3.1415927f, 1, 55, 1, 5, HASHCODE_NONE},
+     1}}, HT_Entity_spark_glass, 6.2f, PI, 1, 55, 1, 5, HASHCODE_NONE},
     {"CERAMICTHIN", HT_Entity_DefaultBulletHole, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right,
         HT_Entity_lazerhotspot, 0x0125,
      0x0084, 0x013a, 0x000f, 0.5f, {{HT_Entity_smoke_1_dust, 9, 0x7f7f7f7f, 0x00000000, 0.005f, 0.02f, 32, 1, 0},
      {HT_Entity_smoke_1_dust, 10, 0x5050507f, 0x00000000, 0.025f, 0.15f, 42, 1, 0}, {HT_Entity_hit_floor, 5, 0x7f7f007f,
-     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, 0.7853982f, 1, 55, 1, 5, HT_Emitter_CeramicHit},
+     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, QUARTER_PI, 1, 55, 1, 5, HT_Emitter_CeramicHit},
     {"CERAMICTHICK", HT_Entity_DefaultBulletHole, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right,
         HT_Entity_lazerhotspot, 0x0126,
      0x0084, 0x013b, 0x0018, 0.5f, {{HT_Entity_smoke_1_dust, 9, 0x7f7f7f7f, 0x00000000, 0.005f, 0.02f, 32, 1, 0},
      {HT_Entity_smoke_1_dust, 10, 0x5050507f, 0x00000000, 0.025f, 0.15f, 42, 1, 0}, {HT_Entity_hit_floor, 5, 0x7f7f007f,
-     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, 3.1415927f, 1, 55, 1, 5, HT_Emitter_CeramicHit},
+     0x7f7f0040, 1.5f, 2.5f, 4, 0, 1}}, HT_Entity_spark_plaster, 6.2f, PI, 1, 55, 1, 5, HT_Emitter_CeramicHit},
     {"FOLLAGE", HASHCODE_NONE, HASHCODE_NONE, HASHCODE_NONE, HASHCODE_NONE, 0x0127, 0x0081, 0x013c, 0x0000, 0.5f,
      {{HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f,
      0.0f, 0, 0, 0}, {HASHCODE_NONE, 0, 0x00000000, 0x00000000, 0.0f, 0.0f, 0, 0, 0}}, HT_Entity_spark_leaves, 2.2f,
-     0.7853982f, 1, 55, 1, 5, HASHCODE_NONE},
+     QUARTER_PI, 1, 55, 1, 5, HASHCODE_NONE},
     {"FABRIC", HT_Entity_BulletHole_scar, HT_Entity_IR_FootPrint_Left, HT_Entity_IR_FootPrint_Right, HASHCODE_NONE,
         0x0128, 0x0083, 0x013d,
      0x0000, 0.5f, {{HT_Entity_smoke_1_dust, 9, 0x7f7f7f7f, 0x00000000, 0.005f, 0.02f, 32, 1, 0},
@@ -334,12 +335,12 @@ void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
             ((Effect_tag *)spark->extraObjectData)->life = 1;
             spark->objectType = OBJECTTYPE_EFFECT;
             spark->scale = (float)(Float_FRand(2.0f) + 2.0f);
-            spark->rotation.z = (float)Float_FRand(6.2831855f);
+            spark->rotation.z = (float)Float_FRand(TWO_PI);
             spark->position.x = (float)((double)out.x * 0.01f + spark->position.x);
             spark->position.y = (float)((double)out.y * 0.01f + spark->position.y);
             spark->position.z = (float)((double)out.z * 0.01f + spark->position.z);
             hashtable_set_object_to_entity_gfx(spark, kLaserSparks[Rand_Rand(5)]);
-            spark->effectFlags |= 0x20;
+            spark->effectFlags |= EFFECT_NO_COLLISION;
             control_link_object_to_cel(spark, cel);
         }
     }
@@ -450,7 +451,7 @@ void Particles_Create(int kind, _VECTOR *pos, plane_equ_tag *plane) {
     if (obj == NULL)
         return;
     obj->transformFlags |= 0x10;
-    obj->effectFlags |= 0x21;
+    obj->effectFlags |= EFFECT_BACK_TO_FRONT | EFFECT_NO_COLLISION;
     obj->objectType = OBJECTTYPE_PARTICLES;
     obj->radius = 10.0f;
     Vec_Copy(pos, &obj->centrePoint);

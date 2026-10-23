@@ -35,7 +35,7 @@ obj_tag* BodyGlow_Create(obj_tag *owner) {
     obj_tag *glow = control_create_object(sizeof(BODYGLOW_tag), &owner->position, &owner->rotation, NULL);
     glow->objectType = OBJECTTYPE_BODYGLOW;
     hashtable_set_object_to_entity_gfx(glow, HT_Entity_lazer_muzzle);
-    glow->effectFlags |= 0x2408;
+    glow->effectFlags |= EFFECT_BILLBOARD | EFFECT_XRAY_ONLY | EFFECT_DRAW_LAST;
     glow->scale = 6.0f;
     build_LinkToRoom(glow, 0, glb_world);
     View_SetDrawInNoViews(glow);
@@ -47,7 +47,7 @@ obj_tag* BodyGlow_Create(obj_tag *owner) {
         obj_tag *beam = control_create_object(0, &owner->position, &owner->rotation, NULL);
         hashtable_set_object_to_entity_gfx(beam, HT_Entity_BoneGlow);
         data->beams[i] = beam;
-        beam->effectFlags |= 0x2400;
+        beam->effectFlags |= EFFECT_XRAY_ONLY | EFFECT_DRAW_LAST;
         beam->objectType = OBJECTTYPE_GFX;
         build_LinkToRoom(beam, 0, glb_world);
         View_SetDrawInNoViews(beam);
@@ -66,10 +66,10 @@ void BodyGlow_Delete(obj_tag *glow) {
 // Drawn in no view, hidden (effect flag 0x10)
 static void Hide(obj_tag *glow, BODYGLOW_tag *data) {
     View_SetDrawInNoViews(glow);
-    glow->effectFlags |= 0x10;
+    glow->effectFlags |= EFFECT_HIDDEN;
     for (int i = 0; i < BODYGLOW_BEAMS; i++) {
         View_SetDrawInNoViews(data->beams[i]);
-        data->beams[i]->effectFlags |= 0x10;
+        data->beams[i]->effectFlags |= EFFECT_HIDDEN;
     }
 }
 
@@ -128,11 +128,11 @@ void BodyGlow_Update(obj_tag *glow) {
     if (throughWalls) {
         distance = 0.0f;
         for (int i = 0; i < BODYGLOW_BEAMS; i++)
-            data->beams[i]->effectFlags &= ~0x2400;
+            data->beams[i]->effectFlags &= ~(EFFECT_XRAY_ONLY | EFFECT_DRAW_LAST);
     }
     else {
         for (int i = 0; i < BODYGLOW_BEAMS; i++)
-            data->beams[i]->effectFlags |= 0x2400;
+            data->beams[i]->effectFlags |= EFFECT_XRAY_ONLY | EFFECT_DRAW_LAST;
         if (distance > 10.0f) {
             Hide(glow, data);
             return;
@@ -147,7 +147,7 @@ void BodyGlow_Update(obj_tag *glow) {
     View_SetDrawInViews(glow, (short)views);
     glow->transformFlags |= TRANSFORM_MOVED;
     glow->tweakA = alpha;
-    glow->effectFlags &= ~0x10;
+    glow->effectFlags &= ~EFFECT_HIDDEN;
     control_unlink_object(glow);
     control_link_object_to_cel(glow, data->owner->inCel);
 
@@ -169,7 +169,7 @@ void BodyGlow_Update(obj_tag *glow) {
         beam->transformFlags |= TRANSFORM_MOVED | TRANSFORM_MATRIX_PLACED | TRANSFORM_NO_SCALE;
         View_SetDrawInViews(beam, (short)views);
         beam->tweakA = alpha;
-        beam->effectFlags &= ~0x10;
+        beam->effectFlags &= ~EFFECT_HIDDEN;
         control_unlink_object(beam);
         control_link_object_to_cel(beam, data->owner->inCel);
     }

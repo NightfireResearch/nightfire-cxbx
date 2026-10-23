@@ -42,7 +42,7 @@ obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
     destroy->blastRadius = (float)((double)keys->blast * 0.01f);
     destroy->delay = Ftol(-((double)keys->delay * _FRAME_RATE));
     destroy->smashed = 0;
-    if (obj->effectFlags & FLAG_HIDDEN)
+    if (obj->effectFlags & EFFECT_HIDDEN)
         destroy->smashedGlist = NULL;
     return obj;
 }
@@ -86,7 +86,7 @@ void Destroy_CollisionHandler(obj_tag *obj) {
         if (hitter == NULL || hitter->objectType != OBJECTTYPE_BULLET)
             continue;
 
-        if (((BU_tag *)hitter->extraObjectData)->wpnDef->weaponBaseNum == Weap_Laser)
+        if (((BU_tag *)hitter->extraObjectData)->wpnDef->weaponBaseNum == Weap_SubLaser)
             heat = 5;
 
         destroy->health -= hit->dmgAmt;

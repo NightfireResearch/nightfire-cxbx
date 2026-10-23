@@ -138,16 +138,16 @@ obj_tag* Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *c
 
     obj->objGraphics = celgl;
     obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;
-    obj->effectFlags = celgl->applyFlagsToObject | 0x840;
-    obj->effectFlags &= ~0x2000;
+    obj->effectFlags = celgl->applyFlagsToObject | (EFFECT_NO_CONTACT | EFFECT_CEL_LIT);
+    obj->effectFlags &= ~EFFECT_DRAW_LAST;
     if (kind == PICKUP_KIND_BONUS || MPSettings.isMultiplayer) {
         info->spin = 1;
-        obj->effectFlags &= ~0x800;
+        obj->effectFlags &= ~EFFECT_CEL_LIT;
     } else {
         info->spin = 0;
     }
     if (kind == PICKUP_KIND_ARMOUR)
-        obj->effectFlags = (obj->effectFlags & ~0x800) | 0x80000;
+        obj->effectFlags = (obj->effectFlags & ~EFFECT_CEL_LIT) | EFFECT_FLASHES;
 
     _VECTOR floor;
     Vec_Copy(pos, &floor);
@@ -216,7 +216,7 @@ void Pickup_Update(obj_tag *obj) {
     switch (info->state) {
     case PICKUP_RESPAWNING:
         if (GameState.NumFramesUnpaused - obj->creationTimeFrames > info->respawn * FRAME_RATE_INT * 10) {
-            obj->effectFlags &= ~FLAG_HIDDEN;
+            obj->effectFlags &= ~EFFECT_HIDDEN;
             info->state = PICKUP_RESTING;
         }
         return;
@@ -533,7 +533,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
         if (MPSettings.isMultiplayer)
             MP_UnregisterPickup(obj);
     } else if (info->respawn != 0xffff) {
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
         info->state = PICKUP_RESPAWNING;
         obj->creationTimeFrames = GameState.NumFramesUnpaused;
     }

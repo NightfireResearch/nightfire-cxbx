@@ -85,7 +85,7 @@ obj_tag* Emitter_Create(HASHCODE hc, _VECTOR *pos, _VECTOR *dir, float life, uin
     }
 
     Vec_Copy(pos, &obj->centrePoint);
-    obj->effectFlags |= 0x21;
+    obj->effectFlags |= EFFECT_BACK_TO_FRONT | EFFECT_NO_COLLISION;
     obj->radius = (float)(((double)def->speedRange + def->speedBase) * ((double)def->lifeRange + def->lifeBase));
     return obj;
 }

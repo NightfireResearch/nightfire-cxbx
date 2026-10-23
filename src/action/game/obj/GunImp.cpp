@@ -75,7 +75,7 @@ obj_tag* GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl) 
     if (gunObj == NULL)
         return NULL;
     GUNIMP *gunImp = (GUNIMP *)gunObj->extraObjectData;
-    gunObj->effectFlags |= 0x1000;
+    gunObj->effectFlags |= EFFECT_MASKABLE;
     gunObj->objectType = OBJECTTYPE_GUNTURRET2;
     gunImp->userOffset.z = celgl->extentMin.z * 0.75f;
     gunImp->userOffset.y = 0.0f;
@@ -84,7 +84,7 @@ obj_tag* GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl) 
     gunImp->gun = Control_CreateObjEx(sizeof(GUNIMP), pos, NULL, &mtx,
                                       hashtable_hashcode_to_celglist(GunTypes[gunType].model), NULL, 1, 4, 1.0f, 0,
                                       0xff, 0xff, 0xff);
-    gunImp->gun->effectFlags |= 0x1000;
+    gunImp->gun->effectFlags |= EFFECT_MASKABLE;
     Mat_Copy(&gunObj->transformMatrix, &gunImp->placement);
     gunImp->heat = 0.0f;
     gunImp->overheated = 0;
@@ -192,7 +192,7 @@ static obj_tag *GunImp_Flash(_VECTOR *pos, HASHCODE gfx, short life, bool spun, 
     flash->tweakA = Rand_Rand(0x80) + 0x7f;
     if (spun) {
         flash->scale = 10.0f;
-        flash->rotation.z = (float)Float_FRand(6.2831855f);
+        flash->rotation.z = (float)Float_FRand(TWO_PI);
     }
     control_link_object_to_cel(flash, cel);
     return flash;
@@ -228,10 +228,10 @@ void GunImp_Update(obj_tag *gunObj) {
     gunImp->pitchTarget = (float)(gunImp->pitchTarget -
                                   (double)Input_Actionf(gunObj->subState, ACTION_TURRET_AIM_Y, 1) * FRAME_RATE_MUL * 0.015f);
     float pitchTarget;
-    if (gunImp->pitchTarget < -1.5707964f)
-        pitchTarget = -1.5707964f;
-    else if (gunImp->pitchTarget > 0.7853982f)
-        pitchTarget = 0.7853982f;
+    if (gunImp->pitchTarget < -HALF_PI)
+        pitchTarget = -HALF_PI;
+    else if (gunImp->pitchTarget > QUARTER_PI)
+        pitchTarget = QUARTER_PI;
     else
         pitchTarget = gunImp->pitchTarget;
     gunImp->pitchTarget = pitchTarget;
@@ -276,7 +276,7 @@ void GunImp_Update(obj_tag *gunObj) {
         rot.z = 0.0f;
         rot.y = 0.0f;
         rot.x = 0.0f;
-        rot.z = (float)Float_FRand(6.2831855f);
+        rot.z = (float)Float_FRand(TWO_PI);
         Gas_Init(gunObj->inCel, &at, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x484030e4, 1, 0x80);
     }
 

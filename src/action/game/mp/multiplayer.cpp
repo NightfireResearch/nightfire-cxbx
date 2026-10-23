@@ -636,7 +636,7 @@ void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keep
     MP_OBJ_EXT *ext = MP_getObjExtFromMPOBJECT(mpObj);
     if (ext != NULL)
         MP_recalcObjExtPaths(ext, false);
-    gameObj->effectFlags &= ~0x21;
+    gameObj->effectFlags &= ~(EFFECT_BACK_TO_FRONT | EFFECT_NO_COLLISION);
     gameObj->tweakA = 0xff;
     View_SetDrawInAllViews(gameObj);
 }
@@ -652,7 +652,7 @@ void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
     Mat_Align2Dir(&gameObj->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
     Matrix_SetTrans(&pos, &gameObj->transformMatrix);
     gameObj->transformFlags |= TRANSFORM_MOVED;
-    gameObj->effectFlags |= 0x20;
+    gameObj->effectFlags |= EFFECT_NO_COLLISION;
     if (holder->objectType == OBJECTTYPE_PLAYER)
         View_SetDrawInOtherViewsOnly(gameObj, ((BLData *)holder->extraObjectData)->playerNum);
 }
@@ -1353,7 +1353,7 @@ ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
     if (MPSettings.GameMode == GM_GOLDENEYE) {
         for (ushort i = 0; i < ARRAY_SIZE(GoldenEye.keys); i++) {
             obj_tag *key = GoldenEye.keys[i].gameObj;
-            if (!(key->effectFlags & FLAG_HIDDEN))
+            if (!(key->effectFlags & EFFECT_HIDDEN))
                 AddRadarObject(&count, Mat_Position(key->transformMatrix), MP_RADAR_GOLDENEYE_KEY,
                                RADAR_COLOUR_NEUTRAL);
         }
@@ -2106,7 +2106,7 @@ bool MP_ReSpawn(obj_tag *obj, ushort playerNum) {
     Camera_Set(glb_viewer[blData->playerNum], &obj->position, &obj->rotation);
     Player_ChangeState(obj, 0);
     Player_ChangeSubState(obj, 0);
-    obj->effectFlags &= ~0x20;
+    obj->effectFlags &= ~EFFECT_NO_COLLISION;
     obj->objectType = OBJECTTYPE_PLAYER;
     agent->flags = 0;
     Control_GetObjMatrix(obj, &obj->transformMatrix);
@@ -2196,7 +2196,7 @@ obj_tag* MP_CreateObject(_MATRIX *mtx, uint *keys, celglist_tag *celgl) {
         ext->mpObj = mpObj;
 
     if (keys[MP_KEY_SCRIPT] != 0) {
-        obj->effectFlags |= 0x10;
+        obj->effectFlags |= EFFECT_HIDDEN;
         _VECTOR rot;
         Mat_GetDir(&rot, mtx);
         vecutil_cartesian_to_spherical_acc(&rot, rot.x, rot.y, rot.z);

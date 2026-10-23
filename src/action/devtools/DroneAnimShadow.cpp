@@ -21,6 +21,7 @@
 #include "../game/drone/DroneAnim.h"
 #include "../game/drone/NDrone2.h"
 #include "../game/mp/multiplayer.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -346,7 +347,7 @@ void RandomDrone(int i) {
     d->unknown434 = ShadowRand(3) == 0 ? (void *)&world.scripts[1] : NULL;
     d->animFunc = RandomFunc();
     d->animStateFunc = RandomFunc();
-    static const float snaps[] = {0.0f, -0.0f, 3.14159274f, -1.57079637f, 0.3f, NAN};
+    static const float snaps[] = {0.0f, -0.0f, PI, -HALF_PI, 0.3f, NAN};
     d->unknown448 = Pick(snaps, 6);
     d->angleToSomePoint = SpecialOr(-3.0f, 3.0f);
     static const float healths[] = {0.0f, -0.0f, -5.0f, 50.0f, NAN};

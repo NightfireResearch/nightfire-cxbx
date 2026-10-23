@@ -510,7 +510,7 @@ bool NDrone2_DSTATE_AbseilDeath(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
             dcv->drone->flags &= ~0x20;
             drone->flags |= 4;
         } else {
-            gameObj->effectFlags |= 0x20;
+            gameObj->effectFlags |= EFFECT_NO_COLLISION;
         }
         drone->stateScratch = 0;
         Drone_AlertStatusSet(3, dcv);

@@ -616,7 +616,7 @@ void Player_SetWeaponAnim(obj_tag *player) {
         View_SetDrawInNoViews(blData->weaponObject);
     }
     PlayerAnimSetInit(player);
-    blData->weaponObject->effectFlags |= 0x1a0a0;
+    blData->weaponObject->effectFlags |= EFFECT_NO_COLLISION | EFFECT_PLACED_LIGHTS | EFFECT_DRAW_LAST | EFFECT_STRADDLES_CELS | EFFECT_SUNLIT;
 }
 
 // Places the gun: its own rotation on the view's (the player's turned by the pitch), at the eyes plus its position in
@@ -1814,7 +1814,7 @@ obj_tag* WatchOrHands_Create(obj_tag *owner) {
         obj->curState = 0;
         obj->objectType = 0;
         obj->parent = owner;
-        obj->effectFlags |= 0x2020;
+        obj->effectFlags |= EFFECT_NO_COLLISION | EFFECT_DRAW_LAST;
     }
     return obj;
 }
@@ -1830,7 +1830,7 @@ void Player_CreateBeams(obj_tag *player, char playerNum) {
             continue;
         beam->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
         beam->objectType = OBJECTTYPE_GFX;
-        beam->effectFlags |= 0x20;
+        beam->effectFlags |= EFFECT_NO_COLLISION;
         beam->parent = player;
         beam->scale = 1.0f;
         View_SetDrawInThisViewOnly(beam, playerNum);
@@ -1898,7 +1898,7 @@ void Player_LaserPointer(obj_tag *player) {
     float length = Vec_Dist3D(&from, &end);
     beam->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY | TRANSFORM_MOVED;
     beam->scale = length;
-    beam->effectFlags |= 0x2000;
+    beam->effectFlags |= EFFECT_DRAW_LAST;
     vecutil_cartesian_to_spherical_acc(&beam->rotation, from.x - end.x, from.y - end.y, from.z - end.z);
     beam->rotation.x = -beam->rotation.x;
     beam->rotation.z = 0.0f;
@@ -1994,7 +1994,7 @@ void Draw_MuzzleFlash(obj_tag *player) {
     View_SetDrawInThisViewOnly(blData->muzzleFlashObj, playerNum);
     hashtable_set_object_to_entity_gfx(blData->muzzleFlashObj, weapon->muzzleFlash1stPerson);
     blData->muzzleFlashObj->transformFlags |= 0x24;
-    blData->muzzleFlashObj->effectFlags |= 0x2000;
+    blData->muzzleFlashObj->effectFlags |= EFFECT_DRAW_LAST;
     blData->muzzleFlashObj->scale = (float)(Float_FRand(0.2f) + 0.9f);
 
     flash = blData->muzzleFlashObj;
@@ -2107,7 +2107,7 @@ void Player_SetWatch(obj_tag *player) {
         Concat(&faceMtx, &turned);
         Mat_CopyRot(&turned, &hands[i]->transformMatrix);
         Matrix_SetTrans(Mat_Position(faceMtx), &hands[i]->transformMatrix);
-        hands[i]->effectFlags = (hands[i]->effectFlags & ~0x800) | 0x2000;
+        hands[i]->effectFlags = (hands[i]->effectFlags & ~EFFECT_CEL_LIT) | EFFECT_DRAW_LAST;
         hands[i]->transformFlags |= 0x24;
     }
 }

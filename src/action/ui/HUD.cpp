@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../game/view.h"
+#include "../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -2327,7 +2328,7 @@ void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cr
                                        0xff, 0xff, 0xff);
         parts[i]->position.z = 1.0f;
         parts[i]->displayMask = 0x20;
-        parts[i]->effectFlags |= 0x10;
+        parts[i]->effectFlags |= EFFECT_HIDDEN;
         build_LinkToRoom(parts[i], 0, glb_viewer[5]->world);
     }
     if (parts[0] != NULL)
@@ -3317,19 +3318,19 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	obj_tag **items = (obj_tag **)hudPane->extraItems;
 	if (!hudPane->enabled) {
 		if (items[0] != NULL)
-			items[0]->effectFlags |= 0x10;
+			items[0]->effectFlags |= EFFECT_HIDDEN;
 		if (items[1] != NULL)
-			items[1]->effectFlags |= 0x10;
+			items[1]->effectFlags |= EFFECT_HIDDEN;
 		if (items[2] != NULL)
-			items[2]->effectFlags |= 0x10;
+			items[2]->effectFlags |= EFFECT_HIDDEN;
 		return;
 	}
 	if (items[0] != NULL)
-		items[0]->effectFlags &= ~0x10;
+		items[0]->effectFlags &= ~EFFECT_HIDDEN;
 	if (items[1] != NULL)
-		items[1]->effectFlags &= ~0x10;
+		items[1]->effectFlags &= ~EFFECT_HIDDEN;
 	if (items[2] != NULL)
-		items[2]->effectFlags &= ~0x10;
+		items[2]->effectFlags &= ~EFFECT_HIDDEN;
 
 	// The player has left the missile: control returns to them
 	if (gameObj->subState != MovementType_RemoteControl) {
@@ -3399,12 +3400,12 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 		hudPane->spriteList[2]->depth = 0xff;
 		if (items[0] != NULL && items[1] != NULL && items[2] != NULL) {
 			float yaw = blData->remoteControlDevice->rotation.z;
-			items[0]->rotation.z = (float)(Extended(1.5707964f) - Extended(yaw) + Extended(3.1415927f));
+			items[0]->rotation.z = (float)(Extended(HALF_PI) - Extended(yaw) + Extended(PI));
 			items[0]->transformFlags |= TRANSFORM_MOVED;
-			items[1]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) - Extended(0.7853982f));
+			items[1]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) - Extended(QUARTER_PI));
 			items[1]->transformFlags |= TRANSFORM_MOVED;
-			items[2]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) + Extended(3.1415927f) -
-			                               Extended(0.7853982f));
+			items[2]->rotation.z = (float)(Extended(blData->remoteControlDevice->rotation.z) + Extended(PI) -
+			                               Extended(QUARTER_PI));
 			items[2]->transformFlags |= TRANSFORM_MOVED;
 		}
 	}
@@ -3842,7 +3843,7 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         effect->life = 0;
         effect->fade = 0;
         hashtable_set_object_to_entity_gfx(mark, HT_Entity_DroneScan);
-        mark->effectFlags |= 0x2000;
+        mark->effectFlags |= EFFECT_DRAW_LAST;
         mark->parent = obj;
     }
 }

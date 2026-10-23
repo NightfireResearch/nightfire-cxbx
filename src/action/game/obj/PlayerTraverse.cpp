@@ -271,15 +271,15 @@ void Player_GrappleSetRope(obj_tag *player) {
     if (blData->rope == NULL)
         return;
     _VECTOR *point = &blData->grapplePoint;
-    blData->rope->effectFlags |= FLAG_HIDDEN;
+    blData->rope->effectFlags |= EFFECT_HIDDEN;
     char weapon = player->animState->currentWeaponId;
     if (weapon != 0x50 && weapon != 0x51)
         return;
     if (blData->grappleState != GRAPPLE_PULLING && !blData->movementDisabled)
         return;
 
-    blData->rope->effectFlags &= ~FLAG_HIDDEN;
-    blData->rope->effectFlags |= 0x8000;
+    blData->rope->effectFlags &= ~EFFECT_HIDDEN;
+    blData->rope->effectFlags |= EFFECT_STRADDLES_CELS;
     blData->rope->transformFlags |= TRANSFORM_MOVED;
     Vec_Copy(point, Mat_Position(blData->rope->transformMatrix));
     Vec_Copy(point, &blData->rope->position);

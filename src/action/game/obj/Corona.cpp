@@ -33,12 +33,12 @@ void Corona_Update(obj_tag *obj) {
     }
     viewer_tag *viewer = glb_viewer[0];
     if (Collide_LineOfSight(&viewer->pos, &obj->position, viewer->someCel, obj, glb_players[0], 8)) {
-        obj->effectFlags |= 0x2000;
+        obj->effectFlags |= EFFECT_DRAW_LAST;
         int alpha = obj->tweakA + 16;
         obj->tweakA = (uchar)(alpha > 0xff ? 0xff : alpha);
     }
     else {
-        obj->effectFlags &= ~0x2000;
+        obj->effectFlags &= ~EFFECT_DRAW_LAST;
         int alpha = obj->tweakA - 16;
         obj->tweakA = (uchar)(alpha < 0 ? 0 : alpha);
     }

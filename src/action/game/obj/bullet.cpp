@@ -143,8 +143,8 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     }
 
     float spread = (float)(((short)bloom + (double)weaponDef->baseSpread) * accuracy);
-    float pitch = (float)Float_FRand(3.1415927f);
-    float yaw = (float)Float_FRand(6.2831855f);
+    float pitch = (float)Float_FRand(PI);
+    float yaw = (float)Float_FRand(TWO_PI);
     float length = (float)(Rand_FRand_MVar2(spread + spread, spread) * 0.0014f);
     _VECTOR scatter;
     Vec_Spherical_2_Cartesian((float *)&scatter, length, yaw, pitch);
@@ -288,7 +288,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
         uchar passes = (hit->flags >> 1) & 1;
         obj_tag *target = hit->hitObj;
         if (target != NULL) {
-            if (target->effectFlags & 0x60)
+            if (target->effectFlags & (EFFECT_NO_COLLISION | EFFECT_NO_CONTACT))
                 passes = 1;
             if (target != bullet->firedFromObj && target->objectType == OBJECTTYPE_CAR
                 && !(bullet->wpnDef->impactFlags & ImpactFlag_Sticks))
@@ -456,7 +456,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
         bullet->occluder->transformFlags |= TRANSFORM_MOVED;
     }
     if (obj->curState == BulletState_Spent)
-        obj->effectFlags |= FLAG_HIDDEN;
+        obj->effectFlags |= EFFECT_HIDDEN;
 }
 
 // Smoke behind the projectile: a puff every fourth frame in single player; once it has gone off (a smoke grenade's
@@ -467,7 +467,7 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
     if (obj->subState == 0) {
         if (MPSettings.isMultiplayer || ((obj->creationTimeFrames + GameState.NumFramesUnpaused) & 3))
             return;
-        rot.z = (float)Float_FRand(6.2831855f);
+        rot.z = (float)Float_FRand(TWO_PI);
         Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.1f, 0.5f, HT_Entity_smoke_3_blacksmoke, 7, 0x404040ff,
                  0x40404001,
                  0x78);
@@ -479,7 +479,7 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
     vel.x = (float)(Rand_FRand_MVar2(0.3f, 0.15f) + 0.6f);
     vel.z = (float)(Rand_FRand_MVar2(0.3f, 0.15f) + 0.3f);
     vel.y = (float)(Rand_FRand_MVar2(0.1f, 0.05f) + 0.5f);
-    rot.z = (float)Float_FRand(6.2831855f);
+    rot.z = (float)Float_FRand(TWO_PI);
     Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, HT_Entity_smoke_3_blacksmoke, 11, 0x404040ff,
              0x404040ff,
              0xff);
@@ -492,7 +492,7 @@ void Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     _VECTOR rot;
     rot.x = 0.0f;
     rot.y = 0.0f;
-    rot.z = (float)Float_FRand(6.2831855f);
+    rot.z = (float)Float_FRand(TWO_PI);
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, HT_Entity_smoke_1_dust, 0, 0x7f7f7f7f, 0x80808000,
              0x40);
 }
@@ -504,7 +504,7 @@ void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     _VECTOR rot;
     rot.x = 0.0f;
     rot.y = 0.0f;
-    rot.z = (float)Float_FRand(6.2831855f);
+    rot.z = (float)Float_FRand(TWO_PI);
     Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x7f7f7f7f, 0x80808000,
              0x20);
 }
@@ -603,7 +603,7 @@ static void Bullet_SatchelDigit(obj_tag *obj, _MATRIX *rot, _VECTOR *offset, int
     effect->life = 0;
     effect->fade = 0;
     hashtable_set_object_to_entity_gfx(shown, SatchelDigits[digit]);
-    shown->effectFlags &= ~0x2000;
+    shown->effectFlags &= ~EFFECT_DRAW_LAST;
     control_link_object_to_cel(shown, obj->inCel);
 }
 
@@ -730,7 +730,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
     }
 
     _MATRIX rot;
-    _VECTOR turn = {1.5707964f, 0.0f, 3.1415927f};
+    _VECTOR turn = {HALF_PI, 0.0f, PI};
     _VECTOR tens = {0.0936933f, -0.0022869301f, -0.122736f};     // where the digits are, in its space
     _VECTOR units = {0.0321801f, -0.0022869301f, -0.122736f};
     RotMatrix(&turn, &rot);
@@ -979,9 +979,9 @@ void Bullet_init_casing_ex(obj_tag *casing) {
     casing->curState = 0;
     control_unlink_object(casing);
     control_link_object_to_cel(casing, owner->inCel);
-    casing->effectFlags |= 0x900;
+    casing->effectFlags |= EFFECT_NO_TRANSIENT_LIGHTS | EFFECT_CEL_LIT;
     if (owner->objectType == OBJECTTYPE_PLAYER)
-        casing->effectFlags |= 0x2000;
+        casing->effectFlags |= EFFECT_DRAW_LAST;
 
     data->timer = 0.0f;
     data->floorY = (float)(owner->position.y - (Float_FRand(0.5f) + 1.0f));
@@ -1041,7 +1041,7 @@ void Bullet_casing_update(obj_tag *casing) {
     double age = (double)FRAME_RATE_MUL + data->timer;
     data->timer = (float)age;
     if (age > 5.0f)
-        casing->effectFlags &= ~0x2000;
+        casing->effectFlags &= ~EFFECT_DRAW_LAST;
 
     if (casing->position.y <= data->floorY) {
         data->floorY = -1000000.0f;
@@ -1164,7 +1164,7 @@ static void Bullet_TripBombBeam(obj_tag *obj, BU_tag *bullet) {
         bullet->swoosh = control_create_object(0, &obj->position, NULL, NULL);
         hashtable_set_object_to_entity_gfx(bullet->swoosh, HT_Entity_watch_lazer);
         bullet->swoosh->objectType = OBJECTTYPE_GFX;
-        bullet->swoosh->effectFlags |= 0x20;
+        bullet->swoosh->effectFlags |= EFFECT_NO_COLLISION;
         bullet->swoosh->parent = obj;
         bullet->swoosh->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
         Sound_Play3D(SFX_WEAPON_GENERIC_LASER_SIGHT_ON, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
@@ -1331,7 +1331,7 @@ void Bullet_Update(obj_tag *obj) {
                 }
                 if (obj->objGraphics != NULL) {
                     View_SetDrawInAllViews(obj);
-                    obj->effectFlags &= ~0x2010;
+                    obj->effectFlags &= ~(EFFECT_HIDDEN | EFFECT_DRAW_LAST);
                 }
             }
             else if ((bullet->firedByObj != NULL && bullet->firedByObj->objectType == OBJECTTYPE_DRONE)

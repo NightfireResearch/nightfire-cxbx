@@ -182,18 +182,18 @@ double ClrStep(float from, float to, float share) {
     return 1.0f + (double)from;
 }
 
-// An object lit by its cel (effect flag 0x800) eases its ambient light towards the cel's for the state of the cel's
-// channel, twice as bright (up to 255) with flag 0x10000 while player 0's night vision is on
+// An object lit by its cel (EFFECT_CEL_LIT) eases its ambient light towards the cel's for the state of the cel's
+// channel, twice as bright (up to 255) with EFFECT_SUNLIT while player 0 can see the sun (ambientBoost)
 // AUTOINJECT
 void Lights_CalcAmbientLight(obj_tag *obj) {
     cel_tag *cel = obj->inCel;
-    if (cel == NULL || !(obj->effectFlags & 0x800))
+    if (cel == NULL || !(obj->effectFlags & EFFECT_CEL_LIT))
         return;
     ushort state = (uchar)switch_channels[(uchar)cel->someSwitchChannel];
     short r = cel->ambientR[state];
     short g = cel->ambientG[state];
     short b = cel->ambientB[state];
-    if ((obj->effectFlags & 0x10000) && glb_blokes[0]->ambientBoost) {
+    if ((obj->effectFlags & EFFECT_SUNLIT) && glb_blokes[0]->ambientBoost) {
         r = r * 2 > 0xff ? 0xff : r * 2;
         g = g * 2 > 0xff ? 0xff : g * 2;
         b = b * 2 > 0xff ? 0xff : b * 2;

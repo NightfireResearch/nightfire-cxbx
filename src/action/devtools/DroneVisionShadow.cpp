@@ -25,6 +25,7 @@
 #include "../game/drone/DroneVision.h"
 #include "../game/drone/NDrone2.h"
 #include "../game/mp/multiplayer.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -522,7 +523,7 @@ void RandomDrone(int i) {
 
     static const float alertness[] = {0.0f, 0.5f, 0.999f, 1.0f, 2.0f};
     d->alertness = Pick(alertness, 5, 0.0f, 1.5f);
-    static const float angles[] = {0.0f, -0.0f, 0.5f, 1.0f, 3.1415927f};
+    static const float angles[] = {0.0f, -0.0f, 0.5f, 1.0f, PI};
     d->viewAngle = Pick(angles, 5, 0.1f, 3.0f);
     static const float ranges[] = {0.0f, -1.0f, 5.0f, 20.0f, 40.0f};
     d->viewRange = Pick(ranges, 5, 1.0f, 50.0f);

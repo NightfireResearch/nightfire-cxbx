@@ -630,7 +630,7 @@ void Collide_Pick(HITTEST_tag *test) {
         }
         if (!(test->mask & 0x10)) {
             for (obj_tag *obj = room->firstObject; obj != NULL; obj = obj->nextInCel) {
-                if (!(obj->effectFlags & FLAG_IN_FORCEDLIST))
+                if (!(obj->effectFlags & EFFECT_IN_FORCED_LIST))
                     Collide_PickObj(test, obj, tester);
             }
         }
@@ -767,7 +767,7 @@ bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
         obj_tag *obj = hit->hitObj;
         if (obj == NULL || obj->objGraphics == NULL)
             return false;
-        if (obj->effectFlags & FLAG_UNKNOWN_40)
+        if (obj->effectFlags & EFFECT_NO_CONTACT)
             hit->flags |= HIT_NO_CONTACT;
         if (test->type != HITTEST_SPHERE_ONE_SIDED && (obj->transformFlags & TRANSFORM_ANIMATED) &&
             obj->objGraphics->colldata == NULL)

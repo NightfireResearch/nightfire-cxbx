@@ -111,8 +111,8 @@ void RandomTrigger(obj_tag *o, TRIGGER *t) {
     memset(t, 0, sizeof(*t));
     o->extraObjectData = t;
     o->objectType = OBJECTTYPE_TRIGGER;
-    o->effectFlags = ShadowRand(2) ? FLAG_HIDDEN : 0;
-    o->effectFlags |= ShadowRand(2) ? 0x30008000 : 0;
+    o->effectFlags = ShadowRand(2) ? EFFECT_HIDDEN : 0;
+    o->effectFlags |= ShadowRand(2) ? (EFFECT_STRADDLES_CELS | EFFECT_FORCED_LISTED | EFFECT_ALWAYS_FORCED) : 0;
     o->objGraphics = ShadowRand(3) ? &world.celgl : NULL;
     static const ushort modes[] = {1, 1, 2, 2, 3, 3, 4, 4, 5, 10, 10, 12, 12, 13, 13, 7, 99};
     t->mode = modes[ShadowRand(sizeof(modes) / sizeof(modes[0]))];

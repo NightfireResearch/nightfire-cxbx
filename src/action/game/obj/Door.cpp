@@ -454,7 +454,7 @@ void Door_MoveGroup(obj_tag *leadObj, DOORINFO *lead, char active) {
 void Door_CloseIfClear(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
     for (obj_tag *other = control_first_object(); other != NULL; other = other->nextObject) {
-        if (other->effectFlags & FLAG_HIDDEN)
+        if (other->effectFlags & EFFECT_HIDDEN)
             continue;
         if (other->objectType != OBJECTTYPE_DEAD_PLAYER && other->objectType != OBJECTTYPE_PLAYER &&
             other->objectType != OBJECTTYPE_DRONE)

@@ -33,7 +33,6 @@
 #define TANK_SHELL_WEAPON   42   // Militek MGL, Grenade
 #define HELI_MISSILE_WEAPON 46   // AT-600 Scorpion, Heatseeker
 
-#define PI     3.1415927f
 
 // XBE_GLOBAL(0x001dc980, 0x20)
 static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
@@ -84,8 +83,8 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
     tankInfo->barrelGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, hashtable_hashcode_to_celglist(barrelHashcode), baseObj, 0, 4, 1.0, 0x20, 0xff, 0xff, 0xff);
 
     // Meaning currently unknown - render mode?
-    tankInfo->turretGeom->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
-    tankInfo->barrelGeom->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
+    tankInfo->turretGeom->effectFlags |= ObjectEffectFlags::EFFECT_NO_CONTACT;
+    tankInfo->barrelGeom->effectFlags |= ObjectEffectFlags::EFFECT_NO_CONTACT;
 
     Mat_Copy(&baseObj->transformMatrix, &tankInfo->turretGeom->transformMatrix);
     Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix)); // This is pointless, it's the same matrix, but the game code does this?
@@ -202,7 +201,7 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
 
     Vec_Zero(&tankInfo->aim);
 
-    baseObj->effectFlags |= ObjectEffectFlags::FLAG_UNKNOWN_40;
+    baseObj->effectFlags |= ObjectEffectFlags::EFFECT_NO_CONTACT;
 
     // Take a copy of our initial position and orientation, so that we can respawn the tank at the right location
     // Could just as easily been stored in the CAR_INFO struct, but this is how the original code does it so we'll stick with that

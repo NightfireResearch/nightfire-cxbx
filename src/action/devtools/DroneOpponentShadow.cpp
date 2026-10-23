@@ -25,6 +25,7 @@
 #include "../game/drone/NDrone2.h"
 #include "../game/drone/NDrone2_Opponent.h"
 #include "../game/mp/multiplayer.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -348,7 +349,7 @@ void RandomDrone(int i) {
     d->unseenFrames = unseen[ShadowRand(sizeof(unseen) / sizeof(unseen[0]))];
     d->sightFlags = ShadowRand(16);
     d->viewBone = (ushort)ShadowRand(8);
-    static const float views[] = {0.0f, 0.5f, 1.0471976f, 1.5707964f, 3.1415927f};
+    static const float views[] = {0.0f, 0.5f, 1.0471976f, HALF_PI, PI};
     d->viewAngle = ShadowRand(5) == 0 ? RandomFloat(0.0f, 3.2f) : views[ShadowRand(5)];
     d->viewRange = RandomFloat(5.0f, 60.0f);
     d->distanceToTarget = RandomFloat(0.0f, 40.0f);

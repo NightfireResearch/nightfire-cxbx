@@ -131,7 +131,7 @@ void control_delete_object(obj_tag* obj) {
   obj->objectType = OBJECTTYPE_DELETED;
 
   // Remove from forced list (objects straddling cels)
-  if (obj->effectFlags & FLAG_IN_FORCEDLIST) {
+  if (obj->effectFlags & EFFECT_IN_FORCED_LIST) {
     LList_Remove(&ForcedList, (LLNODE_tag*)obj);
   }
 
@@ -268,7 +268,7 @@ float control_ClosestPlayerPnt(_VECTOR *pos, _VECTOR *out) {
 
 // AUTOINJECT
 void Control_SetEffectType(obj_tag *obj, uint effectType) {
-  obj->effectFlags = (obj->effectFlags & 0x30008000) | effectType;
+  obj->effectFlags = (obj->effectFlags & (EFFECT_STRADDLES_CELS | EFFECT_FORCED_LISTED | EFFECT_ALWAYS_FORCED)) | effectType;
 }
 
 // AUTOINJECT
@@ -375,8 +375,8 @@ void control_link_object_to_cel(obj_tag *obj, cel_tag *cel) {
 // that no longer does comes out. One always forced is not tested, and the answer is true for it alone.
 // AUTOINJECT
 bool Controls_StraddleTest(obj_tag *obj) {
-    if (obj->effectFlags & FLAG_ALWAYS_FORCED) {
-        obj->effectFlags |= FLAG_STRADDLES_CELS;
+    if (obj->effectFlags & EFFECT_ALWAYS_FORCED) {
+        obj->effectFlags |= EFFECT_STRADDLES_CELS;
         return true;
     }
     HITTEST_tag test = {};
@@ -387,16 +387,16 @@ bool Controls_StraddleTest(obj_tag *obj) {
     ushort count;
     Collide_StraddleCels(&test, &count);
     if (count > 1) {
-        if (!(obj->effectFlags & FLAG_FORCED_LISTED) && !(obj->effectFlags & 0x20)) {
+        if (!(obj->effectFlags & EFFECT_FORCED_LISTED) && !(obj->effectFlags & EFFECT_NO_COLLISION)) {
             LList_Add(&ForcedList, (LLNODE_tag *)obj);
-            obj->effectFlags |= FLAG_FORCED_LISTED;
+            obj->effectFlags |= EFFECT_FORCED_LISTED;
         }
-        obj->effectFlags |= FLAG_STRADDLES_CELS;
+        obj->effectFlags |= EFFECT_STRADDLES_CELS;
         return false;
     }
-    if (obj->effectFlags & FLAG_FORCED_LISTED)
+    if (obj->effectFlags & EFFECT_FORCED_LISTED)
         LList_Remove(&ForcedList, (LLNODE_tag *)obj);
-    obj->effectFlags &= ~(FLAG_FORCED_LISTED | FLAG_STRADDLES_CELS);
+    obj->effectFlags &= ~(EFFECT_FORCED_LISTED | EFFECT_STRADDLES_CELS);
     obj->llPrev = NULL;
     obj->llNext = NULL;
     return false;
@@ -419,7 +419,7 @@ void control_handle_cel_change(obj_tag *obj) {
         return;
     if (Vec_IsEqual(&obj->centrePoint, &obj->lastCentrePoint, 0.0f))
         return;
-    if ((obj->effectFlags & FLAG_IN_FORCEDLIST) || obj->radius > 0.1f) {
+    if ((obj->effectFlags & EFFECT_IN_FORCED_LIST) || obj->radius > 0.1f) {
         if (Controls_StraddleTest(obj))
             return;
     }
@@ -457,7 +457,7 @@ void control_handle_cel_change(obj_tag *obj) {
             return;
         // fall through
     default:
-        if (!(obj->effectFlags & 0x20)) {
+        if (!(obj->effectFlags & EFFECT_NO_COLLISION)) {
             // Back to the last position, then within the cel's box by the radius (each bound compared before it is
             // rounded to a float)
             float radius = obj->radius;

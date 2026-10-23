@@ -46,6 +46,7 @@
 #include <string.h>
 
 #include "Env.h"
+#include "../../math/math.h"
 
 // XBE_GLOBAL(0x002774c8, 0x4)
 static uint32_t player_start_positions_index;
@@ -134,10 +135,10 @@ void Player_Disable(obj_tag *player, char freeze) {
     }
 
     blData->active = 0;
-    player->effectFlags |= FLAG_HIDDEN;
+    player->effectFlags |= EFFECT_HIDDEN;
     blData->hitTest.type = 0;
     if (blData->weaponObject != NULL)
-        blData->weaponObject->effectFlags |= FLAG_HIDDEN;
+        blData->weaponObject->effectFlags |= EFFECT_HIDDEN;
 }
 
 // Puts the player back in play after Player_Disable, placed at mtx if given (facing along its direction), with his
@@ -150,7 +151,7 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
     BLData *blData = (BLData *)player->extraObjectData;
     blData->active = 2;
     blData->frozen = 0;
-    player->effectFlags &= ~FLAG_HIDDEN;
+    player->effectFlags &= ~EFFECT_HIDDEN;
     if (mtx != NULL) {
         _VECTOR dir;
         Mat_GetDir(&dir, mtx);
@@ -162,7 +163,7 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
 
     blData->hitTest.type = 0x800;
     if (blData->weaponObject != NULL)
-        blData->weaponObject->effectFlags &= ~FLAG_HIDDEN;
+        blData->weaponObject->effectFlags &= ~EFFECT_HIDDEN;
     blData->jumpState = 0;
     blData->jumpWait = 0;
     Vec_Zero(&blData->field_0x3c);
@@ -309,7 +310,7 @@ void Player_CreateSight(obj_tag *playerObj, byte viewerNum) {
     
     sightObj->transformFlags |= TRANSFORM_KEEP_ROTATION;
     sightObj->objectType = OBJECTTYPE_DELETED;
-    sightObj->effectFlags |= 0x20;
+    sightObj->effectFlags |= EFFECT_NO_COLLISION;
     sightObj->parent = playerObj;
     sightObj->tweakR = 0x7f;
     sightObj->tweakG = 0;
@@ -331,7 +332,7 @@ void Player_CreateMuzzleFlash(obj_tag *playerObj, byte viewerNum) {
     
     muzzleFlashObj->parent = playerObj;
     muzzleFlashObj->objectType = OBJECTTYPE_DELETED;
-    muzzleFlashObj->effectFlags |= 0x8221;
+    muzzleFlashObj->effectFlags |= EFFECT_BACK_TO_FRONT | EFFECT_NO_COLLISION | EFFECT_BIT9 | EFFECT_STRADDLES_CELS;
     View_SetDrawInThisViewOnly(muzzleFlashObj,viewerNum);
     blData->muzzleFlashObj = muzzleFlashObj;
     blData->muzzleFlashFrames = 0;
@@ -518,7 +519,7 @@ void Player_ViewClamping(obj_tag *player) {
             // to apply a second rotation the same way, which is the three calls below, copied from what
             // Player_ZeroG itself does. Zero G also counts pitch the other way up, hence the negation.
             _VECTOR delta;
-            delta.x = -(pitchFraction * 1.5707964f); // back into radians, which is what RotMatrix wants
+            delta.x = -(pitchFraction * HALF_PI); // back into radians, which is what RotMatrix wants
             delta.y = yawRadians;
             delta.z = 0.0f;
 
@@ -691,7 +692,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     // Swimming goes where the player is looking, and adds to the movement vector rather than replacing it.
     _MATRIX pitched;
     _VECTOR direction;
-    RotMatrixX((float)(player->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f), &pitched);
+    RotMatrixX((float)(player->rotation.x - (double)blData->pitchFromHorizontal * HALF_PI), &pitched);
     Mat_GetDir(&direction, &pitched);
     auxVec_AddMulR32(&blData->movement, &direction, moveZ, &blData->movement);
     blData->movement.x = moveX;
@@ -1614,7 +1615,7 @@ void Player_PositionCamera(obj_tag *player) {
             viewer->pos.z = player->position.z;
             viewer->someVec.y = 0.0f;
             viewer->pos.y = (float)((double)debug_cam_posy + player->position.y + 2.0f);
-            viewer->someVec.x = 1.5707964f;
+            viewer->someVec.x = HALF_PI;
             viewer->someVec.z = 0.0f;
             viewer->zoom = 1.0f;
             Camera_Set(viewer, &viewer->pos, &viewer->someVec);
@@ -1986,7 +1987,7 @@ int Player_ChangeSubState(obj_tag *player, ushort newState) {
         player->transformFlags &= ~TRANSFORM_KEEP_ROTATION;
         player->rotation.x = 0.0f;
     }
-    player->effectFlags &= ~FLAG_HIDDEN;
+    player->effectFlags &= ~EFFECT_HIDDEN;
 
     switch (newState) {
         case MovementType_Walk:
@@ -2217,7 +2218,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
             obj_tag *pickup = Pickup_CreateSimple(&blData->weaponObject->transformMatrix, 0x1b,
                                                   blData->weaponStats[grenades].clipOrCooldown, 1);
             if (pickup != NULL)
-                pickup->effectFlags |= FLAG_HIDDEN;
+                pickup->effectFlags |= EFFECT_HIDDEN;
         }
     }
 
@@ -2676,7 +2677,7 @@ void Player_Aiming(obj_tag *player) {
         blData->lastRotationDelta.x = (float)pitch;
         if (pitch > 0.0002f || pitch < -0.0002f || pitch != pitch) {
             blData->aimAutoLevelState = 1;
-            blData->pitchFromHorizontal = (float)(pitch * 1.5707964f + blData->pitchFromHorizontal);
+            blData->pitchFromHorizontal = (float)(pitch * HALF_PI + blData->pitchFromHorizontal);
         }
         return;
     }
@@ -2752,7 +2753,7 @@ void Player_Aiming(obj_tag *player) {
         turnBy *= 0.4f;
         pitchBy *= 0.7f;
     }
-    blData->rotationDelta.y = (float)(blData->rotationDelta.y - turnBy * 1.5707964f);
+    blData->rotationDelta.y = (float)(blData->rotationDelta.y - turnBy * HALF_PI);
     blData->pitchFromHorizontal = (float)(pitchBy + blData->pitchFromHorizontal);
 }
 
@@ -2975,7 +2976,7 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
         for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
             if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
                 continue;
-            if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
+            if (hit->hitObj != NULL && (hit->hitObj->effectFlags & EFFECT_NO_CONTACT))
                 continue;
             PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
             break;
@@ -3099,7 +3100,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
             if (bone > 0) {
                 if (bone <= 4) {
                     float from = Atan2(hit->hitDirection.x, hit->hitDirection.z);
-                    double degrees = Vec_AngleDifference(from, player->rotation.y) * 57.295776f;
+                    double degrees = Vec_AngleDifference(from, player->rotation.y) * RAD_TO_DEG;
                     if (degrees < 0.0)
                         degrees = -degrees;
                     if (degrees < 70.0f)
@@ -3406,7 +3407,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     Player_InitWeapon(blData, player);
     Player_InitGrapple(blData, player);
     Camera_SetUpdator(playerNum, player, (cameraUpdateFunc)Player_PositionCamera);
-    player->effectFlags |= 0x800;
+    player->effectFlags |= EFFECT_CEL_LIT;
     blData->active = 1;
     blData->frozen = 0;
 
@@ -3483,15 +3484,15 @@ void Player_ZeroG(BLData *blData, obj_tag *player) {
 
     if (!(player->animState->animFlags & 1)) {
         float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
-        blData->rotationDelta.y = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * 0.4f * turn);
+        blData->rotationDelta.y = (float)Negate((double)REC_FRAME_RATE * PI * 0.4f * turn);
         float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
-        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * 0.4f * pitch);
+        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * PI * 0.4f * pitch);
     }
     else {
         float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
-        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * 3.1415927f * 0.4f / blData->zoom * turn * -0.75f);
+        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * PI * 0.4f / blData->zoom * turn * -0.75f);
         float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
-        blData->rotationDelta.x = (float)((double)REC_FRAME_RATE * 3.1415927f * 0.4f / blData->zoom * pitch * -0.75f);
+        blData->rotationDelta.x = (float)((double)REC_FRAME_RATE * PI * 0.4f / blData->zoom * pitch * -0.75f);
     }
     blData->rotationDelta.z = 0.0f;
 
@@ -3555,9 +3556,9 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
         blData->aimAutoLevelState = 2;
         blData->movement.y = 0.0f;
         float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
-        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * 3.1415927f * Negate(turn));
+        blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * PI * Negate(turn));
         float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
-        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * 3.1415927f * pitch);
+        blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * PI * pitch);
 
         float strafe = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
         float target = (float)((double)FRAME_RATE_MUL * 0.075f * 3.0f * strafe);

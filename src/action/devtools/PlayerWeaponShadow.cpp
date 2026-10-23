@@ -431,7 +431,7 @@ void RandomObj(obj_tag *o, int type, void *data) {
     o->rotation.z = ShadowRand(3) ? 0.0f : ShadowRandFloat(-0.5f, 0.5f);
     RandomMatrix(&o->transformMatrix, &o->position);
     o->transformFlags = (ushort)ShadowRand(0x80);
-    o->effectFlags = (int)ShadowRand(0x10000);
+    o->effectFlags = (int)ShadowRand(EFFECT_SUNLIT);
     o->drawnCountdown = (char)ShadowRand(3);
     o->curState = (ushort)(ShadowRand(3) ? 0 : ShadowRand(3));
     o->tweakA = (uchar)ShadowRand(256);

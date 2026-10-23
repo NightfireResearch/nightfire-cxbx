@@ -415,7 +415,7 @@ double Camera_FollowRoom(obj_tag *obj, viewer_tag *viewer, float yaw, float pitc
 void Camera_Follow(obj_tag *obj, viewer_tag *viewer) {
     BLData *blData = (BLData *)obj->extraObjectData;
     float nearest = viewer->trackDistance;
-    float pitch = (float)((double)obj->rotation.x - (double)blData->pitchFromHorizontal * 1.5707964f);
+    float pitch = (float)((double)obj->rotation.x - (double)blData->pitchFromHorizontal * HALF_PI);
     if (pitch < -1.5f)
         pitch = -1.5f;
     else if (pitch > 1.5f)
@@ -488,14 +488,14 @@ void Camera_Orbit(obj_tag *obj, viewer_tag *viewer) {
 
     if (viewer->trackDistance != 0.0f) {
         float look = Input_Actionf((uchar)viewer->idx, ACTION_AIM_U_D, 1);
-        double pitch = viewer->trackPitch - (double)look * ((double)REC_FRAME_RATE * 1.5707964f);
+        double pitch = viewer->trackPitch - (double)look * ((double)REC_FRAME_RATE * HALF_PI);
         viewer->trackPitch = (float)pitch;
         if (pitch < -1.5f)
             viewer->trackPitch = -1.5f;
         else if (pitch > 1.5f)
             viewer->trackPitch = 1.5f;
         float turn = Input_Actionf((uchar)viewer->idx, ACTION_AIM_L_R, 1);
-        viewer->trackYaw = (float)(viewer->trackYaw - (double)REC_FRAME_RATE * 1.5707964f * turn);
+        viewer->trackYaw = (float)(viewer->trackYaw - (double)REC_FRAME_RATE * HALF_PI * turn);
         viewer->trackDistanceUsed = (float)(((double)viewer->trackDistance - viewer->trackDistanceUsed) * 0.03125f
                                             + viewer->trackDistanceUsed);
     }
@@ -612,14 +612,14 @@ void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam) {
 // towards zero if that is still outside. Left unrounded, as the original leaves it on the x87.
 // AUTOINJECT
 double normaliseToPlusMinusPi(float angle) {
-    if (AbsFchs((double)angle) < 3.1415927f)
+    if (AbsFchs((double)angle) < PI)
         return angle;
     double rest = fmod((double)angle, std::bit_cast<double>(0x401921fb60000000ull));
-    if (AbsFchs(rest) < 3.1415927f)
+    if (AbsFchs(rest) < PI)
         return rest;
     if (angle < 0.0f || angle != angle)
-        return rest + 6.2831855f;
-    return rest - 6.2831855f;
+        return rest + TWO_PI;
+    return rest - TWO_PI;
 }
 // XBE_GLOBAL(0x001f667c, 0x1)
 uint8_t GlobalBlur;

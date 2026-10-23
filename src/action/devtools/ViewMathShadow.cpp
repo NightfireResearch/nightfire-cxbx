@@ -750,8 +750,8 @@ void RunTowards(Buf &b, bool o) {
 }
 void MakeWrap(Buf &b) {
     static const float scales[] = {1.0f, 3.0f, 100.0f, 0.5f};
-    static const float edges[] = {3.1415925f, 3.1415927f, -3.1415927f, 3.141593f, 3.14f, 3.1416f, 6.2831855f,
-                                  -6.2831855f, 9.424778f, -9.424778f, 0.0f, -0.0f};
+    static const float edges[] = {3.1415925f, PI, -PI, 3.141593f, 3.14f, 3.1416f, TWO_PI,
+                                  -TWO_PI, 9.424778f, -9.424778f, 0.0f, -0.0f};
     b.f[0] = R(3) ? FiniteAngle() * scales[R(4)] : edges[R(12)];
 }
 void RunWrap(Buf &b, bool o) {
@@ -1784,7 +1784,7 @@ void RunVision(void) {
             in.count = (char)count;
             _VECTOR centre = RandomPoint(20.0f);
             for (int k = 0; k < 12; k++) {
-                float a = 6.2831855f * k / (count ? count : 1);
+                float a = TWO_PI * k / (count ? count : 1);
                 in.v[k].x = centre.x + 5.0f * (float)cos(a);
                 in.v[k].y = centre.y + 5.0f * (float)sin(a);
                 in.v[k].z = centre.z + Uniform(1.0f);

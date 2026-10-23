@@ -36,7 +36,7 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
     build_LinkToRoom(obj, 0, glb_world);
 
     if (hurt->enableSwitchChannel != 0 && !switch_channels[hurt->enableSwitchChannel])
-        obj->effectFlags |= 0x20;
+        obj->effectFlags |= EFFECT_NO_COLLISION;
     return obj;
 }
 
@@ -79,9 +79,9 @@ void Hurt_Update(obj_tag *obj) {
 
     Hurt_tag *hurt = (Hurt_tag *)obj->extraObjectData;
     if (hurt->enableSwitchChannel != 0 && switch_channels[hurt->enableSwitchChannel])
-        obj->effectFlags &= ~0x20;
+        obj->effectFlags &= ~EFFECT_NO_COLLISION;
     if (hurt->enableSwitchChannel != 0 && !switch_channels[hurt->enableSwitchChannel])
-        obj->effectFlags |= 0x20;
+        obj->effectFlags |= EFFECT_NO_COLLISION;
 
     switch ((short)obj->curState) {
     case 0:
@@ -96,7 +96,7 @@ void Hurt_Update(obj_tag *obj) {
             return;
         if (hurt->enableSwitchChannel != 0 && !switch_channels[hurt->enableSwitchChannel]) {
             obj->curState = 0;
-            obj->effectFlags |= 0x20;
+            obj->effectFlags |= EFFECT_NO_COLLISION;
         }
         if (hurt->pathTime == 0.0f)
             Sound_Play3D((Action_SFX)hurt->sound, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);

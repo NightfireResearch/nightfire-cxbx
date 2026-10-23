@@ -253,7 +253,7 @@ typedef struct BLData {
     // a second, from Player_ChangeSubState)
     char animWait; // 0x8f0
     char nightVisionActive; // 0x8f1
-    char ambientBoost; // 0x8f2 - objects with effect flag 0x10000 are lit twice as bright (Lights_CalcAmbientLight)
+    char ambientBoost; // 0x8f2 - its head can see the sun (HUD_UpdateLensFlarePane): EFFECT_SUNLIT objects lit twice as bright
     uchar flashBlur; // 0x8f3 - Player_SetFlashBang
     char laserSight; // 0x8f4 - the gun has a laser sight (weapon flag 8: Player_SetWeaponAnim)
     char punchSkin; // 0x8f5 - which of the fists' models the level's skin goes with (Player_Init)

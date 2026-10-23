@@ -388,7 +388,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     obj_tag *fx = control_create_object(sizeof(Effect_tag), &muzzle, NULL, NULL);
     if (fx != NULL) {
         Vec_Copy(&rot, &fx->rotation);
-        fx->rotation.x = Float_FRand(6.2831855f) + fx->rotation.x;
+        fx->rotation.x = Float_FRand(TWO_PI) + fx->rotation.x;
         fx->rotation.y = (float)(Rand_FRandHalf(0.2f) + HALF_PI + fx->rotation.y);
         double roll = Rand_FRandHalf(0.2f);
         Effect_tag *effect = (Effect_tag *)fx->extraObjectData;
@@ -768,7 +768,7 @@ void DroneWeap_DropWeapon(DCVars_tag *dcv) {
             double ammoShare = Float_FRand(0.5f) + 0.25f;
             obj_tag *ammo = Pickup_CreateSimple(&at, 0x1b, (short)(int)(weapon_data[0x1b].clipSize * ammoShare), 1);
             if (ammo != NULL)
-                ammo->effectFlags |= 0x10;
+                ammo->effectFlags |= EFFECT_HIDDEN;
         }
     }
     dcv->gameObj->animState->currentWeaponId = 0;

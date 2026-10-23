@@ -1148,7 +1148,7 @@ void RandomObject(int i) {
     obj->curState = (ushort)R(9);
     obj->subState = (ushort)R(17);
     obj->flags = (char)(R(5) == 0);
-    obj->effectFlags = (int)R(0x40000) * 7;
+    obj->effectFlags = (int)R(EFFECT_NOT_IN_VIEW_4) * 7;
     obj->creationTimeFrames = (int)R(5000);
     obj->scale = Plain(0.5f, 2.0f);
     obj->tweakA = (uchar)R(256);

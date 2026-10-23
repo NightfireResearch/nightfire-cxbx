@@ -199,7 +199,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
                 for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
                     if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
                         continue;
-                    if (hit->hitObj != NULL && (hit->hitObj->effectFlags & FLAG_UNKNOWN_40))
+                    if (hit->hitObj != NULL && (hit->hitObj->effectFlags & EFFECT_NO_CONTACT))
                         continue;
                     PlayerOrDrone_FeetOnPoint_DoCollision(obj, hit);
                     break;

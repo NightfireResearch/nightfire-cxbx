@@ -7,6 +7,7 @@
 
 #include "../../common/xbeOriginal.h"
 #include "../util/Random.h"
+#include "../math/math.h"
 
 #include <stdint.h>
 #include <stdio.h>
@@ -28,7 +29,7 @@ typedef double(__cdecl *RangeOffsetFn)(float, float);
 typedef void(__cdecl *VecRangeFn)(_VECTOR *, float);
 typedef void(__cdecl *VecRangeOffsetFn)(_VECTOR *, float, float);
 
-const float kRanges[] = {1.0f, 2.0f, 0.2f, 3.0f, 6.2831855f, 100.0f, 0.5f, -7.25f, 0.0f, -0.0f, 1e-30f, 3e38f,
+const float kRanges[] = {1.0f, 2.0f, 0.2f, 3.0f, TWO_PI, 100.0f, 0.5f, -7.25f, 0.0f, -0.0f, 1e-30f, 3e38f,
                          1.17549435e-38f, 0.1f};
 const int kTrials = 64;
 

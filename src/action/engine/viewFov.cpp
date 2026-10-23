@@ -1,6 +1,7 @@
 #include "viewFov.h"
 
 #include "XboxSettings.h"
+#include "../math/math.h"
 
 // See viewFov.h.
 
@@ -10,7 +11,7 @@ float ViewFov_PlayerFov(void) {
     float degrees = Settings_GetFovDegrees();
     if (degrees == 60.0f)
         return ViewFov_GameFov;
-    return degrees * (3.14159265f / 180.0f);
+    return degrees * (PI / 180.0f);
 }
 
 float ViewFov_ForViewer(int viewerNum) {

@@ -222,7 +222,7 @@ void RandomWorld() {
                                       OBJECTTYPE_BULLET};
         other->objectType = types[ShadowRand(sizeof(types))];
         other->tweakA = ShadowRand(2);   // the faked MPDrone_IsDyingOrDead
-        other->effectFlags = ShadowRand(5) == 0 ? FLAG_HIDDEN : 0;
+        other->effectFlags = ShadowRand(5) == 0 ? EFFECT_HIDDEN : 0;
         other->centrePoint = RandomPoint();
         other->radius = ShadowRandFloat(0.1f, 1.5f);
         RandomMatrix(&other->transformMatrix);

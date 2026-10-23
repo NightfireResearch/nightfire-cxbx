@@ -29,6 +29,7 @@
 #include "../game/obj/Door.h"
 #include "../game/obj/Drone_AIHints.h"
 #include "../game/sp/SwitchChannels.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -516,7 +517,8 @@ void RandomDrone(int i) {
     d->soundAlertStep = ShadowRand(12) == 0 ? NAN : RandomOf(steps, 6);
     static const float distances[] = {3.0f, 7.9999995f, 8.0f, 8.000001f, 20.0f, 3.9999998f, 4.0f};
     d->distanceToTarget = ShadowRand(12) == 0 ? NAN : RandomOf(distances, 7);
-    static const float bearings[] = {0.0f, -0.0f, 1.0f, -1.0f, 2.3561945f, 2.356195f, -2.3561945f, -3.0f, 3.1f};
+    static const float bearings[] = {0.0f, -0.0f, 1.0f, -1.0f, THREE_QUARTER_PI, 2.356195f, -THREE_QUARTER_PI, -3.0f,
+        3.1f};
     d->opponentBearing = ShadowRand(12) == 0 ? NAN : RandomOf(bearings, 9);
     d->combatRanges[1] = ShadowRandFloat(5.0f, 30.0f);
     d->combatRanges[4] = ShadowRandFloat(5.0f, 30.0f);

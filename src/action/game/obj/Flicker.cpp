@@ -13,6 +13,7 @@
 #include "Effect.h"
 #include "Gas.h"
 #include "Light.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -121,7 +122,7 @@ void Flicker_Update(obj_tag *obj) {
             gas->kind = 4;
             spark->objectType = OBJECTTYPE_GAS;
             spark->scale = SparkScale;
-            spark->effectFlags |= 0x200;
+            spark->effectFlags |= EFFECT_BIT9;
             spark->tweakG = 0xff;
             spark->tweakB = 0xff;
             spark->tweakR = 0xff;
@@ -135,11 +136,11 @@ void Flicker_Update(obj_tag *obj) {
             gas->colour[1] = spark->tweakG;
             gas->colour[2] = spark->tweakB;
             gas->colour[3] = spark->tweakA;
-            gas->spin = (float)Float_FRand(REC_FRAME_RATE * 1.5707964f);
+            gas->spin = (float)Float_FRand(REC_FRAME_RATE * HALF_PI);
             if (Rand_Rand(0x100) > 0x7f)
                 gas->spin = gas->spin * -1.0f;
             hashtable_set_object_to_entity_gfx(spark, model);
-            spark->effectFlags |= 0x20020120;
+            spark->effectFlags |= EFFECT_NO_COLLISION | EFFECT_NO_TRANSIENT_LIGHTS | EFFECT_DIM_IN_NIGHT_VISION | EFFECT_ALWAYS_FORCED;
             if (!build_LinkToRoom(spark, 0, glb_world))
                 control_link_object_to_cel(spark, cel);
             _VECTOR *up = &flicker->up;

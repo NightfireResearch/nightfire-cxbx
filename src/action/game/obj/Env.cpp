@@ -142,11 +142,11 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     _VECTOR rot;
     rot.y = 0.0f;
     rot.x = 0.0f;
-    rot.z = (float)Float_FRand(6.2831855f);
+    rot.z = (float)Float_FRand(TWO_PI);
     _VECTOR pos;
     auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
     obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_smoke, 0, 0xffffffc8, 0xffffff01, 40);
-    gas->effectFlags |= 0x400;
+    gas->effectFlags |= EFFECT_XRAY_ONLY;
 }
 
 // A tree swaying to its script, looping from a random frame but on one level. Neither the object nor the script is
@@ -170,7 +170,7 @@ obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
         anim->curFrame = (float)Ftol(Float_FRand(anim->numFrames));
     }
 
-    obj->effectFlags = (obj->effectFlags & ~0x20) | 0x80;
+    obj->effectFlags = (obj->effectFlags & ~EFFECT_NO_COLLISION) | EFFECT_PLACED_LIGHTS;
     return obj;
 }
 

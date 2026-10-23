@@ -7,6 +7,7 @@
 #include "../../engine/viewer.h"
 #include "../../util/Random.h"
 #include "../../math/X87Ops.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -100,8 +101,8 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
         angles.z = 0.0f;
         if (creature->kind != CREATURE_FISH) {
             float distance = (float)(Float_FRand(creature->range * 0.5f) + (double)creature->range * 0.5f);
-            angles.x = (float)(Rand_FRandHalf(3.1415927f) * turnX);
-            angles.y = (float)(Rand_FRandHalf(3.1415927f) * turnY);
+            angles.x = (float)(Rand_FRandHalf(PI) * turnX);
+            angles.y = (float)(Rand_FRandHalf(PI) * turnY);
             Creature_CalcPoint(at, distance, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos, obj);
             _VECTOR away;
             Vec_Subtract(at, &creature->home, &away);
@@ -111,7 +112,7 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
             }
         }
         else {
-            angles.y = (float)Rand_FRandHalf(1.5707964f);
+            angles.y = (float)Rand_FRandHalf(HALF_PI);
             angles.x = (float)Rand_FRandHalf(0.19634955f);
             Creature_CalcPoint(at, creature->size, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos,
                                obj);
@@ -196,7 +197,7 @@ void Creature_Move(obj_tag *obj, Creature *creature) {
             creature->state = CREATURE_DEAD;
             break;
         case CREATURE_DEAD:
-            obj->effectFlags |= 0x20;
+            obj->effectFlags |= EFFECT_NO_COLLISION;
             break;
     }
 }

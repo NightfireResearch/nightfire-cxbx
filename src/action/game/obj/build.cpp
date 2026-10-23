@@ -151,9 +151,9 @@ cel_tag* build_FindCel(_VECTOR *position, world_tag *world) {
 // asked, tests whether it straddles rooms. One always forced goes into the forced list instead.
 // AUTOINJECT
 bool build_LinkToRoom(obj_tag *obj, char straddleTest, world_tag *world) {
-    if (obj->effectFlags & FLAG_ALWAYS_FORCED) {
-        if (!(obj->effectFlags & FLAG_FORCED_LISTED)) {
-            obj->effectFlags |= FLAG_FORCED_LISTED | FLAG_STRADDLES_CELS;
+    if (obj->effectFlags & EFFECT_ALWAYS_FORCED) {
+        if (!(obj->effectFlags & EFFECT_FORCED_LISTED)) {
+            obj->effectFlags |= EFFECT_FORCED_LISTED | EFFECT_STRADDLES_CELS;
             LList_Add(&ForcedList, (LLNODE_tag *)obj);
         }
         return false;
@@ -242,7 +242,7 @@ void build_LinkDoors2Portals(cel_tag *, obj_tag *first) {
                     !vecutil_point_on_poly(&centre, &portal->corners[2], &portal->corners[3], &portal->corners[0],
                                            &portal->plane))
                     continue;
-                obj->effectFlags |= FLAG_STRADDLES_CELS;
+                obj->effectFlags |= EFFECT_STRADDLES_CELS;
                 if (portal->door == NULL)
                     portal->door = obj;
                 if (portal->partner->door == NULL)

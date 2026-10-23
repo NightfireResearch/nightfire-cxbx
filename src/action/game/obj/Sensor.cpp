@@ -97,7 +97,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     if(createParams->beamHashcode != 0) {
         sensor->beamObject = control_create_object(0, pos, rot, NULL);
         sensor->beamObject->objectType = OBJECTTYPE_GFX;
-        sensor->beamObject->effectFlags |= 0x20;
+        sensor->beamObject->effectFlags |= EFFECT_NO_COLLISION;
         sensor->beamObject->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY | TRANSFORM_MATRIX_PLACED;
         sensor->beamObject->scale = sensor->beamLength;
         sensor->beamObject->parent = obj;
@@ -240,22 +240,22 @@ void Sensor_Update(obj_tag *sensorObj) {
 
     // Handle visibility state changes
     if (sensor->childObjectVisibilityState == 1) {
-        sensorObj->effectFlags |= 0x10;
+        sensorObj->effectFlags |= EFFECT_HIDDEN;
         if (sensor->beamObject != NULL) {
-            sensor->beamObject->effectFlags |= 0x10;
+            sensor->beamObject->effectFlags |= EFFECT_HIDDEN;
         }
         if (sensor->bodyObject != NULL) {
-            sensor->bodyObject->effectFlags |= 0x10;
+            sensor->bodyObject->effectFlags |= EFFECT_HIDDEN;
         }
         sensor->childObjectVisibilityState = 2;
     }
     else if (sensor->childObjectVisibilityState == 2) {
-        sensorObj->effectFlags &= ~0x10;
+        sensorObj->effectFlags &= ~EFFECT_HIDDEN;
         if (sensor->beamObject != NULL) {
-            sensor->beamObject->effectFlags &= ~0x10;
+            sensor->beamObject->effectFlags &= ~EFFECT_HIDDEN;
         }
         if (sensor->bodyObject != NULL) {
-            sensor->bodyObject->effectFlags &= ~0x10;
+            sensor->bodyObject->effectFlags &= ~EFFECT_HIDDEN;
         }
         sensor->childObjectVisibilityState = 0;
     }

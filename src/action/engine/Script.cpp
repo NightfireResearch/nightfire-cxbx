@@ -1506,9 +1506,9 @@ void Script_HideObj(SCRIPTINFO *scriptInfo, char hide) {
         if (kind != 0 && kind < SStream_Sprite && stream->linkedGameOrSoundObject != NULL) {
             obj_tag* linkedObj = (obj_tag*)stream->linkedGameOrSoundObject;
             if (hide == 0) {
-                linkedObj->effectFlags &= ~FLAG_HIDDEN;
+                linkedObj->effectFlags &= ~EFFECT_HIDDEN;
             } else {
-                linkedObj->effectFlags |= FLAG_HIDDEN;
+                linkedObj->effectFlags |= EFFECT_HIDDEN;
             }
         }
 

@@ -290,7 +290,7 @@ void RandomDrone(int i) {
         o->transformMatrix.m[k] = ShadowRandFloat(-1.0f, 1.0f);
     o->drawnCountdown = (char)(ShadowRand(3) == 0 ? ShadowRand(3) : 0);
     o->transformFlags = (ushort)ShadowRand(0x100);
-    o->effectFlags = ShadowRand(4) == 0 ? 0x40 : 0;
+    o->effectFlags = ShadowRand(4) == 0 ? EFFECT_NO_CONTACT : 0;
     d->gameObj = o;
 
     anim->animFlags = (char)ShadowRand(0x100);
@@ -373,11 +373,11 @@ void RandomWorld() {
     memset(&world.player, 0, sizeof(world.player));
     world.player.objectType = OBJECTTYPE_PLAYER;
     RandomVector(&world.player.position, 10.0f);
-    world.player.effectFlags = ShadowRand(4) == 0 ? 0x40 : 0;
+    world.player.effectFlags = ShadowRand(4) == 0 ? EFFECT_NO_CONTACT : 0;
     memset(&world.other, 0, sizeof(world.other));
     world.other.objectType = OBJECTTYPE_ROTOR;
     RandomVector(&world.other.position, 10.0f);
-    world.other.effectFlags = ShadowRand(4) == 0 ? 0x40 : 0;
+    world.other.effectFlags = ShadowRand(4) == 0 ? EFFECT_NO_CONTACT : 0;
     memset(&world.ladder, 0, sizeof(world.ladder));
     world.ladder.objectType = OBJECTTYPE_LADDER;
 

@@ -65,7 +65,7 @@ void Leaf_Create(obj_tag *gen, ushort count) {
         Rand_FRandHalf_Vec(&leaf->spin, 0.1f);
         Vec_Scalef(&leaf->spin, FRAME_RATE_MUL, &leaf->spin);
         hashtable_set_object_to_entity_gfx(leafObj, HT_Entity_Leaf);
-        leafObj->effectFlags |= 0x20000020;
+        leafObj->effectFlags |= EFFECT_NO_COLLISION | EFFECT_ALWAYS_FORCED;
         if (!build_LinkToRoom(leafObj, 0, glb_world))
             control_link_object_to_cel(leafObj, gen->inCel);
     }

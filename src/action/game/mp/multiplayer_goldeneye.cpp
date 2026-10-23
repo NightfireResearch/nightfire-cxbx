@@ -142,8 +142,8 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             // The key's flags for this part's holder and the crystal's for the other's, whichever this part is
             MP_GoldenEyeLetGo(mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, 0x37);
             MP_GoldenEyeLetGo(other->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x38);
-            GoldenEye.keys[1].gameObj->effectFlags &= ~FLAG_HIDDEN;
-            GoldenEye.keys[0].gameObj->effectFlags &= ~FLAG_HIDDEN;
+            GoldenEye.keys[1].gameObj->effectFlags &= ~EFFECT_HIDDEN;
+            GoldenEye.keys[0].gameObj->effectFlags &= ~EFFECT_HIDDEN;
             MP_GoldeneyeResetObject(mpObj, gameObj, 99, 0);
             MP_GoldeneyeResetObject(other, GoldenEye.keys[gameObj->subState == 0].gameObj, 99, 0);
         }
@@ -183,9 +183,9 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
             MPSound_Play(SFX_BOND_MOMENT_BM_TENSE);
             GoldenEye.keys[1].gameObj->curState = 3;
-            GoldenEye.keys[1].gameObj->effectFlags |= FLAG_HIDDEN;
+            GoldenEye.keys[1].gameObj->effectFlags |= EFFECT_HIDDEN;
             GoldenEye.keys[0].gameObj->curState = 3;
-            GoldenEye.keys[0].gameObj->effectFlags |= FLAG_HIDDEN;
+            GoldenEye.keys[0].gameObj->effectFlags |= EFFECT_HIDDEN;
             GoldenEye.deathRay = SP_Create(&gameObj->position, NULL, HT_Script_GoldenEyeBeam, (HASHCODE)0, 1, 1, NULL,
                                            NULL, NULL, 0);
 
