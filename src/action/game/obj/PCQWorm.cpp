@@ -11,7 +11,7 @@
 #include "../sp/SwitchChannels.h"
 
 typedef struct {
-    ObjectCreationData_Basic baseData;
+    PlacementHeader header; // 0x00
     uint extraData[4];
 
 } PCQWormCreationData;

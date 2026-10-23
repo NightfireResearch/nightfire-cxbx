@@ -5,7 +5,7 @@
 // The placement's parameters as CreepWall_Create reads them
 #pragma pack(push, 1)
 typedef struct {
-    uchar _unknown00[0x2c];
+    PlacementHeader header; // 0x00
     uint param[4];      // 0x2c
 } Create_CreepWall_Params;
 #pragma pack(pop)

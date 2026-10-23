@@ -532,7 +532,7 @@ typedef struct Drone_tag {
 
 // The level_tag Drone_Create is given: the object header, then the drone's keys
 typedef struct DroneCreationData {
-    char baseObj[0x2c];
+    PlacementHeader header; // 0x00
     DroneKeys keys;
 } DroneCreationData;
 

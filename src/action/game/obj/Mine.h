@@ -20,7 +20,7 @@ static_assert(sizeof(MINE_tag) == 0x24, "MINE_tag is 0x24 bytes");
 
 // The placement's keys (level_tag)
 typedef struct MinePlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint damage;                // 0x2c
     uint radius;                // 0x30
     uint spin;                  // 0x34 - 1/5000ths

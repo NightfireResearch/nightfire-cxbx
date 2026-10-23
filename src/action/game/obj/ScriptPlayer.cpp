@@ -496,7 +496,7 @@ void SP_SetPosRot(obj_tag *gameObj, _MATRIX *newMtx) {
 // The raw placement-data payload for Place_ScriptPlayer entries (see parsemap_create_dynamic_objects), and also
 // synthesised on the stack by SP_Create for script players spawned at runtime rather than from map data.
 typedef struct {
-    ObjectCreationData_Basic basicCreation; // 0x00-0x2b
+    PlacementHeader header;      // 0x00
     HASHCODE scriptHashcode0;    // 0x2c - hashcode of script #0 -> SCRIPTPLAYER::scriptHashcodes[0]
     HASHCODE scriptHashcode1;   // 0x30 - hashcode of script #1 -> SCRIPTPLAYER::scriptHashcodes[1]
     short scriptPlayMode0;      // 0x34 -> SCRIPTPLAYER::scriptPlayModes[0]

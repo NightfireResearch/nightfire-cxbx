@@ -52,12 +52,7 @@ typedef struct SIMPLESCRIPT {
 } SIMPLESCRIPT;
 
 typedef struct {
-    ushort unknown00;           // 0x00
-    ushort pathPointCount;      // 0x02
-    ushort pathDuration;        // 0x04 - frames to cover the path; 0 is taken as 75
-    uchar padding06[2];
-    Ptr32<void> path;           // 0x08
-    uchar padding0c[0x20];
+    PlacementHeader header;     // 0x00
     uint mode;                  // 0x2c
     uint once;                  // 0x30
     uint triggers;              // 0x34
@@ -84,7 +79,7 @@ static_assert(offsetof(Create_SS_Params, water) == 0x48, "Bad offset of water");
 // AUTOINJECT
 obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
     Create_SS_Params *params = (Create_SS_Params *)lvl;
-    if (params->pathPointCount == 0)
+    if (params->header.splinePoints == 0)
         return NULL;
 
     obj_tag *obj = control_create_object(sizeof(SIMPLESCRIPT), pos, rot, NULL);
@@ -92,11 +87,11 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
         return NULL;
 
     SIMPLESCRIPT *ss = (SIMPLESCRIPT *)obj->extraObjectData;
-    if (params->pathDuration == 0)
-        params->pathDuration = 75;   // written back into the placement, as in the original
+    if (params->header.splineLength == 0)
+        params->header.splineLength = 75;   // written back into the placement, as in the original
     ss->frame = 0.0f;
-    ss->path = params->path;
-    ss->lastKey = params->pathPointCount - 1;
+    ss->path = params->header.spline;
+    ss->lastKey = params->header.splinePoints - 1;
     ss->mode = params->mode;
     ss->startMode = params->mode;
     ss->once = params->once;
@@ -107,7 +102,7 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
     ss->spline = params->spline;
     ss->water = params->water;
     ss->soundHandle = NULL;
-    ss->speed = (float)ss->lastKey / params->pathDuration;
+    ss->speed = (float)ss->lastKey / params->header.splineLength;
     obj->objectType = OBJECTTYPE_SIMPLESCRIPT;
     Control_SetGList(obj, celgl);
     obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;

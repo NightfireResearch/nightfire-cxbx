@@ -83,7 +83,7 @@ static _MATRIX InterpMatrix;
 // reads from the stream. The game's, at its address: Script_EntityStart writes as many parameters as the stream
 // gives, without a limit.
 typedef struct {
-    char header[0x2c];
+    PlacementHeader header; // 0x00
     uint params[33];    // 0x2c
 } ScriptPlacement;
 // XBE_GLOBAL(0x002792a0, 0xb0)

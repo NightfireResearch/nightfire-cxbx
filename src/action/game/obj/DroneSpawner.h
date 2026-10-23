@@ -12,7 +12,7 @@
 
 // The placement's keys (level_tag + 0x2c)
 typedef struct DroneSpawnerPlacement {
-    char base[0x2c];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c - DroneSpawnerKind; below 2 no spawner is made
     uint group;                 // 0x30 - the drone group it takes its templates from
     uint maxAlive;              // 0x34

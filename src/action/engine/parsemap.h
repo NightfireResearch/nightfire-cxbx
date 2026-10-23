@@ -92,15 +92,10 @@ typedef struct block_header_tag {
 } block_header_tag;
 extern block_header_tag DynamicBH;   // parsemap.cpp
 
-// An object's placement keys as the create functions take them (0xb0 bytes): the placement's spline and the values
+// An object's placement keys as the create functions take them (0xb0 bytes): the placement's path and the values
 // of its key pairs by key number. Each object's own placement struct names its keys.
 struct level_tag {
-    char _unknown00[2];
-    ushort splinePoints;        // 0x02
-    ushort splineLength;        // 0x04
-    char _unknown06[2];
-    Ptr32<void> spline;         // 0x08 - the map's path (a word: the placement structs lay out their keys after it)
-    char _unknown0c[0x2c - 0x0c];
+    PlacementHeader header;     // 0x00
     uint keys[33];              // 0x2c
 };
 #pragma pack(pop)

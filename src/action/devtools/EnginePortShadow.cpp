@@ -1901,9 +1901,9 @@ uint32_t RunLockCreate(bool original) {
     p->openSound = R(2) ? 0 : R(0x400);
     p->lockedSound = R(2) ? 0 : R(0x400);
     p->easy = R(2) ? 0 : R(3);
-    p->splinePoints = (ushort)(R(3) == 0 ? 0 : 1 + R(KEYS - 1));
-    p->splineLength = (ushort)R(200);
-    p->spline = world.path;
+    p->header.splinePoints = (ushort)(R(3) == 0 ? 0 : 1 + R(KEYS - 1));
+    p->header.splineLength = (ushort)R(200);
+    p->header.spline = world.path;
     _VECTOR *pos = &world.v[0], *rot = &world.v[1];
     celglist_tag *glist = &world.glists[R(GLISTS)];
     return W(CDECL_RUN(0x000d13f0, Lock_Create,

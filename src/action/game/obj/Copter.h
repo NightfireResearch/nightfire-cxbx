@@ -78,12 +78,7 @@ static_assert(sizeof(COPTERBIT) == 8, "COPTERBIT is 8 bytes");
 
 // A helicopter path's placement keys (level_tag)
 typedef struct CopterPlacement {
-    char _unknown00[2];
-    ushort points;              // 0x02 - the spline's
-    ushort length;              // 0x04 - frames, when key 10 is 0
-    char _unknown06[2];
-    Ptr32<void> spline;         // 0x08
-    char _unknown0c[0x2c - 0x0c];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c - key 0
     uint group;                 // 0x30
     uint index;                 // 0x34
@@ -97,6 +92,7 @@ typedef struct CopterPlacement {
     uint length2;               // 0x54 - key 10: frames, 0 for the placement's own
 } CopterPlacement;
 
+static_assert(offsetof(CopterPlacement, kind) == 0x2c, "Bad offset of CopterPlacement.kind");
 static_assert(offsetof(CopterPlacement, length2) == 0x54, "Bad offset of CopterPlacement.length2");
 
 #pragma pack(pop)

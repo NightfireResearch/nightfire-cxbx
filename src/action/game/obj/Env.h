@@ -34,7 +34,7 @@ extern ENV_tag *GlobalEnv;
 
 // A wind's placement keys (level_tag)
 typedef struct EnvPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint dropType;              // 0x2c - ENV_tag's
     uint unknown30;             // 0x30
     uint unknown34;             // 0x34
@@ -53,7 +53,7 @@ static_assert(offsetof(EnvPlacement, sunPitch) == 0x58, "Bad offset of EnvPlacem
 
 // An animated tree's placement keys (level_tag)
 typedef struct TreePlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     HASHCODE skin;              // 0x2c
     HASHCODE script;            // 0x30
 } TreePlacement;

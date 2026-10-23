@@ -9,15 +9,11 @@ obj_tag *ThirdPersonCameras[16];
 // The placement's path and parameters as ThirdCam_Create reads them
 #pragma pack(push, 1)
 typedef struct {
-    ushort unknown00;           // 0x00
-    ushort pathPointCount;      // 0x02
-    uchar _unknown04[4];
-    Ptr32<void> path;           // 0x08
-    uchar _unknown0c[0x2c - 0x0c];
+    PlacementHeader header;     // 0x00
     uint param[2];              // 0x2c
 } Create_ThirdCam_Params;
 #pragma pack(pop)
-static_assert(offsetof(Create_ThirdCam_Params, path) == 0x08, "Bad offset of path");
+static_assert(offsetof(Create_ThirdCam_Params, header.spline) == 0x08, "Bad offset of header.spline");
 static_assert(offsetof(Create_ThirdCam_Params, param) == 0x2c, "Bad offset of param");
 
 // A path for the third-person view to follow, kept by its id. The object is used without a check that it was made.
@@ -27,8 +23,8 @@ obj_tag * ThirdCam_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_t
     obj_tag *obj = control_create_object(sizeof(THIRDCAM), pos, rot, NULL);
     THIRDCAM *camera = (THIRDCAM *)obj->extraObjectData;
     camera->id = (ushort)params->param[0];
-    camera->lastKey = params->pathPointCount - 1;
-    camera->path = params->path;
+    camera->lastKey = params->header.splinePoints - 1;
+    camera->path = params->header.spline;
     camera->show = (uchar)params->param[1];
     ThirdPersonCameras[camera->id] = obj;
     return obj;

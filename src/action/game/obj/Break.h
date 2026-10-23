@@ -25,7 +25,7 @@ static_assert(sizeof(ObjData_Break) == 0xc, "Size of ObjData_Break is wrong");
 
 // A breakable's placement keys (level_tag)
 typedef struct {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint breakType;             // 0x2c
     uint health;                // 0x30
     uint mask;                  // 0x34 - the damage classes that break it, 0 for all

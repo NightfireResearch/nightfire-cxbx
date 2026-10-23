@@ -25,7 +25,7 @@ static_assert(std::bit_cast<uint32_t>(kPhaseToAngle) == 0x3c567750);
 #pragma pack(push, 1)
 
 typedef struct {
-    uchar padding00[0x2c];                 // 0x00-0x2b
+    PlacementHeader header;                // 0x00
     ushort searchlightType;                // 0x2c
     uchar padding2e[2];                    // 0x2e-0x2f (align to 0x30)
     uchar reenableSwitchChannel;           // 0x30

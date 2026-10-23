@@ -13,7 +13,7 @@
 
 // The placements' keys (level_tag + 0x2c; names from Ghidra's level_tag_Drone* types)
 typedef struct CoverCornerPlacement {
-    char base[0x2c];
+    PlacementHeader header;     // 0x00
     uint sideFlags;             // 0x2c - 1 or 2; anything else is both
     uint standFlags;            // 0x30 - the same
     uint crouchFlags;           // 0x34 - the same
@@ -26,7 +26,7 @@ typedef struct CoverCornerPlacement {
 } CoverCornerPlacement;
 
 typedef struct CoverLowPlacement {
-    char base[0x2c];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c - 2: the anims come from anim1 and anim2
     uint anim1;                 // 0x30 - index into Drone_CoverLowNode's table
     uint anim2;                 // 0x34
@@ -37,7 +37,7 @@ typedef struct CoverLowPlacement {
 } CoverLowPlacement;
 
 typedef struct AIPointPlacement {
-    char base[0x2c];
+    PlacementHeader header;     // 0x00
     ushort pointId;             // 0x2c
     ushort _unknown2e;
     uint radius;                // 0x30
@@ -46,7 +46,7 @@ typedef struct AIPointPlacement {
 } AIPointPlacement;
 
 typedef struct AIVolumePlacement {
-    char base[0x2c];
+    PlacementHeader header;     // 0x00
     uint visibilityPercent;     // 0x2c
     uint volumeType;            // 0x30
     uint unknown2;              // 0x34

@@ -25,12 +25,7 @@
 #pragma pack(push, 1)
 
 typedef struct {
-    ushort unknown00;           // 0x00
-    ushort pathPointCount;      // 0x02
-    ushort pathDuration;        // 0x04 - frames to cover the path; 0 is taken as one second
-    uchar padding06[2];
-    Ptr32<void> path;           // 0x08
-    uchar padding0c[0x20];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c - DoorKind
     uint group;                 // 0x30
     uint channel;               // 0x34
@@ -88,9 +83,9 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
     door->openSound = params->openSound != 0 ? params->openSound : 0xffff;
     door->closeSound = params->closeSound != 0 ? params->closeSound : 0xffff;
     door->lockedSound = params->lockedSound != 0 ? params->lockedSound : 0xffff;
-    door->path = params->path;
-    door->lastKey = params->pathPointCount - 1;
-    double frames = params->pathDuration != 0 ? (double)params->pathDuration : (double)_FRAME_RATE;
+    door->path = params->header.spline;
+    door->lastKey = params->header.splinePoints - 1;
+    double frames = params->header.splineLength != 0 ? (double)params->header.splineLength : (double)_FRAME_RATE;
     door->speed = (float)(1.0 / frames);
     door->obj = obj;
     door->flags = params->flags[0] | params->flags[1];

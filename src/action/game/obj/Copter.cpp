@@ -176,11 +176,11 @@ void Copter_InitConeSin(void) {
 COPTERPATH* Copter_CreatePath(CopterPlacement *keys) {
     COPTERPATH *path = (COPTERPATH *)Mem_Malloc(sizeof(COPTERPATH), 0x3304, 0);
     memset(path, 0, sizeof(COPTERPATH));
-    uint length = keys->length2 != 0 ? keys->length2 : keys->length;
+    uint length = keys->length2 != 0 ? keys->length2 : keys->header.splineLength;
     path->kind = (ushort)keys->kind;
     path->group = (ushort)keys->group;
-    path->spline = keys->spline;
-    path->frames = keys->points != 0 ? keys->points - 1 : 0;
+    path->spline = keys->header.spline;
+    path->frames = keys->header.splinePoints != 0 ? keys->header.splinePoints - 1 : 0;
     path->start = keys->start < path->frames ? (ushort)keys->start : path->frames;
     path->index = (ushort)keys->index;
     double frames = (double)path->frames * REC_FRAME_RATE;

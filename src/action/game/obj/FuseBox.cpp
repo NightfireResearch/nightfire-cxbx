@@ -26,7 +26,7 @@ typedef struct {
 } FUSEBOX;
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation; // 0x00
+    PlacementHeader header;                 // 0x00
     HASHCODE scriptHashcode;                // 0x2c
     uint channelA[FUSEBOX_LISTS];           // 0x30
     uint channelB[FUSEBOX_LISTS];           // 0x38

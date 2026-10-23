@@ -25,7 +25,7 @@ LAYOUT_32(sizeof(DESTROY_tag) == 0x18, "DESTROY_tag is 0x18 bytes");
 
 // A destroyable's placement keys (level_tag)
 typedef struct DestroyPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint channelOut;            // 0x2c
     uint channelIn;             // 0x30
     uint explosion;             // 0x34

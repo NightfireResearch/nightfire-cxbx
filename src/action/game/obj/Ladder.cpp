@@ -4,7 +4,7 @@
 #pragma pack(push, 1)
 
 typedef struct {
-    ObjectCreationData_Basic baseData;
+    PlacementHeader header; // 0x00
     char unknown[4];
     short b;
 } Create_Ladder_Params;

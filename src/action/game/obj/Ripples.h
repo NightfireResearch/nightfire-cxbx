@@ -15,7 +15,7 @@ static_assert(sizeof(RIPPLES_tag) == 4, "RIPPLES_tag is 4 bytes");
 
 // The placement's keys (level_tag)
 typedef struct RipplesPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint radius;                // 0x2c
     uint rate;                  // 0x30
 } RipplesPlacement;

@@ -294,13 +294,13 @@ static_assert(offsetof(TARGET_PLACEMENT, placementType) == 0x8, "Bad offset of p
 static_assert(offsetof(TARGET_PLACEMENT, pos) == 0xc, "Bad offset of pos");
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation;
+    PlacementHeader header; // 0x00
     ushort teamId;
     char _likely_pad_1[2];
 } Create_MPSpawnPoint_Params;
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation;
+    PlacementHeader header; // 0x00
     int range;// 0x2c
     uchar r;
     char _pad_1[3];
@@ -320,7 +320,7 @@ typedef struct {
 } Create_Light_Params;
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation;
+    PlacementHeader header; // 0x00
     ushort unknown_2c;
     char pad_1[2];
     ushort unknown_30;
@@ -334,7 +334,7 @@ typedef struct {
 } Create_Pickup_Params;
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation;
+    PlacementHeader header; // 0x00
     ushort unknown_2c;
     char pad_1[2];
     char unknown_30;
@@ -347,7 +347,7 @@ typedef struct {
 } Create_SkyObject_Params;
 
 typedef struct {
-    ObjectCreationData_Basic basicCreation;
+    PlacementHeader header; // 0x00
     uchar unknown_2c; // Unused? Switch polarity?
     uchar _pad_1[3];
     uchar switchChannel;
@@ -1167,13 +1167,13 @@ void parsemap_block_map_data_dynamic(block_header_tag *bh, uchar *block, uchar d
         }
         uint type = placement->placementType;
         if (placement->splinePoints != 0) {
-            keys.spline = m_paths[placement->spline];
-            keys.splineLength = placement->splineLength;
-            keys.splinePoints = placement->splinePoints;
+            keys.header.spline = m_paths[placement->spline];
+            keys.header.splineLength = placement->splineLength;
+            keys.header.splinePoints = placement->splinePoints;
         }
         if (!(type & 0xa000) && glist != NULL)
-            parsemap_create_dynamic_objects(placement, &keys, (ObjectPlacementType)type, glist, keys.spline, next,
-                                            doCreation);
+            parsemap_create_dynamic_objects(placement, &keys, (ObjectPlacementType)type, glist, keys.header.spline,
+                                            next, doCreation);
     }
 }
 

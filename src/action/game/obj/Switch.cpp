@@ -17,7 +17,7 @@ extern SSYSITEM SSysItems[SSYS_ITEMS];  // PlayerWeapon.cpp
 
 #pragma pack(push, 1)
 typedef struct {
-    ObjectCreationData_Basic baseData; // 0x00-0x2b
+    PlacementHeader header;            // 0x00
     ushort channelNum;                 // 0x2c
     uchar pad_2e[2];
     HASHCODE scriptHashcode;           // 0x30 - the flip-animation script, passed straight to SP_Create

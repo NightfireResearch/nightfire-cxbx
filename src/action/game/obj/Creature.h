@@ -51,7 +51,7 @@ LAYOUT_32(offsetof(Creature, gameObj) == 0xc0, "Bad offset of Creature.gameObj")
 
 // The placement's keys (level_tag)
 typedef struct CreaturePlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c
     uint range;                 // 0x30
     uint speed;                 // 0x34

@@ -26,12 +26,7 @@ LAYOUT_32(sizeof(LOCK_tag) == 0x20, "LOCK_tag is 0x20 bytes");
 
 // A lock's placement keys (level_tag)
 typedef struct LockPlacement {
-    char _unknown00[2];
-    ushort splinePoints;        // 0x02
-    ushort splineLength;        // 0x04 - frames
-    char _unknown06[2];
-    Ptr32<void> spline;         // 0x08
-    char _unknown0c[0x2c - 0x0c];
+    PlacementHeader header;     // 0x00
     uint kind;                  // 0x2c
     uint key;                   // 0x30
     uint unknown34;             // 0x34
@@ -41,6 +36,7 @@ typedef struct LockPlacement {
     uint easy;                  // 0x44 - unlocked from the start at difficulty 1
 } LockPlacement;
 
+static_assert(offsetof(LockPlacement, kind) == 0x2c, "Bad offset of LockPlacement.kind");
 static_assert(offsetof(LockPlacement, easy) == 0x44, "Bad offset of LockPlacement.easy");
 
 #pragma pack(pop)

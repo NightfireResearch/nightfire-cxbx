@@ -63,12 +63,12 @@ obj_tag* Lock_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *c
     lock->channel = (ushort)keys->channel;
     ushort easy = (ushort)keys->easy;
     lock->pathPos = 0.0f;
-    lock->path = keys->spline;
-    lock->pathFrames = keys->splinePoints != 0 ? keys->splinePoints - 1 : 0;
+    lock->path = keys->header.spline;
+    lock->pathFrames = keys->header.splinePoints != 0 ? keys->header.splinePoints - 1 : 0;
     double speed = (double)(int32_t)lock->pathFrames * REC_FRAME_RATE;
     lock->pathSpeed = (float)speed;
     lock->menu = 0xffff;
-    lock->pathSpeed = (float)(_FRAME_RATE / (double)keys->splineLength * speed);
+    lock->pathSpeed = (float)(_FRAME_RATE / (double)keys->header.splineLength * speed);
     obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX;
     obj->objectType = OBJECTTYPE_LOCK;
     obj->objGraphics = celgl;

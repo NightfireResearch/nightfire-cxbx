@@ -50,7 +50,7 @@ LAYOUT_32(offsetof(GUNTURRET, controlled) == 0xe2, "Bad offset of controlled");
 
 // A turret's placement keys (level_tag)
 typedef struct GTPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header; // 0x00
     uint kind;             // 0x2c
     uint key1;             // 0x30
     HASHCODE bodyScript;   // 0x34

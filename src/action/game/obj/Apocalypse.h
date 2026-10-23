@@ -22,7 +22,7 @@ static_assert(sizeof(APOCALYPSE_tag) == 0x10, "APOCALYPSE_tag is 0x10 bytes");
 
 // The placement's keys (level_tag)
 typedef struct ApocalypsePlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint channel;               // 0x2c
     uint seconds;               // 0x30
     uint rumble;                // 0x34

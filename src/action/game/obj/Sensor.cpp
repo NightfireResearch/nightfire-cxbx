@@ -20,12 +20,7 @@ LLISTINFO_tag CameraList;
 #pragma pack(push, 1)
 
 typedef struct {
-    ushort unknown00;                      // 0x00
-    ushort sweepPointCount;                // 0x02
-    ushort sweepDuration;                  // 0x04
-    uchar padding06[2];
-    Ptr32<void> sweepSpline;               // 0x08
-    uchar padding0c[0x20];
+    PlacementHeader header;                // 0x00
     HASHCODE beamHashcode;                 // 0x2c
     uint viewConeHalfAngle;                // 0x30
     uint beamLength;                       // 0x34
@@ -82,13 +77,14 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
     sensor->monitorGroup = createParams->monitorGroup;
     sensor->monitoredChannel = createParams->monitoredChannel;
 
+    // The placement's path is the sweep
     sensor->sweepPosition = 0.0f;
-    sensor->sweepSpline = createParams->sweepSpline;
+    sensor->sweepSpline = createParams->header.spline;
 
-    sensor->sweepLastPoint = createParams->sweepPointCount == 0 ? 0 : createParams->sweepPointCount - 1;
+    sensor->sweepLastPoint = createParams->header.splinePoints == 0 ? 0 : createParams->header.splinePoints - 1;
     // On the x87, the frames' share and the step stay unrounded until stored
     double frames = (double)sensor->sweepLastPoint * REC_FRAME_RATE;
-    sensor->sweepStep = (float)(_FRAME_RATE / (double)createParams->sweepDuration * frames);
+    sensor->sweepStep = (float)(_FRAME_RATE / (double)createParams->header.splineLength * frames);
 
     sensor->owner = obj;
     sensor->beamObject = NULL;

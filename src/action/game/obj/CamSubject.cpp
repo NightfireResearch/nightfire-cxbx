@@ -7,7 +7,7 @@
 // The placement's parameters as CamSubject_Create reads them
 #pragma pack(push, 1)
 typedef struct {
-    uchar _unknown00[0x2c];
+    PlacementHeader header; // 0x00
     uint param[1];      // 0x2c
 } Create_CamSubject_Params;
 #pragma pack(pop)

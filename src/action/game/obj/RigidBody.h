@@ -53,7 +53,7 @@ LAYOUT_32(offsetof(RIGIDBODY, light) == 0x120, "Bad offset of RIGIDBODY.light");
 
 // The placement's keys for a rigid body (level_tag)
 typedef struct RigidBodyPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint mass;                  // 0x2c - 0 for 3
     char _unknown30[0x34 - 0x30];
     ushort kind;                // 0x34

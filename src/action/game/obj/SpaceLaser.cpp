@@ -8,7 +8,7 @@
 #include "../../engine/Script.h"
 
 typedef struct {
-    ObjectCreationData_Basic baseData;
+    PlacementHeader header; // 0x00
     HASHCODE someScript0;
     HASHCODE someScript1;
     HASHCODE someScript;

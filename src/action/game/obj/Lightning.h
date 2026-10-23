@@ -21,7 +21,7 @@ LAYOUT_32(sizeof(LIGHTNING_tag) == 0x40, "LIGHTNING_tag is 0x40 bytes");
 
 // The placement's keys (level_tag)
 typedef struct LightningPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint key0;                  // 0x2c
     uint pair;                  // 0x30
     uint key2;                  // 0x34

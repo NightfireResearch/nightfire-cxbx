@@ -3264,7 +3264,7 @@ HASHCODE PunchSkin[4] = {
 // The start position's parameters as Player_Init reads them
 #pragma pack(push, 1)
 typedef struct {
-    uchar _unknown00[0x2c];
+    PlacementHeader header; // 0x00
     uint switchChannel;     // 0x2c - unless 0, the start is used only once its channel is set
     uchar _unknown30[0x38 - 0x30];
     uint startState;        // 0x38 - PlayerStartState

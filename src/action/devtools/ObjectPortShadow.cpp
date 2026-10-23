@@ -2029,9 +2029,9 @@ obj_tag *RandomSub(void) {
 uint32_t RunSubCreate(bool original) {
     level_tag *keys = Placement();
     keys->keys[0] = R(2) ? 0 : R(256);
-    keys->spline = &world.paths[0];
-    keys->splinePoints = (ushort)R(KEYS + 1);
-    keys->splineLength = (ushort)(R(8) ? 1 + R(400) : 0);
+    keys->header.spline = &world.paths[0];
+    keys->header.splinePoints = (ushort)R(KEYS + 1);
+    keys->header.splineLength = (ushort)(R(8) ? 1 + R(400) : 0);
     sureCreate = true;
     obj_tag *obj = CDECL_RUN(0x000cef20, Sub_Create, obj_tag *(__cdecl *)(_VECTOR *, _VECTOR *, level_tag *),
                              &world.v[0], &world.v[1], keys);

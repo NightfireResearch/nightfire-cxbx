@@ -19,8 +19,8 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
     Hurt_tag *hurt = (Hurt_tag *)obj->extraObjectData;
     HurtPlacement *keys = (HurtPlacement *)lvl;
     hurt->pathTime = 0.0f;
-    hurt->path = keys->path;
-    hurt->pathFrames = keys->pathCount != 0 ? keys->pathCount - 1 : 0;
+    hurt->path = keys->header.spline;
+    hurt->pathFrames = keys->header.splinePoints != 0 ? keys->header.splinePoints - 1 : 0;
     hurt->type = (uchar)keys->type;
     hurt->damage = (float)keys->damage;
     hurt->enableSwitchChannel = (ushort)keys->enableSwitchChannel;
@@ -28,7 +28,7 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
     hurt->armMask = (ushort)keys->armMask;
     hurt->oneShotPath = (uchar)keys->oneShotPath;
     double frames = (double)hurt->pathFrames * REC_FRAME_RATE;
-    hurt->pathSpeed = (float)(_FRAME_RATE / (double)keys->pathDuration * frames);
+    hurt->pathSpeed = (float)(_FRAME_RATE / (double)keys->header.splineLength * frames);
 
     obj->objectType = OBJECTTYPE_HURT;
     Control_SetGList(obj, celgl);

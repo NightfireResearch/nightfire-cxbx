@@ -87,6 +87,7 @@ typedef void ScriptPlayerCallback(obj_tag *obj, unsigned short arg, void *contex
 
 // Ghidra types
 #include "../helpers.h"
+#include "engine/Placement.h"   // every placement struct starts with one
 
 typedef short MallocFlags;
 
@@ -248,11 +249,5 @@ extern int NfWarnMuted;
         if (cond)                                                           \
             NF_WARN(__VA_ARGS__);                                           \
     } while (0)
-
-
-
-typedef struct {
-    char tbc[0x2c];
-} ObjectCreationData_Basic; // This might be related to TARGET_PLACEMENT but not exactly the same?
 
 #endif //ACTIONHELPERS_H_

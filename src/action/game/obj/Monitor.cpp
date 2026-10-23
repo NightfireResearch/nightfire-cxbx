@@ -19,7 +19,7 @@
 
 #pragma pack(push, 1)
 typedef struct {
-    uchar header[0x2c];
+    PlacementHeader header; // 0x00
     uint group;             // 0x2c - the cameras' SENSOR::monitorGroup
     uint unbreakable;       // 0x30
 } Create_Monitor_Params;

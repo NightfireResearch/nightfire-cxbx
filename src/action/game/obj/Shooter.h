@@ -7,7 +7,7 @@
 
 // The placement's keys (level_tag)
 typedef struct ShooterPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint channel;               // 0x2c
     uint weapon;                // 0x30
 } ShooterPlacement;

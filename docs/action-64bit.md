@@ -55,7 +55,7 @@ those words), the sequences (`sAnimRawSeq_tag.trackData`/`cursor`), the map (`bm
 `ModelData.primitives`/`afterPrimitives`, `PALHEADER_tag.data`, a model's address in `celglist_tag.geom_idx` until it
 is registered) and the sound banks (`SampleHeaderData.Address`/`psi_SampleHeader`). Those fields are `Ptr32`
 (driving/platform/Ptr32.h: `T *` on 32-bit, a word of the low game window on 64-bit); every other file structure has
-no address in it. `level_tag.spline` is a word too: the twenty placement structures lay their keys out at 0x2c after
+no address in it. `level_tag.header.spline` is a word too: the twenty placement structures lay their keys out at 0x2c after
 it. The heap's headers keep the game's layout: `MemBlock.prev` is a word, and the heap's words (`PtrHeap`,
 `QuickBlock`) decode through the window. The allocations do not: about 30 sites ask for structures that hold pointers,
 so on 64-bit the blocks are bigger and lie elsewhere (see the heap addresses below). The executable is linked at

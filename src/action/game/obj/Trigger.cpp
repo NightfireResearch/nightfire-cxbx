@@ -38,12 +38,7 @@ enum TriggerParam {
 #pragma pack(push, 1)
 
 typedef struct {
-    ushort unknown00;               // 0x00
-    ushort pathPointCount;          // 0x02
-    ushort pathDuration;            // 0x04 - frames to cover the path
-    uchar padding06[2];
-    Ptr32<void> path;               // 0x08
-    uchar padding0c[0x20];
+    PlacementHeader header;         // 0x00
     uint param[TRIGGER_PARAMS];     // 0x2c
 } Create_Trigger_Params;
 
@@ -89,8 +84,8 @@ obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
     TRIGGER *t = (TRIGGER *)obj->extraObjectData;
     memset(t, 0, sizeof(TRIGGER));
     t->pathPos = 0.0f;
-    t->path = params->path;
-    t->lastKey = params->pathPointCount != 0 ? params->pathPointCount - 1 : 0;
+    t->path = params->header.spline;
+    t->lastKey = params->header.splinePoints != 0 ? params->header.splinePoints - 1 : 0;
     t->mode = params->param[TriggerParam_Mode];
     t->channel = params->param[TriggerParam_Channel];
     for (int i = 0; i < TRIGGER_INPUTS - 1; i++)
@@ -98,7 +93,7 @@ obj_tag * Trigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
     t->inputs[TRIGGER_INPUTS - 1] = 0;
     t->touch = params->param[TriggerParam_Touch] != 0 ? params->param[TriggerParam_Touch] : TriggerTouch_Bullet;
     double keys = (double)t->lastKey * REC_FRAME_RATE;
-    t->speed = (float)((double)_FRAME_RATE / params->pathDuration * keys);
+    t->speed = (float)((double)_FRAME_RATE / params->header.splineLength * keys);
     t->lock = params->param[TriggerParam_Lock];
     t->hideOnLock = params->param[TriggerParam_HideOnLock];
     if (t->lastKey != 0)

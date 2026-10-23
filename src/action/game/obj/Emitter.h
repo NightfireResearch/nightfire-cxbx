@@ -88,7 +88,7 @@ LAYOUT_32(sizeof(EMITTER_tag) == 0x4c, "EMITTER_tag is 0x4c bytes");
 
 // An emitter's placement keys (level_tag)
 typedef struct EmitterPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     HASHCODE def;               // 0x2c
     uint life;                  // 0x30 - seconds; 0 for for ever, 1 for once
     uint onChannel;             // 0x34

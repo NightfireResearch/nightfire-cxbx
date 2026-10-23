@@ -11,7 +11,7 @@ extern uint32_t HintsEnabled; // defined in game.cpp
 
 // A hint placement's parameters, as the level data has them (after the common 0x2c-byte placement header).
 typedef struct {
-    char header[0x2c];
+    PlacementHeader header; // 0x00
     uint label;          // 0x2c - the text shown
     uint sound;          // 0x30 - played with it; 0 for none
     uint difficulty;     // 0x34 - 0: any; 1-4: at most this difficulty; 5-7: only difficulty 1-3

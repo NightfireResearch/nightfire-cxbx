@@ -19,7 +19,7 @@ static_assert(sizeof(DYNAMICOBJECT_tag) == 0xc, "DYNAMICOBJECT_tag is 0xc bytes"
 
 // Its placement keys (level_tag)
 typedef struct DynamicObjectPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     uint unknown2c;             // 0x2c
     uint unknown30;             // 0x30
     uint unknown34;             // 0x34

@@ -37,13 +37,13 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     obj->objectType = OBJECTTYPE_SUB;
     obj->curState = 0;
     sub->channel = (ushort)lvl->keys[0];
-    sub->path = lvl->spline;
-    sub->lastKey = lvl->splinePoints != 0 ? lvl->splinePoints - 1 : 0;
+    sub->path = lvl->header.spline;
+    sub->lastKey = lvl->header.splinePoints != 0 ? lvl->header.splinePoints - 1 : 0;
     sub->t = 0.0f;
     double keys = (double)sub->lastKey * REC_FRAME_RATE;
     sub->health = 300.0f;
     sub->beam = NULL;
-    sub->speed = (float)((double)_FRAME_RATE / lvl->splineLength * keys);
+    sub->speed = (float)((double)_FRAME_RATE / lvl->header.splineLength * keys);
     sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, 1, 1.0f, 0, 0, 0, 0xffff);
     AnimObjectNew(obj, HT_Skin_Sub);
     sAnimScript_tag *script = AnimScriptAdd(obj, SUB_ANIM_MOVE);

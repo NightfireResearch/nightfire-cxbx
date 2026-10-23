@@ -29,12 +29,7 @@ LAYOUT_32(offsetof(Hurt_tag, damage) == 0x10, "Wrong offset for Hurt_tag.damage"
 
 // A hurt volume's placement (level_tag)
 typedef struct HurtPlacement {
-    ushort _unknown00;
-    ushort pathCount;               // 0x02
-    ushort pathDuration;            // 0x04
-    ushort _unknown06;
-    Ptr32<void> path;               // 0x08
-    char _unknown0c[0x2c - 0x0c];
+    PlacementHeader header;         // 0x00
     uint type;                      // 0x2c - key 0
     uint damage;                    // 0x30 - key 1
     uint enableSwitchChannel;       // 0x34 - key 2
@@ -43,6 +38,7 @@ typedef struct HurtPlacement {
     uint oneShotPath;               // 0x40 - key 5
 } HurtPlacement;
 
+static_assert(offsetof(HurtPlacement, type) == 0x2c, "Bad offset of HurtPlacement.type");
 static_assert(offsetof(HurtPlacement, oneShotPath) == 0x40, "Bad offset of HurtPlacement.oneShotPath");
 
 obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

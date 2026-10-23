@@ -20,7 +20,7 @@ static_assert(sizeof(CLOUD_tag) == 0x18, "CLOUD_tag is 0x18 bytes");
 
 // The placement's keys (level_tag)
 typedef struct CloudPlacement {
-    char _unknown00[0x2c];
+    PlacementHeader header;     // 0x00
     int height;                 // 0x2c
     uint speedX;                // 0x30 - thousandths
     uint speedZ;                // 0x34

@@ -22,7 +22,7 @@ typedef struct {
 LAYOUT_32(sizeof(ObjData_SpaceMissile) == 0x28, "Bad size for ObjData_SpaceMissile");
 
 typedef struct {
-    ObjectCreationData_Basic baseCreation; // 0x00-0x2b
+    PlacementHeader header;         // 0x00
     HASHCODE missileDeploymentAnim; // 0x2c
     HASHCODE missileLaunchCouplerIntactAnim; // 0x30
     HASHCODE missileLaunchCouplerDestroyedAnim; // 0x34

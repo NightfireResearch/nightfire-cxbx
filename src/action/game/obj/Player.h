@@ -389,7 +389,7 @@ typedef enum {
 } MovementType;
 
 typedef struct {
-    char unknown[0x2c];
+    PlacementHeader header; // 0x00
     short requiredSwitch;
     char unknown2[0xb0-2-0x2c];
 } level_tag_PlayerStartPosition;
