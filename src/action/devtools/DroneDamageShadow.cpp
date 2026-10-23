@@ -525,11 +525,11 @@ void RandomWorld() {
 // The properties the functions test, set often
 void RandomProperties() {
     uint *words = world.drones[0].currentBehaviour;
-    behaviour_util_setProperty(DRONE_PROP_32, words, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_1C, words, ShadowRand(3) == 0);
-    behaviour_util_setProperty(DRONE_PROP_34, words, ShadowRand(3) == 0);
+    behaviour_util_setProperty(DRONE_PROP_HURT_ALERTS, words, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_RESISTS_STUN_GRENADE, words, ShadowRand(3) == 0);
+    behaviour_util_setProperty(DRONE_PROP_RUNS_FROM_SMOKE, words, ShadowRand(3) == 0);
     behaviour_util_setProperty(DRONE_PROP_36, words, ShadowRand(3) == 0);
-    behaviour_util_setProperty(DRONE_PROP_10, words, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_AMBUSH, words, ShadowRand(2));
 }
 
 // The arguments the tests hand both sides

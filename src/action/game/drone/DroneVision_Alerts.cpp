@@ -81,12 +81,12 @@ bool DroneVision_TestEndInterogationAssist(Drone_tag *drone) {
 // ---- armed enemies
 
 // Whether an enemy drone other than this one, active and armed, within radius, is in sight; it is kept in
-// nearArmedDrone. With check set, only for a drone with DRONE_PROP_50.
+// nearArmedDrone. With check set, only for a drone with DRONE_PROP_HIDES_FROM_ARMED_DRONES.
 // AUTOINJECT
 bool NDrone2_NearArmedDrone(DCVars_tag *dcv, float radius, char check) {
     Drone_tag *self = dcv->drone;
     self->nearArmedDrone = NULL;
-    if (check && behaviour_util_getProperty(DRONE_PROP_50, dcv->drone->currentBehaviour) == 0)
+    if (check && behaviour_util_getProperty(DRONE_PROP_HIDES_FROM_ARMED_DRONES, dcv->drone->currentBehaviour) == 0)
         return false;
 
     for (Drone_tag *other = NPCGlobals.NDrone2List; other != NULL; other = other->next) {
@@ -137,7 +137,7 @@ bool NDrone2_NotNearArmedDrone(DCVars_tag *dcv, float radius) {
 
 // ---- alerts
 
-// A sound heard (DRONE_MSG_HeardNoise), by a drone with hearing (DRONE_PROP_1F). A bot answers through
+// A sound heard (DRONE_MSG_HeardNoise), by a drone with hearing (DRONE_PROP_HEARING). A bot answers through
 // BOT_reactToDroneAlertMsg. Otherwise nothing beyond 50 m of its opponent, or once it attacks; in EvilBase nothing
 // in DSTATE_EnemyMission. The Powerstation guards (skin classes 5 and 6), at any distance, and the civilians and party
 // girls past 0.7 alertness, attack; the civilians and party girls do nothing else. The rest go to DSTATE_HeardNoise
@@ -146,7 +146,7 @@ ushort DroneVision_AlertSound(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     bool attack = false;
     NDrone2_Player();
-    if (behaviour_util_getProperty(DRONE_PROP_1F, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_HEARING, dcv->drone->currentBehaviour) == 0)
         return 0;
     if (drone->flags & DRONE_FLAG_DEAF)
         return 0;
@@ -155,7 +155,7 @@ ushort DroneVision_AlertSound(DCVars_tag *dcv) {
 
     uint level = GameState.CurrentLevelHashcode;
     if (level >= HT_Level_PowerStationA1 && level <= HT_Level_PowerStationA2 &&
-        (drone->skinClass == 5 || drone->skinClass == 6)) {
+        (drone->skinClass == SKINCLASS_SNIPER || drone->skinClass == SKINCLASS_ELITE)) {
         attack = true;
     } else {
         if (level == HT_Level_EvilBase && drone->sm.curState == DSTATE_EnemyMission)
@@ -217,19 +217,19 @@ static ushort HearShout(DCVars_tag *dcv, DRONE_PROP property) {
 
 // The four shouts EnemyAlerts tells apart (our names). Each original takes the DCVars in EAX and the alert in ESI.
 ushort DroneVision_ShoutMsg11(DCVars_tag *dcv) {
-    return HearShout(dcv, DRONE_PROP_28);
+    return HearShout(dcv, DRONE_PROP_ALERTED_BY_SIGHTING);
 }
 
 ushort DroneVision_ShoutMsg12(DCVars_tag *dcv) {
-    return HearShout(dcv, DRONE_PROP_27);
+    return HearShout(dcv, DRONE_PROP_ALERTED_BY_DRONE_SHOT);
 }
 
 ushort DroneVision_ShoutMsg13(DCVars_tag *dcv) {
-    return HearShout(dcv, DRONE_PROP_4F);
+    return HearShout(dcv, DRONE_PROP_ALERTED_BY_SURRENDER);
 }
 
 ushort DroneVision_ShoutDroneAlert(DCVars_tag *dcv) {
-    return HearShout(dcv, DRONE_PROP_29);
+    return HearShout(dcv, DRONE_PROP_ALERTED_BY_DEAD_BODY);
 }
 
 // The alert messages a state passes on: the state to go to, or 0. First, unless unknown33 or explosiveSeen is set,
@@ -268,8 +268,8 @@ ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg) {
 
 // Each frame, from the guards' states: DSTATE_Attack when the drone sees its opponent and may act on it, else 0.
 // Never while blind, playing a script fully alert, or interrogating; civilians only in TowerA and TowerB; the player
-// only past 0.66 alertness unless DRONE_PROP_51; the runners and alarm raisers not while running to their point or goal
-// unless DRONE_PROP_57.
+// only past 0.66 alertness unless DRONE_PROP_ALWAYS_REACTS_TO_PLAYER; the runners and alarm raisers not while running to their point or goal
+// unless DRONE_PROP_REACTS_WHILE_RUNNING.
 // AUTOINJECT
 ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -277,7 +277,7 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
         return 0;
     if (switch_BLIND_DRONES || drone->opponent == NULL)
         return 0;
-    if (behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, drone->currentBehaviour) == 0)
         return 0;
     if (!(dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT))
         return 0;
@@ -285,11 +285,11 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
     if ((level < HT_Level_TowerA || level > HT_Level_TowerB) && dcv->drone->side == 3)
         return 0;
     if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
-        behaviour_util_getProperty(DRONE_PROP_51, dcv->drone->currentBehaviour) == 0)
+        behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)
         return 0;
     if ((dcv->drone->flags & 0x800) || (dcv->drone->flags2 & DRONE_FLAG2_INTEROGATING))
         return 0;
-    if (behaviour_util_getProperty(DRONE_PROP_57, dcv->drone->currentBehaviour) == 0 &&
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_WHILE_RUNNING, dcv->drone->currentBehaviour) == 0 &&
         (dcv->drone->dtype == DTYPE_RunToPoint || dcv->drone->dtype == DTYPE_AlarmRaiser) &&
         (dcv->aiStateMachine->curState == DSTATE_EnemyRunToPoint ||
          dcv->aiStateMachine->curState == DSTATE_GoToGoalPosition))
@@ -302,7 +302,7 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
     return DSTATE_Attack;
 }
 
-// Each frame, for a drone with hearing (DRONE_PROP_1F; in CastleIndoors1 only an armed one): what it hears where it
+// Each frame, for a drone with hearing (DRONE_PROP_HEARING; in CastleIndoors1 only an armed one): what it hears where it
 // stands raises its alertness by a hundredth. A sound in a known cel, a second (at 60 a second) or more after the
 // last or louder than it, becomes soundTarget and a DRONE_MSG_HeardNoise to itself.
 // AUTOINJECT
@@ -310,7 +310,7 @@ void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     DYNAMICSOUNDS *sound = NULL;
     float level = 0.0f;
-    if (behaviour_util_getProperty(DRONE_PROP_1F, drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_HEARING, drone->currentBehaviour) == 0)
         return;
     if (switch_BLIND_DRONES)
         return;
@@ -404,7 +404,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
     StateMachineInfo_tag *sm = dcv->aiStateMachine;
     switch (msg->msgType) {
     case DRONE_MSG_HeardNoise: {
-        if (behaviour_util_getProperty(DRONE_PROP_1F, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_HEARING, dcv->drone->currentBehaviour) == 0)
             return false;
         Drone_tag *self = dcv->drone;
         if (self->flags & DRONE_FLAG_DEAF)
@@ -471,7 +471,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
         return false;
     switch (msg->msgType) {
     case 0x11:
-        if (behaviour_util_getProperty(DRONE_PROP_28, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, dcv->drone->currentBehaviour) == 0)
             return false;
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
             return false;
@@ -501,7 +501,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
         return true;
 
     case 0x12:
-        if (behaviour_util_getProperty(DRONE_PROP_27, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, dcv->drone->currentBehaviour) == 0)
             return false;
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
             return false;
@@ -529,7 +529,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
     case 0x13:
         if (!NDrone2_InShoutingRange(dcv, alert->sender) && !(dcv->drone->flags & DRONE_FLAG_NO_ALERTS))
             return false;
-        if (behaviour_util_getProperty(DRONE_PROP_4F, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SURRENDER, dcv->drone->currentBehaviour) == 0)
             return false;
         switch (drone->dtype) {
         case DTYPE_Civilian:
@@ -546,7 +546,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
         }
 
     case DRONE_MSG_DroneAlert:
-        if (behaviour_util_getProperty(DRONE_PROP_29, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, dcv->drone->currentBehaviour) == 0)
             return false;
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
             return false;
@@ -605,7 +605,7 @@ static_assert(std::bit_cast<uint32_t>(kAlarmShout) == 0x3f428f5c, "not the origi
 // With property 0x33, a drone that has not yet raised the alarm shouts its opponent to those within 20 m (message
 // 0x11) and raises it
 static void ShoutOpponent(DCVars_tag *dcv, float strength) {
-    if (behaviour_util_getProperty(DRONE_PROP_33, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_ALERTS, dcv->drone->currentBehaviour) == 0)
         return;
     if (dcv->drone->flags & DRONE_FLAG_ALARM_SENT)
         return;
@@ -631,9 +631,9 @@ short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state) {
     if (drone->flags & DRONE_FLAG_HAS_COVER)
         return 0;
     if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
-        behaviour_util_getProperty(DRONE_PROP_51, dcv->drone->currentBehaviour) == 0)
+        behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)
         return 0;
-    if (behaviour_util_getProperty(DRONE_PROP_57, dcv->drone->currentBehaviour) == 0 &&
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_WHILE_RUNNING, dcv->drone->currentBehaviour) == 0 &&
         (dcv->drone->dtype == DTYPE_RunToPoint || dcv->drone->dtype == DTYPE_AlarmRaiser) &&
         (dcv->aiStateMachine->curState == DSTATE_EnemyRunToPoint ||
          dcv->aiStateMachine->curState == DSTATE_GoToGoalPosition))
@@ -651,21 +651,21 @@ short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state) {
     dcv->drone->sightFlags |= DRONE_SIGHT_REACTED_ONCE;
     if (!(drone->alertness <= kReactAlertness))
         return state;
-    if (behaviour_util_getProperty(DRONE_PROP_3C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, dcv->drone->currentBehaviour) == 0)
         return 0;
     dcv->drone->alertness = kReactAlertness;
     ShoutOpponent(dcv, kAlarmShout);
     if (drone->dtype == DTYPE_Interogator)
         return DSTATE_Interogate;
-    if (behaviour_util_getProperty(DRONE_PROP_18, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ATTACK_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return DSTATE_Attack;
-    if (behaviour_util_getProperty(DRONE_PROP_19, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COMBAT_MOVE_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return NDrone2_ChooseCombatMove(dcv);
-    if (behaviour_util_getProperty(DRONE_PROP_1A, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_INTERROGATE_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return DSTATE_Interogate;
-    if (behaviour_util_getProperty(DRONE_PROP_4A, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_GRENADE_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return DSTATE_GrenadeThrow;
-    if (behaviour_util_getProperty(DRONE_PROP_1B, dcv->drone->currentBehaviour) != 0) {
+    if (behaviour_util_getProperty(DRONE_PROP_ATTACK_OR_MOVE_ON_SIGHT, dcv->drone->currentBehaviour) != 0) {
         if (Rand_Rand(2) == 1)
             return NDrone2_ChooseCombatMove(dcv);
         return DSTATE_Attack;

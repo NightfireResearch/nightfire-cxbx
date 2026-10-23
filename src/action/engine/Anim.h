@@ -18,7 +18,7 @@ typedef struct AnimObj AnimObj;
 typedef struct SkeletonInfo {
     short skeletonIdx;      // 0x00 - index into SkeletonTable
     uchar numBones;         // 0x02
-    uchar numTransBones;    // 0x03 - the number of bits set in transMask
+    uchar numTransBones;    // 0x03 - the bones with translation tracks: the number of bits set in transMask
     uint transMask[3];      // 0x04 - bit b set: bone b has animated translation tracks
     _VECTOR boneOffset[1];  // 0x10 - [numBones] each bone's translation when it has none, unscaled
 } SkeletonInfo;
@@ -278,6 +278,9 @@ typedef struct sAnimSeq_tag {
 #define ANIMTAG_FACE_MOOD   0xe0000000
 #define ANIMTAG_FACE_BLINK  0xe0000001
 #define ANIMTAG_FACE_SPEECH 0xe0000002
+
+// The most commands a script holds: firedMask has a bit for each
+#define ANIM_SCRIPT_MAX_CMDS 32
 
 // One playing animation script (hashcode type 0x06).
 typedef struct sAnimScript_tag {

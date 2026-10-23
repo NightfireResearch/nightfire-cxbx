@@ -20,6 +20,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "BOT.h"
+#include "../../math/X87Ops.h"
 
 // One entry of Drone_SfxInfo, per speech or sound number (docs/drone/behaviours/drone_sfx_info.csv)
 typedef struct DroneSfxInfo {
@@ -597,17 +598,6 @@ static DroneSfxInfo *SfxInfo(uint sfx) {
     return sfx < DRONE_SFX_COUNT ? &Drone_SfxInfo[sfx] : NULL;
 }
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // No drone sound for the first 30 frames (at 60 a second) after the level is loaded; worked out on the x87
 static bool TooSoonAfterLoad(uint now) {
     return (double)now < (double)FRAME_RATE_DIV * 30.0f + (double)NPCGlobals.postLoadFrame;
@@ -716,17 +706,17 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
 
     uint sfx = 1;
     switch ((ushort)drone->skinClass) {
-    case 1:
+    case SKINCLASS_YAKUZA:
         sfx = 4;
         break;
-    case 2:
+    case SKINCLASS_SNOW_GUARD:
         sfx = 5;
         break;
-    case 3:
+    case SKINCLASS_BLACK_OPS:
         sfx = 3;
         break;
-    case 5:
-    case 6:
+    case SKINCLASS_SNIPER:
+    case SKINCLASS_ELITE:
         if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
             GameState.CurrentLevelHashcode == HT_Level_PowerStationA2) {
             if (Drone_IsSayingSfx(drone, 0xcd) || Drone_IsSayingSfx(drone, 0xd2))
@@ -734,21 +724,21 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
             sfx = Rand_Rand(2) != 0 ? 0xcd : 0xd2;
         }
         break;
-    case 8:
+    case SKINCLASS_SERVANT:
     case 10:
         sfx = 10;
         break;
-    case 12:
+    case SKINCLASS_ZOE:
         sfx = 0xd;
         break;
-    case 16:
+    case SKINCLASS_ROOK:
         sfx = 8;
         break;
-    case 18:
-    case 19:
+    case SKINCLASS_KIKO:
+    case SKINCLASS_KIKO_COMBAT:
         sfx = 0xe;
         break;
-    case 20:
+    case SKINCLASS_DRAKE:
         sfx = 2;
         break;
     default:
@@ -778,11 +768,11 @@ bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
 
     uint sfx = 0;
     ushort skinClass = drone->skinClass;
-    if (skinClass >= 5 && skinClass <= 7) {
+    if (skinClass >= SKINCLASS_SNIPER && skinClass <= SKINCLASS_ELITE_COMBAT) {
         if (GameState.CurrentLevelHashcode == HT_Level_EvilBase ||
             GameState.CurrentLevelHashcode == HT_Level_EvilBaseC || GameState.CurrentLevelHashcode == HT_Level_EvilSilo)
             sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
-    } else if (skinClass == 16) {
+    } else if (skinClass == SKINCLASS_ROOK) {
         sfx = DroneFunc_ChooseSFX(0xec, 0xf2);
     }
     if (sfx == 0)
@@ -801,38 +791,38 @@ bool NDrone2_PainTalk(DCVars_tag *dcv) {
 
     uint sfx;
     switch ((ushort)drone->skinClass) {
-    case 1:
+    case SKINCLASS_YAKUZA:
         sfx = 0x12;
         break;
-    case 2:
+    case SKINCLASS_SNOW_GUARD:
         sfx = 0x13;
         break;
-    case 3:
+    case SKINCLASS_BLACK_OPS:
         sfx = 0x11;
         break;
-    case 7:
+    case SKINCLASS_ELITE_COMBAT:
         sfx = 0x14;
         break;
-    case 8:
+    case SKINCLASS_SERVANT:
     case 10:
         sfx = 0x18;
         break;
-    case 9:
+    case SKINCLASS_MAYHEW:
         sfx = 0x15;
         break;
-    case 12:
+    case SKINCLASS_ZOE:
         sfx = 0x1b;
         break;
-    case 16:
+    case SKINCLASS_ROOK:
         if (NDrone2_HitTalkExtra(dcv))
             return false;
         sfx = 0x16;
         break;
-    case 18:
-    case 19:
+    case SKINCLASS_KIKO:
+    case SKINCLASS_KIKO_COMBAT:
         sfx = 0x1c;
         break;
-    case 20:
+    case SKINCLASS_DRAKE:
         sfx = 0x10;
         break;
     default:
@@ -873,7 +863,7 @@ void DroneFunc_InjuredTalk(DCVars_tag *dcv) {
     case HT_Level_EvilBase:
     case HT_Level_EvilSilo:
     case HT_Level_EvilBaseC:
-        if (drone->skinClass == 16)
+        if (drone->skinClass == SKINCLASS_ROOK)
             return;
         sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
         break;
@@ -950,7 +940,7 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
 
     uint now = GameState.NumFramesUnpaused;
     switch ((ushort)drone->skinClass) {
-    case 9:
+    case SKINCLASS_MAYHEW:
         if (Drone_IsTalking(drone))
             return true;
         if (drone->stateScratch == 0xff) {
@@ -969,7 +959,7 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         drone->stateScratch = 1;
         return true;
 
-    case 13: {
+    case SKINCLASS_PARTY_GIRL: {
         if (Drone_IsTalking(drone))
             return true;
         if (drone->stateScratch == 0xff) {
@@ -1004,11 +994,11 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         return true;
     }
 
-    case 14:
+    case SKINCLASS_PARTY_GUEST:
         DroneFunc_DoBondTalk(dcv, DroneFunc_ChooseSFX(0x84, 0x8c), 200, 480, 0);
         return true;
 
-    case 16:
+    case SKINCLASS_ROOK:
         if (Drone_IsTalking(drone))
             return true;
         if (drone->stateScratch == 0xff) {
@@ -1027,7 +1017,7 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         drone->stateScratch = 0;
         return true;
 
-    case 17:
+    case SKINCLASS_CASTLE_GUARD:
         if (Drone_IsTalking(drone))
             return true;
         if (drone->stateScratch == 0xff) {
@@ -1045,7 +1035,7 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         drone->stateScratch2 = TalkFrameAfter(480.0f);
         return true;
 
-    case 18: {
+    case SKINCLASS_KIKO: {
         if (Drone_IsTalking(drone))
             return true;
         uint line = drone->stateScratch;
@@ -1062,35 +1052,35 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         // Each line: the head turned to the player for so long (or not), the line, and the wait before the next
         double wait;
         switch (line) {
-        case 0:
+        case SKINCLASS_NONE:
             NDrone2_HeadTrackObj(player, (int)(long long)((double)FRAME_RATE_DIV * 180.0f), 0.0f, dcv);
             if (NDrone2_SpeechSFX(dcv, 0x52, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 960.0f;
             break;
-        case 1:
+        case SKINCLASS_YAKUZA:
             NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
             if (NDrone2_SpeechSFX(dcv, 0x53, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 150.0f;
             break;
-        case 2:
+        case SKINCLASS_SNOW_GUARD:
             if (NDrone2_SpeechSFX(dcv, 0x54, 0, 0, 0) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 480.0f;
             break;
-        case 3:
+        case SKINCLASS_BLACK_OPS:
             NDrone2_HeadTrackObj(player, 240, 0.0f, dcv);
             if (NDrone2_SpeechSFX(dcv, 0x55, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 240.0f;
             break;
-        case 4:
+        case SKINCLASS_HAZMAT:
             if (NDrone2_SpeechSFX(dcv, 0x56, 0, 0, 0) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 240.0f;
             break;
-        case 5:
+        case SKINCLASS_SNIPER:
             NDrone2_HeadTrackObj(player, 180, 0.0f, dcv);
             if (NDrone2_SpeechSFX(dcv, 0x57, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
@@ -1146,7 +1136,7 @@ bool NDrone2_PatrolTalk(DCVars_tag *dcv) {
         NPCGlobals.nextPatrolTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 5;
         return false;
     }
-    if (drone->skinClass != 3)
+    if (drone->skinClass != SKINCLASS_BLACK_OPS)
         return false;
     uint sfx = DroneFunc_ChooseSFX(0xb3, 0xb7);
     NPCGlobals.nextPatrolTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 10;
@@ -1196,7 +1186,7 @@ void NDrone2_HandleTalking(DCVars_tag *dcv) {
         return;
     }
 
-    if (drone->skinClass != 12 || player == NULL)
+    if (drone->skinClass != SKINCLASS_ZOE || player == NULL)
         return;
     if (!(Vec_SqDist2D(&player->position, &dcv->gameObj->position) < 9.0f))
         return;
@@ -1243,7 +1233,7 @@ bool DroneFunc_NewSightTalk(DCVars_tag *dcv) {
         return false;
     if (drone->health <= 0.0f)
         return false;
-    if ((ushort)drone->skinClass < 5 || (ushort)drone->skinClass > 6)
+    if ((ushort)drone->skinClass < SKINCLASS_SNIPER || (ushort)drone->skinClass > SKINCLASS_ELITE)
         return false;
     if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
         GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
@@ -1267,7 +1257,7 @@ bool DroneFunc_LostSightTalk(DCVars_tag *dcv) {
         return false;
     if (drone->health <= 0.0f)
         return false;
-    if ((ushort)drone->skinClass < 5 || (ushort)drone->skinClass > 6)
+    if ((ushort)drone->skinClass < SKINCLASS_SNIPER || (ushort)drone->skinClass > SKINCLASS_ELITE)
         return false;
     if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
         GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)

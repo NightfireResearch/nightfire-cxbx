@@ -36,8 +36,6 @@
 #define BONE_37     0x80000037
 #define BONE_33     0x80000033
 
-#define SKINCLASS_0C 0xc
-#define SKINCLASS_13 0x13
 
 // ---- when the drone collides and falls
 
@@ -61,7 +59,7 @@ bool NDrone2_DoCollision(DCVars_tag *dcv) {
         return false;
     if (!(drone->flags & DRONE_FLAG_COLLIDES))
         return false;
-    if (drone->skinClass == SKINCLASS_0C || drone->skinClass == SKINCLASS_13)
+    if (drone->skinClass == SKINCLASS_ZOE || drone->skinClass == SKINCLASS_KIKO_COMBAT)
         return true;
     if (drone->unknown434 != NULL)
         return true;
@@ -145,7 +143,7 @@ void NDrone2_Collision(obj_tag *obj) {
         auxVec_AddMulR32(&obj->position, &up, (float)-((double)root - 0.3f), &capsule->rayEnd);
         Vec_Copy(&capsule->rayEnd, &capsule->rayStart);
     } else {
-        float radius = drone->skinClass == SKINCLASS_0C ? 0.55f : 0.4f;
+        float radius = drone->skinClass == SKINCLASS_ZOE ? 0.55f : 0.4f;
         bool collides = NDrone2_DoCollision(&dcv);
         capsule->radius = radius;
         capsule->damage = 0;

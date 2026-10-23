@@ -24,6 +24,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "BOTSTATE.h"
+#include "../../math/X87Ops.h"
 
 #pragma fp_contract(off)
 
@@ -43,35 +44,20 @@
 // The frames before the drones receive an alert
 #define ALERT_DELAY 30
 
-constexpr float kPi = 3.1415927f;
-constexpr float kRadToDeg = 57.295776f;
 constexpr float kObjectiveAimHeight = 1.75f;   // above a multiplayer objective's position
 constexpr float kAimTowardsHead = 0.2857143f;  // 2/7 of the way from bone 2 to the head
 constexpr float kCopterAbove = 0.17453294f;    // the pitches an ally takes a helicopter at
 constexpr float kCopterBelow = -0.5235988f;
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kRadToDeg) == 0x42652ee0, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kAimTowardsHead) == 0x3e924925, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kCopterAbove) == 0x3e32b8c3, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kCopterBelow) == 0xbf060a92, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.04f) == 0x3d23d70a, "not the original's constant");
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // How far, in degrees, obj lies off the way `from` faces. The original leaves the product unrounded.
 static double FacingDegrees(obj_tag *from, obj_tag *obj) {
     _VECTOR away;
     Vec_Subtract(&from->position, &obj->position, &away);
-    return Vec_AngleDifference(from->rotation.y, Atan2(away.x, away.z) + kPi) * (double)kRadToDeg;
+    return Vec_AngleDifference(from->rotation.y, Atan2(away.x, away.z) + PI) * (double)RAD_TO_DEG;
 }
 
 // ---- the targets the drones share
@@ -231,7 +217,7 @@ void NDrone2_SetOpponent(Drone_tag *drone, obj_tag *opponent) {
 
     _VECTOR *aimAt = &opponent->position;
     if (same && drone->firstSeenFrame != 0 && (double)FRAME_RATE_DIV * 5.0f < (double)drone->unseenFrames
-        && behaviour_util_getProperty(DRONE_PROP_17, drone->currentBehaviour) != 0)
+        && behaviour_util_getProperty(DRONE_PROP_FIRE_UNSEEN, drone->currentBehaviour) != 0)
         aimAt = &drone->opponentSeenPos;
     Vec_Add2(aimAt, &drone->aimOffset, &drone->targetPos);
 
@@ -260,7 +246,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
     obj_tag *best = NULL;
     MPTeam team = MP_getObjectTeam(me);
     ushort botIndex = bot->botIndex;
-    float viewDegrees = drone->viewAngle * kRadToDeg;
+    float viewDegrees = drone->viewAngle * RAD_TO_DEG;
     bool keepAny = drone->botVars->atObjective;
     float rangeSq = drone->viewRange * drone->viewRange;
     // The slot is read signed

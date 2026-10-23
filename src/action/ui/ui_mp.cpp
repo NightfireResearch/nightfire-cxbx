@@ -13,6 +13,7 @@
 #include "../util/Random.h"
 
 #include "../assets.h"
+#include "../math/X87Ops.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -1449,17 +1450,6 @@ static uint8_t mp_debrief_text_count; // the next of mp_debrief_text's strings
 char mp_debrief_text[24][32];  // the numbers on the debriefing
 // XBE_GLOBAL(0x0025e9a0, 0x100)
 static char mp_debrief_result[0x100]; // "<name> wins the match."
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 static_assert(offsetof(MPSettings_t, GameMode) == 0x204, "Offset of MPSettings.GameMode wrong");
 static_assert(offsetof(MPSettings_t, multiplayerLevelHashcode) == 0x208, "Offset of multiplayerLevelHashcode wrong");

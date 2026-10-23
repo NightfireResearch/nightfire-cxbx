@@ -548,8 +548,8 @@ void RandomDrone(int i) {
     }
     d->currentBehaviour = ShadowRand(2) ? d->behaviour1 : d->behaviour2;
     // The properties these states test, either way
-    static const uint props[] = {DRONE_PROP_0F, DRONE_PROP_10, DRONE_PROP_1D, DRONE_PROP_3C,
-                                 DRONE_PROP_4C, DRONE_PROP_51, DRONE_PROP_53};
+    static const uint props[] = {DRONE_PROP_LOW_COVER, DRONE_PROP_AMBUSH, DRONE_PROP_MISSION_PATH, DRONE_PROP_REACTS_TO_SIGHT,
+                                 DRONE_PROP_HEAD_TRACK, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, DRONE_PROP_DEATH_FAILS_MISSION};
     for (uint p : props)
         behaviour_util_setProperty(p, d->currentBehaviour, ShadowRand(3) != 0);
 

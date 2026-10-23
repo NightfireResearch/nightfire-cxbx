@@ -20,6 +20,7 @@
 #include "../../math/X87Ops.h"
 #include "../../sound/Sound.h"
 #include "../../util/Random.h"
+#include "../../math/math.h"
 
 // XBE_GLOBAL(0x001d98e0, 0x2c70)
 BOT_vars_t BOT_vars[NUM_BOTS];
@@ -42,7 +43,6 @@ static const uchar BotStateClasses[DSTATE_BotIdle - DSTATE_BotInit + 1] = {
     BOTSTATE_CLASS_DOOR, BOTSTATE_CLASS_GUARD, BOTSTATE_CLASS_GUARD, BOTSTATE_CLASS_IDLE,
 };
 
-
 // The player's damage modifiers (Player.cpp)
 // XBE_GLOBAL(0x0017e8cc, 0x4)
 float Plr_DMod_Multi = 4.0f;
@@ -57,9 +57,6 @@ float Plr_DMod_UpperLimb = 0.8f;
 #define DRONE_AI_RUNNING 0x100
 #define DRONE_DEAD 0x200
 #define DRONE_DYING 0x400
-
-// BOT_vars_t.flags: recovering from a hit (BOTSTATE_startRecovery)
-#define BOT_RECOVERING 2
 
 // BOTSTATE_chooseDodgeMove's directions
 #define DODGE_LEFT 1
@@ -77,26 +74,11 @@ static_assert(std::bit_cast<uint32_t>(SightingDistraction) == 0x3e2aaaab, "not t
 constexpr float SettleWobble = 0.099f;
 static_assert(std::bit_cast<uint32_t>(SettleWobble) == 0x3dcac083, "not the original's 0.099");
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // The MPBOT a bot gets when none is passed: Drake's default stats (BOT_init is its only user)
 // XBE_GLOBAL(0x001dc550, 0x12)
 static MPBOT DefaultMPBOT;
 
 // The original's radians-to-degrees constant, one ulp below 180 / pi as a float
-constexpr float RadToDeg = 57.295776f;
-static_assert(std::bit_cast<uint32_t>(RadToDeg) == 0x42652ee0, "not the original's 57.295776");
-constexpr float Pi = 3.1415927f;
-static_assert(std::bit_cast<uint32_t>(Pi) == 0x40490fdb, "not the original's pi");
 
 // Creates bot `playerNum` (NUM_PLAYERS and up) as a drone at `pos`, with `bot`'s character and stats, or Drake's
 // defaults when `bot` is NULL. Passed an existing object, it only clears the bot's state and returns the object.
@@ -307,7 +289,7 @@ void BOT_setOtherPlayerInfo(DCVars_tag *dcv) {
 
         _VECTOR toOther;
         Vec_Subtract(&other->position, &me->position, &toOther);
-        info->facing = Vec_AngleDifference(other->rotation.y, Atan2(toOther.x, toOther.z) + Pi) * RadToDeg;
+        info->facing = Vec_AngleDifference(other->rotation.y, Atan2(toOther.x, toOther.z) + PI) * RAD_TO_DEG;
 
         BOT_vars_t *otherVars;
         if (i > myIndex && i >= NUM_PLAYERS && (otherVars = ((Drone_tag *)other->extraObjectData)->botVars) != NULL &&
@@ -480,7 +462,7 @@ uchar BOT_validateStateChange(DCVars_tag *dc, uint newState) {
         if (goal != NULL && (goal->pickFlags & 0x10))
             return false;
     }
-    if ((drone->botVars->flags & BOT_RECOVERING) && newState == DSTATE_BotAttackRun)
+    if ((drone->botVars->flags & BOT_FLAG_RECOVERING) && newState == DSTATE_BotAttackRun)
         return false;
     if (newState == DSTATE_BotAttackChangeWeapon && bot->weapon == 1 && dc->drone->animRow >= 0x35 &&
         dc->drone->animRow <= 0x38)

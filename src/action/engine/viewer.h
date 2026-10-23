@@ -137,7 +137,8 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     float sphereRadius;                 // 0x7c
     float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
     uint flags84;                      // 0x84 - CEL_ flags
-    short soundEnvironment;            // 0x88 - SFXSetEnvironment's; 0x14 and more, outdoors (Sound_UpdateListeners)
+    short reverb;                      // 0x88 - its reverb depth (SFXSetEnvironment), 0-100 or SFX_ENVIRONMENT_UNDERWATER;
+                                       //        0x14 and more counts as outdoors (Sound_UpdateListeners)
     uchar ambientR[2];                 // 0x8a - the ambient light of objects in it, by its channel's state
     uchar ambientG[2];                 // 0x8c   (Lights_CalcAmbientLight)
     uchar ambientB[2];                 // 0x8e
@@ -153,7 +154,7 @@ LAYOUT_32(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position")
 LAYOUT_32(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
 LAYOUT_32(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
 LAYOUT_32(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
-LAYOUT_32(offsetof(cel_tag, soundEnvironment) == 0x88, "Bad offset of cel_tag.soundEnvironment");
+LAYOUT_32(offsetof(cel_tag, reverb) == 0x88, "Bad offset of cel_tag.reverb");
 
 // cel_tag::bitsFromPlacementTag: a room, an object's cel (build_FindCel)
 #define CEL_ROOM 0x00040000

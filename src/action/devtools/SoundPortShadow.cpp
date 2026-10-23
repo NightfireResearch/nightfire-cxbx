@@ -510,7 +510,7 @@ void RandomViewers(void) {
     }
     for (int i = 0; i < 2; i++) {
         world.cels[i].bitsFromPlacementTag = R(2) ? CEL_NO_SKY : R(0) & ~CEL_NO_SKY;
-        world.cels[i].soundEnvironment = (short)((int)R(0x30) - 8);
+        world.cels[i].reverb = (short)((int)R(0x30) - 8);
     }
 }
 

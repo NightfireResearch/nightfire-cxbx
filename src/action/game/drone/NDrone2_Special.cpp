@@ -147,14 +147,14 @@ bool NDrone2_DSTATE_DonePressAlarm(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         return true;
 
     case DRONE_MSG_Enter:
-        if (drone->skinClass == 0x13)
+        if (drone->skinClass == SKINCLASS_KIKO_COMBAT)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_JustStand, 0);
         if ((dcv->gameObj != NULL && dcv->gameObj->animState != NULL && dcv->gameObj->animState->currentWeaponId > 1) ||
             dcv->drone->secondWeapon > 1) {
             Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
             return true;
         }
-        behaviour_util_setProperty(DRONE_PROP_56, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_RUNS_TO_ALARM, dcv->drone->currentBehaviour, 0);
         if (NDrone2_FindRunToPoint(dcv)) {
             dcv->drone->initialState = DSTATE_CivilianScared;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageGoToGoalPosition, 0);
@@ -180,7 +180,7 @@ bool NDrone2_DSTATE_EnemyMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_Enter:
-        if (dcv->drone->skinClass == 0x13)
+        if (dcv->drone->skinClass == SKINCLASS_KIKO_COMBAT)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_KikoMission, 0);
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
@@ -193,7 +193,7 @@ bool NDrone2_DSTATE_EnemyMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         if (dcv->aiStateMachine->scratch1c != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
         if (NDrone2_UpdateMissionRoute(dcv) == 3) {
-            behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
             AINetwork_InvalidateRoute(&drone->route2);
             drone->route2.count = 0;
             if (dcv->drone->secondState != 0 && dcv->drone->modeChangeSwitchChannel == 0 &&
@@ -965,7 +965,7 @@ bool NDrone2_DSTATE_SpaceDrake(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
         DroneAnim_SetStandIdleAnim(dcv, 0);
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0)
             NDrone2_SetIdleTimeOut(dcv, 45, 5);
         return true;
 
@@ -976,7 +976,7 @@ bool NDrone2_DSTATE_SpaceDrake(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_StateTimeout:
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0) {
             DroneAnim_CallAnim(0x4b, Rand_Rand(3), 0, 0, 0.0f, 0, dcv);
             NDrone2_SetIdleTimeOut(dcv, 45, 5);
         }

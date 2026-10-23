@@ -15,22 +15,12 @@
 #include "../../engine/celglist.h"
 #include "../../engine/parsemap.h"
 #include "build.h"
+#include "../../math/math.h"
 
 // XBE_GLOBAL(0x001f64ac, 0x4)
 ENV_tag *GlobalEnv;
 
 #pragma fp_contract(off)
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // Env_Update's scale of its draw of 20000
 static constexpr float WindDrawScale = 1.0f / 65000;
@@ -46,8 +36,6 @@ static_assert(std::bit_cast<uint32_t>(WindDrawScale) == 0x37810e36, "not the ori
 #define ScriptLoops 0x80000000u     // sAnimScript_tag::flags
 
 // Degrees to radians
-static constexpr float kDegrees = 0.017453292f; // the original's float at 0x0015d558
-static_assert(std::bit_cast<uint32_t>(kDegrees) == 0x3c8efa35, "kDegrees");
 
 // An unsigned key as a float (FILD, and 2^32 added to one read as negative)
 static double UnsignedKey(uint key) {
@@ -89,8 +77,8 @@ void Env_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl)
     InitDrops(env->dropType);
     Vec_Zero(&SkySunPos);
     if (keys->sun)
-        Vec_Spherical_2_Cartesian(&SkySunPos.x, 1000.0f, (float)(UnsignedKey(keys->sunYaw) * kDegrees),
-                                  (float)-(UnsignedKey(keys->sunPitch) * kDegrees));
+        Vec_Spherical_2_Cartesian(&SkySunPos.x, 1000.0f, (float)(UnsignedKey(keys->sunYaw) * DEG_TO_RAD),
+                                  (float)-(UnsignedKey(keys->sunPitch) * DEG_TO_RAD));
 }
 
 // The cel's wind at pos: its direction times its strength, growing along its way from the cel's centre; none without

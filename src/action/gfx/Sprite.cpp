@@ -2,6 +2,7 @@
 #include "Font.h"
 #include "../util/Sort.h"
 #include "../util/hashtable.h"
+#include "../math/X87Ops.h"
 
 #include <math.h>
 
@@ -92,17 +93,6 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
     return SprActiveList;
 }
 
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // A text sprite's format, and its size measured in it, kept in spritesheetWidth and spritesheetHeight
 // AUTOINJECT

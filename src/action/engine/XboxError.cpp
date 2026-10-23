@@ -52,11 +52,12 @@ void xboxInitTextures(void) {
     FontTexture = RegisterTexture(256, 16, 0, 1, pixels, 1);
     d3dMarkTexturePermanent(FontTexture);
     memset(FontCharToGlyph, 0xff, sizeof(FontCharToGlyph));
-    for (int c = 0x21; c < 0x7b; c++) {
-        uint8_t glyph = (c > '`' && c < '{') ? (uint8_t)(c - 0x20) : (uint8_t)c;
+    for (int c = '!'; c <= 'z'; c++) {
+        // no lower case: those take the capitals' glyphs
+        uint8_t glyph = (c >= 'a' && c <= 'z') ? (uint8_t)(c - 'a' + 'A') : (uint8_t)c;
         FontCharToGlyph[c] = glyph;
-        FontGlyphU[c] = ((glyph - 0x21) % 42) * 6;
-        FontGlyphV[c] = ((glyph - 0x21) / 42) * 6;
+        FontGlyphU[c] = ((glyph - '!') % 42) * 6;
+        FontGlyphV[c] = ((glyph - '!') / 42) * 6;
     }
 }
 

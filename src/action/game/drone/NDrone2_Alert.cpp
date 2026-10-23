@@ -16,6 +16,7 @@
 #include "../../util/Random.h"          // Rand_Rand
 #include "../../math/X87Ops.h"          // Negate
 #include "../mp/multiplayer.h"          // MPSettings
+#include "../../math/math.h"
 
 #include <bit>
 #include <math.h>
@@ -50,22 +51,9 @@
 #define SUSPECT_SOUND_STEP 0.1f
 
 // A turn of more than this to face the noise is made with a look behind first
-constexpr float kThreeQuarterPi = 2.35619450f;
-static_assert(std::bit_cast<uint32_t>(kThreeQuarterPi) == 0x4016cbe4, "not the original's 3pi/4");
 static_assert(std::bit_cast<uint32_t>(LOUD_SOUND_STEP) == 0x3e4ccccd, "not the original's 0.2");
 static_assert(std::bit_cast<uint32_t>(SUSPECT_SOUND_STEP) == 0x3dcccccd, "not the original's 0.1");
 static_assert(std::bit_cast<uint32_t>(0.66f) == 0x3f28f5c3, "not the original's 0.66");
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 static void SetTimer(DroneTimer *timer, uint dueFrame) {
     timer->dueFrame = dueFrame;
@@ -192,7 +180,7 @@ void DroneFunc_HeardNoiseTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone) || drone->health <= 0.0f)
         return;
-    if (dcv->drone->skinClass == 1)
+    if (dcv->drone->skinClass == SKINCLASS_YAKUZA)
         NDrone2_SpeechSFX(dcv, SFX_HEARD_THAT, 0, 1, 0);
 }
 
@@ -381,7 +369,7 @@ bool NDrone2_DSTATE_GoToGoalPosition(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
         case AIROUTE_DOOR:
             return true;
         default:
-            if (behaviour_util_getProperty(DRONE_PROP_59, dcv->drone->currentBehaviour) != 0)
+            if (behaviour_util_getProperty(DRONE_PROP_DELETE_AT_GOAL, dcv->drone->currentBehaviour) != 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_DeleteMe, 0);
             dcv->drone->unknown33 = 0;
             if (MPSettings.dronesAreBots == 0 && dcv->drone->dtype == DTYPE_RunToPoint) {
@@ -1004,23 +992,23 @@ bool NDrone2_DSTATE_HeardNoiseSuspect(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         dcv->drone->unknown33 = 1;
         dcv->drone->flags |= 0x2000;
         if ((dcv->drone->flags & 0x10) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             break;
         dcv->drone->unknown33 = 1;
         NDrone2_SetSoundAlertRoute(dcv);
         if (dcv->drone->turnedToAlert &&
-            behaviour_util_getProperty(DRONE_PROP_21, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_INVESTIGATES_NOISE, dcv->drone->currentBehaviour) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AlertToPosition, 0);
         dcv->drone->flags |= 0x10000;
         double turn = NDrone2_GetAngleDifferenceToAlert(dcv) < 0.0f ? -NDrone2_GetAngleDifferenceToAlert(dcv)
                                                                       : NDrone2_GetAngleDifferenceToAlert(dcv);
-        if (turn > kThreeQuarterPi) {
+        if (turn > THREE_QUARTER_PI) {
             DroneAnim_CallAnim(DANIM_LOOK_BEHIND, 0, 0, DRONE_MSG_TurnedBehind, 0.0f, 0, dcv);
             return true;
         }
         dcv->drone->turnedToAlert = 1;
         NDrone2_SetAngleToAlert(dcv, 0.0f);
-        if (behaviour_util_getProperty(DRONE_PROP_21, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_INVESTIGATES_NOISE, dcv->drone->currentBehaviour) != 0) {
             dcv->drone->initialState = DSTATE_SearchArea;
             DroneAnim_CallAnim(DANIM_LOOK_AROUND, 0, DSTATE_AlertToPosition, 0, 0.0f, 0, dcv);
             return true;
@@ -1030,11 +1018,11 @@ bool NDrone2_DSTATE_HeardNoiseSuspect(DCVars_tag *dcv, Drone_tag *drone, obj_tag
 
     case DRONE_MSG_TurnedBehind:
         if (dcv->drone->turnedToAlert &&
-            behaviour_util_getProperty(DRONE_PROP_21, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_INVESTIGATES_NOISE, dcv->drone->currentBehaviour) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AlertToPosition, 0);
         dcv->drone->turnedToAlert = 1;
         NDrone2_SetAngleToAlert(dcv, 0.0f);
-        if (behaviour_util_getProperty(DRONE_PROP_21, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_INVESTIGATES_NOISE, dcv->drone->currentBehaviour) == 0)
             break;
         dcv->drone->initialState = DSTATE_SearchArea;
         if (dcv->drone->animState == DANIM_STAND_ALERT) {
@@ -1113,7 +1101,7 @@ bool NDrone2_DSTATE_HeardNoiseAlert(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         dcv->drone->unknown33 = 1;
         DroneFunc_HeardNoiseTalk(dcv);
         if ((dcv->drone->flags & 0x10) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0) {
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0) {
             dcv->drone->flags |= 0x10000;
             dcv->drone->flags |= 0x2000;
             DroneAnim_CallAnim(DANIM_LOOK_AROUND, 1, DSTATE_Attack, 0, 0.0f, 0, dcv);
@@ -1127,7 +1115,7 @@ bool NDrone2_DSTATE_HeardNoiseAlert(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         float bearing = self->opponentBearing;
         if (bearing < 0.0f)
             bearing = -bearing;
-        if (bearing > kThreeQuarterPi) {
+        if (bearing > THREE_QUARTER_PI) {
             DroneAnim_CallAnim(DANIM_LOOK_BEHIND, 0, 0, DRONE_MSG_TurnedBehind, 0.0f, 0, dcv);
             return true;
         }

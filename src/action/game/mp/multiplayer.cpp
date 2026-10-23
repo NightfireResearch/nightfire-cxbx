@@ -34,6 +34,7 @@
 #include "../Upgrade.h"                 // Upgrade_MPWeapon
 #include "../weapon_stats.h"
 #include "../../gfx/Font.h"
+#include "../../math/math.h"
 
 // XBE_GLOBAL(0x0025fe38, 0x23c)
 MPSettings_t MPSettings;
@@ -108,17 +109,6 @@ sprite *TimeSpr;
 // XBE_GLOBAL(0x002637dc, 0x4)
 sprite *StatusSpr;
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // XBE_GLOBAL(0x0026178c, 0x4)
 obj_tag *CurrentAssassinObjId;
 // XBE_GLOBAL(0x00261788, 0x4)
@@ -134,9 +124,6 @@ obj_tag *AssassinTarget;
 #define BOT_MSG_3C 0x3c
 #define BOT_MSG_CANCEL_GOALS 0x3d
 #define BOT_MSG_OBJECTIVE_GONE 0x40
-
-constexpr float HalfPi = 1.5707964f;
-static_assert(std::bit_cast<uint32_t>(HalfPi) == 0x3fc90fdb, "not the original's pi / 2");
 
 // AUTOINJECT
 void MP_setLoadingSkins(void) {
@@ -1642,7 +1629,7 @@ MP_OBJ_EXT* MP_getEsponageBaseObj(uint team, int quadrant) {
     obj_tag *base = ext->gameObj;
     if (base == NULL)
         return NULL;
-    Extended angle = Extended((double)quadrant) * Extended(HalfPi) + Extended(base->rotation.y);
+    Extended angle = Extended((double)quadrant) * Extended(HALF_PI) + Extended(base->rotation.y);
     Extended reach = Extended(base->radius) + Extended(0.1f);
     ext->celPos.pos.x = (float)(FSin(angle) * reach + Extended(base->centrePoint.x));
     ext->celPos.pos.y = base->centrePoint.y;

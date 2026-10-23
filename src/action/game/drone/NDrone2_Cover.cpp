@@ -19,6 +19,8 @@
 #include "../obj/Drone_AIHints.h"       // CoverNode_tag
 #include "../obj/ScriptPlayer.h"        // SP_UnPause
 #include "../sp/SwitchChannels.h"
+#include "../../math/X87Ops.h"
+#include "../../math/math.h"
 
 #include <bit>
 #include <math.h>
@@ -82,25 +84,10 @@ static const ushort *const DroneCoverLowAnims = CoverLowAnimList;
 #define DANIM_ROW_COVER_A 0x87
 #define DANIM_ROW_COVER_B 0xab
 
-constexpr float kPi = 3.14159274f;
-constexpr float kHalfPi = 1.57079637f;
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's pi");
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb, "not the original's pi/2");
 static_assert(std::bit_cast<uint32_t>(0.08f) == 0x3da3d70a, "not the original's 0.08");
 static_assert(std::bit_cast<uint32_t>(0.33f) == 0x3ea8f5c3, "not the original's 0.33");
 static_assert(std::bit_cast<uint32_t>(0.66f) == 0x3f28f5c3, "not the original's 0.66");
 static_assert(std::bit_cast<uint32_t>(0.025f) == 0x3ccccccd, "not the original's 0.025");
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 static void SetTimer(DroneTimer *timer, uint dueFrame) {
     timer->dueFrame = dueFrame;
@@ -256,12 +243,12 @@ bool NDrone2_SetAngleToCover(DCVars_tag *dcv, float unused) {
     CoverNode_tag *node = drone->coverNode;
     float turn = 0.0f;
     if (node->type == COVER_LOW)
-        turn = -kPi;
+        turn = -PI;
     if ((drone->coverFlags & DRONE_COVER_SIDE_MASK) == 1)
-        turn = -kHalfPi;
+        turn = -HALF_PI;
     float yaw = turn + node->rot.y;
     if (drone->coverMode == COVER_MODE_AS_LOW)
-        yaw = yaw - kPi;
+        yaw = yaw - PI;
     _VECTOR toOpponent;
     Vec_Subtract(&drone->opponent->position, &node->pos, &toOpponent);
     if (dcv->drone->coverNode->type != COVER_LOW && dcv->drone->coverMode != COVER_MODE_AS_LOW) {
@@ -311,7 +298,7 @@ void DroneFunc_RunForCoverTalk(DCVars_tag *dcv) {
     case HT_Level_EvilBase:
     case HT_Level_EvilSilo:
     case HT_Level_EvilBaseC:
-        if (drone->skinClass == 16)
+        if (drone->skinClass == SKINCLASS_ROOK)
             return;
         sfx = DroneFunc_ChooseSFXByID(drone, 0x11b, 0x121);
         break;
@@ -688,7 +675,7 @@ bool NDrone2_DSTATE_UnderCoverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         NDrone2_SeenAndAttacking(dcv);
         dcv->drone->unknown38 = 1;
         NDrone2_SlideToPosition(&drone->coverPos.pos, 0.08f, 0, dcv);
-        NDrone2_SetAngleToCover(dcv, kPi);
+        NDrone2_SetAngleToCover(dcv, PI);
         return true;
 
     case DRONE_MSG_ImpactPunch:
@@ -729,7 +716,7 @@ bool NDrone2_DSTATE_UnderCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         if (drone->animSet != 0x13 || (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
                                        GameState.CurrentLevelHashcode != HT_Level_PowerStationA2))
             dcv->drone->clip = dcv->drone->clipSize;
-        if (behaviour_util_getProperty(DRONE_PROP_10, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) == 0)
             SetTimer(&dcv->drone->timerA,
                      Ftol(Float_FRand(150.0f) * FRAME_RATE_DIV + (double)GameState.NumFramesUnpaused));
         dcv->drone->atCornerCover = dcv->drone->coverNode->type != COVER_LOW;
@@ -740,23 +727,23 @@ bool NDrone2_DSTATE_UnderCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
 
     case DRONE_MSG_Exit:
         dcv->drone->atCornerCover = 0;
-        behaviour_util_setProperty(DRONE_PROP_10, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour, 0);
         return true;
 
     case DRONE_MSG_Update: {
-        if (behaviour_util_getProperty(DRONE_PROP_10, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) != 0) {
             if (!(dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT)) {
                 if (NDrone2_Player() == NULL)
                     return true;
                 if (!(Vec_Dist2D(&dcv->gameObj->position, &NDrone2_Player()->position) < 3.0f))
                     return true;
             }
-            behaviour_util_setProperty(DRONE_PROP_10, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour, 0);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_UnderCoverLeaveNow, 0);
         }
         NDrone2_SeenAndAttacking(dcv);
         NDrone2_SlideToPosition(&drone->coverPos.pos, 0.08f, 0, dcv);
-        NDrone2_SetAngleToCover(dcv, kPi);
+        NDrone2_SetAngleToCover(dcv, PI);
         if (drone->unknown434 != NULL)
             return true;
         Drone_tag *self = dcv->drone;
@@ -1457,9 +1444,9 @@ bool NDrone2_DSTATE_OpenDoor(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         obj_tag *door = self->door;
         if (door != NULL && door->subState == DoorKind_Swing &&
             (self->baseAlertness1 >= 0.66f || self->alertness >= 0.66f) &&
-            (behaviour_util_getProperty(DRONE_PROP_14, self->currentBehaviour) != 0 ||
-             behaviour_util_getProperty(DRONE_PROP_15, dcv->drone->currentBehaviour) != 0 ||
-             behaviour_util_getProperty(DRONE_PROP_16, dcv->drone->currentBehaviour) != 0)) {
+            (behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM_ALERT, self->currentBehaviour) != 0 ||
+             behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM, dcv->drone->currentBehaviour) != 0 ||
+             behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM_2, dcv->drone->currentBehaviour) != 0)) {
             NDrone2_MoveTo_RouteNode(dcv, 1, dcv->drone->activeRoute);
             DroneAnim_CallAnim(DANIM_USE_DOOR, 0, 0, 0, 0.0f, 0, dcv);
             NDrone2_OpenDoor(dcv);

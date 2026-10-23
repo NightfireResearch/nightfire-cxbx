@@ -25,6 +25,7 @@
 #include <string.h>
 #include "../../engine/Text.h"
 #include "../Autoaim.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
@@ -94,9 +95,6 @@ HASHCODE DecryptorDigits[10] = {
 // The view cone's length (0x0017c110; Camera.cpp)
 #define MAX_VIEW_CONE 2000.0f
 
-#define HALF_PI 1.5707964f
-#define TWO_PI 6.2831855f
-
 // What a player carries over from one part of a mission to the next (Player_RamSave, Player_RamLoad)
 #pragma pack(push, 1)
 typedef struct {
@@ -132,17 +130,6 @@ static const ushort BestWeapons[18] = {0x42, 0x32, 0x1a, 0x18, 0x1c, 0x16, 0x15,
 // Player_WeaponChange's third argument (and Player.cpp's)
 #define CHANGE_WEAPONS 0
 #define CHANGE_GADGETS 1
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // Gadgets are weapons 0x4a to 0x5e
 static bool IsGadget(int weapon) {
@@ -1680,7 +1667,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
         Drone_tag *drone = (Drone_tag *)target->extraObjectData;
         if (drone->health <= 0.0f)
             return;
-        if (drone->skinClass == 0xb)
+        if (drone->skinClass == SKINCLASS_NINJA)
             return;
         if (target->curState == 1)
             return;

@@ -73,9 +73,6 @@ typedef struct {
 #define HEAD_BONE 5
 #define WORLD_BONE(bone) (0x80000000 | (bone))
 
-static const float kPi = 3.14159274f;
-static const float kHalfPi = 1.57079637f;
-
 // 0 to 0xfff for a drone, scattered by its state machine's id (its number in the level): Knuth's multiplicative hash
 static uint BreathPhase(const Drone_tag *drone) {
     return (drone->sm.id * 2654435761u) >> 20;
@@ -446,7 +443,7 @@ void Drone_LevelReset(void) {
 
 // 50 degrees, one ulp under the nearest float; and 45
 static const float kMaxSlope = 0.87266463f;
-static const float kMaxSlopeCastleIndoors2 = 0.785398185f;
+static const float kMaxSlopeCastleIndoors2 = QUARTER_PI;
 
 // Once the level is read: the move test's limits (CastleIndoors2's are lower; EvilBaseC starts with channel 0x96
 // off), the safety emitter, every cover node's and AI point's flood, the dummy player, the groups, each drone's own
@@ -659,16 +656,16 @@ void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
     double yaw = Atan2(drone->opponentDelta.x, drone->opponentDelta.z);
     drone->opponentAngles.y = (float)yaw;
     drone->opponentAngles.z = 0.0f;
-    drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, (float)(yaw + kPi));
+    drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, (float)(yaw + PI));
 
     uint turn = drone->unknown46c;
     float facing = gameObj->rotation.y;
     if (turn & 8)
-        facing += kHalfPi;
+        facing += HALF_PI;
     if (turn & 0x10)
-        facing += kPi;
+        facing += PI;
     if (turn & 0x20)
-        facing -= kHalfPi;
+        facing -= HALF_PI;
     drone->opponentBearing = Vec_AngleDifference(facing, drone->opponentAngles.y);
 }
 
@@ -881,7 +878,7 @@ bool NDrone2_PostDroneControl(DCVars_tag *dcv) {
 bool NDrone2_DoAnimation(Drone_tag *drone) {
     if (!(drone->flags & 0x80000))
         return false;
-    if (drone->skinClass == 0xc)
+    if (drone->skinClass == SKINCLASS_ZOE)
         return true;
     obj_tag *gameObj = drone->gameObj;
     if (gameObj->animState->animObj.rootHeight == 0.0f || gameObj->drawnCountdown || drone->unknown434 != NULL)

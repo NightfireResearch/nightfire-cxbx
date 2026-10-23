@@ -54,7 +54,7 @@ static void Civilian_SetTimer(DroneTimer *timer, uint dueFrame, uint unknown8 = 
 // of the player (our name; each state has it inline)
 static void Civilian_SeenArmedPerson(DCVars_tag *dcv) {
     dcv->drone->flags |= 0x8000000;
-    if (behaviour_util_getProperty(DRONE_PROP_33, dcv->drone->currentBehaviour) != 0 &&
+    if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_ALERTS, dcv->drone->currentBehaviour) != 0 &&
         !(dcv->drone->flags & 0x200000)) {
         dcv->drone->flags2 |= 1;
         NDrone2_DroneAlertToObject(dcv, 0x11, NDrone2_Player(), 20.0f, 20.0f, 0.76f);
@@ -71,14 +71,14 @@ bool NDrone2_DSTATE_CivilianInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_Enter:
-        if (dcv->drone->skinClass == 13)
+        if (dcv->drone->skinClass == SKINCLASS_PARTY_GIRL)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_PartyGirl, 0);
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0) {
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
             if (dcv->drone->route2.count != 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianMission, 0);
         }
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         NDrone2_AssignAIPath(dcv, AIPATH_PATROL);
         if (dcv->drone->route2.count != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianPatrol, 0);
@@ -99,9 +99,9 @@ bool NDrone2_DSTATE_Civilian(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         return true;
 
     case DRONE_MSG_Enter:
-        if (dcv->drone->skinClass == 13)
+        if (dcv->drone->skinClass == SKINCLASS_PARTY_GIRL)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_PartyGirl, 0);
-        if (dcv->drone->skinClass == 15)
+        if (dcv->drone->skinClass == SKINCLASS_TRUCK_DRIVER)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_TruckDriverIdle, 0);
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
@@ -117,7 +117,7 @@ bool NDrone2_DSTATE_Civilian(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
             return true;
         }
         Civilian_SeenArmedPerson(dcv);
-        if (dcv->drone->skinClass == 16) {
+        if (dcv->drone->skinClass == SKINCLASS_ROOK) {
             dcv->drone->side = 1;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
@@ -182,7 +182,7 @@ bool NDrone2_DSTATE_CivilianPatrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         if (!NDrone2_NearArmedPerson(dcv))
             return true;
         Civilian_SeenArmedPerson(dcv);
-        if (dcv->drone->skinClass == 16) {
+        if (dcv->drone->skinClass == SKINCLASS_ROOK) {
             dcv->drone->side = 1;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
@@ -255,7 +255,7 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        if (dcv->drone->skinClass == 19)
+        if (dcv->drone->skinClass == SKINCLASS_KIKO_COMBAT)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_KikoMission, 0);
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
@@ -267,7 +267,7 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
     case DRONE_MSG_Update:
         if (NDrone2_NearArmedPerson(dcv)) {
             Civilian_SeenArmedPerson(dcv);
-            if (dcv->drone->skinClass == 16) {
+            if (dcv->drone->skinClass == SKINCLASS_ROOK) {
                 dcv->drone->side = 1;
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
             }
@@ -275,7 +275,7 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         }
         NDrone2_BondTalk(dcv);
         if (NDrone2_UpdateMissionRoute(dcv) == MISSION_ROUTE_DONE) {
-            behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
             if (GameState.CurrentLevelHashcode != HT_Level_Tower2B && dcv->drone->secondState != 0 &&
                 dcv->drone->modeChangeSwitchChannel == 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)NDrone2_ChangeToAttackMode(dcv->drone), 0);
@@ -323,7 +323,7 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_ObjectHit:
-        if (dcv->drone->skinClass == 19)
+        if (dcv->drone->skinClass == SKINCLASS_KIKO_COMBAT)
             return true;
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianMissionWait, 0);
 
@@ -359,7 +359,7 @@ bool NDrone2_DSTATE_CivilianMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_t
             return true;
         }
         Civilian_SeenArmedPerson(dcv);
-        if (dcv->drone->skinClass == 16) {
+        if (dcv->drone->skinClass == SKINCLASS_ROOK) {
             dcv->drone->side = 1;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
@@ -424,7 +424,7 @@ bool NDrone2_DSTATE_AllyLeadInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_Enter:
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         dcv->drone->flags |= 0x10000;
         if (dcv->drone->route2.count != 0) {
@@ -432,7 +432,7 @@ bool NDrone2_DSTATE_AllyLeadInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
             return true;
         }
         DroneAnim_SetStandIdleAnim(dcv, 0);
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         return true;
 
     case DRONE_MSG_Update:
@@ -473,12 +473,12 @@ bool NDrone2_DSTATE_PartyGirlInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         return true;
 
     case DRONE_MSG_Enter:
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0) {
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
             if (dcv->drone->route2.count != 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianMission, 0);
         }
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         Drone_SM_SetState(dcv->aiStateMachine, DSTATE_PartyGirl, 0);
         return true;
 
@@ -496,7 +496,7 @@ bool NDrone2_DSTATE_PartyGirl(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         return true;
 
     case DRONE_MSG_Enter:
-        if (dcv->drone->skinClass == 18)
+        if (dcv->drone->skinClass == SKINCLASS_KIKO)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Civilian, 0);
         NDrone2_AssignAIPath(dcv, AIPATH_PATROL);
         if (dcv->drone->route2.count != 0)
@@ -514,7 +514,7 @@ bool NDrone2_DSTATE_PartyGirl(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
             return true;
         }
         Civilian_SeenArmedPerson(dcv);
-        if (behaviour_util_getProperty(DRONE_PROP_52, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_ALERT_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
             DroneFunc_SetMissionFailReason(drone, 11);
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianScared, 0);
 

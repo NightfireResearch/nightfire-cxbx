@@ -49,17 +49,12 @@
 // The sound DroneWeap_FireWeapon does not play
 #define SFX_NO_FIRE_SOUND 0x5ef
 
-constexpr float kAimAngle = 0.34906587f;        // 20 degrees: how far the barrel may point off the target
-constexpr float kNinjaAimAngle = 0.5235988f;    // 30 degrees, for DTYPE_Ninja
-constexpr float kDegToRad = 0.017453292f;
-constexpr float kHalfPi = 1.5707964f;
-constexpr float kQuarterPi = 0.7853982f;
-constexpr float kCloseCombatAngle = 1.0471976f;  // 60 degrees
+// How far the barrel may point off the target: 20 degrees, a bit above DEG2RAD(20)
+constexpr float kAimAngle = 0.34906587f;
+constexpr float kNinjaAimAngle = DEG2RAD(30);   // for DTYPE_Ninja
+constexpr float kCloseCombatAngle = DEG2RAD(60);
 static_assert(std::bit_cast<uint32_t>(kAimAngle) == 0x3eb2b8c3, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kNinjaAimAngle) == 0x3f060a92, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kDegToRad) == 0x3c8efa35, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kQuarterPi) == 0x3f490fdb, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kCloseCombatAngle) == 0x3f860a92, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.9998f) == 0x3f7ff2e5, "not the original's constant");
 
@@ -111,14 +106,14 @@ void DroneWeap_HandleFiring(DCVars_tag *dcv) {
 }
 
 // A shot when one is due and the drone is ready. False when the burst is over: its last shot, or the opponent out of
-// sight for 16 frames (unless DRONE_PROP_17).
+// sight for 16 frames (unless DRONE_PROP_FIRE_UNSEEN).
 bool DroneWeap_DoFiring(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (MPSettings.dronesAreBots)
         BOT_opponentTargetting(dcv);
     if (drone->burstShots == 0)
         DroneWeap_NextBulletTime(dcv, 1, 0);
-    if (dcv->drone->unseenFrames > 15 && behaviour_util_getProperty(DRONE_PROP_17, drone->currentBehaviour) == 0)
+    if (dcv->drone->unseenFrames > 15 && behaviour_util_getProperty(DRONE_PROP_FIRE_UNSEEN, drone->currentBehaviour) == 0)
         return false;
     if (GameState.NumFramesUnpaused < drone->nextShotFrame)
         return true;
@@ -394,7 +389,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     if (fx != NULL) {
         Vec_Copy(&rot, &fx->rotation);
         fx->rotation.x = Float_FRand(6.2831855f) + fx->rotation.x;
-        fx->rotation.y = (float)(Rand_FRandHalf(0.2f) + kHalfPi + fx->rotation.y);
+        fx->rotation.y = (float)(Rand_FRandHalf(0.2f) + HALF_PI + fx->rotation.y);
         double roll = Rand_FRandHalf(0.2f);
         Effect_tag *effect = (Effect_tag *)fx->extraObjectData;
         fx->objectType = OBJECTTYPE_EFFECT;
@@ -643,7 +638,7 @@ void DroneWeap_ThrowGrenade(DCVars_tag *dcv) {
     _VECTOR heading = {0.0f, (float)FPatan(toTarget.x, toTarget.z), 0.0f};
     RotMatrix(&heading, &aim);
     if (distance < 10.0f || distance > 18.0f) {
-        tilt.x = distance < 10.0f ? kQuarterPi : -kQuarterPi;
+        tilt.x = distance < 10.0f ? QUARTER_PI : -QUARTER_PI;
         _MATRIX pitch;
         RotMatrix(&tilt, &pitch);
         MulMatrix2(&pitch, &aim);
@@ -802,7 +797,7 @@ bool __fastcall Drone_MayDealBackshotDamage(Drone_tag *drone) {
 // AUTOINJECT
 double Drone_ModBulletDamage(Drone_tag *drone, obj_tag *player, HITDATA_tag *hit) {
     float damage = hit->dmgAmt;
-    if (damage == 0.0f || drone->skinClass == 0xc)
+    if (damage == 0.0f || drone->skinClass == SKINCLASS_ZOE)
         return 0.0f;
     ushort weapon = ((BU_tag *)hit->hitObj->extraObjectData)->wpnDef->weaponVariantNum;
     if (weapon >= 99 && weapon <= 102)
@@ -817,7 +812,7 @@ double Drone_ModBulletDamage(Drone_tag *drone, obj_tag *player, HITDATA_tag *hit
     // From here on, the damage rounded to a float
     float rounded = (float)scaled;
     float shotYaw = Atan2(hit->hitDirection.x, hit->hitDirection.z);
-    if (fabs(Vec_AngleDifference(shotYaw, player->rotation.y)) < kHalfPi)
+    if (fabs(Vec_AngleDifference(shotYaw, player->rotation.y)) < HALF_PI)
         return (double)DroneFiring_PlayerBackShot_Damage * rounded;
     return rounded;
 }

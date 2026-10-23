@@ -170,17 +170,6 @@ extern float FlashMod;
 // The originals, called by address
 extern uint8_t GlobalBlur;
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // Cannot autoinject - custom calling convention
 // Only used from within View_CaptureScene, so not a problem
 // UNINJECTABLE

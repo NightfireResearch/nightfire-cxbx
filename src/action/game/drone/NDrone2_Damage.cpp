@@ -25,6 +25,7 @@
 #include <math.h>
 #include <stdint.h>
 #include "../obj/Env.h"
+#include "../../math/X87Ops.h"
 
 // Drone_tag.armour bits
 #define ARMOUR_VEST 1
@@ -43,28 +44,16 @@
 #define DRONE_FLAG_ATTACK_MODE 0x4000000
 #define DRONE_FLAG_2000000 0x2000000
 
-// The message NDrone2_DroneAlertToPosition sends for a hurt drone (DRONE_PROP_27's)
+// The message NDrone2_DroneAlertToPosition sends for a hurt drone (DRONE_PROP_ALERTED_BY_DRONE_SHOT's)
 #define HURT_ALERT_MSG 0x12
 
 // A shot pushes the drone this far along it, to this far at most
 #define PUSH_PER_SHOT 0.175f
 
 // Degrees per radian, as the original rounds it
-constexpr float RAD_TO_DEG = 57.295776f;
 static_assert(std::bit_cast<uint32_t>(RAD_TO_DEG) == 0x42652ee0, "not the original's 180/pi");
 static_assert(std::bit_cast<uint32_t>(PUSH_PER_SHOT) == 0x3e333333, "not the original's 0.175");
 static_assert(std::bit_cast<uint32_t>(0.333f) == 0x3eaa7efa, "not the original's 0.333");
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // A state an impact may return to: any but none and the impact states themselves (FUN_0003a3f0, which takes the
 // state in EAX; our name)
@@ -94,7 +83,7 @@ static bool NDrone2_PlayerContact(Drone_tag *drone, HITDATA_tag *hit) {
 // A hurt volume's damage, outside CastleExterior and for any skin class but 19; a drone left with none dies.
 // 0x000363d0 in the original (our name), which takes the drone in EAX and is reached only from NDrone2_DealWithObjHit.
 static void NDrone2_HurtVolumeDamage(Drone_tag *drone, HITDATA_tag *hit) {
-    if (GameState.CurrentLevelHashcode == HT_Level_CastleExterior || drone->skinClass == 19)
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleExterior || drone->skinClass == SKINCLASS_KIKO_COMBAT)
         return;
     drone->health = drone->health - Hurt_GetDamage(hit->hitObj);
     if (drone->health <= 0.0f)
@@ -170,7 +159,7 @@ void Drone_ExplosiveHit(obj_tag *obj, DroneImpact_tag *impact) {
         return;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
     drone->lastAttacker = impact->source;
-    if (drone->skinClass == 0x10 && obj == impact->source)
+    if (drone->skinClass == SKINCLASS_ROOK && obj == impact->source)
         return;
     Drone_Message(obj, DRONE_MSG_ImpactExplosive, impact, 0);
 }
@@ -271,7 +260,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     case 0x5f:
         return;
     case 0x6e:
-        if (drone->skinClass == 16)
+        if (drone->skinClass == SKINCLASS_ROOK)
             return;
         break;
     }
@@ -370,7 +359,7 @@ void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, 
     switch (location) {
     case BONE_HEAD:
         if (drone->dtype == DTYPE_Ninja || drone->skinHashcode == HT_Skin_Drake_Astronaut ||
-            (drone->skinClass == 16 && GameState.CurrentLevelHashcode == HT_Level_EvilBase)) {
+            (drone->skinClass == SKINCLASS_ROOK && GameState.CurrentLevelHashcode == HT_Level_EvilBase)) {
             damage = (float)(DroneDamage_Torso * (double)damage * 2);
         } else {
             drone->headShot = 1;
@@ -486,7 +475,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
     }
 
     char force = 0;
-    if (bullet->firedByObj != NULL && drone->skinClass == 12 && bullet->firedByObj->objectType == OBJECTTYPE_PLAYER)
+    if (bullet->firedByObj != NULL && drone->skinClass == SKINCLASS_ZOE && bullet->firedByObj->objectType == OBJECTTYPE_PLAYER)
         force = 1;
     int weapon = bullet->wpnDef != NULL ? (ushort)bullet->wpnDef->weaponVariantNum : -1;
     NDrone2_HitDamage(dcv, scale * hit->dmgAmt, (ushort)hit->hitBoneIdx, weapon, force);
@@ -501,7 +490,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
 // Once, a drone with property 0x32 tells those around it that it is hurt; never a sniper.
 // AUTOINJECT
 void DroneFunc_SendHurtMessage(DCVars_tag *dcv) {
-    if (!behaviour_util_getProperty(DRONE_PROP_32, dcv->drone->currentBehaviour))
+    if (!behaviour_util_getProperty(DRONE_PROP_HURT_ALERTS, dcv->drone->currentBehaviour))
         return;
     Drone_tag *drone = dcv->drone;
     if ((drone->flags & DRONE_FLAG_HURT_SENT) || drone->dtype == DTYPE_Sniper)
@@ -625,7 +614,7 @@ bool NDrone2_BulletImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, cha
         case DSTATE_AmbushWait:
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         case DSTATE_UnderCoverIdle:
-            behaviour_util_setProperty(DRONE_PROP_10, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour, 0);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_UnderCoverLeaveNow, 0);
         }
     }
@@ -682,7 +671,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
         }
     }
 
-    if (behaviour_util_getProperty(DRONE_PROP_32, dcv->drone->currentBehaviour) &&
+    if (behaviour_util_getProperty(DRONE_PROP_HURT_ALERTS, dcv->drone->currentBehaviour) &&
         !(dcv->drone->flags & DRONE_FLAG_HURT_SENT)) {
         dcv->drone->flags2 |= DRONE_FLAG2_HURT;
         NDrone2_DroneAlertToPosition(dcv->gameObj, HURT_ALERT_MSG, &dcv->gameObj->position, dcv->gameObj->inCel, 0,
@@ -698,7 +687,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
         }
         if (DroneFunc_CanResumeState(resume))
             drone->sm.resumeState = resume;
-        if (drone->dtype == DTYPE_Astronaut || drone->skinClass == 20 || drone->dtype == DTYPE_Ninja)
+        if (drone->dtype == DTYPE_Astronaut || drone->skinClass == SKINCLASS_DRAKE || drone->dtype == DTYPE_Ninja)
             return true;
         DroneAnim_CallAnim(DANIM_IMPACT_EXPLOSION, NDrone2_ExplosionDir(dcv, impact), drone->sm.resumeState, 0, 0.0f, 0,
                            dcv);
@@ -782,7 +771,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
 
     case DRONE_MSG_ImpactBullet: {
         uint state = nextState;
-        if (drone->skinClass == 12)
+        if (drone->skinClass == SKINCLASS_ZOE)
             state = DSTATE_CrouchCover;
         bool resumable = DroneFunc_CanResumeState(resume);
         if (resumable)
@@ -808,7 +797,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
     case DRONE_MSG_ImpactSmoke:
         if (behaviour_util_getProperty(DRONE_PROP_36, drone->currentBehaviour))
             return true;
-        if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour))
+        if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, dcv->drone->currentBehaviour))
             return true;
         if (DroneFunc_CanResumeState(resume))
             drone->sm.resumeState = resume;
@@ -817,7 +806,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
         return true;
 
     case DRONE_MSG_ImpactStunGrenade:
-        if (behaviour_util_getProperty(DRONE_PROP_1C, drone->currentBehaviour)) {
+        if (behaviour_util_getProperty(DRONE_PROP_RESISTS_STUN_GRENADE, drone->currentBehaviour)) {
             if (drone->animSet == 5) {
                 if (DroneAnim_CanDoAnimState(dcv, 0x57, 0))
                     DroneAnim_CallAnim(0x57, 0, 0, 0, 0.0f, 0, dcv);

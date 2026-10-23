@@ -10,6 +10,7 @@
 #include "../math/math.h"
 #include "../game/drone/NDrone2.h"
 #include "../game/drone/Behaviour.h"
+#include "../game/drone/DroneTables.h"     // DRONE_PROP_36
 #include "../game/obj/Door.h"
 #include "../game/obj/build.h"
 #include "../game/mp/multiplayer.h"
@@ -19,6 +20,7 @@
 #include <math.h>
 #include <string.h>
 #include "../game/drone/NDrone2_Cover.h"
+#include "../math/X87Ops.h"
 
 // XBE_GLOBAL(0x00274cac, 0x4)
 float MoveTest_MaxSlope;
@@ -73,19 +75,6 @@ cel_tag **BoundsTest_Cels;
 constexpr float CORNER_CLEARANCE_SQ = 0.16000001f;
 static_assert(std::bit_cast<uint32_t>(CORNER_CLEARANCE_SQ) == 0x3e23d70b, "not the original's constant");
 
-// The behaviour property that keeps a blocked creep step from marking the drone (LinkCreep_Handler)
-#define BEHAVIOUR_IGNORE_BLOCKED_CREEP 0x36
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // ---- routes
 
@@ -1738,7 +1727,7 @@ bool LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv) {
             return LinkCreep_Decrement(route);
     }
 
-    if (behaviour_util_getProperty(BEHAVIOUR_IGNORE_BLOCKED_CREEP, dcv->drone->currentBehaviour) == 0) {
+    if (behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour) == 0) {
         uchar blocked = 0;
         bool result = LinkCreep_Increment(route, &blocked);
         if (blocked)

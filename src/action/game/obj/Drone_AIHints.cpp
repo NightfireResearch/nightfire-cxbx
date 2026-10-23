@@ -3,6 +3,7 @@
 #include "../../engine/Collide.h"
 #include "../sp/SwitchChannels.h"
 #include "../drone/DroneVision.h"
+#include "../../math/math.h"
 
 #include <bit>
 #include <math.h>
@@ -17,14 +18,6 @@ LLISTINFO_tag AIBoxList;
 // XBE_GLOBAL(0x001dfa2c, 0x4)
 int32_t iTimeToCalc;
 
-constexpr float kDegToRad = 0.017453292f;
-static_assert(std::bit_cast<uint32_t>(kDegToRad) == 0x3c8efa35);
-constexpr float kHalfPi = 1.5707964f;
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb);
-constexpr float kPi = 3.1415927f;
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb);
-constexpr float kQuarterPi = 0.7853982f;
-static_assert(std::bit_cast<uint32_t>(kQuarterPi) == 0x3f490fdb);
 constexpr float kDeg5 = 0.08726647f;
 static_assert(std::bit_cast<uint32_t>(kDeg5) == 0x3db2b8c3);
 constexpr float kDeg10 = 0.17453294f;
@@ -82,9 +75,9 @@ void Drone_CoverCornerNode(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
         node->flags |= COVERNODE_CROUCH1 | COVERNODE_CROUCH2;
 
     if (keys->coverAngleDeg != 0)
-        node->angle = (float)(keys->coverAngleDeg * (double)kDegToRad);
+        node->angle = (float)(keys->coverAngleDeg * (double)DEG_TO_RAD);
     else
-        node->angle = kQuarterPi;
+        node->angle = QUARTER_PI;
 
     node->enableSwitchChannel = keys->enableSwitchChannel;
     node->disableSwitchChannel = keys->disableSwitchChannel;
@@ -266,7 +259,7 @@ bool Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
             wide = kDeg80;
             narrow = kDeg75;
         } else {
-            wide = kQuarterPi;
+            wide = QUARTER_PI;
             narrow = kDeg30;
         }
         if (node->flags & COVERNODE_WIDER) {
@@ -291,16 +284,16 @@ bool Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
 
     // The bounds are not rounded to float
     if (node->type == COVER_CORNER) {
-        if ((node->flags & COVERNODE_CROUCH2) && angle > (double)kHalfPi - narrow &&
-            angle < (double)wide + kHalfPi) {
+        if ((node->flags & COVERNODE_CROUCH2) && angle > (double)HALF_PI - narrow &&
+            angle < (double)wide + HALF_PI) {
             node->usable[target] |= COVERUSE_CROUCH2;
-            if (angle < kHalfPi)
+            if (angle < HALF_PI)
                 node->usable[target] |= COVERUSE_CROUCH2_INNER;
         } else if ((node->flags & COVERNODE_CROUCH1) &&
-                   ((angle > 0.0f && angle > (double)kPi - wide) ||
-                    (angle < 0.0f && angle < (double)narrow - kPi))) {
+                   ((angle > 0.0f && angle > (double)PI - wide) ||
+                    (angle < 0.0f && angle < (double)narrow - PI))) {
             node->usable[target] |= COVERUSE_CROUCH1;
-            if (angle > -kPi)
+            if (angle > -PI)
                 node->usable[target] |= COVERUSE_CROUCH1_INNER;
         } else {
             node->usable[target] |= COVERUSE_OUTSIDE_ANGLE;

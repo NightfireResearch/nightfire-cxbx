@@ -604,9 +604,9 @@ void RandomDrone(int i) {
         d->behaviour2[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     }
     d->currentBehaviour = ShadowRand(2) ? d->behaviour1 : d->behaviour2;
-    behaviour_util_setProperty(DRONE_PROP_32, d->currentBehaviour, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_33, d->currentBehaviour, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_46, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_HURT_ALERTS, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_SIGHTING_ALERTS, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_LOOKS_AROUND, d->currentBehaviour, ShadowRand(2));
 
     d->sm.id = 100 + i;
     d->sm.curState = ShadowRand(250);

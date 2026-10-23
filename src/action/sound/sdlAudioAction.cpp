@@ -4,6 +4,7 @@
 #include "../../common/sound/xadpcm.h"
 #include "../devtools/Demo.h"
 #include "../../driving/platform/Ptr32.h"
+#include "../math/math.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -23,8 +24,6 @@
 
 // The rate the game creates every one of its buffers at (see xboxCreateSoundBuffers)
 #define XBOX_SAMPLE_RATE 44032u
-
-#define PI_F 3.14159265f
 
 #define SDL_BUFFER_MAGIC 0x4c445342u // 'BSDL'
 
@@ -581,14 +580,14 @@ static void Apply3D(SdlBuffer *b) {
     float left = 0.7071068f, right = 0.7071068f;
     if (x * x + z * z > 1e-8f) {
         float azimuth = atan2f(x, z);   // 0 ahead, positive to the right
-        const float quarter = PI_F / 4.0f;
+        const float quarter = PI / 4.0f;
         if (azimuth >= -quarter && azimuth <= quarter) {
-            float t = (azimuth + quarter) / (PI_F / 2.0f) * (PI_F / 2.0f);
+            float t = (azimuth + quarter) / (PI / 2.0f) * (PI / 2.0f);
             left = cosf(t);
             right = sinf(t);
         } else {
-            float around = azimuth < 0.0f ? azimuth + 2.0f * PI_F : azimuth;   // quarter .. 7 quarters
-            float t = (around - quarter) / (1.5f * PI_F) * (PI_F / 2.0f);
+            float around = azimuth < 0.0f ? azimuth + 2.0f * PI : azimuth;   // quarter .. 7 quarters
+            float t = (around - quarter) / (1.5f * PI) * (PI / 2.0f);
             right = cosf(t);
             left = sinf(t);
         }

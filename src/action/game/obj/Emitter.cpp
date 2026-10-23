@@ -15,17 +15,6 @@
 
 #pragma fp_contract(off)
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // ColourGetValue's answer and the keys and weights of its last interpolation, Emitter_Draw's particle counter and
 // matrix: statics of the original's
 // XBE_GLOBAL(0x001f6450, 0x4)

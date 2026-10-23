@@ -6,6 +6,7 @@
 #include "../../engine/viewer.h"
 #include "../sp/SwitchChannels.h"
 #include "../../math/math.h"
+#include "../../math/X87Ops.h"
 
 #include <math.h>
 
@@ -29,16 +30,6 @@ obj_tag* DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
         obj->effectFlags |= 0x30;
     build_LinkToRoom(obj, 0, glb_world);
     return obj;
-}
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
 }
 
 // Waits for showChannel, then takes its model's flags back. hideChannel hides it (hideOnly) or deletes it. Nearer the

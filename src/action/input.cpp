@@ -11,21 +11,11 @@
 #include "devtools/Demo.h"
 #include "game/mp/multiplayer.h"
 #include "game.h"
+#include "math/X87Ops.h"
 #include <math.h>
 
 // XBE_GLOBAL(0x001fe6d0, 0x560)
 PlayerInput PlayerInputs[4];
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // Keyboard input proper now lives in engine/psiInput.cpp, which presents the keyboard as a virtual Xbox pad on
 // port 0 whenever no real pad is plugged in - see the binding table in the block comment above

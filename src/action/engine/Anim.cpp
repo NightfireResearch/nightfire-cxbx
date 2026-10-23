@@ -179,17 +179,6 @@ AnimDistanceTableEntry DistanceTables[NUM_DISTANCE_TABLES];
 // AnimFrameCopy's poses here: as many floats as fit the original's buffers
 #define DISTANCE_POSE_FLOATS 0x2a0
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // What the original's FCOMP and FCHS give: the sign flipped unless x >= 0, so -0 stays -0 (MSVC's fabs clears it)
 static float Magnitude(float x) {
     return x >= 0.0f ? x : std::bit_cast<float>(std::bit_cast<uint32_t>(x) ^ 0x80000000u);
@@ -249,15 +238,13 @@ HASHCODE AnimSleeveGetEntity(uint idx) {
 }
 
 // AUTOINJECT
-void AnimObjectSetSleeveType(obj_tag *param_1, int sleeveNum) {
-    HASHCODE HVar1 = AnimSleeveGetEntity(sleeveNum);
-
-    if (HVar1 != (HASHCODE)0) {
+void AnimObjectSetSleeveType(obj_tag *obj, int sleeveNum) {
+    HASHCODE sleeve = AnimSleeveGetEntity(sleeveNum);
+    if (sleeve != HASHCODE_NONE) {
         // If the hashcode has the corresponding celglist, apply it
-        celglist_tag* celGlist = hashtable_hashcode_to_celglist(HVar1);
-
+        celglist_tag *celGlist = hashtable_hashcode_to_celglist(sleeve);
         if (celGlist != NULL)
-            (param_1->animState->animObj).sleeveGlist = celGlist;
+            obj->animState->animObj.sleeveGlist = celGlist;
     }
 }
 
@@ -499,7 +486,8 @@ void AnimSkeletonProcess(char *data) {
 
     SkeletonInfo *skel = (SkeletonInfo*)data;
 
-    printf("Processing a skeleton, idx: %i, num bones: %i, unknown data 0x%02x\n", skel->skeletonIdx, skel->numBones, skel->numTransBones);
+    printf("Processing a skeleton, idx: %i, num bones: %i, with translation tracks: %i\n", skel->skeletonIdx,
+           skel->numBones, skel->numTransBones);
 
     // Copy to SkeletonTable
     SkeletonTable[skel->skeletonIdx] = skel;
@@ -911,8 +899,9 @@ void AnimScriptInit(obj_tag *obj, sAnimScript_tag *script, HASHCODE hashcode) {
         script->flags |= ANIMSCRIPT_LOOP;
     script->numCmds = (uchar)info;
     script->rate = (info >> 9) & 0x3f;
-    NF_WARN_IF(script->numCmds == 0, "Script 0x%x has no commands", hashcode);                // GC check (0x8004858c)
-    NF_WARN_IF(script->numCmds > 0x20, "Script 0x%x has too many commands", hashcode);        // GC check (0x8004858c)
+    // GC checks (0x8004858c)
+    NF_WARN_IF(script->numCmds == 0, "Script 0x%x has no commands", hashcode);
+    NF_WARN_IF(script->numCmds > ANIM_SCRIPT_MAX_CMDS, "Script 0x%x has too many commands", hashcode);
     if (!reverse) {
         script->curFrame = 1.0f;
         script->speed = 1.0f;
@@ -2636,10 +2625,6 @@ int AnimObjectUpdateThunk(obj_tag *obj) {
 // RefRoom one character in front of the player, talking
 #define ANIMDEBUG_RING_SPACING 0.23873241f  // a skin's share of the ring's radius: 1.5 / 2 pi
 #define ANIMDEBUG_FLOOR 0.09f
-static constexpr float kPi = 3.14159274f;
-static constexpr float kTwoPi = 6.28318548f;
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "pi");
-static_assert(std::bit_cast<uint32_t>(kTwoPi) == 0x40c90fdb, "2 pi");
 static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_RING_SPACING) == 0x3e747645, "0.23873241");
 static_assert(std::bit_cast<uint32_t>(ANIMDEBUG_FLOOR) == 0x3db851ec, "0.09");
 
@@ -2664,7 +2649,7 @@ void AnimDebugCreate(void) {
         float countf = (float)count;
         float spacing = (float)(count * (double)ANIMDEBUG_RING_SPACING);
         for (int i = 0; i < count; i++) {
-            double angle = i / (double)countf * (double)kTwoPi;
+            double angle = i / (double)countf * (double)TWO_PI;
             _VECTOR at;
             at.y = 0.0f;
             at.x = (float)FCos(angle);
@@ -2691,7 +2676,7 @@ void AnimDebugCreate(void) {
         obj->effectFlags |= 0x20;
         obj->position.x = (float)(sine * Extended(3.3f) + Extended(obj->position.x));
         obj->position.z = (float)(FCos(yaw) * Extended(3.3f) + Extended(obj->position.z));
-        obj->rotation.y = yaw + kPi;
+        obj->rotation.y = yaw + PI;
         build_LinkToRoom(obj, 0, glb_world);
         obj->objectType = OBJECTTYPE_ANIMDEBUGHANDLER;
         AnimObjectNew(obj, HT_Skin_SnowGuard_Head4);

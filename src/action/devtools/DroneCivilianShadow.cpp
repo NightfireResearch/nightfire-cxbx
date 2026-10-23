@@ -312,10 +312,10 @@ void RandomDrone(int i) {
     }
     d->currentBehaviour = ShadowRand(2) ? d->behaviour1 : d->behaviour2;
     // The properties these states test, often either way
-    behaviour_util_setProperty(DRONE_PROP_1D, d->currentBehaviour, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_31, d->currentBehaviour, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_33, d->currentBehaviour, ShadowRand(2));
-    behaviour_util_setProperty(DRONE_PROP_52, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_DEAD_BODY_ALERTS, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_SIGHTING_ALERTS, d->currentBehaviour, ShadowRand(2));
+    behaviour_util_setProperty(DRONE_PROP_ALERT_FAILS_MISSION, d->currentBehaviour, ShadowRand(2));
 
     d->sm.id = 100 + i;
     static const uint prevStates[] = {DSTATE_Fade, DSTATE_Fade, DSTATE_Dead, DSTATE_FadeFast, DSTATE_Idle};

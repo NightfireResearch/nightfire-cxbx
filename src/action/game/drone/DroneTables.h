@@ -54,100 +54,203 @@ extern const DroneBehaviourLayout DroneBehaviourLayouts[NUM_DRONE_PROPERTIES];
 extern const uint32_t DroneBehaviourMasks[35];
 extern const BOT_stats_t DefaultBotStats[29];
 
-// The behaviour properties (docs/drone/behaviours/behaviour_properties.md). Numbered, not named: the meanings
-// are inferred and some are guesses.
+// The behaviour properties (docs/drone/behaviours/behaviour_properties.md), named for what their readers do. Those
+// with no reader, or none that settles what they are, keep their number.
 typedef enum {
-    DRONE_PROP_00,  // word 0 bit 0           move: crouch-walk allowed (with 0x02: anim state 0xf)
-    DRONE_PROP_01,  // word 0 bit 1           move: anim state 8 allowed (only if 0x02 clear)
-    DRONE_PROP_02,  // word 0 bit 2           move: modifier for 0x00/0x01
-    DRONE_PROP_03,  // word 0 bit 3           (no reader)
-    DRONE_PROP_04,  // word 0 bit 4           (no reader)
-    DRONE_PROP_05,  // word 0 bit 5           captain on difficulty 2 (Normal): upgraded skin, x DroneCaptain_Mod_*
-    DRONE_PROP_06,  // word 0 bit 6           combat: may back off (anim state 4, 1.8 m clear)
-    DRONE_PROP_07,  // word 0 bit 7           (no reader)
-    DRONE_PROP_08,  // word 0 bit 8           captain on difficulty 3 (Hard)
-    DRONE_PROP_09,  // word 0 bit 9           captain on difficulty 1 (Easy)
-    DRONE_PROP_0A,  // word 0 bit 10          cover: lean (stand/crouch)
-    DRONE_PROP_0B,  // word 0 bit 11          cover: stand lean variant
-    DRONE_PROP_0C,  // word 0 bit 12          cover: step out
-    DRONE_PROP_0D,  // word 0 bit 13          cover: stand lean variant 2
-    DRONE_PROP_0E,  // word 0 bit 14          (no reader)
-    DRONE_PROP_0F,  // word 0 bit 15          cover: may use crouch cover
-    DRONE_PROP_10,  // word 0 bit 16          cover: force crouch-only cover (cleared when shot out of UnderCover)
-    DRONE_PROP_11,  // word 0 bit 17          combat: dodge/roll move (anim state 5, target >= 6 m)
-    DRONE_PROP_12,  // word 0 bit 18          (no reader)
-    DRONE_PROP_13,  // word 0 bit 19          combat: strafe-dodge (anim state 0x29)
-    DRONE_PROP_14,  // word 0 bit 20          doors: open behaviour A
-    DRONE_PROP_15,  // word 0 bit 21          doors: open behaviour B
-    DRONE_PROP_16,  // word 0 bit 22          doors: open behaviour C
-    DRONE_PROP_17,  // word 0 bit 23          firing: keep firing at last-seen position when sight lost (>15 frames)
-    DRONE_PROP_18,  // word 0 bit 24          on sighting: go straight to Attack
-    DRONE_PROP_19,  // word 0 bit 25          on sighting: choose a combat move
-    DRONE_PROP_1A,  // word 0 bit 26          on sighting: challenge/interrogate (Castle, Tower levels)
-    DRONE_PROP_1B,  // word 0 bit 27          on sighting: 50/50 attack or combat move
-    DRONE_PROP_1C,  // word 0 bit 28          stun grenade: resists (plays flinch anim instead of StunGrenadeImpact)
-    DRONE_PROP_1D,  // word 0 bit 29          on init: take nearest AI path of type 8 (NDrone2_AssignAIPath)
-    DRONE_PROP_1E,  // word 0 bit 30          (no reader)
-    DRONE_PROP_1F,  // word 0 bit 31          hearing: reacts to sounds (Sound_Alertness, msg 0x14)
-    DRONE_PROP_20,  // word 1 bit 0 (2 bits)  2-bit: initial alertness level -> {0, 0, 0.66, 1.0}
-    DRONE_PROP_21,  // word 1 bit 2           HeardNoiseSuspect behaviour
-    DRONE_PROP_22,  // word 1 bit 3           (no reader)
-    DRONE_PROP_23,  // word 1 bit 4           (no reader)
-    DRONE_PROP_24,  // word 1 bit 5           patrol: init to InitPatrol (with 0x25)
-    DRONE_PROP_25,  // word 1 bit 6           patrol: follow patrol path
-    DRONE_PROP_26,  // word 1 bit 7           contagion: alerted by seeing a drone whose cause bit 8 (saw a dead body) is set; only read in ConsiderAlerted
-    DRONE_PROP_27,  // word 1 bit 8           contagion: alerted by drone-shot (msg 0x12 / cause bit 2)
-    DRONE_PROP_28,  // word 1 bit 9           contagion: alerted by opponent-sighted alarm (msg 0x11 / cause bit 1)
-    DRONE_PROP_29,  // word 1 bit 10          contagion: alerted by dead body (msg 0x15 / cause bit 8)
-    DRONE_PROP_2A,  // word 1 bit 11          (no reader)
-    DRONE_PROP_2B,  // word 1 bit 12          (no reader)
-    DRONE_PROP_2C,  // word 1 bit 13          (no reader)
-    DRONE_PROP_2D,  // word 1 bit 14          (no reader)
-    DRONE_PROP_2E,  // word 1 bit 15          combat: roll (anim state check)
-    DRONE_PROP_2F,  // word 1 bit 16          (no reader)
-    DRONE_PROP_30,  // word 1 bit 17 (3 bits) cover: uses cover at all (NDrone2_CoverAvailable)
-    DRONE_PROP_31,  // word 1 bit 20          death: broadcasts on death unless head-shot (DSTATE_Dead)
-    DRONE_PROP_32,  // word 1 bit 21          when hurt: broadcast hurt alert 0x12 (DroneFunc_SendHurtMessage)
-    DRONE_PROP_33,  // word 1 bit 22          on sighting: broadcast 0x11 alarm to others (20 m)
-    DRONE_PROP_34,  // word 1 bit 23          explosives: reacts to grenades/smoke (with 0x36)
-    DRONE_PROP_35,  // word 1 bit 24          (no reader)
-    DRONE_PROP_36,  // word 1 bit 25          explosives: ignores smoke (with 0x34)
-    DRONE_PROP_37,  // word 1 bit 26          (no reader)
-    DRONE_PROP_38,  // word 1 bit 27          (no reader)
-    DRONE_PROP_39,  // word 1 bit 28          (no reader)
-    DRONE_PROP_3A,  // word 1 bit 29          explosives: aware of explosives A
-    DRONE_PROP_3B,  // word 1 bit 30          explosives: aware B (then Attack)
-    DRONE_PROP_3C,  // word 1 bit 31          vision: can spot opponents at all
-    DRONE_PROP_3D,  // word 2 bit 0           (no reader)
-    DRONE_PROP_3E,  // word 2 bit 1           (no reader)
-    DRONE_PROP_3F,  // word 2 bit 2           (no reader)
-    DRONE_PROP_40,  // word 2 bit 3           combat: no combat moves (stand and fire)
-    DRONE_PROP_41,  // word 2 bit 4           combat: strafe
-    DRONE_PROP_42,  // word 2 bit 5           combat: side-step
-    DRONE_PROP_43,  // word 2 bit 6           may surrender (close, unarmed-ish, facing Bond)
-    DRONE_PROP_44,  // word 2 bit 7 (2 bits)  2-bit: cover distance cap (cover farther than combatRange*1.5 rejected when set)
-    DRONE_PROP_45,  // word 2 bit 9           (no reader)
-    DRONE_PROP_46,  // word 2 bit 10          idle: look-around/fidget timer (NDrone2_SetIdleTimeOut)
-    DRONE_PROP_47,  // word 2 bit 11          idle: extra idle anim variant (4 instead of 3)
-    DRONE_PROP_48,  // word 2 bit 12          (no reader)
-    DRONE_PROP_49,  // word 2 bit 13          (no reader)
-    DRONE_PROP_4A,  // word 2 bit 14          on sighting: throw grenade (DSTATE_GrenadeThrow)
-    DRONE_PROP_4B,  // word 2 bit 15          Castle Indoors 1: DTYPE 0x16 instead of 0x13
-    DRONE_PROP_4C,  // word 2 bit 16          head-track the opponent/player
-    DRONE_PROP_4D,  // word 2 bit 17          (no reader)
-    DRONE_PROP_4E,  // word 2 bit 18          hostage-tied/run: DTYPE 5, NDrone2_FindRunToPoint
-    DRONE_PROP_4F,  // word 2 bit 19          contagion: alerted by surrendered drone (msg 0x13 / cause bit 4)
-    DRONE_PROP_50,  // word 2 bit 20          NDrone2_NearArmedDrone check
-    DRONE_PROP_51,  // word 2 bit 21          reacts to the player even when not suspicious (<0.66)
-    DRONE_PROP_52,  // word 2 bit 22          first attack: mission-fail label 0x4000033 (PartyGirl: fail reason 0xb)
-    DRONE_PROP_53,  // word 2 bit 23          death: mission fail (0x4000034/33)
-    DRONE_PROP_54,  // word 2 bit 24          death by player: mission fail
-    DRONE_PROP_55,  // word 2 bit 25          seen player: mission fail reason 10
-    DRONE_PROP_56,  // word 2 bit 26          run-to-point: flee to alarm (DTYPE 0xe) / EnemyRunToPoint
-    DRONE_PROP_57,  // word 2 bit 27          on sighting: allowed while in EnemyRunToPoint/99
-    DRONE_PROP_58,  // word 2 bit 28          (no reader)
-    DRONE_PROP_59,  // word 2 bit 29          at goal position: delete self (DSTATE_DeleteMe)
-    DRONE_PROP_5A,  // word 2 bit 30          (no reader)
+    // word 0 bit 0: move: walk aimed any way on a combat route (strafe, back off, anim state 8 ahead); also crouch-walk
+    // (anim state 0xf) as 0x02
+    DRONE_PROP_WALK_AIMED_ANY_WAY,
+    // word 0 bit 1: move: walk aimed (anim state 8); in NDrone2_CanMove8 only with 0x02 clear, in SetCombatMoveAnim
+    // regardless
+    DRONE_PROP_WALK_AIMED,
+    // word 0 bit 2: move: crouch-walk (anim state 0xf); also keeps NDrone2_CanMove8 from walking aimed
+    DRONE_PROP_CROUCH_WALK,
+    // word 0 bit 3: (no reader)
+    DRONE_PROP_03,
+    // word 0 bit 4: (no reader)
+    DRONE_PROP_04,
+    // word 0 bit 5: captain on difficulty 2 (Normal): upgraded skin, x DroneCaptain_Mod_*
+    DRONE_PROP_CAPTAIN_ON_NORMAL,
+    // word 0 bit 6: combat: may back off (anim state 4, 1.8 m clear)
+    DRONE_PROP_BACK_OFF,
+    // word 0 bit 7: (no reader)
+    DRONE_PROP_07,
+    // word 0 bit 8: captain on difficulty 3 (Hard)
+    DRONE_PROP_CAPTAIN_ON_HARD,
+    // word 0 bit 9: captain on difficulty 1 (Easy)
+    DRONE_PROP_CAPTAIN_ON_EASY,
+    // word 0 bit 10: cover: lean (stand/crouch)
+    DRONE_PROP_COVER_LEAN,
+    // word 0 bit 11: cover: lean (stand/crouch), read only together with 0x0a and 0x0d
+    DRONE_PROP_COVER_LEAN_2,
+    // word 0 bit 12: cover: step out
+    DRONE_PROP_COVER_STEP_OUT,
+    // word 0 bit 13: cover: lean (stand/crouch), read only together with 0x0a and 0x0b
+    DRONE_PROP_COVER_LEAN_3,
+    // word 0 bit 14: (no reader)
+    DRONE_PROP_0E,
+    // word 0 bit 15: cover: may use low cover (COVER_LOW nodes) and crouched lean/step-out
+    DRONE_PROP_LOW_COVER,
+    // word 0 bit 16: ambush: DTYPE_Ambush; crouches in cover and waits under it until it sees the opponent or the
+    // player is within 3 m; cleared leaving UnderCoverIdle or AmbushWait, or when shot there
+    DRONE_PROP_AMBUSH,
+    // word 0 bit 17: combat: crouch to aim (anim state 5, opponent >= 6 m)
+    DRONE_PROP_AIM_CROUCH,
+    // word 0 bit 18: (no reader)
+    DRONE_PROP_12,
+    // word 0 bit 19: combat: strafe-dodge (anim state 0x29)
+    DRONE_PROP_STRAFE_DODGE,
+    // word 0 bit 20: doors: door anim (DANIM_USE_DOOR) when alert; drones at a swing door; bots only when alert
+    DRONE_PROP_DOOR_ANIM_ALERT,
+    // word 0 bit 21: doors: door anim (DANIM_USE_DOOR); drones when alert at a swing door; bots always
+    DRONE_PROP_DOOR_ANIM,
+    // word 0 bit 22: doors: door anim (DANIM_USE_DOOR), read exactly as 0x15
+    DRONE_PROP_DOOR_ANIM_2,
+    // word 0 bit 23: firing: keep firing at last-seen position when sight lost (>15 frames)
+    DRONE_PROP_FIRE_UNSEEN,
+    // word 0 bit 24: on sighting: go straight to Attack
+    DRONE_PROP_ATTACK_ON_SIGHT,
+    // word 0 bit 25: on sighting: choose a combat move
+    DRONE_PROP_COMBAT_MOVE_ON_SIGHT,
+    // word 0 bit 26: on sighting: interrogate (FirstSightState: CastleIndoors1, RefRoom) or challenge (TowerA, TowerB);
+    // NDrone2_ReactToOpponentSighted interrogates on any level
+    DRONE_PROP_INTERROGATE_ON_SIGHT,
+    // word 0 bit 27: on sighting: 50/50 attack or combat move
+    DRONE_PROP_ATTACK_OR_MOVE_ON_SIGHT,
+    // word 0 bit 28: stun grenade: resists (plays flinch anim instead of StunGrenadeImpact)
+    DRONE_PROP_RESISTS_STUN_GRENADE,
+    // word 0 bit 29: on init: take nearest AI path of type 8 (NDrone2_AssignAIPath)
+    DRONE_PROP_MISSION_PATH,
+    // word 0 bit 30: (no reader)
+    DRONE_PROP_1E,
+    // word 0 bit 31: hearing: reacts to sounds (Sound_Alertness, msg 0x14)
+    DRONE_PROP_HEARING,
+    // word 1 bit 0: (2 bits)  2-bit: initial alertness level -> {0, 0, 0.66, 1.0}
+    DRONE_PROP_ALERTNESS,
+    // word 1 bit 2: hearing: goes to look at a noise (AlertToPosition then SearchArea) from HeardNoiseSuspect
+    DRONE_PROP_INVESTIGATES_NOISE,
+    // word 1 bit 3: (no reader)
+    DRONE_PROP_22,
+    // word 1 bit 4: (no reader)
+    DRONE_PROP_23,
+    // word 1 bit 5: patrol: init to InitPatrol (with 0x25)
+    DRONE_PROP_PATROL,
+    // word 1 bit 6: patrol: as 0x24, and walks it alert (anims 0x35/0x21, quicker look-rounds) at alertness >= 0.66
+    DRONE_PROP_ALERT_PATROL,
+    // word 1 bit 7: contagion: read only in AlertedByWhatItKnows with cause bit 8, where its case also needs 0x27 and
+    // cause bit 2 (which alert on their own): no effect
+    DRONE_PROP_26,
+    // word 1 bit 8: contagion: alerted by drone-shot (msg 0x12 / cause bit 2)
+    DRONE_PROP_ALERTED_BY_DRONE_SHOT,
+    // word 1 bit 9: contagion: alerted by opponent-sighted alarm (msg 0x11 / cause bit 1)
+    DRONE_PROP_ALERTED_BY_SIGHTING,
+    // word 1 bit 10: contagion: alerted by dead body (msg 0x15 / cause bit 8)
+    DRONE_PROP_ALERTED_BY_DEAD_BODY,
+    // word 1 bit 11: (no reader)
+    DRONE_PROP_2A,
+    // word 1 bit 12: (no reader)
+    DRONE_PROP_2B,
+    // word 1 bit 13: (no reader)
+    DRONE_PROP_2C,
+    // word 1 bit 14: (no reader)
+    DRONE_PROP_2D,
+    // word 1 bit 15: combat: roll (anim state check)
+    DRONE_PROP_ROLL,
+    // word 1 bit 16: (no reader)
+    DRONE_PROP_2F,
+    // word 1 bit 17: (3 bits) cover: uses cover at all (NDrone2_CoverAvailable)
+    DRONE_PROP_USES_COVER,
+    // word 1 bit 20: death: broadcasts on death unless head-shot (DSTATE_Dead)
+    DRONE_PROP_DEAD_BODY_ALERTS,
+    // word 1 bit 21: when hurt: broadcast hurt alert 0x12 (DroneFunc_SendHurtMessage)
+    DRONE_PROP_HURT_ALERTS,
+    // word 1 bit 22: on sighting: broadcast 0x11 alarm to others (20 m)
+    DRONE_PROP_SIGHTING_ALERTS,
+    // word 1 bit 23: smoke: runs from a smoke grenade or its cloud (unless 0x36) instead of being smoked out by
+    // DRONE_MSG_ImpactSmoke
+    DRONE_PROP_RUNS_FROM_SMOKE,
+    // word 1 bit 24: (no reader)
+    DRONE_PROP_35,
+    // word 1 bit 25: smoke: ignores it (not smoked out, does not run from it, overrides 0x34); also a blocked creep
+    // step does not set bunchFlags (AINetwork.cpp BEHAVIOUR_IGNORE_BLOCKED_CREEP)
+    DRONE_PROP_36,
+    // word 1 bit 26: (no reader)
+    DRONE_PROP_37,
+    // word 1 bit 27: (no reader)
+    DRONE_PROP_38,
+    // word 1 bit 28: (no reader)
+    DRONE_PROP_39,
+    // word 1 bit 29: explosives: runs from explosives it sees (aware points type 2, explosive bullets), then hides
+    DRONE_PROP_RUNS_FROM_EXPLOSIVES,
+    // word 1 bit 30: explosives: as 0x3a, then attacks (DSTATE_Attack) after the grenade groups instead of hiding
+    DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS,
+    // word 1 bit 31: vision: acts on seeing its opponent (OpponentSighted, attack on sight, armed-person checks); the
+    // sight itself is registered without it
+    DRONE_PROP_REACTS_TO_SIGHT,
+    // word 2 bit 0: (no reader)
+    DRONE_PROP_3D,
+    // word 2 bit 1: (no reader)
+    DRONE_PROP_3E,
+    // word 2 bit 2: (no reader)
+    DRONE_PROP_3F,
+    // word 2 bit 3: stays put (as DRONE_FLAG_FROZEN): CombatNoMove, no combat moves, cover runs or backing off, only
+    // looks round at a noise
+    DRONE_PROP_STAYS_PUT,
+    // word 2 bit 4: combat: strafe
+    DRONE_PROP_STRAFE,
+    // word 2 bit 5: combat: side-step
+    DRONE_PROP_SIDE_STEP,
+    // word 2 bit 6: may surrender (not yet alert; armed opponent within 2 m behind it, in sight, facing it)
+    DRONE_PROP_MAY_SURRENDER,
+    // word 2 bit 7: 2-bit: cover distance cap (cover farther from the opponent than combatRanges[4] * 1.5 rejected when
+    // set)
+    DRONE_PROP_NEAR_COVER_ONLY,
+    // word 2 bit 9: (no reader)
+    DRONE_PROP_45,
+    // word 2 bit 10: idle: look-around/fidget timer (NDrone2_SetIdleTimeOut)
+    DRONE_PROP_LOOKS_AROUND,
+    // word 2 bit 11: idle: in DSTATE_PartyGirl, one of four stand idle anims (otherwise the plain one)
+    DRONE_PROP_PARTY_IDLE_ANIMS,
+    // word 2 bit 12: (no reader)
+    DRONE_PROP_48,
+    // word 2 bit 13: (no reader)
+    DRONE_PROP_49,
+    // word 2 bit 14: on sighting: throw grenade (DSTATE_GrenadeThrow)
+    DRONE_PROP_GRENADE_ON_SIGHT,
+    // word 2 bit 15: Castle Indoors 1: DTYPE 0x16 instead of 0x13
+    DRONE_PROP_DOOR_GUARD,
+    // word 2 bit 16: head-track the opponent/player
+    DRONE_PROP_HEAD_TRACK,
+    // word 2 bit 17: (no reader)
+    DRONE_PROP_4D,
+    // word 2 bit 18: hostage-tied/run: DTYPE 5, NDrone2_FindRunToPoint
+    DRONE_PROP_HOSTAGE,
+    // word 2 bit 19: contagion: alerted by surrendered drone (msg 0x13 / cause bit 4)
+    DRONE_PROP_ALERTED_BY_SURRENDER,
+    // word 2 bit 20: ally: sees armed enemy drones within 10 m and runs and hides (NDrone2_NearArmedDrone check,
+    // AllyLead states)
+    DRONE_PROP_HIDES_FROM_ARMED_DRONES,
+    // word 2 bit 21: reacts to the player even when not suspicious (< 0.66); also needed by NDrone2_NearArmedBond
+    DRONE_PROP_ALWAYS_REACTS_TO_PLAYER,
+    // word 2 bit 22: first attack: mission-fail label 0x4000033 (PartyGirl: fail reason 0xb)
+    DRONE_PROP_ALERT_FAILS_MISSION,
+    // word 2 bit 23: death: mission fail (0x4000034/33)
+    DRONE_PROP_DEATH_FAILS_MISSION,
+    // word 2 bit 24: death by player: mission fail
+    DRONE_PROP_PLAYER_KILL_FAILS_MISSION,
+    // word 2 bit 25: seen player: mission fail reason 10
+    DRONE_PROP_SIGHTING_FAILS_MISSION,
+    // word 2 bit 26: run-to-point: flee to alarm (DTYPE 0xe) / EnemyRunToPoint
+    DRONE_PROP_RUNS_TO_ALARM,
+    // word 2 bit 27: on sighting: a RunToPoint/AlarmRaiser drone still reacts while in EnemyRunToPoint or
+    // GoToGoalPosition
+    DRONE_PROP_REACTS_WHILE_RUNNING,
+    // word 2 bit 28: (no reader)
+    DRONE_PROP_58,
+    // word 2 bit 29: at goal position: delete self (DSTATE_DeleteMe)
+    DRONE_PROP_DELETE_AT_GOAL,
+    // word 2 bit 30: (no reader)
+    DRONE_PROP_5A,
 } DRONE_PROP;
 
 #endif // DRONETABLES_H_

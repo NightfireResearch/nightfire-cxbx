@@ -46,17 +46,6 @@ HASHCODE StoneDebris[4] = {
 constexpr float kOneFifteenth = 0.06666667f;
 static_assert(std::bit_cast<uint32_t>(kOneFifteenth) == 0x3d888889, "the original's constant at 0x0015d434");
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // The hit a player killed in multiplayer, or a mine, takes from who set the explosion off
 #define EXPLODE_KILL_DIST 9999.0f
 

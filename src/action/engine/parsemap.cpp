@@ -28,6 +28,7 @@
 
 #include <string.h>
 #include "../sound/Sound.h"
+#include "../sound/SFX.h"           // SFX_ENVIRONMENT_UNDERWATER
 
 // XBE_GLOBAL(0x00274c80, 0x4)
 celglist_tag *pCurrCelList;
@@ -1049,7 +1050,7 @@ void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
             cel->position.y = 0.0f;
             cel->position.z = 0.0f;
             cel->musicEvent = (uchar)keys->keys[4];
-            cel->soundEnvironment = (short)0x9898;
+            cel->reverb = SFX_ENVIRONMENT_UNDERWATER;
             cel->ambientR[0] = (uchar)keys->keys[0];
             cel->ambientG[0] = (uchar)keys->keys[1];
             cel->ambientB[0] = (uchar)keys->keys[2];
@@ -1070,7 +1071,7 @@ void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
             cel->ambientG[1] = (uchar)keys->keys[7];
             cel->ambientB[1] = (uchar)keys->keys[8];
             cel->shearHeight = -500.0f;
-            cel->soundEnvironment = (short)keys->keys[9];
+            cel->reverb = (short)keys->keys[9];
             break;
         default:
             return;

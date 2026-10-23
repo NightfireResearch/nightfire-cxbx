@@ -51,12 +51,8 @@ uint32_t switch_BLIND_DRONES;
 
 constexpr float kCollisionRadius = 0.4f;    // DroneFunc_ClampPosToCollisionCylinder
 constexpr float kViewMargin = 0.3926991f;   // pi / 8, beyond viewAngle
-constexpr float kHalfPi = 1.5707964f;
-constexpr float kPi = 3.1415927f;
 static_assert(std::bit_cast<uint32_t>(kCollisionRadius) == 0x3ecccccd, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kViewMargin) == 0x3ec90fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.7f) == 0x3f333333, "not the original's constant");
 
 // The original's compare-and-FCHS: -0 keeps its sign, and a NaN is negated too
@@ -263,7 +259,7 @@ double DroneVision_OpponentVisibility(Drone_tag *drone) {
             return 0.0f;
         }
         double edge = X87NaNs(margin / drone->viewAngle, margin, drone->viewAngle);
-        visibility = (double)(visibility * FSin(edge * kHalfPi));
+        visibility = (double)(visibility * FSin(edge * HALF_PI));
     }
     float scale = 1.0f;
     if ((drone->flags2 == 0 || drone->alertness < 1.0f) && drone->opponentVisibilityScale != 1.0f)
@@ -376,8 +372,8 @@ void DroneVision_LogSeenOpponent(Drone_tag *drone) {
 }
 
 // The drone registers its opponent, after the reaction time outside multiplayer: DRONE_SIGHT_SEES_OPPONENT, when and
-// where it was seen. The first sighting (with DRONE_PROP_3C) sends the drone DRONE_MSG_OpponentSighted; a
-// DTYPE_HostageKiller also DRONE_MSG_AttackNow 8 seconds later and the music; with DRONE_PROP_55 the mission fails
+// where it was seen. The first sighting (with DRONE_PROP_REACTS_TO_SIGHT) sends the drone DRONE_MSG_OpponentSighted; a
+// DTYPE_HostageKiller also DRONE_MSG_AttackNow 8 seconds later and the music; with DRONE_PROP_SIGHTING_FAILS_MISSION the mission fails
 // (reason 10). A bot's second frame of sight chooses its weapon and range.
 void DroneVision_HaveOpponentSight(Drone_tag *drone) {
     if (drone->opponent == NULL)
@@ -403,7 +399,7 @@ void DroneVision_HaveOpponentSight(Drone_tag *drone) {
     drone->opponentSeenFrame = now;
     Vec_Copy(&drone->opponent->position, &drone->opponentSeenPos);
     Vec_Copy(&drone->opponent->rotation, &drone->opponentSeenRot);
-    if ((drone->sightFlags & DRONE_SIGHT_REACTED) || !behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour))
+    if ((drone->sightFlags & DRONE_SIGHT_REACTED) || !behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, drone->currentBehaviour))
         return;
     drone->sightFlags |= DRONE_SIGHT_REACTED;
     drone->firstSeenFrame = now;
@@ -412,7 +408,7 @@ void DroneVision_HaveOpponentSight(Drone_tag *drone) {
         Drone_SM_SendMsgSelf(DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8, 0, &dcv);
         Music_Event(0xf, 1);
     }
-    if (behaviour_util_getProperty(DRONE_PROP_55, drone->currentBehaviour))
+    if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_FAILS_MISSION, drone->currentBehaviour))
         DroneFunc_SetMissionFailReason(drone, 10);
 }
 
@@ -466,23 +462,23 @@ bool DroneVision_DroneCanSeeDrone(Drone_tag *drone, Drone_tag *other, char *inVi
 static bool AlertedByWhatItKnows(Drone_tag *drone, uint known) {
     uint *behaviour = drone->currentBehaviour;
     if (known & 8) {
-        if ((behaviour_util_getProperty(DRONE_PROP_26, behaviour) || behaviour_util_getProperty(DRONE_PROP_29, behaviour)) &&
-            (known & 2) && behaviour_util_getProperty(DRONE_PROP_27, behaviour))
+        if ((behaviour_util_getProperty(DRONE_PROP_26, behaviour) || behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, behaviour)) &&
+            (known & 2) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
             return true;
-        if (behaviour_util_getProperty(DRONE_PROP_29, behaviour))
+        if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, behaviour))
             return true;
     }
     if (known & 0x10)
         return true;
-    if ((known & 2) && behaviour_util_getProperty(DRONE_PROP_27, behaviour))
+    if ((known & 2) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
         return true;
-    if ((known & 4) && behaviour_util_getProperty(DRONE_PROP_4F, behaviour))
+    if ((known & 4) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SURRENDER, behaviour))
         return true;
-    if ((known & 1) && behaviour_util_getProperty(DRONE_PROP_28, behaviour) && (known & 0x20))
+    if ((known & 1) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) && (known & 0x20))
         return true;
-    if ((known & 0x10000) && behaviour_util_getProperty(DRONE_PROP_28, behaviour) && (known & 0x200000))
+    if ((known & 0x10000) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) && (known & 0x200000))
         return true;
-    return (known & 1) && behaviour_util_getProperty(DRONE_PROP_28, behaviour);
+    return (known & 1) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour);
 }
 
 // Whether the alerter alerts the drone. The drone must be open to it (flag 0x2000, not an ally or a hostage, alive,
@@ -521,13 +517,13 @@ bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
         return false;
 
     if (level >= HT_Level_PowerStationA1 && level <= HT_Level_PowerStationA2 &&
-        (drone->skinClass == 6 || drone->skinClass == 5)) {
+        (drone->skinClass == SKINCLASS_ELITE || drone->skinClass == SKINCLASS_SNIPER)) {
         if (!Drone_IsTalking(drone))
             NDrone2_SpeechSFXd(drone, 0xd0, 0, 0, 0);
     } else {
         if (level == HT_Level_CastleIndoors1 && NPCGlobals.unknown1392) {
             drone->viewRange = 20.0f;
-            drone->viewAngle = kPi;
+            drone->viewAngle = PI;
         }
         if (!AlertedByWhatItKnows(drone, alerter->flags2))
             return false;

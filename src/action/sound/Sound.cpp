@@ -11,6 +11,7 @@
 #include "../engine/viewer.h"
 #include "../game.h"
 #include "../game/mp/multiplayer.h"
+#include "../math/X87Ops.h"
 
 #include <math.h>
 
@@ -104,17 +105,6 @@ _VECTOR GlobalListenerPos;
 #define NUM_DYNAMIC_SOUNDS 0x100
 // The view a cut scene's camera uses
 #define SCRIPT_VIEWER 4
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // AUTOINJECT
 void Sound_Init(void) {
@@ -289,8 +279,8 @@ void Sound_UpdateListeners(void) {
     if (view != NULL) {
         cel_tag *cel = view->someCel;
         if (cel != NULL) {
-            bool outdoors = (cel->bitsFromPlacementTag & CEL_NO_SKY) || cel->soundEnvironment >= 0x14;
-            SFXSetEnvironment(cel->soundEnvironment, outdoors);
+            bool outdoors = (cel->bitsFromPlacementTag & CEL_NO_SKY) || cel->reverb >= 0x14;
+            SFXSetEnvironment(cel->reverb, outdoors);
             HandleMapSoundAllocation();
         }
         Sound_UpdateSounds((_VECTOR *)&view->viewMatrix.m[12]);

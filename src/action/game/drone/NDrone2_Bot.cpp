@@ -56,8 +56,6 @@
 
 // Drone_tag.flags: makes no combat moves
 #define DRONE_FLAG_FROZEN 0x10
-// BOT_vars_t.flags: recovering from a hit (no route to the opponent)
-#define BOT_FLAG_RECOVERING 2
 
 // Two messages the attack states end on (meaning unknown)
 #define DRONE_MSG_1B 0x1b
@@ -77,27 +75,10 @@ constexpr float kGuardRangeSq = 20.25f;        // 4.5 m: a guard follows its fri
 constexpr float kAlertStopRange = 8.0f;        // past the alert point by this, it stops running
 constexpr float kObjectiveRadius = 3.0f;       // within this of the protection / demolition object's box
 constexpr float kDoorAlertness = 0.66f;
-constexpr float kPi = 3.1415927f;
 static_assert(std::bit_cast<uint32_t>(kCoverSlide) == 0x3da3d70a, "not the original's 0.08");
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's pi");
 constexpr float kAttackRouteRadius = 2.0f;
-constexpr float kQuarterPi = 0.7853982f;
-constexpr float kHalfPi = 1.5707964f;
-static_assert(std::bit_cast<uint32_t>(kQuarterPi) == 0x3f490fdb, "not the original's pi/4");
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb, "not the original's pi/2");
 static_assert(std::bit_cast<uint32_t>(-0.04f) == 0xbd23d70a, "not the original's -0.04");
 static_assert(std::bit_cast<uint32_t>(-0.1f) == 0xbdcccccd, "not the original's -0.1");
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
     dcv->drone->timerA.dueFrame = dueFrame;
@@ -139,7 +120,7 @@ constexpr float kCloseCombat = 3.0f;        // a random move within this
 
 // Whether the opponent is within 1.5 m and a quarter turn of the bot's facing
 static bool BotCanStrike(Drone_tag *drone) {
-    return drone->distanceToTarget <= kUnarmedRange && fabsf(drone->opponentBearing) < kHalfPi;
+    return drone->distanceToTarget <= kUnarmedRange && fabsf(drone->opponentBearing) < HALF_PI;
 }
 
 // The bot's state as a state class has it: alerts the bot is not attentive for (dying, initialising, attacking...)
@@ -684,7 +665,7 @@ bool NDrone2_DSTATE_BotDeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_t
 
 // With property 0x31, a drone that died in view (not by a head shot) tells those around it, and again each second
 static void BotDeadAlert(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_31, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_DEAD_BODY_ALERTS, dcv->drone->currentBehaviour) == 0)
         return;
     if (!dcv->drone->headShot)
         NDrone2_DroneAlertToObject(dcv, DEATH_ALERT_MSG, dcv->gameObj, 0.0f, 0.0f, 1.0f);
@@ -930,7 +911,7 @@ void NDrone2_SetRunAnim(DCVars_tag *dcv, uint anim, char fire) {
     if ((ushort)dcv->drone->animState != anim)
         DroneAnim_CallAnim(anim, 0, 0, 0, 0.0f, 0, dcv);
     if (fire == 0 ||
-        ((dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT) && dcv->drone->opponentBearing < kQuarterPi))
+        ((dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT) && dcv->drone->opponentBearing < QUARTER_PI))
         dcv->drone->firing = fire;
 }
 
@@ -1005,7 +986,7 @@ bool NDrone2_DSTATE_BotAttack(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         if (!NDrone2_HasOpponent(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackNoOpponent, 0);
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0 &&
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             !(dcv->drone->unseenFrames <= 15 && DroneFunc_InRangeOfTarget(dcv, dcv->drone->combatRanges[1]))) {
             uint route = BotRouteToOpponent(dcv, drone);
             if (!BOTSTATE_validateRoute(dcv, route))
@@ -1107,7 +1088,7 @@ bool NDrone2_DSTATE_BotAttackFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
             return BotCombatMove(dcv);
         }
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return true;
         if (dcv->drone->distanceToTarget <= dcv->drone->combatRanges[0] && NDrone2_CanBackoff(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackBackoff, 0);
@@ -1217,7 +1198,7 @@ bool NDrone2_DSTATE_BotAttackBackoff(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
     case DRONE_MSG_Enter: {
         if (!NDrone2_CanBackoff(dcv)) {
             Drone_tag *self = dcv->drone;
-            if (fabsf(self->opponentBearing) < kHalfPi) {
+            if (fabsf(self->opponentBearing) < HALF_PI) {
                 BOT_vars_t *bot = self->botVars;
                 if ((bot->stats.traitFlags & BOT_TRAIT_FISTS_UP_CLOSE) || bot->weapon == 1 || Rand_Rand(8) == 7)
                     return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackUnarmed, 0);
@@ -1278,7 +1259,7 @@ bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
     case DRONE_MSG_Update: {
         NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, -0.1f, 0);
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0 &&
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             dcv->drone->distanceToTarget <= dcv->drone->combatRanges[0] && NDrone2_CanBackoff(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackBackoff, 0);
         if (!NDrone2_HasOpponent(dcv))
@@ -1289,7 +1270,7 @@ bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         if (move != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)move, 0);
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0) {
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0) {
             if (Rand_Rand(3) != 0 && dcv->drone->unseenFrames <= 15)
                 return true;
             if (!DroneAnim_CanDoAnimState(dcv, DANIM_AIM_CROUCH, 0))
@@ -1491,7 +1472,7 @@ bool NDrone2_DSTATE_BotCoverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
     case DRONE_MSG_Update:
         NDrone2_SlideToPosition(&dcv->drone->aiPoint.pos, kCoverSlide, 0, dcv);
-        NDrone2_SetAngleToCover(dcv, kPi);
+        NDrone2_SetAngleToCover(dcv, PI);
         return true;
     case DRONE_MSG_ImpactPunch:
     case DRONE_MSG_ImpactBullet:
@@ -1529,7 +1510,7 @@ bool NDrone2_DSTATE_BotCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
     case DRONE_MSG_Update:
         NDrone2_SlideToPosition(&dcv->drone->aiPoint.pos, kCoverSlide, 0, dcv);
-        NDrone2_SetAngleToCover(dcv, kPi);
+        NDrone2_SetAngleToCover(dcv, PI);
         if (!BotCoverStillOK(dcv, 0) || Vec_Dist2D(&dcv->gameObj->position, &dcv->drone->aiPoint.pos) > kCoverDrift)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotCoverLeaveNow, 0);
         return true;
@@ -1877,9 +1858,9 @@ bool NDrone2_DSTATE_BotDoorOpen(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->nodeReturnState, 0);
         Drone_tag *self = dcv->drone;
         bool alert = self->baseAlertness1 >= kDoorAlertness || self->alertness >= kDoorAlertness;
-        if ((alert && behaviour_util_getProperty(DRONE_PROP_14, self->currentBehaviour) != 0) ||
-            behaviour_util_getProperty(DRONE_PROP_15, dcv->drone->currentBehaviour) != 0 ||
-            behaviour_util_getProperty(DRONE_PROP_16, dcv->drone->currentBehaviour) != 0) {
+        if ((alert && behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM_ALERT, self->currentBehaviour) != 0) ||
+            behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM, dcv->drone->currentBehaviour) != 0 ||
+            behaviour_util_getProperty(DRONE_PROP_DOOR_ANIM_2, dcv->drone->currentBehaviour) != 0) {
             DroneAnim_CallAnim(DANIM_USE_DOOR, 0, 0, 0, 0.0f, 0, dcv);
         } else {
             if (dcv->drone->alertness < 1.0f) {

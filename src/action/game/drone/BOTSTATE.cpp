@@ -27,8 +27,6 @@
 // The bots' unarmed attack anim state (our name)
 #define DANIM_UNARMED_ATTACK 0x3d
 
-// BOT_vars_t.flags: recovering from a hit (BOTSTATE_startRecovery)
-#define BOT_RECOVERING 2
 
 // The bot message telling a bot to change weapon (BOTSTATE_combatWeaponChangeChoice)
 #define BOT_MSG_CHANGE_WEAPON 0x42
@@ -36,17 +34,6 @@
 // A recovery stat in frames before a recovering bot sees again
 constexpr float RecoveryScale = -0.6666667f;
 static_assert(std::bit_cast<uint32_t>(RecoveryScale) == 0xbf2aaaab, "not the original's -2/3");
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // Whether a bot other than playerIndex has obj as its objective goal. Every bot slot is asked, whatever its team;
 // a player on no team gets false.
@@ -1068,11 +1055,11 @@ void BOTSTATE_setPickupVisitTime(Drone_tag *drone, MP_PICKUP *pickup) {
 // AUTOINJECT
 void BOTSTATE_startRecovery(DCVars_tag *dc) {
     Drone_tag *drone = dc->drone;
-    if (drone->botVars->flags & BOT_RECOVERING)
+    if (drone->botVars->flags & BOT_FLAG_RECOVERING)
         return;
     int frames = Ftol((double)drone->recover * RecoveryScale);
     drone->botVars->recoveryEndFrame = GameState.NumFramesUnpaused - frames;
-    drone->botVars->flags |= BOT_RECOVERING;
+    drone->botVars->flags |= BOT_FLAG_RECOVERING;
 }
 
 // Whether obj (-1 for the bot's opponent) is the object the bot's side is to destroy: the protection object for

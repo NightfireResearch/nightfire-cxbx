@@ -6,25 +6,22 @@
 #include "DroneTracking.h"
 #include "BOT.h"
 #include "Behaviour.h"                 // behaviour_util_getProperty
-#include "DroneTables.h"               // DRONE_PROP_4C
+#include "DroneTables.h"               // DRONE_PROP_HEAD_TRACK
 #include "../../game.h"                // GameState
 #include "../../engine/Anim.h"         // AnimObjectIsAiming, AnimObjectIsHeadTracking, AnimObjectSetAiming
 #include "../../math/math.h"
 #include "../../util/Random.h"
 #include "../mp/multiplayer.h"         // MPSettings
+#include "../../math/X87Ops.h"
 
 #include <math.h>
 #include <stdint.h>
 
 #pragma fp_contract(off)
 
-// The original, called by address: it leaves the distance unrounded in ST0
-
 // Drone_tag.flags: attacking (as DroneVision_Alerts.h has it)
 #define DRONE_FLAG_ATTACK_MODE 0x4000000
 
-// BOT_vars_t.flags
-#define BOT_RECOVERING 2
 
 // Drone_tag.aimMode
 #define AIM_ALWAYS 2
@@ -35,21 +32,9 @@
 #define HEAD_MODE_WIDE 2
 
 // The skin class whose head follows only the player
-#define SKINCLASS_11 0x11
 
 // The bone AnimObjectSetAiming is handed when the aiming stops
 #define AIM_BONE 5
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // Whether the drone's anim aims: the AIM_ALWAYS rows, and the AIM_FROM_HALF_WAY rows once the script is half way
 // through (or, outside multiplayer, as the anim's events say). Never without an anim script, or for a recovering bot.
@@ -61,7 +46,7 @@ uchar NDrone2_AimTest(DCVars_tag *dcv) {
     if (script == NULL)
         return 0;
     if (MPSettings.dronesAreBots) {
-        if (drone->botVars->flags & BOT_RECOVERING)
+        if (drone->botVars->flags & BOT_FLAG_RECOVERING)
             return 0;
     } else if (drone->aimMode == AIM_FROM_HALF_WAY && drone->aimByEvent) {
         return drone->aimEvent;
@@ -99,12 +84,12 @@ void NDrone2_DoHeadTracking(char on, obj_tag *target, DCVars_tag *dcv) {
     obj_tag *obj = dcv->gameObj;
     Drone_tag *drone = dcv->drone;
     float speed = drone->alertness > 0.66f ? 0.14f : 0.07f;
-    if (!on || behaviour_util_getProperty(DRONE_PROP_4C, drone->currentBehaviour) == 0) {
+    if (!on || behaviour_util_getProperty(DRONE_PROP_HEAD_TRACK, drone->currentBehaviour) == 0) {
         if (AnimObjectIsHeadTracking(obj))
             NDrone2_HeadTrackObj(NULL, (Rand_Rand(10) + 5) * FRAME_RATE_INT, speed, dcv);
         return;
     }
-    if (drone->skinClass == SKINCLASS_11 && target != NDrone2_Player())
+    if (drone->skinClass == SKINCLASS_CASTLE_GUARD && target != NDrone2_Player())
         return;
     if (AnimObjectIsHeadTracking(obj) && drone->headTarget == target)
         return;
@@ -115,7 +100,7 @@ void NDrone2_DoHeadTracking(char on, obj_tag *target, DCVars_tag *dcv) {
 // head's target is kept, 1 time in 4, rather than counted. Inline in their reading (our name).
 // FUNC_AT(0x0003a780)
 obj_tag* NDrone2_HeadTrackNearest(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_4C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_HEAD_TRACK, dcv->drone->currentBehaviour) == 0)
         return NULL;
     Drone_tag *nearest = NULL;
     bool keep = false;

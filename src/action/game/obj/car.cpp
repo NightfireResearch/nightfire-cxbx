@@ -34,7 +34,6 @@
 #define HELI_MISSILE_WEAPON 46   // AT-600 Scorpion, Heatseeker
 
 #define PI     3.1415927f
-#define TWO_PI 6.2831855f
 
 // XBE_GLOBAL(0x001dc980, 0x20)
 static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
@@ -42,17 +41,6 @@ static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
 static uint16_t NumTanks;
 // XBE_GLOBAL(0x001dc7a0, 0x1e0)
 static _MATRIX TankSpawns[8];
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // AUTOINJECT
 void Car_Reset(void) {

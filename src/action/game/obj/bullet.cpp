@@ -68,17 +68,6 @@ enum {
     WEAPON_BASE_BEAM_6E = 0x6e,
 };
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 static bool Bullet_IsBeamWeapon(short base) {
     return base == WEAPON_BASE_BEAM_33 || base == WEAPON_BASE_BEAM_6A || base == WEAPON_BASE_BEAM_6E;
 }

@@ -456,12 +456,12 @@ bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
 bool NDrone2_NearArmedPerson(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (GameState.CurrentLevelHashcode >= HT_Level_TowerA && GameState.CurrentLevelHashcode <= HT_Level_TowerB)
-        return behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour) != 0 &&
+        return behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, drone->currentBehaviour) != 0 &&
                (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT);
 
-    if (drone->skinClass == 13)
+    if (drone->skinClass == SKINCLASS_PARTY_GIRL)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_3C, drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, drone->currentBehaviour) == 0)
         return false;
     if (!(dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT))
         return false;
@@ -482,13 +482,10 @@ bool NDrone2_BondWithinAngle(DCVars_tag *dcv, float angle) {
     return !(angle < fabs(turn));
 }
 
-constexpr float kDegToRad = 0.017453292f;
-static_assert(std::bit_cast<uint32_t>(kDegToRad) == 0x3c8efa35, "not the original's constant");
-
 // Whether the opponent faces the drone to within `degrees` (Drone_tag.opponentFacing)
 // AUTOINJECT
 bool NDrone2_BondIsFacingMe(DCVars_tag *dcv, float degrees) {
-    return fabsf(dcv->drone->opponentFacing) < (double)degrees * kDegToRad;
+    return fabsf(dcv->drone->opponentFacing) < (double)degrees * DEG_TO_RAD;
 }
 
 // Turns the drone to face obj, plus `offset` (angleToSomePoint). Unless forced, not while its turning is held:
@@ -513,7 +510,7 @@ void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char for
 // Only for drones with head tracking (property 0x4c).
 // AUTOINJECT
 bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_4C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_HEAD_TRACK, dcv->drone->currentBehaviour) == 0)
         return false;
     AnimObjectSetHeadTracking(dcv->gameObj, obj, 3.0f, 0.14f, 1, 1, HEAD_BONE);
     dcv->gameObj->animState->animObj.headTrackSpeed = speed == 0.0f ? 0.07f : speed;
@@ -555,9 +552,9 @@ bool DroneFunc_DoForcedAttack(DCVars_tag *dcv) {
 // AUTOINJECT
 void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short nextState) {
     Drone_tag *drone = dcv->drone;
-    if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) == 0)
         return;
 
     switch (drone->sm.curState) {
@@ -596,12 +593,12 @@ void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short next
             case 0x2d:
             case 0x2e:
             case 0x2f:
-                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
-                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) == 0)
                     return;
                 drone->explosiveRadius = 4.0f;
                 drone->explosiveTimeout = GameState.NumFramesUnpaused + FRAME_RATE_INT * 2;
-                if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) != 0)
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) != 0)
                     drone->explosiveState = DSTATE_Attack;
                 break;
             case 0x34:
@@ -612,27 +609,27 @@ void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short next
             case 0x3f:
             case 0x40:
             case 0x6c: {
-                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
-                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) == 0)
                     return;
                 drone->explosiveRadius = 14.0f;
                 // Two seconds after the fuse runs out, on the x87 and truncated (__ftol2)
                 double frames = (double)(uint)(FRAME_RATE_INT * 2) + bullet->fuseTimer;
                 drone->explosiveTimeout = (uint)(long long)(frames + (double)(uint)GameState.NumFramesUnpaused);
-                if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) != 0)
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) != 0)
                     drone->explosiveState = DSTATE_Attack;
                 break;
             }
             case 0x36:
-                if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 ||
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, dcv->drone->currentBehaviour) == 0 ||
                     behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour) != 0)
                     return;
                 drone->explosiveRadius = 5.0f;
                 drone->explosiveState = nextState;
                 break;
             case 0x37:
-                if (behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0 &&
-                    behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0)
+                if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, dcv->drone->currentBehaviour) == 0 &&
+                    behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) == 0)
                     return;
                 drone->explosiveRadius = 10.0f;
                 drone->explosiveState = nextState;
@@ -641,7 +638,7 @@ void DroneFunc_ConsiderExplosive(DCVars_tag *dcv, obj_tag *explosive, short next
         }
     } else if (explosive->objectType == OBJECTTYPE_OCCLUDE) {
         // Type 0x2a is treated as weapon 0x36 is
-        if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) == 0 ||
+        if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, dcv->drone->currentBehaviour) == 0 ||
             behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour) != 0)
             return;
         drone->explosiveRadius = 5.0f;
@@ -670,11 +667,11 @@ void DroneFunc_HandleExplosives(DCVars_tag *dcv) {
         DroneAwarePoint *point = &NPCGlobals.awarePoints[i];
         if (point->type == 1) {
             // Asked, and the answers not used
-            if (behaviour_util_getProperty(DRONE_PROP_34, dcv->drone->currentBehaviour) != 0)
+            if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, dcv->drone->currentBehaviour) != 0)
                 behaviour_util_getProperty(DRONE_PROP_36, dcv->drone->currentBehaviour);
         } else if (point->type == 2) {
-            if (behaviour_util_getProperty(DRONE_PROP_3B, dcv->drone->currentBehaviour) == 0 &&
-                behaviour_util_getProperty(DRONE_PROP_3A, dcv->drone->currentBehaviour) == 0)
+            if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, dcv->drone->currentBehaviour) == 0 &&
+                behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, dcv->drone->currentBehaviour) == 0)
                 continue;
             // The radius is squared on the x87, unrounded
             if (!(Vec_SqDist3D(&gameObj->position, &point->pos) < (double)point->radius * point->radius))

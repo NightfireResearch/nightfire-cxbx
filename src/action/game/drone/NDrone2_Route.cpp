@@ -24,20 +24,20 @@
 // Path flag 0x10 (AIPath_tag.flags): a patrol from its first node takes the first link, not the second
 #define AIPATH_FIRST_LINK 0x10
 
-// The anim states NDrone2_UpdatePatrolRoute plays for an alert patroller (DRONE_PROP_25): walking on, and otherwise
+// The anim states NDrone2_UpdatePatrolRoute plays for an alert patroller (DRONE_PROP_ALERT_PATROL): walking on, and otherwise
 #define DANIM_21 0x21
 #define DANIM_35 0x35
 
 // AI point ids (DroneAIPoint_tag.id) the drones look for
 #define AIPOINT_ENEMY 0             // side 1
-#define AIPOINT_RUN 1               // DRONE_PROP_4E, and a civilian with no point of its own
+#define AIPOINT_RUN 1               // DRONE_PROP_HOSTAGE, and a civilian with no point of its own
 #define AIPOINT_CIVILIAN 2          // side 3
-#define AIPOINT_ALARM 8             // DRONE_PROP_56; the one nearest a mission path's end
+#define AIPOINT_ALARM 8             // DRONE_PROP_RUNS_TO_ALARM; the one nearest a mission path's end
 #define AIPOINT_ALLY 9              // side 2
 
 constexpr float kNodeReach = 0.3f;          // NDrone2_AssignAIPath: how near in plan the path's node must be
 constexpr float kPastEnd = 0.5f;            // how far a mission route goes on past its last node, and its arrive radius
-constexpr float kAlert = 0.66f;             // an alertness at which a patroller with DRONE_PROP_25 is alert
+constexpr float kAlert = 0.66f;             // an alertness at which a patroller with DRONE_PROP_ALERT_PATROL is alert
 constexpr float kFarthestPoint = 255.0f;    // an emitter's byte for a node it did not reach
 static_assert(std::bit_cast<uint32_t>(kNodeReach) == 0x3e99999a, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kAlert) == 0x3f28f5c3, "not the original's constant");
@@ -160,7 +160,7 @@ bool NDrone2_AssignAIPath(DCVars_tag *dcv, uint pathType) {
     return true;
 }
 
-// Follows route2 and picks the anim: standing for status 7, else walking, or with DRONE_PROP_25 when alert, anim 0x35
+// Follows route2 and picks the anim: standing for status 7, else walking, or with DRONE_PROP_ALERT_PATROL when alert, anim 0x35
 // on a full route and 0x21 otherwise. Returns 0 on a full route, 7, or 1 for anything else.
 // AUTOINJECT
 uint NDrone2_UpdatePatrolRoute(DCVars_tag *dcv) {
@@ -169,7 +169,7 @@ uint NDrone2_UpdatePatrolRoute(DCVars_tag *dcv) {
         DroneAnim_SetStandIdleAnim(dcv, 1);
         return status;
     }
-    if (behaviour_util_getProperty(DRONE_PROP_25, dcv->drone->currentBehaviour) && dcv->drone->alertness >= kAlert)
+    if (behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, dcv->drone->currentBehaviour) && dcv->drone->alertness >= kAlert)
         DroneAnim_CallAnim(status == AIROUTE_FOLLOWING ? DANIM_35 : DANIM_21, 0, 0, 0, 0.0f, 0, dcv);
     else
         DroneAnim_SetWalkIdleAnim(dcv, 1);
@@ -287,14 +287,14 @@ bool NDrone2_GoToPoint(DCVars_tag *dcv, CelPos_tag *pos, float radius) {
     return NDrone2_CanReachGoalPosition(dcv);
 }
 
-// Where to run to when alerted: the alarm point with DRONE_PROP_56, the run point with DRONE_PROP_4E, else the side's
+// Where to run to when alerted: the alarm point with DRONE_PROP_RUNS_TO_ALARM, the run point with DRONE_PROP_HOSTAGE, else the side's
 // own (a civilian without one takes a run point). True when there is one and it can be reached.
 // AUTOINJECT
 bool NDrone2_FindRunToPoint(DCVars_tag *dcv) {
     ushort id;
-    if (behaviour_util_getProperty(DRONE_PROP_56, dcv->drone->currentBehaviour)) {
+    if (behaviour_util_getProperty(DRONE_PROP_RUNS_TO_ALARM, dcv->drone->currentBehaviour)) {
         id = AIPOINT_ALARM;
-    } else if (behaviour_util_getProperty(DRONE_PROP_4E, dcv->drone->currentBehaviour)) {
+    } else if (behaviour_util_getProperty(DRONE_PROP_HOSTAGE, dcv->drone->currentBehaviour)) {
         id = AIPOINT_RUN;
     } else {
         switch (dcv->drone->side) {

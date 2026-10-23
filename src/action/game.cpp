@@ -744,16 +744,6 @@ HASHCODE ResetMap_LevelAfterMovie(HASHCODE movie) {
 // XBE_GLOBAL(0x00279284, 0x4)
 uint32_t ResetMap_State;
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 // The level to load, while the shared files (0x07000500) load first
 // XBE_GLOBAL(0x00279280, 0x4)
 HASHCODE ResetMap_SavedLevel;

@@ -15,6 +15,7 @@
 #include "Vision.h"
 #include "../input.h"
 #include "../gfx/Sprite.h"
+#include "../math/math.h"
 
 #include <bit>
 #include <math.h>
@@ -192,17 +193,6 @@ void __stdcall Camera_PopStates(void) {
         uintptr_t state = (uintptr_t)Stack_Pop(&viewer->stateStack);
         Camera_Enable(i, state & 1, state >> CAMERA_STATE_SPRITES_SHIFT & 1, NULL);
     }
-}
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
 }
 
 // Fades the view to a colour (0xRRGGBBAA, the alpha the fade reaches) over a number of frames at 60 a second; a
@@ -663,11 +653,6 @@ void Camera_Shear(viewer_tag *vwr) {
     Vec_Copy(&ShearPosition, Mat_Position(vwr->viewMatrix));
     GlobalBlur = 0x91;
 }
-
-#define HALF_PI 1.5707964f
-#define PI 3.1415927f
-#define QUARTER_PI 0.7853982f
-#define TWO_PI 6.2831855f
 
 // Keeps the view's cel: the cel through a portal it moved through since last time, or, out of its cel's box, the
 // cel it is now in. In none, it stays in the old one (or the world's first) and prevPos is not moved on.

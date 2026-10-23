@@ -762,7 +762,7 @@ void TestAnims() {
         static const uint idleStates[] = {DSTATE_Idle, DSTATE_PartyGirl, DSTATE_Patrol, DSTATE_Attack};
         world.drones[0].sm.curState = idleStates[ShadowRand(4)];
         if (ShadowRand(4) == 0)
-            world.drones[0].skinClass = 16;
+            world.drones[0].skinClass = SKINCLASS_ROOK;
         if (ShadowRand(4) == 0)
             GameState.CurrentLevelHashcode = HT_Level_EvilBase;
         waitArg = (char)ShadowRand(2);
@@ -1028,7 +1028,7 @@ void TestTalk() {
         RandomWorld();
         NoBots();
         if (ShadowRand(2))
-            world.drones[0].skinClass = 3;
+            world.drones[0].skinClass = SKINCLASS_BLACK_OPS;
         Compare("NDrone2_PatrolTalk", trial,
                 [] {
                     XbeOriginalScope o(0x0003b9b0);
@@ -1045,7 +1045,7 @@ void TestTalk() {
                 [] { return (uint32_t)NDrone2_PowerstationTalk(&world.dcv); });
         if (ShadowRand(3) == 0) {
             GameState.CurrentLevelHashcode = HT_Level_CastleIndoors2;
-            world.drones[0].skinClass = 12;
+            world.drones[0].skinClass = SKINCLASS_ZOE;
             NPCGlobals.dummyPlayerActive = 0;
             glb_players[0] = &world.player;
             world.player.position = world.objs[0].position;
@@ -1117,8 +1117,8 @@ void TestDeath() {
         RandomWorld();
         NoBots();
         // The properties OnInitDeath tests, set often
-        behaviour_util_setProperty(DRONE_PROP_53, world.drones[0].currentBehaviour, ShadowRand(2));
-        behaviour_util_setProperty(DRONE_PROP_54, world.drones[0].currentBehaviour, ShadowRand(2));
+        behaviour_util_setProperty(DRONE_PROP_DEATH_FAILS_MISSION, world.drones[0].currentBehaviour, ShadowRand(2));
+        behaviour_util_setProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, world.drones[0].currentBehaviour, ShadowRand(2));
         Compare("DroneFunc_OnInitDeath", trial,
                 [] {
                     XbeOriginalScope o(0x0003de00);

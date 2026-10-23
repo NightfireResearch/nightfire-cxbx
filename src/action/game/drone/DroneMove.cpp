@@ -29,24 +29,14 @@
 // Originals called by address
 // Returns in ST0, unrounded
 
-
-
 constexpr float kDroneRadius = 0.404f;          // what NDrone2_Steer gives a drone
 constexpr float kPlayerRadius = 0.47500002f;    // and a player
 constexpr float kHorizon = 7030.0f;             // NDrone2_EvaluateObstacle: no turn for a contact this far off
 constexpr float kInvPi = 0.31830987f;
-constexpr float kQuarterPi = 0.7853982f;
-constexpr float kHalfPi = 1.5707964f;
-constexpr float kThreeQuarterPi = 2.3561945f;
-constexpr float kPi = 3.1415927f;
 static_assert(std::bit_cast<uint32_t>(kDroneRadius) == 0x3eced917, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kPlayerRadius) == 0x3ef33334, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kHorizon) == 0x45dbb000, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(kInvPi) == 0x3ea2f983, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kQuarterPi) == 0x3f490fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kHalfPi) == 0x3fc90fdb, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kThreeQuarterPi) == 0x4016cbe4, "not the original's constant");
-static_assert(std::bit_cast<uint32_t>(kPi) == 0x40490fdb, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.005f) == 0x3ba3d70a, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.9998f) == 0x3f7ff2e5, "not the original's constant");
 static_assert(std::bit_cast<uint32_t>(0.95f) == 0x3f733333, "not the original's constant");
@@ -124,7 +114,7 @@ static bool SteerRoundPlayer(Drone_tag *drone, ObstacleEval_tag *eval, obj_tag *
 void NDrone2_Steer(DCVars_tag *dcv, float angle) {
     obj_tag *obj = dcv->gameObj;
     Drone_tag *drone = dcv->drone;
-    if (drone->skinClass == 0xb || drone->animMoveSpeed == 0.0f) {
+    if (drone->skinClass == SKINCLASS_NINJA || drone->animMoveSpeed == 0.0f) {
         drone->nearestDroneDist = 3.0f;
         drone->nearestDrone = NULL;
         drone->unknown28c = 0;
@@ -264,7 +254,7 @@ bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_t
         eval->share = (float)(self->speed / ((double)obstacle->speed + self->speed));
         double weight = 1.0f - AngleSize(angle) * kInvPi;
         eval->weight = (float)weight;
-        eval->steer = (float)(weight * eval->share * kHalfPi);
+        eval->steer = (float)(weight * eval->share * HALF_PI);
         if (angle < 0.0f)
             eval->steer = -eval->steer;
         return true;
@@ -285,7 +275,7 @@ bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_t
     eval->share = (float)(self->speed / ((double)obstacle->speed + self->speed));
     double weight = 1.0f - 1.0f / ((double)eval->limit * kHorizon) * eval->t;
     eval->weight = (float)weight;
-    eval->steer = (float)(weight * eval->share * kHalfPi);
+    eval->steer = (float)(weight * eval->share * HALF_PI);
     float bearing = (float)FPatan(eval->delta.x, eval->delta.z);
     double angle = Vec_AngleDifference(bearing, self->rot->y);
     eval->angle = (float)angle;
@@ -359,14 +349,14 @@ bool DroneMove_NoBunching(DCVars_tag *dcv) {
     float bearing = Atan2(toNearest.x, toNearest.z);
     float facing = obj->rotation.y;
     if (drone->unknown46c & 8)
-        facing = facing + kHalfPi;
+        facing = facing + HALF_PI;
     if (drone->unknown46c & 0x10)
-        facing = facing + kPi;
+        facing = facing + PI;
     if (drone->unknown46c & 0x20)
-        facing = facing - kHalfPi;
+        facing = facing - HALF_PI;
     double turn = Vec_AngleDifference(facing, bearing);
     drone->bunchFlags |= turn < 0.0f ? 0x10 : 8;
-    drone->bunchFlags |= AngleSize(turn) < kQuarterPi ? 2 : 4;
+    drone->bunchFlags |= AngleSize(turn) < QUARTER_PI ? 2 : 4;
     return true;
 }
 
@@ -639,9 +629,9 @@ void DroneMove_AstronautAnim(DCVars_tag *dcv) {
     float bearing = Atan2(toTarget.x, toTarget.z);
     double turn = Vec_AngleDifference(obj->rotation.y, bearing);
     ushort anim;
-    if (AngleSize(turn) < kQuarterPi)
+    if (AngleSize(turn) < QUARTER_PI)
         anim = 0x72;
-    else if (AngleSize(turn) > kThreeQuarterPi)
+    else if (AngleSize(turn) > THREE_QUARTER_PI)
         anim = 0x71;
     else if (turn > 0.0f)
         anim = 0x73;

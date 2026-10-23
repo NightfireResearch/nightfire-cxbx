@@ -61,11 +61,11 @@ bool DroneAnim_CallAnim(uint state, uint variant, short endState, uint endMsg, f
     // Only these skin classes have the third variant of 0x3d
     if (state == 0x3d && variant == 3) {
         switch ((ushort)drone->skinClass) {
-        case 1:
-        case 5:
-        case 6:
-        case 7:
-        case 16:
+        case SKINCLASS_YAKUZA:
+        case SKINCLASS_SNIPER:
+        case SKINCLASS_ELITE:
+        case SKINCLASS_ELITE_COMBAT:
+        case SKINCLASS_ROOK:
             break;
         default:
             variant = 2;
@@ -171,7 +171,7 @@ bool DroneAnim_SetStandIdleAnim(DCVars_tag *dcv, char wait) {
     Drone_tag *drone = dcv->drone;
     short state = DANIM_STAND_IDLE;
     uint frames = 0;
-    bool partyVariations = behaviour_util_getProperty(DRONE_PROP_47, drone->currentBehaviour) != 0;
+    bool partyVariations = behaviour_util_getProperty(DRONE_PROP_PARTY_IDLE_ANIMS, drone->currentBehaviour) != 0;
 
     if (wait && drone->idleAnimFrame > GameState.NumFramesUnpaused)
         return false;
@@ -186,7 +186,7 @@ bool DroneAnim_SetStandIdleAnim(DCVars_tag *dcv, char wait) {
         frames = (Rand_Rand(5) + 5) * FRAME_RATE_INT;
     }
 
-    if (drone->skinClass == 16)
+    if (drone->skinClass == SKINCLASS_ROOK)
         state = 0x26;
     if (state < DANIM_STAND_IDLE || state > DANIM_STAND_IDLE + 3)
         state = DANIM_STAND_IDLE;

@@ -31,6 +31,7 @@
 #include <stdio.h>
 #include <string.h>
 #include "../sound/SFX.h"
+#include "../math/math.h"
 
 // XBE_GLOBAL(0x0017f478, 0x300)
 const LEVEL_REWARDS rewards_table[REWARDS_TABLE_SIZE] = {
@@ -772,8 +773,6 @@ M_BASECONTROL menu_no_control;
 
 #define MENU_VIEWER 7               // the viewer the menus' sprites are drawn in
 #define MENU_SPRITE_HIDDEN 0xff
-
-#define TWO_PI 6.2831855f
 
 #define MENU_SOUND_SELECT    1      // sounds 0-2 and 8 play only with their bit
 #define MENU_SOUND_ALT1      2

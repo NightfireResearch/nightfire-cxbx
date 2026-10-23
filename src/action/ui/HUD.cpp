@@ -30,17 +30,6 @@
 
 #pragma fp_contract(off)
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // Sprite 3 of the multiplayer score pane is gone (no teams); the PS2 build's name
 // XBE_GLOBAL(0x002790b2, 0x1)
 uint8_t FuckOffSprite3;

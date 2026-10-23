@@ -143,19 +143,19 @@ bool NDrone2_DSTATE_Idle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         return true;
 
     case DRONE_MSG_Enter:
-        if (GameState.CurrentLevelHashcode == HT_Level_SpaceStationD && dcv->drone->skinClass == 0x14)
+        if (GameState.CurrentLevelHashcode == HT_Level_SpaceStationD && dcv->drone->skinClass == SKINCLASS_DRAKE)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpaceDrake, 0);
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         if (dcv->drone->route2.count > 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_EnemyMission, 0);
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         if (dcv->drone->alertness >= ALERT_SUSPICIOUS)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Alert, 0);
         DroneAnim_SetStandIdleAnim(dcv, 0);
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0)
             NDrone2_SetIdleTimeOut(dcv, 45, 5);
         return true;
 
@@ -167,7 +167,7 @@ bool NDrone2_DSTATE_Idle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         return true;
 
     case DRONE_MSG_StateTimeout:
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0) {
             if (dcv->drone->alertness >= ALERT_SUSPICIOUS)
                 DroneAnim_CallAnim(DANIM_ALERT_LOOK, 0, 0, 0, 0.0f, 0, dcv);
             else
@@ -232,13 +232,13 @@ bool NDrone2_DSTATE_Alert(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, M
     case DRONE_MSG_Enter:
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         if (dcv->drone->route2.count > 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_EnemyMission, 0);
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         DroneAnim_CallAnim(DANIM_ALERT_STAND, 0, 0, 0, 0.0f, 0, dcv);
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0)
             NDrone2_SetIdleTimeOut(dcv, 45, 5);
         return true;
 
@@ -250,7 +250,7 @@ bool NDrone2_DSTATE_Alert(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, M
         return true;
 
     case DRONE_MSG_StateTimeout:
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0) {
             DroneAnim_CallAnim(DANIM_ALERT_LOOK, 0, 0, 0, 0.0f, 0, dcv);
             NDrone2_SetIdleTimeOut(dcv, 45, 5);
         }
@@ -308,8 +308,8 @@ bool NDrone2_DSTATE_InitPatrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Enter:
-        if (behaviour_util_getProperty(DRONE_PROP_24, dcv->drone->currentBehaviour) == 0 &&
-            behaviour_util_getProperty(DRONE_PROP_25, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_PATROL, dcv->drone->currentBehaviour) == 0 &&
+            behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, dcv->drone->currentBehaviour) == 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Idle, 0);
         NDrone2_AssignAIPath(dcv, AIPATH_PATROL);
         if (dcv->drone->route2.count > 0)
@@ -334,11 +334,11 @@ bool NDrone2_DSTATE_Patrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= 0x10000;
         dcv->drone->flags |= 0x2000;
-        if (behaviour_util_getProperty(DRONE_PROP_25, dcv->drone->currentBehaviour) != 0 &&
+        if (behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, dcv->drone->currentBehaviour) != 0 &&
             dcv->drone->alertness >= ALERT_SUSPICIOUS) {
-            if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0)
+            if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0)
                 NDrone2_SetIdleTimeOut(dcv, 5, 10);
-        } else if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0) {
+        } else if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0) {
             NDrone2_SetIdleTimeOut(dcv, 45, 10);
         }
         return true;
@@ -353,8 +353,8 @@ bool NDrone2_DSTATE_Patrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
 
     case DRONE_MSG_StateTimeout:
         // no new timeout: it looks round once
-        if (behaviour_util_getProperty(DRONE_PROP_46, dcv->drone->currentBehaviour) != 0) {
-            if (behaviour_util_getProperty(DRONE_PROP_25, dcv->drone->currentBehaviour) != 0 &&
+        if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0) {
+            if (behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, dcv->drone->currentBehaviour) != 0 &&
                 dcv->drone->alertness >= ALERT_SUSPICIOUS) {
                 DroneAnim_CallAnim(DANIM_PATROL_ALERT_LOOK, 0, 0, 0, 0.0f, 0, dcv);
                 return true;
@@ -416,7 +416,7 @@ bool NDrone2_DSTATE_EnemyRunToPoint(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
     case DRONE_MSG_Enter:
         dcv->drone->flags |= 0x10000;
         Drone_AlertStatusSet(1, dcv);
-        if (behaviour_util_getProperty(DRONE_PROP_56, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_RUNS_TO_ALARM, dcv->drone->currentBehaviour) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_RunToAlarm, 0);
         dcv->drone->initialState = DSTATE_Attack;
         switch (GameState.CurrentLevelHashcode) {

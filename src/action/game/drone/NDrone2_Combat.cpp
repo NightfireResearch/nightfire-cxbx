@@ -94,17 +94,6 @@ static_assert(std::bit_cast<uint32_t>(-0.3f) == 0xbe99999a, "not the original's 
 static_assert(std::bit_cast<uint32_t>(-1.1f) == 0xbf8ccccd, "not the original's -1.1");
 static_assert(std::bit_cast<uint32_t>(1.5707964f) == 0x3fc90fdb, "not the original's pi/2");
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // Starts timer A, to run out at the frame given
 static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
     dcv->drone->timerA.dueFrame = dueFrame;
@@ -148,13 +137,13 @@ short DroneFunc_FirstSightState(DCVars_tag *dcv) {
         dcv->drone->alertness = 1.0f;
         return DSTATE_Surrender_Anim;
     }
-    if (behaviour_util_getProperty(DRONE_PROP_33, dcv->drone->currentBehaviour) != 0 &&
+    if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_ALERTS, dcv->drone->currentBehaviour) != 0 &&
         !(dcv->drone->flags & DRONE_FLAG_ALARM_SENT)) {
         dcv->drone->flags2 |= 1;
         NDrone2_DroneAlertToObject(dcv, 0x11, dcv->drone->opponent, 20.0f, 20.0f, 1.0f);
         dcv->drone->flags |= DRONE_FLAG_ALARM_SENT;
     }
-    if (behaviour_util_getProperty(DRONE_PROP_1A, dcv->drone->currentBehaviour) != 0) {
+    if (behaviour_util_getProperty(DRONE_PROP_INTERROGATE_ON_SIGHT, dcv->drone->currentBehaviour) != 0) {
         switch (GameState.CurrentLevelHashcode) {
         case HT_Level_CastleIndoors1:
         case HT_Level_RefRoom:
@@ -167,7 +156,7 @@ short DroneFunc_FirstSightState(DCVars_tag *dcv) {
         }
     }
     NDrone2_SeenPlayerTalk(dcv);
-    if (behaviour_util_getProperty(DRONE_PROP_1B, dcv->drone->currentBehaviour) != 0) {
+    if (behaviour_util_getProperty(DRONE_PROP_ATTACK_OR_MOVE_ON_SIGHT, dcv->drone->currentBehaviour) != 0) {
         switch (Rand_Rand(2)) {
         case 0:
             return 0;
@@ -175,11 +164,11 @@ short DroneFunc_FirstSightState(DCVars_tag *dcv) {
             return NDrone2_ChooseCombatMove(dcv);
         }
     }
-    if (behaviour_util_getProperty(DRONE_PROP_18, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ATTACK_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return 0;
-    if (behaviour_util_getProperty(DRONE_PROP_19, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COMBAT_MOVE_ON_SIGHT, dcv->drone->currentBehaviour) != 0)
         return NDrone2_ChooseCombatMove(dcv);
-    return behaviour_util_getProperty(DRONE_PROP_4A, dcv->drone->currentBehaviour) != 0 ? DSTATE_GrenadeThrow : 0;
+    return behaviour_util_getProperty(DRONE_PROP_GRENADE_ON_SIGHT, dcv->drone->currentBehaviour) != 0 ? DSTATE_GrenadeThrow : 0;
 }
 
 // The state for a drone alerted by another, or 0: one told of an interrogation goes to help with it, in the levels
@@ -239,7 +228,7 @@ short DroneFunc_FirstAttack(DCVars_tag *dcv) {
     DroneFunc_SetAsAttacking(drone);
     NDrone2_SendAttackMessage(dcv);
     NDrone2_AttackTalk(dcv);
-    if (behaviour_util_getProperty(DRONE_PROP_52, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ALERT_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
         DroneFunc_SetMissionFailReason(drone, 8);
     if (dcv->drone->secondState != 0 && !dcv->drone->modeChangeSwitchChannel) {
         dcv->drone->initialState = DSTATE_Attack;
@@ -296,7 +285,7 @@ bool NDrone2_CheckSurrender(DCVars_tag *dcv) {
     obj_tag *opponent = drone->opponent;
     if (opponent == NULL)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_43, drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_MAY_SURRENDER, drone->currentBehaviour) == 0)
         return false;
     drone = dcv->drone;
     if (drone->alertness >= kSurrenderAlertness)        // NaN goes on
@@ -342,7 +331,7 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv) {
         return false;
 
     switch ((ushort)drone->skinClass) {
-    case 1:
+    case SKINCLASS_YAKUZA:
         if (GameState.CurrentLevelHashcode == HT_Level_TowerC || GameState.CurrentLevelHashcode == HT_Level_Tower2A ||
             GameState.CurrentLevelHashcode == HT_Level_Tower2C) {
             sfx = DroneFunc_ChooseSFX(0xa3, 0xaa);
@@ -351,17 +340,17 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv) {
             chance = 2;
         }
         break;
-    case 2:
+    case SKINCLASS_SNOW_GUARD:
         sfx = DroneFunc_ChooseSFX(0x37, 0x3f);
         chance = 3;
         break;
-    case 3:
+    case SKINCLASS_BLACK_OPS:
         if (dcv->drone->sightFlags & DRONE_SIGHT_REACTED)
             return false;
         sfx = DroneFunc_ChooseSFX(0xac, 0xb2);
         break;
-    case 5:
-    case 6:
+    case SKINCLASS_SNIPER:
+    case SKINCLASS_ELITE:
         if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
             GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
             return false;
@@ -369,13 +358,13 @@ bool NDrone2_AttackTalk(DCVars_tag *dcv) {
             return false;
         sfx = DroneFunc_ChooseSFX(0xd3, 0xd5);
         break;
-    case 7:
+    case SKINCLASS_ELITE_COMBAT:
         if (GameState.CurrentLevelHashcode != HT_Level_EvilBase && GameState.CurrentLevelHashcode != HT_Level_EvilBaseC &&
             GameState.CurrentLevelHashcode != HT_Level_EvilSilo)
             return false;
         sfx = DroneFunc_ChooseSFXByID(drone, 0x11b, 0x121);
         break;
-    case 0x11:
+    case SKINCLASS_CASTLE_GUARD:
         if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors1)
             return false;
         sfx = DroneFunc_ChooseSFX(0x93, 0x94);
@@ -406,7 +395,7 @@ bool NDrone2_SeenPlayerTalk(DCVars_tag *dcv) {
         return false;
     if (Rand_Rand(3) != 0)
         return false;
-    if (drone->skinClass == 0x10)
+    if (drone->skinClass == SKINCLASS_ROOK)
         return false;
 
     switch (GameState.CurrentLevelHashcode) {
@@ -414,7 +403,7 @@ bool NDrone2_SeenPlayerTalk(DCVars_tag *dcv) {
     case HT_Level_CastleCourtyard:
     case HT_Level_CastleIndoors1:
     case HT_Level_CastleIndoors2:
-        if (drone->skinClass == 2)
+        if (drone->skinClass == SKINCLASS_SNOW_GUARD)
             sfx = DroneFunc_ChooseSFX(0x49, 0x4e);
         else
             sfx = 0x21;
@@ -448,7 +437,7 @@ bool NDrone2_SeenPlayerTalk(DCVars_tag *dcv) {
     default:
         break;
     }
-    if (drone->skinClass == 0x10) {
+    if (drone->skinClass == SKINCLASS_ROOK) {
         if (drone->unknown3d0 + FRAME_RATE_INT * 3 > GameState.NumFramesUnpaused)
             return false;
         sfx = DroneFunc_ChooseSFX(0xe9, 0xeb);
@@ -489,33 +478,33 @@ bool NDrone2_CanAltAttack(DCVars_tag *dcv, short variant) {
 // 435b0 and 43600 in Ghidra. Not named on PS2; the names are ours.
 // AUTOINJECT
 bool NDrone2_StepAllowed(DCVars_tag *dcv) {
-    return behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
+    return behaviour_util_getProperty(DRONE_PROP_SIDE_STEP, dcv->drone->currentBehaviour) != 0 &&
            !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STEP_LEFT, 0);
 }
 
 // AUTOINJECT
 bool NDrone2_StrafeAllowed(DCVars_tag *dcv) {
-    return behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) != 0 &&
+    return behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) != 0 &&
            !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_LEFT, 0);
 }
 
 // AUTOINJECT
 bool NDrone2_StrafeDodgeAllowed(DCVars_tag *dcv) {
-    return behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) != 0 &&
+    return behaviour_util_getProperty(DRONE_PROP_STRAFE_DODGE, dcv->drone->currentBehaviour) != 0 &&
            !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_DODGE, 0);
 }
 
 // AUTOINJECT
 bool NDrone2_RollAllowed(DCVars_tag *dcv) {
-    return behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) != 0 &&
+    return behaviour_util_getProperty(DRONE_PROP_ROLL, dcv->drone->currentBehaviour) != 0 &&
            !(dcv->drone->flags & DRONE_FLAG_FROZEN) && DroneAnim_CanDoAnimState(dcv, DANIM_ROLL_LEFT, 0);
 }
 
 // Walking crouched (property 0 or 2, anim state 0xf). FUN_000436b0 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 bool NDrone2_CanCrouchWalk(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_02, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_WALK_AIMED_ANY_WAY, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_CROUCH_WALK, dcv->drone->currentBehaviour) == 0)
         return false;
     return DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_WALK, 0);
 }
@@ -523,8 +512,8 @@ bool NDrone2_CanCrouchWalk(DCVars_tag *dcv) {
 // Anim state 8 (property 1 without 2). FUN_00043700 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 bool NDrone2_CanMove8(DCVars_tag *dcv) {
-    return behaviour_util_getProperty(DRONE_PROP_01, dcv->drone->currentBehaviour) != 0 &&
-           behaviour_util_getProperty(DRONE_PROP_02, dcv->drone->currentBehaviour) == 0 &&
+    return behaviour_util_getProperty(DRONE_PROP_WALK_AIMED, dcv->drone->currentBehaviour) != 0 &&
+           behaviour_util_getProperty(DRONE_PROP_CROUCH_WALK, dcv->drone->currentBehaviour) == 0 &&
            DroneAnim_CanDoAnimState(dcv, DANIM_MOVE_8, 0);
 }
 
@@ -537,7 +526,7 @@ short NDrone2_ChooseAimStand(void) {
 // Crouching to aim (property 0x11, anim state 5), 6 m or more from the opponent, half the time.
 // AUTOINJECT
 bool NDrone2_CanAimCrouch(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_11, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_AIM_CROUCH, dcv->drone->currentBehaviour) == 0)
         return false;
     if (!DroneAnim_CanDoAnimState(dcv, DANIM_AIM_CROUCH, 0))
         return false;
@@ -557,7 +546,7 @@ short NDrone2_ChooseAimCrouch(DCVars_tag *dcv) {
 bool NDrone2_CanStepLeft(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_LEFT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_SIDE_STEP, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -571,7 +560,7 @@ bool NDrone2_CanStepLeft(DCVars_tag *dcv) {
 bool NDrone2_CanStepRight(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_RIGHT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_SIDE_STEP, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -589,7 +578,7 @@ bool NDrone2_CanStepRight(DCVars_tag *dcv) {
 bool NDrone2_CanStrafeLeft(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_LEFT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -606,7 +595,7 @@ bool NDrone2_CanStrafeLeft(DCVars_tag *dcv) {
 bool NDrone2_CanStrafeRight(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_RIGHT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -626,7 +615,7 @@ bool NDrone2_CanStrafeRight(DCVars_tag *dcv) {
 bool NDrone2_CanStrafeDodgeLeft(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_LEFT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE_DODGE, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -640,7 +629,7 @@ bool NDrone2_CanStrafeDodgeLeft(DCVars_tag *dcv) {
 bool NDrone2_CanStrafeDodgeRight(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_RIGHT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE_DODGE, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -657,7 +646,7 @@ bool NDrone2_CanStrafeDodgeRight(DCVars_tag *dcv) {
 bool NDrone2_CanRollLeft(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_LEFT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ROLL, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -671,7 +660,7 @@ bool NDrone2_CanRollLeft(DCVars_tag *dcv) {
 bool NDrone2_CanRollRight(DCVars_tag *dcv) {
     if (dcv->drone->bunchFlags & BUNCH_RIGHT)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ROLL, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_FROZEN)
         return false;
@@ -704,7 +693,7 @@ short NDrone2_ChooseRoll(DCVars_tag *dcv) {
 // Only the property: the anim state and the frozen flag are not asked about
 // AUTOINJECT
 short NDrone2_ChooseStrafe(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) == 0)
         return 0;
     if (Rand_Rand(2) != 0) {
         if (NDrone2_CanStrafeLeft(dcv))
@@ -723,7 +712,7 @@ short NDrone2_ChooseStrafe(DCVars_tag *dcv) {
 // The same
 // AUTOINJECT
 short NDrone2_ChooseStrafeDodge(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_13, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STRAFE_DODGE, dcv->drone->currentBehaviour) == 0)
         return 0;
     if (Rand_Rand(2) != 0) {
         if (NDrone2_CanStrafeDodgeLeft(dcv))
@@ -760,7 +749,7 @@ short NDrone2_ChooseStep(DCVars_tag *dcv) {
 // Backing off 1.8 m, aiming (property 6, anim state 4).
 // AUTOINJECT
 bool NDrone2_CanBackoff(DCVars_tag *dcv) {
-    if (behaviour_util_getProperty(DRONE_PROP_06, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_BACK_OFF, dcv->drone->currentBehaviour) == 0)
         return false;
     if (!DroneAnim_CanDoAnimState(dcv, DANIM_BACKOFF, 0))
         return false;
@@ -791,7 +780,7 @@ short NDrone2_ChooseCombatMove(DCVars_tag *dcv) {
 
     if (drone->flags & DRONE_FLAG_FROZEN)
         return 0;
-    if (behaviour_util_getProperty(DRONE_PROP_40, drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, drone->currentBehaviour) != 0)
         return 0;
     uchar bunched = drone->unknown17;
     bool aimedAt = DroneWeap_OpponentIsAimingAtMe(dcv, 0.0f);
@@ -987,7 +976,7 @@ bool NDrone2_SetGoalToCloserPosition(DCVars_tag *dcv) {
 // Crouches behind the node: with property 0x10, or at a corner without side 1.
 // AUTOINJECT
 bool DroneAnim_ForceCrouchCover(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_10, dcv->drone->currentBehaviour) != 0)
+    if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) != 0)
         return true;
     return node->type == COVER_CORNER && !(node->flags & COVERNODE_SIDE1);
 }
@@ -1004,10 +993,10 @@ bool DroneAnim_CanUseCornerAsLowCover(DCVars_tag *dcv, CoverNode_tag *node) {
 // with COVERNODE_SIDE1. FUN_00033a40 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 bool DroneAnim_CanStandAtCover(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_0A, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0C, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0B, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0D, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COVER_LEAN, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_STEP_OUT, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_2, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_3, dcv->drone->currentBehaviour) == 0)
         return false;
     return node->type != COVER_CORNER || (node->flags & COVERNODE_SIDE1);
 }
@@ -1016,14 +1005,14 @@ bool DroneAnim_CanStandAtCover(DCVars_tag *dcv, CoverNode_tag *node) {
 // COVERNODE_STAND2 and anim state 0x13).
 // AUTOINJECT
 bool DroneAnim_CanCrouchLean(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_10, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_LOW_COVER, dcv->drone->currentBehaviour) == 0)
         return false;
     if (node->type == COVER_CORNER && !(node->flags & COVERNODE_SIDE2))
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_0A, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0B, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0D, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COVER_LEAN, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_2, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_3, dcv->drone->currentBehaviour) == 0)
         return false;
     if (node->type != COVER_CORNER || !(node->flags & COVERNODE_STAND2))
         return false;
@@ -1034,12 +1023,12 @@ bool DroneAnim_CanCrouchLean(DCVars_tag *dcv, CoverNode_tag *node) {
 // anim state 0x15).
 // AUTOINJECT
 bool DroneAnim_CanCrouchStepOut(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_10, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_LOW_COVER, dcv->drone->currentBehaviour) == 0)
         return false;
     if (node->type == COVER_CORNER && !(node->flags & COVERNODE_SIDE2))
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_0C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COVER_STEP_OUT, dcv->drone->currentBehaviour) == 0)
         return false;
     if (node->type != COVER_CORNER || !(node->flags & COVERNODE_STAND1))
         return false;
@@ -1049,9 +1038,9 @@ bool DroneAnim_CanCrouchStepOut(DCVars_tag *dcv, CoverNode_tag *node) {
 // Leaning out standing (property 0xa, 0xb or 0xd; a corner it can stand at, with COVERNODE_STAND2 and anim state 0x17).
 // AUTOINJECT
 bool DroneAnim_CanStandLean(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_0A, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0B, dcv->drone->currentBehaviour) == 0 &&
-        behaviour_util_getProperty(DRONE_PROP_0D, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COVER_LEAN, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_2, dcv->drone->currentBehaviour) == 0 &&
+        behaviour_util_getProperty(DRONE_PROP_COVER_LEAN_3, dcv->drone->currentBehaviour) == 0)
         return false;
     if (!DroneAnim_CanStandAtCover(dcv, node))
         return false;
@@ -1063,7 +1052,7 @@ bool DroneAnim_CanStandLean(DCVars_tag *dcv, CoverNode_tag *node) {
 // Stepping out standing (property 0xc; a corner it can stand at, with COVERNODE_STAND1 and anim state 0x1b).
 // AUTOINJECT
 bool DroneAnim_CanStandStepOut(DCVars_tag *dcv, CoverNode_tag *node) {
-    if (behaviour_util_getProperty(DRONE_PROP_0C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_COVER_STEP_OUT, dcv->drone->currentBehaviour) == 0)
         return false;
     if (!DroneAnim_CanStandAtCover(dcv, node))
         return false;
@@ -1089,7 +1078,7 @@ short NDrone2_CoverNodeOK(DCVars_tag *dcv, CoverNode_tag *node, ushort kind, cha
     _VECTOR delta;
     Vec_Subtract(&drone->opponent->position, &node->pos, &delta);
     float distance = Vec_Magnitude(&delta);
-    if (behaviour_util_getProperty(DRONE_PROP_44, drone->currentBehaviour) != 0 &&
+    if (behaviour_util_getProperty(DRONE_PROP_NEAR_COVER_ONLY, drone->currentBehaviour) != 0 &&
         (double)drone->combatRanges[4] * 1.5f < distance)
         return 0;
     if (distance < drone->combatRanges[3])
@@ -1192,7 +1181,7 @@ bool NDrone2_CornerCoverAnimOK(DCVars_tag *dcv, CoverNode_tag *node) {
 bool NDrone2_LowCoverOK(DCVars_tag *dcv, CoverNode_tag *node) {
     if (node->type != COVER_LOW)
         return true;
-    return behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) != 0;
+    return behaviour_util_getProperty(DRONE_PROP_LOW_COVER, dcv->drone->currentBehaviour) != 0;
 }
 
 // Where to stand at the node against a target slot: the kind of use its bits give (low cover over side 2 over side
@@ -1314,7 +1303,7 @@ bool NDrone2_FindCover(DCVars_tag *dcv, char force) {
 // Cover to run to (property 0x30): what it has, or unless it sees the opponent within 4 m, a node it finds.
 // AUTOINJECT
 bool NDrone2_CoverAvailable(DCVars_tag *dcv, char force) {
-    if (behaviour_util_getProperty(DRONE_PROP_30, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_USES_COVER, dcv->drone->currentBehaviour) == 0)
         return false;
     if (dcv->drone->flags & DRONE_FLAG_HAS_COVER)
         return true;
@@ -1420,8 +1409,8 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
     case 1:
         if (dcv->drone->bunchFlags & BUNCH_LEFT)
             break;
-        if (behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) != 0 ||
-            behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_WALK_AIMED_ANY_WAY, dcv->drone->currentBehaviour) != 0 ||
+            behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) != 0) {
             if (drone->animState == DANIM_STRAFE_LEFT || drone->animState == DANIM_STRAFE_DODGE)
                 anim = drone->animState;
             else if (DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_LEFT, 0))
@@ -1432,14 +1421,14 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
             fire = seen;
             drone->moveQuad = quad;
             if (distance > 2.0f && distance < 2.5f &&
-                behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) != 0) {
+                behaviour_util_getProperty(DRONE_PROP_ROLL, dcv->drone->currentBehaviour) != 0) {
                 short roll = CombatRoll(dcv, DANIM_ROLL_LEFT, 0x55);
                 if (roll != 0) {
                     anim = roll;
                     fire = 0;
                 }
             }
-        } else if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
+        } else if (behaviour_util_getProperty(DRONE_PROP_SIDE_STEP, dcv->drone->currentBehaviour) != 0 &&
                    DroneAnim_CanDoAnimState(dcv, DANIM_STEP_LEFT, 0) && DroneMove_DistanceToNextRouteNode(dcv) < 3.0f) {
             float limit = drone->animState == DANIM_STEP_LEFT ? 2.7925267f : 2.6179938f;
             Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
@@ -1455,8 +1444,8 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
     case 2:
         if (dcv->drone->bunchFlags & BUNCH_BEHIND)
             break;
-        if ((behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) != 0 ||
-             behaviour_util_getProperty(DRONE_PROP_06, dcv->drone->currentBehaviour) != 0) &&
+        if ((behaviour_util_getProperty(DRONE_PROP_WALK_AIMED_ANY_WAY, dcv->drone->currentBehaviour) != 0 ||
+             behaviour_util_getProperty(DRONE_PROP_BACK_OFF, dcv->drone->currentBehaviour) != 0) &&
             DroneAnim_CanDoAnimState(dcv, DANIM_BACKOFF, 0)) {
             anim = DANIM_BACKOFF;
             yawOffset = 3.1415927f;
@@ -1468,8 +1457,8 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
     case 3:
         if (dcv->drone->bunchFlags & BUNCH_RIGHT)
             break;
-        if (behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) != 0 ||
-            behaviour_util_getProperty(DRONE_PROP_41, dcv->drone->currentBehaviour) != 0) {
+        if (behaviour_util_getProperty(DRONE_PROP_WALK_AIMED_ANY_WAY, dcv->drone->currentBehaviour) != 0 ||
+            behaviour_util_getProperty(DRONE_PROP_STRAFE, dcv->drone->currentBehaviour) != 0) {
             if (drone->animState == DANIM_STRAFE_RIGHT || drone->animState == DANIM_STRAFE_DODGE + 1)
                 anim = drone->animState;
             else if (DroneAnim_CanDoAnimState(dcv, DANIM_STRAFE_RIGHT, 0))
@@ -1480,14 +1469,14 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
             fire = seen;
             drone->moveQuad = quad;
             if (distance > 2.0f && distance < 2.5f &&
-                behaviour_util_getProperty(DRONE_PROP_2E, dcv->drone->currentBehaviour) != 0) {
+                behaviour_util_getProperty(DRONE_PROP_ROLL, dcv->drone->currentBehaviour) != 0) {
                 short roll = CombatRoll(dcv, DANIM_ROLL_RIGHT, 0x56);
                 if (roll != 0) {
                     anim = roll;
                     fire = 0;
                 }
             }
-        } else if (behaviour_util_getProperty(DRONE_PROP_42, dcv->drone->currentBehaviour) != 0 &&
+        } else if (behaviour_util_getProperty(DRONE_PROP_SIDE_STEP, dcv->drone->currentBehaviour) != 0 &&
                    DroneAnim_CanDoAnimState(dcv, DANIM_STEP_RIGHT, 0) && DroneMove_DistanceToNextRouteNode(dcv) < 3.0f) {
             float limit = drone->animState == DANIM_STEP_RIGHT ? 2.7925267f : 2.6179938f;
             Extended turn = AbsFchs(DroneMove_RouteTurn(dcv));
@@ -1501,12 +1490,12 @@ bool DroneAnim_SetCombatMoveAnim(DCVars_tag *dcv, float distance) {
         break;
 
     default:
-        if ((behaviour_util_getProperty(DRONE_PROP_01, dcv->drone->currentBehaviour) != 0 ||
-             behaviour_util_getProperty(DRONE_PROP_00, dcv->drone->currentBehaviour) != 0) &&
+        if ((behaviour_util_getProperty(DRONE_PROP_WALK_AIMED, dcv->drone->currentBehaviour) != 0 ||
+             behaviour_util_getProperty(DRONE_PROP_WALK_AIMED_ANY_WAY, dcv->drone->currentBehaviour) != 0) &&
             DroneAnim_CanDoAnimState(dcv, 8, 0)) {
             if (!(dcv->drone->bunchFlags & BUNCH_AHEAD))
                 anim = 8;
-        } else if (behaviour_util_getProperty(DRONE_PROP_02, dcv->drone->currentBehaviour) != 0 &&
+        } else if (behaviour_util_getProperty(DRONE_PROP_CROUCH_WALK, dcv->drone->currentBehaviour) != 0 &&
                    DroneAnim_CanDoAnimState(dcv, 0xf, 0)) {
             if (!(dcv->drone->bunchFlags & BUNCH_AHEAD))
                 anim = 0xf;
@@ -1544,7 +1533,7 @@ short DroneFunc_CombatState(DCVars_tag *dcv) {
     switch (state) {
     case DSTATE_Combat:
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return DSTATE_CombatNoMove;
         if (!DroneFunc_InRangeOfTarget(dcv, dcv->drone->combatRanges[1]))
             return DSTATE_CombatOutOfRange;
@@ -1554,7 +1543,7 @@ short DroneFunc_CombatState(DCVars_tag *dcv) {
 
     case DSTATE_CombatOutOfRange:
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return DSTATE_CombatNoMove;
         if (NDrone2_CoverAvailable(dcv, 1))
             return DSTATE_RunForCover;
@@ -1591,7 +1580,7 @@ short DroneFunc_CombatState(DCVars_tag *dcv) {
 
     case DSTATE_CombatNoSight:
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return DSTATE_CombatNoMove;
         if (NDrone2_CoverAvailable(dcv, 1))
             return DSTATE_RunForCover;
@@ -1742,7 +1731,7 @@ bool NDrone2_DSTATE_Attack(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SniperAim, 0);
         dcv->drone->flags |= DRONE_FLAG_ATTACKING;
         NDrone2_InvalidateAttackRoute(dcv);
-        if (behaviour_util_getProperty(DRONE_PROP_18, dcv->drone->currentBehaviour) != 0 &&
+        if (behaviour_util_getProperty(DRONE_PROP_ATTACK_ON_SIGHT, dcv->drone->currentBehaviour) != 0 &&
             DroneFunc_InRangeOfTarget(dcv, dcv->drone->combatRanges[1]) && !psiStubFalse()) {
             dcv->drone->initialState = DSTATE_AimStandFire;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AimStand, 0);
@@ -1829,7 +1818,7 @@ bool NDrone2_DSTATE_CombatNoMove(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
     case DRONE_MSG_Update:
         NDrone2_SeenAndAttacking(dcv);
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AimStandFire, 0);
         DroneMove_TurnToObj(dcv, dcv->drone->opponent, 0.0f, kAimTurnTolerance);
         if (NDrone2_CanAltAttack(dcv, 0))
@@ -1841,7 +1830,7 @@ bool NDrone2_DSTATE_CombatNoMove(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
             drone->firing = !drone->gunThroughWall;
         if (FireOrAnim(dcv, drone))
             return true;
-        if (drone->skinClass == 0xc && Rand_Rand(3) == 0)
+        if (drone->skinClass == SKINCLASS_ZOE && Rand_Rand(3) == 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CrouchCover, 0);
         return true;
 
@@ -2061,7 +2050,7 @@ bool NDrone2_DSTATE_CombatNoRoute(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
 
     case DRONE_MSG_TimerA:
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0) {
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0) {
             if (NDrone2_CoverAvailable(dcv, 1))
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_RunForCover, 0);
             dcv->drone->stateScratch = ~dcv->drone->stateScratch;
@@ -2271,7 +2260,7 @@ bool NDrone2_DSTATE_AimStandFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         if (dcv->drone->dtype == DTYPE_Sniper)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SniperFire, 0);
         if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) != 0)
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CombatNoMove, 0);
         DroneAnim_CallAnim(DANIM_AIM_STAND, 0, 0, 0, 0.0f, 0, dcv);
         dcv->drone->flags |= DRONE_FLAG_ATTACKING;
@@ -2298,7 +2287,7 @@ bool NDrone2_DSTATE_AimStandFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         if (NDrone2_CanAltAttack(dcv, 0))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AltAttack, 0);
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0 &&
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             dcv->drone->distanceToTarget <= 4.0f && NDrone2_CanBackoff(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AimBackoff, 0);
         if (dcv->drone->unseenFrames > 15)
@@ -2520,7 +2509,7 @@ bool NDrone2_DSTATE_CrouchCover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
 
     case DRONE_MSG_Update:
         NDrone2_SeenAndAttacking(dcv);
-        if (drone->skinClass == 0xc)
+        if (drone->skinClass == SKINCLASS_ZOE)
             return true;
         DroneMove_TurnToObj(dcv, dcv->drone->opponent, 0.0f, kAimTurnTolerance);
         return true;
@@ -2593,7 +2582,7 @@ bool NDrone2_DSTATE_AimCrouchFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         if (NDrone2_CanAltAttack(dcv, 0))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AltAttack, 0);
         if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
-            behaviour_util_getProperty(DRONE_PROP_40, dcv->drone->currentBehaviour) == 0 &&
+            behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             dcv->drone->distanceToTarget <= 4.0f && NDrone2_CanBackoff(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AimBackoff, 0);
         if (!NDrone2_HasOpponent(dcv))

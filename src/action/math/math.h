@@ -28,6 +28,18 @@ typedef struct {
 	float d;
 } plane_equ_tag;
 
+// Pi and the angles the game's code uses, as floats
+#define PI                  3.1415927f
+#define HALF_PI             1.5707964f
+#define QUARTER_PI          0.7853982f
+#define THREE_QUARTER_PI    2.3561945f
+#define THREE_HALF_PI       4.712389f
+#define TWO_PI              6.2831855f
+#define DEG_TO_RAD          0.017453292f
+#define RAD_TO_DEG          57.295776f
+// An angle in degrees as radians: the float nearest it, as the original's constants are
+#define DEG2RAD(degrees)    ((float)((degrees) * 3.14159265358979323846 / 180.0))
+
 #pragma pack(pop)
 
 #define Mat_Position(mat) ((_VECTOR *)(((mat).m + 0xc)))

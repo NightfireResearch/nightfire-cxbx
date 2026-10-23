@@ -98,6 +98,10 @@ typedef struct BOT_weapon_t {
     uchar unknown7[5];
 } BOT_weapon_t;
 
+// BOT_vars_t.flags: recovering from a hit (a punch, a bullet, an explosion; BOTSTATE_startRecovery): it sees no one
+// until recoveryEndFrame, and makes no route to its opponent
+#define BOT_FLAG_RECOVERING 2
+
 // A bot player's state (NUM_BOTS at 0x001d98e0, one per bot agent; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
 typedef struct BOT_vars_t {
@@ -117,7 +121,7 @@ typedef struct BOT_vars_t {
     float distraction;              // 0x71c
     uint goalReturnState;           // 0x720 - the DSTATE to go back to after a goal
     uint goalFromState;             // 0x724 - the DSTATE the bot was in when it set off for its goal (BOTSTATE_gotoGoal)
-    uint flags;                     // 0x728 - 2 recovering, 4 objective goal active
+    uint flags;                     // 0x728 - BOT_FLAG_RECOVERING, 4 objective goal active
     uint regenTimer;                // 0x72c - trait 0x10
     DYNAMICSOUNDS *sound;           // 0x730 - the bot's last cry (BOT_soundEffect)
     uint lastImpactFrame;           // 0x734

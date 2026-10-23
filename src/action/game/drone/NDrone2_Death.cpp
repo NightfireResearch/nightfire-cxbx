@@ -158,16 +158,16 @@ void DroneFunc_OnInitDeath(DCVars_tag *dcv) {
     bool byPlayer = drone->lastAttacker != NULL && drone->lastAttacker->objectType == OBJECTTYPE_PLAYER;
 
     if (drone->side != 1) {
-        if (behaviour_util_getProperty(DRONE_PROP_54, drone->currentBehaviour) != 0 && byPlayer)
+        if (behaviour_util_getProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, drone->currentBehaviour) != 0 && byPlayer)
             DroneFunc_SetMissionFailReason(drone, 1);
-        else if (behaviour_util_getProperty(DRONE_PROP_53, dcv->drone->currentBehaviour) != 0)
+        else if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
             DroneFunc_SetMissionFailReason(drone, byPlayer ? 1 : 3);
         if (!dcv->drone->headShot)
             NDrone2_DeathTalk(dcv);
     } else if (!(drone->flags & 0x1000000)) {
-        if (behaviour_util_getProperty(DRONE_PROP_54, drone->currentBehaviour) != 0 && byPlayer)
+        if (behaviour_util_getProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, drone->currentBehaviour) != 0 && byPlayer)
             DroneFunc_SetMissionFailReason(drone, 2);
-        else if (behaviour_util_getProperty(DRONE_PROP_53, dcv->drone->currentBehaviour) != 0)
+        else if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
             DroneFunc_SetMissionFailReason(drone, byPlayer ? 2 : 4);
         NDrone2_LogDroneDeath(dcv);
         if (!dcv->drone->headShot)
@@ -441,7 +441,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         NDrone2_SetAsDead(dcv);
         Drone_AlertStatusSet(3, dcv);
         Death_SetTimer(&dcv->drone->timerA, NPCGlobals.deadFrames + GameState.NumFramesUnpaused);
-        if (behaviour_util_getProperty(DRONE_PROP_31, dcv->drone->currentBehaviour) != 0 && !dcv->drone->headShot) {
+        if (behaviour_util_getProperty(DRONE_PROP_DEAD_BODY_ALERTS, dcv->drone->currentBehaviour) != 0 && !dcv->drone->headShot) {
             dcv->drone->flags2 |= 8;
             NDrone2_DroneAlertToObject(dcv, DRONE_MSG_DroneAlert, dcv->gameObj, 0.0f, 0.0f, 1.0f);
         }
@@ -460,7 +460,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         return true;
 
     case DRONE_MSG_TimerB:
-        if (behaviour_util_getProperty(DRONE_PROP_31, dcv->drone->currentBehaviour) == 0)
+        if (behaviour_util_getProperty(DRONE_PROP_DEAD_BODY_ALERTS, dcv->drone->currentBehaviour) == 0)
             return true;
         if (!drone->headShot) {
             dcv->drone->flags2 |= 8;

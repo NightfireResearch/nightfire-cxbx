@@ -20,12 +20,12 @@
 // AUTOINJECT
 void NDrone2_init_DMODE_Defaults(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_01, DRONE_PROP_06, DRONE_PROP_07, DRONE_PROP_0A, DRONE_PROP_0C, DRONE_PROP_48, DRONE_PROP_0F,
-        DRONE_PROP_11, DRONE_PROP_13, DRONE_PROP_18, DRONE_PROP_1D, DRONE_PROP_4C, DRONE_PROP_21, DRONE_PROP_29,
-        DRONE_PROP_2E, DRONE_PROP_37, DRONE_PROP_41, DRONE_PROP_42, DRONE_PROP_4F, DRONE_PROP_51, DRONE_PROP_5A,
-        DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_44, DRONE_PROP_33, DRONE_PROP_32, DRONE_PROP_31,
-        DRONE_PROP_28, DRONE_PROP_27, DRONE_PROP_26, DRONE_PROP_30, DRONE_PROP_2F, DRONE_PROP_2A, DRONE_PROP_43,
-        DRONE_PROP_3B, DRONE_PROP_0A, DRONE_PROP_0C, DRONE_PROP_17, DRONE_PROP_46,
+        DRONE_PROP_WALK_AIMED, DRONE_PROP_BACK_OFF, DRONE_PROP_07, DRONE_PROP_COVER_LEAN, DRONE_PROP_COVER_STEP_OUT, DRONE_PROP_48, DRONE_PROP_LOW_COVER,
+        DRONE_PROP_AIM_CROUCH, DRONE_PROP_STRAFE_DODGE, DRONE_PROP_ATTACK_ON_SIGHT, DRONE_PROP_MISSION_PATH, DRONE_PROP_HEAD_TRACK, DRONE_PROP_INVESTIGATES_NOISE, DRONE_PROP_ALERTED_BY_DEAD_BODY,
+        DRONE_PROP_ROLL, DRONE_PROP_37, DRONE_PROP_STRAFE, DRONE_PROP_SIDE_STEP, DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, DRONE_PROP_5A,
+        DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_NEAR_COVER_ONLY, DRONE_PROP_SIGHTING_ALERTS, DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS,
+        DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_26, DRONE_PROP_USES_COVER, DRONE_PROP_2F, DRONE_PROP_2A, DRONE_PROP_MAY_SURRENDER,
+        DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, DRONE_PROP_COVER_LEAN, DRONE_PROP_COVER_STEP_OUT, DRONE_PROP_FIRE_UNSEEN, DRONE_PROP_LOOKS_AROUND,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -40,8 +40,8 @@ void NDrone2_init_DMODE_Normal(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_Sniper(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_33, DRONE_PROP_32, DRONE_PROP_31,
-        DRONE_PROP_43, DRONE_PROP_17, DRONE_PROP_39, DRONE_PROP_40, DRONE_PROP_5A,
+        DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_SIGHTING_ALERTS, DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS,
+        DRONE_PROP_MAY_SURRENDER, DRONE_PROP_FIRE_UNSEEN, DRONE_PROP_39, DRONE_PROP_STAYS_PUT, DRONE_PROP_5A,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -50,7 +50,7 @@ void NDrone2_init_DMODE_Sniper(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_Stealth(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
-    behaviour_util_setProperty(DRONE_PROP_25, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_ALERT_PATROL, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
@@ -63,8 +63,8 @@ void NDrone2_init_DMODE_RunToPoint(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_HostageKiller(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_33, DRONE_PROP_32, DRONE_PROP_31, DRONE_PROP_29,
-        DRONE_PROP_28, DRONE_PROP_27, DRONE_PROP_26, DRONE_PROP_43, DRONE_PROP_40, DRONE_PROP_22,
+        DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_SIGHTING_ALERTS, DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS, DRONE_PROP_ALERTED_BY_DEAD_BODY,
+        DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_26, DRONE_PROP_MAY_SURRENDER, DRONE_PROP_STAYS_PUT, DRONE_PROP_22,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -73,22 +73,22 @@ void NDrone2_init_DMODE_HostageKiller(Drone_tag *drone) {
 // Hostage and HostageTied share it
 // AUTOINJECT
 void NDrone2_init_DMODE_HostageTied(Drone_tag *drone) {
-    static const DRONE_PROP props[] = {DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_40, DRONE_PROP_4E};
+    static const DRONE_PROP props[] = {DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_STAYS_PUT, DRONE_PROP_HOSTAGE};
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_JustStand4Demo(Drone_tag *drone) {
-    behaviour_util_setProperty(DRONE_PROP_40, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_STAYS_PUT, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_Civilian(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_1D, DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_29, DRONE_PROP_46,
-        DRONE_PROP_32, DRONE_PROP_31, DRONE_PROP_27, DRONE_PROP_26, DRONE_PROP_3B, DRONE_PROP_4C,
-        DRONE_PROP_4F, DRONE_PROP_50, DRONE_PROP_51, DRONE_PROP_53,
+        DRONE_PROP_MISSION_PATH, DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_LOOKS_AROUND,
+        DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_26, DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, DRONE_PROP_HEAD_TRACK,
+        DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_HIDES_FROM_ARMED_DRONES, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, DRONE_PROP_DEATH_FAILS_MISSION,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -97,8 +97,8 @@ void NDrone2_init_DMODE_Civilian(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_CivilianScared(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_32, DRONE_PROP_31, DRONE_PROP_27, DRONE_PROP_26,
-        DRONE_PROP_3B, DRONE_PROP_4C, DRONE_PROP_4F, DRONE_PROP_50, DRONE_PROP_51, DRONE_PROP_53,
+        DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_26,
+        DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, DRONE_PROP_HEAD_TRACK, DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_HIDES_FROM_ARMED_DRONES, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, DRONE_PROP_DEATH_FAILS_MISSION,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -106,47 +106,47 @@ void NDrone2_init_DMODE_CivilianScared(Drone_tag *drone) {
 
 // AUTOINJECT
 void NDrone2_init_DMODE_MissionFailer(Drone_tag *drone) {
-    behaviour_util_setProperty(DRONE_PROP_3C, drone->currentBehaviour, 1);
-    behaviour_util_setProperty(DRONE_PROP_55, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_REACTS_TO_SIGHT, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_SIGHTING_FAILS_MISSION, drone->currentBehaviour, 1);
 }
 
 // Mayhew and TruckDriver share it
 // AUTOINJECT
 void NDrone2_init_DMODE_Mayhew(Drone_tag *drone) {
-    behaviour_util_setProperty(DRONE_PROP_1D, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_AlarmRaiser(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
     behaviour_util_setProperty(DRONE_PROP_23, drone->currentBehaviour, 1);
-    behaviour_util_setProperty(DRONE_PROP_56, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_RUNS_TO_ALARM, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_SearchLight(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
-    behaviour_util_setProperty(DRONE_PROP_40, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_STAYS_PUT, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_Ambush(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
-    behaviour_util_setProperty(DRONE_PROP_10, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_AMBUSH, drone->currentBehaviour, 1);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_Zoe(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
-    behaviour_util_setProperty(DRONE_PROP_40, drone->currentBehaviour, 1);
-    behaviour_util_setProperty(DRONE_PROP_21, drone->currentBehaviour, 0);
+    behaviour_util_setProperty(DRONE_PROP_STAYS_PUT, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_INVESTIGATES_NOISE, drone->currentBehaviour, 0);
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_PartyGirl(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_1D, DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_46,
-        DRONE_PROP_26, DRONE_PROP_27, DRONE_PROP_28, DRONE_PROP_29, DRONE_PROP_51,
+        DRONE_PROP_MISSION_PATH, DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_LOOKS_AROUND,
+        DRONE_PROP_26, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -155,8 +155,8 @@ void NDrone2_init_DMODE_PartyGirl(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_CivilianGuard(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_1D, DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_46, DRONE_PROP_26,
-        DRONE_PROP_27, DRONE_PROP_28, DRONE_PROP_29, DRONE_PROP_4F, DRONE_PROP_50, DRONE_PROP_51,
+        DRONE_PROP_MISSION_PATH, DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_LOOKS_AROUND, DRONE_PROP_26,
+        DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_HIDES_FROM_ARMED_DRONES, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -165,8 +165,8 @@ void NDrone2_init_DMODE_CivilianGuard(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_CivDoorGuard(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_1D, DRONE_PROP_18, DRONE_PROP_06, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_46, DRONE_PROP_26,
-        DRONE_PROP_27, DRONE_PROP_28, DRONE_PROP_29, DRONE_PROP_4F, DRONE_PROP_50, DRONE_PROP_51,
+        DRONE_PROP_MISSION_PATH, DRONE_PROP_ATTACK_ON_SIGHT, DRONE_PROP_BACK_OFF, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_LOOKS_AROUND, DRONE_PROP_26,
+        DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_HIDES_FROM_ARMED_DRONES, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -181,15 +181,15 @@ void NDrone2_init_DMODE_CastleChatGuard1(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_CastleChatGuard2(Drone_tag *drone) {
     NDrone2_init_DMODE_Defaults(drone);
-    behaviour_util_setProperty(DRONE_PROP_1D, drone->currentBehaviour, 1);
+    behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, drone->currentBehaviour, 1);
     drone->chatSwitchChannel = 0x11;
 }
 
 // AUTOINJECT
 void NDrone2_init_DMODE_SniperAlert(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_33, DRONE_PROP_32, DRONE_PROP_31,
-        DRONE_PROP_43, DRONE_PROP_17, DRONE_PROP_39, DRONE_PROP_40,
+        DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_SIGHTING_ALERTS, DRONE_PROP_HURT_ALERTS, DRONE_PROP_DEAD_BODY_ALERTS,
+        DRONE_PROP_MAY_SURRENDER, DRONE_PROP_FIRE_UNSEEN, DRONE_PROP_39, DRONE_PROP_STAYS_PUT,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -198,8 +198,8 @@ void NDrone2_init_DMODE_SniperAlert(Drone_tag *drone) {
 // AUTOINJECT
 void NDrone2_init_DMODE_PartyGirlLooker(Drone_tag *drone) {
     static const DRONE_PROP props[] = {
-        DRONE_PROP_1D, DRONE_PROP_24, DRONE_PROP_3C, DRONE_PROP_1F, DRONE_PROP_46, DRONE_PROP_47,
-        DRONE_PROP_26, DRONE_PROP_27, DRONE_PROP_28, DRONE_PROP_29, DRONE_PROP_51,
+        DRONE_PROP_MISSION_PATH, DRONE_PROP_PATROL, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_HEARING, DRONE_PROP_LOOKS_AROUND, DRONE_PROP_PARTY_IDLE_ANIMS,
+        DRONE_PROP_26, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_ALWAYS_REACTS_TO_PLAYER,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
@@ -225,13 +225,10 @@ void NDrone2_initDTYPE_SniperAlert(Drone_tag *drone) {
 
 // ---- modes and types
 
-// The skin class with fixed extra properties, and the drone types the code singles out
-#define SKINCLASS_ATTACKS_AT_ONCE 0xb   // alerted at the start: straight to its attack type, 100 health
-
 // The DTYPE for a behaviour class and one of its attack modes (0 for the class's own). The original takes the drone
 // in EDI and the mode in ESI; only NDrone2_GetDroneTypeAttackTypeFriend calls it, so it stays a helper of ours.
 static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mode) {
-    if (mode == 0 && behaviour_util_getProperty(DRONE_PROP_10, drone->currentBehaviour) != 0)
+    if (mode == 0 && behaviour_util_getProperty(DRONE_PROP_AMBUSH, drone->currentBehaviour) != 0)
         return DTYPE_Ambush;
 
     switch (behaviourClass) {
@@ -246,7 +243,7 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
     case 8:
     case 9:
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && mode == 0)
-            return behaviour_util_getProperty(DRONE_PROP_4B, drone->currentBehaviour) != 0 ? DTYPE_CivDoorGuard
+            return behaviour_util_getProperty(DRONE_PROP_DOOR_GUARD, drone->currentBehaviour) != 0 ? DTYPE_CivDoorGuard
                                                                                           : DTYPE_CivilianGuard;
         break;
     case 10:
@@ -254,8 +251,8 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
         if (mode != 0)
             break;
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) {
-            behaviour_util_setProperty(DRONE_PROP_1F, drone->currentBehaviour, 0);
-            behaviour_util_setProperty(DRONE_PROP_54, drone->currentBehaviour, 1);
+            behaviour_util_setProperty(DRONE_PROP_HEARING, drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, drone->currentBehaviour, 1);
         }
         if (drone->alertness >= 1.0f)
             return DTYPE_CivilianScared;
@@ -263,19 +260,19 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
     case 12:
         if (mode != 0)
             break;
-        return drone->skinClass == 0xc ? DTYPE_Zoe : DTYPE_Mayhew;
+        return drone->skinClass == SKINCLASS_ZOE ? DTYPE_Zoe : DTYPE_Mayhew;
     case 13:
         if (mode != 0)
             break;
-        if (drone->skinClass == 0xf)
+        if (drone->skinClass == SKINCLASS_TRUCK_DRIVER)
             return DTYPE_TruckDriver;
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1)
-            behaviour_util_setProperty(DRONE_PROP_1F, drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_HEARING, drone->currentBehaviour, 0);
         return drone->alertness >= 1.0f ? DTYPE_CivilianScared : DTYPE_Civilian;
     case 14:
         if (mode != 0)
             break;
-        if (behaviour_util_getProperty(DRONE_PROP_4E, drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_HOSTAGE, drone->currentBehaviour) != 0)
             return DTYPE_Hostage;
         return drone->alertness >= 1.0f ? DTYPE_CivilianScared : DTYPE_Civilian;
     case 15:
@@ -290,7 +287,7 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
     case 2:
         return drone->alertness >= 1.0f ? DTYPE_SniperAlert : DTYPE_Sniper;
     case 3:
-        return behaviour_util_getProperty(DRONE_PROP_56, drone->currentBehaviour) != 0 ? DTYPE_AlarmRaiser
+        return behaviour_util_getProperty(DRONE_PROP_RUNS_TO_ALARM, drone->currentBehaviour) != 0 ? DTYPE_AlarmRaiser
                                                                                       : DTYPE_RunToPoint;
     case 4:
         return DTYPE_HostageKiller;
@@ -405,8 +402,8 @@ void NDrone2_GetDroneTypeAttackTypeFriend(Drone_tag *drone) {
             drone->initialState = DSTATE_CastleChatGuard1;
             break;
         default:
-            if (behaviour_util_getProperty(DRONE_PROP_24, drone->currentBehaviour) != 0 ||
-                behaviour_util_getProperty(DRONE_PROP_25, drone->currentBehaviour) != 0)
+            if (behaviour_util_getProperty(DRONE_PROP_PATROL, drone->currentBehaviour) != 0 ||
+                behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, drone->currentBehaviour) != 0)
                 drone->initialState = DSTATE_InitPatrol;
             break;
         }
@@ -417,7 +414,7 @@ void NDrone2_GetDroneTypeAttackTypeFriend(Drone_tag *drone) {
         DroneTypeSettings[drone->dtype].init(drone);
 
     if (drone->alertness >= 1.0f) {
-        if (drone->skinClass == SKINCLASS_ATTACKS_AT_ONCE) {
+        if (drone->skinClass == SKINCLASS_NINJA) {
             NDrone2_ChangeToAttackMode(drone);
             drone->health = 100.0f;
             return;
@@ -468,8 +465,8 @@ short NDrone2_DefaultInitialState(Drone_tag *drone) {
     case DTYPE_RunToPoint:
         return DSTATE_EnemyRunToPoint;
     default:
-        if (behaviour_util_getProperty(DRONE_PROP_24, drone->currentBehaviour) != 0 ||
-            behaviour_util_getProperty(DRONE_PROP_25, drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_PATROL, drone->currentBehaviour) != 0 ||
+            behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, drone->currentBehaviour) != 0)
             return DSTATE_InitPatrol;
         return DSTATE_Idle;
     }
@@ -490,7 +487,7 @@ void NDrone2_DoTypeSettingsOLD(Drone_tag *drone, uchar dtype) {
         DroneTypeSettings[drone->dtype].init(drone);
 
     if (drone->alertness >= 1.0f) {
-        if (drone->skinClass == SKINCLASS_ATTACKS_AT_ONCE) {
+        if (drone->skinClass == SKINCLASS_NINJA) {
             NDrone2_ChangeToAttackMode(drone);
             drone->health = 100.0f;
             return;
@@ -573,35 +570,35 @@ void NDrone2_DoModeSettingsOLD(Drone_tag *drone, uint mode, uint *behaviour, DIV
         setting->init(drone);
 
     switch (drone->skinClass) {
-    case 13:
+    case SKINCLASS_PARTY_GIRL:
         behaviour_util_setProperty(DRONE_PROP_4D, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_4C, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_52, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_HEAD_TRACK, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_ALERT_FAILS_MISSION, drone->currentBehaviour, 1);
         break;
-    case 16:
-        behaviour_util_setProperty(DRONE_PROP_51, drone->currentBehaviour, 1);
+    case SKINCLASS_ROOK:
+        behaviour_util_setProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, drone->currentBehaviour, 1);
         break;
-    case 17:
-        behaviour_util_setProperty(DRONE_PROP_4C, drone->currentBehaviour, 1);
+    case SKINCLASS_CASTLE_GUARD:
+        behaviour_util_setProperty(DRONE_PROP_HEAD_TRACK, drone->currentBehaviour, 1);
         break;
-    case 19:
-        behaviour_util_setProperty(DRONE_PROP_4C, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_52, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_55, drone->currentBehaviour, 1);
+    case SKINCLASS_KIKO_COMBAT:
+        behaviour_util_setProperty(DRONE_PROP_HEAD_TRACK, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_ALERT_FAILS_MISSION, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_SIGHTING_FAILS_MISSION, drone->currentBehaviour, 1);
         break;
     }
 
     static const DRONE_PROP props[] = {
-        DRONE_PROP_18, DRONE_PROP_26, DRONE_PROP_27, DRONE_PROP_28, DRONE_PROP_29, DRONE_PROP_31,
-        DRONE_PROP_32, DRONE_PROP_33, DRONE_PROP_4F, DRONE_PROP_1F, DRONE_PROP_3C, DRONE_PROP_30,
-        DRONE_PROP_0A, DRONE_PROP_0C, DRONE_PROP_37, DRONE_PROP_38,
+        DRONE_PROP_ATTACK_ON_SIGHT, DRONE_PROP_26, DRONE_PROP_ALERTED_BY_DRONE_SHOT, DRONE_PROP_ALERTED_BY_SIGHTING, DRONE_PROP_ALERTED_BY_DEAD_BODY, DRONE_PROP_DEAD_BODY_ALERTS,
+        DRONE_PROP_HURT_ALERTS, DRONE_PROP_SIGHTING_ALERTS, DRONE_PROP_ALERTED_BY_SURRENDER, DRONE_PROP_HEARING, DRONE_PROP_REACTS_TO_SIGHT, DRONE_PROP_USES_COVER,
+        DRONE_PROP_COVER_LEAN, DRONE_PROP_COVER_STEP_OUT, DRONE_PROP_37, DRONE_PROP_38,
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
     if (drone->dtype == DTYPE_Zoe) {
-        behaviour_util_setProperty(DRONE_PROP_40, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_53, drone->currentBehaviour, 1);
-        behaviour_util_setProperty(DRONE_PROP_54, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_STAYS_PUT, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_DEATH_FAILS_MISSION, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, drone->currentBehaviour, 1);
     }
 
     if (mode == DMODE_Hostage || mode == DMODE_HostageTied) {
@@ -636,10 +633,10 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
     bs.words2 = drone->behaviour2;
     behaviour_util_get(&bs, behaviour);
     drone->currentBehaviour = drone->behaviour1;
-    float alertness = alertLevels[behaviour_util_getProperty(DRONE_PROP_20, drone->behaviour1)];
+    float alertness = alertLevels[behaviour_util_getProperty(DRONE_PROP_ALERTNESS, drone->behaviour1)];
     drone->baseAlertness1 = alertness;
     drone->alertness = alertness;
-    drone->baseAlertness2 = alertLevels[behaviour_util_getProperty(DRONE_PROP_20, drone->behaviour2)];
+    drone->baseAlertness2 = alertLevels[behaviour_util_getProperty(DRONE_PROP_ALERTNESS, drone->behaviour2)];
     drone->behaviourClass = bs.behaviourClass;
     drone->behaviour1Mode = bs.mode1;
     drone->behaviour2Mode = bs.mode2;
@@ -666,16 +663,16 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
         drone->badSide = 0;
     }
     drone->accuracyF = drone->accuracy;
-    if (drone->skinClass == 16)
+    if (drone->skinClass == SKINCLASS_ROOK)
         drone->health = 100.0f;
 
     HASHCODE level = GameState.CurrentLevelHashcode;
     if (level != HT_Level_CastleIndoors1) {
         if (level == HT_Level_TowerA || level == HT_Level_TowerB) {
-            behaviour_util_setProperty(DRONE_PROP_1A, drone->currentBehaviour, 1);
-            behaviour_util_setProperty(DRONE_PROP_56, drone->currentBehaviour, 1);
+            behaviour_util_setProperty(DRONE_PROP_INTERROGATE_ON_SIGHT, drone->currentBehaviour, 1);
+            behaviour_util_setProperty(DRONE_PROP_RUNS_TO_ALARM, drone->currentBehaviour, 1);
         } else {
-            behaviour_util_setProperty(DRONE_PROP_1A, drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_INTERROGATE_ON_SIGHT, drone->currentBehaviour, 0);
         }
     }
 
@@ -683,7 +680,7 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
         return;
     switch (diVars->keys.playScript) {
     case HT_Script_Speech_M1_DRIVER_TALK_DRIVER02:
-        behaviour_util_setProperty(DRONE_PROP_1D, drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, drone->currentBehaviour, 1);
         drone->dtype = DTYPE_TruckDriver;
         break;
     case HT_Script_Speech_M1_DRIVER_TALK_GUARD01A:

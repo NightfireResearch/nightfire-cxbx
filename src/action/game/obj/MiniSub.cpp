@@ -9,14 +9,13 @@
 #include "../../sound/music.h"
 #include "../../util/Random.h"
 #include "../../math/X87Ops.h"
+#include "../../math/math.h"
 
 #pragma fp_contract(off)
 
 // The mini sub (OBJECTTYPE_MINISUB). No level places one.
 
 #define WEAPON_SUB_TORPEDO  0x30
-
-#define EIGHTH_TURN 0.7853982f   // pi/4, the most it banks
 
 // obj_tag::subState: heading along the route, or turning on the spot
 #define MINISUB_TURN    0
@@ -74,16 +73,16 @@ void MiniSubMove_Turn(MiniSubInfo *sub) {
     float gap = (float)exact;
     float bank;
     if (exact < 0.0) {
-        if (EIGHTH_TURN < AbsFchs((double)gap))
-            bank = EIGHTH_TURN;
+        if (QUARTER_PI < AbsFchs((double)gap))
+            bank = QUARTER_PI;
         else
             bank = (float)Negate(gap);
     }
     else {
-        if (EIGHTH_TURN >= gap || gap != gap)
+        if (QUARTER_PI >= gap || gap != gap)
             bank = (float)Negate(gap);
         else
-            bank = -EIGHTH_TURN;
+            bank = -QUARTER_PI;
     }
     obj_tag *obj = sub->gameObj;
     obj->rotation.z = (float)(Vec_AngleDifference(obj->rotation.z, bank) * sub->turnRate + obj->rotation.z);

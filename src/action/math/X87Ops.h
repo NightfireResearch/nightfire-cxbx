@@ -64,8 +64,17 @@ bool operator>=(const Extended &a, const Extended &b);
 Extended AbsFchs(const Extended &x);
 // FSQRT
 Extended FSqrt(const Extended &x);
-// MSVC's __ftol2 of a value still on the x87 stack: the low word of its truncation to 64 bits, 0 where it is out of
-// that range or rounds to a multiple of 2^32 (as Ftol in src/driving/platform/X87.h has it for a double)
+// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
+// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
+inline int32_t Ftol(double x) {
+    if (!(fabs(x) < 9223372036854775808.0))
+        return 0;
+    long long nearest = llrint(x);
+    if (uint32_t(nearest) == 0)
+        return 0;
+    return int32_t(int64_t(x));
+}
+// The same of a value still on the x87 stack
 int32_t Ftol(const Extended &x);
 // The same with the whole 64-bit result, as __ftol2 leaves it in EDX:EAX: the truncation, or where its low word is 0
 // (the shortcut __ftol2 takes then) the nearest value; 0x8000000000000000 out of range

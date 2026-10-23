@@ -2,6 +2,7 @@
 #include "Spline.h"
 
 #include "../math/math.h"
+#include "../math/X87Ops.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -10,17 +11,6 @@
 #pragma fp_contract(off)
 
 // Break.cpp's port is not patched in yet
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol2(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // The key nearest below t is found by truncation, from above by rounding up (t + 0.999999)
 static constexpr float kRoundUp = 0.999999f; // the original's float at 0x00161d18
@@ -71,7 +61,7 @@ void Spline_Interp(void *path, ushort first, ushort last, float t, _MATRIX *mtx,
     float frac;
     if (last > first) {
         t = ClampFrame(t, first, last);
-        ushort key = (ushort)Ftol2(t);
+        ushort key = (ushort)Ftol(t);
         k1 = key < first ? first : (key > last ? last : key);
         k2 = ClampKey(k1 + 1, first, last);
         k0 = ClampKey(k1 - 1, first, last);
@@ -79,7 +69,7 @@ void Spline_Interp(void *path, ushort first, ushort last, float t, _MATRIX *mtx,
         frac = (float)((double)t - k1);
     } else {
         t = ClampFrame(t, last, first);
-        ushort key = (ushort)Ftol2((double)t + kRoundUp);
+        ushort key = (ushort)Ftol((double)t + kRoundUp);
         k1 = key < last ? last : (key > first ? first : key);
         k2 = ClampKey(k1 - 1, last, first);
         k0 = ClampKey(k1 + 1, last, first);
@@ -158,13 +148,13 @@ void KeyFrame_Interp(void *path, ushort first, ushort last, float t, _MATRIX *mt
     framelist_tag *keys = (framelist_tag *)path;
     if (last > first) {
         t = ClampFrame(t, first, last);
-        ushort key = (ushort)Ftol2(t);
+        ushort key = (ushort)Ftol(t);
         KeyFrom = key < first ? first : (key > last ? last : key);
         KeyTo = (ushort)(KeyFrom + 1 > last ? last : KeyFrom + 1);
         KeyBlend = (float)((double)t - KeyFrom);
     } else {
         t = ClampFrame(t, last, first);
-        ushort key = (ushort)Ftol2((double)t + kRoundUp);
+        ushort key = (ushort)Ftol((double)t + kRoundUp);
         KeyFrom = key < last ? last : (key > first ? first : key);
         KeyTo = (ushort)ClampKey(KeyFrom - 1, last, first);
         KeyBlend = (float)((double)KeyFrom - t);

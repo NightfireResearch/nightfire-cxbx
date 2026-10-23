@@ -110,6 +110,35 @@ typedef void (*DroneAnimFunc)(Drone_tag *drone, ushort phase);
 #define DANIMFUNC_FRAME 1   // each frame it plays (Drone_Control)
 #define DANIMFUNC_END 2     // the row ends
 
+// Drone_tag.skinClass: which kind of character a skin is (NDrone2_DefaultInit gives each skin its class). Named for
+// the skins in each.
+typedef enum SkinClass {
+    SKINCLASS_NONE = 0,
+    SKINCLASS_YAKUZA = 1,
+    SKINCLASS_SNOW_GUARD = 2,
+    SKINCLASS_BLACK_OPS = 3,
+    SKINCLASS_HAZMAT = 4,
+    SKINCLASS_SNIPER = 5,
+    SKINCLASS_ELITE = 6,
+    SKINCLASS_ELITE_COMBAT = 7,
+    SKINCLASS_SERVANT = 8,
+    SKINCLASS_MAYHEW = 9,
+    SKINCLASS_NINJA = 0xb,
+    SKINCLASS_ZOE = 0xc,
+    SKINCLASS_PARTY_GIRL = 0xd,          // and Dominique
+    SKINCLASS_PARTY_GUEST = 0xe,
+    SKINCLASS_TRUCK_DRIVER = 0xf,
+    SKINCLASS_ROOK = 0x10,
+    SKINCLASS_CASTLE_GUARD = 0x11,
+    SKINCLASS_KIKO = 0x12,
+    SKINCLASS_KIKO_COMBAT = 0x13,
+    SKINCLASS_DRAKE = 0x14,
+    SKINCLASS_BUSINESS_WOMAN = 0x15,
+    SKINCLASS_DOMINIQUE_JACKET = 0x16,
+    SKINCLASS_GUARD = 0x17,              // and Drake in his suit, and the technicians
+    SKINCLASS_ASTRONAUT = 0x18,
+} SkinClass;
+
 // One drone (the obj_tag's extraObjectData), 0x978 bytes. Only the fields docs/drone/architecture/README.md 4.3 is
 // sure of are named; A3-drone-fields.md lists every offset the code touches.
 typedef struct Drone_tag {

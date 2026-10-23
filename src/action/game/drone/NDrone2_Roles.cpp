@@ -26,6 +26,7 @@
 #include "NDrone2.h"
 #include "NDrone2_Alert.h"
 #include "NDrone2_Cover.h"
+#include "../../math/X87Ops.h"
 
 
 // Return in ST0, unrounded
@@ -57,17 +58,6 @@ constexpr float ALLY_IN_WAY_ANGLE = (float)(M_PI / 3.0);
 static_assert(std::bit_cast<uint32_t>(ALLY_WITHIN_ANGLE) == 0x3f060a92, "not the original's pi/6");
 static_assert(std::bit_cast<uint32_t>(ALLY_IN_WAY_ANGLE) == 0x3f860a92, "not the original's pi/3");
 
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
-
 // data comes back as timer A's message's extraData
 static void Roles_SetTimer(DroneTimer *timer, uint dueFrame, uint data = 0) {
     timer->dueFrame = dueFrame;
@@ -87,9 +77,9 @@ static uint Roles_FramesFromNow(float ticks) {
 // seen is enough; in CastleIndoors1 the drone's own weapon counts too.
 // AUTOINJECT
 bool NDrone2_NearArmedBond(DCVars_tag *dcv, float radius) {
-    if (behaviour_util_getProperty(DRONE_PROP_3C, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_REACTS_TO_SIGHT, dcv->drone->currentBehaviour) == 0)
         return false;
-    if (behaviour_util_getProperty(DRONE_PROP_51, dcv->drone->currentBehaviour) == 0)
+    if (behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)
         return false;
     // A NaN distance is not near
     if (!(dcv->drone->distanceToTarget < radius))
@@ -112,7 +102,7 @@ bool NDrone2_DSTATE_TruckDriverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        if (behaviour_util_getProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         dcv->drone->angleToSomePoint = dcv->gameObj->rotation.y;
         if (dcv->drone->playScript != 0) {
@@ -122,7 +112,7 @@ bool NDrone2_DSTATE_TruckDriverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
             dcv->drone->flags &= ~0x80;
             return true;
         }
-        behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_TruckDriverIdle, 0);
 
     case DRONE_MSG_Exit:
@@ -293,7 +283,7 @@ bool NDrone2_DSTATE_TruckDriverMission(DCVars_tag *dcv, Drone_tag *drone, obj_ta
 
     case DRONE_MSG_Update:
         if (NDrone2_UpdateMissionRoute(dcv) == MISSION_ROUTE_DONE) {
-            behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_TruckDriverIdle, 0);
         }
         if (dcv->drone->route2.status == AIROUTE_STATUS_9 || dcv->drone->route2.status == AIROUTE_STATUS_C) {
@@ -1231,7 +1221,7 @@ bool NDrone2_DSTATE_KikoMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         if (GameState.CurrentLevelHashcode != HT_Level_EvilBaseC && DroneVision_EnemyLookForOpponent(dcv) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_KikoMissionRun, 0);
         if (NDrone2_UpdateMissionRoute(dcv) == MISSION_ROUTE_DONE) {
-            behaviour_util_setProperty(DRONE_PROP_1D, dcv->drone->currentBehaviour, 0);
+            behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_StandBlind, 0);
         }
         return true;
@@ -1856,7 +1846,7 @@ bool NDrone2_ReFindMissionPath(DCVars_tag *dcv) {
             LinkCreep_Dest(route, 0, &route->waypoint);
             NDrone2_SetMoveTarget(dcv, &route->waypoint);
         }
-        if (drone->skinClass == 9)
+        if (drone->skinClass == SKINCLASS_MAYHEW)
             drone->route1.path = AINetwork_NavPathForPosition(&gameObj->position, gameObj->inCel, 1);
         AINetwork_ResetRoute(&drone->route1, gameObj, NULL);
         AINetwork_InvalidateRoute(&drone->route1);
@@ -1981,7 +1971,7 @@ bool NDrone2_FindAmbushCover(DCVars_tag *dcv) {
             continue;
         if (!NDrone2_CornerCoverAnimOK(dcv, node))
             continue;
-        if (node->type == COVER_LOW && behaviour_util_getProperty(DRONE_PROP_0F, dcv->drone->currentBehaviour) == 0)
+        if (node->type == COVER_LOW && behaviour_util_getProperty(DRONE_PROP_LOW_COVER, dcv->drone->currentBehaviour) == 0)
             continue;
         double dist = Vec_Dist3D(&gameObj->position, &node->pos);
         // A NaN distance is taken
@@ -2060,7 +2050,7 @@ bool NDrone2_DSTATE_AmbushWait(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Exit:
-        behaviour_util_setProperty(DRONE_PROP_10, dcv->drone->currentBehaviour, 0);
+        behaviour_util_setProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour, 0);
         return true;
 
     case DRONE_MSG_Update:

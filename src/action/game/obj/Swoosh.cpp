@@ -5,19 +5,9 @@
 #include "../../engine/viewer.h"
 #include "../mp/multiplayer.h"
 #include "control.h"
+#include "../../math/X87Ops.h"
 
 #pragma fp_contract(off)
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // A trail that lasts frames 60 Hz frames (half as long in multiplayer, from 61)
 // AUTOINJECT

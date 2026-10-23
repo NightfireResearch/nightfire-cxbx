@@ -401,7 +401,7 @@ bool NDrone2_DSTATE_HostageIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
 
     case DRONE_MSG_Enter:
         dcv->drone->sightFlags |= DRONE_SIGHT_REACTED;
-        behaviour_util_setProperty(DRONE_PROP_4C, dcv->drone->currentBehaviour, 1);
+        behaviour_util_setProperty(DRONE_PROP_HEAD_TRACK, dcv->drone->currentBehaviour, 1);
         drone->alertness = 0.0f;
         drone->flags &= ~DRONE_FLAG_ATTACK_MODE;
         Drone_AlertStatusSet(0, dcv);
@@ -487,7 +487,7 @@ bool NDrone2_DSTATE_HostageDead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
     case DRONE_MSG_Enter: {
         Drone_AlertStatusSet(3, dcv);
         NDrone2_SetAsDead(dcv);
-        if (behaviour_util_getProperty(DRONE_PROP_53, dcv->drone->currentBehaviour) != 0)
+        if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
             DroneFunc_SetMissionFailReason(drone, 9);
         dcv->drone->flags &= ~0x8000;
         DroneTimer *timer = &dcv->drone->timerA;

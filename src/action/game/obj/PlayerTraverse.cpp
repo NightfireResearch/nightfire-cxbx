@@ -10,6 +10,7 @@
 #include "../sp/SwitchChannels.h"
 #include "control.h"
 #include "../../sound/music.h"
+#include "../../math/math.h"
 #include <math.h>
 #include <string.h>
 #include <bit>
@@ -22,10 +23,6 @@
 
 // The originals, called by address
 
-#define HALF_PI 1.5707964f
-#define PI 3.1415927f
-#define THREE_HALF_PI 4.712389f
-
 // The wire anim playing, which Player_Wire chooses the next one by
 // XBE_GLOBAL(0x00278e54, 0x4)
 HASHCODE WireAnim;
@@ -36,17 +33,6 @@ HASHCODE WireAnim;
 static const float kWire1Rise = std::bit_cast<float>(0x3f8fcfd4u);    // 1.12353, a bit under
 static const float kGrabMotionX = std::bit_cast<float>(0x3da7ef9du);  // 0.082, a bit under
 #define ROPE_HAND 0.0542f
-
-// MSVC's __ftol2 as the original uses it: the low word of a truncation to 64 bits. NaN, values out of the 64-bit range
-// and values that round to a multiple of 2^32 give 0 (as src/driving/platform/X87.h has it).
-static int32_t Ftol(double x) {
-    if (!(fabs(x) < 9223372036854775808.0))
-        return 0;
-    long long nearest = llrint(x);
-    if (uint32_t(nearest) == 0)
-        return 0;
-    return int32_t(int64_t(x));
-}
 
 // How far apart two angles are, as the original works it out: it calls Vec_AngleDifference again for the size
 static double AngleBetween(float a, float b) {
