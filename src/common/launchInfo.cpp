@@ -152,12 +152,17 @@ static void ExitNow(unsigned code) {
     ExitProcess(code);
 }
 #else
-// Off Windows only the driving engine has an executable, and it is this one: it is started again for DRIVING.XBE,
-// with the same working directory and standard streams.
+// Off Windows only the standalone executables exist: the one for the image is started from this one's folder, with
+// the same working directory and standard streams.
 static bool StartLoaderFor(const char *executableName) {
     const char *slash = strrchr(executableName, '\\');
     const char *image = slash != NULL ? slash + 1 : executableName;
-    if (strcasecmp(image, "DRIVING.XBE") != 0) {
+    const char *loader = NULL;
+    if (strcasecmp(image, "DRIVING.XBE") == 0)
+        loader = "driving_standalone";
+    else if (strcasecmp(image, "DEFAULT.XBE") == 0)
+        loader = "action_standalone";
+    if (loader == NULL) {
         printf("[launch] no executable is known for %s\n", image);
         return false;
     }
@@ -173,6 +178,14 @@ static bool StartLoaderFor(const char *executableName) {
         return false;
     path[length] = '\0';
 #endif
+    char *cut = strrchr(path, '/');
+    if (cut == NULL)
+        return false;
+    snprintf(cut + 1, sizeof(path) - (size_t)(cut + 1 - path), "%s", loader);
+    if (access(path, X_OK) != 0) {
+        printf("[launch] %s is not there, so nothing can be started for %s\n", path, image);
+        return false;
+    }
 
     fflush(stdout);
     pid_t process = fork();

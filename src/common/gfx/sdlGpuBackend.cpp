@@ -76,6 +76,7 @@ static double NowSeconds(void) {
 }
 
 static uint64_t g_statDraws = 0, g_statBatches = 0, g_statPipelines = 0, g_statTextureUploads = 0;
+static uint64_t g_statShaders = 0;
 
 static void ReportFrameTiming(double arrivedAtPacer, double leftPacer) {
     if (!GfxHost_PerfLogEnabled())
@@ -527,6 +528,14 @@ static void DumpShader(const char *name, const char *extension, const void *code
     fclose(f);
 }
 
+// A shader or pipeline made on the game's thread that held it up (Metal compiles each program's source the first time
+// it is seen on a machine): said, with its time
+static void LogIfSlow(const char *what, Uint64 start) {
+    Uint64 ms = (SDL_GetTicksNS() - start) / 1000000;
+    if (ms >= 10)
+        GpuLog("[sdlgpu] %s took %u ms to make\n", what, (unsigned)ms);
+}
+
 static SDL_GPUShader *CreateShader(const char *name, const std::vector<uint32_t> &words, bool pixel, uint32_t samplers,
                                    const char *entryPoint = "main") {
     bool dump = SpirvDumpWanted();
@@ -559,9 +568,12 @@ static SDL_GPUShader *CreateShader(const char *name, const std::vector<uint32_t>
     info.stage = pixel ? SDL_GPU_SHADERSTAGE_FRAGMENT : SDL_GPU_SHADERSTAGE_VERTEX;
     info.num_samplers = samplers;
     info.num_uniform_buffers = 1;
+    Uint64 start = SDL_GetTicksNS();
+    g_statShaders++;
     SDL_GPUShader *shader = SDL_CreateGPUShader(g_device, &info);
     if (shader == NULL)
         GpuLog("[sdlgpu] %s: SDL_CreateGPUShader failed: %s\n", name, SDL_GetError());
+    LogIfSlow(name, start);
     return shader;
 }
 
@@ -1806,7 +1818,9 @@ static SDL_GPUGraphicsPipeline *PipelineFor(const PipelineKey &key) {
     info.target_info.num_color_targets = 1;
     info.target_info.depth_stencil_format = g_depthFormat;
     info.target_info.has_depth_stencil_target = true;
+    Uint64 start = SDL_GetTicksNS();
     SDL_GPUGraphicsPipeline *pipeline = SDL_CreateGPUGraphicsPipeline(g_device, &info);
+    LogIfSlow("a pipeline", start);
     if (pipeline == NULL)
         GpuLog("[sdlgpu] pipeline: %s\n", SDL_GetError());
     g_pipelines[k] = pipeline;
@@ -2675,6 +2689,23 @@ static void DumpBackBuffer(const char *name, bool alpha) {
     }
 }
 
+// A frame that took over 100 ms after one that did not - a hitch, not a loading screen - with the shaders and
+// pipelines made in it
+static void LogLongFrame(void) {
+    static Uint64 last = 0, lastShaders = 0, lastPipelines = 0;
+    static bool lastLong = true;
+    Uint64 now = SDL_GetTicksNS();
+    Uint64 ms = last != 0 ? (now - last) / 1000000 : 0;
+    bool isLong = ms > 100;
+    if (isLong && !lastLong)
+        GpuLog("[sdlgpu] frame %u took %u ms; %u shaders and %u pipelines made in it\n", g_frameCount, (unsigned)ms,
+               (unsigned)(g_statShaders - lastShaders), (unsigned)(g_statPipelines - lastPipelines));
+    lastLong = isLong;
+    last = now;
+    lastShaders = g_statShaders;
+    lastPipelines = g_statPipelines;
+}
+
 void D3D9_Swap(uint32_t type) {
     (void)type;
     if (g_device == NULL)
@@ -2705,6 +2736,7 @@ void D3D9_Swap(uint32_t type) {
     if (g_window != NULL && (presentEvery == 0 || g_frameCount % (uint32_t)presentEvery == 0))
         SDL_RunOnMainThread(PresentOnWindowThread, NULL, true);
     PaceFrame();
+    LogLongFrame();
     g_frameCount++;
     if (g_frameCount == 1 || g_frameCount % 600 == 0)
         PrintMissingSummary();
