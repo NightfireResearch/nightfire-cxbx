@@ -984,7 +984,16 @@ void Demo_FrameEnd(void) {
     }
 #if NIGHTFIRE_DATA_PS2
     // The PS2's data plays the Xbox's recordings by rebasing them (the input comes in another order), and its viewer
-    // is compared with the Xbox's (docs/ps2-data.md)
+    // and what parts from the recording are compared with the Xbox's (docs/ps2-data.md)
+    if (g_mode == DEMO_REBASE && g_divergedFrames > 0 && g_divergedFrames <= 20 &&
+        memcmp(sums, g_rebase[g_frame].sums, sizeof(sums)) != 0) {
+        printf("[demo] frame %u differs:", g_frame);
+        for (int i = 0; i < SUM_COUNT; i++) {
+            if (g_rebase[g_frame].sums[i] != sums[i])
+                printf(" %s", kSumNames[i]);
+        }
+        printf("\n");
+    }
     if (g_mode == DEMO_REBASE && getenv("NIGHTFIRE_DEMO_DUMP_VIEWER") != NULL && glb_viewer[0] != NULL) {
         uint32_t v[7];
         memcpy(v, &glb_viewer[0]->pos, 12);
