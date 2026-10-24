@@ -794,7 +794,7 @@ void RandomWorld(void) {
     MPSettings.isMultiplayer = R(2);
     MPSettings.numPlayers = 1 + R(4);
     MPSettings.isTeamGame = R(2);
-    MPSettings.field53_0x190 = R(2);
+    MPSettings.gameModeBit30 = R(2);
     MPSettings.ShowTeamAndNameOverhead = R(2);
     static const MultiplayerGameMode modes[] = {GM_ARENA, GM_ASSASSIN, GM_CTF, GM_BLUEPRINT, GM_GOLDENEYE,
                                                 GM_UPLINK, GM_TOPAGENT};
@@ -802,7 +802,7 @@ void RandomWorld(void) {
     for (int i = 0; i < 10; i++) {
         sprintf(MPSettings.Player[i].Name, "Agent %u", R(1000));
         MPSettings.Player[i].TeamId = (MPTeam)R(2);
-        MPSettings.Player[i].SomeField2 = R(2);
+        MPSettings.Player[i].radar = R(2);
         MPSettings.Player[i].HealthModifier = (int)R(60) - 30;
         MPGame.players[i].playerObj = R(6) == 0 ? NULL : &world.objs[i % OBJS];
     }

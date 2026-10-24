@@ -9,141 +9,196 @@
 #include <stdio.h>
 
 // XBE_GLOBAL(0x0017e548, 0x4)
-static uint32_t FailLabel = 0xffffffff;
+static Action_TranslatedText FailLabel = Action_TranslatedText_NULLVALUE;
 // XBE_GLOBAL(0x0025fe20, 0x4)
 static uint32_t BaseMap;
 // XBE_GLOBAL(0x0025fe24, 0x4)
 static uint32_t ThisOrderNum;
 // XBE_GLOBAL(0x0017e544, 0x4)
-static uint32_t MissionState = 0x5;
+static MissionStatus MissionState = MISSION_STATUS_NONE;
 
 // The objectives each mission part points at: still the game's own arrays (their status is written at run time).
 // XBE_GLOBAL(0x0017dc58, 0x18)
 static Objective Objectives_1_CastleExterior[1] = {
-    {(Action_TranslatedText)0x04000000, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005b, 70, 0, 1, 69, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000000, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400005b,
+     70, 0, 1, 69, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dc70, 0x18)
 static Objective Objectives_1_CastleCourtyard[1] = {
-    {(Action_TranslatedText)0x04000001, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005c, 2, 0, 1, 70, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000001, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400005c,
+     2, 0, 1, 70, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dc88, 0x30)
 static Objective Objectives_2_CastleIndoors[2] = {
-    {(Action_TranslatedText)0x04000002, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005d, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000003, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005e, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000002, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400005d,
+     72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000003, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400005e,
+     73, 0, 1, 72, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dcb8, 0x30)
 static Objective Objectives_2_CastleIndoors2[2] = {
-    {(Action_TranslatedText)0x04000004, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400005f, 74, 0, 1, 73, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000005, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000060, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000004, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400005f,
+     74, 0, 1, 73, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000005, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000060,
+     75, 0, 1, 74, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dce8, 0x18)
 static Objective Objectives_1_HendersonA[1] = {
-    {(Action_TranslatedText)0x04000006, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000e, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000006, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400000e,
+     71, 0, 0, 0, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dd00, 0x48)
 static Objective Objectives_3_HendersonB[3] = {
-    {(Action_TranslatedText)0x04000007, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400000f, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000008, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000010, 75, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000009, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000011, 77, 0, 1, 76, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000007, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400000f,
+     72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000008, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000010,
+     75, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000009, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000011,
+     77, 0, 1, 76, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dd48, 0x48)
 static Objective Objectives_3_HendersonC[3] = {
-    {(Action_TranslatedText)0x0400000a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000012, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400000b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000013, 81, 0, 1, 77, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400000c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000014, 83, 0, 1, 82, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000a, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000012,
+     78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000b, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000013,
+     81, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000c, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000014,
+     83, 0, 1, 82, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dd90, 0x18)
 static Objective Objectives_1_HendersonD[1] = {
-    {(Action_TranslatedText)0x0400000d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000015, 84, 0, 1, 83, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400000d, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000015,
+     84, 0, 1, 83, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dda8, 0x48)
 static Objective Objectives_3_TowerA[3] = {
-    {(Action_TranslatedText)0x04000016, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000021, 97, 0, 0, 0, 2, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000017, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000022, 70, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000018, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000023, 71, 0, 1, 70, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000016, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000021,
+     97, 0, 0, 0, 2, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000017, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000022,
+     70, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000018, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000023,
+     71, 0, 1, 70, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017ddf0, 0x48)
 static Objective Objectives_3_TowerB[3] = {
-    {(Action_TranslatedText)0x04000019, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000024, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400001a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000025, 73, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400001b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000026, 75, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000019, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000024,
+     72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001a, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000025,
+     73, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001b, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000026,
+     75, 0, 1, 74, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017de38, 0x78)
 static Objective Objectives_5_TowerC[5] = {
-    {(Action_TranslatedText)0x0400001c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000027, 76, 0, 1, 75, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400001d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000028, 77, 0, 1, 75, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400001e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000029, 78, 0, 1, 77, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400001f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002a, 89, 0, 1, 79, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000020, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400002b, 90, 0, 1, 89, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001c, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000027,
+     76, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001d, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000028,
+     77, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001e, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000029,
+     78, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400001f, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400002a,
+     89, 0, 1, 79, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000020, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400002b,
+     90, 0, 1, 89, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017deb0, 0x48)
 static Objective Objectives_3_PowerStationA1[3] = {
-    {(Action_TranslatedText)0x0400002c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000061, 27, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400002d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000062, 28, 0, 1, 27, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400002e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000063, 35, 0, 1, 28, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002c, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000061,
+     27, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002d, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000062,
+     28, 0, 1, 27, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002e, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000063,
+     35, 0, 1, 28, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017def8, 0x48)
 static Objective Objectives_3_PowerStationA2[3] = {
-    {(Action_TranslatedText)0x0400002f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000064, 29, 0, 1, 35, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000030, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000065, 30, 0, 1, 29, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000031, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000066, 31, 0, 1, 29, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400002f, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000064,
+     29, 0, 1, 35, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000030, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000065,
+     30, 0, 1, 29, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000031, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000066,
+     31, 0, 1, 29, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017df40, 0x60)
 static Objective PowerStation_B1[4] = {
-    {(Action_TranslatedText)0x04000041, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 15, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000042, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 10, 0, 1, 7, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000043, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 11, 0, 1, 8, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000044, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 12, 0, 1, 9, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000041, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     15, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000042, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     10, 0, 1, 7, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000043, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     11, 0, 1, 8, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000044, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     12, 0, 1, 9, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dfa0, 0x18)
 static Objective PowerStation_B2[1] = {
-    {(Action_TranslatedText)0x04000045, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000045, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     0, 0, 1, 0, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dfb8, 0x30)
 static Objective Tower_2A[2] = {
-    {(Action_TranslatedText)0x04000035, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003b, 100, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000036, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003c, 72, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000035, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400003b,
+     100, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000036, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400003c,
+     72, 0, 0, 0, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017dfe8, 0x30)
 static Objective Tower_2B[2] = {
-    {(Action_TranslatedText)0x04000037, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003d, 73, 0, 1, 72, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000038, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003e, 77, 0, 1, 73, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000037, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400003d,
+     73, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000038, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400003e,
+     77, 0, 1, 73, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e018, 0x18)
 static Objective Tower_2Elevator[1] = {
-    {(Action_TranslatedText)0x04000039, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400003f, 74, 0, 1, 77, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000039, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400003f,
+     74, 0, 1, 77, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e030, 0x18)
 static Objective Tower_2C[1] = {
-    {(Action_TranslatedText)0x0400003a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000040, 80, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400003a, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000040,
+     80, 0, 1, 74, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e048, 0x48)
 static Objective Caves[3] = {
-    {(Action_TranslatedText)0x04000046, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000047, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000048, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0xffffffff, 0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000046, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000047, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     0, 0, 1, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000048, Action_TranslatedText_NULLVALUE, Action_TranslatedText_NULLVALUE,
+     0, 0, 1, 0, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e090, 0x78)
 static Objective Evil_Base[5] = {
-    {(Action_TranslatedText)0x04000049, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000050, 71, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400004a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000051, 72, 0, 1, 71, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400004b, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000052, 74, 0, 1, 72, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400004c, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000053, 84, 0, 1, 74, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x04000069, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x0400006a, -50, 0, 1, 84, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000049, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000050,
+     71, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004a, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000051,
+     72, 0, 1, 71, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004b, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000052,
+     74, 0, 1, 72, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004c, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000053,
+     84, 0, 1, 74, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000069, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x0400006a,
+     206, 0, 1, 84, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e108, 0x18)
 static Objective Evil_Silo[1] = {
-    {(Action_TranslatedText)0x0400004d, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000054, -114, 0, 1, 75, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004d, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000054,
+     142, 0, 1, 75, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e120, 0x30)
 static Objective EvilBase_ShuttleBay[2] = {
-    {(Action_TranslatedText)0x0400004e, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000055, -113, 0, 1, -114, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400004f, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000056, -112, 0, 1, -113, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004e, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000055,
+     143, 0, 1, 142, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400004f, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000056,
+     144, 0, 1, 143, 0, {0, 0, 0}, 0},
 };
 // XBE_GLOBAL(0x0017e150, 0x30)
 static Objective Space_Station_D[2] = {
-    {(Action_TranslatedText)0x04000059, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000067, 9, 0, 0, 0, 0, {0, 0, 0}, 0},
-    {(Action_TranslatedText)0x0400005a, (Action_TranslatedText)0xffffffff, (Action_TranslatedText)0x04000068, 11, 0, 1, 9, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x04000059, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000067,
+     9, 0, 0, 0, 0, {0, 0, 0}, 0},
+    {(Action_TranslatedText)0x0400005a, Action_TranslatedText_NULLVALUE, (Action_TranslatedText)0x04000068,
+     11, 0, 1, 9, 0, {0, 0, 0}, 0},
 };
 
 // XBE_GLOBAL(0x0017e180, 0x3c0)
@@ -176,7 +231,7 @@ static Mission MissionData[24] = {
 
 // AUTOINJECT
 Action_TranslatedText Mission_FailLabel(void) {
-    return (Action_TranslatedText)FailLabel;
+    return FailLabel;
 }
 
 // AUTOINJECT
@@ -198,12 +253,12 @@ HASHCODE Mission_BaseMapHCode(void) {
 }
 
 // AUTOINJECT
-void Mission_SetStatus(undefined4 status) {
+void Mission_SetStatus(MissionStatus status) {
   MissionState = status;
 }
 
 // AUTOINJECT
-undefined4 Mission_Status(void) {
+MissionStatus Mission_Status(void) {
   return MissionState;
 }
 
@@ -222,7 +277,7 @@ int Mission_NumVisObjectives(void) {
         for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             int objState = MissionData[i].objectives[j].status;
 
-            if(objState != 0 && objState != 1)
+            if(objState != OBJSTATUS_NOT_SHOWN && objState != OBJSTATUS_HIDDEN)
                 count++;
         }
 
@@ -248,13 +303,13 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
         for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             Objective *o = &MissionData[i].objectives[j];
 
-            if(o->status != 0 && o->status != 1) {
+            if(o->status != OBJSTATUS_NOT_SHOWN && o->status != OBJSTATUS_HIDDEN) {
                 if(objWithinLevel == objectiveNum) {
                     state->statusText = (
-                        (o->status == 2) ? 0x2000001 :
-                        (o->status == 3) ? 0x2000000 :
-                        (o->status == 4) ? 0x16f :
-                        0x170 );
+                        (o->status == OBJSTATUS_IN_PROGRESS) ? TXT_OBJECTIVE_IN_PROGRESS :
+                        (o->status == OBJSTATUS_INCOMPLETE) ? TXT_OBJECTIVE_INCOMPLETE :
+                        (o->status == OBJSTATUS_COMPLETE) ? TXT_COMPLETE :
+                        TXT_FAIL );
                     state->name = o->name;
                     state->description = o->description;
                     state->status = o->status;
@@ -287,54 +342,51 @@ void Mission_MonitorObjectives(void) {
             Objective *o = &MissionData[i].objectives[j];
             char* str = Txt_GetStringFromHeap(0);
 
-            bool isFailCondition = (o->someFlags & 0x2); // If set, the objective is a fail condition, otherwise it's a precondition for success
+            bool isFailCondition = (o->flags & OBJECTIVE_FAIL_CONDITION);
 
             uint8_t thisObjectiveMet = isFailCondition ? switch_channels[o->completedChannel] == 0
                                                        : switch_channels[o->completedChannel];
             allObjectivesCompleted &= thisObjectiveMet;
 
             switch(o->status) {
-                case 0:
-                    // On entering a new level, show ones from the previous hashcode? Mayhew part 1->2 reveals that escorting is complete?
-                    if(MissionData[i].level <= GameState.CurrentLevelHashcode) { //??? Guessing at intent
+                case OBJSTATUS_NOT_SHOWN:
+                    // shown once the current level's hashcode is not below the part's
+                    if(MissionData[i].level <= GameState.CurrentLevelHashcode) {
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 300);
-                        o->status = isFailCondition ? 2 : 3;
+                        o->status = isFailCondition ? OBJSTATUS_IN_PROGRESS : OBJSTATUS_INCOMPLETE;
                     }
                     break;
-                case 1:
-                    // New objective revealed 
+                case OBJSTATUS_HIDDEN:
                     if (((o->revealedChannel != 0) && (o->revealedChannel != 0xff)) && (switch_channels[o->revealedChannel] != '\0')) {
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
                         Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 300);
-                        o->status = isFailCondition ? 2 : 3;
+                        o->status = isFailCondition ? OBJSTATUS_IN_PROGRESS : OBJSTATUS_INCOMPLETE;
                     }
                     break;
-                case 2:
-                    // Triggered a failure
+                case OBJSTATUS_IN_PROGRESS:
                     if (!thisObjectiveMet) {
                         switch_channels[SWITCH_MISSION_FAILED] = true;
                         switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
-                        sprintf(str,"%s: %s",Txt_BindLabel((Action_TranslatedText)0x170, 0), Txt_BindLabel(o->name, 0));
+                        sprintf(str,"%s: %s",Txt_BindLabel(TXT_FAIL, 0), Txt_BindLabel(o->name, 0));
                         Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 180);
-                        o->status = 5;
+                        o->status = OBJSTATUS_FAILED;
                     }
                     break;
-                case 3:
-                    // Completed objective within this level of the mission
+                case OBJSTATUS_INCOMPLETE:
                     if(thisObjectiveMet) {
                         sprintf(str, "%s", Txt_BindLabel(TXT_NOTIF_OBJECTIVE_COMPLETE, 0));
                         Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 180);
-                        o->status = 4;
+                        o->status = OBJSTATUS_COMPLETE;
                     }
                     break;
 
-                case 5:
-                    if(o->failLabel != 0xFFFFFFFF)
+                case OBJSTATUS_FAILED:
+                    if(o->failLabel != Action_TranslatedText_NULLVALUE)
                         FailLabel = o->failLabel;
                     break;
 
-                case 4:
+                case OBJSTATUS_COMPLETE:
                 default:
                     // Label has been created, no need to do anything more
                     break;
@@ -387,7 +439,7 @@ void Mission_MonitorObjectives(void) {
 
 }
 
-// Helper function, inlined or didn't exist in the original code but definitely more readable with this pulled out
+// The level a won mission part ends to (ours: the original has the switch in Mission_Update)
 HASHCODE Mission_GetEndTo(HASHCODE level) {
     switch(level) {
         default:
@@ -414,13 +466,24 @@ HASHCODE Mission_GetEndTo(HASHCODE level) {
         case HT_Level_SpaceStationD:
             return HT_Level_SpaceStationD_Outro;
 
-        case HT_Level_Cut_Level2: // Removed level?
+        case HT_Level_Cut_Level2:
             return HT_Level_Cut_Level2_Outro;
     }
 }
 
+// Mission_Update's state
+enum MissionUpdateState : uint32_t {
+    MISSION_UPDATE_RUNNING = 1,
+    MISSION_UPDATE_FAILED = 2,          // shows the fail text
+    MISSION_UPDATE_DIED = 3,
+    MISSION_UPDATE_TIMED_OUT = 4,       // the results after a win, else the retry menu
+    MISSION_UPDATE_WAITING = 5,         // on the game flow or the menu
+    MISSION_UPDATE_WON = 6,
+    MISSION_UPDATE_COUNTDOWN = 7,       // until TimeOut_148 runs out
+};
+
 // XBE_GLOBAL(0x0017e540, 0x4)
-static uint32_t InternalState = 0x5;
+static MissionUpdateState InternalState = MISSION_UPDATE_WAITING;
 // XBE_GLOBAL(0x0017e550, 0x4)
 static uint32_t FadeClr_147 = 0xff;
 // XBE_GLOBAL(0x0025fe28, 0x4)
@@ -438,13 +501,12 @@ void Mission_Update(void) {
         return;
 
     switch(InternalState) {
-        case 1: // Normal running
+        case MISSION_UPDATE_RUNNING:
 
             if(switch_channels[SWITCH_PLAYER_FINISHED_DYING]) {
 
-                // Stop music and show fail screen
                 Music_Event(MUSICEV_DEATH,1);
-                InternalState = 3;
+                InternalState = MISSION_UPDATE_DIED;
                 FadeClr_147 = 0xff0000ff;
 
                 if (glb_players[0] != NULL)
@@ -454,18 +516,17 @@ void Mission_Update(void) {
 
             } else {
 
-                // Check for mission failure or success
                 Mission_MonitorObjectives();
 
                 if (switch_channels[SWITCH_MISSION_FAILED]) {
                     Music_Event(MUSICEV_VICTORY,1);
-                    InternalState = 2;
+                    InternalState = MISSION_UPDATE_FAILED;
                     return;
                 }
                 
                 if (switch_channels[SWITCH_MISSION_WON]) {
                     Music_Event(MUSICEV_END,1);
-                    InternalState = 6;
+                    InternalState = MISSION_UPDATE_WON;
                     FadeClr_147 = 0xff;
                     return;
                 }
@@ -475,51 +536,51 @@ void Mission_Update(void) {
 
             break;
 
-        case 2: // Fail screen
+        case MISSION_UPDATE_FAILED:
             GameState.LevelEnding = true;
-            MissionState = 2;
+            MissionState = MISSION_STATUS_FAILED;
             LevelToEndTo = HT_Level_Menu_Pre;
-            InternalState = 7;
+            InternalState = MISSION_UPDATE_COUNTDOWN;
             Text_AddMsg(0, 0, TXTMSG_MISSION, (char*)Txt_BindLabel(TXT_MISSION_FAIL, 0), 0,
                         4 * VIDEO_FRAME_RATE); // 4 seconds
-            TimeOut_148 = 5 * VIDEO_FRAME_RATE; // ?
+            TimeOut_148 = 5 * VIDEO_FRAME_RATE;
 
             break;
 
-        case 3: // Quit mission
+        case MISSION_UPDATE_DIED:
             TimeOut_148 = 1.0f;
             GameState.LevelEnding = true;
-            MissionState = 3;
-            InternalState = 7;
+            MissionState = MISSION_STATUS_QUIT;
+            InternalState = MISSION_UPDATE_COUNTDOWN;
             LevelToEndTo = HT_Level_Menu_Pre;
             break;
 
-        case 4: // TimeOut expired - either quit to main menu, show results screen, or the "try/quit" screens?
-            if(MissionState == 6) {
-                int lVar3 = Menu_GetLevelIndex(Mission_BaseMapHCode());
-                int lVar4 = Menu_GetLevelIndex((HASHCODE)GameState.BaseMapHashCode);
-                if (lVar4 < lVar3) {
+        case MISSION_UPDATE_TIMED_OUT:
+            if(MissionState == MISSION_STATUS_COMPLETE) {
+                int missionIndex = Menu_GetLevelIndex(Mission_BaseMapHCode());
+                int savedIndex = Menu_GetLevelIndex((HASHCODE)GameState.BaseMapHashCode);
+                if (savedIndex < missionIndex) {
                   GameState.BaseMapHashCode = Mission_BaseMapHCode();
                 }
                 GameState.ReloadMenupage = P_NFRESULTS;
                 ResetMap_LevelToLoad(LevelToEndTo, 0, 0);
                 GameFlow_PushState(GAMEFLOW_FADE, 60.0, FadeClr_147);
-                InternalState = 5;
-            } else { // Show retry/quit menu
+                InternalState = MISSION_UPDATE_WAITING;
+            } else {
                 MenuManager_Create(HT_Menu_MissionEndMenu, P_ENDMISSION, 0, '\0', MENU_NO_CLOSE_ACTION, 0,
                                    MENU_STATUS_MISSION_END);
                 GS_PauseGame(true);
-                InternalState = 5;
+                InternalState = MISSION_UPDATE_WAITING;
             }
 
         break;
 
-        case 5: // Awaiting game flow to change state / menu actions, don't need to do anything
+        case MISSION_UPDATE_WAITING:
             break;
 
-        case 6: // Mission complete, exit to FMV / main menu
-            MissionState = 6;
-            InternalState = 7;
+        case MISSION_UPDATE_WON:
+            MissionState = MISSION_STATUS_COMPLETE;
+            InternalState = MISSION_UPDATE_COUNTDOWN;
             GameState.LevelEnding = true;
             LevelToEndTo = Mission_GetEndTo(GameState.CurrentLevelHashcode);
             Text_AddMsg(0, 0, TXTMSG_MISSION, (char*)Txt_BindLabel(TXT_MISSION_COMPLETE, 0), 0,
@@ -527,17 +588,17 @@ void Mission_Update(void) {
             TimeOut_148 = 4 * VIDEO_FRAME_RATE;
             break;
         
-        case 7: // Await timeout
+        case MISSION_UPDATE_COUNTDOWN:
             GS_PausePlayer(1, 0);
             TimeOut_148 -= FRAME_RATE_MUL;
             if (TimeOut_148 <= 0) {
                 GS_PauseGame(true);
-                InternalState = 4;
+                InternalState = MISSION_UPDATE_TIMED_OUT;
             }
             break;
 
         default:
-            InternalState = 1;
+            InternalState = MISSION_UPDATE_RUNNING;
             break;
     }
 
@@ -554,10 +615,10 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
     if(!warmReset)
         BaseMap = 0xFFFFFFFF;
     
-    FailLabel = 0xFFFFFFFF;
+    FailLabel = Action_TranslatedText_NULLVALUE;
     ThisOrderNum = 0xFFFFFFFF;
-    InternalState = 1;
-    Mission_SetStatus(1);
+    InternalState = MISSION_UPDATE_RUNNING;
+    Mission_SetStatus(MISSION_STATUS_RUNNING);
     GS_PauseGame(false);
 
     for(uint i = 0; i < ARRAY_SIZE(MissionData); i++) {
@@ -569,8 +630,8 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
     }
 
     if(BaseMap == 0xFFFFFFFF) {
-        InternalState = 5;
-        Mission_SetStatus(5);
+        InternalState = MISSION_UPDATE_WAITING;
+        Mission_SetStatus(MISSION_STATUS_NONE);
         return;
     }
 
@@ -588,20 +649,21 @@ void Mission_Init(HASHCODE hashcode, short warmReset) {
         if(MissionData[i].baseLevel != BaseMap)
             continue;
 
-        int someStateThing;
+        // 0 a later part, 1 an earlier one (4 on a warm reset), 2 this one
+        int partOrder;
         if(MissionData[i].idxInOrder < ThisOrderNum) {
-            someStateThing = warmReset ? 4 : 1;
+            partOrder = warmReset ? 4 : 1;
         } else if (MissionData[i].idxInOrder == ThisOrderNum) {
-            someStateThing = 2;
+            partOrder = 2;
         } else {
-            someStateThing = 0;
+            partOrder = 0;
         }
 
         for(uint j = 0; j < MissionData[i].numObjectives; j++) {
             Objective* o = &MissionData[i].objectives[j];
-            if((someStateThing == 0) || (someStateThing == 2)) {
+            if((partOrder == 0) || (partOrder == 2)) {
                 
-                o->status = (o->revealedChannel ? 1 : 0);
+                o->status = (o->revealedChannel ? OBJSTATUS_HIDDEN : OBJSTATUS_NOT_SHOWN);
 
                 if(o->completedChannel) {
                     switch_channels[o->completedChannel] = o->markCompletionTimeAtInit;

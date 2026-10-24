@@ -33,6 +33,6 @@ void Shooter_Update(obj_tag *obj) {
         dir.x = 0.0f;
         dir.y = -1.0f;
     }
-    Bullet_init(0, NULL, obj, weapon, &obj->position, &dir, 0xffff);
+    Bullet_init(0, NULL, obj, weapon, &obj->position, &dir, SFX_NONE);
     obj->flags |= OBJFLAG_DELETE;
 }

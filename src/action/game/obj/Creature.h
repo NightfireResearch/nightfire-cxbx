@@ -9,14 +9,18 @@
 #define CREATURE_WAYPOINTS 6
 
 // Creature::kind
-#define CREATURE_SWIMS 0
-#define CREATURE_FISH  1    // only in a CELKIND_WATER_ROOM, and listed in FishList
+enum CreatureKind {
+    CREATURE_SWIMS = 0,
+    CREATURE_FISH = 1,          // only in a CELKIND_WATER_ROOM, and listed in FishList
+};
 
 // Creature::state
-#define CREATURE_PLAN   0   // new waypoints, then moving
-#define CREATURE_MOVE   1
-#define CREATURE_DIE    3
-#define CREATURE_DEAD   4
+enum CreatureState {
+    CREATURE_PLAN = 0,          // new waypoints, then moving
+    CREATURE_MOVE = 1,
+    CREATURE_DIE = 3,
+    CREATURE_DEAD = 4,
+};
 
 #pragma pack(push, 1)
 // A waypoint: where, and turned along the way there

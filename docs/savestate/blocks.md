@@ -122,7 +122,7 @@ Player = slot; `MPSettings` at 0x0025fe38, `Player[]` 0x30 bytes each (`src/acti
 
 | bit | width | field | rd |
 |---|---|---|---|
-| 64 | 1 | `Player[slot].SomeField2` (0x0025fe60 + 0x30 slot) - meaning unknown | U32 |
+| 64 | 1 | `Player[slot].radar` (0x0025fe60 + 0x30 slot) - the radar shown (SUB_P_CNMPOPTIONS_RADAR) | U32 |
 | 65 | 32 | `Player[slot].HealthModifier` (0x0025fe64 + 0x30 slot), signed | U32 |
 
 ### `GSET` - global options (327 bits, 49 bytes)

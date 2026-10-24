@@ -455,7 +455,8 @@ bool P_MPBOTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         for (int i = 0; i < ARRAY_SIZE(mp_stuff); i++) {
             mp_stuff[i] = mp_characters[i];
             bool goodTaken = mp_good_bot_taken != 0 && mp_editing_bot + 10 != mp_good_bot_taken;
-            if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK && goodTaken && Menu_IsBotGood(mp_characters[i].identifier))
+            if ((MPSettings.GameMode & GM_TEAMGAME) == GM_QUICK && goodTaken &&
+                Menu_IsBotGood(mp_characters[i].identifier))
                 *(uchar *)&mp_stuff[i].enabled = 0;
             if (mp_bond_bot_taken != 0 && mp_editing_bot + 10 != mp_bond_bot_taken && IsBondSkin((int)mp_characters[i].identifier))
                 *(uchar *)&mp_stuff[i].enabled = 0;
@@ -488,7 +489,7 @@ bool C_SBMPBTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
         if (menu_unlock_everything || *(uchar *)&mp_stuff[skin].enabled) {
             mpbots.bot[mp_editing_bot].SkinNum = skin;
             mpbots.bot[bot].isGood = Menu_IsBotGood(skin);
-            if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK && Menu_IsBotGood((uchar)mpbots.bot[bot].SkinNum))
+            if ((MPSettings.GameMode & GM_TEAMGAME) == GM_QUICK && Menu_IsBotGood((uchar)mpbots.bot[bot].SkinNum))
                 mp_good_bot_taken = mp_editing_bot + 10;
             if (IsBondSkin((uchar)mpbots.bot[mp_editing_bot].SkinNum))
                 mp_bond_bot_taken = mp_editing_bot + 10;
@@ -546,7 +547,7 @@ bool P_MPBOTSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
 
         // give back the one-per-game characters if the bot no longer has one or is not playing
         bot = &mpbots.bot[mp_editing_bot];
-        if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK && mp_good_bot_taken == mp_editing_bot + 10)
+        if ((MPSettings.GameMode & GM_TEAMGAME) == GM_QUICK && mp_good_bot_taken == mp_editing_bot + 10)
             if (!Menu_IsBotGood((uchar)bot->SkinNum) || !bot->isPlaying)
                 mp_good_bot_taken = 0;
         if (mp_bond_bot_taken == mp_editing_bot + 10)
@@ -690,7 +691,7 @@ bool C_SBMPSCEN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         MPSettings.GameMode = GM_ARENA;
         MPSettings.MaxPoints = 10;
         MPSettings.MaxDuration = 10;
-        MPSettings.field53_0x190 = 0;
+        MPSettings.gameModeBit30 = 0;
         MPSettings.ExplosiveSceneryEnabled = 0;
         MPSettings.isTeamGame = 0;
         MPSettings.ShowTeamAndNameOverhead = 1;
@@ -758,7 +759,7 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
                 else
                     phoenix++;
             }
-            bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
+            bool teams = (MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK;
             if (!teams && mi6 > 1) {
                 Menu_CreateOptionBox(managerNum, Txt_BindLabel(MP_GOOD_GUYS_WRONG_TEAM, 0), 0, 1, 0);
                 break;
@@ -823,7 +824,7 @@ ulonglong Menu_GetMPSkins(int managerNum, byte agent, char taken) {
             continue;
         uint skin = mp_characters_small[i].identifier;
         bool good = BOT_getDefaultStats(skin)->isBad == 0;
-        if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK) {
+        if ((MPSettings.GameMode & GM_TEAMGAME) == GM_QUICK) {
             if (good) {
                 if (taken)
                     continue;
@@ -901,7 +902,7 @@ static void RefreshCharacterChoices(uchar managerNum, uint except, bool taken) {
 bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     uint agent = (uchar)control->id;
     MPJoinSlot *slot = &mp_join_slots[agent];
-    bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
+    bool teams = (MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK;
     switch (message) {
     case MessageType_Scroll:
     case MessageType_ValueSet:
@@ -998,9 +999,6 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
 extern uint32_t menu_bonus[8];   // MenuUnlocks.cpp
 
-// A missing controller's message, the player's number in it (names ours): for one that had joined, one that had not
-#define MP_CONTROLLER_MISSING_JOINED ((Action_TranslatedText)0x10002d5)
-#define MP_CONTROLLER_MISSING        ((Action_TranslatedText)0x10002a2)
 // The bots' short names, one per mp_characters identifier from the first
 #define MP_BOT_SHORT_NAME_FIRST 0x10002e2
 #define MP_BOT_SHORT_NAMES      29
@@ -1327,7 +1325,7 @@ bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             MPJoinSlot *slot = &mp_join_slots[agent];
             slot->ready = 0;
             M_CONTROL *radio = (M_CONTROL *)__Menu_SendEx(managerNum, C_RBMPSETUP, agent, MessageType_GetControl, 0, 0);
-            if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
+            if ((MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK) {
                 mp_join_step[agent] = JOIN_CHOOSE_TEAM;
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
                               (intptr_t)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
@@ -1339,7 +1337,7 @@ bool P_MPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                 mp_join_step[agent] = JOIN_CHOOSE_CHARACTER;
                 __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText,
                               (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
-                if ((MPSettings.GameMode & TEAMGAME) == GM_QUICK)
+                if ((MPSettings.GameMode & GM_TEAMGAME) == GM_QUICK)
                     slot->team = MI6;
                 else
                     slot->team = (MPTeam)RADIO_GET_VALUE_OF(radio);
@@ -1563,7 +1561,7 @@ bool P_MPDEBRIEFING_Handler(uchar managerNum, M_CONTROL *control, uint hashcode,
 
     __Menu_Send(managerNum, SUB_P_MPDEBRIEFING_RESULT, MessageType_MemoSetOption282, 1, 0);
     const char *result;
-    if ((MPSettings.GameMode & TEAMGAME) != GM_QUICK) {
+    if ((MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK) {
         float phoenix = MPGame.teamScore[PHOENIX], mi6 = MPGame.teamScore[MI6];
         if (phoenix == mi6) {
             result = Txt_BindLabel(MP_MATCH_DRAW, 0);
@@ -1739,7 +1737,7 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_MI6_HANDICAP, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         __Menu_SendEx(managerNum, SUB_P_MPCONFIRM_PHOENIX_HANDICAP, row, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
     }
-    bool teams = (MPSettings.GameMode & TEAMGAME) != GM_QUICK;
+    bool teams = (MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK;
     // column headings: "MI6" and (shown) "Phoenix" from the menu data, or one column of everyone "Playing"
     __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_1, MessageType_SetText, (intptr_t)Txt_BindLabel(teams ? MP_TEAM_MI6 : MP_BOT_PLAYING, 0), 0);
     __Menu_Send(managerNum, SUB_P_MPCONFIRM_HEADING_2, MessageType_SetState, teams ? CONTROL_STATE_INERT : CONTROL_STATE_HIDDEN, 0);

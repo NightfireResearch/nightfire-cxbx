@@ -99,8 +99,6 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 // XBE_GLOBAL(0x0029a140, 0xc)
 _VECTOR GlobalListenerPos;
 
-// The sound ids' low 20 bits index SFXOutputData
-#define SFX_ID_MASK 0xfffff
 #define NUM_DYNAMIC_SOUNDS 0x100
 
 // AUTOINJECT
@@ -294,8 +292,8 @@ bool Sound_IsFinnished(DYNAMICSOUNDS *handle) {
 
 // The alertness heard at pos: each sound playing with any, not looping, within its outer radius, adds it, all of it
 // within its inner radius and falling to none at the outer. level gets the highest the sum reached, and *loudest the
-// sound that took it there. Sounds 0x11c and 0x11d are not heard in TowerA and TowerB; sound 0x248 becomes as loud
-// to its outer radius, with alertness 10.
+// sound that took it there. The large wooden door's sounds are not heard in TowerA and TowerB; the gong's becomes as
+// loud to its outer radius, with alertness 10.
 // AUTOINJECT
 float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest) {
     float sum = 0.0f;
@@ -318,11 +316,11 @@ float Sound_Alertness(_VECTOR *pos, float *level, DYNAMICSOUNDS **loudest) {
             continue;
 
         uint id = snd->sfxId & SFX_ID_MASK;
-        if (id >= 0x11c) {
-            if (id <= 0x11d) {
+        if (id >= SFX_ENV_LARGE_WOODEN_DOOR_CLOSE) {
+            if (id <= SFX_ENV_LARGE_WOODEN_DOOR_OPEN) {
                 if (GameState.CurrentLevelHashcode == HT_Level_TowerA || GameState.CurrentLevelHashcode == HT_Level_TowerB)
                     continue;
-            } else if (id == 0x248) {
+            } else if (id == SFX_ENV_GONG_BULLET_IMPACT) {
                 snd->radiusInner = snd->radiusOuter;
                 snd->alertness = 10.0f;
             }
@@ -367,7 +365,7 @@ DYNAMICSOUNDS* Sound_Play3D(Action_SFX sfxId,_VECTOR *position,float volume,floa
     undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
     Sound_FrameDelay = 0;
     
-    if ((sfxId & 0xfffff) == 0xffff)
+    if ((sfxId & SFX_ID_MASK) == SFX_NONE)
         return NULL;
 
     if (isLimitedRadius == 0) {
@@ -389,7 +387,7 @@ DYNAMICSOUNDS* Sound_PlayExt(Action_SFX sfxId, float volume, undefined2 pitch, u
     undefined1 tmpFrameDelay = (undefined1)Sound_FrameDelay;
     Sound_FrameDelay = 0;
     
-    if ((sfxId & 0xfffff) == 0xffff)
+    if ((sfxId & SFX_ID_MASK) == SFX_NONE)
         return NULL;
 
     DYNAMICSOUNDS *snd = Sound_Play(sfxId,&CONST_ZERO_VECTOR,volume,-1.0,-1.0,pitch,0,ref);

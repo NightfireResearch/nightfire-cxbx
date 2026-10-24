@@ -47,9 +47,6 @@ typedef struct {
 static_assert(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
 static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
 
-// The text shown while a level-load trigger's lock channel is clear
-#define TXT_LEVEL_LOCKED ((Action_TranslatedText)0x02000021)
-
 // Set while Trigger_Calc updates the touch triggers; at other times Trigger_Update leaves them alone.
 // XBE_GLOBAL(0x0029b2cc, 0x1)
 uint8_t ProcessTouch;
@@ -323,7 +320,7 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
     // Locked: say so, at most every three seconds
     if (t->inputs[0] != 0 && !switch_channels[t->inputs[0]]) {
         if (t->cooldown == 0) {
-            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_LEVEL_LOCKED, 0), 0, 180);
+            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_NOT_ALL_OBJECTIVES_COMPLETED, 0), 0, 180);
             t->cooldown = FRAME_RATE_INT * 3;
         }
         return;
@@ -558,7 +555,6 @@ static_assert(sizeof(MUSICTRIGGER) == 0xc, "MUSICTRIGGER is 0xc bytes");
 // XBE_GLOBAL(0x0029b240, 0x4)
 DYNAMICSOUNDS *GlobalVoiceHandle;
 
-#define NO_SOUND 0xffff
 #define NO_MUSIC_EVENT 0xff
 #define MUSIC_TRIGGER_FRAMES 30
 
@@ -575,7 +571,7 @@ obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
     Create_Trigger_Params *params = (Create_Trigger_Params *)lvl;
     GlobalVoiceHandle = NULL;
 
-    if (params->param[2] == 0 || params->param[2] == NO_SOUND || params->param[0] == 0)
+    if (params->param[2] == 0 || params->param[2] == SFX_NONE || params->param[0] == 0)
         return NULL;
     uint difficulty = GameState.difficultyModifier;
     uint only = params->param[6];

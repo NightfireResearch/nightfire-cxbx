@@ -88,7 +88,7 @@ obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 
     sensor->owner = obj;
     sensor->beamObject = NULL;
-    sensor->childObjectVisibilityState = 0;
+    sensor->monitorView = MONITORVIEW_NONE;
 
     if(createParams->beamHashcode != 0) {
         sensor->beamObject = control_create_object(0, pos, rot, NULL);
@@ -234,8 +234,7 @@ void Sensor_Update(obj_tag *sensorObj) {
 
     SENSOR *sensor = (SENSOR*)sensorObj->extraObjectData;
 
-    // Handle visibility state changes
-    if (sensor->childObjectVisibilityState == 1) {
+    if (sensor->monitorView == MONITORVIEW_HIDE) {
         sensorObj->effectFlags |= EFFECT_HIDDEN;
         if (sensor->beamObject != NULL) {
             sensor->beamObject->effectFlags |= EFFECT_HIDDEN;
@@ -243,9 +242,9 @@ void Sensor_Update(obj_tag *sensorObj) {
         if (sensor->bodyObject != NULL) {
             sensor->bodyObject->effectFlags |= EFFECT_HIDDEN;
         }
-        sensor->childObjectVisibilityState = 2;
+        sensor->monitorView = MONITORVIEW_SHOW;
     }
-    else if (sensor->childObjectVisibilityState == 2) {
+    else if (sensor->monitorView == MONITORVIEW_SHOW) {
         sensorObj->effectFlags &= ~EFFECT_HIDDEN;
         if (sensor->beamObject != NULL) {
             sensor->beamObject->effectFlags &= ~EFFECT_HIDDEN;
@@ -253,7 +252,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         if (sensor->bodyObject != NULL) {
             sensor->bodyObject->effectFlags &= ~EFFECT_HIDDEN;
         }
-        sensor->childObjectVisibilityState = 0;
+        sensor->monitorView = MONITORVIEW_NONE;
     }
 
     // Handle loop sound based on disable switch channel
@@ -267,11 +266,11 @@ void Sensor_Update(obj_tag *sensorObj) {
             Sound_Stop(sensor->loopSound);
             sensor->loopSound = NULL;
         }
-        sensorObj->curState = 3;
+        sensorObj->curState = SENSOR_STATE_DISABLED;
     }
 
     switch (sensorObj->curState) {
-    case 0:  // Normal patrol/scanning state
+    case SENSOR_STATE_PATROL:
         if (sensor->beamObject != NULL) {
             View_SetDrawInAllViews(sensor->beamObject);
         }
@@ -315,14 +314,14 @@ void Sensor_Update(obj_tag *sensorObj) {
         if ((short)sensorObj->subState++ > 30) {
             sensor->alertTimer = 0.0f;
             sensor->alertBeepTimer = 0.0f;
-            sensorObj->curState = 1;
+            sensorObj->curState = SENSOR_STATE_ALERT;
             if (sensor->alertSwitchChannel != 0) {
                 Sound_Play3D(SFX_ENV_CAMERA_DETECT_BEEP, &sensorObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             }
         }
         break;
 
-    case 1:  // Alert state - player detected
+    case SENSOR_STATE_ALERT:
         if (sensor->alertSwitchChannel != 0) {
             Extended beep = Extended(REC_FRAME_RATE) + Extended(sensor->alertBeepTimer);   // tested unrounded
             sensor->alertBeepTimer = (float)beep;
@@ -355,7 +354,7 @@ void Sensor_Update(obj_tag *sensorObj) {
 
         // Lost track of player
         if (sensorObj->subState > FRAME_RATE_INT) {
-            sensorObj->curState = 2;
+            sensorObj->curState = SENSOR_STATE_RETURNING;
             return;
         }
 
@@ -371,7 +370,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         }
         break;
 
-    case 2:  // Return to patrol state
+    case SENSOR_STATE_RETURNING:
         sensor->alertBeepTimer = 0.0f;
 
         if (sensor->alertSwitchChannel != 0) {
@@ -393,11 +392,11 @@ void Sensor_Update(obj_tag *sensorObj) {
         Sensor_SetBeam(player, sensorObj, sensor);
 
         if (Quat_IsEqual(&sensor->trackedRotation, &tmpQuat, 0.01f)) {
-            sensorObj->curState = 0;
+            sensorObj->curState = SENSOR_STATE_PATROL;
         }
         break;
 
-    case 3:  // Disabled state
+    case SENSOR_STATE_DISABLED:
         if (sensor->enabledGraphicsLod != NULL) {
             sensorObj->objGraphics = sensor->enabledGraphicsLod;
         }
@@ -414,7 +413,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         // Re-enable if switch channel deactivated
         if ((sensor->disableSwitchChannel != 0) && (switch_channels[sensor->disableSwitchChannel] == 0)) {
             sensorObj->objGraphics = sensor->enabledGraphics;
-            sensorObj->curState = 0;
+            sensorObj->curState = SENSOR_STATE_PATROL;
         }
         break;
     }

@@ -39,7 +39,7 @@ static_assert(offsetof(DestroyPlacement, delay) == 0x44, "Bad offset of DestroyP
 
 #pragma pack(pop)
 
-obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl, celglist_tag *someOtherGl);
+obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl, celglist_tag *nextGlist);
 void Destroy_Update(obj_tag *obj);
 void Destroy_CollisionHandler(obj_tag *obj);
 void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags);

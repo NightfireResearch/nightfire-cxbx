@@ -20,10 +20,10 @@ static_assert(sizeof(DYNAMICOBJECT_tag) == 0xc, "DYNAMICOBJECT_tag is 0xc bytes"
 // Its placement keys (level_tag)
 typedef struct DynamicObjectPlacement {
     PlacementHeader header;     // 0x00
-    uint unknown2c;             // 0x2c
-    uint unknown30;             // 0x30
-    uint unknown34;             // 0x34
-    uint unknown38;             // 0x38
+    uint showChannel;           // 0x2c
+    uint hideChannel;           // 0x30
+    uint fadeDistance;          // 0x34
+    uint hideOnly;              // 0x38
 } DynamicObjectPlacement;
 #pragma pack(pop)
 

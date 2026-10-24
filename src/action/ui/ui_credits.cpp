@@ -11,9 +11,9 @@
 // The credits: a table of 578 lines (data/credits.csv, generated into CreditsData.inc - see docs/ui/credits.md)
 // that P_CREDITS scrolls up the screen through 26 recycled pairs of text controls, one new line every 14 frames.
 
-// A line of the credits as written in the source: a text label, or a literal where the label is TXT_NONE (the
-// names are not translated, and not in the text banks).
-#define TXT_NONE 0xffffffffu
+// A line of the credits as written in the source: a text label, or a literal where the label is none (the names
+// are not translated, and not in the text banks); TXT_NONE, the generator's name for it.
+#define TXT_NONE ((uint)Action_TranslatedText_NULLVALUE)
 typedef struct {
     uchar centred, lstyle, rstyle;
     uint llabel, rlabel;       // Action_TranslatedText
@@ -44,8 +44,10 @@ CreditsEntry* Menu_SetupCredits(uint *numLines_out) {
         CreditsEntry *table = (CreditsEntry *)Menu_Malloc(sizeof(CreditsEntry) * CREDITS_NUM_LINES);
         for (int i = 0; i < CREDITS_NUM_LINES; i++) {
             const CreditsLine *line = &credits_lines[i];
-            table[i].txt_left = line->llabel != TXT_NONE ? Txt_BindLabel((Action_TranslatedText)line->llabel, 0) : line->ltext;
-            table[i].txt_right = line->rlabel != TXT_NONE ? Txt_BindLabel((Action_TranslatedText)line->rlabel, 0) : line->rtext;
+            table[i].txt_left = line->llabel != TXT_NONE ? Txt_BindLabel((Action_TranslatedText)line->llabel, 0)
+                                                         : line->ltext;
+            table[i].txt_right = line->rlabel != TXT_NONE ? Txt_BindLabel((Action_TranslatedText)line->rlabel, 0)
+                                                          : line->rtext;
             table[i].modifiers_left = line->lstyle;
             table[i].modifiers_right = line->rstyle;
             table[i].centred = line->centred;

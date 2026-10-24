@@ -28,9 +28,6 @@ uint8_t mp_good_bot_taken;  // ui_mp.cpp
 // XBE_GLOBAL(0x002456b1, 0x1)
 uint8_t mp_bond_bot_taken;
 
-#define TXT_LEGAL_NOTICE ((Action_TranslatedText)0x375)
-#define TXT_PRESS_START ((Action_TranslatedText)0x2fb)
-
 #define MENU_IDLE_ATTRACT 0xa8c     // frames without input before the start page and the main menu show P_ATTRACT
 #define MENU_IDLE_LANGUAGE 600      // frames without input before the language page takes the language shown
 

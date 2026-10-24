@@ -25,18 +25,18 @@
 // The multiplayer weapon sets' guns, then single player's
 // XBE_GLOBAL(0x00163a30, 0x150) readonly relocate
 GUNTYPE GunTypes[12] = {
-    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 46, 180.0f, 268},
-    {{0.0f, 0.23f, 1.65f}, HT_Entity_50calBarrel, 96, 10.0f, 266},
-    {{0.17f, 0.23f, 0.94f}, HT_Entity_MinigunBarrels, 97, 5.0f, 1255},
-    {{0.0f, 0.2f, 1.16f}, HT_Entity_FAMAS, 111, 180.0f, 1058},
-    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 45, 180.0f, 268},
-    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 42, 120.0f, 1036},
-    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 43, 120.0f, 1036},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, 1307},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, 1307},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, 1059},
-    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, 1059},
-    {{0.0f, 0.0f, 1.71f}, HT_Entity_PowerStationGunImpBarrel, 103, 1.0f, 1307},
+    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 46, 180.0f, SFX_WEAPON_ROCKET_LAUNCHER_SHOOT},
+    {{0.0f, 0.23f, 1.65f}, HT_Entity_50calBarrel, 96, 10.0f, SFX_WEAPON_MINI_GUN_FIRE},
+    {{0.17f, 0.23f, 0.94f}, HT_Entity_MinigunBarrels, 97, 5.0f, SFX_ENV_CEILINGGUNSHOT},
+    {{0.0f, 0.2f, 1.16f}, HT_Entity_FAMAS, 111, 180.0f, SFX_WEAPON_LASER_SHOT_SMALL},
+    {{0.0f, 0.27f, 0.92f}, HT_Entity_RocketLauncherBarrel, 45, 180.0f, SFX_WEAPON_ROCKET_LAUNCHER_SHOOT},
+    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 42, 120.0f, SFX_WEAPON_OICW_GRENADE_SHOT_01},
+    {{0.0f, 0.21f, 0.51f}, HT_Entity_Grenadelauncher, 43, 120.0f, SFX_WEAPON_OICW_GRENADE_SHOT_01},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, SFX_WEAPON_POWERSTATION_LASER},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 112, 1.0f, SFX_WEAPON_POWERSTATION_LASER},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, SFX_WEAPON_LASER_SHOT_LARGE},
+    {{0.0f, 0.33f, 1.61f}, HT_Entity_GunImpBarrel, 50, 180.0f, SFX_WEAPON_LASER_SHOT_LARGE},
+    {{0.0f, 0.0f, 1.71f}, HT_Entity_PowerStationGunImpBarrel, 103, 1.0f, SFX_WEAPON_POWERSTATION_LASER},
 };
 
 // The weapons with their own firing: a minigun's spin up and down, and two lasers
@@ -67,7 +67,8 @@ obj_tag* GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl) 
     memset(&mtx, 0, sizeof(mtx));
     Quat_QuatToMat(quat, &mtx);
     Matrix_SetTrans(pos, &mtx);
-    obj_tag *gunObj = Control_CreateObjEx(sizeof(GUNIMP), pos, NULL, &mtx, celgl, NULL, 1, 4, 1.0f, 0, 0xff, 0xff, 0xff);
+    obj_tag *gunObj = Control_CreateObjEx(sizeof(GUNIMP), pos, NULL, &mtx, celgl, NULL, 1, TRANSFORM_MATRIX_PLACED,
+                                          1.0f, 0, 0xff, 0xff, 0xff);
     if (gunObj == NULL)
         return NULL;
     GUNIMP *gunImp = (GUNIMP *)gunObj->extraObjectData;
@@ -78,8 +79,8 @@ obj_tag* GunImp_Create(_VECTOR *pos, quaternion_tag *quat, celglist_tag *celgl) 
     gunImp->userOffset.x = 0.0f;
     gunImp->gunType = (uchar)gunType;
     gunImp->gun = Control_CreateObjEx(sizeof(GUNIMP), pos, NULL, &mtx,
-                                      hashtable_hashcode_to_celglist(GunTypes[gunType].model), NULL, 1, 4, 1.0f, 0,
-                                      0xff, 0xff, 0xff);
+                                      hashtable_hashcode_to_celglist(GunTypes[gunType].model), NULL, 1,
+                                      TRANSFORM_MATRIX_PLACED, 1.0f, 0, 0xff, 0xff, 0xff);
     gunImp->gun->effectFlags |= EFFECT_MASKABLE;
     Mat_Copy(&gunObj->transformMatrix, &gunImp->placement);
     gunImp->heat = 0.0f;
@@ -100,7 +101,7 @@ static_assert(std::bit_cast<uint32_t>(EmplacementFov) == 0x3f060a92, "not the or
 // AUTOINJECT
 void GunImp_Activate(obj_tag *gunObj, obj_tag *player) {
 
-    if (gunObj->curState != 0)
+    if (gunObj->curState != GUNIMP_FREE)
         return;
 
     GUNIMP *gunImp = (GUNIMP*)gunObj->extraObjectData;
@@ -112,7 +113,7 @@ void GunImp_Activate(obj_tag *gunObj, obj_tag *player) {
     blData->previousSubState = Player_ChangeSubState(player, MovementType_Emplacement);
     blData->remoteControlDevice = gunObj;
     Player_SetCamMode(blData, CamMode_GunImp);
-    gunObj->curState = 1;
+    gunObj->curState = GUNIMP_MANNED;
     gunObj->subState = blData->playerNum;
     Player_Disable(player, 1);
     gunImp->user = player;
@@ -132,7 +133,7 @@ void GunImp_Activate(obj_tag *gunObj, obj_tag *player) {
 // AUTOINJECT
 void GunImp_Deactivate(obj_tag *gunObj) {
 
-    if (gunObj->curState == 1) {
+    if (gunObj->curState == GUNIMP_MANNED) {
         short playerNum = gunObj->subState;
         BLData *blData = glb_blokes[playerNum];
 
@@ -144,7 +145,7 @@ void GunImp_Deactivate(obj_tag *gunObj) {
         anim->switchingToWeaponId = anim->prevHeldWeaponId;
         Camera_CalcViewAngles(gunObj->subState, ViewFov_PlayerFov());
         blData->fallFrames = 0.0f;
-        Vec_Zero(&blData->field_0x3c);
+        Vec_Zero(&blData->fallVelocity);
         Vec_Zero(&blData->movement);
     }
 
@@ -159,7 +160,7 @@ void GunImp_Deactivate(obj_tag *gunObj) {
     gunImp->user->rotation.z = 0.0f;
     gunImp->user->rotation.x = 0.0f;
     gunImp->user = NULL;
-    gunObj->curState = 0;
+    gunObj->curState = GUNIMP_FREE;
 
     Sound_Stop(gunImp->firingSound);
     gunImp->firingSound = NULL;
@@ -211,7 +212,7 @@ void GunImp_Update(obj_tag *gunObj) {
     else
         gunImp->refireTimer = 0.0f;
 
-    if ((short)gunObj->curState != 1)
+    if ((short)gunObj->curState != GUNIMP_MANNED)
         return;
     if (Input_Action(gunObj->subState, ACTION_RELOAD, ACTION_PRESSED)) {
         GunImp_Deactivate(gunObj);
@@ -280,7 +281,7 @@ void GunImp_Update(obj_tag *gunObj) {
 
     if (Input_Action(gunObj->subState, ACTION_FIRE, ACTION_HELD) && gunImp->refireTimer <= 0.0f &&
         !gunImp->overheated) {
-        int sound;
+        Action_SFX sound;
         GUNTYPE *firing = &GunTypes[gunImp->gunType];
         if (firing->weapon == GUNIMP_MINIGUN) {
             sound = firing->sound;
@@ -293,9 +294,9 @@ void GunImp_Update(obj_tag *gunObj) {
             if (gunImp->heat > GUNIMP_OVERHEAT)
                 gunImp->overheated = 1;
         } else if (firing->weapon == GUNIMP_LASER_A || firing->weapon == GUNIMP_LASER_B) {
-            sound = 0xffff;
+            sound = SFX_NONE;
             if (gunImp->firingSound == NULL)
-                gunImp->firingSound = Sound_Play3D((Action_SFX)firing->sound, &gunObj->position, 100.0f, -1.0f, -1.0f,
+                gunImp->firingSound = Sound_Play3D(firing->sound, &gunObj->position, 100.0f, -1.0f, -1.0f,
                                                    0, 0, 0);
             gunImp->heat = gunImp->heat + 2.0f;
             if (gunImp->heat > GUNIMP_OVERHEAT)
@@ -310,21 +311,21 @@ void GunImp_Update(obj_tag *gunObj) {
         Vec_Copy(&muzzle, &from);
         short playerNum = gunObj->subState;
         Bullet_init(playerNum, glb_players[playerNum], gunImp->gun, &weapon_data[GunTypes[gunImp->gunType].weapon],
-                    &from, &dir, 0xffff);
-        if (sound != 0xffff)
-            Sound_Play3D((Action_SFX)sound, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+                    &from, &dir, SFX_NONE);
+        if (sound != SFX_NONE)
+            Sound_Play3D(sound, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
 
         int weapon = GunTypes[gunImp->gunType].weapon;
         if (weapon != GUNIMP_LASER_A && weapon != GUNIMP_LASER_B) {
             GunImp_Flash(&muzzle, HT_Entity_Generic_muzzle, 1, true, gunObj->inCel);
             Light_Create(&from, 0xff, 0x60, 0, 9.0f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0,
-                         0xffff);
+                         SFX_NONE);
             return;
         }
 
         GunImp_Flash(&from, HT_Entity_taser_muzzle, 1, true, gunObj->inCel);
         Light_Create(&from, 0, 0xff, 0xff, 9.0f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0,
-                     0xffff);
+                     SFX_NONE);
         _VECTOR end;
         auxVec_AddMulR32(&from, &dir, 1000.0f, &end);
         // Uninitialised in the original; Collide_RayIntersect sets it

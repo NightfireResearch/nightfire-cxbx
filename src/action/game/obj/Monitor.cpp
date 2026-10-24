@@ -170,5 +170,5 @@ void Monitor_Update(obj_tag *obj) {
     if (sensor->monitoredChannel != 0)
         switch_channels[sensor->monitoredChannel] = 1;
     Mat_Copy(&monitor->camera->transformMatrix, &monitor->viewer->viewMatrix);
-    sensor->childObjectVisibilityState = 1;
+    sensor->monitorView = MONITORVIEW_HIDE;
 }

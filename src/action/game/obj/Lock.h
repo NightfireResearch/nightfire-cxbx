@@ -11,8 +11,8 @@
 typedef struct LOCK_tag {
     ushort kind;                // 0x00 - LOCK_KEYPAD, LOCK_LASER or LOCK_DECRYPT
     ushort key;                 // 0x02 - the key that opens it (BLData::keys), and its code (KeyCodes)
-    ushort openSound;           // 0x04 - 0xffff for none
-    ushort lockedSound;         // 0x06 - used without the key; 0xffff for none
+    ushort openSound;           // 0x04 - Action_SFX, SFX_NONE for none
+    ushort lockedSound;         // 0x06 - used without the key; SFX_NONE for none
     ushort channel;             // 0x08 - set while it is open
     ushort menu;                // 0x0a - the keypad's menu manager
     uint unknownC;              // 0x0c - key 2

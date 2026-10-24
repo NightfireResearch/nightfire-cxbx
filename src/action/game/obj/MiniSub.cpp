@@ -15,15 +15,17 @@
 
 // The mini sub (OBJECTTYPE_MINISUB). No level places one.
 
-#define WEAPON_SUB_TORPEDO  0x30
-
 // obj_tag::subState: heading along the route, or turning on the spot
-#define MINISUB_TURN    0
-#define MINISUB_FORWARD 1
+enum MiniSubMove {
+    MINISUB_TURN = 0,
+    MINISUB_FORWARD = 1,
+};
 
 // obj_tag::curState
-#define MINISUB_START   0
-#define MINISUB_ATTACK  3
+enum MiniSubState {
+    MINISUB_START = 0,
+    MINISUB_ATTACK = 3,
+};
 
 // AUTOINJECT
 obj_tag* MiniSub_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
@@ -144,7 +146,7 @@ void MiniSub_FireTorpedo(MiniSubInfo *sub) {
     dir.x = (float)(Rand_FRandHalf(0.25f) + dir.x);
     dir.y = (float)(Rand_FRandHalf(0.25f) + dir.y);
     Vec_Normalise(&dir, &dir);
-    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[WEAPON_SUB_TORPEDO], &at, &dir, 0xffff);
+    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[Weap_SubTorpedo], &at, &dir, SFX_NONE);
     if (Rand_Rand(0x5b7f) & 1)
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }

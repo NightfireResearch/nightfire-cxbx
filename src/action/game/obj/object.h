@@ -7,13 +7,16 @@
 #include "../../math/math.h"
 
 typedef enum {
+    OBJECTTYPE_0=0,             // a helicopter's body is one (Bullet_heatseekable)
     // The original uses value 1 both for graphics-only child objects and for
     // objects after their delete path has completed.
     OBJECTTYPE_GFX=1,
     OBJECTTYPE_DELETED=OBJECTTYPE_GFX,
     OBJECTTYPE_DRONE=2,
     OBJECTTYPE_PLAYER=3,
+    OBJECTTYPE_4=4,             // listed with the drones (MP_GetRadarObjects)
     OBJECTTYPE_BULLET=5,
+    OBJECTTYPE_6=6,             // deleted like bullets and effects out of every room (control_handle_cel_change)
     OBJECTTYPE_ROTOR=7,
     OBJECTTYPE_PARTICLES=12,
     OBJECTTYPE_CASING=13,
@@ -162,6 +165,14 @@ inline const char* Object_GetName(ObjectType type) {
 // Forward declaration of obj_tag so that it can be used within the struct
 struct obj_tag;
 
+// obj_tag::collideFlags
+enum ObjCollideFlags {
+    OBJCOLL_ACTOR = 0x1,        // a player or a drone: its tests pass through bullets (Collide_PickObj)
+    OBJCOLL_BULLET = 0x2,
+    OBJCOLL_SPHERE = 0x4,       // a sphere test meets it as a sphere
+    OBJCOLL_DOOR_PORTALS = 0x8, // a door: build_LinkDoors2Portals links it to the portals it covers
+};
+
 typedef struct obj_tag {
     // TODO: Complete this
     LLNODE_tag* llPrev; // Required at the start of the struct for insertion into eg ForcedList
@@ -197,7 +208,7 @@ typedef struct obj_tag {
     ushort transformFlags; // ObjectTransformFlags: how the update derives the matrix and bounds (0xd6)
     char drawnCountdown;   // 0xd8 - View_AddObjects sets 2, the object update counts it down: non-zero = drawn in
                            //        the last two ticks
-    char unknown_0xd9;     // 0xd9 - bits: 1 player and drones, 2 bullets, 8 doors; tested by Collide_PickObj
+    char collideFlags;     // 0xd9 - ObjCollideFlags
     char flags;            // 0xda - ObjectFlags
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
     uchar ambientR;        // 0xdc - the ambient light, eased towards its cel's (Lights_CalcAmbientLight)
@@ -252,7 +263,6 @@ typedef enum {
 // Control_GetObjMatrix (0x0002cf10), Control_BuildWorldSph (0x0002db20), control_movement_object_handler
 // (0x0002dd10) and Player_Update. Ordinarily the matrix is rebuilt from rotation, position and scale, and the
 // bounding sphere from the model. (The field was called transformFlags, a guess; Ghidra calls it rendererType.)
-// 0x10 is set on particle-emitter objects but no reader has been found; 0x80 is not traced.
 typedef enum {
     // Scale stretches the object along its own length (Z) only, rather than evenly: beams, lasers, tracers.
     TRANSFORM_SCALE_LENGTH_ONLY = 0x01,
@@ -264,12 +274,17 @@ typedef enum {
     // A skinned, animated object (set by AnimObjectNew): the bounding sphere comes from the animation rather
     // than the model, and collision and the view code treat it as such.
     TRANSFORM_ANIMATED = 0x08,
+    // A platform particle system (Particles_Create): added to the views without a model, sorted 2000 further back,
+    // and drawn by nothing on the Xbox (View_DrawList's profiling hook point)
+    TRANSFORM_PARTICLES = 0x10,
     // Moved this frame: control_movement_object_handler wraps the rotation into +-pi, rebuilds the matrix, the
     // world bounds, the cel and the lighting, and keeps the position and rotation as the last ones.
     TRANSFORM_MOVED = 0x20,
     // After the frame's update, the position is read back out of the matrix's translation.
     TRANSFORM_POSITION_FROM_MATRIX = 0x40,
-    // The radius is kept as set, not worked out from the model and the scale.
+    TRANSFORM_80 = 0x80,                // Door_Create sets it; no reader found
+    // The radius is kept as set, not worked out from the model and the scale; and the views add the object without a
+    // model and draw it with Emitter_Draw (Emitter_Create sets it).
     TRANSFORM_FIXED_RADIUS = 0x100,
     // The scale is not applied to the matrix.
     TRANSFORM_NO_SCALE = 0x200,

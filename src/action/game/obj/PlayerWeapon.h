@@ -7,28 +7,40 @@
 // anims, firing, the zoom, the auto-aim, the laser sight, the muzzle flash and the watch.
 
 // BLData::idleState: the gun's idle anims (Player_SetWeaponAnimObj)
-#define IDLE_NONE    0  // idle, counting towards a fidget or lowering the gun
-#define IDLE_PLAYING 1  // a fidget, or the gun coming back up, is playing
-#define IDLE_LOWERED 3  // lowered (weapon_definition_tag::animRelax) until a drone is alert or the player aims
+enum IdleState {
+    IDLE_NONE = 0,              // idle, counting towards a fidget or lowering the gun
+    IDLE_PLAYING = 1,           // a fidget, or the gun coming back up, is playing
+    IDLE_LOWERED = 3,           // lowered (weapon_definition_tag::animRelax) until a drone is alert or the player aims
+};
 
 // The weapon object's states (BLData::weaponObject->curState)
-#define GUN_IDLE            0
-#define GUN_LOWER           1   // put away, to change weapons
-#define GUN_LOWERING        2
-#define GUN_RAISE           3   // the new weapon's model, brought up
-#define GUN_RAISING         4
-#define GUN_RELOAD_START    5
-#define GUN_RELOADING       6
-#define GUN_RELOAD_END      7
-#define GUN_SWITCH_VARIANT  8   // between variants of one model; also the end of continuous fire
-#define GUN_FIRING          9
-#define GUN_PUT_BACK        10  // a raise turned round
-#define GUN_THROW_WINDUP    11
-#define GUN_THROWING        12
-#define GUN_LOWER_USED_UP   13  // put away for good (the weapon was used up)
-#define GUN_LOWERING_USED_UP 14
-#define GUN_SCOPE_RAISE     15
-#define GUN_SCOPE_LOWER     16
+enum GunState {
+    GUN_IDLE = 0,
+    GUN_LOWER = 1,              // put away, to change weapons
+    GUN_LOWERING = 2,
+    GUN_RAISE = 3,              // the new weapon's model, brought up
+    GUN_RAISING = 4,
+    GUN_RELOAD_START = 5,
+    GUN_RELOADING = 6,
+    GUN_RELOAD_END = 7,
+    GUN_SWITCH_VARIANT = 8,     // between variants of one model; also the end of continuous fire
+    GUN_FIRING = 9,
+    GUN_PUT_BACK = 10,          // a raise turned round
+    GUN_THROW_WINDUP = 11,
+    GUN_THROWING = 12,
+    GUN_LOWER_USED_UP = 13,     // put away for good (the weapon was used up)
+    GUN_LOWERING_USED_UP = 14,
+    GUN_SCOPE_RAISE = 15,       // the bring-to-eye anim of a weapon that has one
+    GUN_SCOPE_LOWER = 16,
+};
+
+// Player_WeaponChange's third argument: cycle the weapons, the gadgets, or the party guest's restricted cycle
+// (CastleIndoors1 before SWITCH_CASTLEINDOORS1_ARMED is on)
+enum WeaponChangeMode {
+    WEAPONCHANGE_WEAPONS = 0,
+    WEAPONCHANGE_GADGETS = 1,
+    WEAPONCHANGE_UNARMED = 2,
+};
 
 void Player_InitAmmoWeapons(obj_tag *player);
 bool Player_EquipWeapon(BLData *blData, short weapon, short amount);

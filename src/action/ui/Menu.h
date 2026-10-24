@@ -197,7 +197,7 @@ typedef struct DEFAULT_CODENAME {
     int sfxVolume;                  // 0x14
     uchar subtitles;                // 0x18
     uchar weaponUpgrade;            // 0x19 GameState.WeaponUpgradeRelated
-    uchar mpSomeField2;             // 0x1a MPSettings_PerPlayer.SomeField2
+    uchar mpRadar;             // 0x1a MPSettings_PerPlayer.radar
     char pad_1b;
     short healthModifier;           // 0x1c
     uchar inverted;                 // 0x1e

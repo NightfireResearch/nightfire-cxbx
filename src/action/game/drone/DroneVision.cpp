@@ -65,7 +65,7 @@ static double AbsByCompare(double x) {
 // ---- lines of sight
 
 // The weapon's bone in the drone's hand, where its muzzle is and the barrel's direction (the bone's -x). False
-// without an anim, a weapon datum or an anim running (flag 1). A sound of 0 comes back as 0xffff.
+// without an anim, a weapon datum or an anim running (flag 1). A sound of 0 comes back as SFX_NONE.
 // AUTOINJECT
 bool DroneWeap_GetWeaponInfo(Drone_tag *drone, int *bone, uint *flash, ushort *sound, _VECTOR *muzzle,
                              _VECTOR *barrel) {
@@ -78,7 +78,7 @@ bool DroneWeap_GetWeaponInfo(Drone_tag *drone, int *bone, uint *flash, ushort *s
     if (obj->animState == NULL || !(obj->animState->animObj.flags & ANIMOBJ_POSE_VALID))
         return false;
     if (sound != NULL && *sound == 0)
-        *sound = 0xffff;
+        *sound = SFX_NONE;
     _MATRIX mtx;
     AnimGetBoneWorldTrans(obj, *bone, 1, muzzle, &mtx);
     _VECTOR back = {-1.0f, 0.0f, 0.0f};

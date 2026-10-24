@@ -24,7 +24,7 @@ obj_tag * Hurt_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
     hurt->type = (uchar)keys->type;
     hurt->damage = (float)keys->damage;
     hurt->enableSwitchChannel = (ushort)keys->enableSwitchChannel;
-    hurt->sound = keys->sound != 0 ? (ushort)keys->sound : 0xffff;
+    hurt->sound = keys->sound != 0 ? (ushort)keys->sound : SFX_NONE;
     hurt->armMask = (ushort)keys->armMask;
     hurt->oneShotPath = (uchar)keys->oneShotPath;
     double frames = (double)hurt->pathFrames * REC_FRAME_RATE;

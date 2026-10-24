@@ -143,7 +143,7 @@ void BodyGlow_Update(obj_tag *glow) {
     sAnimSkin_tag *skin = animObj->skin;
     psiBuildMatrixPalette(owner, animObj, 0);
     Vec_Copy(Mat_Position(animObj->boneMtxs[5]), &glow->position);
-    views |= 0x10;
+    views |= VIEW_4_MASK;
     View_SetDrawInViews(glow, (short)views);
     glow->transformFlags |= TRANSFORM_MOVED;
     glow->tweakA = alpha;

@@ -18,13 +18,6 @@
 extern int LanguageToLoad;  // tLANGUAGE (XboxSystem.cpp)
 extern uint32_t SubtitlesEnabled;
 
-#define TXT_INVERTED ((Action_TranslatedText)0x206)
-#define TXT_NORMAL   ((Action_TranslatedText)0x3bd)
-#define TXT_TOGGLE   ((Action_TranslatedText)0x2a2)
-#define TXT_HOLD     ((Action_TranslatedText)0x2a3)
-#define TXT_HORIZONTAL ((Action_TranslatedText)0x2ba)
-#define TXT_VERTICAL ((Action_TranslatedText)0x2b9)
-
 // ---- the controller styles
 
 #define CONTROLLER_STYLES 8
@@ -139,7 +132,8 @@ bool P_CNCONTROLS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
     RADIO_SELECT_ITEM(managerNum, C_RBCONTROL, PlayerInputs[0].controlStyle);
     Menu_DisplayControllerStyle(managerNum, PlayerInputs[0].controlStyle);
     controls_inverted = PlayerInputs[0].inverted;
-    LABEL_SET_TEXT(managerNum, SUB_P_CNCONTROLS_INVERTED_TEXT, Txt_BindLabel(controls_inverted ? TXT_INVERTED : TXT_NORMAL, 0));
+    LABEL_SET_TEXT(managerNum, SUB_P_CNCONTROLS_INVERTED_TEXT,
+                   Txt_BindLabel(controls_inverted ? TXT_INVERTED : CONTROL_NORMAL, 0));
     return true;
 }
 
@@ -158,7 +152,7 @@ bool C_RBCONTROL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         case MessageType_AltSelect2:
             controls_inverted = !controls_inverted;
             LABEL_SET_TEXT(managerNum, SUB_P_CNCONTROLS_INVERTED_TEXT,
-                           Txt_BindLabel(controls_inverted ? TXT_INVERTED : TXT_NORMAL, 0));
+                           Txt_BindLabel(controls_inverted ? TXT_INVERTED : CONTROL_NORMAL, 0));
             break;
     }
     return true;
@@ -223,7 +217,7 @@ bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_RADAR);
         RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MP_ON, 1);
         RADIO_ADD_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MP_OFF, 0);
-        RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MPSettings.Player[0].SomeField2);
+        RADIO_SELECT_ITEM(managerNum, SUB_P_CNMPOPTIONS_RADAR, MPSettings.Player[0].radar);
         RADIO_CLEAR(managerNum, SUB_P_CNMPOPTIONS_HANDICAP);
         for (int i = 0; i < ARRAY_SIZE(handicaps); i++)
             __Menu_Send(managerNum, SUB_P_CNMPOPTIONS_HANDICAP, MessageType_AddItem, (intptr_t)handicaps[i].text,
@@ -236,7 +230,7 @@ bool P_CNMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
     }
     else if (message == MessageType_Select) {
         cn_modified = 1;
-        MPSettings.Player[0].SomeField2 = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_RADAR);
+        MPSettings.Player[0].radar = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_RADAR);
         MPSettings.Player[0].HealthModifier = RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_HANDICAP);
         PlayerInputs[0].autoAimMultiplayer = (uchar)RADIO_GET_VALUE(managerNum, SUB_P_CNMPOPTIONS_AUTOAIM);
         Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);

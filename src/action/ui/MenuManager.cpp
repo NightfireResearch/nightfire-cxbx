@@ -43,7 +43,7 @@ SpriteInfo menu_cursor = {
     .spritesheetY = 36,
     .spritesheetWidth = 1,
     .spritesheetHeight = 1,
-    .textRef = (Action_TranslatedText)0xffffffff,
+    .textRef = Action_TranslatedText_NULLVALUE,
     .textureHashcode = HT_Texture_final_controls_complete,
 };
 
@@ -60,7 +60,6 @@ int32_t controller_wait = 10;
 static char controller_text[256];
 
 #define CONTROLLER_WAIT 10
-#define CONTROLLER_REMOVED_TEXT ((Action_TranslatedText)0x10001ec)
 #define CONTROLLER_PAGE P_MESSAGEBOX
 #define CONTROLLER_OPTIONS C_LBMSGOPTIONS
 
@@ -516,7 +515,7 @@ void MenuManager_Monitor(void) {
                 controller_mission_end = MenuManager_GetStatus() == MENU_STATUS_MISSION_END;
                 if (!controller_mission_end && GameState.LevelEnding)
                     break;
-                sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0), input->controllerPort + 1);
+                sprintf(controller_text, Txt_BindLabel(TXT_CONTROLLER_REMOVED, 0), input->controllerPort + 1);
                 controller_state = 1;
                 // fall through
             case 1:
@@ -533,7 +532,7 @@ void MenuManager_Monitor(void) {
                 break;
             case 2: {
                 // The box fitted round the text and the options
-                sprintf(controller_text, Txt_BindLabel(CONTROLLER_REMOVED_TEXT, 0),
+                sprintf(controller_text, Txt_BindLabel(TXT_CONTROLLER_REMOVED, 0),
                         PlayerInputs[controller_player].controllerPort + 1);
                 __Menu_Send(0, SUB_P_MESSAGEBOX_TEXT, MessageType_SetText, (intptr_t)controller_text, 0);
                 M_CONTROL *box = (M_CONTROL *)__Menu_Send(0, SUB_P_MESSAGEBOX_BOX, MessageType_GetControl, 0,

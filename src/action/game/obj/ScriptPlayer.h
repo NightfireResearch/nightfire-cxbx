@@ -6,11 +6,41 @@
 
 // Bits of SCRIPTPLAYER::triggerMask, and the values SP_Hit computes/returns each frame
 enum SP_TriggerFlags {
-    SP_Trigger_SwitchChannel = 0x1,  // someSwitchChannel is currently on
+    SP_Trigger_SwitchChannel = 0x1,  // switchChannel is currently on
     SP_Trigger_BulletHit     = 0x2,  // A bullet matching requiredBulletType hit a linked entity
     SP_Trigger_Unpause       = 0x4,  // unpauseRequested was set, or the countdown/damage timer elapsed
     SP_Trigger_PlayerTouch   = 0x8,  // A player touched a linked entity
     SP_Trigger_DroneTouch    = 0x10, // A drone touched a linked entity
+};
+
+// Playback state machine driven by SP_Update. The forward/reverse cycle is:
+//   NotStarted -> PlayingForward -> WaitingReverse -> PlayingReverse -> WaitingForward -> PlayingForward -> ...
+// looping forever, unless playOnce is set - in which case PlayingForward goes straight to Finished instead of
+// WaitingReverse. Armed/DeferredLoad are only ever entered once, right after creation.
+enum SP_State {
+    SP_State_NotStarted = 0,     // Waiting for the first trigger before loading/playing anything
+    SP_State_WaitingForward = 1, // Finished playing reverse; waiting for a trigger to play forward again
+    SP_State_PlayingForward = 2,
+    SP_State_WaitingReverse = 3, // Finished playing forward; waiting for a trigger to play reverse
+    SP_State_PlayingReverse = 4,
+    SP_State_Finished = 5,       // Done for good - marks the object for deletion
+    SP_State_Armed = 6,          // Loaded but waiting for the first trigger before actually playing
+    SP_State_DeferredLoad = 7,   // One-shot: load the script on the next update, then fall into the normal flow
+};
+
+// SCRIPTPLAYER::scriptPlayModes[], SP_Create's playMode (SP_LoadScript, SP_CreateScriptPlayer)
+enum SP_PlayMode {
+    SP_PLAY_ON_TRIGGER = 0,      // not loaded until the first trigger
+    SP_PLAY_NOW = 1,             // plays forward at once (loaded on the first update)
+    SP_PLAY_ARMED = 8,           // played with Script_Play's second argument set, armed
+    SP_PLAY_40 = 0x40,           // FuseBox's; as any other value: loaded and stopped at its first frame, waiting
+};
+
+// SP_GetState's result
+enum SP_Status {
+    SP_STATUS_WAITING = 0,       // the active script is waiting, or there is none
+    SP_STATUS_RUNNING = 1,
+    SP_STATUS_DONE = 2,          // finished, or waiting to play in reverse
 };
 
 #pragma pack(push, 1)
@@ -36,12 +66,12 @@ typedef struct SCRIPTPLAYER {
                                          //        scriptHashcodes[nthScript] via "scriptInfos[nthScript + 4]"
                                          //        pointer-arithmetic trickery from the compiler)
     short state;                        // 0x24 - playback state machine driven by SP_Update - see SP_State
-    short scriptPlayModes[2];           // 0x26 - per-script (indexed like scriptHashcodes) initial play mode,
-                                         //        consumed by SP_LoadScript: 1=start playing immediately
-                                         //        (SP_State_PlayingForward), 8=start armed, paused
-                                         //        (SP_State_Armed), other=load then pause at the first frame,
+    short scriptPlayModes[2];           // 0x26 - per-script (indexed like scriptHashcodes) SP_PlayMode,
+                                         //        consumed by SP_LoadScript: SP_PLAY_NOW starts playing
+                                         //        (SP_State_PlayingForward), SP_PLAY_ARMED starts armed
+                                         //        (SP_State_Armed), others load then pause at the first frame,
                                          //        awaiting a trigger (SP_State_WaitingForward). scriptPlayModes[0]
-                                         //        ==1 also makes SP_CreateScriptPlayer defer the load to
+                                         //        SP_PLAY_NOW also makes SP_CreateScriptPlayer defer the load to
                                          //        SP_State_DeferredLoad
     ushort nthScript;                   // 0x2a - selects scriptInfos[nthScript] / scriptHashcodes[nthScript]
     short unpauseRequested;             // 0x2c - one-shot "please unpause" flag; set by SP_UnPause and by
@@ -51,11 +81,12 @@ typedef struct SCRIPTPLAYER {
                                          //        SP_TriggerFlags. The conditions actually satisfied this frame
                                          //        (from SP_Hit, plus SP_Trigger_Unpause for unpauseRequested/
                                          //        countdown-elapsed) are AND-ed against this
-    ushort someSwitchChannel;           // 0x30 - reset to 0 (off) whenever the script player is (re)created;
-                                         //        also toggled by SP_Update to reflect the current play state
+    ushort switchChannel;               // 0x30 - on, it triggers the player (SP_Trigger_SwitchChannel); cleared
+                                         //        when the script player is (re)created, and SP_Update writes the
+                                         //        play state back to it
     ushort disableSwitchChannel;        // 0x32 - if set and this channel is off, SP_Update skips entirely (same
                                          //        pattern as Sensor/Searchlight's disableSwitchChannel)
-    char someCountdown;                 // 0x34 - frame counter set to 5 whenever playback (re)starts; suppresses
+    char hitDelay;                      // 0x34 - frame counter set to 5 whenever playback (re)starts; suppresses
                                          //        SP_Hit checks and the unpause bit while counting down
     char playOnce;                      // 0x35 - 0 = loop/toggle between the two scripts forever; nonzero = finish
                                          //        (state=5, delete) after the active script finishes once
@@ -74,8 +105,8 @@ LAYOUT_32(offsetof(SCRIPTPLAYER, scriptHashcodes) == 0x1c, "Bad offset of script
 LAYOUT_32(offsetof(SCRIPTPLAYER, scriptPlayModes) == 0x26, "Bad offset of scriptPlayModes");
 LAYOUT_32(offsetof(SCRIPTPLAYER, nthScript) == 0x2a, "Bad offset of nthScript");
 LAYOUT_32(offsetof(SCRIPTPLAYER, triggerMask) == 0x2e, "Bad offset of triggerMask");
-LAYOUT_32(offsetof(SCRIPTPLAYER, someSwitchChannel) == 0x30, "Bad offset of someSwitchChannel");
-LAYOUT_32(offsetof(SCRIPTPLAYER, someCountdown) == 0x34, "Bad offset of someCountdown");
+LAYOUT_32(offsetof(SCRIPTPLAYER, switchChannel) == 0x30, "Bad offset of switchChannel");
+LAYOUT_32(offsetof(SCRIPTPLAYER, hitDelay) == 0x34, "Bad offset of hitDelay");
 
 #pragma pack(pop)
 

@@ -50,19 +50,12 @@ LLISTINFO_tag TheDoors;
 // XBE_GLOBAL(0x001df8c0, 0xca)
 ushort DoorGroupsStates[101];
 
-// obj_tag::unknown_0xd9: build_LinkDoors2Portals links the door to the portals it covers
-#define DOOR_LINK_TO_PORTALS 0x8
-
 // How far through a swing door the one pushing it must be before it swings back
 static constexpr float DOOR_PUSH_TOLERANCE = 0.0002f;
 static_assert(std::bit_cast<uint32_t>(DOOR_PUSH_TOLERANCE) == 0x3951b717, "not the original's constant");
 // How far in front of the hinge's plane the user counts as in a closing swing door's way
 static constexpr float DOOR_CLEARANCE = 0.3f;
 static_assert(std::bit_cast<uint32_t>(DOOR_CLEARANCE) == 0x3e99999a, "not the original's constant");
-
-// The texts shown here
-#define TXT_DOOR_MSG ((Action_TranslatedText)0x0200000b)
-#define TXT_DOOR_UNLOCKED ((Action_TranslatedText)0x02000003)
 
 // AUTOINJECT
 void Door_Init(void) {
@@ -80,9 +73,9 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
     door->group = params->group;
     door->channel = params->channel;
     door->unlockSwitchChannel = params->lockChannel;
-    door->openSound = params->openSound != 0 ? params->openSound : 0xffff;
-    door->closeSound = params->closeSound != 0 ? params->closeSound : 0xffff;
-    door->lockedSound = params->lockedSound != 0 ? params->lockedSound : 0xffff;
+    door->openSound = params->openSound != 0 ? params->openSound : SFX_NONE;
+    door->closeSound = params->closeSound != 0 ? params->closeSound : SFX_NONE;
+    door->lockedSound = params->lockedSound != 0 ? params->lockedSound : SFX_NONE;
     door->path = params->header.spline;
     door->lastKey = params->header.splinePoints - 1;
     double frames = params->header.splineLength != 0 ? (double)params->header.splineLength : (double)_FRAME_RATE;
@@ -93,10 +86,10 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
 
     obj->curState = startOpen ? DoorState_Open : DoorState_Closed;
     obj->subState = params->kind;
-    obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX | 0x80;
+    obj->transformFlags |= TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX | TRANSFORM_80;
     obj->objectType = OBJECTTYPE_DOOR;
     if (params->linkToPortals != 0)
-        obj->unknown_0xd9 |= DOOR_LINK_TO_PORTALS;
+        obj->collideFlags |= OBJCOLL_DOOR_PORTALS;
     door->oneWay = params->oneWay;
     door->noTouch = params->noTouch;
     Control_SetGList(obj, celgl);
@@ -411,7 +404,7 @@ bool Door_IsOpen(obj_tag *obj) {
 uchar Door_Link2Portal(obj_tag *obj) {
     if (obj == NULL)
         return 0;
-    return (obj->unknown_0xd9 & DOOR_LINK_TO_PORTALS) != 0;
+    return (obj->collideFlags & OBJCOLL_DOOR_PORTALS) != 0;
 }
 
 // The door's message, once for each door, unless it is locked or open. None while MPSettings+0x1e4 is set.

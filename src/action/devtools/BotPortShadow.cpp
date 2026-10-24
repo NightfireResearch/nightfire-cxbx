@@ -1533,7 +1533,7 @@ void RandomMP() {
         MPGame.players[p].points = ShadowRandFloat(-3.0f, 50.0f);
     }
     mpbots.NumBots = (char)R(3);
-    MPSettings.field53_0x190 = R(2);
+    MPSettings.gameModeBit30 = R(2);
     memset(world.text, 0, sizeof(world.text));
 }
 

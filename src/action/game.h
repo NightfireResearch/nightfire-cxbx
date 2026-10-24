@@ -178,7 +178,7 @@ typedef struct {
     uint sfxLanguage;           // 0xa4
     uint flashingObjects;       // 0xa8 PlayerInput::flashingObjects
     int controlStyle;           // 0xac
-    uint mpSomeField2;          // 0xb0 MPSettings.Player[0]'s
+    uint mpRadar;          // 0xb0 MPSettings.Player[0]'s
     int healthModifier;         // 0xb4
     uint autoAimMultiplayer;    // 0xb8
     uint splitScreenLayout;     // 0xbc MultiplayerLayout_LeftRightOrTopBtm
@@ -514,8 +514,9 @@ typedef struct {
 } MPGamePlayer;
 
 enum MPGamePlayerFlags : ushort {
-    MPPLAYER_FLAG_1 = 1,        // a CTF bot with it heads for its base (BOTSTATE_pickGoal)
-    MPPLAYER_FLAG_2 = 2,        // a Blueprint bot with it heads for the espionage base; MP_BluePrintReachedBase clears it
+    MPPLAYER_HAS_FLAG = 1,      // holds the enemy flag (MP_FlagUpdate); a CTF bot with it heads for its base
+    MPPLAYER_HAS_BLUEPRINT = 2, // holds the blueprint; a bot with it heads for the espionage base, and
+                                // MP_BluePrintReachedBase clears it
     MPPLAYER_GOLDENEYE_KEY = 4,     // holds the GoldenEye key (MP_GoldenEyeUpdate)
     MPPLAYER_GOLDENEYE_CRYSTAL = 8, // holds the GoldenEye crystal (MP_GoldenEyeUpdate)
     MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
@@ -525,6 +526,17 @@ LAYOUT_32(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determ
 static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
 LAYOUT_32(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
 LAYOUT_32(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
+
+// MPGame.EndGameFlowState, as MP_Update steps it
+enum MPEndState : uint32_t {
+    MPEND_PLAYING = 0,
+    MPEND_DECIDE_WINNER = 1,    // the points limit, or Top Agent's last agents out: MP_SortOutWhoWon
+    MPEND_TIME_UP = 2,
+    MPEND_SHOW_RESULT = 3,      // five seconds of the result, then the level ends
+    MPEND_DEBRIEF = 4,          // the fade to the debriefing
+    MPEND_LEAVING = 5,
+    MPEND_RESTART_ROUND = 6,    // a demolition or protection round over: the scenario restarts
+};
 
 // The marks over the assassin and the target a player sees
 typedef struct {
@@ -537,7 +549,7 @@ typedef struct {
   MPGamePlayer players[NUM_AGENTS];
   // Immediately following is more state related to MP game
   float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
-  uint EndGameFlowState;
+  uint EndGameFlowState; // MPEndState
   uint unknown_3; // MP_CheckForEndCondition: the highest score, team or player
   float TimeUnpaused; // seconds of unpaused play, against TimeLimit (MP_CheckForEndCondition)
   float TimeLimit;

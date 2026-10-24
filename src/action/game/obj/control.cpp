@@ -24,6 +24,7 @@
 #include "Door.h"
 #include "Effect.h"
 #include "Explode.h"
+#include "GunImp.h"
 #include "Light.h"
 #include "Player.h"
 #include "Trigger.h"
@@ -443,7 +444,7 @@ void control_handle_cel_change(obj_tag *obj) {
         Car_Deactivate(obj);
         return;
     case OBJECTTYPE_BULLET:
-    case 6:
+    case OBJECTTYPE_6:
     case OBJECTTYPE_EFFECT:
         obj->flags |= OBJFLAG_DELETE;
         return;
@@ -697,7 +698,7 @@ void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float) {
 }
 
 // The player (or bot) an object is, 0 to 3, or -1. In multiplayer the index counts only if that player's object is
-// this one. A gun turret (OBJECTTYPE_GUNTURRET2) in state 1 answers its sub-state.
+// this one. A manned gun emplacement (OBJECTTYPE_GUNTURRET2) answers its sub-state.
 // AUTOINJECT
 short Control_Plr2Ind(obj_tag *obj) {
     if (obj == NULL)
@@ -713,7 +714,7 @@ short Control_Plr2Ind(obj_tag *obj) {
         index = ((Drone_tag *)obj->extraObjectData)->botVars->playerIndex;
         break;
     case OBJECTTYPE_GUNTURRET2:
-        if (obj->curState != 1)
+        if (obj->curState != GUNIMP_MANNED)
             return -1;
         return obj->subState;
     default:

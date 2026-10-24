@@ -167,7 +167,7 @@ if the `MSSN` load is to stop calling original code.
 5. **`psiLoadData` size contract.** `LS_Load` asks for exactly the size a fresh full save would have *now*
    (166 bytes with 12 score entries). Ours reads up to that and ignores the file's own length; the original
    (`FUN_000e3580`) validated a header. Only matters if the block layout ever changes.
-6. **Field meanings not pinned down**: `MPSettings_PerPlayer.SomeField2` (the `MPSG` flag); the sense of
+6. **Field meanings not pinned down**: the sense of
    `PlayerInput+0x0b` (Ghidra "hudVisibility"; `Boot_LoadPTPData` writes `fHudAlwaysVisible == 0` into it) and of
    `+0x08` (Ghidra "crosshairOff", but written as `fCrossHairOff == 0`, so ours, `crosshairsEnabled`, is right);
    the seven reserved `GSET` words and the version 4 (never checked on load).

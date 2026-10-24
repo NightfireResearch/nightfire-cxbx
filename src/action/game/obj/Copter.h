@@ -4,6 +4,19 @@
 #include "../../actionhelpers.h"
 #include "../../../common/xbeClass.h"
 
+// COPTERPATH::kind
+enum CopterPathKind {
+    COPTERPATH_WITH_COPTER = 0, // the placement makes the helicopter as well
+    COPTERPATH_EXIT = 2,        // the way out
+};
+
+// COPTER::parts, named by the script's event 15 (Copter_Register): shots pass through all but the body
+#define COPTER_PARTS 9
+#define COPTER_PART_BODY 2
+
+// A COPTER::channel that is no channel: the helicopter never attacks
+#define COPTER_NEVER_ATTACKS 100
+
 #pragma pack(push, 1)
 
 // A helicopter's path (on CopterPaths): every placement of the type makes one; those of a group are the routes its
@@ -16,7 +29,7 @@ typedef struct COPTERPATH {
     ushort group;               // 0x12 - key 1
     ushort start;               // 0x14 - the frame a helicopter starts it at (key 3)
     ushort index;               // 0x16 - key 2
-    ushort kind;                // 0x18 - key 0: 0 makes the helicopter as well, 2 the way out
+    ushort kind;                // 0x18 - key 0: CopterPathKind
     ushort _pad1a;
 } COPTERPATH;
 
@@ -29,8 +42,8 @@ typedef struct {
     quaternion_tag quat;      // 0x1c - Spline_Interp's
     obj_tag* scriptPlayer;    // 0x2c
     union {
-        obj_tag *parts[9];    // 0x30 - set by its script (Copter_Register); an explosion that hurts any of them hurts
-                              //        the helicopter
+        // 0x30 - set by its script (Copter_Register); an explosion that hurts any of them hurts the helicopter
+        obj_tag *parts[COPTER_PARTS];
         struct {
             obj_tag *_parts30[2];
             obj_tag* body;    // 0x38
@@ -50,7 +63,7 @@ typedef struct {
     float attackDamage;       // 0x6c - this attack's
     ushort enableChannel;     // 0x70 - shown, and flying, once it is on
     ushort doneChannel;       // 0x72 - set when it leaves or is destroyed
-    ushort channel;           // 0x74 - set after delay; 100: it never attacks, and goes at its path's end
+    ushort channel;           // 0x74 - set after delay; COPTER_NEVER_ATTACKS: it goes at its path's end
     ushort delay;             // 0x76 - frames
     ushort paths;             // 0x78 - its group's routes
     char pad7a[2];

@@ -19,11 +19,11 @@ struct light_tag {
     _VECTOR position;                      // 0x08-0x13 - light position
     short lifetimeFrames;                  // 0x14 - frame countdown timer (0 = infinite)
     ushort switchChannel;                  // 0x16 - switch channel index
-    ushort soundState;                     // 0x18 - non-zero: flicker (and its sound); upper bound of soundTimingCounter & 0xfff
-    ushort soundTimingBase;                // 0x1a - sound timing randomization base
-    ushort soundTimingCounter;             // 0x1c - sound timing counter
+    ushort flickerMax;                     // 0x18 - non-zero: it flickers; the limit of flickerCounter & 0xfff
+    ushort flickerBase;                    // 0x1a - flickerCounter restarts at it plus a random share of it
+    ushort flickerCounter;                 // 0x1c - counts down lit, then (0xf000 set) up flickering
     ushort flickerMask;                   // 0x1e
-    ushort soundID;                        // 0x20 - sound ID (0xffff = no sound)
+    ushort soundID;                        // 0x20 - Action_SFX, SFX_NONE for none
     uchar padding22[2];                    // 0x22-0x23
     obj_tag* parentObject;                 // 0x24
     undefined4 psiLight;                   // 0x28
@@ -64,7 +64,7 @@ void Light_Init(void);
 void Light_AllocateEntries(void);
 light_tag * Light_Create(_VECTOR *pos,undefined1 clr_r,undefined1 clr_g,undefined1 clr_b,float brightness,
                          ushort switchChannel,short lifetimeFrames,undefined1 lightType,
-                         float intensity,ushort soundState,ushort soundTimingBase,undefined2 flickerMask,int soundID);
+                         float intensity,ushort flickerMax,ushort flickerBase,undefined2 flickerMask,int soundID);
 bool Light_Delete(light_tag* light);
 light_tag *Light_FindMapLight(_VECTOR *pos, float radius);
 void Light_Update(void);

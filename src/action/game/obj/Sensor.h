@@ -30,7 +30,7 @@ typedef struct SENSOR {
     ushort monitoredChannel;               // 0x5c - set while a monitor shows this camera
     uchar monitorGroup;                    // 0x5e - the monitors of this group show it
     uchar dontAddToCameraList;             // 0x5f
-    uchar childObjectVisibilityState;      // 0x60 - 1 from Monitor_Update while a monitor shows it
+    uchar monitorView;                     // 0x60 - SensorMonitorView
     uchar padding[3];
 } SENSOR;
 
@@ -41,8 +41,21 @@ LAYOUT_32(offsetof(SENSOR, bodyObject) == 0x50, "Bad offset of bodyObject");
 
 extern LLISTINFO_tag CameraList;
 
-// SENSOR::owner->curState of a camera its disable channel has turned off
-#define SENSOR_STATE_DISABLED 3
+// A camera's obj_tag::curState (Sensor_Update)
+enum SensorState {
+    SENSOR_STATE_PATROL = 0,        // sweeping; the player in its cone for over 30 frames alerts it
+    SENSOR_STATE_ALERT = 1,         // tracking the player; two seconds of it set the alert channel
+    SENSOR_STATE_RETURNING = 2,     // the player lost for a second: turning back to its sweep
+    SENSOR_STATE_DISABLED = 3,      // while its disable channel is on
+};
+
+// SENSOR::monitorView: Monitor_Update sets it while a monitor shows the camera, which hides the camera, its beam and
+// its body for a frame
+enum SensorMonitorView {
+    MONITORVIEW_NONE = 0,
+    MONITORVIEW_HIDE = 1,
+    MONITORVIEW_SHOW = 2,           // hidden last frame: shown again
+};
 
 void Sensor_Init(void);
 obj_tag* Sensor_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl);

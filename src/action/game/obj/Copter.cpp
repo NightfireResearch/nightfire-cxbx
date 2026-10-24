@@ -60,12 +60,6 @@ enum {
     COPTER_DESTROYED = 6,
 };
 
-// The level whose helicopter fires other weapons and now and then a missile straight at the player, and the two
-// whose helicopters are blown up rather than leave
-#define COPTER_LEVEL_A HT_Level_CastleIndoors2
-#define COPTER_EXPLODES_A HT_Level_Tower2B
-#define COPTER_EXPLODES_B HT_Level_TowerC
-
 // The cone's half angle, a double
 static constexpr double CopterConeAngle = 0.78539818525314331;
 
@@ -91,7 +85,7 @@ void Copter_Delete(obj_tag *obj) {
 obj_tag* Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     CopterPlacement *keys = (CopterPlacement *)lvl;
     COPTERPATH *path = Copter_CreatePath(keys);
-    if (keys->kind != 0)
+    if (keys->kind != COPTERPATH_WITH_COPTER)
         return NULL;
 
     obj_tag *obj = control_create_object(sizeof(COPTER), pos, rot, NULL);
@@ -113,7 +107,8 @@ obj_tag* Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     obj->objGraphics = NULL;
     build_LinkToRoom(obj, 0, glb_world);
 
-    copter->scriptPlayer = SP_Create(pos, rot, keys->script0, keys->script1, 8, 0, NULL, Copter_Register, copter, 0);
+    copter->scriptPlayer = SP_Create(pos, rot, keys->script0, keys->script1, SP_PLAY_ARMED, 0, NULL, Copter_Register,
+                                     copter, 0);
     LList_Add(&CopterList, (LLNODE_tag *)copter);
     if (copter->enableChannel != 0 && !switch_channels[copter->enableChannel])
         SP_HideObj(copter->scriptPlayer, 1);
@@ -153,10 +148,10 @@ void Copter_Init(void) {
 // The script's event 15 names its parts: shots pass through all but the body
 // FUNC_AT(0x0006b900)
 void Copter_Register(obj_tag *obj, ushort part, void *context) {
-    if (context == NULL || part >= 9)
+    if (context == NULL || part >= COPTER_PARTS)
         return;
     ((COPTER *)context)->parts[part] = obj;
-    if (part != 2)
+    if (part != COPTER_PART_BODY)
         obj->effectFlags |= EFFECT_NO_COLLISION;
 }
 
@@ -199,7 +194,7 @@ COPTERPATH* Copter_NextPath(COPTER *copter) {
         next = copter->paths;
 
     for (COPTERPATH *path = (COPTERPATH *)CopterPaths.head; path != NULL; path = (COPTERPATH *)path->node.next) {
-        if (path->group == copter->path->group && path->index == next && path->kind != 2) {
+        if (path->group == copter->path->group && path->index == next && path->kind != COPTERPATH_EXIT) {
             copter->path = path;
             break;
         }
@@ -228,7 +223,7 @@ bool Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
 
     if ((float)path->frames < copter->pathFrame) {
         ended = true;
-        if (copter->channel == 100)     // a marker (Copter.h), not SWITCH_MISSION_WON
+        if (copter->channel == COPTER_NEVER_ATTACKS)     // not SWITCH_MISSION_WON
             obj->flags |= OBJFLAG_DELETE;
         copter->path = Copter_NextPath(copter);
     }
@@ -260,8 +255,9 @@ bool Copter_FireGun(COPTER *copter, obj_tag *obj) {
     Vec_Normalise(&dir, &dir);
     auxVec_AddMulR32(&gun->position, &dir, gun->objGraphics->extentMax.z, &muzzle);
     Sound_Play3D(SFX_VEH_HELICOPTER_CHAINGUN_SHOT, &muzzle, 100.0f, -1.0f, -1.0f, 0, 0, 0);
-    int weapon = GameState.CurrentLevelHashcode == COPTER_LEVEL_A ? 0x61 : 0x71;
-    Bullet_init(-1, obj, gun, &weapon_data[weapon], &muzzle, &dir, 0xffff);
+    // CastleIndoors2's helicopter has its own weapons
+    int weapon = GameState.CurrentLevelHashcode == HT_Level_CastleIndoors2 ? Weap_CopterGunCastle : Weap_CopterGun1;
+    Bullet_init(-1, obj, gun, &weapon_data[weapon], &muzzle, &dir, SFX_NONE);
     gun->curState = 0;
     if (flash != NULL) {
         flash->curState = 2;
@@ -280,7 +276,7 @@ bool Copter_FireMissile(COPTER *copter, obj_tag *obj) {
         return false;
 
     _VECTOR dir;
-    if (GameState.CurrentLevelHashcode == COPTER_LEVEL_A && Rand_Rand(Ftol(8.0f / (double)DiffMod)) == 0) {
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors2 && Rand_Rand(Ftol(8.0f / (double)DiffMod)) == 0) {
         Vec_Subtract(&glb_players[0]->position, (_VECTOR *)&launcher->transformMatrix.m[12], &dir);
         Vec_Normalise(&dir, &dir);
     } else {
@@ -288,8 +284,9 @@ bool Copter_FireMissile(COPTER *copter, obj_tag *obj) {
     }
     _VECTOR at;
     auxVec_AddMulR32(&launcher->centrePoint, &dir, launcher->objGraphics->extentMax.z * 1.5f, &at);
-    int weapon = GameState.CurrentLevelHashcode == COPTER_LEVEL_A ? 0x62 : 0x6d;
-    Bullet_init(-1, obj, launcher, &weapon_data[weapon], &at, &dir, 0xffff);
+    int weapon = GameState.CurrentLevelHashcode == HT_Level_CastleIndoors2 ? Weap_CopterMissileCastle
+                                                                            : Weap_CopterMissile1;
+    Bullet_init(-1, obj, launcher, &weapon_data[weapon], &at, &dir, SFX_NONE);
     return true;
 }
 
@@ -343,7 +340,7 @@ void Copter_Update(obj_tag *obj) {
         for (COPTERPATH *path = (COPTERPATH *)CopterPaths.head; path != NULL; path = (COPTERPATH *)path->node.next) {
             if (path->group != copter->path->group)
                 continue;
-            if (path->kind == 2)
+            if (path->kind == COPTERPATH_EXIT)
                 copter->exitPath = path;
             else
                 copter->paths++;
@@ -353,7 +350,7 @@ void Copter_Update(obj_tag *obj) {
 
     case COPTER_PATROL:
         Copter_Move(copter, obj, 0);
-        if (copter->channel == 100)     // never attacks
+        if (copter->channel == COPTER_NEVER_ATTACKS)
             break;
         obj->subState++;
         if ((double)(short)FRAME_RATE_INT * 4 / DiffMod > (double)(short)obj->subState)
@@ -411,7 +408,7 @@ void Copter_Update(obj_tag *obj) {
         return;
     }
 
-    for (int i = 0; i < 9; i++) {
+    for (int i = 0; i < COPTER_PARTS; i++) {
         obj_tag *part = copter->parts[i];
         if (part == NULL)
             continue;
@@ -453,7 +450,8 @@ void Copter_Update(obj_tag *obj) {
 
     if (obj->curState != COPTER_GOING && obj->curState != COPTER_LEAVING && copter->damage > copter->maxDamage) {
         obj->curState = COPTER_LEAVING;
-        if (GameState.CurrentLevelHashcode == COPTER_EXPLODES_A || GameState.CurrentLevelHashcode == COPTER_EXPLODES_B)
+        // blown up rather than leaving
+        if (GameState.CurrentLevelHashcode == HT_Level_Tower2B || GameState.CurrentLevelHashcode == HT_Level_TowerC)
             obj->curState = COPTER_DESTROYED;
         SetChannel(copter->doneChannel);
     }

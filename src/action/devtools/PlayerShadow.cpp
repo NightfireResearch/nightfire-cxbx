@@ -683,9 +683,9 @@ void RandomWorld(void) {
     RandomVector(&bl->lastMovement, 0.3f);
     RandomVector(&bl->rotationDelta, 0.2f);
     RandomVector(&bl->lastRotationDelta, 0.2f);
-    RandomVector(&bl->field_0x3c, 20.0f);
+    RandomVector(&bl->fallVelocity, 20.0f);
     if (ShadowRand(3) == 0)
-        bl->field_0x3c.y = PICK(-50.0f, -45.0f, 0.0f, 50.0f, 45.000004f);
+        bl->fallVelocity.y = PICK(-50.0f, -45.0f, 0.0f, 50.0f, 45.000004f);
     RandomVector(&bl->muzzle, 6.0f);
     RandomVector(&bl->grapplePoint, 6.0f);
     if (ShadowRand(3) == 0)
@@ -747,7 +747,7 @@ void RandomWorld(void) {
     bl->jumpWait = (char)(ShadowRand(2) ? 0 : ShadowRand(5));
     bl->field_0x8e3 = (char)ShadowRand(2);
     bl->shotFired = (char)ShadowRand(2);
-    static const uchar icons[] = {THIRDICON_GRAPPLE, THIRDICON_WIRE, THIRDICON_STANDING, THIRDICON_NONE};
+    static const uchar icons[] = {THIRDICON_GRAPPLE, THIRDICON_WIRE, THIRDICON_WALLHUG, THIRDICON_NONE};
     bl->thirdIcon = icons[ShadowRand(4)];
     bl->animWait = (char)(ShadowRand(2) ? 0 : ShadowRand(4));
     bl->hitDirectionFade = (uchar)ShadowRand(256);

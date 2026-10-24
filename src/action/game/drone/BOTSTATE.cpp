@@ -208,7 +208,7 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
                     case GM_CTF:
                         if (team == NO_TEAM)
                             break;
-                        if (playerFlags & MPPLAYER_FLAG_1) {
+                        if (playerFlags & MPPLAYER_HAS_FLAG) {
                             candidate = MP_getBaseObj(team);
                             subtype = BOT_OBJECTIVE_OWN_BASE;
                         } else if (!(teamFlags & 1)) {
@@ -236,7 +236,7 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
                     case GM_BLUEPRINT:
                         if (team == NO_TEAM)
                             break;
-                        if (playerFlags & MPPLAYER_FLAG_2) {
+                        if (playerFlags & MPPLAYER_HAS_BLUEPRINT) {
                             candidate = MP_getEsponageBaseObj(team, attempt);
                             subtype = BOT_OBJECTIVE_ESPIONAGE_BASE;
                         } else if (!(teamFlags & 1)) {
@@ -674,7 +674,7 @@ void BOTSTATE_processGoals(DCVars_tag *dc) {
             }
         } else if (goal->kind == BOT_GOAL_OBJECTIVE && MPSettings.GameMode == GM_BLUEPRINT
                    && objective == MP_getEsponageBaseObj(team, -1)
-                   && (MPGame.players[bot->playerIndex].flags & MPPLAYER_FLAG_2)
+                   && (MPGame.players[bot->playerIndex].flags & MPPLAYER_HAS_BLUEPRINT)
                    && MP_getBlueprintObj() != NULL && MP_getBlueprintObj()->gameObj != NULL) {
             MP_BluePrintReachedBase(MP_getBlueprintObj()->gameObj, (MPOBJECT *)MP_getBlueprintObj()->gameObj->extraObjectData);
         }

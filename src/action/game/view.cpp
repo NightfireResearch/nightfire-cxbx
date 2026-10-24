@@ -61,7 +61,7 @@ void View_SetDrawInViews(obj_tag* o, short views) {
 // Visible to everyone
 // AUTOINJECT
 void View_SetDrawInAllViews(obj_tag* o) {
-    View_SetDrawInViews(o, 0x1f);
+    View_SetDrawInViews(o, VIEWS_ALL);
 }
 
 // Visible to nobody
@@ -73,7 +73,7 @@ void View_SetDrawInNoViews(obj_tag* o) {
 // Visible to everyone except the specified player (eg 3rd person view of a gun model)
 // AUTOINJECT
 void View_SetDrawInOtherViewsOnly(obj_tag* obj, char playerNum) {
-    char views = 0x1f & (~(1 << (playerNum & 0x1f)));
+    char views = VIEWS_ALL & (~(1 << (playerNum & 0x1f)));
     View_SetDrawInViews(obj, views);
 }
 
@@ -213,15 +213,15 @@ static DrawEntry *View_AddToList(viewer_tag *viewer, int list, obj_tag *obj, cel
     return entry;
 }
 
-// The list an object or a cel is drawn in, by its flags (bit 0: back to front, by a negative key; 0x2000: last)
+// The list an object or a cel is drawn in, by its flags (back to front by a negative key, or last)
 static int View_ListFor(uint flags, float *sign) {
     int list = 0;
     *sign = 1.0f;
-    if (flags & 1) {
+    if (flags & EFFECT_BACK_TO_FRONT) {
         list = 1;
         *sign = -1.0f;
     }
-    if (flags & 0x2000) {
+    if (flags & EFFECT_DRAW_LAST) {
         list = 2;
         *sign = 1.0f;
     }
@@ -242,14 +242,14 @@ static void View_SetDetail(obj_tag *obj, viewer_tag *viewer, double distanceSq) 
     anim->animObj.lod[which] = Ftol(detail);
 }
 
-// Adds a cel's objects that this view draws and sees: those with a model, particles (transformFlags 0x10) and
-// emitters (0x100); not hidden (effectFlags 0x10) or crossing cels (0x8000, View_AddForcedObjects); with 0x400, only
-// in night vision (view mode 2). Particles sort 2000 further back.
+// Adds a cel's objects that this view draws and sees: those with a model, particles (TRANSFORM_PARTICLES) and
+// emitters (TRANSFORM_FIXED_RADIUS); not hidden or crossing cels (View_AddForcedObjects); x-ray-only ones only in
+// x-ray. Particles sort 2000 further back.
 void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
     for (obj_tag *obj = cel->firstObject; obj != NULL; obj = obj->nextInCel) {
         OnlyScaleZ = 0;
         FlipScale = 0;
-        if (!(obj->transformFlags & 0x110) && obj->objGraphics == NULL)
+        if (!(obj->transformFlags & (TRANSFORM_PARTICLES | TRANSFORM_FIXED_RADIUS)) && obj->objGraphics == NULL)
             continue;
         if (!(obj->displayMask & object_display_mask))
             continue;
@@ -269,7 +269,7 @@ void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
         double distanceSq = Vec_SqDist3D(&obj->centrePoint, &CamPos);
         double key = sign * distanceSq;
         entry->key = (float)key;
-        if (obj->transformFlags & 0x10)
+        if (obj->transformFlags & TRANSFORM_PARTICLES)
             entry->key = (float)(key + 2000.0f);
         View_SetDetail(obj, viewer, distanceSq);
     }
@@ -277,11 +277,11 @@ void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
 
 // The cels to draw this frame into list 0, in order (keys from -90000 up in tens), with their objects; then the cels
 // inside each that the view sees, by their distance squared from the eye, and their objects. Inside cels of kind
-// CELKIND_8018 are not drawn from a CELKIND_WATER_ROOM; those with CEL_NOT_IN_VIEW_4 not in view 4's pass (mask 0x10).
+// CELKIND_8018 are not drawn from a CELKIND_WATER_ROOM; those with CEL_NOT_IN_VIEW_4 not in view 4's pass.
 void View_AddCels(viewer_tag *viewer) {
     float key = -90000.0f;
     for (cel_tag *cel = GfxList; cel != NULL; cel = cel->nextVisible) {
-        if (cel->glist != NULL && !(cel->glist->applyFlagsToObject & 0x10)) {
+        if (cel->glist != NULL && !(cel->glist->applyFlagsToObject & EFFECT_HIDDEN)) {
             DrawEntry *entry = View_AddToList(viewer, 0, NULL, cel);
             entry->key = key;
             key = key + 10.0f;
@@ -289,12 +289,12 @@ void View_AddCels(viewer_tag *viewer) {
         View_AddObjects(cel, viewer);
 
         for (cel_tag *inside = cel->childCel; inside != NULL; inside = inside->childCel) {
-            if (inside->glist == NULL || (inside->glist->applyFlagsToObject & 0x10))
+            if (inside->glist == NULL || (inside->glist->applyFlagsToObject & EFFECT_HIDDEN))
                 continue;
             if ((inside->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_8018 &&
                 (viewer->cel->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_WATER_ROOM)
                 continue;
-            if ((inside->flags & CEL_NOT_IN_VIEW_4) && object_display_mask == 0x10)
+            if ((inside->flags & CEL_NOT_IN_VIEW_4) && object_display_mask == VIEW_4_MASK)
                 continue;
             if (!Vision_InView(&inside->sphere, inside->sphereRadius, viewer))
                 continue;
@@ -387,7 +387,7 @@ void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
         alpha = alpha / 4;
 
     bool flashes = (obj->effectFlags & EFFECT_FLASHES) ||
-                   (obj->objGraphics != NULL && (obj->objGraphics->applyFlagsToObject & 0x80000));
+                   (obj->objGraphics != NULL && (obj->objGraphics->applyFlagsToObject & EFFECT_FLASHES));
     if (flashes && PlayerInputs[0].flashingObjects && Vec_SqDist3D(&viewer->pos, &obj->centrePoint) < 16.0f) {
         double flash = FlashMod;
         if (obj->effectFlags & EFFECT_CEL_LIT) {
@@ -553,9 +553,9 @@ void View_DrawObjList(viewer_tag *viewer, ushort list) {
         ushort count;
         void **lights = (void **)Lights_CalcClosestLights(&obj->centrePoint, (ushort)obj->effectFlags, &count);
         psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
-        if (obj->transformFlags & 0x10)
+        if (obj->transformFlags & TRANSFORM_PARTICLES)
             __profiling_or_debugging_hook_point();
-        else if (obj->transformFlags & 0x100)
+        else if (obj->transformFlags & TRANSFORM_FIXED_RADIUS)
             Emitter_Draw(obj, viewer);
         else
             View_DrawObjectGlist(obj, viewer);

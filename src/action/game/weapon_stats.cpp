@@ -4,7 +4,7 @@
 
 // XBE_GLOBAL(0x0018ce08, 0x198) readonly relocate
 AmmoDataEntry ammo_data[NUM_AMMO_TYPES] = {
-    {0, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
+    {0, 0, HASHCODE_NONE, TXT_NULL},
     {20, 70, HT_Entity_OBJECT_SHELL_7_65mm9mm, (Action_TranslatedText)0x05000025},
     {25, 90, HT_Entity_OBJECT_SHELL_7_65mm9mm, (Action_TranslatedText)0x05000026},
     {24, 36, HT_Entity_OBJECT_SHELL_357Magnum, (Action_TranslatedText)0x0500001f},
@@ -24,20 +24,20 @@ AmmoDataEntry ammo_data[NUM_AMMO_TYPES] = {
     {0, 20, HASHCODE_NONE, (Action_TranslatedText)0x0500001b},
     {1, 10, HASHCODE_NONE, (Action_TranslatedText)0x05000024},
     {1, 9, HASHCODE_NONE, (Action_TranslatedText)0x05000075},
-    {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
+    {1, 0, HASHCODE_NONE, TXT_NULL},
     {1, 9, HASHCODE_NONE, (Action_TranslatedText)0x05000024},
     {1, 4, HASHCODE_NONE, (Action_TranslatedText)0x0500003e},
     {1, 9, HASHCODE_NONE, (Action_TranslatedText)0x0500003f},
     {1, 9, HASHCODE_NONE, (Action_TranslatedText)0x0500003c},
     {1, 9, HASHCODE_NONE, (Action_TranslatedText)0x05000031},
-    {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
+    {1, 0, HASHCODE_NONE, TXT_NULL},
     {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x05000040},
     {1, 4, HASHCODE_NONE, (Action_TranslatedText)0x05000049},
     {1, 4, HASHCODE_NONE, (Action_TranslatedText)0x0500004c},
     {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x0500004b},
-    {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
-    {1, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
-    {0, 0, HASHCODE_NONE, (Action_TranslatedText)0x00000000},
+    {1, 0, HASHCODE_NONE, TXT_NULL},
+    {1, 0, HASHCODE_NONE, TXT_NULL},
+    {0, 0, HASHCODE_NONE, TXT_NULL},
 };
 
 // The table, generated from the XBE by tools/weapon_table.py: weapon_data as the image holds it, WeaponTableData as

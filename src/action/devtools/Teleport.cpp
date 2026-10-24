@@ -70,7 +70,7 @@ void ActionTeleport_To(const ActionPlace *place) {
     Player_StandAtNewPosition(player, &position, &rotation, MovementType_Walk);
     BLData *bl = (BLData *)player->extraObjectData;
     bl->pitchFromHorizontal = place->pitch;
-    bl->aimAutoLevelState = 1;   // or the view eases back to level (see Player.cpp's mouse look)
+    bl->aimAutoLevelState = AIMLEVEL_AIMING;   // or the view eases back to level (see Player.cpp's mouse look)
     printf("[teleport] moved to %.3f,%.3f,%.3f facing %.4f, pitch %.4f\n", place->x, place->y, place->z, place->yaw,
            place->pitch);
     fflush(stdout);

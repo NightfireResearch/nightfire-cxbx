@@ -354,11 +354,11 @@ Game modes are bit sets (`MultiplayerGameMode`): bit 29 = team game, bit 30 = KO
   - `MP_KOHUpdate`.
   
   An object script on the object is moved with it. The carried-object updates call `MP_HitBy` and
-  `MP_SetUpPlayerSomehow`, and put an object back with `MP_ResetMPObject`; the originals of all three take
-  register arguments. Every caller of the last two is ours, so their originals (0x9c7e0, 0x9ecb0) are not patched
-  over and ours go by `MP_SetUpPlayerSomehow` and `MP_ResetMPObject`. `MP_KOHUpdate`, `MP_UplinkUpdate`, the flag, blueprint and GoldenEye updates and
-  `MP_BluePrintReachedBase` clear the word at MPGame+0x20c (`unknown_9`); `MP_Init` and `MP_RestartScenario` clear
-  +0x208 and +0x20a.
+  `MP_AttachToHolder` (Ghidra's `MP_SetUpPlayerSomehow`), and put an object back with `MP_ResetMPObject`; the
+  originals of all three take register arguments. Every caller of the last two is ours, so their originals (0x9c7e0,
+  0x9ecb0) are not patched over and ours go by `MP_AttachToHolder` and `MP_ResetMPObject`. `MP_KOHUpdate`,
+  `MP_UplinkUpdate`, the flag, blueprint and GoldenEye updates and `MP_BluePrintReachedBase` clear the word at
+  MPGame+0x20c (`unknown_9`); `MP_Init` and `MP_RestartScenario` clear +0x208 and +0x20a.
 - **Scoring** happens in `MP_PlayerKilled` 0xa1fc0, called from `Player_CheckForDeath` and the two bot death
   states [D][X]:
   - the victim's death count goes up (the field Ghidra calls `pointsScored` is the debriefing's Deaths);
@@ -502,7 +502,7 @@ What raising `NUM_BOTS` still needs:
 10. **The camera** (`Player_PositionCamera`, 1.8 KB) and aiming (`Player_Aiming`, `Check_AutoAim`, `Check_Target`,
     `AccelFunc0`) are live and have not been read here. `AccelFunc0` is caller-cleans despite Ghidra's `__stdcall`
     [S], a trap for anyone calling it.
-11. Bot kill bonus fields, the MPOBJECT fields beyond type, num and script player, and `MP_SetUpPlayerSomehow` /
+11. Bot kill bonus fields, the MPOBJECT fields beyond type, num, droppedFrames and script player, and
     `FUN_0009daae` (882 bytes, in the MP range, unnamed) are unknown.
 
 ## Suggested reimplementation order

@@ -508,7 +508,7 @@ bool Intersect_Portal(HITTEST_tag *test, portal_tag *portal) {
 void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
     if (tester == obj || obj == test->ignoreA || obj == test->ignore)
         return;
-    if (test->tester != NULL && (test->tester->unknown_0xd9 & 1) && (obj->unknown_0xd9 & 2))
+    if (test->tester != NULL && (test->tester->collideFlags & OBJCOLL_ACTOR) && (obj->collideFlags & OBJCOLL_BULLET))
         return;
     uint skip = EFFECT_NO_COLLISION;
     if (test->mask & HITMASK_SKIP_MASKABLE)
@@ -774,7 +774,7 @@ bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
             return Collide_Jointy(test, hit);
         Mat_Copy(&obj->transformMatrix, &mtx);
         test->glist = hit->hitObj->objGraphics;
-        if ((hit->hitObj->unknown_0xd9 & 4) && test->type == HITTEST_SPHERE) {
+        if ((hit->hitObj->collideFlags & OBJCOLL_SPHERE) && test->type == HITTEST_SPHERE) {
             // Sphere against sphere
             Vec_Subtract(&test->sphere, &hit->hitObj->centrePoint, &DeltaP);
             hit->dist = Vec_NormaliseLen(&hit->surfaceNormal.normal, &DeltaP);

@@ -519,7 +519,7 @@ void RandomObject(int i) {
     // Geometry without collision data only on a skinned object (Collide_Pick passes the others by)
     if (R(3) == 0 || obj->objGraphics == &world.noColl)
         obj->transformFlags |= TRANSFORM_ANIMATED;
-    obj->unknown_0xd9 = (char)R(8);
+    obj->collideFlags = (char)R(8);
     static const int effects[] = {0, 0, 0, 0x10, 0x20, 0x40, 0x1000, 0x10000000, 0x20000000};
     obj->effectFlags = effects[R(COUNT(effects))];
     HITTEST_tag *test = &world.objTests[i];

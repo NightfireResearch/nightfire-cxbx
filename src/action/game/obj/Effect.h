@@ -41,7 +41,7 @@ typedef struct HEINFO_tag {
     HASHCODE footprint4;        // 0x08 - the footprint of a step with flag 4 (bone 55; Effect_Player)
     HASHCODE footprint8;        // 0x0c - with flag 8 (bone 51)
     HASHCODE laserGas;          // 0x10 - the laser's smoke (Effect_Laser)
-    ushort soundBullet;         // 0x14
+    ushort soundBullet;         // 0x14 - Action_SFX
     ushort soundStep;           // 0x16 - steps and the laser
     ushort soundBody;           // 0x18
     ushort ricochet;            // 0x1a - Effect_RicochetProb's range

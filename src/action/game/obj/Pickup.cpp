@@ -72,18 +72,6 @@ static void BOTWEAP_setDroneArmour(Drone_tag *drone) {}
 // The level whose ammo 0x2c pickups always hold 4
 #define PICKUP_LEVEL_FOUR HT_Level_CastleIndoors2
 
-// What the multiplayer game modes and their teams change about bots' weapons (MPSettings.GameMode)
-#define GAMEMODE_TEAM0_RULE 0x20000080
-#define GAMEMODE_TEAM1_RULE 0x20000040
-
-// The pickups' messages
-#define TEXT_GOT_WEAPON ((Action_TranslatedText)0x0200000d)
-#define TEXT_GOT_AMMO ((Action_TranslatedText)0x0200000e)
-#define TEXT_GOT_ARMOUR ((Action_TranslatedText)0x0200000f)
-#define TEXT_GOT_KEY ((Action_TranslatedText)0x02000010)
-#define TEXT_GOT_INVISIBILITY ((Action_TranslatedText)0x02000013)
-#define TEXT_GOT_BONUS ((Action_TranslatedText)0x0200004a)
-
 static void SetChannel(ushort channel) {
     if (channel == 0)
         return;
@@ -125,7 +113,7 @@ obj_tag* Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *c
     info->kind = kind;
     info->item = item;
     info->channel = (ushort)channel;
-    info->sound = sound != 0 ? (ushort)sound : 0xffff;
+    info->sound = sound != 0 ? (ushort)sound : SFX_NONE;
     info->respawn = respawn;
     info->lifetime = lifetime;
     info->mpIndex = -1;
@@ -333,9 +321,9 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
             if (MPSettings.dronesAreBots && MPSettings.TripleDamageModifierProfessionalMode) {
                 // Weapon 0x3b is kept by PHOENIX in one mode and MI6 in another
                 bool keep59 = false;
-                if (MPSettings.GameMode == GAMEMODE_TEAM0_RULE)
+                if (MPSettings.GameMode == GM_PROTECTION)
                     keep59 = MPSettings.Player[bot->playerIndex].TeamId == PHOENIX;
-                else if (MPSettings.GameMode == GAMEMODE_TEAM1_RULE)
+                else if (MPSettings.GameMode == GM_DEMOLITION)
                     keep59 = MPSettings.Player[bot->playerIndex].TeamId == MI6;
                 short klass = weapon_data[PickupMatrix[MPSettings.weaponSet][0]].weaponBaseNum;
                 for (short k = 2; k < 0x53; k++) {
@@ -479,7 +467,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
                 sprintf(text, Txt_BindLabel(weapon_data[info->item].nameShort, 0));
             } else {
                 const char *name = Txt_BindLabel(weapon_data[info->item].nameLong, 0);
-                sprintf(text, Txt_BindLabel(TEXT_GOT_WEAPON, 0), name);
+                sprintf(text, Txt_BindLabel(TXT_GOT_WEAPON, 0), name);
             }
             info->sound = SFX_GENERIC_PICKUP_01;
             break;
@@ -490,21 +478,21 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
                 sprintf(text, "%d x %s", taken, Txt_BindLabel(ammo, 0));
             } else if (GetLanguage() == 1) {
                 const char *name = Txt_BindLabel(ammo, 0);
-                sprintf(text, Txt_BindLabel(TEXT_GOT_AMMO, 0), name, taken);
+                sprintf(text, Txt_BindLabel(TXT_GOT_AMMO, 0), name, taken);
             } else {
                 const char *name = Txt_BindLabel(ammo, 0);
-                sprintf(text, Txt_BindLabel(TEXT_GOT_AMMO, 0), taken, name);
+                sprintf(text, Txt_BindLabel(TXT_GOT_AMMO, 0), taken, name);
             }
             info->sound = SFX_GENERIC_PICKUP_01;
             break;
         }
         case PICKUP_KIND_KEY:
             text = Txt_GetStringFromHeap(0);
-            sprintf(text, Txt_BindLabel(TEXT_GOT_KEY, 0));
+            sprintf(text, Txt_BindLabel(TXT_GOT_KEY, 0));
             break;
         case PICKUP_KIND_ARMOUR:
             text = Txt_GetStringFromHeap(0);
-            sprintf(text, Txt_BindLabel(TEXT_GOT_ARMOUR, 0));
+            sprintf(text, Txt_BindLabel(TXT_GOT_ARMOUR, 0));
             info->sound = SFX_GENERIC_PICKUP_BODY_ARMOUR;
             break;
         case PICKUP_KIND_MISSION:
@@ -515,11 +503,11 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
             break;
         case PICKUP_KIND_INVISIBILITY:
             text = Txt_GetStringFromHeap(0);
-            sprintf(text, Txt_BindLabel(TEXT_GOT_INVISIBILITY, 0));
+            sprintf(text, Txt_BindLabel(TXT_GOT_INVISIBILITY, 0));
             break;
         case PICKUP_KIND_BONUS:
             text = Txt_GetStringFromHeap(0);
-            sprintf(text, Txt_BindLabel(TEXT_GOT_BONUS, 0));
+            sprintf(text, Txt_BindLabel(TXT_GOT_BONUS, 0));
             info->sound = SFX_BOND_MOMENT_BM_CAS_WALL;
             break;
         default:
@@ -581,7 +569,7 @@ obj_tag* Pickup_CreateFromSet(_VECTOR *pos, _VECTOR *rot, ushort kind) {
         weapon_definition_tag *ammo = &weapon_data[0x1b];
         model = hashtable_hashcode_to_celglist(HT_Entity_Magazine2);
         obj = Pickup_Create(&beside, rot, NULL, model, PICKUP_KIND_AMMO, ammo->weaponVariantNum, ammo->clipSize, 0,
-                            0xffff, 1, 3, 0, 0);
+                            SFX_NONE, 1, 3, 0, 0);
         if (obj == NULL)
             return NULL;
         obj->scale = 0.5f;
@@ -608,7 +596,7 @@ obj_tag* Pickup_CreateSimple(_MATRIX *mtx, short weapon, short count, ushort kin
         weapon = 0x33;
         break;
     }
-    if (weapon <= 0 || weapon >= 0x72)
+    if (weapon <= 0 || weapon >= NUM_WEAPONS)
         return NULL;
     weapon_definition_tag *def = &weapon_data[weapon];
     ushort lifetime = FRAME_RATE_INT * (MPSettings.dronesAreBots ? 30 : 120);

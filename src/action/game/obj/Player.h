@@ -38,8 +38,48 @@ static_assert(offsetof(WeaponStatus, fireModeIndex) == 0x7, "Offset of fireModeI
 static_assert(offsetof(WeaponStatus, variant) == 0x8, "Offset of variant not correct");
 
 // BLData::waterFlags
-#define WATER_HEAD_WAS_UNDER 0x01   // the head went under and came back up
-#define WATER_HEAD_UNDER     0x10   // the head is under water, or the player is on a wire
+enum WaterFlags {
+    WATER_HEAD_WAS_UNDER = 0x01,    // the head went under and came back up
+    WATER_HEAD_UNDER = 0x10,        // the head is under water, or the player is on a wire
+};
+
+// The player's obj_tag::curState (Player_Update)
+enum PlayerState {
+    PLAYERSTATE_START = 0,          // the first update makes it alive
+    PLAYERSTATE_ALIVE = 1,          // Player_StandAtNewPosition
+    PLAYERSTATE_DYING = 2,          // Player_Kill
+    PLAYERSTATE_3 = 3,              // tested with dying; not set by our code
+    PLAYERSTATE_4 = 4,              // updated as alive, but no move is allowed; not set by our code
+};
+
+// BLData::jumpState (Player_HandleJump)
+enum JumpState {
+    JUMP_NONE = 0,
+    JUMP_RISING = 1,
+    JUMP_FALLING = 2,
+};
+
+// BLData::grappleState
+enum GrappleState {
+    GRAPPLE_NONE = 0,
+    GRAPPLE_PULLING = 1,
+    GRAPPLE_HOLDING = 2,            // arrived, held while fire is
+    GRAPPLE_LET_GO = 4,
+};
+
+// BLData::aimAutoLevelState: whether the view's pitch is eased back towards pitchAutoLevelTarget
+enum AimAutoLevel {
+    AIMLEVEL_OFF = 0,
+    AIMLEVEL_AIMING = 1,            // the player moved the view this frame
+    AIMLEVEL_EASING = 2,
+    AIMLEVEL_EASED = 3,             // the step came within 0.0002 (Player_ClampSomeAngles)
+};
+
+// BLData::crosshairType: the crosshair Check_Target shows (HUD_UpdateCrosshair's row of HUDCrossCoords)
+enum CrosshairType {
+    CROSSHAIR_PLAIN = 2,
+    CROSSHAIR_MARKED = 3,
+};
 
 // WIP
 // The multiplayer end-of-match camera's: it circles the target, above it, as far out as the walls allow
@@ -65,7 +105,9 @@ typedef struct BLData {
     // mouse look does, in Player_ViewClamping.
     _VECTOR rotationDelta; // 0x24
     _VECTOR lastRotationDelta; // 0x30 - Player_Update copies rotationDelta here once it is applied
-    _VECTOR field_0x3c; // 0x3c - zeroed by GunImp_Deactivate and Player_SSScanMode
+    // The jump or fall: Player_HandleJump starts it at -0.4 gravity, ClampFall keeps its y within 45 either way, and
+    // Player_Collision moves the player by it
+    _VECTOR fallVelocity; // 0x3c
     _VECTOR muzzle;     // 0x48 - what the player's anim aims at in multiplayer (Player_StandAtNewPosition)
     // Zero G: the player turned upright (Player_ZeroG builds it on a press of reload), and the same as a
     // quaternion, which the player's matrix is slerped towards for zeroGTurn frames.
@@ -90,19 +132,19 @@ typedef struct BLData {
     // to 1 on any frame the stick moves the view, which is what stops the easing fighting the player - see
     // Player_ClampSomeAngles, which is the other half of it, and Player_ViewClamping, which is where mouse
     // look has to do the same thing for the same reason.
-    char aimAutoLevelState; // 0xf0
+    char aimAutoLevelState; // 0xf0 - AimAutoLevel
     // 1 walking slowly or standing, 2 walking fast (Player_UpdateWalkClass); a change sets aimAutoLevelState to 2
     // when the player's auto-centre option is on.
     char walkClass; // 0xf1
     char field_0xf2; // 0xf2 - zeroed by Player_InitWeapon
-    char crosshairType; // 0xf3
+    char crosshairType; // 0xf3 - CrosshairType
     // The grapple (Player_InitGrapple clears all of it): where it caught, how fast it pulls, what it caught on, the
     // rope drawn to it, its state (GrappleState) and the frames before landing can end the pull.
     _VECTOR grapplePoint;   // 0xf4
     float grappleSpeed;     // 0x100
     obj_tag *grappleObj;    // 0x104
     obj_tag *rope;          // 0x108
-    short grappleState;     // 0x10c
+    short grappleState;     // 0x10c - GrappleState
     short grappleWait;      // 0x10e
     // Non-zero while something else is driving the player - Player_Move takes the controls away entirely.
     char movementDisabled; // 0x110
@@ -220,7 +262,7 @@ typedef struct BLData {
     // nothing at 0
     char active; // 0x8da
     char frozen; // 0x8db - set by Player_Disable(player, 1), cleared by Player_Enable
-    char jumpState; // 0x8dc - JUMP_*: Player_HandleJump
+    char jumpState; // 0x8dc - JumpState
     // The step of the substate on a wire, zipline or wall (Player_Wire, Player_Zipline, Player_Creep): which way
     // the player is moving, or the grab
     char traverseStep; // 0x8dd
@@ -239,7 +281,7 @@ typedef struct BLData {
     // Which hand fires next for twin guns, and which reload anim plays next for alternating ones (Player_SetFiringAnim,
     // Player_WeaponFiring); zeroed by Player_InitWeapon
     char twinGunHand; // 0x8e8
-    char idleState; // 0x8e9 - IDLE_*: Player_SetWeaponAnimObj's idle anims
+    char idleState; // 0x8e9 - IdleState
     char field_0x8ea; // 0x8ea - zeroed on every change of substate
     // A shot left this frame (Player_WeaponInitBullet; Player_WeaponFiring clears it): Player_CollisionHandler draws
     // the muzzle flash at muzzle
@@ -249,7 +291,7 @@ typedef struct BLData {
     char weaponChangeTimer; // 0x8ee - frames the ammo pane shows a new weapon's name (HUD_UpdateAmmoPane); zeroed by Player_StandAtNewPosition
     // The third-person action icon to show (index into HUD.cpp's ThirdIconSprites: grapple, wire, standing, ...),
     // 0xff for none
-    uchar thirdIcon; // 0x8ef
+    uchar thirdIcon; // 0x8ef - ThirdIcon
     // Frames the anim set waits for a crouch or stand anim to finish before it is chosen again (the frame rate,
     // a second, from Player_ChangeSubState)
     char animWait; // 0x8f0
@@ -258,7 +300,7 @@ typedef struct BLData {
     uchar flashBlur; // 0x8f3 - Player_SetFlashBang
     char laserSight; // 0x8f4 - the gun has a laser sight (weapon flag 8: Player_SetWeaponAnim)
     char punchSkin; // 0x8f5 - which of the fists' models the level's skin goes with (Player_Init)
-    char field_0x8f6; // 0x8f6 - set to 8 on landing from a jump
+    char landingStepFrames; // 0x8f6 - 8 on landing from a jump; at 0 AnimObjectUpdate forces a footstep
     // Which sides the player was last hit from (bits 0-3: the health pane's full-screen overlays 20-23) and how
     // bright that flash still is; HUD_UpdateHealthPane fades it by FRAME_RATE_MUL a frame
     uchar hitDirections; // 0x8f7
@@ -286,7 +328,7 @@ LAYOUT_32(offsetof(BLData, traverseStep) == 0x8dd, "Offset of traverseStep not c
 LAYOUT_32(offsetof(BLData, visibility) == 0x8a4, "Offset of visibility not correct");
 LAYOUT_32(offsetof(BLData, stepDistance) == 0x8b4, "Offset of stepDistance not correct");
 LAYOUT_32(offsetof(BLData, groundBits) == 0x8d0, "Offset of groundBits not correct");
-LAYOUT_32(offsetof(BLData, field_0x8f6) == 0x8f6, "Offset of field_0x8f6 not correct");
+LAYOUT_32(offsetof(BLData, landingStepFrames) == 0x8f6, "Offset of landingStepFrames not correct");
 LAYOUT_32(offsetof(BLData, field_0x8cc) == 0x8cc, "Offset of field_0x8cc not correct");
 LAYOUT_32(offsetof(BLData, previousSubState) == 0x8d2, "Offset of previousSubState not correct");
 LAYOUT_32(offsetof(BLData, field_0x8e3) == 0x8e3, "Offset of field_0x8e3 not correct");
@@ -318,7 +360,7 @@ LAYOUT_32(offsetof(BLData, nightVisionActive) == 0x8f1, "Offset of nightVisionAc
 
 //char (*__kaboom)[offsetof(BLData,playerNum)] = 1;
 LAYOUT_32(offsetof(BLData, remoteControlDevice) == 0x808, "Offset of remoteControlDevice not correct");
-static_assert(offsetof(BLData, field_0x3c) == 0x3c, "Offset of field_0x3c not correct");
+static_assert(offsetof(BLData, fallVelocity) == 0x3c, "Offset of fallVelocity not correct");
 static_assert(offsetof(BLData, endCamera) == 0xb0, "Offset of endCamera not correct");
 LAYOUT_32(sizeof(EndCamera) == 0x20, "EndCamera is 0x20 bytes");
 LAYOUT_32(offsetof(BLData, cameraFollowObject) == 0x80c, "Offset of cameraFollowObject not correct");
@@ -406,10 +448,12 @@ typedef struct {
 static_assert(sizeof(PlayerStartPosition) == 0xcc, "Bad size for PlayerStartPosition");
 
 // BLData::thirdIcon: the HUD's third-person action icons (HUD.cpp's ThirdIconSprites)
-#define THIRDICON_GRAPPLE  2
-#define THIRDICON_WIRE     3
-#define THIRDICON_STANDING 6
-#define THIRDICON_NONE     0xff
+enum ThirdIcon {
+    THIRDICON_GRAPPLE = 2,
+    THIRDICON_WIRE = 3,
+    THIRDICON_WALLHUG = 6,          // HT_Texture_640_wallhug_icon
+    THIRDICON_NONE = 0xff,
+};
 
 #pragma pack(pop)
 

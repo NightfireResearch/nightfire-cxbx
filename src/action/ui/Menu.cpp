@@ -137,7 +137,7 @@ DEFAULT_CODENAME def_codename[2] = {
         .name = (Action_TranslatedText)667,
         .musicVolume = 75,
         .sfxVolume = 100,
-        .mpSomeField2 = 1,
+        .mpRadar = 1,
         .controlStyle = 7,
         .autoAim = 1,
         .crouchToggle = 1,
@@ -152,7 +152,7 @@ DEFAULT_CODENAME def_codename[2] = {
         .name = (Action_TranslatedText)529,
         .musicVolume = 75,
         .sfxVolume = 100,
-        .mpSomeField2 = 1,
+        .mpRadar = 1,
         .controlStyle = 7,
         .autoAim = 1,
         .crouchToggle = 1,
@@ -349,9 +349,6 @@ uint optionbox_answer;
 uint optionbox_type;     // the caller's, to tell its boxes apart
 // XBE_GLOBAL(0x00224f64, 0x1)
 uint8_t optionbox_has_answer;
-
-#define TXT_PRESS_A_TO_CONTINUE ((Action_TranslatedText)0x266)
-#define TXT_PRESS_A_OR_B_TO_CANCEL ((Action_TranslatedText)0x10001d6)
 
 // The box opens as an overlay, its height fitted to the text's lines and the answer, centred down the screen, and is
 // drawn at once with the cursor on its answers

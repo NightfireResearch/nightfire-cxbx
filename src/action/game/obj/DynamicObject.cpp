@@ -21,11 +21,11 @@ obj_tag* DynamicObject_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
     obj->objGraphics = celgl;
     obj->effectFlags = celgl->applyFlagsToObject;
     obj->objectType = OBJECTTYPE_DYNAMICOBJECT;
-    data->showChannel = (short)keys->unknown2c;
-    data->hideChannel = (short)keys->unknown30;
+    data->showChannel = (short)keys->showChannel;
+    data->hideChannel = (short)keys->hideChannel;
     data->effectFlags = obj->effectFlags;
-    data->fadeDistance = (short)keys->unknown34;
-    data->hideOnly = (uchar)keys->unknown38;
+    data->fadeDistance = (short)keys->fadeDistance;
+    data->hideOnly = (uchar)keys->hideOnly;
     if (data->showChannel != 0)
         obj->effectFlags |= EFFECT_HIDDEN | EFFECT_NO_COLLISION;
     build_LinkToRoom(obj, 0, glb_world);

@@ -88,6 +88,9 @@ typedef struct SND2LBL_tag {
 #pragma pack(pop)
 static_assert(sizeof(SND2LBL_tag) == 8, "SND2LBL_tag is 8 bytes");
 
+// The sound ids' low 20 bits index SFXOutputData
+#define SFX_ID_MASK 0xfffff
+
 #define NUM_SND2LBL 0x1e4
 extern SND2LBL_tag Snd2Lbl[NUM_SND2LBL];
 

@@ -161,15 +161,7 @@ uint8_t saveflow_relist;  // a codenames page lists the codenames as it enters o
 // The box: a page shown over the one under it, a button behind a memo and a list
 #define SAVEFLOW_PAGE          P_AFTERRESULTS
 
-// The texts (names ours)
-#define TXT_SAVEFLOW_262       ((Action_TranslatedText)0x262)
-#define TXT_SAVEFLOW_264       ((Action_TranslatedText)0x264)
-#define TXT_SAVEFLOW_266       ((Action_TranslatedText)0x266)   // the error box's choice
-#define TXT_SAVEFLOW_397       ((Action_TranslatedText)0x397)
-#define TXT_SAVEFLOW_WORKING   ((Action_TranslatedText)0x398)   // over a tip while the operation runs
-#define TXT_SAVEFLOW_DASHBOARD ((Action_TranslatedText)0x3bb)
-
-// The tips shown under TXT_SAVEFLOW_WORKING, one picked at random every 300 frames
+// The tips shown under TXT_GETTING_CODENAMES, one picked at random every 300 frames
 static const Action_TranslatedText saveflow_tips[] = {
     (Action_TranslatedText)0x1000111, (Action_TranslatedText)0x1000112, (Action_TranslatedText)0x1000113,
     (Action_TranslatedText)0x1000114, (Action_TranslatedText)0x1000115, (Action_TranslatedText)0x1000116,
@@ -222,19 +214,19 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             break;
         case 2:
         case 3:
-            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_264, 0);
+            saveflow_text = (char *)Txt_BindLabel(TXT_UNABLE_TO_LOAD_CODENAME, 0);
             operation->returnPage = (HASHCODE)0;
             saveflow_cancel = 1;
             break;
         case 4:
             Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
-            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_397, 0);
+            saveflow_text = (char *)Txt_BindLabel(TXT_SAVING, 0);
             saveflow_cancel = 0;
             break;
         case 5:
         case 6:
         case 7:
-            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_262, 0);
+            saveflow_text = (char *)Txt_BindLabel(TXT_UNABLE_TO_SAVE_GAME, 0);
             operation->returnPage = (HASHCODE)0;
             saveflow_cancel = 1;
             break;
@@ -246,7 +238,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             if (saveflow_frames > 10) {
                 if (saveflow_frames % SAVEFLOW_TIP_FRAMES == 0 || saveflow_tip == NULL)
                     saveflow_tip = Txt_BindLabel(saveflow_tips[Rand_Random() % ARRAY_SIZE(saveflow_tips)], 0);
-                sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0), saveflow_tip);
+                sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_GETTING_CODENAMES, 0), saveflow_tip);
                 saveflow_text = saveflow_text_buffer;
             }
             saveflow_cancel = 0;
@@ -269,9 +261,9 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
                 saveflow_ls->listStale = 1;
             } else if (result == 11) {
                 if (saveflow_tip != NULL)
-                    sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0), saveflow_tip);
+                    sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_GETTING_CODENAMES, 0), saveflow_tip);
                 else
-                    sprintf(saveflow_text_buffer, "%s", Txt_BindLabel(TXT_SAVEFLOW_WORKING, 0));
+                    sprintf(saveflow_text_buffer, "%s", Txt_BindLabel(TXT_GETTING_CODENAMES, 0));
                 saveflow_text = saveflow_text_buffer;
                 if (saveflow_frames % SAVEFLOW_TIP_FRAMES != 0 && saveflow_box_open)
                     saveflow_hold_until = saveflow_frames - saveflow_frames % SAVEFLOW_TIP_FRAMES + SAVEFLOW_TIP_FRAMES;
@@ -305,7 +297,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
         LS_FlushStates();
         Menu_FlushEnum();
         if (saveflow_dashboard && !saveflow_dashboard_offered && saveflow_ls->operation != LS_OPERATION_ENUM_FIRST) {
-            saveflow_text = (char *)Txt_BindLabel(TXT_SAVEFLOW_DASHBOARD, 0);
+            saveflow_text = (char *)Txt_BindLabel(TXT_DAMAGED_SAVES_FOUND, 0);
             operation->returnPage = (HASHCODE)0;
             saveflow_dashboard_offered = 1;
             saveflow_cancel = 1;
@@ -328,7 +320,8 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             case 12:
                 // An error: a choice to take, and the codenames listed again after
                 Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
-                __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem, (intptr_t)Txt_BindLabel(TXT_SAVEFLOW_266, 0), 0);
+                __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem,
+                            (intptr_t)Txt_BindLabel(TXT_PRESS_A_TO_CONTINUE, 0), 0);
                 __Menu_Send(mgr->index, SUB_P_AFTERRESULTS_HINT_TEXT, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
                 saveflow_relist = 1;
                 break;
@@ -366,8 +359,6 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
 
 // ---- room on the save drive for a codename (names ours)
 
-#define TXT_SAVE_BLOCKS_SHORT ((Action_TranslatedText)0x31e)       // a format: the blocks still to be freed
-#define TXT_TOO_MANY_SAVES    ((Action_TranslatedText)0x10002df)
 #define MAX_SAVES             0xffd
 
 enum {
@@ -604,7 +595,7 @@ void Menu_MapDefaultCodename(byte player, byte slot, uint parts) {
         input->controlStyleDriving = codename->controlStyleDriving;
         input->inverted = codename->inverted;
         MPSettings.TripleDamageModifierProfessionalMode = codename->tripleDamage;
-        MPSettings.Player[player].SomeField2 = codename->mpSomeField2;
+        MPSettings.Player[player].radar = codename->mpRadar;
         MPSettings.RespawnSelectionMode = (RespawnMode)codename->respawnMode;
         SubtitlesEnabled = codename->subtitles;
         input->vibrationEnabled = codename->vibrationEnabled;
@@ -657,7 +648,7 @@ void Menu_UpdateDefaultCodename(uchar player, uchar slot) {
     codename->autoAimMultiplayer = input->autoAimMultiplayer;
     codename->musicVolume = SFXMusicGetVolume();
     codename->tripleDamage = (uchar)MPSettings.TripleDamageModifierProfessionalMode;
-    codename->mpSomeField2 = (uchar)MPSettings.Player[player].SomeField2;
+    codename->mpRadar = (uchar)MPSettings.Player[player].radar;
     codename->respawnMode = (uchar)MPSettings.RespawnSelectionMode;
     codename->multiplayerLayout = (uchar)MultiplayerLayout_LeftRightOrTopBtm;
     codename->sfxVolume = SFXGetVolume();

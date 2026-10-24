@@ -95,7 +95,7 @@ void ScoreShadow_Run(void) {
     XbeOursRead(saved, SCORE_DATA_START, sizeof(saved));
     MissionStats savedStats = Stats;
     HASHCODE savedBaseMap = Mission_BaseMapHCode();
-    undefined4 savedStatus = Mission_Status();
+    MissionStatus savedStatus = Mission_Status();
     undefined4 savedDifficulty = GameState.difficultyModifier;
     undefined4 savedMultiplayer = MPSettings.isMultiplayer;
     undefined4 (*savedNewScores)[9][3] = NewScoresRef;
@@ -112,7 +112,7 @@ void ScoreShadow_Run(void) {
         SCORING_TABLE[i].bestScore = Rand(3) ? Rand(20000) : 0;
     XbeOursRead(start, SCORE_DATA_START, sizeof(start));
 
-    static const undefined4 statuses[] = {1, 3, 6};
+    static const MissionStatus statuses[] = {MISSION_STATUS_RUNNING, MISSION_STATUS_QUIT, MISSION_STATUS_COMPLETE};
     int runs = 0;
     mismatches = 0;
     reported = 0;

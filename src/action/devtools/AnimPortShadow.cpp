@@ -907,7 +907,7 @@ void RandomWorld(void) {
     memset(world.holderBl, 0, sizeof(world.holderBl));
     BLData *bl = (BLData *)world.holderBl;
     bl->stepDistance = ShadowRandFloat(0.0f, 2.0f);
-    bl->field_0x8f6 = (char)ShadowRand(3);
+    bl->landingStepFrames = (char)ShadowRand(3);
     bl->laserSight = (char)ShadowRand(2);
     bl->weaponObject = ShadowRand(2) ? obj : NULL;
 

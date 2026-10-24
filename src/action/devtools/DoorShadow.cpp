@@ -161,7 +161,7 @@ void RandomDoor(obj_tag *o, DOORINFO *d) {
     o->subState = kinds[ShadowRand(sizeof(kinds) / sizeof(kinds[0]))];
     static const ushort states[] = {2, 4, 8, 0x10, 8, 0x10, 0x18, 0, 6};
     o->curState = states[ShadowRand(sizeof(states) / sizeof(states[0]))];
-    o->unknown_0xd9 = ShadowRand(0x10);
+    o->collideFlags = ShadowRand(0x10);
     RandomMatrix(&o->transformMatrix);
     o->centrePoint = RandomPoint();
     o->radius = ShadowRandFloat(0.2f, 2.0f);

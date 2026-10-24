@@ -42,7 +42,7 @@ typedef struct RIGIDBODY {
     light_tag *light;           // 0x120
     uchar carriesLight;         // 0x124
     char _unknown125[3];
-    uint sound;                 // 0x128 - Action_SFX of a bullet's hit; 0xffff for none
+    uint sound;                 // 0x128 - Action_SFX of a bullet's hit; SFX_NONE for none
 } RIGIDBODY;
 
 LAYOUT_32(sizeof(RIGIDBODY) == 0x12c, "RIGIDBODY is 0x12c bytes");

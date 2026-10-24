@@ -22,8 +22,6 @@
 
 #pragma fp_contract(off)
 
-#define LABEL_KEY_CODE ((Action_TranslatedText)0x02000014) // the code's message (four %c)
-
 // The weapon variant of the bullet a hit is from (its definition read unchecked), or -1 for a hit that is not a
 // bullet's
 static short HitWeaponVariant(HITDATA_tag *hit) {
@@ -49,8 +47,8 @@ obj_tag* Lock_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *c
     lock->kind = (ushort)keys->kind;
     lock->key = (ushort)keys->key;
     lock->unknownC = keys->unknown34;
-    lock->openSound = keys->openSound != 0 ? (ushort)keys->openSound : 0xffff;
-    lock->lockedSound = keys->lockedSound != 0 ? (ushort)keys->lockedSound : 0xffff;
+    lock->openSound = keys->openSound != 0 ? (ushort)keys->openSound : SFX_NONE;
+    lock->lockedSound = keys->lockedSound != 0 ? (ushort)keys->lockedSound : SFX_NONE;
     lock->channel = (ushort)keys->channel;
     ushort easy = (ushort)keys->easy;
     lock->pathPos = 0.0f;
@@ -191,8 +189,8 @@ void Lock_Update(obj_tag *obj) {
         KeyCodeEntry *code = &KeyCodes[lock->key];
         if (code->discovered) {
             char *text = Txt_GetStringFromHeap(0);
-            sprintf(text, Txt_BindLabel(LABEL_KEY_CODE, 0), (uchar)code->asciiDigit[0], (uchar)code->asciiDigit[1],
-                    (uchar)code->asciiDigit[2], (uchar)code->asciiDigit[3]);
+            sprintf(text, Txt_BindLabel(OBTAINED_LOCK_KEYCODE_XXXX, 0), (uchar)code->asciiDigit[0],
+                    (uchar)code->asciiDigit[1], (uchar)code->asciiDigit[2], (uchar)code->asciiDigit[3]);
             Text_AddMsg(0, 0, TXTMSG_INFO, text, 0, 0xb4);
         }
         return;

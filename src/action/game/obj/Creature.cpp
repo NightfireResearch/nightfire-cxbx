@@ -136,7 +136,8 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
 // anywhere but in water is not created.
 // AUTOINJECT
 obj_tag* Creature_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl) {
-    obj_tag *obj = Control_CreateObjEx(sizeof(Creature), pos, rot, NULL, celgl, NULL, 1, 0x44, 1.0f, 0, 0xff, 0xff,
+    obj_tag *obj = Control_CreateObjEx(sizeof(Creature), pos, rot, NULL, celgl, NULL, 1,
+                                       TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX, 1.0f, 0, 0xff, 0xff,
                                        0xff);
     if (obj == NULL)
         return NULL;

@@ -205,7 +205,7 @@ void BuildHitWorld(HitWorld *world) {
     SCRIPTPLAYER *scriptPlayer = &world->scriptPlayer;
     scriptPlayer->nthScript = NextRandom() % 2;
     scriptPlayer->scriptInfos[scriptPlayer->nthScript] = (NextRandom() % 8 == 0) ? NULL : scriptInfo;
-    scriptPlayer->someSwitchChannel = (NextRandom() % 3 == 0) ? 0 : 1 + NextRandom() % 255;
+    scriptPlayer->switchChannel = (NextRandom() % 3 == 0) ? 0 : 1 + NextRandom() % 255;
     scriptPlayer->requiredBulletType = (char)(NextRandom() % 4);
     do {
         scriptPlayer->triggerMask = (ushort)(NextRandom() & 0x1f);

@@ -69,7 +69,7 @@ bool Light_Delete(light_tag* light) {
 // AUTOINJECT
 light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b,
                         float brightness, ushort switchChannel, short lifetimeFrames, undefined1 lightType,
-                        float intensity, ushort soundState, ushort soundTimingBase,
+                        float intensity, ushort flickerMax, ushort flickerBase,
                         undefined2 flickerMask, int soundID) {
     light_tag* light = (light_tag*)DList_MoveFromFree2InUse(&LightList);
 
@@ -93,16 +93,16 @@ light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefi
 
     light->lightType = lightType;
     light->intensity = intensity;
-    light->soundState = soundState;
-    light->soundTimingBase = soundTimingBase >> 1;
+    light->flickerMax = flickerMax;
+    light->flickerBase = flickerBase >> 1;
 
-    uint randomValue = Rand_Rand(soundTimingBase);
-    light->soundTimingCounter = (short)randomValue + soundTimingBase;
+    uint randomValue = Rand_Rand(flickerBase);
+    light->flickerCounter = (short)randomValue + flickerBase;
 
     light->flickerMask = flickerMask;
 
     if (soundID == 0) {
-        light->soundID = 0xffff;
+        light->soundID = SFX_NONE;
     } else {
         light->soundID = soundID;
     }
@@ -122,42 +122,35 @@ void Light_Update(void) {
         light_tag* light = (light_tag*)node;
         node = node->next;
 
-        // Update lifetime and delete expired lights
         if (!light->lifetimeFrames || (light->lifetimeFrames--, light->lifetimeFrames != 0)) {
 
-            // Update enabled state from switch channel
             if (light->switchChannel) {
                 light->enabled = switch_channels[light->switchChannel];
             }
 
-            // Flicker, with its sound: keyed on +0x18, not on the sound id
-            if (light->soundState != 0) {
-                // Check if we should trigger sound (counter at 0)
-                if ((light->soundTimingCounter & 0xfff) == 0) {
-                    light->soundTimingCounter = 0xf000;
+            // The flicker, its sound played as the count down ends
+            if (light->flickerMax != 0) {
+                if ((light->flickerCounter & 0xfff) == 0) {
+                    light->flickerCounter = 0xf000;
                     Sound_Play3D((Action_SFX)light->soundID, &light->position, 100.0, -1.0, -1.0, 0, 0, 0);
                 }
 
-                // Update sound timing
-                if ((light->soundTimingCounter & 0xf000) == 0) {
-                    // Countdown mode
-                    light->soundTimingCounter--;
+                if ((light->flickerCounter & 0xf000) == 0) {
+                    light->flickerCounter--;
                     light->enabled = 1;
                 } else {
-                    // Random flickering mode based on frame parity
+                    // lit on the frames that match flickerMask
                     light->enabled = (light->flickerMask == (light->flickerMask & GameState.NumFramesUnpaused));
-                    light->soundTimingCounter++;
+                    light->flickerCounter++;
 
-                    // Reset counter if exceeded base value
-                    if (light->soundState < (light->soundTimingCounter & 0xfff)) {
-                        uint randomValue = Rand_Rand(light->soundTimingBase);
-                        light->soundTimingCounter = (short)randomValue + light->soundTimingBase;
+                    if (light->flickerMax < (light->flickerCounter & 0xfff)) {
+                        uint randomValue = Rand_Rand(light->flickerBase);
+                        light->flickerCounter = (short)randomValue + light->flickerBase;
                     }
                 }
             }
 
         } else {
-            // Lifetime expired - delete light
             Light_Delete(light);
         }
     }
@@ -256,6 +249,6 @@ void Light_SetAmbientRadiators(AMBIENT_RADIATORS *radiators) {
         uchar b = (uchar)Ftol(radiator->b * 255.0f);
         uchar g = (uchar)Ftol(radiator->g * 255.0f);
         uchar r = (uchar)Ftol(radiator->r * 255.0f);
-        Light_Create(&pos, r, g, b, radius, 0, -1, LIGHT_PLACED, 1.0f, 0, 0, 0, 0xffff);
+        Light_Create(&pos, r, g, b, radius, 0, -1, LIGHT_PLACED, 1.0f, 0, 0, 0, SFX_NONE);
     }
 }

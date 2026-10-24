@@ -58,7 +58,7 @@ void MP_KOHUpdate(obj_tag *hill) {
         }
         if (type == OBJECTTYPE_DEAD_PLAYER)
             continue;
-        if (type == OBJECTTYPE_PLAYER && (obj->curState == 2 || obj->curState == 3))
+        if (type == OBJECTTYPE_PLAYER && (obj->curState == PLAYERSTATE_DYING || obj->curState == PLAYERSTATE_3))
             continue;
 
         _VECTOR offset;
@@ -305,7 +305,7 @@ void MP_PlayerKilled(obj_tag *obj) {
                             points = 2.0f;
                     }
 
-                    if (!MPSettings.field53_0x190 &&
+                    if (!MPSettings.gameModeBit30 &&
                         (MPSettings.GameMode == GM_ARENA || MPSettings.GameMode == GM_TEAMARENA ||
                          MPSettings.GameMode == GM_KOTH || MPSettings.GameMode == GM_TEAMKOTH))
                         killerRec.points += points;
@@ -373,7 +373,7 @@ void MP_PlayerKilled(obj_tag *obj) {
 
         Collide_FreeHitList(&MPObjects[i]->hitList);
         if (hurtByHazard)
-            mpObj->unknown04 = FRAME_RATE_INT * 30;
+            mpObj->droppedFrames = FRAME_RATE_INT * 30;
         switch (mpObj->type) {
         case CTF_FLAG:
             MP_FlagUpdate(MPObjects[i], mpObj, true);

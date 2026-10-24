@@ -18,6 +18,13 @@
 
 // The sub (OBJECTTYPE_SUB). No level places one.
 
+// obj_tag::curState
+enum SubState {
+    SUB_AFLOAT = 0,
+    SUB_SINKING = 1,
+    SUB_SUNK = 2,
+};
+
 // The datums its missiles and torpedoes leave from
 // XBE_GLOBAL(0x0018cbec, 0x8)
 static const uint SubMissileDatums[2] = {4, 5};
@@ -32,10 +39,12 @@ static bool Switched(SubInfo *sub) {
 // Along its path at the placement's rate, with a cyan light, its anim looping
 // AUTOINJECT
 obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
-    obj_tag *obj = Control_CreateObjEx(sizeof(SubInfo), pos, rot, NULL, NULL, NULL, 1, 0x44, 1.0f, 0, 0xff, 0xff, 0xff);
+    obj_tag *obj = Control_CreateObjEx(sizeof(SubInfo), pos, rot, NULL, NULL, NULL, 1,
+                                       TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX, 1.0f, 0, 0xff, 0xff,
+                                       0xff);
     SubInfo *sub = (SubInfo *)obj->extraObjectData;
     obj->objectType = OBJECTTYPE_SUB;
-    obj->curState = 0;
+    obj->curState = SUB_AFLOAT;
     sub->channel = (ushort)lvl->keys[0];
     sub->path = lvl->header.spline;
     sub->lastKey = lvl->header.splinePoints != 0 ? lvl->header.splinePoints - 1 : 0;
@@ -44,7 +53,7 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     sub->health = 300.0f;
     sub->beam = NULL;
     sub->speed = (float)((double)_FRAME_RATE / lvl->header.splineLength * keys);
-    sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, LIGHT_TRANSIENT, 1.0f, 0, 0, 0, 0xffff);
+    sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, LIGHT_TRANSIENT, 1.0f, 0, 0, 0, SFX_NONE);
     AnimObjectNew(obj, HT_Skin_Sub);
     sAnimScript_tag *script = AnimScriptAdd(obj, SUB_ANIM_MOVE);
     script->flags |= ANIMSCRIPT_LOOP;
@@ -126,7 +135,7 @@ void Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     _MATRIX datum;
     AnimGetBoneWorldTrans(obj, SubMissileDatums[which], 0, &at, &datum);
     Mat_GetDir(&dir, &datum);
-    Bullet_init(-1, obj, obj, &weapon_data[Weap_SubMissile], &at, &dir, 0xffff);
+    Bullet_init(-1, obj, obj, &weapon_data[Weap_SubMissile], &at, &dir, SFX_NONE);
 }
 
 // Within 25 of a player, the music is told, and every 5 seconds, if it can see him past its own bulk, a torpedo from
@@ -166,20 +175,20 @@ void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
     dir.x = (float)(Rand_FRandHalf(0.25f) + dir.x);
     dir.y = (float)(Rand_FRandHalf(0.25f) + dir.y);
     Vec_Normalise(&dir, &dir);
-    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[Weap_SubTorpedo], &from, &dir, 0xffff);
+    obj_tag *torpedo = Bullet_init(-1, obj, obj, &weapon_data[Weap_SubTorpedo], &from, &dir, SFX_NONE);
     if (Rand_Rand(0x5b7f) & 1)
         ((BU_tag *)torpedo->extraObjectData)->heatseekTarget = glb_players[0];
 }
 
-// Afloat (state 0) it moves and attacks, its light with it; sinking (1, its light gone) it eases down to sinkY, a
-// frame's worth of the gap a frame, and lies there (2)
+// Afloat it moves and attacks, its light with it; sinking (its light gone) it eases down to sinkY, a frame's worth of
+// the gap a frame, and lies there
 // AUTOINJECT
 void Sub_Update(obj_tag *obj) {
     if (obj == NULL)
         return;
     SubInfo *sub = (SubInfo *)obj->extraObjectData;
     switch ((short)obj->curState) {
-        case 0:
+        case SUB_AFLOAT:
             Sub_Follow(obj, sub);
             Sub_Ram(obj, sub);
             Sub_Laser(obj, sub);
@@ -187,7 +196,7 @@ void Sub_Update(obj_tag *obj) {
             Sub_DeployTorpedoes(obj, sub);
             Vec_Copy(&obj->centrePoint, &sub->light->position);
             break;
-        case 1: {
+        case SUB_SINKING: {
             if (sub->light != NULL)
                 Light_Delete(sub->light);
             sub->light = NULL;
@@ -196,7 +205,7 @@ void Sub_Update(obj_tag *obj) {
             obj->transformFlags |= TRANSFORM_MOVED;
             AnimObjectUpdate(obj);
             if (AbsFchs((double)at->y - sub->sinkY) < 0.02f)
-                obj->curState = 2;
+                obj->curState = SUB_SUNK;
             break;
         }
     }
@@ -231,5 +240,5 @@ void Sub_ApplyDamage(obj_tag *obj, float damage) {
         break;
     }
     Collide_FreeHitList(&hits);
-    obj->curState = 1;
+    obj->curState = SUB_SINKING;
 }

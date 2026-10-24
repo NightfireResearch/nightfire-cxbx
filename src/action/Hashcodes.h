@@ -8,6 +8,9 @@ typedef unsigned int HASHCODE;
 
 #define HASHCODE_NONE 0
 
+// A hashcode's section: its top byte
+#define HASHCODE_SECTION_MASK 0xff000000
+
 /* HT_File: Files in a level archive that the map loader reads */
 #define HT_File_HASHCODE_BASE                           0x01000000
 #define HT_File_MP_Renard                               0x0100012a
@@ -1472,7 +1475,7 @@ typedef unsigned int HASHCODE;
 #define SUB_P_CNOPTIONS_CROSSHAIRS                      0x10000124
 #define SUB_P_CNOPTIONS_CROUCH                          0x10000125
 #define SUB_P_CNOPTIONS_MANUAL_AIM                      0x10000126
-#define SUB_P_CNMPOPTIONS_RADAR                         0x10000128  // MPSettings.Player[0].SomeField2
+#define SUB_P_CNMPOPTIONS_RADAR                         0x10000128  // MPSettings.Player[0].radar
 #define SUB_P_CNMPOPTIONS_AUTOAIM                       0x10000129
 #define SUB_P_CNAVOPTIONS_SFX_VOLUME                    0x10000134
 #define SUB_P_CNAVOPTIONS_MUSIC_VOLUME                  0x10000135

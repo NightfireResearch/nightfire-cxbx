@@ -38,7 +38,7 @@ typedef struct {
     float speed;            // 0x50 - of the path, a frame
     float direction;        // 0x54 - 1 or -1
     float side;             // 0x58 - swing: which way along its path it opens, 1 or -1
-    ushort openSound;       // 0x5c - Action_SFX, 0xffff for none
+    ushort openSound;       // 0x5c - Action_SFX, SFX_NONE for none
     ushort closeSound;      // 0x5e
     ushort lockedSound;     // 0x60
     ushort channel;         // 0x62 - set while open or opening; set or cleared, it opens or closes the door

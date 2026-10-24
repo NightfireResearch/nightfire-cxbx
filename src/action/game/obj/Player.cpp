@@ -162,9 +162,9 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
     blData->hitTest.type = 0x800;
     if (blData->weaponObject != NULL)
         blData->weaponObject->effectFlags &= ~EFFECT_HIDDEN;
-    blData->jumpState = 0;
+    blData->jumpState = JUMP_NONE;
     blData->jumpWait = 0;
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     BLData *movement = (BLData *)player->extraObjectData;
     Vec_Zero(&movement->lastMovement);
     Vec_Zero(&movement->lastRotationDelta);
@@ -231,7 +231,7 @@ void Player_ChangeState(obj_tag* obj, unsigned short newState) {
 // AUTOINJECT
 void Player_CheckWeaponsLoaded(BLData *blData) {
 
-    for(int i = 0; i < 114; i++) { // Unclear why it goes to 114 rather than 115 (ie the data size)?
+    for(int i = 0; i < NUM_WEAPONS; i++) { // weapon_data has one entry more than the weapon ids
         if(weapon_data[i].isBaseWeapon) {
 
             HASHCODE model = weapon_data[i].weaponModelHashcode;
@@ -254,10 +254,10 @@ short Player_AmmoIndex(short weaponIndex) {
     return weaponIndex;
 }
 
-// Gives the player ammo for a weapon: fills an empty gun first, for weapons that load a clip (someFlags 0x10),
-// and puts the rest in the carried stock up to the ammo type's maximum. Returns how much was taken, loaded plus
-// stocked (only the low 16 bits mean anything - the original leaves the rest of EAX as it was). Nothing is taken
-// when the stock is already full, even if the gun is empty.
+// Gives the player ammo for a weapon: fills an empty gun first, for weapons with WPNFLAG_SWITCH_TO_ALT, and puts the
+// rest in the carried stock up to the ammo type's maximum. Returns how much was taken, loaded plus stocked (only the
+// low 16 bits mean anything - the original leaves the rest of EAX as it was). Nothing is taken when the stock is
+// already full, even if the gun is empty.
 //
 // The two sniper rifles' pickups (0x1f, 0x25) stand for whichever sniper the player's upgrade level gives: the
 // weapon after that one in weapon_data, which takes the same ammo.
@@ -465,7 +465,7 @@ void Player_WeaponNone(obj_tag* obj) {
     obj->animState->switchingToWeaponId = Weap_Hands;
     obj->animState->currentWeaponId = Weap_Hands;
     
-    blData->weaponObject->curState = 0;
+    blData->weaponObject->curState = GUN_IDLE;
     blData->muzzleFlashFrames = 0;
     blData->zoom = 1.0f;
 
@@ -536,7 +536,7 @@ void Player_ViewClamping(obj_tag *player) {
             // frame whenever aimAutoLevelState is 2 or 3, which at 50fps undoes the whole movement in about a
             // quarter of a second. Player_Aiming sets the state to 1 on every frame the stick moves the view,
             // for exactly this reason, so mouse look says the same thing rather than inventing its own escape.
-            blData->aimAutoLevelState = 1;
+            blData->aimAutoLevelState = AIMLEVEL_AIMING;
         }
     }
 
@@ -571,12 +571,12 @@ static float Plr_NoAimTurnSpeed_X_Mul = 2.0f;
 // XBE_GLOBAL(0x00181a78, 0x4)
 static float Plr_NoAimTurnSpeed_X_Steps = 120.0f;
 
-// False while dying or dead (curState 2 to 4), and in the substates that move the player themselves (climbing,
-// wire, creeping, zipline). Not named on PS2; the name is ours.
+// False while dying or dead (PLAYERSTATE_DYING to PLAYERSTATE_4), and in the substates that move the player
+// themselves (climbing, wire, creeping, zipline). Not named on PS2; the name is ours.
 // FUNC_AT(0x000a9930)
 bool PlayerMoveAllowed(obj_tag *player) {
     short state = (short)player->curState;
-    if (state >= 2 && state <= 4)
+    if (state >= PLAYERSTATE_DYING && state <= PLAYERSTATE_4)
         return false;
     switch ((short)player->subState) {
         case MovementType_Climb:
@@ -619,7 +619,8 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     float turn    = -Input_Actionf(blData->playerNum, ACTION_AIM_L_R, ACTION_HELD);
 
     char weapon = player->animState->currentWeaponId;
-    if (((weapon == 0x50) || (weapon == 0x51)) && (blData->weaponObject->curState == 9)) { // the two grapples, reeling in
+    // the two grapples, reeling in
+    if (((weapon == 0x50) || (weapon == 0x51)) && (blData->weaponObject->curState == GUN_FIRING)) {
         forward = 0.0f;
         strafe = 0.0f;
         turn = 0.0f;
@@ -703,7 +704,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
 // AUTOINJECT
 void Player_ScopeOff(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
-    blData->aimAutoLevelState = 1;
+    blData->aimAutoLevelState = AIMLEVEL_AIMING;
     blData->zoomTarget = 1.0f;
     Player_ResetWalkAnim(player);
     if (blData->zoomSound != NULL) {
@@ -731,18 +732,6 @@ static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x2e, "numFireMod
 static_assert(offsetof(weapon_definition_tag, weaponFlags) == 0x68, "weaponFlags");
 static_assert(offsetof(weapon_definition_tag, animScopeIn) == 0xb8, "animScopeIn");
 static_assert(offsetof(weapon_definition_tag, animScopeOut) == 0xbc, "animScopeOut");
-
-// Weapon object (BLData::weaponObject->curState) states set here: the bring-to-eye and lower-from-eye
-// animations of weapons that have one (someAnimHC2 non-zero).
-#define WEAPONSTATE_IDLE        0x00
-#define WEAPONSTATE_SCOPE_RAISE 0x0f
-#define WEAPONSTATE_SCOPE_LOWER 0x10
-
-// Player_WeaponChange's third argument: 0 cycles weapons, 1 cycles gadgets, 2 is the party-guest restricted
-// cycle used in CastleIndoors1 before SWITCH_CASTLEINDOORS1_ARMED is on.
-#define WEAPONCHANGE_WEAPONS   0
-#define WEAPONCHANGE_GADGETS   1
-#define WEAPONCHANGE_UNARMED   2
 
 // Player_Weapon runs every frame for the player: scope up/down (hold or toggle, per the player's option),
 // the scope's bring-to-eye animations, alt-fire (switching to the alt-fire variant, or cycling a fire-mode
@@ -807,12 +796,12 @@ void Player_Weapon(obj_tag *player) {
             if (isScoped) {
                 // Just asked for the scope: hold the bit off and play the bring-to-eye animation first
                 animNow->animFlags &= ~ANIM_SCOPED;
-                blData->weaponObject->curState = WEAPONSTATE_SCOPE_RAISE;
+                blData->weaponObject->curState = GUN_SCOPE_RAISE;
                 AnimScriptAddSpeed(blData->weaponObject, weapon_data[weaponId].animScopeIn, 1.25f);
             }
-            else if (blData->weaponObject->curState == WEAPONSTATE_IDLE) {
+            else if (blData->weaponObject->curState == GUN_IDLE) {
                 // Lowering. The upgraded camera drops back to the plain camera as it comes down.
-                blData->weaponObject->curState = WEAPONSTATE_SCOPE_LOWER;
+                blData->weaponObject->curState = GUN_SCOPE_LOWER;
                 if (weapon->weaponVariantNum == Weap_Camera_Upgraded) {
                     player->animState->currentWeaponId = Weap_Camera;
                     player->animState->switchingToWeaponId = Weap_Camera;
@@ -835,7 +824,7 @@ void Player_Weapon(obj_tag *player) {
         anim2->animFlags = animFlags ^ ANIM_SCOPE_APPLIED;
         if (animFlags & ANIM_SCOPED) {
             Player_ResetZoom(player);
-            blData->aimAutoLevelState = 0;
+            blData->aimAutoLevelState = AIMLEVEL_OFF;
             Player_ClearAimInertia(player); // inlined in the original
         }
         else {
@@ -852,7 +841,7 @@ void Player_Weapon(obj_tag *player) {
     AnimState *anim3 = player->animState;
     bool altFireBlocked = (anim3->animFlags & ANIM_SCOPED) &&
                           (weapon_data[anim3->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE);
-    if (!altFireBlocked && altFire && (blData->weaponObject->curState == WEAPONSTATE_IDLE)) {
+    if (!altFireBlocked && altFire && (blData->weaponObject->curState == GUN_IDLE)) {
         if (weapon->offsetToNextAltFireVariant != 0) {
             // The offset is signed: the alt-fire variant of a variant points back at it (0xff)
             short altWeapon = (short)anim3->currentWeaponId + (short)(signed char)weapon->offsetToNextAltFireVariant;
@@ -995,7 +984,7 @@ void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
     player->animState->currentWeaponId = Weap_Hands;
     player->animState->prevHeldWeaponId = Weap_Hands;
-    blData->aimAutoLevelState = 3;
+    blData->aimAutoLevelState = AIMLEVEL_EASED;
 
     if (MPSettings.isMultiplayer != 0) {
         MP_EquipPlayer(player);
@@ -1531,7 +1520,7 @@ void Player_PositionCamera(obj_tag *player) {
             if (realScope)
                 viewer->zoom *= ViewFov_ScopeZoomCorrection();
 
-            if (player->curState == 2 || player->curState == 3)
+            if (player->curState == PLAYERSTATE_DYING || player->curState == PLAYERSTATE_3)
                 blData->headCrouchOffset = 0.0f;
 
             Camera_SetToPlayer(player, viewer);
@@ -1704,15 +1693,6 @@ void Player_PositionCamera(obj_tag *player) {
 
 extern uint8_t debug_scanmode;  // the player starts every level flying (MovementType_ScanMode)
 // XBE_GLOBAL(0x001f6648, 0xc) is GRAVITY_VECTOR: in zero G its y is 0
-
-// BLData::jumpState
-#define JUMP_NONE    0
-#define JUMP_RISING  1
-#define JUMP_FALLING 2
-
-// The level and the original's text for a death in multiplayer
-#define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
-#define TXT_MP_KILLED ((Action_TranslatedText)0x02000038)  // with the killer's name
 
 void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity);
 
@@ -2013,11 +1993,11 @@ int Player_InWater(obj_tag *player, BLData *blData) {
 
     if ((double)player->position.y - 0.3f < cel->shearHeight) {
         player->animState->inWater |= 1;
-        if (MPSettings.isMultiplayer == 0 && player->curState != 2) {
+        if (MPSettings.isMultiplayer == 0 && player->curState != PLAYERSTATE_DYING) {
             Player_ChangeSubState(player, MovementType_Swim);
             blData->jumpState = JUMP_NONE;
             blData->traverseWait = (char)Ftol((double)FRAME_RATE_DIV * 5.0f);
-            blData->aimAutoLevelState = 2;
+            blData->aimAutoLevelState = AIMLEVEL_EASING;
             blData->movement.y = 0.0f;
             player->rotation.x = 0.0f;
             player->rotation.z = 0.0f;
@@ -2163,7 +2143,7 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
 // AUTOINJECT
 bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     BLData *blData = (BLData *)player->extraObjectData;
-    if (player->curState == 2 || player->curState == 3)
+    if (player->curState == PLAYERSTATE_DYING || player->curState == PLAYERSTATE_3)
         return true;
     if (CheatInfo.Immortal != 0)
         return false;
@@ -2208,7 +2188,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     player->animState->animFlags &= ~ANIM_SCOPED;
     Player_SetCamMode(blData, CamMode_Default);
     Player_SetHealth(blData, 0.0f);
-    player->curState = 2;
+    player->curState = PLAYERSTATE_DYING;
 
     if (MPSettings.isMultiplayer != 0) {
         char *text = Txt_GetStringFromHeap(0);
@@ -2216,9 +2196,9 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
         short injurer = MPGame.players[self].idxOfLastInjurer;
         short killer = (injurer == self) ? -1 : injurer;
         if (killer == -2 || killer == -1)
-            sprintf(text, Txt_BindLabel(TXT_MP_DIED, 0), MPSettings.Player[self].Name);
+            sprintf(text, Txt_BindLabel(NOTIF_X_DEFEATED, 0), MPSettings.Player[self].Name);
         else
-            sprintf(text, Txt_BindLabel(TXT_MP_KILLED, 0), MPSettings.Player[injurer].Name);
+            sprintf(text, Txt_BindLabel(NOTIF_DEFEATED_BY_X, 0), MPSettings.Player[injurer].Name);
         Text_AddMsg((char)self, 0, TXTMSG_INFO, text, 0, 0xb4);
     }
 
@@ -2263,7 +2243,7 @@ void Player_HandleDeath(obj_tag *player) {
         return;
     if (MPSettings.GameMode == GM_TOPAGENT && (int)MPGame.players[Control_Plr2Ind(player)].deaths >= (int)MPSettings.MaxPoints)
         return;
-    if (player->curState == 3)
+    if (player->curState == PLAYERSTATE_3)
         return;
     MP_ReSpawn(player, blData->playerNum);
 }
@@ -2278,7 +2258,7 @@ void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, usho
     blData->lastPosition = player->lastPosition;
     player->rotation = *rot;
     player->lastRotation = *rot;
-    player->curState = 1;
+    player->curState = PLAYERSTATE_ALIVE;
     if (debug_scanmode)
         Player_ChangeSubState(player, MovementType_ScanMode);
     else
@@ -2295,7 +2275,7 @@ void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, usho
     blData->bondMomentTimer = 0;
     blData->weaponChangeTimer = 0;
     blData->turnKick = 0.0f;
-    blData->thirdIcon = 0xff;
+    blData->thirdIcon = THIRDICON_NONE;
     blData->nightVisionActive = 0;
     blData->nightVisionTimer = 1800.0f;
     blData->stepDistance = 0.0f;
@@ -2312,7 +2292,7 @@ void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, usho
     Vec_Zero(&blData->lastMovement);
     Vec_Zero(&blData->lastRotationDelta);
     Vec_Zero(&blData->rotationDelta);
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     blData->field_0x8cc = 0;
 
     _VECTOR floor;
@@ -2352,7 +2332,7 @@ void Player_UpdateWalkClass(obj_tag *player, float speed, float levelTarget) {
         return;
     blData->walkClass = walkClass;
     if (PlayerInputs[blData->playerNum].levelViewOnPace != 0)
-        blData->aimAutoLevelState = 2;
+        blData->aimAutoLevelState = AIMLEVEL_EASING;
 }
 
 // Turns the player's matrix by the frame's rotationDelta
@@ -2548,8 +2528,8 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             if (!Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL,
                                      HITMASK_SKIP_WATER | HITMASK_SKIP_NO_CONTACT))
                 return;
-            Vec_Zero(&blData->field_0x3c);
-            auxVec_AddMulR32(&blData->field_0x3c, gravity, -0.4f, &blData->field_0x3c);
+            Vec_Zero(&blData->fallVelocity);
+            auxVec_AddMulR32(&blData->fallVelocity, gravity, -0.4f, &blData->fallVelocity);
             blData->jumpState = JUMP_RISING;
             blData->jumpWait = 4;
             player->animState->animFlags &= ~ANIM_CONTACT_FLOOR;
@@ -2561,7 +2541,7 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             char flags = player->animState->animFlags;
             if (flags & ANIM_CONTACT_ABOVE) {
                 blData->jumpState = JUMP_FALLING;
-                Vec_Zero(&blData->field_0x3c);
+                Vec_Zero(&blData->fallVelocity);
                 return;
             }
             if (blData->jumpWait != 0) {
@@ -2570,21 +2550,21 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             }
             if (!(flags & ANIM_CONTACT_FLOOR))
                 return;
-            if (blData->field_0x3c.y > 0.0f)
+            if (blData->fallVelocity.y > 0.0f)
                 return;
         }
             // fall through
         case JUMP_FALLING:
             if (!(player->animState->animFlags & ANIM_CONTACT_FLOOR))
                 return;
-            Vec_Zero(&blData->field_0x3c);
+            Vec_Zero(&blData->fallVelocity);
             blData->jumpState = JUMP_NONE;
             if (player->animState->floor.materialType == MATERIAL_DEEPWATER ||
                 player->animState->floor.materialType == MATERIAL_SHALWATER)
                 Sound_Play3D(SFX_ENV_LAND_IN_WATER, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             else
                 Sound_Play3D(SFX_GENERIC_CLOTH_MOVEMENT_01, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
-            blData->field_0x8f6 = 8;
+            blData->landingStepFrames = 8;
             blData->stepDistance = 999.0f;
             return;
     }
@@ -2659,7 +2639,7 @@ void Player_Aiming(obj_tag *player) {
         double pitch = accel * FRAME_RATE_MUL * look;
         blData->lastRotationDelta.x = (float)pitch;
         if (pitch > 0.0002f || pitch < -0.0002f || pitch != pitch) {
-            blData->aimAutoLevelState = 1;
+            blData->aimAutoLevelState = AIMLEVEL_AIMING;
             blData->pitchFromHorizontal = (float)(pitch * HALF_PI + blData->pitchFromHorizontal);
         }
         return;
@@ -2749,10 +2729,10 @@ static const float kCrouchCapsuleTop = std::bit_cast<float>(0x3ee66667u);
 
 // The fall speed is kept within +-45 a second
 static void ClampFall(BLData *blData) {
-    if (blData->field_0x3c.y < -45.0f)
-        blData->field_0x3c.y = -45.0f;
-    else if (blData->field_0x3c.y > 45.0f)
-        blData->field_0x3c.y = 45.0f;
+    if (blData->fallVelocity.y < -45.0f)
+        blData->fallVelocity.y = -45.0f;
+    else if (blData->fallVelocity.y > 45.0f)
+        blData->fallVelocity.y = 45.0f;
 }
 
 // The player's capsule along up from his position: from top (scaled) to the bottom, rootHeight under it less offset
@@ -2774,7 +2754,7 @@ void Player_Collision(obj_tag *player) {
     _VECTOR up;
     Mat_GetUp(&up, &player->transformMatrix);
 
-    _VECTOR *fall = &blData->field_0x3c;
+    _VECTOR *fall = &blData->fallVelocity;
     switch ((short)player->subState) {
         case MovementType_Climb:
         case MovementType_Grapple:
@@ -2894,7 +2874,7 @@ void Player_Collision(obj_tag *player) {
             SetCapsule(blData, player, &up, 0.275f, (float)-((double)rootHeight - 0.55f));
             break;
     }
-    player->unknown_0xd9 = 1;
+    player->collideFlags = OBJCOLL_ACTOR;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -3135,7 +3115,7 @@ void Player_CollisionHandler(obj_tag *player) {
         return;
 
     if (player->subState != MovementType_Climb) {
-        char dying = player->curState == 2 || player->curState == 3;
+        char dying = player->curState == PLAYERSTATE_DYING || player->curState == PLAYERSTATE_3;
         PlayerNotDrone_FeetOnPoint(player, &blData->hitTest, &blData->floorNormalY, dying);
         blData->groundBits = (ushort)((short)blData->groundBits >> 1);
         if (player->animState->animFlags & ANIM_CONTACT_FLOOR)
@@ -3158,7 +3138,7 @@ void Player_CollisionHandler(obj_tag *player) {
             blData->fallFrames = 0.0f;
         }
         else {
-            if (!(blData->field_0x3c.y >= 0.0f))
+            if (!(blData->fallVelocity.y >= 0.0f))
                 blData->fallFrames = (float)((double)FRAME_RATE_MUL + blData->fallFrames);
             else
                 blData->fallFrames = 0.0f;
@@ -3184,7 +3164,7 @@ void Player_CollisionHandler(obj_tag *player) {
         }
         if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) && blData->jumpState != JUMP_RISING) {
             blData->movement.y = 0.0f;
-            Vec_Zero(&blData->field_0x3c);
+            Vec_Zero(&blData->fallVelocity);
         }
     }
     else {
@@ -3303,7 +3283,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
     Vec_Zero(&blData->lastMovement);
     Vec_Zero(&blData->lastRotationDelta);
     Vec_Zero(&blData->rotationDelta);
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     blData->endCamera.range = 1.5f;
     blData->endCamera.distance = 1.5f;
     blData->endCamera.distanceWanted = 1.5f;
@@ -3454,8 +3434,8 @@ static void ZeroGAxis(float *last, float *movement, float target) {
 }
 
 void Player_ZeroG(BLData *blData, obj_tag *player) {
-    Vec_Zero(&blData->field_0x3c);
-    blData->aimAutoLevelState = 2;
+    Vec_Zero(&blData->fallVelocity);
+    blData->aimAutoLevelState = AIMLEVEL_EASING;
     blData->aimAutoLevelDelay = 0;
     blData->pitchFromHorizontal = 0.0f;
 
@@ -3530,7 +3510,7 @@ static double ScanEase(float previous, float target) {
 
 void Player_SSScanMode(BLData *blData, obj_tag *player) {
     if (!(player->animState->animFlags & ANIM_SCOPED)) {
-        blData->aimAutoLevelState = 2;
+        blData->aimAutoLevelState = AIMLEVEL_EASING;
         blData->movement.y = 0.0f;
         float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, ACTION_HELD);
         blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * PI * Negate(turn));
@@ -3599,7 +3579,7 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
             Camera_CalcViewAngles(blData->playerNum, glb_viewer[blData->playerNum]->fovRadians);
         }
     }
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     player->animState->animObj.rootTravel = 0.0f;
 }
 
@@ -3614,7 +3594,7 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
 uchar Player_Activate(BLData *blData, obj_tag *player) {
     HITDATA_tag *hitList = NULL;
     uchar used = 0;
-    if (blData->thirdIcon == THIRDICON_STANDING) {
+    if (blData->thirdIcon == THIRDICON_WALLHUG) {
         obj_tag *wall = NULL;
         float nearest = 1000.0f;
         for (obj_tag *obj = control_first_object(); obj != NULL; obj = obj->nextObject) {
@@ -3706,7 +3686,7 @@ void Player_Swim(obj_tag *player, BLData *blData) {
 
     if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) != 0
         && !((double)player->position.y - 0.3f < player->inCel->shearHeight)) {
-        blData->aimAutoLevelState = 2;
+        blData->aimAutoLevelState = AIMLEVEL_EASING;
         Player_ChangeSubState(player, MovementType_Walk);
     }
 
@@ -3729,7 +3709,7 @@ void Player_Swim(obj_tag *player, BLData *blData) {
 // aimAutoLevelDelay frames, and not while jumping. Once the step is within 0.0002, state 2 becomes 3.
 void Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
     char state = blData->aimAutoLevelState;
-    if (state < 2 || state > 3)
+    if (state < AIMLEVEL_EASING || state > AIMLEVEL_EASED)
         return;
     if (blData->aimAutoLevelDelay != 0) {
         blData->aimAutoLevelDelay--;
@@ -3745,8 +3725,8 @@ void Player_ClampSomeAngles(BLData *blData, obj_tag *player) {
         blData->pitchFromHorizontal = -1.0f;
     else if (pitch > 1.0f)
         blData->pitchFromHorizontal = 1.0f;
-    if (step <= 0.0002f && step >= -0.0002f && state == 2)
-        blData->aimAutoLevelState = 3;
+    if (step <= 0.0002f && step >= -0.0002f && state == AIMLEVEL_EASING)
+        blData->aimAutoLevelState = AIMLEVEL_EASED;
 }
 
 // A flash bang's fade (Player_SetFlashBang): flashTimeLeft counts down a frame at a time. While flashTime is set,
@@ -3816,11 +3796,11 @@ void Player_Update(obj_tag *player) {
     _VECTOR startPosition;
     Vec_Copy(&player->position, &startPosition);
     switch ((short)player->curState) {
-        case 0:
-            player->curState = 1;
+        case PLAYERSTATE_START:
+            player->curState = PLAYERSTATE_ALIVE;
             break;
 
-        case 1:
+        case PLAYERSTATE_ALIVE:
             PlarStat_LogUpdateElapsedTime(blData->playerNum);
             Vec_Zero(&blData->movement);
             Vec_Zero(&blData->rotationDelta);
@@ -3917,8 +3897,8 @@ void Player_Update(obj_tag *player) {
             Vec_Copy(&blData->rotationDelta, &blData->lastRotationDelta);
             break;
 
-        case 2:
-        case 3:
+        case PLAYERSTATE_DYING:
+        case PLAYERSTATE_3:
             AnimObjectUpdate(player);
             Player_HandleDeath(player);
             break;
@@ -3933,8 +3913,8 @@ void Player_Update(obj_tag *player) {
     Player_Collision(player);
 
     switch ((short)player->curState) {
-        case 1:
-        case 4:
+        case PLAYERSTATE_ALIVE:
+        case PLAYERSTATE_4:
             if (blData->frozen)
                 break;
             if (blData->camMode != CamMode_Default) {
@@ -3943,7 +3923,7 @@ void Player_Update(obj_tag *player) {
                 AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_HEAD), 0, &head, NULL);
                 Env_Breath(&head, &dir, player->inCel, player->creationTimeFrames);
             }
-            if (blData->weaponObject->curState != 9) {
+            if (blData->weaponObject->curState != GUN_FIRING) {
                 uint frames = GameState.NumFramesUnpaused;
                 if (!(frames & 3)) {
                     Recharge(blData, 0x4a);
@@ -3976,8 +3956,8 @@ void Player_Update(obj_tag *player) {
             }
             break;
 
-        case 2:
-        case 3:
+        case PLAYERSTATE_DYING:
+        case PLAYERSTATE_3:
             Player_WeaponRecoil(player);
             break;
     }

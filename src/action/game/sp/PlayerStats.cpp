@@ -425,13 +425,8 @@ undefined4 (*NewScoresRef)[9][3];
 // XBE_GLOBAL(0x0017f468, 0xc)
 static float ScoringTableDifMul[3] = { 0.0f, 1.0f, 2.0f };
 
-// Mission_Status values this function tests (see Mission_Update in Mission.cpp)
-#define MISSION_STATUS_QUIT     3
-#define MISSION_STATUS_COMPLETE 6
-
-// Driving levels' hashcodes are 0x09xxxxxx; everything else is scored from the action engine's own counters.
-#define HASHCODE_TYPE_MASK   0xff000000
-#define HASHCODE_TYPE_DRIVING 0x09000000
+// Driving levels' hashcodes are in their own section; everything else is scored from the action engine's own
+// counters.
 
 // The driving engine reports its time in seconds; the action side keeps it in centiseconds (PlrMissionStats'
 // timeElapsed), which is what the time category expects.
@@ -528,7 +523,7 @@ undefined4* PlrStat_GetScore(char playerNum) {
         return NULL;
     }
 
-    table->isAction = ((level & HASHCODE_TYPE_MASK) == HASHCODE_TYPE_DRIVING) ? 0 : 1;
+    table->isAction = ((level & HASHCODE_SECTION_MASK) == HT_Level_Driving_HASHCODE_BASE) ? 0 : 1;
 
     ScoreCategory *stats = table->statsTable;
 

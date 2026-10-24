@@ -347,7 +347,7 @@ obj_tag* RB_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *l
         break;
     }
     rb->carriesLight = keys->carriesLight;
-    rb->sound = keys->sound != 0 ? keys->sound : 0xffff;
+    rb->sound = keys->sound != 0 ? keys->sound : SFX_NONE;
     return obj;
 }
 

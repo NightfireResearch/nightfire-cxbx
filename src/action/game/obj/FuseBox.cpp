@@ -39,9 +39,6 @@ LAYOUT_32(offsetof(FUSEBOX, channelA) == 0x54, "Bad offset of channelA");
 LAYOUT_32(offsetof(FUSEBOX, channelB) == 0x5c, "Bad offset of channelB");
 static_assert(offsetof(Create_FuseBox_Params, channelB) == 0x38, "Bad offset of channelB");
 
-// The script's play mode: run a tick, then wait (SP_LoadScript)
-#define FUSEBOX_SCRIPT_PLAY_MODE 0x40
-
 // The originals, called by address where Ghidra's prototypes do not fit. Player_Hurt is given a third argument it
 // does not read, as here in the original.
 
@@ -81,7 +78,7 @@ obj_tag * FuseBox_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
     obj->objGraphics = NULL;
     obj->effectFlags = celgl->applyFlagsToObject;
     build_LinkToRoom(obj, 0, glb_world);
-    box->scriptPlayer = SP_Create(pos, rot, params->scriptHashcode, (HASHCODE)0, FUSEBOX_SCRIPT_PLAY_MODE, 0, obj,
+    box->scriptPlayer = SP_Create(pos, rot, params->scriptHashcode, (HASHCODE)0, SP_PLAY_40, 0, obj,
                                   FuseBox_Register, box, 0);
     return obj;
 }

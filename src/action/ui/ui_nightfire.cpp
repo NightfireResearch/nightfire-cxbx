@@ -188,21 +188,8 @@ uint8_t results_saving;
 
 extern uint8_t menu_level_bonus_earned;  // MenuUnlocks.cpp
 
-#define TXT_PLATINUM_WON    ((Action_TranslatedText)0x2c7)
-#define TXT_GOLD_WON        ((Action_TranslatedText)0x2c8)
-#define TXT_SILVER_WON      ((Action_TranslatedText)0x2c9)
-#define TXT_BRONZE_WON      ((Action_TranslatedText)0x2ca)
-#define TXT_PLATINUM_TARGET ((Action_TranslatedText)0x2cc)
-#define TXT_GOLD_TARGET     ((Action_TranslatedText)0x2cd)
-#define TXT_SILVER_TARGET   ((Action_TranslatedText)0x2ce)
-#define TXT_BRONZE_TARGET   ((Action_TranslatedText)0x2cf)
-#define TXT_MISSION_FAILED  ((Action_TranslatedText)0x2fd)
-#define TXT_KILLED_IN_ACTION ((Action_TranslatedText)0x2fe)
-#define TXT_NICE_WORK       ((Action_TranslatedText)0x10001fd)  // "Nice work %s. You completed the mission."
-#define TXT_AGENT           ((Action_TranslatedText)0x10001fe)
-
 #define MEDAL_NONE 5    // Menu_SetLevelBonus's medal for none
-#define TXT_NFMAP_HINT_MAIN_MENU ((Action_TranslatedText)0x283)  // "~A Select  ~Y Dossier  ~V Scroll  ~B Main Menu"
+
 // The format of the results' and the rewards' memos (the game's string, which a memo keeps)
 #define RESULTS_FORMAT FontFormat3
 
@@ -213,7 +200,7 @@ static void Results_GoOn(uchar managerNum) {
     } else if (results_last_mission) {
         Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_WINGAME, 1);
     } else {
-        LABEL_SET_TEXT(managerNum, SUB_P_NFMAP_BUTTON_HINT_TEXT, Txt_BindLabel(TXT_NFMAP_HINT_MAIN_MENU, 0));
+        LABEL_SET_TEXT(managerNum, SUB_P_NFMAP_BUTTON_HINT_TEXT, Txt_BindLabel(NFMAP_HINT_BACK_TO_MAIN_MENU, 0));
         Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_NFMAP, 1);
     }
 }
@@ -242,13 +229,13 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         if (results_score != NULL) {
             sprintf(results_score_text, "%d", results_score->score);
             switch (Mission_Status()) {
-            case 2:
+            case MISSION_STATUS_FAILED:
                 title = TXT_MISSION_FAILED;
                 sprintf(results_target_text, "%d", results_score->thresholdScoreBronze);
                 medal = 4;
                 targetName = TXT_BRONZE_TARGET;
                 break;
-            case 3:
+            case MISSION_STATUS_QUIT:
                 title = TXT_KILLED_IN_ACTION;
                 sprintf(results_target_text, "%d", results_score->thresholdScoreBronze);
                 medal = 4;
@@ -452,23 +439,6 @@ void Menu_AddRowPercentage(uchar managerNum, Action_TranslatedText label, uint p
     Stats_SplitRow(&row, text);
     __Menu_Send(managerNum, SUB_P_NFSTATS_LIST, MessageType_ListAddRow, (intptr_t)&row, 0);
 }
-
-#define TXT_STATS_CATEGORY      ((Action_TranslatedText)0x1000204)
-#define TXT_STATS_CURRENT       ((Action_TranslatedText)0x10001e1)
-#define TXT_STATS_TARGET        ((Action_TranslatedText)0x10001e2)
-#define TXT_STATS_TOTAL         ((Action_TranslatedText)0x163)
-#define TXT_STATS_BOND_MOVES    ((Action_TranslatedText)0x165)
-#define TXT_STATS_OPPONENTS     ((Action_TranslatedText)0x15a)
-#define TXT_STATS_DISPATCHED    ((Action_TranslatedText)0x15b)
-#define TXT_STATS_SUBDUED       ((Action_TranslatedText)0x15c)
-#define TXT_STATS_SURRENDERED   ((Action_TranslatedText)0x16e)
-#define TXT_STATS_STEALTH       ((Action_TranslatedText)0x15d)
-#define TXT_STATS_ACCURACY      ((Action_TranslatedText)0x15e)
-#define TXT_STATS_HEALTH        ((Action_TranslatedText)0x15f)
-#define TXT_STATS_TIME          ((Action_TranslatedText)0x160)
-#define TXT_STATS_007_BONUS     ((Action_TranslatedText)0x161)
-#define TXT_STATS_SUBTOTAL      ((Action_TranslatedText)0x162)
-#define TXT_STATS_DIFFICULTY    ((Action_TranslatedText)0x164)
 
 // A rating of 0 to 1 as a percentage, rounded
 static uint Stats_Percent(float rating) {

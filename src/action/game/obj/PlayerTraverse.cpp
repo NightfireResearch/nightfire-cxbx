@@ -100,7 +100,7 @@ void PlayerCollLadder(obj_tag *player, BLData *blData, obj_tag *ladder) {
     Player_ClearInertia(player);
     Player_ChangeSubState(player, MovementType_Climb);
     blData->traverseStep = 1;
-    blData->aimAutoLevelState = 2;
+    blData->aimAutoLevelState = AIMLEVEL_EASING;
     Player_WeaponNone(player);
     blData->attachedToSpecialMovementItem = ladder;
 }
@@ -135,7 +135,7 @@ void Player_Climb(BLData *blData, obj_tag *player) {
         player->rotation.y = (float)(difference * 0.2f + player->rotation.y);
 
     Player_Move(blData, player, 0.0f);
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     Vec_Add2(&player->position, Mat_Position(blData->attachedToSpecialMovementItem->transformMatrix),
              &player->position);
     Vec_Subtract(&player->position, &blData->attachedToSpecialMovementItem->lastPosition, &player->position);
@@ -176,12 +176,6 @@ void Player_Climb(BLData *blData, obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 // The grapple
 // ---------------------------------------------------------------------------------------------------------------
-
-// BLData::grappleState
-#define GRAPPLE_NONE    0
-#define GRAPPLE_PULLING 1
-#define GRAPPLE_HOLDING 2   // arrived, held while fire is
-#define GRAPPLE_LET_GO  4
 
 // Clears the grapple and makes its rope. The original takes the player's data in ESI.
 void Player_InitGrapple(BLData *blData, obj_tag *player) {
@@ -339,7 +333,7 @@ void Player_CollWire(obj_tag *player, BLData *blData, obj_tag *wire) {
     Player_ClearInertia(player);
     Player_ChangeSubState(player, subState);
     blData->traverseStep = 6;
-    blData->aimAutoLevelState = 2;
+    blData->aimAutoLevelState = AIMLEVEL_EASING;
     blData->ropeFatigue = 0.0f;
     switch (wireData->type) {
         case WIRE_ROPE:
@@ -459,7 +453,7 @@ static sAnimScript_tag *RopeAnim(obj_tag *player, _VECTOR *at, bool handB, HASHC
 void Player_Wire(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     sAnimScript_tag *script = NULL;
-    Vec_Zero(&blData->field_0x3c);
+    Vec_Zero(&blData->fallVelocity);
     WIRE *wireData = (WIRE *)blData->attachedToSpecialMovementItem->extraObjectData;
     Music_Event(MUSICEV_TRAVERSE, 1);
     if (wireData->channel != 0)
@@ -691,7 +685,7 @@ void Player_CollCreepWall(obj_tag *player, BLData *blData, obj_tag *wall) {
     Player_ClearInertia(player);
     Player_ChangeSubState(player, MovementType_Creep);
     blData->traverseStep = CREEP_STILL;
-    blData->aimAutoLevelState = 2;
+    blData->aimAutoLevelState = AIMLEVEL_EASING;
     Player_SetCamMode(blData, CamMode_CreepWall);
     viewer->savedTrackDistance = viewer->trackDistance;
     viewer->savedTrackPitch = viewer->trackPitch;

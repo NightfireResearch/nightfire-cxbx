@@ -33,7 +33,7 @@ typedef struct {
     float unknownD4;       // 0xd4 - cleared by GT_Create
     ushort enableChannel;  // 0xd8 - kind 1 opens once it is on
     ushort disableChannel; // 0xda - and closes once it is
-    short kind;            // 0xdc
+    short kind;            // 0xdc - GTKind
     ushort key1;           // 0xde - the placement's second key, not read
     short ammo;            // 0xe0 - -1 for no limit
     uchar controlled;      // 0xe2 - by the player
@@ -47,6 +47,24 @@ LAYOUT_32(offsetof(GUNTURRET, owner) == 0xa8, "Bad offset of owner");
 LAYOUT_32(offsetof(GUNTURRET, health) == 0xbc, "Bad offset of health");
 LAYOUT_32(offsetof(GUNTURRET, enableChannel) == 0xd8, "Bad offset of enableChannel");
 LAYOUT_32(offsetof(GUNTURRET, controlled) == 0xe2, "Bad offset of controlled");
+
+// GUNTURRET::kind
+enum GTKind {
+    GT_KIND_MINIGUN = 0,
+    GT_KIND_CEILING = 1,
+};
+
+// GT_Update's states (obj_tag::curState)
+enum GTState {
+    GT_CLOSED = 0,
+    GT_OPENING = 1,
+    GT_RETURNING = 2,       // to where it pointed when it opened, then closes
+    GT_CLOSING = 3,
+    GT_ACTIVE = 4,
+    GT_STUNNED = 5,         // by the taser or an explosion (GT_Disable); back to subState
+    GT_DESTROYED = 6,
+    GT_CONTROLLED = 7,      // by the player
+};
 
 // A turret's placement keys (level_tag)
 typedef struct GTPlacement {

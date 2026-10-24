@@ -43,21 +43,6 @@ float TurretRange = 2500.0f;
 // XBE_GLOBAL(0x00161998, 0x4) readonly relocate
 float TurretRefire = 0.1f;
 
-// GT_Update's states (obj_tag::curState)
-enum {
-    GT_CLOSED = 0,
-    GT_OPENING = 1,
-    GT_RETURNING = 2,       // to where it pointed when it opened, then closes
-    GT_CLOSING = 3,
-    GT_ACTIVE = 4,
-    GT_STUNNED = 5,         // by the taser or an explosion (GT_Disable); back to subState
-    GT_DESTROYED = 6,
-    GT_CONTROLLED = 7,      // by the player
-};
-
-#define GT_KIND_MINIGUN 0
-#define GT_KIND_CEILING 1
-
 // The turrets' weapon, and the weapon a placed minigun is picked up as
 #define TURRET_WEAPON 0x60
 #define MINIGUN_WEAPON 0x52
@@ -88,7 +73,8 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
     GTPlacement *keys = (GTPlacement *)lvl;
     if (keys->bodyScript == 0 || keys->baseScript == 0)
         return NULL;
-    obj_tag *obj = Control_CreateObjEx(sizeof(GUNTURRET), pos, rot, NULL, celgl, NULL, 1, 4, 1.0f, 0, 0xff, 0xff, 0xff);
+    obj_tag *obj = Control_CreateObjEx(sizeof(GUNTURRET), pos, rot, NULL, celgl, NULL, 1, TRANSFORM_MATRIX_PLACED, 1.0f,
+                                       0, 0xff, 0xff, 0xff);
     if (obj == NULL)
         return NULL;
 
@@ -349,7 +335,7 @@ static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX
     Mat_GetDir(&dir, &barrel->transformMatrix);
     auxVec_AddMulR32((_VECTOR *)&barrel->transformMatrix.m[12], &dir, turret->muzzle, &at);
     Sound_Play3D(sound, &at, 100.0f, -1.0f, -1.0f, 0, 0, 0);
-    Bullet_init(-1, from, barrel, &weapon_data[TURRET_WEAPON], &at, &dir, 0xffff);
+    Bullet_init(-1, from, barrel, &weapon_data[TURRET_WEAPON], &at, &dir, SFX_NONE);
     // dir, done with, is the smoke's turn
     dir.z = (float)Float_FRand(TWO_PI);
     if (player >= 0)
@@ -623,7 +609,7 @@ void GT_LoseControl(obj_tag *gameObj) {
     Player_Enable(turret->owner, NULL, 0);
     turret->owner->animState->switchingToWeaponId = RONIN_WEAPON;
     turret->owner->animState->currentWeaponId = RONIN_WEAPON;
-    blData->weaponObject->curState = 0xc;
+    blData->weaponObject->curState = GUN_THROWING;
     AnimScriptAdd(blData->weaponObject, weapon_data[RONIN_WEAPON].animFireAlt);
     blData->weaponStats[RONIN_WEAPON].enabled = 0;
     Input_SetAction(blData->playerNum, ACTION_RELOAD, 1);

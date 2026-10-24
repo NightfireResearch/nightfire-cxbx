@@ -200,7 +200,7 @@ void RandomCameras() {
         sensor->owner = camera;
         sensor->monitorGroup = ShadowRand(3);
         sensor->monitoredChannel = ShadowRand(2) ? 1 + ShadowRand(12) : 0;
-        sensor->childObjectVisibilityState = ShadowRand(3);
+        sensor->monitorView = ShadowRand(3);
     }
     int count = ShadowRand(CAMERAS + 1);
     for (int i = count - 1; i >= 0; i--) {

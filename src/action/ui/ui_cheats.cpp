@@ -169,7 +169,7 @@ bool C_CHCHHUD_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             if (glb_blokes[player] == NULL)
                 continue;
             PlayerInputs[player].crosshairsEnabled = hud_state;
-            MPSettings.Player[player].SomeField2 = hud_state;
+            MPSettings.Player[player].radar = hud_state;
             for (int pane = 0; pane < NUM_PANES; pane++)
                 HUD_Enable(glb_blokes[player]->hudInfo, (HUD_PANE_IND)pane, hud_state, 0);
         }

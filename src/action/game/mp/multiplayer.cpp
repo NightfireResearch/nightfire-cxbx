@@ -215,10 +215,6 @@ bool MP_IsTarget(obj_tag *obj) {
   return ((AssassinTarget != NULL) && (AssassinTarget == obj));
 }
 
-// The friendly-fire messages: to the one who fired, and to the one hit, each with the other's name
-#define TXT_MP_FRIENDLY_FIRE_BY ((Action_TranslatedText)0x02000029)
-#define TXT_MP_FRIENDLY_FIRE_ON ((Action_TranslatedText)0x0200002a)
-
 // Who hit player playerIndex (a drone, player or gun turret, or the one who fired a bullet) becomes his last injurer.
 // A teammate's hit does not count (false) without friendly fire, and with it both are told, at most every three
 // seconds. Always true outside multiplayer; false when there is no one to blame. The health is not read.
@@ -254,9 +250,9 @@ bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health) {
       return false;
     if (MPGame.players[playerIndex].friendlyFireLabelTimer == 0) {
       char *text = Txt_GetStringFromHeap(0);
-      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_BY, 0), MPSettings.Player[shooterIndex].Name);
+      sprintf(text, Txt_BindLabel(NOTIF_FRIENDLY_FIRE_BY_X, 0), MPSettings.Player[shooterIndex].Name);
       Text_AddMsg((char)playerIndex, 0, TXTMSG_INFO, text, 0, 0xb4);
-      sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_ON, 0), MPSettings.Player[playerIndex].Name);
+      sprintf(text, Txt_BindLabel(NOTIF_FRIENDLY_FIRE_ON_X, 0), MPSettings.Player[playerIndex].Name);
       Text_AddMsg((char)shooterIndex, 0, TXTMSG_INFO, text, 0, 0xb4);
       MPGame.players[playerIndex].friendlyFireLabelTimer = (short)(FRAME_RATE_INT * 3);
     }
@@ -636,8 +632,9 @@ void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keep
 
 // Puts a carried object on its holder, at the holder's attach point (an AnimGetBoneWorldTrans one), facing along
 // it; a player's own view does not draw it. The original (0x9c7e0) takes attach in EAX, holder in EBX and the
-// object in ESI and on the stack; every caller is ours and passes the same object, so it is not patched over.
-void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
+// object in ESI and on the stack; every caller is ours and passes the same object, so it is not patched over. (Our
+// name; Ghidra's is MP_SetUpPlayerSomehow.)
+void MP_AttachToHolder(obj_tag *gameObj, obj_tag *holder, uint attach) {
     _VECTOR dir, pos;
     _MATRIX mtx;
     AnimGetBoneWorldTrans(holder, attach | ANIM_WHICH_BONE, 0, &pos, &mtx);
@@ -738,7 +735,7 @@ static void ShowScoreLimitResult(sprite *status) {
 
 // AUTOINJECT
 void MP_SortOutWhoWon() {
-    MPGame.EndGameFlowState = 3;
+    MPGame.EndGameFlowState = MPEND_SHOW_RESULT;
 
     if (MPSettings.GameMode == GM_TOPAGENT) {
         ShowTopAgentResult(StatusSpr);
@@ -774,13 +771,13 @@ void MP_RestartScenario(void) {
   Control_DeleteAllObjectsOfType(OBJECTTYPE_GAS);
 
   for(obj_tag* o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET2, NULL); o != NULL; o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET2, o)) {
-    if(o->curState == 1) {
+    if(o->curState == GUNIMP_MANNED) {
       GunImp_Deactivate(o);
     }
   }
 
   for(obj_tag* o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET, NULL); o != NULL; o = Control_ReturnNextObjectOfType(OBJECTTYPE_GUNTURRET, o)) {
-    if(o->curState == 7) {
+    if(o->curState == GT_CONTROLLED) {
       GT_LoseControl(o);
     }
   }
@@ -857,29 +854,28 @@ void MP_Update(void) {
   }
 
   switch(MPGame.EndGameFlowState) {
-    case 0:
+    case MPEND_PLAYING:
       MP_Pickup_Process(); 
       MP_CheckForEndCondition();
-      // some thing which got optimised out?
       break;
 
-    case 1:
+    case MPEND_DECIDE_WINNER:
       MP_SortOutWhoWon();
       break;
 
-    case 2:
+    case MPEND_TIME_UP:
       if(MPSettings.GameMode != GM_TOPAGENT) {
         // TODO: The function also seems to call Txt_BindLabel(PRESS_START, 0) but never uses the result?
         sprintf(StatusSpr->text, "%s", Txt_BindLabel(MP_TIME_UP, 0));
         Sprite_SetText(StatusSpr, StatusSpr->text);
-        MPGame.EndGameFlowState = 3;
+        MPGame.EndGameFlowState = MPEND_SHOW_RESULT;
       } else {
         // In the Xbox code this happens due to fallthrough
         MP_SortOutWhoWon();
       }
       break;
 
-    case 3: // Some kind of temporary delay state, showing the winners?
+    case MPEND_SHOW_RESULT:
 
       if(MPSettings.GameMode == GM_TOPAGENT)
         break;
@@ -887,14 +883,14 @@ void MP_Update(void) {
       MPGame.winStateTimeout += REC_FRAME_RATE;
       
       if(MPGame.winStateTimeout >= 5.0f) {
-        MPGame.EndGameFlowState = 4;
+        MPGame.EndGameFlowState = MPEND_DEBRIEF;
         GameState.LevelEnding = true;
       }
 
       break;
 
-    case 4:
-      MPGame.EndGameFlowState = 5;
+    case MPEND_DEBRIEF:
+      MPGame.EndGameFlowState = MPEND_LEAVING;
       GameState.ReloadMenupage = P_MPDEBRIEFING;
       ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
       GameFlow_PushState(GAMEFLOW_FADE, 60.0f, 0xFF);
@@ -907,13 +903,13 @@ void MP_Update(void) {
       }
       break;
 
-    case 6:
+    case MPEND_RESTART_ROUND:
       MPGame.restartScenarioTimeout += REC_FRAME_RATE;
       if(MPGame.restartScenarioTimeout >= 2.5f) {
         Sprite_SetText(StatusSpr, (char*)Txt_BindLabel(NOTIF_RESTARTING, 0));
       }
       if(MPGame.restartScenarioTimeout > 5.0f) {
-        MPGame.EndGameFlowState = 0;
+        MPGame.EndGameFlowState = MPEND_PLAYING;
         MP_RestartScenario();
         sprintf(StatusSpr->text, "");
         Sprite_SetText(StatusSpr, StatusSpr->text);
@@ -977,7 +973,7 @@ void MP_Init(void) {
 
     uint gameMode = MPSettings.GameMode;
     MPSettings.isTeamGame = (gameMode >> GM_BIT_TEAMGAME) & 1;
-    MPSettings.field53_0x190 = (gameMode >> GM_BIT_30) & 1;
+    MPSettings.gameModeBit30 = (gameMode >> GM_BIT_30) & 1;
 
     SpawnPntCount = 0;
     UplinkCount = 0;
@@ -1045,7 +1041,7 @@ obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) 
             }
             if (type == OBJECTTYPE_DEAD_PLAYER)
                 return NULL;
-            if (type == OBJECTTYPE_PLAYER && (agent->curState == 2 || agent->curState == 3))
+            if (type == OBJECTTYPE_PLAYER && (agent->curState == PLAYERSTATE_DYING || agent->curState == PLAYERSTATE_3))
                 return NULL;
 
             if (teamOut != NULL)
@@ -1080,7 +1076,7 @@ obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly) {
                         continue;
                     break;
                 case OBJECTTYPE_PLAYER:
-                    if (agent->curState != 1)
+                    if (agent->curState != PLAYERSTATE_ALIVE)
                         continue;
                     break;
                 case OBJECTTYPE_DEAD_DRONE:
@@ -1146,7 +1142,7 @@ static void CheckTopAgentEliminations(void) {
 
     if (playersOut + botsOut >= (ushort)(MPSettings.numPlayersAndBots - 1) ||
         playersOut == (ushort)MPSettings.numPlayers)
-        MPGame.EndGameFlowState = 1;
+        MPGame.EndGameFlowState = MPEND_DECIDE_WINNER;
 
     if (playersOut >= MPSettings.numPlayers && MPSettings.numBots != 0 && botsOut < MPSettings.numBots - 1) {
         for (ushort i = 0; i < NUM_AGENTS; i++) {
@@ -1162,7 +1158,8 @@ static void CheckTopAgentEliminations(void) {
 }
 
 // Once a frame while the match runs (MP_Update): the clocks, the time display, and whether the match is over -
-// EndGameFlowState 1 on the points limit, 2 on the time limit, 6 when a demolition or protection round runs out.
+// EndGameFlowState MPEND_DECIDE_WINNER on the points limit, MPEND_TIME_UP on the time limit, MPEND_RESTART_ROUND
+// when a demolition or protection round runs out.
 // AUTOINJECT
 void MP_CheckForEndCondition(void) {
     double now = (uint32_t)psiGetTimeIn100ths();
@@ -1189,7 +1186,7 @@ void MP_CheckForEndCondition(void) {
     if (roundMode) {
         if (MPGame.TimeLimit > 0.0f && !switch_channels[SWITCH_MP_TIME_UP]) {
             if (MPGame.TimeUnpaused >= MPGame.TimeLimit)
-                MPGame.EndGameFlowState = 6;
+                MPGame.EndGameFlowState = MPEND_RESTART_ROUND;
             ShowTimeLeft();
         }
     } else if (MPSettings.MaxDuration != -1 && !switch_channels[SWITCH_MP_TIME_UP]) {
@@ -1204,9 +1201,9 @@ void MP_CheckForEndCondition(void) {
         switch_channels[SWITCH_MP_SCORE_REACHED] = best >= maxPoints;
 
     if (switch_channels[SWITCH_MP_SCORE_REACHED])
-        MPGame.EndGameFlowState = 1;
+        MPGame.EndGameFlowState = MPEND_DECIDE_WINNER;
     else if (switch_channels[SWITCH_MP_TIME_UP])
-        MPGame.EndGameFlowState = 2;
+        MPGame.EndGameFlowState = MPEND_TIME_UP;
 }
 
 // Whether obj is out of play: not an agent at all, dead or dying, or a drone whose AI is not running
@@ -1284,7 +1281,7 @@ static void AddRadarObject(ushort *count, _VECTOR *pos, ushort type, uint colour
 ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
     *objects = MPRadarObjects;
     // Control_Plr2Ind's -1 for a non-agent reads the entry before Player[0]
-    if (!MPSettings.Player[Control_Plr2Ind(viewer)].SomeField2)
+    if (!MPSettings.Player[Control_Plr2Ind(viewer)].radar)
         return 0;
 
     ushort count = 0;
@@ -1296,7 +1293,7 @@ ushort MP_GetRadarObjects(obj_tag *viewer, RADAROBJ **objects) {
 
         switch (agent->objectType) {
             case OBJECTTYPE_DRONE:
-            case 4: // no name in ObjectType
+            case OBJECTTYPE_4:
                 if (MPDrone_IsDyingOrDead(agent))
                     continue;
                 break;
@@ -1394,7 +1391,7 @@ SpriteInfo AssassinSpriteInfo = {
     .flags = 8192,
     .posX = 320,
     .posY = 72,
-    .textRef = (Action_TranslatedText)0xffffffff,
+    .textRef = Action_TranslatedText_NULLVALUE,
     .linkedViewer = VIEWER_HUD,
 };
 // XBE_GLOBAL(0x0017e554, 0x2c)
@@ -1518,7 +1515,7 @@ char* MP_GetTeamScore(ushort team) {
     if (!MPSettings.isTeamGame)
         return NULL;
     char *text = Txt_GetStringFromHeap(0);
-    // both settings of field53_0x190 print the same
+    // both settings of gameModeBit30 print the same
     int theirs = Ftol(MPGame.teamScore[team == PHOENIX]);
     int ours = Ftol(MPGame.teamScore[team]);
     sprintf(text, "%d - %d", ours, theirs);
@@ -1970,7 +1967,7 @@ void MP_EquipPlayer(obj_tag *player) {
     player->animState->currentWeaponId = Weap_Hands;
     player->animState->prevHeldWeaponId = Weap_Hands;
     player->animState->switchingToWeaponId = (char)weapon;
-    blData->weaponObject->curState = 0;
+    blData->weaponObject->curState = GUN_IDLE;
 }
 
 // The bots' paths to the pickups and to the scenario objects of the game mode, once the level is loaded. Not in
@@ -2023,7 +2020,7 @@ void MP_PostLoad_Init(void) {
 
         case GM_GOLDENEYE:
             for (int i = 0; i < 2; i++) {
-                if (GoldenEye.keys[i].gameObj != NULL && GoldenEye.keys[i].gameObj->curState == 0)
+                if (GoldenEye.keys[i].gameObj != NULL && GoldenEye.keys[i].gameObj->curState == MPOBJ_HOME)
                     MP_PostLoadInitObjExt(&GoldenEye.keys[i]);
             }
             break;
@@ -2048,7 +2045,7 @@ void MP_PostLoad_Init(void) {
 // deaths reach the points limit.
 // AUTOINJECT
 bool MP_ReSpawn(obj_tag *obj, ushort playerNum) {
-    if (!MPSettings.isMultiplayer || MPGame.EndGameFlowState != 0)
+    if (!MPSettings.isMultiplayer || MPGame.EndGameFlowState != MPEND_PLAYING)
         return false;
     // a signed comparison in the original
     if (MPSettings.GameMode == GM_TOPAGENT && (int)MPGame.players[playerNum].deaths >= (int)MPSettings.MaxPoints)
@@ -2084,11 +2081,11 @@ bool MP_ReSpawn(obj_tag *obj, ushort playerNum) {
     Player_SetHealth(blData, (float)((double)(int)MPSettings.Player[blData->playerNum].HealthModifier + 100.0f));
     blData->healthShown = blData->health;
     blData->movementDisabled = 0;
-    blData->grappleState = 0;
+    blData->grappleState = GRAPPLE_NONE;
     blData->pitchFromHorizontal = 0.0f;
     MP_EquipPlayer(obj);
     Camera_Set(glb_viewer[blData->playerNum], &obj->position, &obj->rotation);
-    Player_ChangeState(obj, 0);
+    Player_ChangeState(obj, PLAYERSTATE_START);
     Player_ChangeSubState(obj, 0);
     obj->effectFlags &= ~EFFECT_NO_COLLISION;
     obj->objectType = OBJECTTYPE_PLAYER;

@@ -13,11 +13,11 @@ typedef struct {
 #pragma pack(pop)
 static_assert(offsetof(Create_ThirdIcon_Params, param) == 0x2c, "Bad offset of param");
 
-// ThirdIcon's obj_tag::curState: 1 once its channel is set
-#define THIRDICON_ON 1
-
-// The text shown when the player touches the standing icon (not while creeping)
-#define TXT_THIRDICON_STANDING ((Action_TranslatedText)0x01000291)
+// The icon object's obj_tag::curState
+enum ThirdIconState {
+    ICONSTATE_OFF = 0,
+    ICONSTATE_ON = 1,               // its on channel is set, or it has none
+};
 
 // AUTOINJECT
 obj_tag * ThirdIcon_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {
@@ -40,17 +40,17 @@ obj_tag * ThirdIcon_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_
     return obj;
 }
 
-// Once on, a player touching it is shown its icon (and, for the standing icon, its text, at most every 4 frames)
+// Once on, a player touching it is shown its icon (and, for the wallhug icon, its text, at most every 4 frames)
 // AUTOINJECT
 void ThirdIcon_Update(obj_tag *obj) {
     THIRDICON *icon = (THIRDICON *)obj->extraObjectData;
     if (icon->wait > 0)
         icon->wait--;
     if (switch_channels[icon->onChannel])
-        obj->curState = THIRDICON_ON;
+        obj->curState = ICONSTATE_ON;
     if (switch_channels[icon->offChannel])
         obj->flags |= OBJFLAG_DELETE;
-    if (obj->curState != THIRDICON_ON)
+    if (obj->curState != ICONSTATE_ON)
         return;
 
     for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
@@ -58,8 +58,8 @@ void ThirdIcon_Update(obj_tag *obj) {
         if (player == NULL || player->objectType != OBJECTTYPE_PLAYER)
             continue;
         BLData *blData = (BLData *)player->extraObjectData;
-        if (icon->wait == 0 && icon->icon == THIRDICON_STANDING && player->subState != MovementType_Creep)
-            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_THIRDICON_STANDING, 0), 0, 0xb4);
+        if (icon->wait == 0 && icon->icon == THIRDICON_WALLHUG && player->subState != MovementType_Creep)
+            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_PRESS_ACTION, 0), 0, 0xb4);
         blData->thirdIcon = (uchar)icon->icon;
         icon->wait = 4;
     }

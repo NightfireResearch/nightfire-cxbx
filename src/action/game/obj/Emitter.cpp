@@ -57,7 +57,8 @@ obj_tag* Emitter_Create(HASHCODE hc, _VECTOR *pos, _VECTOR *dir, float life, uin
     Mat_SetDir(&u, &mtx);
     Vec_Copy(&v, (_VECTOR *)&mtx.m[0]);
     Mat_SetUp(dir, &mtx);
-    obj_tag *obj = Control_CreateObjEx(size, NULL, NULL, &mtx, NULL, NULL, 1, 0x104, 1.0f, 0, 0xff, 0xff, 0xff);
+    obj_tag *obj = Control_CreateObjEx(size, NULL, NULL, &mtx, NULL, NULL, 1,
+                                       TRANSFORM_FIXED_RADIUS | TRANSFORM_MATRIX_PLACED, 1.0f, 0, 0xff, 0xff, 0xff);
 
     EMITTER_tag *emitter = (EMITTER_tag *)obj->extraObjectData;
     obj->objectType = OBJECTTYPE_EMITTER;

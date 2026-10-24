@@ -134,7 +134,7 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     if (spotlight->searchlightType == 2) {
         _VECTOR lightPos = obj->position;
         light_tag* light = Light_Create(&lightPos, 0xff, 0xff, 0xff, 500.0f, 0, -1, LIGHT_CARRIED, 1.0f, 0, 0, 0,
-                                        0xffff);
+                                        SFX_NONE);
         light->parentObject = obj;       // Back-reference to holder
         spotlight->dynamicLight = light;  // Store the light_tag
 
@@ -284,7 +284,7 @@ void Searchlight_Update(obj_tag *searchlight) {
     case Searchlight_Inactive:
         // Check enable switch
         if ((spotlight->enableSwitchChannel != 0) && (switch_channels[spotlight->enableSwitchChannel] != 0)) {
-            searchlight->curState = 0;
+            searchlight->curState = Searchlight_Sweeping;
             Sound_Play3D(SFX_ENV_SEARCHLIGHT_SWITCH_ON, &searchlight->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         }
         goto check_bullet_hits;

@@ -34,7 +34,7 @@ typedef struct GUNTYPE {
     HASHCODE model;              // 0x0c - the gun's
     int weapon;                  // 0x10
     float refire;                // 0x14 - frames
-    int sound;                   // 0x18 - each shot's, or the loop's for weapons 0x67 and 0x70
+    Action_SFX sound;            // 0x18 - each shot's, or the loop's for weapons 0x67 and 0x70
 } GUNTYPE;
 
 static_assert(sizeof(GUNTYPE) == 0x1c, "Bad size for GUNTYPE");
@@ -47,6 +47,12 @@ LAYOUT_32(offsetof(GUNIMP, firingSound) == 0x7c, "Bad offset of firingSound");
 LAYOUT_32(offsetof(GUNIMP, gunType) == 0x81, "Bad offset of gunType");
 
 #pragma pack(pop)
+
+// obj_tag::curState of an emplacement
+enum GunImpState {
+    GUNIMP_FREE = 0,
+    GUNIMP_MANNED = 1,          // subState holds the player's number
+};
 
 void GunImp_Activate(obj_tag *gunObj, obj_tag *player);
 void GunImp_Deactivate(obj_tag *gunObj);

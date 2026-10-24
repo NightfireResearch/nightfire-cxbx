@@ -78,15 +78,19 @@ void Car_InitBits(CAR_INFO *tankInfo, obj_tag *baseObj) {
         barrelHashcode = HT_Entity_NellieProp;
     }
 
-    tankInfo->turretGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, hashtable_hashcode_to_celglist(turretHashcode), baseObj, 0, 4, 1.0, 0x00, 0xff, 0xff, 0xff);
-    tankInfo->barrelGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL, hashtable_hashcode_to_celglist(barrelHashcode), baseObj, 0, 4, 1.0, 0x20, 0xff, 0xff, 0xff);
+    tankInfo->turretGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL,
+                                               hashtable_hashcode_to_celglist(turretHashcode), baseObj, 0,
+                                               TRANSFORM_MATRIX_PLACED, 1.0, 0x00, 0xff, 0xff, 0xff);
+    tankInfo->barrelGeom = Control_CreateObjEx(0, Mat_Position(baseObj->transformMatrix), NULL, NULL,
+                                               hashtable_hashcode_to_celglist(barrelHashcode), baseObj, 0,
+                                               TRANSFORM_MATRIX_PLACED, 1.0, EFFECT_NO_COLLISION, 0xff, 0xff, 0xff);
 
-    // Meaning currently unknown - render mode?
     tankInfo->turretGeom->effectFlags |= ObjectEffectFlags::EFFECT_NO_CONTACT;
     tankInfo->barrelGeom->effectFlags |= ObjectEffectFlags::EFFECT_NO_CONTACT;
 
     Mat_Copy(&baseObj->transformMatrix, &tankInfo->turretGeom->transformMatrix);
-    Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix)); // This is pointless, it's the same matrix, but the game code does this?
+    // the matrix already has it; the original copies it again
+    Vec_Copy(Mat_Position(baseObj->transformMatrix), Mat_Position(tankInfo->turretGeom->transformMatrix));
 
 }
 
@@ -160,7 +164,9 @@ obj_tag * Car_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag 
     if(NumTanks >= MAX_TANKS)
         return NULL;
 
-    obj_tag* baseObj = Control_CreateObjEx(sizeof(CAR_INFO),pos,rot,NULL,celgl,NULL,'\x01',0x44,1.0,0,0xff,0xff,0xff);
+    obj_tag* baseObj = Control_CreateObjEx(sizeof(CAR_INFO), pos, rot, NULL, celgl, NULL, '\x01',
+                                           TRANSFORM_MATRIX_PLACED | TRANSFORM_POSITION_FROM_MATRIX, 1.0, 0, 0xff, 0xff,
+                                           0xff);
 
     if(baseObj == NULL)
         return NULL;
@@ -363,7 +369,7 @@ void Car_SetBits(CAR_INFO *car, obj_tag *obj) {
         auxVec_AddMulR32(Mat_Position(barrel->transformMatrix), &dir, barrel->radius, &from);
         Sound_Play3D(SFX_WEAPON_MINI_GUN_FIRE, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Bullet_init(obj->subState, glb_players[(short)obj->subState], turret, &weapon_data[CAR_GUN_WEAPON], &from, &dir,
-                    0xffff);
+                    SFX_NONE);
         car->gunWait = 6.0f;
         Car_HeatGun(car);
     }
@@ -372,7 +378,7 @@ void Car_SetBits(CAR_INFO *car, obj_tag *obj) {
         auxVec_AddMulR32(Mat_Position(barrel->transformMatrix), &dir, barrel->radius, &from);
         Sound_Play3D(SFX_WEAPON_OICW_GRENADE_SHOT_01, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Bullet_init(obj->subState, glb_players[(short)obj->subState], turret, &weapon_data[TANK_SHELL_WEAPON], &from,
-                    &dir, 0xffff);
+                    &dir, SFX_NONE);
         car->mainAmmo--;
         car->mainWait = 120.0f;
     }
@@ -452,7 +458,7 @@ static void Car_FlyHeli(obj_tag *obj, CAR_INFO *car) {
         Vec_Add2(Mat_Position(obj->transformMatrix), &from, &from);
         Sound_Play3D(SFX_VEH_HELICOPTER_CHAINGUN_SHOT, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Bullet_init(obj->subState, glb_players[(short)obj->subState], obj, &weapon_data[CAR_GUN_WEAPON], &from, &dir,
-                    0xffff);
+                    SFX_NONE);
         car->gunWait = 6.0f;
         Car_HeatGun(car);
     }
@@ -468,7 +474,7 @@ static void Car_FlyHeli(obj_tag *obj, CAR_INFO *car) {
         Vec_Add2(Mat_Position(obj->transformMatrix), &from, &from);
         Sound_Play3D(SFX_WEAPON_ROCKET_LAUNCHER_SHOOT, &from, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Bullet_init(obj->subState, glb_players[(short)obj->subState], obj, &weapon_data[HELI_MISSILE_WEAPON], &from,
-                    &dir, 0xffff);
+                    &dir, SFX_NONE);
         car->mainAmmo--;
         car->mainWait = 120.0f;
     }

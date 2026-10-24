@@ -21,7 +21,7 @@ Almost all of the scripting in a level is built out of them.
 
 **Data-driven, which is the overwhelming majority.** The channel number comes out of the map data, held
 in the object: `light->switchChannel`, `sensor->alertSwitchChannel`, `spotlight->disableSwitchChannel`,
-`rotor->switchChannel`, `scriptPlayer->someSwitchChannel`, `objective->completedChannel`, and so on.
+`rotor->switchChannel`, `scriptPlayer->switchChannel`, `objective->completedChannel`, and so on.
 Those tell you nothing about what any particular number means, because the meaning lives in the level
 file rather than in the executable.
 

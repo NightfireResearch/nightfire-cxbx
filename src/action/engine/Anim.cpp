@@ -322,7 +322,7 @@ static uint AnimData_ReadHalf(uint *pending, uint *half) {
 // AUTOINJECT
 void AnimProcessSeqData(HASHCODE hashcode) {
     // The hashcode type bytes AnimLoadFile dispatches on
-    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_AnimSeq_HASHCODE_BASE)
         return;
     sAnimRawSeq_tag *raw = (sAnimRawSeq_tag *)hashtable_getitem(hashcode);
     pAnimData = (char *)raw;
@@ -381,7 +381,7 @@ void AnimProcessSeqData(HASHCODE hashcode) {
 
 // Steps over a script's commands; nothing is kept but the cursor
 void AnimProcessScriptData(HASHCODE hashcode) {
-    if ((hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_Script_HASHCODE_BASE)
         return;
     pAnimData = (char *)hashtable_getitem(hashcode);
     if (pAnimData == NULL)
@@ -404,7 +404,7 @@ void AnimProcessScriptData(HASHCODE hashcode) {
 
 // AUTOINJECT
 void AnimLoadFile(HASHCODE hashcode, char noProcess) {
-    switch (hashcode & 0xff000000) {
+    switch (hashcode & HASHCODE_SECTION_MASK) {
     case HT_AnimSeq_HASHCODE_BASE:
         loadAnimFileCapturingSize(MALLOC_ANIM_SEQ_DATA, hashcode);
         AnimFileSizes.seqBytes += AnimFileSize;
@@ -492,7 +492,7 @@ void AnimSkeletonProcess(char *data) {
 // Called only by AnimLoadFile, straight after loading a 0x05xxxxxx file.
 void AnimProcessSkinData(HASHCODE hashcode) {
 
-    if ((hashcode & 0xff000000) != HT_Skin_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_Skin_HASHCODE_BASE)
         return;
 
     pAnimData = (char *)hashtable_getitem(hashcode);
@@ -701,7 +701,7 @@ static void AnimSeqDelete(sAnimSeq_tag **slot) {
 // header. NULL when hashcode is not a loaded sequence.
 sAnimRawSeq_tag* AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimSeq_tag *seq) {
     seq->hashcode = hashcode;
-    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE) {
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_AnimSeq_HASHCODE_BASE) {
         NF_WARN("Can't use animation hash 0x%x", hashcode); // GC check (0x8004dda8)
         return NULL;
     }
@@ -729,7 +729,7 @@ sAnimRawSeq_tag* AnimSeqGetInfo(sAnimRawSeq_tag *raw, HASHCODE hashcode, sAnimSe
 AnimDistanceTable* AnimDistanceTableCreate(uint axes, HASHCODE hashcode, int noWrap) {
     sAnimSeq_tag seq;
     memset(&seq, 0, sizeof(seq));
-    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_AnimSeq_HASHCODE_BASE)
         return NULL;
     AnimSeqGetInfo(NULL, hashcode, &seq);
 
@@ -796,7 +796,7 @@ AnimDistanceTable* AnimDistanceTableGet(HASHCODE hashcode) {
 // its first translation start afresh. The body's sequence gives the object its bound sphere.
 sAnimSeq_tag* AnimSeqSet(sAnimScript_tag *script, HASHCODE hashcode, obj_tag *obj, AnimObj *animObj,
                          sAnimRawSeq_tag *raw, int start, int slot) {
-    if ((hashcode & 0xff000000) != HT_AnimSeq_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_AnimSeq_HASHCODE_BASE)
         return NULL;
     sAnimSeq_tag *seq = (&script->boneAnimSeq)[slot];
     if (seq == NULL)
@@ -865,7 +865,8 @@ sAnimScript_tag* AnimScriptNew(obj_tag *obj, sAnimScript_tag *after) {
 void AnimScriptInit(obj_tag *obj, sAnimScript_tag *script, HASHCODE hashcode) {
     char reverse = ReverseFlag;
     ReverseFlag = 0;
-    if (obj == NULL || obj->animState == NULL || script == NULL || (hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
+    if (obj == NULL || obj->animState == NULL || script == NULL ||
+        (hashcode & HASHCODE_SECTION_MASK) != HT_Script_HASHCODE_BASE)
         return;
     AnimObj *animObj = &obj->animState->animObj;
     uchar *data = (uchar *)hashtable_getitem(hashcode);
@@ -956,7 +957,7 @@ sAnimRawSeq_tag* AnimScriptPeekSeq(HASHCODE script) {
         return NULL;
     // The data is not aligned: the hashcode a byte at a time
     uint hashcode = data[0] | data[1] << 8 | data[2] << 16 | data[3] << 24;
-    if ((hashcode & 0xff000000) != HT_Script_HASHCODE_BASE)
+    if ((hashcode & HASHCODE_SECTION_MASK) != HT_Script_HASHCODE_BASE)
         return NULL;
     if ((*(ushort *)(data + 6) & 0xff00) != ANIMSCRIPT_INFO_ONCE_60)
         return NULL;
@@ -1402,7 +1403,7 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         break;
                     AnimDatumSetEntity(holder, datum + 1, flash, 3);
                     Light_Create(&muzzle, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                                 weapon->muzzleLightRadius, 0, 3, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
+                                 weapon->muzzleLightRadius, 0, 3, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, SFX_NONE);
                     if (!(weapon->weaponFlags & WPNFLAG_NO_SMOKE)) {
                         _VECTOR spin;
                         spin.x = 0.0f;
@@ -2280,7 +2281,7 @@ static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.99520
 // not loaded or anything fails.
 // AUTOINJECT
 int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
-    if ((skinHash & 0xff000000) != HT_Skin_HASHCODE_BASE || obj == NULL)
+    if ((skinHash & HASHCODE_SECTION_MASK) != HT_Skin_HASHCODE_BASE || obj == NULL)
         return 0;
     skinHash = FixupSkinHashcode(skinHash);
     sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
@@ -2492,7 +2493,7 @@ int AnimObjectUpdate(obj_tag *obj) {
             stride = kStrideLadder;
             onLadder = true;
         }
-        if (blData->field_0x8f6 != 0 && --blData->field_0x8f6 == 0)
+        if (blData->landingStepFrames != 0 && --blData->landingStepFrames == 0)
             blData->stepDistance = (float)((double)stride + 0.0001f);
         if (blData->stepDistance > stride) {
             blData->stepDistance = (float)fmod(blData->stepDistance, stride);

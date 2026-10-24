@@ -97,7 +97,7 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
     ss->once = params->once;
     ss->triggers = params->triggers;
     ss->switchChannel = params->switchChannel;
-    ss->sound = (Action_SFX)(params->sound != 0 ? params->sound : 0xffff);
+    ss->sound = (Action_SFX)(params->sound != 0 ? params->sound : SFX_NONE);
     ss->stopFrame = (float)params->stopFrame;
     ss->spline = params->spline;
     ss->water = params->water;

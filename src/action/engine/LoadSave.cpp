@@ -290,7 +290,7 @@ uchar* LS_MakeMPSettings(uint label, ushort slot, ushort *length) {
     const MPSettings_PerPlayer *player = &MPSettings.Player[slot];
     uint cursor;
     StartBlock(MPSettingsBlock, label, &cursor);
-    BIN_PushBits(MPSettingsBlock, &cursor, player->SomeField2, 1);
+    BIN_PushBits(MPSettingsBlock, &cursor, player->radar, 1);
     BIN_PushBits(MPSettingsBlock, &cursor, player->HealthModifier, 32);
     return EndBlock(MPSettingsBlock, cursor, length);
 }
@@ -299,7 +299,7 @@ uchar* LS_MakeMPSettings(uint label, ushort slot, ushort *length) {
 void LS_LoadMPSettings(uchar *block, ushort slot) {
     MPSettings_PerPlayer *player = &MPSettings.Player[slot];
     uint cursor = SAVE_FIELDS_START;
-    BIN_PullBits_U32(block, &cursor, &player->SomeField2, 1);
+    BIN_PullBits_U32(block, &cursor, &player->radar, 1);
     BIN_PullBits_U32(block, &cursor, &player->HealthModifier, 32);
 }
 

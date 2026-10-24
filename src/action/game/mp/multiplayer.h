@@ -6,22 +6,24 @@
 #include "../../engine/AINetwork.h"
 #include "../drone/BOT.h"
 
+// A mode's bit, with GM_TEAMGAME for the team modes and 0x40000000 for KOTH, team KOTH and uplink (MP_Init copies
+// the two to isTeamGame and gameModeBit30)
 typedef enum {
-    GM_QUICK=0,
-    GM_ARENA=1,
-    GM_TOPAGENT=16,
-    GM_UNK3=32,
-    GM_ASSASSIN=1024,
-    TEAMGAME=536870912,
-    GM_TEAMARENA=536870914,
-    GM_CTF=536870916,
-    GM_DEMOLITION=536870976,
-    GM_PROTECTION=536871040,
-    GM_BLUEPRINT=536871168,
-    GM_GOLDENEYE=536871424,
-    GM_KOTH=1073743872,
-    GM_UPLINK=1610612744,
-    GM_TEAMKOTH=1610616832,
+    GM_QUICK = 0,
+    GM_ARENA = 0x1,
+    GM_TOPAGENT = 0x10,
+    GM_20 = 0x20,
+    GM_ASSASSIN = 0x400,
+    GM_TEAMGAME = 0x20000000,
+    GM_TEAMARENA = 0x20000002,
+    GM_CTF = 0x20000004,
+    GM_DEMOLITION = 0x20000040,
+    GM_PROTECTION = 0x20000080,
+    GM_BLUEPRINT = 0x20000100,
+    GM_GOLDENEYE = 0x20000200,
+    GM_KOTH = 0x40000800,
+    GM_UPLINK = 0x60000008,
+    GM_TEAMKOTH = 0x60001000,
     GM_FORCE_UINT32 = 0x7fffffff
 } MultiplayerGameMode;
 
@@ -62,7 +64,7 @@ typedef struct {
     char Name[32];
     MPTeam TeamId;
     undefined4 SkinNum; // Only set when the game actually launches, not set in menu
-    undefined4 SomeField2;
+    undefined4 radar;           // the player's radar is shown (SUB_P_CNMPOPTIONS_RADAR)
     undefined4 HealthModifier; // Handicaps are -ve, boosts are +ve. Only applies to players. 
 } MPSettings_PerPlayer;
 static_assert(sizeof(MPSettings_PerPlayer) == 0x30, "MPSettings_PerPlayer is wrong size");
@@ -76,7 +78,7 @@ typedef struct { // on Xbox, starts at 0025fe38
     bool Started; // a byte: MP_Start clears it, then sets it once the match is set up
     undefined _pad1e9[3];
     undefined4 isTeamGame;
-    undefined4 field53_0x190;
+    undefined4 gameModeBit30;   // GameMode's 0x40000000: kills do not score in the arena and KOTH modes
     undefined4 numPlayersAndBots;
     undefined4 FriendlyFire;
     undefined4 MaxPoints;
@@ -195,11 +197,21 @@ typedef enum {
     KOH,
 } MPOBJECTTYPE;
 
+// The obj_tag::curState of a carried scenario object (the flags, the blueprint, the GoldenEye parts)
+enum MPObjectState {
+    MPOBJ_HOME = 0,             // at its base or place
+    MPOBJ_CARRIED = 1,          // by gameObj->parent, mpObj->holder
+    MPOBJ_DROPPED = 2,
+    MPOBJ_RAY = 3,              // a GoldenEye part while its team's ray is out
+    MPOBJ_RESET = 99,           // MP_GoldenEyeUpdate puts it home; nothing of ours sets it
+};
+
 typedef struct MPOBJECT_tag {
     ushort type; // MPOBJECTTYPE
     ushort num;
-    short unknown04;            // 0x04 MP_PlayerKilled sets it to 30 seconds of frames when a hurt object of types 5-7
-                                //      was among the holder's damage
+    short droppedFrames;        // 0x04 frames on the floor (MPOBJ_DROPPED); back home past 30 seconds of them.
+                                //      MP_PlayerKilled sets it to that when a hurt object of types 5-7 was among
+                                //      the holder's damage
     char unknown06[2];
     obj_tag *holder;            // 0x08 MP_PlayerKilled hands the object back when this one dies
     obj_tag *scriptPlayer;      // 0x0c
@@ -350,7 +362,7 @@ void MP_initObjExt(MP_OBJ_EXT *ext, obj_tag *obj);
 obj_tag* MP_getDemolitionObj_NotExt(void);
 void MP_recalcObjExtPaths(MP_OBJ_EXT *ext, bool keepPos);
 void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keepPlace);
-void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach);
+void MP_AttachToHolder(obj_tag *gameObj, obj_tag *holder, uint attach);
 short MP_PlayerOrBotInd(obj_tag *obj);
 void MP_SortOutWhoWon(void);
 void MP_Pickup_Process(void);

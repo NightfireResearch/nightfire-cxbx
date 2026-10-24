@@ -32,7 +32,9 @@ void Inject_KeyboardInput(void) {
     if (dumpDown && !dumpHeld) {
       printf("MP settings:\n");
       for(int i = 0; i < NUM_AGENTS; i++) {
-        printf("Index %i: %-16s\t%-10s\t%i\t%i\t%i\n", i, MPSettings.Player[i].Name, TEAM_GET_NAME(MPSettings.Player[i].TeamId), MPSettings.Player[i].SkinNum, MPSettings.Player[i].SomeField2, MPSettings.Player[i].HealthModifier);
+        printf("Index %i: %-16s\t%-10s\t%i\t%i\t%i\n", i, MPSettings.Player[i].Name,
+               TEAM_GET_NAME(MPSettings.Player[i].TeamId), MPSettings.Player[i].SkinNum, MPSettings.Player[i].radar,
+               MPSettings.Player[i].HealthModifier);
       }
     }
     dumpHeld = dumpDown;

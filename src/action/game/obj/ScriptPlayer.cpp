@@ -20,21 +20,6 @@
 // XBE_GLOBAL(0x00279410, 0x100)
 static obj_tag* HitObjList[64];
 
-// Playback state machine driven by SP_Update. The forward/reverse cycle is:
-//   NotStarted -> PlayingForward -> WaitingReverse -> PlayingReverse -> WaitingForward -> PlayingForward -> ...
-// looping forever, unless playOnce is set - in which case PlayingForward goes straight to Finished instead of
-// WaitingReverse. Armed/DeferredLoad are only ever entered once, right after creation.
-enum SP_State {
-    SP_State_NotStarted = 0,     // Waiting for the first trigger before loading/playing anything
-    SP_State_WaitingForward = 1, // Finished playing reverse; waiting for a trigger to play forward again
-    SP_State_PlayingForward = 2,
-    SP_State_WaitingReverse = 3, // Finished playing forward; waiting for a trigger to play reverse
-    SP_State_PlayingReverse = 4,
-    SP_State_Finished = 5,       // Done for good - marks the object for deletion
-    SP_State_Armed = 6,          // Loaded but waiting for the first trigger before actually playing
-    SP_State_DeferredLoad = 7,   // One-shot: load the script on the next update, then fall into the normal flow
-};
-
 // Defined further down, next to Create_ScriptPlayer_Params
 void SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer);
 
@@ -52,18 +37,17 @@ void SP_RemoveObj(obj_tag* obj, void* scriptPlayerPtr) {
 // AUTOINJECT
 ushort SP_GetState(obj_tag *obj) {
     if (obj == NULL)
-        return 0;
+        return SP_STATUS_WAITING;
 
     SCRIPTPLAYER* scriptPlayer = (SCRIPTPLAYER*)obj->extraObjectData;
 
-    // "finished" states both read as busy/blocked to callers
     if (scriptPlayer->state == SP_State_Finished || scriptPlayer->state == SP_State_WaitingReverse)
-        return 2;
+        return SP_STATUS_DONE;
 
     if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL)
         return (scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames == 0);
 
-    return 0;
+    return SP_STATUS_WAITING;
 }
 
 // AUTOINJECT
@@ -94,7 +78,7 @@ ushort SP_Hit(SCRIPTPLAYER *scriptPlayer) {
     SCRIPTINFO* scriptInfo = scriptPlayer->scriptInfos[scriptPlayer->nthScript];
 
     ushort hitFlags = 0;
-    if (scriptPlayer->someSwitchChannel != 0 && switch_channels[scriptPlayer->someSwitchChannel] != 0) {
+    if (scriptPlayer->switchChannel != 0 && switch_channels[scriptPlayer->switchChannel] != 0) {
         hitFlags = SP_Trigger_SwitchChannel;
     }
 
@@ -159,8 +143,8 @@ void SP_Activate(obj_tag *activatorObj, obj_tag *player) {
     }
 
     if ((scriptPlayer->triggerMask & SP_Trigger_Unpause) &&
-        (!(scriptPlayer->triggerMask & SP_Trigger_SwitchChannel) || scriptPlayer->someSwitchChannel == 0 ||
-         switch_channels[scriptPlayer->someSwitchChannel] != 0)) {
+        (!(scriptPlayer->triggerMask & SP_Trigger_SwitchChannel) || scriptPlayer->switchChannel == 0 ||
+         switch_channels[scriptPlayer->switchChannel] != 0)) {
         scriptPlayer->unpauseRequested = 1;
         if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL) {
             scriptPlayer->scriptInfos[scriptPlayer->nthScript]->waitFrames = 0;
@@ -193,7 +177,8 @@ void SP_SwitchToScript(obj_tag *obj, short newScriptPlayMode, ScriptPlayerCallba
     SP_LoadScript(obj, scriptPlayer);
 
     if (scriptPlayer->playOnce == 0) {
-        scriptPlayer->state = (scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] != 1) ? SP_State_WaitingReverse : SP_State_PlayingForward;
+        scriptPlayer->state = (scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] != SP_PLAY_NOW)
+                                  ? SP_State_WaitingReverse : SP_State_PlayingForward;
     }
 }
 
@@ -259,15 +244,15 @@ void SP_Update(obj_tag* obj) {
 
     Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
 
-    ushort hitFlags = (scriptPlayer->someCountdown == 0) ? SP_Hit(scriptPlayer) : 0;
+    ushort hitFlags = (scriptPlayer->hitDelay == 0) ? SP_Hit(scriptPlayer) : 0;
 
-    char switchState = (scriptPlayer->someSwitchChannel == 0) ? 0 : switch_channels[scriptPlayer->someSwitchChannel];
+    char switchState = (scriptPlayer->switchChannel == 0) ? 0 : switch_channels[scriptPlayer->switchChannel];
 
-    if (scriptPlayer->someCountdown != 0) {
-        scriptPlayer->someCountdown--;
+    if (scriptPlayer->hitDelay != 0) {
+        scriptPlayer->hitDelay--;
     }
 
-    if (scriptPlayer->unpauseRequested != 0 && scriptPlayer->someCountdown == 0) {
+    if (scriptPlayer->unpauseRequested != 0 && scriptPlayer->hitDelay == 0) {
         hitFlags |= SP_Trigger_Unpause;
     }
 
@@ -283,7 +268,7 @@ void SP_Update(obj_tag* obj) {
                 okToStart = glb_blokes[0]->health > 0.0f;
 
                 int missionStatus = Mission_Status();
-                if (missionStatus != 0 && Mission_Status() != 1) {
+                if (missionStatus != MISSION_STATUS_0 && Mission_Status() != MISSION_STATUS_RUNNING) {
                     okToStart = false;
                 }
 
@@ -312,13 +297,14 @@ void SP_Update(obj_tag* obj) {
             break;
         scriptPlayer->state = SP_State_PlayingForward;
         switchState = 1;
-        scriptPlayer->someCountdown = 5;
-        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] == 8);
+        scriptPlayer->hitDelay = 5;
+        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript],
+                    scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] == SP_PLAY_ARMED);
         break;
 
     case SP_State_PlayingForward: {
-        if ((scriptPlayer->triggerMask & SP_Trigger_SwitchChannel) && scriptPlayer->someSwitchChannel != 0 &&
-            switch_channels[scriptPlayer->someSwitchChannel] != 0) {
+        if ((scriptPlayer->triggerMask & SP_Trigger_SwitchChannel) && scriptPlayer->switchChannel != 0 &&
+            switch_channels[scriptPlayer->switchChannel] != 0) {
             SP_UnPause(obj);
         }
 
@@ -347,8 +333,9 @@ void SP_Update(obj_tag* obj) {
             break;
         scriptPlayer->state = SP_State_PlayingReverse;
         switchState = 0;
-        scriptPlayer->someCountdown = 5;
-        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] == 8);
+        scriptPlayer->hitDelay = 5;
+        Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript],
+                    scriptPlayer->scriptPlayModes[scriptPlayer->nthScript] == SP_PLAY_ARMED);
         break;
 
     case SP_State_PlayingReverse: {
@@ -391,8 +378,8 @@ void SP_Update(obj_tag* obj) {
         break;
     }
 
-    if (scriptPlayer->someSwitchChannel != 0 && triggered) {
-        switch_channels[scriptPlayer->someSwitchChannel] = (switchState != 0);
+    if (scriptPlayer->switchChannel != 0 && triggered) {
+        switch_channels[scriptPlayer->switchChannel] = (switchState != 0);
     }
 
     if (scriptPlayer->scriptInfos[scriptPlayer->nthScript] != NULL &&
@@ -508,7 +495,7 @@ typedef struct {
     char pad_3d[3];
     short triggerMask;          // 0x40 -> SCRIPTPLAYER::triggerMask
     char pad_42[2];
-    ushort switchChannel;       // 0x44 -> SCRIPTPLAYER::someSwitchChannel
+    ushort switchChannel;       // 0x44 -> SCRIPTPLAYER::switchChannel
     char pad_46[2];
     int damageThresholdRaw;     // 0x48 -> SCRIPTPLAYER::damageThreshold (unsigned dword, converted to float as-is)
     char requiredBulletType;    // 0x4c -> SCRIPTPLAYER::requiredBulletType
@@ -546,12 +533,12 @@ void SP_LoadScript(obj_tag *obj, SCRIPTPLAYER *scriptPlayer) {
     scriptPlayer->callback = NULL;
 
     switch (scriptPlayer->scriptPlayModes[scriptPlayer->nthScript]) {
-    case 1:
+    case SP_PLAY_NOW:
         Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 0);
         scriptPlayer->state = SP_State_PlayingForward;
         Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
         break;
-    case 8:
+    case SP_PLAY_ARMED:
         Script_Play(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 1);
         scriptPlayer->state = SP_State_Armed;
         Script_Update(scriptPlayer->scriptInfos[scriptPlayer->nthScript]);
@@ -586,7 +573,7 @@ obj_tag* SP_CreateScriptPlayer(_VECTOR *pos, _VECTOR *rot, level_tag *placementD
     scriptPlayer->scriptPlayModes[1] = params->scriptPlayMode1;
     scriptPlayer->playOnce = params->playOnce;
     scriptPlayer->triggerMask = params->triggerMask;
-    scriptPlayer->someSwitchChannel = params->switchChannel;
+    scriptPlayer->switchChannel = params->switchChannel;
 
     // params->damageThresholdRaw must be treated as unsigned when converting to float
     scriptPlayer->damageThreshold = (float)(unsigned int)params->damageThresholdRaw;
@@ -595,23 +582,23 @@ obj_tag* SP_CreateScriptPlayer(_VECTOR *pos, _VECTOR *rot, level_tag *placementD
     scriptPlayer->disableSwitchChannel = params->disableSwitchChannel;
     scriptPlayer->ownerObj = ownerObj;
     scriptPlayer->state = SP_State_NotStarted;
-    scriptPlayer->someCountdown = 0;
+    scriptPlayer->hitDelay = 0;
     scriptPlayer->nthScript = 0;
     scriptPlayer->scriptInfos[0] = NULL;
     scriptPlayer->scriptInfos[1] = NULL;
     scriptPlayer->callback = funcPtr;
     scriptPlayer->callbackContext = callbackContext;
     obj->objectType = OBJECTTYPE_SCRIPTPLAYER;
-    switch_channels[scriptPlayer->someSwitchChannel] = 0;
+    switch_channels[scriptPlayer->switchChannel] = 0;
     scriptPlayer->loadingScreenShown = 0;
 
     if (scriptPlayer->triggerMask == 0) {
         scriptPlayer->state = SP_State_Armed;
     }
 
-    if (scriptPlayer->scriptPlayModes[0] == 1) {
+    if (scriptPlayer->scriptPlayModes[0] == SP_PLAY_NOW) {
         scriptPlayer->state = SP_State_DeferredLoad;
-    } else if (scriptPlayer->scriptPlayModes[0] != 0) {
+    } else if (scriptPlayer->scriptPlayModes[0] != SP_PLAY_ON_TRIGGER) {
         SP_LoadScript(obj, scriptPlayer);
     }
 

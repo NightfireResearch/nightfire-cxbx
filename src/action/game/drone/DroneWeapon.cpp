@@ -377,7 +377,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     weapon_definition_tag *wpn = &weapon_data[HeldWeapon(dcv)];
     Light_Create(&muzzle, wpn->muzzleFlash_r, wpn->muzzleFlash_g, wpn->muzzleFlash_b, 7.0f, 0, 0, LIGHT_TRANSIENT, 1.0f,
                  0, 0, 0,
-                 0xffff);
+                 SFX_NONE);
 
     // The flash: an effect object for two frames, turned at random about the barrel
     obj_tag *fx = control_create_object(sizeof(Effect_tag), &muzzle, NULL, NULL);
@@ -406,7 +406,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
         Vec_Normalise(&dir, &dir);
     }
     for (short i = 0; i < wpn->numBulletsPerShot; i++)
-        Bullet_init(-1, obj, obj, wpn, &muzzle, &dir, 0xffff);
+        Bullet_init(-1, obj, obj, wpn, &muzzle, &dir, SFX_NONE);
 
     drone->lastShotFrame = GameState.NumFramesUnpaused;
     drone->fired = 1;
@@ -640,7 +640,7 @@ void DroneWeap_ThrowGrenade(DCVars_tag *dcv) {
     }
     _VECTOR dir;
     Mat_GetDir(&dir, &aim);
-    Bullet_init(-1, dcv->gameObj, dcv->gameObj, &weapon_data[weapon], &hand, &dir, 0xffff);
+    Bullet_init(-1, dcv->gameObj, dcv->gameObj, &weapon_data[weapon], &hand, &dir, SFX_NONE);
 }
 
 // The anim event that places the drone's third weapon (DroneAnim_EventFunc): a grenade
@@ -683,7 +683,7 @@ void DroneWeap_CloseCombatImpact(DCVars_tag *dcv, int kind) {
             break;
         }
     }
-    Bullet_init(-1, dcv->gameObj, dcv->gameObj, &weapon_data[weapon], &pos, &dir, 0xffff);
+    Bullet_init(-1, dcv->gameObj, dcv->gameObj, &weapon_data[weapon], &pos, &dir, SFX_NONE);
 }
 
 // Puts a weapon in the drone's hand, with the anim set for it and a full clip: 1 and 54 empty-handed (set 0xc), 6

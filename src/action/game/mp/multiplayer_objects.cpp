@@ -33,13 +33,6 @@ extern MP_OBJ_EXT Protection;
 // The objects that damaged the objective, from SP_GetHitDamage
 extern obj_tag *HitByList[64];
 
-constexpr Action_TranslatedText MP_SUPPOSED_TO_PROTECT_TARGET = (Action_TranslatedText)0x0200002b;
-constexpr Action_TranslatedText MP_MI6_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002c;
-constexpr Action_TranslatedText MP_PHOENIX_FAILED_TO_DESTROY = (Action_TranslatedText)0x0200002d;
-constexpr Action_TranslatedText MP_MI6_DESTROYED = (Action_TranslatedText)0x0200002e;
-constexpr Action_TranslatedText MP_PHOENIX_DESTROYED = (Action_TranslatedText)0x0200002f;
-constexpr Action_TranslatedText NOTIF_X_GOT_BLUEPRINT_TECH = (Action_TranslatedText)0x02000047;
-
 constexpr short EQUIP_FULL_AMMO = 999;                              // as Player.cpp
 
 // The update of every scenario object; control_funcs[OBJECTTYPE_MPOBJECT] points at it. Flags and bases share
@@ -74,7 +67,7 @@ void MP_ObjectUpdate(obj_tag *gameObj) {
 
     if (mpObj->scriptPlayer != NULL && (gameObj->transformFlags & TRANSFORM_MOVED)) {
         SP_SetPos(mpObj->scriptPlayer, &gameObj->position);
-        if (SP_GetState(mpObj->scriptPlayer) == 2)
+        if (SP_GetState(mpObj->scriptPlayer) == SP_STATUS_DONE)
             mpObj->scriptPlayer = NULL;
     }
 }
@@ -109,7 +102,8 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
         MPGamePlayer &player = MPGame.players[idx];
         if (player.friendlyFireProtectionLabelTimer == 0) {
             short frames = Ftol(FRAME_RATE_INT * 1.5);
-            Text_AddMsg((char)idx, 0, TXTMSG_INFO, (char *)Txt_BindLabel(MP_SUPPOSED_TO_PROTECT_TARGET, 0), 0, frames);
+            Text_AddMsg((char)idx, 0, TXTMSG_INFO, (char *)Txt_BindLabel(NOTIF_SUPPOSED_TO_PROTECT_TARGET, 0), 0,
+                        frames);
         }
         player.friendlyFireProtectionLabelTimer = Ftol(FRAME_RATE_INT * 1.5);
     }
@@ -117,8 +111,8 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     if (MPGame.TimeUnpaused > MPGame.TimeLimit) {
         MPGame.teamScore[defenders] += 1.0f;
         gameObj->subState = 1;
-        SP_SwitchToScript(mpObj->scriptPlayer, 1, NULL);
-        Action_TranslatedText label = defenders == MI6 ? MP_PHOENIX_FAILED_TO_DESTROY : MP_MI6_FAILED_TO_DESTROY;
+        SP_SwitchToScript(mpObj->scriptPlayer, SP_PLAY_NOW, NULL);
+        Action_TranslatedText label = defenders == MI6 ? NOTIF_PHOENIX_FAILED_TO_DESTROY : NOTIF_MI6_FAILED_TO_DESTROY;
         sprintf(StatusSpr->text, Txt_BindLabel(label, 0));
         Sprite_SetText(StatusSpr, StatusSpr->text);
         return;
@@ -146,12 +140,13 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BlastFrames, 500.0f,
                    0xff, 0xff, 100, NULL, MATERIAL_NONE);
     if (attacker >= 0) {
-        Action_TranslatedText label = MPSettings.Player[attacker].TeamId == PHOENIX ? MP_PHOENIX_DESTROYED : MP_MI6_DESTROYED;
+        Action_TranslatedText label = MPSettings.Player[attacker].TeamId == PHOENIX ? NOTIF_PHOENIX_DESTROYED
+                                                                                    : NOTIF_MI6_DESTROYED;
         sprintf(StatusSpr->text, Txt_BindLabel(label, 0));
     }
     Sprite_SetText(StatusSpr, StatusSpr->text);
     gameObj->subState = 1;
-    MPGame.EndGameFlowState = 6;
+    MPGame.EndGameFlowState = MPEND_RESTART_ROUND;
 
     if (ext != NULL) {
         obj_tag *obj = ext->gameObj;
@@ -240,7 +235,7 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
     if (carrier != NULL) {
         short idx = Control_Plr2Ind(carrier);
         if (idx != -1) {
-            MPGame.players[idx].flags &= ~MPPLAYER_FLAG_2;
+            MPGame.players[idx].flags &= ~MPPLAYER_HAS_BLUEPRINT;
             MPTeam team = MPSettings.Player[idx].TeamId;
             if (carrier->objectType == OBJECTTYPE_DRONE) {
                 DCVars_tag dcVars;
@@ -259,7 +254,7 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
         MPGame.players[holderIdx].points += 1.0f;
 
     Mat_Copy(&BluePrints[(ushort)Rand_Rand(BluePrintCount)].mtx, &mpObj->resetMtx);
-    MP_ResetMPObject(mpObj, 0, gameObj, false);
+    MP_ResetMPObject(mpObj, MPOBJ_HOME, gameObj, false);
 
     const short *weapons = PickupMatrix[MPSettings.weaponSet];
     obj_tag *holder = mpObj->holder;

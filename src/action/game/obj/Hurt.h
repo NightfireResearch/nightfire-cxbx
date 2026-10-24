@@ -19,7 +19,7 @@ typedef struct Hurt_tag {
     uchar oneShotPath;              // 0x15 - key 5
     ushort armMask;                 // 0x16 - key 4
     ushort enableSwitchChannel;     // 0x18 - key 2
-    ushort sound;                   // 0x1a - key 3 (0xffff for none)
+    ushort sound;                   // 0x1a - key 3 (SFX_NONE for none)
 } Hurt_tag;
 
 #pragma pack(pop)

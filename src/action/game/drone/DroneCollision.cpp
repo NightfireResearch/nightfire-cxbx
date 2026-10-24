@@ -138,7 +138,7 @@ void NDrone2_Collision(obj_tag *obj) {
         auxVec_AddMulR32(&obj->position, &up, (float)-((double)root - radius), &capsule->rayEnd);
     }
 
-    obj->unknown_0xd9 = 1;
+    obj->collideFlags = OBJCOLL_ACTOR;
     if (drone->flags & DRONE_FLAG_BOUNDS) {
         _VECTOR push;
         AINetwork_GetBoundsPushVectorForSphere(&obj->position, obj->inCel, 0.4f, &push, drone->boundsPushFlags);

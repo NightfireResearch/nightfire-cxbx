@@ -773,7 +773,7 @@ SpriteInfo LoadingGfx = {
     .depth = 30,
     .onscreenWidth = 640,
     .onscreenHeight = 480,
-    .textRef = (Action_TranslatedText)0xffffffff,
+    .textRef = Action_TranslatedText_NULLVALUE,
     .textureHashcode = HT_Texture_LoadingGfxDefault,
     .linkedViewer = 99,
 };
@@ -921,7 +921,8 @@ void ResetMap_Load(void) {
         if (SubtitlesEnabled) {
             HASHCODE subtitles = ResetMap_MovieSubtitles(GameState.NextLevelHashcode);
             if (subtitles != 0 && hashtable_getitem(subtitles) != NULL)
-                SP_Create(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, subtitles, (HASHCODE)0, 1, 1, NULL, NULL, NULL, 0);
+                SP_Create(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, subtitles, (HASHCODE)0, SP_PLAY_NOW, 1, NULL, NULL,
+                          NULL, 0);
         }
         GameFlow_PushState(GAMEFLOW_MOVIE, 0.0f, 0xff);
         GameState.MovieHashcode = GameState.NextLevelHashcode;
@@ -1244,7 +1245,7 @@ void bootup_bootup(void) {
 
     MPSettings.Player[i].TeamId = (i & 1) ? MI6 : PHOENIX;
     MPSettings.Player[i].SkinNum = 0;
-    MPSettings.Player[i].SomeField2 = 1;
+    MPSettings.Player[i].radar = 1;
     MPSettings.Player[i].HealthModifier = 0;
 
     if(i < NUM_PLAYERS) {
@@ -1335,7 +1336,7 @@ void Boot_GetPTPData(void **data, uint *size) {
     ec->Cheat_Immortal = CheatInfo.Immortal;
     ec->Cheat_AllWeapons = CheatInfo.AllWeapons;
     ec->Cheat_UnlimitedAmmo = CheatInfo.UnlimitedAmmo;
-    ec->mpSomeField2 = MPSettings.Player[0].SomeField2;
+    ec->mpRadar = MPSettings.Player[0].radar;
     ec->healthModifier = MPSettings.Player[0].HealthModifier;
     ec->autoAimMultiplayer = PlayerInputs[0].autoAimMultiplayer;
     ec->splitScreenLayout = MultiplayerLayout_LeftRightOrTopBtm;
@@ -1402,14 +1403,13 @@ void __stdcall Boot_LoadPTPData(void) {
         return;
     PTP_Eurocom *ec = &PTPDATA.ECDataBuf;
     Mission_SetMapHCode(ec->level);
-    // The mission's status: 6 for a level completed, 3 quit, 2 failed
     if (PTPDATA.LevelStatus == PTP_LEVEL_COMPLETED) {
         GameState.BaseMapHashCode = Mission_BaseMapHCode();
-        Mission_SetStatus(6);
+        Mission_SetStatus(MISSION_STATUS_COMPLETE);
     } else if (PTPDATA.LevelStatus == PTP_LEVEL_QUIT) {
-        Mission_SetStatus(3);
+        Mission_SetStatus(MISSION_STATUS_QUIT);
     } else {
-        Mission_SetStatus(2);
+        Mission_SetStatus(MISSION_STATUS_FAILED);
     }
     GameState.difficultyModifier = ec->difficulty;
     PTPDATA.fSkillLevel = ec->difficulty;
@@ -1431,7 +1431,7 @@ void __stdcall Boot_LoadPTPData(void) {
     CheatInfo.Immortal = ec->Cheat_Immortal;
     MPSettings.Player[0].HealthModifier = ec->healthModifier;
     CheatInfo.AllWeapons = ec->Cheat_AllWeapons;
-    MPSettings.Player[0].SomeField2 = ec->mpSomeField2;
+    MPSettings.Player[0].radar = ec->mpRadar;
     PlayerInputs[0].autoAimMultiplayer = (uchar)ec->autoAimMultiplayer;
     MultiplayerLayout_LeftRightOrTopBtm = ec->splitScreenLayout;
     Menu_SetNightfireStatus(ec->NightfireStatus);

@@ -18,7 +18,7 @@
 
 // In multiplayer, only with explosive scenery on
 // AUTOINJECT
-obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl, celglist_tag *someOtherGl) {
+obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl, celglist_tag *nextGlist) {
 
     if (MPSettings.isMultiplayer && !MPSettings.ExplosiveSceneryEnabled)
         return NULL;
@@ -33,7 +33,7 @@ obj_tag * Destroy_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_ta
 
     DESTROY_tag *destroy = (DESTROY_tag *)obj->extraObjectData;
     DestroyPlacement *keys = (DestroyPlacement *)lvl;
-    destroy->smashedGlist = celgl->lod != NULL ? celgl->lod : someOtherGl;
+    destroy->smashedGlist = celgl->lod != NULL ? celgl->lod : nextGlist;
     destroy->channelIn = (ushort)keys->channelIn;
     destroy->channelOut = (ushort)keys->channelOut;
     destroy->explosion = (char)keys->explosion;

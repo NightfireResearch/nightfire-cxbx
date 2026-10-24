@@ -309,7 +309,7 @@ static ushort __cdecl ShadowGetRadarObjects(obj_tag *viewer, RADAROBJ **objects)
 static bool g_on;
 
 void MPMatchShadow_Tick(void) {
-    if (!g_on || !MPSettings.isMultiplayer || MPGame.EndGameFlowState != 0)
+    if (!g_on || !MPSettings.isMultiplayer || MPGame.EndGameFlowState != MPEND_PLAYING)
         return;
 
     State s;

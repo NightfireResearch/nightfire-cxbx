@@ -641,9 +641,9 @@ void __cdecl FakeProcessCreate(M_CONTROL *c, M_MESSAGE *msg, uint frames, int un
 void __cdecl FakeObjectiveState(OBJ_STATE *state, short n) {
     ShadowLog("objective(%x)", (int)n);
     state->status = R(6);
-    state->statusText = R(0x400);
-    state->name = R(0x400);
-    state->description = R(3) == 0 ? 0xffffffffu : R(0x400);
+    state->statusText = (Action_TranslatedText)R(0x400);
+    state->name = (Action_TranslatedText)R(0x400);
+    state->description = R(3) == 0 ? Action_TranslatedText_NULLVALUE : (Action_TranslatedText)R(0x400);
 }
 
 uint32_t *__cdecl FakeGetScore(char player) {
@@ -872,7 +872,7 @@ void RandomWorld(void) {
     MPSettings.isMultiplayer = R(2);
     MPSettings.numPlayers = R(5);
     MPSettings.numBots = R(7);
-    MPSettings.GameMode = (MultiplayerGameMode)(R(2) ? TEAMGAME : 0);
+    MPSettings.GameMode = (MultiplayerGameMode)(R(2) ? GM_TEAMGAME : 0);
     for (int i = 0; i < 10; i++) {
         MPSettings.Player[i].TeamId = (MPTeam)R(3);
         sprintf(MPSettings.Player[i].Name, "agent%x", R(0x100));
@@ -1203,7 +1203,7 @@ uint32_t Run_AllReady(bool original) {
     return CALL(0x000753f0, Menu_AllJoinedPlayersReady, bool (__stdcall *)(void)) & 0xff;
 }
 uint32_t Run_MPScore(bool original) {
-    static const uint modes[] = {GM_QUICK, GM_ARENA, GM_TOPAGENT, GM_UNK3, GM_ASSASSIN, TEAMGAME, GM_TEAMARENA, GM_CTF,
+    static const uint modes[] = {GM_QUICK, GM_ARENA, GM_TOPAGENT, GM_20, GM_ASSASSIN, GM_TEAMGAME, GM_TEAMARENA, GM_CTF,
                                  GM_DEMOLITION, GM_PROTECTION, GM_BLUEPRINT, GM_GOLDENEYE, GM_KOTH, GM_UPLINK,
                                  GM_TEAMKOTH, 0x20000001, 0x20000010, 0x20000400, 2};
     byte p = (byte)R(NUM_AGENTS);

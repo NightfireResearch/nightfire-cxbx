@@ -76,7 +76,8 @@ obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
 
     // The flip-animation ScriptPlayer: starts armed/paused (playMode 8), only reacts to SP_UnPause
     // (SP_Trigger_Unpause) - Switch_Update/Switch_Activate drive it directly rather than any of its own triggers
-    obj_tag *scriptPlayer = SP_Create(pos, rot, createParams->scriptHashcode, (HASHCODE)0, 8, 0, switchObj, NULL, NULL, SP_Trigger_Unpause);
+    obj_tag *scriptPlayer = SP_Create(pos, rot, createParams->scriptHashcode, (HASHCODE)0, SP_PLAY_ARMED, 0, switchObj,
+                                      NULL, NULL, SP_Trigger_Unpause);
     switchData->scriptPlayer = scriptPlayer;
 
     if (scriptPlayer == NULL) {
@@ -92,7 +93,7 @@ obj_tag* Switch_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag 
         // Starting "on": run the flip animation all the way through immediately rather than playing it out over
         // real frames, so the switch renders in its final state right away
         SP_UnPause(switchData->scriptPlayer);
-        while (SP_GetState(switchData->scriptPlayer) != 0) {
+        while (SP_GetState(switchData->scriptPlayer) != SP_STATUS_WAITING) {
             SP_Update(switchData->scriptPlayer);
         }
     }
@@ -158,7 +159,7 @@ void Switch_Activate(obj_tag *switchObj, obj_tag *activatorObj) {
         return;
 
     // ... and while the flip animation is fully idle
-    if (SP_GetState(switchData->scriptPlayer) != 0)
+    if (SP_GetState(switchData->scriptPlayer) != SP_STATUS_WAITING)
         return;
 
     if (switchData->channelNum == 0)

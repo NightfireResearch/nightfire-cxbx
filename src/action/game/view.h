@@ -26,6 +26,10 @@ struct SkyObj {
 LAYOUT_32(sizeof(SkyObj) == 0x34, "SkyObj is 0x34 bytes");
 
 #define SKY_OBJS 21
+
+// obj_tag::displayMask: a bit for each view, the players' 0-3 and 4
+#define VIEWS_ALL 0x1f
+#define VIEW_4_MASK 0x10
 extern SkyObj SkyObjs[SKY_OBJS];
 // A flash shows this frame; this flash is overhead (Lightning_Update reads both); its thunder is near
 extern uint8_t LightningFlash;

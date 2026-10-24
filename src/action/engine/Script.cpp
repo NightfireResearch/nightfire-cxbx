@@ -102,7 +102,7 @@ SpriteInfo LetterboxSprInfo[1] = {
         .depth = 0xffff,
         .onscreenWidth = 640,
         .onscreenHeight = 64,
-        .textRef = (Action_TranslatedText)0xffffffff,
+        .textRef = Action_TranslatedText_NULLVALUE,
         .textureHashcode = HT_Texture_Square,
         .linkedViewer = VIEWER_SCRIPT,
     },
@@ -774,7 +774,7 @@ void Script_LightStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     uchar kind = BIN_GetByte(&stream->streamBuffer);
     stream->parent = hasParent ? parent : -1;
     stream->linkedGameOrSoundObject = Light_Create(&CONST_ZERO_VECTOR, 0xff, 2, 3, 255.0f, 0, -1, kind == 1, 1.0f,
-                                                   0, 0, 0, 0xffff);
+                                                   0, 0, 0, SFX_NONE);
     stream->whatKindOfInterpolation = SStream_Light;
     Script_Interp(scriptInfo, stream);
 }

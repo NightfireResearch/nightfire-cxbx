@@ -1215,7 +1215,7 @@ static uint TalkFrameAfter(double ticks) {
 bool Drone_IsSayingSfx(Drone_tag *drone, uint sfx) {
     if (drone->speechChannel == NULL)
         return Drone_SfxInfo[sfx].sfx == 0xffffffff;
-    return Drone_SfxInfo[sfx].sfx == (drone->speechChannel->sfxId & 0xfffff);
+    return Drone_SfxInfo[sfx].sfx == (drone->speechChannel->sfxId & SFX_ID_MASK);
 }
 
 // Plays a facial script on the drone, which tells facialAnimDone when it stops and clears facialAnim when deleted

@@ -26,14 +26,6 @@ float FlashMod;
 #define NO_DOOR_MSG_LEVEL HT_Level_Tower2Elevator
 #define NO_LOAD_MSG_LEVEL HT_Level_TowerA
 
-#define TEXT_PRESS_ACTION ((Action_TranslatedText)0x02000009)
-
-// What the crosshair shows (BLData::crosshairType)
-enum {
-    CROSSHAIR_PLAIN = 2,
-    CROSSHAIR_MARKED = 3,
-};
-
 // The weapons that do not mark the crosshair on a drone: the fist, and 0x35, 0x36, 0x43, 0x44, 0x4a-0x4d
 static bool MarksDrones(char weapon) {
     switch (weapon) {
@@ -144,8 +136,8 @@ void Check_Target(obj_tag* obj) {
                 GameState.CurrentLevelHashcode != NO_LOAD_MSG_LEVEL) {
                 LoadMsg = FRAME_RATE_INT * 20;
                 if (!Trigger_Locked(hits->hitObj))
-                    Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TEXT_PRESS_ACTION, 0), 0,
-                                0xb4);
+                    Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO,
+                                (char *)Txt_BindLabel(TXT_PRESS_ACTION_TO_OPEN_DOOR, 0), 0, 0xb4);
             }
             break;
         }

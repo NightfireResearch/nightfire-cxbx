@@ -101,14 +101,14 @@ typedef struct {
     PlayerMissionStats stats;           // 0x000 - player 0's
     short ammo[33];                     // 0x038
     char _pad7a[2];
-    WeaponStatus weaponStats[114];      // 0x07c
+    WeaponStatus weaponStats[NUM_WEAPONS]; // 0x07c
     SSYSITEM ssysItems[SSYS_ITEMS];     // 0x5d4
     float health;                       // 0x5fc
     float armor;                        // 0x600
     uint32_t switchChannelTimes[256];   // 0x604
     short bondMoments[10];              // 0xa04 - BondMoments[0x65] on
     short weapon;                       // 0xa18 - the weapon being switched to
-    char weaponTail[0x33];              // 0xa1a - BLData::keys
+    char keys[0x33];                    // 0xa1a - BLData::keys' first 0x33
     char switchChannels[256];           // 0xa4d
     char switchChannelsHold[256];       // 0xb4d
     char switchChannelsPrev[256];       // 0xc4d
@@ -117,7 +117,7 @@ typedef struct {
 
 static_assert(sizeof(RamSaveData_t) == 0xd4d, "RamSaveData_t size");
 static_assert(offsetof(RamSaveData_t, ssysItems) == 0x5d4, "RamSaveData_t ssysItems");
-static_assert(offsetof(RamSaveData_t, weaponTail) == 0xa1a, "RamSaveData_t weaponTail");
+static_assert(offsetof(RamSaveData_t, keys) == 0xa1a, "RamSaveData_t keys");
 
 // XBE_GLOBAL(0x00276768, 0xd4d)
 RamSaveData_t RamSaveData;
@@ -126,10 +126,6 @@ RamSaveData_t RamSaveData;
 // XBE_GLOBAL(0x00181ad8, 0x24)
 static const ushort BestWeapons[18] = {0x42, 0x32, 0x1a, 0x18, 0x1c, 0x16, 0x15, 0x08, 0x10,
                                        0x0e, 0x0d, 0x0c, 0x12, 0x06, 0x04, 0x02, 0x0a, 0x01};
-
-// Player_WeaponChange's third argument (and Player.cpp's)
-#define CHANGE_WEAPONS 0
-#define CHANGE_GADGETS 1
 
 // Gadgets are weapons 0x4a to 0x5e
 static bool IsGadget(int weapon) {
@@ -275,7 +271,7 @@ void Player_RamLoad(BLData *blData, char boostHealth) {
 
     memcpy(blData->ammo, RamSaveData.ammo, sizeof(RamSaveData.ammo));
     memcpy(blData->weaponStats, RamSaveData.weaponStats, sizeof(RamSaveData.weaponStats));
-    memcpy(blData->keys, RamSaveData.weaponTail, sizeof(RamSaveData.weaponTail));
+    memcpy(blData->keys, RamSaveData.keys, sizeof(RamSaveData.keys));
     SSys_RamLoad(RamSaveData.ssysItems);
     float health = RamSaveData.health;
     memcpy(&PlrMissionStats[0], &RamSaveData.stats, sizeof(RamSaveData.stats));
@@ -313,7 +309,7 @@ void Player_RamLoad(BLData *blData, char boostHealth) {
 void Player_RamSave(BLData *blData) {
     memcpy(RamSaveData.ammo, blData->ammo, sizeof(RamSaveData.ammo));
     memcpy(RamSaveData.weaponStats, blData->weaponStats, sizeof(RamSaveData.weaponStats));
-    memcpy(RamSaveData.weaponTail, blData->keys, sizeof(RamSaveData.weaponTail));
+    memcpy(RamSaveData.keys, blData->keys, sizeof(RamSaveData.keys));
     memcpy(RamSaveData.ssysItems, SSysItems, sizeof(RamSaveData.ssysItems));
     memcpy(&RamSaveData.stats, &PlrMissionStats[0], sizeof(RamSaveData.stats));
     memcpy(RamSaveData.bondMoments, &BondMoments[0x65], sizeof(RamSaveData.bondMoments));
@@ -491,7 +487,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
         return;
 
     int lowest, highest;
-    if (mode == CHANGE_GADGETS) {
+    if (mode == WEAPONCHANGE_GADGETS) {
         lowest = 0x49;
         highest = 0x5f;
         if (current > 0 && current < 0x48 && blData->lastGadget != 0 && Player_WeaponUsable(blData, blData->lastGadget)) {
@@ -502,7 +498,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
     }
     else {
         lowest = 0;
-        if (mode == CHANGE_WEAPONS) {
+        if (mode == WEAPONCHANGE_WEAPONS) {
             highest = 0x48;
             if (current > 0x49 && current < 0x5f && blData->lastWeapon != 0 &&
                 Player_WeaponUsable(blData, blData->lastWeapon)) {
@@ -540,7 +536,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
             anim->switchingToWeaponId = (char)(lowest + 1);
         if (anim->switchingToWeaponId <= lowest)
             anim->switchingToWeaponId = (char)(highest - 1);
-        if (tries > 0x72)
+        if (tries > NUM_WEAPONS)
             break;
 
         char base = anim->switchingToWeaponId;
@@ -775,7 +771,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
             if (current->weaponFlags & WPNFLAG_CONTINUOUS) {
                 // Held: the grapples while they reel in, anything else while there is ammo
                 if (current->weaponBaseNum == 0x50 || current->weaponBaseNum == 0x51) {
-                    if (player->subState == MovementType_Grapple && blData->grappleState == 1)
+                    if (player->subState == MovementType_Grapple && blData->grappleState == GRAPPLE_PULLING)
                         break;
                     if (blData->movementDisabled)
                         break;
@@ -1249,7 +1245,7 @@ void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
                 blData->weaponStats[Weap_Ronin].clipOrCooldown++;
         }
         else {
-            Bullet_init((short)playerNum, player, player, weapon, &from, &direction, 0xffff);
+            Bullet_init((short)playerNum, player, player, weapon, &from, &direction, SFX_NONE);
         }
         shot++;
     } while (shot < weapon->numBulletsPerShot);
@@ -1328,7 +1324,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
                 _VECTOR muzzle;
                 AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &muzzle, NULL);
                 Light_Create(&muzzle, 0, 0xff, 0xff, 5.0f, 0, 0, LIGHT_TRANSIENT, (float)((double)wound + wound), 0, 0,
-                             0, 0xffff);
+                             0, SFX_NONE);
                 double clip = (double)weapon->clipSize;
                 blData->weaponStats[Weap_LaserBeamFromSamurai].clipOrCooldown =
                     (short)Ftol(clip - clip * script->curFrame / (double)weapon->bulletSpawnFrame);
@@ -1342,7 +1338,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_Camera && blData->weaponObject->curState == GUN_IDLE && !CamHint) {
         CamHint = 1;
-        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel((Action_TranslatedText)0x1000216, 0), 0,
+        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_HOLD_MANUAL_AIM_FOR_CAMERA, 0), 0,
                     0xb4);
     }
 
@@ -1350,7 +1346,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
         _VECTOR lens;
         AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &lens, NULL);
         Light_Create(&lens, 0xff, 0x7f, 0, 1.5f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(0.5f) + 0.5f), 0, 0, 0,
-                     0xffff);
+                     SFX_NONE);
     }
 
     if (weapon->weaponBaseNum == 0x1a) {
@@ -1398,7 +1394,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_RemoteMine && blData->weaponObject->curState == GUN_IDLE && !StickyHint) {
         StickyHint = 1;
-        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel((Action_TranslatedText)0x10002dc, 0), 0,
+        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_ALT_FIRE_FOR_DETONATOR, 0), 0,
                     0xb4);
     }
 }
@@ -1408,7 +1404,7 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 static bool GadgetCanFire(obj_tag *player, BLData *blData, weapon_definition_tag *weapon) {
     short base = weapon->weaponBaseNum;
     if (base == 0x50 || base == 0x51) {
-        if (player->subState == MovementType_Grapple && blData->grappleState == 1)
+        if (player->subState == MovementType_Grapple && blData->grappleState == GRAPPLE_PULLING)
             return false;
         if (blData->movementDisabled)
             return false;
@@ -1952,7 +1948,7 @@ void Player_MuzzleFlash(obj_tag *player, _VECTOR *target) {
         AnimGetBoneWorldTrans(blData->weaponObject, bone, 0, &muzzle, &datum);
         blData->muzzleFlashFrames = weapon->weaponBaseNum == 0x33 ? 7 : 3;
         Light_Create(&muzzle, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                     weapon->muzzleLightRadius, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
+                     weapon->muzzleLightRadius, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, SFX_NONE);
         if (!MPSettings.isMultiplayer && !(weapon->weaponFlags & WPNFLAG_NO_SMOKE)) {
             _VECTOR spin = {0.0f, 0.0f, 0.0f};
             spin.z = (float)Float_FRand(TWO_PI);

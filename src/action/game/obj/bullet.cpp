@@ -95,7 +95,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     obj->subState = 0;
     obj->scale = 1.0f;
     obj->objectType = OBJECTTYPE_BULLET;
-    obj->unknown_0xd9 = 2;
+    obj->collideFlags = OBJCOLL_BULLET;
     obj->hitTest = &bullet->test;
     bullet->test.type = 0;
     bullet->occluder = NULL;
@@ -202,7 +202,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
         }
     }
 
-    if (weaponSound != 0xffff)
+    if (weaponSound != SFX_NONE)
         bullet->soundHandle = Sound_Play3D((Action_SFX)weaponSound, &obj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     else
         bullet->soundHandle = NULL;
@@ -516,7 +516,7 @@ static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
              0x7f);
     Camera_Shake(pos, 2.0f);
     Bullet_PlaySound(SFX_OBJ_FLASH_GRENADE_EXPLODE, pos);
-    Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, LIGHT_TRANSIENT, 5.0f, 0, 0, 0, 0xffff);
+    Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, LIGHT_TRANSIENT, 5.0f, 0, 0, 0, SFX_NONE);
 
     HITDATA_tag *hitList = NULL;
     Collide_SphereIntersect((_VECTOR *)&obj->transformMatrix.m[12], 30.0f, obj->inCel, obj, NULL, &hitList, 0, 1,
@@ -780,7 +780,7 @@ void Bullet_Delete(obj_tag *obj) {
 // not in state 1, a live player, a car drawn lately
 bool Bullet_heatseekable(obj_tag *obj) {
     switch (obj->objectType) {
-    case 0:
+    case OBJECTTYPE_0:
         if (!obj->drawnCountdown)
             return false;
         for (COPTER *copter = (COPTER *)CopterList.head; copter != NULL; copter = (COPTER *)copter->node.next) {
@@ -1265,7 +1265,7 @@ void Bullet_Update(obj_tag *obj) {
             weapon = bullet->wpnDef;
             if (weapon->projectileFlags & PROJFLAG_LIGHT) {
                 Light_Create(&obj->position, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                             4.0f, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
+                             4.0f, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, SFX_NONE);
             }
             break;
 
