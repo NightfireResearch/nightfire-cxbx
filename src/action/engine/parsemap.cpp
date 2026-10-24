@@ -29,6 +29,9 @@
 #include <string.h>
 #include "../sound/Sound.h"
 #include "../sound/SFX.h"           // SFX_ENVIRONMENT_UNDERWATER
+#if NIGHTFIRE_DATA_PS2
+#include "../ps2/Ps2Convert.h"
+#endif
 
 // XBE_GLOBAL(0x00274c80, 0x4)
 celglist_tag *pCurrCelList;
@@ -840,6 +843,7 @@ enum {
     BLOCK_COLLISION = 0x2e,
     BLOCK_COLLISION2 = 0x2f,
     BLOCK_PARTICLES = 0x30,
+    BLOCK_ENTITY_GEOMETRY_PS2 = 0x2d,   // the PS2's meshes (docs/ps2-data.md)
 };
 
 // The current block's data, after its header word
@@ -1201,6 +1205,11 @@ bool parsemap_handle_block_id(char mainMap) {
     case BLOCK_ENTITY_GEOMETRY:
         pCurrCelList->geom_idx = (int)PtrTo32(BlockData());
         return false;
+#if NIGHTFIRE_DATA_PS2
+    case BLOCK_ENTITY_GEOMETRY_PS2:
+        pCurrCelList->geom_idx = (int)PtrTo32(Ps2_ConvertModel((uchar *)BlockData(), CurrentBH.size - 4));
+        return false;
+#endif
     case BLOCK_MAP_HEADER:
         parsemap_block_map_header();
         return false;
@@ -1213,6 +1222,9 @@ bool parsemap_handle_block_id(char mainMap) {
         m_pmap->numTexHeaderEntries = (CurrentBH.size - 4) / sizeof(bmpHeaderEntry);
         return false;
     case BLOCK_PALETTE_DATA_PSX:
+#if NIGHTFIRE_DATA_PS2
+        Ps2_ConvertMapTexture(pBmpHeader, pPallHeader->data, (uchar *)BlockData(), CurrentBH.size - 4);
+#endif
         parsemap_block_palette_data_psx();
         return false;
     case BLOCK_TEXTURE_DATA_PC:

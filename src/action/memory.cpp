@@ -50,9 +50,9 @@ static inline MemBlock* Mem_NextBlock(MemBlock *block) { return (MemBlock *)((ch
 static inline uint Mem_Distance(const void *from, const void *to) { return (uint)((const char *)to - (const char *)from); }
 static inline MemBlock* Mem_AlignDown(uintptr_t address, uint mask) { return (MemBlock *)(address & ~(uintptr_t)mask); }
 
-// 49MB of heap allocation from the Xbox kernel, then using an internal allocator
-// This is very similar to what Halo does
+#ifndef HEAP_SIZE   // 49MB from the Xbox kernel, then an internal allocator, as Halo does; the PS2 data sets its own
 #define HEAP_SIZE (40 * 1024 * 1024) // Reduced from 49MB to 40MB to free up video memory for resolution increase.
+#endif
 
 // Only called from Mem_Init, no need to inject
 void psiMem_Init(uint *pMem_out, uint *size_out) {

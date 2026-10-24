@@ -67,6 +67,14 @@ typedef struct {
 static_assert(sizeof(LoaderDirHeader) == 0x20, "Bad size for LoaderDirHeader");
 static_assert(offsetof(LoaderDirHeader, filesRemaining) == 0x04, "Bad offset of LoaderDirHeader.filesRemaining");
 
+// The bytes the header takes in the archive: on the PS2's disc a whole sector, the directory after it rounded to
+// sectors too (PS2 LoaderLoad 0x1d51a0 reads 0x800; docs/ps2-data.md)
+#if NIGHTFIRE_DATA_PS2
+#define LOADER_HEADER_BYTES 0x800
+#else
+#define LOADER_HEADER_BYTES sizeof(LoaderDirHeader)
+#endif
+
 // LoaderLoad is called over and over (ResetMap_Load loops until it returns false); each call does one step.
 enum {
     LOADER_OPEN = 0,            // open the archive
@@ -209,10 +217,10 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
 
     case LOADER_READ_DIRECTORY:
         if (!LoadFromDecompBuf) {
-            pDirHeader = (LoaderDirHeader *)psiFileRead(sizeof(LoaderDirHeader));
+            pDirHeader = (LoaderDirHeader *)psiFileRead(LOADER_HEADER_BYTES);
         } else {
             pDirHeader = (LoaderDirHeader *)Euro_Decomp_Buf;
-            Euro_Decomp_Buf += sizeof(LoaderDirHeader);
+            Euro_Decomp_Buf += LOADER_HEADER_BYTES;
         }
         // With no files, the directory is not read and pDirData keeps its value (NULL, from LOADER_OPEN)
         if (pDirHeader->filesRemaining != 0) {

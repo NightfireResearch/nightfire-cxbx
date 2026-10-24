@@ -1340,6 +1340,15 @@ endif()
 if(APPLE)   # the D3D9 backend's Win32 calls, whose types are dxvk's
   list(REMOVE_ITEM nf_action_standalone_sources src/common/linux/win32Calls.cpp)
 endif()
+# The PS2 version's data in place of the Xbox's (docs/ps2-data.md): its disc's file system for the Xbox's archives,
+# and its textures and meshes converted as the level loads. Off, the targets are built exactly as without it.
+option(NIGHTFIRE_ACTION_DATA_PS2 "Action engine, standalone: load the PS2 version's data (docs/ps2-data.md)" OFF)
+set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Texture.cpp src/action/ps2/Ps2Mesh.cpp)
+if(NIGHTFIRE_ACTION_DATA_PS2)
+  list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
+  list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
+                                           src/action/ps2/Ps2Convert.cpp)
+endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
   src/action/standalone/StandaloneMain.cpp
@@ -1369,6 +1378,10 @@ foreach(target action_standalone action_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
   else()
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
+  if(NIGHTFIRE_ACTION_DATA_PS2)
+    # The heap (memory.cpp): the PS2's textures decoded to 32 bits take up to 35 MB a level
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_PS2=1 HEAP_SIZE=0x6800000)
   endif()
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
@@ -1409,6 +1422,13 @@ foreach(target action_standalone action_standalone_test)
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
 endforeach()
+# The PS2 data's conversions run offline over an extracted PS2 disc (docs/ps2-data.md)
+add_executable(ps2data_check EXCLUDE_FROM_ALL src/action/devtools/Ps2DataCheck.cpp ${nf_action_ps2_data_sources})
+target_compile_definitions(ps2data_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
+if(NOT WIN32)
+  target_compile_options(ps2data_check PRIVATE ${NF_XBOX_ABI_OPTIONS}
+                         -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+endif()
 endif()   # Windows, 64-bit Linux and macOS: the standalone action engine
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
