@@ -1,0 +1,1399 @@
+## window 0: Xbox 0xae830 RigidBody::ModifyLevers .. 0xaec10 RigidBody::ResolveCollision   (PS2 0x1f98e8 .. 0x1f9d98)
+
+Xbox functions in the window, address order:
+  0xaea40 UNNAMED
+     callers: ResolveCollision
+     chain: RigidBody::ResolveCollision@aec10
+     callees: FUN_00115c20, VU0_v3add, VU0_v4scale, VU0_v4sub
+     void FUN_000aea40(int param_1,int param_2,undefined4 param_3,undefined4 param_4,float param_5,
+                      float param_6,float param_7)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       float10 fVar4;
+       float10 fVar5;
+       undefined1 local_30 [16];
+       undefined1 local_20 [28];
+       fVar4 = (float10)FUN_00115c20(param_1 + 0x20);
+       fVar5 = (float10)FUN_00115c20(param_2 + 0x20);
+       if (fVar5 < (float10)(float)fVar4) {
+         fVar5 = (float10)(float)fVar4;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1f9b40 RigidBody::ScaleObjObjForces
+     callers: ResolveCollision
+     callees: 
+     void RigidBody::ScaleObjObjForces
+                    (float param_1,float param_2,float param_3,int param_4,int param_5,
+                    undefined (*param_6) [16],undefined (*param_7) [16])
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 local_20 [16];
+         ...
+
+====================================================================================================
+
+## window 1: Xbox 0xaec10 RigidBody::ResolveCollision .. 0xafdb0 RigidBody::GenerateImpulse   (PS2 0x1f9d98 .. 0x1fb318)
+
+Xbox functions in the window, address order:
+  0xaf960 UNNAMED
+     callers: CollideWithWorld
+     chain: RigidBody::CollideWithWorld@b1420
+     callees: FUN_00115c20, FUN_00115cc0, VU0_MATRIX4_vect3rotate, VU0_v3add, VU0_v4scale, VU0_v4sub, v3dotprod
+     undefined4 __thiscall
+     FUN_000af960(int param_1_00,float *param_1,undefined4 *param_2,float param_3,undefined4 *param_4,
+                 undefined4 param_5,undefined4 param_6)
+     {
+       int iVar1;
+       float fVar2;
+       float fVar3;
+       undefined1 uVar4;
+       undefined4 uVar5;
+       undefined4 uVar6;
+       int iVar7;
+       bool bVar8;
+       undefined4 uVar9;
+       undefined2 extraout_var;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1fade8 RigidBody::ResolveWorldOBBCollision
+     callers: CollideWithWorld
+     callees: 
+     undefined8
+     RigidBody::ResolveWorldOBBCollision
+               (float param_1,undefined4 param_2,int param_3,undefined (*param_4) [16],
+               undefined (*param_5) [16],uint param_6,undefined (*param_7) [16])
+     {
+       byte bVar1;
+       uint uVar2;
+       uint uVar3;
+       int iVar4;
+       ulong *puVar5;
+       bool bVar6;
+       ulong uVar7;
+         ...
+
+====================================================================================================
+
+## window 2: Xbox 0xf3fa0 EAGL::SymbolPool::Search .. 0xf41d0 EAGL::SymbolPool::~SymbolPool   (PS2 0x29db60 .. 0x29dcb0)
+
+Xbox functions in the window, address order:
+  0xf40a0 UNNAMED
+     callers: FUN_000f3bb0, FUN_000f3bd0, ~SymbolPool
+     chain: EAGL::SymbolPool::~SymbolPool@f41d0
+     callees: eagl_free
+     void __fastcall FUN_000f40a0(undefined4 *param_1)
+     {
+       char cVar1;
+       int iVar2;
+       char *pcVar3;
+       uint uVar4;
+       if ((param_1[2] != 0) && (uVar4 = 0, param_1[1] != 0)) {
+         do {
+           iVar2 = *(int *)(param_1[2] + uVar4 * 4);
+           if (iVar2 != 0) {
+             pcVar3 = (char *)(iVar2 + 4);
+             do {
+               cVar1 = *pcVar3;
+               pcVar3 = pcVar3 + 1;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x29dc80 EAGL::SetSymbolPoolDefaultSize
+     callers: 
+     callees: 
+     void EAGL::SetSymbolPoolDefaultSize(int param_1)
+     {
+       symbolPoolDefaultSize = param_1;
+       return;
+     }
+  0x29dc90 EAGL::SymbolPool::SymbolPool
+     callers: _global_ctor_dtor
+     callees: 
+     undefined8 EAGL::SymbolPool::SymbolPool(undefined8 param_1)
+     {
+       undefined4 uVar1;
+       undefined4 *puVar2;
+       uVar1 = symbolPoolDefaultSize;
+       puVar2 = (undefined4 *)param_1;
+       *puVar2 = 0;
+       puVar2[1] = uVar1;
+       puVar2[2] = 0;
+       puVar2[4] = 0;
+       return param_1;
+     }
+
+====================================================================================================
+
+## window 3: Xbox 0xbe4b0 WCollider::Refresh .. 0xbe6f0 WCollisionObject::MakeMatrix   (PS2 0x211e18 .. 0x212c10)
+
+Xbox functions in the window, address order:
+  0xbe540 (named) WCollider::WCollider
+  0xbe620 UNNAMED
+     callers: DoAgentLogic, Simulate
+     chain: AIHelicopter::DoAgentLogic@331c0 | Grenade::Simulate@5d7d0
+     callees: FUN_000be420
+     undefined4 * __thiscall FUN_000be620(undefined4 *param_1_00,undefined4 param_1,undefined4 param_2)
+     {
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       pcStack_c = WCollider___WCollider_Frame_Handler;
+       *param_1_00 = DAT_00243030;
+       param_1_00[1] = DAT_00243034;
+       param_1_00[2] = DAT_00243038;
+       param_1_00[3] = 0;
+       param_1_00[4] = DAT_00243030;
+       param_1_00[5] = DAT_00243034;
+       param_1_00[6] = DAT_00243038;
+       param_1_00[7] = 0;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x211ed0 WCollider::PrepareRegion
+     callers: FUN_00211c98, Refresh
+     callees: FUN_00212920, FUN_00212958, FUN_002129d0, FUN_00212a08, FastAlloc, FastFree, GetBarrierList, GetInstanceList
+     void WCollider::PrepareRegion(int param_1)
+     {
+       uint uVar1;
+       ulong *puVar2;
+       void *pvVar3;
+       int iVar4;
+       void *pvVar5;
+       int iVar6;
+       uint uVar7;
+       uint uVar8;
+       ulong extraout_a3;
+       ulong extraout_a3_00;
+         ...
+  0x2127f0 WCollider::GetWorldNormal
+     callers: CalcSegmentDrivable, CollideWithWorld, DoAgentLogic, DoRunning, GetDirectLaneWeights, HandleInterrupts, ResolveAllCollisions, Simulate
+     callees: GetWorldNormal
+     bool WCollider::GetWorldNormal(int param_1,ulong param_2,undefined4 *param_3)
+     {
+       bool bVar1;
+       bVar1 = false;
+       if ((*(int *)(param_1 + 0x30) != *(int *)(param_1 + 0x34)) ||
+          (*(int *)(param_1 + 0x3c) != *(int *)(param_1 + 0x40))) {
+         bVar1 = WCollisionMgr::GetWorldNormal
+                           ((long)DAT_0033a540,(int *)(param_1 + 0x30),(long)(param_1 + 0x3c),param_2,
+                            param_3,(long)(*(int *)(param_1 + 0x5c) >> 3) & 1);
+       }
+       return bVar1;
+     }
+  0x212bf0 WCollider::WCollider_global_ctors
+     callers: 
+     callees: FUN_00212bb8
+     void WCollider::WCollider_global_ctors(void)
+     {
+       FUN_00212bb8(1,0xffff);
+       return;
+     }
+
+====================================================================================================
+
+## window 4: Xbox 0xf3bf0 EAGL::ConstructorPool::~ConstructorPool .. 0xf3c90 EAGL::SymbolPool::HashFunction   (PS2 0x29e0a0 .. 0x29dd20)
+
+Xbox functions in the window, address order:
+  0xf3c70 UNNAMED
+     callers: FUN_000e6390, FUN_0015ad30
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void __fastcall FUN_000f3c70(undefined4 *param_1)
+     {
+       *param_1 = 0;
+       param_1[1] = DAT_001cdc50;
+       param_1[2] = 0;
+       param_1[4] = 0;
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x29de00 EAGL::SymbolPool::AddFunction
+     callers: 
+     callees: eagl_alloc
+     void EAGL::SymbolPool::AddFunction(int param_1,undefined4 param_2)
+     {
+       undefined4 uVar1;
+       char cVar2;
+       undefined4 *puVar3;
+       cVar2 = (*maybeEaglAlloc)(0xc,"EAGLInternal::FunctionEntry new");
+       puVar3 = (undefined4 *)(int)cVar2;
+       *puVar3 = param_2;
+       uVar1 = *(undefined4 *)(param_1 + 0x10);
+       puVar3[1] = 0;
+       puVar3[2] = uVar1;
+       if (*(int *)(param_1 + 0x10) != 0) {
+         ...
+  0x29de68 EAGL::SymbolPool::RemoveFunction
+     callers: 
+     callees: eagl_free
+     void EAGL::SymbolPool::RemoveFunction(int param_1,int param_2)
+     {
+       int *piVar1;
+       piVar1 = *(int **)(param_1 + 0x10);
+       while( true ) {
+         if (piVar1 == (int *)0x0) {
+           return;
+         }
+         if (*piVar1 == param_2) break;
+         piVar1 = (int *)piVar1[2];
+       }
+       if (piVar1 == (int *)0x0) {
+         ...
+  0x29dee0 EAGL::SymbolPool::Empty
+     callers: Empty, ~SymbolPool
+     callees: eagl_free, strlen
+     void EAGL::SymbolPool::Empty(undefined4 *param_1)
+     {
+       undefined *puVar1;
+       int iVar2;
+       int iVar3;
+       uint uVar4;
+       int iVar5;
+       if (param_1[2] == 0) {
+         iVar3 = param_1[4];
+       }
+       else {
+         uVar4 = 0;
+         ...
+  0x29dfc8 EAGL::SymbolPool::GenerateCRC
+     callers: 
+     callees: 
+     undefined4 EAGL::SymbolPool::GenerateCRC(void)
+     {
+       return 0xffffffff;
+     }
+  0x29dfd8 EAGL::SymbolPool::IsSymbolTableValid
+     callers: 
+     callees: 
+     undefined4 EAGL::SymbolPool::IsSymbolTableValid(void)
+     {
+       return 1;
+     }
+  0x29dfe0 EAGL::SymbolPool::GetFirstPosition
+     callers: 
+     callees: 
+     uint EAGL::SymbolPool::GetFirstPosition(int param_1)
+     {
+       uint uVar1;
+       int *piVar2;
+       uVar1 = 0;
+       if ((*(uint *)(param_1 + 4) != 0) && (piVar2 = *(int **)(param_1 + 8), *piVar2 == 0)) {
+         uVar1 = 1;
+         while ((piVar2 = piVar2 + 1, uVar1 < *(uint *)(param_1 + 4) && (*piVar2 == 0))) {
+           uVar1 = uVar1 + 1;
+         }
+       }
+       return uVar1;
+         ...
+  0x29e020 EAGL::SymbolPool::GetNextPosition
+     callers: 
+     callees: 
+     void EAGL::SymbolPool::GetNextPosition(int param_1,uint *param_2)
+     {
+       uint uVar1;
+       uVar1 = *param_2;
+       while( true ) {
+         uVar1 = uVar1 + 1;
+         *param_2 = uVar1;
+         if ((*(uint *)(param_1 + 4) <= uVar1) || (*(int *)(uVar1 * 4 + *(int *)(param_1 + 8)) != 0))
+         break;
+         uVar1 = *param_2;
+       }
+       return;
+         ...
+  0x29e060 EAGL::SymbolPool::IsPositionAtEnd
+     callers: 
+     callees: 
+     bool EAGL::SymbolPool::IsPositionAtEnd(int param_1,uint param_2)
+     {
+       return *(uint *)(param_1 + 4) <= param_2;
+     }
+  0x29e070 EAGL::SymbolPool::GetSymbolName
+     callers: 
+     callees: 
+     int EAGL::SymbolPool::GetSymbolName(int param_1,int param_2)
+     {
+       return *(int *)(param_2 * 4 + *(int *)(param_1 + 8)) + 4;
+     }
+  0x29e088 EAGL::SymbolPool::GetSymbolAddr
+     callers: 
+     callees: 
+     undefined4 EAGL::SymbolPool::GetSymbolAddr(int param_1,int param_2)
+     {
+       return **(undefined4 **)(param_2 * 4 + *(int *)(param_1 + 8));
+     }
+
+====================================================================================================
+
+## window 5: Xbox 0x14df10 RCMP::RCMP_SYSTEM::SetREALDefaults .. 0x14df70 RCMP::DECODER::FreeChosenCodec   (PS2 0x302e00 .. 0x302928)
+
+Xbox functions in the window, address order:
+  0x14df50 UNNAMED
+     callers: GetRCMPChunk
+     chain: RCMP::AV_PLAYER::GetRCMPChunk@14c800
+     callees: 
+     void __thiscall FUN_0014df50(int param_1_00,int *param_1,undefined4 param_2)
+     {
+       *(int **)(param_1_00 + 0x18) = param_1;
+       *(undefined4 *)(param_1_00 + 4) = param_2;
+       (**(code **)(*param_1 + 4))(param_1_00,param_2);
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x302a70 RCMP::DECODER::ReleaseFrame
+     callers: CompleteDraw, ~EAGL_VD_PS2_SINGLE_BUFFERD
+     callees: 
+     void RCMP::DECODER::ReleaseFrame(int param_1)
+     {
+       int iVar1;
+       iVar1 = **(int **)(param_1 + 0x14);
+       (**(code **)(iVar1 + 0x34))((int)*(int **)(param_1 + 0x14) + (int)*(short *)(iVar1 + 0x30));
+       return;
+     }
+  0x302aa0 RCMP::DECODER::GetChunk
+     callers: mpegNodata
+     callees: 
+     int RCMP::DECODER::GetChunk(int *param_1)
+     {
+       int iVar1;
+       int local_20 [4];
+       undefined4 local_10;
+       undefined4 uStack_c;
+       iVar1 = *param_1;
+       if (iVar1 == 0) {
+         (*(code *)param_1[2])(param_1,param_1[1],local_20);
+       }
+       else {
+         *param_1 = 0;
+         ...
+  0x302ae8 RCMP::DECODER::ReleaseChunk
+     callers: mpegNodata
+     callees: 
+     void RCMP::DECODER::ReleaseChunk(int param_1,undefined8 param_2)
+     {
+       (**(code **)(param_1 + 0xc))(param_1,*(undefined4 *)(param_1 + 4),param_2);
+       return;
+     }
+  0x302ba8 RCMP::RCMP_SYSTEM_type_info_function
+     callers: 
+     callees: maybePrintTypeInfo
+     undefined8 RCMP__RCMP_SYSTEM_type_info_function(void)
+     {
+       if (DAT_003c8408 == 0) {
+         maybePrintTypeInfo(0x3c8408,"Q24RCMP11RCMP_SYSTEM");
+       }
+       return 0x3c8408;
+     }
+  0x302be8 RCMP::RCMP_SYSTEM::~RCMP_SYSTEM
+     callers: 
+     callees: __builtin_delete
+     void RCMP::RCMP_SYSTEM::~RCMP_SYSTEM(long param_1,ulong param_2)
+     {
+       *(undefined **)((int)param_1 + 0xc) = &vtable_RCMP__RCMP_SYSTEM;
+       if ((param_2 & 1) != 0) {
+         __builtin_delete(param_1);
+       }
+       return;
+     }
+  0x302c18 RCMP::DECODER_type_info_function
+     callers: 
+     callees: maybePrintTypeInfo
+     undefined8 RCMP__DECODER_type_info_function(void)
+     {
+       if (DAT_003c8410 == 0) {
+         maybePrintTypeInfo(0x3c8410,"Q24RCMP7DECODER");
+       }
+       return 0x3c8410;
+     }
+  0x302c58 RCMP::DECODER::operator_new
+     callers: 
+     callees: 
+     void RCMP::DECODER::operator_new(undefined8 param_1)
+     {
+       (*plaympc_alloc)(0x3c6fc8,param_1,0,0,DAT_003562d8);
+       return;
+     }
+  0x302c98 RCMP::DECODER::operator_new_array
+     callers: 
+     callees: 
+     void RCMP::DECODER::operator_new_array(undefined8 param_1)
+     {
+       (*plaympc_alloc)(0x3c6fc8,param_1,0,0,DAT_003562d8);
+       return;
+     }
+  0x302cd8 RCMP::DECODER::operator_new
+     callers: 
+     callees: 
+     void RCMP::DECODER::operator_new(undefined8 param_1,undefined8 param_2)
+     {
+       (*plaympc_alloc)(param_2,param_1);
+       return;
+     }
+  0x302d08 RCMP::DECODER::operator_new_array
+     callers: 
+     callees: 
+     void RCMP::DECODER::operator_new_array(undefined8 param_1,undefined8 param_2)
+     {
+       (*plaympc_alloc)(param_2,param_1);
+       return;
+     }
+  0x302d38 RCMP::DECODER::operator_delete
+     callers: 
+     callees: 
+     void RCMP::DECODER::operator_delete(void)
+     {
+       (*plaympc_free)();
+       return;
+     }
+  0x302dc0 RCMP::rcmp_sys_global_ctors
+     callers: 
+     callees: FUN_00302b60
+     void RCMP::rcmp_sys_global_ctors(void)
+     {
+       FUN_00302b60(1,0xffff);
+       return;
+     }
+  0x302de0 RCMP::rcmp_sys_global_dtors
+     callers: 
+     callees: FUN_00302b60
+     void RCMP::rcmp_sys_global_dtors(void)
+     {
+       FUN_00302b60(0,0xffff);
+       return;
+     }
+
+====================================================================================================
+
+## window 6: Xbox 0x9f870 USimpleVec<RLightning::Segment>::~USimpleVec .. 0x9f970 RLightning::BuildNewSegment   (PS2 0x1e3438 .. 0x1e18e0)
+
+Xbox functions in the window, address order:
+  0x9f8b0 UNNAMED
+     callers: AddBolt, AddRoundedBolt, BuildNewSegment
+     chain: RLightning::AddBolt@a0400 | RLightning::AddRoundedBolt@a0500 | RLightning::BuildNewSegment@9f970
+     callees: ??_L@YGXPAXIHP6EX0@Z1@Z, ??_M@YGXPAXIHP6EX0@Z@Z, __builtin_delete, __builtin_vec_new
+     void __thiscall FUN_0009f8b0(int *param_1_00,int param_1)
+     {
+       int iVar1;
+       int *piVar2;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       local_4 = 0xffffffff;
+       pcStack_8 = FUN_0015383b;
+       iVar1 = *param_1_00;
+       if (iVar1 != 0) {
+         ___M_YGXPAXIHP6EX0_Z_Z(iVar1,0x18,*(undefined4 *)(iVar1 + -4),FUN_0009f7e0);
+         __builtin_delete(iVar1 + -4);
+       }
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1e1c58 RLightning::AllocBoltHandle
+     callers: AddBolt, AddRoundedBolt
+     callees: 
+     int RLightning::AllocBoltHandle(int param_1)
+     {
+       int iVar1;
+       iVar1 = *(int *)(param_1 + 0x10);
+       *(int *)(param_1 + 0x10) = iVar1 + 1;
+       return iVar1;
+     }
+  0x1e1c70 RLightning::FindBoltByHandle
+     callers: IsBoltAlive
+     callees: 
+     int RLightning::FindBoltByHandle(int param_1,int param_2)
+     {
+       int iVar1;
+       int *piVar2;
+       piVar2 = *(int **)(param_1 + 4);
+       if (piVar2 != *(int **)(param_1 + 8)) {
+         iVar1 = *piVar2;
+         while( true ) {
+           piVar2 = piVar2 + 1;
+           if (*(int *)(iVar1 + 0x10) == param_2) {
+             return iVar1;
+           }
+         ...
+  0x1e1f50 RLightning::RandomSyncWithSim
+     callers: Draw, Update
+     callees: 
+     void RLightning::RandomSyncWithSim(int param_1,int param_2)
+     {
+       *(uint *)(param_1 + 0x650) = param_2 * 5 & 0x3f;
+       *(uint *)(param_1 + 0x654) = param_2 * 7 & 0x3f;
+       *(uint *)(param_1 + 0x658) = param_2 * 0xb & 0x3f;
+       return;
+     }
+  0x1e1f88 RLightning::GetRandomCoord
+     callers: JitterStripPoints, Respawn, Update
+     callees: 
+     int RLightning::GetRandomCoord(int param_1)
+     {
+       uint uVar1;
+       uVar1 = *(int *)(param_1 + 0x650) + 5U & 0x3f;
+       *(uint *)(param_1 + 0x650) = uVar1;
+       return param_1 + uVar1 * 0x10 + 0x50;
+     }
+  0x1e1fa8 RLightning::GetRandomColor
+     callers: JitterStripPoints
+     callees: 
+     int RLightning::GetRandomColor(int param_1)
+     {
+       uint uVar1;
+       uVar1 = *(int *)(param_1 + 0x654) + 7U & 0x3f;
+       *(uint *)(param_1 + 0x654) = uVar1;
+       return param_1 + uVar1 * 4 + 0x450;
+     }
+  0x1e1fc8 RLightning::GetRandomNum
+     callers: Draw
+     callees: 
+     uint RLightning::GetRandomNum(int param_1)
+     {
+       uint uVar1;
+       uVar1 = *(int *)(param_1 + 0x658) + 0xbU & 0x3f;
+       *(uint *)(param_1 + 0x658) = uVar1;
+       return uVar1;
+     }
+  0x1e2158 RLightning::ResetBoltRendering
+     callers: Draw, Reset
+     callees: 
+     void RLightning::ResetBoltRendering(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x6f4) = 0;
+       *(undefined4 *)(param_1 + 0x710) = 0x3f800000;
+       *(undefined4 *)(param_1 + 0x6f8) = 0;
+       *(undefined4 *)(param_1 + 0x70c) = 0;
+       return;
+     }
+  0x1e2320 RLightning::AdvanceBoltDraw
+     callers: BeginBoltDraw, Draw
+     callees: JitterStripPoints
+     void RLightning::AdvanceBoltDraw(int param_1,undefined (*param_2) [12])
+     {
+       JitterStripPoints(param_1,param_2,
+                         (undefined (*) [16])
+                         (*(int *)(param_1 + 0x6f0) + *(int *)(param_1 + 0x6f4) * 0x10),
+                         (long)(*(int *)(param_1 + 0x6f0) + *(int *)(param_1 + 0x6f4) * 4 + 0xc000));
+       *(int *)(param_1 + 0x6f4) = *(int *)(param_1 + 0x6f4) + 2;
+       return;
+     }
+  0x1e2370 RLightning::FinishBoltDraw
+     callers: Draw
+     callees: 
+     void RLightning::FinishBoltDraw(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x6f8) = 1;
+       return;
+     }
+  0x1e2678 RLightning::ResetMetrics
+     callers: Reset
+     callees: 
+     void RLightning::ResetMetrics(int param_1)
+     {
+       int iVar1;
+       iVar1 = DAT_00339f54;
+       *(undefined4 *)(param_1 + 0x724) = 0;
+       *(undefined4 *)(param_1 + 0x720) = 0;
+       *(int *)(param_1 + 0x71c) = iVar1 + *(int *)(param_1 + 0x718);
+       return;
+     }
+  0x1e2698 RLightning::UpdateMetrics
+     callers: Draw
+     callees: 
+     void RLightning::UpdateMetrics(void)
+     {
+       return;
+     }
+  0x1e2870 RLightning::MidPoint::CalcWorldPos
+     callers: Draw
+     callees: 
+     void RLightning::MidPoint::CalcWorldPos
+                    (int param_1,undefined (*param_2) [16],undefined (*param_3) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 local_10 [16];
+       auVar1 = _lqc2(*(undefined1 (*) [16])param_3);
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       _lqc2(local_10);
+       auVar1 = _vsub(auVar1,auVar2);
+       auVar1 = _sqc2(auVar1);
+       _lqc2(*(undefined1 (*) [16])(param_1 + 0x30));
+         ...
+  0x1e2c58 RLightning::Bolt::Update
+     callers: Update
+     callees: Update
+     void RLightning::Bolt::Update(int *param_1,int param_2)
+     {
+       int iVar1;
+       int iVar2;
+       iVar1 = 0;
+       if (0 < param_1[1]) {
+         iVar2 = 0;
+         do {
+           iVar1 = iVar1 + 1;
+           Point::Update((long)(*param_1 + iVar2),param_2);
+           iVar2 = iVar2 + 0x60;
+         } while (iVar1 < param_1[1]);
+         ...
+  0x1e3028 vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux
+     callers: AddBolt, AddRoundedBolt
+     callees: FastAlloc, FastFree, memmove
+     undefined8 *
+     vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux
+               (int *param_1,undefined8 *param_2,undefined4 *param_3)
+     {
+       undefined4 uVar1;
+       undefined8 *puVar2;
+       undefined8 *dest;
+       int iVar3;
+       int iVar4;
+       int iVar5;
+       undefined4 *puVar6;
+       puVar6 = (undefined4 *)param_1[1];
+         ...
+  0x1e3320 RLightning_type_info_function
+     callers: 
+     callees: __rtti_si, maybePrintTypeInfo
+     undefined4 * RLightning_type_info_function(void)
+     {
+       if (DAT_00426e60 == 0) {
+         if (DAT_003c82a0 == 0) {
+           maybePrintTypeInfo(0x3c82a0,"10USingleton");
+         }
+         __rtti_si(0x426e60,"10RLightning",&DAT_003c82a0);
+       }
+       return &DAT_00426e60;
+     }
+  0x1e3398 RLightning::Get
+     callers: 
+     callees: 
+     RLightning * RLightning::Get(void)
+     {
+       return fgThis_RLightning;
+     }
+  0x1e3418 RLightning::GetSettings
+     callers: 
+     callees: 
+     int __thiscall RLightning::GetSettings(RLightning *this)
+     {
+       return (int)&this->field_0x18;
+     }
+  0x1e3420 RLightning::GetDriftRate
+     callers: 
+     callees: 
+     float __thiscall RLightning::GetDriftRate(RLightning *this)
+     {
+       return this->driftRate;
+     }
+  0x1e3428 RLightning::GetDriftVariance
+     callers: 
+     callees: 
+     float __thiscall RLightning::GetDriftVariance(RLightning *this)
+     {
+       return this->driftVariance;
+     }
+  0x1e3430 RLightning::GetLifeVariance
+     callers: 
+     callees: 
+     float __thiscall RLightning::GetLifeVariance(RLightning *this)
+     {
+       return this->lifeVariance;
+     }
+
+====================================================================================================
+
+## window 7: Xbox 0xb7f10 SMissionManager::UpdateTimedActions .. 0xb8090 SMissionManager::InitPlayerCar   (PS2 0x207500 .. 0x205a90)
+
+Xbox functions in the window, address order:
+  0xb7f60 UNNAMED
+     callers: ~ESetObjective, ~ESetWaypoint
+     chain: ESetObjective::~ESetObjective@442e0 | ESetWaypoint::~ESetWaypoint@44c20
+     callees: 
+     void __thiscall FUN_000b7f60(int param_1_00,int param_1,int param_2)
+     {
+       if (param_2 != 0) {
+         *(undefined4 *)(param_1_00 + 0x724 + param_1 * 4) = 1;
+         *(int *)(param_1_00 + 0x71c + param_1 * 4) = param_2;
+         *(undefined1 *)(param_1 + 0x734 + param_1_00) = 0;
+         *(undefined4 *)(param_1_00 + 0x798) = Sim.field3634_0xe44;
+         return;
+       }
+       *(undefined1 *)(param_1 + 0x734 + param_1_00) = 0;
+       *(undefined4 *)(param_1_00 + 0x724 + param_1 * 4) = 0;
+       return;
+     }
+  0xb7fb0 UNNAMED
+     callers: ~ESetObjective, ~ESetWaypoint
+     chain: ESetObjective::~ESetObjective@442e0 | ESetWaypoint::~ESetWaypoint@44c20
+     callees: 
+     void __thiscall FUN_000b7fb0(int param_1_00,int param_1,int param_2)
+     {
+       if (param_2 != 0) {
+         *(undefined4 *)(param_1_00 + 0x724 + param_1 * 4) = 2;
+         *(int *)(param_1_00 + 0x71c + param_1 * 4) = param_2;
+         *(undefined1 *)(param_1 + 0x734 + param_1_00) = 0;
+         *(undefined4 *)(param_1_00 + 0x798) = Sim.field3634_0xe44;
+         return;
+       }
+       *(undefined1 *)(param_1 + 0x734 + param_1_00) = 0;
+       *(undefined4 *)(param_1_00 + 0x724 + param_1 * 4) = 0;
+       return;
+     }
+  0xb8000 UNNAMED
+     callers: ~ESetObjective, ~ESetWaypoint
+     chain: ESetObjective::~ESetObjective@442e0 | ESetWaypoint::~ESetWaypoint@44c20
+     callees: RedirectCarpElement
+     void __thiscall FUN_000b8000(int param_1_00,int param_1,int param_2)
+     {
+       int iVar1;
+       if (param_2 != 0) {
+         *(undefined4 *)(param_1_00 + 0x724 + param_1 * 4) = 3;
+         *(int *)(param_1_00 + 0x71c + param_1 * 4) = param_2;
+         iVar1 = AIElementController::RedirectCarpElement(param_2);
+         if ((((*(int *)(iVar1 + 0x44) == 1) && (*(int *)(iVar1 + 0x48) == 1)) &&
+             (*(char *)(iVar1 + 0x77) == '\0')) && (*(int **)(iVar1 + 0xfc) != (int *)0x0)) {
+           (**(code **)(**(int **)(iVar1 + 0xfc) + 0x10c))();
+         }
+         *(undefined1 *)(param_1 + 0x734 + param_1_00) = 0;
+         *(undefined4 *)(param_1_00 + 0x798) = Sim.field3634_0xe44;
+         return;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x206228 SMissionManager::ProcessRuleList
+     callers: CallStage, ProcessRules
+     callees: DoRule
+     void __thiscall SMissionManager::ProcessRuleList(SMissionManager *this,undefined4 *param_1)
+     {
+       undefined4 *puVar1;
+       undefined4 *puVar2;
+       puVar1 = (undefined4 *)*param_1;
+       puVar2 = (undefined4 *)*puVar1;
+       while( true ) {
+         if (puVar2 == puVar1) break;
+         puVar1 = puVar2 + 2;
+         puVar2 = (undefined4 *)*puVar2;
+         SMissionRule::DoRule((SMissionRule *)*puVar1);
+         puVar1 = (undefined4 *)*param_1;
+         ...
+  0x206b40 SMissionManager::GetPlayerShield
+     callers: CalcEndMissionScores, TallyScores
+     callees: 
+     float __thiscall SMissionManager::GetPlayerShield(SMissionManager *this,bool param_1)
+     {
+       float fVar1;
+       if (this->maybeMaxShield <= 0.0) {
+         return 0.0;
+       }
+       fVar1 = this->currentShield;
+       if (param_1) {
+         fVar1 = fVar1 * (1.0 / this->maybeMaxShield);
+       }
+       return fVar1;
+     }
+
+====================================================================================================
+
+## window 8: Xbox 0xc36a0 WCollisionMgr::GetObjectLists .. 0xc3b40 WCollisionMgr::CheckHitWorld   (PS2 0x218150 .. 0x215cc8)
+
+Xbox functions in the window, address order:
+  0xc37c0 UNNAMED
+     callers: CollideWithWorld
+     chain: RigidBody::CollideWithWorld@b1420
+     callees: FUN_000c27a0, FUN_000c2970, FUN_000c34c0, FastFree, FindNodes
+     void FUN_000c37c0(undefined4 param_1,undefined4 param_2,void *param_3,float *param_4)
+     {
+       undefined1 local_1c [4];
+       void *local_18;
+       undefined4 local_14;
+       int local_10;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = WCollisionMgr__GetInstanceList_Frame_Handler;
+       local_18 = (void *)0x0;
+       local_14 = 0;
+       local_10 = 0;
+       local_4 = 0;
+         ...
+  0xc3880 UNNAMED
+     callers: FUN_000be2d0
+     chain: FUN_000be2d0@be2d0 <- WCollider::Refresh@be4b0
+     callees: FUN_000bde10, FUN_000be950, FUN_000c30f0, MakeMatrix, OrthoInverse, VU0_MATRIX4_vect3mult
+     void __thiscall
+     FUN_000c3880(int param_1_00,undefined4 param_1,int param_2,undefined4 param_3,float param_4)
+     {
+       int iVar1;
+       int iVar2;
+       bool bVar3;
+       float fVar4;
+       int iVar5;
+       float *pfVar6;
+       float *pfVar7;
+       int *piVar8;
+       MATRIX4 *pMVar9;
+       float *pfVar10;
+       float10 fVar11;
+         ...
+  0xc3ab0 UNNAMED
+     callers: FUN_000c46d0, FUN_000c46f0
+     chain: FUN_000c46d0@c46d0 <- WCollisionMgr::CheckHitWindow@c4d70
+     callees: FUN_000c0cb0, FUN_000c12f0
+     undefined1 * __thiscall FUN_000c3ab0(undefined1 *param_1_00,undefined1 *param_1)
+     {
+       int iVar1;
+       undefined4 local_10;
+       code *pcStack_c;
+       undefined4 local_8;
+       local_8 = 0xffffffff;
+       pcStack_c = FUN_001544d0;
+       *param_1_00 = *param_1;
+       iVar1 = FUN_000c0cb0();
+       *(int *)(param_1_00 + 4) = iVar1;
+       *(undefined1 *)(iVar1 + 0x3d) = 1;
+       *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+       *(undefined4 *)*(undefined4 *)(param_1_00 + 4) = *(undefined4 *)(param_1_00 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x216d30 WCollisionMgr::ClosestCollisionInfo
+     callers: GetWorldNormal, Simulate
+     callees: 
+     void WCollisionMgr::ClosestCollisionInfo
+                    (undefined8 param_1,undefined (*param_2) [16],undefined (*param_3) [16],
+                    undefined (*param_4) [16],undefined4 *param_5)
+     {
+       char cVar1;
+       bool bVar2;
+       undefined8 uVar3;
+       undefined8 uVar4;
+       undefined (*pauVar5) [16];
+       undefined4 uVar6;
+       undefined4 uVar7;
+       undefined4 uVar8;
+         ...
+  0x217e30 WCollisionMgr::GetObjectListsGuts
+     callers: FUN_00218440, GetObjectLists
+     callees: FUN_0021ba50
+     void WCollisionMgr::GetObjectListsGuts
+                    (float param_1,int param_2,ulong param_3,int *param_4,int *param_5,float *param_6)
+     {
+       undefined1 *puVar1;
+       byte bVar2;
+       uint uVar3;
+       uint uVar4;
+       uint *puVar5;
+       bool bVar6;
+       bool bVar7;
+       bool bVar8;
+       ushort *puVar9;
+         ...
+
+====================================================================================================
+
+## window 9: Xbox 0x84a30 RPlayerCamera::scalar_deleting_destructor .. 0x857d0 RPlayerCamera::UpdateAutoDriveCam   (PS2 0x1b2728 .. 0x1b72f0)
+
+Xbox functions in the window, address order:
+  0x84a60 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: AnchorCamera, DoSmoothModeChange, FUN_00080a30, FUN_00081110, GetAnchorLinearVelocity, GetAnchorMatrix4, GetAnchorPosition, GetAnchorSpeed, IncNavPosition, InitAtPoint, InitTransition, ReverseNavDirection, SetCameraZoom, SetViewingTransform, UpdateTr
+     void __fastcall FUN_00084a60(int param_1)
+     {
+       int iVar1;
+       char cVar2;
+       int iVar3;
+       int iVar4;
+       float *vecA;
+       undefined4 uVar5;
+       undefined4 *puVar6;
+       int iVar7;
+       float10 fVar8;
+       float fVar9;
+       float fVar10;
+       float fVar11;
+         ...
+  0x85160 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: AnchorCamera, DoSmoothModeChange, InitTransition, SetCameraZoom, SetViewingTransform, UpdateTransition, VU0_v4scale, VU0_v4sub, vec3distance
+     void __fastcall FUN_00085160(int param_1)
+     {
+       int iVar1;
+       int iVar2;
+       float fVar3;
+       char cVar4;
+       float10 fVar5;
+       float local_30;
+       float local_2c;
+       float fStack_28;
+       undefined4 local_24;
+       undefined4 local_20;
+       undefined4 local_1c;
+       undefined4 local_18;
+         ...
+  0x853e0 UNNAMED
+     callers: UpdateAutoDriveCam
+     chain: RPlayerCamera::UpdateAutoDriveCam@857d0
+     callees: FID_conflict:__CIasin_default, FindAutoDriveArmInd, GetRigidBody, MATRIX4_mult, VU0_fastqslerp, VU0_quattom4, atan_turns
+     void __fastcall FUN_000853e0(int param_1)
+     {
+       float fVar1;
+       char cVar2;
+       int iVar3;
+       int iVar4;
+       MATRIX4 *pMVar5;
+       int iVar6;
+       undefined4 *puVar7;
+       undefined4 *puVar8;
+       float10 fVar9;
+       undefined4 local_e0 [12];
+       undefined4 local_b0;
+       undefined4 local_ac;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1b4430 RPlayerCamera::UpdateSplineCam
+     callers: 
+     callees: AnchorCamera, ClearTransition, DoSmoothModeChange, Get, GetAnchorLinearVelocity, GetAnchorMatrix4, GetAnchorPosition, GetAnchorSpeed, GetSafeWRoadNavPosition, IncNavPosition, InitAtPoint, InitTransition, ReverseNavDirection, SetCameraZoom, SetViewing
+     void RPlayerCamera::UpdateSplineCam
+                    (ulong param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5,
+                    double param_6,double param_7)
+     {
+       undefined1 *puVar1;
+       char cVar2;
+       uint uVar3;
+       uint uVar4;
+       ulong *puVar5;
+       undefined8 *puVar6;
+       undefined1 (*pauVar7) [16];
+       undefined1 (*pauVar8) [16];
+         ...
+  0x1b5120 RPlayerCamera::UpdateFixedCam
+     callers: 
+     callees: AnchorCamera, DoSmoothModeChange, InitTransition, SetCameraZoom, SetViewingTransform, UpdateTransition, memset
+     void RPlayerCamera::UpdateFixedCam
+                    (ulong param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5)
+     {
+       undefined1 *puVar1;
+       undefined *puVar2;
+       char cVar3;
+       uint uVar4;
+       uint uVar5;
+       ulong *puVar6;
+       int iVar7;
+       ulong uVar8;
+       ulong uVar9;
+         ...
+  0x1b62d0 RPlayerCamera::UpdateADWeaponAnims
+     callers: UpdateAutoDriveCam
+     callees: FUN_001b2510, FUN_001b25c0, FindAutoDriveArmInd, GetRigidBody, MATRIX4_mult, VU0_fastqslerp, VU0_quattom4
+     undefined *
+     RPlayerCamera::UpdateADWeaponAnims
+               (undefined8 param_1,undefined8 param_2,ulong param_3,ulong param_4,ulong param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       uint uVar4;
+       ulong *puVar5;
+       char cVar6;
+       int iVar7;
+       int iVar8;
+         ...
+
+====================================================================================================
+
+## window 10: Xbox 0x99610 RReflection::SetReflectivity .. 0x99c50 RReflection::Init   (PS2 0x1c1930 .. 0x1c14d8)
+
+Xbox functions in the window, address order:
+  0x99670 UNNAMED
+     callers: FUN_000997d0
+     chain: FUN_000997d0@997d0 <- FUN_00099ce0@99ce0 <- RRenderHigh::Render@8bf30
+     callees: ConvertToRHCS, CreateMatrix4Inv, FUN_00096980, FUN_000e4870, SetMatrix4, SetViewMatrix
+     void __thiscall FUN_00099670(int param_1_00,float *param_1,float *param_2,float param_3)
+     {
+       int iVar1;
+       MATRIX4 *pMVar2;
+       float *pfVar3;
+       MATRIX4 local_120;
+       RCamera local_e0;
+       undefined4 local_1c;
+       code *pcStack_18;
+       undefined4 local_14;
+       local_14 = 0xffffffff;
+       pcStack_18 = FUN_0015350b;
+       FUN_000e4870(0x3f800000,DAT_001c4834,DAT_001c4838);
+       pMVar2 = &local_120;
+         ...
+  0x997d0 UNNAMED
+     callers: FUN_00099ce0
+     chain: FUN_00099ce0@99ce0 <- RRenderHigh::Render@8bf30
+     callees: DrawWorldAtPoint, FUN_00099670, FUN_00133f50, FlushDrawLists, SceneObjRender, SendPerViewPort, SetZWritesEnable
+     void FUN_000997d0(void)
+     {
+       undefined4 *puVar1;
+       undefined4 uVar2;
+       undefined4 uVar3;
+       undefined4 uVar4;
+       undefined4 uVar5;
+       int iVar6;
+       float fVar7;
+       undefined4 uVar8;
+       float fVar9;
+       int extraout_ECX;
+       undefined4 in_stack_00002c30;
+       undefined4 in_stack_00002c34;
+         ...
+  0x99990 UNNAMED
+     callers: FUN_00099ce0
+     chain: FUN_00099ce0@99ce0 <- RRenderHigh::Render@8bf30
+     callees: Draw, FUN_00098ab0, FUN_00133f50, USimpleTexturedMaterial, thunk_FUN_000ef490
+     void FUN_00099990(void)
+     {
+       undefined4 *extraout_ECX;
+       int iVar1;
+       undefined4 *puVar2;
+       float in_stack_00002458;
+       float local_1c;
+       code *local_18;
+       code *local_14;
+       undefined4 *local_10;
+       local_14 = (code *)0xffffffff;
+       local_18 = FUN_0015352b;
+       FUN_00133f50();
+       puVar2 = (undefined4 *)&stack0x00000054;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1c1758 RReflection::ReInit
+     callers: RestartTrackRender
+     callees: 
+     void RReflection::ReInit(void)
+     {
+       return;
+     }
+  0x1c1828 RReflection::GetReflectionData
+     callers: Init, SendPerCarInstance
+     callees: 
+     int RReflection::GetReflectionData(int param_1,int param_2)
+     {
+       return *(int *)(*(int *)(param_1 + 0x58) + 0xa0) + param_2 * 0x80 + 0x60;
+     }
+  0x1c18b0 RReflection::Lock
+     callers: Begin
+     callees: FUN_002955d0, Lock, SetupFrameBuffers
+     void RReflection::Lock(int param_1)
+     {
+       int iVar1;
+       EAGL::TAR::Lock(*(int *)(*(int *)(param_1 + 0x58) + 0xbc));
+       EAGL::TAR::Lock(*(int *)(*(int *)(param_1 + 0x58) + 0xc0));
+       iVar1 = *(int *)(param_1 + 0x58);
+       EAGL::TextureRenderContext::SetupFrameBuffers
+                 (*(int *)(iVar1 + 0xb0),*(int *)(iVar1 + 0xbc),(long)*(int *)(iVar1 + 0xc0));
+       FUN_002955d0(0.0,0.0,256.0,256.0,0x477fff00,0,*(int *)(param_1 + 0x14));
+       return;
+     }
+
+====================================================================================================
+
+## window 11: Xbox 0xf5750 EAGL::DrawArray::SetParamName .. 0xf5800 EAGL::DrawArray::SetLocalMatrix   (PS2 0x29c250 .. 0x29c568)
+
+Xbox functions in the window, address order:
+  0xf5770 (named) EAGL::DrawArray::SetVar
+  0xf57d0 UNNAMED
+     callers: FUN_000e9f40
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void __fastcall FUN_000f57d0(int param_1)
+     {
+       *(undefined1 *)(param_1 + 0x18) = 1;
+       *(undefined1 *)(param_1 + 0x34) = 1;
+       return;
+     }
+  0xf57e0 UNNAMED
+     callers: FUN_000e9fe0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     undefined1 __fastcall FUN_000f57e0(int param_1)
+     {
+       *(undefined1 *)(param_1 + 0x18) = 0;
+       return 1;
+     }
+  0xf57f0 UNNAMED
+     callers: FUN_000ea080
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     undefined4 __thiscall FUN_000f57f0(int param_1_00,undefined4 param_1)
+     {
+       *(undefined4 *)(param_1_00 + 0x38) = param_1;
+       return 1;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x29c488 EAGL::DrawArray::Lock
+     callers: Lock
+     callees: 
+     undefined4 EAGL::DrawArray::Lock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x34) = 1;
+       *(undefined4 *)(param_1 + 0x18) = 1;
+       return 1;
+     }
+  0x29c4a0 EAGL::DrawArray::Unlock
+     callers: Unlock, ~DrawArray, ~DrawClipGouraud, ~DrawClipTextured, ~DrawGouraud, ~DrawTextured
+     callees: 
+     undefined4 EAGL::DrawArray::Unlock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x18) = 0;
+       return 1;
+     }
+  0x29c558 EAGL::DrawArray::SetNumVerts
+     callers: SetNumVerts
+     callees: 
+     undefined4 EAGL::DrawArray::SetNumVerts(int param_1,undefined4 param_2)
+     {
+       *(undefined4 *)(param_1 + 0x3c) = param_2;
+       return 1;
+     }
+
+====================================================================================================
+
+## window 12: Xbox 0xfa9c0 EAGLAnim::Initializer::InitInternal .. 0xfaa30 EAGLAnim::GetMemoryUsage   (PS2 0x264508 .. 0x264588)
+
+Xbox functions in the window, address order:
+  0xfaa00 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void FUN_000faa00(void)
+     {
+       return;
+     }
+  0xfaa10 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void FUN_000faa10(void)
+     {
+       return;
+     }
+  0xfaa20 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void FUN_000faa20(void)
+     {
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x264570 EAGLAnim::ResetStats
+     callers: 
+     callees: 
+     void EAGLAnim::ResetStats(void)
+     {
+       return;
+     }
+  0x264578 EAGLAnim::DumpStats
+     callers: 
+     callees: 
+     void EAGLAnim::DumpStats(void)
+     {
+       return;
+     }
+  0x264580 EAGLAnim::DumpStats
+     callers: 
+     callees: 
+     void EAGLAnim::DumpStats(void *printChannel)
+     {
+       return;
+     }
+
+====================================================================================================
+
+## window 13: Xbox 0x11aa80 UCarpNamespace::NameLookup .. 0x11b110 USymbolTable::RemoveNamespace   (PS2 0x2cda80 .. 0x2cd088)
+
+Xbox functions in the window, address order:
+  0x11aba0 UNNAMED
+     callers: FUN_0011ae70, FUN_0011b2d0, RemoveNamespace
+     chain: USymbolTable::RemoveNamespace@11b110 | FUN_0011b2d0@11b2d0 <- FUN_0011b540@11b540 <- UCarpNamespace::~UCarpNamespace@11b730
+     callees: FUN_00013630, FUN_00013700, FUN_0009c310, FUN_000b2920, FUN_000cca30, FUN_00126b50, FUN_00126b70, FUN_001325ad, FastFree
+     void __thiscall FUN_0011aba0(int param_1_00,undefined4 *param_1,int *param_2)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       char *pcVar3;
+       char *pcVar4;
+       int *piVar5;
+       undefined4 uVar6;
+       int *piVar7;
+       int *piVar8;
+       bool bVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+         ...
+  0x11ae70 UNNAMED
+     callers: FUN_0011b4d0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_0011a8d0, FUN_0011aba0
+     void __thiscall FUN_0011ae70(int param_1_00,undefined4 *param_1,int *param_2,int *param_3)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       piVar4 = param_3;
+       piVar6 = *(int **)(param_1_00 + 4);
+       piVar2 = param_2;
+       if ((param_2 == (int *)*piVar6) && (param_3 == piVar6)) {
+         FUN_0011a8d0(piVar6[1]);
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+         ...
+  0x11af30 UNNAMED
+     callers: FUN_0011b180, FUN_0011b250
+     chain: FUN_0011b180@11b180 <- UCarpNamespace::AddCarpFile@11b390 | FUN_0011b250@11b250 <- USymbolTable::AddNamespace@11b510
+     callees: FUN_00013630, FUN_00013700, FUN_00093f10, FUN_000cca30, FUN_00126b70, FUN_001325ad
+     void __thiscall
+     FUN_0011af30(int param_1_00,undefined4 *param_1,char param_2,undefined4 *param_3,undefined4 param_4)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int iVar4;
+       char *pcVar5;
+       char *pcVar6;
+       int *piVar7;
+       int *piVar8;
+       int *piVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2cd758 UCarpNamespace::ShareName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::ShareName(void)
+     {
+       return "<<Shared>>";
+     }
+  0x2cd768 UCarpNamespace::RootName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::RootName(void)
+     {
+       return "<<Root>>";
+     }
+  0x2cd778 UCarpNamespace::MapName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::MapName(void)
+     {
+       return "<<Map>>";
+     }
+
+====================================================================================================
+
+## window 14: Xbox 0x11b110 USymbolTable::RemoveNamespace .. 0x11b390 UCarpNamespace::AddCarpFile   (PS2 0x2cd088 .. 0x2cd8c0)
+
+Xbox functions in the window, address order:
+  0x11b180 UNNAMED
+     callers: AddCarpFile
+     chain: UCarpNamespace::AddCarpFile@11b390
+     callees: FUN_0011af30, FUN_00126bd0, __stricmp
+     void __thiscall FUN_0011b180(int param_1_00,undefined4 *param_1,undefined4 *param_2)
+     {
+       char cVar1;
+       undefined4 *puVar2;
+       undefined4 *puVar3;
+       int iVar4;
+       undefined4 *puVar5;
+       undefined4 *puVar6;
+       bool bVar7;
+       puVar3 = param_2;
+       puVar5 = (undefined4 *)(*(undefined4 **)(param_1_00 + 4))[1];
+       bVar7 = true;
+       cVar1 = *(char *)((int)puVar5 + 0x15);
+       puVar2 = *(undefined4 **)(param_1_00 + 4);
+         ...
+  0x11b250 UNNAMED
+     callers: AddNamespace
+     chain: USymbolTable::AddNamespace@11b510
+     callees: FUN_0011af30, __stricmp
+     void __thiscall FUN_0011b250(int param_1_00,undefined4 *param_1,undefined4 *param_2)
+     {
+       char cVar1;
+       undefined4 *puVar2;
+       undefined4 *puVar3;
+       int iVar4;
+       undefined4 *puVar5;
+       undefined4 *puVar6;
+       bool bVar7;
+       puVar3 = param_2;
+       puVar5 = (undefined4 *)(*(undefined4 **)(param_1_00 + 4))[1];
+       bVar7 = true;
+       cVar1 = *(char *)((int)puVar5 + 0x15);
+       puVar2 = *(undefined4 **)(param_1_00 + 4);
+         ...
+  0x11b2d0 UNNAMED
+     callers: FUN_0011b540
+     chain: FUN_0011b540@11b540 <- UCarpNamespace::~UCarpNamespace@11b730
+     callees: FUN_0011a910, FUN_0011aba0
+     void __thiscall FUN_0011b2d0(int param_1_00,undefined4 *param_1,int *param_2,int *param_3)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       piVar4 = param_3;
+       piVar6 = *(int **)(param_1_00 + 4);
+       piVar2 = param_2;
+       if ((param_2 == (int *)*piVar6) && (param_3 == piVar6)) {
+         FUN_0011a910(piVar6[1]);
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2cd758 UCarpNamespace::ShareName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::ShareName(void)
+     {
+       return "<<Shared>>";
+     }
+  0x2cd768 UCarpNamespace::RootName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::RootName(void)
+     {
+       return "<<Root>>";
+     }
+  0x2cd778 UCarpNamespace::MapName
+     callers: AddCarpFile
+     callees: 
+     char * UCarpNamespace::MapName(void)
+     {
+       return "<<Map>>";
+     }
+
+====================================================================================================
+

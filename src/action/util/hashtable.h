@@ -13,10 +13,17 @@ typedef struct {
 celglist_tag * hashtable_hashcode_to_celglist(HASHCODE hashcode);
 void hashtable_set_object_to_entity_gfx(obj_tag *obj, HASHCODE hashcode);
 void hashtable_additem(HASHCODE hashcode, void* data);
+hashtable_entry* hashtable_getentry(HASHCODE hashcode);
 void* hashtable_getitem(HASHCODE hashcode);
 void hashtable_modify(HASHCODE hashcode, void* newData);
 int hashtable_get_hashtype_count(uint hashtype);
 HASHCODE hashtable_celglist_to_hashcode(celglist_tag *celgl);
 bool hashtable_set_sprite(sprite *sprOut, HASHCODE hc);
+void hashtable_set_sub_object_to_entity_gfx(struct ATTACH_tag *mark, HASHCODE hc);
+void hashtable_deleteitem(HASHCODE hashcode);
+void hashtable_initialise(void);
+void hashtable_create_sections(void);
+void hashtable_delete_hashtype(uint hashtype);
+void hashtable_get_hashtype_data(uint hashtype, HASHCODE *out);
 
 #endif // HASHTABLE_H

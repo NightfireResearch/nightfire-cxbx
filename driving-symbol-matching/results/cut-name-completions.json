@@ -1,0 +1,206 @@
+[
+ {
+  "row": 99,
+  "cut": "int __lexicographical_compare_3way<signed char *, signed char *",
+  "complete": "__lexicographical_compare_3way<signed char *, signed char *>",
+  "rule": "sgi"
+ },
+ {
+  "row": 512,
+  "cut": "global constructors keyed to AICharacterEnemyGround::AICharacte",
+  "complete": "global constructors keyed to AICharacterEnemyGround::AICharacterEnemyGround",
+  "rule": "auf"
+ },
+ {
+  "row": 2269,
+  "cut": "void __push_heap<AttributeStoreBlock *, int, AttributeStoreBloc",
+  "complete": "__push_heap<AttributeStoreBlock *, int, AttributeStoreBlock>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2270,
+  "cut": "void __adjust_heap<AttributeStoreBlock *, int, AttributeStoreBl",
+  "complete": "__adjust_heap<AttributeStoreBlock *, int, AttributeStoreBlock>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2271,
+  "cut": "void __make_heap<AttributeStoreBlock *, AttributeStoreBlock, in",
+  "complete": "__make_heap<AttributeStoreBlock *, AttributeStoreBlock, int>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2273,
+  "cut": "void __partial_sort<AttributeStoreBlock *, AttributeStoreBlock>",
+  "complete": "__partial_sort<AttributeStoreBlock *, AttributeStoreBlock>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2275,
+  "cut": "void __introsort_loop<AttributeStoreBlock *, AttributeStoreBloc",
+  "complete": "__introsort_loop<AttributeStoreBlock *, AttributeStoreBlock, int>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2276,
+  "cut": "void __unguarded_linear_insert<AttributeStoreBlock *, Attribute",
+  "complete": "__unguarded_linear_insert<AttributeStoreBlock *, AttributeStoreBlock>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2278,
+  "cut": "void __unguarded_insertion_sort_aux<AttributeStoreBlock *, Attr",
+  "complete": "__unguarded_insertion_sort_aux<AttributeStoreBlock *, AttributeStoreBlock>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2929,
+  "cut": "unsigned char * __unguarded_partition<unsigned char *, unsigned",
+  "complete": "__unguarded_partition<unsigned char *, unsigned char>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2933,
+  "cut": "void __unguarded_insertion_sort_aux<unsigned char *, unsigned c",
+  "complete": "__unguarded_insertion_sort_aux<unsigned char *, unsigned char>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2938,
+  "cut": "unsigned char * __lower_bound<unsigned char *, unsigned char, i",
+  "complete": "__lower_bound<unsigned char *, unsigned char, int>",
+  "rule": "sgi"
+ },
+ {
+  "row": 2939,
+  "cut": "CARP::AnimInfo * __lower_bound<CARP::AnimInfo *, CARP::AnimInfo",
+  "complete": "__lower_bound<CARP::AnimInfo *, CARP::AnimInfo, int>",
+  "rule": "sgi"
+ },
+ {
+  "row": 3052,
+  "cut": "RDrawElement * __uninitialized_copy_aux<RDrawElement *, RDrawEl",
+  "complete": "__uninitialized_copy_aux<RDrawElement *, RDrawElement *>",
+  "rule": "sgi"
+ },
+ {
+  "row": 3132,
+  "cut": "RLightManager::EnableAndCopyDirectionalDiffuseToPlatformSpecifi",
+  "complete": "RLightManager::EnableAndCopyDirectionalDiffuseToPlatformSpecific",
+  "rule": "sibling"
+ },
+ {
+  "row": 3176,
+  "cut": "global constructors keyed to RLightManager::fgThis_RLightManage",
+  "complete": "global constructors keyed to RLightManager::fgThis_RLightManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 3361,
+  "cut": "global constructors keyed to RPlayerViewCamera::RPlayerViewCame",
+  "complete": "global constructors keyed to RPlayerViewCamera::RPlayerViewCamera",
+  "rule": "auf"
+ },
+ {
+  "row": 3487,
+  "cut": "global constructors keyed to RRenderWorldCamera::RRenderWorldCa",
+  "complete": "global constructors keyed to RRenderWorldCamera::RRenderWorldCamera",
+  "rule": "auf"
+ },
+ {
+  "row": 3644,
+  "cut": "global constructors keyed to RStateManager::fgThis_RStateManage",
+  "complete": "global constructors keyed to RStateManager::fgThis_RStateManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 3645,
+  "cut": "global destructors keyed to RStateManager::fgThis_RStateManager",
+  "complete": "global destructors keyed to RStateManager::fgThis_RStateManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 3937,
+  "cut": "global constructors keyed to RDecalManager::fgThis_RDecalManage",
+  "complete": "global constructors keyed to RDecalManager::fgThis_RDecalManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 3938,
+  "cut": "global destructors keyed to RDecalManager::fgThis_RDecalManager",
+  "complete": "global destructors keyed to RDecalManager::fgThis_RDecalManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 4024,
+  "cut": "global constructors keyed to RLensFlareManager::fgThis_RLensFla",
+  "complete": "global constructors keyed to RLensFlareManager::fgThis_RLensFlareManager",
+  "rule": "fgThis"
+ },
+ {
+  "row": 4206,
+  "cut": "global constructors keyed to RPostProcessing::fgThis_RPostProce",
+  "complete": "global constructors keyed to RPostProcessing::fgThis_RPostProcessing",
+  "rule": "fgThis"
+ },
+ {
+  "row": 4329,
+  "cut": "global constructors keyed to RParticleSystem::RParticle::ResetP",
+  "complete": "global constructors keyed to RParticleSystem::RParticle::ResetParticle",
+  "rule": "auf"
+ },
+ {
+  "row": 4330,
+  "cut": "global destructors keyed to RParticleSystem::RParticle::ResetPa",
+  "complete": "global destructors keyed to RParticleSystem::RParticle::ResetParticle",
+  "rule": "auf"
+ },
+ {
+  "row": 4546,
+  "cut": "PHelicopter ** remove_copy<PHelicopter **, PHelicopter **, PHel",
+  "complete": "remove_copy<PHelicopter **, PHelicopter **, PHelicopter *>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4555,
+  "cut": "SimTrackedInstance ** find<SimTrackedInstance **, SimTrackedIns",
+  "complete": "find<SimTrackedInstance **, SimTrackedInstance *>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4556,
+  "cut": "SimTrackedInstance ** remove_copy<SimTrackedInstance **, SimTra",
+  "complete": "remove_copy<SimTrackedInstance **, SimTrackedInstance **, SimTrackedInstance *>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4918,
+  "cut": "void __push_heap<InstanceAndDistance *, int, InstanceAndDistanc",
+  "complete": "__push_heap<InstanceAndDistance *, int, InstanceAndDistance>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4919,
+  "cut": "void __adjust_heap<InstanceAndDistance *, int, InstanceAndDista",
+  "complete": "__adjust_heap<InstanceAndDistance *, int, InstanceAndDistance>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4924,
+  "cut": "void __introsort_loop<InstanceAndDistance *, InstanceAndDistanc",
+  "complete": "__introsort_loop<InstanceAndDistance *, InstanceAndDistance, int>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4925,
+  "cut": "void __unguarded_linear_insert<InstanceAndDistance *, InstanceA",
+  "complete": "__unguarded_linear_insert<InstanceAndDistance *, InstanceAndDistance>",
+  "rule": "sgi"
+ },
+ {
+  "row": 4927,
+  "cut": "void __unguarded_insertion_sort_aux<InstanceAndDistance *, Inst",
+  "complete": "__unguarded_insertion_sort_aux<InstanceAndDistance *, InstanceAndDistance>",
+  "rule": "sgi"
+ }
+]

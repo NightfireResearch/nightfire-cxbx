@@ -1,0 +1,55 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008b7e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDecalManager::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009acf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDecalManager::RDecalManager(void)",
+   "return": "RDecalManager *"
+  },
+  {
+   "address": "0x0009af50",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RDecalManager::Kill(void)"
+  },
+  {
+   "address": "0x0009af70",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RDecalManager::Reset(void)"
+  },
+  {
+   "address": "0x0009b2d0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RDecalManager::DrawDecals(void)"
+  },
+  {
+   "address": "0x0009b3c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDecalManager::~RDecalManager(void)"
+  },
+  {
+   "address": "0x0009b450",
+   "calling_convention": "__thiscall",
+   "return": "RDecalManager *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

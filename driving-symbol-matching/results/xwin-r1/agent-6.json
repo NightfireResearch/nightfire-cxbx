@@ -1,0 +1,301 @@
+{
+ "verdicts": [
+  {
+   "item": "150.1",
+   "xbox": "0xa1ec0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "trivial one-line setter (*this = arg) shared by ActionQueue::GetAction and RParticleSystemManager code - linker-folded identical body, no unique PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "151.1",
+   "xbox": "0xa6670",
+   "ps2": "0x1ebaf8",
+   "name": "RShadowMap::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "RShadowMap vtable 0x192fd4 slot 0 (vtable also stored by RShadowMap::RShadowMap a5ac0): calls ~RShadowMap then FastFree(this,0x58) if flag&1; PS2 ~RShadowMap(this,flags) frees 0x68",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xa5c10",
+     "ps2": "0x1ebaf8",
+     "name": "RShadowMap::~RShadowMap",
+     "verdict": "accept",
+     "why": "called only by the deleting dtor a6670; sets RShadowMap vtable + USingleton second vptr, DeleteViewPort(viewPort), restore saved viewport, delete private data, USingleton vtable, RViewCamera::~RViewCamera - same sequence as PS2 ~RShadowMap"
+    }
+   ]
+  },
+  {
+   "item": "152.1",
+   "xbox": "0xa6cd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "counterpart is PS2 FUN_001ede48 (called 6x from RVehicleParticle::Init as Xbox a6cd0 is), an unlisted static inside sheet row 4256 (RSniperZoom global ctors, 0x1ede28+0x110) - no name to give",
+   "intermediates": []
+  },
+  {
+   "item": "153.1",
+   "xbox": "0x10aea0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "static helper of PRINT_setchannelstate; PS2 counterpart FUN_00260590 (same all/1/index channel-bit logic) is an unlisted static inside sheet row 7186 SYSTEM_abortmessage extent (0x2604c8+0x180) - no name",
+   "intermediates": []
+  },
+  {
+   "item": "154.1",
+   "xbox": "0x2f610",
+   "ps2": "0x133f60",
+   "name": "AIGroundVehicle::DriveToPoint",
+   "verdict": "accept",
+   "why": "sole caller AIGroundVehicle::DoMoveMode on both; calls BarriersInPath (aaf0) and DriveToPointSub (2e0a0), GetPosition, Util_Bound (bce50), sin - same callee set as PS2 (also given by reviewer 1 as an intermediate)",
+   "intermediates": []
+  },
+  {
+   "item": "155.1",
+   "xbox": "0x76810",
+   "ps2": "0x1a1f38",
+   "name": "RAnimEngine::Handle::operator_delete",
+   "verdict": "accept",
+   "why": "body FastFree(p, *p + size) identical to PS2 Handle::operator_delete (FastFree(p, size + *(int*)p)); callers are the Handle-deleting sites (~RSceneObj, ~RWorldCamera, LoadSingleAnimation, RestartCamera) where PS2 calls ~Handle -> operator_delete (inlined ~Handle on Xbox)",
+   "intermediates": []
+  },
+  {
+   "item": "156.1",
+   "xbox": "0x7dae0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "inline accessor returning this+0x20, used twice in RVehicle::PostLoad to read +0x24; PS2 RVehicle::PostLoad inlines it (reads +0x24 directly) - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "157.1",
+   "xbox": "0xa5080",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "normal-from-triangle helper (calls triangle-normal 5d3f0 or returns (0,1,0)) called from ScorchWorld/ScorchGround; PS2 inlines it (v3crossprod called directly in both) - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "158.1",
+   "xbox": "0x1327f9",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT tolower (locale table/_isctype path) - CRT routine, PS2 newlib differs",
+   "intermediates": []
+  },
+  {
+   "item": "159.1",
+   "xbox": "0x365f0",
+   "ps2": "0x13f238",
+   "name": "AIVehicleController::DeRegisterSimCar",
+   "verdict": "accept",
+   "why": "AIElementController::GoToSleep calls it after DeRegisterHelicopter as PS2 GoToSleep calls DeRegisterSimCar; switch on vehicle type (vslot 0x48 = PS2 0x9c) 0/2 -> player/agent deregister (identical bodies folded), 3 -> traffic, each clearing fields via vslot 0x28 (=PS2 0x5c) then vcall +4",
+   "intermediates": []
+  },
+  {
+   "item": "160.1",
+   "xbox": "0x97d70",
+   "ps2": "0x1d65e0",
+   "name": "RWorldCamera::AnchorRelativeCamera",
+   "verdict": "accept",
+   "why": "callers RPlayerCamera::SetOldCameraMode and 82840 (=UpdateRelativeAnimationCam), same as PS2; body GetAnchorMatrix4, GetAnchorPosition, inlined GetAnchorRenderOffset, (0, y-offset, z), bool==1 -> lerp 0.05 else copy into +0xe0 (PS2 +0xd0), rotate by matrix, add position into +0xd0 (PS2 +0xc0): offsets +0x10",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0x82840",
+     "ps2": "0x1b5998",
+     "name": "RPlayerCamera::UpdateRelativeAnimationCam",
+     "verdict": "accept",
+     "why": "installed by RCameraIniLoader::LoadFile for the \"RelativeAnim\" camera mode; no direct callers on either side; callees DoSmoothModeChange, EvaluateSpline, PlayCurrentAnimation, UpdateAnimationCam, AnchorRelativeCamera, GetAnchorMatrix4/Position/RenderOffset, m4toquat, quattom4, MATRIX4setyrot, MATRIX3x4_mult - same set as PS2"
+    }
+   ]
+  },
+  {
+   "item": "161.1",
+   "xbox": "0xacb90",
+   "ps2": "0x1f5ff8",
+   "name": "OBB::CheckOBBOverlapAndFindIntersection",
+   "verdict": "accept",
+   "why": "callers RigidBody::CollideWithObject and b1420 (=CollideWithWorld) as on PS2; body: 2 passes (swap boxes on pass 1) x 3 axes, separation along axis minus projected extents, return 0 if separated, else record max penetration, contact point, pass flag and normal (negated on pass 1), return 1 - same as PS2",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xb1420",
+     "ps2": "0x1fc2f0",
+     "name": "RigidBody::CollideWithWorld",
+     "verdict": "accept",
+     "why": "sole caller Simulation::SimulateGame on both; calls CheckOBBOverlapAndFindIntersection, ECollision, GenerateImpulse, GetRenderInstance, GetSceneObjFromInstance, ProcessStimuli, ProgrammerDefinedEvent, WCollider, FastAlloc/Free like PS2"
+    }
+   ]
+  },
+  {
+   "item": "162.1",
+   "xbox": "0xe3b40",
+   "ps2": "0x24b238",
+   "name": "GSystem::MATH_TransformPoints",
+   "verdict": "accept",
+   "why": "called from GGallery::BITMAP_Draw2D as PS2; body (point, translate, quat, scale): quat->matrix, scale by p4, transform p1, add p2 - same as PS2 VU0 sequence",
+   "intermediates": []
+  },
+  {
+   "item": "163.1",
+   "xbox": "0xf70e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "'return 0' stub referenced from ~100 vtable slots (0x1a0bfc..) - linker-folded identical body",
+   "intermediates": []
+  },
+  {
+   "item": "164.1",
+   "xbox": "0x107be0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "ushort bsearch comparator used by LOCALE_getstr; PS2 counterpart FUN_002592c0 (identical body) is an unlisted static inside sheet row 7049 LOCALE_setstate extent (0x2592a0+0xc0) - no name",
+   "intermediates": []
+  },
+  {
+   "item": "165.1",
+   "xbox": "0x2e6b0",
+   "ps2": "0x135b10",
+   "name": "InCollisionRange",
+   "verdict": "accept",
+   "why": "caller AIGroundVehicle::CheckAgentRoadNetworkCollision (PS2 caller list includes it); body: if !flag and |dy|>5 -> false; distance vs range = clamp(2*speed,20,35), 15 if other speed>speed+1; then dot(unit dir, unit delta)>=0 - identical constants/logic to PS2 InCollisionRange(COORD3&,COORD3&,COORD3&,float,float,bool)",
+   "intermediates": []
+  },
+  {
+   "item": "166.1",
+   "xbox": "0x59900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only inlined strcpy into launch-info +0x4b4 (\"LOADER READY\") after GetLaunchInfo in ApplicationMemoryHeapConfig; PS2 uses strcpy into base_executable_path directly - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "167.1",
+   "xbox": "0x77b20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL sort_heap<unsigned char*> (pop-heap loop calling __adjust_heap 76bc0) - STL helper",
+   "intermediates": []
+  },
+  {
+   "item": "168.1",
+   "xbox": "0x7e430",
+   "ps2": "0x1af200",
+   "name": "RLightManager::VerticalFalloffMultiplier",
+   "verdict": "accept",
+   "why": "returns 1.0f (FLD const), sole caller RRenderSharedData::SendPerCarInstance at the same call position as PS2 (after the second 6f330/0x195808 call); PS2 body lui 0x3f80/mtc1 f0 = 1.0f",
+   "intermediates": []
+  },
+  {
+   "item": "169.1",
+   "xbox": "0xb7320",
+   "ps2": "0x208d98",
+   "name": "SMissionManager::StartSectionProfile",
+   "verdict": "accept",
+   "why": "EProfileMissionSection::~EProfileMissionSection calls it with this[1] where PS2 dtor calls SMissionManager::StartSectionProfile(glbMissionManager, this[1]); body: find section name among 64 0x50-byte records (+0x85c, count +0x1c5c, current +0x1c60; PS2 +0x73c/+0x1b3c/+0x1b40), else init new record (0x42 'z',0x43 'D' = 1000.0f) and strncpy 0x3f, set current/count - identical",
+   "intermediates": []
+  },
+  {
+   "item": "170.1",
+   "xbox": "0xdee80",
+   "ps2": "0x2456c0",
+   "name": "GHud::SetMissionPassed",
+   "verdict": "accept",
+   "why": "sole caller EPlayerWin::~EPlayerWin as on PS2; body: inlined ClearObjectiveMessage (+0x3a8..+0x3c0) then +0x318=0, +0x310=0x18576, inlined AimOff (+0x418=0, RSniperZoom hide), +0x324=0, +0x314=5 - same constants/order as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "171.1",
+   "xbox": "0x10a730",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only thread-start trampoline (sets started flag, calls entry fn) passed as data by THREAD_create/10a930 to the Win32 thread API; PS2 THREAD_createparam uses sceCreateThread directly - no counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "172.1",
+   "xbox": "0x96820",
+   "ps2": "0x1a4638",
+   "name": "RCamera::~RCamera",
+   "verdict": "accept",
+   "why": "non-deleting destructor: only stores vtable_RCamera (the store RCamera::scalar_deleting_destructor 78470 does before its FastFree); called from RViewCamera/RWorldCamera EH unwind funclets as the base-class dtor; PS2 RCamera::~RCamera(this,flags) stores vtable_RCamera then frees if flag&1",
+   "intermediates": []
+  },
+  {
+   "item": "173.1",
+   "xbox": "0xb88c0",
+   "ps2": "0x2089b8",
+   "name": "SMissionManager::SetIncompleteObjective",
+   "verdict": "accept",
+   "why": "EObjectiveSetIncomplete::~EObjectiveSetIncomplete calls it where PS2 dtor calls SetIncompleteObjective(glbMissionManager, this[1]); body: inlined GetObjectiveByID list walk (+4 list, node[2]->id) then objective+0x10 = 0 (SetCurrentObjective b8880 sets 1) - same as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "174.1",
+   "xbox": "0x761c0",
+   "ps2": "0x1a0480",
+   "name": "Draw::DrawQuadC",
+   "verdict": "accept",
+   "why": "called from GGallery::QUAD_Draw (PS2 callers QUAD_Draw, DrawQuad); body sets current material verts (+0x20) and colour array (+0x28) then USimpleMaterial::Draw(6,4,modelMatrix) - exactly the sequence Draw::DrawQuad (762d0) inlines after building its 4-colour array, as PS2 DrawQuad calls DrawQuadC(verts, colours)",
+   "intermediates": []
+  },
+  {
+   "item": "175.1",
+   "xbox": "0x76220",
+   "ps2": "0x1a0fb8",
+   "name": "Draw::SetAdditiveBlendMode",
+   "verdict": "accept",
+   "why": "RLensFlareManager::TestFlares calls it (PS2 TestFlares calls SetNormalBlendMode and SetAdditiveBlendMode); body = Draw::SetNormalBlendMode (76200: eee60(1), eecf0(1)) with blend 2 instead of 1; PS2 file order SetNormalBlendMode 0x1a0f80 then SetAdditiveBlendMode 0x1a0fb8 matches Xbox 76200 then 76220",
+   "intermediates": []
+  },
+  {
+   "item": "176.1",
+   "xbox": "0x76bc0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL _Adjust_heap<unsigned char> (sift-down then calls _Push_heap 76930); STL helper per instructions, MSVC routine differs from SGI __adjust_heap",
+   "intermediates": []
+  },
+  {
+   "item": "177.1",
+   "xbox": "0x7d780",
+   "ps2": "0x143fa0",
+   "name": "USingleton::~USingleton",
+   "verdict": "accept",
+   "why": "non-deleting destructor: only stores the USingleton vtable 0x18beb0 (the vtable ~RShadowMap/~RGain/~RDecalManager etc. restore before their base dtor = PS2 vtable_USingleton); called from singleton classes' EH unwind funclets (RColorize, RDecalManager, RGain...); PS2 USingleton::~USingleton stores vtable_USingleton then deletes if flag&1",
+   "intermediates": []
+  },
+  {
+   "item": "178.1",
+   "xbox": "0x2b7a0",
+   "ps2": "0x1369a0",
+   "name": "AIGroundVehicle::GetDirectLaneWeights",
+   "verdict": "accept",
+   "why": "sole caller AIGroundVehicle::CheckAgentDirectCollision as on PS2; body: clear 64-byte lane array (+0xa8, PS2 +0x98: +0x10), rigid body pos, WCollider(pos, 64.0, 0xc), two sweeps with scaleadd 32.0 marking lanes 0xff around index 0x20, then |32-i|*5 weighting clamped <0x100 - same constants as PS2 (callees WCollider/~WCollider, WWorldPos, Float_COORD3toCOORD4/4to3)",
+   "intermediates": []
+  },
+  {
+   "item": "179.1",
+   "xbox": "0xb9eb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "SRuleSpeed vtable CheckRule-shaped function (GetStats speed vs threshold) - left unnamed at the user's request (do not name SRuleSpeed::CheckRule)",
+   "intermediates": []
+  }
+ ]
+}

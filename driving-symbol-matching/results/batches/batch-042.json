@@ -1,0 +1,154 @@
+{
+ "batch": "042",
+ "program": "Driving.xbe",
+ "note": "Compiler-generated exception handling: frame handlers and unwind funclets (xbox_eh.py).",
+ "items": [
+  {
+   "xbox": "0x0015109b",
+   "expect": "FUN_0015109b",
+   "name": "AsString_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1a98c8; JMP __CxxFrameHandler; installed by AsString (0x396d0)"
+   ]
+  },
+  {
+   "xbox": "0x00151090",
+   "expect": "FUN_00151090",
+   "name": "AsString_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of AsString's FuncInfo 0x1a98c8 (frame handler 0x15109b); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154cbf",
+   "expect": "FUN_00154cbf",
+   "name": "SetPrimitiveType_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1a98; JMP __CxxFrameHandler; installed by SetPrimitiveType (0xe9aa0)"
+   ]
+  },
+  {
+   "xbox": "0x00154cb0",
+   "expect": "FUN_00154cb0",
+   "name": "SetPrimitiveType_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetPrimitiveType's FuncInfo 0x1b1a98 (frame handler 0x154cbf); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154cd8",
+   "expect": "FUN_00154cd8",
+   "name": "GetIndexFromName_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1abc; JMP __CxxFrameHandler; installed by GetIndexFromName (0xe9b40)"
+   ]
+  },
+  {
+   "xbox": "0x00154cc9",
+   "expect": "FUN_00154cc9",
+   "name": "GetIndexFromName_Unwind_0",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of GetIndexFromName's FuncInfo 0x1b1abc (frame handler 0x154cd8); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154cf1",
+   "expect": "FUN_00154cf1",
+   "name": "SetVar_Frame_Handler_154cf1",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1ae0; JMP __CxxFrameHandler; installed by SetVar (0xe9be0)"
+   ]
+  },
+  {
+   "xbox": "0x00154ce2",
+   "expect": "FUN_00154ce2",
+   "name": "SetVar_Unwind_0_154ce2",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetVar's FuncInfo 0x1b1ae0 (frame handler 0x154cf1); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154d0a",
+   "expect": "FUN_00154d0a",
+   "name": "SetVar_Frame_Handler_154d0a",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1b04; JMP __CxxFrameHandler; installed by SetVar (0xe9c90)"
+   ]
+  },
+  {
+   "xbox": "0x00154cfb",
+   "expect": "FUN_00154cfb",
+   "name": "SetVar_Unwind_0_154cfb",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetVar's FuncInfo 0x1b1b04 (frame handler 0x154d0a); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154d23",
+   "expect": "FUN_00154d23",
+   "name": "SetStream_Frame_Handler_154d23",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1b28; JMP __CxxFrameHandler; installed by SetStream (0xe9d40)"
+   ]
+  },
+  {
+   "xbox": "0x00154d14",
+   "expect": "FUN_00154d14",
+   "name": "SetStream_Unwind_0_154d14",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetStream's FuncInfo 0x1b1b28 (frame handler 0x154d23); destroys a local when unwinding from state 0"
+   ]
+  },
+  {
+   "xbox": "0x00154d3c",
+   "expect": "FUN_00154d3c",
+   "name": "SetStream_Frame_Handler_154d3c",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1b4c; JMP __CxxFrameHandler; installed by SetStream (0xe9df0)"
+   ]
+  },
+  {
+   "xbox": "0x00154d2d",
+   "expect": "FUN_00154d2d",
+   "name": "SetStream_Unwind_0_154d2d",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "MSVC unwind funclet: entry 0 of the unwind map of SetStream's FuncInfo 0x1b1b4c (frame handler 0x154d3c); destroys a local when unwinding from state 0"
+   ]
+  }
+ ]
+}

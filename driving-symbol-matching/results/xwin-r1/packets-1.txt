@@ -1,0 +1,1148 @@
+## window 0: Xbox 0x14820 ActCharacter::DrawWeapon .. 0x14870 ActCharacter::GetShadowTriangle   (PS2 0x10dad0 .. 0x10dd00)
+
+Xbox functions in the window, address order:
+  0x14850 UNNAMED
+     callers: Update
+     chain: ActActor::Update@12840
+     callees: SetTransform
+     void __thiscall FUN_00014850(int param_1_00,int param_1,undefined4 param_2)
+     {
+       if (*(int *)(param_1_00 + 0x24 + param_1 * 4) != 0) {
+         RSceneObj::SetTransform(param_2);
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x10dc00 ActCharacter::SetWeaponBone
+     callers: Update
+     callees: SetTransform
+     void ActCharacter::SetWeaponBone(ActCharacter *param_1,int weaponNum,MATRIX4 *param_3)
+     {
+       if ((&param_1->weapons)[weaponNum] != (ActWeapon *)0x0) {
+         RSceneObj::SetTransform((long)(int)&(&param_1->weapons)[weaponNum]->field_0x40,param_3);
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 1: Xbox 0x2a9e0 AIGroundVehicle::DrivableVec .. 0x2af50 AIGroundVehicle::UpdateStuck   (PS2 0x1330d0 .. 0x133850)
+
+Xbox functions in the window, address order:
+  0x2aaf0 UNNAMED
+     callers: FUN_0002e0a0, FUN_0002f610
+     chain: FUN_0002f610@2f610 <- AIGroundVehicle::DoMoveMode@30fb0 | FUN_0002e0a0@2e0a0 <- FUN_0002f610@2f610 <- AIGroundVehicle::DoMoveMode@30fb0
+     callees: CheckHitWorld, FUN_0001a9f0, FUN_0001c140, FUN_0001d9f0, GetPhysicsObject, GetRigidBody, VU0_v4scaleadd, WWorldPos, dummyNullFunction
+     undefined4 __thiscall FUN_0002aaf0(int param_1_00,char param_1)
+     {
+       float fVar1;
+       int iVar2;
+       undefined4 *puVar3;
+       float *pfVar4;
+       undefined1 *puVar5;
+       float local_1b0;
+       float local_1ac;
+       float local_1a8;
+       float local_1a0;
+       float local_19c;
+       float local_198;
+       undefined4 local_190;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x133238 AIGroundVehicle::BarriersInPath
+     callers: DriveToPoint, DriveToPointSub
+     callees: CheckHitWorld, GetPhysicsObject, GetRigidBody, WWorldPos, memset, ~WWorldPos
+     undefined4
+     AIGroundVehicle::BarriersInPath
+               (int param_1,long param_2,undefined8 param_3,undefined8 param_4,ulong param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+         ...
+
+====================================================================================================
+
+## window 2: Xbox 0x318d0 AIHelicopter::DisableTargetBeacon .. 0x31990 AIHelicopter::GetPlayerLaneOffsets   (PS2 0x138588 .. 0x1386b8)
+
+Xbox functions in the window, address order:
+  0x31910 UNNAMED
+     callers: ControlMoveState, DoAgentLogic
+     chain: AIHelicopter::ControlMoveState@32af0 | AIHelicopter::DoAgentLogic@331c0
+     callees: GetPhysicsObject, GetSimpleRigidBody, VU0_v4sub, VU0_v4unitxyz
+     void __thiscall FUN_00031910(int param_1_00,undefined4 param_1)
+     {
+       int iVar1;
+       undefined4 local_30;
+       undefined4 local_2c;
+       undefined4 local_28;
+       undefined1 local_20 [4];
+       undefined4 local_1c;
+       iVar1 = AIVehicle::GetPhysicsObject();
+       iVar1 = Simulation::GetSimpleRigidBody(&Sim,(int)*(short *)(iVar1 + 0x4a));
+       local_30 = *(undefined4 *)(iVar1 + 0x10);
+       local_2c = *(undefined4 *)(iVar1 + 0x14);
+       local_28 = *(undefined4 *)(iVar1 + 0x18);
+       VU0_v4sub(param_1,&local_30,local_20);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1385d8 AIHelicopter::GetDirectionToTarget
+     callers: ControlMoveState, DoAgentLogic
+     callees: GetPhysicsObject, GetSimpleRigidBody
+     void AIHelicopter::GetDirectionToTarget(int param_1,undefined (*param_2) [16])
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       ulong in_v1;
+       ulong uVar5;
+       undefined1 in_vf0 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+         ...
+
+====================================================================================================
+
+## window 3: Xbox 0x31ca0 AIHelicopter::DisengageSplinePath .. 0x321d0 AIHelicopter::~AIHelicopter   (PS2 0x13b498 .. 0x138280)
+
+Xbox functions in the window, address order:
+  0x31cd0 UNNAMED
+     callers: ControlMoveState, DoAgentLogic
+     chain: AIHelicopter::ControlMoveState@32af0 | AIHelicopter::DoAgentLogic@331c0
+     callees: FindClosestFace, GetForwardVector, GetPhysicsObject, GetRightVector, GetSimpleRigidBody, HeightAtPoint, InitAtPoint, RecalcOrientMat, SimRandom_Generate, Util_Step, VU0_MATRIX4_transpose, VU0_MATRIX4_vect3rotate, VU0_v3length, VU0_v4sub, VU0_v4unitxy
+     void __thiscall FUN_00031cd0(int param_1_00,int param_1,float param_2,float param_3,char param_4)
+     {
+       undefined4 uVar1;
+       int iVar2;
+       uint uVar3;
+       float10 fVar4;
+       float10 fVar5;
+       float fVar6;
+       float *pfVar7;
+       float local_114;
+       float local_110;
+       float local_10c;
+       undefined4 local_100;
+       undefined4 local_fc;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1385d8 AIHelicopter::GetDirectionToTarget
+     callers: ControlMoveState, DoAgentLogic
+     callees: GetPhysicsObject, GetSimpleRigidBody
+     void AIHelicopter::GetDirectionToTarget(int param_1,undefined (*param_2) [16])
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       ulong in_v1;
+       ulong uVar5;
+       undefined1 in_vf0 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+         ...
+
+====================================================================================================
+
+## window 4: Xbox 0x32700 AIHelicopter::NewState .. 0x32a60 AIHelicopter::AIHelicopter   (PS2 0x138fa8 .. 0x138220)
+
+Xbox functions in the window, address order:
+  0x32a20 UNNAMED
+     callers: ControlMoveState, DoAgentLogic
+     chain: AIHelicopter::ControlMoveState@32af0 | AIHelicopter::DoAgentLogic@331c0
+     callees: 
+     float10 FUN_00032a20(float param_1)
+     {
+       float10 fVar1;
+       fVar1 = (float10)param_1 * (float10)0.5;
+       if (fVar1 < (float10)10.0) {
+         return (float10)10.0;
+       }
+       if ((float10)20.0 < fVar1) {
+         fVar1 = (float10)20.0;
+       }
+       return fVar1;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1385d8 AIHelicopter::GetDirectionToTarget
+     callers: ControlMoveState, DoAgentLogic
+     callees: GetPhysicsObject, GetSimpleRigidBody
+     void AIHelicopter::GetDirectionToTarget(int param_1,undefined (*param_2) [16])
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       ulong in_v1;
+       ulong uVar5;
+       undefined1 in_vf0 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 auVar8 [16];
+         ...
+
+====================================================================================================
+
+## window 5: Xbox 0x347f0 AIRoadSpawn::Init .. 0x34860 AIRoadSpawn::GetTrafficSpawnPointOnSegment   (PS2 0x13c4d8 .. 0x13c5e8)
+
+Xbox functions in the window, address order:
+  0x34830 UNNAMED
+     callers: ~ERestart
+     chain: ERestart::~ERestart@4d620
+     callees: 
+     void FUN_00034830(void)
+     {
+       int iVar1;
+       undefined4 *puVar2;
+       if (fgRoadSpawn != 0) {
+         DAT_001de800 = Sim.field3634_0xe44;
+         puVar2 = &DAT_001de738;
+         for (iVar1 = 0x32; iVar1 != 0; iVar1 = iVar1 + -1) {
+           *puVar2 = 0xffffffff;
+           puVar2 = puVar2 + 1;
+         }
+         DAT_001de80c = 1;
+       }
+       return;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x13c558 AIRoadSpawn::Restart
+     callers: ~ERestart
+     callees: 
+     void AIRoadSpawn::Restart(void)
+     {
+       uint uVar1;
+       undefined4 *puVar2;
+       if (DAT_00327d58 != 0) {
+         DAT_003c8278 = DAT_00339f54;
+         DAT_00327d60 = 1;
+         puVar2 = &DAT_00423000;
+         uVar1 = 0;
+         do {
+           *puVar2 = 0xffffffff;
+           uVar1 = uVar1 + 1;
+         ...
+
+====================================================================================================
+
+## window 6: Xbox 0x34a70 AIRoadSpawn::TrafficRespawnAvailable .. 0x34d30 AIRoadSpawn::PedRespawnAvailable   (PS2 0x13c860 .. 0x13d228)
+
+Xbox functions in the window, address order:
+  0x34bb0 UNNAMED
+     callers: Recycle
+     chain: AICharacterPedestrian::Recycle@254c0
+     callees: FUN_00116090, GetRigidBody, VU0_v4sub, VU0_v4unitxyz, v3dotprod
+     int FUN_00034bb0(undefined4 param_1)
+     {
+       float fVar1;
+       undefined4 in_EAX;
+       int iVar2;
+       ushort extraout_var;
+       undefined2 extraout_var_00;
+       float10 fVar3;
+       float10 fVar4;
+       float fVar5;
+       undefined4 local_50;
+       undefined4 local_4c;
+       undefined4 local_48;
+       undefined4 local_40;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x13cfd8 AIRoadSpawn::PedRespawnPosCheck
+     callers: Recycle
+     callees: GetRigidBody
+     undefined4 AIRoadSpawn::PedRespawnPosCheck(undefined8 param_1,undefined (*param_2) [16])
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       undefined4 uVar4;
+       ulong *puVar5;
+       undefined1 auVar6 [16];
+       int iVar7;
+       ulong extraout_t1;
+       ulong uVar8;
+       ulong extraout_t1_00;
+         ...
+
+====================================================================================================
+
+## window 7: Xbox 0x35470 AIRoadSpawn::GetRandomPedSpawn .. 0x35680 AISplinePath::AISplinePath   (PS2 0x13d3f0 .. 0x13da80)
+
+Xbox functions in the window, address order:
+  0x35610 UNNAMED
+     callers: AISplinePath, Init, SetOldCameraMode, SetPhysics, SetTransform, Update, UpdatePosition, UseArticle, UseInstance
+     chain: AISplinePath::AISplinePath@35680 | RPathEngine::RPathHandle::Init@80130 | RPlayerCamera::SetOldCameraMode@89200
+     callees: 
+     void __thiscall FUN_00035610(undefined4 *param_1_00,undefined4 *param_1)
+     {
+       *param_1_00 = *param_1;
+       param_1_00[1] = param_1[1];
+       param_1_00[2] = param_1[2];
+       param_1_00[4] = param_1[4];
+       param_1_00[5] = param_1[5];
+       param_1_00[6] = param_1[6];
+       param_1_00[8] = param_1[8];
+       param_1_00[9] = param_1[9];
+       param_1_00[10] = param_1[10];
+       param_1_00[0xc] = param_1[0xc];
+       param_1_00[0xd] = param_1[0xd];
+       param_1_00[0xe] = param_1[0xe];
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x13da60 AIRoadSpawn::fgRoadSpawn_global_ctors
+     callers: 
+     callees: FUN_0013da28
+     void AIRoadSpawn::fgRoadSpawn_global_ctors(void)
+     {
+       FUN_0013da28(1,0xffff);
+       return;
+     }
+
+====================================================================================================
+
+## window 8: Xbox 0x35680 AISplinePath::AISplinePath .. 0x35740 AISplinePath::Reset   (PS2 0x13da80 .. 0x13dcc0)
+
+Xbox functions in the window, address order:
+  0x35730 UNNAMED
+     callers: RestartCamera, SetSplinePath, scalar_deleting_destructor, ~AIVehicle, ~RWorldCamera
+     chain: RWorldCamera::RestartCamera@97ee0 | AIVehicle::SetSplinePath@35860 | AIVehicle::~AIVehicle@35b40
+     callees: FUN_000802d0
+     void __fastcall FUN_00035730(int param_1)
+     {
+       FUN_000802d0(*(undefined4 *)(param_1 + 0x60));
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x13dc78 AISplinePath::~AISplinePath
+     callers: RestartCamera, SetSplinePath, ~AIVehicle, ~RWorldCamera
+     callees: DestroyPathHandle, __builtin_delete
+     void AISplinePath::~AISplinePath(long param_1,ulong param_2)
+     {
+       RPathEngine::DestroyPathHandle(*(int ***)((int)param_1 + 0x60));
+       if ((param_2 & 1) != 0) {
+         __builtin_delete(param_1);
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 9: Xbox 0x35860 AIVehicle::SetSplinePath .. 0x359d0 AIVehicle::GetSplinePath   (PS2 0x13dfd8 .. 0x13e0b0)
+
+Xbox functions in the window, address order:
+  0x35930 UNNAMED
+     callers: ~ESetNextAISpline
+     chain: ESetNextAISpline::~ESetNextAISpline@4d9d0
+     callees: AISplinePath, FUN_00035780, __builtin_new
+     void __thiscall FUN_00035930(int param_1_00,undefined4 param_1)
+     {
+       void *pvVar1;
+       undefined4 uVar2;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       local_4 = 0xffffffff;
+       pcStack_8 = FUN_00150e4b;
+       if (*(int *)(param_1_00 + 0x60) != 0) {
+         FUN_00035780(param_1);
+         return;
+       }
+       pvVar1 = __builtin_new(0xb0);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x13e058 AIVehicle::SetNextSplinePath
+     callers: ~ESetNextAISpline
+     callees: AISplinePath, SetNext, __builtin_new
+     void AIVehicle::SetNextSplinePath(int param_1,uint param_2)
+     {
+       void *pvVar1;
+       undefined8 uVar2;
+       if (*(int *)(param_1 + 0x50) == 0) {
+         pvVar1 = __builtin_new(0xb0);
+         uVar2 = AISplinePath::AISplinePath((long)(int)pvVar1,param_2);
+         *(int *)(param_1 + 0x50) = (int)uVar2;
+       }
+       else {
+         AISplinePath::SetNext(*(int *)(param_1 + 0x50),param_2);
+       }
+         ...
+
+====================================================================================================
+
+## window 10: Xbox 0x3e690 EAnimUpdate::GetEventName .. 0x3e6d0 EAudioUpdate::GetEventName   (PS2 0x147df0 .. 0x1481e0)
+
+Xbox functions in the window, address order:
+  0x3e6b0 UNNAMED
+     callers: PlayMotor
+     chain: ASnowMobile::PlayMotor@12aa10
+     callees: 
+     void __fastcall FUN_0003e6b0(int param_1)
+     {
+       undefined1 *puVar1;
+       int iVar2;
+       puVar1 = (undefined1 *)(param_1 + 0xc);
+       iVar2 = 3;
+       do {
+         *puVar1 = 0;
+         puVar1 = puVar1 + 0x1c;
+         iVar2 = iVar2 + -1;
+       } while (iVar2 != 0);
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x147e18 EAudioUpdate::EAudioUpdate
+     callers: GetEventName
+     callees: 
+     undefined8 EAudioUpdate::EAudioUpdate(undefined8 param_1)
+     {
+       *(undefined4 *)param_1 = &vtable_EAudioUpdate;
+       return param_1;
+     }
+
+====================================================================================================
+
+## window 11: Xbox 0x3e6d0 EAudioUpdate::GetEventName .. 0x3e730 EAutoDrive::~EAutoDrive   (PS2 0x1481e0 .. 0x148220)
+
+Xbox functions in the window, address order:
+  0x3e6f0 UNNAMED
+     callers: ~ESpawnSmackable
+     chain: ESpawnSmackable::~ESpawnSmackable@45a70
+     callees: 
+     uint FUN_0003e6f0(void)
+     {
+       uint uVar1;
+       uint uVar2;
+       uVar2 = DAT_001c45c8 * DAT_001c45c4;
+       uVar1 = (uVar2 & 0xffff) * DAT_001c45c8;
+       DAT_001c45c4 = uVar1 & 0xffff;
+       return ~((int)uVar1 >> 8) << 0x10 | (int)uVar2 >> 8 & 0xffffU;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x148208 EAutoDrive::EAutoDrive
+     callers: GetEventName
+     callees: 
+     void EAutoDrive::EAutoDrive(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[1] = param_2;
+       *param_1 = &vtable_EAutoDrive;
+       return;
+     }
+
+====================================================================================================
+
+## window 12: Xbox 0x3f1c0 ECinematicCamera::GetEventName .. 0x3f260 EClearBitMagicCounter::~EClearBitMagicCounter   (PS2 0x149b10 .. 0x149ba8)
+
+Xbox functions in the window, address order:
+  0x3f210 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_0003f210(int param_1,int *param_2,int param_3)
+     {
+       TagReference *this;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_001513e4;
+       this = (TagReference *)(param_1 + 0x10);
+       local_4 = 0;
+       if (this != (TagReference *)0x0) {
+         CARP::TagReference::TagReference(this,param_2,param_3,(int)this);
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x149b88 EClearBitMagicCounter::EClearBitMagicCounter
+     callers: GetEventName
+     callees: 
+     undefined8
+     EClearBitMagicCounter::EClearBitMagicCounter
+               (undefined8 param_1,undefined4 param_2,undefined4 param_3)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_1;
+       puVar1[1] = param_2;
+       puVar1[2] = param_3;
+       *puVar1 = &vtable_EClearBitMagicCounter;
+       return param_1;
+     }
+
+====================================================================================================
+
+## window 13: Xbox 0x3f3d0 EControlToSpline::GetEventName .. 0x3f420 ECustomTransition::GetEventName   (PS2 0x14af70 .. 0x14b360)
+
+Xbox functions in the window, address order:
+  0x3f400 UNNAMED
+     callers: Play, Stop, ~ATurret, ~AVehicleWind, ~AZoomObj
+     chain: ACharacter::Play@11ddb0 | ABasic::Stop@12fc30 | ATurret::~ATurret@12e250
+     callees: ??_M@YGXPAXIHP6EX0@Z@Z
+     void __fastcall FUN_0003f400(int param_1)
+     {
+       ___M_YGXPAXIHP6EX0_Z_Z(param_1 + 4,0x1c,3,AVoice::View::~View);
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x14b008 ECustomTransition::ECustomTransition
+     callers: GetEventName
+     callees: 
+     void ECustomTransition::ECustomTransition(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[1] = param_2;
+       *param_1 = &vtable_ECustomTransition;
+       return;
+     }
+
+====================================================================================================
+
+## window 14: Xbox 0x3f4e0 EDeactivateAIElement::GetEventName .. 0x3f550 EDisablePowerUp::~EDisablePowerUp   (PS2 0x14b5b0 .. 0x14b630)
+
+Xbox functions in the window, address order:
+  0x3f500 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_0003f500(int param_1,int *param_2,int param_3)
+     {
+       TagReference *this;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_001514a4;
+       this = (TagReference *)(param_1 + 4);
+       local_4 = 0;
+       if (this != (TagReference *)0x0) {
+         CARP::TagReference::TagReference(this,param_2,param_3,(int)this);
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x14b610 EDisablePowerUp::EDisablePowerUp
+     callers: GetEventName
+     callees: 
+     undefined8
+     EDisablePowerUp::EDisablePowerUp(undefined8 param_1,undefined4 param_2,undefined4 param_3)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_1;
+       puVar1[1] = param_2;
+       puVar1[2] = param_3;
+       *puVar1 = &vtable_EDisablePowerUp;
+       return param_1;
+     }
+
+====================================================================================================
+
+## window 15: Xbox 0x3fe40 EFireRandomTrigger::GetEventName .. 0x3ff60 EFireTriggerSpeedCondition::~EFireTriggerSpeedCondition   (PS2 0x14c7b8 .. 0x14c8c8)
+
+Xbox functions in the window, address order:
+  0x3feb0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_0003feb0(int param_1,int *param_2,int param_3)
+     {
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00151440;
+       local_4 = 0;
+       if ((TagReference *)(param_1 + 4) != (TagReference *)0x0) {
+       }
+       local_4 = 1;
+       if ((TagReference *)(param_1 + 0xc) != (TagReference *)0x0) {
+       }
+       local_4 = 2;
+       if ((TagReference *)(param_1 + 0x14) != (TagReference *)0x0) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x14c8a0 EFireTriggerSpeedCondition::EFireTriggerSpeedCondition
+     callers: GetEventName
+     callees: 
+     undefined8
+     EFireTriggerSpeedCondition::EFireTriggerSpeedCondition
+               (undefined4 param_1,undefined8 param_2,undefined4 param_3,undefined4 param_4,
+               undefined4 param_5,undefined4 param_6)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_2;
+       puVar1[1] = param_3;
+       puVar1[2] = param_1;
+       *puVar1 = &vtable_EFireTriggerSpeedCondition;
+       puVar1[3] = param_4;
+       puVar1[4] = param_5;
+         ...
+
+====================================================================================================
+
+## window 16: Xbox 0x40020 EFireTriggerSpeedCondition::GetEventName .. 0x40090 EFireWeapon::GetEventName   (PS2 0x14c9c0 .. 0x14ed50)
+
+Xbox functions in the window, address order:
+  0x40070 UNNAMED
+     callers: Missile
+     chain: Missile::Missile@5e8c0
+     callees: SimRandom_Generate
+     uint __fastcall FUN_00040070(uint *param_1)
+     {
+       uint uVar1;
+       uint uVar2;
+       uVar1 = SimRandom::SimRandom_Generate(param_1);
+       uVar2 = SimRandom::SimRandom_Generate(param_1);
+       return uVar2 | ~uVar1 << 0x10;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x14ca38 EFireWeapon::EFireWeapon
+     callers: GetEventName
+     callees: 
+     undefined8
+     EFireWeapon::EFireWeapon
+               (undefined8 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+               undefined4 param_5,undefined4 param_6)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_1;
+       puVar1[1] = param_2;
+       puVar1[2] = param_3;
+       *puVar1 = &vtable_EFireWeapon;
+       puVar1[3] = param_4;
+       puVar1[4] = param_5;
+         ...
+
+====================================================================================================
+
+## window 17: Xbox 0x446c0 ESetSpecialWeapon::GetEventName .. 0x44740 ESetSubRollDirection::GetEventName   (PS2 0x158e60 .. 0x158f60)
+
+Xbox functions in the window, address order:
+  0x446f0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_000446f0(int param_1,int *param_2,int param_3)
+     {
+       TagReference *this;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00151654;
+       this = (TagReference *)(param_1 + 8);
+       local_4 = 0;
+       if (this != (TagReference *)0x0) {
+         CARP::TagReference::TagReference(this,param_2,param_3,(int)this);
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x158ec8 ESetSubRollDirection::ESetSubRollDirection
+     callers: GetEventName
+     callees: 
+     void ESetSubRollDirection::ESetSubRollDirection(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[1] = param_2;
+       *param_1 = &vtable_ESetSubRollDirection;
+       return;
+     }
+
+====================================================================================================
+
+## window 18: Xbox 0x44fe0 ESpawnExplosion::GetEventName .. 0x45120 ESpawnExplosionStatic::~ESpawnExplosionStatic   (PS2 0x15ae90 .. 0x15b010)
+
+Xbox functions in the window, address order:
+  0x45090 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_00045090(int param_1,int *param_2,int param_3)
+     {
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_0015169c;
+       local_4 = 0;
+       if ((TagReference *)(param_1 + 4) != (TagReference *)0x0) {
+       }
+       local_4 = 1;
+       if ((TagReference *)(param_1 + 0x18) != (TagReference *)0x0) {
+       }
+       local_4 = 2;
+       if ((TagReference *)(param_1 + 0x20) != (TagReference *)0x0) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x15afe0 ESpawnExplosionStatic::ESpawnExplosionStatic
+     callers: GetEventName
+     callees: 
+     undefined8
+     ESpawnExplosionStatic::ESpawnExplosionStatic
+               (undefined4 param_1,undefined8 param_2,undefined4 param_3,undefined4 param_4,
+               undefined4 param_5,undefined4 param_6,undefined4 param_7,undefined4 param_8)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_2;
+       puVar1[1] = param_3;
+       puVar1[2] = param_4;
+       *puVar1 = &vtable_ESpawnExplosionStatic;
+       puVar1[3] = param_5;
+       puVar1[4] = param_6;
+         ...
+
+====================================================================================================
+
+## window 19: Xbox 0x45cb0 ESpawnSmackable::GetEventName .. 0x45d70 ESpawnTraffic::~ESpawnTraffic   (PS2 0x15bfb0 .. 0x15c080)
+
+Xbox functions in the window, address order:
+  0x45d00 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_00045d00(int param_1,int *param_2,int param_3)
+     {
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00151798;
+       local_4 = 0;
+       if ((TagReference *)(param_1 + 4) != (TagReference *)0x0) {
+       }
+       local_4 = 1;
+       if ((TagReference *)(param_1 + 0xc) != (TagReference *)0x0) {
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x15c060 ESpawnTraffic::ESpawnTraffic
+     callers: GetEventName
+     callees: 
+     undefined8 ESpawnTraffic::ESpawnTraffic(undefined4 param_1,undefined8 param_2,undefined4 param_3)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_2;
+       puVar1[1] = param_3;
+       puVar1[2] = param_1;
+       *puVar1 = &vtable_ESpawnTraffic;
+       return param_2;
+     }
+
+====================================================================================================
+
+## window 20: Xbox 0x46450 EStopEffect::GetEventName .. 0x46540 EStopSoundPos::~EStopSoundPos   (PS2 0x15ccb0 .. 0x15cd90)
+
+Xbox functions in the window, address order:
+  0x464b0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_000464b0(int param_1,int *param_2,int param_3)
+     {
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_0015162c;
+       local_4 = 0;
+       if ((TagReference *)(param_1 + 4) != (TagReference *)0x0) {
+       }
+       local_4 = 1;
+       if ((TagReference *)(param_1 + 8) != (TagReference *)0x0) {
+       }
+       local_4 = 2;
+       if ((TagReference *)(param_1 + 0xc) != (TagReference *)0x0) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x15cd78 EStopSoundPos::EStopSoundPos
+     callers: GetEventName
+     callees: 
+     void EStopSoundPos::EStopSoundPos(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[1] = param_2;
+       *param_1 = &vtable_EStopSoundPos;
+       return;
+     }
+
+====================================================================================================
+
+## window 21: Xbox 0x472c0 E007Logo::scalar_deleting_destructor .. 0x47390 EAIElementFireOff::scalar_deleting_destructor   (PS2 0x145f00 .. 0x1469f8)
+
+Xbox functions in the window, address order:
+  0x472e0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: TagReference
+     void FUN_000472e0(int param_1,int *param_2,int param_3)
+     {
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00151870;
+       local_4 = 0;
+       if ((TagReference *)(param_1 + 4) != (TagReference *)0x0) {
+       }
+       local_4 = 1;
+       if ((TagReference *)(param_1 + 8) != (TagReference *)0x0) {
+       }
+       local_4 = 2;
+       if ((TagReference *)(param_1 + 0xc) != (TagReference *)0x0) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1469e0 EAIElementFireOff::EAIElementFireOff
+     callers: GetEventName
+     callees: 
+     void EAIElementFireOff::EAIElementFireOff(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[1] = param_2;
+       *param_1 = &vtable_EAIElementFireOff;
+       return;
+     }
+
+====================================================================================================
+
+## window 22: Xbox 0x4f290 ActionQueue::GetAction .. 0x4f360 ActionQueueManager::FeedQueue   (PS2 0x1655c0 .. 0x165850)
+
+Xbox functions in the window, address order:
+  0x4f2d0 UNNAMED
+     callers: ActionQueue
+     chain: ActionQueue::ActionQueue@4f320
+     callees: ActionData
+     undefined4 * __fastcall FUN_0004f2d0(undefined4 *param_1)
+     {
+       int iVar1;
+       iVar1 = 200;
+       do {
+         ActionData::ActionData(0,0,0);
+         iVar1 = iVar1 + -1;
+       } while (iVar1 != 0);
+       *param_1 = 0;
+       param_1[1] = 0xffffffff;
+       param_1[2] = 0;
+       param_1[3] = 200;
+       return param_1;
+     }
+  0x4f320 (named) ActionQueue::ActionQueue
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1657c0 ActionQueueManager::UnRegisterQueue
+     callers: ~ActionQueue
+     callees: memmove
+     void __thiscall ActionQueueManager::UnRegisterQueue(ActionQueueManager *this,ActionQueue *param_1)
+     {
+       ActionQueue *pAVar1;
+       ActionQueue **dest;
+       ActionQueue **src;
+       dest = this->queueList;
+       if (dest < this->numQueues) {
+         pAVar1 = *dest;
+         while( true ) {
+           src = dest + 1;
+           if (pAVar1 == param_1) {
+             if (src != this->numQueues) {
+         ...
+
+====================================================================================================
+
+## window 23: Xbox 0x5aa80 RunTheGame .. 0x5b0d0 GameLoop_StartUp   (PS2 0x175d78 .. 0x176658)
+
+Xbox functions in the window, address order:
+  0x5b0a0 UNNAMED
+     callers: FUN_00130f8f, FUN_0013101d, GameLoop_StartUp
+     chain: GameLoop_StartUp@5b0d0
+     callees: FUN_00013630
+     void FUN_0005b0a0(char *param_1)
+     {
+       char cVar1;
+       char *pcVar2;
+       pcVar2 = param_1;
+       do {
+         cVar1 = *pcVar2;
+         pcVar2 = pcVar2 + 1;
+       } while (cVar1 != '\0');
+       FUN_00013630(param_1,(int)pcVar2 - (int)(param_1 + 1));
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x176620 GameLoop_LoadDrawUnloadScreens
+     callers: GameLoop_CleanUp
+     callees: Flush, FreeUnloadingScreen, LoadAndDrawUnLoadingScreen
+     void GameLoop_LoadDrawUnloadScreens(void)
+     {
+       GLoadingScreen::LoadAndDrawUnLoadingScreen();
+       RRenderer::Flush(RRenderer::fgRenderer,true);
+       GLoadingScreen::FreeUnloadingScreen();
+       return;
+     }
+
+====================================================================================================
+
+## window 24: Xbox 0x66ee0 PBondCar::ControlTyreTracks .. 0x67bd0 PBondCar::ProcessPhysics   (PS2 0x18bf08 .. 0x18cef8)
+
+Xbox functions in the window, address order:
+  0x670e0 UNNAMED
+     callers: ProcessPhysics
+     chain: PBondCar::ProcessPhysics@67bd0
+     callees: FUN_000ad2c0, FUN_000ad2f0, FUN_000ad440, FUN_00115cc0, FUN_001160f0, GetLocalyyy, GetRigidBody, ResolveMassScaledTorque4, VU0_v3add, VU0_v4scale, VU0_v4sub, VU0_v4unitcrossprodxyz, VU0_v4unitxyz, v3dotprod
+     undefined4 __thiscall
+     FUN_000670e0(int *param_1,float *param_2,int param_3,int param_4,undefined4 *param_5,
+                 undefined4 *param_6,undefined4 param_7,char param_8)
+     {
+       float *pfVar1;
+       undefined4 *puVar2;
+       float *pfVar3;
+       int iVar4;
+       bool bVar5;
+       float fVar6;
+       int iVar7;
+       char cVar8;
+       RigidBody *this;
+       int extraout_EAX;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x18c1b0 PBondCar::AddWheelForces
+     callers: ProcessPhysics
+     callees: ConvertLocalToWorld, ConvertWorldToLocal, GetLocalAngularVelocity, GetRigidBody, ResolveMassScaledForce4, ResolveMassScaledTorque, ResolveMassScaledTorque4
+     undefined4 __thiscall
+     PBondCar::AddWheelForces
+               (PBondCar *this,float *param_1,uint *param_2,undefined (*param_3) [16],
+               undefined (*param_4) [16],uint param_5,undefined (*param_6) [16],char param_7)
+     {
+       char cVar1;
+       uint uVar2;
+       uint uVar3;
+       ulong *puVar4;
+       bool bVar5;
+       int iVar6;
+       int iVar7;
+         ...
+
+====================================================================================================
+
+## window 25: Xbox 0x77560 RAnimEngine::Handle::GetFirstSystemInstanceIndex .. 0x776a0 RAnimEngine::Handle::GetFirstSystemInstance   (PS2 0x1a2f00 .. 0x1a3040)
+
+Xbox functions in the window, address order:
+  0x775c0 UNNAMED
+     callers: Sentry
+     chain: Sentry::Sentry@73a90
+     callees: __lower_bound<unsigned_char_*,_unsigned_char,_int>
+     uint __thiscall FUN_000775c0(int param_1_00,uint param_1)
+     {
+       int iVar1;
+       uint uVar2;
+       float fVar3;
+       float fVar4;
+       byte *pbVar5;
+       int iVar6;
+       uint uVar7;
+       byte *pbVar8;
+       uVar7 = param_1;
+       iVar6 = *(int *)(param_1_00 + 0x10);
+       pbVar8 = (byte *)((uint)*(byte *)(param_1_00 + 0x1e) + iVar6);
+       pbVar5 = (byte *)__lower_bound<unsigned_char_*,_unsigned_char,_int>(iVar6,pbVar8,&param_1,0);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1a2f30 RAnimEngine::Handle::GetBestSystemInstanceIndex
+     callers: Sentry
+     callees: FindSystem
+     uint __thiscall RAnimEngine::Handle::GetBestSystemInstanceIndex(Handle *this,uint param_1)
+     {
+       uint uVar1;
+       int iVar2;
+       uint uVar3;
+       byte *pbVar4;
+       uint uVar5;
+       uint uVar6;
+       float fVar7;
+       float fVar8;
+       float fVar9;
+       iVar2 = FindSystem(this,param_1);
+         ...
+
+====================================================================================================
+
+## window 26: Xbox 0x776a0 RAnimEngine::Handle::GetFirstSystemInstance .. 0x77720 RAnimEngine::System::ProcessStimuli   (PS2 0x1a3040 .. 0x1a33c0)
+
+Xbox functions in the window, address order:
+  0x776d0 UNNAMED
+     callers: ProcessStimuli
+     chain: RAnimEngine::System::ProcessStimuli@77720
+     callees: FUN_00076c60
+     int __fastcall FUN_000776d0(undefined4 param_1_00,int param_2_00,char param_1,char param_2)
+     {
+       int iVar1;
+       int in_EAX;
+       int iVar2;
+       undefined1 local_10 [12];
+       char local_4;
+       char local_3;
+       local_3 = param_1;
+       iVar1 = in_EAX * 0x10 + *(int *)(param_2_00 + 8);
+       local_4 = param_2;
+       iVar2 = FUN_00076c60(*(int *)(param_2_00 + 8),iVar1,local_10,0);
+       if (((iVar2 == iVar1) || (*(char *)(iVar2 + 0xc) != param_2)) ||
+          (*(char *)(iVar2 + 0xd) != param_1)) {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1a3088 RAnimEngine::Handle::SetVerbose
+     callers: 
+     callees: 
+     void __thiscall RAnimEngine::Handle::SetVerbose(Handle *this,bool param_1)
+     {
+       int iVar1;
+       int iVar2;
+       int iVar3;
+       iVar3 = 0;
+       if (this->numSystems != '\0') {
+         iVar1 = *(int *)&this->field_0xc;
+         while( true ) {
+           iVar2 = iVar3 * 0x40;
+           iVar3 = iVar3 + 1;
+           *(bool *)(iVar2 + iVar1 + 0x1c) = param_1;
+         ...
+
+====================================================================================================
+
+## window 27: Xbox 0x785f0 RCameraIniLoader::ResolveWeaponNames .. 0x78770 RCameraIniLoader::LoadFile   (PS2 0x1a6e18 .. 0x1a49e0)
+
+Xbox functions in the window, address order:
+  0x78670 UNNAMED
+     callers: LoadFile
+     chain: RCameraIniLoader::LoadFile@78770
+     callees: FUN_00078590, strstr
+     undefined4 FUN_00078670(char *param_1)
+     {
+       char cVar1;
+       char *pcVar2;
+       int iVar3;
+       undefined4 uVar4;
+       char *pcVar5;
+       char *pcVar6;
+       uint *puVar7;
+       uint uVar8;
+       if (param_1 == (char *)0x0) {
+         return 1;
+       }
+       uVar8 = 0;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1a6cf8 RCameraIniLoader::CheckCameraAgainstCar
+     callers: LoadFile
+     callees: FUN_001a6c68, strlen
+     undefined4 RCameraIniLoader::CheckCameraAgainstCar(long param_1)
+     {
+       byte bVar1;
+       uint uVar2;
+       char *pcVar3;
+       int iVar4;
+       undefined4 uVar5;
+       long lVar6;
+       char *string;
+       uint uVar7;
+       if (param_1 == 0) {
+     LAB_001a6de8:
+         ...
+
+====================================================================================================
+
+## window 28: Xbox 0x7acd0 RCameraSpline::RCameraSpline .. 0x7ae00 RCameraSpline::AddToSplinePtList   (PS2 0x1a7ba0 .. 0x1a7cf8)
+
+Xbox functions in the window, address order:
+  0x7ad50 UNNAMED
+     callers: AddToSplinePtList
+     chain: RCameraSpline::AddToSplinePtList@7ae00
+     callees: FUN_00013630, FUN_00013700, FUN_001325ad
+     void __thiscall FUN_0007ad50(int param_1_00,uint param_1)
+     {
+       char *pcVar1;
+       char *pcVar2;
+       int iVar3;
+       int extraout_ECX;
+       undefined8 uVar4;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+       undefined4 local_38;
+       undefined **local_34 [10];
+       undefined4 local_c;
+       code *pcStack_8;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1a7cd8 RCameraSpline::ClearSplinePtList
+     callers: DirectorChangeCameraMode, UpdateRelativeAnimationCam
+     callees: clear
+     void __thiscall RCameraSpline::ClearSplinePtList(RCameraSpline *this)
+     {
+       _List_base<COORD4,_allocator<COORD4>_>::clear((int **)&this->field_0x64);
+       return;
+     }
+
+====================================================================================================
+
+## window 29: Xbox 0x7c380 RDirectorQueue::RDirectorQueue .. 0x7c3f0 RDirectorQueue::ProcessDirectorLogic   (PS2 0x1aa7b8 .. 0x1aa890)
+
+Xbox functions in the window, address order:
+  0x7c3b0 UNNAMED
+     callers: ~RPlayerCamera
+     chain: RPlayerCamera::~RPlayerCamera@81bf0
+     callees: FUN_0007c2e0, FastFree
+     void __fastcall FUN_0007c3b0(int param_1)
+     {
+       undefined4 *puVar1;
+       undefined4 uVar2;
+       int local_4;
+       puVar1 = *(undefined4 **)(param_1 + 4);
+       if (puVar1 == (undefined4 *)0x0) {
+         uVar2 = 0;
+       }
+       else {
+         uVar2 = *puVar1;
+       }
+       local_4 = param_1;
+       FUN_0007c2e0(&local_4,uVar2,puVar1);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1aa820 RDirectorQueue::~RDirectorQueue
+     callers: ~RPlayerCamera
+     callees: FUN_001aacd0, FastFree
+     void RDirectorQueue::~RDirectorQueue(undefined8 param_1,ulong param_2)
+     {
+       FUN_001aacd0((int **)param_1);
+       UMemory::FastFree(*(int **)param_1,0x30);
+       if ((param_2 & 1) != 0) {
+         UMemory::FastFree((int **)param_1,0xc);
+       }
+       return;
+     }
+
+====================================================================================================
+

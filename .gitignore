@@ -6,10 +6,26 @@ CMakeCache.txt
 CMakeFiles/
 *.dir/
 Release/
+Release64/
 Debug/
 cmake_install.cmake
 **/.DS_Store
 .cmake
 .vscode
+.zed
 __pycache__
 Testing/
+
+# IDE files
+.vs/
+CMakeSettings.json
+
+# Local game data and dumps
+/disc/
+/dump_characters/
+/dump_levels/
+/dump_levels_collision/
+/collision_export/
+/Cxbx-Reloaded/
+# CMake FetchContent (SDL3 with NIGHTFIRE_SDL=ON) in the in-source build
+_deps/

@@ -1,0 +1,29 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# Quick Game from the scenario wheel.
+press DOWN
+wait 30
+press A                    # Multiplayer
+waitpage 0x40000019        # P_MPJOIN
+wait 100
+press A
+wait 120
+press A
+wait 120
+press A
+waitpage 0x4000001a        # P_MPSCENARIO: the wheel starts on the last mode played (Arena), Quick Game is above it
+wait 100
+press UP
+wait 40
+shot quickgame_item
+press A
+wait 150
+shot after_quickgame
+quit

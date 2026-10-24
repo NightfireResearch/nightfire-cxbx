@@ -7,8 +7,27 @@
 #include "actionhelpers.h"
 
 void Mem_Init(void);
-void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t unknownMaybeAlignment);
+void Mem_TakeHeap(void);   // before Mem_Init, the standalone build's (memory.cpp)
+void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment);
 void Mem_Free(void **ptr);
-void Mem_Shrink(void **param_1,uint param_2);
+void Mem_Shrink(void **ptr, uint numBytes);
+void* allocateXboxSpecialMemory(int size, uint32_t alignment);   // Mem_Malloc of MALLOC_XBOX
+void FreeMemory(void *data);                                      // Mem_Free of a pointer that may be null
+void Mem_PrintAllInfo(void);
+
+// How Mem_Malloc picks a free block: tMallocMethod in Ghidra (Malloc_Type_0..3). ResetMap_Load and the loaders
+// switch between them.
+enum tMallocMethod {
+    MALLOC_NEXT_FIT = 0,    // the first big enough block from QuickBlock back to the start, else on to the end
+    MALLOC_BEST_FIT = 1,    // the smallest big enough block (also any value above 3)
+    MALLOC_LOW_END = 2,     // the first big enough block, allocated from its low end instead of its high end
+    MALLOC_LAST_FIT = 3,    // the last big enough block
+};
+tMallocMethod Mem_SetMallocMethod(tMallocMethod method);
+
+void* Mem_Info(void);
+
+// Mem_Init clears all 0x1c bytes; parsemap_block_Coll_Data_New adds to [0]
+extern uint32_t MemStats[7];
 
 #endif // MEMORY_H_

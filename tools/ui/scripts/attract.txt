@@ -1,0 +1,11 @@
+# From a fresh boot, leave the start page idle until the attract movie (P_ATTRACT) plays, let it run to its end
+# and come back to the start page.
+waitpage 0x40000009         # P_START
+shot start_page
+waitpage 0x40000035 4000    # P_ATTRACT, after the start page's idle timeout
+wait 300
+shot attract_movie
+waitpage 0x40000009 12000   # back when the movie ends
+wait 60
+shot start_again
+quit

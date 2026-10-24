@@ -1,0 +1,743 @@
+{
+ "verdicts": [
+  {
+   "item": 216,
+   "xbox": "0x14b310",
+   "ps2": "0x305d38",
+   "name": "STREAM_setpriority",
+   "verdict": "accept",
+   "why": "After a handle check, stores the two args at +0x4c/+0x50, where PS2 uses +0x3c/+0x40 (a consistent +0x10 shift); Xbox checks the 'STRM' magic inline where PS2 validates through FUN_00304e30.",
+   "intermediates": []
+  },
+  {
+   "item": 217,
+   "xbox": "0x8d440",
+   "ps2": "0x1c6858",
+   "name": "RRenderWorldCulling::Setup2dFrustrum",
+   "verdict": "accept",
+   "why": "Both call InitializePlaneInfo only when the fov/dist fields (+0x64/+0x68) differ, then atan of pos x/z, setyrot, rotate 5 planes, and the ABS(+0x24)*-0.2 scaleadd; Xbox transposes at the end.",
+   "intermediates": [
+    {
+     "xbox": "0x8d370",
+     "ps2": "0x1c6b70",
+     "name": "RRenderWorldCulling::InitializePlaneInfo",
+     "why": "Same body: stores fov/dist at +0x64/+0x68, cos/sin(fov*1/360) to +0x6c/+0x8c, length, then +0x80/+0x84=0, +0x88=dist*0.5, and normalised +0x7c/+0x90. Its only callers are Setup2dFrustrum and the ctor, as on PS2."
+    },
+    {
+     "xbox": "0x8d420",
+     "ps2": "0x1c6588",
+     "name": "RRenderWorldCulling::RRenderWorldCulling",
+     "why": "The PS2 ctor(float,float) is InitializePlaneInfo(a,b) and return this. Xbox 0x8d420 is identical and is the other caller of 0x8d370."
+    }
+   ]
+  },
+  {
+   "item": 218,
+   "xbox": "0xfab10",
+   "ps2": "0x266d30",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "verdict": "reject",
+   "why": "Xbox 0xfab10 is not the binary search. It makes a vcall (+0x38, the PS2 +0x78/0x7c slot 14), calls 0x106800 and writes a byte out: an outlined attribute getter called only from UseFPS. The real GetAttribute is its callee.",
+   "intermediates": [
+    {
+     "xbox": "0x1067c0",
+     "ps2": "0x266cc8",
+     "name": "EAGLAnim::AttributeBlock::FindAttribute",
+     "why": "Same binary search over the count at [0] and ushort ids at +4 stride 8; returns the entry pointer or 0."
+    },
+    {
+     "xbox": "0x106800",
+     "ps2": "0x266d30",
+     "name": "EAGLAnim::AttributeBlock::GetAttribute",
+     "why": "FindAttribute(id), then on a hit *out = entry[1] and return true. This matches PS2 0x266d30 (the inline-search overload that stores piVar1[1]), not the memcpy overload at 0x266ba0."
+    }
+   ]
+  },
+  {
+   "item": 219,
+   "xbox": "0x19ad0",
+   "ps2": "0x114aa8",
+   "name": "ActSkeleton::BlendBones",
+   "verdict": "accept",
+   "why": "Same per-bone loop: VU0_fastqslerp at +0x10, then a lerp of +0x20/+0x24/+0x28 when flag==1 or index==[+0x18], with stride 0x30. Xbox inlines GetNumBones as [[+8]+8].",
+   "intermediates": []
+  },
+  {
+   "item": 220,
+   "xbox": "0xc5500",
+   "ps2": "0x213110",
+   "name": "WCollisionMgr::WCollisionMgr",
+   "verdict": "accept",
+   "why": "Same ctor: two STL trees at +0x18/+0x24 (PS2 +0x14/+0x20), [0..4]=0, [0xb]=0xf0 and [0xc]=0 on both.",
+   "intermediates": []
+  },
+  {
+   "item": 221,
+   "xbox": "0x12350",
+   "ps2": "0x10afc0",
+   "name": "ActActor::RotateActor",
+   "verdict": "accept",
+   "why": "Calls Poser::Rotate(angle) first, then if flag +0x14 builds a y-rotation from cos/sin into the matrix at [+0xc]+0x340 via VU0_MATRIX4_mult, as PS2.",
+   "intermediates": []
+  },
+  {
+   "item": 222,
+   "xbox": "0x74770",
+   "ps2": "0x19cd90",
+   "name": "Shell::Shell",
+   "verdict": "accept",
+   "why": "PhysicsObject(\"weapon\",\"Shell\",7) base ctor and a SimpleRigidBody set-up from the same args, as PS2 Shell::Shell. It is the only 1:1 slot in SpawnShellObject.",
+   "intermediates": []
+  },
+  {
+   "item": 223,
+   "xbox": "0x14e070",
+   "ps2": "0x302b48",
+   "name": "RCMP::CODEC_IDATA::CODEC_IDATA",
+   "verdict": "accept",
+   "why": "Identical 4-field ctor with the same store order ([3]=p4, [0]=p1, [1]=p2, [2]=p3) that returns this; the only caller on both sides is GetFirstFrame.",
+   "intermediates": []
+  },
+  {
+   "item": 224,
+   "xbox": "0x147d0",
+   "ps2": "0x10d290",
+   "name": "ActCharacter::EndShadow",
+   "verdict": "accept",
+   "why": "Position is exact: in the shadow block of ActCharacter::Draw, Xbox calls 0x14760 / Model::Draw / 0x147d0 where PS2 calls StartShadow / Draw / EndShadow. PS2 EndShadow is empty; the Xbox one restores D3D state (e7890(0) undoes StartShadow's e7890(1)).",
+   "intermediates": [
+    {
+     "xbox": "0x14760",
+     "ps2": "0x10d288",
+     "name": "ActCharacter::StartShadow",
+     "why": "Called immediately before the shadow Model::Draw in ActCharacter::Draw, where PS2 calls StartShadow. It sets stencil state (0x1e00/0x1e01/0x205, ...) that EndShadow (0x147d0) undoes."
+    }
+   ]
+  },
+  {
+   "item": 225,
+   "xbox": "0xcbcf0",
+   "ps2": "0x226f18",
+   "name": "WRoadNav::ChangeLanes",
+   "verdict": "accept",
+   "why": "Same fields: if p2>0 it sets +0x98/+0x9c from +0xa0, then +0xa0=p1, +0xa4=0, +0xa8=0, +0xac=p2; otherwise it rebuilds lane splines from fSegments[+0x3e].",
+   "intermediates": []
+  },
+  {
+   "item": 226,
+   "xbox": "0x37a70",
+   "ps2": "0x1f5ce8",
+   "name": "OBB::OBB",
+   "verdict": "accept",
+   "why": "Trivial ctor (mov eax,ecx; ret), but the caller set is identical on both sides: Missile::CheckForCollision, RayShell::CollideWithObjects, ~EWakeupSmackable, and CheckCollisions (Xbox 0xb1ff0). There are no other callers, so it has not been folded.",
+   "intermediates": []
+  },
+  {
+   "item": 227,
+   "xbox": "0xe4ef0",
+   "ps2": "0x296e80",
+   "name": "EAGL::ViewPort::SetViewMatrix",
+   "verdict": "accept",
+   "why": "Copies the 16-dword matrix into +0x80; if the flag at +0x188 is set, re-begins the view (BeginView), which is PS2's ReBegin. Xbox and PS2 share 3 anchors in 1:1 slots and the same caller set.",
+   "intermediates": []
+  },
+  {
+   "item": 228,
+   "xbox": "0x239b0",
+   "ps2": "0x12aa20",
+   "name": "AICharacterPedestrian::SetNewState",
+   "verdict": "reject",
+   "why": "Xbox 0x239b0 decrements fRoads[n]->+0x2f, a road-node ped count. Xbox inlines SetNewState (+0x5c=0x16, +0x14c=old, +0x60/+0x19c=0), so the slot pairs the next call. PS2 inlines this decrement in KillSelf, so it has no PS2 counterpart.",
+   "intermediates": []
+  },
+  {
+   "item": 229,
+   "xbox": "0x239b0",
+   "ps2": "0x126800",
+   "name": "AICharacterPedestrian::GetSpecialPedInfo",
+   "verdict": "reject",
+   "why": "Same Xbox function as item 228 (the fRoads[n]+0x2f decrement); the body is unrelated to the GetSpecialPedInfo table lookup.",
+   "intermediates": []
+  },
+  {
+   "item": 230,
+   "xbox": "0x6f270",
+   "ps2": "0x1956d8",
+   "name": "PhysicsObject::GetRadius",
+   "verdict": "accept",
+   "why": "Same body: flag bit 0 selects GetRigidBody()->+0x7c or GetSimpleRigidBody()->+0x2c, using the rigid-body slot at +0x4a.",
+   "intermediates": []
+  },
+  {
+   "item": 231,
+   "xbox": "0x94c90",
+   "ps2": "0x1cfe40",
+   "name": "RTextureContextManager::KillContext",
+   "verdict": "accept",
+   "why": "Walks the map at this+4 and erases every node whose value equals the arg (Xbox node value +0x10 = PS2 +0x14). Xbox calls the erase as 0x94140 where PS2 inlines the rb-erase and FastFree(0x18).",
+   "intermediates": []
+  },
+  {
+   "item": 232,
+   "xbox": "0x14dfc0",
+   "ps2": "0x3029f0",
+   "name": "RCMP::DECODER::GetFrame",
+   "verdict": "accept",
+   "why": "Same lazy-open then vcall: if decoder [+0x18] (PS2 +0x14) is null and [+4] (PS2 [0]) is null, call fn[+0xc](this,[+8],this+4); then return 0 or the decoder's vcall. A consistent +4 shift.",
+   "intermediates": []
+  },
+  {
+   "item": 233,
+   "xbox": "0x12ceb0",
+   "ps2": "0x2e5968",
+   "name": "ATrafficVehicle::PlaySnowmobileSpecifics",
+   "verdict": "accept",
+   "why": "The SFX_heavy1 / \"Opponents\" GetVolume / Lookup sound strings are shared (7 strings), with the airborne-wheels gate and the +0x220..+0x238 fields; it is the 1:1 slot in ATrafficVehicle::Play.",
+   "intermediates": []
+  },
+  {
+   "item": 234,
+   "xbox": "0x1d9f0",
+   "ps2": "0x2a8038",
+   "name": "memset",
+   "verdict": "reject",
+   "why": "Xbox 0x1d9f0 is a struct ctor (copies a 4-float default from 0x1d4c00, copies 8 dwords, zeroes +0x40..+0x58), not memset. PS2 inlines this set-up, so the n:n slot is wrong.",
+   "intermediates": []
+  },
+  {
+   "item": 235,
+   "xbox": "0x9ac40",
+   "ps2": "0x29fd38",
+   "name": "EAGL::DynamicLoader::GetRegisteredVar",
+   "verdict": "reject",
+   "why": "Xbox 0x9ac40 is a ctor that allocates 'EAGL::Rendermethod new' and fetches gpModelViewProjectionMatrix, so it only calls GetRegisteredVar: the slot pairs the caller of the real function.",
+   "intermediates": [
+    {
+     "xbox": "0xe5cf0",
+     "ps2": "0x29fd38",
+     "name": "EAGL::DynamicLoader::GetRegisteredVar",
+     "why": "Body is SymbolPool::Search(&varPool, name, found) (ecx=0x23fb8c). It sits right after RegisterVar (0xe5cc0) and UnRegisterVar (0xe5ce0), the PS2 order, and is called by 0x9ac40 with 'EAGL::ViewPort::gpModelViewProjectionMatrix' as PS2 DrawGouraud does."
+    }
+   ]
+  },
+  {
+   "item": 236,
+   "xbox": "0x8a520",
+   "ps2": "0x1bef30",
+   "name": "SetProcAnimXFormList",
+   "verdict": "accept",
+   "why": "Identical: if p1 is non-null, set the global list pointer and count; else the default list with count 1.",
+   "intermediates": []
+  },
+  {
+   "item": 237,
+   "xbox": "0x119f50",
+   "ps2": "0x2ceb18",
+   "name": "StringToNumber::StringToNumber",
+   "verdict": "accept",
+   "why": "Same: counts the null-terminated 8-byte table, stores count/table, and if the count is >= 0x1f allocates count<<4 with FastAlloc(\"StringToNumber\") and sorts with qsort.",
+   "intermediates": []
+  },
+  {
+   "item": 238,
+   "xbox": "0xb8840",
+   "ps2": "0x208918",
+   "name": "SMissionManager::FailObjective",
+   "verdict": "accept",
+   "why": "Xbox inlines GetObjectiveByID (a list walk matching *entry==id) and sets objective+0x10 = 3, as PS2 piVar1[4]=3; logWarning is stripped in the release build. The sibling (item 248) sets 1.",
+   "intermediates": []
+  },
+  {
+   "item": 239,
+   "xbox": "0xa5530",
+   "ps2": "0x1eb078",
+   "name": "RScorchWorld::ScorchGround",
+   "verdict": "accept",
+   "why": "Same flow: FindClosestFace, early-outs on face flag +0x2d&2, type 6 and +0x34 material, radius = min(size*0.5, 6.0), HeightAtPoint, normal y >= 0.95, then 4 neighbour height probes (<0.15).",
+   "intermediates": []
+  },
+  {
+   "item": 240,
+   "xbox": "0x8e010",
+   "ps2": "0x1c98a0",
+   "name": "RSceneObj::ComputeBoundingRadius",
+   "verdict": "accept",
+   "why": "Xbox inlines GetBoundingDimensions as the half extents ((max-min)*0.5 from [+0x10] +0x10..+0x28), then takes the vector length, as PS2 (dims, then length with VU0).",
+   "intermediates": []
+  },
+  {
+   "item": 241,
+   "xbox": "0x14880",
+   "ps2": "0x24d010",
+   "name": "dpsub",
+   "verdict": "reject",
+   "why": "Xbox 0x14880 is a pointer min (returns the pointer to the smaller float, std::min<float>-like), not a soft-float subtract. The PS2 callers are unrelated.",
+   "intermediates": []
+  },
+  {
+   "item": 242,
+   "xbox": "0x7cf40",
+   "ps2": "0x1aad78",
+   "name": "RDrawGroup::RDrawGroup",
+   "verdict": "accept",
+   "why": "Same: FastAlloc(\"RReverseDrawList\") of a 3-word zeroed list stored at [0]. Xbox allocates 0x10 with a null check where PS2 allocates 0xc.",
+   "intermediates": []
+  },
+  {
+   "item": 243,
+   "xbox": "0xeb220",
+   "ps2": "0x27e368",
+   "name": "EAGL::TAR::SwapClut",
+   "verdict": "accept",
+   "why": "Called in RuntimeAllocTARConstructor's CLUTNAME branch after the shape_ symbol lookup, where PS2 calls TAR::SwapClut. Like PS2 TARExtension::SwapClut (inlined here), it locates the '*' clut chunk with the same +0x1000 flag relative-offset logic, then uploads it to a D3D palette instead of re-initialising the GS image.",
+   "intermediates": []
+  },
+  {
+   "item": 244,
+   "xbox": "0xeecf0",
+   "ps2": "0x23eab0",
+   "name": "GHud::IsFlyByWireOn",
+   "verdict": "reject",
+   "why": "Xbox 0xeecf0 is a GeoPrimState blend-mode setter (switch writing D3D blend factors 0x302/0x303/0x306 and op 0x8006 to +0x30..+0x38; it sits between SetDepthTestMethod and SetAlphaTestMethod), not the IsFlyByWireOn predicate.",
+   "intermediates": []
+  },
+  {
+   "item": 245,
+   "xbox": "0xa6a80",
+   "ps2": "0x1ed8d8",
+   "name": "RSniperZoom::SetupVerts",
+   "verdict": "accept",
+   "why": "Same loop over the verts at +0xb60: alternating radii from two globals, (i/2)*0.05 (PS2 /20.0), a helper call, alpha from [+8]<<24 and white 0xffffff/0x7f7f7f.",
+   "intermediates": []
+  },
+  {
+   "item": 246,
+   "xbox": "0x108c00",
+   "ps2": "0x25b220",
+   "name": "MATRIX4_mult",
+   "verdict": "accept",
+   "why": "A 4x4 matrix multiply: copies to the temp at 0x2420f0 when the operands alias, then 4 row calls (hand-written FPU asm rows), as PS2 MATRIX4_mult with its alias temp. It sits in the Xbox MATRIX4_* asm group (multxlate 0x108840, multscale 0x108900).",
+   "intermediates": []
+  },
+  {
+   "item": 247,
+   "xbox": "0xd0ff0",
+   "ps2": "0x22f660",
+   "name": "WVisCurtain::WVisCurtain",
+   "verdict": "accept",
+   "why": "Copies two COORD4 refs into [0..3]/[4..7] and sets [3] = distance from p1 to the 0.5 midpoint: CalcRadius inlined. This is the (COORD4&,COORD4&) overload 0x22f660 (the other ctor, 0x22f620, takes six floats).",
+   "intermediates": []
+  },
+  {
+   "item": 248,
+   "xbox": "0xb8880",
+   "ps2": "0x208968",
+   "name": "SMissionManager::SetCurrentObjective",
+   "verdict": "accept",
+   "why": "Twin of item 238: inlined GetObjectiveByID then objective+0x10 = 1, as PS2 SetCurrentObjective piVar1[4]=1.",
+   "intermediates": []
+  },
+  {
+   "item": 249,
+   "xbox": "0x12420",
+   "ps2": "0x10b098",
+   "name": "ActActor::RotateActorX",
+   "verdict": "accept",
+   "why": "Same as RotateActor (item 221) but calls Poser::RotateX and builds an x-rotation from cos/sin, applied to [+0xc]+0x340.",
+   "intermediates": []
+  },
+  {
+   "item": 250,
+   "xbox": "0xe6640",
+   "ps2": "0x28af48",
+   "name": "EAGL::RenderContext::EndFrame",
+   "verdict": "accept",
+   "why": "Platform EndFrame (texture unbinds, render state resets, D3DDevice_Swap where PS2 waits on DMA and swaps buffers). The PS2 and Xbox callers match in 4 anchors, all 1:1 slots: RRenderer::EndFrame/Flush and GLoadingScreen x2.",
+   "intermediates": []
+  },
+  {
+   "item": 251,
+   "xbox": "0x98490",
+   "ps2": "0x1c1ad8",
+   "name": "RReflection::TextureSpecular",
+   "verdict": "accept",
+   "why": "Unambiguous by string position in RCARPFile::RegisterSymbols: 'GAME::ReflectionMap1' and 'GAME::SpecularMap' both call it on both platforms (PS2 TextureSpecular). A getter [+0x4c]->+0x124 (PS2 [+0x58]->+0xd0).",
+   "intermediates": [
+    {
+     "xbox": "0x98210",
+     "ps2": "0x1c2898",
+     "name": "RReflection::GetReflectionMapWarpageData",
+     "why": "Returned for 'GAME::FishEyeParams' in RegisterSymbols on both platforms; the getter returns [+0x4c]+0x270."
+    },
+    {
+     "xbox": "0x98470",
+     "ps2": "0x1c28a0",
+     "name": "RReflection::GetReflectionCarPos",
+     "why": "Returned for 'GAME::ReflectionCarPos' on both; returns [+0x4c]+0x180, the block that SetReflectivity (0x99610) fills with the car position."
+    },
+    {
+     "xbox": "0x98480",
+     "ps2": "0x1c1ac8",
+     "name": "RReflection::TextureWeaponEnvMap",
+     "why": "Returned for 'GAME::WeaponReflectionMap' on both; returns [[+0x4c]+0x11c]. It sits just before TextureSpecular (0x98490) and Texture (0x984a0), the PS2 order."
+    },
+    {
+     "xbox": "0x984b0",
+     "ps2": "0x1c28a8",
+     "name": "RReflection::GetReflectionMatrix",
+     "why": "Returned for 'GAME::ReflMatrix' on both; returns [+0x4c]+0x140."
+    }
+   ]
+  },
+  {
+   "item": 252,
+   "xbox": "0x132db0",
+   "ps2": "0x2a8198",
+   "name": "qsort",
+   "verdict": "accept",
+   "why": "MSVC CRT qsort (median-of-three with _shortsort for spans of 8 or fewer); the same routine as newlib qsort under the same name. The caller set matches: AIElementController::Update, WTargetPicker::UpdateTargets, and StringToNumber (0x119f50, item 237).",
+   "intermediates": []
+  },
+  {
+   "item": 253,
+   "xbox": "0x94070",
+   "ps2": "0x1119e8",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::URefCounter",
+   "verdict": "reject",
+   "why": "Xbox 0x94070 is not a URefCounter ctor: it ignores this and only allocates an 0x98 'STL' tree head node (+0x94 isnil=1): MSVC _Tree::_Buynode, shared by every URefCounter<T>::Get. PS2 inlines this into each ctor.",
+   "intermediates": []
+  },
+  {
+   "item": 254,
+   "xbox": "0x94070",
+   "ps2": "0x115288",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253 (no this, only the head-node alloc).",
+   "intermediates": []
+  },
+  {
+   "item": 255,
+   "xbox": "0x94070",
+   "ps2": "0x117440",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 256,
+   "xbox": "0x94070",
+   "ps2": "0x1d0938",
+   "name": "URefCounter<RTextureContext>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 257,
+   "xbox": "0x94070",
+   "ps2": "0x2f36f8",
+   "name": "URefCounter<AMix>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 258,
+   "xbox": "0x94070",
+   "ps2": "0x2ea1f8",
+   "name": "URefCounter<AStream>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 259,
+   "xbox": "0x94070",
+   "ps2": "0x2f9998",
+   "name": "URefCounter<AFader>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 260,
+   "xbox": "0x94070",
+   "ps2": "0x2fda00",
+   "name": "URefCounter<ABank>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 261,
+   "xbox": "0x94070",
+   "ps2": "0x2fae20",
+   "name": "URefCounter<AEngine>::URefCounter",
+   "verdict": "reject",
+   "why": "Same shared _Buynode as item 253.",
+   "intermediates": []
+  },
+  {
+   "item": 262,
+   "xbox": "0x9eae0",
+   "ps2": "0x1e26a0",
+   "name": "RLightning::Point::Update",
+   "verdict": "accept",
+   "why": "Point update: if t-[+0xc] > 0, pos+vel*dt plus a random coord scaled by [+0x3c] (GetRandomCoord inlined: the table index at fgThis+0x650 advances by 5, &0x3f) into +0x20; else copies pos to +0x20. The early-out matches PS2.",
+   "intermediates": []
+  },
+  {
+   "item": 263,
+   "xbox": "0x9eae0",
+   "ps2": "0x1e3238",
+   "name": "RLightning::Bolt::~Bolt",
+   "verdict": "reject",
+   "why": "Same Xbox function as item 262 (Point::Update body); it does no vector/array deletes, so it is not ~Bolt.",
+   "intermediates": []
+  },
+  {
+   "item": 264,
+   "xbox": "0x97100",
+   "ps2": "0x1d5610",
+   "name": "RWorldCamera::SetViewingTransform",
+   "verdict": "accept",
+   "why": "Same offsets shifted +0x10: flag (PS2 +0x50 / Xbox +0x60) = 1, dir = (+0xd0)-(+0xc0) (PS2 +0xc0-+0xb0) normalised, cross products for the up/right rows, w column 0/1, optional copy of arg 2.",
+   "intermediates": []
+  },
+  {
+   "item": 265,
+   "xbox": "0xef490",
+   "ps2": "0x283ed8",
+   "name": "EAGL::GeoPrimState::~GeoPrimState",
+   "verdict": "accept",
+   "why": "The empty Xbox dtor sits right after GeoPrimState::GeoPrimState (0xef480). It is called at the end of RStateManager::GetGeoPrimState to destroy the local GeoPrimState (PS2 calls ~GeoPrimState(,2) there), by member dtors such as 0xf5b60, and by EH unwind funclets. PS2's extension teardown has no Xbox equivalent.",
+   "intermediates": []
+  },
+  {
+   "item": 266,
+   "xbox": "0xd5a80",
+   "ps2": "0x2378b8",
+   "name": "GGallery::FONT_Load",
+   "verdict": "accept",
+   "why": "Identical: FONT_destroy if +0xa8 is set, frees the old buffer at +0xac (MEM_free where PS2 uses FileFree), FileLoad(name), FONT_create into +0xa8.",
+   "intermediates": []
+  },
+  {
+   "item": 267,
+   "xbox": "0x14bf0",
+   "ps2": "0x10d1f0",
+   "name": "ActCharacter::SetAlpha",
+   "verdict": "accept",
+   "why": "*[+0x68] = round(alpha*255), as PS2 *this->alpha = (int)(a*255 +- 0.5).",
+   "intermediates": []
+  },
+  {
+   "item": 268,
+   "xbox": "0xf59f0",
+   "ps2": "0x29c750",
+   "name": "EAGL::DrawGouraud::InternalFlush",
+   "verdict": "accept",
+   "why": "Called after the region loop in ProfilerRegion::DrawRegions and from DrawRegion, as PS2 InternalFlush (the same 2 callers). The Xbox flush is platform code: if the batch is open (+0x58), D3DDevice_End then Begin(prim).",
+   "intermediates": []
+  },
+  {
+   "item": 269,
+   "xbox": "0xf3c90",
+   "ps2": "0x2a9508",
+   "name": "strcmp",
+   "verdict": "reject",
+   "why": "Xbox 0xf3c90 is the SymbolPool string hash (h ^= h<<5 ^ c, then % [+4]), not strcmp. It is called only by SymbolPool::Search/RemoveSymbol.",
+   "intermediates": [
+    {
+     "xbox": "0xf3c90",
+     "ps2": "0x29dd20",
+     "name": "EAGL::SymbolPool::HashFunction",
+     "why": "Identical hash loop (h = h ^ h<<5 ^ c) and return h % this->[+4]; its callers are Search and RemoveSymbol."
+    }
+   ]
+  },
+  {
+   "item": 270,
+   "xbox": "0x99610",
+   "ps2": "0x1c1930",
+   "name": "RReflection::SetReflectivity",
+   "verdict": "accept",
+   "why": "First call in SendPerCarInstance's 'car changed' block on both. Uses the same reflectivity table ([+0x4c/+0x58]->+0xa0 + idx*0x80, indexed by the car byte at +0x1c/+0x18) and writes shader constants (car pos at +0x180) where PS2 builds GIF state.",
+   "intermediates": []
+  },
+  {
+   "item": 271,
+   "xbox": "0x11ec10",
+   "ps2": "0x2e5148",
+   "name": "ATurret::~ATurret",
+   "verdict": "reject",
+   "why": "Xbox 0x11ec10 destroys two embedded AVoice::View[3] arrays (+0x10 and +0x68). That is the AVehicle member at +0x1d0, which PS2 ~AVehicle inlines (the +0x1ec object with View arrays at +0x10 and +0x74). ~ATurret is a different Xbox function.",
+   "intermediates": [
+    {
+     "xbox": "0x12e250",
+     "ps2": "0x2e5148",
+     "name": "ATurret::~ATurret",
+     "why": "Frees three View-array blocks at +8, +0xc, +4 in that order (the PS2 ~ATurret order). It sits between ATurret::ATurret (0x12e220) and ATurret::Play (0x12e2b0), and ~AVehicle calls it on the turret pointer (+0x18c) before the zoom object."
+    }
+   ]
+  },
+  {
+   "item": 272,
+   "xbox": "0xb2780",
+   "ps2": "0x1ff230",
+   "name": "Simulation::FindSignature",
+   "verdict": "accept",
+   "why": "Signature lookup: the sign bit selects the table (+0x30 rigid / +0x130 simple, i.e. FindRigidBodySignature/FindSimpleRigidBodySignature inlined), sets *isSimple, index = sig>>24 & 0x7f, returns the index only when the stored signature matches.",
+   "intermediates": []
+  },
+  {
+   "item": 273,
+   "xbox": "0xf3750",
+   "ps2": "0x292240",
+   "name": "EAGL::TextureRenderContextExtension::TextureRenderContextExtension",
+   "verdict": "accept",
+   "why": "*this = arg. It is the first call in TextureRenderContext::TextureRenderContext (push esi; call with ecx=this: Extension(this,this)) and has no other caller.",
+   "intermediates": [
+    {
+     "xbox": "0xf3790",
+     "ps2": "0x292278",
+     "name": "EAGLInternal::TextureRenderContextPrivate::TextureRenderContextPrivate",
+     "why": "The second ctor call in TextureRenderContext::TextureRenderContext (this+4, owner=this), as PS2 Private(this+8, this). The body stores the owner and zeroes the fields."
+    }
+   ]
+  },
+  {
+   "item": 274,
+   "xbox": "0x8dc60",
+   "ps2": "0x1c9190",
+   "name": "RSceneObj::GetTransform",
+   "verdict": "accept",
+   "why": "Copies the 4x4 from [+0xc] (PS2 this+8) and forces the w column to 0,0,0,1, as PS2. Xbox and PS2 share 3 anchors in 1:1 slots.",
+   "intermediates": []
+  },
+  {
+   "item": 275,
+   "xbox": "0x968b0",
+   "ps2": "0x1d44c8",
+   "name": "RViewCamera::RefreshLODMultiplier",
+   "verdict": "accept",
+   "why": "lodMultiplier (+0x34) = camera->[+0xb4] * (1/33) * (xMax-xMin) * (1/400), the same constants as PS2 (/33 /400).",
+   "intermediates": []
+  },
+  {
+   "item": 276,
+   "xbox": "0x8da60",
+   "ps2": "0x1c85c8",
+   "name": "RSceneObj::RenderAllDeferredEffects",
+   "verdict": "accept",
+   "why": "Loops the same draw-last list as RSceneObj::RenderAllDrawLast (0x1f1cf4/0x1f1d00), calling vtable slot 5 (+0x14), where PS2 RenderArray(0,1,...) calls slot 5 (0x30/0x34) on the same list as RenderAllDrawLast.",
+   "intermediates": []
+  },
+  {
+   "item": 277,
+   "xbox": "0x22770",
+   "ps2": "0x2a9508",
+   "name": "strcmp",
+   "verdict": "reject",
+   "why": "Xbox 0x22770 calls a callback count times (an MSVC vector-ctor-iterator helper), not strcmp; the slot has no caller chain.",
+   "intermediates": []
+  },
+  {
+   "item": 278,
+   "xbox": "0x5e8c0",
+   "ps2": "0x180bc8",
+   "name": "Missile::Missile",
+   "verdict": "accept",
+   "why": "8 shared strings; the same callee set (FindPhysicsObjectSignature, GetSimpleRigidBody, RMissileStreak, SetRenderObject, AddReference, stricmp/strcasecmp); the 1:1 slot in SpawnMissileObject.",
+   "intermediates": []
+  },
+  {
+   "item": 279,
+   "xbox": "0x2a760",
+   "ps2": "0x130f98",
+   "name": "AIGroundVehicle::DisengageAutoDrive",
+   "verdict": "accept",
+   "why": "Same sequence: GetPhysicsObject->vslot 17 (Xbox +0x44 / PS2 +0x90/0x94) with 0, then vslot 21 (+0x54 / +0xb0/0xb4). The SetAttackMode/SetNavigateMode effects are inlined as flag stores, then SetSplinePath(0), and +0x178 (PS2 +0x1a4) = 0.",
+   "intermediates": []
+  },
+  {
+   "item": 280,
+   "xbox": "0x9f8b0",
+   "ps2": "0x1e3438",
+   "name": "USimpleVec<RLightning::Segment>::~USimpleVec",
+   "verdict": "reject",
+   "why": "Xbox 0x9f8b0 is a resize (delete the old array, vec_new n*0x18+4, construct n Segments), not a destructor. PS2 inlines this resize into BuildNewSegment/AddBolt (which call ~USimpleVec plus vec_new directly).",
+   "intermediates": []
+  },
+  {
+   "item": 281,
+   "xbox": "0x81940",
+   "ps2": "0x1bd198",
+   "name": "RPlayerCamera::SetControlToCPU",
+   "verdict": "accept",
+   "why": "Single store into the sub-object at [+0x354] (a byte at +7 where PS2 stores an int at +0x10), with the same 4 caller dtors on both sides and the same arguments (EControlToCPU 1, EControlToPlayer 0, EControlToSpline 1, EEndControlToSpline 0).",
+   "intermediates": []
+  },
+  {
+   "item": 282,
+   "xbox": "0x7d840",
+   "ps2": "0x1ac978",
+   "name": "RFog::SetFogParams",
+   "verdict": "accept",
+   "why": "Last call of RFog::RFog on both. It inlines CalcFogEnd (end = scale*base, [+4] = [+0x18]*[+0x14]), then pushes start/end/density/mode/colour through 5 render-state setters where PS2 builds the GS fog and calls SetFogColour.",
+   "intermediates": [
+    {
+     "xbox": "0x7d8c0",
+     "ps2": "0x1acb50",
+     "name": "RFog::UpdateScale",
+     "why": "Same body: if the flag at +8 is set, scale = base(+0x18) - (count(+0xc) - frame)*rate(+0x10), or snaps to the base and clears the flag, then CalcFogEnd (inlined) and SetFogParams (0x7d840). Called from RRenderHigh::Render, as PS2 via StopFrameRender."
+    }
+   ]
+  },
+  {
+   "item": 283,
+   "xbox": "0xd9b70",
+   "ps2": "0x244ec8",
+   "name": "GHud::LetterBoxOff",
+   "verdict": "accept",
+   "why": "+0x2b4 (PS2 +0x2b0) = arg ? 1 : 3; a +4 shift.",
+   "intermediates": []
+  },
+  {
+   "item": 284,
+   "xbox": "0x57240",
+   "ps2": "0x16e590",
+   "name": "AttributeSystem::RegisterExtensionField",
+   "verdict": "accept",
+   "why": "Called as (type, \"MASS\"/\"HITPOINTS\"/\"DESCRIPTION\"/..., parser, offset, 1, 0, 0) in PhysicsNamespace::PhysicsNamespace, with arguments identical to PS2 RegisterExtensionField. The body looks up the type map, then inserts the field record.",
+   "intermediates": [
+    {
+     "xbox": "0x55a90",
+     "ps2": "0x16e508",
+     "name": "AttributeSystem::RegisterExtensionType",
+     "why": "Called just before the field registrations as (\"smackable\",\"PhysicsData\",0x2c,fn), the same arguments as PS2 RegisterExtensionType; its result is the type handle passed to each RegisterExtensionField."
+    }
+   ]
+  },
+  {
+   "item": 285,
+   "xbox": "0xbe180",
+   "ps2": "0x211988",
+   "name": "WCollider::~WCollider",
+   "verdict": "accept",
+   "why": "Calls Clear, then frees three vectors with the same element sizes (8, 0x28, 8) at +0x54/+0x44/+0x34 (PS2 +0x48/+0x3c/+0x30) in the same order.",
+   "intermediates": []
+  },
+  {
+   "item": 286,
+   "xbox": "0xaadc0",
+   "ps2": "0x1f29d8",
+   "name": "RParticleSystem::RParticle::ResetParticle",
+   "verdict": "accept",
+   "why": "Same particle reset: position jitter with the 16-bit LCG random (*1/32768 range), velocity from emitter dirs +0x30/+0x20 scaled by random ranges, optional 1/60 inherited velocity, life/size bytes, atan and GetCurrentViewPort use.",
+   "intermediates": []
+  }
+ ]
+}

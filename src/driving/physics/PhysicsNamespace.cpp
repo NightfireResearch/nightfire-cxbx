@@ -1,0 +1,144 @@
+#include "PhysicsNamespace.h"
+#include "../Vtables.h"   // our copies of the game's vtables
+
+#include <stdio.h>
+#include <string.h>
+
+#include "../../helpers.h"
+#include "../data/AttributeParsers.h"
+#include "../data/AttributeSystem.h"
+#include "../engine/UMemory.hpp"
+#include "../audio/Bank.h"              // fgBanks, ABank
+
+// ---------------------------------------------------------------------------------------------------------------
+// PhysicsNamespace (0x0006ed40-0x0006f070), ported from the listing.
+// ---------------------------------------------------------------------------------------------------------------
+
+// The sound fields' parser (0x0006ecd0, which Ghidra has inside PhysicsData::Construct; the name is ours): the sound
+// `text` names, looked up in the index of the bank in slot `count`, or failing that in slot `unused1`. The field gets
+// the bank's handle << 7 | the sound's index, or the -1 of a sound in neither; the result is one element of type -3.
+static AttributeParseResult *SoundAttribParser(AttributeParseResult *result, const char *, const char *text,
+                                               uint32_t offset, uint32_t count, uint32_t unused1, uint32_t,
+                                               char *base) {
+    int32_t *field = reinterpret_cast<int32_t *>(base + offset);
+    ABank *bank = fgBanks[count];
+    int index = bank->index.Lookup(text);
+    *field = index;
+    if (index <= -1) {
+        bank = fgBanks[unused1];
+        index = bank->index.Lookup(text);
+        *field = index;
+    }
+    if (index > -1)
+        *field = bank->handle << 7 | index;
+    result->data = field;
+    result->type = -3;
+    result->count = 1;
+    return result;
+}
+
+// ---- globals
+#define PhysicsNamespaceVtable ((void **)Vtable_PhysicsNamespace)
+// XBE_GLOBAL(0x001c3dac, 4)
+int32_t PhysicsDataType = -1;                   // the extension type's id; -1 until the first constructor
+
+namespace {
+
+// The warning beside a provisional port (code no shipped data reaches), once, the first time it runs
+void PhysicsUntested(const char *what) {
+    printf("[physics] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check what it "
+           "computes against the original.\n", what);
+    fflush(stdout);
+}
+
+} // namespace
+
+#define PHYSICS_UNTESTED(what) \
+    do { \
+        static bool warned_; \
+        if (!warned_) { \
+            warned_ = true; \
+            PhysicsUntested(what); \
+        } \
+    } while (0)
+
+// FUN_0006ee10 (the name is ours)
+// FUNC_AT(0x0006ee10)
+void InitPhysicsData(const char *className, const char *collectionName, const char *attributeName, uint32_t type,
+                     void *data) {
+    PhysicsData *physics = static_cast<PhysicsData *>(data);
+    if (physics == NULL)
+        return;
+    physics->attributes.Construct("smackable", collectionName);
+    physics->mass = 100.0f;
+    physics->hitPoints = 500.0f;
+    physics->forceDetach = 0;
+    physics->defaultSound = -1;
+    physics->warningSound = -1;
+    physics->impactSoundLo = -1;
+    physics->impactSoundMed = -1;
+    physics->impactSoundHi = -1;
+    physics->scrapeSound = -1;
+    physics->description = 0.0f;
+}
+
+// FUNC_AT(0x0006ed40)
+void* PhysicsNamespace::NameLookup(const char *name, uint32_t *size) {
+    *size = strlen(name) + 1;
+    AttributeSet attributes;
+    attributes.Construct("smackable", name);
+    void *data = attributes.LookupStruct("PhysicsData", PhysicsDataType, NULL);
+    if (data == NULL) {
+        // LookupStruct makes the structure when the collection has none, so this needs a failed allocation
+        PHYSICS_UNTESTED("PhysicsNamespace::NameLookup's \"Bench\" fallback");
+        AttributeSet bench;
+        bench.Construct("smackable", "Bench");
+        data = bench.LookupStruct("PhysicsData", PhysicsDataType, NULL);
+        bench.Destruct();
+    }
+    attributes.Destruct();
+    return data;
+}
+
+// FUNC_AT(0x0006ee90)
+PhysicsNamespace* PhysicsNamespace::Construct() {
+    vtable = PhysicsNamespaceVtable;
+    if (PhysicsDataType == -1) {
+        PhysicsDataType = AttributeSystemInstance->RegisterExtensionType("smackable", "PhysicsData",
+                                                                         sizeof(PhysicsData), InitPhysicsData);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "MASS", Float_AttribByteOffsetParserFunc,
+                                                        offsetof(PhysicsData, mass), 1, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "HITPOINTS",
+                                                        Float_AttribByteOffsetParserFunc,
+                                                        offsetof(PhysicsData, hitPoints), 1, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "DESCRIPTION",
+                                                        Float_AttribByteOffsetParserFunc,
+                                                        offsetof(PhysicsData, description), 1, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "FORCE_DETACH",
+                                                        Bool_AttribByteOffsetParserFunc,
+                                                        offsetof(PhysicsData, forceDetach), 1, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "MOMENT", Vector_AttribByteOffsetParserFunc,
+                                                        offsetof(PhysicsData, forceDetach), 1, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "DEFAULTSOUND", SoundAttribParser,
+                                                        offsetof(PhysicsData, defaultSound), 5, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "WARNINGSOUND", SoundAttribParser,
+                                                        offsetof(PhysicsData, warningSound), 5, 0, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "IMPACTSOUNDLO", SoundAttribParser,
+                                                        offsetof(PhysicsData, impactSoundLo), 2, 1, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "IMPACTSOUNDMED", SoundAttribParser,
+                                                        offsetof(PhysicsData, impactSoundMed), 2, 1, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "IMPACTSOUNDHI", SoundAttribParser,
+                                                        offsetof(PhysicsData, impactSoundHi), 2, 1, 0);
+        AttributeSystemInstance->RegisterExtensionField(PhysicsDataType, "SCRAPESOUND", SoundAttribParser,
+                                                        offsetof(PhysicsData, scrapeSound), 2, 1, 0);
+    }
+    return this;
+}
+
+// FUNC_AT(0x0006f050)
+PhysicsNamespace* PhysicsNamespace::Delete(unsigned flags) {
+    vtable = PhysicsNamespaceVtable;
+    if (flags & 1)
+        OperatorDelete(this);
+    return this;
+}

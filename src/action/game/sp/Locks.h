@@ -3,17 +3,13 @@
 
 #include "../../actionhelpers.h"
 
-
 typedef struct {
     char asciiDigit[4];
     bool discovered;
 } KeyCodeEntry;
 
-#define KeyCodes (*(KeyCodeEntry (*)[51])0x0029aaf8)
-
-
+extern KeyCodeEntry KeyCodes[51];
 
 void Locks_Init(void);
-
 
 #endif // LOCKS_H_

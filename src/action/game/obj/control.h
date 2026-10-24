@@ -11,14 +11,24 @@ obj_tag* control_first_object(void);
 void control_delete_object(obj_tag* obj);
 void control_init_object(obj_tag* obj);
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat);
+void Control_InheritVelocity(obj_tag *obj, obj_tag *from, float unused);
 void control_movement_object_handler(char);
-obj_tag * Control_CreateObjEx(unsigned short, _VECTOR *, _VECTOR *, _MATRIX *, celglist_tag *, obj_tag *,char,unsigned short,float,unsigned short,unsigned char,unsigned char,unsigned char);
+obj_tag* Control_CreateObjEx(ushort size, _VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *glist, obj_tag *carrier,
+                             char linkToRoom, ushort transformFlags, float scale, ushort effectFlags, uchar tweakR,
+                             uchar tweakG, uchar tweakB);
 void Control_SetGList(obj_tag *obj, celglist_tag *celgl);;
+float control_ClosestPlayerPnt(_VECTOR *pos, _VECTOR *out);
 void control_unlink_object(obj_tag* obj);
 bool Control_NextLOD(obj_tag *);
-bool Controls_StraddleTest(obj_tag *param_1);
+bool Controls_StraddleTest(obj_tag *obj);
 void Control_SetEffectType(obj_tag *obj, uint effectType);
 void control_link_object_to_cel(obj_tag *obj, cel_tag *cel);
+void Control_GetObjMatrix(obj_tag *obj, _MATRIX *mtx);
+void Control_BuildWorldSph(obj_tag *obj);
+void control_handle_cel_change(obj_tag *obj);
+void Control_Switches_Update(void);
+void Control_ObjectReferenced(obj_tag *obj, char referenced);
+short Control_Plr2Ind(obj_tag *obj);
 
 // Each object type has 3 optional functions which are called by the control system
 // These are Update, Collide and Delete.
@@ -35,7 +45,9 @@ typedef struct {
     ObjectDeleteFunc deleteFunc;
 } ControlFunction;
 
-#define control_funcs ((ControlFunction*)0x00163b98)
+#define OBJECTTYPE_FUNCS 85
+extern ControlFunction control_funcs[OBJECTTYPE_FUNCS];   // ControlFuncs.cpp
 
+void control_init_object_lists(void);
 
 #endif // CONTROL_H_

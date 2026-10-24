@@ -1,5 +1,10 @@
 #include "../actionhelpers.h"
+#include "Upgrade.h"
 
+// XBE_GLOBAL(0x00279120, 0x24)
+uchar Upgrades[4][9];
+
+// XBE_GLOBAL(0x00181b14, 0x10)
 uint UpgradedHandguns[4] = {
     2,
     4,
@@ -7,6 +12,7 @@ uint UpgradedHandguns[4] = {
     8
 };
 
+// XBE_GLOBAL(0x00181b34, 0x10)
 uint UpgradedSnipers[4] = {
     0x1e,
     0x20,
@@ -14,6 +20,7 @@ uint UpgradedSnipers[4] = {
     0x22
 };
 
+// XBE_GLOBAL(0x00181b44, 0x10)
 uint UpgradedSilencedSnipers[4] = {
     0x24,
     0x26,
@@ -21,6 +28,7 @@ uint UpgradedSilencedSnipers[4] = {
     0x28
 };
 
+// XBE_GLOBAL(0x00181b74, 0x10)
 uint UpgradedDartGuns[4] = {
     0x43,
     0x44,
@@ -28,6 +36,7 @@ uint UpgradedDartGuns[4] = {
     0x44
 };
 
+// XBE_GLOBAL(0x00181b54, 0x10)
 uint UpgradedTasers[4] = {
     0x4a,
     0x4c,
@@ -35,6 +44,7 @@ uint UpgradedTasers[4] = {
     0x4c
 };
 
+// XBE_GLOBAL(0x00181b24, 0x10)
 uint UpgradedLasers[4] = {
     0x4e,
     0x4f,
@@ -42,6 +52,7 @@ uint UpgradedLasers[4] = {
     0x4f
 };
 
+// XBE_GLOBAL(0x00181b64, 0x10)
 uint UpgradedPDA[4] = {
     Weap_Decryptor,
     Weap_Decryptor_Upgraded,
@@ -49,20 +60,31 @@ uint UpgradedPDA[4] = {
     Weap_Decryptor_Upgraded
 };
 
-typedef enum {
-    WUG_Handgun = 0,
-    WUG_UNKNOWN1,
-    WUG_Camera = 2,
-    WUG_Sniper = 3,
-    WUG_DartGun = 4,
-    WUG_PDA = 5,
-    WUG_Taser = 6,
-    WUG_Laser = 7,
-    WUG_UNKNOWN8,
-} WeaponUpgradeGroup;
+// The multiplayer versions: the handgun upgrades differ by which pistol the scenario hands out, and the grapple
+// is upgradable only in multiplayer.
+// XBE_GLOBAL(0x00181b84, 0x10)
+uint UpgradedPPK_MP[4] = {
+    2,
+    4,
+    4,
+    4
+};
 
-// Upgrades is an array of type uchar[4][9] located at 0x00279120. First index is player ID, second is weapon upgrade group
-#define Upgrades (*(uchar(*)[4][9])0x00279120)
+// XBE_GLOBAL(0x00181b94, 0x10)
+uint UpgradedP99_MP[4] = {
+    6,
+    6,
+    6,
+    8
+};
+
+// XBE_GLOBAL(0x00181ba4, 0x10)
+uint UpgradedGrapple_MP[4] = {
+    80,
+    81,
+    81,
+    81
+};
 
 // Singleplayer weapon upgrades
 // AUTOINJECT
@@ -113,4 +135,47 @@ uint Upgrade_Weapon(uint id_base) {
 
     
     }
+}
+
+// Multiplayer weapon upgrades: every variant of an upgradable weapon maps to the one this player's upgrade level
+// gives. A jump table in the original; anything else comes back unchanged.
+// AUTOINJECT
+undefined4 Upgrade_MPWeapon(short playerNum, undefined4 weapon) {
+    switch (weapon) {
+        case 2:
+        case 4:
+            return UpgradedPPK_MP[Upgrades[playerNum][WUG_Handgun]];
+        case 6:
+        case 8:
+            return UpgradedP99_MP[Upgrades[playerNum][WUG_Handgun]];
+        case 0x1e:
+        case 0x20:
+        case 0x22:
+            return UpgradedSnipers[Upgrades[playerNum][WUG_Sniper]];
+        case 0x24:
+        case 0x26:
+        case 0x28:
+            return UpgradedSilencedSnipers[Upgrades[playerNum][WUG_Sniper]];
+        case 0x50:
+            return UpgradedGrapple_MP[Upgrades[playerNum][WUG_Grapple]];
+        default:
+            return weapon;
+    }
+}
+
+// A player's upgrade level for the group of objId (three objects a group). A group past the table is not written; a
+// negative objId's is (before the player's row), as the original does.
+// AUTOINJECT
+void Set_Upgrade(uchar player, short objId, uchar level) {
+    short group = objId / 3;
+    if (group < 9)
+        Upgrades[player][group] = level;
+    else
+        NF_WARN("Invalid upgrade %d\n", group); // GC check (0x800f6ec4)
+}
+
+// AUTOINJECT
+void ResetUpgrade(uchar player) {
+    for (int group = 0; group < 9; group++)
+        Upgrades[player][group] = 0;
 }

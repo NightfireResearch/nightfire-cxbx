@@ -7,7 +7,6 @@
 
 #pragma pack(push, 1)
 
-
 typedef struct {
     uint controllerIndex;
     XINPUT_STATE controllerState;
@@ -17,7 +16,9 @@ typedef struct {
     float Joystick_RX;
     float Joystick_RY;
     uint buttons;
-    XINPUT_VIBRATION vibrationState;
+    // The Xbox XINPUT_FEEDBACK header's status word for the rumble write in flight: 997 (ERROR_IO_PENDING)
+    // until it completes (see psiInput_PollDevices). The rumble values themselves follow the header.
+    uint feedbackStatus; // 0x30
     // 15x additional vibration samples perhaps?
     char pad_2[60];
     char pad_3[2];
@@ -29,11 +30,14 @@ typedef struct {
     ushort rumbleB;
     char pad_4[2];
     uint prevButtons;
-    char pad_5[4];
-    int unknown[8]; // Angle-Magnitude or some other representations of joysticks / D-Pads?
+    char axisLocked[4];         // 0x84 LX, LY, RX, RY: held at 0 until the stick is back under 80
+    int axisSnapCountdown[8];   // 0x88 two per axis: the snap-to-edge countdowns
 } ControllerStateStruct;
 
 static_assert(sizeof(ControllerStateStruct) == 0xa8, "Bad size for ControllerStateStruct");
+static_assert(offsetof(ControllerStateStruct, feedbackStatus) == 0x30, "Bad offset of feedbackStatus");
+static_assert(offsetof(ControllerStateStruct, rumbleA) == 0x78, "Bad offset of rumbleA");
+static_assert(offsetof(ControllerStateStruct, prevButtons) == 0x80, "Bad offset of prevButtons");
 
 typedef struct {
     bool Initialised; 
@@ -43,8 +47,8 @@ typedef struct {
 
 static_assert(sizeof(XboxInputs_struct) == 0x2a4, "Bad size for XboxInputs struct");
 
+// PlayerInput.controlStyle: in the order P_CNCONTROLS and P_PAUSE name the styles (ui_options.cpp's style_names)
 typedef enum {
-    // TODO: Inferred from P_PAUSE_HANDLER / P_CNCONTROLS_Handler but needs checking
     CONTROLSTYLE_NIGHTFIRE,
     CONTROLSTYLE_MOONRAKER,
     CONTROLSTYLE_OCTOPUSSY,
@@ -57,7 +61,6 @@ typedef enum {
     CONTROLSTYLE_FORCE_U16 = 0x7fff
 } GameContStyle_tag;
 
-
 typedef struct {
     bool inverted;
     bool autoaimSp;
@@ -65,7 +68,7 @@ typedef struct {
     bool manualAimToggle;
     bool crouchToggleOrHold;
     char _unknown000[3];
-    bool maybeCrosshairEnable;
+    bool crosshairsEnabled;
     bool vibrationEnabled;
     bool autoSwitchBetterWeapon;
     bool hudVisibility;
@@ -125,12 +128,38 @@ typedef enum {
     ACTION_MENU_ALTSELECT_1,
     ACTION_MENU_ALTSELECT_2,
     ACTION_MENU_BACK,
-
+    ACTION_35,
+    ACTION_36,
+    ACTION_37,
+    ACTION_38,
+    ACTION_39,
 } GameActions_tag;
+
+// PlayerInput::actions, by action: what the action did this frame; Input_Action's flags ask for any of them
+enum InputActionFlags {
+    ACTION_HELD = 0x1,
+    ACTION_PRESSED = 0x4,       // the first frame it is held
+    ACTION_REPEAT = 0x8,        // held a while: every few frames
+};
 
 #pragma pack(pop)
 
-#define XboxInputs (*(XboxInputs_struct*)(0x002ff498))
+extern XboxInputs_struct XboxInputs;
+extern uint8_t bSkipAttract;
+extern int controller_rumbleTimeout[4];
+extern unsigned int controllerIsPresent[4];
+
+// Real signature: xboxInitInputDevices() - zeroes XboxInputs and marks it ready for polling. The original
+// also pre-opened every already-connected Xbox controller here via XAPILIB::XInputOpen; our replacement
+// psiInput_PollDevices below doesn't need that, since it re-derives "connected" fresh every frame straight
+// from Win32's XInputGetState instead of tracking Xbox-style insertion/removal events.
+void xboxInitInputDevices(void);
+
+// Real signature: psiInput_PollDevices() - called once per frame by Input_Update (through the thunk 0x000de5c0),
+// and again in a drain loop by InputShutdown. Talks straight to the host's
+// real gamepads via Win32 XInputGetState/XInputSetState now, instead of going through the original Xbox
+// XAPILIB device layer - see the block comment above its definition.
+void psiInput_PollDevices(void);
 
 float psiInput_GetJoystickLX(uint i);
 float psiInput_GetJoystickLY(uint i);
@@ -147,5 +176,6 @@ void psiInput_ResetRumble(unsigned int i);
 bool psiInput_ControllerIsActive(unsigned int i);
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers);
 
+void InputShutdown(void);
 
 #endif // PSIINPUT_H_

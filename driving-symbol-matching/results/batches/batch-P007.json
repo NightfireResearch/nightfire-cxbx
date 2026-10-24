@@ -1,0 +1,2867 @@
+{
+ "batch": "P007",
+ "program": "DRIVING.ELF",
+ "note": "Sheet names for PS2 functions placed by align, infill-count, infill-exact, resolved, sheet. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0010b8e8",
+   "expect": "FUN_0010b8e8",
+   "name": "lexicographical_compare<signed_char_*,_signed_char_*>",
+   "sheet_name": "bool lexicographical_compare<signed char *, signed char *>(sign",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 98, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0010de78",
+   "expect": "FUN_0010de78",
+   "name": "ActCharacter::LoadCharacter_global_ctors",
+   "sheet_name": "global constructors keyed to ActCharacter::LoadCharacter(char *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 166, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001110f0",
+   "expect": "FUN_001110f0",
+   "name": "ActManager::fpsManager_global_ctors",
+   "sheet_name": "global constructors keyed to ActManager::fpsManager",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 220, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001119e8",
+   "expect": "FUN_001119e8",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::URefCounter",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 235, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00111a50",
+   "expect": "FUN_00111a50",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::~URefCounter",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 236, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00111b78",
+   "expect": "FUN_00111b78",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::GetReference",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::GetReference(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 238, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x001121f8",
+   "expect": "FUN_001121f8",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::AddReference",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::AddReference(char *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 241, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x001122e0",
+   "expect": "FUN_001122e0",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::RemoveReference",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::RemoveReference(ActMo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 242, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x001128d0",
+   "expect": "FUN_001128d0",
+   "name": "URefCounter<ActModelDatabase::ModelInfo>::Get",
+   "sheet_name": "URefCounter<ActModelDatabase::ModelInfo>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 243, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00115288",
+   "expect": "FUN_00115288",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::URefCounter",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 304, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001152f0",
+   "expect": "FUN_001152f0",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::~URefCounter",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::~URefCounter(void",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 305, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00115b80",
+   "expect": "FUN_00115b80",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::RemoveReference",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::RemoveReference(A",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 311, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00116170",
+   "expect": "FUN_00116170",
+   "name": "URefCounter<ActTextureDatabase::TextureInfo>::Get",
+   "sheet_name": "URefCounter<ActTextureDatabase::TextureInfo>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 312, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001174a8",
+   "expect": "FUN_001174a8",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 340, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001185f8",
+   "expect": "FUN_001185f8",
+   "name": "URefCounter<ActWeaponDatabase::WeaponInfo>::Get",
+   "sheet_name": "URefCounter<ActWeaponDatabase::WeaponInfo>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 365, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00118690",
+   "expect": "FUN_00118690",
+   "name": "ActWeapon::LoadAttributes_global_ctors",
+   "sheet_name": "global constructors keyed to ActWeapon::LoadAttributes(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 367, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0011e178",
+   "expect": "FUN_0011e178",
+   "name": "AICharacterEnemyGround::AICharacterEnemyGround_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterEnemyGround::AICharacte",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 512, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00125ab8",
+   "expect": "FUN_00125ab8",
+   "name": "AICharacterPassenger::GetRotPos_global_ctors",
+   "sheet_name": "global constructors keyed to AICharacterPassenger::GetRotPos(in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 657, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0012dd60",
+   "expect": "FUN_0012dd60",
+   "name": "AIElementTracking::kLowestFreq_global_ctors",
+   "sheet_name": "global constructors keyed to AIElementTracking::kLowestFreq",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 752, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00138200",
+   "expect": "FUN_00138200",
+   "name": "AIGroundVehicle::AIGroundVehicle_global_ctors",
+   "sheet_name": "global constructors keyed to AIGroundVehicle::AIGroundVehicle(v",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 874, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0013da60",
+   "expect": "FUN_0013da60",
+   "name": "AIRoadSpawn::fgRoadSpawn_global_ctors",
+   "sheet_name": "global constructors keyed to AIRoadSpawn::fgRoadSpawn",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 932, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0013de48",
+   "expect": "FUN_0013de48",
+   "name": "AISplinePath::AISplinePath_global_ctors",
+   "sheet_name": "global constructors keyed to AISplinePath::AISplinePath(CARP::A",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 937, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001400c0",
+   "expect": "FUN_001400c0",
+   "name": "AIVehicleController::fgController_global_ctors",
+   "sheet_name": "global constructors keyed to AIVehicleController::fgController",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1000, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001400e0",
+   "expect": "FUN_001400e0",
+   "name": "AIVehicleController::fgController_global_dtors",
+   "sheet_name": "global destructors keyed to AIVehicleController::fgController",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1001, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001406c0",
+   "expect": "FUN_001406c0",
+   "name": "AIZoneController::fgController_global_ctors",
+   "sheet_name": "global constructors keyed to AIZoneController::fgController",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1008, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001406e0",
+   "expect": "FUN_001406e0",
+   "name": "AIZoneController::fgController_global_dtors",
+   "sheet_name": "global destructors keyed to AIZoneController::fgController",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1009, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142df0",
+   "expect": "FUN_00142df0",
+   "name": "TypeTraits<unsigned_int>::isChar",
+   "sheet_name": "TypeTraits<unsigned int>::isChar(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1049, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142df8",
+   "expect": "FUN_00142df8",
+   "name": "TypeTraits<unsigned_int>::isStdFloat",
+   "sheet_name": "TypeTraits<unsigned int>::isStdFloat(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1050, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142e00",
+   "expect": "FUN_00142e00",
+   "name": "TypeTraits<unsigned_int>::isStdBool",
+   "sheet_name": "TypeTraits<unsigned int>::isStdBool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1051, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142e08",
+   "expect": "FUN_00142e08",
+   "name": "DebugVariable<unsigned_int>::AsString",
+   "sheet_name": "DebugVariable<unsigned int>::AsString(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1052, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ea8",
+   "expect": "FUN_00142ea8",
+   "name": "TypeTraits<int>::isChar",
+   "sheet_name": "TypeTraits<int>::isChar(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1053, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142eb0",
+   "expect": "FUN_00142eb0",
+   "name": "TypeTraits<int>::isStdUnsignedInt",
+   "sheet_name": "TypeTraits<int>::isStdUnsignedInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1054, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142eb8",
+   "expect": "FUN_00142eb8",
+   "name": "TypeTraits<int>::isStdFloat",
+   "sheet_name": "TypeTraits<int>::isStdFloat(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1055, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ec0",
+   "expect": "FUN_00142ec0",
+   "name": "TypeTraits<int>::isStdBool",
+   "sheet_name": "TypeTraits<int>::isStdBool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1056, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ec8",
+   "expect": "FUN_00142ec8",
+   "name": "TypeTraits<char>::isStdUnsignedInt",
+   "sheet_name": "TypeTraits<char>::isStdUnsignedInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1057, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ed0",
+   "expect": "FUN_00142ed0",
+   "name": "TypeTraits<char>::isStdFloat",
+   "sheet_name": "TypeTraits<char>::isStdFloat(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1058, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ed8",
+   "expect": "FUN_00142ed8",
+   "name": "TypeTraits<char>::isStdBool",
+   "sheet_name": "TypeTraits<char>::isStdBool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1059, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ee0",
+   "expect": "FUN_00142ee0",
+   "name": "TypeTraits<unsigned_char>::isStdFloat",
+   "sheet_name": "TypeTraits<unsigned char>::isStdFloat(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1060, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ee8",
+   "expect": "FUN_00142ee8",
+   "name": "TypeTraits<unsigned_char>::isStdBool",
+   "sheet_name": "TypeTraits<unsigned char>::isStdBool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1061, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ef0",
+   "expect": "FUN_00142ef0",
+   "name": "TypeTraits<float>::isChar",
+   "sheet_name": "TypeTraits<float>::isChar(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1062, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142ef8",
+   "expect": "FUN_00142ef8",
+   "name": "TypeTraits<float>::isStdInt",
+   "sheet_name": "TypeTraits<float>::isStdInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1063, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f00",
+   "expect": "FUN_00142f00",
+   "name": "TypeTraits<float>::isStdUnsignedInt",
+   "sheet_name": "TypeTraits<float>::isStdUnsignedInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1064, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f08",
+   "expect": "FUN_00142f08",
+   "name": "TypeTraits<float>::isStdBool",
+   "sheet_name": "TypeTraits<float>::isStdBool(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1065, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f10",
+   "expect": "FUN_00142f10",
+   "name": "TypeTraits<bool>::isChar",
+   "sheet_name": "TypeTraits<bool>::isChar(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1066, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f18",
+   "expect": "FUN_00142f18",
+   "name": "TypeTraits<bool>::isStdInt",
+   "sheet_name": "TypeTraits<bool>::isStdInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1067, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f20",
+   "expect": "FUN_00142f20",
+   "name": "TypeTraits<bool>::isStdUnsignedInt",
+   "sheet_name": "TypeTraits<bool>::isStdUnsignedInt(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1068, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f28",
+   "expect": "FUN_00142f28",
+   "name": "TypeTraits<bool>::isStdFloat",
+   "sheet_name": "TypeTraits<bool>::isStdFloat(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1069, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00142f30",
+   "expect": "FUN_00142f30",
+   "name": "DebugVariable<unsigned_int>::Increase",
+   "sheet_name": "DebugVariable<unsigned int>::Increase(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1070, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00143090",
+   "expect": "FUN_00143090",
+   "name": "DebugVariable<unsigned_int>::Decrease",
+   "sheet_name": "DebugVariable<unsigned int>::Decrease(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1071, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001431f0",
+   "expect": "FUN_001431f0",
+   "name": "DebugVariable<unsigned_int>::Parse",
+   "sheet_name": "DebugVariable<unsigned int>::Parse(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1072, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001433c0",
+   "expect": "FUN_001433c0",
+   "name": "DebugVariable<unsigned_int>_type_info_function",
+   "sheet_name": "DebugVariable<unsigned int> type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1086, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00143498",
+   "expect": "FUN_00143498",
+   "name": "DebugVariable<unsigned_int>::~DebugVariable",
+   "sheet_name": "DebugVariable<unsigned int>::~DebugVariable(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1088, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001434f8",
+   "expect": "FUN_001434f8",
+   "name": "DebugVariable<unsigned_int>::SetToMin",
+   "sheet_name": "DebugVariable<unsigned int>::SetToMin(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1090, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00143528",
+   "expect": "FUN_00143528",
+   "name": "DebugVariable<unsigned_int>::SetToMax",
+   "sheet_name": "DebugVariable<unsigned int>::SetToMax(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1091, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00143558",
+   "expect": "FUN_00143558",
+   "name": "DebugVariable<unsigned_int>::Debounce",
+   "sheet_name": "DebugVariable<unsigned int>::Debounce(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1092, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00145ec8",
+   "expect": "FUN_00145ec8",
+   "name": "EPathUtil_GetFromInstanceOrAI_global_ctors",
+   "sheet_name": "global constructors keyed to EPathUtil_GetFromInstanceOrAI(CARP",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1169, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00165158",
+   "expect": "FUN_00165158",
+   "name": "E007Logo::E007Logo_global_ctors",
+   "sheet_name": "global constructors keyed to E007Logo::E007Logo(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2052, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00165248",
+   "expect": "FUN_00165248",
+   "name": "ActionRef::ActionRef_global_ctors",
+   "sheet_name": "global constructors keyed to ActionRef::ActionRef(ActionData *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2057, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00165268",
+   "expect": "FUN_00165268",
+   "name": "ActionRef::ActionRef_global_dtors",
+   "sheet_name": "global destructors keyed to ActionRef::ActionRef(ActionData *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2058, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x001664a0",
+   "expect": "FUN_001664a0",
+   "name": "IFeedbackPort::IFeedbackPort_global_ctors",
+   "sheet_name": "global constructors keyed to IFeedbackPort::IFeedbackPort(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2088, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00167728",
+   "expect": "FUN_00167728",
+   "name": "InputUpdateTypeToStringTable_global_ctors",
+   "sheet_name": "global constructors keyed to InputUpdateTypeToStringTable",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2112, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00167748",
+   "expect": "FUN_00167748",
+   "name": "InputUpdateTypeToStringTable_global_dtors",
+   "sheet_name": "global destructors keyed to InputUpdateTypeToStringTable",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2113, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00168ae8",
+   "expect": "FUN_00168ae8",
+   "name": "IOModule::GetIOModule_global_ctors",
+   "sheet_name": "global constructors keyed to IOModule::GetIOModule(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2148, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0016f510",
+   "expect": "FUN_0016f510",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, AttributeExtension>,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2240, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001708a8",
+   "expect": "FUN_001708a8",
+   "name": "SetAttribute<bool>",
+   "sheet_name": "void SetAttribute<bool>(AttributeCollection &, char *, bool, At",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2256, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00170cb8",
+   "expect": "FUN_00170cb8",
+   "name": "SetAttribute<int>",
+   "sheet_name": "void SetAttribute<int>(AttributeCollection &, char *, bool, Att",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2257, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001710c8",
+   "expect": "FUN_001710c8",
+   "name": "SetAttribute<unsigned_int>",
+   "sheet_name": "void SetAttribute<unsigned int>(AttributeCollection &, char *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2258, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001714d8",
+   "expect": "FUN_001714d8",
+   "name": "SetAttribute<float>",
+   "sheet_name": "void SetAttribute<float>(AttributeCollection &, char *, bool, A",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2259, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00171b58",
+   "expect": "FUN_00171b58",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, AttributeExtension>,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2262, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00171b98",
+   "expect": "FUN_00171b98",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, AttributeExtension>,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2263, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00171f50",
+   "expect": "FUN_00171f50",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, AttributeExtension>,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2264, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00172090",
+   "expect": "FUN_00172090",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_AttributeExtension>,",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, AttributeExtension>,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2265, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001726e0",
+   "expect": "FUN_001726e0",
+   "name": "sort_heap<AttributeStoreBlock_*>",
+   "sheet_name": "void sort_heap<AttributeStoreBlock *>(AttributeStoreBlock *, At",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2272, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00172b20",
+   "expect": "FUN_00172b20",
+   "name": "__insertion_sort<AttributeStoreBlock_*>",
+   "sheet_name": "void __insertion_sort<AttributeStoreBlock *>(AttributeStoreBloc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2277, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00172c78",
+   "expect": "FUN_00172c78",
+   "name": "__final_insertion_sort<AttributeStoreBlock_*>",
+   "sheet_name": "void __final_insertion_sort<AttributeStoreBlock *>(AttributeSto",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2279, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00173c20",
+   "expect": "FUN_00173c20",
+   "name": "AttributeSet::AttributeSet_global_ctors",
+   "sheet_name": "global constructors keyed to AttributeSet::AttributeSet(Attribu",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2301, placed by infill-count"
+   ]
+  },
+  {
+   "xbox": "0x00177550",
+   "expect": "FUN_00177550",
+   "name": "kTracks_global_ctors",
+   "sheet_name": "global constructors keyed to kTracks",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2340, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00177570",
+   "expect": "FUN_00177570",
+   "name": "kTracks_global_dtors",
+   "sheet_name": "global destructors keyed to kTracks",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2341, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0017bbf8",
+   "expect": "FUN_0017bbf8",
+   "name": "Float_m3Reorthoganalize_global_ctors",
+   "sheet_name": "global constructors keyed to Float_m3Reorthoganalize(MATRIX3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2436, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0017e540",
+   "expect": "FUN_0017e540",
+   "name": "Explosion::Explosion_global_ctors",
+   "sheet_name": "global constructors keyed to Explosion::Explosion(ExplosionType",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2467, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0017f390",
+   "expect": "FUN_0017f390",
+   "name": "Grenade::Grenade_global_ctors",
+   "sheet_name": "global constructors keyed to Grenade::Grenade(WeaponType, COORD",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2479, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0017fbf8",
+   "expect": "FUN_0017fbf8",
+   "name": "Human::Human_global_ctors",
+   "sheet_name": "global constructors keyed to Human::Human(HumanType, COORD3 &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2495, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00183c50",
+   "expect": "FUN_00183c50",
+   "name": "Missile::fUserMissileLaunchPos_global_ctors",
+   "sheet_name": "global constructors keyed to Missile::fUserMissileLaunchPos",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2527, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001933e8",
+   "expect": "FUN_001933e8",
+   "name": "TRAFFIC_OPT_DISTANCE_SQUARE_global_ctors",
+   "sheet_name": "global constructors keyed to TRAFFIC_OPT_DISTANCE_SQUARE",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2661, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00195310",
+   "expect": "FUN_00195310",
+   "name": "PhysicsNamespace::PhysicsNamespace_global_ctors",
+   "sheet_name": "global constructors keyed to PhysicsNamespace::PhysicsNamespace",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2699, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00196128",
+   "expect": "FUN_00196128",
+   "name": "kPhysObjTypeName_global_ctors",
+   "sheet_name": "global constructors keyed to kPhysObjTypeName",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2753, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00198e60",
+   "expect": "FUN_00198e60",
+   "name": "PVehicle::GetNameCount_global_ctors",
+   "sheet_name": "global constructors keyed to PVehicle::GetNameCount(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2777, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0019ae98",
+   "expect": "FUN_0019ae98",
+   "name": "gEnableRayShells_global_ctors",
+   "sheet_name": "global constructors keyed to gEnableRayShells",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2805, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0019cd70",
+   "expect": "FUN_0019cd70",
+   "name": "Sentry::fFlashCount_global_ctors",
+   "sheet_name": "global constructors keyed to Sentry::fFlashCount",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2824, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001a3c50",
+   "expect": "FUN_001a3c50",
+   "name": "__push_heap<unsigned_char_*,_int,_unsigned_char>",
+   "sheet_name": "void __push_heap<unsigned char *, int, unsigned char>(unsigned",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2924, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a3cb0",
+   "expect": "FUN_001a3cb0",
+   "name": "__adjust_heap<unsigned_char_*,_int,_unsigned_char>",
+   "sheet_name": "void __adjust_heap<unsigned char *, int, unsigned char>(unsigne",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2925, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a3d48",
+   "expect": "FUN_001a3d48",
+   "name": "__make_heap<unsigned_char_*,_unsigned_char,_int>",
+   "sheet_name": "void __make_heap<unsigned char *, unsigned char, int>(unsigned",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2926, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a3db8",
+   "expect": "FUN_001a3db8",
+   "name": "sort_heap<unsigned_char_*>",
+   "sheet_name": "void sort_heap<unsigned char *>(unsigned char *, unsigned char",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2927, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a3e50",
+   "expect": "FUN_001a3e50",
+   "name": "__partial_sort<unsigned_char_*,_unsigned_char>",
+   "sheet_name": "void __partial_sort<unsigned char *, unsigned char>(unsigned ch",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2928, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a3f68",
+   "expect": "FUN_001a3f68",
+   "name": "__introsort_loop<unsigned_char_*,_unsigned_char,_int>",
+   "sheet_name": "void __introsort_loop<unsigned char *, unsigned char, int>(unsi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2930, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a4070",
+   "expect": "FUN_001a4070",
+   "name": "__unguarded_linear_insert<unsigned_char_*,_unsigned_char>",
+   "sheet_name": "void __unguarded_linear_insert<unsigned char *, unsigned char>(",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2931, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a40a8",
+   "expect": "FUN_001a40a8",
+   "name": "__insertion_sort<unsigned_char_*>",
+   "sheet_name": "void __insertion_sort<unsigned char *>(unsigned char *, unsigne",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2932, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a4190",
+   "expect": "FUN_001a4190",
+   "name": "__final_insertion_sort<unsigned_char_*>",
+   "sheet_name": "void __final_insertion_sort<unsigned char *>(unsigned char *, u",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2934, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a41f0",
+   "expect": "FUN_001a41f0",
+   "name": "adjacent_find<unsigned_char_*>",
+   "sheet_name": "unsigned char * adjacent_find<unsigned char *>(unsigned char *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2935, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a4280",
+   "expect": "FUN_001a4280",
+   "name": "unique<unsigned_char_*>",
+   "sheet_name": "unsigned char * unique<unsigned char *>(unsigned char *, unsign",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2937, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001a43b8",
+   "expect": "FUN_001a43b8",
+   "name": "RAnimEngine::Init_global_ctors",
+   "sheet_name": "global constructors keyed to RAnimEngine::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2940, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001ab3d8",
+   "expect": "FUN_001ab3d8",
+   "name": "vector<RDrawElement,_allocator<RDrawElement>_>::_M_insert_aux",
+   "sheet_name": "vector<RDrawElement, allocator<RDrawElement> >::_M_insert_aux(R",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3053, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001ac648",
+   "expect": "FUN_001ac648",
+   "name": "RRenderer::fgRenderer_global_ctors",
+   "sheet_name": "global constructors keyed to RRenderer::fgRenderer",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3085, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001ae610",
+   "expect": "FUN_001ae610",
+   "name": "gDrawGlares_global_ctors",
+   "sheet_name": "global constructors keyed to gDrawGlares",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3126, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001beec0",
+   "expect": "FUN_001beec0",
+   "name": "RPlayerViewCamera::RPlayerViewCamera_global_ctors",
+   "sheet_name": "global constructors keyed to RPlayerViewCamera::RPlayerViewCame",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3361, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001c5000",
+   "expect": "FUN_001c5000",
+   "name": "RRenderHigh::fgThis_global_ctors",
+   "sheet_name": "global constructors keyed to RRenderHigh::fgThis",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3453, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001c5020",
+   "expect": "FUN_001c5020",
+   "name": "RRenderHigh::fgThis_global_dtors",
+   "sheet_name": "global destructors keyed to RRenderHigh::fgThis",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3454, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001cb468",
+   "expect": "FUN_001cb468",
+   "name": "URefCounter<RCARPFile>::~URefCounter",
+   "sheet_name": "URefCounter<RCARPFile>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3580, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001cc4f0",
+   "expect": "FUN_001cc4f0",
+   "name": "URefCounter<RCARPFile>::Get",
+   "sheet_name": "URefCounter<RCARPFile>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3610, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001cc548",
+   "expect": "FUN_001cc548",
+   "name": "gRigidBodyDraw_global_ctors",
+   "sheet_name": "global constructors keyed to gRigidBodyDraw",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3611, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001d0938",
+   "expect": "FUN_001d0938",
+   "name": "URefCounter<RTextureContext>::URefCounter",
+   "sheet_name": "URefCounter<RTextureContext>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3673, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001d09a0",
+   "expect": "FUN_001d09a0",
+   "name": "URefCounter<RTextureContext>::~URefCounter",
+   "sheet_name": "URefCounter<RTextureContext>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3674, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001d1e68",
+   "expect": "FUN_001d1e68",
+   "name": "URefCounter<RTextureContext>::Get",
+   "sheet_name": "URefCounter<RTextureContext>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3691, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001d51d8",
+   "expect": "FUN_001d51d8",
+   "name": "RViewCamera::fCulling_global_ctors",
+   "sheet_name": "global constructors keyed to RViewCamera::fCulling",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3788, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001d6d38",
+   "expect": "FUN_001d6d38",
+   "name": "RWorldCamera::RWorldCamera_global_ctors",
+   "sheet_name": "global constructors keyed to RWorldCamera::RWorldCamera(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3830, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001d83d8",
+   "expect": "FUN_001d83d8",
+   "name": "RBulletStreak::fgMaterial_global_ctors",
+   "sheet_name": "global constructors keyed to RBulletStreak::fgMaterial",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3891, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001d83f8",
+   "expect": "FUN_001d83f8",
+   "name": "RBulletStreak::fgMaterial_global_dtors",
+   "sheet_name": "global destructors keyed to RBulletStreak::fgMaterial",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3892, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001da010",
+   "expect": "FUN_001da010",
+   "name": "RDebris::fgThis_global_ctors",
+   "sheet_name": "global constructors keyed to RDebris::fgThis",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3922, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001dbc78",
+   "expect": "FUN_001dbc78",
+   "name": "CylinderSection_global_ctors",
+   "sheet_name": "global constructors keyed to CylinderSection(COORD3 *, COORD2 *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3944, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001dbc98",
+   "expect": "FUN_001dbc98",
+   "name": "CylinderSection_global_dtors",
+   "sheet_name": "global destructors keyed to CylinderSection(COORD3 *, COORD2 *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3945, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001df7a8",
+   "expect": "FUN_001df7a8",
+   "name": "RFlockGoal::RFlockGoal_global_ctors",
+   "sheet_name": "global constructors keyed to RFlockGoal::RFlockGoal(RFlock *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3997, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001df8b8",
+   "expect": "FUN_001df8b8",
+   "name": "RGain::Debug",
+   "sheet_name": "RGain::Debug(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4004, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x001dfc38",
+   "expect": "FUN_001dfc38",
+   "name": "RGain::fgThis_RGain_global_ctors",
+   "sheet_name": "global constructors keyed to RGain::fgThis_RGain",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4011, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001e3438",
+   "expect": "FUN_001e3438",
+   "name": "USimpleVec<RLightning::Segment>::~USimpleVec",
+   "sheet_name": "USimpleVec<RLightning::Segment>::~USimpleVec(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4071, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001e34f8",
+   "expect": "FUN_001e34f8",
+   "name": "RLightning::fgThis_RLightning_global_ctors",
+   "sheet_name": "global constructors keyed to RLightning::fgThis_RLightning",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4072, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001e3e08",
+   "expect": "FUN_001e3e08",
+   "name": "RMissileCam::fgThis_RMissileCam_global_ctors",
+   "sheet_name": "global constructors keyed to RMissileCam::fgThis_RMissileCam",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4085, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001e4b08",
+   "expect": "FUN_001e4b08",
+   "name": "RMissileStreak::Init_global_ctors",
+   "sheet_name": "global constructors keyed to RMissileStreak::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4096, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001e4b28",
+   "expect": "FUN_001e4b28",
+   "name": "RMissileStreak::Init_global_dtors",
+   "sheet_name": "global destructors keyed to RMissileStreak::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4097, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001e5c98",
+   "expect": "FUN_001e5c98",
+   "name": "RMuzzleFlash_fgPts_global_ctors",
+   "sheet_name": "global constructors keyed to RMuzzleFlash_fgPts",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4103, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001e5cb8",
+   "expect": "FUN_001e5cb8",
+   "name": "RMuzzleFlash_fgPts_global_dtors",
+   "sheet_name": "global destructors keyed to RMuzzleFlash_fgPts",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4104, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001e91a0",
+   "expect": "FUN_001e91a0",
+   "name": "CalcEmitVal_global_ctors",
+   "sheet_name": "global constructors keyed to CalcEmitVal(int, int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4173, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001ea0f0",
+   "expect": "FUN_001ea0f0",
+   "name": "RParticulate::fgThis_RParticulate_global_ctors",
+   "sheet_name": "global constructors keyed to RParticulate::fgThis_RParticulate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4188, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001ea110",
+   "expect": "FUN_001ea110",
+   "name": "RParticulate::fgThis_RParticulate_global_dtors",
+   "sheet_name": "global destructors keyed to RParticulate::fgThis_RParticulate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4189, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001eb690",
+   "expect": "FUN_001eb690",
+   "name": "RScorchWorld::ScorchWorld_global_ctors",
+   "sheet_name": "global constructors keyed to RScorchWorld::ScorchWorld(WWorldPo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4209, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001f0340",
+   "expect": "FUN_001f0340",
+   "name": "RVehicleParticle::fAllCars_global_ctors",
+   "sheet_name": "global constructors keyed to RVehicleParticle::fAllCars",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4279, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001f0b28",
+   "expect": "FUN_001f0b28",
+   "name": "RWater::fgThis_RWater_global_ctors",
+   "sheet_name": "global constructors keyed to RWater::fgThis_RWater",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4292, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001f1490",
+   "expect": "FUN_001f1490",
+   "name": "RWindow::Init_global_ctors",
+   "sheet_name": "global constructors keyed to RWindow::Init(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4297, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001f2998",
+   "expect": "FUN_001f2998",
+   "name": "fgGlareTexture_global_ctors",
+   "sheet_name": "global constructors keyed to fgGlareTexture",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4312, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001f29b8",
+   "expect": "FUN_001f29b8",
+   "name": "fgGlareTexture_global_dtors",
+   "sheet_name": "global destructors keyed to fgGlareTexture",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4313, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001f46c0",
+   "expect": "FUN_001f46c0",
+   "name": "CheckConsistency",
+   "sheet_name": "CheckConsistency(char *, void *, void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4323, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x001f5ca8",
+   "expect": "FUN_001f5ca8",
+   "name": "RTyreTrack::RTyreTrack_global_ctors",
+   "sheet_name": "global constructors keyed to RTyreTrack::RTyreTrack(float, bool",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4337, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001f5cc8",
+   "expect": "FUN_001f5cc8",
+   "name": "RTyreTrack::RTyreTrack_global_dtors",
+   "sheet_name": "global destructors keyed to RTyreTrack::RTyreTrack(float, bool,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4338, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001f6298",
+   "expect": "FUN_001f6298",
+   "name": "OBB::OBB_global_ctors",
+   "sheet_name": "global constructors keyed to OBB::OBB(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4345, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001f64f8",
+   "expect": "FUN_001f64f8",
+   "name": "PackedRigidBody::GetOrientMat_global_ctors",
+   "sheet_name": "global constructors keyed to PackedRigidBody::GetOrientMat(void",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4350, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x001fd428",
+   "expect": "FUN_001fd428",
+   "name": "GRAVITY_global_ctors",
+   "sheet_name": "global constructors keyed to GRAVITY",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4413, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x001fe198",
+   "expect": "FUN_001fe198",
+   "name": "operator<",
+   "sheet_name": "operator<(PhysicsObjMapIterator &, PhysicsObjMapIterator &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4434, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00201de0",
+   "expect": "FUN_00201de0",
+   "name": "find<PVehicle_**,_PVehicle_*>",
+   "sheet_name": "PVehicle ** find<PVehicle **, PVehicle *>(PVehicle **, PVehicle",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4501, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00201eb0",
+   "expect": "FUN_00201eb0",
+   "name": "remove_copy<PVehicle_**,_PVehicle_**,_PVehicle_*>",
+   "sheet_name": "PVehicle ** remove_copy<PVehicle **, PVehicle **, PVehicle *>(P",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4502, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00201ee8",
+   "expect": "FUN_00201ee8",
+   "name": "remove<PVehicle_**,_PVehicle_*>",
+   "sheet_name": "PVehicle ** remove<PVehicle **, PVehicle *>(PVehicle **, PVehic",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4503, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00201f38",
+   "expect": "FUN_00201f38",
+   "name": "vector<PVehicle_*,_allocator<PVehicle_*>_>::_M_insert_aux",
+   "sheet_name": "vector<PVehicle *, allocator<PVehicle *> >::_M_insert_aux(PVehi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4504, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202468",
+   "expect": "FUN_00202468",
+   "name": "vector<Explosion_*,_allocator<Explosion_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Explosion *, allocator<Explosion *> >::_M_insert_aux(Exp",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4507, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002025d0",
+   "expect": "FUN_002025d0",
+   "name": "vector<Human_*,_allocator<Human_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Human *, allocator<Human *> >::_M_insert_aux(Human **, H",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4508, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202738",
+   "expect": "FUN_00202738",
+   "name": "vector<Mine_*,_allocator<Mine_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Mine *, allocator<Mine *> >::_M_insert_aux(Mine **, Mine",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4509, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002028a0",
+   "expect": "FUN_002028a0",
+   "name": "vector<Missile_*,_allocator<Missile_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Missile *, allocator<Missile *> >::_M_insert_aux(Missile",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4510, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202a08",
+   "expect": "FUN_00202a08",
+   "name": "vector<Shell_*,_allocator<Shell_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Shell *, allocator<Shell *> >::_M_insert_aux(Shell **, S",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4511, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202b70",
+   "expect": "FUN_00202b70",
+   "name": "vector<Grenade_*,_allocator<Grenade_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Grenade *, allocator<Grenade *> >::_M_insert_aux(Grenade",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4512, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202cd8",
+   "expect": "FUN_00202cd8",
+   "name": "vector<Newton_*,_allocator<Newton_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Newton *, allocator<Newton *> >::_M_insert_aux(Newton **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4513, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00202fa8",
+   "expect": "FUN_00202fa8",
+   "name": "vector<Sentry_*,_allocator<Sentry_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Sentry *, allocator<Sentry *> >::_M_insert_aux(Sentry **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4515, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203110",
+   "expect": "FUN_00203110",
+   "name": "vector<Smackable_*,_allocator<Smackable_*>_>::_M_insert_aux",
+   "sheet_name": "vector<Smackable *, allocator<Smackable *> >::_M_insert_aux(Sma",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4516, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002039d8",
+   "expect": "FUN_002039d8",
+   "name": "find<Explosion_**,_Explosion_*>",
+   "sheet_name": "Explosion ** find<Explosion **, Explosion *>(Explosion **, Expl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4524, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203aa8",
+   "expect": "FUN_00203aa8",
+   "name": "remove_copy<Explosion_**,_Explosion_**,_Explosion",
+   "sheet_name": "Explosion ** remove_copy<Explosion **, Explosion **, Explosion",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4525, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203ae0",
+   "expect": "FUN_00203ae0",
+   "name": "remove<Explosion_**,_Explosion_*>",
+   "sheet_name": "Explosion ** remove<Explosion **, Explosion *>(Explosion **, Ex",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4526, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203b30",
+   "expect": "FUN_00203b30",
+   "name": "find<Human_**,_Human_*>",
+   "sheet_name": "Human ** find<Human **, Human *>(Human **, Human **, Human * &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4527, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203c00",
+   "expect": "FUN_00203c00",
+   "name": "remove_copy<Human_**,_Human_**,_Human_*>",
+   "sheet_name": "Human ** remove_copy<Human **, Human **, Human *>(Human **, Hum",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4528, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203c38",
+   "expect": "FUN_00203c38",
+   "name": "remove<Human_**,_Human_*>",
+   "sheet_name": "Human ** remove<Human **, Human *>(Human **, Human **, Human *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4529, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203c88",
+   "expect": "FUN_00203c88",
+   "name": "find<Mine_**,_Mine_*>",
+   "sheet_name": "Mine ** find<Mine **, Mine *>(Mine **, Mine **, Mine * &, rando",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4530, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203d58",
+   "expect": "FUN_00203d58",
+   "name": "remove_copy<Mine_**,_Mine_**,_Mine_*>",
+   "sheet_name": "Mine ** remove_copy<Mine **, Mine **, Mine *>(Mine **, Mine **,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4531, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203d90",
+   "expect": "FUN_00203d90",
+   "name": "remove<Mine_**,_Mine_*>",
+   "sheet_name": "Mine ** remove<Mine **, Mine *>(Mine **, Mine **, Mine * &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4532, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203de0",
+   "expect": "FUN_00203de0",
+   "name": "find<Missile_**,_Missile_*>",
+   "sheet_name": "Missile ** find<Missile **, Missile *>(Missile **, Missile **,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4533, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203eb0",
+   "expect": "FUN_00203eb0",
+   "name": "remove_copy<Missile_**,_Missile_**,_Missile_*>",
+   "sheet_name": "Missile ** remove_copy<Missile **, Missile **, Missile *>(Missi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4534, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203ee8",
+   "expect": "FUN_00203ee8",
+   "name": "remove<Missile_**,_Missile_*>",
+   "sheet_name": "Missile ** remove<Missile **, Missile *>(Missile **, Missile **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4535, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00203f38",
+   "expect": "FUN_00203f38",
+   "name": "find<Shell_**,_Shell_*>",
+   "sheet_name": "Shell ** find<Shell **, Shell *>(Shell **, Shell **, Shell * &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4536, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204008",
+   "expect": "FUN_00204008",
+   "name": "remove_copy<Shell_**,_Shell_**,_Shell_*>",
+   "sheet_name": "Shell ** remove_copy<Shell **, Shell **, Shell *>(Shell **, She",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4537, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204040",
+   "expect": "FUN_00204040",
+   "name": "remove<Shell_**,_Shell_*>",
+   "sheet_name": "Shell ** remove<Shell **, Shell *>(Shell **, Shell **, Shell *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4538, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204090",
+   "expect": "FUN_00204090",
+   "name": "find<Grenade_**,_Grenade_*>",
+   "sheet_name": "Grenade ** find<Grenade **, Grenade *>(Grenade **, Grenade **,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4539, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204160",
+   "expect": "FUN_00204160",
+   "name": "remove_copy<Grenade_**,_Grenade_**,_Grenade_*>",
+   "sheet_name": "Grenade ** remove_copy<Grenade **, Grenade **, Grenade *>(Grena",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4540, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204198",
+   "expect": "FUN_00204198",
+   "name": "remove<Grenade_**,_Grenade_*>",
+   "sheet_name": "Grenade ** remove<Grenade **, Grenade *>(Grenade **, Grenade **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4541, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002041e8",
+   "expect": "FUN_002041e8",
+   "name": "find<Newton_**,_Newton_*>",
+   "sheet_name": "Newton ** find<Newton **, Newton *>(Newton **, Newton **, Newto",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4542, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002042b8",
+   "expect": "FUN_002042b8",
+   "name": "remove_copy<Newton_**,_Newton_**,_Newton_*>",
+   "sheet_name": "Newton ** remove_copy<Newton **, Newton **, Newton *>(Newton **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4543, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002042f0",
+   "expect": "FUN_002042f0",
+   "name": "remove<Newton_**,_Newton_*>",
+   "sheet_name": "Newton ** remove<Newton **, Newton *>(Newton **, Newton **, New",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4544, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204340",
+   "expect": "FUN_00204340",
+   "name": "find<PHelicopter_**,_PHelicopter_*>",
+   "sheet_name": "PHelicopter ** find<PHelicopter **, PHelicopter *>(PHelicopter",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4545, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204448",
+   "expect": "FUN_00204448",
+   "name": "remove<PHelicopter_**,_PHelicopter_*>",
+   "sheet_name": "PHelicopter ** remove<PHelicopter **, PHelicopter *>(PHelicopte",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4547, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204498",
+   "expect": "FUN_00204498",
+   "name": "find<Sentry_**,_Sentry_*>",
+   "sheet_name": "Sentry ** find<Sentry **, Sentry *>(Sentry **, Sentry **, Sentr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4548, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204568",
+   "expect": "FUN_00204568",
+   "name": "remove_copy<Sentry_**,_Sentry_**,_Sentry_*>",
+   "sheet_name": "Sentry ** remove_copy<Sentry **, Sentry **, Sentry *>(Sentry **",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4549, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002045a0",
+   "expect": "FUN_002045a0",
+   "name": "remove<Sentry_**,_Sentry_*>",
+   "sheet_name": "Sentry ** remove<Sentry **, Sentry *>(Sentry **, Sentry **, Sen",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4550, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002045f0",
+   "expect": "FUN_002045f0",
+   "name": "find<Smackable_**,_Smackable_*>",
+   "sheet_name": "Smackable ** find<Smackable **, Smackable *>(Smackable **, Smac",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4551, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002046c0",
+   "expect": "FUN_002046c0",
+   "name": "remove_copy<Smackable_**,_Smackable_**,_Smackable",
+   "sheet_name": "Smackable ** remove_copy<Smackable **, Smackable **, Smackable",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4552, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002046f8",
+   "expect": "FUN_002046f8",
+   "name": "remove<Smackable_**,_Smackable_*>",
+   "sheet_name": "Smackable ** remove<Smackable **, Smackable *>(Smackable **, Sm",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4553, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00204aa0",
+   "expect": "FUN_00204aa0",
+   "name": "operator<_global_ctors",
+   "sheet_name": "global constructors keyed to operator<(PhysicsObjMapIterator &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4558, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002117c8",
+   "expect": "FUN_002117c8",
+   "name": "Util_Step_global_ctors",
+   "sheet_name": "global constructors keyed to Util_Step(int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4803, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002130f0",
+   "expect": "FUN_002130f0",
+   "name": "WCollisionObject::MakeMatrix_global_ctors",
+   "sheet_name": "global constructors keyed to WCollisionObject::MakeMatrix(MATRI",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4825, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0021c0d0",
+   "expect": "FUN_0021c0d0",
+   "name": "WCollisionMgr::fgCollisionMgr_global_ctors",
+   "sheet_name": "global constructors keyed to WCollisionMgr::fgCollisionMgr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4881, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0021e610",
+   "expect": "FUN_0021e610",
+   "name": "WGrid::fgGrid_global_ctors",
+   "sheet_name": "global constructors keyed to WGrid::fgGrid",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4897, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0021e630",
+   "expect": "FUN_0021e630",
+   "name": "WGrid::fgGrid_global_dtors",
+   "sheet_name": "global destructors keyed to WGrid::fgGrid",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4898, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00220480",
+   "expect": "FUN_00220480",
+   "name": "__make_heap<InstanceAndDistance_*,_bool",
+   "sheet_name": "void __make_heap<InstanceAndDistance *, bool (*)(InstanceAndDis",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4920, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00220528",
+   "expect": "FUN_00220528",
+   "name": "sort_heap<InstanceAndDistance_*,_bool",
+   "sheet_name": "void sort_heap<InstanceAndDistance *, bool (*)(InstanceAndDista",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4921, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002209a8",
+   "expect": "FUN_002209a8",
+   "name": "__insertion_sort<InstanceAndDistance_*,_bool",
+   "sheet_name": "void __insertion_sort<InstanceAndDistance *, bool (*)(InstanceA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4926, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002273b8",
+   "expect": "FUN_002273b8",
+   "name": "WRoadNetwork::fgRoadNetwork_global_ctors",
+   "sheet_name": "global constructors keyed to WRoadNetwork::fgRoadNetwork",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5002, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00228ce0",
+   "expect": "FUN_00228ce0",
+   "name": "_Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound",
+   "sheet_name": "_Rb_tree<int, pair<int, WSound *>, _Select1st<pair<int, WSound",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5022, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00228d48",
+   "expect": "FUN_00228d48",
+   "name": "_Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound",
+   "sheet_name": "_Rb_tree<int, pair<int, WSound *>, _Select1st<pair<int, WSound",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5023, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00228db0",
+   "expect": "FUN_00228db0",
+   "name": "_Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound",
+   "sheet_name": "_Rb_tree<int, pair<int, WSound *>, _Select1st<pair<int, WSound",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5024, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0022c168",
+   "expect": "FUN_0022c168",
+   "name": "WTargetPicker::kTargetRangeBits_global_ctors",
+   "sheet_name": "global constructors keyed to WTargetPicker::kTargetRangeBits",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5077, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0022c188",
+   "expect": "FUN_0022c188",
+   "name": "WTargetPicker::kTargetRangeBits_global_dtors",
+   "sheet_name": "global destructors keyed to WTargetPicker::kTargetRangeBits",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5078, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0022cbb8",
+   "expect": "FUN_0022cbb8",
+   "name": "WTriggerManager::~WTriggerManager",
+   "sheet_name": "WTriggerManager::~WTriggerManager(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5090, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x00232160",
+   "expect": "FUN_00232160",
+   "name": "WWorldMath::CalcBoundingBox_global_ctors",
+   "sheet_name": "global constructors keyed to WWorldMath::CalcBoundingBox(COORD4",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5146, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002396f8",
+   "expect": "FUN_002396f8",
+   "name": "NULL_ID_global_ctors",
+   "sheet_name": "global constructors keyed to NULL_ID",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5283, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00247e78",
+   "expect": "FUN_00247e78",
+   "name": "GHud::fActionQueue_global_ctors",
+   "sheet_name": "global constructors keyed to GHud::fActionQueue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5418, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00249f58",
+   "expect": "FUN_00249f58",
+   "name": "LoadingDotBinary_global_ctors",
+   "sheet_name": "global constructors keyed to LoadingDotBinary",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5443, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00249f78",
+   "expect": "FUN_00249f78",
+   "name": "LoadingDotBinary_global_dtors",
+   "sheet_name": "global destructors keyed to LoadingDotBinary",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5444, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0024afc0",
+   "expect": "FUN_0024afc0",
+   "name": "GSubtitles::fTheApp_global_ctors",
+   "sheet_name": "global constructors keyed to GSubtitles::fTheApp",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5470, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x0024b9a8",
+   "expect": "FUN_0024b9a8",
+   "name": "DEFAULT_STRING_global_ctors",
+   "sheet_name": "global constructors keyed to DEFAULT_STRING",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5495, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00287508",
+   "expect": "FUN_00287508",
+   "name": "EAGL::DeviceExtension::gPerfMeter_global_ctors",
+   "sheet_name": "global constructors keyed to EAGL::DeviceExtension::gPerfMeter",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5869, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00287528",
+   "expect": "FUN_00287528",
+   "name": "EAGL::DeviceExtension::gPerfMeter_global_dtors",
+   "sheet_name": "global destructors keyed to EAGL::DeviceExtension::gPerfMeter",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5870, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x00291450",
+   "expect": "FUN_00291450",
+   "name": "SetSpriteCoords",
+   "sheet_name": "SetSpriteCoords(sprite_tag &, int, int, short, short, short, sh",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5997, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x00299d88",
+   "expect": "FUN_00299d88",
+   "name": "EAGL::ProfilerRegion::gBufferHead_global_dtors",
+   "sheet_name": "global destructors keyed to EAGL::ProfilerRegion::gBufferHead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6174, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258100",
+   "expect": "FUN_00258100",
+   "name": "FONT_drawtextx<unsigned_char>",
+   "sheet_name": "void FONT_drawtextx<unsigned char>(FONT *, float, float, unsign",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7040, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002584c0",
+   "expect": "FUN_002584c0",
+   "name": "FONT_drawtextx<unsigned_short>",
+   "sheet_name": "void FONT_drawtextx<unsigned short>(FONT *, float, float, unsig",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7041, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002cf140",
+   "expect": "FUN_002cf140",
+   "name": "vector<USingleton_*,_allocator<USingleton_*>_>::_M_insert_aux",
+   "sheet_name": "vector<USingleton *, allocator<USingleton *> >::_M_insert_aux(U",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8241, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002d4000",
+   "expect": "FUN_002d4000",
+   "name": "UDataGroupEncodeTag",
+   "sheet_name": "UDataGroupEncodeTag(unsigned int, bool, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8350, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x002d4090",
+   "expect": "FUN_002d4090",
+   "name": "UDataGroupDecodeTag",
+   "sheet_name": "UDataGroupDecodeTag(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8351, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x002d42a8",
+   "expect": "FUN_002d42a8",
+   "name": "UData::UData",
+   "sheet_name": "UData::UData(UData &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8352, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x002d43b8",
+   "expect": "FUN_002d43b8",
+   "name": "UData::UData",
+   "sheet_name": "UData::UData(void *, unsigned int, unsigned int, unsigned int,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8353, placed by sheet"
+   ]
+  },
+  {
+   "xbox": "0x002dba90",
+   "expect": "FUN_002dba90",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_void",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, void (*)(UData *, UGr",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8555, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dbdf8",
+   "expect": "FUN_002dbdf8",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_void",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, void (*)(UData *, UGr",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8556, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dbf38",
+   "expect": "FUN_002dbf38",
+   "name": "_Rb_tree<unsigned_int,_pair<unsigned_int,_void",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, void (*)(UData *, UGr",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8557, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dbfa0",
+   "expect": "FUN_002dbfa0",
+   "name": "__lower_bound<float_*,_float,_int>",
+   "sheet_name": "float * __lower_bound<float *, float, int>(float *, float *, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8558, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dd678",
+   "expect": "FUN_002dd678",
+   "name": "AWorldSound::Play_global_ctors",
+   "sheet_name": "global constructors keyed to AWorldSound::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8649, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002de738",
+   "expect": "FUN_002de738",
+   "name": "list<AVoice::View_*,_allocator<AVoice::View_*>_>::remove",
+   "sheet_name": "list<AVoice::View *, allocator<AVoice::View *> >::remove(AVoice",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8665, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e3598",
+   "expect": "FUN_002e3598",
+   "name": "AHorn::AHorn_global_ctors",
+   "sheet_name": "global constructors keyed to AHorn::AHorn(char *, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8740, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002e4910",
+   "expect": "FUN_002e4910",
+   "name": "AUltraLite::AUltraLite_global_ctors",
+   "sheet_name": "global constructors keyed to AUltraLite::AUltraLite(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8749, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002e6a68",
+   "expect": "FUN_002e6a68",
+   "name": "ATrafficVehicle::ATrafficVehicle_global_ctors",
+   "sheet_name": "global constructors keyed to ATrafficVehicle::ATrafficVehicle(c",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8765, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002e8680",
+   "expect": "FUN_002e8680",
+   "name": "ASubmersible::ASubmersible_global_ctors",
+   "sheet_name": "global constructors keyed to ASubmersible::ASubmersible(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8785, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002ea1f8",
+   "expect": "FUN_002ea1f8",
+   "name": "URefCounter<AStream>::URefCounter",
+   "sheet_name": "URefCounter<AStream>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8821, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ea260",
+   "expect": "FUN_002ea260",
+   "name": "URefCounter<AStream>::~URefCounter",
+   "sheet_name": "URefCounter<AStream>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8822, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002eaaf0",
+   "expect": "FUN_002eaaf0",
+   "name": "URefCounter<AStream>::RemoveReference",
+   "sheet_name": "URefCounter<AStream>::RemoveReference(AStream *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8828, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ef6d0",
+   "expect": "FUN_002ef6d0",
+   "name": "ASnowMobile::ASnowMobile_global_ctors",
+   "sheet_name": "global constructors keyed to ASnowMobile::ASnowMobile(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8876, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f0ef0",
+   "expect": "FUN_002f0ef0",
+   "name": "APlayerVehicle::APlayerVehicle_global_ctors",
+   "sheet_name": "global constructors keyed to APlayerVehicle::APlayerVehicle(cha",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8919, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f1408",
+   "expect": "FUN_002f1408",
+   "name": "APlayerTank::APlayerTank_global_ctors",
+   "sheet_name": "global constructors keyed to APlayerTank::APlayerTank(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8926, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f1f20",
+   "expect": "FUN_002f1f20",
+   "name": "APlayerHeli::APlayerHeli_global_ctors",
+   "sheet_name": "global constructors keyed to APlayerHeli::APlayerHeli(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8932, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f36f8",
+   "expect": "FUN_002f36f8",
+   "name": "URefCounter<AMix>::URefCounter",
+   "sheet_name": "URefCounter<AMix>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8966, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f3760",
+   "expect": "FUN_002f3760",
+   "name": "URefCounter<AMix>::~URefCounter",
+   "sheet_name": "URefCounter<AMix>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8967, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f3ff0",
+   "expect": "FUN_002f3ff0",
+   "name": "URefCounter<AMix>::RemoveReference",
+   "sheet_name": "URefCounter<AMix>::RemoveReference(AMix *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8973, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f4740",
+   "expect": "FUN_002f4740",
+   "name": "AMix::gList_global_ctors",
+   "sheet_name": "global constructors keyed to AMix::gList",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8976, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f4760",
+   "expect": "FUN_002f4760",
+   "name": "AMix::gList_global_dtors",
+   "sheet_name": "global destructors keyed to AMix::gList",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8977, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f6e40",
+   "expect": "FUN_002f6e40",
+   "name": "AHelicopter::AHelicopter_global_ctors",
+   "sheet_name": "global constructors keyed to AHelicopter::AHelicopter(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9016, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f7c80",
+   "expect": "FUN_002f7c80",
+   "name": "AGun::AGun_global_ctors",
+   "sheet_name": "global constructors keyed to AGun::AGun(ASceneObj &, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9021, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f8d38",
+   "expect": "FUN_002f8d38",
+   "name": "AFingoDeath::AFingoDeath_global_ctors",
+   "sheet_name": "global constructors keyed to AFingoDeath::AFingoDeath(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9042, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002f9998",
+   "expect": "FUN_002f9998",
+   "name": "URefCounter<AFader>::URefCounter",
+   "sheet_name": "URefCounter<AFader>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9064, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f9a00",
+   "expect": "FUN_002f9a00",
+   "name": "URefCounter<AFader>::~URefCounter",
+   "sheet_name": "URefCounter<AFader>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9065, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fa290",
+   "expect": "FUN_002fa290",
+   "name": "URefCounter<AFader>::RemoveReference",
+   "sheet_name": "URefCounter<AFader>::RemoveReference(AFader *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9071, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fa880",
+   "expect": "FUN_002fa880",
+   "name": "URefCounter<AFader>::Get",
+   "sheet_name": "URefCounter<AFader>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9072, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fae20",
+   "expect": "FUN_002fae20",
+   "name": "URefCounter<AEngine>::URefCounter",
+   "sheet_name": "URefCounter<AEngine>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9080, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fae88",
+   "expect": "FUN_002fae88",
+   "name": "URefCounter<AEngine>::~URefCounter",
+   "sheet_name": "URefCounter<AEngine>::~URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9081, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fbd88",
+   "expect": "FUN_002fbd88",
+   "name": "URefCounter<AEngine>::Get",
+   "sheet_name": "URefCounter<AEngine>::Get(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9090, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fbde0",
+   "expect": "FUN_002fbde0",
+   "name": "AEngine::AEngine_global_ctors",
+   "sheet_name": "global constructors keyed to AEngine::AEngine(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9091, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fcce0",
+   "expect": "FUN_002fcce0",
+   "name": "list<ABaseSound_*,_allocator<ABaseSound_*>_>::remove",
+   "sheet_name": "list<ABaseSound *, allocator<ABaseSound *> >::remove(ABaseSound",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9112, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fe980",
+   "expect": "FUN_002fe980",
+   "name": "ABank::fgPath_global_ctors",
+   "sheet_name": "global constructors keyed to ABank::fgPath",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9170, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002fe9a0",
+   "expect": "FUN_002fe9a0",
+   "name": "ABank::fgPath_global_dtors",
+   "sheet_name": "global destructors keyed to ABank::fgPath",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9171, placed by infill-exact"
+   ]
+  },
+  {
+   "xbox": "0x002ff020",
+   "expect": "FUN_002ff020",
+   "name": "AVehicleWind::gMaxVolume_global_ctors",
+   "sheet_name": "global constructors keyed to AVehicleWind::gMaxVolume",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9176, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ffdd0",
+   "expect": "FUN_002ffdd0",
+   "name": "ARaceEngine::ARaceEngine_global_ctors",
+   "sheet_name": "global constructors keyed to ARaceEngine::ARaceEngine(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9181, placed by infill-exact"
+   ]
+  }
+ ]
+}

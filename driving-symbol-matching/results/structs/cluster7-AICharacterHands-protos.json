@@ -1,0 +1,147 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000227a0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterHands::GetAimFraction(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x000227c0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterHands::Shutdown(void)"
+  },
+  {
+   "address": "0x00022820",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::~AICharacterHands(void)"
+  },
+  {
+   "address": "0x00022830",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::AbleToFire(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00022860",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::GetWeapon(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x000228b0",
+   "calling_convention": "__thiscall",
+   "return": "AICharacterHands *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00022930",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacterHands::Init(void)"
+  },
+  {
+   "address": "0x00022c30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::ShowHands(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00022c50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::HideHands(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00022cc0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "AICharacterHands::ChangeWeapon(int)"
+  },
+  {
+   "address": "0x00022dd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::Fire(void)"
+  },
+  {
+   "address": "0x00022e20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::Reload(void)"
+  },
+  {
+   "address": "0x00022e70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoNeutral(void)"
+  },
+  {
+   "address": "0x00022f10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoIdling(void)"
+  },
+  {
+   "address": "0x00022f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoArming(void)"
+  },
+  {
+   "address": "0x00022fb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoArmed(void)"
+  },
+  {
+   "address": "0x000230a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoAiming(void)"
+  },
+  {
+   "address": "0x00023170",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoFiring(void)"
+  },
+  {
+   "address": "0x00023230",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoReloading(void)"
+  },
+  {
+   "address": "0x00023280",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::DoUnarming(void)"
+  },
+  {
+   "address": "0x000232b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacterHands::UpdateRotPos(void)"
+  }
+ ]
+}

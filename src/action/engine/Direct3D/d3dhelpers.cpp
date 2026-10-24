@@ -1,6 +1,5 @@
 #include "d3dhelpers.h"
 
-
 // Direct3D takes 4x4 matrix in row-major order, but _MATRIX (internal, cross-platform) is shortened to 15 entries and is column-major
 void _MATRIXtoD3DMATRIX(_MATRIX* m_in, D3DMATRIX* m_out) {
     m_out->f[0] = m_in->m[0];

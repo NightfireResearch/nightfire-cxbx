@@ -1,0 +1,617 @@
+{
+ "verdicts": [
+  {
+   "item": 0,
+   "xbox": "0x00117530",
+   "current": "UFileLoader::AttemptBigFileLoad",
+   "ps2": "0x002d7400",
+   "name": "",
+   "verdict": "keep",
+   "why": "Body ('|' prefix + copy, FILE_loadpackz, FileNameList::AddFile on success/fail lists) matches PS2 AttemptBigFileLoad 0x2d7138 exactly; FileLoadPackz uses LookupAbsolutePath, not present here.",
+   "intermediates": []
+  },
+  {
+   "item": 1,
+   "xbox": "0x0013e700",
+   "current": "iSNDcalcpitch",
+   "ps2": "0x0030e788",
+   "name": "",
+   "verdict": "keep",
+   "why": "Body (fields 0x7e/0x80/0x82, (c-0x40)*x>>6 detune, detunetolinear) matches PS2 iSNDcalcpitch 0x30b1a0; SNDPLATFORM_setpitch loops MIX_setpitch over mixes.",
+   "intermediates": []
+  },
+  {
+   "item": 2,
+   "xbox": "0x000d44b0",
+   "current": "GGallery::MGMT_Load",
+   "ps2": "0x00233618",
+   "name": "GFXGallery::GFXGallery",
+   "verdict": "accept",
+   "why": "Same body as PS2 GFXGallery::GFXGallery (0x1408..0x142c zeroed, 0x200 at 0x1420, 'GFXParticleSystems'/'GFXCanvas' allocs) and same call position in GFX::Init right after __builtin_new(0x1430) with GetGalleryName(); MGMT_Load is an invented name.",
+   "intermediates": []
+  },
+  {
+   "item": 3,
+   "xbox": "0x00141280",
+   "current": "SNDI_randomseed",
+   "ps2": "0x0030c990",
+   "name": "SNDI_randomseeed",
+   "verdict": "accept",
+   "why": "Same function (6 seeds = table + param, called from SNDSYSI_init); the PS2 canonical symbol is spelled SNDI_randomseeed.",
+   "intermediates": []
+  },
+  {
+   "item": 4,
+   "xbox": "0x00135a38",
+   "current": "__lock_file2",
+   "ps2": "0x002abd58",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT lock helper (index<0x14 -> lock table, else EnterCriticalSection); unrelated to newlib vfprintf.",
+   "intermediates": []
+  },
+  {
+   "item": 5,
+   "xbox": "0x0011a6d0",
+   "current": "DAFI_setsection",
+   "ps2": "0x002d9b88",
+   "name": "",
+   "verdict": "keep",
+   "why": "Calls getsectionindex-equivalent then DAFI_setsectionbyindex and returns the index - matches PS2 DAFI_setsection 0x2d9770, not getvalue (swap partner of item 14, both correct).",
+   "intermediates": []
+  },
+  {
+   "item": 6,
+   "xbox": "0x000f3a40",
+   "current": "ConstructorPool::AddType",
+   "ps2": "0x0029e158",
+   "name": "EAGL::ConstructorPool::AddType",
+   "verdict": "accept",
+   "why": "Identical: AddSymbol(this,name,ctor); AddSymbol(this+0x14,name,dtor); only adds the missing EAGL namespace (siblings already EAGL::ConstructorPool::*).",
+   "intermediates": []
+  },
+  {
+   "item": 7,
+   "xbox": "0x000e28a0",
+   "current": "GLoadingScreen::Update",
+   "ps2": "0x00249128",
+   "name": "",
+   "verdict": "keep",
+   "why": "Draws background/dots/text by loading state - matches PS2 GLoadingScreen::Update 0x248d40; FadeToBlack is a timed FadeScreen loop.",
+   "intermediates": []
+  },
+  {
+   "item": 8,
+   "xbox": "0x00144300",
+   "current": "SFILTER_timestretchratio",
+   "ps2": "0x00317098",
+   "name": "SFILTER_timestretchsetratio",
+   "verdict": "accept",
+   "why": "Same function: ratio*1/4096 stored at +0x24 clamped to [0.5,2.0]; called from MIX_settimemult on both sides; current is a misremembered name.",
+   "intermediates": []
+  },
+  {
+   "item": 9,
+   "xbox": "0x00071930",
+   "current": "RayShell:GetNumActiveRayShells",
+   "ps2": "0x00199230",
+   "name": "RayShell::GetNumActiveRayShells",
+   "verdict": "accept",
+   "why": "Same getter, same caller WTriggerManager::Update; current name has a single-colon typo.",
+   "intermediates": []
+  },
+  {
+   "item": 10,
+   "xbox": "0x00117b50",
+   "current": "UGroup::DataLocateTag",
+   "ps2": "0x002d5920",
+   "name": "",
+   "verdict": "keep",
+   "why": "One-key search: flag&8==0 linear scan else binary search FUN_00117840 - matches PS2 DataLocateTag 0x2d5a10; Xbox DataLocateFirst 0x117a60 already has the param_3==-1 / 0xffff0000 mask form of PS2 DataLocateFirst.",
+   "intermediates": []
+  },
+  {
+   "item": 11,
+   "xbox": "0x000abf20",
+   "current": "RParticleParticleCache::UpdateAndRender",
+   "ps2": "0x001f4920",
+   "name": "",
+   "verdict": "keep",
+   "why": "Loops JustUpdate up to 3 times then renders (JustRender inlined) - matches PS2 UpdateAndRender 0x1f47f8.",
+   "intermediates": []
+  },
+  {
+   "item": 12,
+   "xbox": "0x0013d310",
+   "current": "SNDSYS_inited",
+   "ps2": "0x003070f0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Returns SNDSYS_is_inited - identical to PS2 SNDSYS_inited 0x3077b0.",
+   "intermediates": []
+  },
+  {
+   "item": 13,
+   "xbox": "0x0010a7f0",
+   "current": "THREAD_iscurrent",
+   "ps2": "0x00261810",
+   "name": "",
+   "verdict": "keep",
+   "why": "0 -> compare with main thread id, -1 -> true, else compare thread field - matches PS2 THREAD_iscurrent 0x261578; MUTEX_destroy is DeleteSema.",
+   "intermediates": []
+  },
+  {
+   "item": 14,
+   "xbox": "0x0011a700",
+   "current": "DAFI_getvalue",
+   "ps2": "0x002d9770",
+   "name": "",
+   "verdict": "keep",
+   "why": "DAFI_getkeyindex then value table +0x2eec (getvaluebyindex inlined) - matches PS2 DAFI_getvalue 0x2d9b88.",
+   "intermediates": []
+  },
+  {
+   "item": 15,
+   "xbox": "0x00145ab0",
+   "current": "SFILTER_unpack_unknown2",
+   "ps2": "0x00315fe8",
+   "name": "SFILTER_unpackxapf",
+   "verdict": "accept",
+   "why": "Same body as PS2 SFILTER_unpackxapf (freeframes, CEAXABLKDecf::Decode loop, SNDPKTPLAYI_get, SetState/Feed); its init installs it with the xapfrestore twin and news a CEAXABLKDecf(0xa8) like SFILTER_unpackxapfinit. xalf/xaf already named on Xbox.",
+   "intermediates": [
+    {
+     "xbox": "0x00145bf0",
+     "ps2": "0x00316158",
+     "name": "SFILTER_unpackxapfrestore",
+     "why": "Currently SFILTER_unpack_unknown2b: deletes the CEAXABLKDecf at +0x1c, identical to PS2 xapfrestore; installed as func2 next to unpackxapf."
+    },
+    {
+     "xbox": "0x00145c10",
+     "ps2": "0x00316178",
+     "name": "SFILTER_unpackxapfinit",
+     "why": "Currently SFILTER_unpack_unknown2_init: installs unpackxapf/restore, getmastervoice/voicetopackethandle/getsamplechan, new CEAXABLKDecf(0xa8) - identical to PS2 xapfinit."
+    }
+   ]
+  },
+  {
+   "item": 16,
+   "xbox": "0x0013ee00",
+   "current": "SNDPKTPLAYI_get",
+   "ps2": "0x00312068",
+   "name": "",
+   "verdict": "keep",
+   "why": "Takes (idx,chan,int*,int*) and fills both outputs from the frame entry - matches PS2 SNDPKTPLAYI_get 0x311e08; freeframes is a small counter update.",
+   "intermediates": []
+  },
+  {
+   "item": 17,
+   "xbox": "0x000d69a0",
+   "current": "GGallery::Sprite_Draw2D",
+   "ps2": "0x00238d40",
+   "name": "GGallery::SPRITE_Draw2D",
+   "verdict": "accept",
+   "why": "Same function family and callers (GHud::DrawCrossHairs/DrawPauseMenu/DrawZoomingCrossHairs); canonical symbol is GGallery::SPRITE_Draw2D (PS2 has 5 overloads of that name) - capitalisation fix only.",
+   "intermediates": []
+  },
+  {
+   "item": 18,
+   "xbox": "0x00144340",
+   "current": "SFILTER_unpack_unknown4",
+   "ps2": "0x00317130",
+   "name": "SFILTER_timestretch",
+   "verdict": "accept",
+   "why": "Identical to PS2 SFILTER_timestretch: 200-frame pull when +0x30==0, stretchframesneeded (FUN_001440b0), framesoutstanding check, stretch, memclr tail.",
+   "intermediates": [
+    {
+     "xbox": "0x001443f0",
+     "ps2": "0x00317240",
+     "name": "SFILTER_timestretchinit",
+     "why": "Currently SFILTER_unpack_unknown4_init: installs the timestretch func, same field writes (+6 ptr, 1.0f, byte<<1, SNDI_getb(..,4)) as PS2 timestretchinit."
+    }
+   ]
+  },
+  {
+   "item": 19,
+   "xbox": "0x001327c0",
+   "current": "_strncmp",
+   "ps2": "0x002a9760",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT strncmp; VT paired it with newlib strlen.",
+   "intermediates": []
+  },
+  {
+   "item": 20,
+   "xbox": "0x0011a660",
+   "current": "DAFI_getkeyindex",
+   "ps2": "0x002d9a38",
+   "name": "",
+   "verdict": "keep",
+   "why": "Scans key table at +0x1f48/+0x1f4c with stricmp - matches PS2 DAFI_getkeyindex 0x2d9af0; getsectionindex uses param[1]/param+2 and a null-name case.",
+   "intermediates": []
+  },
+  {
+   "item": 21,
+   "xbox": "0x00019cd0",
+   "current": "ActSkeletonDatabase::~ActSkeletonDatabase",
+   "ps2": "0x00114718",
+   "name": "",
+   "verdict": "keep",
+   "why": "Deletes 9 skeletons then the inlined ActSkeleton::ShutDown tail - matches PS2 ~ActSkeletonDatabase 0x114d00; ShutDown is only the inlined part.",
+   "intermediates": []
+  },
+  {
+   "item": 22,
+   "xbox": "0x0008cfa0",
+   "current": "RRenderWorldCamera::DoRender",
+   "ps2": "0x001c5ca8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Full render sequence (PerformCulling, DrawStaticWorldGeometry, DrawActors, ...) - PS2 DoRender 0x1c55d8; DrawTranslucentStaticWorldGeometry is inlined inside it (size ratio 4.3).",
+   "intermediates": []
+  },
+  {
+   "item": 23,
+   "xbox": "0x00124490",
+   "current": "voice_create",
+   "ps2": "0x002dd8a0",
+   "name": "AVoice::View::Push",
+   "verdict": "accept",
+   "why": "Allocates a list node holding the View* (ECX) and links it at the tail of the global voice list; sole call is in AVoice::View::Play at the exact position PS2 Play calls Push(this) (after setting +0x17 from +0x16). voice_create is invented.",
+   "intermediates": []
+  },
+  {
+   "item": 24,
+   "xbox": "0x00051580",
+   "current": "InputConfigManager::Get",
+   "ps2": "0x00167d80",
+   "name": "IOModule::GetIOModule",
+   "verdict": "accept",
+   "why": "Callers (~EStartMission, ~EControlToPlayer, ~ESetVideo, GameLoop_StartUp, SetAutoDrive, Bond_*) match PS2 IOModule::GetIOModule; the static-init+atexit singleton shape matches it too. The real InputConfigManager::Get is Xbox 0x50270 (callers PauseOn/PauseOff/DrawPauseMenu/SendGameMessages as PS2 0x1664c0), so this was a duplicate wrong name.",
+   "intermediates": [
+    {
+     "xbox": "0x001086c0",
+     "ps2": "0x00259980",
+     "name": "PAD_init",
+     "why": "Currently also named IOModule::GetIOModule: once-only XGetDevices/XInputOpen per port then SYNCTASK_add(update) - the Xbox PAD_init; called first in IOModule::Initialize exactly where PS2 Initialize calls PAD_init."
+    },
+    {
+     "xbox": "0x00108490",
+     "ps2": "0x0025a4a8",
+     "name": "PAD_update",
+     "why": "Currently IOModule::Update: it is the task PAD_init adds and IOModule::Initialize removes with SYNCTASK_del, the position of PAD_update in PS2 Initialize (PS2 IOModule::Update 0x168060 is a different function). Only comments in src/driving/platform/XboxInput.cpp mention IOModule::Update."
+    }
+   ]
+  },
+  {
+   "item": 25,
+   "xbox": "0x000f3a90",
+   "current": "EAGL::ConstructorPool::FindDestructor",
+   "ps2": "0x0029e1a8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Disassembly does ADD ECX,0x14 before SymbolPool::Search - the destructor pool, as PS2 FindDestructor 0x29e1d0; FindConstructor is Xbox 0xf3a70 without the offset.",
+   "intermediates": []
+  },
+  {
+   "item": 26,
+   "xbox": "0x0007f470",
+   "current": "LightManager::SetLightingModel",
+   "ps2": "0x001aec20",
+   "name": "RLightManager::SetLightingModel",
+   "verdict": "accept",
+   "why": "Same function (model at +0x70/+0x74 vs PS2 +0x74/+0x78, MEM_copy 0x70, SetCurrentAmbientAndDiffuse, AddSpecularLight; same 4 callers); canonical class is RLightManager.",
+   "intermediates": []
+  },
+  {
+   "item": 27,
+   "xbox": "0x0011df50",
+   "current": "AMenuSound::Trigger",
+   "ps2": "0x002f4d58",
+   "name": "",
+   "verdict": "keep",
+   "why": "operator_new(0x120,'AMenuSoundPriv') + ctor with flag&4 -> 2 - matches PS2 AMenuSound::Trigger(int,int,..) 0x2f4a20; AMenuSoundPriv::operator_new is inlined.",
+   "intermediates": []
+  },
+  {
+   "item": 28,
+   "xbox": "0x001284b0",
+   "current": "APlayerVehicle::APlayerVehicle",
+   "ps2": "0x002f0900",
+   "name": "",
+   "verdict": "keep",
+   "why": "vtable store, AEngine::Get(..,4500.0), strcpy name, ActivateGun('Machine Gun') - matches PS2 constructor 0x2f07c8, not Play.",
+   "intermediates": []
+  },
+  {
+   "item": 29,
+   "xbox": "0x0008bf30",
+   "current": "RRenderHigh::Render",
+   "ps2": "0x001c3d58",
+   "name": "",
+   "verdict": "keep",
+   "why": "StartFrame, DisableAlphaWrites, camera loop, GHud::Render - PS2 RRenderHigh::Render 0x1c3c10 with StartFrameRender/StopFrameRender inlined (size ratio 4.3).",
+   "intermediates": []
+  },
+  {
+   "item": 30,
+   "xbox": "0x000b2730",
+   "current": "Simulation::GetSimpleRigidBody",
+   "ps2": "0x001ff280",
+   "name": "",
+   "verdict": "keep",
+   "why": "Returns index*0x40 + (+0x2c or +0x20 by +4 flag) - identical to PS2 GetSimpleRigidBody 0x1ff0b0.",
+   "intermediates": []
+  },
+  {
+   "item": 31,
+   "xbox": "0x0013f880",
+   "current": "SNDMEMI_free",
+   "ps2": "0x00311d10",
+   "name": "",
+   "verdict": "keep",
+   "why": "Heap-table search and compaction - matches PS2 SNDMEMI_free 0x307eb8; SNDPKTPLAY_stop calls SNDstop/purge.",
+   "intermediates": []
+  },
+  {
+   "item": 32,
+   "xbox": "0x00114750",
+   "current": "UMemory::FastAlloc",
+   "ps2": "0x002cfe50",
+   "name": "",
+   "verdict": "keep",
+   "why": "Size-class freelist pop + MEM_fill, large via vtable alloc - PS2 FastAlloc 0x2cfda8; FastFree pushes onto the list.",
+   "intermediates": []
+  },
+  {
+   "item": 33,
+   "xbox": "0x000fa9c0",
+   "current": "EAGLAnim::Initializer::InitInternal",
+   "ps2": "0x002645c0",
+   "name": "",
+   "verdict": "keep",
+   "why": "EAGLMalloc('EAGLAnim::FnAnimFactory new') + AddType('AnimationBank') - identical to PS2 InitInternal 0x264508; ShutDown does RemoveType.",
+   "intermediates": []
+  },
+  {
+   "item": 34,
+   "xbox": "0x001237d0",
+   "current": "AStream::Event",
+   "ps2": "0x002e9688",
+   "name": "AStream::Get",
+   "verdict": "accept",
+   "why": "Body is URefCounter<AStream>::Get() + GetReference(name) = PS2 AStream::Get; its 8+ callers (ClearMission, DrawMissionResult, AFader::Priv::Event, RunTheGame...) match PS2 AStream::Get's. The real AStream::Event is Xbox 0x1234d0 (printf 'event %s, %.1f, %s' / loop|one-shot), which keeps its name.",
+   "intermediates": []
+  },
+  {
+   "item": 35,
+   "xbox": "0x00125270",
+   "current": "URefCounter::GetReference",
+   "ps2": "0x002fafb0",
+   "name": "",
+   "verdict": "keep",
+   "why": "One MSVC-folded GetReference shared by AMix/AStream/AFader/ABank/AEngine callers; the generic name is right, the AEngine instantiation is too narrow.",
+   "intermediates": []
+  },
+  {
+   "item": 36,
+   "xbox": "0x00133d60",
+   "current": "_strncpy",
+   "ps2": "0x002a9a50",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT strncpy; same function in spirit as newlib strncpy but a different library - CRT name stays.",
+   "intermediates": []
+  },
+  {
+   "item": 37,
+   "xbox": "0x0003d870",
+   "current": "DTuningFile::Reader::FindIndexedItem",
+   "ps2": "0x00144548",
+   "name": "",
+   "verdict": "keep",
+   "why": "sprintf('%s{%s}') + strip spaces + OptionParser - matches PS2 FindIndexedItem(char*,char*) 0x144648; FindItem has no sprintf.",
+   "intermediates": []
+  },
+  {
+   "item": 38,
+   "xbox": "0x0005bbe0",
+   "current": "std::list<>::clear",
+   "ps2": "0x0017a928",
+   "name": "List_TaskRecord_Clear",
+   "verdict": "accept",
+   "why": "The TaskRecord list clear (MSVC range-erase form, FastFree(node,0x1c)) called from Schedule::RemoveAllTasks and ~Schedule's helper at the positions where PS2 calls List_TaskRecord_Clear (= _List_base<TaskRecord>::clear, sheet row 2401); only callers are those two, so the canonical name replaces the generic one.",
+   "intermediates": []
+  },
+  {
+   "item": 39,
+   "xbox": "0x00051d90",
+   "current": "XBoxPadDevice::XBoxPadDevice",
+   "ps2": "0x00169510",
+   "name": "",
+   "verdict": "keep",
+   "why": "Platform-specific twin: Xbox vtable PTR__XBoxPadDevice, 20 scalars; PS2PadDevice is the PS2 class - Xbox name is correct.",
+   "intermediates": []
+  },
+  {
+   "item": 40,
+   "xbox": "0x0008cb30",
+   "current": "RRenderWorldCamera::DrawStaticWorldGeometry",
+   "ps2": "0x001c5d08",
+   "name": "",
+   "verdict": "keep",
+   "why": "EnableAlphaWrites, EnableFog, DrawWorld(..,1), UpdateTargets, GHud::UpdateTargets - identical to PS2 DrawStaticWorldGeometry 0x1c5c20.",
+   "intermediates": []
+  },
+  {
+   "item": 41,
+   "xbox": "0x00012fd0",
+   "current": "RRenderWorldCamera::DrawActors",
+   "ps2": "0x0010b6e0",
+   "name": "ActActorDatabase::DrawAll",
+   "verdict": "accept",
+   "why": "Iterates the actor list calling ActActor::Draw for non-hidden actors = PS2 ActActorDatabase::DrawAll; DoRender calls it with ECX=fActorDatabase and (cam,0,0)/(cam,1,1), i.e. PS2 DrawActors/DrawActorsPOV wrappers inlined. No Xbox function holds DrawAll.",
+   "intermediates": []
+  },
+  {
+   "item": 42,
+   "xbox": "0x0008cb90",
+   "current": "RRenderWorldCamera::DrawFinalStaticWorldGeometry",
+   "ps2": "0x001c5ca8",
+   "name": "",
+   "verdict": "keep",
+   "why": "SetZWritesEnable(0), fog, DrawPass(..,0,0,2), SetZWritesEnable(1) - identical to PS2 DrawFinalStaticWorldGeometry 0x1c5d08; Translucent uses (1,1,2) without Z toggles.",
+   "intermediates": []
+  },
+  {
+   "item": 43,
+   "xbox": "0x0008cfa0",
+   "current": "RRenderWorldCamera::DoRender",
+   "ps2": "0x001c5c20",
+   "name": "",
+   "verdict": "keep",
+   "why": "Duplicate of item 22: full render sequence = PS2 DoRender 0x1c55d8; it calls DrawStaticWorldGeometry rather than being it.",
+   "intermediates": []
+  },
+  {
+   "item": 44,
+   "xbox": "0x00078190",
+   "current": "RAnimEngine::Init",
+   "ps2": "0x001a1a10",
+   "name": "RAnimEngine::Update",
+   "verdict": "accept",
+   "why": "Body is ticks = ftol(param*rate*60), loop System::Update over systems when changed = PS2 RAnimEngine::Update; same caller ~EAnimUpdate. PS2 Init only zeroes two globals. No Xbox function holds RAnimEngine::Update.",
+   "intermediates": []
+  },
+  {
+   "item": 45,
+   "xbox": "0x000e5cc0",
+   "current": "DynamicLoader::RegisterVar",
+   "ps2": "0x0029fce8",
+   "name": "EAGL::DynamicLoader::RegisterVar",
+   "verdict": "accept",
+   "why": "Same one-line AddSymbol(varPool,name,ptr), same callers (SymbolInit, ActSkeleton ctor, ActManagerInit); adds missing EAGL namespace (UnRegisterVar is already EAGL::DynamicLoader::).",
+   "intermediates": []
+  },
+  {
+   "item": 46,
+   "xbox": "0x000c8370",
+   "current": "someSortOperation",
+   "ps2": "0x0021f670",
+   "name": "WRender::DrawPass",
+   "verdict": "accept",
+   "why": "Mode 2/1 picks comparator, sorts instances then QuickDrawInstance loop = PS2 WRender::DrawPass; DrawFinalStaticWorldGeometry calls it with (..,0,0,2) and DoRender's inlined translucent pass with (..,1,1,2), matching PS2 DrawPass call sites.",
+   "intermediates": []
+  },
+  {
+   "item": 47,
+   "xbox": "0x0013bb20",
+   "current": "SNDSTRMI_releasecallback",
+   "ps2": "0x00308f30",
+   "name": "",
+   "verdict": "keep",
+   "why": "Single STREAM_release on header at param-4 - identical to PS2 SNDSTRMI_releasecallback 0x308978; parsechunk dispatches on chunk tags.",
+   "intermediates": []
+  },
+  {
+   "item": 48,
+   "xbox": "0x00050170",
+   "current": "InputConfigManager::GetNumConfigs",
+   "ps2": "0x00166d78",
+   "name": "",
+   "verdict": "keep",
+   "why": "Returns this[+0x10 + i*4] - identical to PS2 GetNumConfigs 0x166d80; IsInverted has no index.",
+   "intermediates": []
+  },
+  {
+   "item": 49,
+   "xbox": "0x001327c0",
+   "current": "_strncmp",
+   "ps2": "0x002a9898",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT strncmp (case-sensitive), not newlib strncasecmp.",
+   "intermediates": []
+  },
+  {
+   "item": 50,
+   "xbox": "0x00126ad0",
+   "current": "ABank::Load",
+   "ps2": "0x002fd348",
+   "name": "",
+   "verdict": "keep",
+   "why": "Load(name,slot): removes old bank (Remove inlined), Load(name,1), store slot - matches PS2 ABank::Load(char*,int) 0x2fd288.",
+   "intermediates": []
+  },
+  {
+   "item": 51,
+   "xbox": "0x00117010",
+   "current": "UFileLoader::FileExists",
+   "ps2": "0x002d7578",
+   "name": "",
+   "verdict": "keep",
+   "why": "Path normalise + AttemptBigFileExists + FILE_exists - matches PS2 FileExists 0x2d74f8; FileSize uses size calls.",
+   "intermediates": []
+  },
+  {
+   "item": 52,
+   "xbox": "0x00071970",
+   "current": "WTriggerManager::SetTriggerHittingRayShell",
+   "ps2": "0x00199268",
+   "name": "RayShell::SetTriggerHittingRayShell",
+   "verdict": "accept",
+   "why": "One-store setter sitting in the RayShell block between ClearActiveRayShells and RayShell::GetTriggerHittingRayShell, same order as PS2 0x199258/0x199268/0x199278; canonical class is RayShell.",
+   "intermediates": []
+  },
+  {
+   "item": 53,
+   "xbox": "0x00134537",
+   "current": "__stricmp",
+   "ps2": "0x002a9198",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT _stricmp (locale branch to ___ascii_stricmp); CRT name stays.",
+   "intermediates": []
+  },
+  {
+   "item": 54,
+   "xbox": "0x0005f640",
+   "current": "Missile::SetUserSteerY",
+   "ps2": "0x00181df0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Disassembly stores to +0x704 as PS2 SetUserSteerY 0x181e30; SetUserSteerX (+0x700) is Xbox 0x5f600.",
+   "intermediates": []
+  },
+  {
+   "item": 55,
+   "xbox": "0x00057a40",
+   "current": "AttributeSet::~AttributeSet",
+   "ps2": "0x001696d0",
+   "name": "",
+   "verdict": "keep",
+   "why": "Decrements collection refcount and clears at zero - matches PS2 ~AttributeSet 0x169728; copy-ctor increments.",
+   "intermediates": []
+  },
+  {
+   "item": 56,
+   "xbox": "0x00121320",
+   "current": "ASoundManager::Restart",
+   "ps2": "0x002ec6d8",
+   "name": "",
+   "verdict": "keep",
+   "why": "Two passes over the sound list calling a vtable check, then stream/mix reset - matches PS2 Restart 0x2ec788; Resume only clears flags and restores volumes.",
+   "intermediates": []
+  },
+  {
+   "item": 57,
+   "xbox": "0x00134537",
+   "current": "__stricmp",
+   "ps2": "0x002a9508",
+   "name": "",
+   "verdict": "keep",
+   "why": "MSVC CRT _stricmp, not newlib strcmp.",
+   "intermediates": []
+  }
+ ]
+}

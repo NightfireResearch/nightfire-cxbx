@@ -2,18 +2,21 @@
 #define OBJECT_H_
 
 #include "../../actionhelpers.h"
+#include "../../../common/xbeClass.h"
 
 #include "../../math/math.h"
 
-
 typedef enum {
+    OBJECTTYPE_0=0,             // a helicopter's body is one (Bullet_heatseekable)
     // The original uses value 1 both for graphics-only child objects and for
     // objects after their delete path has completed.
     OBJECTTYPE_GFX=1,
     OBJECTTYPE_DELETED=OBJECTTYPE_GFX,
     OBJECTTYPE_DRONE=2,
     OBJECTTYPE_PLAYER=3,
+    OBJECTTYPE_4=4,             // listed with the drones (MP_GetRadarObjects)
     OBJECTTYPE_BULLET=5,
+    OBJECTTYPE_6=6,             // deleted like bullets and effects out of every room (control_handle_cel_change)
     OBJECTTYPE_ROTOR=7,
     OBJECTTYPE_PARTICLES=12,
     OBJECTTYPE_CASING=13,
@@ -155,7 +158,6 @@ inline const char* Object_GetName(ObjectType type) {
     }
 }
 
-
 // A base object consists of the minimum functionality required to be updated, rendered, collided with, destroyed, etc.
 // All specific object types will consist of this, plus additional data specific to that object type (pointed to by extraObjectData)
 #pragma pack(push, 1)
@@ -163,67 +165,148 @@ inline const char* Object_GetName(ObjectType type) {
 // Forward declaration of obj_tag so that it can be used within the struct
 struct obj_tag;
 
+// obj_tag::collideFlags
+enum ObjCollideFlags {
+    OBJCOLL_ACTOR = 0x1,        // a player or a drone: its tests pass through bullets (Collide_PickObj)
+    OBJCOLL_BULLET = 0x2,
+    OBJCOLL_SPHERE = 0x4,       // a sphere test meets it as a sphere
+    OBJCOLL_DOOR_PORTALS = 0x8, // a door: build_LinkDoors2Portals links it to the portals it covers
+};
+
 typedef struct obj_tag {
     // TODO: Complete this
     LLNODE_tag* llPrev; // Required at the start of the struct for insertion into eg ForcedList
     LLNODE_tag* llNext;
-    obj_tag* prevInCel; // 0x8 -- doubly-linked list
-    obj_tag *nextInCel; // 0xC
-    char pad_0000[4];
+    obj_tag* nextInCel; // 0x8 - the cel's objects, from cel_tag::firstObject
+    obj_tag *prevInCel; // 0xC - (the cel itself for the first)
+    struct ATTACH_tag *attachments; // 0x10 - the marks on it (Effect_Bullet, Effect_Player)
     obj_tag *nextObject; // 0x14 - doubly-linked list
     obj_tag* prevObject; // 0x18
-    obj_tag* maybeParent; // 0x1c
+    obj_tag* parent; // 0x1c
     cel_tag* inCel; // 0x20 - cel_tag
     _VECTOR position; // 0x24
-    _VECTOR lastPosition; // 0x28
-    _VECTOR rotation; // 0x2C
-    _VECTOR lastRotation; // 0x30
-    char _pad_2[12];
+    _VECTOR lastPosition; // 0x30 - comment previously (incorrectly) said 0x28; confirmed via Ghidra's own struct
+    _VECTOR rotation; // 0x3C
+    _VECTOR lastRotation; // 0x48
+    _VECTOR lastCentrePoint; // 0x54 - centrePoint before Control_BuildWorldSph last moved it
     _VECTOR centrePoint; // 0x60
     float radius; // 0x6C
     _MATRIX transformMatrix; // 0x70
     HITDATA_tag* hitList; // 0xAC - HITLIST_tag
-    void* maybeCollision; // 0xB0
+    HITTEST_tag* hitTest; // 0xB0 - the test Collide_Update runs for the object
     celglist_tag* objGraphics; // 0xB4
     AnimState* animState; // 0xB8
     void* extraObjectData; // 0xBC
-    void* scriptPlayer;
+    void* scriptPlayer; // 0xC0 - cleared by Script_KillStream when an entity/anim stream controlling this
+                         // object ends
     float scale;
     int creationTimeFrames;
-    int effectFlags; // 0xCC, unclear what the meaning is but sometimes relevant for rendering or object state or straddle tests?
+    int effectFlags;       // 0xCC - EFFECT_*
     unsigned short curState; // 0xD0
     unsigned short subState; // MovementType (Player), PlayerNum (Car)
     ushort displayMask;
-    ushort renderType;
-    char unknown_0xd8;
-    char _pad_6;
-    char flags; // (1 == Marked for deletion or resetting)
+    ushort transformFlags; // ObjectTransformFlags: how the update derives the matrix and bounds (0xd6)
+    char drawnCountdown;   // 0xd8 - View_AddObjects sets 2, the object update counts it down: non-zero = drawn in
+                           //        the last two ticks
+    char collideFlags;     // 0xd9 - ObjCollideFlags
+    char flags;            // 0xda - ObjectFlags
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
-    uchar light_related1;
-    uchar light_related2;
-    uchar light_related3;
+    uchar ambientR;        // 0xdc - the ambient light, eased towards its cel's (Lights_CalcAmbientLight)
+    uchar ambientG;
+    uchar ambientB;
     uchar tweakR;
     uchar tweakG;
     uchar tweakB;
-    uchar maybeBrightness; // Maybe glow intensity?
+    uchar tweakA;          // 0xe2 - the alpha of psiSetTweakARGB (View_SetupRenderModes)
     char _pad_8;
 } obj_tag;
 #pragma pack(pop)
 
-typedef enum{
-    FLAG_UNKNOWN_40 = 0x40,
-    FLAG_IN_FORCEDLIST = 0x30000000,
+// obj_tag::flags
+enum ObjectFlags {
+    OBJFLAG_DELETE = 0x1,           // deleted (or reset) by the object list's next update
+    OBJFLAG_NEW = 0x2,              // set by control_init_object; the update works out its world sphere and ambient
+                                    // light once, then clears it
+    OBJFLAG_RIGGED = 0x4,           // an animated object whose skin has rigged bodies, and its discrete parts
+    OBJFLAG_FULL_CHARACTER = 0x8,   // an animated object with ANIMOBJ_FULL_CHARACTER
+};
+
+// obj_tag::effectFlags: how it is drawn, lit and collided with. The low bits come from its model
+// (celglist_tag::applyFlagsToObject, which Control_SetGList copies over all but EFFECT_STRADDLES_CELS and the two
+// forced-list bits); the same word gives a cel its flags (cel_tag::flags, CelFlags). EFFECT_BITn: no reader.
+typedef enum {
+    EFFECT_BACK_TO_FRONT = 0x1,                 // drawn in list 1, sorted far to near
+    EFFECT_SKY_AT_EYE = 0x2,                    // a sky model: placed at the eye
+    EFFECT_JITTER = 0x4,                        // its scale shaken at random each draw
+    EFFECT_BILLBOARD = 0x8,                     // drawn facing the view
+    EFFECT_HIDDEN = 0x10,                       // not drawn, and no line of sight stops at it (Script_HideObj)
+    EFFECT_NO_COLLISION = 0x20,                 // never a collision candidate, never in ForcedList
+    EFFECT_NO_CONTACT = 0x40,                   // its hits are HIT_NO_CONTACT: bullets pass, nothing stands on it
+    EFFECT_PLACED_LIGHTS = 0x80,                // lit by LIGHT_PLACED and LIGHT_CARRIED lights
+    EFFECT_NO_TRANSIENT_LIGHTS = 0x100,         // not lit by LIGHT_TRANSIENT lights
+    EFFECT_BIT9 = 0x200,
+    EFFECT_XRAY_ONLY = 0x400,                   // drawn only in VISION_XRAY
+    EFFECT_CEL_LIT = 0x800,                     // its ambient eases to its cel's, and tints it
+    EFFECT_MASKABLE = 0x1000,                   // skipped by the tests with HITMASK_SKIP_MASKABLE
+    EFFECT_DRAW_LAST = 0x2000,                  // drawn in list 2, after lists 0 and 1
+    EFFECT_STRADDLES_CELS = 0x8000,             // drawn by View_AddForcedObjects (Controls_StraddleTest)
+    EFFECT_SUNLIT = 0x10000,                    // its ambient doubled while player 0 can see the sun
+    EFFECT_DIM_IN_NIGHT_VISION = 0x20000,       // its alpha a quarter in VISION_NIGHT
+    EFFECT_NOT_IN_VIEW_4 = 0x40000,             // the model's: Control_SetGList takes view 4 out of displayMask
+    EFFECT_FLASHES = 0x80000,                   // its tint times FlashMod
+    EFFECT_FORCED_LISTED = 0x10000000,          // in ForcedList
+    EFFECT_ALWAYS_FORCED = 0x20000000,          // in no cel: always in ForcedList (build_LinkToRoom)
+    EFFECT_IN_FORCED_LIST = 0x30000000,         // either of the two
 } ObjectEffectFlags;
 
-//char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
-static_assert(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
-static_assert(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
-static_assert(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
-static_assert(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
-static_assert(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
-static_assert(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
-static_assert(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
+// obj_tag::transformFlags bits: how the game's update derives an object's matrix and bounds each frame - in
+// Control_GetObjMatrix (0x0002cf10), Control_BuildWorldSph (0x0002db20), control_movement_object_handler
+// (0x0002dd10) and Player_Update. Ordinarily the matrix is rebuilt from rotation, position and scale, and the
+// bounding sphere from the model. (The field was called transformFlags, a guess; Ghidra calls it rendererType.)
+typedef enum {
+    // Scale stretches the object along its own length (Z) only, rather than evenly: beams, lasers, tracers.
+    TRANSFORM_SCALE_LENGTH_ONLY = 0x01,
+    // The matrix's rotation is set elsewhere and kept; only its translation comes from position.
+    TRANSFORM_KEEP_ROTATION = 0x02,
+    // The whole matrix is set elsewhere and kept: neither rotation nor position is put into it (Player_Update
+    // too). With TRANSFORM_KEEP_ROTATION, the last rotation is taken from the matrix's direction.
+    TRANSFORM_MATRIX_PLACED = 0x04,
+    // A skinned, animated object (set by AnimObjectNew): the bounding sphere comes from the animation rather
+    // than the model, and collision and the view code treat it as such.
+    TRANSFORM_ANIMATED = 0x08,
+    // A platform particle system (Particles_Create): added to the views without a model, sorted 2000 further back,
+    // and drawn by nothing on the Xbox (View_DrawList's profiling hook point)
+    TRANSFORM_PARTICLES = 0x10,
+    // Moved this frame: control_movement_object_handler wraps the rotation into +-pi, rebuilds the matrix, the
+    // world bounds, the cel and the lighting, and keeps the position and rotation as the last ones.
+    TRANSFORM_MOVED = 0x20,
+    // After the frame's update, the position is read back out of the matrix's translation.
+    TRANSFORM_POSITION_FROM_MATRIX = 0x40,
+    TRANSFORM_80 = 0x80,                // Door_Create sets it; no reader found
+    // The radius is kept as set, not worked out from the model and the scale; and the views add the object without a
+    // model and draw it with Emitter_Draw (Emitter_Create sets it).
+    TRANSFORM_FIXED_RADIUS = 0x100,
+    // The scale is not applied to the matrix.
+    TRANSFORM_NO_SCALE = 0x200,
+    // Not a transform matter, but kept here with the rest: others may point at the object, so when it is
+    // deleted, bullets, explosions and hit lists referring to it are cleared.
+    TRANSFORM_REFERENCED = 0x400,
+} ObjectTransformFlags;
 
-static_assert(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
+//char (*__kaboom)[offsetof(obj_tag,objectType)] = 1;
+LAYOUT_32(offsetof(obj_tag, position) == 0x24, "Offset of position not correct");
+LAYOUT_32(offsetof(obj_tag, lastPosition) == 0x30, "Offset of lastPosition not correct");
+LAYOUT_32(offsetof(obj_tag, rotation) == 0x3c, "Offset of rotation not correct");
+LAYOUT_32(offsetof(obj_tag, lastRotation) == 0x48, "Offset of lastRotation not correct");
+LAYOUT_32(offsetof(obj_tag, transformMatrix) == 0x70, "Offset of transformMatrix not correct");
+LAYOUT_32(offsetof(obj_tag, extraObjectData) == 0xbc, "Offset of extraObjectData not correct");
+LAYOUT_32(offsetof(obj_tag, scriptPlayer) == 0xc0, "Offset of scriptPlayer not correct");
+LAYOUT_32(offsetof(obj_tag, effectFlags) == 0xcc, "Offset of effectFlags not correct");
+LAYOUT_32(offsetof(obj_tag, transformFlags) == 0xd6, "Offset of transformFlags not correct");
+LAYOUT_32(offsetof(obj_tag, flags) == 0xda, "Offset of flags not correct");
+LAYOUT_32(offsetof(obj_tag, objectType) == 0xdb, "Offset of objectType not correct");
+LAYOUT_32(offsetof(obj_tag, tweakB) == 0xe1, "Offset of tweakB not correct");
+
+LAYOUT_32(sizeof(obj_tag) == 0xe4, "Size of obj_tag wrong");
 
 #endif // OBJECT_H_

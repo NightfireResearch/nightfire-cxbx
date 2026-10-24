@@ -1,0 +1,60 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0004ff50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::ParseDefFileForFrontEnd(ConfigInfo *, char"
+  },
+  {
+   "address": "0x00050080",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::Shutdown(void)"
+  },
+  {
+   "address": "0x00050140",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "InputConfigManager::SetInverted(bool)"
+  },
+  {
+   "address": "0x00050160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::IsInverted(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x00050270",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::Get(void)",
+   "return": "InputConfigManager *"
+  },
+  {
+   "address": "0x000502d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "InputConfigManager::ParseMasterConfigFile(char *)"
+  },
+  {
+   "address": "0x000504d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputConfigManager::InitAndPreload(void)"
+  }
+ ]
+}

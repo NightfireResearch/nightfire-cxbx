@@ -53,5 +53,4 @@ typedef enum {
 
 } XInput_Gamepad_ButtonBits;
 
-
 #endif // XINPUT_XBOX_H_

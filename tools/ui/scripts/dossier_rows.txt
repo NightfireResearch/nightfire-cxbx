@@ -1,0 +1,71 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The dossier's records and rewards: NightFire -> codename -> difficulty -> the mission wheel -> Y -> the dossier's
+# wheel -> Records (the missions' best scores and medals, round them), Rewards (round them).
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press Y                    # the dossier
+waitpage 0x4000002b        # P_DOSSIER
+wait 100
+shot dossier
+press A                    # Records, where the wheel starts
+waitpage 0x4000003a 200    # P_DSRECORDS
+wait 100
+shot records
+press RIGHT
+wait 40
+shot records_right
+press RIGHT
+wait 40
+press RIGHT
+wait 40
+shot records_right3
+press LEFT
+wait 40
+press LEFT
+wait 40
+press LEFT
+wait 40
+press LEFT
+wait 40
+shot records_left
+press B
+waitpage 0x4000002b
+wait 100
+press DOWN
+wait 40
+shot dossier_rewards
+press A
+waitpage 0x4000003b 200    # P_DSREWARDS
+wait 100
+shot rewards
+press RIGHT
+wait 40
+shot rewards_right
+press LEFT
+wait 40
+press LEFT
+wait 40
+shot rewards_left
+press B
+waitpage 0x4000002b
+wait 100
+shot dossier_again
+quit

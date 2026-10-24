@@ -1,27 +1,28 @@
 #include "actionhelpers.h"
+#include "engine/psiInput.h" // xboxInitInputDevices is reimplemented there now, talking to real XInput directly
 
-// AUTOGEN
-void xboxInitInputDevices(void);
-// AUTOGEN
-void xboxInitGraphics(void);
-// AUTOGEN
-void xboxInitTextures(void);
-// AUTOGEN
-void xboxInitSound(void);
-// AUTOGEN
-void* GetPTPData(void);
-// AUTOGEN
-void Graphics_Init_LowLevel(void);
+#include "engine/Direct3D/d3dSeam.h" // xboxInitGraphics is reimplemented there now
+#include "gfx/LowLevel.h"                // Graphics_Init_LowLevel
+#include "sound/dsndSeam.h"            // xboxInitSound is reimplemented there now
+#include "engine/XboxSystem.h"
+#include "engine/XboxError.h"
 
-// AUTOINJECT
-void main(int argc, char **argv) {
+// Set to silence NF_WARN (actionhelpers.h) - for the shadow tests
+int NfWarnMuted;
+
+// The game's own main - not the entry point of any executable we build. It cannot keep that name in C++,
+// which requires main to return int: MSVC accepts "void main", clang rejects it outright. Because the name
+// no longer matches the Ghidra export, this is injected by address rather than through AUTOINJECT, which
+// would look "Game_Main" up in tools/functions_action.json and not find it.
+// FUNC_AT(000e8e90)
+void Game_Main(int argc, char **argv) {
 
     xboxInitInputDevices();
     xboxInitGraphics();
     FS_Init();
     xboxInitTextures();
     xboxInitSound();
-    GetPTPData();
+    GetPTPData_Copy();
     Graphics_Init_LowLevel();
 
     while(1) {

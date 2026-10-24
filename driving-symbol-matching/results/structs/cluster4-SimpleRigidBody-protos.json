@@ -1,0 +1,136 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000b1e10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::SimpleRigidBody(int, int, COORD3 &, COORD3 &,",
+   "return": "SimpleRigidBody *"
+  },
+  {
+   "address": "0x000b1e90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::~SimpleRigidBody(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000b1ea0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::GetOwner(void) const",
+   "return": "PhysicsObject *"
+  },
+  {
+   "address": "0x000b1eb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::RecalcOrientMat(MATRIX4 &) const"
+  },
+  {
+   "address": "0x000b1ec0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::GetForwardVector(COORD3 &)"
+  },
+  {
+   "address": "0x000b1ee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::GetRightVector(COORD3 &)"
+  },
+  {
+   "address": "0x000b1f00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::SetOrientMat(MATRIX4 *)"
+  },
+  {
+   "address": "0x000b1f10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::SetOrientation(COORD4 &)"
+  },
+  {
+   "address": "0x000b1f30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::GetScalarVelocity(void)",
+   "return": "float"
+  },
+  {
+   "address": "0x000b1f40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::Accelerate(COORD3 *)"
+  },
+  {
+   "address": "0x000b1f80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::UpdatePosition(void)"
+  },
+  {
+   "address": "0x000b1fe0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimpleRigidBody::NeedsCollisionCheck(void) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x000b1ff0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "SimpleRigidBody::CheckCollisions(SimCollisionMap &)"
+  },
+  {
+   "address": "0x000b25c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SimpleRigidBody::SetCanHitTrigger(bool)",
+   "return": "void"
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "batch": "004c",
+ "program": "Driving.xbe",
+ "note": "0x96c60 plate only",
+ "items": [
+  {
+   "xbox": "0x00096c60",
+   "expect": "RViewCamera::~RViewCamera",
+   "name": "RViewCamera::scalar_deleting_destructor",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "vtable slot 0; frees this when flag bit 1 is set (MSVC scalar deleting destructor). VT had renamed it ~RViewCamera",
+    "PS2 0x001d4238",
+    "name: Ghidra refused the rename because VT left scalar_deleting_destructor as a secondary label here; set it primary by hand"
+   ]
+  }
+ ]
+}

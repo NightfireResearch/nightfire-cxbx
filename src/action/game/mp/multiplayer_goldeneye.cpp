@@ -1,0 +1,234 @@
+// GoldenEye: the key and the crystal, taken, carried, dropped and returned, and the GoldenEye's ray fired at the other
+// team once one team holds both.
+
+#include "multiplayer.h"
+#include "../../game.h"
+#include "../../engine/Text.h"
+#include "../../sound/Sound.h"
+#include "../../util/Random.h"
+#include "../obj/Player.h"
+#include "../obj/ScriptPlayer.h"
+#include "../drone/Drone.h"
+#include "../drone/NDrone2.h"
+#include "../view.h"
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "../obj/control.h"
+#include "../../math/X87Ops.h"
+
+// How long the GoldenEye's messages stay up, in frames
+static short MP_GoldenEyeMsgFrames(void) {
+    return (short)Ftol(FRAME_RATE_INT * 1.5);
+}
+
+// The part and its team's name, into a message. (Our helper; the original repeats it inline.)
+static void MP_GoldenEyeMsg(MPOBJECT *mpObj, Action_TranslatedText key, Action_TranslatedText crystal) {
+    char *str = Txt_GetStringFromHeap(0);
+    const char *team = Txt_BindLabel(mpObj->num == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
+    const char *format = Txt_BindLabel(mpObj->type == GOLDENEYE_KEY ? key : crystal, 0);
+    sprintf(str, format, team);
+    Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
+}
+
+// An agent takes a part. (Our helper; the original repeats it for each part.)
+static void MP_GoldenEyeTake(obj_tag *gameObj, obj_tag *taker, ushort playerFlag, ushort objectiveFlag, uint msg) {
+    short idx = Control_Plr2Ind(taker);
+    if (idx == -1)
+        return;
+    MPGame.players[idx].flags |= playerFlag;
+    MPTeam team = MPSettings.Player[idx].TeamId;
+    uint senderId = 0;
+    if (taker->objectType == OBJECTTYPE_DRONE) {
+        DCVars_tag dcVars;
+        Drone_DCVfromOBJ(taker, &dcVars);
+        senderId = dcVars.aiStateMachine->id;
+    }
+    MPGame.teamObjectiveFlags[team] |= objectiveFlag;
+    MP_sendBotMessage(taker, DRONE_MSG_BotGoalComplete, 1, 0);
+    MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, gameObj, 0, senderId);
+    MPGame.unknown_9 = 0;
+    MP_sendBotMessage(taker, msg, 0, 0);
+}
+
+// An agent lets go of a part. (Our helper; the original repeats it inline.)
+static void MP_GoldenEyeLetGo(obj_tag *holder, ushort playerFlag, ushort objectiveFlag, uint msg) {
+    if (holder == NULL)
+        return;
+    short idx = Control_Plr2Ind(holder);
+    if (idx == -1)
+        return;
+    MPGame.players[idx].flags &= ~playerFlag;
+    MPTeam team = MPSettings.Player[idx].TeamId;
+    if (holder->objectType == OBJECTTYPE_DRONE) {
+        DCVars_tag dcVars;
+        Drone_DCVfromOBJ(holder, &dcVars);
+    }
+    MPGame.teamObjectiveFlags[team] &= ~objectiveFlag;
+    MP_sendBotMessage(holder, DRONE_MSG_BotGoalUninit, 1, 0);
+    MPGame.unknown_9 = 0;
+    MP_sendBotMessage(holder, msg, 0, 0);
+}
+
+// mpObj->holder has just taken the part.
+static void MP_GoldenEyeTaken(MPOBJECT *mpObj, obj_tag *gameObj) {
+    if (mpObj->type == GOLDENEYE_KEY)
+        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyTaken);
+    else
+        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalTaken);
+    gameObj->curState = MPOBJ_CARRIED;
+    gameObj->parent = mpObj->holder;
+    MP_GoldenEyeMsg(mpObj, NOTIF_X_CAPTURED_GOLDENEYE_KEY, NOTIF_X_CAPTURED_GOLDENEYE_CRYSTAL);
+    Sound_PlayExt(SFX_PICKUP_DM_COLLECT_GOLDEN_GUN_PART, 100.0f, 0, 0);
+}
+
+// Back to a random one of the part's places: 0-7 are the key's, 8-15 the crystal's. unused is not read (callers
+// pass 99, 2 or 0); state goes to MP_ResetMPObject.
+// AUTOINJECT
+void MP_GoldeneyeResetObject(MPOBJECT *mpObj, obj_tag *gameObj, int unused, char state) {
+    ushort set = mpObj->type != GOLDENEYE_KEY;
+    ushort place = Rand_Rand(set ? GoldenEyeNonKeyCount : GoldenEyeKeyCount);
+    Mat_Copy(&GoldenEyeSpawns[place + set * 8].mtx, &mpObj->resetMtx);
+    MP_ResetMPObject(mpObj, state, gameObj, false);
+}
+
+// gameObj->curState is an MPObjectState.
+// gameObj->subState is the part's index in GoldenEye.keys; mpObj->num the team of whoever last took it.
+void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
+    MPOBJECT *other = (MPOBJECT *)GoldenEye.keys[gameObj->subState == 0].gameObj->extraObjectData;
+
+    if (GoldenEye.deathRay != NULL) {
+        if (GoldenEye.targetedPlayer != NULL) {
+            _VECTOR pos;
+            Vec_Copy(&GoldenEye.targetedPlayer->position, &pos);
+            pos.y -= 1.0f;
+            GoldenEye.deathRay->transformFlags |= TRANSFORM_MOVED;
+            SP_SetPos(GoldenEye.deathRay, &pos);
+        }
+
+        if (SP_GetState(GoldenEye.deathRay) == SP_STATUS_DONE) {
+            obj_tag *target = GoldenEye.targetedPlayer;
+            if (target != NULL) {
+                if (!MP_playerIsDead(target)) {
+                    if (target->objectType == OBJECTTYPE_PLAYER) {
+                        Player_Kill(target);
+                    } else {
+                        Drone_tag *drone = (Drone_tag *)target->extraObjectData;
+                        drone->health = -1.0f;
+                        Drone_SM_SetState(&drone->sm, DSTATE_BotDeathAnim, 0);
+                    }
+                }
+                short idx = Control_Plr2Ind(GoldenEye.targetedPlayer);
+                if (idx != -1) {
+                    MPGame.teamScore[MPSettings.Player[idx].TeamId == PHOENIX ? MI6 : PHOENIX] += 1.0f;
+                    MPGame.players[idx].idxOfLastInjurer = -2;
+                }
+            }
+            GoldenEye.deathRay = NULL;
+            GoldenEye.targetedPlayer = NULL;
+
+            // The key's flags for this part's holder and the crystal's for the other's, whichever this part is
+            MP_GoldenEyeLetGo(mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyDropped);
+            MP_GoldenEyeLetGo(other->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalDropped);
+            GoldenEye.keys[1].gameObj->effectFlags &= ~EFFECT_HIDDEN;
+            GoldenEye.keys[0].gameObj->effectFlags &= ~EFFECT_HIDDEN;
+            MP_GoldeneyeResetObject(mpObj, gameObj, 99, MPOBJ_HOME);
+            MP_GoldeneyeResetObject(other, GoldenEye.keys[gameObj->subState == 0].gameObj, 99, MPOBJ_HOME);
+        }
+    }
+
+    View_SetDrawInAllViews(gameObj);
+
+    switch (gameObj->curState) {
+    case MPOBJ_HOME:
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        if (mpObj->holder == NULL)
+            return;
+        MP_GoldenEyeTaken(mpObj, gameObj);
+        return;
+
+    case MPOBJ_CARRIED:
+        if (!dropped) {
+            MP_AttachToHolder(gameObj, mpObj->holder, gameObj->subState != 0 ? 0x23 : 0x15);
+
+            // Both parts held by one team, and no ray out yet: fire it at an agent of the other team
+            if (GoldenEye.keys[gameObj->subState == 0].gameObj->curState != MPOBJ_CARRIED)
+                return;
+            if (mpObj->num != other->num)
+                return;
+            if (GoldenEye.deathRay != NULL)
+                return;
+            GoldenEye.targetedPlayer = MP_GetTarget(mpObj->num == PHOENIX ? MI6 : PHOENIX, NULL, true);
+            if (GoldenEye.targetedPlayer == NULL)
+                return;
+
+            short idx = Control_Plr2Ind(mpObj->holder);
+            if (idx != -1)
+                MPGame.players[idx].points += 1.0f;
+            idx = Control_Plr2Ind(other->holder);
+            if (idx != -1)
+                MPGame.players[idx].points += 1.0f;
+
+            MPSound_Play(SFX_BOND_MOMENT_BM_TENSE);
+            GoldenEye.keys[1].gameObj->curState = MPOBJ_RAY;
+            GoldenEye.keys[1].gameObj->effectFlags |= EFFECT_HIDDEN;
+            GoldenEye.keys[0].gameObj->curState = MPOBJ_RAY;
+            GoldenEye.keys[0].gameObj->effectFlags |= EFFECT_HIDDEN;
+            GoldenEye.deathRay = SP_Create(&gameObj->position, NULL, HT_Script_GoldenEyeBeam, (HASHCODE)0, SP_PLAY_NOW,
+                                           1, NULL, NULL, NULL, 0);
+
+            char *str = Txt_GetStringFromHeap(0);
+            const char *team = Txt_BindLabel(mpObj->num == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
+            const char *format = Txt_BindLabel(NOTIF_X_ACTIVATED_GOLDENEYE, 0);
+            sprintf(str, format, team);
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
+
+            if (GoldenEye.targetedPlayer->objectType == OBJECTTYPE_PLAYER)
+                Player_SetCamMode((BLData *)GoldenEye.targetedPlayer->extraObjectData, CamMode_PostMPGameThirdPerson);
+            return;
+        }
+
+        // Dropped (MP_PlayerKilled, when its holder dies): onto the floor below it
+        if (mpObj->type == GOLDENEYE_KEY)
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyDropped);
+        else
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalDropped);
+        {
+            _VECTOR *pos = Mat_Position(gameObj->transformMatrix);
+            build_PointOnFloor(gameObj->inCel, gameObj, pos, gameObj->objGraphics->extentMin.y, NULL);
+            Vec_Copy(pos, &gameObj->position);
+        }
+        MP_GoldeneyeResetObject(mpObj, gameObj, 2, MPOBJ_CARRIED);
+        MP_GoldenEyeMsg(mpObj, NOTIF_X_DROPPED_GOLDENEYE_KEY, NOTIF_X_DROPPED_GOLDENEYE_CRYSTAL);
+        gameObj->curState = MPOBJ_DROPPED;
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
+        return;
+
+    case MPOBJ_DROPPED: {
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        if (mpObj->holder != NULL) {
+            MP_GoldenEyeTaken(mpObj, gameObj);
+            return;
+        }
+
+        // Left on the floor for 30 seconds: back to a place
+        ushort frames = mpObj->droppedFrames;
+        mpObj->droppedFrames = frames + 1;
+        if (frames > FRAME_RATE_INT * 30) {
+            mpObj->droppedFrames = 0;
+            MP_GoldeneyeResetObject(mpObj, gameObj, 0, MPOBJ_HOME);
+            char *str = Txt_GetStringFromHeap(0);
+            const char *format = Txt_BindLabel(mpObj->type == GOLDENEYE_KEY ? NOTIF_GOLDENEYE_KEY_RETURNED
+                                                                            : NOTIF_GOLDENEYE_CRYSTAL_RETURNED, 0);
+            sprintf(str, format);
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
+            MPSound_Play(SFX_BOND_MOMENT_BM_CAS_BEAM);
+        }
+        break;
+    }
+
+    case MPOBJ_RESET:
+        gameObj->curState = MPOBJ_HOME;
+        break;
+    }
+}

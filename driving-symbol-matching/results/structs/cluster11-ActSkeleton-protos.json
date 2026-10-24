@@ -1,0 +1,62 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000197f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ActSkeleton::GetBoneIndex(char *)",
+   "return": "int"
+  },
+  {
+   "address": "0x00019850",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActSkeleton::BlendQ(COORD4 &, COORD4 &, float)"
+  },
+  {
+   "address": "0x000198b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ActSkeleton::ActSkeleton(char *)",
+   "return": "ActSkeleton *"
+  },
+  {
+   "address": "0x00019ac0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActSkeleton::GetNumBones(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x00019c60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActSkeleton::~ActSkeleton(void)"
+  }
+ ]
+}

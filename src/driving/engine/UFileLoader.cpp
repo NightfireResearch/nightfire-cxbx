@@ -1,164 +1,333 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
 #include "../platform/FILE.h"
+#include "../platform/FileSys.h"
+#include "../eagl/Realgraph.h"
+#include "../data/DataUntested.h"
+#include "../data/Tree.h"
 
 #include "UFileLoader.h"
 #include "FileNameList.h"
+#include "GameLoop.h"   // gDVD
+#include "UMemory.hpp"
 
 #include <stdio.h>
+#include <string.h>
 
-// Inlined - can't be injected
-bool UFileLoader::LookupAbsolutePath(char *pathOut, char *pathIn) {
-  char tmp;
-  
-  if (*pathIn != '\0') {
-    tmp = *pathIn;
-    do {
-      if (tmp == '/') {
-        *pathOut = '\\';
-      }
-      else {
-        *pathOut = *pathIn;
-      }
-      pathIn = pathIn + 1;
-      tmp = *pathIn;
-      pathOut = pathOut + 1;
-    } while (tmp != '\0');
-  }
-  *pathOut = '\0';
-  return true;
+#include "../devtools/FileDump.h"
+
+// ---------------------------------------------------------------------------------------------------------------
+// UFileLoader (see UFileLoader.h) and the file-name lists of its request logging (FileNameList.h).
+//
+// FileLoad also hands each file it loads to devtools/FileDump.cpp, which saves it only with settings.ini's
+// DumpFiles=on - in FileLoad itself because our own ports call it directly, so a wrapper at its address would
+// miss their loads.
+// ---------------------------------------------------------------------------------------------------------------
+
+// XBE_GLOBAL(0x002431d8, 0x100)
+char BigFileName[0x100];          // the big file's name, for the request lists' files
+// XBE_GLOBAL(0x002430d8, 0x100)
+static char BigFilePath[0x100];   // cleared and not otherwise used
+// XBE_GLOBAL(0x002434da, 0x1)
+uint8_t BigFileOpen;
+// XBE_GLOBAL(0x002434dc, 0x4)
+static int32_t BigFileId;
+// XBE_GLOBAL(0x002434e0, 0x1)
+uint8_t LogRequests;              // the bool StartUsingBigFile is given, its byte as given
+
+// XBE_GLOBAL(0x00243508, 0xc)
+FileNameList RequestedFiles;      // every file loaded
+// XBE_GLOBAL(0x00243514, 0xc)
+FileNameList FilesInBigFile;      // found in the big file
+// XBE_GLOBAL(0x002434e4, 0xc)
+FileNameList FilesNotInBigFile;   // not found there
+
+constexpr int kBigFileAllocFlags = 0x100;
+constexpr int kBigFilePriority = 2;
+constexpr int kDumpOpenMode = 0x26;                // FILESYS_open's mode: write, create, truncate
+constexpr int kDumpPriority = 100;
+
+// "|" + path, FILE_'s prefix for a file in an open archive.
+static void BigFilePathOf(char *out, const char *path) {
+    out[0] = '|';
+    strcpy(out + 1, path);
 }
 
-// Inlined - can't be injected
-void * UFileLoader::FileLoadDirectFromDisk(char* param_1, int param_2, bool z_variant) {
-    if (z_variant) {
-        return FILE_load(param_1, param_2);
-    }
-    return FILE_loadz(param_1, param_2);
+// FUNC_AT(0x00116f00)
+bool UFileLoader::LookupAbsolutePath(char *pathOut, const char *pathIn) {
+    for (; *pathIn != 0; pathIn++, pathOut++)
+        *pathOut = *pathIn == '/' ? '\\' : *pathIn;
+    *pathOut = 0;
+    return true;
 }
 
-#define DAT_002434e0 U8_AT(0x002434e0)
-
-// Inlined - can't be injected
-void UFileLoader::AddFileToRequestList(char* fname) {
-    if(DAT_002434e0 == 1) { // Path does not seem to be taken in very limited testing...
-        ((FileNameList*)(0x243508))->AddFile(fname);
-    }
+// FUNC_AT(0x00117530)
+void* UFileLoader::AttemptBigFileLoad(const char *path, int flags) {
+    char packed[256];
+    BigFilePathOf(packed, path);
+    void *loaded = FILE_loadpackz(packed, flags);
+    if (LogRequests != 0)
+        (loaded != NULL ? FilesInBigFile : FilesNotInBigFile).AddFile(path);
+    return loaded;
 }
 
-#define someFileNameList ((FileNameList*)(0x00243514))
-#define someOtherFileNameList ((FileNameList*)(0x002434e4))
-
-void* UFileLoader::AttemptBigFileLoad(char *param_1,undefined4 param_2) {
-  char tmp;
-  char *pcVar2;
-  FileNameList *fnl;
-  char local_100 [256];
-  
-  local_100[0] = '|';
-
-  pcVar2 = param_1;
-  do {
-    tmp = *pcVar2;
-    pcVar2[(int)(local_100 + (1 - (int)param_1))] = tmp;
-    pcVar2 = pcVar2 + 1;
-  } while (tmp != '\0');
-
-
-  void* iVar3 = FILE_loadpackz(local_100, param_2);
-  if (DAT_002434e0 != '\0') {
-    fnl = someFileNameList;
-    if (iVar3 == NULL) {
-      fnl = someOtherFileNameList;
-    }
-    fnl->AddFile(param_1);
-  }
-  return iVar3;
-}
-
-
-#include <direct.h>
-static void ensureDirs(const char *path)
-{
-    char tmp[256];
-    snprintf(tmp, sizeof(tmp), "%s", path);
-
-    for (char *p = tmp + 1; *p; p++) {
-        if (*p == '/' || *p == '\\') {
-            char old = *p;
-            *p = '\0';
-            //printf("Making %s\n", tmp);
-            _mkdir(tmp);              // ignore error (EEXIST is fine)
-            *p = old;
+// FUNC_AT(0x00116e10)
+bool UFileLoader::StartUsingBigFile(const char *directory, const char *name, bool logRequests) {
+    BigFileName[0] = 0;
+    BigFilePath[0] = 0;
+    BigFileOpen = 0;
+    LogRequests = logRequests;
+    if (name == NULL)
+        return false;
+    strcpy(BigFileName, name);
+    char path[256];
+    sprintf(path, "%s\\%s.viv", directory, name);
+    if (gDVD != 0 || FILE_exists(path)) {
+        if (FILESYS_addbigsync(path, kBigFileAllocFlags, kBigFilePriority, &BigFileId)) {
+            BigFileOpen = 1;
+            return true;
         }
     }
+    return BigFileOpen;
 }
 
-void dumpToFile(char* gamefile, void* data, size_t len) {
+// FUNC_AT(0x00116ed0)
+void UFileLoader::StopUsingBigFile() {
+    if (BigFileOpen == 1) {
+        int id = BigFileId;
+        BigFileOpen = 0;
+        FILESYS_delbigsync(id, kBigFilePriority);
+    }
+}
 
-    // Open the file in binary write mode
+// FUNC_AT(0x00116f30)
+int UFileLoader::AttemptBigFileExists(char *path) {
+    char packed[256];
+    BigFilePathOf(packed, path);
+    return FILE_exists(packed);
+}
 
-	char filename[256];
+// FUNC_AT(0x00116f70)
+int UFileLoader::AttemptBigFileSize(char *path) {
+    char packed[256];
+    BigFilePathOf(packed, path);
+    int size = int(FILE_unpacksizez(packed));
+    if (size == 0)
+        size = FILE_sizez(packed);
+    return size;
+}
 
-	snprintf(filename, sizeof(filename), "dump_driving/%s", gamefile);
+// FUNC_AT(0x00116fc0)
+int UFileLoader::FileLoadAt(const char *path, void *buffer, int size) {
+    char fixed[256];
+    LookupAbsolutePath(fixed, path);
+    return FILE_loadat(fixed, buffer, size);
+}
 
-    ensureDirs(filename);
+// FUNC_AT(0x00117010)
+int UFileLoader::FileExists(const char *path) {
+    char fixed[256];
+    char absolute[256];
+    LookupAbsolutePath(fixed, path);
+    if (AttemptBigFileExists(fixed) == 1)
+        return 1;
+    if (LookupAbsolutePath(absolute, path))
+        return FILE_exists(absolute);
+    return 0;
+}
 
-    FILE* file = fopen(filename, "wb");
+// FUNC_AT(0x001170a0)
+int UFileLoader::FileSize(const char *path) {
+    char fixed[256];
+    LookupAbsolutePath(fixed, path);
+    int size = AttemptBigFileSize(fixed);
+    if (size == 0) {
+        size = int(FILE_unpacksizez(fixed));
+        if (size == 0)
+            size = FILE_sizez(fixed);
+    }
+    return size;
+}
 
-    if (file == NULL) {
-        // Handle error if the file couldn't be opened
-        perror("Error opening file\n");
+// FUNC_AT(0x00117200)
+void UFileLoader::DumpFileRequestList() {
+    if (LogRequests != 1)
         return;
+    char inFile[288];
+    char requestFile[288];
+    char outFile[288];
+    sprintf(requestFile, "%s_req.txt", BigFileName);
+    RequestedFiles.Dump(requestFile);
+    if (BigFileOpen == 1) {
+        sprintf(inFile, "%s_in.txt", BigFileName);
+        FilesInBigFile.Dump(inFile);
+        sprintf(outFile, "%s_out.txt", BigFileName);
+        FilesNotInBigFile.Dump(outFile);
     }
-
-    // Write the data to the file
-    size_t written = fwrite(data, 1, len, file);
-
-    if (written != len) {
-        // Handle error if not all data could be written
-        perror("Error writing to file");
-    } else {
-        printf("-- Dumped %s (%i bytes)\n", filename, len);
-    }
-
-    // Close the file
-    fclose(file);
-}
-// AUTOGEN
-size_t MEM_size(void* data);
-
-// AUTOINJECT
-void* UFileLoader::FileLoad(char *rawPath, int param_2, bool param_3) {
-
-    char fixedPath [256];
-
-    // Normalise file path
-    UFileLoader::LookupAbsolutePath(fixedPath, rawPath);
-
-    // OUR DEBUG: Print details
-    printf("-------- Loading file %s, %i, %s\n", fixedPath, param_2, param_3 ? "true" : "false");
-
-    // First try from BIG archive
-    void* loadedFile = UFileLoader::AttemptBigFileLoad(fixedPath, param_2);
-
-    // Otherwise try direct file
-    if (loadedFile == NULL) {
-        loadedFile = UFileLoader::FileLoadDirectFromDisk(fixedPath, param_2, param_3);
-    }
-
-    // No luck either from archive or filesystem means the file is missing
-    if(loadedFile == NULL)
-        return NULL;
-
-    // OUR DEBUG: Retrieve file size and dump to file
-    size_t fileSize = MEM_size(loadedFile);
-    dumpToFile(fixedPath, loadedFile, fileSize);
-
-    UFileLoader::AddFileToRequestList(fixedPath);
-
-    return loadedFile;
 }
 
-// AUTOINJECT
-void* UFileLoader::FileLoadz(char * fname, int flags) {
-    return FileLoad(fname, flags, false);
+// FUNC_AT(0x001173a0)
+void UFileLoader::Startup() {
+    FileNameNode *ignored;
+    RequestedFiles.Erase(&ignored, RequestedFiles.head != NULL ? RequestedFiles.head->next : NULL, RequestedFiles.head);
+    FilesInBigFile.Erase(&ignored, FilesInBigFile.head != NULL ? FilesInBigFile.head->next : NULL, FilesInBigFile.head);
+    FilesNotInBigFile.Erase(&ignored, FilesNotInBigFile.head != NULL ? FilesNotInBigFile.head->next : NULL,
+                            FilesNotInBigFile.head);
+}
+
+// FUNC_AT(0x001175a0)
+void* UFileLoader::AttemptBigFileShapeLoad(char *path, int flags) {
+    char packed[256];
+    BigFilePathOf(packed, path);
+    void *loaded = SHAPE_loadfilez(packed, flags);
+    if (LogRequests != 0)
+        (loaded != NULL ? FilesInBigFile : FilesNotInBigFile).AddFile(path);
+    return loaded;
+}
+
+// FUNC_AT(0x001176f0)
+void* UFileLoader::ShapeFileLoad(char *path, int flags, bool uncompressed) {
+    char fixed[256];
+    LookupAbsolutePath(fixed, path);
+    void *loaded = AttemptBigFileShapeLoad(fixed, flags);
+    if (loaded == NULL) {
+        loaded = uncompressed ? SHAPE_loadfile(fixed, flags) : SHAPE_loadfilez(fixed, flags);
+        if (loaded == NULL)
+            return NULL;
+    }
+    // (the original flushes the CPU cache here, WBINVD, for the GPU's sake - nothing to do on a PC)
+    if (loaded != NULL && LogRequests == 1)
+        RequestedFiles.AddFile(fixed);
+    return loaded;
+}
+
+// FUNC_AT(0x00117790)
+void* UFileLoader::ShapeFileLoad(char *path, int flags) {
+    return ShapeFileLoad(path, flags, true);
+}
+
+// FUNC_AT(0x000e3c20)
+void* UFileLoader::FileLoadThunk(char *rawPath, int flags) {
+    return FileLoad(rawPath, flags);
+}
+
+// ---- the request lists
+
+// FUNC_AT(0x00117120)
+FileNameNode* FileNameList::BuyNode(FileNameNode *next, FileNameNode *prev, const char *name) {
+    FileNameNode *node = static_cast<FileNameNode *>(UMemory::FastAlloc(sizeof(FileNameNode), "STL"));
+    if (node != NULL) {
+        node->next = next;
+        node->prev = prev;
+        memcpy(node->name, name, sizeof(node->name));
+    }
+    return node;
+}
+
+// FUNC_AT(0x00117160)
+void FileNameList::Dump(const char *path) {
+    int file;
+    FILESYS_opensync(path, kDumpOpenMode, kDumpPriority, &file);
+    int offset = 0;
+    for (FileNameNode *node = head != NULL ? head->next : NULL; node != head; node = node->next) {
+        char line[200];
+        sprintf(line, "%s\n", node->name);
+        offset += FILESYS_writesync(file, offset, line, int(strlen(line)), kDumpPriority);
+    }
+    FILESYS_closesync(file, kDumpPriority);
+}
+
+// FUNC_AT(0x00117300)
+FileNameNode* FileNameList::BuyHeadNode() {
+    FileNameNode *node = static_cast<FileNameNode *>(UMemory::FastAlloc(sizeof(FileNameNode), "STL"));
+    if (node != NULL)
+        node->next = node;
+    node->prev = node;   // unguarded in the original too (it tests &node->prev, never null)
+    return node;
+}
+
+// FUNC_AT(0x00117330)
+FileNameList* FileNameList::Construct() {
+    head = BuyHeadNode();
+    size = 0;
+    return this;
+}
+
+// FUNC_AT(0x00117350)
+void FileNameList::Destruct() {
+    FileNameNode *ignored;
+    Erase(&ignored, head != NULL ? head->next : NULL, head);
+    if (head != NULL)
+        UMemory::FastFree(head, sizeof(FileNameNode));
+    head = NULL;
+    size = 0;
+}
+
+// FUNC_AT(0x001172b0)
+FileNameNode** FileNameList::Erase(FileNameNode **result, FileNameNode *first, FileNameNode *last) {
+    while (first != last) {
+        FileNameNode *node = first;
+        first = first->next;
+        if (node != head) {
+            node->prev->next = node->next;
+            node->next->prev = node->prev;
+            UMemory::FastFree(node, sizeof(FileNameNode));
+            size--;
+        }
+    }
+    *result = first;
+    return result;
+}
+
+// FUNC_AT(0x00117420)
+void FileNameList::IncSize(uint32_t count) {
+    if (0xffffff - size < count)
+        TreeThrow("list<T> too long", kLengthErrorVtable, kLengthErrorThrowInfo);
+    size += count;
+}
+
+// FUNC_AT(0x001174d0)
+void FileNameList::AddFile(const char *name) {
+    char copy[256];
+    strcpy(copy, name);
+    FileNameNode *end = head;
+    FileNameNode *node = BuyNode(end, end->prev, copy);
+    IncSize(1);
+    end->prev = node;
+    node->prev->next = node;
+}
+
+// ---- loading files
+
+#include "../platform/RealMemory.h"   // MEM_size, ours now
+
+// A file, from the big file if it has it, otherwise from the disc: as stored (uncompressed true, FILE_load) or
+// unpacked if packed (FILE_loadz). The big file is always read with FILE_loadpackz. Gives the block or NULL.
+// FUNC_AT(0x00117610)
+void* UFileLoader::FileLoad(const char *path, int flags, bool uncompressed) {
+    char fixed[256];
+    LookupAbsolutePath(fixed, path);
+    void *loaded = AttemptBigFileLoad(fixed, flags);
+    if (loaded == NULL) {
+        loaded = uncompressed ? FILE_load(fixed, flags) : FILE_loadz(fixed, flags);
+        if (loaded == NULL)
+            return NULL;
+    }
+    // (the original flushes the CPU cache here, WBINVD, for the GPU's sake - nothing to do on a PC)
+    FileDump_Save(fixed, loaded, MEM_size(loaded));   // devtools: settings.ini DumpFiles=on only
+    if (loaded != NULL && LogRequests == 1)
+        RequestedFiles.AddFile(fixed);
+    return loaded;
+}
+
+// FUNC_AT(0x001176b0)
+void* UFileLoader::FileLoad(const char *path, int flags) {
+    return FileLoad(path, flags, true);
+}
+
+// FUNC_AT(0x001176d0)
+void* UFileLoader::FileLoadz(const char *path, int flags) {
+    return FileLoad(path, flags, false);
 }

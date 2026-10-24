@@ -1,0 +1,27 @@
+{
+ "batch": "043",
+ "program": "Driving.xbe",
+ "note": "Struct pilot: two names from the RSceneObj layout work.",
+ "items": [
+  {
+   "xbox": "0x0001aa70",
+   "expect": "RSceneObj::~RSceneObj",
+   "name": "RAutonomousObj::~RAutonomousObj",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "struct pilot: a 5-byte jump to RSceneObj::~RSceneObj (0x905a0), called only by RAutonomousObj's scalar deleting destructor (0x1b180) and an ActWeapon unwind - the compiler-emitted RAutonomousObj destructor (RAutonomousObj adds nothing to destroy). Was a second RSceneObj::~RSceneObj"
+   ]
+  },
+  {
+   "xbox": "0x00015770",
+   "expect": "FUN_00015770",
+   "name": "RSceneObj::TriggerIlluminate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "struct pilot: slot 12 of the RSceneObj vtable (0x191be0), matching PS2 vtable entry 13 (entry 0 is type_info) = RSceneObj::TriggerIlluminate"
+   ]
+  }
+ ]
+}

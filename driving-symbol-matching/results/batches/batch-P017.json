@@ -1,0 +1,668 @@
+{
+ "batch": "P017",
+ "program": "DRIVING.ELF",
+ "skip_refused_creates": true,
+ "note": "Round-3 extras reviewed by hand: renames first, then creations (a refused creation is skipped). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0024eea8",
+   "expect": "FUN_0024eea8",
+   "name": "__get_eh_context",
+   "sheet_name": "__get_eh_context",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5598: __get_eh_context: returns (*get_eh_context)(), between new_eh_context and __get_eh_info"
+   ]
+  },
+  {
+   "xbox": "0x0024fd88",
+   "expect": "FUN_0024fd88",
+   "name": "set_unexpected",
+   "sheet_name": "set_unexpected(void (*)(void))",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5612: set_unexpected: swaps __unexpected_func; not a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x0024fd98",
+   "expect": "FUN_0024fd98",
+   "name": "unexpected",
+   "sheet_name": "unexpected(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5613: unexpected(): calls through __unexpected_func; Ghidra function also swallows __cp_exception_info at 0x24fdb0"
+   ]
+  },
+  {
+   "xbox": "0x002858d8",
+   "expect": "FUN_002858d8",
+   "name": "EAGL::Model::GetGeometry",
+   "sheet_name": "EAGL::Model::GetGeometry(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5802: EAGL::Model::GetGeometry(char*): strcmp over name list at +0xa0, returns slot in +0xc4 array; sits right after GetChild"
+   ]
+  },
+  {
+   "xbox": "0x00295410",
+   "expect": "FUN_00295410",
+   "name": "EAGL::Transform::BuildRotate",
+   "sheet_name": "EAGL::Transform::BuildRotate(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6051: EAGL::Transform::BuildRotate: sin/cos of angle*pi/180, normalised axis, identity on zero angle - matches AUF; called by AppendRotate/PrependRotate"
+   ]
+  },
+  {
+   "xbox": "0x002934e0",
+   "expect": "FUN_002934e0",
+   "name": "EAGL::Transform::PostMult",
+   "sheet_name": "EAGL::Transform::PostMult(EAGL::Transform &, EAGL::Transform *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6052: EAGL::Transform::PostMult(Transform&, Transform*): MultMatrix(this, a, out) wrapper"
+   ]
+  },
+  {
+   "xbox": "0x00297470",
+   "expect": "FUN_00297470",
+   "name": "EAGL::ViewPort::SetBackgroundColour",
+   "sheet_name": "EAGL::ViewPort::SetBackgroundColour(EAGL::Colour)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6125: EAGL::ViewPort::SetBackgroundColour: stores at +0x1c, called from SetFillColour; Ghidra function spans the getter too"
+   ]
+  },
+  {
+   "xbox": "0x00299c38",
+   "expect": "FUN_00299c38",
+   "name": "EAGL::Profiler::Profiler",
+   "sheet_name": "EAGL::Profiler::Profiler(EAGL::ProfilerRegion &, bool)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6170: EAGL::Profiler::Profiler(ProfilerRegion&, bool): stores region, if bool closes the current section and opens this one (sheet currently places 6169 and 6170 both at 0x299bd0)"
+   ]
+  },
+  {
+   "xbox": "0x00299d68",
+   "expect": "FUN_00299d68",
+   "name": "EAGL::ProfilerRegion::gBufferHead_global_ctors",
+   "sheet_name": "global constructors keyed to EAGL::ProfilerRegion::gBufferHead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6173: global constructors keyed to EAGL::ProfilerRegion::gBufferHead: ctors-table stub calling static init (1,0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x00266410",
+   "expect": "FUN_00266410",
+   "name": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::~FnCompoundChannel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6407: EAGLAnim::FnCompoundChannel::~FnCompoundChannel: vtable slot 1, sets vtable, frees child anims and block, ~FnAnimMemoryMap, free 0x1c"
+   ]
+  },
+  {
+   "xbox": "0x00266518",
+   "expect": "FUN_00266518",
+   "name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::SetAnimMemoryMap(EAGLAnim::AnimMem",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6408: EAGLAnim::FnCompoundChannel::SetAnimMemoryMap: sets +0xc and frees existing children, in the SetAnimMemoryMap vtable slot 0x3af0cc; AUF same shape"
+   ]
+  },
+  {
+   "xbox": "0x0026b958",
+   "expect": "FUN_0026b958",
+   "name": "EAGLAnim::FnDeltaSingleQ::GetLength",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6516: EAGLAnim::FnDeltaSingleQ::GetLength(float&) const: in the GetLength vtable slot (0x3afb0c), writes frame count as float, returns 1"
+   ]
+  },
+  {
+   "xbox": "0x0026d468",
+   "expect": "FUN_0026d468",
+   "name": "EAGLAnim::FnDeltaQFast::~FnDeltaQFast",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::~FnDeltaQFast(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6522: ~FnDeltaQFast: dtor slot of vtable 0x3afe80, frees the +0x10/+0x20/+0x2c buffers SetAnimMemoryMap allocates, eagl_free(this,0x40)"
+   ]
+  },
+  {
+   "xbox": "0x002724d8",
+   "expect": "FUN_002724d8",
+   "name": "EAGLAnim::RawPoseChannel::EvalFrame",
+   "sheet_name": "EAGLAnim::RawPoseChannel::EvalFrame(int, float *, EAGLAnim::Bon",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6693: RawPoseChannel::EvalFrame(int,float*,mask): called from Eval for integer frames"
+   ]
+  },
+  {
+   "xbox": "0x002726a8",
+   "expect": "FUN_002726a8",
+   "name": "EAGLAnim::EulF3",
+   "sheet_name": "EAGLAnim::EulF3(float *&, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6694: EAGLAnim::EulF3: reads 3 euler degrees from stream, builds quat with sin/cos"
+   ]
+  },
+  {
+   "xbox": "0x00276538",
+   "expect": "FUN_00276538",
+   "name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6743: ~FnKeyDeltaChan: dtor slot of the vtable at 0x3b2440 whose type_info is FnKeyDeltaChan (Ghidra's vtable label in the body says FnDeltaQuatChan); sheet row is far from this retail position"
+   ]
+  },
+  {
+   "xbox": "0x00307c00",
+   "expect": "FUN_00307c00",
+   "name": "SNDMEMI_constrain",
+   "sheet_name": "SNDMEMI_constrain(unsigned int *, int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7259: SNDMEMI_constrain(unsigned*,int*): clamps size to heap end"
+   ]
+  },
+  {
+   "xbox": "0x002b1a58",
+   "expect": "FUN_002b1a58",
+   "name": "__swrite",
+   "sheet_name": "__swrite",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7576: __swrite: _lseek_r if __SAPP then _write_r"
+   ]
+  },
+  {
+   "xbox": "0x002b1b40",
+   "expect": "FUN_002b1b40",
+   "name": "__sclose",
+   "sheet_name": "__sclose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7578: __sclose: _close_r(fp->_data)"
+   ]
+  },
+  {
+   "xbox": "0x002b2150",
+   "expect": "FUN_002b2150",
+   "name": "_close_r",
+   "sheet_name": "_close_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7608: _close_r: errno-wrapping call to close stub"
+   ]
+  },
+  {
+   "xbox": "0x002b2208",
+   "expect": "FUN_002b2208",
+   "name": "_lseek_r",
+   "sheet_name": "_lseek_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7619: _lseek_r: errno-wrapping call to lseek stub"
+   ]
+  },
+  {
+   "xbox": "0x002b5280",
+   "expect": "FUN_002b5280",
+   "name": "sceDmaReset",
+   "sheet_name": "sceDmaReset",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7715: sceDmaReset: clears channels and DMAC_STAT, PutEnv(zeroed env), optional enable"
+   ]
+  },
+  {
+   "xbox": "0x002b8e78",
+   "expect": "FUN_002b8e78",
+   "name": "sceSifAddCmdHandler",
+   "sheet_name": "sceSifAddCmdHandler",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7923: sceSifAddCmdHandler(cmd, fn, data)"
+   ]
+  },
+  {
+   "xbox": "0x002b9008",
+   "expect": "FUN_002b9008",
+   "name": "sceSifSendCmd",
+   "sheet_name": "sceSifSendCmd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7925: sceSifSendCmd: send-cmd core with flag 0"
+   ]
+  },
+  {
+   "xbox": "0x002bebc8",
+   "expect": "FUN_002bebc8",
+   "name": "SetTLBHandler",
+   "sheet_name": "SetTLBHandler",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8014: SetTLBHandler: stores handler and installs a fixed refill handler for causes 1-3; exact sheet size 0x60 (Ghidra function FUN_002bebc8 currently spans 0xe8 and swallows SetDebugHandler)"
+   ]
+  },
+  {
+   "xbox": "0x002c8ff0",
+   "expect": "FUN_002c8ff0",
+   "name": "scePadGetReqState",
+   "sheet_name": "scePadGetReqState",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8114: scePadGetReqState: returns reqState byte +0x71 of the pad area (0x2c8f88 is its setter)"
+   ]
+  },
+  {
+   "xbox": "0x002cddf8",
+   "expect": "FUN_002cddf8",
+   "name": "_Rb_tree<CStringKey,_USymbolTable::Namespace_*>::_M_erase",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8214: _Rb_tree<CStringKey, pair<CStringKey, USymbolTable::Namespace *>> _M_erase: recursive free of 0x18 nodes, called by ~USymbolTable; exact 0x68"
+   ]
+  },
+  {
+   "xbox": "0x002d3d58",
+   "expect": "FUN_002d3d58",
+   "name": "CalcPlaneNormal",
+   "sheet_name": "CalcPlaneNormal(COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8344: CalcPlaneNormal(COORD4 *, COORD4 *): VU0 cross product of two edges, normalised into out; exact 0x80"
+   ]
+  },
+  {
+   "xbox": "0x002d8870",
+   "expect": "FUN_002d8870",
+   "name": "PrepareBitField",
+   "sheet_name": "PrepareBitField(void *, int,...)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8495: PrepareBitField(void *, int, ...): exact 0x170, called by UData::EndianPrepareMembers"
+   ]
+  },
+  {
+   "xbox": "0x002d89e0",
+   "expect": "FUN_002d89e0",
+   "name": "UnprepareBitField",
+   "sheet_name": "UnprepareBitField(void *, int,...)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8496: UnprepareBitField(void *, int, ...): exact 0x208, called by UData::EndianUnprepareMembers"
+   ]
+  },
+  {
+   "xbox": "0x002de938",
+   "expect": "FUN_002de938",
+   "name": "AVoice::Set_global_ctors",
+   "sheet_name": "global constructors keyed to AVoice::Set(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8667: global constructors keyed to AVoice::Set: ctors-table entry calling 0x2de830(1, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x002de958",
+   "expect": "FUN_002de958",
+   "name": "AVoice::Set_global_dtors",
+   "sheet_name": "global destructors keyed to AVoice::Set(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8668: global destructors keyed to AVoice::Set: dtors-table entry calling 0x2de830(0, 0xffff)"
+   ]
+  },
+  {
+   "xbox": "0x00302790",
+   "expect": "FUN_00302790",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_delete",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator delete(void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9241: EAGL_VD_PS2_SINGLE_BUFFERD::operator delete(void *): calls the free hook at 0x3562d4; 0x28"
+   ]
+  },
+  {
+   "xbox": "0x00302d38",
+   "expect": "FUN_00302d38",
+   "name": "RCMP::DECODER::operator_delete",
+   "sheet_name": "RCMP::DECODER::operator delete(void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9268: RCMP::DECODER::operator delete(void *): free hook call, 0x28"
+   ]
+  },
+  {
+   "xbox": "0x003039c8",
+   "expect": "FUN_003039c8",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_delete",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::operator delete(void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9300: PS2_SONY_CODEC_INTERNAL::operator delete(void *): free hook call, 0x28"
+   ]
+  },
+  {
+   "xbox": "0x00304c38",
+   "expect": "FUN_00304c38",
+   "name": "marker_bit",
+   "sheet_name": "marker_bit(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9318: marker_bit(char *): Get_Bits(1) with the text arg ignored, called from every MPEG header parser; 0x304c38+0x1c8 lands on 0x304e00"
+   ]
+  },
+  {
+   "xbox": "0x00304e28",
+   "expect": "FUN_00304e28",
+   "name": "FILESYS_deletesync",
+   "sheet_name": "FILESYS_deletesync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9337: FILESYS_deletesync: return-0 stub called by Delete and FileDeleteSync"
+   ]
+  },
+  {
+   "xbox": "0x00250228",
+   "expect": "(none)",
+   "name": "__throw_bad_cast",
+   "sheet_name": "__throw_bad_cast",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5624: __throw_bad_cast: function start inside FUN_00250070's body, references the bad_cast dtor at 0x250288; not a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x002502a8",
+   "expect": "(none)",
+   "name": "__throw_bad_typeid",
+   "sheet_name": "__throw_bad_typeid",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5625: __throw_bad_typeid: function start inside FUN_00250070's body, references the bad_typeid dtor at 0x250308; not a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x002913b0",
+   "expect": "(none)",
+   "name": "EAGLInternal::RenderContextPrivate::EAGLVBL_end",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::EAGLVBL_end(int)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5991: EAGLInternal::RenderContextPrivate::EAGLVBL_end: sync; ei; return 0; not a Ghidra function (inside EAGLVBL_start's range)"
+   ]
+  },
+  {
+   "xbox": "0x002913c0",
+   "expect": "(none)",
+   "name": "EAGL::RenderContextExtension::SetFrameRate",
+   "sheet_name": "EAGL::RenderContextExtension::SetFrameRate(int)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5992: EAGL::RenderContextExtension::SetFrameRate(int): stores 60/rate at +0x874, the threshold EAGLVBL_start tests; not a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00297468",
+   "expect": "(none)",
+   "name": "EAGL::ViewPort::GetProjectionType",
+   "sheet_name": "EAGL::ViewPort::GetProjectionType(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6124: EAGL::ViewPort::GetProjectionType: 'lw v0,0x18(a0)', right after GetFrustum; not a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00297478",
+   "expect": "(none)",
+   "name": "EAGL::ViewPort::GetBackgroundColour",
+   "sheet_name": "EAGL::ViewPort::GetBackgroundColour(void) const",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6126: EAGL::ViewPort::GetBackgroundColour: loads +0x1c; not a separate Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x0026ba08",
+   "expect": "(none)",
+   "name": "QuatMultXxYxZ",
+   "sheet_name": "QuatMultXxYxZ(COORD4 &, COORD4 &, COORD4 &, COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6519: QuatMultXxYxZ: 4-arg quat product using only x/w of arg0, y/w of arg1, z/w of arg2 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x0026bab0",
+   "expect": "(none)",
+   "name": "QuatMultXxQ",
+   "sheet_name": "QuatMultXxQ(COORD4 &, COORD4 &, COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6520: QuatMultXxQ: uses x/w of arg0 and full arg1 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x0026bb40",
+   "expect": "(none)",
+   "name": "QuatMultQxZ",
+   "sheet_name": "QuatMultQxZ(COORD4 &, COORD4 &, COORD4 &)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6521: QuatMultQxZ: full arg0, z/w of arg1 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x002727f0",
+   "expect": "(none)",
+   "name": "EAGLAnim::QuatF4",
+   "sheet_name": "EAGLAnim::QuatF4(float *&, float *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6695: EAGLAnim::QuatF4: copies 4 floats from stream (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x00272838",
+   "expect": "(none)",
+   "name": "EAGLAnim::TranF3",
+   "sheet_name": "EAGLAnim::TranF3(float *&, float *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6696: EAGLAnim::TranF3: copies 3 floats to out+0x10 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x00272ba8",
+   "expect": "(none)",
+   "name": "EAGLAnim::TranF3Interp",
+   "sheet_name": "EAGLAnim::TranF3Interp(float, float *&, float *&, float *)",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6699: EAGLAnim::TranF3Interp: lerps 3 floats into out+0x10 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x0025f5a8",
+   "expect": "(none)",
+   "name": "CLIP_setflags2",
+   "sheet_name": "CLIP_setflags2",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7152: CLIP_setflags2: outcode from x,y only, right after setflags3 (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x002b9d68",
+   "expect": "(none)",
+   "name": "sceSifRegisterRpc",
+   "sheet_name": "sceSifRegisterRpc",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7935: sceSifRegisterRpc: 7-arg prologue right after SetRpcQueue (Ghidra retail size 0x168 = 0x98+0xd0) (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x002beb20",
+   "expect": "(none)",
+   "name": "sceDeci2ExReqSend",
+   "sheet_name": "sceDeci2ExReqSend",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8010: sceDeci2ExReqSend: Deci2Call(-7) after ExSend (not yet a Ghidra function)"
+   ]
+  },
+  {
+   "xbox": "0x002bedd0",
+   "expect": "(none)",
+   "name": "PutTLBEntry",
+   "sheet_name": "PutTLBEntry",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8017: PutTLBEntry: syscall 0x55 stub just before SetTLBEntry; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x002bede0",
+   "expect": "(none)",
+   "name": "iPutTLBEntry",
+   "sheet_name": "iPutTLBEntry",
+   "create": true,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8018: iPutTLBEntry: syscall -0x55 stub; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00302730",
+   "expect": "(none)",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator new(unsigned int, char *,",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9239: EAGL_VD_PS2_SINGLE_BUFFERD::operator new(unsigned int, char *, ...): 0x30 allocator variant after new[]; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00302760",
+   "expect": "(none)",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator_new_array",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::operator new [](unsigned int, char",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9240: EAGL_VD_PS2_SINGLE_BUFFERD::operator new[](unsigned int, char *, ...): twin 0x30 variant; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00302cd8",
+   "expect": "(none)",
+   "name": "RCMP::DECODER::operator_new",
+   "sheet_name": "RCMP::DECODER::operator new(unsigned int, char *, int, int, int",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9266: RCMP::DECODER::operator new(unsigned int, char *, int, int, int): 0x30 variant; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00302d08",
+   "expect": "(none)",
+   "name": "RCMP::DECODER::operator_new_array",
+   "sheet_name": "RCMP::DECODER::operator new [](unsigned int, char *, int, int,",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9267: RCMP::DECODER::operator new[](unsigned int, char *, ...): 0x30 twin; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00303968",
+   "expect": "(none)",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::operator new(unsigned int, char *, int",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9298: PS2_SONY_CODEC_INTERNAL::operator new(unsigned int, char *, ...): 0x30 variant; not yet a Ghidra function"
+   ]
+  },
+  {
+   "xbox": "0x00303998",
+   "expect": "(none)",
+   "name": "PS2_SONY_CODEC_INTERNAL::operator_new_array",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::operator new [](unsigned int, char *,",
+   "create": true,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9299: PS2_SONY_CODEC_INTERNAL::operator new[](unsigned int, char *, ...): 0x30 twin; not yet a Ghidra function"
+   ]
+  }
+ ]
+}

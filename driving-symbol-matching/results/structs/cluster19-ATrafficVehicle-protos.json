@@ -1,0 +1,76 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012cb90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ATrafficVehicle::ATrafficVehicle(char *, char *)",
+   "return": "ATrafficVehicle *"
+  },
+  {
+   "address": "0x0012ce10",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ATrafficVehicle::IsTracked(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0012ce20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ATrafficVehicle::GetName(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x0012ceb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ATrafficVehicle::PlaySnowmobileSpecifics(float)"
+  },
+  {
+   "address": "0x0012d300",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ATrafficVehicle::~ATrafficVehicle(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0012d400",
+   "calling_convention": "__thiscall",
+   "return": "ATrafficVehicle *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0012d430",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ATrafficVehicle::Play(APath &)"
+  }
+ ]
+}

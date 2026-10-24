@@ -1,6 +1,7 @@
 #include <cstdarg>
 #include <cstdio>
 
+// FUNC_AT(000e2e30) - the game's log output; see inject_driving.cpp
 void dbg_printf(char* format, ...)
 {
     va_list args;
@@ -15,7 +16,8 @@ void dbg_printf(char* format, ...)
     va_end(args);
 }
 
-void dbg_wprintf(char* format, ...)
+// FUNC_AT(00132192) - the CRT printf
+void dbg_wprintf(const char* format, ...)
 {
     va_list args;
     va_start(args, format);

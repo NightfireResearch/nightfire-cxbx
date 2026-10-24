@@ -1,0 +1,343 @@
+{
+ "verdicts": [
+  {
+   "item": "0.1",
+   "xbox": "0x14850",
+   "ps2": "0x10dc00",
+   "name": "ActCharacter::SetWeaponBone",
+   "verdict": "accept",
+   "why": "ActActor::Update calls it (weapon slot this+0x24+i*4 non-null -> RSceneObj::SetTransform) where PS2 ActActor::Update calls SetWeaponBone; identical body, sole caller on both",
+   "intermediates": []
+  },
+  {
+   "item": "1.1",
+   "xbox": "0x2aaf0",
+   "ps2": "0x133238",
+   "name": "AIGroundVehicle::BarriersInPath",
+   "verdict": "accept",
+   "why": "DoMoveMode -> DriveToPoint(2f610) -> it, and DriveToPointSub(2e0a0) -> it, same as PS2; body: flag check (+0xe9/+0xdc) with mode==6, clear flag, WWorldPos, rigid body pos, forward vector negated when reversing, 2*[+0x4c8], side offset [+0x4c0], CheckHitWorld result >1 -> 1",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0x2f610",
+     "ps2": "0x133f60",
+     "name": "AIGroundVehicle::DriveToPoint",
+     "verdict": "accept",
+     "why": "sole caller AIGroundVehicle::DoMoveMode on both; calls BarriersInPath and DriveToPointSub, GetPosition, Util_Bound, sin like PS2"
+    },
+    {
+     "item": "extra",
+     "xbox": "0x2e0a0",
+     "ps2": "0x1349c0",
+     "name": "AIGroundVehicle::DriveToPointSub",
+     "verdict": "accept",
+     "why": "sole caller DriveToPoint on both; calls BarriersInPath, GetPhysicsObject/GetRigidBody, Util_Bound (bce50) like PS2"
+    }
+   ]
+  },
+  {
+   "item": "2.1",
+   "xbox": "0x31910",
+   "ps2": "0x1385d8",
+   "name": "AIHelicopter::GetDirectionToTarget",
+   "verdict": "accept",
+   "why": "first unnamed call in ControlMoveState and DoAgentLogic on both; target - rigid body pos, normalised into this+0xc0 and (y=0) this+0xd0 (PS2 +0xb0/+0xc0, +0x10 shift)",
+   "intermediates": []
+  },
+  {
+   "item": "3.1",
+   "xbox": "0x31cd0",
+   "ps2": "0x13b4f8",
+   "name": "AIHelicopter::ManeuverToPos",
+   "verdict": "accept",
+   "why": "ControlMoveState call order: GetHeliCollNav, PathForwardRoadSegment, InitAtPoint, ReverseNavDirection, IncNavPosition x2, then this (PS2 ManeuverToPos) then GetRightVector; also DoAgentLogic; callees match (FindClosestFace, HeightAtPoint, SimRandom_Generate, Util_Step, InitAtPoint)",
+   "intermediates": []
+  },
+  {
+   "item": "4.1",
+   "xbox": "0x32a20",
+   "ps2": "0x13b4c8",
+   "name": "AIHelicopter::GetLookAhead",
+   "verdict": "accept",
+   "why": "ControlMoveState: GetScalarVelocity then this, as PS2 GetScalarVelocity then GetLookAhead; body clamp(v*0.5, 10, 20) identical to PS2 (0.5/10/20 constants, max/min)",
+   "intermediates": []
+  },
+  {
+   "item": "5.1",
+   "xbox": "0x34830",
+   "ps2": "0x13c558",
+   "name": "AIRoadSpawn::Restart",
+   "verdict": "accept",
+   "why": "sole caller ~ERestart on both; if fgRoadSpawn non-null: store sim frame, fill 0x32 dwords with -1, flag=1 (Init's body without the new)",
+   "intermediates": []
+  },
+  {
+   "item": "6.1",
+   "xbox": "0x34bb0",
+   "ps2": "0x13cfd8",
+   "name": "AIRoadSpawn::PedRespawnPosCheck",
+   "verdict": "accept",
+   "why": "sole caller AICharacterPedestrian::Recycle on both; body: global override flag -> 1; mission-manager flag / sim frame<6 branch distance check vs player; else camera-direction dot >0.8 / <0.2 tests, same constants",
+   "intermediates": []
+  },
+  {
+   "item": "7.1",
+   "xbox": "0x35610",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "3x3 matrix-row copy helper called from 9 unrelated functions (AISplinePath ctor, RSceneObj::SetTransform, UseArticle...); an MSVC-outlined inline, not fgRoadSpawn_global_ctors (which just calls a ctor helper); no PS2 function",
+   "intermediates": []
+  },
+  {
+   "item": "8.1",
+   "xbox": "0x35730",
+   "ps2": "0x13dc78",
+   "name": "AISplinePath::~AISplinePath",
+   "verdict": "accept",
+   "why": "callers ~AIVehicle, SetSplinePath, RestartCamera, ~RWorldCamera match PS2 ~AISplinePath's; body DestroyPathHandle(this+0x60); no delete flag -> ~AISplinePath",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0x802d0",
+     "ps2": "0x1b1dc0",
+     "name": "RPathEngine::DestroyPathHandle",
+     "verdict": "accept",
+     "why": "only callee of ~AISplinePath on both; walks global handle list, unlinks node whose +8 == handle, FastFree(node,0xdc)"
+    }
+   ]
+  },
+  {
+   "item": "9.1",
+   "xbox": "0x35930",
+   "ps2": "0x13e058",
+   "name": "AIVehicle::SetNextSplinePath",
+   "verdict": "accept",
+   "why": "sole caller ~ESetNextAISpline on both; if this+0x60(PS2 +0x50) path exists -> SetNext else new(0xb0) AISplinePath",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0x35780",
+     "ps2": "0x13dd28",
+     "name": "AISplinePath::SetNext",
+     "verdict": "accept",
+     "why": "called by SetNextSplinePath when the path exists; body RPathHandle::SetNextPath(this+0x60 handle, spline) as PS2"
+    }
+   ]
+  },
+  {
+   "item": "10.1",
+   "xbox": "0x3e6b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "called only by ASnowMobile::PlayMotor right after AVoice ctor, clears a byte in 3 AVoice::View records; inlined on PS2 (PS2 PlayMotor has no such call); not EAudioUpdate::EAudioUpdate",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0x3e6f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "inline 16-bit LCG random called by ~ESpawnSmackable; PS2 ~ESpawnSmackable inlines it (no call between SpawnSmackableObject and BytesToCoord); not EAutoDrive ctor",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0x3f210",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "per-event-type TagReference init thunk from the event data table (0x1b68d8), TagReference at this+0x10; PS2 counterpart FUN_00149b60 (data 0x32be98) is an unlisted static inside ECinematicCamera::GetEventName's sheet row - no name",
+   "intermediates": []
+  },
+  {
+   "item": "13.1",
+   "xbox": "0x3f400",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "eh vector destructor over 3 AVoice::View at this+4 = inlined AVoice::~AVoice (callers ~ATurret x3, ~AZoomObj, ~AVehicleWind, Play, Stop); PS2 inlines it, no named counterpart; not ECustomTransition ctor",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0x3f500",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "linker-folded TagReference-at-this+4 init thunk used by ~50 entries of the event data table; PS2 equivalents are unnamed statics (FUN_0014ca10 etc.)",
+   "intermediates": []
+  },
+  {
+   "item": "15.1",
+   "xbox": "0x3feb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (4 refs at +4/+0xc/+0x14/+0x1c); PS2 counterpart FUN_0014c818 unnamed static inside EFireRandomTrigger::GetEventName row",
+   "intermediates": []
+  },
+  {
+   "item": "16.1",
+   "xbox": "0x40070",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "SimRandom_Generate x2 combined into 32-bit random, called by Missile::Missile; PS2 Missile ctor inlines the two SimRandom_Generate calls; no PS2 function",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xcdfd0",
+     "ps2": "0x22af58",
+     "name": "WTargetPicker::GetWorldTarget",
+     "verdict": "accept",
+     "why": "called by Missile::Missile at the same positions as PS2 GetWorldTarget; body FastAlloc(0x50,\"WTargetable\"), WTargetable(x,y,z at this+0x10..0x18), result+0x38 = 1"
+    },
+    {
+     "item": "extra",
+     "xbox": "0xcd930",
+     "ps2": "0x229490",
+     "name": "WTargetable::WTargetable",
+     "verdict": "accept",
+     "why": "overload (float,float,float) called by GetWorldTarget on both; zeroes +0x1c..+0x24, common init, stores xyz at +0..+8, +0x34=0, WSimpleZone::SetPosition; Xbox 0xcdba0 is a different overload"
+    }
+   ]
+  },
+  {
+   "item": "17.1",
+   "xbox": "0x446f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (+8), several table refs; PS2 counterpart FUN_00158ea0 unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "18.1",
+   "xbox": "0x45090",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (+4/+0x18/+0x20); PS2 counterpart FUN_0015af70 unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "19.1",
+   "xbox": "0x45d00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (+4/+0xc); PS2 counterpart FUN_0015c000 unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "20.1",
+   "xbox": "0x464b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (+4/+8/+0xc), many table refs (folded); PS2 counterpart FUN_0015cd08 unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "21.1",
+   "xbox": "0x472e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "event data table TagReference init thunk (+4..+0x10); PS2 counterpart FUN_00146958 unnamed static",
+   "intermediates": []
+  },
+  {
+   "item": "22.1",
+   "xbox": "0x4f2d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "inner 200-slot ActionData queue ctor called by ActionQueue::ActionQueue; PS2 ActionQueue ctors inline this loop; not ActionQueueManager::UnRegisterQueue",
+   "intermediates": []
+  },
+  {
+   "item": "23.1",
+   "xbox": "0x5b0a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "strlen + FUN_00013630 string assign wrapper (MSVC std::string helper), called by GameLoop_StartUp and two CRT-area functions; not GameLoop_LoadDrawUnloadScreens",
+   "intermediates": []
+  },
+  {
+   "item": "24.1",
+   "xbox": "0x670e0",
+   "ps2": "0x18c1b0",
+   "name": "PBondCar::AddWheelForces",
+   "verdict": "accept",
+   "why": "sole unnamed between ControlTyreTracks and ProcessPhysics, sole caller PBondCar::ProcessPhysics; tail call order ConvertWorldToLocal, ConvertLocalToWorld, ResolveMassScaledForce4, ResolveMassScaledTorque4 x2, GetLocalAngularVelocity x2, ConvertLocalToWorld, Torque matches PS2",
+   "intermediates": [
+    {
+     "item": "extra",
+     "xbox": "0xad2c0",
+     "ps2": "0x1f8508",
+     "name": "RigidBody::ConvertWorldToLocal",
+     "verdict": "accept",
+     "why": "transpose(this+0x5c) then vect3mult in place, PS2 same (transpose via pext); callers AddWheelForces, AddSnowmobileForces, ApplyDamage, GenerateImpulse, ProcessSubmarinePhysics all PS2 callers"
+    },
+    {
+     "item": "extra",
+     "xbox": "0xad2f0",
+     "ps2": "0x1f84d0",
+     "name": "RigidBody::ConvertLocalToWorld",
+     "verdict": "accept",
+     "why": "vect3mult(p, this+0x5c, p) in place, PS2 same; callers subset of PS2's; sits next to ConvertWorldToLocal between GetLocalyyy and SetAngularMomentum"
+    }
+   ]
+  },
+  {
+   "item": "25.1",
+   "xbox": "0x775c0",
+   "ps2": "0x1a2f30",
+   "name": "RAnimEngine::Handle::GetBestSystemInstanceIndex",
+   "verdict": "accept",
+   "why": "sole caller Sentry on both; FindSystem (lower_bound) inlined on Xbox, then loop over instances picking max (x&0x3ff)*scale[bit] with flag bit0 clear, return index byte or -1",
+   "intermediates": []
+  },
+  {
+   "item": "26.1",
+   "xbox": "0x776d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "lower_bound over AnimInfo (16-byte) matching two bytes, called by System::ProcessStimuli; PS2 counterpart FUN_001a3348 (also used by SetFrame/SetFrameRate/NumFrames) is an unlisted static inside EvaluateInstance's sheet row; not SetVerbose",
+   "intermediates": []
+  },
+  {
+   "item": "27.1",
+   "xbox": "0x78670",
+   "ps2": "0x1a6cf8",
+   "name": "RCameraIniLoader::CheckCameraAgainstCar",
+   "verdict": "accept",
+   "why": "called twice by RCameraIniLoader::LoadFile on both; null -> 1; lowercases string, global override name, player vtable name/alt-name calls, substring match helper (78590 = PS2 FUN_001a6c68)",
+   "intermediates": []
+  },
+  {
+   "item": "28.1",
+   "xbox": "0x7ad50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC list<T>::_Incsize ('list<T> too long' length_error), STL helper; not ClearSplinePtList",
+   "intermediates": []
+  },
+  {
+   "item": "29.1",
+   "xbox": "0x7c3b0",
+   "ps2": "0x1aa820",
+   "name": "RDirectorQueue::~RDirectorQueue",
+   "verdict": "accept",
+   "why": "~RPlayerCamera: if (this+0x368) { call it; FastFree(p,0x14) } = delete of the director queue, as PS2 ~RPlayerCamera calls ~RDirectorQueue; body erase all nodes, FastFree(head,0x30) as PS2; sole caller; no delete flag -> ~RDirectorQueue",
+   "intermediates": []
+  }
+ ]
+}

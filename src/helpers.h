@@ -12,6 +12,7 @@
 #define U8_AT(x) (*((uint8_t*)x))
 #define BOOL8_AT(x) (*((uint8_t*)x))
 #define FLOAT_AT(x) (*((float*)x))
+#define DOUBLE_AT(x) (*((double*)x))
 #define PTR_AT(x) (*((void**)x))
 
 typedef unsigned char   undefined;
@@ -22,7 +23,7 @@ typedef unsigned int    dword;
 
 typedef long long    longlong;
 typedef unsigned int    uint;
-typedef unsigned long    ulong;
+// No ulong: Ghidra's is 32 bits (uint32_t), and glibc's <sys/types.h> has one of its own, unsigned long
 typedef unsigned long long    ulonglong;
 typedef unsigned char    undefined1;
 typedef unsigned short    undefined2;

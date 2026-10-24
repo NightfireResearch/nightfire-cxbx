@@ -1,6 +1,7 @@
 // crc32-adler
 #include "crc.h"
 
+// XBE_GLOBAL(0x001d52e8, 0x400)
 static const uint32_t crc32_table[256] =
 {
     0x00000000, 0x77073096, 0xee0e612c, 0x990951ba,

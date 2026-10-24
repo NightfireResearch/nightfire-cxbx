@@ -1,0 +1,212 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000ba7f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::SortWeaponList(void)"
+  },
+  {
+   "address": "0x000ba990",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "RSceneObj *"
+    }
+   ],
+   "sheet": "SWeaponManager::SetPlayerCar(RSceneObj *)",
+   "return": "void"
+  },
+  {
+   "address": "0x000ba9f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    },
+    {
+     "name": "param_4",
+     "type": "int"
+    }
+   ],
+   "sheet": "SWeaponManager::LoadWeapon(WeaponType, int, int, int)"
+  },
+  {
+   "address": "0x000baa70",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SWeaponManager::UnloadWeapon(WeaponType)"
+  },
+  {
+   "address": "0x000baab0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SWeaponManager::SetSecondary(WeaponType)"
+  },
+  {
+   "address": "0x000baad0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::GetPreviousSecondaryType(void)"
+  },
+  {
+   "address": "0x000bab20",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::GetNextSecondaryType(void)"
+  },
+  {
+   "address": "0x000bab80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "uint"
+    }
+   ],
+   "sheet": "SWeaponManager::DoWeaponAnim(WeaponType, int, unsigned int)"
+  },
+  {
+   "address": "0x000babb0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SWeaponManager::GetWeaponFromSystem(int)"
+  },
+  {
+   "address": "0x000babf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::UserReloading(void)"
+  },
+  {
+   "address": "0x000bad00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "SWeaponManager::StartNuclearSequence(COORD3 &, float)"
+  },
+  {
+   "address": "0x000bad40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::~SWeaponManager(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000bad70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::Reset(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000bae50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "SWeaponManager::SetSpecialWeapon(int, CARP::Trigger *, float)"
+  },
+  {
+   "address": "0x000baee0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "SWeaponManager::SelectSecondary(bool)"
+  },
+  {
+   "address": "0x000baf60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::UpdateTurret(void)"
+  },
+  {
+   "address": "0x000bb220",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::SWeaponManager(void)",
+   "return": "SWeaponManager *"
+  },
+  {
+   "address": "0x000bb2b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "SWeaponManager::FireWeapon(WeaponType)"
+  },
+  {
+   "address": "0x000bb9b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::HandleNuclearSequence(void)"
+  },
+  {
+   "address": "0x000bbdc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SWeaponManager::Update(void)"
+  }
+ ]
+}

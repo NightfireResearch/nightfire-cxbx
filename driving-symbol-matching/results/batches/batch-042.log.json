@@ -1,0 +1,471 @@
+{
+ "batch": "042",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 01:21:05 2026",
+ "items": [
+  {
+   "xbox": "0x0015109b",
+   "old_name": "FUN_0015109b",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0015109b from 'FUN_0015109b' to 'AsString_Frame_Handler'",
+      "warnings": [
+       "Function name 'AsString_Frame_Handler' \u2014 main part 'AsString_Frame_Handler' is not PascalCase. Expected: AsstringFrameHandler",
+       "Function name 'AsString_Frame_Handler' \u2014 main part 'AsString_Frame_Handler' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'AsString_Frame_Handler' does not start with a recognized verb. First word 'As' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0015109b",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AsString_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00151090",
+   "old_name": "FUN_00151090",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00151090 from 'FUN_00151090' to 'AsString_Unwind_0'",
+      "warnings": [
+       "Function name 'AsString_Unwind_0' \u2014 main part 'AsString_Unwind_0' is not PascalCase. Expected: AsstringUnwind0",
+       "Function name 'AsString_Unwind_0' \u2014 main part 'AsString_Unwind_0' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'AsString_Unwind_0' does not start with a recognized verb. First word 'As' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00151090",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AsString_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cbf",
+   "old_name": "FUN_00154cbf",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cbf from 'FUN_00154cbf' to 'SetPrimitiveType_Frame_Handler'",
+      "warnings": [
+       "Function name 'SetPrimitiveType_Frame_Handler' \u2014 main part 'SetPrimitiveType_Frame_Handler' is not PascalCase. Expected: SetprimitivetypeFrameHandler",
+       "Function name 'SetPrimitiveType_Frame_Handler' \u2014 main part 'SetPrimitiveType_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cbf",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetPrimitiveType_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cb0",
+   "old_name": "FUN_00154cb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cb0 from 'FUN_00154cb0' to 'SetPrimitiveType_Unwind_0'",
+      "warnings": [
+       "Function name 'SetPrimitiveType_Unwind_0' \u2014 main part 'SetPrimitiveType_Unwind_0' is not PascalCase. Expected: SetprimitivetypeUnwind0",
+       "Function name 'SetPrimitiveType_Unwind_0' \u2014 main part 'SetPrimitiveType_Unwind_0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetPrimitiveType_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cd8",
+   "old_name": "FUN_00154cd8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cd8 from 'FUN_00154cd8' to 'GetIndexFromName_Frame_Handler'",
+      "warnings": [
+       "Function name 'GetIndexFromName_Frame_Handler' \u2014 main part 'GetIndexFromName_Frame_Handler' is not PascalCase. Expected: GetindexfromnameFrameHandler",
+       "Function name 'GetIndexFromName_Frame_Handler' \u2014 main part 'GetIndexFromName_Frame_Handler' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cd8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetIndexFromName_Frame_Handler",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cc9",
+   "old_name": "FUN_00154cc9",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cc9 from 'FUN_00154cc9' to 'GetIndexFromName_Unwind_0'",
+      "warnings": [
+       "Function name 'GetIndexFromName_Unwind_0' \u2014 main part 'GetIndexFromName_Unwind_0' is not PascalCase. Expected: GetindexfromnameUnwind0",
+       "Function name 'GetIndexFromName_Unwind_0' \u2014 main part 'GetIndexFromName_Unwind_0' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cc9",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetIndexFromName_Unwind_0",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cf1",
+   "old_name": "FUN_00154cf1",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cf1 from 'FUN_00154cf1' to 'SetVar_Frame_Handler_154cf1'",
+      "warnings": [
+       "Function name 'SetVar_Frame_Handler_154cf1' \u2014 main part 'SetVar_Frame_Handler_154cf1' is not PascalCase. Expected: SetvarFrameHandler154cf1",
+       "Function name 'SetVar_Frame_Handler_154cf1' \u2014 main part 'SetVar_Frame_Handler_154cf1' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cf1",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetVar_Frame_Handler_154cf1",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154ce2",
+   "old_name": "FUN_00154ce2",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154ce2 from 'FUN_00154ce2' to 'SetVar_Unwind_0_154ce2'",
+      "warnings": [
+       "Function name 'SetVar_Unwind_0_154ce2' \u2014 main part 'SetVar_Unwind_0_154ce2' is not PascalCase. Expected: SetvarUnwind0154ce2",
+       "Function name 'SetVar_Unwind_0_154ce2' \u2014 main part 'SetVar_Unwind_0_154ce2' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154ce2",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetVar_Unwind_0_154ce2",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d0a",
+   "old_name": "FUN_00154d0a",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d0a from 'FUN_00154d0a' to 'SetVar_Frame_Handler_154d0a'",
+      "warnings": [
+       "Function name 'SetVar_Frame_Handler_154d0a' \u2014 main part 'SetVar_Frame_Handler_154d0a' is not PascalCase. Expected: SetvarFrameHandler154d0a",
+       "Function name 'SetVar_Frame_Handler_154d0a' \u2014 main part 'SetVar_Frame_Handler_154d0a' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d0a",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetVar_Frame_Handler_154d0a",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154cfb",
+   "old_name": "FUN_00154cfb",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154cfb from 'FUN_00154cfb' to 'SetVar_Unwind_0_154cfb'",
+      "warnings": [
+       "Function name 'SetVar_Unwind_0_154cfb' \u2014 main part 'SetVar_Unwind_0_154cfb' is not PascalCase. Expected: SetvarUnwind0154cfb",
+       "Function name 'SetVar_Unwind_0_154cfb' \u2014 main part 'SetVar_Unwind_0_154cfb' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154cfb",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetVar_Unwind_0_154cfb",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d23",
+   "old_name": "FUN_00154d23",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d23 from 'FUN_00154d23' to 'SetStream_Frame_Handler_154d23'",
+      "warnings": [
+       "Function name 'SetStream_Frame_Handler_154d23' \u2014 main part 'SetStream_Frame_Handler_154d23' is not PascalCase. Expected: SetstreamFrameHandler154d23",
+       "Function name 'SetStream_Frame_Handler_154d23' \u2014 main part 'SetStream_Frame_Handler_154d23' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d23",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetStream_Frame_Handler_154d23",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d14",
+   "old_name": "FUN_00154d14",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d14 from 'FUN_00154d14' to 'SetStream_Unwind_0_154d14'",
+      "warnings": [
+       "Function name 'SetStream_Unwind_0_154d14' \u2014 main part 'SetStream_Unwind_0_154d14' is not PascalCase. Expected: SetstreamUnwind0154d14",
+       "Function name 'SetStream_Unwind_0_154d14' \u2014 main part 'SetStream_Unwind_0_154d14' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d14",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetStream_Unwind_0_154d14",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d3c",
+   "old_name": "FUN_00154d3c",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d3c from 'FUN_00154d3c' to 'SetStream_Frame_Handler_154d3c'",
+      "warnings": [
+       "Function name 'SetStream_Frame_Handler_154d3c' \u2014 main part 'SetStream_Frame_Handler_154d3c' is not PascalCase. Expected: SetstreamFrameHandler154d3c",
+       "Function name 'SetStream_Frame_Handler_154d3c' \u2014 main part 'SetStream_Frame_Handler_154d3c' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d3c",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetStream_Frame_Handler_154d3c",
+   "ok": true
+  },
+  {
+   "xbox": "0x00154d2d",
+   "old_name": "FUN_00154d2d",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00154d2d from 'FUN_00154d2d' to 'SetStream_Unwind_0_154d2d'",
+      "warnings": [
+       "Function name 'SetStream_Unwind_0_154d2d' \u2014 main part 'SetStream_Unwind_0_154d2d' is not PascalCase. Expected: SetstreamUnwind0154d2d",
+       "Function name 'SetStream_Unwind_0_154d2d' \u2014 main part 'SetStream_Unwind_0_154d2d' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00154d2d",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetStream_Unwind_0_154d2d",
+   "ok": true
+  }
+ ]
+}

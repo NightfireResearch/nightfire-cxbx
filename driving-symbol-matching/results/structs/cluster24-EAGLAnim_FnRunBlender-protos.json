@@ -1,0 +1,165 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00105000",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnRunBlender::FnRunBlender(void)",
+   "return": "EAGLAnim::FnRunBlender *"
+  },
+  {
+   "address": "0x00105050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnRunBlender::~FnRunBlender(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x001051a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::Eval(float, float, float *)"
+  },
+  {
+   "address": "0x001051c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::SetWeight(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x00105670",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::CycleTime(float, float, float) const"
+  },
+  {
+   "address": "0x00105a60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::AlignVel(float *) const"
+  },
+  {
+   "address": "0x00105ab0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::BlendVel(float, float, float *) const"
+  },
+  {
+   "address": "0x00105e00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnRunBlender::GetFrequency(void) const"
+  },
+  {
+   "address": "0x00105ef0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::ComputeBeginRootQ(COORD4 &) const"
+  },
+  {
+   "address": "0x00105f10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::ComputeEndRootQ(COORD4 &) const"
+  },
+  {
+   "address": "0x00105f50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::AlignCycleBeginEnd(int)"
+  },
+  {
+   "address": "0x001061f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnRunBlender::EvalVel2D(float, float *)"
+  },
+  {
+   "address": "0x00106300",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnRunBlender *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

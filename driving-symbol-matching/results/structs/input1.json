@@ -1,0 +1,143 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "ActionData",
+   "size": 12,
+   "comment": "One game action (input layer). Built by ActionData::ActionData(int, float, int) (0x4f170).",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "action",
+     "comment": "action id, 1..0x40 for the mapped controls (from the control config entry); 0x1f is gated by global 0x234e34 in FeedQueue"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "source",
+     "comment": "name invented: the constructor's third argument; SendGameMessages fills it from the input device (+0x18)"
+    },
+    {
+     "offset": 8,
+     "type": "float",
+     "name": "value",
+     "comment": "the control's value, read from the device scalar (0..1 for buttons and triggers)"
+    }
+   ]
+  },
+  {
+   "name": "ActionQueueRing",
+   "size": 2416,
+   "comment": "INVENTED NAME: the ring buffer embedded in ActionQueue at +4 (ctor 0x4f2d0, Push 0x4f1c0; inlined on PS2).",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "count"
+    },
+    {
+     "offset": 4,
+     "type": "int",
+     "name": "tail",
+     "comment": "last written slot; -1 when empty after a flush"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "head",
+     "comment": "next slot to read"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "capacity",
+     "comment": "200"
+    },
+    {
+     "offset": 16,
+     "type": "ActionData[200]",
+     "name": "items"
+    }
+   ]
+  },
+  {
+   "name": "ActionQueue",
+   "size": 2420,
+   "comment": "A consumer's queue of game actions (GHud, SMissionManager, SWeaponManager, RWorldCamera, PHelicopter...). Registered with the ActionQueueManager by its constructor.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ActionQueueManager *",
+     "name": "manager"
+    },
+    {
+     "offset": 4,
+     "type": "ActionQueueRing",
+     "name": "ring"
+    }
+   ]
+  },
+  {
+   "name": "ActionRef",
+   "size": 4,
+   "comment": "Handle returned by ActionQueue::GetAction: a pointer to the head ActionData, or null when the queue is empty.",
+   "fields": [
+    {
+     "offset": 0,
+     "type": "ActionData *",
+     "name": "data"
+    }
+   ]
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0004f170",
+   "calling_convention": "__thiscall",
+   "return": "ActionData *",
+   "params": [
+    {
+     "name": "action",
+     "type": "int"
+    },
+    {
+     "name": "value",
+     "type": "float"
+    },
+    {
+     "name": "source",
+     "type": "int"
+    }
+   ]
+  },
+  {
+   "address": "0x000a1ec0",
+   "calling_convention": "__thiscall",
+   "return": "ActionRef *",
+   "params": [
+    {
+     "name": "data",
+     "type": "ActionData *"
+    }
+   ]
+  },
+  {
+   "address": "0x0004f1c0",
+   "calling_convention": "__thiscall",
+   "return": "void",
+   "params": [
+    {
+     "name": "data",
+     "type": "ActionData *"
+    }
+   ]
+  },
+  {
+   "address": "0x0004f2d0",
+   "calling_convention": "__thiscall",
+   "return": "ActionQueueRing *",
+   "params": []
+  }
+ ]
+}

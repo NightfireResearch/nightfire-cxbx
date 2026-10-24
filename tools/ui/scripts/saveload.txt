@@ -1,0 +1,58 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# Codenames: load a saved codename from the wheel, save it from the codename menu, then the delete box (cancelled)
+# and the help line of the wheel. Run on the run folder's copy of Release/saves.
+press DOWN
+wait 30
+press DOWN
+wait 30
+press A                    # Codenames
+waitpage 0x4000001b        # P_CNSELECT
+wait 100
+shot cnselect
+press DOWN                 # the first saved codename
+wait 60
+shot cnselect_saved
+press A                    # load it
+waitpage 0x4000001d 600    # P_CNMENU
+wait 150
+shot cnmenu_loaded
+press DOWN
+wait 40
+press DOWN
+wait 40
+press DOWN
+wait 40
+press DOWN
+wait 40
+press DOWN
+wait 40
+shot cnmenu_save           # Save Codename
+press A                    # save it
+wait 120
+shot saving
+waitpage 0x4000001b 600    # back on P_CNSELECT
+wait 100
+shot cnselect_again
+press DOWN
+wait 60
+press X                    # delete: the box asking
+wait 80
+shot delete_box
+press B                    # no
+wait 80
+shot delete_cancelled
+press UP
+wait 60
+shot cnselect_default
+press B
+wait 150
+shot main
+quit

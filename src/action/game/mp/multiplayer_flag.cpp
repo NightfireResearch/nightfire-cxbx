@@ -1,0 +1,213 @@
+// The carried scenario objects: the Capture the Flag flags and the Espionage blueprint.
+
+#include "multiplayer.h"
+#include "../../game.h"
+#include "../../engine/Collide.h"
+#include "../../engine/Text.h"
+#include "../../sound/Sound.h"
+#include "../view.h"
+#include "../drone/Drone.h"
+#include "../drone/NDrone2.h"   // DRONE_MSG
+#include <math.h>
+#include <stdint.h>
+#include <stdio.h>
+#include "../obj/control.h"
+#include "../../math/X87Ops.h"
+
+#pragma fp_contract(off)
+
+// A message to every player naming team. (Our helper; the original repeats it inline.)
+static void MP_TeamMessage(Action_TranslatedText format, ushort team) {
+    char *str = Txt_GetStringFromHeap(0);
+    const char *teamName = Txt_BindLabel(team == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
+    sprintf(str, Txt_BindLabel(format, 0), teamName);
+    Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, Ftol(FRAME_RATE_INT * 1.5));
+}
+
+// The holder no longer carries the object: its status bit, its team's objective bits and its goal go. (Our
+// helper; the original repeats it inline.)
+static void MP_ClearCarrier(obj_tag *holder, ushort status, ushort objectiveBits, uint goalMsg, uint msg) {
+    if (holder == NULL)
+        return;
+    short idx = Control_Plr2Ind(holder);
+    if (idx == -1)
+        return;
+
+    MPGame.players[idx].flags &= ~status;
+    MPTeam team = MPSettings.Player[idx].TeamId;
+    if (holder->objectType == OBJECTTYPE_DRONE) {
+        DCVars_tag dcVars;
+        Drone_DCVfromOBJ(holder, &dcVars);
+    }
+    MPGame.teamObjectiveFlags[team] &= ~objectiveBits;
+    MP_sendBotMessage(holder, goalMsg, 1, 0);
+    MPGame.teamObjectiveFlags[NO_TEAM] = 0;
+    MP_sendBotMessage(holder, msg, 0, 0);
+}
+
+// Drops the object where its holder was, on the floor.
+static void MP_DropToFloor(MPOBJECT *mpObj, obj_tag *gameObj) {
+    _VECTOR *pos = Mat_Position(gameObj->transformMatrix);
+    build_PointOnFloor(gameObj->inCel, gameObj, pos, gameObj->objGraphics->extentMin.y, NULL);
+    Vec_Copy(pos, &gameObj->position);
+    MP_ResetMPObject(mpObj, MPOBJ_DROPPED, gameObj, true);
+}
+
+// gameObj->curState is an MPObjectState. mpObj->num is the flag's team.
+// The other team takes it from its base and scores by bringing it to its own; its own team returns it once
+// dropped, and it goes back by itself after 30 seconds on the floor.
+void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
+    MPTeam other = mpObj->num == PHOENIX ? MI6 : PHOENIX;
+
+    View_SetDrawInAllViews(gameObj);
+    switch (gameObj->curState) {
+    case MPOBJ_HOME:
+        mpObj->holder = MP_HitBy(gameObj, other, NULL, NULL);
+        if (mpObj->holder == NULL)
+            return;
+        MP_setPlayerStatus(mpObj->holder, MPPLAYER_HAS_FLAG, DRONE_MSG_BotFlagTaken, mpObj->num, gameObj, false);
+        gameObj->curState = MPOBJ_CARRIED;
+        gameObj->parent = mpObj->holder;
+        MP_TeamMessage(NOTIF_X_FLAG_CAPTURED, mpObj->num);
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
+        break;
+
+    case MPOBJ_CARRIED: {
+        if (dropped) {
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_HAS_FLAG, 1, DRONE_MSG_BotGoalUninit, DRONE_MSG_BotFlagDropped);
+            MP_DropToFloor(mpObj, gameObj);
+            gameObj->curState = MPOBJ_DROPPED;
+            MP_TeamMessage(NOTIF_X_FLAG_DROPPED, mpObj->num);
+            Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
+            return;
+        }
+
+        MP_AttachToHolder(gameObj, mpObj->holder, 0x15);
+        _VECTOR goal = *Mat_Position(Bases[other].gameObj->transformMatrix);
+        goal.y += 1.0f;
+        if (!(Vec_SqDist3D(Mat_Position(gameObj->transformMatrix), &goal) < 2.0f))
+            return;
+
+        MP_ClearCarrier(gameObj->parent, MPPLAYER_HAS_FLAG, 3, DRONE_MSG_BotGoalComplete, DRONE_MSG_BotFlagCaptured);
+        MPGame.teamScore[other] += 1.0f;
+        short idx = Control_Plr2Ind(gameObj->parent);
+        if (idx != -1)
+            MPGame.players[idx].points += 1.0f;
+        MP_ResetMPObject(mpObj, MPOBJ_HOME, gameObj, false);
+        MP_TeamMessage(NOTIF_X_TEAM_SCORED, other);
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_TRUCK, 100.0f, 0, 0);
+        break;
+    }
+
+    case MPOBJ_DROPPED: {
+        if (MP_HitBy(gameObj, mpObj->num, NULL, NULL) != NULL) {
+            mpObj->droppedFrames = 0;
+            MP_ResetMPObject(mpObj, MPOBJ_HOME, gameObj, false);
+            MP_TeamMessage(NOTIF_X_FLAG_RETURNED, mpObj->num);
+            Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
+            return;
+        }
+
+        mpObj->holder = MP_HitBy(gameObj, other, NULL, NULL);
+        if (mpObj->holder == NULL) {
+            ushort frames = mpObj->droppedFrames++;
+            if (frames <= FRAME_RATE_INT * 30)
+                return;
+            mpObj->droppedFrames = 0;
+            MP_ResetMPObject(mpObj, MPOBJ_HOME, gameObj, false);
+            MP_TeamMessage(NOTIF_X_FLAG_RETURNED, mpObj->num);
+            MPSound_Play(SFX_BOND_MOMENT_BM_CAS_BEAM);
+            return;
+        }
+
+        MP_setPlayerStatus(mpObj->holder, MPPLAYER_HAS_FLAG, DRONE_MSG_BotFlagTaken, mpObj->num, gameObj, false);
+        gameObj->curState = MPOBJ_CARRIED;
+        gameObj->parent = mpObj->holder;
+        MP_TeamMessage(NOTIF_X_FLAG_PICKED_UP, mpObj->num);
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
+        break;
+    }
+    }
+}
+
+// An agent takes the blueprint. (Our helper; the original repeats it inline.)
+static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
+    short idx = Control_Plr2Ind(taker);
+    if (idx == -1)
+        return;
+
+    MPGame.players[idx].flags |= MPPLAYER_HAS_BLUEPRINT;
+    MPTeam team = MPSettings.Player[idx].TeamId;
+    uint senderId = 0;
+    if (taker->objectType == OBJECTTYPE_DRONE) {
+        DCVars_tag dcVars;
+        Drone_DCVfromOBJ(taker, &dcVars);
+        senderId = dcVars.aiStateMachine->id;
+    }
+    MPGame.teamObjectiveFlags[team] |= 1;
+    MP_sendBotMessage(taker, DRONE_MSG_BotGoalComplete, 1, 0);
+    MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, gameObj, 0, senderId);
+    MPGame.teamObjectiveFlags[NO_TEAM] = 0;
+    MP_sendBotMessage(taker, DRONE_MSG_BotBlueprintTaken, 0, 0);
+}
+
+// gameObj->curState is an MPObjectState (home at its spawn place). Either team takes it,
+// and mpObj->num becomes the taker's team, which scores by bringing it to its espionage base. Dropped, it goes
+// back after 30 seconds on the floor unless someone takes it.
+void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
+    View_SetDrawInAllViews(gameObj);
+    switch (gameObj->curState) {
+    case MPOBJ_HOME:
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        if (mpObj->holder == NULL)
+            return;
+        MP_BluePrintTaken(gameObj, mpObj->holder);
+        MP_TeamMessage(NOTIF_X_PICKED_UP_BLUEPRINT, mpObj->num);
+        gameObj->curState = MPOBJ_CARRIED;
+        gameObj->parent = mpObj->holder;
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
+        break;
+
+    case MPOBJ_CARRIED:
+        if (dropped) {
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_HAS_BLUEPRINT, 1, DRONE_MSG_BotGoalUninit,
+                            DRONE_MSG_BotBlueprintDropped);
+            MP_DropToFloor(mpObj, gameObj);
+            MP_TeamMessage(NOTIF_X_DROPPED_BLUEPRINT, mpObj->num);
+            gameObj->curState = MPOBJ_DROPPED;
+            Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
+            return;
+        }
+
+        MP_AttachToHolder(gameObj, mpObj->holder, 0x15);
+        for (HITDATA_tag *hit = EsponageBase[mpObj->num].gameObj->hitList; hit != NULL; hit = hit->next) {
+            if (hit->hitObj == mpObj->holder) {
+                MP_BluePrintReachedBase(gameObj, mpObj);
+                return;
+            }
+        }
+        break;
+
+    case MPOBJ_DROPPED:
+        mpObj->holder = MP_HitBy(gameObj, NO_TEAM, NULL, &mpObj->num);
+        if (mpObj->holder == NULL) {
+            ushort frames = mpObj->droppedFrames++;
+            if (frames <= FRAME_RATE_INT * 30)
+                return;
+            mpObj->droppedFrames = 0;
+            MP_ResetMPObject(mpObj, MPOBJ_HOME, gameObj, false);
+            char *str = Txt_GetStringFromHeap(0);
+            sprintf(str, Txt_BindLabel(NOTIF_BLUEPRINT_RETURNED, 0));
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, Ftol(FRAME_RATE_INT * 1.5));
+            Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
+            return;
+        }
+
+        MP_BluePrintTaken(gameObj, mpObj->holder);
+        gameObj->curState = MPOBJ_CARRIED;
+        gameObj->parent = mpObj->holder;
+        MP_TeamMessage(NOTIF_X_PICKED_UP_BLUEPRINT, mpObj->num);
+        Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
+        break;
+    }
+}

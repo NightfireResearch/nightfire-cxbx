@@ -1,0 +1,482 @@
+{
+ "verdicts": [
+  {
+   "item": 310,
+   "xbox": "0x000b7260",
+   "ps2": "0x00208428",
+   "name": "SMissionManager::GetEnemyAccuracyBoost",
+   "verdict": "accept",
+   "why": "Same three-way branch on mode field returning +0x2b0/+0x2b4/+0x2ac of the same sub-object; only caller EFireWeapon dtor on both",
+   "intermediates": []
+  },
+  {
+   "item": 311,
+   "xbox": "0x00021f10",
+   "ps2": "0x00122780",
+   "name": "AICharacterEnemyWindow::DoNeutral",
+   "verdict": "accept",
+   "why": "Same guard (vcall==0 && vcall), sets fields to 2 and 8, flag=1, Human::Activate, timer = rate*300",
+   "intermediates": []
+  },
+  {
+   "item": 312,
+   "xbox": "0x00035f10",
+   "ps2": "0x0013ed38",
+   "name": "AIVehicleController::UpdateAgentGroundVehicles",
+   "verdict": "accept",
+   "why": "Round-robin index mod agent count, sets per-vehicle flag (idx!=current) and virtual update per vehicle; caller UpdateVehicles on both",
+   "intermediates": []
+  },
+  {
+   "item": 313,
+   "xbox": "0x000bf0e0",
+   "ps2": "0x00213d68",
+   "name": "WCollisionMgr::FindFaceInTriStrip",
+   "verdict": "accept",
+   "why": "Same constants (count-2 < 0xb4 scratchpad else static buffer, 3x vect3mult, 1e38 best, >-1.0, &0x2c/0x2d mask filter); called from the two FindFaceInCInst-position functions",
+   "intermediates": []
+  },
+  {
+   "item": 314,
+   "xbox": "0x000b6e30",
+   "ps2": "0x00207ea8",
+   "name": "SMissionManager::AddScore",
+   "verdict": "accept",
+   "why": "Adds score to per-type array, if >0 and type 1 calls GHud::TheApp()+Stylin and bumps counter; caller EAddScoreAction dtor",
+   "intermediates": []
+  },
+  {
+   "item": 315,
+   "xbox": "0x00035e70",
+   "ps2": "0x0013ebc0",
+   "name": "AIVehicleController::GetPlayerGroundVehiclePtr",
+   "verdict": "accept",
+   "why": "Global array base + index*stride (0x270 bytes Xbox, consistent with UpdateAgentGroundVehicles stride); callers SetTargetMode and EAICommand dtor agree",
+   "intermediates": []
+  },
+  {
+   "item": 316,
+   "xbox": "0x00124ed0",
+   "ps2": "0x002f9180",
+   "name": "AFader::Priv::Update",
+   "verdict": "accept",
+   "why": "Same AStream::IsOver / AMix::Add(\"Ambience\") / Event flow, 10/10 named callees, caller AFader::Update",
+   "intermediates": []
+  },
+  {
+   "item": 317,
+   "xbox": "0x0011a800",
+   "ps2": "0x002cdca8",
+   "name": "UCharNamespace::UCharNamespace",
+   "verdict": "accept",
+   "why": "Vtable-only ctor called at the guarded static-init spot in GlobalSymbolTable::Init before atexit and AddNamespace(\"CHAR\"/\"DATA\") on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 318,
+   "xbox": "0x000c8e60",
+   "ps2": "0x00221528",
+   "name": "WRoadNetwork::GetSpecialRoads",
+   "verdict": "accept",
+   "why": "Loop over WRoadNetwork segments testing flag bit 0x100 at +0x50 (byte 0x51 bit0) and +0x59, filling output up to count",
+   "intermediates": []
+  },
+  {
+   "item": 319,
+   "xbox": "0x00097870",
+   "ps2": "0x001d6860",
+   "name": "RWorldCamera::LoadSingleAnimationFromList",
+   "verdict": "accept",
+   "why": "Linear search of anim list (stride 0x40, id at +8->+4), stop old handle, RAnimEngine::Handle::Create(1,...,list+i*0x40)",
+   "intermediates": []
+  },
+  {
+   "item": 320,
+   "xbox": "0x0007fef0",
+   "ps2": "0x001b1860",
+   "name": "RPathEngine::RPathHandle::SetThrottle",
+   "verdict": "accept",
+   "why": "Setter of +0xbc; called from EPathSetThrottleDynamic/Static dtors on both sides (PS2 decomp swaps arg order)",
+   "intermediates": []
+  },
+  {
+   "item": 321,
+   "xbox": "0x000cedd0",
+   "ps2": "0x0022c1a8",
+   "name": "WTree::FindNode",
+   "verdict": "accept",
+   "why": "Same recursive quadtree descent with half-size child boxes; callers RSceneObj ctor and the outer FindNode overload agree",
+   "intermediates": [
+    {
+     "xbox": "0x000cf0b0",
+     "ps2": "0x0022c6b8",
+     "name": "WTree::FindNode",
+     "why": "Outer FindNode overload: CheckContainment then inner FindNode, called from RSceneObj::UpdatePosition on both sides"
+    }
+   ]
+  },
+  {
+   "item": 322,
+   "xbox": "0x000d0f50",
+   "ps2": "0x0022f5a8",
+   "name": "IsVisibleAgainstCurtains",
+   "verdict": "accept",
+   "why": "Xbox C loop over active curtains (count written by InitActiveCurtainList) replaces the PS2 VU0 microprogram (vcallms); called at the same spot in CullModule after IsInFrustum2d, size ratio explained by the microcode",
+   "intermediates": []
+  },
+  {
+   "item": 323,
+   "xbox": "0x000d9370",
+   "ps2": "0x00241ea8",
+   "name": "GHud::GetCenter",
+   "verdict": "accept",
+   "why": "LOCALE_Symbol if no string, FONT_SetState, FONT_SetScale(s,s), FONT_Width; same HUD callers (DrawObjectiveMessage, DrawPauseMenu, Draw children)",
+   "intermediates": [
+    {
+     "xbox": "0x000d6eb0",
+     "ps2": "0x002377d8",
+     "name": "GGallery::FONT_SetState",
+     "why": "Copies Keys position/colour/font into gallery state then sets scale; called before FONT_SetScale in GetCenter and DrawTimer on both sides"
+    }
+   ]
+  },
+  {
+   "item": 324,
+   "xbox": "0x000b30c0",
+   "ps2": "0x00201730",
+   "name": "Simulation::UntrackAllInstances",
+   "verdict": "accept",
+   "why": "Deletes every pointer in the tracked-instance vector then clears it; callers Simulation::Reset and WWorld::Reset on both",
+   "intermediates": []
+  },
+  {
+   "item": 325,
+   "xbox": "0x00011790",
+   "ps2": "0x001092f8",
+   "name": "ActActor::SetupFOVConversion",
+   "verdict": "accept",
+   "why": "Guarded SetWorldTransformMode, copy global MVP matrix, invert, FOV scale with >2.0 check, SetWeaponsTransformToWorldSpace; caller ActActorDatabase::SetupFOVConversions",
+   "intermediates": []
+  },
+  {
+   "item": 326,
+   "xbox": "0x000803e0",
+   "ps2": "0x001b1ec0",
+   "name": "RPathEngine::Purge",
+   "verdict": "accept",
+   "why": "If global path engine exists: clear its list, destroy and delete, null the global; caller WWorld::Close",
+   "intermediates": []
+  },
+  {
+   "item": 327,
+   "xbox": "0x000e8a30",
+   "ps2": "0x00287778",
+   "name": "EAGL::Device::SetDeleteOverride",
+   "verdict": "accept",
+   "why": "Stores its argument into maybeEaglFree; caller RRenderer ctor on both",
+   "intermediates": []
+  },
+  {
+   "item": 328,
+   "xbox": "0x00084130",
+   "ps2": "0x001ba7a0",
+   "name": "RPlayerCamera::DirectorChangeCameraMode",
+   "verdict": "accept",
+   "why": "Large director mode switch with same callee set (LoadSingleAnimationFromList = FUN_00097870, BuildRotationMat4, m4toquat, MATRIX4_mult); neighbour distance 7",
+   "intermediates": []
+  },
+  {
+   "item": 329,
+   "xbox": "0x0009fb90",
+   "ps2": "0x001e0d60",
+   "name": "RLightning::Update",
+   "verdict": "accept",
+   "why": "Same catch-up loop (sim tick - last, clamp 3->1) over bolts; Xbox inlined RandomSyncWithSim (*5,*7,*11 &0x3f); caller RLightning::Draw",
+   "intermediates": []
+  },
+  {
+   "item": 330,
+   "xbox": "0x0008f500",
+   "ps2": "0x001c97d0",
+   "name": "RSceneObj::GetBoundingRadius",
+   "verdict": "accept",
+   "why": "PS2 disassembly: (field&0x3ff) as float * table[bit30] else ComputeBoundingRadius when sign bit set - identical to Xbox; caller Sentry ctor",
+   "intermediates": []
+  },
+  {
+   "item": 331,
+   "xbox": "0x000f8310",
+   "ps2": "0x00264190",
+   "name": "EAGLAnim::EventTarget::~EventTarget",
+   "verdict": "accept",
+   "why": "Frees each name string (strlen+1, inlined on Xbox) via maybeEaglFree, then the arrays (count<<3, count<<2); caller ActEventResolver dtor",
+   "intermediates": []
+  },
+  {
+   "item": 332,
+   "xbox": "0x0010d900",
+   "ps2": "0x00256fe0",
+   "name": "FILE_load_internal",
+   "verdict": "accept",
+   "why": "opensync, size, FILE_malloc(size), read, closesync, return buffer; neighbour distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 333,
+   "xbox": "0x00118030",
+   "ps2": "0x002db798",
+   "name": "CARP::BaseDesc::CalcDamageZone",
+   "verdict": "accept",
+   "why": "Same zone-code constants (0x14/4/0x28/8) from box midpoints after transforming (-1,1,-1) vector; callers PBondCar::ApplyDamage, Handle ctor/Create, InitEffects agree",
+   "intermediates": []
+  },
+  {
+   "item": 334,
+   "xbox": "0x0014df70",
+   "ps2": "0x00302928",
+   "name": "RCMP::DECODER::FreeChosenCodec",
+   "verdict": "accept",
+   "why": "If codec pointer set call its deleting destructor and null it (+0x14 PS2 / +0x18 Xbox); caller RCMP::AV_PLAYER::GetRCMPChunk",
+   "intermediates": []
+  },
+  {
+   "item": 335,
+   "xbox": "0x00088be0",
+   "ps2": "0x001bb8a8",
+   "name": "RPlayerCamera::SetMissileCamera",
+   "verdict": "accept",
+   "why": "Guard, clear queue, new(0x28) RDirectorQueueData with kMissileCamLatency, set mode, delete; called from SetDriveMissile on both",
+   "intermediates": [
+    {
+     "xbox": "0x000b80b0",
+     "ps2": "0x002064d8",
+     "name": "SMissionManager::SetDriveMissile",
+     "why": "Sets driveMissile, zeros 4 fields, calls SetMissileCamera/SetTarget or EndMissileCamera, player physics vcall(8); same callers"
+    }
+   ]
+  },
+  {
+   "item": 336,
+   "xbox": "0x0009f6b0",
+   "ps2": "0x001e2d18",
+   "name": "RLightning::Bolt::Draw",
+   "verdict": "accept",
+   "why": "Same fade computation ((sim-start)*rcp*decay, random jitter), loop over segments then draw; caller RLightning::Draw",
+   "intermediates": []
+  },
+  {
+   "item": 337,
+   "xbox": "0x000190b0",
+   "ps2": "0x00113b48",
+   "name": "ActPoser::DoMainPose",
+   "verdict": "accept",
+   "why": "Caller ActPoser::DoSkeletonPose on both; same MATRIX4_mult/m4toquat pattern, size ratio 1.02",
+   "intermediates": []
+  },
+  {
+   "item": 338,
+   "xbox": "0x00093a90",
+   "ps2": "0x001ceec0",
+   "name": "RTexList::CreateNewTextureElement",
+   "verdict": "accept",
+   "why": "SHAPE_locatez on name, build element and insert, else return end; caller RTextureContext::FindOrCreateTexture",
+   "intermediates": []
+  },
+  {
+   "item": 339,
+   "xbox": "0x0004f190",
+   "ps2": "0x001651a0",
+   "name": "getActionID",
+   "verdict": "accept",
+   "why": "ConvertStringToNumber, -1 maps to 0x75; caller InputToAction::LoadParseDefFile",
+   "intermediates": []
+  },
+  {
+   "item": 340,
+   "xbox": "0x000b96a0",
+   "ps2": "0x00209d48",
+   "name": "SMissionTimer::IsReverse",
+   "verdict": "accept",
+   "why": "Returns sign of timer rate field; DrawTimer calls GetValue then IsReverse at the same spot on both sides",
+   "intermediates": [
+    {
+     "xbox": "0x000b9630",
+     "ps2": "0x00209c88",
+     "name": "SMissionTimer::GetValue",
+     "why": "Same body incl. 'SFX_ReverseBeep' trigger; called right before IsReverse in DrawTimer"
+    }
+   ]
+  },
+  {
+   "item": 341,
+   "xbox": "0x000ad310",
+   "ps2": "0x001f8588",
+   "name": "RigidBody::SetAngularMomentum",
+   "verdict": "accept",
+   "why": "Transforms vector by matrix at +0x5c into +0x50 (PS2 inline VU0); 5 named callers agree",
+   "intermediates": []
+  },
+  {
+   "item": 342,
+   "xbox": "0x000287c0",
+   "ps2": "0x0012c738",
+   "name": "AIElementController::GetNumMightAsWellBeDead",
+   "verdict": "accept",
+   "why": "Getter of +0x54 called in SMissionManager::Win right after CalcMightAsWellBeDead on both sides",
+   "intermediates": []
+  },
+  {
+   "item": 343,
+   "xbox": "0x000aaa60",
+   "ps2": "0x001f34d8",
+   "name": "RParticleParticleCache::RParticleParticleCache",
+   "verdict": "accept",
+   "why": "Same start (fields -1/0/-1, textures 'MAIN' ctx1 and 'sprk' ctx0, field3=0, geoprim state setup); Xbox drops the PS2 DrawArray setup, sole caller RParticleSystemManager ctor",
+   "intermediates": []
+  },
+  {
+   "item": 344,
+   "xbox": "0x0008dac0",
+   "ps2": "0x001c8ad8",
+   "name": "RSceneObj::DestroyAll",
+   "verdict": "accept",
+   "why": "WTree::WalkTree over world tree root with destroy callback; caller GameLoop_CleanUp",
+   "intermediates": []
+  },
+  {
+   "item": 345,
+   "xbox": "0x00012180",
+   "ps2": "0x0010ace0",
+   "name": "ActActor::SetTimeScale",
+   "verdict": "accept",
+   "why": "Setter of (+4)->+0x34/+0x38; many callers agree (AICharacterBond Do* and PlayAnim chains)",
+   "intermediates": []
+  },
+  {
+   "item": 346,
+   "xbox": "0x0012d7f0",
+   "ps2": "0x002efea8",
+   "name": "ASentry::ASentry",
+   "verdict": "accept",
+   "why": "ASentry ctor: vtable, ATurret, AGun, 'SFX_SALFire' string, fire patch; caller Sentry::Sentry",
+   "intermediates": []
+  },
+  {
+   "item": 347,
+   "xbox": "0x000d9040",
+   "ps2": "0x00241040",
+   "name": "GHud::SetAutoDrive",
+   "verdict": "accept",
+   "why": "Byte setter of autoDrive; callers SMissionManager::SetAutoDrive and EAutoDrive dtor on both",
+   "intermediates": []
+  },
+  {
+   "item": 348,
+   "xbox": "0x000d61e0",
+   "ps2": "0x002378a0",
+   "name": "GGallery::FONT_SetScale",
+   "verdict": "accept",
+   "why": "Writes x,y scale into (+0xa8)->+0x38/+0x3c, identical offsets; same HUD callers",
+   "intermediates": []
+  },
+  {
+   "item": 349,
+   "xbox": "0x00073730",
+   "ps2": "0x0019c398",
+   "name": "Sentry::RotateSRB",
+   "verdict": "accept",
+   "why": "Same GetSystemState==4 early out, ComputeNewRotation, x/y/z rot by axis field +0x6c; callers Sentry ctor and TrackTarget",
+   "intermediates": []
+  },
+  {
+   "item": 350,
+   "xbox": "0x0012edd0",
+   "ps2": "0x002fa8d8",
+   "name": "AEngine::AEngine",
+   "verdict": "accept",
+   "why": "Vtable-only base ctor called first in ARaceEngine ctor on both sides; vtable also used by the adjacent dtor",
+   "intermediates": []
+  },
+  {
+   "item": 351,
+   "xbox": "0x00083b40",
+   "ps2": "0x001b8d08",
+   "name": "RPlayerCamera::AdjustCamAroundObjectEllipse",
+   "verdict": "accept",
+   "why": "kCameraObjectRadiusEx scaling, quattom4 when no object matrix; caller CheckObjectCollisions",
+   "intermediates": []
+  },
+  {
+   "item": 352,
+   "xbox": "0x000bce10",
+   "ps2": "0x002104a8",
+   "name": "Util_Step",
+   "verdict": "accept",
+   "why": "Identical step-toward-target with clamp",
+   "intermediates": []
+  },
+  {
+   "item": 353,
+   "xbox": "0x00114a60",
+   "ps2": "0x002d0aa8",
+   "name": "rrandom",
+   "verdict": "accept",
+   "why": "random() as unsigned * 2^-32; callers AGun::Play, AWorldSound::Play agree",
+   "intermediates": []
+  },
+  {
+   "item": 354,
+   "xbox": "0x000ac250",
+   "ps2": "0x001f5220",
+   "name": "RTyreTrack::Draw",
+   "verdict": "accept",
+   "why": "Same +0x900 >1 guard, SetZWritesEnable(0), ring buffer +0x904/+0x90c/+0x915/+0x916 logic; caller DrawTyreTracks",
+   "intermediates": []
+  },
+  {
+   "item": 355,
+   "xbox": "0x0008eca0",
+   "ps2": "0x001cae00",
+   "name": "RSceneObj::LocateFX",
+   "verdict": "accept",
+   "why": "Type 7/6 attach cases vs identity+position, adjust, flag 0x100 ground clamp; 6 shared named callers",
+   "intermediates": []
+  },
+  {
+   "item": 356,
+   "xbox": "0x00114400",
+   "ps2": "0x002d0288",
+   "name": "UMemory::NewClass",
+   "verdict": "accept",
+   "why": "Allocate heap id, allocate block, store in table, -1 on failure, init heap; caller UMemory::Init",
+   "intermediates": []
+  },
+  {
+   "item": 357,
+   "xbox": "0x0012bc60",
+   "ps2": "0x002e74d8",
+   "name": "ASubmersible::PlayFanMotors",
+   "verdict": "accept",
+   "why": "Same /20 (0.05) volume, *0.85, fade start 10, Play with (a+b)/3300 pitch; neighbour distance 1",
+   "intermediates": []
+  },
+  {
+   "item": 358,
+   "xbox": "0x000b4810",
+   "ps2": "0x002015d8",
+   "name": "Simulation::TrackInstance",
+   "verdict": "accept",
+   "why": "Search tracked vector for instance, else new(0xc){inst,arg,0} and push_back; callers WWorld::Open/Reset and EEnablePowerUp dtor",
+   "intermediates": []
+  },
+  {
+   "item": 359,
+   "xbox": "0x00045330",
+   "ps2": "0x0015b248",
+   "name": "ESpawnForceEffect::ESpawnForceEffect",
+   "verdict": "accept",
+   "why": "Stores args into fields and sets vtable_ESpawnForceEffect; caller GetEventName",
+   "intermediates": []
+  }
+ ]
+}

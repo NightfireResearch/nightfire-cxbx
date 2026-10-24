@@ -1,0 +1,47 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The results pages after a mission: into the first mission, then back to the front end opened on P_NFRESULTS (as
+# the end of a mission does: GameState.ReloadMenupage), its statistics (X), the dossier (Y), and on with A.
+press A                    # NightFire
+waitpage 0x40000025        # P_NFSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000002f        # P_MESSAGEBOX
+wait 150
+press A
+waitpage 0x40000023        # P_NFDFCTY
+wait 100
+press A
+waitpage 0x4000001c        # P_NFMAP
+wait 100
+press A                    # the first mission
+wait 1500
+press A                    # skip the opening cutscene
+wait 300
+poke 0x001f659c 0x40000036 # GameState.ReloadMenupage = P_NFRESULTS
+level 0x07000048           # the front end
+waitpage 0x40000036 2500   # P_NFRESULTS
+wait 150
+shot results
+press X                    # the statistics
+waitpage 0x40000037 200    # P_NFSTATS
+wait 100
+shot stats
+press B
+waitpage 0x40000036 200
+wait 100
+shot results_again
+press A
+wait 200
+shot after_results
+press A
+wait 200
+shot after_results2
+quit

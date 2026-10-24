@@ -1,0 +1,307 @@
+[
+ {
+  "xbox": "0x7aea0",
+  "name": "EAGLNamespace::NameLookup",
+  "ps2": "0x1a94a8",
+  "why": "Version Tracking candidate, body review: same body: DynamicLoader::GetAddr(this+4,\"Model\",name,&out) returning out or 0; only ref is a vtable slot, as on PS2; RCARPFile file"
+ },
+ {
+  "xbox": "0xcc900",
+  "name": "WSound::scalar_deleting_destructor",
+  "ps2": "0x227540",
+  "why": "Version Tracking candidate, body review: slot 0 of vtable 0x193ac4 (Play=AWorldSound::Play); cc8f0 sets it then calls AWorldSound dtor 0x12e090; delete 0x160 = PS2 0x150 +0x10, consistent with AWorldSound 0x140->0x150"
+ },
+ {
+  "xbox": "0xcca00",
+  "name": "AWorldSound::scalar_deleting_destructor",
+  "ps2": "0x2dd178",
+  "why": "Version Tracking candidate, body review: slot 0 of AWorldSound vtable 0x193ae8: calls 0x12e090 (sets that vtable, destroys 3 AVoice::View, ~ABaseSound = PS2 ~AWorldSound body) then delete 0x150 (PS2 0x140 +0x10)"
+ },
+ {
+  "xbox": "0x21710",
+  "name": "AICharacterEnemySunroof::DoRunning",
+  "ps2": "0x121568",
+  "why": "Version Tracking candidate, body review: vtable slot aligned: Xbox 0x18ab2c after DoDying/DoTilting/3 dummy slots = PS2 0x368fec; IsAnimationDone only"
+ },
+ {
+  "xbox": "0x21740",
+  "name": "AICharacterEnemySunroof::DoLeaning",
+  "ps2": "0x1215a8",
+  "why": "Version Tracking candidate, body review: vtable slot 0x18ab30 = PS2 0x368ff4; IsAnimationDone, SetNewAnimation, VehicleIsAccelerating (FUN_20f90)"
+ },
+ {
+  "xbox": "0x217e0",
+  "name": "AICharacterEnemySunroof::HandleInterrupts",
+  "ps2": "0x121680",
+  "why": "Version Tracking candidate, body review: vtable slot 0x18ab38 = PS2 0x369004 (DoDead folded to dummy in between); GetHitPoints, SetNewAnimation"
+ },
+ {
+  "xbox": "0x218f0",
+  "name": "AICharacterEnemySunroof::TargetIsInRange",
+  "ps2": "0x121818",
+  "why": "Version Tracking candidate, body review: vtable slot 0x18ab44 = PS2 0x36901c (after UpdateRotPos); GetRigidBody, GetPosition, distance"
+ },
+ {
+  "xbox": "0x219e0",
+  "name": "AICharacterEnemySunroof::TargetIsAcquired",
+  "ps2": "0x1219c0",
+  "why": "Version Tracking candidate, body review: vtable slot 0x18ab4c = PS2 0x36902c (after NeedsToReload); GetWeaponPosition + atan"
+ },
+ {
+  "xbox": "0x103060",
+  "name": "EAGLAnim::DeltaQFast::GetConstPhysical",
+  "ps2": "0x26d200",
+  "why": "Version Tracking candidate, body review: same arithmetic: base+0x12+b6*0x10 + ((3*b6*(n+1)+1)&~1)*(cnt/n) (+ remainder term), then +b7+1 rounded to even; called from the SetAnimMemoryMap helper chain"
+ },
+ {
+  "xbox": "0xbf3a0",
+  "name": "WCollisionMgr::ClosestCollisionInfo",
+  "ps2": "0x216d30",
+  "why": "Version Tracking candidate, body review: same callers (GetWorldNormal, Simulate); flags at +0x53 on both infos, 9.9e31 sentinel, distance-squared compare, copies 0x60 bytes of the nearer"
+ },
+ {
+  "xbox": "0xe9aa0",
+  "name": "EAGL::DynamicModel::SetPrimitiveType",
+  "ps2": "0x2862a0",
+  "why": "Version Tracking candidate, body review: lazy DrawArray alloc (\"EAGL::DrawArray new\") + SetGeoPrim then DrawArray::SetPrimitiveType; same order as PS2"
+ },
+ {
+  "xbox": "0xe9b40",
+  "name": "EAGL::DynamicModel::GetIndexFromName",
+  "ps2": "0x286348",
+  "why": "Version Tracking candidate, body review: same lazy-alloc wrapper forwarding to DrawArray::GetIndexFromName; order matches"
+ },
+ {
+  "xbox": "0xe9be0",
+  "name": "EAGL::DynamicModel::SetVar",
+  "ps2": "0x2863f0",
+  "why": "Version Tracking candidate, body review: wrapper calling DrawArray::SetVar(char*) overload (Xbox 0xf5c80 = PS2 0x29c2e8) with 0; PS2 overload SetVar(int,char*,void*,int)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xe9c90",
+  "name": "EAGL::DynamicModel::SetVar",
+  "ps2": "0x2864c0",
+  "why": "Version Tracking candidate, body review: wrapper calling DrawArray::SetVar(int) overload (Xbox 0xf5870 = PS2 0x29c3b0) with 0; second PS2 overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xe9d40",
+  "name": "EAGL::DynamicModel::SetStream",
+  "ps2": "0x286590",
+  "why": "Version Tracking candidate, body review: wrapper calling DrawArray::SetVar(char*) with -1 = PS2 SetStream(int,char*,void*,int)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xe9df0",
+  "name": "EAGL::DynamicModel::SetStream",
+  "ps2": "0x286660",
+  "why": "Version Tracking candidate, body review: wrapper calling DrawArray::SetVar(int) with -1 = second PS2 SetStream overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xb2980",
+  "name": "Simulation::ReleaseRigidBodySlot",
+  "ps2": "0x1ff0f0",
+  "why": "Version Tracking candidate, body review: caller ~PhysicsObject on both; bool picks ~SimpleRigidBody vs ~RigidBody, decrements count +0xc/+8, clears two slot arrays"
+ },
+ {
+  "xbox": "0xf2f50",
+  "name": "EAGL::Transform::ElementMinor",
+  "ps2": "0x294188",
+  "why": "Version Tracking candidate, body review: copy minor skipping row/col, sign by (row+col) parity, times Determinant(minor,n-1) (Xbox f2790 = Determinant)"
+ },
+ {
+  "xbox": "0xf2ff0",
+  "name": "EAGL::Transform::AppendRotate",
+  "ps2": "0x2944e0",
+  "why": "Version Tracking candidate, body review: BuildRotate(f32e0)(4 floats) into temp then this*temp (post-multiply) = PS2 AppendRotate; Prepend twin at f3040"
+ },
+ {
+  "xbox": "0xf3040",
+  "name": "EAGL::Transform::PrependRotate",
+  "ps2": "0x2949a0",
+  "why": "Version Tracking candidate, body review: BuildRotate(f32e0) into temp then temp*this (pre-multiply) = PS2 PrependRotate/PreMult"
+ },
+ {
+  "xbox": "0xf32e0",
+  "name": "EAGL::Transform::BuildRotate",
+  "ps2": "0x295410",
+  "why": "Version Tracking candidate, body review: angle*0.017453294, identity on zero angle, normalised axis, sin/cos axis-angle matrix; identical to PS2 BuildRotate; callers Append/PrependRotate"
+ },
+ {
+  "xbox": "0x7c220",
+  "name": "RDirectorQueueData::~RDirectorQueueData",
+  "ps2": "0x1aa758",
+  "why": "Version Tracking candidate, body review: dtor without delete flag: zeroes same fields, +0xc=1.0f, as PS2 dtor minus __builtin_delete; same callers"
+ },
+ {
+  "xbox": "0x118dd0",
+  "name": "CARP::PathInfo::ComputeLinear",
+  "ps2": "0x2dafe0",
+  "why": "Version Tracking candidate, body review: flag ? VU0_fastqslerp : lerp of COORD4; called only by EvaluateLinear(1190e0)"
+ },
+ {
+  "xbox": "0x118e30",
+  "name": "CARP::PathInfo::ScaleToUnitTime",
+  "ps2": "0x2db028",
+  "why": "Version Tracking candidate, body review: flag&8 ? floor(t) : (t-k[i])/(k[j]-k[i]) (ComputeUnitTime inlined); called by EvaluateLinear/Spline"
+ },
+ {
+  "xbox": "0x118ed0",
+  "name": "__lower_bound<float_*,_float,_int>",
+  "ps2": "0x2dbfa0",
+  "why": "Version Tracking candidate, body review: binary lower_bound over float array; called by GetKnotIndex (Xbox 119010, same as PS2)"
+ },
+ {
+  "xbox": "0x1190e0",
+  "name": "CARP::PathInfo::EvaluateLinear",
+  "ps2": "0x2db080",
+  "why": "Version Tracking candidate, body review: GetKnotIndex, next knot clamp, ScaleToUnitTime, flag&4 scalar lerp into 4 lanes else ComputeLinear(flag>>1&1); called by EvaluateMatrix"
+ },
+ {
+  "xbox": "0x119190",
+  "name": "CARP::PathInfo::EvaluateSpline",
+  "ps2": "0x2db188",
+  "why": "Version Tracking candidate, body review: GetKnotIndex, ScaleToUnitTime, knot*0x30 stride, t,t^2,t^3,1 basis times matrix; called by EvaluateMatrix alongside EvaluateLinear"
+ },
+ {
+  "xbox": "0x146bb0",
+  "name": "readsamples",
+  "ps2": "0x315180",
+  "why": "Version Tracking candidate, body review: param==0 path writes 0xc0000000/0x40000000/0 from 2-bit/1-bit codes stepping 2 to 0x6c, else table-driven codes with unary runs and zero runs (discardbits inlined); called by decodemut as on PS2"
+ },
+ {
+  "xbox": "0xf2330",
+  "name": "EAGL::Transform::Invert",
+  "ps2": "0x292f68",
+  "why": "Version Tracking candidate, body review: Invert(src,dst): det, return if |det|<1e-5, else dst=adj/det; only caller is Inverse(void) wrapper as on PS2. Xbox uses unrolled cofactors vs PS2 minor loop"
+ },
+ {
+  "xbox": "0xf2960",
+  "name": "EAGL::Transform::AppendScale",
+  "ps2": "0x294480",
+  "why": "Version Tracking candidate, body review: diag(sx,sy,sz,sw) temp, mult(out,this,tmp) post-multiply; mirrors named PrependScale"
+ },
+ {
+  "xbox": "0xf2a20",
+  "name": "EAGL::Transform::AppendTranslate",
+  "ps2": "0x294518",
+  "why": "Version Tracking candidate, body review: identity with translation row (w=1), post-multiply; mirrors named PrependTranslate"
+ },
+ {
+  "xbox": "0xf2ae0",
+  "name": "EAGL::Transform::AppendRotTrans",
+  "ps2": "0x294580",
+  "why": "Version Tracking candidate, body review: BuildRotTrans(MATRIX3,COORD4) (f1660, w copied) then post-multiply = (MATRIX3*,COORD4*) overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xf2b30",
+  "name": "EAGL::Transform::AppendRotTrans",
+  "ps2": "0x294620",
+  "why": "Version Tracking candidate, body review: BuildRotTrans(MATRIX3,COORD3) (f16d0, w=1.0) then post-multiply = (MATRIX3*,COORD3*) overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xf2b80",
+  "name": "EAGL::Transform::AppendMatrix",
+  "ps2": "0x2946c0",
+  "why": "Version Tracking candidate, body review: copy matrix, post-multiply; caller ViewPort::BeginView as on PS2"
+ },
+ {
+  "xbox": "0xf2bd0",
+  "name": "EAGL::Transform::AppendQuatTrans",
+  "ps2": "0x2946e0",
+  "why": "Version Tracking candidate, body review: quat->MATRIX3 (f3090) + BuildRotTrans then post-multiply = PS2 AppendQuatTrans (inlined quat)"
+ },
+ {
+  "xbox": "0xe7430",
+  "name": "EAGL::RenderContext::GetZWritesEnable",
+  "ps2": "0x291420",
+  "why": "Version Tracking candidate, body review: sheet row 5995 (PS2 0x291420 right after SetZWritesEnable, not a Ghidra function): *out = byte +0x59 (field SetZWritesEnable e73f0 writes), return 1; follows SetZWritesEnable on Xbox too"
+ },
+ {
+  "xbox": "0xe7aa0",
+  "name": "EAGL::RenderContextExtension::SetFogColour",
+  "ps2": "0x28cf98",
+  "why": "Version Tracking candidate, body review: stores colour into ctx private +0x74 then sets FogColor render state; PS2 stores +0x84c and sends GS FOGCOL; called by RFog::SetFogParams with fog colour on both (PS2 SetFogParams calls SetFogColour); same RenderContextExtension window"
+ },
+ {
+  "xbox": "0xe8bf0",
+  "name": "EAGL::Model::GetChild",
+  "ps2": "0x285780",
+  "why": "Version Tracking candidate, body review: walks child lists +0xa4, +0xac, +0xa8 (next +0xb0, name +0xb4) with inline strcmp, returns node; identical order/offsets on PS2; EAGL::Model window"
+ },
+ {
+  "xbox": "0xe8f60",
+  "name": "EAGL::Model::GetGeometry",
+  "ps2": "0x2858d8",
+  "why": "Version Tracking candidate, body review: name loop over count +0x9c / names +0xa0 with inline strcmp, returns +0xc4 array + 4 + i*4; identical on PS2 (strcmp); EAGL::Model window"
+ },
+ {
+  "xbox": "0xe8ff0",
+  "name": "EAGL::Model::SetModelMatrix",
+  "ps2": "0x285970",
+  "why": "Version Tracking candidate, body review: copies 16 dwords (MATRIX4) to this+0xc on both (PS2 unaligned 64-byte copy to +0xc..+0x4c); called by Draw on both; EAGL::Model window"
+ },
+ {
+  "xbox": "0x38490",
+  "name": "DebugVariable<unsigned_int>::SetToMin",
+  "ps2": "0x1434f8",
+  "why": "Version Tracking candidate, body review: slot 7 of DebugIndexer vtable 0x18bd00 (used only by dbindex) = PS2 DebugIndexer vtable 0x36cdf4 slot 7; body *GetDeindexedPtr(this+0x18) = this+0x20 identical"
+ },
+ {
+  "xbox": "0x384c0",
+  "name": "DebugVariable<unsigned_int>::SetToMax",
+  "ps2": "0x143528",
+  "why": "Version Tracking candidate, body review: slot 8 of DebugIndexer vtable 0x18bd00 = PS2 slot 8; body stores this+0x1c via deindexed ptr, identical"
+ },
+ {
+  "xbox": "0x395d0",
+  "name": "dbattrib_f",
+  "ps2": "0x142548",
+  "why": "Version Tracking candidate, body review: same dbattrib template as Xbox dbattrib_float (FindItem/FindIndexedItem loop, vtable slot 9 index string); sole caller ReflPrivateData passes \"Sky bright\", byte field at +0, range 0..0xff = PS2 dbattrib_f call (str 0x383d98 'Sky bright', puVar12+0, 0..0xff); reads a single char like PS2's byte store; sits before dbattrib_s8 as on PS2 (f precedes float)"
+ },
+ {
+  "xbox": "0x396d0",
+  "name": "DebugVariable<unsigned_int>::AsString",
+  "ps2": "0x142e08",
+  "why": "Version Tracking candidate, body review: slot 9 of DebugIndexer vtable 0x18bd00 = PS2 slot 9; body: if names table +0x28 null format value (+0x18 deindexed) to string else strcpy names[value], identical"
+ },
+ {
+  "xbox": "0x000f2f20",
+  "name": "EAGL::Transform::Inverse",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "final triage (sheet row cited; PS2 function unnamed or not a function in Ghidra): sheet row 6069 Inverse(void) (PS2 FUN_00294050, between Inverse const 0x294030 and Transpose): copies self to temp, calls Invert(temp,this); Xbox same, callee f2330=Invert"
+ },
+ {
+  "xbox": "0x000f2270",
+  "name": "EAGL::Transform::Transpose",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "final triage (sheet row cited; PS2 function unnamed or not a function in Ghidra): sheet row 6070 Transpose(void) (PS2 0x294098, not a Ghidra function; raw code swaps 4/0x10, 8/0x20, 0xc/0x30, 0x18/0x24, 0x1c/0x34, 0x2c/0x38 in place) - identical pair set on Xbox"
+ },
+ {
+  "xbox": "0x000f2790",
+  "name": "EAGL::Transform::Determinant",
+  "ps2": null,
+  "allow_duplicate": false,
+  "why": "final triage (sheet row cited; PS2 function unnamed or not a function in Ghidra): sheet row 6073 Determinant(Transform&,int) (PS2 FUN_00294240, after ElementMinor): recursive cofactor expansion along row 0; Xbox adds n==4/n==3 fast paths; callers ElementMinor/Invert"
+ },
+ {
+  "xbox": "0x0007c160",
+  "name": "RDirectorQueueData::RDirectorQueueData",
+  "ps2": null,
+  "allow_duplicate": true,
+  "why": "final triage (sheet row cited; PS2 function unnamed or not a function in Ghidra): ctor(ushort x4, int x3): same field stores (+0x10..+0x16 shorts, +0x18/+0x20/+0x24, +0xc=1.0f, rest 0); same callers SetCameraModeByIndex/SetMissileCamera/TriggerCarAnimationCamera"
+ },
+ {
+  "xbox": "0x0007c1c0",
+  "name": "RDirectorQueueData::RDirectorQueueData",
+  "ps2": null,
+  "allow_duplicate": true,
+  "why": "final triage (sheet row cited; PS2 function unnamed or not a function in Ghidra): copy ctor overload, sheet row 3033 (PS2 FUN_001aa6e8 right after the ctor): copies same fields; called from AppendData list-node alloc"
+ }
+]

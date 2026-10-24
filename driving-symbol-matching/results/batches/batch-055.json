@@ -1,0 +1,16 @@
+{
+ "batch": "055",
+ "program": "Driving.xbe",
+ "note": "Input layer, IOModule.",
+ "items": [
+  {
+   "xbox": "0x00108460",
+   "expect": "FUN_00108460",
+   "name": "PAD_getpadtype",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "PAD_getpadtype(int port) (EA's pad library; PS2 0x259b90). On Xbox: 1 when the port's PadData record (0x241c50 + port*0x90) has an open XInput handle (+0x88), else 0. IOModule::CheckUnplugged calls it where the PS2 CheckUnplugged calls PAD_getpadtype.",
+   "evidence": []
+  }
+ ]
+}

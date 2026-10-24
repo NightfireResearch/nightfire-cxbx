@@ -1,0 +1,27 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0005cc80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimRandom::SimRandom(void)",
+   "return": "SimRandom *"
+  },
+  {
+   "address": "0x0005cc90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimRandom::SimRandom_Generate(void)",
+   "return": "uint"
+  },
+  {
+   "address": "0x0005ccb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "SimRandom::Reset(void)",
+   "return": "void"
+  }
+ ]
+}

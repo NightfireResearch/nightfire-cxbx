@@ -1,0 +1,919 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "RSceneObj_vtbl",
+   "size": 76,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "scalar_deleting_destructor"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "SetViewDrawList"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "Render"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "RenderSimple"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "RenderShadow"
+    },
+    {
+     "offset": 20,
+     "type": "void *",
+     "name": "RenderDeferredEffects"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "TransformToWorldSpace"
+    },
+    {
+     "offset": 28,
+     "type": "void *",
+     "name": "TransformPointToWorldSpace"
+    },
+    {
+     "offset": 32,
+     "type": "void *",
+     "name": "TransformMatrixToWorldSpace"
+    },
+    {
+     "offset": 36,
+     "type": "void *",
+     "name": "GetRenderOffset"
+    },
+    {
+     "offset": 40,
+     "type": "void *",
+     "name": "SetProcAnimState"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "SetEventDynamicData"
+    },
+    {
+     "offset": 48,
+     "type": "void *",
+     "name": "TriggerIlluminate"
+    },
+    {
+     "offset": 52,
+     "type": "void *",
+     "name": "GetVelocity"
+    },
+    {
+     "offset": 56,
+     "type": "void *",
+     "name": "UpdatePosition"
+    },
+    {
+     "offset": 60,
+     "type": "void *",
+     "name": "TriggerFX"
+    },
+    {
+     "offset": 64,
+     "type": "void *",
+     "name": "Debug"
+    },
+    {
+     "offset": 68,
+     "type": "void *",
+     "name": "PostLoad"
+    },
+    {
+     "offset": 72,
+     "type": "void *",
+     "name": "ResolveObjectData"
+    }
+   ]
+  },
+  {
+   "name": "RSceneObj",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RSceneObj_vtbl *",
+     "name": "vtable",
+     "comment": "high: ctor stores 0x191be0; PS2 keeps its vptr at the END (+0x3c, ctor sw vtable_RSceneObj,0x3c), which is why every PS2 field sits 4 bytes lower than Xbox"
+    },
+    {
+     "offset": 4,
+     "type": "RSceneObj *",
+     "name": "next",
+     "comment": "high: SetMapNode/UseInstanceList/~RSceneObj: doubly linked list headed at MapNode+4, new obj inserted at head (next=old head); DestroySceneObjectList/InitializeSceneObjectListLighting walk +4; dtor poisons it 0xabababab. PS2 +0x0"
+    },
+    {
+     "offset": 8,
+     "type": "RSceneObj *",
+     "name": "prev",
+     "comment": "high: SetMapNode clears it on insert and fixes next->prev (+8); dtor unlinks via +4/+8. PS2 +0x4"
+    },
+    {
+     "offset": 12,
+     "type": "CARP::Instance *",
+     "name": "sourceInstance",
+     "comment": "high: POINTER, not a copy: ctor stores its CARP::Instance& arg (param_1_00[3]=param_1) and only copies it to a stack MATRIX4. 64-byte record: rows 0-3 are the transform, word +0x3c packs the bounding radius ((v&0x3ff)*table[bit30], bit31=compute), by"
+    },
+    {
+     "offset": 16,
+     "type": "CARP::BaseDesc *",
+     "name": "baseDesc",
+     "comment": "high: PS2 GetBaseDesc returns PS2 +0xc. Set in UseInstanceList from *(article+0x1c); *baseDesc is the model UGroup (SetVariation/GetViewDrawList/GetNumBones/GetBoneIndex/Reset); +4 flags (0x2000 = skip lighting), +0x10/+0x20 bbox min/max (GetBounding"
+    },
+    {
+     "offset": 20,
+     "type": "RCARPFile *",
+     "name": "carpFile",
+     "comment": "high: PS2 GetCARPFile returns PS2 +0x10. Load stores the URefCounter<RCARPFile> reference here; ~RSceneObj/Load RemoveReference it and FastFree(..,0x38)"
+    },
+    {
+     "offset": 24,
+     "type": "CARP::MapNode *",
+     "name": "mapNode",
+     "comment": "high: SetMapNode(CARP::MapNode*) stores its arg here after unlinking from the old node; UpdatePosition passes it to WTree::FindNode as the search start; UseInstanceList sets it to the world-tree root when flags bit2. PS2 +0x14 (SetMapNode)"
+    },
+    {
+     "offset": 28,
+     "type": "byte",
+     "name": "renderTypeIndex",
+     "comment": "medium: ctor zeroes it; no Xbox RSceneObj method reads it. PS2 GetRenderTypeIndex/SetRenderTypeIndex = lbu/sb PS2 +0x18 (byte 0 of the PS2 bitfield word at +0x18)"
+    },
+    {
+     "offset": 29,
+     "type": "byte",
+     "name": "variation",
+     "comment": "high: SetVariation stores (char)arg on success; Reset passes it to UseArticle; UseArticle writes it. PS2 GetVariation = lbu PS2 +0x19"
+    },
+    {
+     "offset": 30,
+     "type": "byte",
+     "name": "brightness",
+     "comment": "high: ctor sets 100. PS2 Brightness() = lbu PS2 +0x1a * (1/255); SetBrightness(float) clamps 0..1, *255, sb PS2 +0x1a; PS2 ctor also sb 100 there"
+    },
+    {
+     "offset": 31,
+     "type": "byte",
+     "name": "flags",
+     "comment": "high: Show/Hide bit0; ctor does &0xe1|1 (clears bits1-4, sets visible). On PS2 these are bits 24-28 of the word at PS2 +0x18 (Show/Hide = or/and 0x01000000, IsVisible = lb +0x1b &1)"
+    },
+    {
+     "offset": 32,
+     "type": "ushort",
+     "name": "damagedZones",
+     "comment": "medium: PS2 GetDamagedZones = lhu PS2 +0x1c. TriggerFX type 10 feeds the newly set bits to RAnimEngine::Handle::ProcessStimuliZones(0x12,..) and stores the mask; RenderEffects skips an effect whose zone (effect byte +0x16) bit is set here unless the "
+    },
+    {
+     "offset": 34,
+     "type": "ushort",
+     "name": "damageEffectZones",
+     "comment": "low: TriggerFX type 9: if new bits, DamageEffects(this+0x22 | mask) then ORs mask in; UseInstanceList zeroes it. PS2 +0x1e (TriggerFX uses it the same way); no PS2 accessor, name invented"
+    },
+    {
+     "offset": 36,
+     "type": "uint",
+     "name": "effectDecayTime",
+     "comment": "medium: TriggerEffects/DamageEffects/DecayEffects set it to frame counter DAT_001f2a4c+600 while any effect is active, 0 otherwise; RenderEffects calls DecayEffects once the counter passes it. PS2 +0x20 (RenderEffects field9_0x20). Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "PhysicsObject *",
+     "name": "physics",
+     "comment": "high: SetPhysics(PhysicsObject*) stores here; PS2 GetPhysics (both overloads) = lw PS2 +0x24. UpdatePosition/GetVelocity/SetTransform/EnableTarget/SetEventDynamicData read +0x48 bit0 (simple body) and short +0x4a (rigid body index)"
+    },
+    {
+     "offset": 44,
+     "type": "RAnimEngine::Handle *",
+     "name": "animHandle",
+     "comment": "high: UseInstanceList stores RAnimEngine::Handle::Create(...); dtor/Load/UseInstanceList Stop and operator_delete(..,0x40). The effect state lives in the handle: effects array +0x14, zone-mask ushort array +0x18, instance count byte +0x1c, numEffects"
+    },
+    {
+     "offset": 48,
+     "type": "RPathEngine::RPathHandle *",
+     "name": "pathHandle",
+     "comment": "high: ctor stores RPathEngine::GetPathHandle(instance); GetVelocity returns pathHandle+0x88 when there is no physics. PS2 GetPathHandle = lw PS2 +0x2c"
+    },
+    {
+     "offset": 52,
+     "type": "WTargetable *",
+     "name": "target",
+     "comment": "high: EnableTarget FastAlloc(0x50,'WTargetable') and stores it; SetPhysics/~RSceneObj RemoveReference and clear it. PS2 +0x30 (DisableTarget clears PS2 +0x30)"
+    },
+    {
+     "offset": 56,
+     "type": "SceneObjCollisionInfo *",
+     "name": "collisionInfo",
+     "comment": "medium: AddCollisionInfo lazily __builtin_new(0x20)s it: {COORD3 pointSum; uint frame; COORD3 normalSum; uint count}; GetCollisionInfo averages it for the current frame or deletes it; dtor/UseInstanceList delete it. PS2 +0x34. Struct type name invent"
+    },
+    {
+     "offset": 60,
+     "type": "char *",
+     "name": "name",
+     "comment": "medium: UseInstanceList stores its name arg or '<<unknown>>' (UseInstance passes '<<fragment1>>', UseArticle the article's 'Name' tag). PS2 +0x38 (UseInstanceList piVar5[0xe]). No accessor; debug name"
+    }
+   ],
+   "comment": "Derived by the struct pilot (results/struct-pilot-rsceneobj.json)"
+  },
+  {
+   "name": "RAutonomousObj",
+   "size": 128,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RSceneObj",
+     "name": "super_RSceneObj"
+    },
+    {
+     "offset": 64,
+     "type": "CARP::Instance",
+     "name": "instance",
+     "comment": "high: every allocation site (Grenade 0x5d728, Mine, Missile, Newton, ~ESpawnSmackable) copies the identity matrix to this+0x40 then calls RSceneObj(this+0x40), so sourceInstance points at this embedded 64-byte record: the object owns its own instance"
+    }
+   ],
+   "comment": "Derived by the struct pilot (results/struct-pilot-rsceneobj.json)"
+  },
+  {
+   "name": "RSkeletalObj",
+   "size": 160,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "RSceneObj",
+     "name": "super_RSceneObj"
+    },
+    {
+     "offset": 64,
+     "type": "float[12]",
+     "name": "params",
+     "comment": "high: ctor zeroes 12 dwords; SetProcAnimState calls SetProcAnimParamList(this+0x40,12). PS2 GetParam(i) = this+0x40+4*i (same offset on PS2)"
+    },
+    {
+     "offset": 112,
+     "type": "ulonglong",
+     "name": "springEffectMask",
+     "comment": "medium: PostLoad ORs 1<<i for every anim-handle effect of type 8; UpdatePosition walks its set bits and runs UpdateSpringMassSystem for each. PS2 sd zero,0x70 / PostLoad same. Name invented"
+    },
+    {
+     "offset": 120,
+     "type": "uint",
+     "name": "numBones",
+     "comment": "high: AllocateSkeleton stores the count; dtor frees bones with size numBones<<6. PS2 NumBones = lw +0x78"
+    },
+    {
+     "offset": 124,
+     "type": "MATRIX4 *",
+     "name": "bones",
+     "comment": "high: AllocateSkeleton FastAlloc(n*0x40,'Bones') and inits each to identity; SetProcAnimState passes (bones,numBones) to SetProcAnimXFormList; UpdatePosition writes bone[id-1]. PS2 GetBone(i) = *(+0x7c)+(i-1)*0x40"
+    },
+    {
+     "offset": 128,
+     "type": "COORD4",
+     "name": "springPrevPos",
+     "comment": "low: ctor sets (0,0,0,-1); UpdateSpringMassSystem treats w==-1 as 'uninitialised' (resets both to (0,0,0,1)), then shifts +0x90 into +0x80 each step. PS2 same offset. Name invented"
+    },
+    {
+     "offset": 144,
+     "type": "COORD4",
+     "name": "springPos",
+     "comment": "low: ctor (0,0,0,-1); UpdateSpringMassSystem stores the new spring point here after velocity from (+0x90 - +0x80). PS2 same offset. Name invented"
+    }
+   ],
+   "comment": "Derived by the struct pilot (results/struct-pilot-rsceneobj.json)"
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x00015770",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "RSceneObj::TriggerIlluminate(int, int, int)"
+  },
+  {
+   "address": "0x0008d6b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "RSceneObj::ResolveData(char *, bool &)"
+  },
+  {
+   "address": "0x0008d6d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "RSceneObj::ResolveObjectData(char *, bool &)"
+  },
+  {
+   "address": "0x0008d760",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::SetVariation(unsigned int)"
+  },
+  {
+   "address": "0x0008d830",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CachedDrawInfo *"
+    }
+   ],
+   "sheet": "RSceneObj::PrepareSceneObjsForCulling(CachedDrawInfo &)"
+  },
+  {
+   "address": "0x0008d9f0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSceneObj::RenderAllNormal(void)"
+  },
+  {
+   "address": "0x0008da30",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSceneObj::RenderAllDrawLast(void)"
+  },
+  {
+   "address": "0x0008da60",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSceneObj::RenderAllDeferredEffects(void)"
+  },
+  {
+   "address": "0x0008da90",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::MapNode *"
+    }
+   ],
+   "sheet": "RSceneObj::DestroySceneObjectList(CARP::MapNode &)"
+  },
+  {
+   "address": "0x0008dac0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSceneObj::DestroyAll(void)"
+  },
+  {
+   "address": "0x0008dae0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::SetEventDynamicData(void)"
+  },
+  {
+   "address": "0x0008db30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::Hide(void)"
+  },
+  {
+   "address": "0x0008db40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::Show(void)"
+  },
+  {
+   "address": "0x0008db50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    },
+    {
+     "name": "param_2",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "RSceneObj::GetViewDrawList(unsigned int, unsigned int &) const"
+  },
+  {
+   "address": "0x0008dbc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::SetNowVisible(void)"
+  },
+  {
+   "address": "0x0008dc00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::MapNode *"
+    }
+   ],
+   "sheet": "RSceneObj::SetMapNode(CARP::MapNode *)"
+  },
+  {
+   "address": "0x0008dc60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "RSceneObj::GetTransform(MATRIX4 &) const"
+  },
+  {
+   "address": "0x0008dc90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "RSceneObj::GetPosition(COORD3 &) const"
+  },
+  {
+   "address": "0x0008dcb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "RSceneObj::SetTransform(MATRIX4 &)"
+  },
+  {
+   "address": "0x0008dce0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::GetRenderOffset(void) const"
+  },
+  {
+   "address": "0x0008dcf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::GetInstanceSystemID(unsigned int) const"
+  },
+  {
+   "address": "0x0008dfd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RSceneObj::GetBoundingDimensions(COORD4 &) const"
+  },
+  {
+   "address": "0x0008e010",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::ComputeBoundingRadius(void) const"
+  },
+  {
+   "address": "0x0008e060",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint *"
+    }
+   ],
+   "sheet": "RSceneObj::GetCollisionGeometry(unsigned int &) const"
+  },
+  {
+   "address": "0x0008e080",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::GetNumBones(void) const"
+  },
+  {
+   "address": "0x0008e0c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RSceneObj::GetBoneIndex(char *) const"
+  },
+  {
+   "address": "0x0008e1a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::GetVelocity(void) const"
+  },
+  {
+   "address": "0x0008e1f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RSceneObj::AddCollisionInfo(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x0008e2d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RSceneObj::GetCollisionInfo(COORD4 &, COORD4 &)"
+  },
+  {
+   "address": "0x0008e580",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::DecayEffects(void)"
+  },
+  {
+   "address": "0x0008e6a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "uint"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "RSceneObj::TriggerEffects(bool, bool, unsigned int, float)"
+  },
+  {
+   "address": "0x0008e7d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::SuppressEffects(bool, unsigned int)"
+  },
+  {
+   "address": "0x0008e900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::DamageEffects(unsigned int)"
+  },
+  {
+   "address": "0x0008ea20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Effect *"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "RSceneObj::RenderEffect(CARP::Effect *, MATRIX4 &)"
+  },
+  {
+   "address": "0x0008eb60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::StopFX(void)"
+  },
+  {
+   "address": "0x0008ec20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::LookupFXHandle(char *, unsigned int) const"
+  },
+  {
+   "address": "0x0008eca0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Effect *"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RSceneObj::LocateFX(CARP::Effect *, MATRIX4 &, bool) const"
+  },
+  {
+   "address": "0x0008ed50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::GetViewDistance(void)"
+  },
+  {
+   "address": "0x0008edd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "RSceneObj::ConvertInstanceToLocal(CARP::Instance *) const"
+  },
+  {
+   "address": "0x0008eec0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "RSceneObj::RSceneObj(CARP::Instance &)"
+  },
+  {
+   "address": "0x0008f000",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "RSceneObj::SetSceneObjectCull(int, bool, float)"
+  },
+  {
+   "address": "0x0008f050",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::InitializeLighting(void)"
+  },
+  {
+   "address": "0x0008f160",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::EnableTarget(void)"
+  },
+  {
+   "address": "0x0008f270",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RSceneObj::UpdatePosition(bool)"
+  },
+  {
+   "address": "0x0008f500",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::GetBoundingRadius(void) const"
+  },
+  {
+   "address": "0x0008f550",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RSceneObj::ScaleBoundingRadius(float)"
+  },
+  {
+   "address": "0x0008f580",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "RSceneObj::SetPhysics(PhysicsObject *)"
+  },
+  {
+   "address": "0x0008f690",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RSceneObj::InitEffects(bool)"
+  },
+  {
+   "address": "0x0008f740",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RSceneObj::RenderEffects(bool)"
+  },
+  {
+   "address": "0x0008f930",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::RenderSimple(void)"
+  },
+  {
+   "address": "0x0008f9f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::Render(void)"
+  },
+  {
+   "address": "0x0008fac0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::MapNode *"
+    }
+   ],
+   "sheet": "RSceneObj::InitializeSceneObjectListLighting(CARP::MapNode &)"
+  },
+  {
+   "address": "0x0008fae0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RSceneObj::InitializeAllLighting(void)"
+  },
+  {
+   "address": "0x000904c0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RSceneObj::PreLoad(char *, char *, char *)"
+  },
+  {
+   "address": "0x00090560",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RSceneObj::PurgePreloaded(char *, char *)"
+  },
+  {
+   "address": "0x000905a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::~RSceneObj(void)"
+  },
+  {
+   "address": "0x000908b0",
+   "calling_convention": "__thiscall",
+   "return": "RSceneObj *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x000908d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "UGroup *"
+    },
+    {
+     "name": "param_2",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RSceneObj::UseArticle(UGroup *, unsigned int)"
+  },
+  {
+   "address": "0x00090a40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RSceneObj::Reset(void)"
+  }
+ ]
+}

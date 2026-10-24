@@ -1,0 +1,64 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0009bd50",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "REmpBolts::LoadAttributes(void)"
+  },
+  {
+   "address": "0x0009c260",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "REmpBolts::CreateWorldBolt(REmpBolts::Anchor *, COORD3 &)"
+  },
+  {
+   "address": "0x0009d320",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "REmpBolts::TrySpawnBolt(void)"
+  },
+  {
+   "address": "0x0009d6b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "REmpBolts::Update(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009d7c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "REmpBolts::Draw(void)"
+  },
+  {
+   "address": "0x0009d9a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "REmpBolts::FindAnchors(void)"
+  },
+  {
+   "address": "0x0009dc90",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "REmpBolts::REmpBolts(RVehicle *)",
+   "return": "REmpBolts *"
+  }
+ ]
+}

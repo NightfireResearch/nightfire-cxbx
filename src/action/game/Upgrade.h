@@ -3,7 +3,52 @@
 
 #include "../actionhelpers.h"
 
-uint Upgrade_Weapon(uint id_base);
+// Which upgrade level each player has reached in each group (0-3); Set_Upgrade and ResetUpgrade write it.
+typedef enum {
+    WUG_Handgun = 0,
+    WUG_Grapple = 1,     // multiplayer only: Upgrade_MPWeapon picks the grapple from it
+    WUG_Camera = 2,
+    WUG_Sniper = 3,
+    WUG_DartGun = 4,
+    WUG_PDA = 5,
+    WUG_Taser = 6,
+    WUG_Laser = 7,
+    WUG_UNKNOWN8,
+} WeaponUpgradeGroup;
 
+// A group's first upgrade bit in a bonus, its WeaponUpgradeGroup times 3: the objId of its REWARD_UPGRADE rewards
+enum UpgradeBit {
+    UPGRADE_BIT_HANDGUN = WUG_Handgun * 3,
+    UPGRADE_BIT_GRAPPLE = WUG_Grapple * 3,
+    UPGRADE_BIT_CAMERA = WUG_Camera * 3,
+    UPGRADE_BIT_SNIPER = WUG_Sniper * 3,
+    UPGRADE_BIT_DARTGUN = WUG_DartGun * 3,
+    UPGRADE_BIT_PDA = WUG_PDA * 3,
+    UPGRADE_BIT_TASER = WUG_Taser * 3,
+    UPGRADE_BIT_LASER = WUG_Laser * 3,
+    UPGRADE_BIT_UNKNOWN8 = WUG_UNKNOWN8 * 3,
+    UPGRADE_BIT_NONE = 0x3f,            // the dossier's items with no upgrades
+};
+
+// Upgrades is an array of type uchar[4][9] located at 0x00279120. First index is player ID, second is weapon upgrade group
+extern uchar Upgrades[4][9];
+
+void Set_Upgrade(uchar player, short objId, uchar level);
+void ResetUpgrade(uchar player);
+
+// The weapon each upgrade level turns a base weapon into (Upgrade.cpp)
+extern uint UpgradedHandguns[4];
+extern uint UpgradedSnipers[4];
+extern uint UpgradedSilencedSnipers[4];
+extern uint UpgradedDartGuns[4];
+extern uint UpgradedTasers[4];
+extern uint UpgradedLasers[4];
+extern uint UpgradedPDA[4];
+extern uint UpgradedPPK_MP[4];
+extern uint UpgradedP99_MP[4];
+extern uint UpgradedGrapple_MP[4];
+
+uint Upgrade_Weapon(uint id_base);
+undefined4 Upgrade_MPWeapon(short playerNum, undefined4 weapon);
 
 #endif // UPGRADE_H_

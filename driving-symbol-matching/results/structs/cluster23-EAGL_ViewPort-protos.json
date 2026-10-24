@@ -1,0 +1,92 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e4900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::ViewPort::SetOrthographic(float, float, float)"
+  },
+  {
+   "address": "0x000e49a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::ViewPort::EndView(void)"
+  },
+  {
+   "address": "0x000e49d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::ViewPort::ClearViewPort(EAGL::ClearFlags)"
+  },
+  {
+   "address": "0x000e4a10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::ViewPort::IsSphereInView(COORD3 &, float)"
+  },
+  {
+   "address": "0x000e4be0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::ViewPort::BeginView(void)"
+  },
+  {
+   "address": "0x000e4ef0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::ViewPort::SetViewMatrix(MATRIX4 &)"
+  },
+  {
+   "address": "0x000f3900",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::ViewPort::GetEnableModelSphereCull(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x000f3970",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::ViewPort::SetBackgroundColour(EAGL::Colour)"
+  }
+ ]
+}

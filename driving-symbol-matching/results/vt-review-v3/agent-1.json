@@ -1,0 +1,378 @@
+{
+ "verdicts": [
+  {
+   "item": 0,
+   "xbox": "0x1e090",
+   "current": "AICharacterEnemyGround::DoArmed",
+   "ps2": "0x11e9a0",
+   "name": "AICharacterEnemySnow::DoArmed",
+   "verdict": "keep",
+   "why": "Only xref is slot 0x18a880 of the Ground vtable (0x18a840: Ground dtor/IsAlive/DoWandering 0x1ee60/DoArming/DoAiming neighbours), aligned with PS2 Ground vtable slot 0x3686d4=0x11bbf0; Snow vtable differs (inherits AICharacter::DoWandering etc.)",
+   "intermediates": []
+  },
+  {
+   "item": 1,
+   "xbox": "0x1e090",
+   "current": "AICharacterEnemyGround::DoArmed",
+   "ps2": "0x11b908",
+   "name": "AICharacterEnemyGround::DoWandering",
+   "verdict": "keep",
+   "why": "Ground::DoWandering is already Xbox 0x1ee60 in the adjacent Ground vtable slot 0x18a86c; 0x1e090 sits in the DoArmed slot",
+   "intermediates": []
+  },
+  {
+   "item": 2,
+   "xbox": "0x274c0",
+   "current": "AICharacterPedestrian::DoDodging",
+   "ps2": "0x1282e0",
+   "name": "AICharacterPedestrian::DoTurning",
+   "verdict": "keep",
+   "why": "Xbox body opens like PS2 DoDodging (state 0: field=-1, flags&3 or dist<8.0 -> threat target); DoTurning already named at Xbox 0x26290",
+   "intermediates": []
+  },
+  {
+   "item": 3,
+   "xbox": "0x819a0",
+   "current": "RPlayerCamera::InitSpin",
+   "ps2": "0x1bc390",
+   "name": "RPlayerCamera::SetAutoDriveRotationX",
+   "verdict": "keep",
+   "why": "Body = PS2 InitSpin: GetAnchorMatrix4, stores 0x24 and 0x3f7fc19f; SetAutoDriveRotationX is Xbox 0x847f0 (both called from AutoDriveCamInputHandler)",
+   "intermediates": []
+  },
+  {
+   "item": 4,
+   "xbox": "0x847f0",
+   "current": "RPlayerCamera::SetAutoDriveRotationX",
+   "ps2": "0x1bc3c8",
+   "name": "RPlayerCamera::SetAutoDriveRotationY",
+   "verdict": "keep",
+   "why": "Stores SetAutoDriveRotation result to +0x2a0 = PS2 X (Y writes +0x2a4); Y already named at Xbox 0x84820",
+   "intermediates": []
+  },
+  {
+   "item": 5,
+   "xbox": "0xed2d0",
+   "current": "EAGLInternal::RuntimeAllocTARDestructor",
+   "ps2": "0x27e188",
+   "name": "EAGLInternal::TARDestructor",
+   "verdict": "keep",
+   "why": "Loops ~TAR over count then frees count*stride = PS2 RuntimeAllocTARDestructor 0x27e108; PS2 TARDestructor is a single ~TAR call (xbox-names.json is stale here, still lists TARDestructor on 0xed2d0)",
+   "intermediates": []
+  },
+  {
+   "item": 6,
+   "xbox": "0xfaf60",
+   "current": "InitAnimMemoryMap",
+   "ps2": "0x2669c8",
+   "name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap",
+   "verdict": "keep",
+   "why": "Same name, namespace move pending",
+   "intermediates": []
+  },
+  {
+   "item": 7,
+   "xbox": "0x128d10",
+   "current": "APlayerHeli::Play",
+   "ps2": "0x2f1000",
+   "name": "APlayerTank::Play",
+   "verdict": "keep",
+   "why": "Only xref is slot 0x1a2b20 of vtable 0x1a2b14 (APlayerHeli dtor, after SFX_heli strings); body uses velocity magnitude like PS2 Heli::Play, no +0x22c sub-object vcall that Tank::Play makes",
+   "intermediates": []
+  },
+  {
+   "item": 8,
+   "xbox": "0x12d430",
+   "current": "ATrafficVehicle::Play",
+   "ps2": "0x2f1000",
+   "name": "APlayerTank::Play",
+   "verdict": "keep",
+   "why": "Only xref is Play slot of ATrafficVehicle vtable 0x1a2ed8 (Traffic dtor/GetName/IsTracked); body reads ASoundManager::fgCount first and calls rpm helper like PS2 ATrafficVehicle::Play 0x2e5598",
+   "intermediates": []
+  },
+  {
+   "item": 9,
+   "xbox": "0x12d430",
+   "current": "ATrafficVehicle::Play",
+   "ps2": "0x2f16b8",
+   "name": "APlayerHeli::Play",
+   "verdict": "keep",
+   "why": "Same as item 8; APlayerHeli::Play is Xbox 0x128d10",
+   "intermediates": []
+  },
+  {
+   "item": 10,
+   "xbox": "0x14a4f0",
+   "current": "MUTEX_create",
+   "ps2": "0x305910",
+   "name": "STREAM_overhead",
+   "verdict": "keep",
+   "why": "Body is RtlInitializeCriticalSection wrapper; STREAM_overhead already named at Xbox 0x14b090",
+   "intermediates": []
+  },
+  {
+   "item": 11,
+   "xbox": "0x11020",
+   "ps2": "0x1073c0",
+   "name": "AnimationController::GetTotalTime",
+   "verdict": "reject",
+   "why": "Xbox reads frame+8 only (= PS2 frame+0xc current frame, offsets -4); that is GetCurrentFrame (item 12)",
+   "intermediates": [
+    {
+     "xbox": "0x11050",
+     "ps2": "0x1073c0",
+     "name": "AnimationController::GetTotalTime",
+     "why": "frame+0x18*frame+0x2c = PS2 0x1c*0x30; called from DoAiming on both sides"
+    }
+   ]
+  },
+  {
+   "item": 12,
+   "xbox": "0x11020",
+   "ps2": "0x107388",
+   "name": "AnimationController::GetCurrentFrame",
+   "verdict": "accept",
+   "why": "FLD [frame+8] = PS2 lwc1 frame+0xc (layout -4: 0xc/0x1c/0x30 -> 8/0x18/0x2c, cf. named GetTotalFrames 0x11030); same 4 callers DoAiming/DoFiring/DoLeaning/DoWandering",
+   "intermediates": []
+  },
+  {
+   "item": 13,
+   "xbox": "0x11040",
+   "ps2": "0x1073a8",
+   "name": "AnimationController::GetCurrentTime",
+   "verdict": "accept",
+   "why": "frame+0x2c*frame+8 = PS2 0x30*0xc; sits between GetTotalFrames and GetTotalTime, called by DoAiming on both",
+   "intermediates": []
+  },
+  {
+   "item": 14,
+   "xbox": "0x11060",
+   "ps2": "0x1073d8",
+   "name": "AnimationController::GetRemainingTime",
+   "verdict": "accept",
+   "why": "PROPOSED GetTotalTime REJECTED; body is (0x18*0x2c) - (0x2c*8) = GetTotalTime - GetCurrentTime inlined = PS2 GetRemainingTime 0x1073d8; DoAiming calls 11020/11040/11050/11060 as PS2 calls CurrentFrame/CurrentTime/TotalTime/RemainingTime",
+   "intermediates": [
+    {
+     "xbox": "0x11050",
+     "ps2": "0x1073c0",
+     "name": "AnimationController::GetTotalTime",
+     "why": "frame+0x18*frame+0x2c = PS2 0x1c*0x30"
+    }
+   ]
+  },
+  {
+   "item": 15,
+   "xbox": "0x218f0",
+   "ps2": "0x123878",
+   "name": "AICharacterHands::GetRotPos",
+   "verdict": "reject",
+   "why": "PS2 GetRotPos copies a 64-byte matrix and the player rigid-body position; Xbox is a player-distance vs range test returning bool",
+   "intermediates": []
+  },
+  {
+   "item": 16,
+   "xbox": "0x219e0",
+   "ps2": "0x123878",
+   "name": "AICharacterHands::GetRotPos",
+   "verdict": "reject",
+   "why": "Xbox is an atan_turns facing test (+-0.0055 turn tolerance); no matrix copy as in PS2 GetRotPos",
+   "intermediates": []
+  },
+  {
+   "item": 17,
+   "xbox": "0x239b0",
+   "ps2": "0x126800",
+   "name": "AICharacterPedestrian::GetSpecialPedInfo",
+   "verdict": "reject",
+   "why": "Xbox decrements a WRoadNetwork road counter (+0x2f); PS2 returns &table[i*0x4c]; caller overlap is just the Pedestrian class",
+   "intermediates": []
+  },
+  {
+   "item": 18,
+   "xbox": "0x23ba0",
+   "ps2": "0x12aa20",
+   "name": "AICharacterPedestrian::SetNewState",
+   "verdict": "reject",
+   "why": "Xbox copies a vec3 into +0x190..0x198; PS2 SetNewState swaps state/prev-state fields; shared callers are just the Do* handlers",
+   "intermediates": []
+  },
+  {
+   "item": 19,
+   "xbox": "0x23e60",
+   "ps2": "0x12a398",
+   "name": "AICharacterPedestrian::UpdateThreatRelativeDirection",
+   "verdict": "accept",
+   "why": "Same sole caller CheckVehicleThreat; atan(dx,dz)-heading, wrap +-0.5, GetDegFromAng(a,1)->out1, a*360 (GetDegFromAng(a,0) inlined)->out2, GetSimpleRigidBody+GetForwardVector",
+   "intermediates": [
+    {
+     "xbox": "0x23bc0",
+     "ps2": "0x129298",
+     "name": "AICharacterPedestrian::GetDegFromAng",
+     "why": "a*360, snap to 45-degree steps at +-22.5/67.5/... when flag set; same on PS2"
+    }
+   ]
+  },
+  {
+   "item": 20,
+   "xbox": "0x81a20",
+   "ps2": "0x1bd3c8",
+   "name": "RPlayerCamera::InitWeaponChange",
+   "verdict": "accept",
+   "why": "Identical: node type==0x200 -> FindAutoDriveArmInd, compare/set arm byte, flag|=1, store previous to global; both called from AutoDriveCamInputHandler beside InitSpin",
+   "intermediates": []
+  },
+  {
+   "item": 21,
+   "xbox": "0x81af0",
+   "ps2": "0x1bd4b8",
+   "name": "RPlayerCamera::GetMaxTumble",
+   "verdict": "accept",
+   "why": "Returns RCameraIniLoader::kMaxTumble; sole shared caller RDirectorQueue::ProcessDirectorLogic",
+   "intermediates": []
+  },
+  {
+   "item": 22,
+   "xbox": "0x96960",
+   "ps2": "0x1d4688",
+   "name": "RViewCamera::AspectRatio",
+   "verdict": "accept",
+   "why": "Identical widescreen flag ? k*1.7777778 : k*1.3333333; caller WTargetPicker::GetScreenPos on both",
+   "intermediates": []
+  },
+  {
+   "item": 23,
+   "xbox": "0xfb050",
+   "ps2": "0x2665f8",
+   "name": "EAGLAnim::FnCompoundChannel::InitSubChannels",
+   "verdict": "accept",
+   "why": "Allocs count*4 at +0x10 then NewFnAnim per sub-channel in reverse; Xbox callers are all FnCompoundChannel Eval* methods (PS2 has no recorded callers)",
+   "intermediates": []
+  },
+  {
+   "item": 24,
+   "xbox": "0xfb930",
+   "ps2": "0x276688",
+   "name": "EAGLAnim::FnKeyDeltaChan::EvalToPrevValues",
+   "verdict": "accept",
+   "why": "DecompressValues(0, n, +0x10, arg, +0x14, +0x14) then +0x10=arg; the sibling DecompressValues callers (fb400<->276320 etc.) have bounds branches, this is the unique straight one",
+   "intermediates": []
+  },
+  {
+   "item": 25,
+   "xbox": "0xfe2d0",
+   "ps2": "0x270a30",
+   "name": "EAGLAnim::FnDeltaF1::EvalSQTMask",
+   "verdict": "accept",
+   "why": "FnDeltaF1::EvalSQT calls exactly two helpers on both sides (EvalSQTMask, InitBuffersAsRequired); size ratio 1.01",
+   "intermediates": []
+  },
+  {
+   "item": 26,
+   "xbox": "0xfeae0",
+   "ps2": "0x2713f0",
+   "name": "EAGLAnim::FnDeltaF1::InitBuffersAsRequired",
+   "verdict": "accept",
+   "why": "Allocs n*4, n*4, n*16 (F1 sizes; F3 uses n*16,n*16,n*0x30), same 1.5259022e-05 scaling loop; caller FnDeltaF1::EvalSQT on both",
+   "intermediates": []
+  },
+  {
+   "item": 27,
+   "xbox": "0xff2d0",
+   "ps2": "0x26eff0",
+   "name": "EAGLAnim::FnDeltaF3::EvalSQTMask",
+   "verdict": "accept",
+   "why": "Large mask evaluator called by FnDeltaF3::EvalSQT on both sides (other callee is InitBuffersAsRequired, item 28); size ratio 0.96",
+   "intermediates": []
+  },
+  {
+   "item": 28,
+   "xbox": "0xffd20",
+   "ps2": "0x26fc80",
+   "name": "EAGLAnim::FnDeltaF3::InitBuffersAsRequired",
+   "verdict": "accept",
+   "why": "Allocs n*16, n*16, n*0x30 as PS2 F3; same dequantise loop; caller FnDeltaF3::EvalSQT on both",
+   "intermediates": []
+  },
+  {
+   "item": 29,
+   "xbox": "0x1051c0",
+   "ps2": "0x277c08",
+   "name": "EAGLAnim::FnRunBlender::SetWeight",
+   "verdict": "accept",
+   "why": "clamp idx to [0,count-2], frac to +0x28, compare with +0x30 and swap/NewFnAnim sub-anims; called by FnRunBlender EvalSQT and EvalVel2D on both (FnTurnBlender::SetWeight is 0x1043b0)",
+   "intermediates": []
+  },
+  {
+   "item": 30,
+   "xbox": "0x105670",
+   "ps2": "0x2793c8",
+   "name": "EAGLAnim::FnRunBlender::CycleTime",
+   "verdict": "accept",
+   "why": "Identical wrap-into-[a,b) float code; called from FnRunBlender::EvalSQT",
+   "intermediates": []
+  },
+  {
+   "item": 31,
+   "xbox": "0x105710",
+   "ps2": "0x279440",
+   "name": "EAGLAnim::FnRunBlender::ComputeCycleIdx",
+   "verdict": "accept",
+   "why": "Identical cycle-index code; adjacent to CycleTime on both; called from FnRunBlender::EvalSQT",
+   "intermediates": []
+  },
+  {
+   "item": 32,
+   "xbox": "0x105a60",
+   "ps2": "0x278b48",
+   "name": "EAGLAnim::FnRunBlender::AlignVel",
+   "verdict": "accept",
+   "why": "Rotates the 2D velocity by the quaternion at +0x58 (Xbox via helper 0x104eb0, PS2 inlined); sole caller FnRunBlender::EvalVel2D on both",
+   "intermediates": []
+  },
+  {
+   "item": 33,
+   "xbox": "0x105ab0",
+   "ps2": "0x278c20",
+   "name": "EAGLAnim::FnRunBlender::BlendVel",
+   "verdict": "accept",
+   "why": "Vcall on sub-anim +0x20, if weight +0x28==0 copy, else lerp and rescale by blended speed magnitude; sole caller FnRunBlender::EvalVel2D on both",
+   "intermediates": []
+  },
+  {
+   "item": 34,
+   "xbox": "0x115ee0",
+   "ps2": "0x1e2320",
+   "name": "RLightning::AdvanceBoltDraw",
+   "verdict": "reject",
+   "why": "Tier X; Xbox is a generic vec4 component multiply keeping w, callers all over the engine; PS2 AdvanceBoltDraw calls JitterStripPoints and bumps +0x6f4",
+   "intermediates": []
+  },
+  {
+   "item": 35,
+   "xbox": "0x120db0",
+   "ps2": "0x2ece10",
+   "name": "ASoundManager::NormalizedRandomNumber",
+   "verdict": "accept",
+   "why": "Polar Box-Muller with cached second value and static flag, rand() in [-1,1]; sole shared caller ASubmersible::PlayCreaks",
+   "intermediates": []
+  },
+  {
+   "item": 36,
+   "xbox": "0x14a450",
+   "ps2": "0x306e28",
+   "name": "SHAPE_loadfile",
+   "verdict": "accept",
+   "why": "Calls shape loader 0x14a370 with flag 1 while named SHAPE_loadfilez 0x14a470 passes 0 (AUF: loadfile a2=1); sits just before loadfilez as on PS2; ShapeFileLoad calls both",
+   "intermediates": []
+  },
+  {
+   "item": 37,
+   "xbox": "0x14a490",
+   "ps2": "0x306e68",
+   "name": "SHAPE_version",
+   "verdict": "accept",
+   "why": "Parses 3-digit version from header bytes 0xc..0xf identically; called from the shape loader after the magic check on both sides",
+   "intermediates": []
+  }
+ ]
+}

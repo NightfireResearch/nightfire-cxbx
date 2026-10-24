@@ -1,0 +1,121 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The codename's options pages: Codenames -> the codename -> the options wheel -> Controller Setup (a style, the
+# inversion), Advanced Options, Multiplayer Options, AV Options (the volumes heard and put back on B, then kept on A).
+press DOWN
+wait 30
+press DOWN
+wait 30
+press A                    # Codenames
+waitpage 0x4000001b        # P_CNSELECT
+wait 100
+press A                    # the codename
+waitpage 0x4000001d        # P_CNMENU, the wheel on Controller Setup
+wait 150
+press A
+waitpage 0x40000022        # P_CNCONTROLS
+wait 100
+shot controls
+press RIGHT                # the next style, drawn round the pad
+wait 40
+shot controls_right
+press RIGHT
+wait 40
+press X                    # inverted
+wait 30
+shot controls_inverted
+press A                    # kept: back to the wheel
+waitpage 0x4000001d
+wait 120
+press DOWN
+wait 40
+press DOWN
+wait 40
+shot cnmenu_advanced
+press A                    # Advanced Options
+waitpage 0x4000002d        # P_CNOPTIONS
+wait 100
+shot advanced
+press RIGHT
+wait 30
+press DOWN
+wait 30
+press RIGHT
+wait 30
+press DOWN
+wait 30
+press DOWN
+wait 30
+press RIGHT
+wait 30
+shot advanced_changed
+press A
+waitpage 0x4000001d
+wait 120
+press DOWN
+wait 40
+press A                    # Multiplayer Options
+waitpage 0x4000002e        # P_CNMPOPTIONS
+wait 100
+shot multiplayer
+press DOWN
+wait 30
+press RIGHT
+wait 30
+press RIGHT
+wait 30
+shot multiplayer_changed
+press A
+waitpage 0x4000001d
+wait 120
+press DOWN
+wait 40
+press A                    # AV Options
+waitpage 0x40000031        # P_CNAVOPTIONS
+wait 100
+shot av
+press LEFT
+wait 20
+press LEFT
+wait 20
+press LEFT
+wait 20
+shot av_quieter
+press B                    # the volumes put back
+waitpage 0x4000001d
+wait 120
+press A                    # AV Options again
+waitpage 0x40000031
+wait 100
+press DOWN
+wait 30
+press RIGHT
+wait 30
+press DOWN
+wait 30
+press DOWN
+wait 30
+press RIGHT
+wait 30
+shot av_changed
+press DOWN
+wait 30
+press DOWN
+wait 30
+press DOWN
+wait 30
+shot av_buttons
+press A
+wait 150
+shot av_button_pressed
+press B
+wait 150
+shot av_after
+quit

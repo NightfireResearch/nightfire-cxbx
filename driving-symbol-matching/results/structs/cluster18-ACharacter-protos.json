@@ -1,0 +1,63 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0001c0c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ACharacter::ACharacter(char *)"
+  },
+  {
+   "address": "0x0001c110",
+   "calling_convention": "__thiscall",
+   "return": "ACharacter *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0011dad0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ACharacter::Say(char *)"
+  },
+  {
+   "address": "0x0011dd00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ACharacter::GetName(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x0011dd30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ACharacter::~ACharacter(void)"
+  },
+  {
+   "address": "0x0011ddb0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ACharacter::Play(APath &)"
+  }
+ ]
+}

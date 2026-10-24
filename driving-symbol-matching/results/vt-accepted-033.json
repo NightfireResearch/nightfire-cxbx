@@ -1,0 +1,489 @@
+[
+ {
+  "xbox": "0x0010a9c0",
+  "name": "THREAD_createparam",
+  "ps2": "0x00261220",
+  "why": "windowed review: stores both the thread function and a user parameter for the entry stub 0x10a730 (which calls func(param)), as PS2 THREAD_createparam; the parameterless wrapper THREAD_create is 0x10a930. Was THREAD_create"
+ },
+ {
+  "xbox": "0xb9d00",
+  "name": "SRuleAlways::scalar_deleting_destructor",
+  "ps2": "0x209d98",
+  "why": "Version Tracking candidate, body review: slot 0 of SRuleAlways vtable 0x1935e0 (built by SRuleAlways ctor 0xb96c0), referenced by no other vtable; ~SMissionRule + FastFree(0xc) = PS2 ~SRuleAlways FastFree(0x14) (-8 size shift like the other SRules)"
+ },
+ {
+  "xbox": "0xb9a20",
+  "name": "SRuleDifficulty::CheckRule",
+  "ps2": "0x20aac0",
+  "why": "Version Tracking candidate, body review: slot 1 of SRuleDifficulty vtable 0x193610; glbMissionManager+0x4dc (PS2 +0x3b8, +0x124) vs flag bits 1/2/4 of +0xc (PS2 +0x14) for difficulty 0/1/2 - same body"
+ },
+ {
+  "xbox": "0x986a0",
+  "name": "RReflection::DeregisterSceneObj",
+  "ps2": "0x1c25f8",
+  "why": "Version Tracking candidate, body review: sole caller ~RSceneObj on both; 4-slot search of scene objs (+0x240, PS2 +500), rank decrement, 0x4cbebc20 reset, max-distance recompute - same body (Xbox unrolled)"
+ },
+ {
+  "xbox": "0x98850",
+  "name": "RReflection::SceneObjRender",
+  "ps2": "0x1c2720",
+  "why": "Version Tracking candidate, body review: SetVehiclesAllowed(1), render each of 4 registered scene objs via vtable, restore SetVehiclesAllowed - same body"
+ },
+ {
+  "xbox": "0xcfeb0",
+  "name": "WTriggerManager::CheckCollide",
+  "ps2": "0x22efb0",
+  "why": "Version Tracking candidate, body review: overload (COORD3&,float,WTrigger*): both called by the same WTriggerManager::Process (Xbox 0xd0630 / PS2 0x22d5a8); xz-circle r^2 + y+r / y-r vs trigger y..y+h - identical body",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xcff20",
+  "name": "WTriggerManager::CheckCollide",
+  "ps2": "0x22f030",
+  "why": "Version Tracking candidate, body review: overload (COORD3&,float,float,float,WTrigger*): same Process caller as 5.1; separate up/down extents - identical body",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xd3050",
+  "name": "WWorldPos::FindClosestFace",
+  "ps2": "0x2324e8",
+  "why": "Version Tracking candidate, body review: overload (WCollisionInstanceCacheList&,COORD3&): called from FindClosestFace(COORD3&,bool) 0xd31f0 as PS2 0x2322c8 calls 0x2324e8; cache-list loop step 8, FindFaceInCInst, 1e38 best, copy 0x30 bytes, +0x34/+0x38, flag +0x30",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xbffe0",
+  "name": "WCollisionMgr::FindFaceInCInst",
+  "ps2": "0x214338",
+  "why": "on the caller chain of WWorldPos::FindClosestFace, body review: overload called by FindClosestFace(CacheList,COORD3) on both (0xd3050 / PS2 0x2324e8); dispatches to point overload when cache null, MakeMatrix, vect3mult, v3sub loop",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xd3110",
+  "name": "WWorldPos::FindClosestFace",
+  "ps2": "0x232638",
+  "why": "Version Tracking candidate, body review: segment overload (CacheList&,COORD3&,COORD3&): caller CheckHitWorld on both; +0x3c=frame counter, MakeSegSpaceMatrix then FindFaceInCInst loop, returns 0 - same body",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xd2d70",
+  "name": "WWorldMath::MakeSegSpaceMatrix",
+  "ps2": "0x231d68",
+  "why": "on the caller chain of WWorldPos::FindClosestFace, body review: first callee of FindClosestFace(seg) 0xd3110 as MakeSegSpaceMatrix is of PS2 0x232638; builds orthonormal seg-space matrix (sub, normalise, cross, translation w=1), returns 1"
+ },
+ {
+  "xbox": "0xc01d0",
+  "name": "WCollisionMgr::FindFaceInCInst",
+  "ps2": "0x214c08",
+  "why": "on the caller chain of WWorldPos::FindClosestFace, body review: segment overload called by FindClosestFace(seg) on both (0xd3110 / PS2 0x232638); MakeMatrix, OrthoInverse, MATRIX4_mult, FindFaceInTriStrip loop",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xe4eb0",
+  "name": "EAGLInternal::ViewPortPrivate::ReBegin",
+  "ps2": "0x296f28",
+  "why": "Version Tracking candidate, body review: this->viewport (+0x180, PS2 +0x188): EndView inlined (clear +0x188 flag, BeginView prev unless 0/1, +4=0) then BeginView = PS2 ReBegin (EndView+BeginView); no Xbox refs"
+ },
+ {
+  "xbox": "0x2b210",
+  "name": "AIGroundVehicle::GetCollNav",
+  "ps2": "0x1351d0",
+  "why": "Version Tracking candidate, body review: callers CheckAgentRoadNetworkCollision + DoAgentStateUpdate on both; callees GetPhysicsObject/GetRigidBody/InitAtPoint/ReverseNavDirection match"
+ },
+ {
+  "xbox": "0x2b4d0",
+  "name": "TestForCollision",
+  "ps2": "0x135530",
+  "why": "Version Tracking candidate, body review: sole caller CheckTrafficCollision on both; two unit dirs from rigid-body pos, dot>=0.9, distance vs param, then pos-distance compare - same body"
+ },
+ {
+  "xbox": "0x52430",
+  "name": "Matrix_AttribByteOffsetParserFunc",
+  "ps2": "0x16c458",
+  "why": "Version Tracking candidate, body review: parser-func family (Vector_ at 0x52350 before it); tokenises on ';', copies identity matrix, Float_AttribByteOffsetParserFunc(...,0x10,...), result {-7,count,ptr} - same body"
+ },
+ {
+  "xbox": "0x969f0",
+  "name": "RViewCamera::SetViewPortToUnitTransformMode",
+  "ps2": "0x1d4b78",
+  "why": "Version Tracking candidate, body review: ortho(1.0,a,b), BuildTranslate(-1,1,0), BuildScale(2,-2,-1), mult, SetViewMatrix - exactly the PS2 Unit variant (Ortho uses translate 0, Device uses 2/w,-2/h)"
+ },
+ {
+  "xbox": "0xa5950",
+  "name": "RShadowMap::ProjectedShadowsEnabled",
+  "ps2": "0x1ec1e8",
+  "why": "Version Tracking candidate, body review: returns a global flag whose only other xref is LoadAttributes on both (Xbox 0x1c5078 / PS2 0x335384)"
+ },
+ {
+  "xbox": "0xcd9b0",
+  "name": "WTargetable::WTargetable",
+  "ps2": "0x229570",
+  "why": "Version Tracking candidate, body review: overload setting type +0x34=2 and +0x44 (PS2 +0x48)=arg; callers AICharacterEnemyGround/AICharacterEnemySunroof ctors on both",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xcda20",
+  "name": "WTargetable::WTargetable",
+  "ps2": "0x2295d8",
+  "why": "Version Tracking candidate, body review: overload setting type +0x34=3 and +0x44 (PS2 +0x48)=arg; caller EnableTargetBeacon on both",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xef4a0",
+  "name": "EAGL::GeoPrimState::GeoPrimState",
+  "ps2": "0x283f28",
+  "why": "Version Tracking candidate, body review: REVIEW name clash: copy ctor = GeoPrimStateExtension ctor then copy whole object (0x13 dwords; PS2 MEM_copy 0x80) = PS2 GeoPrimState(GeoPrimState&). Xbox 0xef480 already holds this name/PS2 addr but its body is the default ctor (ext ctor only) = PS2 unnamed FUN_00283eb0; suggest un-naming 0xef480 (copy constructor; the default constructor 0xef480 shares the name)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xeeea0",
+  "name": "EAGL::GeoPrimStateExtension::GeoPrimStateExtension",
+  "ps2": "0x283568",
+  "why": "on the caller chain of EAGL::GeoPrimState::GeoPrimState, body review: called by default GeoPrimState ctor, copy ctor and RuntimeAllocGeoPrimStateConstructor (PS2: FUN_00283eb0, GeoPrimState); sets default render state (D3D values on Xbox vs GS regs on PS2)"
+ },
+ {
+  "xbox": "0xd5170",
+  "name": "GFXGallery::~GFXGallery",
+  "ps2": "0x233760",
+  "why": "Version Tracking candidate, body review: called by GFX::Shutdown before delete on both; PurgeAllEffects, STICKY_ReleaseAllIndexes inlined (+0x400/+0x404=0), Free +0x140c/+0x1410/+0x1414 - same body, no delete flag on Xbox"
+ },
+ {
+  "xbox": "0x1a880",
+  "name": "URefCounter<ActTextureDatabase::TextureInfo>::~URefCounter",
+  "ps2": "0x1152f0",
+  "why": "Version Tracking candidate, body review: atexit-registered from URefCounter<TextureInfo>::Get (static instance); body = clear map (size!=0 erase, reset head links) then FastFree(head,0x98) exactly as PS2 ~URefCounter (map head +4/size +8 on Xbox vs +0/+4 PS2); same pattern as Model 0x182b0"
+ },
+ {
+  "xbox": "0x1d530",
+  "name": "AICharacterEnemyDriver::GetRotPos",
+  "ps2": "0x11ab50",
+  "why": "Version Tracking candidate, body review: 3-arg overload (int, MATRIX4&, COORD3&): GetRigidBody(car+0x140 ->+0x4a) copies matrix + pos w=1 and velocity +0x20..0x28 to 3rd arg, as PS2 0x11ab50 (+0x150/+0x46); passed as pointer from WakeUp like PS2; 2-arg overload already 0x20e30. Genuine overload. Note: likely ICF-shared with other drivers' 3-arg GetRotPos (5 WakeUp refs)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x1d5f0",
+  "name": "AICharacterEnemyDriver::AICharacterEnemyDriver",
+  "ps2": "0x11aca8",
+  "why": "Version Tracking candidate, body review: ctor: AICharacter ctor, installs vtable 0x18a788 whose slot 0 is AICharacterEnemyDriver::scalar_deleting_destructor 0x1d650, stores param at +0x140 (PS2 same), called from WakeUp as PS2"
+ },
+ {
+  "xbox": "0x7a530",
+  "name": "RCameraSpline::EvaluateSpline",
+  "ps2": "0x1a85d0",
+  "why": "Version Tracking candidate, body review: GetSegmentCurveStep calls it after BuildSplineEx exactly where PS2 0x222d40 calls EvaluateSpline(float,COORD4&); body t^3,t^2,t,1 x basis (0x190cf0/0x190d30 by type) -> point, w=1, *0.5 if type==1, as PS2 0x1a85d0. Genuine overload (other overload 0x7a6d0 = PS2 0x1a8440)",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x7a5c0",
+  "name": "RCameraSpline::EvaluateTangent",
+  "ps2": "0x1a86a8",
+  "why": "Version Tracking candidate, body review: UpdateNavPos calls it on both sides (PS2 UpdateNavPos -> EvaluateTangent); tangent basis matrix (0x190d70/0x190db0), cubic weights, normalise xyz, w=1 as PS2"
+ },
+ {
+  "xbox": "0xb6c30",
+  "name": "SMissionManager::SetObjectiveComment",
+  "ps2": "0x207720",
+  "why": "Version Tracking candidate, body review: called from ~ESetObjective both sides; this[0x72c + i*4] = v vs PS2 0x608 + i*4 (SMissionManager +0x124 shift)"
+ },
+ {
+  "xbox": "0xb6c50",
+  "name": "SMissionManager::ClearObjective",
+  "ps2": "0x207730",
+  "why": "Version Tracking candidate, body review: called from ~ESetObjective/~ESetWaypoint both sides; clears visible flag and +0x724+i*4 (PS2 +0x600+i*4, +0x124 shift)"
+ },
+ {
+  "xbox": "0xd2860",
+  "name": "WWorldMath::SegmentIntersect",
+  "ps2": "0x231548",
+  "why": "Version Tracking candidate, body review: callers GetBarrierNormal/GetClosestIntersectingBarrier on both sides, calls v3sub; 2D segment/segment cross-product intersection with 3 args as PS2"
+ },
+ {
+  "xbox": "0xd29e0",
+  "name": "WWorldMath::IntersectCircle",
+  "ps2": "0x231720",
+  "why": "Version Tracking candidate, body review: 9-arg circle/segment test called from GetClosestIntersectingCylObject (Xbox 0xc0440, see intermediate); identical radius^2 endpoint checks, quadratic discriminant, sqrt, 1/(2a), roots in [0,1]"
+ },
+ {
+  "xbox": "0xc0440",
+  "name": "WCollisionMgr::GetClosestIntersectingCylObject",
+  "ps2": "0x218af0",
+  "why": "on the caller chain of WWorldMath::IntersectCircle, body review: sits before GetClosestIntersectingOBBObject/Barrier as on PS2; loops object vector calling IntersectCircle, best distance init 1e38, as PS2"
+ },
+ {
+  "xbox": "0x10a920",
+  "name": "THREAD_exit",
+  "ps2": "0x2617a8",
+  "why": "Version Tracking candidate, body review: ExitThread(0) no-return wrapper called at the end of IFeedback's thread loop (Xbox 0x4fbc0), as PS2 THREAD_exit (ExitDeleteThread) is called from IFeedback Thread; sits after THREAD_testexit as PS2 testexit..exit"
+ },
+ {
+  "xbox": "0x10a930",
+  "name": "THREAD_create",
+  "ps2": "0x2611f0",
+  "why": "Version Tracking candidate, body review: called by IFeedback ctor on both sides; startup block {flag, func, funcP=0} with no user param (entry 0x10a730 calls func() when set) = PS2 THREAD_create (createparam with param=0). NAME CLASH: Xbox 0x10a9c0 currently carries THREAD_create but stores {flag,0,func,param} = THREAD_createparam - see intermediate; needs user review"
+ },
+ {
+  "xbox": "0x1167f0",
+  "name": "VU0_v4quatrotate",
+  "ps2": "0x2cbc50",
+  "why": "Version Tracking candidate, body review: DEBRIS_Draw calls it on both sides (PS2 DEBRIS_Draw -> VU0_v4quatrotate); q*v*q^-1 cross/dot form, writes xyz and keeps out.w as PS2 .xyz sqc2 of loaded a2"
+ },
+ {
+  "xbox": "0x1169a0",
+  "name": "VU0_v4quatrotate_xlate",
+  "ps2": "0x2cbcf8",
+  "why": "Version Tracking candidate, body review: 4-arg: same quaternion rotate then adds translation xyz, keeps w, as PS2 v4quatrotate_xlate; called from the CANVAS helper 0xd4f90 as PS2 from CANVAS helper FUN_002360c0"
+ },
+ {
+  "xbox": "0x182b0",
+  "name": "URefCounter<ActModelDatabase::ModelInfo>::~URefCounter",
+  "ps2": "0x111a50",
+  "why": "Version Tracking candidate, body review: atexit-registered from URefCounter<ModelInfo>::Get (xref 0x183a4 via 0x15cd20); clear map then FastFree(head,0x98) as PS2 ~URefCounter"
+ },
+ {
+  "xbox": "0x96cc0",
+  "name": "RViewCamera::SetExtents",
+  "ps2": "0x1d4420",
+  "why": "Version Tracking candidate, body review: (xMin,yMin,w,h) sets +0x1c/+0x20/+0x28/+0x2c, inlined RefreshLODMultiplier (+0x34 = lod*..) and UpdateForResolution (resolution scaled viewport); called from RearrangeSplitScreens (Xbox 0x8bb10) as PS2",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0x8bb10",
+  "name": "RRenderHigh::RearrangeSplitScreens",
+  "ps2": "0x1c4c10",
+  "why": "on the caller chain of RViewCamera::SetExtents, body review: sits after ReceiveCameraInput as PS2; called from PushPlayerView/Render(PopPlayerView); per-player-count row/column char tables, loops calling SetExtents(float x4) as PS2 RearrangeSplitScreens -> SetExtents"
+ },
+ {
+  "xbox": "0x96d70",
+  "name": "RViewCamera::SetExtents",
+  "ps2": "0x1d4468",
+  "why": "Version Tracking candidate, body review: SetExtents(RViewCamera*): copies other's extents +0x1c..0x30, LOD multiplier, UpdateForResolution; caller PreRender both sides. Genuine overload",
+  "allow_duplicate": true
+ },
+ {
+  "xbox": "0xbe4b0",
+  "name": "WCollider::Refresh",
+  "ps2": "0x211e18",
+  "why": "found reviewing (rejected) candidate , body review: callers CollideWithWorld and WCollider ctor both sides; InRegion, if outside: Clear, store pos+radius, FUN_bd690 (=PS2 FUN_00211ac8), PrepareRegion; then store current pos/radius, as PS2 Refresh"
+ },
+ {
+  "xbox": "0x130780",
+  "name": "PlayMPC::PlayMPC",
+  "ps2": "0x300110",
+  "why": "Version Tracking candidate, body review: callers ~ESetVideo both sides; stores p1,p2 at +0/+4, clears +8(short)/+0xc/+0x10/+0x14, p3 at +0x18, SetREALDefaults(&plaympc_alloc) then global = p4, identical to PS2"
+ },
+ {
+  "xbox": "0x14df10",
+  "name": "RCMP::RCMP_SYSTEM::SetREALDefaults",
+  "ps2": "0x302e00",
+  "why": "on the caller chain of PlayMPC::PlayMPC, body review: only callee of PlayMPC ctor on both sides; sets alloc/free hooks to MEM_allocalign/MEM_free and third field 0 (Xbox +4/+8/+0xc, vtable at +0)"
+ },
+ {
+  "xbox": "0x12c30",
+  "name": "ActActor::DropWeapon",
+  "ps2": "0x109a08",
+  "why": "Version Tracking candidate, body review: follows ActActor::Draw as PS2 DropWeapon follows Draw/DrawWeapons; body identical: t<0.95 -> flag=1; t<1.95 && flag==1 -> SpawnWeapon (ActActor::SpawnWeapon 0x11ff0 = PS2 0x10aa58, whose only caller is DropWeapon); flag=0 (flag +0x1e byte vs PS2 +0x24 int)"
+ },
+ {
+  "xbox": "0x2dc90",
+  "name": "AIGroundVehicle::GetLookAhead",
+  "ps2": "0x132f80",
+  "why": "Version Tracking candidate, body review: called from DoMoveMode both sides; rigid body pos, speed length, target (+0x64 vs PS2 +0x54) direction normalised, returns max(speed*0.35, body+0x4c8 + 7.5) - same constants 0x3eb3/0x40f0/+0x4c8 on PS2"
+ },
+ {
+  "xbox": "0x2dd80",
+  "name": "AIGroundVehicle::DriveToPointTraffic",
+  "ps2": "0x133ab0",
+  "why": "Version Tracking candidate, body review: called from DoMoveMode both sides; same constant set (-0.2, 0.5, 5.0, 7.5, 0.05, 1.0), Util_Bound steering, repeated vehicle virtual control calls, as PS2"
+ },
+ {
+  "xbox": "0x4f8c0",
+  "name": "IFeedback::ApplyJolt",
+  "ps2": "0x165fb0",
+  "why": "Version Tracking candidate, body review: callers AddCollisionInfo, ~EFireWeapon, ~EShake, ~ESpawnExplosion identical on both sides; t<=0.25 -> t*1020 / 8 else 255 / min(t*32,24); update port +0x10/+0x14/+0x18 if larger, identical"
+ },
+ {
+  "xbox": "0x4f960",
+  "name": "IFeedback::SetRumble",
+  "ps2": "0x1660f0",
+  "why": "Version Tracking candidate, body review: caller ~EFireWeapon both sides; port[7]=round(a*255), port[8]=round(b*60), identical"
+ },
+ {
+  "xbox": "0xd2cf0",
+  "name": "WWorldMath::NearestPointLine3D",
+  "ps2": "0x231cc8",
+  "why": "Version Tracking candidate, body review: Sole caller WTriggerManager::CheckCollide on both sides; identical body: d=seg[1]-seg[0], v=p-seg[0], t=dot(v,d)/dot(d,d), out=seg[0]+d*t (PS2 VU0 disasm step for step)"
+ },
+ {
+  "xbox": "0xc0e00",
+  "name": "WCollisionMgr::GetWorldNormal",
+  "ps2": "0x2166f8",
+  "why": "on the caller chain of WWorldMath::MakeSegSpaceMatrix, body review: The other caller of FindClosestFace 0x232638 besides CheckHitWorld; bool return, optional WWorldPos + FindClosestFace + IntersectSegPlane + normal-flip block then the closest-collision query, as PS2"
+ },
+ {
+  "xbox": "0x80cf0",
+  "name": "RPlayerCamera::UpdateAIPathAnimationCam",
+  "ps2": "0x1b6160",
+  "why": "Version Tracking candidate, body review: Camera-config LoadFile registers it as the handler for mode string AIPathAnim; same callees as PS2 (GetOrientMat, GetPosition x3, VU0_MATRIX4_mult, GetAnchorMatrix4, AnchorCamera)"
+ },
+ {
+  "xbox": "0x80e20",
+  "name": "RPlayerCamera::GetZoomPercent",
+  "ps2": "0x1b8960",
+  "why": "Version Tracking candidate, body review: Only caller GHud::DrawCrossHairs (PS2 caller DrawCrossHairs); same body: arm table entry type==0x200, min zoom from per-player table +0x5c, returns (max-cur)/(max-min) else 0"
+ },
+ {
+  "xbox": "0xcdc10",
+  "name": "WTargetPicker::GetOffScreenPos",
+  "ps2": "0x22a430",
+  "why": "Version Tracking candidate, body review: Called from WTargetPicker::UpdateTargets as on PS2; same body: view-matrix transpose/translate, transform point, unit xyz, screen = res*(x+0.5),(0.5-y), clamp to 0.46*resX / 0.4*resY box with slope rescale"
+ },
+ {
+  "xbox": "0xcdee0",
+  "name": "WTargetPicker::IsPointOnScreen",
+  "ps2": "0x22a728",
+  "why": "Version Tracking candidate, body review: Called from UpdateTargets as on PS2; identical constants: 0.46*resX (+107 if widescreen flag), 0.4*resY, point minus half-res tested inside box"
+ },
+ {
+  "xbox": "0xa1c00",
+  "name": "RParticleSystem::InitData",
+  "ps2": "0x1e5d78",
+  "why": "Version Tracking candidate, body review: Called from RParticleSystem ctor (PS2 callers are the RParticleSystem/RMovableParticleSystem ctors); same body: cache source ptr, copy its position, cross(src+0x20,src+0x30) into direction, emit accumulator += count(uint)*rate*scale (offsets +0x10)"
+ },
+ {
+  "xbox": "0xa1c60",
+  "name": "RParticleSystemManager::CreateParticles",
+  "ps2": "0x1e6330",
+  "why": "Version Tracking candidate, body review: Shell::ApplyWorldEffects calls it with the SPKB system and count 2 exactly where PS2 calls CreateParticles(...,2); same body: basis from normal (0.1 thresholds), two unit cross products, loop count: Spawn then ResetParticle"
+ },
+ {
+  "xbox": "0xd38f0",
+  "name": "GFXGallery::GET_Keys",
+  "ps2": "0x233df8",
+  "why": "Version Tracking candidate, body review: Called from CANVAS_Draw (PS2 CANVAS_Draw calls GET_Keys); same 7-arg body with GET_Key inlined (stride max(byte[0x21]+0x30,0x40)), brackets time between key+0xc values; Xbox order GET_Canvas, this, next, GET_EffectPosQuat matches PS2 GET_Keys, GET_FirstIdleKey, GET_EffectPosQuat"
+ },
+ {
+  "xbox": "0xd39d0",
+  "name": "GFXGallery::GET_FirstIdleKey",
+  "ps2": "0x233f18",
+  "why": "Version Tracking candidate, body review: Called from CANVAS_Draw; body DataLocateTag(0x676b3000) = 'gk'|DataIndex(3,0), then data+0xc (relative if flag&2) - identical to PS2"
+ },
+ {
+  "xbox": "0xad4a0",
+  "name": "RigidBody::UpdateZonalInfo",
+  "ps2": "0x1f8908",
+  "why": "Version Tracking candidate, body review: Callers ResetObject, RigidBody ctor and the timestep function (PS2: ResetObject, RigidBody, Timestep_CollectVU0data); body: owner(+0x5c)+0x4f0..0x4f8 = round(pos*0.2)"
+ },
+ {
+  "xbox": "0xad520",
+  "name": "RigidBody::CalculateAndApplyWorldDamage",
+  "ps2": "0x1fc198",
+  "why": "Version Tracking candidate, body review: Only caller CollideWithWorld (same on PS2); same body: threshold 0.2/0.05 by +0x6d<4, dmg=2*v*scale, player boost + vslot checks, type==1 exemption, apply-damage virtual with flag 1"
+ },
+ {
+  "xbox": "0x121e40",
+  "name": "ASoundManager::ReportFailure",
+  "ps2": "0x2ecf60",
+  "why": "Version Tracking candidate, body review: WTriggerManager::Restart calls it after appending FAIL to the name exactly where PS2 Restart calls ASoundManager::ReportFailure; same body: allocate list node holding the string, push_back into global list; window starts at ASoundManager::Shutdown"
+ },
+ {
+  "xbox": "0xf5be0",
+  "name": "EAGL::DrawTextured::InternalFlush",
+  "ps2": "0x29cec0",
+  "why": "Version Tracking candidate, body review: Directly after ~DrawTextured on both platforms; Xbox platform flush like accepted DrawGouraud::InternalFlush but on DrawTextured's batch-open flag +0x5c (set by DrawTextured::Begin 0x14cf10, cleared by DrawTextured::Init): if open D3DDevice_End/Begin(prim); called from Begin before a primitive change, as PS2 Begin inlines the flush"
+ },
+ {
+  "xbox": "0x14cf10",
+  "name": "EAGL::DrawTextured::Begin",
+  "ps2": "0x29b330",
+  "why": "on the caller chain of EAGL::DrawTextured::InternalFlush, body review: if prim != current: DrawTextured::InternalFlush, store prim, GeoPrimState::SetPrimitiveType; binds texture +0x50, D3DDevice_Begin, sets +0x5c=1 - PS2 Begin (flush inlined, stores prim at +0x50). Note: sits in the RCMP address range on Xbox"
+ },
+ {
+  "xbox": "0xf58b0",
+  "name": "EAGL::DrawGouraud::DrawGouraud",
+  "ps2": "0x29c588",
+  "why": "Version Tracking candidate, body review: ProfilerRegion::DrawRegions: new(EAGL::DrawGouraud new) -> this ctor -> Init -> SetDepthTestMethod, same sequence as PS2; body GeoPrimState ctor + shader allocs, returns this"
+ },
+ {
+  "xbox": "0xf5970",
+  "name": "EAGL::DrawGouraud::Init",
+  "ps2": "0x29a008",
+  "why": "Version Tracking candidate, body review: Called right after the DrawGouraud ctor in DrawRegions as PS2 DrawGouraud::Init; same shape as accepted DrawTextured::Init (prim states, transparency 1, clears flag +0x58 used by DrawGouraud::InternalFlush, identity matrix)"
+ },
+ {
+  "xbox": "0x57a80",
+  "name": "AttributeSystem::ProcessDafiSection",
+  "ps2": "0x16d130",
+  "why": "Version Tracking candidate, body review: Only callee of LoadCollection called 3x (collection section, named section, 'default') exactly where PS2 LoadCollection calls ProcessDafiSection; callees DAFI_getkeycount/CreateExtensionAttribute/MakeString match PS2"
+ },
+ {
+  "xbox": "0xb0ec0",
+  "name": "RigidBody::UpdatePositionAndOrientation",
+  "ps2": "0x1f8fd0",
+  "why": "Version Tracking candidate, body review: SimulateGame: per-body loop calls ApplyAngularDamping then this(1.0f), same as PS2 ApplyAngularDamping; UpdatePositionAndOrientation(1.0,body); Xbox inlines PS2's Timestep_LoadAndStartVU0/Timestep_CollectVU0data chain (ControlSleep, quattom4, matrix ops)"
+ },
+ {
+  "xbox": "0xae4c0",
+  "name": "RigidBody::CollideWithGround",
+  "ps2": "0x1f9500",
+  "why": "on the caller chain of RigidBody::UpdatePositionAndOrientation, body review: SimulateGame ground loop (type==2) position of PS2 CollideWithGround; body: isUnderwater early out, owner vfunc check +0xc4, sets +0x4e0/4e4/4e8 = 0,1,0 and returns - identical to PS2"
+ },
+ {
+  "xbox": "0xae150",
+  "name": "RigidBody::ResolveLeverForces",
+  "ps2": "0x1f91e8",
+  "why": "on the caller chain of RigidBody::UpdatePositionAndOrientation, body review: Sole callee of CollideWithGround (ae4c0) like PS2; C version of PS2's VU0 routine: loops lever count (+0xc), MICRO_THRESHOLD, owner vfunc +200 selects constant"
+ },
+ {
+  "xbox": "0xaec10",
+  "name": "RigidBody::ResolveCollision",
+  "ps2": "0x1f9d98",
+  "why": "on the caller chain of RigidBody::UpdatePositionAndOrientation, body review: Called from CollideWithObject where PS2 calls ResolveCollision; callees GetHitPoints, PlayAnimation, ModifyLevers, ScaleObjObjForces match PS2"
+ },
+ {
+  "xbox": "0xae830",
+  "name": "RigidBody::ModifyLevers",
+  "ps2": "0x1f98e8",
+  "why": "on the caller chain of RigidBody::UpdatePositionAndOrientation, body review: Callee of ResolveCollision; world->local transforms, |dot|>0.866 tests, CAR_COLLIDE_COG_SCALE, flag param_7 - matches PS2"
+ },
+ {
+  "xbox": "0x8d6b0",
+  "name": "RSceneObj::ResolveData",
+  "ps2": "0x1c6f60",
+  "why": "Version Tracking candidate, body review: Static (char*,bool&): *flag=0; if global obj non-null call its vfunc slot 18 (Xbox +0x48 = PS2 pfn +0x9c, 8-byte entries after type_info) else 0; no callers on either side; sits right before ResolveObjectData on both"
+ },
+ {
+  "xbox": "0x11d460",
+  "name": "URefCounter<AMix>::AddReference",
+  "ps2": "0x2f3f08",
+  "why": "Version Tracking candidate, body review: AMix::Add calls it where PS2 AMix::Add calls URefCounter<AMix>::AddReference; body identical to named URefCounter<AEngine>::AddReference (lookup by name, insert, set +0x90, ++refcount +0x8c)"
+ },
+ {
+  "xbox": "0xa29c0",
+  "name": "RParticleSystemManager::Reset",
+  "ps2": "0x1e76c8",
+  "why": "Version Tracking candidate, body review: RestartTrackRender calls it where PS2 calls RParticleSystemManager::Reset; body: zero counter, index=-1, clear two big-offset fields, iterate system map deleting each system (virtual deleting dtor) and erasing - same as PS2"
+ },
+ {
+  "xbox": "0xa8120",
+  "name": "RVehicleParticle::UpdateAll",
+  "ps2": "0x1ef1e0",
+  "why": "Version Tracking candidate, body review: Called from RRenderHigh::Render (PS2 from StopFrameRender, not present on Xbox so inlined); body: frame-delta check vs Sim frame, store frame, iterate global fAllCars set calling vfunc slot 1 (arg 1) on 14 sub-emitters, then erase-range - same as PS2"
+ },
+ {
+  "xbox": "0xa79f0",
+  "name": "RVehicleParticle::~RVehicleParticle",
+  "ps2": "0x1ee3e0",
+  "why": "on the caller chain of RVehicleParticle::UpdateAll, body review: Installs vtable 0x1930b0, deletes 14 sub-emitters (virtual deleting dtor), deletes array at +4, erases this from global set - same as PS2 ~RVehicleParticle (without delete flag on Xbox)"
+ },
+ {
+  "xbox": "0xa7300",
+  "name": "RVehicleParticle::ResetAll",
+  "ps2": "0x1ef338",
+  "why": "on the caller chain of RVehicleParticle::UpdateAll, body review: Called from RestartTrackRender like PS2 ResetAll; iterates global set setting +0x44=0 (PS2 Reset inlined: +0x40, +4 shift)"
+ },
+ {
+  "xbox": "0xa8220",
+  "name": "RVehicleParticle::scalar_deleting_destructor",
+  "ps2": "0x1ee3e0",
+  "why": "Version Tracking candidate, body review: Slot 0 of vtable 0x1930b0, the vtable installed by 0xa79f0 (~RVehicleParticle); calls it then FastFree(this,0x4c) - PS2 ~RVehicleParticle frees 0x4c too"
+ }
+]

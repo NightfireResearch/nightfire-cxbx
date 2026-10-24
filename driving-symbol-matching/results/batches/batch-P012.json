@@ -1,0 +1,1932 @@
+{
+ "batch": "P012",
+ "program": "DRIVING.ELF",
+ "note": "Names accepted by reading function bodies (review.py). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0013e3b8",
+   "expect": "FUN_0013e3b8",
+   "name": "AIVehicle::operator_delete",
+   "sheet_name": "AIVehicle::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 949, body review: Body is FastFree(p,size) directly after AIVehicle::operator new; unreferenced like other class deletes."
+   ]
+  },
+  {
+   "xbox": "0x00145d00",
+   "expect": "FUN_00145d00",
+   "name": "EPathUtil_GetFromInstanceOrAI",
+   "sheet_name": "EPathUtil_GetFromInstanceOrAI(CARP::Instance *, CARP::AIElement",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 1168, body review: Takes (Instance*, AIElement*): scene object from instance else spline path from AI element or player vehicle; called from EPath* event code."
+   ]
+  },
+  {
+   "xbox": "0x001651a0",
+   "expect": "FUN_001651a0",
+   "name": "getActionID",
+   "sheet_name": "getActionID(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2055, body review: ConvertStringToNumber on the action-name table with default 0x75; called from LoadParseDefFile; AUF getActionID maps strings to action IDs."
+   ]
+  },
+  {
+   "xbox": "0x00167c48",
+   "expect": "FUN_00167c48",
+   "name": "InputDevice::DeadZoneChop",
+   "sheet_name": "InputDevice::DeadZoneChop(float &, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2126, body review: Sets float& to 0 when strictly between the two float bounds; called by PollDevice."
+   ]
+  },
+  {
+   "xbox": "0x00168678",
+   "expect": "FUN_00168678",
+   "name": "IOModule::SendGameMessages",
+   "sheet_name": "IOModule::SendGameMessages(InputDevice *, InputToAction *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2147, body review: Iterates an input device's scalars against an InputToAction map, testing transitions and feeding ActionQueueManager; called from UpdateAllDevices."
+   ]
+  },
+  {
+   "xbox": "0x0016e868",
+   "expect": "FUN_0016e868",
+   "name": "AttributeSystem::GetExtensionTypeSize",
+   "sheet_name": "AttributeSystem::GetExtensionTypeSize(AttributeType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2225, body review: Extension-type map lookup returning node[6], which RegisterExtensionType fills from its unsigned size argument; caller ComputeBytes."
+   ]
+  },
+  {
+   "xbox": "0x0016e950",
+   "expect": "FUN_0016e950",
+   "name": "AttributeSystem::GetExtensionTypeClass",
+   "sheet_name": "AttributeSystem::GetExtensionTypeClass(AttributeType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2226, body review: Same lookup returning node[9], filled from RegisterExtensionType's first char* ('smackable' = class)."
+   ]
+  },
+  {
+   "xbox": "0x0016ea38",
+   "expect": "FUN_0016ea38",
+   "name": "AttributeSystem::GetExtensionTypeName",
+   "sheet_name": "AttributeSystem::GetExtensionTypeName(AttributeType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2227, body review: Same lookup returning node[8], filled from RegisterExtensionType's second char* ('PhysicsData' = type name)."
+   ]
+  },
+  {
+   "xbox": "0x0016eb20",
+   "expect": "FUN_0016eb20",
+   "name": "AttributeSystem::InitializeExtensionType",
+   "sheet_name": "AttributeSystem::InitializeExtensionType(AttributeType, char *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2228, body review: Looks up the extension type and calls its stored init function pointer with the type's fields and the passed args; callers CreateExtensionAttribute/AddStruct."
+   ]
+  },
+  {
+   "xbox": "0x0016ec90",
+   "expect": "FUN_0016ec90",
+   "name": "AttributeSystem::ConfigEditParameters",
+   "sheet_name": "AttributeSystem::ConfigEditParameters(char *, char *, float, fl",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2235, body review: Empty stub (8 bytes, last of three consecutive jr-ra stubs) called after every Float field registration with the extension class; float overload stubbed in retail."
+   ]
+  },
+  {
+   "xbox": "0x0016f890",
+   "expect": "FUN_0016f890",
+   "name": "pair<CStringPairKey,_AttributeCollection>::pair",
+   "sheet_name": "pair<CStringPairKey, AttributeCollection>::pair(pair<CStringPai",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2246, body review: Copy-constructs a pair: copies CStringPairKey, builds an empty STL tree header (FastAlloc 0x1c 'STL'), copies remaining collection fields; called twice from the _Rb_tree insert."
+   ]
+  },
+  {
+   "xbox": "0x00173260",
+   "expect": "FUN_00173260",
+   "name": "_Rb_tree<CStringKey,_AttributeParser>::_M_insert",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2284, body review: SGI _Rb_tree _M_insert shape (x,y,v; FastAlloc node 0x2c 'STL', strcasecmp key compare, rebalance); called from the insert_unique below."
+   ]
+  },
+  {
+   "xbox": "0x00173628",
+   "expect": "FUN_00173628",
+   "name": "_Rb_tree<CStringKey,_AttributeParser>::insert_unique",
+   "sheet_name": "_Rb_tree<CStringKey, pair<CStringKey, AttributeParser>, _Select",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 2285, body review: Descends with strcasecmp, checks predecessor, calls the _M_insert above; the insert_unique shape."
+   ]
+  },
+  {
+   "xbox": "0x0017f288",
+   "expect": "FUN_0017f288",
+   "name": "Grenade::BlowUp",
+   "sheet_name": "Grenade::BlowUp(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2478, body review: Sets the +0x6d4 flag that CheckTimer/CheckForProximity set to trigger the explosion in Grenade::Simulate."
+   ]
+  },
+  {
+   "xbox": "0x00180620",
+   "expect": "FUN_00180620",
+   "name": "Mine::CheckTimer",
+   "sheet_name": "Mine::CheckTimer(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2501, body review: Decrements the mine timer and on expiry spawns an explosion and deletes the mine; called from Mine::Simulate."
+   ]
+  },
+  {
+   "xbox": "0x00183b48",
+   "expect": "FUN_00183b48",
+   "name": "Missile::GetAutoDriveLaunchPos",
+   "sheet_name": "Missile::GetAutoDriveLaunchPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2526, body review: Returns the address of a static COORD3 (the one the global ctor keyed to Missile::fUserMissileLaunchPos initialises)."
+   ]
+  },
+  {
+   "xbox": "0x001847e8",
+   "expect": "FUN_001847e8",
+   "name": "Newton::SpawnFromEvent",
+   "sheet_name": "Newton::SpawnFromEvent(float, float, CARP::Instance *, bool, in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2532, body review: Same shape as AUF Newton::SpawnFromEvent (instance fallback, flag 0x10 path, Hide, SpawnNewtonObject); callers ESpawn* events."
+   ]
+  },
+  {
+   "xbox": "0x00185280",
+   "expect": "FUN_00185280",
+   "name": "Newton::operator_delete",
+   "sheet_name": "Newton::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2535, body review: UMemory::Free(p), matching Newton::operator new which uses UMemory::Alloc rather than FastAlloc."
+   ]
+  },
+  {
+   "xbox": "0x001942e8",
+   "expect": "FUN_001942e8",
+   "name": "PHelicopter::Simulate",
+   "sheet_name": "PHelicopter::Simulate(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2667, body review: Matches AUF PHelicopter::Simulate (ForceVehicleToSleep, GetControllerInput, forward-vector steering); referenced from the vtable."
+   ]
+  },
+  {
+   "xbox": "0x00194b50",
+   "expect": "FUN_00194b50",
+   "name": "PHelicopter::operator_new",
+   "sheet_name": "PHelicopter::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2669, body review: FastAlloc(size, 'PHelicopter')."
+   ]
+  },
+  {
+   "xbox": "0x00194b70",
+   "expect": "FUN_00194b70",
+   "name": "PHelicopter::operator_delete",
+   "sheet_name": "PHelicopter::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2670, body review: FastFree(p, size) right after PHelicopter::operator new."
+   ]
+  },
+  {
+   "xbox": "0x00194b98",
+   "expect": "FUN_00194b98",
+   "name": "PHelicopter::SetTargetPos",
+   "sheet_name": "PHelicopter::SetTargetPos(COORD3)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2672, body review: Copies a COORD3 argument to this+0x7c; first of two consecutive COORD3 setters (+0x7c then +0x88), matching sheet order SetTargetPos, SetDestPos."
+   ]
+  },
+  {
+   "xbox": "0x00194bd8",
+   "expect": "FUN_00194bd8",
+   "name": "PHelicopter::SetDestPos",
+   "sheet_name": "PHelicopter::SetDestPos(COORD3)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2673, body review: corrected from 0x194cb0 (a static-ctor stub); 0x194bd8 copies a COORD3 to this+0x88, the second consecutive COORD3 setter after SetTargetPos."
+   ]
+  },
+  {
+   "xbox": "0x00195f80",
+   "expect": "FUN_00195f80",
+   "name": "PhysicsObject::operator_new",
+   "sheet_name": "PhysicsObject::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2731, body review: FastAlloc(size, 'PhysicsObject')."
+   ]
+  },
+  {
+   "xbox": "0x00195fa0",
+   "expect": "FUN_00195fa0",
+   "name": "PhysicsObject::operator_delete",
+   "sheet_name": "PhysicsObject::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2732, body review: FastFree(p, size) right after PhysicsObject::operator new."
+   ]
+  },
+  {
+   "xbox": "0x00196330",
+   "expect": "FUN_00196330",
+   "name": "PTank::PTank_global_ctors",
+   "sheet_name": "global constructors keyed to PTank::PTank(CarClass, char *, COO",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2757, body review: corrected from 0x196350 (a static pvehicle-name-table builder called by PVehicle::GetName*); 0x196330 is in the ctors table and calls the init helper with (1,0xffff) after PTank's functions."
+   ]
+  },
+  {
+   "xbox": "0x001998c0",
+   "expect": "FUN_001998c0",
+   "name": "RayShell::CollideWithObjects",
+   "sheet_name": "RayShell::CollideWithObjects(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2794, body review: Matches AUF RayShell::CollideWithObjects (ordered-body loop, IsOwnedBy, GetRadius/GetPosition, OBB tests, ConsiderVictim)."
+   ]
+  },
+  {
+   "xbox": "0x0019a3e0",
+   "expect": "FUN_0019a3e0",
+   "name": "RayShell::Fire",
+   "sheet_name": "RayShell::Fire(float &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2796, body review: Matches AUF RayShell::Fire: switch on shell state, tracer store in state 0, damage via signature lookup, writes float& out."
+   ]
+  },
+  {
+   "xbox": "0x0019abb8",
+   "expect": "FUN_0019abb8",
+   "name": "RayShell::AddFlash",
+   "sheet_name": "RayShell::AddFlash(SimObjSig, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2801, body review: Adds (SimObjSig, COORD3) to a static flash array capped at 8, skipping duplicates and the player; called from the RayShell fire and collision paths."
+   ]
+  },
+  {
+   "xbox": "0x0019c908",
+   "expect": "FUN_0019c908",
+   "name": "Sentry::DrawMuzzleFlashes",
+   "sheet_name": "Sentry::DrawMuzzleFlashes(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2819, body review: Matches AUF Sentry::DrawMuzzleFlashes: draws each flash, decays intensity x0.33, removes it below 0.1 by swapping with the last."
+   ]
+  },
+  {
+   "xbox": "0x0019ddb8",
+   "expect": "FUN_0019ddb8",
+   "name": "Shell::ApplyWorldDamage",
+   "sheet_name": "Shell::ApplyWorldDamage(float, WWorldPos &, float, DecalType, W",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2829, body review: Takes damage float, position and decal type: ScorchWorld plus anim stimuli at damage thresholds 10/50/250/500; called from shell/missile collision."
+   ]
+  },
+  {
+   "xbox": "0x001a1628",
+   "expect": "FUN_001a1628",
+   "name": "Draw::DrawBatchedSprite",
+   "sheet_name": "Draw::DrawBatchedSprite(float, float, float, float, EAGL::Colou",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2880, body review: Matches AUF Draw::DrawBatchedSprite: flushes the batch on texture change or full buffer via USimpleTexturedMaterial::Draw, then appends a sprite."
+   ]
+  },
+  {
+   "xbox": "0x001a30c0",
+   "expect": "FUN_001a30c0",
+   "name": "RAnimEngine::EvaluateInstance",
+   "sheet_name": "RAnimEngine::EvaluateInstance(CARP::Instance &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2918, body review: Matches AUF RAnimEngine::EvaluateInstance (keyframe index, qslerp, quattom4, translation lerp)."
+   ]
+  },
+  {
+   "xbox": "0x001a4318",
+   "expect": "FUN_001a4318",
+   "name": "__lower_bound<CARP::AnimInfo_*,_CARP::AnimInfo,_int>",
+   "sheet_name": "CARP::AnimInfo * __lower_bound<CARP::AnimInfo *, CARP::AnimInfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2939, body review: Binary search over 16-byte AnimInfo elements comparing bytes +0xc/+0xd; the lower_bound shape."
+   ]
+  },
+  {
+   "xbox": "0x001a4670",
+   "expect": "FUN_001a4670",
+   "name": "RCamera::GetMatrix4Inv",
+   "sheet_name": "RCamera::GetMatrix4Inv(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2953, body review: Calls CreateMatrix4Inv then returns this+0x60."
+   ]
+  },
+  {
+   "xbox": "0x001a74b8",
+   "expect": "FUN_001a74b8",
+   "name": "RCameraMath::VU0_TransformByForwardVec",
+   "sheet_name": "RCameraMath::VU0_TransformByForwardVec(MATRIX4 &, MATRIX4 &, MA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2981, body review: Builds a matrix from the input matrix's forward row via GenerateMatrix4 (0x1a7558) then multiplies the matrices, after VU0_InvTransformByForwardVec."
+   ]
+  },
+  {
+   "xbox": "0x001a77b0",
+   "expect": "FUN_001a77b0",
+   "name": "RCameraMath::FindAngleBetweenVectors",
+   "sheet_name": "RCameraMath::FindAngleBetweenVectors(COORD4 &, COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2987, body review: Matches AUF FindAngleBetweenVectors: dot product, clamped acos helper, cross product sign test."
+   ]
+  },
+  {
+   "xbox": "0x001a7948",
+   "expect": "FUN_001a7948",
+   "name": "CompareM4_global_ctors",
+   "sheet_name": "global constructors keyed to CompareM4(MATRIX4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2988, body review: In the ctors table and calls the init helper with (1,0xffff), directly after RCameraMath's functions."
+   ]
+  },
+  {
+   "xbox": "0x001ab050",
+   "expect": "FUN_001ab050",
+   "name": "RDrawGroup::AddToTranslucentList",
+   "sheet_name": "RDrawGroup::AddToTranslucentList(RRenderRequest &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3050, body review: corrected from 0x1ab220 (an _Rb_tree _M_erase); 0x1ab050 push_backs the element onto the vector at this+0, exactly like AUF AddToTranslucentList, right after AddToList."
+   ]
+  },
+  {
+   "xbox": "0x001aee60",
+   "expect": "FUN_001aee60",
+   "name": "RLightManager::ClearAllLights",
+   "sheet_name": "RLightManager::ClearAllLights(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3135, body review: Zeroes the light counts and MEM_fills the light blocks."
+   ]
+  },
+  {
+   "xbox": "0x001af638",
+   "expect": "FUN_001af638",
+   "name": "RLightManager::NumPositionalLightsAffecting",
+   "sheet_name": "RLightManager::NumPositionalLightsAffecting(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3146, body review: corrected from 0x1af708 (a dynamic-light flicker intensity function); 0x1af638 counts positional lights within radius+10 of the COORD4, returning 1 when forced; called from SendPerCarInstance."
+   ]
+  },
+  {
+   "xbox": "0x001afd50",
+   "expect": "FUN_001afd50",
+   "name": "RHighLevelLightManager::Process",
+   "sheet_name": "RHighLevelLightManager::Process(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3151, body review: Matches AUF RHighLevelLightManager::Process (AddPositionalLight loop, then explosion lights fading over time)."
+   ]
+  },
+  {
+   "xbox": "0x001affd0",
+   "expect": "FUN_001affd0",
+   "name": "RLightManager::DisablePositionalLighting",
+   "sheet_name": "RLightManager::DisablePositionalLighting(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3152, body review: corrected from 0x1b0038 (a light-block builder); 0x1affd0 stores the bool at +0x70 and saves/zeroes or restores the positional light block."
+   ]
+  },
+  {
+   "xbox": "0x001b0158",
+   "expect": "FUN_001b0158",
+   "name": "RLightManager::RefreshLightBlocks",
+   "sheet_name": "RLightManager::RefreshLightBlocks(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3154, body review: Rebuilds the 4 light blocks via 0x1b0038 from stored angles and resets default directions; called from the RLightManager ctor."
+   ]
+  },
+  {
+   "xbox": "0x001b0cb8",
+   "expect": "FUN_001b0cb8",
+   "name": "ROffscreenBuffer::Begin",
+   "sheet_name": "ROffscreenBuffer::Begin(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3183, body review: Lock, TextureRenderContext::BeginFrame, BeginView, ClearViewPort; called from MakeCopy/MakeTexCopy."
+   ]
+  },
+  {
+   "xbox": "0x001b0f28",
+   "expect": "FUN_001b0f28",
+   "name": "ROffscreenBuffer::ROffscreenBuffer_global_ctors",
+   "sheet_name": "global constructors keyed to ROffscreenBuffer::ROffscreenBuffer",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3185, body review: corrected from 0x1b0ef0 (the static-init helper itself); 0x1b0f28 is in the ctors table and calls it with (1,0xffff)."
+   ]
+  },
+  {
+   "xbox": "0x001b1860",
+   "expect": "FUN_001b1860",
+   "name": "RPathEngine::RPathHandle::SetThrottle",
+   "sheet_name": "RPathEngine::RPathHandle::SetThrottle(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3198, body review: Setter for +0xbc; field order throttle<accel<desired matches AUF (+0x30,+0x32,+0x34); called from EPathSetThrottle*."
+   ]
+  },
+  {
+   "xbox": "0x001b1868",
+   "expect": "FUN_001b1868",
+   "name": "RPathEngine::RPathHandle::SetDesiredThrottle",
+   "sheet_name": "RPathEngine::RPathHandle::SetDesiredThrottle(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3199, body review: Setter for +0xc4, the third field in AUF order (desired throttle +0x34); called from EPathChange/MultiplyThrottle."
+   ]
+  },
+  {
+   "xbox": "0x001b1870",
+   "expect": "FUN_001b1870",
+   "name": "RPathEngine::RPathHandle::SetAcceleration",
+   "sheet_name": "RPathEngine::RPathHandle::SetAcceleration(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3200, body review: Setter for +0xc0, the middle field in AUF order (acceleration +0x32)."
+   ]
+  },
+  {
+   "xbox": "0x001b1878",
+   "expect": "FUN_001b1878",
+   "name": "RPathEngine::RPathHandle::SetAccelDelay",
+   "sheet_name": "RPathEngine::RPathHandle::SetAccelDelay(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3201, body review: Stores the unsigned delay at +0xc8, after the throttle/accel fields; AUF stores it converted at the next field."
+   ]
+  },
+  {
+   "xbox": "0x001b18a8",
+   "expect": "FUN_001b18a8",
+   "name": "RPathEngine::RPathHandle::GetOrientMat",
+   "sheet_name": "RPathEngine::RPathHandle::GetOrientMat(MATRIX4 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3204, body review: Copies a 4x4 matrix from the handle into the MATRIX4& argument; callers are spline-path movement code."
+   ]
+  },
+  {
+   "xbox": "0x001b1f68",
+   "expect": "FUN_001b1f68",
+   "name": "RPathEngine::GetNextPathHandle",
+   "sheet_name": "RPathEngine::GetNextPathHandle(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3212, body review: Advances the static path-handle iterator and returns the handle or 0 at list end, like AUF GetNextPathHandle."
+   ]
+  },
+  {
+   "xbox": "0x001b2058",
+   "expect": "FUN_001b2058",
+   "name": "RPathEngine::Update",
+   "sheet_name": "RPathEngine::Update(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3217, body review: corrected from 0x1b21f0 (an _Rb_tree _M_erase); 0x1b2058 calls RPathHandle::Update(float) for every handle in the list, like AUF RPathEngine::Update."
+   ]
+  },
+  {
+   "xbox": "0x001b20c8",
+   "expect": "FUN_001b20c8",
+   "name": "RPathEngine::GetPathHandle",
+   "sheet_name": "RPathEngine::GetPathHandle(CARP::Instance *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3219, body review: corrected from 0x1b2258 (an _Rb_tree _M_erase); 0x1b20c8 walks the path list returning the handle whose instance matches, like AUF GetPathHandle."
+   ]
+  },
+  {
+   "xbox": "0x001b8ae0",
+   "expect": "FUN_001b8ae0",
+   "name": "RPlayerCamera::CheckObjectCollisions",
+   "sheet_name": "RPlayerCamera::CheckObjectCollisions(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3249, body review: Loops physics objects skipping own, GetRigidBody, calls ellipse-adjust helper; same shape as AUF."
+   ]
+  },
+  {
+   "xbox": "0x001b8d08",
+   "expect": "FUN_001b8d08",
+   "name": "RPlayerCamera::AdjustCamAroundObjectEllipse",
+   "sheet_name": "RPlayerCamera::AdjustCamAroundObjectEllipse(COORD4 &, RigidBody",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3250, body review: Only callee of CheckObjectCollisions; rigidbody-null branch and kCameraObjectRadiusEx scaling as in AUF."
+   ]
+  },
+  {
+   "xbox": "0x001bbf70",
+   "expect": "FUN_001bbf70",
+   "name": "RPlayerCamera::DoSmoothModeChange",
+   "sheet_name": "RPlayerCamera::DoSmoothModeChange(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3284, body review: Bool flag/mode-table test called from every Update*Cam function, sits between RestartCamera and SetCameraLookBack."
+   ]
+  },
+  {
+   "xbox": "0x001bc0e0",
+   "expect": "FUN_001bc0e0",
+   "name": "RPlayerCamera::SetAutoDriveRotation",
+   "sheet_name": "RPlayerCamera::SetAutoDriveRotation(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3287, body review: corrected from 0x001bc1e8: 0x1bc0e0 takes (float,this) and returns scaled rotation, called by SetAutoDriveRotationX/Y; 0x1bc1e8 is a (float*,float*) clamp helper (sizes sum to sheet 0x2b0)."
+   ]
+  },
+  {
+   "xbox": "0x001bd198",
+   "expect": "FUN_001bd198",
+   "name": "RPlayerCamera::SetControlToCPU",
+   "sheet_name": "RPlayerCamera::SetControlToCPU(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3308, body review: Stores bool arg into control struct (+0x354)->0x10; called from EControlToCPU/EControlToPlayer event handlers."
+   ]
+  },
+  {
+   "xbox": "0x001bd2b8",
+   "expect": "FUN_001bd2b8",
+   "name": "RPlayerCamera::AbortCinematic",
+   "sheet_name": "RPlayerCamera::AbortCinematic(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3312, body review: Clears cinematic flag, clears director queue list, zeroes two control fields - matches AUF."
+   ]
+  },
+  {
+   "xbox": "0x001bd2f8",
+   "expect": "FUN_001bd2f8",
+   "name": "RPlayerCamera::CameraAiming",
+   "sheet_name": "RPlayerCamera::CameraAiming(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3313, body review: Null-checked read of control struct field, matches AUF CameraAiming."
+   ]
+  },
+  {
+   "xbox": "0x001bd4b8",
+   "expect": "FUN_001bd4b8",
+   "name": "RPlayerCamera::GetMaxTumble",
+   "sheet_name": "RPlayerCamera::GetMaxTumble(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3319, body review: Returns RCameraIniLoader::kMaxTumble, identical to AUF."
+   ]
+  },
+  {
+   "xbox": "0x001bd878",
+   "expect": "FUN_001bd878",
+   "name": "RPlayerCamera::operator_new",
+   "sheet_name": "RPlayerCamera::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3321, body review: FastAlloc(size,\"RPlayerCamera\")."
+   ]
+  },
+  {
+   "xbox": "0x001bd898",
+   "expect": "FUN_001bd898",
+   "name": "RPlayerCamera::operator_delete",
+   "sheet_name": "RPlayerCamera::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3322, body review: FastFree(p,size) directly after RPlayerCamera operator new."
+   ]
+  },
+  {
+   "xbox": "0x001bda78",
+   "expect": "FUN_001bda78",
+   "name": "RPlayerCamera::fBumperCamInfo_global_ctors",
+   "sheet_name": "global constructors keyed to RPlayerCamera::fBumperCamInfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3342, body review: corrected from 0x001bd898 (operator delete): 0x1bda78 is the ctors-table stub calling helper(1,0xffff)."
+   ]
+  },
+  {
+   "xbox": "0x001be8b8",
+   "expect": "FUN_001be8b8",
+   "name": "RPlayerCamState::RPlayerCamState_global_ctors",
+   "sheet_name": "global constructors keyed to RPlayerCamState::RPlayerCamState(R",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3353, body review: corrected from 0x001bea00 (atan2f wrapper): 0x1be8b8 is the ctors-table stub calling helper(1,0xffff) after RPlayerCamState code."
+   ]
+  },
+  {
+   "xbox": "0x001beba0",
+   "expect": "FUN_001beba0",
+   "name": "RPlayerViewCamera::ConfigureView",
+   "sheet_name": "RPlayerViewCamera::ConfigureView(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3357, body review: RefreshLODMultiplier then Setup2dFrustrum with far-plane scaling, same shape as AUF ConfigureView; vtable ref."
+   ]
+  },
+  {
+   "xbox": "0x001bf000",
+   "expect": "FUN_001bf000",
+   "name": "SetFEAnimation",
+   "sheet_name": "SetFEAnimation(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3367, body review: Stores float into a global and calls SetProcAnimParamList(&it,1)."
+   ]
+  },
+  {
+   "xbox": "0x001bf028",
+   "expect": "FUN_001bf028",
+   "name": "SetFEXform",
+   "sheet_name": "SetFEXform(MATRIX4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3368, body review: Calls SetProcAnimXFormList(matrix,1), paired with SetFEAnimation."
+   ]
+  },
+  {
+   "xbox": "0x001c0898",
+   "expect": "FUN_001c0898",
+   "name": "GetInstanceMatrix_global_ctors",
+   "sheet_name": "global constructors keyed to GetInstanceMatrix(CARP::Instance &",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3369, body review: Ctors-table stub calling helper(1,0xffff) before RRandom."
+   ]
+  },
+  {
+   "xbox": "0x001c08b8",
+   "expect": "FUN_001c08b8",
+   "name": "RRandom::CleanUp",
+   "sheet_name": "RRandom::CleanUp(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3370, body review: Empty, called from Render_KillLibRender; AUF CleanUp is empty too."
+   ]
+  },
+  {
+   "xbox": "0x001c18b0",
+   "expect": "FUN_001c18b0",
+   "name": "RReflection::Lock",
+   "sheet_name": "RReflection::Lock(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3384, body review: Locks two TARs, SetupFrameBuffers, clears 256x256 target; called from Begin."
+   ]
+  },
+  {
+   "xbox": "0x001c28b0",
+   "expect": "FUN_001c28b0",
+   "name": "RReflection::EnableReflectionMapWarpage",
+   "sheet_name": "RReflection::EnableReflectionMapWarpage(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3406, body review: Empty stub called from PreRender with a bool arg (a1=0), in order after GetReflectionMatrix."
+   ]
+  },
+  {
+   "xbox": "0x001c2b60",
+   "expect": "FUN_001c2b60",
+   "name": "RReflection::fgThis_global_ctors",
+   "sheet_name": "global constructors keyed to RReflection::fgThis",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3413, body review: Ctors-table stub calling helper(1,0xffff) after RReflection::DoRender."
+   ]
+  },
+  {
+   "xbox": "0x001c2fa0",
+   "expect": "FUN_001c2fa0",
+   "name": "ShowAlphaChannel",
+   "sheet_name": "ShowAlphaChannel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3422, body review: Called from RRenderDebugViewScreenSpace::Debug; SetRenderMask/SetAlphaCorrection/DrawQuad full-screen quad."
+   ]
+  },
+  {
+   "xbox": "0x001c3138",
+   "expect": "FUN_001c3138",
+   "name": "SetMipmapParams",
+   "sheet_name": "SetMipmapParams(EAGL::MIPMAPMode, EAGL::FilterMode, int, int, i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3423, body review: Walks world article textures setting mipmap mode (0/2/4), filter mode and further int bitfields from its 5 args."
+   ]
+  },
+  {
+   "xbox": "0x001c3908",
+   "expect": "FUN_001c3908",
+   "name": "gNumParticles_global_ctors",
+   "sheet_name": "global constructors keyed to gNumParticles",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3432, body review: Ctors-table stub calling helper(1,0xffff) before RRenderHigh."
+   ]
+  },
+  {
+   "xbox": "0x001c5100",
+   "expect": "FUN_001c5100",
+   "name": "RRenderHUDView::operator_delete",
+   "sheet_name": "RRenderHUDView::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3459, body review: FastFree(p,size) right after RRenderHUDView operator new."
+   ]
+  },
+  {
+   "xbox": "0x001c60c0",
+   "expect": "FUN_001c60c0",
+   "name": "RRenderWorldCamera::Debug",
+   "sheet_name": "RRenderWorldCamera::Debug(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3482, body review: Empty vtable-referenced function after AddPlayerHeadlight; AUF Debug is empty."
+   ]
+  },
+  {
+   "xbox": "0x001c6330",
+   "expect": "FUN_001c6330",
+   "name": "RRenderWorldCamera::RRenderWorldCamera_global_ctors",
+   "sheet_name": "global constructors keyed to RRenderWorldCamera::RRenderWorldCa",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3487, body review: Ctors-table stub calling helper(1,0xffff) after RRenderWorldCamera operator delete."
+   ]
+  },
+  {
+   "xbox": "0x001c6b70",
+   "expect": "FUN_001c6b70",
+   "name": "RRenderWorldCulling::InitializePlaneInfo",
+   "sheet_name": "RRenderWorldCulling::InitializePlaneInfo(float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3493, body review: Stores fov/dist, cos/sin, normalises plane - same as AUF InitializePlaneInfo; called from ctor and Setup2dFrustrum."
+   ]
+  },
+  {
+   "xbox": "0x001c6fa8",
+   "expect": "FUN_001c6fa8",
+   "name": "RSceneObj::ResolveObjectData",
+   "sheet_name": "RSceneObj::ResolveObjectData(char *, bool &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3496, body review: *flag=0; return 0 - identical to AUF, vtable-referenced."
+   ]
+  },
+  {
+   "xbox": "0x001c9e38",
+   "expect": "FUN_001c9e38",
+   "name": "RSceneObj::GetCollisionInfo",
+   "sheet_name": "RSceneObj::GetCollisionInfo(COORD4 &, COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3558, body review: Averages collision info when timestamp matches else deletes it - same as AUF GetCollisionInfo."
+   ]
+  },
+  {
+   "xbox": "0x001cb000",
+   "expect": "FUN_001cb000",
+   "name": "RSceneObj::GetViewDistance",
+   "sheet_name": "RSceneObj::GetViewDistance(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3576, body review: GetTransform then GetArticleViewDistance, as AUF; called from ResetSceneObjDistances."
+   ]
+  },
+  {
+   "xbox": "0x001cb0d0",
+   "expect": "FUN_001cb0d0",
+   "name": "RSceneObj::ConvertInstanceToLocal",
+   "sheet_name": "RSceneObj::ConvertInstanceToLocal(CARP::Instance *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3577, body review: Takes an instance, finds it in the group's instance data and returns the matching local instance; called from EHide/EShowInstanceStatic."
+   ]
+  },
+  {
+   "xbox": "0x001cb398",
+   "expect": "FUN_001cb398",
+   "name": "_Rb_tree<MapKey,_RCARPFile>::_M_erase",
+   "sheet_name": "_Rb_tree<MapKey, pair<MapKey, MapElement<RCARPFile> >, _Select1",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 3578, body review: Recurses right child, walks left, FastFree(node,0x98) - SGI _M_erase; called from ~URefCounter<RCARPFile>."
+   ]
+  },
+  {
+   "xbox": "0x001cb400",
+   "expect": "FUN_001cb400",
+   "name": "URefCounter<RCARPFile>::URefCounter",
+   "sheet_name": "URefCounter<RCARPFile>::URefCounter(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3579, body review: Allocates 0x98 header node \"STL\" and initialises empty map; called from Get."
+   ]
+  },
+  {
+   "xbox": "0x001cb590",
+   "expect": "FUN_001cb590",
+   "name": "URefCounter<RCARPFile>::GetReference",
+   "sheet_name": "URefCounter<RCARPFile>::GetReference(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3582, body review: strcpy key, map find, return node+0x94 or 0; called from RSceneObj Load/PreLoad."
+   ]
+  },
+  {
+   "xbox": "0x001cbc10",
+   "expect": "FUN_001cbc10",
+   "name": "URefCounter<RCARPFile>::AddReference",
+   "sheet_name": "URefCounter<RCARPFile>::AddReference(char *, RCARPFile *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3585, body review: find, insert if absent storing pointer at +0x94, increments refcount +0x90."
+   ]
+  },
+  {
+   "xbox": "0x001cbcf8",
+   "expect": "FUN_001cbcf8",
+   "name": "URefCounter<RCARPFile>::RemoveReference",
+   "sheet_name": "URefCounter<RCARPFile>::RemoveReference(RCARPFile *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3586, body review: Iterates map for value==arg, decrements count and erases node at zero; called from PurgePreloaded/Close."
+   ]
+  },
+  {
+   "xbox": "0x001cc9b0",
+   "expect": "FUN_001cc9b0",
+   "name": "RSkeletalObj::UpdateSpringMassSystem",
+   "sheet_name": "RSkeletalObj::UpdateSpringMassSystem(RigidBody &, MATRIX4 &, CO",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3617, body review: Large VU0 spring-mass routine using GetLocalVelocity/GetLocalAngularVelocity, called only from UpdatePosition."
+   ]
+  },
+  {
+   "xbox": "0x001cd398",
+   "expect": "FUN_001cd398",
+   "name": "RSkeletalObj::RSkeletalObj_global_ctors",
+   "sheet_name": "global constructors keyed to RSkeletalObj::RSkeletalObj(CARP::I",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3627, body review: Ctors-table stub calling helper(1,0xffff) after RSkeletalObj::NumBones."
+   ]
+  },
+  {
+   "xbox": "0x001ceaf0",
+   "expect": "FUN_001ceaf0",
+   "name": "_Rb_tree<StateRef,_StateRef>::insert_unique",
+   "sheet_name": "_Rb_tree<StateRef, StateRef, _Identity<StateRef>, less<StateRef",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 3638, body review: Descends tree with memcmp(0x80) key compare, _M_insert at leftmost or after decrement check - insert_unique; called from GetGeoPrimState."
+   ]
+  },
+  {
+   "xbox": "0x001cfcd0",
+   "expect": "FUN_001cfcd0",
+   "name": "RTextureContext::operator_new",
+   "sheet_name": "RTextureContext::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3661, body review: FastAlloc(size,\"RTextureContext\")."
+   ]
+  },
+  {
+   "xbox": "0x001cfcf0",
+   "expect": "FUN_001cfcf0",
+   "name": "RTextureContext::operator_delete",
+   "sheet_name": "RTextureContext::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3662, body review: FastFree(p,size) right after RTextureContext operator new."
+   ]
+  },
+  {
+   "xbox": "0x001d0ac8",
+   "expect": "FUN_001d0ac8",
+   "name": "URefCounter<RTextureContext>::GetReference",
+   "sheet_name": "URefCounter<RTextureContext>::GetReference(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3676, body review: strcpy key, find, return +0x94 or 0; called from NewContext."
+   ]
+  },
+  {
+   "xbox": "0x001d1148",
+   "expect": "FUN_001d1148",
+   "name": "URefCounter<RTextureContext>::AddReference",
+   "sheet_name": "URefCounter<RTextureContext>::AddReference(char *, RTextureCont",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3679, body review: find, insert if absent storing pointer at +0x94, increment count; called from NewContext."
+   ]
+  },
+  {
+   "xbox": "0x001d1708",
+   "expect": "FUN_001d1708",
+   "name": "URefCounter<RTextureContext>::RemoveReference",
+   "sheet_name": "URefCounter<RTextureContext>::RemoveReference(RTextureContext *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3685, body review: Find by value, decrement count, erase at zero; same body as RCARPFile RemoveReference; called from ~RTextureContextManager."
+   ]
+  },
+  {
+   "xbox": "0x001d1ef8",
+   "expect": "FUN_001d1ef8",
+   "name": "RTimeData::Update",
+   "sheet_name": "RTimeData::Update(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3693, body review: Copies frame counter to fTime and float fTimeData, as AUF Update; called from StartFrameRender."
+   ]
+  },
+  {
+   "xbox": "0x001d2aa0",
+   "expect": "FUN_001d2aa0",
+   "name": "RVehicle::TriggerIlluminate",
+   "sheet_name": "RVehicle::TriggerIlluminate(int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3702, body review: corrected from 0x001d2ac0: 0x1d2aa0 is the vtable entry taking (this,int,int) storing an illuminate value per light; 0x1d2ac0 is a float fade helper for SetPerObjectBuffers."
+   ]
+  },
+  {
+   "xbox": "0x001d3e30",
+   "expect": "FUN_001d3e30",
+   "name": "RVehicle::Debug",
+   "sheet_name": "RVehicle::Debug(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3725, body review: Empty vtable-referenced function after RenderShadowVolume (Debug slot)."
+   ]
+  },
+  {
+   "xbox": "0x001d4078",
+   "expect": "FUN_001d4078",
+   "name": "RVehicle::operator_delete",
+   "sheet_name": "RVehicle::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3728, body review: FastFree(p,size) right after RVehicle operator new."
+   ]
+  },
+  {
+   "xbox": "0x001d40d0",
+   "expect": "FUN_001d40d0",
+   "name": "RVehicle::fDoSimpleShadow_global_ctors",
+   "sheet_name": "global constructors keyed to RVehicle::fDoSimpleShadow",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3733, body review: Ctors-table stub calling helper(1,0xffff) before RViewCamera ctor."
+   ]
+  },
+  {
+   "xbox": "0x001d51f8",
+   "expect": "FUN_001d51f8",
+   "name": "RViewCamera::fCulling_global_dtors",
+   "sheet_name": "global destructors keyed to RViewCamera::fCulling",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3789, body review: Dtors-table stub calling helper(0,0xffff) right after the fCulling global ctors stub."
+   ]
+  },
+  {
+   "xbox": "0x001d6cd0",
+   "expect": "FUN_001d6cd0",
+   "name": "RWorldCamera::operator_new",
+   "sheet_name": "RWorldCamera::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3824, body review: FastAlloc(size,\"RWorldCamera\")."
+   ]
+  },
+  {
+   "xbox": "0x001d6cf0",
+   "expect": "FUN_001d6cf0",
+   "name": "RWorldCamera::operator_delete",
+   "sheet_name": "RWorldCamera::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3825, body review: FastFree(p,size) right after RWorldCamera operator new."
+   ]
+  },
+  {
+   "xbox": "0x001d6d10",
+   "expect": "FUN_001d6d10",
+   "name": "RWorldCamera::CreateDBVars",
+   "sheet_name": "RWorldCamera::CreateDBVars(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3826, body review: Empty vtable-referenced function; AUF CreateDBVars is empty."
+   ]
+  },
+  {
+   "xbox": "0x001d6d30",
+   "expect": "FUN_001d6d30",
+   "name": "RWorldCamera::CameraInputCallback",
+   "sheet_name": "RWorldCamera::CameraInputCallback(int, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3829, body review: Empty vtable-referenced function before RWorldCamera gctors; AUF CameraInputCallback is empty."
+   ]
+  },
+  {
+   "xbox": "0x001d7d78",
+   "expect": "FUN_001d7d78",
+   "name": "RBulletStreak::Add",
+   "sheet_name": "RBulletStreak::Add(COORD4 &, COORD4 &, RBulletStreak::StreakTyp",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 3889, body review: COORD4 streak builder (camera-facing cross product, type table) called from the COORD3 wrapper 0x1d8048, as in AUF."
+   ]
+  },
+  {
+   "xbox": "0x001d93c8",
+   "expect": "FUN_001d93c8",
+   "name": "RColorize::fgThis_RColorize_global_ctors",
+   "sheet_name": "global constructors keyed to RColorize::fgThis_RColorize",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3909, body review: corrected from 0x001d93e8 (a helper called by RDebris::RDebris): 0x1d93c8 is the ctors-table stub calling helper(1,0xffff) after RColorize::Reset."
+   ]
+  },
+  {
+   "xbox": "0x001d9bb8",
+   "expect": "FUN_001d9bb8",
+   "name": "RDebrisType::Add",
+   "sheet_name": "RDebrisType::Add(COORD4 &, COORD4 &, unsigned int, unsigned int",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3921, body review: Appends pos/vel entry to a 0x40-slot debris array with lifetime 0x46; called from RDebris Add."
+   ]
+  },
+  {
+   "xbox": "0x001dd248",
+   "expect": "FUN_001dd248",
+   "name": "REmpBolts::CreateVehicleBolt",
+   "sheet_name": "REmpBolts::CreateVehicleBolt(REmpBolts::Anchor *, REmpBolts::An",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3955, body review: Takes two anchor pointers, AddRoundedBolt between them plus LocateFX/ApplyWorldEffects; called from TrySpawnBolt."
+   ]
+  },
+  {
+   "xbox": "0x001dd4a0",
+   "expect": "FUN_001dd4a0",
+   "name": "REmpBolts::CreateWorldBolt",
+   "sheet_name": "REmpBolts::CreateWorldBolt(REmpBolts::Anchor *, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3956, body review: Anchor plus world point passed to RLightning::AddBolt; called from TrySpawnBolt, follows CreateVehicleBolt."
+   ]
+  },
+  {
+   "xbox": "0x001df198",
+   "expect": "FUN_001df198",
+   "name": "RFlockManager::FlockDB",
+   "sheet_name": "RFlockManager::FlockDB(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 3990, body review: Empty debug stub called from flock update, sits exactly after addFlock."
+   ]
+  },
+  {
+   "xbox": "0x001e0358",
+   "expect": "FUN_001e0358",
+   "name": "RLensFlareManager::AddFlare",
+   "sheet_name": "RLensFlareManager::AddFlare(COORD4 &, RLensFlareManager::FlareT",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4019, body review: TransformPoint to screen, bounds test by mode, store flare (<10 per buffer) - same as AUF AddFlare."
+   ]
+  },
+  {
+   "xbox": "0x001e2d18",
+   "expect": "FUN_001e2d18",
+   "name": "RLightning::Bolt::Draw",
+   "sheet_name": "RLightning::Bolt::Draw(RLightning &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4060, body review: CalcWorldPos per control point, BeginBoltDraw, Segment::Draw/AdvanceBoltDraw loop, FinishBoltDraw; called from RLightning::Draw."
+   ]
+  },
+  {
+   "xbox": "0x001e3028",
+   "expect": "FUN_001e3028",
+   "name": "vector<RLightning::Bolt_*,_allocator<RLightning::Bolt_*>_>::_M_insert_aux",
+   "sheet_name": "vector<RLightning::Bolt *, allocator<RLightning::Bolt *> >::_M_",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4061, body review: Vector-of-pointers grow-by-doubling with FastAlloc \"STL\"/memmove; called from AddBolt/AddRoundedBolt."
+   ]
+  },
+  {
+   "xbox": "0x001e5cd8",
+   "expect": "FUN_001e5cd8",
+   "name": "CalcEmitVal",
+   "sheet_name": "CalcEmitVal(int, int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4105, body review: (int,int,int,int)->float emission rate calc called from RParticleSystem ctor and SetSystem, right before InitData."
+   ]
+  },
+  {
+   "xbox": "0x001e9100",
+   "expect": "FUN_001e9100",
+   "name": "RMovableParticleSystem::operator_delete",
+   "sheet_name": "RMovableParticleSystem::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4169, body review: Body is FastFree(p,size) between operator new and SetEmitterPosition."
+   ]
+  },
+  {
+   "xbox": "0x001ea468",
+   "expect": "FUN_001ea468",
+   "name": "RPostProcessing::Debug",
+   "sheet_name": "RPostProcessing::Debug(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4197, body review: Empty debug stub in exact run between Draw (0x1ea460) and GrabBackBuffer."
+   ]
+  },
+  {
+   "xbox": "0x001ea470",
+   "expect": "FUN_001ea470",
+   "name": "RPostProcessing::GrabBackBuffer",
+   "sheet_name": "RPostProcessing::GrabBackBuffer(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4198, body review: Copies back buffer via ROffscreenBuffer::MakeCopy (gated on sniper zoom); called from DrawPostProcessingEffects."
+   ]
+  },
+  {
+   "xbox": "0x001eb078",
+   "expect": "FUN_001eb078",
+   "name": "RScorchWorld::ScorchGround",
+   "sheet_name": "RScorchWorld::ScorchGround(WWorldPos &, COORD4 &, float, DecalT",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4208, body review: Same shape as AUF ScorchGround: FindClosestFace, face-flag early outs, height at point, normal via cross product, AddDecal; callers ESpawnExplosion/FireWeapon."
+   ]
+  },
+  {
+   "xbox": "0x001eb6b0",
+   "expect": "FUN_001eb6b0",
+   "name": "RShadowMap::ShadowPrivateData::ShadowPrivateData",
+   "sheet_name": "RShadowMap::ShadowPrivateData::ShadowPrivateData(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4210, body review: Creates two 128x128 textures and a TextureRenderContext, returns this; called only from RShadowMap ctor; sits just before ~ShadowPrivateData."
+   ]
+  },
+  {
+   "xbox": "0x001ec390",
+   "expect": "FUN_001ec390",
+   "name": "RShadowMap::Resolve",
+   "sheet_name": "RShadowMap::Resolve(char *, bool &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4227, body review: strcmp on GAME::Shadow* symbol names, returns address and sets the bool& out; registered via AddMajorCallbacks."
+   ]
+  },
+  {
+   "xbox": "0x001ec4a0",
+   "expect": "FUN_001ec4a0",
+   "name": "RShadowMap::DrawSimpleShadow",
+   "sheet_name": "RShadowMap::DrawSimpleShadow(RVehicle &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4228, body review: Matches AUF DrawSimpleShadow (static USimpleTexturedMaterial, quad UV table, GetRigidBody); called from DrawShadowUnderCar."
+   ]
+  },
+  {
+   "xbox": "0x001ecdf8",
+   "expect": "FUN_001ecdf8",
+   "name": "RShadowMap::fgThis_RShadowMap_global_ctors",
+   "sheet_name": "global constructors keyed to RShadowMap::fgThis_RShadowMap",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4237, body review: Ctors-table stub (DATA 0x362f80) calling helper(1,0xffff) right after RShadowMap::DoRender."
+   ]
+  },
+  {
+   "xbox": "0x001ece18",
+   "expect": "FUN_001ece18",
+   "name": "RSky::Draw",
+   "sheet_name": "RSky::Draw(CARP::Instance *, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4238, body review: Matches AUF RSky::Draw: DisableFog, Z-writes off unless bool, QuickDrawInstance loop over instances, sun angle statics."
+   ]
+  },
+  {
+   "xbox": "0x001ed8d8",
+   "expect": "FUN_001ed8d8",
+   "name": "RSniperZoom::SetupVerts",
+   "sheet_name": "RSniperZoom::SetupVerts(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4245, body review: Takes only this, fills vertex position/colour arrays for the zoom ring via helper 0x1ed7b0; called from RSniperZoom::Draw."
+   ]
+  },
+  {
+   "xbox": "0x001ede28",
+   "expect": "FUN_001ede28",
+   "name": "RSniperZoom::fgThis_RSniperZoom_global_ctors",
+   "sheet_name": "global constructors keyed to RSniperZoom::fgThis_RSniperZoom",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4256, body review: corrected from 0x1ede48 (a UV-lookup helper called by RVehicleParticle::Init); 0x1ede28 is the ctors-table stub (DATA 0x362f88) calling 0x1edc18(1,0xffff); sheet 0x110 = 0x20 stub + 0xf0 static helper."
+   ]
+  },
+  {
+   "xbox": "0x001ef338",
+   "expect": "FUN_001ef338",
+   "name": "RVehicleParticle::ResetAll",
+   "sheet_name": "RVehicleParticle::ResetAll(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4268, body review: Iterates the global RVehicleParticle set calling Reset on each; called from RestartTrackRender."
+   ]
+  },
+  {
+   "xbox": "0x001f0148",
+   "expect": "FUN_001f0148",
+   "name": "_Rb_tree<RVehicleParticle_*,_RVehicleParticle_*>::insert_unique",
+   "sheet_name": "_Rb_tree<RVehicleParticle *, RVehicleParticle *, _Identity<RVeh",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4275, body review: Descends tree comparing key, checks predecessor, calls _M_insert (0x1efdf0), returns pair; called from UpdateCar."
+   ]
+  },
+  {
+   "xbox": "0x001f0b80",
+   "expect": "FUN_001f0b80",
+   "name": "RWindow::Kill",
+   "sheet_name": "RWindow::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4294, body review: corrected from 0x1f0b88 (a batched draw helper called by DrawBrokenWindows); 0x1f0b80 is empty like AUF RWindow::Kill and is called from KillGameRender."
+   ]
+  },
+  {
+   "xbox": "0x001f5a48",
+   "expect": "FUN_001f5a48",
+   "name": "RTyreTrack::Break",
+   "sheet_name": "RTyreTrack::Break(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4336, body review: Same shape as AUF RTyreTrack::Break: bumps ring indices at +0x900/0x904, clears +0x914/915, writes colour to +0x800 table."
+   ]
+  },
+  {
+   "xbox": "0x001f5ff8",
+   "expect": "FUN_001f5ff8",
+   "name": "OBB::CheckOBBOverlapAndFindIntersection",
+   "sheet_name": "OBB::CheckOBBOverlapAndFindIntersection(OBB *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4344, body review: Same shape as AUF CheckOBBOverlapAndFindIntersection (two-pass axis loop swapping OBBs, axis order 0,2,1); callers CollideWithObject/World."
+   ]
+  },
+  {
+   "xbox": "0x001f63a8",
+   "expect": "FUN_001f63a8",
+   "name": "PackedRigidBody::GetLinearVelocityCH",
+   "sheet_name": "PackedRigidBody::GetLinearVelocityCH(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4349, body review: GetOrientMat then dot of velocity (this+0x20) with orientation axis[int]; follows GetScalarVelocity."
+   ]
+  },
+  {
+   "xbox": "0x001f86e8",
+   "expect": "FUN_001f86e8",
+   "name": "RigidBody::ResolveForce",
+   "sheet_name": "RigidBody::ResolveForce(COORD3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4386, body review: Identical to AUF ResolveForce: skip if state 3, set state 2, clear flag bit, add force to +0x60."
+   ]
+  },
+  {
+   "xbox": "0x00201d10",
+   "expect": "FUN_00201d10",
+   "name": "_Rb_tree<unsigned_int,_PhysicsObject_*>::_M_erase",
+   "sheet_name": "_Rb_tree<unsigned int, pair<unsigned int, PhysicsObject *>, _Se",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4499, body review: Recursive right, walk left, FastFree(node,0x18) = map<uint,PhysicsObject*> node; called from ~Simulation."
+   ]
+  },
+  {
+   "xbox": "0x00201d78",
+   "expect": "FUN_00201d78",
+   "name": "_Rb_tree<PhysicsObjMapIterator,_PhysicsObjMapIterator>::_M_erase",
+   "sheet_name": "_Rb_tree<PhysicsObjMapIterator, PhysicsObjMapIterator, _Identit",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4500, body review: Recursive _M_erase freeing 0x14-byte nodes (set of 4-byte PhysicsObjMapIterator); callers ~Simulation and DeleteDeadObjects."
+   ]
+  },
+  {
+   "xbox": "0x00208468",
+   "expect": "FUN_00208468",
+   "name": "SMissionManager::GetEnemyGlueFactor",
+   "sheet_name": "SMissionManager::GetEnemyGlueFactor(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4627, body review: corrected from 0x208428: AUF GlueFactor returns a difficulty-indexed float and is called from DoAttackMode; 0x208468 returns float (lwc1 f0, +0x2b8..0x2c0) and is called from DoAttackMode."
+   ]
+  },
+  {
+   "xbox": "0x0020b8a8",
+   "expect": "FUN_0020b8a8",
+   "name": "SMissionRule::SMissionRule_global_ctors",
+   "sheet_name": "global constructors keyed to SMissionRule::SMissionRule(CARP::R",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4744, body review: Ctors-table stub (DATA 0x362fbc) calling 0x20b0e8(1,0xffff) after the SRule type_info functions."
+   ]
+  },
+  {
+   "xbox": "0x0020ea20",
+   "expect": "FUN_0020ea20",
+   "name": "SWeaponManager::StartNuclearSequence",
+   "sheet_name": "SWeaponManager::StartNuclearSequence(COORD3 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4778, body review: Sets this+0x54=1, start time +0x6c, copies COORD3 to +0x60 and the float to +0x70; called from ENuclearBlast; 0x20ea60 then consumes these fields."
+   ]
+  },
+  {
+   "xbox": "0x0020ea60",
+   "expect": "FUN_0020ea60",
+   "name": "SWeaponManager::HandleNuclearSequence",
+   "sheet_name": "SWeaponManager::HandleNuclearSequence(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4779, body review: corrected from 0x20f2b8 (a static initialiser building the weapon table); 0x20ea60 runs when this+0x54==1, times from +0x6c, colourise/explosion SFX/SpawnExplosion/GenerateImpulse; called from SWeaponManager::Update."
+   ]
+  },
+  {
+   "xbox": "0x00211600",
+   "expect": "FUN_00211600",
+   "name": "Util_InvSin",
+   "sheet_name": "Util_InvSin(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4801, body review: Arcsine by binary search in the trig table (calls Util_InitTrigTable lazily), returns +-0.25 turns at +-1."
+   ]
+  },
+  {
+   "xbox": "0x00212ed0",
+   "expect": "FUN_00212ed0",
+   "name": "WCollisionInstance::MakeMatrix",
+   "sheet_name": "WCollisionInstance::MakeMatrix(MATRIX4 &, bool) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4824, body review: Builds a MATRIX4 from the instance axes (cross product for the up vector), bool chooses translation or identity row; many collision callers."
+   ]
+  },
+  {
+   "xbox": "0x002138b0",
+   "expect": "FUN_002138b0",
+   "name": "WCollisionMgr::FindFaceInTriStrip",
+   "sheet_name": "WCollisionMgr::FindFaceInTriStrip(COORD3 &, WCollisionStrip *&)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4833, body review: No-matrix triangle-strip point test (this, COORD3, WCollisionStrip*&), used by the FindFaceInCInst variants."
+   ]
+  },
+  {
+   "xbox": "0x00213d68",
+   "expect": "FUN_00213d68",
+   "name": "WCollisionMgr::FindFaceInTriStrip",
+   "sheet_name": "WCollisionMgr::FindFaceInTriStrip(MATRIX4 &, COORD3 &, WCollisi",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4834, body review: Matches AUF FindFaceInTriStrip(MATRIX4&,...): scratchpad buffer or static fallback, transforms strip vertices by the matrix, GetPlaneY; called from FindFaceInCInst(MATRIX4...)."
+   ]
+  },
+  {
+   "xbox": "0x00213ff8",
+   "expect": "FUN_00213ff8",
+   "name": "WCollisionMgr::FindFaceInCInst",
+   "sheet_name": "WCollisionMgr::FindFaceInCInst(COORD3 &, WCollisionInstance &,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4835, body review: Makes the instance matrix (MakeMatrix), transforms the point, bounds check, loops strips calling FindFaceInTriStrip(COORD3...)."
+   ]
+  },
+  {
+   "xbox": "0x00214338",
+   "expect": "FUN_00214338",
+   "name": "WCollisionMgr::FindFaceInCInst",
+   "sheet_name": "WCollisionMgr::FindFaceInCInst(COORD3 &, WCollisionInstanceCach",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4836, body review: Cache-list variant: falls back to 0x213ff8 when no cache, else walks the cache list; called from WWorldPos::FindClosestFace."
+   ]
+  },
+  {
+   "xbox": "0x0021e100",
+   "expect": "FUN_0021e100",
+   "name": "WGrid::RangeCheck",
+   "sheet_name": "WGrid::RangeCheck(COORD3 *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4894, body review: const, takes this and a pointer to two COORD3s, converts both to grid cells and checks the span is < 21 cells; directly follows FindNodes(COORD3&,...)."
+   ]
+  },
+  {
+   "xbox": "0x0021e420",
+   "expect": "FUN_0021e420",
+   "name": "vector<unsigned_int,_allocator<unsigned_int>_>::_M_insert_aux",
+   "sheet_name": "vector<unsigned int, allocator<unsigned int> >::_M_insert_aux(u",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4896, body review: vector<uint> _M_insert_aux (grow x2 with FastAlloc(\"STL\"), memmove, FastFree old); callers WGrid::FindNodes/FindNodesBox."
+   ]
+  },
+  {
+   "xbox": "0x0021fef0",
+   "expect": "FUN_0021fef0",
+   "name": "DBDrawNode",
+   "sheet_name": "DBDrawNode(CARP::MapNode &, COORD4 &, bool, int, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4917, body review: Debug quad draw with no callers directly after DrawWorldAtPoint: builds a square from a COORD4 centre/radius, colour chosen by the trailing bool, DrawQuad + DrawQuadLines."
+   ]
+  },
+  {
+   "xbox": "0x00220bf8",
+   "expect": "FUN_00220bf8",
+   "name": "DistanceCheck2d_global_ctors",
+   "sheet_name": "global constructors keyed to DistanceCheck2d(COORD4 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 4931, body review: Ctors-table stub (DATA 0x362fd8) calling 0x220b88(1,0xffff) just before WRoadNetwork::Get."
+   ]
+  },
+  {
+   "xbox": "0x00222ca0",
+   "expect": "FUN_00222ca0",
+   "name": "WRoadNetwork::GetSegmentCurveStep",
+   "sheet_name": "WRoadNetwork::GetSegmentCurveStep(WRoadSegment &, float, COORD3",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 4974, body review: Gets segment nodes and forwards to GetSegmentCurveStep(COORD3&,COORD3&,WRoadSegment&,...); called from the (int,...) overload."
+   ]
+  },
+  {
+   "xbox": "0x002270e8",
+   "expect": "FUN_002270e8",
+   "name": "GetAttachedDirectionalSegment",
+   "sheet_name": "GetAttachedDirectionalSegment(WRoadNode *, short)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5001, body review: Loops over node segments returning the first whose id differs from the short and is drivable; road-network callers."
+   ]
+  },
+  {
+   "xbox": "0x00229118",
+   "expect": "FUN_00229118",
+   "name": "_Rb_tree<int,_pair<int,_WSound_*>,__Select1st<pair<int,_WSound",
+   "sheet_name": "_Rb_tree<int, pair<int, WSound *>, _Select1st<pair<int, WSound",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5025, body review: map<int,WSound*> insert_unique: descend, check predecessor, call _M_insert; called from Add."
+   ]
+  },
+  {
+   "xbox": "0x00230c48",
+   "expect": "FUN_00230c48",
+   "name": "WWorld::GetProcAnimStateFromInstance",
+   "sheet_name": "WWorld::GetProcAnimStateFromInstance(CARP::Instance *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5129, body review: Identical to AUF GetProcAnimStateFromInstance (instance range check, flag 0x10, index*0x20)."
+   ]
+  },
+  {
+   "xbox": "0x00232228",
+   "expect": "FUN_00232228",
+   "name": "WWorldPos::MakeFaceAtPoint",
+   "sheet_name": "WWorldPos::MakeFaceAtPoint(COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5149, body review: Builds a tiny triangle (+0.2 offsets) at the point and sets face fields; called from TempGetHeightInformation."
+   ]
+  },
+  {
+   "xbox": "0x002327a0",
+   "expect": "FUN_002327a0",
+   "name": "WWorldPos::HeightAtPoint",
+   "sheet_name": "WWorldPos::HeightAtPoint(COORD3 &, bool) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5153, body review: Same as AUF HeightAtPoint: if face valid, compute normal and return GetPlaneY; many callers."
+   ]
+  },
+  {
+   "xbox": "0x00232ad8",
+   "expect": "FUN_00232ad8",
+   "name": "WWorldPos::WWorldPos_global_ctors",
+   "sheet_name": "global constructors keyed to WWorldPos::WWorldPos(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5154, body review: corrected from 0x232af8 (a CANVAS trigger helper); 0x232ad8 is the ctors-table stub (DATA 0x362ff4) calling 0x232aa0(1,0xffff) before GFX::Init."
+   ]
+  },
+  {
+   "xbox": "0x00233440",
+   "expect": "FUN_00233440",
+   "name": "GFX::fGallery_global_ctors",
+   "sheet_name": "global constructors keyed to GFX::fGallery",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5187, body review: corrected from 0x233460 (static GFXGetSceneTransform, per its assert string); 0x233440 is the ctors-table stub (DATA 0x362ff8); sheet 0x1d8 = 0x20 + 0x1b8."
+   ]
+  },
+  {
+   "xbox": "0x002356d8",
+   "expect": "FUN_002356d8",
+   "name": "GFXGallery::CANVAS_SetCulling",
+   "sheet_name": "GFXGallery::CANVAS_SetCulling(AnimRef *, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5221, body review: corrected from 0x235750 (that is CANVAS_SetIntensity, called from SetIntensity); 0x2356d8 sets a bool bit in the canvas flags and is called from SetCulling."
+   ]
+  },
+  {
+   "xbox": "0x00235808",
+   "expect": "FUN_00235808",
+   "name": "GFXGallery::DEBRIS_SetState",
+   "sheet_name": "GFXGallery::DEBRIS_SetState(GFXGallery::Keys *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5224, body review: Empty stub called from CANVAS_Draw immediately before DEBRIS_Draw."
+   ]
+  },
+  {
+   "xbox": "0x00235810",
+   "expect": "FUN_00235810",
+   "name": "GFXGallery::DEBRIS_Draw",
+   "sheet_name": "GFXGallery::DEBRIS_Draw(GFXGallery::Keys *, COORD4 &, COORD4 &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5225, body review: Called from CANVAS_Draw after DEBRIS_SetState; builds debris particles from Keys (quat rotate, Add); sizes match (0x540 vs 0x538)."
+   ]
+  },
+  {
+   "xbox": "0x00237928",
+   "expect": "FUN_00237928",
+   "name": "GGallery::FONT_Draw",
+   "sheet_name": "GGallery::FONT_Draw(GGallery::Text *, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5256, body review: Takes Text* and char*; falls back to LOCALE_Symbol(text id) when the string is null, then draws."
+   ]
+  },
+  {
+   "xbox": "0x00237a50",
+   "expect": "FUN_00237a50",
+   "name": "GGallery::FONT_Draw",
+   "sheet_name": "GGallery::FONT_Draw(char *, float, float, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5257, body review: FONT_Draw with explicit colour argument written to the font colour field; otherwise identical to the 3-arg version."
+   ]
+  },
+  {
+   "xbox": "0x00237b80",
+   "expect": "FUN_00237b80",
+   "name": "GGallery::FONT_Draw",
+   "sheet_name": "GGallery::FONT_Draw(char *, float, float)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5258, body review: FONT_Draw(char*,x,y) using this+0x50 default colour; callers DrawFont*."
+   ]
+  },
+  {
+   "xbox": "0x00237ca8",
+   "expect": "FUN_00237ca8",
+   "name": "GGallery::FONT_Width",
+   "sheet_name": "GGallery::FONT_Width(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5259, body review: FONT_getrecta with width out-pointer (5th arg); the next function passes the 6th (height). Ghidra name is GGallery::FUN_00237ca8 (namespace only)."
+   ]
+  },
+  {
+   "xbox": "0x00237ce0",
+   "expect": "FUN_00237ce0",
+   "name": "GGallery::FONT_Height",
+   "sheet_name": "GGallery::FONT_Height(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5260, body review: corrected from 0x238000 (atexit destructor for a static USimpleMaterial); 0x237ce0 is FONT_getrecta with the height out-pointer, directly after FONT_Width."
+   ]
+  },
+  {
+   "xbox": "0x00239498",
+   "expect": "FUN_00239498",
+   "name": "GGallery::TRANSFORM_Vertices",
+   "sheet_name": "GGallery::TRANSFORM_Vertices(COORD4 *, int, COORD4 *, COORD4 *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5282, body review: Same as AUF TRANSFORM_Vertices: conjugate quat to matrix, scale rows, transform N vertices."
+   ]
+  },
+  {
+   "xbox": "0x0023c6c8",
+   "expect": "FUN_0023c6c8",
+   "name": "GHud::SetLevelLoadText",
+   "sheet_name": "GHud::SetLevelLoadText(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5311, body review: Sets a flag to 1 as AUF SetLevelLoadText does; called from EEndMission."
+   ]
+  },
+  {
+   "xbox": "0x002454f0",
+   "expect": "FUN_002454f0",
+   "name": "GHud::ComputeAngle0to1",
+   "sheet_name": "GHud::ComputeAngle0to1(COORD3 *, COORD3 *, COORD3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5386, body review: Same as AUF ComputeAngle0to1: flatten and normalise, v3sub, dot, acos, sign by cross; called from GetObjectiveOrientation0to1."
+   ]
+  },
+  {
+   "xbox": "0x00249930",
+   "expect": "FUN_00249930",
+   "name": "GLoadingScreen::ClearFrameBuffers",
+   "sheet_name": "GLoadingScreen::ClearFrameBuffers(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5441, body review: Begin/clear/end frames with sync-to-VBL and filter set; called from InitLoadScreen/InitLoadDots."
+   ]
+  },
+  {
+   "xbox": "0x0024ad40",
+   "expect": "FUN_0024ad40",
+   "name": "GSubtitleSplitter::GetString",
+   "sheet_name": "GSubtitleSplitter::GetString(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5468, body review: Advances the subtitle chunk index by elapsed time and returns the current string pointer; called from DrawSubtitles."
+   ]
+  },
+  {
+   "xbox": "0x0024b820",
+   "expect": "FUN_0024b820",
+   "name": "GSystem::ParticleShapeFileInUse",
+   "sheet_name": "GSystem::ParticleShapeFileInUse(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5494, body review: Returns partic01/02/ears/sav .ssh file name by game variant; called from InitGameRender/InitFrontEndRender."
+   ]
+  },
+  {
+   "xbox": "0x0024bd68",
+   "expect": "FUN_0024bd68",
+   "name": "IniFiles::WriteFloat",
+   "sheet_name": "IniFiles::WriteFloat(char *, char *, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5503, body review: First of three 8-byte empty stubs after FindSection matching WriteFloat/WriteInteger/WriteString (writes stubbed on PS2)."
+   ]
+  }
+ ]
+}

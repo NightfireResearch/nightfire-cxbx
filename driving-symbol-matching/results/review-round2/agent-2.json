@@ -1,0 +1,408 @@
+[
+ {
+  "row": 3249,
+  "ps2": "0x001b8ae0",
+  "verdict": "accept",
+  "why": "Loops physics objects skipping own, GetRigidBody, calls ellipse-adjust helper; same shape as AUF."
+ },
+ {
+  "row": 3250,
+  "ps2": "0x001b8d08",
+  "verdict": "accept",
+  "why": "Only callee of CheckObjectCollisions; rigidbody-null branch and kCameraObjectRadiusEx scaling as in AUF."
+ },
+ {
+  "row": 3284,
+  "ps2": "0x001bbf70",
+  "verdict": "accept",
+  "why": "Bool flag/mode-table test called from every Update*Cam function, sits between RestartCamera and SetCameraLookBack."
+ },
+ {
+  "row": 3287,
+  "ps2": "0x001bc0e0",
+  "verdict": "accept",
+  "why": "corrected from 0x001bc1e8: 0x1bc0e0 takes (float,this) and returns scaled rotation, called by SetAutoDriveRotationX/Y; 0x1bc1e8 is a (float*,float*) clamp helper (sizes sum to sheet 0x2b0)."
+ },
+ {
+  "row": 3308,
+  "ps2": "0x001bd198",
+  "verdict": "accept",
+  "why": "Stores bool arg into control struct (+0x354)->0x10; called from EControlToCPU/EControlToPlayer event handlers."
+ },
+ {
+  "row": 3312,
+  "ps2": "0x001bd2b8",
+  "verdict": "accept",
+  "why": "Clears cinematic flag, clears director queue list, zeroes two control fields - matches AUF."
+ },
+ {
+  "row": 3313,
+  "ps2": "0x001bd2f8",
+  "verdict": "accept",
+  "why": "Null-checked read of control struct field, matches AUF CameraAiming."
+ },
+ {
+  "row": 3319,
+  "ps2": "0x001bd4b8",
+  "verdict": "accept",
+  "why": "Returns RCameraIniLoader::kMaxTumble, identical to AUF."
+ },
+ {
+  "row": 3321,
+  "ps2": "0x001bd878",
+  "verdict": "accept",
+  "why": "FastAlloc(size,\"RPlayerCamera\")."
+ },
+ {
+  "row": 3322,
+  "ps2": "0x001bd898",
+  "verdict": "accept",
+  "why": "FastFree(p,size) directly after RPlayerCamera operator new."
+ },
+ {
+  "row": 3342,
+  "ps2": "0x001bda78",
+  "verdict": "accept",
+  "why": "corrected from 0x001bd898 (operator delete): 0x1bda78 is the ctors-table stub calling helper(1,0xffff)."
+ },
+ {
+  "row": 3352,
+  "ps2": "0x001be8b8",
+  "verdict": "reject",
+  "why": "Candidate is a static-initialiser stub (helper(1,0xffff), ctors table), not IsDriveMissileOn; row already sits at 0x1be6f8."
+ },
+ {
+  "row": 3353,
+  "ps2": "0x001be8b8",
+  "verdict": "accept",
+  "why": "corrected from 0x001bea00 (atan2f wrapper): 0x1be8b8 is the ctors-table stub calling helper(1,0xffff) after RPlayerCamState code."
+ },
+ {
+  "row": 3357,
+  "ps2": "0x001beba0",
+  "verdict": "accept",
+  "why": "RefreshLODMultiplier then Setup2dFrustrum with far-plane scaling, same shape as AUF ConfigureView; vtable ref."
+ },
+ {
+  "row": 3367,
+  "ps2": "0x001bf000",
+  "verdict": "accept",
+  "why": "Stores float into a global and calls SetProcAnimParamList(&it,1)."
+ },
+ {
+  "row": 3368,
+  "ps2": "0x001bf028",
+  "verdict": "accept",
+  "why": "Calls SetProcAnimXFormList(matrix,1), paired with SetFEAnimation."
+ },
+ {
+  "row": 3369,
+  "ps2": "0x001c0898",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) before RRandom."
+ },
+ {
+  "row": 3370,
+  "ps2": "0x001c08b8",
+  "verdict": "accept",
+  "why": "Empty, called from Render_KillLibRender; AUF CleanUp is empty too."
+ },
+ {
+  "row": 3384,
+  "ps2": "0x001c18b0",
+  "verdict": "accept",
+  "why": "Locks two TARs, SetupFrameBuffers, clears 256x256 target; called from Begin."
+ },
+ {
+  "row": 3406,
+  "ps2": "0x001c28b0",
+  "verdict": "accept",
+  "why": "Empty stub called from PreRender with a bool arg (a1=0), in order after GetReflectionMatrix."
+ },
+ {
+  "row": 3413,
+  "ps2": "0x001c2b60",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) after RReflection::DoRender."
+ },
+ {
+  "row": 3422,
+  "ps2": "0x001c2fa0",
+  "verdict": "accept",
+  "why": "Called from RRenderDebugViewScreenSpace::Debug; SetRenderMask/SetAlphaCorrection/DrawQuad full-screen quad."
+ },
+ {
+  "row": 3423,
+  "ps2": "0x001c3138",
+  "verdict": "accept",
+  "why": "Walks world article textures setting mipmap mode (0/2/4), filter mode and further int bitfields from its 5 args."
+ },
+ {
+  "row": 3432,
+  "ps2": "0x001c3908",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) before RRenderHigh."
+ },
+ {
+  "row": 3459,
+  "ps2": "0x001c5100",
+  "verdict": "accept",
+  "why": "FastFree(p,size) right after RRenderHUDView operator new."
+ },
+ {
+  "row": 3482,
+  "ps2": "0x001c60c0",
+  "verdict": "accept",
+  "why": "Empty vtable-referenced function after AddPlayerHeadlight; AUF Debug is empty."
+ },
+ {
+  "row": 3487,
+  "ps2": "0x001c6330",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) after RRenderWorldCamera operator delete."
+ },
+ {
+  "row": 3493,
+  "ps2": "0x001c6b70",
+  "verdict": "accept",
+  "why": "Stores fov/dist, cos/sin, normalises plane - same as AUF InitializePlaneInfo; called from ctor and Setup2dFrustrum."
+ },
+ {
+  "row": 3496,
+  "ps2": "0x001c6fa8",
+  "verdict": "accept",
+  "why": "*flag=0; return 0 - identical to AUF, vtable-referenced."
+ },
+ {
+  "row": 3558,
+  "ps2": "0x001c9e38",
+  "verdict": "accept",
+  "why": "Averages collision info when timestamp matches else deletes it - same as AUF GetCollisionInfo."
+ },
+ {
+  "row": 3576,
+  "ps2": "0x001cb000",
+  "verdict": "accept",
+  "why": "GetTransform then GetArticleViewDistance, as AUF; called from ResetSceneObjDistances."
+ },
+ {
+  "row": 3577,
+  "ps2": "0x001cb0d0",
+  "verdict": "accept",
+  "why": "Takes an instance, finds it in the group's instance data and returns the matching local instance; called from EHide/EShowInstanceStatic."
+ },
+ {
+  "row": 3578,
+  "ps2": "0x001cb398",
+  "verdict": "accept",
+  "method": "_M_erase",
+  "why": "Recurses right child, walks left, FastFree(node,0x98) - SGI _M_erase; called from ~URefCounter<RCARPFile>."
+ },
+ {
+  "row": 3579,
+  "ps2": "0x001cb400",
+  "verdict": "accept",
+  "why": "Allocates 0x98 header node \"STL\" and initialises empty map; called from Get."
+ },
+ {
+  "row": 3582,
+  "ps2": "0x001cb590",
+  "verdict": "accept",
+  "why": "strcpy key, map find, return node+0x94 or 0; called from RSceneObj Load/PreLoad."
+ },
+ {
+  "row": 3585,
+  "ps2": "0x001cbc10",
+  "verdict": "accept",
+  "why": "find, insert if absent storing pointer at +0x94, increments refcount +0x90."
+ },
+ {
+  "row": 3586,
+  "ps2": "0x001cbcf8",
+  "verdict": "accept",
+  "why": "Iterates map for value==arg, decrements count and erases node at zero; called from PurgePreloaded/Close."
+ },
+ {
+  "row": 3617,
+  "ps2": "0x001cc9b0",
+  "verdict": "accept",
+  "why": "Large VU0 spring-mass routine using GetLocalVelocity/GetLocalAngularVelocity, called only from UpdatePosition."
+ },
+ {
+  "row": 3627,
+  "ps2": "0x001cd398",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) after RSkeletalObj::NumBones."
+ },
+ {
+  "row": 3638,
+  "ps2": "0x001ceaf0",
+  "verdict": "accept",
+  "method": "insert_unique",
+  "why": "Descends tree with memcmp(0x80) key compare, _M_insert at leftmost or after decrement check - insert_unique; called from GetGeoPrimState."
+ },
+ {
+  "row": 3661,
+  "ps2": "0x001cfcd0",
+  "verdict": "accept",
+  "why": "FastAlloc(size,\"RTextureContext\")."
+ },
+ {
+  "row": 3662,
+  "ps2": "0x001cfcf0",
+  "verdict": "accept",
+  "why": "FastFree(p,size) right after RTextureContext operator new."
+ },
+ {
+  "row": 3663,
+  "ps2": "0x001cfd18",
+  "verdict": "reject",
+  "why": "Candidate is the USymbolTable::Namespace type_info function; next function 0x1cfd58 is an atexit dtor, no GetShapeFile body found."
+ },
+ {
+  "row": 3676,
+  "ps2": "0x001d0ac8",
+  "verdict": "accept",
+  "why": "strcpy key, find, return +0x94 or 0; called from NewContext."
+ },
+ {
+  "row": 3679,
+  "ps2": "0x001d1148",
+  "verdict": "accept",
+  "why": "find, insert if absent storing pointer at +0x94, increment count; called from NewContext."
+ },
+ {
+  "row": 3685,
+  "ps2": "0x001d1708",
+  "verdict": "accept",
+  "why": "Find by value, decrement count, erase at zero; same body as RCARPFile RemoveReference; called from ~RTextureContextManager."
+ },
+ {
+  "row": 3693,
+  "ps2": "0x001d1ef8",
+  "verdict": "accept",
+  "why": "Copies frame counter to fTime and float fTimeData, as AUF Update; called from StartFrameRender."
+ },
+ {
+  "row": 3702,
+  "ps2": "0x001d2aa0",
+  "verdict": "accept",
+  "why": "corrected from 0x001d2ac0: 0x1d2aa0 is the vtable entry taking (this,int,int) storing an illuminate value per light; 0x1d2ac0 is a float fade helper for SetPerObjectBuffers."
+ },
+ {
+  "row": 3725,
+  "ps2": "0x001d3e30",
+  "verdict": "accept",
+  "why": "Empty vtable-referenced function after RenderShadowVolume (Debug slot)."
+ },
+ {
+  "row": 3728,
+  "ps2": "0x001d4078",
+  "verdict": "accept",
+  "why": "FastFree(p,size) right after RVehicle operator new."
+ },
+ {
+  "row": 3733,
+  "ps2": "0x001d40d0",
+  "verdict": "accept",
+  "why": "Ctors-table stub calling helper(1,0xffff) before RViewCamera ctor."
+ },
+ {
+  "row": 3789,
+  "ps2": "0x001d51f8",
+  "verdict": "accept",
+  "why": "Dtors-table stub calling helper(0,0xffff) right after the fCulling global ctors stub."
+ },
+ {
+  "row": 3824,
+  "ps2": "0x001d6cd0",
+  "verdict": "accept",
+  "why": "FastAlloc(size,\"RWorldCamera\")."
+ },
+ {
+  "row": 3825,
+  "ps2": "0x001d6cf0",
+  "verdict": "accept",
+  "why": "FastFree(p,size) right after RWorldCamera operator new."
+ },
+ {
+  "row": 3826,
+  "ps2": "0x001d6d10",
+  "verdict": "accept",
+  "why": "Empty vtable-referenced function; AUF CreateDBVars is empty."
+ },
+ {
+  "row": 3829,
+  "ps2": "0x001d6d30",
+  "verdict": "accept",
+  "why": "Empty vtable-referenced function before RWorldCamera gctors; AUF CameraInputCallback is empty."
+ },
+ {
+  "row": 3889,
+  "ps2": "0x001d7d78",
+  "verdict": "accept",
+  "why": "COORD4 streak builder (camera-facing cross product, type table) called from the COORD3 wrapper 0x1d8048, as in AUF."
+ },
+ {
+  "row": 3909,
+  "ps2": "0x001d93c8",
+  "verdict": "accept",
+  "why": "corrected from 0x001d93e8 (a helper called by RDebris::RDebris): 0x1d93c8 is the ctors-table stub calling helper(1,0xffff) after RColorize::Reset."
+ },
+ {
+  "row": 3921,
+  "ps2": "0x001d9bb8",
+  "verdict": "accept",
+  "why": "Appends pos/vel entry to a 0x40-slot debris array with lifetime 0x46; called from RDebris Add."
+ },
+ {
+  "row": 3955,
+  "ps2": "0x001dd248",
+  "verdict": "accept",
+  "why": "Takes two anchor pointers, AddRoundedBolt between them plus LocateFX/ApplyWorldEffects; called from TrySpawnBolt."
+ },
+ {
+  "row": 3956,
+  "ps2": "0x001dd4a0",
+  "verdict": "accept",
+  "why": "Anchor plus world point passed to RLightning::AddBolt; called from TrySpawnBolt, follows CreateVehicleBolt."
+ },
+ {
+  "row": 3966,
+  "ps2": "0x001de470",
+  "verdict": "accept",
+  "method": "insert_unique",
+  "why": "Hint-iterator insert: checks hint==begin/end, compares keys, falls back to insert_unique(v) 0x1de330 or _M_insert 0x1dde98."
+ },
+ {
+  "row": 3990,
+  "ps2": "0x001df198",
+  "verdict": "accept",
+  "why": "Empty debug stub called from flock update, sits exactly after addFlock."
+ },
+ {
+  "row": 4019,
+  "ps2": "0x001e0358",
+  "verdict": "accept",
+  "why": "TransformPoint to screen, bounds test by mode, store flare (<10 per buffer) - same as AUF AddFlare."
+ },
+ {
+  "row": 4060,
+  "ps2": "0x001e2d18",
+  "verdict": "accept",
+  "why": "CalcWorldPos per control point, BeginBoltDraw, Segment::Draw/AdvanceBoltDraw loop, FinishBoltDraw; called from RLightning::Draw."
+ },
+ {
+  "row": 4061,
+  "ps2": "0x001e3028",
+  "verdict": "accept",
+  "method": "_M_insert_aux",
+  "why": "Vector-of-pointers grow-by-doubling with FastAlloc \"STL\"/memmove; called from AddBolt/AddRoundedBolt."
+ },
+ {
+  "row": 4105,
+  "ps2": "0x001e5cd8",
+  "verdict": "accept",
+  "why": "(int,int,int,int)->float emission rate calc called from RParticleSystem ctor and SetSystem, right before InitData."
+ }
+]

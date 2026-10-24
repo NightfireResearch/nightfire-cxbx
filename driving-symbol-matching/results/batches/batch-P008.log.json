@@ -1,0 +1,370 @@
+{
+ "batch": "P008",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 22:34:48 2026",
+ "items": [
+  {
+   "xbox": "0x00175a28",
+   "old_name": "UseNamedVivFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00175a28 from 'UseNamedVivFile' to 'GameLoop_StartUsingMainBigFile'",
+      "warnings": [
+       "Function name 'GameLoop_StartUsingMainBigFile' \u2014 main part 'GameLoop_StartUsingMainBigFile' is not PascalCase. Expected: GameloopStartusingmainbigfile",
+       "Function name 'GameLoop_StartUsingMainBigFile' \u2014 main part 'GameLoop_StartUsingMainBigFile' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'GameLoop_StartUsingMainBigFile' does not start with a recognized verb. First word 'Game' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00175a28",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GameLoop_StartUsingMainBigFile",
+   "ok": true
+  },
+  {
+   "xbox": "0x00175ab8",
+   "old_name": "GameLoop_StartUsingMainBigFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00175ab8 from 'GameLoop_StartUsingMainBigFile' to 'GameLoop_DumpMainBigFile'",
+      "warnings": [
+       "Function name 'GameLoop_DumpMainBigFile' \u2014 main part 'GameLoop_DumpMainBigFile' is not PascalCase. Expected: GameloopDumpmainbigfile",
+       "Function name 'GameLoop_DumpMainBigFile' \u2014 main part 'GameLoop_DumpMainBigFile' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'GameLoop_DumpMainBigFile' does not start with a recognized verb. First word 'Game' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00175ab8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GameLoop_DumpMainBigFile",
+   "ok": true
+  },
+  {
+   "xbox": "0x00175ad8",
+   "old_name": "GameLoop_DumpMainBigFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00175ad8 from 'GameLoop_DumpMainBigFile' to 'GameLoop_StopUsingMainBigFile'",
+      "warnings": [
+       "Function name 'GameLoop_StopUsingMainBigFile' \u2014 main part 'GameLoop_StopUsingMainBigFile' is not PascalCase. Expected: GameloopStopusingmainbigfile",
+       "Function name 'GameLoop_StopUsingMainBigFile' \u2014 main part 'GameLoop_StopUsingMainBigFile' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'GameLoop_StopUsingMainBigFile' does not start with a recognized verb. First word 'Game' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00175ad8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GameLoop_StopUsingMainBigFile",
+   "ok": true
+  },
+  {
+   "xbox": "0x00175af8",
+   "old_name": "GameLoop_StopUsingMainBigFile",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00175af8 from 'GameLoop_StopUsingMainBigFile' to 'FUN_00175af8'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00175af8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_00175af8",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260860",
+   "old_name": "FUN_00260860",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260860 from 'FUN_00260860' to 'PRINT_string'",
+      "warnings": [
+       "Function name 'PRINT_string' \u2014 main part 'PRINT_string' is not PascalCase. Expected: PrintString",
+       "Function name 'PRINT_string' \u2014 main part 'PRINT_string' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260860",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_string",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b6980",
+   "old_name": "Exit",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b6980 from 'Exit' to '_Exit'",
+      "warnings": [
+       "Function name '_Exit' \u2014 main part '_Exit' is not PascalCase. Expected: Exit",
+       "Function name '_Exit' \u2014 main part '_Exit' contains underscores. Use PascalCase after the module prefix.",
+       "Function name '_Exit' is too short (main part '_Exit' is 5 chars, minimum 8)."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b6980",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "_Exit",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b7180",
+   "old_name": "ExecOSD",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b7180 from 'ExecOSD' to '_ExecOSD'",
+      "warnings": [
+       "Function name '_ExecOSD' \u2014 main part '_ExecOSD' is not PascalCase. Expected: Execosd",
+       "Function name '_ExecOSD' \u2014 main part '_ExecOSD' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b7180",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "_ExecOSD",
+   "ok": true
+  },
+  {
+   "xbox": "0x002be988",
+   "old_name": "FUN_002be988",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002be988 from 'FUN_002be988' to 'Exit'",
+      "warnings": [
+       "Function name 'Exit' is too short (main part 'Exit' is 4 chars, minimum 8).",
+       "Function name 'Exit' does not start with a recognized verb. First word 'Exit' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_quality/missing_specifier - Name 'Exit' has only one token. Function names need at least one specifier after the verb.",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'Exit' shares the same token set as existing function 'EExit' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002be988",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Exit",
+   "ok": true
+  },
+  {
+   "xbox": "0x002be9b0",
+   "old_name": "FUN_002be9b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002be9b0 from 'FUN_002be9b0' to 'ExecOSD'",
+      "warnings": [
+       "Function name 'ExecOSD' is too short (main part 'ExecOSD' is 7 chars, minimum 8).",
+       "Function name 'ExecOSD' does not start with a recognized verb. First word 'Exec' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002be9b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ExecOSD",
+   "ok": true
+  },
+  {
+   "xbox": "0x00112b78",
+   "old_name": "GetNumBones",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00112b78 from 'GetNumBones' to 'GetRootBonePosOri'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetRootBonePosOri' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00112b78",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetRootBonePosOri",
+   "ok": true
+  },
+  {
+   "xbox": "0x00114a48",
+   "old_name": "FUN_00114a48",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00114a48 from 'FUN_00114a48' to 'GetNumBones'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetNumBones' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00114a48",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetNumBones",
+   "ok": true
+  }
+ ]
+}

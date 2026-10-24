@@ -1,0 +1,157 @@
+# (Included by the other scripts' first lines: from boot to the main menu, timed by page.)
+waitpage 0x40000009 3000   # P_START
+wait 500                   # until "Press START" shows
+press START
+waitpage 0x40000043        # P_ESTHERO, the movie before the main menu
+wait 150
+press A                    # skip it
+waitpage 0x40000002        # P_MAIN
+wait 60
+# The bot setup page's scrolls and the bot compaction (Menu_PrepareBots): bot 2 with every stat changed, bot 4 on
+# its defaults, bot 5 set up then not playing, bot 6 a character whose stats are fixed; bots 1 and 3 never set up.
+# A/B: ORIGINAL=0x4000002c:0x8ade0,0x75dd0,0x7eb00,0x7eb30 tools/ui/run_menu.sh tools/ui/scripts/multiplayer_botsetup.txt
+press DOWN
+wait 30
+press A                    # Multiplayer
+waitpage 0x40000019        # P_MPJOIN
+wait 100
+press A
+wait 120
+press A
+wait 120
+press A
+waitpage 0x4000001a        # P_MPSCENARIO
+wait 100
+press DOWN
+wait 40
+press A
+waitpage 0x40000013        # P_MPMAP (not Ravine: the first map)
+wait 100
+press A
+waitpage 0x40000051        # P_MPSETUP
+wait 100
+gopage 0x40000012          # P_MPOPTIONS
+waitpage 0x40000012 400
+wait 100
+press DOWN                 # AI Bots
+wait 40
+press A
+waitpage 0x40000027 400    # P_MPBOTS, on bot 1
+wait 100
+# Bot 2: its character, then every row of the setup page moved one step.
+press DOWN
+wait 40
+press A
+waitpage 0x4000003f 400    # P_MPBOTCHOOSE
+wait 100
+press A                    # the character under the wheel
+waitpage 0x4000002c 400    # P_MPBOTSETUP
+wait 100
+shot bot2_setup
+press RIGHT                # each row: the next value, then down to the next row (8 rows)
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+press DOWN
+wait 20
+press RIGHT
+wait 20
+shot bot2_changed
+press A                    # keep them: back twice, to the bot wheel
+waitpage 0x40000027 400    # P_MPBOTS, on bot 2
+wait 100
+shot bots_after_bot2
+# Bot 4: a character on its defaults.
+press DOWN 2
+wait 40
+press A
+waitpage 0x4000003f 400
+wait 100
+press DOWN                 # another character
+wait 40
+press A
+waitpage 0x4000002c 400
+wait 100
+shot bot4_setup
+press A
+waitpage 0x40000027 400    # on bot 4
+wait 100
+# Bot 5: set up, then "Playing : No" (the first row, where the page starts if the cursor starts at the top).
+press DOWN
+wait 40
+press A
+waitpage 0x4000003f 400
+wait 100
+press DOWN 2
+wait 40
+press A
+waitpage 0x4000002c 400
+wait 100
+press RIGHT                # Playing: No
+wait 20
+shot bot5_not_playing
+press A
+waitpage 0x40000027 400    # on bot 5
+wait 100
+# Bot 6: playing as skin 0x10, whose stats are fixed (MPBOT +0x0e isPlaying 1, +0x0f isGood 0, +0x10 SkinNum
+# 0x10, +0x11 statsEdited 0 of mpbots.bot[5] at 0x2452dc). The character is locked, so the setup page is reached
+# by gopage from the character wheel, with the bot chosen on the bot wheel.
+poke 0x002452ea 0x00100001
+press DOWN
+wait 40
+shot bot6_on_wheel
+press A
+waitpage 0x4000003f 400
+wait 100
+gopage 0x4000002c          # P_MPBOTSETUP: the rows inert, BOT_STATS_FIXED in the info text
+waitpage 0x4000002c 400
+wait 100
+shot bot6_fixed
+press A
+wait 100
+shot after_bot6
+# Back to the options and Continue: Menu_PrepareBots moves bots 2, 4 and 6 to slots 1-3.
+gopage 0x40000012          # P_MPOPTIONS
+waitpage 0x40000012 400
+wait 100
+press UP                   # Continue
+wait 40
+press A
+wait 120
+shot after_continue        # P_MPCONFIRM (its bot icons), or a message box
+gopage 0x40000027          # P_MPBOTS: the bots in their new slots
+waitpage 0x40000027 400
+wait 100
+shot bots_compacted_1
+press DOWN
+wait 40
+shot bots_compacted_2
+press DOWN
+wait 40
+shot bots_compacted_3
+press DOWN
+wait 40
+shot bots_compacted_4
+quit

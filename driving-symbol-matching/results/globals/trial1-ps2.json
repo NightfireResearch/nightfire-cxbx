@@ -1,0 +1,1125 @@
+{
+ "program": "DRIVING.ELF",
+ "labels": [
+  {
+   "address": "0x00370ca8",
+   "name": "EPathSetDesiredThrottleDynamic::~EPathSetDesiredThrottleDynamic",
+   "comment": "sheet 0x168af0, 192 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003268c0",
+   "name": "AICharacterBond::fgLeftButton",
+   "comment": "sheet 0x3845b0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003268c4",
+   "name": "AICharacterBond::fgRightButton",
+   "comment": "sheet 0x3845b4, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003268d0",
+   "name": "solveInfo",
+   "comment": "sheet 0x3845c0, 96 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00326930",
+   "name": "handBlends",
+   "comment": "sheet 0x384620, 3432 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327674",
+   "name": "AICharacterHands::fgHandObj",
+   "comment": "sheet 0x385388, 4 bytes; snapped -4; block anchored"
+  },
+  {
+   "address": "0x0032767c",
+   "name": "AICharacterHands::fgHumanObj",
+   "comment": "sheet 0x38538c, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00327680",
+   "name": "AICharacterHands::fgInitRotPos",
+   "comment": "sheet 0x385390, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003276c0",
+   "name": "AICharacterHands::fgActor",
+   "comment": "sheet 0x3853d0, 32 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003276e0",
+   "name": "AICharacterHands::fgZoomButton",
+   "comment": "sheet 0x3853f0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003276e4",
+   "name": "AICharacterHands::fgIsZoomed",
+   "comment": "sheet 0x3853f4, 1028 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327c2c",
+   "name": "gAIElementHardLimit",
+   "comment": "sheet 0x38598c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327c30",
+   "name": "AIElementController::fObj",
+   "comment": "sheet 0x385990, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327c40",
+   "name": "heliScriptCommands",
+   "comment": "sheet 0x3859a0, 280 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d58",
+   "name": "AIRoadSpawn::fgRoadSpawn",
+   "comment": "sheet 0x385ab8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d5c",
+   "name": "AIRoadSpawn::fNumSpawnSegments",
+   "comment": "sheet 0x385abc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d60",
+   "name": "AIRoadSpawn::fInitialUpdate",
+   "comment": "sheet 0x385ac0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d64",
+   "name": "AIRoadSpawn::fLastTrafficLaneSpawn",
+   "comment": "sheet 0x385ac4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d68",
+   "name": "AIRoadSpawn::fMinDistSpawn",
+   "comment": "sheet 0x385ac8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d6c",
+   "name": "AIRoadSpawn::fMaxDistSpawn",
+   "comment": "sheet 0x385acc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d70",
+   "name": "AIRoadSpawn::fForceRespawn",
+   "comment": "sheet 0x385ad0, 52 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d80",
+   "name": "AIVehicleController::fgController",
+   "comment": "sheet 0x385b04, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00327d90",
+   "name": "AIVehicleController::fPlayerGroundVehicleList",
+   "comment": "sheet 0x385b10, 1344 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x003282d0",
+   "name": "AIVehicleController::fTrafficVehicleList",
+   "comment": "sheet 0x386050, 13440 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x0032b750",
+   "name": "AIVehicleController::fMaxActiveTraffic",
+   "comment": "sheet 0x3894d0, 2 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032b752",
+   "name": "AIVehicleController::fNumActiveTraffic",
+   "comment": "sheet 0x3894d2, 2 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0032b758",
+   "name": "AIVehicleController::fTrafficCarCullIndex",
+   "comment": "sheet 0x3894d4, 2 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x0032b756",
+   "name": "AIVehicleController::fPreselectedUsedTrafficTypes",
+   "comment": "sheet 0x3894d6, 10 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0032b760",
+   "name": "AIZoneController::fgController",
+   "comment": "sheet 0x3894e0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032b768",
+   "name": "AIZoneController::fZone",
+   "comment": "sheet 0x3894e8, 840 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bab0",
+   "name": "AIZoneController::fActiveZones",
+   "comment": "sheet 0x389830, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bab8",
+   "name": "gAudioTargetList",
+   "comment": "sheet 0x389838, 1984 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bab4",
+   "name": "DNightrun::fgNightrun",
+   "comment": "sheet 0x38a294, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0032babc",
+   "name": "MY_DEVICE",
+   "comment": "sheet 0x38a29c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bac0",
+   "name": "g_ProfileActive",
+   "comment": "sheet 0x38a2a0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bac8",
+   "name": "PR",
+   "comment": "sheet 0x38a2a8, 24 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0032bae0",
+   "name": "DTuningDBMgr::fgThis_DTuningDBMgr",
+   "comment": "sheet 0x38a2c0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bae4",
+   "name": "g_bTimingActive",
+   "comment": "sheet 0x38a2c4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bae8",
+   "name": "g_bHierarchyActive",
+   "comment": "sheet 0x38a2c8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032baec",
+   "name": "g_bSapphireActive",
+   "comment": "sheet 0x38a2cc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032baf0",
+   "name": "g_funcArray",
+   "comment": "sheet 0x38a2d0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032baf4",
+   "name": "g_hierArray",
+   "comment": "sheet 0x38a2d4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032baf8",
+   "name": "g_hierArrayPtr",
+   "comment": "sheet 0x38a2d8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bafc",
+   "name": "g_iSapphireFrameCount",
+   "comment": "sheet 0x38a2dc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bb00",
+   "name": "g_flags",
+   "comment": "sheet 0x38a2e0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bb04",
+   "name": "g_PCFlags",
+   "comment": "sheet 0x38a2e4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bb08",
+   "name": "g_PC0",
+   "comment": "sheet 0x38a2e8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032bb0c",
+   "name": "g_PC1",
+   "comment": "sheet 0x38a2ec, 324 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032e638",
+   "name": "AttributeSystem::fgThis_AttributeSystem",
+   "comment": "sheet 0x38d344, 72 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032f2b0",
+   "name": "Scheduler::fgScheduler",
+   "comment": "sheet 0x38e02c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0032f2b4",
+   "name": "ascii_special",
+   "comment": "sheet 0x38e030, 296 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003320b0",
+   "name": "gEnableRayShells",
+   "comment": "sheet 0x390ec0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003320b4",
+   "name": "RayShell::fNumTracers",
+   "comment": "sheet 0x390ec4, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003320c0",
+   "name": "RayShell::fTracer",
+   "comment": "sheet 0x390ed0, 2048 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003328c0",
+   "name": "RayShell::fNumFlashes",
+   "comment": "sheet 0x3916d0, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003328d0",
+   "name": "RayShell::fFlash",
+   "comment": "sheet 0x3916e0, 128 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00332950",
+   "name": "RayShell::fNumActiveRayShells",
+   "comment": "sheet 0x391760, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00332960",
+   "name": "RayShell::fActiveRayShells",
+   "comment": "sheet 0x391770, 3072 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333760",
+   "name": "RRenderer::fgRenderer",
+   "comment": "sheet 0x3925fc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333768",
+   "name": "RRenderer::fMemClass",
+   "comment": "sheet 0x392600, 52 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x0033376c",
+   "name": "RFog::fgThis_RFog",
+   "comment": "sheet 0x392634, 52 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333830",
+   "name": "RLightManager::fgThis_RLightManager",
+   "comment": "sheet 0x392734, 496 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333e68",
+   "name": "RReflection::fgThis",
+   "comment": "sheet 0x392e74, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333e6c",
+   "name": "RReflection_gRenderingNow",
+   "comment": "sheet 0x392e78, 60 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f2c",
+   "name": "gRigidBodyDraw",
+   "comment": "sheet 0x392fd4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f30",
+   "name": "kIdentityInstance",
+   "comment": "sheet 0x392fd8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f34",
+   "name": "RSceneObj::fgCachedDrawInfo",
+   "comment": "sheet 0x392fdc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f38",
+   "name": "RSceneObj::fgCurrentCullCheckNode",
+   "comment": "sheet 0x392fe0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f3c",
+   "name": "RSceneObj::fgCurrentlyLoadingObj",
+   "comment": "sheet 0x392fe4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f40",
+   "name": "RSceneObj::fgCullIterator",
+   "comment": "sheet 0x392fe8, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00333f44",
+   "name": "RSceneObj::fgHead",
+   "comment": "sheet 0x392fec, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333f50",
+   "name": "RStateManager::fgThis_RStateManager",
+   "comment": "sheet 0x392ff8, 148 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00333fe4",
+   "name": "RTextureContextManager::fgThis_RTextureContextManager",
+   "comment": "sheet 0x39308c, 56 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334068",
+   "name": "RVehicle::fDoSimpleShadow",
+   "comment": "sheet 0x39315c, 244 bytes; snapped -4; block anchored"
+  },
+  {
+   "address": "0x00334160",
+   "name": "RViewCamera::fCulling",
+   "comment": "sheet 0x393250, 160 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334200",
+   "name": "RViewCamera::fAspectRatioMult",
+   "comment": "sheet 0x3932f0, 176 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334270",
+   "name": "FeatureManager::fCPUSpeed",
+   "comment": "sheet 0x3933a0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334278",
+   "name": "FeatureManager::fInFrontEnd",
+   "comment": "sheet 0x3933a8, 120 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003349e0",
+   "name": "RColorize::fgThis_RColorize",
+   "comment": "sheet 0x393b94, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334bc0",
+   "name": "RDecalManager::fgThis_RDecalManager",
+   "comment": "sheet 0x393db4, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334bcc",
+   "name": "fgDecalState",
+   "comment": "sheet 0x393dc0, 340 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00334d48",
+   "name": "RFlockManager::fgThis_RFlockManager",
+   "comment": "sheet 0x393fb4, 40 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334d4c",
+   "name": "RGain::fgThis_RGain",
+   "comment": "sheet 0x393fdc, 40 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334d50",
+   "name": "RLensFlareManager::fgThis_RLensFlareManager",
+   "comment": "sheet 0x394004, 40 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334d58",
+   "name": "RLightning::fgThis_RLightning",
+   "comment": "sheet 0x39402c, 56 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334d70",
+   "name": "RMissileCam::fgThis_RMissileCam",
+   "comment": "sheet 0x394064, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00334d78",
+   "name": "RMissileCam::fFrameName",
+   "comment": "sheet 0x394068, 296 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x00335290",
+   "name": "RParticulate::fgThis_RParticulate",
+   "comment": "sheet 0x394640, 52 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003352a0",
+   "name": "RPostProcessing::fgThis_RPostProcessing",
+   "comment": "sheet 0x394674, 256 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00335380",
+   "name": "RShadowMap::fgThis_RShadowMap",
+   "comment": "sheet 0x394774, 184 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003353ec",
+   "name": "RSniperZoom::fgThis_RSniperZoom",
+   "comment": "sheet 0x39482c, 72 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00335b20",
+   "name": "RWater::fgThis_RWater",
+   "comment": "sheet 0x394fa4, 540 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00339004",
+   "name": "fgGlareTexture",
+   "comment": "sheet 0x3984b4, 12 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00339010",
+   "name": "fgGlareState",
+   "comment": "sheet 0x3984c0, 128 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00339090",
+   "name": "RGlareManager::fgThis_RGlareManager",
+   "comment": "sheet 0x398540, 132 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a540",
+   "name": "WCollisionMgr::fgCollisionMgr",
+   "comment": "sheet 0x399aa0, 136 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a5c8",
+   "name": "WGrid::fgGrid",
+   "comment": "sheet 0x399b28, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a5d0",
+   "name": "WGrid::fgMapGroup",
+   "comment": "sheet 0x399b2c, 48 bytes; snapped +4; block anchored"
+  },
+  {
+   "address": "0x0033a5f8",
+   "name": "WRoadNetwork::fgRoadNetwork",
+   "comment": "sheet 0x399ba4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a5fc",
+   "name": "WRoadNetwork::fNodes",
+   "comment": "sheet 0x399ba8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a600",
+   "name": "WRoadNetwork::fSegments",
+   "comment": "sheet 0x399bac, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a604",
+   "name": "WRoadNetwork::fIntersections",
+   "comment": "sheet 0x399bb0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a608",
+   "name": "WRoadNetwork::fJunctions",
+   "comment": "sheet 0x399bb4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a60c",
+   "name": "WRoadNetwork::fRoads",
+   "comment": "sheet 0x399bb8, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033a610",
+   "name": "WRoadNetwork::fSegmentStamp",
+   "comment": "sheet 0x399bc0, 848 bytes; snapped -4; block anchored"
+  },
+  {
+   "address": "0x0033a964",
+   "name": "WTargetable::fTargetsInWorld",
+   "comment": "sheet 0x399f10, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033aad0",
+   "name": "GFX::fGallery",
+   "comment": "sheet 0x39a0fc, 40 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0033ba60",
+   "name": "GSubtitles::fTheApp",
+   "comment": "sheet 0x39afa8, 44 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348258",
+   "name": "EAGL::TARExtension::sPrebuildChains",
+   "comment": "sheet 0x3a05e0, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0034825c",
+   "name": "EAGL::TARExtension::sDefL",
+   "comment": "sheet 0x3a05e4, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348260",
+   "name": "EAGL::TARExtension::sDefK",
+   "comment": "sheet 0x3a05e8, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348264",
+   "name": "EAGL::TARExtension::sDefLCM",
+   "comment": "sheet 0x3a05ec, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348268",
+   "name": "EAGL::TARExtension::sWarningAsserts",
+   "comment": "sheet 0x3a05f0, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348270",
+   "name": "EAGLInternal::GifState::sRuntimeFRAME",
+   "comment": "sheet 0x3a05f8, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348278",
+   "name": "EAGLInternal::GifState::sRuntimeZBUF",
+   "comment": "sheet 0x3a0600, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348280",
+   "name": "EAGLInternal::GifState::sRuntimeFBA",
+   "comment": "sheet 0x3a0608, 80 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003482d0",
+   "name": "EAGLInternal::ProfileDMDraw",
+   "comment": "sheet 0x3a0658, 296 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003483f8",
+   "name": "EAGLInternal::CurrentVariation",
+   "comment": "sheet 0x3a0780, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00348400",
+   "name": "EAGL::DeviceExtension::gPerfMeter",
+   "comment": "sheet 0x3a0788, 428 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485ac",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentDevice",
+   "comment": "sheet 0x3a0934, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485b0",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentRenderContext",
+   "comment": "sheet 0x3a0938, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485b4",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentTextureRenderContext",
+   "comment": "sheet 0x3a093c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485b8",
+   "name": "EAGLInternal::DevicePrivate::gpVUAllocator",
+   "comment": "sheet 0x3a0940, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485bc",
+   "name": "EAGLInternal::DevicePrivate::gpTexAllocator",
+   "comment": "sheet 0x3a0944, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485c0",
+   "name": "EAGLInternal::DevicePrivate::gpDmaMgr",
+   "comment": "sheet 0x3a0948, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485c4",
+   "name": "EAGLInternal::DevicePrivate::gAllocatorParity",
+   "comment": "sheet 0x3a094c, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003485c8",
+   "name": "EAGLInternal::DevicePrivate::gIntAllocCount",
+   "comment": "sheet 0x3a0950, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485cc",
+   "name": "EAGLInternal::DevicePrivate::gLast4HSize",
+   "comment": "sheet 0x3a0954, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003485d0",
+   "name": "EAGLInternal::DevicePrivate::gLastAllocWith4H",
+   "comment": "sheet 0x3a0958, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003485d4",
+   "name": "EAGLInternal::EAGLMalloc",
+   "comment": "sheet 0x3a095c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485d8",
+   "name": "EAGLInternal::EAGLFree",
+   "comment": "sheet 0x3a0960, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485dc",
+   "name": "EAGL::Device::gGameLink",
+   "comment": "sheet 0x3a0964, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003485e0",
+   "name": "EAGLInternal::DmaMgr::gInstalled",
+   "comment": "sheet 0x3a0968, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485e4",
+   "name": "EAGLInternal::DmaMgr::mTimeoutValue",
+   "comment": "sheet 0x3a096c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485e8",
+   "name": "EAGLInternal::DmaMgr::gNumbBuffers",
+   "comment": "sheet 0x3a0970, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485ec",
+   "name": "EAGLInternal::DmaMgr::gVifAccLength",
+   "comment": "sheet 0x3a0974, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485f0",
+   "name": "EAGLInternal::DmaMgr::gTexAccLength",
+   "comment": "sheet 0x3a0978, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485f4",
+   "name": "EAGLInternal::DmaMgr::gDMAPerfLength",
+   "comment": "sheet 0x3a097c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485f8",
+   "name": "EAGLInternal::DmaMgr::gCountInterGIF",
+   "comment": "sheet 0x3a0980, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003485fc",
+   "name": "EAGLInternal::DmaMgr::gCountInterVIF",
+   "comment": "sheet 0x3a0984, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348600",
+   "name": "EAGLInternal::DmaMgr::gAtBarrier",
+   "comment": "sheet 0x3a0988, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348604",
+   "name": "EAGLInternal::DmaMgr::gVIFIntId",
+   "comment": "sheet 0x3a098c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348608",
+   "name": "EAGLInternal::DmaMgr::gGIFIntId",
+   "comment": "sheet 0x3a0990, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x0034860c",
+   "name": "EAGLInternal::DmaMgr::gVIFDmacIntId",
+   "comment": "sheet 0x3a0994, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348610",
+   "name": "EAGLInternal::DmaMgr::gStallCount",
+   "comment": "sheet 0x3a0998, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348614",
+   "name": "EAGLInternal::DmaMgr::gMaxVIFLength",
+   "comment": "sheet 0x3a099c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00348618",
+   "name": "EAGLInternal::DmaMgr::gMaxGIFLength",
+   "comment": "sheet 0x3a09a0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x0034861c",
+   "name": "EAGLInternal::DmaMgr::gpCurVifAcc",
+   "comment": "sheet 0x3a09a4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355980",
+   "name": "ProfileIOPInfo",
+   "comment": "sheet 0x3bff10, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355990",
+   "name": "memclass",
+   "comment": "sheet 0x3bff20, 256 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355a90",
+   "name": "gDebugAllocAddress",
+   "comment": "sheet 0x3c0020, 152 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b28",
+   "name": "UMemory::fgLocalCreation",
+   "comment": "sheet 0x3c00b8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b2c",
+   "name": "UMemory::fgPlatformPageSize",
+   "comment": "sheet 0x3c00bc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b30",
+   "name": "UMemory::fgObjectMemClass",
+   "comment": "sheet 0x3c00c0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b34",
+   "name": "UMemory::fgMemVectors",
+   "comment": "sheet 0x3c00c4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b38",
+   "name": "UMemory::fgFastBlocks",
+   "comment": "sheet 0x3c00c8, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b40",
+   "name": "UMemory::fgHeaps",
+   "comment": "sheet 0x3c00d0, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b80",
+   "name": "kZeroCoord3",
+   "comment": "sheet 0x3c0110, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355b90",
+   "name": "kAllZeroCoord4",
+   "comment": "sheet 0x3c0120, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355ba0",
+   "name": "kZeroCoord4",
+   "comment": "sheet 0x3c0130, 16 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355bb0",
+   "name": "kIdentityMatrix4",
+   "comment": "sheet 0x3c0140, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355bf0",
+   "name": "kIdentityMatrix3",
+   "comment": "sheet 0x3c0180, 40 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355c18",
+   "name": "UTransform::fgIdentityTransform",
+   "comment": "sheet 0x3c01a8, 64 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355c58",
+   "name": "USphere::fgNullSphere",
+   "comment": "sheet 0x3c01e8, 32 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355d28",
+   "name": "ASystem::fgSystem",
+   "comment": "sheet 0x3c0ba0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355d30",
+   "name": "AStream::fgPath",
+   "comment": "sheet 0x3c0ba8, 128 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355db0",
+   "name": "AStream::fTrigger",
+   "comment": "sheet 0x3c0c28, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355db4",
+   "name": "AStream::fHoldBegin",
+   "comment": "sheet 0x3c0c2c, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355dc0",
+   "name": "ASoundManager::fgSoundList",
+   "comment": "sheet 0x3c0c38, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355dc4",
+   "name": "ASoundManager::fgFailedStreams",
+   "comment": "sheet 0x3c0c3c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355dc8",
+   "name": "ASoundManager::fgMusicExt",
+   "comment": "sheet 0x3c0c40, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00355dd0",
+   "name": "ASoundManager::fgSpeechExt",
+   "comment": "sheet 0x3c0c48, 8 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x00355dd8",
+   "name": "ASoundManager::fgPath",
+   "comment": "sheet 0x3c0c50, 128 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e58",
+   "name": "ASoundManager::fLoadIOP",
+   "comment": "sheet 0x3c0cd0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e5c",
+   "name": "ASoundManager::fCinematicMode",
+   "comment": "sheet 0x3c0cd4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e60",
+   "name": "ASoundManager::fgCount",
+   "comment": "sheet 0x3c0cd8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e64",
+   "name": "ASoundManager::fgTime",
+   "comment": "sheet 0x3c0cdc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e68",
+   "name": "ASoundManager::fHUDFadeValue",
+   "comment": "sheet 0x3c0ce0, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e6c",
+   "name": "ASoundManager::fHUDFade",
+   "comment": "sheet 0x3c0ce4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e70",
+   "name": "ASoundManager::fStingerChannel",
+   "comment": "sheet 0x3c0ce8, 12 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e7c",
+   "name": "ASoundManager::fMusicVolume",
+   "comment": "sheet 0x3c0cf4, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e80",
+   "name": "ASoundManager::fSFXVolume",
+   "comment": "sheet 0x3c0cf8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e84",
+   "name": "ASoundManager::fInitialized",
+   "comment": "sheet 0x3c0cfc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x00355e88",
+   "name": "ASoundManager::fMissionOver",
+   "comment": "sheet 0x3c0d00, 48 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8230",
+   "name": "AICharacterPedestrian::fgPedsEnabled",
+   "comment": "sheet 0x4e5030, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8234",
+   "name": "AICharacterPedestrian::fgPedBase",
+   "comment": "sheet 0x4e5034, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8238",
+   "name": "AICharacterPedestrian::fgNumPeds",
+   "comment": "sheet 0x4e5038, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c823c",
+   "name": "AICharacterPedestrian::fgNumSpecialPedPoints",
+   "comment": "sheet 0x4e503c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8240",
+   "name": "AICharacterPedestrian::fgForceSpecialPed",
+   "comment": "sheet 0x4e5040, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8244",
+   "name": "AICharacterPedestrian::fgUseLastSpawnPos",
+   "comment": "sheet 0x4e5044, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8248",
+   "name": "AICharacterPedestrian::fgChatAllowed",
+   "comment": "sheet 0x4e5048, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c824c",
+   "name": "AICharacterPedestrian::fgLastSpawnType",
+   "comment": "sheet 0x4e504c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8250",
+   "name": "AICharacterPedestrian::fgPedVoiceDelay",
+   "comment": "sheet 0x4e5050, 2 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8252",
+   "name": "AICharacterPedestrian::fgLastSeg",
+   "comment": "sheet 0x4e5052, 2 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003c8254",
+   "name": "WRoadNetwork::fValid",
+   "comment": "sheet 0x4e5054, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8258",
+   "name": "WRoadNetwork::fNumRoads",
+   "comment": "sheet 0x4e5058, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c825c",
+   "name": "WRoadNetwork::fValidTrafficRoads",
+   "comment": "sheet 0x4e505c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8268",
+   "name": "AIHeliScript::scriptFileSize",
+   "comment": "sheet 0x4e5068, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c826c",
+   "name": "AIHeliScript::scriptMem",
+   "comment": "sheet 0x4e506c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8270",
+   "name": "AIHeliScript::offset",
+   "comment": "sheet 0x4e5070, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8274",
+   "name": "AIHeliScript::numCompiledCommands",
+   "comment": "sheet 0x4e5074, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8278",
+   "name": "AIRoadSpawn::fLastRefresh",
+   "comment": "sheet 0x4e5078, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c827c",
+   "name": "WRoadNetwork::fRightSideSystem",
+   "comment": "sheet 0x4e507c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8280",
+   "name": "WRoadNetwork::fNumSegments",
+   "comment": "sheet 0x4e5080, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8284",
+   "name": "AIVehicleController::fAgentGroundVehicleList",
+   "comment": "sheet 0x4e5084, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8288",
+   "name": "AIVehicleController::fHelicopterList",
+   "comment": "sheet 0x4e5088, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c828c",
+   "name": "AIVehicleController::fCurrentLightCounter",
+   "comment": "sheet 0x4e508c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8290",
+   "name": "AIVehicleController::fNextLightChangeTick",
+   "comment": "sheet 0x4e5090, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82b0",
+   "name": "IFeedback::fgStop",
+   "comment": "sheet 0x4e50b0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82b8",
+   "name": "IFeedback::fgThread",
+   "comment": "sheet 0x4e50b8, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82c8",
+   "name": "ASoundManager::fgIsPaused",
+   "comment": "sheet 0x4e50c8, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82f0",
+   "name": "RParticleSystemManager::fManager",
+   "comment": "sheet 0x4e50f0, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82f8",
+   "name": "USimpleMaterial::fgLayerData",
+   "comment": "sheet 0x4e50f8, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c82fc",
+   "name": "USimpleMaterial::fgCur",
+   "comment": "sheet 0x4e50fc, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8300",
+   "name": "USimpleTexturedMaterial::fgLayerData",
+   "comment": "sheet 0x4e5100, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8304",
+   "name": "USimpleTexturedMaterial::fgCur",
+   "comment": "sheet 0x4e5104, 4 bytes; predicted (no reference at its start); block anchored"
+  },
+  {
+   "address": "0x003c8320",
+   "name": "RSceneObj::fgNumVisibleObjs",
+   "comment": "sheet 0x4e5120, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8324",
+   "name": "RSceneObj::fgNumVisibleDrawLastObjs",
+   "comment": "sheet 0x4e5124, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8328",
+   "name": "RSceneObj::fgMaxVisibleObjects",
+   "comment": "sheet 0x4e5128, 8 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8338",
+   "name": "UVolatileMaterial::fgLayerData",
+   "comment": "sheet 0x4e5138, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c833c",
+   "name": "UVolatileMaterial::fgCur",
+   "comment": "sheet 0x4e513c, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8360",
+   "name": "WRoadNetwork::fNumNodes",
+   "comment": "sheet 0x4e5160, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8364",
+   "name": "WRoadNetwork::fNumJunctions",
+   "comment": "sheet 0x4e5164, 4 bytes; exact; block anchored"
+  },
+  {
+   "address": "0x003c8368",
+   "name": "WRoadNetwork::fNumIntersections",
+   "comment": "sheet 0x4e5168, 8 bytes; exact; block anchored"
+  }
+ ]
+}

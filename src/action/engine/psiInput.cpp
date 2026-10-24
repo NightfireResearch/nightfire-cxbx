@@ -1,9 +1,353 @@
 #include "psiInput.h"
 #include "../actionhelpers.h"
+#include "mouseLook.h"
+#include "../input.h"
+#include "../devtools/Demo.h"
+#include "../devtools/MenuProbe.h"
+#include "../../driving/platform/HostInput.h"
 #include <string.h>
+#include <math.h>
 
-// Array of 4 uint32_t entries, all initialised to 0xFFFFFFFF
-#define controller_maybeRumbleTimeout ((int*)0x0019481c)
+// XBE_GLOBAL(0x002ff498, 0x2a4)
+XboxInputs_struct XboxInputs;
+
+// ---------------------------------------------------------------------------------------------------------------
+// Real hardware polling - the host's gamepads as XInput reports them (HostInput_ReadPad: XInput on Win32, SDL3's
+// gamepads with NIGHTFIRE_SDL), instead of the original Xbox XAPILIB device layer (XInitDevices/XGetDevices/
+// XInputOpen/XGetDeviceChanges/XInputGetState/XInputSetState/XInputClose - on real hardware, all backed by IOCTLs
+// against the Xbox's USB gamepad driver). xboxInitInputDevices and psiInput_PollDevices below replace that whole
+// chain; everything else in this file (psiInput_GetJoystickLX and friends, psiInput_MapInputs, ...) is unmodified
+// and keeps reading/writing the same XboxInputs global exactly as before. The host's pad is XInput's shape, which
+// differs from the Xbox one in xinput_xbox.h (the original Xbox pad exposed 6 analog buttons instead of 2 analog
+// triggers, among other things).
+// ---------------------------------------------------------------------------------------------------------------
+
+// ---------------------------------------------------------------------------------------------------------------
+// Keyboard fallback - a virtual Xbox pad on port 0, used only when no real pad is plugged into port 0.
+//
+// This deliberately synthesizes a pad's state and lets it fall through the rest of psiInput_PollDevices
+// untouched, rather than writing game action channels directly (which is what the older Inject_KeyboardInput in
+// input.cpp did). Everything downstream then behaves exactly as it does for a real pad: the deadzone and gain
+// curves, the analog-to-digital button thresholds, all four control styles, and - the part that matters most -
+// psiInput_MapInputs, which only maps anything at all for a player whose controllerIsActive is set, and which
+// derives the action flags the game reads. Pretending to be a pad at the lowest level is both less code and
+// less guesswork than reproducing that mapping.
+//
+// As a side effect this is also why the game no longer stops at "no controller present": port 0 now always has
+// something on it. A real pad appearing later takes over on the next poll.
+//
+// The bindings are a keyboard reading of the default NIGHTFIRE control style - see psiInput_MapInputs for what
+// each pad button actually does, and note that several are deliberately overloaded exactly as they are on the
+// pad (A is crouch in game and select in menus, START is pause and skip-cutscene, and so on).
+//
+//   W / A / S / D          left stick   - move and strafe
+//   arrow keys             right stick  - look (60% deflection, full with Shift held)
+//   Left Ctrl  or  mouse 1 right trigger - fire        (the mouse only while the pointer is captured)
+//   Z                      left shoulder - alternate fire
+//   X          or  mouse 2 left trigger  - scope zoom   (likewise)
+//   Space                  Y  - jump                 (also menu alt-select 1)
+//   C  or  Return          A  - crouch               (also menu select)
+//   R  or  E               X  - reload and interact   (also menu alt-select 2)
+//   Backspace              B  - next weapon          (also menu back)
+//   N                      BACK - night vision       (also menu back)
+//   P  or  Escape          START - pause             (also skip cutscene)
+//   Q  or  wheel down      d-pad left  - previous weapon      (wheel only when not scoped)
+//   wheel up               d-pad right - next weapon          (likewise)
+//   1 / 2  or  wheel       d-pad down/up - previous / next gadget, and scope zoom out / in
+//                                        (wheel only when scoped, where it adjusts the zoom)
+//
+// E is "interact" as much as "reload": Player_WeaponFiring calls Player_Activate - doors, triggers, cars,
+// turrets, monitors, locks - when ACTION_RELOAD has just been pressed and fire is not held. The game has no
+// separate use button, so a key that opens doors necessarily reloads as well, exactly as the pad's X does.
+//
+// The weapon d-pad used to be Q and E, and E was taken for the above once the wheel could do the same job.
+// Next weapon is still on Backspace (the B button) for anyone without a wheel.
+//
+// In menus the left stick doubles as the directional input (psiInput_MapInputs treats a stick deflection past
+// 33% the same as a d-pad press), so WASD navigates menus as well as walking.
+// ---------------------------------------------------------------------------------------------------------------
+
+// Fills in state as though a pad were connected, and returns whether any key is actually being held. The state
+// is always fully written, so a caller can use it regardless of the return value.
+static bool BuildKeyboardPadState(HostPadState *state) {
+    memset(state, 0, sizeof(*state));
+
+    // Only when the game's window is in front, so keys typed into another application do not drive Bond around
+    if (!HostInput_WindowHasFocus())
+        return false;
+
+    // A counter is enough for the packet number: the only thing that reads it is the original's own
+    // "has anything changed" bookkeeping, which just wants it to move when the state does.
+    static uint32_t packet = 0;
+    state->packetNumber = ++packet;
+
+    const short kFull = 32767;
+    const short kLook = (short)(HostInput_KeyHeld(kKeyShift) ? 32767 : 19660); // ~60% unless Shift is held
+
+    short moveX = 0, moveY = 0, lookX = 0, lookY = 0;
+    if (HostInput_KeyHeld(kKeyD)) moveX += kFull;
+    if (HostInput_KeyHeld(kKeyA)) moveX -= kFull;
+    if (HostInput_KeyHeld(kKeyW)) moveY += kFull;
+    if (HostInput_KeyHeld(kKeyS)) moveY -= kFull;
+    if (HostInput_KeyHeld(kKeyRight)) lookX += kLook;
+    if (HostInput_KeyHeld(kKeyLeft))  lookX -= kLook;
+    if (HostInput_KeyHeld(kKeyUp))    lookY += kLook;
+    if (HostInput_KeyHeld(kKeyDown))  lookY -= kLook;
+
+    state->thumbLX = moveX;
+    state->thumbLY = moveY;
+    state->thumbRX = lookX;
+    state->thumbRY = lookY;
+
+    unsigned short buttons = 0;
+    if (HostInput_KeyHeld(kKeyC) || HostInput_KeyHeld(kKeyEnter)) buttons |= kPadA;
+    if (HostInput_KeyHeld(kKeyBackspace))               buttons |= kPadB;
+    if (HostInput_KeyHeld(kKeyR) || HostInput_KeyHeld(kKeyE))        buttons |= kPadX;
+    if (HostInput_KeyHeld(kKeySpace))                  buttons |= kPadY;
+    if (HostInput_KeyHeld(kKeyZ))                        buttons |= kPadLeftShoulder;
+    if (HostInput_KeyHeld(kKeyP) || HostInput_KeyHeld(kKeyEscape)) buttons |= XINPUT_GAMEPAD_START;
+    if (HostInput_KeyHeld(kKeyN))                        buttons |= XINPUT_GAMEPAD_BACK;
+    if (MouseLook_NextWeapon())              buttons |= XINPUT_GAMEPAD_DPAD_RIGHT;
+    if (HostInput_KeyHeld(kKeyQ) || MouseLook_PrevWeapon()) buttons |= XINPUT_GAMEPAD_DPAD_LEFT;
+    if (HostInput_KeyHeld(kKey2) || MouseLook_ZoomIn())   buttons |= XINPUT_GAMEPAD_DPAD_UP;
+    if (HostInput_KeyHeld(kKey1) || MouseLook_ZoomOut())  buttons |= XINPUT_GAMEPAD_DPAD_DOWN;
+    state->buttons = buttons;
+
+    // The mouse buttons come in here rather than being applied to the player directly, so that they go
+    // through the same mapping as every other button - see the comment on MouseLook_FireHeld. Both are held
+    // false unless the pointer is captured, so this cannot pick up a click meant for something else.
+    state->rightTrigger = (HostInput_KeyHeld(kKeyLeftCtrl) || MouseLook_FireHeld()) ? 0xFF : 0; // fire
+    state->leftTrigger  = (HostInput_KeyHeld(kKeyX) || MouseLook_ZoomHeld(PlayerInputs[0].manualAimToggle != 0)) ? 0xFF : 0;          // scope zoom
+
+    return buttons != 0 || moveX != 0 || moveY != 0 || lookX != 0 || lookY != 0 ||
+           state->leftTrigger != 0 || state->rightTrigger != 0;
+}
+
+// AUTOINJECT
+void xboxInitInputDevices(void) {
+    memset(&XboxInputs, 0, sizeof(XboxInputs));
+    XboxInputs.Initialised = true;
+}
+
+// Faithfully reproduces the original's per-axis "sticky" deadzone widening: once an axis saturates past
+// +-90 (out of the -100..100 range produced further down), a 5-frame countdown starts, and while it's
+// running the deadzone threshold used below widens from 30 to 60 - this makes it easier to stay pinned at
+// full deflection without a stick's natural jitter dipping back under the (otherwise much tighter)
+// deadzone. counterA's countdown restarts while axisValue is pinned to the negative extreme, counterB's
+// while it's pinned to the positive extreme (matching the original's two independent per-direction
+// countdowns per axis).
+static float UpdateAxisSnapThreshold(float axisValue, int *counterA, int *counterB) {
+    if (*counterA <= 0 && *counterB <= 0)
+        return 30.0f;
+
+    if (*counterA > 0) {
+        int c = *counterA - 1;
+        if (axisValue >= -90.0f) c = 5;
+        *counterA = c;
+    }
+    if (*counterB > 0) {
+        int c = *counterB - 1;
+        if (axisValue <= 90.0f) c = 5;
+        *counterB = c;
+    }
+    return 60.0f;
+}
+
+// Applies the deadzone (anything within +-threshold collapses to 0) then rescales the remaining range back
+// out to +-100 - exactly as the original does per-axis below.
+static float ApplyDeadzoneAndRescale(float raw, float threshold) {
+    float v;
+    if (raw >= -threshold && raw <= threshold)
+        v = 0.0f;
+    else if (raw > threshold)
+        v = raw - threshold;
+    else
+        v = raw + threshold;
+    return (v / (100.0f - threshold)) * 100.0f;
+}
+
+// Real signature/behaviour: see the block comment above. Called once per frame by the original (untouched)
+// Input_Update, and again in a drain loop by InputShutdown to let rumble
+// motors spin down before handing off to another engine.
+//
+// AUTOINJECT
+void psiInput_PollDevices(void) {
+    if (!XboxInputs.Initialised)
+        return;
+
+    for (int i = 0; i < 4; i++) {
+        ControllerStateStruct *c = &XboxInputs.Controllers[i];
+
+        HostPadState winState;
+        memset(&winState, 0, sizeof(winState));
+        bool connected = HostInput_ReadPad(i, &winState);
+
+        // No real pad on port 0: present the keyboard as one instead (see BuildKeyboardPadState above). Note
+        // this claims "connected" whether or not a key is currently held - a pad that is plugged in but idle is
+        // still a connected pad, and the game needs port 0 occupied to let you past the front end.
+        if (!connected && i == 0) {
+            BuildKeyboardPadState(&winState);
+            connected = true;
+        }
+
+        // devtools: a time demo records this, or replaces it with the recording
+        if (Demo_Active()) {
+            DemoPad pad;
+            pad.connected = connected ? 1 : 0;
+            pad.buttons = winState.buttons;
+            pad.leftTrigger = winState.leftTrigger;
+            pad.rightTrigger = winState.rightTrigger;
+            pad.thumbLX = winState.thumbLX;
+            pad.thumbLY = winState.thumbLY;
+            pad.thumbRX = winState.thumbRX;
+            pad.thumbRY = winState.thumbRY;
+            Demo_Pad(i, &pad);
+            connected = pad.connected != 0;
+            winState.packetNumber = pad.packet;
+            winState.buttons = pad.buttons;
+            winState.leftTrigger = pad.leftTrigger;
+            winState.rightTrigger = pad.rightTrigger;
+            winState.thumbLX = pad.thumbLX;
+            winState.thumbLY = pad.thumbLY;
+            winState.thumbRX = pad.thumbRX;
+            winState.thumbRY = pad.thumbRY;
+        }
+
+        if (!connected) {
+            c->controllerIndex = 0;
+            c->controllerState.dwPacketNumber = 0;
+            memset(&c->controllerState.Gamepad, 0, sizeof(c->controllerState.Gamepad));
+        } else {
+            // Any nonzero value marks "connected" here - the original's real device handle is never
+            // otherwise inspected by anything reimplemented in this file, only ever compared against 0.
+            c->controllerIndex = (uint)(i + 1);
+            c->controllerState.dwPacketNumber = winState.packetNumber;
+
+            // The low 8 bits (D-pad/start/back/thumbstick-click) sit at the same bit positions in both the
+            // real Win32 layout and the original Xbox one - see xinput_xbox.h.
+            c->controllerState.Gamepad.wButtons = winState.buttons & 0x00FF;
+
+            // The original Xbox pad exposed A/B/X/Y/BLACK/WHITE/triggers as 6+2 analog bytes rather than
+            // digital bits (see xinput_xbox.h) - synthesize those from the real pad's digital face buttons
+            // (full-scale 0 or 255) and real analog triggers (already 0-255). Index 5 (WHITE, i.e. the left
+            // shoulder on a modern pad) is wired like the others: leaving it out (an earlier reading of the
+            // original's unrolled per-button code) lost the alternate-fire button, which the game maps to
+            // XBOXINPUT_GAMEPAD_LEFT_SHOULDER further down in this file.
+            unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
+            analog[0] = (winState.buttons & kPadA) ? 0xFF : 0;
+            analog[1] = (winState.buttons & kPadB) ? 0xFF : 0;
+            analog[2] = (winState.buttons & kPadX) ? 0xFF : 0;
+            analog[3] = (winState.buttons & kPadY) ? 0xFF : 0;
+            analog[4] = (winState.buttons & kPadRightShoulder) ? 0xFF : 0;
+            analog[5] = (winState.buttons & kPadLeftShoulder) ? 0xFF : 0;
+            analog[6] = winState.leftTrigger;
+            analog[7] = winState.rightTrigger;
+
+            c->controllerState.Gamepad.sThumbLX = winState.thumbLX;
+            c->controllerState.Gamepad.sThumbLY = winState.thumbLY;
+            c->controllerState.Gamepad.sThumbRX = winState.thumbRX;
+            c->controllerState.Gamepad.sThumbRY = winState.thumbRY;
+        }
+
+        // --- from here down, faithfully transliterated from the original polling function (0x000e76a0) ---
+
+        float lx = (float)(int)c->controllerState.Gamepad.sThumbLX * 0.0030518044f + 0.0015259022f;
+        float ly = (float)(int)c->controllerState.Gamepad.sThumbLY * 0.0030518044f + 0.0015259022f;
+        float rx = (float)(int)c->controllerState.Gamepad.sThumbRX * 0.0030518044f + 0.0015259022f;
+        float ry = (float)(int)c->controllerState.Gamepad.sThumbRY * 0.0030518044f + 0.0015259022f;
+
+        float lxThreshold = UpdateAxisSnapThreshold(lx, &c->axisSnapCountdown[0], &c->axisSnapCountdown[1]);
+        float lyThreshold = UpdateAxisSnapThreshold(ly, &c->axisSnapCountdown[3], &c->axisSnapCountdown[2]);
+        float rxThreshold = UpdateAxisSnapThreshold(rx, &c->axisSnapCountdown[4], &c->axisSnapCountdown[5]);
+        float ryThreshold = UpdateAxisSnapThreshold(ry, &c->axisSnapCountdown[7], &c->axisSnapCountdown[6]);
+
+        lx = ApplyDeadzoneAndRescale(lx, lxThreshold);
+        ly = ApplyDeadzoneAndRescale(ly, lyThreshold);
+        rx = ApplyDeadzoneAndRescale(rx, rxThreshold);
+        ry = ApplyDeadzoneAndRescale(ry, ryThreshold);
+
+        // Extra gain, then clamp each stick's magnitude (not just its individual axes) to 100.
+        lx *= 1.2f;
+        ly *= 1.2f;
+        float lMag = sqrtf(lx * lx + ly * ly);
+        if (lMag > 100.0f) {
+            lx *= 100.0f / lMag;
+            ly *= 100.0f / lMag;
+        }
+
+        rx *= 1.2f;
+        ry *= 1.2f;
+        float rMag = sqrtf(rx * rx + ry * ry);
+        if (rMag > 100.0f) {
+            rx *= 100.0f / rMag;
+            ry *= 100.0f / rMag;
+        }
+
+        c->Joystick_LX = lx;
+        c->Joystick_LY = ly;
+        c->Joystick_RX = rx;
+        c->Joystick_RY = ry;
+
+        // Digital button mask: low 8 bits are D-pad/start/back/thumbclick (already copied above); the rest
+        // are synthesized from the analog bytes at a ~5.5% (buttons) / ~11% (triggers) threshold, exactly
+        // matching the original's fixed-point 0xe/0x1c comparisons against (byte*100)>>8.
+        unsigned char *analog = (unsigned char*)c->controllerState.Gamepad.bAnalogButtons;
+        unsigned int buttons = c->controllerState.Gamepad.wButtons;
+        buttons |= ((analog[0] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_A : 0;
+        buttons |= ((analog[1] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_B : 0;
+        buttons |= ((analog[2] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_X : 0;
+        buttons |= ((analog[3] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_Y : 0;
+        buttons |= ((analog[4] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_RIGHT_SHOULDER : 0;
+        buttons |= ((analog[5] * 100) >> 8) > 0xe ? XBOXINPUT_GAMEPAD_LEFT_SHOULDER : 0;
+        buttons |= ((analog[6] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_LEFT_TRIGGER : 0;
+        buttons |= ((analog[7] * 100) >> 8) > 0x1c ? XBOXINPUT_GAMEPAD_RIGHT_TRIGGER : 0;
+        c->buttons = buttons;
+
+        // Per-axis "locked" flag: once set, holds that axis at 0 until it drops back under 80 (of the
+        // -100..100 range above). We haven't found anything in this binary that ever sets axisLocked[0..3]
+        // nonzero, so in practice this is inert - kept here for fidelity in case that's wrong.
+        if (c->axisLocked[0] != 0) {
+            if (fabsf(c->Joystick_LX) < 80.0f) c->axisLocked[0] = 0; else c->Joystick_LX = 0.0f;
+        }
+        if (c->axisLocked[1] != 0) {
+            if (fabsf(c->Joystick_LY) < 80.0f) c->axisLocked[1] = 0; else c->Joystick_LY = 0.0f;
+        }
+        if (c->axisLocked[2] != 0) {
+            if (fabsf(c->Joystick_RX) < 80.0f) c->axisLocked[2] = 0; else c->Joystick_RX = 0.0f;
+        }
+        if (c->axisLocked[3] != 0) {
+            if (fabsf(c->Joystick_RY) < 80.0f) c->axisLocked[3] = 0; else c->Joystick_RY = 0.0f;
+        }
+
+        // Edge-trigger: .buttons becomes "just pressed this frame" (prevButtons masks out anything that
+        // was already held last frame), and prevButtons is retained as "still held" for next frame.
+        unsigned int prevHeld = c->prevButtons;
+        unsigned int rawButtons = c->buttons;
+        c->prevButtons = prevHeld & rawButtons;
+        c->buttons = ~prevHeld & rawButtons;
+
+        // Rumble dispatch. The original's XInputSetState is asynchronous, taking a pointer to a real Xbox
+        // XINPUT_FEEDBACK (header + status/context fields, with the actual XINPUT_RUMBLE payload right at
+        // the end - which is exactly what "vibrationState"/pad_2/pad_3/scaledRumbleA/B here are: a 4-byte
+        // status word checked against 0x3e5 (997, ERROR_IO_PENDING) to skip re-issuing a call that's still
+        // in flight, followed by padding for the rest of the header, followed by the real rumble values -
+        // confirmed from the raw disassembly of 0x000e76a0, not just its decompile, since the decompile's
+        // own account of this part doesn't hold together on its own). The host's rumble is
+        // synchronous and takes only the two motor speeds, so none of that header/pending-check
+        // machinery applies here - we just send the new values directly whenever they've changed.
+        if (c->controllerIndex != 0 &&
+            (c->lastRumbleA != c->rumbleA || c->lastRumbleB != c->rumbleB)) {
+            HostInput_SetRumble(i, (unsigned short)(c->rumbleA * 655), (unsigned short)(c->rumbleB * 655));
+
+            c->lastRumbleA = c->rumbleA;
+            c->lastRumbleB = c->rumbleB;
+        }
+    }
+}
+
+// Frames of rumble left per controller; -1 = none running. All -1 in the XBE's data.
+// XBE_GLOBAL(0x0019481c, 0x10)
+int controller_rumbleTimeout[4] = {-1, -1, -1, -1};
 
 // AUTOINJECT
 bool psiInput_ControllerIsActive(uint i) {
@@ -69,13 +413,13 @@ void psiInput_RumbleStart(ushort controllerNum, int time, int intensity) {
     if((intensity > 0) && (intensity <= 30))
         intensity = 30;
     
-    if(time >= 0)
+    if(time > 0)
         time = time + 3;
     
     psiInput_RumbleSetIntensity(controllerNum, intensity, intensity);
     
-    if(controller_maybeRumbleTimeout[controllerNum] < time)
-        controller_maybeRumbleTimeout[controllerNum] = time;
+    if(controller_rumbleTimeout[controllerNum] < time)
+        controller_rumbleTimeout[controllerNum] = time;
 
     // Weird self-assignment - ternary operator of some sort?
     
@@ -87,11 +431,11 @@ void psiInput_RumbleUpdate(void) {
     for(int i = 0; i < 4; i++) {
 
         // Skip if timeout has already been hit
-        if(controller_maybeRumbleTimeout[i] <= -1)
+        if(controller_rumbleTimeout[i] <= -1)
             continue;
 
         // Decrement then check if timeout has been hit
-        if(--controller_maybeRumbleTimeout[i] < 0)
+        if(--controller_rumbleTimeout[i] < 0)
             psiInput_RumbleSetIntensity(i, 0, 0);
     }
     
@@ -117,7 +461,7 @@ void psiInput_ResetRumble(unsigned int i) {
     NF_ASSERT(i <= 3, "Incorrectly assumed controller index <= 3");
 
     psiInput_RumbleSetIntensity(i, 0, 0);
-    controller_maybeRumbleTimeout[i] = 0xffffffff;
+    controller_rumbleTimeout[i] = -1;
 
 }
 
@@ -136,10 +480,13 @@ void psiInputReset(void) {
 
 }
 
-#define bSkipAttract U8_AT(0x0025d79d)
+// A controller was connected this frame: P_ATTRACT_Handler leaves the attract movie.
+// XBE_GLOBAL(0x0025d79d, 0x1)
+uint8_t bSkipAttract;
 
-// Array of 4x bool32
-#define controllerIsPresent ((unsigned int*)(0x0019482c))
+// Array of 4x bool32: was each controller present on the last psiInput_MapInputs. All 1 in the XBE's data.
+// XBE_GLOBAL(0x0019482c, 0x10)
+unsigned int controllerIsPresent[4] = {1, 1, 1, 1};
 
 // AUTOINJECT
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
@@ -165,7 +512,7 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
         // If in some pause state, stop rumble
         if(GameState.SomeAlternatePauseState) {
             psiInput_RumbleSetIntensity(i, 0, 0);
-            controller_maybeRumbleTimeout[i] = -1;
+            controller_rumbleTimeout[i] = -1;
         }
     }
 
@@ -409,4 +756,40 @@ void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers) {
 
     }
 
+}
+
+#define ERROR_IO_PENDING_XBOX 997
+
+// Before handing over to another engine: stops every controller's rumble and clears its sticks and buttons
+// (prevButtons all set, so nothing held now counts as a new press), then keeps polling until no connected
+// controller's rumble is still changing or its last feedback write is still in flight - at most a second.
+// FUNC_AT(0x000e8030)
+void InputShutdown(void) {
+    for (int i = 0; i < 4; i++) {
+        ControllerStateStruct *c = &XboxInputs.Controllers[i];
+        c->rumbleA = 0;
+        c->rumbleB = 0;
+        c->Joystick_LX = 0.0f;
+        c->Joystick_LY = 0.0f;
+        c->Joystick_RX = 0.0f;
+        c->Joystick_RY = 0.0f;
+        c->buttons = 0;
+        c->prevButtons = 0xffffffff;
+    }
+    double start = timestamp();
+    int pending;
+    do {
+        // psiInput_PollDevices, or a menu script's pads in its place (which also counts polls to time the script)
+        MenuProbe_PollDevices();
+        pending = 0;
+        for (int i = 0; i < 4; i++) {
+            ControllerStateStruct *c = &XboxInputs.Controllers[i];
+            if (c->controllerIndex == 0)
+                continue;
+            if (c->lastRumbleA != c->rumbleA || c->lastRumbleB != c->rumbleB)
+                pending++;
+            if (c->feedbackStatus == ERROR_IO_PENDING_XBOX)
+                pending++;
+        }
+    } while (pending != 0 && timestamp() - start <= 1000.0);
 }

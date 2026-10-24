@@ -1,0 +1,225 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00018550",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    },
+    {
+     "name": "param_4",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActPoser::ActPoser(ActSkeleton *, ActEvents *, bool, bool)",
+   "return": "ActPoser *"
+  },
+  {
+   "address": "0x000186e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ActPoser::GetBoneIndex(char *)",
+   "return": "int"
+  },
+  {
+   "address": "0x000186f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActPoser::GetRootBonePosOri(MATRIX4 &)"
+  },
+  {
+   "address": "0x00018720",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActPoser::GetWeaponBonePosOri(int, MATRIX4 &)"
+  },
+  {
+   "address": "0x00018750",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActPoser::ChangeAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x00018780",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActPoser::GetAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x000187b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActPoser::GetInitialTbOu(MATRIX4 &)"
+  },
+  {
+   "address": "0x000187d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "ActPoser::SetupCrossFadeBlend(float, bool)"
+  },
+  {
+   "address": "0x00018940",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::Skin(void)"
+  },
+  {
+   "address": "0x00018960",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::DoEventPose(void)"
+  },
+  {
+   "address": "0x00018b30",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "ActPoser::SetAnimationOrigin(COORD3 &)"
+  },
+  {
+   "address": "0x00018b80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActPoser::SetInitialTbOu(MATRIX4 &)"
+  },
+  {
+   "address": "0x00018bd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActPoser::Rotate(float)"
+  },
+  {
+   "address": "0x00018cf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "ActPoser::RotateX(float)"
+  },
+  {
+   "address": "0x00018e10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "ActPoser::CalcSnapAndCorrectionMatrices(MATRIX4 &)"
+  },
+  {
+   "address": "0x000190b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::DoMainPose(void)"
+  },
+  {
+   "address": "0x00019580",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::~ActPoser(void)"
+  },
+  {
+   "address": "0x00019610",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::FinishCrossFadeBlend(void)"
+  },
+  {
+   "address": "0x000196d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::DoIK(void)"
+  },
+  {
+   "address": "0x00019710",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::AdvanceTime(void)"
+  },
+  {
+   "address": "0x00019750",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::DoSkeletonPose(void)"
+  },
+  {
+   "address": "0x000197c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ActPoser::DoInitialPoses(void)"
+  }
+ ]
+}

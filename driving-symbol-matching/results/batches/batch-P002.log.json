@@ -1,0 +1,40 @@
+{
+ "batch": "P002",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 18:03:00 2026",
+ "items": [
+  {
+   "xbox": "0x0024c5d0",
+   "old_name": "__terminate",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0024c5d0 from '__terminate' to '__pure_virtual'",
+      "warnings": [
+       "Function name '__pure_virtual' \u2014 main part '__pure_virtual' is not PascalCase. Expected: PureVirtual",
+       "Function name '__pure_virtual' \u2014 main part '__pure_virtual' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0024c5d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__pure_virtual",
+   "ok": true
+  }
+ ]
+}

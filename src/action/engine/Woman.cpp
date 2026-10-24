@@ -1,103 +1,113 @@
 // RLE-encoded 1-bit image, combined with a scrolling fire texture, to create the pause menu background
 #include "Woman.h"
+#include "psiGraphics.h"
 
 #include "../memory.h"
+#include "FS.h"
 #include "../util/hashtable.h"
+#include "../game.h"
+#include "Direct3D/d3dSeam.h"
 
-#define MemoryForWoman (*(void**)0x002ae2dc) // Buffer containing the complete data
-#define pWoman (*(void**)0x002ae2e0) // Current point in the buffer to which we have decoded
-#define WomanFrame U32_AT(0x002ae2e4) // Frame number
+#include <string.h>
 
-#define FILELOADER_COMPLETE 0
+// XBE_GLOBAL(0x002ae2dc, 0x4)
+void *MemoryForWoman;
 
-// NOAUTOINJECT
-// void LoadWoman(void) {
+// XBE_GLOBAL(0x002ae2e0, 0x4)
+void *pWoman;  // Current point in the buffer to which we have decoded
+// XBE_GLOBAL(0x002ae2e4, 0x4)
+uint32_t WomanFrame;  // Frame number
 
-//     int sizeBytes = fileGetSize(0x161da8); // Unclear what this represents so far
+// Loads the pause menu background's RLE file whole and rewinds the decoder to its first frame
+// AUTOINJECT
+void LoadWoman(void) {
+    int sizeBytes = FS_GetFileSize((char *)"woman.rle");
+    MemoryForWoman = Mem_Malloc(sizeBytes, MALLOC_XBOX, 4);
+    FS_LoadFileIfReady((char *)"woman.rle", MemoryForWoman);
+    while (FS_StateMachineIterate())
+        ;
+    pWoman = MemoryForWoman;
+    WomanFrame = 0;
+}
 
-//     MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
-//     LoadFromFileWithinArchive("woman.rle", MemoryForWoman);
+// The Xbox layer's thunk to it (0x000dc860), which ResetMap_Load calls
+// FUNC_AT(000dc860)
+void LoadWoman_Thunk(void) {
+    LoadWoman();
+}
 
-//     int result;
-//     do {
-//         result = FileLoaderStateMachineIterate();
-//     } while (result != FILELOADER_COMPLETE);
+// XBE_GLOBAL(0x002ae4f0, 0x4)
+uint32_t WomanFirePixel;  // where the next frame takes the fire texture from, in pixels
 
+#define WOMAN_FRAMES 348        // the frames in the file
+#define WOMAN_HELD_UNTIL 588    // the last is held until then, and the film starts again
+#define WOMAN_PIXELS 0x4000     // a frame's
 
-//     pWoman = MemoryForWoman;
-//     WomanFrame = 0;
+static int WomanTextureIndex(HASHCODE texture) {
+    int *item = (int *)hashtable_getitem(texture);
+    return item != NULL ? *item : 0;
+}
 
-// }
+// A texture's current frame's data, its frames turning over at its own rate (looked up three times, as the original
+// does). The frames' slots run on past the record from its first.
+static void *WomanTextureFrame(HASHCODE texture) {
+    TextureInfo *frames = Tex[WomanTextureIndex(texture)];
+    TextureInfo *rate = Tex[WomanTextureIndex(texture)];
+    TextureInfo *count = Tex[WomanTextureIndex(texture)];
+    uint frame = (uint)GameState.NumFramesUnpaused / (uint)rate->animSpeed % (uint)count->numFrames;
+    return Texture_GetRawDataPtr((&frames->baseIdx)[frame]);
+}
 
-// AUTOGEN
-void* Texture_GetRawDataPtr(int texIdx);
-
-typedef struct {
-    char _pad_1[0x24];
-    int numFrames;
-    int animSpeed;
-    char _pad_2[0x28];
-    int baseIdx;
-    char unknown_size_padding[0x1234]; // FIXME: Don't currently know how big this is
-} TextureInfo;
-
-#define Tex (*(TextureInfo**)0x002abe80)
-
-// AUTOGEN
-void psiDecompressWoman(void);
-
-// NOAUTOGEN
-void WIP(void){
-
-    if(MemoryForWoman == NULL) 
+// The next frame of the pause menu's film into its texture. A frame alternates between a run of clear pixels (a
+// 16-bit count) and a 16-bit count of runs (8-bit lengths) that alternate between the fire's pixels and clear
+// ones, until its 0x4000 pixels are done.
+// AUTOINJECT
+void psiDecompressWoman(void) {
+    if (MemoryForWoman == NULL)
         return;
-
-    // On PS2, the skipping is implemented using "skipit.288" and "PS2FramesToSkip"
-    // Xbox just runs it at the rate that psiDecompressWoman is called, and does this maths instead
-    // Unclear if this is manual or a result of optimisation
-    if(WomanFrame > 347) { // No more frame data
-        if(WomanFrame < 587) {
-            // Hold on the last frame for (587-347) = 240 frames = 4s
-            WomanFrame++;
+    if (WomanFrame >= WOMAN_FRAMES) {
+        WomanFrame++;
+        if (WomanFrame < WOMAN_HELD_UNTIL)
             return;
-        } else {
-            // Then restart the animation
-            WomanFrame = 0;
-            pWoman = MemoryForWoman;
-        }
+        WomanFrame = 0;
+        pWoman = MemoryForWoman;
     }
-
-    // Locate the used textures
-    // In the original Xbox logic, this is called 3 times but this looks like a bug.
-    // All it does is access one member of the thing each time - likely some macro which calls hashtable_getitem()?
-    // Each access could just be about obtaining each component (dataPtr, numFrames, etc)
-    void* pFireTexture = hashtable_getitem(TEX_FIRE_FOR_WOMAN);
-    int FireIdx = pFireTexture ? *((int*)pFireTexture) : 0;
-    void* pOutTexture = hashtable_getitem(TEX_DISCOWOMAN); // Placeholder for the output texture, we will overwrite the data - hacky way to implement animated texture using RLE
-    int OutIdx = pOutTexture ? *((int*)pOutTexture) : 0;
-
-    TextureInfo t;
-    
-    t = Tex[FireIdx];
-    int fireIdxBase = t.baseIdx;
-    int fireFrames = t.numFrames;
-    int fireAnimSpeed = t.animSpeed;
-    int fireTexIdx = fireIdxBase + (GameState.NumFramesUnpaused / fireAnimSpeed) % fireFrames; // FIXME: NumFramesUnpaused doesn't make sense because it's part of the pause menu and still animates!
-    void* FireData = Texture_GetRawDataPtr(fireTexIdx);
-
-
-    t = Tex[OutIdx];
-    int outIdxBase = t.baseIdx;
-    int outFrames = t.numFrames;
-    int outAnimSpeed = t.animSpeed;
-    int outTexIdx = outIdxBase + (GameState.NumFramesUnpaused / outAnimSpeed) % outFrames; // FIXME: NumFramesUnpaused doesn't make sense because it's part of the pause menu and still animates!
-    void* OutData = Texture_GetRawDataPtr(outTexIdx);
-
-    if(FireData == NULL || OutData == NULL)
+    uint32_t *fire = (uint32_t *)WomanTextureFrame(HT_Texture_Fire2);
+    if (fire == NULL)
+        return;
+    uint32_t *out = (uint32_t *)WomanTextureFrame(HT_Texture_WomanBack);
+    if (out == NULL)
         return;
 
-    // Simultaneously RLE decode and blend with the fire texture
-
-    // TODO: This
-
+    uchar *in = (uchar *)pWoman;
+    uint left = WOMAN_PIXELS;
+    bool clearRun = true;
+    do {
+        uint count = in[0] << 8 | in[1];
+        in += 2;
+        if (clearRun) {
+            memset(out, 0, count * 4);
+            out += count;
+            WomanFirePixel += count;
+            left -= count;
+        } else {
+            bool fireRun = true;
+            for (int runs = (int)count; runs > 0; runs--) {
+                uint length = *in++;
+                if (fireRun)
+                    memcpy(out, &fire[WomanFirePixel & (WOMAN_PIXELS - 1)], length * 4);
+                else
+                    memset(out, 0, length * 4);
+                out += length;
+                WomanFirePixel += length;
+                left -= length;
+                fireRun = !fireRun;
+            }
+        }
+        clearRun = !clearRun;
+    } while (left != 0);
+    pWoman = in;
+    // The original's WBINVD here (for the GPU to see the frame) has no work to do off the Xbox
+    WomanFirePixel += 0x7f;
+    WomanFrame++;
 }

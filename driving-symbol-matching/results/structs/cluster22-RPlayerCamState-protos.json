@@ -1,0 +1,72 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00089b70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamState::ResetState(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00089bd0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamState::ResetStateForAnimation(void)"
+  },
+  {
+   "address": "0x00089be0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamState::DriveCamInputHandler(int, float)"
+  },
+  {
+   "address": "0x00089df0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RPlayerCamState::RPlayerCamState(RPlayerCamera *)"
+  },
+  {
+   "address": "0x00089e10",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RPlayerCamState::AutoDriveCamInputHandler(int, float)"
+  },
+  {
+   "address": "0x0008a310",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamState::AimZoom(void)"
+  },
+  {
+   "address": "0x0008a390",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RPlayerCamState::AimRelease(void)"
+  }
+ ]
+}

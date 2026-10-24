@@ -1,0 +1,901 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "EAGL::Transform",
+   "size": 64,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "float[16]",
+     "name": "m",
+     "comment": "high: Xbox BuildRotTrans f1660/BuildSQT f8780/BuildRotate f32e0 write +0x0..+0x3c (floats, +0x3c column w); PS2 BuildIdentity 2935b8/BuildMatrix 293aa0 the same 16 words. Name invented"
+    }
+   ],
+   "comment": "Plain 4x4 float matrix wrapper, no vptr. Every Build*/Append*/Prepend* method writes all 16 dwords +0x0..+0x3c on both builds; same layout on PS2. Size 0x40 from the access range (no allocation; used by value)."
+  },
+  {
+   "name": "EAGL::Model",
+   "size": 216,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "char *",
+     "name": "name",
+     "comment": "low: PS2 GetTARList 285a48 reads +0x0; copy ctor 285cf0 copies +0x0..+0x7; sheet has Model::GetName. Xbox: no this-relative read seen. Type and name guessed"
+    },
+    {
+     "offset": 12,
+     "type": "MATRIX4",
+     "name": "modelMatrix",
+     "comment": "high: Xbox SetModelMatrix e8ff0 LEA this+0xc; PS2 SetModelMatrix 285970 and both ctors copy/initialise +0xc..+0x48 (unaligned ldl/sdl)"
+    },
+    {
+     "offset": 76,
+     "type": "COORD4",
+     "name": "scale",
+     "comment": "low: Xbox Draw ea210 passes this+0x4c to EAGLInternal::ModelSetScale; no PS2 access. Size assumed (up to the +0x5c block). Name invented"
+    },
+    {
+     "offset": 140,
+     "type": "float[3]",
+     "name": "boundsCentre",
+     "comment": "low: Xbox Draw ea210 floats +0x8c..+0x94; PS2 Draw 2843a0 reads +0x8c..+0x98 floats (bounding sphere?). Name invented"
+    },
+    {
+     "offset": 152,
+     "type": "float",
+     "name": "boundsRadius",
+     "comment": "low: PS2 Draw 2843a0 reads float +0x98; Xbox Draw reads +0x98 (integer move). Name invented"
+    },
+    {
+     "offset": 156,
+     "type": "int",
+     "name": "numGeometries",
+     "comment": "medium: GetGeometry: Xbox e8f60 +0x9c/+0xa0, PS2 2858d8 the same; both ctors copy. Name invented"
+    },
+    {
+     "offset": 160,
+     "type": "void *",
+     "name": "geometries",
+     "comment": "medium: GetGeometry Xbox e8f60/PS2 2858d8 (PS2 also addr-taken); intended type EAGL geometry array. Name invented"
+    },
+    {
+     "offset": 164,
+     "type": "int",
+     "name": "numChildren",
+     "comment": "low: GetChild Xbox e8bf0/PS2 285780, Draw, PS2 RemoveModel 2840c0 read +0xa4..+0xac. Name invented"
+    },
+    {
+     "offset": 168,
+     "type": "EAGL::Model **",
+     "name": "children",
+     "comment": "low: GetChild Xbox e8bf0/PS2 285780, Draw, RemoveModel. Name invented"
+    },
+    {
+     "offset": 184,
+     "type": "void *",
+     "name": "morphTarget",
+     "comment": "low: Xbox ClearMorphModel e96c0; PS2 MorphModel 284d88/ClearMorphModel 285f48/ctors. Name invented"
+    },
+    {
+     "offset": 188,
+     "type": "void *",
+     "name": "overlay",
+     "comment": "low: PS2 PS2SetOverlay 285ba0 writes +0xbc; Xbox GetTARList e9170 reads it. Intended EAGL::Overlay *. Name invented"
+    },
+    {
+     "offset": 192,
+     "type": "void *",
+     "name": "tarList",
+     "comment": "low: Xbox GetTARList e9170/SetTexture e9210/Draw; PS2 -> memcpy in several. Name invented"
+    },
+    {
+     "offset": 200,
+     "type": "int",
+     "name": "on",
+     "comment": "high: PS2 IsOn 285c80/On 285c90/Off 285ca0 accessors on +0xc8; Xbox Draw ea210/DrawInstances e9260 read it"
+    },
+    {
+     "offset": 204,
+     "type": "int",
+     "name": "optimized",
+     "comment": "low: Optimize: Xbox e9410, PS2 284c40; Draw reads it. Name invented"
+    },
+    {
+     "offset": 212,
+     "type": "void *",
+     "name": "morph",
+     "comment": "medium: PS2 Link(EAGL::Morph *) 285eb8 stores +0xd4; MorphModel reads it on both (Xbox ea480). Intended EAGL::Morph *"
+    }
+   ],
+   "comment": "Loaded (DynamicLoader data), never allocated by code; no vptr. Offsets identical on Xbox and PS2 (all 4-byte fields, unaligned matrix at +0xc). Size 0xd8: PS2 copy ctor 285cf0 copies words up to +0xd4 and nothing beyond; highest Xbox access +0xd4. +0x5c..+0x8b (addr-taken in Draw on both builds) and +0xc4/+0xd0 are left undefined."
+  },
+  {
+   "name": "EAGL::DynamicModel",
+   "size": 88,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "MATRIX4",
+     "name": "modelMatrix",
+     "comment": "high: Xbox ctor e9760 writes identity (1.0 at +0,+0x14,+0x28,+0x3c); PS2 SetModelMatrix 286218/Draw read +0x0..+0x3c; sheet GetModelMatrix/SetModelMatrix(MATRIX4&)"
+    },
+    {
+     "offset": 64,
+     "type": "int",
+     "name": "unknown40",
+     "comment": "low: zeroed by ctor on both builds (Xbox e9760, PS2 286018); no other use seen. Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "int",
+     "name": "maxGeoPrims",
+     "comment": "low: AddGeoPrim/ctor/~DynamicModel on both; PS2 Preallocate(int) 2850b0 uses it. Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "int",
+     "name": "numGeoPrims",
+     "comment": "low: AddGeoPrim, DrawNoTransform (loop), ctor, dtor on both builds. Name invented"
+    },
+    {
+     "offset": 76,
+     "type": "void *",
+     "name": "geoPrims",
+     "comment": "low: used by every per-index method (SetVar/SetStream/Lock/SetNumVerts...) on both builds: array base. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "void *",
+     "name": "drawArrays",
+     "comment": "low: used by every per-index method with +0x4c on both builds; EAGL::DrawArray +0x4 points back to a DynamicModel. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x58 (88). Ctor e9760 sets +0x0..+0x3c to identity and zeroes +0x40..+0x50. Same offsets on PS2 (ctor 286018). Confirms RGain's embedded 0x58-byte EAGL::DynamicModel at RGain+0x70."
+  },
+  {
+   "name": "EAGL::DrawArray",
+   "size": 76,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "primitiveType",
+     "comment": "medium: SetPrimitiveType(EAGL::PrimitiveType) writes +0x0 on both (Xbox f5640, PS2 29c0f8). Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "EAGL::DynamicModel *",
+     "name": "model",
+     "comment": "high: passed as this to DynamicModel::AddGeoPrim/Draw/SetModelMatrix/~DynamicModel (Xbox SetGeoPrim f55a0, Draw f5cb0, SetLocalMatrix f5800); PS2 +0x4 same hints. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "geoPrim",
+     "comment": "low: SetGeoPrim writes; GetIndexFromName/GetNameFromIndex use it on both builds. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "bool",
+     "name": "locked",
+     "comment": "medium: Xbox Lock f57d0/Unlock f57e0 (byte, Unlock writes 0), Draw, dtor; PS2 Lock/Unlock +0x18 (4-byte). Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "char *",
+     "name": "paramName",
+     "comment": "low: SetParamName(char *) Xbox f5750/PS2 29c250 use +0x2c. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "bool",
+     "name": "dirty",
+     "comment": "low: Xbox Draw/Lock/SetUpGeoPrim byte; PS2 +0x34 (int) Lock/Draw. Name invented"
+    },
+    {
+     "offset": 53,
+     "type": "bool",
+     "name": "varSet",
+     "comment": "low: Xbox SetVar f5770/SetUpGeoPrim byte; PS2 SetVar 29c3b0 writes int +0x38. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "int",
+     "name": "numVerts",
+     "comment": "high: SetNumVerts(int) accessor writes Xbox +0x38 (f57f0) / PS2 +0x3c (29c558)"
+    },
+    {
+     "offset": 60,
+     "type": "byte[16]",
+     "name": "xboxStreamInfo",
+     "comment": "low: Xbox only: SetUpGeoPrim f5820 LEA +0x3c and writes +0x40/+0x44/+0x48. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x4c (76). Offsets match PS2 up to +0x34; the PS2 int flags at +0x34/+0x38 are bytes +0x34/+0x35 on Xbox, so numVerts moves from PS2 +0x3c to Xbox +0x38. +0x3c..+0x4b is Xbox-only (SetUpGeoPrim)."
+  },
+  {
+   "name": "EAGL::DynamicLoader",
+   "size": 28,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "symbolTable",
+     "comment": "low: GetAddr/GetSymbol/GetNextSymbol/Resolve/Release read it (Xbox); PS2 GetCount/GetIndex/GetAddr -> FUN_0029f5b0. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "constructors",
+     "comment": "low: ctor zeroes; RunConstructors/RunDestructors use it on both builds. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "destructors",
+     "comment": "low: ctor zeroes; RunConstructors/RunDestructors on Xbox; PS2 also GetSymbol/RegisterShapes. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "unknownC",
+     "comment": "low: ctor zeroes; RunDestructors (Xbox), Resolve/RunDestructors (PS2). Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "elfData",
+     "comment": "high: ctor e62f0 stores arg1 (void *); PS2 GetElfData 29fb28 returns +0x10"
+    },
+    {
+     "offset": 20,
+     "type": "uint",
+     "name": "elfSize",
+     "comment": "medium: ctor e62f0 stores arg2 (sheet: unsigned int); PS2 ctor the same. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "resolverData",
+     "comment": "low: ctor zeroes; Initialize e52a0 reads/writes +0x10..+0x18. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x1c (28). Ctor e62f0(elf, size, resolver) zeroes +4/+8/+0xc/+0x18, stores +0x10/+0x14, then Initialize(resolver) and Resolve. Same offsets on PS2."
+  },
+  {
+   "name": "EAGL::Device",
+   "size": 28,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "self",
+     "comment": "medium: ctor e50c0 stores this at +0x0 (extension view of the same object, as RenderContext +0x0/+0x4). Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "EAGL::RenderContext *",
+     "name": "renderContexts",
+     "comment": "high: NewRenderContext e8900: rc->next(+0x140) = +0x10, +0x10 = rc; ~Device e50e0 deletes while +0x10 != 0; ctor zeroes. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "EAGL::TextureRenderContext *",
+     "name": "textureRenderContexts",
+     "comment": "medium: ~Device e50e0 loops calling e8ad0 (delete TRC, by analogy) while +0x14 != 0; ctor zeroes. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "bool",
+     "name": "initialised",
+     "comment": "high: ctor e50c0 writes 0, Init e4f70 writes 1 (byte). PS2 +0xc (4-byte). Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x1c (28); the instance lives in global 0x23fb60 (ctor and Init store it; Get returns it); current RenderContext global 0x23fb64 (NewRenderContext). Xbox layout differs from PS2 (PS2: +4 embedded list, +8, +0xc initialised flag). Confirms RRenderer+0x60 Device* (FastAlloc 0x1c)."
+  },
+  {
+   "name": "EAGL::RenderContext",
+   "size": 332,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "extension",
+     "comment": "medium: ctor e8740 stores this; then zeroes +0x120..+0x134 through it. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "priv",
+     "comment": "medium: ctor e8740 stores this. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "backBufferFormat",
+     "comment": "low: SetBackBufferDepth e6ac0 and SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "int",
+     "name": "zBufferFormat",
+     "comment": "low: SetZBufferDepth e6b10 and SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "int",
+     "name": "multiSampleType",
+     "comment": "low: ctor writes 0x11 (D3DMULTISAMPLE_NONE on Xbox); EndFrame/SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "width",
+     "comment": "medium: ctor 640; SetSize e6a60 writes. PS2 +0x810 float. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "height",
+     "comment": "medium: ctor 480; SetSize e6a60 writes. PS2 +0x814 float. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "int",
+     "name": "frontBufferDepth",
+     "comment": "medium: ctor 32; SetBackBufferDepth writes it too (Xbox front = back). PS2 +0x818. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "backBufferDepth",
+     "comment": "medium: ctor 32; SetBackBufferDepth e6ac0. PS2 +0x81c. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "zBufferDepth",
+     "comment": "medium: ctor 32; SetZBufferDepth e6b10. PS2 +0x820. (The hint 'RenderContext::GetCurrentViewPort' f3520 is the misnamed TRC accessor.) Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "bool",
+     "name": "syncToVBL",
+     "comment": "medium: SetSyncToVBL(bool) e6b60 byte; ctor 1. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "bool",
+     "name": "unknown34",
+     "comment": "low: ctor 0; SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "int",
+     "name": "stencilState",
+     "comment": "low: ctor 1; +0x38..+0x54 hold D3D stencil values (0x1e00 = D3DSTENCILOP_KEEP at +0x3c/+0x44, 0x207 = D3DCMP_ALWAYS at +0x48, 0xffffffff +0x50, 0xff +0x54). Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "int",
+     "name": "stencilFunc",
+     "comment": "low: ctor 0x207 (D3DCMP_ALWAYS); SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "uint",
+     "name": "stencilMask",
+     "comment": "low: ctor 0xffffffff. Name invented"
+    },
+    {
+     "offset": 84,
+     "type": "uint",
+     "name": "stencilWriteMask",
+     "comment": "low: ctor 0xff. Name invented"
+    },
+    {
+     "offset": 88,
+     "type": "bool",
+     "name": "stencilEnable",
+     "comment": "high: SetupFrameBuffers passes it to D3DDevice_SetRenderState_StencilEnable; ctor 0. Name invented"
+    },
+    {
+     "offset": 89,
+     "type": "bool",
+     "name": "zWritesEnable",
+     "comment": "high: GetZWritesEnable e7430 / SetZWritesEnable e73f0 (byte); ctor 1. PS2 +0x808"
+    },
+    {
+     "offset": 92,
+     "type": "uint",
+     "name": "colourWriteMask",
+     "comment": "low: ctor 0x01010101 (four byte flags). Name invented"
+    },
+    {
+     "offset": 116,
+     "type": "uint",
+     "name": "fogColour",
+     "comment": "high: passed to D3DDevice_SetRenderState_FogColor (SetupFrameBuffers/EndFrame); ctor 0. +0x64..+0x70 are fog-related (ctor 0,0,1.0,1.0). Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "uint",
+     "name": "pushBufferSize",
+     "comment": "high: ctor 0x80000; passed to D3D_SetPushBufferSize in SetupFrameBuffers (with +0x84 = 0x8000 kick-off size). Name invented"
+    },
+    {
+     "offset": 132,
+     "type": "uint",
+     "name": "pushBufferKickOffSize",
+     "comment": "medium: ctor 0x8000; SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 188,
+     "type": "byte[64]",
+     "name": "presentParams",
+     "comment": "medium: D3DPRESENT_PARAMETERS: ctor zeroes 0x11 dwords from +0xb8 (LEA +0xb8); SetupFrameBuffers writes +0xbc..+0xe8; SetSyncToVBL writes +0xe4/+0xe8 = FullScreen_RefreshRateInHz/PresentationInterval (struct offsets 0x28/0x2c). Name invented"
+    },
+    {
+     "offset": 252,
+     "type": "int",
+     "name": "currentWidth",
+     "comment": "low: ctor 640; GetSize e6a80; SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 256,
+     "type": "int",
+     "name": "currentHeight",
+     "comment": "low: ctor 480; GetSize e6a80; SetupFrameBuffers. Name invented"
+    },
+    {
+     "offset": 272,
+     "type": "void *",
+     "name": "backBuffer",
+     "comment": "medium: D3DSurface *: passed to D3DSurface_GetDesc; EndFrame/SetupFrameBuffers/~RenderContext. Name invented"
+    },
+    {
+     "offset": 276,
+     "type": "void *",
+     "name": "renderTarget",
+     "comment": "medium: D3DSurface *: passed to D3DDevice_SetRenderTarget in BeginFrame/EndFrame; released in dtor. Name invented"
+    },
+    {
+     "offset": 280,
+     "type": "void *",
+     "name": "depthSurface",
+     "comment": "low: D3DSurface * by position: BeginFrame/EndFrame/SetupFrameBuffers/dtor. Name invented"
+    },
+    {
+     "offset": 312,
+     "type": "EAGL::ViewPort *",
+     "name": "currentViewPort",
+     "comment": "high: accessor ee080 (labelled TextureRenderContext::GetCurrentViewPort, really RenderContext's) returns +0x138; DeleteViewPort ee0a0; ctor zeroes. PS2 +0x828"
+    },
+    {
+     "offset": 316,
+     "type": "EAGL::ViewPort *",
+     "name": "viewPorts",
+     "comment": "high: NewViewPort ee010: vp->next(+0x18c) = +0x13c, +0x13c = vp; DeleteViewPort/dtor. PS2 +0x82c. Name invented"
+    },
+    {
+     "offset": 320,
+     "type": "EAGL::RenderContext *",
+     "name": "next",
+     "comment": "high: Device::NewRenderContext e8900 sets rc->+0x140 = device->+0x10. Name invented"
+    },
+    {
+     "offset": 328,
+     "type": "EAGL::Device *",
+     "name": "device",
+     "comment": "high: ctor e8740 stores its argument (sheet RenderContext(EAGL::Device *)). Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x14c (332) by Device::NewRenderContext e8900. The Xbox layout is a D3D port and does not follow the PS2 one (PS2 fields at +0x74c..+0x87c). +0x0/+0x4 hold the object's own address (extension/private views). Holds D3D stencil/fog/push-buffer settings, an embedded D3DPRESENT_PARAMETERS and D3D surfaces. Confirms RRenderer+0x64 RenderContext*."
+  },
+  {
+   "name": "EAGL::ViewPort",
+   "size": 416,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "EAGL::ViewPort *",
+     "name": "previousViewPort",
+     "comment": "medium: ctor zeroes; BeginView e4be0 / EndView e49a0 R/W; PS2 +0x4 is passed as this to ViewPort::BeginView (restored in EndView). Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "enableModelSphereCull",
+     "comment": "high: GetEnableModelSphereCull f3900 returns +0x8; PS2 Set/GetEnableModelSphereCull(int) +0x8"
+    },
+    {
+     "offset": 16,
+     "type": "byte[24]",
+     "name": "priv",
+     "comment": "low: Xbox only: ctor runs e4bb0 on this+0x10 (LEA), BeginView uses it; block assumed to run to +0x28. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "EAGL::RenderContext *",
+     "name": "renderContext",
+     "comment": "high: ctor f37d0 stores its argument; passed as this to ee080 (really RenderContext::GetCurrentViewPort). PS2 +0x10. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "EAGL::TextureRenderContext *",
+     "name": "textureRenderContext",
+     "comment": "high: ctor zeroes (TRC ctor variant sets it); passed to f3520 (really TRC::GetCurrentViewPort) and TRC::GetSize; D3DDevice_SetRenderTarget in BeginView. PS2 +0x14. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "int",
+     "name": "projectionType",
+     "comment": "medium: SetOrthographic e4900 / IsSphereInView e4a10; PS2 GetProjectionType 297468 returns +0x18. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "uint",
+     "name": "backgroundColour",
+     "comment": "high: SetBackgroundColour(EAGL::Colour) f3970 writes +0x34; ClearViewPort reads. PS2 +0x1c (Get/SetBackgroundColour)"
+    },
+    {
+     "offset": 64,
+     "type": "MATRIX4",
+     "name": "projectionMatrix",
+     "comment": "medium: ctor copies identity; BeginView/SetOrthographic LEA +0x40; PS2 GetProjectionMatrix 297488 returns this+0x20. Name invented"
+    },
+    {
+     "offset": 128,
+     "type": "MATRIX4",
+     "name": "viewMatrix",
+     "comment": "high: SetViewMatrix e4ef0 LEA +0x80; ctor identity. PS2 SetViewMatrix 296e80 +0x60. Name invented"
+    },
+    {
+     "offset": 192,
+     "type": "MATRIX4",
+     "name": "viewProjectionMatrix",
+     "comment": "medium: ctor identity; BeginView LEA +0xc0. PS2 GetViewProjectionMatrix 297490 returns this+0xa0. Name invented"
+    },
+    {
+     "offset": 280,
+     "type": "float[6]",
+     "name": "shape",
+     "comment": "medium: GetShape e4680 floats +0x118..+0x12c; SetOrthographic writes +0x120/+0x124. PS2 GetShape 296d88 +0xf8..+0x10c (+0x20). Name invented"
+    },
+    {
+     "offset": 304,
+     "type": "float[4]",
+     "name": "frustum",
+     "comment": "medium: PS2 GetFrustum 297440 +0x110..+0x11c (+0x20 -> +0x130); Xbox IsSphereInView e4a10 uses +0x138/+0x13c as PS2 IsSphereInView uses +0x118/+0x11c. Name invented"
+    },
+    {
+     "offset": 344,
+     "type": "float[8]",
+     "name": "cullPlanes",
+     "comment": "low: IsSphereInView e4a10 floats +0x158..+0x174; PS2 IsSphereInView +0x138..+0x154 (+0x20). Name invented"
+    },
+    {
+     "offset": 392,
+     "type": "bool",
+     "name": "viewDirty",
+     "comment": "low: byte in BeginView/EndView/SetViewMatrix; PS2 +0x168 (int) in the same three. Name invented"
+    },
+    {
+     "offset": 396,
+     "type": "EAGL::ViewPort *",
+     "name": "next",
+     "comment": "high: RenderContext::NewViewPort ee010 stores the old list head here before linking. Name invented"
+    },
+    {
+     "offset": 400,
+     "type": "EAGL::ViewPort *",
+     "name": "linkedViewPort",
+     "comment": "low: SetViewMatrix e4ef0 passes [this+0x190] as this to ViewPort::BeginView. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0x1a0 by RenderContext::NewViewPort ee010 (ctor f37d0(RenderContext*)), linked through +0x18c. Ctor calls e4b90(this) and e4bb0(this+0x10) (extension/private ctors) and copies identity (ptr 0x1cdb70) into the three matrices. PS2 mapping: +0x4/+0x8 same; PS2 +0x10..+0x1c -> Xbox +0x28..+0x34 (+0x18; Xbox-only block at +0x10); PS2 matrices +0x20/+0x60/+0xa0 and everything up to +0x154 -> +0x20; PS2 +0x168 int -> Xbox bool +0x188. PS2 +0x16c..+0x190 (guard band etc.) has no Xbox counterpart seen. Confirms RRenderer+0x68 / RViewCamera+0x18 ViewPort*."
+  },
+  {
+   "name": "EAGL::TextureRenderContext",
+   "size": 212,
+   "fields": [
+    {
+     "offset": 16,
+     "type": "float",
+     "name": "width",
+     "comment": "medium: GetSize f3640/SetupFrameBuffers f36e0 floats; PS2 GetSize 2921d8 +0x14. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "float",
+     "name": "height",
+     "comment": "medium: GetSize f3640/SetupFrameBuffers f36e0 floats; PS2 +0x18. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "EAGL::ViewPort *",
+     "name": "currentViewPort",
+     "comment": "high: accessor f3520 (labelled RenderContext::GetCurrentViewPort, really TRC's) returns +0x24; PS2 GetCurrentViewPort 2924e8 +0x40 sits just before the list as here. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "EAGL::ViewPort *",
+     "name": "viewPorts",
+     "comment": "high: NewViewPort f34b0 / DeleteViewPort f3540 / dtor; PS2 +0x44. Name invented"
+    },
+    {
+     "offset": 208,
+     "type": "EAGL::Device *",
+     "name": "device",
+     "comment": "medium: ctor f3450 stores its argument (sheet TextureRenderContext(EAGL::Device *, ...)). PS2 ctor writes +0x180. Name invented"
+    }
+   ],
+   "comment": "No vptr; allocated 0xd4 (212). Ctor f3450(Device*) runs TextureRenderContextExtension ctor f3750(this) and TextureRenderContextPrivate ctor f3790 on this+0x4 (the private block spans +0x4..+0xcf; fields listed flat), then stores the Device at +0xd0. PS2 layout does not carry over (PS2 size >= 0x184: size floats +0x14/+0x18, current viewport +0x40, list +0x44, device +0x180)."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x000f19a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::BuildMatrix(MATRIX4 *)"
+  },
+  {
+   "address": "0x000f19f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::BuildQuatTrans(COORD4 *, COORD4 *)"
+  },
+  {
+   "address": "0x000f2330",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::Transform::Invert(EAGL::Transform &, EAGL::Transform &)"
+  },
+  {
+   "address": "0x000f2790",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGL::Transform::Determinant(EAGL::Transform &, int)"
+  },
+  {
+   "address": "0x000f2960",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::AppendScale(float, float, float, float)"
+  },
+  {
+   "address": "0x000f2a20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::AppendTranslate(float, float, float)"
+  },
+  {
+   "address": "0x000f2b80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::AppendMatrix(MATRIX4 *)"
+  },
+  {
+   "address": "0x000f2bd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::AppendQuatTrans(COORD4 *, COORD4 *)"
+  },
+  {
+   "address": "0x000f2c80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::PrependScale(float, float, float, float)"
+  },
+  {
+   "address": "0x000f2d40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::PrependTranslate(float, float, float)"
+  },
+  {
+   "address": "0x000f2e50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::PrependMatrix(MATRIX4 *)"
+  },
+  {
+   "address": "0x000f2ea0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "EAGL::Transform::PrependQuatTrans(COORD4 *, COORD4 *)"
+  },
+  {
+   "address": "0x000f2ff0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::AppendRotate(float, float, float, float)"
+  },
+  {
+   "address": "0x000f3040",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::PrependRotate(float, float, float, float)"
+  },
+  {
+   "address": "0x000f32e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGL::Transform::BuildRotate(float, float, float, float)"
+  }
+ ]
+}
