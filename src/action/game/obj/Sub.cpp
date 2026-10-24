@@ -109,7 +109,7 @@ void Sub_Laser(obj_tag *obj, SubInfo *sub) {
         Rand_FRand_MVar2_Vec(&dir, 0.2f, 0.1f);
         sub->beam->scale = (float)Negate(Vec_NormaliseLen(&dir, &dir));
         Bullet_init(-1, obj, obj, &weapon_data[Weap_SubLaser], &obj->centrePoint, &dir, 0x12);
-        Mat_Align2Dir(&sub->beam->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+        Mat_Align2Dir(&sub->beam->transformMatrix, &dir, &CONST_UP_VECTOR, &CONST_X_VECTOR);
         Vec_Copy(&obj->centrePoint, Mat_Position(sub->beam->transformMatrix));
         sub->beam->transformFlags |= TRANSFORM_MOVED;
         View_SetDrawInAllViews(sub->beam);

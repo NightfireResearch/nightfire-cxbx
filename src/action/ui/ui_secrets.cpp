@@ -3,6 +3,8 @@
 #include "Menu.h"
 
 #include "../engine/Text.h"
+#include "../engine/LoadSave.h"
+#include "../game/Upgrade.h"
 
 #include <string.h>
 
@@ -42,7 +44,7 @@ uint64_t Menu_UpgradeCheat(uint64_t bonus, uint objId, byte count) {
     for (uint level = 0; level < 12; level++)
         for (uint slot = 1; slot < 5; slot++) {
             PlrStarts_ProcessRewardCounter((uint32_t *)&bonus, LevelAt(level), slot, 0, &info);
-            if (info.hasMedal && info.objType == 4 && info.objId == objId)
+            if (info.hasMedal && info.objType == REWARD_UPGRADE && info.objId == objId)
                 owned++;
         }
     if (owned < count)
@@ -122,19 +124,22 @@ static const SecretCode secret_codes[] = {
     { "GUARDIAN", SECRET_REWARD, 0x10000000 },   // Protection
     { "ORBIT",    SECRET_REWARD, 0x20000000 },   // GoldenEye Strike
     { "BOOM",     SECRET_REWARD, 0x40000000 },   // Explosive Scenery
-    { "Q LAB",    SECRET_UPGRADES, 0, { { 9, 2 }, { 24, 1 }, { 21, 1 }, { 18, 1 }, { 15, 1 }, { 0, 3 }, { 12, 1 }, { 6, 1 }, { 3, 1 } } },
-    { "AU PP7",   SECRET_UPGRADES, 0, { { 0, 1 } } },    // pistol, first upgrade
-    { "LIFTOFF",  SECRET_UPGRADES, 0, { { 3, 1 } } },    // grapple
-    { "SHUTTER",  SECRET_UPGRADES, 0, { { 6, 1 } } },    // camera
-    { "SCOPE",    SECRET_UPGRADES, 0, { { 9, 1 } } },    // sniper rifle, first upgrade
-    { "P2000",    SECRET_UPGRADES, 0, { { 0, 2 } } },    // pistol, second upgrade
-    { "SLEEPY",   SECRET_UPGRADES, 0, { { 12, 1 } } },   // dart gun
-    { "AU P2K",   SECRET_UPGRADES, 0, { { 0, 3 } } },    // pistol, third upgrade
-    { "SESAME",   SECRET_UPGRADES, 0, { { 15, 1 } } },   // decryptor
-    { "ZAP",      SECRET_UPGRADES, 0, { { 18, 1 } } },   // stunner
-    { "PHOTON",   SECRET_UPGRADES, 0, { { 21, 1 } } },   // laser
-    { "MAGAZINE", SECRET_UPGRADES, 0, { { 9, 2 } } },    // sniper rifle, second upgrade
-    { "LAUNCH",   SECRET_UPGRADES, 0, { { 24, 1 } } },   // missile
+    { "Q LAB",    SECRET_UPGRADES, 0, {
+        { UPGRADE_BIT_SNIPER, 2 }, { UPGRADE_BIT_UNKNOWN8, 1 }, { UPGRADE_BIT_LASER, 1 }, { UPGRADE_BIT_TASER, 1 },
+        { UPGRADE_BIT_PDA, 1 }, { UPGRADE_BIT_HANDGUN, 3 }, { UPGRADE_BIT_DARTGUN, 1 }, { UPGRADE_BIT_CAMERA, 1 },
+        { UPGRADE_BIT_GRAPPLE, 1 } } },
+    { "AU PP7",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_HANDGUN, 1 } } },     // pistol, first upgrade
+    { "LIFTOFF",  SECRET_UPGRADES, 0, { { UPGRADE_BIT_GRAPPLE, 1 } } },     // grapple
+    { "SHUTTER",  SECRET_UPGRADES, 0, { { UPGRADE_BIT_CAMERA, 1 } } },      // camera
+    { "SCOPE",    SECRET_UPGRADES, 0, { { UPGRADE_BIT_SNIPER, 1 } } },      // sniper rifle, first upgrade
+    { "P2000",    SECRET_UPGRADES, 0, { { UPGRADE_BIT_HANDGUN, 2 } } },     // pistol, second upgrade
+    { "SLEEPY",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_DARTGUN, 1 } } },     // dart gun
+    { "AU P2K",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_HANDGUN, 3 } } },     // pistol, third upgrade
+    { "SESAME",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_PDA, 1 } } },         // decryptor
+    { "ZAP",      SECRET_UPGRADES, 0, { { UPGRADE_BIT_TASER, 1 } } },       // stunner
+    { "PHOTON",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_LASER, 1 } } },       // laser
+    { "MAGAZINE", SECRET_UPGRADES, 0, { { UPGRADE_BIT_SNIPER, 2 } } },      // sniper rifle, second upgrade
+    { "LAUNCH",   SECRET_UPGRADES, 0, { { UPGRADE_BIT_UNKNOWN8, 1 } } },    // missile
 };
 static_assert(ARRAY_SIZE(secret_codes) == 52, "the game has 52 secret codes");
 
@@ -220,7 +225,7 @@ static void SaveNewCodename(uchar managerNum) {
     ls.done = 0;
     ls.control = NULL;
     ls.field17_0x42 = 0;
-    Menu_UpdateMessageBox(managerNum, 0xff, 0);
+    Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
 }
 
 // AUTOINJECT
@@ -247,13 +252,13 @@ bool P_CNNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         for (int k = 0; k < 4; k++)
             __Menu_SendEx(managerNum, C_KEYBOARD, KEY_ACCENT_FIRST + k, MessageType_SetText, (intptr_t)&kbd_accent_keys[k], 0);
     } else if (message == MessageType_PageUpdate) {
-        Menu_UpdateMessageBox(managerNum, 0xff, 0);
+        Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
         undefined4 box = 0;
         undefined4 answer = Menu_UpdateOptionBox(&box);
         if (box == OPTIONBOX_OVERWRITE_CODENAME) {
-            if (answer == 1)
+            if (answer == OPTIONBOX_A)
                 SaveNewCodename(managerNum);
-        } else if (box == OPTIONBOX_UNLOCK_SUCCESS && answer != 0) {
+        } else if (box == OPTIONBOX_UNLOCK_SUCCESS && answer != OPTIONBOX_NO_ANSWER) {
             Manager_SendMessage(&manager[managerNum], MessageType_Back, 0, 0);
         }
     }

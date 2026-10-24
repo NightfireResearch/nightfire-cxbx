@@ -78,9 +78,6 @@ int bTweakBrightness;
 int bDebugControls = 1;
 
 // The movement substates the cheats put player 0 in (names ours)
-#define PLAYER_SUBSTATE_NORMAL 0
-#define PLAYER_SUBSTATE_FLY    5   // Player_SSScanMode
-#define PLAYER_SUBSTATE_ZEROG  9
 
 #define WEAPON_CHEAT_FIRST_WEAPON 0x01
 #define WEAPON_CHEAT_LAST_WEAPON  0x47
@@ -104,7 +101,7 @@ bool C_CHCHFLY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         uchar on = Checked(control);
         debug_scanmode = on;
         debug_clipmode = on;
-        Player_ChangeSubState(glb_players[0], on ? PLAYER_SUBSTATE_FLY : PLAYER_SUBSTATE_NORMAL);
+        Player_ChangeSubState(glb_players[0], on ? MovementType_ScanMode : MovementType_Walk);
     } else if (message == MessageType_ControlCreated) {
         ShowChecked(control, debug_scanmode);
     }
@@ -220,7 +217,7 @@ bool C_CHCHDUMMY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 bool C_CHCHZEROG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         zero_gravity = Checked(control);
-        Player_ChangeSubState(glb_players[0], zero_gravity ? PLAYER_SUBSTATE_ZEROG : PLAYER_SUBSTATE_NORMAL);
+        Player_ChangeSubState(glb_players[0], zero_gravity ? MovementType_ZeroG_Anim : MovementType_Walk);
     } else if (message == MessageType_ControlCreated) {
         ShowChecked(control, zero_gravity);
     }

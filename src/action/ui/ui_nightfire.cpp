@@ -4,6 +4,7 @@
 #include "Menu.h"
 #include "MenuManager.h"
 #include "../engine/Text.h"
+#include "../engine/LoadSave.h"
 #include "../game.h"
 #include "../sound/SFX.h"
 #include "../game/mp/multiplayer.h"
@@ -62,10 +63,10 @@ static uint8_t nf_mission_countdown;
 bool P_NFDFCTY_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         if ((HASHCODE)arg2 == P_NFSELECT) {
-            Menu_StartIris(0, managerNum, SUB_C_SBNFDFCTY_IRIS);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBNFDFCTY_IRIS);
             __Menu_Send(managerNum, C_SBNFDFCTY, MessageType_SetValue, 0, 0);
         } else {
-            Menu_StartIris(4, managerNum, SUB_C_SBNFDFCTY_IRIS);
+            Menu_StartIris(IRIS_LAST_FRAME, managerNum, SUB_C_SBNFDFCTY_IRIS);
         }
     } else if (message == MessageType_PageUpdate) {
         Menu_PlayIris(1, managerNum, SUB_C_SBNFDFCTY_IRIS);
@@ -102,7 +103,8 @@ bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         for (int i = 0; i < 4; i++)
             PlayerInputs[i].controllerPort = (undefined1)i;
         Menu_RestartFrontEndLoop();
-        Menu_StartIris((HASHCODE)arg2 == P_NFDFCTY ? 0 : 4, managerNum, SUB_C_SBNFMAP_IRIS);
+        Menu_StartIris((HASHCODE)arg2 == P_NFDFCTY ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME,
+                       managerNum, SUB_C_SBNFMAP_IRIS);
         // B goes back to the main menu when this is the first page (the menu was opened straight onto it)
         Action_TranslatedText hint = Stack_IsEmpty(&manager[managerNum].stack) ? NFMAP_HINT_BACK_TO_MAIN_MENU : NFMAP_HINT_BACK;
         LABEL_SET_TEXT(managerNum, SUB_P_NFMAP_BUTTON_HINT_TEXT, Txt_BindLabel(hint, 0));
@@ -126,7 +128,7 @@ bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
             }
         }
     } else if (message == MessageType_BackAtRoot) {
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MAIN, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MAIN, GOPAGE_NO_HISTORY);
     }
     return true;
 }
@@ -188,25 +190,23 @@ uint8_t results_saving;
 
 extern uint8_t menu_level_bonus_earned;  // MenuUnlocks.cpp
 
-#define MEDAL_NONE 5    // Menu_SetLevelBonus's medal for none
-
 // The format of the results' and the rewards' memos (the game's string, which a memo keeps)
 #define RESULTS_FORMAT FontFormat3
 
 // On from the results: to the rewards won, the end of the game, or the missions
 static void Results_GoOn(uchar managerNum) {
     if (menu_level_bonus_earned) {
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_NFBONUS, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_NFBONUS, GOPAGE_NO_HISTORY);
     } else if (results_last_mission) {
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_WINGAME, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_WINGAME, GOPAGE_NO_HISTORY);
     } else {
         LABEL_SET_TEXT(managerNum, SUB_P_NFMAP_BUTTON_HINT_TEXT, Txt_BindLabel(NFMAP_HINT_BACK_TO_MAIN_MENU, 0));
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_NFMAP, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_NFMAP, GOPAGE_NO_HISTORY);
     }
 }
 
 // The result: the score, the medal won and the next medal's target, and the mission's rewards given (by
-// Menu_SetLevelBonus, with the medal; a failed mission or one killed in action passes 4, as a platinum). Coming
+// Menu_SetLevelBonus, with the medal; a failed mission or one killed in action passes MEDAL_PLATINUM). Coming
 // back from the statistics or the dossier changes nothing. A then saves a better score (with a saved codename), and
 // goes on to the rewards won, the end of the game, or the missions.
 // AUTOINJECT
@@ -232,13 +232,13 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             case MISSION_STATUS_FAILED:
                 title = TXT_MISSION_FAILED;
                 sprintf(results_target_text, "%d", results_score->thresholdScoreBronze);
-                medal = 4;
+                medal = MEDAL_PLATINUM;
                 targetName = TXT_BRONZE_TARGET;
                 break;
             case MISSION_STATUS_QUIT:
                 title = TXT_KILLED_IN_ACTION;
                 sprintf(results_target_text, "%d", results_score->thresholdScoreBronze);
-                medal = 4;
+                medal = MEDAL_PLATINUM;
                 targetName = TXT_BRONZE_TARGET;
                 break;
             default: {
@@ -248,25 +248,25 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                 if (score == 0)
                     break;
                 if (score >= results_score->thresholdScorePlatinum) {
-                    medal = 4;
+                    medal = MEDAL_PLATINUM;
                     title = TXT_PLATINUM_WON;
                     targetName = TXT_PLATINUM_TARGET;
                     icon = HT_Texture_medal_platinum;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreGold) {
-                    medal = 3;
+                    medal = MEDAL_GOLD;
                     title = TXT_GOLD_WON;
                     targetName = TXT_PLATINUM_TARGET;
                     icon = HT_Texture_medal_gold;
                     SeparateNumber(results_score->thresholdScorePlatinum, results_target_text);
                 } else if (score >= results_score->thresholdScoreSilver) {
-                    medal = 2;
+                    medal = MEDAL_SILVER;
                     title = TXT_SILVER_WON;
                     targetName = TXT_GOLD_TARGET;
                     icon = HT_Texture_medal_silver;
                     SeparateNumber(results_score->thresholdScoreGold, results_target_text);
                 } else if (score >= results_score->thresholdScoreBronze) {
-                    medal = 1;
+                    medal = MEDAL_BRONZE;
                     title = TXT_BRONZE_WON;
                     targetName = TXT_SILVER_TARGET;
                     icon = HT_Texture_medal_bronze;
@@ -313,7 +313,7 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         break;
     case MessageType_PageUpdate: {
         uint answer = Menu_UpdateOptionBox(NULL);
-        if (answer == 1 || results_saving) {
+        if (answer == OPTIONBOX_A || results_saving) {
             ls.busy = 1;
             ls.slot = LS_SLOT_NEW;
             ls.returnPage = (HASHCODE)0;
@@ -322,12 +322,12 @@ bool P_NFRESULTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             ls.done = 0;
             ls.control = NULL;
             ls.field17_0x42 = 0;
-            Menu_UpdateMessageBox(managerNum, 0xff, 0);
-        } else if (answer == 2) {
+            Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
+        } else if (answer == OPTIONBOX_B) {
             ls.done = 1;
         }
         if (ls.slot >= CODENAME_SLOTS_DEFAULT)
-            Menu_UpdateMessageBox(managerNum, 0xff, 0);
+            Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
         if (ls.done) {
             Results_GoOn(managerNum);
             ls.done = 0;
@@ -375,7 +375,8 @@ bool P_NFBONUS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         break;
     }
     case MessageType_Select:
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, results_last_mission ? P_WINGAME : P_NFMAP, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, results_last_mission ? P_WINGAME : P_NFMAP,
+                            GOPAGE_NO_HISTORY);
         break;
     case MessageType_AltSelect1:
         Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_DOSSIER, 0);

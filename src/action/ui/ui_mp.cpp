@@ -72,69 +72,73 @@ M_ITEM mp_scenario[13] = {
 // The multiplayer characters (identifier = skin number). Items 12-28 are unlocked by rewards (Menu_UnlockMPSkins).
 // XBE_GLOBAL(0x0017c8e0, 0x2b8)
 M_ITEM mp_characters[29] = {
-    {HT_Texture_bot_bond, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, 0, 1, CHARACTER_LOCKED}, // Bond
-    {HT_Texture_bot_drake, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, 1, 1, CHARACTER_LOCKED}, // Drake
-    {HT_Texture_bot_rook, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, 2, 1, CHARACTER_LOCKED}, // Rook
-    {HT_Texture_bot_kiko, CHAR_KIKO_FULLNAME, CHAR_KIKO_DESC, 3, 1, CHARACTER_LOCKED}, // Kiko
-    {HT_Texture_bot_allura, CHAR_ALURA_FULLNAME, CHAR_ALURA_DESC, 4, 1, CHARACTER_LOCKED}, // Alura
-    {HT_Texture_bot_dominique, CHAR_DOMINIQUE_FULLNAME, CHAR_DOMINIQUE_DESC, 5, 1, CHARACTER_LOCKED}, // Dominique
-    {HT_Texture_bot_snowtrooper, CHAR_GUARD_FULLNAME, CHAR_GUARD_DESC, 6, 1, CHARACTER_LOCKED}, // Snow Guard
-    {HT_Texture_bot_blackops, CHAR_BLACKOPS_FULLNAME, CHAR_BLACKOPS_DESC, 7, 1, CHARACTER_LOCKED}, // Black Ops
-    {HT_Texture_bot_yakuza, CHAR_YAKUZA_FULLNAME, CHAR_YAKUZA_DESC, 8, 1, CHARACTER_LOCKED}, // Yakuza
-    {HT_Texture_bot_commando, CHAR_COMMANDO_FULLNAME, CHAR_COMMANDO_DESC, 9, 1, CHARACTER_LOCKED}, // Phoenix Commando
-    {HT_Texture_bot_soldier, CHAR_SOLDIER_FULLNAME, CHAR_SOLDIER_DESC, 0xa, 1, CHARACTER_LOCKED}, // Phoenix Soldier
-    {HT_Texture_bot_ninja, CHAR_NINJA_FULLNAME, CHAR_NINJA_DESC, 0xb, 1, CHARACTER_LOCKED}, // Ninja
-    {HT_Texture_bot_bondtux, CHAR_BONDTUX_FULLNAME, CHAR_BONDTUX_DESC, 0xc, 0, CHARACTER_LOCKED}, // Bond Tux
-    {HT_Texture_bot_drakesuit, CHAR_DRAKESUIT_FULLNAME, CHAR_DRAKESUIT_DESC, 0xd, 0, CHARACTER_LOCKED}, // Drake Suit
-    {HT_Texture_bot_bondspacesuit, CHAR_BONDSPACE_FULLNAME, CHAR_BONDSPACE_DESC, 0xe, 0, CHARACTER_LOCKED}, // Bond Spacesuit
-    {HT_Texture_bot_goldfinger, CHAR_GOLDFINGER_FULLNAME, CHAR_GOLDFINGER_DESC, 0xf, 0, CHARACTER_LOCKED}, // Goldfinger
-    {HT_Texture_bot_renard, CHAR_RENARD_FULLNAME, CHAR_RENARD_DESC, 0x10, 0, CHARACTER_LOCKED}, // Renard
-    {HT_Texture_bot_scaramanga, CHAR_SCARAMANGA_FULLNAME, CHAR_SCARAMANGA_DESC, 0x11, 0, CHARACTER_LOCKED}, // Scaramanga
-    {HT_Texture_bot_pussygalore, CHAR_GALORE_FULLNAME, CHAR_GALORE_DESC, 0x12, 0, CHARACTER_LOCKED}, // Pussy Galore
-    {HT_Texture_bot_christmasjones, CHAR_XMASJONES_FULLNAME, CHAR_XMASJONES_DESC, 0x13, 0, CHARACTER_LOCKED}, // Christmas Jones
-    {HT_Texture_bot_wailin, CHAR_WAILIN_FULLNAME, CHAR_WAILIN_DESC, 0x14, 0, CHARACTER_LOCKED}, // Wai Lin
-    {HT_Texture_bot_xeniaonatopp, CHAR_XENIA_FULLNAME, CHAR_XENIA_DESC, 0x15, 0, CHARACTER_LOCKED}, // Xenia Onatopp
-    {HT_Texture_bot_mayday, CHAR_MAYDAY_FULLNAME, CHAR_MAYDAY_DESC, 0x16, 0, CHARACTER_LOCKED}, // May Day
-    {HT_Texture_bot_elektra, CHAR_ELEKTRA_FULLNAME, CHAR_ELEKTRA_DESC, 0x17, 0, CHARACTER_LOCKED}, // Elektra King
-    {HT_Texture_bot_jaws, CHAR_JAWS_FULLNAME, CHAR_JAWS_DESC, 0x18, 0, CHARACTER_LOCKED}, // Jaws
-    {HT_Texture_bot_baronsamedi, CHAR_SAMEDI_FULLNAME, CHAR_SAMEDI_DESC, 0x19, 0, CHARACTER_LOCKED}, // Baron Samedi
-    {HT_Texture_bot_oddjob, CHAR_ODDJOB_FULLNAME, CHAR_ODDJOB_DESC, 0x1a, 0, CHARACTER_LOCKED}, // Oddjob
-    {HT_Texture_bot_niknak, CHAR_NICKNACK_FULLNAME, CHAR_NICKNACK_DESC, 0x1b, 0, CHARACTER_LOCKED}, // Nick Nack
-    {HT_Texture_bot_maxzorin, CHAR_ZORIN_FULLNAME, CHAR_ZORIN_DESC, 0x1c, 0, CHARACTER_LOCKED}, // Max Zorin
+    {HT_Texture_bot_bond, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, BOT_BOND, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_drake, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, BOT_DRAKE, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_rook, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, BOT_ROOK, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_kiko, CHAR_KIKO_FULLNAME, CHAR_KIKO_DESC, BOT_KIKO, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_allura, CHAR_ALURA_FULLNAME, CHAR_ALURA_DESC, BOT_ALURA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_dominique, CHAR_DOMINIQUE_FULLNAME, CHAR_DOMINIQUE_DESC, BOT_DOMINIQUE, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_snowtrooper, CHAR_GUARD_FULLNAME, CHAR_GUARD_DESC, BOT_GUARD, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_blackops, CHAR_BLACKOPS_FULLNAME, CHAR_BLACKOPS_DESC, BOT_BLACKOPS, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_yakuza, CHAR_YAKUZA_FULLNAME, CHAR_YAKUZA_DESC, BOT_YAKUZA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_commando, CHAR_COMMANDO_FULLNAME, CHAR_COMMANDO_DESC, BOT_COMMANDO, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_soldier, CHAR_SOLDIER_FULLNAME, CHAR_SOLDIER_DESC, BOT_SOLDIER, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_ninja, CHAR_NINJA_FULLNAME, CHAR_NINJA_DESC, BOT_NINJA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_bondtux, CHAR_BONDTUX_FULLNAME, CHAR_BONDTUX_DESC, BOT_BONDTUX, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_drakesuit, CHAR_DRAKESUIT_FULLNAME, CHAR_DRAKESUIT_DESC, BOT_DRAKESUIT, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_bondspacesuit, CHAR_BONDSPACE_FULLNAME, CHAR_BONDSPACE_DESC, BOT_BONDSPACE, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_goldfinger, CHAR_GOLDFINGER_FULLNAME, CHAR_GOLDFINGER_DESC, BOT_GOLDFINGER, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_renard, CHAR_RENARD_FULLNAME, CHAR_RENARD_DESC, BOT_RENARD, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_scaramanga, CHAR_SCARAMANGA_FULLNAME, CHAR_SCARAMANGA_DESC, BOT_SCARAMANGA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_pussygalore, CHAR_GALORE_FULLNAME, CHAR_GALORE_DESC, BOT_GALORE, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_christmasjones, CHAR_XMASJONES_FULLNAME, CHAR_XMASJONES_DESC, BOT_XMASJONES, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_wailin, CHAR_WAILIN_FULLNAME, CHAR_WAILIN_DESC, BOT_WAILIN, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_xeniaonatopp, CHAR_XENIA_FULLNAME, CHAR_XENIA_DESC, BOT_XENIA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_mayday, CHAR_MAYDAY_FULLNAME, CHAR_MAYDAY_DESC, BOT_MAYDAY, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_elektra, CHAR_ELEKTRA_FULLNAME, CHAR_ELEKTRA_DESC, BOT_ELEKTRA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_jaws, CHAR_JAWS_FULLNAME, CHAR_JAWS_DESC, BOT_JAWS, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_baronsamedi, CHAR_SAMEDI_FULLNAME, CHAR_SAMEDI_DESC, BOT_SAMEDI, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_oddjob, CHAR_ODDJOB_FULLNAME, CHAR_ODDJOB_DESC, BOT_ODDJOB, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_niknak, CHAR_NICKNACK_FULLNAME, CHAR_NICKNACK_DESC, BOT_NICKNACK, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_maxzorin, CHAR_ZORIN_FULLNAME, CHAR_ZORIN_DESC, BOT_ZORIN, 0, CHARACTER_LOCKED},
 };
 
 // The same characters with small icons, for the bot and player setup pages; unlocked alongside mp_characters.
 // XBE_GLOBAL(0x0017cb98, 0x2b8)
 M_ITEM mp_characters_small[29] = {
-    {HT_Texture_bot_bond_square, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, 0, 1, CHARACTER_LOCKED}, // Bond
-    {HT_Texture_bot_drake_square, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, 1, 1, CHARACTER_LOCKED}, // Drake
-    {HT_Texture_bot_rook_square, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, 2, 1, CHARACTER_LOCKED}, // Rook
-    {HT_Texture_bot_kiko_square, CHAR_KIKO_FULLNAME, CHAR_KIKO_DESC, 3, 1, CHARACTER_LOCKED}, // Kiko
-    {HT_Texture_bot_allura_square, CHAR_ALURA_FULLNAME, CHAR_ALURA_DESC, 4, 1, CHARACTER_LOCKED}, // Alura
-    {HT_Texture_bot_dominique_square, CHAR_DOMINIQUE_FULLNAME, CHAR_DOMINIQUE_DESC, 5, 1, CHARACTER_LOCKED}, // Dominique
-    {HT_Texture_bot_snowtrooper_square, CHAR_GUARD_FULLNAME, CHAR_GUARD_DESC, 6, 1, CHARACTER_LOCKED}, // Snow Guard
-    {HT_Texture_bot_blackops_square, CHAR_BLACKOPS_FULLNAME, CHAR_BLACKOPS_DESC, 7, 1, CHARACTER_LOCKED}, // Black Ops
-    {HT_Texture_bot_yakuza_square, CHAR_YAKUZA_FULLNAME, CHAR_YAKUZA_DESC, 8, 1, CHARACTER_LOCKED}, // Yakuza
-    {HT_Texture_bot_commando_square, CHAR_COMMANDO_FULLNAME, CHAR_COMMANDO_DESC, 9, 1, CHARACTER_LOCKED}, // Phoenix Commando
-    {HT_Texture_bot_soldier_square, CHAR_SOLDIER_FULLNAME, CHAR_SOLDIER_DESC, 0xa, 1, CHARACTER_LOCKED}, // Phoenix Soldier
-    {HT_Texture_bot_ninja_square, CHAR_NINJA_FULLNAME, CHAR_NINJA_DESC, 0xb, 1, CHARACTER_LOCKED}, // Ninja
-    {HT_Texture_bot_bondtux_square, CHAR_BONDTUX_FULLNAME, CHAR_BONDTUX_DESC, 0xc, 0, CHARACTER_LOCKED}, // Bond Tux
-    {HT_Texture_bot_drakesuit_square, CHAR_DRAKESUIT_FULLNAME, CHAR_DRAKESUIT_DESC, 0xd, 0, CHARACTER_LOCKED}, // Drake Suit
-    {HT_Texture_bot_bondspacesuit_square, CHAR_BONDSPACE_FULLNAME, CHAR_BONDSPACE_DESC, 0xe, 0, CHARACTER_LOCKED}, // Bond Spacesuit
-    {HT_Texture_bot_goldfinger_square, CHAR_GOLDFINGER_FULLNAME, CHAR_GOLDFINGER_DESC, 0xf, 0, CHARACTER_LOCKED}, // Goldfinger
-    {HT_Texture_bot_renard_square, CHAR_RENARD_FULLNAME, CHAR_RENARD_DESC, 0x10, 0, CHARACTER_LOCKED}, // Renard
-    {HT_Texture_bot_scaramanga_square, CHAR_SCARAMANGA_FULLNAME, CHAR_SCARAMANGA_DESC, 0x11, 0, CHARACTER_LOCKED}, // Scaramanga
-    {HT_Texture_bot_pussygalore_square, CHAR_GALORE_FULLNAME, CHAR_GALORE_DESC, 0x12, 0, CHARACTER_LOCKED}, // Pussy Galore
-    {HT_Texture_bot_christmasjones_square, CHAR_XMASJONES_FULLNAME, CHAR_XMASJONES_DESC, 0x13, 0, CHARACTER_LOCKED}, // Christmas Jones
-    {HT_Texture_bot_wailin_square, CHAR_WAILIN_FULLNAME, CHAR_WAILIN_DESC, 0x14, 0, CHARACTER_LOCKED}, // Wai Lin
-    {HT_Texture_bot_xeniaonatopp_square, CHAR_XENIA_FULLNAME, CHAR_XENIA_DESC, 0x15, 0, CHARACTER_LOCKED}, // Xenia Onatopp
-    {HT_Texture_bot_mayday_square, CHAR_MAYDAY_FULLNAME, CHAR_MAYDAY_DESC, 0x16, 0, CHARACTER_LOCKED}, // May Day
-    {HT_Texture_bot_elektra_square, CHAR_ELEKTRA_FULLNAME, CHAR_ELEKTRA_DESC, 0x17, 0, CHARACTER_LOCKED}, // Elektra King
-    {HT_Texture_bot_jaws_square, CHAR_JAWS_FULLNAME, CHAR_JAWS_DESC, 0x18, 0, CHARACTER_LOCKED}, // Jaws
-    {HT_Texture_bot_baronsamedi_square, CHAR_SAMEDI_FULLNAME, CHAR_SAMEDI_DESC, 0x19, 0, CHARACTER_LOCKED}, // Baron Samedi
-    {HT_Texture_bot_oddjob_square, CHAR_ODDJOB_FULLNAME, CHAR_ODDJOB_DESC, 0x1a, 0, CHARACTER_LOCKED}, // Oddjob
-    {HT_Texture_bot_niknak_square, CHAR_NICKNACK_FULLNAME, CHAR_NICKNACK_DESC, 0x1b, 0, CHARACTER_LOCKED}, // Nick Nack
-    {HT_Texture_bot_maxzorin_square, CHAR_ZORIN_FULLNAME, CHAR_ZORIN_DESC, 0x1c, 0, CHARACTER_LOCKED}, // Max Zorin
+    {HT_Texture_bot_bond_square, CHAR_BOND_FULLNAME, CHAR_BOND_DESC, BOT_BOND, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_drake_square, CHAR_DRAKE_FULLNAME, CHAR_DRAKE_DESC, BOT_DRAKE, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_rook_square, CHAR_ROOK_FULLNAME, CHAR_ROOK_DESC, BOT_ROOK, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_kiko_square, CHAR_KIKO_FULLNAME, CHAR_KIKO_DESC, BOT_KIKO, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_allura_square, CHAR_ALURA_FULLNAME, CHAR_ALURA_DESC, BOT_ALURA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_dominique_square, CHAR_DOMINIQUE_FULLNAME, CHAR_DOMINIQUE_DESC, BOT_DOMINIQUE, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_snowtrooper_square, CHAR_GUARD_FULLNAME, CHAR_GUARD_DESC, BOT_GUARD, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_blackops_square, CHAR_BLACKOPS_FULLNAME, CHAR_BLACKOPS_DESC, BOT_BLACKOPS, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_yakuza_square, CHAR_YAKUZA_FULLNAME, CHAR_YAKUZA_DESC, BOT_YAKUZA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_commando_square, CHAR_COMMANDO_FULLNAME, CHAR_COMMANDO_DESC, BOT_COMMANDO, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_soldier_square, CHAR_SOLDIER_FULLNAME, CHAR_SOLDIER_DESC, BOT_SOLDIER, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_ninja_square, CHAR_NINJA_FULLNAME, CHAR_NINJA_DESC, BOT_NINJA, 1, CHARACTER_LOCKED},
+    {HT_Texture_bot_bondtux_square, CHAR_BONDTUX_FULLNAME, CHAR_BONDTUX_DESC, BOT_BONDTUX, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_drakesuit_square, CHAR_DRAKESUIT_FULLNAME, CHAR_DRAKESUIT_DESC, BOT_DRAKESUIT, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_bondspacesuit_square, CHAR_BONDSPACE_FULLNAME, CHAR_BONDSPACE_DESC,
+        BOT_BONDSPACE, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_goldfinger_square, CHAR_GOLDFINGER_FULLNAME, CHAR_GOLDFINGER_DESC,
+        BOT_GOLDFINGER, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_renard_square, CHAR_RENARD_FULLNAME, CHAR_RENARD_DESC, BOT_RENARD, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_scaramanga_square, CHAR_SCARAMANGA_FULLNAME, CHAR_SCARAMANGA_DESC,
+        BOT_SCARAMANGA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_pussygalore_square, CHAR_GALORE_FULLNAME, CHAR_GALORE_DESC, BOT_GALORE, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_christmasjones_square, CHAR_XMASJONES_FULLNAME, CHAR_XMASJONES_DESC,
+        BOT_XMASJONES, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_wailin_square, CHAR_WAILIN_FULLNAME, CHAR_WAILIN_DESC, BOT_WAILIN, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_xeniaonatopp_square, CHAR_XENIA_FULLNAME, CHAR_XENIA_DESC, BOT_XENIA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_mayday_square, CHAR_MAYDAY_FULLNAME, CHAR_MAYDAY_DESC, BOT_MAYDAY, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_elektra_square, CHAR_ELEKTRA_FULLNAME, CHAR_ELEKTRA_DESC, BOT_ELEKTRA, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_jaws_square, CHAR_JAWS_FULLNAME, CHAR_JAWS_DESC, BOT_JAWS, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_baronsamedi_square, CHAR_SAMEDI_FULLNAME, CHAR_SAMEDI_DESC, BOT_SAMEDI, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_oddjob_square, CHAR_ODDJOB_FULLNAME, CHAR_ODDJOB_DESC, BOT_ODDJOB, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_niknak_square, CHAR_NICKNACK_FULLNAME, CHAR_NICKNACK_DESC, BOT_NICKNACK, 0, CHARACTER_LOCKED},
+    {HT_Texture_bot_maxzorin_square, CHAR_ZORIN_FULLNAME, CHAR_ZORIN_DESC, BOT_ZORIN, 0, CHARACTER_LOCKED},
 };
 
 // The multiplayer setup wheel. P_MPOPTIONS disables AI Bots on Ravine.
@@ -174,12 +178,13 @@ bool P_MPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
 
     switch((MessageType)message) {
         case MessageType_PageEnter: {
-            Menu_StartIris(((arg2 == P_MPSCENARIO) ? 0 : 4), managerNum, SUB_C_SBMPMAP_IRIS);
-            M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(managerNum, C_SBMPMAP, 0x39, 0, 0);
+            Menu_StartIris(((arg2 == P_MPSCENARIO) ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME),
+                           managerNum, SUB_C_SBMPMAP_IRIS);
+            M_CONTROL* ctrl = (M_CONTROL*)__Menu_Send(managerNum, C_SBMPMAP, MessageType_GetControl, 0, 0);
             Menu_SelectItemInControl(ctrl, mp_level, ARRAY_SIZE(mp_level), MPSettings.multiplayerLevelHashcode);
             break;
         }
-        case 0x50: {
+        case MessageType_PageUpdate: {
             Menu_PlayIris(1, managerNum, SUB_C_SBMPMAP_IRIS);
             break;
         }
@@ -209,8 +214,8 @@ bool C_SBMPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             }
             break;
         }
-        case 0x51: {
-            __Menu_SendMessage(control, 0x27, 0, 7);
+        case MessageType_ControlCreated: {
+            __Menu_SendMessage(control, MessageType_SetRange, 0, 7);
             break;
         }
     }
@@ -222,17 +227,17 @@ bool C_SBMPMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
 bool P_MPSCENARIO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     switch(message) {
         case MessageType_PageEnter: {
-            Menu_StartIris((arg2 == P_MAIN) ? 0 : 4, managerNum, SUB_C_SBMPSCEN_IRIS);
+            Menu_StartIris((arg2 == P_MAIN) ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME, managerNum, SUB_C_SBMPSCEN_IRIS);
             Menu_UnlockMPSettings();
-            M_CONTROL *ctrl = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, 0x39, 0, 0);
+            M_CONTROL *ctrl = (M_CONTROL *)__Menu_Send(managerNum, C_SBMPSCEN, MessageType_GetControl, 0, 0);
             Menu_SelectItemInControl(ctrl, mp_scenario, ARRAY_SIZE(mp_scenario), MPSettings.GameMode); // Start on the previously chosen game mode
             break;
         }
-        case 0x50: {
+        case MessageType_PageUpdate: {
             Menu_PlayIris(1, managerNum, SUB_C_SBMPSCEN_IRIS);
             break;
         }
-        case 0x63: {
+        case MessageType_BackAtRoot: {
             Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MAIN, 0);
             break;
         }
@@ -370,10 +375,10 @@ bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     if (message == MessageType_PageEnter) {
         M_CONTROL *wheel = CONTROL_GET(managerNum, C_SBMPOPTIONS);
         if ((HASHCODE)arg2 == P_MPSETUP) {
-            Menu_StartIris(0, managerNum, SUB_C_SBMPOPTIONS_IRIS);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBMPOPTIONS_IRIS);
             Menu_SelectItemInControl(wheel, mp_options, ARRAY_SIZE(mp_options), 0);
         } else {
-            Menu_StartIris(4, managerNum, SUB_C_SBMPOPTIONS_IRIS);
+            Menu_StartIris(IRIS_LAST_FRAME, managerNum, SUB_C_SBMPOPTIONS_IRIS);
         }
         mp_options[1].enabled = MPSettings.multiplayerLevelHashcode != HT_Level_Ravine;   // no bots on Ravine
     } else if (message == MessageType_PageUpdate) {
@@ -386,7 +391,8 @@ bool P_MPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 // AUTOINJECT
 bool P_MPBOTS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter || message == MessageType_PageResume) {
-        Menu_StartIris((HASHCODE)arg2 == P_MPOPTIONS ? 0 : 4, managerNum, SUB_C_SBBOTS_IRIS);
+        Menu_StartIris((HASHCODE)arg2 == P_MPOPTIONS ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME,
+                       managerNum, SUB_C_SBBOTS_IRIS);
         __Menu_Send(managerNum, C_SBBOTS, MessageType_SetValue, mp_editing_bot + 1, 0);
     } else if (message == MessageType_PageUpdate) {
         Menu_PlayIris(1, managerNum, SUB_C_SBBOTS_IRIS);
@@ -444,14 +450,15 @@ extern uint8_t mp_bond_bot_taken;
 static BOT_stats_t * mp_bot_default_stats; // the last stats copied into a bot
 
 static bool IsBondSkin(int skin) {
-    return skin == 0 || skin == 0xc || skin == 0xe;
+    return skin == BOT_BOND || skin == BOT_BONDTUX || skin == BOT_BONDSPACE;
 }
 
 // AUTOINJECT
 bool P_MPBOTCHOOSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
         Menu_UnlockMPSkins(0xff);
-        Menu_StartIris((HASHCODE)arg2 == P_MPBOTS ? 0 : 4, managerNum, SUB_C_SBMPBTCHOOSE_IRIS);
+        Menu_StartIris((HASHCODE)arg2 == P_MPBOTS ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME,
+                       managerNum, SUB_C_SBMPBTCHOOSE_IRIS);
         for (int i = 0; i < ARRAY_SIZE(mp_stuff); i++) {
             mp_stuff[i] = mp_characters[i];
             bool goodTaken = mp_good_bot_taken != 0 && mp_editing_bot + 10 != mp_good_bot_taken;
@@ -761,18 +768,19 @@ bool C_SBMPOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
             }
             bool teams = (MPSettings.GameMode & GM_TEAMGAME) != GM_QUICK;
             if (!teams && mi6 > 1) {
-                Menu_CreateOptionBox(managerNum, Txt_BindLabel(MP_GOOD_GUYS_WRONG_TEAM, 0), 0, 1, 0);
+                Menu_CreateOptionBox(managerNum, Txt_BindLabel(MP_GOOD_GUYS_WRONG_TEAM, 0),
+                                     OPTIONBOX_MP_GOOD_GUYS_WRONG_TEAM, 1, 0);
                 break;
             }
             if (teams && (phoenix == 0 || mi6 == 0)) {
                 sprintf(mp_option_box_text, Txt_BindLabel(MP_NO_PLAYERS_ON_TEAM, 0),
                         Txt_BindLabel(phoenix == 0 ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0));
-                Menu_CreateOptionBox(managerNum, mp_option_box_text, 8, 1, 0);
+                Menu_CreateOptionBox(managerNum, mp_option_box_text, OPTIONBOX_MP_NO_PLAYERS_ON_TEAM, 1, 0);
                 break;
             }
             if (MPSettings.numBots + MPSettings.numPlayers < 2) {
                 strcpy(mp_option_box_text, Txt_BindLabel(MP_NOT_ENOUGH_PLAYERS, 0));
-                Menu_CreateOptionBox(managerNum, mp_option_box_text, 7, 1, 0);
+                Menu_CreateOptionBox(managerNum, mp_option_box_text, OPTIONBOX_MP_NOT_ENOUGH_PLAYERS, 1, 0);
                 break;
             }
             Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPCONFIRM, 0);
@@ -972,7 +980,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_CHOOSE_TEAM, 0), 0);
             ShowTeamIcon(managerNum, control, agent);
             mp_join_step[agent] = JOIN_CHOOSE_TEAM;
-            *(int *)arg2 = -2;
+            *(int *)arg2 = BACK_REFUSED;
         } else if (mp_join_step[agent] == JOIN_CHOOSE_HANDICAP) {
             mp_join_step[agent] = JOIN_CHOOSE_CHARACTER;
             __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, agent, MessageType_SetText, (intptr_t)Txt_BindLabel(CFG_CHOOSE_CHARACTER, 0), 0);
@@ -988,7 +996,7 @@ bool C_RBMPSETUP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                 mp_bond_bot_taken = 0;
                 RefreshCharacterChoices(managerNum, NUM_PLAYERS, false);
             }
-            *(int *)arg2 = -2;
+            *(int *)arg2 = BACK_REFUSED;
         }
         break;
     }
@@ -1187,7 +1195,7 @@ bool P_MPJOIN_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         __Menu_SendDelayedMessage(19, &manager[managerNum].control, MessageType_Back, 1, 0);
         __Menu_SendDelayedMessage(19, &manager[managerNum].control, MessageType_LockInput, 0, 0);
         FadeJoinPage(managerNum, FADE_BLACK);
-        *(int *)arg2 = -2;
+        *(int *)arg2 = BACK_REFUSED;
         return true;
     }
     return true;
@@ -1252,7 +1260,7 @@ bool C_RBMPSTART_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         __Menu_SendMessage(control, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);
         __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_TITLE, player, MessageType_SetState, CONTROL_STATE_INERT, 0);
         __Menu_SendEx(managerNum, C_RBMPCNAME, player, MessageType_SetState, CONTROL_STATE_SHOWN, 0);
-        *(int *)arg2 = -2;
+        *(int *)arg2 = BACK_REFUSED;
         break;
     }
     return true;
@@ -1269,7 +1277,7 @@ bool C_RBMPCNAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
             break;
         mp_join_step[player] = JOIN_OUT;
         Manager_SendMessage(&manager[managerNum], MessageType_SetPlayerFocus, C_RBMPSTART, player);
-        *(int *)arg2 = -2;
+        *(int *)arg2 = BACK_REFUSED;
         break;
 
     case MessageType_PlayerFocusGained:
@@ -1397,7 +1405,7 @@ bool C_RBMPFINISH_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
             __Menu_SendMessage(title, MessageType_AddItem, (intptr_t)handicaps[i].text, handicaps[i].value);
         __Menu_SendMessage(title, MessageType_SelectItemByValue, MPSettings.Player[agent].HealthModifier, 0);
         __Menu_SendEx(managerNum, SUB_C_RBMPSETUP_ICON, agent, MessageType_SetState, CONTROL_STATE_INERT, 0);
-        *(int *)arg2 = -2;
+        *(int *)arg2 = BACK_REFUSED;
         break;
     }
     }
@@ -1634,7 +1642,7 @@ void __stdcall Menu_RestoreMPSettings(void) {
 bool C_MPDBG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
         Menu_RestoreMPSettings();
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, GOPAGE_NO_HISTORY);
     } else if (message == MessageType_AltSelect1) {
         ResetMap_LevelToLoad((HASHCODE)MPSettings.multiplayerLevelHashcode, false, false);
         GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);

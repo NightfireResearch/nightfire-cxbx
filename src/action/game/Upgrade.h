@@ -16,6 +16,20 @@ typedef enum {
     WUG_UNKNOWN8,
 } WeaponUpgradeGroup;
 
+// A group's first upgrade bit in a bonus, its WeaponUpgradeGroup times 3: the objId of its REWARD_UPGRADE rewards
+enum UpgradeBit {
+    UPGRADE_BIT_HANDGUN = WUG_Handgun * 3,
+    UPGRADE_BIT_GRAPPLE = WUG_Grapple * 3,
+    UPGRADE_BIT_CAMERA = WUG_Camera * 3,
+    UPGRADE_BIT_SNIPER = WUG_Sniper * 3,
+    UPGRADE_BIT_DARTGUN = WUG_DartGun * 3,
+    UPGRADE_BIT_PDA = WUG_PDA * 3,
+    UPGRADE_BIT_TASER = WUG_Taser * 3,
+    UPGRADE_BIT_LASER = WUG_Laser * 3,
+    UPGRADE_BIT_UNKNOWN8 = WUG_UNKNOWN8 * 3,
+    UPGRADE_BIT_NONE = 0x3f,            // the dossier's items with no upgrades
+};
+
 // Upgrades is an array of type uchar[4][9] located at 0x00279120. First index is player ID, second is weapon upgrade group
 extern uchar Upgrades[4][9];
 

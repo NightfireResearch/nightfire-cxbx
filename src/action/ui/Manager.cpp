@@ -35,9 +35,6 @@ typedef struct PAGE_HISTORY {
 #pragma pack(pop)
 LAYOUT_32(sizeof(PAGE_HISTORY) == 8, "PAGE_HISTORY is 8 bytes");
 
-// What MessageType_QueryBack's answer is set to by a handler that keeps the page
-#define BACK_REFUSED 0xfffffffe
-
 static M_PAGE* Manager_NextPage(M_PAGE *page) {
     return (M_PAGE *)((char *)page->pageLink[0] - offsetof(M_PAGE, pageLink));
 }
@@ -275,11 +272,11 @@ static int Manager_Back(M_MANAGER *mgr, int forced, int player) {
         int answer = player;
         if (page->playerFocus[player] != NULL) {
             Manager_SendMessage(mgr, MessageType_QueryBack, (intptr_t)page->playerFocus[player], (intptr_t)&answer);
-            if (answer == (int)BACK_REFUSED)
+            if (answer == BACK_REFUSED)
                 return 1;
         }
         Manager_SendMessage(mgr, MessageType_QueryBack, (intptr_t)page, (intptr_t)&answer);
-        if (answer == (int)BACK_REFUSED)
+        if (answer == BACK_REFUSED)
             return 1;
     }
     if (Stack_IsEmpty(&mgr->stack)) {

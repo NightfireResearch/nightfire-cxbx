@@ -59,6 +59,13 @@ block_header_tag DynamicBH;
 extern void *DynamicPtr;
 // XBE_GLOBAL(0x00274c88, 0x4)
 static uint32_t MapHashCode;
+// parsemap_parsemap's steps through a map, a call each
+enum ParseMapState {
+    PARSEMAP_LOAD = 0,
+    PARSEMAP_PARSE = 1,
+    PARSEMAP_DYNAMIC = 2,
+    PARSEMAP_SHRINK = 3,
+};
 // XBE_GLOBAL(0x00274ca4, 0x4)
 static uint32_t ParseMap_State;
 // XBE_GLOBAL(0x00274b58, 0x100)
@@ -88,8 +95,7 @@ void psiFileLoadForParse(char *name) {
 bool parsemap_parsemap(uint hashcode, bool secondPass) {
 
     switch(ParseMap_State) {
-        case 0: {
-            // Load the file into RAM?
+        case PARSEMAP_LOAD: {
             const char* filePath = "";
             sprintf(filename, "%s%8.8X.bin", filePath, hashcode);
             psiFileLoadForParse(filename);
@@ -97,33 +103,32 @@ bool parsemap_parsemap(uint hashcode, bool secondPass) {
             DynamicBH.size = 0;
             DynamicPtr = NULL;
             StartingNewMap = 1;
-            ParseMap_State = 1;
+            ParseMap_State = PARSEMAP_PARSE;
             return true;
         }
-        case 1: {
-            // Run parsemap_parsenextblock until completion
+        case PARSEMAP_PARSE: {
             bool complete = false;
             do {
                 complete = parsemap_parsenextblock(secondPass);
             } while(!complete);
 
-            ParseMap_State = 2;
+            ParseMap_State = PARSEMAP_DYNAMIC;
             return true;
         }
-        case 2: {
-            // If in the second pass, do stuff with dynamic data?
+        case PARSEMAP_DYNAMIC: {
+            // The first pass only: the map's dynamic data
             if(!secondPass) {
                 parsemap_block_map_data_dynamic(&DynamicBH, (uchar*)DynamicPtr, false);
             }
-            ParseMap_State = 3;
+            ParseMap_State = PARSEMAP_SHRINK;
             return true;
         }
-        case 3: {
-            // If in the second pass, shrink memory?
+        case PARSEMAP_SHRINK: {
+            // The first pass only: FileDiscard's block shrunk to end at FileLastBlock
             if(!secondPass) {
                 Mem_Shrink((void**)&FileDiscard, (uint)(FileLastBlock - FileDiscard));
             }
-            ParseMap_State = 0;
+            ParseMap_State = PARSEMAP_LOAD;
             break;
         }
 
@@ -275,7 +280,7 @@ typedef struct TARGET_PLACEMENT {
     _VECTOR pos;
     _VECTOR rot;
     quaternion_tag quat;
-    _VECTOR unknown;
+    _VECTOR scale;                  // 0x34
     ushort splinePoints;            // 0x40 - with a spline: the level_tag's
     ushort splineLength;            // 0x42
     ushort spline;                  // 0x44 - the map's path
@@ -301,54 +306,54 @@ typedef struct {
 
 typedef struct {
     PlacementHeader header; // 0x00
-    int range;// 0x2c
+    int brightness;         // 0x2c
     uchar r;
     char _pad_1[3];
     uchar g;
     char _pad_2[3];
     uchar b;
     char _pad_3[3];
-    undefined2 unknown1;
+    undefined2 switchChannel;
     char _pad_4[2];
-    undefined2 unknown2;
+    undefined2 flickerMax;
     char _pad_5[2];
-    undefined2 unknown3;
+    undefined2 flickerBase;
     char _pad_6[2];
-    undefined2 unknown4;
+    undefined2 flickerMask;
     char _pad_7[2];
-    int unknown5;
+    int soundID;
 } Create_Light_Params;
 
 typedef struct {
     PlacementHeader header; // 0x00
-    ushort unknown_2c;
+    ushort kind;            // 0x2c
     char pad_1[2];
-    ushort unknown_30;
+    ushort item;
     char pad_2[2];
-    uint unknown_34;
-    uint unknown_38;
-    uint unknown_3c;
-    ushort unknown_40;
+    uint count;
+    uint channel;
+    uint sound;
+    ushort respawn;         // 0x40
     char pad_3[2];
-    uint unknown_44;
+    uint label;
 } Create_Pickup_Params;
 
 typedef struct {
     PlacementHeader header; // 0x00
-    ushort unknown_2c;
+    ushort slot;            // 0x2c
     char pad_1[2];
-    char unknown_30;
+    char flash;
     char pad_2[3];
-    ushort unknown_34;
+    ushort interval;
     char pad_3[2];
-    ushort unknown_38;
+    ushort length;
     char pad_4[2];
-    char unknown_3c;
+    char pass;
 } Create_SkyObject_Params;
 
 typedef struct {
     PlacementHeader header; // 0x00
-    uchar unknown_2c; // Unused? Switch polarity?
+    uchar unusedKey;        // 0x2c - rotor_init's unusedKey
     uchar _pad_1[3];
     uchar switchChannel;
 } Create_Rotor_Params;
@@ -359,16 +364,16 @@ typedef struct {
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type,
                                      celglist_tag* celglist, void* spline, void* next, char doCreation) {
 
-    // Create local copies that can be passed by reference, for some reason?
+    // The placement's vectors copied, for the create functions to take by pointer
     _VECTOR pos;
     _VECTOR rot;
     quaternion_tag quat;
-    _VECTOR unknown; // Only used in Drone_AIVolume creation - scope down?
-    _MATRIX mtx; // Only used in Emitter creation - scope down?
+    _VECTOR scale; // the AI volumes'
+    _MATRIX mtx; // the emitters'
     Vec_Copy(&placement->pos, &pos);
     Vec_Copy(&placement->rot, &rot);
     Quat_Copy(&quat, &placement->quat);
-    Vec_Copy(&placement->unknown, &unknown);
+    Vec_Copy(&placement->scale, &scale);
 
     // Almost all are just dependent on doCreation
     // Exceptions:
@@ -434,7 +439,8 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_SkyObject:
             if(doCreation) {
                 Create_SkyObject_Params *skyObj = (Create_SkyObject_Params*)lvl;
-                View_AddSkyObj(skyObj->unknown_2c, celglist, &pos, &rot, 0, skyObj->unknown_30, skyObj->unknown_34, skyObj->unknown_38, skyObj->unknown_3c);
+                View_AddSkyObj(skyObj->slot, celglist, &pos, &rot, 0, skyObj->flash, skyObj->interval, skyObj->length,
+                               skyObj->pass);
             }
             return;
 
@@ -547,16 +553,17 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
             if(doCreation) {
                 Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
                 Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b,
-                            (float)lightParams->range,
-                            lightParams->unknown1, -1, LIGHT_PLACED, 1.0f,
-                            lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
+                            (float)lightParams->brightness,
+                            lightParams->switchChannel, -1, LIGHT_PLACED, 1.0f,
+                            lightParams->flickerMax, lightParams->flickerBase, lightParams->flickerMask,
+                            lightParams->soundID);
             }
             return;
 
         case Place_Rotor:
             if(doCreation) {
                 Create_Rotor_Params * rotorInfo = (Create_Rotor_Params*) lvl;
-                rotor_init(&pos, &rot, celglist, 0,rotorInfo->unknown_2c, rotorInfo->switchChannel);
+                rotor_init(&pos, &rot, celglist, 0,rotorInfo->unusedKey, rotorInfo->switchChannel);
             }
             return;
 
@@ -693,7 +700,9 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_Pickup:
             if(doCreation) {
                 Create_Pickup_Params *pickupParams = (Create_Pickup_Params*)(lvl);
-                Pickup_Create(&pos, &rot, NULL, celglist, pickupParams->unknown_2c, pickupParams->unknown_30, pickupParams->unknown_34, pickupParams->unknown_38, pickupParams->unknown_3c, 1,  pickupParams->unknown_40, 0,  pickupParams->unknown_44);
+                Pickup_Create(&pos, &rot, NULL, celglist, pickupParams->kind, pickupParams->item, pickupParams->count,
+                              pickupParams->channel, pickupParams->sound, 1, pickupParams->respawn, 0,
+                              pickupParams->label);
             }
             return;
 
@@ -723,7 +732,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
         case Place_DroneAIVolume1:
         case Place_DroneAIVolume2:
             if(doCreation)
-                Drone_AIVolume_Create(&pos, &rot, &unknown, lvl, celglist);
+                Drone_AIVolume_Create(&pos, &rot, &scale, lvl, celglist);
             return;
 
         case Place_SoundTrigger:

@@ -201,7 +201,7 @@ void Vec_Track(float blendFactor, float *targetPos, float *currentPos, _MATRIX *
   Vec_Normalise(&dir, &dir);
 
   _MATRIX targetMtx;
-  Mat_Align2Dir(&targetMtx, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+  Mat_Align2Dir(&targetMtx, &dir, &CONST_UP_VECTOR, &CONST_X_VECTOR);
 
   quaternion_tag currentQuat, targetQuat;
   Quat_MatToQuat(&currentQuat, matrix);

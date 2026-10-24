@@ -56,7 +56,39 @@ typedef struct M_CONTROL M_CONTROL;
 typedef struct M_ITEM M_ITEM;
 typedef struct M_MANAGER M_MANAGER;
 typedef struct M_PAGE M_PAGE;
-typedef unsigned int BotNum;   // Ghidra's enum of the multiplayer characters: an mp_characters identifier
+// The multiplayer characters (Ghidra's enum): mp_characters' identifiers, a bot's skin, named after each row's
+// CHAR_*_FULLNAME label
+enum BotNum : unsigned int {
+    BOT_BOND = 0,
+    BOT_DRAKE = 1,
+    BOT_ROOK = 2,
+    BOT_KIKO = 3,
+    BOT_ALURA = 4,
+    BOT_DOMINIQUE = 5,
+    BOT_GUARD = 6,
+    BOT_BLACKOPS = 7,
+    BOT_YAKUZA = 8,
+    BOT_COMMANDO = 9,
+    BOT_SOLDIER = 0xa,
+    BOT_NINJA = 0xb,
+    BOT_BONDTUX = 0xc,
+    BOT_DRAKESUIT = 0xd,
+    BOT_BONDSPACE = 0xe,
+    BOT_GOLDFINGER = 0xf,
+    BOT_RENARD = 0x10,
+    BOT_SCARAMANGA = 0x11,
+    BOT_GALORE = 0x12,
+    BOT_XMASJONES = 0x13,
+    BOT_WAILIN = 0x14,
+    BOT_XENIA = 0x15,
+    BOT_MAYDAY = 0x16,
+    BOT_ELEKTRA = 0x17,
+    BOT_JAWS = 0x18,
+    BOT_SAMEDI = 0x19,
+    BOT_ODDJOB = 0x1a,
+    BOT_NICKNACK = 0x1b,
+    BOT_ZORIN = 0x1c,
+};
 typedef struct M_MESSAGE M_MESSAGE;
 typedef struct M_SCRIPT M_SCRIPT;
 typedef struct M_KEYFRAME M_KEYFRAME;
@@ -217,7 +249,7 @@ extern obj_tag *glb_players[NUM_PLAYERS];
 extern _VECTOR CONST_UP_VECTOR;
 extern _VECTOR CONST_ZERO_VECTOR;
 extern _VECTOR GRAVITY_VECTOR;
-extern _VECTOR MAYBE_CONST_FORWARD_VECTOR;
+extern _VECTOR CONST_X_VECTOR;
 extern _MATRIX MAT_IDENTITY;
 
 extern uint32_t VIDEO_FRAME_RATE;

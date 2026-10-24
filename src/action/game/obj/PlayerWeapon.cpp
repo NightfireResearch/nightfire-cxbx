@@ -1914,7 +1914,7 @@ void Player_LaserPointer(obj_tag *player) {
     beam->rotation.z = 0.0f;
 
     if (hit != NULL) {
-        Mat_Align2Dir(&dot->transformMatrix, &hit->surfaceNormal.normal, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+        Mat_Align2Dir(&dot->transformMatrix, &hit->surfaceNormal.normal, &CONST_UP_VECTOR, &CONST_X_VECTOR);
         _VECTOR out2;
         Mat_GetDir(&out2, &dot->transformMatrix);
         dot->transformFlags |= TRANSFORM_MOVED;

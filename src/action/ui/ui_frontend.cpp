@@ -93,10 +93,10 @@ static const tLANGUAGE language_of_button[7] = {Lang_UK, Lang_GR, Lang_FR, Lang_
 // AUTOINJECT
 void Menu_SetSoundLanguage(int language) {
     switch (language) {
-        case Lang_FR: SFXSetLanguage(1); break;
-        case Lang_GR: SFXSetLanguage(2); break;
-        case Lang_SP: SFXSetLanguage(3); break;
-        default: SFXSetLanguage(0); break;
+        case Lang_FR: SFXSetLanguage(SFX_LANG_FRENCH); break;
+        case Lang_GR: SFXSetLanguage(SFX_LANG_GERMAN); break;
+        case Lang_SP: SFXSetLanguage(SFX_LANG_SPANISH); break;
+        default: SFXSetLanguage(SFX_LANG_ENGLISH); break;
     }
 }
 
@@ -134,7 +134,7 @@ bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         if (!AskForLanguage && LanguageToLoad != 9) {
             Txt_SetLanguage((tLANGUAGE)LanguageToLoad);
             Menu_SetSoundLanguage(LanguageToLoad);
-            Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, 1);
+            Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, GOPAGE_NO_HISTORY);
             return true;
         }
 
@@ -171,7 +171,7 @@ bool P_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         Txt_SetLanguage((tLANGUAGE)LanguageToLoad);
         Menu_SetSoundLanguage(LanguageToLoad);
         Language_SaveChoice();
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, GOPAGE_NO_HISTORY);
     }
     return true;
 }
@@ -192,7 +192,7 @@ bool C_LANGUAGE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         Txt_SetLanguage((tLANGUAGE)LanguageToLoad);
         Menu_SetSoundLanguage(LanguageToLoad);
         Language_SaveChoice();
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_INTRO, GOPAGE_NO_HISTORY);
     }
     return true;
 }
@@ -219,7 +219,7 @@ bool P_INTRO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
                 Menu_PlayMovie(HT_Level_Menu_MGMLogo, 0, 0, 1, 1, 0);
                 break;
             default:
-                Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_START, 1);
+                Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_START, GOPAGE_NO_HISTORY);
                 break;
         }
     }
@@ -345,10 +345,10 @@ bool P_PARISENUM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
                 Menu_RunMiniMission(managerNum);
         }
         switch (Menu_UpdateOptionBox(NULL)) {
-            case 1:     // ~A: carry on without saving
+            case OPTIONBOX_A:   // carry on without saving
                 Menu_RunMiniMission(managerNum);
                 break;
-            case 2:     // ~B: free some space
+            case OPTIONBOX_B:   // free some space
                 Menu_GoToDashboard();
                 break;
         }
@@ -360,7 +360,7 @@ bool P_PARISENUM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         if (Menu_WillRunMiniMission() && !Menu_CheckSaveSpace(managerNum, &ls))
             return true;
         if (!Menu_RunMiniMission(managerNum))
-            Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_ESTHERO, 1);
+            Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_ESTHERO, GOPAGE_NO_HISTORY);
     }
     return true;
 }
@@ -379,7 +379,7 @@ bool P_ESTHERO_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             Menu_PlayMovie(HT_Level_Menu_Esthero, 1, 0, 1, 1, 180);
         esthero_frame++;
         if (esthero_frame > 1 && psiMovieLoop())
-            __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_MAIN, 1);
+            __Menu_SendMessage(&manager[managerNum].control, MessageType_GoPage, P_MAIN, GOPAGE_NO_HISTORY);
     }
     return true;
 }
@@ -539,7 +539,7 @@ bool P_WINGAME_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
     }
     else if (message == MessageType_PageUpdate && psiMovieLoop()) {
         Menu_StopMovie(1);
-        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_CREDITS, 1);
+        Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_CREDITS, GOPAGE_NO_HISTORY);
     }
     return true;
 }

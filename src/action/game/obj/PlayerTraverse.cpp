@@ -283,7 +283,7 @@ void Player_GrappleSetRope(obj_tag *player) {
     AnimGetBoneWorldTrans(((BLData *)player->extraObjectData)->weaponObject, 0, 0, &gun, NULL);
     Vec_Subtract(point, &gun, &direction);
     Vec_Normalise(&direction, &direction);
-    Mat_Align2Dir(&blData->rope->transformMatrix, &direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Align2Dir(&blData->rope->transformMatrix, &direction, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     blData->rope->scale = Vec_Dist3D(&gun, point);
 }
 

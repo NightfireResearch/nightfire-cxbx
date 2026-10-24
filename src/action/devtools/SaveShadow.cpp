@@ -184,7 +184,7 @@ uint32_t Hash(const uchar *data, uint size) {
 
 undefined4 __cdecl FakeSaveData(void *data, uint32_t size, const char *name) {
     ShadowLog("save(%u,%08x,%s)", size, Hash((const uchar *)data, size), name);
-    psiInternalLoadingDataState = fake.saveWorks ? 4 : 5;
+    psiInternalLoadingDataState = fake.saveWorks ? PSISAVE_SAVED : PSISAVE_SAVE_FAILED;
     return 1;
 }
 
@@ -192,7 +192,7 @@ undefined4 __cdecl FakeLoadData(void *buffer, uint32_t *size, const char *name) 
     ShadowLog("load(%u,%s)", *size, name);
     memset(buffer, 0, *size);
     memcpy(buffer, fake.file, fake.fileSize < *size ? fake.fileSize : *size);
-    psiInternalLoadingDataState = fake.loadWorks ? 1 : 3;
+    psiInternalLoadingDataState = fake.loadWorks ? PSISAVE_LOADED : PSISAVE_LOAD_FAILED;
     return 1;
 }
 

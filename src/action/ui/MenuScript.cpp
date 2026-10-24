@@ -13,9 +13,6 @@
 
 #pragma fp_contract(off)
 
-// MenuManager_Update's B on a focused control: an event for its script slot 5, never sent as a message
-#define SCRIPT_EVENT_BACK 0x5b
-
 // The frames a process lasts when the script has no keyframe after it
 #define PROCESS_FRAMES 15
 

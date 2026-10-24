@@ -73,7 +73,7 @@ void Graphics_Init_LowLevel(void) {
     for (int y = 0; y < LOADING_DOT_SIZE; y++)
         for (int x = 0; x < LOADING_DOT_SIZE; x++)
             pixels[y * LOADING_DOT_SIZE + x] = LoadingDotArt[y][x] == '#' ? 0xffffffffu : 0;
-    LoadingDotTexture = RegisterTexture(LOADING_DOT_SIZE, LOADING_DOT_SIZE, 2, 1, pixels, 1);
+    LoadingDotTexture = RegisterTexture(LOADING_DOT_SIZE, LOADING_DOT_SIZE, TEXFMT_A8R8G8B8, 1, pixels, 1);
     d3dMarkTexturePermanent(LoadingDotTexture);
 }
 

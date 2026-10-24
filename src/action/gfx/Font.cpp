@@ -105,11 +105,6 @@ GPOINT TScale_138;
 // XBE_GLOBAL(0x001f655c, 0x8)
 GPOINT Size_137;
 
-// The control codes of a format
-#define FMT_COLOUR      0xfa    // r g b, and a byte not read
-#define FMT_ALIGN       0xfe
-#define FMT_FONT        0xff
-
 // The characters a text treats specially
 #define CHAR_SPACE      0x20
 #define CHAR_NBSP       0xa0
@@ -176,15 +171,15 @@ void Font_ParseFormat(const char *format, uint *flags) {
                 CharInfo.clrB = (uchar)*p;
                 p += 2;
                 break;
-            case 0xfb:
-            case 0xfc:
+            case FMT_FB:
+            case FMT_FC:
                 p++;
                 break;
             case FMT_ALIGN:
                 *(uchar *)flags = 0;
-                if (*p == 2)
+                if (*p == ALIGN_RIGHT)
                     *flags |= FONT_RIGHT;
-                else if (*p == 3)
+                else if (*p == ALIGN_CENTRE)
                     *flags |= FONT_CENTRE;
                 p++;
                 break;
@@ -540,7 +535,7 @@ uint Font_GetTextCountExtent(const char *text, const char *format, const GPOINT 
     return fit;
 }
 
-// The first alignment a format names (2 right, 3 centred), 1 if none
+// The first alignment a format names (a FontAlignment), ALIGN_LEFT if none
 // AUTOINJECT
 ushort Font_GetAlignment(const char *format) {
     const char *p = format;
@@ -550,8 +545,8 @@ ushort Font_GetAlignment(const char *format) {
             case FMT_COLOUR:
                 p += 4;
                 break;
-            case 0xfb:
-            case 0xfc:
+            case FMT_FB:
+            case FMT_FC:
             case FMT_FONT:
                 p++;
                 break;
@@ -561,5 +556,5 @@ ushort Font_GetAlignment(const char *format) {
                 break;
         }
     }
-    return 1;
+    return ALIGN_LEFT;
 }

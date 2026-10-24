@@ -36,7 +36,6 @@ extern uint8_t user_restarted_or_quit;  // MenuManager.cpp
 #define PAUSE_CONFIRM_LIST          13  // yes, no
 #define PAUSE_INVERTED_TEXT         14
 
-#define OPTIONBOX_OBJECTIVE_HINT 10
 
 static void Pause_SetState(uchar managerNum, int id, int state) {
     __Menu_SendEx(managerNum, C_GCPAUSE, id, MessageType_SetState, state, 0);
@@ -77,7 +76,7 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         break;
     }
     case MessageType_PageUpdate:
-        if (Menu_UpdateOptionBox(NULL) != 0)
+        if (Menu_UpdateOptionBox(NULL) != OPTIONBOX_NO_ANSWER)
             Pause_SetState(managerNum, PAUSE_PANEL_LIST, CONTROL_STATE_SHOWN);
         break;
     case MessageType_PageEnter: {
@@ -218,7 +217,7 @@ static void Pause_ShowScores(uchar managerNum) {
         Pause_PanelSend(managerNum, MessageType_ListSetColumnWidth, 0, 20);
         for (int column = 1; column < 5; column++)
             Pause_PanelSend(managerNum, MessageType_ListAddColumn, 20, 0);
-        static const uchar align[5] = {1, ALIGN_RIGHT, 1, 1, ALIGN_RIGHT};
+        static const uchar align[5] = {ALIGN_LEFT, ALIGN_RIGHT, ALIGN_LEFT, ALIGN_LEFT, ALIGN_RIGHT};
         for (int column = 0; column < 5; column++)
             Pause_PanelSend(managerNum, MessageType_ListSetColumnAlign, column, align[column]);
         for (int row = 0; row < 10; row++)

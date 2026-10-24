@@ -15,7 +15,22 @@
 //
 // psiCreateMapTextures registers every one of a level's ~500 textures on entry; d3dReleaseResources (below) frees
 // every non-permanent slot on each level change.
-int RegisterTexture(unsigned int width, unsigned int height, int formatType, unsigned int levels, void *data,
+//
+// formatType picks the Xbox format: 4 and 5, and 6 and 7, are the pairs the Xbox gives one code each.
+enum TexFormat {
+    TEXFMT_A1R5G5B5 = 0,        // and any value not below
+    TEXFMT_A4R4G4B4 = 1,
+    TEXFMT_A8R8G8B8 = 2,
+    TEXFMT_DXT1 = 3,
+    TEXFMT_DXT2 = 4,
+    TEXFMT_DXT3 = 5,
+    TEXFMT_DXT4 = 6,
+    TEXFMT_DXT5 = 7,
+    TEXFMT_P8 = 8,
+    TEXFMT_YUY2 = 9,            // always linear
+    TEXFMT_X8R8G8B8 = 10,
+};
+int RegisterTexture(unsigned int width, unsigned int height, TexFormat formatType, unsigned int levels, void *data,
                     int nonSwizzled);
 
 // Frees a texture slot returned by RegisterTexture (no-ops if its refcount is still nonzero).

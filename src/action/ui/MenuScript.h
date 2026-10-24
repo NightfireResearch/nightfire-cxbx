@@ -3,6 +3,9 @@
 
 #include "ui.h"
 
+// MenuManager_Update's B on a focused control: Script_PlayDefault's event for script slot 5, never sent as a message
+#define SCRIPT_EVENT_BACK 0x5b
+
 void Script_PrepareScripting(M_CONTROL *control);
 M_SCRIPT* Script_AddScript(M_CONTROL *control, int id);
 M_KEYFRAME* Script_AddKeyFrame(M_SCRIPT *script, M_KEYFRAME *key);

@@ -292,7 +292,7 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
     ATTACH_tag *mark = Effect_NewMark();
     if (mark == NULL)
         return;
-    Mat_Align2Dir(&mark->matrix, normal, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Align2Dir(&mark->matrix, normal, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     auxVec_AddMulR32(&hit->hitPosition, normal, 0.01f, (_VECTOR *)&mark->matrix.m[12]);
     mark->parent = hit->hitObj;
     hashtable_set_sub_object_to_entity_gfx(mark, EffectInfo[hit->materialType & MATERIAL_MASK].decal);

@@ -14,7 +14,7 @@
 
 #include "../util/crc.h"
 
-#define SOME_BUFFER_SIZE 0x13800
+#define FS_HEADER_CACHE_SIZE 0x13800   // the archive header and the file entries
 
 #define FLAG_IS_EDL_COMPRESSED (1 << 1)
 
@@ -46,7 +46,7 @@ static_assert(sizeof(FileEntry) == 0x26, "Bad size for FileEntry");
 
 typedef struct {
     char PathNormalisationTable[256];
-    char ramCache[SOME_BUFFER_SIZE];
+    char headerCache[FS_HEADER_CACHE_SIZE];
     ArchiveHeader *archiveHeader;
     FileEntry *fileEntries;
     int filesysHandles[64];
@@ -57,11 +57,11 @@ typedef struct {
     int fileLoadState;
     int fileIdx;   // the file being loaded: its index in fileEntries
     void* compressedDataPtr;     // the caller's buffer, where the file ends up
-    void* someDataPtr;           // where the file is read to: the buffer, or its tail when it is compressed
+    void* readPtr;               // where the file is read to: the buffer, or its tail when it is compressed
     int field_0x13a24;
-    uint32_t someOffsetLow;      // the file's offset in the archive set (unused once read by archive)
-    uint32_t someOffsetHigh;
-    int someDataLen;
+    uint32_t offsetLow;          // the file's offset in the archive set (unused once read by archive)
+    uint32_t offsetHigh;
+    int readLength;              // the bytes read and checked: the compressed length
     int filesysIdx;
     int offsetOfFileWithinArchive;
     char unknown4[4];
@@ -72,7 +72,7 @@ LAYOUT_32(sizeof(FileSystem_t) == 0x13a40, "Bad size for FileSystem_t");
 // One open file. The read is overlapped: the OVERLAPPED is Xbox's IO_STATUS_BLOCK under its Win32 name.
 struct FileOperationXbox {
     uint8_t open;             // 0x00 the slot is open
-    uint8_t field1_0x1;       // 0x01 the last operation succeeded
+    uint8_t succeeded;        // 0x01 the last operation succeeded
     uint8_t field2_0x2;
     uint8_t field3_0x3;
     HANDLE fileHandle;        // 0x04
@@ -191,7 +191,7 @@ int openOrCreateFile(char *nameRelated, char write) {
     LARGE_INTEGER size;
     op->fileSize = getFileSize_LargeInteger(op->fileHandle, &size) ? (int32_t)size.LowPart : -1;
     op->open = 1;
-    op->field1_0x1 = 1;
+    op->succeeded = 1;
     return idx;
 }
 
@@ -204,13 +204,13 @@ static bool FS_OperationInProgress(int idx) {
     uint32_t transferred = 0;
     int done = Xbox_GetOverlappedResult(op->fileHandle, &op->overlapped, &transferred, 0);
     op->readPending = done == 0;
-    op->field1_0x1 = 1;
+    op->succeeded = 1;
     if (op->readPending) {
         DWORD err = Xbox_GetLastError();
         if (err == ERROR_IO_PENDING || err == ERROR_IO_INCOMPLETE)
             return true;
         op->readPending = 0;
-        op->field1_0x1 = 0;
+        op->succeeded = 0;
         if (!op->fileReadMayFail)
             FS_FatalErrorHandler();
     }
@@ -256,9 +256,8 @@ void FS_Init(void) {
     }
     FileSystem.PathNormalisationTable['/'] = '\\';
 
-    // ??
-    FileSystem.archiveHeader = (ArchiveHeader*)FileSystem.ramCache;
-    FileSystem.fileEntries = (FileEntry*)(FileSystem.ramCache+0x20); // File list starts 32 bytes into the file 
+    FileSystem.archiveHeader = (ArchiveHeader*)FileSystem.headerCache;
+    FileSystem.fileEntries = (FileEntry*)(FileSystem.headerCache+0x20); // File list starts 32 bytes into the file 
     FileSystem.fileLoadState = 0;
 
     // Open all the on-disc files
@@ -273,14 +272,14 @@ void FS_Init(void) {
         if(filesysAt == 0) {
             do {
                 // Load the KXF header / metadata (only found in the first of the files)
-                FS_ReadFile(FileSystem.ramCache, 0x13800, 0, 0, FileSystem.filesysHandles[0]);
+                FS_ReadFile(FileSystem.headerCache, FS_HEADER_CACHE_SIZE, 0, 0, FileSystem.filesysHandles[0]);
                 
                 // Await completion of the file operation
                 while(FS_OperationInProgress(FileSystem.filesysHandles[0]))
                     ;
 
             } while ((XboxFileOperations[FileSystem.filesysHandles[0]].open == 0) ||
-                    (XboxFileOperations[FileSystem.filesysHandles[0]].field1_0x1 == 0));
+                    (XboxFileOperations[FileSystem.filesysHandles[0]].succeeded == 0));
 
             
         }
@@ -317,7 +316,7 @@ bool FS_OpInProgressWithCleanup(void) {
     if (FS_OperationInProgress(FileSystem.activeSlot))
         return true;
     FileOperationXbox *op = &XboxFileOperations[FileSystem.activeSlot];
-    FileSystem.readSucceeded = op->open != 0 ? op->field1_0x1 : 0;
+    FileSystem.readSucceeded = op->open != 0 ? op->succeeded : 0;
     if (FileSystem.readSucceeded == 0 && FileSystem.activeSlot == FileSystem.CacheFileHandleIdx)
         FileSystem.CacheFileHandleIdx = 0;
     return false;
@@ -361,12 +360,13 @@ bool FS_StateMachineIterate(void) {
                 return true;
 
             case FLSM_LOAD_FROM_DISC:
-                FS_ReadFromActualFile(FileSystem.someDataLen, FileSystem.someDataPtr, FileSystem.offsetOfFileWithinArchive, 0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
+                FS_ReadFromActualFile(FileSystem.readLength, FileSystem.readPtr, FileSystem.offsetOfFileWithinArchive,
+                                      0, FileSystem.filesysHandles[FileSystem.filesysIdx]);
                 FileSystem.fileLoadState = FLSM_CHECK_CRC;
                 return true;
             
             case FLSM_CHECK_CRC:
-                crc = crc32buf((uint8_t*)FileSystem.someDataPtr, FileSystem.someDataLen);
+                crc = crc32buf((uint8_t*)FileSystem.readPtr, FileSystem.readLength);
                 if (FileSystem.fileEntries[FileSystem.fileIdx].dataCrc != crc) {
                     NF_ASSERT(false, "CRC mismatch found in file loader state machine");
                     FS_FatalErrorHandler();
@@ -382,7 +382,7 @@ bool FS_StateMachineIterate(void) {
 
             case FLSM_DECOMPRESS_IF_REQD:
                 if ((FileSystem.fileEntries[FileSystem.fileIdx].flags & FLAG_IS_EDL_COMPRESSED)) {
-                    EDL_DecompressSection((char*)FileSystem.compressedDataPtr, (edl_section_t*)FileSystem.someDataPtr);
+                    EDL_DecompressSection((char*)FileSystem.compressedDataPtr, (edl_section_t*)FileSystem.readPtr);
                 }
                 FileSystem.fileLoadState = FLSM_FINISHED;
                 return true;
@@ -425,12 +425,12 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
     FileEntry *h = &FileSystem.fileEntries[idx];
     FileSystem.fileLoadState = FLSM_BEGIN_LOADING;
     FileSystem.compressedDataPtr = buffer;
-    FileSystem.someDataPtr = buffer;
+    FileSystem.readPtr = buffer;
     if (h->flags & FLAG_IS_EDL_COMPRESSED)
-        FileSystem.someDataPtr = (char *)buffer + (h->uncompressedLen - h->compressedLen) + 0x800;
-    FileSystem.someOffsetLow = h->offsetLow;
-    FileSystem.someOffsetHigh = h->offsetHigh;
-    FileSystem.someDataLen = h->compressedLen;
+        FileSystem.readPtr = (char *)buffer + (h->uncompressedLen - h->compressedLen) + 0x800;
+    FileSystem.offsetLow = h->offsetLow;
+    FileSystem.offsetHigh = h->offsetHigh;
+    FileSystem.readLength = h->compressedLen;
     FileSystem.filesysIdx = h->filesysIdx;
     FileSystem.offsetOfFileWithinArchive = h->offsetOfFileWithinArchive;
 }

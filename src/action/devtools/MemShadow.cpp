@@ -20,7 +20,8 @@
 #include <string.h>
 
 // memory.cpp's heap globals
-extern uint32_t PtrHeap, HeapByteSize, MallocMethod, QuickBlock;
+extern uint32_t PtrHeap, HeapByteSize, QuickBlock;
+extern tMallocMethod MallocMethod;
 
 // The game's
 #define GamePtrHeap      U32_AT(XbeOurs(0x00223a80))
@@ -97,7 +98,7 @@ static int RunMethod(uint32_t method, int steps) {
         XbeOriginalScope init(kMemInit);
         ((InitFn)(uintptr_t)kMemInit)();
     }
-    MallocMethod = method;
+    MallocMethod = (tMallocMethod)method;
     GameMallocMethod = method;
     CompareHeaps(-1);
 
@@ -199,7 +200,7 @@ static int RunMethod(uint32_t method, int steps) {
 }
 
 void MemShadow_Run(void) {
-    uint32_t saved[4] = {PtrHeap, HeapByteSize, MallocMethod, QuickBlock};
+    uint32_t saved[4] = {PtrHeap, HeapByteSize, (uint32_t)MallocMethod, QuickBlock};
     uint32_t savedGame[4] = {GamePtrHeap, GameHeapByteSize, GameMallocMethod, GameQuickBlock};
 
     // Same alignment for both, so that every alignment computation comes out the same
@@ -228,7 +229,7 @@ void MemShadow_Run(void) {
     _aligned_free(theirs);
     PtrHeap = saved[0];
     HeapByteSize = saved[1];
-    MallocMethod = saved[2];
+    MallocMethod = (tMallocMethod)saved[2];
     QuickBlock = saved[3];
     GamePtrHeap = savedGame[0];
     GameHeapByteSize = savedGame[1];

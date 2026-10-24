@@ -256,13 +256,10 @@ void psiInput_PollDevices(void) {
         float rx = (float)(int)c->controllerState.Gamepad.sThumbRX * 0.0030518044f + 0.0015259022f;
         float ry = (float)(int)c->controllerState.Gamepad.sThumbRY * 0.0030518044f + 0.0015259022f;
 
-        // unknown[8] (offsets 0x88-0xa4, in pairs per axis) are the snap-to-edge countdowns above;
-        // pad_5[4] (offsets 0x84-0x87, one byte per axis in LX,LY,RX,RY order) are the "locked" flags
-        // handled further down.
-        float lxThreshold = UpdateAxisSnapThreshold(lx, &c->unknown[0], &c->unknown[1]);
-        float lyThreshold = UpdateAxisSnapThreshold(ly, &c->unknown[3], &c->unknown[2]);
-        float rxThreshold = UpdateAxisSnapThreshold(rx, &c->unknown[4], &c->unknown[5]);
-        float ryThreshold = UpdateAxisSnapThreshold(ry, &c->unknown[7], &c->unknown[6]);
+        float lxThreshold = UpdateAxisSnapThreshold(lx, &c->axisSnapCountdown[0], &c->axisSnapCountdown[1]);
+        float lyThreshold = UpdateAxisSnapThreshold(ly, &c->axisSnapCountdown[3], &c->axisSnapCountdown[2]);
+        float rxThreshold = UpdateAxisSnapThreshold(rx, &c->axisSnapCountdown[4], &c->axisSnapCountdown[5]);
+        float ryThreshold = UpdateAxisSnapThreshold(ry, &c->axisSnapCountdown[7], &c->axisSnapCountdown[6]);
 
         lx = ApplyDeadzoneAndRescale(lx, lxThreshold);
         ly = ApplyDeadzoneAndRescale(ly, lyThreshold);
@@ -307,12 +304,20 @@ void psiInput_PollDevices(void) {
         c->buttons = buttons;
 
         // Per-axis "locked" flag: once set, holds that axis at 0 until it drops back under 80 (of the
-        // -100..100 range above). We haven't found anything in this binary that ever sets pad_5[0..3]
+        // -100..100 range above). We haven't found anything in this binary that ever sets axisLocked[0..3]
         // nonzero, so in practice this is inert - kept here for fidelity in case that's wrong.
-        if (c->pad_5[0] != 0) { if (fabsf(c->Joystick_LX) < 80.0f) c->pad_5[0] = 0; else c->Joystick_LX = 0.0f; }
-        if (c->pad_5[1] != 0) { if (fabsf(c->Joystick_LY) < 80.0f) c->pad_5[1] = 0; else c->Joystick_LY = 0.0f; }
-        if (c->pad_5[2] != 0) { if (fabsf(c->Joystick_RX) < 80.0f) c->pad_5[2] = 0; else c->Joystick_RX = 0.0f; }
-        if (c->pad_5[3] != 0) { if (fabsf(c->Joystick_RY) < 80.0f) c->pad_5[3] = 0; else c->Joystick_RY = 0.0f; }
+        if (c->axisLocked[0] != 0) {
+            if (fabsf(c->Joystick_LX) < 80.0f) c->axisLocked[0] = 0; else c->Joystick_LX = 0.0f;
+        }
+        if (c->axisLocked[1] != 0) {
+            if (fabsf(c->Joystick_LY) < 80.0f) c->axisLocked[1] = 0; else c->Joystick_LY = 0.0f;
+        }
+        if (c->axisLocked[2] != 0) {
+            if (fabsf(c->Joystick_RX) < 80.0f) c->axisLocked[2] = 0; else c->Joystick_RX = 0.0f;
+        }
+        if (c->axisLocked[3] != 0) {
+            if (fabsf(c->Joystick_RY) < 80.0f) c->axisLocked[3] = 0; else c->Joystick_RY = 0.0f;
+        }
 
         // Edge-trigger: .buttons becomes "just pressed this frame" (prevButtons masks out anything that
         // was already held last frame), and prevButtons is retained as "still held" for next frame.

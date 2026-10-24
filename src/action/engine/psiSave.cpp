@@ -46,7 +46,7 @@ static void BuildSavePath(char *out, size_t outSize, const char *profileName) {
 // AUTOINJECT
 undefined4 psiSaveData(void *data, uint32_t size, const char *profileName) {
     if (profileName == NULL || data == NULL || (int32_t)size < 1) {
-        psiInternalLoadingDataState = 5; // matches SaveFile_Write's "bad parameters" result
+        psiInternalLoadingDataState = PSISAVE_SAVE_FAILED; // SaveFile_Write's result for bad parameters
         return 1;
     }
 
@@ -62,7 +62,7 @@ undefined4 psiSaveData(void *data, uint32_t size, const char *profileName) {
         fclose(file);
     }
 
-    psiInternalLoadingDataState = ok ? 4 : 5; // 4 = success, 5 = failure (both matching the original's codes)
+    psiInternalLoadingDataState = ok ? PSISAVE_SAVED : PSISAVE_SAVE_FAILED;
     return 1;
 }
 
@@ -73,7 +73,7 @@ undefined4 psiSaveData(void *data, uint32_t size, const char *profileName) {
 // AUTOINJECT
 undefined4 psiLoadData(void *buffer, uint32_t *sizeInOut, const char *profileName) {
     if (profileName == NULL || buffer == NULL || sizeInOut == NULL || (int32_t)*sizeInOut < 1) {
-        psiInternalLoadingDataState = 2; // matches FUN_000e3700's "bad parameters" result
+        psiInternalLoadingDataState = PSISAVE_LOAD_BAD_ARGS; // FUN_000e3700's result for bad parameters
         return 1;
     }
 
@@ -84,14 +84,14 @@ undefined4 psiLoadData(void *buffer, uint32_t *sizeInOut, const char *profileNam
 
     FILE *file = fopen(path, "rb");
     if (file == NULL) {
-        psiInternalLoadingDataState = 3; // matches FUN_000e3580's "couldn't open/read" result
+        psiInternalLoadingDataState = PSISAVE_LOAD_FAILED; // FUN_000e3580's result
         return 1;
     }
 
     size_t bytesRead = fread(buffer, 1, *sizeInOut, file);
     fclose(file);
 
-    psiInternalLoadingDataState = (bytesRead > 0) ? 1 : 3; // 1 = success, matching the original's code
+    psiInternalLoadingDataState = (bytesRead > 0) ? PSISAVE_LOADED : PSISAVE_LOAD_FAILED;
     return 1;
 }
 
@@ -147,8 +147,6 @@ int32_t SaveEnum_EntriesPerFrame = 2;
 #define SAVE_CACHE_SKIPPED ((char)0xff)
 #define SAVE_ENUM_SKIP ((char*)-1)
 
-// psiInternalLoadingDataState value psiEndSaveEnum leaves behind
-#define SAVE_STATE_ENUM_ENDED 11
 
 // The original's find handle on "u:\" around a walk of the saves (0x000e3850 opens it, 0x000e3430 closes it).
 // The walk is of our own folder now (SaveEnum_GetNextEntry), so there is nothing to open.
@@ -168,7 +166,7 @@ static char g_saveEnumNameBuf[16]; // matches the original's 9-byte (8 char + NU
 void psiStartSaveEnum(void) {
     SavesListed = 0;
     saveflow_dashboard = 0;
-    psiInternalLoadingDataState = 10;
+    psiInternalLoadingDataState = PSISAVE_ENUM_RUNNING;
     SaveGamesReturned = 0;
 
     SaveGamesCached = 0; // force psiGetNextSaveName to do a fresh walk instead of ever trusting the stale cache
@@ -287,7 +285,7 @@ void psiEndSaveEnum(void) {
     SaveGamesReturned = 0;
     if(!SaveGamesCached)
         SaveDrive_Close();
-    psiInternalLoadingDataState = SAVE_STATE_ENUM_ENDED;
+    psiInternalLoadingDataState = PSISAVE_ENUM_ENDED;
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -296,22 +294,19 @@ void psiEndSaveEnum(void) {
 // space" message does.
 // ---------------------------------------------------------------------------------------------------------------
 
-#define SAVE_DELETED 8
-#define SAVE_DELETE_FAILED 9
-
 // FUNC_AT(000e3790)
 int SaveDrive_Delete(const char *profileName) {
     if (profileName == NULL)
-        return SAVE_DELETE_FAILED;
+        return PSISAVE_DELETE_FAILED;
     char path[256];
     BuildSavePath(path, sizeof(path), profileName);
-    return remove(path) == 0 ? SAVE_DELETED : SAVE_DELETE_FAILED;
+    return remove(path) == 0 ? PSISAVE_DELETED : PSISAVE_DELETE_FAILED;
 }
 
 // A codename's save deleted, and once it is, taken out of the cache (matched without case). The name is ours.
 int SaveGame_Delete(const char *profileName) {
     int result = SaveDrive_Delete(profileName);
-    if (result != SAVE_DELETED)
+    if (result != PSISAVE_DELETED)
         return result;
     for (int i = 0; i < NumberSaveGamesGot; i++) {
         if (_stricmp(profileName, SaveGameCache[i]) != 0)
@@ -327,28 +322,28 @@ int SaveGame_Delete(const char *profileName) {
     return result;
 }
 
-// The menus' poll of the last load, save and delete: 2 done, 4 not (PS2 names)
+// The menus' poll of the last load, save and delete
 // AUTOINJECT
 int psiLoadingData(void) {
-    return psiInternalLoadingDataState == 1 ? 2 : 4;
+    return psiInternalLoadingDataState == PSISAVE_LOADED ? PSI_DONE : PSI_NOT_DONE;
 }
 
 // AUTOINJECT
 int psiSavingData(void) {
-    return psiInternalLoadingDataState == 4 ? 2 : 4;
+    return psiInternalLoadingDataState == PSISAVE_SAVED ? PSI_DONE : PSI_NOT_DONE;
 }
 
 // Deleting is never waited for
 // AUTOINJECT
 int psiDeletingData(void) {
-    return 4;
+    return PSI_NOT_DONE;
 }
 
 // Deletes a codename's save, its result left for the polls; true if it was deleted. The name is ours.
 // AUTOINJECT
 bool psiDeleteSave(const char *profileName) {
     psiInternalLoadingDataState = SaveGame_Delete(profileName);
-    return psiInternalLoadingDataState == SAVE_DELETED;
+    return psiInternalLoadingDataState == PSISAVE_DELETED;
 }
 
 // Free blocks on the save drive, 50000 at most (0x000e37c0)

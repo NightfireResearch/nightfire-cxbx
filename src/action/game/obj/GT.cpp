@@ -302,7 +302,7 @@ void GT_AimAt(GUNTURRET *turret, _VECTOR *at) {
     Mat_GetUp(&up, &turret->aim);
     _MATRIX look;
     memset(&look, 0, sizeof(look));
-    Mat_LookAt(&look, (_VECTOR *)&turret->aim.m[12], at, &up, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_LookAt(&look, (_VECTOR *)&turret->aim.m[12], at, &up, &CONST_X_VECTOR);
     GT_InterpolateAimDir(&look, &turret->aim);
     Mat_Copy(&look, &turret->aim);
     if (turret->barrel != NULL)

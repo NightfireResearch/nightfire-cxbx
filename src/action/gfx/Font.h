@@ -11,6 +11,22 @@
 // 0xfc n nothing here, 0xfe n the alignment (2 right, 3 centred), 0xff n the font (FontTable[n]). In the text
 // itself, 0xba switches the colour, "~X" draws button symbol X (SpecialChars) and 0x99 draws T and M at half size.
 
+// The control codes of a format
+enum FontFormatCode {
+    FMT_COLOUR = 0xfa,      // r g b, and a byte not read
+    FMT_FB = 0xfb,          // a byte, not read here
+    FMT_FC = 0xfc,          // a byte, not read here
+    FMT_ALIGN = 0xfe,       // a FontAlignment
+    FMT_FONT = 0xff,        // FontTable's index
+};
+
+// FMT_ALIGN's byte, Font_GetAlignment's answer and a list column's alignment
+enum FontAlignment {
+    ALIGN_LEFT = 1,         // and a format without FMT_ALIGN
+    ALIGN_RIGHT = 2,
+    ALIGN_CENTRE = 3,
+};
+
 // The text's colours: its own, and the one 0xba switches to
 #define TEXT_NORMAL     0x7d6d59ff
 #define TEXT_HIGHLIGHT  0x785a14ff

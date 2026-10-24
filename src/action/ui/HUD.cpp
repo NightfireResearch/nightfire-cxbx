@@ -168,7 +168,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
             spr->depth = SPRITE_HIDDEN;
             return;
         }
-        crosshair = 1;
+        crosshair = CROSSHAIR_ZOOMED;
     } else {
         crosshair = (uchar)player->crosshairType;
     }
@@ -338,7 +338,7 @@ void HUD_ValidateXY(short *x, short *y, ushort width, ushort height, ushort play
     ushort maxY = (ushort)Ftol(bottom + (double)viewY);
 
     if (players == 2) {
-        if (MultiplayerLayout_LeftRightOrTopBtm == 1) {
+        if (MultiplayerLayout_LeftRightOrTopBtm == SPLIT_VERTICAL) {
             if (player == 0)
                 maxX = (ushort)Ftol(viewWidth);
             else if (player == 1)
@@ -3110,8 +3110,14 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 
 // XBE_GLOBAL(0x002790b4, 0x2)
 static int16_t OICW_timer;
+// HUD_UpdateOICWPane's steps: a line shown every 30 frames, then all of them flickering, then none
+enum OicwBoot {
+    OICW_BOOTING = 0,
+    OICW_FLICKER = 1,
+    OICW_READY = 2,
+};
 // XBE_GLOBAL(0x002790ae, 0x1)
-static uint8_t OICW_mode;
+static uint8_t OICW_mode;   // OicwBoot
 
 // AUTOINJECT
 void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *create,obj_tag *obj) {
@@ -3119,13 +3125,13 @@ void HUD_CreateOICWPane(BLData *playerInfo,HUDPANE_tag *pane,HUDPANECREATE_tag *
   HUD_CreateShrink(playerInfo,pane,create,obj);
 
   if (MPSettings.isMultiplayer) {
-    OICW_timer = -555; // 555 timer mentioned - this code was written by an electronics geek?
-    OICW_mode = 2;
+    OICW_timer = -555;
+    OICW_mode = OICW_READY;
     return;
   }
 
   OICW_timer = 150;
-  OICW_mode = 0;
+  OICW_mode = OICW_BOOTING;
 
   sprintf(pane->spriteList[2]->text,"COMMAND.COM\n");
   Sprite_SetText(pane->spriteList[2], pane->spriteList[2]->text);
@@ -3153,8 +3159,8 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 	if(!pane->enabled) { // Pane closed?
 		// Reset the "startup" sequence, unless we fully booted
-		if(OICW_mode != 2) {
-			OICW_mode = 0;
+		if(OICW_mode != OICW_READY) {
+			OICW_mode = OICW_BOOTING;
 			OICW_timer = 150;
 		}
 		// No need to update anything else
@@ -3165,7 +3171,7 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 	// Process the "startup" sequence
 	switch(OICW_mode) {
-		case 0:
+		case OICW_BOOTING:
 		{
 			// Phase 1: Make a new line visible every 30 frames
 			OICW_timer--;
@@ -3190,13 +3196,13 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 			if(OICW_timer <= 0) {
 				// Advance to phase 2 - all entries flicker fast
-				OICW_mode = 1;
+				OICW_mode = OICW_FLICKER;
 				OICW_timer = 30;
 			}
 
 			break;
 		}
-		case 1:
+		case OICW_FLICKER:
 		{
 			// Phase 2: All entries flicker
 			OICW_timer--;
@@ -3207,12 +3213,12 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 
 			if(OICW_timer <= 0) {
 				// Advance to phase 3
-				OICW_mode = 2;
+				OICW_mode = OICW_READY;
 			}
 
 			break;
 		}
-		case 2:
+		case OICW_READY:
 		{
 			// Fully booted - hide all the labels
 			pane->spriteList[2]->depth = SPRITE_HIDDEN;
@@ -3947,7 +3953,7 @@ void HUD_FixMP(sprite *spr, short player) {
             bottom -= 40;
             break;
         case 2:
-            if (MultiplayerLayout_LeftRightOrTopBtm == 1) {
+            if (MultiplayerLayout_LeftRightOrTopBtm == SPLIT_VERTICAL) {
                 top += 40;
                 if (player == 0)
                     left += 50;

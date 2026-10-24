@@ -76,7 +76,7 @@ BLData *glb_blokes[NUM_PLAYERS];
 // XBE_GLOBAL(0x001f6654, 0x10)
 obj_tag *glb_players[NUM_PLAYERS];
 // XBE_GLOBAL(0x0029d6d4, 0xc)
-_VECTOR MAYBE_CONST_FORWARD_VECTOR;
+_VECTOR CONST_X_VECTOR;
 // XBE_GLOBAL(0x0029d6e0, 0x3c)
 _MATRIX MAT_IDENTITY;
 // XBE_GLOBAL(0x0029d71c, 0xc)
@@ -930,7 +930,7 @@ void ResetMap_Load(void) {
         GameState.field5_0x14 = 0;
         if (GameState.NextLevelHashcode == HT_Level_SpaceStationA)
             GameState.NextLevelHashcode = HT_Level_SpaceStationD;
-        Mem_SetMallocMethod(0);
+        Mem_SetMallocMethod(MALLOC_NEXT_FIT);
         psiStartBackgroundMovie((HASHCODE)GameState.MovieHashcode, 0, SFXGetVolume());
         ResetMap_State = RESETMAP_MOVIE;
         return;
@@ -985,7 +985,7 @@ void ResetMap_Load(void) {
         if (GameState.CurrentLevelHashcode == HT_MainMenu)
             MenuManager_Create(GameState.ReloadMainMenu, (HASHCODE)GameState.ReloadMenupage, -1, 0,
                                MENU_NO_CLOSE_ACTION, 0, MENU_STATUS_FRONT_END);
-        Mem_SetMallocMethod(0);
+        Mem_SetMallocMethod(MALLOC_NEXT_FIT);
         hashtable_create_sections();
         GameFlow_PopState();
         GameFlow_PushState(GAMEFLOW_INIT_LOCKS, 0.0f, 0xff);
@@ -1270,9 +1270,9 @@ void bootup_bootup(void) {
   CONST_UP_VECTOR.y = 1.0f;
   CONST_UP_VECTOR.z = 0.0f;
 
-  MAYBE_CONST_FORWARD_VECTOR.x = 1.0;
-  MAYBE_CONST_FORWARD_VECTOR.y = 0.0;
-  MAYBE_CONST_FORWARD_VECTOR.z = 0.0;
+  CONST_X_VECTOR.x = 1.0;
+  CONST_X_VECTOR.y = 0.0;
+  CONST_X_VECTOR.z = 0.0;
 
   Mat_IdentityT(&MAT_IDENTITY);
 
@@ -1297,7 +1297,6 @@ uint32_t IsWidescreen;
 #define PTP_VERSION 1
 #define PTP_LOADED_FROM_DVD 2
 #define PTP_CHEAT_PARIS_PLATINUM 8  // fCheat: Paris has its platinum medal
-#define MEDAL_PLATINUM 3
 
 // The driving engine's level states (LevelStatus) a return reports
 #define PTP_LEVEL_COMPLETED 0
@@ -1383,7 +1382,8 @@ void Boot_GetPTPData(void **data, uint *size) {
     PTPDATA.WideScreen = IsWidescreen == 1;
     PTPDATA.fAntialiasMode = 0;
     PTPDATA.fMedalAwarded = Menu_GetBestMedal(GameState.NextLevelHashcode, 0);
-    if (Menu_HasMedal(HT_Level_Driving_Paris, MEDAL_PLATINUM, 0))
+    // Medal 3 is MEDAL_GOLD by P_NFRESULTS's medals; the bit is named for platinum
+    if (Menu_HasMedal(HT_Level_Driving_Paris, 3, 0))
         PTPDATA.fCheat |= PTP_CHEAT_PARIS_PLATINUM;
     else
         PTPDATA.fCheat &= ~PTP_CHEAT_PARIS_PLATINUM;
@@ -1496,10 +1496,6 @@ void Reset_MapLoadSettings(void) {
 
 // AUTOINJECT
 void GameFlow_Main(void) {
-  byte bVar2;
-  uint local_8;
-  void *local_4;
-
   GameState.NumFrames++;
 
   if ((sloflag == 0) && !GS_IsPaused(-1)) {
@@ -1507,12 +1503,12 @@ void GameFlow_Main(void) {
     GameState.VideoFrames += VIDEO_FRAME_RATE / FRAME_RATE_INT;
   }
 
-  // vestigial logic, value never read?
-  bVar2 = (byte)GameState.NumFrames & 0x3f;
-  if (0x1f < bVar2) {
-    bVar2 = 0x3f - bVar2;
+  // Nothing reads Pulse
+  byte pulse = (byte)GameState.NumFrames & 0x3f;
+  if (pulse > 0x1f) {
+    pulse = 0x3f - pulse;
   }
-  GameState.Pulse = bVar2 << 1;
+  GameState.Pulse = pulse << 1;
 
   switch(GameFlow_GetState()) {
   case GAMEFLOW_BOOT:
@@ -1553,13 +1549,14 @@ void GameFlow_Main(void) {
       GameFlow_PopState();
     }
     break;
-  case GAMEFLOW_DRIVING:
-    local_4 = (void *)0x0;
-    local_8 = 0;
-    Boot_GetPTPData(&local_4,&local_8);
-    psiLaunchDriving(local_4,local_8);
+  case GAMEFLOW_DRIVING: {
+    void *data = NULL;
+    uint size = 0;
+    Boot_GetPTPData(&data, &size);
+    psiLaunchDriving(data, size);
     GameFlow_PopState();
     break;
+  }
   case GAMEFLOW_10:
     Input_UpdateWithMouse();
     if (CheatInfo.someThing != 0) {
@@ -1568,7 +1565,7 @@ void GameFlow_Main(void) {
     Game_Draw();
     return;
   case GAMEFLOW_DELAYING:
-    if (glb_viewer[VIEWER_FADE] != NULL) { // Cutscene camera?
+    if (glb_viewer[VIEWER_FADE] != NULL) {
       if (!(glb_viewer[VIEWER_FADE]->fadeRate <= 0.0f)) {
         glb_viewer[VIEWER_FADE]->fadeRate = glb_viewer[VIEWER_FADE]->fadeRate - 1.0f;
       }
@@ -1621,7 +1618,7 @@ void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate) {
 
 // AUTOINJECT
 bool Graphics_IsPalI(void) {
-  return Gfx.isPalI;
+  return Gfx.is60Hz;
 }
 
 // The other region and video-mode flags xboxInitGraphics works out; each original is one MOV AL and a RET.
@@ -1656,11 +1653,7 @@ bool Graphics_IsSomeRegionBasedThing(void) {
 
 // AUTOINJECT
 void mainloop(void) {
-  // Fixed: this was backwards (50 for PAL, 60 otherwise) relative to the original's own formula at this
-  // exact spot ("(-(uint)(cVar1 != 0) & 10) + 50", i.e. 60 when Graphics_IsPalI() is true, 50 otherwise) -
-  // confirmed against the raw disassembly of both this function and xboxInitGraphics's matching refresh-
-  // rate calculation, which agree with each other and disagree with the ternary this used to have here.
-  // Despite the name, Graphics_IsPalI() reads true for everywhere except the PAL-I region specifically.
+  // Graphics_IsPalI reads Gfx.is60Hz: true outside the PAL-I region
   int refreshRate = Graphics_IsPalI() ? 60 : 50;
 
   int fpsOverride = Settings_GetFPSOverride();

@@ -1018,7 +1018,8 @@ uint32_t Run_RunMini(bool original) {
     return CALL(0x0007cd50, Menu_RunMiniMission, uchar (__cdecl *)(uchar), in.managerNum) & 0xff;
 }
 uint32_t Run_StartIris(bool original) {
-    CALL_VOID(0x0007f260, Menu_StartIris, void (__cdecl *)(uint, uchar, uint), in.a[0] % 6, in.managerNum, in.a[1]);
+    CALL_VOID(0x0007f260, Menu_StartIris, void (__cdecl *)(uint, uchar, uint),
+              (MENU_IRISOPS)(in.a[0] % 6), in.managerNum, in.a[1]);
     return 0;
 }
 uint32_t Run_PlayIris(bool original) {
@@ -1378,7 +1379,7 @@ uint32_t Run_UpdateControllers(bool original) {
     return 0;
 }
 uint32_t Run_BotShortName(bool original) {
-    BotNum skin = in.a[0] % 4 == 0 ? in.a[1] : in.a[1] % 32;
+    BotNum skin = (BotNum)(in.a[0] % 4 == 0 ? in.a[1] : in.a[1] % 32);
     return CALL(0x0007eb90, Menu_GetBotShortName, char *(__cdecl *)(BotNum), skin) == (uint32_t)BotString ? 1 : 2;
 }
 

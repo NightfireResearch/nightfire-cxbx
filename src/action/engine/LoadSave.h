@@ -8,18 +8,24 @@
 // return the state they found: 0 idle, 1 loading or 2 saving, 7 done, 8 failed; LS_FlushStates resets them.
 
 // The blocks, by their bit in a mask
-#define SAVE_PLRS 0x01   // one player's control options
-#define SAVE_MSSN 0x02   // missions open, best scores and Bond moments
-#define SAVE_MPSG 0x04   // one player's multiplayer settings
-#define SAVE_GSET 0x08   // volumes, subtitles, split-screen layout
-#define SAVE_CHET 0x10   // cheats
-#define SAVE_BNUS 0x20   // the bonus word
+enum SaveBlockMask {
+    SAVE_PLRS = 0x01,   // one player's control options
+    SAVE_MSSN = 0x02,   // missions open, best scores and Bond moments
+    SAVE_MPSG = 0x04,   // one player's multiplayer settings
+    SAVE_GSET = 0x08,   // volumes, subtitles, split-screen layout
+    SAVE_CHET = 0x10,   // cheats
+    SAVE_BNUS = 0x20,   // the bonus word
+    SAVE_ALL = 0xff,
+};
 
-#define LS_STATE_IDLE    0
-#define LS_STATE_LOADING 1
-#define LS_STATE_SAVING  2
-#define LS_STATE_DONE    7
-#define LS_STATE_FAILED  8
+// Load_State and Save_State, and what LS_Load and LS_Save return
+enum LSState {
+    LS_STATE_IDLE = 0,
+    LS_STATE_LOADING = 1,
+    LS_STATE_SAVING = 2,
+    LS_STATE_DONE = 7,
+    LS_STATE_FAILED = 8,
+};
 
 #define LS_SLOTS 4
 #define LS_SLOT_SIZE 0x1000

@@ -68,30 +68,31 @@ static char controller_text[256];
 #define MISSION_END_PAGE P_ENDMISSION
 
 // The menu data's records
-#define RECORD_PAGE             0xfffffff0  // a page of a menu, for some platforms
-#define RECORD_END              0xfffffff2
-#define RECORD_MANAGER_MESSAGE  0xfffffff3
-#define RECORD_KEY_MESSAGE      0xfffffff4  // a message the last keyframe sends
-#define RECORD_KEYFRAME         0xfffffff5  // of the last script
-#define RECORD_MESSAGE          0xfffffff6  // to the last control
-#define RECORD_SCRIPT           0xfffffff7  // of the last control
-#define RECORD_FONT             0xfffffff8  // of the last control
-#define RECORD_CONTROL          0xfffffff9
-#define RECORD_PIECE            0xfffffffb  // of the last skin
-#define RECORD_SKIN             0xfffffffc  // of the last set
-#define RECORD_SKIN_SET         0xfffffffd
-#define RECORD_SKIP             0xfffffffe
+enum MenuRecord : uint32_t {
+    RECORD_PAGE = 0xfffffff0,               // a page of a menu, for some platforms
+    RECORD_END = 0xfffffff2,
+    RECORD_MANAGER_MESSAGE = 0xfffffff3,
+    RECORD_KEY_MESSAGE = 0xfffffff4,        // a message the last keyframe sends
+    RECORD_KEYFRAME = 0xfffffff5,           // of the last script
+    RECORD_MESSAGE = 0xfffffff6,            // to the last control
+    RECORD_SCRIPT = 0xfffffff7,             // of the last control
+    RECORD_FONT = 0xfffffff8,               // of the last control
+    RECORD_CONTROL = 0xfffffff9,
+    RECORD_PIECE = 0xfffffffb,              // of the last skin
+    RECORD_SKIN = 0xfffffffc,               // of the last set
+    RECORD_SKIN_SET = 0xfffffffd,
+    RECORD_SKIP = 0xfffffffe,
+};
 
 // A record's platforms: all, or the Xbox
-#define PLATFORM_ALL  0
-#define PLATFORM_XBOX 1
+enum MenuPlatform {
+    PLATFORM_ALL = 0,
+    PLATFORM_XBOX = 1,
+};
 
 // The colour the menu data gives some texts, and the one the Xbox shows instead
 #define MENU_DATA_COLOUR TEXT_NORMAL
 #define XBOX_COLOUR      0x645a49ff
-
-// Script_PlayDefault's event for back
-#define SCRIPT_EVENT_BACK 0x5b
 
 // The status shown: the highest of the managers' (inline in the original's frame and watch, as here)
 static uint MenuManager_HighestStatus(void) {
@@ -354,7 +355,7 @@ uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNu
     menu_cursor.textureHashcode = (HASHCODE)0;
     menu_cursor.textRef = (Action_TranslatedText)(uintptr_t)MenuEmptyString;
     mgr->cursorSprite = Menu_CreateSprite(&menu_cursor);
-    Manager_SendMessage(mgr, MessageType_GoPage, startPage, 1);
+    Manager_SendMessage(mgr, MessageType_GoPage, startPage, GOPAGE_NO_HISTORY);
     Manager_SendMessage(mgr, MessageType_SetCursor, C_GONIGHTFIRE, 0);
     return result;
 }

@@ -46,12 +46,12 @@ bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         // Coming back from one of its own pages (Secret Unlocks among them) keeps the changes made so far; arriving
         // with a codename just picked, or just named, starts afresh.
         if ((HASHCODE)arg2 != P_CNSELECT && ((HASHCODE)arg2 != P_CNNAME || cn_secret_mode)) {
-            Menu_StartIris(4, managerNum, SUB_C_SBCNOPTIONS_IRIS);
+            Menu_StartIris(IRIS_LAST_FRAME, managerNum, SUB_C_SBCNOPTIONS_IRIS);
             break;
         }
         cn_modified = 0;
         Menu_SelectItemInControl(CONTROL_GET(managerNum, C_SBCNOPTIONS), cn_options, ARRAY_SIZE(cn_options), 1);
-        Menu_StartIris(0, managerNum, SUB_C_SBCNOPTIONS_IRIS);
+        Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBCNOPTIONS_IRIS);
         sprintf(cn_menu_title_text, Txt_BindLabel(CODENAME_EDIT_TITLE, 0), ls.codename);
         LABEL_SET_TEXT(managerNum, SUB_P_CNMENU_TITLE_TEXT, cn_menu_title_text);
         cn_options[6].title = ls.slot < 2 ? CODENAMES : SAVE_CODENAME;
@@ -61,8 +61,8 @@ bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
         break;
     case MessageType_PageUpdate:
         Menu_PlayIris(1, managerNum, SUB_C_SBCNOPTIONS_IRIS);
-        Menu_UpdateMessageBox(managerNum, 0xff, 0);
-        if (Menu_UpdateOptionBox(NULL) == 3)   // "lose your changes?" answered yes
+        Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
+        if (Menu_UpdateOptionBox(NULL) == OPTIONBOX_ANSWER_A)   // "lose your changes?" answered yes
             Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
         break;
     case MessageType_SaveFlowDone:
@@ -72,7 +72,7 @@ bool P_CNMENU_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint 
     case MessageType_QueryBack:
         if (cn_modified) {
             Menu_CreateOptionBoxLabel(managerNum, EXIT_LOSING_CHANGES_CONFIRM, OPTIONBOX_LOSE_CHANGES, 1, 1);
-            *(int *)arg2 = -2;   // stay on the page
+            *(int *)arg2 = BACK_REFUSED;   // stay on the page
         }
         break;
     }
@@ -115,7 +115,7 @@ bool C_SBCNOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
             ls.done = 0;
             ls.control = control;
             ls.field17_0x42 = 0;
-            Menu_UpdateMessageBox(managerNum, 0xff, 0);
+            Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
             break;
         }
         break;
@@ -150,11 +150,6 @@ uint8_t saveflow_cancel;  // clear the delayed messages instead of going on
 extern uint8_t saveflow_dashboard;  // B on the box leaves for the dashboard
 // XBE_GLOBAL(0x0025edb9, 0x1)
 uint8_t saveflow_relist;  // a codenames page lists the codenames as it enters or resumes
-
-// The option boxes the codenames page answers
-#define OPTIONBOX_DELETE_CODENAME 2
-#define OPTIONBOX_3               3   // no code in the Xbox build makes a box of this type
-#define OPTIONBOX_SAVE_SPACE      5   // Menu_CheckSaveSpace's
 
 // ---- the message box of a load, save or listing (XBox_DoSaveFlow)
 
@@ -207,30 +202,30 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
     case 2:
     case 3:
         switch (result) {
-        case 1:
-        case 8:
-        case 11:
+        case PSISAVE_LOADED:
+        case PSISAVE_DELETED:
+        case PSISAVE_ENUM_ENDED:
             saveflow_cancel = 0;
             break;
-        case 2:
-        case 3:
+        case PSISAVE_LOAD_BAD_ARGS:
+        case PSISAVE_LOAD_FAILED:
             saveflow_text = (char *)Txt_BindLabel(TXT_UNABLE_TO_LOAD_CODENAME, 0);
             operation->returnPage = (HASHCODE)0;
             saveflow_cancel = 1;
             break;
-        case 4:
+        case PSISAVE_SAVED:
             Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
             saveflow_text = (char *)Txt_BindLabel(TXT_SAVING, 0);
             saveflow_cancel = 0;
             break;
-        case 5:
-        case 6:
-        case 7:
+        case PSISAVE_SAVE_FAILED:
+        case PSISAVE_6:
+        case PSISAVE_7:
             saveflow_text = (char *)Txt_BindLabel(TXT_UNABLE_TO_SAVE_GAME, 0);
             operation->returnPage = (HASHCODE)0;
             saveflow_cancel = 1;
             break;
-        case 10:
+        case PSISAVE_ENUM_RUNNING:
             if (saveflow_frames == 1) {
                 Manager_SendMessage(mgr, MessageType_LockInput, 1, 0);
                 saveflow_tip = NULL;
@@ -243,7 +238,7 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             }
             saveflow_cancel = 0;
             break;
-        case 12:
+        case PSISAVE_12:
             saveflow_cancel = 1;
             break;
         }
@@ -256,10 +251,10 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
     case 8:
         // Held a little (or to the tip's end, while the box is up) before it is over
         if (saveflow_hold_until == 0) {
-            if (result == 4) {
+            if (result == PSISAVE_SAVED) {
                 saveflow_hold_until = 80;
                 saveflow_ls->listStale = 1;
-            } else if (result == 11) {
+            } else if (result == PSISAVE_ENUM_ENDED) {
                 if (saveflow_tip != NULL)
                     sprintf(saveflow_text_buffer, "%s\n%s", Txt_BindLabel(TXT_GETTING_CODENAMES, 0), saveflow_tip);
                 else
@@ -312,12 +307,12 @@ void XBox_DoSaveFlow(M_MANAGER *mgr, uint state, MENU_LS *operation) {
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_ListSetColumnAlign, 0, ALIGN_CENTRE);
             __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_SetPulse, 0, 0);
             switch (result) {
-            case 2:
-            case 3:
-            case 5:
-            case 6:
-            case 7:
-            case 12:
+            case PSISAVE_LOAD_BAD_ARGS:
+            case PSISAVE_LOAD_FAILED:
+            case PSISAVE_SAVE_FAILED:
+            case PSISAVE_6:
+            case PSISAVE_7:
+            case PSISAVE_12:
                 // An error: a choice to take, and the codenames listed again after
                 Manager_SendMessage(mgr, MessageType_LockInput, 0, 0);
                 __Menu_Send(mgr->index, C_LBERROPTIONS, MessageType_AddItem,
@@ -437,7 +432,6 @@ bool Menu_CodenameExists(const char *name) {
 #define CODENAME_FIRST_MAX 8          // the longest name a first-only enumeration takes
 #define CODENAME_MAX       0x20
 
-#define COLOUR_FADE 0xe1              // M_MESSAGE type: a colour fade (Process_Create)
 
 // XBE_GLOBAL(0x00224f70, 0x4)
 uint ls_state;                 // what the operation last returned, for XBox_DoSaveFlow
@@ -479,7 +473,7 @@ void Menu_UpdateMessageBox(uchar managerNum, ushort mask, byte slot) {
         else if (ls_delete_state != 5)
             break;
         ls_state = psiDeletingData();
-        if (ls_state == 4)
+        if (ls_state == PSI_NOT_DONE)
             ls_delete_state = 0;
         break;
     case LS_OPERATION_ENUM_FIRST:
@@ -716,7 +710,7 @@ void Menu_UpdateCodenameWheel(uchar managerNum, M_CONTROL *wheel, HASHCODE text,
                       (intptr_t)(slots[i] == LS_SLOT_NEW ? MenuSpaceString : codename_buf[slots[i]]), 0);
 
     if (turning)
-        Menu_StartIris(2, managerNum, iris);
+        Menu_StartIris(IRIS_WHEEL, managerNum, iris);
 }
 
 // Puts a codenames wheel on the codename, or on the first entry if it is not in the list.
@@ -777,7 +771,7 @@ static void ListCodenames(uchar managerNum, M_CONTROL *wheel) {
 
 static void FadeMenuGroup(uchar managerNum, HASHCODE group, int arg1) {
     M_MESSAGE fade = {};
-    fade.type = COLOUR_FADE;
+    fade.type = MESSAGE_PROCESS;
     fade.arg1 = arg1;
     fade.arg2 = 0;
     Process_Create(CONTROL_GET(managerNum, group), &fade, 0xf, 0);
@@ -789,7 +783,8 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
     case MessageType_PageEnter:
         ls.returnPage = (HASHCODE)0;
         Menu_SelectCodenameInControl(managerNum, ls.codename, C_SBCNSELECT);
-        Menu_StartIris((HASHCODE)arg2 == P_MAIN ? 0 : 4, managerNum, SUB_C_SBCNSELECT_IRIS);
+        Menu_StartIris((HASHCODE)arg2 == P_MAIN ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME,
+                       managerNum, SUB_C_SBCNSELECT_IRIS);
         saveflow_relist = 1;
         LABEL_SET_TEXT(managerNum, SUB_C_SBCNSELECT_WHEEL_TEXT, " ");
         // and on as when resuming
@@ -803,7 +798,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             saveflow_relist = 0;
         }
         if ((HASHCODE)arg2 == P_MAIN) {
-            Menu_StartIris(0, managerNum, SUB_C_SBCNSELECT_IRIS);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBCNSELECT_IRIS);
             LABEL_SET_COLOUR(managerNum, SUB_P_CNSELECT_MENU_GROUP, 0xff);
             M_MANAGER *mgr = &manager[managerNum];
             __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
@@ -834,13 +829,13 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             if (ls.returnPage != 0)
                 Menu_ChangePageCloseIris(ls.returnPage, managerNum, SUB_C_SBCNSELECT_IRIS);
         } else {
-            Menu_UpdateMessageBox(managerNum, 0xff, 0);
+            Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
         }
         undefined4 box = 0;
         undefined4 answer = Menu_UpdateOptionBox(&box);
         switch (box) {
         case OPTIONBOX_DELETE_CODENAME:
-            if (answer == 1) {
+            if (answer == OPTIONBOX_A) {
                 if (psiDeleteSave(codename_buf[__Menu_Send(managerNum, C_SBCNSELECT, MessageType_GetValue, 0, 0)])) {
                     M_CONTROL *wheel = CONTROL_GET(managerNum, C_SBCNSELECT);
                     ls.listStale |= 1;
@@ -852,7 +847,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             }
             break;
         case OPTIONBOX_3:
-            if (answer == 1) {
+            if (answer == OPTIONBOX_A) {
                 ls.done = 1;
                 ls.canSave = 0;
                 if (ls.slot > 0 && ls.slot < CODENAME_SLOTS_DEFAULT)
@@ -861,7 +856,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             }
             // and on, as for the space box
         case OPTIONBOX_SAVE_SPACE:
-            if (answer == 2)
+            if (answer == OPTIONBOX_B)
                 Menu_GoToDashboard();
             break;
         }
@@ -882,7 +877,7 @@ bool P_CNSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_GoPage, P_MAIN, 0);
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_LockInput, 0, 0);
         FadeMenuGroup(managerNum, SUB_P_CNSELECT_MENU_GROUP, 0xff);
-        *(int *)arg2 = -2;   // stay on the page meanwhile
+        *(int *)arg2 = BACK_REFUSED;   // stay on the page meanwhile
         break;
     }
     }
@@ -978,7 +973,6 @@ uint8_t nfselect_leaving;         // a codename was loaded, or the wheel redrawn
 // XBE_GLOBAL(0x0017d609, 0x1)
 uint8_t nfselect_from_main_menu = 1; // the wheel starts on "Default"
 
-#define OPTIONBOX_DEFAULT_CODENAME 9      // "You won't be able to save your progress using this default profile..."
 
 // As P_CNSELECT, for the campaign: a codename is picked, then the difficulty. Entering puts the Codenames page's
 // wheel (not this page's) on the codename in hand, as the original does.
@@ -988,7 +982,7 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
     case MessageType_PageEnter:
         ls.returnPage = (HASHCODE)0;
         Menu_SelectCodenameInControl(managerNum, ls.codename, C_SBCNSELECT);
-        Menu_StartIris((HASHCODE)arg2 == P_MAIN ? 0 : 4, managerNum, SUB_C_SBNFCN_IRIS);
+        Menu_StartIris((HASHCODE)arg2 == P_MAIN ? IRIS_FROM_MIDDLE : IRIS_LAST_FRAME, managerNum, SUB_C_SBNFCN_IRIS);
         saveflow_relist = 1;
         LABEL_SET_TEXT(managerNum, SUB_C_SBNFCN_WHEEL_TEXT, MenuSpaceString);
         // and on as when resuming
@@ -1002,7 +996,7 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             saveflow_relist = 0;
         }
         if ((HASHCODE)arg2 == P_MAIN) {
-            Menu_StartIris(0, managerNum, SUB_C_SBNFCN_IRIS);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBNFCN_IRIS);
             LABEL_SET_COLOUR(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0xff);
             M_MANAGER *mgr = &manager[managerNum];
             __Menu_SendMessage(&mgr->control, MessageType_LockInput, 1, 0);
@@ -1028,16 +1022,16 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         uint box = 0;
         uint answer = Menu_UpdateOptionBox(&box);
         if (box == OPTIONBOX_SAVE_SPACE) {
-            if (answer == 1) {
+            if (answer == OPTIONBOX_A) {
                 ls.done = 1;
                 ls.canSave = 0;
                 // The original hands the iris P_NFDFCTY's low byte as the manager (0x23), not managerNum
                 if (ls.slot > 0 && ls.slot < CODENAME_SLOTS_DEFAULT)
                     Menu_ChangePageCloseIris(ls.returnPage, (uchar)P_NFDFCTY, SUB_C_SBNFCN_IRIS);
-            } else if (answer == 2) {
+            } else if (answer == OPTIONBOX_B) {
                 Menu_GoToDashboard();
             }
-        } else if (box == OPTIONBOX_DEFAULT_CODENAME && answer == 3) {
+        } else if (box == OPTIONBOX_DEFAULT_CODENAME && answer == OPTIONBOX_ANSWER_A) {
             Menu_ChangePageCloseIris(P_NFDFCTY, managerNum, SUB_C_SBNFCN_IRIS);
         }
         // a default codename picked on the wheel needs no load
@@ -1046,7 +1040,7 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
             Menu_MapDefaultCodename(0, ls.slot, 0xff);
             Menu_ChangePageCloseIris(ls.returnPage, managerNum, SUB_C_SBNFCN_IRIS);
         } else {
-            Menu_UpdateMessageBox(managerNum, 0xff, 0);
+            Menu_UpdateMessageBox(managerNum, SAVE_ALL, 0);
         }
         break;
     }
@@ -1065,7 +1059,7 @@ bool P_NFSELECT_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uin
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_GoPage, P_MAIN, 0);
         __Menu_SendDelayedMessage(0x13, &mgr->control, MessageType_LockInput, 0, 0);
         FadeMenuGroup(managerNum, SUB_P_NFSELECT_MENU_GROUP, 0xff);
-        *(int *)arg2 = -2;   // stay on the page meanwhile
+        *(int *)arg2 = BACK_REFUSED;   // stay on the page meanwhile
         break;
     }
     }

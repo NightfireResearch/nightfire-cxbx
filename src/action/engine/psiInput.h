@@ -30,8 +30,8 @@ typedef struct {
     ushort rumbleB;
     char pad_4[2];
     uint prevButtons;
-    char pad_5[4];
-    int unknown[8]; // Angle-Magnitude or some other representations of joysticks / D-Pads?
+    char axisLocked[4];         // 0x84 LX, LY, RX, RY: held at 0 until the stick is back under 80
+    int axisSnapCountdown[8];   // 0x88 two per axis: the snap-to-edge countdowns
 } ControllerStateStruct;
 
 static_assert(sizeof(ControllerStateStruct) == 0xa8, "Bad size for ControllerStateStruct");
@@ -47,8 +47,8 @@ typedef struct {
 
 static_assert(sizeof(XboxInputs_struct) == 0x2a4, "Bad size for XboxInputs struct");
 
+// PlayerInput.controlStyle: in the order P_CNCONTROLS and P_PAUSE name the styles (ui_options.cpp's style_names)
 typedef enum {
-    // TODO: Inferred from P_PAUSE_HANDLER / P_CNCONTROLS_Handler but needs checking
     CONTROLSTYLE_NIGHTFIRE,
     CONTROLSTYLE_MOONRAKER,
     CONTROLSTYLE_OCTOPUSSY,

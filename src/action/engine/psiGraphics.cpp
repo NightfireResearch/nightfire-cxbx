@@ -143,7 +143,7 @@ void psiResetResources(void) {
 
     debug_scanmode = 0;
     debug_clipmode = 0;
-    psiInternalLoadingDataState = 0;
+    psiInternalLoadingDataState = PSISAVE_IDLE;
     ScreenBlur = 0;
 
     BackgroundMovieCleanup();
@@ -226,18 +226,18 @@ void psiPreDraw(void) {
     psiUpdateBackgroundMovie();
 }
 
-// RegisterTexture's format for a texture: by depth for formatType 0, one of four for 2..5, else 3
-static int TextureInfo_Format(const TextureInfo *tex) {
+// RegisterTexture's format for a texture: by depth for formatType 0, DXT2 to DXT5 for 2 to 5, else DXT1
+static TexFormat TextureInfo_Format(const TextureInfo *tex) {
     switch (tex->formatType) {
     case 0:
         if (tex->bitsPerPixel == 4)
-            return 1;
-        return tex->bitsPerPixel == 8 ? 2 : 0;
-    case 2: return 4;
-    case 3: return 5;
-    case 4: return 6;
-    case 5: return 7;
-    default: return 3;
+            return TEXFMT_A4R4G4B4;
+        return tex->bitsPerPixel == 8 ? TEXFMT_A8R8G8B8 : TEXFMT_A1R5G5B5;
+    case 2: return TEXFMT_DXT2;
+    case 3: return TEXFMT_DXT3;
+    case 4: return TEXFMT_DXT4;
+    case 5: return TEXFMT_DXT5;
+    default: return TEXFMT_DXT1;
     }
 }
 

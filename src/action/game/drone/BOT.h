@@ -55,7 +55,6 @@ enum {
 };
 
 // BOT_vars_t.skin: the character whose bot throws Weap_OddjobHat, which comes back every 10 s
-#define BOT_SKIN_ODDJOB 0x1a
 
 // BOT_goal_t.flags
 #define BOT_GOAL_COMPLETE 0x1           // BOTSTATE_setGoalComplete

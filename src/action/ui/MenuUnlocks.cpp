@@ -97,7 +97,7 @@ bool Menu_SetLevelBonus(int level, uint medal, byte player) {
         GameState.WeaponUpgradeRelated = 1;
     bool lastMission = level == HT_Level_SpaceStationD;
     REWARDINFO_tag info = {};
-    if (medal < 5)
+    if (medal < MEDAL_NONE)
         for (; (int)medal > 0; medal--) {
             PlrStarts_ProcessRewardCounter(bonus, (HASHCODE)level, medal, 0, &info);
             if (!info.hasMedal) {
@@ -135,11 +135,25 @@ static void PlayerRewards(byte player, uint32_t out[2]) {
     }
 }
 
-// The multiplayer characters that are rewards: reward id (0x26-0x37) -> mp_characters index. 0x2c is unused.
+// The multiplayer characters that are rewards: reward id -> mp_characters index. 0x2c is unused.
 static const struct { uint objId; uchar character; } reward_characters[] = {
-    { 0x26, 0x1a }, { 0x27, 0x0c }, { 0x28, 0x14 }, { 0x29, 0x1b }, { 0x2a, 0x11 }, { 0x2b, 0x18 },
-    { 0x2d, 0x19 }, { 0x2e, 0x15 }, { 0x2f, 0x0f }, { 0x30, 0x16 }, { 0x31, 0x17 }, { 0x32, 0x13 },
-    { 0x33, 0x12 }, { 0x34, 0x10 }, { 0x35, 0x1c }, { 0x36, 0x0d }, { 0x37, 0x0e },
+    { REWARD_BIT_ODDJOB, BOT_ODDJOB },
+    { REWARD_BIT_BONDTUX, BOT_BONDTUX },
+    { REWARD_BIT_WAILIN, BOT_WAILIN },
+    { REWARD_BIT_NICKNACK, BOT_NICKNACK },
+    { REWARD_BIT_SCARAMANGA, BOT_SCARAMANGA },
+    { REWARD_BIT_JAWS, BOT_JAWS },
+    { REWARD_BIT_SAMEDI, BOT_SAMEDI },
+    { REWARD_BIT_XENIA, BOT_XENIA },
+    { REWARD_BIT_GOLDFINGER, BOT_GOLDFINGER },
+    { REWARD_BIT_MAYDAY, BOT_MAYDAY },
+    { REWARD_BIT_ELEKTRA, BOT_ELEKTRA },
+    { REWARD_BIT_XMASJONES, BOT_XMASJONES },
+    { REWARD_BIT_GALORE, BOT_GALORE },
+    { REWARD_BIT_RENARD, BOT_RENARD },
+    { REWARD_BIT_ZORIN, BOT_ZORIN },
+    { REWARD_BIT_DRAKESUIT, BOT_DRAKESUIT },
+    { REWARD_BIT_BONDSPACE, BOT_BONDSPACE },
 };
 
 // Locks the reward characters (items 12-28) and opens those the player (or anyone, 0xff) has earned.
@@ -165,11 +179,11 @@ void Menu_UnlockMPSkins(byte player) {
         }
 }
 
-// The multiplayer scenarios that are rewards: reward id (0x38-0x3d) -> mp_scenario index.
+// The multiplayer scenarios that are rewards: reward id -> mp_scenario index.
 static const struct { uint objId; uchar scenario; } reward_scenarios[] = {
-    { 0x38, 10 }, { 0x39, 4 }, { 0x3a, 12 }, { 0x3b, 6 }, { 0x3c, 7 }, { 0x3d, 9 },
+    { REWARD_BIT_ASSASSIN, 10 }, { REWARD_BIT_UPLINK, 4 }, { REWARD_BIT_TEAMKOTH, 12 },
+    { REWARD_BIT_DEMOLITION, 6 }, { REWARD_BIT_PROTECTION, 7 }, { REWARD_BIT_GOLDENEYE, 9 },
 };
-#define REWARD_EXPLOSIVE_SCENERY 0x3e
 
 // Opens the reward scenarios, and the Explosive Scenery option, that any player has earned.
 // AUTOINJECT
@@ -189,7 +203,7 @@ void Menu_UnlockMPSettings(void) {
                 for (int i = 0; i < ARRAY_SIZE(reward_scenarios); i++)
                     if (reward_scenarios[i].objId == info.objId)
                         ITEM_ENABLED(mp_scenario[reward_scenarios[i].scenario]) = 1;
-            } else if (info.objType == REWARD_MP_MODIFIER && info.objId == REWARD_EXPLOSIVE_SCENERY) {
+            } else if (info.objType == REWARD_MP_MODIFIER && info.objId == REWARD_BIT_EXPLOSIVE_SCENERY) {
                 mp_explosive_scenery_unlocked = 1;
             }
         }
@@ -207,7 +221,7 @@ LEVEL_BONUSES* Menu_GetLevelBonuses(HASHCODE level) {
     for (uint i = 0; i < PlrStarts_GetRewardsTableSize(); i++) {
         if (rewards_table[i].level != level)
             continue;
-        for (uint medal = 1; medal < 5; medal++) {
+        for (uint medal = MEDAL_BRONZE; medal < MEDAL_NONE; medal++) {
             REWARDINFO_tag info = {};
             PlrStarts_ProcessRewardCounter(menu_bonus, level, medal, 0, &info);
             level_bonuses.medals[medal - 1].earned = info.hasMedal;
@@ -230,7 +244,7 @@ bool Menu_HasMedal(HASHCODE level, uint medal, uchar player) {
 // The best medal (1-4) whose reward the player has of a mission, 0 for none
 // AUTOINJECT
 int Menu_GetBestMedal(HASHCODE level, uchar player) {
-    for (int medal = 4; medal > 0; medal--) {
+    for (int medal = MEDAL_PLATINUM; medal > 0; medal--) {
         REWARDINFO_tag info = {};
         PlrStarts_ProcessRewardCounter(&menu_bonus[player * 2], level, medal, 0, &info);
         if (info.hasMedal)

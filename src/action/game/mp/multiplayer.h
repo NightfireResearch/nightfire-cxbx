@@ -106,7 +106,13 @@ static_assert(offsetof(MPSettings_t, RespawnSelectionMode) == 0x220, "RespawnSel
 static_assert(offsetof(MPSettings_t, ShowTeamAndNameOverhead) == 0x224, "ShowTeamAndNameOverhead is at wrong offset");
 
 extern MPSettings_t MPSettings;
-extern uint32_t MultiplayerLayout_LeftRightOrTopBtm;  // Part of a DrawInfo struct which also contains IsWidescreen?
+// MultiplayerLayout_LeftRightOrTopBtm: P_CNAVOPTIONS's split-screen choices; with SPLIT_VERTICAL two players' views
+// sit side by side
+enum SplitLayout {
+    SPLIT_HORIZONTAL = 0,
+    SPLIT_VERTICAL = 1,
+};
+extern uint32_t MultiplayerLayout_LeftRightOrTopBtm;  // SplitLayout
 
 //char (*__kaboom)[sizeof(MPSettings_t)] = 1;
 

@@ -146,7 +146,7 @@ static bool ResolveForOpen(const char *filename, char *out, size_t outSize) {
 // file openOrCreateFile opens (flags 0x60000000), which made sense for DVD reads on the real hardware. On a
 // host filesystem no buffering only imposes the constraint that every offset, length and buffer address be
 // sector aligned - and the very first read the game makes, FS_Init pulling the archive header into
-// FileSystem.ramCache at 0x002b0d28, is into a buffer that is not. (CXBX never honoured the flag either, which
+// FileSystem.headerCache at 0x002b0d28, is into a buffer that is not. (CXBX never honoured the flag either, which
 // is why it did not matter while the game ran there.) The overlapped reads are made synchronously (above).
 //
 // AUTOINJECT

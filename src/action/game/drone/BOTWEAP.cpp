@@ -321,7 +321,7 @@ void BOTWEAP_InitWeapon(Drone_tag *drone) {
         (MPSettings.GameMode == GM_DEMOLITION && team == MI6))
         BOTWEAP_EquipWeapon(drone, Weap_Satchel, 1);
 
-    if (vars->skin == BOT_SKIN_ODDJOB) {
+    if (vars->skin == BOT_ODDJOB) {
         BOTWEAP_EquipWeapon(drone, Weap_OddjobHat, 1);
         vars->weapon = Weap_OddjobHat;
     }

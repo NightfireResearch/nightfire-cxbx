@@ -8,6 +8,7 @@
 
 #include "../input.h"
 #include "../engine/Text.h"
+#include "../gfx/Font.h"
 #include "../game/mp/multiplayer.h"
 #include "../sound/SFX.h"
 
@@ -96,7 +97,7 @@ static const uchar style_list_d_line[CONTROLLER_STYLES] = {10, 10, 10, 9, 10, 9,
 void Menu_DisplayControllerStyleList(uchar managerNum, uint style) {
     style_list_next = 0;
     __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ClearItems, 0, 0);
-    __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ListAddColumn, 52, 1);
+    __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ListAddColumn, 52, ALIGN_LEFT);
     __Menu_SendEx(managerNum, STYLE_LIST, STYLE_LIST_ID, MessageType_ListSetColumnWidth, 0, 52);
     if (style >= CONTROLLER_STYLES)
         return;
@@ -270,8 +271,8 @@ bool P_CNAVOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
         RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SUBTITLES, MP_OFF, 0);
         RADIO_SELECT_ITEM(managerNum, SUB_P_CNAVOPTIONS_SUBTITLES, SubtitlesEnabled);
         RADIO_CLEAR(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN);
-        RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_HORIZONTAL, 0);
-        RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_VERTICAL, 1);
+        RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_HORIZONTAL, SPLIT_HORIZONTAL);
+        RADIO_ADD_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, TXT_VERTICAL, SPLIT_VERTICAL);
         RADIO_SELECT_ITEM(managerNum, SUB_P_CNAVOPTIONS_SPLIT_SCREEN, MultiplayerLayout_LeftRightOrTopBtm);
         RADIO_CLEAR(managerNum, SUB_P_CNAVOPTIONS_SPEAKER);
         __Menu_Send(managerNum, SUB_P_CNAVOPTIONS_SPEAKER, MessageType_SetState, CONTROL_STATE_HIDDEN, 0);

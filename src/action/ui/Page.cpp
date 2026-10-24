@@ -15,12 +15,14 @@ typedef struct HELP_TEXT {
 #pragma pack(pop)
 static_assert(sizeof(HELP_TEXT) == 0xc, "HELP_TEXT is 0xc bytes");
 
+#define HELP_ANY_VALUE ((int)0xf0f0f0f0)
+
 #define HELP_TEXTS 130
 // XBE_GLOBAL(0x0017d640, 0x618)
 HELP_TEXT help_texts[HELP_TEXTS] = {
-    {.control = C_GONIGHTFIRE, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000000},
-    {.control = C_GOMULTIPLAYER, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000001},
-    {.control = C_GOCODENAMES, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000002},
+    {.control = C_GONIGHTFIRE, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000000},
+    {.control = C_GOMULTIPLAYER, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000001},
+    {.control = C_GOCODENAMES, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000002},
     {.control = SUB_P_MPRULES_DURATION, .text = (Action_TranslatedText)0x100002f},
     {.control = SUB_P_MPRULES_POINTS, .text = (Action_TranslatedText)0x100002f},
     {.control = SUB_C_MPPLAYERMODS_FRIENDLYFIRE, .value = 1, .text = (Action_TranslatedText)0x1000021},
@@ -56,8 +58,8 @@ HELP_TEXT help_texts[HELP_TEXTS] = {
     {.control = SUB_C_MPENVIROMODS_MINIVEHICLES, .value = 1, .text = (Action_TranslatedText)0x1000325},
     {.control = SUB_C_MPENVIROMODS_MINIVEHICLES, .value = 2, .text = (Action_TranslatedText)0x1000326},
     {.control = SUB_C_MPENVIROMODS_MINIVEHICLES, .value = 3, .text = (Action_TranslatedText)0x10001dc},
-    {.control = SUB_P_MPRULES_DURATION, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x100030d},
-    {.control = SUB_P_MPRULES_POINTS, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x100030e},
+    {.control = SUB_P_MPRULES_DURATION, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x100030d},
+    {.control = SUB_P_MPRULES_POINTS, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x100030e},
     {.control = SUB_P_MPBOTSETUP_PLAYING_SCROLL, .value = 1, .text = (Action_TranslatedText)0x1000079},
     {.control = SUB_P_MPBOTSETUP_PLAYING_SCROLL, .text = (Action_TranslatedText)0x100007a},
     {.control = SUB_P_MPBOTSETUP_TEAM_SCROLL, .value = 1, .text = (Action_TranslatedText)0x100007b},
@@ -132,8 +134,8 @@ HELP_TEXT help_texts[HELP_TEXTS] = {
     {.control = SUB_P_CNMPOPTIONS_HANDICAP, .value = 100, .text = (Action_TranslatedText)0x1000067},
     {.control = SUB_P_CNMPOPTIONS_AUTOAIM, .value = 1, .text = (Action_TranslatedText)0x100006b},
     {.control = SUB_P_CNMPOPTIONS_AUTOAIM, .text = (Action_TranslatedText)0x100006c},
-    {.control = SUB_P_CNAVOPTIONS_MUSIC_VOLUME, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000306},
-    {.control = SUB_P_CNAVOPTIONS_SFX_VOLUME, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000307},
+    {.control = SUB_P_CNAVOPTIONS_MUSIC_VOLUME, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000306},
+    {.control = SUB_P_CNAVOPTIONS_SFX_VOLUME, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000307},
     {.control = SUB_P_CNAVOPTIONS_SUBTITLES, .value = 1, .text = (Action_TranslatedText)0x1000071},
     {.control = SUB_P_CNAVOPTIONS_SUBTITLES, .text = (Action_TranslatedText)0x1000072},
     {.control = SUB_P_CNAVOPTIONS_SPEAKER, .text = (Action_TranslatedText)0x100006d},
@@ -142,14 +144,13 @@ HELP_TEXT help_texts[HELP_TEXTS] = {
     {.control = SUB_P_CNAVOPTIONS_SPEAKER, .value = 4, .text = (Action_TranslatedText)0x100030b},
     {.control = SUB_P_CNAVOPTIONS_WIDESCREEN, .value = 1, .text = (Action_TranslatedText)0x1000309},
     {.control = SUB_P_CNAVOPTIONS_WIDESCREEN, .text = (Action_TranslatedText)0x100030a},
-    {.control = SUB_P_CNAVOPTIONS_SCREEN_ADJUST, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x100030c},
+    {.control = SUB_P_CNAVOPTIONS_SCREEN_ADJUST, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x100030c},
     {.control = SUB_P_CNAVOPTIONS_SPLIT_SCREEN, .text = (Action_TranslatedText)0x100006f},
     {.control = SUB_P_CNAVOPTIONS_SPLIT_SCREEN, .value = 1, .text = (Action_TranslatedText)0x1000070},
-    {.control = SUB_P_CNAVOPTIONS_DEFAULTS, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000073},
-    {.control = SUB_P_CNAVOPTIONS_CREDITS, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000074},
-    {.control = SUB_P_CNAVOPTIONS_TRAILER, .value = -0xf0f0f10, .text = (Action_TranslatedText)0x1000308},
+    {.control = SUB_P_CNAVOPTIONS_DEFAULTS, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000073},
+    {.control = SUB_P_CNAVOPTIONS_CREDITS, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000074},
+    {.control = SUB_P_CNAVOPTIONS_TRAILER, .value = HELP_ANY_VALUE, .text = (Action_TranslatedText)0x1000308},
 };
-#define HELP_ANY_VALUE ((int)0xf0f0f0f0)
 
 // The memo of the page shown that the help lines go to
 // XBE_GLOBAL(0x0025fc18, 0x4)

@@ -698,7 +698,7 @@ SCORETABLE * PlrStats_GetLevelTotals(HASHCODE hashcode) {
 
 // AUTOINJECT
 bool PlrStats_HasGoldMedal(void) {
-    return Menu_HasMedal(Mission_BaseMapHCode(), 3, 0);
+    return Menu_HasMedal(Mission_BaseMapHCode(), MEDAL_GOLD, 0);
 }
 
 // AUTOINJECT

@@ -324,12 +324,16 @@ enum StreamStatus {
     STREAM_OPENING = 3,
     STREAM_READING = 4,
     STREAM_JUMPING = 5,
+    STREAM_8 = 8,               // ES_JumpToMusicMarker takes it as STREAM_READY; nothing here sets it
     STREAM_JUMP_COPYING = 9,
     STREAM_STOPPED = 10,
 };
 
 // StreamMemCpyHandle.TransferStatus
-#define STREAM_COPYING 7
+enum StreamTransferStatus {
+    STREAM_COPY_DONE = 0,       // or none started
+    STREAM_COPYING = 7,
+};
 
 // MusicMarkerData.MType
 enum MusicMarkerType {
@@ -380,7 +384,14 @@ extern _VECTOR ListenerUp;
 extern uint32_t FileBufferMask;  // the stream's file buffers less one
 extern int32_t SFXJumpMarker;  // the section the music asks for, -1 for none
 extern int32_t InitialiseStatus;  // SFXInitialiseStreamUpdate's: STREAM_READY or STREAM_OPENING
-extern int32_t SFXJumpState;  // why the last ask was not taken: 3 read, 0 playing, 1 jumping
+// SFXJumpState: why the last ask for a section was not taken
+enum SFXJumpStateValue {
+    SFX_JUMP_NONE = -1,
+    SFX_JUMP_PLAYING = 0,       // the section asked for is playing
+    SFX_JUMP_JUMPING = 1,       // a jump is still completing
+    SFX_JUMP_LOADED = 3,        // the section asked for is the one read
+};
+extern int32_t SFXJumpState;
 
 extern SoundBankHeader SoundBankData[SFX_NUM_BANKS];
 extern ES_VoiceHandleDetails ES_VoiceHandleData[SFX_NUM_VOICE_HANDLES];
@@ -459,6 +470,14 @@ int ES_CombineVolumes(int MyVolume, SFXItem *Sfx);
 void SFXSetPositionAndVelocity(_VECTOR *pos, _VECTOR *vel, DYNAMICSOUNDS *handle, int hashCode);
 void SFXSetFilePath(char *path);
 void UpdateLanguageName(void);
+// SFXLanguage: the sound banks' language, by the folder UpdateLanguageName names
+enum SFXLanguageNum {
+    SFX_LANG_ENGLISH = 0,
+    SFX_LANG_FRENCH = 1,
+    SFX_LANG_GERMAN = 2,
+    SFX_LANG_SPANISH = 3,
+    SFX_LANG_JAPANESE = 4,
+};
 int GetSFXLanguage(void);
 void SFXSetLanguage(int language);
 void SFXSetMode(int mode);

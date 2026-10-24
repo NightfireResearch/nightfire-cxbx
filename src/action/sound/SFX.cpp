@@ -99,9 +99,9 @@ uint32_t FileBufferMask = 7;
 // XBE_GLOBAL(0x00182b6c, 0x4)
 int32_t SFXJumpMarker = -1;
 // XBE_GLOBAL(0x00182b74, 0x4)
-int32_t InitialiseStatus = 2;
+int32_t InitialiseStatus = STREAM_READY;
 // XBE_GLOBAL(0x00182b78, 0x4)
-int32_t SFXJumpState = -1;
+int32_t SFXJumpState = SFX_JUMP_NONE;
 
 // XBE_GLOBAL(0x0027aedc, 0x4)
 SFXItem *SFXFreeList;
@@ -384,19 +384,19 @@ void SFXSetFilePath(char *path) {
 // AUTOINJECT
 void UpdateLanguageName(void) {
     switch (SFXLanguage) {
-    case 0:
+    case SFX_LANG_ENGLISH:
         sprintf(SFXLanguageName, "%s", "ENGLISH");
         break;
-    case 1:
+    case SFX_LANG_FRENCH:
         sprintf(SFXLanguageName, "%s", "FRENCH");
         break;
-    case 2:
+    case SFX_LANG_GERMAN:
         sprintf(SFXLanguageName, "%s", "GERMAN");
         break;
-    case 3:
+    case SFX_LANG_SPANISH:
         sprintf(SFXLanguageName, "%s", "SPANISH");
         break;
-    case 4:
+    case SFX_LANG_JAPANESE:
         sprintf(SFXLanguageName, "%s", "JAPANESE");
         break;
     }

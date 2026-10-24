@@ -25,22 +25,6 @@
 #define CentredFormat FontFormat2Centred        // a button's and a radio's label
 #define LabelFormat FontFormat2CentredScaled    // a label's at first, of 9 bytes
 
-// Font_GetAlignment's, and a list column's
-#define ALIGN_RIGHT  2
-#define ALIGN_CENTRE 3
-
-// Menu_PlaySound's sounds
-#define MENU_SFX_SELECT         0   // with MENU_SOUND_SELECT
-#define MENU_SFX_ALTSELECT_1    1   // with MENU_SOUND_ALT1
-#define MENU_SFX_ALTSELECT_2    2   // with MENU_SOUND_ALT2
-#define MENU_SFX_PREV           3   // a scroll's value down
-#define MENU_SFX_NEXT           4   // up
-#define MENU_SFX_PREV_REPEAT    5   // held
-#define MENU_SFX_NEXT_REPEAT    6
-#define MENU_SFX_FOCUS          7   // the focus moves
-#define MENU_SFX_BACK           8   // with MENU_SOUND_BACK
-#define MENU_SFX_BACK_ON_CONTROL 9  // none plays
-
 // A colour's three high bytes raised by the highlight's pulse; a carry runs into the byte above
 inline uint PulsedColour(uint colour, int alpha) {
     return ((colour & 0xff0000) + (alpha << 16)) | ((colour & 0xff000000) + (alpha << 24)) |

@@ -14,7 +14,16 @@ void Mem_Shrink(void **ptr, uint numBytes);
 void* allocateXboxSpecialMemory(int size, uint32_t alignment);   // Mem_Malloc of MALLOC_XBOX
 void FreeMemory(void *data);                                      // Mem_Free of a pointer that may be null
 void Mem_PrintAllInfo(void);
-uint32_t Mem_SetMallocMethod(uint32_t method);
+
+// How Mem_Malloc picks a free block: tMallocMethod in Ghidra (Malloc_Type_0..3). ResetMap_Load and the loaders
+// switch between them.
+enum tMallocMethod {
+    MALLOC_NEXT_FIT = 0,    // the first big enough block from QuickBlock back to the start, else on to the end
+    MALLOC_BEST_FIT = 1,    // the smallest big enough block (also any value above 3)
+    MALLOC_LOW_END = 2,     // the first big enough block, allocated from its low end instead of its high end
+    MALLOC_LAST_FIT = 3,    // the last big enough block
+};
+tMallocMethod Mem_SetMallocMethod(tMallocMethod method);
 
 void* Mem_Info(void);
 

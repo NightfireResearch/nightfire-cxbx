@@ -4,7 +4,14 @@
 #include "../actionhelpers.h"
 #include "../../common/xbeClass.h"
 
-typedef uint MENU_IRISOPS;
+// How Menu_StartIris starts the iris
+enum MENU_IRISOPS {
+    IRIS_FROM_MIDDLE = 0,
+    IRIS_WHOLE = 1,
+    IRIS_WHEEL = 2,         // the whole of it unless one is running, without marking it running (a wheel's turn)
+    IRIS_HOLD_MIDDLE = 3,
+    IRIS_LAST_FRAME = 4,
+};
 
 int Menu_GetLevelIndex(HASHCODE level);
 bool Menu_IsDrivingLevel(HASHCODE level);
@@ -98,6 +105,45 @@ static_assert(sizeof(REWARDINFO_tag) == 0x10, "REWARDINFO_tag is 0x10 bytes");
 #define REWARD_MP_MODIFIER  3
 #define REWARD_UPGRADE      4
 
+// The reward bits of the multiplayer characters, scenarios and modifier (REWARDINFO_tag::objId), named after what
+// MenuUnlocks.cpp unlocks for each
+enum RewardBit {
+    REWARD_BIT_ODDJOB = 0x26,
+    REWARD_BIT_BONDTUX = 0x27,
+    REWARD_BIT_WAILIN = 0x28,
+    REWARD_BIT_NICKNACK = 0x29,
+    REWARD_BIT_SCARAMANGA = 0x2a,
+    REWARD_BIT_JAWS = 0x2b,
+    REWARD_BIT_SAMEDI = 0x2d,
+    REWARD_BIT_XENIA = 0x2e,
+    REWARD_BIT_GOLDFINGER = 0x2f,
+    REWARD_BIT_MAYDAY = 0x30,
+    REWARD_BIT_ELEKTRA = 0x31,
+    REWARD_BIT_XMASJONES = 0x32,
+    REWARD_BIT_GALORE = 0x33,
+    REWARD_BIT_RENARD = 0x34,
+    REWARD_BIT_ZORIN = 0x35,
+    REWARD_BIT_DRAKESUIT = 0x36,
+    REWARD_BIT_BONDSPACE = 0x37,
+    REWARD_BIT_ASSASSIN = 0x38,
+    REWARD_BIT_UPLINK = 0x39,
+    REWARD_BIT_TEAMKOTH = 0x3a,
+    REWARD_BIT_DEMOLITION = 0x3b,
+    REWARD_BIT_PROTECTION = 0x3c,
+    REWARD_BIT_GOLDENEYE = 0x3d,
+    REWARD_BIT_EXPLOSIVE_SCENERY = 0x3e,
+};
+
+// A mission's medals (Menu_SetLevelBonus, Menu_HasMedal, Menu_GetBestMedal), as P_NFRESULTS gives them with each
+// medal's texture and title
+enum Medal {
+    MEDAL_BRONZE = 1,
+    MEDAL_SILVER = 2,
+    MEDAL_GOLD = 3,
+    MEDAL_PLATINUM = 4,
+    MEDAL_NONE = 5,     // Menu_SetLevelBonus's medal for none
+};
+
 // The rewards of each mission: a medal (1-4) gives the reward of its slot, named and pictured on the results pages
 typedef union LEVEL_REWARD {
     uint value;
@@ -160,7 +206,7 @@ typedef struct MENU_LS {
     M_CONTROL *control;         // 0x14 the wheel an enumeration fills
     char codename[32];          // 0x18
     uchar mpPlayer;             // 0x38 P_MPJOIN: the player (from 1) whose codename is loading
-    uchar operation;            // 0x39 LS_OPERATION_*
+    uchar operation;            // 0x39 LsOperation
     uchar done;                 // 0x3a the operation is over (or, for a page, its list is ready)
     uchar listStale;            // 0x3b the codenames list must be enumerated again
     char pad_3c[1];
@@ -241,21 +287,43 @@ void Menu_StartLS(char *codename, int operation, char stale, uchar managerNum, b
 extern uint8_t cn_modified;  // it has changes not yet saved
 extern uint8_t cn_secret_mode; // P_CNNAME was entered from the codename menu (Secret Unlocks)
 
-#define LS_OPERATION_LOAD 0
-#define LS_OPERATION_SAVE 1
-#define LS_OPERATION_ENUM 2         // list the saved codenames into ls.control
-#define LS_OPERATION_DELETE 3
-#define LS_OPERATION_ENUM_FIRST 4   // only the first short enough
-#define LS_OPERATION_NONE 5         // P_MPJOIN, once a player's codename is loaded
+// MENU_LS::operation and Menu_StartLS's
+enum LsOperation {
+    LS_OPERATION_LOAD = 0,
+    LS_OPERATION_SAVE = 1,
+    LS_OPERATION_ENUM = 2,          // list the saved codenames into ls.control
+    LS_OPERATION_DELETE = 3,
+    LS_OPERATION_ENUM_FIRST = 4,    // only the first short enough
+    LS_OPERATION_NONE = 5,          // P_MPJOIN, once a player's codename is loaded
+};
 
 #define LS_SLOT_NEW 999             // ls.slot: a codename not saved yet
 
 // Option boxes (Menu_CreateOptionBox): the type a page's update gets back from Menu_UpdateOptionBox, to tell
 // its boxes apart.
-#define OPTIONBOX_OVERWRITE_CODENAME 4   // "This codename already exists..."
-#define OPTIONBOX_BAD_CODENAME       6   // Menu_IsValidCodename's complaint
-#define OPTIONBOX_UNLOCK_SUCCESS     0xc // "Unlock successful"
-#define OPTIONBOX_LOSE_CHANGES       0xd // "Are you sure you want to exit and lose your changes?"
+enum OptionBoxType {
+    OPTIONBOX_MP_GOOD_GUYS_WRONG_TEAM = 0,
+    OPTIONBOX_DELETE_CODENAME = 2,
+    OPTIONBOX_3 = 3,                    // no code in the Xbox build makes a box of this type
+    OPTIONBOX_OVERWRITE_CODENAME = 4,   // "This codename already exists..."
+    OPTIONBOX_SAVE_SPACE = 5,           // Menu_CheckSaveSpace's
+    OPTIONBOX_BAD_CODENAME = 6,         // Menu_IsValidCodename's complaint
+    OPTIONBOX_MP_NOT_ENOUGH_PLAYERS = 7,
+    OPTIONBOX_MP_NO_PLAYERS_ON_TEAM = 8,
+    OPTIONBOX_DEFAULT_CODENAME = 9,     // "You won't be able to save your progress using this default profile..."
+    OPTIONBOX_OBJECTIVE_HINT = 10,
+    OPTIONBOX_UNLOCK_SUCCESS = 0xc,     // "Unlock successful"
+    OPTIONBOX_LOSE_CHANGES = 0xd,       // "Are you sure you want to exit and lose your changes?"
+};
+
+// Menu_UpdateOptionBox's answer: A or B, on a box with an answer to pick or without one
+enum OptionBoxAnswer {
+    OPTIONBOX_NO_ANSWER = 0,            // none yet
+    OPTIONBOX_A = 1,
+    OPTIONBOX_B = 2,
+    OPTIONBOX_ANSWER_A = 3,
+    OPTIONBOX_ANSWER_B = 4,
+};
 
 extern uint8_t mp_explosive_scenery_unlocked; // defined in MenuUnlocks.cpp
 
@@ -303,6 +371,20 @@ void Menu_AlphaReset(void);
 short Menu_AlphaGet(void);
 void Menu_EnableSounds(HASHCODE page);
 void Menu_PlaySound(uint sound);
+
+// Menu_PlaySound's sounds
+enum MenuSfx {
+    MENU_SFX_SELECT = 0,            // with MENU_SOUND_SELECT
+    MENU_SFX_ALTSELECT_1 = 1,       // with MENU_SOUND_ALT1
+    MENU_SFX_ALTSELECT_2 = 2,       // with MENU_SOUND_ALT2
+    MENU_SFX_PREV = 3,              // a scroll's value down
+    MENU_SFX_NEXT = 4,              // up
+    MENU_SFX_PREV_REPEAT = 5,       // held
+    MENU_SFX_NEXT_REPEAT = 6,
+    MENU_SFX_FOCUS = 7,             // the focus moves
+    MENU_SFX_BACK = 8,              // with MENU_SOUND_BACK
+    MENU_SFX_BACK_ON_CONTROL = 9,   // none plays
+};
 void Menu_UpdateTextFmt(void);
 void Menu_GetNormalTextFmt(sprite *spr);
 

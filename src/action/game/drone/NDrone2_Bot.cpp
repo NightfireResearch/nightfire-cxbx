@@ -266,7 +266,7 @@ static bool BotGlobalUpdate(DCVars_tag *dcv, Drone_tag *drone) {
         }
     }
 
-    if (bot->skin == BOT_SKIN_ODDJOB && bot->ammoRegenTimer != 0) {
+    if (bot->skin == BOT_ODDJOB && bot->ammoRegenTimer != 0) {
         int elapsed = GameState.NumFramesUnpaused - bot->ammoRegenTimer;
         if (elapsed < 0)
             elapsed = bot->ammoRegenTimer - GameState.NumFramesUnpaused;

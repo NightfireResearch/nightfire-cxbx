@@ -111,6 +111,9 @@ typedef enum {
     MessageType_SetAlwaysHighlighted = 0x76, // Label (+0x110). Args: a1 = bool. Returns: 0.
 } MessageType;
 
+// What MessageType_QueryBack's answer is set to by a handler that keeps the page
+#define BACK_REFUSED (-2)
+
 typedef enum {
     ControlType_Button = 1,     // Button_*; label at +0x94; handler prefix GO
     ControlType_Checkbox = 2,   // prefix CH

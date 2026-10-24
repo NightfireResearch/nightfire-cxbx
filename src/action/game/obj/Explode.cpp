@@ -82,7 +82,7 @@ void Explode_Create(obj_tag *obj, _VECTOR *pos, _VECTOR *unusedDir, float script
     if (data->script != NULL) {
         data->script->scale = scriptScale;
         data->frames = data->script->endFrame;
-        Mat_Align2Dir(&data->script->matrix, &toPlayer, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+        Mat_Align2Dir(&data->script->matrix, &toPlayer, &CONST_UP_VECTOR, &CONST_X_VECTOR);
         Mat_GetUp(&data->up, &data->script->matrix);
     } else {
         data->frames = 15;

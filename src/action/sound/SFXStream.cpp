@@ -108,7 +108,7 @@ void SFXInitialiseAudioStreamSystem(void) {
     DoInitialStreamBuffer = 1;
     Streams[0].Status = STREAM_FREE;
     Streams[0].IdNumber = 0;
-    StreamMemCpyHandles[0].TransferStatus = 0;
+    StreamMemCpyHandles[0].TransferStatus = STREAM_COPY_DONE;
 }
 
 // The stream's playback buffer and read buffers, after a reset: the music's in stereo at 44.1 kHz, a streamed
@@ -252,7 +252,7 @@ void SFXStopStream(StreamData *stream) {
         psiSFX_UnPause(stream->StreamHandle);
         psiSFX_SetVolume(stream->StreamHandle, 0);
         psiAsyncCloseFile(stream->FileHandle);
-        StreamMemCpyHandles[stream->IdNumber].TransferStatus = 0;
+        StreamMemCpyHandles[stream->IdNumber].TransferStatus = STREAM_COPY_DONE;
         psiStreamStop(stream->StreamHandle);
         if (stream->Channels != 1)
             psiSFXFreeFileMem(stream->StreamMarkerHeader);
@@ -445,7 +445,7 @@ void ES_JumpToMusicMarker(StreamData *stream, int instant) {
     int jumpTo = stream->StreamJumpTo;
     // Read before the test of jumpTo: with none asked for, it is the word before the first start's
     MusicMarkerStartData *start = &stream->BaseMusicMarkerStart[jumpTo];
-    if ((stream->Status == STREAM_READY || stream->Status == 8) && !stream->EndMarker.CheckMe && jumpTo > -1) {
+    if ((stream->Status == STREAM_READY || stream->Status == STREAM_8) && !stream->EndMarker.CheckMe && jumpTo > -1) {
         stream->MusicMarkerStart = start;
         if (start->IsInstant || instant) {
             SFXLoadedMarker = jumpTo;
@@ -475,15 +475,15 @@ void SFXJumpToMusicMarkerUpdate(void) {
         return;
     SFXLastJumpMarker = SFXJumpMarker;
     if (SFXLoadedMarker == SFXJumpMarker) {
-        SFXJumpState = 3;
+        SFXJumpState = SFX_JUMP_LOADED;
         return;
     }
     if (SFXActiveMarker == SFXJumpMarker) {
-        SFXJumpState = 0;
+        SFXJumpState = SFX_JUMP_PLAYING;
         return;
     }
     if (stream->HasJustJumped && !SFXJumpInstant) {
-        SFXJumpState = 1;
+        SFXJumpState = SFX_JUMP_JUMPING;
         return;
     }
     stream->StreamJumpTo = SFXJumpMarker;
@@ -687,7 +687,7 @@ static void ES_UpdateStreamMemCpy(void) {
             stream->State[1] = stream->Read[transfer].State[1];
             stream->Read[transfer].UseThisState = 0;
         }
-        copy->TransferStatus = 0;
+        copy->TransferStatus = STREAM_COPY_DONE;
         stream->TransferBufferNumber = (transfer + 1) & FileBufferMask;
     }
     if (!stream->AllowStartedPlaying)
@@ -859,7 +859,7 @@ void SFXUpdateStreams(void) {
                 read->ByteSize = read->ByteSize - next->ByteSize;
             }
             stream->TransferBufferNumber = readBuffer;
-            StreamMemCpyHandles[stream->IdNumber].TransferStatus = 0;
+            StreamMemCpyHandles[stream->IdNumber].TransferStatus = STREAM_COPY_DONE;
             ES_SetStreamStates(stream);
             ES_StartStreamMemCpy(stream->StreamHandle, read->ByteOffset, read->DataBuffer, read->ByteSize, stream);
             stream->Status = STREAM_JUMP_COPYING;

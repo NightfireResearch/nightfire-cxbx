@@ -8,6 +8,17 @@
 #include <stddef.h>
 #include <stdint.h>
 
+// Gfx.shaderFlags: the index of the vertex shader to draw with, of the 128 xboxInitGraphics creates
+enum ShaderFlags {
+    SHADER_STREAMS = 0x1,           // d3dSetStreamSources has streams set
+    SHADER_STRIDE_32 = 0x2,         // the stream buffer's vertices are 0x20 bytes, not 0x1c
+    SHADER_TWO_LIGHTS = 0x4,        // a light 0-1 is set (d3dsetVertexShader drops it for SHADER_FOUR_LIGHTS)
+    SHADER_FOUR_LIGHTS = 0x8,       // a light 2-3 is set
+    SHADER_CHARACTER_LIGHT = 0x10,  // gfxSetCharacterLightIntensity's
+    SHADER_TEX_STAGE1 = 0x20,       // d3dSetTextureStage1 has a texture
+    SHADER_BORDER_TEXTURE = 0x40,   // d3dSetTextureWithBorderColor has a texture
+};
+
 // Gfx, the graphics layer's one global struct. xboxInitGraphics clears it whole at boot (REP STOSD of 0xe739
 // dwords from 0x002c5750), which fixes its size at 0x39ce4 bytes; Ghidra's GraphicsSystem is one byte longer.
 // Everything from +0x20 to the end is accounted for below except the block at +0x1894, which nothing
@@ -42,12 +53,15 @@ struct D3DVertexBufferSlotRaw {
     Ptr32<void> dataPtr;    // +0x04 - Data; set BY D3DResource_Register itself (we zero it first, it adds data to that)
     uint32_t reserved08; // +0x08 - always 0; nothing else reads it as far as we've traced
     Ptr32<void> selfPtr;    // +0x0c - Ghidra's Gfx.d3dstreamDataPtr; 0 marks the slot free
-    uint32_t field10;     // +0x10 - single-path: the ORIGINAL, unaligned data pointer; multi-path: vtxCnt
+    union {
+        uint32_t originalData; // +0x10 - a single buffer: the data pointer as given, before it was aligned
+        uint32_t vertexCount;  //         a buffer of a multi-stream run: its vertices
+    };
     uint32_t byteSize;    // +0x14 - total byte size (both paths, same role, different formula)
-    uint8_t  field18;      // +0x18 - single-path: (nonSwizzled != 0); multi-path: always 0. Ghidra's
-                          // Gfx.d3dstreamStrideRelated
+    uint8_t  stride32;     // +0x18 - a single buffer: its vertices are 0x20 bytes, not 0x1c (nonSwizzled != 0);
+                          // always 0 in a run. Ghidra's Gfx.d3dstreamStrideRelated
     uint8_t  pad19, pad1a, pad1b;
-    uint32_t field1c;     // +0x1c - single-path: always 0; multi-path: streamCount (same value in every slot of the run)
+    uint32_t streamCount; // +0x1c - a run's buffers (in every slot of the run); 0 for a single buffer
     Ptr32<void> alignedData; // +0x20 - single-path ONLY; never written by the multi-path
 };
 static_assert(sizeof(D3DVertexBufferSlotRaw) == 36, "Bad size for D3DVertexBufferSlotRaw");
@@ -98,7 +112,7 @@ struct GraphicsSystem {
     uint8_t  pad5[3];
     uint32_t frameCounter;             // +0x8
     uint32_t state0x40358LastValue;    // +0xc - the last value d3dSetZBias/d3dSetup sent through D3D8's method 0x40358
-    uint8_t  isPalI;                   // +0x10 - misnamed: a copy of isNotPalI (xboxInitGraphics)
+    uint8_t  is60Hz;                   // +0x10 - a copy of isNotPalI: 60 Hz, else 50 (xboxInitGraphics)
     uint8_t  isNotPalI;                // +0x11 - AV region != 3 (PAL-I)
     uint8_t  isNtscM;                  // +0x12 - AV region == 1 (NTSC-M); Ghidra's IsSomeGfxRegion
     uint8_t  isWidescreen;             // +0x13 - video mode bit 0
@@ -168,8 +182,8 @@ struct GraphicsSystem {
     float    shaderConstant75[4];      // +0x39c28 - {0, 0, characterLightIntensity, 1 - characterLightIntensity}
     float    levelDirectionViewSpace[4]; // +0x39c38 - shader constant 0x7b
     float    levelDirectionVector[3];  // +0x39c48 - world space; no reader found anywhere in the binary
-    uint32_t miscModeFlags;            // +0x39c54 - small state-flag word: 0x4/0x8 lights, 0x10, 0x20 texture stage 1
-    uint32_t miscResetFlag;            // +0x39c58 - untraced; d3dBeginFrame sets it to -1
+    uint32_t shaderFlags;              // +0x39c54 - ShaderFlags: the vertex shader to draw with
+    uint32_t selectedShader;           // +0x39c58 - the shaderFlags d3dsetVertexShader last selected; -1 for none
     uint32_t auxRenderPassResult;      // +0x39c5c - texture slot written by d3dInitShadowBlurTextures
     uint32_t shadowBlurTargetB;        // +0x39c60 - likewise
     D3DMATRIX auxSavedViewMatrix;      // +0x39c64 - secondaryBasisMatrix, saved across d3dBeginEndAuxRenderPass
@@ -196,7 +210,7 @@ LAYOUT_32(offsetof(GraphicsSystem, fogConstant66) == 0x39bec, "GraphicsSystem la
 LAYOUT_32(offsetof(GraphicsSystem, streamStrideConstants) == 0x39c08, "GraphicsSystem layout");
 LAYOUT_32(offsetof(GraphicsSystem, shaderConstant75) == 0x39c28, "GraphicsSystem layout");
 LAYOUT_32(offsetof(GraphicsSystem, levelDirectionVector) == 0x39c48, "GraphicsSystem layout");
-LAYOUT_32(offsetof(GraphicsSystem, miscModeFlags) == 0x39c54, "GraphicsSystem layout");
+LAYOUT_32(offsetof(GraphicsSystem, shaderFlags) == 0x39c54, "GraphicsSystem layout");
 LAYOUT_32(offsetof(GraphicsSystem, auxSavedViewMatrix) == 0x39c64, "GraphicsSystem layout");
 LAYOUT_32(sizeof(GraphicsSystem) == 0x39ce4, "Bad size for GraphicsSystem"); // xboxInitGraphics' clear
 

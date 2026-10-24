@@ -23,13 +23,6 @@ uint32_t TextBoxHeldFrames;
 #define TextBoxFormat FontFormat2
 #define TextBoxAlphabet FontAlphabet
 
-// The menu inputs a text box reads
-#define MENU_UP     0x1a
-#define MENU_DOWN   0x1b
-#define MENU_LEFT   0x1c
-#define MENU_RIGHT  0x1d
-#define MENU_SELECT 0x1f
-
 #define GRID_WIDTH  0xf8
 #define GRID_HEIGHT 0x7e
 
@@ -151,19 +144,23 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
 
             ushort player = mgr->whichPlayer;
             TEXTBOX_KEY *key = &box->keys[box->selected];
-            if (Menu_InputAction(player, MENU_RIGHT, ACTION_HELD) && !(box->keys[box->selected].blocked & 8)) {
+            if (Menu_InputAction(player, ACTION_MENU_DIR_RIGHT, ACTION_HELD) &&
+                       !(box->keys[box->selected].blocked & 8)) {
                 TextBox_Step(box, &box->cursorX, key->width, box->cursorX < GRID_WIDTH - key->width);
-            } else if (Menu_InputAction(player, MENU_LEFT, ACTION_HELD) && !(box->keys[box->selected].blocked & 4)) {
+            } else if (Menu_InputAction(player, ACTION_MENU_DIR_LEFT, ACTION_HELD) &&
+                       !(box->keys[box->selected].blocked & 4)) {
                 TextBox_Step(box, &box->cursorX, -key->width, box->cursorX > key->width);
-            } else if (Menu_InputAction(player, MENU_DOWN, ACTION_HELD) && !(box->keys[box->selected].blocked & 2)) {
+            } else if (Menu_InputAction(player, ACTION_MENU_DIR_DOWN, ACTION_HELD) &&
+                       !(box->keys[box->selected].blocked & 2)) {
                 TextBox_Step(box, &box->cursorY, key->height, box->cursorY < GRID_HEIGHT - key->height);
-            } else if (Menu_InputAction(player, MENU_UP, ACTION_HELD) && !(box->keys[box->selected].blocked & 1)) {
+            } else if (Menu_InputAction(player, ACTION_MENU_DIR_UP, ACTION_HELD) &&
+                       !(box->keys[box->selected].blocked & 1)) {
                 TextBox_Step(box, &box->cursorY, -key->height, box->cursorY > key->height);
             } else {
                 box->control.drawState &= ~TEXTBOX_HELD;
             }
 
-            if (Menu_InputAction(player, MENU_SELECT, ACTION_PRESSED)) {
+            if (Menu_InputAction(player, ACTION_MENU_SELECT, ACTION_PRESSED)) {
                 char c = box->keys[box->selected].c;
                 sprite *text = TextOf(box);
                 if (c == '-') {

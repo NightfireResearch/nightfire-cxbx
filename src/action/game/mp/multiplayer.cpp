@@ -639,7 +639,7 @@ void MP_AttachToHolder(obj_tag *gameObj, obj_tag *holder, uint attach) {
     _MATRIX mtx;
     AnimGetBoneWorldTrans(holder, attach | ANIM_WHICH_BONE, 0, &pos, &mtx);
     Mat_GetDir(&dir, &mtx);
-    Mat_Align2Dir(&gameObj->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Align2Dir(&gameObj->transformMatrix, &dir, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     Matrix_SetTrans(&pos, &gameObj->transformMatrix);
     gameObj->transformFlags |= TRANSFORM_MOVED;
     gameObj->effectFlags |= EFFECT_NO_COLLISION;
@@ -1490,7 +1490,7 @@ void MP_Start(void) {
             TimeSpr->positionY = 56;
             break;
         case 2:
-            if (!MultiplayerLayout_LeftRightOrTopBtm)
+            if (MultiplayerLayout_LeftRightOrTopBtm == SPLIT_HORIZONTAL)
                 TimeSpr->positionY = 56;
             break;
         case 3:

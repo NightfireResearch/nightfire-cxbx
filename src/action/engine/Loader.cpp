@@ -36,7 +36,7 @@ static uchar *DirFileEnd;
 static uint *DirFileFirstBuf;
 // The type of the current file: LoaderProcess switches on it.
 // XBE_GLOBAL(0x00279184, 0x4)
-static uint DirFileType;
+static uint DirFileType;     // DirFileType_tag
 // The name of the current file, upper-cased, as stored in the directory. It ends in the file's hashcode in
 // hex. Nothing but the directory parser touches it; the parser has no length check (the original's buffer is
 // the 0x40 bytes up to DirFileHash too).
@@ -114,8 +114,20 @@ static uint LoaderFilesPerBatch = 0xffffffff;
 #define LOADER_VARIANT_SHIFT 20
 #define LOADER_VARIANT_BASE 7
 
-// MALLOC_LOW_END (memory.cpp): the batch goes at the low end of a free block
-#define LOADER_BATCH_MALLOC_METHOD 2
+// A directory entry's type byte: the loader LoaderProcess hands the file to
+enum DirFileType_tag {
+    DIRFILE_MAP = 0,                // parsemap_parsemap
+    DIRFILE_MAP_SECOND_PASS = 1,    // parsemap_parsemap's second pass, after AnimPostLoadInit
+    DIRFILE_MAP_2 = 2,
+    DIRFILE_ANIM_3 = 3,             // AnimLoadFile
+    DIRFILE_ANIM_4 = 4,
+    DIRFILE_ANIM_5 = 5,
+    DIRFILE_SKELETON = 6,           // AnimSkeletonProcess
+    DIRFILE_SCRIPT = 7,             // Script_Load
+    DIRFILE_MENU = 8,               // MenuManager_Load
+    DIRFILE_MAP_B = 0xb,            // parsemap_parsemap, with MemType 1
+    DIRFILE_LOADABLE = 0xc,         // a LoadableFiles entry
+};
 
 // Reads one directory entry at *cursor and advances *cursor past it: a 32-bit little-endian size, a type byte
 // and a NUL-terminated name whose last component is the file's hashcode in hex.
@@ -237,7 +249,8 @@ bool LoaderLoad(int mode, uint fileHash, undefined4 unused, int variant) {
     case LOADER_READ_BATCH:
         if (FilesToLoadCount != 0) {
             if (!LoadFromDecompBuf) {
-                uint previousMethod = Mem_SetMallocMethod(LOADER_BATCH_MALLOC_METHOD);
+                // the batch goes at the low end of a free block
+                tMallocMethod previousMethod = Mem_SetMallocMethod(MALLOC_LOW_END);
                 dirFileBuf = (uint *)psiFileRead(BatchByteSize);
                 Mem_SetMallocMethod(previousMethod);
             } else {
@@ -306,35 +319,35 @@ bool LoaderProcess(void) {
     NF_WARN_IF(DirFileType == 9 || DirFileType > 0x10, "Loader : Invalid file type %d\n", DirFileType);
 
     switch(DirFileType) {
-        case 1:
+        case DIRFILE_MAP_SECOND_PASS:
           AnimPostLoadInit();
           if (parsemap_parsemap(DirFileHash,'\x01')) {
             return false;
           }
           break;
-        case 3:
-        case 4:
-        case 5:
+        case DIRFILE_ANIM_3:
+        case DIRFILE_ANIM_4:
+        case DIRFILE_ANIM_5:
           AnimLoadFile(DirFileHash,0);
           return true;
-        case 6:
+        case DIRFILE_SKELETON:
           AnimSkeletonProcess((char *)dirFileBuf);
           return true;
-        case 7:
+        case DIRFILE_SCRIPT:
           Script_Load(DirFileHash,&CONST_ZERO_VECTOR,&CONST_ZERO_VECTOR,dirFileBuf,NULL, NULL, NULL);
           return true;
-        case 8:
+        case DIRFILE_MENU:
           MenuManager_Load(DirFileHash,dirFileBuf);
           return true;
-        case 0xb:
+        case DIRFILE_MAP_B:
           MemType = 1;
-        case 0:
-        case 2:
-          if (parsemap_parsemap(DirFileHash,'\0')) { // Returns fasle on completion, true if there's more to parse
+        case DIRFILE_MAP:
+        case DIRFILE_MAP_2:
+          if (parsemap_parsemap(DirFileHash,'\0')) { // false when it is done, true with more to parse
             return false;
           }
           break;
-        case 0xc:
+        case DIRFILE_LOADABLE:
           if (LoadableIndex < ARRAY_SIZE(LoadableFiles)) {
             LoadableFiles[LoadableIndex].hashcode = (HASHCODE) *dirFileBuf;
             LoadableFiles[LoadableIndex].loadableIdx = (char)dirFileBuf[1];
@@ -359,12 +372,12 @@ uint isLoadable(HASHCODE hashcode) {
 }
 
 // A loadable part of the level (isLoadable's index). The Xbox build loads nothing for it: the hashtable's loadable
-// items (type 0x04000000) are dropped and its sections made again, under the second malloc method. Both arguments are
+// items (type 0x04000000) are dropped and its sections made again, under MALLOC_BEST_FIT. Both arguments are
 // unread.
 // AUTOINJECT
 bool LoadableLoad(HASHCODE hashcode, uint loadable) {
     __profiling_or_debugging_hook_point();
-    uint method = Mem_SetMallocMethod(1);
+    tMallocMethod method = Mem_SetMallocMethod(MALLOC_BEST_FIT);
     hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);
     bLevelLoaded = 0;
     hashtable_create_sections();
@@ -375,7 +388,7 @@ bool LoadableLoad(HASHCODE hashcode, uint loadable) {
 // The same for a script reloaded: the script freed first, and the anims' preload started again
 // AUTOINJECT
 bool LoadableReload(HASHCODE hashcode) {
-    uint method = Mem_SetMallocMethod(1);
+    tMallocMethod method = Mem_SetMallocMethod(MALLOC_BEST_FIT);
     Script_FreeFromHashTable(hashcode);
     __profiling_or_debugging_hook_point();
     hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);

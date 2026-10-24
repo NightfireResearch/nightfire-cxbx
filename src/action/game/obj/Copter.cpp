@@ -243,9 +243,9 @@ bool Copter_FireGun(COPTER *copter, obj_tag *obj) {
         return false;
 
     _VECTOR *gunPos = (_VECTOR *)&gun->transformMatrix.m[12];
-    Mat_LookAt(&gun->transformMatrix, gunPos, &target, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_LookAt(&gun->transformMatrix, gunPos, &target, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     Mat_LookAt(&flash->transformMatrix, (_VECTOR *)&flash->transformMatrix.m[12], &target, &CONST_UP_VECTOR,
-               &MAYBE_CONST_FORWARD_VECTOR);
+               &CONST_X_VECTOR);
     short shots = gun->curState++;
     if (shots < 5)
         return false;

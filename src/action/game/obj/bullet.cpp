@@ -150,7 +150,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     bullet->direction.z = scatter.y + bullet->direction.z;
     bullet->direction.y = scatter.z + bullet->direction.y;
     Vec_Normalise(&bullet->direction, &bullet->direction);
-    Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     build_LinkToRoom(obj, 0, glb_world);
 
     weapon_definition_tag *weapon = bullet->wpnDef;
@@ -354,7 +354,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                 into.x = into.x * -1.0f;
                 into.y = into.y * -1.0f;
                 into.z = into.z * -1.0f;
-                Mat_Align2Dir(&obj->transformMatrix, &into, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+                Mat_Align2Dir(&obj->transformMatrix, &into, &CONST_UP_VECTOR, &CONST_X_VECTOR);
 
                 weapon = bullet->wpnDef;
                 if (weapon->impactFlags & IMPACTFLAG_TRIP_BOMB) {
@@ -404,12 +404,12 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                     bullet->speed = (float)speed;
                     if (speed < (double)FRAME_RATE_MUL * 0.01f) {
                         Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR,
-                                      &MAYBE_CONST_FORWARD_VECTOR);
+                                      &CONST_X_VECTOR);
                         bullet->speed = 0.0f;
                     }
                 }
             } else {
-                Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+                Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &CONST_X_VECTOR);
                 bullet->speed = 0.0f;
             }
             obj->curState = BulletState_Flying;
@@ -430,7 +430,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                 auxVec_AddMulR32(&dir, &normal, k, &bullet->direction);
                 Vec_Normalise(&bullet->direction, &bullet->direction);
                 Vec_Copy(&hit->hitPosition, &obj->position);
-                Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+                Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &CONST_X_VECTOR);
                 bullet->numRicochets++;
                 obj->curState = BulletState_Flying;
             }
@@ -860,7 +860,7 @@ void Bullet_homing(BU_tag *bullet, obj_tag *obj) {
         turn.z = 0.01f;
     Vec_Add2(&bullet->direction, &turn, &bullet->direction);
     Vec_Normalise(&bullet->direction, &bullet->direction);
-    Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR, &CONST_X_VECTOR);
 }
 
 // The level's 32 spent cases, hidden until used

@@ -22,7 +22,7 @@ static uint32_t PtrHeapEnd;
 uint32_t HeapByteSize;
 // How Mem_Malloc picks a free block (Mem_SetMallocMethod; Mem_Init sets MALLOC_BEST_FIT)
 // XBE_GLOBAL(0x00223a7c, 0x4)
-uint32_t MallocMethod;
+tMallocMethod MallocMethod;
 // Where MALLOC_NEXT_FIT starts looking: the block it last allocated from, or one Mem_Free made
 // XBE_GLOBAL(0x002237d8, 0x4)
 uint32_t QuickBlock;
@@ -42,14 +42,6 @@ typedef struct MemBlock {
 } MemBlock;
 #pragma pack(pop)
 static_assert(sizeof(MemBlock) == 0xc, "MemBlock is 0xc bytes");
-
-// tMallocMethod in Ghidra (Malloc_Type_0..3). ResetMap_Load and the loaders switch between them.
-enum {
-    MALLOC_NEXT_FIT = 0,    // the first big enough block from QuickBlock back to the start, else on to the end
-    MALLOC_BEST_FIT = 1,    // the smallest big enough block (also any value above 3)
-    MALLOC_LOW_END = 2,     // the first big enough block, allocated from its low end instead of its high end
-    MALLOC_LAST_FIT = 3,    // the last big enough block
-};
 
 // The end of the walk over the blocks: every walk stops at the last header-sized slot of the heap
 static inline MemBlock* Mem_HeapStart(void) { return PtrFrom32<MemBlock>(PtrHeap); }
@@ -411,8 +403,8 @@ void Mem_Shrink(void **ptr, uint numBytes) {
 
 // Returns the previous method
 // AUTOINJECT
-uint32_t Mem_SetMallocMethod(uint32_t method) {
-    uint32_t previous = MallocMethod;
+tMallocMethod Mem_SetMallocMethod(tMallocMethod method) {
+    tMallocMethod previous = MallocMethod;
     MallocMethod = method;
     return previous;
 }

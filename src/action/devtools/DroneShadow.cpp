@@ -25,7 +25,8 @@
 #include <string.h>
 
 // memory.cpp's heap globals (for the emitter test's scratch heap)
-extern uint32_t PtrHeap, HeapByteSize, MallocMethod, QuickBlock;
+extern uint32_t PtrHeap, HeapByteSize, QuickBlock;
+extern tMallocMethod MallocMethod;
 
 // The game's RNG state (Rand_Random)
 #define RandWord0 U32_AT(XbeOurs(0x0018cdf8))
@@ -591,7 +592,7 @@ static void TestRoutesAndEmitters(void) {
     typedef void(__cdecl * FreeFn)(AIEmitter_tag *);
     const uint heapSize = 0x10000;
     static uchar heap[0x10000], snapAlloc[2][0x10000], snapFree[2][0x10000];
-    uint saved[4] = {PtrHeap, HeapByteSize, MallocMethod, QuickBlock};
+    uint saved[4] = {PtrHeap, HeapByteSize, (uint)MallocMethod, QuickBlock};
     static const uint sizes[] = {1, 7, 8, 100, 0x400, 0x1000};
     for (int s = 0; s < 6; s++) {
         AIEmitter_tag e[2], eAlloc[2];
@@ -644,7 +645,7 @@ static void TestRoutesAndEmitters(void) {
     }
     PtrHeap = saved[0];
     HeapByteSize = saved[1];
-    MallocMethod = saved[2];
+    MallocMethod = (tMallocMethod)saved[2];
     QuickBlock = saved[3];
 }
 

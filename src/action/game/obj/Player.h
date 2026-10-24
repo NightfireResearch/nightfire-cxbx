@@ -77,6 +77,7 @@ enum AimAutoLevel {
 
 // BLData::crosshairType: the crosshair Check_Target shows (HUD_UpdateCrosshair's row of HUDCrossCoords)
 enum CrosshairType {
+    CROSSHAIR_ZOOMED = 1,       // HUD_UpdateCrossHair's while zoomed
     CROSSHAIR_PLAIN = 2,
     CROSSHAIR_MARKED = 3,
 };

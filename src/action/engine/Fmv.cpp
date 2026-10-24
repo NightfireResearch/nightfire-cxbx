@@ -37,7 +37,7 @@
 //   - BackgroundMovieIsPlaying(): whether it has not ended yet.
 //   - BackgroundMovieSetVolume(0..100): through the game's volume table.
 //   - BackgroundMovieCleanup(): stops and frees everything; called freely, also with nothing playing.
-// The textures stay the game's kind (RegisterTexture format 9, Xbox YUY2, in memory from the game's allocator), so
+// The textures stay the game's kind (RegisterTexture's TEXFMT_YUY2, in memory from the game's allocator), so
 // the backend's existing YUY2 upload and the drawing calls are exactly the original's.
 //
 // Timing follows the audio: a frame is due once the samples played reach its timestamp (the wall clock stands in
@@ -48,7 +48,6 @@
 #define FMV_HEIGHT           480
 #define FMV_FRAME_BYTES      0x12c000        // what the original allocates per frame (twice a YUY2 frame)
 #define FMV_FRAME_ALIGN      0x80
-#define FMV_FORMAT_YUY2      9               // RegisterTexture's format type for Xbox YUY2
 
 // ---------------------------------------------------------------------------------------------------------------
 // The player
@@ -222,7 +221,8 @@ void BackgroundMoviePlayFile(char *filename) {
 
     for (int i = 0; i < 2; i++) {
         M.frameMemory[i] = Mem_Malloc(FMV_FRAME_BYTES, MALLOC_XBOX, FMV_FRAME_ALIGN);
-        M.texture[i] = M.frameMemory[i] ? RegisterTexture(FMV_WIDTH, FMV_HEIGHT, FMV_FORMAT_YUY2, 1, M.frameMemory[i], 0) : 0;
+        M.texture[i] = M.frameMemory[i] ? RegisterTexture(FMV_WIDTH, FMV_HEIGHT, TEXFMT_YUY2, 1, M.frameMemory[i], 0)
+                                        : 0;
         if (M.frameMemory[i] == NULL || M.texture[i] == 0) {
             BackgroundMovieCleanup();
             return;

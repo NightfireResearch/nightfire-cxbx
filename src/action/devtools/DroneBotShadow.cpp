@@ -682,7 +682,7 @@ void RandomBrain() {
         d->sm.curState = Pick(states);
         d->clip = (short)(ShadowRand(3) ? ShadowRand(10) : -ShadowRand(2));
         d->opponentSeenFrame = GameState.NumFramesUnpaused - ShadowRand(600);
-        bot->skin = (uchar)(ShadowRand(2) ? BOT_SKIN_ODDJOB : ShadowRand(30));
+        bot->skin = (uchar)(ShadowRand(2) ? BOT_ODDJOB : ShadowRand(30));
         bot->ammoRegenTimer = ShadowRand(3) ? 0 : GameState.NumFramesUnpaused - 700 + ShadowRand(1400);
         bot->weapons[0x45].rounds = (short)ShadowRand(4);
         bot->regenTimer = ShadowRand(3) ? GameState.NumFramesUnpaused - 30 + ShadowRand(60) :

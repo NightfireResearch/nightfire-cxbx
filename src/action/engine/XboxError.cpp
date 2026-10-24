@@ -49,7 +49,7 @@ void xboxInitTextures(void) {
     uint16_t *pixels = (uint16_t *)allocateAligned0x1000(0x2000);
     for (int i = 0; i < 0x1000; i++)
         pixels[i] = FontImage[i] != 0 ? 0xffff : 0x8000;   // ARGB1555: white, or opaque black
-    FontTexture = RegisterTexture(256, 16, 0, 1, pixels, 1);
+    FontTexture = RegisterTexture(256, 16, TEXFMT_A1R5G5B5, 1, pixels, 1);
     d3dMarkTexturePermanent(FontTexture);
     memset(FontCharToGlyph, 0xff, sizeof(FontCharToGlyph));
     for (int c = '!'; c <= 'z'; c++) {
@@ -139,7 +139,7 @@ void FS_FatalErrorHandler(void) {
         language = 1;
     void *image = allocateAligned0x1000(DISC_ERROR_IMAGE_BYTES);
     memcpy(image, DiscErrorImage, DISC_ERROR_IMAGE_BYTES);
-    int texture = RegisterTexture(0x200, 0x200, 3, 1, image, 0);
+    int texture = RegisterTexture(0x200, 0x200, TEXFMT_DXT1, 1, image, 0);
     d3dMarkTexturePermanent(texture);
     float row = (float)(language << 6);
     for (;;) {

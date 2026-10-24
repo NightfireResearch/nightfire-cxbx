@@ -3,20 +3,9 @@
 #include "Menu.h"
 #include "../engine/Text.h"
 #include "../game/sp/PlayerStats.h"
+#include "../game/Upgrade.h"
 #include <stdio.h>
 #include <string.h>
-
-typedef enum {
-    WEAPON_PISTOL = 0x00,
-    GADGET_GRAPPLE = 0x03,
-    GADGET_CAMERA = 0x06,
-    WEAPON_SNIPER = 0x09,
-    GADGET_DARTGUN = 0x0C,
-    GADGET_DECODER = 0x0F,
-    GADGET_TASER = 0x12,
-    GADGET_LASER = 0x15,
-    NO_UPGRADES = 0x3F,
-} UpgradeabilityType;
 
 // This array is not constant - it is modified for the custom branded shaver, and potentially for upgraded gadgets too?
 // XBE_GLOBAL(0x0017d3f0, 0x150)
@@ -25,7 +14,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_stunner,
         .title = GADGET_TASER_NAME,
         .description = GADGET_TASER_DESC,
-        .identifier = GADGET_TASER,
+        .identifier = UPGRADE_BIT_TASER,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -33,7 +22,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_watch,
         .title = GADGET_LASER_NAME,
         .description = GADGET_LASER_DESC,
-        .identifier = GADGET_LASER,
+        .identifier = UPGRADE_BIT_LASER,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -41,7 +30,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_grapple,
         .title = GADGET_GRAPPLE_NAME,
         .description = GADGET_GRAPPLE_DESC,   
-        .identifier = GADGET_GRAPPLE,
+        .identifier = UPGRADE_BIT_GRAPPLE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -49,7 +38,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_microcamera,
         .title = GADGET_CAMERA_NAME,
         .description = GADGET_CAMERA_DESC,   
-        .identifier = GADGET_CAMERA,
+        .identifier = UPGRADE_BIT_CAMERA,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -57,7 +46,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_decryptor,
         .title = GADGET_DECODER_NAME,
         .description = GADGET_DECODER_DESC,   
-        .identifier = GADGET_DECODER,
+        .identifier = UPGRADE_BIT_PDA,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -65,7 +54,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_qworm,
         .title = GADGET_QWORM_NAME,
         .description = GADGET_QWORM_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -73,7 +62,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_shaver_logo, // default value never seen, this is always overwritten as soon as the page is started
         .title = GADGET_SHAVER_NAME,
         .description = GADGET_SHAVER_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -81,7 +70,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_suitcase,
         .title = GADGET_SENTRY_NAME,
         .description = GADGET_SENTRY_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -89,7 +78,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_dart,
         .title = GADGET_DARTGUN_NAME,
         .description = GADGET_DARTGUN_DESC,   
-        .identifier = GADGET_DARTGUN,
+        .identifier = UPGRADE_BIT_DARTGUN,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -97,7 +86,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_nightvision,
         .title = GADGET_NIGHTVISION_NAME,
         .description = GADGET_NIGHTVISION_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -105,7 +94,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_vanquishsmoke,
         .title = GADGET_SMOKESCREEN_NAME,
         .description = GADGET_SMOKESCREEN_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -113,7 +102,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_turbo,
         .title = GADGET_TURBO_NAME,
         .description = GADGET_TURBO_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -121,7 +110,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_vanquishknifeedge,
         .title = GADGET_QWEDGE_NAME,
         .description = GADGET_QWEDGE_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     },
@@ -129,7 +118,7 @@ M_ITEM ds_gadgets[14] = {
         .iconHashcode = HT_Texture_gadget_emp,
         .title = GADGET_EMP_NAME,
         .description = GADGET_EMP_DESC,   
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL 
     }
@@ -181,7 +170,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_pp7,
         .title = WEAPON_PP7_NAME,
         .description = WEAPON_PP7_DESC,
-        .identifier = WEAPON_PISTOL,
+        .identifier = UPGRADE_BIT_HANDGUN,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -189,7 +178,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_goldengun,
         .title = WEAPON_GOLDENGUN_NAME,
         .description = WEAPON_GOLDENGUN_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -197,7 +186,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_kowloon,
         .title = WEAPON_KOWLOON_NAME,
         .description = WEAPON_KOWLOON_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -205,7 +194,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_magnum,
         .title = WEAPON_RAPTORMAGNUM_NAME,
         .description = WEAPON_RAPTORMAGNUM_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -213,7 +202,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_deutsche,
         .title = WEAPON_DEUTSCHEM9K_NAME,
         .description = WEAPON_DEUTSCHEM9K_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -221,7 +210,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_storm,
         .title = WEAPON_STORMM32_NAME,
         .description = WEAPON_STORMM32_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -229,7 +218,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_sig,
         .title = WEAPON_SG5COMMANDO_NAME,
         .description = WEAPON_SG5COMMANDO_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -237,7 +226,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_aims,
         .title = WEAPON_AIMS20_NAME,
         .description = WEAPON_AIMS20_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -245,7 +234,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_frinesi,
         .title = WEAPON_FRINESI_NAME,
         .description = WEAPON_FRINESI_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -253,7 +242,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_wintersniper,
         .title = WEAPON_COVERTSNIPER_NAME,
         .description = WEAPON_COVERTSNIPER_DESC,
-        .identifier = WEAPON_SNIPER, // Upgradeable description
+        .identifier = UPGRADE_BIT_SNIPER, // Upgradeable description
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -261,7 +250,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_wintertacticalsniper,
         .title = WEAPON_TACTICALSNIPER_NAME,
         .description = WEAPON_TACTICALSNIPER_DESC,
-        .identifier = WEAPON_SNIPER, // Upgradeable description
+        .identifier = UPGRADE_BIT_SNIPER, // Upgradeable description
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -269,7 +258,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_militek,
         .title = WEAPON_MILITEKLAUNCHER_NAME,
         .description = WEAPON_MILITEKLAUNCHER_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -277,7 +266,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_sentinel,
         .title = WEAPON_SENTINEL_NAME,
         .description = WEAPON_SENTINEL_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -285,7 +274,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_scorpion,
         .title = WEAPON_SCORPION_NAME,
         .description = WEAPON_SCORPION_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -293,7 +282,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_laserrifle,
         .title = WEAPON_SAMURAI_NAME,
         .description = WEAPON_SAMURAI_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -301,7 +290,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_fraggrenade,
         .title = WEAPON_FRAGGRENADE_NAME,
         .description = WEAPON_FRAGGRENADE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -309,7 +298,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_smokegrenade,
         .title = WEAPON_SMOKEGRENADE_NAME,
         .description = WEAPON_SMOKEGRENADE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -317,7 +306,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_flashbang,
         .title = WEAPON_STUNGRENADE_NAME,
         .description = WEAPON_STUNGRENADE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -325,7 +314,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_satchel,
         .title = WEAPON_SATCHELCHARGE_NAME,
         .description = WEAPON_SATCHELCHARGE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -333,7 +322,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_remotemine,
         .title = WEAPON_REMOTEMINE_NAME,
         .description = WEAPON_REMOTEMINE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -341,7 +330,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_tripbomb,
         .title = WEAPON_TRIPBOMB_NAME,
         .description = WEAPON_TRIPBOMB_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -349,7 +338,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_snowmobile,
         .title = WEAPON_SNOWMOBILE_NAME,
         .description = WEAPON_SNOWMOBILE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -357,7 +346,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_vanquishmissiles,
         .title = WEAPON_CARMISSILES_NAME,
         .description = WEAPON_CARMISSILES_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -365,7 +354,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_vanquishtorpedo,
         .title = WEAPON_SUBTORPEDOES_NAME,
         .description = WEAPON_SUBTORPEDOES_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -373,7 +362,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_qcharge,
         .title = WEAPON_SUBMINES_NAME,
         .description = WEAPON_SUBMINES_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -381,7 +370,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_urbanassault,
         .title = WEAPON_JUNGLECAR_NAME,
         .description = WEAPON_JUNGLECAR_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     },
@@ -389,7 +378,7 @@ M_ITEM ds_weapons[27] = {
         .iconHashcode = HT_Texture_weapon_ultralight,
         .title = WEAPON_JUNGLEPLANE_NAME,
         .description = WEAPON_JUNGLEPLANE_DESC,
-        .identifier = NO_UPGRADES,
+        .identifier = UPGRADE_BIT_NONE,
         .enabled = 1,
         .descriptionWhenDisabled = TXT_NULL
     }
@@ -401,14 +390,13 @@ bool C_SBDOSSIER_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint e
     MessageType event = (MessageType)eventType;
 
     printf("In C_SBDOSSIER_Handler, params 0x%08x, 0x%08x, 0x%08x, 0x%08x, 0x%08x\n", managerNum, control, eventType, arg1, arg2);
-    // Seems that param 3 is always C_SBDOSSIER, 4 is the action/event type, 5 is some unknown value (pointer?), 6 is 0
     switch (event) {
     
     case MessageType_Select: {
             
-            int lVar1 = SCROLL_GET_VALUE(ctrl);
+            int selected = SCROLL_GET_VALUE(ctrl);
 
-            switch(lVar1) {
+            switch(selected) {
                 case 0:
                     // Option 0: Records
                     Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_DSRECORDS, 0);
@@ -434,8 +422,8 @@ bool C_SBDOSSIER_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uint e
                              SUB_C_SBDOSSIER_DESCRIPTION_TEXT, SUB_C_SBDOSSIER_IRIS, event == MessageType_Scroll);
             return 1;
 
-        case 0x51:
-            __Menu_SendMessage(ctrl, 0x27, 0, 3);
+        case MessageType_ControlCreated:
+            __Menu_SendMessage(ctrl, MessageType_SetRange, 0, 3);
             return 1;
 
         default:
@@ -455,14 +443,14 @@ bool P_DOSSIER_Handler(uchar managerNum, M_CONTROL* control, uint hashcode, uint
     switch (messageType) {
         case MessageType_PageEnter:
             if (arg2 != P_NFMAP && arg2 != P_NFRESULTS && arg2 != P_NFBONUS) {
-                Menu_StartIris(4, managerNum, SUB_C_SBDOSSIER_IRIS);
+                Menu_StartIris(IRIS_LAST_FRAME, managerNum, SUB_C_SBDOSSIER_IRIS);
                 return true;
             }
-            Menu_StartIris(0, managerNum, SUB_C_SBDOSSIER_IRIS);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBDOSSIER_IRIS);
             __Menu_Send(managerNum, C_SBDOSSIER, MessageType_SetValue, 0x0, 0x0);
             break;
 
-        case 0x50: // Every frame
+        case MessageType_PageUpdate:
             Menu_PlayIris(1, managerNum, SUB_C_SBDOSSIER_IRIS);
             return true;
 
@@ -478,8 +466,8 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
     switch(messageType) {
         case MessageType_PageEnter: {
             
-            Menu_StartIris(0, managerNum, SUB_C_SBDSGTSCROLL_IRIS);
-            __Menu_Send(managerNum, C_SBDSGTSCROLL, 0x2e, 0, 0);
+            Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBDSGTSCROLL_IRIS);
+            __Menu_Send(managerNum, C_SBDSGTSCROLL, MessageType_SetValue, 0, 0);
 
             // Modify the shaver icon depending on the current territory - special licensing deal
             ds_gadgets[6].iconHashcode = ((VIDEO_FRAME_RATE != 50) ? HT_Texture_gadget_shaver
@@ -487,7 +475,7 @@ bool P_DSGADGETS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
 
             break;
         }
-        case 0x50: {
+        case MessageType_PageUpdate: {
             Menu_PlayIris(1, managerNum, SUB_C_SBDSGTSCROLL_IRIS);
             break;
         }
@@ -523,25 +511,25 @@ bool C_SBDSGTSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uin
                 // If a gadget has been upgraded, we append a second part to the description
                 Action_TranslatedText modifier = TXT_NULL;
                 switch(gadgetId) {
-                    case GADGET_GRAPPLE:
+                    case UPGRADE_BIT_GRAPPLE:
                         modifier = REWARD_UPGRADE_RANGE;
                         break;
-                    case GADGET_CAMERA:
+                    case UPGRADE_BIT_CAMERA:
                         modifier = REWARD_UPGRADE_MAGNIFICATION_AND_BIOTARGET;
                         break;
-                    case GADGET_DARTGUN:
+                    case UPGRADE_BIT_DARTGUN:
                         modifier = REWARD_UPGRADE_DARTGUN_STRONGER_SEDATIVE;
                         break;
-                    case GADGET_DECODER:
+                    case UPGRADE_BIT_PDA:
                         modifier = REWARD_UPGRADE_PDA_SPEED;
                         break;
-                    case GADGET_TASER:
+                    case UPGRADE_BIT_TASER:
                         modifier = REWARD_UPGRADE_RANGE_AND_CHARGE;
                         break;
-                    case GADGET_LASER:
+                    case UPGRADE_BIT_LASER:
                         modifier = REWARD_UPGRADE_LASER_SPEED;
                         break;
-                    case NO_UPGRADES:
+                    case UPGRADE_BIT_NONE:
                     default:
                         modifier = TXT_NULL;
                         break;
@@ -560,8 +548,8 @@ bool C_SBDSGTSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uin
             break;
         }
         case MessageType_ControlCreated: {
-            __Menu_SendMessage(ctrl, 0x27, 0, ARRAY_SIZE(ds_gadgets) - 1);
-            __Menu_SendMessage(ctrl, 0x2e, 0, 0);
+            __Menu_SendMessage(ctrl, MessageType_SetRange, 0, ARRAY_SIZE(ds_gadgets) - 1);
+            __Menu_SendMessage(ctrl, MessageType_SetValue, 0, 0);
             break;
         }
     }
@@ -574,7 +562,7 @@ bool C_SBDSGTSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uin
 bool P_DSWEAPONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint eventType, intptr_t arg1, intptr_t arg2) {
   switch((MessageType)eventType) {
     case MessageType_PageEnter: {
-        switch(Menu_GetObjectUpgradeLevel(0, 0)) {
+        switch(Menu_GetObjectUpgradeLevel(UPGRADE_BIT_HANDGUN, 0)) {
         case 0:
         ds_weapons[0].iconHashcode = HT_Texture_weapon_pp7;
         ds_weapons[0].title = WEAPON_PP7_NAME;
@@ -595,11 +583,11 @@ bool P_DSWEAPONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         ds_weapons[0].title = WEAPON_P2K_GOLD_NAME;
         ds_weapons[0].description = WEAPON_P2K_GOLD_DESC;
         }
-        Menu_StartIris(0, managerNum, SUB_C_SBDSWPSCROLL_IRIS);
-        __Menu_Send(managerNum, C_SBDSWPSCROLL, 0x2e, 0, 0);
+        Menu_StartIris(IRIS_FROM_MIDDLE, managerNum, SUB_C_SBDSWPSCROLL_IRIS);
+        __Menu_Send(managerNum, C_SBDSWPSCROLL, MessageType_SetValue, 0, 0);
         break;
     }
-    case 0x50: {
+    case MessageType_PageUpdate: {
         Menu_PlayIris(1, managerNum, SUB_C_SBDSWPSCROLL_IRIS);
         break;
     }
@@ -636,7 +624,7 @@ bool C_SBDSWPSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uin
                 // If a weapon has been upgraded, we append a second part to the description
                 Action_TranslatedText modifier = TXT_NULL;
                 switch(weaponId) {
-                    case WEAPON_SNIPER:
+                    case UPGRADE_BIT_SNIPER:
                         modifier = (upgradeLevel == 1 ? REWARD_UPGRADE_MAGNIFICATION :
                                     upgradeLevel == 2 ? REWARD_UPGRADE_MAGNIFICATION_AND_CLIP :
                                     TXT_NULL);
@@ -659,8 +647,8 @@ bool C_SBDSWPSCROLL_Handler(uchar managerNum, M_CONTROL *ctrl, uint control, uin
             break;
         }
         case MessageType_ControlCreated: {
-            __Menu_SendMessage(ctrl, 0x27, 0, ARRAY_SIZE(ds_weapons) - 1);
-            __Menu_SendMessage(ctrl, 0x2e, 0, 0);
+            __Menu_SendMessage(ctrl, MessageType_SetRange, 0, ARRAY_SIZE(ds_weapons) - 1);
+            __Menu_SendMessage(ctrl, MessageType_SetValue, 0, 0);
             break;
         }
     }
@@ -740,7 +728,7 @@ bool C_RBDSRECORDS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, 
     LABEL_SET_TEXT(managerNum, SUB_C_RBDSRECORDS_BOND_MOVES_TEXT, records_bond_moves_text);
 
     uchar upgrades = 0;
-    for (uint medal = 1; medal < 5; medal++) {
+    for (uint medal = MEDAL_BRONZE; medal < MEDAL_NONE; medal++) {
         REWARDINFO_tag info = {};
         PlrStarts_ProcessRewardCounter(menu_bonus, level, medal, 0, &info);
         if (info.hasMedal && info.objType == REWARD_UPGRADE)

@@ -54,7 +54,7 @@ void Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angle
     if (Collide_RayIntersect(&start, &end, obj->inCel, obj, NULL, &hits, 0,
                              HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS,
                              0)) {
-        Mat_Align2Dir(&turn, (_VECTOR *)&hits->surfaceNormal, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+        Mat_Align2Dir(&turn, (_VECTOR *)&hits->surfaceNormal, &CONST_UP_VECTOR, &CONST_X_VECTOR);
         Mat_GetNorm(dir, &turn);
         auxVec_AddMulR32(&hits->hitPosition, (_VECTOR *)&hits->surfaceNormal, size, out);
         Collide_FreeHitList(&hits);

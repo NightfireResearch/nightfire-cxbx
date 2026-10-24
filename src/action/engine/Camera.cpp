@@ -53,7 +53,7 @@ void Camera_CalcViewAngles(ushort playerNum,float fovRadians) {
 
     // Special case: When 2 players, we need to modify the aspect ratio according to whether the layout is left/right or top/bottom
     if(initialisedCameras == 2) {
-        if(MultiplayerLayout_LeftRightOrTopBtm == 1) {
+        if(MultiplayerLayout_LeftRightOrTopBtm == SPLIT_VERTICAL) {
             vwr->AspectRatio *= 0.5f;
         } else {
             vwr->AspectRatio *= 2.0f;
@@ -307,7 +307,7 @@ void Camera_CreateCameras(void) {
             Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
             break;
         case 2:
-            if(MultiplayerLayout_LeftRightOrTopBtm == 1) {
+            if(MultiplayerLayout_LeftRightOrTopBtm == SPLIT_VERTICAL) {
                 Camera_ScreenCoords(0, 0, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
                 Camera_ScreenCoords(1, SCREEN_WIDTH/2, 0, SCREEN_WIDTH/2, SCREEN_HEIGHT);
             } else {
@@ -583,7 +583,7 @@ void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam) {
     eye.z = (float)((double)c * cam->distance + eye.z);
 
     _MATRIX look;
-    Mat_LookAt(&look, &eye, &cam->target, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
+    Mat_LookAt(&look, &eye, &cam->target, &CONST_UP_VECTOR, &CONST_X_VECTOR);
     Mat_Copy(&look, &viewer->viewMatrix);
     _VECTOR *at = Mat_Position(viewer->viewMatrix);
     cel_tag *cel = build_FindCel(at, glb_world);

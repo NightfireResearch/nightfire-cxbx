@@ -162,9 +162,9 @@ uint LS_Save(char *codename, uint slot, ushort mask) {
         return state;
     }
     int result = psiSavingData();
-    if (result == 2)
+    if (result == PSI_DONE)
         Save_State = LS_STATE_DONE;
-    else if (result == 4)
+    else if (result == PSI_NOT_DONE)
         Save_State = LS_STATE_FAILED;
     return state;
 }
@@ -175,7 +175,7 @@ uint LS_Load(char *codename, ushort slot, ushort mask) {
     uint state = Load_State;
     if (state == LS_STATE_IDLE) {
         LoadSlot = slot;
-        uint size = LS_GetSaveStuff(0xff, 0);   // what a full save comes to now: as much as is read
+        uint size = LS_GetSaveStuff(SAVE_ALL, 0);   // what a full save comes to now: as much as is read
         memset(InBufData[LoadSlot], 0, sizeof(InBufData[LoadSlot]));
         psiLoadData(InBufData[LoadSlot], &size, codename);
         Load_State = LS_STATE_LOADING;
@@ -183,10 +183,10 @@ uint LS_Load(char *codename, ushort slot, ushort mask) {
         return state;
     }
     int result = psiLoadingData();
-    if (result == 2) {
+    if (result == PSI_DONE) {
         Load_State = LS_STATE_DONE;
         LS_GetLoadStuff(mask, LoadSlot);
-    } else if (result == 4) {
+    } else if (result == PSI_NOT_DONE) {
         Load_State = LS_STATE_FAILED;
     }
     return state;

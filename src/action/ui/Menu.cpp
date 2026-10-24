@@ -222,34 +222,33 @@ uint8_t iris_active;
 
 #define IRIS_FRAMES 10
 
-// Starts the iris: 0 from the middle; 1 the whole of it; 2 the whole of it unless one is running, without marking it
-// running (a wheel's turn); 3 held at the middle; 4 its last frame. Its first frame is drawn.
+// Starts the iris (MENU_IRISOPS); its first frame is drawn.
 // AUTOINJECT
 void Menu_StartIris(MENU_IRISOPS op, uchar managerNum, uint label) {
-    if (op == 2 && iris_active)
+    if (op == IRIS_WHEEL && iris_active)
         return;
     switch (op) {
-        case 0:
+        case IRIS_FROM_MIDDLE:
             iris_frame = 5;
             iris_active = 1;
             iris_hold = 0;
             break;
-        case 1:
+        case IRIS_WHOLE:
             iris_active = 1;
             iris_frame = 1;
             iris_hold = 0;
             break;
-        case 2:
+        case IRIS_WHEEL:
             iris_active = 0;
             iris_frame = 1;
             iris_hold = 0;
             break;
-        case 3:
+        case IRIS_HOLD_MIDDLE:
             iris_active = 1;
             iris_hold = 1;
             iris_frame = 5;
             break;
-        case 4:
+        case IRIS_LAST_FRAME:
             iris_frame = IRIS_FRAMES;
             iris_active = 1;
             iris_hold = 0;
@@ -313,7 +312,7 @@ void Menu_PlayIris(char tick, uchar managerNum, uint label) {
 // The whole iris, input locked, and the page (with the GoPage flags of the load or save in hand) as it closes
 // AUTOINJECT
 void Menu_ChangePageCloseIris(HASHCODE page, uchar managerNum, uint label) {
-    Menu_StartIris(1, managerNum, label);
+    Menu_StartIris(IRIS_WHOLE, managerNum, label);
     M_CONTROL *mgr = &manager[managerNum].control;
     __Menu_SendDelayedMessage(1, mgr, MessageType_LockInput, 1, 0);
     __Menu_SendDelayedMessage(10, mgr, MessageType_GoPage, page, ls.returnPageArg);
@@ -342,7 +341,7 @@ void __stdcall Menu_StopFrontEndMusic(void) {
 
 // ---- option boxes: a message in a box over the page, with an answer to pick or none (PS2: menu_handlers.cpp)
 
-// The answer, which Menu_UpdateOptionBox takes: 0 none yet; without an answer to pick 1 (A) or 2 (B), with one 3 or 4
+// The answer, which Menu_UpdateOptionBox takes (OptionBoxAnswer)
 // XBE_GLOBAL(0x00224f5c, 0x4)
 uint optionbox_answer;
 // XBE_GLOBAL(0x00224f60, 0x4)
@@ -363,7 +362,7 @@ void Menu_CreateOptionBox(uchar managerNum, const char *text, uint type, char ha
         __Menu_Send(managerNum, C_LBMSGOPTIONS, MessageType_AddItem,
                     (intptr_t)Txt_BindLabel(canCancel ? TXT_PRESS_A_OR_B_TO_CANCEL : TXT_PRESS_A_TO_CONTINUE, 0), 3);
     M_MANAGER *mgr = &manager[managerNum];
-    Manager_SendMessage(mgr, MessageType_GoPage, P_MESSAGEBOX, 2);
+    Manager_SendMessage(mgr, MessageType_GoPage, P_MESSAGEBOX, GOPAGE_OVERLAY);
     M_BUTTON *box = (M_BUTTON *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_BOX);
     M_MEMO *memo = (M_MEMO *)CONTROL_GET(managerNum, SUB_P_MESSAGEBOX_TEXT);
     M_LIST *answers = (M_LIST *)CONTROL_GET(managerNum, C_LBMSGOPTIONS);
@@ -404,12 +403,12 @@ uint Menu_UpdateOptionBox(uint *type) {
 // AUTOINJECT
 bool C_LBMSGOPTIONS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_Select) {
-        optionbox_answer = optionbox_has_answer ? 3 : 1;
+        optionbox_answer = optionbox_has_answer ? OPTIONBOX_ANSWER_A : OPTIONBOX_A;
         Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
     }
     else if (message == MessageType_BackOnControl) {
         Manager_SendMessage(&manager[managerNum], MessageType_Back, 1, 0);
-        optionbox_answer = optionbox_has_answer ? 4 : 2;
+        optionbox_answer = optionbox_has_answer ? OPTIONBOX_ANSWER_B : OPTIONBOX_B;
     }
     return true;
 }
@@ -503,16 +502,14 @@ static char buf_171[0x100];
 // AUTOINJECT
 void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHCODE wheel, HASHCODE icon, HASHCODE descriptionLabel, HASHCODE iris, bool doAnimation) {
 
-  int iVar2;
   const char *text;
   const char *teamLabel;
   const char *descText;
-  Action_TranslatedText AVar7;
 
   // The index of the item in the list that is currently selected, and its 2 surrounding items
   int idxUp2;
   int idxUp1;
-  const int idxMid = __Menu_SendMessage(ctrl,0x40,0,0);
+  const int idxMid = __Menu_SendMessage(ctrl,MessageType_GetValue,0,0);
   int idxDown1;
   int idxDown2;
 
@@ -629,14 +626,7 @@ void Menu_UpdateWheel(uchar managerNum, M_CONTROL *ctrl, M_ITEM *itemList, HASHC
   __Menu_SendEx(managerNum, wheel, 2, MessageType_SetColour, itemList[idxMid].enabled ? colourEnabled[0] : colourDisabled[0], NULL);
 
   if (doAnimation) {
-    // Inlined Menu_StartIris(2, managerNum, iris)
-    // DAT_0025d7b9 = '\0';
-    // DAT_0025d7b8 = 0;
-    // DAT_0025d7b0 = 1;
-    // DAT_0025d7ac = 0;
-    // Menu_PlayIris('\0',managerNum,iris);
-    // DAT_0025d7ac = 0xffffffff;
-    Menu_StartIris(2, managerNum, iris);
+    Menu_StartIris(IRIS_WHEEL, managerNum, iris);   // inlined in the original
   }
 
 }
@@ -768,10 +758,13 @@ M_BASECONTROL menu_no_control;
 #define MENU_SEND_STEPS 1000        // pages and controls a send visits before it gives up
 
 
-#define MENU_SOUND_SELECT    1      // sounds 0-2 and 8 play only with their bit
-#define MENU_SOUND_ALT1      2
-#define MENU_SOUND_ALT2      4
-#define MENU_SOUND_BACK      8
+// menu_sounds: MENU_SFX_SELECT, the two ALTSELECTs and MENU_SFX_BACK play only with their bit
+enum MenuSoundFlags {
+    MENU_SOUND_SELECT = 1,
+    MENU_SOUND_ALT1 = 2,
+    MENU_SOUND_ALT2 = 4,
+    MENU_SOUND_BACK = 8,
+};
 
 // ---- skins (components)
 
@@ -1570,34 +1563,34 @@ void Menu_EnableSounds(HASHCODE page) {
     }
 }
 
-// 0-2 select, alternative selects; 3-6 a scroll's steps; 7 the focus moving; 8 back
+// A MenuSfx
 // AUTOINJECT
 void Menu_PlaySound(uint sound) {
     switch (sound) {
-        case 0:
+        case MENU_SFX_SELECT:
             if (menu_sounds & MENU_SOUND_SELECT)
                 Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
             break;
-        case 1:
+        case MENU_SFX_ALTSELECT_1:
             if (menu_sounds & MENU_SOUND_ALT1)
                 Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
             break;
-        case 2:
+        case MENU_SFX_ALTSELECT_2:
             if (menu_sounds & MENU_SOUND_ALT2)
                 Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
             break;
-        case 3:
-        case 5:
+        case MENU_SFX_PREV:
+        case MENU_SFX_PREV_REPEAT:
             Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_UP, 100.0f, 0, 0);
             break;
-        case 4:
-        case 6:
+        case MENU_SFX_NEXT:
+        case MENU_SFX_NEXT_REPEAT:
             Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_DOWN, 100.0f, 0, 0);
             break;
-        case 7:
+        case MENU_SFX_FOCUS:
             Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_SELECT, 100.0f, 0, 0);
             break;
-        case 8:
+        case MENU_SFX_BACK:
             if (menu_sounds & MENU_SOUND_BACK)
                 Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_DOWN, 100.0f, 0, 0);
             break;

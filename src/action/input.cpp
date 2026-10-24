@@ -56,10 +56,10 @@ unsigned short Input_Action(short playerNum, GameActions_tag action,unsigned cha
   
     // Any player (specified with a negative value)
     if (playerNum < 0) {
-        unsigned short uVar2 = 0;
+        unsigned short value = 0;
         for(int i = 0; i<4; i++)
-            uVar2 |= Input_Action(i,action,flags);
-        return uVar2;
+            value |= Input_Action(i,action,flags);
+        return value;
     }
 
     // One specific player and the action is pressed
@@ -288,10 +288,6 @@ uchar AnalogStickMapping[129] = {
 // held (1) nor the pressed (4) state it locks is there.
 #define ACTIONLOCK_OPEN 0x10
 
-// The control styles that take the left stick as one
-#define CONTROLSTYLE_DRNO_STICK 2
-#define CONTROLSTYLE_GOLDENEYE_STICK 5
-
 // The stick (x, y) with its length passed through AnalogStickMapping, its direction kept
 void StickCompensation2(float *x, float *y) {
     double length = sqrt((double)*y * *y + (double)*x * *x);
@@ -343,7 +339,8 @@ void Input_Update(void) {
     for (int p = 0; p < 4; p++) {
         PlayerInput *input = &PlayerInputs[p];
         float *channel = input->fChannels;
-        if (input->controlStyle == CONTROLSTYLE_DRNO_STICK || input->controlStyle == CONTROLSTYLE_GOLDENEYE_STICK) {
+        // the styles that walk and turn on the left stick
+        if (input->controlStyle == CONTROLSTYLE_OCTOPUSSY || input->controlStyle == CONTROLSTYLE_THUNDERBALL) {
             StickCompensation2(&channel[3], &channel[4]);
             StickCompensation3(&channel[2], &channel[0]);
         } else {
@@ -410,7 +407,7 @@ void Input_Init(void) {
         input->levelViewOnPace = 1;
         input->rememberZoom = 1;
         input->crosshairsEnabled = 1;
-        input->controlStyle = 0;
+        input->controlStyle = CONTROLSTYLE_NIGHTFIRE;
         input->controlStyleDriving = 0;
         input->autoSwitchBetterWeapon = 1;
         input->hudVisibility = 0;

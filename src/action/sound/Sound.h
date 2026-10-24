@@ -87,6 +87,7 @@ typedef struct SND2LBL_tag {
 } SND2LBL_tag;
 #pragma pack(pop)
 static_assert(sizeof(SND2LBL_tag) == 8, "SND2LBL_tag is 8 bytes");
+#define SUBTITLE_ALWAYS 0x80000000u     // the label's top bit
 
 // The sound ids' low 20 bits index SFXOutputData
 #define SFX_ID_MASK 0xfffff
