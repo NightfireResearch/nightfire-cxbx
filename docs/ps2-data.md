@@ -4,8 +4,8 @@ A side project: our action engine (action_standalone, docs/action-standalone.md)
 (`SLES-51258`, the European release) in place of the Xbox's, behind a build switch. The game code stays the Xbox
 port; what changes is how the files are found and how the formats that differ become what the Xbox code expects.
 
-Status (24 October 2026): milestones 1, 2, 5 and 6 done, 3 done for rigid meshes, 4 done but for what only a person
-playing can judge. The PS2 data's levels load and play on the test runner (HendersonA, CastleCourtyard,
+Status (24 October 2026): milestones 1, 2, 5 and 6 done, 3 done for rigid meshes, 4 done (the Xbox's time demos play
+the same on it, one with a lead left). The PS2 data's levels load and play on the test runner (HendersonA, CastleCourtyard,
 SpaceStationD, SkyRail, the front end) with the PS2's textures, sound, music and movies, the Xbox's skinned meshes
 standing in for the PS2's until milestone 7; see [State](#state) and [In game](#in-game).
 
@@ -190,6 +190,32 @@ where it had retried them thousands of times while none could open. The 35 "SPRI
 HendersonA run are the Xbox build's own: the same hashcodes, in neither disc's HendersonA bundle (they are in other
 levels'), which the HUD asks for anyway.
 
+## Time demos
+
+Collision, AI paths and objects in play were checked with no one playing by giving the Xbox's time demos
+(tests/demos/action) to the PS2 build. Its input is polled in another order than the recording's, so plain playback
+stops at frame 3 (StreamBroken); rebasing (`NIGHTFIRE_DEMO_REBASE`) is the keep-going mode, feeding each frame the
+recording's pad state whatever order it is asked in. In the PS2 build only, a rebase also prints the viewer
+(`NIGHTFIRE_DEMO_DUMP_VIEWER`), takes pictures (`NIGHTFIRE_DEMO_SHOT_EVERY`) and names the checksums that part from
+the recording (devtools/Demo.cpp). The Xbox build played the same recordings in `C:\nightfire-ps2\xbox\Release` on
+the runner, and every one matched every frame there. The viewer's position, rotation and zoom were compared frame by frame
+(24 October 2026):
+
+| Recording | Frames | Viewer against the Xbox's | Checksums against the recording |
+|---|---|---|---|
+| CastleExterior-20261016-031815 | 5,649 | the same bits every frame, into CastleCourtyard | `objects` from frame 4884 (179 frames) |
+| TowerA-20261016-033544 | 8,935 | the same bits every frame | `gamestate` and `objects` from frame 5353 |
+| SpaceStationD-20261021-195726 | 13,395 | the same bits every frame, through the mission's end to the front end | `gamestate` alone from frame 1171 |
+| HendersonA-20261021-190659 | 24,483 | the same to frame 745, then apart (3.7 units by frame 800); the PS2 run stays in HendersonA | `rng` from frame 165, `objects` from 166 |
+
+So the player moves through the PS2's collision exactly as through the Xbox's in all four, levels change at the
+same frames and the missions end alike. In HendersonA something draws the random number generator once more or
+less at frame 165 (after the intro), the drones then act differently (frame 500's picture: the same view, a drone
+elsewhere), and at frame 745 the player, given the same input, slides along something the Xbox's player did not
+meet. From there the recording's input no longer leads to the level's exit. What draws the extra random number is
+not found yet: the PS2's sound banks (other sample counts, so other random choices) and its entity params are the
+first suspects. Runs repeat exactly: a second rebase of each gave the same viewer bits.
+
 ## Sound and movies
 
 - **Sound banks.** LoadSoundBank reads the PS2's three files as it does the Xbox's; after the sample headers,
@@ -256,7 +282,7 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline and in game |
 | 2 | done: block 0x12 to a KXT of DXT1 or DXT5 (A8R8G8B8 where it must be). All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); 07000001's take 2.8 MB at a mean PSNR of 38 dB; right in game |
 | 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline, and in game the static worlds draw right ([In game](#in-game)); every converted primitive double-sided |
-| 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins; skinned meshes from the Xbox disc (interim). Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play: see [Time demos](#time-demos) |
+| 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins; skinned meshes from the Xbox disc (interim). Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play checked with four Xbox time demos ([Time demos](#time-demos)): the player moves exactly as on the Xbox in three whole recordings and in HendersonA to frame 745, where the drones have parted after an extra random draw at frame 165 (left: find that draw) |
 | 5 | done: text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); SpecialChars takes the PS2's 17 symbols from ACTION.ELF's `specialchar` (the same 0x18-byte records, coordinates in the PS2's `buttons` texture), its other slots empty, so prompts show the PS2's pad |
 | 6 | done but the voice streams: sound banks and music from SPU ADPCM (above), movies from PSS through FFmpeg |
 | 7-8 | not started |
