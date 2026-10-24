@@ -919,7 +919,8 @@ int CmdAll(Disc &disc) {
 int main(int argc, char **argv) {
     if (argc < 3) {
         printf("usage: ps2data_check <disc> files | bundle <hash> | textures <hash> [<out>] | "
-               "meshes <hash> [<xbox bundle>] [--obj <out>] | all\n");
+               "meshes <hash> [<xbox bundle>] [--obj <out>] | all | woman [<xbox woman.rle>] | sound <bank> [<out>] | "
+               "music <track> [<wav>]\n");
         return 2;
     }
     Disc disc;
