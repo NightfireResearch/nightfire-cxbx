@@ -1,64 +1,90 @@
 # Nightfire-cxbx
 
-An ongoing decompilation of *007: Nightfire* (Xbox), done by running the original game and replacing it a
-function at a time.
+*007: Nightfire* (Xbox, 2002), rebuilt as a native PC game from the original's own code.
 
-**Both engines now run with no emulator in the process.** The game is two programs: the action engine
-(`default.xbe`, on foot) and the driving engine (`Driving.xbe`, EA's EAGL engine, for the car missions).
-`action.exe` and `driving.exe` map their XBE themselves, provide the Xbox kernel calls it makes, and run it.
-Graphics go through Direct3D 9, audio through XAudio2, input through XInput, and files through a plain Win32
-layer. The two hand over to each other as the console did, by relaunching.
+## What this is
 
-Together, these two executables allow you to play through the entire game, both single and multiplayer.
+A fan research project that rebuilt the Xbox version of *007: Nightfire* function by function, until none of the
+original program is needed any more. What you get is the game as it shipped, running as an ordinary program on a
+modern computer: no emulator and no Xbox files beyond the game's data. You supply that data from your own copy of
+the disc.
 
-## How it works
+The goal is faithfulness: the same game, behaving exactly as the original did, with the conveniences a PC needs on
+top: high resolutions and widescreen, mouse and keyboard as well as controllers, and saves on your own disk.
 
-The original Xbox game is x86 code, which is executable on a modern PC, except for its interactions with
-the operating system / kernel. The Xbox provides one set of APIs; modern PCs have similar but not identical ones.
+## Where it is today (October 2026)
 
-Roughly 10% of its functions have been reimplemented in C++ in this repository, and at startup those are 
-patched over the originals - `tools/preprocess.py` turns `AUTOINJECT`and `FUNC_AT(<address>)` comment tags 
-into a table of jumps. Everything else still runs as shipped. The proportion goes up over time; nothing has
-to be finished before the game runs.
+- **The whole game plays**, both the on-foot missions and the driving missions. The story moves between them as it
+  did on the console. Split-screen multiplayer with bots works too.
+- **Windows** is the main platform. Builds for **Linux** and **Apple Silicon Macs** also run the game, but for now
+  you have to build them yourself (below).
+- **High resolution and widescreen**, mouse look, and Xbox-style controllers.
+- **Checked against the original.** Recorded play sessions replay frame for frame, identical to the original game.
+  That is how we know a change hasn't altered the game.
+- **Rough edges:**
+  - There are no ready-made downloads or installer yet. One is planned: `docs/install-and-update.md`.
+  - Only the PAL (European) Xbox disc has been tested.
+  - Loading the PS2 version's data is an early experiment.
 
-Replacing a whole library rather than one function is done with a "seam". In the action engine the seam sits
-above the library, in Eurocom's own wrapper functions, which are reimplemented to call a native backend - which
-is how Direct3D 8 became Direct3D 9 and DirectSound became XAudio2. The driving engine's seams sit at
-the library boundary instead, every D3D8 and DirectSound entry point patched at its own address, because its
-engine above them is too large and too unnamed to reimplement first. Both engines share the Direct3D 9
-backend, which translates the NV2A's vertex programs and register combiners to HLSL at run time.
+## What you need
+
+- **Your own copy of the game for the original Xbox**, copied to your computer. The game's data is not included
+  here and never will be, so please don't ask for it.
+- From the disc you need the `eurocom` and `driving` folders, about 3.2 GB in all. Extract the disc image with any
+  Xbox disc extraction tool.
+- A computer with a graphics card that supports Direct3D 9 (Windows) or Vulkan or Metal (Linux, macOS). Any machine
+  from the last decade is plenty.
+
+## Playing
+
+1. Get the program: build it (see Building below). Ready-made downloads will come with the installer.
+2. Put the disc's folders in a folder called `disc` next to the program's folder, or tell the game where they are
+   with `DiscPath=` in `settings.ini`. The game writes `settings.ini` the first time it runs.
+3. Run `action_standalone` to start the game from the beginning. It starts `driving_standalone` by itself when a
+   driving mission comes up.
+4. For a higher resolution, set `RenderWidth` and `RenderHeight` in `settings.ini`, with `Widescreen=1` for 16:9.
+
+Your saves and settings stay in the folder you run the game from.
+
+Something wrong? Please open an issue at [github.com/NightfireResearch](https://github.com/NightfireResearch).
+Include the end of the game's log, which says plainly what it was doing and what it could not do.
+
+---
+
+## For developers
+
+### How it got here
+
+The original game is x86 code, which a PC can run, except where it talks to the Xbox's kernel and hardware. The
+project started by running the game inside the cxbx-reloaded emulator and patching our C++ over the original's
+functions one at a time. `tools/preprocess.py` turns `AUTOINJECT` and `FUNC_AT(<address>)` tags into a table of
+jumps. Later, a loader of our own (`action.exe`, `driving.exe`) mapped the XBE without the emulator, which was
+dropped on 3 October 2026 (`docs/cxbx-removal-plan.md`).
+
+Libraries were replaced at "seams":
+- **Action engine:** above the library, in Eurocom's wrappers, so Direct3D 8 became Direct3D 9 and DirectSound
+  became XAudio2.
+- **Driving engine:** at the library boundary, every D3D8 and DirectSound entry point patched at its own address.
+- **Both:** one Direct3D 9 backend, which translates the NV2A's shader programs to HLSL at run time. An SDL GPU
+  backend (Vulkan, Metal) serves Linux and macOS.
+
+Every function of both engines is now ours, and the game's data is in our source:
+- `action_standalone` and `driving_standalone` build from this repository alone and run with no XBE mapped
+  (`docs/action-standalone.md`, `docs/driving/standalone.md`).
+- The injected builds (`action.exe` with `actioninject.dll`, `driving.exe` with `drivinginject.dll`) are kept as
+  test beds. They still need the XBEs, and run our code and the original's side by side to compare them.
 
 The pieces:
 
 | | |
 |---|---|
-| `action.exe` | The loader (`src/loader/`), for the action engine. Maps the XBE at its link address, resolves its kernel imports, creates the window, runs the game. |
-| `driving.exe` | The same loader, built for the driving engine. |
-| `actioninject.dll`, `drivinginject.dll` | The reimplemented functions and the seams, one per engine, loaded by the loader. |
+| `action_standalone`, `driving_standalone` | The game, one program per engine, with no original code. The `_test` variants add the time-demo and lockstep harnesses. |
+| `action.exe`, `driving.exe` | The loader (`src/loader/`): maps the XBE at its link address, resolves its kernel imports, runs it with the inject DLL. |
+| `actioninject.dll`, `drivinginject.dll` | Our functions and the seams, patched over the original's. |
 
-The project began by running the game inside cxbx-reloaded and injecting those DLLs into it; the loader
-replaced it, and the CXBX launchers were removed on 3 October 2026 (`docs/cxbx-removal-plan.md` has the
-history). The loader is the only way the game runs.
-
-## Getting started
-
-You need a dump of your own Xbox disc. The game data is not in this repository and will not be.
-
-* Extract the disc to a folder, so that you have `default.xbe`, `Driving.xbe` and the data directories.
-* Put it where the loader will find it: by default `../disc` relative to the executable, or set `DiscPath`
-  in `settings.ini`.
-* Build (below), or download a release.
-* Run `action.exe` to start the game from the beginning, or `driving.exe -mission N` to go straight to a
-  driving mission (below). Both print what they are doing, and say plainly what they could not do.
-* For a higher resolution, set `RenderWidth` and `RenderHeight` in `settings.ini` (with `Widescreen=1` for a
-  16:9 size). Both engines render their 640x480 into a backbuffer of that size; 0 turns it off.
-
-(`settings.ini` once had `GraphicsBackend` and `AudioBackend` keys, for choosing between the emulator's
-graphics and sound and the native backends; they are ignored now.)
-
-Switching between the two engines, and between the parts of a driving mission, is a process relaunch: the
-game writes its launch data to `psiLaunch.bin`, the loader starts `action.exe` or `driving.exe` from beside
-itself with the same log, and exits.
+Switching between the two engines, and between the parts of a driving mission, is a process relaunch. The game
+writes its launch data to `psiLaunch.bin`, starts the other engine's program from beside itself with the same log,
+and exits.
 
 ### Starting a driving mission directly
 
@@ -122,8 +148,11 @@ All under `[Settings]` in `settings.ini`, read at startup:
 
 ## Building
 
-CMake and Python, plus a compiler. The game is a 32-bit x86 binary and the loader has to share its address
-space, so this cannot be built for x64 on any host.
+CMake and Python, plus a compiler. The presets below build the 32-bit Windows binaries: the loader, the inject
+DLLs and the 32-bit standalone executables, the exact build against the original (x87). The loader shares the
+XBE's address space, so it is 32-bit only. The standalone executables also build as native 64-bit programs:
+`windows-x64` (docs/action-64bit.md), `linux-x64` and `linux-i386` (docs/action-portable.md,
+docs/driving/portable.md), and `macos-arm64` (docs/driving/macos.md).
 
 The movies play through a minimal FFmpeg (`docs/fmv.md`), whose DLLs and headers are committed in
 `third_party/ffmpeg-prebuilt` and copied beside the executables by the build. Nothing to do unless you change it:
