@@ -9,12 +9,15 @@
 //                                                       entity when the Xbox's bundle (decompressed) is given
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
+//   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
 //
 // <disc> is the folder with FILES.BIN, ACTION.ELF and PS2\. <hash> is a bundle's name without .bin (07000001).
 
 #include "../ps2/Ps2Disc.h"
 #include "../ps2/Ps2Mesh.h"
 #include "../ps2/Ps2Texture.h"
+#include "../ps2/Ps2Sound.h"
+#include "../../common/sound/xadpcm.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -701,6 +704,67 @@ int CmdWoman(Disc &disc, const char *xboxPath) {
     return 1;
 }
 
+void WriteWav(const std::string &path, const int16_t *pcm, size_t samples, uint32_t rate) {
+    FILE *f = fopen(path.c_str(), "wb");
+    if (f == NULL)
+        return;
+    uint32_t dataBytes = (uint32_t)(samples * 2);
+    struct {
+        char riff[4]; uint32_t size; char wave[4]; char fmt[4]; uint32_t fmtSize; uint16_t format, channels;
+        uint32_t rate, byteRate; uint16_t align, bits; char data[4]; uint32_t dataSize;
+    } h = { {'R','I','F','F'}, 36 + dataBytes, {'W','A','V','E'}, {'f','m','t',' '}, 16, 1, 1, rate, rate * 2, 2, 16,
+            {'d','a','t','a'}, dataBytes };
+    fwrite(&h, sizeof(h), 1, f);
+    fwrite(pcm, 2, samples, f);
+    fclose(f);
+}
+
+// A sound bank's samples as Ps2_ConvertSoundBank converts them: the SPU decode (to WAV, with <out>), then the Xbox
+// ADPCM made of it decoded again, against it
+int CmdSound(Disc &disc, int bank, const char *outDir) {
+    char base[300];
+    snprintf(base, sizeof(base), "%s/PS2/ENGLISH/SB_%d/SB_%d", disc.root.c_str(), bank / 8, bank);
+    Bytes shf, sbf;
+    if (!ReadWhole(std::string(base) + ".SHF", shf) || !ReadWhole(std::string(base) + ".SBF", sbf)) {
+        printf("no %s.SHF / .SBF\n", base);
+        return 1;
+    }
+    uint32_t count;
+    memcpy(&count, shf.data(), 4);
+    double worstSnr = 1e9;
+    for (uint32_t i = 0; i < count; i++) {
+        uint32_t h[9];
+        memcpy(h, shf.data() + 4 + i * 36, sizeof(h));
+        uint32_t offset = h[1], size = h[2], pitch = h[3];
+        std::vector<int16_t> pcm(size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES + 1);
+        long loopStart;
+        size_t n = Ps2Spu_Decode(sbf.data() + offset, size, pcm.data(), &loopStart);
+        Bytes xadpcm(Ps2Spu_XAdpcmBytes(n));
+        Ps2Spu_EncodeXAdpcm(pcm.data(), n, xadpcm.data());
+        std::vector<int16_t> back(XAdpcm_DecodedValueCount(xadpcm.size(), 1));
+        XAdpcm_Decode(xadpcm.data(), xadpcm.size(), 1, back.data(), back.size());
+        double signal = 0, noise = 0;
+        for (size_t k = 0; k < n; k++) {
+            signal += (double)pcm[k] * pcm[k];
+            noise += ((double)pcm[k] - back[k]) * ((double)pcm[k] - back[k]);
+        }
+        double snr = noise > 0 ? 10 * log10(signal / noise) : 99;
+        if (signal > 0 && snr < worstSnr)
+            worstSnr = snr;
+        printf("  sample %u: %u bytes, %zu samples, pitch %u = %u Hz, loop flag %u, loop start %ld, %zu bytes of Xbox "
+               "ADPCM, %.1f dB\n", i, size, n, pitch, Ps2Spu_PitchToHz(pitch), h[0], loopStart, xadpcm.size(), snr);
+        if (outDir != NULL) {
+            char name[400];
+            snprintf(name, sizeof(name), "%s/sb%d_%u.wav", outDir, bank, i);
+            WriteWav(name, pcm.data(), n, Ps2Spu_PitchToHz(pitch));
+            snprintf(name, sizeof(name), "%s/sb%d_%u_xbox.wav", outDir, bank, i);
+            WriteWav(name, back.data(), n, Ps2Spu_PitchToHz(pitch));
+        }
+    }
+    printf("[ps2sound] bank %d: %u samples, the Xbox ADPCM's worst signal to noise %.1f dB\n", bank, count, worstSnr);
+    return 0;
+}
+
 int CmdAll(Disc &disc) {
     int failed = 0;
     for (int i = 0; i < disc.count; i++) {
@@ -744,6 +808,8 @@ int main(int argc, char **argv) {
     }
     if (cmd == "all")
         return CmdAll(disc);
+    if (cmd == "sound" && argc > 3)
+        return CmdSound(disc, atoi(argv[3]), argc > 4 ? argv[4] : NULL);
     if (cmd == "woman")
         return CmdWoman(disc, argc > 3 ? argv[3] : NULL);
     printf("unknown command %s\n", cmd.c_str());

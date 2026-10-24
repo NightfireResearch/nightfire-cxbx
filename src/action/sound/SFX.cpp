@@ -6,6 +6,9 @@
 #include "../game.h"
 #include "../game/mp/multiplayer.h"
 #include "../ui/Menu.h"
+#if NIGHTFIRE_DATA_PS2
+#include "../ps2/Ps2Convert.h"
+#endif
 
 #include <stdio.h>
 
@@ -1261,6 +1264,9 @@ void LoadSoundBank(int index) {
                                                        PtrTo32(bank->psi_SampleHeaderBuffer));
             samples += sample->Size;
         }
+#if NIGHTFIRE_DATA_PS2
+        Ps2_ConvertSoundBank(bank->SampleHeader, bank->SampleCount);   // SPU ADPCM to the Xbox's (docs/ps2-data.md)
+#endif
     }
     bank->Loaded = 1;
     bank->HashCode = index;

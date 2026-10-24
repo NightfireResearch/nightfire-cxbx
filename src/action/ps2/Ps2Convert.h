@@ -5,6 +5,7 @@
 // with the level. Built only with NIGHTFIRE_ACTION_DATA_PS2.
 
 #include "../engine/psiGraphics.h"
+#include "../sound/psiSound.h"      // SampleHeaderData
 
 // Block 0x12, a texture's palette, after its texels (block 0x16, which left their address in the header's
 // textureInfo): the header is pointed at an Xbox texture header (KXT) of the decoded frames instead. hashcode is the
@@ -18,5 +19,10 @@ ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes);
 // Ps2_ConvertModel cannot convert yet, the Xbox's mesh of the entity's hashcode stands in (interim, until milestone 7:
 // Ps2XboxStandIn.h)
 void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode);
+
+// A sound bank just loaded (LoadSoundBank): its samples, SPU ADPCM in the .SBF with the SPU's pitch for a rate, made
+// Xbox ADPCM in memory of their own with the rate in Hz and the loop's start in Xbox ADPCM bytes; the .SBF's memory is
+// given back
+void Ps2_ConvertSoundBank(SampleHeaderData *samples, int count);
 
 #endif // PS2_PS2CONVERT_H_

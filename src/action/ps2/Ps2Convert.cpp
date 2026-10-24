@@ -2,6 +2,8 @@
 #include "Ps2Mesh.h"
 #include "Ps2Texture.h"
 #include "Ps2XboxStandIn.h"
+#include "Ps2Sound.h"
+#include "../../common/sound/xadpcm.h"
 #include "../memory.h"
 
 #include <stdio.h>
@@ -47,6 +49,33 @@ ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     ModelData *model = (ModelData *)Mem_Malloc(kxe.size(), MALLOC_PS2_OBJECT, 0);
     memcpy(model, kxe.data(), kxe.size());
     return model;
+}
+
+void Ps2_ConvertSoundBank(SampleHeaderData *samples, int count) {
+    if (count <= 0)
+        return;
+    size_t bytes = 0;
+    for (int i = 0; i < count; i++)
+        bytes += Ps2Spu_XAdpcmBytes(samples[i].Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
+    void *spu = samples[0].Address;     // the .SBF file, the samples one after another
+    uint8_t *out = (uint8_t *)Mem_Malloc(bytes, MALLOC_XBOX, 0);
+    std::vector<int16_t> pcm;
+    for (int i = 0; i < count; i++) {
+        SampleHeaderData *sample = &samples[i];
+        pcm.resize((size_t)sample->Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
+        long loopStart;
+        size_t n = Ps2Spu_Decode((const uint8_t *)(void *)sample->Address, sample->Size, pcm.data(), &loopStart);
+        int written = (int)Ps2Spu_EncodeXAdpcm(pcm.data(), n, out);
+        sample->Address = out;
+        sample->Size = written;
+        sample->RealSize = written;
+        sample->Frequency = (int)Ps2Spu_PitchToHz(sample->Frequency);
+        // The loop's start (the block the SPU flags) as the Xbox's: the byte offset of its block
+        sample->LoopOffset = loopStart > 0 ? (int)(loopStart / XADPCM_SAMPLES_PER_BLOCK * XADPCM_BLOCK_BYTES_PER_CHANNEL)
+                                           : 0;
+        out += written;
+    }
+    Mem_Free(&spu);
 }
 
 void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode) {
