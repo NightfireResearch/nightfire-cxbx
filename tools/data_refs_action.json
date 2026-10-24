@@ -8471,7 +8471,7 @@
   "0xdcd6b",
   "0xdce26"
  ],
- "controller_maybeRumbleTimeout": [
+ "controller_rumbleTimeout": [
   "0xdd206",
   "0xdd240",
   "0xdd24e",

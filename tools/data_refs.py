@@ -215,8 +215,12 @@ def main():
             names |= more
 
     def port_names_it(fn, names):
-        """Whether the port, or a function of ours it names (an adaptor's C core, a helper), names the block."""
-        for p in ports.get(fn, ()):
+        """Whether the port, or a function of ours it names (an adaptor's C core, a helper), names the block. Where the
+        table patches the original with a register-argument entry (Asm_<name>, src/<side>/inject), the port is what
+        the entry calls."""
+        entries = ports.get(fn, set())
+        entries = entries | {w for p in entries if p.startswith('Asm_') for w in bodies.get(p, ()) if w in bodies}
+        for p in entries:
             words = bodies.get(p, set())
             if names & words or any(names & bodies.get(w, set()) for w in words if w in bodies):
                 return True
