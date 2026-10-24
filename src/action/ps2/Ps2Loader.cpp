@@ -5,6 +5,7 @@
 #include "../game.h"            // GameState
 #include "../memory.h"
 #include "../util/hashtable.h"
+#include "FS_ps2.h"
 
 #include <stdio.h>
 
@@ -17,8 +18,14 @@
 
 extern uchar bLevelLoaded;
 
-// Loads the level bundle's variant through LoaderLoad, if the disc has it
-static void LoadVariant(uint32_t level, int variant) {
+// LoaderAnimBase (PS2 0x0030e750): the memory the level's sequence bundle was read into. The PS2's LoaderLoad reads
+// it fresh (mode 0) and remembers it; its modes 2 and 3 (the loadables, and the sequences again) read into it over
+// what was there. Here a bundle that does not fit takes new memory, and the old is given back.
+static void *AnimBuffer;
+static uint32_t AnimBufferBytes;
+
+// Loads the level bundle's variant through LoaderLoad, if the disc has it: into the animation buffer, with intoBuffer
+static void LoadVariant(uint32_t level, int variant, bool intoBuffer) {
     char name[16];
     uint32_t bundle = (level & ~LOADER_VARIANT_BITS) | (uint32_t)(variant + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT;
     snprintf(name, sizeof(name), "%8.8x.bin", bundle);
@@ -26,12 +33,28 @@ static void LoadVariant(uint32_t level, int variant) {
         printf("[ps2] no %s on the disc\n", name);
         return;
     }
+    if (intoBuffer && AnimBuffer != NULL)
+        Ps2Fs_LoadNextInto(AnimBuffer, AnimBufferBytes);
     while (LoaderLoad(1, level, 0, variant))
         ;
+    uint32_t bytes;
+    void *loaded = Ps2Fs_LastLoad(&bytes);
+    if (loaded != AnimBuffer) {
+        if (intoBuffer && AnimBuffer != NULL) {
+            printf("[ps2] %s does not fit the animation buffer (%u bytes): it takes new memory\n", name,
+                   AnimBufferBytes);
+            Mem_Free(&AnimBuffer);
+        }
+        AnimBuffer = loaded;
+        AnimBufferBytes = bytes;
+    } else {
+        printf("[ps2] %s loaded into the animation buffer\n", name);
+    }
 }
 
 void Ps2_LoadLevelSequences(uint32_t level) {
-    LoadVariant(level, LOADER_VARIANT_SEQUENCES);
+    AnimBuffer = NULL;      // the heap it was in has been started again
+    LoadVariant(level, LOADER_VARIANT_SEQUENCES, false);
 }
 
 // PS2 LoadableLoad (0x1d7188): the loadable bundle in place of the level's sequences, with NextLevelHashcode naming
@@ -43,7 +66,7 @@ bool LoadableLoad(HASHCODE hashcode, uint loadable) {
     HASHCODE next = (HASHCODE)GameState.NextLevelHashcode;
     uint32_t level = (uint32_t)GameState.CurrentLevelHashcode;
     GameState.NextLevelHashcode = (level & ~LOADER_VARIANT_BITS) | (loadable + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT;
-    LoadVariant(level, (int)loadable);
+    LoadVariant(level, (int)loadable, true);
     GameState.NextLevelHashcode = next;
     hashtable_create_sections();
     Mem_SetMallocMethod(method);
@@ -56,7 +79,7 @@ bool LoadableReload(HASHCODE hashcode) {
     tMallocMethod method = Mem_SetMallocMethod(MALLOC_BEST_FIT);
     Script_FreeFromHashTable(hashcode);
     hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);
-    LoadVariant((uint32_t)GameState.CurrentLevelHashcode, LOADER_VARIANT_SEQUENCES);
+    LoadVariant((uint32_t)GameState.CurrentLevelHashcode, LOADER_VARIANT_SEQUENCES, true);
     bLevelLoaded = 0;
     hashtable_create_sections();
     AnimPreLoadInit(1);

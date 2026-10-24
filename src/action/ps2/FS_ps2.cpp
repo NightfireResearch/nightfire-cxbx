@@ -13,6 +13,7 @@
 #include "../game.h"            // timestamp
 #include "../gfx/LowLevel.h"    // ShowLoadProgressScreen
 #include "Ps2Disc.h"
+#include "FS_ps2.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -198,7 +199,24 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
 
 double TimeSpentLoadingFiles;
 
-// As FS.cpp's (0x000dc990): the whole file, in memory of its own
+// The buffer the next whole file goes into, when it fits (Ps2Fs_LoadNextInto), and the last one loaded
+static void *LoadInto;
+static uint32_t LoadIntoBytes;
+static void *LastLoad;
+static uint32_t LastLoadBytes;
+
+void Ps2Fs_LoadNextInto(void *buffer, uint32_t bytes) {
+    LoadInto = buffer;
+    LoadIntoBytes = bytes;
+}
+
+void *Ps2Fs_LastLoad(uint32_t *bytes) {
+    *bytes = LastLoadBytes;
+    return LastLoad;
+}
+
+// As FS.cpp's (0x000dc990): the whole file, in memory of its own - or in the buffer Ps2Fs_LoadNextInto gave, as the
+// PS2's psiFileRead reads into the buffer its caller passes (LoaderLoad's, for the animation bundles)
 void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *sizeOut) {
     TimeSpentLoadingFiles = TimeSpentLoadingFiles - timestamp();
     int size = FS_GetFileSize(filename);
@@ -207,7 +225,11 @@ void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *siz
         ShowFatalErrorScreen(true);
         XboxError_Halt("file missing from the PS2 disc", filename);
     }
-    void *data = Mem_Malloc(size, allocType, 0);
+    bool into = LoadInto != NULL && (uint32_t)size <= LoadIntoBytes;
+    void *data = into ? LoadInto : Mem_Malloc(size, allocType, 0);
+    LastLoad = data;
+    LastLoadBytes = into ? LoadIntoBytes : (uint32_t)size;   // the buffer's whole size stays usable
+    LoadInto = NULL;
     FS_LoadFileIfReady(filename, data);
     while (FS_StateMachineIterate())
         ShowLoadProgressScreen();

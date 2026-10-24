@@ -11,8 +11,8 @@
 void Ps2_LoadLevelSequences(uint32_t level);
 
 // LoadableLoad and LoadableReload (Loader.h) are the PS2's here: a cutscene's loadable bundle (0x0780xxxx-0x07A0xxxx,
-// its sequences and script) loaded in place of the level's sequences, which come back with LoadableReload. The
-// Xbox's, which load nothing (their bundles hold everything), are left out of this build. Each load takes the
-// bundle's memory from the heap until the level ends, as LoaderLoad's always do.
+// its sequences and script) loaded in place of the level's sequences, into the same memory, and the sequences loaded
+// back the same way by LoadableReload. The Xbox's, which load nothing (their bundles hold everything), are left out of
+// this build.
 
 #endif // PS2_PS2LOADER_H_
