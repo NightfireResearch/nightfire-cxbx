@@ -10,6 +10,7 @@
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
+//   ps2data_check <disc> music <track> [<out.wav>]       a music track read in pieces as the music code reads it
 //
 // <disc> is the folder with FILES.BIN, ACTION.ELF and PS2\. <hash> is a bundle's name without .bin (07000001).
 
@@ -23,6 +24,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include <map>
 #include <string>
 #include <vector>
@@ -267,8 +269,59 @@ int CmdBundle(Disc &disc, const std::string &hash) {
 
 struct TextureTotals {
     int textures = 0, frames = 0, failed = 0, resized = 0, colours16 = 0, colours256 = 0;
+    int formats[4] = {};                // by Ps2TextureFormat
     uint64_t kxtBytes = 0;
+    double psnrSum = 0, psnrWorst = 99;
+    std::string worstName;
 };
+
+// DXT1 or DXT5 blocks back to texels (bytes B, G, R, A), as the backends upload them
+void DecodeDxt(const uint8_t *blocks, int width, int height, bool dxt5, uint8_t *bgra) {
+    for (int by = 0; by < height; by += 4) {
+        for (int bx = 0; bx < width; bx += 4) {
+            int alpha[16];
+            for (int i = 0; i < 16; i++)
+                alpha[i] = 255;
+            if (dxt5) {
+                int a0 = blocks[0], a1 = blocks[1], levels[8] = { a0, a1 };
+                for (int k = 1; k < 7; k++)
+                    levels[k + 1] = a0 > a1 ? ((7 - k) * a0 + k * a1) / 7 : (k < 5 ? ((5 - k) * a0 + k * a1) / 5 : 0);
+                if (a0 <= a1) { levels[6] = 0; levels[7] = 255; }
+                uint64_t bits = 0;
+                for (int b = 0; b < 6; b++)
+                    bits |= (uint64_t)blocks[2 + b] << (b * 8);
+                for (int i = 0; i < 16; i++)
+                    alpha[i] = levels[(bits >> (i * 3)) & 7];
+                blocks += 8;
+            }
+            uint16_t c0, c1;
+            uint32_t indices;
+            memcpy(&c0, blocks, 2);
+            memcpy(&c1, blocks + 2, 2);
+            memcpy(&indices, blocks + 4, 4);
+            blocks += 8;
+            int p[4][4];
+            for (int k = 0; k < 2; k++) {
+                uint16_t c = k == 0 ? c0 : c1;
+                p[k][0] = ((c >> 11) & 31) * 255 / 31; p[k][1] = ((c >> 5) & 63) * 255 / 63; p[k][2] = (c & 31) * 255 / 31;
+                p[k][3] = 255;
+            }
+            bool four = dxt5 || c0 > c1;
+            for (int c = 0; c < 3; c++) {
+                p[2][c] = four ? (2 * p[0][c] + p[1][c]) / 3 : (p[0][c] + p[1][c]) / 2;
+                p[3][c] = four ? (p[0][c] + 2 * p[1][c]) / 3 : 0;
+            }
+            p[2][3] = 255;
+            p[3][3] = four ? 255 : 0;
+            for (int i = 0; i < 16; i++) {
+                const int *q = p[(indices >> (i * 2)) & 3];
+                uint8_t *t = bgra + ((size_t)(by + i / 4) * width + bx + i % 4) * 4;
+                t[0] = (uint8_t)q[2]; t[1] = (uint8_t)q[1]; t[2] = (uint8_t)q[0];
+                t[3] = (uint8_t)(dxt5 ? alpha[i] : q[3]);
+            }
+        }
+    }
+}
 
 // As parsemap: block 0x10 the headers, then per texture 0x16 (texels) and 0x12 (palette), which converts it
 void ConvertPackTextures(const std::vector<Block> &blocks, const std::string &pack, const char *outDir,
@@ -307,17 +360,43 @@ void ConvertPackTextures(const std::vector<Block> &blocks, const std::string &pa
                        pack.c_str(), next, hashcode, width, height, frames, b.size, texelBytes);
                 totals.failed++;
             } else {
-                Bytes kxt(Ps2Texture_KxtBytes(width, height, frames));
+                Ps2TextureFormat format = Ps2Texture_ChooseFormat(b.data, colours, width, height);
+                Bytes kxt(Ps2Texture_KxtBytes(width, height, frames, format));
                 TextureInfo *tex = (TextureInfo *)kxt.data();
-                Ps2Texture_BuildKxt(tex, hashcode, width, height, frames, h.someDivisor, texels, b.data, colours);
+                Ps2Texture_BuildKxt(tex, hashcode, width, height, frames, h.someDivisor, texels, b.data, colours,
+                                    format);
                 totals.textures++;
                 totals.frames += frames;
                 totals.kxtBytes += kxt.size();
+                totals.formats[format]++;
                 (colours == 16 ? totals.colours16 : totals.colours256)++;
+                // Frame 0 as the backend will see it, against the PS2's texels decoded straight
+                const uint8_t *pixels = (const uint8_t *)(&tex->baseIdx + frames);
+                std::vector<uint32_t> linear((size_t)width * height), direct((size_t)width * height);
+                if (format == PS2TEX_A8R8G8B8)
+                    Unswizzle((const uint32_t *)pixels, linear.data(), width, height);
+                else
+                    DecodeDxt(pixels, width, height, format == PS2TEX_DXT5, (uint8_t *)linear.data());
+                Ps2Texture_DecodeFrame(texels, b.data, colours, width, height, (uint8_t *)direct.data());
+                // (a clear texel's colour does not count)
+                double error = 0;
+                size_t counted = 0;
+                for (size_t k = 0; k < direct.size(); k++) {
+                    const uint8_t *x = (const uint8_t *)&linear[k], *y = (const uint8_t *)&direct[k];
+                    for (int c = 0; c < 4; c++) {
+                        if (c < 3 && y[3] == 0)
+                            continue;
+                        error += (double)(x[c] - y[c]) * (x[c] - y[c]);
+                        counted++;
+                    }
+                }
+                double psnr = error > 0 ? 10 * log10(255.0 * 255.0 * counted / error) : 99;
+                totals.psnrSum += psnr;
+                if (psnr < totals.psnrWorst) {
+                    totals.psnrWorst = psnr;
+                    totals.worstName = pack + "_" + std::to_string(next);
+                }
                 if (outDir != NULL) {
-                    const uint32_t *pixels = (const uint32_t *)(&tex->baseIdx + frames);
-                    std::vector<uint32_t> linear((size_t)width * height);
-                    Unswizzle(pixels, linear.data(), width, height);
                     char name[512];
                     if (hashcode != 0xffffffff)
                         snprintf(name, sizeof(name), "%s/%s_%03d_%08x.png", outDir, pack.c_str(), next, hashcode);
@@ -345,9 +424,12 @@ int CmdTextures(Disc &disc, const std::string &hash, const char *outDir, bool qu
         if (IsPack(e.type))
             ConvertPackTextures(ReadBlocks(e.data, e.size), e.name, outDir, totals);
     if (!quiet || totals.failed != 0)
-        printf("[ps2tex] %s: %d textures (%d of 16 colours, %d of 256), %d frames, %.1f MB as KXT, %d resized, %d failed\n",
-               hash.c_str(), totals.textures, totals.colours16, totals.colours256, totals.frames,
-               totals.kxtBytes / 1048576.0, totals.resized, totals.failed);
+        printf("[ps2tex] %s: %d textures (%d of 16 colours, %d of 256; %d A8R8G8B8, %d DXT1, %d DXT5), %d frames, %.1f MB "
+               "as KXT, PSNR mean %.1f dB worst %.1f (%s), %d resized, %d failed\n", hash.c_str(), totals.textures,
+               totals.colours16, totals.colours256, totals.formats[PS2TEX_A8R8G8B8], totals.formats[PS2TEX_DXT1],
+               totals.formats[PS2TEX_DXT5], totals.frames, totals.kxtBytes / 1048576.0,
+               totals.textures ? totals.psnrSum / totals.textures : 0.0, totals.psnrWorst, totals.worstName.c_str(),
+               totals.resized, totals.failed);
     return totals.failed != 0;
 }
 
@@ -765,6 +847,60 @@ int CmdSound(Disc &disc, int bank, const char *outDir) {
     return 0;
 }
 
+bool ReadFromBytes(void *context, uint32_t offset, uint32_t bytes, uint8_t *out) {
+    const Bytes *data = (const Bytes *)context;
+    if (offset >= data->size())
+        return false;
+    if (bytes > data->size() - offset)
+        bytes = (uint32_t)(data->size() - offset);
+    memcpy(out, data->data() + offset, bytes);
+    return true;
+}
+
+// A music track read as FS_ps2.cpp reads it for the music code (the Xbox's 0x4800-byte pieces), against the same
+// seconds made in one piece: the pieces must join without a seam. Writes the first seconds as a stereo WAV.
+int CmdMusic(Disc &disc, int track, const char *outWav) {
+    char path[300];
+    snprintf(path, sizeof(path), "%s/PS2/MUSIC/MFX_%d/MFX_%d.SSD", disc.root.c_str(), track / 16, track);
+    Bytes ssd;
+    if (!ReadWhole(path, ssd)) {
+        printf("no %s\n", path);
+        return 1;
+    }
+    uint32_t xboxBytes = Ps2Music_ToXboxBytes((uint32_t)ssd.size());
+    const uint32_t piece = 0x4800, blockBytes = 72, span = piece * 16;    // the first 16 pieces, about 6 s
+    Bytes pieces(span), whole(span);
+    for (uint32_t at = 0; at < span; at += piece)
+        Ps2Music_XboxBlocks(at / blockBytes, piece / blockBytes, (uint32_t)ssd.size(), ReadFromBytes, &ssd,
+                            pieces.data() + at);
+    Ps2Music_XboxBlocks(0, span / blockBytes, (uint32_t)ssd.size(), ReadFromBytes, &ssd, whole.data());
+    std::vector<int16_t> a(XAdpcm_DecodedValueCount(span, 2)), b(a.size());
+    XAdpcm_Decode(pieces.data(), span, 2, a.data(), a.size());
+    XAdpcm_Decode(whole.data(), span, 2, b.data(), b.size());
+    int worst = 0;
+    double energy = 0, difference = 0;
+    for (size_t k = 0; k < a.size(); k++) {
+        worst = std::max(worst, abs(a[k] - b[k]));
+        energy += (double)a[k] * a[k];
+        difference += (double)(a[k] - b[k]) * (a[k] - b[k]);
+    }
+    printf("[ps2music] track %d: %zu PS2 bytes, %u as the Xbox's; the first %u bytes in pieces against in one: the "
+           "music's RMS %.0f, the difference's %.1f (worst %d)\n", track, ssd.size(), xboxBytes, span,
+           sqrt(energy / a.size()), sqrt(difference / a.size()), worst);
+    if (outWav != NULL) {
+        FILE *f = fopen(outWav, "wb");
+        if (f != NULL) {
+            uint32_t dataBytes = (uint32_t)(a.size() * 2);
+            uint32_t h[11] = { 0x46464952, 36 + dataBytes, 0x45564157, 0x20746d66, 16, 0x00020001, 44100, 44100 * 4,
+                               0x00100004, 0x61746164, dataBytes };
+            fwrite(h, 4, 11, f);
+            fwrite(a.data(), 2, a.size(), f);
+            fclose(f);
+        }
+    }
+    return 0;
+}
+
 int CmdAll(Disc &disc) {
     int failed = 0;
     for (int i = 0; i < disc.count; i++) {
@@ -810,6 +946,8 @@ int main(int argc, char **argv) {
         return CmdAll(disc);
     if (cmd == "sound" && argc > 3)
         return CmdSound(disc, atoi(argv[3]), argc > 4 ? argv[4] : NULL);
+    if (cmd == "music" && argc > 3)
+        return CmdMusic(disc, atoi(argv[3]), argc > 4 ? argv[4] : NULL);
     if (cmd == "woman")
         return CmdWoman(disc, argc > 3 ? argv[3] : NULL);
     printf("unknown command %s\n", cmd.c_str());

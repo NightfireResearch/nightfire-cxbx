@@ -15,6 +15,8 @@
 #include "Ps2Disc.h"
 #include "FS_ps2.h"
 #include "Ps2ExecutableData.h"
+#include "Ps2Sound.h"
+#include "../sound/SFX.h"           // the music markers
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,6 +28,7 @@ struct Ps2File {
     uint32_t base;          // its first byte in that file
     uint32_t size;
     bool loose;             // the handle is the file's own, closed with it
+    uint32_t musicBytes;    // a music track's (.SSD) PS2 bytes, read as the Xbox's track (size is then that's): or 0
 };
 
 struct Ps2FileSystem {
@@ -95,8 +98,14 @@ static bool FindWoman(uint32_t *offset, uint32_t *size) {
     return womanSize != 0;
 }
 
+static bool EndsWith(const char *name, const char *suffix) {
+    size_t n = strlen(name), k = strlen(suffix);
+    return n >= k && _stricmp(name + n - k, suffix) == 0;
+}
+
 // The file named: a FileList entry in FILES.BIN, the woman, else a loose file under PS2\. False when it is none.
 static bool Ps2File_Open(const char *name, Ps2File *file) {
+    file->musicBytes = 0;
     int index = Ps2Disc_FindFile(FileSystem.files, FileSystem.fileCount, name);
     if (index >= 0) {
         file->handle = FileSystem.filesBin;
@@ -128,12 +137,38 @@ static void Ps2File_Close(Ps2File *file) {
     file->handle = INVALID_HANDLE_VALUE;
 }
 
+static bool ReadMusic(void *context, uint32_t offset, uint32_t bytes, uint8_t *out) {
+    const Ps2File *file = (const Ps2File *)context;
+    if (offset >= file->musicBytes)
+        return false;
+    if (bytes > file->musicBytes - offset)
+        bytes = file->musicBytes - offset;
+    return ReadAt(file->handle, out, bytes, file->base + offset);
+}
+
+// A music track's bytes as the Xbox's track has them, made from the PS2's a whole block at a time
+#define MUSIC_XBOX_BLOCK_BYTES 72
+static void Ps2File_ReadMusic(const Ps2File *file, uint8_t *buffer, uint32_t len, uint32_t offset) {
+    uint32_t first = offset / MUSIC_XBOX_BLOCK_BYTES;
+    uint32_t last = (offset + len + MUSIC_XBOX_BLOCK_BYTES - 1) / MUSIC_XBOX_BLOCK_BYTES;
+    uint8_t *blocks = (uint8_t *)malloc((size_t)(last - first) * MUSIC_XBOX_BLOCK_BYTES);
+    if (blocks == NULL)
+        return;
+    Ps2Music_XboxBlocks(first, last - first, file->musicBytes, ReadMusic, (void *)file, blocks);
+    memcpy(buffer, blocks + (offset - first * MUSIC_XBOX_BLOCK_BYTES), len);
+    free(blocks);
+}
+
 // Reads len bytes from offset in the file, no further than its end
 static void Ps2File_Read(const Ps2File *file, void *buffer, uint32_t len, uint32_t offset) {
     if (offset >= file->size)
         return;
     if (len > file->size - offset)
         len = file->size - offset;
+    if (file->musicBytes != 0) {
+        Ps2File_ReadMusic(file, (uint8_t *)buffer, len, offset);
+        return;
+    }
     if (!ReadAt(file->handle, buffer, len, file->base + offset))
         FS_FatalErrorHandler();
 }
@@ -200,6 +235,27 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
     Ps2File_Close(&file);
 }
 
+// A music track's markers (.SMF): their positions in the PS2's track made the Xbox's (Ps2Music_ToXboxBytes), as its
+// reads are (Ps2File_ReadMusic)
+static void ConvertMusicMarkers(uint8_t *file, uint32_t size) {
+    StreamMarkerHeaderData *header = (StreamMarkerHeaderData *)file;
+    if (size < sizeof(*header))
+        return;
+    MusicMarkerData *markers = (MusicMarkerData *)(file + header->MarkerOffset);
+    MusicMarkerStartData *starts = (MusicMarkerStartData *)(file + header->StartMarkerOffset);
+    if (header->MarkerOffset + header->MarkerCount * sizeof(MusicMarkerData) > size ||
+        header->StartMarkerOffset + header->StartMarkerCount * sizeof(MusicMarkerStartData) > size)
+        return;
+    for (int i = 0; i < header->MarkerCount; i++) {
+        markers[i].Pos = (int)Ps2Music_ToXboxBytes((uint32_t)markers[i].Pos);
+        markers[i].LoopStart = (int)Ps2Music_ToXboxBytes((uint32_t)markers[i].LoopStart);
+    }
+    for (int i = 0; i < header->StartMarkerCount; i++) {
+        starts[i].Marker.Pos = (int)Ps2Music_ToXboxBytes((uint32_t)starts[i].Marker.Pos);
+        starts[i].Marker.LoopStart = (int)Ps2Music_ToXboxBytes((uint32_t)starts[i].Marker.LoopStart);
+    }
+}
+
 double TimeSpentLoadingFiles;
 
 // The buffer the next whole file goes into, when it fits (Ps2Fs_LoadNextInto), and the last one loaded
@@ -234,6 +290,8 @@ void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *siz
     LastLoadBytes = into ? LoadIntoBytes : (uint32_t)size;   // the buffer's whole size stays usable
     LoadInto = NULL;
     FS_LoadFileIfReady(filename, data);
+    if (EndsWith(filename, ".SMF"))
+        ConvertMusicMarkers((uint8_t *)data, (uint32_t)size);
     while (FS_StateMachineIterate())
         ShowLoadProgressScreen();
     if (sizeOut != NULL)
@@ -255,7 +313,12 @@ int psiAsyncOpenFile(char *fileName) {
         stream++;
     if (stream >= MAX_ASYNC_STREAMS)
         FS_FatalErrorHandler();
-    Ps2File_OpenOrDie(fileName, &AsyncStreams[stream].file);
+    Ps2File *file = &AsyncStreams[stream].file;
+    Ps2File_OpenOrDie(fileName, file);
+    if (EndsWith(fileName, ".SSD")) {      // a music track: read as the Xbox's
+        file->musicBytes = file->size;
+        file->size = Ps2Music_ToXboxBytes(file->size);
+    }
     AsyncStreams[stream].open = true;
     return stream;
 }

@@ -29,4 +29,20 @@ size_t Ps2Spu_XAdpcmBytes(size_t samples);
 // last block padded with the last sample); the bytes written
 size_t Ps2Spu_EncodeXAdpcm(const int16_t *pcm, size_t samples, uint8_t *out);
 
+// ---- music: a track's .SSD (two channels of SPU ADPCM at 32 kHz, interleaved 128 bytes at a time) seen as the Xbox's
+// (two channels of Xbox ADPCM at 44.1 kHz), the music code reading and seeking in the Xbox's bytes
+
+// A byte offset or size in a PS2 track as the Xbox's track of the same music would have it: the .SMF markers'
+// positions and the file's size
+uint32_t Ps2Music_ToXboxBytes(uint32_t ps2Bytes);
+
+// Reads bytes of the PS2 track at offset into out; false on failure
+typedef bool (*Ps2ReadFn)(void *context, uint32_t offset, uint32_t bytes, uint8_t *out);
+
+// The Xbox ADPCM blocks firstBlock to firstBlock + count of the track (72 bytes each, at out), made from the PS2
+// track of ps2Bytes, which read gives: decoded (from a pair of chunks before, for the filters' history), resampled
+// and encoded (from a block before, for the encoder's state)
+void Ps2Music_XboxBlocks(uint32_t firstBlock, uint32_t count, uint32_t ps2Bytes, Ps2ReadFn read, void *context,
+                         uint8_t *out);
+
 #endif // PS2_PS2SOUND_H_
