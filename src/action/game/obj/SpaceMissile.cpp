@@ -127,7 +127,6 @@ void SpaceMissile_Update(obj_tag *obj) {
 
     }
 
-
     switch(obj->curState) {
         case 0: // Inactive, waiting to be triggered and timer to reach zero
             if ((spaceMissile->deployOnChannel == 0) || (switch_channels[spaceMissile->deployOnChannel])) {
@@ -201,7 +200,5 @@ void SpaceMissile_Update(obj_tag *obj) {
             break;
 
     }
-
-
 
 }

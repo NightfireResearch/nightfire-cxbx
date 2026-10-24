@@ -78,19 +78,20 @@ void DroneFunc_SetMissionFailReason(Drone_tag *drone, uint reason) {
     }
 }
 
-// The drone is dead: it drops its weapon, and is flagged dead. Its health goes to 0 unless flags 0x1000000 is set.
+// The drone is dead: it drops its weapon, and is flagged dead. Its health goes to 0 unless it is
+// DRONE_FLAG_KNOCKED_OUT.
 // AUTOINJECT
 void NDrone2_SetAsDead(DCVars_tag *dcv) {
     DroneWeap_DropWeapon(dcv);
-    dcv->drone->flags |= 0x200;
-    dcv->drone->flags &= ~0x8000;
+    dcv->drone->flags |= DRONE_FLAG_DEAD;
+    dcv->drone->flags &= ~DRONE_FLAG_ANIM_ONCE;
     dcv->drone->unknown3f0 = 0;
     if (GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator) {
-        dcv->drone->flags &= ~0x20;
-        dcv->drone->flags &= ~0x80;
+        dcv->drone->flags &= ~DRONE_FLAG_COLLIDES;
+        dcv->drone->flags &= ~DRONE_FLAG_FALLS;
     }
     dcv->gameObj->effectFlags |= EFFECT_NO_COLLISION;
-    if (!(dcv->drone->flags & 0x1000000))
+    if (!(dcv->drone->flags & DRONE_FLAG_KNOCKED_OUT))
         dcv->drone->health = 0.0f;
 }
 
@@ -114,7 +115,7 @@ bool NDrone2_FadeOut(DCVars_tag *dcv) {
 // With more dead drones about than NPCGlobals allows, the one it names fades fast.
 // AUTOINJECT
 bool DroneFunc_DeadDrone(DCVars_tag *dcv) {
-    if (NPCGlobals.unknown150 > NPCGlobals.unknown14c && NPCGlobals.unknown15c == dcv->aiStateMachine->id) {
+    if (NPCGlobals.deadDrones > NPCGlobals.maxDeadDrones && NPCGlobals.oldestDeadId == dcv->aiStateMachine->id) {
         Drone_SM_SetState(dcv->aiStateMachine, DSTATE_FadeFast, 0);
         return true;
     }
@@ -145,13 +146,13 @@ bool DroneFunc_SetDeathChannel(Drone_tag *drone) {
 void NDrone2_LogDroneDeath(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     obj_tag *killer = MPSettings.dronesAreBots == 0 ? NDrone2_Player() : drone->opponent;
-    if (drone->lastAttacker == killer && !(drone->flags & 0x1000000) && drone->side == 1)
+    if (drone->lastAttacker == killer && !(drone->flags & DRONE_FLAG_KNOCKED_OUT) && drone->side == 1)
         PlrStat_LogEnemyDispatched(0);
 }
 
 // As a drone starts to die: the mission fails if it must not (properties 0x53, or 0x54 when the player killed it),
-// an enemy's death is logged, it cries out unless shot in the head, and a captain leaves grenades. An enemy with
-// flags 0x1000000 set only leaves the grenades.
+// an enemy's death is logged, it cries out unless shot in the head, and a captain leaves grenades. An enemy
+// knocked out only leaves the grenades.
 // AUTOINJECT
 void DroneFunc_OnInitDeath(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -164,7 +165,7 @@ void DroneFunc_OnInitDeath(DCVars_tag *dcv) {
             DroneFunc_SetMissionFailReason(drone, byPlayer ? 1 : 3);
         if (!dcv->drone->headShot)
             NDrone2_DeathTalk(dcv);
-    } else if (!(drone->flags & 0x1000000)) {
+    } else if (!(drone->flags & DRONE_FLAG_KNOCKED_OUT)) {
         if (behaviour_util_getProperty(DRONE_PROP_PLAYER_KILL_FAILS_MISSION, drone->currentBehaviour) != 0 && byPlayer)
             DroneFunc_SetMissionFailReason(drone, 2);
         else if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
@@ -226,7 +227,7 @@ uint NDrone2_ExplosionDir(DCVars_tag *dcv, DroneImpact_tag *impact) {
 
 static void Death_SetTimer(DroneTimer *timer, uint dueFrame) {
     timer->dueFrame = dueFrame;
-    timer->unknown8 = 0;
+    timer->data = 0;
     timer->on = 1;
 }
 
@@ -254,7 +255,7 @@ bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
     case DRONE_MSG_Enter:
         gameObj->effectFlags |= EFFECT_NO_COLLISION;
         if (GameState.CurrentLevelHashcode == HT_Level_Tower2Elevator)
-            dcv->drone->flags |= 4;
+            dcv->drone->flags |= DRONE_FLAG_FALLS_ANYWAY;
         switch (dcv->drone->dtype) {
         case DTYPE_Abseil27:
         case DTYPE_Abseil28:
@@ -385,15 +386,15 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
             dcv->drone->deathScript != 0) {
             DroneFunc_OnInitDeath(dcv);
             DroneFunc_SetDeathChannel(drone);
-            drone->flags &= ~0x80000000;
-            Vec_Copy(&dcv->drone->scriptedMoveRot, &dcv->drone->moveTargetRot);
+            drone->flags &= ~DRONE_FLAG_BOUNDS;
+            Vec_Copy(&dcv->drone->scriptedMoveRot, &dcv->drone->targetRot);
             DroneAnim_SetScript(dcv->drone->deathScript, 0x40, 0, 0, 0, DRONE_MSG_ScriptEnd, 0, dcv);
-            drone->unknown1a = 1;
+            drone->playingDeathScript = 1;
             drone->animEndState = dcv->drone->dtype == DTYPE_Hostage ? DSTATE_HostageDead : DSTATE_Dead;
             drone->animEndMsg = DRONE_MSG_ScriptEnd;
             drone->animNextRow = DANIM_ROW_AFTER_DEATH_SCRIPT;
-            dcv->drone->flags &= ~0x20;
-            dcv->drone->flags &= ~0x80;
+            dcv->drone->flags &= ~DRONE_FLAG_COLLIDES;
+            dcv->drone->flags &= ~DRONE_FLAG_FALLS;
             drone->stateScratch = 0;
             Death_SetTimer(&dcv->drone->timerA, Death_FramesFromNow(60.0f));
             return true;
@@ -442,7 +443,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         Drone_AlertStatusSet(3, dcv);
         Death_SetTimer(&dcv->drone->timerA, NPCGlobals.deadFrames + GameState.NumFramesUnpaused);
         if (behaviour_util_getProperty(DRONE_PROP_DEAD_BODY_ALERTS, dcv->drone->currentBehaviour) != 0 && !dcv->drone->headShot) {
-            dcv->drone->flags2 |= 8;
+            dcv->drone->knowledge |= DRONE_KNOWS_DEAD;
             NDrone2_DroneAlertToObject(dcv, DRONE_MSG_DroneAlert, dcv->gameObj, 0.0f, 0.0f, 1.0f);
         }
         return true;
@@ -463,7 +464,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
         if (behaviour_util_getProperty(DRONE_PROP_DEAD_BODY_ALERTS, dcv->drone->currentBehaviour) == 0)
             return true;
         if (!drone->headShot) {
-            dcv->drone->flags2 |= 8;
+            dcv->drone->knowledge |= DRONE_KNOWS_DEAD;
             NDrone2_DroneAlertToObject(dcv, DRONE_MSG_DroneAlert, dcv->gameObj, 0.0f, 0.0f, 1.0f);
         }
         Death_SetTimer(&dcv->drone->timerB, Death_FramesFromNow(60.0f));
@@ -484,8 +485,8 @@ bool NDrone2_DSTATE_Fade(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
 
     case DRONE_MSG_Enter:
         if (GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator) {
-            dcv->drone->flags &= ~0x20;
-            dcv->drone->flags &= ~0x80;
+            dcv->drone->flags &= ~DRONE_FLAG_COLLIDES;
+            dcv->drone->flags &= ~DRONE_FLAG_FALLS;
         }
         dcv->drone->fadeAlpha = dcv->gameObj->tweakA;
         return true;
@@ -513,8 +514,8 @@ bool NDrone2_DSTATE_FadeFast(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
 
     case DRONE_MSG_Enter:
         if (GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator) {
-            dcv->drone->flags &= ~0x20;
-            dcv->drone->flags &= ~0x80;
+            dcv->drone->flags &= ~DRONE_FLAG_COLLIDES;
+            dcv->drone->flags &= ~DRONE_FLAG_FALLS;
         }
         if (drone->sm.prevState != DSTATE_Fade)
             dcv->drone->fadeAlpha = dcv->gameObj->tweakA;

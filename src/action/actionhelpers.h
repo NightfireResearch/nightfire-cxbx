@@ -77,7 +77,6 @@ typedef struct TARGET_PLACEMENT TARGET_PLACEMENT;
 typedef struct SPRITE_DRAW SPRITE_DRAW;
 typedef struct edl_header_t edl_header_t;
 
-
 // What a script player calls on script event 15: the object of the stream before the event's, the event's
 // argument, and the context it was given (FuseBox_Register)
 typedef void ScriptPlayerCallback(obj_tag *obj, unsigned short arg, void *context);
@@ -89,7 +88,7 @@ typedef void ScriptPlayerCallback(obj_tag *obj, unsigned short arg, void *contex
 #include "../helpers.h"
 #include "engine/Placement.h"   // every placement struct starts with one
 
-typedef short MallocFlags;
+#include "MallocFlags.h"
 
 // QuickSort's comparison selector (Ghidra's COMP_FUNC). Only Compare_CustomFunction uses QuickSort's last argument.
 typedef enum {
@@ -194,7 +193,6 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 #include "ui/HUD.h"
 #include "ui/Menu.h"
 #include "sound/Sound.h"
-
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 

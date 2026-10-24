@@ -81,7 +81,6 @@ void Menu_AddRow(uchar managerNum, Action_TranslatedText label, int achieved, in
 void Menu_AddRowPercentage(uchar managerNum, Action_TranslatedText label, uint percent, int extra, uint points,
                            char indent);
 
-
 // Rewards (MenuUnlocks.cpp; docs/ui/secrets.md)
 #pragma pack(push, 1)
 typedef struct REWARDINFO_tag {

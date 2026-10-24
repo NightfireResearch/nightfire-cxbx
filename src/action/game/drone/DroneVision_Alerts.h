@@ -7,19 +7,6 @@
 // What a drone does about alerts (DroneVision_Alerts.cpp): the messages its states pass on, what it hears, whether
 // it sees its opponent and should attack, the armed enemies near it, and the interrogation flags.
 
-// Drone_tag.flags
-#define DRONE_FLAG_ATTACK_MODE 0x4000000        // attacking (DroneFunc_CalmOnImpact)
-// Set with DRONE_FLAG_ATTACK_MODE by the function that makes it attack (our names)
-#define DRONE_FLAG_ATTACK_SIGHT 0x8000000       // DroneVision_EnemyLookForOpponent
-#define DRONE_FLAG_ATTACK_SOUND 0x10000000      // DroneVision_AlertSound
-#define DRONE_FLAG_ATTACK_ALARM 0x40000000      // DroneVision_GlobalAlarm
-#define DRONE_FLAG_DEAF 0x400000                // hears nothing (our name)
-#define DRONE_FLAG_NO_ALERTS 0x800000           // DroneVision_EnemyAlerts ignores every alert (our name)
-
-// Drone_tag.flags2
-#define DRONE_FLAG2_INTEROGATING 0x20           // DroneVision_BeginInterogate, _SetInterogateAssist
-#define DRONE_FLAG2_INTEROGATED 0x10            // DroneVision_EndInterogate, _EndInterogateAssist
-
 void DroneVision_BeginInterogate(Drone_tag *drone);
 void DroneVision_EndInterogate(Drone_tag *drone);
 void DroneVision_SetInterogateAssist(Drone_tag *drone);

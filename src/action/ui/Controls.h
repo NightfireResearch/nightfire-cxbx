@@ -168,7 +168,6 @@ LAYOUT_32(sizeof(M_COMBO) == 0x71c, "M_COMBO is 0x71c bytes");
 
 #define COMBO_OPEN 0x80000000 // drawState: the list is open
 
-
 // A value picked with left and right and shown as a number (Spin_*)
 typedef struct M_SPIN {
     M_CONTROL control;          // type ControlType_Spin

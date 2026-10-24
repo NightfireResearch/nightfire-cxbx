@@ -38,7 +38,6 @@ VisCel VisCelList[64];
 // XBE_GLOBAL(0x002a0a70, 0x2)
 uint16_t VisCelCount;
 
-
 // AUTOINJECT
 bool Vision_InView(_VECTOR *point, float radius, viewer_tag *viewer) {
 

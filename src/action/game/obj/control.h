@@ -48,7 +48,6 @@ typedef struct {
 #define OBJECTTYPE_FUNCS 85
 extern ControlFunction control_funcs[OBJECTTYPE_FUNCS];   // ControlFuncs.cpp
 
-
 void control_init_object_lists(void);
 
 #endif // CONTROL_H_

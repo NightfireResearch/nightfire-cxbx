@@ -684,7 +684,6 @@ void RandomCreep(AIRoute_tag *route, AIPath_tag *path) {
     creep->segmentEnd = creep->segmentStart;
 }
 
-
 void RandomRoute(int r) {
     AIRoute_tag *route = &world.routes[r];
     AIPath_tag *path = ShadowRand(5) == 0 ? &AIPaths[1] : Nav();
@@ -783,7 +782,6 @@ void MoveTestLimits() {
     MoveTest_MaxRise = ShadowRand(3) == 0 ? 1.0f : 4.0f;
     MoveTest_MaxDistanceSq = ShadowRand(3) == 0 ? 100.0f : 900.0f;
 }
-
 
 // ---- the tests
 

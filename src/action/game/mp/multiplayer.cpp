@@ -1017,11 +1017,6 @@ void MP_Init(void) {
     }
 }
 
-// Drone_tag.flags bits (docs/drone/bots-and-navigation/README.md 4.3)
-#define DRONE_AI_RUNNING 0x100
-#define DRONE_DEAD 0x200
-#define DRONE_DYING 0x400
-
 // The first agent on the team (NO_TEAM: either) whose object is in obj's hit list, unless that agent is dead,
 // dying or spawned within the last 4 frames - then none. The agent's team goes to teamOut.
 obj_tag* MP_HitBy(obj_tag *obj, ushort team, obj_tag *exclude, ushort *teamOut) {
@@ -1241,9 +1236,9 @@ bool MP_playerIsDead(obj_tag *obj) {
     char type = obj->objectType;
     if (type == OBJECTTYPE_DRONE || type == OBJECTTYPE_DEAD_DRONE) {
         Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-        if (drone->flags & (DRONE_DEAD | DRONE_DYING))
+        if (drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING))
             return true;
-        if (!(drone->flags & DRONE_AI_RUNNING))
+        if (!(drone->flags & DRONE_FLAG_ENABLED))
             return true;
         if (drone->health <= 0.0f)
             return true;

@@ -347,8 +347,8 @@ void RandomDrone(int i) {
 
     d->vulnerable = (uchar)(ShadowRand(4) != 0);
     d->impactImmune = (uchar)(ShadowRand(8) == 0);
-    d->unknown15 = (uchar)ShadowRand(2);
-    d->unknown16 = (uchar)ShadowRand(2);
+    d->female = (uchar)ShadowRand(2);
+    d->runningToAlarm = (uchar)ShadowRand(2);
     d->side = (uchar)ShadowRand(5);
     static const float healths[] = {-1.0f, 0.0f, -0.0f, 0.4f, 3.5f, 20.0f, 50.0f, 100.0f, 160.0f};
     d->health = healths[ShadowRand(sizeof(healths) / 4)];
@@ -367,7 +367,7 @@ void RandomDrone(int i) {
     static const ushort stuns[] = {0, 0, 1, 2, 7, 40, 199, 200, 201, 320, 0xffff};
     d->stunFrames = stuns[ShadowRand(sizeof(stuns) / 2)];
     d->hitsTaken = (ushort)ShadowRand(5);
-    d->unknown3d0 = GameState.NumFramesUnpaused - ShadowRand(400);
+    d->sfxFrame = GameState.NumFramesUnpaused - ShadowRand(400);
     d->impactAnimFrame = GameState.NumFramesUnpaused - ShadowRand(300);
     d->speechChannel = ShadowRand(3) == 0 ? (DYNAMICSOUNDS *)world.sound : NULL;
 
@@ -385,7 +385,7 @@ void RandomDrone(int i) {
     for (int k = 0; k < 5; k++)
         if (ShadowRand(3) == 0)
             d->flags |= flagBits[k];
-    d->flags2 = ShadowRand(8);
+    d->knowledge = ShadowRand(8);
     d->usingSecondBehaviour = (uchar)ShadowRand(2);
     d->secondState = (short)RandomState();
     d->initialState = (short)RandomState();

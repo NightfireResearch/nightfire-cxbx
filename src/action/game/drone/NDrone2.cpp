@@ -205,8 +205,8 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
-        dcv->drone->flags |= 0x2000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         if (dcv->drone->dtype == DTYPE_CastleChatGuard)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CastleChatGuard1, 0);
 
@@ -224,24 +224,24 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
             drone->stateScratch = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 8, 0, 5, 0, dcv);
             NDrone2_AttackTalk(dcv);
-            dcv->drone->flags |= 0x400000;
+            dcv->drone->flags |= DRONE_FLAG_DEAF;
             return true;
 
         case HT_Script_DroneAttackTalkB:
             drone->stateScratch = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 5, 0x32, 0x1e, 0, 5, 0, dcv);
             NDrone2_AttackTalk(dcv);
-            dcv->drone->flags |= 0x400000;
+            dcv->drone->flags |= DRONE_FLAG_DEAF;
             return true;
 
         case HT_Script_Tower2BDronePlay:
             drone->stateScratch = 0;
             drone->stateScratch2 = 0;
             DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 0xf, 0, 5, 0, dcv);
-            dcv->drone->flags |= 0x400000;
+            dcv->drone->flags |= DRONE_FLAG_DEAF;
             behaviour_util_setProperty(0x3b, drone->currentBehaviour, 0);
             behaviour_util_setProperty(0x3a, drone->currentBehaviour, 0);
-            drone->unknown825 &= ~1;
+            drone->avoidLinks &= ~AILINK_EXPLOSIVE;
             return true;
 
         default:
@@ -267,22 +267,22 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
     case DRONE_MSG_ScriptEnd:
         switch ((uint)dcv->drone->playScript) {
         case HT_Script_DroneAttackTalkA:
-            dcv->drone->flags &= ~0x400000;
+            dcv->drone->flags &= ~DRONE_FLAG_DEAF;
             dcv->drone->playScript = (HASHCODE)0;
             DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
             NDrone2_AttackTalk(dcv);
             return true;
 
         case HT_Script_DroneAttackTalkB:
-            dcv->drone->flags &= ~0x400000;
+            dcv->drone->flags &= ~DRONE_FLAG_DEAF;
             DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
             dcv->drone->playScript = (HASHCODE)0;
             NDrone2_AttackTalk(dcv);
             return true;
 
         case HT_Script_Tower2BDronePlay:
-            dcv->drone->flags &= ~0x400000;
-            drone->unknown448 = PI;
+            dcv->drone->flags &= ~DRONE_FLAG_DEAF;
+            drone->pendingTurn = PI;
             DroneAnim_SetDAnimNow(0xf4, 0, 1, dcv);
             break;
         }
@@ -410,7 +410,8 @@ bool NDrone2_GetHeadPos(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
 // AUTOINJECT
 bool NDrone2_GetHeadPosOld(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
     if (GameState.CurrentLevelHashcode != HT_Level_SpaceStationD && gameObj != NULL && gameObj->animState != NULL &&
-        gameObj->objectType == OBJECTTYPE_DRONE && (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000) &&
+        gameObj->objectType == OBJECTTYPE_DRONE &&
+        (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED) &&
         (gameObj->animState->animObj.flags & 1)) {
         if (yaw != NULL) {
             _MATRIX mtx;
@@ -438,7 +439,7 @@ bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
     if (anim != NULL && (gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_PLAYER)) {
         bool animating = true;
         if (gameObj->objectType == OBJECTTYPE_DRONE)
-            animating = (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000) &&
+            animating = (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED) &&
                         GameState.CurrentLevelHashcode != HT_Level_SpaceStationD;
         if (animating && (anim->animObj.flags & 1)) {
             AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
@@ -488,7 +489,7 @@ bool NDrone2_BondIsFacingMe(DCVars_tag *dcv, float degrees) {
     return fabsf(dcv->drone->opponentFacing) < (double)degrees * DEG_TO_RAD;
 }
 
-// Turns the drone to face obj, plus `offset` (angleToSomePoint). Unless forced, not while its turning is held:
+// Turns the drone to face obj, plus `offset` (targetRot.y). Unless forced, not while its turning is held:
 // unknown3f0 bit 0x8000000, a bot recovering, or the anim's flags 0x380.
 // AUTOINJECT
 void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char force) {
@@ -499,11 +500,11 @@ void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char for
         return;
     if (MPSettings.dronesAreBots && (drone->botVars->flags & 2) && !force)
         return;
-    if ((drone->unknown46c & 0x380) && !force)
+    if ((drone->animFlags & 0x380) && !force)
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
-    dcv->drone->angleToSomePoint = Atan2(toObj.x, toObj.z) + offset;
+    dcv->drone->targetRot.y = Atan2(toObj.x, toObj.z) + offset;
 }
 
 // Turns the drone's head to obj (NULL lets it go) for `ticks` (at 60 a second), at `speed` (0 for the usual 0.07).
@@ -522,23 +523,24 @@ bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv)
     return true;
 }
 
-// Message DRONE_MSG_ConsideredAlerted: a live, active drone set to attack when told (flags 0x20000, and not
-// 0x2000000) attacks now. In CastleIndoors1, while NPCGlobals.unknown1392 is set, only civilian and door guards do.
+// Message DRONE_MSG_ConsideredAlerted: a live, active drone set to attack when told (ALERTED_BY_DRONE, and not
+// ATTACK_STARTED) attacks now. In CastleIndoors1, while NPCGlobals.interogating is set, only civilian and door guards
+// do.
 // AUTOINJECT
 bool DroneFunc_DoForcedAttack(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (MPSettings.dronesAreBots != 0)
         return false;
-    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && NPCGlobals.unknown1392 &&
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && NPCGlobals.interogating &&
         drone->dtype != DTYPE_CivilianGuard && drone->dtype != DTYPE_CivDoorGuard)
         return false;
     if (MPDrone_IsDyingOrDead(dcv->gameObj))
         return false;
-    if (!(drone->flags & 0x20000) || (drone->flags & 0x2000000))
+    if (!(drone->flags & DRONE_FLAG_ALERTED_BY_DRONE) || (drone->flags & DRONE_FLAG_ATTACK_STARTED))
         return false;
 
-    drone->flags &= ~0x20000;
-    drone->flags |= 0x24000000;
+    drone->flags &= ~DRONE_FLAG_ALERTED_BY_DRONE;
+    drone->flags |= DRONE_FLAG_ATTACK_MODE | DRONE_FLAG_ATTACK_ALERTED;
     dcv->aiStateMachine->scratch1c = DSTATE_Attack;
     if (dcv->aiStateMachine->scratch1c != 0)
         return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
@@ -693,13 +695,13 @@ int32_t pDCVCount;
 
 #define COMBAT_MUSIC 5      // the value with MUSIC_EVENT_ALARM
 
-// Tells the music about an enemy (or a drone with unknown16 set) fighting: the nearest opponent distances and the
+// Tells the music about an enemy (or a drone with runningToAlarm set) fighting: the nearest opponent distances and the
 // latest sighting always, and if it saw its opponent lately (or is close while the combat music is on), counts it
 // once. Enough of them, or any once the music is on, start the combat music.
 // AUTOINJECT
 void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (!drone->unknown16 && drone->side != 1)
+    if (!drone->runningToAlarm && drone->side != 1)
         return;
     if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 && !(drone->sightFlags & DRONE_SIGHT_REACTED))
         return;
@@ -714,7 +716,7 @@ void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
         MusicVars.nearestSeenOpponent = drone->distanceToTarget;
     if (drone->opponentSeenFrame > MusicVars.lastSeenFrame)
         MusicVars.lastSeenFrame = drone->opponentSeenFrame;
-    if (!counts && !drone->unknown16)
+    if (!counts && !drone->runningToAlarm)
         return;
 
     if (!MusicVars.countingStarted) {
@@ -732,7 +734,7 @@ void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
 
     NPCGlobals.seenAttacking++;
     MusicVars.attackers++;
-    if (MusicVars.attackers >= MusicVars.combatThreshold || combat != 0 || drone->unknown16) {
+    if (MusicVars.attackers >= MusicVars.combatThreshold || combat != 0 || drone->runningToAlarm) {
         MusicVars.combat = 1;
         Music_Event(MUSIC_EVENT_ALARM, COMBAT_MUSIC);
         MusicVars.combatFrame = GameState.NumFramesUnpaused;

@@ -238,7 +238,7 @@ bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState) {
 
     drone->headShot = 0;
     uint variant = 0;
-    if (drone->unknown481 != 0)
+    if (drone->animMoveState != 0)
         variant = Rand_Rand(4);
     NDrone2_DeathTalk(dcv);
     DroneAnim_CallAnim(DANIM_DEATH, variant, endState, 0, 0.0f, 0, dcv);
@@ -296,12 +296,12 @@ bool DroneAnim_LocationImpactAnim(DCVars_tag *dcv) {
 }
 
 // For a drone whose shots come from the anim (firesByAnim): once DroneWeap_DoFiring has found it ready, with no anim
-// call or script pending and its aim event (unknown21) set, plays the firing DAnim and fires.
+// call or script pending and its fire event set, plays the firing DAnim and fires.
 // AUTOINJECT
 bool DroneAnim_PlayFiringAnim(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (!drone->firesByAnim || drone->animCall.state != 0 || drone->unknown434 != NULL || !drone->readyToFire ||
-        !drone->unknown21)
+    if (!drone->firesByAnim || drone->animCall.state != 0 || drone->blendScript != NULL || !drone->readyToFire ||
+        !drone->fireEvent)
         return false;
     DroneAnim_FreeScript(dcv);
     DroneAnim_SetDAnimNow(DANIM_NOW_FIRE, 0, 0, dcv);
@@ -312,10 +312,10 @@ bool DroneAnim_PlayFiringAnim(DCVars_tag *dcv) {
 
 // ---- Playing a row: the anim call protocol (docs/drone/behaviours/README.md 6.2)
 
-// The script blending out (unknown434), freed.
+// The script blending out (blendScript), freed.
 // AUTOINJECT
 void DroneAnim_FreeScript(DCVars_tag *dcv) {
-    sAnimScript_tag **slot = (sAnimScript_tag **)&dcv->drone->unknown434;
+    sAnimScript_tag **slot = &dcv->drone->blendScript;
     if (*slot != NULL) {
         (*slot)->ownerSlot = NULL;
         AnimScriptDelete(dcv->gameObj, slot);
@@ -366,7 +366,7 @@ ushort DroneAnim_BaseCallState(ushort state) {
 void DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet) {
     const DroneAnimInfo *info = &Drone_AnimInfo[row];
     const DroneAnimScript *script = &Drone_AnimTables[row][animSet];
-    drone->prevAnimFlags = drone->unknown46c;
+    drone->prevAnimFlags = drone->animFlags;
     drone->animRow = row;
     drone->animStartFrame = script->startFrame;
     drone->animNextRow = info->nextRow == row ? 0 : info->nextRow;
@@ -376,10 +376,10 @@ void DroneAnim_SetDAnimVeryInternal(Drone_tag *drone, ushort row, ushort animSet
     drone->animState = info->animState;
     drone->animOnce = 0;
     drone->animPlaying = 0;
-    drone->unknown46c = info->htFlags;
+    drone->animFlags = info->htFlags;
     drone->animMoveSpeed = info->moveSpeed;
     drone->animSpeed = info->speed;
-    drone->unknown481 = info->moveState;
+    drone->animMoveState = info->moveState;
     drone->animEndBlend = info->blendFrames;
     drone->aimMode = info->aimMode;
     drone->animCallFlag = 0;
@@ -392,7 +392,7 @@ LAYOUT_32(offsetof(Drone_tag, animMode) == 0x464, "Asm_DroneAnim_SetDAnimVeryInt
 bool DroneAnim_SkipAnim(Drone_tag *drone) {
     if (drone->animHashcode == HT_Script_HASHCODE_BASE)
         return true;
-    if (drone->gameObj->drawnCountdown == 0 && (drone->unknown46c & DANIMFLAG_SKIP_UNSEEN)) {
+    if (drone->gameObj->drawnCountdown == 0 && (drone->animFlags & DANIMFLAG_SKIP_UNSEEN)) {
         switch (drone->animMode) {
         case 0:
         case 3:
@@ -426,7 +426,7 @@ bool DroneAnim_TakeCall(Drone_tag *drone) {
 // functions. False when it is skipped, or with bots while a script blends out and the drone animates.
 // AUTOINJECT
 bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_tag *drone) {
-    if (MPSettings.dronesAreBots && drone->unknown434 != NULL && NDrone2_DoAnimation(drone))
+    if (MPSettings.dronesAreBots && drone->blendScript != NULL && NDrone2_DoAnimation(drone))
         return false;
 
     ushort animSet = drone->animSet;
@@ -442,7 +442,7 @@ bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_
         drone->animStateFunc(drone, DANIMFUNC_END);
     if (drone->animFunc != NULL)
         drone->animFunc(drone, DANIMFUNC_END);
-    DroneAnim_SetHTAnim(drone->animHashcode, drone->unknown46c, drone->animStartFrame, drone, blend, drone->animSpeed);
+    DroneAnim_SetHTAnim(drone->animHashcode, drone->animFlags, drone->animStartFrame, drone, blend, drone->animSpeed);
     const DroneDataFunc *func = DroneData_GetAnimFuncInfo(row);
     if (func != NULL)
         drone->animFunc = func->func;
@@ -455,13 +455,13 @@ bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_
 
 // Starts the row's script: blended from the one playing over `blend` frames when the drone animates, else at once.
 // Blending out of a turning row (DANIMFLAG_TURN_180) that has not ended stops it, blends over 30 frames and keeps
-// the turn its root has still to make (unknown448, for DroneAnim_SnapRotate). The script's events go to
+// the turn its root has still to make (pendingTurn, for DroneAnim_SnapRotate). The script's events go to
 // DroneAnim_EventFunc; one that does not loop sets animOnce and animPlaying until DroneAnim_AnimEndCallback. Frame
 // 999 holds the last frame. The script blending out is not checked again after AnimScriptAppendBlend.
 // AUTOINJECT
 void DroneAnim_SetHTAnim(HASHCODE hashcode, uint flags, ushort frame, Drone_tag *drone, ushort blend, float speed) {
     if (NDrone2_DoAnimation(drone) && blend != 0 && drone->animScript != NULL) {
-        sAnimScript_tag **blendSlot = (sAnimScript_tag **)&drone->unknown434;
+        sAnimScript_tag **blendSlot = &drone->blendScript;
         *blendSlot = drone->animScript;
         (*blendSlot)->ownerSlot = blendSlot;
         drone->animScript = AnimScriptAppendBlend(drone->gameObj, hashcode);
@@ -483,7 +483,7 @@ void DroneAnim_SetHTAnim(HASHCODE hashcode, uint flags, ushort frame, Drone_tag 
             AnimGetBoneWorldTrans(obj, 0x80000000, 0, &pos, &root);
             Mat_GetDir(&dir, &root);
             Vec_DirToRot(&dir, &rot);
-            drone->unknown448 = rot.y - obj->rotation.y;
+            drone->pendingTurn = rot.y - obj->rotation.y;
             (*blendSlot)->flags |= ANIMSCRIPT_SHARE_ROOT;
         }
     } else {
@@ -506,18 +506,18 @@ void DroneAnim_SetHTAnim(HASHCODE hashcode, uint flags, ushort frame, Drone_tag 
     drone->animScript->flags |= ANIMSCRIPT_GAME_FLAG;
     if (flags & DANIMFLAG_LOOP) {
         drone->animScript->flags |= ANIMSCRIPT_LOOP;
-        drone->flags &= ~0x8000;
+        drone->flags &= ~DRONE_FLAG_ANIM_ONCE;
         drone->animOnce = 0;
         drone->animPlaying = 0;
     } else {
         drone->animScript->flags &= ~ANIMSCRIPT_LOOP;
-        drone->flags |= 0x8000;
+        drone->flags |= DRONE_FLAG_ANIM_ONCE;
         drone->animOnce = 1;
         drone->animPlaying = 1;
         AnimScriptCallOnStop(drone->animScript, DroneAnim_AnimEndCallback);
     }
     drone->animHashcode = hashcode;
-    drone->unknown47c = GameState.NumFramesUnpaused;
+    drone->scriptStartFrame = GameState.NumFramesUnpaused;
     drone->animFunc = NULL;
     drone->animStateFunc = NULL;
 }
@@ -533,7 +533,7 @@ bool DroneAnim_SetEndAnim(Drone_tag *drone, uchar blend) {
     drone->animEndBlend = 0;
     if (drone->animRow == next)
         return false;
-    if (DroneAnim_SetDAnimInternal(next, DroneAnim_OnEndAnim(drone, drone->unknown46c, blend), 0, drone))
+    if (DroneAnim_SetDAnimInternal(next, DroneAnim_OnEndAnim(drone, drone->animFlags, blend), 0, drone))
         return true;
     drone->animNextRow = next;
     drone->animEndBlend = endBlend;
@@ -549,15 +549,15 @@ uchar DroneAnim_OnEndAnim(Drone_tag *drone, uint flags, uchar blend) {
     if (drone->animFunc != NULL)
         drone->animFunc(drone, DANIMFUNC_END);
     if (flags & DANIMFLAG_TURN_180) {
-        drone->unknown448 = (float)M_PI;
+        drone->pendingTurn = (float)M_PI;
         blend = 0;
     }
     if (flags & DANIMFLAG_TURN_90) {
-        drone->unknown448 = (float)M_PI_2;
+        drone->pendingTurn = (float)M_PI_2;
         blend = 0;
     }
     if (flags & DANIMFLAG_TURN_MINUS_90) {
-        drone->unknown448 = -(float)M_PI_2;
+        drone->pendingTurn = -(float)M_PI_2;
         blend = 0;
     }
     return blend;
@@ -579,21 +579,21 @@ void DroneAnim_OnStartAnim(Drone_tag *drone) {
         drone->animFunc(drone, DANIMFUNC_START);
 }
 
-// Makes the turn a row left to make (unknown448) at once, with the script's anim rotation off meanwhile.
+// Makes the turn a row left to make (pendingTurn) at once, with the script's anim rotation off meanwhile.
 // AUTOINJECT
 void DroneAnim_SnapRotate(Drone_tag *drone) {
     if (drone == NULL)
         return;
     if (drone->animScript != NULL)
         AnimScriptSetAnimRotation(drone->animScript, 0);
-    if (drone->unknown448 != 0.0f) {
+    if (drone->pendingTurn != 0.0f) {
         obj_tag *obj = drone->gameObj;
-        drone->angleToSomePoint = drone->unknown448 + drone->angleToSomePoint;
-        obj->rotation.y = drone->angleToSomePoint;
+        drone->targetRot.y = drone->pendingTurn + drone->targetRot.y;
+        obj->rotation.y = drone->targetRot.y;
         Drone_GetOpponentInfo(drone, obj);
         if (drone->animScript != NULL)
             AnimScriptSetAnimRotation(drone->animScript, 1);
-        drone->unknown448 = 0.0f;
+        drone->pendingTurn = 0.0f;
     }
 }
 
@@ -643,7 +643,7 @@ bool DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, us
 bool DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     if (drone->animCall.state == 0)
         return false;
-    if (MPSettings.dronesAreBots && drone->unknown434 != NULL)
+    if (MPSettings.dronesAreBots && drone->blendScript != NULL)
         return false;
     if ((ushort)drone->animState != drone->animCall.fromState && drone->animMode == 5)
         return false;
@@ -673,7 +673,7 @@ void DroneAnim_CallFullyComplete(Drone_tag *drone) {
 // AUTOINJECT
 void DroneAnim_CallHandler(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (drone->animCallFlag && drone->unknown434 == NULL)
+    if (drone->animCallFlag && drone->blendScript == NULL)
         drone->animCallFlag = 0;
 
     if (drone->animOnce && !drone->animPlaying) {
@@ -749,8 +749,8 @@ void DroneAnim_EventFunc(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script
             DroneWeap_CloseCombatImpact(&dcv, 2);
         break;
     case 0xe:
-        if (drone->unknown230 != NULL && drone->health > 0.0f && script == drone->animScript) {
-            Drone_tag *other = (Drone_tag *)drone->unknown230->extraObjectData;
+        if (drone->hostagePartner != NULL && drone->health > 0.0f && script == drone->animScript) {
+            Drone_tag *other = (Drone_tag *)drone->hostagePartner->extraObjectData;
             Drone_SM_SendMsg(DRONE_MSG_ToHostages, DSTATE_Hostage, dcv.aiStateMachine->id, other->sm.id);
         }
         break;
@@ -759,11 +759,11 @@ void DroneAnim_EventFunc(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script
         break;
     case 0x10:
         drone->aimEvent = 0;
-        drone->unknown21 = 0;
+        drone->fireEvent = 0;
         break;
     case 0x12:
         drone->aimEvent = 1;
-        drone->unknown21 = 1;
+        drone->fireEvent = 1;
         break;
     }
 }
@@ -775,9 +775,9 @@ void DroneAnim_AnimEndCallback(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *
 }
 
 // What the root's move (delta) does to a drone before it is applied: the feet follow the anim's root height (0.2 at
-// least); with unknown1a the height stays and the moves add up in scriptedMovePos; a bot's move is scaled by its
-// speed; one standing still (unknown38) or flying does not move; one touching the player does not move towards it
-// (contactDir); and the bounds (boundaryFlags) stop it, in its own frame.
+// least); with playingDeathScript the height stays and the moves add up in scriptedMovePos; a bot's move is scaled by
+// its speed; one standing still (standingStill) or flying does not move; one touching the player does not move towards
+// it (contactDir); and the bounds (boundaryFlags) stop it, in its own frame.
 // AUTOINJECT
 void DroneAnim_PreTransCallback(obj_tag *obj, AnimObj *animObj, _VECTOR *delta) {
     if (obj->objectType != OBJECTTYPE_DRONE)
@@ -793,16 +793,16 @@ void DroneAnim_PreTransCallback(obj_tag *obj, AnimObj *animObj, _VECTOR *delta) 
             drone->rootHeight = 0.2f;
         drone->rootHeightSet = 1;
     }
-    if (!drone->unknown1a)
+    if (!drone->playingDeathScript)
         delta->y = drone->rootHeight - drone->prevRootHeight;
     if (drone->dtype == DTYPE_Bot) {
         float speed = BOT_getMovementSpeedMul(drone);
         Vec_Mul_F3(delta, delta, speed, 1.0f, speed);
     }
-    if (drone->unknown1a)
+    if (drone->playingDeathScript)
         Vec_Add2(&drone->scriptedMovePos, delta, &drone->scriptedMovePos);
 
-    bool still = drone->unknown38 || drone->flies;
+    bool still = drone->standingStill || drone->flies;
     if (drone->touchingPlayer) {
         _VECTOR rot, local;
         _MATRIX contact, inverse;
@@ -821,7 +821,7 @@ void DroneAnim_PreTransCallback(obj_tag *obj, AnimObj *animObj, _VECTOR *delta) 
         return;
     }
 
-    if ((drone->flags & 1) && drone->door == NULL) {
+    if ((drone->flags & DRONE_FLAG_BOUNDARY_STOPS) && drone->door == NULL) {
         _MATRIX inverse;
         _VECTOR local;
         Mat_Inverse(&obj->transformMatrix, &inverse);

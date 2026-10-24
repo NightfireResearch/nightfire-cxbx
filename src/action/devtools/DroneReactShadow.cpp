@@ -557,7 +557,7 @@ void RandomDrone(int i) {
     d->firing = (uchar)ShadowRand(2);
     d->burstOver = (uchar)ShadowRand(2);
     d->gunThroughWall = (uchar)ShadowRand(2);
-    d->unknown16 = (uchar)ShadowRand(2);
+    d->runningToAlarm = (uchar)ShadowRand(2);
     d->alertness = RandomAlertness();
     d->distanceToTarget = RandomDistance();
     for (int r = 0; r < 5; r++)
@@ -599,7 +599,7 @@ void RandomDrone(int i) {
     d->scriptedMoveRot.y = o->rotation.y + Pick(turns);
 
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x10000);
+    d->knowledge = ShadowRand(0x10000);
     for (int w = 0; w < 3; w++) {
         d->behaviour1[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
         d->behaviour2[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -616,7 +616,7 @@ void RandomDrone(int i) {
     d->sm.scratch1c = ShadowRand(5);
     d->timerA.on = (uchar)ShadowRand(2);
     d->timerA.dueFrame = ShadowRand(5000);
-    d->timerA.unknown8 = ShadowRand(5);
+    d->timerA.data = ShadowRand(5);
 }
 
 void RandomWorld(bool playerAlways) {

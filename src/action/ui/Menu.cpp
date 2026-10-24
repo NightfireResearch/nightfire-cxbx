@@ -766,7 +766,6 @@ M_BASECONTROL menu_no_control;
 #define NO_CONTROL_HASHCODE ((HASHCODE)0x1fffffff)
 
 #define COMPONENTSET_NEXT_ID 999    // Component_AddSet: the next id free
-#define MENU_ALLOCATIONS 0x3104     // Mem_Malloc's type for the menus
 
 #define MENU_SEND_ALL 0xffffffffu   // the hashcode that matches every control
 #define MENU_SEND_STEPS 1000        // pages and controls a send visits before it gives up
@@ -1478,7 +1477,7 @@ sprite* Menu_CreateSprite(SpriteInfo *info) {
 
 // AUTOINJECT
 void* Menu_Malloc(int size) {
-    return Mem_Malloc(size, MENU_ALLOCATIONS, 0);
+    return Mem_Malloc(size, MALLOC_MENU, 0);
 }
 
 // The callers' type is not used

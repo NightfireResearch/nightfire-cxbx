@@ -18,7 +18,6 @@
 extern uint32_t SubtitlesEnabled;
 extern uint32_t IsWidescreen;
 
-
 #define SAVE_LABEL(a, b, c, d) ((uint)(a) | (uint)(b) << 8 | (uint)(c) << 16 | (uint)(d) << 24)
 #define SAVE_FIELDS_START 0x40   // the first field's bit, after the header
 

@@ -605,7 +605,6 @@ int __stdcall Xbox_FindNextFileA(HANDLE findHandle, WIN32_FIND_DATAA *findData) 
 // reads. Enabled by PerfLog in settings.ini.
 // ---------------------------------------------------------------------------------------------------------------
 
-
 void XboxFile_ReportStreamingIfDue(void) {
     if (!Settings_GetPerfLog())
         return;

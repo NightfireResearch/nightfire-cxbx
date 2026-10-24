@@ -43,8 +43,6 @@ typedef struct MemBlock {
 #pragma pack(pop)
 static_assert(sizeof(MemBlock) == 0xc, "MemBlock is 0xc bytes");
 
-#define MEM_FREE_FLAGS 4
-
 // tMallocMethod in Ghidra (Malloc_Type_0..3). ResetMap_Load and the loaders switch between them.
 enum {
     MALLOC_NEXT_FIT = 0,    // the first big enough block from QuickBlock back to the start, else on to the end
@@ -59,7 +57,6 @@ static inline MemBlock* Mem_HeapEnd(void) { return PtrFrom32<MemBlock>(PtrHeap +
 static inline MemBlock* Mem_NextBlock(MemBlock *block) { return (MemBlock *)((char *)block + block->size); }
 static inline uint Mem_Distance(const void *from, const void *to) { return (uint)((const char *)to - (const char *)from); }
 static inline MemBlock* Mem_AlignDown(uintptr_t address, uint mask) { return (MemBlock *)(address & ~(uintptr_t)mask); }
-
 
 // 49MB of heap allocation from the Xbox kernel, then using an internal allocator
 // This is very similar to what Halo does
@@ -111,7 +108,7 @@ void Mem_Init(void) {
     heap->size = HeapByteSize - sizeof(MemBlock);
     heap->isFree = 1;
     heap->prev = heap;
-    heap->flags = MEM_FREE_FLAGS;
+    heap->flags = MALLOC_ZERO;
     QuickBlock = PtrHeap;
     MallocSize = 0;
 
@@ -125,7 +122,8 @@ void Mem_PrintAllInfo(void) {
     // GC check (0x80057104): a block whose type byte is past the last allocation type has a corrupt header
     MemBlock *end = Mem_HeapEnd();
     for (MemBlock *block = Mem_HeapStart(); block < end; block = Mem_NextBlock(block))
-        NF_WARN_IF((block->flags >> 8) > 0x4f, "Mem type %d size %dk\n", block->flags >> 8, block->size >> 10);
+        NF_WARN_IF(MALLOC_TYPE(block->flags) > MALLOC_TYPE_NULL, "Mem type %d size %dk\n", block->flags >> 8,
+                   block->size >> 10);
 }
 
 // Chooses the free block Mem_Malloc will carve from: one of at least `need` bytes, by the current MallocMethod.
@@ -192,7 +190,7 @@ static MemBlock* Mem_FindFreeBlock(uint need) {
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
 
     // GC check (0x80056700): an allocation type past the last one MemInfo names, or nothing to allocate
-    NF_WARN_IF(((flags >> 8) & 0xff) > 0x4f || size == 0, "Mem_Malloc of bad type %d size %dk\n",
+    NF_WARN_IF(MALLOC_TYPE(flags) > MALLOC_TYPE_NULL || size == 0, "Mem_Malloc of bad type %d size %dk\n",
                (flags >> 8) & 0xff, (int)size);
 
     if (alignment == 0)
@@ -222,12 +220,12 @@ void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment) {
             used = (MemBlock *)((char *)Mem_AlignDown((uintptr_t)block + mask + 0x18, mask) - sizeof(MemBlock));
             used->prev = block;
             block->size = Mem_Distance(block, used);
-            block->flags = MEM_FREE_FLAGS;
+            block->flags = MALLOC_ZERO;
             block->isFree = 1;
             block->slack = 0;
         }
         MemBlock *rest = Mem_AlignDown((uintptr_t)used + size + 0xf, 3);
-        rest->flags = MEM_FREE_FLAGS;
+        rest->flags = MALLOC_ZERO;
         rest->slack = 0;
         rest->isFree = 1;
         rest->prev = used;
@@ -274,7 +272,7 @@ void Mem_Free(void **ptr) {
     MemBlock *block = (MemBlock *)data - 1;
     MemBlock *prev = block->prev;
     block->isFree = 1;
-    block->flags = MEM_FREE_FLAGS;
+    block->flags = MALLOC_ZERO;
 
     // Into the free block before it - but only when it is not the last block
     if (prev != block && prev->isFree) {
@@ -422,8 +420,8 @@ uint32_t Mem_SetMallocMethod(uint32_t method) {
 // What Mem_Info reports: a name and a byte count per allocation type, then totals (Ghidra's MemInfo). The names
 // are the game's own, as its initialised data has them.
 typedef struct {
-    const char *typeNames[0x50];
-    uint typeBytes[0x50];
+    const char *typeNames[MALLOC_TYPE_COUNT];
+    uint typeBytes[MALLOC_TYPE_COUNT];
     uint bytesFree;
     uint bytesMalloced;
     uint unused[7];
@@ -521,7 +519,7 @@ static MemInfo_t MemInfo = {
 void* Mem_Info(void) {
     char *heap = PtrFrom32<char>(PtrHeap);
     char *end = heap + HeapByteSize - 0xc;
-    for (ushort type = 0; type <= 0x4f; type++) {
+    for (ushort type = 0; type <= MALLOC_TYPE_NULL; type++) {
         MemInfo.typeBytes[type] = 0;
         for (char *p = heap; p < end; p += ((MemBlock *)p)->size) {
             MemBlock *block = (MemBlock *)p;
@@ -536,10 +534,10 @@ void* Mem_Info(void) {
     return &MemInfo;
 }
 
-// The Xbox layer's own pair (0x000dbcd0, 0x000dbcf0): the sound buffers' allocations, always of type 0x1204.
+// The Xbox layer's own pair (0x000dbcd0, 0x000dbcf0): the sound buffers' allocations, always MALLOC_XBOX.
 // AUTOINJECT
 void* allocateXboxSpecialMemory(int size, uint32_t alignment) {
-    return Mem_Malloc(size, 0x1204, alignment);
+    return Mem_Malloc(size, MALLOC_XBOX, alignment);
 }
 
 // AUTOINJECT

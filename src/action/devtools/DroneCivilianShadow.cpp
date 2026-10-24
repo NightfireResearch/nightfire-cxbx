@@ -286,7 +286,7 @@ void RandomDrone(int i) {
     d->modeChangeSwitchChannel = (uchar)(ShadowRand(3) == 0 ? ShadowRand(256) : 0);
     d->secondState = (short)(ShadowRand(3) == 0 ? 0 : ShadowRand(250));
     d->initialState = (short)ShadowRand(250);
-    d->unknown15 = (uchar)ShadowRand(2);
+    d->female = (uchar)ShadowRand(2);
     d->firing = (uchar)ShadowRand(2);
     d->headShot = (uchar)ShadowRand(2);
     d->side = (uchar)(1 + ShadowRand(3));
@@ -305,7 +305,7 @@ void RandomDrone(int i) {
     d->route2.status = statuses[ShadowRand(sizeof(statuses))];
 
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x10000);
+    d->knowledge = ShadowRand(0x10000);
     for (int w = 0; w < 3; w++) {
         d->behaviour1[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
         d->behaviour2[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -325,10 +325,10 @@ void RandomDrone(int i) {
     d->sm.stateParam = ShadowRand(4) ? (int)(uintptr_t)&world.impact : 0;
     d->timerA.on = (uchar)ShadowRand(2);
     d->timerA.dueFrame = ShadowRand(5000);
-    d->timerA.unknown8 = ShadowRand(5);
+    d->timerA.data = ShadowRand(5);
     d->timerB.on = (uchar)ShadowRand(2);
     d->timerB.dueFrame = ShadowRand(5000);
-    d->timerB.unknown8 = ShadowRand(5);
+    d->timerB.data = ShadowRand(5);
 }
 
 void RandomWorld() {
@@ -379,9 +379,9 @@ void RandomWorld() {
         FRAME_RATE_INT = 50;
         FRAME_RATE_DIV = 1.2f;
     }
-    NPCGlobals.unknown14c = ShadowRand(4);
-    NPCGlobals.unknown150 = ShadowRand(6);
-    NPCGlobals.unknown15c = 100 + ShadowRand(2);
+    NPCGlobals.maxDeadDrones = ShadowRand(4);
+    NPCGlobals.deadDrones = ShadowRand(6);
+    NPCGlobals.oldestDeadId = 100 + ShadowRand(2);
     NPCGlobals.deadFrames = ShadowRand(2) ? 600 : 0xfffffff0u + ShadowRand(32);
     switch_channels[0x35] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);

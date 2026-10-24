@@ -9,7 +9,6 @@
 #include "../../driving/platform/Ptr32.h"
 #include "../devtools/FileDump.h"
 
-
 static uint8_t *allocateAndLoadFileWithinArchive(char* a, unsigned short b, int* c) {
 	return (uint8_t *)FS_AllocateAndLoadBlocking(a, (MallocFlags)b, c);
 }
@@ -31,7 +30,7 @@ int psiFileOpen(char* filename)
   CurrentFile.data = NULL;
   CurrentFile.size = 0;
   CurrentFile.position = 0;
-  CurrentFile.data = allocateAndLoadFileWithinArchive(filename,0x1204,(int*)&CurrentFile.size);
+  CurrentFile.data = allocateAndLoadFileWithinArchive(filename,MALLOC_XBOX,(int*)&CurrentFile.size);
   CurrentFile.position = 0;
   return (int)((PtrTo32(CurrentFile.data) >> 8) << 8 | 1);
 }
@@ -59,9 +58,6 @@ void* psiFileRead(int length) {
 
 // XBE_GLOBAL(0x002adf70, 0x1)
 static uint8_t SingleFileMode;
-
-
-
 
 int ** __cdecl psiFileLoadOrig(char *filename, unsigned short allocType, int *sizeOut)
 {

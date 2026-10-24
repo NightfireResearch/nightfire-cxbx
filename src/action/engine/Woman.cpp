@@ -22,7 +22,7 @@ uint32_t WomanFrame;  // Frame number
 // AUTOINJECT
 void LoadWoman(void) {
     int sizeBytes = FS_GetFileSize((char *)"woman.rle");
-    MemoryForWoman = Mem_Malloc(sizeBytes, 0x1204, 4);
+    MemoryForWoman = Mem_Malloc(sizeBytes, MALLOC_XBOX, 4);
     FS_LoadFileIfReady((char *)"woman.rle", MemoryForWoman);
     while (FS_StateMachineIterate())
         ;

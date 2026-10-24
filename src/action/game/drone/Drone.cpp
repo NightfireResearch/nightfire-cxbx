@@ -432,12 +432,12 @@ void Drone_LevelReset(void) {
     memset(&NPCGlobals, 0, sizeof(NPCGlobals));
     if (Drone_bDisableSystem)
         return;
-    NPCGlobals.unknown138c = 0.5f;
+    NPCGlobals.coverWaitScale = 0.5f;
     NPCGlobals.deadFrames = FRAME_RATE_INT * 10;
-    NPCGlobals.unknown14c = 6;
+    NPCGlobals.maxDeadDrones = 6;
     NPCGlobals.enabled = 1;
     NPCGlobals.NumDrones = 0;
-    NPCGlobals.unknown1390 = 0;
+    NPCGlobals.blind = 0;
     Drone_SM_Init();
 }
 
@@ -510,9 +510,9 @@ void Drone_UpdateCombatChannels(void) {
     bool calm = true;
     bool alerted = false;
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
-        if (drone->flags & 0x600)
+        if (drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING))
             continue;
-        if (!(drone->flags & 0x100)) {
+        if (!(drone->flags & DRONE_FLAG_ENABLED)) {
             if (drone->side == 1)
                 calm = false;
             continue;
@@ -557,10 +557,10 @@ void Drone_InitComms(void) {
     Drone_UpdateCombatChannels();
     NDrone2_NavNodeCache();
 
-    NPCGlobals.unknown150 = 0;
+    NPCGlobals.deadDrones = 0;
     NPCGlobals.deadOrFadingFast = 0;
     NPCGlobals.oldestDeadFrame = GameState.NumFramesUnpaused;
-    NPCGlobals.unknown15c = 0;
+    NPCGlobals.oldestDeadId = 0;
     // A drone whose object is not a drone keeps the last one's DCVars (before the first, the original's are
     // uninitialised stack; ours are zero)
     DCVars_tag dcv;
@@ -584,13 +584,13 @@ void Drone_InitComms(void) {
         default:
             continue;
         }
-        NPCGlobals.unknown150++;
+        NPCGlobals.deadDrones++;
         if (since < NPCGlobals.oldestDeadFrame) {
             NPCGlobals.oldestDeadFrame = since;
-            NPCGlobals.unknown15c = drone->sm.id;
+            NPCGlobals.oldestDeadId = drone->sm.id;
         }
     }
-    NPCGlobals.deadOrFadingFast += NPCGlobals.unknown150;
+    NPCGlobals.deadOrFadingFast += NPCGlobals.deadDrones;
     Sound_ZeroAlertness();
 
     if (switch_channels[0x96] && NPCGlobals.alarmFrame + 30 < GameState.NumFramesUnpaused
@@ -607,11 +607,11 @@ void Drone_InitComms(void) {
     NPCGlobals.prevEnemies = NPCGlobals.enemies;
     NPCGlobals.prevNeutrals = NPCGlobals.neutrals;
     NPCGlobals.prevAllies = NPCGlobals.allies;
-    NPCGlobals.prevUnknown188 = NPCGlobals.unknown188;
+    NPCGlobals.prevOutOfRangeCount = NPCGlobals.outOfRangeCount;
     NPCGlobals.prevSeenAttacking = NPCGlobals.seenAttacking;
-    NPCGlobals.unknown174 = NPCGlobals.seenOpponentCount;
+    NPCGlobals.prevSeenOpponentCount = NPCGlobals.seenOpponentCount;
     NPCGlobals.prevLostOpponentCount = NPCGlobals.lostOpponentCount;
-    NPCGlobals.unknown188 = 0;
+    NPCGlobals.outOfRangeCount = 0;
     NPCGlobals.seenAttacking = 0;
     NPCGlobals.seenOpponentCount = 0;
     NPCGlobals.lostOpponentCount = 0;
@@ -634,7 +634,7 @@ void Drone_InitComms(void) {
 // Nothing while the AI is not running.
 // AUTOINJECT
 void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
-    if (!(drone->flags & 0x100))
+    if (!(drone->flags & DRONE_FLAG_ENABLED))
         return;
 
     if (drone->opponent != NULL) {
@@ -658,7 +658,7 @@ void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
     drone->opponentAngles.z = 0.0f;
     drone->opponentFacing = Vec_AngleDifference(drone->opponentLastRot.y, (float)(yaw + PI));
 
-    uint turn = drone->unknown46c;
+    uint turn = drone->animFlags;
     float facing = gameObj->rotation.y;
     if (turn & 8)
         facing += HALF_PI;
@@ -680,7 +680,7 @@ bool NDrone2_PreDroneControl(DCVars_tag *dcv) {
     gameObj->transformFlags &= ~TRANSFORM_MOVED;
     drone->prevAlertness = drone->alertness;
     drone->lastHit = NULL;
-    drone->unknown38 = 0;
+    drone->standingStill = 0;
     drone->yawOffset = 0.0f;
     // On the x87, both frames converted unsigned
     if (GameState.NumFramesUnpaused > drone->inPlayersSightsFrame + FRAME_RATE_DIV * 30.0)
@@ -718,15 +718,15 @@ bool NDrone2_PreDroneControl(DCVars_tag *dcv) {
     }
     // A timer's third word is its message's payload
     if (drone->timerA.on && drone->timerA.dueFrame <= now) {
-        void *data = (void *)(uintptr_t)drone->timerA.unknown8;
+        void *data = (void *)(uintptr_t)drone->timerA.data;
         drone->timerA.on = 0;
-        drone->timerA.unknown8 = 0;
+        drone->timerA.data = 0;
         Drone_SM_SendMsgSelf(DRONE_MSG_TimerA, data, 0, 0, dcv);
     }
     if (drone->timerB.on && drone->timerB.dueFrame <= now) {
-        void *data = (void *)(uintptr_t)drone->timerB.unknown8;
+        void *data = (void *)(uintptr_t)drone->timerB.data;
         drone->timerB.on = 0;
-        drone->timerB.unknown8 = 0;
+        drone->timerB.data = 0;
         Drone_SM_SendMsgSelf(DRONE_MSG_TimerB, data, 0, 0, dcv);
     }
     if (drone->ninjaEyes)
@@ -752,8 +752,8 @@ void NDrone2_HandleDoor(DCVars_tag *dcv) {
 }
 
 // The control every drone type runs (DroneTypeSettings' control functions add to it): the alertness eased back
-// towards its base over 50 s, the state machine's update message, the speech and facial anim finished; then, with
-// the AI running, the drone counted by side, its opponent, its tracking (and its breath, drawn and alive), talking,
+// towards its base over 50 s, the state machine's update message, the speech and facial anim finished; then, while
+// enabled, the drone counted by side, its opponent, its tracking (and its breath, drawn and alive), talking,
 // moving (or flying), collision, firing, doors and explosives.
 // AUTOINJECT
 bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
@@ -776,7 +776,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
             speaker->facialAnimPlaying = 0;
     }
 
-    if (!(dcv->drone->flags & 0x100)) {
+    if (!(dcv->drone->flags & DRONE_FLAG_ENABLED)) {
         NDrone2_DoTracking(0, dcv);
         return true;
     }
@@ -825,7 +825,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
         NDrone2_Move(dcv);
         drone->moveRotation.y -= drone->yawOffset;
         Vec_Copy(&drone->moveRotation, &gameObj->rotation);
-        drone->unknown17 = DroneMove_NoBunching(dcv);
+        drone->bunched = DroneMove_NoBunching(dcv);
     }
     NDrone2_Collision(dcv->gameObj);
     DroneWeap_HandleFiring(dcv);
@@ -859,38 +859,40 @@ bool NDrone2_ControlDTYPE_Astronaut(DCVars_tag *dcv) {
     return NDrone2_ControlSTANDARD(dcv);
 }
 
-// The end of the control: with the AI running, the object is marked moved, and a drone out of health that is not
-// yet dead is marked dying (0x400).
+// The end of the control: while enabled, the object is marked moved, and a drone out of health that is not yet
+// dead is marked dying.
 // AUTOINJECT
 bool NDrone2_PostDroneControl(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (drone->flags & 0x100) {
+    if (drone->flags & DRONE_FLAG_ENABLED) {
         dcv->gameObj->transformFlags |= TRANSFORM_MOVED;
-        if (drone->health <= 0.0f && !(drone->flags & 0x200))
-            dcv->drone->flags |= 0x400;
+        if (drone->health <= 0.0f && !(drone->flags & DRONE_FLAG_DEAD))
+            dcv->drone->flags |= DRONE_FLAG_DYING;
     }
     return true;
 }
 
-// Whether the drone's anim runs this frame (flag 0x80000): always for skin class 12, a drone with no root height, one
-// drawn lately or one with unknown434's script; else unless its anim moves it without animating (unknown46c 4).
+// Whether the drone's anim runs this frame (DRONE_FLAG_ANIMATE): always for skin class 12, a drone with no root
+// height, one drawn lately or one blending a script out (blendScript); else unless its anim moves it without animating
+// (animFlags 4).
 // AUTOINJECT
 bool NDrone2_DoAnimation(Drone_tag *drone) {
-    if (!(drone->flags & 0x80000))
+    if (!(drone->flags & DRONE_FLAG_ANIMATE))
         return false;
     if (drone->skinClass == SKINCLASS_ZOE)
         return true;
     obj_tag *gameObj = drone->gameObj;
-    if (gameObj->animState->animObj.rootHeight == 0.0f || gameObj->drawnCountdown || drone->unknown434 != NULL)
+    if (gameObj->animState->animObj.rootHeight == 0.0f || gameObj->drawnCountdown || drone->blendScript != NULL)
         return true;
-    return !(drone->unknown46c & 4);
+    return !(drone->animFlags & 4);
 }
 
 // A drone's frame (the object's update): nothing while the NPC system is off, or in multiplayer for a dead drone or
 // one that is no player's. PreDroneControl, then the type's control (or the standard one) unless PreDroneControl
-// ended the frame, PostDroneControl; then the anim: run, or (not run, and not in unknown47c's frame) the drone moved
-// along its heading by the anim's speed, held back from what blocks it ahead or behind when flag 1 is set and it has
-// no door; the anim callbacks, the anim calls; how far it moved in the plane, and unknown3a0's length.
+// ended the frame, PostDroneControl; then the anim: run, or (not run, and not in scriptStartFrame's frame) the drone
+// moved along its heading by the anim's speed, held back from what blocks it ahead or behind with
+// DRONE_FLAG_BOUNDARY_STOPS and no door; the anim callbacks, the anim calls; how far it moved in the plane, and
+// unknown3a0's length.
 // AUTOINJECT
 void Drone_Control(obj_tag *gameObj) {
     if (!NPCGlobals.enabled || Drone_bDisableSystem)
@@ -918,13 +920,13 @@ void Drone_Control(obj_tag *gameObj) {
     NDrone2_PostDroneControl(&dcv);
     DroneAnim_SnapRotate(drone);
 
-    if (drone->flags & 0x80000) {
-        if (!NDrone2_DoAnimation(drone) && drone->unknown47c != GameState.NumFramesUnpaused) {
-            drone->flags &= ~0x100000;
+    if (drone->flags & DRONE_FLAG_ANIMATE) {
+        if (!NDrone2_DoAnimation(drone) && drone->scriptStartFrame != GameState.NumFramesUnpaused) {
+            drone->flags &= ~DRONE_FLAG_ANIM_UPDATED;
             uint flags = drone->flags;
             float speed = drone->animMoveSpeed;
             if (speed != 0.0f) {
-                if ((flags & 1) && drone->door == NULL) {
+                if ((flags & DRONE_FLAG_BOUNDARY_STOPS) && drone->door == NULL) {
                     if ((drone->boundaryFlags & 2) && speed > 0.0f)
                         speed = 0.0f;
                     if ((drone->boundaryFlags & 4) && speed < 0.0f)
@@ -936,7 +938,7 @@ void Drone_Control(obj_tag *gameObj) {
         } else {
             AnimObjectUpdate(gameObj);
             // The original calls DroneAnim_SnapRotate2 here, an empty function on the Xbox
-            drone->flags |= 0x100000;
+            drone->flags |= DRONE_FLAG_ANIM_UPDATED;
         }
         if (drone->animFunc != NULL)
             drone->animFunc(drone, DANIMFUNC_FRAME);
@@ -989,12 +991,12 @@ void Drone_Delete(obj_tag *gameObj) {
                 other->nearestDrone = NULL;
             if (other->unknown28c == drone)
                 other->unknown28c = NULL;
-            if (other->unknown230 == gameObj)
-                other->unknown230 = NULL;
+            if (other->hostagePartner == gameObj)
+                other->hostagePartner = NULL;
             if (other->lastAttacker == gameObj)
                 other->lastAttacker = NULL;
-            if (other->unknown23c == gameObj)
-                other->unknown23c = NULL;
+            if (other->guardPartner == gameObj)
+                other->guardPartner = NULL;
             if (other->headTarget == gameObj) {
                 AnimObjectSetHeadTracking(obj, NULL, 3.0f, 0.14f, 1, 1, HEAD_BONE);
                 other->headTarget = NULL;

@@ -1,5 +1,5 @@
 // How the drones move. The anims move the drone; NDrone2_Move only turns its heading (moveRotation) towards
-// angleToSomePoint, at turnRate a frame, through NDrone2_Steer, which also turns it away from each drone within 3 m and
+// targetRot.y, at turnRate a frame, through NDrone2_Steer, which also turns it away from each drone within 3 m and
 // from the players when NDrone2_EvaluateObstacle finds that walking on would bring them into contact (the sooner,
 // the harder). A shot's push (pushOffset) is added to the position and dies away. In zero gravity (flies) the drone
 // floats towards moveTarget instead. Also which ways are blocked, the nearest drone's side, the turn to an object,
@@ -53,13 +53,13 @@ static double AngleSize(double angle) {
 
 // ---- walking and steering
 
-// Each frame: turns the heading towards angleToSomePoint (unless unknown3f0 has 0x8000000), or in zero gravity
+// Each frame: turns the heading towards targetRot.y (unless unknown3f0 has 0x8000000), or in zero gravity
 // speeds up towards moveTarget and turns the object a tenth of the way a frame. Last frame's push comes off the
 // position, this frame's goes on, and it dies away by 5%.
 // AUTOINJECT
 void NDrone2_Move(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    float heading = drone->angleToSomePoint;
+    float heading = drone->targetRot.y;
     obj_tag *obj = dcv->gameObj;
     drone->avoidingPlayer = 0;
     if (!drone->flies) {
@@ -79,7 +79,7 @@ void NDrone2_Move(DCVars_tag *dcv) {
     Vec_MulR32(&drone->pushOffset, &drone->pushOffset, 0.95f);
 }
 
-// Another drone to steer round: running (0x100), neither dead nor dying (0x600), alive (a NaN health counts), not a
+// Another drone to steer round: enabled, neither dead nor dying, alive (a NaN health counts), not a
 // dead drone, not marked for deletion
 static bool IsObstacle(Drone_tag *drone, Drone_tag *other) {
     if (other == drone)
@@ -88,7 +88,7 @@ static bool IsObstacle(Drone_tag *drone, Drone_tag *other) {
     if (obj == NULL)
         return false;
     Drone_tag *data = (Drone_tag *)obj->extraObjectData;
-    if ((data->flags & 0x600) || !(data->flags & 0x100))
+    if ((data->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(data->flags & DRONE_FLAG_ENABLED))
         return false;
     if (data->health <= 0.0f)
         return false;
@@ -334,25 +334,25 @@ bool SolveQuadratic(float a, float b, float c, float *root1, float *root2) {
     return true;
 }
 
-// Which side the nearest drone (from NDrone2_Steer) is on, off the way the drone faces (its anim's turn, unknown46c
+// Which side the nearest drone (from NDrone2_Steer) is on, off the way the drone faces (its anim's turn, animFlags
 // 8, 0x10, 0x20, added): bunchFlags gets 0x10 right or 8 left, and 2 within 45 degrees of ahead or 4. False with no
-// nearest drone, or a frozen one (0x10).
+// nearest drone, or a stationary one.
 // AUTOINJECT
 bool DroneMove_NoBunching(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     obj_tag *obj = dcv->gameObj;
     Drone_tag *nearest = drone->nearestDrone;
-    if (nearest == NULL || (nearest->flags & 0x10))
+    if (nearest == NULL || (nearest->flags & DRONE_FLAG_STATIONARY))
         return false;
     _VECTOR toNearest;
     Vec_Subtract(&nearest->gameObj->position, &obj->position, &toNearest);
     float bearing = Atan2(toNearest.x, toNearest.z);
     float facing = obj->rotation.y;
-    if (drone->unknown46c & 8)
+    if (drone->animFlags & 8)
         facing = facing + HALF_PI;
-    if (drone->unknown46c & 0x10)
+    if (drone->animFlags & 0x10)
         facing = facing + PI;
-    if (drone->unknown46c & 0x20)
+    if (drone->animFlags & 0x20)
         facing = facing - HALF_PI;
     double turn = Vec_AngleDifference(facing, bearing);
     drone->bunchFlags |= turn < 0.0f ? 0x10 : 8;
@@ -366,13 +366,13 @@ static bool StepBlocked(Drone_tag *drone, obj_tag *obj, float x, float z) {
     return !NDrone2_MoveTestRelative(&step, drone, obj, 0, 0);
 }
 
-// Which ways half a metre's step is blocked (boundaryFlags), for a drone with flags bit 0
+// Which ways half a metre's step is blocked (boundaryFlags), for a drone with DRONE_FLAG_BOUNDARY_STOPS
 // AUTOINJECT
 void DroneMove_SetBoundryFlags(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     obj_tag *obj = dcv->gameObj;
     drone->boundaryFlags = 0;
-    if (!(dcv->drone->flags & 1))
+    if (!(dcv->drone->flags & DRONE_FLAG_BOUNDARY_STOPS))
         return;
     if (StepBlocked(drone, obj, 0.0f, 0.5f))
         drone->boundaryFlags |= 2;
@@ -386,18 +386,18 @@ void DroneMove_SetBoundryFlags(DCVars_tag *dcv) {
 
 // ---- turning and routes
 
-// Turns angleToSomePoint to face obj (plus offset) when it is more than tolerance off. Not while unknown3f0 has
-// 0x8000000 or the anim turns the drone (unknown46c 0x380).
+// Turns targetRot.y to face obj (plus offset) when it is more than tolerance off. Not while unknown3f0 has
+// 0x8000000 or the anim turns the drone (animFlags 0x380).
 // AUTOINJECT
 void DroneMove_TurnToObj(DCVars_tag *dcv, obj_tag *obj, float offset, float tolerance) {
     Drone_tag *drone = dcv->drone;
-    if (obj == NULL || (drone->unknown3f0 & 0x8000000) || (drone->unknown46c & 0x380))
+    if (obj == NULL || (drone->unknown3f0 & 0x8000000) || (drone->animFlags & 0x380))
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
     float heading = Atan2(toObj.x, toObj.z) + offset;
-    if (ABS(Vec_AngleDifference(heading, drone->angleToSomePoint)) > tolerance)
-        drone->angleToSomePoint = heading;
+    if (ABS(Vec_AngleDifference(heading, drone->targetRot.y)) > tolerance)
+        drone->targetRot.y = heading;
 }
 
 // The angle between the way from moveTarget to the drone and the segment the active route creeps along; 0 within
@@ -592,10 +592,10 @@ void DroneMove_AstronautCombat(DCVars_tag *dcv) {
     if (drone->opponent == NULL)
         return;
     if (!(drone->unknown3f0 & 0x8000000) && (!MPSettings.dronesAreBots || !(drone->botVars->flags & 2)) &&
-        !(drone->unknown46c & 0x380)) {
+        !(drone->animFlags & 0x380)) {
         _VECTOR toOpponent;
         Vec_Subtract(&drone->opponent->position, &obj->position, &toOpponent);
-        dcv->drone->angleToSomePoint = Atan2(toOpponent.x, toOpponent.z);
+        dcv->drone->targetRot.y = Atan2(toOpponent.x, toOpponent.z);
     }
     drone->firing = (dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT) != 0;
 
@@ -659,7 +659,8 @@ void DroneMove_AstronautHitMove(DCVars_tag *dcv) {
     drone->floatsToMoveTarget = 0;
 }
 
-// Killed while floating: 5 m/s more away from the opponent, flags 0x40 cleared, and no more floating to moveTarget
+// Killed while floating: 5 m/s more away from the opponent, DRONE_FLAG_DAMPED cleared, and no more floating to
+// moveTarget
 // AUTOINJECT
 void DroneMove_AstronautDeathMove(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -668,6 +669,6 @@ void DroneMove_AstronautDeathMove(DCVars_tag *dcv) {
     Vec_Normalise(&push, &push);
     Vec_MulR32(&push, &push, -5.0f);
     Vec_Add2(&drone->velocity, &push, &drone->velocity);
-    dcv->drone->flags &= ~0x40u;
+    dcv->drone->flags &= ~DRONE_FLAG_DAMPED;
     drone->floatsToMoveTarget = 0;
 }

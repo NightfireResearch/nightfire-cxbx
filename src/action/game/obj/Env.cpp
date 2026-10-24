@@ -50,7 +50,7 @@ void Env_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_tag *lvl)
     cel_tag *cel = build_FindCel(pos, glb_world);
     if (cel == NULL || cel->env != NULL)
         return;
-    ENV_tag *env = (ENV_tag *)Mem_Malloc(sizeof(ENV_tag), (MallocFlags)0x104, 0);
+    ENV_tag *env = (ENV_tag *)Mem_Malloc(sizeof(ENV_tag), MALLOC_CELSTRUCTS, 0);
     if (env == NULL)
         return;
     EnvPlacement *keys = (EnvPlacement *)lvl;

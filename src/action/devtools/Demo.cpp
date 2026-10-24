@@ -87,7 +87,6 @@ static const char *const kSumNames[SUM_COUNT] = { "rng", "gamestate", "channels"
 #define KernelKeQuerySystemTime (*(void(__stdcall **)(LARGE_INTEGER *))0x0015d198)
 #endif
 
-
 static DemoMode g_mode = DEMO_OFF;
 static std::string g_path;
 

@@ -127,14 +127,16 @@ void DroneFunc_ClearTargets(void) {
 
 // ---- the opponent
 
-// A bone of an animated drone (flag 0x100000) or player (true); else the object's position, when pos is given.
+// A bone of an animated drone (DRONE_FLAG_ANIM_UPDATED) or player (true); else the object's position, when pos is
+// given.
 // Only NDrone2_SetOpponentAimPos calls it (our name). A NULL object with pos given reads its position from address
 // 0x24, as in the original; neither call can pass one.
 // FUNC_AT(0x00037870)
 bool NDrone2_OpponentBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
     if (gameObj != NULL && gameObj->animState != NULL
         && (gameObj->objectType == OBJECTTYPE_DRONE || gameObj->objectType == OBJECTTYPE_PLAYER)
-        && (gameObj->objectType != OBJECTTYPE_DRONE || (((Drone_tag *)gameObj->extraObjectData)->flags & 0x100000))
+        && (gameObj->objectType != OBJECTTYPE_DRONE ||
+            (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED))
         && (gameObj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
         AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
         return true;
@@ -465,7 +467,8 @@ obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
         obj_tag *obj = other->gameObj;
         if (obj != NULL) {
             Drone_tag *otherDrone = (Drone_tag *)obj->extraObjectData;
-            if (!(otherDrone->flags & 0x600) && (otherDrone->flags & 0x100) && !(otherDrone->health <= 0.0f)
+            if (!(otherDrone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) && (otherDrone->flags & DRONE_FLAG_ENABLED)
+                && !(otherDrone->health <= 0.0f)
                 && obj->objectType != OBJECTTYPE_DEAD_DRONE && !(obj->flags & 1) && other->side == 1
                 && Vec_SqDist2D(&drone->gameObj->position, &obj->position) < nearestSq
                 && NDrone2_CanSeeObject(drone, other->gameObj, 5, 0)) {

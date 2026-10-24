@@ -23,10 +23,8 @@
 #include "NDrone2_Alert.h"
 #include "NDrone2_Route.h"
 
-
 // The bots' unarmed attack anim state (our name)
 #define DANIM_UNARMED_ATTACK 0x3d
-
 
 // The bot message telling a bot to change weapon (BOTSTATE_combatWeaponChangeChoice)
 #define BOT_MSG_CHANGE_WEAPON 0x42
@@ -1375,8 +1373,8 @@ short BOTSTATE_pickupWeaponChangeChoice(Drone_tag *drone, short weapon, char che
 void BOTSTATE_stopAnim(Drone_tag *drone) {
     sAnimScript_tag *script = drone->animScript;
     script->numFrames = (short)Ftol(script->curFrame);
-    if (drone->unknown434 != NULL) {
-        ((sAnimScript_tag *)drone->unknown434)->ownerSlot = NULL;
-        AnimScriptDelete(drone->gameObj, (sAnimScript_tag **)&drone->unknown434);
+    if (drone->blendScript != NULL) {
+        drone->blendScript->ownerSlot = NULL;
+        AnimScriptDelete(drone->gameObj, &drone->blendScript);
     }
 }

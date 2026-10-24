@@ -13,7 +13,7 @@ bool LList_Init(LLISTINFO_tag *list, unsigned short entrySize, unsigned short nu
     if (list == NULL)
         return false;
 
-    char *nodes = numEntries != 0 ? (char *)Mem_Malloc(numEntries * entrySize, 0x1B04, 0) : NULL;
+    char *nodes = numEntries != 0 ? (char *)Mem_Malloc(numEntries * entrySize, MALLOC_LLIST, 0) : NULL;
 
     list->head = NULL;
     list->tail = NULL;
@@ -54,7 +54,6 @@ bool LList_Add(LLISTINFO_tag *list, LLNODE_tag *newElement) {
     return true;
 
 }
-
 
 // AUTOINJECT
 void LList_Insert(LLISTINFO_tag *list, LLNODE_tag *insertionPoint, LLNODE_tag *newElement) {
@@ -120,7 +119,7 @@ void LList_AllocnNodes(LLISTINFO_tag *list, int n) {
     if(n == 0)
         return;
 
-    void* mem = Mem_Malloc(n * list->elementSize, 0x1B04, 0);
+    void* mem = Mem_Malloc(n * list->elementSize, MALLOC_LLIST, 0);
     memset(mem, 0, n * list->elementSize);
     
     for(int i = 0; i < n; i++) {

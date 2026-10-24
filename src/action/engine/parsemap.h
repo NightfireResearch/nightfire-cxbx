@@ -4,7 +4,6 @@
 #include "../actionhelpers.h"
 #include "../../driving/platform/Ptr32.h"
 
-
 typedef enum {
     Place_Drone	                = 15,
     Place_Breakable	            = 32,
@@ -82,8 +81,6 @@ typedef enum {
     Place_Force_U32             = 0x7FFFFFFF
 } ObjectPlacementType;
 
-
-
 #pragma pack(push, 1)
 // A block's header word, split (CurrentBH, DynamicBH)
 typedef struct block_header_tag {
@@ -120,6 +117,5 @@ void parsemap_block_entity_params(void);
 void parsemap_block_Coll_Data_New(void);
 void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl, ObjectPlacementType type,
                                      celglist_tag* celglist, void* spline, void* next, char doCreation);
-
 
 #endif // PARSEMAP_H_

@@ -33,7 +33,7 @@ typedef struct DroneAnimState {
 
 // Drone_AnimInfo, one per row
 typedef struct DroneAnimInfo {
-    uint htFlags;               // 0x00 - for DroneAnim_SetHTAnim (-> Drone_tag.unknown46c)
+    uint htFlags;               // 0x00 - for DroneAnim_SetHTAnim (-> Drone_tag.animFlags)
     float moveSpeed;            // 0x04 - -> Drone_tag.animMoveSpeed
     short animState;            // 0x08 - the anim state it belongs to
     ushort nextRow;             // 0x0a - played when it ends
@@ -79,7 +79,7 @@ extern const DroneAnimScript Drone_AnimTables[NUM_DRONE_ANIM_ROWS][NUM_DRONE_ANI
 extern const DroneDataFunc DroneData_AnimFunc[2];
 extern const DroneDataFunc DroneData_DAStateFunc[2];
 
-// DroneAnimInfo.htFlags (Drone_tag.unknown46c)
+// DroneAnimInfo.htFlags (Drone_tag.animFlags)
 #define DANIMFLAG_LOOP 0x1
 #define DANIMFLAG_SKIP_UNSEEN 0x4       // DroneAnim_SkipAnim: skipped, in some modes, while the drone is not drawn
 #define DANIMFLAG_TURN_90 0x80          // DroneAnim_OnEndAnim: the drone turns by this at the row's end

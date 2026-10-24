@@ -117,7 +117,7 @@ void RandomWorld() {
     d->secondaryMode = Pick(secondary, 11);
     static const uchar channels[] = {0, 0, 3};
     d->modeChangeSwitchChannel = Pick(channels, 3);
-    d->unknown15 = (uchar)ShadowRand(2);
+    d->female = (uchar)ShadowRand(2);
     d->dtype = (uchar)ShadowRand(DTYPE_Bot + 1);
     d->dtype2 = ShadowRand(3) == 0 ? 0 : (uchar)ShadowRand(DTYPE_Bot + 1);
     d->initialState = Pick(kStates, sizeof(kStates) / sizeof(kStates[0]));

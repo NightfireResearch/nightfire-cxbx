@@ -184,7 +184,7 @@ void __cdecl FakeSendAttackMessage(DCVars_tag *dcv) {
 
 void __cdecl FakeSetAsAttacking(Drone_tag *drone) {
     ShadowLog("setasattacking(%d)", Who(drone));
-    drone->flags |= 0x2000000;
+    drone->flags |= DRONE_FLAG_ATTACK_STARTED;
 }
 
 short __cdecl FakeChangeToAttack(Drone_tag *drone) {
@@ -450,7 +450,7 @@ void RandomDrone(int i) {
     d->firing = (uchar)ShadowRand(2);
     d->gunThroughWall = (uchar)ShadowRand(2);
     d->burstOver = (uchar)ShadowRand(2);
-    d->unknown17 = (uchar)ShadowRand(2);
+    d->bunched = (uchar)ShadowRand(2);
     d->modeChangeSwitchChannel = (uchar)(ShadowRand(3) == 0 ? 5 : 0);
     d->secondState = (short)(ShadowRand(2) ? 0 : DSTATE_Combat);
     d->initialState = (short)ShadowRand(250);
@@ -472,21 +472,21 @@ void RandomDrone(int i) {
     d->sightFlags = ShadowRand(16);
     d->boundaryFlags = ShadowRand(0x20);
     d->bunchFlags = ShadowRand(0x20);
-    d->unknown3d0 = 12000 + ShadowRand(500);
+    d->sfxFrame = 12000 + ShadowRand(500);
     d->clip = (short)(ShadowRand(3) - 1);
     d->clipSize = 30;
     d->moveQuad = (ushort)ShadowRand(5);
     d->speechChannel = (DYNAMICSOUNDS *)(uintptr_t)(ShadowRand(2) ? 0 : 0x5000);
     d->coverNode = ShadowRand(3) ? NULL : &world.nodes[ShadowRand(NODES)];
     d->stateScratch = ShadowRand(2) ? 0 : 0xffffffff;
-    *(ushort *)&d->unknown824 = (ushort)ShadowRand(0x10000);
+    d->avoidLinks = (ushort)ShadowRand(0x10000);
     d->route1.path = ShadowRand(5) ? &world.path : &world.otherPath;
     d->route1.targetFrame = 100 + ShadowRand(3);
     d->route1.arriveRadius = RandomDistance();
     d->activeRoute = &d->route1;
 
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
+    d->knowledge = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     for (int w = 0; w < 3; w++) {
         d->behaviour1[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
         d->behaviour2[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -495,7 +495,7 @@ void RandomDrone(int i) {
     // A drone without an object only as a dead one (the cover test reads every live drone's object)
     if (i != 0 && ShadowRand(10) == 0) {
         d->gameObj = NULL;
-        d->flags |= 0x200;
+        d->flags |= DRONE_FLAG_DEAD;
     }
 
     d->sm.id = 100 + i;
@@ -507,7 +507,7 @@ void RandomDrone(int i) {
     d->sm.scratch1c = ShadowRand(5);
     d->timerA.on = (uchar)ShadowRand(2);
     d->timerA.dueFrame = ShadowRand(5000);
-    d->timerA.unknown8 = ShadowRand(5);
+    d->timerA.data = ShadowRand(5);
 }
 
 void RandomNode(int i) {

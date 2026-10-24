@@ -53,11 +53,6 @@ float Plr_DMod_LowerLimb = 0.8f;
 // XBE_GLOBAL(0x0017e8d8, 0x4)
 float Plr_DMod_UpperLimb = 0.8f;
 
-// Drone_tag.flags (docs/drone README 4.3)
-#define DRONE_AI_RUNNING 0x100
-#define DRONE_DEAD 0x200
-#define DRONE_DYING 0x400
-
 // BOTSTATE_chooseDodgeMove's directions
 #define DODGE_LEFT 1
 #define DODGE_RIGHT 2
@@ -389,9 +384,9 @@ bool MPDrone_IsDyingOrDead(obj_tag *obj) {
     if (obj == NULL)
         return true;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-    if (drone->flags & (DRONE_DYING | DRONE_DEAD))
+    if (drone->flags & (DRONE_FLAG_DYING | DRONE_FLAG_DEAD))
         return true;
-    if (!(drone->flags & DRONE_AI_RUNNING))
+    if (!(drone->flags & DRONE_FLAG_ENABLED))
         return true;
     if (drone->health < 0.0f || drone->health == 0.0f)
         return true;
@@ -532,10 +527,10 @@ uchar BOT_validateStateChange(DCVars_tag *dc, uint newState) {
 
 // Who a bot fights, from who has attacked it lately (the last 16 hits, BOT_vars_t.attackers): the attacker seen
 // most often - five times as much for its current opponent - or the new one. A dead attacker's later entries are
-// forgotten. Changing opponent resets the drone's sight frames. Only for a drone with flag 0x10000.
+// forgotten. Changing opponent resets the drone's sight frames. Only for a drone with DRONE_FLAG_LOOKS_FOR_OPPONENT.
 // AUTOINJECT
 obj_tag* BOT_handleOpponentHistory(Drone_tag *drone, obj_tag *attacker) {
-    if (!(drone->flags & 0x10000))
+    if (!(drone->flags & DRONE_FLAG_LOOKS_FOR_OPPONENT))
         return NULL;
 
     BOT_vars_t *bot = drone->botVars;
@@ -598,7 +593,7 @@ DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
     uint first, count;
     switch (kind) {
         case BOT_SOUND_DEATH:
-            first = drone->unknown15 ? 0x157 : 0x154;
+            first = drone->female ? 0x157 : 0x154;
             count = 3;
             break;
         case BOT_SOUND_PAIN_UNLESS_PLAYING:
@@ -606,7 +601,7 @@ DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
                 return NULL;
             // fall through
         case BOT_SOUND_PAIN:
-            if (drone->unknown15) {
+            if (drone->female) {
                 first = 0x152;
                 count = 2;
             } else {
@@ -624,14 +619,14 @@ DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
     return drone->botVars->sound;
 }
 
-// The voice a bot's cries use (Drone_tag.unknown15) by its character: the other voice for characters 3-5 and 18-23.
+// The voice a bot's cries use (Drone_tag.female) by its character: the other voice for characters 3-5 and 18-23.
 // nightfire-port's name.
 // AUTOINJECT
 void BOT_setGender(Drone_tag *drone) {
-    drone->unknown15 = 0;
+    drone->female = 0;
     switch (drone->botVars->skin) {
         case 3: case 4: case 5: case 18: case 19: case 20: case 21: case 22: case 23:
-            drone->unknown15 = 1;
+            drone->female = 1;
             break;
     }
 }
@@ -803,12 +798,12 @@ void BOT_handlePain(DCVars_tag *dc, float damage, ushort hitType, short location
     BOTSTATE_increaseDistraction(drone, taken * 8.0f);
 }
 
-// A bot's drone once its level is loaded: its stats, flag 0x80000000, and its combat ranges kept for
+// A bot's drone once its level is loaded: its stats, DRONE_FLAG_BOUNDS, and its combat ranges kept for
 // BOTSTATE_defaultCombatRange
 // AUTOINJECT
 void BOT_postLoadInit(Drone_tag *drone) {
     BOT_setDroneStats(drone, &drone->botVars->stats);
-    drone->flags |= 0x80000000;
+    drone->flags |= DRONE_FLAG_BOUNDS;
     drone->botVars->savedCombatRanges[0] = drone->combatRanges[0];
     drone->botVars->savedCombatRanges[1] = drone->combatRanges[1];
     drone->botVars->savedCombatRanges[2] = drone->combatRanges[4];

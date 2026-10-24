@@ -320,8 +320,8 @@ void RandomDrone(int i) {
     for (int k = 0; k < 15; k++)
         o->transformMatrix.m[k] = ShadowRandFloat(-1, 1);
 
-    d->unknown15 = (uchar)ShadowRand(2);
-    d->unknown16 = (uchar)(ShadowRand(4) == 0);
+    d->female = (uchar)ShadowRand(2);
+    d->runningToAlarm = (uchar)(ShadowRand(4) == 0);
     d->captain = (uchar)ShadowRand(2);
     d->inPlayersSights = (uchar)ShadowRand(2);
     d->explosiveSeen = (uchar)(ShadowRand(4) == 0);
@@ -366,7 +366,7 @@ void RandomDrone(int i) {
         if (ShadowRand(3) == 0)
             d->flags |= flagBits[k];
     if (ShadowRand(2))
-        d->flags |= 0x100;
+        d->flags |= DRONE_FLAG_ENABLED;
 
     d->speechChannel = ShadowRand(3) == 0 ? (DYNAMICSOUNDS *)world.sound : NULL;
     d->facialAnim = ShadowRand(3) == 0 ? world.face : NULL;
@@ -394,7 +394,7 @@ void RandomDrone(int i) {
     d->animEndState = (short)(ShadowRand(2) ? 0 : ShadowRand(250));
     d->animEndMsg = ShadowRand(2) ? 0 : ShadowRand(0x30);
     d->animCallSpeed = ShadowRand(2) ? 0.0f : 1.5f;
-    d->unknown481 = (uchar)ShadowRand(2);
+    d->animMoveState = (uchar)ShadowRand(2);
     d->idleAnimFrame = 900 + ShadowRand(300);
 
     static const uint scratches[] = {0xff, 0xff, 0, 0, 1, 2, 3, 4, 5, 6, 7, 9};
@@ -485,12 +485,12 @@ void RandomWorld() {
     NPCGlobals.NDrone2List = &world.drones[0];
     NPCGlobals.dummyPlayerActive = (uchar)(ShadowRand(4) == 0);
     NPCGlobals.dummyPlayer = &world.objs[ShadowRand(DRONES)];
-    NPCGlobals.unknown14c = ShadowRand(4);
-    NPCGlobals.unknown150 = ShadowRand(6);
-    NPCGlobals.unknown15c = 100 + ShadowRand(3);
+    NPCGlobals.maxDeadDrones = ShadowRand(4);
+    NPCGlobals.deadDrones = ShadowRand(6);
+    NPCGlobals.oldestDeadId = 100 + ShadowRand(3);
     NPCGlobals.nextPatrolTalkFrame = 1000 + ShadowRand(100);
     NPCGlobals.lastPowerstationChannel = 0x34 + ShadowRand(10);
-    NPCGlobals.unknown1392 = (uchar)ShadowRand(2);
+    NPCGlobals.interogating = (uchar)ShadowRand(2);
     NPCGlobals.numAwarePoints = ShadowRand(8);
     for (int k = 0; k < 8; k++) {
         DroneAwarePoint *p = &NPCGlobals.awarePoints[k];

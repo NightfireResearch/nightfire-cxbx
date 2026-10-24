@@ -442,9 +442,9 @@ void RandomDrone(int i) {
             d->flags |= flagBits[k];
     static const short skins[] = {0, 5, 0xc, 0x11};
     d->skinClass = skins[ShadowRand(4)];
-    d->unknown434 = ShadowRand(4) == 0 ? (void *)&world.facial : NULL;
-    d->unknown46c = ShadowRand(3) == 0 ? 0 : ShadowRand(0x40);
-    d->unknown47c = ShadowRand(4) == 0 ? 1000 : RandomFrame();
+    d->blendScript = ShadowRand(4) == 0 ? &world.facial : NULL;
+    d->animFlags = ShadowRand(3) == 0 ? 0 : ShadowRand(0x40);
+    d->scriptStartFrame = ShadowRand(4) == 0 ? 1000 : RandomFrame();
     static const float speeds[] = {0.0f, -0.0f, 0.05f, -0.05f, 1.0f, NAN};
     d->animMoveSpeed = Pick(speeds, 6);
     d->boundaryFlags = ShadowRand(8);
@@ -489,13 +489,13 @@ void RandomDrone(int i) {
     d->sm.stateEnteredFrame = RandomFrame();
     d->timerA.on = (uchar)ShadowRand(2);
     d->timerA.dueFrame = RandomFrame();
-    d->timerA.unknown8 = ShadowRand(10);
+    d->timerA.data = ShadowRand(10);
     d->timerB.on = (uchar)ShadowRand(2);
     d->timerB.dueFrame = RandomFrame();
-    d->timerB.unknown8 = ShadowRand(10);
+    d->timerB.data = ShadowRand(10);
     d->prevAlertness = 7.0f;
     d->lastHit = (HITDATA_tag *)(uintptr_t)0x4444;
-    d->unknown38 = 1;
+    d->standingStill = 1;
 
     d->opponent = ShadowRand(4) == 0 ? NULL : RandomObj();
     d->targetSlot = (uchar)(ShadowRand(3) == 0 ? NO_TARGET_SLOT : ShadowRand(MAX_DRONE_TARGETS));
@@ -513,9 +513,9 @@ void RandomDrone(int i) {
     d->group = ShadowRand(3);
     d->opponentCursor = RandomDronePtr();
     d->unknown28c = RandomDronePtr();
-    d->unknown230 = RandomObj();
+    d->hostagePartner = RandomObj();
     d->lastAttacker = RandomObj();
-    d->unknown23c = RandomObj();
+    d->guardPartner = RandomObj();
     d->headTarget = RandomObj();
     d->headTracking = (uchar)ShadowRand(2);
 }
@@ -609,7 +609,7 @@ void RandomWorld() {
     NPCGlobals.enemies = 3;
     NPCGlobals.allies = 4;
     NPCGlobals.neutrals = 5;
-    NPCGlobals.unknown188 = 6;
+    NPCGlobals.outOfRangeCount = 6;
     NPCGlobals.seenAttacking = 7;
     NPCGlobals.seenOpponentCount = 8;
     NPCGlobals.lostOpponentCount = 9;

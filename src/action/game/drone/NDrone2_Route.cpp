@@ -20,7 +20,6 @@
 // Originals called by address
 // Returns in ST0, unrounded
 
-
 // Path flag 0x10 (AIPath_tag.flags): a patrol from its first node takes the first link, not the second
 #define AIPATH_FIRST_LINK 0x10
 
@@ -201,7 +200,7 @@ uint NDrone2_FollowRoute(AIRoute_tag *route, DCVars_tag *dcv) {
 // AUTOINJECT
 uint NDrone2_MoveToGoalPosition(DCVars_tag *dcv, CelPos_tag *dest, float radius, ushort clearFlags) {
     Drone_tag *drone = dcv->drone;
-    ushort flags = (drone->unknown824 | drone->unknown825 << 8) & ~clearFlags;
+    ushort flags = drone->avoidLinks & ~clearFlags;
     AIRoute_tag *route = &drone->route1;
     drone->activeRoute = route;
     if (!AINetwork_RouteIsValid(route)) {

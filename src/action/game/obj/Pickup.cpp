@@ -286,7 +286,8 @@ void Pickup_Update(obj_tag *obj) {
             if (bot == NULL || bot->objectType == OBJECTTYPE_DEAD_DRONE)
                 continue;
             Drone_tag *drone = (Drone_tag *)bot->extraObjectData;
-            if ((drone->flags & 0x600) || !(drone->flags & 0x100) || drone->health < 0.0f || drone->health == 0.0f)
+            if ((drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(drone->flags & DRONE_FLAG_ENABLED) ||
+                drone->health < 0.0f || drone->health == 0.0f)
                 continue;
             if (bot->flags & 1)
                 continue;

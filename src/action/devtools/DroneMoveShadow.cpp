@@ -445,13 +445,13 @@ void RandomDrone(int i) {
     d->moved = RandomSpeed();
     d->turnRate = RandomFloat(0.0f, 1.0f);
     d->moveRotation.y = RandomFloat(-4.0f, 4.0f);
-    d->angleToSomePoint = RandomFloat(-4.0f, 4.0f);
+    d->targetRot.y = RandomFloat(-4.0f, 4.0f);
     d->flies = (uchar)(ShadowRand(3) == 0);
     d->floatsToMoveTarget = (uchar)ShadowRand(2);
     d->floatAcceleration = RandomFloat(0.0f, 4.0f);
     d->unknown3f0 = ShadowRand(5) == 0 ? 0x8000000 : 0;
     static const uint animFlags[] = {0, 0, 8, 0x10, 0x20, 0x38, 0x80, 0x200};
-    d->unknown46c = animFlags[ShadowRand(sizeof(animFlags) / sizeof(animFlags[0]))];
+    d->animFlags = animFlags[ShadowRand(sizeof(animFlags) / sizeof(animFlags[0]))];
     d->bunchFlags = ShadowRand(4) == 0 ? 0x1e : 0;
     RandomVector(&d->pushOffset, 0.2f);
     RandomVector(&d->prevPushOffset, 0.2f);

@@ -7,7 +7,6 @@
 
 #pragma pack(push, 1)
 
-
 typedef struct {
     uint controllerIndex;
     XINPUT_STATE controllerState;
@@ -61,7 +60,6 @@ typedef enum {
 
     CONTROLSTYLE_FORCE_U16 = 0x7fff
 } GameContStyle_tag;
-
 
 typedef struct {
     bool inverted;
@@ -166,7 +164,6 @@ void psiInputReset(void);
 void psiInput_ResetRumble(unsigned int i);
 bool psiInput_ControllerIsActive(unsigned int i);
 void psiInput_MapInputs(PlayerInput_tag* playerInputs, int maxPlayers);
-
 
 void InputShutdown(void);
 

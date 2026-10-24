@@ -229,5 +229,4 @@ void d3dsetVertexShader(void);
 void d3dSetSkinMatrix(const void *matrix3x4, uint32_t boneIndex);
 void d3dDrawIndexedVertices(int startIndex, int indexCount);
 
-
 #endif // D3DSEAM_H_

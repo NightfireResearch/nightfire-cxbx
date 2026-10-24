@@ -262,7 +262,7 @@ double DroneVision_OpponentVisibility(Drone_tag *drone) {
         visibility = (double)(visibility * FSin(edge * HALF_PI));
     }
     float scale = 1.0f;
-    if ((drone->flags2 == 0 || drone->alertness < 1.0f) && drone->opponentVisibilityScale != 1.0f)
+    if ((drone->knowledge == 0 || drone->alertness < 1.0f) && drone->opponentVisibilityScale != 1.0f)
         scale = drone->opponentVisibilityScale;
     visibility = X87NaNs(visibility * scale, visibility, scale);
     // Written so that a -0 becomes +0 too: MSVC compiles the plain `<= 0` clamp to a MAXSD, which keeps -0
@@ -277,7 +277,7 @@ double DroneVision_OpponentVisibility(Drone_tag *drone) {
 // Clears DRONE_SIGHT_SEES_OPPONENT either way. Our name.
 bool DroneVision_OpponentInView(Drone_tag *drone, float range) {
     drone->sightFlags &= ~DRONE_SIGHT_SEES_OPPONENT;
-    if (drone->opponent != NULL && !switch_BLIND_DRONES && !(drone->health <= 0.0f) && !NPCGlobals.unknown1390 &&
+    if (drone->opponent != NULL && !switch_BLIND_DRONES && !(drone->health <= 0.0f) && !NPCGlobals.blind &&
         !(range > 0.0f && drone->distanceToTarget > range) && !(DroneVision_OpponentVisibility(drone) < 0.7f))
         return true;
     drone->opponentVisibility = 0.0f;
@@ -458,39 +458,42 @@ bool DroneVision_DroneCanSeeDrone(Drone_tag *drone, Drone_tag *other, char *inVi
     return NDrone2_CanSeeObject(drone, other->gameObj, HEAD_BONE, 0);
 }
 
-// Whether what the alerter knows (its flags2) is something the drone's behaviour lets it be alerted by
+// Whether what the alerter knows (its knowledge) is something the drone's behaviour lets it be alerted by
 static bool AlertedByWhatItKnows(Drone_tag *drone, uint known) {
     uint *behaviour = drone->currentBehaviour;
-    if (known & 8) {
+    if (known & DRONE_KNOWS_DEAD) {
         if ((behaviour_util_getProperty(DRONE_PROP_26, behaviour) || behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, behaviour)) &&
-            (known & 2) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
+            (known & DRONE_KNOWS_HURT) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
             return true;
         if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, behaviour))
             return true;
     }
-    if (known & 0x10)
+    if (known & DRONE_KNOWS_BIT4)
         return true;
-    if ((known & 2) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
+    if ((known & DRONE_KNOWS_HURT) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
         return true;
-    if ((known & 4) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SURRENDER, behaviour))
+    if ((known & DRONE_KNOWS_SURRENDERED) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SURRENDER, behaviour))
         return true;
-    if ((known & 1) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) && (known & 0x20))
+    if ((known & DRONE_KNOWS_SIGHTING) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) &&
+        (known & DRONE_KNOWS_INTERROGATING))
         return true;
-    if ((known & 0x10000) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) && (known & 0x200000))
+    if ((known & (DRONE_KNOWS_SIGHTING << 16)) &&
+        behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour) &&
+        (known & (DRONE_KNOWS_INTERROGATING << 16)))
         return true;
-    return (known & 1) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour);
+    return (known & DRONE_KNOWS_SIGHTING) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, behaviour);
 }
 
-// Whether the alerter alerts the drone. The drone must be open to it (flag 0x2000, not an ally or a hostage, alive,
-// not alerted yet, not in some states) and the alerter attacking for 60 x FRAME_RATE_DIV frames. In the
+// Whether the alerter alerts the drone. The drone must be open to it (DRONE_FLAG_ALERTABLE, not an ally or a hostage,
+// alive, not alerted yet, not in some states) and the alerter attacking for 60 x FRAME_RATE_DIV frames. In the
 // Powerstation levels skin classes 5 and 6 are alerted outright (with line 0xd0); otherwise the drone must be open to
-// what the alerter knows and see it. Alerted: flag 0x20000, the alerter's flags2 moved up 16 bits into its own
-// (in CastleIndoors1 its high half too), alertedBy and DRONE_MSG_ConsideredAlerted. Returns whether the alerter was
-// in view.
+// what the alerter knows and see it. Alerted: DRONE_FLAG_ALERTED_BY_DRONE, the alerter's knowledge moved up 16 bits
+// into its own (in CastleIndoors1 its high half too), alertedBy and DRONE_MSG_ConsideredAlerted. Returns whether the
+// alerter was in view.
 bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     uint flags = drone->flags;
     char inView = 0;
-    if (!(flags & 0x2000) || drone->side == 2 || drone->dtype == DTYPE_Hostage ||
+    if (!(flags & DRONE_FLAG_ALERTABLE) || drone->side == 2 || drone->dtype == DTYPE_Hostage ||
         MPDrone_IsDyingOrDead(drone->gameObj))
         return false;
     HASHCODE level = GameState.CurrentLevelHashcode;
@@ -510,7 +513,7 @@ bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     case DSTATE_EnemyRunToPoint:
         return false;
     }
-    if (flags & 0x20000)
+    if (flags & DRONE_FLAG_ALERTED_BY_DRONE)
         return false;
     // On the x87: the frames are converted unsigned
     if ((double)GameState.NumFramesUnpaused < (double)alerter->alertedFrame + (double)FRAME_RATE_DIV * 60.0f)
@@ -521,35 +524,35 @@ bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
         if (!Drone_IsTalking(drone))
             NDrone2_SpeechSFXd(drone, 0xd0, 0, 0, 0);
     } else {
-        if (level == HT_Level_CastleIndoors1 && NPCGlobals.unknown1392) {
+        if (level == HT_Level_CastleIndoors1 && NPCGlobals.interogating) {
             drone->viewRange = 20.0f;
             drone->viewAngle = PI;
         }
-        if (!AlertedByWhatItKnows(drone, alerter->flags2))
+        if (!AlertedByWhatItKnows(drone, alerter->knowledge))
             return false;
         if (!DroneVision_DroneCanSeeDrone(drone, alerter, &inView))
             return inView;
     }
 
-    drone->flags |= 0x20000;
-    uint known = alerter->flags2 << 16;
+    drone->flags |= DRONE_FLAG_ALERTED_BY_DRONE;
+    uint known = alerter->knowledge << 16;
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1)
-        known |= alerter->flags2 & 0xffff0000;
-    drone->flags2 |= known;
+        known |= alerter->knowledge & 0xffff0000;
+    drone->knowledge |= known;
     drone->alertedBy = alerter;
     Drone_Message(drone->gameObj, DRONE_MSG_ConsideredAlerted, NULL, 0);
     return inView;
 }
 
-// A drone knows something it can pass on: running, not an ally, not alerted by another and some flags2
+// A drone knows something it can pass on: running, not an ally, not alerted by another and some knowledge
 static bool KnowsSomething(Drone_tag *drone) {
-    if (drone->flags & 0x20000)
+    if (drone->flags & DRONE_FLAG_ALERTED_BY_DRONE)
         return false;
-    if (!(drone->flags & 0x100))
+    if (!(drone->flags & DRONE_FLAG_ENABLED))
         return false;
     if (drone->side == 2)
         return false;
-    return drone->flags2 != 0;
+    return drone->knowledge != 0;
 }
 
 // Of the two, the one that knows something may alert the other (not when both do)
@@ -643,7 +646,7 @@ void DroneVision_ProcessDroneSight(void) {
         drone->positionVisibility = Drone_VisibilityForPosition(&obj->position, 0);
         if (drone->gameObj != NULL)
             NDrone2_GetHeadPosOld(drone->gameObj, &drone->headPos, &drone->headYaw);
-        if ((drone->flags & 0x10000) && drone->opponent != NULL)
+        if ((drone->flags & DRONE_FLAG_LOOKS_FOR_OPPONENT) && drone->opponent != NULL)
             DroneVision_OpponentInView(drone, 0.0f);
     }
 
@@ -653,7 +656,8 @@ void DroneVision_ProcessDroneSight(void) {
             tested = NPCGlobals.NDrone2List;
         NPCGlobals.sightCursor = tested->sm.id;
         uint frame = GameState.NumFramesUnpaused;
-        if (!MPDrone_IsDyingOrDead(tested->gameObj) && (tested->flags & 0x10000) && tested->opponent != NULL) {
+        if (!MPDrone_IsDyingOrDead(tested->gameObj) && (tested->flags & DRONE_FLAG_LOOKS_FOR_OPPONENT) &&
+            tested->opponent != NULL) {
             DroneVision_SeekOpponentLOS(tested);
             tested->sightTestFrame = frame;
         }
@@ -664,7 +668,8 @@ void DroneVision_ProcessDroneSight(void) {
     }
 
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
-        if (!MPDrone_IsDyingOrDead(drone->gameObj) && (drone->flags & 0x10000) && drone->opponent != NULL &&
+        if (!MPDrone_IsDyingOrDead(drone->gameObj) && (drone->flags & DRONE_FLAG_LOOKS_FOR_OPPONENT) &&
+            drone->opponent != NULL &&
             (drone->sightFlags & DRONE_SIGHT_LOS)) {
             drone->unseenFrames = 0;
             drone->sightFrames++;
@@ -682,10 +687,10 @@ void DroneVision_ProcessDroneSight(void) {
             drone->sightFlags = flags;
             drone->unseenFrames++;
             drone->sightFrames = 0;
-            drone->unknown41 = 1;
+            drone->lostSightSinceShot = 1;
             if ((flags & DRONE_SIGHT_REACTED) && drone->unseenFrames > FRAME_RATE_INT * 2) {
                 NPCGlobals.lostOpponentCount++;
-                if (!NPCGlobals.lostSightSaid && NPCGlobals.unknown174 == 0) {
+                if (!NPCGlobals.lostSightSaid && NPCGlobals.prevSeenOpponentCount == 0) {
                     DCVars_tag dcv;
                     Drone_DCVfromOBJ(drone->gameObj, &dcv);
                     DroneFunc_LostSightTalk(&dcv);

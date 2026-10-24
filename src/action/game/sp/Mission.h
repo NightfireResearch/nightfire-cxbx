@@ -39,9 +39,7 @@ typedef struct {
     undefined4 description;
 } OBJ_STATE;
 
-
 #pragma pack(pop)
-
 
 Action_TranslatedText Mission_FailLabel(void);
 void Mission_SetFailLabel(Action_TranslatedText text);

@@ -297,7 +297,7 @@ void RandomDrone(int i) {
     d->skinHashcode = (HASHCODE)(HT_Skin_HASHCODE_BASE + ShadowRand(0x100));
     d->side = (uchar)ShadowRand(4);
     d->flags = (ShadowRand(2) ? 0x200000 : 0) | ShadowRand(0x100000);
-    d->flags2 = ShadowRand(0x40);
+    d->knowledge = ShadowRand(0x40);
     d->alertness = RandomFloat();
     d->distanceToTarget = RandomFloat();
     d->opponentBearing = RandomFloat();

@@ -3,7 +3,6 @@
 
 #include "../../actionhelpers.h"
 
-
 bool build_LinkToRoom(obj_tag *obj, char straddleTest, world_tag *world);
 cel_tag* build_FindCel(_VECTOR *position, world_tag *world);
 // Returns the viewer, which Camera_Create keeps

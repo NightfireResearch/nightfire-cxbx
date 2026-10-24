@@ -270,7 +270,6 @@ D3DSEAM_TRACED_CALL_TYPE()   // x86-64 has the one convention
 // added to this file later rather than trusting Ghidra's reported signature at face value.
 // ---------------------------------------------------------------------------------------------------------------
 
-
 // D3DDevice_SetRenderState_CullMode(value) and D3DResource_Register(pTexture, data) are both plain __stdcall
 // functions taking their arguments on the stack in the normal way - confirmed via raw disassembly, unlike
 // D3DDevice_SetRenderState_Simple below.
@@ -2148,7 +2147,6 @@ void resetRenderState(char param1) {
 // d3dSetDeferredTextureState, d3dSetTextureWithBorderColor
 // ---------------------------------------------------------------------------------------------------------------
 
-
 // Caches a pair of "deferred texture state" values and, once changed, pushes them into the two D3D8-internal
 // globals as a {1 if nonzero, 3 if zero} encoding - untraced overall meaning, ported verbatim. Shares its cache
 // fields with resetRenderState's own use of the same pair (which resets both to 1).
@@ -2419,7 +2417,6 @@ static const int32_t D3D8_ShaderConstantSubIndexTable[53] = { // untraced - ~53 
 #define D3D8_Stage3_0x64 D3D8_TRACED("D3D8_Stage3_0x64", D3DTextureState[3][5])
 #define D3D8_Stage3_0x68 D3D8_TRACED("D3D8_Stage3_0x68", D3DTextureState[3][6])
 
-
 // One-time-per-call D3D8 device setup: resets the whole texture/stream/buffer cache block to -1, lazily enables
 // a handful of always-on render states (alpha-test/z-bias/misc/fog-mode/yuv-mode registers, Z-enable/normalize-
 // normals/vertex-blend), writes a large block of opaque per-texture-stage D3D8-internal registers to fixed
@@ -2606,7 +2603,6 @@ void d3dSetup(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // psiBlurCharacterShadow
 // ---------------------------------------------------------------------------------------------------------------
-
 
 // Called (only ever from psiDrawShadow, not yet reimplemented) right after a shadow has been rendered
 // into the aux render target via d3dBeginEndAuxRenderPass(1, ...). First closes that render pass (begin=0,
@@ -3218,7 +3214,6 @@ void xboxInitGraphics(void) {
 
 typedef void(__stdcall *D3DDevice_DrawIndexedVerticesFn)(uint32_t primitiveType, uint32_t vertexCount, const void *pIndexData);
 #define D3DDevice_DrawIndexedVertices (D3DSeam<D3DDevice_DrawIndexedVerticesFn>::Traced("D3DDevice_DrawIndexedVertices", D3D9_DrawIndexedVertices))
-
 
 // FUN_000e86c0 in the original: rotates a 3-vector by the upper-left 3x3 of a row-major 4x4 matrix, optionally
 // adding the translation column - i.e. a full point transform (translate != 0) or a direction transform.

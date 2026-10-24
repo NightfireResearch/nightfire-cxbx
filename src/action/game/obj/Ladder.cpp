@@ -1,6 +1,5 @@
 #include "Ladder.h"
 
-
 #pragma pack(push, 1)
 
 typedef struct {
@@ -15,7 +14,6 @@ typedef struct {
 obj_tag * Ladder_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *celgl) {
 
     Create_Ladder_Params *params = (Create_Ladder_Params*)lvl;
-
 
     obj_tag *obj = control_create_object(sizeof(ObjData_Ladder), pos, rot, NULL);
     if(obj == NULL)

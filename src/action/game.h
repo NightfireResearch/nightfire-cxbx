@@ -129,11 +129,9 @@ struct CheatInfo_t {
 };
 extern CheatInfo_t CheatInfo;   // game.cpp
 
-
 typedef struct {
     char unknown[560]; // 464 bytes on PS2
 } MPGame_t;
-
 
 // The action engine's part of the page handed between the engines (Boot_GetPTPData and Boot_LoadPTPData): the
 // codename's settings, which the driving engine hands back
@@ -251,7 +249,6 @@ typedef struct {
     undefined field11_0x17;
 } GlobalVars_t;
 extern GlobalVars_t GlobalVars;   // game.cpp
-
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
 static_assert(sizeof(PTP_Eurocom) == 0x1b4, "PTP_Eurocom is 0x1b4 bytes");
@@ -473,7 +470,6 @@ LAYOUT_32(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaus
 LAYOUT_32(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
 
 #pragma pack(pop)
-
 
 extern MPGameStruct MPGame;
 

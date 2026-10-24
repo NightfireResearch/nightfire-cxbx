@@ -51,7 +51,6 @@ static uint8_t StringHeapLock[256];
 // XBE_GLOBAL(0x00215584, 0x4)
 static uint32_t StringHeapCnt;
 
-
 // AUTOINJECT
 void Txt_SetLanguage(tLANGUAGE languageId) {
     CurrentLanguage = languageId;
@@ -80,7 +79,7 @@ void Txt_LoadLanguage(void) {
     printf("Loading language %i from file %s\n", CurrentLanguage, filename);
 
     int size = 0;
-    void* dataFile = psiFileLoad(filename, 0x3604, &size);
+    void* dataFile = psiFileLoad(filename, MALLOC_LANG_DATA, &size);
     void* fileAt = dataFile;
 
     if(dataFile == NULL)
@@ -91,7 +90,7 @@ void Txt_LoadLanguage(void) {
     //printf("Loaded %i bytes of data file, of which %i is bank info\n", size, bankSize);
 
     // Allocate and copy bank data to RAM - this is the raw ASCII or UTF-16 buffer
-    BankData = Mem_Malloc(bankSize, 0x3604, 0);
+    BankData = Mem_Malloc(bankSize, MALLOC_LANG_DATA, 0);
     memcpy(BankData, fileAt, bankSize);
     
     // Add 4 bytes even if the string ends on a word boundary already. Unclear why.
@@ -104,7 +103,8 @@ void Txt_LoadLanguage(void) {
     NumEntries = BIN_GetDWord((uchar **)&fileAt); // 2801 strings
     //printf("Num entries: %i\n", NumEntries);
 
-    Bank = (const char**)Mem_Malloc(NumEntries * sizeof(*Bank), 0x3604, 0); // a pointer into the text per string
+    // a pointer into the text per string
+    Bank = (const char**)Mem_Malloc(NumEntries * sizeof(*Bank), MALLOC_LANG_DATA, 0);
     
     // Looks like the first entry in the bank is hardcoded to be a blank string
     Bank[0] = "";
@@ -120,7 +120,7 @@ void Txt_LoadLanguage(void) {
     NumFixups = BIN_GetDWord((uchar **)&fileAt);
     //printf("Num fixups: %i\n", NumFixups);
     
-    FixupTable = (uint*) Mem_Malloc((NumFixups+1) * 4, 0x3604, 0);
+    FixupTable = (uint*) Mem_Malloc((NumFixups+1) * 4, MALLOC_LANG_DATA, 0);
 
     for(uint i = 0; i < NumFixups; i++) {
         uint offset = BIN_GetDWord((uchar **)&fileAt);
@@ -198,7 +198,6 @@ const char* Txt_BindLabel(Action_TranslatedText label, unsigned int lockCount) {
     return "Not Loaded";
 }
 
-
 // AUTOINJECT
 void Txt_LanguageInit(void) {
     memset(&StringHeapLock, 0, sizeof(StringHeapLock));
@@ -207,7 +206,6 @@ void Txt_LanguageInit(void) {
     Bank = NULL;
     Txt_LoadLanguage();
 }
-
 
 // Which heap string a pointer falls in: the unsigned distance from the start of the heap in whole strings, so any
 // pointer into a string - not only its start - names that string, and one below the heap wraps round to a huge

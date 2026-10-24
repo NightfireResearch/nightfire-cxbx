@@ -1,5 +1,5 @@
-// Hostage killers and their hostages. A killer takes the free hostage nearest it (Drone_tag.unknown230 points each at
-// the other), the two face each other and take turns to talk; told to attack, the killer executes the hostage. A
+// Hostage killers and their hostages. A killer takes the free hostage nearest it (Drone_tag.hostagePartner points each
+// at the other), the two face each other and take turns to talk; told to attack, the killer executes the hostage. A
 // hostage whose killer is dead is saved: it counts, sets its mode change channel and hides from armed enemies.
 
 #include "NDrone2_Hostage.h"
@@ -29,14 +29,14 @@ static void NDrone2_HostageSituationActive(DCVars_tag *dcv) {
 }
 
 static Drone_tag *Hostage_Partner(Drone_tag *drone) {
-    return (Drone_tag *)drone->unknown230->extraObjectData;
+    return (Drone_tag *)drone->hostagePartner->extraObjectData;
 }
 
 // The killer and its hostage face each other: each moves towards the other, turned to it.
 // AUTOINJECT
 void NDrone2_SetupHostageExecute(DCVars_tag *dcv) {
     obj_tag *killerObj = dcv->gameObj;
-    obj_tag *hostageObj = dcv->drone->unknown230;
+    obj_tag *hostageObj = dcv->drone->hostagePartner;
     if (hostageObj == NULL || killerObj == NULL)
         return;
     Drone_tag *hostage = (Drone_tag *)hostageObj->extraObjectData;
@@ -47,23 +47,23 @@ void NDrone2_SetupHostageExecute(DCVars_tag *dcv) {
     hostage->moveTargetCel = killerObj->inCel;
     _VECTOR delta;
     Vec_Subtract(&killerObj->position, &hostageObj->position, &delta);
-    killer->moveTargetRot.x = 0.0f;
-    killer->moveTargetRot.y = Atan2(-delta.x, -delta.z);
-    killer->moveTargetRot.z = 0.0f;
-    hostage->moveTargetRot.x = 0.0f;
-    hostage->moveTargetRot.y = Atan2(delta.x, delta.z);
-    hostage->moveTargetRot.z = 0.0f;
+    killer->targetRot.x = 0.0f;
+    killer->targetRot.y = Atan2(-delta.x, -delta.z);
+    killer->targetRot.z = 0.0f;
+    hostage->targetRot.x = 0.0f;
+    hostage->targetRot.y = Atan2(delta.x, delta.z);
+    hostage->targetRot.z = 0.0f;
 }
 
 // A killer without a hostage takes the nearest free one (DTYPE_Hostage) within 5 m; false if there is none.
 // AUTOINJECT
 bool NDrone2_SetupHostageKiller(DCVars_tag *dcv) {
-    if (dcv->drone->unknown230 != NULL)
+    if (dcv->drone->hostagePartner != NULL)
         return true;
     Drone_tag *chosen = NULL;
     float best = FLT_MAX;
     for (Drone_tag *other = NPCGlobals.NDrone2List; other != NULL; other = other->next) {
-        if (other->dtype != DTYPE_Hostage || other->unknown230 != NULL)
+        if (other->dtype != DTYPE_Hostage || other->hostagePartner != NULL)
             continue;
         double dist = Vec_Dist3D(&other->gameObj->position, &dcv->gameObj->position);
         if (dist < best && dist < HOSTAGE_RANGE) {
@@ -73,21 +73,21 @@ bool NDrone2_SetupHostageKiller(DCVars_tag *dcv) {
     }
     if (chosen == NULL)
         return false;
-    dcv->drone->unknown230 = chosen->gameObj;
-    chosen->unknown230 = dcv->gameObj;
+    dcv->drone->hostagePartner = chosen->gameObj;
+    chosen->hostagePartner = dcv->gameObj;
     NDrone2_SetupHostageExecute(dcv);
     return true;
 }
 
-// The killer and the hostage take turns to talk (message 0x1a), each once the other has finished: unknown3ca is 0
+// The killer and the hostage take turns to talk (message 0x1a), each once the other has finished: talkTurn is 0
 // before the killer's first line, 1 while the killer talks, 2 while the hostage does.
 // AUTOINJECT
 bool NDrone2_MonitorTalkToMissionObj(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    switch (drone->unknown3ca) {
+    switch (drone->talkTurn) {
     case 0:
         Drone_Message(dcv->gameObj, DRONE_MSG_TalkToMissionObject, NULL, 0);
-        drone->unknown3ca++;
+        drone->talkTurn++;
         break;
 
     case 1:
@@ -96,8 +96,8 @@ bool NDrone2_MonitorTalkToMissionObj(DCVars_tag *dcv) {
                 return true;
             drone->speechChannel = NULL;
         }
-        Drone_Message(dcv->drone->unknown230, DRONE_MSG_TalkToMissionObject, NULL, 0);
-        dcv->drone->unknown3ca++;
+        Drone_Message(dcv->drone->hostagePartner, DRONE_MSG_TalkToMissionObject, NULL, 0);
+        dcv->drone->talkTurn++;
         break;
 
     case 2: {
@@ -108,7 +108,7 @@ bool NDrone2_MonitorTalkToMissionObj(DCVars_tag *dcv) {
             hostage->speechChannel = NULL;
         }
         Drone_Message(dcv->gameObj, DRONE_MSG_TalkToMissionObject, NULL, 0);
-        dcv->drone->unknown3ca = 1;
+        dcv->drone->talkTurn = 1;
         break;
     }
     }
@@ -143,11 +143,11 @@ bool NDrone2_DSTATE_HostageKiller(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
-        dcv->drone->flags |= 0x2000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         if (!NDrone2_SetupHostageKiller(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Idle, 0);
-        dcv->drone->flags |= 0x10;
+        dcv->drone->flags |= DRONE_FLAG_STATIONARY;
         DroneAnim_CallAnim(9, 0, 0, 0, 0.0f, 0, dcv);
         return true;
 
@@ -210,8 +210,8 @@ bool NDrone2_DSTATE_HostageKiller(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
     }
 }
 
-// With its hostage alive it turns to it and a second later (message 0xa) executes it; otherwise it attacks, without
-// flag 0x10 when it came from WaitSwitch or has no death script.
+// With its hostage alive it turns to it and a second later (message 0xa) executes it; otherwise it attacks, no longer
+// stationary when it came from WaitSwitch or has no death script.
 // AUTOINJECT
 bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
     switch (msg->msgType) {
@@ -219,16 +219,16 @@ bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *dcv, Drone_tag *drone, obj_t
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         Drone_AlertStatusSet(1, dcv);
-        if (dcv->drone->unknown230 != NULL && Hostage_Partner(dcv->drone)->health > 0.0f) {
+        if (dcv->drone->hostagePartner != NULL && Hostage_Partner(dcv->drone)->health > 0.0f) {
             NDrone2_SetupHostageExecute(dcv);
             Drone_SM_SendMsgSelf(DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT, 0, dcv);
             DroneAnim_CallAnim(9, 0, 0, 0, 0.0f, 0, dcv);
             return true;
         }
         if (dcv->aiStateMachine->curState == DSTATE_WaitSwitch || dcv->drone->deathScript == 0)
-            dcv->drone->flags &= ~0x10;
+            dcv->drone->flags &= ~DRONE_FLAG_STATIONARY;
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
 
     case DRONE_MSG_Update:
@@ -236,9 +236,9 @@ bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *dcv, Drone_tag *drone, obj_t
         return true;
 
     case DRONE_MSG_AttackNow:
-        if (dcv->drone->unknown230 != NULL) {
+        if (dcv->drone->hostagePartner != NULL) {
             if (dcv->drone->deathScript == 0)
-                dcv->drone->flags &= ~0x10;
+                dcv->drone->flags &= ~DRONE_FLAG_STATIONARY;
             DroneAnim_CallAnim(0x58, 0, 0, DRONE_MSG_ScriptEnd, 0.0f, 0, dcv);
         }
         return true;
@@ -284,7 +284,7 @@ bool NDrone2_DSTATE_Hostage(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj,
         return true;
 
     case DRONE_MSG_Update: {
-        obj_tag *killer = dcv->drone->unknown230;
+        obj_tag *killer = dcv->drone->hostagePartner;
         // A NaN health is dead
         if (killer == NULL || !(((Drone_tag *)killer->extraObjectData)->health > 0.0f))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageSaved, 0);
@@ -355,7 +355,7 @@ bool NDrone2_DSTATE_HostageSaved(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
 
     case DRONE_MSG_Enter:
         Drone_AlertStatusSet(0, dcv);
-        dcv->drone->unknown230 = NULL;
+        dcv->drone->hostagePartner = NULL;
         Music_Event(MUSIC_HOSTAGE_SAVED, 1);
         DroneFunc_HostageSaved(dcv);
         if (dcv->drone->secondState != 0 && dcv->drone->modeChangeSwitchChannel == 0) {
@@ -489,10 +489,10 @@ bool NDrone2_DSTATE_HostageDead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         NDrone2_SetAsDead(dcv);
         if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
             DroneFunc_SetMissionFailReason(drone, 9);
-        dcv->drone->flags &= ~0x8000;
+        dcv->drone->flags &= ~DRONE_FLAG_ANIM_ONCE;
         DroneTimer *timer = &dcv->drone->timerA;
         timer->dueFrame = GameState.NumFramesUnpaused + NPCGlobals.deadFrames;
-        timer->unknown8 = 0;
+        timer->data = 0;
         timer->on = 1;
         return true;
     }

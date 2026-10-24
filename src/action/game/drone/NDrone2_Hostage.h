@@ -4,7 +4,7 @@
 #include "NDrone2.h"
 
 // Hostage killers and their hostages (NDrone2_Hostage.cpp). The pair point at each other through
-// Drone_tag.unknown230.
+// Drone_tag.hostagePartner.
 void NDrone2_SetupHostageExecute(DCVars_tag *dcv);
 bool NDrone2_SetupHostageKiller(DCVars_tag *dcv);
 bool NDrone2_MonitorTalkToMissionObj(DCVars_tag *dcv);

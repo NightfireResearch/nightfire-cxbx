@@ -33,7 +33,6 @@
 #define TANK_SHELL_WEAPON   42   // Militek MGL, Grenade
 #define HELI_MISSILE_WEAPON 46   // AT-600 Scorpion, Heatseeker
 
-
 // XBE_GLOBAL(0x001dc980, 0x20)
 static obj_tag* Tanks[MAX_TANKS]; // the original Car_Init clears all 0x20 bytes
 // XBE_GLOBAL(0x001dc798, 0x2)

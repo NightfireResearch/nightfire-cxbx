@@ -221,7 +221,7 @@ void BackgroundMoviePlayFile(char *filename) {
     BackgroundMovieCleanup();
 
     for (int i = 0; i < 2; i++) {
-        M.frameMemory[i] = Mem_Malloc(FMV_FRAME_BYTES, (MallocFlags)0x1204, FMV_FRAME_ALIGN);
+        M.frameMemory[i] = Mem_Malloc(FMV_FRAME_BYTES, MALLOC_XBOX, FMV_FRAME_ALIGN);
         M.texture[i] = M.frameMemory[i] ? RegisterTexture(FMV_WIDTH, FMV_HEIGHT, FMV_FORMAT_YUY2, 1, M.frameMemory[i], 0) : 0;
         if (M.frameMemory[i] == NULL || M.texture[i] == 0) {
             BackgroundMovieCleanup();

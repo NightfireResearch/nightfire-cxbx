@@ -99,7 +99,6 @@ static void QuatRotation(quaternion_tag *quat, _MATRIX *m) {
   m->m[10] = (float)(1.0f - ((double)yy + xx));
 }
 
-
 // The rotation of a quaternion (x, y, z, w) and a translation
 // AUTOINJECT
 void Quat_QuatTransToMat(quaternion_tag *quatIn, float *vecIn, _MATRIX *mOut) {

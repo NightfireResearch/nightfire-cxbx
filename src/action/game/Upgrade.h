@@ -37,5 +37,4 @@ extern uint UpgradedGrapple_MP[4];
 uint Upgrade_Weapon(uint id_base);
 undefined4 Upgrade_MPWeapon(short playerNum, undefined4 weapon);
 
-
 #endif // UPGRADE_H_

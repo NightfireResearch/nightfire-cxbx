@@ -235,8 +235,8 @@ void RandomDrone(int i) {
     d->returnState = (short)ShadowRand(200);
     d->stateScratch = ShadowRand(2) ? kStates[ShadowRand(sizeof(kStates) / 4)] : 0x80000000u + ShadowRand(5);
     d->alertness = RandomAlertness();
-    d->angleToSomePoint = ShadowRandFloat(-7.0f, 7.0f);
-    d->unknown38 = (uchar)ShadowRand(3);
+    d->targetRot.y = ShadowRandFloat(-7.0f, 7.0f);
+    d->standingStill = (uchar)ShadowRand(3);
     d->route2.count = (ushort)(ShadowRand(2) ? 0 : 1 + ShadowRand(5));
     d->alertStatus = (uchar)ShadowRand(3);
     d->prevAlertStatus = (uchar)ShadowRand(3);

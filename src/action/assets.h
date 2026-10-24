@@ -6,7 +6,6 @@
 typedef enum {
     TXT_NULL = 0,
 
-
     MP_WEAPSET_NORMAL = 416,
     MP_WEAPSET_NORMAL_DESC = 417,
     MP_WEAPSET_PISTOLS = 418,
@@ -302,7 +301,6 @@ typedef enum {
     NOTIF_BLUEPRINT_RETURNED = 0x02000048,
     NOTIF_RESTARTING = 0x02000049,
     NOTIF_KILLED_X = 0x0200004d,              // formatted with the victim's name (MP_PlayerKilled)
-
 
     TXT_MISSION_FAIL_ALARM_TRIGGERED = 0x04000032,
     TXT_MISSION_FAIL_COVER_LOST = 0x04000033,      // Ghidra's name (MISSION_FAIL_COVER_LOST)

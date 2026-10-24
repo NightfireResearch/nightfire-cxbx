@@ -199,7 +199,7 @@ void ShatterPolyRecurse(int depth, TriListVertex *verts, obj_tag *obj, HITDATA_t
         for (int i = 0; i < 3; i++)
             Vec_Subtract(&verts[i].pos, &centre, &verts[i].pos);
 
-        SHARD_tag *shard = (SHARD_tag *)Mem_Malloc(sizeof(SHARD_tag), 0x3204, 0);
+        SHARD_tag *shard = (SHARD_tag *)Mem_Malloc(sizeof(SHARD_tag), MALLOC_SHARD, 0);
         memset(shard, 0, sizeof(SHARD_tag));
         LList_Add(&ShardList, &shard->node);
 

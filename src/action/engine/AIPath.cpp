@@ -17,9 +17,6 @@
 // A file node's flags when it has none
 #define AINODE_NO_FLAGS 0x2468abce
 
-// The runtime arrays: allocation type malloc_pathpointers (0x1800), aligned to 4
-#define MALLOC_PATHPOINTERS_ALIGN4 ((MallocFlags)0x1804)
-
 // How far up AIBounds_Link2Cel looks for a ceiling over a bound node, and the least headroom it leaves
 #define BOUND_CEILING_SEARCH 256.0f
 #define BOUND_MIN_HEADROOM 2.0f
@@ -62,7 +59,7 @@ void AIPath_Parse(AIPathBlock *block) {
             path->nodeCount = record->nodeCount;
             if (path->nodeCount != 0)
                 path->runtimeNodes = (AINode_tag *)Mem_Malloc(path->nodeCount * sizeof(AINode_tag),
-                                                              MALLOC_PATHPOINTERS_ALIGN4, 0);
+                                                              MALLOC_PATHPOINTERS, 0);
             else
                 path->runtimeNodes = NULL;
             if (path->nodeCount > AIPath_MaxNodes)
@@ -104,7 +101,7 @@ void AIPath_Parse(AIPathBlock *block) {
             bound->nodeCount = record->nodeCount;
             if (bound->nodeCount != 0)
                 bound->runtimeNodes = (AIBoundNode_tag *)Mem_Malloc(bound->nodeCount * sizeof(AIBoundNode_tag),
-                                                                    MALLOC_PATHPOINTERS_ALIGN4, 0);
+                                                                    MALLOC_PATHPOINTERS, 0);
             else
                 bound->runtimeNodes = NULL;
 
@@ -156,7 +153,7 @@ void AIPath_Prepare(AIPath_tag *path) {
         return;
     }
 
-    path->nodeLinks = (ushort *)Mem_Malloc(entries * sizeof(ushort), MALLOC_PATHPOINTERS_ALIGN4, 0);
+    path->nodeLinks = (ushort *)Mem_Malloc(entries * sizeof(ushort), MALLOC_PATHPOINTERS, 0);
     int first = 0;
     for (int node = 0; node < (int)path->nodeCount; node++) {
         int count = 0;

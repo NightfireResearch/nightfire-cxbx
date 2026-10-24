@@ -303,7 +303,7 @@ bool DroneWeap_Ready2Fire(DCVars_tag *dcv) {
     if (drone->animMode == 4)
         return true;
     if (!MPSettings.dronesAreBots) {
-        if (drone->animMode != 2 || drone->unknown434 != NULL)
+        if (drone->animMode != 2 || drone->blendScript != NULL)
             return false;
         if (drone->distanceToTarget < 2.0f)
             return true;
@@ -415,7 +415,7 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
 
     drone->lastShotFrame = GameState.NumFramesUnpaused;
     drone->fired = 1;
-    drone->unknown41 = 0;
+    drone->lostSightSinceShot = 0;
     if (!MPSettings.dronesAreBots)
         Bullet_init_casing(obj);
     drone->clip--;
@@ -478,7 +478,7 @@ void DroneWeap_DoBulletAccuracy(DCVars_tag *dcv) {
         uint sighting = (uint)(int)((double)_FRAME_RATE * DroneFiring_NewSighting_TimeToHit);
         if (drone->sightFrames < sighting)
             hit = false;
-        if (drone->unknown41)
+        if (drone->lostSightSinceShot)
             hit = false;
     }
     if (drone->distanceToTarget < 3.0f || hit) {
@@ -557,9 +557,9 @@ bool DroneWeap_AimTarget_IsOpponent(char checkAngle, char keepTurning, DCVars_ta
     }
 
     if (drone->animState == 0x1e || drone->animState == 0x1f) {
-        drone->angleToSomePoint = obj->rotation.y - Vec_AngleDifference(yaw, obj->rotation.y) * 0.5f;
+        drone->targetRot.y = obj->rotation.y - Vec_AngleDifference(yaw, obj->rotation.y) * 0.5f;
         if (NDrone2_CanMoveToRelativePos(drone, obj, 0.0f, 0.0f, 0.4f))
-            drone->unknown38 = 1;
+            drone->standingStill = 1;
     } else {
         NDrone2_SetAngleToObj(dcv, drone->opponent, 0.0f, 0);
     }

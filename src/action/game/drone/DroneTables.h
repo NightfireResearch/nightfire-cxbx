@@ -193,7 +193,8 @@ typedef enum {
     DRONE_PROP_3E,
     // word 2 bit 2: (no reader)
     DRONE_PROP_3F,
-    // word 2 bit 3: stays put (as DRONE_FLAG_FROZEN): CombatNoMove, no combat moves, cover runs or backing off, only
+    // word 2 bit 3: stays put (as DRONE_FLAG_STATIONARY): CombatNoMove, no combat moves, cover runs or backing off,
+    // only
     // looks round at a noise
     DRONE_PROP_STAYS_PUT,
     // word 2 bit 4: combat: strafe

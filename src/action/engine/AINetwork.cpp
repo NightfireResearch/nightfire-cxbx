@@ -60,10 +60,6 @@ cel_tag **TestRayCels_Cels;
 // XBE_GLOBAL(0x001ee430, 0x4)
 cel_tag **BoundsTest_Cels;
 
-// An emitter's data: allocation type malloc_bot_path3 (0x4e00), aligned to 8 (Mem_Malloc takes the alignment from
-// the flags' low byte)
-#define MALLOC_BOT_PATH3_ALIGN8 ((MallocFlags)0x4e08)
-
 // How far a node search looks when it is not told: 15 m. A* and the emitters look 25 m.
 #define NODE_SEARCH_RADIUS 15.0f
 #define ROUTE_START_RADIUS_SQ 625.0f
@@ -74,7 +70,6 @@ cel_tag **BoundsTest_Cels;
 // How near (squared, in plan) a walk may pass a bound corner in AINetwork_BoundsTest: one step above 0.16f
 constexpr float CORNER_CLEARANCE_SQ = 0.16000001f;
 static_assert(std::bit_cast<uint32_t>(CORNER_CLEARANCE_SQ) == 0x3e23d70b, "not the original's constant");
-
 
 // ---- routes
 

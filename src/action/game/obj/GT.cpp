@@ -233,7 +233,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
                 if (other == NULL)
                     continue;
                 Drone_tag *data = (Drone_tag *)other->extraObjectData;
-                if ((data->flags & 0x600) || !(data->flags & 0x100))
+                if ((data->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(data->flags & DRONE_FLAG_ENABLED))
                     continue;
                 if (data->health <= 0.0f)
                     continue;

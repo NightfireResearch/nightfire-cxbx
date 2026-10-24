@@ -50,5 +50,4 @@ short Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor);
 bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor);
 void Sensor_Update(obj_tag *sensorObj);
 
-
 #endif // SENSOR_H_

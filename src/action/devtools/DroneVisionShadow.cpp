@@ -334,7 +334,7 @@ bool __cdecl DroneDying(obj_tag *obj) {
     if (obj == NULL)
         return true;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-    if ((drone->flags & 0x600) || !(drone->flags & 0x100))
+    if ((drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(drone->flags & DRONE_FLAG_ENABLED))
         return true;
     if (drone->health <= 0.0f)
         return true;
@@ -550,11 +550,11 @@ void RandomDrone(int i) {
     if (ShadowRand(8) == 0)
         flags |= ShadowRand(2) ? 0x200 : 0x400;
     d->flags = flags;
-    uint flags2 = 0;
+    uint knowledge = 0;
     if (ShadowRand(3))
         for (int k = ShadowRand(3); k >= 0; k--)
-            flags2 |= kFlags2Bits[ShadowRand(8)];
-    d->flags2 = flags2;
+            knowledge |= kFlags2Bits[ShadowRand(8)];
+    d->knowledge = knowledge;
     static const uchar sides[] = {1, 1, 2, 3};
     d->side = sides[ShadowRand(4)];
     static const uchar dtypes[] = {DTYPE_Normal, DTYPE_HostageKiller, DTYPE_Hostage, DTYPE_Bot};
@@ -571,7 +571,7 @@ void RandomDrone(int i) {
     d->unknown1d = (uchar)ShadowRand(2);
     d->gunThroughWall = (uchar)ShadowRand(2);
     d->seenPlayerLogged = (uchar)(ShadowRand(4) == 0);
-    d->unknown41 = (uchar)ShadowRand(2);
+    d->lostSightSinceShot = (uchar)ShadowRand(2);
     for (int w = 0; w < 3; w++)
         d->behaviour1[w] = RandomWord();
     d->currentBehaviour = d->behaviour1;
@@ -709,9 +709,9 @@ void RandomWorld() {
     NPCGlobals.alertCursor[1] = cursorIds[ShadowRand(9)];
     NPCGlobals.sightCursor = cursorIds[ShadowRand(9)];
     NPCGlobals.visionTests = (ushort)(ShadowRand(3) == 0 ? 0xffff - ShadowRand(3) : ShadowRand(1000));
-    NPCGlobals.unknown1390 = (uchar)(ShadowRand(10) == 0);
-    NPCGlobals.unknown1392 = (uchar)ShadowRand(2);
-    NPCGlobals.unknown174 = ShadowRand(4) == 0;
+    NPCGlobals.blind = (uchar)(ShadowRand(10) == 0);
+    NPCGlobals.interogating = (uchar)ShadowRand(2);
+    NPCGlobals.prevSeenOpponentCount = ShadowRand(4) == 0;
     NPCGlobals.newSightSaid = (uchar)ShadowRand(2);
     NPCGlobals.lostSightSaid = (uchar)ShadowRand(2);
 
@@ -1035,7 +1035,8 @@ void TestAlerts() {
                 d->gameObj->position.z += ShadowRandFloat(-6.0f, 6.0f);
             }
             if (ShadowRand(2))
-                d->flags = (d->flags | 0x2100) & ~0x20600;
+                d->flags = (d->flags | DRONE_FLAG_ENABLED | DRONE_FLAG_ALERTABLE) &
+                           ~(DRONE_FLAG_DEAD | DRONE_FLAG_DYING | DRONE_FLAG_ALERTED_BY_DRONE);
             // Half the frames: drones that all see round them, open to every alert, so that five pairs are in view
             // and the search stops
             if (trial & 1) {
@@ -1071,7 +1072,8 @@ void TestEachFrame() {
         RandomWorld();
         if (ShadowRand(2))
             for (int i = 0; i < kDrones; i++)
-                world.drones[i].flags = (world.drones[i].flags | 0x10100) & ~0x600;
+                world.drones[i].flags = (world.drones[i].flags | DRONE_FLAG_ENABLED | DRONE_FLAG_LOOKS_FOR_OPPONENT) &
+                                        ~(DRONE_FLAG_DEAD | DRONE_FLAG_DYING);
         // A count with no list would have both run off NULL
         if (NPCGlobals.NDrone2List == NULL)
             NPCGlobals.NDrone2Count = 0;

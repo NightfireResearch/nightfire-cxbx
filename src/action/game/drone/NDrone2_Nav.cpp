@@ -146,7 +146,8 @@ bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except) {
         if (obj == except || obj == NULL)
             continue;
         Drone_tag *other = (Drone_tag *)obj->extraObjectData;
-        if ((other->flags & 0x600) || !(other->flags & 0x100) || other->health <= 0.0f
+        if ((other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(other->flags & DRONE_FLAG_ENABLED)
+            || other->health <= 0.0f
             || obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & 1))
             continue;
         if (Vec_SqDist2D(pos, &obj->position) < radiusSq && NearHeight(pos->y, obj->position.y))
@@ -171,10 +172,10 @@ void NDrone2_NavNodeCache(void) {
 }
 
 // Whether the drone could walk straight from its object's feet to pos (finding pos's cel when it has none); never
-// while it is frozen (0x10). FUN_00045340 in Ghidra. Not named on PS2; the name is ours.
+// while it is stationary. FUN_00045340 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, char checkBlocked) {
-    if (drone != NULL && (drone->flags & 0x10))
+    if (drone != NULL && (drone->flags & DRONE_FLAG_STATIONARY))
         return false;
     CelPos_tag from;
     NDrone2_FeetPos(obj, &from.pos);
@@ -186,11 +187,11 @@ bool NDrone2_CanWalkStraightTo(Drone_tag *drone, obj_tag *obj, CelPos_tag *pos, 
 }
 
 // Whether the drone could walk from its object's feet to `offset` in the object's own frame (a bot's offset scaled by
-// its speed unless `unscaled`); the offset is left turned into the world. Never while it is frozen. FUN_000453e0 in
+// its speed unless `unscaled`); the offset is left turned into the world. Never while it is stationary. FUN_000453e0 in
 // Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 bool NDrone2_MoveTestRelative(_VECTOR *offset, Drone_tag *drone, obj_tag *obj, char unscaled, char checkBlocked) {
-    if (drone != NULL && (drone->flags & 0x10))
+    if (drone != NULL && (drone->flags & DRONE_FLAG_STATIONARY))
         return false;
     CelPos_tag to;
     NDrone2_FeetPos(obj, &to.pos);
@@ -231,15 +232,15 @@ void NDrone2_SetMoveTarget(DCVars_tag *dcv, CelPos_tag *target) {
     Drone_tag *drone = dcv->drone;
     _VECTOR delta;
     Vec_Subtract(&drone->moveTarget, &dcv->gameObj->position, &delta);
-    drone->moveTargetRot.x = 0.0f;
-    drone->moveTargetRot.y = Atan2(delta.x, delta.z);
-    drone->moveTargetRot.z = 0.0f;
+    drone->targetRot.x = 0.0f;
+    drone->targetRot.y = Atan2(delta.x, delta.z);
+    drone->targetRot.z = 0.0f;
 }
 
-// Whether the drone could walk to (x, y, z) in its object's own frame from its feet. Never while it is frozen (0x10).
+// Whether the drone could walk to (x, y, z) in its object's own frame from its feet. Never while it is stationary.
 // FUNC_AT(0x00045490)
 bool NDrone2_CanMoveToRelativePos(Drone_tag *drone, obj_tag *obj, float x, float y, float z) {
-    if (drone != NULL && (drone->flags & 0x10))
+    if (drone != NULL && (drone->flags & DRONE_FLAG_STATIONARY))
         return false;
     _VECTOR offset = {x, y, z};
     return NDrone2_MoveTestRelative(&offset, drone, obj, 1, 1);

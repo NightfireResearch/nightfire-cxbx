@@ -106,30 +106,9 @@ float DroneArmour_Combat = 0.25f;
 // XBE_GLOBAL(0x0016408c, 0x4)
 float DroneArmour_Jacket = 0.5f;
 
-// Drone_tag.flags
-#define DRONE_FLAG_FROZEN       0x10
-#define DRONE_FLAG_COLLIDES     0x20
-#define DRONE_FLAG_FALLS        0x80
-#define DRONE_FLAG_AI_RUNNING   0x100
-#define DRONE_FLAG_DEAD         0x200
-#define DRONE_FLAG_ANIMATE      0x80000
-#define DRONE_FLAG_ANIM_UPDATED 0x100000
-#define DRONE_FLAG_2000000      0x2000000
-#define DRONE_FLAG_ATTACK_MODE  0x4000000
-#define DRONE_FLAG_ATTACK_ALARM 0x40000000
-#define DRONE_FLAG_BOUNDS       0x80000000  // the AI network's bounds push the drone back
-#define DRONE_FLAGS_ACTIVE (DRONE_FLAG_COLLIDES | DRONE_FLAG_FALLS | DRONE_FLAG_AI_RUNNING | DRONE_FLAG_ANIMATE)
-
-// Drone_tag.flags2
-#define DRONE_FLAG2_10 0x10
-
 // obj_tag.effectFlags
 #define EFFECT_NO_COLLISION 0x20
 #define EFFECT_XRAY_ONLY 0x400
-
-// The heap types of the two route node lists (our names)
-#define MALLOC_ROUTE1_NODES_ALIGN8 ((MallocFlags)0x1508)
-#define MALLOC_ROUTE2_NODES_ALIGN8 ((MallocFlags)0x4d08)
 
 // The anim states a drone starts in (DroneAnim_SetAnimD)
 #define DANIM_START 0x11a
@@ -274,7 +253,7 @@ void DroneInit_Collision(Drone_tag *drone) {
 // range, all round.
 // AUTOINJECT
 void DroneFunc_SetAsAttacking(Drone_tag *drone) {
-    drone->flags |= DRONE_FLAG_2000000;
+    drone->flags |= DRONE_FLAG_ATTACK_STARTED;
     drone->secondaryMode = 0;
     drone->modeChangeSwitchChannel = 0;
     if (drone->alertedFrame == 0)
@@ -307,8 +286,8 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     build_LinkToRoom(gameObj, 0, glb_world);
 
     if (AIPath_MaxNodes != 0) {
-        drone->route1.nodes = (ushort *)Mem_Malloc(AIPath_MaxNodes * sizeof(ushort), MALLOC_ROUTE1_NODES_ALIGN8, 0);
-        drone->route2.nodes = (ushort *)Mem_Malloc(AIPath_MaxNodes * sizeof(ushort), MALLOC_ROUTE2_NODES_ALIGN8, 0);
+        drone->route1.nodes = (ushort *)Mem_Malloc(AIPath_MaxNodes * sizeof(ushort), MALLOC_BOT_PATH1_ALIGN8, 0);
+        drone->route2.nodes = (ushort *)Mem_Malloc(AIPath_MaxNodes * sizeof(ushort), MALLOC_BOT_PATH2_ALIGN8, 0);
         memset(drone->route1.nodes, 0, AIPath_MaxNodes * sizeof(ushort));
         memset(drone->route2.nodes, 0, AIPath_MaxNodes * sizeof(ushort));
     }
@@ -317,7 +296,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     drone->damageScale = 1.0f;
     drone->prevRootHeight = 1.0f;
     drone->rootHeight = 1.0f;
-    drone->unknown854 = 0.5f;
+    drone->coverWaitShare = 0.5f;
     drone->vulnerable = 1;
     drone->impactImmune = 0;
     drone->health = 10.0f;
@@ -326,16 +305,22 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     gameObj->curState = 0;
     gameObj->subState = 1;
     drone->unknown3f0 = 0;
-    drone->flags = (drone->flags & 0xffea05e2) | 0x801e2;
+    drone->flags = (drone->flags & (DRONE_FLAG_BIT1 | DRONE_FLAG_COLLIDES | DRONE_FLAG_DAMPED | DRONE_FLAG_FALLS |
+                                    DRONE_FLAG_ENABLED | DRONE_FLAG_DYING | DRONE_FLAG_ALERTED_BY_DRONE |
+                                    DRONE_FLAG_ANIMATE | DRONE_FLAG_ALERTED_OTHERS | DRONE_FLAG_DEAF |
+                                    DRONE_FLAG_NO_ALERTS | DRONE_FLAG_KNOCKED_OUT | DRONE_FLAG_ATTACK_STARTED |
+                                    DRONE_FLAG_ATTACK_MODE | DRONE_FLAG_ATTACK_SIGHT | DRONE_FLAG_ATTACK_SOUND |
+                                    DRONE_FLAG_ATTACK_ALERTED | DRONE_FLAG_ATTACK_ALARM | DRONE_FLAG_BOUNDS)) |
+                   DRONE_FLAG_BIT1 | DRONE_FLAG_DAMPED | DRONE_FLAGS_ACTIVE;
     // Everything from the opponent to 0x230
-    memset(&drone->opponent, 0, offsetof(Drone_tag, unknown230) - offsetof(Drone_tag, opponent));
+    memset(&drone->opponent, 0, offsetof(Drone_tag, hostagePartner) - offsetof(Drone_tag, opponent));
     Vec_Zero(&drone->velocity);
     Vec_Zero(&drone->unknown3a0);
     Vec_Copy(&gameObj->position, &drone->moveTarget);
     drone->moveTargetCel = gameObj->inCel;
-    Vec_Copy(&gameObj->rotation, &drone->moveTargetRot);
+    Vec_Copy(&gameObj->rotation, &drone->targetRot);
     drone->speechChannel = NULL;
-    drone->unknown3ca = 0;
+    drone->talkTurn = 0;
     drone->turnRate = 0.1f / FRAME_RATE_DIV;
 
     // The skin's class and anim set, and what else the skin says. The skin may be changed in the placement's own keys.
@@ -376,7 +361,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     case HT_Skin_Servant: case HT_Skin_00002d: case HT_Skin_TowelGirl:
         drone->skinClass = SKINCLASS_SERVANT;
         drone->animSet = 1;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_Mayhew_Tux: case HT_Skin_Mayhew_Shirt:
         drone->animSet = 3;
@@ -391,13 +376,13 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         drone->skinClass = SKINCLASS_ZOE;
         drone->animSet = 0xe;
         drone->vulnerable = 0;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_Dominique: case HT_Skin_PartyGirl01: case HT_Skin_PartyGirl02: case HT_Skin_PartyGirl03:
     case HT_Skin_PartyGirl04:
         drone->skinClass = SKINCLASS_PARTY_GIRL;
         drone->animSet = 0xe;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_PartyGuest_OldMan: case HT_Skin_PartyGuest_Male:
         drone->skinClass = SKINCLASS_PARTY_GUEST;
@@ -420,12 +405,12 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     case HT_Skin_Kiko_Jacket: case HT_Skin_Kiko_Dress:
         drone->animSet = 0xe;
         drone->skinClass = SKINCLASS_KIKO;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_Kiko_Combat:
         drone->animSet = 0xd;
         drone->skinClass = SKINCLASS_KIKO_COMBAT;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_Drake_Tux: case HT_Skin_Drake_Spacesuit: case HT_Skin_Drake_SpacesuitBurnt:
         drone->skinClass = SKINCLASS_DRAKE;
@@ -434,12 +419,12 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     case HT_Skin_BusinessWoman_A: case HT_Skin_BusinessWoman_B:
         drone->skinClass = SKINCLASS_BUSINESS_WOMAN;
         drone->animSet = 2;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_000010: case HT_Skin_000011: case HT_Skin_Dominique_Jacket:
         drone->skinClass = SKINCLASS_DOMINIQUE_JACKET;
         drone->animSet = 2;
-        drone->unknown15 = 1;
+        drone->female = 1;
         break;
     case HT_Skin_Drake_SuitA:
         drone->vulnerable = 0;
@@ -608,7 +593,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         drone->scriptedMoveRot = gameObj->rotation;
         drone->scriptedMovePos = gameObj->position;
         if (drone->deathScript != HT_Script_DeathScriptIcyQuip)
-            drone->flags |= DRONE_FLAG_FROZEN;
+            drone->flags |= DRONE_FLAG_STATIONARY;
     }
 
     if (keys->mode >= DMODE_COUNT)
@@ -687,7 +672,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     memset(&drone->goalTarget, 0, sizeof(drone->goalTarget));
 
     gameObj->effectFlags &= ~(EFFECT_HIDDEN | EFFECT_NO_COLLISION);
-    drone->flags |= DRONE_FLAG_COLLIDES | DRONE_FLAG_FALLS | DRONE_FLAG_AI_RUNNING;
+    drone->flags |= DRONE_FLAG_COLLIDES | DRONE_FLAG_FALLS | DRONE_FLAG_ENABLED;
     if (drone->side == 1)
         PlrStat_LogEnemySpawned();
 
@@ -747,7 +732,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->initialState == DSTATE_Attack || drone->initialState == DSTATE_CivilianScared) {
         DroneFunc_SetAsAttacking(drone);
         drone->flags |= DRONE_FLAG_ATTACK_MODE | DRONE_FLAG_ATTACK_ALARM;
-        drone->flags2 |= DRONE_FLAG2_10;
+        drone->knowledge |= DRONE_KNOWS_BIT4;
     }
 
     // What some skin classes and types get on top
@@ -834,15 +819,14 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         }
     }
 
-    drone->unknown824 = 0x80;
-    drone->unknown825 = 0;
+    drone->avoidLinks = 0x80;
     drone->boundsPushFlags = 0x1c00;
     if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, drone->currentBehaviour) &&
         !behaviour_util_getProperty(DRONE_PROP_36, drone->currentBehaviour))
-        drone->unknown825 |= 2;
+        drone->avoidLinks |= AILINK_SMOKE;
     if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES_THEN_ATTACKS, drone->currentBehaviour) ||
         behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, drone->currentBehaviour))
-        drone->unknown825 |= 1;
+        drone->avoidLinks |= AILINK_EXPLOSIVE;
 
     drone->bodyGlow = BodyGlow_Create(diVars->gameObj);
     return diVars->gameObj;

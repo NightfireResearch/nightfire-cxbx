@@ -376,7 +376,6 @@ typedef enum {
     // 0x2f-0x45: bot messages (docs/drone/bots-and-navigation)
 } DRONE_MSG;
 
-
 // A point drones take notice of (NPCGlobals.awarePoints, built each frame by Drone_BuildDynamicAwarePoints).
 // Only the fields our code reads.
 typedef struct DroneAwarePoint {
@@ -438,8 +437,7 @@ LAYOUT_32(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
 
 #define DRONE_SFX_LOG 16
 
-// The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). Only what our code uses
-// is named so far; FUN_00030e70 and
+// The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). FUN_00030e70 and
 // Drone_PostLoad_Init clear the aware points at +0xb54 and safetyEmitter at +0x1354.
 typedef struct {
     uchar enabled;              // +0x0 - Drone_EnableAll's last setting
@@ -453,24 +451,25 @@ typedef struct {
     ushort groupCounts[DRONE_GROUPS];   // +0x108 - drones in each group; 0xffff once DroneSpawner_Init has taken them
     char _pad146[0x148 - 0x146];
     uint deadFrames;            // +0x148 - how long a drone lies in DSTATE_Dead before it fades (our name)
-    uint unknown14c;            // +0x14c - 6 (Drone_LevelReset). DroneFunc_DeadDrone: with more than this in unknown150,
-    uint unknown150;            // +0x150   the drone whose sm.id is unknown15c fades fast. Drone_InitComms counts here
-                                //          the drones in DSTATE_HostageDead, Dead, Fade or AstronautDeath,
-    uint deadOrFadingFast;      // +0x154   and here those and the ones in FadeFast (our name),
-    uint oldestDeadFrame;       // +0x158   and the earliest frame one of them entered (Fade: plus deadFrames),
-    uint unknown15c;            // +0x15c   and that drone's sm.id
+    uint maxDeadDrones;         // +0x14c - 6 (Drone_LevelReset; 3 on the PS2): with more dead than this, the oldest
+                                //          fades fast (DroneFunc_DeadDrone)
+    uint deadDrones;            // +0x150 - Drone_InitComms counts the drones in DSTATE_HostageDead, Dead, Fade or
+                                //          AstronautDeath,
+    uint deadOrFadingFast;      // +0x154   those and the ones in FadeFast (our name),
+    uint oldestDeadFrame;       // +0x158   the earliest frame one of them entered (Fade: plus deadFrames),
+    uint oldestDeadId;          // +0x15c   and that drone's sm.id
     uint prevEnemies;           // +0x160 - Drone_InitComms keeps last frame's counts here: enemies,
     uint prevNeutrals;          // +0x164   neutrals,
     uint prevAllies;            // +0x168   allies,
-    uint prevUnknown188;        // +0x16c   unknown188,
+    uint prevOutOfRangeCount;   // +0x16c   outOfRangeCount,
     uint prevSeenAttacking;     // +0x170   seenAttacking,
-    uint unknown174;            // +0x174   seenOpponentCount (while set, DroneVision_ProcessDroneSight makes no drone say
-                                //          it lost sight)
+    uint prevSeenOpponentCount; // +0x174   seenOpponentCount (while set, DroneVision_ProcessDroneSight makes no drone
+                                //          say it lost sight)
     uint prevLostOpponentCount; // +0x178   and lostOpponentCount (our names)
-    uint enemies;               // +0x17c - drones with the AI running, by side (1, 2, 3), counted each frame by
+    uint enemies;               // +0x17c - enabled drones, by side (1, 2, 3), counted each frame by
     uint allies;                // +0x180   NDrone2_ControlSTANDARD (our names)
     uint neutrals;              // +0x184
-    uint unknown188;            // +0x188 - counted by DSTATE_CombatOutOfRange
+    uint outOfRangeCount;       // +0x188 - drones in DSTATE_CombatOutOfRange, counted each frame
     uint seenAttacking;         // +0x18c - NDrone2_SeenAndAttacking counts each drone it lets through
     uint seenOpponentCount;     // +0x190 - DroneVision_ProcessDroneSight: drones that see their opponent, counted
     uint lostOpponentCount;     //  +0x194   every frame; and drones that lost theirs over 2 s ago (our names)
@@ -511,10 +510,11 @@ typedef struct {
     struct DroneAIPoint_tag *aiPoints;  // +0x1380 - Drone_PreLoad_Init points it at a table of MAX_AI_POINTS
     uint unknown1384;           // +0x1384 - cleared by Drone_PreLoad_Init
     char _pad1388[0x138c - 0x1388];
-    float unknown138c;          // +0x138c - 0.5 (Drone_LevelReset); read by DSTATE_BotCoverIdle
-    uchar unknown1390;          // +0x1390 - while set, no drone sees its opponent (DroneVision_OpponentInView)
+    float coverWaitScale;       // +0x138c - 0.5 (Drone_LevelReset): scales a bot's random wait in cover (BotCoverWait)
+    uchar blind;                // +0x1390 - while set, no drone sees its opponent (DroneVision_OpponentInView);
+                                //           nothing sets it
     uchar alarmSaid;            // +0x1391 - in EvilBase the alarm message goes out only once (our name)
-    uchar unknown1392;          // +0x1392 - while set in CastleIndoors1, DroneFunc_DoForcedAttack acts only on DTYPEs
+    uchar interogating;         // +0x1392 - while set in CastleIndoors1, DroneFunc_DoForcedAttack acts only on DTYPEs
                                 //           0x13 and 0x16. Set by DroneVision_BeginInterogate, cleared by
                                 //           DroneVision_EndInterogate outside CastleIndoors1
     char _pad1393;
@@ -531,27 +531,27 @@ LAYOUT_32(offsetof(NPCGlobals_t, NDrone2Count) == 0xc, "Wrong offset for NDrone2
 LAYOUT_32(offsetof(NPCGlobals_t, groups) == 0x10, "Wrong offset for groups");
 LAYOUT_32(offsetof(NPCGlobals_t, spawners) == 0x8c, "Wrong offset for spawners");
 LAYOUT_32(offsetof(NPCGlobals_t, groupCounts) == 0x108, "Wrong offset for groupCounts");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown174) == 0x174, "Wrong offset for unknown174");
+LAYOUT_32(offsetof(NPCGlobals_t, prevSeenOpponentCount) == 0x174, "Wrong offset for prevSeenOpponentCount");
 LAYOUT_32(offsetof(NPCGlobals_t, seenOpponentCount) == 0x190, "Wrong offset for seenOpponentCount");
 LAYOUT_32(offsetof(NPCGlobals_t, lostSightSaid) == 0x199, "Wrong offset for lostSightSaid");
 LAYOUT_32(offsetof(NPCGlobals_t, postLoadFrame) == 0x1a8, "Wrong offset for postLoadFrame");
 LAYOUT_32(offsetof(NPCGlobals_t, sightCursor) == 0x234, "Wrong offset for sightCursor");
 LAYOUT_32(offsetof(NPCGlobals_t, alertCursor) == 0x238, "Wrong offset for alertCursor");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown1390) == 0x1390, "Wrong offset for unknown1390");
+LAYOUT_32(offsetof(NPCGlobals_t, blind) == 0x1390, "Wrong offset for blind");
 LAYOUT_32(offsetof(NPCGlobals_t, hostagesSaved) == 0x19c, "Wrong offset for hostagesSaved");
 LAYOUT_32(offsetof(NPCGlobals_t, dummyPlayer) == 0x1a4, "Wrong offset for dummyPlayer");
 LAYOUT_32(offsetof(NPCGlobals_t, enabledFrame) == 0x1ac, "Wrong offset for enabledFrame");
 LAYOUT_32(offsetof(NPCGlobals_t, NumDrones) == 0x230, "Wrong offset for NumDrones");
 LAYOUT_32(offsetof(NPCGlobals_t, playerTarget) == 0x1c0, "Wrong offset for playerTarget");
 LAYOUT_32(offsetof(NPCGlobals_t, deadFrames) == 0x148, "Wrong offset for deadFrames");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown14c) == 0x14c, "Wrong offset for unknown14c");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown15c) == 0x15c, "Wrong offset for unknown15c");
+LAYOUT_32(offsetof(NPCGlobals_t, maxDeadDrones) == 0x14c, "Wrong offset for maxDeadDrones");
+LAYOUT_32(offsetof(NPCGlobals_t, oldestDeadId) == 0x15c, "Wrong offset for oldestDeadId");
 LAYOUT_32(offsetof(NPCGlobals_t, seenAttacking) == 0x18c, "Wrong offset for seenAttacking");
 LAYOUT_32(offsetof(NPCGlobals_t, nextPatrolTalkFrame) == 0x1b4, "Wrong offset for nextPatrolTalkFrame");
 LAYOUT_32(offsetof(NPCGlobals_t, impactAnimFrame) == 0x1b0, "Wrong offset for impactAnimFrame");
 LAYOUT_32(offsetof(NPCGlobals_t, lastPowerstationChannel) == 0x1bc, "Wrong offset for lastPowerstationChannel");
 LAYOUT_32(offsetof(NPCGlobals_t, numAwarePoints) == 0xb50, "Wrong offset for numAwarePoints");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown1392) == 0x1392, "Wrong offset for unknown1392");
+LAYOUT_32(offsetof(NPCGlobals_t, interogating) == 0x1392, "Wrong offset for interogating");
 LAYOUT_32(offsetof(NPCGlobals_t, visionTests) == 0x232, "Wrong offset for visionTests");
 LAYOUT_32(offsetof(NPCGlobals_t, coverCursor) == 0x284, "Wrong offset for coverCursor");
 LAYOUT_32(offsetof(NPCGlobals_t, numCoverNodes) == 0x288, "Wrong offset for numCoverNodes");
@@ -564,8 +564,8 @@ LAYOUT_32(offsetof(NPCGlobals_t, aiPoints) == 0x1380, "Wrong offset for aiPoints
 LAYOUT_32(offsetof(NPCGlobals_t, safetyEmitter) == 0x1354, "Wrong offset for safetyEmitter");
 LAYOUT_32(offsetof(NPCGlobals_t, oldestDeadFrame) == 0x158, "Wrong offset for oldestDeadFrame");
 LAYOUT_32(offsetof(NPCGlobals_t, prevLostOpponentCount) == 0x178, "Wrong offset for prevLostOpponentCount");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown188) == 0x188, "Wrong offset for unknown188");
-LAYOUT_32(offsetof(NPCGlobals_t, unknown138c) == 0x138c, "Wrong offset for unknown138c");
+LAYOUT_32(offsetof(NPCGlobals_t, outOfRangeCount) == 0x188, "Wrong offset for outOfRangeCount");
+LAYOUT_32(offsetof(NPCGlobals_t, coverWaitScale) == 0x138c, "Wrong offset for coverWaitScale");
 LAYOUT_32(offsetof(NPCGlobals_t, alarmFrame) == 0x1394, "Wrong offset for alarmFrame");
 extern NPCGlobals_t NPCGlobals;
 // NPCGlobals.NDrone2List and NDrone2Count are the head and count of a list of Drone_tags (LList_Init by

@@ -16,7 +16,7 @@ bool CirBuf_Init(CIRBUF_INFO *info, ushort size, intptr_t *data) {
     info->buffer = data;
     info->size = size;
     if (data == NULL && size != 0)
-        info->buffer = (intptr_t *)Mem_Malloc(size * sizeof(intptr_t), 0x1b04, 0);
+        info->buffer = (intptr_t *)Mem_Malloc(size * sizeof(intptr_t), MALLOC_LLIST, 0);
     memset(info->buffer, 0, size * sizeof(intptr_t));
     return true;
 }

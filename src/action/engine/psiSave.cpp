@@ -13,7 +13,6 @@ uint32_t SavesListed;
 // XBE_GLOBAL(0x002adf10, 0x4)
 uint32_t psiInternalLoadingDataState;
 
-
 #define SAVE_DIR "saves"
 
 // Builds "saves/<profileName>.dat", replacing anything that isn't alphanumeric/space/dash/underscore with an

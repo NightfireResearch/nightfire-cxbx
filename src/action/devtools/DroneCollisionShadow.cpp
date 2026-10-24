@@ -315,8 +315,8 @@ void RandomDrone(int i) {
             d->flags |= flagBits[k];
     static const short skins[] = {0, 5, 0xc, 0x11, 0x13};
     d->skinClass = skins[ShadowRand(5)];
-    d->unknown434 = ShadowRand(5) == 0 ? (void *)&world.script : NULL;
-    d->unknown46c = ShadowRand(3) == 0 ? 0 : ShadowRand(8);
+    d->blendScript = ShadowRand(5) == 0 ? &world.script : NULL;
+    d->animFlags = ShadowRand(3) == 0 ? 0 : ShadowRand(8);
     static const float distances[] = {0.0f, -0.0f, 1.9f, 2.0f, 2.1f, 10.0f, NAN};
     for (int k = 0; k < 4; k++)
         d->playerDistance[k] = Pick(distances, 7);

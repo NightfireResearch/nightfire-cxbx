@@ -43,7 +43,6 @@
 // exactly the same shape. So this is an ordinary LPTHREAD_START_ROUTINE and the stack works out on its own.
 // ---------------------------------------------------------------------------------------------------------------
 
-
 #ifndef NIGHTFIRE_STANDALONE
 // The table of initialisers XapiInitProcess runs once the heap is made. Its one entry is NULL in this XBE, so the
 // standalone build has none.

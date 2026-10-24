@@ -496,7 +496,7 @@ void RandomDrone(int i) {
     d->animSet = (short)ShadowRand(10);
     d->savedAnimSet = (short)ShadowRand(10);
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x10000);
+    d->knowledge = ShadowRand(0x10000);
     d->sightFlags = ShadowRand(0x20);
     static const float alertnesses[] = {0.0f, 0.5f, 0.65999997f, 0.66f, 0.66000003f, 1.0f};
     d->alertness = Pick(alertnesses, 6);
@@ -505,7 +505,7 @@ void RandomDrone(int i) {
     d->interrogateNearest = ShadowRand(3) ? d->distanceToTarget + ShadowRandFloat(-5.0f, 1.0f) : 4.0f;
     d->interrogateDistance = ShadowRandFloat(0.0f, 10.0f);
     d->viewAngle = 1.0f;
-    d->unknown33 = (uchar)ShadowRand(2);
+    d->returnPosKept = (uchar)ShadowRand(2);
     d->gunThroughWall = (uchar)ShadowRand(2);
     d->firing = (uchar)ShadowRand(2);
     d->flies = (uchar)ShadowRand(2);
@@ -525,7 +525,7 @@ void RandomDrone(int i) {
     d->initialState = (short)ShadowRand(250);
     d->returnState = (short)(ShadowRand(2) ? DSTATE_RunToAlarm : ShadowRand(250));
     d->health = ShadowRand(4) ? ShadowRandFloat(-10.0f, 100.0f) : (ShadowRand(2) ? 0.0f : NAN);
-    d->unknown3ca = (ushort)ShadowRand(4);
+    d->talkTurn = (ushort)ShadowRand(4);
     d->speechChannel = ShadowRand(2) ? (DYNAMICSOUNDS *)&world.cels[1] : NULL;
     static const uint scratches[] = {0, 0, 1, 2, 3, 4, 5, 6, 7, 0x19, 0x99, 300};
     d->stateScratch = scratches[ShadowRand(sizeof(scratches) / sizeof(scratches[0]))];
@@ -562,7 +562,7 @@ void RandomDrone(int i) {
     d->sm.stateParam = ShadowRand(2) ? 0 : (int)ShadowRand(256);
     d->timerA.on = (uchar)ShadowRand(2);
     d->timerA.dueFrame = ShadowRand(5000);
-    d->timerA.unknown8 = ShadowRand(5);
+    d->timerA.data = ShadowRand(5);
 }
 
 void RandomWorld() {
@@ -570,7 +570,7 @@ void RandomWorld() {
         RandomDrone(i);
     // The pairs a hostage killer and its hostage make, or none
     for (int i = 0; i < DRONES; i++)
-        world.drones[i].unknown230 = ShadowRand(3) ? &world.objs[ShadowRand(DRONES)] : NULL;
+        world.drones[i].hostagePartner = ShadowRand(3) ? &world.objs[ShadowRand(DRONES)] : NULL;
     for (int i = 0; i < DRONES; i++) {
         world.drones[i].opponent = ShadowRand(5) ? &world.player : (ShadowRand(2) ? &world.objs[2] : NULL);
         world.drones[i].alertedBy = ShadowRand(3) ? &world.drones[ShadowRand(DRONES)] : NULL;
@@ -687,9 +687,9 @@ void RandomMessage() {
 // The hostage pairs as the game keeps them: where a handler reads the partner without testing it, it has one
 void HostageFixups() {
     uint m = world.msg.msgType;
-    if (m == DRONE_MSG_AttackNow || m == DRONE_MSG_ScriptEnd || world.drones[0].unknown3ca == 2)
-        if (world.drones[0].unknown230 == NULL)
-            world.drones[0].unknown230 = &world.objs[1];
+    if (m == DRONE_MSG_AttackNow || m == DRONE_MSG_ScriptEnd || world.drones[0].talkTurn == 2)
+        if (world.drones[0].hostagePartner == NULL)
+            world.drones[0].hostagePartner = &world.objs[1];
 }
 
 // The interrogation's steps run on Timer A, one per message, each level with its own script
@@ -880,8 +880,8 @@ void TestHelpers(int trials) {
             // A position on a node now and then, so equal distances come up
             if (ShadowRand(4) == 0)
                 world.objs[0].position = world.fileNodes[ShadowRand(NODES)].node.pos;
-            if (world.drones[0].unknown3ca == 2 && world.drones[0].unknown230 == NULL)
-                world.drones[0].unknown230 = &world.objs[1];
+            if (world.drones[0].talkTurn == 2 && world.drones[0].hostagePartner == NULL)
+                world.drones[0].hostagePartner = &world.objs[1];
             static const float radii[] = {4.0f, 6.0f, 6.0000005f, NAN};
             bondRadius = radii[ShadowRand(4)];
             cases++;

@@ -110,12 +110,12 @@ typedef struct BOT_vars_t {
     uchar _pad86[2];
     BOT_playerInfo_t players[NUM_AGENTS]; // 0x088 - what it knows of each MPGame player (BOT_setOtherPlayerInfo)
     _VECTOR opponentLastPos;        // 0x128
-    BOT_weapon_t weapons[114];      // 0x134 - per weapon id: sqrt(maxZoom), rounds in clip, held. One slot per id
-                                    //         (NUM_WEAPONS), but the bot code only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
-                                    //         BOTWEAP_listHeldLoadedWeapons stop at 0x53): 83 and up are gadgets
-                                    //         (camera, decryptor, Q-worm, ...) and vehicle / boss weapons
-    short reserveAmmo[33];          // 0x68c
-    uchar _pad6ce[2];
+    BOT_weapon_t weapons[NUM_WEAPONS]; // 0x134 - per weapon id: sqrt(maxZoom), rounds in clip, held. The bot code
+                                    //         only walks ids 0-82 (BOTWEAP_CheckWeaponsLoaded,
+                                    // BOTWEAP_listHeldLoadedWeapons
+                                    //         stop at 0x53): 83 and up are gadgets (camera, decryptor, Q-worm, ...) and
+                                    //         vehicle / boss weapons
+    short reserveAmmo[NUM_AMMO_TYPES]; // 0x68c - per ammo type (ammo_data)
     obj_tag *attackers[16];         // 0x6d0 - cursor at attackerCursor
     float savedCombatRanges[3];     // 0x710 - drone+0xd0, 0xd4, 0xe0
     float distraction;              // 0x71c

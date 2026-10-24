@@ -3,7 +3,6 @@
 
 #include "../../actionhelpers.h"
 
-
 typedef struct {
     char asciiDigit[4];
     bool discovered;
@@ -11,9 +10,6 @@ typedef struct {
 
 extern KeyCodeEntry KeyCodes[51];
 
-
-
 void Locks_Init(void);
-
 
 #endif // LOCKS_H_

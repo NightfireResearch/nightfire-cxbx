@@ -10,8 +10,6 @@ typedef enum {
     NUM_ALGORITHMS
 } algorithm_t;
 
-
-
 // AUTOINJECT
 uint32_t fix_endianness32(EDLDecompressorState *state, uint32_t dataIn) {
     if(state->ourEndianness == state->fileEndianness)
@@ -134,6 +132,5 @@ void EDL_DecompressSection(char* compressedData, edl_section_t *section) {
         dest += sizeDecompressed;
     
     }
-
 
 }

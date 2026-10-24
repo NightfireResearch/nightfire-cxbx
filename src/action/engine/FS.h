@@ -19,5 +19,4 @@ void psiAsyncCloseFile(int fileHandle);
 void psiAsyncReadFile(int fileHandle, int byteOffset, int byteSize, void *destBuffer);
 int psiAsyncHasReadFinished(int fileHandle);
 
-
 #endif // FS_H_

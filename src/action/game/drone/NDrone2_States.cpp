@@ -23,8 +23,6 @@ void NDrone2_Enable(char enable, Drone_tag *drone);
 // FUN_00046c20; the PS2 build's name
 // Takes nothing and answers DSTATE_Obstructed; the caller passes dcv all the same
 
-#define DRONE_FLAG_AI_RUNNING 0x100     // Drone_tag.flags
-
 // The anim states these ask for (our names)
 #define DANIM_ALERT_STAND 0x21
 #define DANIM_ALERT_LOOK 0x22
@@ -57,7 +55,7 @@ bool NDrone2_DSTATE_Global(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
         return true;
 
     case DRONE_MSG_AttackNow:
-        if ((dcv->drone->flags & DRONE_FLAG_AI_RUNNING) && dcv->drone->dtype == DTYPE_HostageKiller &&
+        if ((dcv->drone->flags & DRONE_FLAG_ENABLED) && dcv->drone->dtype == DTYPE_HostageKiller &&
             dcv->drone->health > 0.0f)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageKillerAttack, 0);
         return true;
@@ -117,7 +115,7 @@ bool NDrone2_DSTATE_Disabled(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         return true;
 
     case DRONE_MSG_Update:
-        if (!(dcv->drone->flags & DRONE_FLAG_AI_RUNNING))
+        if (!(dcv->drone->flags & DRONE_FLAG_ENABLED))
             return true;
         if (dcv->drone->waitSwitchChannel != 0 && !dcv->drone->waitSwitchInitial)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_WaitSwitch, 0);
@@ -145,8 +143,8 @@ bool NDrone2_DSTATE_Idle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
     case DRONE_MSG_Enter:
         if (GameState.CurrentLevelHashcode == HT_Level_SpaceStationD && dcv->drone->skinClass == SKINCLASS_DRAKE)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_SpaceDrake, 0);
-        dcv->drone->flags |= 0x10000;
-        dcv->drone->flags |= 0x2000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         if (dcv->drone->route2.count > 0)
@@ -230,8 +228,8 @@ bool NDrone2_DSTATE_Alert(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, M
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
-        dcv->drone->flags |= 0x2000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         if (behaviour_util_getProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour) != 0)
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         if (dcv->drone->route2.count > 0)
@@ -332,8 +330,8 @@ bool NDrone2_DSTATE_Patrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
-        dcv->drone->flags |= 0x2000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         if (behaviour_util_getProperty(DRONE_PROP_ALERT_PATROL, dcv->drone->currentBehaviour) != 0 &&
             dcv->drone->alertness >= ALERT_SUSPICIOUS) {
             if (behaviour_util_getProperty(DRONE_PROP_LOOKS_AROUND, dcv->drone->currentBehaviour) != 0)
@@ -405,7 +403,7 @@ bool NDrone2_DSTATE_Patrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, 
 }
 
 // An enemy running to an AI point (NDrone2_FindRunToPoint), or with property 0x56 to the alarm, then attacking. In
-// RefRoom and Tower2A-C, a drone without flag 0x4000000 that is not yet fully alert stands idle or alert there
+// RefRoom and Tower2A-C, a drone not in DRONE_FLAG_ATTACK_MODE that is not yet fully alert stands idle or alert there
 // instead. With no point it goes straight to that state.
 // AUTOINJECT
 bool NDrone2_DSTATE_EnemyRunToPoint(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
@@ -414,7 +412,7 @@ bool NDrone2_DSTATE_EnemyRunToPoint(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         Drone_AlertStatusSet(1, dcv);
         if (behaviour_util_getProperty(DRONE_PROP_RUNS_TO_ALARM, dcv->drone->currentBehaviour) != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_RunToAlarm, 0);
@@ -424,7 +422,7 @@ bool NDrone2_DSTATE_EnemyRunToPoint(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         case HT_Level_Tower2A:
         case HT_Level_Tower2B:
         case HT_Level_Tower2C:
-            if (!(dcv->drone->flags & 0x4000000)) {
+            if (!(dcv->drone->flags & DRONE_FLAG_ATTACK_MODE)) {
                 if (dcv->drone->alertness < ALERT_SUSPICIOUS)
                     dcv->drone->initialState = DSTATE_Idle;
                 else if (dcv->drone->alertness < 1.0f)
@@ -469,7 +467,7 @@ bool NDrone2_DSTATE_DeleteMe(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
     }
 }
 
-// Stands, turning angleToSomePoint by 0.01 a frame and moving the object round a circle of radius 0.01 with the
+// Stands, turning targetRot.y by 0.01 a frame and moving the object round a circle of radius 0.01 with the
 // frame count. A shot sends it back here.
 // AUTOINJECT
 bool NDrone2_DSTATE_JustStand(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
@@ -480,8 +478,8 @@ bool NDrone2_DSTATE_JustStand(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         return true;
 
     case DRONE_MSG_Update: {
-        drone->angleToSomePoint += 0.01f;
-        drone->unknown38 = 1;
+        drone->targetRot.y += 0.01f;
+        drone->standingStill = 1;
         // On the x87: FSIN and FCOS of the unrounded product, rounded once at each store
         double phase = (double)GameState.NumFramesUnpaused * 0.005f;
         gameObj->position.x = (float)(FSin(phase) * Extended(0.01f) + Extended(gameObj->position.x));

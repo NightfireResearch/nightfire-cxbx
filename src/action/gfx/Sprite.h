@@ -4,7 +4,6 @@
 #include "../actionhelpers.h"
 #include "../../common/xbeClass.h"
 
-
 #pragma pack(push, 1)
 
 typedef struct {
@@ -67,7 +66,6 @@ static_assert(offsetof(SpriteInfo, depth) == 0x8, "Offset of depth is incorrect"
 LAYOUT_32(offsetof(SpriteInfo, textureHashcode) == 0x24, "Offset of textureHashcode is incorrect");
 
 #pragma pack(pop)
-
 
 void Sprite_SetText(sprite *spr,char *text);
 void Sprite_SetFmt(sprite *spr, char *fmt);

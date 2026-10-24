@@ -19,23 +19,13 @@
 
 #pragma fp_contract(off)
 
-// Drone_tag.flags
-#define DRONE_FLAG_FALLS_ANYWAY 0x4     // NDrone2_DoGravity: falls whether it collides or not
-#define DRONE_FLAG_COLLIDES     0x20
-#define DRONE_FLAG_DAMPED       0x40    // flying: its velocity loses 2% a frame
-#define DRONE_FLAG_FALLS        0x80
-#define DRONE_FLAG_DEAD         0x200
-#define DRONE_FLAG_4000         0x4000  // cleared by Drone_CollisionHandler
-#define DRONE_FLAG_BOUNDS       0x80000000  // the AI network's bounds push the drone back
-
-// Drone_tag.unknown46c: an anim that does not collide
+// Drone_tag.animFlags: an anim that does not collide
 #define DRONE_ANIM_NO_COLLISION 2
 
 // The bones a dead drone's capsule runs along
 #define BONE_HEAD   0x80000005
 #define BONE_37     0x80000037
 #define BONE_33     0x80000033
-
 
 // ---- when the drone collides and falls
 
@@ -61,13 +51,13 @@ bool NDrone2_DoCollision(DCVars_tag *dcv) {
         return false;
     if (drone->skinClass == SKINCLASS_ZOE || drone->skinClass == SKINCLASS_KIKO_COMBAT)
         return true;
-    if (drone->unknown434 != NULL)
+    if (drone->blendScript != NULL)
         return true;
     if (DroneFunc_NearPlayerCollision(drone))
         return true;
     if (dcv->gameObj->drawnCountdown != 0)
         return true;
-    return !(drone->unknown46c & DRONE_ANIM_NO_COLLISION);
+    return !(drone->animFlags & DRONE_ANIM_NO_COLLISION);
 }
 
 // Whether gravity acts: with DRONE_FLAG_FALLS, and then always with DRONE_FLAG_FALLS_ANYWAY, otherwise when it
@@ -248,7 +238,7 @@ void Drone_CollisionHandler(obj_tag *obj) {
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
     DCVars_tag dcv;
     Drone_DCVfromOBJ(obj, &dcv);
-    drone->flags &= ~DRONE_FLAG_4000;
+    drone->flags &= ~DRONE_FLAG_BIT14;
     obj->animState->animFlags &= ~(ANIM_CONTACT_FLOOR | ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE);
     obj->animState->animFlags &= ~(ANIM_CONTACT_HIT | ANIM_CONTACT_ABOVE | ANIM_CONTACT_MOVER);
     float height = 0.0f;

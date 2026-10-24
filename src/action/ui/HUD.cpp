@@ -393,7 +393,7 @@ void HUD_ValidateXY(short *x, short *y, ushort width, ushort height, ushort play
 void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *unused) {
     pane->numSprites = create->numSprites;
     pane->spriteList = (sprite **)Mem_Malloc((create->numExtraItems + (ushort)pane->numSprites) * sizeof(void *),
-                                             0x2704, 0);
+                                             MALLOC_PLRHUD, 0);
     pane->extraItems = (void **)&pane->spriteList[(ushort)pane->numSprites];
     for (ushort i = 0; i < create->numExtraItems; i++)
         pane->extraItems[i] = NULL;
@@ -3055,7 +3055,7 @@ void HUD_Init(BLData *player, obj_tag *obj) {
 	if((obj != NULL) && (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
 		return;
 
-	player->hudInfo = (HUDINFO_tag*)Mem_Malloc(sizeof(HUDINFO_tag), 0x2704, 0);
+	player->hudInfo = (HUDINFO_tag*)Mem_Malloc(sizeof(HUDINFO_tag), MALLOC_PLRHUD, 0);
 
 	if(player->hudInfo == NULL)
 		return;
@@ -4367,7 +4367,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             case OBJECTTYPE_DRONE: {
                 // A bot: one alive and thinking
                 Drone_tag *bot = (Drone_tag *)other->extraObjectData;
-                if ((bot->flags & 0x600) || !(bot->flags & 0x100))
+                if ((bot->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(bot->flags & DRONE_FLAG_ENABLED))
                     continue;
                 if (bot->health < 0.0f || bot->health == 0.0f)
                     continue;

@@ -95,7 +95,6 @@ bool Sound_IsLooping(DYNAMICSOUNDS *handle) {
 
 // The originals, called by address
 
-
 // Written by Sound_UpdateListeners, once per frame
 // XBE_GLOBAL(0x0029a140, 0xc)
 _VECTOR GlobalListenerPos;
@@ -474,7 +473,6 @@ void Sound_LoadMapSounds(int *mapSoundBlock) {
     if (count > 0)
         memcpy(GMapSounds, &mapSoundBlock[1], count * sizeof(MapSound));
 }
-
 
 // The handle of each playing map sound. HandleMapSoundAllocation is the only function that touches it (Ghidra
 // xrefs: one read, one write, both here), so it is ours. Not cleared at level load in the original either:

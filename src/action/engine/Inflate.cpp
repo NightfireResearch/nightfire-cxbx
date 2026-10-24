@@ -350,7 +350,6 @@ void Inflate_bitwise(EDLDecompressorState *st) {
     }
 }
 
-
 // AUTOINJECT
 void Inflate_directcopy(EDLDecompressorState *state) {
 

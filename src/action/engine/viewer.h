@@ -169,8 +169,6 @@ enum {
     CEL_MASKABLE = 0x1000,          // a test with mask 0x20 passes it by
 };
 
-
-
 LAYOUT_32(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
 LAYOUT_32(offsetof(viewer_tag, draw) == 0x08, "Bad offset of viewer_tag.draw");
 LAYOUT_32(offsetof(viewer_tag, camMode) == 0x24, "Bad offset of viewer_tag.camMode");

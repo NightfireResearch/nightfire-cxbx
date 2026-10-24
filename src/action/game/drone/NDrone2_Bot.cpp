@@ -54,9 +54,6 @@
 #define DANIM_STEP_LEFT 0x5a
 #define DANIM_STEP_RIGHT 0x5b
 
-// Drone_tag.flags: makes no combat moves
-#define DRONE_FLAG_FROZEN 0x10
-
 // Two messages the attack states end on (meaning unknown)
 #define DRONE_MSG_1B 0x1b
 #define DRONE_MSG_1C 0x1c
@@ -82,13 +79,13 @@ static_assert(std::bit_cast<uint32_t>(-0.1f) == 0xbdcccccd, "not the original's 
 
 static void SetTimerA(DCVars_tag *dcv, uint dueFrame) {
     dcv->drone->timerA.dueFrame = dueFrame;
-    dcv->drone->timerA.unknown8 = 0;
+    dcv->drone->timerA.data = 0;
     dcv->drone->timerA.on = 1;
 }
 
 static void SetTimerB(DCVars_tag *dcv, uint dueFrame) {
     dcv->drone->timerB.dueFrame = dueFrame;
-    dcv->drone->timerB.unknown8 = 0;
+    dcv->drone->timerB.data = 0;
     dcv->drone->timerB.on = 1;
 }
 
@@ -297,7 +294,7 @@ static bool BotGlobalUpdate(DCVars_tag *dcv, Drone_tag *drone) {
         }
         bot->goalReturnState = 0;
     }
-    dcv->drone->flags |= 0x10000;
+    dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
     obj_tag *opponent = dcv->drone->opponent;
     if (opponent != NULL && opponent->objectType == OBJECTTYPE_GFX)
         NDrone2_SetOpponent(dcv->drone, NULL);
@@ -308,7 +305,7 @@ static bool BotGlobalUpdate(DCVars_tag *dcv, Drone_tag *drone) {
         if (GameState.NumFramesUnpaused > own->recoveryEndFrame) {
             own->flags &= ~BOT_FLAG_RECOVERING;
         } else if (drone->opponent != NULL) {
-            dcv->drone->flags &= ~0x10000;
+            dcv->drone->flags &= ~DRONE_FLAG_LOOKS_FOR_OPPONENT;
             dcv->drone->sightFlags &= ~DRONE_SIGHT_SEES_OPPONENT;
             for (int i = 0; i < NUM_AGENTS; i++)
                 bot->players[i].flags &= ~(BOT_PLAYER_PRESENT | BOT_PLAYER_IN_SIGHT);
@@ -433,7 +430,7 @@ static bool BotStateChanged(DCVars_tag *dcv) {
     }
     dcv->drone->alertness = (float)alert;
     Drone_AlertStatusSet(status, dcv);
-    dcv->drone->flags |= 0x10000;
+    dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
     dcv->drone->botVars->stateClass = (uchar)stateClass;
     return true;
 }
@@ -943,7 +940,7 @@ uint NDrone2_ChooseRunAnim(DCVars_tag *dcv, float remaining) {
     return anim;
 }
 
-// Turns the drone's heading (angleToSomePoint) towards moveTarget, plus offset; not while unknown3f0 has 0x8000000.
+// Turns the drone's heading (targetRot.y) towards moveTarget, plus offset; not while unknown3f0 has 0x8000000.
 // FUN_00043cf0 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
 void NDrone2_FaceMoveTarget(DCVars_tag *dcv, float offset) {
@@ -951,7 +948,7 @@ void NDrone2_FaceMoveTarget(DCVars_tag *dcv, float offset) {
         return;
     _VECTOR delta;
     Vec_Subtract(&dcv->drone->moveTarget, &dcv->gameObj->position, &delta);
-    dcv->drone->angleToSomePoint = (float)(Extended(Atan2(delta.x, delta.z)) + Extended(offset));
+    dcv->drone->targetRot.y = (float)(Extended(Atan2(delta.x, delta.z)) + Extended(offset));
 }
 
 // The route to the opponent, within 2 m (none while the bot is recovering): its status
@@ -985,7 +982,7 @@ bool NDrone2_DSTATE_BotAttack(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
     case DRONE_MSG_Update: {
         if (!NDrone2_HasOpponent(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackNoOpponent, 0);
-        if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
+        if (!(dcv->drone->flags & DRONE_FLAG_STATIONARY) &&
             behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             !(dcv->drone->unseenFrames <= 15 && DroneFunc_InRangeOfTarget(dcv, dcv->drone->combatRanges[1]))) {
             uint route = BotRouteToOpponent(dcv, drone);
@@ -1087,7 +1084,7 @@ bool NDrone2_DSTATE_BotAttackFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
                 return true;
             return BotCombatMove(dcv);
         }
-        if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
+        if ((dcv->drone->flags & DRONE_FLAG_STATIONARY) ||
             behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0)
             return true;
         if (dcv->drone->distanceToTarget <= dcv->drone->combatRanges[0] && NDrone2_CanBackoff(dcv))
@@ -1258,7 +1255,7 @@ bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackRunChangePosition, 0);
     case DRONE_MSG_Update: {
         NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, -0.1f, 0);
-        if (!(dcv->drone->flags & DRONE_FLAG_FROZEN) &&
+        if (!(dcv->drone->flags & DRONE_FLAG_STATIONARY) &&
             behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) == 0 &&
             dcv->drone->distanceToTarget <= dcv->drone->combatRanges[0] && NDrone2_CanBackoff(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotAttackBackoff, 0);
@@ -1269,7 +1266,7 @@ bool NDrone2_DSTATE_BotAttackCrouch(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         short move = BOTSTATE_EvasiveMove(dcv);
         if (move != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)move, 0);
-        if ((dcv->drone->flags & DRONE_FLAG_FROZEN) ||
+        if ((dcv->drone->flags & DRONE_FLAG_STATIONARY) ||
             behaviour_util_getProperty(DRONE_PROP_STAYS_PUT, dcv->drone->currentBehaviour) != 0) {
             if (Rand_Rand(3) != 0 && dcv->drone->unseenFrames <= 15)
                 return true;
@@ -1402,10 +1399,11 @@ static void SetAtCornerCover(DCVars_tag *dcv) {
     dcv->drone->atCornerCover = dcv->drone->coverNode->type != COVER_LOW;
 }
 
-// How long to wait in cover before looking out: up to a share of 120 frames (NPCGlobals.unknown138c, unknown854),
+// How long to wait in cover before looking out: up to a share of 120 frames (NPCGlobals.coverWaitScale,
+// coverWaitShare),
 // and a second
 static void BotCoverWait(DCVars_tag *dcv) {
-    uint wait = Rand_Rand(Ftol((double)NPCGlobals.unknown138c * dcv->drone->unknown854 * kCoverWaitScale));
+    uint wait = Rand_Rand(Ftol((double)NPCGlobals.coverWaitScale * dcv->drone->coverWaitShare * kCoverWaitScale));
     SetTimerA(dcv, wait + FRAME_RATE_INT + GameState.NumFramesUnpaused);
 }
 
@@ -1461,8 +1459,8 @@ bool NDrone2_DSTATE_BotCoverInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
     case DRONE_MSG_Enter: {
         DroneAnim_CoverAnim(dcv, COVER_STEP_ARRIVE, DSTATE_BotCoverIdle);
         SetAtCornerCover(dcv);
-        dcv->drone->flags &= ~0x800;
-        dcv->drone->unknown38 = 1;
+        dcv->drone->flags &= ~DRONE_FLAG_GOING_TO_COVER;
+        dcv->drone->standingStill = 1;
         Drone_tag *self = dcv->drone;
         NDrone2_GetCoverPosForTarget(self->coverNode, self->targetSlot, &self->aiPoint.pos, NULL, 0);
         return true;
@@ -1502,7 +1500,7 @@ bool NDrone2_DSTATE_BotCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         DroneAnim_CoverAnim(dcv, COVER_STEP_IDLE, 0);
         BotCoverWait(dcv);
         SetAtCornerCover(dcv);
-        dcv->drone->unknown38 = 0;
+        dcv->drone->standingStill = 0;
         dcv->drone->stateScratch = 0;
         return true;
     case DRONE_MSG_Exit:
@@ -1867,7 +1865,7 @@ bool NDrone2_DSTATE_BotDoorOpen(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
                 DroneAnim_CallAnim(DANIM_DOOR_WAIT, 1, 0, 0, 0.0f, 0, dcv);
             } else {
                 DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
-                dcv->drone->unknown38 = 1;
+                dcv->drone->standingStill = 1;
             }
             NDrone2_OpenDoor(dcv);
         }
@@ -1875,12 +1873,12 @@ bool NDrone2_DSTATE_BotDoorOpen(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         return true;
     }
     case DRONE_MSG_Exit:
-        dcv->drone->unknown38 = 0;
+        dcv->drone->standingStill = 0;
         return true;
     case DRONE_MSG_Update:
         if (NDrone2_DoorIsOpen(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->nodeReturnState, 0);
-        dcv->drone->unknown38 = 1;
+        dcv->drone->standingStill = 1;
         return true;
     case DRONE_MSG_TimerA:
         NDrone2_OpenDoor(dcv);

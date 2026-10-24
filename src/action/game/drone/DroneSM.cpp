@@ -21,7 +21,6 @@ bool NDrone2_ProcessStateMachine(DCVars_tag *dcv, uint state, MsgObject *msg) {
     return NDrone2_StateFuncs[state](dcv, dcv->drone, dcv->gameObj, msg);
 }
 
-
 // A message waiting for its frame: the head of one of Drone_SM_LLDelayed's lists, or one of its items
 typedef struct DroneSMItem {
     DroneSMItem *next;
@@ -255,8 +254,8 @@ void Drone_SM_RouteMsgDCV(DCVars_tag *dcv, MsgObject *msg) {
         sm->prevState = sm->curState;
         sm->curState = sm->nextState;
         dcv->gameObj->curState = (ushort)sm->curState;
-        dcv->drone->flags &= ~0x10000;
-        dcv->drone->flags &= ~0x2000;
+        dcv->drone->flags &= ~DRONE_FLAG_LOOKS_FOR_OPPONENT;
+        dcv->drone->flags &= ~DRONE_FLAG_ALERTABLE;
         dcv->drone->hitDamageScale = 1.0f;
         dcv->drone->timerA.on = 0;
         dcv->drone->timerB.on = 0;

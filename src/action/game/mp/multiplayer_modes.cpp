@@ -25,9 +25,6 @@
 // XBE_GLOBAL(0x00261c58, 0x100)
 obj_tag *HitByList[64];
 
-
-
-
 // Bot messages sent here (docs/drone/bots-and-navigation, DSTATE_BotGlobal): 0x3a objective changed, 0x3b goal
 // complete, 0x3d cancel goals on an object, 0x43 a player died. 0x39, 0x3e and 0x3f are not in its table.
 
@@ -51,9 +48,9 @@ void MP_KOHUpdate(obj_tag *hill) {
         char type = obj->objectType;
         if (type == OBJECTTYPE_DRONE || type == OBJECTTYPE_DEAD_DRONE) {
             Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-            if (drone->flags & 0x600)
+            if (drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING))
                 continue;
-            if (!(drone->flags & 0x100))
+            if (!(drone->flags & DRONE_FLAG_ENABLED))
                 continue;
             if (drone->health <= 0.0f)
                 continue;

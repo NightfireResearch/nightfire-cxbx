@@ -17,8 +17,6 @@
 #include <math.h>
 #include <string.h>
 
-
-
 // Fists: a bot always holds them
 #define WEAPON_FISTS 1
 

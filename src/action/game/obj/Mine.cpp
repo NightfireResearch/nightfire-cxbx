@@ -7,7 +7,6 @@
 
 #pragma fp_contract(off)
 
-
 // Others may point at it until it goes
 // AUTOINJECT
 obj_tag* Mine_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *celgl) {

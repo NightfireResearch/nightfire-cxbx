@@ -140,7 +140,7 @@ In order [dec]:
 
 ```
 Drone_InitComms()                                  0x32a00  global AI step (areas B/C), then per drone:
-   switch_NO_DRONES handling (sets/clears Drone_bDisableSystem, flag 0x10 in every drone's +0x3f4 [inf: "frozen"])
+   switch_NO_DRONES handling (Drone_PauseNoDraw: sets/clears Drone_bDisableSystem and hides the drones)
    Drone_PauseNoDraw? 0x30950, AINetwork_ClearLinkFlags(0x310), Drone_BuildDynamicAwarePoints, 0x31190,
    Drone_ProcessCoverNodes, Drone_ProcessOpponents? 0x313e0, 0x31110, DroneVision_ProcessDroneSight, 0x314a0,
    NDrone2_NavNodeCache? 0x44de0
@@ -474,7 +474,7 @@ GetDroneTypeAttackTypeFriend, DoTypeSettingsOLD):
 | 0x014-0x01b | 1 each | skin flags | 0x19 = PS2 isCaptain | +0x18 ninja eyes, +0x19 captain, +0x1b impact immunity [inf: HandleImpact skips when set] | [dec] |
 | 0x023 | 1 | flies | | abseil / astronaut movement (routes get flag 0x80, ControlSTANDARD skips steering) [inf] | [dec] |
 | 0x029 | 1 | usingSecondBehaviour | 0x29 usingSecondBehaviour | ChangeToAttackMode, 0x3a410 | [dec] |
-| 0x031/0x032 | 1 | modeSettings flags | 0x31/0x32 | 0x32 = mode came from the OLD table (DefaultInit then runs DoTypeSettingsOLD) | [dec, PS2] |
+| 0x031/0x032 | 1 | modeSet / modeFromOldTable | 0x31/0x32 | 0x32 = mode came from the OLD table (DefaultInit then runs DoTypeSettingsOLD) | [dec, PS2] |
 | 0x03b/0x03d | 1 | | | written by RouteMsgDCV on every change (see 3.3) | [dis] |
 | 0x044 | 1 | side ("isCivilian" in Ghidra) | 0x44 isCivilian | 1 enemy, 2 ally, 3 civilian/neutral (mode table col 1, or behaviour class) | [dec, PS2] |
 | 0x090 | 4 f | health | 0xac health | DoModeSettings*, DefaultInit, damage code | [dec, PS2] |
@@ -508,8 +508,8 @@ GetDroneTypeAttackTypeFriend, DoTypeSettingsOLD):
 | 0x2fc | | collision block | | obj->maybeCollision | [dec] |
 | 0x3d4 | 4 | currentBehaviour (points at +0x3d8 or +0x3e4) | 0x4d8 | | [dec, PS2] |
 | 0x3d8 / 0x3e4 | 12 each | behaviour 1 / behaviour 2 property bits | 0x4dc / 0x4e8 | behaviour_util_* (area B) | [dec, PS2] |
-| **0x3f4** | 4 | **flags** | 0x4f8 | 0x100 active (AI runs), 0x200 dead, 0x400 dying, 0x10 frozen/disabled, 0x80000 animate, 0x100000 anim updated, 0x20/0x80 cleared at death [inf: targetable/collidable], 0x1000000 keep health, 0x10000/0x2000 cleared per state, 0x4000000/0x40000000 start attacking. 186 functions touch it (A3) | [dec] |
-| 0x3f8 | 4 | flags2 | | | [dec] |
+| **0x3f4** | 4 | **flags** | 0x4f8 | `DroneFlags` in Drone.h names every bit: 0x100 enabled (NDrone2_Enable), 0x200 dead, 0x400 dying, 0x10 stationary, 0x80000 animate, 0x100000 anim updated, 0x20/0x80 collides/falls, 0x1000000 knocked out (keeps health), 0x10000/0x2000 looks for its opponent / alertable (cleared per state), 0x4000000 attack mode with its reason in 0x8000000-0x40000000. 186 functions touch it (A3) | [dec] |
+| 0x3f8 | 4 | knowledge | | `DRONE_KNOWS_*`: what it found out (sighting, hurt, surrendered, dead, interrogating), set as it alerts the drones near it; DroneVision_ConsiderAlerted moves an alerter's into the high half | [dec] |
 | 0x3fc / 0x400 | 4 f | base alertness (behaviour 1 / 2) | 0x500 / 0x504 | mode table or behaviour | [dec, PS2] |
 | 0x404 | 4 f | previous alertness | | PreDroneControl | [dec] |
 | 0x408 | 4 f | alertness ("cumulativeAlertnessScaled") | 0x50c cumulativeSoundAlertness | 1.0 = starts alerted | [dec, PS2] |

@@ -110,7 +110,7 @@ int WhoScript(const void *p) {
     for (int i = 0; i < kDrones; i++) {
         if (p == &world.drones[i].animScript)
             return 10 + i;
-        if (p == &world.drones[i].unknown434)
+        if (p == &world.drones[i].blendScript)
             return 20 + i;
     }
     return p == NULL ? -1 : 999;
@@ -335,7 +335,7 @@ void RandomDrone(int i) {
     d->animNextRow = ShadowRand(3) == 0 ? 0 : (ShadowRand(4) == 0 ? d->animRow : RandomRow());
     d->animEndBlend = (uchar)ShadowRand(3) == 0 ? 0 : (uchar)ShadowRand(40);
     static const uint animFlags[] = {0, 1, 4, 5, 0x80, 0x100, 0x101, 0x200, 0x384, 0x105};
-    d->unknown46c = animFlags[ShadowRand(10)];
+    d->animFlags = animFlags[ShadowRand(10)];
     d->prevAnimFlags = animFlags[ShadowRand(10)];
     d->animHashcode = (HASHCODE)(HT_Script_HASHCODE_BASE + ShadowRand(3) * 0x123);
     d->animSpeed = SpecialOr(0.5f, 1.5f);
@@ -344,28 +344,28 @@ void RandomDrone(int i) {
     d->animEndState = (short)(ShadowRand(3) ? 0 : ShadowRand(70) - 2);
     d->animEndMsg = ShadowRand(3) ? 0 : ShadowRand(0x30);
     d->animScript = ShadowRand(5) == 0 ? NULL : &world.scripts[0];
-    d->unknown434 = ShadowRand(3) == 0 ? (void *)&world.scripts[1] : NULL;
+    d->blendScript = ShadowRand(3) == 0 ? &world.scripts[1] : NULL;
     d->animFunc = RandomFunc();
     d->animStateFunc = RandomFunc();
     static const float snaps[] = {0.0f, -0.0f, PI, -HALF_PI, 0.3f, NAN};
-    d->unknown448 = Pick(snaps, 6);
-    d->angleToSomePoint = SpecialOr(-3.0f, 3.0f);
+    d->pendingTurn = Pick(snaps, 6);
+    d->targetRot.y = SpecialOr(-3.0f, 3.0f);
     static const float healths[] = {0.0f, -0.0f, -5.0f, 50.0f, NAN};
     d->health = Pick(healths, 5);
     d->secondWeapon = (char)(ShadowRand(5) - 1);
-    d->unknown230 = ShadowRand(2) ? &world.objs[1 - i] : NULL;
+    d->hostagePartner = ShadowRand(2) ? &world.objs[1 - i] : NULL;
     d->heavyHit = (uchar)ShadowRand(2);
     d->flags = ShadowRand(0x10000) | (ShadowRand(2) << 31);
     d->aimMode = (uchar)ShadowRand(16);
-    d->unknown481 = (uchar)ShadowRand(16);
+    d->animMoveState = (uchar)ShadowRand(16);
 
     static const float heights[] = {0.0f, 0.2f, 0.35f, 1.0f, NAN};
     d->rootHeight = Pick(heights, 5);
     d->prevRootHeight = SpecialOr(0.0f, 1.0f);
-    d->unknown1a = (uchar)(ShadowRand(4) == 0);
+    d->playingDeathScript = (uchar)(ShadowRand(4) == 0);
     d->dtype = (uchar)(ShadowRand(4) == 0 ? DTYPE_Bot : ShadowRand(30));
     d->speed = (uchar)ShadowRand(4);
-    d->unknown38 = (uchar)(ShadowRand(5) == 0);
+    d->standingStill = (uchar)(ShadowRand(5) == 0);
     d->flies = (uchar)(ShadowRand(5) == 0);
     d->touchingPlayer = (uchar)(ShadowRand(3) == 0);
     RandomVector(&d->contactDir, 1.0f);

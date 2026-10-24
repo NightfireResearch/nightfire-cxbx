@@ -32,14 +32,11 @@
 #define FAIL_TASERED 13
 #define FAIL_STUN_DARTED 14
 
-// Drone_tag.flags: knocked out, and no longer counted as killed (NDrone2_LogDroneDeath)
-#define DRONE_FLAG_KNOCKED_OUT 0x1000000
-
 static_assert(std::bit_cast<uint32_t>((float)M_PI_2) == 0x3fc90fdb, "not the original's pi/2");
 
-static void Reactions_SetTimer(DroneTimer *timer, uint dueFrame, uint unknown8 = 0) {
+static void Reactions_SetTimer(DroneTimer *timer, uint dueFrame, uint data = 0) {
     timer->dueFrame = dueFrame;
-    timer->unknown8 = unknown8;
+    timer->data = data;
     timer->on = 1;
 }
 
@@ -58,7 +55,7 @@ bool NDrone2_DSTATE_PunchImpact(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         NDrone2_PunchImpact(dcv, (HITDATA_tag *)msg->extraData, 0, 1);
         return true;
 
@@ -89,7 +86,7 @@ bool NDrone2_DSTATE_ExplosiveImpact(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         NDrone2_ExplosiveImpact(dcv, (DroneImpact_tag *)msg->extraData, 0, 1);
         return true;
 
@@ -121,7 +118,7 @@ bool NDrone2_DSTATE_BulletImpact(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         drone->firing = 0;
         return true;
 
@@ -341,7 +338,7 @@ bool NDrone2_DSTATE_Stunned_Recover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         if (dcv->drone->skinClass == SKIN_CLASS_TURNCOAT)
             dcv->drone->side = 1;
         if (NDrone2_IsCivilian(dcv)) {
@@ -458,7 +455,7 @@ bool NDrone2_DSTATE_StunGrenadeRecover(DCVars_tag *dcv, Drone_tag *drone, obj_ta
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         if (NDrone2_IsCivilian(dcv)) {
             DroneAnim_CallAnim(DANIM_GET_UP, 0, (short)dcv->aiStateMachine->resumeState, 0, 0.0f, 0, dcv);
         } else {
@@ -573,7 +570,7 @@ bool NDrone2_DSTATE_StunDartRecover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         if (NDrone2_IsCivilian(dcv))
             DroneAnim_CallAnim(DANIM_GET_UP, 0, (short)dcv->aiStateMachine->resumeState, 0, 0.0f, 0, dcv);
         else
@@ -682,7 +679,7 @@ bool NDrone2_DSTATE_SmokedOut_Recover(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         DroneAnim_CallAnim(0xa, 0, (short)dcv->aiStateMachine->resumeState, 0, 0.0f, 0, dcv);
         return true;
 
@@ -736,7 +733,7 @@ bool NDrone2_DSTATE_Surrender_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         DroneAnim_CallAnim(0x5c, 0, DSTATE_Surrendered, 0, 0.0f, 0, dcv);
         Drone_AlertStatusSet(2, dcv);
         DroneWeap_DropWeapon(dcv);
@@ -756,7 +753,7 @@ bool NDrone2_DSTATE_Surrender_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         return true;
 
     case DRONE_MSG_TimerA:
-        dcv->drone->flags2 |= 4;
+        dcv->drone->knowledge |= DRONE_KNOWS_SURRENDERED;
         NDrone2_DroneAlertToObject(dcv, 0x13, dcv->gameObj, 0.0f, 0.0f, 1.0f);
         Reactions_SetTimer(&dcv->drone->timerA, Reactions_FramesFromNow(15.0f), 1);
         return true;
@@ -792,7 +789,7 @@ bool NDrone2_DSTATE_Surrendered(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         if (drone->opponent == NULL)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_NoOpponent, 0);
         NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, 0.0f, 1);
@@ -834,7 +831,7 @@ bool NDrone2_DSTATE_Unsurrender_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
         return true;
 
     case DRONE_MSG_Enter:
-        dcv->drone->flags |= 0x10000;
+        dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, 0.0f, 0);
         DroneAnim_CallAnim(0xa, 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
         return true;

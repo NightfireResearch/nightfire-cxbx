@@ -27,7 +27,6 @@ DLISTINFO_tag LightList;
 // XBE_GLOBAL(0x00215718, 0x78)
 light_tag *ClosestLights[30];
 
-
 // AUTOINJECT
 void Light_Init(void) {
     DList_Init(&LightList, sizeof(light_tag), 0);
@@ -37,7 +36,7 @@ void Light_Init(void) {
 // AUTOINJECT
 void Light_AllocateEntries(void) {
     size_t allocSize = sizeof(light_tag) * NUM_LIGHTS;
-    light_tag* lightMemory = (light_tag*)Mem_Malloc(allocSize, (MallocFlags)0x3704, 0);
+    light_tag* lightMemory = (light_tag*)Mem_Malloc(allocSize, MALLOC_LIGHT_DATA, 0);
 
     memset(lightMemory, 0, allocSize);
 

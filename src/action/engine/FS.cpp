@@ -89,8 +89,6 @@ struct FileOperationXbox {
 };
 LAYOUT_32(sizeof(FileOperationXbox) == 0x28, "FileOperationXbox must be 0x28 bytes");
 
-
-
 #pragma pack(pop)
 
 // XBE_GLOBAL(0x002b0c28, 0x13a40)
@@ -111,7 +109,6 @@ struct AsyncStream {
 #define MAX_ASYNC_STREAMS 16
 // XBE_GLOBAL(0x002c5068, 0x80)
 static AsyncStream AsyncStreams[MAX_ASYNC_STREAMS];
-
 
 // Helper - the compiler optimised this substantially, and it has also been inlined in various places
 void FS_NormalisePath(char* src, char* dst) {
@@ -158,7 +155,6 @@ int FS_MatchFilenameToHeader(char *filename) {
     printf("FS_MatchFilenameToHeader: %s not found!\n", normalisedName);
     return -1;
 }
-
 
 // ---------------------------------------------------------------------------------------------------------------
 // The open-file table (0x000e24a0-0x000e2900). Reads are overlapped: FS_ReadFile issues one and
@@ -392,7 +388,6 @@ bool FS_StateMachineIterate(void) {
                 return true;
                             
 
-
         }        
 
         return true;
@@ -416,8 +411,6 @@ int FS_GetFileSize(char *filename) {
 
     return (FileSystem.fileEntries[idx].uncompressedLen + (FileSystem.fileEntries[idx].flags & FLAG_IS_EDL_COMPRESSED ? 0x800 : 0));
 }
-
-
 
 // Starts loading a file into buffer, if the loader is idle (FS_StateMachineIterate then runs it). A compressed
 // file is read into the tail of the buffer and decompressed down to its start. (0x000e3280)

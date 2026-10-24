@@ -37,13 +37,6 @@
 #define BONE_TORSO 1
 #define BONE_HEAD 5
 
-// Drone_tag.flags: has told the others it is hurt; flags2: hurt
-#define DRONE_FLAG_HURT_SENT 8
-#define DRONE_FLAG2_HURT 2
-// Drone_tag.flags: attacking (DroneFunc_CalmOnImpact)
-#define DRONE_FLAG_ATTACK_MODE 0x4000000
-#define DRONE_FLAG_2000000 0x2000000
-
 // The message NDrone2_DroneAlertToPosition sends for a hurt drone (DRONE_PROP_ALERTED_BY_DRONE_SHOT's)
 #define HURT_ALERT_MSG 0x12
 
@@ -495,7 +488,7 @@ void DroneFunc_SendHurtMessage(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if ((drone->flags & DRONE_FLAG_HURT_SENT) || drone->dtype == DTYPE_Sniper)
         return;
-    drone->flags2 |= DRONE_FLAG2_HURT;
+    drone->knowledge |= DRONE_KNOWS_HURT;
     NDrone2_DroneAlertToPosition(dcv->gameObj, HURT_ALERT_MSG, &dcv->gameObj->position, dcv->gameObj->inCel, 0, 0,
                                  0);
     dcv->drone->flags |= DRONE_FLAG_HURT_SENT;
@@ -673,7 +666,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
 
     if (behaviour_util_getProperty(DRONE_PROP_HURT_ALERTS, dcv->drone->currentBehaviour) &&
         !(dcv->drone->flags & DRONE_FLAG_HURT_SENT)) {
-        dcv->drone->flags2 |= DRONE_FLAG2_HURT;
+        dcv->drone->knowledge |= DRONE_KNOWS_HURT;
         NDrone2_DroneAlertToPosition(dcv->gameObj, HURT_ALERT_MSG, &dcv->gameObj->position, dcv->gameObj->inCel, 0,
                                      0, 0);
         dcv->drone->flags |= DRONE_FLAG_HURT_SENT;
@@ -713,10 +706,10 @@ static void DroneFunc_CalmOnImpact(DCVars_tag *dcv) {
         dcv->aiStateMachine->resumeState = DSTATE_CivilianPatrol;
         return;
     }
-    drone->flags &= ~DRONE_FLAG_2000000;
+    drone->flags &= ~DRONE_FLAG_ATTACK_STARTED;
     dcv->drone->secondState = DSTATE_RunToAlarm;
-    dcv->drone->unknown16 = 0;
-    dcv->drone->flags2 = 0;
+    dcv->drone->runningToAlarm = 0;
+    dcv->drone->knowledge = 0;
     if (dcv->drone->diVars.keys.mode == 100) {
         dcv->drone->currentBehaviour = dcv->drone->behaviour1;
         dcv->drone->usingSecondBehaviour = 0;

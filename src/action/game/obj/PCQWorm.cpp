@@ -29,9 +29,6 @@ static_assert(sizeof(ObjData_PCQWorm) == 6, "Size of PCQWorm incorrect");
 
 #pragma pack(pop)
 
-
-
-
 // AUTOINJECT
 obj_tag * PCQWorm_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *celgl) {
   

@@ -28,7 +28,7 @@
 // While set, no drone sees or hears anything (the cheat)
 extern uint32_t switch_BLIND_DRONES;
 
-// The target bit of a drone's soundTarget
+// The target bit of a drone's heardTarget
 #define AITARGET_SOUND 0x4000000
 
 // The bone NDrone2_CanSeeObject looks for
@@ -46,34 +46,37 @@ static_assert(std::bit_cast<uint32_t>(0.2f) == 0x3e4ccccd, "not the original's c
 // The name is the PS2 build's
 // AUTOINJECT
 void DroneVision_BeginInterogate(Drone_tag *drone) {
-    drone->flags2 |= DRONE_FLAG2_INTEROGATING;
-    NPCGlobals.unknown1392 = 1;
+    drone->knowledge |= DRONE_KNOWS_INTERROGATING;
+    NPCGlobals.interogating = 1;
 }
 
 // AUTOINJECT
 void DroneVision_EndInterogate(Drone_tag *drone) {
-    drone->flags2 = (drone->flags2 & ~DRONE_FLAG2_INTEROGATING) | DRONE_FLAG2_INTEROGATED;
+    drone->knowledge = (drone->knowledge & ~DRONE_KNOWS_INTERROGATING) | DRONE_KNOWS_BIT4;
     if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors1)
-        NPCGlobals.unknown1392 = 0;
+        NPCGlobals.interogating = 0;
 }
 
 // AUTOINJECT
 void DroneVision_SetInterogateAssist(Drone_tag *drone) {
-    drone->flags2 |= DRONE_FLAG2_INTEROGATING;
+    drone->knowledge |= DRONE_KNOWS_INTERROGATING;
 }
 
 // AUTOINJECT
 void DroneVision_EndInterogateAssist(Drone_tag *drone) {
-    drone->flags2 = (drone->flags2 & ~(DRONE_FLAG2_INTEROGATING | 0x200000)) | DRONE_FLAG2_INTEROGATED;
+    drone->knowledge = (drone->knowledge & ~(DRONE_KNOWS_INTERROGATING | (DRONE_KNOWS_INTERROGATING << 16))) |
+                       DRONE_KNOWS_BIT4;
     drone->alertedBy = NULL;
 }
 
-// False while the drone that alerted this one still interrogates: its flags2 is 0x20 or 0x21 (the test takes 0x200000
-// too, but nothing else may be set). The name is the PS2 build's.
+// False while the drone that alerted this one still interrogates: it knows INTERROGATING, perhaps with SIGHTING (the
+// test takes the told INTERROGATING too, but nothing else may be set). The name is the PS2 build's.
 // AUTOINJECT
 bool DroneVision_TestEndInterogationAssist(Drone_tag *drone) {
     Drone_tag *interogator = drone->alertedBy;
-    if (interogator != NULL && (interogator->flags2 & 0x200020) && !(interogator->flags2 & ~0x21u))
+    if (interogator != NULL &&
+        (interogator->knowledge & (DRONE_KNOWS_INTERROGATING | (DRONE_KNOWS_INTERROGATING << 16))) &&
+        !(interogator->knowledge & ~(DRONE_KNOWS_SIGHTING | DRONE_KNOWS_INTERROGATING)))
         return false;
     return true;
 }
@@ -95,7 +98,7 @@ bool NDrone2_NearArmedDrone(DCVars_tag *dcv, float radius, char check) {
         obj_tag *obj = other->gameObj;
         if (obj == NULL || MPDrone_IsDyingOrDead(obj))
             continue;
-        if (other->flags & 0x4200)
+        if (other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_BIT14))
             continue;
         if (!NDrone2_ObjectIsArmed(obj) || other->side != 1)
             continue;
@@ -117,11 +120,11 @@ bool NDrone2_NotNearArmedDrone(DCVars_tag *dcv, float radius) {
         if (other == dcv->drone)
             continue;
         obj_tag *obj = other->gameObj;
-        if (other->flags & 0x4200)
+        if (other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_BIT14))
             continue;
         if (other->health <= 0.0f)
             continue;
-        if (!(other->flags & 0x100))
+        if (!(other->flags & DRONE_FLAG_ENABLED))
             continue;
         if (obj == NULL || !NDrone2_ObjectIsArmed(obj) || other->side != 1)
             continue;
@@ -232,7 +235,7 @@ ushort DroneVision_ShoutDroneAlert(DCVars_tag *dcv) {
     return HearShout(dcv, DRONE_PROP_ALERTED_BY_DEAD_BODY);
 }
 
-// The alert messages a state passes on: the state to go to, or 0. First, unless unknown33 or explosiveSeen is set,
+// The alert messages a state passes on: the state to go to, or 0. First, unless returnPosKept or explosiveSeen is set,
 // the drone keeps where it was (the state, its feet and cel) to come back to. Message 0x16 is a shout heard by all;
 // it changes nothing either.
 // AUTOINJECT
@@ -242,7 +245,7 @@ ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg) {
         return 0;
     if (drone->flags & DRONE_FLAG_NO_ALERTS)
         return 0;
-    if (!drone->unknown33 && !drone->explosiveSeen) {
+    if (!drone->returnPosKept && !drone->explosiveSeen) {
         drone->returnState = (short)dcv->aiStateMachine->curState;
         NDrone2_FeetPos(dcv->gameObj, &dcv->drone->returnPos);
         dcv->drone->returnCel = dcv->gameObj->inCel;
@@ -287,7 +290,7 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
     if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
         behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)
         return 0;
-    if ((dcv->drone->flags & 0x800) || (dcv->drone->flags2 & DRONE_FLAG2_INTEROGATING))
+    if ((dcv->drone->flags & DRONE_FLAG_GOING_TO_COVER) || (dcv->drone->knowledge & DRONE_KNOWS_INTERROGATING))
         return 0;
     if (behaviour_util_getProperty(DRONE_PROP_REACTS_WHILE_RUNNING, dcv->drone->currentBehaviour) == 0 &&
         (dcv->drone->dtype == DTYPE_RunToPoint || dcv->drone->dtype == DTYPE_AlarmRaiser) &&
@@ -304,7 +307,7 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
 
 // Each frame, for a drone with hearing (DRONE_PROP_HEARING; in CastleIndoors1 only an armed one): what it hears where it
 // stands raises its alertness by a hundredth. A sound in a known cel, a second (at 60 a second) or more after the
-// last or louder than it, becomes soundTarget and a DRONE_MSG_HeardNoise to itself.
+// last or louder than it, becomes heardTarget and a DRONE_MSG_HeardNoise to itself.
 // AUTOINJECT
 void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -337,11 +340,11 @@ void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv) {
 
     if (sound != NULL)
         drone->heardAlertness = sound->alertness;
-    drone->soundTarget.targetBit = AITARGET_SOUND;
-    drone->soundTarget.obj = NULL;
-    Vec_Copy(&sound->location, &drone->soundTarget.goal.pos);
-    drone->soundTarget.goal.cel = cel;
-    drone->soundTarget.builtFrame = 0;
+    drone->heardTarget.targetBit = AITARGET_SOUND;
+    drone->heardTarget.obj = NULL;
+    Vec_Copy(&sound->location, &drone->heardTarget.goal.pos);
+    drone->heardTarget.goal.cel = cel;
+    drone->heardTarget.builtFrame = 0;
     drone->heardFrame = GameState.NumFramesUnpaused;
     drone->heardLevel = level;
     Drone_SM_SendMsgSelf(DRONE_MSG_HeardNoise, NULL, 0, 0, dcv);
@@ -356,9 +359,6 @@ constexpr float kShoutInCel = 20.0f;
 
 // Drone_tag.sightFlags: NDrone2_ReactToOpponentSighted has reacted once (our name)
 #define DRONE_SIGHT_REACTED_ONCE 0x20
-// Drone_tag.flags
-#define DRONE_FLAG_HAS_COVER 0x800
-#define DRONE_FLAG_ALARM_SENT 0x200000
 
 // Whether the drone hears a shout from obj: within 15 m, or 20 m in the same cel (40 and 100 m in PowerStationA1,
 // PowerStationA2, Cut_Level1 and Cut_Level2).
@@ -381,7 +381,7 @@ bool NDrone2_InShoutingRange(DCVars_tag *dcv, obj_tag *obj) {
 
 // Leaves the state for an alert, as a state may answer it: the state given (or DSTATE_Attack) for a civilian,
 // party girl or guard civilian, another state for the rest, through BOT_reactToDroneAlertMsg for a bot. Unless
-// unknown33 or explosiveSeen is set, the drone first keeps where it was. True when the alert was taken (whether or
+// returnPosKept or explosiveSeen is set, the drone first keeps where it was. True when the alert was taken (whether or
 // not the state changed). Messages: a sound heard (0x14), the global alarm (0x1e), and other drones' shouts (0x11-0x16)
 // from a drone on the same path within shouting range. FUN_00038ff0 in Ghidra. Not named on PS2; the name is ours.
 // AUTOINJECT
@@ -395,7 +395,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
         if (alert->sender != NULL && alert->sender->objectType == OBJECTTYPE_DRONE)
             sender = (Drone_tag *)alert->sender->extraObjectData;
     }
-    if (!drone->unknown33 && !drone->explosiveSeen) {
+    if (!drone->returnPosKept && !drone->explosiveSeen) {
         drone->returnState = (short)dcv->aiStateMachine->curState;
         NDrone2_FeetPos(dcv->gameObj, &dcv->drone->returnPos);
         dcv->drone->returnCel = dcv->gameObj->inCel;
@@ -607,10 +607,10 @@ static_assert(std::bit_cast<uint32_t>(kAlarmShout) == 0x3f428f5c, "not the origi
 static void ShoutOpponent(DCVars_tag *dcv, float strength) {
     if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_ALERTS, dcv->drone->currentBehaviour) == 0)
         return;
-    if (dcv->drone->flags & DRONE_FLAG_ALARM_SENT)
+    if (dcv->drone->flags & DRONE_FLAG_ALERTED_OTHERS)
         return;
     NDrone2_DroneAlertToObject(dcv, 0x11, dcv->drone->opponent, 20.0f, 20.0f, strength);
-    dcv->drone->flags |= DRONE_FLAG_ALARM_SENT;
+    dcv->drone->flags |= DRONE_FLAG_ALERTED_OTHERS;
 }
 
 // The state a drone that sees its opponent goes to, `state` for the plain attack, or 0 to stay: none while the drones
@@ -628,7 +628,7 @@ short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state) {
         return 0;
     if (drone->side == 3)
         return 0;
-    if (drone->flags & DRONE_FLAG_HAS_COVER)
+    if (drone->flags & DRONE_FLAG_GOING_TO_COVER)
         return 0;
     if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
         behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)

@@ -32,7 +32,6 @@
 #define VK_F9_ 0x78
 #define GA_ROOT_ 2
 
-
 static bool GameWindowHasFocus(void) {
     HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
     if (render == NULL)

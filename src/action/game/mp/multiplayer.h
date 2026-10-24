@@ -6,7 +6,6 @@
 #include "../../engine/AINetwork.h"
 #include "../drone/BOT.h"
 
-
 typedef enum {
     GM_QUICK=0,
     GM_ARENA=1,
@@ -55,7 +54,6 @@ typedef enum  {
 } MPTeam;
 
 #define TEAM_GET_NAME(team) ((team == PHOENIX) ? "PHOENIX" : ((team == MI6) ? "MI6" : ((team == NO_TEAM) ? "NO_TEAM" : "UNKNOWN")))
-
 
 #pragma pack(push, 1)
 
@@ -135,7 +133,6 @@ static_assert(sizeof(MP_skin) == 0x10, "MP_skin is wrong size");
 
 extern MP_skin MP_skins[29];
 
-
 typedef struct MPBOT {
     BOT_stats_t stats;  // 0x00 the character's defaults (BOT_getDefaultStats), then P_MPBOTSETUP's
     char isPlaying;     // 0x0e the bot is in the game (P_MPBOTSETUP's "Playing" option)
@@ -169,7 +166,6 @@ typedef struct {
 static_assert(sizeof(MPJoinSlot) == 0x10, "MPJoinSlot is wrong size");
 
 extern MPJoinSlot mp_join_slots[NUM_PLAYERS];
-
 
 struct MPOBJECT_tag;
 
@@ -219,7 +215,6 @@ LAYOUT_32(offsetof(MPOBJECT, resetMtx) == 0x10, "MPOBJECT.resetMtx is at wrong o
 LAYOUT_32(offsetof(MPOBJECT, attackerIdx) == 0x4c, "MPOBJECT.attackerIdx is at wrong offset");
 LAYOUT_32(offsetof(MPOBJECT, holderIdx) == 0x4e, "MPOBJECT.holderIdx is at wrong offset");
 
-
 typedef struct {
     MP_OBJ_EXT keys[2];
     obj_tag *deathRay;
@@ -255,7 +250,6 @@ extern GoldenEyeStruct GoldenEye;
 extern SpawnPlace GoldenEyeSpawns[16];
 extern uint16_t GoldenEyeKeyCount;
 extern uint16_t GoldenEyeNonKeyCount;
-
 
 // One multiplayer weapon/ammo pickup slot (Ghidra's MP_PICKUP; 64 of them, 0x1600 bytes, from MP_Init's clear)
 #pragma pack(push, 1)

@@ -304,7 +304,7 @@ void parsemap_block_particles(uchar *data) {
         def.model = model != 0xffffffff ? (celglist_tag *)hashtable_getitem(model) : NULL;
 
         EMITTER_DEF *made = (EMITTER_DEF *)Mem_Malloc(sizeof(EMITTER_DEF) + def.keyCount * sizeof(KEYED_CLR),
-                                                    (MallocFlags)0x4204, 0);
+                                                    MALLOC_GAME_PARTICLE, 0);
         if (made == NULL)
             continue;
         *made = def;

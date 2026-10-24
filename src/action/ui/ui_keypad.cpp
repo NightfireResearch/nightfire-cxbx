@@ -9,7 +9,6 @@
 // The keypad page: each key adds its digit to the code being entered (GlobalVars' decoder digits), and the digits
 // so far are shown.
 
-
 // XBE_GLOBAL(0x0025dc48, 0x8)
 char keypad_text[8];
 

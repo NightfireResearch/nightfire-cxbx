@@ -208,11 +208,10 @@ void NDrone2_init_DMODE_PartyGirlLooker(Drone_tag *drone) {
 
 // ---- the type initialisers (DroneTypeSettings.init)
 
-#define DRONE_FLAG_FROZEN 0x10
 
 // AUTOINJECT
 void NDrone2_initDTYPE_Sniper(Drone_tag *drone) {
-    drone->flags |= DRONE_FLAG_FROZEN;
+    drone->flags |= DRONE_FLAG_STATIONARY;
 }
 
 // The DCVars it fills are not used
@@ -220,7 +219,7 @@ void NDrone2_initDTYPE_Sniper(Drone_tag *drone) {
 void NDrone2_initDTYPE_SniperAlert(Drone_tag *drone) {
     DCVars_tag dcv;
     Drone_DCVfromOBJ(drone->gameObj, &dcv);
-    drone->flags |= DRONE_FLAG_FROZEN;
+    drone->flags |= DRONE_FLAG_STATIONARY;
 }
 
 // ---- modes and types
@@ -256,7 +255,7 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
         }
         if (drone->alertness >= 1.0f)
             return DTYPE_CivilianScared;
-        return drone->unknown15 != 0 ? DTYPE_PartyGirl : DTYPE_Civilian;
+        return drone->female != 0 ? DTYPE_PartyGirl : DTYPE_Civilian;
     case 12:
         if (mode != 0)
             break;
@@ -553,7 +552,7 @@ void NDrone2_DoModeSettingsOLD(Drone_tag *drone, uint mode, uint *behaviour, DIV
     }
 
     const DroneModeSetting *setting = &DroneModeSettings[mode];
-    drone->modeFlag31 = 1;
+    drone->modeSet = 1;
     drone->modeFromOldTable = 1;
     drone->baseAlertness1 = setting->alertness;
     drone->alertness = setting->alertness;
@@ -621,7 +620,7 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
     NF_WARN_IF(behaviour == NULL, "NULL behaviours pointer!");  // GC check (0x80099554)
     NF_WARN_IF(behaviour != NULL && *behaviour == 0,
                "No behaviour data stored but placement param claims there is!");  // GC check (0x80099554)
-    drone->modeFlag31 = 1;
+    drone->modeSet = 1;
     drone->modeFromOldTable = 0;
     NF_WARN_IF(behaviour == NULL, "Drone has no behaviour data!");  // GC check (0x80099554)
 
@@ -694,7 +693,7 @@ void NDrone2_DoModeSettingsNEW(Drone_tag *drone, uint mode, uint *behaviour, DIV
         break;
     case HT_Script_DeathScriptIcyQuip:
         behaviour_util_setProperty(DRONE_PROP_38, drone->currentBehaviour, 0);
-        drone->flags |= DRONE_FLAG_FROZEN;
+        drone->flags |= DRONE_FLAG_STATIONARY;
         break;
     }
 }

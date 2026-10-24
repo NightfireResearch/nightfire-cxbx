@@ -18,8 +18,6 @@ TextureInfo *Tex[2048];
 // XBE_GLOBAL(0x002adf88, 0x300)
 ParticleOverlayBuffer ParticleOverlayRing[PARTICLE_OVERLAY_RING_SIZE];
 
-
-
 // AUTOINJECT
 void psiDrawObjectMatrix(celglist_tag* celglist, _MATRIX* matrix) {
 
@@ -74,8 +72,6 @@ void psiAgeParticleOverlayRing(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // psiResetResources
 // ---------------------------------------------------------------------------------------------------------------
-
-
 
 // Set here and consumed by the first psiPreDraw after the reset: it calls ConfigureGammaForLevel, turns
 // LevelLoadTime from the reset's timestamp into the load's duration, and zeroes TimeSpentLoadingFiles.
@@ -209,7 +205,6 @@ void psiResetResources(void) {
 // ---------------------------------------------------------------------------------------------------------------
 // psiPreDraw, psiCreateMapTextures, psiCreateEntityGfx
 // ---------------------------------------------------------------------------------------------------------------
-
 
 // The start of every frame's drawing (from mainloop). The first frame after a level load sets the level's gamma and
 // turns LevelLoadTime into how long the load took. The cache flush psiCreateMapTextures and psiCreateEntityGfx ask

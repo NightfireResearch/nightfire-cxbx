@@ -551,8 +551,7 @@ void RandomDrone() {
     d->route1.path = ShadowRand(6) ? &AIPaths[ShadowRand(3)] : NULL;
     d->route2.path = &AIPaths[0];
     d->missionPoint = ShadowRand(3) ? &world.points[ShadowRand(kPoints)] : NULL;
-    d->unknown824 = (uchar)ShadowRand(256);
-    d->unknown825 = (uchar)ShadowRand(256);
+    d->avoidLinks = (ushort)ShadowRand(0x10000);
     d->sm.nextState = ShadowRand(3) == 0 ? DSTATE_OpenDoor : ShadowRand(0x90);
     for (int i = 0; i < kNodes; i++) {
         world.route1Nodes[i] = (ushort)ShadowRand(kNodes);

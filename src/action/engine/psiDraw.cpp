@@ -224,7 +224,7 @@ void psiDrawParticleList(const float *positions, int count, uint32_t colour, int
     ParticleOverlayBuffer *entry = &ParticleOverlayRing[ParticleOverlayRingNext];
     if (entry->overlaySlot != 0)
         return;
-    void *vertices = Mem_Malloc(count * sizeof(ParticleVertex), 0x1204, 4);
+    void *vertices = Mem_Malloc(count * sizeof(ParticleVertex), MALLOC_XBOX, 4);
     if (vertices == NULL)
         return;
     ParticleVertex *v = (ParticleVertex *)vertices;
@@ -469,14 +469,14 @@ TriList* psiGetTriList(void *obj) {
         return NULL;
     int idx = gfx->geom_idx;
     ModelData *model = d3dGeometryObjs[idx];
-    TriList *list = (TriList *)Mem_Malloc(sizeof(TriList), 0x1204, 4);
+    TriList *list = (TriList *)Mem_Malloc(sizeof(TriList), MALLOC_XBOX, 4);
     if (list == NULL)
         return NULL;
     int allocated = model->dataSize14 - model->dataSize18;
     list->triangleCount = allocated;
     list->vertexCount = model->vtxCnt;
-    list->triangles = (TriListTriangle *)Mem_Malloc(allocated * sizeof(TriListTriangle), 0x1204, 4);
-    list->vertices = (TriListVertex *)Mem_Malloc(list->vertexCount * sizeof(TriListVertex), 0x1204, 4);
+    list->triangles = (TriListTriangle *)Mem_Malloc(allocated * sizeof(TriListTriangle), MALLOC_XBOX, 4);
+    list->vertices = (TriListVertex *)Mem_Malloc(list->vertexCount * sizeof(TriListVertex), MALLOC_XBOX, 4);
     if (list->triangles == NULL || list->vertices == NULL)
         return NULL;
 
@@ -524,7 +524,7 @@ void psiDeleteShard(void **shard) {
 void* psiCreateShard(const TriListVertex *vertices) {
     if (vertices == NULL)
         return NULL;
-    ShardVertex *shard = (ShardVertex *)Mem_Malloc(3 * sizeof(ShardVertex), 0x1204, 4);
+    ShardVertex *shard = (ShardVertex *)Mem_Malloc(3 * sizeof(ShardVertex), MALLOC_XBOX, 4);
     for (int i = 0; i < 3; i++) {
         const TriListVertex *in = &vertices[i];
         ShardVertex *out = &shard[i];

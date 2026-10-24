@@ -4,7 +4,6 @@
 #include "../../actionhelpers.h"
 #include "../../../common/xbeClass.h"
 
-
 #pragma pack(push, 1)
 
 // A helicopter's path (on CopterPaths): every placement of the type makes one; those of a group are the routes its

@@ -76,7 +76,7 @@ uint *pBinFileHeader;
 // AUTOINJECT
 void psiFileLoadForParse(char *name) {
     int size;
-    uint *file = (uint *)psiFileLoad(name, 0x1704, &size);
+    uint *file = (uint *)psiFileLoad(name, MALLOC_PARSEFILEBUFFER, &size);
     FileNextBlock = file;
     FileBase = (uchar *)file;
     FileLastBlock = (uint8_t *)file + size;
@@ -236,7 +236,7 @@ void parsemap_block_Coll_Data_New(void) {
             return;
         }
         // Rounded up to 4 (0x18, not the 0x16 of COLLDATA_tag on 32-bit), as the original
-        cel->colldata = (COLLDATA_tag *)Mem_Malloc((sizeof(COLLDATA_tag) + 3) & ~(size_t)3, (MallocFlags)0x1a04, 0);
+        cel->colldata = (COLLDATA_tag *)Mem_Malloc((sizeof(COLLDATA_tag) + 3) & ~(size_t)3, MALLOC_COLLDATA, 0);
     }
 
     COLLDATA_tag *coll = cel->colldata;
@@ -845,18 +845,18 @@ void parsemap_block_map_header(void) {
     MapEntityCount = pBMH->entityCount;
     if (MapEntityCount == 0)
         return;
-    pCelList = (celglist_tag *)Mem_Malloc(MapEntityCount * sizeof(celglist_tag), (MallocFlags)0x904, 0);
+    pCelList = (celglist_tag *)Mem_Malloc(MapEntityCount * sizeof(celglist_tag), MALLOC_CELGLISTSTRUCTS, 0);
     memset(pCelList, 0, pBMH->entityCount * sizeof(celglist_tag));
     pCelList->colldata = NULL;
     pCurrCelList = pCelList;
     if (pBMH->pathCount == 0) {
         m_paths = NULL;
     } else {
-        m_paths = (Ptr32<void> *)Mem_Malloc(pBMH->pathCount * sizeof(Ptr32<void>), (MallocFlags)0x1804, 0);
+        m_paths = (Ptr32<void> *)Mem_Malloc(pBMH->pathCount * sizeof(Ptr32<void>), MALLOC_PATHPOINTERS, 0);
         if (m_paths != NULL)
             m_ppaths = m_paths;
     }
-    m_pmap = (map_tag *)Mem_Malloc(sizeof(map_tag), (MallocFlags)0xa04, 0);
+    m_pmap = (map_tag *)Mem_Malloc(sizeof(map_tag), MALLOC_MAP_HEADER, 0);
     m_pmap->paletteHeaderData = NULL;
     m_pmap->numPaletteHeaderEntries = 0;
     m_pmap->texHeaderData = NULL;
@@ -900,7 +900,7 @@ void parsemap_block_palette_header(void) {
     m_pmap->texData = NULL;
     if (m_pmap->numPaletteHeaderEntries != 0)
         m_pmap->texData = (texDataEntry *)Mem_Malloc(m_pmap->numPaletteHeaderEntries * sizeof(texDataEntry),
-                                                    (MallocFlags)0xb08, 0);
+                                                    MALLOC_TEXTURES_ALIGN8, 0);
     pPallHeader = headers;
     pTexData = m_pmap->texData;
 }

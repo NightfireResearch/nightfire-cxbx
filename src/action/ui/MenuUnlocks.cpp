@@ -21,7 +21,6 @@ uint8_t menu_level_bonus_earned;  // Menu_SetLevelBonus gave a new reward
 // XBE_GLOBAL(0x002456a8, 0x1)
 uint8_t mp_explosive_scenery_unlocked;
 
-
 // The level whose rewards are slot 'index' of the rewards table, as sp_level lists them.
 static HASHCODE LevelAt(uint index) {
     for (uint i = 0; i < ARRAY_SIZE(sp_level); i++)

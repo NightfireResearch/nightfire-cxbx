@@ -141,7 +141,6 @@ void __cdecl dsndSetDistances(uint32_t channel, float minDist, float maxDist);
 void __cdecl dsndSetI3DL2Source(uint32_t channel, float volume); // reverb send, 0..100 into the volume table
 void __cdecl dsndSetPositioned(uint32_t channel, uint8_t positioned); // 0 = follow the listener
 
-
 // Called once per frame: pushes deferred 3D settings, services DSOUND's own work queue, then starts/stops
 // voices according to the per-slot request flags and frees the slots that have finished playing.
 //

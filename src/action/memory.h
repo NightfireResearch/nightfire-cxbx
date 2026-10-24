@@ -11,7 +11,7 @@ void Mem_TakeHeap(void);   // before Mem_Init, the standalone build's (memory.cp
 void* Mem_Malloc(size_t size, MallocFlags flags, uint32_t alignment);
 void Mem_Free(void **ptr);
 void Mem_Shrink(void **ptr, uint numBytes);
-void* allocateXboxSpecialMemory(int size, uint32_t alignment);   // Mem_Malloc of type 0x1204
+void* allocateXboxSpecialMemory(int size, uint32_t alignment);   // Mem_Malloc of MALLOC_XBOX
 void FreeMemory(void *data);                                      // Mem_Free of a pointer that may be null
 void Mem_PrintAllInfo(void);
 uint32_t Mem_SetMallocMethod(uint32_t method);

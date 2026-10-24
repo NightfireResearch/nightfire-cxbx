@@ -6,7 +6,6 @@
 
 #include "../../math/math.h"
 
-
 typedef enum {
     // The original uses value 1 both for graphics-only child objects and for
     // objects after their delete path has completed.
@@ -155,7 +154,6 @@ inline const char* Object_GetName(ObjectType type) {
         default: return "Unknown";
     }
 }
-
 
 // A base object consists of the minimum functionality required to be updated, rendered, collided with, destroyed, etc.
 // All specific object types will consist of this, plus additional data specific to that object type (pointed to by extraObjectData)

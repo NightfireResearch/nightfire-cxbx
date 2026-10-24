@@ -603,7 +603,7 @@ void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     Input_ClearAllActions(-1);
     SCRIPTCAMERA *camera = (SCRIPTCAMERA *)stream->linkedGameOrSoundObject;
     if (camera == NULL) {
-        camera = (SCRIPTCAMERA *)Mem_Malloc(sizeof(SCRIPTCAMERA), (MallocFlags)0x1404, 0);
+        camera = (SCRIPTCAMERA *)Mem_Malloc(sizeof(SCRIPTCAMERA), MALLOC_SCRIPTDATA, 0);
         if (camera == NULL)
             return;
     }
@@ -1199,7 +1199,7 @@ SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation
             return NULL;
         }
 
-        def = (SCRIPTDEF *)Mem_Malloc(sizeof(SCRIPTDEF), (MallocFlags)0x1404, 0);
+        def = (SCRIPTDEF *)Mem_Malloc(sizeof(SCRIPTDEF), MALLOC_SCRIPTDATA, 0);
         hashtable_additem(hashcode, def);
         def->hasCamera = BIN_GetWord(&cursor);
         def->numStreams = BIN_GetWord(&cursor);
@@ -1228,7 +1228,7 @@ SCRIPTINFO* Script_Load(HASHCODE hashcode, _VECTOR *transform, _VECTOR *rotation
     if (def == (SCRIPTDEF *)-1 || fileBuf != NULL)
         return NULL;
 
-    SCRIPTINFO *scriptInfo = (SCRIPTINFO *)Mem_Malloc(sizeof(SCRIPTINFO), (MallocFlags)0x1404, 0);
+    SCRIPTINFO *scriptInfo = (SCRIPTINFO *)Mem_Malloc(sizeof(SCRIPTINFO), MALLOC_SCRIPTDATA, 0);
     if (scriptInfo == NULL)
         return NULL;
 

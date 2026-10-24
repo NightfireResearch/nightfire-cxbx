@@ -7,5 +7,4 @@ void Inflate_huffman(EDLDecompressorState *state);
 void Inflate_bitwise(EDLDecompressorState *state);
 void Inflate_directcopy(EDLDecompressorState *state);
 
-
 #endif // INFLATE_H_

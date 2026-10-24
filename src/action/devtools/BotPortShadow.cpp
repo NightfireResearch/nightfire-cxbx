@@ -1242,9 +1242,9 @@ uint32_t RunStopAnim(bool original) {
     static const float frames[] = {0.0f, 1.0f, 1.5f, 12.75f, 30.0f, -2.5f, 70000.0f};
     world.scripts[0].curFrame = A(3) ? frames[A(COUNT(frames))] : (float)A(4000) / 16.0f;
     world.scripts[0].numFrames = (short)A(100);
-    world.scripts[1].ownerSlot = (sAnimScript_tag **)&drone->unknown434;
+    world.scripts[1].ownerSlot = &drone->blendScript;
     drone->animScript = &world.scripts[0];
-    drone->unknown434 = A(2) ? &world.scripts[1] : NULL;
+    drone->blendScript = A(2) ? &world.scripts[1] : NULL;
     CDECL_VOID(0x0001c2d0, BOTSTATE_stopAnim, void (__cdecl *)(Drone_tag *), drone);
     return 0;
 }
@@ -1347,7 +1347,7 @@ uint32_t RunOpponentHistory(bool original) {
 
 uint32_t RunSoundEffect(bool original) {
     DCVars_tag *dc = ArgDc();
-    dc->drone->unknown15 = (uchar)A(2);
+    dc->drone->female = (uchar)A(2);
     dc->drone->botVars->sound = A(2) ? (DYNAMICSOUNDS *)world.item : NULL;
     static const int kinds[] = {0, 1, 1, 29, 30, 30, 31, 31, 32};
     int kind = kinds[A(COUNT(kinds))];
@@ -1357,7 +1357,7 @@ uint32_t RunSoundEffect(bool original) {
 uint32_t RunSetGender(bool original) {
     Drone_tag *drone = ArgDrone();
     drone->botVars->skin = (uchar)A(30);
-    drone->unknown15 = (uchar)A(3);
+    drone->female = (uchar)A(3);
     CDECL_VOID(0x0001ad70, BOT_setGender, void (__cdecl *)(Drone_tag *), drone);
     return 0;
 }
@@ -1417,7 +1417,7 @@ uint32_t RunHandlePain(bool original) {
     DCVars_tag *dc = ArgDc();
     Fighting(dc->drone);
     if (A(2)) {
-        dc->drone->flags = 0x10100;
+        dc->drone->flags = DRONE_FLAG_ENABLED | DRONE_FLAG_LOOKS_FOR_OPPONENT;
         dc->drone->gameObj->flags = 0;
         dc->drone->gameObj->objectType = OBJECTTYPE_DRONE;
         dc->drone->health = (float)(1 + A(150));

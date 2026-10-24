@@ -15,8 +15,6 @@
 
 #pragma fp_contract(off)
 
-
-
 // A message to every player naming team. (Our helper; the original repeats it inline.)
 static void MP_TeamMessage(Action_TranslatedText format, ushort team) {
     char *str = Txt_GetStringFromHeap(0);

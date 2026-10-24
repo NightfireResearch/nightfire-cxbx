@@ -12,7 +12,6 @@ intptr_t Manager_SendMessage(M_MANAGER *mgr, MessageType msgType, intptr_t arg1,
 #define GOPAGE_QUIET        8   // no PageLeave and PageEnter (a page come back to): PageResume
 #define GOPAGE_NO_RESUME    0x10
 
-
 extern M_MANAGER manager[5];
 
 #endif // MANAGER_H_

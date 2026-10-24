@@ -71,5 +71,4 @@ void Env_Tree_Update(obj_tag *obj);
 void Env_Update(void);
 void Env_Reset(void);
 
-
 #endif // ENV_H_

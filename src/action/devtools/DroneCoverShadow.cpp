@@ -496,9 +496,9 @@ void RandomDrone(int i) {
     d->dtype = dtypes[ShadowRand(sizeof(dtypes))];
     d->dtypeBase = (uchar)ShadowRand(30);
     d->side = (uchar)(1 + ShadowRand(3));
-    d->unknown15 = (uchar)ShadowRand(2);
-    d->unknown16 = (uchar)(ShadowRand(4) == 0);
-    d->unknown33 = (uchar)ShadowRand(2);
+    d->female = (uchar)ShadowRand(2);
+    d->runningToAlarm = (uchar)(ShadowRand(4) == 0);
+    d->returnPosKept = (uchar)ShadowRand(2);
     d->turnedToAlert = (uchar)ShadowRand(2);
     d->heardNoiseStage = (uchar)ShadowRand(6);
     d->atCornerCover = (uchar)ShadowRand(2);
@@ -508,7 +508,7 @@ void RandomDrone(int i) {
     d->burstOver = (uchar)ShadowRand(2);
     d->gunThroughWall = (uchar)ShadowRand(2);
     d->inPlayersSights = (uchar)ShadowRand(2);
-    d->unknown38 = (uchar)ShadowRand(2);
+    d->standingStill = (uchar)ShadowRand(2);
     static const float healths[] = {100.0f, 1.0f, 0.0f, -0.0f, -5.0f};
     d->health = ShadowRand(10) == 0 ? NAN : RandomOf(healths, 5);
     d->alertness = RandomAlertness();
@@ -528,7 +528,7 @@ void RandomDrone(int i) {
     d->unseenFrames = ShadowRand(2) ? ShadowRand(14) : 14 + ShadowRand(4);
     d->sightFlags = ShadowRand(16);
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x10000) | (ShadowRand(4) << 20);
+    d->knowledge = ShadowRand(0x10000) | (ShadowRand(4) << 20);
     d->unknown3f0 = ShadowRand(2) ? 0 : 0x8000000;
     for (int w = 0; w < 3; w++) {
         d->behaviour1[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
@@ -543,14 +543,14 @@ void RandomDrone(int i) {
     static const ushort rows[] = {0, 0x87, 0xab, 0x10, 0x86};
     d->animRow = rows[ShadowRand(sizeof(rows) / sizeof(rows[0]))];
     d->animMode = (uchar)ShadowRand(4);
-    d->unknown434 = ShadowRand(4) ? NULL : (void *)&world.path;
+    d->blendScript = ShadowRand(4) ? NULL : (sAnimScript_tag *)&world.path;
     d->initialState = (short)ShadowRand(250);
     d->returnState = (short)(ShadowRand(4) ? ShadowRand(250) : 0x8000 + ShadowRand(16));
     d->nodeReturnState = (short)ShadowRand(250);
     d->stateScratch = ShadowRand(5);
     d->waitNode = (ushort)(ShadowRand(2) ? 0xffff : ShadowRand(ROUTE_NODES));
     d->guardZone = ShadowRand(3) ? ShadowRand(4) : 0xff;
-    d->unknown23c = ShadowRand(3) ? NULL : &world.objs[(i + 1) % DRONES];
+    d->guardPartner = ShadowRand(3) ? NULL : &world.objs[(i + 1) % DRONES];
     for (int p = 0; p < 3; p++) {
         RandomVector(&d->guardPlanes[p].normal, 1.0f);
         d->guardPlanes[p].d = ShadowRandFloat(-4.0f, 4.0f);
@@ -569,7 +569,7 @@ void RandomDrone(int i) {
     RandomVector(&d->aiPoint.pos, 4.0f);
     d->aiPoint.radius = ShadowRandFloat(0.0f, 3.0f);
     d->aiPoint.distance = ShadowRandFloat(0.0f, 14.0f);
-    RandomVector(&d->soundTarget.goal.pos, 6.0f);
+    RandomVector(&d->heardTarget.goal.pos, 6.0f);
     RandomVector(&d->returnPos, 4.0f);
     d->heardFrame = ShadowRand(5000);
 
@@ -718,7 +718,7 @@ void RandomWorld() {
     }
     MPSettings.dronesAreBots = ShadowRand(3) == 0;
     NPCGlobals.NDrone2List = &world.drones[0];
-    NPCGlobals.unknown174 = ShadowRand(3) == 0;
+    NPCGlobals.prevSeenOpponentCount = ShadowRand(3) == 0;
     switch_channels[0x99] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);

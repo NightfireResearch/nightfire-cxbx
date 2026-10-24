@@ -7,7 +7,6 @@
 #include <string.h>
 #include "../engine/FS.h"
 
-
 static uint32_t SndBits(float f) { uint32_t u; memcpy(&u, &f, 4); return u; }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -90,7 +89,7 @@ int64_t psiSFXGetTimer(void) {
 // AUTOINJECT
 void* psiSFXLoadFile(char *fileName) {
     SndTrace("loadfile %s", fileName);
-    return FS_AllocateAndLoadBlocking(fileName, 0x1204, NULL);
+    return FS_AllocateAndLoadBlocking(fileName, MALLOC_XBOX, NULL);
 }
 
 // AUTOINJECT

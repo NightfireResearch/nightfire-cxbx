@@ -411,7 +411,7 @@ void RandomDrone(int i) {
     d->dtype = DTYPE_Bot;
     d->side = (uchar)ShadowRand(4);
     d->flags = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
-    d->flags2 = ShadowRand(0x100);
+    d->knowledge = ShadowRand(0x100);
     d->health = RandomFloat();
     d->distanceToTarget = RandomFloat();
     d->opponentBearing = RandomFloat();
@@ -428,7 +428,7 @@ void RandomDrone(int i) {
     d->coverMode = (uchar)ShadowRand(5);
     d->coverFlags = (ushort)ShadowRand(0x10000);
     d->stateScratch = ShadowRand(5);
-    d->unknown854 = ShadowRand(3) ? 0.5f : RandomFloat();
+    d->coverWaitShare = ShadowRand(3) ? 0.5f : RandomFloat();
     d->aiPoint.set = (uchar)ShadowRand(2);
     d->aiPoint.radius = ShadowRandFloat(0.2f, 2.0f);
     d->aiPoint.pos.x = o->position.x + (ShadowRand(3) ? ShadowRandFloat(-1.0f, 1.0f) : 1.5f);
@@ -465,7 +465,7 @@ void RandomDrone(int i) {
     }
     d->baseAlertness1 = ShadowRand(3) ? ShadowRandFloat(0.0f, 1.2f) : 0.66f;
     d->alertness = ShadowRand(3) ? ShadowRandFloat(0.0f, 1.2f) : (ShadowRand(2) ? 0.66f : 1.0f);
-    d->unknown38 = (uchar)ShadowRand(2);
+    d->standingStill = (uchar)ShadowRand(2);
     if (ShadowRand(4) == 0)
         bot->weapon = 1;
     for (int r = 0; r < 5; r++)
@@ -482,7 +482,7 @@ void RandomDrone(int i) {
     d->moveTarget.y = o->position.y;
     d->moveTarget.z = o->position.z + ShadowRandFloat(-3.0f, 3.0f);
     d->unknown3f0 = ShadowRand(4) ? 0 : 0x8000000;
-    d->angleToSomePoint = 0.0f;
+    d->targetRot.y = 0.0f;
     d->nodeReturnState = 0;
 }
 
@@ -517,7 +517,7 @@ void RandomWorld() {
     world.floatArg = RandomFloat();
 
     GameState.NumFramesUnpaused = ShadowRand(100000);
-    NPCGlobals.unknown138c = ShadowRand(3) ? 0.5f : ShadowRandFloat(0.0f, 2.0f);
+    NPCGlobals.coverWaitScale = ShadowRand(3) ? 0.5f : ShadowRandFloat(0.0f, 2.0f);
     static const MultiplayerGameMode modes[] = {GM_PROTECTION, GM_DEMOLITION, GM_CTF};
     MPSettings.GameMode = Pick(modes);
     memset(&world.objective, 0, sizeof(world.objective));
@@ -739,7 +739,7 @@ void RandomAlerts() {
                                           NAN};
         d->alertness = Pick(alertness);
         d->sightFlags = ShadowRand(0x40);
-        d->unknown33 = (uchar)(ShadowRand(3) == 0);
+        d->returnPosKept = (uchar)(ShadowRand(3) == 0);
         d->explosiveSeen = (uchar)(ShadowRand(3) == 0);
         world.objs[i].curState = (ushort)(ShadowRand(4) ? ShadowRand(4) : 0x63);
         world.objs[i].objectType = OBJECTTYPE_DRONE;

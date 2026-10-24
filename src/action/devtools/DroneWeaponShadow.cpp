@@ -409,8 +409,8 @@ void RandomDrone(int i) {
     d->firesByAnim = (uchar)(ShadowRand(3) == 0);
     d->readyToFire = (uchar)ShadowRand(2);
     d->fired = (uchar)ShadowRand(2);
-    d->unknown41 = (uchar)(ShadowRand(3) == 0);
-    d->unknown21 = (uchar)ShadowRand(2);
+    d->lostSightSinceShot = (uchar)(ShadowRand(3) == 0);
+    d->fireEvent = (uchar)ShadowRand(2);
     d->inPlayersSights = (uchar)ShadowRand(2);
     static const float healths[] = {-1.0f, 0.0f, -0.0f, 50.0f, 100.0f};
     d->health = healths[ShadowRand(5)];
@@ -450,11 +450,11 @@ void RandomDrone(int i) {
     d->unknown3f0 = ShadowRand(5) == 0 ? 0x8000000 : 0;
     static const uchar modes[] = {0, 1, 2, 2, 4};
     d->animMode = modes[ShadowRand(5)];
-    d->unknown434 = ShadowRand(5) == 0 ? (void *)world.cel : NULL;
+    d->blendScript = ShadowRand(5) == 0 ? (sAnimScript_tag *)world.cel : NULL;
     static const short animStates[] = {0, 10, 0x1e, 0x1f, 0x24};
     d->animState = animStates[ShadowRand(5)];
     d->animCall.state = (ushort)(ShadowRand(4) == 0 ? 0x10 : 0);
-    d->unknown46c = ShadowRand(4) == 0 ? 0x100 : 0;
+    d->animFlags = ShadowRand(4) == 0 ? 0x100 : 0;
     d->clip = (short)ShadowRand(20);
     d->clipSize = (short)ShadowRand(40);
     static const short bursts[] = {0, 0, 1, 2, 3, 5};

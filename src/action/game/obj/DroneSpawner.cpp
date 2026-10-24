@@ -18,10 +18,6 @@
 
 #pragma fp_contract(off)
 
-
-#define MALLOC_SPAWNER_SLOTS_ALIGN4 ((MallocFlags)0x3404)
-#define MALLOC_SPAWNER_ENTRIES_ALIGN4 ((MallocFlags)0x3504)
-
 // The first of the two speech sounds DroneSpawner_WaveTalk picks from
 #define SFX_WAVE_TALK 0xd6
 
@@ -122,9 +118,9 @@ void DroneSpawner_Init(obj_tag *obj) {
         if ((spawner->startChannel == 0 || switch_channels[spawner->startChannel])
             && (spawner->stopChannel == 0 || !switch_channels[spawner->stopChannel]))
             spawner->anywhere = 1;
-        spawner->spawned = (obj_tag **)Mem_Malloc(spawner->maxAlive * sizeof(obj_tag *), MALLOC_SPAWNER_SLOTS_ALIGN4, 0);
+        spawner->spawned = (obj_tag **)Mem_Malloc(spawner->maxAlive * sizeof(obj_tag *), MALLOC_DRONE_SPAWN_OBJS, 0);
         spawner->entries = (DroneSpawnEntry_tag *)Mem_Malloc(spawner->entryCount * sizeof(DroneSpawnEntry_tag),
-                                                             MALLOC_SPAWNER_ENTRIES_ALIGN4, 0);
+                                                             MALLOC_DRONE_SPAWN_VARS, 0);
         NF_WARN_IF(spawner->entries == NULL || spawner->spawned == NULL,
                    "Couldn't allocate memory for DroneSpawner (group %d)\n", spawner->group);  // GC check (0x80085400)
         memset(spawner->spawned, 0, spawner->maxAlive * sizeof(obj_tag *));
@@ -307,7 +303,7 @@ void DroneSpawner_Control(obj_tag *obj) {
             continue;
         }
         Drone_tag *data = (Drone_tag *)drone->extraObjectData;
-        if (data == NULL || (data->flags & 0x600) || data->health <= 0.0f) {
+        if (data == NULL || (data->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || data->health <= 0.0f) {
             spawner->spawned[i] = NULL;
             continue;
         }

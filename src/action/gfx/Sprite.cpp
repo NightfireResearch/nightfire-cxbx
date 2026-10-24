@@ -30,7 +30,6 @@ static sprite* SprActiveList[MAX_SPRITES];
 // The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of flags)
 #define SPRITE_FLAGS_KEEP_MASK 0xfff0
 
-
 // AUTOINJECT
 void Sprite_InitLists(void) {
     DList_Init(&SpriteList, sizeof(sprite), MAX_SPRITES);
@@ -92,7 +91,6 @@ sprite** Sprite_BuildList(ushort viewer, undefined4 *startOut, uint *lastForegro
 
     return SprActiveList;
 }
-
 
 // A text sprite's format, and its size measured in it, kept in spritesheetWidth and spritesheetHeight
 // AUTOINJECT

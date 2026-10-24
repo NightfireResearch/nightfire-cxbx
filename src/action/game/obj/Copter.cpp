@@ -174,7 +174,7 @@ void Copter_InitConeSin(void) {
 
 // A path's speed puts its frames into its length (key 10, or the placement's own), at 60 Hz
 COPTERPATH* Copter_CreatePath(CopterPlacement *keys) {
-    COPTERPATH *path = (COPTERPATH *)Mem_Malloc(sizeof(COPTERPATH), 0x3304, 0);
+    COPTERPATH *path = (COPTERPATH *)Mem_Malloc(sizeof(COPTERPATH), MALLOC_COPTER_PATH, 0);
     memset(path, 0, sizeof(COPTERPATH));
     uint length = keys->length2 != 0 ? keys->length2 : keys->header.splineLength;
     path->kind = (ushort)keys->kind;

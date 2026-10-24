@@ -50,7 +50,6 @@ static cel_tag *StraddleCels[128];
 // XBE_GLOBAL(0x001dec34, 0x2)
 uint16_t PortalTriangle;
 
-
 // The vertices and planes of a leaf box's triangles: shorts, the normals times 2^-14
 constexpr float kCollScale = 6.103888e-05f;
 static_assert(std::bit_cast<uint32_t>(kCollScale) == 0x38800200, "the original's constant at 0x0015d4fc");
@@ -1220,7 +1219,7 @@ void Intersect_CylTriGeom(HITTEST_tag *test, HITDATA_tag *hit) {
                 if (TriAllocCnt >= 501)
                     return;
                 // Not checked: an allocation that fails
-                _VECTOR *grown = (_VECTOR *)Mem_Malloc((TriAllocCnt + 100) * sizeof(_VECTOR), (MallocFlags)0x1a04, 0);
+                _VECTOR *grown = (_VECTOR *)Mem_Malloc((TriAllocCnt + 100) * sizeof(_VECTOR), MALLOC_COLLDATA, 0);
                 memset(grown, 0, (TriAllocCnt + 100) * sizeof(_VECTOR));
                 memcpy(grown, TriHeap, TriAllocCnt * sizeof(_VECTOR));
                 Mem_Free((void **)&TriHeap);
@@ -1572,6 +1571,6 @@ void Coll_ResetHitHeap(void) {
     HitAllocCnt = 0;
     LList_Init(&HitHeap, sizeof(HITDATA_tag), 0);
     TriAllocCnt = 100;
-    TriHeap = (_VECTOR *)Mem_Malloc(0x4b0, (MallocFlags)0x1a04, 0);   // 100 * 12, as a constant in the original
+    TriHeap = (_VECTOR *)Mem_Malloc(0x4b0, MALLOC_COLLDATA, 0);   // 100 * 12, as a constant in the original
     memset(TriHeap, 0, TriAllocCnt * 12);
 }

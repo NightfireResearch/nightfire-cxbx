@@ -103,7 +103,6 @@ typedef struct HUDINFO_tag {
 LAYOUT_32(sizeof(HUDINFO_tag) == 0x2c8, "Size of HUDINFO_tag is incorrect");
 LAYOUT_32(offsetof(HUDINFO_tag, pane) == 0x8, "Offset of pane is incorrect");
 
-
 #pragma pack(pop)
 
 void HUD_Init(BLData *player, obj_tag *obj);

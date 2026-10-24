@@ -19,10 +19,6 @@
 
 #pragma fp_contract(off)
 
-// Drone_tag.flags: attacking (as DroneVision_Alerts.h has it)
-#define DRONE_FLAG_ATTACK_MODE 0x4000000
-
-
 // Drone_tag.aimMode
 #define AIM_ALWAYS 2
 #define AIM_FROM_HALF_WAY 3     // or as the anim's events say (aimByEvent)

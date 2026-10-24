@@ -89,7 +89,6 @@ int bDebugControls = 1;
 #define WEAPON_CHEAT_AMMO 999
 #define WEAPON_CHEAT_ARMOR 50.0f
 
-
 static int Checked(M_CONTROL *control) {
     return __Menu_SendMessage(control, MessageType_GetValue, 0, 0);
 }

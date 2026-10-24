@@ -128,20 +128,6 @@ const HASHCODE FacialAnimsAltSkeleton[5] = {
     HT_Script_MaleFaceBlink,
 };
 
-// Mem_Malloc tags (Ghidra's MallocFlags, with the Unknown bit every tag in the game carries)
-#define MALLOC_ANIM_SKIN_DATA           ((MallocFlags)0x1c04)
-#define MALLOC_ANIM_SEQ_DATA            ((MallocFlags)0x1e04)
-#define MALLOC_ANIM_SCRIPT_DATA         ((MallocFlags)0x1f04)
-#define MALLOC_ANIM_SKIN_STRUCTS        ((MallocFlags)0x2004)
-#define MALLOC_ANIM_SKINMAT_STRUCTS     ((MallocFlags)0x2104)
-#define MALLOC_ANIM_SEQ_STRUCTS         ((MallocFlags)0x2304)
-#define MALLOC_ANIM_SEQ_DATA_BUFFERS    ((MallocFlags)0x2404)
-#define MALLOC_ANIM_SCRIPT_STRUCTS      ((MallocFlags)0x2504)
-#define MALLOC_ANIM_OBJECT_STRUCTS      ((MallocFlags)0x2604)
-#define MALLOC_ANIM_MORPH_DATA_BUFFERS  ((MallocFlags)0x3b04)
-#define MALLOC_ANIM_SET_STRUCTS         ((MallocFlags)0x3c04)
-#define MALLOC_ANIM_UNPAK_OPT           ((MallocFlags)0x3d04)
-
 // The bone (by index) the laser sight's beam leaves from, and its datum
 #define WEAPON_LASER_PISTOL 0x18
 
@@ -175,7 +161,6 @@ AnimDistanceTableEntry DistanceTables[NUM_DISTANCE_TABLES];
 // A frame's step shorter than this counts as DISTANCE_MIN_STEP
 #define DISTANCE_STEP_EPSILON 1e-05f
 #define DISTANCE_MIN_STEP 0.01f
-#define MALLOC_ANIM_DISTANCE_TABLE      ((MallocFlags)0x0c04)
 // AnimFrameCopy's poses here: as many floats as fit the original's buffers
 #define DISTANCE_POSE_FLOATS 0x2a0
 

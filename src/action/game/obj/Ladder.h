@@ -16,6 +16,4 @@ static_assert(sizeof(ObjData_Ladder) == 4, "Bad size for ObjData_Ladder");
 
 obj_tag * Ladder_Create(_VECTOR *pos,_VECTOR *rot,level_tag *lvl,celglist_tag *celgl);
 
-
-
 #endif // LADDER_H_

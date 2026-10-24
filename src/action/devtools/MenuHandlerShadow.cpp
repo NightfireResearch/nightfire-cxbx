@@ -1129,7 +1129,6 @@ uint32_t Run_CodenameWheel(bool original) {
               void (__cdecl *)(uchar, M_CONTROL *, HASHCODE, HASHCODE, HASHCODE, HASHCODE, char), in.managerNum, wheel,
               SUB_C_SBNFCN_WHEEL_TEXT, (HASHCODE)(in.a[1] % 3 ? SUB_C_SBNFCN_ICON : 0), (HASHCODE)(in.a[2] % 3
 
-
                                                                                                            ? SUB_C_SBNFCN_DESCRIPTION_TEXT : 0),
               SUB_C_SBNFCN_IRIS, (char)(in.a[3] % 2));
     return 0;

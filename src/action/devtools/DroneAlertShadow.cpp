@@ -220,7 +220,7 @@ bool __cdecl FakeDying(obj_tag *obj) {
     if (obj == NULL)
         return true;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
-    if ((drone->flags & 0x600) || !(drone->flags & 0x100))
+    if ((drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(drone->flags & DRONE_FLAG_ENABLED))
         return true;
     if (drone->health <= 0.0f)
         return true;
@@ -355,7 +355,7 @@ void RandomDrone(int i) {
             d->flags |= kFlagBits[k];
     for (uint k = 0; k < sizeof(kFlag2Bits) / sizeof(kFlag2Bits[0]); k++)
         if (ShadowRand(4) == 0)
-            d->flags2 |= kFlag2Bits[k];
+            d->knowledge |= kFlag2Bits[k];
     static const float healths[] = {-1.0f, 0.0f, -0.0f, 50.0f, 100.0f, 100.0f};
     d->health = ShadowRand(15) == 0 ? NaN() : healths[ShadowRand(6)];
     static const uchar sides[] = {1, 1, 2, 3};
@@ -379,7 +379,7 @@ void RandomDrone(int i) {
         d->behaviour1[w] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     d->currentBehaviour = d->behaviour1;
     d->sightFlags = ShadowRand(16);
-    d->unknown33 = (uchar)(ShadowRand(4) == 0);
+    d->returnPosKept = (uchar)(ShadowRand(4) == 0);
     d->explosiveSeen = (uchar)(ShadowRand(4) == 0);
     d->returnState = (short)ShadowRand(200);
     d->speechChannel = ShadowRand(2) ? &world.speech : NULL;
@@ -389,7 +389,7 @@ void RandomDrone(int i) {
     d->heardFrame = RandomFrame();
     static const float levels[] = {0.0f, 0.5f, 1.0f};
     d->heardLevel = Pick(levels, 3, 0.0f, 2.0f);
-    d->unknown3d0 = RandomFrame();
+    d->sfxFrame = RandomFrame();
 }
 
 const uint kSfxNumbers[] = {0, 1, 2, 3, 0x8b, 0xd0, 0xd3, 0xd4, 0xd5, 0xd6, 0xd7, 0x100, 0x159};
@@ -502,7 +502,7 @@ void RandomWorld() {
     GameState.CurrentLevelHashcode = levels[ShadowRand(sizeof(levels) / sizeof(levels[0]))];
     NPCGlobals.postLoadFrame = ShadowRand(5) == 0 ? RandomFrame() : now - ShadowRand(60);
     NPCGlobals.sfxLogNext = ShadowRand(5) == 0 ? 15 : ShadowRand(16);
-    NPCGlobals.unknown1392 = (uchar)ShadowRand(2);
+    NPCGlobals.interogating = (uchar)ShadowRand(2);
     MPSettings.dronesAreBots = ShadowRand(5) == 0;
     switch_BLIND_DRONES = ShadowRand(8) == 0;
     switch (ShadowRand(20)) {

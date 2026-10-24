@@ -211,7 +211,7 @@ void control_add_object_to_list(obj_tag *list,obj_tag *obj) {
 obj_tag* control_create_object(int sizeBytes,_VECTOR *pos,_VECTOR *rot,quaternion_tag *quat) {
 
     int totalSize = sizeBytes + sizeof(obj_tag);
-    obj_tag* obj = (obj_tag*)Mem_Malloc(totalSize, 0x0404, 0);
+    obj_tag* obj = (obj_tag*)Mem_Malloc(totalSize, MALLOC_OBJS, 0);
     
     if(obj == NULL) {
         printf("Failed to allocate object of size %d bytes\n", sizeBytes);

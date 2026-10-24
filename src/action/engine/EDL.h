@@ -17,7 +17,6 @@ typedef struct {
 } EDLHeader;
 #pragma pack(pop)
 
-
 typedef struct {
     char* dst;
     char* src;
@@ -38,6 +37,5 @@ bool EDL_DecompressBlock(char* src, char* dest);
 
 // The decompression algorithms
 void Inflate_directcopy(EDLDecompressorState *state);
-
 
 #endif // EDL_H_

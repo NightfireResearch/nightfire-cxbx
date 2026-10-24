@@ -742,7 +742,7 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
         sfx = 2;
         break;
     default:
-        sfx = drone->unknown15 ? 9 : 1;
+        sfx = drone->female ? 9 : 1;
         break;
     }
 
@@ -753,7 +753,7 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
 }
 
 // A line on being hit: skin classes 5 to 7 in EvilBase, EvilSilo and EvilBaseC, and 16. Never in multiplayer, while
-// it is still talking or once dead; for 3 s after unknown3d0 a hit says nothing one time in five.
+// it is still talking or once dead; for 3 s after sfxFrame a hit says nothing one time in five.
 // AUTOINJECT
 bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -763,7 +763,7 @@ bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
         return false;
     if (drone->health <= 0.0f)
         return false;
-    if (drone->unknown3d0 + FRAME_RATE_INT * 3 > GameState.NumFramesUnpaused && Rand_Rand(5) == 0)
+    if (drone->sfxFrame + FRAME_RATE_INT * 3 > GameState.NumFramesUnpaused && Rand_Rand(5) == 0)
         return false;
 
     uint sfx = 0;
@@ -826,7 +826,7 @@ bool NDrone2_PainTalk(DCVars_tag *dcv) {
         sfx = 0x10;
         break;
     default:
-        sfx = drone->unknown15 ? 0x17 : 0xf;
+        sfx = drone->female ? 0x17 : 0xf;
         break;
     }
 
@@ -1275,7 +1275,7 @@ bool DroneFunc_LostSightTalk(DCVars_tag *dcv) {
 
 // Plays a Drone_SfxInfo sound at pos (or at the drone), its range scaled, at a pitch drawn from the entry's: not in
 // the first frames after a load, nor with `check` within the entry's interval. Each try is logged in
-// NPCGlobals.sfxLog and the frame kept in unknown3d0. A number past the table is read through NULL.
+// NPCGlobals.sfxLog and the frame kept in sfxFrame. A number past the table is read through NULL.
 // AUTOINJECT
 DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char check, float scale) {
     DroneSfxInfo *info = SfxInfo(sfx);
@@ -1306,7 +1306,7 @@ DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char che
         logged = sfx;
         info->lastFrame = now;
     }
-    dcv->drone->unknown3d0 = now;
+    dcv->drone->sfxFrame = now;
     NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].sfx = logged;
     NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].handle = handle;
     if (++NPCGlobals.sfxLogNext >= DRONE_SFX_LOG)

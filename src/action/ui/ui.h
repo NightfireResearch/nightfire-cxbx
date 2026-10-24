@@ -252,7 +252,6 @@ LAYOUT_32(sizeof(NEW_CONTROL) == 0x24, "NEW_CONTROL is 0x24 bytes");
 
 #define NEW_CONTROL_LAYOUT 0xff
 
-
 typedef struct M_PAGE {
     M_CONTROL control;          // type ControlType_Page
     char pad_7c[0x94 - 0x7c];
@@ -357,7 +356,6 @@ LAYOUT_32(sizeof(M_SCRIPT) == 0x20, "M_SCRIPT is 0x20 bytes");
 
 #define SCRIPT_SPLINE   1       // interpolated by spline, else by line
 #define SCRIPT_LOOPING  8       // a KEYFRAME_LOOP_START has been passed
-
 
 // Common between PS2 and Xbox
 typedef struct M_ITEM {
