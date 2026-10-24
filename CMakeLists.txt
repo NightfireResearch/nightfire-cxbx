@@ -1343,11 +1343,12 @@ endif()
 # The PS2 version's data in place of the Xbox's (docs/ps2-data.md): its disc's file system for the Xbox's archives,
 # and its textures and meshes converted as the level loads. Off, the targets are built exactly as without it.
 option(NIGHTFIRE_ACTION_DATA_PS2 "Action engine, standalone: load the PS2 version's data (docs/ps2-data.md)" OFF)
-set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Texture.cpp src/action/ps2/Ps2Mesh.cpp)
+set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Texture.cpp src/action/ps2/Ps2Mesh.cpp
+                                src/action/ps2/Ps2Sound.cpp)
 if(NIGHTFIRE_ACTION_DATA_PS2)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
-                                           src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp
+                                           src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp src/action/ps2/Ps2ExecutableData.cpp
                                            src/action/ps2/Ps2XboxStandIn.cpp)   # interim, until milestone 7
 endif()
 add_executable(action_standalone
@@ -1424,7 +1425,8 @@ foreach(target action_standalone action_standalone_test)
   endif()
 endforeach()
 # The PS2 data's conversions run offline over an extracted PS2 disc (docs/ps2-data.md)
-add_executable(ps2data_check EXCLUDE_FROM_ALL src/action/devtools/Ps2DataCheck.cpp ${nf_action_ps2_data_sources})
+add_executable(ps2data_check EXCLUDE_FROM_ALL src/action/devtools/Ps2DataCheck.cpp ${nf_action_ps2_data_sources}
+                                              src/common/sound/xadpcm.cpp)
 target_compile_definitions(ps2data_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
 if(NOT WIN32)
   target_compile_options(ps2data_check PRIVATE ${NF_XBOX_ABI_OPTIONS}

@@ -14,6 +14,7 @@
 #include "../gfx/LowLevel.h"    // ShowLoadProgressScreen
 #include "Ps2Disc.h"
 #include "FS_ps2.h"
+#include "Ps2ExecutableData.h"
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -161,8 +162,10 @@ void FS_Init(void) {
     uint8_t *elf = (uint8_t *)malloc(elfSize);
     bool read = elf != NULL && ReadAt(elfHandle, elf, elfSize, 0);
     DoNtClose(elfHandle);
-    if (read)
+    if (read) {
         FileSystem.fileCount = Ps2Disc_ReadFileList(elf, elfSize, FileSystem.files, PS2_FILELIST_COUNT);
+        Ps2_ReadExecutableData(elf, elfSize);   // the executable's own tables, while the file is here
+    }
     free(elf);
     if (FileSystem.fileCount == 0)
         XboxError_Halt("ACTION.ELF has no FileList symbol", "d:\\ACTION.ELF");

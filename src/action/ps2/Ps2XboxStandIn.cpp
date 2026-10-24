@@ -70,8 +70,17 @@ static bool ReadAt(const char *path, uint32_t offset, void *out, uint32_t len) {
     return ok;
 }
 
+// settings.ini's XboxDiscPath, else the environment's NIGHTFIRE_XBOX_DISC (a time demo's playback reads the settings
+// the recording started from, which have no such key)
+static const char *XboxDiscPath(void) {
+    const char *path = Settings_GetXboxDiscPath();
+    if (path[0] == '\0' && getenv("NIGHTFIRE_XBOX_DISC") != NULL)
+        path = getenv("NIGHTFIRE_XBOX_DISC");
+    return path;
+}
+
 static void ArchivePath(int index, char *out, size_t size) {
-    snprintf(out, size, "%s/eurocom/filesys.d%02d", Settings_GetXboxDiscPath(), index);
+    snprintf(out, size, "%s/eurocom/filesys.d%02d", XboxDiscPath(), index);
 }
 
 // A file of the Xbox's archives, decompressed, as FS_LoadFileIfReady and FS_StateMachineIterate read one
@@ -153,7 +162,7 @@ static void IndexBundle(void) {
 }
 
 ModelData *Ps2_XboxStandInModel(uint32_t entityHashcode) {
-    if (Settings_GetXboxDiscPath()[0] == '\0') {
+    if (XboxDiscPath()[0] == '\0') {
         printf("[ps2] mesh 0x%08x: skinned; no XboxDiscPath to take the Xbox's from\n", entityHashcode);
         return NULL;
     }
@@ -163,7 +172,7 @@ ModelData *Ps2_XboxStandInModel(uint32_t entityHashcode) {
         snprintf(name, sizeof(name), "%8.8x.bin", level);
         BundleHashcode = level;
         if (!ReadXboxFile(name, Bundle)) {
-            printf("[ps2] the Xbox disc (%s) has no %s\n", Settings_GetXboxDiscPath(), name);
+            printf("[ps2] the Xbox disc (%s) has no %s\n", XboxDiscPath(), name);
             Bundle.clear();
         }
         IndexBundle();
