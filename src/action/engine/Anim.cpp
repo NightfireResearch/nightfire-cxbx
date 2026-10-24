@@ -2443,9 +2443,6 @@ static constexpr float kStrideLadder = 0.4125f;
 static_assert(std::bit_cast<uint32_t>(kStride) == 0x3fd33333, "1.65");
 static_assert(std::bit_cast<uint32_t>(kStrideLadder) == 0x3ed33333, "0.4125");
 
-// The sound of the player's steps on a ladder
-#define SFX_FOOTSTEP_LADDER ((Action_SFX)0x286)
-
 // An animated object's tick: the face, the scripts, the footsteps, the sequences and the turns of anim-rotation
 // scripts, then the pose; the bones for the player and the rigid parts, which follow them.
 // There is also a thunk to this at 0x0002cf00 with the same name, hence FUNC_AT.

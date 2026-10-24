@@ -43,9 +43,9 @@ enum {
     PICKUP_KIND_KEY = 2,
     PICKUP_KIND_ARMOUR = 3,
     PICKUP_KIND_MISSION = 4,
-    PICKUP_KIND_INVISIBILITY = 5,
-    PICKUP_KIND_BONUS = 6,      // only with a gold medal
-    PICKUP_KIND_SET_FIRST = 7,  // 7-11: a weapon of the multiplayer set (Pickup_CreateFromSet)
+    PICKUP_KIND_INVISIBILITY = 5,   // the player's alpha to 0; no level's map places one
+    PICKUP_KIND_BONUS = 6,          // only with a gold medal
+    PICKUP_KIND_SET_FIRST = 7,      // 7-11: a weapon of the multiplayer set (Pickup_CreateFromSet)
     PICKUP_KIND_SET_LAST = 11,
 };
 

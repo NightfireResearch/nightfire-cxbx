@@ -47,17 +47,6 @@ typedef struct {
 static_assert(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
 static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
 
-// Channels with fixed meanings here
-#define CHANNEL_BOND_MOMENT_FIRST 0x65  // ten channels, one per bond moment
-#define CHANNEL_BOND_MOMENT_LAST 0x6e
-#define CHANNEL_TOUCH_ONLY_7001500 0x7d // a touch trigger sets it only in level 0x07001500
-
-// The channels that stop a level-load trigger (docs/switch-channels.md)
-#define CHANNEL_DRONE_DIED 0x60
-#define CHANNEL_ALARM_RAISED 0x61
-#define CHANNEL_PLAYER_DEAD 0x62
-#define CHANNEL_STEALTH_BROKEN 0x63
-
 // The GameFlow states pushed here
 #define GAMEFLOW_MOVIE 6
 #define GAMEFLOW_FADE 7
@@ -331,8 +320,8 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
         return;
     }
 
-    if (switch_channels[CHANNEL_STEALTH_BROKEN] || switch_channels[CHANNEL_PLAYER_DEAD] ||
-        switch_channels[CHANNEL_ALARM_RAISED] || switch_channels[CHANNEL_DRONE_DIED])
+    if (switch_channels[SWITCH_MISSION_FAILED] || switch_channels[SWITCH_PLAYER_FINISHED_DYING] ||
+        switch_channels[SWITCH_FAIL_ALARM] || switch_channels[SWITCH_FAIL_CIVILIAN_KILLED])
         return;
 
     // Locked: say so, at most every three seconds
@@ -402,7 +391,7 @@ void Trigger_Update(obj_tag *obj) {
         }
         // fall through
     case TriggerMode_Touch:
-        if (GameState.CurrentLevelHashcode != HT_Level_Level7001500 && channel == CHANNEL_TOUCH_ONLY_7001500)
+        if (GameState.CurrentLevelHashcode != HT_Level_Level7001500 && channel == SWITCH_LEVEL7001500_TOUCH)
             return;
         if (channel == 0)
             return;
@@ -422,7 +411,7 @@ void Trigger_Update(obj_tag *obj) {
             return;
         switch_channels_time[channel] = now;
         // A bond moment's hidden trigger goes once it is done
-        if (channel >= CHANNEL_BOND_MOMENT_FIRST && channel <= CHANNEL_BOND_MOMENT_LAST &&
+        if (channel >= SWITCH_BOND_MOMENT_FIRST && channel <= SWITCH_BOND_MOMENT_LAST &&
             (obj->effectFlags & EFFECT_HIDDEN))
             obj->flags |= 1;
         return;
@@ -488,16 +477,16 @@ void Trigger_Update(obj_tag *obj) {
 // and runs the touch triggers. Each clears its channel first, so it stays set only while something touches it.
 // AUTOINJECT
 void Trigger_Calc(void) {
-    for (ushort moment = CHANNEL_BOND_MOMENT_FIRST; moment <= CHANNEL_BOND_MOMENT_LAST; moment++) {
+    for (ushort moment = SWITCH_BOND_MOMENT_FIRST; moment <= SWITCH_BOND_MOMENT_LAST; moment++) {
         if (switch_channels[moment])
             PlrStat_DoneBondMoment(0, moment);
     }
 
     if (GameState.CurrentLevelHashcode == HT_Level_CastleExterior) {
-        if (switch_channels[0xa4])
-            switch_channels[0x6f] = 1;
+        if (switch_channels[SWITCH_CASTLEEXTERIOR_ALARM])
+            switch_channels[0x6f] = 1;  // the level's number
     } else if (GameState.CurrentLevelHashcode == HT_Level_TowerC) {
-        if (switch_channels[0x34])
+        if (switch_channels[0x34])      // the level's numbers
             switch_channels[0x2d] = 1;
     }
 

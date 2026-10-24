@@ -268,6 +268,8 @@ typedef enum WeaponBaseNum {
     Weap_Hands=71,              // nothing in hand (Player_WeaponNone); the last of the weapons the weapon button
                                 // cycles, 1-71
     // 72 and 73 empty, then the gadgets the gadget button cycles, 74-94
+    Weap_WatchLaser=78,
+    Weap_WatchLaser_Upgraded=79,
     Weap_Ronin=82,
     Weap_Camera=84,
     Weap_Camera_Upgraded=85,

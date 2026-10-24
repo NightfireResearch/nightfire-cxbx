@@ -33,11 +33,6 @@ double NDrone2_DistanceToObj(DCVars_tag *dcv, obj_tag *obj) {
 // DroneInit.cpp
 void NDrone2_Enable(char enable, Drone_tag *drone);
 
-// The switch channels the engine sets when a mission fails (docs/switch-channels.md)
-#define CHANNEL_FAIL_CIVILIAN 0x60      // with TXT_MISSION_FAIL_KILLED_CIVILIAN
-#define CHANNEL_FAIL 99                 // with TXT_MISSION_FAIL_COVER_LOST, or alone
-#define CHANNEL_ALARM 0x61              // a switch on it fails with TXT_MISSION_FAIL_ALARM_TRIGGERED
-
 // Fails the mission: 1, 3, 6 and 9 for killing a civilian, 2, 4, 5, 7, 8 and 10-12 with the cover lost, 16 by the
 // switch nearest the drone (its channel, if it has one), anything else with no message.
 // AUTOINJECT
@@ -48,7 +43,7 @@ void DroneFunc_SetMissionFailReason(Drone_tag *drone, uint reason) {
     case 6:
     case 9:
         Mission_SetFailLabel(TXT_MISSION_FAIL_KILLED_CIVILIAN);
-        SwitchChannel_SetActive(CHANNEL_FAIL_CIVILIAN);
+        SwitchChannel_SetActive(SWITCH_FAIL_CIVILIAN_KILLED);
         break;
     case 2:
     case 4:
@@ -59,12 +54,12 @@ void DroneFunc_SetMissionFailReason(Drone_tag *drone, uint reason) {
     case 11:
     case 12:
         Mission_SetFailLabel(TXT_MISSION_FAIL_COVER_LOST);
-        SwitchChannel_SetActive(CHANNEL_FAIL);
+        SwitchChannel_SetActive(SWITCH_MISSION_FAILED);
         break;
     case 16: {
         ushort channel = Switch_GetSwitchChannel(Switch_GetNearest(&drone->gameObj->position));
         if (channel != 0) {
-            if (channel == CHANNEL_ALARM)
+            if (channel == SWITCH_FAIL_ALARM)
                 Mission_SetFailLabel(TXT_MISSION_FAIL_ALARM_TRIGGERED);
             // Not bounded by the table, unlike SwitchChannel_SetActive
             switch_channels[channel] = 1;
@@ -73,7 +68,7 @@ void DroneFunc_SetMissionFailReason(Drone_tag *drone, uint reason) {
         break;
     }
     default:
-        SwitchChannel_SetActive(CHANNEL_FAIL);
+        SwitchChannel_SetActive(SWITCH_MISSION_FAILED);
         break;
     }
 }
@@ -122,14 +117,14 @@ bool DroneFunc_DeadDrone(DCVars_tag *dcv) {
     return false;
 }
 
-// Sets the drone's death channel (placement key 12), if it has one. Channel 99 fails the mission instead, as a
-// civilian killed or the cover lost depending on the side, whoever killed it.
+// Sets the drone's death channel (placement key 12), if it has one. SWITCH_MISSION_FAILED fails the mission instead,
+// as a civilian killed or the cover lost depending on the side, whoever killed it.
 // AUTOINJECT
 bool DroneFunc_SetDeathChannel(Drone_tag *drone) {
     uchar channel = drone->deathSwitchChannel;
     if (channel == 0)
         return false;
-    if (channel == CHANNEL_FAIL) {
+    if (channel == SWITCH_MISSION_FAILED) {
         bool byPlayer = drone->lastAttacker == NDrone2_Player();
         if (drone->side == 1)
             DroneFunc_SetMissionFailReason(drone, byPlayer ? 2 : 4);
@@ -236,9 +231,6 @@ static uint Death_FramesFromNow(float ticks) {
     return (uint)(long long)((double)FRAME_RATE_DIV * ticks + (double)GameState.NumFramesUnpaused);
 }
 
-// With switch channel 0x35 on, a dying drone whose death channel is 0x88, 0x29 or 0x2a is taken away
-#define CHANNEL_REMOVE_DYING 0x35
-
 // DSTATE_DeathByExplosion's anim state; its variant is the side the explosion came from (NDrone2_ExplosionDir)
 #define DANIM_DEATH_EXPLOSION 0x44
 
@@ -285,7 +277,8 @@ bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
     case DRONE_MSG_Update:
         if (!drone->firing || drone->animSet == 4 || drone->animSet == 9)
             DroneWeap_DropWeapon(dcv);
-        if (switch_channels[CHANNEL_REMOVE_DYING] != 0 &&
+        // Death channels from the level data
+        if (switch_channels[SWITCH_REMOVE_DYING] != 0 &&
             (drone->deathSwitchChannel == 0x88 || drone->deathSwitchChannel == 0x29 ||
              drone->deathSwitchChannel == 0x2a)) {
             if (drone->stateScratch != 0) {
@@ -354,8 +347,6 @@ bool NDrone2_DSTATE_DeathByExplosion(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
     }
 }
 
-#define SFX_DEATH_SCRIPT_21F 0x148
-
 // The row played after a death script
 #define DANIM_ROW_AFTER_DEATH_SCRIPT 0xbf
 
@@ -412,7 +403,8 @@ bool NDrone2_DSTATE_SpecialDeath_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag
 
     case DRONE_MSG_ScriptEnd:
         if (drone->deathScript == HT_Script_DeathScriptIcyQuip && glb_players[0] != NULL)
-            Sound_Play3D((Action_SFX)SFX_DEATH_SCRIPT_21F, &glb_players[0]->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            Sound_Play3D(SFX_CHR_SPEECH_M1_BOND_ICY_QUIP_BOND4, &glb_players[0]->position, 100.0f, -1.0f, -1.0f, 0, 0,
+                         0);
         if (dcv->drone->dtype == DTYPE_Hostage)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_HostageDead, 0);
         Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Dead, 0);

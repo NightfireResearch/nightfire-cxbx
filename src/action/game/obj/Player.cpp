@@ -115,8 +115,6 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 
 }
 
-// The original's, called by address: Ghidra's prototypes have untyped arguments.
-
 // What Player_Enable looks for around the player when asked to (the radius, the collision flags).
 #define PLAYER_ENABLE_ATTACH_RADIUS 2.0f
 #define PLAYER_ENABLE_ATTACH_FLAGS 0x8c0
@@ -665,13 +663,11 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
     }
     forwards = ClampToStep(forwards, limit);
 
-    // Channel 0x48 is "cover blown": set once Bond has rendezvoused with Zoe and been told to stop
-    // playing a party guest. Until then he walks rather than jogs, and Player_HandleJump refuses to let
-    // him jump at all. See docs/switch-channels.md for the rest of the hard-coded channels, and for why
-    // a channel number need not mean the same thing in another level.
+    // In CastleIndoors1, until SWITCH_CASTLEINDOORS1_ARMED is on, the player moves at 0.9 speed
     // The scaled speed stays unrounded on the x87
     double speed = speedScale;
-    if ((GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) && (switch_channels[0x48] == '\0')) {
+    if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 &&
+        switch_channels[SWITCH_CASTLEINDOORS1_ARMED] == 0) {
         speed = (double)speedScale * 0.9f;
     }
     float moveZ = (float)(forwards * speed);
@@ -754,7 +750,7 @@ static_assert(offsetof(weapon_definition_tag, animScopeOut) == 0xbc, "animScopeO
 #define WEAPONSTATE_SCOPE_LOWER 0x10
 
 // Player_WeaponChange's third argument: 0 cycles weapons, 1 cycles gadgets, 2 is the party-guest restricted
-// cycle used in CastleIndoors1 before channel 0x48 ("cover blown") is set.
+// cycle used in CastleIndoors1 before SWITCH_CASTLEINDOORS1_ARMED is on.
 #define WEAPONCHANGE_WEAPONS   0
 #define WEAPONCHANGE_GADGETS   1
 #define WEAPONCHANGE_UNARMED   2
@@ -893,15 +889,15 @@ void Player_Weapon(obj_tag *player) {
         Player_WeaponChange(player, -1, WEAPONCHANGE_GADGETS);
     }
 
-    // CastleIndoors1: until channel 0x48 ("cover blown", see docs/switch-channels.md) Bond is a party guest and
-    // weapon cycling is restricted; on the frame it goes up he is handed his (upgraded) P2K. Upgrade_Weapon(6)
+    // CastleIndoors1: until SWITCH_CASTLEINDOORS1_ARMED is on, weapon cycling is restricted; on the frame it goes
+    // on the player is handed his (upgraded) P2K. Upgrade_Weapon(6)
     // is exactly the original's inlined UpgradedHandguns[Upgrades[0][WUG_Handgun]], truncated to a byte.
     char changeMode = WEAPONCHANGE_WEAPONS;
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) {
-        if (switch_channels[0x48] == 0) {
+        if (switch_channels[SWITCH_CASTLEINDOORS1_ARMED] == 0) {
             changeMode = WEAPONCHANGE_UNARMED;
         }
-        else if (switch_channels_prev[0x48] == 0) {
+        else if (switch_channels_prev[SWITCH_CASTLEINDOORS1_ARMED] == 0) {
             player->animState->switchingToWeaponId = (char)Upgrade_Weapon(6);
         }
     }
@@ -2018,9 +2014,9 @@ int Player_ChangeSubState(obj_tag *player, ushort newState) {
     }
 
     if (newState >= 1 && newState <= 16 && newState != MovementType_Crouch) {
-        Sound_StopAllWithId((Action_SFX)0x12);
-        Sound_StopAllWithId((Action_SFX)0x3d);
-        Sound_StopAllWithId((Action_SFX)0xf0);
+        Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_SHOOT);
+        Sound_StopAllWithId(SFX_GADGET_WATCH_TASER_SHOOT);
+        Sound_StopAllWithId(SFX_GADGET_WATCH_LASER_BURN_LOOP);
     }
     blData->field_0x8ea = 0;
     return oldState;
@@ -2081,7 +2077,7 @@ void Player_InShadow(BLData *blData, obj_tag *player) {
 // rumbling. hitLocation is the bone hit, or -1. The original takes the player's data in ESI, the hit location in DI
 // and the pain type in BX.
 void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitLocation, ushort painType) {
-    if (switch_channels[0x5f] != 0)
+    if (switch_channels[SWITCH_PLAYER_NO_PAIN] != 0)
         return;
     if (blData->health <= 0.0f)
         return;
@@ -2160,7 +2156,7 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
     }
     else {
         if (Rand_Rand(4) == 0)
-            Sound_Play3D((Action_SFX)0x88, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            Sound_Play3D(SFX_CHR_BOND_PAIN_01, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Input_RumbleStart(blData->playerNum, 5, Ftol(damage));
         blData->hitDirections = (painType == 6) ? 2 : 0xc;
     }
@@ -2206,7 +2202,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     GunImp_PlayerHasDied(player);
     GT_PlayerHasDied(player);
     if (MPSettings.isMultiplayer == 0) {
-        switch_channels[0x5e] = 1;
+        switch_channels[SWITCH_PLAYER_DIED] = 1;
         Music_Event(6, 1);
     }
     else if (weapon->worldModelGfx != 0 && blData->weaponObject != NULL) {
@@ -2244,16 +2240,16 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
         Text_AddMsg((char)self, 0, 1, text, 0, 0xb4);
     }
 
-    Sound_Play3D((Action_SFX)0x89, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+    Sound_Play3D(SFX_CHR_BOND_DIE, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     Player_ChangeSubState(player, (player->animState->inWater & 1) ? MovementType_DeadInWater : MovementType_Dead);
     MP_PlayerKilled(player);
     Collide_FreeHitList(&player->hitList);
     return true;
 }
 
-// The dead player, every frame. In zero G the body tumbles. In single player the death channel (0x62) goes up once the
-// blood pane has run and skip is pressed; in multiplayer the player comes back after five seconds, unless he has used
-// up his lives (game mode 0x10).
+// The dead player, every frame. In zero G the body tumbles. In single player SWITCH_PLAYER_FINISHED_DYING goes up
+// once the blood pane has run and skip is pressed; in multiplayer the player comes back after five seconds, unless he
+// has used up his lives (game mode 0x10).
 void Player_HandleDeath(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     Player_InWater(player, blData);
@@ -2275,7 +2271,7 @@ void Player_HandleDeath(obj_tag *player) {
             return;
         if (Menu_PlayerHasQuitOrRestarted())
             return;
-        switch_channels[0x62] = 1;
+        switch_channels[SWITCH_PLAYER_FINISHED_DYING] = 1;
         return;
     }
 
@@ -2492,7 +2488,8 @@ void Player_MonitorAir(obj_tag *player, BLData *blData) {
         if (surfaced) {
             if (blData->waterSound != NULL)
                 Sound_Stop(blData->waterSound);
-            blData->waterSound = Sound_Play3D((Action_SFX)0x27, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            blData->waterSound = Sound_Play3D(SFX_ENV_UNDERWATER_AMBIENCE_LOOP_01, &player->position, 100.0f, -1.0f,
+                                              -1.0f, 0, 0, 0);
             surfaced = 0;
         }
     }
@@ -2503,7 +2500,7 @@ void Player_MonitorAir(obj_tag *player, BLData *blData) {
                 Sound_Stop(blData->waterSound);
                 blData->waterSound = NULL;
             }
-            Sound_PlayExt((Action_SFX)0x60c, 100.0f, 0, 0);
+            Sound_PlayExt(SFX_CHR_BOND_AIR_GASP, 100.0f, 0, 0);
             surfaced = 1;
         }
     }
@@ -2515,7 +2512,7 @@ void Player_MonitorAir(obj_tag *player, BLData *blData) {
         air = 100.0f;
     blData->air = air;
     if (air < 1.0f && GameState.NumFramesUnpaused % (uint)Ftol((double)_FRAME_RATE * 0.5f) == 0) {
-        Sound_PlayExt((Action_SFX)0x60b, 100.0f, 0, 0);
+        Sound_PlayExt(SFX_CHR_BOND_GULP, 100.0f, 0, 0);
         Player_HandlePain(player, 2.0f, blData, -1, 7);
     }
 }
@@ -2535,9 +2532,10 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
                 return;
             if (player->animState->animFlags & ANIM_CONTACT_ABOVE)
                 return;
-            if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && switch_channels[0x48] == 0) {
+            if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 &&
+                switch_channels[SWITCH_CASTLEINDOORS1_ARMED] == 0) {
                 if (Input_Action(blData->playerNum, ACTION_JUMP, 4))
-                    Sound_PlayExt((Action_SFX)0x1db, 100.0f, 0, 0);
+                    Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_ERROR, 100.0f, 0, 0);
                 return;
             }
             if (!Input_Action(blData->playerNum, ACTION_JUMP, 4))
@@ -2571,7 +2569,7 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             blData->jumpState = JUMP_RISING;
             blData->jumpWait = 4;
             player->animState->animFlags &= ~ANIM_CONTACT_FLOOR;
-            Sound_Play3D((Action_SFX)0xa3, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            Sound_Play3D(SFX_GENERIC_CLOTH_MOVEMENT_01, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             return;
         }
 
@@ -2598,9 +2596,9 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             Vec_Zero(&blData->field_0x3c);
             blData->jumpState = JUMP_NONE;
             if (player->animState->floor.materialType == MATERIAL_0D || player->animState->floor.materialType == MATERIAL_0E)
-                Sound_Play3D((Action_SFX)0x5fb, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+                Sound_Play3D(SFX_ENV_LAND_IN_WATER, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             else
-                Sound_Play3D((Action_SFX)0xa3, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+                Sound_Play3D(SFX_GENERIC_CLOTH_MOVEMENT_01, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             blData->field_0x8f6 = 8;
             blData->stepDistance = 999.0f;
             return;
@@ -3129,7 +3127,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
     blData->hitDirections = HitDirections(&direction);
 
     if (!(bullet->wpnDef->impactFlags & 0x180))
-        Sound_PlayExt((Action_SFX)(headshot ? 0x600 : 0x412), 100.0f, 0, 0);
+        Sound_PlayExt(headshot ? SFX_IMPACT_PLAYER_HEAD_SHOT : SFX_IMPACT_PLAYER_BODY, 100.0f, 0, 0);
     if (MPSettings.isMultiplayer == 0 && (bullet->wpnDef->damageClass & 1)) {
         if (bullet->wpnDef->weaponBaseNum == 0x65)
             blData->turnKick = -0.1f;
@@ -3137,7 +3135,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
             blData->turnKick = 0.1f;
         if (bullet->wpnDef->weaponBaseNum == 0x63)
             blData->turnKick = 0.1f;
-        Sound_Play3D((Action_SFX)0x171, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+        Sound_Play3D(SFX_PUNCH_IMPACT, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     }
     return 0.0f;
 }
@@ -3186,7 +3184,7 @@ void Player_CollisionHandler(obj_tag *player) {
             else
                 blData->fallFrames = 0.0f;
             if (GameState.CurrentLevelHashcode == HT_Level_Tower2B && player->position.y < -10.0f)
-                switch_channels[0x7c] = 1;
+                switch_channels[SWITCH_TOWER2B_FELL] = 1;
         }
 
         if (player->hitList != NULL) {
@@ -3289,8 +3287,8 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
         return NULL;
 
     short num = (short)playerNum;
-    switch_channels[0x5e] = 0;
-    switch_channels[0x62] = 0;
+    switch_channels[SWITCH_PLAYER_DIED] = 0;
+    switch_channels[SWITCH_PLAYER_FINISHED_DYING] = 0;
     if (glb_players[num] != NULL)
         return NULL;
 

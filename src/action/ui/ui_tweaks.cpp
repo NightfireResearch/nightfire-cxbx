@@ -347,8 +347,8 @@ bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint mes
 // XBE_GLOBAL(0x002790a8, 0x4)
 uint cheat_medal;    // nothing reads it
 
-// The list's choice: switch channel 99 (item 0), or channel 100 with a medal (items 1 to 5: 999, then 1 to 4), each
-// with the frame it was set; the menu closes
+// The list's choice: SWITCH_MISSION_FAILED (item 0), or SWITCH_MISSION_WON with a medal (items 1 to 5: 999, then 1
+// to 4), each with the frame it was set; the menu closes
 // AUTOINJECT
 bool P_CHEATMEDAL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint message, intptr_t arg1, intptr_t arg2) {
     if (message == MessageType_PageEnter) {
@@ -359,13 +359,13 @@ bool P_CHEATMEDAL_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
         MenuManager_Delete(managerNum);
         switch (choice) {
             case 0:
-                switch_channels[99] = 1;
-                switch_channels_time[99] = GameState.NumFramesUnpaused;
+                switch_channels[SWITCH_MISSION_FAILED] = 1;
+                switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
                 break;
             case 1: case 2: case 3: case 4: case 5:
-                switch_channels_time[100] = GameState.NumFramesUnpaused;
+                switch_channels_time[SWITCH_MISSION_WON] = GameState.NumFramesUnpaused;
                 cheat_medal = choice == 1 ? 999 : choice - 1;
-                switch_channels[100] = 1;
+                switch_channels[SWITCH_MISSION_WON] = 1;
                 break;
         }
     }

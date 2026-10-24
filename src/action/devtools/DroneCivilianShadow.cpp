@@ -383,7 +383,7 @@ void RandomWorld() {
     NPCGlobals.deadDrones = ShadowRand(6);
     NPCGlobals.oldestDeadId = 100 + ShadowRand(2);
     NPCGlobals.deadFrames = ShadowRand(2) ? 600 : 0xfffffff0u + ShadowRand(32);
-    switch_channels[0x35] = (char)ShadowRand(2);
+    switch_channels[SWITCH_REMOVE_DYING] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
 }

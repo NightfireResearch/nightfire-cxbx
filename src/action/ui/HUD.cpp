@@ -3287,20 +3287,17 @@ void HUD_UpdateSpacePane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
 		}
 	}
 
-	// Game won - space station flashes red/white
-	if(switch_channels[9]) {
+	if(switch_channels[SWITCH_SPACESTATIOND_HUD_BLINK0]) {
 		pane->spriteList[0]->colourTint = blink_state ? 0xff000080 : 0x7f7f7f7f;
 	}
 
-	// Left spawner door - flash red when active
-	if(switch_channels[24]) {
+	if(switch_channels[SWITCH_SPACESTATIOND_HUD_BLINK9]) {
 		pane->spriteList[9]->colourTint = blink_state ? 0xff000080: 0x7f7f7f7f;
 	} else {
 		pane->spriteList[9]->colourTint = 0x7f7f7f7f;
 	}
 
-	// Right spawner door - flash red when active
-	if(switch_channels[28]) {
+	if(switch_channels[SWITCH_SPACESTATIOND_HUD_BLINK10]) {
 		pane->spriteList[10]->colourTint = blink_state ? 0xff000080 : 0x7f7f7f7f;
 	} else {
 		pane->spriteList[10]->colourTint = 0x7f7f7f7f;

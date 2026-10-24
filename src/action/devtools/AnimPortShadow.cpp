@@ -697,8 +697,7 @@ void RandomObj(obj_tag *o, int type, void *data) {
     o->scale = 1.0f;
 }
 
-const HASHCODE kTags[] = {(HASHCODE)0, HT_Menu_Keypad, (HASHCODE)ANIMTAG_FACE_MOOD,
-                          (HASHCODE)ANIMTAG_FACE_BLINK, (HASHCODE)ANIMTAG_FACE_SPEECH};
+const HASHCODE kTags[] = {(HASHCODE)0, HT_Menu_Keypad, ANIMTAG_FACE_MOOD, ANIMTAG_FACE_BLINK, ANIMTAG_FACE_SPEECH};
 
 uint RandomScriptFlags(void) {
     static const uint bits[] = {ANIMSCRIPT_SHARE_ROOT, ANIMSCRIPT_SCRIPT_DRIVEN, ANIMSCRIPT_ANIM_ROTATION,

@@ -29,9 +29,6 @@ extern uint32_t switch_BLIND_DRONES;
 // Below this alertness an enemy on its mission path walks (and waits) idly
 #define ENEMY_ALERT_LOOK 0.66f
 
-// While switch channel 10 is on, the space drake can be shot, and then leaves
-#define CHANNEL_SPACE_DRAKE 10
-
 static void Special_SetTimer(DroneTimer *timer, uint dueFrame, uint data = 0) {
     timer->dueFrame = dueFrame;
     timer->data = data;
@@ -967,7 +964,7 @@ bool NDrone2_DSTATE_SpaceDrake(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Update:
-        if (switch_channels[CHANNEL_SPACE_DRAKE] != 0)
+        if (switch_channels[SWITCH_SPACE_DRAKE] != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_DeleteMe, 0);
         DroneAnim_SetStandIdleAnim(dcv, 1);
         return true;
@@ -984,7 +981,7 @@ bool NDrone2_DSTATE_SpaceDrake(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_ImpactBullet:
-        if (switch_channels[CHANNEL_SPACE_DRAKE] != 0)
+        if (switch_channels[SWITCH_SPACE_DRAKE] != 0)
             DroneFunc_HandleImpact(dcv, msg, 0, 0);
         return true;
 

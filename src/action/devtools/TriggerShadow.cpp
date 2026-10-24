@@ -89,8 +89,8 @@ void SetChannels() {
     }
     for (int ch = 0x60; ch <= 0x6f; ch++)
         switch_channels[ch] = ShadowRand(5) == 0;
-    switch_channels[0x7d] = ShadowRand(2);
-    switch_channels[0xa4] = ShadowRand(2);
+    switch_channels[SWITCH_LEVEL7001500_TOUCH] = ShadowRand(2);
+    switch_channels[SWITCH_CASTLEEXTERIOR_ALARM] = ShadowRand(2);
     switch_channels[0x34] = ShadowRand(2);
     GameState.NumFramesUnpaused = 300 + ShadowRand(100);
     static const HASHCODE levels[] = {HT_Level_Level7001500, HT_Level_TowerC, HT_Level_CastleExterior,
@@ -303,7 +303,8 @@ void TestTriggers() {
         world.others[0].objectType = OBJECTTYPE_DRONE;
         // The level-load trigger's own lock channels clear, most of the time
         if (ShadowRand(3))
-            switch_channels[0x60] = switch_channels[0x61] = switch_channels[0x62] = switch_channels[0x63] = 0;
+            switch_channels[SWITCH_FAIL_CIVILIAN_KILLED] = switch_channels[SWITCH_FAIL_ALARM] =
+                switch_channels[SWITCH_PLAYER_FINISHED_DYING] = switch_channels[SWITCH_MISSION_FAILED] = 0;
         Compare("Trigger_Activate", trial,
                 [] {
                     XbeOriginalScope original(kTriggerActivate);

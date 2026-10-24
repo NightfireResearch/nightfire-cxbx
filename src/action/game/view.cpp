@@ -593,7 +593,9 @@ void View_DrawSky(viewer_tag *viewer, char pass) {
                 if (sky->thunderDelay > 0) {
                     sky->thunderDelay--;
                     if (sky->thunderDelay == 0)
-                        Sound_PlayExt((Action_SFX)(ThunderNear ? 0x5e : 0x5d), 100.0f, 0, 0);
+                        Sound_PlayExt(ThunderNear ? SFX_ENV_THUNDER_CLAP_STEREO_02
+                                                  : SFX_ENV_THUNDER_CLAP_STEREO_01,
+                                      100.0f, 0, 0);
                 }
                 if (sky->flashTimer > 0) {
                     sky->flashTimer--;

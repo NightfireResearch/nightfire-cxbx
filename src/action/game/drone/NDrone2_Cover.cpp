@@ -62,9 +62,6 @@ static const ushort *const DroneCoverLowAnims = CoverLowAnimList;
 #define AINODE_FIDDLE 0x40
 #define AINODE_KICKED 0x8000
 
-// While switch channel 0x99 is off, a mission wait node holds the drone (in DSTATE_AllyLeadMissionWait)
-#define MISSION_WAIT_CHANNEL 0x99
-
 // Anim states (our names)
 #define DANIM_COVER_FIRE_LOW 0x58
 #define DANIM_CROUCH_AIM 5          // DroneAnim_ValidateCoverAnim gives way to 7, or else 10
@@ -428,8 +425,8 @@ void NDrone2_MoveTo_RouteNode(DCVars_tag *dcv, short offset, AIRoute_tag *route)
 
 // A route reaching one of its special nodes (LinkCreep_Handler): Mayhew's lines, a wait (once per node, while calm),
 // a door to open (with the next node a door node too) or let go of once open, an object to kick (once), an action
-// anim, a mission wait while channel 0x99 is off, or a fiddle. The state left is kept for the door, kick, action and
-// fiddle states to go back to. Past the route's end the creep is cleared. False only before the first node.
+// anim, a mission wait while SWITCH_MISSION_WAIT is off, or a fiddle. The state left is kept for the door, kick,
+// action and fiddle states to go back to. Past the route's end the creep is cleared. False only before the first node.
 // AUTOINJECT
 bool NDrone2_ReachedDestNode(AIRoute_tag *route, DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
@@ -507,7 +504,7 @@ bool NDrone2_ReachedDestNode(AIRoute_tag *route, DCVars_tag *dcv) {
         Drone_SM_SetState(sm, DSTATE_ActionAnim, 0);
         return true;
     }
-    if ((node->flags & AINODE_MISSION_WAIT) && switch_channels[MISSION_WAIT_CHANNEL] == 0) {
+    if ((node->flags & AINODE_MISSION_WAIT) && switch_channels[SWITCH_MISSION_WAIT] == 0) {
         if (sm->curState == DSTATE_AllyLeadMissionWait)
             return true;
         drone->initialState = (short)sm->curState;

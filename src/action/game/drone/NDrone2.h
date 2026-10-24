@@ -367,7 +367,7 @@ typedef enum {
     DRONE_MSG_ImpactStunDart = 0x19,
     DRONE_MSG_TalkToMissionObject = 0x1a,
     DRONE_MSG_ForceState = 0x1d,    // extraData = the DSTATE
-    DRONE_MSG_GlobalAlarm = 0x1e,   // every 30 frames while switch 0x96 is on
+    DRONE_MSG_GlobalAlarm = 0x1e,   // every 30 frames while SWITCH_GLOBAL_ALARM is on
     DRONE_MSG_ConsideredAlerted = 0x1f,
     DRONE_MSG_AnimEvent = 0x20,
     DRONE_MSG_ExplosiveSeen = 0x21, // extraData = the object
@@ -518,7 +518,8 @@ typedef struct {
                                 //           0x13 and 0x16. Set by DroneVision_BeginInterogate, cleared by
                                 //           DroneVision_EndInterogate outside CastleIndoors1
     char _pad1393;
-    uint alarmFrame;            // +0x1394 - Drone_InitComms sends DRONE_MSG 0x1e every 30 frames while channel 0x96 is on
+    uint alarmFrame;            // +0x1394 - Drone_InitComms sends DRONE_MSG 0x1e every 30 frames while
+                                //           SWITCH_GLOBAL_ALARM is on
     char _pad1398[0x13a8 - 0x1398];
     DroneSfxLog sfxLog[DRONE_SFX_LOG];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
     uint sfxLogNext;            // +0x1428 - the entry it writes next

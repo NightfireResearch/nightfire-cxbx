@@ -1144,14 +1144,14 @@ bool NDrone2_PatrolTalk(DCVars_tag *dcv) {
     return true;
 }
 
-// The Powerstation loudspeakers: while channel 0x98 is on, an active drone that is not talking says the line of
-// each channel that has come on, except the last one said. Always false.
+// The Powerstation loudspeakers: while SWITCH_ENEMY_ALERTED_NEAR is on, an active drone that is not talking says the
+// line of each channel that has come on, except the last one said. Always false.
 // AUTOINJECT
 bool NDrone2_PowerstationTalk(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (Drone_IsTalking(drone))
         return false;
-    if (MPDrone_IsDyingOrDead(drone->gameObj) || !switch_channels[0x98])
+    if (MPDrone_IsDyingOrDead(drone->gameObj) || !switch_channels[SWITCH_ENEMY_ALERTED_NEAR])
         return false;
     bool a1 = GameState.CurrentLevelHashcode == HT_Level_PowerStationA1;
     if (!a1 && GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
@@ -1172,7 +1172,7 @@ bool NDrone2_PowerstationTalk(DCVars_tag *dcv) {
 
 // Each frame, per drone: the Powerstation loudspeakers, or in CastleIndoors2 the guards' (skin class 12) talk to a
 // player within 3 m they can see, tried every 30 frames at most: three lines in turn (5 s after the first, 15 s
-// after the others), or once channel 0x4a is on, a last one that ends it.
+// after the others), or once SWITCH_CASTLEINDOORS2_ZOE_LAST_LINE is on, a last one that ends it.
 void NDrone2_HandleTalking(DCVars_tag *dcv) {
     if (Drone_bDisableSystem)
         return;
@@ -1198,7 +1198,7 @@ void NDrone2_HandleTalking(DCVars_tag *dcv) {
     if (!NDrone2_CanSeeObject(drone, player, 5, 0))
         return;
 
-    if (switch_channels[0x4a]) {
+    if (switch_channels[SWITCH_CASTLEINDOORS2_ZOE_LAST_LINE]) {
         NDrone2_SpeechSFX(dcv, 0x9e, 1, 0, 0);
         drone->talkStep = 99;
         return;

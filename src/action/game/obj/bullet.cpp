@@ -40,12 +40,6 @@ short NextCasing;
 
 // A satchel's digits, 0 to 9
 
-// Sounds without a name in assets.h
-#define SFX_BULLET_WHIZZ ((Action_SFX)0x1dc)
-#define SFX_FLASH_GRENADE ((Action_SFX)0x16)
-#define SFX_SMOKE_GRENADE ((Action_SFX)0x14)
-#define SFX_SATCHEL_DISARMED ((Action_SFX)0x5dd)
-
 // What the remote mine's fuse is set to when the player lays it: it waits for the detonator
 static constexpr float kMineWaitsForDetonator = 7777.0f;
 static_assert(std::bit_cast<uint32_t>(kMineWaitsForDetonator) == 0x45f30800);
@@ -518,7 +512,7 @@ static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
              0x80808000,
              0x7f);
     Camera_Shake(pos, 2.0f);
-    Bullet_PlaySound(SFX_FLASH_GRENADE, pos);
+    Bullet_PlaySound(SFX_OBJ_FLASH_GRENADE_EXPLODE, pos);
     Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, 1, 5.0f, 0, 0, 0, 0xffff);
 
     HITDATA_tag *hitList = NULL;
@@ -656,7 +650,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
         _VECTOR nearest;
         vecutil_calculate_closest_point_on_line(&nearest, &obj->position, &obj->lastPosition, &glb_viewer[0]->pos);
         if (Vec_SqDist3D(&nearest, &glb_viewer[0]->pos) < 9.0f && Rand_Rand(5) == 0)
-            Bullet_PlaySound(SFX_BULLET_WHIZZ, &nearest);
+            Bullet_PlaySound(SFX_BULLET_FLY_BY, &nearest);
     }
 
     // The fuse; the player's remote mine and the detonated ones wait
@@ -686,7 +680,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
                     if (bullet->wpnDef->weaponBaseNum == WEAPON_BASE_SMOKE)
                         bullet->fuseTimer = 2400.0f;
                     bullet->occluder = Occlude_Create(&obj->position, Ftol(bullet->fuseTimer), 1);
-                    Bullet_PlaySound(SFX_SMOKE_GRENADE, &obj->position);
+                    Bullet_PlaySound(SFX_OBJ_SMOKE_GRENADE_EXPLODE, &obj->position);
                 }
             } else {
                 weapon = bullet->wpnDef;
@@ -725,7 +719,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
             bullet->charge -= shot;
             Emitter_Create(HT_Emitter_LaserSparks, &hit->hitPosition, &hit->surfaceNormal.normal, 0.0f, 0, 0, 0, 0.0f);
             if (bullet->charge <= 0)
-                Bullet_PlaySound(SFX_SATCHEL_DISARMED, &obj->position);
+                Bullet_PlaySound(SFX_GADGET_DECRYPTOR_ABORT, &obj->position);
         }
     }
 

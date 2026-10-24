@@ -16,47 +16,44 @@ extern uint8_t IsWarmReset;
 
 // XBE_GLOBAL(0x0018cc50, 0x38) readonly relocate
 SSYSMSG SSysMsgs1[7] = {
-    {(Action_TranslatedText)0x0200001f, 676},
-    {(Action_TranslatedText)0x02000032, 675},
-    {(Action_TranslatedText)0x0200001c, 664},
-    {(Action_TranslatedText)0x0200001b, 663},
-    {(Action_TranslatedText)0x0200001a, 662},
-    {(Action_TranslatedText)0x02000019, 661},
-    {(Action_TranslatedText)0x02000017, 674},
+    {(Action_TranslatedText)0x0200001f, SFX_CHR_SPEECH_M3_BUI_021},
+    {(Action_TranslatedText)0x02000032, SFX_CHR_SPEECH_M3_BUI_020},
+    {(Action_TranslatedText)0x0200001c, SFX_CHR_SPEECH_M3_BUI_005},
+    {(Action_TranslatedText)0x0200001b, SFX_CHR_SPEECH_M3_BUI_004},
+    {(Action_TranslatedText)0x0200001a, SFX_CHR_SPEECH_M3_BUI_003},
+    {(Action_TranslatedText)0x02000019, SFX_CHR_SPEECH_M3_BUI_002},
+    {(Action_TranslatedText)0x02000017, SFX_CHR_SPEECH_M3_BUI_015},
 };
 // XBE_GLOBAL(0x0018cc18, 0x38) readonly relocate
 SSYSMSG SSysMsgs2[7] = {
-    {(Action_TranslatedText)0x02000020, 1073},
-    {(Action_TranslatedText)0x02000033, 1085},
-    {(Action_TranslatedText)0x0200001c, 664},
-    {(Action_TranslatedText)0x0200001b, 663},
-    {(Action_TranslatedText)0x0200001a, 662},
-    {(Action_TranslatedText)0x02000019, 661},
-    {(Action_TranslatedText)0x02000018, 1080},
+    {(Action_TranslatedText)0x02000020, SFX_CHR_SPEECH_M3_BUI_042},
+    {(Action_TranslatedText)0x02000033, SFX_CHR_SPEECH_M3_BUI_041},
+    {(Action_TranslatedText)0x0200001c, SFX_CHR_SPEECH_M3_BUI_005},
+    {(Action_TranslatedText)0x0200001b, SFX_CHR_SPEECH_M3_BUI_004},
+    {(Action_TranslatedText)0x0200001a, SFX_CHR_SPEECH_M3_BUI_003},
+    {(Action_TranslatedText)0x02000019, SFX_CHR_SPEECH_M3_BUI_002},
+    {(Action_TranslatedText)0x02000018, SFX_CHR_SPEECH_M3_BUI_037A},
 };
 // XBE_GLOBAL(0x0018ccc0, 0x38) readonly relocate
 SSYSMSG SSysMsgs3[7] = {
-    {(Action_TranslatedText)0x0200001d, 673},
-    {(Action_TranslatedText)0x02000030, 672},
-    {(Action_TranslatedText)0x0200001c, 664},
-    {(Action_TranslatedText)0x0200001b, 663},
-    {(Action_TranslatedText)0x0200001a, 662},
-    {(Action_TranslatedText)0x02000019, 661},
-    {(Action_TranslatedText)0x02000015, 667},
+    {(Action_TranslatedText)0x0200001d, SFX_CHR_SPEECH_M3_BUI_014},
+    {(Action_TranslatedText)0x02000030, SFX_CHR_SPEECH_M3_BUI_013},
+    {(Action_TranslatedText)0x0200001c, SFX_CHR_SPEECH_M3_BUI_005},
+    {(Action_TranslatedText)0x0200001b, SFX_CHR_SPEECH_M3_BUI_004},
+    {(Action_TranslatedText)0x0200001a, SFX_CHR_SPEECH_M3_BUI_003},
+    {(Action_TranslatedText)0x02000019, SFX_CHR_SPEECH_M3_BUI_002},
+    {(Action_TranslatedText)0x02000015, SFX_CHR_SPEECH_M3_BUI_008},
 };
 // XBE_GLOBAL(0x0018cc88, 0x38) readonly relocate
 SSYSMSG SSysMsgs4[7] = {
-    {(Action_TranslatedText)0x0200001e, 673},
-    {(Action_TranslatedText)0x02000031, 672},
-    {(Action_TranslatedText)0x0200001c, 664},
-    {(Action_TranslatedText)0x0200001b, 663},
-    {(Action_TranslatedText)0x0200001a, 662},
-    {(Action_TranslatedText)0x02000019, 661},
-    {(Action_TranslatedText)0x02000016, 667},
+    {(Action_TranslatedText)0x0200001e, SFX_CHR_SPEECH_M3_BUI_014},
+    {(Action_TranslatedText)0x02000031, SFX_CHR_SPEECH_M3_BUI_013},
+    {(Action_TranslatedText)0x0200001c, SFX_CHR_SPEECH_M3_BUI_005},
+    {(Action_TranslatedText)0x0200001b, SFX_CHR_SPEECH_M3_BUI_004},
+    {(Action_TranslatedText)0x0200001a, SFX_CHR_SPEECH_M3_BUI_003},
+    {(Action_TranslatedText)0x02000019, SFX_CHR_SPEECH_M3_BUI_002},
+    {(Action_TranslatedText)0x02000016, SFX_CHR_SPEECH_M3_BUI_008},
 };
-
-// In HT_Level_TowerC, only item 2 speaks, and only once this channel is set
-#define CHANNEL_SSYS_SPEAKS 0x76
 
 // A countdown runs four minutes; its messages come with three, two and one minute left, then six seconds, then at the
 // end.
@@ -76,7 +73,7 @@ void SSys_Init(void) {
 
 // Item 3 says nothing in HT_Level_TowerB.
 void SSys_Msg(ushort item, ushort msg) {
-    bool quiet = GameState.CurrentLevelHashcode == HT_Level_TowerC && !switch_channels[CHANNEL_SSYS_SPEAKS];
+    bool quiet = GameState.CurrentLevelHashcode == HT_Level_TowerC && !switch_channels[SWITCH_TOWERC_SSYS_SPEAKS];
 
     SSYSMSG *msgs;
     switch (item) {
@@ -99,7 +96,7 @@ void SSys_Msg(ushort item, ushort msg) {
     }
     if (quiet)
         return;
-    Sound_PlayExt((Action_SFX)msgs[msg].sound, 100.0f, 0, 0);
+    Sound_PlayExt(msgs[msg].sound, 100.0f, 0, 0);
 }
 
 // Once a frame, outside cutscenes: an item's channel being set starts its countdown, and clearing it stops the

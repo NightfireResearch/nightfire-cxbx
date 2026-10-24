@@ -1,7 +1,6 @@
 #include "Explode.h"
 #include "Sub.h"
 
-#include <bit>
 #include <math.h>
 #include <stdint.h>
 
@@ -27,7 +26,7 @@
 static void Sensor_ApplyDamage(obj_tag *obj, float damage) {}
 static void Monitor_ApplyDamage(obj_tag *obj, float damage) {}
 
-// The debris an explosion throws: metal, and in 0x07000008 with channel 0x53 on, stone
+// The debris an explosion throws: metal, and in CastleIndoors2 with SWITCH_CASTLEINDOORS2_STONE_DEBRIS on, stone
 // XBE_GLOBAL(0x001780b8, 0x10) readonly relocate
 HASHCODE MetalDebris[4] = {
     HT_Entity_Metal_Debris_1,
@@ -42,9 +41,6 @@ HASHCODE StoneDebris[4] = {
     HT_Entity_STONE_Debris3,
     HT_Entity_STONE_Debris_1,
 };
-
-constexpr float kOneFifteenth = 0.06666667f;
-static_assert(std::bit_cast<uint32_t>(kOneFifteenth) == 0x3d888889, "the original's constant at 0x0015d434");
 
 // The hit a player killed in multiplayer, or a mine, takes from who set the explosion off
 #define EXPLODE_KILL_DIST 9999.0f
@@ -94,7 +90,7 @@ void Explode_Create(obj_tag *obj, _VECTOR *pos, _VECTOR *unusedDir, float script
 
     explosion->objectType = OBJECTTYPE_EXPLODE;
     explosion->effectFlags = EFFECT_HIDDEN | EFFECT_NO_COLLISION;
-    explosion->scale = radius * kOneFifteenth;
+    explosion->scale = radius * (1.0f / 15.0f);
     Vec_Copy(pos, &explosion->position);
     if (from != NULL)
         Control_ObjectReferenced(from, 1);
@@ -133,7 +129,8 @@ void Explode_Update(obj_tag *obj) {
     case 8:
     case 10:
     case 11:
-        if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors2 || !switch_channels[0x53])
+        if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors2 ||
+            !switch_channels[SWITCH_CASTLEINDOORS2_STONE_DEBRIS])
             return;
         debris = StoneDebris;
         break;

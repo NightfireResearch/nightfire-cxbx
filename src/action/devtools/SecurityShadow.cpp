@@ -95,7 +95,7 @@ void RandomItems() {
     }
     for (int ch = 0; ch < 16; ch++)
         switch_channels[ch] = ShadowRand(4) != 0;
-    switch_channels[0x76] = ShadowRand(2);
+    switch_channels[SWITCH_TOWERC_SSYS_SPEAKS] = ShadowRand(2);
     static const HASHCODE levels[] = {HT_Level_TowerB, HT_Level_TowerC, HT_Level_CastleExterior};
     GameState.CurrentLevelHashcode = levels[ShadowRand(3)];
     ScriptCam = ShadowRand(10) == 0 ? (HASHCODE)0x1234 : (HASHCODE)0;

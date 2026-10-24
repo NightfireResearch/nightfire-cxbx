@@ -84,10 +84,6 @@ static void BOTWEAP_setDroneArmour(Drone_tag *drone) {}
 #define TEXT_GOT_INVISIBILITY ((Action_TranslatedText)0x02000013)
 #define TEXT_GOT_BONUS ((Action_TranslatedText)0x0200004a)
 
-#define PICKUP_SOUND ((ushort)0xf5)
-#define PICKUP_ARMOUR_SOUND ((ushort)0x141)
-#define PICKUP_BONUS_SOUND ((ushort)0x14c)
-
 static void SetChannel(ushort channel) {
     if (channel == 0)
         return;
@@ -478,7 +474,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
                 const char *name = Txt_BindLabel(weapon_data[info->item].nameLong, 0);
                 sprintf(text, Txt_BindLabel(TEXT_GOT_WEAPON, 0), name);
             }
-            info->sound = PICKUP_SOUND;
+            info->sound = SFX_GENERIC_PICKUP_01;
             break;
         case PICKUP_KIND_AMMO: {
             text = Txt_GetStringFromHeap(0);
@@ -492,7 +488,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
                 const char *name = Txt_BindLabel(ammo, 0);
                 sprintf(text, Txt_BindLabel(TEXT_GOT_AMMO, 0), taken, name);
             }
-            info->sound = PICKUP_SOUND;
+            info->sound = SFX_GENERIC_PICKUP_01;
             break;
         }
         case PICKUP_KIND_KEY:
@@ -502,7 +498,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
         case PICKUP_KIND_ARMOUR:
             text = Txt_GetStringFromHeap(0);
             sprintf(text, Txt_BindLabel(TEXT_GOT_ARMOUR, 0));
-            info->sound = PICKUP_ARMOUR_SOUND;
+            info->sound = SFX_GENERIC_PICKUP_BODY_ARMOUR;
             break;
         case PICKUP_KIND_MISSION:
             if (info->label != 0)
@@ -517,7 +513,7 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
         case PICKUP_KIND_BONUS:
             text = Txt_GetStringFromHeap(0);
             sprintf(text, Txt_BindLabel(TEXT_GOT_BONUS, 0));
-            info->sound = PICKUP_BONUS_SOUND;
+            info->sound = SFX_BOND_MOMENT_BM_CAS_WALL;
             break;
         default:
             show = false;
@@ -569,7 +565,7 @@ obj_tag* Pickup_CreateFromSet(_VECTOR *pos, _VECTOR *rot, ushort kind) {
     weapon_definition_tag *base = &weapon_data[weapon_data[gun].weaponBaseNum];
     celglist_tag *model = hashtable_hashcode_to_celglist(base->worldModelGfx);
     obj_tag *obj = Pickup_Create(pos, rot, NULL, model, PICKUP_KIND_WEAPON, base->weaponVariantNum,
-                                 base->clipSize * 2, 0, PICKUP_SOUND, 1, 3, 0, 0);
+                                 base->clipSize * 2, 0, SFX_GENERIC_PICKUP_01, 1, 3, 0, 0);
     if (gun == 0x1a) {
         _VECTOR beside;
         Vec_Copy(pos, &beside);
@@ -610,5 +606,5 @@ obj_tag* Pickup_CreateSimple(_MATRIX *mtx, short weapon, short count, ushort kin
     weapon_definition_tag *def = &weapon_data[weapon];
     ushort lifetime = FRAME_RATE_INT * (MPSettings.dronesAreBots ? 30 : 120);
     return Pickup_Create(NULL, NULL, mtx, hashtable_hashcode_to_celglist(def->worldModelGfx), kind,
-                         def->weaponVariantNum, count, 0, PICKUP_SOUND, 0, 0, lifetime, 0);
+                         def->weaponVariantNum, count, 0, SFX_GENERIC_PICKUP_01, 0, 0, lifetime, 0);
 }

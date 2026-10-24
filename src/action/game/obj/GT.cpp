@@ -58,8 +58,6 @@ enum {
 #define GT_KIND_MINIGUN 0
 #define GT_KIND_CEILING 1
 
-#define MINIGUN_SOUND ((Action_SFX)0x10a)
-#define CEILING_GUN_SOUND ((Action_SFX)0x4e7)
 // The turrets' weapon, and the weapon a placed minigun is picked up as
 #define TURRET_WEAPON 0x60
 #define MINIGUN_WEAPON 0x52
@@ -501,7 +499,8 @@ void GT_Update(obj_tag *obj) {
                 turret->fireTimer = 0.0f;
                 if (turret->ammo > 0)
                     turret->ammo--;
-                GT_Fire(obj, turret, barrel, turret->kind == GT_KIND_CEILING ? CEILING_GUN_SOUND : MINIGUN_SOUND,
+                GT_Fire(obj, turret, barrel,
+                        turret->kind == GT_KIND_CEILING ? SFX_ENV_CEILINGGUNSHOT : SFX_WEAPON_MINI_GUN_FIRE,
                         turret->owner != NULL ? turret->owner : obj, -1);
             }
             if (barrel == NULL)
@@ -595,7 +594,7 @@ void GT_Update(obj_tag *obj) {
                 turret->fireTimer = 0.0f;
                 if (turret->ammo > 0)
                     turret->ammo--;
-                GT_Fire(obj, turret, barrel, MINIGUN_SOUND, turret->owner, ownerData->playerNum);
+                GT_Fire(obj, turret, barrel, SFX_WEAPON_MINI_GUN_FIRE, turret->owner, ownerData->playerNum);
             }
             turret->spinSpeed = REC_FRAME_RATE * BarrelSpin;
         }

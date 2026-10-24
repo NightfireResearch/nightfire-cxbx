@@ -44,10 +44,6 @@ GUNTYPE GunTypes[12] = {
 #define GUNIMP_LASER_A 0x67
 #define GUNIMP_LASER_B 0x70
 
-#define GUNIMP_SPIN_UP ((Action_SFX)0x5e4)
-#define GUNIMP_SPIN ((Action_SFX)0x5e5)
-#define GUNIMP_SPIN_DOWN ((Action_SFX)0x5e6)
-
 // Past this the gun overheats until it has cooled
 #define GUNIMP_OVERHEAT 200.0f
 
@@ -286,8 +282,9 @@ void GunImp_Update(obj_tag *gunObj) {
         if (firing->weapon == GUNIMP_MINIGUN) {
             sound = firing->sound;
             if (gunImp->firingSound == NULL) {
-                Sound_Play3D(GUNIMP_SPIN_UP, &gunObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
-                gunImp->firingSound = Sound_Play3D(GUNIMP_SPIN, &gunObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+                Sound_Play3D(SFX_GADGET_RONIN_WHIR_START, &gunObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+                gunImp->firingSound = Sound_Play3D(SFX_GADGET_RONIN_WHIR_LOOP, &gunObj->position, 100.0f, -1.0f, -1.0f,
+                                                   0, 0, 0);
             }
             gunImp->heat = gunImp->heat + 8.0f;
             if (gunImp->heat > GUNIMP_OVERHEAT)
@@ -354,7 +351,7 @@ void GunImp_Update(obj_tag *gunObj) {
         return;
     if (gunImp->firingSound != NULL) {
         if (GunTypes[gunImp->gunType].weapon == GUNIMP_MINIGUN)
-            Sound_Play3D(GUNIMP_SPIN_DOWN, &gunObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+            Sound_Play3D(SFX_GADGET_RONIN_WHIR_END, &gunObj->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Sound_Stop(gunImp->firingSound);
         gunImp->firingSound = NULL;
     }

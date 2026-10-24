@@ -46,9 +46,6 @@
 // Where a grenade leaves the drone's hand
 #define GRENADE_BONE 0x80000015
 
-// The sound DroneWeap_FireWeapon does not play
-#define SFX_NO_FIRE_SOUND 0x5ef
-
 // How far the barrel may point off the target: 20 degrees, a bit above DEG2RAD(20)
 constexpr float kAimAngle = 0.34906587f;
 constexpr float kNinjaAimAngle = DEG2RAD(30);   // for DTYPE_Ninja
@@ -422,9 +419,9 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     if (dcv->drone->dtype == DTYPE_Bot)
         BOTWEAP_decrRounds(drone, 1);
 
-    // The original also tests the sound against -1, which a ushort never is. The pitch is converted as unsigned:
-    // a negative draw comes out near 4.29e9.
-    if (sound != SFX_NO_FIRE_SOUND) {
+    // No shot sound for a weapon whose sound is the Oddjob hat's loop. The original also tests the sound against -1,
+    // which a ushort never is. The pitch is converted as unsigned: a negative draw comes out near 4.29e9.
+    if (sound != SFX_WEAPON_ODDJOB_HAT_LOOP) {
         float pitch = (float)(uint)(Rand_Rand(500) - 250);
         Sound_Play3D((Action_SFX)sound, &obj->position, 25.0f, 100.0f, pitch, 0, 0, 0);
     }

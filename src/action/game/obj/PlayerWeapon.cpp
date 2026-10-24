@@ -516,7 +516,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
         else {
             highest = 2;
             if (current == 1)
-                Sound_PlayExt((Action_SFX)0x1db, 100.0f, 0, 0);
+                Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_ERROR, 100.0f, 0, 0);
         }
     }
 
@@ -879,7 +879,9 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                     AnimScriptAdd(blData->weaponObject, previous->animLowerRelaxed);
                 else
                     AnimScriptAddSpeed(blData->weaponObject, previous->animLower, 1.25f);
-                Sound_PlayExt((Action_SFX)(IsGadget((ushort)previous->weaponVariantNum) ? 0x280 : 0x283), 100.0f, 0, 0);
+                Sound_PlayExt(IsGadget((ushort)previous->weaponVariantNum) ? SFX_GADGET_LOWER_GADGET
+                                                                           : SFX_WEAPON_GENERIC_LOWER_WEAPON,
+                              100.0f, 0, 0);
             }
             if (blData->weaponObject->curState == GUN_LOWER_USED_UP)
                 blData->weaponObject->curState = GUN_LOWERING_USED_UP;
@@ -912,7 +914,9 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 AnimScriptAddSpeed(blData->weaponObject, current->animRaise, 1.25f);
                 AnimObjectUpdate(blData->weaponObject);
                 blData->weaponObject->curState = GUN_RAISING;
-                Sound_PlayExt((Action_SFX)(IsGadget((ushort)current->weaponVariantNum) ? 0x281 : 0x282), 100.0f, 0, 0);
+                Sound_PlayExt(IsGadget((ushort)current->weaponVariantNum) ? SFX_GADGET_RAISE_GADGET
+                                                                          : SFX_WEAPON_GENERIC_RAISE_WEAPON,
+                              100.0f, 0, 0);
             }
             else {
                 ToIdle(blData->weaponObject, current);
@@ -1233,7 +1237,7 @@ void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
         if (weapon->damageClass & 0xf8)
             PlrStat_LogShotFired(blData->playerNum);
         if (weapon->weaponBaseNum == Weap_Camera)
-            Sound_PlayExt((Action_SFX)0xec, 100.0f, 0, 0);
+            Sound_PlayExt(SFX_GADGET_CAMERA_SHOOT, 100.0f, 0, 0);
         if (weapon->weaponBaseNum == Weap_Ronin) {
             // The Ronin is set down a unit in front of the player; if it cannot be, the round goes back
             Mat_GetDir(&direction, &player->transformMatrix);

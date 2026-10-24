@@ -719,7 +719,7 @@ void RandomWorld() {
     MPSettings.dronesAreBots = ShadowRand(3) == 0;
     NPCGlobals.NDrone2List = &world.drones[0];
     NPCGlobals.prevSeenOpponentCount = ShadowRand(3) == 0;
-    switch_channels[0x99] = (char)ShadowRand(2);
+    switch_channels[SWITCH_MISSION_WAIT] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
 }

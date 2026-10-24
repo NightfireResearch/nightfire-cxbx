@@ -60,7 +60,6 @@ enum {
     COPTER_DESTROYED = 6,
 };
 
-#define COPTER_GUN_SOUND ((Action_SFX)0x5df)
 // The level whose helicopter fires other weapons and now and then a missile straight at the player, and the two
 // whose helicopters are blown up rather than leave
 #define COPTER_LEVEL_A HT_Level_CastleIndoors2
@@ -229,7 +228,7 @@ bool Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
 
     if ((float)path->frames < copter->pathFrame) {
         ended = true;
-        if (copter->channel == 100)
+        if (copter->channel == 100)     // a marker (Copter.h), not SWITCH_MISSION_WON
             obj->flags |= 1;
         copter->path = Copter_NextPath(copter);
     }
@@ -260,7 +259,7 @@ bool Copter_FireGun(COPTER *copter, obj_tag *obj) {
     Vec_Subtract(&target, gunPos, &dir);
     Vec_Normalise(&dir, &dir);
     auxVec_AddMulR32(&gun->position, &dir, gun->objGraphics->extentMax.z, &muzzle);
-    Sound_Play3D(COPTER_GUN_SOUND, &muzzle, 100.0f, -1.0f, -1.0f, 0, 0, 0);
+    Sound_Play3D(SFX_VEH_HELICOPTER_CHAINGUN_SHOT, &muzzle, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     int weapon = GameState.CurrentLevelHashcode == COPTER_LEVEL_A ? 0x61 : 0x71;
     Bullet_init(-1, obj, gun, &weapon_data[weapon], &muzzle, &dir, 0xffff);
     gun->curState = 0;
@@ -352,7 +351,7 @@ void Copter_Update(obj_tag *obj) {
 
     case COPTER_PATROL:
         Copter_Move(copter, obj, 0);
-        if (copter->channel == 100)
+        if (copter->channel == 100)     // never attacks
             break;
         obj->subState++;
         if ((double)(short)FRAME_RATE_INT * 4 / DiffMod > (double)(short)obj->subState)

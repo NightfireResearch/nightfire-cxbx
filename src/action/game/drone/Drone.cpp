@@ -151,7 +151,7 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
                 continue;
             if (gameObj->objectType != OBJECTTYPE_DRONE && gameObj->objectType != OBJECTTYPE_DEAD_DRONE)
                 continue;
-            if (gameObj->curState == 1 && drone->waitSwitchChannel == 10)
+            if (gameObj->curState == 1 && drone->waitSwitchChannel == 10)    // a wait channel, not SWITCH_SPACE_DRAKE
                 Drone_Message(gameObj, DRONE_MSG_Enable, NULL, 0);
         }
     }
@@ -445,7 +445,7 @@ void Drone_LevelReset(void) {
 static const float kMaxSlope = 0.87266463f;
 static const float kMaxSlopeCastleIndoors2 = QUARTER_PI;
 
-// Once the level is read: the move test's limits (CastleIndoors2's are lower; EvilBaseC starts with channel 0x96
+// Once the level is read: the move test's limits (CastleIndoors2's are lower; EvilBaseC starts with SWITCH_GLOBAL_ALARM
 // off), the safety emitter, every cover node's and AI point's flood, the dummy player, the groups, each drone's own
 // set-up, and the door and kick nodes and the passable bounds.
 // AUTOINJECT
@@ -457,7 +457,7 @@ void Drone_PostLoad_Init(void) {
     NPCGlobals.playerTarget.builtFrame = 0;
     NPCGlobals.alertTarget.builtFrame = 0;
     if (GameState.CurrentLevelHashcode == HT_Level_EvilBaseC)
-        switch_channels[0x96] = 0;
+        switch_channels[SWITCH_GLOBAL_ALARM] = 0;
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors2) {
         MoveTest_MaxSlope = kMaxSlopeCastleIndoors2;
         MoveTest_StepHeight = 1.5f;
@@ -503,7 +503,8 @@ static void Drone_PauseNoDraw(bool pause) {
 }
 
 // Music event 0xe when no enemy drone is idle and none is alerted near its opponent; a non-ally drone alerted within
-// 30 m of its opponent turns channel 0x97 on instead. Channel 0x98 says whether one is. Our name; nightfire-port has
+// 30 m of its opponent turns SWITCH_ENEMY_ALERTED_NEAR_LATCHED on instead; SWITCH_ENEMY_ALERTED_NEAR says whether one
+// is. Our name; nightfire-port has
 // it inline in Drone_InitComms.
 // FUNC_AT(0x000314a0)
 void Drone_UpdateCombatChannels(void) {
@@ -523,16 +524,16 @@ void Drone_UpdateCombatChannels(void) {
         }
     }
     if (alerted)
-        switch_channels[0x97] = 1;
+        switch_channels[SWITCH_ENEMY_ALERTED_NEAR_LATCHED] = 1;
     else if (calm)
         Music_Event(0xe, 1);
-    switch_channels[0x98] = alerted;
+    switch_channels[SWITCH_ENEMY_ALERTED_NEAR] = alerted;
 }
 
 // The NPC system's frame: hides the drones while the no-drones cheat is on, follows the dummy-player cheat, then
 // (drones enabled and present) the aware points, targets, cover nodes, opponents and sight, the combat channels and
-// the nav node cache; counts the dead drones, repeats the global alarm while channel 0x96 is on (once in EvilBase),
-// sends the delayed messages, keeps this frame's counts and starts the music's counts again.
+// the nav node cache; counts the dead drones, repeats the global alarm while SWITCH_GLOBAL_ALARM is on (once in
+// EvilBase), sends the delayed messages, keeps this frame's counts and starts the music's counts again.
 // AUTOINJECT
 void Drone_InitComms(void) {
     if (switch_NO_DRONES) {
@@ -593,7 +594,7 @@ void Drone_InitComms(void) {
     NPCGlobals.deadOrFadingFast += NPCGlobals.deadDrones;
     Sound_ZeroAlertness();
 
-    if (switch_channels[0x96] && NPCGlobals.alarmFrame + 30 < GameState.NumFramesUnpaused
+    if (switch_channels[SWITCH_GLOBAL_ALARM] && NPCGlobals.alarmFrame + 30 < GameState.NumFramesUnpaused
         && (GameState.CurrentLevelHashcode != HT_Level_EvilBase || !NPCGlobals.alarmSaid)) {
         NPCGlobals.alarmSaid = 1;
         // Drone_Message(NULL, ...), inline
@@ -834,15 +835,15 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
     return true;
 }
 
-// Zoe: once channel 1 is on, channel 0x9b too; while 0x9b is on, the player more than 10 m from her fails the
+// Zoe: once channel 1 is on, SWITCH_ZOE_LEASH too; while that is on, the player more than 10 m from her fails the
 // mission (reason 15, inline in the original). Then the standard control.
 // FUNC_AT(0x0003f8a0)
 bool NDrone2_ControlDTYPE_Zoe(DCVars_tag *dcv) {
-    if (switch_channels[1]) {
-        switch_channels[0x9b] = 1;
-        switch_channels_time[0x9b] = GameState.NumFramesUnpaused;
+    if (switch_channels[1]) {     // the level's number
+        switch_channels[SWITCH_ZOE_LEASH] = 1;
+        switch_channels_time[SWITCH_ZOE_LEASH] = GameState.NumFramesUnpaused;
     }
-    if (switch_channels[0x9b] && glb_players[0] != NULL
+    if (switch_channels[SWITCH_ZOE_LEASH] && glb_players[0] != NULL
         && Vec_Dist3D(&dcv->gameObj->position, &glb_players[0]->position) > 10.0f)
         DroneFunc_SetMissionFailReason(dcv->drone, 15);
     return NDrone2_ControlSTANDARD(dcv);

@@ -38,7 +38,7 @@ LAYOUT_32(sizeof(light_tag) == 64, "light_tag must be 64 bytes");
 typedef struct AMBIENT_RADIATOR {
     _VECTOR pos;
     float radiusSq;             // 0x0c
-    float unknown10;            // 0x10
+    float invRadiusSq;          // 0x10 - 1 / radiusSq in every map; Light_SetAmbientRadiators does not read it
     float r;                    // 0x14 - 0 to 1
     float g;                    // 0x18
     float b;                    // 0x1c

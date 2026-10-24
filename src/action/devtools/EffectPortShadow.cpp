@@ -2111,7 +2111,7 @@ obj_tag *Explosion(void) {
 uint32_t RunExplodeUpdate(bool original) {
     if (R(3) == 0) {
         GameState.CurrentLevelHashcode = HT_Level_CastleIndoors2;
-        switch_channels[0x53] = 1;
+        switch_channels[SWITCH_CASTLEINDOORS2_STONE_DEBRIS] = 1;
     }
     if (R(3) == 0)
         CDECL_RUN(0x00069370, Explode_Delete, void (__cdecl *)(obj_tag *), Explosion());

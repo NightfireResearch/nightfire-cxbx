@@ -22,15 +22,6 @@
 
 #pragma fp_contract(off)
 
-// The weapons that open locks (weapon variants)
-#define WEAPON_LASER 78
-#define WEAPON_LASER_2 79
-#define WEAPON_DECRYPTOR 86
-#define WEAPON_DECRYPTOR_2 87
-
-#define SFX_LOCK_CUT 0x249
-#define SFX_DECRYPT_DIGIT 0x5db
-#define SFX_DECRYPT_DONE 0x5da
 #define LABEL_KEY_CODE ((Action_TranslatedText)0x02000014) // the code's message (four %c)
 
 // The weapon variant of the bullet a hit is from (its definition read unchecked), or -1 for a hit that is not a
@@ -100,8 +91,9 @@ static uchar ClampByte(short value) {
     return (uchar)value;
 }
 
-// A frame of a lock: a locked one opens to its key; is cut by the laser (each hit takes 3 or 10 from its tint, open
-// below 4, the tint coming back while not hit); or starts decrypting when the decryptor hits it. One opening moves
+// A frame of a lock: a locked one opens to its key; is cut by the watch laser (each hit takes 3, or 10 upgraded, from
+// its green and blue tint, so it reddens; it opens once blue is down to 3, and they creep back while it is not hit);
+// or starts decrypting when the decryptor hits it. One opening moves
 // along its spline and sets its channel; one open fades back and, a keypad lock, locks again when its channel goes
 // off. The keypad and the decryptor work on GlobalVars' code.
 // AUTOINJECT
@@ -118,9 +110,9 @@ void Lock_Update(obj_tag *obj) {
                 if (bullet == NULL || bullet->wpnDef == NULL)
                     continue;
                 short heat;
-                if (bullet->wpnDef->weaponVariantNum == WEAPON_LASER)
+                if (bullet->wpnDef->weaponVariantNum == Weap_WatchLaser)
                     heat = 3;
-                else if (bullet->wpnDef->weaponVariantNum == WEAPON_LASER_2)
+                else if (bullet->wpnDef->weaponVariantNum == Weap_WatchLaser_Upgraded)
                     heat = 10;
                 else
                     continue;
@@ -130,7 +122,7 @@ void Lock_Update(obj_tag *obj) {
                 obj->tweakG = ClampByte(obj->tweakG - heat);
                 obj->tweakB = ClampByte(obj->tweakB - heat);
                 if (obj->tweakB <= 3) {
-                    PlayAt(SFX_LOCK_CUT, obj);
+                    PlayAt(SFX_ENV_METAL_LOCK_BREAK, obj);
                     Lock_Unlock(bullet->firedByObj, obj, 0);
                     return;
                 }
@@ -152,7 +144,7 @@ void Lock_Update(obj_tag *obj) {
         }
         for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
             short weapon = HitWeaponVariant(hit);
-            if (weapon == WEAPON_DECRYPTOR || weapon == WEAPON_DECRYPTOR_2)
+            if (weapon == Weap_Decryptor || weapon == Weap_Decryptor_Upgraded)
                 obj->subState++;
         }
         if (obj->subState != 0) {
@@ -227,16 +219,16 @@ void Lock_Update(obj_tag *obj) {
     }
 
     case LOCKSTATE_DECRYPTING: {
-        // Each frame the decryptor is on it counts 1 (3 for the second), and a count past 40 for each digit still to
-        // find finds the next; while it is off the count runs down by 4, and at 0 the lock is left
+        // Each frame the decryptor is on it counts 1 (3 for the upgraded one), and a count past 40 for each digit still
+        // to find finds the next; while it is off the count runs down by 4, and at 0 the lock is left
         GlobalVars.DecoderDisplayShown = 1;
         ushort hits = 0;
         for (HITDATA_tag *hit = obj->hitList; hit != NULL; hit = hit->next) {
             short weapon = HitWeaponVariant(hit);
-            if (weapon == WEAPON_DECRYPTOR) {
+            if (weapon == Weap_Decryptor) {
                 obj->subState++;
                 hits++;
-            } else if (weapon == WEAPON_DECRYPTOR_2) {
+            } else if (weapon == Weap_Decryptor_Upgraded) {
                 obj->subState += 3;
                 hits++;
             }
@@ -260,12 +252,12 @@ void Lock_Update(obj_tag *obj) {
             GlobalVars.DecoderDisplay[digit] = GlobalVars.DecoderTarget[digit];
             GlobalVars.DecoderDigitAt++;
             obj->subState = 5;
-            Sound_PlayExt((Action_SFX)SFX_DECRYPT_DIGIT, 100.0f, 0, 0);
+            Sound_PlayExt(SFX_GADGET_DECRYPTOR_DECODE_DIGIT, 100.0f, 0, 0);
         }
         if (GlobalVars.DecoderDigitAt == GlobalVars.DecoderNumDigits + 1) {
             Lock_Unlock(glb_players[0], obj, 0);
             memset(&GlobalVars, 0, sizeof(GlobalVars));
-            Sound_PlayExt((Action_SFX)SFX_DECRYPT_DONE, 100.0f, 0, 0);
+            Sound_PlayExt(SFX_GADGET_DECRYPTOR_CODE_COMPLETE, 100.0f, 0, 0);
         }
         return;
     }

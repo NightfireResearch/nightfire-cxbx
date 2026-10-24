@@ -1104,10 +1104,6 @@ obj_tag* MP_GetTarget(ushort team, obj_tag *exclude, bool aliveOnly) {
     return candidates[Rand_Rand(count)];
 }
 
-// Switch channels MP_CheckForEndCondition sets
-#define SW_MP_SCORE_REACHED 0xfd
-#define SW_MP_TIME_UP 0xfe
-
 // XBE_GLOBAL(0x001dfa14, 0x4)
 uint32_t switch_MP4EVER;
 
@@ -1198,13 +1194,13 @@ void MP_CheckForEndCondition(void) {
         MPGame.TimeUnpaused += dt;
 
     if (roundMode) {
-        if (MPGame.TimeLimit > 0.0f && !switch_channels[SW_MP_TIME_UP]) {
+        if (MPGame.TimeLimit > 0.0f && !switch_channels[SWITCH_MP_TIME_UP]) {
             if (MPGame.TimeUnpaused >= MPGame.TimeLimit)
                 MPGame.EndGameFlowState = 6;
             ShowTimeLeft();
         }
-    } else if (MPSettings.MaxDuration != -1 && !switch_channels[SW_MP_TIME_UP]) {
-        switch_channels[SW_MP_TIME_UP] = MPGame.TimeUnpaused >= MPGame.TimeLimit;
+    } else if (MPSettings.MaxDuration != -1 && !switch_channels[SWITCH_MP_TIME_UP]) {
+        switch_channels[SWITCH_MP_TIME_UP] = MPGame.TimeUnpaused >= MPGame.TimeLimit;
         ShowTimeLeft();
     }
 
@@ -1212,11 +1208,11 @@ void MP_CheckForEndCondition(void) {
 
     int maxPoints = MPSettings.MaxPoints;
     if (MPSettings.GameMode != GM_TOPAGENT && maxPoints != -1)
-        switch_channels[SW_MP_SCORE_REACHED] = best >= maxPoints;
+        switch_channels[SWITCH_MP_SCORE_REACHED] = best >= maxPoints;
 
-    if (switch_channels[SW_MP_SCORE_REACHED])
+    if (switch_channels[SWITCH_MP_SCORE_REACHED])
         MPGame.EndGameFlowState = 1;
-    else if (switch_channels[SW_MP_TIME_UP])
+    else if (switch_channels[SWITCH_MP_TIME_UP])
         MPGame.EndGameFlowState = 2;
 }
 

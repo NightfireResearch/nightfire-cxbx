@@ -268,17 +268,6 @@ void Mission_ObjectiveState(OBJ_STATE *state, short objectiveNum) {
 
 }
 
-// Hard-coded switch channels (docs/switch-channels.md)
-#define MissionFailConditionHit switch_channels[0x63]
-#define MissionWinConditionHit switch_channels[0x64]
-#define MissionFailTime switch_channels_time[0x63]
-#define MissionWinTime switch_channels_time[0x64]
-
-#define FailedDueToAlarm switch_channels[0x61]
-#define FailedDueToKilledCivilian switch_channels[0x60]
-#define FailedDueToKikoEscape switch_channels[0x7b]
-#define FailedDueToMissileLaunch switch_channels[0xc7]
-
 // AUTOINJECT
 void Mission_MonitorObjectives(void) {
 
@@ -324,8 +313,8 @@ void Mission_MonitorObjectives(void) {
                 case 2:
                     // Triggered a failure
                     if (!thisObjectiveMet) {
-                        MissionFailConditionHit = true;
-                        MissionFailTime = GameState.NumFramesUnpaused;
+                        switch_channels[SWITCH_MISSION_FAILED] = true;
+                        switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
                         sprintf(str,"%s: %s",Txt_BindLabel((Action_TranslatedText)0x170, 0), Txt_BindLabel(o->name, 0));
                         Text_AddMsg(0, fromPreviousPart, 2, str, 0, 180);
                         o->status = 5;
@@ -360,37 +349,37 @@ void Mission_MonitorObjectives(void) {
     // Check conditions for mission failure or success: every one is tested, and success can be set beside a failure
 
     // Mission failure - Alarm triggered
-    if(FailedDueToAlarm) {
+    if(switch_channels[SWITCH_FAIL_ALARM]) {
         FailLabel = TXT_MISSION_FAIL_ALARM_TRIGGERED;
-        MissionFailConditionHit = true;
-        MissionFailTime = GameState.NumFramesUnpaused;
+        switch_channels[SWITCH_MISSION_FAILED] = true;
+        switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
     }
 
     // Mission failure - Civilian was killed
-    if(FailedDueToKilledCivilian) {
+    if(switch_channels[SWITCH_FAIL_CIVILIAN_KILLED]) {
         FailLabel = TXT_MISSION_FAIL_KILLED_CIVILIAN;
-        MissionFailConditionHit = true;
-        MissionFailTime = GameState.NumFramesUnpaused;
+        switch_channels[SWITCH_MISSION_FAILED] = true;
+        switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
     }
 
     // Mission failure - Kiko escaped in Evil Base C
-    if(FailedDueToKikoEscape && GameState.CurrentLevelHashcode == HT_Level_EvilBaseC) {
+    if(switch_channels[SWITCH_EVILBASEC_FAIL_KIKO] && GameState.CurrentLevelHashcode == HT_Level_EvilBaseC) {
         FailLabel = TXT_MISSION_FAIL_KIKO_ESCAPE;
-        MissionFailConditionHit = true;
-        MissionFailTime = GameState.NumFramesUnpaused;
+        switch_channels[SWITCH_MISSION_FAILED] = true;
+        switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
     }
 
     // Mission failure - Missile launched in Space Station D
-    if(FailedDueToMissileLaunch && GameState.CurrentLevelHashcode == HT_Level_SpaceStationD) {
+    if(switch_channels[SWITCH_SPACESTATIOND_FAIL_MISSILE] && GameState.CurrentLevelHashcode == HT_Level_SpaceStationD) {
         FailLabel = TXT_MISSION_FAIL_MISSILE_LAUNCHED;
-        MissionFailConditionHit = true;
-        MissionFailTime = GameState.NumFramesUnpaused;
+        switch_channels[SWITCH_MISSION_FAILED] = true;
+        switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
     }
 
     // Mission success
     if(allObjectivesCompleted) {
-        MissionWinConditionHit = 1;
-        MissionWinTime = GameState.NumFramesUnpaused;
+        switch_channels[SWITCH_MISSION_WON] = 1;
+        switch_channels_time[SWITCH_MISSION_WON] = GameState.NumFramesUnpaused;
         Music_Event(8,1);
         printf("--- Completed mission 0x%08x in %i frames\n", GameState.CurrentLevelHashcode, GameState.NumFramesUnpaused);
         return;
@@ -436,7 +425,6 @@ static uint32_t InternalState = 0x5;
 static uint32_t FadeClr_147 = 0xff;
 // XBE_GLOBAL(0x0025fe28, 0x4)
 static float TimeOut_148;
-#define PlayerHasFinishedDying switch_channels[0x62]
 // XBE_GLOBAL(0x0017e54c, 0x4)
 static HASHCODE LevelToEndTo = HT_Level_Menu_Pre;
 
@@ -452,7 +440,7 @@ void Mission_Update(void) {
     switch(InternalState) {
         case 1: // Normal running
 
-            if(PlayerHasFinishedDying) {
+            if(switch_channels[SWITCH_PLAYER_FINISHED_DYING]) {
 
                 // Stop music and show fail screen
                 Music_Event(6,1);
@@ -469,13 +457,13 @@ void Mission_Update(void) {
                 // Check for mission failure or success
                 Mission_MonitorObjectives();
 
-                if (MissionFailConditionHit) {
+                if (switch_channels[SWITCH_MISSION_FAILED]) {
                     Music_Event(7,1);
                     InternalState = 2;
                     return;
                 }
                 
-                if (MissionWinConditionHit) {
+                if (switch_channels[SWITCH_MISSION_WON]) {
                     Music_Event(8,1);
                     InternalState = 6;
                     FadeClr_147 = 0xff;

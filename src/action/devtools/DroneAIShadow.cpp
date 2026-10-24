@@ -504,8 +504,8 @@ void RandomWorld() {
 
     for (int ch = 0x34; ch < 0x54; ch++)
         switch_channels[ch] = (char)(ShadowRand(3) == 0);
-    switch_channels[0x98] = (char)ShadowRand(2);
-    switch_channels[0x4a] = (char)(ShadowRand(3) == 0);
+    switch_channels[SWITCH_ENEMY_ALERTED_NEAR] = (char)ShadowRand(2);
+    switch_channels[SWITCH_CASTLEINDOORS2_ZOE_LAST_LINE] = (char)(ShadowRand(3) == 0);
 
     MusicVars.combatThreshold = (ushort)ShadowRand(4);
     MusicVars.seenSeconds = ShadowRand(4);

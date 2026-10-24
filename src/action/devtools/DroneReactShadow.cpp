@@ -698,7 +698,7 @@ void RandomWorld(bool playerAlways) {
         glb_players[0] = &world.player;
     MPSettings.dronesAreBots = ShadowRand(3) == 0;
     switch_BLIND_DRONES = ShadowRand(2);
-    switch_channels[10] = (char)ShadowRand(2);
+    switch_channels[SWITCH_SPACE_DRAKE] = (char)ShadowRand(2);
     RandWords[0] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
     RandWords[1] = ShadowRand(0x10000) | (ShadowRand(0x10000) << 16);
 }

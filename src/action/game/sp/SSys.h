@@ -27,7 +27,7 @@ void SSys_RamLoad(SSYSITEM *saved);
 // Each item's seven messages, by state: the text and the sound. Only the sound is played.
 typedef struct {
     Action_TranslatedText label;
-    uint sound;
+    Action_SFX sound;
 } SSYSMSG;
 static_assert(sizeof(SSYSMSG) == 8, "SSYSMSG is 8 bytes");
 

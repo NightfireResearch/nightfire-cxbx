@@ -1533,7 +1533,8 @@ bool NDrone2_DSTATE_AllyLeadWait(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
     }
 }
 
-// Standing at the mission path's next node until a switch channel is on: the state change's parameter, else 0x99.
+// Standing at the mission path's next node until a switch channel is on: the state change's parameter, else
+// SWITCH_MISSION_WAIT.
 // AUTOINJECT
 bool NDrone2_DSTATE_AllyLeadMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, MsgObject *msg) {
     switch (msg->msgType) {
@@ -1541,7 +1542,7 @@ bool NDrone2_DSTATE_AllyLeadMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_t
         return true;
 
     case DRONE_MSG_Enter:
-        drone->stateScratch = drone->sm.stateParam != 0 ? drone->sm.stateParam : 0x99;
+        drone->stateScratch = drone->sm.stateParam != 0 ? drone->sm.stateParam : SWITCH_MISSION_WAIT;
         drone->activeRoute = &drone->route2;
         Drone_AlertStatusSet(2, dcv);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
@@ -1886,7 +1887,7 @@ bool NDrone2_DSTATE_CastleChatGuard1(DCVars_tag *dcv, Drone_tag *drone, obj_tag 
 
     case DRONE_MSG_Exit:
         if (dcv->drone->playScript != 0)
-            SwitchChannel_SetActive(0x1a);
+            SwitchChannel_SetActive(0x1a);   // the level's number
         return true;
 
     case DRONE_MSG_Update:

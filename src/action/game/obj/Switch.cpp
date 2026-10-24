@@ -145,9 +145,8 @@ void Switch_Activate(obj_tag *switchObj, obj_tag *activatorObj) {
     if (switchData->oneShot != 0 && switchData->triggerCount != 0)
         return;
 
-    // Channel 0x61 is specifically locked out from being triggered directly by the player (some other mechanism
-    // must flip it instead) - exact reason for this particular channel isn't known
-    if (activatorObj->objectType == OBJECTTYPE_PLAYER && switchData->channelNum == 0x61)
+    // The player can't flip a switch on the alarm channel
+    if (activatorObj->objectType == OBJECTTYPE_PLAYER && switchData->channelNum == SWITCH_FAIL_ALARM)
         return;
 
     // Only activatable while visually in sync with the channel (not mid-animation) ...
