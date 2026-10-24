@@ -68,6 +68,14 @@ endif()
 # We'll use the original unsafe versions, and tell the compiler to stop nagging us, because YOLO
 add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
+# The C forms of the x87 code (NIGHTFIRE_X87 or NIGHTFIRE_ACTION_X87 off, and every 64-bit build) take their
+# transcendentals from src/common/math/DetMath.cpp, the same bits on every host, instead of the host's <math.h>
+# (docs/deterministic-maths.md). No effect on the x87 forms.
+option(NIGHTFIRE_DET_MATH "C forms of the x87 code: DetMath's sin, cos, tan, atan2, asin, acos and exp (off: <math.h>)" OFF)
+if(NIGHTFIRE_DET_MATH)
+  add_compile_definitions(NIGHTFIRE_DET_MATH=1)
+endif()
+
 # The action engine's own sources, which both builds compile: actioninject.dll (with the devtools and the patching
 # of the XBE) and action_standalone.exe (with neither).
 set(nf_action_sources
@@ -116,6 +124,7 @@ set(nf_action_sources
   # The driving engine's C runtime, the same library (src/action/engine/CRuntime.h)
   src/driving/platform/CRuntimeCore.cpp
   src/driving/platform/CRuntimeX87.cpp
+  src/common/math/DetMath.cpp
   src/driving/platform/CRuntimeFormat.cpp
   src/driving/platform/CRuntimeFloat.cpp
   # The driving engine's host layer (src/driving/platform/Host.h), which the platform code calls; on 64-bit its heaps
@@ -1030,6 +1039,7 @@ set(nf_driving_sources
   src/driving/platform/CRuntimeCore.cpp
   src/driving/platform/CRuntimeFloat.cpp
   src/driving/platform/CRuntimeX87.cpp
+  src/common/math/DetMath.cpp
   src/driving/platform/CRuntimeFormat.cpp
   src/driving/platform/CRuntimeParse.cpp
   src/driving/platform/CRuntimeStd.cpp

@@ -1,5 +1,8 @@
 #include "X87Ops.h"
 #include "../engine/CRuntime.h"
+#if !NIGHTFIRE_X87 && NIGHTFIRE_DET_MATH
+#include "../../common/math/DetMath.h"
+#endif
 
 #if NIGHTFIRE_X87
 // The x87 instructions behind Extended (X87Ops.h). Each loads its operands, does one operation and stores the
@@ -412,7 +415,25 @@ int32_t Ftol(const Extended &x) {
 }
 
 #else
-// ---- the C forms, in double
+// ---- the C forms, in double. With NIGHTFIRE_DET_MATH the transcendentals are DetMath's, the same bits on every
+// host; without it the host's <math.h>, which differs between hosts in the last place.
+
+#if NIGHTFIRE_DET_MATH
+namespace Libm = DetMath;
+#else
+namespace Libm {
+inline double Sin(double x) { return sin(x); }
+inline double Cos(double x) { return cos(x); }
+inline double Tan(double x) { return tan(x); }
+inline double Atan2(double y, double x) { return atan2(y, x); }
+inline double Exp(double x) { return exp(x); }
+} // namespace Libm
+#endif
+
+// FSIN, FCOS and FPTAN leave an operand of 2^63 or more as it is (and set C2)
+static bool OutOfRange(double x) {
+    return fabs(x) >= 9223372036854775808.0;
+}
 
 Extended::Extended(float x) : value(x) {}
 
@@ -433,19 +454,19 @@ static Extended Of(double x) {
 }
 
 Extended FSin(double x) {
-    return Of(sin(x));
+    return Of(OutOfRange(x) ? x : Libm::Sin(x));
 }
 
 Extended FCos(double x) {
-    return Of(cos(x));
+    return Of(OutOfRange(x) ? x : Libm::Cos(x));
 }
 
 Extended FSin(const Extended &x) {
-    return Of(sin(x.value));
+    return FSin(x.value);
 }
 
 Extended FCos(const Extended &x) {
-    return Of(cos(x.value));
+    return FCos(x.value);
 }
 
 Extended CIAcos(double x) {
@@ -453,15 +474,15 @@ Extended CIAcos(double x) {
 }
 
 Extended FPatan(double y, double x) {
-    return Of(atan2(y, x));
+    return Of(Libm::Atan2(y, x));
 }
 
 Extended FPtan(double x) {
-    return Of(tan(x));
+    return Of(OutOfRange(x) ? x : Libm::Tan(x));
 }
 
 Extended FExp(double x) {
-    return Of(exp(x));
+    return Of(Libm::Exp(x));
 }
 
 Extended operator+(const Extended &a, const Extended &b) {

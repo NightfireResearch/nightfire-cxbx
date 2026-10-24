@@ -2,6 +2,9 @@
 #include "CRuntimeInternal.h"
 
 #include "Win32Types.h"
+#if !NIGHTFIRE_X87 && NIGHTFIRE_DET_MATH
+#include "../../common/math/DetMath.h"
+#endif
 #include <fenv.h>
 #include <math.h>
 #include <stdint.h>
@@ -342,13 +345,21 @@ __declspec(naked) void Crt::CIpow() {
 double Crt::CIacos(double x) {
     if (!(fabs(x) <= 1.0))
         return DomainError(x);
+#if NIGHTFIRE_DET_MATH
+    return DetMath::Acos(x);
+#else
     return acos(x);
+#endif
 }
 
 double Crt::CIasin(double x) {
     if (!(fabs(x) <= 1.0))
         return DomainError(x);
+#if NIGHTFIRE_DET_MATH
+    return DetMath::Asin(x);
+#else
     return asin(x);
+#endif
 }
 
 double Crt::CIpow(double x, double y) {
