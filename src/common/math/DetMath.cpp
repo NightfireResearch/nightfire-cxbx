@@ -15,8 +15,8 @@
 #if defined(__clang__)
 #pragma STDC FP_CONTRACT OFF
 #endif
-#if (defined(_M_IX86) && !defined(_M_IX86_FP)) || (defined(_M_IX86_FP) && _M_IX86_FP < 2) || \
-    (defined(__i386__) && !defined(__SSE2_MATH__))
+#if NIGHTFIRE_DET_MATH && ((defined(_M_IX86) && !defined(_M_IX86_FP)) || (defined(_M_IX86_FP) && _M_IX86_FP < 2) || \
+                           (defined(__i386__) && !defined(__SSE2_MATH__)))
 #error "DetMath needs SSE2 double arithmetic (/arch:SSE2, -msse2 -mfpmath=sse)"
 #endif
 

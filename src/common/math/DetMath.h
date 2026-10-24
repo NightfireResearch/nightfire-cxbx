@@ -3,8 +3,8 @@
 
 // The C library's transcendental functions in plain C++, the same bits on every host: fdlibm's algorithms (FreeBSD
 // msun), with nothing but IEEE double additions, multiplications, divisions and square roots, each rounded once.
-// The hosts' own libraries (MSVC's UCRT, glibc, Apple's libm) each round about one result in thirty differently in
-// the last place, and the 32-bit UCRT's sin and cos lose their range reduction above 2^20 (docs/deterministic-maths.md).
+// The hosts' own libraries (MSVC's UCRT, glibc, Apple's libm) round a few results in a hundred differently in the
+// last place, and the 32-bit UCRT's sin and cos lose their range reduction above 2^20.
 //
 // What every host must do for these to agree: double arithmetic in SSE2 or NEON registers (not the x87), no fused
 // multiply-adds (-ffp-contract=off; MSVC contracts only with /fp:contract or /fp:fast), no fast-math, and the default

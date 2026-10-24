@@ -70,7 +70,7 @@ add_definitions(-D_CRT_SECURE_NO_WARNINGS)
 
 # The C forms of the x87 code (NIGHTFIRE_X87 or NIGHTFIRE_ACTION_X87 off, and every 64-bit build) take their
 # transcendentals from src/common/math/DetMath.cpp, the same bits on every host, instead of the host's <math.h>
-# (docs/deterministic-maths.md). No effect on the x87 forms.
+# (src/common/math/DetMath.h). No effect on the x87 forms.
 option(NIGHTFIRE_DET_MATH "C forms of the x87 code: DetMath's sin, cos, tan, atan2, asin, acos and exp (off: <math.h>)" OFF)
 if(NIGHTFIRE_DET_MATH)
   add_compile_definitions(NIGHTFIRE_DET_MATH=1)
