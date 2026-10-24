@@ -47,10 +47,6 @@ typedef struct {
 static_assert(offsetof(Create_Trigger_Params, param) == 0x2c, "Bad offset of param");
 static_assert(sizeof(Create_Trigger_Params) == 0xb0, "Bad size for Create_Trigger_Params");
 
-// The GameFlow states pushed here
-#define GAMEFLOW_MOVIE 6
-#define GAMEFLOW_FADE 7
-
 // The text shown while a level-load trigger's lock channel is clear
 #define TXT_LEVEL_LOCKED ((Action_TranslatedText)0x02000021)
 
@@ -294,7 +290,7 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
             switch_channels_time[t->channel] = GameState.NumFramesUnpaused;
         }
         if (obj->effectFlags & EFFECT_HIDDEN)
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         return;
 
     case TriggerMode_Touch:
@@ -327,7 +323,7 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
     // Locked: say so, at most every three seconds
     if (t->inputs[0] != 0 && !switch_channels[t->inputs[0]]) {
         if (t->cooldown == 0) {
-            Text_AddMsg(0, 0, 1, (char *)Txt_BindLabel(TXT_LEVEL_LOCKED, 0), 0, 180);
+            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_LEVEL_LOCKED, 0), 0, 180);
             t->cooldown = FRAME_RATE_INT * 3;
         }
         return;
@@ -340,7 +336,7 @@ void Trigger_Activate(obj_tag *obj, obj_tag *user) {
         switch_channels_time[set] = GameState.NumFramesUnpaused;
     }
 
-    Music_Event(3, 1);
+    Music_Event(MUSICEV_END_B, 1);
     GS_PauseGame(true);
     ResetMap_LevelToLoad((HASHCODE)t->channel, true, false);
     GameFlow_PushState(GAMEFLOW_FADE, 300.0f, 0xff);
@@ -386,7 +382,7 @@ void Trigger_Update(obj_tag *obj) {
     case TriggerMode_TouchOnce:
         if (switch_channels[channel]) {
             if (obj->effectFlags & EFFECT_HIDDEN)
-                obj->flags |= 1;
+                obj->flags |= OBJFLAG_DELETE;
             return;
         }
         // fall through
@@ -413,7 +409,7 @@ void Trigger_Update(obj_tag *obj) {
         // A bond moment's hidden trigger goes once it is done
         if (channel >= SWITCH_BOND_MOMENT_FIRST && channel <= SWITCH_BOND_MOMENT_LAST &&
             (obj->effectFlags & EFFECT_HIDDEN))
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         return;
     }
 
@@ -585,11 +581,11 @@ obj_tag * SoundTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
     uint only = params->param[6];
     if (only != 0 && difficulty > only)
         return NULL;
-    if (only == SoundTriggerDifficulty_Only1 && difficulty != 1)
+    if (only == SoundTriggerDifficulty_Only1 && difficulty != DIFF_OPERATIVE)
         return NULL;
-    if (only == SoundTriggerDifficulty_Only2 && difficulty != 2)
+    if (only == SoundTriggerDifficulty_Only2 && difficulty != DIFF_AGENT)
         return NULL;
-    if (only == SoundTriggerDifficulty_Only3 && difficulty != 3)
+    if (only == SoundTriggerDifficulty_Only3 && difficulty != DIFF_00AGENT)
         return NULL;
 
     obj_tag *obj = control_create_object(sizeof(SOUNDTRIGGER), pos, rot, NULL);
@@ -620,13 +616,13 @@ void SoundTrigger_Update(obj_tag *obj) {
 
     if (trigger->handle == NULL) {
         if (switch_channels[trigger->stopChannel]) {
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             return;
         }
         if (!switch_channels[trigger->channel])
             return;
         if (trigger->exclusive && GlobalVoiceHandle != NULL) {
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             return;
         }
         if (trigger->is2d)
@@ -651,12 +647,12 @@ void SoundTrigger_Update(obj_tag *obj) {
         Sound_Stop(trigger->handle);
         trigger->handle = NULL;
         if (trigger->exclusive) {
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             GlobalVoiceHandle = NULL;
         }
     }
     if (trigger->once == 1)
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
 }
 
 // No event or no channel, and nothing is made
@@ -686,13 +682,13 @@ obj_tag * MusicTrigger_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celgli
 void MusicTrigger_Update(obj_tag *obj) {
     MUSICTRIGGER *trigger = (MUSICTRIGGER *)obj->extraObjectData;
     if (trigger->stopChannel != 0 && switch_channels[trigger->stopChannel])
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     if (switch_channels[trigger->channel])
         trigger->frames = MUSIC_TRIGGER_FRAMES;
     if (trigger->frames > 0) {
         trigger->frames--;
         Music_Event(trigger->event, 2);
         if (trigger->once)
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
     }
 }

@@ -161,7 +161,7 @@ short Sensor_SetBeam(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
             sensor->beamObject,
             &hitData,
             0,
-            8,
+            HITMASK_SKIP_NO_CONTACT,
             0
         );
 
@@ -220,7 +220,7 @@ bool Sensor_InCone(obj_tag *targetObj, obj_tag *sensorObj, SENSOR *sensor) {
         sensorObj->inCel,
         sensorObj,
         targetObj,
-        10
+        HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT
     );
 }
 
@@ -306,7 +306,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         }
 
         // Check if player is in cone
-        if ((glb_viewer[4]->enabled != 0) || !Sensor_InCone(player, sensorObj, sensor)) {
+        if ((glb_viewer[VIEWER_SCRIPT]->enabled != 0) || !Sensor_InCone(player, sensorObj, sensor)) {
             sensorObj->subState = 0;
             return;
         }
@@ -346,7 +346,7 @@ void Sensor_Update(obj_tag *sensorObj) {
         Vec_Track(0.05f, &player->centrePoint.x, &sensorObj->position.x, &sensorObj->transformMatrix, &sensor->trackedRotation);
 
         // Check if player is still in cone
-        if ((glb_viewer[4]->enabled == 0) && Sensor_InCone(player, sensorObj, sensor)) {
+        if ((glb_viewer[VIEWER_SCRIPT]->enabled == 0) && Sensor_InCone(player, sensorObj, sensor)) {
             sensorObj->subState = 0;
         }
         else {

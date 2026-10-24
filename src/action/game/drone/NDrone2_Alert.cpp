@@ -217,7 +217,7 @@ bool NDrone2_SetDronePartner(uchar dtype, DCVars_tag *dcv) {
         if ((otherDrone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(otherDrone->flags & DRONE_FLAG_ENABLED) ||
             otherDrone->health <= 0.0f)
             continue;
-        if (obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & 1))
+        if (obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & OBJFLAG_DELETE))
             continue;
         if (other->guardPartner != NULL)
             continue;

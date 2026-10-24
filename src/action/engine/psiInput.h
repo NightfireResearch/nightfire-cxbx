@@ -128,8 +128,19 @@ typedef enum {
     ACTION_MENU_ALTSELECT_1,
     ACTION_MENU_ALTSELECT_2,
     ACTION_MENU_BACK,
-
+    ACTION_35,
+    ACTION_36,
+    ACTION_37,
+    ACTION_38,
+    ACTION_39,
 } GameActions_tag;
+
+// PlayerInput::actions, by action: what the action did this frame; Input_Action's flags ask for any of them
+enum InputActionFlags {
+    ACTION_HELD = 0x1,
+    ACTION_PRESSED = 0x4,       // the first frame it is held
+    ACTION_REPEAT = 0x8,        // held a while: every few frames
+};
 
 #pragma pack(pop)
 

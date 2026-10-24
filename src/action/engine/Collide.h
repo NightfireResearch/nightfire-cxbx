@@ -17,6 +17,53 @@ typedef struct COLLQUANT_tag COLLQUANT_tag;
 
 #pragma pack(push, 1)
 
+// The surface in the low six bits of a triangle's material byte (HITDATA_tag::materialType), and two flags. The
+// surfaces are EffectInfo's rows, named by its strings.
+enum Material {
+  MATERIAL_NONE,
+  MATERIAL_CARPET,
+  MATERIAL_PAPER,
+  MATERIAL_WOODTHIN,
+  MATERIAL_WOODTHICK,
+  MATERIAL_METALTHIN,
+  MATERIAL_METALTHICK,
+  MATERIAL_GRASS,
+  MATERIAL_EARTH,
+  MATERIAL_SAND,
+  MATERIAL_STONE,
+  MATERIAL_GRAVEL,
+  MATERIAL_SNOW,
+  MATERIAL_DEEPWATER,
+  MATERIAL_SHALWATER,
+  MATERIAL_ICE,
+  MATERIAL_GLASS,
+  MATERIAL_CERAMICTHIN,
+  MATERIAL_CERAMICTHICK,
+  MATERIAL_FOLLAGE,
+  MATERIAL_FABRIC,
+  MATERIAL_GENERIC,
+  MATERIAL_LAST,
+  MATERIAL_MASK = 0x3f,                 // the surface
+  MATERIAL_PASSABLE = 0x40,             // no contact: tests pass through it (HITMASK_SKIP_PASSABLE rejects it)
+  MATERIAL_PASSABLE_AT_RANDOM = 0x80,   // no contact: Collide_Update's tests and bullets pass through it at random
+};
+
+// HITTEST_tag::mask: what a test passes through (Intersect_CheckIfFlagsMatch, Collide_PickObj, Collide_Pick)
+enum HitTestMask {
+  HITMASK_SKIP_WATER = 0x1,           // MATERIAL_DEEPWATER and MATERIAL_SHALWATER
+  HITMASK_SKIP_GLASS = 0x2,           // MATERIAL_GLASS
+  HITMASK_SKIP_HIDDEN = 0x4,          // objects with EFFECT_HIDDEN
+  HITMASK_SKIP_NO_CONTACT = 0x8,      // HIT_NO_CONTACT hits, objects with EFFECT_NO_CONTACT
+  HITMASK_SKIP_OBJECTS = 0x10,
+  HITMASK_SKIP_MASKABLE = 0x20,       // objects with EFFECT_MASKABLE, cels with CEL_MASKABLE
+  HITMASK_SKIP_ROOMS = 0x40,          // the cels' own geometry
+  HITMASK_SKIP_CHILD_CELS = 0x80,     // the cels chained from them
+  HITMASK_SKIP_DRONES = 0x100,        // drones, living and dead
+  HITMASK_SKIP_BULLETS = 0x200,
+  HITMASK_SKIP_PLAYERS = 0x400,       // players, living and dead
+  HITMASK_SKIP_PASSABLE = 0x800,      // MATERIAL_PASSABLE
+};
+
 // HITDATA_tag::flags
 enum {
   HIT_COPIED = 0x01,        // Collide_Update's copy of a hit on the object hit, which it does not test again
@@ -33,10 +80,10 @@ typedef struct HITDATA_tag {
   float dmgAmt;           // 0x08 - the test's damage
   float dist;             // 0x0c - the hit list is sorted by it; HIT_NONE for a rejected hit
   plane_equ_tag surfaceNormal;
-  _VECTOR unknown1;      // 0x20
+  _VECTOR tangent;       // 0x20 - along the surface: Effect_Create's u + v; debris is thrown along it
   _VECTOR hitDirection; // 0x2C - ray direction
   _VECTOR hitPosition;   // 0x38
-  char materialType;     // 0x44 - the triangle's material byte: 0x3f the surface, 0x40 and 0x80 flags
+  char materialType;     // 0x44 - the triangle's material byte (Material)
   char flags;            // 0x45 - HIT_COPIED, HIT_NO_CONTACT, and the test's flags
   short hitBoneIdx;
   cel_tag* hitCel;
@@ -83,7 +130,7 @@ typedef struct HITTEST_tag {
   float damage;         // 0x7c - copied to the hits (1 for a dead player's capsule, else 0)
   ushort type;          // 0x80 - HITTEST_ (0 for none)
   char _unknown82[0x84 - 0x82];
-  ushort mask;          // 0x84 - what the test passes through
+  ushort mask;          // 0x84 - what the test passes through (HitTestMask)
   ushort flags;         // 0x86 - 0x10: stop at the first hit
   ushort found;         // 0x88 - bit 1: Intersect_CylGeom found a floor (Drone_FeetOnPoint counts the drone as on
                         //        the ground)

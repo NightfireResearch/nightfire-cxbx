@@ -501,7 +501,7 @@ Found along the way:
   `glist`, `radius` (was `rayLength`), `damage`, `type` (was `hitType`, `unknown80/81`), `mask`, `flags`, `found`) and
   the `HITTEST_` types; `HITDATA_tag::dist` (was `unknown1f`), `flags` (was `unknown3`) and `HIT_COPIED`,
   `HIT_NO_CONTACT`, `HIT_NO_PUSH`; `cel_tag::childCel` 0x18, `glist` 0x38, `position`, `rotation`, `sphere`,
-  `sphereRadius` 0x58-0x7c, `flags84` a dword with `CEL_NO_COLLISION`, `CEL_NO_CONTACT`, `CEL_MASKABLE`, and
+  `sphereRadius` 0x58-0x7c, `flags` a dword with `CEL_NO_COLLISION`, `CEL_NO_CONTACT`, `CEL_MASKABLE`, and
   `CEL_WORLD_SPACE` in `bitsFromPlacementTag`; `portal_tag::plane`, `stamp`, `centre`, `boxMin`, `boxMax`;
   `COLLBOX_tag::triEnd`, `vertexBlock`, `quant` (`COLLQUANT_tag`); `collDataB` (a triangle); `obj_tag::maybeCollision`
   is a `HITTEST_tag *` (`CAR_INFO` starts with one); the whole of `RIGIDBODY` and `RigidBodyPlacement` (RigidBody.h);
@@ -696,7 +696,7 @@ Found along the way:
   `SPECIALCHAR_tag`, `PRINTINFO_tag` and the `FONT_*` flags; the `SPRITE_*` draw flags in view.h; `CIRBUF_INFO`;
   `TXTMSG_*`, `TextMsgFormat` (moved to Text.h), `TXT_MSG::priority` (was `param_2`) and its padding to 0x20;
   `SND2LBL_tag`; `HUDPANE_tag::posX`/`posY` (were `unknown2`), `HUDPANECREATE_tag::flags` (was `unknown_thing`) and
-  the `HUDPANE_KEEP_IN_*`/`VIEW_*` flags, `SPRITEINFO_CLIP_TO_VIEW`, `RADAROBJ`, `MPRadarMarks` (were
+  the `HUDPANE_KEEP_IN_*`/`VIEW_*` flags, `SPRITE_CLIP_TO_VIEW`, `RADAROBJ`, `MPRadarMarks` (were
   `MPGameStruct::radar_related`); `M_CONTROL::unknown08` and `skinPiece` (were padding), `NEW_CONTROL`,
   `MENU_SKINPIECE`, `TEXTBOX_KEY`, `M_TEXTBOX` (0x9b0); `BLData::weaponChangeTimer` (was `field_0x8ee`);
   `WATER_HEAD_*` moved to Player.h. `CompMsgTxt` (parcel 14) read its lines as `HUDPANE_tag`s; it now reads
@@ -997,7 +997,7 @@ Found along the way:
   with no hit (or one that is not a grapple point), returns before deleting a trip-bomb's beam (the same weapon never
   has both). `Bullet_InitCasingLists` uses the 32 objects unchecked.
 - `Explode_Propagate` writes the mine's damage through `Coll_AddHitToList`'s result unchecked.
-- `Mat_Inverse` (0xd51e0) negates the translation without turning it by the transposed rotation. `View_AddCels` reads `viewer->someCel` unchecked. `ClipPortalWithPlane` writes as many clipped points as it makes, past the portal's 12. `vision_generate_display_list` links the visible cels onto whatever `GfxList` already holds.
+- `Mat_Inverse` (0xd51e0) negates the translation without turning it by the transposed rotation. `View_AddCels` reads `viewer->cel` unchecked. `ClipPortalWithPlane` writes as many clipped points as it makes, past the portal's 12. `vision_generate_display_list` links the visible cels onto whatever `GfxList` already holds.
 
 - `Env_Breath`'s second `Gas_Init` and `Cloud_Create`'s object are not checked; `Env_Tree_Create` checks neither its
   object nor its script; `Lightning_Create`'s segments, `GT_Update`'s barrel, `GunImp_Create`'s gun,

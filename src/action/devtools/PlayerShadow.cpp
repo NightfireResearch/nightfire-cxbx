@@ -779,7 +779,7 @@ void RandomWorld(void) {
     viewer_tag *viewer = Viewer();
     viewer->idx = 0;
     RandomVector(&viewer->pos, 6.0f);
-    RandomVector(&viewer->someVec, 3.0f);
+    RandomVector(&viewer->rot, 3.0f);
     viewer->fovRadians = PICK(1.0471976f, 0.21f, 3.13f, 0.2f);
     RandomMatrix(&viewer->viewMatrix, &viewer->pos);
     RandomMatrix(&viewer->worldMatrix, &viewer->pos);

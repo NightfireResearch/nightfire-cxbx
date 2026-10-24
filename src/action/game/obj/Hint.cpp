@@ -38,11 +38,11 @@ obj_tag * Hint_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *
     uint difficulty = GameState.difficultyModifier;
     if (p->difficulty != 0 && difficulty > p->difficulty)
         return NULL;
-    if (p->difficulty == 5 && difficulty != 1)
+    if (p->difficulty == 5 && difficulty != DIFF_OPERATIVE)
         return NULL;
-    if (p->difficulty == 6 && difficulty != 2)
+    if (p->difficulty == 6 && difficulty != DIFF_AGENT)
         return NULL;
-    if (p->difficulty == 7 && difficulty != 3)
+    if (p->difficulty == 7 && difficulty != DIFF_00AGENT)
         return NULL;
 
     obj_tag *obj = control_create_object(sizeof(HINT), pos, rot, NULL);
@@ -67,7 +67,7 @@ void Hint_Update(obj_tag *obj) {
     if (hint->onChannel != 0 && !switch_channels[hint->onChannel])
         return;
     if (hint->offChannel != 0 && switch_channels[hint->offChannel]) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 
@@ -77,8 +77,9 @@ void Hint_Update(obj_tag *obj) {
         if (hint->sound != 0)
             Sound_PlayExt((Action_SFX)hint->sound, 100.0f, 0, 0);
         BLData *bloke = (BLData *)hit->hitObj->extraObjectData;
-        Text_AddMsg(bloke->playerNum, 0, 1, (char *)Txt_BindLabel((Action_TranslatedText)hint->label, 0), 0, 180);
-        obj->flags |= 1;
+        Text_AddMsg(bloke->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel((Action_TranslatedText)hint->label, 0), 0,
+                    180);
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 }

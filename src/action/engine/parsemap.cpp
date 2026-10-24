@@ -548,7 +548,7 @@ void parsemap_create_dynamic_objects(TARGET_PLACEMENT* placement, level_tag* lvl
                 Create_Light_Params * lightParams = (Create_Light_Params*)(lvl);
                 Light_Create(&pos, lightParams->r, lightParams->g, lightParams->b,
                             (float)lightParams->range,
-                            lightParams->unknown1, -1, 0, 1.0f,
+                            lightParams->unknown1, -1, LIGHT_PLACED, 1.0f,
                             lightParams->unknown2, lightParams->unknown3, lightParams->unknown4, lightParams->unknown5);
             }
             return;
@@ -997,7 +997,7 @@ static void parseentity_RoomKeys(cel_tag *cel, level_tag *keys, uint kind) {
 // AUTOINJECT
 void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
     *flags = cel->glist->applyFlagsToObject;
-    switch (cel->bitsFromPlacementTag & 0xffff) {
+    switch (cel->bitsFromPlacementTag & CELKIND_MASK) {
         case Place_Drone:
             cel->bitsFromPlacementTag = Place_Drone;
             return;
@@ -1007,8 +1007,8 @@ void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
         case Place_Light:
             cel->bitsFromPlacementTag = Place_Light;
             return;
-        case 0x00dd:
-            cel->bitsFromPlacementTag = 0x00dd;
+        case CELKIND_DD:
+            cel->bitsFromPlacementTag = CELKIND_DD;
             return;
         case Place_GunImp:
         case Place_RigidBody:
@@ -1022,31 +1022,31 @@ void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
         case Place_Hurt:
         case Place_Emitter:
         case Place_EnvTree:
-            cel->bitsFromPlacementTag = 0x8019;
+            cel->bitsFromPlacementTag = CELKIND_8019;
             return;
-        case 0x8017:
-            cel->bitsFromPlacementTag = 0x8017;
+        case CELKIND_8017:
+            cel->bitsFromPlacementTag = CELKIND_8017;
             if (parseentity_AtOrigin(cel))
                 cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
             return;
-        case 0x8018:
-            cel->bitsFromPlacementTag = 0x8018;
+        case CELKIND_8018:
+            cel->bitsFromPlacementTag = CELKIND_8018;
             if (parseentity_AtOrigin(cel))
                 cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
             return;
-        case 0x8019:
+        case CELKIND_8019:
             // Its alpha: the speed in key 1, the mode in key 0
-            cel->bitsFromPlacementTag = 0x8019;
+            cel->bitsFromPlacementTag = CELKIND_8019;
             if (parseentity_AtOrigin(cel))
                 cel->bitsFromPlacementTag |= CEL_WORLD_SPACE;
             cel->blink = (uchar)((uchar)keys->keys[1] << 4 | (uchar)keys->keys[0]);
             return;
-        case 0x803d:
-            cel->bitsFromPlacementTag = 0x28019;
+        case CELKIND_803D:
+            cel->bitsFromPlacementTag = CEL_20000 | CELKIND_8019;
             return;
-        case 0xc023:
-            parseentity_RoomKeys(cel, keys, 0xc023);
-            cel->shearHeight = cel->someMax.y;
+        case CELKIND_WATER_ROOM:
+            parseentity_RoomKeys(cel, keys, CELKIND_WATER_ROOM);
+            cel->shearHeight = cel->boxMax.y;
             cel->position.x = 0.0f;
             cel->position.y = 0.0f;
             cel->position.z = 0.0f;
@@ -1056,15 +1056,15 @@ void parseentityfixup_entity(cel_tag *cel, uint *flags, level_tag *keys) {
             cel->ambientG[0] = (uchar)keys->keys[1];
             cel->ambientB[0] = (uchar)keys->keys[2];
             break;
-        case 0xc047:
+        case CELKIND_ROOM:
             // Two ambient lights, chosen by a switch channel (key 5): the second in keys 6 to 8; its sound
             // environment in key 9
-            parseentity_RoomKeys(cel, keys, 0xc047);
+            parseentity_RoomKeys(cel, keys, CELKIND_ROOM);
             cel->position.z = 0.0f;
             cel->position.y = 0.0f;
             cel->position.x = 0.0f;
             cel->musicEvent = (uchar)keys->keys[4];
-            cel->someSwitchChannel = (uchar)keys->keys[5];
+            cel->ambientChannel = (uchar)keys->keys[5];
             cel->ambientR[0] = (uchar)keys->keys[0];
             cel->ambientG[0] = (uchar)keys->keys[1];
             cel->ambientB[0] = (uchar)keys->keys[2];
@@ -1091,11 +1091,11 @@ static void parsemap_PlaceCel(TARGET_PLACEMENT *placement, celglist_tag *glist, 
     cel_tag *cel = glb_world->firstCel;
     cel->glist = glist;
     if (glist != NULL) {
-        cel->someMin = glist->extentMin;
-        cel->someMax = glist->extentMax;
+        cel->boxMin = glist->extentMin;
+        cel->boxMax = glist->extentMax;
     }
     cel->bitsFromPlacementTag = kind;
-    cel->flags84 = glist->applyFlagsToObject;
+    cel->flags = glist->applyFlagsToObject;
     cel->position = placement->pos;
     cel->rotation = placement->rot;
     cel->bitsFromPlacementTag = kind;

@@ -155,5 +155,5 @@ void Destroy_Smash(obj_tag *obj, obj_tag *from, ushort flags) {
         size = 3;
     }
     Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, (float)size * obj->radius, destroy->blastRadius, script,
-                   (float)kind * 10.0f, 200, 200, 0, from, 0);
+                   (float)kind * 10.0f, 200, 200, 0, from, MATERIAL_NONE);
 }

@@ -1639,7 +1639,7 @@ bool C_MPDBG_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
         Manager_SendMessage(&manager[managerNum], MessageType_GoPage, P_MPSCENARIO, 1);
     } else if (message == MessageType_AltSelect1) {
         ResetMap_LevelToLoad((HASHCODE)MPSettings.multiplayerLevelHashcode, false, false);
-        GameFlow_PushState(7, 80.0f, 0xff);
+        GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
         MenuManager_Delete(managerNum);
     }
     return true;
@@ -1716,10 +1716,10 @@ bool P_MPCONFIRM_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, ui
         MPSettings.ExplosiveSceneryEnabled &= 1;
         MPSettings.numPlayers = players;
         GameState.NextLevelHashcode = (HASHCODE)MPSettings.multiplayerLevelHashcode;
-        GameState.difficultyModifier = 1;
+        GameState.difficultyModifier = DIFF_OPERATIVE;
         MPSettings.isMultiplayer = 1;
         ResetMap_LevelToLoad((HASHCODE)MPSettings.multiplayerLevelHashcode, false, false);
-        GameFlow_PushState(7, 80.0f, 0xff);
+        GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
         SFXFadeDown(1);
         MenuManager_Delete(managerNum);
         return true;

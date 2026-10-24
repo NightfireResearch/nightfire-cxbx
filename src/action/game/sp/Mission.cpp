@@ -298,7 +298,7 @@ void Mission_MonitorObjectives(void) {
                     // On entering a new level, show ones from the previous hashcode? Mayhew part 1->2 reveals that escorting is complete?
                     if(MissionData[i].level <= GameState.CurrentLevelHashcode) { //??? Guessing at intent
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
+                        Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 300);
                         o->status = isFailCondition ? 2 : 3;
                     }
                     break;
@@ -306,7 +306,7 @@ void Mission_MonitorObjectives(void) {
                     // New objective revealed 
                     if (((o->revealedChannel != 0) && (o->revealedChannel != 0xff)) && (switch_channels[o->revealedChannel] != '\0')) {
                         sprintf(str,"%s",Txt_BindLabel(o->name,0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 300);
+                        Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 300);
                         o->status = isFailCondition ? 2 : 3;
                     }
                     break;
@@ -316,7 +316,7 @@ void Mission_MonitorObjectives(void) {
                         switch_channels[SWITCH_MISSION_FAILED] = true;
                         switch_channels_time[SWITCH_MISSION_FAILED] = GameState.NumFramesUnpaused;
                         sprintf(str,"%s: %s",Txt_BindLabel((Action_TranslatedText)0x170, 0), Txt_BindLabel(o->name, 0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 180);
+                        Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 180);
                         o->status = 5;
                     }
                     break;
@@ -324,7 +324,7 @@ void Mission_MonitorObjectives(void) {
                     // Completed objective within this level of the mission
                     if(thisObjectiveMet) {
                         sprintf(str, "%s", Txt_BindLabel(TXT_NOTIF_OBJECTIVE_COMPLETE, 0));
-                        Text_AddMsg(0, fromPreviousPart, 2, str, 0, 180);
+                        Text_AddMsg(0, fromPreviousPart, TXTMSG_OBJECTIVE, str, 0, 180);
                         o->status = 4;
                     }
                     break;
@@ -380,7 +380,7 @@ void Mission_MonitorObjectives(void) {
     if(allObjectivesCompleted) {
         switch_channels[SWITCH_MISSION_WON] = 1;
         switch_channels_time[SWITCH_MISSION_WON] = GameState.NumFramesUnpaused;
-        Music_Event(8,1);
+        Music_Event(MUSICEV_END,1);
         printf("--- Completed mission 0x%08x in %i frames\n", GameState.CurrentLevelHashcode, GameState.NumFramesUnpaused);
         return;
     }
@@ -443,7 +443,7 @@ void Mission_Update(void) {
             if(switch_channels[SWITCH_PLAYER_FINISHED_DYING]) {
 
                 // Stop music and show fail screen
-                Music_Event(6,1);
+                Music_Event(MUSICEV_DEATH,1);
                 InternalState = 3;
                 FadeClr_147 = 0xff0000ff;
 
@@ -458,13 +458,13 @@ void Mission_Update(void) {
                 Mission_MonitorObjectives();
 
                 if (switch_channels[SWITCH_MISSION_FAILED]) {
-                    Music_Event(7,1);
+                    Music_Event(MUSICEV_VICTORY,1);
                     InternalState = 2;
                     return;
                 }
                 
                 if (switch_channels[SWITCH_MISSION_WON]) {
-                    Music_Event(8,1);
+                    Music_Event(MUSICEV_END,1);
                     InternalState = 6;
                     FadeClr_147 = 0xff;
                     return;
@@ -480,7 +480,8 @@ void Mission_Update(void) {
             MissionState = 2;
             LevelToEndTo = HT_Level_Menu_Pre;
             InternalState = 7;
-            Text_AddMsg(0, 0, 3, (char*)Txt_BindLabel(TXT_MISSION_FAIL, 0), 0, 4 * VIDEO_FRAME_RATE); // 4 seconds
+            Text_AddMsg(0, 0, TXTMSG_MISSION, (char*)Txt_BindLabel(TXT_MISSION_FAIL, 0), 0,
+                        4 * VIDEO_FRAME_RATE); // 4 seconds
             TimeOut_148 = 5 * VIDEO_FRAME_RATE; // ?
 
             break;
@@ -502,10 +503,11 @@ void Mission_Update(void) {
                 }
                 GameState.ReloadMenupage = P_NFRESULTS;
                 ResetMap_LevelToLoad(LevelToEndTo, 0, 0);
-                GameFlow_PushState(7, 60.0, FadeClr_147);
+                GameFlow_PushState(GAMEFLOW_FADE, 60.0, FadeClr_147);
                 InternalState = 5;
             } else { // Show retry/quit menu
-                MenuManager_Create(HT_Menu_MissionEndMenu, P_ENDMISSION, 0, '\0', 40, 0, 4);
+                MenuManager_Create(HT_Menu_MissionEndMenu, P_ENDMISSION, 0, '\0', MENU_NO_CLOSE_ACTION, 0,
+                                   MENU_STATUS_MISSION_END);
                 GS_PauseGame(true);
                 InternalState = 5;
             }
@@ -520,7 +522,8 @@ void Mission_Update(void) {
             InternalState = 7;
             GameState.LevelEnding = true;
             LevelToEndTo = Mission_GetEndTo(GameState.CurrentLevelHashcode);
-            Text_AddMsg(0, 0, 3, (char*)Txt_BindLabel(TXT_MISSION_COMPLETE, 0), 0, 4 * (short)VIDEO_FRAME_RATE); // 4 seconds
+            Text_AddMsg(0, 0, TXTMSG_MISSION, (char*)Txt_BindLabel(TXT_MISSION_COMPLETE, 0), 0,
+                        4 * (short)VIDEO_FRAME_RATE); // 4 seconds
             TimeOut_148 = 4 * VIDEO_FRAME_RATE;
             break;
         

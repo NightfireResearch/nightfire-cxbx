@@ -79,7 +79,7 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
     switch((CamMode)player->camMode) {
         case CamMode_Default: // 0x00
             HUD_Reset(player);
-            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            glb_viewer[player->playerNum]->visionMode = VISION_NORMAL;
             break;
 
         case CamMode_PostMPGameThirdPerson:
@@ -90,24 +90,24 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
             player->endCamera.angle = 0.0f;
 
             HUD_Reset(player);
-            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            glb_viewer[player->playerNum]->visionMode = VISION_NORMAL;
             break;
         
         case CamMode_Redeemer:
             HUD_Reset(player);
-            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            glb_viewer[player->playerNum]->visionMode = VISION_NORMAL;
             HUD_Enable(player->hudInfo, Redeemer, 1, 0);
             break;
         
         case CamMode_RCCar:
             HUD_Reset(player);
-            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            glb_viewer[player->playerNum]->visionMode = VISION_NORMAL;
             HUD_Enable(player->hudInfo, RCCar, 1, 0);
             break;
 
         case CamMode_Ronin:
             HUD_Reset(player);
-            glb_viewer[player->playerNum]->nightVisionRelated = 0;
+            glb_viewer[player->playerNum]->visionMode = VISION_NORMAL;
             HUD_Enable(player->hudInfo, Ronin, 1, 0);
             break;
 
@@ -117,7 +117,7 @@ void Player_SetCamMode(BLData *player, unsigned short newMode) {
 
 // What Player_Enable looks for around the player when asked to (the radius, the collision flags).
 #define PLAYER_ENABLE_ATTACH_RADIUS 2.0f
-#define PLAYER_ENABLE_ATTACH_FLAGS 0x8c0
+#define PLAYER_ENABLE_ATTACH_FLAGS (HITMASK_SKIP_ROOMS | HITMASK_SKIP_CHILD_CELS | HITMASK_SKIP_PASSABLE)
 
 // Takes the player out of play for a cutscene: hidden with his weapon, and not hit-tested. With freeze, he only
 // stops where he is.
@@ -198,7 +198,7 @@ void Player_Enable(obj_tag *player, _MATRIX *mtx, int checkAttach) {
     build_LinkToRoom(player, 1, glb_world);
 }
 
-// The camera mode a script asks for (event 9): 3 is the third-person view (camera mode 2); anything else is the
+// The camera mode a script asks for (event 9): 3 is the third-person view (CamMode_ThirdPerson); anything else is the
 // first-person view, level, with the player on foot.
 // AUTOINJECT
 void Player_Cam2Mode(ushort playerNum, uint mode) {
@@ -206,12 +206,12 @@ void Player_Cam2Mode(ushort playerNum, uint mode) {
         return;
 
     if (mode == 3) {
-        Player_SetCamMode(glb_blokes[playerNum], 2);
+        Player_SetCamMode(glb_blokes[playerNum], CamMode_ThirdPerson);
         return;
     }
 
     glb_blokes[playerNum]->pitchFromHorizontal = 0.0f;
-    Player_SetCamMode(glb_blokes[playerNum], 0);
+    Player_SetCamMode(glb_blokes[playerNum], CamMode_Default);
     Player_ChangeSubState(glb_players[playerNum], MovementType_Walk);
 }
 
@@ -276,7 +276,8 @@ uint Player_EquipAmmo(BLData *playerInfo, short weaponIndex, short amount) {
         return 0;
 
     short loaded = 0;
-    if ((weapon->weaponFlags & 0x10) && playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown == 0) {
+    if ((weapon->weaponFlags & WPNFLAG_SWITCH_TO_ALT) &&
+        playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown == 0) {
         loaded = (amount < weapon->clipSize) ? amount : weapon->clipSize;
         playerInfo->weaponStats[Player_AmmoIndex(weaponIndex)].clipOrCooldown = loaded;
         amount -= weapon->clipSize;
@@ -468,7 +469,7 @@ void Player_WeaponNone(obj_tag* obj) {
     blData->muzzleFlashFrames = 0;
     blData->zoom = 1.0f;
 
-    obj->animState->animFlags &= 0xfe;
+    obj->animState->animFlags &= ~ANIM_SCOPED;
 
 }
 
@@ -491,7 +492,7 @@ void Player_ViewClamping(obj_tag *player) {
     // Bit 0 of animFlags is "weapon is zoomed in" (engine/Anim.h). Mouse look needs it for the wheel, which
     // adjusts the zoom instead of changing weapon while it is set, and for aim speed.
     if (blData->playerNum == 0) {
-        MouseLook_SetScoped((player->animState->animFlags & 1) != 0);
+        MouseLook_SetScoped((player->animState->animFlags & ANIM_SCOPED) != 0);
     }
 
     float yawRadians = 0.0f, pitchFraction = 0.0f;
@@ -613,9 +614,9 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
         return;
     }
 
-    float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1);
-    float strafe  = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
-    float turn    = -Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+    float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, ACTION_HELD);
+    float strafe  = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, ACTION_HELD);
+    float turn    = -Input_Actionf(blData->playerNum, ACTION_AIM_L_R, ACTION_HELD);
 
     char weapon = player->animState->currentWeaponId;
     if (((weapon == 0x50) || (weapon == 0x51)) && (blData->weaponObject->curState == 9)) { // the two grapples, reeling in
@@ -628,7 +629,7 @@ void Player_Move(BLData *blData, obj_tag *player, float speedScale) {
         strafe = 0.0f;
         turn = 0.0f;
     }
-    if ((player->animState->animFlags & 1) != 0) { // scoped
+    if ((player->animState->animFlags & ANIM_SCOPED) != 0) {
         forward = 0.0f;
         turn = 0.0f;
     }
@@ -731,18 +732,6 @@ static_assert(offsetof(weapon_definition_tag, weaponFlags) == 0x68, "weaponFlags
 static_assert(offsetof(weapon_definition_tag, animScopeIn) == 0xb8, "animScopeIn");
 static_assert(offsetof(weapon_definition_tag, animScopeOut) == 0xbc, "animScopeOut");
 
-// AnimState::animFlags bits. SCOPED is what the player asked for this frame (after the weapon has had its say);
-// SCOPE_APPLIED is what the zoom was last set up for, so the edge between them runs the enter/leave code once.
-#define ANIMFLAG_SCOPED        0x01
-#define ANIMFLAG_SCOPE_APPLIED 0x02
-
-// weapon_definition_tag::someFlags bits this function reads.
-// 0x40: a proper sighted scope - more weapon states knock it down (reload-like states 6-8 and 16), and the
-// alt-fire button does nothing while it is up (the sniper rifles, flags 0x408050/0x4080d0).
-#define WPNFLAG_SIGHTED_SCOPE      0x40
-// 0x8000: in weapon state 9 the scope may stay up if it already was, but cannot be raised.
-#define WPNFLAG_SCOPE_HOLD_STATE9  0x8000
-
 // Weapon object (BLData::weaponObject->curState) states set here: the bring-to-eye and lower-from-eye
 // animations of weapons that have one (someAnimHC2 non-zero).
 #define WEAPONSTATE_IDLE        0x00
@@ -778,19 +767,19 @@ void Player_Weapon(obj_tag *player) {
     }
 
     if (handleScope) {
-        char wasScoped = anim->animFlags & ANIMFLAG_SCOPED;
+        char wasScoped = anim->animFlags & ANIM_SCOPED;
 
         if (PlayerInputs[playerNum].manualAimToggle == 0) {
             // Hold to aim: scoped exactly while the button is down
-            anim->animFlags &= ~ANIMFLAG_SCOPED;
-            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, 1)) {
-                player->animState->animFlags |= ANIMFLAG_SCOPED;
+            anim->animFlags &= ~ANIM_SCOPED;
+            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, ACTION_HELD)) {
+                player->animState->animFlags |= ANIM_SCOPED;
             }
         }
         else {
             // Toggle: flip on each press
-            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, 4)) {
-                player->animState->animFlags ^= ANIMFLAG_SCOPED;
+            if (Input_Action(playerNum, ACTION_AIM_ZOOM_SCOPE, ACTION_PRESSED)) {
+                player->animState->animFlags ^= ANIM_SCOPED;
             }
         }
 
@@ -802,22 +791,22 @@ void Player_Weapon(obj_tag *player) {
                 forceDown = true;
                 break;
             case 6: case 7: case 8: case 16:
-                forceDown = (flags & WPNFLAG_SIGHTED_SCOPE) != 0;
+                forceDown = (flags & WPNFLAG_REAL_SCOPE) != 0;
                 break;
             case 9:
-                forceDown = (flags & WPNFLAG_SIGHTED_SCOPE) && (flags & WPNFLAG_SCOPE_HOLD_STATE9) && !wasScoped;
+                forceDown = (flags & WPNFLAG_REAL_SCOPE) && (flags & WPNFLAG_SINGLE_ACTION) && !wasScoped;
                 break;
         }
         if (forceDown) {
-            player->animState->animFlags &= ~ANIMFLAG_SCOPED;
+            player->animState->animFlags &= ~ANIM_SCOPED;
         }
 
         AnimState *animNow = player->animState;
-        char isScoped = animNow->animFlags & ANIMFLAG_SCOPED;
+        char isScoped = animNow->animFlags & ANIM_SCOPED;
         if ((isScoped != wasScoped) && (weapon_data[weaponId].animScopeIn != 0)) {
             if (isScoped) {
                 // Just asked for the scope: hold the bit off and play the bring-to-eye animation first
-                animNow->animFlags &= ~ANIMFLAG_SCOPED;
+                animNow->animFlags &= ~ANIM_SCOPED;
                 blData->weaponObject->curState = WEAPONSTATE_SCOPE_RAISE;
                 AnimScriptAddSpeed(blData->weaponObject, weapon_data[weaponId].animScopeIn, 1.25f);
             }
@@ -842,9 +831,9 @@ void Player_Weapon(obj_tag *player) {
     // Run the enter/leave-scope code on the edge
     AnimState *anim2 = player->animState;
     char animFlags = anim2->animFlags;
-    if ((animFlags & ANIMFLAG_SCOPED) != ((animFlags >> 1) & 1)) {
-        anim2->animFlags = animFlags ^ ANIMFLAG_SCOPE_APPLIED;
-        if (animFlags & ANIMFLAG_SCOPED) {
+    if ((animFlags & ANIM_SCOPED) != ((animFlags >> 1) & 1)) {
+        anim2->animFlags = animFlags ^ ANIM_SCOPE_APPLIED;
+        if (animFlags & ANIM_SCOPED) {
             Player_ResetZoom(player);
             blData->aimAutoLevelState = 0;
             Player_ClearAimInertia(player); // inlined in the original
@@ -856,13 +845,13 @@ void Player_Weapon(obj_tag *player) {
 
     // Alt-fire. The camera variants also take the fire button as alt-fire. Only the low byte of each result
     // is kept (MOV BL,AL / OR BL,AL), as in the original.
-    uchar altFire = (uchar)Input_Action(playerNum, ACTION_ALTFIRE, 4);
+    uchar altFire = (uchar)Input_Action(playerNum, ACTION_ALTFIRE, ACTION_PRESSED);
     if ((weapon->weaponVariantNum == Weap_Camera) || (weapon->weaponVariantNum == Weap_Camera_Upgraded)) {
-        altFire |= (uchar)Input_Action(playerNum, ACTION_FIRE, 4);
+        altFire |= (uchar)Input_Action(playerNum, ACTION_FIRE, ACTION_PRESSED);
     }
     AnimState *anim3 = player->animState;
-    bool altFireBlocked = (anim3->animFlags & ANIMFLAG_SCOPED) &&
-                          (weapon_data[anim3->currentWeaponId].weaponFlags & WPNFLAG_SIGHTED_SCOPE);
+    bool altFireBlocked = (anim3->animFlags & ANIM_SCOPED) &&
+                          (weapon_data[anim3->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE);
     if (!altFireBlocked && altFire && (blData->weaponObject->curState == WEAPONSTATE_IDLE)) {
         if (weapon->offsetToNextAltFireVariant != 0) {
             // The offset is signed: the alt-fire variant of a variant points back at it (0xff)
@@ -882,10 +871,10 @@ void Player_Weapon(obj_tag *player) {
         }
     }
 
-    if (Input_Action(playerNum, ACTION_GADGET_NEXT, 4)) {
+    if (Input_Action(playerNum, ACTION_GADGET_NEXT, ACTION_PRESSED)) {
         Player_WeaponChange(player, 1, WEAPONCHANGE_GADGETS);
     }
-    else if (Input_Action(playerNum, ACTION_GADGET_PREV, 4)) {
+    else if (Input_Action(playerNum, ACTION_GADGET_PREV, ACTION_PRESSED)) {
         Player_WeaponChange(player, -1, WEAPONCHANGE_GADGETS);
     }
 
@@ -901,10 +890,10 @@ void Player_Weapon(obj_tag *player) {
             player->animState->switchingToWeaponId = (char)Upgrade_Weapon(6);
         }
     }
-    if (Input_Action(playerNum, ACTION_WEAPON_NEXT, 4)) {
+    if (Input_Action(playerNum, ACTION_WEAPON_NEXT, ACTION_PRESSED)) {
         Player_WeaponChange(player, 1, changeMode);
     }
-    else if (Input_Action(playerNum, ACTION_WEAPON_PREV, 4)) {
+    else if (Input_Action(playerNum, ACTION_WEAPON_PREV, ACTION_PRESSED)) {
         Player_WeaponChange(player, -1, changeMode);
     }
 
@@ -949,10 +938,10 @@ uchar StickyHint;
 void Player_InitWeapon(BLData *blData, obj_tag *player) {
 
     if (MPSettings.isMultiplayer == 0) {
-        if (GameState.difficultyModifier == 2) {
+        if (GameState.difficultyModifier == DIFF_AGENT) {
             MAX_AUTO_AIM_DIST_NEAR = 8.0f;
             MAX_AUTO_AIM_DIST_MIDL = 14.0f;
-        } else if (GameState.difficultyModifier == 3) {
+        } else if (GameState.difficultyModifier == DIFF_00AGENT) {
             // The hardest difficulty has no autoaim at all
             MAX_AUTO_AIM_DIST_NEAR = 0.0f;
             MAX_AUTO_AIM_DIST_MIDL = 0.0f;
@@ -1486,9 +1475,6 @@ void __stdcall ReadTuningVars(void) {
 uint8_t surfaced;  // non-zero while swimming at the surface
 extern float debug_cam_posy;  // height of camera mode 8's overhead view above the player
 
-// The bone AnimGetBoneWorldTrans gives the head for (also Player_Update's breath effect).
-#define BONE_HEAD 0x80000005
-
 // AUTOINJECT
 void Player_PositionCamera(obj_tag *player) {
 
@@ -1531,7 +1517,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInThisViewOnly(blData->weaponObject, playerNum);
 
             weapon_definition_tag *weapon = &weapon_data[player->animState->currentWeaponId];
-            bool realScope = (player->animState->animFlags & 1) && (weapon->weaponFlags & WPNFLAG_REAL_SCOPE);
+            bool realScope = (player->animState->animFlags & ANIM_SCOPED) && (weapon->weaponFlags & WPNFLAG_REAL_SCOPE);
             if (realScope)
                 View_SetDrawInNoViews(blData->weaponObject);
             if (weapon->weaponModelHashcode == 0)
@@ -1555,14 +1541,14 @@ void Player_PositionCamera(obj_tag *player) {
         case CamMode_PostMPGameThirdPerson:
             viewer->zoom = 1.0f;
             blData->endCamera.subject = player;
-            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &blData->endCamera.target, NULL);
+            AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_HEAD), 0, &blData->endCamera.target, NULL);
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_LookAtFrom(viewer, &blData->endCamera);
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
-        case 2:
+        case CamMode_ThirdPerson:
             View_SetDrawInAllViews(player);
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_PlaceBehind(&player->position, &player->rotation, viewer, 1.0f, 10.0f);
@@ -1570,7 +1556,7 @@ void Player_PositionCamera(obj_tag *player) {
             Camera_PlaceAround(&player->position, viewer, 1.0f);
             Camera_PlaceAbove(&player->position, viewer, 1.0f);
             viewer->zoom = 1.0f;
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
         case 3:
@@ -1578,7 +1564,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_Orbit(player, viewer);
             viewer->zoom = 1.0f;
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
         case 4:
@@ -1593,7 +1579,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_Trail(player, viewer);
             viewer->zoom = 1.0f;
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
         case 6:
@@ -1601,7 +1587,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInNoViews(blData->weaponObject);
             Camera_Follow(player, viewer);
             viewer->zoom = 1.0f;
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
         case 8: // looking straight down on the player from debug_cam_posy above
@@ -1609,12 +1595,12 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInNoViews(blData->weaponObject);
             viewer->pos.x = player->position.x;
             viewer->pos.z = player->position.z;
-            viewer->someVec.y = 0.0f;
+            viewer->rot.y = 0.0f;
             viewer->pos.y = (float)((double)debug_cam_posy + player->position.y + 2.0f);
-            viewer->someVec.x = HALF_PI;
-            viewer->someVec.z = 0.0f;
+            viewer->rot.x = HALF_PI;
+            viewer->rot.z = 0.0f;
             viewer->zoom = 1.0f;
-            Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+            Camera_Set(viewer, &viewer->pos, &viewer->rot);
             return;
 
         case CamMode_RemoteDeviceBehind: {
@@ -1632,9 +1618,9 @@ void Player_PositionCamera(obj_tag *player) {
             offset.y += device->position.y;
             offset.z += device->position.z;
             Vec_Copy(&offset, &viewer->pos);
-            viewer->someVec = device->rotation;
+            viewer->rot = device->rotation;
             viewer->zoom = 1.0f;
-            Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+            Camera_Set(viewer, &viewer->pos, &viewer->rot);
             return;
         }
 
@@ -1651,7 +1637,7 @@ void Player_PositionCamera(obj_tag *player) {
             View_SetDrawInNoViews(blData->weaponObject);
             camera_tracking(player, viewer);
             viewer->zoom = 1.0f;
-            viewer->someCel = NULL;
+            viewer->cel = NULL;
             return;
 
         case CamMode_Redeemer: // the missile's own view
@@ -1723,10 +1709,6 @@ extern uint8_t debug_scanmode;  // the player starts every level flying (Movemen
 #define JUMP_NONE    0
 #define JUMP_RISING  1
 #define JUMP_FALLING 2
-
-// Floor materials (HITDATA_tag::materialType) that land with their own sound
-#define MATERIAL_0D 0x0d
-#define MATERIAL_0E 0x0e
 
 // The level and the original's text for a death in multiplayer
 #define TXT_MP_DIED   ((Action_TranslatedText)0x02000037)  // with the player's name
@@ -2083,7 +2065,7 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
         return;
     if (damage <= 0.0f)
         return;
-    if (MPSettings.dronesAreBots != 0 && GameFlow_GetState() != 2)
+    if (MPSettings.dronesAreBots != 0 && GameFlow_GetState() != GAMEFLOW_GAME)
         return;
 
     blData->hudFadeIn = 1.0f;
@@ -2110,13 +2092,13 @@ void Player_HandlePain(obj_tag *player, float damage, BLData *blData, short hitL
     }
     else {
         switch (GameState.difficultyModifier) {
-            case 1:
+            case DIFF_OPERATIVE:
                 hurt *= Plr_DMod_Easy;
                 break;
-            case 3:
+            case DIFF_00AGENT:
                 hurt *= Plr_DMod_Hard;
                 break;
-            case 4:
+            case DIFF_4:
                 hurt = hurt + hurt;
                 break;
             default:
@@ -2203,7 +2185,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     GT_PlayerHasDied(player);
     if (MPSettings.isMultiplayer == 0) {
         switch_channels[SWITCH_PLAYER_DIED] = 1;
-        Music_Event(6, 1);
+        Music_Event(MUSICEV_DEATH, 1);
     }
     else if (weapon->worldModelGfx != 0 && blData->weaponObject != NULL) {
         ushort dropped = weapon->weaponBaseNum;
@@ -2223,7 +2205,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
     player->creationTimeFrames = GameState.NumFramesUnpaused;
     player->objectType = OBJECTTYPE_DEAD_PLAYER;
     Player_WeaponNone(player);
-    player->animState->animFlags &= ~1;
+    player->animState->animFlags &= ~ANIM_SCOPED;
     Player_SetCamMode(blData, CamMode_Default);
     Player_SetHealth(blData, 0.0f);
     player->curState = 2;
@@ -2237,7 +2219,7 @@ bool Player_CheckForDeath(obj_tag *player, uint objectType) {
             sprintf(text, Txt_BindLabel(TXT_MP_DIED, 0), MPSettings.Player[self].Name);
         else
             sprintf(text, Txt_BindLabel(TXT_MP_KILLED, 0), MPSettings.Player[injurer].Name);
-        Text_AddMsg((char)self, 0, 1, text, 0, 0xb4);
+        Text_AddMsg((char)self, 0, TXTMSG_INFO, text, 0, 0xb4);
     }
 
     Sound_Play3D(SFX_CHR_BOND_DIE, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
@@ -2267,7 +2249,7 @@ void Player_HandleDeath(obj_tag *player) {
             HUD_Enable(blData->hudInfo, Blood, 1, 0);
             return;
         }
-        if (HUD_State(blData->hudInfo, Blood) == 0 && Input_Action(-1, ACTION_SKIP_CUTSCENE, 1) == 0)
+        if (HUD_State(blData->hudInfo, Blood) == 0 && Input_Action(-1, ACTION_SKIP_CUTSCENE, ACTION_HELD) == 0)
             return;
         if (Menu_PlayerHasQuitOrRestarted())
             return;
@@ -2343,9 +2325,9 @@ void Player_StandAtNewPosition(obj_tag *player, _VECTOR *pos, _VECTOR *rot, usho
     Control_BuildWorldSph(player);
     build_LinkToRoom(player, 1, glb_world);
 
-    glb_viewer[blData->playerNum]->someCel = NULL;
+    glb_viewer[blData->playerNum]->cel = NULL;
     viewer_tag *viewer = glb_viewer[blData->playerNum];
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
     if (MPSettings.isMultiplayer != 0)
         AnimObjectSetAiming(player, &blData->muzzle, 1000.0f, 0.2f, 0, 5);
     player->transformFlags |= TRANSFORM_MOVED;
@@ -2430,17 +2412,18 @@ void Player_SSCrouch(obj_tag *player, BLData *blData) {
     char playerNum = blData->playerNum;
     uchar standUp;
     if (PlayerInputs[playerNum].crouchToggle == 0) {
-        standUp = Input_Action(playerNum, ACTION_CROUCH, 1) == 0;
+        standUp = Input_Action(playerNum, ACTION_CROUCH, ACTION_HELD) == 0;
     }
     else {
-        standUp = (uchar)Input_Action(playerNum, ACTION_CROUCH, 4);
-        standUp |= (uchar)Input_Action(blData->playerNum, ACTION_JUMP, 4);
+        standUp = (uchar)Input_Action(playerNum, ACTION_CROUCH, ACTION_PRESSED);
+        standUp |= (uchar)Input_Action(blData->playerNum, ACTION_JUMP, ACTION_PRESSED);
     }
     if (!(player->animState->animFlags & ANIM_CONTACT_ABOVE) && standUp && blData->animWait == 0) {
         _VECTOR above;
         Vec_Copy(Mat_Position(player->transformMatrix), &above);
         above.y = (float)((double)above.y + 0.95f);
-        if (Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL, 9))
+        if (Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL,
+                                HITMASK_SKIP_WATER | HITMASK_SKIP_NO_CONTACT))
             Player_ChangeSubState(player, MovementType_Walk);
     }
     TurnByRotationDelta(blData, player);
@@ -2455,7 +2438,7 @@ void Player_MonitorAir(obj_tag *player, BLData *blData) {
     HUD_Enable(blData->hudInfo, Air, subState == MovementType_Swim || subState == MovementType_Wire, 0);
     _VECTOR head;
     _MATRIX headMatrix;
-    AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, &headMatrix);
+    AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_HEAD), 0, &head, &headMatrix);
     if (player->inCel == NULL)
         return;
 
@@ -2524,7 +2507,7 @@ void Player_MonitorAir(obj_tag *player, BLData *blData) {
 void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
     switch (blData->jumpState) {
         case JUMP_NONE: {
-            if ((uchar)Input_Action(blData->playerNum, ACTION_CROUCH, 4) && blData->animWait == 0) {
+            if ((uchar)Input_Action(blData->playerNum, ACTION_CROUCH, ACTION_PRESSED) && blData->animWait == 0) {
                 Player_ChangeSubState(player, MovementType_Crouch);
                 return;
             }
@@ -2534,11 +2517,11 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
                 return;
             if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 &&
                 switch_channels[SWITCH_CASTLEINDOORS1_ARMED] == 0) {
-                if (Input_Action(blData->playerNum, ACTION_JUMP, 4))
+                if (Input_Action(blData->playerNum, ACTION_JUMP, ACTION_PRESSED))
                     Sound_PlayExt(SFX_FRONT_END_MENU_ITEM_ERROR, 100.0f, 0, 0);
                 return;
             }
-            if (!Input_Action(blData->playerNum, ACTION_JUMP, 4))
+            if (!Input_Action(blData->playerNum, ACTION_JUMP, ACTION_PRESSED))
                 return;
 
             if (blData->thirdIcon == THIRDICON_WIRE) {
@@ -2562,7 +2545,8 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
             _VECTOR above;
             Vec_Copy(Mat_Position(player->transformMatrix), &above);
             above.y = (float)((double)above.y + 0.95f);
-            if (!Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL, 9))
+            if (!Collide_LineOfSight(&player->position, &above, player->inCel, player, NULL,
+                                     HITMASK_SKIP_WATER | HITMASK_SKIP_NO_CONTACT))
                 return;
             Vec_Zero(&blData->field_0x3c);
             auxVec_AddMulR32(&blData->field_0x3c, gravity, -0.4f, &blData->field_0x3c);
@@ -2595,7 +2579,8 @@ void Player_HandleJump(BLData *blData, obj_tag *player, _VECTOR *gravity) {
                 return;
             Vec_Zero(&blData->field_0x3c);
             blData->jumpState = JUMP_NONE;
-            if (player->animState->floor.materialType == MATERIAL_0D || player->animState->floor.materialType == MATERIAL_0E)
+            if (player->animState->floor.materialType == MATERIAL_DEEPWATER ||
+                player->animState->floor.materialType == MATERIAL_SHALWATER)
                 Sound_Play3D(SFX_ENV_LAND_IN_WATER, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
             else
                 Sound_Play3D(SFX_GENERIC_CLOTH_MOVEMENT_01, &player->position, 100.0f, -1.0f, -1.0f, 0, 0, 0);
@@ -2655,7 +2640,7 @@ double AccelFunc0Flag(float input, float *speed, float base, float mul, float st
 }
 
 // The right stick, outside the remote-control substates and zero G. Not aiming, it pitches the view (and stops the
-// view levelling itself while it does). Aiming through a sighted scope (WPNFLAG_SIGHTED_SCOPE), it turns and
+// view levelling itself while it does). Aiming through a sighted scope (WPNFLAG_REAL_SCOPE), it turns and
 // pitches the view, slowed by the zoom. Aiming otherwise, it moves the crosshair over the screen, and turns or
 // pitches the view only once the crosshair is pushed past its edge - slower under water.
 // AUTOINJECT
@@ -2666,8 +2651,8 @@ void Player_Aiming(obj_tag *player) {
         return;
 
     AnimState *anim = player->animState;
-    if (!(anim->animFlags & 1)) {
-        float look = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+    if (!(anim->animFlags & ANIM_SCOPED)) {
+        float look = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, ACTION_HELD);
         double accel = AccelFunc0(look, &blData->lookAccel, Plr_NoAimTurnSpeed_Y, Plr_NoAimTurnSpeed_Y_Mul,
                                   Plr_NoAimTurnSpeed_Y_Steps, 0.05f, 0.95f);
         blData->lookAccel = (float)accel;
@@ -2680,9 +2665,9 @@ void Player_Aiming(obj_tag *player) {
         return;
     }
 
-    if (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_SIGHTED_SCOPE) {
-        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
-        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+    if (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE) {
+        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, ACTION_HELD);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, ACTION_HELD);
         float accelX = (float)AccelFunc0(turn, &blData->scopeAccelX, Plr_ScopeSpeed_X, Plr_ScopeSpeed_X_Mul,
                                          Plr_ScopeSpeed_X_Steps, 0.05f, 0.95f);
         blData->scopeAccelX = accelX;
@@ -2702,8 +2687,8 @@ void Player_Aiming(obj_tag *player) {
         return;
     }
 
-    float stickX = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
-    float stickY = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+    float stickX = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, ACTION_HELD);
+    float stickY = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, ACTION_HELD);
     float turn = 0.0f;
     float pitch = 0.0f;
     double aimY = (double)Plr_AimSpeed_Y * FRAME_RATE_MUL * stickY * 0.125f + blData->aimY;
@@ -2758,10 +2743,6 @@ void Player_Aiming(obj_tag *player) {
 // ---------------------------------------------------------------------------------------------------------------
 // Falling, and the collision capsule (Player_Collision)
 // ---------------------------------------------------------------------------------------------------------------
-
-// The bones a dead player's capsule runs between, with the head
-#define BONE_37 0x80000037
-#define BONE_33 0x80000033
 
 // 0.45 a bit over: the constant's bits are 0x3ee66667, not 0.45f's
 static const float kCrouchCapsuleTop = std::bit_cast<float>(0x3ee66667u);
@@ -2857,7 +2838,7 @@ void Player_Collision(obj_tag *player) {
             capsule->radius = 0.55f;
             capsule->damage = 0.0f;
             if (player->subState == 15)
-                capsule->mask = 0x1c0;
+                capsule->mask = HITMASK_SKIP_ROOMS | HITMASK_SKIP_CHILD_CELS | HITMASK_SKIP_DRONES;
             SetCapsule(blData, player, &up, 0.275f, (float)(2.1f - (double)rootHeight));
             break;
 
@@ -2873,16 +2854,16 @@ void Player_Collision(obj_tag *player) {
 
         case MovementType_Dead:
         case MovementType_DeadInWater: {
-            // From the head, as long as half the body (head to bone 0x33) or half the neck (head to bone 0x37), the
-            // longer, and no wider than the anim's root height
+            // From the head, as long as half the head to either foot, the longer, and no wider than the anim's root
+            // height
             capsule->radius = (0.55f < rootHeight) ? 0.55f : rootHeight;
-            _VECTOR head, neck, body;
-            AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, NULL);
-            AnimGetBoneWorldTrans(player, BONE_37, 0, &neck, NULL);
-            AnimGetBoneWorldTrans(player, BONE_33, 0, &body, NULL);
-            Vec_Subtract(&head, &neck, &up);
+            _VECTOR head, leftFoot, rightFoot;
+            AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_HEAD), 0, &head, NULL);
+            AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_LEFT_FOOT), 0, &leftFoot, NULL);
+            AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_RIGHT_FOOT), 0, &rightFoot, NULL);
+            Vec_Subtract(&head, &leftFoot, &up);
             float length = (float)(Vec_NormaliseLen(&up, &up) * 0.5f);
-            double halfBody = Vec_Dist3D(&head, &body) * 0.5f;
+            double halfBody = Vec_Dist3D(&head, &rightFoot) * 0.5f;
             if (!(length > halfBody))
                 length = (float)halfBody;
             capsule->ignore = blData->weaponObject;
@@ -2961,10 +2942,11 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
         *floorNormalY = 1.0f;
     float root = obj->animState->animObj.rootHeight;
     auxVec_AddMulR32(&test->rayEnd, &up, (float)-((double)root + 0.6f), &below);
-    Collide_RayIntersect(&obj->position, &below, obj->inCel, obj, NULL, &hits, 0, 0xc, 8);
+    Collide_RayIntersect(&obj->position, &below, obj->inCel, obj, NULL, &hits, 0,
+                         HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT, 8);
 
     if (hits != NULL) {
-        if (hits->materialType != 0)
+        if (hits->materialType != MATERIAL_NONE)
             material = hits;
         if ((double)hits->dist - 0.1f <= root) {
             stoodOn = hits;
@@ -2972,7 +2954,7 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
                 *floorNormalY = hits->surfaceNormal.b;
         }
         for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
-            if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
+            if (hit->hitCel != NULL && (hit->hitCel->flags & CEL_NO_CONTACT))
                 continue;
             if (hit->hitObj != NULL && (hit->hitObj->effectFlags & EFFECT_NO_CONTACT))
                 continue;
@@ -2986,7 +2968,7 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
     if (material != NULL && surfaced) {
         AnimState *anim = obj->animState;
         uchar floor = (uchar)anim->floor.materialType;
-        if ((floor < 0xd || floor > 0xe) && (anim->animFlags & ANIM_CONTACT_FLOOR))
+        if ((floor < MATERIAL_DEEPWATER || floor > MATERIAL_SHALWATER) && (anim->animFlags & ANIM_CONTACT_FLOOR))
             memcpy(&anim->floor, material, sizeof(HITDATA_tag));
     }
     Collide_FreeHitList(&hits);
@@ -3038,12 +3020,13 @@ static uchar HitDirections(_VECTOR *direction) {
 // AUTOINJECT
 float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
     char headshot = 0;
-    int material = hit->materialType & 0x3f;
-    if (material == MATERIAL_0D || material == MATERIAL_0E) {
+    int material = hit->materialType & MATERIAL_MASK;
+    if (material == MATERIAL_DEEPWATER || material == MATERIAL_SHALWATER) {
         AnimState *anim = player->animState;
-        if ((uchar)anim->floor.materialType < MATERIAL_0D || (uchar)anim->floor.materialType > MATERIAL_0E)
+        if ((uchar)anim->floor.materialType < MATERIAL_DEEPWATER ||
+            (uchar)anim->floor.materialType > MATERIAL_SHALWATER)
             anim->floor = *hit;
-        if (player->animState->animFlags & 4)
+        if (player->animState->animFlags & ANIM_FOOTSTEP)
             Env_WaterRipple(hit);
     }
 
@@ -3122,7 +3105,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
     Vec_Normalise(&direction, &direction);
     blData->hitDirections = HitDirections(&direction);
 
-    if (!(bullet->wpnDef->impactFlags & 0x180))
+    if (!(bullet->wpnDef->impactFlags & (IMPACTFLAG_BOUNCES | IMPACTFLAG_STICKS)))
         Sound_PlayExt(headshot ? SFX_IMPACT_PLAYER_HEAD_SHOT : SFX_IMPACT_PLAYER_BODY, 100.0f, 0, 0);
     if (MPSettings.isMultiplayer == 0 && (bullet->wpnDef->damageClass & 1)) {
         if (bullet->wpnDef->weaponBaseNum == 0x65)
@@ -3147,7 +3130,7 @@ void Player_CollisionHandler(obj_tag *player) {
     if (!blData->active)
         return;
     player->animState->animFlags &= ~ANIM_CONTACTS;
-    player->animState->floor.materialType = 0;
+    player->animState->floor.materialType = MATERIAL_NONE;
     if (debug_scanmode)
         return;
 
@@ -3374,7 +3357,7 @@ obj_tag* Player_Init(ushort playerNum, _VECTOR *pos, _VECTOR *rot, level_tag *sp
 
     glb_viewer[num]->zoom = 1.0f;
     Camera_Set(glb_viewer[num], pos, &player->rotation);
-    glb_viewer[num]->someCel = NULL;
+    glb_viewer[num]->cel = NULL;
     glb_viewer[num]->player = player;
 
     blData->armor = 0.0f;
@@ -3476,26 +3459,26 @@ void Player_ZeroG(BLData *blData, obj_tag *player) {
     blData->aimAutoLevelDelay = 0;
     blData->pitchFromHorizontal = 0.0f;
 
-    if (!(player->animState->animFlags & 1)) {
-        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+    if (!(player->animState->animFlags & ANIM_SCOPED)) {
+        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, ACTION_HELD);
         blData->rotationDelta.y = (float)Negate((double)REC_FRAME_RATE * PI * 0.4f * turn);
-        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, ACTION_HELD);
         blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * PI * 0.4f * pitch);
     }
     else {
-        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, 1);
+        float turn = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_X, ACTION_HELD);
         blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * PI * 0.4f / blData->zoom * turn * -0.75f);
-        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, 1);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_TURRET_AIM_Y, ACTION_HELD);
         blData->rotationDelta.x = (float)((double)REC_FRAME_RATE * PI * 0.4f / blData->zoom * pitch * -0.75f);
     }
     blData->rotationDelta.z = 0.0f;
 
     ZeroGAxis(&blData->lastMovement.x, &blData->movement.x,
-              Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1) * 0.1f);
+              Input_Actionf(blData->playerNum, ACTION_WALK_L_R, ACTION_HELD) * 0.1f);
     ZeroGAxis(&blData->lastMovement.z, &blData->movement.z,
-              Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1) * 0.1f);
-    int down = (short)Input_Action(blData->playerNum, ACTION_CROUCH, 1);
-    int up = (short)Input_Action(blData->playerNum, ACTION_JUMP, 1);
+              Input_Actionf(blData->playerNum, ACTION_WALK_F_B, ACTION_HELD) * 0.1f);
+    int down = (short)Input_Action(blData->playerNum, ACTION_CROUCH, ACTION_HELD);
+    int up = (short)Input_Action(blData->playerNum, ACTION_JUMP, ACTION_HELD);
     ZeroGAxis(&blData->lastMovement.y, &blData->movement.y, (float)(up - down) * 0.1f);
 
     _MATRIX turn;
@@ -3503,7 +3486,7 @@ void Player_ZeroG(BLData *blData, obj_tag *player) {
     Concat(&player->transformMatrix, &turn);
     Mat_CopyRot(&turn, &player->transformMatrix);
 
-    if (Input_Action(blData->playerNum, ACTION_RELOAD, 4))
+    if (Input_Action(blData->playerNum, ACTION_RELOAD, ACTION_PRESSED))
         blData->zeroGTurn = (short)Ftol((double)_FRAME_RATE * 1.5f);
     if (blData->zeroGTurn != 0) {
         blData->zeroGTurn--;
@@ -3546,15 +3529,15 @@ static double ScanEase(float previous, float target) {
 }
 
 void Player_SSScanMode(BLData *blData, obj_tag *player) {
-    if (!(player->animState->animFlags & 1)) {
+    if (!(player->animState->animFlags & ANIM_SCOPED)) {
         blData->aimAutoLevelState = 2;
         blData->movement.y = 0.0f;
-        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, 1);
+        float turn = Input_Actionf(blData->playerNum, ACTION_AIM_L_R, ACTION_HELD);
         blData->rotationDelta.y = (float)((double)REC_FRAME_RATE * PI * Negate(turn));
-        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, 1);
+        float pitch = Input_Actionf(blData->playerNum, ACTION_AIM_U_D, ACTION_HELD);
         blData->rotationDelta.x = (float)Negate((double)REC_FRAME_RATE * PI * pitch);
 
-        float strafe = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
+        float strafe = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, ACTION_HELD);
         float target = (float)((double)FRAME_RATE_MUL * 0.075f * 3.0f * strafe);
         double eased = ScanEase(blData->lastMovement.x, target);
         blData->lastMovement.x = (float)eased;
@@ -3570,7 +3553,7 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
         }
         blData->movement.x = blData->lastMovement.x + blData->movement.x;
 
-        float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1);
+        float forward = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, ACTION_HELD);
         target = (float)((double)FRAME_RATE_MUL * 0.1f * 5.0f * forward);
         eased = ScanEase(blData->lastMovement.z, target);
         blData->lastMovement.z = (float)eased;
@@ -3586,7 +3569,7 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
         }
         blData->movement.z = blData->movement.z + blData->lastMovement.z;
 
-        glb_viewer[blData->playerNum]->someCel = NULL;
+        glb_viewer[blData->playerNum]->cel = NULL;
         blData->rotationDelta.z = 0.0f;
         _MATRIX yaw, pitched;
         RotMatrixY(blData->rotationDelta.y, &yaw);
@@ -3595,14 +3578,16 @@ void Player_SSScanMode(BLData *blData, obj_tag *player) {
         Concat(&player->transformMatrix, &pitched);
         Mat_CopyRot(&pitched, &player->transformMatrix);
 
-        float climb = Input_Actionf(blData->playerNum, ACTION_JUMP, 1);
-        double y = ((double)climb - Input_Actionf(blData->playerNum, ACTION_CROUCH, 1)) * REC_FRAME_RATE * 3.0f +
+        float climb = Input_Actionf(blData->playerNum, ACTION_JUMP, ACTION_HELD);
+        double y = ((double)climb - Input_Actionf(blData->playerNum, ACTION_CROUCH,
+                                                  ACTION_HELD)) * REC_FRAME_RATE * 3.0f +
                    player->position.y;
         player->position.y = (float)y;
         Mat_Position(player->transformMatrix)->y = (float)y;
     }
     else {
-        double zoom = (double)Input_Actionf(blData->playerNum, ACTION_SCOPE_ZOOM, 0xc) * REC_FRAME_RATE;
+        double zoom = (double)Input_Actionf(blData->playerNum, ACTION_SCOPE_ZOOM,
+                                            ACTION_PRESSED | ACTION_REPEAT) * REC_FRAME_RATE;
         if (zoom != 0.0) {
             viewer_tag *viewer = glb_viewer[blData->playerNum];
             double fov = zoom + viewer->fovRadians;
@@ -3796,9 +3781,9 @@ static void Recharge(BLData *blData, int weapon) {
 // AUTOINJECT
 void Player_Update(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
-    if (Input_Action(blData->playerNum, ACTION_PAUSE, 4) && GameState.LevelEnding == 0 && ScriptCam == 0) {
+    if (Input_Action(blData->playerNum, ACTION_PAUSE, ACTION_PRESSED) && GameState.LevelEnding == 0 && ScriptCam == 0) {
         blData->pauseMenu = (short)MenuManager_Create(HT_Menu_ControllerMenu, P_PAUSE, blData->playerNum,
-                                                      (uchar)blData->playerNum, ACTION_PAUSE, 1, 3);
+                                                      (uchar)blData->playerNum, ACTION_PAUSE, 1, MENU_STATUS_PAUSE);
         GS_PauseGame(1);
     }
     HUD_Update(blData, player);
@@ -3845,7 +3830,7 @@ void Player_Update(obj_tag *player) {
                 blData->field_0x8e3--;
 
             // Player 4's action 0x27 turns flying on and off
-            if (Input_Action(3, (GameActions_tag)0x27, 4)) {
+            if (Input_Action(3, ACTION_39, ACTION_PRESSED)) {
                 debug_scanmode ^= 1;
                 if (debug_scanmode) {
                     Player_ChangeSubState(player, MovementType_ScanMode);
@@ -3903,7 +3888,7 @@ void Player_Update(obj_tag *player) {
                             break;
                         }
                         Player_SetCamMode(blData, CamMode_Default);
-                        glb_viewer[blData->playerNum]->someCel = NULL;
+                        glb_viewer[blData->playerNum]->cel = NULL;
                         Player_ChangeSubState(player, blData->previousSubState);
                         break;
                     case MovementType_Grapple:
@@ -3955,7 +3940,7 @@ void Player_Update(obj_tag *player) {
             if (blData->camMode != CamMode_Default) {
                 _VECTOR dir, head;
                 Mat_GetDir(&dir, &player->transformMatrix);
-                AnimGetBoneWorldTrans(player, BONE_HEAD, 0, &head, NULL);
+                AnimGetBoneWorldTrans(player, ANIM_BONE(BONE_HEAD), 0, &head, NULL);
                 Env_Breath(&head, &dir, player->inCel, player->creationTimeFrames);
             }
             if (blData->weaponObject->curState != 9) {

@@ -88,7 +88,7 @@ because the original passes its arguments in registers).
    into `ViewPoints`, five planes into the depth-0 clip stack at 0x29ea60 (count 5 at 0x29e998); the first four
    (the sides) are copied into `viewer->frustumPlanes` **(decompile)**. The fifth is a far plane at 200 units.
 3. Unless `switch_ForceDrawAll` (0x1dfa18): `Vision_Portal_Recurse` 0xdbc40 adds the viewer's own room
-   (`viewer->someCel`) and calls `Vision_Recurse` 0xdb9f0. For each portal of a room that is open (+0x27), faces
+   (`viewer->cel`) and calls `Vision_Recurse` 0xdb9f0. For each portal of a room that is open (+0x27), faces
    the eye, and whose door (`Door_IsClosed`) is not closed, the portal quad is clipped by
    `ClipPortalWithPlane` 0xdb7c0 against every plane of the current depth's stack (Sutherland-Hodgman, edge
    intersection in `FUN_000db730`); if three or more points survive, the far room is added

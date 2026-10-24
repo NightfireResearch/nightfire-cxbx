@@ -163,7 +163,9 @@ obj_tag* Pickup_Create(_VECTOR *pos, _VECTOR *rot, _MATRIX *mtx, celglist_tag *c
         _VECTOR centre;
         HITDATA_tag *hits = NULL;
         Vec_Copy(&obj->centrePoint, &centre);
-        Collide_SphereIntersect(&centre, obj->radius, obj->inCel, obj, NULL, &hits, 0, 0, 0x50d, 8);
+        Collide_SphereIntersect(&centre, obj->radius, obj->inCel, obj, NULL, &hits, 0, 0,
+                                HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT |
+                                HITMASK_SKIP_DRONES | HITMASK_SKIP_PLAYERS, 8);
         Collide_FreeHitList(&hits);
         _VECTOR push;
         Vec_Subtract(&centre, &obj->centrePoint, &push);
@@ -226,7 +228,9 @@ void Pickup_Update(obj_tag *obj) {
         end.y = (float)(end.y - AbsFchs(obj->objGraphics->extentMin.y));
         // Uninitialised in the original; Collide_RayIntersect sets it
         HITDATA_tag *hits = NULL;
-        if (!Collide_RayIntersect(&obj->lastPosition, &end, obj->inCel, obj, NULL, &hits, 0, 0x50d, 0))
+        if (!Collide_RayIntersect(&obj->lastPosition, &end, obj->inCel, obj, NULL, &hits, 0,
+                                  HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT |
+                                  HITMASK_SKIP_DRONES | HITMASK_SKIP_PLAYERS, 0))
             break;
         float below = at->y - hits->hitPosition.y;
         if (below < 0.0f) {
@@ -270,7 +274,8 @@ void Pickup_Update(obj_tag *obj) {
             continue;
         if (!(Vec_SqDist3D(&obj->centrePoint, &player->position) >= reachSq) &&
             Collide_LineOfSight(&glb_players[i]->centrePoint, &obj->centrePoint, glb_players[i]->inCel, obj, NULL,
-                                0x721)) {
+                                HITMASK_SKIP_WATER | HITMASK_SKIP_MASKABLE | HITMASK_SKIP_DRONES |
+                                HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS)) {
             Pickup_Handler(obj, info, glb_players[i]);
             return;
         }
@@ -285,10 +290,12 @@ void Pickup_Update(obj_tag *obj) {
             if ((drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(drone->flags & DRONE_FLAG_ENABLED) ||
                 drone->health < 0.0f || drone->health == 0.0f)
                 continue;
-            if (bot->flags & 1)
+            if (bot->flags & OBJFLAG_DELETE)
                 continue;
             if (!(Vec_SqDist3D(&obj->centrePoint, &bot->position) >= reachSq) &&
-                Collide_LineOfSight(&bot->position, &obj->centrePoint, bot->inCel, obj, NULL, 0x721)) {
+                Collide_LineOfSight(&bot->position, &obj->centrePoint, bot->inCel, obj, NULL,
+                                    HITMASK_SKIP_WATER | HITMASK_SKIP_MASKABLE | HITMASK_SKIP_DRONES |
+                                    HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS)) {
                 Pickup_Handler(obj, info, bot);
                 return;
             }
@@ -298,7 +305,7 @@ void Pickup_Update(obj_tag *obj) {
     if (info->lifetime != 0) {
         info->lifetime--;
         if (info->lifetime == 0) {
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             MP_UnregisterPickup(obj);
         }
     }
@@ -311,7 +318,7 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
     Control_Plr2Ind(by);
     int item = info->item;
     if (MPSettings.isMultiplayer) {
-        if (MPSettings.Player[drone->botVars->playerIndex].TeamId != 0) {
+        if (MPSettings.Player[drone->botVars->playerIndex].TeamId != PHOENIX) {
             if (item == 13)
                 item = 10;
         } else if (item == 10 && bot->weapons[10].held) {
@@ -324,12 +331,12 @@ static bool BotTakes(PICKUPINFO *info, obj_tag *by) {
         if (!bot->weapons[item].held) {
             short drop = 0;
             if (MPSettings.dronesAreBots && MPSettings.TripleDamageModifierProfessionalMode) {
-                // Weapon 0x3b is kept by team 0 in one mode and team 1 in another
+                // Weapon 0x3b is kept by PHOENIX in one mode and MI6 in another
                 bool keep59 = false;
                 if (MPSettings.GameMode == GAMEMODE_TEAM0_RULE)
-                    keep59 = MPSettings.Player[bot->playerIndex].TeamId == 0;
+                    keep59 = MPSettings.Player[bot->playerIndex].TeamId == PHOENIX;
                 else if (MPSettings.GameMode == GAMEMODE_TEAM1_RULE)
-                    keep59 = MPSettings.Player[bot->playerIndex].TeamId == 1;
+                    keep59 = MPSettings.Player[bot->playerIndex].TeamId == MI6;
                 short klass = weapon_data[PickupMatrix[MPSettings.weaponSet][0]].weaponBaseNum;
                 for (short k = 2; k < 0x53; k++) {
                     if (k == klass || !drone->botVars->weapons[k].held)
@@ -520,13 +527,13 @@ void Pickup_Handler(obj_tag *obj, PICKUPINFO *info, obj_tag *by) {
             break;
         }
         if (show && text != NULL)
-            Text_AddMsg(playerNum, 0, 6, text, 0, (short)Ftol(MPSettings.isMultiplayer ? 90.0f : 180.0f));
+            Text_AddMsg(playerNum, 0, TXTMSG_PICKUP, text, 0, (short)Ftol(MPSettings.isMultiplayer ? 90.0f : 180.0f));
         SetChannel(info->channel);
     }
 
     Sound_Play3D((Action_SFX)info->sound, (_VECTOR *)&obj->transformMatrix.m[12], 100.0f, -1.0f, -1.0f, 0, 0, 0);
     if (info->respawn == 0) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         if (MPSettings.isMultiplayer)
             MP_UnregisterPickup(obj);
     } else if (info->respawn != 0xffff) {

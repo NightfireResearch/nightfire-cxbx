@@ -107,11 +107,11 @@ void Explode_Update(obj_tag *obj) {
     if (!Script_IsPlaying(data->script)) {
         Script_Free(data->script);
         data->script = NULL;
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 
-    if (MPSettings.isMultiplayer == 1 || data->material == 0)
+    if (MPSettings.isMultiplayer == 1 || data->material == MATERIAL_NONE)
         return;
     if (data->script != NULL && data->script->scriptHashcode != HT_Script_ExplosionBlastRadius)
         return;
@@ -122,13 +122,13 @@ void Explode_Update(obj_tag *obj) {
 
     HASHCODE *debris;
     switch (data->material) {
-    case 5:
-    case 6:
+    case MATERIAL_METALTHIN:
+    case MATERIAL_METALTHICK:
         debris = MetalDebris;
         break;
-    case 8:
-    case 10:
-    case 11:
+    case MATERIAL_EARTH:
+    case MATERIAL_STONE:
+    case MATERIAL_GRAVEL:
         if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors2 ||
             !switch_channels[SWITCH_CASTLEINDOORS2_STONE_DEBRIS])
             return;
@@ -152,13 +152,14 @@ void Explode_Propagate(_VECTOR *pos, float radius, cel_tag *cel, float damage, o
     _VECTOR centre;
     HITDATA_tag *hitList = NULL;
     Vec_Copy(pos, &centre);
-    if (!Collide_SphereIntersect(&centre, radius, cel, NULL, NULL, &hitList, 0, 1, 0xc0, 4))
+    if (!Collide_SphereIntersect(&centre, radius, cel, NULL, NULL, &hitList, 0, 1,
+                                 HITMASK_SKIP_ROOMS | HITMASK_SKIP_CHILD_CELS, 4))
         return;
 
     for (HITDATA_tag *hit = hitList; hit != NULL; hit = hit->next) {
 
         obj_tag *obj = hit->hitObj;
-        if (obj == NULL || (obj->flags & 1))
+        if (obj == NULL || (obj->flags & OBJFLAG_DELETE))
             continue;
 
         // Where two NaNs can meet, the x87's choice between them is kept (X87NaNs)

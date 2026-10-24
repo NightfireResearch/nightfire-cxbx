@@ -181,7 +181,7 @@ bool BOT_respawn(obj_tag* gameObj, int playerNum, char noSpawn) {
         Vec_Copy(&gameObj->rotation, &rot);
         pos.y += 1.0f;
         NDrone2_Enable(false, (Drone_tag *)gameObj->extraObjectData);
-        gameObj->flags |= 1;
+        gameObj->flags |= OBJFLAG_DELETE;
 
         MPBOT *bot = mpbots.Enabled ? &mpbots.bot[playerNum - NUM_PLAYERS] : NULL;
         obj_tag *newObj = BOT_init(playerNum, &pos, &rot, NULL, bot, noSpawn);
@@ -383,7 +383,7 @@ bool MPDrone_IsDyingOrDead(obj_tag *obj) {
         return true;
     if (obj->objectType == OBJECTTYPE_DEAD_DRONE)
         return true;
-    if (obj->flags & 1)
+    if (obj->flags & OBJFLAG_DELETE)
         return true;
     return false;
 }
@@ -754,7 +754,7 @@ void BOT_handlePain(DCVars_tag *dc, float damage, ushort hitType, short location
         return;
     if (damage < 0.0f || damage == 0.0f)
         return;
-    if (GameFlow_GetState() != 2)
+    if (GameFlow_GetState() != GAMEFLOW_GAME)
         return;
 
     Extended hurt = location != -1 ? Extended(Plr_DMod_Multi) * Extended(damage) : Extended(damage);

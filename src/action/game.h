@@ -34,6 +34,26 @@ union _LARGE_INTEGER;
 uint32_t __stdcall Xbox_QueryPerformanceCounter(union _LARGE_INTEGER *counter);
 uint32_t __stdcall Xbox_QueryPerformanceFrequency(union _LARGE_INTEGER *frequency);
 void Reset_MapLoadSettings(void);
+
+// The states on the game flow's stack (GameFlow_Main runs the top one). Our names.
+enum GameFlowState {
+  GAMEFLOW_NONE,                // the stack is empty
+  GAMEFLOW_BOOT,                // bootup_bootup, then the game
+  GAMEFLOW_GAME,
+  GAMEFLOW_LOAD_LEVEL,          // ResetMap_Load
+  GAMEFLOW_INIT_LOCKS,          // Locks_Init
+  GAMEFLOW_IDLE,                // nothing this frame
+  GAMEFLOW_MOVIE,               // until the movie ends or is skipped
+  GAMEFLOW_FADE,                // pushed: fades the screen, and is GAMEFLOW_FADING
+  GAMEFLOW_FADING,              // until the fade is done
+  GAMEFLOW_DRIVING,             // hands over to the driving engine
+  GAMEFLOW_10,                  // draws the game until CheatInfo.someThing is set
+  GAMEFLOW_DELAY,               // pushed: sets the fade viewer's fadeRate, and is GAMEFLOW_DELAYING
+  GAMEFLOW_DELAYING,            // counts it down
+  GAMEFLOW_FADE_FROZEN,         // pushed: fades the screen, and is GAMEFLOW_FADING_FROZEN
+  GAMEFLOW_FADING_FROZEN,       // until the fade is done, with only the cameras updated
+};
+
 uint GameFlow_GetState(void);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
 void ResetMap_GameInit(void);
@@ -52,6 +72,14 @@ void GS_PauseGame(bool pause);
 void GS_PausePlayer(char pause, ushort playerNum);
 bool GS_IsPaused(short playerNum);
 
+// GameState.difficultyModifier: the menu's three, and a fourth the code tests with the hardest
+enum Difficulty {
+    DIFF_OPERATIVE = 1,
+    DIFF_AGENT = 2,
+    DIFF_00AGENT = 3,
+    DIFF_4 = 4,
+};
+
 #pragma pack(push, 1)
 typedef struct {
     undefined4 field0_0x0;
@@ -65,7 +93,7 @@ typedef struct {
     undefined4 ReloadMenupage;
     undefined4 ReloadMainMenu;
     undefined4 LevelEnding;
-    undefined4 difficultyModifier;
+    undefined4 difficultyModifier;  // Difficulty
     undefined Pulse; // no apparent sites where this is used
     undefined field12_0x2d;
     undefined field13_0x2e;
@@ -293,6 +321,72 @@ typedef enum WeaponBaseNum {
     NUM_WEAPONS=114,
 } WeaponBaseNum;
 
+// weapon_definition_tag::weaponFlags (docs/weapons.md)
+enum WeaponFlags {
+    WPNFLAG_UNDERWATER = 0x2,               // fires under water
+    WPNFLAG_LASER_SIGHT = 0x8,
+    WPNFLAG_SWITCH_TO_ALT = 0x10,           // out of ammo, the alt-fire variant is tried first
+    WPNFLAG_NO_AMMO_COUNT = 0x20,           // no ammo counter on the HUD
+    WPNFLAG_REAL_SCOPE = 0x40,              // scoped: the gun hidden, alt fire and reload blocked, more weapon states
+                                            // drop the scope
+    WPNFLAG_SHELL_RELOAD = 0x100,           // reloads a shell at a time
+    WPNFLAG_ALT_RELOADS = 0x200,            // the reload anims take turns
+    WPNFLAG_CONTINUOUS = 0x400,             // fires while the button is held, then plays animFireAlt
+    WPNFLAG_SILENCER = 0x800,
+    WPNFLAG_SLIDE_LOCK = 0x1000,
+    WPNFLAG_NO_SMOKE = 0x2000,
+    WPNFLAG_CAN_BE_SHOT = 0x4000,           // the projectile goes off when shot
+    WPNFLAG_SINGLE_ACTION = 0x8000,         // no refire until the fire anim ends; in weapon state 9 the scope may
+                                            // stay up, but not be raised
+    WPNFLAG_FROM_MUZZLE = 0x10000,          // the shot starts half way between the eye and the muzzle
+    WPNFLAG_DETONATOR = 0x20000,
+    WPNFLAG_TWIN_GUNS = 0x40000,
+    WPNFLAG_RANDOM_FIRE = 0x80000,
+    WPNFLAG_REFIRE_HELD = 0x100000,         // the fire anim starts again while the button is held
+    WPNFLAG_PERFECT_WHEN_SCOPED = 0x400000,
+};
+
+// weapon_definition_tag::projectileFlags (docs/weapons.md)
+enum ProjectileFlags {
+    PROJFLAG_SMOKE = 0x2,
+    PROJFLAG_REMOTE_CONTROL = 0x4,
+    PROJFLAG_GRAVITY = 0x8,
+    PROJFLAG_NO_MODEL = 0x10,
+    PROJFLAG_DUST = 0x20,
+    PROJFLAG_CASING = 0x40,
+    PROJFLAG_TASER = 0x80,
+    PROJFLAG_LASER = 0x100,
+    PROJFLAG_ACCELERATES = 0x200,
+    PROJFLAG_THROWN = 0x400,
+    PROJFLAG_MATERIAL_MASK = 0x800,
+    PROJFLAG_TRACER = 0x1000,
+    PROJFLAG_LIGHT = 0x2000,
+    PROJFLAG_GRAPPLE_LINE = 0x4000,
+    PROJFLAG_TUMBLES = 0x8000,
+    PROJFLAG_SWOOSH = 0x10000,
+    PROJFLAG_HOMING = 0x20000,
+    PROJFLAG_FLY_BY = 0x40000,
+    PROJFLAG_FINE_DUST = 0x80000,
+};
+
+// weapon_definition_tag::impactFlags (docs/weapons.md)
+enum ImpactFlags {
+    IMPACTFLAG_MARKS = 0x2,
+    IMPACTFLAG_EXPLODES = 0x4,
+    IMPACTFLAG_RICOCHETS = 0x10,
+    IMPACTFLAG_GRAPPLE = 0x40,
+    IMPACTFLAG_BOUNCES = 0x80,
+    IMPACTFLAG_STICKS = 0x100,
+    IMPACTFLAG_FUSE = 0x200,
+    IMPACTFLAG_LASER_EFFECT = 0x1000,
+    IMPACTFLAG_FLASH_BANG = 0x2000,
+    IMPACTFLAG_LONG_FUSE = 0x10000,
+    IMPACTFLAG_SMOKE_CLOUD = 0x20000,
+    IMPACTFLAG_TRIP_BOMB = 0x80000,
+    IMPACTFLAG_BEAM_EXPLODES = 0x100000,
+    IMPACTFLAG_BEAM_EXPLODES_2 = 0x200000,
+};
+
 // One entry per weapon variant; weapon_data[115] at 0x0018cfa0. Entries 0x35.. are built by
 // WeaponDataTableInit (0x000f5530). See docs/weapons.md.
 typedef struct weapon_definition_tag {
@@ -338,9 +432,9 @@ typedef struct weapon_definition_tag {
     uchar _pad62[2];                  // 0x062
     uchar unk64;                      // 0x064 0/2/3, no reader found
     uchar _pad65[3];                  // 0x065
-    uint weaponFlags;                 // 0x068 see doc
-    uint projectileFlags;             // 0x06c see doc
-    uint impactFlags;                 // 0x070 see doc
+    uint weaponFlags;                 // 0x068 WeaponFlags
+    uint projectileFlags;             // 0x06c ProjectileFlags
+    uint impactFlags;                 // 0x070 ImpactFlags
     short swooshInterval;             // 0x074 frames between trail segments
     short swooshLifetime;             // 0x076 trail segment lifetime, frames
     uchar casingDelayFrames;          // 0x078 frames before the casing appears

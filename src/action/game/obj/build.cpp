@@ -39,7 +39,9 @@ bool build_PointOnFloor(cel_tag *cel, obj_tag* obj, _VECTOR *position, float dis
 
   HITDATA_tag* hitList = NULL;
 
-  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, NULL, &hitList, 0, 0x70c, 0);
+  bool intersects = Collide_RayIntersect(position, &endPosition, cel, obj, NULL, &hitList, 0,
+                                         HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_DRONES |
+                                         HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS, 0);
 
   if(intersects) {
     Vec_Copy(&(hitList->hitPosition), position);
@@ -62,11 +64,11 @@ viewer_tag* build_alloc_viewer(unsigned char idx) {
 bool build_point_in_bounding_box(_VECTOR *point, cel_tag *cel) {
     if (cel == NULL)
         return false;
-    if (point->x < cel->someMin.x || point->x > cel->someMax.x)
+    if (point->x < cel->boxMin.x || point->x > cel->boxMax.x)
         return false;
-    if (point->z < cel->someMin.z || point->z > cel->someMax.z)
+    if (point->z < cel->boxMin.z || point->z > cel->boxMax.z)
         return false;
-    if (point->y < cel->someMin.y || point->y > cel->someMax.y)
+    if (point->y < cel->boxMin.y || point->y > cel->boxMax.y)
         return false;
     return true;
 }
@@ -127,11 +129,13 @@ cel_tag* build_FindCel(_VECTOR *position, world_tag *world) {
     float reach = 256.0f;
     for (ushort i = 0; i < CelListCount; i++) {
         _VECTOR to = {position->x, position->y + reach, position->z};
-        Collide_RayIntersect(position, &to, CelList[i], NULL, NULL, &above, 1, 0x90, 0);
+        Collide_RayIntersect(position, &to, CelList[i], NULL, NULL, &above, 1,
+                             HITMASK_SKIP_OBJECTS | HITMASK_SKIP_CHILD_CELS, 0);
         if (above != NULL && !(reach < above->dist))
             reach = above->dist;
         to = {position->x, position->y - reach, position->z};
-        Collide_RayIntersect(position, &to, CelList[i], NULL, NULL, &below, 1, 0x90, 0);
+        Collide_RayIntersect(position, &to, CelList[i], NULL, NULL, &below, 1,
+                             HITMASK_SKIP_OBJECTS | HITMASK_SKIP_CHILD_CELS, 0);
         if (below != NULL && !(reach < below->dist))
             reach = below->dist;
         HITDATA_tag *hit = below;
@@ -167,7 +171,7 @@ bool build_LinkToRoom(obj_tag *obj, char straddleTest, world_tag *world) {
     control_unlink_object(obj);
     control_link_object_to_cel(obj, room);
     cel_tag *cel = obj->inCel;
-    uchar state = switch_channels[cel->someSwitchChannel];
+    uchar state = switch_channels[cel->ambientChannel];
     obj->ambientR = cel->ambientR[state];
     obj->ambientG = cel->ambientG[state];
     obj->ambientB = cel->ambientB[state];
@@ -176,20 +180,20 @@ bool build_LinkToRoom(obj_tag *obj, char straddleTest, world_tag *world) {
     return true;
 }
 
-// Puts each of the cels of kinds 0x8017 to 0x8019 into a room (kinds 0xc047 and 0xc023) at least as large whose box
-// holds its centre: the one whose geometry a sphere about the centre meets nearest. A cel of kind 0x8017 gives its
-// room its lowest height as the water's (shearHeight).
+// Puts each of the cels of kinds CELKIND_8017 to CELKIND_8019 into a room (CELKIND_ROOM or CELKIND_WATER_ROOM) at
+// least as large whose box holds its centre: the one whose geometry a sphere about the centre meets nearest. A cel
+// of kind CELKIND_8017 gives its room its lowest height as the water's (shearHeight).
 // AUTOINJECT
 void build_link_objects_to_rooms(cel_tag *first) {
     for (cel_tag *cel = first; cel != NULL; cel = cel->nextCel) {
-        uint kind = cel->bitsFromPlacementTag & 0xffff;
-        if (kind != 0x8019 && kind != 0x8018 && kind != 0x8017)
+        uint kind = cel->bitsFromPlacementTag & CELKIND_MASK;
+        if (kind != CELKIND_8019 && kind != CELKIND_8018 && kind != CELKIND_8017)
             continue;
         cel_tag *found = NULL;
         float nearest = 4000.0f;
         for (cel_tag *room = first; room != NULL; room = room->nextCel) {
-            uint roomKind = room->bitsFromPlacementTag & 0xffff;
-            if (roomKind != 0xc047 && roomKind != 0xc023)
+            uint roomKind = room->bitsFromPlacementTag & CELKIND_MASK;
+            if (roomKind != CELKIND_ROOM && roomKind != CELKIND_WATER_ROOM)
                 continue;
             if (room->sphereRadius < cel->sphereRadius)
                 continue;
@@ -198,7 +202,8 @@ void build_link_objects_to_rooms(cel_tag *first) {
             _VECTOR centre;
             Vec_Copy(&cel->sphere, &centre);
             HITDATA_tag *hits = NULL;
-            if (Collide_SphereIntersect(&centre, nearest + 1.0f, room, NULL, NULL, &hits, 1, 0, 0x90, 4)) {
+            if (Collide_SphereIntersect(&centre, nearest + 1.0f, room, NULL, NULL, &hits, 1, 0,
+                                        HITMASK_SKIP_OBJECTS | HITMASK_SKIP_CHILD_CELS, 4)) {
                 if (hits->dist < nearest) {
                     nearest = hits->dist;
                     found = hits->hitCel;
@@ -211,8 +216,8 @@ void build_link_objects_to_rooms(cel_tag *first) {
         cel->parentCel = found;
         cel->childCel = found->childCel;
         found->childCel = cel;
-        if ((cel->bitsFromPlacementTag & 0xffff) == 0x8017)
-            found->shearHeight = cel->someMin.y;
+        if ((cel->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_8017)
+            found->shearHeight = cel->boxMin.y;
     }
 }
 
@@ -266,7 +271,7 @@ void init_cel(cel_tag *cel, cel_tag *next) {
     cel->portals = NULL;
     cel->childCel = NULL;
     cel->nextVisible = NULL;
-    cel->flags84 = 0;
+    cel->flags = 0;
     cel->bitsFromPlacementTag = 0;
     cel->position = {0.0f, 0.0f, 0.0f};
     cel->rotation = {0.0f, 0.0f, 0.0f};
@@ -274,8 +279,8 @@ void init_cel(cel_tag *cel, cel_tag *next) {
     cel->env = NULL;
     cel->addedToDraw = 0;
     cel->musicEvent = 0;
-    cel->someMin.x = cel->someMin.y = cel->someMin.z = -1.0f;
-    cel->someMax.x = cel->someMax.y = cel->someMax.z = 1.0f;
+    cel->boxMin.x = cel->boxMin.y = cel->boxMin.z = -1.0f;
+    cel->boxMax.x = cel->boxMax.y = cel->boxMax.z = 1.0f;
     cel->shearHeight = -500.0f;
     cel->nextCel = next;
     cel->blink = 0x10;

@@ -44,7 +44,7 @@ obj_tag* Sub_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
     sub->health = 300.0f;
     sub->beam = NULL;
     sub->speed = (float)((double)_FRAME_RATE / lvl->header.splineLength * keys);
-    sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, 1, 1.0f, 0, 0, 0, 0xffff);
+    sub->light = Light_Create(pos, 0, 0xff, 0xff, 45.0f, 0, -1, LIGHT_TRANSIENT, 1.0f, 0, 0, 0, 0xffff);
     AnimObjectNew(obj, HT_Skin_Sub);
     sAnimScript_tag *script = AnimScriptAdd(obj, SUB_ANIM_MOVE);
     script->flags |= ANIMSCRIPT_LOOP;
@@ -117,7 +117,7 @@ void Sub_FireMissiles(obj_tag *obj, SubInfo *sub) {
     _VECTOR closest;
     if (control_ClosestPlayerPnt(Mat_Position(obj->transformMatrix), &closest) > 225.0f)
         return;
-    Music_Event(2, 1);
+    Music_Event(MUSICEV_ALERT, 1);
     if (!(sub->missileTime > 10.0f))
         return;
     ushort which = (ushort)Rand_Rand(2);
@@ -140,7 +140,7 @@ void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
     sub->torpedoTime = (float)((double)REC_FRAME_RATE + sub->torpedoTime);
     if (distance > 625.0f)
         return;
-    Music_Event(2, 1);
+    Music_Event(MUSICEV_ALERT, 1);
     if (!(sub->torpedoTime > 5.0f))
         return;
 
@@ -148,7 +148,8 @@ void Sub_DeployTorpedoes(obj_tag *obj, SubInfo *sub) {
     Vec_Subtract(&closest, at, &towards);
     Vec_Normalise(&towards, &towards);
     auxVec_AddMulR32(at, &towards, (float)((double)sub->height + 1.0f), &clear);
-    if (!Collide_LineOfSight(&clear, &closest, obj->inCel, obj, glb_players[0], 0x40d))
+    if (!Collide_LineOfSight(&clear, &closest, obj->inCel, obj, glb_players[0],
+                             HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_PLAYERS))
         return;
     sub->torpedoTime = 0.0f;
     ushort which = (ushort)Rand_Rand(4);

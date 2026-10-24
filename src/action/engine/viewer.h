@@ -31,7 +31,7 @@ enum {
 
 struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     struct world_tag *world;
-    cel_tag* someCel;
+    cel_tag* cel;             // 0x04 - the cel holding pos (Camera_CheckLocation)
     ViewDrawLists draw;       // 0x08 - what View_CaptureScene gathers to draw, allocated while the view is enabled
     undefined4 camMode;       // 0x24 - the player's camera mode, copied every frame (Player_CollisionHandler)
     undefined1 idx; /* Created by retype action */
@@ -46,7 +46,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     _VECTOR move;             // 0xac - pos less prevPos, each frame (Camera_CheckLocation)
     _VECTOR pos; /* View? */
     _VECTOR prevPos;          // 0xc4 - where Camera_CheckLocation last placed the view in a cel
-    _VECTOR someVec;
+    _VECTOR rot;              // 0xd0 - pitch, yaw and roll (Camera_Set)
     float xMin;
     float xMax;
     float yMin;
@@ -84,7 +84,7 @@ struct viewer_tag { /* Size confirmed in build_alloc_viewer */
     uchar fadeColour[4];      // 0x200 - red, green, blue and the alpha the fade gives
     undefined1 fadeHold;      // 0x204 - Camera_SetFade's last argument: no new fade while one runs
     undefined1 fadeState;     // 0x205 - VIEWFADE_
-    undefined2 nightVisionRelated;
+    undefined2 visionMode;    // 0x206 - VisionMode
 };
 
 struct world_tag {
@@ -128,15 +128,15 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     struct AIBoundNode_tag *boundNodes; // 0x30 - the AI bound nodes in this cel (AIBounds_Link2Cel)
     struct AIBoundLink_tag *boundLinks; // 0x34 - the AI bound links with an end in this cel (AIBounds_Prepare)
     celglist_tag *glist;                // 0x38 - the cel's geometry; NULL for none
-    uint bitsFromPlacementTag;          // 0x3c - CEL_WORLD_SPACE: the geometry has no matrix (Collide_Intersect)
-    _VECTOR someMin;
-    _VECTOR someMax;                    // 0x4c - its y is the ceiling smoke rises to (gases_smoke)
+    uint bitsFromPlacementTag;          // 0x3c - its CelKind, and CelPlacementFlags
+    _VECTOR boxMin;                     // 0x40 - its box (parsemap: the model's extent)
+    _VECTOR boxMax;                     // 0x4c - its y is the ceiling smoke rises to (gases_smoke)
     _VECTOR position;                   // 0x58 - the geometry's matrix (Collide_Intersect): translation
     _VECTOR rotation;                   // 0x64 - and rotation
     _VECTOR sphere;                     // 0x70 - the bounding sphere Collide_Pick tests
     float sphereRadius;                 // 0x7c
     float shearHeight;                 // 0x80 - a drone more than 0.3 m below it does not fall (NDrone2_Fall)
-    uint flags84;                      // 0x84 - CEL_ flags
+    uint flags;                        // 0x84 - CelFlags
     short reverb;                      // 0x88 - its reverb depth (SFXSetEnvironment), 0-100 or SFX_ENVIRONMENT_UNDERWATER;
                                        //        0x14 and more counts as outdoors (Sound_UpdateListeners)
     uchar ambientR[2];                 // 0x8a - the ambient light of objects in it, by its channel's state
@@ -144,7 +144,7 @@ struct cel_tag { /* Confirmed size in build_alloc_cel */
     uchar ambientB[2];                 // 0x8e
     undefined addedToDraw;
     uchar musicEvent;                  // 0x91 - Player_Update sends it (Music_Event) every frame the player is in the cel
-    undefined1 someSwitchChannel;      // 0x92 - the channel choosing its ambient light
+    undefined1 ambientChannel;         // 0x92 - the SwitchChannel choosing its ambient light
     uchar blink;                       // 0x93 - its alpha: bits 0-1 the mode, 4-7 the speed (View_SetupCelRenderModes)
 };
 LAYOUT_32(offsetof(cel_tag, childCel) == 0x18, "Bad offset of cel_tag.childCel");
@@ -152,21 +152,45 @@ LAYOUT_32(offsetof(cel_tag, nextVisible) == 0x20, "Bad offset of cel_tag.nextVis
 LAYOUT_32(offsetof(cel_tag, glist) == 0x38, "Bad offset of cel_tag.glist");
 LAYOUT_32(offsetof(cel_tag, position) == 0x58, "Bad offset of cel_tag.position");
 LAYOUT_32(offsetof(cel_tag, sphereRadius) == 0x7c, "Bad offset of cel_tag.sphereRadius");
-LAYOUT_32(offsetof(cel_tag, flags84) == 0x84, "Bad offset of cel_tag.flags84");
+LAYOUT_32(offsetof(cel_tag, flags) == 0x84, "Bad offset of cel_tag.flags");
 LAYOUT_32(offsetof(cel_tag, ambientB) == 0x8e, "Bad offset of cel_tag.ambientB");
 LAYOUT_32(offsetof(cel_tag, reverb) == 0x88, "Bad offset of cel_tag.reverb");
 
-// cel_tag::bitsFromPlacementTag: a room, an object's cel (build_FindCel)
-#define CEL_ROOM 0x00040000
-// cel_tag::bitsFromPlacementTag: the geometry is in world space, and Collide_Pick tests the cel's box (not its sphere)
-#define CEL_WORLD_SPACE 0x08000000
-// cel_tag::bitsFromPlacementTag: the cel does not show the sky (vision_generate_display_list)
-#define CEL_NO_SKY 0x10000000
-// cel_tag::flags84
-enum {
+// cel_tag::bitsFromPlacementTag's low word: the cel's kind (parseentityfixup_entity), from its placement's. Rooms
+// and the other cels by our names; the objects' placements give CELKIND_8019.
+enum CelKind {
+    CELKIND_DD = 0x00dd,
+    CELKIND_8017 = 0x8017,          // linked into a room, whose shearHeight it gives (build_link_objects_to_rooms)
+    CELKIND_8018 = 0x8018,          // linked into a room; not drawn from a CELKIND_WATER_ROOM
+    CELKIND_8019 = 0x8019,          // linked into a room; a placement of this kind gives cel_tag::blink
+    CELKIND_803D = 0x803d,          // made CEL_20000 | CELKIND_8019
+    CELKIND_WATER_ROOM = 0xc023,    // a room under water: its reverb, the fish
+    CELKIND_ROOM = 0xc047,          // a room with two ambient lights, chosen by a switch channel
+    CELKIND_MASK = 0xffff,
+};
+
+// cel_tag::bitsFromPlacementTag's high bits
+enum CelPlacementFlags {
+    CEL_20000 = 0x00020000,
+    CEL_ROOM = 0x00040000,          // a room, an object's cel (build_FindCel)
+    CEL_400000 = 0x00400000,        // bullets glance off it more often
+    CEL_WORLD_SPACE = 0x08000000,   // the geometry is in world space, and Collide_Pick tests the cel's box
+    CEL_NO_SKY = 0x10000000,        // the cel does not show the sky (vision_generate_display_list)
+};
+
+// cel_tag::flags: its model's flags, the same word as obj_tag::effectFlags (ObjectEffectFlags)
+enum CelFlags {
     CEL_NO_COLLISION = 0x20,        // Collide_Pick passes it by
     CEL_NO_CONTACT = 0x40,          // its hits are HIT_NO_CONTACT (Drone_FeetOnPoint does not stand on them)
-    CEL_MASKABLE = 0x1000,          // a test with mask 0x20 passes it by
+    CEL_MASKABLE = 0x1000,          // a test with HITMASK_SKIP_MASKABLE passes it by
+    CEL_NOT_IN_VIEW_4 = 0x40000,    // not drawn in view 4's pass
+};
+
+// viewer_tag::visionMode
+enum VisionMode {
+    VISION_NORMAL,
+    VISION_NIGHT,
+    VISION_XRAY,
 };
 
 LAYOUT_32(sizeof(viewer_tag) == 0x208, "viewer_tag is 0x208 bytes");
@@ -178,7 +202,7 @@ LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag.v
 LAYOUT_32(offsetof(viewer_tag, mtx) == 0x180, "Bad offset of viewer_tag.mtx");
 LAYOUT_32(offsetof(viewer_tag, swingPhase) == 0x1e0, "Bad offset of viewer_tag.swingPhase");
 LAYOUT_32(offsetof(viewer_tag, fade) == 0x1f8, "Bad offset of viewer_tag.fade");
-LAYOUT_32(offsetof(viewer_tag, nightVisionRelated) == 0x206, "Bad offset of viewer_tag.nightVisionRelated");
+LAYOUT_32(offsetof(viewer_tag, visionMode) == 0x206, "Bad offset of viewer_tag.visionMode");
 
 #pragma pack(pop)
 

@@ -58,8 +58,8 @@ void Label_Init(M_LABEL *label, NEW_CONTROL *create, M_CONTROL *parent) {
     model->depth = (uchar)label->control.depth;
     model->onscreenHeight = create->height;
     model->colourTint = 0x7f7f7fc0;
-    model->unknown1 = 0x80;
-    model->linkedViewer = 7;
+    model->shadowColour = 0x80;
+    model->linkedViewer = VIEWER_MENU;
     model->flags = 0;
     model->textureIndex = 0;
     model->scale.x = 1.0f;
@@ -116,7 +116,7 @@ intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t
                 return 1;
             }
             label->mode &= ~LABEL_OWN_COLOURS;
-            label->model.unknown1 = (arg1 & 0xff) < 0x80 ? arg1 & 0xff : 0x80;
+            label->model.shadowColour = (arg1 & 0xff) < 0x80 ? arg1 & 0xff : 0x80;
             label->highlightColour = arg1;
             label->normalColour = arg1;
             return 1;
@@ -148,7 +148,7 @@ intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t
             return 1;
         case MessageType_SetAlpha:
             label->control.drawState |= 4;
-            label->model.unknown1 = arg1;
+            label->model.shadowColour = arg1;
             return 1;
         case MessageType_SetPulseColour:
             label->pulseColour = arg1;
@@ -156,9 +156,9 @@ intptr_t Label_SendMessage(M_LABEL *label, uint message, intptr_t arg1, intptr_t
         case MessageType_SetState:
             label->control.state = (uchar)arg1;
             if (label->control.state & CONTROL_STATE_HIDDEN) {
-                label->model.depth = MENU_SPRITE_HIDDEN;
+                label->model.depth = SPRITE_HIDDEN;
                 if (label->drawn != NULL)
-                    label->drawn->depth = MENU_SPRITE_HIDDEN;
+                    label->drawn->depth = SPRITE_HIDDEN;
             }
             Label_Refresh(label);
             return 1;
@@ -214,7 +214,7 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
         label->control.state |= CONTROL_STATE_UNDRAWN;
         if (label->drawn == NULL)
             return;
-        label->drawn->depth = MENU_SPRITE_HIDDEN;
+        label->drawn->depth = SPRITE_HIDDEN;
         Menu_DeleteSprite(label->drawn);
         label->drawn = NULL;
         return;
@@ -223,11 +223,11 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
 
     char pressed = 0;
     if (Menu_CursorOverMe(mgr, &label->control)) {
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_PRESSED))
             pressed = 1;
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, ACTION_PRESSED))
             pressed = 2;
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, ACTION_PRESSED))
             pressed = 3;
     }
 
@@ -236,7 +236,7 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
     uint alpha = model->colourTint & 0xff;
     if (alpha > 0x80)
         alpha = 0x80;
-    model->unknown1 = (model->unknown1 & 0xffffff00) | alpha;
+    model->shadowColour = (model->shadowColour & 0xffffff00) | alpha;
     if (label->mode & LABEL_OWN_COLOURS) {
         if (Menu_CursorOverMe(mgr, &label->control) || cursorOver ||
             (label->control.hashcode == page->focused->hashcode &&
@@ -306,9 +306,9 @@ void Label_Update(M_MANAGER *mgr, M_PAGE *page, M_LABEL *label, bool cursorOver)
         if (strlen(label->text) != 0)
             Sprite_SetText(model, label->text);
         if (label->textFlag2000)
-            model->flags |= 0x2000;
+            model->flags |= SPRITE_TEXT_RING;
         else
-            model->flags &= ~0x2000;
+            model->flags &= ~SPRITE_TEXT_RING;
         Menu_ClipString(model, label->control.width, model->format);
     }
 

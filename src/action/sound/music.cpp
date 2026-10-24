@@ -357,7 +357,7 @@ void UpdateMFX_02MayhewB(void) {
     }
 
     if (MusicTemp1 != 0) {
-        if (MusicEventList[15] == 0 && MusicEventList[16] == 0)
+        if (MusicEventList[MUSICEV_ATTACK_NOW] == 0 && MusicEventList[MUSICEV_HOSTAGE_SAVED] == 0)
             return;
         PickRandomCombat(0);
         MusicTemp1 = 0;
@@ -416,7 +416,7 @@ void UpdateMFX_02MayhewC(void) {
         return;
 
     if (MusicTemp1 != 0) {
-        if (MusicEventList[15] == 0 && MusicEventList[16] == 0)
+        if (MusicEventList[MUSICEV_ATTACK_NOW] == 0 && MusicEventList[MUSICEV_HOSTAGE_SAVED] == 0)
             return;
         PickRandomCombat(0);
         MusicTemp1 = 0;
@@ -531,7 +531,7 @@ void UpdateMFX_01CastleA(void) {
 
     if (MusicUnderAttack != 0)
         PickRandomCombat(0);
-    else if (MusicEventList[13] != 0)
+    else if (MusicEventList[MUSICEV_TRAVERSE] != 0)
         Music_JumpTo(Music_PlayingCombat() ? 6 : 2, 0);
     else if (MusicLastJumpRequest == 2)
         Music_JumpTo(0x14, 0);
@@ -595,7 +595,7 @@ void UpdateMFX_01CastleC(void) {
         MusicTemp2 = 1;
     }
 
-    if (MusicEventList[13] != 0)
+    if (MusicEventList[MUSICEV_TRAVERSE] != 0)
         Music_JumpTo(0xc, 0);
 }
 
@@ -609,7 +609,7 @@ void UpdateMFX_01CastleD(void) {
     if (Music_MissionEnded())
         return;
 
-    if (MusicEventList[13] != 0 && MusicTemp1 == 0) {
+    if (MusicEventList[MUSICEV_TRAVERSE] != 0 && MusicTemp1 == 0) {
         Music_JumpTo(6, 0);
         MusicTemp1 = 1;
     }
@@ -746,7 +746,7 @@ void UpdateMFX_PowerStationA1(void) {
         PickRandomCombat(0);
         return;
     }
-    if (MusicEventList[13] != 0) {
+    if (MusicEventList[MUSICEV_TRAVERSE] != 0) {
         if (!Music_PlayingCombat() && MusicLastJump != 0x38)
             Music_JumpTo(0x22, 0);
         else
@@ -789,7 +789,7 @@ void UpdateMFX_PowerStationA2(void) {
         PickRandomCombat(0);
         return;
     }
-    if (MusicEventList[13] != 0) {
+    if (MusicEventList[MUSICEV_TRAVERSE] != 0) {
         if (!Music_PlayingCombat() && MusicLastJump != 0x38)
             Music_JumpTo(0x22, 0);
         else

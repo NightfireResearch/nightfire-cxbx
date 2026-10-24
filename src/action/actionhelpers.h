@@ -196,8 +196,20 @@ static_assert(sizeof(COMP_FUNC) == 4, "COMP_FUNC is a 32-bit argument");
 
 #define ARRAY_SIZE(x) (sizeof(x) / sizeof((x)[0]))
 
+// glb_viewer's views (Camera_CreateCameras): the players' are 0 to 3, by player number
+enum ViewerIndex {
+    VIEWER_SCRIPT = 4,          // a cut scene's camera
+    VIEWER_HUD = 5,             // the HUD's sprites and 3D parts, in a world of its own
+    VIEWER_FADE = 6,            // the game flow's fades
+    VIEWER_MENU = 7,            // the menus' sprites, in a world of its own
+    VIEWER_8 = 8,
+    VIEWER_9 = 9,
+    VIEWER_LOAD_SCREEN = 10,    // draws the loading screen (LoadScreen_Draw)
+    NUM_VIEWERS
+};
+
 // globals and constants
-extern viewer_tag *glb_viewer[11];
+extern viewer_tag *glb_viewer[NUM_VIEWERS];
 extern world_tag *glb_world;
 extern BLData *glb_blokes[NUM_PLAYERS];
 extern obj_tag *glb_players[NUM_PLAYERS];

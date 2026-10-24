@@ -546,13 +546,13 @@ void RandomCel(int i) {
     default: cel->glist = &world.geom[0].glist; break;
     }
     static const uint flags[] = {0, 0, 0, CEL_NO_COLLISION, CEL_NO_CONTACT, CEL_MASKABLE, 0x8};
-    cel->flags84 = flags[R(COUNT(flags))];
+    cel->flags = flags[R(COUNT(flags))];
     cel->bitsFromPlacementTag = R(3) == 0 ? CEL_WORLD_SPACE : 0;
-    PlainVector(&cel->someMin, 4.0f);
-    cel->someMax = cel->someMin;
-    cel->someMax.x += Plain(0.0f, 6.0f);
-    cel->someMax.y += Plain(0.0f, 6.0f);
-    cel->someMax.z += Plain(0.0f, 6.0f);
+    PlainVector(&cel->boxMin, 4.0f);
+    cel->boxMax = cel->boxMin;
+    cel->boxMax.x += Plain(0.0f, 6.0f);
+    cel->boxMax.y += Plain(0.0f, 6.0f);
+    cel->boxMax.z += Plain(0.0f, 6.0f);
     PlainVector(&cel->sphere, 4.0f);
     cel->sphereRadius = Plain(0.5f, 5.0f);
     PlainVector(&cel->position, 2.0f);

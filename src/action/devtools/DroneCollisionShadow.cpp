@@ -387,7 +387,7 @@ void RandomWorld() {
         world.cels[c].shearHeight = Pick(shears, 4);
         if (ShadowRand(2))
             world.cels[c].shearHeight = world.objs[0].position.y + Pick(kShearOffsets, 3);
-        world.cels[c].flags84 = (uchar)(ShadowRand(3) == 0 ? 0x40 : 0);
+        world.cels[c].flags = (uchar)(ShadowRand(3) == 0 ? 0x40 : 0);
     }
 
     world.rayHitCount = ShadowRand(4);

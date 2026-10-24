@@ -53,7 +53,7 @@ void MP_KOHUpdate(obj_tag *hill) {
                 continue;
             if (type == OBJECTTYPE_DEAD_DRONE)
                 continue;
-            if (obj->flags & 1)
+            if (obj->flags & OBJFLAG_DELETE)
                 continue;
         }
         if (type == OBJECTTYPE_DEAD_PLAYER)
@@ -225,7 +225,7 @@ void MP_PlayerKilled(obj_tag *obj) {
         char *str = Txt_GetStringFromHeap(0);
         const char *format = Txt_BindLabel(NOTIF_KILLED_X, 0);
         sprintf(str, format, MPSettings.Player[victim].Name);
-        Text_AddMsg((char)injurer, 0, 1, str, 0, 0xb4);
+        Text_AddMsg((char)injurer, 0, TXTMSG_INFO, str, 0, 0xb4);
     }
 
     if (obj->objectType == OBJECTTYPE_PLAYER)

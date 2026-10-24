@@ -115,7 +115,8 @@ void Combo_Update(M_MANAGER *mgr, M_PAGE *page, M_COMBO *combo) {
 
     if (page->focused->hashcode == combo->control.hashcode) {
         combo->control.drawState |= 0x20;
-        if (Menu_InputAction(0, ACTION_MENU_SELECT, 4) && mgr->cursorSprite->positionX >= combo->control.x &&
+        if (Menu_InputAction(0, ACTION_MENU_SELECT, ACTION_PRESSED) &&
+            mgr->cursorSprite->positionX >= combo->control.x &&
             mgr->cursorSprite->positionX <= combo->control.x + combo->control.width &&
             mgr->cursorSprite->positionY >= combo->control.y &&
             mgr->cursorSprite->positionY <= combo->control.y + (double)combo->labelHeight + 5.0) {

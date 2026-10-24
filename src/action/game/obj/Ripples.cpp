@@ -14,10 +14,9 @@
 
 #pragma fp_contract(off)
 
-// A ring's Gas_Init(cel, &pos, NULL, NULL, size, size * 2, HT_Entity_watereffect, 1, 0x7f7f7fff, 0x00000006, 42),
-// inline
-// in
-// Ripples_Update with the compiler's constants: a frame's share of the life is 1/42 as a float
+// A ring's Gas_Init(cel, &pos, NULL, NULL, size, size * 2, HT_Entity_watereffect, GAS_GROWING, 0x7f7f7fff,
+// 0x00000006, 42), inline in Ripples_Update with the compiler's constants: a frame's share of the life is
+// 1/42 as a float
 static constexpr float RippleLife = 42.0f;
 static constexpr float RipplePerFrame = 1.0f / 42.0f;
 static constexpr float RippleColourStep = -127.0f / 42.0f;
@@ -107,7 +106,7 @@ void Ripples_Update(obj_tag *obj) {
 }
 
 // A bubble in a cel: grows by 0.001 a frame and moves by its velocity, which slows by 5% a frame across, until its
-// time is up or the top of its model is past the cel's ceiling (someMax.y), and it is deleted. Out of any cel it
+// time is up or the top of its model is past the cel's ceiling (boxMax.y), and it is deleted. Out of any cel it
 // waits.
 // AUTOINJECT
 void Bubble_Update(obj_tag *obj) {
@@ -117,12 +116,12 @@ void Bubble_Update(obj_tag *obj) {
         return;
     obj->scale = (float)((double)obj->scale + 0.001f);
     bubble->framesLeft--;
-    if (bubble->framesLeft > 0 && !((double)obj->objGraphics->extentMax.y + obj->position.y > cel->someMax.y)) {
+    if (bubble->framesLeft > 0 && !((double)obj->objGraphics->extentMax.y + obj->position.y > cel->boxMax.y)) {
         Vec_Add2(&bubble->velocity, &obj->position, &obj->position);
         bubble->velocity.x = (float)((double)bubble->velocity.x * 0.95f);
         bubble->velocity.z = (float)((double)bubble->velocity.z * 0.95f);
         obj->transformFlags |= TRANSFORM_MOVED;
         return;
     }
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
 }

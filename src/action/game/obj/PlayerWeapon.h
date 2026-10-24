@@ -11,31 +11,6 @@
 #define IDLE_PLAYING 1  // a fidget, or the gun coming back up, is playing
 #define IDLE_LOWERED 3  // lowered (weapon_definition_tag::animRelax) until a drone is alert or the player aims
 
-// weapon_definition_tag::weaponFlags bits read here (docs/weapons.md)
-#define WPNFLAG_UNDERWATER      0x00000002  // fires under water
-#define WPNFLAG_LASER_SIGHT     0x00000008
-#define WPNFLAG_SWITCH_TO_ALT   0x00000010  // out of ammo, the alt-fire variant is tried first
-#define WPNFLAG_REAL_SCOPE      0x00000040
-#define WPNFLAG_SHELL_RELOAD    0x00000100  // reloads a shell at a time
-#define WPNFLAG_ALT_RELOADS     0x00000200  // the reload anims take turns
-#define WPNFLAG_CONTINUOUS      0x00000400  // fires while the button is held, then plays animFireAlt
-#define WPNFLAG_SILENCER        0x00000800
-#define WPNFLAG_SLIDE_LOCK      0x00001000
-#define WPNFLAG_NO_SMOKE        0x00002000
-#define WPNFLAG_SINGLE_ACTION   0x00008000
-#define WPNFLAG_FROM_MUZZLE     0x00010000  // the shot starts half way between the eye and the muzzle
-#define WPNFLAG_DETONATOR       0x00020000
-#define WPNFLAG_TWIN_GUNS       0x00040000
-#define WPNFLAG_RANDOM_FIRE     0x00080000
-#define WPNFLAG_REFIRE_HELD     0x00100000  // the fire anim starts again while the button is held
-
-// weapon_definition_tag::projectileFlags bits read here
-#define PROJFLAG_CASING         0x00000040
-#define PROJFLAG_TASER          0x00000080
-#define PROJFLAG_LASER          0x00000100
-#define PROJFLAG_THROWN         0x00000400
-#define PROJFLAG_MATERIAL_MASK  0x00000800
-
 // The weapon object's states (BLData::weaponObject->curState)
 #define GUN_IDLE            0
 #define GUN_LOWER           1   // put away, to change weapons

@@ -43,9 +43,6 @@
 // DroneWeap_BurstLength, DroneWeap_NextBulletTime)
 #define SLOW_WEAPON_CASES case 6: case 10: case 14: case 15: case 16
 
-// Where a grenade leaves the drone's hand
-#define GRENADE_BONE 0x80000015
-
 // How far the barrel may point off the target: 20 degrees, a bit above DEG2RAD(20)
 constexpr float kAimAngle = 0.34906587f;
 constexpr float kNinjaAimAngle = DEG2RAD(30);   // for DTYPE_Ninja
@@ -378,7 +375,8 @@ void DroneWeap_FireWeapon(DCVars_tag *dcv) {
     rot.x = -rot.x;
     rot.z = 0.0f;
     weapon_definition_tag *wpn = &weapon_data[HeldWeapon(dcv)];
-    Light_Create(&muzzle, wpn->muzzleFlash_r, wpn->muzzleFlash_g, wpn->muzzleFlash_b, 7.0f, 0, 0, 1, 1.0f, 0, 0, 0,
+    Light_Create(&muzzle, wpn->muzzleFlash_r, wpn->muzzleFlash_g, wpn->muzzleFlash_b, 7.0f, 0, 0, LIGHT_TRANSIENT, 1.0f,
+                 0, 0, 0,
                  0xffff);
 
     // The flash: an effect object for two frames, turned at random about the barrel
@@ -454,11 +452,11 @@ void DroneWeap_DoBulletAccuracy(DCVars_tag *dcv) {
         chance *= DroneFiring_TargetMoving_Accuracy;
     float difficulty;
     switch (GameState.difficultyModifier) {
-    case 1:
+    case DIFF_OPERATIVE:
         difficulty = DroneFiring_Accuracy_Easy;
         break;
-    case 3:
-    case 4:
+    case DIFF_00AGENT:
+    case DIFF_4:
         difficulty = DroneFiring_Accuracy_Hard;
         break;
     default:
@@ -626,7 +624,7 @@ void DroneWeap_ThrowGrenade(DCVars_tag *dcv) {
 
     _VECTOR hand;
     _MATRIX aim;
-    AnimGetBoneWorldTrans(dcv->gameObj, GRENADE_BONE, 0, &hand, &aim);
+    AnimGetBoneWorldTrans(dcv->gameObj, ANIM_BONE(BONE_GRENADE_HAND), 0, &hand, &aim);
     Mat_Copy(&obj->transformMatrix, &aim);  // replaced below
     _VECTOR tilt = {0.0f, 0.0f, 0.0f};
     _VECTOR toTarget;
@@ -728,7 +726,9 @@ void DroneWeap_ChangeWeapon(DCVars_tag *dcv, int weapon) {
 bool DroneWeap_DropPathClear(Drone_tag *drone, _VECTOR *to) {
     obj_tag *obj = drone->gameObj;
     HITDATA_tag *hits = NULL;
-    if (Collide_RayIntersect(&obj->position, to, obj->inCel, obj, NULL, &hits, 0, 0x125, 0)) {
+    if (Collide_RayIntersect(&obj->position, to, obj->inCel, obj, NULL, &hits, 0,
+                             HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_MASKABLE | HITMASK_SKIP_DRONES,
+                             0)) {
         Collide_FreeHitList(&hits);
         return false;
     }
@@ -821,13 +821,13 @@ bool Drone_ModPlayerHitDamage(obj_tag *player, HITDATA_tag *hit) {
     if (MPSettings.dronesAreBots || player == NULL || hit == NULL)
         return true;
     obj_tag *bullet = hit->hitObj;
-    if (bullet == NULL || (bullet->flags & 1) || bullet->objectType != OBJECTTYPE_BULLET)
+    if (bullet == NULL || (bullet->flags & OBJFLAG_DELETE) || bullet->objectType != OBJECTTYPE_BULLET)
         return true;
     obj_tag *shooter = ((BU_tag *)bullet->extraObjectData)->firedByObj;
     if (shooter == NULL || shooter->objectType != OBJECTTYPE_DRONE)
         return true;
     Drone_tag *drone = (Drone_tag *)shooter->extraObjectData;
-    if (drone == NULL || (shooter->flags & 1))
+    if (drone == NULL || (shooter->flags & OBJFLAG_DELETE))
         return true;
     hit->dmgAmt = (float)Drone_ModBulletDamage(drone, player, hit);
     return true;

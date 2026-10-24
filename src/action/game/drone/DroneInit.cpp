@@ -230,7 +230,7 @@ void DroneInit_Collision(Drone_tag *drone) {
     _VECTOR to = gameObj->position;
     to.y -= 25.0f;
     HITDATA_tag *hits;
-    if (Collide_RayIntersect(&from, &to, cel, NULL, NULL, &hits, 0, 0x104, 0)) {
+    if (Collide_RayIntersect(&from, &to, cel, NULL, NULL, &hits, 0, HITMASK_SKIP_HIDDEN | HITMASK_SKIP_DRONES, 0)) {
         Vec_Copy(&hits->hitPosition, &to);
         gameObj->animState->animFlags |= ANIM_CONTACT_FLOOR;
         gameObj->position.y = to.y + 1.0f;
@@ -592,11 +592,14 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
 
     // A captain on the difficulties its behaviour says: an upgraded skin, if the class has one
     drone->captain = 0;
-    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_EASY, drone->currentBehaviour) && GameState.difficultyModifier == 1)
+    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_EASY, drone->currentBehaviour) &&
+        GameState.difficultyModifier == DIFF_OPERATIVE)
         drone->captain = 1;
-    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_NORMAL, drone->currentBehaviour) && GameState.difficultyModifier == 2)
+    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_NORMAL, drone->currentBehaviour) &&
+        GameState.difficultyModifier == DIFF_AGENT)
         drone->captain = 1;
-    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_HARD, drone->currentBehaviour) && GameState.difficultyModifier == 3)
+    if (behaviour_util_getProperty(DRONE_PROP_CAPTAIN_ON_HARD, drone->currentBehaviour) &&
+        GameState.difficultyModifier == DIFF_00AGENT)
         drone->captain = 1;
     if (drone->captain) {
         switch (drone->skinClass) {
@@ -713,7 +716,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     }
 
     if (gameObj->inCel == NULL) {
-        gameObj->flags |= 1;
+        gameObj->flags |= OBJFLAG_DELETE;
         return NULL;
     }
     gameObj->effectFlags &= ~EFFECT_XRAY_ONLY;
@@ -742,7 +745,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         drone->initialState = DSTATE_AstronautLaunch;
         drone->secondState = 0;
         // DroneInit_TakeXHits on the PS2, inline here: as much health as one or two hits of this weapon take
-        float hits = GameState.difficultyModifier == 1 ? 1.0f : 2.0f;
+        float hits = GameState.difficultyModifier == DIFF_OPERATIVE ? 1.0f : 2.0f;
         drone->health = weapon_data[Weap_LaserBeamFromSamurai].damage * hits;
         if (drone->skinHashcode == HT_Skin_Drake_Astronaut)
             drone->health = drone->health * 3.0f;

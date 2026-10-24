@@ -43,11 +43,11 @@ uint Drone_View_Bones[8] = {
 // XBE_GLOBAL(0x001df9a0, 0x4)
 uint32_t switch_BLIND_DRONES;
 
-#define HEAD_BONE 5
-
 // The flags every line of sight hands Collide_LineOfSight, and the muzzle's ray
-#define SIGHT_RAY_FLAGS 0xa27
-#define MUZZLE_RAY_FLAGS 0x927
+#define SIGHT_RAY_FLAGS (HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_MASKABLE | \
+                         HITMASK_SKIP_BULLETS | HITMASK_SKIP_PASSABLE)
+#define MUZZLE_RAY_FLAGS (HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_MASKABLE | \
+                          HITMASK_SKIP_DRONES | HITMASK_SKIP_PASSABLE)
 
 constexpr float kCollisionRadius = 0.4f;    // DroneFunc_ClampPosToCollisionCylinder
 constexpr float kViewMargin = 0.3926991f;   // pi / 8, beyond viewAngle
@@ -239,7 +239,7 @@ double DroneVision_OpponentVisibility(Drone_tag *drone) {
         return 0.0f;
     }
     if (drone->distanceToTarget < 2.0f && drone->viewRange > 0.0f &&
-        NDrone2_CanSeeObject(drone, drone->opponent, HEAD_BONE, 0)) {
+        NDrone2_CanSeeObject(drone, drone->opponent, BONE_HEAD, 0)) {
         drone->opponentVisibility = 1.0f;
         return 1.0f;
     }
@@ -293,7 +293,7 @@ bool DroneVision_OpponentLOS(Drone_tag *drone) {
     if (opponent == NULL)
         return false;
     if (MPSettings.dronesAreBots || drone->side == DRONE_SIDE_NEUTRAL)
-        return NDrone2_CanSeeObject(drone, opponent, HEAD_BONE, 0);
+        return NDrone2_CanSeeObject(drone, opponent, BONE_HEAD, 0);
 
     bool seen = false;
     if (drone->sightFlags & DRONE_SIGHT_HAD_LOS) {
@@ -406,7 +406,7 @@ void DroneVision_HaveOpponentSight(Drone_tag *drone) {
     Drone_SM_SendMsgSelf(DRONE_MSG_OpponentSighted, NULL, 0, 0, &dcv);
     if (drone->dtype == DTYPE_HostageKiller) {
         Drone_SM_SendMsgSelf(DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8, 0, &dcv);
-        Music_Event(0xf, 1);
+        Music_Event(MUSICEV_ATTACK_NOW, 1);
     }
     if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_FAILS_MISSION, drone->currentBehaviour))
         DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_SEEN);
@@ -455,7 +455,7 @@ bool DroneVision_DroneCanSeeDrone(Drone_tag *drone, Drone_tag *other, char *inVi
         return false;
     if (inView != NULL)
         *inView = 1;
-    return NDrone2_CanSeeObject(drone, other->gameObj, HEAD_BONE, 0);
+    return NDrone2_CanSeeObject(drone, other->gameObj, BONE_HEAD, 0);
 }
 
 // Whether what the alerter knows (its knowledge) is something the drone's behaviour lets it be alerted by

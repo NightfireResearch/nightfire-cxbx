@@ -84,8 +84,8 @@ LAYOUT_32(sizeof(ATTACH_tag) == 0x58, "ATTACH_tag is 0x58 bytes");
 enum {
     EFFECT_BULLET = 0x1,
     EFFECT_STEP = 0x2,
-    EFFECT_LEFT_FOOT = 0x4,     // the footprint of bone 55
-    EFFECT_RIGHT_FOOT = 0x8,    // of bone 51
+    EFFECT_LEFT_FOOT = 0x4,     // the footprint of BONE_LEFT_FOOT
+    EFFECT_RIGHT_FOOT = 0x8,    // of BONE_RIGHT_FOOT
     EFFECT_LASER = 0x10,
     EFFECT_SPARKS = 0x20,       // and debris
     EFFECT_SOUND = 0x40,

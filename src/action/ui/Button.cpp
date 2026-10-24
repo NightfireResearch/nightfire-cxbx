@@ -95,16 +95,16 @@ void Button_Update(M_MANAGER *mgr, M_PAGE *page, M_BUTTON *button) {
         button->control.drawState = 0x20;
         if (Menu_CursorOverMe(mgr, &button->control) ||
             (button->control.hashcode == page->focused->hashcode && button->control.id == page->focused->id)) {
-            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4))
+            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_PRESSED))
                 pressed = 1;
-            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 8))
+            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_REPEAT))
                 pressed = 2;
-            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, 4))
+            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, ACTION_PRESSED))
                 pressed = 3;
-            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, 4))
+            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, ACTION_PRESSED))
                 pressed = 4;
             button->control.drawState = 0x80;
-            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 1))
+            if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_HELD))
                 button->control.drawState = 0x40;
         }
     } else {

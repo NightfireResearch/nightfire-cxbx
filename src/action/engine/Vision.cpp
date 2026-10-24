@@ -235,7 +235,7 @@ void Vision_Recurse(cel_tag *cel, int depth) {
 // The cel the view is in and what it sees from there
 // AUTOINJECT
 void Vision_Portal_Recurse(viewer_tag *viewer) {
-    cel_tag *cel = viewer->someCel;
+    cel_tag *cel = viewer->cel;
     if (cel == NULL)
         return;
 

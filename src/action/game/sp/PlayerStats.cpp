@@ -651,9 +651,9 @@ undefined4* PlrStat_GetScore(char playerNum) {
     }
 
     float multiplier;
-    if (GameState.difficultyModifier == 1) {
+    if (GameState.difficultyModifier == DIFF_OPERATIVE) {
         multiplier = ScoringTableDifMul[0];
-    } else if (GameState.difficultyModifier == 2) {
+    } else if (GameState.difficultyModifier == DIFF_AGENT) {
         multiplier = ScoringTableDifMul[1];
     } else {
         multiplier = ScoringTableDifMul[2];

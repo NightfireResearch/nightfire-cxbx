@@ -190,8 +190,6 @@ typedef struct InputEvent {
 #pragma pack(pop)
 LAYOUT_32(sizeof(InputEvent) == 0x18, "InputEvent is InputEventList's entry size");
 
-#define ACTION_HELD 1               // PlayerInput.actions bits the walker tests
-#define ACTION_PRESSED 4
 
 // Whether player 0's action is pressed right now and has a value (in hundredths) that is not 0 in its low 16 bits
 static bool Input_EventActionOn(uint action) {
@@ -279,9 +277,9 @@ uchar AnalogStickMapping[129] = {
 // An axis within this of the centre sends the other, past it, to its end (StickCompensation3)
 #define STICK_DIAGONAL 0.707107f
 
-// Fires when held this long, every 8 frames
+// ACTION_REPEAT: when held this long, every 8 frames
 #define ACTION_REPEAT_FRAMES 0x2d
-#define ACTION_REPEAT 8
+#define ACTION_REPEAT_INTERVAL 8
 #define ACTION_MAX_HOLD 0x7fff
 
 // PlayerInput::actionLock: Input_ClearAction-style holds. Bit 0x10 off, the action is not reported until neither the
@@ -375,7 +373,7 @@ void Input_Update(void) {
                 if (held > ACTION_MAX_HOLD)
                     held = ACTION_MAX_HOLD;
                 input->holdFrames[i] = held;
-                if (input->holdFrames[i] > ACTION_REPEAT_FRAMES && input->holdFrames[i] % ACTION_REPEAT == 0)
+                if (input->holdFrames[i] > ACTION_REPEAT_FRAMES && input->holdFrames[i] % ACTION_REPEAT_INTERVAL == 0)
                     flags |= ACTION_REPEAT;
                 input->anyInput = 1;
             }

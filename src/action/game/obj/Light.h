@@ -4,6 +4,14 @@
 #include "../../actionhelpers.h"
 #include "../../../common/xbeClass.h"
 
+// light_tag::lightType: which objects it lights (Lights_CalcClosestLights)
+enum LightType {
+    LIGHT_PLACED,       // the map's: for objects with EFFECT_PLACED_LIGHTS
+    LIGHT_TRANSIENT,    // muzzle flashes, explosions, night vision: but objects with EFFECT_NO_TRANSIENT_LIGHTS
+    LIGHT_CARRIED,      // carried by its parentObject (the searchlight): objects with EFFECT_PLACED_LIGHTS within 4
+                        // across the floor
+};
+
 #pragma pack(push, 1)
 // light_tag structure - 61 bytes of actual data, padded to 64 for 4-byte alignment
 struct light_tag {
@@ -25,7 +33,7 @@ struct light_tag {
     uchar clr_r;                           // 0x38
     uchar clr_g;                           // 0x39
     uchar clr_b;                           // 0x3a
-    uchar lightType;                       // 0x3b - light type/mode
+    uchar lightType;                       // 0x3b - LightType
     uchar enabled;                         // 0x3c - controlled by switch channel
     uchar padding3d[3];                    // 0x3d-0x3f - pad to 4-byte alignment (64 bytes total)
 };

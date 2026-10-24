@@ -216,16 +216,16 @@ static short Scroll_ThumbAt(double space, double offset, int count, double start
 // Select, the alternative selects and back on the focused scroll go to its owner
 static void Scroll_Selects(M_MANAGER *mgr, M_PAGE *page, M_SCROLL *scroll) {
     if (page->focused->hashcode == scroll->control.hashcode && mgr->takingInput && !mgr->inputLocked) {
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4)) {
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_PRESSED)) {
             Menu_PlaySound(MENU_SFX_SELECT);
             __Menu_SendMessage(scroll->control.parent, MessageType_Select, (intptr_t)scroll, 0);
-        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, 4)) {
+        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, ACTION_PRESSED)) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_1);
             __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect1, (intptr_t)scroll, 0);
-        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, 4)) {
+        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, ACTION_PRESSED)) {
             Menu_PlaySound(MENU_SFX_ALTSELECT_2);
             __Menu_SendMessage(scroll->control.parent, MessageType_AltSelect2, (intptr_t)scroll, 0);
-        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_BACK, 4)) {
+        } else if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_BACK, ACTION_PRESSED)) {
             Menu_PlaySound(MENU_SFX_BACK_ON_CONTROL);
             __Menu_SendMessage(scroll->control.parent, MessageType_BackOnControl, (intptr_t)scroll, 0);
         }
@@ -257,10 +257,10 @@ void Scroll_Update(M_MANAGER *mgr, M_PAGE *page, M_SCROLL *scroll) {
     scroll->value = value;
 
     // A key's low byte
-    uchar up = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, 1);
-    uchar down = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, 1);
-    uchar left = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, 1);
-    uchar right = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, 1);
+    uchar up = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, ACTION_HELD);
+    uchar down = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, ACTION_HELD);
+    uchar left = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, ACTION_HELD);
+    uchar right = (uchar)Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, ACTION_HELD);
     bool vertically = up || down;
     bool across = left || right;
     uint held = scroll->heldFrames;

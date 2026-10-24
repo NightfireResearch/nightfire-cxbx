@@ -39,7 +39,7 @@ void UpdateMFX_HT_Level_EvilBaseC(void);
 void UpdateMFX_HT_Level_SpaceStationD(void);
 
 // The music events the code gives a meaning (Music_Event's ids); the others are the cels' (cel_tag::musicEvent)
-enum {
+enum MusicEvent {
     MUSICEV_LEVEL = 0,          // the level's hashcode
     MUSICEV_NEW_LEVEL = 1,      // with MUSICEV_LEVEL: start its track
     MUSICEV_ALERT = 2,          // 2: the drones' alert; another value counts towards the combat music
@@ -51,6 +51,10 @@ enum {
     MUSICEV_COMBAT = 10,        // the drones' combat threshold drops to 1
     MUSICEV_NIS_STARTED = 11,   // the cut scene's hashcode
     MUSICEV_NIS_ENDED = 12,     // the same
+    MUSICEV_TRAVERSE = 13,      // the player is on a rope or creep wall (Player_Wire, Player_Creep)
+    MUSICEV_DRONES_CALM = 14,   // a drone is calm, and none near is alerted
+    MUSICEV_ATTACK_NOW = 15,    // with DRONE_MSG_AttackNow
+    MUSICEV_HOSTAGE_SAVED = 16,
 };
 
 #pragma pack(push, 1)

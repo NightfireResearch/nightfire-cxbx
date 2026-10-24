@@ -782,7 +782,7 @@ void RandomHit(HITDATA_tag *hit) {
     hit->dist = Plain(0.0f, 10.0f);
     UnitVector(&hit->surfaceNormal.normal);
     hit->surfaceNormal.d = Plain(-3.0f, 3.0f);
-    UnitVector(&hit->unknown1);
+    UnitVector(&hit->tangent);
     UnitVector(&hit->hitDirection);
     RandomVector(&hit->hitPosition, 6.0f);
     // Any flags in the top bits, but one of EffectInfo's materials: past them the original read the game's neighbouring
@@ -1045,7 +1045,7 @@ void RandomWorld(void) {
         cel->env = R(3) ? &world.env : NULL;
         cel->bitsFromPlacementTag = R(2) ? 0x400000 : 0;
         PlainVector(&cel->sphere, 4.0f);
-        PlainVector(&cel->someMax, 4.0f);
+        PlainVector(&cel->boxMax, 4.0f);
         cel->shearHeight = R(3) ? Plain(-5.0f, 5.0f) : NAN;
         world.glists[i].colldata = R(4) ? &world.coll : NULL;
         world.glists[i].lod = R(2) ? &world.glists[R(3)] : NULL;
@@ -1603,7 +1603,7 @@ uint32_t RunCollision(bool original) {
     if (R(3) == 0) {
         BU_tag *bullet = (BU_tag *)obj->extraObjectData;
         if (R(2))
-            bullet->wpnDef->impactFlags |= ImpactFlag_Sticks | (R(2) ? ImpactFlag_TripBomb : 0);
+            bullet->wpnDef->impactFlags |= IMPACTFLAG_STICKS | (R(2) ? IMPACTFLAG_TRIP_BOMB : 0);
         if (R(2))
             bullet->wpnDef->weaponBaseNum = 0x37;
         for (int i = 0; i < OBJS; i++) {
@@ -1693,7 +1693,7 @@ uint32_t RunHoming(bool original) {
     obj_tag *obj = Bullet();
     BU_tag *bullet = (BU_tag *)obj->extraObjectData;
     if (bullet->heatseekTarget != NULL && R(3) == 0)
-        bullet->heatseekTarget->flags |= 1;
+        bullet->heatseekTarget->flags |= OBJFLAG_DELETE;
     Regs r = {};
     r.esi = P(bullet);
     uint32_t args[1] = {P(obj)};
@@ -1788,7 +1788,7 @@ uint32_t RunBodyGlowUpdate(bool original) {
     }
     for (int i = 0; i < 4; i++) {
         memset(&g.viewers[i], 0, sizeof(viewer_tag));
-        g.viewers[i].nightVisionRelated = (undefined2)(R(3) == 0 ? 2 : R(2));
+        g.viewers[i].visionMode = (undefined2)(R(3) == 0 ? 2 : R(2));
         PlainVector(&g.viewers[i].pos, 15.0f);
         glb_viewer[i] = R(3) ? &g.viewers[i] : NULL;
         glb_blokes[i] = R(5) == 0 ? (BLData *)g.ownerExtra : (BLData *)g.blokes[i];

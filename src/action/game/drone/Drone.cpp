@@ -60,9 +60,6 @@ CoverNode_tag CoverNodeTable[MAX_COVER_NODES];
 // XBE_GLOBAL(0x001dfa30, 0x5c00)
 DroneAIPoint_tag AIPointTable[MAX_AI_POINTS];
 
-#define HEAD_BONE 5
-#define WORLD_BONE(bone) (0x80000000 | (bone))
-
 // 0 to 0xfff for a drone, scattered by its state machine's id (its number in the level): Knuth's multiplicative hash
 static uint BreathPhase(const Drone_tag *drone) {
     return (drone->sm.id * 2654435761u) >> 20;
@@ -133,7 +130,7 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
     NPCGlobals.enabledFrame = GameState.NumFramesUnpaused;
     if (hashcode == HT_Script_DronesAttackAfter) {
         Drone_Message(NULL, DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT * 8);
-        Music_Event(0xf, 1);
+        Music_Event(MUSICEV_ATTACK_NOW, 1);
     } else if (hashcode == HT_Script_DronesEnableAfter) {
         for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
             obj_tag *gameObj = drone->gameObj;
@@ -212,7 +209,7 @@ bool Drone_PositionVisible(_VECTOR *pos, cel_tag *cel) {
         return false;
     CelPos_tag from, to;
     Vec_Copy(&viewer->pos, &from.pos);
-    from.cel = viewer->someCel;
+    from.cel = viewer->cel;
     Vec_Copy(pos, &to.pos);
     to.cel = cel;
     return DroneVision_LineOfSightToObject(&from, &to, glb_players[0], NULL, 1, 0);
@@ -227,7 +224,7 @@ void Drone_FellOutMap(obj_tag *gameObj) {
     }
     if (gameObj->extraObjectData != NULL)
         NDrone2_Enable(0, (Drone_tag *)gameObj->extraObjectData);
-    gameObj->flags |= 1;
+    gameObj->flags |= OBJFLAG_DELETE;
 }
 
 // ---- once a frame, from Drone_InitComms (parcel 7: opponents)
@@ -518,7 +515,7 @@ void Drone_UpdateCombatChannels(void) {
     if (alerted)
         switch_channels[SWITCH_ENEMY_ALERTED_NEAR_LATCHED] = 1;
     else if (calm)
-        Music_Event(0xe, 1);
+        Music_Event(MUSICEV_DRONES_CALM, 1);
     switch_channels[SWITCH_ENEMY_ALERTED_NEAR] = alerted;
 }
 
@@ -692,7 +689,7 @@ bool NDrone2_PreDroneControl(DCVars_tag *dcv) {
 
     if (drone->modeChangeSwitchChannel != 0 && switch_channels[drone->modeChangeSwitchChannel]) {
         if (drone->secondaryMode == DMODE_DeleteMe) {
-            dcv->gameObj->flags |= 1;
+            dcv->gameObj->flags |= OBJFLAG_DELETE;
             drone->secondaryMode = 0;
             drone->modeChangeSwitchChannel = 0;
             return true;
@@ -793,7 +790,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
         // Its breath, 0.12 m out from the head along the bone's z axis
         _VECTOR head, dir, breath;
         _MATRIX bone;
-        AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, &head, &bone);
+        AnimGetBoneWorldTrans(gameObj, ANIM_BONE(BONE_HEAD), 0, &head, &bone);
         _VECTOR forward = {0.0f, 0.0f, 1.0f};
         ApplyMatrixLV(&bone, &forward, &dir);
         auxVec_AddMulR32(&head, &dir, 0.12f, &breath);
@@ -991,7 +988,7 @@ void Drone_Delete(obj_tag *gameObj) {
             if (other->guardPartner == gameObj)
                 other->guardPartner = NULL;
             if (other->headTarget == gameObj) {
-                AnimObjectSetHeadTracking(obj, NULL, 3.0f, 0.14f, 1, 1, HEAD_BONE);
+                AnimObjectSetHeadTracking(obj, NULL, 3.0f, 0.14f, 1, 1, BONE_HEAD);
                 other->headTarget = NULL;
                 other->headTracking = 0;
             }
@@ -1016,17 +1013,17 @@ void Drone_Delete(obj_tag *gameObj) {
         case OBJECTTYPE_GUNTURRET: {
             GUNTURRET *turret = (GUNTURRET *)obj->extraObjectData;
             if (turret != NULL && turret->owner == gameObj) {
-                obj->flags |= 1;
+                obj->flags |= OBJFLAG_DELETE;
                 Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                                0xff,
-                               0xff, 100, NULL, 0);
+                               0xff, 100, NULL, MATERIAL_NONE);
             }
             break;
         }
         }
     }
 
-    AnimObjectSetHeadTracking(gameObj, NULL, 3.0f, 0.14f, 1, 1, HEAD_BONE);
+    AnimObjectSetHeadTracking(gameObj, NULL, 3.0f, 0.14f, 1, 1, BONE_HEAD);
     drone->headTarget = NULL;
     drone->headTracking = 0;
     LList_Remove(&NDrone2Info, (LLNODE_tag *)drone);

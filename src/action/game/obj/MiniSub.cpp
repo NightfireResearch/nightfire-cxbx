@@ -184,7 +184,7 @@ void MiniSubState_Attack(MiniSubInfo *sub) {
         }
     }
     MiniSub_FireTorpedo(sub);
-    Music_Event(2, 1);
+    Music_Event(MUSICEV_ALERT, 1);
 }
 
 // Player 1 as its target, a fresh route over the AI network from where it is, never straight there; then attacking

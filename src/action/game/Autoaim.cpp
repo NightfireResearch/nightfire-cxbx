@@ -96,7 +96,8 @@ void Check_Target(obj_tag* obj) {
     Mat_GetDir(&dir, &blData->weaponObject->transformMatrix);
     auxVec_AddMulR32(&head, &dir, 50.0f, &end);
     HITDATA_tag *hits = NULL;
-    Collide_RayIntersect(&head, &end, obj->inCel, obj, NULL, &hits, 0, 0xc, 0);
+    Collide_RayIntersect(&head, &end, obj->inCel, obj, NULL, &hits, 0, HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT,
+                         0);
 
     if (hits != NULL && hits->hitObj != NULL) {
         obj_tag *target = hits->hitObj;
@@ -133,7 +134,7 @@ void Check_Target(obj_tag* obj) {
                 char *msg = Door_DoMsg(target);
                 if (msg != NULL) {
                     DoorMsg++;
-                    Text_AddMsg(blData->playerNum, 0, 1, msg, 0, 0xb4);
+                    Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, msg, 0, 0xb4);
                 }
             }
             break;
@@ -143,7 +144,8 @@ void Check_Target(obj_tag* obj) {
                 GameState.CurrentLevelHashcode != NO_LOAD_MSG_LEVEL) {
                 LoadMsg = FRAME_RATE_INT * 20;
                 if (!Trigger_Locked(hits->hitObj))
-                    Text_AddMsg(blData->playerNum, 0, 1, (char *)Txt_BindLabel(TEXT_PRESS_ACTION, 0), 0, 0xb4);
+                    Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TEXT_PRESS_ACTION, 0), 0,
+                                0xb4);
             }
             break;
         }

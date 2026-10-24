@@ -1200,7 +1200,7 @@ void RandomWorld(void) {
         cel->addedToDraw = (uchar)R(3);
         cel->bitsFromPlacementTag = R(2) ? CEL_NO_SKY : 0;
         cel->shearHeight = Value(-10.0f, 10.0f);
-        cel->someSwitchChannel = (uchar)R(8);
+        cel->ambientChannel = (uchar)R(8);
         for (int j = 0; j < 2; j++) {
             cel->ambientR[j] = (uchar)R(256);
             cel->ambientG[j] = (uchar)R(256);
@@ -1257,9 +1257,9 @@ void RandomWorld(void) {
         viewer_tag *viewer = &world.viewers[i];
         viewer->enabled = (uchar)R(2);
         viewer->draw.skyVisible = (uchar)R(4) != 0;
-        viewer->someCel = R(2) ? NULL : &world.cels[R(3)];
+        viewer->cel = R(2) ? NULL : &world.cels[R(3)];
         PlainVector(&viewer->pos, 30.0f);
-        viewer->nightVisionRelated = (ushort)R(3);
+        viewer->visionMode = (ushort)R(3);
         RandomMatrix(&viewer->mtx, 10.0f);
     }
     for (int i = 0; i < PATHS; i++) {
@@ -1612,7 +1612,7 @@ uint32_t RunBubbleUpdate(bool original) {
     obj->objGraphics = &world.glists[R(4)];
     bubble->framesLeft = (short)(R(3) == 0 ? R(3) : R(100));
     if (obj->inCel != NULL && R(2))
-        obj->inCel->someMax.y = obj->position.y + obj->objGraphics->extentMax.y + (R(2) ? 0.5f : -0.5f);
+        obj->inCel->boxMax.y = obj->position.y + obj->objGraphics->extentMax.y + (R(2) ? 0.5f : -0.5f);
     CDECL_VOID(0x000cd0b0, Bubble_Update, void (__cdecl *)(obj_tag *), obj);
     return 0;
 }

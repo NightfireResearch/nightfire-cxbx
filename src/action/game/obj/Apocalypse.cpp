@@ -44,7 +44,7 @@ void Apocalypse_Update(obj_tag *obj) {
     float left = quake->timeLeft - FRAME_RATE_MUL;
     quake->timeLeft = left;
     if (left <= 0.0f) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 

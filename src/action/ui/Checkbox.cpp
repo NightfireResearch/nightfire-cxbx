@@ -96,7 +96,7 @@ void Checkbox_Update(M_MANAGER *mgr, M_PAGE *page, M_CHECKBOX *checkbox) {
 
     if (page->focused->hashcode == checkbox->control.hashcode && checkbox->control.state == CONTROL_STATE_SHOWN &&
         mgr->takingInput) {
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4)) {
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_PRESSED)) {
             checkbox->checked = !checkbox->checked;
             selected = true;
         }

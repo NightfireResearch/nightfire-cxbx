@@ -255,9 +255,9 @@ bool MP_RegisterBulletHit(ushort playerIndex, obj_tag *obj, float health) {
     if (MPGame.players[playerIndex].friendlyFireLabelTimer == 0) {
       char *text = Txt_GetStringFromHeap(0);
       sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_BY, 0), MPSettings.Player[shooterIndex].Name);
-      Text_AddMsg((char)playerIndex, 0, 1, text, 0, 0xb4);
+      Text_AddMsg((char)playerIndex, 0, TXTMSG_INFO, text, 0, 0xb4);
       sprintf(text, Txt_BindLabel(TXT_MP_FRIENDLY_FIRE_ON, 0), MPSettings.Player[playerIndex].Name);
-      Text_AddMsg((char)shooterIndex, 0, 1, text, 0, 0xb4);
+      Text_AddMsg((char)shooterIndex, 0, TXTMSG_INFO, text, 0, 0xb4);
       MPGame.players[playerIndex].friendlyFireLabelTimer = (short)(FRAME_RATE_INT * 3);
     }
   }
@@ -640,7 +640,7 @@ void MP_ResetMPObject(MPOBJECT *mpObj, ushort state, obj_tag *gameObj, bool keep
 void MP_SetUpPlayerSomehow(obj_tag *gameObj, obj_tag *holder, uint attach) {
     _VECTOR dir, pos;
     _MATRIX mtx;
-    AnimGetBoneWorldTrans(holder, attach | 0x80000000, 0, &pos, &mtx);
+    AnimGetBoneWorldTrans(holder, attach | ANIM_WHICH_BONE, 0, &pos, &mtx);
     Mat_GetDir(&dir, &mtx);
     Mat_Align2Dir(&gameObj->transformMatrix, &dir, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
     Matrix_SetTrans(&pos, &gameObj->transformMatrix);
@@ -791,7 +791,7 @@ void MP_RestartScenario(void) {
     MPOBJECT *mpObj = (MPOBJECT*)MPObjects[i]->extraObjectData;
     if(mpObj->scriptPlayer == NULL)
       continue;
-    mpObj->scriptPlayer->flags |= 1; 
+    mpObj->scriptPlayer->flags |= OBJFLAG_DELETE; 
   }
 
   if(MPSettings.GameMode == GM_DEMOLITION) {
@@ -837,7 +837,7 @@ void MP_Update(void) {
   if(!MPSettings.isMultiplayer)
     return;
 
-  if(GameFlow_GetState() != 2)
+  if(GameFlow_GetState() != GAMEFLOW_GAME)
     return;
 
   // Handle paused state
@@ -897,11 +897,11 @@ void MP_Update(void) {
       MPGame.EndGameFlowState = 5;
       GameState.ReloadMenupage = P_MPDEBRIEFING;
       ResetMap_LevelToLoad(HT_Level_Menu_Pre, false, false);
-      GameFlow_PushState(7, 60.0f, 0xFF);
+      GameFlow_PushState(GAMEFLOW_FADE, 60.0f, 0xFF);
       for(int i = 0; i < NUM_PLAYERS; i++) {
         obj_tag* plyObj = MPGame.players[i].playerObj;
         if(plyObj != NULL) {
-          Player_SetCamMode((BLData*)plyObj->extraObjectData, 1);
+          Player_SetCamMode((BLData*)plyObj->extraObjectData, CamMode_PostMPGameThirdPerson);
           GS_PausePlayer(1, i);
         }
       }
@@ -1233,7 +1233,7 @@ bool MP_playerIsDead(obj_tag *obj) {
             return true;
         if (type == OBJECTTYPE_DEAD_DRONE)
             return true;
-        return obj->flags & 1;
+        return obj->flags & OBJFLAG_DELETE;
     }
 
     if (type == OBJECTTYPE_DEAD_PLAYER)
@@ -1389,35 +1389,35 @@ void MP_assassinReset(bool handOver) {
 // XBE_GLOBAL(0x0017e5ac, 0x2c)
 SpriteInfo AssassinSpriteInfo = {
     .colour = 0xffffffff,
-    .unknown1 = 0xffffffff,
+    .shadowColour = 0xffffffff,
     .depth = 1,
     .flags = 8192,
     .posX = 320,
     .posY = 72,
     .textRef = (Action_TranslatedText)0xffffffff,
-    .linkedViewer = 5,
+    .linkedViewer = VIEWER_HUD,
 };
 // XBE_GLOBAL(0x0017e554, 0x2c)
 SpriteInfo MPTimeInfo = {
     .colour = 0xffffffff,
-    .unknown1 = 255,
+    .shadowColour = 255,
     .depth = 1,
     .flags = 8192,
     .posX = 320,
     .posY = 134,
     .format = FontFormat1Centred,
-    .linkedViewer = 5,
+    .linkedViewer = VIEWER_HUD,
 };
 // XBE_GLOBAL(0x0017e580, 0x2c)
 SpriteInfo MPStatusInfo = {
     .colour = 0xffffffff,
-    .unknown1 = 255,
+    .shadowColour = 255,
     .depth = 1,
     .flags = 8192,
     .posX = 320,
     .posY = 72,
     .format = FontFormat2Centred,
-    .linkedViewer = 5,
+    .linkedViewer = VIEWER_HUD,
 };
 
 static void CreateAt(SpawnPlace *place) {
@@ -1477,7 +1477,7 @@ void MP_Start(void) {
         for (int i = 0; i < NUM_PLAYERS; i++) {
             if (MPGame.players[i].playerObj == NULL)
                 continue;
-            AssassinSpriteInfo.linkedViewer = 5;
+            AssassinSpriteInfo.linkedViewer = VIEWER_HUD;
             // The assassin sprites' textures (names ours)
             AssassinSpriteInfo.textureHashcode = HT_Texture_MP_icon_assassin;
             MPGame.radarMarks[i].assassin = Sprite_Create2(&AssassinSpriteInfo);
@@ -2077,7 +2077,7 @@ bool MP_ReSpawn(obj_tag *obj, ushort playerNum) {
 
     BLData *blData = (BLData *)obj->extraObjectData;
     HUD_Enable(blData->hudInfo, (HUD_PANE_IND)0xc, 0, 0);
-    Player_SetCamMode(blData, 0);
+    Player_SetCamMode(blData, CamMode_Default);
     blData->armor = 0.0f;
     blData->field_0x844 = 0.0f;
     // the handicap is loaded as a signed int

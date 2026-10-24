@@ -37,7 +37,7 @@ static void MP_GoldenEyeMsg(MPOBJECT *mpObj, Action_TranslatedText key, Action_T
     const char *team = Txt_BindLabel(mpObj->num == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
     const char *format = Txt_BindLabel(mpObj->type == GOLDENEYE_KEY ? key : crystal, 0);
     sprintf(str, format, team);
-    Text_AddMsg(-1, 0, 4, str, 0, MP_GoldenEyeMsgFrames());
+    Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
 }
 
 // An agent takes a part. (Our helper; the original repeats it for each part.)
@@ -190,10 +190,10 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             const char *team = Txt_BindLabel(mpObj->num == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
             const char *format = Txt_BindLabel(NOTIF_X_ACTIVATED_GOLDENEYE, 0);
             sprintf(str, format, team);
-            Text_AddMsg(-1, 0, 4, str, 0, MP_GoldenEyeMsgFrames());
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
 
             if (GoldenEye.targetedPlayer->objectType == OBJECTTYPE_PLAYER)
-                Player_SetCamMode((BLData *)GoldenEye.targetedPlayer->extraObjectData, 1);
+                Player_SetCamMode((BLData *)GoldenEye.targetedPlayer->extraObjectData, CamMode_PostMPGameThirdPerson);
             return;
         }
 
@@ -230,7 +230,7 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             const char *format = Txt_BindLabel(mpObj->type == GOLDENEYE_KEY ? NOTIF_GOLDENEYE_KEY_RETURNED
                                                                             : NOTIF_GOLDENEYE_CRYSTAL_RETURNED, 0);
             sprintf(str, format);
-            Text_AddMsg(-1, 0, 4, str, 0, MP_GoldenEyeMsgFrames());
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, MP_GoldenEyeMsgFrames());
             MPSound_Play(SFX_BOND_MOMENT_BM_CAS_BEAM);
         }
         break;

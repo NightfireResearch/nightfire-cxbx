@@ -40,7 +40,7 @@ void InitShards(void) {
 // AUTOINJECT
 void Break_Update(obj_tag *obj) {
 
-    if (obj == NULL || (obj->flags & 1))
+    if (obj == NULL || (obj->flags & OBJFLAG_DELETE))
         return;
 
     ObjData_Break *breakData = (ObjData_Break *)obj->extraObjectData;
@@ -114,7 +114,7 @@ void Break_DoBreak(_VECTOR *pos) {
 void Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
 
     COLLDATA_tag *coll = obj->objGraphics->colldata;
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
     if (coll == NULL)
         return;
 
@@ -135,9 +135,9 @@ void Break_Kill(obj_tag *obj, HITDATA_tag *hit) {
     }
 
     Drone_BrokenObject(obj, hit);
-    if ((hit->materialType & 0x3f) == 0)
-        hit->materialType = 0x10;
-    Vec_Zero(&hit->unknown1);
+    if ((hit->materialType & MATERIAL_MASK) == MATERIAL_NONE)
+        hit->materialType = MATERIAL_GLASS;
+    Vec_Zero(&hit->tangent);
     Debris_Create_Loop(coll, hit, obj);
 }
 
@@ -347,7 +347,7 @@ void Debris_Create_Loop(COLLDATA_tag *coll, HITDATA_tag *hit, obj_tag *obj) {
             hit->surfaceNormal.c = (float)plane[2] * kCollScale;
             memcpy(&hit->surfaceNormal.d, &plane[3], sizeof(float));
 
-            Debris_Create(hit, &EffectInfo[hit->materialType & 0x3f], obj->inCel, 1);
+            Debris_Create(hit, &EffectInfo[hit->materialType & MATERIAL_MASK], obj->inCel, 1);
         }
     }
 }

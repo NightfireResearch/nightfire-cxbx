@@ -13,9 +13,6 @@
 #include <math.h>
 #include <stdint.h>
 
-// A sprite's priority that hides it
-#define MENU_SPRITE_HIDDEN 0xff
-
 // The strings that controls keep pointers to (gfx/Font.cpp)
 #define MenuEmptyString FontEmptyString
 #define MenuSpaceString FontSpaceString

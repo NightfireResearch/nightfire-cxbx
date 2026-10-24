@@ -56,9 +56,20 @@ typedef struct sAnimSkin_tag {
 #define ANIM_BONE_PARENT_MASK   0x7f
 #define ANIM_BONE_ROOT          0x7f
 
-// The bones head tracking and aiming turn
-#define ANIM_HEADTRACK_BONE 5
-#define ANIM_AIM_BONE 2
+// The characters' bones the code asks for by index
+enum SkeletonBone {
+    BONE_ROOT = 0,
+    BONE_TORSO = 1,
+    BONE_AIM = 2,               // the bone aiming turns (AnimObjectAimAt)
+    BONE_HEAD = 5,              // the bone head tracking turns
+    BONE_GRENADE_HAND = 0x15,   // where a drone's grenade leaves its hand
+    BONE_RIGHT_FOOT = 0x33,     // EFFECT_RIGHT_FOOT's footprint
+    BONE_LEFT_FOOT = 0x37,      // EFFECT_LEFT_FOOT's
+};
+
+// AnimGetBoneWorldTrans's which: with this bit a bone, by index, else a datum
+#define ANIM_WHICH_BONE 0x80000000
+#define ANIM_BONE(bone) (ANIM_WHICH_BONE | (bone))
 
 // What a script, an object or a set is told
 typedef void (*AnimScriptEventFunc)(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *script, ushort event);
@@ -115,24 +126,26 @@ typedef struct AnimObj {
 } AnimObj;
 
 // AnimObj::flags
-#define ANIMOBJ_POSE_VALID      0x1     // a pose has been resolved: nothing is drawn or asked of the bones before
-#define ANIMOBJ_FULL_CHARACTER  0x2     // a skeleton of more than 70 bones: faces, datum weapons, the height offset
-#define ANIMOBJ_BONES_VALID     0x4     // boneMtxs are this frame's
-#define ANIMOBJ_PALETTE_VALID   0x8     // palette is this frame's
-#define ANIMOBJ_HEAD_TRACK      0x10    // head tracking asked for (AnimObjectSetHeadTracking)
-#define ANIMOBJ_HEAD_TRACKING   0x30    // AnimObjectIsHeadTracking
-#define ANIMOBJ_HEAD_TURNED     0x20    // the head is turned, or turning back
-#define ANIMOBJ_HEAD_TARGET_OBJ 0x40    // headTrackTarget is an object, looked at by headTrackTargetBone
-#define ANIMOBJ_AIMING          0x80
-#define ANIMOBJ_AIMING_2        0x100   // with ANIMOBJ_AIMING, AnimObjectIsAiming: aimed, or turning back
-#define ANIMOBJ_AIM_AT_BONE     0x200   // aimTargetBone is used
-#define ANIMOBJ_ALT_SKELETON    0x400   // a full character whose skeletonNum is not 1
-#define ANIMOBJ_AIM_IN_RANGE    0x1000
-#define ANIMOBJ_AIM_YAW_LIMIT   0x2000
-#define ANIMOBJ_AIM_PITCH_LIMIT 0x4000
-#define ANIMOBJ_INV_SKIN_SCALE  0x8000  // the root's translation is divided by the skin's scale
-#define ANIMOBJ_NO_FACE         0x10000 // no facial animation (AnimFacialUpdate)
-#define ANIMOBJ_MUTE            0x40000 // script sounds and events are not played
+enum AnimObjFlags {
+    ANIMOBJ_POSE_VALID = 0x1,         // a pose has been resolved: nothing is drawn or asked of the bones before
+    ANIMOBJ_FULL_CHARACTER = 0x2,     // a skeleton of more than 70 bones: faces, datum weapons, the height offset
+    ANIMOBJ_BONES_VALID = 0x4,        // boneMtxs are this frame's
+    ANIMOBJ_PALETTE_VALID = 0x8,      // palette is this frame's
+    ANIMOBJ_HEAD_TRACK = 0x10,        // head tracking asked for (AnimObjectSetHeadTracking)
+    ANIMOBJ_HEAD_TRACKING = 0x30,     // AnimObjectIsHeadTracking
+    ANIMOBJ_HEAD_TURNED = 0x20,       // the head is turned, or turning back
+    ANIMOBJ_HEAD_TARGET_OBJ = 0x40,   // headTrackTarget is an object, looked at by headTrackTargetBone
+    ANIMOBJ_AIMING = 0x80,
+    ANIMOBJ_AIMING_2 = 0x100,         // with ANIMOBJ_AIMING, AnimObjectIsAiming: aimed, or turning back
+    ANIMOBJ_AIM_AT_BONE = 0x200,      // aimTargetBone is used
+    ANIMOBJ_ALT_SKELETON = 0x400,     // a full character whose skeletonNum is not 1
+    ANIMOBJ_AIM_IN_RANGE = 0x1000,
+    ANIMOBJ_AIM_YAW_LIMIT = 0x2000,
+    ANIMOBJ_AIM_PITCH_LIMIT = 0x4000,
+    ANIMOBJ_INV_SKIN_SCALE = 0x8000,  // the root's translation is divided by the skin's scale
+    ANIMOBJ_NO_FACE = 0x10000,        // no facial animation (AnimFacialUpdate)
+    ANIMOBJ_MUTE = 0x40000,           // script sounds and events are not played
+};
 
 // AnimObj::facialState
 #define FACIAL_START        0
@@ -142,7 +155,7 @@ typedef struct AnimObj {
 
 typedef struct AnimState {
     HITDATA_tag floor; // 0x00 - what Drone_FeetOnPoint found the feet on
-    char animFlags; // 0x50 - bit one when weapon is zoomed in; ANIM_CONTACT_* for drones; ANIM_FOOTSTEP
+    char animFlags;   // 0x50 - AnimStateFlags
     char inWater;     // 0x51 - bit 0: the player is in water (Player_InWater)
     char currentWeaponId; // 0x52
     char switchingToWeaponId; // 0x53
@@ -151,15 +164,16 @@ typedef struct AnimState {
     AnimObj animObj; // 0x58
 } AnimState;
 
-// AnimState::animFlags, for drones (Drone_FeetOnPoint, Drone_CollisionHandler)
-#define ANIM_CONTACT_FLOOR  0x08    // the feet stand on something
-#define ANIM_CONTACT_HIT    0x10    // the capsule hit something
-#define ANIM_CONTACT_ABOVE  0x20    // the capsule hit something above its top
-#define ANIM_CONTACT_MOVER  0x80    // moves with what it stands on (PlayerOrDrone_FeetOnPoint_DoCollision)
-// AnimState::animFlags, for the player: the weapon's scope is up
-#define ANIM_SCOPED         0x01
-// AnimState::animFlags: a footstep this frame (AnimObjectUpdate)
-#define ANIM_FOOTSTEP       0x04
+// AnimState::animFlags
+enum AnimStateFlags {
+    ANIM_SCOPED = 0x01,             // the player's scope is up: what he asked for this frame, after the weapon's say
+    ANIM_SCOPE_APPLIED = 0x02,      // what the zoom was last set up for (Player_Weapon runs the change on the edge)
+    ANIM_FOOTSTEP = 0x04,           // a footstep this frame (AnimObjectUpdate)
+    ANIM_CONTACT_FLOOR = 0x08,      // the feet stand on something (PlayerOrDrone_FeetOnPoint, Drone_FeetOnPoint)
+    ANIM_CONTACT_HIT = 0x10,        // the capsule hit something
+    ANIM_CONTACT_ABOVE = 0x20,      // the capsule hit something above its top
+    ANIM_CONTACT_MOVER = 0x80,      // moves with what it stands on (PlayerOrDrone_FeetOnPoint_DoCollision)
+};
 
 // these constants seem to be the same on both PS2 and Xbox
 typedef enum {

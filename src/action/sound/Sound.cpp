@@ -102,8 +102,6 @@ _VECTOR GlobalListenerPos;
 // The sound ids' low 20 bits index SFXOutputData
 #define SFX_ID_MASK 0xfffff
 #define NUM_DYNAMIC_SOUNDS 0x100
-// The view a cut scene's camera uses
-#define SCRIPT_VIEWER 4
 
 // AUTOINJECT
 void Sound_Init(void) {
@@ -261,7 +259,7 @@ void Sound_UpdateListeners(void) {
         SFXSetupListener(&pos, &vel, &listenerDir, &listenerUp, &listenerNorm, i);
     }
 
-    viewer_tag *script = glb_viewer[SCRIPT_VIEWER];
+    viewer_tag *script = glb_viewer[VIEWER_SCRIPT];
     if (script != NULL && script->enabled) {
         view = script;
         Mat_GetUp(&up, &view->viewMatrix);
@@ -276,7 +274,7 @@ void Sound_UpdateListeners(void) {
         GlobalListenerPos = *(_VECTOR *)&view->viewMatrix.m[12];
 
     if (view != NULL) {
-        cel_tag *cel = view->someCel;
+        cel_tag *cel = view->cel;
         if (cel != NULL) {
             bool outdoors = (cel->bitsFromPlacementTag & CEL_NO_SKY) || cel->reverb >= 0x14;
             SFXSetEnvironment(cel->reverb, outdoors);

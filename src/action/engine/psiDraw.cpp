@@ -319,7 +319,7 @@ void ConfigureGammaForLevel(void) {
 // AUTOINJECT
 void psiPostDraw(void) {
     d3dSetupViewportDimensions(0, 0, 640, 480);
-    if (ScreenBlur != 0 && MenuManager_GetStatus() != 3)
+    if (ScreenBlur != 0 && MenuManager_GetStatus() != MENU_STATUS_PAUSE)
         psiBlurScreen(ScreenBlur);
     d3dSwap();
     dsndUpdateVoices();
@@ -601,7 +601,9 @@ void psiDrawShadow(float x, float y, float z, void *obj, celglist_tag *glist) {
     to.z = z;
     uint triangles = 0;
     const float *ground = (const float *)Collide_CylinderTris(&from, &to, 1.0f, ((obj_tag *)obj)->inCel,
-                                                              &triangles, 0x307, 4);
+                                                              &triangles, HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS |
+                                                              HITMASK_SKIP_HIDDEN | HITMASK_SKIP_DRONES |
+                                                              HITMASK_SKIP_BULLETS, 4);
     if (ground == NULL || (int)triangles < 1)
         return;
 

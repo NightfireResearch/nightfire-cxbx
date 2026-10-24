@@ -224,7 +224,7 @@ bool __cdecl FakeDying(obj_tag *obj) {
         return true;
     if (drone->health <= 0.0f)
         return true;
-    return obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & 1);
+    return obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & OBJFLAG_DELETE);
 }
 
 void InstallFakes() {

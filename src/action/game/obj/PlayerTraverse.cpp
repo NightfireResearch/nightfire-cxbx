@@ -131,7 +131,7 @@ void Player_Climb(BLData *blData, obj_tag *player) {
         player->rotation.y = (float)((double)blData->attachedToSpecialMovementItem->rotation.y + PI - HALF_PI);
     if (difference < -HALF_PI)
         player->rotation.y = blData->attachedToSpecialMovementItem->rotation.y + THREE_HALF_PI;
-    if (!(player->animState->animFlags & 1))
+    if (!(player->animState->animFlags & ANIM_SCOPED))
         player->rotation.y = (float)(difference * 0.2f + player->rotation.y);
 
     Player_Move(blData, player, 0.0f);
@@ -141,7 +141,8 @@ void Player_Climb(BLData *blData, obj_tag *player) {
     Vec_Subtract(&player->position, &blData->attachedToSpecialMovementItem->lastPosition, &player->position);
 
     char playerNum = blData->playerNum;
-    if (Input_Action(playerNum, ACTION_JUMP, 1) && Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1) < 0.05f) {
+    if (Input_Action(playerNum, ACTION_JUMP, ACTION_HELD) &&
+        Input_Actionf(blData->playerNum, ACTION_WALK_F_B, ACTION_HELD) < 0.05f) {
         blData->movement.z = (float)((double)0.2f / FRAME_RATE_DIV * -0.25f + blData->movement.z);
         Player_LeaveLadder(player, blData);
         return;
@@ -161,7 +162,7 @@ void Player_Climb(BLData *blData, obj_tag *player) {
         return;
     }
 
-    float climb = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, 1);
+    float climb = Input_Actionf(blData->playerNum, ACTION_WALK_F_B, ACTION_HELD);
     char flags = player->animState->animFlags;
     if ((flags & ANIM_CONTACT_ABOVE) && climb > 0.0f)
         climb = 0.0f;
@@ -215,7 +216,8 @@ void Player_SSGrapple(BLData *blData, obj_tag *player) {
     switch ((ushort)blData->grappleState) {
         case GRAPPLE_PULLING:
             if (MPSettings.isMultiplayer != 0 &&
-                !Collide_LineOfSight(&player->position, point, player->inCel, player, blData->grappleObj, 8)) {
+                !Collide_LineOfSight(&player->position, point, player->inCel, player, blData->grappleObj,
+                                     HITMASK_SKIP_NO_CONTACT)) {
                 blData->grappleState = GRAPPLE_LET_GO;
             }
             else if ((player->animState->animFlags & ANIM_CONTACT_FLOOR) && blData->grappleWait == 0) {
@@ -238,7 +240,7 @@ void Player_SSGrapple(BLData *blData, obj_tag *player) {
             break;
 
         case GRAPPLE_HOLDING:
-            if (!Input_Action(blData->playerNum, ACTION_FIRE, 1))
+            if (!Input_Action(blData->playerNum, ACTION_FIRE, ACTION_HELD))
                 blData->grappleState = GRAPPLE_LET_GO;
             break;
 
@@ -259,7 +261,7 @@ void Player_SSGrapple(BLData *blData, obj_tag *player) {
         double y = (double)Mat_Position(blData->grappleObj->transformMatrix)->y + player->position.y;
         player->position.y = (float)y;
         player->position.y = (float)(y - blData->grappleObj->lastPosition.y);
-        if (blData->grappleObj->flags & 1)
+        if (blData->grappleObj->flags & OBJFLAG_DELETE)
             blData->grappleObj = NULL;
     }
 }
@@ -459,7 +461,7 @@ void Player_Wire(obj_tag *player) {
     sAnimScript_tag *script = NULL;
     Vec_Zero(&blData->field_0x3c);
     WIRE *wireData = (WIRE *)blData->attachedToSpecialMovementItem->extraObjectData;
-    Music_Event(0xd, 1);
+    Music_Event(MUSICEV_TRAVERSE, 1);
     if (wireData->channel != 0)
         switch_channels[wireData->channel] = 1;
 
@@ -495,7 +497,7 @@ void Player_Wire(obj_tag *player) {
     if (blData->traverseStep != ROPE_GRAB)
         blData->ropeFatigue = (float)(100.0f / ((double)_FRAME_RATE * 30.0f) + blData->ropeFatigue);
 
-    if (Input_Action(blData->playerNum, ACTION_JUMP, 4) || blData->ropeFatigue > 100.0f) {
+    if (Input_Action(blData->playerNum, ACTION_JUMP, ACTION_PRESSED) || blData->ropeFatigue > 100.0f) {
         blData->previousSubState = player->subState;
         Player_ChangeSubState(player, MovementType_Walk);
         Player_SetCamMode(blData, CamMode_Default);
@@ -509,7 +511,7 @@ void Player_Wire(obj_tag *player) {
         return;
     }
 
-    float stick = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
+    float stick = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, ACTION_HELD);
     short step;
     if (stick < 0.0f && atEndA)
         step = ROPE_STILL;
@@ -679,7 +681,9 @@ void Player_CollCreepWall(obj_tag *player, BLData *blData, obj_tag *wall) {
     Vec_Copy(&at, &below);
     below.y = below.y - 5.0f;
     HITDATA_tag *hitList = NULL;
-    if (Collide_RayIntersect(&at, &below, player->inCel, player, wall, &hitList, 0, 0x62d, 0))
+    if (Collide_RayIntersect(&at, &below, player->inCel, player, wall, &hitList, 0,
+                             HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT |
+                             HITMASK_SKIP_MASKABLE | HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS, 0))
         player->position.y = hitList->hitPosition.y + 1.0f;
     Collide_FreeHitList(&hitList);
 
@@ -708,7 +712,7 @@ void Player_Creep(BLData *blData, obj_tag *player) {
     sAnimScript_tag *script = NULL;
     CREEPWALL *wallData = (CREEPWALL *)blData->attachedToSpecialMovementItem->extraObjectData;
     viewer_tag *viewer = glb_viewer[blData->playerNum];
-    Music_Event(0xd, 1);
+    Music_Event(MUSICEV_TRAVERSE, 1);
     if (wallData->channel != 0)
         switch_channels[wallData->channel] = 1;
 
@@ -734,7 +738,7 @@ void Player_Creep(BLData *blData, obj_tag *player) {
     player->position.x = (float)(FSin(facing) * Extended(CREEP_STAND_OFF) + Extended(at.x));
     player->position.z = (float)(FCos(player->rotation.y) * Extended(CREEP_STAND_OFF) + Extended(at.z));
 
-    float stick = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, 1);
+    float stick = Input_Actionf(blData->playerNum, ACTION_WALK_L_R, ACTION_HELD);
     short direction = CREEP_STILL;
     float magnitude = stick < 0.0f ? -stick : stick;
     if (!(magnitude < 0.5f)) {

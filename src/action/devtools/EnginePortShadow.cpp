@@ -392,13 +392,13 @@ void __cdecl FakeDelete(obj_tag *obj) {
     if (obj->nextObject != NULL)
         obj->nextObject->prevObject = obj->prevObject;
     obj->objectType = OBJECTTYPE_DELETED;
-    obj->flags &= ~1;
+    obj->flags &= ~OBJFLAG_DELETE;
 }
 
 void __cdecl FakeUpdate(obj_tag *obj) {
     ShadowLog("update(%x)", W(obj));
     if (R(4) == 0)
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     if (R(3) == 0)
         obj->transformFlags |= TRANSFORM_MOVED;
 }
@@ -750,12 +750,12 @@ void RandomCel(cel_tag *cel) {
     RandomBytes(cel, sizeof(*cel));
     static const uint kKinds[] = {0xc047, 0xc023, 0x8017, 0x8018, 0x8019, 0x1234};
     cel->bitsFromPlacementTag = kKinds[R(COUNT(kKinds))] | (R(2) ? CEL_ROOM : 0);
-    PlainVector(&cel->someMin, 40.0f);
-    cel->someMax.x = cel->someMin.x + Plain(0.0f, 60.0f);
-    cel->someMax.y = cel->someMin.y + Plain(0.0f, 60.0f);
-    cel->someMax.z = cel->someMin.z + Plain(0.0f, 60.0f);
+    PlainVector(&cel->boxMin, 40.0f);
+    cel->boxMax.x = cel->boxMin.x + Plain(0.0f, 60.0f);
+    cel->boxMax.y = cel->boxMin.y + Plain(0.0f, 60.0f);
+    cel->boxMax.z = cel->boxMin.z + Plain(0.0f, 60.0f);
     if (R(12) == 0)
-        cel->someMin.x = NAN;
+        cel->boxMin.x = NAN;
     PlainVector(&cel->sphere, 30.0f);
     cel->sphereRadius = Value(0.0f, 50.0f);
     PlainVector(&cel->position, 30.0f);
@@ -764,7 +764,7 @@ void RandomCel(cel_tag *cel) {
     cel->firstObject = R(2) ? AnyObj() : NULL;
     cel->portals = R(3) == 0 ? NULL : &world.portals[R(PORTALS)];
     cel->childCel = R(2) ? AnyCel() : NULL;
-    cel->someSwitchChannel = (uchar)R(6);
+    cel->ambientChannel = (uchar)R(6);
     cel->env = NULL;
 }
 
@@ -1212,9 +1212,9 @@ uint32_t RunFindCel(bool original) {
     _VECTOR *pos = &world.v[R(2)];
     if (R(2)) {
         cel_tag *cel = AnyCel();
-        pos->x = Plain(cel->someMin.x, cel->someMax.x);
-        pos->y = Plain(cel->someMin.y, cel->someMax.y);
-        pos->z = Plain(cel->someMin.z, cel->someMax.z);
+        pos->x = Plain(cel->boxMin.x, cel->boxMax.x);
+        pos->y = Plain(cel->boxMin.y, cel->boxMax.y);
+        pos->z = Plain(cel->boxMin.z, cel->boxMax.z);
     }
     world_tag *w = &world.worlds[R(3) == 0 ? 1 : 0];
     return W(CDECL_RUN(0x00020c30, build_FindCel, cel_tag *(__cdecl *)(_VECTOR *, world_tag *), pos, w));
@@ -1233,9 +1233,9 @@ uint32_t RunLinkToRoom(bool original) {
     obj_tag *obj = AnyObj();
     if (R(2)) {
         cel_tag *cel = AnyCel();
-        obj->transformMatrix.m[12] = Plain(cel->someMin.x, cel->someMax.x);
-        obj->transformMatrix.m[13] = Plain(cel->someMin.y, cel->someMax.y);
-        obj->transformMatrix.m[14] = Plain(cel->someMin.z, cel->someMax.z);
+        obj->transformMatrix.m[12] = Plain(cel->boxMin.x, cel->boxMax.x);
+        obj->transformMatrix.m[13] = Plain(cel->boxMin.y, cel->boxMax.y);
+        obj->transformMatrix.m[14] = Plain(cel->boxMin.z, cel->boxMax.z);
         obj->objGraphics = NULL;
         obj->transformFlags |= TRANSFORM_MATRIX_PLACED;
     }
@@ -1248,9 +1248,9 @@ uint32_t RunLinkObjects(bool original) {
     for (int i = 0; i < CELS; i++) {
         if (R(2)) {
             cel_tag *room = AnyCel();
-            world.cels[i].sphere.x = Plain(room->someMin.x, room->someMax.x);
-            world.cels[i].sphere.y = Plain(room->someMin.y, room->someMax.y);
-            world.cels[i].sphere.z = Plain(room->someMin.z, room->someMax.z);
+            world.cels[i].sphere.x = Plain(room->boxMin.x, room->boxMax.x);
+            world.cels[i].sphere.y = Plain(room->boxMin.y, room->boxMax.y);
+            world.cels[i].sphere.z = Plain(room->boxMin.z, room->boxMax.z);
         }
     }
     cel_tag *first = R(6) == 0 ? NULL : &world.cels[R(3)];

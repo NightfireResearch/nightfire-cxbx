@@ -338,7 +338,7 @@ bool __cdecl DroneDying(obj_tag *obj) {
         return true;
     if (drone->health <= 0.0f)
         return true;
-    return obj->objectType == 0x11 || (obj->flags & 1);
+    return obj->objectType == 0x11 || (obj->flags & OBJFLAG_DELETE);
 }
 
 void InstallFakes() {
@@ -652,7 +652,7 @@ void RandomWorld() {
     // The camera
     memset(world.viewer, 0, sizeof(world.viewer));
     RandomVector(&Viewer()->pos, 30.0f);
-    Viewer()->someCel = Cel(ShadowRand(3));
+    Viewer()->cel = Cel(ShadowRand(3));
     for (int v = 0; v < 11; v++)
         glb_viewer[v] = Viewer();
     glb_players[0] = &world.player;

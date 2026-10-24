@@ -213,16 +213,18 @@ void GunImp_Update(obj_tag *gunObj) {
 
     if ((short)gunObj->curState != 1)
         return;
-    if (Input_Action(gunObj->subState, ACTION_RELOAD, 4)) {
+    if (Input_Action(gunObj->subState, ACTION_RELOAD, ACTION_PRESSED)) {
         GunImp_Deactivate(gunObj);
         return;
     }
 
     gunImp->yawTarget = (float)(gunImp->yawTarget -
-                                (double)Input_Actionf(gunObj->subState, ACTION_TURRET_AIM_X, 1) * FRAME_RATE_MUL * 0.015f);
+                                (double)Input_Actionf(gunObj->subState, ACTION_TURRET_AIM_X,
+                                                      ACTION_HELD) * FRAME_RATE_MUL * 0.015f);
     gunImp->unknown64 = 0.0f;
     gunImp->pitchTarget = (float)(gunImp->pitchTarget -
-                                  (double)Input_Actionf(gunObj->subState, ACTION_TURRET_AIM_Y, 1) * FRAME_RATE_MUL * 0.015f);
+                                  (double)Input_Actionf(gunObj->subState, ACTION_TURRET_AIM_Y,
+                                                        ACTION_HELD) * FRAME_RATE_MUL * 0.015f);
     float pitchTarget;
     if (gunImp->pitchTarget < -HALF_PI)
         pitchTarget = -HALF_PI;
@@ -273,10 +275,11 @@ void GunImp_Update(obj_tag *gunObj) {
         rot.y = 0.0f;
         rot.x = 0.0f;
         rot.z = (float)Float_FRand(TWO_PI);
-        Gas_Init(gunObj->inCel, &at, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x484030e4, 1, 0x80);
+        Gas_Init(gunObj->inCel, &at, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, GAS_WIND, 0x484030e4, 1, 0x80);
     }
 
-    if (Input_Action(gunObj->subState, ACTION_FIRE, 1) && gunImp->refireTimer <= 0.0f && !gunImp->overheated) {
+    if (Input_Action(gunObj->subState, ACTION_FIRE, ACTION_HELD) && gunImp->refireTimer <= 0.0f &&
+        !gunImp->overheated) {
         int sound;
         GUNTYPE *firing = &GunTypes[gunImp->gunType];
         if (firing->weapon == GUNIMP_MINIGUN) {
@@ -314,17 +317,19 @@ void GunImp_Update(obj_tag *gunObj) {
         int weapon = GunTypes[gunImp->gunType].weapon;
         if (weapon != GUNIMP_LASER_A && weapon != GUNIMP_LASER_B) {
             GunImp_Flash(&muzzle, HT_Entity_Generic_muzzle, 1, true, gunObj->inCel);
-            Light_Create(&from, 0xff, 0x60, 0, 9.0f, 0, 0, 1, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0, 0xffff);
+            Light_Create(&from, 0xff, 0x60, 0, 9.0f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0,
+                         0xffff);
             return;
         }
 
         GunImp_Flash(&from, HT_Entity_taser_muzzle, 1, true, gunObj->inCel);
-        Light_Create(&from, 0, 0xff, 0xff, 9.0f, 0, 0, 1, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0, 0xffff);
+        Light_Create(&from, 0, 0xff, 0xff, 9.0f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(1.0f) + 1.5f), 0, 0, 0,
+                     0xffff);
         _VECTOR end;
         auxVec_AddMulR32(&from, &dir, 1000.0f, &end);
         // Uninitialised in the original; Collide_RayIntersect sets it
         HITDATA_tag *hits = NULL;
-        if (Collide_RayIntersect(&from, &end, gunObj->inCel, gunObj, NULL, &hits, 0, 8, 0))
+        if (Collide_RayIntersect(&from, &end, gunObj->inCel, gunObj, NULL, &hits, 0, HITMASK_SKIP_NO_CONTACT, 0))
             Vec_Copy(&hits->hitPosition, &end);
         obj_tag *beam = GunImp_Flash(&from, HT_Entity_lazer_Big, 0, false, gunObj->inCel);
         beam->parent = gunObj;
@@ -347,7 +352,7 @@ void GunImp_Update(obj_tag *gunObj) {
         return;
     }
 
-    if (Input_Action(gunObj->subState, ACTION_FIRE, 1) && !gunImp->overheated)
+    if (Input_Action(gunObj->subState, ACTION_FIRE, ACTION_HELD) && !gunImp->overheated)
         return;
     if (gunImp->firingSound != NULL) {
         if (GunTypes[gunImp->gunType].weapon == GUNIMP_MINIGUN)

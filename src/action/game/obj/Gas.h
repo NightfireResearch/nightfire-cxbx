@@ -3,6 +3,22 @@
 
 #include "../../actionhelpers.h"
 
+// The kinds of smoke gases_smoke knows
+enum GasKind {
+    GAS_SLOWING = 0,            // rises, slowing down, to the cel's ceiling
+    GAS_GROWING = 1,            // only grows
+    GAS_STILL = 2,
+    GAS_RISING = 3,             // rises faster, to the ceiling
+    GAS_FALLING = 4,            // falls, slowing sideways
+    GAS_GROWING5 = 5,
+    GAS_RISING6 = 6,
+    GAS_WIND = 7,               // blown by the cel's wind
+    GAS_SINKING = 8,
+    GAS_SOURCE = 9,             // hidden; gives off GAS_SINKING smoke every fourth frame once 20 frames old
+    GAS_WIND_SOURCE = 10,       // hidden; gives off GAS_WIND smoke, rising
+    GAS_FADING = 11,            // rises, fading out over its last 30 frames
+};
+
 #pragma pack(push, 1)
 
 // A puff of smoke's extra data (OBJECTTYPE_GAS, 0x3c bytes; 0x54 for kinds 9 and 10, which give off smoke of their
@@ -15,7 +31,7 @@ typedef struct GAS_tag {
     float spin;                 // 0x2c - about z, a frame
     float scaleStep;            // 0x30 - a frame
     float life;                 // 0x34 - frames
-    uchar kind;                 // 0x38
+    uchar kind;                 // 0x38 - GasKind
     uchar _pad39[3];
     // Kinds 9 and 10 only: the smoke they give off
     uint colour0;               // 0x3c

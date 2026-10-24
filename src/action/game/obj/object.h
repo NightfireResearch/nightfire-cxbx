@@ -198,7 +198,7 @@ typedef struct obj_tag {
     char drawnCountdown;   // 0xd8 - View_AddObjects sets 2, the object update counts it down: non-zero = drawn in
                            //        the last two ticks
     char unknown_0xd9;     // 0xd9 - bits: 1 player and drones, 2 bullets, 8 doors; tested by Collide_PickObj
-    char flags; // (1 == Marked for deletion or resetting)
+    char flags;            // 0xda - ObjectFlags
     char objectType; // Actually ObjectType but can't tell the compiler to make it just one byte
     uchar ambientR;        // 0xdc - the ambient light, eased towards its cel's (Lights_CalcAmbientLight)
     uchar ambientG;
@@ -211,9 +211,18 @@ typedef struct obj_tag {
 } obj_tag;
 #pragma pack(pop)
 
+// obj_tag::flags
+enum ObjectFlags {
+    OBJFLAG_DELETE = 0x1,           // deleted (or reset) by the object list's next update
+    OBJFLAG_NEW = 0x2,              // set by control_init_object; the update works out its world sphere and ambient
+                                    // light once, then clears it
+    OBJFLAG_RIGGED = 0x4,           // an animated object whose skin has rigged bodies, and its discrete parts
+    OBJFLAG_FULL_CHARACTER = 0x8,   // an animated object with ANIMOBJ_FULL_CHARACTER
+};
+
 // obj_tag::effectFlags: how it is drawn, lit and collided with. The low bits come from its model
 // (celglist_tag::applyFlagsToObject, which Control_SetGList copies over all but EFFECT_STRADDLES_CELS and the two
-// forced-list bits); the same word gives a cel its flags (cel_tag::flags84, CEL_*). EFFECT_BITn: no reader.
+// forced-list bits); the same word gives a cel its flags (cel_tag::flags, CelFlags). EFFECT_BITn: no reader.
 typedef enum {
     EFFECT_BACK_TO_FRONT = 0x1,                 // drawn in list 1, sorted far to near
     EFFECT_SKY_AT_EYE = 0x2,                    // a sky model: placed at the eye
@@ -222,16 +231,16 @@ typedef enum {
     EFFECT_HIDDEN = 0x10,                       // not drawn, and no line of sight stops at it (Script_HideObj)
     EFFECT_NO_COLLISION = 0x20,                 // never a collision candidate, never in ForcedList
     EFFECT_NO_CONTACT = 0x40,                   // its hits are HIT_NO_CONTACT: bullets pass, nothing stands on it
-    EFFECT_PLACED_LIGHTS = 0x80,                // lit by light types 0 and 2: the map's, and the searchlight's
-    EFFECT_NO_TRANSIENT_LIGHTS = 0x100,         // not lit by type 1: muzzle flashes, explosions, night vision's
+    EFFECT_PLACED_LIGHTS = 0x80,                // lit by LIGHT_PLACED and LIGHT_CARRIED lights
+    EFFECT_NO_TRANSIENT_LIGHTS = 0x100,         // not lit by LIGHT_TRANSIENT lights
     EFFECT_BIT9 = 0x200,
-    EFFECT_XRAY_ONLY = 0x400,                   // drawn only in vision mode 2 (the HUD's xray)
+    EFFECT_XRAY_ONLY = 0x400,                   // drawn only in VISION_XRAY
     EFFECT_CEL_LIT = 0x800,                     // its ambient eases to its cel's, and tints it
-    EFFECT_MASKABLE = 0x1000,                   // skipped by the tests whose mask has 0x20
+    EFFECT_MASKABLE = 0x1000,                   // skipped by the tests with HITMASK_SKIP_MASKABLE
     EFFECT_DRAW_LAST = 0x2000,                  // drawn in list 2, after lists 0 and 1
     EFFECT_STRADDLES_CELS = 0x8000,             // drawn by View_AddForcedObjects (Controls_StraddleTest)
     EFFECT_SUNLIT = 0x10000,                    // its ambient doubled while player 0 can see the sun
-    EFFECT_DIM_IN_NIGHT_VISION = 0x20000,       // its alpha a quarter in vision mode 1 (night vision)
+    EFFECT_DIM_IN_NIGHT_VISION = 0x20000,       // its alpha a quarter in VISION_NIGHT
     EFFECT_NOT_IN_VIEW_4 = 0x40000,             // the model's: Control_SetGList takes view 4 out of displayMask
     EFFECT_FLASHES = 0x80000,                   // its tint times FlashMod
     EFFECT_FORCED_LISTED = 0x10000000,          // in ForcedList

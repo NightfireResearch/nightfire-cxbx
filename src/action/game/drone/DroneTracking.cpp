@@ -22,9 +22,6 @@
 
 // The skin class whose head follows only the player
 
-// The bone AnimObjectSetAiming is handed when the aiming stops
-#define AIM_BONE 5
-
 // Whether the drone's anim aims: the DRONE_AIM_ALWAYS rows, and the DRONE_AIM_FROM_HALF_WAY rows once the script is
 // half way through (or, outside multiplayer, as the anim's events say). Never without an anim script, or for a
 // recovering bot.
@@ -62,7 +59,7 @@ void NDrone2_DoAiming(char aim, DCVars_tag *dcv) {
         if (obj->animState->animObj.aimTarget != drone->opponent || !AnimObjectIsAiming(obj))
             AnimObjectSetAiming(obj, &drone->targetPos, 100.0f, 0.2f, 0, 0);
     } else if (AnimObjectIsAiming(obj)) {
-        AnimObjectSetAiming(obj, NULL, 100.0f, 0.2f, 1, AIM_BONE);
+        AnimObjectSetAiming(obj, NULL, 100.0f, 0.2f, 1, BONE_HEAD);
     }
 }
 

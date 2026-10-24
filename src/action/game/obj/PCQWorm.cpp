@@ -81,7 +81,7 @@ void PCQWorm_Update(obj_tag *gameObj) {
                     KeyCodes[qWorm->keyCodeNum].asciiDigit[2],
                     KeyCodes[qWorm->keyCodeNum].asciiDigit[3]
                 );
-      Text_AddMsg('\0','\0',1,str,0,0xb4);
+      Text_AddMsg('\0','\0',TXTMSG_INFO,str,0,0xb4);
       KeyCodes[qWorm->keyCodeNum].discovered = true;
     }
     

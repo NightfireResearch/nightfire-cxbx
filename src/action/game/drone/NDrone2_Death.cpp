@@ -287,7 +287,7 @@ bool NDrone2_DSTATE_Death_Anim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
                 drone->stateScratch = 0;
             }
             NDrone2_Enable(0, dcv->drone);
-            dcv->gameObj->flags |= 1;
+            dcv->gameObj->flags |= OBJFLAG_DELETE;
         }
         return true;
 
@@ -441,7 +441,7 @@ bool NDrone2_DSTATE_Dead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
     case DRONE_MSG_Update:
         if (gameObj->drawnCountdown == 0) {
             NDrone2_Enable(0, dcv->drone);
-            dcv->gameObj->flags |= 1;
+            dcv->gameObj->flags |= OBJFLAG_DELETE;
         }
         DroneFunc_DeadDrone(dcv);
         return true;
@@ -484,7 +484,7 @@ bool NDrone2_DSTATE_Fade(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj, Ms
     case DRONE_MSG_Update:
         if (gameObj->drawnCountdown == 0 || NDrone2_FadeOut(dcv)) {
             NDrone2_Enable(0, dcv->drone);
-            dcv->gameObj->flags |= 1;
+            dcv->gameObj->flags |= OBJFLAG_DELETE;
         }
         DroneFunc_DeadDrone(dcv);
         return true;
@@ -514,7 +514,7 @@ bool NDrone2_DSTATE_FadeFast(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
     case DRONE_MSG_Update:
         if (gameObj->drawnCountdown == 0 || NDrone2_FadeOut(dcv)) {
             NDrone2_Enable(0, dcv->drone);
-            dcv->gameObj->flags |= 1;
+            dcv->gameObj->flags |= OBJFLAG_DELETE;
         }
         return true;
 

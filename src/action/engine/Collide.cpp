@@ -155,20 +155,20 @@ void Collide_Sort(HITDATA_tag **list) {
     prev->next = NULL;
 }
 
-// Whether the test passes through the hit's material (and marks it HIT_NONE): the mask's 0x800 the material's 0x40,
-// 1 surfaces 13 and 14, 2 surface 16, 8 a hit that makes no contact
+// Whether the test passes through the hit's material (and marks it HIT_NONE)
 // AUTOINJECT
 bool Intersect_CheckIfFlagsMatch(uchar material, uchar hitFlags, ushort mask, float *dist) {
-    if ((material & 0x40) && (mask & 0x800))
+    if ((material & MATERIAL_PASSABLE) && (mask & HITMASK_SKIP_PASSABLE))
         *dist = HIT_NONE;
     uint flags = hitFlags;
-    if (material & 0xc0)
+    if (material & (MATERIAL_PASSABLE | MATERIAL_PASSABLE_AT_RANDOM))
         flags |= HIT_NO_CONTACT;
-    if ((mask & 1) && ((material & 0x3f) == 13 || (material & 0x3f) == 14))
+    if ((mask & HITMASK_SKIP_WATER) &&
+        ((material & MATERIAL_MASK) == MATERIAL_DEEPWATER || (material & MATERIAL_MASK) == MATERIAL_SHALWATER))
         *dist = HIT_NONE;
-    if ((mask & 2) && (material & 0x3f) == 16)
+    if ((mask & HITMASK_SKIP_GLASS) && (material & MATERIAL_MASK) == MATERIAL_GLASS)
         *dist = HIT_NONE;
-    if ((mask & 8) && (flags & HIT_NO_CONTACT)) {
+    if ((mask & HITMASK_SKIP_NO_CONTACT) && (flags & HIT_NO_CONTACT)) {
         *dist = HIT_NONE;
         return true;
     }
@@ -510,20 +510,22 @@ void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
         return;
     if (test->tester != NULL && (test->tester->unknown_0xd9 & 1) && (obj->unknown_0xd9 & 2))
         return;
-    uint skip = 0x20;
-    if (test->mask & 0x20)
-        skip |= 0x1000;
-    if (test->mask & 8)
-        skip |= 0x40;
-    if (test->mask & 4)
-        skip |= 0x10;
+    uint skip = EFFECT_NO_COLLISION;
+    if (test->mask & HITMASK_SKIP_MASKABLE)
+        skip |= EFFECT_MASKABLE;
+    if (test->mask & HITMASK_SKIP_NO_CONTACT)
+        skip |= EFFECT_NO_CONTACT;
+    if (test->mask & HITMASK_SKIP_HIDDEN)
+        skip |= EFFECT_HIDDEN;
     if (obj->effectFlags & skip)
         return;
-    if ((test->mask & 0x400) && (obj->objectType == OBJECTTYPE_PLAYER || obj->objectType == OBJECTTYPE_DEAD_PLAYER))
+    if ((test->mask & HITMASK_SKIP_PLAYERS) &&
+        (obj->objectType == OBJECTTYPE_PLAYER || obj->objectType == OBJECTTYPE_DEAD_PLAYER))
         return;
-    if ((test->mask & 0x100) && (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
+    if ((test->mask & HITMASK_SKIP_DRONES) &&
+        (obj->objectType == OBJECTTYPE_DRONE || obj->objectType == OBJECTTYPE_DEAD_DRONE))
         return;
-    if ((test->mask & 0x200) && obj->objectType == OBJECTTYPE_BULLET)
+    if ((test->mask & HITMASK_SKIP_BULLETS) && obj->objectType == OBJECTTYPE_BULLET)
         return;
     if (test->type != HITTEST_SPHERE_ONE_SIDED && !(obj->transformFlags & TRANSFORM_ANIMATED) &&
         (obj->objGraphics == NULL || obj->objGraphics->colldata == NULL))
@@ -557,9 +559,8 @@ void Collide_PickObj(HITTEST_tag *test, obj_tag *obj, obj_tag *tester) {
     }
 }
 
-// The broad phase: in each cel the test reaches, the cels chained from it (but with mask 0x80), its objects (but
-// with mask 0x10) and the cel itself (but with mask 0x40), then the forced objects. The candidates go to the
-// tester's hit list.
+// The broad phase: in each cel the test reaches, the cels chained from it, its objects and the cel itself (each
+// but where the mask skips it), then the forced objects. The candidates go to the tester's hit list.
 // AUTOINJECT
 void Collide_Pick(HITTEST_tag *test) {
     obj_tag *tester = test->tester;
@@ -584,19 +585,19 @@ void Collide_Pick(HITTEST_tag *test) {
     HITTEST_tag copy = *test;
     for (uint i = 0; i < count; i++) {
         cel_tag *room = cels[i];
-        if (!(test->mask & 0x80)) {
+        if (!(test->mask & HITMASK_SKIP_CHILD_CELS)) {
             for (cel_tag *cel = room->childCel; cel != NULL; cel = cel->childCel) {
                 celglist_tag *glist = cel->glist;
-                if (glist == NULL || (cel->flags84 & CEL_NO_COLLISION) || glist->colldata == NULL)
+                if (glist == NULL || (cel->flags & CEL_NO_COLLISION) || glist->colldata == NULL)
                     continue;
-                if ((cel->flags84 & CEL_MASKABLE) && (test->mask & 0x20))
+                if ((cel->flags & CEL_MASKABLE) && (test->mask & HITMASK_SKIP_MASKABLE))
                     continue;
                 float dist;
                 switch (test->type) {
                 case HITTEST_RAY_BOXES:
                 case HITTEST_RAY:
                     if (cel->bitsFromPlacementTag & CEL_WORLD_SPACE) {
-                        if (Intersect_RayBox(test, &cel->someMin, &cel->someMax, &dist))
+                        if (Intersect_RayBox(test, &cel->boxMin, &cel->boxMax, &dist))
                             Vec_Copy(&test->dir, &Coll_AddHitToList(&tester->hitList, dist, cel, NULL)->hitDirection);
                     } else {
                         Vec_Copy(&cel->sphere, &copy.sphere);
@@ -615,7 +616,7 @@ void Collide_Pick(HITTEST_tag *test) {
                 case HITTEST_SPHERE:
                 case HITTEST_SPHERE_BOXES:
                     if (cel->bitsFromPlacementTag & CEL_WORLD_SPACE) {
-                        if (Intersect_SphereBox(&test->sphere, test->sphereRadius, &cel->someMin, &cel->someMax))
+                        if (Intersect_SphereBox(&test->sphere, test->sphereRadius, &cel->boxMin, &cel->boxMax))
                             Coll_AddHitToList(&tester->hitList, 1.0f, cel, NULL);
                     } else {
                         _VECTOR difference;
@@ -627,17 +628,17 @@ void Collide_Pick(HITTEST_tag *test) {
                 }
             }
         }
-        if (!(test->mask & 0x10)) {
+        if (!(test->mask & HITMASK_SKIP_OBJECTS)) {
             for (obj_tag *obj = room->firstObject; obj != NULL; obj = obj->nextInCel) {
                 if (!(obj->effectFlags & EFFECT_IN_FORCED_LIST))
                     Collide_PickObj(test, obj, tester);
             }
         }
         // The cel's own geometry sorts first, in the order the cels were found
-        if (!(test->mask & 0x40) && !(room->flags84 & CEL_NO_COLLISION) && room->glist != NULL)
+        if (!(test->mask & HITMASK_SKIP_ROOMS) && !(room->flags & CEL_NO_COLLISION) && room->glist != NULL)
             Coll_AddHitToList(&tester->hitList, (float)((double)(int)i * 0.1f - 1000.0f), room, NULL);
     }
-    if (!(test->mask & 0x10)) {
+    if (!(test->mask & HITMASK_SKIP_OBJECTS)) {
         for (LLNODE_tag *node = ForcedList.head; node != NULL && node != node->next; node = node->next)
             Collide_PickObj(test, (obj_tag *)node, tester);
     }
@@ -660,7 +661,7 @@ bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
             COLLJOINT_tag *joint = &joints[i];
             if (!Intersect_PointOOBox(&joint->m, &joint->half, &test->pos, test->radius))
                 continue;
-            hit->materialType = 0;
+            hit->materialType = MATERIAL_NONE;
             hit->hitBoneIdx = joint->joint;
             hit->dist = test->radius;
             hit->dmgAmt = test->damage;
@@ -683,7 +684,7 @@ bool Collide_Jointy(HITTEST_tag *test, HITDATA_tag *hit) {
             Vec_Negate(&joint->half, &boxMin);
             if (!Intersect_RayBox(&copy, &boxMin, &joint->half, &t))
                 continue;
-            hit->materialType = 0;
+            hit->materialType = MATERIAL_NONE;
             hit->hitBoneIdx = joint->joint;
             hit->dmgAmt = test->damage;
             if (t == 0.0f) {
@@ -755,7 +756,7 @@ bool Collide_Intersect(HITTEST_tag *test, HITDATA_tag *hit, ushort flags) {
     cel_tag *cel = hit->hitCel;
     if (cel != NULL) {
         Ident = (cel->bitsFromPlacementTag & CEL_WORLD_SPACE) != 0;
-        if (cel->flags84 & CEL_NO_CONTACT)
+        if (cel->flags & CEL_NO_CONTACT)
             hit->flags |= HIT_NO_CONTACT;
         if (!Ident)
             RotTransMatrix(&cel->rotation, &cel->position, &mtx);
@@ -1173,9 +1174,10 @@ void Intersect_CylTriGeom(HITTEST_tag *test, HITDATA_tag *hit) {
     for (uint b = 0; b < BoxCnt; b++) {
         uchar *block = coll->dataStartC[ColBoxs[b].box->vertexBlock].raw;
         for (uint t = ColBoxs[b].box->childB; t < (uint)ColBoxs[b].box->triEnd; t++) {
-            if ((test->mask & 1) && ((coll->dataStartD[t] & 0x3f) == 13 || (coll->dataStartD[t] & 0x3f) == 14))
+            if ((test->mask & HITMASK_SKIP_WATER) && ((coll->dataStartD[t] & MATERIAL_MASK) == MATERIAL_DEEPWATER ||
+                                                      (coll->dataStartD[t] & MATERIAL_MASK) == MATERIAL_SHALWATER))
                 continue;
-            if ((test->mask & 2) && (coll->dataStartD[t] & 0x3f) == 16)
+            if ((test->mask & HITMASK_SKIP_GLASS) && (coll->dataStartD[t] & MATERIAL_MASK) == MATERIAL_GLASS)
                 continue;
             // The byte before the material table, for every triangle
             if ((test->flags & 0x10) && (coll->dataStartD[-1] & 0xc0))
@@ -1374,7 +1376,9 @@ bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent,
     Mat_GetUp(&up, mtx);
     cel_tag *cel = build_FindCel(pos, glb_world);
     auxVec_AddMulR32(pos, &up, -3.0f, &below);
-    if (!Collide_RayIntersect(pos, &below, cel, obj, NULL, &hits, 0, 0x1d, 0))
+    if (!Collide_RayIntersect(pos, &below, cel, obj, NULL, &hits, 0,
+                              HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_OBJECTS,
+                              0))
         return false;
     Vec_Copy(&hits->surfaceNormal.normal, &up);
     Vec_Normalise(&up, &up);
@@ -1386,7 +1390,8 @@ bool Collide_PlaceObject(_VECTOR *pos, _MATRIX *mtx, float radius, float extent,
     Collide_FreeHitList(&hits);
     Vec_Copy2(pos, &boxMin, &boxMax);
     uint count;
-    _VECTOR *tris = Collide_CylinderTris(pos, &below, extent, floorCel, &count, 0xd, 1);
+    _VECTOR *tris = Collide_CylinderTris(pos, &below, extent, floorCel, &count,
+                                         HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT, 1);
     for (uint i = 0; i < count * 3; i += 3) {
         _VECTOR *tri = &tris[i];
         plane_equ_tag plane;
@@ -1459,12 +1464,11 @@ void Collide_Update(obj_tag *first) {
                 Vec_Copy(&hit->surfaceNormal.normal, &copy->surfaceNormal.normal);
                 Vec_Copy(&hit->hitDirection, &copy->hitDirection);
             }
-            // The test passes through a hit without contact, material 0x40, at random material 0x80, and with its
-            // flag 0x20 surface 16
-            uint passes = ((hit->materialType & 0x40) || (hit->flags & HIT_NO_CONTACT)) ? 1 : 0;
-            if (hit->materialType & 0x80)
+            // The test passes through a hit without contact, and with its flag 0x20 glass
+            uint passes = ((hit->materialType & MATERIAL_PASSABLE) || (hit->flags & HIT_NO_CONTACT)) ? 1 : 0;
+            if (hit->materialType & MATERIAL_PASSABLE_AT_RANDOM)
                 passes |= Rand_Rand(0x3f) & 1;
-            if ((test->flags & 0x20) && hit->materialType == 16)
+            if ((test->flags & 0x20) && hit->materialType == MATERIAL_GLASS)
                 passes |= 1;
             if (!passes)
                 break;
@@ -1511,7 +1515,7 @@ double Collide_GetDamageNObjects(HITDATA_tag *hitDatas, obj_tag **objectList, us
 // AUTOINJECT
 bool Collide_LineOfSight(_VECTOR *start, _VECTOR *end, cel_tag *cel, obj_tag *obj, obj_tag *ignore, uint mask) {
   HITDATA_tag *hitData = NULL;
-  bool intersects = Collide_RayIntersect(start, end, cel, obj, ignore, &hitData, 0, mask | 4, 0x10);
+  bool intersects = Collide_RayIntersect(start, end, cel, obj, ignore, &hitData, 0, mask | HITMASK_SKIP_HIDDEN, 0x10);
   if (intersects) {
     // Discard the results, we only care whether an intersection occurred
     Collide_FreeHitList(&hitData);

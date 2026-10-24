@@ -133,7 +133,8 @@ obj_tag * Searchlight_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglis
     // Type 2 is the light holder - create dynamic light and move holder far away
     if (spotlight->searchlightType == 2) {
         _VECTOR lightPos = obj->position;
-        light_tag* light = Light_Create(&lightPos, 0xff, 0xff, 0xff, 500.0f, 0, -1, 2, 1.0f, 0, 0, 0, 0xffff);
+        light_tag* light = Light_Create(&lightPos, 0xff, 0xff, 0xff, 500.0f, 0, -1, LIGHT_CARRIED, 1.0f, 0, 0, 0,
+                                        0xffff);
         light->parentObject = obj;       // Back-reference to holder
         spotlight->dynamicLight = light;  // Store the light_tag
 
@@ -158,7 +159,7 @@ static void Searchlight_CleanupLinkedObjects(obj_tag *searchlight) {
             Light_Delete(spotlight->dynamicLight);
         } else {
             // Type 1: Mark projection spot object for deletion
-            spotlight->projectionSpot->flags |= 1;
+            spotlight->projectionSpot->flags |= OBJFLAG_DELETE;
         }
 
         spotlight->projectionSpot = NULL;
@@ -168,13 +169,13 @@ static void Searchlight_CleanupLinkedObjects(obj_tag *searchlight) {
 
     // Clean up volumetric cone
     if (spotlight->volumetricCone != NULL) {
-        spotlight->volumetricCone->flags |= 1;
+        spotlight->volumetricCone->flags |= OBJFLAG_DELETE;
         spotlight->volumetricCone = NULL;
     }
 
     // Clean up lens flare
     if (spotlight->lensFlare != NULL) {
-        spotlight->lensFlare->flags |= 1;
+        spotlight->lensFlare->flags |= OBJFLAG_DELETE;
         spotlight->lensFlare = NULL;
     }
 }
@@ -267,7 +268,8 @@ void Searchlight_Update(obj_tag *searchlight) {
             gasVec.x = 0.0f;
             gasVec.y = 0.0f;
             gasVec.z = Float_FRand(M_2PI);
-            Gas_Init(searchlight->inCel, &searchlight->position, &gasVec, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7,
+            Gas_Init(searchlight->inCel, &searchlight->position, &gasVec, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust,
+                     GAS_WIND,
                      0x48403080, 1, 0x80);
         }
 
@@ -304,7 +306,8 @@ void Searchlight_Update(obj_tag *searchlight) {
         rayEnd.y = sphericalDir.y + searchlight->position.y;
         rayEnd.z = sphericalDir.z + searchlight->position.z;
 
-        bool hit = Collide_RayIntersect(&searchlight->position, &rayEnd, searchlight->inCel, searchlight, NULL, &hitData, 0, 0x18, 0);
+        bool hit = Collide_RayIntersect(&searchlight->position, &rayEnd, searchlight->inCel, searchlight, NULL,
+                                        &hitData, 0, HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_OBJECTS, 0);
 
         if (hit) {
             if (hitData == NULL) {
@@ -409,7 +412,8 @@ void Searchlight_Update(obj_tag *searchlight) {
 
                 // Brighten further if direct line of sight
                 if (componentObj->tweakA != 0) {
-                    bool lineOfSight = Collide_LineOfSight(&glb_viewer[0]->pos, &componentObj->position, player->inCel, componentObj, player, 8);
+                    bool lineOfSight = Collide_LineOfSight(&glb_viewer[0]->pos, &componentObj->position, player->inCel,
+                                                           componentObj, player, HITMASK_SKIP_NO_CONTACT);
                     if (lineOfSight) {
                         componentObj->effectFlags |= EFFECT_DRAW_LAST;
                         componentObj->scale *= 1.5f;

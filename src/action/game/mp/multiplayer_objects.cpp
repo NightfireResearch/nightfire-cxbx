@@ -109,7 +109,7 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
         MPGamePlayer &player = MPGame.players[idx];
         if (player.friendlyFireProtectionLabelTimer == 0) {
             short frames = Ftol(FRAME_RATE_INT * 1.5);
-            Text_AddMsg((char)idx, 0, 1, (char *)Txt_BindLabel(MP_SUPPOSED_TO_PROTECT_TARGET, 0), 0, frames);
+            Text_AddMsg((char)idx, 0, TXTMSG_INFO, (char *)Txt_BindLabel(MP_SUPPOSED_TO_PROTECT_TARGET, 0), 0, frames);
         }
         player.friendlyFireProtectionLabelTimer = Ftol(FRAME_RATE_INT * 1.5);
     }
@@ -144,7 +144,7 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     gameObj->creationTimeFrames = GameState.NumFramesUnpaused;
     SP_UnPause(mpObj->scriptPlayer);
     Explode_Create(gameObj, &gameObj->centrePoint, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_BlastFrames, 500.0f,
-                   0xff, 0xff, 100, NULL, 0);
+                   0xff, 0xff, 100, NULL, MATERIAL_NONE);
     if (attacker >= 0) {
         Action_TranslatedText label = MPSettings.Player[attacker].TeamId == PHOENIX ? MP_PHOENIX_DESTROYED : MP_MI6_DESTROYED;
         sprintf(StatusSpr->text, Txt_BindLabel(label, 0));
@@ -279,5 +279,5 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
     const char *teamName = Txt_BindLabel(mpObj->num == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
     const char *format = Txt_BindLabel(NOTIF_X_GOT_BLUEPRINT_TECH, 0);
     sprintf(str, format, teamName);
-    Text_AddMsg(-1, 0, 4, str, 0, Ftol(FRAME_RATE_INT * 1.5));
+    Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, Ftol(FRAME_RATE_INT * 1.5));
 }

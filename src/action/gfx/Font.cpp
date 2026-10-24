@@ -119,9 +119,6 @@ GPOINT Size_137;
 #define CHAR_ELLIPSIS   0x85    // drawn as .
 #define CHAR_TRADEMARK  0x99    // drawn as a half-size T and M
 
-#define TEXT_HIGHLIGHT  0x785a14ff
-#define TEXT_NORMAL     0x7d6d59ff
-
 // The glyph of c, by binary search of the font's glyphs; NULL outside the font's range. A character between two
 // glyphs gets the one below it. The search does not stop at the table's end (as the original).
 CHARDATA_tag* Font_FindGlyph(uchar c) {

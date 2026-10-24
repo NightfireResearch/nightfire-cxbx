@@ -241,7 +241,7 @@ void Emitter_Update(obj_tag *obj) {
     if ((finished && dead == emitter->def->count) || (emitter->stopping && ended == emitter->def->count)) {
         emitter->finishedFrames = finished + 1;
         if (emitter->finishedFrames > 2)
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
     }
 }
 

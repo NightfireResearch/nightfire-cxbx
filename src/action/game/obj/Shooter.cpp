@@ -34,5 +34,5 @@ void Shooter_Update(obj_tag *obj) {
         dir.y = -1.0f;
     }
     Bullet_init(0, NULL, obj, weapon, &obj->position, &dir, 0xffff);
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
 }

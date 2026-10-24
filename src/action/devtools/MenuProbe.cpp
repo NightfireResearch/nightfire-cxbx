@@ -492,7 +492,7 @@ static int ScriptFrame(void) {
                    canLoad ? "" : ": TIMED OUT waiting for play", state);
             fflush(stdout);
             ResetMap_LevelToLoad((HASHCODE)s.frames, false, true);
-            GameFlow_PushState(7, 60.0f, 0xff);
+            GameFlow_PushState(GAMEFLOW_FADE, 60.0f, 0xff);
             break;
         }
         case Step::TELEPORT: {
@@ -507,7 +507,7 @@ static int ScriptFrame(void) {
             printf("[menuscript] f=%u reload level 0x%08x\n", g_frame, (unsigned)GameState.CurrentLevelHashcode);
             fflush(stdout);
             ResetMap_LevelToLoad(GameState.CurrentLevelHashcode, false, true);
-            GameFlow_PushState(7, 60.0f, 0xff);
+            GameFlow_PushState(GAMEFLOW_FADE, 60.0f, 0xff);
             break;
         case Step::SECRETSTEST:
             SecretsShadow_Run();

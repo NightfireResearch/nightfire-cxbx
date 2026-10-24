@@ -288,10 +288,10 @@ void Player_RamLoad(BLData *blData, char boostHealth) {
     if (boostHealth) {
         float least;
         switch (GameState.difficultyModifier) {
-            case 1:
+            case DIFF_OPERATIVE:
                 least = ContinueHealthBoostEasy;
                 break;
-            case 2:
+            case DIFF_AGENT:
                 least = ContinueHealthBoostMedium;
                 break;
             default:
@@ -487,7 +487,7 @@ void Player_WeaponChange(obj_tag *player, char direction, char mode) {
         return;
     if (current > 0x5c && current <= 0x5e)
         return;
-    if (anim->animFlags & 1)
+    if (anim->animFlags & ANIM_SCOPED)
         return;
 
     int lowest, highest;
@@ -780,7 +780,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                     if (blData->movementDisabled)
                         break;
                 }
-                else if (Input_Action(playerNum, ACTION_FIRE, 1) &&
+                else if (Input_Action(playerNum, ACTION_FIRE, ACTION_HELD) &&
                          Player_WeaponHasAmmo(blData, (ushort)current->weaponVariantNum)) {
                     break;
                 }
@@ -791,7 +791,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 }
                 break;
             }
-            if ((current->weaponFlags & WPNFLAG_REFIRE_HELD) && Input_Action(playerNum, ACTION_FIRE, 1) &&
+            if ((current->weaponFlags & WPNFLAG_REFIRE_HELD) && Input_Action(playerNum, ACTION_FIRE, ACTION_HELD) &&
                 AnimScriptIsStopped(blData->weaponObject)) {
                 Player_SetFiringAnim(blData, blData->weaponObject, current);
             }
@@ -819,7 +819,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
 
         case GUN_SCOPE_RAISE:
             if (AnimScriptIsStopped(gun)) {
-                player->animState->animFlags |= 1;
+                player->animState->animFlags |= ANIM_SCOPED;
                 blData->weaponObject->curState = GUN_IDLE;
                 blData->idleState = IDLE_PLAYING;
             }
@@ -850,7 +850,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
             Player_ReloadAmmoType(player, false);
             if (current->weaponFlags & WPNFLAG_SHELL_RELOAD) {
                 // Another shell while there are any and fire is not held
-                if (Player_ReloadAmmoType(player, true) && !Input_Action(playerNum, ACTION_FIRE, 1)) {
+                if (Player_ReloadAmmoType(player, true) && !Input_Action(playerNum, ACTION_FIRE, ACTION_HELD)) {
                     AnimScriptAdd(blData->weaponObject, current->animReload);
                     break;
                 }
@@ -962,8 +962,9 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                         AnimScriptAdd(gun, current->animFidget);
                         blData->idleState = IDLE_PLAYING;
                     }
-                    else if (current->animRelax != 0 && blData->idleWait == 0 && !(player->animState->animFlags & 1) &&
-                             blData->crosshairOffsetX == 0.0f && blData->crosshairOffsetY == 0.0f && !AnyDroneAlert()) {
+                    else if (current->animRelax != 0 && blData->idleWait == 0 &&
+                             !(player->animState->animFlags & ANIM_SCOPED) && blData->crosshairOffsetX == 0.0f &&
+                             blData->crosshairOffsetY == 0.0f && !AnyDroneAlert()) {
                         AnimScriptAdd(gun, current->animRelax);
                         blData->idleState = IDLE_LOWERED;
                     }
@@ -981,7 +982,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 case IDLE_LOWERED:
                     if (AnimScriptIsStopped(gun)) {
                         bool alert = AnyDroneAlert();
-                        if ((player->animState->animFlags & 1) || alert || blData->crosshairOffsetX != 0.0f ||
+                        if ((player->animState->animFlags & ANIM_SCOPED) || alert || blData->crosshairOffsetX != 0.0f ||
                             blData->crosshairOffsetY != 0.0f) {
                             if (current->animRelaxEnd != 0)
                                 AnimScriptAddSpeed(blData->weaponObject, current->animRelaxEnd, 1.25f);
@@ -1105,7 +1106,7 @@ void Player_GetAimingPoint(obj_tag *player, _VECTOR *point) {
 
     _VECTOR head, through, ahead;
     Player_GetHeadPos(&head, player, NULL);
-    if (blData->camMode == 0) {
+    if (blData->camMode == CamMode_Default) {
         // x87 chains; a NaN over a NaN gives the x87's choice
         double across = (double)blData->crosshairOffsetX / viewer->zoom * viewer->width;
         double wide = (double)viewer->projectionScaleX + viewer->projectionScaleX;
@@ -1176,7 +1177,9 @@ void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
     Player_GetHeadPos(&from, player, NULL);
     Player_GetAimingPoint(player, &aim);
     Collide_RayIntersect(&from, &aim, player->inCel, player, NULL, &hitList, 0,
-                         (weapon->projectileFlags & PROJFLAG_MATERIAL_MASK) ? 0x208 : 0x20a, 0);
+                         (weapon->projectileFlags & PROJFLAG_MATERIAL_MASK)
+                             ? HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS
+                             : HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS, 0);
     HITDATA_tag *hit = hitList;
     if (hit != NULL)
         Vec_Copy(&hit->hitPosition, &target);
@@ -1220,7 +1223,7 @@ void Player_WeaponInitBullet(obj_tag *player, weapon_definition_tag *weapon) {
             fromMuzzle = false;
             break;
     }
-    if ((player->animState->animFlags & 1) && (held->weaponFlags & WPNFLAG_REAL_SCOPE))
+    if ((player->animState->animFlags & ANIM_SCOPED) && (held->weaponFlags & WPNFLAG_REAL_SCOPE))
         fromMuzzle = false;
     if ((held->weaponFlags & WPNFLAG_FROM_MUZZLE) && fromMuzzle) {
         _VECTOR muzzle;
@@ -1324,7 +1327,8 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
                 float wound = (float)(script->curFrame / spawnFrame * 0.75f);
                 _VECTOR muzzle;
                 AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &muzzle, NULL);
-                Light_Create(&muzzle, 0, 0xff, 0xff, 5.0f, 0, 0, 1, (float)((double)wound + wound), 0, 0, 0, 0xffff);
+                Light_Create(&muzzle, 0, 0xff, 0xff, 5.0f, 0, 0, LIGHT_TRANSIENT, (float)((double)wound + wound), 0, 0,
+                             0, 0xffff);
                 double clip = (double)weapon->clipSize;
                 blData->weaponStats[Weap_LaserBeamFromSamurai].clipOrCooldown =
                     (short)Ftol(clip - clip * script->curFrame / (double)weapon->bulletSpawnFrame);
@@ -1338,13 +1342,15 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_Camera && blData->weaponObject->curState == GUN_IDLE && !CamHint) {
         CamHint = 1;
-        Text_AddMsg(blData->playerNum, 0, 1, (char *)Txt_BindLabel((Action_TranslatedText)0x1000216, 0), 0, 0xb4);
+        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel((Action_TranslatedText)0x1000216, 0), 0,
+                    0xb4);
     }
 
     if (weapon->weaponVariantNum == Weap_Camera_Upgraded && blData->weaponObject->curState == GUN_IDLE) {
         _VECTOR lens;
         AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &lens, NULL);
-        Light_Create(&lens, 0xff, 0x7f, 0, 1.5f, 0, 0, 1, (float)(Float_FRand(0.5f) + 0.5f), 0, 0, 0, 0xffff);
+        Light_Create(&lens, 0xff, 0x7f, 0, 1.5f, 0, 0, LIGHT_TRANSIENT, (float)(Float_FRand(0.5f) + 0.5f), 0, 0, 0,
+                     0xffff);
     }
 
     if (weapon->weaponBaseNum == 0x1a) {
@@ -1392,7 +1398,8 @@ static void Player_WeaponDisplays(obj_tag *player, BLData *blData, weapon_defini
 
     if (weapon->weaponVariantNum == Weap_RemoteMine && blData->weaponObject->curState == GUN_IDLE && !StickyHint) {
         StickyHint = 1;
-        Text_AddMsg(blData->playerNum, 0, 1, (char *)Txt_BindLabel((Action_TranslatedText)0x10002dc, 0), 0, 0xb4);
+        Text_AddMsg(blData->playerNum, 0, TXTMSG_INFO, (char *)Txt_BindLabel((Action_TranslatedText)0x10002dc, 0), 0,
+                    0xb4);
     }
 }
 
@@ -1477,12 +1484,14 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
     Player_GetAimingPoint(player, &blData->muzzle);
 
     // Reload, or use whatever is in front of the player
-    if (!Input_Action(blData->playerNum, ACTION_FIRE, 1) && Input_Action(blData->playerNum, ACTION_RELOAD, 4) &&
+    if (!Input_Action(blData->playerNum, ACTION_FIRE, ACTION_HELD) &&
+        Input_Action(blData->playerNum, ACTION_RELOAD, ACTION_PRESSED) &&
         player->subState != MovementType_RemoteControl) {
         uchar used = Player_Activate(blData, player);
         AnimState *anim = player->animState;
-        if (!((anim->animFlags & 1) && (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE)) && !used &&
-            blData->weaponObject->curState == GUN_IDLE && Player_ReloadAmmoType(player, true)) {
+        if (!((anim->animFlags & ANIM_SCOPED) &&
+              (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE)) &&
+            !used && blData->weaponObject->curState == GUN_IDLE && Player_ReloadAmmoType(player, true)) {
             char held = player->animState->currentWeaponId;
             blData->burstShotsLeft = weapon->shotsPerTrigger[(uchar)blData->weaponStats[held].fireModeIndex];
             if (weapon->weaponFlags & WPNFLAG_ALT_RELOADS) {
@@ -1496,10 +1505,10 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
         }
     }
 
-    if (Input_Action(blData->playerNum, ACTION_FIRE, 1)) {
+    if (Input_Action(blData->playerNum, ACTION_FIRE, ACTION_HELD)) {
         if (!surfaced && !(weapon->weaponFlags & WPNFLAG_UNDERWATER))
             return;
-        if (weapon->weaponBaseNum == Weap_Camera && !(player->animState->animFlags & 1))
+        if (weapon->weaponBaseNum == Weap_Camera && !(player->animState->animFlags & ANIM_SCOPED))
             return;
         if (!GadgetCanFire(player, blData, weapon))
             return;
@@ -1524,7 +1533,7 @@ void Player_WeaponFiring(obj_tag *player, char fire) {
         }
     }
 
-    if (Input_Action(blData->playerNum, ACTION_FIRE, 4) || fire == 1) {
+    if (Input_Action(blData->playerNum, ACTION_FIRE, ACTION_PRESSED) || fire == 1) {
         if (player->subState == MovementType_RemoteControl) {
             if (blData->remoteControlDevice != NULL)
                 Bullet_handle_object_destruction(blData->remoteControlDevice, NULL);   // unread: the original passes the weapon
@@ -1599,8 +1608,8 @@ void Player_Zoom(obj_tag *player) {
     BLData *blData = (BLData *)player->extraObjectData;
     float before = blData->zoom;
     float input = 0.0f;
-    if (player->animState->animFlags & 1)
-        input = Input_Actionf(blData->playerNum, ACTION_SCOPE_ZOOM, 1);
+    if (player->animState->animFlags & ANIM_SCOPED)
+        input = Input_Actionf(blData->playerNum, ACTION_SCOPE_ZOOM, ACTION_HELD);
 
     float gap, step;
     if (input == 0.0f) {
@@ -1646,7 +1655,8 @@ void Player_Zoom(obj_tag *player) {
         blData->zoomTarget = blData->zoom;
         blData->weaponStats[(ushort)weapon_data[player->animState->currentWeaponId].weaponBaseNum].zoom = blData->zoom;
         if (blData->zoom != before &&
-            (Input_Action(blData->playerNum, ACTION_TMP_ZOOMOUT, 4) || Input_Action(blData->playerNum, ACTION_TMP_ZOOMIN, 4)) &&
+            (Input_Action(blData->playerNum, ACTION_TMP_ZOOMOUT, ACTION_PRESSED) ||
+                Input_Action(blData->playerNum, ACTION_TMP_ZOOMIN, ACTION_PRESSED)) &&
             blData->zoomSound != NULL) {
             Sound_Stop(blData->zoomSound);
         }
@@ -1699,7 +1709,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
     _VECTOR head, at;
     Player_GetHeadPos(&head, player, NULL);
     if (target->objectType == OBJECTTYPE_DRONE || target->objectType == OBJECTTYPE_PLAYER)
-        AnimGetBoneWorldTrans(target, 0x80000002, 0, &at, NULL);
+        AnimGetBoneWorldTrans(target, ANIM_BONE(BONE_AIM), 0, &at, NULL);
     else
         Vec_Copy(&target->position, &at);
 
@@ -1714,11 +1724,11 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
     char held = player->animState->currentWeaponId;
     double strength = (1.0 - (double)distance / Autoaim_Range) * ((double)weapon_data[held].autoAimStrength * 0.01f);
     switch (GameState.difficultyModifier) {
-        case 1:
+        case DIFF_OPERATIVE:
             strength = strength * Autoaim_EasyMul;
             break;
-        case 3:
-        case 4:
+        case DIFF_00AGENT:
+        case DIFF_4:
             strength = strength * Autoaim_HardMul;
             break;
         default:
@@ -1743,7 +1753,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
     if (!(fabs(tilt) < upDown))
         return;
 
-    if (!Collide_LineOfSight(&head, &at, player->inCel, player, target, 0xa))
+    if (!Collide_LineOfSight(&head, &at, player->inCel, player, target, HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT))
         return;
 
     _VECTOR screen = {0.0f, 0.0f, 0.0f};
@@ -1767,7 +1777,7 @@ void Player_AutoAim(obj_tag *player) {
     char held = player->animState->currentWeaponId;
     bool grapple = held == 0x50 || held == 0x51;
 
-    if (player->animState->animFlags & 1) {
+    if (player->animState->animFlags & ANIM_SCOPED) {
         blData->crosshairOffsetX = (float)(((double)blData->aimX - blData->crosshairOffsetX) * 0.5f + blData->crosshairOffsetX);
         blData->crosshairOffsetY = (float)(((double)blData->aimY - blData->crosshairOffsetY) * 0.5f + blData->crosshairOffsetY);
         Check_Target(player);
@@ -1872,7 +1882,7 @@ void Player_LaserPointer(obj_tag *player) {
     MatrixMultiplyVector(&datum, &ahead, &out);
 
     HITDATA_tag *hit = NULL;
-    if (Collide_RayIntersect(&head, &out, player->inCel, player, NULL, &hitList, 0, 8, 0))
+    if (Collide_RayIntersect(&head, &out, player->inCel, player, NULL, &hitList, 0, HITMASK_SKIP_NO_CONTACT, 0))
         hit = hitList;
     if (hit != NULL)
         vecutil_calculate_closest_point_on_line(&end, &head, &out, &hit->hitPosition);
@@ -1882,7 +1892,7 @@ void Player_LaserPointer(obj_tag *player) {
     beam = blData->beamObjs[0];
     beam->position = from;
     beam->transformFlags &= ~TRANSFORM_MOVED;
-    if (glb_viewer[playerNum]->nightVisionRelated == 1) {
+    if (glb_viewer[playerNum]->visionMode == VISION_NIGHT) {
         hashtable_set_object_to_entity_gfx(beam, HT_Entity_lazer);
         double flicker = Float_FRand(128.0f);
         beam->tweakA = (uchar)Ftol((flicker + (beam->tweakA + 0x3f)) * 0.5f);
@@ -1896,7 +1906,7 @@ void Player_LaserPointer(obj_tag *player) {
         else if (alpha > 0x30)
             beam->tweakA = 0x30;
     }
-    if (blData->camMode == 0)
+    if (blData->camMode == CamMode_Default)
         View_SetDrawInThisViewOnly(beam, blData->playerNum);
 
     float length = Vec_Dist3D(&from, &end);
@@ -1942,18 +1952,20 @@ void Player_MuzzleFlash(obj_tag *player, _VECTOR *target) {
         AnimGetBoneWorldTrans(blData->weaponObject, bone, 0, &muzzle, &datum);
         blData->muzzleFlashFrames = weapon->weaponBaseNum == 0x33 ? 7 : 3;
         Light_Create(&muzzle, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                     weapon->muzzleLightRadius, 0, 0, 1, 2.0f, 0, 0, 0, 0xffff);
+                     weapon->muzzleLightRadius, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
         if (!MPSettings.isMultiplayer && !(weapon->weaponFlags & WPNFLAG_NO_SMOKE)) {
             _VECTOR spin = {0.0f, 0.0f, 0.0f};
             spin.z = (float)Float_FRand(TWO_PI);
-            Gas_Init(player->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1, 0x80);
+            Gas_Init(player->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, GAS_WIND, 0x48403080, 1,
+                     0x80);
         }
     }
 
     if ((weapon->projectileFlags & (PROJFLAG_TASER | PROJFLAG_LASER)) && target != NULL) {
         HITDATA_tag *hitList = NULL;
         AnimGetBoneWorldTrans(blData->weaponObject, 0, 0, &muzzle, NULL);
-        if (Collide_RayIntersect(&muzzle, target, player->inCel, player, NULL, &hitList, 0, 8, 0) && hitList != NULL)
+        if (Collide_RayIntersect(&muzzle, target, player->inCel, player, NULL, &hitList, 0, HITMASK_SKIP_NO_CONTACT,
+                                 0) && hitList != NULL)
             Vec_Copy(&hitList->hitPosition, target);
         if (weapon->projectileFlags & PROJFLAG_LASER)
             Player_SetupLaser(blData, target);
@@ -2069,15 +2081,15 @@ void Player_SetWatch(obj_tag *player) {
 
     if (gun->animState->animObj.skin->hashcode != HT_Skin_Watch) {
         if (HourHand != NULL) {
-            HourHand->flags |= 1;
+            HourHand->flags |= OBJFLAG_DELETE;
             HourHand = NULL;
         }
         if (MinuteHand != NULL) {
-            MinuteHand->flags |= 1;
+            MinuteHand->flags |= OBJFLAG_DELETE;
             MinuteHand = NULL;
         }
         if (SecondHand != NULL) {
-            SecondHand->flags |= 1;
+            SecondHand->flags |= OBJFLAG_DELETE;
             SecondHand = NULL;
         }
         return;

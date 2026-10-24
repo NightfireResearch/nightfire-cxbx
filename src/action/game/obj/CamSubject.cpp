@@ -42,6 +42,6 @@ void CamSubject_Update(obj_tag *obj) {
         if (((BU_tag *)bullet->extraObjectData)->wpnDef->weaponBaseNum != WEAPON_CAMERA_SHOT)
             continue;
         switch_channels[(short)obj->subState] = 1;
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     }
 }

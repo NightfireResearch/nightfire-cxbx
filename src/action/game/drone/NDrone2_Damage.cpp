@@ -33,10 +33,6 @@
 #define ARMOUR_HELMET 4
 #define ARMOUR_COMBAT 8
 
-// The bones NDrone2_HitDamage tells apart (HITDATA_tag.hitBoneIdx)
-#define BONE_TORSO 1
-#define BONE_HEAD 5
-
 // A shot pushes the drone this far along it, to this far at most
 #define PUSH_PER_SHOT 0.175f
 
@@ -93,13 +89,15 @@ static void NDrone2_BodyHitEffect(BU_tag *bullet, HITDATA_tag *hit, obj_tag *obj
         break;
     case 0x32:
     case 0x33:
-        Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 1.0f, 16.0f, HT_Entity_taser_muzzle, 5, 0xffffffff,
+        Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 1.0f, 16.0f, HT_Entity_taser_muzzle, GAS_GROWING5,
+                 0xffffffff,
                  0xffffff00,
                  0x3c);
         break;
     default:
         if (bullet->wpnDef->damage > 0.0f) {
-            obj_tag *smoke = Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 3.0f, 6.0f, HT_Entity_BodyHit, 5,
+            obj_tag *smoke = Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 3.0f, 6.0f, HT_Entity_BodyHit,
+                                      GAS_GROWING5,
                                       0xffffffff, 0xffffff00, 0x3c);
             smoke->effectFlags |= EFFECT_BILLBOARD;
         }
@@ -111,7 +109,7 @@ static void NDrone2_BodyHitEffect(BU_tag *bullet, HITDATA_tag *hit, obj_tag *obj
 // Ghidra; the name is the PS2 build's.
 // FUNC_AT(0x00031f20)
 void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit) {
-    if (obj == NULL || (obj->flags & 1))
+    if (obj == NULL || (obj->flags & OBJFLAG_DELETE))
         return;
     Drone_tag *drone = (Drone_tag *)obj->extraObjectData;
     if (drone == NULL)
@@ -163,8 +161,8 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
     if (hit == NULL)
         return;
 
-    uint material = hit->materialType & 0x3f;
-    if (material >= 13 && material <= 14) {
+    uint material = hit->materialType & MATERIAL_MASK;
+    if (material >= MATERIAL_DEEPWATER && material <= MATERIAL_SHALWATER) {
         if (drone->gameObj->animState->animFlags & ANIM_FOOTSTEP)
             Env_WaterRipple(hit);
     } else if (drone->dtype == DTYPE_Astronaut && (drone->gameObj->animState->animFlags & ANIM_CONTACT_HIT)) {
@@ -193,7 +191,7 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
         }
         if (BOTSTATE_getStateType(drone->sm.curState) == BOTSTATE_CLASS_DEATH)
             return;
-        if (GameFlow_GetState() != 2)
+        if (GameFlow_GetState() != GAMEFLOW_GAME)
             return;
         drone->health = drone->health - Hurt_GetDamage(hit->hitObj);
         Hurt_GetType(hit->hitObj);      // the answer is not used
@@ -404,9 +402,9 @@ void NDrone2_HitDamage(DCVars_tag *dcv, float damage, int location, int weapon, 
     }
 
     float difficulty;
-    if (GameState.difficultyModifier == 1)
+    if (GameState.difficultyModifier == DIFF_OPERATIVE)
         difficulty = DroneDamage_Easy;
-    else if (GameState.difficultyModifier == 3 || GameState.difficultyModifier == 4)
+    else if (GameState.difficultyModifier == DIFF_00AGENT || GameState.difficultyModifier == DIFF_4)
         difficulty = DroneDamage_Hard;
     else
         difficulty = DroneDamage_Normal;
@@ -470,7 +468,7 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
     int weapon = bullet->wpnDef != NULL ? (ushort)bullet->wpnDef->weaponVariantNum : -1;
     NDrone2_HitDamage(dcv, scale * hit->dmgAmt, (ushort)hit->hitBoneIdx, weapon, force);
 
-    if (hit->dmgAmt > 0.5f && !(bullet->wpnDef->impactFlags & 0x180))
+    if (hit->dmgAmt > 0.5f && !(bullet->wpnDef->impactFlags & (IMPACTFLAG_BOUNCES | IMPACTFLAG_STICKS)))
         Sound_Play3D(hit->hitBoneIdx == BONE_HEAD ? SFX_IMPACT_DRONE_HEAD_SHOT : SFX_IMPACT_DRONE_BODY,
                      &hit->hitPosition, 100.0f, -1.0f, -1.0f, 0, 0, 0);
     if (MPSettings.dronesAreBots != 0)

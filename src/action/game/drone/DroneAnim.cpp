@@ -478,7 +478,7 @@ void DroneAnim_SetHTAnim(HASHCODE hashcode, uint flags, ushort frame, Drone_tag 
             AnimScriptSetAnimRotation(*blendSlot, 1);
             _VECTOR pos, dir, rot;
             _MATRIX root;
-            AnimGetBoneWorldTrans(obj, 0x80000000, 0, &pos, &root);
+            AnimGetBoneWorldTrans(obj, ANIM_BONE(BONE_ROOT), 0, &pos, &root);
             Mat_GetDir(&dir, &root);
             Vec_DirToRot(&dir, &rot);
             drone->pendingTurn = rot.y - obj->rotation.y;

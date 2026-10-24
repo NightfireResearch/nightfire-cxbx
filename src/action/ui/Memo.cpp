@@ -140,7 +140,7 @@ intptr_t Memo_SendMessage(M_MEMO *memo, uint message, intptr_t arg1, intptr_t ar
                 for (int i = 0; i < MEMO_LINES; i++) {
                     if (memo->lines[i] == NULL)
                         break;
-                    memo->lines[i]->depth = MENU_SPRITE_HIDDEN;
+                    memo->lines[i]->depth = SPRITE_HIDDEN;
                 }
             }
             Memo_Refresh(memo);
@@ -197,7 +197,7 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
         for (int i = 0; i <= MEMO_LINES; i++) {
             if (memo->lines[i] == NULL)
                 break;
-            memo->lines[i]->depth = MENU_SPRITE_HIDDEN;
+            memo->lines[i]->depth = SPRITE_HIDDEN;
         }
         memo->topLine = Scroll_SendMessage(&memo->scroll, MessageType_GetValue, 0, 0);
         char *rest = memo->text;
@@ -226,7 +226,7 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
                 short x = Component_GetHandle(&memo->control)->left + page->control.x + memo->control.x + indent + 2;
                 Menu_InitializeSprite(memo->lines[memo->linesShown], (uchar)(memo->control.depth - 5), x, y,
                                       memo->control.width - MEMO_BAR_WIDTH, 11, line, (HASHCODE)0, colour, memo->alpha,
-                                      0, 0, 0, 0, 0x2000);
+                                      0, 0, 0, 0, SPRITE_TEXT_RING);
                 memo->lines[memo->linesShown]->format = memo->format;
                 memo->linesShown++;
             }
@@ -241,11 +241,11 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
     }
 
     if (Menu_CursorOverMe(mgr, &memo->control)) {
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_SELECT, ACTION_PRESSED))
             pressed = 1;
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_1, ACTION_PRESSED))
             pressed = 2;
-        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, 4))
+        if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_ALTSELECT_2, ACTION_PRESSED))
             pressed = 3;
     }
 
@@ -261,7 +261,7 @@ void Memo_Update(M_MANAGER *mgr, M_PAGE *page, M_MEMO *memo) {
         Scroll_Update(mgr, page, &memo->scroll);
 
     // Back from the first pad
-    if (page->focused->hashcode == memo->control.hashcode && Menu_InputAction(0, ACTION_MENU_BACK, 4))
+    if (page->focused->hashcode == memo->control.hashcode && Menu_InputAction(0, ACTION_MENU_BACK, ACTION_PRESSED))
         __Menu_SendMessage(memo->control.parent, MessageType_MemoBack, (intptr_t)memo, 0);
     if (!mgr->takingInput || mgr->inputLocked)
         return;

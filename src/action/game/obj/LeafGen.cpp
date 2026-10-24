@@ -78,7 +78,7 @@ void Leaf_Update(obj_tag *obj) {
         return;
     LEAF_tag *leaf = (LEAF_tag *)obj->extraObjectData;
     if (leaf->life <= 0 || obj->tweakA - leaf->fade <= 0) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
     obj->tweakA -= leaf->fade;

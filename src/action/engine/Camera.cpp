@@ -75,15 +75,15 @@ void Camera_CalcViewAngles(ushort playerNum,float fovRadians) {
 void Viewer_Init(viewer_tag *viewer) {
     viewer->world = NULL;
     View_RotTransMatrix(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, &viewer->viewMatrix);
-    Vec_Copy(&CONST_ZERO_VECTOR, &viewer->someVec);
+    Vec_Copy(&CONST_ZERO_VECTOR, &viewer->rot);
     Vec_Copy(&CONST_ZERO_VECTOR, &viewer->pos);
     viewer->cameraUpdated = 0;
     memset(&viewer->draw, 0, sizeof(viewer->draw));
     Mat_IdentityT(&viewer->mtx);
     Vec_Zero(&viewer->prevPos);
     viewer->zoom = 1.0f;
-    viewer->someCel = NULL;
-    viewer->camMode = 0;
+    viewer->cel = NULL;
+    viewer->camMode = CamMode_Default;
     viewer->enabled = 0;
     viewer->spritesShown = 0;
     viewer->trackDistanceUsed = 4.0f;
@@ -98,7 +98,7 @@ void Viewer_Init(viewer_tag *viewer) {
     viewer->field249_0x1ec = 0;
     viewer->field250_0x1f0 = 0;
     viewer->shearAngle = 0.0f;
-    viewer->nightVisionRelated = 0;
+    viewer->visionMode = VISION_NORMAL;
     viewer->fade = 0.0f;
     viewer->fadeRate = 0.0f;
     viewer->fadeColour[3] = 0;
@@ -118,7 +118,7 @@ void Camera_Set(viewer_tag *viewer, _VECTOR *transform, _VECTOR *rotation) {
         return;
 
     View_RotTransMatrix(rotation, transform, &viewer->viewMatrix);
-    Vec_Copy(rotation, &viewer->someVec);
+    Vec_Copy(rotation, &viewer->rot);
     Vec_Copy(transform, &viewer->pos);
     viewer->cameraUpdated = 0;
 }
@@ -161,7 +161,7 @@ void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *p
     }
 
     if (position != NULL) {
-        glb_viewer[cameraNum]->someCel = NULL;
+        glb_viewer[cameraNum]->cel = NULL;
         Camera_Set(glb_viewer[cameraNum], position, &CONST_ZERO_VECTOR);
     }
 }
@@ -173,7 +173,7 @@ void Camera_Enable(ushort cameraNum, char enable, undefined1 sprites, _VECTOR *p
 // Saves every camera's enabled and sprites-shown flags on its own stack.
 // AUTOINJECT
 void __stdcall Camera_PushStates(void) {
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < NUM_VIEWERS; i++) {
         viewer_tag *viewer = glb_viewer[i];
         if (viewer != NULL) {
             uintptr_t state = viewer->spritesShown << CAMERA_STATE_SPRITES_SHIFT | viewer->enabled;
@@ -185,7 +185,7 @@ void __stdcall Camera_PushStates(void) {
 // Gives every camera back the state Camera_PushStates saved last, where its stack has one.
 // AUTOINJECT
 void __stdcall Camera_PopStates(void) {
-    for (ushort i = 0; i < 11; i++) {
+    for (ushort i = 0; i < NUM_VIEWERS; i++) {
         viewer_tag *viewer = glb_viewer[i];
         if (viewer == NULL || Stack_IsEmpty(&viewer->stateStack))
             continue;
@@ -256,13 +256,13 @@ void Camera_Create(int idx, world_tag *viewWorld, char enable, ushort posX, usho
     newCel = build_alloc_cel(glb_viewer[idx]->world->firstCel);
     glb_viewer[idx]->world->firstCel = newCel;
     cel = glb_viewer[idx]->world->firstCel;
-    cel->bitsFromPlacementTag |= 0x10040000;
-    (cel->someMin).z = -1000.0;
-    (cel->someMin).y = -1000.0;
-    (cel->someMin).x = -1000.0;
-    (cel->someMax).z = 1000.0;
-    (cel->someMax).y = 1000.0;
-    (cel->someMax).x = 1000.0;
+    cel->bitsFromPlacementTag |= CEL_NO_SKY | CEL_ROOM;
+    (cel->boxMin).z = -1000.0;
+    (cel->boxMin).y = -1000.0;
+    (cel->boxMin).x = -1000.0;
+    (cel->boxMax).z = 1000.0;
+    (cel->boxMax).y = 1000.0;
+    (cel->boxMax).x = 1000.0;
   }
   glb_viewer[idx]->world = viewWorld;
   glb_viewer[idx]->enabled = enable;
@@ -281,19 +281,19 @@ void Camera_CreateCameras(void) {
 
     Camera_Create(0, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(5, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    Camera_Create(7, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_HUD, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_MENU, build_alloc_world(), 1, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(4, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_SCRIPT, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
-    Camera_Create(6, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    Camera_Create(8, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
-    Camera_Create(10, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_FADE, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_8, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
+    Camera_Create(VIEWER_LOAD_SCREEN, NULL, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT);
 
     // Inlined and optimised for the fact that enable==0
-    Camera_Enable(8, 0, 0, NULL);
+    Camera_Enable(VIEWER_8, 0, 0, NULL);
 
-    Camera_Create(9, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Specific to Xbox?
+    Camera_Create(VIEWER_9, glb_world, 0, 0, 0, SCREEN_WIDTH, SCREEN_HEIGHT); // Specific to Xbox?
 
     int numPlayers = (MPSettings.isMultiplayer) ? MPSettings.numPlayers : 1;
 
@@ -352,8 +352,8 @@ float debug_cam_posy;
 // AUTOINJECT
 void Camera_PlaceAround(_VECTOR *target, viewer_tag *viewer, float rate) {
     Extended yaw = FPatan((double)target->x - viewer->pos.x, (double)target->z - viewer->pos.z);
-    viewer->someVec.y = (float)((yaw - Extended(viewer->someVec.y)) * Extended(rate) + Extended(viewer->someVec.y));
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    viewer->rot.y = (float)((yaw - Extended(viewer->rot.y)) * Extended(rate) + Extended(viewer->rot.y));
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // The pitch, to look at the target
@@ -363,8 +363,8 @@ void Camera_PlaceAbove(_VECTOR *target, viewer_tag *viewer, float rate) {
     double dz = (double)target->z - viewer->pos.z;
     double dy = (double)target->y - viewer->pos.y;
     Extended pitch = -FPatan(dy, sqrt(dz * dz + dx * dx));
-    viewer->someVec.x = (float)((pitch - Extended(viewer->someVec.x)) * Extended(rate) + Extended(viewer->someVec.x));
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    viewer->rot.x = (float)((pitch - Extended(viewer->rot.x)) * Extended(rate) + Extended(viewer->rot.x));
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // The height, to height above the object (and debug_cam_posy). Not named on PS2; the name is ours.
@@ -372,7 +372,7 @@ void Camera_PlaceAbove(_VECTOR *target, viewer_tag *viewer, float rate) {
 void Camera_PlaceOver(obj_tag *obj, viewer_tag *viewer, float rate, float height) {
     Extended y = Extended(debug_cam_posy) + Extended(obj->position.y) + Extended(height);
     viewer->pos.y = (float)((y - Extended(viewer->pos.y)) * Extended(rate) + Extended(viewer->pos.y));
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // Across the ground, to distance (plus CameraBehindDistance) along the facing turned by CameraBehindYaw. The z's
@@ -385,7 +385,7 @@ void Camera_PlaceBehind(_VECTOR *position, _VECTOR *rotation, viewer_tag *viewer
     viewer->pos.x = (float)((Extended(position->x) - FSin(yaw) * away - Extended(viewer->pos.x)) * Extended(rate)
                             + Extended(viewer->pos.x));
     viewer->pos.z = (float)(Extended(stepZ) + Extended(viewer->pos.z));
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // How far the follow camera can be from the head at the given angles: its trackDistance, or less where a ray from
@@ -400,7 +400,7 @@ double Camera_FollowRoom(obj_tag *obj, viewer_tag *viewer, float yaw, float pitc
     end.x = head.x - end.x;
     end.y = head.y - end.y;
     end.z = head.z - end.z;
-    if (Collide_RayIntersect(&head, &end, obj->inCel, obj, NULL, &hits, 0, 8, 0)) {
+    if (Collide_RayIntersect(&head, &end, obj->inCel, obj, NULL, &hits, 0, HITMASK_SKIP_NO_CONTACT, 0)) {
         room = Vec_Dist3D(&hits->hitPosition, &head);
         Collide_FreeHitList(&hits);
     }
@@ -444,10 +444,10 @@ void Camera_Follow(obj_tag *obj, viewer_tag *viewer) {
     viewer->pos.z = head.z - offset.z;
     Camera_PlaceAround(&head, viewer, 1.0f);
     Camera_PlaceAbove(&head, viewer, 1.0f);
-    viewer->someVec.z = obj->rotation.z;
+    viewer->rot.z = obj->rotation.z;
     viewer->trackYaw = obj->rotation.y;
     viewer->trackPitch = pitch;
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // Facing the object from where the view is. Camera mode 4. Not named on PS2; the name is ours.
@@ -461,7 +461,7 @@ void Camera_LookAtObject(obj_tag *obj, viewer_tag *viewer) {
 void Cameras_PostLoad(void) {
     if (MPSettings.numPlayers != 3 || !MPSettings.isMultiplayer)
         return;
-    sprite *quarter = Sprite_CreateAndLink2Viewer(5);
+    sprite *quarter = Sprite_CreateAndLink2Viewer(VIEWER_HUD);
     if (quarter == NULL)
         return;
     Sprite_SetParams(quarter, 5, 320, 240, HT_Texture_medal_platinum_mp, 0x7f7f7fff);
@@ -484,17 +484,17 @@ void Camera_Orbit(obj_tag *obj, viewer_tag *viewer) {
     viewer->pos.z = head.z - offset.z;
     Camera_PlaceAround(&head, viewer, 1.0f);
     Camera_PlaceAbove(&head, viewer, 1.0f);
-    viewer->someVec.z = 0.0f;
+    viewer->rot.z = 0.0f;
 
     if (viewer->trackDistance != 0.0f) {
-        float look = Input_Actionf((uchar)viewer->idx, ACTION_AIM_U_D, 1);
+        float look = Input_Actionf((uchar)viewer->idx, ACTION_AIM_U_D, ACTION_HELD);
         double pitch = viewer->trackPitch - (double)look * ((double)REC_FRAME_RATE * HALF_PI);
         viewer->trackPitch = (float)pitch;
         if (pitch < -1.5f)
             viewer->trackPitch = -1.5f;
         else if (pitch > 1.5f)
             viewer->trackPitch = 1.5f;
-        float turn = Input_Actionf((uchar)viewer->idx, ACTION_AIM_L_R, 1);
+        float turn = Input_Actionf((uchar)viewer->idx, ACTION_AIM_L_R, ACTION_HELD);
         viewer->trackYaw = (float)(viewer->trackYaw - (double)REC_FRAME_RATE * HALF_PI * turn);
         viewer->trackDistanceUsed = (float)(((double)viewer->trackDistance - viewer->trackDistanceUsed) * 0.03125f
                                             + viewer->trackDistanceUsed);
@@ -506,13 +506,13 @@ void Camera_Orbit(obj_tag *obj, viewer_tag *viewer) {
                                    + viewer->trackYaw);
         double distance = (double)viewer->trackDistanceUsed - 0.13333334f;
         viewer->trackDistanceUsed = (float)distance;
-        if (blData->camMode != 0 && distance <= 0.1f) {
-            blData->camMode = 0;
+        if (blData->camMode != CamMode_Default && distance <= 0.1f) {
+            blData->camMode = CamMode_Default;
             blData->pitchFromHorizontal = 0.0f;
             viewer->trackDistanceUsed = 0.0f;
         }
     }
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // Behind the player's head at the track angles and distance used, pulled in to where a ray from his position meets
@@ -523,13 +523,14 @@ void Camera_Trail(obj_tag *obj, viewer_tag *viewer) {
     HITDATA_tag *hits = NULL;
     _VECTOR oldPos, oldRot, head, offset, back;
     Vec_Copy(&viewer->pos, &oldPos);
-    Vec_Copy(&viewer->someVec, &oldRot);
+    Vec_Copy(&viewer->rot, &oldRot);
     Player_GetHeadPos(&head, obj, NULL);
     Vec_Spherical_2_Cartesian(&offset.x, viewer->trackDistanceUsed, viewer->trackYaw, -viewer->trackPitch);
     viewer->pos.x = head.x - offset.x;
     viewer->pos.z = head.z - offset.z;
     viewer->pos.y = head.y - offset.y;
-    if (Collide_RayIntersect(&obj->position, &viewer->pos, obj->inCel, obj, NULL, &hits, 0, 8, 0)) {
+    if (Collide_RayIntersect(&obj->position, &viewer->pos, obj->inCel, obj, NULL, &hits, 0, HITMASK_SKIP_NO_CONTACT,
+                             0)) {
         Vec_Copy(&hits->hitPosition, &viewer->pos);
         Collide_FreeHitList(&hits);
     }
@@ -543,16 +544,16 @@ void Camera_Trail(obj_tag *obj, viewer_tag *viewer) {
     Camera_PlaceAround(&head, viewer, 1.0f);
     Camera_PlaceAbove(&head, viewer, 1.0f);
 
-    float pitch = viewer->someVec.x;
+    float pitch = viewer->rot.x;
     viewer->trackDistanceUsed = (float)(((double)viewer->trackDistance - viewer->trackDistanceUsed) * 0.03125f
                                         + viewer->trackDistanceUsed);
     viewer->pos.x = (float)(((double)viewer->pos.x - oldPos.x) * 0.083333336f + oldPos.x);
     viewer->pos.y = (float)(((double)viewer->pos.y - oldPos.y) * 0.083333336f + oldPos.y);
     viewer->pos.z = (float)(((double)viewer->pos.z - oldPos.z) * 0.083333336f + oldPos.z);
-    viewer->someVec.x = (float)(Vec_AngleDifference(oldRot.x, pitch) * 0.083333336f + oldRot.x);
-    viewer->someVec.y = (float)(Vec_AngleDifference(oldRot.y, viewer->someVec.y) * 0.083333336f + oldRot.y);
-    viewer->someVec.z = (float)(Vec_AngleDifference(oldRot.z, viewer->someVec.z) * 0.083333336f + oldRot.z);
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    viewer->rot.x = (float)(Vec_AngleDifference(oldRot.x, pitch) * 0.083333336f + oldRot.x);
+    viewer->rot.y = (float)(Vec_AngleDifference(oldRot.y, viewer->rot.y) * 0.083333336f + oldRot.y);
+    viewer->rot.z = (float)(Vec_AngleDifference(oldRot.z, viewer->rot.z) * 0.083333336f + oldRot.z);
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // The multiplayer end-of-match camera: circling the target 0.7 a second, distance out from it and up (at least 0.75
@@ -587,7 +588,7 @@ void Camera_LookAtFrom(viewer_tag *viewer, EndCamera *cam) {
     _VECTOR *at = Mat_Position(viewer->viewMatrix);
     cel_tag *cel = build_FindCel(at, glb_world);
     HITDATA_tag *hits;
-    Collide_SphereIntersect(at, 1.5f, cel, cam->subject, NULL, &hits, 0, 0, 3, 4);
+    Collide_SphereIntersect(at, 1.5f, cel, cam->subject, NULL, &hits, 0, 0, HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS, 4);
     if (hits == NULL) {
         cam->distanceWanted = cam->range;
     }
@@ -666,22 +667,22 @@ void Camera_CheckLocation(ushort idx) {
     if (!viewer->enabled)
         return;
 
-    cel_tag *through = Cel_ObjectLeftCel(viewer->someCel, &viewer->prevPos, &viewer->pos);
+    cel_tag *through = Cel_ObjectLeftCel(viewer->cel, &viewer->prevPos, &viewer->pos);
     if (through != NULL) {
-        viewer->someCel = through;
-    } else if (!build_point_in_bounding_box(&viewer->pos, viewer->someCel)) {
-        cel_tag *old = viewer->someCel;
-        viewer->someCel = build_FindCel(&viewer->pos, viewer->world);
-        if (viewer->someCel == NULL) {
+        viewer->cel = through;
+    } else if (!build_point_in_bounding_box(&viewer->pos, viewer->cel)) {
+        cel_tag *old = viewer->cel;
+        viewer->cel = build_FindCel(&viewer->pos, viewer->world);
+        if (viewer->cel == NULL) {
             if (old != NULL) {
-                viewer->someCel = old;
+                viewer->cel = old;
             } else {
                 NF_WARN("Error : Camera cant be linked to a cel!\n"); // GC check (0x8010b688)
-                viewer->someCel = glb_world->firstCel;
+                viewer->cel = glb_world->firstCel;
             }
             return;
         }
-        viewer->someCel->addedToDraw = 1;
+        viewer->cel->addedToDraw = 1;
     }
     Vec_Copy(&viewer->pos, &viewer->prevPos);
 }
@@ -738,10 +739,10 @@ void Camera_ApplySwing(viewer_tag *viewer, float sway) {
     double phase = TWO_PI / ((double)_FRAME_RATE * 4.0f) + viewer->swingPhase;
     viewer->swingPhase = (float)phase;
     Extended zoomed = (double)viewer->zoom - 1.0f;
-    viewer->someVec.x = (float)(FSin(phase + phase) * zoomed * Extended(sway) + Extended(viewer->someVec.x));
-    viewer->someVec.y = (float)(FSin(viewer->swingPhase) * zoomed * Extended(sway) + Extended(viewer->someVec.y));
-    viewer->someVec.z = (float)(FSin(viewer->swingPhase * 3.0) * zoomed * Extended(sway) + Extended(viewer->someVec.z));
-    Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+    viewer->rot.x = (float)(FSin(phase + phase) * zoomed * Extended(sway) + Extended(viewer->rot.x));
+    viewer->rot.y = (float)(FSin(viewer->swingPhase) * zoomed * Extended(sway) + Extended(viewer->rot.y));
+    viewer->rot.z = (float)(FSin(viewer->swingPhase * 3.0) * zoomed * Extended(sway) + Extended(viewer->rot.z));
+    Camera_Set(viewer, &viewer->pos, &viewer->rot);
 }
 
 // Shakes the players' views near pos: up to twice amount away, by amount x (1 - (distance / 2 amount)^2), at most 10
@@ -775,7 +776,7 @@ void camera_tracking(obj_tag *obj, viewer_tag *viewer) {
     BLData *blData = glb_blokes[(uchar)viewer->idx];
     obj_tag *line = blData->attachedToSpecialMovementItem;
     if (line == NULL) {
-        viewer->camMode = 0;
+        viewer->camMode = CamMode_Default;
         return;
     }
 
@@ -865,7 +866,7 @@ void camera_tracking(obj_tag *obj, viewer_tag *viewer) {
     if (show) {
         Camera_PlaceAround(&at, viewer, 1.0f);
         Camera_PlaceAbove(&at, viewer, 1.0f);
-        Camera_Set(viewer, &viewer->pos, &viewer->someVec);
+        Camera_Set(viewer, &viewer->pos, &viewer->rot);
     }
 }
 
@@ -879,7 +880,7 @@ void Camera_Update(uint idx) {
         viewer->cameraUpdateCallback(viewer->cameraUpdateObj, viewer->cameraUpdateObj->extraObjectData);
     }
 
-    if(viewer->someCel != NULL && (viewer->pos).y < (viewer->someCel)->shearHeight) {
+    if(viewer->cel != NULL && (viewer->pos).y < (viewer->cel)->shearHeight) {
         // Under the cel's water level (its shearHeight) the view wobbles
         Camera_Shear(viewer);
     }
@@ -904,7 +905,7 @@ void Camera_Update(uint idx) {
 
 // AUTOINJECT
 void Camera_UpdateAll(void) {
-    for(int i = 0; i < 11; i++) {
+    for(int i = 0; i < NUM_VIEWERS; i++) {
         if(glb_viewer[i] != NULL) {
             Camera_Update(i);
             Camera_CheckLocation(i);

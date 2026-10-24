@@ -50,7 +50,7 @@ void DynamicObject_Update(obj_tag *obj) {
             obj->effectFlags = data->effectFlags;
     }
     else if (hide) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     }
     if (data->fadeDistance == 0)
         return;

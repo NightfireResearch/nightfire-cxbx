@@ -141,7 +141,7 @@ void RB_RestingContactRot(obj_tag *obj, RIGIDBODY *rb, HITDATA_tag *hit) {
     if (rb->kind != RB_SWING_Y) {
         auxVec_AddMulR32(pivot, &up, -(rb->test.radius * 1.8f), &rb->test.rayStart);
         auxVec_AddMulR32(pivot, &up, -(rb->halfHeight - rb->test.radius), &rb->test.rayEnd);
-        rb->test.mask = 0x10;
+        rb->test.mask = HITMASK_SKIP_OBJECTS;
         Collide_CylinderIntersect(&rb->test, &hits, 0, 0);
     }
     for (; hit != NULL; hit = hit->next) {
@@ -368,10 +368,11 @@ void RB_Update(obj_tag *obj) {
     if (cel != NULL && cel->shearHeight > Mat_Position(obj->transformMatrix)->y &&
         (GameState.NumFramesUnpaused & 0xf) != 0) {
         _VECTOR lift = {0.0f, 0.0f, 0.0f};
-        float depth = (float)AbsFchs((double)Mat_Position(obj->transformMatrix)->y - cel->someMax.y);
+        float depth = (float)AbsFchs((double)Mat_Position(obj->transformMatrix)->y - cel->boxMax.y);
         double random = Float_FRand(0.15f);
         lift.y = (float)((double)depth * rb->mass * 0.4f + random);
-        Gas_Init(obj->inCel, Mat_Position(obj->transformMatrix), NULL, NULL, 0.5f, 1.0f, HT_Entity_watereffect, 1,
+        Gas_Init(obj->inCel, Mat_Position(obj->transformMatrix), NULL, NULL, 0.5f, 1.0f, HT_Entity_watereffect,
+                 GAS_GROWING,
                  0x40008080, 0x80808008, 0x10);
         Vec_Add2(&lift, &rb->impulse, &rb->impulse);    // RB_AddImpulsiveForce
     }

@@ -151,19 +151,19 @@ void TextBox_Update(M_MANAGER *mgr, M_PAGE *page, M_TEXTBOX *box) {
 
             ushort player = mgr->whichPlayer;
             TEXTBOX_KEY *key = &box->keys[box->selected];
-            if (Menu_InputAction(player, MENU_RIGHT, 1) && !(box->keys[box->selected].blocked & 8)) {
+            if (Menu_InputAction(player, MENU_RIGHT, ACTION_HELD) && !(box->keys[box->selected].blocked & 8)) {
                 TextBox_Step(box, &box->cursorX, key->width, box->cursorX < GRID_WIDTH - key->width);
-            } else if (Menu_InputAction(player, MENU_LEFT, 1) && !(box->keys[box->selected].blocked & 4)) {
+            } else if (Menu_InputAction(player, MENU_LEFT, ACTION_HELD) && !(box->keys[box->selected].blocked & 4)) {
                 TextBox_Step(box, &box->cursorX, -key->width, box->cursorX > key->width);
-            } else if (Menu_InputAction(player, MENU_DOWN, 1) && !(box->keys[box->selected].blocked & 2)) {
+            } else if (Menu_InputAction(player, MENU_DOWN, ACTION_HELD) && !(box->keys[box->selected].blocked & 2)) {
                 TextBox_Step(box, &box->cursorY, key->height, box->cursorY < GRID_HEIGHT - key->height);
-            } else if (Menu_InputAction(player, MENU_UP, 1) && !(box->keys[box->selected].blocked & 1)) {
+            } else if (Menu_InputAction(player, MENU_UP, ACTION_HELD) && !(box->keys[box->selected].blocked & 1)) {
                 TextBox_Step(box, &box->cursorY, -key->height, box->cursorY > key->height);
             } else {
                 box->control.drawState &= ~TEXTBOX_HELD;
             }
 
-            if (Menu_InputAction(player, MENU_SELECT, 4)) {
+            if (Menu_InputAction(player, MENU_SELECT, ACTION_PRESSED)) {
                 char c = box->keys[box->selected].c;
                 sprite *text = TextOf(box);
                 if (c == '-') {

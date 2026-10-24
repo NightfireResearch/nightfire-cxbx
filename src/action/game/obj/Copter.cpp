@@ -119,13 +119,13 @@ obj_tag* Copter_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
         SP_HideObj(copter->scriptPlayer, 1);
 
     switch (GameState.difficultyModifier) {
-    case 2:
+    case DIFF_AGENT:
         DiffMod = 1.5f;
         break;
-    case 3:
+    case DIFF_00AGENT:
         DiffMod = 2.0f;
         break;
-    case 4:
+    case DIFF_4:
         DiffMod = 4.0f;
         break;
     default:
@@ -229,7 +229,7 @@ bool Copter_Move(COPTER *copter, obj_tag *obj, char positionOnly) {
     if ((float)path->frames < copter->pathFrame) {
         ended = true;
         if (copter->channel == 100)     // a marker (Copter.h), not SWITCH_MISSION_WON
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         copter->path = Copter_NextPath(copter);
     }
     SP_SetPosRot(copter->scriptPlayer, &obj->transformMatrix);
@@ -307,7 +307,9 @@ bool Copter_SeesPlayer(obj_tag *player, obj_tag *obj) {
     _VECTOR ahead;
     auxVec_AddMulR32(at, &dir, 4.0f, &ahead);
     cel_tag *cel = build_FindCel(&ahead, glb_world);
-    return Collide_LineOfSight(&ahead, &player->centrePoint, cel, obj, player, 0x2e);
+    return Collide_LineOfSight(&ahead, &player->centrePoint, cel, obj, player,
+                               HITMASK_SKIP_GLASS | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT |
+                               HITMASK_SKIP_MASKABLE);
 }
 
 // Shown and on its way once its channel is on; patrols, attacks while it sees player 0, takes its parts' shots, smokes
@@ -365,7 +367,7 @@ void Copter_Update(obj_tag *obj) {
         break;
 
     case COPTER_ATTACK: {
-        Music_Event(2, 1);
+        Music_Event(MUSICEV_ALERT, 1);
         Copter_Move(copter, obj, 0);
         obj->subState++;
         if (CopterAttackMode & 1)
@@ -397,15 +399,15 @@ void Copter_Update(obj_tag *obj) {
         if (!Copter_Move(copter, obj, 0))
             return;
         SetChannel(copter->doneChannel);
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
 
     case COPTER_DESTROYED:
         SetChannel(copter->doneChannel);
         Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 10.0f, 10.0f, HT_Script_ExplosionBlastRadius, 67.4f, 0xff,
                        0xff, 100,
-                       NULL, 6);
-        obj->flags |= 1;
+                       NULL, MATERIAL_METALTHICK);
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 
@@ -445,7 +447,7 @@ void Copter_Update(obj_tag *obj) {
         vel.y = 0.0f;
         float size = (float)(Float_FRand(2.0f) + 3.0f);
         uint colour = ((grey << 8 | grey) << 8 | grey) << 8;
-        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, HT_Entity_smoke_3_blacksmoke, 3,
+        Gas_Init(smoke->inCel, &smoke->centrePoint, &rot, &vel, 2.0f, size, HT_Entity_smoke_3_blacksmoke, GAS_RISING,
                  colour | (uchar)(0xbf - grey), colour, 0x1a4);
     }
 

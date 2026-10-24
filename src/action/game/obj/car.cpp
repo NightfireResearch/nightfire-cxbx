@@ -126,7 +126,7 @@ void __cdecl Car_Activate(obj_tag* carObj, obj_tag* playerObj) {
     // If it's a helicopter, control its body, otherwise control the barrel
     playerData->remoteControlDevice = carData->isHeli ? carObj : carData->barrelGeom;
 
-    Player_SetCamMode(playerData, 0xd);
+    Player_SetCamMode(playerData, CamMode_RCCar);
     carObj->curState = CAR_TAKEN;
     carObj->subState = playerData->playerNum;
     Player_Disable(playerObj, 1);
@@ -238,7 +238,7 @@ void Car_Deactivate(obj_tag *carObj) {
         obj_tag* playerObj = glb_players[carObj->subState];
 
         playerData->remoteControlDevice = NULL;
-        Player_SetCamMode(playerData, 0);
+        Player_SetCamMode(playerData, CamMode_Default);
         Player_ChangeSubState(playerObj, playerData->previousSubState);
         Player_Enable(playerObj, NULL, 0);
         playerObj->animState->switchingToWeaponId = playerObj->animState->prevHeldWeaponId; // Bring the weapon up after the car has been deactivated
@@ -259,7 +259,7 @@ void Car_Deactivate(obj_tag *carObj) {
     }
 
     Explode_Create(carObj, &carObj->position, &CONST_UP_VECTOR, 10.0, 10.0, HT_Script_ExplosionBlastRadius, 50.0, 0xff,
-                   0xff, 100, carObj, 6);
+                   0xff, 100, carObj, MATERIAL_METALTHICK);
     Vec_Zero(&carInfo->aim);
     Vec_Zero(&carInfo->fall);
     Vec_Zero(&carInfo->velocity);
@@ -309,13 +309,15 @@ void Car_SetBits(CAR_INFO *car, obj_tag *obj) {
     bool fireGun = false;
     bool fireShell = false;
     if (obj->curState == CAR_DRIVEN) {
-        if (Input_Action(obj->subState, ACTION_FIRE, 1))
+        if (Input_Action(obj->subState, ACTION_FIRE, ACTION_HELD))
             fireGun = true;
-        if (Input_Action(obj->subState, ACTION_ALTFIRE, 1))
+        if (Input_Action(obj->subState, ACTION_ALTFIRE, ACTION_HELD))
             fireShell = true;
-        car->aim.y = (float)(Extended(car->aim.y) - Extended(Input_Actionf(obj->subState, ACTION_AIM_L_R, 1)) *
+        car->aim.y = (float)(Extended(car->aim.y) - Extended(Input_Actionf(obj->subState, ACTION_AIM_L_R,
+                                                                           ACTION_HELD)) *
                                                         Extended(FRAME_RATE_MUL) * Extended(0.05f));
-        car->aim.x = (float)(Extended(car->aim.x) - Extended(Input_Actionf(obj->subState, ACTION_AIM_U_D, 1)) *
+        car->aim.x = (float)(Extended(car->aim.x) - Extended(Input_Actionf(obj->subState, ACTION_AIM_U_D,
+                                                                           ACTION_HELD)) *
                                                         Extended(FRAME_RATE_MUL) * Extended(0.05f));
         car->aim.z = 0.0f;
         double heading = normaliseToPlusMinusPi(car->aim.y);
@@ -398,14 +400,14 @@ bool Car_InheritVelocity(obj_tag *car, obj_tag *by) {
 static void Car_FlyHeli(obj_tag *obj, CAR_INFO *car) {
     _VECTOR steer;
     Vec_Zero(&steer);
-    steer.y = (float)(Extended(Input_Actionf(obj->subState, ACTION_AIM_L_R, 1)) * Extended(FRAME_RATE_MUL) *
+    steer.y = (float)(Extended(Input_Actionf(obj->subState, ACTION_AIM_L_R, ACTION_HELD)) * Extended(FRAME_RATE_MUL) *
                       Extended(0.05));
-    steer.x = (float)(-Extended(Input_Actionf(obj->subState, ACTION_AIM_U_D, 1)) * Extended(FRAME_RATE_MUL) *
+    steer.x = (float)(-Extended(Input_Actionf(obj->subState, ACTION_AIM_U_D, ACTION_HELD)) * Extended(FRAME_RATE_MUL) *
                       Extended(0.05));
-    float drive = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_F_B, 1) * FRAME_RATE_MUL * 2.0);
+    float drive = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_F_B, ACTION_HELD) * FRAME_RATE_MUL * 2.0);
     car->velocity.z = Car_Ease(car->velocity.z, drive, 0.15f);
     Car_LimitSpeed(&car->velocity.z, FRAME_RATE_MUL * -0.125, FRAME_RATE_MUL * 0.125);
-    float strafe = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_L_R, 1) * FRAME_RATE_MUL * 2.0);
+    float strafe = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_L_R, ACTION_HELD) * FRAME_RATE_MUL * 2.0);
     car->velocity.x = Car_Ease(car->velocity.x, strafe, 0.15f);
     Car_LimitSpeed(&car->velocity.x, FRAME_RATE_MUL * -0.1, FRAME_RATE_MUL * 0.1);
 
@@ -438,7 +440,7 @@ static void Car_FlyHeli(obj_tag *obj, CAR_INFO *car) {
         car->mainWait -= FRAME_RATE_MUL;
 
     _VECTOR from;
-    if (Input_Action(obj->subState, ACTION_FIRE, 1) && car->gunWait <= 0.0f && !car->machineGunOverheated) {
+    if (Input_Action(obj->subState, ACTION_FIRE, ACTION_HELD) && car->gunWait <= 0.0f && !car->machineGunOverheated) {
         _VECTOR gun = {0.1f, -0.05f, 0.1f};
         if (car->fireSide & HELI_GUN_LEFT) {
             gun.x = -0.1f;
@@ -454,7 +456,7 @@ static void Car_FlyHeli(obj_tag *obj, CAR_INFO *car) {
         car->gunWait = 6.0f;
         Car_HeatGun(car);
     }
-    if (Input_Action(obj->subState, ACTION_ALTFIRE, 1) && car->mainWait <= 0.0f && car->mainAmmo != 0) {
+    if (Input_Action(obj->subState, ACTION_ALTFIRE, ACTION_HELD) && car->mainWait <= 0.0f && car->mainAmmo != 0) {
         _VECTOR launcher = {0.15f, -0.1f, 0.1f};
         if (car->fireSide & HELI_MISSILE_LEFT) {
             launcher.x = -0.15f;
@@ -479,8 +481,8 @@ static void Car_DriveTank(obj_tag *obj, CAR_INFO *car) {
     float drive = 0.0f;
     if (obj->curState == CAR_DRIVEN) {
         if (car->onGround)
-            drive = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_F_B, 1) * FRAME_RATE_MUL * 2.0);
-        turn = (float)(Extended(Input_Actionf(obj->subState, ACTION_WALK_L_R, 1)) * Extended(FRAME_RATE_MUL) *
+            drive = (float)((double)Input_Actionf(obj->subState, ACTION_WALK_F_B, ACTION_HELD) * FRAME_RATE_MUL * 2.0);
+        turn = (float)(Extended(Input_Actionf(obj->subState, ACTION_WALK_L_R, ACTION_HELD)) * Extended(FRAME_RATE_MUL) *
                        Extended(0.05f));
     }
     if (car->onGround) {
@@ -551,7 +553,7 @@ void Car_Update(obj_tag *obj) {
     View_SetDrawInAllViews(car->bodyGeom);
     if (obj->curState == CAR_STOPPED)
         return;
-    if (obj->curState == CAR_DRIVEN && Input_Action(obj->subState, ACTION_RELOAD, 4)) {
+    if (obj->curState == CAR_DRIVEN && Input_Action(obj->subState, ACTION_RELOAD, ACTION_PRESSED)) {
         Car_Deactivate(obj);
         return;
     }

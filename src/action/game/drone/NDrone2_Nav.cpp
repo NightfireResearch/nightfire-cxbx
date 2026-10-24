@@ -148,7 +148,7 @@ bool NDrone2_DroneNearPos(_VECTOR *pos, float radius, obj_tag *except) {
         Drone_tag *other = (Drone_tag *)obj->extraObjectData;
         if ((other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) || !(other->flags & DRONE_FLAG_ENABLED)
             || other->health <= 0.0f
-            || obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & 1))
+            || obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & OBJFLAG_DELETE))
             continue;
         if (Vec_SqDist2D(pos, &obj->position) < radiusSq && NearHeight(pos->y, obj->position.y))
             return true;

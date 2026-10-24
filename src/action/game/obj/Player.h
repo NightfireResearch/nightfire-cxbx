@@ -7,6 +7,7 @@
 typedef enum {
     CamMode_Default = 0x00,
     CamMode_PostMPGameThirdPerson = 0x01,
+    CamMode_ThirdPerson = 0x02,        // a script's third-person view (Player_Cam2Mode)
     CamMode_Redeemer = 0x0c, // Redeemer = Sentinel Missile?
     CamMode_RemoteDeviceBehind = 0x09, // behind the remote device, from its rotation
     CamMode_FollowObject = 0x0a,       // following BLData::cameraFollowObject

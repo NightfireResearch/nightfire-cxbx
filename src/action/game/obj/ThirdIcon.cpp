@@ -49,7 +49,7 @@ void ThirdIcon_Update(obj_tag *obj) {
     if (switch_channels[icon->onChannel])
         obj->curState = THIRDICON_ON;
     if (switch_channels[icon->offChannel])
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     if (obj->curState != THIRDICON_ON)
         return;
 
@@ -59,7 +59,7 @@ void ThirdIcon_Update(obj_tag *obj) {
             continue;
         BLData *blData = (BLData *)player->extraObjectData;
         if (icon->wait == 0 && icon->icon == THIRDICON_STANDING && player->subState != MovementType_Creep)
-            Text_AddMsg(0, 0, 1, (char *)Txt_BindLabel(TXT_THIRDICON_STANDING, 0), 0, 0xb4);
+            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_THIRDICON_STANDING, 0), 0, 0xb4);
         blData->thirdIcon = (uchar)icon->icon;
         icon->wait = 4;
     }

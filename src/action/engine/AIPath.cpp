@@ -21,7 +21,7 @@
 #define BOUND_CEILING_SEARCH 256.0f
 #define BOUND_MIN_HEADROOM 2.0f
 // Collide_RayIntersect's collision types for that ray
-#define BOUND_CEILING_COLLISION 0x90
+#define BOUND_CEILING_COLLISION (HITMASK_SKIP_OBJECTS | HITMASK_SKIP_CHILD_CELS)
 
 // The block's version, as read
 // XBE_GLOBAL(0x00274ca8, 0x4)

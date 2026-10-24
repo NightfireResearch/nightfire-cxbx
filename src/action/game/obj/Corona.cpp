@@ -32,7 +32,8 @@ void Corona_Update(obj_tag *obj) {
         return;
     }
     viewer_tag *viewer = glb_viewer[0];
-    if (Collide_LineOfSight(&viewer->pos, &obj->position, viewer->someCel, obj, glb_players[0], 8)) {
+    if (Collide_LineOfSight(&viewer->pos, &obj->position, viewer->cel, obj, glb_players[0],
+                            HITMASK_SKIP_NO_CONTACT)) {
         obj->effectFlags |= EFFECT_DRAW_LAST;
         int alpha = obj->tweakA + 16;
         obj->tweakA = (uchar)(alpha > 0xff ? 0xff : alpha);
@@ -62,6 +63,6 @@ void Sunreflection_Update(obj_tag *obj) {
         double scale = obj->scale * (1.0 / 1.1);
         obj->scale = (float)scale;
         if (scale < 2.0f)
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
     }
 }

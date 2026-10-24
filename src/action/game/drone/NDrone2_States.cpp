@@ -450,7 +450,7 @@ bool NDrone2_DSTATE_DeleteMe(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
 
     case DRONE_MSG_Enter:
         NDrone2_Enable(0, dcv->drone);
-        dcv->gameObj->flags |= 1;
+        dcv->gameObj->flags |= OBJFLAG_DELETE;
         return true;
 
     default:

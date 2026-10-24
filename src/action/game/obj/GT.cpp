@@ -110,7 +110,7 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
     turret->body = Script_Load(keys->bodyScript, pos, rot, NULL, NULL, GT_Register, turret);
     turret->base = Script_Load(keys->baseScript, pos, rot, NULL, NULL, GT_Register, turret);
     if (turret->body == NULL || turret->base == NULL) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return NULL;
     }
     Script_Play(turret->body, 1);
@@ -142,10 +142,10 @@ obj_tag* GT_Create(_VECTOR *pos, _VECTOR *rot, quaternion_tag *quat, level_tag *
             if (other == obj || other->objectType != OBJECTTYPE_GUNTURRET ||
                 ((GUNTURRET *)other->extraObjectData)->owner != turret->owner)
                 continue;
-            other->flags |= 1;
+            other->flags |= OBJFLAG_DELETE;
             Explode_Create(other, &other->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                            0xff, 0xff,
-                           100, NULL, 0);
+                           100, NULL, MATERIAL_NONE);
         }
     }
     return obj;
@@ -181,7 +181,7 @@ obj_tag* GT_DeployMiniGun(_VECTOR *pos, _MATRIX *mtx, obj_tag *owner) {
 // the drones up and about and the helicopters. The current target stays while it is the second seen.
 // AUTOINJECT
 obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
-    if (turret->target != NULL && (turret->target->flags & 1))
+    if (turret->target != NULL && (turret->target->flags & OBJFLAG_DELETE))
         turret->target = NULL;
     if (turret->target != NULL && turret->target->objectType == OBJECTTYPE_DRONE &&
         MPDrone_IsDyingOrDead(turret->target))
@@ -235,7 +235,7 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
                     continue;
                 if (data->health <= 0.0f)
                     continue;
-                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & 1)
+                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & OBJFLAG_DELETE)
                     || (other->effectFlags & EFFECT_HIDDEN))
                     continue;
                 Vec_Subtract(&other->position, &obj->position, &offset);
@@ -280,7 +280,10 @@ obj_tag* GT_Track(GUNTURRET *turret, obj_tag *obj) {
                         (double)to.x * turret->facing.x;
         if (facing < 0.01f)
             continue;
-        if (!Collide_LineOfSight(&muzzle, &TargetList[i].obj->centrePoint, obj->inCel, obj, TargetList[i].obj, 0x72f))
+        if (!Collide_LineOfSight(&muzzle, &TargetList[i].obj->centrePoint, obj->inCel, obj, TargetList[i].obj,
+                                 HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS | HITMASK_SKIP_HIDDEN |
+                                 HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_MASKABLE | HITMASK_SKIP_DRONES |
+                                 HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS))
             continue;
         if (first != NULL) {
             second = TargetList[i].obj;
@@ -358,7 +361,7 @@ static void GT_Fire(obj_tag *obj, GUNTURRET *turret, obj_tag *barrel, Action_SFX
     flash->curState = 2;
     flash->effectFlags &= ~EFFECT_HIDDEN;
     if (flash->subState != 0)
-        Gas_Init(obj->inCel, &at, &dir, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1, 0x80);
+        Gas_Init(obj->inCel, &at, &dir, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, GAS_WIND, 0x48403080, 1, 0x80);
 }
 
 // The barrel turned on by step, about its length
@@ -481,7 +484,7 @@ void GT_Update(obj_tag *obj) {
                           hashtable_hashcode_to_celglist(HT_Entity_Suitcase_Pickup), 0, MINIGUN_WEAPON, 1, 0, 0xf5,
                           1, 0, 0,
                           0);
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         } else {
             obj->curState = GT_CLOSED;
         }
@@ -490,7 +493,7 @@ void GT_Update(obj_tag *obj) {
     case GT_ACTIVE: {
         turret->target = GT_Track(turret, obj);
         if (turret->target != NULL) {
-            Music_Event(2, 1);
+            Music_Event(MUSICEV_ALERT, 1);
             turret->timer = 0.0f;
             GT_AimAt(turret, &turret->target->position);
             double fireTimer = (double)REC_FRAME_RATE + turret->fireTimer;
@@ -537,10 +540,10 @@ void GT_Update(obj_tag *obj) {
     case GT_DESTROYED:
         if (!(turret->timer < 10.0f)) {
             if (MPSettings.isMultiplayer && turret->kind != GT_KIND_CEILING) {
-                obj->flags |= 1;
+                obj->flags |= OBJFLAG_DELETE;
                 Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, 5.0f, 5.0f, HT_Script_ExplosionBlastRadius, 50.0f,
                                0xff, 0xff,
-                               100, NULL, 0);
+                               100, NULL, MATERIAL_NONE);
             }
             return;
         }
@@ -550,7 +553,8 @@ void GT_Update(obj_tag *obj) {
             rot.y = 0.0f;
             rot.x = 0.0f;
             rot.z = (float)Float_FRand(TWO_PI);
-            Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, 7, 0x48403080, 1,
+            Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.25f, HT_Entity_smoke_1_dust, GAS_WIND, 0x48403080,
+                     1,
                      0x3c);
         }
         return;
@@ -558,10 +562,10 @@ void GT_Update(obj_tag *obj) {
     case GT_CONTROLLED: {
         short playerNum = ownerData->playerNum;
         _VECTOR steer;
-        steer.y = (float)Negate(Input_Actionf(playerNum, ACTION_TURRET_AIM_X, 1) *
+        steer.y = (float)Negate(Input_Actionf(playerNum, ACTION_TURRET_AIM_X, ACTION_HELD) *
                                 ((double)FRAME_RATE_MUL * 0.024543693f));
         steer.z = 0.0f;
-        steer.x = (float)Negate(Input_Actionf(playerNum, ACTION_TURRET_AIM_Y, 1) *
+        steer.x = (float)Negate(Input_Actionf(playerNum, ACTION_TURRET_AIM_Y, ACTION_HELD) *
                                 ((double)FRAME_RATE_MUL * 0.024543693f));
         Vec_Add2(&turret->control, &steer, &turret->control);
         if (turret->control.x < -0.5f)
@@ -589,7 +593,7 @@ void GT_Update(obj_tag *obj) {
         turret->spinSpeed = turret->spinSpeed * 0.9f;
         turret->fireTimer = REC_FRAME_RATE + turret->fireTimer;
 
-        if (Input_Action(ownerData->playerNum, ACTION_FIRE, 1)) {
+        if (Input_Action(ownerData->playerNum, ACTION_FIRE, ACTION_HELD)) {
             if (turret->fireTimer > TurretRefire) {
                 turret->fireTimer = 0.0f;
                 if (turret->ammo > 0)
@@ -600,7 +604,7 @@ void GT_Update(obj_tag *obj) {
         }
         if (barrel != NULL && turret->spinSpeed != 0.0f)
             GT_SpinBarrel(turret, barrel, turret->spinSpeed);
-        if (Input_Action(ownerData->playerNum, ACTION_RELOAD, 4))
+        if (Input_Action(ownerData->playerNum, ACTION_RELOAD, ACTION_PRESSED))
             GT_LoseControl(obj);
         return;
     }
@@ -614,7 +618,7 @@ void GT_LoseControl(obj_tag *gameObj) {
     BLData *blData = (BLData *)turret->owner->extraObjectData;
     blData->remoteControlDevice = NULL;
     Player_SetCamMode(blData, CamMode_Default);
-    glb_viewer[blData->playerNum]->someCel = NULL;
+    glb_viewer[blData->playerNum]->cel = NULL;
     Player_ChangeSubState(turret->owner, blData->previousSubState);
     Player_Enable(turret->owner, NULL, 0);
     turret->owner->animState->switchingToWeaponId = RONIN_WEAPON;
@@ -644,7 +648,7 @@ bool GT_TakeControl(obj_tag *gameObj, obj_tag *player) {
     blData->previousSubState = Player_ChangeSubState(player, MovementType_Ronin);
     blData->remoteControlDevice = gameObj;
     Player_SetCamMode(blData, CamMode_Ronin);
-    glb_viewer[blData->playerNum]->someCel = NULL;
+    glb_viewer[blData->playerNum]->cel = NULL;
     gameObj->curState = GT_CONTROLLED;
     Input_SetAction(gameObj->subState, ACTION_RELOAD, 1);
     Player_WeaponNone(player);

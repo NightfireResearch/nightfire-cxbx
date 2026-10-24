@@ -42,8 +42,8 @@ void Mine_Update(obj_tag *obj) {
         if (hit->hitObj == NULL)
             continue;
         Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, mine->radius, mine->radius, mine->script, mine->damage,
-                       0xc8, 0xc8, 0, obj, 0);
-        obj->flags |= 1;
+                       0xc8, 0xc8, 0, obj, MATERIAL_NONE);
+        obj->flags |= OBJFLAG_DELETE;
         return;
     }
 }

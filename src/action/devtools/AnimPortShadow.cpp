@@ -1113,7 +1113,7 @@ void RandomWorld(void) {
         RandomVector(&world.hits[i].hitPosition, 8.0f);
     }
     memset(world.viewer, 0, sizeof(world.viewer));
-    ((viewer_tag *)world.viewer)->nightVisionRelated = (undefined2)ShadowRand(2);
+    ((viewer_tag *)world.viewer)->visionMode = (undefined2)ShadowRand(2);
     world.doneFlag = 0;
 }
 

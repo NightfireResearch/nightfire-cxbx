@@ -770,8 +770,6 @@ M_BASECONTROL menu_no_control;
 #define MENU_SEND_ALL 0xffffffffu   // the hashcode that matches every control
 #define MENU_SEND_STEPS 1000        // pages and controls a send visits before it gives up
 
-#define MENU_VIEWER 7               // the viewer the menus' sprites are drawn in
-#define MENU_SPRITE_HIDDEN 0xff
 
 #define MENU_SOUND_SELECT    1      // sounds 0-2 and 8 play only with their bit
 #define MENU_SOUND_ALT1      2
@@ -920,7 +918,7 @@ void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int w
         MENU_COMPONENTPIECE *piece = &component->pieces[i];
         if ((piece->flags & state) == 0) {
             if (control->sprites[i] != NULL)
-                control->sprites[i]->depth = MENU_SPRITE_HIDDEN;
+                control->sprites[i]->depth = SPRITE_HIDDEN;
             continue;
         }
 
@@ -985,10 +983,10 @@ void Component_SetupInstance(M_CONTROL *control, uint state, int x, int y, int w
         }
 
         uint spriteFlags;
-        if (piece->flags & PIECE_SPRITE_100)
-            spriteFlags = 0x100;
+        if (piece->flags & PIECE_BLEND_1)
+            spriteFlags = SPRITE_BLEND_1;
         else
-            spriteFlags = (piece->flags & PIECE_SPRITE_200) ? 0x200 : 0;
+            spriteFlags = (piece->flags & PIECE_BLEND_2) ? SPRITE_BLEND_2 : 0;
 
         int spriteY;
         if (piece->flags & PIECE_BOTTOM)
@@ -1309,13 +1307,15 @@ ushort Menu_GetAction(short player, int action, uchar flags) {
 // AUTOINJECT
 ushort Menu_InputAction(short player, int action, int flags) {
     if (action == ACTION_MENU_SELECT || action == ACTION_PAUSE) {
-        if (Menu_GetAction(player, ACTION_MENU_BACK, 1))
+        if (Menu_GetAction(player, ACTION_MENU_BACK, ACTION_HELD))
             return 0;
     }
     if (action == ACTION_MENU_BACK) {
-        if (Menu_GetAction(player, ACTION_MENU_SELECT, 1) || Menu_GetAction(player, ACTION_PAUSE, 1))
+        if (Menu_GetAction(player, ACTION_MENU_SELECT, ACTION_HELD) ||
+            Menu_GetAction(player, ACTION_PAUSE, ACTION_HELD))
             return 0;
-    } else if ((action == ACTION_MENU_SELECT || action == ACTION_PAUSE) && MenuManager_GetStatus() > 3) {
+    } else if ((action == ACTION_MENU_SELECT || action == ACTION_PAUSE) &&
+               MenuManager_GetStatus() > MENU_STATUS_PAUSE) {
         if (Menu_GetAction(player, ACTION_MENU_SELECT, flags) || Menu_GetAction(player, ACTION_PAUSE, flags))
             return 1;
     }
@@ -1419,7 +1419,7 @@ void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short 
     spr->onscreenWidth = width;
     spr->onscreenHeight = height;
     spr->format = NULL;
-    spr->linkedViewer = MENU_VIEWER;
+    spr->linkedViewer = VIEWER_MENU;
     spr->flags = flags;
     if (u != 0xffff) {
         spr->spritesheetX = u;
@@ -1435,7 +1435,7 @@ void Menu_InitializeSprite(sprite *spr, uchar priority, short x, short y, short 
         spr->text = NULL;
     }
     spr->colourTint = colour != 0 ? colour : 0x7f7f7fc0;
-    spr->unknown1 = colour2;
+    spr->shadowColour = colour2;
 }
 
 // FUNC_AT(0x00072c30)
@@ -1471,7 +1471,7 @@ int Menu_ClipString(sprite *spr, int width, char *format) {
 sprite* Menu_CreateSprite(SpriteInfo *info) {
     if (info == NULL)
         return Sprite_Create();
-    info->linkedViewer = MENU_VIEWER;
+    info->linkedViewer = VIEWER_MENU;
     return Sprite_Create2(info);
 }
 

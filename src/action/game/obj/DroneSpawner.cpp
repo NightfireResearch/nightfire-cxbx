@@ -104,7 +104,7 @@ void DroneSpawner_Init(obj_tag *obj) {
     ushort count = NPCGlobals.groupCounts[spawner->group];
     NF_WARN_IF(count == 0xffff, "ERROR: More than one DroneSpawner has the same group");   // GC check (0x80085400)
     if (count == 0) {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         NPCGlobals.spawners[spawner->group] = NULL;
         return;
     }
@@ -130,7 +130,7 @@ void DroneSpawner_Init(obj_tag *obj) {
             entry->vars = drone->diVars;
             entry->cel = drone->gameObj->inCel;
             NDrone2_Enable(0, drone);
-            drone->gameObj->flags |= 1;
+            drone->gameObj->flags |= OBJFLAG_DELETE;
             Drone_tag *next = drone->groupNext;
             control_delete_object(drone->gameObj);
             entry++;
@@ -163,7 +163,7 @@ void DroneSpawner_Delete(obj_tag *obj) {
 // A drone of the spawner's group is deleted (Drone_Delete): its slot is freed
 // AUTOINJECT
 void DroneSpawner_DroneDelete(obj_tag *obj, obj_tag *drone) {
-    if (obj == NULL || drone == NULL || (obj->flags & 1))
+    if (obj == NULL || drone == NULL || (obj->flags & OBJFLAG_DELETE))
         return;
     DroneSpawner_tag *spawner = Spawner(obj);
     if (spawner == NULL || spawner->spawned == NULL)
@@ -233,7 +233,7 @@ obj_tag* DroneSpawner_SpawnDrone(obj_tag *obj) {
 void DroneSpawner_Control(obj_tag *obj) {
     if (!NPCGlobals.enabled || Drone_bDisableSystem)
         return;
-    if (obj == NULL || (obj->flags & 1))
+    if (obj == NULL || (obj->flags & OBJFLAG_DELETE))
         return;
     DroneSpawner_tag *spawner = Spawner(obj);
     if (spawner == NULL || spawner->group == 0 || spawner->spawned == NULL || spawner->kind < SPAWNER_KEEP_UP
@@ -251,7 +251,7 @@ void DroneSpawner_Control(obj_tag *obj) {
     if (spawner->stopChannel != 0 && switch_channels[spawner->stopChannel]) {
         spawner->running = 0;
         if (!spawner->killing)
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         return;
     }
 
@@ -281,12 +281,12 @@ void DroneSpawner_Control(obj_tag *obj) {
             }
             if (GameState.CurrentLevelHashcode == HT_Level_EvilBaseC)
                 DroneFunc_SetDeathChannel((Drone_tag *)drone->extraObjectData);
-            drone->flags |= 1;
+            drone->flags |= OBJFLAG_DELETE;
             spawner->spawned[i] = NULL;
         }
         if (!all && kept != 0)
             return;
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         spawner->running = 0;
         return;
     }
@@ -297,7 +297,7 @@ void DroneSpawner_Control(obj_tag *obj) {
         obj_tag *drone = spawner->spawned[i];
         if (drone == NULL)
             continue;
-        if (drone->objectType != OBJECTTYPE_DRONE || (drone->flags & 1)) {
+        if (drone->objectType != OBJECTTYPE_DRONE || (drone->flags & OBJFLAG_DELETE)) {
             spawner->spawned[i] = NULL;
             continue;
         }
@@ -319,7 +319,7 @@ void DroneSpawner_Control(obj_tag *obj) {
                 switch_channels_time[spawner->doneChannel] = GameState.NumFramesUnpaused;
             }
         }
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         spawner->ready = 0;
         spawner->running = 0;
         return;

@@ -22,7 +22,6 @@
 #define HOSTAGE_RANGE 5.0f
 
 // The music event a saved hostage plays
-#define MUSIC_HOSTAGE_SAVED 0x10
 
 // Empty. The Xbox's call goes to an empty function the linker shares with others (0x000e0ec0).
 static void NDrone2_HostageSituationActive(DCVars_tag *dcv) {
@@ -356,7 +355,7 @@ bool NDrone2_DSTATE_HostageSaved(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
     case DRONE_MSG_Enter:
         Drone_AlertStatusSet(DRONE_ALERT_CALM, dcv);
         dcv->drone->hostagePartner = NULL;
-        Music_Event(MUSIC_HOSTAGE_SAVED, 1);
+        Music_Event(MUSICEV_HOSTAGE_SAVED, 1);
         DroneFunc_HostageSaved(dcv);
         if (dcv->drone->secondState != 0 && dcv->drone->modeChangeSwitchChannel == 0) {
             if (NDrone2_NearArmedPerson(dcv))
@@ -515,7 +514,7 @@ bool NDrone2_DSTATE_HostageDead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
 // UNINJECTABLE - custom calling convention and only used from DroneFunc_HostageSaved
 void DroneFunc_NotifyHostageSaved(uint numHostagesSaved) {
     char *str = (char *)Txt_BindLabel(numHostagesSaved == 1 ? NOTIF_ONE_HOSTAGE_RELEASED : NOTIF_ALL_HOSTAGES_RELEASED, 0);
-    Text_AddMsg(NULL, NULL, 1, str, 0, 180);
+    Text_AddMsg(NULL, NULL, TXTMSG_INFO, str, 0, 180);
 }
 
 // A hostage saved: once per mode change channel, it counts and sets the channel; in HendersonB and HendersonC the

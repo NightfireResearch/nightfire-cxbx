@@ -69,7 +69,7 @@ obj_tag* Lock_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *c
         Vec_Copy(Mat_Position(obj->transformMatrix), &obj->position);
     }
     build_LinkToRoom(obj, 1, glb_world);
-    if (easy != 0 && GameState.difficultyModifier == 1)
+    if (easy != 0 && GameState.difficultyModifier == DIFF_OPERATIVE)
         Lock_Unlock(glb_players[0], obj, 1);
     return obj;
 }
@@ -186,14 +186,14 @@ void Lock_Update(obj_tag *obj) {
         GlobalVars.keypadBLData->active = 0;
         obj->curState = LOCKSTATE_KEYPAD_OPEN;
         lock->menu = (ushort)MenuManager_Create(HT_Menu_Keypad, P_KEYPAD, GlobalVars.keypadBLData->playerNum,
-                                                1, 0x22, 0,
-                                                1);
+                                                1, ACTION_MENU_BACK, 0,
+                                                MENU_STATUS_KEYPAD);
         KeyCodeEntry *code = &KeyCodes[lock->key];
         if (code->discovered) {
             char *text = Txt_GetStringFromHeap(0);
             sprintf(text, Txt_BindLabel(LABEL_KEY_CODE, 0), (uchar)code->asciiDigit[0], (uchar)code->asciiDigit[1],
                     (uchar)code->asciiDigit[2], (uchar)code->asciiDigit[3]);
-            Text_AddMsg(0, 0, 1, text, 0, 0xb4);
+            Text_AddMsg(0, 0, TXTMSG_INFO, text, 0, 0xb4);
         }
         return;
     }

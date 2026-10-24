@@ -108,7 +108,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     if (playerObj != NULL)
         playerObj->transformFlags |= TRANSFORM_REFERENCED;
 
-    if (bullet->wpnDef->projectileFlags & ProjectileFlag_Swoosh) {
+    if (bullet->wpnDef->projectileFlags & PROJFLAG_SWOOSH) {
         if (Bullet_IsBeamWeapon(bullet->wpnDef->weaponBaseNum))
             // Trails: the beam weapons' (bases 0x33, 0x6a and 0x6e) and the others', first and later segments
             bullet->swoosh = Swoosh_Create(pos, pos, bullet->wpnDef->swooshLifetime, HT_Entity_lazer_Big, 0);
@@ -127,11 +127,11 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
             if (shots >= weaponDef->clipSize)
                 shots = weaponDef->clipSize;
             bloom = Ftol((double)shots * weaponDef->spreadPerShot);
-            if ((weaponDef->weaponFlags & WeaponFlag_PerfectWhenScoped) && (anim->animFlags & 1))
+            if ((weaponDef->weaponFlags & WPNFLAG_PERFECT_WHEN_SCOPED) && (anim->animFlags & ANIM_SCOPED))
                 accuracy = 0.0f;
         } else if (playerObj->objectType == OBJECTTYPE_DRONE) {
             accuracy = ((Drone_tag *)playerObj->extraObjectData)->accuracyF;
-            if (weaponDef->weaponFlags & WeaponFlag_PerfectWhenScoped)
+            if (weaponDef->weaponFlags & WPNFLAG_PERFECT_WHEN_SCOPED)
                 accuracy = 0.0f;
         }
     }
@@ -154,11 +154,11 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     build_LinkToRoom(obj, 0, glb_world);
 
     weapon_definition_tag *weapon = bullet->wpnDef;
-    if (weapon->projectileFlags & ProjectileFlag_Accelerates)
+    if (weapon->projectileFlags & PROJFLAG_ACCELERATES)
         bullet->speed = weaponDef->projectileSpeed * 0.25f;
     else
         bullet->speed = weaponDef->projectileSpeed;
-    if (weapon->impactFlags & ImpactFlag_LongFuse)
+    if (weapon->impactFlags & IMPACTFLAG_LONG_FUSE)
         bullet->fuseTimer = 300.0f;
 
     // A satchel's fuse by its variant: 5, 10, 15 seconds...
@@ -179,7 +179,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     }
 
     // The guided missile: its player steers it
-    if (weapon->projectileFlags & ProjectileFlag_RemoteControl) {
+    if (weapon->projectileFlags & PROJFLAG_REMOTE_CONTROL) {
         obj_tag *shooter = bullet->firedByObj;
         if (shooter != NULL && shooter->objectType == OBJECTTYPE_PLAYER
             && shooter->subState != MovementType_RemoteControl) {
@@ -193,7 +193,7 @@ obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_d
     }
 
     // The grapple: the player is held while its line flies
-    if (bullet->wpnDef->projectileFlags & ProjectileFlag_GrappleLine) {
+    if (bullet->wpnDef->projectileFlags & PROJFLAG_GRAPPLE_LINE) {
         obj_tag *shooter = bullet->firedByObj;
         if (shooter != NULL && shooter->objectType == OBJECTTYPE_PLAYER) {
             BLData *blData = (BLData *)shooter->extraObjectData;
@@ -225,17 +225,17 @@ bool Bullet_handle_object_destruction(obj_tag *obj, obj_tag *from) {
         return false;
 
     BU_tag *bullet = (BU_tag *)obj->extraObjectData;
-    if (!(bullet->wpnDef->weaponFlags & WeaponFlag_CanBeShot)
-        || !(bullet->wpnDef->impactFlags & (ImpactFlag_TripBomb | ImpactFlag_Fuse | ImpactFlag_Explodes)))
+    if (!(bullet->wpnDef->weaponFlags & WPNFLAG_CAN_BE_SHOT)
+        || !(bullet->wpnDef->impactFlags & (IMPACTFLAG_TRIP_BOMB | IMPACTFLAG_FUSE | IMPACTFLAG_EXPLODES)))
         return false;
 
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
     weapon_definition_tag *weapon = bullet->wpnDef;
     // The explosions bullets set off
     Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, weapon->explodeRadius, weapon->explodeRadius,
-                   HT_Script_ExplosionBlastRadius, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj, 0);
-    if ((bullet->wpnDef->impactFlags & ImpactFlag_TripBomb) && bullet->swoosh != NULL)
-        bullet->swoosh->flags |= 1;
+                   HT_Script_ExplosionBlastRadius, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj, MATERIAL_NONE);
+    if ((bullet->wpnDef->impactFlags & IMPACTFLAG_TRIP_BOMB) && bullet->swoosh != NULL)
+        bullet->swoosh->flags |= OBJFLAG_DELETE;
     return true;
 }
 
@@ -255,7 +255,7 @@ static void Bullet_LimitLaid(BU_tag *bullet) {
             oldest = other;
     }
     if (count > 5)
-        oldest->flags |= 1;
+        oldest->flags |= OBJFLAG_DELETE;
 }
 
 // The frame's hits, nearest first. A hit it passes through (one that makes no contact, objects with effect flags
@@ -285,57 +285,58 @@ void Bullet_CollisionHandler(obj_tag *obj) {
             if (target->effectFlags & (EFFECT_NO_COLLISION | EFFECT_NO_CONTACT))
                 passes = 1;
             if (target != bullet->firedFromObj && target->objectType == OBJECTTYPE_CAR
-                && !(bullet->wpnDef->impactFlags & ImpactFlag_Sticks))
+                && !(bullet->wpnDef->impactFlags & IMPACTFLAG_STICKS))
                 passes = 0;
         }
-        if (!(bullet->wpnDef->projectileFlags & ProjectileFlag_MaterialMask) && (hit->materialType & 0x3f) == 0x10)
+        if (!(bullet->wpnDef->projectileFlags & PROJFLAG_MATERIAL_MASK) &&
+            (hit->materialType & MATERIAL_MASK) == MATERIAL_GLASS)
             passes = 1;
         short base = bullet->wpnDef->weaponBaseNum;
         if (base != WEAPON_BASE_GRAPPLE_50 && base != WEAPON_BASE_GRAPPLE_51) {
-            if (hit->materialType & 0x40)
+            if (hit->materialType & MATERIAL_PASSABLE)
                 passes |= 1;
-            if (hit->materialType & 0x80)
+            if (hit->materialType & MATERIAL_PASSABLE_AT_RANDOM)
                 passes |= Rand_Rand(0x3f) & 1;
         }
 
-        if (hit->hitObj != NULL && !passes && (bullet->wpnDef->impactFlags & ImpactFlag_Bounces))
+        if (hit->hitObj != NULL && !passes && (bullet->wpnDef->impactFlags & IMPACTFLAG_BOUNCES))
             Control_InheritVelocity(obj, hit->hitObj, 10.0f);
         obj->curState = BulletState_Spent;
         if (!passes && bullet->wpnDef->damage > 0.0f)
             Bullet_handle_object_destruction(hit->hitObj, bullet->firedByObj);
 
         weapon_definition_tag *weapon = bullet->wpnDef;
-        if (weapon->impactFlags & ImpactFlag_Marks)
+        if (weapon->impactFlags & IMPACTFLAG_MARKS)
             effect |= EFFECT_BULLET | EFFECT_SPARKS | EFFECT_SOUND;
-        if (weapon->projectileFlags & ProjectileFlag_LaserBeam)
+        if (weapon->projectileFlags & PROJFLAG_LASER)
             effect = EFFECT_LASER;
-        if (weapon->impactFlags & ImpactFlag_LaserEffect)
+        if (weapon->impactFlags & IMPACTFLAG_LASER_EFFECT)
             effect = EFFECT_LASER;
         Effect_Create(hit, obj, effect, 1.0f);
 
-        if ((bullet->wpnDef->impactFlags & ImpactFlag_Explodes) && !passes) {
+        if ((bullet->wpnDef->impactFlags & IMPACTFLAG_EXPLODES) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, weapon->explodeRadius,
                            weapon->explodeRadius, HT_Script_ExplosionBlastRadius, weapon->damage, 0xff, 0xff, 100,
                                bullet->firedByObj,
-                           hit->materialType & 0x3f);
+                           hit->materialType & MATERIAL_MASK);
         }
-        if ((bullet->wpnDef->impactFlags & ImpactFlag_BeamExplodes) && !passes) {
+        if ((bullet->wpnDef->impactFlags & IMPACTFLAG_BEAM_EXPLODES) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, 1.0f, weapon->explodeRadius,
                            HT_Script_LaserBlast, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
-                           hit->materialType & 0x3f);
+                           hit->materialType & MATERIAL_MASK);
         }
-        if ((bullet->wpnDef->impactFlags & ImpactFlag_BeamExplodes2) && !passes) {
+        if ((bullet->wpnDef->impactFlags & IMPACTFLAG_BEAM_EXPLODES_2) && !passes) {
             weapon = bullet->wpnDef;
             Explode_Create(obj, &hit->hitPosition, &hit->surfaceNormal.normal, 1.0f, weapon->explodeRadius,
                            HT_Script_LaserBlast, weapon->damage, 0xff, 0xff, 100, bullet->firedByObj,
-                           hit->materialType & 0x3f);
+                           hit->materialType & MATERIAL_MASK);
         }
 
         // Sticking: a character (or type 21) does not hold it, and it bounces off instead
         uchar bouncesOff = 0;
-        if ((bullet->wpnDef->impactFlags & ImpactFlag_Sticks) && !passes) {
+        if ((bullet->wpnDef->impactFlags & IMPACTFLAG_STICKS) && !passes) {
             target = hit->hitObj;
             if (target != NULL && (target->objectType == OBJECTTYPE_DRONE || target->objectType == OBJECTTYPE_PLAYER
                                    || target->objectType == OBJECTTYPE_ANIMDEBUGHANDLER)) {
@@ -356,7 +357,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                 Mat_Align2Dir(&obj->transformMatrix, &into, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
 
                 weapon = bullet->wpnDef;
-                if (weapon->impactFlags & ImpactFlag_TripBomb) {
+                if (weapon->impactFlags & IMPACTFLAG_TRIP_BOMB) {
                     Bullet_PlaySound(SFX_WEAPON_TRIPBOMB_PLANT, &obj->position);
                     bullet->fuseTimer = 120.0f;
                     out = 0.002f;
@@ -376,11 +377,11 @@ void Bullet_CollisionHandler(obj_tag *obj) {
 
         // Bouncing, up to 20 times, off what it meets head on
         uint impact = bullet->wpnDef->impactFlags;
-        if (((impact & ImpactFlag_Bounces) && !passes) || bouncesOff) {
-            if (impact & ImpactFlag_FlashBang) {
+        if (((impact & IMPACTFLAG_BOUNCES) && !passes) || bouncesOff) {
+            if (impact & IMPACTFLAG_FLASH_BANG) {
                 if (bullet->numRicochets == 0)
                     Bullet_PlaySound(SFX_OBJ_FLASH_GRENADE_ROLL, &obj->position);
-            } else if (impact & ImpactFlag_SmokeCloud) {
+            } else if (impact & IMPACTFLAG_SMOKE_CLOUD) {
                 if (bullet->numRicochets == 0)
                     Bullet_PlaySound(SFX_OBJ_SMOKE_GRENADE_ROLL, &obj->position);
             } else if (!(bullet->numRicochets & 1) && bullet->numRicochets < 15) {
@@ -399,7 +400,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                 if (along <= 0.0) {
                     auxVec_AddMulR32(&bullet->direction, normal, (float)-along, &bullet->direction);
                     Vec_Normalise(&bullet->direction, &bullet->direction);
-                    double speed = (double)EffectInfo[hit->materialType & 0x3f].bounce * bullet->speed;
+                    double speed = (double)EffectInfo[hit->materialType & MATERIAL_MASK].bounce * bullet->speed;
                     bullet->speed = (float)speed;
                     if (speed < (double)FRAME_RATE_MUL * 0.01f) {
                         Mat_Align2Dir(&obj->transformMatrix, &bullet->direction, &CONST_UP_VECTOR,
@@ -414,10 +415,10 @@ void Bullet_CollisionHandler(obj_tag *obj) {
             obj->curState = BulletState_Flying;
         }
 
-        // Ricochets, up to three, as the material allows (more often off cels with flag 0x400000)
-        if (bullet->wpnDef->impactFlags & ImpactFlag_Ricochets) {
+        // Ricochets, up to three, as the material allows (more often off cels with CEL_400000)
+        if (bullet->wpnDef->impactFlags & IMPACTFLAG_RICOCHETS) {
             ushort mask = 8;
-            if (cel != NULL && (cel->bitsFromPlacementTag & 0x400000))
+            if (cel != NULL && (cel->bitsFromPlacementTag & CEL_400000))
                 mask = 9;
             if (passes)
                 mask = 0;
@@ -425,7 +426,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
                 _VECTOR dir = bullet->direction;
                 _VECTOR normal = hit->surfaceNormal.normal;
                 double along = ((double)dir.z * normal.z + (double)dir.y * normal.y) + (double)dir.x * normal.x;
-                float k = (float)-(((double)EffectInfo[hit->materialType & 0x3f].bounce + 1.0f) * along);
+                float k = (float)-(((double)EffectInfo[hit->materialType & MATERIAL_MASK].bounce + 1.0f) * along);
                 auxVec_AddMulR32(&dir, &normal, k, &bullet->direction);
                 Vec_Normalise(&bullet->direction, &bullet->direction);
                 Vec_Copy(&hit->hitPosition, &obj->position);
@@ -437,7 +438,7 @@ void Bullet_CollisionHandler(obj_tag *obj) {
 
         if (bullet->wpnDef->onImpact != NULL) {
             bullet->wpnDef->onImpact(obj, &hit->surfaceNormal, &hit->hitPosition);
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
         }
 
         if (!passes)
@@ -462,7 +463,7 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
         if (MPSettings.isMultiplayer || ((obj->creationTimeFrames + GameState.NumFramesUnpaused) & 3))
             return;
         rot.z = (float)Float_FRand(TWO_PI);
-        Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.1f, 0.5f, HT_Entity_smoke_3_blacksmoke, 7, 0x404040ff,
+        Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.1f, 0.5f, HT_Entity_smoke_3_blacksmoke, GAS_WIND, 0x404040ff,
                  0x40404001,
                  0x78);
         return;
@@ -474,7 +475,7 @@ void Bullet_trail_effect_smoke(obj_tag *obj) {
     vel.z = (float)(Rand_FRand_MVar2(0.3f, 0.15f) + 0.3f);
     vel.y = (float)(Rand_FRand_MVar2(0.1f, 0.05f) + 0.5f);
     rot.z = (float)Float_FRand(TWO_PI);
-    Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, HT_Entity_smoke_3_blacksmoke, 11, 0x404040ff,
+    Gas_Init(obj->inCel, &obj->position, &rot, &vel, 0.2f, 5.0f, HT_Entity_smoke_3_blacksmoke, GAS_FADING, 0x404040ff,
              0x404040ff,
              0xff);
 }
@@ -487,7 +488,8 @@ void Bullet_SpawnSmokeDust_SomeOtherProbability(obj_tag *obj) {
     rot.x = 0.0f;
     rot.y = 0.0f;
     rot.z = (float)Float_FRand(TWO_PI);
-    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, HT_Entity_smoke_1_dust, 0, 0x7f7f7f7f, 0x80808000,
+    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.1f, 0.4f, HT_Entity_smoke_1_dust, GAS_SLOWING, 0x7f7f7f7f,
+             0x80808000,
              0x40);
 }
 
@@ -499,7 +501,8 @@ void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
     rot.x = 0.0f;
     rot.y = 0.0f;
     rot.z = (float)Float_FRand(TWO_PI);
-    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x7f7f7f7f, 0x80808000,
+    Gas_Init(obj->inCel, &obj->position, &rot, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, GAS_WIND, 0x7f7f7f7f,
+             0x80808000,
              0x20);
 }
 
@@ -508,15 +511,17 @@ void Bullet_SpawnSmokeDust_SomeProbability(obj_tag *obj) {
 static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
 
     _VECTOR *pos = &obj->position;
-    Gas_Init(obj->inCel, pos, &obj->rotation, NULL, 0.5f, 1.67f, HT_Entity_smoke_3_blacksmoke, 11, 0xffffff7f,
+    Gas_Init(obj->inCel, pos, &obj->rotation, NULL, 0.5f, 1.67f, HT_Entity_smoke_3_blacksmoke, GAS_FADING, 0xffffff7f,
              0x80808000,
              0x7f);
     Camera_Shake(pos, 2.0f);
     Bullet_PlaySound(SFX_OBJ_FLASH_GRENADE_EXPLODE, pos);
-    Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, 1, 5.0f, 0, 0, 0, 0xffff);
+    Light_Create(pos, 0xff, 0xff, 0xff, 10.0f, 0, 10, LIGHT_TRANSIENT, 5.0f, 0, 0, 0, 0xffff);
 
     HITDATA_tag *hitList = NULL;
-    Collide_SphereIntersect((_VECTOR *)&obj->transformMatrix.m[12], 30.0f, obj->inCel, obj, NULL, &hitList, 0, 1, 0xca, 4);
+    Collide_SphereIntersect((_VECTOR *)&obj->transformMatrix.m[12], 30.0f, obj->inCel, obj, NULL, &hitList, 0, 1,
+                            HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_ROOMS | HITMASK_SKIP_CHILD_CELS,
+                            4);
     for (HITDATA_tag *hit = hitList; hit != NULL; hit = hit->next) {
 
         obj_tag *target = hit->hitObj;
@@ -560,7 +565,7 @@ static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
                 break;
 
             double strength = flash;
-            if (!Collide_LineOfSight(&head, pos, obj->inCel, obj, target, 10))
+            if (!Collide_LineOfSight(&head, pos, obj->inCel, obj, target, HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT))
                 strength = strength * 0.5f;
             uchar blur = (uchar)Ftol(255.0f * strength);
             Player_SetFlashBang((BLData *)target->extraObjectData, (float)((double)_FRAME_RATE * strength * 10.0f), blur);
@@ -580,7 +585,7 @@ static void Bullet_FlashBang(obj_tag *obj, BU_tag *bullet) {
         }
     }
     Collide_FreeHitList(&hitList);
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
 }
 
 // One of a satchel's two digits, at offset in its space
@@ -611,26 +616,26 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
     if (cel == NULL)
         return;
 
-    if (bullet->firedByObj != NULL && (bullet->wpnDef->projectileFlags & ProjectileFlag_GrappleLine))
+    if (bullet->firedByObj != NULL && (bullet->wpnDef->projectileFlags & PROJFLAG_GRAPPLE_LINE))
         Vec_Copy(&obj->position, &((BLData *)bullet->firedByObj->extraObjectData)->grapplePoint);
 
     weapon_definition_tag *weapon = bullet->wpnDef;
-    if ((weapon->projectileFlags & ProjectileFlag_Accelerates) && bullet->speed < weapon->projectileSpeed)
+    if ((weapon->projectileFlags & PROJFLAG_ACCELERATES) && bullet->speed < weapon->projectileSpeed)
         bullet->speed = (float)((double)weapon->projectileSpeed * 0.02f + bullet->speed);
 
     // Out of water, by where it started the frame
     if (startPosition != NULL) {
-        if ((weapon->projectileFlags & ProjectileFlag_Smoke) && !(cel->shearHeight > startPosition->y))
+        if ((weapon->projectileFlags & PROJFLAG_SMOKE) && !(cel->shearHeight > startPosition->y))
             Bullet_trail_effect_smoke(obj);
-        if ((bullet->wpnDef->projectileFlags & ProjectileFlag_Dust) && !(cel->shearHeight > startPosition->y))
+        if ((bullet->wpnDef->projectileFlags & PROJFLAG_DUST) && !(cel->shearHeight > startPosition->y))
             Bullet_SpawnSmokeDust_SomeOtherProbability(obj);
-        if ((bullet->wpnDef->projectileFlags & ProjectileFlag_FineDust) && !(cel->shearHeight > startPosition->y))
+        if ((bullet->wpnDef->projectileFlags & PROJFLAG_FINE_DUST) && !(cel->shearHeight > startPosition->y))
             Bullet_SpawnSmokeDust_SomeProbability(obj);
     }
 
     // A new segment of trail every swooshInterval frames; the newest follows the bullet
     weapon = bullet->wpnDef;
-    if ((weapon->projectileFlags & ProjectileFlag_Swoosh) && bullet->swoosh != NULL) {
+    if ((weapon->projectileFlags & PROJFLAG_SWOOSH) && bullet->swoosh != NULL) {
         SWOOSH_tag *last = (SWOOSH_tag *)bullet->swoosh->extraObjectData;
         if ((uint)(GameState.NumFramesUnpaused - obj->creationTimeFrames) % (uint)(int)weapon->swooshInterval == 0) {
             if (Bullet_IsBeamWeapon(weapon->weaponBaseNum))
@@ -645,7 +650,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
     }
 
     // A bullet passing within 3 units of the camera, now and then
-    if ((bullet->wpnDef->projectileFlags & ProjectileFlag_FlyBy) && !MPSettings.isMultiplayer
+    if ((bullet->wpnDef->projectileFlags & PROJFLAG_FLY_BY) && !MPSettings.isMultiplayer
         && bullet->firedByObj != glb_players[0]) {
         _VECTOR nearest;
         vecutil_calculate_closest_point_on_line(&nearest, &obj->position, &obj->lastPosition, &glb_viewer[0]->pos);
@@ -655,7 +660,7 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
 
     // The fuse; the player's remote mine and the detonated ones wait
     weapon = bullet->wpnDef;
-    if (weapon->impactFlags & ImpactFlag_Fuse) {
+    if (weapon->impactFlags & IMPACTFLAG_FUSE) {
         if (weapon->weaponBaseNum == WEAPON_BASE_MINE) {
             if (bullet->fuseTimer != kMineWaitsForDetonator)
                 bullet->fuseTimer -= FRAME_RATE_MUL;
@@ -665,12 +670,12 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
 
         if (bullet->fuseTimer < 0.0f) {
             obj->curState = BulletState_Spent;
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             char flags = obj->flags;
             uint impact = bullet->wpnDef->impactFlags;
-            if (impact & ImpactFlag_FlashBang) {
+            if (impact & IMPACTFLAG_FLASH_BANG) {
                 Bullet_FlashBang(obj, bullet);
-            } else if (impact & ImpactFlag_SmokeCloud) {
+            } else if (impact & IMPACTFLAG_SMOKE_CLOUD) {
                 // The first time a cloud for 20 seconds (40 for the smoke grenade), and it stays; the second, it goes
                 if (obj->subState == 0) {
                     obj->subState = 1;
@@ -685,7 +690,8 @@ void Bullet_DoTrails(obj_tag *obj, BU_tag *bullet, _VECTOR *startPosition, float
             } else {
                 weapon = bullet->wpnDef;
                 Explode_Create(obj, &obj->position, &CONST_UP_VECTOR, weapon->explodeRadius, weapon->explodeRadius,
-                               HT_Script_ExplosionBlastRadius, weapon->damage, 200, 200, 0, bullet->firedByObj, 0);
+                               HT_Script_ExplosionBlastRadius, weapon->damage, 200, 200, 0, bullet->firedByObj,
+                               MATERIAL_NONE);
             }
         }
     }
@@ -747,12 +753,12 @@ void Bullet_Delete(obj_tag *obj) {
     if (bullet->firedByObj != NULL && bullet->firedByObj->objectType == OBJECTTYPE_PLAYER)
         blData = (BLData *)bullet->firedByObj->extraObjectData;
 
-    if ((bullet->wpnDef->projectileFlags & ProjectileFlag_RemoteControl) && blData != NULL) {
+    if ((bullet->wpnDef->projectileFlags & PROJFLAG_REMOTE_CONTROL) && blData != NULL) {
         blData->remoteControlDevice = NULL;
         blData->remoteControlTimer = 15;
     }
 
-    if ((bullet->wpnDef->impactFlags & ImpactFlag_Grapple) && blData != NULL) {
+    if ((bullet->wpnDef->impactFlags & IMPACTFLAG_GRAPPLE) && blData != NULL) {
         blData->movementDisabled = 0;
         if (obj->curState == BulletState_Spent) {
             if (obj->hitList == NULL)
@@ -766,8 +772,8 @@ void Bullet_Delete(obj_tag *obj) {
         }
     }
 
-    if ((bullet->wpnDef->impactFlags & ImpactFlag_TripBomb) && bullet->swoosh != NULL)
-        bullet->swoosh->flags |= 1;
+    if ((bullet->wpnDef->impactFlags & IMPACTFLAG_TRIP_BOMB) && bullet->swoosh != NULL)
+        bullet->swoosh->flags |= OBJFLAG_DELETE;
 }
 
 // Whether a homing projectile may chase the object: a helicopter's body drawn lately, a live drone drawn lately and
@@ -814,7 +820,8 @@ void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter) {
         double dot = (double)towards.z * facing.z + (double)towards.y * facing.y + (double)towards.x * facing.x;
         if (!(dot > 0.66f))
             continue;
-        if (Collide_LineOfSight(&shooter->position, &obj->position, shooter->inCel, shooter, obj, 8)) {
+        if (Collide_LineOfSight(&shooter->position, &obj->position, shooter->inCel, shooter, obj,
+                                HITMASK_SKIP_NO_CONTACT)) {
             bullet->heatseekTarget = obj;
             nearest = distance;
         }
@@ -824,7 +831,7 @@ void Bullet_acquiretarget(BU_tag *bullet, obj_tag *shooter) {
 // Turns a homing projectile a little towards its target (finding one first), by at most 0.01 on each axis a frame
 void Bullet_homing(BU_tag *bullet, obj_tag *obj) {
 
-    if (bullet->heatseekTarget != NULL && (bullet->heatseekTarget->flags & 1))
+    if (bullet->heatseekTarget != NULL && (bullet->heatseekTarget->flags & OBJFLAG_DELETE))
         bullet->heatseekTarget = NULL;
     if (bullet->heatseekTarget == NULL)
         Bullet_acquiretarget(bullet, obj);
@@ -925,7 +932,7 @@ void Bullet_init_casing_ex(obj_tag *casing) {
     _MATRIX bone;
     if (owner->objectType == OBJECTTYPE_PLAYER) {
         BLData *blData = (BLData *)owner->extraObjectData;
-        if ((weapon->weaponFlags & WeaponFlag_TwinGuns) && !blData->twinGunHand)
+        if ((weapon->weaponFlags & WPNFLAG_TWIN_GUNS) && !blData->twinGunHand)
             AnimGetBoneWorldTrans(blData->weaponObject, 5, 0, &bonePos, &bone);
         else
             AnimGetBoneWorldTrans(blData->weaponObject, 1, 0, &bonePos, &bone);
@@ -981,7 +988,7 @@ void Bullet_init_casing_ex(obj_tag *casing) {
     data->floorY = (float)(owner->position.y - (Float_FRand(0.5f) + 1.0f));
     AnimState *anim = owner->animState;
     if (anim != NULL)
-        data->material = anim->floor.materialType & 0x3f;
+        data->material = anim->floor.materialType & MATERIAL_MASK;
     else
         data->material = 0;
     View_SetDrawInAllViews(casing);
@@ -1096,9 +1103,9 @@ static void Bullet_SteerRemoteControl(obj_tag *obj, BU_tag *bullet, obj_tag *sho
     // these same two channels - engine/mouseSteer.cpp.)
     _VECTOR turn;
     turn.y = (float)((double)FRAME_RATE_MUL * SteerRatePerFrame
-                     * Input_Actionf(shooterData->playerNum, ACTION_AIM_L_R, 1));
+                     * Input_Actionf(shooterData->playerNum, ACTION_AIM_L_R, ACTION_HELD));
     turn.x = -(float)((double)FRAME_RATE_MUL * SteerRatePerFrame
-                      * Input_Actionf(shooterData->playerNum, ACTION_AIM_U_D, 1));
+                      * Input_Actionf(shooterData->playerNum, ACTION_AIM_U_D, ACTION_HELD));
 
     _VECTOR direction;
     Mat_GetDir(&direction, matrix);
@@ -1141,7 +1148,9 @@ static void Bullet_SteerRemoteControl(obj_tag *obj, BU_tag *bullet, obj_tag *sho
     if (bullet->distanceTravelled > 1.0f)
         ignore = NULL;
 
-    Collide_SphereIntersect((_VECTOR*)&matrix->m[12], 0.1f, obj->inCel, obj, ignore, &hitList, 0, 0, 0xa0a, 4);
+    Collide_SphereIntersect((_VECTOR*)&matrix->m[12], 0.1f, obj->inCel, obj, ignore, &hitList, 0, 0,
+                            HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS | HITMASK_SKIP_PASSABLE,
+                            4);
     bool hit = hitList != NULL;
     Collide_FreeHitList(&hitList);
 
@@ -1170,7 +1179,8 @@ static void Bullet_TripBombBeam(obj_tag *obj, BU_tag *bullet) {
     Vec_Add2(&end, &obj->position, &end);
 
     HITDATA_tag *hitList = NULL;
-    Collide_RayIntersect(&obj->position, &end, obj->inCel, obj, NULL, &hitList, 0, 0x20a, 0);
+    Collide_RayIntersect(&obj->position, &end, obj->inCel, obj, NULL, &hitList, 0,
+                         HITMASK_SKIP_GLASS | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS, 0);
     if (hitList != NULL) {
         Vec_Copy(&hitList->hitPosition, &end);
 
@@ -1202,7 +1212,7 @@ void Bullet_Update(obj_tag *obj) {
 
     bullet->test.type = 0;
 
-    if (obj->flags & 1)
+    if (obj->flags & OBJFLAG_DELETE)
         return;
 
     // How far the bullet moves this frame, before the frame rate is applied.
@@ -1216,12 +1226,12 @@ void Bullet_Update(obj_tag *obj) {
 
             if (bullet->distanceTravelled > bullet->wpnDef->range) {
                 obj->curState = BulletState_OutOfRange;
-                obj->flags |= 1;
+                obj->flags |= OBJFLAG_DELETE;
                 return;
             }
 
             // Tumbling: a roll about its own axis, slower after every bounce.
-            if (bullet->wpnDef->projectileFlags & ProjectileFlag_Tumbles) {
+            if (bullet->wpnDef->projectileFlags & PROJFLAG_TUMBLES) {
                 int bounces = bullet->numRicochets + 1;
 
                 _VECTOR spin;
@@ -1235,7 +1245,7 @@ void Bullet_Update(obj_tag *obj) {
                 MulMatrix0(&current, &spinMatrix, &obj->transformMatrix);
             }
 
-            if (bullet->wpnDef->projectileFlags & ProjectileFlag_RemoteControl) {
+            if (bullet->wpnDef->projectileFlags & PROJFLAG_REMOTE_CONTROL) {
                 obj_tag *shooter = bullet->firedByObj;
                 if (shooter != NULL && shooter->objectType == OBJECTTYPE_PLAYER
                     && shooter->subState == MovementType_RemoteControl) {
@@ -1245,7 +1255,7 @@ void Bullet_Update(obj_tag *obj) {
 
             // Gravity bends the direction and changes the speed, which are kept apart as a unit direction and
             // a length.
-            if ((bullet->wpnDef->projectileFlags & ProjectileFlag_Gravity) && !bullet->gravityOff) {
+            if ((bullet->wpnDef->projectileFlags & PROJFLAG_GRAVITY) && !bullet->gravityOff) {
                 Vec_Scalef(&bullet->direction, bullet->speed, &bullet->direction);
                 auxVec_AddMulR32(&bullet->direction, &GRAVITY_VECTOR,
                                  (float)((double)REC_FRAME_RATE * REC_FRAME_RATE * FRAME_RATE_DIV), &bullet->direction);
@@ -1253,15 +1263,15 @@ void Bullet_Update(obj_tag *obj) {
             }
 
             weapon = bullet->wpnDef;
-            if (weapon->projectileFlags & ProjectileFlag_Light) {
+            if (weapon->projectileFlags & PROJFLAG_LIGHT) {
                 Light_Create(&obj->position, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                             4.0f, 0, 0, 1, 2.0f, 0, 0, 0, 0xffff);
+                             4.0f, 0, 0, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
             }
             break;
 
         case BulletState_Spent:
         case BulletState_OutOfRange:
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
             return;
 
         case BulletState_Stuck:
@@ -1273,8 +1283,8 @@ void Bullet_Update(obj_tag *obj) {
 
             // Stuck to something that has since gone: a trip-bomb goes off, anything else flies on.
             if (bullet->heatseekTarget != NULL) {
-                if (bullet->heatseekTarget->flags & 1) {
-                    if (bullet->wpnDef->impactFlags & ImpactFlag_TripBomb) {
+                if (bullet->heatseekTarget->flags & OBJFLAG_DELETE) {
+                    if (bullet->wpnDef->impactFlags & IMPACTFLAG_TRIP_BOMB) {
                         Bullet_handle_object_destruction(obj, bullet->firedByObj);
                         bullet->heatseekTarget = NULL;
                         return;
@@ -1290,7 +1300,7 @@ void Bullet_Update(obj_tag *obj) {
             bullet->speed = 0.0f;
             Vec_Zero(&bullet->direction);
 
-            if (bullet->wpnDef->impactFlags & ImpactFlag_TripBomb) {
+            if (bullet->wpnDef->impactFlags & IMPACTFLAG_TRIP_BOMB) {
                 // Armed once the fuse has run down; until then the beam is not there.
                 if (bullet->fuseTimer > 0.0f) {
                     bullet->fuseTimer -= FRAME_RATE_MUL;
@@ -1303,7 +1313,7 @@ void Bullet_Update(obj_tag *obj) {
             if (bullet->wpnDef->weaponBaseNum == Weap_OddjobHat) {
                 bullet->fuseTimer -= FRAME_RATE_MUL;
                 if (bullet->fuseTimer <= 0.0f)
-                    obj->flags |= 1;
+                    obj->flags |= OBJFLAG_DELETE;
             }
             break;
 
@@ -1313,12 +1323,12 @@ void Bullet_Update(obj_tag *obj) {
             step = (float)((Float_FRand(0.5f) + 0.5f) * bullet->speed);
             obj->curState++;
 
-            if ((bullet->wpnDef->projectileFlags & (ProjectileFlag_NoModel | ProjectileFlag_Tracer)) == 0) {
+            if ((bullet->wpnDef->projectileFlags & (PROJFLAG_NO_MODEL | PROJFLAG_TRACER)) == 0) {
                 obj->scale = 1.0f;
                 HASHCODE gfx = bullet->wpnDef->projectileGfx;
                 if (gfx != 0) {
                     hashtable_set_object_to_entity_gfx(obj, gfx);
-                    if (bullet->wpnDef->projectileFlags & ProjectileFlag_LaserBeam) {
+                    if (bullet->wpnDef->projectileFlags & PROJFLAG_LASER) {
                         obj->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
                         obj->scale = bullet->speed;
                     }
@@ -1329,7 +1339,7 @@ void Bullet_Update(obj_tag *obj) {
                 }
             }
             else if ((bullet->firedByObj != NULL && bullet->firedByObj->objectType == OBJECTTYPE_DRONE)
-                     || (bullet->wpnDef->projectileFlags & ProjectileFlag_Tracer)) {
+                     || (bullet->wpnDef->projectileFlags & PROJFLAG_TRACER)) {
                 View_SetDrawInAllViews(obj);
                 hashtable_set_object_to_entity_gfx(obj, HT_Entity_GUN_BULLET_TRAIL);
                 obj->transformFlags |= TRANSFORM_SCALE_LENGTH_ONLY;
@@ -1360,7 +1370,7 @@ void Bullet_Update(obj_tag *obj) {
     // at least half its radius, otherwise a sphere where it is now.
     if ((short)obj->curState < BulletState_Spent) {
         bullet->test.mask = 0;
-        bullet->test.flags = (weapon->projectileFlags & ProjectileFlag_MaterialMask) ? 0 : 0x20;
+        bullet->test.flags = (weapon->projectileFlags & PROJFLAG_MATERIAL_MASK) ? 0 : 0x20;
         bullet->test.damage = weapon->damage;
 
         if (weapon->explodeRadius > 0.0f) {
@@ -1412,7 +1422,7 @@ void Bullet_Update(obj_tag *obj) {
 
     Bullet_DoTrails(obj, bullet, &startPosition, step);
 
-    if (bullet->wpnDef->projectileFlags & ProjectileFlag_Homing)
+    if (bullet->wpnDef->projectileFlags & PROJFLAG_HOMING)
         Bullet_homing(bullet, obj);
 
     obj->transformFlags |= TRANSFORM_MOVED;

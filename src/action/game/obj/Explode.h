@@ -16,7 +16,8 @@ typedef struct EXPLODE_tag {
     float radius;               // 0x24
     uint frames;                // 0x28 - the script's (15 without one): debris comes in the first quarter
     SCRIPTINFO *script;         // 0x2c
-    ushort material;            // 0x30 - what was hit: 5 and 6 throw metal debris, 8, 10 and 11 stone
+    ushort material;            // 0x30 - what was hit (Material): metal throws metal debris, earth, stone and
+                                //        gravel stone
     uchar propagated;           // 0x32
     uchar _pad33;
 } EXPLODE_tag;

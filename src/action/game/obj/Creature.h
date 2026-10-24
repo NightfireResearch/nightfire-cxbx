@@ -10,7 +10,7 @@
 
 // Creature::kind
 #define CREATURE_SWIMS 0
-#define CREATURE_FISH  1    // only in a cel of kind 0xc023, and listed in FishList
+#define CREATURE_FISH  1    // only in a CELKIND_WATER_ROOM, and listed in FishList
 
 // Creature::state
 #define CREATURE_PLAN   0   // new waypoints, then moving

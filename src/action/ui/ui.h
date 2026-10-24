@@ -275,7 +275,7 @@ typedef struct M_MANAGER {
     STACKINFO stack;            // 0xa8 page history for Back: {M_PAGE*, focused control} entries
     int stackMem[64];           // 0xb0
     HASHCODE currentMovie;      // 0x1b0 the background movie playing
-    uint status;                // 0x1b4 MenuManager_GetStatus; above 3, START selects too
+    uint status;                // 0x1b4 MenuStatus; above MENU_STATUS_PAUSE, START selects too
     HASHCODE startPage;         // 0x1b8
     M_PAGE *currentPage;        // 0x1bc
     M_PAGE *underPage;          // 0x1c0 the page left showing under an overlay (GoPage flag 2)

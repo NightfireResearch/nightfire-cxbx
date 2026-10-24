@@ -301,14 +301,14 @@ uchar Menu_RunMiniMission(uchar managerNum) {
             strcpy(ls.codename, Txt_BindLabel(def_codename[1].name, 0));
             ls.doMiniMission = 1;
             GameState.NextLevelHashcode = HT_Level_Driving_Paris;
-            GameState.difficultyModifier = 1;
+            GameState.difficultyModifier = DIFF_OPERATIVE;
             MPSettings.isMultiplayer = 0;
             MPSettings.numPlayers = 1;
             MPSettings.numPlayersAndBots = 1;
             MPSettings.isTeamGame = 0;
             ResetMap_LevelToLoad(HT_Level_Driving_Paris, false, false);
             GameState.BaseMapHashCode = 0;
-            GameFlow_PushState(7, 80.0f, 0xff);
+            GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
             SFXFadeDown(1);
             MenuManager_Delete(managerNum);
             return 1;

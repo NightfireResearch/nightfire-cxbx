@@ -92,7 +92,7 @@ static bool IsObstacle(Drone_tag *drone, Drone_tag *other) {
         return false;
     if (data->health <= 0.0f)
         return false;
-    if (obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & 1))
+    if (obj->objectType == OBJECTTYPE_DEAD_DRONE || (obj->flags & OBJFLAG_DELETE))
         return false;
     return true;
 }

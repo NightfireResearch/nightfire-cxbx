@@ -40,7 +40,7 @@ void Swoosh_Update(obj_tag *obj) {
     SWOOSH_tag *swoosh = (SWOOSH_tag *)obj->extraObjectData;
     swoosh->timer--;
     if (swoosh->timer <= 0)
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     obj->transformFlags |= TRANSFORM_MOVED;
     obj->tweakA = Ftol((double)swoosh->timer * 128.0f / swoosh->total);
 

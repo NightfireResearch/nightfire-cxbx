@@ -4,6 +4,25 @@
 #include "../actionhelpers.h"
 #include "../../common/xbeClass.h"
 
+// sprite::flags and SpriteInfo::flags (Sprite_Create2 copies them). View_DrawSprites reads them, the blends go on
+// to psiDrawSprites.
+enum SpriteFlags {
+    SPRITE_SHADOW = 0x20,           // a black copy where it was, the sprite a 64th of its size (1 to 5 pixels) on
+    SPRITE_FLIP_X = 0x40,
+    SPRITE_FLIP_Y = 0x80,
+    SPRITE_BLEND_1 = 0x100,         // d3dSetupRenderStatesAndFog(1)
+    SPRITE_BLEND_2 = 0x200,         // d3dSetupRenderStatesAndFog(2), when SPRITE_BLEND_1 is clear
+    SPRITE_TILED = 0x400,           // mirrored tiles, as many as the texture goes into the texels used
+    SPRITE_CENTRED = 0x800,
+    SPRITE_CLIP_TO_VIEW = 0x1000,   // HUD_CreateDefault cuts the sprite to the view, HUD_CalcWidthHeight leaves it out
+    SPRITE_TEXT_RING = 0x2000,      // a text's four-copy shadow (Font_DrawText's FONT_SHADOW_RING)
+    SPRITE_TEXT_OUTLINE = 0x4000,
+};
+
+// Values of sprite::depth with special meaning to the list builder
+#define SPRITE_HIDDEN 0xff          // never drawn
+#define SPRITE_FOREGROUND_MIN 50    // sorted to the front; see Sprite_BuildList
+
 #pragma pack(push, 1)
 
 typedef struct {
@@ -16,11 +35,11 @@ typedef struct sprite {
     unsigned int createdOnFrame;
     unsigned int textureIndex;
     unsigned int colourTint;
-    unsigned int unknown1;
+    unsigned int shadowColour;  // 0x14 - a text's shadow (Font_DrawText's)
     char *text;
     char *format;
     short length; // at 0x20
-    short flags;
+    short flags;                // 0x22 - SpriteFlags
     short positionX;
     short positionY;
     short backupOnscreenWidth;
@@ -38,14 +57,14 @@ typedef struct sprite {
 } sprite;
 
 LAYOUT_32(sizeof(sprite) == 0x44, "Wrong size for sprite");
-LAYOUT_32(offsetof(sprite, unknown1) == 0x14, "Wrong offset for unknown1");
+LAYOUT_32(offsetof(sprite, shadowColour) == 0x14, "Wrong offset for shadowColour");
 LAYOUT_32(offsetof(sprite, linkedViewer) == 0x39, "Wrong offset for linkedViewer");
 
 typedef struct SpriteInfo {
     uint colour;
-    uint unknown1;
+    uint shadowColour;
     ushort depth;
-    short flags;
+    short flags;        // SpriteFlags
     short posX;
     short posY;
     short onscreenWidth;

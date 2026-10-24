@@ -136,7 +136,8 @@ void SpaceLaser_Update(obj_tag *obj) {
 
             // Cast a ray. If the ray hits something, update the end point accordingly?
             HITDATA_tag *hitList = NULL;
-            if(Collide_RayIntersect(&spaceLaser->emitterPnt, &beamEnd, obj->inCel, obj, NULL, &hitList, 0, 0x0008, 0)) {
+            if(Collide_RayIntersect(&spaceLaser->emitterPnt, &beamEnd, obj->inCel, obj, NULL, &hitList, 0,
+                                    HITMASK_SKIP_NO_CONTACT, 0)) {
                 Vec_Copy(&(hitList[0].hitPosition), &spaceLaser->targetPnt);
             }
             Collide_FreeHitList(&hitList);
@@ -198,7 +199,7 @@ void SpaceLaser_Update(obj_tag *obj) {
                 spaceLaser->soundHandle = NULL;
             }
             
-            obj->flags |= 1;
+            obj->flags |= OBJFLAG_DELETE;
 
             break;
 

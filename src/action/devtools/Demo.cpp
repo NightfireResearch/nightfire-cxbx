@@ -975,7 +975,7 @@ void Demo_FrameEnd(void) {
         if (getenv("NIGHTFIRE_DEMO_DUMP_VIEWER") != NULL && glb_viewer[0] != NULL) {
             uint32_t v[7];
             memcpy(v, &glb_viewer[0]->pos, 12);
-            memcpy(v + 3, &glb_viewer[0]->someVec, 12);
+            memcpy(v + 3, &glb_viewer[0]->rot, 12);
             memcpy(v + 6, &glb_viewer[0]->zoom, 4);
             printf("[demo] frame %u viewer: %08x %08x %08x %08x %08x %08x %08x\n", g_frame, v[0], v[1], v[2], v[3], v[4],
                    v[5], v[6]);

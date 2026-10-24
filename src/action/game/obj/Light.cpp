@@ -188,7 +188,7 @@ void Lights_CalcAmbientLight(obj_tag *obj) {
     cel_tag *cel = obj->inCel;
     if (cel == NULL || !(obj->effectFlags & EFFECT_CEL_LIT))
         return;
-    ushort state = (uchar)switch_channels[(uchar)cel->someSwitchChannel];
+    ushort state = (uchar)switch_channels[(uchar)cel->ambientChannel];
     short r = cel->ambientR[state];
     short g = cel->ambientG[state];
     short b = cel->ambientB[state];
@@ -203,8 +203,7 @@ void Lights_CalcAmbientLight(obj_tag *obj) {
 }
 
 // The lights within reach of a sphere (its radius after its centre), up to 30, sorted, in a list of the module's; NULL
-// for none. Mask 0x80 lets in the level's ambient lights (type 0) and those carried by objects within 4 across the
-// floor (type 2); 0x100 keeps out type 1.
+// for none. The mask is the object's effect flags.
 // AUTOINJECT
 light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) {
     ushort found = 0;
@@ -217,13 +216,13 @@ light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) 
         if (!light->enabled)
             continue;
         uchar type = light->lightType;
-        if (type == 0 && !(mask & 0x80))
+        if (type == LIGHT_PLACED && !(mask & EFFECT_PLACED_LIGHTS))
             continue;
-        if (type == 1 && (mask & 0x100))
+        if (type == LIGHT_TRANSIENT && (mask & EFFECT_NO_TRANSIENT_LIGHTS))
             continue;
         double distance;
-        if (type == 2) {
-            if (!(mask & 0x80))
+        if (type == LIGHT_CARRIED) {
+            if (!(mask & EFFECT_PLACED_LIGHTS))
                 continue;
             distance = Vec_Dist2D(&light->parentObject->position, sphere);
             if (distance > 4.0f)
@@ -257,6 +256,6 @@ void Light_SetAmbientRadiators(AMBIENT_RADIATORS *radiators) {
         uchar b = (uchar)Ftol(radiator->b * 255.0f);
         uchar g = (uchar)Ftol(radiator->g * 255.0f);
         uchar r = (uchar)Ftol(radiator->r * 255.0f);
-        Light_Create(&pos, r, g, b, radius, 0, -1, 0, 1.0f, 0, 0, 0, 0xffff);
+        Light_Create(&pos, r, g, b, radius, 0, -1, LIGHT_PLACED, 1.0f, 0, 0, 0, 0xffff);
     }
 }

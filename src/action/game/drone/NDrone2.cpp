@@ -334,9 +334,6 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
 // ---------------------------------------------------------------------------------------------------------------
 
-// AnimGetBoneWorldTrans's bone argument, as these pass it: bit 31 set, and the bone
-#define WORLD_BONE(bone) (0x80000000 | (bone))
-#define HEAD_BONE 5
 
 // Whether the object holds a weapon: 2-0x46 or 0x6a-0x71 (AnimState.currentWeaponId).
 // AUTOINJECT
@@ -420,10 +417,10 @@ bool NDrone2_GetHeadPosOld(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
         (gameObj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
         if (yaw != NULL) {
             _MATRIX mtx;
-            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, pos, &mtx);
+            AnimGetBoneWorldTrans(gameObj, ANIM_BONE(BONE_HEAD), 0, pos, &mtx);
             *yaw = gameObj->rotation.y;
         } else {
-            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, pos, NULL);
+            AnimGetBoneWorldTrans(gameObj, ANIM_BONE(BONE_HEAD), 0, pos, NULL);
         }
         return true;
     }
@@ -447,7 +444,7 @@ bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
             animating = (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED) &&
                         GameState.CurrentLevelHashcode != HT_Level_SpaceStationD;
         if (animating && (anim->animObj.flags & ANIMOBJ_POSE_VALID)) {
-            AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
+            AnimGetBoneWorldTrans(gameObj, ANIM_BONE(bone), 0, pos, NULL);
             return true;
         }
     }
@@ -518,7 +515,7 @@ void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char for
 bool NDrone2_HeadTrackObj(obj_tag *obj, int ticks, float speed, DCVars_tag *dcv) {
     if (behaviour_util_getProperty(DRONE_PROP_HEAD_TRACK, dcv->drone->currentBehaviour) == 0)
         return false;
-    AnimObjectSetHeadTracking(dcv->gameObj, obj, 3.0f, 0.14f, 1, 1, HEAD_BONE);
+    AnimObjectSetHeadTracking(dcv->gameObj, obj, 3.0f, 0.14f, 1, 1, BONE_HEAD);
     dcv->gameObj->animState->animObj.headTrackSpeed = speed == 0.0f ? 0.07f : speed;
     dcv->drone->headTarget = obj;
     dcv->drone->headTracking = obj != NULL;
@@ -683,7 +680,8 @@ void DroneFunc_HandleExplosives(DCVars_tag *dcv) {
             // The radius is squared on the x87, unrounded
             if (!(Vec_SqDist3D(&gameObj->position, &point->pos) < (double)point->radius * point->radius))
                 continue;
-            if (DroneVision_ObjectVisibility(drone, point->obj) >= 0.7f && NDrone2_CanSeeObject(drone, point->obj, HEAD_BONE, 0))
+            if (DroneVision_ObjectVisibility(drone, point->obj) >= 0.7f &&
+                NDrone2_CanSeeObject(drone, point->obj, BONE_HEAD, 0))
                 Drone_SM_SendMsgSelf(DRONE_MSG_ExplosiveSeen, point->obj, 0, 0, dcv);
             return;
         }

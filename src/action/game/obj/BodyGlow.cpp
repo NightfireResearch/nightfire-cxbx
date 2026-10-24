@@ -57,10 +57,10 @@ obj_tag* BodyGlow_Create(obj_tag *owner) {
 
 // AUTOINJECT
 void BodyGlow_Delete(obj_tag *glow) {
-    glow->flags |= 1;
+    glow->flags |= OBJFLAG_DELETE;
     BODYGLOW_tag *data = (BODYGLOW_tag *)glow->extraObjectData;
     for (int i = 0; i < BODYGLOW_BEAMS; i++)
-        data->beams[i]->flags |= 1;
+        data->beams[i]->flags |= OBJFLAG_DELETE;
 }
 
 // Drawn in no view, hidden (effect flag 0x10)
@@ -87,13 +87,13 @@ void BodyGlow_Update(obj_tag *glow) {
     AnimObj *animObj = &anim->animObj;
 
     Drone_tag *drone = NULL;
-    if (owner->objectType == OBJECTTYPE_DRONE && !(owner->flags & 1)) {
+    if (owner->objectType == OBJECTTYPE_DRONE && !(owner->flags & OBJFLAG_DELETE)) {
         drone = (Drone_tag *)owner->extraObjectData;
         if (drone->health < 0.0f || drone->health == 0.0f)
             data->life--;
     }
     BLData *blData = NULL;
-    if (owner->objectType == OBJECTTYPE_PLAYER && !(owner->flags & 1)) {
+    if (owner->objectType == OBJECTTYPE_PLAYER && !(owner->flags & OBJFLAG_DELETE)) {
         blData = (BLData *)owner->extraObjectData;
         if (blData->health < 0.0f || blData->health == 0.0f)
             data->life--;
@@ -112,7 +112,7 @@ void BodyGlow_Update(obj_tag *glow) {
     for (int i = 0; i < NUM_PLAYERS; i++) {
         if (glb_viewer[i] == NULL || blData == glb_blokes[i])
             continue;
-        if (glb_viewer[i]->nightVisionRelated == 2)
+        if (glb_viewer[i]->visionMode == VISION_XRAY)
             views |= 1 << i;
         if (glb_blokes[i]->hudInfo->pane[OICW].enabled) {
             views |= 1 << i;

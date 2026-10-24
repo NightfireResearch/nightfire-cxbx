@@ -900,7 +900,7 @@ bool NDrone2_SetGoalToDroneWithLosToOpponent(DCVars_tag *dcv) {
             continue;
         if (gameObj->objectType == OBJECTTYPE_DEAD_DRONE)
             continue;
-        if (gameObj->flags & 1)
+        if (gameObj->flags & OBJFLAG_DELETE)
             continue;
         if (other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_BIT14))
             continue;

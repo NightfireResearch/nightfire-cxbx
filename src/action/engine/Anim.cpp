@@ -1402,14 +1402,15 @@ void AnimProcessScriptCmds(obj_tag *obj, AnimObj *animObj, sAnimScript_tag *scri
                         break;
                     AnimDatumSetEntity(holder, datum + 1, flash, 3);
                     Light_Create(&muzzle, weapon->muzzleFlash_r, weapon->muzzleFlash_g, weapon->muzzleFlash_b,
-                                 weapon->muzzleLightRadius, 0, 3, 1, 2.0f, 0, 0, 0, 0xffff);
-                    if (!(weapon->weaponFlags & 0x2000)) {
+                                 weapon->muzzleLightRadius, 0, 3, LIGHT_TRANSIENT, 2.0f, 0, 0, 0, 0xffff);
+                    if (!(weapon->weaponFlags & WPNFLAG_NO_SMOKE)) {
                         _VECTOR spin;
                         spin.x = 0.0f;
                         spin.y = 0.0f;
                         spin.z = 0.0f;
                         spin.z = (float)Float_FRand(TWO_PI);
-                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, 7, 0x48403080,
+                        Gas_Init(obj->inCel, &muzzle, &spin, NULL, 0.05f, 0.1f, HT_Entity_smoke_1_dust, GAS_WIND,
+                                 0x48403080,
                                  1, 0x80);
                     }
                     break;
@@ -2340,9 +2341,9 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
             hashtable_set_object_to_entity_gfx(obj, hashtable_celglist_to_hashcode(skin->riggedBody[0]));
         rigged = skin->numRigged != 0;
         if (animObj->flags & ANIMOBJ_FULL_CHARACTER)
-            obj->flags |= 8;
+            obj->flags |= OBJFLAG_FULL_CHARACTER;
         if (rigged)
-            obj->flags |= 4;
+            obj->flags |= OBJFLAG_RIGGED;
 
         if (skin->numDiscrete != 0) {
             animObj->discreteObj = (obj_tag **)Mem_Malloc(skin->numDiscrete * sizeof(obj_tag *),
@@ -2359,7 +2360,7 @@ int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
                 part->objectType = OBJECTTYPE_ANIMOBJECT;
                 part->effectFlags = (part->effectFlags & ~EFFECT_NO_COLLISION) | EFFECT_STRADDLES_CELS;
                 if (rigged)
-                    part->flags |= 4;
+                    part->flags |= OBJFLAG_RIGGED;
                 animObj->discreteObj[i] = part;
             }
         }
@@ -2576,9 +2577,6 @@ int AnimObjectUpdate(obj_tag *obj) {
     return 1;
 }
 
-// A full character's foot
-#define ANIM_BONE_FOOT 0x37
-
 // How high a full character's foot is when it stands; 0 for others
 float AnimObjectInitialPose(obj_tag *obj) {
     _VECTOR foot;
@@ -2591,7 +2589,7 @@ float AnimObjectInitialPose(obj_tag *obj) {
         script->speed = 0.0f;
         script->flags &= ~ANIMSCRIPT_LOOP;
         AnimObjectUpdate(obj);
-        AnimGetBoneWorldTrans(obj, 0x80000000 | ANIM_BONE_FOOT, 0, &foot, NULL);
+        AnimGetBoneWorldTrans(obj, ANIM_BONE(BONE_LEFT_FOOT), 0, &foot, NULL);
         AnimScriptDelete(obj, &script);
     }
     return foot.y;
@@ -2727,10 +2725,10 @@ void psiBuildMatrixPalette(obj_tag *obj, AnimObj *animObj, char buildPalette) {
                 MultiplyQuaternionAltOrder(&worldQuats[parent], &quats[b], &worldQuats[b]);
                 Quat_QuatToMat(&worldQuats[b], m);
                 MatrixMultiplyVector(&bone[parent], &trans[b], Mat_Position((*m)));
-                if (headTrack && b == ANIM_HEADTRACK_BONE)
-                    AnimObjectHeadTrack(obj, animObj, worldQuats, bone, ANIM_HEADTRACK_BONE);
-                if (aim && b == ANIM_AIM_BONE)
-                    AnimObjectAimAt(obj, animObj, worldQuats, bone, ANIM_AIM_BONE);
+                if (headTrack && b == BONE_HEAD)
+                    AnimObjectHeadTrack(obj, animObj, worldQuats, bone, BONE_HEAD);
+                if (aim && b == BONE_AIM)
+                    AnimObjectAimAt(obj, animObj, worldQuats, bone, BONE_AIM);
             }
         }
     }
@@ -2757,8 +2755,8 @@ void AnimGetBoneWorldTrans(obj_tag *obj, uint which, int datumOffset, _VECTOR *p
         psiBuildMatrixPalette(obj, animObj, 0);
         sAnimSkin_tag *skin = animObj->skin;
 
-        if (which & 0x80000000) {
-            _MATRIX *m = &animObj->boneMtxs[which & 0x7fffffff];
+        if (which & ANIM_WHICH_BONE) {
+            _MATRIX *m = &animObj->boneMtxs[which & ~ANIM_WHICH_BONE];
             *posOut = *Mat_Position((*m));
             if (mtxOut != NULL)
                 *mtxOut = *m;
@@ -2799,8 +2797,8 @@ void AnimGetBoneWorldTrans2(obj_tag *obj, uint which, int datumOffset, _VECTOR *
         sAnimSkin_tag *skin = animObj->skin;
         _VECTOR *trans = (_VECTOR *)animObj->pose;
         quaternion_tag *quats = (quaternion_tag *)(trans + SkeletonTable[skin->skeletonNum]->numBones);
-        bool isBone = (which & 0x80000000) != 0;
-        which &= 0x7fffffff;
+        bool isBone = (which & ANIM_WHICH_BONE) != 0;
+        which &= ~ANIM_WHICH_BONE;
 
         int datum = 0;
         int bone;
@@ -2893,7 +2891,7 @@ void AnimObjectHeadTrack(obj_tag *obj, AnimObj *animObj, quaternion_tag *worldQu
     _VECTOR *headPos = Mat_Position(*head);
     _VECTOR ahead, up, side;
     Vec_Copy((_VECTOR *)&head->m[8], &ahead);
-    Vec_UnitVector(&up, Mat_Position(boneMtxs[ANIM_AIM_BONE]), headPos);
+    Vec_UnitVector(&up, Mat_Position(boneMtxs[BONE_AIM]), headPos);
     Vec_CrossNormalise(&up, &ahead, &side);
 
     _VECTOR *target;
@@ -3319,10 +3317,11 @@ void AnimObjectDraw(obj_tag *obj, viewer_tag *viewer) {
         reach.y = 0.0f;
         reach.z = 0.0f;
         MatrixMultiplyVector(&gunMtx, &reach, &to);
-        if (Collide_RayIntersect(&from, &to, obj->inCel, obj, NULL, &hitList, 0, 8, 0) && hitList != NULL)
+        if (Collide_RayIntersect(&from, &to, obj->inCel, obj, NULL, &hitList, 0, HITMASK_SKIP_NO_CONTACT, 0) &&
+            hitList != NULL)
             Vec_Copy(&hitList->hitPosition, &to);
         Collide_FreeHitList(&hitList);
-        celglist_tag *beam = (celglist_tag *)hashtable_getitem(viewer->nightVisionRelated == 1
+        celglist_tag *beam = (celglist_tag *)hashtable_getitem(viewer->visionMode == VISION_NIGHT
                                                                ? HT_Entity_lazer
                                                                    : HT_Entity_watch_lazer);
         if (beam != NULL) {

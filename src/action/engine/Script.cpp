@@ -98,13 +98,13 @@ DLISTINFO_tag ScriptList;
 SpriteInfo LetterboxSprInfo[1] = {
     {
         .colour = 255,
-        .unknown1 = 0xffffffff,
+        .shadowColour = 0xffffffff,
         .depth = 0xffff,
         .onscreenWidth = 640,
         .onscreenHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 4,
+        .linkedViewer = VIEWER_SCRIPT,
     },
 };
 #define LETTERBOX_BOTTOM_Y 0x1a0
@@ -174,7 +174,7 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
                 Vec_Copy2(Mat_Position(linkedObj->transformMatrix), &linkedObj->position, &linkedObj->lastPosition);
                 linkedObj->transformFlags |= TRANSFORM_MOVED;
             } else {
-                linkedObj->flags |= 1; // mark for deletion
+                linkedObj->flags |= OBJFLAG_DELETE;
             }
         }
         break;
@@ -190,7 +190,7 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         if (scriptInfo->scriptFlags & ScriptFlag_RestoreOnKillStream) {
             linkedObj->extraObjectData = NULL;
         } else {
-            linkedObj->flags |= 1; // mark for deletion
+            linkedObj->flags |= OBJFLAG_DELETE;
         }
         break;
     }
@@ -207,15 +207,15 @@ void Script_KillStream(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
             return;
 
         Camera_PopStates();
-        Camera_Enable(4, 0, 0, NULL);
+        Camera_Enable(VIEWER_SCRIPT, 0, 0, NULL);
         Mem_Free(&cameraState);
-        Music_Event(0xc, scriptInfo->scriptHashcode);
+        Music_Event(MUSICEV_NIS_ENDED, scriptInfo->scriptHashcode);
 
         if (Borders[0] != NULL) {
-            Borders[0]->depth = 0xff;
+            Borders[0]->depth = SPRITE_HIDDEN;
         }
         if (Borders[1] != NULL) {
-            Borders[1]->depth = 0xff;
+            Borders[1]->depth = SPRITE_HIDDEN;
         }
         break;
     }
@@ -443,12 +443,12 @@ void Script_ConcatParents(SCRIPTINFO *scriptInfo, SSTREAM *stream, _MATRIX *out)
 
 // Copies a camera stream's view to camera 4 and leaves the camera to find its room again.
 void Script_UpdateCamera(SCRIPTCAMERA *camera) {
-    if (camera == NULL || glb_viewer[4] == NULL)
+    if (camera == NULL || glb_viewer[VIEWER_SCRIPT] == NULL)
         return;
 
-    glb_viewer[4]->viewMatrix = camera->view;
-    Camera_CalcViewAngles(4, glb_viewer[4]->AspectRatio * camera->fov);
-    glb_viewer[4]->someCel = NULL;
+    glb_viewer[VIEWER_SCRIPT]->viewMatrix = camera->view;
+    Camera_CalcViewAngles(VIEWER_SCRIPT, glb_viewer[VIEWER_SCRIPT]->AspectRatio * camera->fov);
+    glb_viewer[VIEWER_SCRIPT]->cel = NULL;
 }
 
 // Puts what a stream drives where its keys say for the stream's current frame: an entity (its matrix, scale and
@@ -506,14 +506,17 @@ void Script_Interp(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
             NDrone2_CreateNinjaEyes(obj);
 
         // A footstep this frame: a ray 4 down from the object finds the ground under it
-        if (!(obj->animState->animFlags & 4))
+        if (!(obj->animState->animFlags & ANIM_FOOTSTEP))
             return;
 
         _VECTOR from, to;
         Vec_Copy2(Mat_Position(obj->transformMatrix), &from, &to);
         to.y -= 4.0f;
         HITDATA_tag *hitList = NULL;
-        if (!Collide_RayIntersect(&from, &to, build_FindCel(&from, glb_world), obj, NULL, &hitList, 0, 0xf0d, 0))
+        if (!Collide_RayIntersect(&from, &to, build_FindCel(&from, glb_world), obj, NULL, &hitList, 0,
+                                  HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT |
+                                  HITMASK_SKIP_DRONES | HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS |
+                                  HITMASK_SKIP_PASSABLE, 0))
             return;
 
         if ((double)hitList->dist - animObj->rootHeight <= 0.2f)
@@ -617,9 +620,9 @@ void Script_CameraStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
     Camera_PushStates();
     for (ushort i = 0; i <= 6; i++)
         Camera_Enable(i, 0, 0, NULL);
-    Camera_Enable(4, 1, 1, NULL);
+    Camera_Enable(VIEWER_SCRIPT, 1, 1, NULL);
     scriptInfo->fadeFlags |= ScriptFade_FFwdAllowed;
-    Music_Event(0xb, scriptInfo->scriptHashcode);
+    Music_Event(MUSICEV_NIS_STARTED, scriptInfo->scriptHashcode);
 
     if (Borders[0] == NULL)
         Borders[0] = Sprite_Create2(LetterboxSprInfo);
@@ -675,7 +678,7 @@ obj_tag* Script_CreateEntity(SSTREAM *stream, HASHCODE hashcode, uchar placement
             control_unlink_object(obj);
             return obj;
         }
-        obj->flags |= 1; // mark for deletion
+        obj->flags |= OBJFLAG_DELETE;
         stream->linkedGameOrSoundObject = NULL;
     }
 
@@ -787,7 +790,7 @@ void Script_SpriteStart(SSTREAM *stream) {
     HASHCODE hashcode = (HASHCODE)BIN_GetDWord(&stream->streamBuffer);
     sprite *spr = (sprite *)stream->linkedGameOrSoundObject;
     if (spr == NULL) {
-        spr = Sprite_CreateAndLink2Viewer(4);
+        spr = Sprite_CreateAndLink2Viewer(VIEWER_SCRIPT);
         if (spr == NULL)
             return;
     }
@@ -1014,7 +1017,7 @@ void Script_AnimStart(SCRIPTINFO *scriptInfo, SSTREAM *stream) {
         return;
 
     AnimObjectNew(obj, skin);
-    obj->animState->animObj.flags |= 0x8000;
+    obj->animState->animObj.flags |= ANIMOBJ_INV_SKIN_SCALE;
     sAnimScript_tag *animScript = AnimScriptAdd(obj, scriptHashcode);
     animScript->flags |= ANIMSCRIPT_SCRIPT_DRIVEN;
     float frame = (float)startFrame;
@@ -1118,7 +1121,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
             case ScriptCmd_FadeStart: {
                 float frames = BIN_GetFloat(&stream->streamBuffer);
                 if (!(scriptInfo->fadeFlags & ScriptFade_FFwdRequested))
-                    Camera_SetFade(4, -frames, 0xff, 0);
+                    Camera_SetFade(VIEWER_SCRIPT, -frames, 0xff, 0);
                 break;
             }
 
@@ -1148,7 +1151,7 @@ void Script_Run(SCRIPTINFO *scriptInfo) {
             case ScriptCmd_TextStart: {
                 Action_TranslatedText label = (Action_TranslatedText)BIN_GetDWord(&stream->streamBuffer);
                 ushort frames = BIN_GetWord(&stream->streamBuffer);
-                Text_AddMsg(-1, 0, 4, (char *)Txt_BindLabel(label, 0), 0, frames);
+                Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, (char *)Txt_BindLabel(label, 0), 0, frames);
                 break;
             }
 
@@ -1332,7 +1335,7 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
             // Pre-emptively start fading out a scripted camera NIS once it's within 20 frames of its end
             if (ScriptCam != 0 && (scriptInfo->scriptFlags & ScriptFlag_IsCameraNIS) &&
                 (float)(int)(scriptInfo->endFrame - 20) <= scriptInfo->elapsedFrames &&
-                glb_viewer[4]->fadeState != VIEWFADE_FADING) {
+                glb_viewer[VIEWER_SCRIPT]->fadeState != VIEWFADE_FADING) {
 
                 if (Script_IsDeathNIS(scriptInfo->scriptHashcode)) {
                     goto finalize;
@@ -1344,7 +1347,7 @@ void Script_Update(SCRIPTINFO *scriptInfo) {
                     && scriptInfo->scriptHashcode != HT_Script_NIS_YakuzaSniper) {
                     if (scriptInfo->scriptHashcode != HT_Script_NIS_InfiltrateStair
                         && scriptInfo->scriptHashcode != HT_Script_Scriptplayer_SC10) {
-                        Camera_SetFade(4, 40.0f, 0xff, 0);
+                        Camera_SetFade(VIEWER_SCRIPT, 40.0f, 0xff, 0);
                     }
                 }
             }
@@ -1413,9 +1416,9 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd) {
     scriptInfo->fadeFrames = (uchar)(int)framesRemaining;
     scriptInfo->fadeElapsedFrames = FRAME_RATE_MUL;
     scriptInfo->playbackFlags |= ScriptPlayback_FFwdFading;
-    Music_Event(5, scriptInfo->scriptHashcode);
+    Music_Event(MUSICEV_NIS_DONE, scriptInfo->scriptHashcode);
     scriptInfo->fadeFlags |= ScriptFade_FFwdRequested;
-    Camera_SetFade(4, (float)scriptInfo->fadeFrames, 0xff, 1);
+    Camera_SetFade(VIEWER_SCRIPT, (float)scriptInfo->fadeFrames, 0xff, 1);
 
     // Also nudge every currently-linked Anim stream's object: sets bit 0x40000 of its AnimObj's flags for anything
     // with an AnimState. The original checks this via "animState + 0x58 == 0" (ie. animState == -0x58) rather than a
@@ -1428,7 +1431,7 @@ void Script_FFwd(SCRIPTINFO *scriptInfo, char doFFwd) {
 
         obj_tag *linkedObj = (obj_tag*)stream->linkedGameOrSoundObject;
         if (linkedObj->animState != NULL) {
-            linkedObj->animState->animObj.flags |= 0x40000;
+            linkedObj->animState->animObj.flags |= ANIMOBJ_MUTE;
         }
     }
 }
@@ -1472,7 +1475,7 @@ bool Script_Play(SCRIPTINFO *scriptInfo, char loop) {
         ScriptCam = scriptInfo->scriptHashcode;
 
         if (Script_IsDeathNIS(scriptInfo->scriptHashcode)) {
-            Music_Event(6, 1);
+            Music_Event(MUSICEV_DEATH, 1);
         }
 
         Text_FlushAllSubtitles();

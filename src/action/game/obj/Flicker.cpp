@@ -17,7 +17,7 @@
 
 #pragma fp_contract(off)
 
-// A spark's Gas_Init(cel, &centre, NULL, &up, 1.2f, 0.8f, model, 4, 0xffffffff, 0x0a460003, 85), inline in
+// A spark's Gas_Init(cel, &centre, NULL, &up, 1.2f, 0.8f, model, GAS_FALLING, 0xffffffff, 0x0a460003, 85), inline in
 // Flicker_Update with the compiler's constants
 static constexpr float SparkLife = 85.0f;
 static constexpr float SparkScale = 1.2f;

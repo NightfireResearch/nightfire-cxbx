@@ -26,7 +26,7 @@ typedef struct {
 #pragma pack(pop)
 
 static_assert(offsetof(Create_Monitor_Params, unbreakable) == 0x30, "Bad offset of unbreakable");
-LAYOUT_32(offsetof(viewer_tag, someCel) == 0x4, "Bad offset of viewer_tag::someCel");
+LAYOUT_32(offsetof(viewer_tag, cel) == 0x4, "Bad offset of viewer_tag::cel");
 LAYOUT_32(offsetof(viewer_tag, viewMatrix) == 0x108, "Bad offset of viewer_tag::viewMatrix");
 
 // AUTOINJECT
@@ -88,7 +88,7 @@ void Monitor_Activate(obj_tag *obj, obj_tag *user) {
     obj->curState = MonitorState_Showing;
     monitor->user = user;
     monitor->viewerIndex = bloke->playerNum;
-    monitor->viewer->someCel = NULL;
+    monitor->viewer->cel = NULL;
     Camera_SetUpdator(bloke->playerNum, user, NULL);
     Input_SetAction(bloke->playerNum, ACTION_RELOAD, 1);
     Player_Disable(user, 0);
@@ -115,7 +115,7 @@ void Monitor_Update(obj_tag *obj) {
             if (monitor->user != NULL)
                 Monitor_GiveBack(monitor);
             Explode_Create(obj, &obj->centrePoint, &CONST_UP_VECTOR, obj->radius * 6.0f, obj->radius,
-                           HT_Script_ExplosionSmallElectrical, 0.5f, 200, 200, 0, NULL, 0);
+                           HT_Script_ExplosionSmallElectrical, 0.5f, 200, 200, 0, NULL, MATERIAL_NONE);
         }
     }
 
@@ -146,7 +146,7 @@ void Monitor_Update(obj_tag *obj) {
         monitor->camera = next;
     }
 
-    if (Input_Action(monitor->viewerIndex, ACTION_RELOAD, 4)) {
+    if (Input_Action(monitor->viewerIndex, ACTION_RELOAD, ACTION_PRESSED)) {
         obj_tag *next = NULL;
         camera = monitor->camera;
         if (camera != NULL) {
@@ -156,7 +156,7 @@ void Monitor_Update(obj_tag *obj) {
                 next = Monitor_FindCamera(sensor->cameraListNode.next, group);
         }
         monitor->camera = next;
-        monitor->viewer->someCel = NULL;
+        monitor->viewer->cel = NULL;
     }
 
     if (monitor->camera == NULL) {

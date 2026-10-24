@@ -28,9 +28,6 @@
 // While set, no drone sees or hears anything (the cheat)
 extern uint32_t switch_BLIND_DRONES;
 
-// The bone NDrone2_CanSeeObject looks for
-#define BONE_HEAD 5
-
 constexpr float kHearingRange = 50.0f;
 constexpr float kSoundAlertnessScale = 0.01f;
 static_assert(std::bit_cast<uint32_t>(kSoundAlertnessScale) == 0x3c23d70a, "not the original's constant");

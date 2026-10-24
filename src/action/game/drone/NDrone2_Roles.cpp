@@ -515,7 +515,7 @@ bool NDrone2_DSTATE_AbseilDeath(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         if (GameState.CurrentLevelHashcode == HT_Level_Tower2Elevator) {
             if (gameObj->drawnCountdown == 0) {
                 NDrone2_Enable(0, dcv->drone);
-                dcv->gameObj->flags |= 1;
+                dcv->gameObj->flags |= OBJFLAG_DELETE;
             }
             return true;
         }

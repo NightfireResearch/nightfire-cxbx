@@ -26,8 +26,8 @@ LAYOUT_32(sizeof(MENU_COMPONENTPIECE) == 0x38, "MENU_COMPONENTPIECE is 0x38 byte
 #define PIECE_HEIGHT_FROM_WIDTH 0x200   // its height is its width, or the room's width stretched
 #define PIECE_KEEP_ROOM_X       0x400   // a fixed piece that leaves the room alone
 #define PIECE_KEEP_ROOM_Y       0x800
-#define PIECE_SPRITE_100        0x1000  // the sprite's flags 0x100
-#define PIECE_SPRITE_200        0x2000  // the sprite's flags 0x200
+#define PIECE_BLEND_1           0x1000  // the sprite's SPRITE_BLEND_1
+#define PIECE_BLEND_2           0x2000  // the sprite's SPRITE_BLEND_2
 
 // A control's skin (Component_GetHandle): its pieces, and the insets of what it frames
 typedef struct MENU_COMPONENT {

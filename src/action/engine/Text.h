@@ -28,12 +28,14 @@ uint GetLanguage(void);
 char* Timer_Seconds2String(int hundredths, int format);
 
 // The kind of a Text_AddMsg message (its third argument), which decides the pane it shows on
-#define TXTMSG_INFO             1   // e.g. a hostage's line (NDrone2_Hostage)
-#define TXTMSG_OBJECTIVE        2   // objective updates (Mission.cpp)
-#define TXTMSG_MISSION          3
-#define TXTMSG_SUBTITLE         4
-#define TXTMSG_SUBTITLE_2LINE   5   // a subtitle without the main view, in two lines (Text_Update2Line)
-#define TXTMSG_PICKUP           6
+enum TextMsgType {
+    TXTMSG_INFO = 1,            // e.g. a hostage's line (NDrone2_Hostage)
+    TXTMSG_OBJECTIVE = 2,       // objective updates (Mission.cpp)
+    TXTMSG_MISSION = 3,
+    TXTMSG_SUBTITLE = 4,
+    TXTMSG_SUBTITLE_2LINE = 5,  // a subtitle without the main view, in two lines (Text_Update2Line)
+    TXTMSG_PICKUP = 6,
+};
 
 #pragma pack(push, 1)
 // The layout of each kind of message: the format it is word-wrapped in and the width it is wrapped to. PS2 name:
@@ -59,7 +61,7 @@ typedef struct TXT_MSG {
     ushort pad16;
     float timer;                // 0x18 - frames left on screen; Text_UpdateMsg counts it down by FRAME_RATE_MUL.
                                 //        Negative: being dropped (Text_AddMsg sets -1 on objectives under a mission banner)
-    uchar type;                 // 0x1c - TXTMSG_*
+    uchar type;                 // 0x1c - TextMsgType
     char priority;              // 0x1d - Text_AddMsg's second argument: the queue's order (CompMsgTxt)
     char playerNum;             // 0x1e - -1 for every player
     char pad1f;

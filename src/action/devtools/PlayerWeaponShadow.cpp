@@ -628,7 +628,7 @@ void RandomWorld(void) {
     viewer->height = 480.0f;
     viewer->projectionScaleX = PICK(320.0f, 554.0f);
     viewer->projectionScaleY = PICK(240.0f, 415.0f);
-    viewer->nightVisionRelated = (undefined2)ShadowRand(2);
+    viewer->visionMode = (undefined2)ShadowRand(2);
     RandomMatrix(&viewer->viewMatrix, &world.player.position);
     memset(world.cel, 0, sizeof(world.cel));
     memset(world.celgl, 0, sizeof(world.celgl));

@@ -520,7 +520,7 @@ static void List_DrawRow(M_PAGE *page, M_PAGE *own, M_LIST *list, LIST_ROW *row,
         (*cell)->format = list->format;
         Menu_ClipString(*cell, Ftol(list->columnWidth[column] * (double)0.01f * list->control.width - 16.0),
                         list->format);
-        ushort flags = list->textFlag2000 ? 0x2000 : 0;
+        ushort flags = list->textFlag2000 ? SPRITE_TEXT_RING : 0;
         uint colour = page->focused->hashcode == list->control.hashcode ? list->highlightColour : list->normalColour;
         short width = Ftol(list->columnWidth[column] * (double)0.01f * list->control.width);
         short y = Ftol(Component_GetHandle(&list->control)->top + (rowNum - list->topRow) * (double)list->rowHeight +
@@ -582,12 +582,12 @@ void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list) {
         Scroll_Update(mgr, page, &list->scroll);
         for (LIST_ROW *row = (LIST_ROW *)LinkedList_First(&list->rows); row != NULL; row = row->next) {
             if (row->stripe != NULL)
-                row->stripe->depth = MENU_SPRITE_HIDDEN;
+                row->stripe->depth = SPRITE_HIDDEN;
         }
         for (ushort i = 0; i < List_SpriteRows(list); i++) {
             for (int j = 0; j < LIST_COLUMNS; j++) {
                 if (list->cells[i][j] != NULL)
-                    list->cells[i][j]->depth = MENU_SPRITE_HIDDEN;
+                    list->cells[i][j]->depth = SPRITE_HIDDEN;
             }
         }
         return;
@@ -633,7 +633,7 @@ void List_Update(M_MANAGER *mgr, M_PAGE *page, M_LIST *list) {
                 // The sprites of the next visible row's place
                 for (int i = 0; i < list->numColumns; i++) {
                     if (slot[i] != NULL)
-                        slot[i]->depth = MENU_SPRITE_HIDDEN;
+                        slot[i]->depth = SPRITE_HIDDEN;
                 }
             }
             rowNum++;

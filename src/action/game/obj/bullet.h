@@ -66,53 +66,8 @@ enum BulletState {
     BulletState_New = 0,      // first frame: picks its graphics and speed, then flies
     BulletState_Flying = 1,
     BulletState_Spent = 2,    // marked for deletion on the next update
-    BulletState_Stuck = 3,    // stuck to a surface or object (impact flag 0x100)
+    BulletState_Stuck = 3,    // stuck to a surface or object (IMPACTFLAG_STICKS)
     BulletState_OutOfRange = 4,
-};
-
-// projectileFlags bits Bullet_Update reads (docs/weapons.md, "+0x06c projectileFlags").
-enum {
-    ProjectileFlag_Smoke         = 0x2,
-    ProjectileFlag_RemoteControl = 0x4,
-    ProjectileFlag_Gravity       = 0x8,
-    ProjectileFlag_NoModel       = 0x10,
-    ProjectileFlag_Dust          = 0x20,
-    ProjectileFlag_LaserBeam     = 0x100,
-    ProjectileFlag_Accelerates   = 0x200,
-    ProjectileFlag_MaterialMask  = 0x800,
-    ProjectileFlag_Tracer        = 0x1000,
-    ProjectileFlag_Light         = 0x2000,
-    ProjectileFlag_GrappleLine   = 0x4000,
-    ProjectileFlag_Tumbles       = 0x8000,
-    ProjectileFlag_Swoosh        = 0x10000,
-    ProjectileFlag_Homing        = 0x20000,
-    ProjectileFlag_FlyBy         = 0x40000,
-    ProjectileFlag_FineDust      = 0x80000,
-};
-
-// impactFlags bits (docs/weapons.md, "+0x070 impactFlags").
-enum {
-    ImpactFlag_Marks         = 0x2,
-    ImpactFlag_Explodes      = 0x4,
-    ImpactFlag_Ricochets     = 0x10,
-    ImpactFlag_Grapple       = 0x40,
-    ImpactFlag_Bounces       = 0x80,
-    ImpactFlag_Sticks        = 0x100,
-    ImpactFlag_Fuse          = 0x200,
-    ImpactFlag_LaserEffect   = 0x1000,
-    ImpactFlag_FlashBang     = 0x2000,
-    ImpactFlag_LongFuse      = 0x10000,
-    ImpactFlag_SmokeCloud    = 0x20000,
-    ImpactFlag_TripBomb      = 0x80000,
-    ImpactFlag_BeamExplodes  = 0x100000,
-    ImpactFlag_BeamExplodes2 = 0x200000,
-};
-
-// weaponFlags bits the bullet code reads (docs/weapons.md, "+0x068 weaponFlags").
-enum {
-    WeaponFlag_CanBeShot         = 0x4000,
-    WeaponFlag_TwinGuns          = 0x40000,
-    WeaponFlag_PerfectWhenScoped = 0x400000,
 };
 
 obj_tag * Bullet_init(short plyNum, obj_tag *playerObj, obj_tag *owner, weapon_definition_tag *weaponDef, _VECTOR *pos, _VECTOR *direction, ushort weaponSound);

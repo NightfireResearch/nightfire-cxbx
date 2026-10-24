@@ -203,15 +203,15 @@ static bool BotAtObjective(DCVars_tag *dcv) {
     ushort team;
     obj_tag *objective;
     if (MPSettings.GameMode == GM_PROTECTION) {
-        team = 1;
+        team = MI6;
         objective = MP_getProtectionObj_NotExt();
     } else if (MPSettings.GameMode == GM_DEMOLITION) {
-        team = 0;
+        team = PHOENIX;
         objective = MP_getDemolitionObj_NotExt();
     } else {
         return false;
     }
-    if (objective == NULL || team == 2 ||
+    if (objective == NULL || team == NO_TEAM ||
         (uint)MPSettings.Player[dcv->drone->botVars->playerIndex].TeamId != team || objective->objGraphics == NULL)
         return false;
     _VECTOR offset;

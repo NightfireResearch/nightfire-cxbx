@@ -504,7 +504,7 @@ void RandomViewers(void) {
         RandomVector(&v->prevPos, 50.0f);
         for (int m = 0; m < 15; m++)
             v->viewMatrix.m[m] = Num(-30.0f, 30.0f);
-        v->someCel = R(4) == 0 ? NULL : &world.cels[R(2)];
+        v->cel = R(4) == 0 ? NULL : &world.cels[R(2)];
         v->enabled = (undefined1)R(2);
         glb_viewer[i] = R(5) == 0 ? NULL : v;
     }

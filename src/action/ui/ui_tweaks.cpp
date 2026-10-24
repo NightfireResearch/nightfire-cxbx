@@ -45,7 +45,7 @@ bool C_LBPMMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
         case MessageType_Select:
             MPSettings.numPlayers = 1;
             ResetMap_LevelToLoad((HASHCODE)RADIO_GET_VALUE_OF(control), false, false);
-            GameFlow_PushState(7, 80.0f, 0xff);
+            GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
             SFXFadeDown(1);
             MenuManager_Delete(managerNum);
             break;
@@ -221,7 +221,7 @@ bool P_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint mes
             nis_script = NULL;
             Player_Enable(glb_players[0], NULL, 0);
             Camera_PopStates();
-            Camera_Enable(7, 0, 1, NULL);
+            Camera_Enable(VIEWER_MENU, 0, 1, NULL);
             ScriptCam = HASHCODE_NONE;
         }
     }
@@ -338,7 +338,7 @@ bool C_NIS_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint mes
     Player_Disable(glb_players[0], 0);
     Script_Play(nis_script, 0);
     Camera_PushStates();
-    Camera_Enable(7, 0, 0, NULL);
+    Camera_Enable(VIEWER_MENU, 0, 0, NULL);
     return true;
 }
 

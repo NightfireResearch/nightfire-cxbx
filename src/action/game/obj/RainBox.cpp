@@ -160,7 +160,7 @@ void UpdateDrops(void) {
     if (GS_IsPaused(-1))
         return;
 
-    short view = glb_viewer[4]->enabled ? 4 : 0;
+    short view = glb_viewer[VIEWER_SCRIPT]->enabled ? VIEWER_SCRIPT : 0;
     viewer_tag *viewer = glb_viewer[view];
     if (!viewer->draw.skyVisible) {
         Added = 999;
@@ -270,7 +270,7 @@ void DrawDrops(void) {
         return;
     }
 
-    cel_tag *cel = glb_viewer[0]->someCel;
+    cel_tag *cel = glb_viewer[0]->cel;
     if (cel != NULL && cel->shearHeight > glb_viewer[0]->pos.y)
         return;
 

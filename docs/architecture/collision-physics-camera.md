@@ -135,7 +135,7 @@ Movement is therefore one discrete step per frame with a push-out; no swept time
 - **Query reach**: `Collide_StraddleCels` limits a query to the rooms its volume reaches through portals. Geometry
   in a room the volume reaches only without crossing a portal quad is not tested (inference from the code: a long
   ray that leaves the room through a wall, not a portal, cannot see the next room).
-- **Cameras** follow the same rule: `Camera_CheckLocation` 0x250a0 moves `viewer->someCel` with
+- **Cameras** follow the same rule: `Camera_CheckLocation` 0x250a0 moves `viewer->cel` with
   `Cel_ObjectLeftCel`, falling back to `build_FindCel`.
 
 ### 1.6 Characters: `Collide_Jointy`

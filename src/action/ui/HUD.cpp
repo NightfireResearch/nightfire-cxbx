@@ -130,12 +130,12 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     if (spr == NULL)
         return;
     if (player->hudInfo->pane[Blood].enabled || player->hudInfo->pane[SecCam].enabled) {
-        spr->depth = 0xff;
+        spr->depth = SPRITE_HIDDEN;
         return;
     }
 
     viewer_tag *viewer = glb_viewer[player->playerNum];
-    bool zoomed = glb_players[player->playerNum]->animState->animFlags & 1;
+    bool zoomed = glb_players[player->playerNum]->animState->animFlags & ANIM_SCOPED;
     HUD_Enable(player->hudInfo, Sight, 0, 0);
     HUD_Enable(player->hudInfo, Camera, 0, 0);
     HUD_Enable(player->hudInfo, OICW, 0, 0);
@@ -144,7 +144,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     ushort crosshair;
     if (zoomed) {
         AnimState *anim = glb_players[player->playerNum]->animState;
-        if (weapon_data[anim->currentWeaponId].weaponFlags & 0x40) {
+        if (weapon_data[anim->currentWeaponId].weaponFlags & WPNFLAG_REAL_SCOPE) {
             switch (anim->currentWeaponId) {
                 case 0x1a:
                 case 0x1b:
@@ -165,7 +165,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
                     HUD_Enable(player->hudInfo, Sight, 1, 0);
                     break;
             }
-            spr->depth = 0xff;
+            spr->depth = SPRITE_HIDDEN;
             return;
         }
         crosshair = 1;
@@ -180,7 +180,7 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     spr->onscreenWidth = info->width;
     spr->spritesheetHeight = info->height;
     spr->onscreenHeight = info->height;
-    spr->colourTint = viewer->nightVisionRelated == 1 ? 0x208020ff : 0xff0000ff;
+    spr->colourTint = viewer->visionMode == VISION_NIGHT ? 0x208020ff : 0xff0000ff;
     // On the x87: y first, held while x is worked out
     double y = (double)player->crosshairOffsetY * -0.5f * viewer->height + (double)viewer->height * 0.5f;
     double x = (double)player->crosshairOffsetX * 0.5f * viewer->width + (double)viewer->width * 0.5f;
@@ -188,9 +188,9 @@ void HUD_UpdateCrossHair(BLData *player, sprite *spr) {
     spr->positionY = (short)Ftol(y);
     spr->depth = 0x31;
     if (!zoomed)
-        spr->depth = PlayerInputs[player->playerNum].crosshairsEnabled ? 0x31 : 0xff;
+        spr->depth = PlayerInputs[player->playerNum].crosshairsEnabled ? 0x31 : SPRITE_HIDDEN;
     if (player->camMode)
-        spr->depth = 0xff;
+        spr->depth = SPRITE_HIDDEN;
 }
 
 // The night vision goggles in single player: putting them on (the weapon 0x5d once it is in hand) turns night vision
@@ -210,7 +210,7 @@ void HUD_MonitorNightSight(BLData *player) {
     if (obj->animState->currentWeaponId == Weap_MaybeNightvision) {
         if (player->weaponObject->curState != 0)
             return;
-        viewer->nightVisionRelated = 1;
+        viewer->visionMode = VISION_NIGHT;
         HUD_Enable(player->hudInfo, NightSight, 1, 0);
         obj->animState->switchingToWeaponId = obj->animState->prevHeldWeaponId;
         player->nightVisionActive = 1;
@@ -220,22 +220,23 @@ void HUD_MonitorNightSight(BLData *player) {
         return;
     }
 
-    if (Input_Action(player->playerNum, ACTION_NIGHTVISION, 4) && !(obj->animState->animFlags & 1)) {
+    if (Input_Action(player->playerNum, ACTION_NIGHTVISION, ACTION_PRESSED) &&
+        !(obj->animState->animFlags & ANIM_SCOPED)) {
         if (!player->nightVisionActive) {
             obj->animState->switchingToWeaponId = Weap_MaybeNightvision;
         } else {
-            switch ((ushort)viewer->nightVisionRelated) {
-                case 0:
-                    viewer->nightVisionRelated = 1;
+            switch ((ushort)viewer->visionMode) {
+                case VISION_NORMAL:
+                    viewer->visionMode = VISION_NIGHT;
                     HUD_Enable(player->hudInfo, NightSight, 1, 0);
                     break;
-                case 1:
-                    viewer->nightVisionRelated = 2;
+                case VISION_NIGHT:
+                    viewer->visionMode = VISION_XRAY;
                     HUD_Enable(player->hudInfo, NightSight, 0, 0);
                     HUD_Enable(player->hudInfo, Xray, 1, 0);
                     break;
-                case 2:
-                    viewer->nightVisionRelated = 0;
+                case VISION_XRAY:
+                    viewer->visionMode = VISION_NORMAL;
                     HUD_Enable(player->hudInfo, NightSight, 0, 0);
                     HUD_Enable(player->hudInfo, Xray, 0, 0);
                     break;
@@ -243,7 +244,7 @@ void HUD_MonitorNightSight(BLData *player) {
         }
     }
 
-    if (viewer->nightVisionRelated != 0) {
+    if (viewer->visionMode != VISION_NORMAL) {
         player->nightVisionTimer = player->nightVisionTimer - FRAME_RATE_MUL;
     } else {
         double charged = (double)FRAME_RATE_MUL * 3.0f + player->nightVisionTimer;
@@ -251,10 +252,10 @@ void HUD_MonitorNightSight(BLData *player) {
             charged = 1800.0f;
         player->nightVisionTimer = (float)charged;
     }
-    if (player->nightVisionTimer <= 0.0f && (ushort)viewer->nightVisionRelated > 0 &&
-        (ushort)viewer->nightVisionRelated <= 2) {
+    if (player->nightVisionTimer <= 0.0f && (ushort)viewer->visionMode > VISION_NORMAL &&
+        (ushort)viewer->visionMode <= VISION_XRAY) {
         player->nightVisionTimer = 0.0f;
-        viewer->nightVisionRelated = 0;
+        viewer->visionMode = VISION_NORMAL;
         HUD_Enable(player->hudInfo, NightSight, 0, 0);
         HUD_Enable(player->hudInfo, Xray, 0, 0);
     }
@@ -276,7 +277,7 @@ void HUD_Update(BLData *playerInfo, obj_tag *obj) {
 		if(!pane->enabled) {
 			// Hide all sprites on this pane
 			for(int j = 0; j < pane->numSprites; j++) {
-				pane->spriteList[j]->depth = 0xff;
+				pane->spriteList[j]->depth = SPRITE_HIDDEN;
 			}
 		} else {
 			// Copy the sprite enablement state from the base pane
@@ -299,7 +300,7 @@ void HUD_CalcWidthHeight(HUDPANECREATE_tag *create, short *width, short *height)
     short left = 0, top = 0, right = 0, bottom = 0;
     for (short i = 0; i < create->numSprites; i++) {
         SpriteInfo *info = &create->spriteInfo[i];
-        if (info->flags & SPRITEINFO_CLIP_TO_VIEW)
+        if (info->flags & SPRITE_CLIP_TO_VIEW)
             continue;
         if (left >= info->posX)
             left = info->posX;
@@ -388,7 +389,7 @@ void HUD_ValidateXY(short *x, short *y, ushort width, ushort height, ushort play
 }
 
 // Makes a pane's sprites from its layout, at its position kept to the view, with numExtraItems words cleared
-// after them. A sprite with SPRITEINFO_CLIP_TO_VIEW is cut to the view.
+// after them. A sprite with SPRITE_CLIP_TO_VIEW is cut to the view.
 // AUTOINJECT
 void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *create, obj_tag *unused) {
     pane->numSprites = create->numSprites;
@@ -423,7 +424,7 @@ void HUD_CreateDefault(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cre
         if (info->textRef == 0)
             Txt_LockString(spr->text);
 
-        if (info->flags & SPRITEINFO_CLIP_TO_VIEW) {
+        if (info->flags & SPRITE_CLIP_TO_VIEW) {
             int left = spr->positionX;
             if ((double)(spr->positionX + spr->onscreenWidth) > viewRight)
                 spr->onscreenWidth = (short)Ftol((double)viewRight - left);
@@ -475,59 +476,59 @@ static int16_t ctimer;
 // XBE_GLOBAL(0x0017f7d0, 0x160)
 static SpriteInfo AmmoSprInfo[8] = {
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 4128,
+        .flags = SPRITE_SHADOW | SPRITE_CLIP_TO_VIEW,
         .posY = 18,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .posY = 38,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 4128,
+        .flags = SPRITE_SHADOW | SPRITE_CLIP_TO_VIEW,
         .posY = 38,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 0xffff,
-        .flags = 4128,
+        .flags = SPRITE_SHADOW | SPRITE_CLIP_TO_VIEW,
         .posX = -60,
         .format = (char *)"\xff\x01",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x14507fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
-        .flags = 4096,
+        .flags = SPRITE_CLIP_TO_VIEW,
         .posX = -62,
         .posY = -20,
         .onscreenWidth = 68,
         .onscreenHeight = 22,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 28,
-        .flags = 4096,
+        .flags = SPRITE_CLIP_TO_VIEW,
         .posX = -25,
         .posY = -64,
         .onscreenWidth = 25,
@@ -537,13 +538,13 @@ static SpriteInfo AmmoSprInfo[8] = {
         .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_AmmoTypes,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x4040407f,
-        .unknown1 = 0x7f7f7f7f,
+        .shadowColour = 0x7f7f7f7f,
         .depth = 29,
-        .flags = 4096,
+        .flags = SPRITE_CLIP_TO_VIEW,
         .posX = -25,
         .posY = -64,
         .onscreenWidth = 25,
@@ -553,23 +554,23 @@ static SpriteInfo AmmoSprInfo[8] = {
         .spritesheetHeight = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_AmmoTypes,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffffff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 31,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Sight_temp2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x0017f9c8, 0x420)
 static SpriteInfo HealthSprInfo[24] = {
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 19,
         .posX = 32,
         .posY = 30,
@@ -581,11 +582,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 17,
         .posX = 26,
         .posY = 12,
@@ -597,11 +598,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 16,
         .posX = 11,
         .posY = 18,
@@ -613,11 +614,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 44,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 15,
         .posX = 12,
         .posY = 46,
@@ -629,11 +630,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 29,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 14,
         .posX = 26,
         .posY = 49,
@@ -645,11 +646,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 34,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 13,
         .posX = 57,
         .posY = 39,
@@ -660,11 +661,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 43,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 12,
         .posX = 47,
         .posY = 30,
@@ -676,11 +677,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 32,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 0x7f7f7fff,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 0x7f7f7fff,
         .depth = 11,
         .posX = 35,
         .posY = 12,
@@ -692,11 +693,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 27,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 24,
         .posX = 26,
         .posY = 5,
@@ -708,11 +709,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 49,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 23,
         .posX = 4,
         .posY = 11,
@@ -724,11 +725,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 22,
         .posX = 5,
         .posY = 38,
@@ -740,11 +741,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 38,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 21,
         .posX = 17,
         .posY = 49,
@@ -756,11 +757,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 42,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 20,
         .posX = 51,
         .posY = 39,
@@ -772,11 +773,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 51,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 19,
         .posX = 48,
         .posY = 30,
@@ -788,11 +789,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 39,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 18,
         .posX = 36,
         .posY = 8,
@@ -804,11 +805,11 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 30,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7fff7f40,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 9,
         .posX = 4,
         .posY = 4,
@@ -820,97 +821,97 @@ static SpriteInfo HealthSprInfo[24] = {
         .spritesheetHeight = 86,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 28,
-        .flags = 6144,
+        .flags = SPRITE_CENTRED | SPRITE_CLIP_TO_VIEW,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_gold007,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x8e8e3cff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 0xffff,
-        .flags = 4128,
+        .flags = SPRITE_SHADOW | SPRITE_CLIP_TO_VIEW,
         .format = (char *)"\xff\x01",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
-        .flags = 4096,
+        .flags = SPRITE_CLIP_TO_VIEW,
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_640_wallhug_icon,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
-        .flags = 4096,
+        .flags = SPRITE_CLIP_TO_VIEW,
         .posX = 320,
         .posY = -300,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Crouch,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirection,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 384,
+        .flags = SPRITE_FLIP_Y | SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirection,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirectionH,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 320,
+        .flags = SPRITE_FLIP_X | SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirectionH,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x0017fe08, 0x84)
 static SpriteInfo AirSprInfo[3] = {
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
         .posX = 192,
         .posY = 48,
@@ -920,11 +921,11 @@ static SpriteInfo AirSprInfo[3] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
         .posX = 192,
         .posY = 48,
@@ -935,164 +936,164 @@ static SpriteInfo AirSprInfo[3] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_grip_meter_hand,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x0017ff68, 0x18c)
 static SpriteInfo CameraSprInfo[9] = {
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
-        .flags = 512,
+        .flags = SPRITE_BLEND_2,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 1536,
+        .flags = SPRITE_BLEND_2 | SPRITE_TILED,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .spritesheetWidth = 255,
         .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Frame,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 48,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Axis_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 320,
+        .flags = SPRITE_FLIP_X | SPRITE_BLEND_1,
         .posX = 464,
         .posY = 208,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Axis_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 48,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Height_scroll_bars,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 560,
         .posY = 136,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Height_scroll_bars,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 48,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Height_scroll_bars,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 560,
         .posY = 272,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Height_scroll_bars,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Cam_viewfinder,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180110, 0x108)
 static SpriteInfo NightSightSprInfo[6] = {
     {
         .colour = 0x7f0020,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 38,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .spritesheetWidth = 127,
         .spritesheetHeight = 255,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Static_1_test,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff7f,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 41,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff00ffff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 512,
+        .flags = SPRITE_BLEND_2,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 192,
         .posY = 48,
@@ -1102,13 +1103,13 @@ static SpriteInfo NightSightSprInfo[6] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f00ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 31,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
@@ -1118,208 +1119,208 @@ static SpriteInfo NightSightSprInfo[6] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f00ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 31,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_power_gauge_battery,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180238, 0x134)
 static SpriteInfo LensFlareSprInfo[7] = {
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 3328,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED | SPRITE_CENTRED,
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare1,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 3328,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED | SPRITE_CENTRED,
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 3328,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED | SPRITE_CENTRED,
         .spritesheetWidth = 63,
         .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare4,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 3328,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED | SPRITE_CENTRED,
         .spritesheetWidth = 31,
         .spritesheetHeight = 31,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Flare3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff00,
-        .unknown1 = 0xffffff00,
+        .shadowColour = 0xffffff00,
         .depth = 0xffff,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_flaresun2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180588, 0x108)
 static SpriteInfo RCCarSprInfo[6] = {
     {
         .colour = 0x2000ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 38,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff00ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 2432,
+        .flags = SPRITE_FLIP_Y | SPRITE_BLEND_1 | SPRITE_CENTRED,
         .posX = 320,
         .posY = 192,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_bz,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff00ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .posX = 320,
         .posY = 288,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_bz,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffffff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 39,
-        .flags = 2304,
+        .flags = SPRITE_BLEND_1 | SPRITE_CENTRED,
         .posX = 320,
         .posY = 240,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Sight_temp2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff7f,
-        .unknown1 = 0x7f7f7f7f,
+        .shadowColour = 0x7f7f7f7f,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 126,
         .posY = 176,
         .onscreenWidth = 2,
         .onscreenHeight = 128,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffffff7f,
-        .unknown1 = 0x7f7f7f7f,
+        .shadowColour = 0x7f7f7f7f,
         .depth = 39,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 512,
         .posY = 176,
         .onscreenWidth = 2,
         .onscreenHeight = 128,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x001806ac, 0x2c)
 static SpriteInfo RadarSprInfo[1] = {
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 640,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_MPradar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x001806f8, 0xdc)
 static SpriteInfo XraySprInfo[5] = {
     {
         .colour = 0x7f0020,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 38,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .spritesheetWidth = 511,
         .spritesheetHeight = 511,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = (HASHCODE)50331800,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xffff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 192,
         .posY = 48,
@@ -1329,13 +1330,13 @@ static SpriteInfo XraySprInfo[5] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 31,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 192,
         .posY = 48,
         .onscreenWidth = 256,
@@ -1345,25 +1346,25 @@ static SpriteInfo XraySprInfo[5] = {
         .spritesheetHeight = 16,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_meter_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 31,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 172,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SP_power_gauge_battery,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x001807f0, 0x134)
 static SpriteInfo SecCamSprInfo[7] = {
     {
         .colour = 0xffffffff,
-        .unknown1 = 0xffffffff,
+        .shadowColour = 0xffffffff,
         .depth = 33,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
@@ -1371,93 +1372,93 @@ static SpriteInfo SecCamSprInfo[7] = {
         .spritesheetHeight = 320,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Lines,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 100,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Corner,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 384,
+        .flags = SPRITE_FLIP_Y | SPRITE_BLEND_1,
         .posX = 100,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Corner,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 448,
+        .flags = SPRITE_FLIP_X | SPRITE_FLIP_Y | SPRITE_BLEND_1,
         .posX = 476,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Corner,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 320,
+        .flags = SPRITE_FLIP_X | SPRITE_BLEND_1,
         .posX = 476,
         .posY = 64,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Corner,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 540,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_REC,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 480,
         .posY = 410,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_ON_light,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180940, 0x134)
 static SpriteInfo OICWSprInfo[7] = {
     {
         .colour = 0xffffff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 512,
+        .flags = SPRITE_BLEND_2,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f40,
-        .unknown1 = 0x7f7f7f40,
+        .shadowColour = 0x7f7f7f40,
         .depth = 39,
-        .flags = 1280,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED,
         .posX = 256,
         .posY = 176,
         .onscreenWidth = 128,
@@ -1468,119 +1469,119 @@ static SpriteInfo OICWSprInfo[7] = {
         .spritesheetHeight = 127,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_T800R,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fc8,
-        .unknown1 = 200,
+        .shadowColour = 200,
         .depth = 0xffff,
         .posX = 20,
         .posY = 452,
         .format = FontFormat3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fc8,
-        .unknown1 = 200,
+        .shadowColour = 200,
         .depth = 0xffff,
         .posX = 20,
         .posY = 459,
         .format = FontFormat3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fc8,
-        .unknown1 = 200,
+        .shadowColour = 200,
         .depth = 0xffff,
         .posX = 20,
         .posY = 466,
         .format = FontFormat3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fc8,
-        .unknown1 = 200,
+        .shadowColour = 200,
         .depth = 0xffff,
         .posX = 20,
         .posY = 473,
         .format = FontFormat3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fc8,
-        .unknown1 = 200,
+        .shadowColour = 200,
         .depth = 0xffff,
         .posX = 20,
         .posY = 480,
         .format = FontFormat3,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180a90, 0x108)
 static SpriteInfo RoninSprInfo[6] = {
     {
         .colour = 0x1000ff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posY = 58,
         .onscreenWidth = 67,
         .onscreenHeight = 36,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 70,
         .posY = 58,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_ronin_s,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 70,
         .posY = 78,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_v20,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 202,
         .posY = 58,
         .onscreenWidth = 438,
         .onscreenHeight = 36,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 3328,
+        .flags = SPRITE_BLEND_1 | SPRITE_TILED | SPRITE_CENTRED,
         .posX = 320,
         .posY = 240,
         .spritesheetX = 1,
@@ -1589,431 +1590,431 @@ static SpriteInfo RoninSprInfo[6] = {
         .spritesheetHeight = 63,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_thing2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180bb8, 0x108)
 static SpriteInfo LaserSprInfo[6] = {
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 140,
         .posY = 64,
         .onscreenWidth = 360,
         .onscreenHeight = 4,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 140,
         .posY = 416,
         .onscreenWidth = 360,
         .onscreenHeight = 4,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 256,
         .posY = 239,
         .onscreenWidth = 40,
         .onscreenHeight = 2,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 344,
         .posY = 239,
         .onscreenWidth = 40,
         .onscreenHeight = 2,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 319,
         .posY = 176,
         .onscreenWidth = 2,
         .onscreenHeight = 40,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f78,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 40,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 319,
         .posY = 264,
         .onscreenWidth = 2,
         .onscreenHeight = 40,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Square,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180ce0, 0x1e4)
 static SpriteInfo SpaceSprInfo[11] = {
     {
         .colour = 0x7f7f7f7f,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 33,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 470,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Main2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 497,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 555,
         .posY = 93,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 497,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 555,
         .posY = 114,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 497,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 555,
         .posY = 135,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 497,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 555,
         .posY = 156,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Idle,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f7f,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 497,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Iris,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f7f,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 34,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .posX = 543,
         .posY = 48,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_SpaceMap_Iris,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180f38, 0x84)
 static SpriteInfo MPAmmoSprInfo[3] = {
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .posX = 100,
         .posY = 18,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .posX = 100,
         .posY = 38,
         .onscreenHeight = 4,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 28,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .posX = 100,
         .posY = 38,
         .onscreenHeight = 4,
         .format = (char *)"\xff\x02\xfe\x02",
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00180fd8, 0x160)
 static SpriteInfo MPHealthSprInfo[8] = {
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 29,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_MPhealth_back,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x8e8e3cff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 0xffff,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .posX = 64,
         .posY = 330,
         .format = FontFormat2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 28,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_MPhealth_bar,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 0xffff,
         .posX = 64,
         .posY = 352,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_MParmor,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirection,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 384,
+        .flags = SPRITE_FLIP_Y | SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirection,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirectionH,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0xff0000ff,
-        .unknown1 = 0xff0000ff,
+        .shadowColour = 0xff0000ff,
         .depth = 0xffff,
-        .flags = 320,
+        .flags = SPRITE_FLIP_X | SPRITE_BLEND_1,
         .onscreenWidth = 640,
         .onscreenHeight = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_HitDirectionH,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00181154, 0x2c)
 static SpriteInfo MPInfoStatusSprInfo[1] = {
     {
         .colour = 0xffffffff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 29,
-        .flags = 32,
+        .flags = SPRITE_SHADOW,
         .format = FontFormat2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x001811a0, 0x134)
 static SpriteInfo MPScoreSprInfo[7] = {
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 29,
-        .flags = 8192,
+        .flags = SPRITE_TEXT_RING,
         .format = FontFormat2,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_icon_flag,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_icon_flag,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 30,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_score_points,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 30,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_score_kills,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 30,
-        .flags = 256,
+        .flags = SPRITE_BLEND_1,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_score_deaths,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7fff,
-        .unknown1 = 255,
+        .shadowColour = 255,
         .depth = 0xffff,
         .posY = 480,
         .textRef = (Action_TranslatedText)0xffffffff,
         .format = FontFormat2,
         .textureHashcode = HT_Texture_MP_icon_flag,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00181408, 0x84)
 static SpriteInfo MissionStatusSprInfo[3] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 42, .linkedViewer = 5},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 320, .posY = 42, .linkedViewer = VIEWER_HUD},
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 29,
         .posX = 320,
         .posY = 64,
         .format = FontFormat2Centred,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .onscreenWidth = 640,
         .onscreenHeight = 103,
@@ -2022,16 +2023,16 @@ static SpriteInfo MissionStatusSprInfo[3] = {
         .spritesheetHeight = 103,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00181490, 0x108)
 static SpriteInfo ObjectiveStatusSprInfo[6] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 40, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 160, .posY = 40, .linkedViewer = VIEWER_HUD},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = VIEWER_HUD},
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 50,
         .onscreenWidth = 540,
@@ -2041,11 +2042,11 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
@@ -2055,11 +2056,11 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
@@ -2069,25 +2070,25 @@ static SpriteInfo ObjectiveStatusSprInfo[6] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
-        .colour = 0x7d6d59ff,
-        .unknown1 = 255,
+        .colour = TEXT_NORMAL,
+        .shadowColour = 255,
         .depth = 29,
         .posX = 160,
         .posY = 20,
         .textRef = (Action_TranslatedText)0x2000052,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x001815b8, 0xdc)
 static SpriteInfo PickupStatusSprInfo[5] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = VIEWER_HUD},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = VIEWER_HUD},
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 160,
         .onscreenWidth = 320,
@@ -2097,11 +2098,11 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 160,
         .onscreenWidth = 5,
@@ -2111,11 +2112,11 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 160,
         .onscreenWidth = 5,
@@ -2125,16 +2126,16 @@ static SpriteInfo PickupStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 // XBE_GLOBAL(0x00181698, 0xdc)
 static SpriteInfo InfoStatusSprInfo[5] = {
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = 5},
-    {.colour = 0x7d6d59ff, .unknown1 = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = 5},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 160, .posY = 16, .linkedViewer = VIEWER_HUD},
+    {.colour = TEXT_NORMAL, .shadowColour = 255, .depth = 29, .posX = 320, .posY = 64, .linkedViewer = VIEWER_HUD},
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 50,
         .onscreenWidth = 540,
@@ -2144,11 +2145,11 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
@@ -2158,11 +2159,11 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
     {
         .colour = 0x7f7f7f8d,
-        .unknown1 = 0x7f7f7fff,
+        .shadowColour = 0x7f7f7fff,
         .depth = 30,
         .posX = 80,
         .onscreenWidth = 5,
@@ -2172,7 +2173,7 @@ static SpriteInfo InfoStatusSprInfo[5] = {
         .spritesheetHeight = 56,
         .textRef = (Action_TranslatedText)0xffffffff,
         .textureHashcode = HT_Texture_Hud2Gfx,
-        .linkedViewer = 5,
+        .linkedViewer = VIEWER_HUD,
     },
 };
 
@@ -2329,7 +2330,7 @@ void HUD_CreateRedeemer(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *cr
         parts[i]->position.z = 1.0f;
         parts[i]->displayMask = 0x20;
         parts[i]->effectFlags |= EFFECT_HIDDEN;
-        build_LinkToRoom(parts[i], 0, glb_viewer[5]->world);
+        build_LinkToRoom(parts[i], 0, glb_viewer[VIEWER_HUD]->world);
     }
     if (parts[0] != NULL)
         hashtable_set_object_to_entity_gfx(parts[0], HT_Entity_Horizon_centre);
@@ -2369,7 +2370,7 @@ void HUD_UpdateLensFlarePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         _VECTOR head;
         Player_GetHeadPos(&head, obj, NULL);
         Vec_Subtract(&head, &SkySunPos, &sun);
-        if (Collide_LineOfSight(&head, &sun, obj->inCel, obj, NULL, 8))
+        if (Collide_LineOfSight(&head, &sun, obj->inCel, obj, NULL, HITMASK_SKIP_NO_CONTACT))
             blData->ambientBoost = 1;
         bool show = false;
         if (View_3DPoint2Screen(&sun, &sun, blData->playerNum) > 0) {
@@ -2408,7 +2409,7 @@ void HUD_UpdateLensFlarePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         }
     }
     for (int i = 0; i < 7; i++)
-        pane->spriteList[i]->depth = 0xff;
+        pane->spriteList[i]->depth = SPRITE_HIDDEN;
 }
 
 // XBE_GLOBAL(0x0017f950, 0x58)
@@ -2558,7 +2559,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     sprite *clipSprite = pane->spriteList[AMMO_CLIP];
     sprite *grapple = pane->spriteList[AMMO_GRAPPLE];
     ushort clip = def->clipSize;
-    bool showCount = !(flags & 0x20);
+    bool showCount = !(flags & WPNFLAG_NO_AMMO_COUNT);
 
     if (ammoType == AMMO_TYPE_CHARGE) {
         loaded = clip - loaded;
@@ -2591,7 +2592,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         Sprite_SetText(count, count->text);
         sprintf(mode->text, "%d", Ftol(car->tankMachinegunTemperature));
         Sprite_SetText(mode, mode->text);
-        name->depth = 0xff;
+        name->depth = SPRITE_HIDDEN;
         mode->depth = 0x1c;
         return;
     }
@@ -2622,9 +2623,9 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         if (blData->weaponChangeTimer != 0) {
             blData->weaponChangeTimer--;
             name->depth = 0x1c;
-            mode->depth = 0xff;
+            mode->depth = SPRITE_HIDDEN;
         } else {
-            name->depth = 0xff;
+            name->depth = SPRITE_HIDDEN;
             mode->depth = 0x1c;
         }
         // The name is the format (as the original)
@@ -2640,7 +2641,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     // The clip: a column of rounds, double width for a big clip, over the empty clip
     if (rounds != NULL && pane->numSprites > AMMO_ROUNDS) {
         if (blData->weaponChangeTimer != 0) {
-            rounds->depth = 0xff;
+            rounds->depth = SPRITE_HIDDEN;
         } else {
             double scale = clip >= 0x58 ? 16.0f : 1.0f;
             AmmoImage *image = &BulletImg[ammoType];
@@ -2660,7 +2661,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
     if (clipSprite != NULL && pane->numSprites > AMMO_CLIP) {
         if (blData->weaponChangeTimer != 0) {
-            clipSprite->depth = 0xff;
+            clipSprite->depth = SPRITE_HIDDEN;
         } else {
             double scale = clip >= 0x58 ? 16.0f : 1.0f;
             AmmoImage *image = &BulletImg[ammoType];
@@ -2679,7 +2680,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
 
     if (grapple != NULL && pane->numSprites > AMMO_GRAPPLE) {
-        grapple->depth = 0xff;
+        grapple->depth = SPRITE_HIDDEN;
         char held = obj->animState->currentWeaponId;
         float nearest = 10000.0f;
         if (held != WEAPON_GRAPPLE_A && held != WEAPON_GRAPPLE_B)
@@ -2688,7 +2689,7 @@ void HUD_UpdateAmmoPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             if (point->drawnCountdown == 0 || point->objectType != OBJECTTYPE_GRAPPLE)
                 continue;
             if (!Collide_LineOfSight(&point->position, &glb_viewer[blData->playerNum]->pos, point->inCel, obj, point,
-                                     8))
+                                     HITMASK_SKIP_NO_CONTACT))
                 continue;
             _VECTOR screen;
             if (View_3DPoint2Screen(&point->position, &screen, blData->playerNum) <= 0)
@@ -2786,7 +2787,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         return;
 
     for (int i = 0; i < HEALTH_NUM_HIT; i++)
-        pane->spriteList[HEALTH_HIT_FIRST + i]->depth = 0xff;
+        pane->spriteList[HEALTH_HIT_FIRST + i]->depth = SPRITE_HIDDEN;
 
     // Flash the sides the player was hit from, fading by a frame's worth each frame
     uchar fade = (uchar)blData->hitDirectionFade;
@@ -2821,7 +2822,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         // The x87 products below are exact (or all but) in double; float would round them differently.
         for (ushort i = 0; i < HEALTH_NUM_ARMOUR; i++) {
             if (armourSegments == 0.0f) {
-                pane->spriteList[HEALTH_ARMOUR_FIRST + i]->depth = 0xff;
+                pane->spriteList[HEALTH_ARMOUR_FIRST + i]->depth = SPRITE_HIDDEN;
             } else {
                 // Full segments brighter than empty ones; the first (the armour icon) always full
                 float brightness = ((float)i < armourSegments) ? 0.75f : 0.35f;
@@ -2867,17 +2868,18 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
     } else {
         for (int i = 0; i < HEALTH_NUM_BARS; i++)
-            pane->spriteList[i]->depth = 0xff;
+            pane->spriteList[i]->depth = SPRITE_HIDDEN;
     }
 
     // The Bond moment icon: spins in (a squashed, flipping card) over the first 100 frames of its 200, then sits
     // still until the timer runs out
     if (bondMoment != NULL) {
-        bondMoment->linkedViewer = (glb_viewer[4] != NULL && glb_viewer[4]->enabled != 0) ? 4 : 5;
+        bondMoment->linkedViewer =
+            (glb_viewer[VIEWER_SCRIPT] != NULL && glb_viewer[VIEWER_SCRIPT]->enabled != 0) ? VIEWER_SCRIPT : VIEWER_HUD;
 
         if (blData->bondMomentTimer <= 0) {
             blData->bondMomentTimer = 0;
-            bondMoment->depth = 0xff;
+            bondMoment->depth = SPRITE_HIDDEN;
         } else {
             bondMoment->positionX = 320;
             bondMoment->positionY = 80;
@@ -2906,7 +2908,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                     (double)obj->position.z, (double)_FRAME_RATE);
             Sprite_SetText(coords, coords->text);
         } else {
-            coords->depth = 0xff;
+            coords->depth = SPRITE_HIDDEN;
         }
     }
 
@@ -2932,7 +2934,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             shown = true;
         }
         if (!shown)
-            thirdIcon->depth = 0xff;
+            thirdIcon->depth = SPRITE_HIDDEN;
     }
 
     // The crouch icon: on while crouching, then the "stand up" icon for a second, fading over the last half
@@ -2957,7 +2959,7 @@ void HUD_UpdateHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             CrouchIconTimer--;
             return;
         }
-        crouchIcon->depth = 0xff;
+        crouchIcon->depth = SPRITE_HIDDEN;
     }
 }
 
@@ -3158,7 +3160,7 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		return;
 	}
 
-	glb_viewer[playerInfo->playerNum]->nightVisionRelated = 0;
+	glb_viewer[playerInfo->playerNum]->visionMode = VISION_NORMAL;
 
 	// Process the "startup" sequence
 	switch(OICW_mode) {
@@ -3180,7 +3182,7 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 				// 2nd line flickers slowly
 				if(i == 1 && numVisibleLines == 2) {
 					if(OICW_timer % 8 < 4) {
-						pane->spriteList[i+2]->depth = 0xff;
+						pane->spriteList[i+2]->depth = SPRITE_HIDDEN;
 					}
 				}
 			}
@@ -3212,11 +3214,11 @@ void HUD_UpdateOICWPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		case 2:
 		{
 			// Fully booted - hide all the labels
-			pane->spriteList[2]->depth = 0xff;
-			pane->spriteList[3]->depth = 0xff;
-			pane->spriteList[4]->depth = 0xff;
-			pane->spriteList[5]->depth = 0xff;
-			pane->spriteList[6]->depth = 0xff;
+			pane->spriteList[2]->depth = SPRITE_HIDDEN;
+			pane->spriteList[3]->depth = SPRITE_HIDDEN;
+			pane->spriteList[4]->depth = SPRITE_HIDDEN;
+			pane->spriteList[5]->depth = SPRITE_HIDDEN;
+			pane->spriteList[6]->depth = SPRITE_HIDDEN;
 			break;
 		}
 	}
@@ -3234,8 +3236,8 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 	if(playerInfo->remoteControlDevice->objGraphics == hashtable_hashcode_to_celglist(HT_Entity_LittleNellie)) {
 		// Helicopter overlay
 		pane->spriteList[0]->colourTint = 0x000020ff; // Blue tint
-		pane->spriteList[1]->depth = 0xff;
-		pane->spriteList[2]->depth = 0xff;
+		pane->spriteList[1]->depth = SPRITE_HIDDEN;
+		pane->spriteList[2]->depth = SPRITE_HIDDEN;
 		pane->spriteList[3]->depth = 0x27;
 		pane->spriteList[4]->depth = 0x27;
 		pane->spriteList[5]->depth = 0x27;
@@ -3244,9 +3246,9 @@ void HUD_UpdateCarPane(BLData *playerInfo, HUDPANE_tag *pane, obj_tag *obj) {
 		pane->spriteList[0]->colourTint = 0x002000ff; // Green tint
 		pane->spriteList[1]->depth = 0x27;
 		pane->spriteList[2]->depth = 0x27;
-		pane->spriteList[3]->depth = 0xff;
-		pane->spriteList[4]->depth =	0xff;
-		pane->spriteList[5]->depth = 0xff;
+		pane->spriteList[3]->depth = SPRITE_HIDDEN;
+		pane->spriteList[4]->depth =	SPRITE_HIDDEN;
+		pane->spriteList[5]->depth = SPRITE_HIDDEN;
 	}
 }
 
@@ -3331,8 +3333,8 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 
 	// The player has left the missile: control returns to them
 	if (gameObj->subState != MovementType_RemoteControl) {
-		Player_SetCamMode(blData, 0);
-		glb_viewer[blData->playerNum]->someCel = NULL;
+		Player_SetCamMode(blData, CamMode_Default);
+		glb_viewer[blData->playerNum]->cel = NULL;
 		if (blData->hudInfo != NULL && blData->hudInfo->pane[Redeemer].canBeEnabled) {
 			blData->hudInfo->pane[Redeemer].enabled = false;
 			blData->hudInfo->pane[Redeemer].state = 0;
@@ -3343,7 +3345,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	viewer_tag *viewer = glb_viewer[blData->playerNum];
 
 	// A target marker over each helicopter on screen, flashing when it is near the middle
-	hudPane->spriteList[10]->depth = 0xff;
+	hudPane->spriteList[10]->depth = SPRITE_HIDDEN;
 	for (COPTER *c = (COPTER *)CopterList.head; c != NULL; c = (COPTER *)c->node.next) {
 		obj_tag *body = Copter_GetBody(c);
 		_VECTOR at;
@@ -3375,7 +3377,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 			if (dy < 0.0f)
 				dy = -dy;
 			if (dy < 32.0f && (GameState.NumFramesUnpaused & 8))
-				hudPane->spriteList[10]->depth = 0xff;
+				hudPane->spriteList[10]->depth = SPRITE_HIDDEN;
 		}
 	}
 
@@ -3394,7 +3396,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 	} else {
 		BU_tag *missile = (BU_tag *)blData->remoteControlDevice->extraObjectData;
 		lifetime = Extended(missile->distanceTravelled) / Extended(missile->wpnDef->range);
-		hudPane->spriteList[2]->depth = 0xff;
+		hudPane->spriteList[2]->depth = SPRITE_HIDDEN;
 		if (items[0] != NULL && items[1] != NULL && items[2] != NULL) {
 			float yaw = blData->remoteControlDevice->rotation.z;
 			items[0]->rotation.z = (float)(Extended(HALF_PI) - Extended(yaw) + Extended(PI));
@@ -3422,7 +3424,7 @@ void HUD_UpdateRedeemerPane(BLData *blData, HUDPANE_tag *hudPane, obj_tag *gameO
 typedef struct StatusPaneData {
     TXT_MSG *msg;       // the message on show, NULL for none - Text_UpdateMsg's in/out argument
     int state;          // STATUS_* below
-    int msgType;        // the Text_AddMsg type this pane shows: 1 info, 2 objective, 3 mission, 6 pickup
+    int msgType;        // the TextMsgType this pane shows
     int shrinkStep;     // pixels the bar sprite loses per frame while closing: 16, or 32 for the mission pane
 } StatusPaneData;
 LAYOUT_32(sizeof(StatusPaneData) == 4 * sizeof(void*), "StatusPaneData is the pane's four extra items");
@@ -3435,8 +3437,8 @@ LAYOUT_32(sizeof(StatusPaneData) == 4 * sizeof(void*), "StatusPaneData is the pa
 #define STATUS_CLOSE    4   // the bar shrinks away, then back to STATUS_IDLE
 
 // The sprite colours the message text is drawn in.
-#define STATUS_TEXT_COLOUR      0x7d6d59ff
-#define STATUS_HEADING_COLOUR   0x785a14ff  // "NEW OBJECTIVE" / "OBJECTIVE COMPLETE"
+#define STATUS_TEXT_COLOUR      TEXT_NORMAL
+#define STATUS_HEADING_COLOUR   TEXT_HIGHLIGHT  // "NEW OBJECTIVE" / "OBJECTIVE COMPLETE"
 
 // The objective heading's state, shared by every objective pane (only player 0 has one in practice). PS2 names
 // (function-local statics of HUD_UpdateStatusPane there). Only HUD_UpdateStatusPane touches any of them.
@@ -3500,7 +3502,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
             if (numSprites != 0) {
                 ushort i = 0;
                 do {
-                    pane->spriteList[i]->depth = 0xff;
+                    pane->spriteList[i]->depth = SPRITE_HIDDEN;
                     i++;
                 } while (i < (ushort)pane->numSprites);
             }
@@ -3552,7 +3554,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                 return;
             }
 
-            if (msg->type == 2) {
+            if (msg->type == TXTMSG_OBJECTIVE) {
                 // An objective: is it "objective complete" or a new one? Decides the heading and its sounds.
                 // The flags are set before the label is fetched, as in the original.
                 const char *label;
@@ -3607,7 +3609,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                 if (failText != NULL)
                     StatusPane_SetAlpha(failText, 0xff);
 
-                if (msg->type == 2) {
+                if (msg->type == TXTMSG_OBJECTIVE) {
                     // x87 sums: exact in double. The heading shows for the first 240 (new) or 120 (complete)
                     // frames of the message's life, then flashes (20 frames on, 20 off) for the rest of it
                     // while the message text shows.
@@ -3617,10 +3619,10 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                         if (failText != NULL)
                             failText->colourTint = 0;
                         heading->colourTint = (fmodf(msg->timer, 40.0f) < 20.0f) ? STATUS_HEADING_COLOUR : 0;
-                        heading->unknown1 = 0;
-                        text->unknown1 = 0;
+                        heading->shadowColour = 0;
+                        text->shadowColour = 0;
                         if (failText != NULL)
-                            failText->unknown1 = 0;
+                            failText->shadowColour = 0;
                         if (ScriptCam == 0 && ObjectiveSFXTriggered1 == 0) {
                             Sound_PlayExt(ObjectiveSFXPlayMe1st, 100.0f, 0, 0);
                             ObjectiveSFXTriggered1 = 1;
@@ -3634,10 +3636,10 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                         text->colourTint = IsComplete ? 0 : STATUS_TEXT_COLOUR;
                         if (failText != NULL)
                             failText->colourTint = STATUS_TEXT_COLOUR;
-                        heading->unknown1 = 0xff;
-                        text->unknown1 = IsComplete ? 0 : 0xff;
+                        heading->shadowColour = 0xff;
+                        text->shadowColour = IsComplete ? 0 : 0xff;
                         if (failText != NULL)
-                            failText->unknown1 = 0xff;
+                            failText->shadowColour = 0xff;
                     }
                 }
 
@@ -3652,7 +3654,7 @@ void HUD_UpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
                     if (failText != NULL)
                         failText->colourTint = 0;
                 }
-                if (msg->type == 2 && IsComplete)
+                if (msg->type == TXTMSG_OBJECTIVE && IsComplete)
                     text->colourTint = 0;   // "objective complete" is said by the heading alone
             }
 
@@ -3739,7 +3741,7 @@ void HUD_CreatePickupStatusPane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE
 void HUD_UpdateSecCamPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
     if (!pane->enabled)
         return;
-    glb_viewer[blData->playerNum]->nightVisionRelated = 0;
+    glb_viewer[blData->playerNum]->visionMode = VISION_NORMAL;
     if ((GameState.NumFramesUnpaused & 0x1f) < 0x10)
         pane->spriteList[6]->colourTint = 0x7f7f7f78;
     else
@@ -3807,12 +3809,12 @@ void HUD_UpdateAirPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             wire->depth = 0x1f;
         } else {
             bar->colourTint = 0x68b1d6ff;
-            wire->depth = 0xff;
+            wire->depth = SPRITE_HIDDEN;
         }
     } else {
-        bar->depth = 0xff;
-        frame->depth = 0xff;
-        wire->depth = 0xff;
+        bar->depth = SPRITE_HIDDEN;
+        frame->depth = SPRITE_HIDDEN;
+        wire->depth = SPRITE_HIDDEN;
     }
     HUD_SetBarWidth(bar, level);
 }
@@ -3828,7 +3830,7 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         *flashFrames = 10;
     else if (*flashFrames != 0)
         (*flashFrames)--;
-    pane->spriteList[0]->depth = *flashFrames != 0 ? 0x28 : 0xff;
+    pane->spriteList[0]->depth = *flashFrames != 0 ? 0x28 : SPRITE_HIDDEN;
 
     for (Drone_tag *drone = (Drone_tag *)NDrone2Info.head; drone != NULL; drone = drone->next) {
         obj_tag *body = drone->gameObj;
@@ -3845,38 +3847,39 @@ void HUD_UpdateCameraPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     }
 }
 
-// Night vision (viewer->nightVisionRelated 1): the green tint flickering (sprite 0, its scanlines jumping every
+// Night vision (VISION_NIGHT): the green tint flickering (sprite 0, its scanlines jumping every
 // other frame), a light at the view in single player, and the battery's bar (sprite 4). Off when the view leaves
 // night vision.
 // AUTOINJECT
 void HUD_UpdateNightSightPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
     if (!pane->enabled)
         return;
-    if (glb_viewer[blData->playerNum]->nightVisionRelated != 1) {
+    if (glb_viewer[blData->playerNum]->visionMode != VISION_NIGHT) {
         pane->enabled = false;
         return;
     }
-    if (glb_viewer[4]->enabled)
+    if (glb_viewer[VIEWER_SCRIPT]->enabled)
         return;
     pane->spriteList[0]->colourTint = (Rand_Rand(24) + 7) | 0xff0000;
     if (NightSightScanline++ & 1)
         pane->spriteList[0]->spritesheetY = Rand_Rand((ushort)pane->spriteList[0]->backupOnscreenHeight - 1);
     if (!MPSettings.isMultiplayer)
-        Light_Create(&glb_viewer[blData->playerNum]->pos, 0xff, 0xff, 0xff, 32.0f, 0, 0, 1, 2.5f, 0, 0, 0, 0xffff);
+        Light_Create(&glb_viewer[blData->playerNum]->pos, 0xff, 0xff, 0xff, 32.0f, 0, 0, LIGHT_TRANSIENT, 2.5f, 0, 0, 0,
+                     0xffff);
     HUD_SetBarWidth(pane->spriteList[4], (double)blData->nightVisionTimer * (1.0f / 1800.0f));
 }
 
-// X-ray (viewer->nightVisionRelated 2): the tint flickering and its scanlines rolling (sprite 0), and the battery's
+// X-ray (VISION_XRAY): the tint flickering and its scanlines rolling (sprite 0), and the battery's
 // bar (sprite 3). Off when the view leaves x-ray.
 // AUTOINJECT
 void HUD_UpdateXRayPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) {
     if (!pane->enabled)
         return;
-    if (glb_viewer[blData->playerNum]->nightVisionRelated != 2) {
+    if (glb_viewer[blData->playerNum]->visionMode != VISION_XRAY) {
         pane->enabled = false;
         return;
     }
-    if (glb_viewer[4]->enabled)
+    if (glb_viewer[VIEWER_SCRIPT]->enabled)
         return;
     pane->spriteList[0]->colourTint = (Rand_Rand(24) + 7) | 0xffffff00;
     pane->spriteList[0]->spritesheetY++;
@@ -4025,7 +4028,7 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     sprite *bar = pane->spriteList[MPHEALTH_BAR];
     sprite *backing = pane->spriteList[MPHEALTH_BACKING];
     for (int i = 0; i < HEALTH_NUM_HIT; i++)
-        pane->spriteList[MPHEALTH_HIT_FIRST + i]->depth = 0xff;
+        pane->spriteList[MPHEALTH_HIT_FIRST + i]->depth = SPRITE_HIDDEN;
 
     if (blData->hitDirectionFade != 0) {
         for (int i = 0; i < HEALTH_NUM_HIT; i++) {
@@ -4043,9 +4046,9 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     HUDINFO_tag *hud = blData->hudInfo;
     if (hud->pane[Camera].enabled || hud->pane[OICW].enabled || hud->pane[Ronin].enabled ||
         hud->pane[SecCam].enabled || hud->pane[Redeemer].enabled || hud->pane[RCCar].enabled) {
-        backing->depth = 0xff;
-        bar->depth = 0xff;
-        armour->depth = 0xff;
+        backing->depth = SPRITE_HIDDEN;
+        bar->depth = SPRITE_HIDDEN;
+        armour->depth = SPRITE_HIDDEN;
         return;
     }
     if (bar != NULL) {
@@ -4069,7 +4072,7 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             armour->onscreenWidth = (short)Ftol(blData->armor * (double)2.56f);
             armour->spritesheetWidth = (short)Ftol(blData->armor * (double)2.56f);
         } else {
-            armour->depth = 0xff;
+            armour->depth = SPRITE_HIDDEN;
         }
     }
     if (coords != NULL) {
@@ -4079,7 +4082,7 @@ void HUD_UpdateMPHealthPane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                     (double)obj->position.z, (double)_FRAME_RATE);
             Sprite_SetText(coords, coords->text);
         } else {
-            coords->depth = 0xff;
+            coords->depth = SPRITE_HIDDEN;
         }
     }
 }
@@ -4095,7 +4098,7 @@ void HUD_MPUpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) 
     switch (data->state) {
         case STATUS_IDLE:
             for (ushort i = 0; i < (ushort)pane->numSprites; i++)
-                pane->spriteList[i]->depth = 0xff;
+                pane->spriteList[i]->depth = SPRITE_HIDDEN;
             if (Text_UpdateMsg(blData->playerNum, data->msgType, &data->msg) && data->msg != NULL)
                 data->state = STATUS_SHOW;
             return;
@@ -4121,7 +4124,7 @@ void HUD_MPUpdateStatusPane(BLData *blData, HUDPANE_tag *pane, obj_tag *unused) 
                 data->state = data->msg == NULL ? STATUS_CLOSE : STATUS_SHOW;
             return;
         case STATUS_CLOSE:
-            text->depth = 0xff;
+            text->depth = SPRITE_HIDDEN;
             data->state = STATUS_IDLE;
             return;
         default:
@@ -4158,7 +4161,7 @@ void HUD_CreateMPScorePane(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag 
     s[0]->positionY -= 3;
     // Without teams sprite 3 goes, and the score takes its place
     if (!MPSettings.isTeamGame && !MPSettings.field53_0x190 && MPSettings.GameMode != GM_ASSASSIN) {
-        s[3]->depth = 0xff;
+        s[3]->depth = SPRITE_HIDDEN;
         FuckOffSprite3 = 1;
         s[3]->positionY -= 0x11;
     } else {
@@ -4185,31 +4188,31 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     if (me != NULL && (me->objectType == OBJECTTYPE_DRONE || me->objectType == OBJECTTYPE_DEAD_DRONE))
         return;
     if (FuckOffSprite3)
-        pane->spriteList[3]->depth = 0xff;
+        pane->spriteList[3]->depth = SPRITE_HIDDEN;
 
     char *teamScore = MP_GetTeamScore(team);
     char *playerScore = MP_GetPlayerScore(blData->playerNum);
     if (teamScore != NULL && playerScore != NULL) {
         sprintf(score->text, "%s\n%s", teamScore, playerScore);
-        score->unknown1 = team != 0 ? 0x0000ffff : 0xff0000ff;
+        score->shadowColour = team != PHOENIX ? 0x0000ffff : 0xff0000ff;
     } else {
         if (teamScore == NULL && playerScore != NULL)
             sprintf(score->text, "%s", playerScore);
         else
             sprintf(score->text, "");
-        score->unknown1 = 0xff;
+        score->shadowColour = 0xff;
     }
     Sprite_SetText(score, score->text);
-    iconA->depth = 0xff;
-    iconB->depth = 0xff;
-    iconC->depth = 0xff;
+    iconA->depth = SPRITE_HIDDEN;
+    iconB->depth = SPRITE_HIDDEN;
+    iconC->depth = SPRITE_HIDDEN;
 
     switch (MPSettings.GameMode) {
         case GM_CTF:
-            if (MP_IsFlagParent(me, team == 0)) {
+            if (MP_IsFlagParent(me, team == PHOENIX)) {
                 iconA->depth = HUD_HIT_ON;
                 hashtable_set_sprite(iconA, HT_Texture_MP_icon_flag);
-                iconA->colourTint = team != 0 ? 0xff0000ff : 0x0040ffff;
+                iconA->colourTint = team != PHOENIX ? 0xff0000ff : 0x0040ffff;
             }
             return;
         case GM_BLUEPRINT:
@@ -4225,13 +4228,13 @@ void HUD_MPUpdatePane(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             sprite *uplinks[3] = {iconA, iconB, iconC};
             for (short i = 0; i < 3; i++) {
                 switch (MP_getUplinkStatus(i)) {
-                    case 0:
+                    case PHOENIX:
                         uplinks[i]->colourTint = 0xd22d35ff;
                         break;
-                    case 1:
+                    case MI6:
                         uplinks[i]->colourTint = 0x2d61d2ff;
                         break;
-                    case 2:
+                    case NO_TEAM:
                         uplinks[i]->colourTint = 0x7f7f7fff;
                         break;
                 }
@@ -4271,12 +4274,12 @@ void HUD_CreateRadar(BLData *blData, HUDPANE_tag *pane, HUDPANECREATE_tag *creat
     HUD_FixMP(pane->spriteList[0], blData->playerNum);
     sprite **dots = (sprite **)pane->extraItems;
     for (ushort i = 0; i < create->numExtraItems; i++) {
-        dots[i] = Sprite_CreateAndLink2Viewer(5);
+        dots[i] = Sprite_CreateAndLink2Viewer(VIEWER_HUD);
         Sprite_SetParams(dots[i], 0, pane->posX, pane->posY, HT_Texture_RadarLove, 0x005000ff);
         dots[i]->onscreenWidth = 2;
         dots[i]->onscreenHeight = 2;
-        dots[i]->depth = 0xff;
-        dots[i]->flags |= 0x900;
+        dots[i]->depth = SPRITE_HIDDEN;
+        dots[i]->flags |= SPRITE_BLEND_1 | SPRITE_CENTRED;
     }
 }
 
@@ -4295,7 +4298,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
     Mat_Inverse(&viewer->viewMatrix, &RadarInverse);
     RADAROBJ *list = NULL;
     ushort count = MP_GetRadarObjects(obj, &list);
-    radar->depth = MPSettings.Player[blData->playerNum].SomeField2 ? 0x1e : 0xff;
+    radar->depth = MPSettings.Player[blData->playerNum].SomeField2 ? 0x1e : SPRITE_HIDDEN;
 
     ushort used = 0;
     if (count != 0) {
@@ -4335,7 +4338,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         }
     }
     for (; used < (ushort)(pane->base->numExtraItems >> 1); used++)
-        dots[used]->depth = 0xff;
+        dots[used]->depth = SPRITE_HIDDEN;
 
     sprite *assassinMark = NULL;
     sprite *targetMark = NULL;
@@ -4343,9 +4346,9 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         assassinMark = MPGame.radarMarks[blData->playerNum].assassin;
         targetMark = MPGame.radarMarks[blData->playerNum].target;
         if (assassinMark != NULL)
-            assassinMark->depth = 0xff;
+            assassinMark->depth = SPRITE_HIDDEN;
         if (targetMark != NULL)
-            targetMark->depth = 0xff;
+            targetMark->depth = SPRITE_HIDDEN;
     }
 
     for (ushort i = 0; i < NUM_AGENTS; i++) {
@@ -4368,7 +4371,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
                     continue;
                 if (bot->health < 0.0f || bot->health == 0.0f)
                     continue;
-                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & 1))
+                if (other->objectType == OBJECTTYPE_DEAD_DRONE || (other->flags & OBJFLAG_DELETE))
                     continue;
                 break;
             }
@@ -4392,7 +4395,9 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
         if (!(screen.z < 100.0f) || !(screen.x > half) || !((double)viewer->width - half > screen.x))
             continue;
         obj_tag *me = MPGame.players[blData->playerNum].playerObj;
-        if (!Collide_LineOfSight(&other->position, &me->position, other->inCel, other, me, 0x623))
+        if (!Collide_LineOfSight(&other->position, &me->position, other->inCel, other, me,
+                                 HITMASK_SKIP_WATER | HITMASK_SKIP_GLASS | HITMASK_SKIP_MASKABLE |
+                                 HITMASK_SKIP_BULLETS | HITMASK_SKIP_PLAYERS))
             continue;
 
         if (MPSettings.ShowTeamAndNameOverhead) {
@@ -4412,7 +4417,7 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
             label->positionY = (short)Ftol((viewer->height - y) + viewer->yMin);
             label->depth = HUD_HIT_ON;
             if (MPSettings.isTeamGame)
-                label->colourTint = MPSettings.Player[i].TeamId != 0 ? 0x14145aff : 0x5a1414ff;
+                label->colourTint = MPSettings.Player[i].TeamId != PHOENIX ? 0x14145aff : 0x5a1414ff;
             else
                 label->colourTint = 0x1e504bff;
             used++;
@@ -4451,6 +4456,6 @@ void HUD_RadarUpdate(BLData *blData, HUDPANE_tag *pane, obj_tag *obj) {
 
     for (; used < pane->base->numExtraItems; used++) {
         if (dots[used] != NULL)
-            dots[used]->depth = 0xff;
+            dots[used]->depth = SPRITE_HIDDEN;
     }
 }

@@ -68,7 +68,7 @@
 MPGameStruct MPGame;
 
 // XBE_GLOBAL(0x001f661c, 0x2c)
-viewer_tag *glb_viewer[11];
+viewer_tag *glb_viewer[NUM_VIEWERS];
 // XBE_GLOBAL(0x001f6674, 0x4)
 world_tag *glb_world;
 // XBE_GLOBAL(0x002774b8, 0x10)
@@ -425,18 +425,18 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
 
   IsWarmReset = warmReset;
   switch(GameFlow_GetState()) {
-    case 2:
-    case 7:
-    case 8:
-    case 0xd:
-    case 0xe:
+    case GAMEFLOW_GAME:
+    case GAMEFLOW_FADE:
+    case GAMEFLOW_FADING:
+    case GAMEFLOW_FADE_FROZEN:
+    case GAMEFLOW_FADING_FROZEN:
 
       GameState.InhibitGameDraw = 1;
       GameState.isMultiplayerLevel = 0;
 
       if(Menu_IsDrivingLevel(level)) {
 
-        GameFlow_PushState(9, 0.0, 0xff);
+        GameFlow_PushState(GAMEFLOW_DRIVING, 0.0, 0xff);
         GameState.NextLevelHashcode = level;
 
       } else {
@@ -447,7 +447,7 @@ void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv) {
         }
 
         GameState.NextLevelHashcode = (skipFmv ? level : GetLevelWithFmv(level));
-        GameFlow_PushState(3, 0.0, 0xff);
+        GameFlow_PushState(GAMEFLOW_LOAD_LEVEL, 0.0, 0xff);
 
       }
     }
@@ -769,7 +769,7 @@ uint32_t switch_NO_DRONES;
 // XBE_GLOBAL(0x00181bb8, 0x2c)
 SpriteInfo LoadingGfx = {
     .colour = 0x7f7f7fff,
-    .unknown1 = 0x7f7f7fff,
+    .shadowColour = 0x7f7f7fff,
     .depth = 30,
     .onscreenWidth = 640,
     .onscreenHeight = 480,
@@ -857,7 +857,7 @@ void ResetMap_GenLoadScreen(void) {
             if (line == NULL)
                 break;
             sprite *spr = Sprite_CreateAndLink2Viewer(0x63);
-            Sprite_SetParams(spr, 0, 0x138, (short)Ftol(y), HASHCODE_NONE, 0x7d6d59ff);
+            Sprite_SetParams(spr, 0, 0x138, (short)Ftol(y), HASHCODE_NONE, TEXT_NORMAL);
             Sprite_SetTextNFmt(spr, line, LoadScreenFont);
             y = y + 15.0f;
         } while (text != NULL);
@@ -923,7 +923,7 @@ void ResetMap_Load(void) {
             if (subtitles != 0 && hashtable_getitem(subtitles) != NULL)
                 SP_Create(&CONST_ZERO_VECTOR, &CONST_ZERO_VECTOR, subtitles, (HASHCODE)0, 1, 1, NULL, NULL, NULL, 0);
         }
-        GameFlow_PushState(6, 0.0f, 0xff);
+        GameFlow_PushState(GAMEFLOW_MOVIE, 0.0f, 0xff);
         GameState.MovieHashcode = GameState.NextLevelHashcode;
         GameState.NextLevelHashcode = (HASHCODE)(GameState.NextLevelHashcode & 0xff00ffff);
         GameState.field5_0x14 = 0;
@@ -982,11 +982,12 @@ void ResetMap_Load(void) {
         Cameras_PostLoad();
         LoadWoman_Thunk();
         if (GameState.CurrentLevelHashcode == HT_MainMenu)
-            MenuManager_Create(GameState.ReloadMainMenu, (HASHCODE)GameState.ReloadMenupage, -1, 0, 0x28, 0, 5);
+            MenuManager_Create(GameState.ReloadMainMenu, (HASHCODE)GameState.ReloadMenupage, -1, 0,
+                               MENU_NO_CLOSE_ACTION, 0, MENU_STATUS_FRONT_END);
         Mem_SetMallocMethod(0);
         hashtable_create_sections();
         GameFlow_PopState();
-        GameFlow_PushState(4, 0.0f, 0xff);
+        GameFlow_PushState(GAMEFLOW_INIT_LOCKS, 0.0f, 0xff);
         ResetMap_State = RESETMAP_START;
         return;
     }
@@ -1005,21 +1006,21 @@ uint GameFlow_GetState(void) {
 // AUTOINJECT
 void set_InhibitGameDrawIfRequired(void) {
   switch(GameFlow_GetState()) {
-    case 1:
-    case 3:
-    case 4:
-    case 5:
-    case 9:
+    case GAMEFLOW_BOOT:
+    case GAMEFLOW_LOAD_LEVEL:
+    case GAMEFLOW_INIT_LOCKS:
+    case GAMEFLOW_IDLE:
+    case GAMEFLOW_DRIVING:
       GameState.InhibitGameDraw = 1;
       break;
-    case 2:
-    case 6:
-    case 7:
-    case 8:
-    case 10:
-    case 0xc:
-    case 0xd:
-    case 0xe:
+    case GAMEFLOW_GAME:
+    case GAMEFLOW_MOVIE:
+    case GAMEFLOW_FADE:
+    case GAMEFLOW_FADING:
+    case GAMEFLOW_10:
+    case GAMEFLOW_DELAYING:
+    case GAMEFLOW_FADE_FROZEN:
+    case GAMEFLOW_FADING_FROZEN:
     GameState.InhibitGameDraw = 0;
       break;
     }
@@ -1037,27 +1038,27 @@ uint GameFlow_PopState(void)
   return GameStateStack[StackIndex];
 }
 
-// Puts a state on the stack, which wraps round at 64. States 7 and 13 fade the screen first (over 'time' frames, to
-// 'colour') and are 8 and 14 once the fade has started, or are not pushed if it cannot; state 11 sets the fade's rate
-// and is 12.
+// Puts a state on the stack, which wraps round at 64. GAMEFLOW_FADE and GAMEFLOW_FADE_FROZEN fade the screen first
+// (over 'time' frames, to 'colour') and are pushed as their fading states once the fade has started, or not at all
+// if it cannot; GAMEFLOW_DELAY sets the fade viewer's rate.
 // AUTOINJECT
 void GameFlow_PushState(int state, float time, uint colour) {
   switch (state) {
-    case 7:
-      if (!Camera_SetFade(6, time, colour, 1))
+    case GAMEFLOW_FADE:
+      if (!Camera_SetFade(VIEWER_FADE, time, colour, 1))
         return;
-      state = 8;
+      state = GAMEFLOW_FADING;
       GameState.InhibitGameDraw = 0;
       break;
-    case 0xb:
-      glb_viewer[6]->fadeRate = time;
-      state = 0xc;
+    case GAMEFLOW_DELAY:
+      glb_viewer[VIEWER_FADE]->fadeRate = time;
+      state = GAMEFLOW_DELAYING;
       GameState.InhibitGameDraw = 0;
       break;
-    case 0xd:
-      if (!Camera_SetFade(6, time, colour, 1))
+    case GAMEFLOW_FADE_FROZEN:
+      if (!Camera_SetFade(VIEWER_FADE, time, colour, 1))
         return;
-      state = 0xe;
+      state = GAMEFLOW_FADING_FROZEN;
       GameState.InhibitGameDraw = 0;
       break;
   }
@@ -1218,7 +1219,7 @@ void bootup_bootup(void) {
   PlayerInputs[2].controllerPort = 2;
   PlayerInputs[3].controllerPort = 3;
 
-  GameState.difficultyModifier = 2;
+  GameState.difficultyModifier = DIFF_AGENT;
   MPSettings.RespawnSelectionMode = RESPAWN_RANDOM;
   GameState.ReloadMainMenu = HT_Menu_ControllerMenu;
   GameState.ReloadMenupage = P_LANGUAGE;
@@ -1514,7 +1515,7 @@ void GameFlow_Main(void) {
   GameState.Pulse = bVar2 << 1;
 
   switch(GameFlow_GetState()) {
-  case 1:
+  case GAMEFLOW_BOOT:
     GameState.InhibitGameDraw = 0;
     GameState.NumFramesUnpaused = 1;
     GameState.NumFrames = 1;
@@ -1522,62 +1523,62 @@ void GameFlow_Main(void) {
     GameState.NumDraws = 0;
     Mem_Init();
     bootup_bootup();
-    GameFlow_QuickPushState(2);
+    GameFlow_QuickPushState(GAMEFLOW_GAME);
     Boot_LoadPTPData();
     LaunchOptions_Apply();   // -level, -difficulty
     Reset_MapLoadSettings();
     return;
-  case 2:
+  case GAMEFLOW_GAME:
     GameState.LoadTimeStart = psiGetTimeIn100ths();
     if (GameState.ReloadGame != 0) {
-      GameFlow_QuickPushState(3);
+      GameFlow_QuickPushState(GAMEFLOW_LOAD_LEVEL);
       return;
     }
     break;
-  case 3:
+  case GAMEFLOW_LOAD_LEVEL:
     ResetMap_Load();
     return;
-  case 4:
+  case GAMEFLOW_INIT_LOCKS:
     Locks_Init();
     GameFlow_PopState();
     break;
-  case 6:
-    if (movieFinished() || Input_Action(-1, ACTION_SKIP_CUTSCENE, 1)) {
+  case GAMEFLOW_MOVIE:
+    if (movieFinished() || Input_Action(-1, ACTION_SKIP_CUTSCENE, ACTION_HELD)) {
       psiStopBackgroundMovie();
       GameFlow_PopState();
     }
     break;
-  case 8:
-    if (glb_viewer[6] != NULL && glb_viewer[6]->fadeState != VIEWFADE_FADING) {
+  case GAMEFLOW_FADING:
+    if (glb_viewer[VIEWER_FADE] != NULL && glb_viewer[VIEWER_FADE]->fadeState != VIEWFADE_FADING) {
       GameFlow_PopState();
     }
     break;
-  case 9:
+  case GAMEFLOW_DRIVING:
     local_4 = (void *)0x0;
     local_8 = 0;
     Boot_GetPTPData(&local_4,&local_8);
     psiLaunchDriving(local_4,local_8);
     GameFlow_PopState();
     break;
-  case 10:
+  case GAMEFLOW_10:
     Input_UpdateWithMouse();
     if (CheatInfo.someThing != 0) {
       GameFlow_PopState();
     }
     Game_Draw();
     return;
-  case 0xc:
-    if (glb_viewer[6] != NULL) { // Cutscene camera?
-      if (!(glb_viewer[6]->fadeRate <= 0.0f)) {
-        glb_viewer[6]->fadeRate = glb_viewer[6]->fadeRate - 1.0f;
+  case GAMEFLOW_DELAYING:
+    if (glb_viewer[VIEWER_FADE] != NULL) { // Cutscene camera?
+      if (!(glb_viewer[VIEWER_FADE]->fadeRate <= 0.0f)) {
+        glb_viewer[VIEWER_FADE]->fadeRate = glb_viewer[VIEWER_FADE]->fadeRate - 1.0f;
       }
       else {
         GameFlow_PopState();
       }
     }
     break;
-  case 0xe:
-    if (glb_viewer[6] == NULL || glb_viewer[6]->fadeState == VIEWFADE_FADING) {
+  case GAMEFLOW_FADING_FROZEN:
+    if (glb_viewer[VIEWER_FADE] == NULL || glb_viewer[VIEWER_FADE]->fadeState == VIEWFADE_FADING) {
       Camera_UpdateAll();
       SkipCodeFrame = '\x01';
       break;
@@ -1586,8 +1587,8 @@ void GameFlow_Main(void) {
     SkipCodeFrame = '\0';
     break;
   default:
-    // GC check (0x800515e8). 5 is a valid state that does nothing this frame
-    NF_WARN_IF(GameFlow_GetState() != 5, "Game state not valid %d\n", GameFlow_GetState());
+    // GC check (0x800515e8)
+    NF_WARN_IF(GameFlow_GetState() != GAMEFLOW_IDLE, "Game state not valid %d\n", GameFlow_GetState());
     break;
   }
 

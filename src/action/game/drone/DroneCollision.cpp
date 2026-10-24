@@ -20,11 +20,6 @@
 
 #pragma fp_contract(off)
 
-// The bones a dead drone's capsule runs along
-#define BONE_HEAD   0x80000005
-#define BONE_37     0x80000037
-#define BONE_33     0x80000033
-
 // ---- when the drone collides and falls
 
 // Whether any player is within 2 m (Drone_tag.playerDistance)
@@ -106,13 +101,13 @@ void NDrone2_Collision(obj_tag *obj) {
 
     if (drone->flags & DRONE_FLAG_DEAD) {
         capsule->radius = 0.4f < root ? 0.4f : root;
-        _VECTOR head, bone37, bone33, axis;
-        AnimGetBoneWorldTrans(obj, BONE_HEAD, 0, &head, NULL);
-        AnimGetBoneWorldTrans(obj, BONE_37, 0, &bone37, NULL);
-        AnimGetBoneWorldTrans(obj, BONE_33, 0, &bone33, NULL);
-        Vec_Subtract(&head, &bone37, &axis);
+        _VECTOR head, leftFoot, rightFoot, axis;
+        AnimGetBoneWorldTrans(obj, ANIM_BONE(BONE_HEAD), 0, &head, NULL);
+        AnimGetBoneWorldTrans(obj, ANIM_BONE(BONE_LEFT_FOOT), 0, &leftFoot, NULL);
+        AnimGetBoneWorldTrans(obj, ANIM_BONE(BONE_RIGHT_FOOT), 0, &rightFoot, NULL);
+        Vec_Subtract(&head, &leftFoot, &axis);
         float length = (float)(Vec_NormaliseLen(&axis, &axis) * 0.5f);
-        double span = Vec_Dist3D(&head, &bone33) * 0.5f;
+        double span = Vec_Dist3D(&head, &rightFoot) * 0.5f;
         if (!(length > span))
             length = (float)span;
         capsule->damage = 0;
@@ -168,9 +163,10 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
     Mat_GetUp(&up, &obj->transformMatrix);
     if (slope != NULL)
         *slope = 1.0f;
-    obj->animState->floor.materialType = 0;
+    obj->animState->floor.materialType = MATERIAL_NONE;
     auxVec_AddMulR32(&test->rayEnd, &up, -(drone->rootHeight + 0.6f), &below);
-    Collide_RayIntersect(&obj->position, &below, obj->inCel, obj, NULL, &hits, 0, 0xc, 8);
+    Collide_RayIntersect(&obj->position, &below, obj->inCel, obj, NULL, &hits, 0,
+                         HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT, 8);
 
     if (hits != NULL) {
         double drop = ((double)obj->position.y - drone->rootHeight) - hits->hitPosition.y;
@@ -185,7 +181,7 @@ obj_tag* Drone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *slope, int un
                 *slope = hits->surfaceNormal.b;
             if (floor != NULL && floor->hitObj != NULL) {
                 for (HITDATA_tag *hit = hits; hit != NULL; hit = hit->next) {
-                    if (hit->hitCel != NULL && (hit->hitCel->flags84 & CEL_NO_CONTACT))
+                    if (hit->hitCel != NULL && (hit->hitCel->flags & CEL_NO_CONTACT))
                         continue;
                     if (hit->hitObj != NULL && (hit->hitObj->effectFlags & EFFECT_NO_CONTACT))
                         continue;

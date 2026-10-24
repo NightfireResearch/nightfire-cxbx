@@ -21,7 +21,7 @@ static void MP_TeamMessage(Action_TranslatedText format, ushort team) {
     char *str = Txt_GetStringFromHeap(0);
     const char *teamName = Txt_BindLabel(team == PHOENIX ? MP_TEAM_PHOENIX : MP_TEAM_MI6, 0);
     sprintf(str, Txt_BindLabel(format, 0), teamName);
-    Text_AddMsg(-1, 0, 4, str, 0, Ftol(FRAME_RATE_INT * 1.5));
+    Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, Ftol(FRAME_RATE_INT * 1.5));
 }
 
 // The holder no longer carries the object: its status bit, its team's objective bits and its goal go. (Our
@@ -198,7 +198,7 @@ void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             MP_ResetMPObject(mpObj, 0, gameObj, false);
             char *str = Txt_GetStringFromHeap(0);
             sprintf(str, Txt_BindLabel(NOTIF_BLUEPRINT_RETURNED, 0));
-            Text_AddMsg(-1, 0, 4, str, 0, Ftol(FRAME_RATE_INT * 1.5));
+            Text_AddMsg(-1, 0, TXTMSG_SUBTITLE, str, 0, Ftol(FRAME_RATE_INT * 1.5));
             Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
             return;
         }

@@ -60,9 +60,6 @@ LAYOUT_32(sizeof(HUDPANECREATE_tag) == 0x1c, "HUDPANECREATE_tag is 0x1c bytes");
 #define HUDPANE_VIEW_X      0x0080  // the position is from the view's corner
 #define HUDPANE_VIEW_Y      0x0100
 
-// SpriteInfo::flags: HUD_CreateDefault cuts the sprite to the view, and HUD_CalcWidthHeight leaves it out
-#define SPRITEINFO_CLIP_TO_VIEW 0x1000
-
 // The C++ dynamic initialisers of the message panes' widths (HUD.cpp), run by _cinit.
 void HUD_InitObjectiveStatusPaneWidth(void);
 void HUD_InitInfoStatusPaneWidth(void);

@@ -287,7 +287,8 @@ void SP_Update(obj_tag* obj) {
                     okToStart = false;
                 }
 
-                if ((scriptPlayer->scriptHashcodes[0] == HT_Script_Scriptplayer_SC10 && Get_Music_Event(2) != 0)
+                if ((scriptPlayer->scriptHashcodes[0] == HT_Script_Scriptplayer_SC10 &&
+                     Get_Music_Event(MUSICEV_ALERT) != 0)
                     || !okToStart) {
                     scriptPlayer->state = SP_State_Finished;
                     break;
@@ -296,7 +297,7 @@ void SP_Update(obj_tag* obj) {
 
             if (isLoadable(scriptPlayer->scriptHashcodes[0]) && scriptPlayer->loadingScreenShown == 0) {
                 scriptPlayer->loadingScreenShown = 1;
-                GameFlow_PushState(0xd, 20.0f, 0xff);
+                GameFlow_PushState(GAMEFLOW_FADE_FROZEN, 20.0f, 0xff);
                 return;
             }
 
@@ -321,7 +322,7 @@ void SP_Update(obj_tag* obj) {
             SP_UnPause(obj);
         }
 
-        if (Input_Action(-1, ACTION_SKIP_CUTSCENE, 1) != 0 &&
+        if (Input_Action(-1, ACTION_SKIP_CUTSCENE, ACTION_HELD) != 0 &&
             !Script_IsDeathNIS(scriptPlayer->scriptHashcodes[0])) {
             Script_FFwd(scriptPlayer->scriptInfos[scriptPlayer->nthScript], 1);
         }
@@ -363,7 +364,7 @@ void SP_Update(obj_tag* obj) {
     }
 
     case SP_State_Finished:
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         break;
 
     case SP_State_Armed: {
@@ -425,7 +426,7 @@ void SP_Delete(obj_tag *obj) {
     sp->scriptInfos[0] = NULL;
     Script_Free(sp->scriptInfos[1]);
     sp->scriptInfos[1] = NULL;
-    obj->flags |= 1;
+    obj->flags |= OBJFLAG_DELETE;
 }
 
 // AUTOINJECT

@@ -97,7 +97,7 @@ void Control_DeleteAllObjectsOfType(ObjectType type) {
     while (at != NULL) {
 
         if (at->objectType == type)
-            at->flags |= 1;
+            at->flags |= OBJFLAG_DELETE;
         
         at = at->nextObject;
     }
@@ -184,7 +184,7 @@ void control_init_object(obj_tag* obj) {
         return;
     
     obj->displayMask = 0x001f;
-    obj->flags |= 2;
+    obj->flags |= OBJFLAG_NEW;
     obj->drawnCountdown = 2;
     obj->creationTimeFrames = GameState.NumFramesUnpaused;
     obj->scale = 1.0;
@@ -364,7 +364,7 @@ void control_link_object_to_cel(obj_tag *obj, cel_tag *cel) {
     }
     cel = obj->inCel;
     if (cel != NULL && obj->ambientR == 0xff && obj->ambientG == 0xff && obj->ambientB == 0xff) {
-        uchar state = switch_channels[cel->someSwitchChannel];
+        uchar state = switch_channels[cel->ambientChannel];
         obj->ambientR = cel->ambientR[state];
         obj->ambientG = cel->ambientG[state];
         obj->ambientB = cel->ambientB[state];
@@ -445,7 +445,7 @@ void control_handle_cel_change(obj_tag *obj) {
     case OBJECTTYPE_BULLET:
     case 6:
     case OBJECTTYPE_EFFECT:
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
         return;
     case OBJECTTYPE_CASING:
         obj->curState = 2;
@@ -462,9 +462,9 @@ void control_handle_cel_change(obj_tag *obj) {
             // rounded to a float)
             float radius = obj->radius;
             Vec_Copy(&obj->lastPosition, &obj->position);
-            ClampInBox(&obj->position.x, cel->someMin.x, cel->someMax.x, radius);
-            ClampInBox(&obj->position.y, cel->someMin.y, cel->someMax.y, radius);
-            ClampInBox(&obj->position.z, cel->someMin.z, cel->someMax.z, radius);
+            ClampInBox(&obj->position.x, cel->boxMin.x, cel->boxMax.x, radius);
+            ClampInBox(&obj->position.y, cel->boxMin.y, cel->boxMax.y, radius);
+            ClampInBox(&obj->position.z, cel->boxMin.z, cel->boxMax.z, radius);
             Vec_Copy(&obj->position, Mat_Position(obj->transformMatrix));
             Vec_Copy(&obj->position, &obj->lastCentrePoint);
         }
@@ -478,16 +478,16 @@ void control_handle_cel_change(obj_tag *obj) {
     }
 }
 
-// The rooms whose models change with a switch channel: a room (0xc047) with a channel and a second model takes that
+// The rooms whose models change with a switch channel: a CELKIND_ROOM with a channel and a second model takes that
 // model when its channel changes. The model is read before it is known there is one.
 // FUNC_AT(0x0002d640)
 void Control_Switches_Update(void) {
     for (cel_tag *cel = glb_world->firstCel; cel != NULL; cel = cel->nextCel) {
-        uchar channel = cel->someSwitchChannel;
+        uchar channel = cel->ambientChannel;
         if (channel == 0)
             continue;
         celglist_tag *next = cel->glist->lod;
-        if (next != NULL && (cel->bitsFromPlacementTag & 0xffff) == 0xc047 &&
+        if (next != NULL && (cel->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_ROOM &&
             switch_channels[channel] != switch_channels_hold[channel])
             cel->glist = next;
     }
@@ -559,17 +559,17 @@ void control_movement_object_handler(char) {
         deleted = false;
         for (obj_tag *obj = DynamicObjList.nextObject, *next; obj != NULL; obj = next) {
             next = obj->nextObject;
-            if (obj->flags & 1) {
+            if (obj->flags & OBJFLAG_DELETE) {
                 bool referenced = (obj->transformFlags & TRANSFORM_REFERENCED) != 0;
                 Effect_RemoveSObjs(obj);
                 control_delete_object(obj);
                 if (referenced)
                     control_ForgetObject(obj);
                 deleted = true;
-            } else if (obj->flags & 2) {
+            } else if (obj->flags & OBJFLAG_NEW) {
                 Control_BuildWorldSph(obj);
                 Lights_CalcAmbientLight(obj);
-                obj->flags &= ~2;
+                obj->flags &= ~OBJFLAG_NEW;
             }
         }
     } while (deleted);

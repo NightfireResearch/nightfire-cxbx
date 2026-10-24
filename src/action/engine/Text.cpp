@@ -243,14 +243,14 @@ void Txt_UnlockString(char* text) {
 DLISTINFO_tag MsgQueue;
 // XBE_GLOBAL(0x0018cd30, 0x2c)
 SpriteInfo SubtitlesInfo = {
-    .colour = 0x7d6d59ff,
-    .unknown1 = 0x1400ff,
+    .colour = TEXT_NORMAL,
+    .shadowColour = 0x1400ff,
     .depth = 0xffff,
     .flags = 8192,
     .posX = 320,
     .posY = 434,
     .textRef = (Action_TranslatedText)0x2000004,
-    .linkedViewer = 5,
+    .linkedViewer = VIEWER_HUD,
 };
 // XBE_GLOBAL(0x0029ae20, 0x4)
 TXT_MSG *SubTitleMsg;
@@ -272,7 +272,6 @@ static intptr_t ReceivedBuf[0x80];
 // The two-line subtitles' format: font 2, centred (the one TextMsgFormats[5] has)
 #define SubtitleFormat FontFormat2Centred
 
-#define SUBTITLE_COLOUR 0x7d6d59ff
 #define SUBTITLE_VIEWERS 6  // the highest of the views that show sprites gets them
 
 // The first queued line for player of type
@@ -344,7 +343,7 @@ void Text_AddMsg(char player, char priority, int type, char *text, int sprite, s
             priority = 0;
             forced = true;
         }
-        if (!glb_viewer[4]->enabled && movieFinished())
+        if (!glb_viewer[VIEWER_SCRIPT]->enabled && movieFinished())
             type = TXTMSG_SUBTITLE_2LINE;
     }
 
@@ -484,9 +483,9 @@ void Text_DelMsg(TXT_MSG *msg) {
 // AUTOINJECT
 void Text_FlushAllSubtitles(void) {
     SubTitleMsg = NULL;
-    SubTitleSpr->depth = 0xff;
-    SubTitleSpr1->depth = 0xff;
-    SubTitleSpr2->depth = 0xff;
+    SubTitleSpr->depth = SPRITE_HIDDEN;
+    SubTitleSpr1->depth = SPRITE_HIDDEN;
+    SubTitleSpr2->depth = SPRITE_HIDDEN;
     TXT_MSG *msg = (TXT_MSG *)MsgQueue.activeList.head;
     while (msg != NULL) {
         TXT_MSG *next = (TXT_MSG *)msg->node.next;
@@ -537,7 +536,7 @@ void Text_Update(void) {
         Text_LinkSubtitle(SubTitleSpr);
     }
     if (SubTitleMsg == NULL)
-        SubTitleSpr->depth = 0xff;
+        SubTitleSpr->depth = SPRITE_HIDDEN;
 }
 
 // The two-line subtitle: the line wrapped again, its first 0.6 of the width on one sprite and the rest on the other
@@ -548,24 +547,24 @@ void Text_Update2Line(void) {
         char *rest = SubTitleMsg->text;
         SubTitleStr = Font_WordWrapString(&rest, (int)strlen(rest), SubtitleFormat, Ftol((double)width * 0.6f));
         Txt_LockString(SubTitleStr);
-        Sprite_SetParams(SubTitleSpr1, 0, 320, 410, HASHCODE_NONE, SUBTITLE_COLOUR);
+        Sprite_SetParams(SubTitleSpr1, 0, 320, 410, HASHCODE_NONE, TEXT_NORMAL);
         Sprite_SetTextNFmt(SubTitleSpr1, SubTitleStr, SubtitleFormat);
         Text_LinkSubtitle(SubTitleSpr1);
         if (rest == NULL) {
-            SubTitleSpr2->depth = 0xff;
+            SubTitleSpr2->depth = SPRITE_HIDDEN;
         } else {
             SubTitleStr2 = Font_WordWrapString(&rest, (int)strlen(rest), SubtitleFormat, width);
             if (SubTitleStr2 != NULL) {
                 Txt_LockString(SubTitleStr2);
-                Sprite_SetParams(SubTitleSpr2, 0, 320, 430, HASHCODE_NONE, SUBTITLE_COLOUR);
+                Sprite_SetParams(SubTitleSpr2, 0, 320, 430, HASHCODE_NONE, TEXT_NORMAL);
                 Sprite_SetTextNFmt(SubTitleSpr2, SubTitleStr2, SubtitleFormat);
                 Text_LinkSubtitle(SubTitleSpr2);
             }
         }
     }
     if (SubTitleMsg == NULL) {
-        SubTitleSpr1->depth = 0xff;
-        SubTitleSpr2->depth = 0xff;
+        SubTitleSpr1->depth = SPRITE_HIDDEN;
+        SubTitleSpr2->depth = SPRITE_HIDDEN;
     }
 }
 

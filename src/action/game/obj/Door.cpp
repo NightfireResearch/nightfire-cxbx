@@ -502,7 +502,7 @@ void Door_Update(obj_tag *obj) {
     if (lock != 0 && !switch_channels_prev[lock] && switch_channels[lock] && !(door->flags & DoorFlag_Moved)) {
         if (GameState.CurrentLevelHashcode != HT_Level_EvilBase &&
             GameState.CurrentLevelHashcode != HT_Level_Tower2Elevator)
-            Text_AddMsg(0, 0, 1, (char *)Txt_BindLabel(TXT_DOOR_UNLOCKED, 0), 0, 180);
+            Text_AddMsg(0, 0, TXTMSG_INFO, (char *)Txt_BindLabel(TXT_DOOR_UNLOCKED, 0), 0, 180);
         Door_Activate(obj, glb_players[0], 0);
         door->flags |= DoorFlag_Moved;
         door->unlockSwitchChannel = 0;

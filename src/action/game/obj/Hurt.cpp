@@ -149,7 +149,7 @@ void Occlude_Update(obj_tag *obj) {
         return;
     short life = obj->curState;
     if (life == 0)
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     if (life > 0)
         obj->curState = life - 1;
 }

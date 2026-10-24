@@ -27,13 +27,9 @@ static constexpr float WindDrawScale = 1.0f / 65000;
 static_assert(std::bit_cast<uint32_t>(WindDrawScale) == 0x37810e36, "not the original's 1/65000");
 
 // The water materials a step or a shot ripples
-#define MATERIAL_WATER_A 13
-#define MATERIAL_WATER_B 14
 
 // The tree script that has a second version, and the level where trees do not loop
 #define TREE_STILL_LEVEL HT_Level_AllCharacters
-
-#define ScriptLoops 0x80000000u     // sAnimScript_tag::flags
 
 // Degrees to radians
 
@@ -104,8 +100,8 @@ void Env_GetWindVel(cel_tag *cel, _VECTOR *pos, _VECTOR *velOut) {
 void Env_WaterRipple(HITDATA_tag *hit) {
     if (hit == NULL)
         return;
-    int material = hit->materialType & 0x3f;
-    if (material != MATERIAL_WATER_A && material != MATERIAL_WATER_B)
+    int material = hit->materialType & MATERIAL_MASK;
+    if (material != MATERIAL_DEEPWATER && material != MATERIAL_SHALWATER)
         return;
     cel_tag *cel = hit->hitCel;
     if (cel == NULL) {
@@ -113,7 +109,7 @@ void Env_WaterRipple(HITDATA_tag *hit) {
             return;
         cel = hit->hitObj->inCel;
     }
-    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, HT_Entity_watereffect, 1, 0x7f7f7f7f, 2, 0x3f);
+    Gas_Init(cel, &hit->hitPosition, NULL, NULL, 0.5f, 1.01f, HT_Entity_watereffect, GAS_GROWING, 0x7f7f7f7f, 2, 0x3f);
 }
 
 // A breath from the mouth, on the first third of every two seconds, a puff each tenth of one, in a cel seen this
@@ -133,11 +129,11 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     if (GlobalEnv != NULL && GlobalEnv->dropType == 0 && !(cel->bitsFromPlacementTag & CEL_NO_SKY)) {
         _VECTOR pos;
         auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, HT_Entity_smoke, 0, 0xffffff80, 0xffffff01, 40);
+        Gas_Init(cel, &pos, NULL, dir, 0.05f, 0.1f, HT_Entity_smoke, GAS_SLOWING, 0xffffff80, 0xffffff01, 40);
         return;
     }
 
-    if (glb_viewer[0]->nightVisionRelated != 2)
+    if (glb_viewer[0]->visionMode != VISION_XRAY)
         return;
     _VECTOR rot;
     rot.y = 0.0f;
@@ -145,7 +141,8 @@ void Env_Breath(_VECTOR *mouth, _VECTOR *dir, cel_tag *cel, int created) {
     rot.z = (float)Float_FRand(TWO_PI);
     _VECTOR pos;
     auxVec_AddMulR32(mouth, dir, 0.1f, &pos);
-    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_smoke, 0, 0xffffffc8, 0xffffff01, 40);
+    obj_tag *gas = Gas_Init(cel, &pos, &rot, dir, 0.05f, 0.2f, HT_Entity_smoke, GAS_SLOWING, 0xffffffc8, 0xffffff01,
+                            40);
     gas->effectFlags |= EFFECT_XRAY_ONLY;
 }
 
@@ -164,9 +161,9 @@ obj_tag* Env_Tree_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
         script = HT_Script_TreeScriptB;
     sAnimScript_tag *anim = AnimScriptAdd(obj, script);
     if (GameState.NextLevelHashcode == TREE_STILL_LEVEL) {
-        anim->flags &= ~ScriptLoops;
+        anim->flags &= ~ANIMSCRIPT_LOOP;
     } else {
-        anim->flags |= ScriptLoops;
+        anim->flags |= ANIMSCRIPT_LOOP;
         anim->curFrame = (float)Ftol(Float_FRand(anim->numFrames));
     }
 

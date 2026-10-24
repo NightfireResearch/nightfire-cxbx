@@ -6,7 +6,6 @@
 
 // See mouseSteer.h for what this is for and the table of devices.
 
-#define ACTION_HELD 1 // PlayerInput.actions bit that Input_Actionf(..., 1) tests
 
 typedef struct {
     GameActions_tag right;      // the channel whose positive deflection turns the device right

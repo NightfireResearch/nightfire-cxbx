@@ -3,6 +3,16 @@
 
 #include "ui.h"
 
+// A manager's status (MenuManager_Create's last argument); MenuManager_GetStatus answers the highest
+enum MenuStatus {
+    MENU_STATUS_NONE,
+    MENU_STATUS_KEYPAD,
+    MENU_STATUS_CONTROLLER,     // the pad is gone
+    MENU_STATUS_PAUSE,
+    MENU_STATUS_MISSION_END,
+    MENU_STATUS_FRONT_END,
+};
+
 void MenuManager_Init(void);
 uint MenuManager_Create(uint menu, uint startPage, short player, uchar managerNum, uint closeAction, char pauseAudio,
                         uint status);

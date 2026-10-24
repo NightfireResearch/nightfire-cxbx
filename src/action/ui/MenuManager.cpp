@@ -34,7 +34,7 @@ uint8_t user_restarted_or_quit;
 // XBE_GLOBAL(0x0017d60c, 0x2c)
 SpriteInfo menu_cursor = {
     .colour = 0x7f7f7f7f,
-    .unknown1 = 0x7f7f7f7f,
+    .shadowColour = 0x7f7f7f7f,
     .depth = 0xffff,
     .flags = 2048,
     .onscreenWidth = 128,
@@ -67,8 +67,6 @@ static char controller_text[256];
 // The pause menu and the mission's end menu, made again once the pad is back
 #define PAUSE_PAGE P_PAUSE
 #define MISSION_END_PAGE P_ENDMISSION
-#define MENU_STATUS_PAUSE 3
-#define MENU_STATUS_MISSION_END 4
 
 // The menu data's records
 #define RECORD_PAGE             0xfffffff0  // a page of a menu, for some platforms
@@ -90,7 +88,7 @@ static char controller_text[256];
 #define PLATFORM_XBOX 1
 
 // The colour the menu data gives some texts, and the one the Xbox shows instead
-#define MENU_DATA_COLOUR 0x7d6d59ff
+#define MENU_DATA_COLOUR TEXT_NORMAL
 #define XBOX_COLOUR      0x645a49ff
 
 // Script_PlayDefault's event for back
@@ -399,7 +397,7 @@ void MenuManager_Update(void) {
     Menu_ProcessDelayedMessages();
     if (!movieFinished()) {
         Menu_UpdateMovieCounter();
-        if (Menu_InputAction(-1, ACTION_SKIP_CUTSCENE, 4))
+        if (Menu_InputAction(-1, ACTION_SKIP_CUTSCENE, ACTION_PRESSED))
             Menu_StopMovie(0);
     }
 
@@ -413,7 +411,7 @@ void MenuManager_Update(void) {
             do {
                 if (mgr->whichPlayer != -1)
                     player = (uchar)mgr->whichPlayer;
-                if (Menu_InputAction(player, ACTION_MENU_BACK, 4)) {
+                if (Menu_InputAction(player, ACTION_MENU_BACK, ACTION_PRESSED)) {
                     // The control with the player's focus, or the focused one, may take back with its script
                     if (mgr->currentPage != NULL) {
                         M_CONTROL *c = mgr->currentPage->playerFocus[player];
@@ -445,25 +443,25 @@ void MenuManager_Update(void) {
         if (shared && !mgr->inputLocked) {
             switch (page->navigationMode) {
                 case 3:
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_LEFT);
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_RIGHT);
                     break;
                 case 2:
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_UP);
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_DOWN);
                     break;
                 case 1:
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_LEFT, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_LEFT);
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_RIGHT, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_RIGHT);
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_UP, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_UP);
-                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, 0xc))
+                    if (Menu_InputAction(mgr->whichPlayer, ACTION_MENU_DIR_DOWN, ACTION_PRESSED | ACTION_REPEAT))
                         Menu_FindControl(mgr, MENU_DIR_DOWN);
                     break;
             }
@@ -485,16 +483,17 @@ void MenuManager_Monitor(void) {
     for (uchar m = 0; m < 5; m++) {
         M_MANAGER *mgr = &manager[m];
         if (mgr->exists && (m == 0 || !manager[m - 1].exists) && mgr->closeAction != MENU_NO_CLOSE_ACTION &&
-            Menu_InputAction(mgr->whichPlayer, mgr->closeAction, 4) && mgr->control.type == ControlType_Manager)
+            Menu_InputAction(mgr->whichPlayer, mgr->closeAction, ACTION_PRESSED) &&
+            mgr->control.type == ControlType_Manager)
             MenuManager_Delete(m);
     }
 
     switch (GameFlow_GetState()) {
-        case 7:
-        case 8:
-        case 0xc:
-        case 0xd:
-        case 0xe:
+        case GAMEFLOW_FADE:
+        case GAMEFLOW_FADING:
+        case GAMEFLOW_DELAYING:
+        case GAMEFLOW_FADE_FROZEN:
+        case GAMEFLOW_FADING_FROZEN:
             controller_wait = CONTROLLER_WAIT;
             return;
     }
@@ -526,7 +525,8 @@ void MenuManager_Monitor(void) {
                 MenuManager_Delete(2);
                 MenuManager_Delete(3);
                 GS_PauseGame(true);
-                MenuManager_Create(HT_Menu_ControllerMenu, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1, 2);
+                MenuManager_Create(HT_Menu_ControllerMenu, CONTROLLER_PAGE, 0, 0, MENU_NO_CLOSE_ACTION, 1,
+                                   MENU_STATUS_CONTROLLER);
                 Manager_SendMessage(&manager[0], MessageType_LockInput, 1, 0);
                 __Menu_Send(0, SUB_P_MESSAGEBOX_TEXT, MessageType_SetText, (intptr_t)controller_text, 0);
                 controller_state = 2;

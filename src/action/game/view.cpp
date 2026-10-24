@@ -257,7 +257,7 @@ void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
             continue;
         if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
             continue;
-        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->nightVisionRelated != 2)
+        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->visionMode != VISION_XRAY)
             continue;
 
         OnlyScaleZ = obj->transformFlags & TRANSFORM_SCALE_LENGTH_ONLY;
@@ -277,7 +277,7 @@ void View_AddObjects(cel_tag *cel, viewer_tag *viewer) {
 
 // The cels to draw this frame into list 0, in order (keys from -90000 up in tens), with their objects; then the cels
 // inside each that the view sees, by their distance squared from the eye, and their objects. Inside cels of kind
-// 0x8018 are not drawn from a cel of kind 0xc023; those flagged 0x40000 not in view 4's pass (mask 0x10).
+// CELKIND_8018 are not drawn from a CELKIND_WATER_ROOM; those with CEL_NOT_IN_VIEW_4 not in view 4's pass (mask 0x10).
 void View_AddCels(viewer_tag *viewer) {
     float key = -90000.0f;
     for (cel_tag *cel = GfxList; cel != NULL; cel = cel->nextVisible) {
@@ -291,16 +291,16 @@ void View_AddCels(viewer_tag *viewer) {
         for (cel_tag *inside = cel->childCel; inside != NULL; inside = inside->childCel) {
             if (inside->glist == NULL || (inside->glist->applyFlagsToObject & 0x10))
                 continue;
-            if ((inside->bitsFromPlacementTag & 0xffff) == 0x8018 &&
-                (viewer->someCel->bitsFromPlacementTag & 0xffff) == 0xc023)
+            if ((inside->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_8018 &&
+                (viewer->cel->bitsFromPlacementTag & CELKIND_MASK) == CELKIND_WATER_ROOM)
                 continue;
-            if ((inside->flags84 & 0x40000) && object_display_mask == 0x10)
+            if ((inside->flags & CEL_NOT_IN_VIEW_4) && object_display_mask == 0x10)
                 continue;
             if (!Vision_InView(&inside->sphere, inside->sphereRadius, viewer))
                 continue;
 
             float sign;
-            int list = View_ListFor(inside->flags84, &sign);
+            int list = View_ListFor(inside->flags, &sign);
             DrawEntry *entry = View_AddToList(viewer, list, NULL, inside);
             entry->key = (float)(Vec_SqDist3D(&inside->sphere, &CamPos) * sign);
             View_AddObjects(inside, viewer);
@@ -321,7 +321,7 @@ void View_AddForcedObjects(viewer_tag *viewer) {
             continue;
         if (!Vision_InView(&obj->centrePoint, obj->radius, viewer))
             continue;
-        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->nightVisionRelated != 2)
+        if ((obj->effectFlags & EFFECT_XRAY_ONLY) && viewer->visionMode != VISION_XRAY)
             continue;
 
         if (obj->objectType == OBJECTTYPE_DRONE && obj->radius > 0.5f) {
@@ -383,7 +383,7 @@ void View_CaptureScene(viewer_tag *viewer) {
 // AUTOINJECT
 void View_SetupRenderModes_Tweak(viewer_tag *viewer, obj_tag *obj) {
     short alpha = obj->tweakA;
-    if ((obj->effectFlags & EFFECT_DIM_IN_NIGHT_VISION) && viewer->nightVisionRelated == 1)
+    if ((obj->effectFlags & EFFECT_DIM_IN_NIGHT_VISION) && viewer->visionMode == VISION_NIGHT)
         alpha = alpha / 4;
 
     bool flashes = (obj->effectFlags & EFFECT_FLASHES) ||
@@ -450,7 +450,7 @@ static void View_SetupCelRenderModes(cel_tag *cel) {
     }
     psiSetTweakARGB(alpha, 0xff, 0xff, 0xff);
     ushort count;
-    void **lights = (void **)Lights_CalcClosestLights(&cel->sphere, (ushort)cel->flags84, &count);
+    void **lights = (void **)Lights_CalcClosestLights(&cel->sphere, (ushort)cel->flags, &count);
     psiLight_SetLights(lights, count, 1.0f, 1.0f, 1.0f);
 }
 
@@ -460,7 +460,7 @@ static void View_DrawAttachments(ATTACH_tag *attachment, viewer_tag *viewer) {
     for (; attachment != NULL; attachment = attachment->next) {
         if (attachment->glist == NULL)
             continue;
-        if ((attachment->glist->applyFlagsToObject & 0x400) && viewer->nightVisionRelated != 2)
+        if ((attachment->glist->applyFlagsToObject & EFFECT_XRAY_ONLY) && viewer->visionMode != VISION_XRAY)
             continue;
         if (attachment->parent != NULL) {
             _MATRIX mtx;
@@ -473,16 +473,16 @@ static void View_DrawAttachments(ATTACH_tag *attachment, viewer_tag *viewer) {
     }
 }
 
-// A cel's geometry: turned by its rotation (or facing the view, flags84 8), shaken in scale (4), at its position
+// A cel's geometry: turned by its rotation (or facing the view, flags 8), shaken in scale (4), at its position
 void View_DrawCelGlist(viewer_tag *viewer, cel_tag *cel) {
     View_SetupCelRenderModes(cel);
     _MATRIX mtx;
-    if (cel->flags84 & 8) {
+    if (cel->flags & 8) {
         Mat_CopyRot(&viewer->mtx, &mtx);
     } else {
         RotMatrixZYX(&cel->rotation, &mtx);
     }
-    if (cel->flags84 & 4) {
+    if (cel->flags & 4) {
         float z = (float)(Float_FRand(0.05f) + 1.0f);
         float y = (float)(Float_FRand(0.05f) + 1.0f);
         float x = (float)(Float_FRand(0.05f) + 1.0f);
@@ -797,16 +797,7 @@ SPRITE_DRAW * View_AddSprite(ushort someNum) {
     return &SprBuffList[SprCnt++];
 }
 
-// The sprite flags View_DrawSprites reads (sprite::flags)
-#define SPRITE_SHADOW       0x0020  // a black copy where it was, the sprite a 64th of its size (1 to 5 pixels) on
-#define SPRITE_FLIP_X       0x0040
-#define SPRITE_FLIP_Y       0x0080
-#define SPRITE_TILED        0x0400  // mirrored tiles, as many as the texture goes into the texels used
-#define SPRITE_CENTRED      0x0800
-#define SPRITE_TEXT_RING    0x2000  // a text's four-copy shadow (Font_DrawText's FONT_SHADOW_RING)
-#define SPRITE_TEXT_OUTLINE 0x4000
-
-// Draws sprites first to last of a view's list: a text by Font_DrawText (the sprite's second colour its shadow),
+// Draws sprites first to last of a view's list: a text by Font_DrawText (with its shadowColour),
 // a picture as one sprite or as tiles of it, each with a shadow if it asks.
 // AUTOINJECT
 void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) {
@@ -829,7 +820,7 @@ void View_DrawSprites(viewer_tag *viewer, sprite **list, uint first, uint last) 
             if (spr->flags & SPRITE_TEXT_OUTLINE)
                 flags |= FONT_OUTLINE;
             Font_DrawText(spr->positionX + viewer->xMin, spr->positionY + viewer->yMin, spr->colourTint,
-                          spr->unknown1, 0xffffffff, spr->text, spr->format, &spr->scale, flags,
+                          spr->shadowColour, 0xffffffff, spr->text, spr->format, &spr->scale, flags,
                           (ushort)spr->length, spr->spritesheetWidth);
             continue;
         }
@@ -988,9 +979,9 @@ void LoadScreen_Draw(void) {
     uint lastForeground = 0, count = 0;
     GameState.NumDraws++;
     psiPreDraw();
-    psiUseCamera(glb_viewer[10]);
+    psiUseCamera(glb_viewer[VIEWER_LOAD_SCREEN]);
     sprite **list = Sprite_BuildList(99, &start, &lastForeground, &count);
-    View_DrawSprites(glb_viewer[10], list, start, count);
+    View_DrawSprites(glb_viewer[VIEWER_LOAD_SCREEN], list, start, count);
     psiPostDraw();
 }
 
@@ -1008,7 +999,7 @@ void __stdcall Game_Draw(void) {
     Tots[0] = 0;
     Tots[1] = 0;
     Tots[2] = 0;
-    for (int i = 0; i < 11; i++) {
+    for (int i = 0; i < NUM_VIEWERS; i++) {
         if (glb_viewer[i] != NULL)
             View_CaptureScene(glb_viewer[i]);
     }

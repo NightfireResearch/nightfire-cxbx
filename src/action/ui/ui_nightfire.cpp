@@ -120,7 +120,7 @@ bool P_NFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
                 __Menu_Send(managerNum, SUB_P_NFMAP_LOADING_PANEL, MessageType_SetState, CONTROL_STATE_INERT, 0);
             } else if (nf_mission_countdown == 4) {
                 ResetMap_LevelToLoad(GameState.NextLevelHashcode, false, false);
-                GameFlow_PushState(0xb, 80.0f, 0);
+                GameFlow_PushState(GAMEFLOW_DELAY, 80.0f, 0);
                 MenuManager_Delete(managerNum);
                 SFXFadeDown(1);
             }
@@ -150,7 +150,7 @@ bool C_SBNFMAP_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
             GameState.BaseMapHashCode = 0;
             PlayerInputs[0].controllerPort = (undefined1)Menu_GetLastController();
             ResetMap_LevelToLoad(GameState.NextLevelHashcode, false, false);
-            GameFlow_PushState(7, 80.0f, 0xff);
+            GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
             MenuManager_Delete(managerNum);
             SFXFadeDown(1);
         }

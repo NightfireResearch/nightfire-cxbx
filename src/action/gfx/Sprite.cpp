@@ -23,10 +23,6 @@ static DLISTINFO_tag SpriteList;
 // XBE_GLOBAL(0x0029a298, 0x800)
 static sprite* SprActiveList[MAX_SPRITES];
 
-// Values of sprite::depth with special meaning to the list builder
-#define SPRITE_HIDDEN 0xff          // never drawn
-#define SPRITE_FOREGROUND_MIN 50    // sorted to the front; see Sprite_BuildList
-
 // The sprite flag bits Sprite_BuildList clears on every sprite it collects (the low nibble of flags)
 #define SPRITE_FLAGS_KEEP_MASK 0xfff0
 
@@ -228,7 +224,7 @@ sprite* Sprite_Create2(SpriteInfo *sprInfo) {
     
     // Common to both image and text-based sprites
     spr->colourTint = sprInfo->colour;
-    spr->unknown1 = sprInfo->unknown1;
+    spr->shadowColour = sprInfo->shadowColour;
     spr->depth = sprInfo->depth;
     spr->flags = sprInfo->flags;
 

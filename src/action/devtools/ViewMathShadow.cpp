@@ -1307,7 +1307,7 @@ void MakeViewer(int i) {
     viewer_tag &v = world.views[i];
     memset(&v, 0, sizeof(v));
     v.world = &world.world;
-    v.someCel = R(6) ? &world.cels[R(4)] : RandomCel();
+    v.cel = R(6) ? &world.cels[R(4)] : RandomCel();
     v.draw.sizes[0] = 0x20;
     v.draw.sizes[1] = 0x20;
     v.draw.sizes[2] = 0x10;
@@ -1328,7 +1328,7 @@ void MakeViewer(int i) {
     v.prevPos = R(3) ? v.pos : RandomPoint(40.0f);
     if (R(3) == 0)
         v.prevPos.x = v.pos.x + Uniform(3.0f);
-    v.someVec = RandomPoint(7.0f);
+    v.rot = RandomPoint(7.0f);
     v.zoom = R(6) ? 1.0f + Positive(3.0f) : Coordinate();
     v.AspectRatio = R(6) ? 1.3333334f : Coordinate();
     v.fovRadians = R(6) ? 0.3f + Positive(2.0f) : Angle();
@@ -1346,7 +1346,7 @@ void MakeViewer(int i) {
         v.fadeColour[k] = (uchar)NextWord();
     v.fadeHold = (undefined1)R(2);
     v.fadeState = (undefined1)R(4);
-    v.nightVisionRelated = (undefined2)R(3);
+    v.visionMode = (undefined2)R(3);
     for (int k = 0; k < 4; k++) {
         _VECTOR p[3] = {RandomPoint(30.0f), RandomPoint(30.0f), RandomPoint(30.0f)};
         Plane_PlaneEq(&v.frustumPlanes[k], &p[0], &p[1], &p[2]);
@@ -1356,20 +1356,20 @@ void MakeViewer(int i) {
 void MakeCel(int i) {
     cel_tag &c = world.cels[i];
     memset(&c, 0, sizeof(c));
-    c.someMin = RandomPoint(30.0f);
-    c.someMax = c.someMin;
-    c.someMax.x += Positive(40.0f);
-    c.someMax.y += Positive(40.0f);
-    c.someMax.z += Positive(40.0f);
+    c.boxMin = RandomPoint(30.0f);
+    c.boxMax = c.boxMin;
+    c.boxMax.x += Positive(40.0f);
+    c.boxMax.y += Positive(40.0f);
+    c.boxMax.z += Positive(40.0f);
     if (R(8) == 0)
-        c.someMin.y = Coordinate();
+        c.boxMin.y = Coordinate();
     c.glist = R(4) ? &world.glists[R(GLISTS)] : NULL;
     static const uint kPlacement[] = {0x10000000, 0x08000000, 0x00008018, 0x0000c023};
     c.bitsFromPlacementTag = RandomBits(kPlacement, 4);
     if ((c.bitsFromPlacementTag & 0x8018) == 0x8018 && (c.bitsFromPlacementTag & 0xc023) == 0xc023)
         c.bitsFromPlacementTag &= ~0x4000u;
     static const uint kFlags[] = {1, 0x2000, 0x40000, 8, 4, 0x20, 0x100};
-    c.flags84 = RandomBits(kFlags, 7);
+    c.flags = RandomBits(kFlags, 7);
     c.sphere = RandomPoint(30.0f);
     c.sphereRadius = R(8) ? Positive(20.0f) : Coordinate();
     c.position = RandomPoint(30.0f);
@@ -1691,14 +1691,16 @@ void RunCamera(void) {
             if (c.run == RunInBox) {
                 s_vecA = &world.v[0];
                 if (s_cel != NULL && R(2)) {   // inside, or on a face
-                    world.v[0].x = s_cel->someMin.x + Positive(s_cel->someMax.x - s_cel->someMin.x);
-                    world.v[0].y = R(4) ? s_cel->someMin.y + Positive(s_cel->someMax.y - s_cel->someMin.y) : s_cel->someMax.y;
-                    world.v[0].z = R(4) ? s_cel->someMin.z + Positive(s_cel->someMax.z - s_cel->someMin.z) : s_cel->someMin.z;
+                    world.v[0].x = s_cel->boxMin.x + Positive(s_cel->boxMax.x - s_cel->boxMin.x);
+                    world.v[0].y = R(4) ? s_cel->boxMin.y + Positive(s_cel->boxMax.y - s_cel->boxMin.y)
+                                         : s_cel->boxMax.y;
+                    world.v[0].z = R(4) ? s_cel->boxMin.z + Positive(s_cel->boxMax.z - s_cel->boxMin.z)
+                                         : s_cel->boxMin.z;
                 }
             }
             if (c.run == RunLeftCel || c.run == RunCheckLocation) {
                 // A segment through one of the cel's portals, now and then
-                cel_tag *cel = c.run == RunLeftCel ? s_cel : glb_viewer[s_view] ? glb_viewer[s_view]->someCel : NULL;
+                cel_tag *cel = c.run == RunLeftCel ? s_cel : glb_viewer[s_view] ? glb_viewer[s_view]->cel : NULL;
                 _VECTOR *from = c.run == RunLeftCel ? &world.v[0] : glb_viewer[s_view] ? &glb_viewer[s_view]->prevPos : NULL;
                 _VECTOR *to = c.run == RunLeftCel ? &world.v[1] : glb_viewer[s_view] ? &glb_viewer[s_view]->pos : NULL;
                 if (c.run == RunLeftCel) {
@@ -1883,7 +1885,7 @@ void RunView(bool draw) {
             s_viewer = &world.views[R(VIEWS)];
             if (c.run == RunAddCels || c.run == RunCapture) {
                 // The view's cel is one of the rooms, and the rooms' kinds what the inside test looks for
-                s_viewer->someCel = &world.cels[R(4)];
+                s_viewer->cel = &world.cels[R(4)];
             }
             if (c.run == RunAddCels || c.run == RunAddObjects || c.run == RunForced || c.run == RunCapture) {
                 SetFrustum(s_viewer);

@@ -17,7 +17,6 @@
 // XBE_GLOBAL(0x001df8b0, 0xc)
 LLISTINFO_tag FishList;
 
-#define CEL_KIND_WATER 0xc023   // the low word of cel_tag::bitsFromPlacementTag where fish live
 
 // AUTOINJECT
 void Creature_Init(void) {
@@ -52,7 +51,9 @@ void Creature_CalcPoint(_VECTOR *out, float distance, float size, _VECTOR *angle
     _VECTOR end, start;
     auxVec_AddMulR32(from, dir, (float)((double)distance + size), &end);
     Vec_Copy(from, &start);
-    if (Collide_RayIntersect(&start, &end, obj->inCel, obj, NULL, &hits, 0, 0x20d, 0)) {
+    if (Collide_RayIntersect(&start, &end, obj->inCel, obj, NULL, &hits, 0,
+                             HITMASK_SKIP_WATER | HITMASK_SKIP_HIDDEN | HITMASK_SKIP_NO_CONTACT | HITMASK_SKIP_BULLETS,
+                             0)) {
         Mat_Align2Dir(&turn, (_VECTOR *)&hits->surfaceNormal, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
         Mat_GetNorm(dir, &turn);
         auxVec_AddMulR32(&hits->hitPosition, (_VECTOR *)&hits->surfaceNormal, size, out);
@@ -117,7 +118,7 @@ void Creature_CalcWaypoints(obj_tag *obj, Creature *creature) {
             Creature_CalcPoint(at, creature->size, creature->size, &angles, &dir, &creature->waypoints[i - 1].pos,
                                obj);
             if ((double)cel->shearHeight - creature->size < at->y)
-                at->y = (float)((double)cel->someMax.y - creature->size);
+                at->y = (float)((double)cel->boxMax.y - creature->size);
         }
     }
 
@@ -164,7 +165,7 @@ obj_tag* Creature_Create(_VECTOR *pos, _VECTOR *rot, celglist_tag *celgl, level_
             creature->splineMode = 0;
             break;
         case CREATURE_FISH:
-            if ((obj->inCel->bitsFromPlacementTag & 0xffff) != CEL_KIND_WATER) {
+            if ((obj->inCel->bitsFromPlacementTag & CELKIND_MASK) != CELKIND_WATER_ROOM) {
                 control_delete_object(obj);
                 return NULL;
             }

@@ -159,7 +159,7 @@ void Effect_InitLists(void) {
 // is held to the table here, as nowhere else.
 // AUTOINJECT
 uchar Effect_RicochetProb(uchar material, ushort mask) {
-    int surface = (material & 0x3f) > 22 ? 22 : material & 0x3f;
+    int surface = (material & MATERIAL_MASK) > MATERIAL_LAST ? MATERIAL_LAST : material & MATERIAL_MASK;
     ushort range = EffectInfo[surface].ricochet;
     if (range == 0 || mask == 0)
         return 0;
@@ -172,28 +172,29 @@ uchar Effect_RicochetProb(uchar material, ushort mask) {
 void Effect_Create(HITDATA_tag *hit, obj_tag *obj, uint flags, float volume) {
 
     plane_equ_tag plane = hit->surfaceNormal;
-    if (obj == NULL || (hit->materialType & 0x3f) == 0)
+    if (obj == NULL || (hit->materialType & MATERIAL_MASK) == MATERIAL_NONE)
         return;
 
     cel_tag *cel = hit->hitCel;
     if (cel == NULL)
         cel = hit->hitObj != NULL ? hit->hitObj->inCel : NULL;
 
-    if ((hit->materialType & 0x3f) == 0x10) {
+    if ((hit->materialType & MATERIAL_MASK) == MATERIAL_GLASS) {
         hit->surfaceNormal.a = -hit->surfaceNormal.a;
         hit->surfaceNormal.b = -hit->surfaceNormal.b;
         hit->surfaceNormal.c = -hit->surfaceNormal.c;
     }
     _VECTOR u, v;
     Vec_MakeOrthonormalBasis(&u, &v, &hit->surfaceNormal.normal);
-    Vec_Add2(&u, &v, &hit->unknown1);
+    Vec_Add2(&u, &v, &hit->tangent);
 
     if (flags & EFFECT_SPARKS) {
-        Emitter_Create(EffectInfo[hit->materialType & 0x3f].emitter, &hit->hitPosition, &hit->surfaceNormal.normal,
+        Emitter_Create(EffectInfo[hit->materialType & MATERIAL_MASK].emitter, &hit->hitPosition,
+                       &hit->surfaceNormal.normal,
                        0.0f, 0, 0, 0, 0.0f);
-        if (EffectInfo[hit->materialType & 0x3f].debrisOn) {
-            ushort count = Rand_Rand(EffectInfo[hit->materialType & 0x3f].debrisMax) + 1;
-            Debris_Create(hit, &EffectInfo[hit->materialType & 0x3f], cel, count);
+        if (EffectInfo[hit->materialType & MATERIAL_MASK].debrisOn) {
+            ushort count = Rand_Rand(EffectInfo[hit->materialType & MATERIAL_MASK].debrisMax) + 1;
+            Debris_Create(hit, &EffectInfo[hit->materialType & MATERIAL_MASK], cel, count);
         }
     }
 
@@ -226,7 +227,7 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
     faceRot.y = Atan2(-normal->x, -normal->z);
     faceRot.z = 0.0f;
 
-    HEINFO_tag *info = &EffectInfo[hit->materialType & 0x3f];
+    HEINFO_tag *info = &EffectInfo[hit->materialType & MATERIAL_MASK];
     if (flags & EFFECT_SOUND)
         Sound_Play3D((Action_SFX)info->soundBullet, &hit->hitPosition, 100.0f, -1.0f, -1.0f, 0, 0, 0);
 
@@ -250,7 +251,7 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
         }
     }
 
-    if (EffectInfo[hit->materialType & 0x3f].decal == 0)
+    if (EffectInfo[hit->materialType & MATERIAL_MASK].decal == 0)
         return;
     ATTACH_tag *mark = Effect_NewMark();
     if (mark == NULL)
@@ -258,7 +259,7 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
     Mat_Align2Dir(&mark->matrix, normal, &CONST_UP_VECTOR, &MAYBE_CONST_FORWARD_VECTOR);
     auxVec_AddMulR32(&hit->hitPosition, normal, 0.01f, (_VECTOR *)&mark->matrix.m[12]);
     mark->parent = hit->hitObj;
-    hashtable_set_sub_object_to_entity_gfx(mark, EffectInfo[hit->materialType & 0x3f].decal);
+    hashtable_set_sub_object_to_entity_gfx(mark, EffectInfo[hit->materialType & MATERIAL_MASK].decal);
     if (hit->hitCel != NULL)
         Effect_LinkToCel(mark, cel);
     else
@@ -270,21 +271,21 @@ void Effect_Bullet(obj_tag *obj, HITDATA_tag *hit, cel_tag *cel, uint flags) {
 void Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, float volume) {
 
     if (flags & EFFECT_SOUND) {
-        DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundStep,
+        DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & MATERIAL_MASK].soundStep,
                                             &hit->hitPosition, volume, -1.0f, -1.0f, 0, 0, 0);
         Sound_SetAlertness(sound, 0.0f);
     }
 
-    HASHCODE footprint = (flags & EFFECT_LEFT_FOOT) ? EffectInfo[hit->materialType & 0x3f].footprint4
-                                                    : EffectInfo[hit->materialType & 0x3f].footprint8;
+    HASHCODE footprint = (flags & EFFECT_LEFT_FOOT) ? EffectInfo[hit->materialType & MATERIAL_MASK].footprint4
+                                                    : EffectInfo[hit->materialType & MATERIAL_MASK].footprint8;
     if (!(flags & (EFFECT_LEFT_FOOT | EFFECT_RIGHT_FOOT)) || footprint == 0)
         return;
 
     _MATRIX *foot = &obj->transformMatrix;
     if (flags & EFFECT_LEFT_FOOT)
-        foot = &obj->animState->animObj.boneMtxs[55];
+        foot = &obj->animState->animObj.boneMtxs[BONE_LEFT_FOOT];
     else if (flags & EFFECT_RIGHT_FOOT)
-        foot = &obj->animState->animObj.boneMtxs[51];
+        foot = &obj->animState->animObj.boneMtxs[BONE_RIGHT_FOOT];
 
     _VECTOR dir;
     if (ScriptCam == 0 && !MPSettings.isMultiplayer && obj->objectType == OBJECTTYPE_PLAYER)
@@ -314,10 +315,10 @@ void Effect_Player(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags, flo
 void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
 
     if (flags & EFFECT_SOUND)
-        Sound_PlayExt((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundStep, 100.0f, 0, 0);
+        Sound_PlayExt((Action_SFX)EffectInfo[hit->materialType & MATERIAL_MASK].soundStep, 100.0f, 0, 0);
 
     _VECTOR *normal = &hit->surfaceNormal.normal;
-    if (EffectInfo[hit->materialType & 0x3f].laserGas != 0) {
+    if (EffectInfo[hit->materialType & MATERIAL_MASK].laserGas != 0) {
 
         _VECTOR rot;
         double x = normal->x, z = normal->z;
@@ -326,7 +327,8 @@ void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
         rot.z = 0.0f;
         _VECTOR at;
         auxVec_AddMulR32(&hit->hitPosition, normal, 0.005f, &at);
-        Gas_Init(cel, &at, &rot, NULL, 2.0f, 3.0f, EffectInfo[hit->materialType & 0x3f].laserGas, 5, 0x7f7f64ff,
+        Gas_Init(cel, &at, &rot, NULL, 2.0f, 3.0f, EffectInfo[hit->materialType & MATERIAL_MASK].laserGas, GAS_GROWING5,
+                 0x7f7f64ff,
                  0x643c0018, 10);
 
         if (Rand_Rand(100) > 40) {
@@ -348,9 +350,10 @@ void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
     if (GameState.NumFramesUnpaused & 1) {
         _VECTOR dust;
         Rand_FRandHalf_Vec(&dust, 0.1f);
-        Vec_Mul(&dust, &hit->unknown1);
+        Vec_Mul(&dust, &hit->tangent);
         Vec_Add2(&dust, &hit->hitPosition, &dust);
-        Gas_Init(cel, &dust, &CONST_ZERO_VECTOR, NULL, 0.005f, 0.02f, HT_Entity_smoke_1_dust, 0, 0xc8c8c87f, 0x20202006,
+        Gas_Init(cel, &dust, &CONST_ZERO_VECTOR, NULL, 0.005f, 0.02f, HT_Entity_smoke_1_dust, GAS_SLOWING, 0xc8c8c87f,
+                 0x20202006,
                  0x15);
     }
 }
@@ -358,7 +361,7 @@ void Effect_Laser(HITDATA_tag *hit, cel_tag *cel, obj_tag *obj, uint flags) {
 // Only the sound, which makes the drones more watchful
 void Effect_Body(HITDATA_tag *hit, obj_tag *obj, cel_tag *cel, uint flags) {
     if (flags & EFFECT_SOUND) {
-        DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & 0x3f].soundBody,
+        DYNAMICSOUNDS *sound = Sound_Play3D((Action_SFX)EffectInfo[hit->materialType & MATERIAL_MASK].soundBody,
                                             &hit->hitPosition, 100.0f, -1.0f, -1.0f, 0, 0, 0);
         Sound_ModAlertness(sound, 0.5f);
     }
@@ -466,5 +469,5 @@ void Particles_Update(obj_tag *obj) {
     if (obj == NULL)
         return;
     if (!psiParticleUpdate(obj->extraObjectData))
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
 }

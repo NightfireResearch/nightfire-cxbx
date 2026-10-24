@@ -13,24 +13,8 @@
 
 #pragma fp_contract(off)
 
-// The kinds of smoke gases_smoke knows
-enum {
-    GAS_SLOWING = 0,            // rises, slowing down, to the cel's ceiling
-    GAS_GROWING = 1,            // only grows
-    GAS_STILL = 2,
-    GAS_RISING = 3,             // rises faster, to the ceiling
-    GAS_FALLING = 4,            // falls, slowing sideways
-    GAS_GROWING5 = 5,
-    GAS_RISING6 = 6,
-    GAS_WIND = 7,               // blown by the cel's wind
-    GAS_SINKING = 8,
-    GAS_SOURCE = 9,             // hidden; gives off GAS_SINKING smoke every fourth frame once 20 frames old
-    GAS_WIND_SOURCE = 10,       // hidden; gives off GAS_WIND smoke, rising
-    GAS_FADING = 11,            // rises, fading out over its last 30 frames
-};
-
-// Kinds 9 and 10 stay put, give off smoke and are hidden; kind 7 goes with the wind; the rest rise at a unit a second
-// unless given a velocity (a second's)
+// GAS_SOURCE and GAS_WIND_SOURCE stay put, give off smoke and are hidden; GAS_WIND goes with the wind; the rest rise
+// at a unit a second unless given a velocity (a second's)
 // AUTOINJECT
 obj_tag* Gas_Init(cel_tag *cel, _VECTOR *pos, _VECTOR *rot, _VECTOR *vel, float scale0, float scale1, HASHCODE entity,
                   uint kind, uint colour0, uint colour1, ushort life) {
@@ -156,8 +140,8 @@ void gases_smoke(obj_tag *obj) {
     case GAS_WIND:
         obj->rotation.z = (float)((double)FRAME_RATE_MUL * gas->spin + obj->rotation.z);
         Gas_Drift(obj, gas, -0.02f);
-        if (obj->position.y > obj->inCel->someMax.y)
-            obj->position.y = obj->inCel->someMax.y;
+        if (obj->position.y > obj->inCel->boxMax.y)
+            obj->position.y = obj->inCel->boxMax.y;
         Gas_Grow(obj, gas);
         break;
 
@@ -165,8 +149,8 @@ void gases_smoke(obj_tag *obj) {
     case GAS_RISING6:
         obj->rotation.z = gas->spin + obj->rotation.z;
         Gas_Drift(obj, gas, -0.1f);
-        if (obj->position.y > obj->inCel->someMax.y) {
-            obj->position.y = obj->inCel->someMax.y;
+        if (obj->position.y > obj->inCel->boxMax.y) {
+            obj->position.y = obj->inCel->boxMax.y;
             break;
         }
         Gas_Grow(obj, gas);
@@ -175,8 +159,8 @@ void gases_smoke(obj_tag *obj) {
     case GAS_FADING:
         obj->rotation.z = gas->spin + obj->rotation.z;
         Gas_Drift(obj, gas, -0.02f);
-        if (obj->position.y > obj->inCel->someMax.y)
-            obj->position.y = obj->inCel->someMax.y;
+        if (obj->position.y > obj->inCel->boxMax.y)
+            obj->position.y = obj->inCel->boxMax.y;
         Gas_Grow(obj, gas);
         if (gas->life < 30.0f)
             gas->colour[3] = gas->life * 8.5f;
@@ -243,7 +227,7 @@ void gases_smoke(obj_tag *obj) {
     double left = (double)gas->life - FRAME_RATE_MUL;
     gas->life = (float)left;
     if (left <= 0.0)
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     else
         obj->transformFlags |= TRANSFORM_MOVED;
 }
@@ -273,11 +257,11 @@ void Debris_Create(HITDATA_tag *hit, struct HEINFO_tag *info, cel_tag *cel, usho
         debris->fade = 1;
         debris->life = (short)(extra + (info->debrisLife >> 1));
 
-        debris->vel.x = (float)((Rand_FRandHalf(speed) * hit->unknown1.x + (double)half * hit->surfaceNormal.a)
+        debris->vel.x = (float)((Rand_FRandHalf(speed) * hit->tangent.x + (double)half * hit->surfaceNormal.a)
                                 * REC_FRAME_RATE);
-        debris->vel.y = (float)((Rand_FRandHalf(speed) * hit->unknown1.y + (double)half * hit->surfaceNormal.b)
+        debris->vel.y = (float)((Rand_FRandHalf(speed) * hit->tangent.y + (double)half * hit->surfaceNormal.b)
                                 * REC_FRAME_RATE);
-        debris->vel.z = (float)((Rand_FRandHalf(speed) * hit->unknown1.z + (double)half * hit->surfaceNormal.c)
+        debris->vel.z = (float)((Rand_FRandHalf(speed) * hit->tangent.z + (double)half * hit->surfaceNormal.c)
                                 * REC_FRAME_RATE);
         Rand_FRandHalf_Vec(&debris->spin, info->debrisSpin);
 
@@ -340,6 +324,6 @@ void Debris_Update(obj_tag *obj) {
         Vec_Add2(&obj->rotation, &debris->spin, &obj->rotation);
         obj->transformFlags |= TRANSFORM_MOVED;
     } else {
-        obj->flags |= 1;
+        obj->flags |= OBJFLAG_DELETE;
     }
 }

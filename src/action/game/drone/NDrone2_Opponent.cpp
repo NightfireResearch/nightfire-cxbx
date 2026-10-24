@@ -30,9 +30,6 @@
 
 // The bones a drone's line of sight tests in turn (Drone_tag.viewBone)
 
-// A bone's world position rather than its parent-relative one (AnimGetBoneWorldTrans)
-#define WORLD_BONE(bone) (0x80000000 | (bone))
-#define AIM_BONE 2
 
 // The cost NDrone2_FindOpponent's bots give a player they do not consider
 #define NO_COST 640000.0f
@@ -134,7 +131,7 @@ bool NDrone2_OpponentBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
         && (gameObj->objectType != OBJECTTYPE_DRONE ||
             (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED))
         && (gameObj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
-        AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
+        AnimGetBoneWorldTrans(gameObj, ANIM_BONE(bone), 0, pos, NULL);
         return true;
     }
     if (pos != NULL)
@@ -154,13 +151,13 @@ void NDrone2_SetOpponentAimPos(Drone_tag *drone) {
         NDrone2_GetHeadPos(opponent, &drone->aimOffset, NULL);
         uint odds = (drone->botVars->stats.traitFlags & BOT_TRAIT_1) ? 4 : drone->accuracy * 4;
         _VECTOR head;
-        if (Rand_Rand(odds) != odds - 1 && NDrone2_OpponentBonePos(drone->opponent, AIM_BONE, &head)) {
+        if (Rand_Rand(odds) != odds - 1 && NDrone2_OpponentBonePos(drone->opponent, BONE_AIM, &head)) {
             Vec_Swap(&head, &drone->aimOffset);
             double towardsHead = ((double)drone->aimOffset.y - head.y) * kAimTowardsHead;
             drone->aimOffset.y = (float)(drone->aimOffset.y - towardsHead);
         }
     } else {
-        uint bone = (drone->sightFlags & DRONE_SIGHT_LOS) ? Drone_View_Bones[drone->viewBone] : AIM_BONE;
+        uint bone = (drone->sightFlags & DRONE_SIGHT_LOS) ? Drone_View_Bones[drone->viewBone] : BONE_AIM;
         NDrone2_OpponentBonePos(opponent, bone, &drone->aimOffset);
     }
     Vec_Subtract(&drone->aimOffset, &drone->opponent->position, &drone->aimOffset);
@@ -465,7 +462,8 @@ obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
             Drone_tag *otherDrone = (Drone_tag *)obj->extraObjectData;
             if (!(otherDrone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) && (otherDrone->flags & DRONE_FLAG_ENABLED)
                 && !(otherDrone->health <= 0.0f)
-                && obj->objectType != OBJECTTYPE_DEAD_DRONE && !(obj->flags & 1) && other->side == DRONE_SIDE_ENEMY
+                && obj->objectType != OBJECTTYPE_DEAD_DRONE && !(obj->flags & OBJFLAG_DELETE)
+                && other->side == DRONE_SIDE_ENEMY
                 && Vec_SqDist2D(&drone->gameObj->position, &obj->position) < nearestSq
                 && NDrone2_CanSeeObject(drone, other->gameObj, 5, 0)) {
                 NDrone2_SetOpponent(drone, other->gameObj);

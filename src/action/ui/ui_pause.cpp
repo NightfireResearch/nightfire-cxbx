@@ -79,7 +79,7 @@ bool P_PAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint m
     switch (message) {
     case MessageType_QueryBack: {
         M_CONTROL *confirm = (M_CONTROL *)__Menu_SendEx(managerNum, C_GCPAUSE, PAUSE_CONFIRM_LIST, MessageType_GetControl, 0, 0);
-        if (MenuManager_GetStatus() != 3 || confirm->state != CONTROL_STATE_SHOWN)
+        if (MenuManager_GetStatus() != MENU_STATUS_PAUSE || confirm->state != CONTROL_STATE_SHOWN)
             break;
         LABEL_SET_TEXT(managerNum, SUB_P_PAUSE_HINT_TEXT, Txt_BindLabel(TXT_PAUSE_HINT, 0));
         Pause_SetState(managerNum, PAUSE_CONFIRM_TEXT, CONTROL_STATE_HIDDEN);
@@ -420,7 +420,7 @@ bool C_GCPAUSE_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, uint
                     ResetMap_LevelToLoad(Mission_BaseMapHCode(), false, true);
                 }
                 SFXFadeDown(1);
-                GameFlow_PushState(7, 80.0f, 0xff);
+                GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
                 MenuManager_Delete(managerNum);
                 GameState.LevelEnding = 1;
                 user_restarted_or_quit = 1;
@@ -490,7 +490,7 @@ bool P_ENDMISSION_Handler(uchar managerNum, M_CONTROL *control, uint hashcode, u
             break;
         }
         SFXFadeDown(1);
-        GameFlow_PushState(7, 80.0f, 0xff);
+        GameFlow_PushState(GAMEFLOW_FADE, 80.0f, 0xff);
         MenuManager_Delete(managerNum);
     }
     return true;

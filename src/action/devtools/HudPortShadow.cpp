@@ -561,7 +561,7 @@ void RandomFormat(char *out) {
 void RandomSprite(sprite *spr, int index) {
     memset(spr, 0, sizeof(sprite));
     spr->colourTint = R(5) == 0 ? R(0) & 0xffffff00 : R(0);
-    spr->unknown1 = R(0);
+    spr->shadowColour = R(0);
     spr->text = R(3) == 0 ? world.texts[index] : NULL;
     if (spr->text != NULL)
         RandomText(spr->text, 40);
@@ -599,7 +599,7 @@ void RandomViewer(viewer_tag *v, int i) {
     v->height = R(2) ? 480.0f : Num(150.0f, 480.0f);
     v->xMax = R(2) ? v->width : Num(200.0f, 640.0f);
     v->yMax = R(2) ? v->height : Num(150.0f, 480.0f);
-    v->nightVisionRelated = (undefined2)R(4);
+    v->visionMode = (undefined2)R(4);
     for (int k = 0; k < 15; k++)
         v->viewMatrix.m[k] = Num(-1.0f, 1.0f);
     v->pos.x = Num(-100.0f, 100.0f);
