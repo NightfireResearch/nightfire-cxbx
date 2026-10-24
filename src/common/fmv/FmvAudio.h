@@ -25,10 +25,12 @@ class FmvAudio {
 public:
     // A voice on the device for `channels` channels of 16-bit PCM at `sampleRate`. outputMatrix, if not null, is
     // XAudio2's: outputChannels rows of `channels` levels (each output's level of each input). False if there is no
-    // device or the voice cannot be made, in which case the movie plays silently on the wall clock.
+    // device or the voice cannot be made, in which case the movie plays silently on the wall clock - except in a time
+    // demo (SetVirtualClock), where it opens without a voice, counting: the decoded frames are counted and dropped, so
+    // that the movie still ends when its audio would, whether the host has a sound device or not.
     bool Open(FmvAudioDevice device, int channels, int sampleRate, const float *outputMatrix, int outputChannels);
     void Close();
-    bool IsOpen() const { return voice_ != nullptr; }
+    bool IsOpen() const { return voice_ != nullptr || counting_; }
 
     // Appends a decoded frame (16-bit, planar or interleaved); full chunks are submitted as they fill
     void Queue(const AVFrame *frame);
@@ -38,7 +40,7 @@ public:
     double QueuedSeconds();
     // Whether more audio is wanted to stay the lead ahead
     bool WantsMore();
-    // Finished and all played (always true without a voice)
+    // Finished and all played (always true without a voice, unless counting)
     bool PlayedOut();
 
     void SetVolume(float amplitude);
@@ -69,6 +71,7 @@ private:
     static double (*virtualClock_)(void);
     double startVirtual_ = 0.0;         // virtualClock_ at Start
     int64_t framesTotal_ = 0;           // queued since Open, for the virtual clock's PlayedOut
+    bool counting_ = false;             // open without a voice in a time demo: frames counted, not played
     std::deque<int16_t *> chunks_;      // submitted, in order; freed once played
     int16_t *pending_ = nullptr;        // the chunk being filled
     int pendingFrames_ = 0;

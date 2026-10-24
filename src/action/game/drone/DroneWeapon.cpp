@@ -30,6 +30,7 @@
 #include "../../util/hashtable.h"  // hashtable_set_object_to_entity_gfx
 #include "DroneVision.h"
 #include "NDrone2_Opponent.h"
+#include "../../../common/floatToInt.h"
 
 #include <bit>
 #include <math.h>
@@ -187,7 +188,7 @@ void DroneWeap_NextBulletTime(DCVars_tag *dcv, char newBurst, char start) {
         if (MPSettings.dronesAreBots) {
             float aggression = (float)BOT_getAggressionMul(drone);
             uint draw = Rand_Rand(15);
-            wait = draw - (int)(-60.0f / (double)aggression);
+            wait = draw - TruncateToInt32(-60.0f / (double)aggression);
             double shots = (double)drone->burstShots * aggression;
             if (shots <= 1.0f)
                 shots = 1.0f;

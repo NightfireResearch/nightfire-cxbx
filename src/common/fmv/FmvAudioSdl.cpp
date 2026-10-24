@@ -20,10 +20,24 @@ static double SecondsSince(uint64_t start) {
     return (double)(SDL_GetPerformanceCounter() - start) / (double)SDL_GetPerformanceFrequency();
 }
 
+// No voice, in a time demo: the frames are counted for the virtual clock's PlayedOut
+static bool OpenCounting(bool *counting, int *channelsOut, int *sampleRateOut, int channels, int sampleRate,
+                         bool demo) {
+    if (!demo)
+        return false;
+    *counting = true;
+    *channelsOut = channels;
+    *sampleRateOut = sampleRate;
+    return true;
+}
+
 bool FmvAudio::Open(FmvAudioDevice device, int channels, int sampleRate, const float *outputMatrix, int outputChannels) {
     Close();
-    if (device == 0 || channels <= 0 || channels > 8 || sampleRate <= 0)
+    if (channels <= 0 || channels > 8 || sampleRate <= 0)
         return false;
+    framesQueued_ = 0;
+    if (device == 0)
+        return OpenCounting(&counting_, &channels_, &sampleRate_, channels, sampleRate, virtualClock_ != nullptr);
     folding_ = outputMatrix != nullptr && outputChannels > 0 && outputChannels <= 2;
     outputChannels_ = folding_ ? outputChannels : channels;
     if (folding_)
@@ -31,7 +45,7 @@ bool FmvAudio::Open(FmvAudioDevice device, int channels, int sampleRate, const f
     SDL_AudioSpec spec = { SDL_AUDIO_S16, outputChannels_, sampleRate };
     voice_ = SDL_CreateAudioStream(&spec, &spec);   // the output side becomes the device's when it is bound
     if (voice_ == nullptr)
-        return false;
+        return OpenCounting(&counting_, &channels_, &sampleRate_, channels, sampleRate, virtualClock_ != nullptr);
     device_ = device;
     channels_ = channels;
     sampleRate_ = sampleRate;
@@ -48,7 +62,7 @@ void FmvAudio::Close() {
     pending_ = nullptr;
     pendingFrames_ = channels_ = sampleRate_ = outputChannels_ = 0;
     device_ = 0;
-    started_ = finished_ = drained_ = false;
+    started_ = finished_ = drained_ = counting_ = false;
 }
 
 // Nothing is held back here: SDL keeps what is queued
@@ -59,8 +73,11 @@ void FmvAudio::Submit() {
 }
 
 void FmvAudio::Queue(const AVFrame *frame) {
-    if (voice_ == nullptr)
+    if (voice_ == nullptr) {
+        if (counting_)
+            framesQueued_ += frame->nb_samples;
         return;
+    }
     bool planar = frame->format == AV_SAMPLE_FMT_S16P;
     int channels = frame->ch_layout.nb_channels < channels_ ? frame->ch_layout.nb_channels : channels_;
     int16_t *out = (int16_t *)malloc((size_t)frame->nb_samples * outputChannels_ * sizeof(int16_t));
@@ -94,6 +111,8 @@ void FmvAudio::Finish() {
 }
 
 double FmvAudio::QueuedSeconds() {
+    if (counting_)
+        return (double)framesQueued_ / sampleRate_ - Clock();
     if (voice_ == nullptr)
         return 1e9;
     int queued = SDL_GetAudioStreamQueued(voice_);
@@ -101,11 +120,11 @@ double FmvAudio::QueuedSeconds() {
 }
 
 bool FmvAudio::WantsMore() {
-    return voice_ != nullptr && !finished_ && QueuedSeconds() < FMV_AUDIO_AHEAD;
+    return IsOpen() && !finished_ && QueuedSeconds() < FMV_AUDIO_AHEAD;
 }
 
 bool FmvAudio::PlayedOut() {
-    if (voice_ == nullptr)
+    if (!IsOpen())
         return true;
     if (virtualClock_ != nullptr)
         return finished_ && Clock() >= (double)framesQueued_ / sampleRate_;
@@ -122,6 +141,7 @@ void FmvAudio::Start() {
     if (voice_ != nullptr && !SDL_BindAudioStream(device_, voice_)) {
         SDL_DestroyAudioStream(voice_);
         voice_ = nullptr;
+        counting_ = virtualClock_ != nullptr;
     }
     started_ = true;
     startWall_ = (int64_t)SDL_GetPerformanceCounter();

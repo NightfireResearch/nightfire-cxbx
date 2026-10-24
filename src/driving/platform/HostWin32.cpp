@@ -4,8 +4,14 @@
 #include <windows.h>
 #include <mmsystem.h>
 #include <shellapi.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
+#include <map>
+#include <mutex>
+#include <string>
+#include <vector>
 
 // The host layer on Windows: each function is the Win32 call the code made before the layer existed, with the
 // same arguments. Host.h's types are Win32's own (HANDLE and HostHandle are both void *, DWORD is unsigned long),
@@ -365,27 +371,66 @@ int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t 
                                reinterpret_cast<ULARGE_INTEGER *>(freeBytes));
 }
 
-static void CopyFoundName(const WIN32_FIND_DATAA *found, char *name) {
-    memcpy(name, found->cFileName, sizeof(found->cFileName));
+// The order of a directory search's names on every host (Host.h): their bytes with a-z as A-Z, then as they are
+static bool NameBefore(const std::string &a, const std::string &b) {
+    for (size_t i = 0;; i++) {
+        unsigned char x = (unsigned char)a.c_str()[i], y = (unsigned char)b.c_str()[i];
+        unsigned char upperX = x >= 'a' && x <= 'z' ? x - 32 : x;
+        unsigned char upperY = y >= 'a' && y <= 'z' ? y - 32 : y;
+        if (upperX != upperY)
+            return upperX < upperY;
+        if (x == 0)
+            return a < b;
+    }
 }
+
+// Each search's every match, read when it starts and handed out sorted. The search keeps its own handle, which the
+// game is given (a word, as the Xbox's).
+struct FoundNames {
+    std::vector<std::string> names;
+    size_t next;
+};
+static std::map<HANDLE, FoundNames> g_searches;
+static std::mutex g_searchesLock;
 
 HostHandle HostFindFirstFile(const char *pattern, char *name) {
     WIN32_FIND_DATAA found;
     HANDLE search = FindFirstFileA(pattern, &found);
-    if (search != INVALID_HANDLE_VALUE)
-        CopyFoundName(&found, name);
+    if (search == INVALID_HANDLE_VALUE)
+        return search;
+    FoundNames names;
+    do
+        names.names.push_back(found.cFileName);
+    while (FindNextFileA(search, &found));
+    std::sort(names.names.begin(), names.names.end(), NameBefore);
+    names.next = 1;
+    snprintf(name, HOST_MAX_PATH, "%s", names.names[0].c_str());
+    std::lock_guard<std::mutex> hold(g_searchesLock);
+    g_searches[search] = std::move(names);
     return search;
 }
 
 int HostFindNextFile(HostHandle search, char *name) {
-    WIN32_FIND_DATAA found;
-    if (!FindNextFileA(search, &found))
+    std::lock_guard<std::mutex> hold(g_searchesLock);
+    auto found = g_searches.find(search);
+    if (found == g_searches.end()) {
+        SetLastError(ERROR_INVALID_HANDLE);
         return FALSE;
-    CopyFoundName(&found, name);
+    }
+    FoundNames &names = found->second;
+    if (names.next >= names.names.size()) {
+        SetLastError(ERROR_NO_MORE_FILES);
+        return FALSE;
+    }
+    snprintf(name, HOST_MAX_PATH, "%s", names.names[names.next++].c_str());
     return TRUE;
 }
 
 int HostFindClose(HostHandle search) {
+    {
+        std::lock_guard<std::mutex> hold(g_searchesLock);
+        g_searches.erase(search);
+    }
     return FindClose(search);
 }
 

@@ -27,10 +27,23 @@ static double SecondsSince(int64_t start) {
     return (double)(Now() - start) / freq.QuadPart;
 }
 
+// No voice, in a time demo: the frames are counted for the virtual clock's PlayedOut
+static bool OpenCounting(bool *counting, int *channelsOut, int *sampleRateOut, int channels, int sampleRate,
+                         bool demo) {
+    if (!demo)
+        return false;
+    *counting = true;
+    *channelsOut = channels;
+    *sampleRateOut = sampleRate;
+    return true;
+}
+
 bool FmvAudio::Open(IXAudio2 *device, int channels, int sampleRate, const float *outputMatrix, int outputChannels) {
     Close();
-    if (device == nullptr || channels <= 0 || sampleRate <= 0)
+    if (channels <= 0 || sampleRate <= 0)
         return false;
+    if (device == nullptr)
+        return OpenCounting(&counting_, &channels_, &sampleRate_, channels, sampleRate, virtualClock_ != nullptr);
     WAVEFORMATEX wfx = {};
     wfx.wFormatTag = WAVE_FORMAT_PCM;
     wfx.nChannels = (WORD)channels;
@@ -40,7 +53,7 @@ bool FmvAudio::Open(IXAudio2 *device, int channels, int sampleRate, const float 
     wfx.nAvgBytesPerSec = wfx.nSamplesPerSec * wfx.nBlockAlign;
     if (FAILED(device->CreateSourceVoice(&voice_, &wfx))) {
         voice_ = nullptr;
-        return false;
+        return OpenCounting(&counting_, &channels_, &sampleRate_, channels, sampleRate, virtualClock_ != nullptr);
     }
     if (outputMatrix != nullptr)
         voice_->SetOutputMatrix(nullptr, (UINT32)channels, (UINT32)outputChannels, outputMatrix);
@@ -60,7 +73,7 @@ void FmvAudio::Close() {
     free(pending_);
     pending_ = nullptr;
     pendingFrames_ = channels_ = sampleRate_ = 0;
-    started_ = finished_ = drained_ = false;
+    started_ = finished_ = drained_ = counting_ = false;
     framesTotal_ = 0;
 }
 
@@ -90,8 +103,11 @@ void FmvAudio::Submit() {
 }
 
 void FmvAudio::Queue(const AVFrame *frame) {
-    if (voice_ == nullptr)
+    if (voice_ == nullptr) {
+        if (counting_)
+            framesTotal_ += frame->nb_samples;
         return;
+    }
     bool planar = frame->format == AV_SAMPLE_FMT_S16P;
     int channels = frame->ch_layout.nb_channels < channels_ ? frame->ch_layout.nb_channels : channels_;
     framesTotal_ += frame->nb_samples;
@@ -116,6 +132,8 @@ void FmvAudio::Finish() {
 }
 
 double FmvAudio::QueuedSeconds() {
+    if (counting_)
+        return (double)framesTotal_ / sampleRate_ - Clock();
     if (voice_ == nullptr)
         return 1e9;
     Reap();
@@ -125,11 +143,11 @@ double FmvAudio::QueuedSeconds() {
 }
 
 bool FmvAudio::WantsMore() {
-    return voice_ != nullptr && !finished_ && QueuedSeconds() < FMV_AUDIO_AHEAD;
+    return IsOpen() && !finished_ && QueuedSeconds() < FMV_AUDIO_AHEAD;
 }
 
 bool FmvAudio::PlayedOut() {
-    if (voice_ == nullptr)
+    if (!IsOpen())
         return true;
     Reap();
     if (virtualClock_ != nullptr)

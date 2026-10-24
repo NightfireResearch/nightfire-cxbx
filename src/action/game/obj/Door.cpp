@@ -1,5 +1,6 @@
 #include "Door.h"
 #include "../../../common/xbeClass.h"
+#include "../../../common/floatToInt.h"
 #include "build.h"
 #include "control.h"
 #include "../Spline.h"
@@ -113,7 +114,7 @@ obj_tag * Door_Create(_VECTOR *pos, _VECTOR *rot, level_tag *level, celglist_tag
 // The hinge is the inverse of the closed matrix; side is which way along the path it swings open.
 void Door_SetupSwing(obj_tag *obj) {
     DOORINFO *door = (DOORINFO *)obj->extraObjectData;
-    int framesToHalf = (int)(int64_t)(0.5 / ((double)door->speed * 2.0));
+    int framesToHalf = (int)TruncateToInt64(0.5 / ((double)door->speed * 2.0));   // a speed of 0 gives 0
     door->speed = (float)(0.5 / framesToHalf);
     door->pathPos = (obj->curState & DoorState_Open) ? 1.0f : 0.5f;
     Spline_Interp(door->path, 0, door->lastKey, door->lastKey * 0.5f, &door->hinge, NULL, 2);

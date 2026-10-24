@@ -24,6 +24,7 @@
 #include "../../math/X87Ops.h"          // Extended
 #include "../../util/Random.h"          // Rand_Rand
 #include "../weapon_stats.h"            // weapon_data
+#include "../../../driving/platform/Ptr32.h"   // PtrTo32: an object sent as a message's sender word
 
 #include <bit>
 #include <math.h>
@@ -504,7 +505,7 @@ bool NDrone2_DSTATE_BotGlobal(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
     }
 
     case DRONE_MSG_BotWeaponChanged: {
-        obj_tag *picker = (obj_tag *)(uintptr_t)msg->sender;    // the sender is an object here
+        obj_tag *picker = PtrFrom32<obj_tag>(msg->sender);    // the sender is an object here, as a word
         obj_tag *self = dcv->gameObj;
         if (picker == self)
             return true;
@@ -848,7 +849,7 @@ bool NDrone2_DSTATE_BotAttackChangeWeapon(DCVars_tag *dcv, Drone_tag *drone, obj
         if (BOTSTATE_changeWeapon(Bot(dcv), Bot(dcv)->nextWeapon, 1, 0) != 0)
             // the sender is the object itself, not its state machine's id
             MP_sendTeamBotMessage(NO_TEAM, DRONE_MSG_BotWeaponChanged, (void *)(uintptr_t)Bot(dcv)->weapon,
-                                  FRAME_RATE_INT, (uint)(uintptr_t)dcv->gameObj);
+                                  FRAME_RATE_INT, PtrTo32(dcv->gameObj));
         dcv->drone->initialState = DSTATE_BotAttack;
         return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->initialState, 0);
     default:

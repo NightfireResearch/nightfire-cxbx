@@ -1,5 +1,6 @@
 #include "SS.h"
 #include "../../../common/xbeClass.h"
+#include "../../../common/floatToInt.h"
 #include "build.h"
 #include "control.h"
 #include "../Spline.h"
@@ -109,7 +110,7 @@ obj_tag * SS_Create(_VECTOR *pos, _VECTOR *rot, level_tag *lvl, celglist_tag *ce
     build_LinkToRoom(obj, 1, glb_world);
 
     // The stop moves to a frame the steps land on
-    ss->stopFrame = (int)((double)ss->stopFrame / ss->speed) * ss->speed;
+    ss->stopFrame = TruncateToInt32((double)ss->stopFrame / ss->speed) * ss->speed;
     return obj;
 }
 

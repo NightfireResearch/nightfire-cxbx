@@ -148,7 +148,10 @@ int HostGetDiskFreeSpace(const char *path, HostDword *sectorsPerCluster, HostDwo
 int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t *totalBytes, uint64_t *freeBytes);
 
 // A directory search: the pattern's last component may hold * and ?, matched without regard to case. Each call
-// gives the next entry's name (at most HOST_MAX_PATH bytes with its terminator).
+// gives the next entry's name (at most HOST_MAX_PATH bytes with its terminator), sorted the same way on every host:
+// by their bytes with a-z as A-Z (NTFS's order for ASCII names), then as they are. NTFS lists names so, but FAT,
+// network drives and POSIX directories list them as they lie, and the game keeps the first save it finds
+// (Menu_EnumSaves).
 HostHandle HostFindFirstFile(const char *pattern, char *name);
 int HostFindNextFile(HostHandle search, char *name);
 int HostFindClose(HostHandle search);

@@ -23,6 +23,9 @@
 #include <sys/statvfs.h>
 #include <time.h>
 #include <unistd.h>
+#include <algorithm>
+#include <string>
+#include <vector>
 #ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/mach_vm.h>
@@ -225,8 +228,8 @@ struct File : Object {
 };
 
 struct Search : Object {
-    DIR *directory;
-    char pattern[HOST_MAX_PATH];
+    std::vector<std::string> names;   // every match, sorted (Host.h)
+    size_t next;
 };
 
 struct Heap : Object {
@@ -1194,18 +1197,29 @@ int HostGetDiskFreeSpaceEx(const char *path, uint64_t *availableBytes, uint64_t 
     return 1;
 }
 
-// The next entry whose name matches the pattern's last component
-static bool NextMatch(Search *search, char *name) {
-    while (dirent *entry = readdir(search->directory)) {
-        if (fnmatch(search->pattern, entry->d_name, FNM_CASEFOLD) == 0) {
-            snprintf(name, HOST_MAX_PATH, "%s", entry->d_name);
-            return true;
-        }
+// The order of a directory search's names on every host (Host.h): their bytes with a-z as A-Z, then as they are
+static bool NameBefore(const std::string &a, const std::string &b) {
+    for (size_t i = 0;; i++) {
+        unsigned char x = (unsigned char)a.c_str()[i], y = (unsigned char)b.c_str()[i];
+        unsigned char upperX = x >= 'a' && x <= 'z' ? x - 32 : x;
+        unsigned char upperY = y >= 'a' && y <= 'z' ? y - 32 : y;
+        if (upperX != upperY)
+            return upperX < upperY;
+        if (x == 0)
+            return a < b;
     }
-    return false;
 }
 
-// The pattern is split at its last slash, of either kind: the directory, then what to match in it.
+// The next of a search's matches
+static bool NextMatch(Search *search, char *name) {
+    if (search->next >= search->names.size())
+        return false;
+    snprintf(name, HOST_MAX_PATH, "%s", search->names[search->next++].c_str());
+    return true;
+}
+
+// The pattern is split at its last slash, of either kind: the directory, then what to match in it. Every match is
+// read at once and sorted, so that the order is the same on every host (Host.h).
 HostHandle HostFindFirstFile(const char *pattern, char *name) {
     char directory[HOST_MAX_PATH];
     snprintf(directory, sizeof(directory), "%s", pattern);
@@ -1232,10 +1246,14 @@ HostHandle HostFindFirstFile(const char *pattern, char *name) {
     }
     Search *search = new Search();
     search->kind = kSearch;
-    search->directory = opened;
-    snprintf(search->pattern, sizeof(search->pattern), "%s", last);
+    search->next = 0;
+    while (dirent *entry = readdir(opened)) {
+        if (fnmatch(last, entry->d_name, FNM_CASEFOLD) == 0)
+            search->names.push_back(entry->d_name);
+    }
+    closedir(opened);
+    std::sort(search->names.begin(), search->names.end(), NameBefore);
     if (!NextMatch(search, name)) {
-        closedir(opened);
         delete search;
         LastError = kErrorFileNotFound;
         return HOST_INVALID_HANDLE;
@@ -1258,7 +1276,6 @@ int HostFindClose(HostHandle handle) {
     Search *search = static_cast<Search *>(ObjectOf(handle, kSearch));
     if (search == NULL)
         return 0;
-    closedir(search->directory);
     delete search;
     return 1;
 }

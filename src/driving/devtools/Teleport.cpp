@@ -19,6 +19,7 @@
 #include "../platform/HostInput.h"
 #include "../platform/RealSystem.h"
 #include "../../common/gfx/d3d9Backend.h"
+#include "../../common/fpuState.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // A debug teleport for the player's car, so that a graphics test can look at one particular place in a level
@@ -296,9 +297,24 @@ static bool LockstepOn(void) {
 // Without FIX_ORIGINAL_GAME_BUGS, below a timeScale of 1 (an ESetSimRate slow motion) the one-tick mode is left off:
 // the original truncates one tick scaled below 1 to none and leaves lastTickCount alone, so Scheduler::Run would never
 // advance. Off, the elapsed ticks build up as on the console, whose clock moves about one tick a call.
+// The game's thread's floating-point control state, reported in a lockstep run when it is not what the game's
+// arithmetic assumes, or changes: such a run would part from its baseline for that reason alone
+static void CheckFpuState(void) {
+    static bool known = false;
+    static FpuState last;
+    FpuState state = FpuState_Read();
+    if (known && state.sse == last.sse && state.x87 == last.x87 && state.fpcr == last.fpcr)
+        return;
+    if (known || !FpuState_IsExpected(state))
+        FpuState_Print(FpuState_IsExpected(state) ? "[lockstep] changed:" : "[lockstep] UNEXPECTED:", state);
+    known = true;
+    last = state;
+}
+
 void Teleport_BeforeRun(Scheduler *scheduler) {
     if (!LockstepOn())
         return;
+    CheckFpuState();
 #if FIX_ORIGINAL_GAME_BUGS
     scheduler->oneTickPerRun = 1;
 #else

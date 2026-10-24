@@ -1,5 +1,6 @@
 #include "PlayerWeapon.h"
 #include "../../engine/CRuntime.h"
+#include "../../../driving/platform/Ptr32.h"   // PtrTo32: the player sent as a message's sender word
 #include "Player.h"
 #include "GT.h"
 #include "bullet.h"
@@ -898,7 +899,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                     if (MPSettings.dronesAreBots)
                         MP_sendTeamBotMessage(NO_TEAM, DRONE_MSG_BotWeaponChanged,
                                               (void *)(uintptr_t)player->animState->switchingToWeaponId, 0,
-                                              (uint)(uintptr_t)player);
+                                              PtrTo32(player));
                 }
                 blData->weaponObject->curState = GUN_RAISE;
             }

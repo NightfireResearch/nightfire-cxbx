@@ -645,7 +645,7 @@ typedef struct DroneCreationData {
 typedef struct MsgObject {
     uint msgType;           // 0x00 - a DRONE_MSG
     uint scope;             // 0x04 - 0 any state, 0xc5 BotGlobal, else only delivered in that state
-    uint sender;            // 0x08 - sender's StateMachineInfo_tag.id
+    uint sender;            // 0x08 - sender's StateMachineInfo_tag.id (DRONE_MSG_BotWeaponChanged: the object, PtrTo32)
     int receiver;           // 0x0c - 0 broadcast, > 0 an id, < 0 multiplayer bot -1-n
     uint createdFrame;      // 0x10
     uint handleOnFrame;     // 0x14 - later than now: queued in the delayed list

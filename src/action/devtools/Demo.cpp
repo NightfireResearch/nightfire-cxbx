@@ -910,7 +910,8 @@ static void CheckFpuState(void) {
         return;
     }
     char tag[64];
-    snprintf(tag, sizeof(tag), "[demo] frame %u: %s", g_frame, FpuState_IsExpected(state) ? "changed" : "UNEXPECTED");
+    snprintf(tag, sizeof(tag), "[demo] frame %u: %s", g_frame,
+             FpuState_IsExpected(state) ? "changed" : "UNEXPECTED");
     FpuState_Print(tag, state);
     known = true;
     last = state;
