@@ -800,6 +800,15 @@ void Demo_FrameStart(void) {
         for (int i = 0; i < 4; i++)
             g_rebasePadAt[i] = 0;
         g_rebaseMouseAt = 0;
+#if NIGHTFIRE_DATA_PS2
+        // Pictures to compare with the Xbox's playback of the recording (docs/ps2-data.md)
+        if (g_shotEvery != 0 && g_frame >= g_shotFrom && g_frame % g_shotEvery == 0) {
+            char name[64];
+            snprintf(name, sizeof(name), "demo_shots/%06u", g_frame);
+            HostCreateDirectory("demo_shots");
+            D3D9_RequestScreenshot(name);
+        }
+#endif
         return;
     }
 
