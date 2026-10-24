@@ -28,13 +28,20 @@ void Ps2Texture_DecodeFrame(const uint8_t *texels, const uint8_t *palette, int c
 // dimension's surplus bits on top (the inverse of src/common/gfx/xboxTexture.h's Unswizzle)
 void Ps2Texture_Swizzle(const uint32_t *linear, uint32_t *swizzled, int width, int height);
 
+// The Xbox format a texture is made: DXT1 (opaque, or each texel opaque or clear), DXT5 (alpha between), as the
+// Xbox's own map textures mostly are, and swizzled A8R8G8B8 under 4 texels across or down. A level's textures take
+// 3-5 MB so where A8R8G8B8 took 12-35, which the heap and contiguous memory cannot spare (docs/ps2-data.md). Linear
+// A8R8G8B8 is for the textures the game reads and writes as pixels (Woman.cpp's), as the Xbox has them.
+enum Ps2TextureFormat { PS2TEX_A8R8G8B8, PS2TEX_DXT1, PS2TEX_DXT5, PS2TEX_LIN_A8R8G8B8 };
+Ps2TextureFormat Ps2Texture_ChooseFormat(const uint8_t *palette, int colours, int width, int height);
+
 // The bytes Ps2Texture_BuildKxt writes for a texture of this size: the header, a texture slot per frame, and each
 // frame's pixels with 128 bytes to spare (RegisterTexture moves a frame up to a 128-byte boundary in place)
-uint32_t Ps2Texture_KxtBytes(int width, int height, int frames);
+uint32_t Ps2Texture_KxtBytes(int width, int height, int frames, Ps2TextureFormat format);
 
-// The Xbox texture header (KXT, swizzled A8R8G8B8, one level) and its frames, at out (Ps2Texture_KxtBytes bytes).
-// rate is the 0x10 header's byte 7, which psiCreateMapTextures turns into ticks per frame as it does the KXT's.
+// The Xbox texture header (KXT, one level) and its frames, at out (Ps2Texture_KxtBytes bytes). rate is the 0x10
+// header's byte 7, which psiCreateMapTextures turns into ticks per frame as it does the KXT's.
 void Ps2Texture_BuildKxt(TextureInfo *out, uint32_t hashcode, int width, int height, int frames, int rate,
-                         const uint8_t *texels, const uint8_t *palette, int colours);
+                         const uint8_t *texels, const uint8_t *palette, int colours, Ps2TextureFormat format);
 
 #endif // PS2_PS2TEXTURE_H_
