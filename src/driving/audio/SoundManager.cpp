@@ -4,6 +4,7 @@
 #pragma fp_contract(off)
 
 #include "SoundManager.h"
+#include "../../common/math/Libm.h"
 #include "Fader.h"
 #include "Stream.h"
 #include "../data/Dafi.h"
@@ -145,7 +146,7 @@ __declspec(naked) double LogX87(double) {
 }
 #else
 double LogX87(double x) {
-    return log(x);
+    return Libm::Log(x);
 }
 #endif
 

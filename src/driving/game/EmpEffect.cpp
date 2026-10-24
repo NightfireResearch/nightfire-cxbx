@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "EmpEffect.h"
+#include "../../common/math/Libm.h"
 
 #include <math.h>
 #include <stddef.h>
@@ -230,7 +231,7 @@ __declspec(naked) float GlowWave(double radians, float amplitude, float strength
 #else
 // strength + amplitude * sin(radians) in double
 float GlowWave(double radians, float amplitude, float strength) {
-    return float(sin(radians) * amplitude + strength);
+    return float(Libm::Sin(radians) * amplitude + strength);
 }
 #endif
 

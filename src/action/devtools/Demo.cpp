@@ -18,6 +18,7 @@
 #include "../engine/LaunchOptions.h"
 #include "../../common/fmv/FmvAudio.h"
 #include "../../common/gfx/d3d9Backend.h"
+#include "../../common/fpuState.h"
 
 #include "../../driving/platform/Host.h"
 #include "../../driving/platform/HostInput.h"
@@ -895,6 +896,26 @@ static bool StampOffsetMatches(uint32_t recorded) {
     return false;
 }
 
+// The game's thread's floating-point control state: reported when it is not what the game's arithmetic assumes, or
+// changes, since a recording made or played with another state may part from the game for that reason alone
+static void CheckFpuState(void) {
+    static bool known = false;
+    static FpuState last;
+    FpuState state = FpuState_Read();
+    if (known && state.sse == last.sse && state.x87 == last.x87 && state.fpcr == last.fpcr)
+        return;
+    if (!known && FpuState_IsExpected(state)) {
+        known = true;
+        last = state;
+        return;
+    }
+    char tag[64];
+    snprintf(tag, sizeof(tag), "[demo] frame %u: %s", g_frame, FpuState_IsExpected(state) ? "changed" : "UNEXPECTED");
+    FpuState_Print(tag, state);
+    known = true;
+    last = state;
+}
+
 static void Checksums(uint32_t sums[SUM_COUNT]) {
     // The random generator's state and multipliers, in the game's order (Rand_Random)
     const uint32_t rand[4] = {RandStateA, RandStateB, RandMultiplierB, RandMultiplierA};
@@ -942,6 +963,7 @@ void Demo_FrameEnd(void) {
     if (g_mode == DEMO_OFF)
         return;
 
+    CheckFpuState();
     uint32_t sums[SUM_COUNT];
     Checksums(sums);
 

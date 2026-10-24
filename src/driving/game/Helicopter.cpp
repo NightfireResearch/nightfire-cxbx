@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Helicopter.h"
+#include "../../common/math/Libm.h"
 
 #include <bit>
 #include <math.h>
@@ -91,7 +92,7 @@ __declspec(naked) float NegativeSine(double x, float scale) {
 #else
 // -sin(x * scale), rounded once by the float return
 float NegativeSine(double x, float scale) {
-    return float(-sin(x * scale));
+    return float(-Libm::Sin(x * scale));
 }
 #endif
 

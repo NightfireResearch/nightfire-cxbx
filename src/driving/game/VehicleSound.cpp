@@ -1,4 +1,5 @@
 #include "VehicleSound.h"
+#include "../../common/math/Libm.h"
 #include "../Vtables.h"   // our copies of the game's vtables
 
 #pragma fp_contract(off)
@@ -343,7 +344,7 @@ __declspec(naked) double LogTimes(double, float factor) {
 }
 #else
 double LogTimes(double x, float factor) {
-    return log(x) * factor;
+    return Libm::Log(x) * factor;
 }
 #endif
 

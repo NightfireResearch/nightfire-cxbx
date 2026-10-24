@@ -1,4 +1,5 @@
 #include "Targeting.h"
+#include "../../common/math/Libm.h"
 
 #include "CollisionManager.h"
 #include "../../common/xbeOverload.h"
@@ -118,7 +119,7 @@ __declspec(naked) float Tangent(double radians) {
 #else
 // The tangent, rounded once by the float return.
 float Tangent(double radians) {
-    return float(tan(radians));
+    return float(Libm::Tan(radians));
 }
 #endif
 

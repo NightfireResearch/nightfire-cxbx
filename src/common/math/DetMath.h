@@ -23,6 +23,8 @@ double Atan2(double y, double x);
 double Asin(double x);
 double Acos(double x);
 double Exp(double x);
+double Log(double x);
+double Pow(double x, double y);
 
 } // namespace DetMath
 

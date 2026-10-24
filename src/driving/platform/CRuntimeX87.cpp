@@ -2,8 +2,8 @@
 #include "CRuntimeInternal.h"
 
 #include "Win32Types.h"
-#if !NIGHTFIRE_X87 && NIGHTFIRE_DET_MATH
-#include "../../common/math/DetMath.h"
+#if !NIGHTFIRE_X87
+#include "../../common/math/Libm.h"
 #endif
 #include <fenv.h>
 #include <math.h>
@@ -87,7 +87,11 @@ double PowEdge(double x, double y) {
         return DomainError(x);
     if (x < 0.0 && fabs(x) != INFINITY && fabs(y) != INFINITY && floor(y) != y)
         return DomainError(x);
+#if NIGHTFIRE_X87
     return pow(x, y);
+#else
+    return Libm::Pow(x, y);
+#endif
 }
 
 // pow's answer past the largest double: the infinity of its sign, a range error (errno ERANGE).
@@ -341,31 +345,23 @@ __declspec(naked) void Crt::CIpow() {
 }
 #else
 // The runtime's arc cosine, arc sine and pow in C: the same domain errors, overflows and edge cases, the answers
-// <math.h>'s. Untagged: the injection's tags are on the x87 forms above.
+// Libm's (src/common/math/Libm.h). Untagged: the injection's tags are on the x87 forms above.
 double Crt::CIacos(double x) {
     if (!(fabs(x) <= 1.0))
         return DomainError(x);
-#if NIGHTFIRE_DET_MATH
-    return DetMath::Acos(x);
-#else
-    return acos(x);
-#endif
+    return Libm::Acos(x);
 }
 
 double Crt::CIasin(double x) {
     if (!(fabs(x) <= 1.0))
         return DomainError(x);
-#if NIGHTFIRE_DET_MATH
-    return DetMath::Asin(x);
-#else
-    return asin(x);
-#endif
+    return Libm::Asin(x);
 }
 
 double Crt::CIpow(double x, double y) {
     if (x == 0.0 || !isfinite(x) || !isfinite(y) || (x < 0.0 && floor(y) != y))
         return PowEdge(x, y);
-    double answer = pow(x, y);
+    double answer = Libm::Pow(x, y);
     if (isinf(answer))
         return PowOverflow(answer);
     return answer;

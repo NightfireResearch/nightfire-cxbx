@@ -1,4 +1,5 @@
 #include "RealMath.h"
+#include "../../common/math/Libm.h"
 
 #include <math.h>
 #include <stdint.h>
@@ -149,19 +150,19 @@ __declspec(naked) double AsDouble(double value) {
 // once where the caller stores a float. Untagged: the injection's tags are on the x87 forms above.
 
 double SineTurns(float turns) {
-    return sin(double(kTwoPi) * turns);
+    return Libm::Sin(double(kTwoPi) * turns);
 }
 
 double CosineTurns(float turns) {
-    return cos(double(kTwoPi) * turns);
+    return Libm::Cos(double(kTwoPi) * turns);
 }
 
 double TangentTurns(float turns) {
-    return tan(double(kTwoPi) * turns);
+    return Libm::Tan(double(kTwoPi) * turns);
 }
 
 double AtanTurns(float y, float x) {
-    return atan2(double(y), double(x)) * kOneOverTwoPi;
+    return Libm::Atan2(double(y), double(x)) * kOneOverTwoPi;
 }
 
 float sin_fractionalangle(float turns) {

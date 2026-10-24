@@ -1,7 +1,7 @@
 #include "X87Ops.h"
 #include "../engine/CRuntime.h"
-#if !NIGHTFIRE_X87 && NIGHTFIRE_DET_MATH
-#include "../../common/math/DetMath.h"
+#if !NIGHTFIRE_X87
+#include "../../common/math/Libm.h"
 #endif
 
 #if NIGHTFIRE_X87
@@ -415,20 +415,7 @@ int32_t Ftol(const Extended &x) {
 }
 
 #else
-// ---- the C forms, in double. With NIGHTFIRE_DET_MATH the transcendentals are DetMath's, the same bits on every
-// host; without it the host's <math.h>, which differs between hosts in the last place.
-
-#if NIGHTFIRE_DET_MATH
-namespace Libm = DetMath;
-#else
-namespace Libm {
-inline double Sin(double x) { return sin(x); }
-inline double Cos(double x) { return cos(x); }
-inline double Tan(double x) { return tan(x); }
-inline double Atan2(double y, double x) { return atan2(y, x); }
-inline double Exp(double x) { return exp(x); }
-} // namespace Libm
-#endif
+// ---- the C forms, in double; the transcendentals Libm's (src/common/math/Libm.h)
 
 // FSIN, FCOS and FPTAN leave an operand of 2^63 or more as it is (and set C2)
 static bool OutOfRange(double x) {

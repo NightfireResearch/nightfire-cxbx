@@ -1,4 +1,5 @@
 #include "RealMath.h"
+#include "../../common/math/Libm.h"
 
 #include "Sse.h"
 #include <math.h>
@@ -169,8 +170,8 @@ static __declspec(naked) void SinCosFloat(float angle, float *cosOut, float *sin
 #else
 // The cosine and sine of a float, each rounded once to a float.
 static void SinCosFloat(float angle, float *cosOut, float *sinOut) {
-    *cosOut = float(cos(double(angle)));
-    *sinOut = float(sin(double(angle)));
+    *cosOut = float(Libm::Cos(double(angle)));
+    *sinOut = float(Libm::Sin(double(angle)));
 }
 #endif
 

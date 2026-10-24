@@ -5,9 +5,12 @@
 #include <bit>
 
 // fdlibm's algorithms and coefficients (FreeBSD msun: k_sin.c, k_cos.c, k_tan.c, e_rem_pio2.c, s_atan.c, e_atan2.c,
-// e_asin.c, e_acos.c, e_exp.c), copyright Sun Microsystems: "Permission to use, copy, modify, and distribute this
+// e_asin.c, e_acos.c, e_exp.c, e_log.c, e_pow.c), copyright Sun Microsystems: "Permission to use, copy, modify, and distribute this
 // software is freely granted, provided that this notice is preserved." The reduction of arguments above 2^20 * pi/2
 // is our own (Payne and Hanek's, in integers).
+
+// Only the C forms of the x87 code use these: an x87 build compiles none of it.
+#if !NIGHTFIRE_X87
 
 #if defined(_MSC_VER) && !defined(__clang__)
 #pragma fp_contract(off)
@@ -636,4 +639,289 @@ double Exp(double x) {
     return y * FromWords(uint32_t(0x3ff + k + 1000) << 20, 0) * 0x1p-1000;
 }
 
+namespace {
+
+// ---- logarithm
+
+const double kLg1 = 6.666666666666735130e-01;
+const double kLg2 = 3.999999999940941908e-01;
+const double kLg3 = 2.857142874366239149e-01;
+const double kLg4 = 2.222219843214978396e-01;
+const double kLg5 = 1.818357216161805012e-01;
+const double kLg6 = 1.531383769920937332e-01;
+const double kLg7 = 1.479819860511658591e-01;
+const double kTwo54 = 1.80143985094819840000e+16;
+
+double WithHigh(double x, uint32_t high) {
+    return std::bit_cast<double>((std::bit_cast<uint64_t>(x) & 0x00000000ffffffffull) | uint64_t(high) << 32);
+}
+
+// ---- power
+
+const double kBp[] = {1.0, 1.5};
+const double kDpH[] = {0.0, 5.84962487220764160156e-01};
+const double kDpL[] = {0.0, 1.35003920212974897128e-08};
+const double kTwo53 = 9007199254740992.0;
+const double kL1 = 5.99999999999994648725e-01;
+const double kL2 = 4.28571428578550184252e-01;
+const double kL3 = 3.33333329818377432918e-01;
+const double kL4 = 2.72728123808534006489e-01;
+const double kL5 = 2.30660745775561754067e-01;
+const double kL6 = 2.06975017800338417784e-01;
+const double kLg2Full = 6.93147180559945286227e-01;
+const double kLg2H = 6.93147182464599609375e-01;
+const double kLg2L = -1.90465429995776804525e-09;
+const double kOvt = 8.0085662595372944372e-17;   // -(1024 - log2(the largest double + half an ulp))
+const double kCp = 9.61796693925975554329e-01;    // 2 / (3 ln2)
+const double kCpH = 9.61796700954437255859e-01;
+const double kCpL = -7.02846165095275826516e-09;
+const double kIvLn2 = 1.44269504088896338700e+00;
+const double kIvLn2H = 1.44269502162933349609e+00;
+const double kIvLn2L = 1.92596299112661746887e-08;
+
+const double kInfinity = std::bit_cast<double>(0x7ff0000000000000ull);
+
+// z * 2^n for z near 1, rounded once where the result is subnormal
+double ScaleByPowerOfTwo(double z, int n) {
+    if (n > 1023)
+        return z * 0x1p1023 * FromWords(uint32_t(0x3ff + n - 1023) << 20, 0);
+    if (n >= -1022)
+        return z * FromWords(uint32_t(0x3ff + n) << 20, 0);
+    return z * FromWords(uint32_t(0x3ff + n + 54) << 20, 0) * 0x1p-54;
+}
+
+} // namespace
+
+double Log(double x) {
+    int32_t hx = int32_t(High(x));
+    uint32_t lx = Low(x);
+    int k = 0;
+    if (hx < 0x00100000) {   // x < 2^-1022
+        if (((hx & 0x7fffffff) | lx) == 0)
+            return -kInfinity;
+        if (hx < 0)
+            return x != x ? Quiet(x) : kInvalid;
+        k -= 54;   // subnormal: scaled up
+        x *= kTwo54;
+        hx = int32_t(High(x));
+    }
+    if (hx >= 0x7ff00000)
+        return x != x ? Quiet(x) : x;
+    k += (hx >> 20) - 1023;
+    hx &= 0x000fffff;
+    int32_t i = (hx + 0x95f64) & 0x100000;
+    x = WithHigh(x, uint32_t(hx | (i ^ 0x3ff00000)));   // x or x/2 in [sqrt(2)/2, sqrt(2)]
+    k += i >> 20;
+    double f = x - 1.0;
+    double dk = k;
+    if ((0x000fffff & (2 + hx)) < 3) {   // -2^-20 <= f < 2^-20
+        if (f == 0.0)
+            return k == 0 ? 0.0 : dk * kLn2Hi + dk * kLn2Lo;
+        double r = f * f * (0.5 - 0.33333333333333333 * f);
+        if (k == 0)
+            return f - r;
+        return dk * kLn2Hi - ((r - dk * kLn2Lo) - f);
+    }
+    double s = f / (2.0 + f);
+    double z = s * s;
+    i = hx - 0x6147a;
+    double w = z * z;
+    int32_t j = 0x6b851 - hx;
+    double t1 = w * (kLg2 + w * (kLg4 + w * kLg6));
+    double t2 = z * (kLg1 + w * (kLg3 + w * (kLg5 + w * kLg7)));
+    i |= j;
+    double r = t2 + t1;
+    if (i > 0) {
+        double hfsq = 0.5 * f * f;
+        if (k == 0)
+            return f - (hfsq - s * (hfsq + r));
+        return dk * kLn2Hi - ((hfsq - (s * (hfsq + r) + dk * kLn2Lo)) - f);
+    }
+    if (k == 0)
+        return f - s * (f - r);
+    return dk * kLn2Hi - ((s * (f - r) - dk * kLn2Lo) - f);
+}
+
+double Pow(double x, double y) {
+    int32_t hx = int32_t(High(x)), hy = int32_t(High(y));
+    uint32_t lx = Low(x), ly = Low(y);
+    int32_t ix = hx & 0x7fffffff, iy = hy & 0x7fffffff;
+
+    if ((iy | ly) == 0)   // x^0 is 1
+        return 1.0;
+    if (hx == 0x3ff00000 && lx == 0)   // 1^y is 1, a NaN y too
+        return 1.0;
+    if (ix > 0x7ff00000 || (ix == 0x7ff00000 && lx != 0) || iy > 0x7ff00000 || (iy == 0x7ff00000 && ly != 0))
+        return PickNaN(x, y);
+
+    // For negative x: 0 if y is not an integer, 1 if it is odd, 2 if even
+    int yIsInteger = 0;
+    if (hx < 0) {
+        if (iy >= 0x43400000) {   // |y| >= 2^53
+            yIsInteger = 2;
+        } else if (iy >= 0x3ff00000) {
+            int k = (iy >> 20) - 0x3ff;
+            if (k > 20) {
+                uint32_t j = ly >> (52 - k);
+                if ((j << (52 - k)) == ly)
+                    yIsInteger = 2 - int(j & 1);
+            } else if (ly == 0) {
+                int32_t j = iy >> (20 - k);
+                if ((j << (20 - k)) == iy)
+                    yIsInteger = 2 - int(j & 1);
+            }
+        }
+    }
+
+    if (ly == 0) {
+        if (iy == 0x7ff00000) {   // y is infinite
+            if (((ix - 0x3ff00000) | int32_t(lx)) == 0)
+                return 1.0;   // (-1)^infinity
+            if (ix >= 0x3ff00000)
+                return hy >= 0 ? y : 0.0;
+            return hy < 0 ? -y : 0.0;
+        }
+        if (iy == 0x3ff00000)   // y is 1 or -1
+            return hy < 0 ? 1.0 / x : x;
+        if (hy == 0x40000000)   // y is 2
+            return x * x;
+        if (hy == 0x3fe00000 && hx >= 0)   // y is 0.5
+            return sqrt(x);
+    }
+
+    double ax = Abs(x);
+    if (lx == 0 && (ix == 0x7ff00000 || ix == 0 || ix == 0x3ff00000)) {   // x is 0, 1 or infinite, either sign
+        double z = ax;
+        if (hy < 0)
+            z = 1.0 / z;
+        if (hx < 0) {
+            if (((ix - 0x3ff00000) | yIsInteger) == 0)
+                z = kInvalid;   // (-1)^(not an integer)
+            else if (yIsInteger == 1)
+                z = -z;
+        }
+        return z;
+    }
+
+    int32_t n = int32_t(uint32_t(hx) >> 31) - 1;
+    if ((n | yIsInteger) == 0)   // negative x to a power that is not an integer
+        return kInvalid;
+    double sign = (n | (yIsInteger - 1)) == 0 ? -1.0 : 1.0;   // negative x to an odd power
+
+    double t1, t2;
+    if (iy > 0x41e00000) {   // |y| > 2^31
+        if (iy > 0x43f00000) {   // |y| > 2^64: overflows or underflows
+            if (ix <= 0x3fefffff)
+                return hy < 0 ? kInfinity : 0.0;
+            if (ix >= 0x3ff00000)
+                return hy > 0 ? kInfinity : 0.0;
+        }
+        if (ix < 0x3fefffff)
+            return hy < 0 ? sign * kInfinity : sign * 0.0;
+        if (ix > 0x3ff00000)
+            return hy > 0 ? sign * kInfinity : sign * 0.0;
+        // |1 - x| <= 2^-20: log(x) from its series
+        double t = ax - 1.0;
+        double w = (t * t) * (0.5 - t * (0.3333333333333333333333 - t * 0.25));
+        double u = kIvLn2H * t;
+        double v = t * kIvLn2L - w * kIvLn2;
+        t1 = WithLow(u + v, 0);
+        t2 = v - (t1 - u);
+    } else {
+        n = 0;
+        if (ix < 0x00100000) {   // subnormal x
+            ax *= kTwo53;
+            n -= 53;
+            ix = int32_t(High(ax));
+        }
+        n += (ix >> 20) - 0x3ff;
+        int32_t j = ix & 0x000fffff;
+        ix = j | 0x3ff00000;
+        int k;
+        if (j <= 0x3988e) {   // |x| < sqrt(3/2)
+            k = 0;
+        } else if (j < 0xbb67a) {   // |x| < sqrt(3)
+            k = 1;
+        } else {
+            k = 0;
+            n += 1;
+            ix -= 0x00100000;
+        }
+        ax = WithHigh(ax, uint32_t(ix));
+
+        // ss = sH + sL = (x - 1) / (x + 1) or (x - 1.5) / (x + 1.5)
+        double u = ax - kBp[k];
+        double v = 1.0 / (ax + kBp[k]);
+        double ss = u * v;
+        double sH = WithLow(ss, 0);
+        double tH = FromWords(uint32_t(((ix >> 1) | 0x20000000) + 0x00080000 + (k << 18)), 0);   // ax + bp[k], high
+        double tL = ax - (tH - kBp[k]);
+        double sL = v * ((u - sH * tH) - sH * tL);
+        // log(ax)
+        double s2 = ss * ss;
+        double r = s2 * s2 * (kL1 + s2 * (kL2 + s2 * (kL3 + s2 * (kL4 + s2 * (kL5 + s2 * kL6)))));
+        r += sL * (sH + ss);
+        s2 = sH * sH;
+        tH = WithLow(3.0 + s2 + r, 0);
+        tL = r - ((tH - 3.0) - s2);
+        u = sH * tH;
+        v = sL * tH + tL * ss;
+        // 2 / (3 log2) * (ss + ...)
+        double pH = WithLow(u + v, 0);
+        double pL = v - (pH - u);
+        double zH = kCpH * pH;
+        double zL = kCpL * pH + pL * kCp + kDpL[k];
+        // log2(ax) = n + dp_h + z_h + z_l
+        double t = n;
+        t1 = WithLow(((zH + zL) + kDpH[k]) + t, 0);
+        t2 = zL - (((t1 - t) - kDpH[k]) - zH);
+    }
+
+    // (y1 + y2) * (t1 + t2)
+    double y1 = WithLow(y, 0);
+    double pL = (y - y1) * t1 + y * t2;
+    double pH = y1 * t1;
+    double z = pL + pH;
+    int32_t j = int32_t(High(z));
+    int32_t i = int32_t(Low(z));
+    if (j >= 0x40900000) {   // z >= 1024
+        if (((j - 0x40900000) | i) != 0 || pL + kOvt > z - pH)
+            return sign * kInfinity;
+    } else if ((j & 0x7fffffff) >= 0x4090cc00) {   // z <= -1075
+        if (((j - int32_t(0xc090cc00)) | i) != 0 || pL <= z - pH)
+            return sign * 0.0;
+    }
+
+    // 2^(pH + pL)
+    i = j & 0x7fffffff;
+    int k = (i >> 20) - 0x3ff;
+    n = 0;
+    if (i > 0x3fe00000) {   // |z| > 0.5: n = [z + 0.5]
+        n = j + (0x00100000 >> (k + 1));
+        k = ((n & 0x7fffffff) >> 20) - 0x3ff;
+        double t = FromWords(uint32_t(n & ~(0x000fffff >> k)), 0);
+        n = ((n & 0x000fffff) | 0x00100000) >> (20 - k);
+        if (j < 0)
+            n = -n;
+        pH -= t;
+    }
+    double t = WithLow(pL + pH, 0);
+    double u = t * kLg2H;
+    double v = (pL - (t - pH)) * kLg2Full + t * kLg2L;
+    z = u + v;
+    double w = v - (z - u);
+    t = z * z;
+    t1 = z - t * (kP1 + t * (kP2 + t * (kP3 + t * (kP4 + t * kP5))));
+    double r = (z * t1) / (t1 - 2.0) - (w + z * w);
+    z = 1.0 - (r - z);
+    j = int32_t(High(z)) + (n << 20);
+    if ((j >> 20) <= 0)   // subnormal
+        z = ScaleByPowerOfTwo(z, n);
+    else
+        z = WithHigh(z, uint32_t(j));
+    return sign * z;
+}
+
 } // namespace DetMath
+
+#endif // !NIGHTFIRE_X87

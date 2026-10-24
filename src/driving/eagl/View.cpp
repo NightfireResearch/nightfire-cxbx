@@ -1,4 +1,5 @@
 #include "View.h"
+#include "../../common/math/Libm.h"
 
 #include "Loader.h"
 #include "Tar.h"
@@ -204,19 +205,19 @@ __declspec(naked) void __stdcall PerspectivePlanes(ViewPort *view, float fov, fl
 // guard-band-adjusted angles (the first three stored as floats, the last kept), then each plane's tangent and the
 // sine of its complement.
 void __stdcall PerspectivePlanes(ViewPort *view, float fov, float aspect) {
-    double halfTan = tan(double(kPi) * kOneOver180 * fov * kHalf);
+    double halfTan = Libm::Tan(double(kPi) * kOneOver180 * fov * kHalf);
     float angle[3];
-    angle[0] = float(atan2(-(halfTan * view->guardBand[0]), 1.0));
-    angle[1] = float(atan2(halfTan * view->guardBand[1], 1.0));
-    angle[2] = float(atan2(double(view->guardBand[2]) / aspect * halfTan, 1.0));
-    double angle3 = atan2(halfTan * (double(kMinusOne) / aspect * view->guardBand[3]), 1.0);
+    angle[0] = float(Libm::Atan2(-(halfTan * view->guardBand[0]), 1.0));
+    angle[1] = float(Libm::Atan2(halfTan * view->guardBand[1], 1.0));
+    angle[2] = float(Libm::Atan2(double(view->guardBand[2]) / aspect * halfTan, 1.0));
+    double angle3 = Libm::Atan2(halfTan * (double(kMinusOne) / aspect * view->guardBand[3]), 1.0);
     double quarterTurn = double(kPi) * kHalf;
     for (int i = 0; i < 3; i++) {
-        view->planes[i * 2] = float(tan(double(angle[i])));
-        view->planes[i * 2 + 1] = float(sin(quarterTurn - angle[i]));
+        view->planes[i * 2] = float(Libm::Tan(double(angle[i])));
+        view->planes[i * 2 + 1] = float(Libm::Sin(quarterTurn - angle[i]));
     }
-    view->planes[6] = float(tan(angle3));
-    view->planes[7] = float(sin(quarterTurn - angle3));
+    view->planes[6] = float(Libm::Tan(angle3));
+    view->planes[7] = float(Libm::Sin(quarterTurn - angle3));
 }
 #endif
 

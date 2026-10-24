@@ -1,4 +1,5 @@
 #include "Transform.h"
+#include "../../common/math/Libm.h"
 
 #include "../platform/RealMath.h"
 #include "../platform/RealPrint.h"
@@ -557,7 +558,7 @@ void __fastcall EAGL_BuildRotate(Transform *self, int unusedEdx, float degrees, 
         m[15] = 1.0f;
     } else {
         float angle = float(radians);
-        double s = sin(double(angle)), c = cos(double(angle));
+        double s = Libm::Sin(double(angle)), c = Libm::Cos(double(angle));
         double scale = kOne / sqrt(double(x) * x + double(y) * y + double(z) * z);
         double nx = x * scale;
         y = float(scale * y);
@@ -674,15 +675,15 @@ __declspec(naked) double X87Atan2(double, double) {
 #else
 // sin, cos and atan2(y, x) where the originals use FSIN, FCOS and FPATAN
 double X87Sin(double x) {
-    return sin(x);
+    return Libm::Sin(x);
 }
 
 double X87Cos(double x) {
-    return cos(x);
+    return Libm::Cos(x);
 }
 
 double X87Atan2(double y, double x) {
-    return atan2(y, x);
+    return Libm::Atan2(y, x);
 }
 #endif
 

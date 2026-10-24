@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "IK.h"
+#include "../../common/math/Libm.h"
 
 #include "Skeleton.h"                   // ActSkeleton::BlendQ, BlendQT
 
@@ -70,15 +71,15 @@ __declspec(naked) double CrtAcos(float) {
 #else
 // sin, cos and atan2(y, x) where the original uses FSIN, FCOS and FPATAN
 double X87Sin(double x) {
-    return sin(x);
+    return Libm::Sin(x);
 }
 
 double X87Cos(double x) {
-    return cos(x);
+    return Libm::Cos(x);
 }
 
 double X87Atan2(double y, double x) {
-    return atan2(y, x);
+    return Libm::Atan2(y, x);
 }
 
 // The C runtime's arc cosine (_CIacos at 0x001328d0, the game's own)

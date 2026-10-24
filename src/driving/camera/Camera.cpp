@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "Camera.h"
+#include "../../common/math/Libm.h"
 #include "../Vtables.h"   // our copies of the game's vtables
 #include "../game/Simulation.h"
 #include "../render/RenderHigh.h"   // AspectScale
@@ -79,7 +80,7 @@ __declspec(naked) float AddSine(double radians, float amplitude, float value) {
 #else
 // value + amplitude * sin(radians) in double
 float AddSine(double radians, float amplitude, float value) {
-    return float(sin(radians) * amplitude + value);
+    return float(Libm::Sin(radians) * amplitude + value);
 }
 #endif
 

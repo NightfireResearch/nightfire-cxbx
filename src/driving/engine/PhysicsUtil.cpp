@@ -1,6 +1,7 @@
 #pragma fp_contract(off)
 
 #include "PhysicsUtil.h"
+#include "../../common/math/Libm.h"
 #include "UMemory.hpp"
 #include "../platform/RealMath.h"
 #include "../platform/X87.h"
@@ -44,7 +45,7 @@ __declspec(naked) static double LogX87(double) {
 }
 #else
 static double LogX87(double x) {
-    return log(x);
+    return Libm::Log(x);
 }
 #endif
 

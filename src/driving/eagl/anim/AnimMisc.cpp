@@ -1,4 +1,5 @@
 #include "AnimMisc.h"
+#include "../../../common/math/Libm.h"
 #include "AnimChannels.h"
 #include "AnimDecode.h"
 #include "AnimUntested.h"
@@ -653,8 +654,8 @@ __declspec(naked) static void __cdecl EulerToQuatX87(const float *angles, float 
 static void EulerToQuatX87(const float *angles, float *quat) {
     double half0 = double(angles[0]) * kHalf, half1 = double(angles[1]) * kHalf;
     float half2 = float(double(angles[2]) * kHalf);
-    float c0 = float(cos(half0)), c1 = float(cos(half1)), c2 = float(cos(double(half2))), s0 = float(sin(half0));
-    double s1 = sin(half1), s2 = sin(double(half2));
+    float c0 = float(Libm::Cos(half0)), c1 = float(Libm::Cos(half1)), c2 = float(Libm::Cos(double(half2))), s0 = float(Libm::Sin(half0));
+    double s1 = Libm::Sin(half1), s2 = Libm::Sin(double(half2));
     float c2c0 = float(double(c2) * c0);
     double c0s2 = c0 * s2;
     double s0c2 = double(s0) * c2;

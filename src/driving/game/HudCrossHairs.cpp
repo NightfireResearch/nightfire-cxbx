@@ -6,6 +6,7 @@
 #pragma fp_contract(off)
 
 #include "HudCrossHairs.h"
+#include "../../common/math/Libm.h"
 
 #include "AIHands.h"                      // AICharacterHands
 #include "Gallery.h"
@@ -78,7 +79,7 @@ __declspec(naked) double X87Atan2(double, double) {
 }
 #else
 double X87Atan2(double y, double x) {
-    return atan2(y, x);
+    return Libm::Atan2(y, x);
 }
 #endif
 
