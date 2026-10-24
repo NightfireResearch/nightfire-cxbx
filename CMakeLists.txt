@@ -1347,7 +1347,8 @@ set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Text
 if(NIGHTFIRE_ACTION_DATA_PS2)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
-                                           src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp)
+                                           src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp
+                                           src/action/ps2/Ps2XboxStandIn.cpp)   # interim, until milestone 7
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
@@ -1380,8 +1381,8 @@ foreach(target action_standalone action_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
   if(NIGHTFIRE_ACTION_DATA_PS2)
-    # The heap (memory.cpp): the PS2's textures decoded to 32 bits take up to 35 MB a level
-    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_PS2=1 HEAP_SIZE=0x6800000)
+    # The heap (memory.cpp): the PS2's textures decoded to 32 bits take up to 35 MB a level (88 MB in all)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_PS2=1 HEAP_SIZE=0x5800000)
   endif()
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)

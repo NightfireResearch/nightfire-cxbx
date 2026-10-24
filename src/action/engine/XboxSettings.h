@@ -50,4 +50,11 @@ float Settings_GetFovDegrees(void);
 // the executable's folder by Xbox_SetDiscRoot. See common/xboxPath.h for the drive-letter mapping this feeds.
 const char *Settings_GetDiscPath(void);
 
+#if NIGHTFIRE_DATA_PS2
+// settings.ini's [Settings] XboxDiscPath key, the PS2 data's build only: the Xbox's disc folder (holding
+// eurocom\filesys.d00), from which the interim stand-ins take what the PS2 data lacks in a usable form (the skinned
+// meshes, until milestone 7 of docs/ps2-data.md). Empty when unset; a relative path is from the working folder.
+const char *Settings_GetXboxDiscPath(void);
+#endif
+
 #endif // XBOXSETTINGS_H_

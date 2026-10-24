@@ -49,6 +49,9 @@ struct Settings {
     bool mouseZoomToggle;
     float fovDegrees;
     char discPath[240];  // where the game's disc data lives; see common/xboxPath.cpp
+#if NIGHTFIRE_DATA_PS2
+    char xboxDiscPath[240];  // the Xbox's disc beside the PS2's, for the interim stand-ins (docs/ps2-data.md)
+#endif
 };
 
 static Settings g_settings;
@@ -226,6 +229,11 @@ static void LoadSettingsFile() {
                 strncpy(g_settings.discPath, value, sizeof(g_settings.discPath) - 1);
                 g_settings.discPath[sizeof(g_settings.discPath) - 1] = '\0';
             }
+#if NIGHTFIRE_DATA_PS2
+        } else if (_stricmp(key, "XboxDiscPath") == 0) {
+            strncpy(g_settings.xboxDiscPath, value, sizeof(g_settings.xboxDiscPath) - 1);
+            g_settings.xboxDiscPath[sizeof(g_settings.xboxDiscPath) - 1] = '\0';
+#endif
         }
     }
 
@@ -325,3 +333,9 @@ float Settings_GetFovDegrees(void) {
 const char *Settings_GetDiscPath(void) {
     return GetSettings()->discPath;
 }
+
+#if NIGHTFIRE_DATA_PS2
+const char *Settings_GetXboxDiscPath(void) {
+    return GetSettings()->xboxDiscPath;
+}
+#endif

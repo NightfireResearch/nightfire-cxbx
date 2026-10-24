@@ -379,6 +379,8 @@ uint isLoadable(HASHCODE hashcode) {
   return 0;
 }
 
+#if !NIGHTFIRE_DATA_PS2   // the PS2's load the loadable bundles: ps2/Ps2Loader.cpp
+
 // A loadable part of the level (isLoadable's index). The Xbox build loads nothing for it: the hashtable's loadable
 // items (type 0x04000000) are dropped and its sections made again, under MALLOC_BEST_FIT. Both arguments are
 // unread.
@@ -406,3 +408,5 @@ bool LoadableReload(HASHCODE hashcode) {
     Mem_SetMallocMethod(method);
     return true;
 }
+
+#endif // !NIGHTFIRE_DATA_PS2

@@ -4,8 +4,9 @@ A side project: our action engine (action_standalone, docs/action-standalone.md)
 (`SLES-51258`, the European release) in place of the Xbox's, behind a build switch. The game code stays the Xbox
 port; what changes is how the files are found and how the formats that differ become what the Xbox code expects.
 
-Status (24 October 2026): scoped; milestones 1 and 2 done, 3 done for rigid meshes, all checked offline but not yet
-run in the game; see [State](#state).
+Status (24 October 2026): scoped; milestones 1 and 2 done, 3 done for rigid meshes, 4 mostly done. The PS2 data's
+levels load and play on the test runner (HendersonA, CastleCourtyard, SpaceStationD, SkyRail, the front end), with
+the Xbox's skinned meshes standing in for the PS2's until milestone 7; see [State](#state) and [In game](#in-game).
 
 Sources: the PS2 disc as extracted by the extractor project (Q:\nightfire-re, read only; its PS2 extraction in
 `iso_extract/ps2_eu_sles-51258`), `ACTION.ELF`'s own symbol table (5,607 symbols with GCC-mangled signatures: every
@@ -81,11 +82,27 @@ Where the PS2 build branches (`#if NIGHTFIRE_DATA_PS2`), each a line or two in t
 | The archive (whole file replaced) | engine/FS.cpp out of the build | ps2/FS_ps2.cpp: FileList from ACTION.ELF, FILES.BIN, loose `PS2\` files, `woman.rle` from a level bundle |
 | A level's sequences are in their own bundle | game.cpp ResetMap_Load, before the level's LoaderLoad loop | ps2/Ps2Loader.cpp: the 07F bundle through LoaderLoad (variant 8) |
 | A bundle's header is a sector | engine/Loader.cpp | - |
-| The heap: the PS2's textures decoded to 32 bits need room (12-35 MB a level, against 40 MB for the whole heap); textures must stay in the heap or contiguous memory, below 256 MB, which the D3D seam's addresses assume | memory.cpp's `HEAP_SIZE`, set to 104 MB by CMake | - |
+| The heap: the PS2's textures decoded to 32 bits need room (12-35 MB a level, against 40 MB for the whole heap); textures must stay in the heap or contiguous memory, below 256 MB, which the D3D seam's addresses assume | memory.cpp's `HEAP_SIZE`, set to 88 MB by CMake (104 MB left contiguous memory short on the runner: xboxInitTextures's 8 KB was refused and the game stopped at start) | - |
 | Block 0x12 (a PS2 texture's palette, after its texels) | engine/parsemap.cpp | ps2/Ps2Texture.cpp, ps2/Ps2Convert.cpp: `KXT` A8R8G8B8 |
 | Block 0x2d (a PS2 mesh) | engine/parsemap.cpp | ps2/Ps2Mesh.cpp, ps2/Ps2Convert.cpp: `KXE` |
+| Block 0x04 after a skinned 0x2d: **interim** stand-in (below) | engine/parsemap.cpp | ps2/Ps2XboxStandIn.cpp |
+| A cutscene's loadable bundle (0x0780xxxx-0x07A0xxxx) | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | ps2/Ps2Loader.cpp: the PS2's (0x1d7188, 0x1d7250) |
+| The levels' own "Spec" skins (FixupSkinHashcode): the Xbox's alone, neither the skins nor the function are on the PS2 | engine/Anim.cpp AnimObjectNew | - |
+| The Xbox disc for the stand-ins | engine/XboxSettings.cpp: `XboxDiscPath` | - |
 
 psiCreateMapTextures and psiCreateEntityGfx stay the Xbox's: the conversions hand them the Xbox's own structures.
+
+### Interim: the Xbox's skinned meshes
+
+Until milestone 7 converts the PS2's skinned meshes, `src/action/ps2/Ps2XboxStandIn.cpp` takes them from the Xbox
+disc's copy of the level: settings.ini's `XboxDiscPath` names the Xbox disc folder (holding `eurocom\filesys.d00`).
+When block 0x2d is skinned, the entity params block after it looks the entity's hashcode up in the Xbox's bundle of
+the level being loaded (read from the Xbox's archives and EDL-decompressed once a level, as FS.cpp does) and copies
+that KXE into the heap. It works because skins and skeletons are byte for byte the same on both discs, and all 63
+skinned meshes of 07000001, 07000006, 07000024 and 0700001b have an Xbox twin with the same hashcode in the pack of
+the same name, whose texture list holds the textures the mesh uses at the same indices (checked offline), so the
+Xbox's mesh draws with the PS2's textures. Without `XboxDiscPath` skinned meshes are not drawn (and a level with
+drones may not load). Remove the file, its seam and the setting with milestone 7.
 
 ## Milestones
 
@@ -145,6 +162,23 @@ How a PS2 rigid mesh becomes a KXE (src/action/ps2/Ps2Mesh.cpp), and what the ch
 - Over all 99 bundles: 15,908 meshes, 13,888 converted, 421 skinned (left out), every VIF chain read to its end,
   no batch whose counts disagree with its GIF tag, strips only (no fans in the data).
 
+## In game
+
+On the test runner (vr-desktop, `C:\nightfire-ps2\run\Release`: `DiscPath` the extracted PS2 disc, `XboxDiscPath`
+the Xbox disc, `DumpEvery=250`), `action_standalone.exe -level <level>`, no input, 100-120 s:
+
+| Level | What the frames show |
+|---|---|
+| HendersonA | the intro cutscene (the loadable 0x07800001: the characters in the PS2's room), then play: the Japanese house's room, furniture, lamps and garden from the PS2's meshes and textures, the Xbox's drones attacking, the first-person gun and hands, the HUD; with nobody playing, "Mission Failed" |
+| CastleCourtyard | the snowy courtyard, the truck, falling snow, the gun |
+| SpaceStationD | the intro (Bond in the space suit), then the station's exterior and walkway, the beam weapon, the HUD |
+| SkyRail (`-level 07000024`, a multiplayer map) | the snow map with the multiplayer HUD and timer; with no match settings the match ends at once, then the debriefing and the front end |
+| the front end (any unknown `-level`) | the PS2's title screen |
+
+The movies are missing (no XMV on the PS2 disc: milestone 6). The 35 "SPRITE HASHCODE ... NOT FOUND" lines in a
+HendersonA run are the Xbox build's own: the same hashcodes, in neither disc's HendersonA bundle (they are in other
+levels'), which the HUD asks for anyway.
+
 ## Tools
 
 `ps2data_check` (src/action/devtools/Ps2DataCheck.cpp, `cmake --build . --config Release --target ps2data_check`):
@@ -172,9 +206,9 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 
 | # | State |
 |---|---|
-| 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline (`files`, `bundle`); the PS2 build compiles and links; not yet run (a game window is not opened on this PC; a headless run needs the Linux build in WSL) |
-| 2 | done: block 0x12 to a KXT of swizzled A8R8G8B8. All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); PNGs checked by eye (UI panels, floors, a gun's skin, alpha smoke) |
-| 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline; double-sided unknown (all double-sided); not yet seen in game |
-| 4 | started: the 07F sequence bundle loads before the level, as PS2 ResetMap_Load's `LoaderLoad(0, level)` does; `woman.rle` comes from a level bundle (`ps2data_check woman` matches it with the Xbox's file). Left: the loadables (078/079/07A, cutscenes) through LoadableLoad, which loads nothing on the Xbox; collision and AI paths in play |
+| 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline and in game |
+| 2 | done: block 0x12 to a KXT of swizzled A8R8G8B8. All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); right in game |
+| 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline, and in game the static worlds draw right ([In game](#in-game)); every converted primitive double-sided |
+| 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins; skinned meshes from the Xbox disc (interim). Drones, cutscenes and the HUD work in the levels tried. Left: collision, AI paths and objects checked by someone playing; each loadable's memory is held until the level ends, as LoaderLoad's always is |
 | 5 | text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); left: the PS2's button symbols (`specialchar`) for SpecialChars |
 | 6-8 | not started |

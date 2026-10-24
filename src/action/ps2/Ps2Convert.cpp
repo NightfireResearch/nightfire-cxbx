@@ -1,6 +1,7 @@
 #include "Ps2Convert.h"
 #include "Ps2Mesh.h"
 #include "Ps2Texture.h"
+#include "Ps2XboxStandIn.h"
 #include "../memory.h"
 
 #include <stdio.h>
@@ -32,12 +33,25 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
     header->textureInfo = tex;
 }
 
+// The last mesh converted was skinned: the entity params block after it stands the Xbox's in (interim)
+static bool SkinnedMeshPending;
+
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     std::vector<uint8_t> kxe;
     Ps2MeshStats stats;
-    if (!Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats))
+    SkinnedMeshPending = false;
+    if (!Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats)) {
+        SkinnedMeshPending = stats.skinned;
         return NULL;
+    }
     ModelData *model = (ModelData *)Mem_Malloc(kxe.size(), MALLOC_PS2_OBJECT, 0);
     memcpy(model, kxe.data(), kxe.size());
     return model;
+}
+
+void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode) {
+    if (!SkinnedMeshPending)
+        return;
+    SkinnedMeshPending = false;
+    celglist->geom_idx = (int)PtrTo32(Ps2_XboxStandInModel(hashcode));
 }

@@ -2283,7 +2283,9 @@ static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.99520
 int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
     if ((skinHash & HASHCODE_SECTION_MASK) != HT_Skin_HASHCODE_BASE || obj == NULL)
         return 0;
+#if !NIGHTFIRE_DATA_PS2   // the levels' own skins are the Xbox's; the PS2 has none, nor this (docs/ps2-data.md)
     skinHash = FixupSkinHashcode(skinHash);
+#endif
     sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
     if (skin == NULL) {
         NF_WARN("Skin 0x%x not loaded", skinHash); // GC check (0x800452fc)

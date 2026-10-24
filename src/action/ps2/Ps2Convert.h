@@ -14,4 +14,9 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
 // Block 0x2d, a mesh: the Xbox's (a KXE) for the entity's geom_idx, or NULL when it has nothing to draw
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes);
 
+// Block 0x04, an entity's params, before parsemap_block_entity_params: when its mesh was a skinned one, which
+// Ps2_ConvertModel cannot convert yet, the Xbox's mesh of the entity's hashcode stands in (interim, until milestone 7:
+// Ps2XboxStandIn.h)
+void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode);
+
 #endif // PS2_PS2CONVERT_H_
