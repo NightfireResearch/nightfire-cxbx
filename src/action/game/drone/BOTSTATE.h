@@ -29,10 +29,20 @@ enum {
 };
 
 // BOT_goal_t.pickFlags
-#define BOT_PICK_SINGLE_PASS 2
-#define BOT_PICK_SKIP_RESPAWNING 4      // skip every respawning pickup, not only the near ones
-#define BOT_PICK_AVOID_OPPONENT 8       // plan the route at once and pick again if it passes the opponent
-#define BOT_PICK_IGNORE_VISITS 0x20
+typedef enum {
+    BOT_PICK_SINGLE_PASS = 0x2,
+    BOT_PICK_SKIP_RESPAWNING = 0x4,     // skip every respawning pickup, not only the near ones
+    BOT_PICK_AVOID_OPPONENT = 0x8,      // plan the route at once and pick again if it passes the opponent
+    BOT_PICK_NOT_DISTRACTED = 0x10,     // on its way to the goal, the bot is not drawn into the alerted states
+    BOT_PICK_IGNORE_VISITS = 0x20,
+} BotPickFlags;
+
+// BOTSTATE_chooseDodgeMove's directions
+typedef enum {
+    DODGE_LEFT = 0x1,
+    DODGE_RIGHT = 0x2,
+    DODGE_BACK = 0x4,
+} DodgeDirection;
 
 bool BOTSTATE_isObjAlreadyAnotherTeamObjective(obj_tag *obj, int playerIndex);
 uchar BOTSTATE_getPreferredTraitOpponentObjIndex(Drone_tag *drone);    // a player index, 0xff none

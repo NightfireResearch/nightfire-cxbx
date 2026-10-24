@@ -900,7 +900,7 @@ void Player_SetWeaponAnimObj(obj_tag *player, _VECTOR *sway) {
                 if (anim->switchingToWeaponId != anim->currentWeaponId) {
                     anim->currentWeaponId = anim->switchingToWeaponId;
                     if (MPSettings.dronesAreBots)
-                        MP_sendTeamBotMessage(NO_TEAM, 0x44,
+                        MP_sendTeamBotMessage(NO_TEAM, DRONE_MSG_BotWeaponChanged,
                                               (void *)(uintptr_t)player->animState->switchingToWeaponId, 0,
                                               (uint)(uintptr_t)player);
                 }
@@ -1679,7 +1679,7 @@ void Check_AutoAim(obj_tag *player, obj_tag *target, float *best) {
             if (MP_areObjectsOnSameTeam(player, drone->gameObj))
                 return;
         }
-        else if (drone->side != 1) {
+        else if (drone->side != DRONE_SIDE_ENEMY) {
             return;
         }
     }

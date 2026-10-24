@@ -6,6 +6,7 @@
 #include "DroneTracking.h"
 #include "BOT.h"
 #include "Behaviour.h"                 // behaviour_util_getProperty
+#include "DroneAnim.h"                 // DroneAimMode
 #include "DroneTables.h"               // DRONE_PROP_HEAD_TRACK
 #include "../../game.h"                // GameState
 #include "../../engine/Anim.h"         // AnimObjectIsAiming, AnimObjectIsHeadTracking, AnimObjectSetAiming
@@ -19,21 +20,14 @@
 
 #pragma fp_contract(off)
 
-// Drone_tag.aimMode
-#define AIM_ALWAYS 2
-#define AIM_FROM_HALF_WAY 3     // or as the anim's events say (aimByEvent)
-#define AIM_NO_LOOK 0xd         // with 0, the head does not follow anyone
-
-// Drone_tag.headMode: looks further and holds on to its choice
-#define HEAD_MODE_WIDE 2
-
 // The skin class whose head follows only the player
 
 // The bone AnimObjectSetAiming is handed when the aiming stops
 #define AIM_BONE 5
 
-// Whether the drone's anim aims: the AIM_ALWAYS rows, and the AIM_FROM_HALF_WAY rows once the script is half way
-// through (or, outside multiplayer, as the anim's events say). Never without an anim script, or for a recovering bot.
+// Whether the drone's anim aims: the DRONE_AIM_ALWAYS rows, and the DRONE_AIM_FROM_HALF_WAY rows once the script is
+// half way through (or, outside multiplayer, as the anim's events say). Never without an anim script, or for a
+// recovering bot.
 // The event byte is returned as it is.
 // AUTOINJECT
 uchar NDrone2_AimTest(DCVars_tag *dcv) {
@@ -44,12 +38,12 @@ uchar NDrone2_AimTest(DCVars_tag *dcv) {
     if (MPSettings.dronesAreBots) {
         if (drone->botVars->flags & BOT_FLAG_RECOVERING)
             return 0;
-    } else if (drone->aimMode == AIM_FROM_HALF_WAY && drone->aimByEvent) {
+    } else if (drone->aimMode == DRONE_AIM_FROM_HALF_WAY && drone->aimByEvent) {
         return drone->aimEvent;
     }
-    if (drone->aimMode == AIM_ALWAYS)
+    if (drone->aimMode == DRONE_AIM_ALWAYS)
         return 1;
-    if (drone->aimMode != AIM_FROM_HALF_WAY)
+    if (drone->aimMode != DRONE_AIM_FROM_HALF_WAY)
         return 0;
     return Ftol(script->curFrame) > script->numFrames >> 1;
 }
@@ -124,16 +118,17 @@ obj_tag* NDrone2_HeadTrackNearest(DCVars_tag *dcv) {
 // Whom the head follows while the drone does not aim. Nobody while attacking or for the anims that do not look; its
 // opponent once it has reacted to it; otherwise, when the last choice has run out, the nearest drone
 // (NDrone2_HeadTrackNearest): for an enemy below 0.66 alert that has not reacted, for allies and civilians when they
-// have no opponent within range (16, or 50 for HEAD_MODE_WIDE) or already follow it. HEAD_MODE_WIDE holds the
-// opponent for 5 to 9 seconds, anyone else for one.
+// have no opponent within range (16, or 50 for DRONE_HEAD_MODE_WIDE) or already follow it. DRONE_HEAD_MODE_WIDE holds
+// the opponent for 5 to 9 seconds, anyone else for one.
 // AUTOINJECT
 void NDrone2_DoHeadTrackingBehaviour(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    float range = drone->headMode == HEAD_MODE_WIDE ? 50.0f : 16.0f;
+    float range = drone->headMode == DRONE_HEAD_MODE_WIDE ? 50.0f : 16.0f;
     obj_tag *target = NULL;
     if (drone->sightFlags & DRONE_SIGHT_REACTED)
         target = drone->opponent;
-    if ((drone->flags & DRONE_FLAG_ATTACK_MODE) || drone->aimMode == 0 || drone->aimMode == AIM_NO_LOOK) {
+    if ((drone->flags & DRONE_FLAG_ATTACK_MODE) || drone->aimMode == DRONE_AIM_NONE ||
+        drone->aimMode == DRONE_AIM_NO_LOOK) {
         NDrone2_DoHeadTracking(0, NULL, dcv);
         return;
     }
@@ -145,14 +140,14 @@ void NDrone2_DoHeadTrackingBehaviour(DCVars_tag *dcv) {
         return;
 
     switch (drone->side) {
-    case 1:
+    case DRONE_SIDE_ENEMY:
         if (drone->alertness >= 0.66f)
             return;
         if (!(dcv->drone->sightFlags & DRONE_SIGHT_REACTED))
             target = NDrone2_HeadTrackNearest(dcv);
         break;
-    case 2:
-    case 3:
+    case DRONE_SIDE_ALLY:
+    case DRONE_SIDE_NEUTRAL:
         if (target == NULL || distSq > range || drone->headTarget == target)
             target = NDrone2_HeadTrackNearest(dcv);
         break;
@@ -161,7 +156,7 @@ void NDrone2_DoHeadTrackingBehaviour(DCVars_tag *dcv) {
     if (target == NULL || target == drone->headTarget)
         return;
     NDrone2_DoHeadTracking(1, target, dcv);
-    if (drone->headMode != HEAD_MODE_WIDE)
+    if (drone->headMode != DRONE_HEAD_MODE_WIDE)
         return;
     if (target == drone->opponent)
         drone->headTrackUntil = (Rand_Rand(5) + 5) * FRAME_RATE_INT + GameState.NumFramesUnpaused;

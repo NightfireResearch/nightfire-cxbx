@@ -7,6 +7,7 @@
 #include "../../sound/Sound.h"
 #include "../view.h"
 #include "../drone/Drone.h"
+#include "../drone/NDrone2.h"   // DRONE_MSG
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -64,7 +65,7 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
         mpObj->holder = MP_HitBy(gameObj, other, NULL, NULL);
         if (mpObj->holder == NULL)
             return;
-        MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, 0x2f, mpObj->num, gameObj, false);
+        MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, DRONE_MSG_BotFlagTaken, mpObj->num, gameObj, false);
         gameObj->curState = 1;
         gameObj->parent = mpObj->holder;
         MP_TeamMessage(NOTIF_X_FLAG_CAPTURED, mpObj->num);
@@ -73,7 +74,7 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
 
     case 1: {
         if (dropped) {
-            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 1, 0x3c, 0x30);
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 1, DRONE_MSG_BotGoalUninit, DRONE_MSG_BotFlagDropped);
             MP_DropToFloor(mpObj, gameObj);
             gameObj->curState = 2;
             MP_TeamMessage(NOTIF_X_FLAG_DROPPED, mpObj->num);
@@ -87,7 +88,7 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
         if (!(Vec_SqDist3D(Mat_Position(gameObj->transformMatrix), &goal) < 2.0f))
             return;
 
-        MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 3, 0x3b, 0x31);
+        MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_1, 3, DRONE_MSG_BotGoalComplete, DRONE_MSG_BotFlagCaptured);
         MPGame.teamScore[other] += 1.0f;
         short idx = Control_Plr2Ind(gameObj->parent);
         if (idx != -1)
@@ -119,7 +120,7 @@ void MP_FlagUpdate(obj_tag *gameObj, MPOBJECT *mpObj, bool dropped) {
             return;
         }
 
-        MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, 0x2f, mpObj->num, gameObj, false);
+        MP_setPlayerStatus(mpObj->holder, MPPLAYER_FLAG_1, DRONE_MSG_BotFlagTaken, mpObj->num, gameObj, false);
         gameObj->curState = 1;
         gameObj->parent = mpObj->holder;
         MP_TeamMessage(NOTIF_X_FLAG_PICKED_UP, mpObj->num);
@@ -144,10 +145,10 @@ static void MP_BluePrintTaken(obj_tag *gameObj, obj_tag *taker) {
         senderId = dcVars.aiStateMachine->id;
     }
     MPGame.teamObjectiveFlags[team] |= 1;
-    MP_sendBotMessage(taker, 0x3b, 1, 0);
-    MP_sendTeamBotMessage(team, 0x3d, gameObj, 0, senderId);
+    MP_sendBotMessage(taker, DRONE_MSG_BotGoalComplete, 1, 0);
+    MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, gameObj, 0, senderId);
     MPGame.teamObjectiveFlags[NO_TEAM] = 0;
-    MP_sendBotMessage(taker, 0x32, 0, 0);
+    MP_sendBotMessage(taker, DRONE_MSG_BotBlueprintTaken, 0, 0);
 }
 
 // gameObj->curState: 0 at its spawn place, 1 carried (by gameObj->parent), 2 dropped. Either team takes it,
@@ -169,7 +170,8 @@ void MP_BluePrintUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
     case 1:
         if (dropped) {
-            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_2, 1, 0x3c, 0x33);
+            MP_ClearCarrier(gameObj->parent, MPPLAYER_FLAG_2, 1, DRONE_MSG_BotGoalUninit,
+                            DRONE_MSG_BotBlueprintDropped);
             MP_DropToFloor(mpObj, gameObj);
             MP_TeamMessage(NOTIF_X_DROPPED_BLUEPRINT, mpObj->num);
             gameObj->curState = 2;

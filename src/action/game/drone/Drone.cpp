@@ -9,7 +9,7 @@
 #include "../../engine/Vision.h"   // Vision_InView
 #include "../../engine/viewer.h"   // viewer_tag, cel_tag
 #include "NDrone2_Opponent.h"      // NDrone2_SetOpponent
-#include "../obj/bullet.h"         // BU_tag
+#include "../obj/bullet.h"         // BU_tag, CASING_tag
 #include "../obj/control.h"        // control_first_object
 #include "../obj/Drone_AIHints.h"  // CoverNode_tag, AIBoxList, Drone_ProcessCoverNodes
 #include "../obj/DroneSpawner.h"   // DroneSpawner_tag, DroneSpawner_DroneDelete
@@ -46,10 +46,6 @@
 // XBE_GLOBAL(0x001dfa2a, 0x1)
 uchar Drone_bDisableSystem;
 
-// The lines Drone_BrokenObject picks from
-#define DRONE_BROKEN_OBJECT_SFX 0x40
-#define DRONE_BROKEN_OBJECT_SFX_LAST 0x43
-
 // The cheats' switches (ui_cheats.cpp)
 extern uint32_t switch_NO_DRONES;
 // XBE_GLOBAL(0x001dfa29, 0x1)
@@ -63,12 +59,6 @@ uchar Drone_bDontDraw;
 CoverNode_tag CoverNodeTable[MAX_COVER_NODES];
 // XBE_GLOBAL(0x001dfa30, 0x5c00)
 DroneAIPoint_tag AIPointTable[MAX_AI_POINTS];
-
-// A cartridge case's extraObjectData; only what Drone_Delete reads
-typedef struct {
-    char _unknown00[0x20];
-    obj_tag *unknown20;     // 0x20 - Drone_Delete clears it when it is the drone deleted
-} CasingData;
 
 #define HEAD_BONE 5
 #define WORLD_BONE(bone) (0x80000000 | (bone))
@@ -133,7 +123,7 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
         return;
 
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
-        if (!enable || drone->gameObj->curState != 1)
+        if (!enable || drone->gameObj->curState != DSTATE_WaitSwitch)
             NDrone2_Enable(enable, drone);
     }
     NPCGlobals.enabled = enable;
@@ -151,7 +141,8 @@ void Drone_EnableAll(char enable, HASHCODE hashcode) {
                 continue;
             if (gameObj->objectType != OBJECTTYPE_DRONE && gameObj->objectType != OBJECTTYPE_DEAD_DRONE)
                 continue;
-            if (gameObj->curState == 1 && drone->waitSwitchChannel == 10)    // a wait channel, not SWITCH_SPACE_DRAKE
+            // waitSwitchChannel 10: a wait channel, not SWITCH_SPACE_DRAKE
+            if (gameObj->curState == DSTATE_WaitSwitch && drone->waitSwitchChannel == 10)
                 Drone_Message(gameObj, DRONE_MSG_Enable, NULL, 0);
         }
     }
@@ -390,13 +381,14 @@ void Drone_BrokenObject(obj_tag *obj, HITDATA_tag *hit) {
         return;
 
     for (Drone_tag *drone = NPCGlobals.NDrone2List; drone != NULL; drone = drone->next) {
-        if (drone->dtype != 12)
+        if (drone->dtype != DTYPE_Mayhew)
             continue;
         if (drone->health <= 0.0f)
             return;
         DCVars_tag dcv;
         if (Drone_DCVfromOBJ(drone->gameObj, &dcv))
-            NDrone2_SpeechSFX(&dcv, DroneFunc_ChooseSFX(DRONE_BROKEN_OBJECT_SFX, DRONE_BROKEN_OBJECT_SFX_LAST), 0, 0, 0);
+            NDrone2_SpeechSFX(&dcv, DroneFunc_ChooseSFX(DRONE_SFX_BROKEN_OBJECT_FIRST, DRONE_SFX_BROKEN_OBJECT_LAST),
+                              0, 0, 0);
     }
 }
 
@@ -514,11 +506,11 @@ void Drone_UpdateCombatChannels(void) {
         if (drone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING))
             continue;
         if (!(drone->flags & DRONE_FLAG_ENABLED)) {
-            if (drone->side == 1)
+            if (drone->side == DRONE_SIDE_ENEMY)
                 calm = false;
             continue;
         }
-        if (drone->alertness >= 1.0f && drone->distanceToTarget < 30.0f && drone->side != 2) {
+        if (drone->alertness >= 1.0f && drone->distanceToTarget < 30.0f && drone->side != DRONE_SIDE_ALLY) {
             alerted = true;
             break;
         }
@@ -661,11 +653,11 @@ void Drone_GetOpponentInfo(Drone_tag *drone, obj_tag *gameObj) {
 
     uint turn = drone->animFlags;
     float facing = gameObj->rotation.y;
-    if (turn & 8)
+    if (turn & DANIMFLAG_FACING_90)
         facing += HALF_PI;
-    if (turn & 0x10)
+    if (turn & DANIMFLAG_FACING_180)
         facing += PI;
-    if (turn & 0x20)
+    if (turn & DANIMFLAG_FACING_MINUS_90)
         facing -= HALF_PI;
     drone->opponentBearing = Vec_AngleDifference(facing, drone->opponentAngles.y);
 }
@@ -773,7 +765,7 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
     Drone_tag *speaker = dcv->drone;
     if (speaker->facialAnimPlaying) {
         if (speaker->facialAnimDone || speaker->facialAnim == NULL
-            || (((sAnimScript_tag *)speaker->facialAnim)->flags & 0x10000000))
+            || (((sAnimScript_tag *)speaker->facialAnim)->flags & ANIMSCRIPT_STOPPED))
             speaker->facialAnimPlaying = 0;
     }
 
@@ -783,13 +775,13 @@ bool NDrone2_ControlSTANDARD(DCVars_tag *dcv) {
     }
 
     switch (drone->side) {
-    case 1:
+    case DRONE_SIDE_ENEMY:
         NPCGlobals.enemies++;
         break;
-    case 2:
+    case DRONE_SIDE_ALLY:
         NPCGlobals.allies++;
         break;
-    case 3:
+    case DRONE_SIDE_NEUTRAL:
         NPCGlobals.neutrals++;
         break;
     }
@@ -845,7 +837,7 @@ bool NDrone2_ControlDTYPE_Zoe(DCVars_tag *dcv) {
     }
     if (switch_channels[SWITCH_ZOE_LEASH] && glb_players[0] != NULL
         && Vec_Dist3D(&dcv->gameObj->position, &glb_players[0]->position) > 10.0f)
-        DroneFunc_SetMissionFailReason(dcv->drone, 15);
+        DroneFunc_SetMissionFailReason(dcv->drone, DRONE_FAIL_ZOE_LEASH);
     return NDrone2_ControlSTANDARD(dcv);
 }
 
@@ -875,7 +867,7 @@ bool NDrone2_PostDroneControl(DCVars_tag *dcv) {
 
 // Whether the drone's anim runs this frame (DRONE_FLAG_ANIMATE): always for skin class 12, a drone with no root
 // height, one drawn lately or one blending a script out (blendScript); else unless its anim moves it without animating
-// (animFlags 4).
+// (DANIMFLAG_SKIP_UNSEEN).
 // AUTOINJECT
 bool NDrone2_DoAnimation(Drone_tag *drone) {
     if (!(drone->flags & DRONE_FLAG_ANIMATE))
@@ -885,7 +877,7 @@ bool NDrone2_DoAnimation(Drone_tag *drone) {
     obj_tag *gameObj = drone->gameObj;
     if (gameObj->animState->animObj.rootHeight == 0.0f || gameObj->drawnCountdown || drone->blendScript != NULL)
         return true;
-    return !(drone->animFlags & 4);
+    return !(drone->animFlags & DANIMFLAG_SKIP_UNSEEN);
 }
 
 // A drone's frame (the object's update): nothing while the NPC system is off, or in multiplayer for a dead drone or
@@ -928,9 +920,9 @@ void Drone_Control(obj_tag *gameObj) {
             float speed = drone->animMoveSpeed;
             if (speed != 0.0f) {
                 if ((flags & DRONE_FLAG_BOUNDARY_STOPS) && drone->door == NULL) {
-                    if ((drone->boundaryFlags & 2) && speed > 0.0f)
+                    if ((drone->boundaryFlags & DRONE_BLOCKED_AHEAD) && speed > 0.0f)
                         speed = 0.0f;
-                    if ((drone->boundaryFlags & 4) && speed < 0.0f)
+                    if ((drone->boundaryFlags & DRONE_BLOCKED_BEHIND) && speed < 0.0f)
                         speed = 0.0f;
                 }
                 dcv.gameObj->position.x = (float)(FSin(dcv.gameObj->rotation.y) * speed + dcv.gameObj->position.x);
@@ -970,7 +962,7 @@ void Drone_Delete(obj_tag *gameObj) {
         CoverNode_tag *node = &NPCGlobals.coverNodes[i];
         if (node->occupant == gameObj) {
             node->occupant = NULL;
-            node->flags &= ~COVERNODE_WIDER;
+            node->flags &= ~COVERNODE_TAKEN;
         }
     }
     if (drone->route1.nodes != NULL)
@@ -1012,9 +1004,9 @@ void Drone_Delete(obj_tag *gameObj) {
             break;
         }
         case OBJECTTYPE_CASING: {
-            CasingData *casing = (CasingData *)obj->extraObjectData;
-            if (casing->unknown20 == gameObj)
-                casing->unknown20 = NULL;
+            CASING_tag *casing = (CASING_tag *)obj->extraObjectData;
+            if (casing->owner == gameObj)
+                casing->owner = NULL;
             break;
         }
         case OBJECTTYPE_DRONE_SPAWNER:

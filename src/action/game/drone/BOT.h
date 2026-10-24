@@ -47,10 +47,25 @@ typedef enum {
 
 // BOT_stats_t.traitFlags
 enum {
+    BOT_TRAIT_1 = 1,                    // NDrone2_SetOpponentAimPos: odds of 4, not by accuracy
+    BOT_TRAIT_SHOT_DAMAGE = 2,          // its shots other than the fists' hurt a quarter more
     BOT_TRAIT_FISTS_UP_CLOSE = 4,
     BOT_TRAIT_ATTACK_ON_SIGHT = 8,
     BOT_TRAIT_REGENERATE = 0x10,
 };
+
+// BOT_vars_t.skin: the character whose bot throws Weap_OddjobHat, which comes back every 10 s
+#define BOT_SKIN_ODDJOB 0x1a
+
+// BOT_goal_t.flags
+#define BOT_GOAL_COMPLETE 0x1           // BOTSTATE_setGoalComplete
+
+// BOT_soundEffect's kinds of cry
+typedef enum {
+    BOT_SOUND_DEATH = 1,
+    BOT_SOUND_PAIN = 30,
+    BOT_SOUND_PAIN_UNLESS_PLAYING = 31,         // unless the last cry is still playing
+} BotSound;
 
 // One of a bot's two goals (BOTSTATE_pickGoal): slot 0 a pickup, an opponent or a friend to guard, slot 1 the game
 // mode's objective. See docs/drone/bots-and-navigation/README.md 5.2 and 5.6.
@@ -65,7 +80,7 @@ typedef struct BOT_goal_t {
     float weightObjective;      // 0x28
     void *target;               // 0x2c - MP_PICKUP*, the objective or the opponent
     uint arriveOrNextState;     // 0x30
-    uchar flags;                // 0x34 - 1 complete
+    uchar flags;                // 0x34 - BOT_GOAL_COMPLETE
     uchar kind;                 // 0x35 - 1 pickup, 2 objective, 3 object / opponent
     uchar pickFlags;            // 0x36 - 2 single pass, 8 avoid the opponent's path, 0x20 ignore visit times
     uchar maxEmitterDistance;   // 0x37
@@ -85,10 +100,12 @@ typedef struct BOT_playerInfo_t {
 } BOT_playerInfo_t;
 
 // BOT_playerInfo_t.flags
-#define BOT_PLAYER_ACTIVE   1   // a drone with burstOver clear, a player with byte 0x8eb set; kept for 2 s after
-#define BOT_PLAYER_PRESENT  2   // in the game and alive
-#define BOT_PLAYER_IN_SIGHT 4   // NDrone2_CanSeeObject from bone 5
-#define BOT_PLAYER_TEAMMATE 8
+typedef enum {
+    BOT_PLAYER_ACTIVE = 0x1,    // a drone with burstOver clear, a player with byte 0x8eb set; kept for 2 s after
+    BOT_PLAYER_PRESENT = 0x2,   // in the game and alive
+    BOT_PLAYER_IN_SIGHT = 0x4,  // NDrone2_CanSeeObject from bone 5
+    BOT_PLAYER_TEAMMATE = 0x8,
+} BotPlayerFlags;
 
 // One weapon as a bot holds it (BOT_vars_t.weapons, indexed by weapon id). Invented name.
 typedef struct BOT_weapon_t {
@@ -98,9 +115,13 @@ typedef struct BOT_weapon_t {
     uchar unknown7[5];
 } BOT_weapon_t;
 
-// BOT_vars_t.flags: recovering from a hit (a punch, a bullet, an explosion; BOTSTATE_startRecovery): it sees no one
-// until recoveryEndFrame, and makes no route to its opponent
-#define BOT_FLAG_RECOVERING 2
+// BOT_vars_t.flags
+typedef enum {
+    BOT_FLAG_RECOVERING = 0x2,  // from a hit (a punch, a bullet, an explosion; BOTSTATE_startRecovery): it sees no one
+                                // until recoveryEndFrame, makes no route to its opponent and does not turn
+    BOT_FLAG_ENEMY_FLAG = 0x4,  // the goal last dropped was for the enemy flag (BOTSTATE_uninitGoal); no attack or
+                                // distraction until a goal is picked
+} BotFlags;
 
 // A bot player's state (NUM_BOTS at 0x001d98e0, one per bot agent; Drone_tag.botVars). Ghidra's type is 0x75f
 // bytes, too short.
@@ -121,7 +142,7 @@ typedef struct BOT_vars_t {
     float distraction;              // 0x71c
     uint goalReturnState;           // 0x720 - the DSTATE to go back to after a goal
     uint goalFromState;             // 0x724 - the DSTATE the bot was in when it set off for its goal (BOTSTATE_gotoGoal)
-    uint flags;                     // 0x728 - BOT_FLAG_RECOVERING, 4 objective goal active
+    uint flags;                     // 0x728 - BotFlags
     uint regenTimer;                // 0x72c - trait 0x10
     DYNAMICSOUNDS *sound;           // 0x730 - the bot's last cry (BOT_soundEffect)
     uint lastImpactFrame;           // 0x734
@@ -135,7 +156,7 @@ typedef struct BOT_vars_t {
     short botIndex;                 // 0x752
     short nearestNavNode;           // 0x754 - -1 each frame
     ushort redirectState;           // 0x756 - where BOT_validateStateChange sends a refused change
-    uchar skin;                     // 0x758
+    uchar skin;                     // 0x758 - the character (an mp_characters id)
     uchar activeGoal;               // 0x759 - 0xff none
     uchar stateClass;               // 0x75a
     uchar visibilityCursor;         // 0x75b

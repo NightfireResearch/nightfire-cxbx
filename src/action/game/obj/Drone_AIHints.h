@@ -20,8 +20,8 @@ typedef struct CoverCornerPlacement {
     uint coverAngleDeg;         // 0x38 - 0 for 45
     uint enableSwitchChannel;   // 0x3c
     uint disableSwitchChannel;  // 0x40
-    uint unknown6;              // 0x44 - 0 for 8
-    uint unknown7;              // 0x48 - 0 for 8
+    uint side1Offset;           // 0x44 - 0 for 8
+    uint side2Offset;           // 0x48 - 0 for 8
     char _unknown4c[0xb0 - 0x4c];
 } CoverCornerPlacement;
 
@@ -61,26 +61,31 @@ typedef enum {
 } CoverNodeType;
 
 // CoverNode_tag.flags. Corner nodes take one or both of each pair from the placement's keys.
-#define COVERNODE_LOW_ANIMS     0x1     // low: the anims come from the placement
-#define COVERNODE_LOW_FLAG2     0x2     // low: the placement's flag2 was 1
-#define COVERNODE_SIDE2         0x4     // sideFlags 2
-#define COVERNODE_SIDE1         0x8     // sideFlags 1
-#define COVERNODE_WIDER         0x10    // Drone_IsCoverNodeUsable allows wider angles
-#define COVERNODE_STAND1        0x20
-#define COVERNODE_STAND2        0x40
-#define COVERNODE_CROUCH1       0x80    // tested on one side, against angles near +-pi
-#define COVERNODE_CROUCH2       0x100   // and on the other, against angles near pi/2
+typedef enum {
+    COVERNODE_LOW_ANIMS = 0x1,      // low: the anims come from the placement
+    COVERNODE_LOW_FLAG2 = 0x2,      // low: the placement's flag2 was 1
+    COVERNODE_SIDE2 = 0x4,          // sideFlags 2
+    COVERNODE_SIDE1 = 0x8,          // sideFlags 1
+    COVERNODE_TAKEN = 0x10,         // a drone holds it (NDrone2_TakeCover; cleared by NDrone2_DisownCover and
+                                    // Drone_Delete): Drone_IsCoverNodeUsable allows it wider angles
+    COVERNODE_STAND1 = 0x20,
+    COVERNODE_STAND2 = 0x40,
+    COVERNODE_CROUCH1 = 0x80,       // tested on one side, against angles near +-pi
+    COVERNODE_CROUCH2 = 0x100,      // and on the other, against angles near pi/2
+} CoverNodeFlags;
 
 // CoverNode_tag.usable: what Drone_IsCoverNodeUsable found for a target
-#define COVERUSE_CROUCH2        0x2
-#define COVERUSE_CROUCH1        0x4
-#define COVERUSE_LOW            0x48
-#define COVERUSE_CROUCH2_INNER  0x10    // within pi/2
-#define COVERUSE_CROUCH1_INNER  0x20    // above -pi
-#define COVERUSE_INNER_MASK     0x70    // cleared when the target can see the node
-#define COVERUSE_TOO_CLOSE      0x80    // the target is within 4 m
-#define COVERUSE_OUTSIDE_ANGLE  0x200
-#define COVERUSE_SEEN           0x400
+typedef enum {
+    COVERUSE_CROUCH2 = 0x2,
+    COVERUSE_CROUCH1 = 0x4,
+    COVERUSE_LOW = 0x48,
+    COVERUSE_CROUCH2_INNER = 0x10,  // within pi/2
+    COVERUSE_CROUCH1_INNER = 0x20,  // above -pi
+    COVERUSE_INNER_MASK = 0x70,     // cleared when the target can see the node
+    COVERUSE_TOO_CLOSE = 0x80,      // the target is within 4 m
+    COVERUSE_OUTSIDE_ANGLE = 0x200,
+    COVERUSE_SEEN = 0x400,
+} CoverUse;
 
 // A cover node (NPCGlobals.coverNodes)
 typedef struct CoverNode_tag {
@@ -89,11 +94,11 @@ typedef struct CoverNode_tag {
     uchar disableSwitchChannel;     // 0x02 - not usable while this one is on, if not 0
     uchar lowAnim1;                 // 0x03 - low nodes
     uchar lowAnim2;                 // 0x04
-    uchar unknown5;                 // 0x05 - corner nodes
-    uchar unknown6;                 // 0x06
+    uchar side1Offset;              // 0x05 - corner nodes: tenths of a metre across on side 1
+    uchar side2Offset;              // 0x06 - and back on side 2 (NDrone2_GetPosForCornerCover)
     uchar _pad07;
     float angle;                    // 0x08 - corner nodes: radians
-    uint flags;                     // 0x0c - COVERNODE_*
+    uint flags;                     // 0x0c - CoverNodeFlags
     cel_tag *cel;                   // 0x10
     obj_tag *occupant;              // 0x14 - a drone here counts only for its own target
     _VECTOR pos;                    // 0x18
@@ -107,11 +112,20 @@ LAYOUT_32(offsetof(CoverNode_tag, emitter) == 0x30, "Wrong offset for CoverNode_
 LAYOUT_32(offsetof(CoverNode_tag, usable) == 0x58, "Wrong offset for CoverNode_tag.usable");
 
 // An AI point (NPCGlobals.aiPoints). Its first 0x28 bytes have AIPoint_tag's layout (AINetwork.h).
+// DroneAIPoint_tag.id: the points the drones look for (NDrone2_ClosestAIPoint)
+typedef enum {
+    AIPOINT_ENEMY = 0,              // DRONE_SIDE_ENEMY
+    AIPOINT_RUN = 1,                // DRONE_PROP_HOSTAGE, and a civilian with no point of its own
+    AIPOINT_CIVILIAN = 2,           // DRONE_SIDE_NEUTRAL
+    AIPOINT_ALARM = 8,              // DRONE_PROP_RUNS_TO_ALARM; the one nearest a mission path's end
+    AIPOINT_ALLY = 9,               // DRONE_SIDE_ALLY
+} DroneAIPointId;
+
 typedef struct DroneAIPoint_tag {
     uint _unknown0;
     uchar active;                   // 0x04
     uchar _pad05;
-    ushort id;                      // 0x06
+    ushort id;                      // 0x06 - DroneAIPointId
     ushort unknown08;               // 0x08
     ushort _pad0a;
     uint group;                     // 0x0c

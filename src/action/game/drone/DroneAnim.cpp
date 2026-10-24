@@ -27,9 +27,6 @@ static void DAStateFunc_Nothing(Drone_tag *drone, ushort phase) {}
 const DroneDataFunc DroneData_DAStateFunc[2] = {{.id = 10, .func = DAStateFunc_Nothing},
                                                 {.id = 0xffff, ._pad2 = 0xffff}};
 
-// The DAnim of a shot fired through the anim (DroneAnim_PlayFiringAnim)
-#define DANIM_NOW_FIRE 0x5c
-
 // Whether the drone has a script for the variant of the anim state, in its own anim set or else in set 0. State 0
 // always does; one beyond the table never.
 // AUTOINJECT
@@ -58,8 +55,8 @@ bool DroneAnim_CallAnim(uint state, uint variant, short endState, uint endMsg, f
                         DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
 
-    // Only these skin classes have the third variant of 0x3d
-    if (state == 0x3d && variant == 3) {
+    // Only these skin classes have the third variant of DANIM_ALT_ATTACK
+    if (state == DANIM_ALT_ATTACK && variant == 3) {
         switch ((ushort)drone->skinClass) {
         case SKINCLASS_YAKUZA:
         case SKINCLASS_SNIPER:
@@ -75,55 +72,55 @@ bool DroneAnim_CallAnim(uint state, uint variant, short endState, uint endMsg, f
 
     if (state == 0 || !DroneAnim_CanDoAnimState(dcv, state, 0)) {
         switch (state) {
-        case 0x0b:
-        case 0x0c:
-        case 0x0d:
-        case 0x29:
-        case 0x2a:
-        case 0x3d:
-        case 0x4a:
-        case 0x4f:
-        case 0x52:
-        case 0x53:
-        case 0x54:
-        case 0x55:
-        case 0x56:
-        case 0x5d:
-        case 0x5e:
-        case 0x61:
-            state = 0x0a;
+        case DANIM_SEARCH_LOOK:
+        case DANIM_STRAFE_LEFT:
+        case DANIM_STRAFE_RIGHT:
+        case DANIM_STRAFE_DODGE:
+        case DANIM_STRAFE_DODGE_RIGHT:
+        case DANIM_ALT_ATTACK:
+        case DANIM_RELOAD_B:
+        case DANIM_4F:
+        case DANIM_RELOAD:
+        case DANIM_ROLL_LEFT:
+        case DANIM_ROLL_RIGHT:
+        case DANIM_55:
+        case DANIM_56:
+        case DANIM_5D:
+        case DANIM_5E:
+        case DANIM_LOOK_BEHIND:
+            state = DANIM_AIM_STAND;
             break;
-        case 0x0f:
-        case 0x36:
-            state = 0x35;
+        case DANIM_CROUCH_WALK:
+        case DANIM_PATROL_ALERT_LOOK:
+            state = DANIM_ALERT_WALK;
             break;
-        case 0x1f:
-        case 0x62:
-            state = 0x1e;
+        case DANIM_1F:
+        case DANIM_62:
+            state = DANIM_RUN;
             break;
-        case 0x22:
-        case 0x60:
-            state = 0x21;
+        case DANIM_LOOK_AROUND:
+        case DANIM_60:
+            state = DANIM_STAND_ALERT;
             break;
-        case 0x25:
-        case 0x26:
-        case 0x27:
+        case DANIM_STAND_IDLE + 1:
+        case DANIM_STAND_IDLE + 2:
+        case DANIM_STAND_IDLE + 3:
             state = DANIM_STAND_IDLE;
             break;
-        case 0x4c:
+        case DANIM_IMPACT:
             state = (ushort)drone->animState;
             break;
-        case 0x57:
-            if (DroneAnim_CanDoAnimState(dcv, 0x11, 0))
-                state = 0x11;
-            else if (DroneAnim_CanDoAnimState(dcv, 0x19, 0))
-                state = 0x19;
+        case DANIM_57:
+            if (DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_COVER, 0))
+                state = DANIM_CROUCH_COVER;
+            else if (DroneAnim_CanDoAnimState(dcv, DANIM_HIDE, 0))
+                state = DANIM_HIDE;
             else
-                state = 0x21;
+                state = DANIM_STAND_ALERT;
             break;
         default:
             NDrone2_ObjectIsArmed(drone->gameObj);  // the answer is not used
-            state = 0x21;
+            state = DANIM_STAND_ALERT;
             break;
         }
         if (!DroneAnim_CanDoAnimState(dcv, state, 0))
@@ -187,7 +184,7 @@ bool DroneAnim_SetStandIdleAnim(DCVars_tag *dcv, char wait) {
     }
 
     if (drone->skinClass == SKINCLASS_ROOK)
-        state = 0x26;
+        state = DANIM_STAND_IDLE + 2;
     if (state < DANIM_STAND_IDLE || state > DANIM_STAND_IDLE + 3)
         state = DANIM_STAND_IDLE;
     else if (state != DANIM_STAND_IDLE && !DroneAnim_CanDoAnimState(dcv, state, 0))
@@ -211,7 +208,7 @@ bool DroneAnim_SetWalkIdleAnim(DCVars_tag *dcv, char wait) {
         state = DANIM_WALK_IDLE + (drone->sm.id + 1) % 3;
 
     if (GameState.CurrentLevelHashcode == HT_Level_EvilBase)
-        state = 0x39;
+        state = DANIM_WALK_IDLE + 2;
     if (state < DANIM_WALK_IDLE || state > DANIM_WALK_IDLE + 2)
         state = DANIM_WALK_IDLE;
     else if (state != DANIM_WALK_IDLE && !DroneAnim_CanDoAnimState(dcv, state, 0))
@@ -229,7 +226,8 @@ bool DroneAnim_SetWalkIdleAnim(DCVars_tag *dcv, char wait) {
 bool DroneAnim_LocationDeathAnim(DCVars_tag *dcv, short endState) {
     Drone_tag *drone = dcv->drone;
     HITDATA_tag *hit = drone->lastHit;
-    if (hit != NULL && (glb_players[0]->animState->animFlags & 1) && (hit->hitBoneIdx == 5 || hit->hitBoneIdx == 4)) {
+    if (hit != NULL && (glb_players[0]->animState->animFlags & ANIM_SCOPED) &&
+        (hit->hitBoneIdx == 5 || hit->hitBoneIdx == 4)) {
         float shotYaw = Atan2(hit->hitDirection.x, hit->hitDirection.z);
         double turn = Vec_AngleDifference(shotYaw, dcv->gameObj->rotation.y);
         DroneAnim_CallAnim(DANIM_DEATH_SHOT, fabs(turn) > (float)M_PI_2 ? 0 : 1, endState, 0, 0.0f, 0, dcv);
@@ -253,7 +251,7 @@ bool DroneAnim_LocationImpactAnim(DCVars_tag *dcv) {
     static const uint abseilVariants[19] = {0, 0, 0, 0, 0, 1, 1, 2, 1, 2, 3, 4, 3, 4, 0, 0, 0, 0, 0};
     Drone_tag *drone = dcv->drone;
     uint variant;
-    if (glb_players[0]->animState->animFlags & 1) {
+    if (glb_players[0]->animState->animFlags & ANIM_SCOPED) {
         switch ((ushort)drone->lastHit->hitBoneIdx) {
         case 4:
         case 5:
@@ -289,7 +287,7 @@ bool DroneAnim_LocationImpactAnim(DCVars_tag *dcv) {
         variant = Rand_Rand(8) + 5;
     }
 
-    if (drone->dtype == DTYPE_Abseil27 || drone->dtype == DTYPE_Abseil28)
+    if (drone->dtype == DTYPE_AbseilToGround || drone->dtype == DTYPE_AbseilHang)
         variant = abseilVariants[variant];
     DroneAnim_CallAnim(DANIM_IMPACT, variant, dcv->aiStateMachine->resumeState, 0, 0.0f, 0, dcv);
     return true;
@@ -304,7 +302,7 @@ bool DroneAnim_PlayFiringAnim(DCVars_tag *dcv) {
         !drone->fireEvent)
         return false;
     DroneAnim_FreeScript(dcv);
-    DroneAnim_SetDAnimNow(DANIM_NOW_FIRE, 0, 0, dcv);
+    DroneAnim_SetDAnimNow(DROW_COVER_FIRE, 0, 0, dcv);
     DroneWeap_FireWeapon(dcv);
     drone->fired = 0;
     return true;
@@ -347,15 +345,15 @@ void DroneAnim_SetAnimD(ushort row, ushort blend, Drone_tag *drone) {
         drone->animCallTaken = 1;
 }
 
-// The call states that play as DANIM_DEATH: 0x41-0x44, 0x50 and 0x6f.
+// The call states that play as DANIM_DEATH: 0x41-0x44, DANIM_KNOCKED_OUT and DANIM_ASTRONAUT_DEATH.
 ushort DroneAnim_BaseCallState(ushort state) {
     switch (state) {
-    case 0x41:
-    case 0x42:
-    case 0x43:
-    case 0x44:
-    case 0x50:
-    case 0x6f:
+    case DANIM_41:
+    case DANIM_DEATH_SHOT:
+    case DANIM_43:
+    case DANIM_DEATH_EXPLOSION:
+    case DANIM_KNOCKED_OUT:
+    case DANIM_ASTRONAUT_DEATH:
         return DANIM_DEATH;
     default:
         return state;
@@ -394,13 +392,13 @@ bool DroneAnim_SkipAnim(Drone_tag *drone) {
         return true;
     if (drone->gameObj->drawnCountdown == 0 && (drone->animFlags & DANIMFLAG_SKIP_UNSEEN)) {
         switch (drone->animMode) {
-        case 0:
-        case 3:
-        case 4:
-        case 5:
-        case 6:
-        case 7:
-        case 9:
+        case DANIMMODE_0:
+        case DANIMMODE_3:
+        case DANIMMODE_4:
+        case DANIMMODE_INTERRUPTIBLE:
+        case DANIMMODE_SHORT:
+        case DANIMMODE_7:
+        case DANIMMODE_COMPLETE_9:
             return true;
         }
     }
@@ -431,7 +429,7 @@ bool DroneAnim_SetDAnimInternal(ushort row, ushort blend, uchar callFlag, Drone_
 
     ushort animSet = drone->animSet;
     if (Drone_AnimTables[row][animSet].scriptLo == 0)
-        animSet = 0;
+        animSet = DANIMSET_DEFAULT;
     DroneAnim_SetDAnimVeryInternal(drone, row, animSet);
     drone->animCallFlag = callFlag;
     drone->animCall.state = DroneAnim_BaseCallState(drone->animCall.state);
@@ -563,11 +561,11 @@ uchar DroneAnim_OnEndAnim(Drone_tag *drone, uint flags, uchar blend) {
     return blend;
 }
 
-// The row's start: a mode 6 row, unless the last hit was heavy, plays 15 frames at most and blends 5 frames into
-// the next; its functions are told. The script is not checked.
+// The row's start: a DANIMMODE_SHORT row, unless the last hit was heavy, plays 15 frames at most and blends 5 frames
+// into the next; its functions are told. The script is not checked.
 // AUTOINJECT
 void DroneAnim_OnStartAnim(Drone_tag *drone) {
-    if (drone->animMode == 6 && !drone->heavyHit) {
+    if (drone->animMode == DANIMMODE_SHORT && !drone->heavyHit) {
         sAnimScript_tag *script = drone->animScript;
         if (script->numFrames > 15)
             script->numFrames = 15;
@@ -638,21 +636,21 @@ bool DroneAnim_GetDAnimForCall(Drone_tag *drone, ushort call, ushort variant, us
     return *row != 0 && *row != 0xffff;
 }
 
-// Whether the call may start now: there is one; with bots, no script blends out; a mode 5 row is left only for a
-// call made while it played, and in anim states 0xc, 0xd, 0x29 and 0x2a not for call 10.
+// Whether the call may start now: there is one; with bots, no script blends out; a DANIMMODE_INTERRUPTIBLE row is left
+// only for a call made while it played, and in the strafes not for DANIM_AIM_STAND.
 bool DroneAnim_CanSetAnimCall(Drone_tag *drone) {
     if (drone->animCall.state == 0)
         return false;
     if (MPSettings.dronesAreBots && drone->blendScript != NULL)
         return false;
-    if ((ushort)drone->animState != drone->animCall.fromState && drone->animMode == 5)
+    if ((ushort)drone->animState != drone->animCall.fromState && drone->animMode == DANIMMODE_INTERRUPTIBLE)
         return false;
     switch ((ushort)drone->animState) {
-    case 0x0c:
-    case 0x0d:
-    case 0x29:
-    case 0x2a:
-        if (drone->animCall.state == 10 && drone->animMode == 5)
+    case DANIM_STRAFE_LEFT:
+    case DANIM_STRAFE_RIGHT:
+    case DANIM_STRAFE_DODGE:
+    case DANIM_STRAFE_DODGE_RIGHT:
+        if (drone->animCall.state == DANIM_AIM_STAND && drone->animMode == DANIMMODE_INTERRUPTIBLE)
             return false;
         break;
     }
@@ -683,7 +681,9 @@ void DroneAnim_CallHandler(DCVars_tag *dcv) {
     }
 
     if (drone->animCallTaken && !drone->animCallFlag) {
-        if ((drone->animMode == 1 && !drone->animOnce) || drone->animMode == 2 || drone->animMode == 9) {
+        if ((drone->animMode == DANIMMODE_LOOP_UNTIL_CALLED && !drone->animOnce) ||
+            drone->animMode == DANIMMODE_COMPLETE ||
+            drone->animMode == DANIMMODE_COMPLETE_9) {
             DroneAnim_CallFullyComplete(drone);
             drone->animCallTaken = 0;
             return;
@@ -827,13 +827,13 @@ void DroneAnim_PreTransCallback(obj_tag *obj, AnimObj *animObj, _VECTOR *delta) 
         Mat_Inverse(&obj->transformMatrix, &inverse);
         ApplyMatrixLV(&inverse, delta, &local);
         uint bounds = drone->boundaryFlags;
-        if ((bounds & 2) && local.z > 0.0f)
+        if ((bounds & DRONE_BLOCKED_AHEAD) && local.z > 0.0f)
             local.z = 0.0f;
-        if ((bounds & 4) && local.z < 0.0f)
+        if ((bounds & DRONE_BLOCKED_BEHIND) && local.z < 0.0f)
             local.z = 0.0f;
-        if ((bounds & 8) && local.x > 0.0f)
+        if ((bounds & DRONE_BLOCKED_LEFT) && local.x > 0.0f)
             local.x = 0.0f;
-        if ((bounds & 0x10) && local.x < 0.0f)
+        if ((bounds & DRONE_BLOCKED_RIGHT) && local.x < 0.0f)
             local.x = 0.0f;
         ApplyMatrixLV(&obj->transformMatrix, &local, delta);
     }

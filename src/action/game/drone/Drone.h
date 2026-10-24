@@ -16,7 +16,7 @@ typedef struct DroneKeys {
     int minDifficulty;              // 0x08 key 2 - only Drone_Create reads it
     uint waitSwitchChannel;         // 0x0c key 3
     uint group;                     // 0x10 key 4
-    uint mode;                      // 0x14 key 5 - a DMODE below 0x24, else behaviour-driven (100 = has a second behaviour)
+    uint mode;                      // 0x14 key 5 - a DMODE, else behaviour-driven (DRONE_MODE_BEHAVIOUR)
     uint modeChangeSwitchChannel;   // 0x18 key 6
     uint key7;                      // 0x1c key 7 - copied to Drone_tag+0x12c, meaning unknown
     uint secondaryMode;             // 0x20 key 8
@@ -29,6 +29,11 @@ typedef struct DroneKeys {
     uint behaviour[11];             // 0x3c keys 15-25 - the behaviour block (behaviour_util_get; docs/drone/behaviours)
     uint statsOverride[7];          // 0x68 keys 26-32 - the packed stats records
 } DroneKeys;
+
+// DroneKeys.mode and .secondaryMode beyond the DMODEs: the behaviour block decides (as key 8: there is a second
+// behaviour), and none
+#define DRONE_MODE_BEHAVIOUR 100
+#define DRONE_MODE_NONE 0x65
 
 // Runs a message through the handler of `state` (NDrone2_ProcessStateMachine); true when it was handled
 typedef bool (*DroneProcessFunc)(DCVars_tag *dcv, uint state, MsgObject *msg);
@@ -99,10 +104,45 @@ typedef struct DroneImpact_tag {
 } DroneImpact_tag;
 
 // Drone_tag.sightFlags
-#define DRONE_SIGHT_LOS 2               // a line of sight to the opponent this frame (DroneVision_SeekOpponentLOS)
-#define DRONE_SIGHT_HAD_LOS 0x40        // and the frame before
-#define DRONE_SIGHT_SEES_OPPONENT 4    // registered the opponent after the reaction time (DroneVision_HaveOpponentSight)
-#define DRONE_SIGHT_REACTED 8           // has reacted to a first sighting: DroneFunc_ReactionTime is 0 from then on
+typedef enum {
+    DRONE_SIGHT_LOS = 0x2,                      // a line of sight to the opponent this frame
+                                                // (DroneVision_SeekOpponentLOS)
+    DRONE_SIGHT_SEES_OPPONENT = 0x4,            // registered the opponent after the reaction time
+                                                // (DroneVision_HaveOpponentSight)
+    DRONE_SIGHT_REACTED = 0x8,                  // has reacted to a first sighting: DroneFunc_ReactionTime is 0 from
+                                                // then on
+    DRONE_SIGHT_OPPONENT_WAS_ARMED = 0x10,      // the opponent had a weapon when the interrogation began (our name)
+    DRONE_SIGHT_REACTED_ONCE = 0x20,            // NDrone2_ReactToOpponentSighted has reacted once (our name)
+    DRONE_SIGHT_HAD_LOS = 0x40,                 // a line of sight the frame before
+} DroneSightFlags;
+
+// Drone_tag.boundaryFlags (DroneMove_SetBoundryFlags: which ways half a metre's step is blocked) and bunchFlags (the
+// sides another drone is on, DroneMove_NoBunching; all four when a creep step is blocked)
+typedef enum {
+    DRONE_BLOCKED_AHEAD = 0x2,
+    DRONE_BLOCKED_BEHIND = 0x4,
+    DRONE_BLOCKED_LEFT = 0x8,
+    DRONE_BLOCKED_RIGHT = 0x10,
+
+    DRONE_BLOCKED_ALL = DRONE_BLOCKED_AHEAD | DRONE_BLOCKED_BEHIND | DRONE_BLOCKED_LEFT | DRONE_BLOCKED_RIGHT,
+} DroneBlockedSides;
+
+// Drone_tag.side, DroneModeSetting.side: NPCGlobals counts each
+typedef enum {
+    DRONE_SIDE_ENEMY = 1,
+    DRONE_SIDE_ALLY = 2,
+    DRONE_SIDE_NEUTRAL = 3,                     // civilians
+} DroneSide;
+
+// Drone_tag.alertStatus (Drone_AlertStatusSet): picks the face script, HT_Script_MaleFaceAlert0-3 and
+// HT_Script_FemaleFaceAlert0-3 (Anim.cpp). Set to DEAD only by the death states, to ALARMED by the impacts and the
+// scared states, to ALERTED by the alert and search states (our names).
+typedef enum {
+    DRONE_ALERT_CALM = 0,
+    DRONE_ALERT_ALERTED = 1,
+    DRONE_ALERT_ALARMED = 2,
+    DRONE_ALERT_DEAD = 3,
+} DroneAlertStatus;
 
 // Drone_tag.flags. DRONE_FLAG_BITn: no reader.
 typedef enum {
@@ -145,14 +185,14 @@ typedef enum {
                                                 // any reason but sight (DroneFunc_FirstAttack)
 } DroneFlags;
 
-// Drone_tag.knowledge: what the drone has found out, each bit set as it alerts the drones near it (bar BIT4's
+// Drone_tag.knowledge: what the drone has found out, each bit set as it alerts the drones near it (bar ATTACK's
 // setters). DroneVision_ConsiderAlerted moves an alerter's bits into the high half of the drone it alerts.
 typedef enum {
     DRONE_KNOWS_SIGHTING = 0x1,                 // Civilian_SeenArmedPerson, DroneFunc_FirstSightState
     DRONE_KNOWS_HURT = 0x2,                     // DroneFunc_SendHurtMessage, NDrone2_ExplosiveImpact
     DRONE_KNOWS_SURRENDERED = 0x4,              // DSTATE_Surrender_Anim
     DRONE_KNOWS_DEAD = 0x8,                     // DSTATE_Dead
-    DRONE_KNOWS_BIT4 = 0x10,                    // NDrone2_DefaultInit for a drone that starts attacking,
+    DRONE_KNOWS_ATTACK = 0x10,                    // NDrone2_DefaultInit for a drone that starts attacking,
                                                 // NDrone2_SendAttackMessage, DroneVision_EndInterogate(Assist);
                                                 // alerts any drone
     DRONE_KNOWS_INTERROGATING = 0x20,           // DroneVision_BeginInterogate, _SetInterogateAssist, CivilianChallenge
@@ -160,9 +200,11 @@ typedef enum {
 
 // A row's or anim state's function (DroneData_AnimFunc, DroneData_DAStateFunc), run with a DANIMFUNC_ phase
 typedef void (*DroneAnimFunc)(Drone_tag *drone, ushort phase);
-#define DANIMFUNC_START 0   // the row's script has started
-#define DANIMFUNC_FRAME 1   // each frame it plays (Drone_Control)
-#define DANIMFUNC_END 2     // the row ends
+typedef enum {
+    DANIMFUNC_START = 0,    // the row's script has started
+    DANIMFUNC_FRAME = 1,    // each frame it plays (Drone_Control)
+    DANIMFUNC_END = 2,      // the row ends
+} DroneAnimFuncPhase;
 
 // Drone_tag.skinClass: which kind of character a skin is (NDrone2_DefaultInit gives each skin its class). Named for
 // the skins in each.
@@ -269,7 +311,7 @@ typedef struct Drone_tag {
     uchar seenPlayerLogged;         // 0x042 - DroneVision_LogSeenOpponent has counted it
     uchar heardNoiseStage;          // 0x043 - the furthest heard-noise state entered: 2 Aware, 3 Suspect, 4 Alert (our
                                     //         name)
-    uchar side;                    // 0x044 - 1 enemy, 2 ally, 3 civilian / neutral
+    uchar side;                     // 0x044 - DroneSide
     char secondWeapon;              // 0x045 - DroneAnim_EventFunc's event 2 changes to it
     char _pad46[0x50 - 0x46];
     float floatAcceleration;        // 0x050 - NDrone2_Move: how fast it speeds up towards moveTarget, a second
@@ -296,7 +338,7 @@ typedef struct Drone_tag {
     uchar dtypeBase;                // 0x0a8 - GetDTYPENEW(class, 0)
     uchar dtype;                    // 0x0a9 - the active DTYPE: indexes DroneTypeSettings; 30 = bot
     uchar dtype2;                   // 0x0aa - the DTYPE after the switch to the second behaviour
-    uchar behaviourClass;           // 0x0ab - 0-9 soldier, 10/11/13/14 civilian kinds, 12 ally, 15 ninja, 16 bot
+    uchar behaviourClass;           // 0x0ab - BehaviourClass
     uchar behaviour1Mode;           // 0x0ac
     uchar behaviour2Mode;           // 0x0ad
     char _padae[0xb0 - 0xae];
@@ -304,7 +346,7 @@ typedef struct Drone_tag {
     uint unknownb4;                 // 0x0b4 - 0xf from NDrone2_DefaultInit (0x3c for skin class 0x13 in EvilBase)
     uint sightTestFrame;            // 0x0b8 - when DroneVision_ProcessDroneSight last tested its line of sight
     short skinClass;               // 0x0bc
-    short animSet;                  // 0x0be - the weapon stance table index (inferred)
+    short animSet;                  // 0x0be - DroneAnimSet
     short savedAnimSet;             // 0x0c0
     char _padc2[0xc4 - 0xc2];
     HASHCODE skinHashcode;          // 0x0c4
@@ -392,10 +434,9 @@ typedef struct Drone_tag {
     float nearestDroneDist;         // 0x284 - NDrone2_Steer: how far the nearest drone within 3 m is,
     Drone_tag *nearestDrone;        // 0x288   and which (DroneMove_NoBunching)
     Drone_tag *unknown28c;          // 0x28c - cleared by NDrone2_Steer and, when it is the drone deleted, Drone_Delete
-    uint bunchFlags;                // 0x290 - the ways another drone is in: DroneMove_NoBunching adds which side
-                                    //         nearestDrone is on (bits as boundaryFlags), LinkCreep_Handler 0x1e
-                                    //         when a creep step is blocked; the NDrone2_Can* side moves test it
-    uint boundaryFlags;             // 0x294 - DroneMove_SetBoundryFlags: 2 ahead, 4 behind, 8 left, 0x10 right blocked
+    uint bunchFlags;                // 0x290 - DroneBlockedSides: the ways another drone is in (DroneMove_NoBunching,
+                                    //         LinkCreep_Handler); the NDrone2_Can* side moves test it
+    uint boundaryFlags;             // 0x294 - DroneBlockedSides (DroneMove_SetBoundryFlags)
     uint explosiveTimeout;          // 0x298 - DroneFunc_ConsiderExplosive: the frame it stops running
     _VECTOR explosivePos;           // 0x29c - and from where
     cel_tag *explosiveCel;          // 0x2a8
@@ -403,7 +444,8 @@ typedef struct Drone_tag {
     short explosiveState;           // 0x2b0 - the state it goes to afterwards
     char _pad2b2[0x2b4 - 0x2b2];
     uint headTrackUntil;            // 0x2b4 - NDrone2_HeadTrackObj
-    short headMode;                 // 0x2b8 - 2: NDrone2_DoHeadTrackingBehaviour looks further and holds its choice
+    short headMode;                 // 0x2b8 - DRONE_HEAD_MODE_WIDE: NDrone2_DoHeadTrackingBehaviour looks further and
+                                    //         holds its choice
     char _pad2ba[0x2bc - 0x2ba];
     obj_tag *headTarget;            // 0x2bc
     char _pad2c0[0x2cc - 0x2c0];
@@ -447,7 +489,7 @@ typedef struct Drone_tag {
     float soundAlertness;           // 0x40c - Sound_Alertness where it stands (DroneFunc_HandleSoundAlerts)
     float soundAlertStep;           // 0x410 - a hundredth of it, added to alertness
     float heardAlertness;           // 0x414 - the alertness of the last sound heard (DYNAMICSOUNDS.alertness)
-    uchar alertStatus;              // 0x418 - Drone_AlertStatusSet
+    uchar alertStatus;              // 0x418 - DroneAlertStatus (Drone_AlertStatusSet)
     uchar prevAlertStatus;          // 0x419 - the status before the last change
     uchar alertStatusChanged;       // 0x41a - set to 1 on a change (only Drone_AlertStatusSet writes it)
     char _pad41b;
@@ -473,13 +515,13 @@ typedef struct Drone_tag {
     char _pad44c[0x450 - 0x44c];
     HASHCODE playScript;            // 0x450 - key 1
     DroneAnimCall animCall;         // 0x454 - the anim state asked for (DroneAnim_CallAnim)
-    uchar animMode;                 // 0x464 - the playing row's completion mode (docs/drone/behaviours 6.1)
+    uchar animMode;                 // 0x464 - DroneAnimMode: the playing row's completion mode
     uchar animPriority;             // 0x465 - DroneAnimStates[animState].priority
-    short animState;                // 0x466 - the anim state playing
-    ushort animRow;                 // 0x468 - the Drone_AnimInfo row playing
+    short animState;                // 0x466 - the DroneAnimStateId playing
+    ushort animRow;                 // 0x468 - the Drone_AnimInfo row playing (DroneAnimRow)
     ushort animStartFrame;          // 0x46a - the script's first frame (999 = its last)
     uint animFlags;                 // 0x46c - the row's DANIMFLAG_* (DroneAnimInfo.htFlags; DroneAnim_SetScript's
-                                    //         own); with 0x380, NDrone2_SetAngleToObj turns only when forced
+                                    //         own); with DANIMFLAG_TURNS, NDrone2_SetAngleToObj turns only when forced
     uint prevAnimFlags;             // 0x470 - animFlags of the row before
     uchar animCallFlag;             // 0x474 - from the transition that started the row; cleared once no script blends
                                     //         out (blendScript)
@@ -492,8 +534,7 @@ typedef struct Drone_tag {
     uchar animEndBlend;             // 0x480 - blend frames into animNextRow
     uchar animMoveState;            // 0x481 - the row's move state (docs/drone/behaviours 6.1);
                                     //         DroneAnim_LocationDeathAnim picks a random death variant when it is set
-    uchar aimMode;                  // 0x482 - DroneAnim_SetScript: 2 aims, 3 aims from half way (NDrone2_AimTest); 0
-                                    //         and 0xd turn the head tracking off (our name)
+    uchar aimMode;                  // 0x482 - DroneAimMode (NDrone2_AimTest; our name)
     char _pad483;
     float animCallSpeed;            // 0x484 - DroneAnim_CallAnim's speed
     float animMoveSpeed;            // 0x488 - DroneAnim_SetScript; while 0, NDrone2_Steer only turns
@@ -533,7 +574,7 @@ typedef struct Drone_tag {
     AIRoute_tag route1;             // 0x634 - the dynamic route
     char _pad6d4[0x6d8 - 0x6d4];
     AIRoute_tag route2;             // 0x6d8 - the patrol / mission route
-    struct DroneAIPoint_tag *missionPoint;  // 0x778 - the type 8 AI point nearest the end of a mission path
+    struct DroneAIPoint_tag *missionPoint;  // 0x778 - the AIPOINT_ALARM nearest the end of a mission path
                                             //         (NDrone2_AssignAIPath)
     AITarget_tag goalTarget;        // 0x77c - the target aiPoint's goal is built in (AINetwork_SetupGoalPosition)
     uint goalHeardFrame;            // 0x7ac - NDrone2_SetSoundAlertRoute's copy of heardTarget covers these two

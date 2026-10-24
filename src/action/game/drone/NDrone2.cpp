@@ -28,9 +28,8 @@
 // XBE_GLOBAL(0x001e5630, 0x142c)
 NPCGlobals_t NPCGlobals;
 
-// Music event 2 is the alarm music. Its value picks the cue: 3 for SWITCH_CASTLEEXTERIOR_ALARM, 1 for
-// SWITCH_CASTLE_ALARM and SWITCH_FAIL_ALARM.
-#define MUSIC_EVENT_ALARM 2
+// MUSICEV_ALERT's value picks the cue: 3 for SWITCH_CASTLEEXTERIOR_ALARM, 1 for SWITCH_CASTLE_ALARM and
+// SWITCH_FAIL_ALARM.
 #define ALARM_MUSIC_CASTLE 3
 #define ALARM_MUSIC_GENERIC 1
 
@@ -63,14 +62,14 @@ void DroneFunc_CheckAlarmRaised(void) {
     case HT_Level_CastleExterior:
         if (switch_channels[SWITCH_CASTLEEXTERIOR_ALARM] != 0 &&
             DroneFunc_TickAlarmTimer(SWITCH_CASTLEEXTERIOR_ALARM) < frameRate) {
-            Music_Event(MUSIC_EVENT_ALARM, ALARM_MUSIC_CASTLE);
+            Music_Event(MUSICEV_ALERT, ALARM_MUSIC_CASTLE);
             return;
         }
         // fall through: the castle alarm has run its second (or is off), try SWITCH_CASTLE_ALARM
     case HT_Level_CastleCourtyard:
         if (switch_channels[SWITCH_CASTLE_ALARM] != 0 &&
             DroneFunc_TickAlarmTimer(SWITCH_CASTLE_ALARM) < frameRate * 10) {
-            Music_Event(MUSIC_EVENT_ALARM, ALARM_MUSIC_GENERIC);
+            Music_Event(MUSICEV_ALERT, ALARM_MUSIC_GENERIC);
             return;
         }
         break;
@@ -79,7 +78,7 @@ void DroneFunc_CheckAlarmRaised(void) {
     }
 
     if (switch_channels[SWITCH_FAIL_ALARM] != 0 && DroneFunc_TickAlarmTimer(SWITCH_FAIL_ALARM) < frameRate * 10)
-        Music_Event(MUSIC_EVENT_ALARM, ALARM_MUSIC_GENERIC);
+        Music_Event(MUSICEV_ALERT, ALARM_MUSIC_GENERIC);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -219,19 +218,21 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         case HT_Script_HendersonCDroneIntroAttack:
         case HT_Script_Tower2BDroneIntroAttack:
             drone->stateScratch = DSTATE_Attack;
-            DroneAnim_SetScript(dcv->drone->playScript, 0x21, 0, 0, 0, 0, 1, dcv);
+            DroneAnim_SetScript(dcv->drone->playScript, DANIM_STAND_ALERT, 0, 0, 0, 0, 1, dcv);
             return true;
 
         case HT_Script_DroneAttackTalkA:
             drone->stateScratch = 0;
-            DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 8, 0, 5, 0, dcv);
+            DroneAnim_SetScript(dcv->drone->playScript, DANIM_AIM_STAND, DROW_AIM_STAND, 8, 0, DRONE_MSG_ScriptEnd, 0,
+                                dcv);
             NDrone2_AttackTalk(dcv);
             dcv->drone->flags |= DRONE_FLAG_DEAF;
             return true;
 
         case HT_Script_DroneAttackTalkB:
             drone->stateScratch = 0;
-            DroneAnim_SetScript(dcv->drone->playScript, 5, 0x32, 0x1e, 0, 5, 0, dcv);
+            DroneAnim_SetScript(dcv->drone->playScript, DANIM_AIM_CROUCH, DROW_AIM_STAND, 0x1e, 0, DRONE_MSG_ScriptEnd,
+                                0, dcv);
             NDrone2_AttackTalk(dcv);
             dcv->drone->flags |= DRONE_FLAG_DEAF;
             return true;
@@ -239,7 +240,8 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         case HT_Script_Tower2BDronePlay:
             drone->stateScratch = 0;
             drone->stateScratch2 = 0;
-            DroneAnim_SetScript(dcv->drone->playScript, 10, 0x32, 0xf, 0, 5, 0, dcv);
+            DroneAnim_SetScript(dcv->drone->playScript, DANIM_AIM_STAND, DROW_AIM_STAND, 0xf, 0, DRONE_MSG_ScriptEnd, 0,
+                                dcv);
             dcv->drone->flags |= DRONE_FLAG_DEAF;
             behaviour_util_setProperty(0x3b, drone->currentBehaviour, 0);
             behaviour_util_setProperty(0x3a, drone->currentBehaviour, 0);
@@ -248,7 +250,8 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
         default:
             drone->stateScratch = DSTATE_Attack;
-            DroneAnim_SetScript(dcv->drone->playScript, 0x24, 0x11a, 0x1e, 0, 5, 0, dcv);
+            DroneAnim_SetScript(dcv->drone->playScript, DANIM_STAND_IDLE, DROW_STAND_IDLE, 0x1e, 0, DRONE_MSG_ScriptEnd,
+                                0, dcv);
             return true;
         }
 
@@ -271,13 +274,13 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         case HT_Script_DroneAttackTalkA:
             dcv->drone->flags &= ~DRONE_FLAG_DEAF;
             dcv->drone->playScript = (HASHCODE)0;
-            DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_AIM_STAND, 0, DSTATE_AimStandFire, 0, 0.0f, 0, dcv);
             NDrone2_AttackTalk(dcv);
             return true;
 
         case HT_Script_DroneAttackTalkB:
             dcv->drone->flags &= ~DRONE_FLAG_DEAF;
-            DroneAnim_CallAnim(10, 0, 0x68, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_AIM_STAND, 0, DSTATE_AimStandFire, 0, 0.0f, 0, dcv);
             dcv->drone->playScript = (HASHCODE)0;
             NDrone2_AttackTalk(dcv);
             return true;
@@ -285,7 +288,7 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         case HT_Script_Tower2BDronePlay:
             dcv->drone->flags &= ~DRONE_FLAG_DEAF;
             drone->pendingTurn = PI;
-            DroneAnim_SetDAnimNow(0xf4, 0, 1, dcv);
+            DroneAnim_SetDAnimNow(DROW_STAND_ALERT, 0, 1, dcv);
             break;
         }
         dcv->drone->playScript = (HASHCODE)0;
@@ -305,11 +308,11 @@ bool NDrone2_DSTATE_PlayScript(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         DroneFunc_HandleImpact(dcv, msg, drone->stateScratch, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -414,7 +417,7 @@ bool NDrone2_GetHeadPosOld(obj_tag *gameObj, _VECTOR *pos, float *yaw) {
     if (GameState.CurrentLevelHashcode != HT_Level_SpaceStationD && gameObj != NULL && gameObj->animState != NULL &&
         gameObj->objectType == OBJECTTYPE_DRONE &&
         (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED) &&
-        (gameObj->animState->animObj.flags & 1)) {
+        (gameObj->animState->animObj.flags & ANIMOBJ_POSE_VALID)) {
         if (yaw != NULL) {
             _MATRIX mtx;
             AnimGetBoneWorldTrans(gameObj, WORLD_BONE(HEAD_BONE), 0, pos, &mtx);
@@ -443,7 +446,7 @@ bool DroneFunc_GetBonePos(obj_tag *gameObj, uint bone, _VECTOR *pos) {
         if (gameObj->objectType == OBJECTTYPE_DRONE)
             animating = (((Drone_tag *)gameObj->extraObjectData)->flags & DRONE_FLAG_ANIM_UPDATED) &&
                         GameState.CurrentLevelHashcode != HT_Level_SpaceStationD;
-        if (animating && (anim->animObj.flags & 1)) {
+        if (animating && (anim->animObj.flags & ANIMOBJ_POSE_VALID)) {
             AnimGetBoneWorldTrans(gameObj, WORLD_BONE(bone), 0, pos, NULL);
             return true;
         }
@@ -500,9 +503,9 @@ void NDrone2_SetAngleToObj(DCVars_tag *dcv, obj_tag *obj, float offset, char for
     Drone_tag *drone = dcv->drone;
     if ((drone->unknown3f0 & 0x8000000) && !force)
         return;
-    if (MPSettings.dronesAreBots && (drone->botVars->flags & 2) && !force)
+    if (MPSettings.dronesAreBots && (drone->botVars->flags & BOT_FLAG_RECOVERING) && !force)
         return;
-    if ((drone->animFlags & 0x380) && !force)
+    if ((drone->animFlags & DANIMFLAG_TURNS) && !force)
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
@@ -695,7 +698,7 @@ Drone_tag *pNPCPassed[100];
 // XBE_GLOBAL(0x001ee418, 0x4)
 int32_t pDCVCount;
 
-#define COMBAT_MUSIC 5      // the value with MUSIC_EVENT_ALARM
+#define COMBAT_MUSIC 5      // the value with MUSICEV_ALERT
 
 // Tells the music about an enemy (or a drone with runningToAlarm set) fighting: the nearest opponent distances and the
 // latest sighting always, and if it saw its opponent lately (or is close while the combat music is on), counts it
@@ -703,7 +706,7 @@ int32_t pDCVCount;
 // AUTOINJECT
 void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (!drone->runningToAlarm && drone->side != 1)
+    if (!drone->runningToAlarm && drone->side != DRONE_SIDE_ENEMY)
         return;
     if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 && !(drone->sightFlags & DRONE_SIGHT_REACTED))
         return;
@@ -738,7 +741,7 @@ void NDrone2_SeenAndAttacking(DCVars_tag *dcv) {
     MusicVars.attackers++;
     if (MusicVars.attackers >= MusicVars.combatThreshold || combat != 0 || drone->runningToAlarm) {
         MusicVars.combat = 1;
-        Music_Event(MUSIC_EVENT_ALARM, COMBAT_MUSIC);
+        Music_Event(MUSICEV_ALERT, COMBAT_MUSIC);
         MusicVars.combatFrame = GameState.NumFramesUnpaused;
     }
 }

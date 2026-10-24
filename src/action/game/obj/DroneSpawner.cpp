@@ -19,7 +19,6 @@
 #pragma fp_contract(off)
 
 // The first of the two speech sounds DroneSpawner_WaveTalk picks from
-#define SFX_WAVE_TALK 0xd6
 
 constexpr float kDefaultDistance = 10.0f;
 constexpr ushort kDefaultWaves = 32000;
@@ -191,7 +190,7 @@ void DroneSpawner_ResetEntries(obj_tag *obj) {
 void DroneSpawner_WaveTalk(ushort wave) {
     HASHCODE level = GameState.CurrentLevelHashcode;
     if (level >= HT_Level_PowerStationA1 && level <= HT_Level_PowerStationA2 && wave != 0)
-        NDrone2_PlaySFX(NULL, Rand_Rand(2) + SFX_WAVE_TALK, NULL, 1, 1.0f);
+        NDrone2_PlaySFX(NULL, Rand_Rand(2) + DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_10B, NULL, 1, 1.0f);
 }
 
 // Draws a template that has not spawned this wave and, unless the spawner spawns anywhere, is at least the spawner's

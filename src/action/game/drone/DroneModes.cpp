@@ -8,6 +8,7 @@
 
 #include "DroneModes.h"
 #include "Behaviour.h"
+#include "DroneAnim.h"     // DANIMSET_*, DRONE_HEAD_MODE_WIDE
 #include "DroneTables.h"
 #include "../../game.h"     // GameState
 
@@ -203,7 +204,7 @@ void NDrone2_init_DMODE_PartyGirlLooker(Drone_tag *drone) {
     };
     for (DRONE_PROP prop : props)
         behaviour_util_setProperty(prop, drone->currentBehaviour, 1);
-    drone->headMode = 2;
+    drone->headMode = DRONE_HEAD_MODE_WIDE;
 }
 
 // ---- the type initialisers (DroneTypeSettings.init)
@@ -231,22 +232,22 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
         return DTYPE_Ambush;
 
     switch (behaviourClass) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
-    case 4:
-    case 5:
-    case 6:
-    case 7:
-    case 8:
-    case 9:
+    case BCLASS_SOLDIER_0:
+    case BCLASS_SOLDIER_1:
+    case BCLASS_SOLDIER_2:
+    case BCLASS_SOLDIER_3:
+    case BCLASS_SOLDIER_4:
+    case BCLASS_SOLDIER_5:
+    case BCLASS_SOLDIER_6:
+    case BCLASS_SOLDIER_7:
+    case BCLASS_SOLDIER_8:
+    case BCLASS_SOLDIER_9:
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && mode == 0)
             return behaviour_util_getProperty(DRONE_PROP_DOOR_GUARD, drone->currentBehaviour) != 0 ? DTYPE_CivDoorGuard
                                                                                           : DTYPE_CivilianGuard;
         break;
-    case 10:
-    case 11:
+    case BCLASS_CIVILIAN_10:
+    case BCLASS_CIVILIAN_11:
         if (mode != 0)
             break;
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1) {
@@ -256,11 +257,11 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
         if (drone->alertness >= 1.0f)
             return DTYPE_CivilianScared;
         return drone->female != 0 ? DTYPE_PartyGirl : DTYPE_Civilian;
-    case 12:
+    case BCLASS_ALLY:
         if (mode != 0)
             break;
         return drone->skinClass == SKINCLASS_ZOE ? DTYPE_Zoe : DTYPE_Mayhew;
-    case 13:
+    case BCLASS_CIVILIAN_13:
         if (mode != 0)
             break;
         if (drone->skinClass == SKINCLASS_TRUCK_DRIVER)
@@ -268,17 +269,17 @@ static uchar NDrone2_GetDTYPENEW(Drone_tag *drone, uint behaviourClass, uint mod
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1)
             behaviour_util_setProperty(DRONE_PROP_HEARING, drone->currentBehaviour, 0);
         return drone->alertness >= 1.0f ? DTYPE_CivilianScared : DTYPE_Civilian;
-    case 14:
+    case BCLASS_HOSTAGE:
         if (mode != 0)
             break;
         if (behaviour_util_getProperty(DRONE_PROP_HOSTAGE, drone->currentBehaviour) != 0)
             return DTYPE_Hostage;
         return drone->alertness >= 1.0f ? DTYPE_CivilianScared : DTYPE_Civilian;
-    case 15:
+    case BCLASS_15:
         if (mode != 0)
             break;
         return DTYPE_Ninja;
-    case 16:
+    case BCLASS_BOT:
         return DTYPE_Bot;
     }
 
@@ -342,29 +343,29 @@ static void NDrone2_SetSecondState(Drone_tag *drone) {
 // class 0xb changes to its attack type at once. Called by NDrone2_DoModeSettingsNEW.
 // AUTOINJECT
 void NDrone2_GetDroneTypeAttackTypeFriend(Drone_tag *drone) {
-    if (drone->behaviour1Mode == drone->behaviour2Mode || drone->secondaryMode == 0x65)
+    if (drone->behaviour1Mode == drone->behaviour2Mode || drone->secondaryMode == DRONE_MODE_NONE)
         drone->secondaryMode = 0;
 
     drone->dtypeBase = NDrone2_GetDTYPENEW(drone, drone->behaviourClass, 0);
     drone->dtype = NDrone2_GetDTYPENEW(drone, drone->behaviourClass, drone->behaviour1Mode);
-    if (drone->secondaryMode == 0 || drone->secondaryMode == 0x65 ||
+    if (drone->secondaryMode == 0 || drone->secondaryMode == DRONE_MODE_NONE ||
         (drone->modeChangeSwitchChannel == 0 && drone->baseAlertness1 >= 1.0f))
         drone->dtype2 = 0;
     else
         drone->dtype2 = NDrone2_GetDTYPENEW(drone, drone->behaviourClass, drone->behaviour2Mode);
 
     switch (drone->behaviourClass) {
-    case 10:
-    case 11:
-    case 13:
-    case 14:
-        drone->side = 3;
+    case BCLASS_CIVILIAN_10:
+    case BCLASS_CIVILIAN_11:
+    case BCLASS_CIVILIAN_13:
+    case BCLASS_HOSTAGE:
+        drone->side = DRONE_SIDE_NEUTRAL;
         break;
-    case 12:
-        drone->side = 2;
+    case BCLASS_ALLY:
+        drone->side = DRONE_SIDE_ALLY;
         break;
     default:
-        drone->side = 1;
+        drone->side = DRONE_SIDE_ENEMY;
         break;
     }
     if (drone->gameObj != NULL)
@@ -450,7 +451,7 @@ void NDrone2_GetDroneTypeAttackTypeFriend(Drone_tag *drone) {
         (drone->modeChangeSwitchChannel != 0 || drone->baseAlertness2 >= 1.0f))
         drone->secondState = NDrone2_SecondStateFor(drone);
     if (drone->secondState != 0 && drone->secondaryMode == 0)
-        drone->secondaryMode = 100;
+        drone->secondaryMode = DRONE_MODE_BEHAVIOUR;
 }
 
 // The initial state of a type the table leaves to be worked out (-1)
@@ -532,7 +533,7 @@ short NDrone2_ChangeToAttackMode(Drone_tag *drone) {
     }
     drone->dtype2 = 0;
     drone->secondState = 0;
-    if (drone->diVars.keys.mode == 100) {
+    if (drone->diVars.keys.mode == DRONE_MODE_BEHAVIOUR) {
         drone->currentBehaviour = drone->behaviour2;
         drone->usingSecondBehaviour = 1;
     }
@@ -546,7 +547,7 @@ short NDrone2_ChangeToAttackMode(Drone_tag *drone) {
 // and 0xc, and empty hands (the anim state is not checked).
 // AUTOINJECT
 void NDrone2_DoModeSettingsOLD(Drone_tag *drone, uint mode, uint *behaviour, DIVars_tag *diVars) {
-    if (mode > 0x23) {
+    if (mode > DMODE_COUNT - 1) {
         NDrone2_DoModeSettingsNEW(drone, mode, behaviour, diVars);
         return;
     }
@@ -560,7 +561,7 @@ void NDrone2_DoModeSettingsOLD(Drone_tag *drone, uint mode, uint *behaviour, DIV
     memset(drone->behaviour2, 0, sizeof(drone->behaviour2));
     drone->currentBehaviour = drone->behaviour1;
     drone->dtype = setting->dtype;
-    if (drone->secondaryMode != 0 && drone->secondaryMode != 0x65 && drone->modeChangeSwitchChannel == 0)
+    if (drone->secondaryMode != 0 && drone->secondaryMode != DRONE_MODE_NONE && drone->modeChangeSwitchChannel == 0)
         drone->dtype2 = DroneModeSettings[(ushort)drone->secondaryMode].dtype;
     else
         drone->dtype2 = 0;
@@ -601,10 +602,10 @@ void NDrone2_DoModeSettingsOLD(Drone_tag *drone, uint mode, uint *behaviour, DIV
     }
 
     if (mode == DMODE_Hostage || mode == DMODE_HostageTied) {
-        drone->animSet = 1;
+        drone->animSet = DANIMSET_HOSTAGE;
         drone->gameObj->animState->currentWeaponId = 0;
     } else if (mode == DMODE_SearchLight) {
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         drone->gameObj->animState->currentWeaponId = 0;
     }
 }

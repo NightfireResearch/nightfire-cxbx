@@ -118,13 +118,6 @@ obj_tag *AssassinTarget;
 
 #define WEAPON_FISTS 1
 
-// Bot messages (docs/drone/bots-and-navigation): 0x3b goal complete, 0x3d cancel goals on an object, 0x40 the
-// demolition or protection object has gone (MP_getObjExtObj)
-#define BOT_MSG_GOAL_COMPLETE 0x3b
-#define BOT_MSG_3C 0x3c
-#define BOT_MSG_CANCEL_GOALS 0x3d
-#define BOT_MSG_OBJECTIVE_GONE 0x40
-
 // AUTOINJECT
 void MP_setLoadingSkins(void) {
 
@@ -527,8 +520,8 @@ void MP_objectBeingDeleted(obj_tag* obj) {
     MsgObject msg;
     msg.createdFrame = GameState.NumFramesUnpaused;
     msg.handleOnFrame = GameState.NumFramesUnpaused;
-    msg.msgType = 0x3d;
-    msg.scope = 0xc5;          // DSTATE_BotGlobal
+    msg.msgType = DRONE_MSG_BotCancelGoals;
+    msg.scope = DSTATE_BotGlobal;
     msg.sender = 0;
     msg.receiver = 0;          // broadcast
     msg.extraData = obj;
@@ -1653,7 +1646,7 @@ bool MP_isPosOnHill(_VECTOR *pos) {
 }
 
 // A scenario object's object. The demolition and protection objects are their script's: when that changes, the
-// side's bots are told the old one has gone (bot message 0x40).
+// side's bots are told the old one has gone.
 // AUTOINJECT
 obj_tag* MP_getObjExtObj(MP_OBJ_EXT *ext) {
     MPTeam told;    // the side told when the object goes
@@ -1670,7 +1663,7 @@ obj_tag* MP_getObjExtObj(MP_OBJ_EXT *ext) {
         if (obj != old) {
             ext->gameObj = obj;
             if (old != NULL)
-                MP_sendTeamBotMessage(told, BOT_MSG_OBJECTIVE_GONE, old, 0, 0);
+                MP_sendTeamBotMessage(told, DRONE_MSG_BotObjectiveGone, old, 0, 0);
         }
     }
     return ext->gameObj;
@@ -1756,39 +1749,39 @@ void MP_setPlayerStatus(obj_tag *obj, ushort status, uint msg, uint unused, obj_
 
     ushort *teamFlags = &MPGame.teamObjectiveFlags[team];
     switch (msg) {
-        case 0x2f: case 0x32: case 0x35:
+        case DRONE_MSG_BotFlagTaken: case DRONE_MSG_BotBlueprintTaken: case DRONE_MSG_BotKeyTaken:
             *teamFlags |= 1;
-            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
-            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
+            MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, target, 0, sender);
             break;
-        case 0x36:
+        case DRONE_MSG_BotCrystalTaken:
             *teamFlags |= 2;
-            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
-            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
+            MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, target, 0, sender);
             break;
-        case 0x30: case 0x33: case 0x37:
+        case DRONE_MSG_BotFlagDropped: case DRONE_MSG_BotBlueprintDropped: case DRONE_MSG_BotKeyDropped:
             *teamFlags &= ~1;
-            MP_sendBotMessage(obj, BOT_MSG_3C, 1, 0);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalUninit, 1, 0);
             break;
-        case 0x38:
+        case DRONE_MSG_BotCrystalDropped:
             *teamFlags &= ~2;
-            MP_sendBotMessage(obj, BOT_MSG_3C, 1, 0);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalUninit, 1, 0);
             break;
-        case 0x31: case 0x34:
+        case DRONE_MSG_BotFlagCaptured: case DRONE_MSG_BotBlueprintDelivered:
             *teamFlags &= ~3;
-            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
             break;
-        case 0x39:
+        case DRONE_MSG_BotEnteredHill:
             // nothing for an agent already in the hill
             if (flags & MPPLAYER_IN_HILL) {
                 msg = 0;
                 break;
             }
-            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
             break;
-        case 0x3e:
-            MP_sendBotMessage(obj, BOT_MSG_GOAL_COMPLETE, 1, 0);
-            MP_sendTeamBotMessage(team, BOT_MSG_CANCEL_GOALS, target, 0, sender);
+        case DRONE_MSG_BotUplinkTaken:
+            MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
+            MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, target, 0, sender);
             break;
     }
     MPGame.teamObjectiveFlags[NO_TEAM] = 0;

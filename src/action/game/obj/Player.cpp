@@ -3001,10 +3001,6 @@ obj_tag* PlayerNotDrone_FeetOnPoint(obj_tag *obj, HITTEST_tag *test, float *floo
 #define FALL_SAFE_FRAMES 60.0f
 #define FALL_HURT_FRAMES 10
 
-// The bot traits (BOT_stats_t::traitFlags) that make its hits on the player hurt more: with fists, and otherwise
-#define BOT_TRAIT_FIST_DAMAGE 0x04
-#define BOT_TRAIT_SHOT_DAMAGE 0x02
-
 // The ids of the fists, which the fist trait boosts
 static bool IsFist(short weapon) {
     return weapon == 1 || weapon == 0x64 || weapon == 0x65 || weapon == 0x66;
@@ -3083,7 +3079,7 @@ float Player_DealWithObjHit(obj_tag *player, BLData *blData, HITDATA_tag *hit) {
         if (Control_Plr2Ind(bullet->firedByObj) >= 4 && bullet->firedByObj != NULL) {
             BOT_vars_t *bot = ((Drone_tag *)bullet->firedByObj->extraObjectData)->botVars;
             if (IsFist(bullet->wpnDef->weaponVariantNum)) {
-                if (bot->stats.traitFlags & BOT_TRAIT_FIST_DAMAGE)
+                if (bot->stats.traitFlags & BOT_TRAIT_FISTS_UP_CLOSE)
                     hit->dmgAmt = (float)((double)hit->dmgAmt * 1.5f);
             }
             else if (bot->stats.traitFlags & BOT_TRAIT_SHOT_DAMAGE) {

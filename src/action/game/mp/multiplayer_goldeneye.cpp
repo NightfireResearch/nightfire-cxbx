@@ -26,9 +26,6 @@
 #define NOTIF_GOLDENEYE_KEY_RETURNED ((Action_TranslatedText)0x02000043)
 #define NOTIF_GOLDENEYE_CRYSTAL_RETURNED ((Action_TranslatedText)0x02000044)
 
-// Bot messages sent here: 0x35 / 0x36 when the key / the crystal is taken, after 0x3b and 0x3d (see
-// multiplayer_modes.cpp); 0x37 / 0x38 when it is let go, after 0x3c.
-
 // How long the GoldenEye's messages stay up, in frames
 static short MP_GoldenEyeMsgFrames(void) {
     return (short)Ftol(FRAME_RATE_INT * 1.5);
@@ -57,8 +54,8 @@ static void MP_GoldenEyeTake(obj_tag *gameObj, obj_tag *taker, ushort playerFlag
         senderId = dcVars.aiStateMachine->id;
     }
     MPGame.teamObjectiveFlags[team] |= objectiveFlag;
-    MP_sendBotMessage(taker, 0x3b, 1, 0);
-    MP_sendTeamBotMessage(team, 0x3d, gameObj, 0, senderId);
+    MP_sendBotMessage(taker, DRONE_MSG_BotGoalComplete, 1, 0);
+    MP_sendTeamBotMessage(team, DRONE_MSG_BotCancelGoals, gameObj, 0, senderId);
     MPGame.unknown_9 = 0;
     MP_sendBotMessage(taker, msg, 0, 0);
 }
@@ -77,7 +74,7 @@ static void MP_GoldenEyeLetGo(obj_tag *holder, ushort playerFlag, ushort objecti
         Drone_DCVfromOBJ(holder, &dcVars);
     }
     MPGame.teamObjectiveFlags[team] &= ~objectiveFlag;
-    MP_sendBotMessage(holder, 0x3c, 1, 0);
+    MP_sendBotMessage(holder, DRONE_MSG_BotGoalUninit, 1, 0);
     MPGame.unknown_9 = 0;
     MP_sendBotMessage(holder, msg, 0, 0);
 }
@@ -85,9 +82,9 @@ static void MP_GoldenEyeLetGo(obj_tag *holder, ushort playerFlag, ushort objecti
 // mpObj->holder has just taken the part.
 static void MP_GoldenEyeTaken(MPOBJECT *mpObj, obj_tag *gameObj) {
     if (mpObj->type == GOLDENEYE_KEY)
-        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, 0x35);
+        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyTaken);
     else
-        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x36);
+        MP_GoldenEyeTake(gameObj, mpObj->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalTaken);
     gameObj->curState = 1;
     gameObj->parent = mpObj->holder;
     MP_GoldenEyeMsg(mpObj, NOTIF_X_CAPTURED_GOLDENEYE_KEY, NOTIF_X_CAPTURED_GOLDENEYE_CRYSTAL);
@@ -140,8 +137,8 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
             GoldenEye.targetedPlayer = NULL;
 
             // The key's flags for this part's holder and the crystal's for the other's, whichever this part is
-            MP_GoldenEyeLetGo(mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, 0x37);
-            MP_GoldenEyeLetGo(other->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x38);
+            MP_GoldenEyeLetGo(mpObj->holder, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyDropped);
+            MP_GoldenEyeLetGo(other->holder, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalDropped);
             GoldenEye.keys[1].gameObj->effectFlags &= ~EFFECT_HIDDEN;
             GoldenEye.keys[0].gameObj->effectFlags &= ~EFFECT_HIDDEN;
             MP_GoldeneyeResetObject(mpObj, gameObj, 99, 0);
@@ -202,9 +199,9 @@ void MP_GoldenEyeUpdate(MPOBJECT *mpObj, bool dropped, obj_tag *gameObj) {
 
         // Dropped (MP_PlayerKilled, when its holder dies): onto the floor below it
         if (mpObj->type == GOLDENEYE_KEY)
-            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_KEY, 1, 0x37);
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_KEY, 1, DRONE_MSG_BotKeyDropped);
         else
-            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_CRYSTAL, 2, 0x38);
+            MP_GoldenEyeLetGo(gameObj->parent, MPPLAYER_GOLDENEYE_CRYSTAL, 2, DRONE_MSG_BotCrystalDropped);
         {
             _VECTOR *pos = Mat_Position(gameObj->transformMatrix);
             build_PointOnFloor(gameObj->inCel, gameObj, pos, gameObj->objGraphics->extentMin.y, NULL);

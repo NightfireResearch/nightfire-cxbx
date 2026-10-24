@@ -16,7 +16,7 @@ typedef bool (*DroneStateFunc)(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 // DroneModeSettings, indexed by DMODE (NDrone2_DoModeSettingsOLD)
 typedef struct DroneModeSetting {
     uchar dtype;                // the DTYPE the mode gives
-    uchar side;                 // Drone_tag.side: 1 enemy, 2 ally, 3 civilian / neutral
+    uchar side;                 // DroneSide (Drone_tag.side)
     ushort pad;
     float alertness;            // Drone_tag.baseAlertness1 and .alertness
     void (*init)(Drone_tag *drone);

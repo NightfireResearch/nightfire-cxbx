@@ -27,9 +27,11 @@ enum {
 };
 
 // Drone_tag.coverFlags
-#define DRONE_COVER_SIDE_MASK 3     // the corner's side, 1 or 2
-#define DRONE_COVER_LOST 4          // UnderCoverReturn found the node no longer good
-#define DRONE_COVER_LEFT 8          // left: a low node's leave step, or UnderCoverLeaveNow
+typedef enum {
+    DRONE_COVER_SIDE_MASK = 0x3,    // the corner's side, 1 or 2
+    DRONE_COVER_LOST = 0x4,         // UnderCoverReturn found the node no longer good
+    DRONE_COVER_LEFT = 0x8,         // left: a low node's leave step, or UnderCoverLeaveNow
+} DroneCoverFlags;
 
 ushort DroneAnim_CoverModeAnim(DCVars_tag *dcv, uchar mode);
 bool DroneAnim_CoverAnim(DCVars_tag *dcv, uchar step, short endState);

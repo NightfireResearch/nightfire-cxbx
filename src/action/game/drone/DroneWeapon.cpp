@@ -297,15 +297,15 @@ bool DroneWeap_Ready2Fire(DCVars_tag *dcv) {
             return false;
     }
 
-    if (drone->animMode == 4)
+    if (drone->animMode == DANIMMODE_4)
         return true;
     if (!MPSettings.dronesAreBots) {
-        if (drone->animMode != 2 || drone->blendScript != NULL)
+        if (drone->animMode != DANIMMODE_COMPLETE || drone->blendScript != NULL)
             return false;
         if (drone->distanceToTarget < 2.0f)
             return true;
     }
-    if (!(obj->animState->animObj.flags & 0x1000))
+    if (!(obj->animState->animObj.flags & ANIMOBJ_AIM_IN_RANGE))
         return true;
     if (dcv->drone->dtype == DTYPE_Bot && BOTWEAP_AmmoInGun(drone, drone->botVars->weapon) < 1)
         return false;
@@ -448,7 +448,7 @@ void DroneWeap_DoBulletAccuracy(DCVars_tag *dcv) {
     if (drone->targetStopped &&
         (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
          GameState.CurrentLevelHashcode == HT_Level_PowerStationA2) &&
-        drone->animSet == 0x13)
+        drone->animSet == DANIMSET_13)
         chance *= DroneFiring_TargetFirstStopped_Accuracy;
     if (drone->targetMoving)
         chance *= DroneFiring_TargetMoving_Accuracy;
@@ -553,7 +553,7 @@ bool DroneWeap_AimTarget_IsOpponent(char checkAngle, char keepTurning, DCVars_ta
             return false;
     }
 
-    if (drone->animState == 0x1e || drone->animState == 0x1f) {
+    if (drone->animState == DANIM_RUN || drone->animState == DANIM_1F) {
         drone->targetRot.y = obj->rotation.y - Vec_AngleDifference(yaw, obj->rotation.y) * 0.5f;
         if (NDrone2_CanMoveToRelativePos(drone, obj, 0.0f, 0.0f, 0.4f))
             drone->standingStill = 1;
@@ -604,7 +604,7 @@ bool DroneWeap_CanThrowGrenade(DCVars_tag *dcv) {
         return false;
     if (drone->distanceToTarget < 8.0f || drone->distanceToTarget > 20.0f)
         return false;
-    return DroneAnim_CanDoAnimState(dcv, 0x49, 0);
+    return DroneAnim_CanDoAnimState(dcv, DANIM_THROW_GRENADE, 0);
 }
 
 // Throws a grenade from the hand towards targetPos, 45 degrees down within 10 m and up beyond 18 m. A ninja throws
@@ -660,7 +660,7 @@ void DroneWeap_CloseCombatImpact(DCVars_tag *dcv, int kind) {
     obj_tag *obj = dcv->gameObj;
     int weapon = 100;
     _VECTOR pos, dir;
-    if (drone->animSet == 7) {
+    if (drone->animSet == DANIMSET_NINJA) {
         if (drone->distanceToTarget > 2.0f)
             return;
         Vec_Copy(&drone->opponentDelta, &dir);
@@ -698,20 +698,20 @@ void DroneWeap_ChangeWeapon(DCVars_tag *dcv, int weapon) {
     switch (weapon) {
     case 1:
     case 54:
-        animSet = 0xc;
+        animSet = DANIMSET_UNARMED;
         rounds = 0;
         break;
     case 6:
-        animSet = 4;
+        animSet = DANIMSET_PISTOL;
         rounds = 16;
         break;
     case 18:
-        animSet = 6;
+        animSet = DANIMSET_SMG;
         rounds = 32;
         break;
     case 24:
     case 25:
-        animSet = 5;
+        animSet = DANIMSET_RIFLE;
         rounds = 32;
         break;
     default:
@@ -776,7 +776,7 @@ void DroneWeap_DropWeapon(DCVars_tag *dcv) {
 // Whether a drone's shots hurt more from behind: anim set 0x12, not a sniper, not in SpaceStationD.
 // AUTOLTCG
 bool __fastcall Drone_MayDealBackshotDamage(Drone_tag *drone) {
-    if (drone->dtype == DTYPE_Sniper || drone->dtype == DTYPE_SniperAlert || drone->animSet != 0x12)
+    if (drone->dtype == DTYPE_Sniper || drone->dtype == DTYPE_SniperAlert || drone->animSet != DANIMSET_RIFLE_SNIPER)
         return false;
     switch (GameState.CurrentLevelHashcode) {
     case HT_Level_PowerStationA1:

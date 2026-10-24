@@ -28,9 +28,6 @@
 // While set, no drone sees or hears anything (the cheat)
 extern uint32_t switch_BLIND_DRONES;
 
-// The target bit of a drone's heardTarget
-#define AITARGET_SOUND 0x4000000
-
 // The bone NDrone2_CanSeeObject looks for
 #define BONE_HEAD 5
 
@@ -52,7 +49,7 @@ void DroneVision_BeginInterogate(Drone_tag *drone) {
 
 // AUTOINJECT
 void DroneVision_EndInterogate(Drone_tag *drone) {
-    drone->knowledge = (drone->knowledge & ~DRONE_KNOWS_INTERROGATING) | DRONE_KNOWS_BIT4;
+    drone->knowledge = (drone->knowledge & ~DRONE_KNOWS_INTERROGATING) | DRONE_KNOWS_ATTACK;
     if (GameState.CurrentLevelHashcode != HT_Level_CastleIndoors1)
         NPCGlobals.interogating = 0;
 }
@@ -65,7 +62,7 @@ void DroneVision_SetInterogateAssist(Drone_tag *drone) {
 // AUTOINJECT
 void DroneVision_EndInterogateAssist(Drone_tag *drone) {
     drone->knowledge = (drone->knowledge & ~(DRONE_KNOWS_INTERROGATING | (DRONE_KNOWS_INTERROGATING << 16))) |
-                       DRONE_KNOWS_BIT4;
+                       DRONE_KNOWS_ATTACK;
     drone->alertedBy = NULL;
 }
 
@@ -100,7 +97,7 @@ bool NDrone2_NearArmedDrone(DCVars_tag *dcv, float radius, char check) {
             continue;
         if (other->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_BIT14))
             continue;
-        if (!NDrone2_ObjectIsArmed(obj) || other->side != 1)
+        if (!NDrone2_ObjectIsArmed(obj) || other->side != DRONE_SIDE_ENEMY)
             continue;
         if (Vec_Dist3D(&dcv->gameObj->position, &obj->position) > radius)
             continue;
@@ -126,7 +123,7 @@ bool NDrone2_NotNearArmedDrone(DCVars_tag *dcv, float radius) {
             continue;
         if (!(other->flags & DRONE_FLAG_ENABLED))
             continue;
-        if (obj == NULL || !NDrone2_ObjectIsArmed(obj) || other->side != 1)
+        if (obj == NULL || !NDrone2_ObjectIsArmed(obj) || other->side != DRONE_SIDE_ENEMY)
             continue;
         if (Vec_Dist3D(&obj->position, &dcv->gameObj->position) > radius)
             continue;
@@ -252,11 +249,11 @@ ushort DroneVision_EnemyAlerts(DCVars_tag *dcv, MsgObject *msg) {
     }
 
     switch (msg->msgType) {
-    case 0x11:
+    case DRONE_MSG_AlertSighting:
         return DroneVision_ShoutMsg11(dcv);
-    case 0x12:
+    case DRONE_MSG_AlertDroneShot:
         return DroneVision_ShoutMsg12(dcv);
-    case 0x13:
+    case DRONE_MSG_AlertSurrender:
         return DroneVision_ShoutMsg13(dcv);
     case DRONE_MSG_HeardNoise:
         return DroneVision_AlertSound(dcv);
@@ -285,7 +282,7 @@ ushort DroneVision_EnemyLookForOpponent(DCVars_tag *dcv) {
     if (!(dcv->drone->sightFlags & DRONE_SIGHT_SEES_OPPONENT))
         return 0;
     uint level = GameState.CurrentLevelHashcode;
-    if ((level < HT_Level_TowerA || level > HT_Level_TowerB) && dcv->drone->side == 3)
+    if ((level < HT_Level_TowerA || level > HT_Level_TowerB) && dcv->drone->side == DRONE_SIDE_NEUTRAL)
         return 0;
     if (drone->opponent == NDrone2_Player() && drone->alertness < 0.66f &&
         behaviour_util_getProperty(DRONE_PROP_ALWAYS_REACTS_TO_PLAYER, dcv->drone->currentBehaviour) == 0)
@@ -340,7 +337,7 @@ void DroneFunc_HandleSoundAlerts(DCVars_tag *dcv) {
 
     if (sound != NULL)
         drone->heardAlertness = sound->alertness;
-    drone->heardTarget.targetBit = AITARGET_SOUND;
+    drone->heardTarget.targetBit = AITARGET_ALERT;
     drone->heardTarget.obj = NULL;
     Vec_Copy(&sound->location, &drone->heardTarget.goal.pos);
     drone->heardTarget.goal.cel = cel;
@@ -356,9 +353,6 @@ constexpr float kPowerstationShout = 40.0f;     // in PowerStationA1 to Cut_Leve
 constexpr float kPowerstationShoutInCel = 100.0f;   // and within this in the same cel
 constexpr float kShout = 15.0f;                 // elsewhere
 constexpr float kShoutInCel = 20.0f;
-
-// Drone_tag.sightFlags: NDrone2_ReactToOpponentSighted has reacted once (our name)
-#define DRONE_SIGHT_REACTED_ONCE 0x20
 
 // Whether the drone hears a shout from obj: within 15 m, or 20 m in the same cel (40 and 100 m in PowerStationA1,
 // PowerStationA2, Cut_Level1 and Cut_Level2).
@@ -429,7 +423,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
             Drone_SM_SetState(sm, state != 0 ? (DSTATE)state : DSTATE_Attack, 0);
             return true;
         default:
-            if (dcv->gameObj->curState == 0x63)
+            if (dcv->gameObj->curState == DSTATE_GoToGoalPosition)
                 return false;
             Drone_SM_SetState(sm, DSTATE_HeardNoise, 0);
             return true;
@@ -470,7 +464,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
     if (dcv->drone->route1.path != sender->route1.path)
         return false;
     switch (msg->msgType) {
-    case 0x11:
+    case DRONE_MSG_AlertSighting:
         if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SIGHTING, dcv->drone->currentBehaviour) == 0)
             return false;
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
@@ -500,7 +494,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
         Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         return true;
 
-    case 0x12:
+    case DRONE_MSG_AlertDroneShot:
         if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, dcv->drone->currentBehaviour) == 0)
             return false;
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
@@ -526,7 +520,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
             return true;
         }
 
-    case 0x13:
+    case DRONE_MSG_AlertSurrender:
         if (!NDrone2_InShoutingRange(dcv, alert->sender) && !(dcv->drone->flags & DRONE_FLAG_NO_ALERTS))
             return false;
         if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_SURRENDER, dcv->drone->currentBehaviour) == 0)
@@ -566,7 +560,7 @@ bool NDrone2_HandleDroneAlert(DCVars_tag *dcv, MsgObject *msg, short state) {
             return true;
         }
 
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
         if (dcv->drone->flags & DRONE_FLAG_NO_ALERTS)
             return false;
         if (!NDrone2_InShoutingRange(dcv, alert->sender))
@@ -609,7 +603,7 @@ static void ShoutOpponent(DCVars_tag *dcv, float strength) {
         return;
     if (dcv->drone->flags & DRONE_FLAG_ALERTED_OTHERS)
         return;
-    NDrone2_DroneAlertToObject(dcv, 0x11, dcv->drone->opponent, 20.0f, 20.0f, strength);
+    NDrone2_DroneAlertToObject(dcv, DRONE_MSG_AlertSighting, dcv->drone->opponent, 20.0f, 20.0f, strength);
     dcv->drone->flags |= DRONE_FLAG_ALERTED_OTHERS;
 }
 
@@ -626,7 +620,7 @@ short NDrone2_ReactToOpponentSighted(DCVars_tag *dcv, short state) {
     Drone_tag *drone = dcv->drone;
     if (drone->opponent == NULL)
         return 0;
-    if (drone->side == 3)
+    if (drone->side == DRONE_SIDE_NEUTRAL)
         return 0;
     if (drone->flags & DRONE_FLAG_GOING_TO_COVER)
         return 0;

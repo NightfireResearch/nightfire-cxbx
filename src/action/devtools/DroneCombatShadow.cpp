@@ -514,8 +514,8 @@ void RandomNode(int i) {
     CoverNode_tag *n = &world.nodes[i];
     memset(n, 0, sizeof(*n));
     n->type = (uchar)ShadowRand(3);
-    n->unknown5 = (uchar)ShadowRand(12);
-    n->unknown6 = (uchar)ShadowRand(12);
+    n->side1Offset = (uchar)ShadowRand(12);
+    n->side2Offset = (uchar)ShadowRand(12);
     n->flags = ShadowRand(0x200);
     n->cel = (cel_tag *)(uintptr_t)(0x2000 + i);
     n->occupant = ShadowRand(2) ? NULL : &world.objs[1];

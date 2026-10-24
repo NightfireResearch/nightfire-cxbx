@@ -356,7 +356,7 @@ void RandomDrone(int i) {
     d->startHealth = starts[ShadowRand(4)];
     d->armour = (uchar)ShadowRand(16);
     static const uchar dtypes[] = {DTYPE_Normal, DTYPE_Guard, DTYPE_Sniper, DTYPE_Civilian, DTYPE_Ninja, DTYPE_Ambush,
-                                   DTYPE_Abseil27, DTYPE_Abseil28, DTYPE_Astronaut, DTYPE_Bot};
+                                   DTYPE_AbseilToGround, DTYPE_AbseilHang, DTYPE_Astronaut, DTYPE_Bot};
     d->dtype = dtypes[ShadowRand(sizeof(dtypes))];
     d->skinClass = (short)(ShadowRand(4) == 0 ? (ShadowRand(2) ? 12 : 16) : ShadowRand(22));
     d->animSet = (short)(ShadowRand(3) == 0 ? 5 : ShadowRand(NUM_DRONE_ANIM_SETS));

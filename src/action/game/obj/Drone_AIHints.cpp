@@ -81,8 +81,8 @@ void Drone_CoverCornerNode(_VECTOR *pos, _VECTOR *rot, level_tag *lvl) {
 
     node->enableSwitchChannel = keys->enableSwitchChannel;
     node->disableSwitchChannel = keys->disableSwitchChannel;
-    node->unknown5 = keys->unknown6 != 0 ? keys->unknown6 : 8;
-    node->unknown6 = keys->unknown7 != 0 ? keys->unknown7 : 8;
+    node->side1Offset = keys->side1Offset != 0 ? keys->side1Offset : 8;
+    node->side2Offset = keys->side2Offset != 0 ? keys->side2Offset : 8;
 
     AINetwork_InitEmitter(NULL, pos, node->cel, &node->emitter, NULL);
     NPCGlobals.numCoverNodes++;
@@ -262,11 +262,11 @@ bool Drone_IsCoverNodeUsable(uint target, CoverNode_tag *node) {
             wide = QUARTER_PI;
             narrow = kDeg30;
         }
-        if (node->flags & COVERNODE_WIDER) {
+        if (node->flags & COVERNODE_TAKEN) {
             wide += kDeg5;
             narrow += kDeg5;
         }
-    } else if (!(node->flags & COVERNODE_WIDER)) {
+    } else if (!(node->flags & COVERNODE_TAKEN)) {
         wide = node->angle + kDeg5;
         narrow = node->angle * 0.66f;
     } else {

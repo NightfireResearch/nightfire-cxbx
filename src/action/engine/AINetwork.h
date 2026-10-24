@@ -18,8 +18,17 @@ typedef struct {
 } CelPos_tag;
 
 // MAPNODE_tag.flags. The low bits come from the map file; the high ones are the searches' scratch marks.
+#define AINODE_WAIT         0x1         // a drone waits here once (NDrone2_ReachedDestNode)
 #define AINODE_DOOR         0x2         // next to a door (NDrone_InitDoorNodes finds which)
 #define AINODE_KICK         0x4         // next to a kickable object (NDrone_InitKickNodes)
+#define AINODE_ACTION_ANIM  0x8
+#define AINODE_MISSION_WAIT 0x20
+#define AINODE_FIDDLE       0x40
+#define AINODE_KICKED       0x8000      // a kick node whose object has been kicked
+#define AINODE_MAYHEW_TALK_1 0x10000    // Drone_MayhewTalk says a line here: one of four
+#define AINODE_MAYHEW_TALK_2 0x20000
+#define AINODE_MAYHEW_TALK_3 0x40000
+#define AINODE_MAYHEW_TALK_4 0x80000
 #define AINODE_SPECIAL      0xf007f     // any of these: NDrone2_ReachedDestNode runs when a route gets there
 #define AINODE_OPEN         0x40000000  // on a search's open or closed list
 #define AINODE_CLOSED       0x80000000  // on the emitter's closed list (no search sets it)
@@ -114,6 +123,7 @@ typedef struct AIBoundNode_tag {
 #define AIPATH_NAV          0x2         // a navigation graph: routes and emitters
 #define AIPATH_PATROL       0x4
 #define AIPATH_MISSION      0x8
+#define AIPATH_PATROL_MOD   0x10        // a patrol from its first node takes the first link, not the second
 #define AIPATH_NOT_NAV      (AIPATH_BOUND | AIPATH_PATROL | AIPATH_MISSION)
 
 // An AI path (the table at 0x00274ccc, 50 entries)
@@ -121,7 +131,7 @@ typedef struct AIPath_tag {
     ushort index;                   // 0x00
     ushort _pad02;
     uchar *record;                  // 0x04 - the file record (its name at +0)
-    uint flags;                     // 0x08 - AIPATH_*; 0x10 patrol modifier
+    uint flags;                     // 0x08 - AIPATH_*
     uint fromFile[8];               // 0x0c - copied from the file; always 0
     uint nodeCount;                 // 0x2c - also an emitter's size
     AIPathNodeRecord *fileNodes;    // 0x30

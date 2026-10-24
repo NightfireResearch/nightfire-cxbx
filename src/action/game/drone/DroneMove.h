@@ -10,9 +10,12 @@
 
 #pragma pack(push, 1)
 
+// SteerBody.flags: standing still (set by NDrone2_EvaluateObstacle; nothing clears it)
+#define STEERBODY_STILL 0x2
+
 // One of the two movers NDrone2_EvaluateObstacle tests (0x30 bytes; our name)
 typedef struct SteerBody {
-    uint flags;             // 0x00 - 2: standing still (set by NDrone2_EvaluateObstacle; nothing clears it)
+    uint flags;             // 0x00 - STEERBODY_STILL
     _VECTOR *pos;           // 0x04
     _VECTOR *rot;           // 0x08 - only .y is read
     float speed;            // 0x0c - how far it moves a frame

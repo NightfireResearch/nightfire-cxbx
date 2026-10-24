@@ -23,12 +23,6 @@
 #include "NDrone2_Alert.h"
 #include "NDrone2_Route.h"
 
-// The bots' unarmed attack anim state (our name)
-#define DANIM_UNARMED_ATTACK 0x3d
-
-// The bot message telling a bot to change weapon (BOTSTATE_combatWeaponChangeChoice)
-#define BOT_MSG_CHANGE_WEAPON 0x42
-
 // A recovery stat in frames before a recovering bot sees again
 constexpr float RecoveryScale = -0.6666667f;
 static_assert(std::bit_cast<uint32_t>(RecoveryScale) == 0xbf2aaaab, "not the original's -2/3");
@@ -534,9 +528,9 @@ uchar BOTSTATE_pickGoal(DCVars_tag *dc, int slot) {
     if (slot != 0xff) {
         BOT_vars_t *owner = bot->drone->botVars;
         if (bot->goals[slot].subtype == BOT_OBJECTIVE_ENEMY_FLAG)
-            owner->flags |= 4;
+            owner->flags |= BOT_FLAG_ENEMY_FLAG;
         else
-            owner->flags &= ~4;
+            owner->flags &= ~BOT_FLAG_ENEMY_FLAG;
         if (bot->activeGoal == slot)
             bot->activeGoal = 0xff;
         BOT_goal_t *dropped = &bot->goals[slot];
@@ -661,7 +655,7 @@ void BOTSTATE_processGoals(DCVars_tag *dc) {
             continue;
         }
 
-        if (!(goal->flags & 1) && goal->lastRouteStatus != 3)
+        if (!(goal->flags & BOT_GOAL_COMPLETE) && goal->lastRouteStatus != AIROUTE_ARRIVED)
             continue;
 
         // Arrived
@@ -701,8 +695,8 @@ void BOTSTATE_processGoals(DCVars_tag *dc) {
 short BOTSTATE_chooseUnarmedAttackAnim(DCVars_tag *dc) {
     uint variant = Rand_Rand(4);
     if (NDrone2_CanAltAttack(dc, (short)variant) &&
-        DroneAnim_CallAnim(DANIM_UNARMED_ATTACK, variant, DSTATE_BotAttack, 0, 0.0f, 0, dc))
-        return DANIM_UNARMED_ATTACK;
+        DroneAnim_CallAnim(DANIM_ALT_ATTACK, variant, DSTATE_BotAttack, 0, 0.0f, 0, dc))
+        return DANIM_ALT_ATTACK;
     return 0;
 }
 
@@ -868,7 +862,7 @@ uchar BOTSTATE_gotoGoal(DCVars_tag *dc, int slot, uint nextState) {
             budget = 0.0f;
     }
     goal->timeBudget = budget;
-    drone->botVars->flags &= ~4u;
+    drone->botVars->flags &= ~BOT_FLAG_ENEMY_FLAG;
     bot->activeGoal = (uchar)slot;
     return true;
 }
@@ -876,7 +870,7 @@ uchar BOTSTATE_gotoGoal(DCVars_tag *dc, int slot, uint nextState) {
 // AUTOINJECT
 void BOTSTATE_setGoalComplete(DCVars_tag *dc, uint slot) {
     if (slot < 2)
-        dc->drone->botVars->goals[slot].flags |= 1;
+        dc->drone->botVars->goals[slot].flags |= BOT_GOAL_COMPLETE;
 }
 
 // The goal being followed, or NULL
@@ -978,12 +972,12 @@ bool BOTSTATE_hasWeapon(BOT_vars_t *bot, uint weapon) {
 uchar BOTSTATE_validateRoute(DCVars_tag *dc, uint routeStatus) {
     BOT_vars_t *bot;
     switch (routeStatus) {
-        case 0: case 1: case 2: case 3:
+        case AIROUTE_FOLLOWING: case AIROUTE_PARTIAL: case AIROUTE_DIRECT: case AIROUTE_ARRIVED:
             bot = dc->drone->botVars;
             if (bot->routeFailCount == 0 || GameState.NumFramesUnpaused - bot->lastRouteFailFrame >= 5)
                 bot->routeFailCount = 0;
             return true;
-        case 5:
+        case AIROUTE_OFF_NETWORK:
             dc->drone->botVars->lastRouteFailFrame = GameState.NumFramesUnpaused;
             dc->drone->botVars->routeFailCount++;
             return false;
@@ -1103,11 +1097,11 @@ void BOTSTATE_defaultCombatRange(Drone_tag *drone) {
 }
 
 // Adds to how distracted a bot on its way to a goal is, up to the goal's time budget, where it stays. Returns false
-// while it is below the budget (and at least 0); otherwise whether the bot's flag 4 is clear.
+// while it is below the budget (and at least 0); otherwise whether BOT_FLAG_ENEMY_FLAG is clear.
 // AUTOINJECT
 uchar BOTSTATE_increaseDistraction(Drone_tag *drone, float amount) {
     BOT_vars_t *bot = drone->botVars;
-    bool result = !(bot->flags & 4);
+    bool result = !(bot->flags & BOT_FLAG_ENEMY_FLAG);
     if (bot->activeGoal == 0xff || drone->sm.curState != DSTATE_BotGotoGoalPosition)
         return result;
 
@@ -1128,7 +1122,7 @@ uchar BOTSTATE_increaseDistraction(Drone_tag *drone, float amount) {
 // AUTOINJECT
 uchar BOTSTATE_isDistracted(Drone_tag *drone) {
     BOT_vars_t *bot = drone->botVars;
-    if (bot->flags & 4)
+    if (bot->flags & BOT_FLAG_ENEMY_FLAG)
         return false;
     if (bot->activeGoal == 0xff || drone->sm.curState != DSTATE_BotGotoGoalPosition)
         return true;
@@ -1163,11 +1157,6 @@ short BOTSTATE_chooseCombatMove(DCVars_tag *dc) {
     }
     return 0;
 }
-
-// BOTSTATE_chooseDodgeMove's directions
-#define DODGE_LEFT 1
-#define DODGE_RIGHT 2
-#define DODGE_BACK 4
 
 // A move out of the way in the directions allowed (DODGE_*): a strafe or a step to a side, tried in one of four
 // orders chosen at random, or (one time in five, or when none is allowed) a roll from NDrone2_EvasiveMove or a back
@@ -1335,7 +1324,7 @@ short BOTSTATE_combatWeaponChangeChoice(Drone_tag *drone, obj_tag *opponent, cha
     else if (weapon == 0)
         return 0;
     if (!noMessage && !(keepCurrent && weapon == bot->weapon))
-        MP_sendBotMessage(drone->gameObj, BOT_MSG_CHANGE_WEAPON, weapon, 0);
+        MP_sendBotMessage(drone->gameObj, DRONE_MSG_BotChangeWeapon, weapon, 0);
     return weapon;
 }
 

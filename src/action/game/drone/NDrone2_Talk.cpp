@@ -24,7 +24,7 @@
 
 // One entry of Drone_SfxInfo, per speech or sound number (docs/drone/behaviours/drone_sfx_info.csv)
 typedef struct DroneSfxInfo {
-    uint sfx;               // 0x00 - the sound; 0 for none
+    uint sfx;               // 0x00 - the sound (Action_SFX); 0 for none
     HASHCODE facialAnim;    // 0x04 - the facial script said instead, when a face is asked for
     uint lastFrame;         // 0x08 - when it was last played
     uint interval;          // 0x0c - frames (at 60 a second) before it plays again
@@ -36,76 +36,158 @@ typedef struct DroneSfxInfo {
 } DroneSfxInfo;
 static_assert(sizeof(DroneSfxInfo) == 0x20, "DroneSfxInfo is 0x20 bytes");
 
-#define DRONE_SFX_COUNT 0x15a
-
 // XBE_GLOBAL(0x00174b28, 0x2b40)
-DroneSfxInfo Drone_SfxInfo[346] = {
+DroneSfxInfo Drone_SfxInfo[DRONE_SFX_COUNT] = {
     {.interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 949, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 596, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 748, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 581, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 581, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 945, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 945, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 466, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 951, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 925, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 950, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 925, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 925, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 925, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 596, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 946, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 465, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 925, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 138, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 138, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_DRAKE_DEATH, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_MAYHEW_PAIN, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ROOK_DEATH, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_HOSTAGE_GIRL_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_HOSTAGE_GIRL_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ALURA_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ALURA_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ZOE_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_KIKO_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_SOLDIER_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_DRAKE_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_SOLDIER_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_SOLDIER_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_SOLDIER_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_MAYHEW_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ROOK_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_HOSTAGE_PAIN_SERV, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_HOSTAGE_PAIN_SERV, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_HOSTAGE_PAIN_SERV, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_HOSTAGE_PAIN_SERV, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ZOE_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_HOSTAGE_PAIN_SERV, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_SOLDIER_PAIN, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_PAIN, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_PAIN, .interval = 30, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 114, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1477, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1478, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 736, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 729, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 730, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 733, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 727, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 110, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 108, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 109, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 107, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 115, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 112, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 111, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 113, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 175, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 177, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 179, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 185, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 192, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 193, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 194, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 195, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 198, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
-        .sfx = 721,
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK19,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {.sfx = SFX_ENV_BOOT_DOOR, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_ENV_TABLE_TOPPLE, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_YAK1, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_YAK2, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_YAK3, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_YAK6, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_YAK9, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_SERV10, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_SERV6, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_SERV7, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_INTER_SERV8, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK11,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK16,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK20,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK18,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA01,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA03,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA05,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA11,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA18,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA19,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA20,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA21,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA24,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M2_MAY_SCOLDING_MAYHEW12,
         .facialAnim = HT_Script_Speech_M2_MAY_SCOLDING_MAYHEW12,
         .interval = 180,
         .volume = 100.0f,
@@ -113,7 +195,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 719,
+        .sfx = SFX_CHR_SPEECH_M2_MAY_SCOLDING_MAYHEW3,
         .facialAnim = HT_Script_Speech_M2_MAY_SCOLDING_MAYHEW3,
         .interval = 180,
         .volume = 100.0f,
@@ -121,7 +203,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 720,
+        .sfx = SFX_CHR_SPEECH_M2_MAY_SCOLDING_MAYHEW6,
         .facialAnim = HT_Script_Speech_M2_MAY_SCOLDING_MAYHEW6,
         .interval = 180,
         .volume = 100.0f,
@@ -129,26 +211,26 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 718,
+        .sfx = SFX_CHR_SPEECH_M2_MAY_SCOLDING_MAYHEW8,
         .facialAnim = HT_Script_Speech_M2_MAY_SCOLDING_MAYHEW8,
         .interval = 180,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 922, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 155, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 156, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 154, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 924, .interval = 300, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 191, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 192, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 194, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 195, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 186, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 178, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_BUNKER_FAIL_MAYHEW13, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW14, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW15, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW19, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_HOSTAGE_GIRL_SCREAM, .interval = 300, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA17, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA18, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA20, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA21, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA12, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA04, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
-        .sfx = 428,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD6,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD6,
         .interval = 180,
         .volume = 100.0f,
@@ -156,7 +238,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 430,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD9,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD9,
         .interval = 180,
         .volume = 100.0f,
@@ -164,7 +246,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 429,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD8_B,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD8_B,
         .interval = 180,
         .volume = 100.0f,
@@ -172,7 +254,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 440,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKO02,
         .facialAnim = HT_Script_Speech_CAS_IG_KIKO02,
         .interval = 960,
         .volume = 100.0f,
@@ -180,124 +262,321 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 442,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKOBOND1A,
         .facialAnim = HT_Script_Speech_CAS_IG_KIKOBOND1A,
         .interval = 240,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 443, .interval = 960, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
-        .sfx = 444,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKOBOND1B,
+        .interval = 960,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKOBOND2A,
         .facialAnim = HT_Script_Speech_CAS_IG_KIKOBOND2A,
         .interval = 280,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 445, .interval = 240, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
-        .sfx = 441,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKOBOND2B,
+        .interval = 240,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_KIKO03,
         .facialAnim = HT_Script_Speech_CAS_IG_KIKO03,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 463, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 374, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 375, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 376, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 377, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 378, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 379, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 380, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 381, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 382, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 383, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 384, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 385, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 386, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 387, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 388, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 389, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 390, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 391, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 392, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 393, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 394, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 395, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 396, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 397, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_AUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 398, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_BRIT, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 399, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_RUS, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 400, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_USA, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 401, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 402, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 403, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 404, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 405, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 406, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 407, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 408, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 409, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 410, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 411, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 412, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 413, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 414, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 415, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 416, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 418, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M2_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 419, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M3_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 420, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M4_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 421, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M5_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 422, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M6_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 423, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M7_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 424, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M8_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 425, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M9_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
-    {.sfx = 426, .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M10_E, .volume = 100.0f, .radiusOuter = 15.0f,
-        .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F1_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F1_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F1_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F1_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F1_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2B_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2B_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2B_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F2B_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F2B_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F3_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F3_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F3_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F3_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F3_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F4_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F4_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F4_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F4_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F4_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F5_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F5_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F5_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F5_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F5_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F6_AUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_AUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F6_BRIT,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_BRIT,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F6_RUS,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_RUS,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F6_USA,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_F6_USA,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F7_AUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F7_BRIT, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F7_RUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F7_USA, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F8_AUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F8_BRIT, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F8_RUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F8_USA, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F9_AUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F9_BRIT, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F9_RUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F9_USA, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F10_AUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F10_BRIT, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F10_RUS, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_F10_USA, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M2_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M2_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M3_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M3_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M4_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M4_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M5_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M5_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M6_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M6_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M7_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M7_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M8_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M8_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M9_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M9_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_CAS_IG_GUEST_M10_E,
+        .facialAnim = HT_Script_Speech_CAS_IG_GUEST_M10_E,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
     {.interval = 900, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {
-        .sfx = 427,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD5_B,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD5_B,
         .interval = 900,
         .volume = 100.0f,
@@ -305,7 +584,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 432,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD10_B,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD10_B,
         .interval = 180,
         .volume = 100.0f,
@@ -313,7 +592,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 433,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD11,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD11,
         .interval = 180,
         .volume = 100.0f,
@@ -321,7 +600,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 435,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD12,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD12_B,
         .interval = 180,
         .volume = 100.0f,
@@ -329,7 +608,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 437,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD13,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD13,
         .interval = 180,
         .volume = 100.0f,
@@ -337,7 +616,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 438,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD18_B,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD18_B,
         .interval = 180,
         .volume = 100.0f,
@@ -345,7 +624,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 439,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_INT_GUARD19_B,
         .facialAnim = HT_Script_Speech_CAS_IG_INT_GUARD19_B,
         .interval = 180,
         .volume = 100.0f,
@@ -353,7 +632,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 450,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_MAYHEW1,
         .facialAnim = HT_Script_Speech_CAS_IG_MAYHEW1,
         .interval = 900,
         .volume = 100.0f,
@@ -361,7 +640,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 453,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_MAYHEW4,
         .facialAnim = HT_Script_Speech_CAS_IG_MAYHEW4,
         .interval = 900,
         .volume = 100.0f,
@@ -369,7 +648,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 454,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_ROOK1,
         .facialAnim = HT_Script_Speech_CAS_IG_ROOK1,
         .interval = 300,
         .volume = 100.0f,
@@ -377,7 +656,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 455,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_ROOK2,
         .facialAnim = HT_Script_Speech_CAS_IG_ROOK2,
         .interval = 300,
         .volume = 100.0f,
@@ -385,7 +664,7 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 456,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_ROOK3,
         .facialAnim = HT_Script_Speech_CAS_IG_ROOK3,
         .interval = 300,
         .volume = 100.0f,
@@ -393,204 +672,486 @@ DroneSfxInfo Drone_SfxInfo[346] = {
         .radiusInner = 10.0f,
     },
     {
-        .sfx = 457,
+        .sfx = SFX_CHR_SPEECH_CAS_IG_ROOK4_ALT,
         .facialAnim = HT_Script_Speech_CAS_IG_ROOK4_ALT,
         .interval = 300,
         .volume = 100.0f,
         .radiusOuter = 15.0f,
         .radiusInner = 10.0f,
     },
-    {.sfx = 705, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 706, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 462, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 373, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 709, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 708, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 707, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 592, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 115, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 112, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 111, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 698, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 699, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 700, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 701, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 690, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_M1_RESCUE_ZOE7,
+        .interval = 60,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_ZOE6B2, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_ZOE06B, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_CAS_IG_ZOE08, .interval = 60, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_M2_INTER_SERV3,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M2_INTER_SERV4,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M2_INTER_SERV5,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_M2_BATH_SERV1,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK11,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK16,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK20,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {.sfx = SFX_CHR_SPEECH_M3_YAK_001, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_YAK_002, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_YAK_003, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_YAK_004, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_YAK_005, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
     {.interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 634, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 606, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 607, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 608, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 613, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 615, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 616, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 609, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 610, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 611, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 612, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 614, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 619, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 620, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 621, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 622, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 623, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 617, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 618, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 600, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 603, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 604, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 605, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 923, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 702, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 691, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 692, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 693, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 694, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 695, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 696, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 697, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1341, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1342, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1344, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1345, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1346, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1347, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1343, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1329, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1340, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1348, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1353, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1318, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1310, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1312, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1314, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1315, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1317, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1319, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1320, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1326, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1328, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1330, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1332, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1335, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1336, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1337, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1338, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1339, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1309, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 740, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 741, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 743, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 746, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 738, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 747, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 737, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 745, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 739, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 744, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1367, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1372, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1424, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1429, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1368, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1373, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1425, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1430, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1371, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1376, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1428, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1433, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1379, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1383, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1436, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1440, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1382, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1384, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1439, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1441, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1389, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1446, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1390, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1447, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1393, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1450, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1468, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1410, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1412, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1467, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1356, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1357, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1358, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1377, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1388, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1413, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1414, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1415, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1434, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1445, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1359, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1360, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1361, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1408, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1362, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1365, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1399, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1416, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1417, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1418, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1465, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1419, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1422, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1456, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1363, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1364, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1366, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1409, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1411, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1420, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1421, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1423, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1466, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1354, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1394, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1395, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1397, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1398, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1400, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1451, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1452, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1454, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1455, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1457, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1396, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1453, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1401, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1458, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1402, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1403, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1459, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1460, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1404, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1405, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1406, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1407, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1461, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1462, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1463, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 1464, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 950, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 948, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 943, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 596, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 138, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 944, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 465, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 949, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 947, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 139, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 945, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 581, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
-    {.sfx = 466, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_001, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_006, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_007, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_008, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_013, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_015, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_016, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_009, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_010, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_011, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_012, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_014, .interval = 600, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_019, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_020, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_021, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_022, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_023, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_017, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_018, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_002, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_003, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_004, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M5_BO1_005, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_002, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_011, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_012, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_017, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_019, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_020, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_021, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_022, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_M3_GUA_023, .interval = 180, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_40B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_41B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_43B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_44B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_45B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_46B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_42B,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_2B,
+        .interval = 600,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_3B,
+        .interval = 600,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_4B,
+        .interval = 600,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_10B,
+        .interval = 600,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_1B,
+        .interval = 600,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_11B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_14B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_16B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_17B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_19B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_20B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_21B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_27B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_29B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_30B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_32B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_35B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_36B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_37B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_38B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_39B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_NUK_IG_SNIP2_9B,
+        .interval = 180,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT13,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT14,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT4,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT7,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT10,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT8,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT9,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT6,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT12,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {
+        .sfx = SFX_CHR_SPEECH_AST_ROOK_TAUNT5,
+        .interval = 120,
+        .volume = 100.0f,
+        .radiusOuter = 15.0f,
+        .radiusInner = 10.0f,
+    },
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_20, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_25, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_20, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_25, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_21, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_26, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_21, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_26, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_24, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_29, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_24, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_29, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_31, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_35, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_31, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_35, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_34, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_36, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_34, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_36, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_40, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_40, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_41, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_41, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_44, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_44, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_1, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_8, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_1, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_8, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_10, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_11, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_12, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_3, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_4, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_10, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_11, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_12, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_3, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_4, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_13, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_14, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_15, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_6, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_16, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_19, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_5, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_13, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_14, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_15, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_6, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_16, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_19, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_5, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_17, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_18, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_2, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_7, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_9, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_17, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_18, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_2, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_7, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_9, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_45, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_46, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_48, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_49, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_50, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_45, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_46, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_48, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_49, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_50, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_47, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_47, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_51, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_51, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_52, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_53, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_52, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_53, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_54, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_55, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_56, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX_57, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_54, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_55, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_56, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_SPEECH_USB_PHX3_57, .interval = 120, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_DRAKE_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_BLACK_OPS_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GEN_YAK_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_MAYHEW_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ALURA_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ZOE_PAIN, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_DRAKE_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_BLACK_OPS_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_GENERIC_GUARD_DIE, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ALURA_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_HOSTAGE_GIRL_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
+    {.sfx = SFX_CHR_ZOE_DEATH, .volume = 100.0f, .radiusOuter = 15.0f, .radiusInner = 10.0f},
 };
 
 // The entry of a number, or NULL past the table (which the callers then read)
@@ -618,23 +1179,23 @@ static_assert(sizeof(PowerstationLine) == 8, "PowerstationLine is 8 bytes");
 
 // XBE_GLOBAL(0x00177668, 0x98)
 const PowerstationLine PowerstationLines[19] = {
-    {.channelA2 = 70, .sfx = 216},
-    {.channelA1 = 52, .channelA2 = 71, .sfx = 217},
-    {.channelA2 = 72, .sfx = 218},
-    {.channelA1 = 64, .sfx = 219},
-    {.channelA1 = 53, .sfx = 220},
-    {.channelA1 = 54, .sfx = 221},
-    {.channelA1 = 55, .sfx = 222},
-    {.channelA1 = 56, .sfx = 223},
-    {.channelA1 = 57, .channelA2 = 74, .sfx = 224},
-    {.channelA1 = 58, .channelA2 = 75, .sfx = 225},
-    {.channelA1 = 59, .sfx = 226},
-    {.channelA1 = 60, .channelA2 = 77, .sfx = 227},
-    {.channelA1 = 79, .sfx = 228},
-    {.channelA1 = 80, .sfx = 229},
-    {.channelA2 = 81, .sfx = 230},
-    {.channelA1 = 61, .channelA2 = 83, .sfx = 231},
-    {.channelA1 = 62, .sfx = 232},
+    {.channelA2 = 70, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_11B},
+    {.channelA1 = 52, .channelA2 = 71, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_14B},
+    {.channelA2 = 72, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_16B},
+    {.channelA1 = 64, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_17B},
+    {.channelA1 = 53, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_19B},
+    {.channelA1 = 54, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_20B},
+    {.channelA1 = 55, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_21B},
+    {.channelA1 = 56, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_27B},
+    {.channelA1 = 57, .channelA2 = 74, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_29B},
+    {.channelA1 = 58, .channelA2 = 75, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_30B},
+    {.channelA1 = 59, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_32B},
+    {.channelA1 = 60, .channelA2 = 77, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_35B},
+    {.channelA1 = 79, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_36B},
+    {.channelA1 = 80, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_37B},
+    {.channelA2 = 81, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_38B},
+    {.channelA1 = 61, .channelA2 = 83, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_39B},
+    {.channelA1 = 62, .sfx = DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_9B},
     {},
     {.channelA1 = 256},
 };
@@ -668,7 +1229,7 @@ void NDrone2_PlayFacialAnim(DCVars_tag *dcv, HASHCODE script) {
         drone->facialAnimPlaying = 1;
         anim->doneFlag = &drone->facialAnimDone;
         anim->ownerSlot = (sAnimScript_tag **)&drone->facialAnim;
-        anim->flags &= 0x7fffffff;
+        anim->flags &= ~ANIMSCRIPT_LOOP;
         anim->playMode = ANIMPLAY_DELETE;
     }
     drone->unknown37 = 0;
@@ -704,45 +1265,46 @@ bool NDrone2_DeathTalk(DCVars_tag *dcv) {
     if (MPSettings.dronesAreBots != 0)
         return false;
 
-    uint sfx = 1;
+    uint sfx = DRONE_SFX_CHR_GENERIC_GUARD_DIE;
     switch ((ushort)drone->skinClass) {
     case SKINCLASS_YAKUZA:
-        sfx = 4;
+        sfx = DRONE_SFX_CHR_GENERIC_GUARD_DIE_3;
         break;
     case SKINCLASS_SNOW_GUARD:
-        sfx = 5;
+        sfx = DRONE_SFX_CHR_GENERIC_GUARD_DIE_4;
         break;
     case SKINCLASS_BLACK_OPS:
-        sfx = 3;
+        sfx = DRONE_SFX_CHR_GENERIC_GUARD_DIE_2;
         break;
     case SKINCLASS_SNIPER:
     case SKINCLASS_ELITE:
         if (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
             GameState.CurrentLevelHashcode == HT_Level_PowerStationA2) {
-            if (Drone_IsSayingSfx(drone, 0xcd) || Drone_IsSayingSfx(drone, 0xd2))
+            if (Drone_IsSayingSfx(drone, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_41B) ||
+                Drone_IsSayingSfx(drone, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_42B))
                 return false;
-            sfx = Rand_Rand(2) != 0 ? 0xcd : 0xd2;
+            sfx = Rand_Rand(2) != 0 ? DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_41B : DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_42B;
         }
         break;
     case SKINCLASS_SERVANT:
     case 10:
-        sfx = 10;
+        sfx = DRONE_SFX_CHR_HOSTAGE_GIRL_DEATH_2;
         break;
     case SKINCLASS_ZOE:
-        sfx = 0xd;
+        sfx = DRONE_SFX_CHR_ZOE_DEATH;
         break;
     case SKINCLASS_ROOK:
-        sfx = 8;
+        sfx = DRONE_SFX_CHR_ROOK_DEATH;
         break;
     case SKINCLASS_KIKO:
     case SKINCLASS_KIKO_COMBAT:
-        sfx = 0xe;
+        sfx = DRONE_SFX_CHR_KIKO_DEATH;
         break;
     case SKINCLASS_DRAKE:
-        sfx = 2;
+        sfx = DRONE_SFX_CHR_DRAKE_DEATH;
         break;
     default:
-        sfx = drone->female ? 9 : 1;
+        sfx = drone->female ? DRONE_SFX_CHR_HOSTAGE_GIRL_DEATH : DRONE_SFX_CHR_GENERIC_GUARD_DIE;
         break;
     }
 
@@ -771,9 +1333,9 @@ bool NDrone2_HitTalkExtra(DCVars_tag *dcv) {
     if (skinClass >= SKINCLASS_SNIPER && skinClass <= SKINCLASS_ELITE_COMBAT) {
         if (GameState.CurrentLevelHashcode == HT_Level_EvilBase ||
             GameState.CurrentLevelHashcode == HT_Level_EvilBaseC || GameState.CurrentLevelHashcode == HT_Level_EvilSilo)
-            sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
+            sfx = DroneFunc_ChooseSFXByID(drone, DRONE_SFX_CHR_SPEECH_USB_PHX_45, DRONE_SFX_CHR_SPEECH_USB_PHX_50);
     } else if (skinClass == SKINCLASS_ROOK) {
-        sfx = DroneFunc_ChooseSFX(0xec, 0xf2);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT7, DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT5);
     }
     if (sfx == 0)
         return false;
@@ -792,41 +1354,41 @@ bool NDrone2_PainTalk(DCVars_tag *dcv) {
     uint sfx;
     switch ((ushort)drone->skinClass) {
     case SKINCLASS_YAKUZA:
-        sfx = 0x12;
+        sfx = DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_3;
         break;
     case SKINCLASS_SNOW_GUARD:
-        sfx = 0x13;
+        sfx = DRONE_SFX_CHR_GENERIC_GUARD_PAIN;
         break;
     case SKINCLASS_BLACK_OPS:
-        sfx = 0x11;
+        sfx = DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_2;
         break;
     case SKINCLASS_ELITE_COMBAT:
-        sfx = 0x14;
+        sfx = DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_4;
         break;
     case SKINCLASS_SERVANT:
     case 10:
-        sfx = 0x18;
+        sfx = DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV_2;
         break;
     case SKINCLASS_MAYHEW:
-        sfx = 0x15;
+        sfx = DRONE_SFX_CHR_MAYHEW_PAIN_2;
         break;
     case SKINCLASS_ZOE:
-        sfx = 0x1b;
+        sfx = DRONE_SFX_CHR_ZOE_PAIN;
         break;
     case SKINCLASS_ROOK:
         if (NDrone2_HitTalkExtra(dcv))
             return false;
-        sfx = 0x16;
+        sfx = DRONE_SFX_CHR_ROOK_PAIN;
         break;
     case SKINCLASS_KIKO:
     case SKINCLASS_KIKO_COMBAT:
-        sfx = 0x1c;
+        sfx = DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV_5;
         break;
     case SKINCLASS_DRAKE:
-        sfx = 0x10;
+        sfx = DRONE_SFX_CHR_DRAKE_PAIN;
         break;
     default:
-        sfx = drone->female ? 0x17 : 0xf;
+        sfx = drone->female ? DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV : DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN;
         break;
     }
 
@@ -852,20 +1414,20 @@ void DroneFunc_InjuredTalk(DCVars_tag *dcv) {
     switch (GameState.CurrentLevelHashcode) {
     case HT_Level_PowerStationA1:
     case HT_Level_PowerStationA2:
-        sfx = DroneFunc_ChooseSFX(0xcc, 0xd1);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_40B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_46B);
         break;
     case HT_Level_Tower2A:
     case HT_Level_Tower2B:
     case HT_Level_Tower2C:
     case HT_Level_Tower2Elevator:
-        sfx = 0xb9;
+        sfx = DRONE_SFX_CHR_SPEECH_M5_BO1_020;
         break;
     case HT_Level_EvilBase:
     case HT_Level_EvilSilo:
     case HT_Level_EvilBaseC:
         if (drone->skinClass == SKINCLASS_ROOK)
             return;
-        sfx = DroneFunc_ChooseSFXByID(drone, 0x133, 0x137);
+        sfx = DroneFunc_ChooseSFXByID(drone, DRONE_SFX_CHR_SPEECH_USB_PHX_45, DRONE_SFX_CHR_SPEECH_USB_PHX_50);
         break;
     default:
         return;
@@ -953,7 +1515,8 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         if (!drone->inPlayersSights || drone->stateScratch >= 1 || drone->stateScratch2 >= now)
             return true;
         NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
-        if (NDrone2_SpeechSFX(dcv, 0x95 + Rand_Rand(2), 0, 1, 1) == 0 && drone->facialAnim == NULL)
+        if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_MAYHEW1 + Rand_Rand(2), 0, 1, 1) == 0 &&
+            drone->facialAnim == NULL)
             return true;
         drone->stateScratch2 = TalkFrameAfter(480.0f);
         drone->stateScratch = 1;
@@ -987,7 +1550,8 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
             break;
         }
         NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
-        if (NDrone2_SpeechSFX(dcv, Rand_Rand(11) * 4 + voice + 0x58, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+        if (NDrone2_SpeechSFX(dcv, Rand_Rand(11) * 4 + voice + DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_F1_AUS,
+                              0, 1, 1) == 0 && drone->facialAnim == NULL)
             return true;
         drone->stateScratch2 = TalkFrameAfter(600.0f);
         drone->stateScratch = Rand_Rand(7);
@@ -995,7 +1559,9 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
     }
 
     case SKINCLASS_PARTY_GUEST:
-        DroneFunc_DoBondTalk(dcv, DroneFunc_ChooseSFX(0x84, 0x8c), 200, 480, 0);
+        DroneFunc_DoBondTalk(dcv, DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_M2_E,
+                                                      DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_M10_E),
+                             200, 480, 0);
         return true;
 
     case SKINCLASS_ROOK:
@@ -1011,7 +1577,8 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         if (!drone->inPlayersSights || drone->stateScratch >= 1 || drone->stateScratch2 >= now)
             return true;
         NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
-        if (NDrone2_SpeechSFX(dcv, 0x97 + Rand_Rand(4), 0, 1, 1) == 0 && drone->facialAnim == NULL)
+        if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_ROOK1 + Rand_Rand(4), 0, 1, 1) == 0 &&
+            drone->facialAnim == NULL)
             return true;
         drone->stateScratch2 = TalkFrameAfter(480.0f);
         drone->stateScratch = 0;
@@ -1030,7 +1597,7 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         if (!drone->inPlayersSights || drone->stateScratch >= 1 || drone->stateScratch2 >= now)
             return true;
         NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
-        if (NDrone2_SpeechSFX(dcv, 0x8e, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+        if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_INT_GUARD5_B, 0, 1, 1) == 0 && drone->facialAnim == NULL)
             return true;
         drone->stateScratch2 = TalkFrameAfter(480.0f);
         return true;
@@ -1054,35 +1621,39 @@ bool NDrone2_BondTalk(DCVars_tag *dcv) {
         switch (line) {
         case SKINCLASS_NONE:
             NDrone2_HeadTrackObj(player, (int)(long long)((double)FRAME_RATE_DIV * 180.0f), 0.0f, dcv);
-            if (NDrone2_SpeechSFX(dcv, 0x52, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKO02, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 960.0f;
             break;
         case SKINCLASS_YAKUZA:
             NDrone2_HeadTrackObj(player, 200, 0.0f, dcv);
-            if (NDrone2_SpeechSFX(dcv, 0x53, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND1A, 0, 1, 1) == 0 &&
+                drone->facialAnim == NULL)
                 return true;
             wait = 150.0f;
             break;
         case SKINCLASS_SNOW_GUARD:
-            if (NDrone2_SpeechSFX(dcv, 0x54, 0, 0, 0) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND1B, 0, 0, 0) == 0 &&
+                drone->facialAnim == NULL)
                 return true;
             wait = 480.0f;
             break;
         case SKINCLASS_BLACK_OPS:
             NDrone2_HeadTrackObj(player, 240, 0.0f, dcv);
-            if (NDrone2_SpeechSFX(dcv, 0x55, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND2A, 0, 1, 1) == 0 &&
+                drone->facialAnim == NULL)
                 return true;
             wait = 240.0f;
             break;
         case SKINCLASS_HAZMAT:
-            if (NDrone2_SpeechSFX(dcv, 0x56, 0, 0, 0) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND2B, 0, 0, 0) == 0 &&
+                drone->facialAnim == NULL)
                 return true;
             wait = 240.0f;
             break;
         case SKINCLASS_SNIPER:
             NDrone2_HeadTrackObj(player, 180, 0.0f, dcv);
-            if (NDrone2_SpeechSFX(dcv, 0x57, 0, 1, 1) == 0 && drone->facialAnim == NULL)
+            if (NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_KIKO03, 0, 1, 1) == 0 && drone->facialAnim == NULL)
                 return true;
             wait = 300.0f;
             break;
@@ -1138,7 +1709,7 @@ bool NDrone2_PatrolTalk(DCVars_tag *dcv) {
     }
     if (drone->skinClass != SKINCLASS_BLACK_OPS)
         return false;
-    uint sfx = DroneFunc_ChooseSFX(0xb3, 0xb7);
+    uint sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_M5_BO1_009, DRONE_SFX_CHR_SPEECH_M5_BO1_014);
     NPCGlobals.nextPatrolTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 10;
     NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
     return true;
@@ -1199,23 +1770,23 @@ void NDrone2_HandleTalking(DCVars_tag *dcv) {
         return;
 
     if (switch_channels[SWITCH_CASTLEINDOORS2_ZOE_LAST_LINE]) {
-        NDrone2_SpeechSFX(dcv, 0x9e, 1, 0, 0);
+        NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE08, 1, 0, 0);
         drone->talkStep = 99;
         return;
     }
     switch (drone->talkStep) {
     case 0:
-        NDrone2_SpeechSFX(dcv, 0x9b, 1, 1, 0);
+        NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_M1_RESCUE_ZOE7, 1, 1, 0);
         drone->talkStep++;
         drone->nextTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 5;
         break;
     case 1:
-        NDrone2_SpeechSFX(dcv, 0x9c, 1, 1, 0);
+        NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE6B2, 1, 1, 0);
         drone->talkStep++;
         drone->nextTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 15;
         break;
     case 2:
-        NDrone2_SpeechSFX(dcv, 0x9d, 1, 1, 0);
+        NDrone2_SpeechSFX(dcv, DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE06B, 1, 1, 0);
         drone->talkStep--;
         drone->nextTalkFrame = GameState.NumFramesUnpaused + FRAME_RATE_INT * 15;
         break;
@@ -1238,7 +1809,7 @@ bool DroneFunc_NewSightTalk(DCVars_tag *dcv) {
     if (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
         GameState.CurrentLevelHashcode != HT_Level_PowerStationA2)
         return false;
-    uint sfx = DroneFunc_ChooseSFX(0xd6, 0xd7);
+    uint sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_10B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_1B);
     if (sfx == 0)
         return false;
     NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
@@ -1265,7 +1836,7 @@ bool DroneFunc_LostSightTalk(DCVars_tag *dcv) {
     obj_tag *player = NDrone2_Player();
     if (drone->gameObj->inCel != player->inCel)
         return false;
-    uint sfx = DroneFunc_ChooseSFX(0xd3, 0xd5);
+    uint sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_2B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_4B);
     if (sfx == 0)
         return false;
     NDrone2_SpeechSFX(dcv, sfx, 0, 0, 0);
@@ -1309,7 +1880,7 @@ DYNAMICSOUNDS* NDrone2_PlaySFX(DCVars_tag *dcv, uint sfx, _VECTOR *pos, char che
     dcv->drone->sfxFrame = now;
     NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].sfx = logged;
     NPCGlobals.sfxLog[NPCGlobals.sfxLogNext].handle = handle;
-    if (++NPCGlobals.sfxLogNext >= DRONE_SFX_LOG)
+    if (++NPCGlobals.sfxLogNext >= DRONE_SFX_LOG_SIZE)
         NPCGlobals.sfxLogNext = 0;
     return handle;
 }

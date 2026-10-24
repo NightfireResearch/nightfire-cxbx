@@ -22,27 +22,12 @@
 #include "NDrone2_Combat.h"
 #include "NDrone2_Roles.h"
 
-// What NDrone2_UpdateMissionRoute returns at the end of the path; the route's status while it cannot go on
-#define MISSION_ROUTE_DONE 3
-#define AIROUTE_STATUS_9 9
-#define AIROUTE_STATUS_C 0xc
-
-#define SFX_CIVILIAN_SCARED 0x48
-
-// The lines a door guard picks from (DroneFunc_ChooseSFX) as the opponent comes into zones 2 and 3
-#define DOOR_GUARD_SFX_ZONE2 0x4f
-#define DOOR_GUARD_SFX_ZONE2_LAST 0x50
-#define DOOR_GUARD_SFX_ZONE3 0x8f
-#define DOOR_GUARD_SFX_ZONE3_LAST 0x92
-
-// Below this alertness a civilian waits with the stand idle anims, at or above it with anim state 0x21
-#define CIVILIAN_ALERT_LOOK 0.66f
 // The player is close enough to keep a civilian waiting within 3 m (in plan) and 30 degrees of its facing
 #define CIVILIAN_WAIT_DISTANCE 3.0f
 constexpr float CIVILIAN_WAIT_ANGLE = (float)(M_PI / 6.0);
 static_assert(std::bit_cast<uint32_t>(CIVILIAN_WAIT_ANGLE) == 0x3f060a92, "not the original's pi/6");
 static_assert(std::bit_cast<uint32_t>(0.76f) == 0x3f428f5c, "not the original's 0.76");
-static_assert(std::bit_cast<uint32_t>(CIVILIAN_ALERT_LOOK) == 0x3f28f5c3, "not the original's 0.66");
+static_assert(std::bit_cast<uint32_t>(DRONE_ALERTNESS_SUSPICIOUS) == 0x3f28f5c3, "not the original's 0.66");
 
 static void Civilian_SetTimer(DroneTimer *timer, uint dueFrame, uint data = 0) {
     timer->dueFrame = dueFrame;
@@ -57,7 +42,7 @@ static void Civilian_SeenArmedPerson(DCVars_tag *dcv) {
     if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_ALERTS, dcv->drone->currentBehaviour) != 0 &&
         !(dcv->drone->flags & DRONE_FLAG_ALERTED_OTHERS)) {
         dcv->drone->knowledge |= DRONE_KNOWS_SIGHTING;
-        NDrone2_DroneAlertToObject(dcv, 0x11, NDrone2_Player(), 20.0f, 20.0f, 0.76f);
+        NDrone2_DroneAlertToObject(dcv, DRONE_MSG_AlertSighting, NDrone2_Player(), 20.0f, 20.0f, 0.76f);
         dcv->drone->flags |= DRONE_FLAG_ALERTED_OTHERS;
     }
 }
@@ -118,7 +103,7 @@ bool NDrone2_DSTATE_Civilian(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         }
         Civilian_SeenArmedPerson(dcv);
         if (dcv->drone->skinClass == SKINCLASS_ROOK) {
-            dcv->drone->side = 1;
+            dcv->drone->side = DRONE_SIDE_ENEMY;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianScared, 0);
@@ -136,11 +121,11 @@ bool NDrone2_DSTATE_Civilian(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         DroneFunc_HandleImpact(dcv, msg, DSTATE_CivilianScared, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -183,11 +168,11 @@ bool NDrone2_DSTATE_CivilianPatrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
             return true;
         Civilian_SeenArmedPerson(dcv);
         if (dcv->drone->skinClass == SKINCLASS_ROOK) {
-            dcv->drone->side = 1;
+            dcv->drone->side = DRONE_SIDE_ENEMY;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
         if (dcv->drone->female)
-            NDrone2_PlaySFX(dcv, SFX_CIVILIAN_SCARED, NULL, 1, 1.0f);
+            NDrone2_PlaySFX(dcv, DRONE_SFX_CIVILIAN_SCARED, NULL, 1, 1.0f);
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
 
     case DRONE_MSG_ImpactPunch:
@@ -203,11 +188,11 @@ bool NDrone2_DSTATE_CivilianPatrol(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -268,25 +253,25 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         if (NDrone2_NearArmedPerson(dcv)) {
             Civilian_SeenArmedPerson(dcv);
             if (dcv->drone->skinClass == SKINCLASS_ROOK) {
-                dcv->drone->side = 1;
+                dcv->drone->side = DRONE_SIDE_ENEMY;
                 return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
             }
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianScared, 0);
         }
         NDrone2_BondTalk(dcv);
-        if (NDrone2_UpdateMissionRoute(dcv) == MISSION_ROUTE_DONE) {
+        if (NDrone2_UpdateMissionRoute(dcv) == AIROUTE_ARRIVED) {
             behaviour_util_setProperty(DRONE_PROP_MISSION_PATH, dcv->drone->currentBehaviour, 0);
             if (GameState.CurrentLevelHashcode != HT_Level_Tower2B && dcv->drone->secondState != 0 &&
                 dcv->drone->modeChangeSwitchChannel == 0)
                 return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)NDrone2_ChangeToAttackMode(dcv->drone), 0);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Civilian, 0);
         }
-        if (dcv->drone->route2.status == AIROUTE_STATUS_9 || dcv->drone->route2.status == AIROUTE_STATUS_C) {
+        if (dcv->drone->route2.status == AIROUTE_CREEP_FAILED || dcv->drone->route2.status == AIROUTE_CREEP_FAILED2) {
             // A NaN alertness looks up
-            if (dcv->drone->alertness < CIVILIAN_ALERT_LOOK)
+            if (dcv->drone->alertness < DRONE_ALERTNESS_SUSPICIOUS)
                 DroneAnim_SetStandIdleAnim(dcv, 0);
             else
-                DroneAnim_CallAnim(0x21, 0, 0, 0, 0.0f, 0, dcv);
+                DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
         }
         return true;
 
@@ -303,11 +288,11 @@ bool NDrone2_DSTATE_CivilianMission(DCVars_tag *dcv, Drone_tag *drone, obj_tag *
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -344,10 +329,10 @@ bool NDrone2_DSTATE_CivilianMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_t
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         // A NaN alertness looks up
-        if (dcv->drone->alertness < CIVILIAN_ALERT_LOOK)
+        if (dcv->drone->alertness < DRONE_ALERTNESS_SUSPICIOUS)
             DroneAnim_SetStandIdleAnim(dcv, 0);
         else
-            DroneAnim_CallAnim(0x21, 0, 0, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
         Civilian_SetTimer(&dcv->drone->timerA, GameState.NumFramesUnpaused + FRAME_RATE_INT * 2);
         dcv->drone->stateScratch = 0xff;
         dcv->drone->stateScratch2 = 0;
@@ -360,7 +345,7 @@ bool NDrone2_DSTATE_CivilianMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_t
         }
         Civilian_SeenArmedPerson(dcv);
         if (dcv->drone->skinClass == SKINCLASS_ROOK) {
-            dcv->drone->side = 1;
+            dcv->drone->side = DRONE_SIDE_ENEMY;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianScared, 0);
@@ -391,11 +376,11 @@ bool NDrone2_DSTATE_CivilianMissionWait(DCVars_tag *dcv, Drone_tag *drone, obj_t
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -428,7 +413,7 @@ bool NDrone2_DSTATE_AllyLeadInit(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
             NDrone2_AssignAIPath(dcv, AIPATH_MISSION);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         if (dcv->drone->route2.count != 0) {
-            DroneAnim_CallAnim(0x21, 0, 0, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
             return true;
         }
         DroneAnim_SetStandIdleAnim(dcv, 0);
@@ -515,7 +500,7 @@ bool NDrone2_DSTATE_PartyGirl(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         }
         Civilian_SeenArmedPerson(dcv);
         if (behaviour_util_getProperty(DRONE_PROP_ALERT_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
-            DroneFunc_SetMissionFailReason(drone, 11);
+            DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_PARTY_GIRL_ALERTED);
         return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_CivilianScared, 0);
 
     case DRONE_MSG_ImpactPunch:
@@ -531,11 +516,11 @@ bool NDrone2_DSTATE_PartyGirl(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         DroneFunc_HandleImpact(dcv, msg, DSTATE_CivilianScared, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -571,14 +556,14 @@ bool NDrone2_DSTATE_CivilianGuard(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         dcv->drone->flags |= DRONE_FLAG_ALERTABLE;
         dcv->drone->initialState = DSTATE_Attack;
         // A NaN alertness stands idle
-        DroneAnim_CallAnim(dcv->drone->alertness >= CIVILIAN_ALERT_LOOK ? 0x21 : DANIM_STAND_IDLE, 0, 0, 0, 0.0f, 0,
-                           dcv);
+        DroneAnim_CallAnim(dcv->drone->alertness >= DRONE_ALERTNESS_SUSPICIOUS ? DANIM_STAND_ALERT : DANIM_STAND_IDLE,
+                           0, 0, 0, 0.0f, 0, dcv);
         dcv->drone->stateScratch = 0xff;
         dcv->drone->stateScratch2 = 0;
         return true;
 
     case DRONE_MSG_Exit:
-        dcv->drone->side = 1;
+        dcv->drone->side = DRONE_SIDE_ENEMY;
         return true;
 
     case DRONE_MSG_Update:
@@ -603,11 +588,11 @@ bool NDrone2_DSTATE_CivilianGuard(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -649,13 +634,13 @@ bool NDrone2_DSTATE_CivilianDoorGuard(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         return true;
 
     case DRONE_MSG_Exit:
-        dcv->drone->side = 1;
+        dcv->drone->side = DRONE_SIDE_ENEMY;
         return true;
 
     case DRONE_MSG_Update:
         if (NDrone2_NearArmedPerson(dcv)) {
             Civilian_SeenArmedPerson(dcv);
-            dcv->drone->side = 1;
+            dcv->drone->side = DRONE_SIDE_ENEMY;
             dcv->drone->initialState = DSTATE_Attack;
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         }
@@ -677,16 +662,19 @@ bool NDrone2_DSTATE_CivilianDoorGuard(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         case 2:
             if (dcv->drone->stateScratch2 != 2) {
                 dcv->drone->stateScratch2 = 2;
-                DroneAnim_CallAnim(0x5f, 1, 0, 0, 0.0f, 0, dcv);
+                DroneAnim_CallAnim(DANIM_TELL_TO_STOP, 1, 0, 0, 0.0f, 0, dcv);
                 if (dcv->drone->guardZone != 0xff)
-                    NDrone2_SpeechSFX(dcv, DroneFunc_ChooseSFX(DOOR_GUARD_SFX_ZONE2, DOOR_GUARD_SFX_ZONE2_LAST), 0, 1,
-                                      1);
+                    NDrone2_SpeechSFX(dcv, DroneFunc_ChooseSFX(DRONE_SFX_DOOR_GUARD_ZONE2_FIRST,
+                                                               DRONE_SFX_DOOR_GUARD_ZONE2_LAST),
+                                      0, 1, 1);
             }
             NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, 0.0f, 0);
             return true;
         case 3:
-            NDrone2_SpeechSFX(dcv, DroneFunc_ChooseSFX(DOOR_GUARD_SFX_ZONE3, DOOR_GUARD_SFX_ZONE3_LAST), 0, 1, 1);
-            DroneFunc_SetMissionFailReason(drone, 12);
+            NDrone2_SpeechSFX(dcv, DroneFunc_ChooseSFX(DRONE_SFX_DOOR_GUARD_ZONE3_FIRST,
+                                                       DRONE_SFX_DOOR_GUARD_ZONE3_LAST),
+                              0, 1, 1);
+            DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_DOOR_GUARD);
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         default:
             return true;
@@ -729,11 +717,11 @@ bool NDrone2_DSTATE_CivilianDoorGuard(DCVars_tag *dcv, Drone_tag *drone, obj_tag
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -766,7 +754,7 @@ bool NDrone2_DSTATE_CivilianScared(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         if (dcv->aiStateMachine->scratch1c != 0)
             return Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->aiStateMachine->scratch1c, 0);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        Drone_AlertStatusSet(2, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
         dcv->drone->flags |= DRONE_FLAG_DEAF;
         dcv->drone->flags |= DRONE_FLAG_NO_ALERTS;
         NDrone2_CivilianScaredTalk(dcv);
@@ -807,9 +795,9 @@ bool NDrone2_DSTATE_CivilianHiding(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         return true;
 
     case DRONE_MSG_Enter:
-        Drone_AlertStatusSet(2, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        DroneAnim_CallAnim(0x19, 0, 0, 0, 0.0f, 0, dcv);
+        DroneAnim_CallAnim(DANIM_HIDE, 0, 0, 0, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_ImpactPunch:

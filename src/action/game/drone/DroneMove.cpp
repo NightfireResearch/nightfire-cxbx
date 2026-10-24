@@ -223,14 +223,14 @@ bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_t
         obstacleTo.x = obstacle->pos->x;
         obstacleTo.y = 0.0f;
         obstacleTo.z = obstacle->pos->z;
-        obstacle->flags |= 2;
+        obstacle->flags |= STEERBODY_STILL;
     }
     float second;
     if (!SphereSphereSweep(self->radius, self->pos, &selfTo, obstacle->radius, obstacle->pos, &obstacleTo, &eval->t,
                            &second))
         return false;
 
-    if (!(obstacle->flags & 2))
+    if (!(obstacle->flags & STEERBODY_STILL))
         eval->limit = (float)(self->speed -
                               FCos((double)Vec_AngleDifference(obstacle->rot->y, self->rot->y)) * obstacle->speed);
     else
@@ -262,7 +262,7 @@ bool NDrone2_EvaluateObstacle(Drone_tag *drone, Drone_tag *other, ObstacleEval_t
 
     Vec_Scalef(&self->vel, eval->t, &self->contact);
     Vec_Add2(self->pos, &self->contact, &self->contact);
-    if (obstacle->flags & 2) {
+    if (obstacle->flags & STEERBODY_STILL) {
         Vec_Copy(obstacle->pos, &obstacle->contact);
     } else {
         Vec_Scalef(&obstacle->vel, eval->t, &obstacle->contact);
@@ -334,8 +334,8 @@ bool SolveQuadratic(float a, float b, float c, float *root1, float *root2) {
     return true;
 }
 
-// Which side the nearest drone (from NDrone2_Steer) is on, off the way the drone faces (its anim's turn, animFlags
-// 8, 0x10, 0x20, added): bunchFlags gets 0x10 right or 8 left, and 2 within 45 degrees of ahead or 4. False with no
+// Which side the nearest drone (from NDrone2_Steer) is on, off the way the drone faces (its anim's DANIMFLAG_FACING_*
+// added): bunchFlags gets right or left, and ahead within 45 degrees, else behind. False with no
 // nearest drone, or a stationary one.
 // AUTOINJECT
 bool DroneMove_NoBunching(DCVars_tag *dcv) {
@@ -348,15 +348,15 @@ bool DroneMove_NoBunching(DCVars_tag *dcv) {
     Vec_Subtract(&nearest->gameObj->position, &obj->position, &toNearest);
     float bearing = Atan2(toNearest.x, toNearest.z);
     float facing = obj->rotation.y;
-    if (drone->animFlags & 8)
+    if (drone->animFlags & DANIMFLAG_FACING_90)
         facing = facing + HALF_PI;
-    if (drone->animFlags & 0x10)
+    if (drone->animFlags & DANIMFLAG_FACING_180)
         facing = facing + PI;
-    if (drone->animFlags & 0x20)
+    if (drone->animFlags & DANIMFLAG_FACING_MINUS_90)
         facing = facing - HALF_PI;
     double turn = Vec_AngleDifference(facing, bearing);
-    drone->bunchFlags |= turn < 0.0f ? 0x10 : 8;
-    drone->bunchFlags |= AngleSize(turn) < QUARTER_PI ? 2 : 4;
+    drone->bunchFlags |= turn < 0.0f ? DRONE_BLOCKED_RIGHT : DRONE_BLOCKED_LEFT;
+    drone->bunchFlags |= AngleSize(turn) < QUARTER_PI ? DRONE_BLOCKED_AHEAD : DRONE_BLOCKED_BEHIND;
     return true;
 }
 
@@ -375,23 +375,23 @@ void DroneMove_SetBoundryFlags(DCVars_tag *dcv) {
     if (!(dcv->drone->flags & DRONE_FLAG_BOUNDARY_STOPS))
         return;
     if (StepBlocked(drone, obj, 0.0f, 0.5f))
-        drone->boundaryFlags |= 2;
+        drone->boundaryFlags |= DRONE_BLOCKED_AHEAD;
     if (StepBlocked(drone, obj, 0.0f, -0.5f))
-        drone->boundaryFlags |= 4;
+        drone->boundaryFlags |= DRONE_BLOCKED_BEHIND;
     if (StepBlocked(drone, obj, 0.5f, 0.0f))
-        drone->boundaryFlags |= 8;
+        drone->boundaryFlags |= DRONE_BLOCKED_LEFT;
     if (StepBlocked(drone, obj, -0.5f, 0.0f))
-        drone->boundaryFlags |= 0x10;
+        drone->boundaryFlags |= DRONE_BLOCKED_RIGHT;
 }
 
 // ---- turning and routes
 
 // Turns targetRot.y to face obj (plus offset) when it is more than tolerance off. Not while unknown3f0 has
-// 0x8000000 or the anim turns the drone (animFlags 0x380).
+// 0x8000000 or the anim turns the drone (DANIMFLAG_TURNS).
 // AUTOINJECT
 void DroneMove_TurnToObj(DCVars_tag *dcv, obj_tag *obj, float offset, float tolerance) {
     Drone_tag *drone = dcv->drone;
-    if (obj == NULL || (drone->unknown3f0 & 0x8000000) || (drone->animFlags & 0x380))
+    if (obj == NULL || (drone->unknown3f0 & 0x8000000) || (drone->animFlags & DANIMFLAG_TURNS))
         return;
     _VECTOR toObj;
     Vec_Subtract(&obj->position, &dcv->gameObj->position, &toObj);
@@ -508,10 +508,10 @@ short NDrone2_NearestNodeDCV(DCVars_tag *dcv) {
 bool NDrone2_CanReachGoalPosition(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     switch (NDrone2_MoveToGoalPosition(dcv, (CelPos_tag *)&drone->aiPoint.pos, drone->aiPoint.radius, 0)) {
-    case 0:
-    case 1:
-    case 2:
-    case 3:
+    case AIROUTE_FOLLOWING:
+    case AIROUTE_PARTIAL:
+    case AIROUTE_DIRECT:
+    case AIROUTE_ARRIVED:
         return true;
     default:
         return false;
@@ -591,8 +591,9 @@ void DroneMove_AstronautCombat(DCVars_tag *dcv) {
     obj_tag *obj = dcv->gameObj;
     if (drone->opponent == NULL)
         return;
-    if (!(drone->unknown3f0 & 0x8000000) && (!MPSettings.dronesAreBots || !(drone->botVars->flags & 2)) &&
-        !(drone->animFlags & 0x380)) {
+    if (!(drone->unknown3f0 & 0x8000000) &&
+        (!MPSettings.dronesAreBots || !(drone->botVars->flags & BOT_FLAG_RECOVERING)) &&
+        !(drone->animFlags & DANIMFLAG_TURNS)) {
         _VECTOR toOpponent;
         Vec_Subtract(&drone->opponent->position, &obj->position, &toOpponent);
         dcv->drone->targetRot.y = Atan2(toOpponent.x, toOpponent.z);
@@ -619,8 +620,7 @@ void DroneMove_AstronautCombat(DCVars_tag *dcv) {
     }
 }
 
-// The float anim for where moveTarget is: 0x72 within 45 degrees of ahead, 0x71 beyond 135, else 0x73 for a positive
-// turn or 0x74
+// The float anim for where moveTarget is
 // AUTOINJECT
 void DroneMove_AstronautAnim(DCVars_tag *dcv) {
     obj_tag *obj = dcv->gameObj;
@@ -630,13 +630,13 @@ void DroneMove_AstronautAnim(DCVars_tag *dcv) {
     double turn = Vec_AngleDifference(obj->rotation.y, bearing);
     ushort anim;
     if (AngleSize(turn) < QUARTER_PI)
-        anim = 0x72;
+        anim = DANIM_FLOAT_AHEAD;
     else if (AngleSize(turn) > THREE_QUARTER_PI)
-        anim = 0x71;
+        anim = DANIM_FLOAT_BACK;
     else if (turn > 0.0f)
-        anim = 0x73;
+        anim = DANIM_FLOAT_TURN_POSITIVE;
     else
-        anim = 0x74;
+        anim = DANIM_FLOAT_TURN_NEGATIVE;
     DroneAnim_CallAnim(anim, 0, 0, 0, 0.0f, 0, dcv);
 }
 

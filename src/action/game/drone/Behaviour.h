@@ -4,7 +4,28 @@
 #include "../../actionhelpers.h"
 #include "../../../common/xbeClass.h"
 
-#define NUM_BEHAVIOUR_CLASSES 0x11  // Drone_tag.behaviourClass: 0-9 soldier ... 16 bot
+// Drone_tag.behaviourClass, BehaviourStruct.behaviourClass (key 15): which DTYPEs and side a placement gets
+// (NDrone2_GetDroneTypeAttackTypeFriend; docs/drone/behaviours). Numbered where the code treats them alike.
+typedef enum {
+    BCLASS_SOLDIER_0 = 0,       // 0-9: enemies
+    BCLASS_SOLDIER_1 = 1,
+    BCLASS_SOLDIER_2 = 2,
+    BCLASS_SOLDIER_3 = 3,
+    BCLASS_SOLDIER_4 = 4,
+    BCLASS_SOLDIER_5 = 5,
+    BCLASS_SOLDIER_6 = 6,
+    BCLASS_SOLDIER_7 = 7,
+    BCLASS_SOLDIER_8 = 8,
+    BCLASS_SOLDIER_9 = 9,
+    BCLASS_CIVILIAN_10 = 10,    // DTYPE_Civilian, DTYPE_PartyGirl for the women
+    BCLASS_CIVILIAN_11 = 11,
+    BCLASS_ALLY = 12,           // DTYPE_Zoe or DTYPE_Mayhew
+    BCLASS_CIVILIAN_13 = 13,    // DTYPE_Civilian, DTYPE_TruckDriver
+    BCLASS_HOSTAGE = 14,        // DTYPE_Hostage with DRONE_PROP_HOSTAGE, else DTYPE_Civilian
+    BCLASS_15 = 15,
+    BCLASS_BOT = 16,
+} BehaviourClass;
+#define NUM_BEHAVIOUR_CLASSES 0x11
 #define NUM_BEHAVIOUR_MODES 6       // attack modes per behaviour
 #define DRONE_STATS_FIELDS 8
 

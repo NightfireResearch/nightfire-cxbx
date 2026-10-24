@@ -10,6 +10,7 @@
 #include "../obj/Player.h"
 #include "../obj/ScriptPlayer.h"
 #include "../drone/Drone.h"
+#include "../drone/NDrone2.h"  // DRONE_MSG
 #include "../drone/BOT.h"
 #include "../drone/BOTSTATE.h"
 #include "../drone/BOTWEAP.h"
@@ -155,7 +156,7 @@ void MP_DemolitionProtectionUpdate(MPOBJECT *mpObj, ushort defenders, obj_tag *g
     if (ext != NULL) {
         obj_tag *obj = ext->gameObj;
         ext->gameObj = NULL;
-        MP_sendTeamBotMessage(attackers, 0x41, obj, 0, 0);
+        MP_sendTeamBotMessage(attackers, DRONE_MSG_BotObjectiveDestroyed, obj, 0, 0);
     }
 }
 
@@ -246,9 +247,9 @@ void MP_BluePrintReachedBase(obj_tag *gameObj, MPOBJECT *mpObj) {
                 Drone_DCVfromOBJ(carrier, &dcVars);
             }
             MPGame.teamObjectiveFlags[team] &= ~3;
-            MP_sendBotMessage(carrier, 0x3b, 1, 0);
+            MP_sendBotMessage(carrier, DRONE_MSG_BotGoalComplete, 1, 0);
             MPGame.unknown_9 = 0;
-            MP_sendBotMessage(carrier, 0x34, 0, 0);
+            MP_sendBotMessage(carrier, DRONE_MSG_BotBlueprintDelivered, 0, 0);
         }
     }
 

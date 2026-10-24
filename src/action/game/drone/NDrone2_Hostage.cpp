@@ -121,10 +121,10 @@ bool NDrone2_TalkToMissionObj(DCVars_tag *dcv) {
     uint sfx;
     switch (dcv->drone->dtype) {
     case DTYPE_HostageKiller:
-        sfx = Rand_Rand(6) + 0x29;
+        sfx = Rand_Rand(6) + DRONE_SFX_CHR_SPEECH_M2_INTER_YAK1;
         break;
     case DTYPE_Hostage:
-        sfx = Rand_Rand(4) + 0x2f;
+        sfx = Rand_Rand(4) + DRONE_SFX_CHR_SPEECH_M2_INTER_SERV10;
         break;
     default:
         return false;
@@ -148,7 +148,7 @@ bool NDrone2_DSTATE_HostageKiller(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         if (!NDrone2_SetupHostageKiller(dcv))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Idle, 0);
         dcv->drone->flags |= DRONE_FLAG_STATIONARY;
-        DroneAnim_CallAnim(9, 0, 0, 0, 0.0f, 0, dcv);
+        DroneAnim_CallAnim(DANIM_09, 0, 0, 0, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_Update:
@@ -164,7 +164,7 @@ bool NDrone2_DSTATE_HostageKiller(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
 
     case DRONE_MSG_AttackNow:
         if (Hostage_Partner(dcv->drone)->health > 0.0f)
-            DroneAnim_CallAnim(0x58, 0, 0, DRONE_MSG_ScriptEnd, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_COVER_FIRE, 0, 0, DRONE_MSG_ScriptEnd, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_ScriptEnd:
@@ -186,11 +186,11 @@ bool NDrone2_DSTATE_HostageKiller(DCVars_tag *dcv, Drone_tag *drone, obj_tag *ga
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -220,11 +220,11 @@ bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *dcv, Drone_tag *drone, obj_t
 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        Drone_AlertStatusSet(1, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALERTED, dcv);
         if (dcv->drone->hostagePartner != NULL && Hostage_Partner(dcv->drone)->health > 0.0f) {
             NDrone2_SetupHostageExecute(dcv);
             Drone_SM_SendMsgSelf(DRONE_MSG_AttackNow, NULL, FRAME_RATE_INT, 0, dcv);
-            DroneAnim_CallAnim(9, 0, 0, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_09, 0, 0, 0, 0.0f, 0, dcv);
             return true;
         }
         if (dcv->aiStateMachine->curState == DSTATE_WaitSwitch || dcv->drone->deathScript == 0)
@@ -239,7 +239,7 @@ bool NDrone2_DSTATE_HostageKillerAttack(DCVars_tag *dcv, Drone_tag *drone, obj_t
         if (dcv->drone->hostagePartner != NULL) {
             if (dcv->drone->deathScript == 0)
                 dcv->drone->flags &= ~DRONE_FLAG_STATIONARY;
-            DroneAnim_CallAnim(0x58, 0, 0, DRONE_MSG_ScriptEnd, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_COVER_FIRE, 0, 0, DRONE_MSG_ScriptEnd, 0.0f, 0, dcv);
         }
         return true;
 
@@ -279,8 +279,8 @@ bool NDrone2_DSTATE_Hostage(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj,
         return true;
 
     case DRONE_MSG_Enter:
-        Drone_AlertStatusSet(2, dcv);
-        DroneAnim_CallAnim(0x21, 0, 0, 0, 0.0f, 0, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
+        DroneAnim_CallAnim(DANIM_STAND_ALERT, 0, 0, 0, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_Update: {
@@ -293,7 +293,7 @@ bool NDrone2_DSTATE_Hostage(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj,
     }
 
     case DRONE_MSG_ScriptEnd:
-        DroneAnim_SetDAnimNow(0xf4, 0, 0, dcv);
+        DroneAnim_SetDAnimNow(DROW_STAND_ALERT, 0, 0, dcv);
         return true;
 
     case DRONE_MSG_ToHostages:
@@ -334,8 +334,8 @@ bool NDrone2_DSTATE_HostageDie(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_Enter:
-        Drone_AlertStatusSet(3, dcv);
-        NDrone2_PlaySFX(dcv, 0xa, NULL, 1, 1.0f);
+        Drone_AlertStatusSet(DRONE_ALERT_DEAD, dcv);
+        NDrone2_PlaySFX(dcv, DRONE_SFX_CHR_HOSTAGE_GIRL_DEATH_2, NULL, 1, 1.0f);
         DroneAnim_CallAnim(DANIM_DEATH, 0, DSTATE_HostageDead, 0, 0.0f, 0, dcv);
         NDrone2_LogDroneDeath(dcv);
         return true;
@@ -354,7 +354,7 @@ bool NDrone2_DSTATE_HostageSaved(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
         return true;
 
     case DRONE_MSG_Enter:
-        Drone_AlertStatusSet(0, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_CALM, dcv);
         dcv->drone->hostagePartner = NULL;
         Music_Event(MUSIC_HOSTAGE_SAVED, 1);
         DroneFunc_HostageSaved(dcv);
@@ -404,7 +404,7 @@ bool NDrone2_DSTATE_HostageIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         behaviour_util_setProperty(DRONE_PROP_HEAD_TRACK, dcv->drone->currentBehaviour, 1);
         drone->alertness = 0.0f;
         drone->flags &= ~DRONE_FLAG_ATTACK_MODE;
-        Drone_AlertStatusSet(0, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_CALM, dcv);
         NDrone2_SetAngleToObj(dcv, dcv->drone->opponent, 0.0f, 0);
         DroneAnim_CallAnim(DANIM_STAND_IDLE, 0, 0, 0, 0.0f, 0, dcv);
         return true;
@@ -446,8 +446,8 @@ bool NDrone2_DSTATE_HostageHide(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
     case DRONE_MSG_Enter:
         drone->alertness = 1.0f;
         drone->flags |= DRONE_FLAG_ATTACK_MODE;
-        Drone_AlertStatusSet(2, dcv);
-        DroneAnim_CallAnim(0x19, 0, 0, 0, 0.0f, 0, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
+        DroneAnim_CallAnim(DANIM_HIDE, 0, 0, 0, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_Update:
@@ -485,10 +485,10 @@ bool NDrone2_DSTATE_HostageDead(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         return true;
 
     case DRONE_MSG_Enter: {
-        Drone_AlertStatusSet(3, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_DEAD, dcv);
         NDrone2_SetAsDead(dcv);
         if (behaviour_util_getProperty(DRONE_PROP_DEATH_FAILS_MISSION, dcv->drone->currentBehaviour) != 0)
-            DroneFunc_SetMissionFailReason(drone, 9);
+            DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_HOSTAGE_DEAD);
         dcv->drone->flags &= ~DRONE_FLAG_ANIM_ONCE;
         DroneTimer *timer = &dcv->drone->timerA;
         timer->dueFrame = GameState.NumFramesUnpaused + NPCGlobals.deadFrames;

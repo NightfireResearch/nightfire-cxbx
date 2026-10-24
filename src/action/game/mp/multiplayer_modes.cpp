@@ -25,9 +25,6 @@
 // XBE_GLOBAL(0x00261c58, 0x100)
 obj_tag *HitByList[64];
 
-// Bot messages sent here (docs/drone/bots-and-navigation, DSTATE_BotGlobal): 0x3a objective changed, 0x3b goal
-// complete, 0x3d cancel goals on an object, 0x43 a player died. 0x39, 0x3e and 0x3f are not in its table.
-
 // A team's score in the team game: the whole points of its agents. (Our helper; the original repeats it inline.)
 static void MP_SumTeamScore(int team) {
     MPGame.teamScore[team] = 0;
@@ -86,10 +83,10 @@ void MP_KOHUpdate(obj_tag *hill) {
                 }
                 bool entered = !(was & MPPLAYER_IN_HILL);
                 if (entered)
-                    MP_sendBotMessage(obj, 0x3b, 1, 0);
+                    MP_sendBotMessage(obj, DRONE_MSG_BotGoalComplete, 1, 0);
                 MPGame.unknown_9 = 0;
                 if (entered)
-                    MP_sendBotMessage(obj, 0x39, 0, 0);
+                    MP_sendBotMessage(obj, DRONE_MSG_BotEnteredHill, 0, 0);
             }
 
             int before = (int)player.points;
@@ -109,7 +106,7 @@ void MP_KOHUpdate(obj_tag *hill) {
                     Drone_DCVfromOBJ(obj, &dcVars);
                 }
                 MPGame.unknown_9 = 0;
-                MP_sendBotMessage(obj, 0x3a, 0, 0);
+                MP_sendBotMessage(obj, DRONE_MSG_BotLeftHill, 0, 0);
             }
         }
     }
@@ -143,10 +140,10 @@ static void MP_UplinkTaken(MPOBJECT *mpObj, obj_tag *gameObj, obj_tag *taker, MP
             Drone_DCVfromOBJ(taker, &dcVars);
             senderId = dcVars.aiStateMachine->id;
         }
-        MP_sendBotMessage(taker, 0x3b, 1, 0);
-        MP_sendTeamBotMessage(takerTeam, 0x3d, gameObj, 0, senderId);
+        MP_sendBotMessage(taker, DRONE_MSG_BotGoalComplete, 1, 0);
+        MP_sendTeamBotMessage(takerTeam, DRONE_MSG_BotCancelGoals, gameObj, 0, senderId);
         MPGame.unknown_9 = 0;
-        MP_sendBotMessage(taker, 0x3e, 0, 0);
+        MP_sendBotMessage(taker, DRONE_MSG_BotUplinkTaken, 0, 0);
     }
     mpObj->holderIdx = Control_Plr2Ind(taker);
     Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_WALL, 100.0f, 0, 0);
@@ -171,7 +168,7 @@ void MP_UplinkUpdate(MPOBJECT *mpObj, obj_tag *gameObj) {
                         Drone_DCVfromOBJ(taker, &dcVars);
                     }
                     MPGame.unknown_9 = 0;
-                    MP_sendBotMessage(taker, 0x3f, 0, 0);
+                    MP_sendBotMessage(taker, DRONE_MSG_BotUplinkTakenOver, 0, 0);
                 }
                 mpObj->holderIdx = Control_Plr2Ind(taker);
                 Sound_PlayExt(SFX_BOND_MOMENT_BM_CAS_BEAM, 100.0f, 0, 0);
@@ -303,8 +300,8 @@ void MP_PlayerKilled(obj_tag *obj) {
                         points = -1.0f;
                     } else if (killerRec.playerObj != NULL && killer >= NUM_PLAYERS) {
                         BOT_vars_t *bot = ((Drone_tag *)killerRec.playerObj->extraObjectData)->botVars;
-                        // 7: Vengeful, against its preferred opponent
-                        if (bot->stats.personality == 7 && victim == bot->preferredOpponent)
+                        // against its preferred opponent
+                        if (bot->stats.personality == BOT_PERSONALITY_VENGEFUL && victim == bot->preferredOpponent)
                             points = 2.0f;
                     }
 
@@ -319,7 +316,7 @@ void MP_PlayerKilled(obj_tag *obj) {
                 MsgObject msg;
                 msg.createdFrame = GameState.NumFramesUnpaused;
                 msg.handleOnFrame = GameState.NumFramesUnpaused;
-                msg.msgType = 0x43;
+                msg.msgType = DRONE_MSG_BotPlayerDied;
                 msg.scope = DSTATE_BotGlobal;
                 msg.sender = senderId;
                 msg.receiver = 0;

@@ -115,7 +115,7 @@ void Check_Target(obj_tag* obj) {
             if (MPSettings.dronesAreBots)
                 spared = !MPSettings.FriendlyFire || !MP_isObjectOnTeam(drone->gameObj, team);
             else
-                spared = drone->side == 1;
+                spared = drone->side == DRONE_SIDE_ENEMY;
             drone->inPlayersSights = 1;
             drone->inPlayersSightsFrame = GameState.NumFramesUnpaused;
             if (spared)

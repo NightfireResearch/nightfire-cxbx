@@ -37,9 +37,6 @@
 #define BONE_TORSO 1
 #define BONE_HEAD 5
 
-// The message NDrone2_DroneAlertToPosition sends for a hurt drone (DRONE_PROP_ALERTED_BY_DRONE_SHOT's)
-#define HURT_ALERT_MSG 0x12
-
 // A shot pushes the drone this far along it, to this far at most
 #define PUSH_PER_SHOT 0.175f
 
@@ -104,7 +101,7 @@ static void NDrone2_BodyHitEffect(BU_tag *bullet, HITDATA_tag *hit, obj_tag *obj
         if (bullet->wpnDef->damage > 0.0f) {
             obj_tag *smoke = Gas_Init(obj->inCel, &hit->hitPosition, NULL, NULL, 3.0f, 6.0f, HT_Entity_BodyHit, 5,
                                       0xffffffff, 0xffffff00, 0x3c);
-            smoke->effectFlags |= 8;
+            smoke->effectFlags |= EFFECT_BILLBOARD;
         }
         break;
     }
@@ -131,7 +128,7 @@ void Drone_BulletHit(obj_tag *obj, BU_tag *bullet, HITDATA_tag *hit) {
 // AUTOINJECT
 void NDrone2_LogHitByOpponent(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
-    if (drone->lastAttacker == drone->opponent && drone->side == 1)
+    if (drone->lastAttacker == drone->opponent && drone->side == DRONE_SIDE_ENEMY)
         PlrStat_LogShotHitEnemy(0);
 }
 
@@ -141,7 +138,7 @@ void NDrone2_LogHitByOpponentOrAlive(DCVars_tag *dcv) {
     Drone_tag *drone = dcv->drone;
     if (drone->lastAttacker != drone->opponent && drone->health <= 0.0f)
         return;
-    if (drone->side == 1)
+    if (drone->side == DRONE_SIDE_ENEMY)
         PlrStat_LogShotHitEnemy(0);
 }
 
@@ -168,9 +165,9 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
 
     uint material = hit->materialType & 0x3f;
     if (material >= 13 && material <= 14) {
-        if (drone->gameObj->animState->animFlags & 4)
+        if (drone->gameObj->animState->animFlags & ANIM_FOOTSTEP)
             Env_WaterRipple(hit);
-    } else if (drone->dtype == DTYPE_Astronaut && (drone->gameObj->animState->animFlags & 0x10)) {
+    } else if (drone->dtype == DTYPE_Astronaut && (drone->gameObj->animState->animFlags & ANIM_CONTACT_HIT)) {
         Vec_MulR32(&drone->velocity, &drone->velocity, -1.0f);
     }
 
@@ -272,12 +269,12 @@ void NDrone2_DealWithObjHit(Drone_tag *drone, obj_tag *obj, HITDATA_tag *hit) {
             hurts = true;
         } else if (shooter->objectType == OBJECTTYPE_DRONE) {
             // Enemies (and drones of no side) hurt allies and civilians, and the other way round
-            bool enemy = drone->side != 2 && drone->side != 3;
+            bool enemy = drone->side != DRONE_SIDE_ALLY && drone->side != DRONE_SIDE_NEUTRAL;
             Drone_tag *shooterDrone = (Drone_tag *)shooter->extraObjectData;
             if (shooterDrone != NULL) {
-                if (shooterDrone->side == 1)
+                if (shooterDrone->side == DRONE_SIDE_ENEMY)
                     hurts = !enemy;
-                else if (shooterDrone->side == 2 || shooterDrone->side == 3)
+                else if (shooterDrone->side == DRONE_SIDE_ALLY || shooterDrone->side == DRONE_SIDE_NEUTRAL)
                     hurts = enemy;
             }
         }
@@ -445,11 +442,11 @@ void NDrone2_DoHitEffects(DCVars_tag *dcv, HITDATA_tag *hit, float scale) {
             case 0x64:
             case 0x65:
             case 0x66:
-                if (bot->stats.traitFlags & 4)
+                if (bot->stats.traitFlags & BOT_TRAIT_FISTS_UP_CLOSE)
                     hit->dmgAmt = hit->dmgAmt * 1.5f;
                 break;
             default:
-                if (bot->stats.traitFlags & 2)
+                if (bot->stats.traitFlags & BOT_TRAIT_SHOT_DAMAGE)
                     hit->dmgAmt = hit->dmgAmt * 1.25f;
                 break;
             }
@@ -489,8 +486,8 @@ void DroneFunc_SendHurtMessage(DCVars_tag *dcv) {
     if ((drone->flags & DRONE_FLAG_HURT_SENT) || drone->dtype == DTYPE_Sniper)
         return;
     drone->knowledge |= DRONE_KNOWS_HURT;
-    NDrone2_DroneAlertToPosition(dcv->gameObj, HURT_ALERT_MSG, &dcv->gameObj->position, dcv->gameObj->inCel, 0, 0,
-                                 0);
+    NDrone2_DroneAlertToPosition(dcv->gameObj, DRONE_MSG_AlertDroneShot, &dcv->gameObj->position, dcv->gameObj->inCel,
+                                 0, 0, 0);
     dcv->drone->flags |= DRONE_FLAG_HURT_SENT;
 }
 
@@ -519,15 +516,15 @@ bool NDrone2_PunchImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, char
         drone->sm.resumeState = resume;
 
     dcv->drone->alertness = 1.0f;
-    Drone_AlertStatusSet(2, dcv);
+    Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
     NDrone2_DoHitEffects(dcv, hit, dcv->drone->hitDamageScale);
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && !NDrone2_ObjectIsArmed(drone->gameObj))
-        DroneFunc_SetMissionFailReason(drone, 5);
+        DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_UNARMED_PUNCHED);
 
-    if (dcv->drone->side != 1) {
+    if (dcv->drone->side != DRONE_SIDE_ENEMY) {
         if ((GameState.CurrentLevelHashcode < HT_Level_TowerA || GameState.CurrentLevelHashcode > HT_Level_TowerB) &&
             !NDrone2_ObjectIsArmed(drone->gameObj))
-            DroneFunc_SetMissionFailReason(drone, 6);
+            DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_CIVILIAN_PUNCHED);
         DroneFunc_SendHurtMessage(dcv);
         if (drone->health <= 0.0f)
             return Drone_SM_SetState(dcv->aiStateMachine, NDrone2_PunchDeath(dcv->drone), 0);
@@ -575,15 +572,15 @@ bool NDrone2_BulletImpact(DCVars_tag *dcv, HITDATA_tag *hit, uint nextState, cha
         nextState = 0;
 
     drone->alertness = 1.0f;
-    Drone_AlertStatusSet(2, dcv);
+    Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
     NDrone2_DoHitEffects(dcv, hit, dcv->drone->hitDamageScale);
     DroneFunc_SendHurtMessage(dcv);
     if (drone->health <= 0.0f) {
         if (dcv->drone->dtype == DTYPE_Bot)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_BotDeathAnim, 0);
         switch (drone->dtype) {
-        case DTYPE_Abseil27:
-        case DTYPE_Abseil28:
+        case DTYPE_AbseilToGround:
+        case DTYPE_AbseilHang:
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AbseilDeath, 0);
         case DTYPE_Astronaut:
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AstronautDeath, 0);
@@ -636,7 +633,7 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
     }
 
     drone->alertness = 1.0f;
-    Drone_AlertStatusSet(2, dcv);
+    Drone_AlertStatusSet(DRONE_ALERT_ALARMED, dcv);
     // The damage: FUN_0003db50 in the original, which is handed hitDamageScale but does not use it
     if (impact != NULL && impact->damage > 0.0f) {
         NDrone2_HitDamage(dcv, impact->damage, 0, -1, 0);
@@ -652,8 +649,8 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
         case DTYPE_Ninja:
             Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Death_Anim, 0);
             return true;
-        case DTYPE_Abseil27:
-        case DTYPE_Abseil28:
+        case DTYPE_AbseilToGround:
+        case DTYPE_AbseilHang:
             Drone_SM_SetState(dcv->aiStateMachine, DSTATE_AbseilDeath, 0);
             return true;
         case DTYPE_Astronaut:
@@ -667,8 +664,8 @@ bool NDrone2_ExplosiveImpact(DCVars_tag *dcv, DroneImpact_tag *impact, uint next
     if (behaviour_util_getProperty(DRONE_PROP_HURT_ALERTS, dcv->drone->currentBehaviour) &&
         !(dcv->drone->flags & DRONE_FLAG_HURT_SENT)) {
         dcv->drone->knowledge |= DRONE_KNOWS_HURT;
-        NDrone2_DroneAlertToPosition(dcv->gameObj, HURT_ALERT_MSG, &dcv->gameObj->position, dcv->gameObj->inCel, 0,
-                                     0, 0);
+        NDrone2_DroneAlertToPosition(dcv->gameObj, DRONE_MSG_AlertDroneShot, &dcv->gameObj->position,
+                                     dcv->gameObj->inCel, 0, 0, 0);
         dcv->drone->flags |= DRONE_FLAG_HURT_SENT;
     }
 
@@ -710,7 +707,7 @@ static void DroneFunc_CalmOnImpact(DCVars_tag *dcv) {
     dcv->drone->secondState = DSTATE_RunToAlarm;
     dcv->drone->runningToAlarm = 0;
     dcv->drone->knowledge = 0;
-    if (dcv->drone->diVars.keys.mode == 100) {
+    if (dcv->drone->diVars.keys.mode == DRONE_MODE_BEHAVIOUR) {
         dcv->drone->currentBehaviour = dcv->drone->behaviour1;
         dcv->drone->usingSecondBehaviour = 0;
     }
@@ -748,7 +745,7 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
 
     case DRONE_MSG_ImpactTaser: {
         if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && !NDrone2_ObjectIsArmed(drone->gameObj))
-            DroneFunc_SetMissionFailReason(drone, 7);
+            DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_UNARMED_TASERED);
         dcv->drone->stunFrames = Ftol(dcv->drone->stunFrames + (double)FRAME_RATE_MUL);
         Drone_tag *stunned = dcv->drone;
         if (stunned->stunFrames > (uint)Ftol(stunned->health) * 2) {
@@ -800,13 +797,13 @@ bool DroneFunc_HandleImpact(DCVars_tag *dcv, MsgObject *msg, uint nextState, cha
 
     case DRONE_MSG_ImpactStunGrenade:
         if (behaviour_util_getProperty(DRONE_PROP_RESISTS_STUN_GRENADE, drone->currentBehaviour)) {
-            if (drone->animSet == 5) {
-                if (DroneAnim_CanDoAnimState(dcv, 0x57, 0))
-                    DroneAnim_CallAnim(0x57, 0, 0, 0, 0.0f, 0, dcv);
-                else if (DroneAnim_CanDoAnimState(dcv, 0x11, 0))
-                    DroneAnim_CallAnim(0x11, 0, 0, 0, 0.0f, 0, dcv);
+            if (drone->animSet == DANIMSET_RIFLE) {
+                if (DroneAnim_CanDoAnimState(dcv, DANIM_57, 0))
+                    DroneAnim_CallAnim(DANIM_57, 0, 0, 0, 0.0f, 0, dcv);
+                else if (DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_COVER, 0))
+                    DroneAnim_CallAnim(DANIM_CROUCH_COVER, 0, 0, 0, 0.0f, 0, dcv);
                 else
-                    DroneAnim_CallAnim(0x19, 0, 0, 0, 0.0f, 0, dcv);
+                    DroneAnim_CallAnim(DANIM_HIDE, 0, 0, 0, 0.0f, 0, dcv);
             }
             return true;
         }

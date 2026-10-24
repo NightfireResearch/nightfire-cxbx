@@ -6,6 +6,7 @@
 #include "BOTWEAP.h"
 #include "BOTSTATE.h"
 #include "Drone.h"
+#include "DroneAnim.h"                 // DANIMSET_BOT_*
 #include "DroneWeapon.h"
 #include "../mp/multiplayer.h"
 #include "../obj/Pickup.h"      // PickupMatrix
@@ -19,9 +20,6 @@
 
 // Fists: a bot always holds them
 #define WEAPON_FISTS 1
-
-// The character whose bot throws Weap_OddjobHat (an mp_characters id)
-#define SKIN_ODDJOB_HAT 0x1a
 
 // XBE_GLOBAL(0x001639c8, 2)
 short BOT_startWeapon = 6;
@@ -67,7 +65,7 @@ bool BOTWEAP_reload(obj_tag *obj, char checkOnly) {
 
     BOT_weapon_t *gun = &vars->weapons[slot];
     int load = wpn->clipSize - gun->rounds;
-    if (load > 0 && (wpn->weaponFlags & 0x100))
+    if (load > 0 && (wpn->weaponFlags & WPNFLAG_SHELL_RELOAD))
         load = 1;
     if (load > reserve)
         load = reserve;
@@ -136,7 +134,7 @@ bool BOTWEAP_EquipAmmo(Drone_tag *drone, short weapon, short count) {
     if (count == 0)
         return false;
 
-    if (wpn->weaponFlags & 0x10) {
+    if (wpn->weaponFlags & WPNFLAG_SWITCH_TO_ALT) {
         if (vars->weapons[Player_AmmoIndex(weapon)].rounds == 0) {
             short loaded = count < wpn->clipSize ? count : wpn->clipSize;
             vars->weapons[Player_AmmoIndex(weapon)].rounds = loaded;
@@ -208,13 +206,13 @@ int BOTWEAP_getWeaponClipSize(Drone_tag *drone, short weapon) {
 // AUTOINJECT
 bool BOTWEAP_isValidWeapon(short weapon) {
     switch (weapon) {
-        case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 0xa: case 0xb: case 0xc:
-        case 0xd: case 0xe: case 0xf: case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16:
-        case 0x18: case 0x19: case 0x1a: case 0x1c: case 0x1d: case 0x1e: case 0x1f: case 0x20: case 0x21:
-        case 0x22: case 0x23: case 0x24: case 0x25: case 0x26: case 0x27: case 0x28: case 0x29: case 0x2a:
-        case 0x2b: case 0x2c: case 0x2d: case 0x2e: case 0x2f: case 0x33: case 0x34: case 0x35: case 0x36:
-        case 0x37: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f: case 0x40: case 0x41:
-        case 0x42: case 0x45: case 0x52:
+        case 1: case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 0xa: case 0xb: case 0xc: case 0xd:
+        case 0xe: case 0xf: case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x18:
+        case 0x19: case 0x1a: case 0x1c: case 0x1d: case 0x1e: case 0x1f: case 0x20: case 0x21: case 0x22: case 0x23:
+        case 0x24: case 0x25: case 0x26: case 0x27: case 0x28: case 0x29: case 0x2a: case 0x2b: case 0x2c: case 0x2d:
+        case 0x2e: case 0x2f: case Weap_LaserBeamFromSamurai: case 0x34: case 0x35: case 0x36: case Weap_RemoteMine:
+        case 0x3a: case Weap_Satchel: case 0x3c: case 0x3d: case 0x3e: case 0x3f: case 0x40: case 0x41: case 0x42:
+        case Weap_OddjobHat: case Weap_Ronin:
             return true;
         default:
             return false;
@@ -245,22 +243,22 @@ int BOTWEAP_getWeaponPriority(short weapon) {
 // AUTOINJECT
 short BOTWEAP_getAnimSet(short weapon) {
     switch (weapon) {
-        case 1: case 0x34: case 0x35: case 0x36: case 0x37: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e:
-        case 0x3f: case 0x40: case 0x45: case 0x52: case 0x53:
-            return 0x18;
+        case 1: case 0x34: case 0x35: case 0x36: case Weap_RemoteMine: case 0x3a: case Weap_Satchel: case 0x3c:
+        case 0x3d: case 0x3e: case 0x3f: case 0x40: case Weap_OddjobHat: case Weap_Ronin: case 0x53:
+            return DANIMSET_BOT_UNARMED;
         case 2: case 3: case 4: case 5: case 6: case 7: case 8: case 9: case 0xa: case 0xb: case 0xc: case 0x41:
         case 0x42:
-            return 0x16;
+            return DANIMSET_BOT_HANDGUN;
         case 0xd:
-            return 0x1a;
+            return DANIMSET_BOT_TWIN_HANDGUNS;
         case 0xe: case 0xf: case 0x10: case 0x11:
-            return 0x17;
-        case 0x12: case 0x13: case 0x14: case 0x15: case 0x2a: case 0x2b: case 0x33:
-            return 0x15;
+            return DANIMSET_BOT_TWO_HANDED_HANDGUN;
+        case 0x12: case 0x13: case 0x14: case 0x15: case 0x2a: case 0x2b: case Weap_LaserBeamFromSamurai:
+            return DANIMSET_BOT_SMG;
         case 0x2c: case 0x2d: case 0x2e: case 0x2f:
-            return 0x19;
+            return DANIMSET_BOT_LAUNCHER;
         default:
-            return 0x14;
+            return DANIMSET_BOT_RIFLE;
     }
 }
 
@@ -269,8 +267,8 @@ short BOTWEAP_getAnimSet(short weapon) {
 // AUTOINJECT
 bool BOTWEAP_shouldChangeWeapon(short weapon) {
     switch (weapon) {
-        case 0x34: case 0x35: case 0x36: case 0x37: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
-        case 0x40: case 0x52: case 0x53:
+        case 0x34: case 0x35: case 0x36: case Weap_RemoteMine: case 0x3a: case Weap_Satchel: case 0x3c: case 0x3d:
+        case 0x3e: case 0x3f: case 0x40: case Weap_Ronin: case 0x53:
             return true;
         default:
             return false;
@@ -282,8 +280,8 @@ bool BOTWEAP_shouldChangeWeapon(short weapon) {
 // AUTOINJECT
 bool BOTWEAP_hasReloadAnim(short weapon) {
     switch (weapon) {
-        case 1: case 0x34: case 0x35: case 0x36: case 0x37: case 0x3a: case 0x3b: case 0x3c: case 0x3d: case 0x3e:
-        case 0x3f: case 0x40: case 0x41: case 0x45: case 0x52: case 0x53:
+        case 1: case 0x34: case 0x35: case 0x36: case Weap_RemoteMine: case 0x3a: case Weap_Satchel: case 0x3c:
+        case 0x3d: case 0x3e: case 0x3f: case 0x40: case 0x41: case Weap_OddjobHat: case Weap_Ronin: case 0x53:
             return false;
         default:
             return true;
@@ -323,7 +321,7 @@ void BOTWEAP_InitWeapon(Drone_tag *drone) {
         (MPSettings.GameMode == GM_DEMOLITION && team == MI6))
         BOTWEAP_EquipWeapon(drone, Weap_Satchel, 1);
 
-    if (vars->skin == SKIN_ODDJOB_HAT) {
+    if (vars->skin == BOT_SKIN_ODDJOB) {
         BOTWEAP_EquipWeapon(drone, Weap_OddjobHat, 1);
         vars->weapon = Weap_OddjobHat;
     }

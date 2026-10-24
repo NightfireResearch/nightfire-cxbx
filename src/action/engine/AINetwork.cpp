@@ -1726,7 +1726,7 @@ bool LinkCreep_Handler(AIRoute_tag *route, DCVars_tag *dcv) {
         uchar blocked = 0;
         bool result = LinkCreep_Increment(route, &blocked);
         if (blocked)
-            dcv->drone->bunchFlags |= 0x1e;
+            dcv->drone->bunchFlags |= DRONE_BLOCKED_ALL;
         return result;
     }
     return LinkCreep_Increment(route, NULL);

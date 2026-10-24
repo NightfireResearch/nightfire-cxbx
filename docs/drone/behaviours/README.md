@@ -694,8 +694,9 @@ behaviour words, the missing cover/AI point bounds (add an assert, not a behavio
   0x3a/0x3b explosives, 0x00-0x02 movement) need the reading states (part A) or a play test toggling each.
 - `DroneAnimStates` +4/+5 and `Drone_AnimInfo` +4/+0xf are not read by the functions I traced; `anim_states.csv`
   has them raw.
-- Anim state ids have no names; the rows' scripts (`anim_tables.csv`) can be named by playing them with the
-  docs/anim tools (a good follow-up: export each state's column-0 script to see what it is).
+- Anim state ids have no names in any build: `DroneAnimStateId` (DroneAnim.h) names the ones the code asks for
+  after the states and functions that ask for them, and numbers the rest. The rows' scripts (`anim_tables.csv`)
+  can be named by playing them with the docs/anim tools (a good follow-up: export each state's column-0 script).
 - Where the cover-node and AI-point arrays are allocated and their capacity (part C / `Drone_PostLoad_Init`).
 - Whether single-player drones really never react to the broadcast messages 0x11/0x12/0x13/0x15 (4.5): confirm in
   play by shooting a drone near another one out of its sight.

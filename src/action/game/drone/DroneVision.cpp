@@ -75,7 +75,7 @@ bool DroneWeap_GetWeaponInfo(Drone_tag *drone, int *bone, uint *flash, ushort *s
     *bone = AnimDatumGetWeaponInfo(obj, NULL, (HASHCODE *)flash, sound);
     if (*bone < 0)
         return false;
-    if (obj->animState == NULL || !(obj->animState->animObj.flags & 1))
+    if (obj->animState == NULL || !(obj->animState->animObj.flags & ANIMOBJ_POSE_VALID))
         return false;
     if (sound != NULL && *sound == 0)
         *sound = 0xffff;
@@ -292,7 +292,7 @@ bool DroneVision_OpponentLOS(Drone_tag *drone) {
     obj_tag *opponent = drone->opponent;
     if (opponent == NULL)
         return false;
-    if (MPSettings.dronesAreBots || drone->side == 3)
+    if (MPSettings.dronesAreBots || drone->side == DRONE_SIDE_NEUTRAL)
         return NDrone2_CanSeeObject(drone, opponent, HEAD_BONE, 0);
 
     bool seen = false;
@@ -360,9 +360,9 @@ bool DroneVision_SeekOpponentLOS(Drone_tag *drone) {
 void DroneVision_LogSeenOpponent(Drone_tag *drone) {
     if (drone->opponent != glb_players[0] || drone->seenPlayerLogged)
         return;
-    if (drone->side == 2)
+    if (drone->side == DRONE_SIDE_ALLY)
         return;
-    if (drone->side == 3 && GameState.CurrentLevelHashcode != HT_Level_TowerA &&
+    if (drone->side == DRONE_SIDE_NEUTRAL && GameState.CurrentLevelHashcode != HT_Level_TowerA &&
         GameState.CurrentLevelHashcode != HT_Level_TowerB)
         return;
     if (GameState.CurrentLevelHashcode == HT_Level_CastleIndoors1 && !NDrone2_ObjectIsArmed(drone->opponent))
@@ -409,7 +409,7 @@ void DroneVision_HaveOpponentSight(Drone_tag *drone) {
         Music_Event(0xf, 1);
     }
     if (behaviour_util_getProperty(DRONE_PROP_SIGHTING_FAILS_MISSION, drone->currentBehaviour))
-        DroneFunc_SetMissionFailReason(drone, 10);
+        DroneFunc_SetMissionFailReason(drone, DRONE_FAIL_SEEN);
 }
 
 // ---- drones alerting each other
@@ -468,7 +468,7 @@ static bool AlertedByWhatItKnows(Drone_tag *drone, uint known) {
         if (behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DEAD_BODY, behaviour))
             return true;
     }
-    if (known & DRONE_KNOWS_BIT4)
+    if (known & DRONE_KNOWS_ATTACK)
         return true;
     if ((known & DRONE_KNOWS_HURT) && behaviour_util_getProperty(DRONE_PROP_ALERTED_BY_DRONE_SHOT, behaviour))
         return true;
@@ -493,7 +493,7 @@ static bool AlertedByWhatItKnows(Drone_tag *drone, uint known) {
 bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     uint flags = drone->flags;
     char inView = 0;
-    if (!(flags & DRONE_FLAG_ALERTABLE) || drone->side == 2 || drone->dtype == DTYPE_Hostage ||
+    if (!(flags & DRONE_FLAG_ALERTABLE) || drone->side == DRONE_SIDE_ALLY || drone->dtype == DTYPE_Hostage ||
         MPDrone_IsDyingOrDead(drone->gameObj))
         return false;
     HASHCODE level = GameState.CurrentLevelHashcode;
@@ -522,7 +522,7 @@ bool DroneVision_ConsiderAlerted(Drone_tag *drone, Drone_tag *alerter) {
     if (level >= HT_Level_PowerStationA1 && level <= HT_Level_PowerStationA2 &&
         (drone->skinClass == SKINCLASS_ELITE || drone->skinClass == SKINCLASS_SNIPER)) {
         if (!Drone_IsTalking(drone))
-            NDrone2_SpeechSFXd(drone, 0xd0, 0, 0, 0);
+            NDrone2_SpeechSFXd(drone, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_45B, 0, 0, 0);
     } else {
         if (level == HT_Level_CastleIndoors1 && NPCGlobals.interogating) {
             drone->viewRange = 20.0f;
@@ -550,7 +550,7 @@ static bool KnowsSomething(Drone_tag *drone) {
         return false;
     if (!(drone->flags & DRONE_FLAG_ENABLED))
         return false;
-    if (drone->side == 2)
+    if (drone->side == DRONE_SIDE_ALLY)
         return false;
     return drone->knowledge != 0;
 }

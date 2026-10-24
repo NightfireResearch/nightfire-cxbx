@@ -34,10 +34,6 @@
 #define WORLD_BONE(bone) (0x80000000 | (bone))
 #define AIM_BONE 2
 
-// MP_sendBotMessage's messages
-#define BOT_MSG_OBJECTIVE_SEEN 0x3b
-#define BOT_MSG_NEW_OPPONENT 0x45
-
 // The cost NDrone2_FindOpponent's bots give a player they do not consider
 #define NO_COST 640000.0f
 
@@ -65,7 +61,7 @@ static double FacingDegrees(obj_tag *from, obj_tag *obj) {
 // The target entry for obj: the one it has, else the first free one, cleared. Only enemies get one.
 // AUTOINJECT
 uchar DroneFunc_AllocateTargetID(Drone_tag *drone, obj_tag *obj) {
-    if (drone->side != 1)
+    if (drone->side != DRONE_SIDE_ENEMY)
         return NO_TARGET_SLOT;
     for (uchar i = 0; i < MAX_DRONE_TARGETS; i++) {
         if ((NPCGlobals.targets[i].flags & DRONE_TARGET_USED) && NPCGlobals.targets[i].obj == obj)
@@ -156,7 +152,7 @@ void NDrone2_SetOpponentAimPos(Drone_tag *drone) {
         return;
     if (MPSettings.dronesAreBots) {
         NDrone2_GetHeadPos(opponent, &drone->aimOffset, NULL);
-        uint odds = (drone->botVars->stats.traitFlags & 1) ? 4 : drone->accuracy * 4;
+        uint odds = (drone->botVars->stats.traitFlags & BOT_TRAIT_1) ? 4 : drone->accuracy * 4;
         _VECTOR head;
         if (Rand_Rand(odds) != odds - 1 && NDrone2_OpponentBonePos(drone->opponent, AIM_BONE, &head)) {
             Vec_Swap(&head, &drone->aimOffset);
@@ -164,7 +160,7 @@ void NDrone2_SetOpponentAimPos(Drone_tag *drone) {
             drone->aimOffset.y = (float)(drone->aimOffset.y - towardsHead);
         }
     } else {
-        uint bone = (drone->sightFlags & 2) ? Drone_View_Bones[drone->viewBone] : AIM_BONE;
+        uint bone = (drone->sightFlags & DRONE_SIGHT_LOS) ? Drone_View_Bones[drone->viewBone] : AIM_BONE;
         NDrone2_OpponentBonePos(opponent, bone, &drone->aimOffset);
     }
     Vec_Subtract(&drone->aimOffset, &drone->opponent->position, &drone->aimOffset);
@@ -191,7 +187,7 @@ void NDrone2_SetOpponent(Drone_tag *drone, obj_tag *opponent) {
     bool same = drone->opponent == opponent;
     drone->opponent = opponent;
     if (MPSettings.dronesAreBots)
-        MP_sendBotMessage(drone->gameObj, BOT_MSG_NEW_OPPONENT, (uintptr_t)opponent, 0);
+        MP_sendBotMessage(drone->gameObj, DRONE_MSG_BotNewOpponent, (uintptr_t)opponent, 0);
     if (opponent == NULL) {
         Vec_Zero(&drone->aimOffset);
         drone->targetSlot = NO_TARGET_SLOT;
@@ -399,7 +395,7 @@ static obj_tag* NDrone2_FindBotOpponent(Drone_tag *drone) {
         return NULL;
     if (!NDrone2_CanSeeObject(drone, objective, 5, 0))
         return NULL;
-    MP_sendBotMessage(drone->gameObj, BOT_MSG_OBJECTIVE_SEEN, 1, 0);
+    MP_sendBotMessage(drone->gameObj, DRONE_MSG_BotGoalComplete, 1, 0);
     return BOT_handleOpponentHistory(drone, objective);
 }
 
@@ -414,7 +410,7 @@ obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
     if (MPSettings.dronesAreBots)
         return NDrone2_FindBotOpponent(drone);
 
-    if (drone->side != 2) {
+    if (drone->side != DRONE_SIDE_ALLY) {
         obj_tag *player = NDrone2_Player();
         if (!PlrStat_OkToUpdate()) {
             player = NULL;
@@ -469,7 +465,7 @@ obj_tag* NDrone2_FindOpponent(Drone_tag *drone) {
             Drone_tag *otherDrone = (Drone_tag *)obj->extraObjectData;
             if (!(otherDrone->flags & (DRONE_FLAG_DEAD | DRONE_FLAG_DYING)) && (otherDrone->flags & DRONE_FLAG_ENABLED)
                 && !(otherDrone->health <= 0.0f)
-                && obj->objectType != OBJECTTYPE_DEAD_DRONE && !(obj->flags & 1) && other->side == 1
+                && obj->objectType != OBJECTTYPE_DEAD_DRONE && !(obj->flags & 1) && other->side == DRONE_SIDE_ENEMY
                 && Vec_SqDist2D(&drone->gameObj->position, &obj->position) < nearestSq
                 && NDrone2_CanSeeObject(drone, other->gameObj, 5, 0)) {
                 NDrone2_SetOpponent(drone, other->gameObj);

@@ -334,8 +334,8 @@ typedef enum {
     DTYPE_CastleChatGuard,
     DTYPE_SniperAlert, // 25
     DTYPE_Unnamed26,
-    DTYPE_Abseil27,
-    DTYPE_Abseil28,
+    DTYPE_AbseilToGround,
+    DTYPE_AbseilHang,           // a slider stops on the rope level with its opponent
     DTYPE_Astronaut,
     DTYPE_Bot, // 30
     DTYPE_COUNT = 85
@@ -360,20 +360,54 @@ typedef enum {
     DRONE_MSG_TimerB = 0xd,
     DRONE_MSG_Enable = 0xe,         // leave WaitSwitch
     DRONE_MSG_OpponentSighted = 0xf,
+    DRONE_MSG_AlertSighting = 0x11, // the alert shouts (NDrone2_DroneAlertToObject): an opponent seen
+    DRONE_MSG_AlertDroneShot = 0x12,  // a drone hurt
+    DRONE_MSG_AlertSurrender = 0x13,  // a drone surrendering
     DRONE_MSG_HeardNoise = 0x14,
     DRONE_MSG_DroneAlert = 0x15,    // a dead body etc.; broadcast
+    DRONE_MSG_AlertAttack = 0x16,   // NDrone2_SendAttackMessage
     DRONE_MSG_ImpactSmoke = 0x17,
     DRONE_MSG_ImpactStunGrenade = 0x18,
     DRONE_MSG_ImpactStunDart = 0x19,
     DRONE_MSG_TalkToMissionObject = 0x1a,
+    DRONE_MSG_1B = 0x1b,            // no sender found for either
+    DRONE_MSG_1C = 0x1c,
     DRONE_MSG_ForceState = 0x1d,    // extraData = the DSTATE
     DRONE_MSG_GlobalAlarm = 0x1e,   // every 30 frames while SWITCH_GLOBAL_ALARM is on
     DRONE_MSG_ConsideredAlerted = 0x1f,
     DRONE_MSG_AnimEvent = 0x20,
     DRONE_MSG_ExplosiveSeen = 0x21, // extraData = the object
     DRONE_MSG_ObjectHit = 0x22,     // non-damaging (inferred)
+    DRONE_MSG_TurnedBehind = 0x23,  // the search and heard-noise states' own, at the end of an anim
+    DRONE_MSG_SearchLooked = 0x24,
+    DRONE_MSG_SearchDone = 0x25,
     DRONE_MSG_BotStateChanged = 0x2e, // to BotGlobal; scope = the new state
-    // 0x2f-0x45: bot messages (docs/drone/bots-and-navigation)
+
+    // The bot messages, to DSTATE_BotGlobal (docs/drone/bots-and-navigation). 0x2f-0x39, 0x3e and 0x3f tell an
+    // agent what it did in the multiplayer modes (MP_setPlayerStatus); BotGlobal only answers them.
+    DRONE_MSG_BotFlagTaken = 0x2f,
+    DRONE_MSG_BotFlagDropped = 0x30,
+    DRONE_MSG_BotFlagCaptured = 0x31,
+    DRONE_MSG_BotBlueprintTaken = 0x32,
+    DRONE_MSG_BotBlueprintDropped = 0x33,
+    DRONE_MSG_BotBlueprintDelivered = 0x34,
+    DRONE_MSG_BotKeyTaken = 0x35,           // the GoldenEye key
+    DRONE_MSG_BotCrystalTaken = 0x36,       // and crystal
+    DRONE_MSG_BotKeyDropped = 0x37,
+    DRONE_MSG_BotCrystalDropped = 0x38,
+    DRONE_MSG_BotEnteredHill = 0x39,
+    DRONE_MSG_BotLeftHill = 0x3a,           // the bot picks the objective goal again
+    DRONE_MSG_BotGoalComplete = 0x3b,       // extraData = the goal slot
+    DRONE_MSG_BotGoalUninit = 0x3c,         // extraData = the goal slot
+    DRONE_MSG_BotCancelGoals = 0x3d,        // extraData = the object
+    DRONE_MSG_BotUplinkTaken = 0x3e,
+    DRONE_MSG_BotUplinkTakenOver = 0x3f,
+    DRONE_MSG_BotObjectiveGone = 0x40,      // extraData = the demolition or protection object that went
+    DRONE_MSG_BotObjectiveDestroyed = 0x41, // extraData = the object destroyed
+    DRONE_MSG_BotChangeWeapon = 0x42,       // extraData = the weapon
+    DRONE_MSG_BotPlayerDied = 0x43,         // extraData = the agent's object
+    DRONE_MSG_BotWeaponChanged = 0x44,      // extraData = the weapon; sender = the agent's object
+    DRONE_MSG_BotNewOpponent = 0x45,        // extraData = the opponent (NDrone2_SetOpponent)
 } DRONE_MSG;
 
 // A point drones take notice of (NPCGlobals.awarePoints, built each frame by Drone_BuildDynamicAwarePoints).
@@ -400,8 +434,10 @@ typedef struct DroneTarget_tag {
 } DroneTarget_tag;
 
 // DroneTarget_tag.flags
-#define DRONE_TARGET_USED 1     // handed out (DroneFunc_AllocateTargetID)
-#define DRONE_TARGET_SEEN 2     // DroneFunc_TargetSeen
+typedef enum {
+    DRONE_TARGET_USED = 0x1,    // handed out (DroneFunc_AllocateTargetID)
+    DRONE_TARGET_SEEN = 0x2,    // DroneFunc_TargetSeen
+} DroneTargetFlags;
 
 // The last alert a drone broadcast (NPCGlobals.alert; NDrone2_DroneAlertToObject, NDrone2_DroneAlertToPosition):
 // the message's extraData
@@ -428,6 +464,140 @@ LAYOUT_32(sizeof(DroneTarget_tag) == 0x18, "DroneTarget_tag is 0x18 bytes");
 struct CoverNode_tag;
 struct DroneAIPoint_tag;
 
+// Drone_SfxInfo rows (NDrone2_PlaySFX, NDrone2_SpeechSFX, DroneFunc_ChooseSFX and the talk functions), named
+// after the sound each plays (Action_SFX) unless the code gives a use; only those the code names
+typedef enum {
+    DRONE_SFX_CHR_GENERIC_GUARD_DIE = 0x1,
+    DRONE_SFX_CHR_DRAKE_DEATH = 0x2,
+    DRONE_SFX_CHR_GENERIC_GUARD_DIE_2 = 0x3,
+    DRONE_SFX_CHR_GENERIC_GUARD_DIE_3 = 0x4,
+    DRONE_SFX_CHR_GENERIC_GUARD_DIE_4 = 0x5,
+    DRONE_SFX_CHR_ROOK_DEATH = 0x8,
+    DRONE_SFX_CHR_HOSTAGE_GIRL_DEATH = 0x9,
+    DRONE_SFX_CHR_HOSTAGE_GIRL_DEATH_2 = 0xa,
+    DRONE_SFX_CHR_ZOE_DEATH = 0xd,
+    DRONE_SFX_CHR_KIKO_DEATH = 0xe,
+    DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN = 0xf,
+    DRONE_SFX_CHR_DRAKE_PAIN = 0x10,
+    DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_2 = 0x11,
+    DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_3 = 0x12,
+    DRONE_SFX_CHR_GENERIC_GUARD_PAIN = 0x13,
+    DRONE_SFX_CHR_GENERIC_SOLDIER_PAIN_4 = 0x14,
+    DRONE_SFX_CHR_MAYHEW_PAIN_2 = 0x15,
+    DRONE_SFX_CHR_ROOK_PAIN = 0x16,
+    DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV = 0x17,
+    DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV_2 = 0x18,
+    DRONE_SFX_CHR_ZOE_PAIN = 0x1b,
+    DRONE_SFX_CHR_GEN_HOSTAGE_PAIN_SERV_5 = 0x1c,
+    DRONE_SFX_21 = 0x21,
+    DRONE_SFX_SURRENDERED_DRONE = 0x23,
+    DRONE_SFX_HEARD_THAT = 0x26,
+    DRONE_SFX_DOOR_OPEN = 0x27,
+    DRONE_SFX_KICK = 0x28,
+    DRONE_SFX_CHR_SPEECH_M2_INTER_YAK1 = 0x29,
+    DRONE_SFX_CHR_SPEECH_M2_INTER_SERV10 = 0x2f,
+    DRONE_SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK11 = 0x33,
+    DRONE_SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK18 = 0x36,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA01 = 0x37,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA24 = 0x3f,
+    DRONE_SFX_BROKEN_OBJECT_FIRST = 0x40,
+    DRONE_SFX_BROKEN_OBJECT_LAST = 0x43,
+    DRONE_SFX_CHR_SPEECH_M2_BUNKER_FAIL_MAYHEW13 = 0x44,
+    DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW14 = 0x45,
+    DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW15 = 0x46,
+    DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW19 = 0x47,
+    DRONE_SFX_CIVILIAN_SCARED = 0x48,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA17 = 0x49,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA18_2 = 0x4a,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA12 = 0x4d,
+    DRONE_SFX_CHR_SPEECH_M1_GUARD_CHATTER_SOLDA04 = 0x4e,
+    DRONE_SFX_DOOR_GUARD_ZONE2_FIRST = 0x4f,
+    DRONE_SFX_DOOR_GUARD_ZONE2_LAST = 0x50,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_INT_GUARD8_B = 0x51,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKO02 = 0x52,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND1A = 0x53,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND1B = 0x54,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND2A = 0x55,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKOBOND2B = 0x56,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_KIKO03 = 0x57,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_F1_AUS = 0x58,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_M2_E = 0x84,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_GUEST_M10_E = 0x8c,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_INT_GUARD5_B = 0x8e,
+    DRONE_SFX_DOOR_GUARD_ZONE3_FIRST = 0x8f,
+    DRONE_SFX_DOOR_GUARD_ZONE3_LAST = 0x92,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_INT_GUARD18_B = 0x93,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_INT_GUARD19_B = 0x94,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_MAYHEW1 = 0x95,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_ROOK1 = 0x97,
+    DRONE_SFX_CHR_SPEECH_M1_RESCUE_ZOE7 = 0x9b,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE6B2 = 0x9c,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE06B = 0x9d,
+    DRONE_SFX_CHR_SPEECH_CAS_IG_ZOE08 = 0x9e,
+    DRONE_SFX_CHR_SPEECH_M2_INTER_SERV3 = 0x9f,
+    DRONE_SFX_CHR_SPEECH_GEN_YAK_COMBAT_YAK11_2 = 0xa3,
+    DRONE_SFX_CHR_SPEECH_M3_YAK_005 = 0xaa,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_001 = 0xac,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_016 = 0xb2,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_009 = 0xb3,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_014 = 0xb7,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_020 = 0xb9,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_021 = 0xba,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_022 = 0xbb,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_017 = 0xbd,
+    DRONE_SFX_CHR_SPEECH_M5_BO1_018 = 0xbe,
+    DRONE_SFX_CHR_SPEECH_M3_GUA_002 = 0xc3,
+    DRONE_SFX_CHR_SPEECH_M3_GUA_023 = 0xcb,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_40B = 0xcc,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_41B = 0xcd,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_44B = 0xcf,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_45B = 0xd0,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_46B = 0xd1,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_42B = 0xd2,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_2B = 0xd3,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_4B = 0xd5,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_10B = 0xd6,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_1B = 0xd7,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_11B = 0xd8,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_14B = 0xd9,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_16B = 0xda,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_17B = 0xdb,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_19B = 0xdc,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_20B = 0xdd,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_21B = 0xde,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_27B = 0xdf,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_29B = 0xe0,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_30B = 0xe1,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_32B = 0xe2,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_35B = 0xe3,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_36B = 0xe4,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_37B = 0xe5,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_38B = 0xe6,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_39B = 0xe7,
+    DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_9B = 0xe8,
+    DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT13 = 0xe9,
+    DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT4 = 0xeb,
+    DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT7 = 0xec,
+    DRONE_SFX_CHR_SPEECH_AST_ROOK_TAUNT5 = 0xf2,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_20 = 0xf3,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_25 = 0xf4,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_21 = 0xf7,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_26 = 0xf8,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_24 = 0xfb,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_29 = 0xfc,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_1 = 0x10d,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_8 = 0x10e,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_13 = 0x11b,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_5 = 0x121,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_45 = 0x133,
+    DRONE_SFX_CHR_SPEECH_USB_PHX_50 = 0x137,
+    DRONE_SFX_BOT_PAIN = 0x14d,
+    DRONE_SFX_BOT_PAIN_FEMALE = 0x152,
+    DRONE_SFX_BOT_DEATH = 0x154,
+    DRONE_SFX_BOT_DEATH_FEMALE = 0x157,
+} DroneSfx;
+#define DRONE_SFX_COUNT 346
+
 // One sound NDrone2_PlaySFX played (NPCGlobals.sfxLog): its Drone_SfxInfo number, 0 when it did not start
 typedef struct DroneSfxLog {
     uint sfx;
@@ -435,7 +605,10 @@ typedef struct DroneSfxLog {
 } DroneSfxLog;
 LAYOUT_32(sizeof(DroneSfxLog) == 8, "DroneSfxLog is 8 bytes");
 
-#define DRONE_SFX_LOG 16
+#define DRONE_SFX_LOG_SIZE 16
+
+// The third of DRONE_PROP_ALERTNESS's levels ({0, 0, 0.66, 1.0}): from it drones use their alert anims and states
+#define DRONE_ALERTNESS_SUSPICIOUS 0.66f
 
 // The NPC system's globals: one block that Drone_LevelReset clears whole (0x142c bytes). FUN_00030e70 and
 // Drone_PostLoad_Init clear the aware points at +0xb54 and safetyEmitter at +0x1354.
@@ -521,7 +694,7 @@ typedef struct {
     uint alarmFrame;            // +0x1394 - Drone_InitComms sends DRONE_MSG 0x1e every 30 frames while
                                 //           SWITCH_GLOBAL_ALARM is on
     char _pad1398[0x13a8 - 0x1398];
-    DroneSfxLog sfxLog[DRONE_SFX_LOG];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
+    DroneSfxLog sfxLog[DRONE_SFX_LOG_SIZE];  // +0x13a8 - the last sounds NDrone2_PlaySFX played, in a ring
     uint sfxLogNext;            // +0x1428 - the entry it writes next
 } NPCGlobals_t;
 LAYOUT_32(sizeof(NPCGlobals_t) == 0x142c, "Bad size for NPCGlobals_t");
@@ -651,6 +824,28 @@ void DroneFunc_HandleExplosives(DCVars_tag *dcv);
 void NDrone2_SeenAndAttacking(DCVars_tag *dcv);
 
 // NDrone2_Death.cpp
+
+// DroneFunc_SetMissionFailReason's reasons, named for who fails the mission (our names)
+typedef enum {
+    DRONE_FAIL_STATE = 0,                       // DSTATE_FailMission: no message
+    DRONE_FAIL_CIVILIAN_KILLED_BY_PLAYER = 1,   // a drone not an enemy (DRONE_PROP_PLAYER_KILL_FAILS_MISSION)
+    DRONE_FAIL_ENEMY_KILLED_BY_PLAYER = 2,
+    DRONE_FAIL_CIVILIAN_KILLED = 3,             // by anyone (DRONE_PROP_DEATH_FAILS_MISSION)
+    DRONE_FAIL_ENEMY_KILLED = 4,
+    DRONE_FAIL_UNARMED_PUNCHED = 5,             // in CastleIndoors1
+    DRONE_FAIL_CIVILIAN_PUNCHED = 6,            // unarmed, outside the towers
+    DRONE_FAIL_UNARMED_TASERED = 7,             // in CastleIndoors1
+    DRONE_FAIL_ATTACKED = 8,                    // DroneFunc_FirstAttack (DRONE_PROP_ALERT_FAILS_MISSION)
+    DRONE_FAIL_HOSTAGE_DEAD = 9,
+    DRONE_FAIL_SEEN = 10,                       // DRONE_PROP_SIGHTING_FAILS_MISSION
+    DRONE_FAIL_PARTY_GIRL_ALERTED = 11,         // DSTATE_PartyGirl (DRONE_PROP_ALERT_FAILS_MISSION)
+    DRONE_FAIL_DOOR_GUARD = 12,                 // DSTATE_CivilianDoorGuard: the opponent in zone 3
+    DRONE_FAIL_TASERED = 13,                    // DTYPE_Zoe, DTYPE_Mayhew
+    DRONE_FAIL_STUN_DARTED = 14,
+    DRONE_FAIL_ZOE_LEASH = 15,                  // SWITCH_ZOE_LEASH: more than 10 m from the player
+    DRONE_FAIL_ALARM = 16,                      // DSTATE_PressAlarm: the nearest switch's channel
+} DroneFailReason;
+
 void DroneFunc_SetMissionFailReason(Drone_tag *drone, uint reason);
 void NDrone2_SetAsDead(DCVars_tag *dcv);
 bool NDrone2_FadeOut(DCVars_tag *dcv);

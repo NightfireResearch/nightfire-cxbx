@@ -31,15 +31,23 @@
 // The corner anims: a list per step for each mode and side (DRONE_COVER_SIDE_MASK, 1 or 2)
 // XBE_GLOBAL(0x00163fc4, 0x6c)
 static const ushort CoverCornerAnimLists[9][6] = {
-    {16, 16, 19, 88, 16, 26},
-    {16, 16, 20, 88, 16, 26},
-    {16, 16, 21, 88, 16, 26},
-    {16, 16, 22, 88, 16, 26},
-    {26, 26, 23, 88, 26, 26},
-    {26, 26, 24, 88, 26, 26},
-    {26, 26, 27, 88, 26, 26},
-    {26, 26, 28, 88, 26, 26},
-    {17, 17, 10, 88, 17, 10},
+    {DANIM_CORNER_CROUCH, DANIM_CORNER_CROUCH, DANIM_CROUCH_LEAN, DANIM_COVER_FIRE, DANIM_CORNER_CROUCH,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_CROUCH, DANIM_CORNER_CROUCH, DANIM_CROUCH_LEAN_SIDE2, DANIM_COVER_FIRE, DANIM_CORNER_CROUCH,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_CROUCH, DANIM_CORNER_CROUCH, DANIM_CROUCH_STEP_OUT, DANIM_COVER_FIRE, DANIM_CORNER_CROUCH,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_CROUCH, DANIM_CORNER_CROUCH, DANIM_CROUCH_STEP_OUT_SIDE2, DANIM_COVER_FIRE, DANIM_CORNER_CROUCH,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_STAND, DANIM_CORNER_STAND, DANIM_STAND_LEAN, DANIM_COVER_FIRE, DANIM_CORNER_STAND,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_STAND, DANIM_CORNER_STAND, DANIM_STAND_LEAN_SIDE2, DANIM_COVER_FIRE, DANIM_CORNER_STAND,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_STAND, DANIM_CORNER_STAND, DANIM_STAND_STEP_OUT, DANIM_COVER_FIRE, DANIM_CORNER_STAND,
+     DANIM_CORNER_STAND},
+    {DANIM_CORNER_STAND, DANIM_CORNER_STAND, DANIM_STAND_STEP_OUT_SIDE2, DANIM_COVER_FIRE, DANIM_CORNER_STAND,
+     DANIM_CORNER_STAND},
+    {DANIM_CROUCH_COVER, DANIM_CROUCH_COVER, DANIM_AIM_STAND, DANIM_COVER_FIRE, DANIM_CROUCH_COVER, DANIM_AIM_STAND},
 };
 // XBE_GLOBAL(0x00164030, 0x28)
 static const ushort *const DroneCoverCornerAnims[5][2] = {
@@ -51,35 +59,10 @@ static const ushort *const DroneCoverCornerAnims[5][2] = {
 };
 // The low nodes' anims, by step
 // XBE_GLOBAL(0x00164058, 0xc)
-static const ushort CoverLowAnimList[6] = {17, 17, 10, 88, 17, 10};
+static const ushort CoverLowAnimList[6] = {DANIM_CROUCH_COVER, DANIM_CROUCH_COVER, DANIM_AIM_STAND, DANIM_COVER_FIRE,
+                                           DANIM_CROUCH_COVER, DANIM_AIM_STAND};
 // XBE_GLOBAL(0x00164064, 0x4)
 static const ushort *const DroneCoverLowAnims = CoverLowAnimList;
-
-// A node a drone waits at once (its wait flag), and a kick node whose object has been kicked (our names)
-#define AINODE_WAIT 0x1
-#define AINODE_ACTION_ANIM 0x8
-#define AINODE_MISSION_WAIT 0x20
-#define AINODE_FIDDLE 0x40
-#define AINODE_KICKED 0x8000
-
-// Anim states (our names)
-#define DANIM_COVER_FIRE_LOW 0x58
-#define DANIM_CROUCH_AIM 5          // DroneAnim_ValidateCoverAnim gives way to 7, or else 10
-#define DANIM_CROUCH_AIM_ALT 7
-#define DANIM_STAND_AIM 10
-#define DANIM_STAND_ALERT 0x21
-#define DANIM_THROW_GRENADE 0x49
-#define DANIM_SNIPER_IDLE 0xe
-#define DANIM_RELOAD 0x52
-#define DANIM_USE_DOOR 0x4e
-#define DANIM_IDLE_FIDDLE 0x23
-
-#define SFX_DOOR_OPEN 0x27
-#define SFX_KICK 0x28
-
-// UnderCoverLeaveNow: from these anim rows it steps out to the side of its opponent
-#define DANIM_ROW_COVER_A 0x87
-#define DANIM_ROW_COVER_B 0xab
 
 static_assert(std::bit_cast<uint32_t>(0.08f) == 0x3da3d70a, "not the original's 0.08");
 static_assert(std::bit_cast<uint32_t>(0.33f) == 0x3ea8f5c3, "not the original's 0.33");
@@ -94,8 +77,8 @@ static void SetTimer(DroneTimer *timer, uint dueFrame) {
 
 // Anim state 5 the drone has no script for becomes 7, or failing that 10; any other is kept as it is
 ushort DroneAnim_ValidateCoverAnim(DCVars_tag *dcv, ushort state) {
-    if (!DroneAnim_CanDoAnimState(dcv, state, 0) && state == DANIM_CROUCH_AIM)
-        return DroneAnim_CanDoAnimState(dcv, DANIM_CROUCH_AIM_ALT, 0) ? DANIM_CROUCH_AIM_ALT : DANIM_STAND_AIM;
+    if (!DroneAnim_CanDoAnimState(dcv, state, 0) && state == DANIM_AIM_CROUCH)
+        return DroneAnim_CanDoAnimState(dcv, DANIM_AIM_CROUCH_ALT, 0) ? DANIM_AIM_CROUCH_ALT : DANIM_AIM_STAND;
     return state;
 }
 
@@ -140,7 +123,7 @@ bool DroneAnim_CoverAnim(DCVars_tag *dcv, uchar step, short endState) {
             break;
         case COVER_STEP_FIRE:
             drone->coverStep = step;
-            anim = DANIM_COVER_FIRE_LOW;
+            anim = DANIM_COVER_FIRE;
             break;
         case COVER_STEP_LEAVE:
             drone->coverFlags |= DRONE_COVER_LEFT;
@@ -286,18 +269,18 @@ void DroneFunc_RunForCoverTalk(DCVars_tag *dcv) {
     case HT_Level_Tower2B:
     case HT_Level_Tower2C:
     case HT_Level_Tower2Elevator:
-        DroneFunc_InjuredSFX(dcv, 0xbd);
+        DroneFunc_InjuredSFX(dcv, DRONE_SFX_CHR_SPEECH_M5_BO1_017);
         return;
     case HT_Level_PowerStationA1:
     case HT_Level_PowerStationA2:
-        sfx = DroneFunc_ChooseSFX(0xd0, 0xd1);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_45B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_46B);
         break;
     case HT_Level_EvilBase:
     case HT_Level_EvilSilo:
     case HT_Level_EvilBaseC:
         if (drone->skinClass == SKINCLASS_ROOK)
             return;
-        sfx = DroneFunc_ChooseSFXByID(drone, 0x11b, 0x121);
+        sfx = DroneFunc_ChooseSFXByID(drone, DRONE_SFX_CHR_SPEECH_USB_PHX_13, DRONE_SFX_CHR_SPEECH_USB_PHX_5);
         break;
     default:
         return;
@@ -319,11 +302,11 @@ void DroneFunc_UnderCoverTalk(DCVars_tag *dcv) {
     case HT_Level_Tower2B:
     case HT_Level_Tower2C:
     case HT_Level_Tower2Elevator:
-        sfx = DroneFunc_ChooseSFX(0xbd, 0xbe);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_M5_BO1_017, DRONE_SFX_CHR_SPEECH_M5_BO1_018);
         break;
     case HT_Level_PowerStationA1:
     case HT_Level_PowerStationA2:
-        sfx = DroneFunc_ChooseSFX(0xcf, 0xd1);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_44B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_46B);
         break;
     default:
         return;
@@ -345,11 +328,11 @@ void DroneFunc_UnderCoverAimTalk(DCVars_tag *dcv) {
     case HT_Level_Tower2B:
     case HT_Level_Tower2C:
     case HT_Level_Tower2Elevator:
-        sfx = DroneFunc_ChooseSFX(0xba, 0xbb);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_M5_BO1_021, DRONE_SFX_CHR_SPEECH_M5_BO1_022);
         break;
     case HT_Level_PowerStationA1:
     case HT_Level_PowerStationA2:
-        sfx = DroneFunc_ChooseSFX(0xd0, 0xd1);
+        sfx = DroneFunc_ChooseSFX(DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_45B, DRONE_SFX_CHR_SPEECH_NUK_IG_SNIP2_46B);
         break;
     default:
         return;
@@ -444,14 +427,14 @@ bool NDrone2_ReachedDestNode(AIRoute_tag *route, DCVars_tag *dcv) {
     if ((ushort)(current + 1) < route->count)
         next = nodes[route->nodes[current + 1]].fileNode;
 
-    if (node->flags & 0x10000)
-        Drone_MayhewTalk(0x44);
-    if (node->flags & 0x40000)
-        Drone_MayhewTalk(0x46);
-    if (node->flags & 0x20000)
-        Drone_MayhewTalk(0x45);
-    if (node->flags & 0x80000)
-        Drone_MayhewTalk(0x47);
+    if (node->flags & AINODE_MAYHEW_TALK_1)
+        Drone_MayhewTalk(DRONE_SFX_CHR_SPEECH_M2_BUNKER_FAIL_MAYHEW13);
+    if (node->flags & AINODE_MAYHEW_TALK_3)
+        Drone_MayhewTalk(DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW15);
+    if (node->flags & AINODE_MAYHEW_TALK_2)
+        Drone_MayhewTalk(DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW14);
+    if (node->flags & AINODE_MAYHEW_TALK_4)
+        Drone_MayhewTalk(DRONE_SFX_CHR_SPEECH_M2_MAY_DIR_MAYHEW19);
 
     if ((node->flags & AINODE_WAIT) && dcv->drone->alertness < 0.33f) {
         if ((ushort)route->current != drone->waitNode) {
@@ -533,13 +516,13 @@ bool DroneAnim_SetScript(HASHCODE script, ushort animState, ushort nextRow, ucha
     drone->animEndBlend = blend;
     drone->animCallSpeedTaken = 0.0f;
     drone->animCallSpeed = 0.0f;
-    drone->animMode = 1;
+    drone->animMode = DANIMMODE_LOOP_UNTIL_CALLED;
     drone->animPriority = 99;
     drone->animRow = 0;
     drone->animEndMsg = endMsg;
     drone->animMoveSpeed = 0.0f;
     drone->animMoveState = 0;
-    drone->aimMode = 0;
+    drone->aimMode = DRONE_AIM_NONE;
     drone->animFlags = flags;
     drone->animCallTaken = 1;
     if (script == 0)
@@ -563,7 +546,7 @@ bool NDrone2_DSTATE_RunForCover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        Drone_AlertStatusSet(1, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALERTED, dcv);
         if (!dcv->drone->aiPoint.set)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         DroneFunc_RunForCoverTalk(dcv);
@@ -605,7 +588,7 @@ bool NDrone2_DSTATE_RunForCover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
                 return true;
             }
             drone->firing = drone->gunThroughWall == 0;
-            DroneAnim_CallAnim(DANIM_STAND_AIM, 0, 0, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_AIM_STAND, 0, 0, 0, 0.0f, 0, dcv);
             if (dcv->drone->burstOver) {
                 if (drone->firing)
                     DroneWeap_Fire(1, dcv);
@@ -632,7 +615,7 @@ bool NDrone2_DSTATE_RunForCover(DCVars_tag *dcv, Drone_tag *drone, obj_tag *game
         DroneFunc_HandleImpact(dcv, msg, DSTATE_Attack, 1);
         return true;
 
-    case 0x1b:
+    case DRONE_MSG_1B:
         Drone_SM_SetState(dcv->aiStateMachine, DSTATE_Attack, 0);
         return true;
 
@@ -710,14 +693,14 @@ bool NDrone2_DSTATE_UnderCoverIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         DroneAnim_CoverAnim(dcv, COVER_STEP_IDLE, 0);
-        if (drone->animSet != 0x13 || (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
+        if (drone->animSet != DANIMSET_13 || (GameState.CurrentLevelHashcode != HT_Level_PowerStationA1 &&
                                        GameState.CurrentLevelHashcode != HT_Level_PowerStationA2))
             dcv->drone->clip = dcv->drone->clipSize;
         if (behaviour_util_getProperty(DRONE_PROP_AMBUSH, dcv->drone->currentBehaviour) == 0)
             SetTimer(&dcv->drone->timerA,
                      Ftol(Float_FRand(150.0f) * FRAME_RATE_DIV + (double)GameState.NumFramesUnpaused));
         dcv->drone->atCornerCover = dcv->drone->coverNode->type != COVER_LOW;
-        if (drone->animMode == 2)
+        if (drone->animMode == DANIMMODE_COMPLETE)
             dcv->drone->standingStill = 0;
         dcv->drone->stateScratch = 0;
         return true;
@@ -840,7 +823,7 @@ bool NDrone2_DSTATE_UnderCoverFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *g
         return true;
 
     case DRONE_MSG_Enter:
-        if (drone->animSet == 0x13 && (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
+        if (drone->animSet == DANIMSET_13 && (GameState.CurrentLevelHashcode == HT_Level_PowerStationA1 ||
                                        GameState.CurrentLevelHashcode == HT_Level_PowerStationA2))
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_UnderCoverSniperFire, 0);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
@@ -926,7 +909,7 @@ bool NDrone2_DSTATE_UnderCoverSniperFire(DCVars_tag *dcv, Drone_tag *drone, obj_
         NDrone2_SeenAndAttacking(dcv);
         if (drone->fired && dcv->drone->clip <= 0)
             return Drone_SM_SetState(dcv->aiStateMachine, DSTATE_UnderCoverSniperReload, 0);
-        if (drone->animMode != 2 || !drone->firing)
+        if (drone->animMode != DANIMMODE_COMPLETE || !drone->firing)
             return true;
         Drone_tag *self = dcv->drone;
         if (!NDrone2_CoverNodeOK(dcv, self->coverNode, self->coverFlags & DRONE_COVER_SIDE_MASK, 0)) {
@@ -981,7 +964,7 @@ bool NDrone2_DSTATE_UnderCoverSniperReload(DCVars_tag *dcv, Drone_tag *drone, ob
 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        Drone_AlertStatusSet(1, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALERTED, dcv);
         dcv->drone->firing = 0;
         DroneAnim_CallAnim(DANIM_RELOAD, 0, DSTATE_UnderCoverSniperFire, 0, 0.0f, 0, dcv);
         dcv->drone->clip = dcv->drone->clipSize;
@@ -1130,12 +1113,12 @@ bool NDrone2_DSTATE_UnderCoverLeaveNow(DCVars_tag *dcv, Drone_tag *drone, obj_ta
         dcv->drone->coverFlags |= DRONE_COVER_LEFT;
         NDrone2_DisownCover(dcv);
         dcv->drone->atCornerCover = 0;
-        if (drone->animRow != DANIM_ROW_COVER_A && drone->animRow != DANIM_ROW_COVER_B) {
+        if (drone->animRow != DROW_CORNER_CROUCH && drone->animRow != DROW_CORNER_STAND) {
             drone->animState = 0;
-            DroneAnim_CallAnim(DANIM_STAND_AIM, 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
+            DroneAnim_CallAnim(DANIM_AIM_STAND, 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
             return true;
         }
-        DroneAnim_CallAnim(DANIM_STAND_AIM, dcv->drone->opponentBearing > 0.0f ? 1 : 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
+        DroneAnim_CallAnim(DANIM_AIM_STAND, dcv->drone->opponentBearing > 0.0f ? 1 : 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
         return true;
 
     case DRONE_MSG_Exit:
@@ -1181,7 +1164,7 @@ bool NDrone2_DSTATE_GrenadeThrow(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gam
 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        Drone_AlertStatusSet(1, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALERTED, dcv);
         DroneAnim_CallAnim(DANIM_THROW_GRENADE, 0, DSTATE_Attack, 0, 0.0f, 0, dcv);
         return true;
 
@@ -1230,11 +1213,11 @@ bool NDrone2_DSTATE_SniperIdle(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         DroneFunc_DoForcedAttack(dcv);
         return true;
 
-    case 0x11:
-    case 0x12:
+    case DRONE_MSG_AlertSighting:
+    case DRONE_MSG_AlertDroneShot:
     case DRONE_MSG_HeardNoise:
     case DRONE_MSG_DroneAlert:
-    case 0x16:
+    case DRONE_MSG_AlertAttack:
     case DRONE_MSG_GlobalAlarm:
         dcv->aiStateMachine->scratch1c = (short)DroneVision_EnemyAlerts(dcv, msg);
         if (dcv->aiStateMachine->scratch1c != 0)
@@ -1275,8 +1258,8 @@ bool NDrone2_DSTATE_SniperAim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameOb
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         dcv->drone->flags |= DRONE_FLAG_STATIONARY;
         NDrone2_FindElevatorDoor(dcv);
-        Drone_AlertStatusSet(1, dcv);
-        DroneAnim_CallAnim(DANIM_STAND_AIM, 0, 0, 0, 0.0f, 0, dcv);
+        Drone_AlertStatusSet(DRONE_ALERT_ALERTED, dcv);
+        DroneAnim_CallAnim(DANIM_AIM_STAND, 0, 0, 0, 0.0f, 0, dcv);
         dcv->drone->combatRanges[4] = 1000.0f;
         dcv->drone->viewRange = 1000.0f;
         NDrone2_AttackTalk(dcv);
@@ -1321,7 +1304,7 @@ bool NDrone2_DSTATE_SniperFire(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_STATIONARY;
         DroneWeap_AimTarget_IsOpponent(1, 1, dcv);
-        DroneAnim_CallAnim(DANIM_STAND_AIM, 0, 0, 0, 0.0f, 0, dcv);
+        DroneAnim_CallAnim(DANIM_AIM_STAND, 0, 0, 0, 0.0f, 0, dcv);
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
         drone->firing = 0;
         SetTimer(&dcv->drone->timerA, GameState.NumFramesUnpaused + FRAME_RATE_INT);
@@ -1474,7 +1457,7 @@ bool NDrone2_DSTATE_OpenDoor(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameObj
         return true;
 
     case DRONE_MSG_AnimEvent:
-        NDrone2_PlaySFX(dcv, SFX_DOOR_OPEN, NULL, 1, 1.0f);
+        NDrone2_PlaySFX(dcv, DRONE_SFX_DOOR_OPEN, NULL, 1, 1.0f);
         NDrone2_OpenDoor(dcv);
         return true;
 
@@ -1519,7 +1502,7 @@ bool NDrone2_DSTATE_KickObject(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
         return true;
 
     case DRONE_MSG_AnimEvent:
-        NDrone2_PlaySFX(dcv, SFX_KICK, NULL, 1, 1.0f);
+        NDrone2_PlaySFX(dcv, DRONE_SFX_KICK, NULL, 1, 1.0f);
         NDrone2_KickObject(dcv);
         Drone_SM_SetState(dcv->aiStateMachine, (DSTATE)dcv->drone->nodeReturnState, 0);
         return true;
@@ -1556,7 +1539,8 @@ bool NDrone2_DSTATE_ActionAnim(DCVars_tag *dcv, Drone_tag *drone, obj_tag *gameO
 
     case DRONE_MSG_Enter:
         dcv->drone->flags |= DRONE_FLAG_LOOKS_FOR_OPPONENT;
-        DroneAnim_SetScript(dcv->drone->playScript, DANIM_STAND_AIM, 0x32, 0x1e, 0, DRONE_MSG_ScriptEnd, 0, dcv);
+        DroneAnim_SetScript(dcv->drone->playScript, DANIM_AIM_STAND, DROW_AIM_STAND, 0x1e, 0, DRONE_MSG_ScriptEnd, 0,
+                            dcv);
         dcv->drone->flags |= DRONE_FLAG_DEAF;
         return true;
 

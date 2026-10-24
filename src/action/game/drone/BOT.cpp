@@ -53,15 +53,6 @@ float Plr_DMod_LowerLimb = 0.8f;
 // XBE_GLOBAL(0x0017e8d8, 0x4)
 float Plr_DMod_UpperLimb = 0.8f;
 
-// BOTSTATE_chooseDodgeMove's directions
-#define DODGE_LEFT 1
-#define DODGE_RIGHT 2
-
-// BOT_soundEffect's cries
-#define BOT_SOUND_DEATH 1
-#define BOT_SOUND_PAIN 30
-#define BOT_SOUND_PAIN_UNLESS_PLAYING 31
-
 // How much a sighting nearer than 24 m distracts a bot, a metre closer
 constexpr float SightingDistraction = 0.16666667f;
 static_assert(std::bit_cast<uint32_t>(SightingDistraction) == 0x3e2aaaab, "not the original's 1/6");
@@ -98,8 +89,8 @@ obj_tag* BOT_init(short playerNum, _VECTOR *pos, _VECTOR *rot, obj_tag *gameObj,
 
     DroneCreationData placement;
     memset(&placement, 0, sizeof(placement));
-    placement.keys.mode = 100;
-    placement.keys.secondaryMode = 100;
+    placement.keys.mode = DRONE_MODE_BEHAVIOUR;
+    placement.keys.secondaryMode = DRONE_MODE_BEHAVIOUR;
     placement.keys.skin = MP_skins[skinNum].skinHashcode;
     placement.keys.behaviour[0] = 0x10;     // the bot behaviour class
     if (stats->accuracy < 3)
@@ -397,11 +388,12 @@ bool MPDrone_IsDyingOrDead(obj_tag *obj) {
     return false;
 }
 
-// Whether a bot heeds a drone alert (messages 0x11-0x16 and 0x1e): one without a sender always, one from another
-// bot when they are on the same team, or in any game without teams but Assassin.
+// Whether a bot heeds a drone alert (DRONE_MSG_AlertSighting to DRONE_MSG_AlertAttack, and the global alarm): one
+// without a sender always, one from another bot when they are on the same team, or in any game without teams but
+// Assassin.
 // AUTOINJECT
 bool BOT_reactToDroneAlertMsg(uint msg, Drone_tag *drone, Drone_tag *from) {
-    if (msg < 0x11 || (msg > 0x16 && msg != 0x1e))
+    if (msg < DRONE_MSG_AlertSighting || (msg > DRONE_MSG_AlertAttack && msg != DRONE_MSG_GlobalAlarm))
         return false;
     if (drone->botVars == NULL)
         return false;
@@ -454,7 +446,7 @@ uchar BOT_validateStateChange(DCVars_tag *dc, uint newState) {
         return false;
     if (newType == BOTSTATE_CLASS_ALERTED && current == DSTATE_BotGotoGoalPosition) {
         BOT_goal_t *goal = BOTSTATE_getActiveGoal(drone);
-        if (goal != NULL && (goal->pickFlags & 0x10))
+        if (goal != NULL && (goal->pickFlags & BOT_PICK_NOT_DISTRACTED))
             return false;
     }
     if ((drone->botVars->flags & BOT_FLAG_RECOVERING) && newState == DSTATE_BotAttackRun)
@@ -474,11 +466,11 @@ uchar BOT_validateStateChange(DCVars_tag *dc, uint newState) {
         if (newType == BOTSTATE_CLASS_ATTACK) {
             if (BOTSTATE_isDistracted(seer) && !inSight)
                 return false;
-            if (drone->botVars->flags & 4)
+            if (drone->botVars->flags & BOT_FLAG_ENEMY_FLAG)
                 return false;
         }
     } else if (newType == BOTSTATE_CLASS_ATTACK) {
-        if (drone->botVars->flags & 4)
+        if (drone->botVars->flags & BOT_FLAG_ENEMY_FLAG)
             return false;
     }
 
@@ -593,7 +585,7 @@ DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
     uint first, count;
     switch (kind) {
         case BOT_SOUND_DEATH:
-            first = drone->female ? 0x157 : 0x154;
+            first = drone->female ? DRONE_SFX_BOT_DEATH_FEMALE : DRONE_SFX_BOT_DEATH;
             count = 3;
             break;
         case BOT_SOUND_PAIN_UNLESS_PLAYING:
@@ -602,10 +594,10 @@ DYNAMICSOUNDS* BOT_soundEffect(DCVars_tag *dc, int kind) {
             // fall through
         case BOT_SOUND_PAIN:
             if (drone->female) {
-                first = 0x152;
+                first = DRONE_SFX_BOT_PAIN_FEMALE;
                 count = 2;
             } else {
-                first = 0x14d;
+                first = DRONE_SFX_BOT_PAIN;
                 count = 5;
             }
             break;

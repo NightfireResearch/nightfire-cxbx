@@ -106,17 +106,6 @@ float DroneArmour_Combat = 0.25f;
 // XBE_GLOBAL(0x0016408c, 0x4)
 float DroneArmour_Jacket = 0.5f;
 
-// obj_tag.effectFlags
-#define EFFECT_NO_COLLISION 0x20
-#define EFFECT_XRAY_ONLY 0x400
-
-// The anim states a drone starts in (DroneAnim_SetAnimD)
-#define DANIM_START 0x11a
-#define DANIM_START_NINJA 0x1a5
-#define DANIM_START_ASTRONAUT 0x82
-#define DANIM_START_DTYPE_2 0x7d
-#define DANIM_START_DTYPE_19 0x32
-
 constexpr float kFloatAcceleration = 0.075f;
 static_assert(std::bit_cast<uint32_t>(kFloatAcceleration) == 0x3d99999a, "not the original's 0.075");
 
@@ -332,98 +321,98 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     case HT_Skin_Yakuza_Trenchcoat: case HT_Skin_Yakcoatopen: case HT_Skin_Yakuza_RedTrenchcoat:
     case HT_Skin_Yakuza_Leather: case HT_Skin_Yakuza_Suit:
         drone->skinClass = SKINCLASS_YAKUZA;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_SnowGuard_Head4: case HT_Skin_SnowGuard_Camera: case HT_Skin_SnowGuard_Hat:
         drone->skinClass = SKINCLASS_SNOW_GUARD;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_BlackOps: case HT_Skin_BlackOps_RedVest: case HT_Skin_BlackOps_GasMask: case HT_Skin_00004c:
         drone->skinClass = SKINCLASS_BLACK_OPS;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_HazMat_body: case HT_Skin_Hazmat_heavy_1: case HT_Skin_Hazmat_NoMask: case HT_Skin_Hazmat_heavy_3:
         drone->skinClass = SKINCLASS_HAZMAT;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_Sniper:
         drone->skinClass = SKINCLASS_SNIPER;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_Elite: case HT_Skin_Elite_B: case HT_Skin_Elite_Beret:
         drone->skinClass = SKINCLASS_ELITE;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_EliteCombat: case HT_Skin_EliteCombat_B: case HT_Skin_EliteCaptain:
         drone->skinClass = SKINCLASS_ELITE_COMBAT;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_Servant: case HT_Skin_00002d: case HT_Skin_TowelGirl:
         drone->skinClass = SKINCLASS_SERVANT;
-        drone->animSet = 1;
+        drone->animSet = DANIMSET_HOSTAGE;
         drone->female = 1;
         break;
     case HT_Skin_Mayhew_Tux: case HT_Skin_Mayhew_Shirt:
-        drone->animSet = 3;
+        drone->animSet = DANIMSET_MAYHEW;
         drone->skinClass = SKINCLASS_MAYHEW;
         break;
     case HT_Skin_Ninja:
-        drone->animSet = 7;
+        drone->animSet = DANIMSET_NINJA;
         drone->skinClass = SKINCLASS_NINJA;
         weapon = 0;
         break;
     case HT_Skin_Zoe_PartyDress: case HT_Skin_zoe_partydress_b:
         drone->skinClass = SKINCLASS_ZOE;
-        drone->animSet = 0xe;
+        drone->animSet = DANIMSET_CIVILIAN;
         drone->vulnerable = 0;
         drone->female = 1;
         break;
     case HT_Skin_Dominique: case HT_Skin_PartyGirl01: case HT_Skin_PartyGirl02: case HT_Skin_PartyGirl03:
     case HT_Skin_PartyGirl04:
         drone->skinClass = SKINCLASS_PARTY_GIRL;
-        drone->animSet = 0xe;
+        drone->animSet = DANIMSET_CIVILIAN;
         drone->female = 1;
         break;
     case HT_Skin_PartyGuest_OldMan: case HT_Skin_PartyGuest_Male:
         drone->skinClass = SKINCLASS_PARTY_GUEST;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_TruckDriver:
         drone->skinClass = SKINCLASS_TRUCK_DRIVER;
         drone->dtype = DTYPE_TruckDriver;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_Rook: case HT_Skin_Rook_Scarred:
         keys->drawWeapon = 6;
         drone->skinClass = SKINCLASS_ROOK;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_CastleGuard_2: case HT_Skin_CastleGuard: case HT_Skin_CastleGuard_3:
         drone->skinClass = SKINCLASS_CASTLE_GUARD;
-        drone->animSet = 0xa;
+        drone->animSet = DANIMSET_CASTLE_GUARD;
         break;
     case HT_Skin_Kiko_Jacket: case HT_Skin_Kiko_Dress:
-        drone->animSet = 0xe;
+        drone->animSet = DANIMSET_CIVILIAN;
         drone->skinClass = SKINCLASS_KIKO;
         drone->female = 1;
         break;
     case HT_Skin_Kiko_Combat:
-        drone->animSet = 0xd;
+        drone->animSet = DANIMSET_KIKO_COMBAT;
         drone->skinClass = SKINCLASS_KIKO_COMBAT;
         drone->female = 1;
         break;
     case HT_Skin_Drake_Tux: case HT_Skin_Drake_Spacesuit: case HT_Skin_Drake_SpacesuitBurnt:
         drone->skinClass = SKINCLASS_DRAKE;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     case HT_Skin_BusinessWoman_A: case HT_Skin_BusinessWoman_B:
         drone->skinClass = SKINCLASS_BUSINESS_WOMAN;
-        drone->animSet = 2;
+        drone->animSet = DANIMSET_WOMAN;
         drone->female = 1;
         break;
     case HT_Skin_000010: case HT_Skin_000011: case HT_Skin_Dominique_Jacket:
         drone->skinClass = SKINCLASS_DOMINIQUE_JACKET;
-        drone->animSet = 2;
+        drone->animSet = DANIMSET_WOMAN;
         drone->female = 1;
         break;
     case HT_Skin_Drake_SuitA:
@@ -433,16 +422,16 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     case HT_Skin_Guard_1: case HT_Skin_Guard_2: case HT_Skin_Guard_3: case HT_Skin_Guard_4: case HT_Skin_Tech_a:
     case HT_Skin_000032: case HT_Skin_000033:
         drone->skinClass = SKINCLASS_GUARD;
-        drone->animSet = 0xb;
+        drone->animSet = DANIMSET_GUARD;
         break;
     case HT_Skin_Astronaut: case HT_Skin_000094: case HT_Skin_Drake_Astronaut:
         drone->flies = 1;
         drone->skinClass = SKINCLASS_ASTRONAUT;
-        drone->animSet = 0x10;
+        drone->animSet = DANIMSET_ASTRONAUT;
         break;
     default:
         drone->skinClass = SKINCLASS_NONE;
-        drone->animSet = 0xc;
+        drone->animSet = DANIMSET_UNARMED;
         break;
     }
 
@@ -454,35 +443,35 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         weapon = (ushort)keys->weapon;
     drone->secondWeapon = (char)keys->drawWeapon;
     switch (weapon) {
-    case 2: case 6: case 0xa: case 0xb: case 0xe: case 0x10: case 0x3b: case 0x3c: case 0x3d: case 0x3e: case 0x3f:
-    case 0x40:
+    case 2: case 6: case 0xa: case 0xb: case 0xe: case 0x10: case Weap_Satchel: case 0x3c: case 0x3d: case 0x3e:
+    case 0x3f: case 0x40:
         drone->damageScale = 2.0f;
         drone->clipSize = 0xc;
         drone->clip = 0xc;
-        drone->animSet = drone->skinClass == SKINCLASS_ZOE ? 8 : 4;
+        drone->animSet = drone->skinClass == SKINCLASS_ZOE ? DANIMSET_PISTOL_ZOE : DANIMSET_PISTOL;
         break;
     case 0x12: case 0x14: case 0x15:
         if (drone->skinClass == SKINCLASS_NINJA)
             weapon = 0x14;
         else
-            drone->animSet = 6;
+            drone->animSet = DANIMSET_SMG;
         drone->clipSize = drone->clip = 0x40;
         break;
     case 0x16: case 0x18: case 0x19: case 0x1a: case 0x1b:
-        drone->animSet = 5;
+        drone->animSet = DANIMSET_RIFLE;
         drone->clipSize = drone->clip = 0x40;
         break;
     case 0x1e: case 0x1f: case 0x24: case 0x25:
-        drone->animSet = 0x13;
+        drone->animSet = DANIMSET_13;
         drone->clipSize = drone->clip = 5;
         break;
     case 0x1c: case 0x1d: case 0x2a: case 0x2b: case 0x2c: case 0x2d:
-        drone->animSet = 9;
+        drone->animSet = DANIMSET_SNIPER;
         drone->clipSize = drone->clip = 8;
         break;
-    case 0x30: case 0x32: case 0x33: case 0x6a: case 0x6e:
+    case Weap_SubTorpedo: case 0x32: case Weap_LaserBeamFromSamurai: case Weap_LaserBurst1: case Weap_LaserBurst2:
         if (drone->skinClass != SKINCLASS_ASTRONAUT)
-            drone->animSet = 6;
+            drone->animSet = DANIMSET_SMG;
         drone->clipSize = drone->clip = 10000;
         break;
     default:
@@ -566,15 +555,15 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     drone->sightTestFrame = 0;
     drone->viewAngle = HALF_PI;
     if (GameState.CurrentLevelHashcode == HT_Level_Tower2A) {
-        if (drone->animSet == 9) {
+        if (drone->animSet == DANIMSET_SNIPER) {
             drone->combatRanges[1] = 5.0f;
             drone->combatRanges[4] = 8.0f;
         } else {
             drone->combatRanges[1] = 6.0f;
             drone->combatRanges[4] = 9.0f;
         }
-    } else if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && drone->animSet != 5) {
-        drone->combatRanges[1] = drone->animSet == 9 ? 7.0f : 10.0f;
+    } else if (GameState.CurrentLevelHashcode == HT_Level_EvilBase && drone->animSet != DANIMSET_RIFLE) {
+        drone->combatRanges[1] = drone->animSet == DANIMSET_SNIPER ? 7.0f : 10.0f;
     }
     drone->combatRanges[2] = Float_FRand(0.0f) + drone->combatRanges[0];
 
@@ -642,7 +631,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     NF_WARN_IF(!AnimObjectNew(gameObj, drone->skinHashcode), "Could not create AnimObjectNew(o,0x%08x)\n",
                drone->skinHashcode);
     drone->armour = 0;
-    if (drone->behaviourClass == 0xc) {
+    if (drone->behaviourClass == BCLASS_ALLY) {
         behaviour_util_setProperty(DRONE_PROP_DOOR_ANIM_ALERT, drone->currentBehaviour, 0);
         behaviour_util_setProperty(DRONE_PROP_DOOR_ANIM, drone->currentBehaviour, 0);
         behaviour_util_setProperty(DRONE_PROP_DOOR_ANIM_2, drone->currentBehaviour, 0);
@@ -673,7 +662,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
 
     gameObj->effectFlags &= ~(EFFECT_HIDDEN | EFFECT_NO_COLLISION);
     drone->flags |= DRONE_FLAG_COLLIDES | DRONE_FLAG_FALLS | DRONE_FLAG_ENABLED;
-    if (drone->side == 1)
+    if (drone->side == DRONE_SIDE_ENEMY)
         PlrStat_LogEnemySpawned();
 
     // The play script (key 1); two of them make the drone an abseiler instead
@@ -682,15 +671,15 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (keys->playScript != HT_Script_HASHCODE_BASE) {
         drone->playScript = keys->playScript;
         if (keys->playScript == HT_Script_ScriptAbseil1C) {
-            drone->dtype = DTYPE_Abseil28;
+            drone->dtype = DTYPE_AbseilHang;
             drone->playScript = (HASHCODE)0;
             drone->savedAnimSet = drone->animSet;
-            drone->animSet = 0xf;
+            drone->animSet = DANIMSET_ABSEIL;
         } else if (keys->playScript == HT_Script_ScriptAbseil1B) {
             drone->playScript = (HASHCODE)0;
-            drone->dtype = DTYPE_Abseil27;
+            drone->dtype = DTYPE_AbseilToGround;
             drone->savedAnimSet = drone->animSet;
-            drone->animSet = 0xf;
+            drone->animSet = DANIMSET_ABSEIL;
         }
     }
 
@@ -698,20 +687,20 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     bool animStarted = false;
     drone->animRow = 0xffff;
     if (drone->skinClass == SKINCLASS_NINJA) {
-        DroneAnim_SetAnimD(DANIM_START_NINJA, 0, drone);
+        DroneAnim_SetAnimD(DROW_NINJA_STAND, 0, drone);
         animStarted = true;
     } else if (drone->skinClass == SKINCLASS_ASTRONAUT) {
-        DroneAnim_SetAnimD(DANIM_START_ASTRONAUT, 0, drone);
+        DroneAnim_SetAnimD(DROW_ASTRONAUT_COMBAT, 0, drone);
         animStarted = true;
     }
-    if (drone->dtype == DTYPE_Sniper && drone->animSet == 5) {
-        drone->animSet = 0x12;
-        DroneAnim_SetAnimD(DANIM_START_DTYPE_2, 0, drone);
-    } else if (drone->dtype == DTYPE_SniperAlert && drone->animSet == 5) {
-        drone->animSet = 0x12;
-        DroneAnim_SetAnimD(DANIM_START_DTYPE_19, 0, drone);
+    if (drone->dtype == DTYPE_Sniper && drone->animSet == DANIMSET_RIFLE) {
+        drone->animSet = DANIMSET_RIFLE_SNIPER;
+        DroneAnim_SetAnimD(DROW_SNIPER_IDLE, 0, drone);
+    } else if (drone->dtype == DTYPE_SniperAlert && drone->animSet == DANIMSET_RIFLE) {
+        drone->animSet = DANIMSET_RIFLE_SNIPER;
+        DroneAnim_SetAnimD(DROW_AIM_STAND, 0, drone);
     } else if (!animStarted) {
-        DroneAnim_SetAnimD(DANIM_START, 0, drone);
+        DroneAnim_SetAnimD(DROW_STAND_IDLE, 0, drone);
     }
     if (gameObj->animState != NULL) {
         gameObj->animState->animObj.rootMotionCallback = DroneAnim_PreTransCallback;
@@ -732,7 +721,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     if (drone->initialState == DSTATE_Attack || drone->initialState == DSTATE_CivilianScared) {
         DroneFunc_SetAsAttacking(drone);
         drone->flags |= DRONE_FLAG_ATTACK_MODE | DRONE_FLAG_ATTACK_ALARM;
-        drone->knowledge |= DRONE_KNOWS_BIT4;
+        drone->knowledge |= DRONE_KNOWS_ATTACK;
     }
 
     // What some skin classes and types get on top
@@ -766,7 +755,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
         drone->health = 100.0f;
         drone->route1.creepReach = 8.0f;
         drone->combatRanges[0] = 2.0f;
-    } else if (drone->dtype == DTYPE_Abseil27 || drone->dtype == DTYPE_Abseil28) {
+    } else if (drone->dtype == DTYPE_AbseilToGround || drone->dtype == DTYPE_AbseilHang) {
         drone->flies = 1;
         drone->initialState = DSTATE_AbseilInit;
     }
@@ -791,8 +780,8 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
             behaviour_util_setProperty(DRONE_PROP_RUNS_FROM_EXPLOSIVES, drone->currentBehaviour, 0);
             break;
         case DTYPE_Ninja:
-        case DTYPE_Abseil27:
-        case DTYPE_Abseil28:
+        case DTYPE_AbseilToGround:
+        case DTYPE_AbseilHang:
         case DTYPE_Astronaut:
             drone->aimByEvent = 0;
             break;
@@ -820,7 +809,7 @@ obj_tag* NDrone2_DefaultInit(DIVars_tag *diVars) {
     }
 
     drone->avoidLinks = 0x80;
-    drone->boundsPushFlags = 0x1c00;
+    drone->boundsPushFlags = AIBOUND_PASSABLE | AIBOUND_DOOR | AIBOUND_KICK;
     if (behaviour_util_getProperty(DRONE_PROP_RUNS_FROM_SMOKE, drone->currentBehaviour) &&
         !behaviour_util_getProperty(DRONE_PROP_36, drone->currentBehaviour))
         drone->avoidLinks |= AILINK_SMOKE;

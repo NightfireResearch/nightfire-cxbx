@@ -6,6 +6,7 @@
 // flying drone only drifts by its velocity.
 
 #include "DroneCollision.h"
+#include "DroneAnim.h"                 // DANIMFLAG_NO_COLLISION
 #include "NDrone2_Damage.h"            // NDrone2_DealWithObjHit
 #include "../../game.h"                // GameState
 #include "../../engine/AINetwork.h"    // AINetwork_GetBoundsPushVectorForSphere
@@ -18,9 +19,6 @@
 #include <string.h>
 
 #pragma fp_contract(off)
-
-// Drone_tag.animFlags: an anim that does not collide
-#define DRONE_ANIM_NO_COLLISION 2
 
 // The bones a dead drone's capsule runs along
 #define BONE_HEAD   0x80000005
@@ -57,7 +55,7 @@ bool NDrone2_DoCollision(DCVars_tag *dcv) {
         return true;
     if (dcv->gameObj->drawnCountdown != 0)
         return true;
-    return !(drone->animFlags & DRONE_ANIM_NO_COLLISION);
+    return !(drone->animFlags & DANIMFLAG_NO_COLLISION);
 }
 
 // Whether gravity acts: with DRONE_FLAG_FALLS, and then always with DRONE_FLAG_FALLS_ANYWAY, otherwise when it
