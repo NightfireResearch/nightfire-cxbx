@@ -9,9 +9,9 @@ Each starts with `-level`, and carries its own settings.ini and saves, so it nee
 
 ## The set
 
-Recorded by Charlie on an AMD Ryzen 9800X3D (PAL, 50 Hz, 1920x1080), format 2. They stay in step only on an AMD
-processor (the game runs the x87's transcendental instructions, which AMD and Intel round differently), so this set
-is not for the Intel runner (vr-desktop).
+Twelve recordings, made by Charlie on an AMD Ryzen 9800X3D (PAL, 50 Hz, 1920x1080), format 2. The AMD and Intel
+x87s round some transcendentals differently in their last bit, but the set plays every frame on the Intel runner
+(vr-desktop) too, on the x87 build and on the C builds (24 October 2026, docs/action-timedemo.md "Limits").
 
 **The missions, recorded 21 October 2026** on dev da057abe with the x87 and type fixes that made every port exact
 (the all-original runs, docs/action-standalone.md), each from its first level (`-level`, the default difficulty) to

@@ -337,7 +337,8 @@ the level, the cars, the HUD and its text, the Mission Failed screen.
 
 `-DNIGHTFIRE_X87=OFF` builds the driving targets with no x87 transcendentals: the 43 functions of
 [64-bit.md](64-bit.md) 4.1 (FSIN, FCOS, FPTAN, FPATAN, FYL2X and the runtime's `_CIacos`/`_CIasin`/`_CIpow`) each get
-a C form in double from `<math.h>`. It is ON by default, which leaves every target exactly as before: the injected
+a C form in double, its transcendentals DetMath's (src/common/math/Libm.h, docs/deterministic-maths.md: the same
+bits on every host; `-DNIGHTFIRE_DET_MATH=OFF` gives `<math.h>`'s, as before 24 October 2026). It is ON by default, which leaves every target exactly as before: the injected
 build's shadows compare our code with the original's, and they need the original instructions. The 64-bit build
 will use OFF; the Linux build is tested with ON so far (its traces against lloc). The C forms sit next to the assembly in the same files, under `#if NIGHTFIRE_X87` (`X87.h` refuses to
 compile without the definition). The injection tags stay on the assembly. A caller that keeps an unrounded result

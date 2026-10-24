@@ -37,6 +37,12 @@ Taken out of the core, for the mod layer to bring back:
   Decided 23 October 2026, after speedrunners confirmed no run relies on random-number manipulation. It replaced a
   shadow of the Xbox heap that gave every host the Xbox's addresses. Recordings in which drones breathe (the
   CastleExterior ones) diverge from those made before it.
+- A directory search (the saves the game lists, `HostFindFirstFile`) gives its names sorted as NTFS sorts them, on
+  every host (src/driving/platform/Host.h). The Xbox's FATX listed them as they lay, and so do FAT
+  and POSIX directories, while the menus keep the first save found (`Menu_EnumSaves`). Added 24 October 2026, so
+  that every host lists them alike.
+- The C forms of the x87 code (64-bit and non-x86 hosts) take their transcendentals from DetMath, the same bits on
+  every host but not the x87's (docs/deterministic-maths.md).
 - Uninitialised stack the original leaves in a record is written as zero (docs/driving/original-quirks.md,
   docs/nightfire-port-lifts.md "Departures from the original").
 

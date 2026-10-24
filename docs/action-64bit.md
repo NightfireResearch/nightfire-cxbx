@@ -47,7 +47,9 @@ the viewer on the stack; it calls `_View_CaptureScene`.
 actioninject keeps the instructions. Off, `Extended` is a double and every operation the C one (math/X87Ops.cpp),
 `CIAsin` and the drones' route turn too, and the shared C runtime takes its C forms. The 13 recordings rebased onto a
 32-bit build with it off (tools/demo/rebase_demos.sh) differ from the x87 recordings in no frame or a handful: the
-C forms change almost nothing.
+C forms change almost nothing. Since 24 October 2026 the C forms' transcendentals are DetMath's, the same bits on
+every host (docs/deterministic-maths.md), where they were the host's `<math.h>`; the 12 recordings now in the
+repository play on them as they are.
 
 **3, 4. File structures.** Five loaders write addresses into the files they read: AIPath_Parse (`MAPNODE_tag.cel`,
 `AIBoundLink_tag.nextA`/`nextB`), the skins (hashcodes made glists, `sAnimSkin_tag::riggedBody`/`discreteObj` point at

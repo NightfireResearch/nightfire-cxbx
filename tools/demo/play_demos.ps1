@@ -10,8 +10,8 @@
 # Each runs Release\action.exe with NIGHTFIRE_DEMO_PLAY from Release\ (the playback's sandbox is
 # Release\demoplay\<name>); its log goes to build\demoplay\<name>.log. Exits 1 if any recording failed to match.
 #
-# Recordings stay in step only on a processor of the vendor they were recorded on (the game runs the x87's
-# transcendental instructions): tests\demos\action\README.md says which machine each set comes from.
+# The 12 recordings play on AMD and Intel alike (the x87's transcendentals differ between them only where rounding to
+# a float hides it): tests\demos\action\README.md and docs\action-timedemo.md, "Limits".
 # ---------------------------------------------------------------------------------------------------------------
 
 param(

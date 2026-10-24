@@ -6,7 +6,8 @@ which it assumes: our code alone, no XBE, 13 of 13 recordings matching the C bas
 
 The target is **Linux x86-64**, the driving engine's `linux-x64` preset (docs/driving/64-bit.md 7.11): clang, one ABI,
 no x87, SDL3 for the window, input and sound, D3D9 on dxvk-native, FFmpeg's shared libraries. The action engine has
-no 32-bit Linux build: its 32-bit x87 recordings are AMD-only and its 64-bit build already runs on the C baseline.
+no 32-bit Linux build: its 64-bit build already runs the recordings. (The recordings were thought to be AMD-only
+then; they are not, docs/action-timedemo.md "Limits". The C forms' maths is DetMath's, docs/deterministic-maths.md.)
 
 ## What stands in the way
 

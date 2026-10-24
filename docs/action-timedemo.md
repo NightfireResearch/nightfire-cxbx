@@ -157,7 +157,9 @@ of the device's. The game therefore plays its real sound while you record. Durin
 hear is not what the game is told.
 
 **The movie clock** follows that clock too (`FmvAudio::SetVirtualClock`): frames fall due by the clock, and the
-movie ends once the clock has passed its audio.
+movie ends once the clock has passed its audio. A host with no sound device, or a movie whose voice cannot be made,
+still decodes the audio and counts it without playing it, so the movie ends on the same frame either way (outside a
+demo such a movie ends with its last picture, as before).
 
 **File times** in a directory listing read zero, because a playback's files were made when it started.
 
@@ -165,11 +167,20 @@ The picture is still drawn and paced as usual, so a recording plays like the gam
 
 ## Limits
 
-- **The CPU vendor.** The game runs the x87's transcendental instructions itself: `default.xbe` has 69 `FSIN`, 62
-  `FCOS`, 25 `FPATAN` and more, most of them in game code (0x18000-0x45000). AMD and Intel processors round some of
-  these differently, so a recording stays in step only on a processor of the vendor it was recorded on, and is
-  surest on the same machine. The Xbox's CPU was a Pentium III, so Intel's results are likely the closer to it
-  (not checked).
+- **The CPU vendor and the host do not matter, so far.** The game runs the x87's transcendental instructions
+  itself: `default.xbe` has 69 `FSIN`, 62 `FCOS`, 25 `FPATAN` and more, most of them in game code
+  (0x18000-0x45000). AMD and Intel round some of them differently, in the last of their 64 significand bits, and
+  the C libraries differ from each other in the last bit of a double. But the game keeps floats, and rounding to a
+  float hides those differences almost always. The 12 recordings, made on AMD, play every frame on the Intel runner
+  as well (24 October 2026):
+  - the 32-bit x87 build;
+  - the 32-bit C build on MSVC's maths;
+  - the 32-bit and 64-bit C builds on DetMath;
+  - the 64-bit Linux build.
+
+  A difference that did reach a float would show as a playback parting from its recording on another machine.
+  The x87 builds can still do that, rarely; the C builds take their transcendentals from DetMath, which is the
+  same on every host, and cannot (docs/deterministic-maths.md).
 - **The recordings hold our build's behaviour, not the original's.** They were made with our ports in place, and
   some of those are known to be inexact against the Xbox. The random helpers were made exact (0438ade) and the set was
   rebased onto them. So were the rotation-matrix functions (`RotMatrix`, `RotMatrixZYX`, `RotTransMatrix`,
