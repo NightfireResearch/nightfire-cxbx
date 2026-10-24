@@ -15,6 +15,11 @@
 # Builds natively where the i686 mingw-w64 compiler, make and nasm are installed (Linux, macOS); otherwise (Windows)
 # in the nf-cross Docker image, installing make and nasm into a throwaway container.
 #
+# "sh tools/fmv/build_ffmpeg.sh windows-x86-ps2" builds the i686 DLLs with the PS2's movies too (MPEG program streams,
+# MPEG-2 video: docs/ps2-data.md) into third_party/ffmpeg-prebuilt-ps2, for the action engine's
+# NIGHTFIRE_ACTION_DATA_PS2 build only; the default build keeps third_party/ffmpeg-prebuilt. FFMPEG_SOURCE names the
+# submodule's checkout when this one has none (a worktree).
+#
 # "sh tools/fmv/build_ffmpeg.sh windows-x86_64" builds the same DLLs for x86-64, for the 64-bit standalone driving
 # engine (docs/driving/64-bit.md), into third_party/ffmpeg-prebuilt/bin-x64 (committed too); the headers, licence
 # and README stay the i686 build's, which they match.
@@ -56,12 +61,13 @@ if [ "$1" = linux-i386 ] || [ "$1" = linux-x86_64 ] || [ "$1" = macos-arm64 ]; t
     exit 0
 fi
 
-if [ ! -f "$REPO/$SRC/configure" ]; then
-    echo "$SRC is empty: run git submodule update --init $SRC" >&2
+SOURCE=${FFMPEG_SOURCE:-$REPO/$SRC}
+if [ ! -f "$SOURCE/configure" ]; then
+    echo "$SOURCE is empty: run git submodule update --init $SRC" >&2
     exit 1
 fi
 # A Windows checkout with core.autocrlf=true gives the scripts CRLF line endings, which configure cannot run with
-if head -n 1 "$REPO/$SRC/configure" | grep -q "$(printf '\r')"; then
+if [ "$SOURCE" = "$REPO/$SRC" ] && head -n 1 "$REPO/$SRC/configure" | grep -q "$(printf '\r')"; then
     echo "Re-checking out $SRC with LF line endings"
     git -C "$REPO/$SRC" config core.autocrlf false
     git -C "$REPO/$SRC" rm -q --cached -r .
@@ -70,6 +76,10 @@ fi
 
 ARCH=x86
 TRIPLE=i686-w64-mingw32
+if [ "$1" = windows-x86-ps2 ]; then
+    # (the raw MPEG video demuxer is what the program stream demuxer probes its video streams with)
+    COMMON="$COMMON --enable-demuxer=mpegps,mpegvideo --enable-decoder=mpeg2video --enable-parser=mpegvideo"
+fi
 if [ "$1" = windows-x86_64 ]; then
     ARCH=x86_64
     TRIPLE=x86_64-w64-mingw32
@@ -87,23 +97,28 @@ rm -rf build/ffmpeg-build build/ffmpeg
 mkdir -p build/ffmpeg-build
 cd build/ffmpeg-build
 HOSTCC=$(command -v gcc || command -v clang || command -v cc)
-"$ROOT/third_party/ffmpeg/configure" --prefix="$ROOT/build/ffmpeg" --host-cc="$HOSTCC" $OPTIONS >/dev/null
+"$FFSRC/configure" --prefix="$ROOT/build/ffmpeg" --host-cc="$HOSTCC" $OPTIONS >/dev/null
 make -j"$(getconf _NPROCESSORS_ONLN 2>/dev/null || echo 4)" >/dev/null
 make install >/dev/null
 '
 
 if command -v $TRIPLE-gcc >/dev/null 2>&1 && command -v make >/dev/null 2>&1 && command -v nasm >/dev/null 2>&1; then
-    ROOT="$REPO" OPTIONS="$OPTIONS" sh -c "$BUILD"
+    ROOT="$REPO" FFSRC="$SOURCE" OPTIONS="$OPTIONS" sh -c "$BUILD"
 else
     PACKAGES="make nasm"
     [ "$ARCH" = x86_64 ] && PACKAGES="$PACKAGES gcc-mingw-w64-x86-64"
     MOUNT=$(cygpath -m "$REPO" 2>/dev/null || echo "$REPO")
-    MSYS_NO_PATHCONV=1 docker run --rm -v "$MOUNT:/src" -e ROOT=/src -e OPTIONS="$OPTIONS" nf-cross bash -c "
+    FFMOUNT=$(cygpath -m "$SOURCE" 2>/dev/null || echo "$SOURCE")
+    MSYS_NO_PATHCONV=1 docker run --rm -v "$MOUNT:/src" -v "$FFMOUNT:/ffmpeg:ro" -e ROOT=/src -e FFSRC=/ffmpeg \
+        -e OPTIONS="$OPTIONS" nf-cross bash -c "
         apt-get update -qq >/dev/null && DEBIAN_FRONTEND=noninteractive apt-get install -y -qq $PACKAGES >/dev/null 2>&1
         $BUILD"
 fi
 
 OUT="$REPO/third_party/ffmpeg-prebuilt"
+if [ "$1" = windows-x86-ps2 ]; then
+    OUT="$REPO/third_party/ffmpeg-prebuilt-ps2"
+fi
 if [ "$ARCH" = x86_64 ]; then
     rm -rf "$OUT/bin-x64"
     mkdir -p "$OUT/bin-x64"
@@ -117,22 +132,29 @@ rm -rf "$OUT/bin" "$OUT/include"
 mkdir -p "$OUT/bin"
 cp "$REPO"/build/ffmpeg/bin/*.dll "$OUT/bin/"
 cp -r "$REPO/build/ffmpeg/include" "$OUT/include"
-cp "$REPO/$SRC/COPYING.LGPLv2.1" "$OUT/FFmpeg-COPYING.LGPLv2.1.txt"
+cp "$SOURCE/COPYING.LGPLv2.1" "$OUT/FFmpeg-COPYING.LGPLv2.1.txt"
+MORE='bin-x64 holds the same for x86-64 (--arch=x86_64 --cross-prefix=x86_64-w64-mingw32-, the rest as above), for the
+64-bit standalone driving engine.
+
+To rebuild: git submodule update --init third_party/ffmpeg, then sh tools/fmv/build_ffmpeg.sh, and
+sh tools/fmv/build_ffmpeg.sh windows-x86_64 for bin-x64.'
+if [ "$1" = windows-x86-ps2 ]; then
+    MORE="For the action engine's NIGHTFIRE_ACTION_DATA_PS2 build: third_party/ffmpeg-prebuilt's configuration with the PS2's
+movies added (MPEG program streams, MPEG-2 video).
+
+To rebuild: git submodule update --init third_party/ffmpeg, then sh tools/fmv/build_ffmpeg.sh windows-x86-ps2."
+fi
 cat > "$OUT/FFmpeg-README.txt" <<EOF
-These DLLs are FFmpeg $(cat "$REPO/$SRC/RELEASE") (https://ffmpeg.org), licensed under the LGPL 2.1 or later
+These DLLs are FFmpeg $(cat "$SOURCE/RELEASE") (https://ffmpeg.org), licensed under the LGPL 2.1 or later
 (FFmpeg-COPYING.LGPLv2.1.txt). They are dynamically linked: the game loads them at startup.
 
 Source: the third_party/ffmpeg submodule of https://github.com/NightfireResearch/nightfire-cxbx, which is FFmpeg's
-own repository at commit $(git -C "$REPO/$SRC" rev-parse HEAD) (tag $(git -C "$REPO/$SRC" describe --tags)), unmodified.
+own repository at commit $(git -C "$SOURCE" rev-parse HEAD) (tag $(git -C "$SOURCE" describe --tags)), unmodified.
 
 Built by tools/fmv/build_ffmpeg.sh with the i686 mingw-w64 cross compiler and this configuration:
 
     configure $(echo $OPTIONS)
 
-bin-x64 holds the same for x86-64 (--arch=x86_64 --cross-prefix=x86_64-w64-mingw32-, the rest as above), for the
-64-bit standalone driving engine.
-
-To rebuild: git submodule update --init third_party/ffmpeg, then sh tools/fmv/build_ffmpeg.sh, and
-sh tools/fmv/build_ffmpeg.sh windows-x86_64 for bin-x64.
+$MORE
 EOF
 ls -la "$OUT/bin"

@@ -1168,7 +1168,11 @@ endif()
 # and headers in third_party/ffmpeg-prebuilt, built from the third_party/ffmpeg submodule by tools/fmv/build_ffmpeg.sh
 # and committed. The DLLs are loaded at run time and copied beside the executables with FFmpeg's licence and build
 # note, so the build output is complete.
-set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg-prebuilt CACHE PATH "FFmpeg DLLs and headers")
+if(NIGHTFIRE_ACTION_DATA_PS2)   # the PS2's movies want MPEG program streams and MPEG-2 video too (docs/ps2-data.md)
+  set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg-prebuilt-ps2 CACHE PATH "FFmpeg DLLs and headers" FORCE)
+else()
+  set(NF_FFMPEG_DIR ${CMAKE_SOURCE_DIR}/third_party/ffmpeg-prebuilt CACHE PATH "FFmpeg DLLs and headers")
+endif()
 if(NOT EXISTS ${NF_FFMPEG_DIR}/include/libavformat/avformat.h)
   message(FATAL_ERROR "No FFmpeg in ${NF_FFMPEG_DIR}: it is committed in third_party/ffmpeg-prebuilt, "
                       "and tools/fmv/build_ffmpeg.sh rebuilds it")
@@ -1346,9 +1350,10 @@ option(NIGHTFIRE_ACTION_DATA_PS2 "Action engine, standalone: load the PS2 versio
 set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Texture.cpp src/action/ps2/Ps2Mesh.cpp
                                 src/action/ps2/Ps2Sound.cpp)
 if(NIGHTFIRE_ACTION_DATA_PS2)
-  list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
+  list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp src/action/engine/Fmv.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
                                            src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp src/action/ps2/Ps2ExecutableData.cpp
+                                           src/action/ps2/Fmv_ps2.cpp
                                            src/action/ps2/Ps2XboxStandIn.cpp)   # interim, until milestone 7
 endif()
 add_executable(action_standalone
