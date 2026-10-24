@@ -54,7 +54,7 @@ have no pointers in them that the Xbox's lack (both store offsets or hashcodes a
 |---|---|---|---|---|---|---|
 | Archive / filesystem | no | Xbox: `filesys.dNN`, entries by CRC32 of the lower-cased name, EDL compression. PS2: one `FILES.BIN`, 118 files at 2 KB sectors, named by `FileList` in ACTION.ELF (16-character name, byte offset, size); sound, music and streams are loose files under `PS2\` read by the IOP | everything (psiFileOpen 0x10bf00 does `strupr` + `strcmp` over FileList, 0x76 entries) | - | FS.cpp, whole (FS_ps2.cpp) | small, done |
 | Level bundle (`07xxxxxx.bin`) | nearly | Header and directory each padded to a 2 KB sector: the header is 0x800 bytes (Xbox 0x20), `dirSize` is sector-rounded. Directory entries (`u32 len, u8 type, name`) and data are as the Xbox's | PS2 LoaderLoad 0x1d51a0 reads 0x800 | - | Loader.cpp: the header's size | small, done |
-| Bundle contents | split | The PS2 splits a level over variant bundles: `07F0xxxx` holds the level's anim sequences (type 4; the Xbox has them in the level's own bundle), `078/079/07A0xxxx` cutscene sequences and their script, loaded on demand (type 12 "loadable" entries name them). PS2 LoaderLoad takes a mode: 0 and 3 set bits 20-23 to 0xF (the sequences), 5 to 0xD, 4 a stored hashcode; PS2 ResetMap_Load calls `LoaderLoad(0, level)` then loops `LoaderLoad(1, level)`. The PS2 bundle also carries the pause screen's `woman` (type 16) | the variant naming; all 468 + 7 sequences of 07F00001 / 07800001 are byte for byte the Xbox's | how the PS2 streams sequences (AnimSeqGetHdrBuf, LoaderLoadAnims 0x1d72e8, LoadableLoad 0x1d7188) | game.cpp ResetMap_Load, Loader.cpp LoadableLoad | medium |
+| Bundle contents | split | The PS2 splits a level over variant bundles: `07F0xxxx` holds the level's anim sequences (type 4; the Xbox has them in the level's own bundle), `078/079/07A0xxxx` cutscene sequences and their script, loaded on demand (type 12 "loadable" entries name them). PS2 LoaderLoad takes a mode: 0 and 3 set bits 20-23 to 0xF (the sequences), 5 to 0xD, 4 a stored hashcode; PS2 ResetMap_Load calls `LoaderLoad(0, level)` then loops `LoaderLoad(1, level)`. The PS2 bundle also carries the pause screen's `woman` (type 16) | the variant naming; all 468 + 7 sequences of 07F00001 / 07800001 are byte for byte the Xbox's | how the PS2 streams sequences (AnimSeqGetHdrBuf, LoaderLoadAnims 0x1d72e8, LoadableLoad 0x1d7188) | game.cpp ResetMap_Load (the sequences: done), Loader.cpp LoadableLoad (the loadables) | medium |
 | Skeletons, skins, anim scripts, game scripts, menus (types 6, 3, 5, 7, 8) | yes | 42 of 45 skeletons byte-identical, three differ in the float noise (under 0.008); skins, anim scripts, scripts and menus identical | - | - | none | none |
 | Anim sequences (type 4) | yes | identical, only in other bundles (above) | - | - | loader only | (in the loader row) |
 | Map/graphics packs (`01xxxxxx`): container, header, placements, portals, LOD, paths, collision | yes | same blocks and records: placements 0x4c + 8n with 12-byte vectors, entity params 0x34 + name, portals, LOD, AI paths, collision (version 5, the same COLLBOX 0x30) | the container walks identically; placement layout as the Xbox's | collision and AI path payloads checked by size only | parsemap.cpp as is | small |
@@ -69,7 +69,7 @@ have no pointers in them that the Xbox's lack (both store offsets or hashcodes a
 | Music, streams | container yes | `MUSIC\MFX_n\*.SMF/SSD`, `ENGLISH\STREAMS\STREAMS.BIN/LUT`, `MFXINFO.MXI`, `SBINFO.SBI`: the same names; PS2 data is SPU ADPCM (music stereo, 0x80-byte interleave, 32 kHz; streams mono 22,050 Hz) | nightfire-re | marker files' exact match | SFXStream.cpp, music.cpp (decode) | medium |
 | FMV | no | Xbox `eurocom\25_fps\<hash>.xmv` (WMV2 + Xbox ADPCM); PS2 `MOVIES\25_FPS\<LANG>\<hash>.PSS` (MPEG-2 program stream, SPU ADPCM audio in a private stream), the same hashcode names | names | FFmpeg's handling of the PSS audio | Fmv.cpp (path and demuxer) | small |
 | Saves | n/a | ours are host files (psiSave.cpp); the PS2 memory card format matters only to import PS2 saves | - | the card layout | psiSave.cpp | small (optional) |
-| Woman (pause background) | no | Xbox `woman.rle` (a file); PS2 bundle entry type 16 `woman`, decoded by `psiDecompressWoman` 0x1208f8 | where it is | its format against the Xbox RLE | Woman.cpp LoadWoman, Loader.cpp type 16 | small |
+| Woman (pause background) | yes | Xbox `woman.rle` (a file); PS2 each level bundle's entry type 16 `woman`, byte for byte the Xbox's file padded with zeros | all | - | FS_ps2.cpp serves `woman.rle` from the first level bundle that has it | small, done |
 
 ## Seams
 
@@ -78,7 +78,8 @@ Where the PS2 build branches (`#if NIGHTFIRE_DATA_PS2`), each a line or two in t
 
 | Seam | Game file | PS2 code |
 |---|---|---|
-| The archive (whole file replaced) | engine/FS.cpp out of the build | ps2/FS_ps2.cpp: FileList from ACTION.ELF, FILES.BIN, loose `PS2\` files |
+| The archive (whole file replaced) | engine/FS.cpp out of the build | ps2/FS_ps2.cpp: FileList from ACTION.ELF, FILES.BIN, loose `PS2\` files, `woman.rle` from a level bundle |
+| A level's sequences are in their own bundle | game.cpp ResetMap_Load, before the level's LoaderLoad loop | ps2/Ps2Loader.cpp: the 07F bundle through LoaderLoad (variant 8) |
 | A bundle's header is a sector | engine/Loader.cpp | - |
 | The heap: the PS2's textures decoded to 32 bits need room (12-35 MB a level, against 40 MB for the whole heap); textures must stay in the heap or contiguous memory, below 256 MB, which the D3D seam's addresses assume | memory.cpp's `HEAP_SIZE`, set to 104 MB by CMake | - |
 | Block 0x12 (a PS2 texture's palette, after its texels) | engine/parsemap.cpp | ps2/Ps2Texture.cpp, ps2/Ps2Convert.cpp: `KXT` A8R8G8B8 |
@@ -158,7 +159,11 @@ Release\ps2data_check.exe <disc> meshes 07000001 [<xbox bundle>] [--obj <out>]
                                                                           every mesh to a KXE, checked; with the
                                                                           Xbox's decompressed bundle, against the twins
 Release\ps2data_check.exe <disc> all                                      every level bundle's textures and meshes
+Release\ps2data_check.exe <disc> woman [<xbox woman.rle>]                 the pause screen's film, as FS_ps2 finds it
 ```
+
+`tools/pe_compare.py` compares two builds of an executable section by section: the default build before and after a
+PS2 seam must come out identical.
 
 The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-exports branch) writes to
 `build/anim/lvl/`.
@@ -170,6 +175,6 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline (`files`, `bundle`); the PS2 build compiles and links; not yet run (a game window is not opened on this PC; a headless run needs the Linux build in WSL) |
 | 2 | done: block 0x12 to a KXT of swizzled A8R8G8B8. All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); PNGs checked by eye (UI panels, floors, a gun's skin, alpha smoke) |
 | 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline; double-sided unknown (all double-sided); not yet seen in game |
-| 4 | not started. Needs: `LoaderLoad` of the 07F bundle (sequences) after the level, as PS2 ResetMap_Load does; the loadables (078/079/07A) for cutscenes; the woman entry (type 16) |
+| 4 | started: the 07F sequence bundle loads before the level, as PS2 ResetMap_Load's `LoaderLoad(0, level)` does; `woman.rle` comes from a level bundle (`ps2data_check woman` matches it with the Xbox's file). Left: the loadables (078/079/07A, cutscenes) through LoadableLoad, which loads nothing on the Xbox; collision and AI paths in play |
 | 5 | text banks load through FileList (done with 1); fonts not checked |
 | 6-8 | not started |

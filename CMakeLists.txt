@@ -1347,7 +1347,7 @@ set(nf_action_ps2_data_sources src/action/ps2/Ps2Disc.cpp src/action/ps2/Ps2Text
 if(NIGHTFIRE_ACTION_DATA_PS2)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
-                                           src/action/ps2/Ps2Convert.cpp)
+                                           src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}

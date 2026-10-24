@@ -59,13 +59,52 @@ static bool ReadAt(HANDLE handle, void *buffer, uint32_t len, uint32_t offset) {
     return readFromFileBlocking(handle, buffer, len, NULL, &overlapped) != 0;
 }
 
-// The file named: a FileList entry in FILES.BIN, else a loose file under PS2\. False when it is neither.
+// The pause screen's film, the Xbox's woman.rle: the "woman" entry of the first level bundle in FileList that has one.
+// Its place in FILES.BIN, found once.
+static bool FindWoman(uint32_t *offset, uint32_t *size) {
+    static uint32_t womanOffset, womanSize;
+    static bool searched;
+    if (!searched) {
+        searched = true;
+        for (int i = 0; i < FileSystem.fileCount && womanSize == 0; i++) {
+            const Ps2FileListEntry *bundle = &FileSystem.files[i];
+            if (bundle->name[0] != '0' || bundle->name[1] != '7' || bundle->size <= PS2_SECTOR_SIZE)
+                continue;
+            uint8_t header[PS2_SECTOR_SIZE];
+            uint32_t dirSize;
+            if (!ReadAt(FileSystem.filesBin, header, sizeof(header), bundle->offset))
+                continue;
+            memcpy(&dirSize, header, 4);
+            if (dirSize == 0 || PS2_SECTOR_SIZE + dirSize > bundle->size)
+                continue;
+            uint8_t *directory = (uint8_t *)malloc(dirSize);
+            uint32_t at, length;
+            if (directory != NULL && ReadAt(FileSystem.filesBin, directory, dirSize, bundle->offset + PS2_SECTOR_SIZE) &&
+                Ps2Disc_FindBundleEntry(header, directory, dirSize, PS2_BUNDLE_WOMAN_TYPE, PS2_BUNDLE_WOMAN_NAME, &at,
+                                        &length)) {
+                womanOffset = bundle->offset + at;
+                womanSize = length;
+            }
+            free(directory);
+        }
+    }
+    *offset = womanOffset;
+    *size = womanSize;
+    return womanSize != 0;
+}
+
+// The file named: a FileList entry in FILES.BIN, the woman, else a loose file under PS2\. False when it is none.
 static bool Ps2File_Open(const char *name, Ps2File *file) {
     int index = Ps2Disc_FindFile(FileSystem.files, FileSystem.fileCount, name);
     if (index >= 0) {
         file->handle = FileSystem.filesBin;
         file->base = FileSystem.files[index].offset;
         file->size = FileSystem.files[index].size;
+        file->loose = false;
+        return true;
+    }
+    if (_stricmp(name, "woman.rle") == 0 && FindWoman(&file->base, &file->size)) {
+        file->handle = FileSystem.filesBin;
         file->loose = false;
         return true;
     }

@@ -63,6 +63,9 @@
 #include "devtools/MenuProbe.h"
 #include "sound/SFX.h"
 #include "math/X87Ops.h"
+#if NIGHTFIRE_DATA_PS2
+#include "ps2/Ps2Loader.h"
+#endif
 
 // XBE_GLOBAL(0x00262738, 0x230)
 MPGameStruct MPGame;
@@ -963,6 +966,9 @@ void ResetMap_Load(void) {
         SFXLoadCorrectBank();
         psiLight_Create();           // the original passes 1, which it does not read
         bLevelLoaded = 0;
+#if NIGHTFIRE_DATA_PS2
+        Ps2_LoadLevelSequences(GameState.NextLevelHashcode);   // the PS2's LoaderLoad(0, level) (docs/ps2-data.md)
+#endif
         while (LoaderLoad(1, GameState.NextLevelHashcode, 0, 0))
             ;
         ResetMap_State = 4;

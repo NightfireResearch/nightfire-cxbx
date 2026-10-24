@@ -103,6 +103,30 @@ int Ps2Disc_FindFile(const Ps2FileListEntry *entries, int count, const char *nam
     return -1;
 }
 
+bool Ps2Disc_FindBundleEntry(const uint8_t *header, const uint8_t *directory, uint32_t directoryBytes, int type,
+                             const char *name, uint32_t *offset, uint32_t *size) {
+    uint32_t dirSize, count;
+    memcpy(&dirSize, header, 4);
+    memcpy(&count, header + 4, 4);
+    uint32_t data = PS2_SECTOR_SIZE + dirSize;   // the files follow the directory, in its order
+    uint32_t at = 0;
+    for (uint32_t i = 0; i < count && at + 5 < directoryBytes; i++) {
+        uint32_t len;
+        memcpy(&len, directory + at, 4);
+        int entryType = directory[at + 4];
+        const char *entryName = (const char *)directory + at + 5;
+        size_t nameLength = strnlen(entryName, directoryBytes - at - 5);
+        if (entryType == type && strcmp(entryName, name) == 0) {
+            *offset = data;
+            *size = len;
+            return true;
+        }
+        at += 5 + (uint32_t)nameLength + 1;
+        data += len;
+    }
+    return false;
+}
+
 void Ps2Disc_LoosePath(const char *name, char *out, size_t outSize) {
     size_t n = (size_t)snprintf(out, outSize, "PS2\\");
     for (; *name != '\0' && n + 1 < outSize; name++)

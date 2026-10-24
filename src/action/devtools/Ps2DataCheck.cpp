@@ -8,6 +8,7 @@
 //                                                       stored normals, and against the Xbox's twin of each named
 //                                                       entity when the Xbox's bundle (decompressed) is given
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
+//   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //
 // <disc> is the folder with FILES.BIN, ACTION.ELF and PS2\. <hash> is a bundle's name without .bin (07000001).
 
@@ -668,6 +669,38 @@ int CmdMeshes(Disc &disc, const std::string &hash, const char *xboxBundlePath, c
     return totals.unknownVif != 0 || totals.badBatches != 0;
 }
 
+// The pause screen's film as FS_ps2.cpp finds it (the first level bundle with a "woman" entry), against the Xbox's
+// woman.rle when given
+int CmdWoman(Disc &disc, const char *xboxPath) {
+    for (int i = 0; i < disc.count; i++) {
+        if (disc.files[i].name[0] != '0' || disc.files[i].name[1] != '7')
+            continue;
+        Bytes bundle;
+        if (!disc.Read(disc.files[i].name, bundle) || bundle.size() <= PS2_SECTOR_SIZE)
+            continue;
+        uint32_t dirSize, at, size;
+        memcpy(&dirSize, bundle.data(), 4);
+        if (!Ps2Disc_FindBundleEntry(bundle.data(), bundle.data() + PS2_SECTOR_SIZE, dirSize, PS2_BUNDLE_WOMAN_TYPE,
+                                     PS2_BUNDLE_WOMAN_NAME, &at, &size))
+            continue;
+        printf("woman: %s, %u bytes at %u\n", disc.files[i].name, size, at);
+        if (xboxPath == NULL)
+            return 0;
+        Bytes xbox;
+        if (!ReadWhole(xboxPath, xbox)) {
+            printf("no %s\n", xboxPath);
+            return 1;
+        }
+        bool same = xbox.size() <= size && memcmp(xbox.data(), bundle.data() + at, xbox.size()) == 0;
+        for (uint32_t k = (uint32_t)xbox.size(); same && k < size; k++)
+            same = bundle[at + k] == 0;
+        printf("against the Xbox's %zu bytes: %s\n", xbox.size(), same ? "the same, then zeros" : "DIFFERENT");
+        return same ? 0 : 1;
+    }
+    printf("no level bundle has a woman entry\n");
+    return 1;
+}
+
 int CmdAll(Disc &disc) {
     int failed = 0;
     for (int i = 0; i < disc.count; i++) {
@@ -711,6 +744,8 @@ int main(int argc, char **argv) {
     }
     if (cmd == "all")
         return CmdAll(disc);
+    if (cmd == "woman")
+        return CmdWoman(disc, argc > 3 ? argv[3] : NULL);
     printf("unknown command %s\n", cmd.c_str());
     return 2;
 }
