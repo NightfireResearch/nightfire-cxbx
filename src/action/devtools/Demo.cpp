@@ -994,6 +994,8 @@ void Demo_FrameEnd(void) {
         }
         printf("\n");
     }
+    if (g_mode == DEMO_REBASE && g_frame == g_dumpStateFrame)
+        PrintGameState();
     if (g_mode == DEMO_REBASE && getenv("NIGHTFIRE_DEMO_DUMP_VIEWER") != NULL && glb_viewer[0] != NULL) {
         uint32_t v[7];
         memcpy(v, &glb_viewer[0]->pos, 12);

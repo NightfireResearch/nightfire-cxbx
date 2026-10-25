@@ -12,6 +12,9 @@
 //                                                       STs, triangles and their winding
 //   ps2data_check <disc> morphs <hash> <xbox bundle>    every head's morph targets converted and checked against the
 //                                                       Xbox twin's: each morph vertex's deltas, target by target
+//   ps2data_check <disc> tris <hash> <xbox bundle> <name>
+//                                                       an entity's triangles in drawing order, the PS2's as converted
+//                                                       and the Xbox's (psiGetTriList's: what breaking glass shatters)
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
@@ -1135,6 +1138,38 @@ int CmdMorphs(Disc &disc, const std::string &hash, const char *xboxBundlePath) {
     return totals.outsidePrims != 0;
 }
 
+void PrintTriangles(const char *which, const Kxe &k) {
+    std::vector<Corners> tris = Triangles(k);
+    printf("%s: %d vertices, %d primitives, %d triangles drawn\n", which, k.header->vtxCnt, k.header->primitiveCnt,
+           (int)tris.size());
+    for (const Corners &c : tris)
+        printf("   (%d %d %d) (%d %d %d) (%d %d %d)\n", c[0][0], c[0][1], c[0][2], c[1][0], c[1][1], c[1][2], c[2][0],
+               c[2][1], c[2][2]);
+}
+
+int CmdTris(Disc &disc, const std::string &hash, const char *xboxBundlePath, const char *name) {
+    Bytes bundle, xboxBundle;
+    if (!ReadPs2Bundle(disc, hash, bundle) || !ReadWhole(xboxBundlePath, xboxBundle))
+        return 1;
+    std::map<std::string, NamedMesh> ps2 = Entities(ReadBundle(bundle, PS2_SECTOR_SIZE), 0x2d);
+    std::map<std::string, NamedMesh> xbox = Entities(ReadBundle(xboxBundle, 0x20), 0x0d);
+    auto p = ps2.find(name);
+    auto x = xbox.find(name);
+    if (p == ps2.end() || x == xbox.end()) {
+        printf("no %s on %s\n", name, p == ps2.end() ? "the PS2" : "the Xbox");
+        return 1;
+    }
+    Bytes kxe;
+    Ps2MeshStats st;
+    Kxe k, xk;
+    if (!Ps2Mesh_ConvertToKxe(p->second.data, p->second.size, p->second.morph, p->second.morphSize, kxe, &st) ||
+        !k.Parse(kxe.data(), kxe.size()) || !xk.Parse(x->second.data, x->second.size))
+        return 1;
+    PrintTriangles("PS2 (converted)", k);
+    PrintTriangles("Xbox", xk);
+    return 0;
+}
+
 // The pause screen's film as FS_ps2.cpp finds it (the first level bundle with a "woman" entry), against the Xbox's
 // woman.rle when given
 int CmdWoman(Disc &disc, const char *xboxPath) {
@@ -1328,6 +1363,8 @@ int main(int argc, char **argv) {
         return CmdSkins(disc, argv[3], argv[4]);
     if (cmd == "morphs" && argc > 4)
         return CmdMorphs(disc, argv[3], argv[4]);
+    if (cmd == "tris" && argc > 5)
+        return CmdTris(disc, argv[3], argv[4], argv[5]);
     if (cmd == "all")
         return CmdAll(disc);
     if (cmd == "sound" && argc > 3)
