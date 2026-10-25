@@ -21,6 +21,11 @@
 #define LOADER_VARIANT_SHIFT 20
 #define LOADER_VARIANT_BITS 0x00f00000
 
+// The level's bundle's variant (1-3 the loadables, 8 the sequences)
+static uint32_t VariantOf(uint32_t level, uint32_t variant) {
+    return (level & ~LOADER_VARIANT_BITS) | (variant + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT;
+}
+
 extern uchar bLevelLoaded;
 
 // The memory the last loadable or sequence bundle was read into. GC LoadableLoad (0x8005c1e4) reads a loadable over
@@ -33,7 +38,7 @@ static uint32_t AnimBufferLoad;     // GcFs_LevelLoads when it was taken: the he
 // Loads the level bundle's variant through LoaderLoad, into the animation buffer when it fits
 static void LoadVariant(uint32_t level, int variant) {
     char name[16];
-    uint32_t bundle = (level & ~LOADER_VARIANT_BITS) | (uint32_t)(variant + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT;
+    uint32_t bundle = VariantOf(level, (uint32_t)variant);
     snprintf(name, sizeof(name), "%8.8x.bin", bundle);
     if (FS_MatchFilenameToHeader(name) < 0) {
         printf("[gc] no %s on the disc\n", name);
@@ -63,7 +68,7 @@ bool LoadableLoad(HASHCODE hashcode, uint loadable) {
     hashtable_delete_hashtype(HT_AnimSeq_HASHCODE_BASE);
     HASHCODE next = (HASHCODE)GameState.NextLevelHashcode;
     uint32_t level = (uint32_t)GameState.CurrentLevelHashcode;
-    GameState.NextLevelHashcode = (level & ~LOADER_VARIANT_BITS) | (loadable + LOADER_VARIANT_BASE) << LOADER_VARIANT_SHIFT;
+    GameState.NextLevelHashcode = VariantOf(level, loadable);
     LoadVariant(level, (int)loadable);
     GameState.NextLevelHashcode = next;
     hashtable_create_sections();

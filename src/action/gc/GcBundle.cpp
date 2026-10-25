@@ -159,7 +159,8 @@ void GcBundle_Convert(const uint8_t *bundle, uint32_t bytes, const std::vector<G
             x.data.assign(data, data + e.length);
             GcPutLe32(x.data.data(), hashcode);
             stats->loadables++;
-        } else if (e.type == ENTRY_MAP || e.type == ENTRY_MAP_SECOND_PASS || e.type == ENTRY_MAP_2 || e.type == ENTRY_MAP_B) {
+        } else if (e.type == ENTRY_MAP || e.type == ENTRY_MAP_SECOND_PASS || e.type == ENTRY_MAP_2 ||
+                   e.type == ENTRY_MAP_B) {
             GcMapStats map;
             GcMap_Convert(data, e.length, bundle, bytes, x.data, &map);
             stats->packs++;

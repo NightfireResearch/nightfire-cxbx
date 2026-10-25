@@ -10,7 +10,8 @@ Status (25 October 2026): the disc's files are served (milestone 1), every level
 (milestone 3) and the skinned ones, with the heads' morph targets, to skinned KXEs (milestone 7), all checked offline
 against the US Xbox disc's twins. In game HendersonB, CastleCourtyard and SpaceStationD load from the GameCube's
 bundles and draw from the GameCube's meshes and textures on the test runner; CastleCourtyard's frames are within
-2-2.6 grey levels of the Xbox build's at the same moments. Cutscenes (the loadables) and sound are still to come.
+2-2.6 grey levels of the Xbox build's at the same moments, and with the cutscenes' loadable bundles (milestone 4)
+HendersonB's intro cutscene plays as the Xbox's does, frame for frame within a few. Sound is still to come.
 See [Milestones](#milestones) and [In game](#in-game).
 
 Sources: the GameCube disc as extracted by the extractor project (Q:\nightfire-re, read only:
@@ -64,7 +65,7 @@ not swapped throughout: each format below says which way round it is.
 | Format | Same? | What differs | Known | Unknown | Seam in our code | Size |
 |---|---|---|---|---|---|---|
 | File system | no | loose files; names mapped by `GcDisc_Path` (`ENGLISH/SB_0/SB_0.SHF` is `gc\audio\SFX\English\SB_0\SB_0.shf`, a text bank `common\<name>`, a bundle `gc\<hash>.bin`) | all | - | FS.cpp, whole (GcFs.cpp) | small, done |
-| Level bundle | nearly | EDL-compressed with the big-endian flag (the same bit stream, read from words the other way round); the header's two words big-endian, the directory's entries little-endian as the Xbox's. The anim sequences (type 4) are not in the level's bundle but in its group's (07e0000n, from `common.bin`) and its own (07d0xxxx). Extra entry types: 12 (a loadable, its name a binary hashcode; the Xbox's bundles have none), 13 `GC EXTRA STATIC` and 14 `GC EXTRA DISCARD` (the meshes' data: 1.6-2.7 MB and 0.9-1.4 MB in the three levels looked at) | all | the loadables' mode (as the PS2's) | GcBundle.cpp, in GcFs.cpp's open | small, done |
+| Level bundle | nearly | EDL-compressed with the big-endian flag (the same bit stream, read from words the other way round); the header's two words big-endian, the directory's entries little-endian as the Xbox's. The anim sequences (type 4) are not in the level's bundle but in its group's (07e0000n, from `common.bin`) and its own (07d0xxxx). Extra entry types: 12 (a loadable: a cutscene's script and the bundle variant, 0x078/079/07A0xxxx, holding it; its name four bytes, its hashcode big-endian; the Xbox's level bundles hold those scripts themselves), 13 `GC EXTRA STATIC` and 14 `GC EXTRA DISCARD` (the meshes' data: 1.6-2.7 MB and 0.9-1.4 MB in the three levels looked at) | all | - | GcBundle.cpp, in GcFs.cpp's open | small, done |
 | Skins, anim scripts, skeletons, scripts, menus (types 3, 5, 6, 7, 8); sequences (4) | yes | byte for byte the Xbox's: over 29 levels 974 skins, 16,097 anim scripts, 1,260 skeletons, 393 of 394 scripts, 29 menus, 15,969 sequences. The Xbox's levels also hold 27 "Spec" skins and 30 scripts the GameCube's lack (HendersonB's two are in its 078/079 loadables) | all | - | none (the sequences: GcBundle_Load) | done |
 | Map packs (types 0, 1, 2, 11): container, header, placements, portals, LOD, paths, collision | nearly | block headers little-endian on both; most payloads big-endian (placements, map header, paths, LOD, sounds, entity parameters 0x1f, collision 0x2f), some little-endian as on the Xbox (palette headers, portals, hashlists, AI paths, particles). Collision: the box's quantisation scale is a power of two's exponent (n for 2^-n) where the Xbox has the float | all; after conversion, over 1,831 packs: headers, LOD, portals, hashlists, AI paths, particles, sounds all the Xbox's; placements 1,815 the same (16 apart in float noise or padding); collision 6,850 of 7,322 the same, 393 more within 0.1% of bytes; entity parameters 15,236 the same, 217 within two bytes | the 62 entity parameter blocks and 79 collision blocks that differ more | GcMap.cpp | done |
 | Textures | no | block 0x17: a 0x5c-byte big-endian header (name, size, GX format index, mip levels) then the GX's tiled texels, every level and frame. Three formats only in the level bundles: CMPR (16,016 textures), RGB5A3 (1,395), RGBA8 (437); no I4/I8/IA, no C4/C8 palettes. Every size a power of two from 4 to 512 but one (128x132, which the GameCube draws as 32x32). "DT" headers (another texture's frames) count every header of the level from 0, as the Xbox's do from 1 | all (GC psiCreateMapTextures 0x8002fd0c) | - | GcTexture.cpp: block 0x18 (KXT) | done |
@@ -86,7 +87,7 @@ not swapped throughout: each format below says which way round it is.
 | The file system (whole file replaced) | engine/FS.cpp out of the build | gc/GcFs.cpp: loose files through GcDisc_Path, bundles converted whole when opened (gc/GcBundle.cpp, GcMap.cpp, GcTexture.cpp, GcMesh.cpp); for now silent stand-ins for the sound banks and an empty music list |
 | The levels' swapped skins | engine/Anim.cpp AnimObjectNew | gc/GcAnim.cpp: the GameCube's own FixupSkinHashcode (0x80045298: Elite_B becomes Elite in PowerStationA1, Elite_Beret in EvilBase), since the Xbox's swaps in "Spec" skins the GameCube's bundles lack |
 | Meshes | none: block 0x0c becomes 0x0d as the bundle converts (GcMap.cpp), so parsemap and psiCreateEntityGfx are the Xbox's | gc/GcMesh.cpp |
-| The cutscene loadables (to come) | engine/Loader.cpp, as the PS2 branch's | the 078/079/07A bundles |
+| The cutscene loadables | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | gc/GcLoader.cpp: the loadable bundle (0x0780xxxx-0x07A0xxxx) through LoaderLoad, and on reload the level's sequences again (0x07f0xxxx, which GcBundle_Load makes from the level's sequence bundles), into one buffer while they fit (GcFs_LoadNextInto), as GC LoadableLoad (0x8005c1e4) reads a loadable over the sequences |
 | Sound banks, music (to come) | sound/SFX.cpp LoadSoundBank; GcFs.cpp's reads | DSP ADPCM decoder, Xbox ADPCM encoder (the PS2 branch's) |
 | Movies (to come) | engine/Fmv.cpp replaced | an HVQM4 decoder |
 
@@ -289,19 +290,20 @@ disc) ran the same:
 
 | Level | GameCube build | Against the Xbox build |
 |---|---|---|
-| HendersonB (07000002) | the bunker's rooms and corridors, the crates, lamps, the gun and the first-person hands from the GameCube's meshes and textures, the HUD; 576 meshes converted, 10 of them skinned; runs to the end | the Xbox plays the intro cutscene first (its scripts are in the GameCube's loadables, not loaded yet), so the moments differ; the same rooms, textures and lighting once the Xbox's player is in them |
+| HendersonB (07000002) | the intro cutscene (the loadable 0x07800002: Bond and Mayhew in the bunker, their faces moving), then play: the bunker's rooms and corridors, the crates, lamps, the gun and the first-person hands from the GameCube's meshes and textures, the HUD; 576 meshes converted, 10 of them skinned; runs to the end | both play the intro cutscene, so the frames line up: frames 250, 1500, 3000 and 5000 differ by 5.3, 2.3, 4.5 and 1.5 grey levels on average; the cutscene's camera and heads are a few frames apart at places (Bond's head turned a little further at 1500) |
 | CastleCourtyard (07000006) | the snowy courtyard, the truck, falling snow, the gun and the hands; 454 meshes, 8 skinned | no cutscene, so the frames line up: at frames 250, 1500, 3000 and 4500 the two differ by 2.0-2.6 grey levels on average, 1.3-1.8% of pixels by more than 32, mostly the snowflakes (before the skinned meshes, without the hands: 2.6-3.4) |
-| SpaceStationD (0700001b) | the station's exterior, walkway and trusses, the beam weapon and the space suit's hands, a guard in his suit in a window, the HUD; 345 meshes, 8 skinned | the Xbox plays the intro cutscene first |
+| SpaceStationD (0700001b) | the intro cutscene (the loadable 0x0780001b), then the station's exterior, walkway and trusses, the beam weapon and the space suit's hands, a guard in his suit in a window, the HUD; 345 meshes, 8 skinned | both play the intro: 1.3 grey levels apart at frame 250, then the same shots a few frames apart (7-18 grey levels, the camera moving fast past the station) |
 
-The skinned meshes pose and move with no stretched or stray vertices in the frames looked at; with no one playing
-and no cutscenes, few characters come close enough to judge faces. The log has the scripts the GameCube keeps in its
-loadables (0x0600007f, 0x06000084) as not loaded, and "EMITTER TEXTURE MISSING" once.
+The skinned meshes pose and move with no stretched or stray vertices in the frames looked at, the cutscenes'
+close-ups included, and the heads take the Xbox's expressions there (the morph targets). The log has
+"EMITTER TEXTURE MISSING" once; before the loadables it also had their scripts (0x0600007f, 0x06000084) as not
+loaded.
 
 Before GcAnim.cpp the first run stopped in Drone_PostLoad_Init: the Xbox's FixupSkinHashcode had swapped in a "Spec"
 skin that the GameCube's bundle does not have.
 
-A time demo's rebase, as the PS2 work did, needs the cutscenes (milestone 4) before the Xbox's recordings can line up
-with the GameCube build.
+A time demo's rebase, as the PS2 work did, is still to do: the rebase's viewer print and pictures are the ps2-data
+branch's (devtools/Demo.cpp, behind its switch), to bring over for this build.
 
 ## Milestones
 
@@ -310,7 +312,7 @@ with the GameCube build.
 | 1 | The disc's files are served: names to paths, bundles decompressed | - | done |
 | 2 | Bundles converted: the directory, the sequences merged, every map block, textures to KXT; checked against the Xbox's twins offline | 1 | done |
 | 3 | A level's static world: block 0x0c and the GC EXTRA entries to KXE, the double-sided bit carried over | 2 | done (rigid meshes) |
-| 4 | Placements and objects in play: the 078/079/07A loadables (cutscene scripts and sequences) as the PS2 branch's LoadableLoad; collision and paths confirmed with the Xbox's time demos | 3 | medium (2-3 days) |
+| 4 | Placements and objects in play: the 078/079/07A loadables (cutscene scripts and sequences) as the PS2 branch's LoadableLoad; collision and paths confirmed with the Xbox's time demos | 3 | loadables done; the time demos to do (1-2 days, with the PS2 branch's rebase tools) |
 | 5 | Sound: DSP ADPCM banks to Xbox ADPCM, the `.SFX` fields, the music re-blocked and its markers | 1 | medium (2-3 days) |
 | 6 | Text, fonts, menus: text needs nothing; the GameCube's button symbols from Nightfire.elf | 2 | small (1 day) |
 | 7 | Skinned characters and morphs: the skinning data at 0x90-0xa0, bone palettes and morph streams into the KXE | 3 | done; faces in game wait for the cutscenes (4) |
