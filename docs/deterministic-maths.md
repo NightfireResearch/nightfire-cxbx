@@ -98,6 +98,19 @@ Besides the maths:
 - **The heap's layout** differs between 32-bit and 64-bit hosts (structures that hold pointers are bigger), so a
   heap that runs out does so at another moment. Nothing guards against that; normal play should not run out.
 
+## Apple Silicon (25 October 2026)
+
+Checked on the M2 Max (macOS 27, Apple clang 21), from `mac-scope` at 83070d2f with the `macos-arm64` preset
+(`NIGHTFIRE_DET_MATH=ON`, `NIGHTFIRE_SSE=OFF`, DetMath compiled with `-ffp-contract=off` and no fast-math option):
+
+| Check | Result |
+|---|---|
+| The probe (tools/detmath/detprobe.cpp, built as its header says) against the x86-64 reference | all 26 outputs identical (`shasum -c reference_x86_64.sha256`: 26 OK). Against Apple's libm the same inputs differ by up to 3 ulps (tan) - what DetMath is for |
+| Fused multiply-adds (tools/fused_ops.sh) | none in the probe or in DetMath; in the four executables only the three the source asks for (ShaderBuilder::Mad, Crt::CIpow), as arm64_probe.sh lists them |
+| The 12 action recordings, action_standalone_test (Metal, headless) | every one matches every frame; no "UNEXPECTED floating-point control" line (FPCR's rounding, flush-to-zero and trap bits clear) |
+| The 16 driving lockstep runs to tick 9000 (3 slots), against the runner's `lbase_c` | sound traces identical in all 16. The Mac's runs of 17 October, before DetMath and the RSQRTSS table change, were already identical too |
+| Float-to-unsigned conversions (every `fcvtzu` in the two test executables, by function) | none in the game's code; the seven in host code (the SDL sound backend, the visibility count) cannot see a negative value |
+
 ## Why not the Xbox's bits
 
 The original ran the x87's instructions on the Xbox's Pentium III. A portable library cannot match them:
