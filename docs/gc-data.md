@@ -6,10 +6,12 @@ PS2's. The game code stays the Xbox port; what changes is how the files are foun
 become what the Xbox code expects.
 
 Status (25 October 2026): the disc's files are served (milestone 1), every level bundle converts to the Xbox's layout
-(milestone 2: textures, placements, collision, paths, skins, scripts, sequences) and is checked offline against the
-US Xbox disc's twins, and in game HendersonB loads from the GameCube's bundle and plays on the test runner with the
-GameCube's textures in its HUD - but no world, since the meshes are not converted yet, and no sound. See
-[Milestones](#milestones) and [In game](#in-game).
+(milestone 2: textures, placements, collision, paths, skins, scripts, sequences) and the rigid meshes to KXEs
+(milestone 3), all checked offline against the US Xbox disc's twins. In game HendersonB, CastleCourtyard and
+SpaceStationD load from the GameCube's bundles and draw their static worlds from the GameCube's meshes and textures
+on the test runner; CastleCourtyard's frames are within 2-3 grey levels of the Xbox build's at the same moments.
+Characters (skinned meshes), cutscenes (the loadables) and sound are still to come. See [Milestones](#milestones) and
+[In game](#in-game).
 
 Sources: the GameCube disc as extracted by the extractor project (Q:\nightfire-re, read only:
 `iso_extract/gc_us`), the US Xbox disc (`iso_extract/xbox_us`), the GameCube executable in Ghidra
@@ -66,8 +68,8 @@ not swapped throughout: each format below says which way round it is.
 | Skins, anim scripts, skeletons, scripts, menus (types 3, 5, 6, 7, 8); sequences (4) | yes | byte for byte the Xbox's: over 29 levels 974 skins, 16,097 anim scripts, 1,260 skeletons, 393 of 394 scripts, 29 menus, 15,969 sequences. The Xbox's levels also hold 27 "Spec" skins and 30 scripts the GameCube's lack (HendersonB's two are in its 078/079 loadables) | all | - | none (the sequences: GcBundle_Load) | done |
 | Map packs (types 0, 1, 2, 11): container, header, placements, portals, LOD, paths, collision | nearly | block headers little-endian on both; most payloads big-endian (placements, map header, paths, LOD, sounds, entity parameters 0x1f, collision 0x2f), some little-endian as on the Xbox (palette headers, portals, hashlists, AI paths, particles). Collision: the box's quantisation scale is a power of two's exponent (n for 2^-n) where the Xbox has the float | all; after conversion, over 1,831 packs: headers, LOD, portals, hashlists, AI paths, particles, sounds all the Xbox's; placements 1,815 the same (16 apart in float noise or padding); collision 6,850 of 7,322 the same, 393 more within 0.1% of bytes; entity parameters 15,236 the same, 217 within two bytes | the 62 entity parameter blocks and 79 collision blocks that differ more | GcMap.cpp | done |
 | Textures | no | block 0x17: a 0x5c-byte big-endian header (name, size, GX format index, mip levels) then the GX's tiled texels, every level and frame. Three formats only in the level bundles: CMPR (16,016 textures), RGB5A3 (1,395), RGBA8 (437); no I4/I8/IA, no C4/C8 palettes. Every size a power of two from 4 to 512 but one (128x132, which the GameCube draws as 32x32). "DT" headers (another texture's frames) count every header of the level from 0, as the Xbox's do from 1 | all (GC psiCreateMapTextures 0x8002fd0c) | - | GcTexture.cpp: block 0x18 (KXT) | done |
-| Static meshes | no | block 0x0c (the GameCube's mesh header, 0xac bytes, big-endian, magic 0x0f) where the Xbox has a KXE in 0x0d; its vertices and strips in the bundle's GC EXTRA entries. Not stored display lists: the game builds one the first time it draws the mesh ([Meshes](#meshes)) | the header's offsets and the strip layout, from the draw code | the vertex formats' fraction bits in practice, how the GC EXTRA data is attached to each header, the layer flags | parsemap.cpp case 0x0c (to a KXE) | medium, after research |
-| Skinned meshes, morphs | no | the same 0x0c headers; no 0x2b morph blocks on this disc (the PS2's have them) | - | all (psiDrawSkinObjectMatrix 0x8000cec4, psiBuildMatrixPalette 0x8000d0b8) | as meshes | research |
+| Static meshes | no | block 0x0c (the GameCube's mesh header, 0xac bytes, big-endian, magic 0x0f) where the Xbox has a KXE in 0x0d; its offsets reach into the bundle's GC EXTRA entries (vertex arrays in STATIC, strips and index streams in DISCARD). Not stored display lists: the game builds one per mesh as the level loads ([Meshes](#meshes)). Half the quads are cut along the other diagonal | all that a conversion needs | the layer flags beyond the blends; where the Xbox's alpha reference and clamping come from | GcMesh.cpp: 0x0c to 0x0d (KXE) as the bundle converts | done |
+| Skinned meshes, morphs | no | the same 0x0c headers with five more offsets at 0x90-0xa0 (0 on a rigid mesh) and non-zero words at 0x28 and 0x2c (22 and 0xef on the two looked at; a head has 0x80000003 at 0x3c); no 0x2b morph blocks on this disc (the PS2's have them) | the strips and arrays, as a rigid mesh's | the skinning data (psiDrawSkinObjectMatrix 0x8000cec4, psiBuildMatrixPalette 0x8000d0b8) | as meshes | research |
 | Text banks | yes | the nine `*Txt.dat` byte for byte the Xbox's; the GameCube adds `*TxtU.dat` | - | what reads `TxtU` | none | none |
 | Fonts, button symbols | glyphs probably | the glyph tables are executable data (`GC FontInc.cpp`); the button symbols are the GameCube pad's | - | the GameCube's symbol table in Nightfire.elf (no symbols: find it by the Xbox table's layout) | SpecialChars, as the PS2's | small |
 | Sound banks | container yes, codec no | the same files, big-endian (the `.SHF` sample headers' nine words; `.SFX` 98% of bytes the Xbox's once each word is turned round); samples Nintendo DSP ADPCM (8 bytes per 14 samples) with the DSP's 96-byte headers (coefficients, history) in the new `.SHG`; every sample mono, at lower rates ([Sound](#sound)) | the codec, the rates | the `.SFX` fields that differ | SFX.cpp LoadSoundBank, as the PS2's | medium |
@@ -81,9 +83,9 @@ not swapped throughout: each format below says which way round it is.
 
 | Seam | Game file | GameCube code |
 |---|---|---|
-| The file system (whole file replaced) | engine/FS.cpp out of the build | gc/GcFs.cpp: loose files through GcDisc_Path, bundles converted whole when opened (gc/GcBundle.cpp, GcMap.cpp, GcTexture.cpp); for now silent stand-ins for the sound banks and an empty music list |
+| The file system (whole file replaced) | engine/FS.cpp out of the build | gc/GcFs.cpp: loose files through GcDisc_Path, bundles converted whole when opened (gc/GcBundle.cpp, GcMap.cpp, GcTexture.cpp, GcMesh.cpp); for now silent stand-ins for the sound banks and an empty music list |
 | The levels' swapped skins | engine/Anim.cpp AnimObjectNew | gc/GcAnim.cpp: the GameCube's own FixupSkinHashcode (0x80045298: Elite_B becomes Elite in PowerStationA1, Elite_Beret in EvilBase), since the Xbox's swaps in "Spec" skins the GameCube's bundles lack |
-| Meshes (to come) | engine/parsemap.cpp case 0x0c | a converter to KXE, with the GC EXTRA entries |
+| Meshes | none: block 0x0c becomes 0x0d as the bundle converts (GcMap.cpp), so parsemap and psiCreateEntityGfx are the Xbox's | gc/GcMesh.cpp |
 | The cutscene loadables (to come) | engine/Loader.cpp, as the PS2 branch's | the 078/079/07A bundles |
 | Sound banks, music (to come) | sound/SFX.cpp LoadSoundBank; GcFs.cpp's reads | DSP ADPCM decoder, Xbox ADPCM encoder (the PS2 branch's) |
 | Movies (to come) | engine/Fmv.cpp replaced | an HVQM4 decoder |
@@ -113,46 +115,92 @@ so the index is kept as it is.
 
 ## Meshes
 
-Read from GC PsiDraw.cpp's draw code (maybe_psiDrawClonedObject 0x8002ea08, called by psiDrawObjectMatrix
-0x8002f584); not converted yet. parsemap's case 0x0c keeps the header's address in the cel, as the Xbox's 0x0d does.
-The header (big-endian words, offsets from the header):
+Read from GC PsiDraw.cpp (Nightfire.elf in Ghidra): psiCreateEntityGfx's counterpart (0x8002f864) draws each mesh once,
+as the level loads, into a display list through maybe_psiDrawClonedObject (0x8002ea08); later draws call that list.
+parsemap's case 0x0c keeps the header's address in the cel, as the Xbox's 0x0d does.
+
+**Where the data is.** The header's offsets count from the header itself and reach past its pack into the same
+bundle: the loader reads the whole bundle into one buffer, and LoaderProcess (0x8005c444) only notes where the two
+GC EXTRA entries are. The vertex arrays are in GC EXTRA STATIC, the strip groups, strip lengths and index streams in
+GC EXTRA DISCARD, which psiPreDraw (0x8002d8a0) clears and gives back once the display lists are built. A few
+headers (in 0x0c blocks larger than 0xac bytes) have their data inline in the pack; the offsets work the same way.
+
+**The header** (GcMeshHeader in src/action/gc/GcMesh.h; big-endian words):
 
 | Offset | Meaning |
 |---|---|
 | 0x00 | 0x0f (psiDrawObjectMatrix draws nothing else) |
-| 0x18 | strip groups; 0x1c, 0x20 must be non-zero too |
-| 0x30 | flags: 0x200 sets a z mode of (1, 0, 3) where it is otherwise (1, 1, 3): the z-write off, by the look of it |
-| 0x34 | bit 0: set, the layers' blend and alpha-compare states are left as they are |
-| 0x38 | eight layers' flags: bits 0, 1, 2 and 0x40 pick the layer's blend and alpha-compare states (meanings not settled) |
-| 0x58 | -1: positions and normals 16 bytes a vertex (floats, by the stride); else 12 bytes (16-bit), with fraction bits at 0x5b and 0x5f |
-| 0x60 | a point the draw transforms by the object's matrix (the bounds' centre, by the look of it) |
-| 0x70 | the strip groups: five words each. Word 0: vertices (bits 0-15), strips (16-27), **double-sided (28)**, and in bits 29-31 a multiplier on the group's index stride (not understood); then eight halfwords, each layer's texture (-1 for none) |
-| 0x74 | each strip's length less two (halfwords) |
-| 0x78 | the position-and-normal indices (halfwords; one index serves both) |
+| 0x04 | the name, 20 bytes |
+| 0x18 | strip groups; 0x1c the position indices, 0x20 the positions (both must be non-zero) |
+| 0x28, 0x2c | 0 on a rigid mesh |
+| 0x30 | flags: 0x200 turns the depth writes off (a z mode of (1, 0, 3) where it is otherwise (1, 1, 3)) |
+| 0x34 | bit 0: the layers' blend and alpha-compare states left as they are; bit 2: fogged, by the look of it |
+| 0x38 | eight layers' flags: 0x02 additive, 0x04 subtractive (both with depth writes off), 0x40 the next layer's texture as a second stage in the same pass; bit 0 picks another alpha compare |
+| 0x58 | -1: float positions (16 bytes a vertex: three floats, three signed bytes of normal with 7 fraction bits); else the byte at 0x5b is the position shift: 12 bytes a vertex, three signed halfwords of position with 16 - shift fraction bits, three of normal with 14 |
+| 0x5f | the texture coordinates' shift: two signed halfwords with 16 - shift fraction bits |
+| 0x60 | the centre, three floats, added to every position (the draw adds it to the matrix's translation) |
+| 0x70 | the strip groups, 20 bytes each: a word of counts - the strips' vertices less two each (bits 0-15), the strips (16-27), **double-sided (28)**, the layers with a texture less one (29-31) - then eight halfwords, each layer's texture in the pack (-1 for none) |
+| 0x74 | each strip's vertices less two (halfwords) |
+| 0x78 | the position indices (halfwords; one index serves position and normal, the array interleaving them) |
 | 0x7c | the positions and normals (GX attributes 9 and 10) |
-| 0x80 | the texture coordinate indices; 0x84 the coordinates (attribute 13, 4 bytes) |
-| 0x88 | the colour indices; 0x8c the colours (attribute 11, 4 bytes; 0 for none) |
+| 0x80 | the texture coordinate indices; 0x84 the coordinates (attribute 13) |
+| 0x88 | the colour indices; 0x8c the colours (attribute 11, RGBA8; 0 for none) |
+| 0x90-0xa0 | a skinned mesh's five offsets; 0 on a rigid one |
+| 0xa4 | the display list's size |
 
-Each strip goes into the display list as a triangle strip command, its count, then per vertex the position index
-twice (position and normal), the colour index if any and the coordinate index. A converter makes the Xbox's KXE
-from these (vertices, strips joined, a primitive per texture and layer state), as the PS2 branch's Ps2Mesh.cpp does
-from VIF packets.
+The vertex formats are GXSetVtxAttrFmt's (0x8017f9f8) through the draw's format switch (0x80036fd8, cases 1 and 12).
+
+**The draw order.** For each of the eight layers (skipping one whose layer before has flag 0x40), each strip group
+with a texture in that layer draws its strips as GX triangle strips (`0x98`); a group with none in that layer only
+moves the cursors on. Per strip vertex the display list gets the position index (twice: position and normal), the
+colour index when the mesh has colours, and the coordinate index. The position indices are walked from the start
+for every layer; a group's coordinate and colour indices come once for each of its layers with a texture, in layer
+order. A group's texture numbers are the pack's, offset by where the map's textures start (as the Xbox's).
+
+**The conversion** (GcMesh_ConvertToKxe): every strip vertex (its three indices) becomes a 28-byte KXE vertex,
+shared where the indices repeat; the strips are joined with degenerate triangles into one strip per texture and
+state, wound as they are (GX strips turn as D3D's do); normals are turned round, colours made B, G, R, A, and a mesh
+with no colours gets white. The states: the layer's blend, depth writes unless the mesh's flag or a blend turns them
+off, wrap in both directions, double-sided from the group's bit 28 - and also for every blended layer with depth
+writes off (below). The skinned meshes are left out (their entities draw nothing) until milestone 7.
+
+**Checked** (`gcdata_check meshes`, every level, against the Xbox's twins: the same entity in the same pack):
+
+| Check | Result |
+|---|---|
+| meshes / converted / skinned (left out) / nothing to draw | 15,515 / 13,618 / 448 / 1,449 |
+| compared (the Xbox's twin rigid and drawing something) | 13,558 |
+| Xbox vertices at one of ours (2 mm) / ours at an Xbox vertex | 4,272,343 of 4,439,746 (96.2%) / 4,203,345 of 4,369,361 (96.2%) |
+| at those: texture coordinates / normal (cos > 0.9) / colour the same | 91% / 89% / 93% (another 1.5% with the alpha alone different) |
+| our triangles: the Xbox's, wound the same / the quad's other diagonal / wound the other way / not on the Xbox | 1,421,245 / 1,610,426 / 12,086 / 177,941 of 3,221,698 |
+| on the triangles that are the Xbox's: texture / double-sided / blend / depth writes the same | 97.3% / 98.4% (1.6% double-sided on ours only, 0.01% on the Xbox's only) / 99.9% / 99.96% |
+| on them: wrapping / alpha reference 180 the same | 99.5% (ours wraps, the Xbox's clamps) / 99.3% (the Xbox's alone has it) |
+
+The vertices that miss are almost all in 83 meshes (skies, skylines, far scenery) whose large position shift leaves
+steps of more than 2 mm. Half the triangles are the other diagonal of the same quad: the two exporters cut quads
+differently, as the PS2's did. The Xbox's twins also have no geometry for 60 invisible blocking meshes (their only
+texture "blocking_polly") which the GameCube's have. They are converted like the rest; none has shown in the frames
+looked at, but whether the game hides them (they are collision placements, by their names) is still to check.
 
 ### Culling
 
-The data does say which surfaces are double-sided. Each strip group's bit 28 sets the GameCube's cull mode as the
-group is drawn: set, `GX_CULL_NONE`; clear, `GX_CULL_BACK` (GC GX.cpp's state flush 0x80036244 writes the GX
-generation mode through the GX's own table, 0 2 1 3 at 0x8030f2e4). So the bit is the Xbox's primitive state bit 3
-(double-sided), and a converter should carry it over.
+The data says which surfaces are double-sided. Each strip group's bit 28 sets the GameCube's cull mode as the group
+is drawn: set, `GX_CULL_NONE`; clear, `GX_CULL_BACK` (GC GX.cpp's state flush 0x80036244 writes the GX generation
+mode through the GX's own table, 0 2 1 3 at 0x8030f2e4). So the bit is the Xbox's primitive state bit 3.
 
-The particles are drawn otherwise: GC psiDrawParticleList (0x8002af38) sets `GX_CULL_BACK` (its state 1, through
-the GX's cull mode call, 0x80181688) for every particle quad. The Xbox's psiDrawParticleList sets no cull mode that
-we have found and draws with whatever the last mesh primitive left. That is where the GameCube can lose billboarded
-effects the Xbox shows, such as the bullet-impact gas on drones and the explosions in SpaceStationD: a quad built
-facing away (mirrored, or wound the other way by the effect code) is culled on the GameCube and drawn on the Xbox
-whenever the last primitive was double-sided. Whether those effects are particles or effect meshes with bit 28 clear
-is still to check. In our port the particles keep the Xbox's behaviour whatever the data, so this GameCube fault
-does not carry over.
+The effects the GameCube loses are **meshes**: SpaceStationD's explosion is pack 0x01000081's flat quads
+(`Blast_frame_1` to `_17`, `Single_Blast_frame`, `flash`, `ExplodeMarker`, `Vertical_smoke`), the bullet impacts pack
+0x0100002d's `HitSpark` and `gas_steam`, the dust pack 0x01000004's `smoke_1_dust` and `smoke_2_fire`. All are
+additive with depth writes off. On the Xbox every one of them is double-sided (state 0x1ca); on the GameCube most
+have bit 28 clear (`cloud_n`, `smoke`, `gas_steam` and a few others have it set), so the GameCube culls them whenever
+they face away from the camera. Over every level, 10,544 blended triangles were double-sided on the Xbox and not in
+the GameCube's data, against 12,205 double-sided in both and 9,919 single-sided in both; giving the double-sided bit
+to every blended layer with depth writes off (the mesh flag 0x200) leaves 148 the Xbox has and we lack and 186 we
+have and it lacks. The conversion does that, so these effects draw as on the Xbox.
+
+The particles are drawn otherwise: GC psiDrawParticleList (0x8002af38) sets `GX_CULL_BACK` (its state 1, through the
+GX's cull mode call, 0x80181688) for every particle quad, where the Xbox's sets no cull mode that we have found and
+draws with whatever the last mesh primitive left. In our port the particles keep the Xbox's behaviour.
 
 ## Sound
 
@@ -187,15 +235,24 @@ positions moved.
 ## In game
 
 On the test runner (vr-desktop, `C:\nightfire-gc\run`: `DiscPath=C:/nightfire-gc/gcdisc`, a copy of the bundles,
-`common\` and the two sound tables HendersonB needs; `DumpEvery=250`), `action_standalone.exe -level 07000002`, no
-input, 100 s: the GameCube's bundle (12.8 MB decompressed) converts to 18.1 MB of the Xbox's layout with 621
-sequences added, the level loads and runs to the end of the 100 s without a fault. The frames show the HUD drawn
-from the GameCube's textures (the health and armour iris, the crosshair, the weapon's name and ammunition) over a
-black world: the meshes are left out. The log has the scripts the GameCube keeps in its loadables (0x0600007f,
-0x06000084) as not loaded, and "EMITTER TEXTURE MISSING" once.
+`common\` and the two sound tables the levels tried need; `DumpEvery=250`), `action_standalone.exe -level <level>`,
+no input, 90-100 s each; the Xbox build (the default build, in `C:\nightfire-gc\xbox`, reading the runner's Xbox
+disc) ran the same:
 
-Before GcAnim.cpp the run stopped in Drone_PostLoad_Init: the Xbox's FixupSkinHashcode had swapped in a "Spec"
+| Level | GameCube build | Against the Xbox build |
+|---|---|---|
+| HendersonB (07000002) | the bunker's rooms and corridors, the crates, lamps and the gun from the GameCube's meshes and textures, the HUD; 566 meshes converted, 10 skinned left out; runs to the end | the Xbox plays the intro cutscene first (its scripts are in the GameCube's loadables, not loaded yet), so the moments differ; the same rooms, textures and lighting once the Xbox's player is in them |
+| CastleCourtyard (07000006) | the snowy courtyard, the truck, falling snow, the gun; 446 meshes, 8 skinned left out | no cutscene, so the frames line up: at frames 250, 1500, 3000 and 4500 the two differ by 2.6-3.4 grey levels on average (2.2-2.9 away from the first-person hands, which are skinned and missing on the GameCube build), 1.5-2.3% of pixels by more than 32, mostly the snowflakes |
+| SpaceStationD (0700001b) | the station's exterior, walkway and trusses, the beam weapon, the HUD; 337 meshes, 8 skinned left out | the Xbox plays the intro cutscene first |
+
+Characters (drones, Mayhew, the first-person hands) do not draw: they are skinned. The log has the scripts the
+GameCube keeps in its loadables (0x0600007f, 0x06000084) as not loaded, and "EMITTER TEXTURE MISSING" once.
+
+Before GcAnim.cpp the first run stopped in Drone_PostLoad_Init: the Xbox's FixupSkinHashcode had swapped in a "Spec"
 skin that the GameCube's bundle does not have.
+
+A time demo's rebase, as the PS2 work did, needs the cutscenes (milestone 4) before the Xbox's recordings can line up
+with the GameCube build.
 
 ## Milestones
 
@@ -203,22 +260,20 @@ skin that the GameCube's bundle does not have.
 |---|---|---|---|
 | 1 | The disc's files are served: names to paths, bundles decompressed | - | done |
 | 2 | Bundles converted: the directory, the sequences merged, every map block, textures to KXT; checked against the Xbox's twins offline | 1 | done |
-| 3 | A level's static world: block 0x0c and the GC EXTRA entries to KXE, the double-sided bit carried over | 2 | research, then medium (3-5 days) |
+| 3 | A level's static world: block 0x0c and the GC EXTRA entries to KXE, the double-sided bit carried over | 2 | done (rigid meshes) |
 | 4 | Placements and objects in play: the 078/079/07A loadables (cutscene scripts and sequences) as the PS2 branch's LoadableLoad; collision and paths confirmed with the Xbox's time demos | 3 | medium (2-3 days) |
 | 5 | Sound: DSP ADPCM banks to Xbox ADPCM, the `.SFX` fields, the music re-blocked and its markers | 1 | medium (2-3 days) |
 | 6 | Text, fonts, menus: text needs nothing; the GameCube's button symbols from Nightfire.elf | 2 | small (1 day) |
-| 7 | Skinned characters and morphs | 3 | research, then medium (4-6 days) |
+| 7 | Skinned characters and morphs: the skinning data at 0x90-0xa0, bone palettes into the KXE | 3 | research, then medium (4-6 days) |
 | 8 | Movies: an HVQM4 decoder, or the Xbox's movies in its place | 1 | medium-large (3-5 days), or skip |
 
 ## Research items
 
-- **The meshes' data:** which part of the GC EXTRA entries each 0x0c header's offsets point into (the extractor
-  project found the STATIC entry's pieces in order, sized by a header word); the fraction bits and vertex formats
-  in practice; what the layer flags select. GC psiCreateEntityGfx's counterpart (who fixes up the offsets) is not
-  found yet: start from the readers of a cel's geometry pointer after parsemap's case 0x0c.
-- **Skinning and morphs:** psiDrawSkinObjectMatrix (0x8000cec4) and psiBuildMatrixPalette (0x8000d0b8).
-- **The culled effects:** whether the drone gas and SpaceStationD's explosions are particles or effect meshes, and
-  for meshes whether their groups have bit 28 clear.
+- **Skinning and morphs:** the skinned header's offsets at 0x90-0xa0 and words at 0x28-0x2c;
+  psiDrawSkinObjectMatrix (0x8000cec4) and psiBuildMatrixPalette (0x8000d0b8).
+- **Mesh states the data does not obviously give:** the Xbox's alpha reference 180 (0.7% of triangles) and clamped
+  textures (0.5%); perhaps the texture header's words at 0x24 and 0x28, or layer flag bit 0.
+- **The invisible blocking meshes** the GameCube has geometry for and the Xbox not: whether the game hides them.
 - **The `.SFX` fields that differ** after the words are turned round (2% of bytes): halfwords or bytes inside
   words, or values that changed with the stereo samples split in two.
 - **The HVQM4 movies:** the audio track's format, a decoder to port.
@@ -229,14 +284,15 @@ skin that the GameCube's bundle does not have.
 ## Tools
 
 `gcdata_check` (src/action/devtools/GcDataCheck.cpp, `cmake --build . --config Release --target gcdata_check`): the
-GameCube code's conversions (the same GcBundle, GcMap, GcTexture and GcDisc code GcFs.cpp links) run offline over
-the extracted disc, no game.
+GameCube code's conversions (the same GcBundle, GcMap, GcMesh, GcTexture and GcDisc code GcFs.cpp links) run offline
+over the extracted disc, no game.
 
 ```
 gcdata_check <gc disc> files                          every bundle: compressed or not, its entries by type
 gcdata_check <gc disc> bundle 07000002                a bundle's directory and its packs' blocks
 gcdata_check <gc disc> textures 07000002 [<out>]      every texture to a KXT, decoded back; TGAs into <out>
 gcdata_check <gc disc> dt 07000002                    the "DT" headers' indices against the names they point at
+gcdata_check <gc disc> meshes <xbox disc> [<hash>...]  every rigid mesh to a KXE, against the Xbox's twins
 gcdata_check <gc disc> convert 07000002 <xbox disc>   the level as the Xbox's, against the Xbox's bundle
 gcdata_check <gc disc> all <xbox disc>                convert, for every level, totals only
 gcdata_check <gc disc> names <xbox disc>              every name the Xbox build asks for, found on both discs
