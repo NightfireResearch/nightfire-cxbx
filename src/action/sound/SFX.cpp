@@ -1265,7 +1265,7 @@ void LoadSoundBank(int index) {
             samples += sample->Size;
         }
 #if NIGHTFIRE_DATA_PS2
-        Ps2_ConvertSoundBank(bank->SampleHeader, bank->SampleCount);   // SPU ADPCM to the Xbox's (docs/ps2-data.md)
+        Ps2_ConvertSoundBank(bank);     // SPU ADPCM to the Xbox's, streamed speech as samples (docs/ps2-data.md)
 #endif
     }
     bank->Loaded = 1;

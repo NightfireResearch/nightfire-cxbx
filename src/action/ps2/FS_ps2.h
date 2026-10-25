@@ -12,4 +12,9 @@ void Ps2Fs_LoadNextInto(void *buffer, uint32_t bytes);
 // The memory the last whole file was loaded into, and how many bytes of it there are to use again
 void *Ps2Fs_LastLoad(uint32_t *bytes);
 
+// For the sound banks' streamed sounds (Ps2Convert.cpp): a file's size (0 when there is none), and bytes of it from
+// offset (false when it is not there to read)
+uint32_t Ps2Fs_FileSize(const char *name);
+bool Ps2Fs_ReadFile(const char *name, uint32_t offset, uint32_t bytes, void *out);
+
 #endif // PS2_FS_PS2_H_

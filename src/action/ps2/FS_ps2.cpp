@@ -276,6 +276,24 @@ void *Ps2Fs_LastLoad(uint32_t *bytes) {
 
 // As FS.cpp's (0x000dc990): the whole file, in memory of its own - or in the buffer Ps2Fs_LoadNextInto gave, as the
 // PS2's psiFileRead reads into the buffer its caller passes (LoaderLoad's, for the animation bundles)
+uint32_t Ps2Fs_FileSize(const char *name) {
+    Ps2File file;
+    if (!Ps2File_Open(name, &file))
+        return 0;
+    uint32_t size = file.size;
+    Ps2File_Close(&file);
+    return size;
+}
+
+bool Ps2Fs_ReadFile(const char *name, uint32_t offset, uint32_t bytes, void *out) {
+    Ps2File file;
+    if (!Ps2File_Open(name, &file))
+        return false;
+    bool ok = offset <= file.size && bytes <= file.size - offset && ReadAt(file.handle, out, bytes, file.base + offset);
+    Ps2File_Close(&file);
+    return ok;
+}
+
 void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *sizeOut) {
     TimeSpentLoadingFiles = TimeSpentLoadingFiles - timestamp();
     int size = FS_GetFileSize(filename);

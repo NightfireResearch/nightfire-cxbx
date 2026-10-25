@@ -6,6 +6,7 @@
 
 #include "../engine/psiGraphics.h"
 #include "../sound/psiSound.h"      // SampleHeaderData
+#include "../sound/SFX.h"           // SoundBankHeader
 
 // Block 0x12, a texture's palette, after its texels (block 0x16, which left their address in the header's
 // textureInfo): the header is pointed at an Xbox texture header (KXT) of the decoded frames instead. hashcode is the
@@ -20,7 +21,8 @@ ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes);
 
 // A sound bank just loaded (LoadSoundBank): its samples, SPU ADPCM in the .SBF with the SPU's pitch for a rate, made
 // Xbox ADPCM in memory of their own with the rate in Hz and the loop's start in Xbox ADPCM bytes; the .SBF's memory is
-// given back
-void Ps2_ConvertSoundBank(SampleHeaderData *samples, int count);
+// given back. The sounds that play a stream (a FileRef below 0: the speech, out of the language's STREAMS.BIN) get
+// it as a sample of the bank instead, as the Xbox's banks have them: the Xbox's code has no stream for them.
+void Ps2_ConvertSoundBank(SoundBankHeader *bank);
 
 #endif // PS2_PS2CONVERT_H_

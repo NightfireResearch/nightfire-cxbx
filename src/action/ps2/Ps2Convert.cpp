@@ -1,4 +1,5 @@
 #include "Ps2Convert.h"
+#include "FS_ps2.h"
 #include "Ps2Mesh.h"
 #include "Ps2Texture.h"
 #include "Ps2Sound.h"
@@ -7,6 +8,7 @@
 
 #include <stdio.h>
 #include <string.h>
+#include <algorithm>
 
 // The game's own allocation types for these (MemInfo's names)
 #define MALLOC_PS2_OBJECT   ((MallocFlags)0x2804)
@@ -61,28 +63,122 @@ ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     return model;
 }
 
-void Ps2_ConvertSoundBank(SampleHeaderData *samples, int count) {
+// The streamed sounds' rate and their samples' header as the Xbox's banks have them (mono, 4-bit ADPCM)
+#define STREAM_FREQUENCY 22050
+#define STREAM_CHANNELS 1
+#define STREAM_BITS_PER_SAMPLE 4
+
+// A streamed sound's SPU ADPCM out of the language's STREAMS.BIN, through STREAMS.LUT (SFXStream.cpp's
+// StreamLookupFileDetails); empty when it cannot be read
+static std::vector<uint8_t> ReadStream(const std::vector<StreamLookupFileDetails> &lookup, int stream) {
+    std::vector<uint8_t> audio;
+    if (stream < 0 || stream >= (int)lookup.size() || lookup[stream].AudioSize <= 0)
+        return audio;
+    char name[64];
+    snprintf(name, sizeof(name), "%s/STREAMS/STREAMS.BIN", SFXLanguageName);
+    audio.resize((size_t)lookup[stream].AudioSize);
+    if (!Ps2Fs_ReadFile(name, (uint32_t)lookup[stream].AudioOffset, (uint32_t)audio.size(), audio.data()))
+        audio.clear();
+    return audio;
+}
+
+static std::vector<StreamLookupFileDetails> ReadStreamLookup(void) {
+    char name[64];
+    snprintf(name, sizeof(name), "%s/STREAMS/STREAMS.LUT", SFXLanguageName);
+    std::vector<StreamLookupFileDetails> lookup(Ps2Fs_FileSize(name) / sizeof(StreamLookupFileDetails));
+    if (!lookup.empty() && !Ps2Fs_ReadFile(name, 0, (uint32_t)(lookup.size() * sizeof(StreamLookupFileDetails)),
+                                           lookup.data()))
+        lookup.clear();
+    return lookup;
+}
+
+// The bank's streamed sounds pointed at new samples after the bank's own, one a stream: their streams' numbers
+static std::vector<int> TakeStreams(SoundBankHeader *bank) {
+    std::vector<int> streams;
+    for (int k = 0; k < bank->SFXCount; k++) {
+        SFXParameters *sound = (SFXParameters *)((char *)bank->SFXBuffer + bank->SFXHeaderData[k].Offset);
+        SFXSamplePoolFiles *pool = (SFXSamplePoolFiles *)(sound + 1);
+        for (int i = 0; i < sound->SampleCount; i++) {
+            if (pool[i].FileRef >= 0)
+                continue;
+            int stream = -1 - pool[i].FileRef;
+            size_t at = std::find(streams.begin(), streams.end(), stream) - streams.begin();
+            if (at == streams.size())
+                streams.push_back(stream);
+            pool[i].FileRef = bank->SampleCount + (int)at;
+        }
+    }
+    return streams;
+}
+
+void Ps2_ConvertSoundBank(SoundBankHeader *bank) {
+    int count = bank->SampleCount;
+    SampleHeaderData *samples = bank->SampleHeader;
     if (count <= 0)
         return;
+    std::vector<int> streams = TakeStreams(bank);
+    std::vector<StreamLookupFileDetails> lookup;
+    if (!streams.empty())
+        lookup = ReadStreamLookup();
+
+    // Every sample's sound decoded: the bank's own from the .SBF, then the streams'
+    std::vector<std::vector<int16_t>> pcm(count + streams.size());
+    std::vector<long> loopStarts(count + streams.size(), -1);
     size_t bytes = 0;
-    for (int i = 0; i < count; i++)
-        bytes += Ps2Spu_XAdpcmBytes(samples[i].Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
+    for (int i = 0; i < count; i++) {
+        pcm[i].resize((size_t)samples[i].Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
+        pcm[i].resize(Ps2Spu_Decode((const uint8_t *)(void *)samples[i].Address, samples[i].Size, pcm[i].data(),
+                                    &loopStarts[i]));
+        bytes += Ps2Spu_XAdpcmBytes(pcm[i].size());
+    }
+    int missing = 0;
+    for (size_t s = 0; s < streams.size(); s++) {
+        std::vector<uint8_t> audio = ReadStream(lookup, streams[s]);
+        std::vector<int16_t> &out = pcm[count + s];
+        out.resize(audio.size() / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
+        long loopStart;
+        out.resize(Ps2Spu_Decode(audio.data(), audio.size(), out.data(), &loopStart));
+        missing += out.empty();
+        bytes += Ps2Spu_XAdpcmBytes(out.size());
+    }
+    if (missing != 0)
+        printf("[ps2] a sound bank's streamed sounds: %d of %d not in STREAMS.BIN\n", missing, (int)streams.size());
+
+    // The headers, the bank's and the streams', in memory of their own when there are streams (the .SHF's count first)
+    if (!streams.empty()) {
+        int total = count + (int)streams.size();
+        int *headers = (int *)Mem_Malloc(sizeof(int) + total * sizeof(SampleHeaderData), MALLOC_XBOX, 0);
+        headers[0] = total;
+        SampleHeaderData *all = (SampleHeaderData *)(headers + 1);
+        memcpy(all, samples, count * sizeof(SampleHeaderData));
+        for (int s = count; s < total; s++) {
+            memset(&all[s], 0, sizeof(SampleHeaderData));
+            all[s].Frequency = STREAM_FREQUENCY;
+            all[s].NumberOfChannels = STREAM_CHANNELS;
+            all[s].BitsPerSample = STREAM_BITS_PER_SAMPLE;
+        }
+        psiSFXFreeFileMem(bank->SampleHeaderBuffer);
+        bank->SampleHeaderBuffer = headers;
+        bank->SampleHeader = all;
+        bank->SampleCount = total;
+        samples = all;
+    }
+
     void *spu = samples[0].Address;     // the .SBF file, the samples one after another
     uint8_t *out = (uint8_t *)Mem_Malloc(bytes, MALLOC_XBOX, 0);
-    std::vector<int16_t> pcm;
-    for (int i = 0; i < count; i++) {
+    for (int i = 0; i < bank->SampleCount; i++) {
         SampleHeaderData *sample = &samples[i];
-        pcm.resize((size_t)sample->Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
-        long loopStart;
-        size_t n = Ps2Spu_Decode((const uint8_t *)(void *)sample->Address, sample->Size, pcm.data(), &loopStart);
-        int written = (int)Ps2Spu_EncodeXAdpcm(pcm.data(), n, out);
+        int written = (int)Ps2Spu_EncodeXAdpcm(pcm[i].data(), pcm[i].size(), out);
         sample->Address = out;
         sample->Size = written;
         sample->RealSize = written;
-        sample->Frequency = (int)Ps2Spu_PitchToHz(sample->Frequency);
-        // The loop's start (the block the SPU flags) as the Xbox's: the byte offset of its block
-        sample->LoopOffset = loopStart > 0 ? (int)(loopStart / XADPCM_SAMPLES_PER_BLOCK * XADPCM_BLOCK_BYTES_PER_CHANNEL)
-                                           : 0;
+        if (i < count) {
+            sample->Frequency = (int)Ps2Spu_PitchToHz(sample->Frequency);
+            // The loop's start (the block the SPU flags) as the Xbox's: the byte offset of its block
+            sample->LoopOffset = loopStarts[i] > 0 ? (int)(loopStarts[i] / XADPCM_SAMPLES_PER_BLOCK *
+                                                           XADPCM_BLOCK_BYTES_PER_CHANNEL)
+                                                   : 0;
+        }
         out += written;
     }
     Mem_Free(&spu);
