@@ -54,7 +54,7 @@ bool HostInput_KeyHeld(HostKey key) {
 // The render window is found by its class (src/common/renderWindow.h). If it cannot be found the keys are accepted
 // anyway: better stray input than input that silently does nothing.
 bool HostInput_WindowHasFocus(void) {
-    HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    HWND render = FindOwnRenderWindow();
     if (render == NULL)
         return true;
     HWND root = GetAncestor(render, GA_ROOT);
@@ -100,7 +100,7 @@ static POINT CursorBeforeCapture;
 static int32_t AccumX, AccumY, AccumWheel;
 
 static HWND FindRenderWindow(void) {
-    return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    return FindOwnRenderWindow();
 }
 
 static bool GetClientCentre(HWND window, POINT *centre) {
