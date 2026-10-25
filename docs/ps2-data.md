@@ -7,7 +7,7 @@ port; what changes is how the files are found and how the formats that differ be
 Status (25 October 2026): milestones 1, 2 and 5-8 done, 3 done for rigid meshes, 4 done (the Xbox's time demos
 play the same on it, one with a lead left). The PS2 data's levels load and play on the test runner (HendersonA,
 CastleCourtyard, SpaceStationD, SkyRail, the front end) with the PS2's textures, meshes (skinned ones and the heads'
-morph targets too), sound, music and movies, and nothing from the Xbox disc; the voice streams are left. See
+morph targets too), sound (the streamed speech too), music and movies, and nothing from the Xbox disc. See
 [State](#state) and [In game](#in-game).
 
 Sources: the PS2 disc as extracted by the extractor project (Q:\nightfire-re, read only; its PS2 extraction in
@@ -122,7 +122,16 @@ Until milestone 7 the Xbox disc's skinned meshes stood in for the PS2's (Ps2Xbox
 - **Double-sided meshes.** The Xbox marks 30-40% of meshes double-sided somewhere (primitive state bit 3); no PS2
   field found yet says which (box flag bit 0 does not: `ps2data_check meshes` prints the comparison). Perhaps the
   VU1 program (the MSCAL/MSCNT address), the GIF tag's PRIM bits, or the GS culls nothing and the Xbox port's
-  exporter decided. Until then every converted primitive is double-sided.
+  exporter decided. Until then every converted primitive is double-sided. Before replacing that with real culling:
+  - Do not derive culling from the PS2's winding. The GS culls nothing in hardware (the VU1 code decides), so the
+    PS2's data can carry winding that never mattered there; on the GameCube, which culls, a known bug drops some
+    effects - the dust or gas when a bullet hits a drone, explosion effects in SpaceStationD - thought to be
+    billboarded effect meshes wound the wrong way.
+  - Take each mesh's cull state from what the Xbox does with its twin (the Xbox meshes' primitive states are known
+    offline: `ps2data_check meshes <bundle> <xbox bundle>` compares them), which means a table built offline from
+    the Xbox's data, since the PS2 build reads nothing from the Xbox disc.
+  - Keep billboards and effects double-sided whatever the table says.
+  - Check those effects in game against the Xbox: the bullet-impact gas on drones and SpaceStationD's explosions.
 - **Sequence streaming.** If the PS2 loads only sequence headers and streams the data (AnimSeqGetHdrBuf), we need
   not: loading the 07F bundle whole, as the Xbox loads its type-4 entries, is enough, since the files are identical.
 
@@ -241,13 +250,15 @@ On the test runner (vr-desktop, `C:\nightfire-ps2\run\Release`: `DiscPath` the e
 
 With milestone 8 the heads' faces move. A session with no input recorded on the Xbox build (HendersonA from its
 start, 7,451 frames: the intro movie and cutscene) was played on the Xbox build and rebased onto the PS2 build,
-with a picture every 50 frames: the two run the same up to frame 2136, where the dialogue starts, and the cutscene's
-shots then stay level with each other but for one cut (frame 3400). The PS2 build draws the faces with the
+with a picture every 50 frames: the two run the same up to frame 2136, where the intro movie ends on the Xbox and
+the game pops its movie state; the PS2's PSS plays 10 frames (0.2 s) longer (the pops come at 2146, 2149 and 2150
+against 2136, 2139 and 2140; found with cdb, below), so from there the PS2 run is 10 frames behind. The PS2 build draws the faces with the
 Xbox's morph shaders, and with the morphs the close-ups take the expressions the Xbox's do - Bond's brows lowering
 (frame 3100), Mayhew's mouth opening (2500), eyelids on Kiko (2200) - where without them (the same run, with the
-morph targets left out) the faces stay neutral. No face tears or stretches at the morph seams. The mouths move less
-than on the Xbox in the lines spoken after frame 2136; the PS2 build plays no voice streams yet, which may be why
-(not confirmed).
+morph targets left out) the faces stay neutral. No face tears or stretches at the morph seams. Taken 10 frames later
+(a picture every 10 frames), the PS2's faces are the Xbox's: 0.9-3.2 grey levels apart in the face regions, against
+6-13 at the same frame number (`face_aligned_*` pairs in the scratch folder of the 25 October run). The speech does
+not drive them: the same run with and without the voice samples (below) draws the same pixels.
 
 With milestone 7 the characters - the cutscenes' figures, the drones, the first-person hands and the space suit's -
 are the PS2's own skinned meshes: posed and lit as the Xbox's were, no stretched or stray vertices. Against runs of
@@ -282,9 +293,18 @@ So the player moves through the PS2's collision exactly as through the Xbox's in
 same frames and the missions end alike. In HendersonA something draws the random number generator once more or
 less at frame 165 (after the intro), the drones then act differently (frame 500's picture: the same view, a drone
 elsewhere), and at frame 745 the player, given the same input, slides along something the Xbox's player did not
-meet. From there the recording's input no longer leads to the level's exit. What draws the extra random number is
-not found yet: the PS2's sound banks (other sample counts, so other random choices) and its entity params are the
-first suspects. Runs repeat exactly: a second rebase of each gave the same viewer bits. With the PS2's own skinned meshes (milestone 7) all four gave the same viewer bits again, the checksums parted at the same frames, and the pictures differ from the stand-in runs' by 0.0-0.2 grey levels on average.
+meet. From there the recording's input no longer leads to the level's exit.
+
+The extra draw was found with cdb on the runner (the Debugging Tools for Windows; a write breakpoint on
+RandStateA, which every random draw writes, logging each draw's stack in the frame, resolved through the linker
+maps). With the streamed speech in the banks (below) the parting moved to frame 170, and in that frame both builds
+draw the same numbers for the rain (UpdateDrops), the ripples and Env_Update, then the player breaks the glass doors
+of the meeting room: Break_ShatterWindow cuts each of the window's triangles along its longest side, at a random
+fraction from its first corner towards its second, until the pieces are small, and the Xbox draws 452 numbers for
+it where the PS2 draws 412. The window ("meeting_room_glass_doors") is the same 3 x 2 grid of quads on both discs,
+but the PS2's exporter cut most of the quads along the other diagonal and in another order (`ps2data_check tris`
+prints both), so the pieces, and the draws, differ. That is in the data: the converted mesh has the PS2's own
+triangles, and nothing in it says where the Xbox's diagonals went. Runs repeat exactly: a second rebase of each gave the same viewer bits. With the PS2's own skinned meshes (milestone 7) all four gave the same viewer bits again, the checksums parted at the same frames, and the pictures differ from the stand-in runs' by 0.0-0.2 grey levels on average.
 
 ## Sound and movies
 
@@ -302,9 +322,15 @@ first suspects. Runs repeat exactly: a second rebase of each gave the same viewe
   Xbox's 14,583,808), and each read decodes the PS2 blocks it needs (eight blocks before it to settle the
   predictors), resamples them and encodes the Xbox blocks asked for. The `.SMF` marker files' byte positions are
   moved by the same ratio as they load. `ps2data_check music` checks that tracks read in pieces match tracks read whole.
-- **Voice streams** (`ENGLISH\STREAMS\STREAMS.BIN`) are not converted: the
-  Xbox's disc has no `STREAMS.LUT` and its stream code one channel (`SFX_NUM_STREAMS`), so how the PS2's index
-  maps onto the Xbox's stream calls is still to be worked out.
+- **Streamed speech.** A PS2 bank's sound whose sample-pool FileRef is below 0 plays entry `-1 - FileRef` of the
+  language's `STREAMS\STREAMS.BIN` (STREAMS.LUT: 16 bytes an entry, the offset and size of its 136 bytes of
+  markers, then of its audio: mono SPU ADPCM at 22,050 Hz, its end marker where its end flag is). 6 to 187 of a
+  level bank's pool entries are streams, 675 streams in all. The Xbox's code has one stream, the music's
+  (`SFX_NUM_STREAMS`), so such a sound never starts there - and the Xbox's banks have none: the same sounds, with the
+  same parameters, play ordinary 22,050 Hz mono samples of the bank. So the PS2 build makes them that: when a bank
+  loads (Ps2_ConvertSoundBank) each stream its sounds play is read through STREAMS.LUT, decoded to its end flag and
+  encoded with the bank's own samples, given a header after theirs, and the FileRefs pointed at it. The lengths come
+  out the Xbox's to within a block (HendersonA's cutscene: 167,552 samples against 167,488, 113,792 against 113,728).
 - **Movies.** Fmv_ps2.cpp keeps Fmv.cpp's drawing and sound path and finds `MOVIES\25_FPS\<language>\<name>.PSS`
   (the sound language, else English). FFmpeg (the PS2 build's DLLs, above) decodes the MPEG-2 video at 512x512,
   scaled to the Xbox movies' 640x480. The sound is not one FFmpeg reads: private stream 1 carries a 4-byte prefix,
@@ -358,8 +384,8 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline and in game |
 | 2 | done: block 0x12 to a KXT of DXT1 or DXT5 (A8R8G8B8 where it must be). All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); 07000001's take 2.8 MB at a mean PSNR of 38 dB; right in game |
 | 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline, and in game the static worlds draw right ([In game](#in-game)); every converted primitive double-sided |
-| 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins. Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play checked with four Xbox time demos ([Time demos](#time-demos)): the player moves exactly as on the Xbox in three whole recordings and in HendersonA to frame 745, where the drones have parted after an extra random draw at frame 165 (left: find that draw) |
+| 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins. Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play checked with four Xbox time demos ([Time demos](#time-demos)): the player moves exactly as on the Xbox in three whole recordings and in HendersonA to frame 745, where the drones have parted after the glass doors shatter differently (the PS2's window is triangulated otherwise: data) |
 | 5 | done: text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); SpecialChars takes the PS2's 17 symbols from ACTION.ELF's `specialchar` (the same 0x18-byte records, coordinates in the PS2's `buttons` texture), its other slots empty, so prompts show the PS2's pad |
-| 6 | done but the voice streams: sound banks and music from SPU ADPCM (above), movies from PSS through FFmpeg |
+| 6 | done: sound banks and music from SPU ADPCM, the streamed speech as samples of its bank (above), movies from PSS through FFmpeg |
 | 7 | done: the PS2's skinned meshes become skinned KXEs with bone palettes ([Skinned meshes](#skinned-meshes)); all 459 convert and match their Xbox twins; in game the characters skin right, and the time demos' viewer and pictures are those of the Xbox's meshes. The stand-in, its seam and `XboxDiscPath` are gone. The PS2 build reads nothing from the Xbox disc |
-| 8 | done: block 0x2b's morph targets become the KXE's morph streams ([Morph targets](#morph-targets)); all 151 heads convert, 99.5% of their moving vertices the Xbox's to the unit; in game the faces take the Xbox's expressions. Left: the voice streams, which may be why mouths move less in dialogue |
+| 8 | done: block 0x2b's morph targets become the KXE's morph streams ([Morph targets](#morph-targets)); all 151 heads convert, 99.5% of their moving vertices the Xbox's to the unit; in game the faces take the Xbox's expressions, and move as the Xbox's once the PS2's longer intro movie (10 frames) is allowed for |
