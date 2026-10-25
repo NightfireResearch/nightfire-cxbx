@@ -154,9 +154,9 @@ void GcMap_Convert(const uint8_t *pack, uint32_t bytes, const uint8_t *bundle, u
             GcMeshStats mesh;
             if (GcMesh_ConvertToKxe(pack + o + BLOCK_HEADER_BYTES, bundle, bundleBytes, kxe, &mesh)) {
                 stats->meshesConverted++;
+                if (mesh.skinned)
+                    stats->meshesSkinned++;
                 PutBlock(out, GC_BLOCK_ENTITY_GEOMETRY_XBOX, kxe.data(), (uint32_t)kxe.size());
-            } else if (mesh.skinned) {
-                stats->meshesSkinned++;
             } else {
                 stats->meshesSkipped++;
             }

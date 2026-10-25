@@ -21,7 +21,9 @@
 //   with 16 - uvShift fraction bits; colours RGBA8;
 // - a group's word bit 28 draws it with no culling, else back faces culled: the Xbox primitive's double-sided bit.
 //
-// A skinned mesh has offsets at 0x90 on (its skinning data) and is left out for now.
+// A skinned mesh's positions are in bind pose and come in runs, each moved by one skeleton bone or blended with a
+// second by two weights per position, which GC SkinIt (0x8000c740) applies on the CPU every frame. A head's morph
+// targets are deltas in the positions' fixed point for a list of positions, which GC 0x8000c9cc adds first.
 
 #include <stdint.h>
 #include <vector>
@@ -38,8 +40,8 @@ struct GcMeshHeader {
     uint32_t positionIndices;   // 0x1c
     uint32_t positions;         // 0x20 position-and-normal entries
     uint32_t unknown24;
-    uint32_t unknown28;         // a skinned mesh's bones, it seems
-    uint32_t unknown2c;
+    uint32_t morphTargets;      // 0x28 a head's (22), else 0
+    uint32_t morphVertexCount;  // 0x2c the positions the targets move
     uint32_t flags;             // 0x30 GC_MESH_NO_Z_WRITE
     uint32_t drawFlags;         // 0x34 bit 2: fogged
     uint32_t layerFlags[GC_MESH_LAYERS];    // 0x38 GC_LAYER_*
@@ -57,7 +59,11 @@ struct GcMeshHeader {
     uint32_t uvArray;           // 0x84 two halfwords each
     uint32_t colourIndexList;   // 0x88 halfwords
     uint32_t colourArray;       // 0x8c RGBA8; 0 for none
-    uint32_t skin[5];           // 0x90 a skinned mesh's: 0 for a rigid one
+    uint32_t skinWeights;       // 0x90 two halfwords a position: 0 for a rigid mesh
+    uint32_t skinRuns;          // 0x94 a bone and a count of positions each, halfwords
+    uint32_t skinSecondBones;   // 0x98 each run's second bone (0xff for none) and its count again
+    uint32_t morphDeltaList;    // 0x9c per morph position, morphTargets deltas of three halfwords
+    uint32_t morphVertexList;   // 0xa0 the morph positions, halfwords, rising
     uint32_t displayListBytes;  // 0xa4
     uint32_t unknownA8;
 };
@@ -81,6 +87,9 @@ static_assert(sizeof(GcStripGroup) == 0x14, "GcStripGroup is 0x14 bytes");
 // What a conversion met, for the checker
 struct GcMeshStats {
     bool skinned;
+    int palettes;               // a skinned mesh's bone palettes
+    int morphTargets;           // a head's: the morph streams written
+    int morphVertices;          // the vertices they cover (the KXE's first)
     int groups;
     int strips;
     int vertices;               // the KXE's
@@ -92,7 +101,7 @@ struct GcMeshStats {
 };
 
 // The mesh whose header is at header (inside bundle, bundleBytes long) to a KXE in out. False when there is nothing
-// to draw (no strips, or skinned) or the data runs past the bundle.
+// to draw (no strips) or the data runs past the bundle.
 bool GcMesh_ConvertToKxe(const uint8_t *header, const uint8_t *bundle, uint32_t bundleBytes, std::vector<uint8_t> &out,
                          GcMeshStats *stats);
 

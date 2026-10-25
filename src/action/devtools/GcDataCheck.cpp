@@ -15,6 +15,7 @@
 //   gcdata_check <gc disc> dt <hash>                        the "DT" texture headers' indices against their names
 //   gcdata_check <gc disc> meshes <xbox disc> [<hash>...]   every rigid mesh to a KXE, against the Xbox's twins
 //                                                           (every level when no hash is given)
+//   gcdata_check <gc disc> skins <xbox disc> [<hash>...]    the same for the skinned meshes: bones, weights, morphs
 //
 // <gc disc> is the folder with Nightfire.elf, common\ and gc\. <hash> is a bundle's name without .bin (0700001b).
 
@@ -441,7 +442,36 @@ struct Kxe {
     std::vector<uint16_t> indices;
     std::vector<KxePrimitiveData> primitives;
     bool skinned = false;
+    std::vector<uint32_t> boneWords;                // a skinned mesh's, one a vertex
+    std::vector<std::vector<uint8_t>> palettes;     // its bone palettes, skeleton bones
+    std::vector<int> vertexPalette;                 // the palette each vertex is drawn with, -1 for none
+    int morphTargets = 0, morphVertices = 0;
+    std::vector<int16_t> morphDeltas;               // target by target, morphVertices of x, y, z each
 };
+
+// The palette slot a skinned vertex's register byte names (the inverse of the Xbox's SkinRegTable)
+int SlotOfRegister(int reg) {
+    if (reg < 57)
+        return reg / 3;
+    if (reg < 126)
+        return 19 + (reg - 60) / 3;
+    return 31 + (reg - 126) / 3;
+}
+
+// A skinned vertex's bones (skeleton bones) and bone A's weight, from its word and its palette; false when unknown
+bool VertexBones(const Kxe &k, int v, int *boneA, int *boneB, float *weightA) {
+    if (!k.skinned || k.vertexPalette[v] < 0)
+        return false;
+    const std::vector<uint8_t> &palette = k.palettes[k.vertexPalette[v]];
+    uint32_t word = k.boneWords[v];
+    int a = SlotOfRegister(word & 0xff), b = SlotOfRegister((word >> 8) & 0xff);
+    if (a >= (int)palette.size() || b >= (int)palette.size())
+        return false;
+    *boneA = palette[a];
+    *boneB = palette[b];
+    *weightA = (word >> 16) / 65535.0f;
+    return true;
+}
 
 bool ReadKxe(const uint8_t *p, uint32_t bytes, Kxe &k) {
     if (bytes < 0x60 || GcLe32(p) != 0x0645584b)
@@ -462,6 +492,42 @@ bool ReadKxe(const uint8_t *p, uint32_t bytes, Kxe &k) {
     at += idxCnt * 2 + 3;
     k.primitives.resize(primCnt);
     memcpy(k.primitives.data(), at, primCnt * 12);
+    if (k.skinned) {
+        k.boneWords.resize(vtxCnt);
+        for (uint32_t i = 0; i < vtxCnt; i++)
+            k.boneWords[i] = GcLe32(p + 0x60 + i * stride + 28);
+        uint32_t groups = GcLe32(p + 0x1c);
+        const uint8_t *pal = at + primCnt * 12;
+        if (pal + groups * 0x36 > p + bytes)
+            return false;
+        for (uint32_t g = 0; g < groups; g++) {
+            std::vector<uint8_t> palette;
+            for (int slot = 0; slot < 0x36 && pal[g * 0x36 + slot] != 0xff; slot++)
+                palette.push_back(pal[g * 0x36 + slot]);
+            k.palettes.push_back(palette);
+        }
+        k.vertexPalette.assign(vtxCnt, -1);
+        size_t start = 0;
+        int palette = -1;
+        for (const KxePrimitiveData &prim : k.primitives) {
+            if (prim.palette != 0)
+                palette = prim.palette - 1;
+            for (size_t i = start; i < start + prim.count + 2 && i < k.indices.size(); i++)
+                if (k.indices[i] < vtxCnt)
+                    k.vertexPalette[k.indices[i]] = palette;
+            start += prim.count + 2;
+        }
+        k.morphTargets = (int)GcLe32(p + 0x24);
+        k.morphVertices = (int)GcLe32(p + 0x28);
+        const uint8_t *morph = pal + groups * 0x36;
+        size_t n = (size_t)k.morphTargets * k.morphVertices * 3;
+        if (n != 0 && morph + n * 2 <= p + bytes) {
+            k.morphDeltas.resize(n);
+            memcpy(k.morphDeltas.data(), morph, n * 2);
+        } else {
+            k.morphTargets = k.morphVertices = 0;
+        }
+    }
     return true;
 }
 
@@ -612,6 +678,52 @@ void CompareMesh(const Kxe &ours, const Kxe &xbox, MeshTotals &t) {
         bool colour = memcmp(v.colour, best->colour, 4) == 0;
         t.Add(colour ? "  colour the same" : memcmp(v.colour, best->colour, 3) == 0 ? "  colour, alpha differs"
                                                                                        : "  colour differs");
+        int oa, ob, xa, xb;
+        float ow, xw;
+        int bestIndex = (int)(best - xbox.vertices.data());
+        if (VertexBones(ours, (int)i, &oa, &ob, &ow) && VertexBones(xbox, bestIndex, &xa, &xb, &xw)) {
+            // One bone is the same bone twice at weight 1; a pair may come in either order
+            if (oa == ob || ow > 0.999f) { ob = oa; ow = 1.0f; }
+            if (xa == xb || xw > 0.999f) { xb = xa; xw = 1.0f; }
+            bool same = (oa == xa && ob == xb) || (oa == xb && ob == xa);
+            bool dropped = !same && oa == ob && xa == oa && xw >= 0.95f;     // the Xbox's second bone under 5%
+            t.Add(same ? "  bones the same" : dropped ? "  bones the same but for the xbox's second under 5%"
+                                                      : "  bones differ");
+            if (!same && !dropped && getenv("GCDATA_SHOW") != NULL)
+                printf("  bones: ours %d %d %.3f, the xbox's %d %d %.3f\n", oa, ob, ow, xa, xb, xw);
+            if (same) {
+                float w = oa == xa ? xw : 1.0f - xw;
+                t.Add(fabsf(w - ow) <= 0.01f ? "  bone A's weight the same (0.01)" : "  bone A's weight differs");
+            }
+        }
+        if (i < (size_t)ours.morphVertices && bestIndex < xbox.morphVertices &&
+            ours.morphTargets == xbox.morphTargets) {
+            int exact = 0, close = 0, near = 0, moving = 0;
+            for (int target = 0; target < ours.morphTargets; target++)
+                for (int a = 0; a < 3; a++) {
+                    int d1 = ours.morphDeltas[((size_t)target * ours.morphVertices + i) * 3 + a];
+                    int d2 = xbox.morphDeltas[((size_t)target * xbox.morphVertices + bestIndex) * 3 + a];
+                    exact += d1 == d2;
+                    close += abs(d1 - d2) <= 4;
+                    near += abs(d1 - d2) <= 32;
+                    moving += d1 != 0 || d2 != 0;
+                }
+            int all = ours.morphTargets * 3;
+            if (moving != 0 && getenv("GCDATA_SHOW") != NULL && (close != all || getenv("GCDATA_SHOW")[0] == '2')) {
+                printf("  morph vertex %zu:", i);
+                for (int a = 0; a < 6; a++)
+                    printf(" %d/%d", ours.morphDeltas[((size_t)(a / 3) * ours.morphVertices + i) * 3 + a % 3],
+                           xbox.morphDeltas[((size_t)(a / 3) * xbox.morphVertices + bestIndex) * 3 + a % 3]);
+                printf("\n");
+            }
+            if (moving != 0) {
+                t.Add("  morph vertices compared");
+                t.Add(exact == all ? "    every delta the same" : close == all ? "    every delta within 4"
+                                      : near == all ? "    every delta within 32" : "    deltas differ");
+            }
+        } else if (i < (size_t)ours.morphVertices) {
+            t.Add("  our morph vertex with no xbox morph vertex there");
+        }
     }
 
     std::map<std::tuple<int, int, int>, std::vector<int>> xboxTris;    // -> the Xbox primitives drawing it
@@ -667,7 +779,8 @@ void CompareMesh(const Kxe &ours, const Kxe &xbox, MeshTotals &t) {
     }
 }
 
-int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &hashes) {
+// Rigid meshes, or with skins the skinned ones
+int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &hashes, bool skins) {
     MeshTotals t;
     for (const std::string &hash : hashes) {
         Bytes bundle, xbox;
@@ -704,9 +817,8 @@ int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &has
                 GcMeshStats stats;
                 bool converted = GcMesh_ConvertToKxe(ours[i].data, bundle.data(), (uint32_t)bundle.size(), kxe,
                                                       &stats);
-                if (stats.skinned) {
-                    t.Add("  skinned (left out)");
-                    t.Add(xboxOk && x.skinned ? "    the xbox's skinned too" : "    the xbox's not skinned");
+                if (stats.skinned != skins) {
+                    t.Add(skins ? "  rigid (see meshes)" : "  skinned (see skins)");
                     continue;
                 }
                 if (!converted) {
@@ -714,6 +826,11 @@ int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &has
                     continue;
                 }
                 t.Add("  converted");
+                if (skins) {
+                    t.Add("  bone palettes", stats.palettes);
+                    if (stats.morphTargets != 0)
+                        t.Add("  with morph targets");
+                }
                 t.Add("  double-sided triangles", stats.doubleSidedTriangles);
                 if (stats.layers != 0)
                     t.Add("  with layers after the first");
@@ -726,8 +843,8 @@ int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &has
                     t.Add("  the xbox's draws nothing");
                     continue;
                 }
-                if (x.skinned) {
-                    t.Add("  the xbox's skinned");
+                if (x.skinned != skins) {
+                    t.Add(skins ? "  the xbox's rigid" : "  the xbox's skinned");
                     continue;
                 }
                 t.Add("  compared");
@@ -1138,7 +1255,7 @@ int Convert(GcDisc &disc, XboxDisc &xboxDisc, const std::string &hash, ConvertTo
     bool okA = GcBundle_Directory(ours.data(), (uint32_t)ours.size(), a);
     bool okB = GcBundle_Directory(xbox.data(), (uint32_t)xbox.size(), b);
     printf("%s: %zu bytes as the Xbox's (%s), %d entries (%d sequences added, %d left out), %d packs: %d textures, "
-           "%d DT, %d failed, %d meshes (%d skinned and %d with nothing to draw left out), %d unknown blocks; the "
+           "%d DT, %d failed, %d meshes (%d skinned; %d with nothing to draw left out), %d unknown blocks; the "
            "Xbox's: %zu bytes, %zu entries\n",
            hash.c_str(), ours.size(), okA ? "directory reads" : "DIRECTORY BAD", stats.entries, stats.sequencesAdded,
            stats.dropped, stats.packs, stats.texturesConverted, stats.duplicates, stats.texturesFailed,
@@ -1233,14 +1350,14 @@ int main(int argc, char **argv) {
         XboxDisc xbox;
         return xbox.Open(argv[3]) ? Names(disc, xbox) : 1;
     }
-    if (cmd == "meshes" && argc >= 4) {
+    if ((cmd == "meshes" || cmd == "skins") && argc >= 4) {
         XboxDisc xbox;
         if (!xbox.Open(argv[3]))
             return 1;
         std::vector<std::string> hashes(argv + 4, argv + argc);
         if (hashes.empty())
             hashes.assign(std::begin(kLevels), std::end(kLevels));
-        return Meshes(disc, xbox, hashes);
+        return Meshes(disc, xbox, hashes, cmd == "skins");
     }
     if (cmd == "dt" && argc >= 4)
         return Duplicates(disc, argv[3]);

@@ -106,7 +106,7 @@ static bool GcFile_Open(const char *name, GcFile *file) {
                 return false;
             snprintf(ConvertedName, sizeof(ConvertedName), "%s", name);
             printf("[gc] %s: %u bytes as the Xbox's, %d entries (%d sequences added), %d textures, %d meshes (%d "
-                   "skinned left out)\n", name, (unsigned)Converted.size(), stats.entries, stats.sequencesAdded,
+                   "skinned)\n", name, (unsigned)Converted.size(), stats.entries, stats.sequencesAdded,
                    stats.texturesConverted, stats.meshesConverted, stats.meshesSkinned);
         }
         file->memory = Converted.data();

@@ -4,9 +4,8 @@
 // A GameCube map pack (a bundle's type 0, 1, 2 or 11 entry, docs/gc-data.md) made the Xbox's, block by block. The
 // block headers are little-endian on both; most blocks are big-endian on the GameCube's disc, and some (palette
 // headers, portals, hashlists, AI paths, particles) are as the Xbox has them. Each block is turned round field by
-// field, the textures (0x17) become the Xbox's (0x18, GcTexture.h), and the rigid meshes (0x0c, whose data is in the
-// bundle's "GC EXTRA" entries) the Xbox's (0x0d, GcMesh.h); the skinned ones are left out for now, their entities
-// with no geometry. No game state: the offline checker uses it too.
+// field, the textures (0x17) become the Xbox's (0x18, GcTexture.h), and the meshes (0x0c, whose data is in the
+// bundle's "GC EXTRA" entries) the Xbox's (0x0d, GcMesh.h). No game state: the offline checker uses it too.
 
 #include <stdint.h>
 #include <vector>
@@ -18,7 +17,7 @@ struct GcMapStats {
     int texturesFailed;
     int duplicates;         // "DT" texture headers
     int meshesConverted;    // 0x0c blocks made 0x0d
-    int meshesSkinned;      // 0x0c blocks left out: skinned
+    int meshesSkinned;      // of them skinned
     int meshesSkipped;      // 0x0c blocks left out: nothing to draw, or unreadable
     int unknownBlocks;      // blocks of an id this does not know, copied as they are
 };
