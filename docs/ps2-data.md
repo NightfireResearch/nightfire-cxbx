@@ -4,11 +4,11 @@ A side project: our action engine (action_standalone, docs/action-standalone.md)
 (`SLES-51258`, the European release) in place of the Xbox's, behind a build switch. The game code stays the Xbox
 port; what changes is how the files are found and how the formats that differ become what the Xbox code expects.
 
-Status (25 October 2026): milestones 1, 2, 5, 6 and 7 done, 3 done for rigid meshes, 4 done (the Xbox's time demos
+Status (25 October 2026): milestones 1, 2 and 5-8 done, 3 done for rigid meshes, 4 done (the Xbox's time demos
 play the same on it, one with a lead left). The PS2 data's levels load and play on the test runner (HendersonA,
-CastleCourtyard, SpaceStationD, SkyRail, the front end) with the PS2's textures, meshes (skinned ones too), sound,
-music and movies, and nothing from the Xbox disc; facial morphs (milestone 8) are left. See [State](#state) and
-[In game](#in-game).
+CastleCourtyard, SpaceStationD, SkyRail, the front end) with the PS2's textures, meshes (skinned ones and the heads'
+morph targets too), sound, music and movies, and nothing from the Xbox disc; the voice streams are left. See
+[State](#state) and [In game](#in-game).
 
 Sources: the PS2 disc as extracted by the extractor project (Q:\nightfire-re, read only; its PS2 extraction in
 `iso_extract/ps2_eu_sles-51258`), `ACTION.ELF`'s own symbol table (5,607 symbols with GCC-mangled signatures: every
@@ -67,7 +67,7 @@ have no pointers in them that the Xbox's lack (both store offsets or hashcodes a
 | Textures | no | Xbox: block 0x18 `KXT` (DXT1/3/5, swizzled A8R8G8B8). PS2: blocks 0x16 (texels) then 0x12 (palette) per texture, after 0x10/0x0f as on the Xbox. 4-bit (16-colour, 64-byte palette) or 8-bit (256 colours, 1 KB palette in the GS's CSM1 order: bits 3 and 4 of the index swapped); colours RGBA with alpha 0x80 = opaque; no mip levels; animated textures are frames back to back; 0x10 flag bit 0 = 8-bit, 0x0f byte 0 = the palette's last index (0x0f or 0xff). Every size is a power of two | all of it (PS2 psiCreateMapTextures 0x11d800 reads the same fields) | - | parsemap.cpp case 0x12 (converts to a `KXT` of DXT1, DXT5 or A8R8G8B8, which psiCreateMapTextures registers as is) | small, done |
 | Static meshes | no | Xbox: block 0x0d `KXE` (vertex/index buffers, strip primitives). PS2: block 0x2d, VIF packets: a box tree (0x38-byte boxes, leaves hold a VIF chain), per batch a GIF tag (NLOOP vertices, triangle strip or fan), UV (V2-32), position (V3-32), colour (V4-8 unsigned, 0x80 = 1.0) and normal + ADC flag (V4-8 signed, w = -1 skips the triangle), textures by STROW whose first word is the pack's texture index (the box's texture list holds the offsets of those STROWs; PS2 psiCreateEntityGfx 0x1173a8 patches them) and each leaf's DIRECT packet sets ALPHA_1, ZBUF_1 and TEST_1 (see [Meshes](#meshes)) | the rigid layout and its render states (above) | which meshes the Xbox draws double-sided (no PS2 field found yet); the box flags (bit 0 is not it) | parsemap.cpp case 0x2d (converts to a `KXE`, which psiCreateEntityGfx registers as is) | medium; rigid done |
 | Skinned meshes | no | PS2 0x2d with a skin record (footer word 2): the skin vertices in bind pose, the chain's REF tags, the bone list; the vertices skinned on the VU0 (`SkinIt` 0x10c128, `SKIN_2_BONE`/`SKIN_2_BONE2`) into a copy `CacheSkin` 0x1114b8 makes, and pulled into the VU1's batches by a DMA chain (see [Skinned meshes](#skinned-meshes)) | all that a conversion needs | - | the same case 0x2d (KXE with 32-byte vertices and bone palettes) | done |
-| Facial animation (morphs) | partly | The morph *sequences* are the shared type-4 files (identical). The targets: Xbox in the KXE (int16 deltas); PS2 a block 0x2b (`parsemap_block_morph_data` 0x1d2b88) | that block 0x2b exists and its handler's name | its layout; how SkinIt applies it | parsemap.cpp case 0x2b | research |
+| Facial animation (morphs) | partly | The morph *sequences* are the shared type-4 files (identical). The targets: Xbox in the KXE (s16 deltas); PS2 a block 0x2b (`parsemap_block_morph_data` 0x1d2b88) of float deltas, before the head's 0x2d (see [Morph targets](#morph-targets)) | all | - | parsemap.cpp case 0x2b, then the head's 0x2d | done |
 | Text banks (`UKTxt.dat`...) | yes | same layout and entry count (2,801 in UKTxt), a few strings differ (the pads' button names, by the look of the diff) | - | - | none (FileList) | none |
 | Fonts | glyphs yes, button symbols no | Glyph tables are executable data on both: the PS2's `FontDataNFont2`, `FontDataSerpLight`, `FontDataMedium` are, all 149 glyphs each, our FontData.inc's Font1, Font2 and Font3, and the font textures (NFont2 512x128, SerpLight 512x64, Medium 512x128, buttons 256x128) are the same sizes. The button symbols in text (`~A`...) differ: the PS2's `specialchar` (0x002de700) has 17 entries (A B C D E F H I J L R S T V W X Y) where the Xbox's SpecialChars has 23, at other places in the PS2's `buttons` texture, and seemingly another field order (u, v, w, h, screen w, h) | everything; the record layout is the Xbox's | - | SpecialChars filled from ACTION.ELF's `specialchar` (Ps2ExecutableData.cpp) | small, done |
 | Menus, UI | yes | menu files identical; sprites and HUD art come through the textures | - | the HUD's PS2 sprite coordinates (as fonts) | none | small |
@@ -90,6 +90,7 @@ Where the PS2 build branches (`#if NIGHTFIRE_DATA_PS2`), each a line or two in t
 | The heap: the converted textures and the decoded sound need room; textures must stay in the heap or contiguous memory, below 256 MB, which the D3D seam's addresses assume | memory.cpp's `HEAP_SIZE`, set to 64 MB by CMake (textures as A8R8G8B8 took 12-35 MB a level and wanted 88-104 MB, which left contiguous memory short on the runner: xboxInitTextures's 8 KB was refused and the game stopped at start; as DXT they take 2-4 MB) | - |
 | Block 0x12 (a PS2 texture's palette, after its texels) | engine/parsemap.cpp | ps2/Ps2Texture.cpp, ps2/Ps2Convert.cpp: `KXT` DXT1 (opaque or cut-out), DXT5 (alpha between), swizzled A8R8G8B8 (under 4 texels a side), linear A8R8G8B8 (Fire2 and WomanBack, whose pixels Woman.cpp writes and reads, as on the Xbox) |
 | Block 0x2d (a PS2 mesh) | engine/parsemap.cpp | ps2/Ps2Mesh.cpp, ps2/Ps2Convert.cpp: `KXE` |
+| Block 0x2b (a head's morph targets), kept for the 0x2d after it | engine/parsemap.cpp | ps2/Ps2Convert.cpp, ps2/Ps2Mesh.cpp: the KXE's morph streams |
 | A cutscene's loadable bundle (0x0780xxxx-0x07A0xxxx) | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | ps2/Ps2Loader.cpp: the PS2's (0x1d7188, 0x1d7250) |
 | The levels' own "Spec" skins (FixupSkinHashcode): the Xbox's alone, neither the skins nor the function are on the PS2 | engine/Anim.cpp AnimObjectNew | - |
 | A sound bank's samples (SPU ADPCM, the pitch word) | sound/SFX.cpp LoadSoundBank, after the sample headers are read | ps2/Ps2Sound.cpp, ps2/Ps2Convert.cpp: Xbox ADPCM, Hz, loop offset |
@@ -118,15 +119,6 @@ Until milestone 7 the Xbox disc's skinned meshes stood in for the PS2's (Ps2Xbox
 
 ## Research items and how to crack them
 
-- **Facial morphs.** The PS2's skinned heads already say which vertices move: a skin vertex's last halfword is a
-  morph index (-1 for none; 07000001's heads have 338-412 such vertices, the Xbox twins 298-410 morph vertices).
-  SkinIt's morph loop (0x10c3a0) adds, for each of Morph_Count targets, `Morph_Weight[t] *` the float3 at
-  `(index + Morph_Index[t]) * 12` bytes into the morph data psiDrawSkinObjectMatrix passes it (from the cel's
-  geometry, +0x14 of the PS2 glist info) before skinning. The indices repeat across heads (1224, 1268, 1246...), so
-  the deltas are a table shared by a level's heads, presumably block 0x2b (`parsemap_block_morph_data` 0x1d2b88).
-  What is left for milestone 8: read block 0x2b, check its deltas against the Xbox twins' int16 ones (22 targets),
-  and write the KXE's morph streams (morphTargetCnt, morphVtxCnt, the morph vertices first) with primitive state
-  bit 0 on the strips that use them.
 - **Double-sided meshes.** The Xbox marks 30-40% of meshes double-sided somewhere (primitive state bit 3); no PS2
   field found yet says which (box flag bit 0 does not: `ps2data_check meshes` prints the comparison). Perhaps the
   VU1 program (the MSCAL/MSCNT address), the GIF tag's PRIM bits, or the GS culls nothing and the Xbox port's
@@ -191,6 +183,35 @@ palette and bone A's weight (spec-mesh.md 7.1). The palette is the bone list; a 
 slots (Yakcoatopen's 55) is split, each batch going to a palette that holds its bones, the primitive that changes
 palette loading it.
 
+### Morph targets
+
+`parsemap_block_morph_data` (0x1d2b88) only keeps block 0x2b's data in the cel's PS2 graphics (morphData), and
+psiDrawSkinObjectMatrix hands it to SkinIt, whose morph loop (0x10c3a0) adds, for each of Morph_Count targets,
+`Morph_Weight[t]` times the float3 at row `index + Morph_Index[t]` (12-byte rows from the block's data) to the skin
+vertex's bind position before skinning; `index` is the skin vertex's last halfword. Every head's 0x2d has its own
+0x2b just before it (Ps2MorphHeader):
+
+| Offset | Meaning |
+|---|---|
+| 0 | the morph vertices, n |
+| 4 | the targets (22 on every head) |
+| 8 | the row the deltas start at: past these three words and the list (80 for n = 237) |
+| 12 | n words, one a morph vertex (8, 9, 10...; not needed) |
+| row 8 on | n vertices of 22 float3 deltas each, a vertex's targets in consecutive rows; a skin vertex's index is the first of its 22 rows (the PS2 exporter's duplicated vertices share them) |
+
+The Xbox keeps the same targets in the same order as s16 deltas, `delta * weight / 32767` model units, target by
+target, after the bone palettes; only the first morphVtxCnt vertices have them, and only primitives with state
+bit 0 bind them (spec-facial.md 2.3, 3.6). The conversion gives bit 0 to every primitive that draws a vertex with a
+morph index, moves the vertices those primitives draw to the front (the others' deltas zero), and writes each
+delta as `(int16_t)(float * 32767)`: truncated, as the Xbox's exporter did (rounding matches 88% of the Xbox's
+deltas exactly, truncating 99.8%).
+
+`ps2data_check morphs <bundle> <xbox bundle>` checks each head's streams against its Xbox twin's: over the 32 level
+bundles (25 October 2026), all 151 heads convert and have a twin, no morphing primitive draws a vertex past the
+streams, all 89,575 PS2 vertices that move are at an Xbox morph vertex, 99.5% of them with every delta of every
+target the same to the unit (the rest probably two morph vertices at one place, such as where the lips meet), and
+every one of the Xbox's 39,940 moving vertices has a moving PS2 vertex at its place.
+
 `ps2data_check skins <bundle> <xbox bundle>` checks each converted mesh against its Xbox twin (the same
 hashcode). Over the 32 level bundles the Xbox's decompressed copies exist for (25 October 2026):
 
@@ -217,6 +238,16 @@ On the test runner (vr-desktop, `C:\nightfire-ps2\run\Release`: `DiscPath` the e
 | SpaceStationD | the intro (Bond in the space suit), then the station's exterior and walkway, the beam weapon, the HUD |
 | SkyRail (`-level 07000024`, a multiplayer map) | the snow map with the multiplayer HUD and timer; with no match settings the match ends at once, then the debriefing and the front end |
 | the front end (no `-level`, or an unknown one) | the attract movies (PSS), then the PS2's title screen |
+
+With milestone 8 the heads' faces move. A session with no input recorded on the Xbox build (HendersonA from its
+start, 7,451 frames: the intro movie and cutscene) was played on the Xbox build and rebased onto the PS2 build,
+with a picture every 50 frames: the two run the same up to frame 2136, where the dialogue starts, and the cutscene's
+shots then stay level with each other but for one cut (frame 3400). The PS2 build draws the faces with the
+Xbox's morph shaders, and with the morphs the close-ups take the expressions the Xbox's do - Bond's brows lowering
+(frame 3100), Mayhew's mouth opening (2500), eyelids on Kiko (2200) - where without them (the same run, with the
+morph targets left out) the faces stay neutral. No face tears or stretches at the morph seams. The mouths move less
+than on the Xbox in the lines spoken after frame 2136; the PS2 build plays no voice streams yet, which may be why
+(not confirmed).
 
 With milestone 7 the characters - the cutscenes' figures, the drones, the first-person hands and the space suit's -
 are the PS2's own skinned meshes: posed and lit as the Xbox's were, no stretched or stray vertices. Against runs of
@@ -302,13 +333,16 @@ Release\ps2data_check.exe <disc> meshes 07000001 [<xbox bundle>] [--obj <out>]
 Release\ps2data_check.exe <disc> all                                      every level bundle's textures and meshes
 Release\ps2data_check.exe <disc> skins 07000001 <xbox bundle>             every skinned mesh to a KXE, checked against
                                                                           the Xbox's twins
+Release\ps2data_check.exe <disc> morphs 07000001 <xbox bundle>            every head's morph streams, checked against
+                                                                          the Xbox's twins
 Release\ps2data_check.exe <disc> woman [<xbox woman.rle>]                 the pause screen's film, as FS_ps2 finds it
 Release\ps2data_check.exe <disc> sound 0 [<out>]                          a sound bank to Xbox ADPCM, the signal to
                                                                           noise of each sample; WAVs of both
 Release\ps2data_check.exe <disc> music 1 [<wav>]                          a track as the Xbox's, read in pieces and whole
 ```
 
-`skins <hash> <xbox bundle>` checks the skinned meshes against the Xbox's twins ([Skinned meshes](#skinned-meshes)).
+`skins <hash> <xbox bundle>` checks the skinned meshes against the Xbox's twins ([Skinned meshes](#skinned-meshes)),
+`morphs <hash> <xbox bundle>` the heads' morph streams ([Morph targets](#morph-targets)).
 `textures` also prints the DXT formats chosen and the mean and worst PSNR of the DXT texels against the PS2's.
 
 `tools/pe_compare.py` compares two builds of an executable section by section: the default build before and after a
@@ -328,4 +362,4 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | 5 | done: text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); SpecialChars takes the PS2's 17 symbols from ACTION.ELF's `specialchar` (the same 0x18-byte records, coordinates in the PS2's `buttons` texture), its other slots empty, so prompts show the PS2's pad |
 | 6 | done but the voice streams: sound banks and music from SPU ADPCM (above), movies from PSS through FFmpeg |
 | 7 | done: the PS2's skinned meshes become skinned KXEs with bone palettes ([Skinned meshes](#skinned-meshes)); all 459 convert and match their Xbox twins; in game the characters skin right, and the time demos' viewer and pictures are those of the Xbox's meshes. The stand-in, its seam and `XboxDiscPath` are gone. The PS2 build reads nothing from the Xbox disc |
-| 8 | not started: what the PS2's heads carry and how SkinIt applies it is in the research items |
+| 8 | done: block 0x2b's morph targets become the KXE's morph streams ([Morph targets](#morph-targets)); all 151 heads convert, 99.5% of their moving vertices the Xbox's to the unit; in game the faces take the Xbox's expressions. Left: the voice streams, which may be why mouths move less in dialogue |
