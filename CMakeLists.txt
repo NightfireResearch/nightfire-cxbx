@@ -1089,7 +1089,11 @@ endif()
 # build) gets the same version from the same place, with no prebuilt to keep per toolchain; NF_SDL3_DIR takes an
 # installed SDL3's CMake package instead (SDL3Config.cmake's directory), for a machine without network access.
 option(NIGHTFIRE_SDL "Window, input and sound output through SDL3 (the driving engine, and the standalone action engine)" OFF)
-if(NIGHTFIRE_SDL)
+# The launcher (src/launcher, below) is SDL3 too, linked statically so that it is one file that can replace itself;
+# with it on, SDL is fetched for it whether or not the game uses SDL, built as a static library as well, and keeps
+# its renderer and dialogs, which the game's settings leave out.
+option(NIGHTFIRE_LAUNCHER "The launcher: install, update and start the standalone game (docs/install-and-update.md)" OFF)
+if(NIGHTFIRE_SDL OR NIGHTFIRE_LAUNCHER)
   set(NF_SDL3_DIR "" CACHE PATH "An installed SDL3's CMake package directory; empty to build the pinned release")
   if(NF_SDL3_DIR)
     find_package(SDL3 REQUIRED CONFIG PATHS ${NF_SDL3_DIR} NO_DEFAULT_PATH)
@@ -1104,12 +1108,20 @@ if(NIGHTFIRE_SDL)
     if(NIGHTFIRE_GFX STREQUAL "sdlgpu")
       set(SDL_GPU ON CACHE BOOL "" FORCE)
     endif()
+    if(NIGHTFIRE_LAUNCHER)
+      set(SDL_SHARED ${NIGHTFIRE_SDL} CACHE BOOL "" FORCE)
+      set(SDL_STATIC ON CACHE BOOL "" FORCE)
+      set(SDL_RENDER ON CACHE BOOL "" FORCE)
+      set(SDL_DIALOG ON CACHE BOOL "" FORCE)
+    endif()
     FetchContent_Declare(SDL3
                          GIT_REPOSITORY https://github.com/libsdl-org/SDL.git
                          GIT_TAG release-3.4.18
                          GIT_SHALLOW TRUE)
     FetchContent_MakeAvailable(SDL3)
   endif()
+endif()
+if(NIGHTFIRE_SDL)
   set(nf_output_sources
     src/driving/platform/HostWindowSdl.cpp
     src/driving/platform/HostInputSdl.cpp
@@ -1731,4 +1743,88 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
       set_target_properties(${target} PROPERTIES EXCLUDE_FROM_ALL ON EXCLUDE_FROM_DEFAULT_BUILD ON)
     endif()
   endforeach()
+endif()
+
+# The launcher (docs/install-and-update.md, src/launcher): its own program, outside the game's code - installs and
+# updates the standalone executables in the per-user folder and starts them. SDL3 (static) and Dear ImGui for the
+# window, WinHTTP for downloads, miniz for the zips, Monocypher for the manifest's Ed25519 signature
+# (third_party/imgui 1.92.9, miniz 3.1.1, monocypher 4.0.3, each with its licence). Windows only for now: macOS and
+# Linux need their Platform and Http files (Platform.h, Http.h). NIGHTFIRE_LAUNCHER_TEST_KEY trusts
+# tools/release/test_key.txt, for the local tests; NIGHTFIRE_RELEASE (the release job) refuses that, and refuses to
+# build without the project's key in src/launcher/ReleaseKey.h.
+option(NIGHTFIRE_LAUNCHER_TEST_KEY "The launcher trusts the test signing key (local tests only, never a release)" OFF)
+option(NIGHTFIRE_RELEASE "A release build (.github/workflows/release.yml): the launcher must carry the release key" OFF)
+if(NIGHTFIRE_LAUNCHER)
+  if(NOT WIN32)
+    message(FATAL_ERROR "NIGHTFIRE_LAUNCHER: the launcher builds for Windows only so far (src/launcher/Platform.h)")
+  endif()
+  file(STRINGS src/launcher/ReleaseKey.h nf_release_key REGEX "kReleasePublicKey\\[\\] = \"[0-9a-fA-F]*\"")
+  string(REGEX REPLACE ".*\"([0-9a-fA-F]*)\".*" "\\1" nf_release_key "${nf_release_key}")
+  file(STRINGS src/launcher/ReleaseKey.h nf_test_key REGEX "kTestPublicKey\\[\\] = \"[0-9a-fA-F]*\"")
+  string(REGEX REPLACE ".*\"([0-9a-fA-F]*)\".*" "\\1" nf_test_key "${nf_test_key}")
+  string(TOLOWER "${nf_release_key}" nf_release_key)
+  string(TOLOWER "${nf_test_key}" nf_test_key)
+  if(NIGHTFIRE_RELEASE)
+    if(NIGHTFIRE_LAUNCHER_TEST_KEY)
+      message(FATAL_ERROR "NIGHTFIRE_RELEASE with NIGHTFIRE_LAUNCHER_TEST_KEY: a release never trusts the test key")
+    endif()
+    string(LENGTH "${nf_release_key}" nf_release_key_length)
+    if(NOT nf_release_key_length EQUAL 64)
+      message(FATAL_ERROR "NIGHTFIRE_RELEASE: src/launcher/ReleaseKey.h has no release key (kReleasePublicKey) - "
+                          "see docs/install-and-update.md, \"The release key\"")
+    endif()
+    if(nf_release_key STREQUAL nf_test_key)
+      message(FATAL_ERROR "NIGHTFIRE_RELEASE: kReleasePublicKey is the test key")
+    endif()
+  endif()
+  if(NIGHTFIRE_LAUNCHER_TEST_KEY)
+    message(WARNING "\n*** NIGHTFIRE_LAUNCHER_TEST_KEY is ON: this launcher trusts tools/release/test_key.txt, whose "
+                    "private half is public. For local tests only - never give this build to anyone. ***\n")
+  endif()
+
+  enable_language(C)
+  set(nf_launcher_sources
+    src/launcher/LauncherMain.cpp
+    src/launcher/LauncherUi.cpp
+    src/launcher/Launcher.cpp
+    src/launcher/Installation.cpp
+    src/launcher/Updater.cpp
+    src/launcher/DiscSetup.cpp
+    src/launcher/IniFile.cpp
+    src/launcher/Json.cpp
+    src/launcher/SemVer.cpp
+    src/launcher/Sha256.cpp
+    src/launcher/Signature.cpp
+    src/launcher/Zip.cpp
+    src/launcher/Http.cpp
+    src/launcher/HttpWin32.cpp
+    src/launcher/PlatformWin32.cpp
+    src/launcher/SelfTest.cpp
+    third_party/imgui/imgui.cpp
+    third_party/imgui/imgui_draw.cpp
+    third_party/imgui/imgui_tables.cpp
+    third_party/imgui/imgui_widgets.cpp
+    third_party/imgui/misc/cpp/imgui_stdlib.cpp
+    third_party/imgui/backends/imgui_impl_sdl3.cpp
+    third_party/imgui/backends/imgui_impl_sdlrenderer3.cpp
+    third_party/miniz/miniz.c
+    third_party/monocypher/monocypher.c
+    third_party/monocypher/monocypher-ed25519.c)
+  add_executable(nightfire_launcher WIN32 ${nf_launcher_sources})
+  set_target_properties(nightfire_launcher PROPERTIES OUTPUT_NAME launcher)
+  nf_versioned(nightfire_launcher)
+  target_include_directories(nightfire_launcher PRIVATE third_party/imgui third_party/miniz third_party/monocypher)
+  target_compile_definitions(nightfire_launcher PRIVATE UNICODE _UNICODE NOMINMAX)
+  if(NIGHTFIRE_LAUNCHER_TEST_KEY)
+    target_compile_definitions(nightfire_launcher PRIVATE NIGHTFIRE_LAUNCHER_TEST_KEY)
+  endif()
+  if(TARGET SDL3::SDL3-static)
+    target_link_libraries(nightfire_launcher PRIVATE SDL3::SDL3-static)
+  else()
+    target_link_libraries(nightfire_launcher PRIVATE SDL3::SDL3)
+  endif()
+  target_link_libraries(nightfire_launcher PRIVATE winhttp shell32 ole32)
+  if(MSVC)
+    target_compile_options(nightfire_launcher PRIVATE /utf-8)
+  endif()
 endif()
