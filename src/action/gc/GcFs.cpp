@@ -16,6 +16,7 @@
 #include "GcBundle.h"
 #include "GcBytes.h"
 #include "GcDisc.h"
+#include "GcFs.h"
 
 #include <stdio.h>
 #include <string.h>
@@ -186,7 +187,16 @@ int FS_GetFileSize(char *filename) {
     return size;
 }
 
+// Level bundles (0x0700xxxx) loaded so far: each starts the level's heap again
+static uint32_t LevelLoads;
+
+uint32_t GcFs_LevelLoads(void) {
+    return LevelLoads;
+}
+
 void FS_LoadFileIfReady(char *fileName, void *buffer) {
+    if ((GcDisc_BundleHash(fileName) & 0xfff00000) == 0x07000000)
+        LevelLoads++;
     GcFile file;
     GcFile_OpenOrDie(fileName, &file);
     GcFile_Read(&file, buffer, file.size, 0);
@@ -195,6 +205,24 @@ void FS_LoadFileIfReady(char *fileName, void *buffer) {
 
 double TimeSpentLoadingFiles;
 
+// The buffer the next whole file goes into, when it fits (GcFs_LoadNextInto), and the last one loaded
+static void *LoadInto;
+static uint32_t LoadIntoBytes;
+static void *LastLoad;
+static uint32_t LastLoadBytes;
+
+void GcFs_LoadNextInto(void *buffer, uint32_t bytes) {
+    LoadInto = buffer;
+    LoadIntoBytes = bytes;
+}
+
+void *GcFs_LastLoad(uint32_t *bytes) {
+    *bytes = LastLoadBytes;
+    return LastLoad;
+}
+
+// As FS.cpp's (0x000dc990): the whole file, in memory of its own - or in the buffer GcFs_LoadNextInto gave, as the
+// GameCube's LoaderLoad reads a loadable into the buffer its caller passes
 void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *sizeOut) {
     TimeSpentLoadingFiles = TimeSpentLoadingFiles - timestamp();
     int size = FS_GetFileSize(filename);
@@ -203,7 +231,11 @@ void* FS_AllocateAndLoadBlocking(char *filename, MallocFlags allocType, int *siz
         ShowFatalErrorScreen(true);
         XboxError_Halt("file missing from the GameCube disc", filename);
     }
-    void *data = Mem_Malloc(size, allocType, 0);
+    bool into = LoadInto != NULL && (uint32_t)size <= LoadIntoBytes;
+    void *data = into ? LoadInto : Mem_Malloc(size, allocType, 0);
+    LastLoad = data;
+    LastLoadBytes = into ? LoadIntoBytes : (uint32_t)size;    // the buffer's whole size stays usable
+    LoadInto = NULL;
     FS_LoadFileIfReady(filename, data);
     while (FS_StateMachineIterate())
         ShowLoadProgressScreen();

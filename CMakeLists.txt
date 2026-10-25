@@ -1348,7 +1348,7 @@ set(nf_action_gc_data_sources src/action/gc/GcBundle.cpp src/action/gc/GcDisc.cp
 if(NIGHTFIRE_ACTION_DATA_GC)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_gc_data_sources} src/action/gc/GcFs.cpp
-                                           src/action/gc/GcAnim.cpp)
+                                           src/action/gc/GcAnim.cpp src/action/gc/GcLoader.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}

@@ -371,6 +371,8 @@ uint isLoadable(HASHCODE hashcode) {
   return 0;
 }
 
+#if !NIGHTFIRE_DATA_GC   // the GameCube's data loads the loadable bundles: gc/GcLoader.cpp
+
 // A loadable part of the level (isLoadable's index). The Xbox build loads nothing for it: the hashtable's loadable
 // items (type 0x04000000) are dropped and its sections made again, under MALLOC_BEST_FIT. Both arguments are
 // unread.
@@ -398,3 +400,5 @@ bool LoadableReload(HASHCODE hashcode) {
     Mem_SetMallocMethod(method);
     return true;
 }
+
+#endif // !NIGHTFIRE_DATA_GC

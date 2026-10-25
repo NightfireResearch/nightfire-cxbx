@@ -15,6 +15,8 @@
 #define LEVEL_BUNDLE 0x07000000
 #define VARIANT_MASK 0x00f00000
 #define LEVEL_SEQUENCES_VARIANT 0x00d00000
+#define SEQUENCES_ONLY_VARIANT 0x00f00000      // a level's sequences alone, which the loadables' reload asks for
+#define LOADABLE_BYTES 8                        // a hashcode, then the loadable's number
 
 // A directory entry's type byte (Loader.cpp's DirFileType_tag), and the GameCube's own
 enum {
@@ -47,7 +49,7 @@ bool GcBundle_Directory(const uint8_t *bundle, uint32_t bytes, std::vector<GcBun
         e.length = GcLe32(p);
         e.type = p[4];
         p += 5;
-        if (e.type == ENTRY_LOADABLE) {
+        if (e.type == ENTRY_LOADABLE && bigEndian) {      // the Xbox's (ours) have a name
             if (p + 4 > end)
                 return false;
             char hex[9];
@@ -137,7 +139,7 @@ void GcBundle_Convert(const uint8_t *bundle, uint32_t bytes, const std::vector<G
     std::vector<XboxEntry> xbox;
     std::set<std::string> names;
     for (const GcBundleEntry &e : entries) {
-        if (e.type == ENTRY_LOADABLE || e.type == ENTRY_GC_EXTRA_STATIC || e.type == ENTRY_GC_EXTRA_DISCARD) {
+        if (e.type == ENTRY_GC_EXTRA_STATIC || e.type == ENTRY_GC_EXTRA_DISCARD) {
             stats->dropped++;
             continue;
         }
@@ -145,7 +147,19 @@ void GcBundle_Convert(const uint8_t *bundle, uint32_t bytes, const std::vector<G
         x.name = e.name;
         x.type = e.type;
         const uint8_t *data = bundle + e.offset;
-        if (e.type == ENTRY_MAP || e.type == ENTRY_MAP_SECOND_PASS || e.type == ENTRY_MAP_2 || e.type == ENTRY_MAP_B) {
+        if (e.type == ENTRY_LOADABLE) {
+            // The hashcode (big-endian here) and the loadable's number (LoaderProcess reads its low byte); the
+            // Xbox's directory has a name where the GameCube's has four bytes, so the hashcode is the name
+            if (e.length < LOADABLE_BYTES)
+                continue;
+            uint32_t hashcode = GcBe32(data);
+            char name[9];
+            snprintf(name, sizeof(name), "%08x", hashcode);
+            x.name = name;
+            x.data.assign(data, data + e.length);
+            GcPutLe32(x.data.data(), hashcode);
+            stats->loadables++;
+        } else if (e.type == ENTRY_MAP || e.type == ENTRY_MAP_SECOND_PASS || e.type == ENTRY_MAP_2 || e.type == ENTRY_MAP_B) {
             GcMapStats map;
             GcMap_Convert(data, e.length, bundle, bytes, x.data, &map);
             stats->packs++;
@@ -214,16 +228,23 @@ static bool ReadBundle(uint32_t hash, GcReadFile read, void *context, GcBytesVec
 
 bool GcBundle_Load(uint32_t hash, GcReadFile read, void *context, GcBytesVec &out, GcBundleStats *stats) {
     out.clear();
+    // 0x07f0xxxx: the level's sequences in a bundle of their own (on the GameCube's disc, where there is one, an
+    // empty bundle)
+    bool sequencesOnly = (hash & 0xff000000) == (LEVEL_BUNDLE & 0xff000000) &&
+                         (hash & VARIANT_MASK) == SEQUENCES_ONLY_VARIANT;
+    uint32_t level = sequencesOnly ? hash & ~VARIANT_MASK : hash;
     GcBytesVec bundle;
-    if (!ReadBundle(hash, read, context, bundle))
+    if (sequencesOnly)
+        bundle.assign(BUNDLE_HEADER_BYTES, 0);
+    else if (!ReadBundle(hash, read, context, bundle))
         return false;
     std::vector<GcBytesVec> sequences;
     GcBytesVec common, seq;
-    if ((hash & 0xfff00000) == LEVEL_BUNDLE && read(context, "gc\\common.bin", common)) {
-        uint32_t group = GcBundle_SequenceGroup(common.data(), (uint32_t)common.size(), hash);
+    if ((level & 0xfff00000) == LEVEL_BUNDLE && read(context, "gc\\common.bin", common)) {
+        uint32_t group = GcBundle_SequenceGroup(common.data(), (uint32_t)common.size(), level);
         if (group != 0 && ReadBundle(group, read, context, seq))
             sequences.push_back(seq);
-        if (ReadBundle((hash & ~VARIANT_MASK) | LEVEL_SEQUENCES_VARIANT, read, context, seq))
+        if (ReadBundle(level | LEVEL_SEQUENCES_VARIANT, read, context, seq))
             sequences.push_back(seq);
     }
     GcBundle_Convert(bundle.data(), (uint32_t)bundle.size(), sequences, out, stats);
