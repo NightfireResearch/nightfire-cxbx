@@ -3,6 +3,7 @@
 #include <time.h>
 
 #include <algorithm>
+#include <chrono>
 #include <fstream>
 #include <optional>
 #include <sstream>
@@ -108,7 +109,13 @@ bool Launcher::Start(std::string *notice) {
         *notice = error;
         return false;
     }
-    Updater_CleanUp(m_installation);
+    // launcher.old is the launcher that started this one after an update, which may take a moment to end
+    for (int wait = 0; wait < 40 && fs::exists(m_installation.Root() / ("launcher.old" +
+                                                                      std::string(Platform_ExecutableSuffix())));
+         wait++) {
+        Updater_CleanUp(m_installation);
+        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    }
     m_lastLog = NewestLog(m_installation.LogFolder());
 
     // A first run from an extracted release: its files go into app/, and this launcher into the root. Only a release
@@ -291,8 +298,7 @@ void Launcher::CheckDisc(const fs::path &folder) {
             *message = "This folder does not hold the game's data.";
             return false;
         }
-        *message = check.release.empty() ? "Not a version we have tested." : "Recognised: " + check.release + ".";
-        return true;
+        return true;   // the window shows the check itself
     });
 }
 
@@ -356,7 +362,12 @@ bool Launcher::Undo(std::string *error) {
         *error = "wait for the current job to finish";
         return false;
     }
-    return Updater_Undo(m_installation, error);
+    if (!Updater_Undo(m_installation, error))
+        return false;
+    std::lock_guard<std::mutex> lock(m_mutex);
+    if (m_lastCheck.ok)
+        m_lastCheck.newer = SemVer_Compare(m_lastCheck.release.version, m_installation.Config().installed) > 0;
+    return true;
 }
 
 bool Launcher::Play(const std::string &level, std::string *error) {

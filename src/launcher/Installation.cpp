@@ -8,7 +8,7 @@
 #include "Platform.h"
 #include "SemVer.h"
 
-Installation::Installation(fs::path root) : m_root(std::move(root)) {}
+Installation::Installation(fs::path root) : m_root(std::move(root.make_preferred())) {}
 
 fs::path Installation::VersionFolder(const std::string &version) const {
     return AppFolder() / FromUtf8(version);
