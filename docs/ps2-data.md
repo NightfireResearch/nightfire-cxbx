@@ -132,6 +132,17 @@ Until milestone 7 the Xbox disc's skinned meshes stood in for the PS2's (Ps2Xbox
     the Xbox's data, since the PS2 build reads nothing from the Xbox disc.
   - Keep billboards and effects double-sided whatever the table says.
   - Check those effects in game against the Xbox: the bullet-impact gas on drones and SpaceStationD's explosions.
+
+  **Parked (25 October 2026):** everything stays double-sided until something is seen to look wrong. The cost is
+  nothing on a modern GPU. Closed objects look the same, since their back faces are hidden by the depth buffer.
+  Where it can show:
+  - single-sided surfaces seen from behind (walls meant to be seen from one side, cut-aways, the backs of signs and
+    foliage cards; the level format has a `OneSided` placement type), and their back faces are lit with the front's
+    normal;
+  - alpha-blended surfaces (glass, smoke, water) seen through both sides, which blend twice.
+
+  It cannot cause the GameCube's missing effects (that was too much culling). If a case turns up, cull only
+  alpha-blended meshes and `OneSided` placements as the Xbox does, before building a table for every mesh.
 - **Sequence streaming.** If the PS2 loads only sequence headers and streams the data (AnimSeqGetHdrBuf), we need
   not: loading the 07F bundle whole, as the Xbox loads its type-4 entries, is enough, since the files are identical.
 
