@@ -48,8 +48,9 @@ public:
     void CheckForUpdates();
     void InstallUpdate();   // the release the last check found
     void FinishUpdate();    // a check and its install, by a launcher an update put in place (--finish-update)
-    void CheckDisc(const fs::path &folder);
-    void SetUpDisc(const fs::path &folder, bool copy);   // the check, the copy (or use in place), settings.ini
+    void CheckDisc(const fs::path &source);   // a folder or a disc image
+    // The check, the copy (or the folder used in place; an image is always copied), settings.ini
+    void SetUpDisc(const fs::path &source, bool copy);
 
     // The last results, copied out for the window
     UpdateCheck LastCheck() const;

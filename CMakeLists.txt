@@ -1790,6 +1790,7 @@ if(NIGHTFIRE_LAUNCHER)
     src/launcher/Installation.cpp
     src/launcher/Updater.cpp
     src/launcher/DiscSetup.cpp
+    src/launcher/Xdvdfs.cpp
     src/launcher/IniFile.cpp
     src/launcher/Json.cpp
     src/launcher/SemVer.cpp

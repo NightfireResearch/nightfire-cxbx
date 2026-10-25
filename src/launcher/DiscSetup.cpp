@@ -1,9 +1,12 @@
 #include "DiscSetup.h"
 
+#include <algorithm>
 #include <fstream>
+#include <map>
 
 #include "Platform.h"
 #include "Sha256.h"
+#include "Xdvdfs.h"
 
 namespace {
 
@@ -62,151 +65,249 @@ bool HashFile(const fs::path &file, std::string *hex, const std::function<void(u
     return true;
 }
 
-uint64_t FolderBytes(const fs::path &folder) {
-    uint64_t bytes = 0;
-    std::error_code error;
-    for (auto it = fs::recursive_directory_iterator(folder, error); it != fs::recursive_directory_iterator();
-         it.increment(error)) {
-        if (error)
-            break;
-        if (it->is_regular_file(error))
-            bytes += it->file_size(error);
+std::string Lower(std::string text) {
+    for (char &c : text)
+        if (c >= 'A' && c <= 'Z')
+            c = char(c + 32);
+    return text;
+}
+
+// What the game reads: eurocom/ and driving/
+bool GameFile(const std::string &lowerPath) {
+    return lowerPath.compare(0, 8, "eurocom/") == 0 || lowerPath.compare(0, 8, "driving/") == 0;
+}
+
+// The game's files in a folder or an image, by their lowercase paths
+struct Listing {
+    struct File {
+        std::string path;   // as the source spells it
+        uint64_t size;
+        uint64_t offset;    // in an image
+    };
+    std::map<std::string, File> files;
+
+    const File *Find(const std::string &path) const {
+        auto it = files.find(path);
+        return it == files.end() ? nullptr : &it->second;
     }
-    return bytes;
+    bool HasFolder(const std::string &path) const {
+        auto it = files.lower_bound(path + "/");
+        return it != files.end() && it->first.compare(0, path.size() + 1, path + "/") == 0;
+    }
+    uint64_t Bytes(const std::string &folder) const {
+        uint64_t bytes = 0;
+        for (const auto &file : files)
+            if (file.first.compare(0, folder.size() + 1, folder + "/") == 0)
+                bytes += file.second.size;
+        return bytes;
+    }
+};
+
+void ListFolder(const fs::path &folder, Listing *listing) {
+    for (const char *top : {"eurocom", "driving"}) {
+        std::error_code error;
+        for (auto it = fs::recursive_directory_iterator(folder / top, error); it != fs::recursive_directory_iterator();
+             it.increment(error)) {
+            if (error)
+                break;
+            if (!it->is_regular_file(error))
+                continue;
+            std::string path = ToUtf8(fs::relative(it->path(), folder, error).generic_wstring());
+            listing->files[Lower(path)] = {path, it->file_size(error), 0};
+        }
+    }
+}
+
+bool ListImage(XdvdfsImage &image, Listing *listing, std::string *error) {
+    std::vector<XdvdfsEntry> entries;
+    if (!image.List(&entries, error))
+        return false;
+    for (const XdvdfsEntry &entry : entries) {
+        std::string lower = Lower(entry.path);
+        if (!entry.directory && GameFile(lower))
+            listing->files[lower] = {entry.path, entry.size, entry.offset};
+    }
+    return true;
+}
+
+// The folders and files the game needs, and the release whose key files have the sizes found
+void CheckListing(const Listing &listing, DiscCheck *check) {
+    if (!listing.HasFolder("eurocom") || !listing.HasFolder("driving")) {
+        check->problems.push_back(check->image ? "the image holds no eurocom and driving folders: is it 007: Nightfire?"
+                                               : "the folder should hold the disc's eurocom and driving folders");
+        return;
+    }
+    int archives = 0;
+    while (listing.Find("eurocom/filesys.d" + std::string(archives < 10 ? "0" : "") + std::to_string(archives)))
+        archives++;
+    if (archives == 0)
+        check->problems.push_back("eurocom/filesys.d00 is missing");
+    else if (archives < 11)
+        check->problems.push_back("eurocom/ has filesys.d00 to .d" + std::to_string(archives - 1) +
+                                  "; the discs we know have eleven, to .d10");
+    bool movies25 = listing.HasFolder("eurocom/25_fps"), movies30 = listing.HasFolder("eurocom/30_fps");
+    if (!movies25 && !movies30)
+        check->problems.push_back("eurocom/25_fps (or 30_fps), the background movies, is missing");
+    if (!listing.Find("driving/misc.viv"))
+        check->problems.push_back("driving/misc.viv is missing");
+
+    uint64_t eurocomBytes = listing.Bytes("eurocom"), drivingBytes = listing.Bytes("driving");
+    check->bytes = eurocomBytes + drivingBytes;
+    if (eurocomBytes < 1000000000ull || drivingBytes < 150000000ull)
+        check->problems.push_back("the folders are smaller than the game's data (about 1.5 GB in eurocom, more than "
+                                  "150 MB in driving): is the copy complete?");
+    check->usable = archives > 0 && (movies25 || movies30) && listing.Find("driving/misc.viv") != nullptr;
+    check->region = movies25 ? "PAL" : "NTSC";
+    for (const KnownRelease &release : kReleases) {
+        bool sizes = true;
+        for (const KnownFile &file : release.files) {
+            if (file.path == nullptr)
+                break;
+            const Listing::File *found = listing.Find(file.path);
+            sizes = sizes && found != nullptr && found->size == file.size;
+        }
+        if (sizes) {
+            check->release = release.name;
+            check->region = release.region;
+            break;
+        }
+    }
+}
+
+void NotTested(DiscCheck *check) {
+    check->problems.push_back("not a version we have tested (we know the PAL and US Xbox discs): it may well work; "
+                              "please report how it goes");
 }
 
 } // namespace
 
-DiscCheck DiscSetup_Check(const fs::path &folder, const DiscProgress &progress) {
+bool DiscSetup_IsImage(const fs::path &source) {
+    std::error_code error;
+    return fs::is_regular_file(source, error);
+}
+
+DiscCheck DiscSetup_Check(const fs::path &source, const DiscProgress &progress) {
     DiscCheck check;
     std::error_code error;
-    if (!fs::is_directory(folder, error)) {
-        check.problems.push_back("there is no folder " + ToUtf8(folder));
+    Listing listing;
+    check.image = DiscSetup_IsImage(source);
+    if (check.image) {
+        // An image: its file system read, and the release told by its files' sizes; the hashes come after the copy
+        XdvdfsImage image;
+        std::string why;
+        if (!image.Open(source, &why) || !ListImage(image, &listing, &why)) {
+            check.problems.push_back(why);
+            return check;
+        }
+        CheckListing(listing, &check);
+        if (check.usable && check.release.empty())
+            NotTested(&check);
         return check;
     }
-    fs::path eurocom = folder / "eurocom", driving = folder / "driving";
-    if (!fs::is_directory(eurocom, error) || !fs::is_directory(driving, error)) {
-        check.problems.push_back("the folder should hold the disc's eurocom and driving folders");
+    if (!fs::is_directory(source, error)) {
+        check.problems.push_back("there is no folder or disc image " + ToUtf8(source));
         return check;
     }
-    int archives = 0;
-    while (fs::is_regular_file(eurocom / ("filesys.d" + std::string(archives < 10 ? "0" : "") +
-                                          std::to_string(archives)),
-                               error))
-        archives++;
-    if (archives == 0)
-        check.problems.push_back("eurocom/filesys.d00 is missing");
-    else if (archives < 11)
-        check.problems.push_back("eurocom/ has filesys.d00 to .d" + std::to_string(archives - 1) +
-                                 "; the discs we know have eleven, to .d10");
-    bool movies25 = fs::is_directory(eurocom / "25_fps", error), movies30 = fs::is_directory(eurocom / "30_fps", error);
-    if (!movies25 && !movies30)
-        check.problems.push_back("eurocom/25_fps (or 30_fps), the background movies, is missing");
-    if (!fs::is_regular_file(driving / "misc.viv", error))
-        check.problems.push_back("driving/misc.viv is missing");
-
-    uint64_t eurocomBytes = FolderBytes(eurocom), drivingBytes = FolderBytes(driving);
-    check.bytes = eurocomBytes + drivingBytes;
-    if (eurocomBytes < 1000000000ull || drivingBytes < 150000000ull)
-        check.problems.push_back("the folders are smaller than the game's data (about 1.5 GB in eurocom, more than "
-                                 "150 MB in driving): is the copy complete?");
-    check.usable = archives > 0 && (movies25 || movies30) && fs::is_regular_file(driving / "misc.viv", error);
+    ListFolder(source, &listing);
+    CheckListing(listing, &check);
     if (!check.usable)
         return check;
 
-    // The releases: the files of each read once, whichever release names them
-    uint64_t toHash = 0, hashed = 0;
-    std::vector<std::pair<std::string, std::string>> hashes;   // path, sha256
-    for (const KnownRelease &release : kReleases)
-        for (const KnownFile &file : release.files)
-            if (file.path != nullptr && file.sha256 != nullptr && fs::file_size(folder / file.path, error) == file.size)
-                toHash += file.size;
+    // A folder: the release its sizes name, confirmed by the key files' hashes
+    std::string sized = check.release;
+    check.release.clear();
     for (const KnownRelease &release : kReleases) {
+        if (sized != release.name)
+            continue;
+        uint64_t toHash = 0, hashed = 0;
+        for (const KnownFile &file : release.files)
+            if (file.path != nullptr && file.sha256 != nullptr)
+                toHash += file.size;
         bool matches = true;
         for (const KnownFile &file : release.files) {
-            if (file.path == nullptr)
+            if (file.path == nullptr || !matches)
                 break;
-            fs::path path = folder / file.path;
-            if (fs::file_size(path, error) != file.size || error) {
-                matches = false;
-                break;
-            }
             if (file.sha256 == nullptr)
                 continue;
             std::string hex;
-            for (const auto &known : hashes)
-                if (known.first == file.path)
-                    hex = known.second;
-            if (hex.empty()) {
-                HashFile(path, &hex, [&](uint64_t read) {
-                    hashed += read;
-                    if (progress)
-                        progress(hashed, toHash, file.path);
-                });
-                hashes.emplace_back(file.path, hex);
-            }
-            if (hex != file.sha256) {
-                matches = false;
-                break;
-            }
+            HashFile(source / FromUtf8(listing.Find(file.path)->path), &hex, [&](uint64_t read) {
+                hashed += read;
+                if (progress)
+                    progress(hashed, toHash, file.path);
+            });
+            matches = hex == file.sha256;
         }
         if (matches) {
             check.release = release.name;
-            check.region = release.region;
-            break;
+            check.confirmed = true;
         }
     }
-    if (check.release.empty()) {
-        check.region = movies25 ? "PAL" : "NTSC";
-        check.problems.push_back("not a version we have tested (we know the PAL and US Xbox discs): it may well work; "
-                                 "please report how it goes");
-    }
+    if (check.release.empty())
+        NotTested(&check);
     return check;
 }
 
 bool DiscSetup_Copy(const fs::path &from, const fs::path &to, const DiscProgress &progress,
                     const std::atomic<bool> &cancel, std::string *error) {
-    uint64_t total = FolderBytes(from / "eurocom") + FolderBytes(from / "driving"), done = 0;
+    Listing listing;
+    XdvdfsImage image;
+    bool fromImage = DiscSetup_IsImage(from);
+    if (fromImage) {
+        if (!image.Open(from, error) || !ListImage(image, &listing, error))
+            return false;
+    } else {
+        ListFolder(from, &listing);
+    }
+    uint64_t total = listing.Bytes("eurocom") + listing.Bytes("driving"), done = 0;
+
+    std::error_code ec;
+    fs::create_directories(to, ec);
+    fs::space_info space = fs::space(to, ec);
+    if (!ec && space.available < total + (100u << 20)) {
+        *error = "not enough free space in " + ToUtf8(to) + ": the data needs " + std::to_string(total / 1000000) +
+                 " MB, and " + std::to_string(space.available / 1000000) + " MB are free";
+        return false;
+    }
+
     std::vector<char> buffer(4 << 20);
-    for (const char *top : {"eurocom", "driving"}) {
-        std::error_code ec;
-        for (auto it = fs::recursive_directory_iterator(from / top, ec); it != fs::recursive_directory_iterator();
-             it.increment(ec)) {
-            if (ec) {
-                *error = "cannot read " + ToUtf8(from / top) + ": " + ec.message();
+    for (const auto &item : listing.files) {
+        const Listing::File &file = item.second;
+        fs::path target = to / FromUtf8(file.path);
+        fs::create_directories(target.parent_path(), ec);
+        std::ifstream in;
+        if (!fromImage) {
+            in.open(from / FromUtf8(file.path), std::ios::binary);
+            if (!in) {
+                *error = "cannot read " + file.path;
                 return false;
             }
-            fs::path relative = fs::relative(it->path(), from, ec);
-            fs::path target = to / relative;
-            if (it->is_directory(ec)) {
-                fs::create_directories(target, ec);
-                continue;
-            }
-            fs::create_directories(target.parent_path(), ec);
-            std::ifstream in(it->path(), std::ios::binary);
-            std::ofstream out(target, std::ios::binary | std::ios::trunc);
-            if (!in || !out) {
-                *error = "cannot copy " + ToUtf8(relative) + " to " + ToUtf8(target);
+        }
+        std::ofstream out(target, std::ios::binary | std::ios::trunc);
+        if (!out) {
+            *error = "cannot write " + ToUtf8(target);
+            return false;
+        }
+        for (uint64_t at = 0; at < file.size;) {
+            if (cancel) {
+                *error = "cancelled";
                 return false;
             }
-            while (in) {
-                if (cancel) {
-                    *error = "cancelled";
-                    return false;
-                }
-                in.read(buffer.data(), std::streamsize(buffer.size()));
-                std::streamsize got = in.gcount();
-                if (got <= 0)
-                    break;
-                out.write(buffer.data(), got);
-                if (!out) {
-                    *error = "cannot write " + ToUtf8(target) + " (is the disk full?)";
-                    return false;
-                }
-                done += uint64_t(got);
-                if (progress)
-                    progress(done, total, ToUtf8(relative));
+            size_t chunk = size_t(std::min<uint64_t>(buffer.size(), file.size - at));
+            bool read = fromImage ? image.Read(file.offset + at, buffer.data(), chunk)
+                                  : bool(in.read(buffer.data(), std::streamsize(chunk)));
+            if (!read) {
+                *error = "cannot read " + file.path + (fromImage ? " from the image (is it damaged?)" : "");
+                return false;
             }
+            out.write(buffer.data(), std::streamsize(chunk));
+            if (!out) {
+                *error = "cannot write " + ToUtf8(target) + " (is the disk full?)";
+                return false;
+            }
+            at += chunk;
+            done += chunk;
+            if (progress)
+                progress(done, total, file.path);
         }
     }
     return true;

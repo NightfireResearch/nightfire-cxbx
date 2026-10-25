@@ -30,7 +30,7 @@ const ImVec4 kGrey(0.65f, 0.65f, 0.65f, 1.0f);
 std::mutex g_chosenMutex;
 std::string g_chosenFolder;
 
-void SDLCALL FolderDialogDone(void *userdata, const char *const *files, int) {
+void SDLCALL SourceChosen(void *userdata, const char *const *files, int) {
     if (files == nullptr || files[0] == nullptr)
         return;
     std::lock_guard<std::mutex> lock(g_chosenMutex);
@@ -138,34 +138,46 @@ void LauncherUi::DrawSetup() {
     Installation &installation = m_launcher.GetInstallation();
     bool busy = m_launcher.Busy();
     Heading("First-time setup");
-    ImGui::TextWrapped("You need your own copy of 007: Nightfire for the original Xbox, extracted to a folder: the "
-                       "folder that holds the disc's eurocom and driving folders (about 3.2 GB). Nothing is "
-                       "downloaded: the game's data never comes from us.");
+    ImGui::TextWrapped("You need your own copy of 007: Nightfire for the original Xbox: a disc image (.iso), or the "
+                       "folder an image was extracted to, which holds the disc's eurocom and driving folders. About "
+                       "3.2 GB is copied. Nothing is downloaded: the game's data never comes from us.");
     if (ImGui::TextLink("What you need (README)"))
         Platform_OpenUrl("https://github.com/" + installation.Config().repository + "#what-you-need");
     ImGui::Spacing();
 
     ImGui::BeginDisabled(busy);
-    ImGui::Text("The extracted disc:");
-    ImGui::SetNextItemWidth(-110);
-    ImGui::InputText("##folder", m_discFolder, sizeof(m_discFolder));
+    ImGui::Text("The disc image or the extracted disc's folder:");
+    float browseWidth = ImGui::CalcTextSize("Disc image...").x + ImGui::CalcTextSize("Folder...").x +
+                        ImGui::GetStyle().FramePadding.x * 4 + ImGui::GetStyle().ItemSpacing.x * 2;
+    ImGui::SetNextItemWidth(-browseWidth);
+    ImGui::InputText("##source", m_discFolder, sizeof(m_discFolder));
     ImGui::SameLine();
-    if (ImGui::Button("Browse...", ImVec2(-1, 0)))
-        SDL_ShowOpenFolderDialog(FolderDialogDone, nullptr, m_window, m_discFolder[0] ? m_discFolder : nullptr, false);
-    // TODO: a disc image (.iso) as the source, once the XDVDFS reader is written (DiscSetup.h)
-    ImGui::TextColored(kGrey, "A disc image (.iso) is not read yet: extract it with an Xbox disc tool first.");
+    if (ImGui::Button("Disc image...")) {
+        static const SDL_DialogFileFilter kFilters[] = {{"Xbox disc images", "iso;xiso"}, {"All files", "*"}};
+        SDL_ShowOpenFileDialog(SourceChosen, nullptr, m_window, kFilters, SDL_arraysize(kFilters),
+                               m_discFolder[0] ? m_discFolder : nullptr, false);
+    }
+    ImGui::SameLine();
+    if (ImGui::Button("Folder..."))
+        SDL_ShowOpenFolderDialog(SourceChosen, nullptr, m_window, m_discFolder[0] ? m_discFolder : nullptr, false);
 
-    ImGui::RadioButton("Copy the data into the launcher's folder", &m_copyData, 1);
+    bool image = m_discFolder[0] && DiscSetup_IsImage(FromUtf8(m_discFolder));
+    ImGui::BeginDisabled(image);
+    int copyData = image ? 1 : m_copyData;
+    ImGui::RadioButton("Copy the data into the launcher's folder", &copyData, 1);
     ImGui::SameLine();
-    ImGui::RadioButton("Use it where it is", &m_copyData, 0);
-    if (m_copyData)
+    ImGui::RadioButton("Use the folder where it is", &copyData, 0);
+    if (!image)
+        m_copyData = copyData;
+    ImGui::EndDisabled();
+    if (copyData)
         ImGui::TextColored(kGrey, "Copied to %s", ToUtf8(installation.DiscFolder()).c_str());
 
-    if (ImGui::Button("Check the folder") && m_discFolder[0])
+    if (ImGui::Button(image ? "Check the image" : "Check the folder") && m_discFolder[0])
         m_launcher.CheckDisc(FromUtf8(m_discFolder));
     ImGui::SameLine();
-    if (ImGui::Button(m_copyData ? "Copy and set up" : "Set up") && m_discFolder[0])
-        m_launcher.SetUpDisc(FromUtf8(m_discFolder), m_copyData != 0);
+    if (ImGui::Button(copyData ? "Copy and set up" : "Set up") && m_discFolder[0])
+        m_launcher.SetUpDisc(FromUtf8(m_discFolder), copyData != 0);
     if (m_changingData) {
         ImGui::SameLine();
         if (ImGui::Button("Back"))
@@ -179,7 +191,10 @@ void LauncherUi::DrawSetup() {
         if (check.usable)
             ImGui::TextColored(check.release.empty() ? kRed : kGreen, "%s",
                                check.release.empty() ? "Not a version we have tested"
-                                                     : ("Recognised: " + check.release).c_str());
+                                                     : ("Recognised: " + check.release +
+                                                        (check.confirmed ? "" : " (by its files' sizes; their "
+                                                                                "contents are checked after the copy)"))
+                                                           .c_str());
         if (check.bytes > 0)
             ImGui::Text("%.1f GB to copy", double(check.bytes) / 1e9);
         for (const std::string &problem : check.problems) {

@@ -9,6 +9,7 @@
 //                                     (the release's minLauncher was above the one before)
 //   launcher --screenshot FILE.bmp [--tab NAME]   the window drawn, saved, and closed
 //   launcher --selftest ...           the scripted test (SelfTest.cpp)
+//   launcher --check-disc PATH        first-time setup's check of a disc image or folder, printed
 //   launcher --version
 
 #include <stdio.h>
@@ -20,6 +21,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_main.h>
 
+#include "DiscSetup.h"
 #include "Http.h"
 #include "Launcher.h"
 #include "LauncherUi.h"
@@ -197,6 +199,15 @@ int main(int argc, char **argv) {
         if (argument == "--selftest") {
             Platform_AttachConsole();
             return SelfTest_Run(argc, argv);
+        } else if (argument == "--check-disc") {
+            Platform_AttachConsole();
+            DiscCheck check = DiscSetup_Check(FromUtf8(value()));
+            printf("%s%s, %s%s, %.2f GB\n", check.image ? "disc image" : "folder", check.usable ? "" : ", NOT USABLE",
+                   check.release.empty() ? "not a known release" : check.release.c_str(),
+                   check.release.empty() ? "" : check.confirmed ? " (hashes)" : " (sizes)", double(check.bytes) / 1e9);
+            for (const std::string &problem : check.problems)
+                printf("  %s\n", problem.c_str());
+            return check.usable ? 0 : 1;
         } else if (argument == "--version") {
             Platform_AttachConsole();
             printf("Nightfire launcher %s (%s)%s\n", NightfireVersion, Platform_Name(),

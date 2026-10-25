@@ -1,9 +1,13 @@
-// launcher --selftest --root DIR --disc DIR --api-base URL --bundle DIR [--in-place] [--play-seconds N] [--log FILE]
+// launcher --selftest --root DIR --disc DIR|ISO --api-base URL --bundle DIR [--in-place] [--play-seconds N]
+//                    [--image ISO --reference DIR]... [--bad-image FILE]... [--log FILE]
 //
 //   --root          the test's own launcher folder: made, or emptied if an earlier self-test made it (it holds
 //                   selftest-root.txt); any other existing folder is refused
-//   --disc          an extracted disc (eurocom/, driving/)
-//   --in-place      use the disc where it is instead of copying its 3 GB
+//   --disc          an extracted disc (eurocom/, driving/), or a disc image of one
+//   --in-place      use the disc folder where it is instead of copying its 3 GB
+//   --image         a disc image to check and extract, the result compared byte for byte with the --reference
+//                   folder given after it (tools/release/make_test_xiso.py makes such images)
+//   --bad-image     a file the image check must refuse (not an Xbox disc, cut short, damaged)
 //   --api-base      tools/release/fake_releases.py's folder, as a file:// or http:// URL
 //   --bundle        its bundle/: an extracted release, the first install
 //   --play-seconds  how long the game runs before it is stopped (default 20; 0 skips it)
@@ -17,6 +21,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include <string.h>
+
+#include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <fstream>
 #include <sstream>
@@ -71,7 +79,74 @@ std::string ReadText(const fs::path &file) {
 
 bool SameFile(const fs::path &a, const fs::path &b) {
     std::error_code ec;
-    return fs::file_size(a, ec) == fs::file_size(b, ec) && !ec && ReadText(a) == ReadText(b);
+    if (fs::file_size(a, ec) != fs::file_size(b, ec) || ec)
+        return false;
+    std::ifstream x(a, std::ios::binary), y(b, std::ios::binary);
+    std::vector<char> bufferX(1 << 20), bufferY(1 << 20);
+    while (x && y) {
+        x.read(bufferX.data(), std::streamsize(bufferX.size()));
+        y.read(bufferY.data(), std::streamsize(bufferY.size()));
+        if (x.gcount() != y.gcount() || memcmp(bufferX.data(), bufferY.data(), size_t(x.gcount())) != 0)
+            return false;
+    }
+    return true;
+}
+
+// The game's files under a folder: eurocom/ and driving/, by their lowercase relative paths
+std::vector<std::pair<std::string, fs::path>> GameFiles(const fs::path &folder) {
+    std::vector<std::pair<std::string, fs::path>> files;
+    for (const char *top : {"eurocom", "driving"}) {
+        std::error_code ec;
+        for (auto it = fs::recursive_directory_iterator(folder / top, ec); it != fs::recursive_directory_iterator();
+             it.increment(ec)) {
+            if (ec || !it->is_regular_file(ec))
+                continue;
+            std::string name = ToUtf8(fs::relative(it->path(), folder, ec).generic_wstring());
+            for (char &c : name)
+                c = char(tolower(static_cast<unsigned char>(c)));
+            files.emplace_back(name, it->path());
+        }
+    }
+    std::sort(files.begin(), files.end());
+    return files;
+}
+
+// An image checked and extracted, and every file compared with the folder it was made from
+void ImageTest(const fs::path &root, const fs::path &image, const fs::path &reference) {
+    std::string name = ToUtf8(image.filename());
+    DiscCheck check = DiscSetup_Check(image);
+    Check(check.image && check.usable && !check.release.empty(), name + ": recognised before extracting",
+          check.release.empty() ? (check.problems.empty() ? "unknown" : check.problems[0]) : check.release);
+    fs::path out = root / "image-test";
+    std::error_code ec;
+    fs::remove_all(out, ec);
+    std::atomic<bool> cancel{false};
+    std::string error;
+    auto started = std::chrono::steady_clock::now();
+    bool extracted = DiscSetup_Copy(image, out, nullptr, cancel, &error);
+    double seconds = std::chrono::duration<double>(std::chrono::steady_clock::now() - started).count();
+    Check(extracted, name + ": extracted", extracted ? std::to_string(int(seconds)) + " s" : error);
+    std::vector<std::pair<std::string, fs::path>> got = GameFiles(out), want = GameFiles(reference);
+    size_t differ = 0;
+    std::string first;
+    for (size_t i = 0; i < got.size() && i < want.size(); i++)
+        if (got[i].first != want[i].first || !SameFile(got[i].second, want[i].second)) {
+            if (differ++ == 0)
+                first = want[i].first;
+        }
+    Check(got.size() == want.size() && differ == 0 && !want.empty(),
+          name + ": the extracted files are the reference's, byte for byte",
+          std::to_string(got.size()) + " files of " + std::to_string(want.size()) +
+              (differ ? ", " + std::to_string(differ) + " differ (first " + first + ")" : ""));
+    DiscCheck copied = DiscSetup_Check(out);
+    Check(copied.confirmed && copied.release == check.release, name + ": the copy's hashes confirm it",
+          copied.release);
+    fs::remove_all(out, ec);
+
+    // Cancelled part-way, the copy stops
+    cancel = true;
+    Check(!DiscSetup_Copy(image, out, nullptr, cancel, &error) && error == "cancelled", name + ": cancel stops it");
+    fs::remove_all(out, ec);
 }
 
 // A check, then an install, of the given scenario's release
@@ -92,6 +167,8 @@ int SelfTest_Run(int argc, char **argv) {
     fs::path root, disc, bundle;
     std::string apiBase, logFile;
     bool inPlace = false;
+    std::vector<std::pair<fs::path, fs::path>> images;   // image, reference folder
+    std::vector<fs::path> badImages;
     int playSeconds = 20;
     for (int i = 1; i < argc; i++) {
         std::string argument = argv[i];
@@ -106,6 +183,12 @@ int SelfTest_Run(int argc, char **argv) {
             apiBase = value();
         else if (argument == "--in-place")
             inPlace = true;
+        else if (argument == "--image")
+            images.emplace_back(FromUtf8(value()), fs::path());
+        else if (argument == "--reference" && !images.empty())
+            images.back().second = FromUtf8(value());
+        else if (argument == "--bad-image")
+            badImages.push_back(FromUtf8(value()));
         else if (argument == "--play-seconds")
             playSeconds = atoi(value().c_str());
         else if (argument == "--log")
@@ -147,7 +230,9 @@ int SelfTest_Run(int argc, char **argv) {
     Check(!check.release.empty(), "the disc is a release we know", check.release.empty() ? "unknown" : check.release);
     launcher.SetUpDisc(disc, !inPlace);
     status = Wait(launcher);
-    Check(status.ok && installation.HasGameData(), inPlace ? "setup, the data used in place" : "setup, the data copied",
+    Check(status.ok && installation.HasGameData(),
+          DiscSetup_IsImage(disc) ? "setup, the data extracted from the image"
+                                  : inPlace ? "setup, the data used in place" : "setup, the data copied",
           status.message);
     IniFile settings;
     settings.Load(installation.SettingsFile());
@@ -156,6 +241,19 @@ int SelfTest_Run(int argc, char **argv) {
           "settings.ini has an absolute DiscPath", discPath);
     Check(settings.Get("Region") == check.region && settings.Has("MouseLook"), "settings.ini's Region and defaults",
           "Region=" + settings.Get("Region"));
+
+    // Disc images: good ones extracted exactly, bad ones refused with a reason
+    for (const auto &image : images)
+        ImageTest(root, image.first, image.second);
+    for (const fs::path &bad : badImages) {
+        DiscCheck badCheck = DiscSetup_Check(bad);
+        std::atomic<bool> cancel{false};
+        std::string error;
+        bool copied = DiscSetup_Copy(bad, root / "bad-image-test", nullptr, cancel, &error);
+        fs::remove_all(root / "bad-image-test", ec);
+        Check(!badCheck.usable && !badCheck.problems.empty() && !copied,
+              ToUtf8(bad.filename()) + ": refused", badCheck.problems.empty() ? "" : badCheck.problems[0]);
+    }
 
     // The first install, from an extracted release
     InstallResult first;

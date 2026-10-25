@@ -285,9 +285,9 @@ void Launcher::FinishUpdate() {
     });
 }
 
-void Launcher::CheckDisc(const fs::path &folder) {
-    RunJob("Checking the game data", [this, folder](std::string *message) {
-        DiscCheck check = DiscSetup_Check(folder, [this](uint64_t done, uint64_t total, const std::string &file) {
+void Launcher::CheckDisc(const fs::path &source) {
+    RunJob("Checking the game data", [this, source](std::string *message) {
+        DiscCheck check = DiscSetup_Check(source, [this](uint64_t done, uint64_t total, const std::string &file) {
             Report("Reading " + file, total > 0 ? double(done) / double(total) : -1);
         });
         {
@@ -295,18 +295,20 @@ void Launcher::CheckDisc(const fs::path &folder) {
             m_lastDisc = check;
         }
         if (!check.usable) {
-            *message = "This folder does not hold the game's data.";
+            *message = check.image ? "This disc image does not hold the game's data." :
+                                     "This folder does not hold the game's data.";
             return false;
         }
         return true;   // the window shows the check itself
     });
 }
 
-void Launcher::SetUpDisc(const fs::path &folder, bool copy) {
+void Launcher::SetUpDisc(const fs::path &source, bool copy) {
     Installation installation = m_installation;
+    copy = copy || DiscSetup_IsImage(source);
     RunJob(copy ? "Copying the game data" : "Setting up the game data",
-           [this, installation, folder, copy](std::string *message) mutable {
-               DiscCheck check = DiscSetup_Check(folder, [this](uint64_t done, uint64_t total, const std::string &file) {
+           [this, installation, source, copy](std::string *message) mutable {
+               DiscCheck check = DiscSetup_Check(source, [this](uint64_t done, uint64_t total, const std::string &file) {
                    Report("Checking " + file, total > 0 ? double(done) / double(total) : -1);
                });
                {
@@ -314,28 +316,47 @@ void Launcher::SetUpDisc(const fs::path &folder, bool copy) {
                    m_lastDisc = check;
                }
                if (!check.usable) {
-                   *message = "This folder does not hold the game's data.";
+                   *message = check.image ? "This disc image does not hold the game's data." :
+                                            "This folder does not hold the game's data.";
                    return false;
                }
-               fs::path data = fs::absolute(folder);
+               fs::path data = fs::absolute(source);
                if (copy) {
+                   // Into disc.partial, which replaces disc/ once it is complete and checked
+                   fs::path staging = installation.Root() / "disc.partial";
+                   std::error_code ec;
+                   fs::remove_all(staging, ec);
                    std::string error;
-                   if (!DiscSetup_Copy(folder, installation.DiscFolder(),
+                   if (!DiscSetup_Copy(source, staging,
                                        [this](uint64_t done, uint64_t total, const std::string &file) {
                                            Report("Copying " + file, total > 0 ? double(done) / double(total) : -1);
                                        },
                                        m_cancel, &error)) {
+                       fs::remove_all(staging, ec);
                        *message = "The copy stopped: " + error;
                        return false;
                    }
-                   // The copies, checked as the source was
-                   DiscCheck copied = DiscSetup_Check(installation.DiscFolder(),
+                   // The copies, checked as a folder is: for an image, the first check of the key files' hashes
+                   DiscCheck copied = DiscSetup_Check(staging,
                                                       [this](uint64_t done, uint64_t total, const std::string &file) {
                                                           Report("Checking the copy of " + file,
                                                                  total > 0 ? double(done) / double(total) : -1);
                                                       });
-                   if (!copied.usable || copied.release != check.release) {
+                   if (!copied.usable || (!check.image && copied.release != check.release)) {
+                       fs::remove_all(staging, ec);
                        *message = "The copy does not match the source: is the disk full or failing?";
+                       return false;
+                   }
+                   check = copied;
+                   {
+                       std::lock_guard<std::mutex> lock(m_mutex);
+                       m_lastDisc = check;
+                   }
+                   fs::remove_all(installation.DiscFolder(), ec);
+                   fs::rename(staging, installation.DiscFolder(), ec);
+                   if (ec) {
+                       *message = "cannot move the data into " + ToUtf8(installation.DiscFolder()) + ": " +
+                                  ec.message();
                        return false;
                    }
                    data = installation.DiscFolder();
