@@ -707,7 +707,7 @@ static HWND FindRenderWindow(void) {
 #ifdef NIGHTFIRE_SDL
     return (HWND)GfxHost_Window();
 #else
-    return FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    return FindOwnRenderWindow();
 #endif
 }
 
