@@ -1197,9 +1197,6 @@ bool parsemap_handle_block_id(char mainMap) {
     switch (CurrentBH.identifier) {
     case BLOCK_ENTITY_PARAMS:
     case BLOCK_ENTITY_PARAMS2:
-#if NIGHTFIRE_DATA_PS2
-        Ps2_EntityParams(pCurrCelList, *(uint *)BlockData());   // interim: docs/ps2-data.md, milestone 7
-#endif
         parsemap_block_entity_params();
         return false;
     case BLOCK_AI_PATHS:

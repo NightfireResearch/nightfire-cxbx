@@ -15,11 +15,6 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
 // Block 0x2d, a mesh: the Xbox's (a KXE) for the entity's geom_idx, or NULL when it has nothing to draw
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes);
 
-// Block 0x04, an entity's params, before parsemap_block_entity_params: when its mesh was a skinned one left to the
-// Xbox's (NIGHTFIRE_PS2_XBOX_SKINS, for comparing, or one that does not convert), the Xbox's mesh of the entity's
-// hashcode stands in (interim: Ps2XboxStandIn.h)
-void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode);
-
 // A sound bank just loaded (LoadSoundBank): its samples, SPU ADPCM in the .SBF with the SPU's pitch for a rate, made
 // Xbox ADPCM in memory of their own with the rate in Hz and the loop's start in Xbox ADPCM bytes; the .SBF's memory is
 // given back

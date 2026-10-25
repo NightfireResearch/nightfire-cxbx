@@ -1353,8 +1353,7 @@ if(NIGHTFIRE_ACTION_DATA_PS2)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp src/action/engine/Fmv.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
                                            src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp src/action/ps2/Ps2ExecutableData.cpp
-                                           src/action/ps2/Fmv_ps2.cpp
-                                           src/action/ps2/Ps2XboxStandIn.cpp)   # interim, until milestone 7
+                                           src/action/ps2/Fmv_ps2.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}

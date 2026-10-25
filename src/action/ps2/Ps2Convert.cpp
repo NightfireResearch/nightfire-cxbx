@@ -1,13 +1,11 @@
 #include "Ps2Convert.h"
 #include "Ps2Mesh.h"
 #include "Ps2Texture.h"
-#include "Ps2XboxStandIn.h"
 #include "Ps2Sound.h"
 #include "../../common/sound/xadpcm.h"
 #include "../memory.h"
 
 #include <stdio.h>
-#include <stdlib.h>
 #include <string.h>
 
 // The game's own allocation types for these (MemInfo's names)
@@ -42,20 +40,10 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
     header->textureInfo = tex;
 }
 
-// The last mesh was a skinned one left to the Xbox's: the entity params block after it stands the Xbox's in. Interim,
-// for comparing: with NIGHTFIRE_PS2_XBOX_SKINS set, or when one does not convert.
-static bool SkinnedMeshPending;
-
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     std::vector<uint8_t> kxe;
     Ps2MeshStats stats;
-    SkinnedMeshPending = false;
-    bool converted = Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats);
-    if (stats.skinned && (!converted || getenv("NIGHTFIRE_PS2_XBOX_SKINS") != NULL)) {
-        SkinnedMeshPending = true;
-        return NULL;
-    }
-    if (!converted)
+    if (!Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats))
         return NULL;
     ModelData *model = (ModelData *)Mem_Malloc(kxe.size(), MALLOC_PS2_OBJECT, 0);
     memcpy(model, kxe.data(), kxe.size());
@@ -87,11 +75,4 @@ void Ps2_ConvertSoundBank(SampleHeaderData *samples, int count) {
         out += written;
     }
     Mem_Free(&spu);
-}
-
-void Ps2_EntityParams(celglist_tag *celglist, uint32_t hashcode) {
-    if (!SkinnedMeshPending)
-        return;
-    SkinnedMeshPending = false;
-    celglist->geom_idx = (int)PtrTo32(Ps2_XboxStandInModel(hashcode));
 }
