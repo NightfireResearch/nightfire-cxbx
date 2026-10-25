@@ -182,21 +182,59 @@ static bool DecodeVideoFrame(void) {
     }
 }
 
-// 4:2:0 planar of any size to the game's 640x480 YUY2, each texel the nearest of the movie's
+// A source position for each destination texel when scaling `from` texels to `to` (centres aligned): the texel before
+// it and the weight of the one after, in 256ths
+struct Tap {
+    int at;
+    int weight;
+};
+
+static void MakeTaps(int from, int to, double scale, std::vector<Tap> &taps) {
+    taps.resize(to);
+    for (int i = 0; i < to; i++) {
+        double s = (i + 0.5) * scale - 0.5;
+        if (s < 0)
+            s = 0;
+        int at = (int)s;
+        if (at >= from - 1) {
+            taps[i].at = from - 1;
+            taps[i].weight = 0;
+        } else {
+            taps[i].at = at;
+            taps[i].weight = (int)((s - at) * 256.0 + 0.5);
+        }
+    }
+}
+
+static uint8_t Bilinear(const uint8_t *plane, int stride, const Tap &x, const Tap &y) {
+    const uint8_t *a = plane + y.at * stride + x.at;
+    int dx = x.weight != 0 ? 1 : 0, dy = y.weight != 0 ? stride : 0;
+    int top = a[0] * (256 - x.weight) + a[dx] * x.weight;
+    int bottom = a[dy] * (256 - x.weight) + a[dy + dx] * x.weight;
+    return (uint8_t)((top * (256 - y.weight) + bottom * y.weight + 32768) >> 16);
+}
+
+// 4:2:0 planar of any size (the PSS's 512x512) to the game's 640x480 YUY2, filtered: the nearest texel would repeat
+// every fourth column and drop every sixteenth line. The YUY2 pair's chroma is sampled at the pair's left texel.
 static void ConvertFrame(const AVFrame *frame, uint8_t *out) {
-    int width = frame->width, height = frame->height;
+    static std::vector<Tap> lumaX, lumaY, chromaX, chromaY;
+    static int width, height;
+    if (frame->width != width || frame->height != height) {
+        width = frame->width;
+        height = frame->height;
+        double sx = (double)width / FMV_WIDTH, sy = (double)height / FMV_HEIGHT;
+        MakeTaps(width, FMV_WIDTH, sx, lumaX);
+        MakeTaps(height, FMV_HEIGHT, sy, lumaY);
+        MakeTaps(width / 2, FMV_WIDTH / 2, sx, chromaX);
+        MakeTaps(height / 2, FMV_HEIGHT, sy / 2, chromaY);
+    }
     for (int y = 0; y < FMV_HEIGHT; y++) {
-        int sy = y * height / FMV_HEIGHT;
-        const uint8_t *Y = frame->data[0] + sy * frame->linesize[0];
-        const uint8_t *U = frame->data[1] + (sy >> 1) * frame->linesize[1];
-        const uint8_t *V = frame->data[2] + (sy >> 1) * frame->linesize[2];
         uint8_t *row = out + y * FMV_WIDTH * 2;
         for (int x = 0; x < FMV_WIDTH; x += 2) {
-            int sx0 = x * width / FMV_WIDTH, sx1 = (x + 1) * width / FMV_WIDTH;
-            row[x * 2 + 0] = Y[sx0];
-            row[x * 2 + 1] = U[sx0 >> 1];
-            row[x * 2 + 2] = Y[sx1];
-            row[x * 2 + 3] = V[sx0 >> 1];
+            row[x * 2 + 0] = Bilinear(frame->data[0], frame->linesize[0], lumaX[x], lumaY[y]);
+            row[x * 2 + 1] = Bilinear(frame->data[1], frame->linesize[1], chromaX[x / 2], chromaY[y]);
+            row[x * 2 + 2] = Bilinear(frame->data[0], frame->linesize[0], lumaX[x + 1], lumaY[y]);
+            row[x * 2 + 3] = Bilinear(frame->data[2], frame->linesize[2], chromaX[x / 2], chromaY[y]);
         }
     }
 }
