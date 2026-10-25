@@ -7,6 +7,9 @@
 //                                                       every mesh converted to a KXE and checked: strips against the
 //                                                       stored normals, and against the Xbox's twin of each named
 //                                                       entity when the Xbox's bundle (decompressed) is given
+//   ps2data_check <disc> skins <hash> <xbox bundle>     every skinned mesh converted and checked against the Xbox's
+//                                                       twin (the same hashcode): vertices, bones, weights, normals,
+//                                                       STs, triangles and their winding
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
@@ -25,7 +28,9 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <array>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -754,6 +759,239 @@ int CmdMeshes(Disc &disc, const std::string &hash, const char *xboxBundlePath, c
     return totals.unknownVif != 0 || totals.badBatches != 0;
 }
 
+// ---- skinned meshes ----
+
+// The entities of a bundle's packs by hashcode (block 0x04's first word), the mesh block before each
+std::map<uint32_t, NamedMesh> EntitiesByHash(const std::vector<Entry> &entries, int meshId) {
+    std::map<uint32_t, NamedMesh> out;
+    for (const Entry &e : entries) {
+        if (!IsPack(e.type))
+            continue;
+        NamedMesh last = { NULL, 0, 0 };
+        for (const Block &b : ReadBlocks(e.data, e.size)) {
+            if (b.id == meshId)
+                last = { b.data, b.size, b.id };
+            if (b.id == 0x04 && last.data != NULL) {
+                uint32_t hashcode;
+                memcpy(&hashcode, b.data, 4);
+                out.emplace(hashcode, last);
+                last.data = NULL;
+            }
+        }
+    }
+    return out;
+}
+
+// A skinned KXE vertex's bones and bone A's weight, through the mesh's first palette (spec-mesh.md 7.1)
+struct SkinWeights {
+    int boneA, boneB;
+    float weightA;
+};
+
+// Two STs the same on a wrapped texture
+bool WrappedNear(float a, float b) {
+    float d = fabsf(a - b);
+    return fabsf(d - roundf(d)) < 0.01f;
+}
+
+int SlotOfRegister(int r) {
+    return r < 57 ? r / 3 : r <= 93 ? (r - 3) / 3 : (r - 33) / 3;
+}
+
+// Each vertex's palette: the one loaded when a primitive that draws it is drawn (bonePalette 0 keeps the last)
+std::vector<int> VertexPalettes(const Kxe &k) {
+    std::vector<int> out(k.header->vtxCnt, 0);
+    int start = 0, palette = 0;
+    for (int p = 0; p < k.header->primitiveCnt; p++) {
+        if (k.prims[p].bonePalette != 0)
+            palette = k.prims[p].bonePalette - 1;
+        for (uint32_t i = 0; i < k.prims[p].count + 2; i++)
+            out[k.Index(start + i)] = palette;
+        start += k.prims[p].count + 2;
+    }
+    return out;
+}
+
+SkinWeights Weights(const Kxe &k, const std::vector<int> &palettes, int i) {
+    uint32_t word;
+    memcpy(&word, (const uint8_t *)k.vertices + i * k.stride + 28, 4);
+    const uint8_t *palette = (const uint8_t *)k.prims + k.header->primitiveCnt * 12 + palettes[i] * 0x36;
+    SkinWeights w;
+    w.boneA = palette[SlotOfRegister(word & 0xff)];
+    w.boneB = palette[SlotOfRegister((word >> 8) & 0xff)];
+    w.weightA = (word >> 16) / 65535.0f;
+    return w;
+}
+
+// A drawn triangle's corners (positions to the millimetre), in the order drawn
+typedef std::array<std::array<int, 3>, 3> Corners;
+
+std::array<int, 3> Mm(const float *p) {
+    return { (int)lroundf(p[0] * 1000), (int)lroundf(p[1] * 1000), (int)lroundf(p[2] * 1000) };
+}
+
+std::vector<Corners> Triangles(const Kxe &k) {
+    std::vector<Corners> out;
+    int start = 0;
+    for (int p = 0; p < k.header->primitiveCnt; p++) {
+        for (uint32_t t = 0; t < k.prims[p].count; t++) {
+            int i0 = k.Index(start + t), i1 = k.Index(start + t + 1), i2 = k.Index(start + t + 2);
+            if (t & 1)
+                std::swap(i0, i1);
+            if (i0 == i1 || i1 == i2 || i0 == i2)
+                continue;
+            out.push_back({ Mm(k.Position(i0)), Mm(k.Position(i1)), Mm(k.Position(i2)) });
+        }
+        start += k.prims[p].count + 2;
+    }
+    return out;
+}
+
+// The same corners in either winding: sorted, and whether that took an odd permutation
+Corners Sorted(const Corners &c, bool *odd) {
+    Corners s = c;
+    int swaps = 0;
+    for (int a = 0; a < 3; a++)
+        for (int b = a + 1; b < 3; b++)
+            if (s[b] < s[a]) {
+                std::swap(s[a], s[b]);
+                swaps++;
+            }
+    *odd = (swaps & 1) != 0;
+    return s;
+}
+
+struct SkinTotals {
+    int meshes = 0, converted = 0, twins = 0, ps2Vertices = 0, matched = 0, bones = 0, weights = 0, normals = 0,
+        sts = 0, ps2Triangles = 0, foundOnXbox = 0, sameWinding = 0, xboxTriangles = 0, foundOnPs2 = 0,
+        badBatches = 0, unknownVif = 0, tooManyBones = 0;
+};
+
+int CmdSkins(Disc &disc, const std::string &hash, const char *xboxBundlePath) {
+    Bytes bundle, xboxBundle;
+    if (!ReadPs2Bundle(disc, hash, bundle))
+        return 1;
+    if (!ReadWhole(xboxBundlePath, xboxBundle)) {
+        printf("no %s\n", xboxBundlePath);
+        return 1;
+    }
+    std::map<uint32_t, NamedMesh> xbox = EntitiesByHash(ReadBundle(xboxBundle, 0x20), 0x0d);
+    SkinTotals totals;
+    for (auto &entity : EntitiesByHash(ReadBundle(bundle, PS2_SECTOR_SIZE), 0x2d)) {
+        Bytes kxe;
+        Ps2MeshStats st;
+        bool ok = Ps2Mesh_ConvertToKxe(entity.second.data, entity.second.size, kxe, &st);
+        if (!st.skinned)
+            continue;
+        totals.meshes++;
+        totals.badBatches += st.badBatches;
+        totals.unknownVif += st.unknownVif;
+        if (!ok) {
+            totals.tooManyBones += st.bones > 53;
+            printf("  %08x: not converted (%d bones, %d bad batches%s)\n", entity.first, st.bones, st.badBatches,
+                   st.unknownVif ? ", an unread chain" : "");
+            continue;
+        }
+        totals.converted++;
+        Kxe k;
+        k.Parse(kxe.data(), kxe.size());
+        auto twin = xbox.find(entity.first);
+        Kxe x;
+        if (twin == xbox.end() || !x.Parse(twin->second.data, twin->second.size) || x.header->skinGroupCnt == 0) {
+            printf("  %08x: no skinned Xbox twin\n", entity.first);
+            continue;
+        }
+        totals.twins++;
+        // Vertices: each PS2 one against the Xbox's at the same place (to the millimetre); the best agreeing of those
+        std::vector<int> ps2Palettes = VertexPalettes(k), xboxPalettes = VertexPalettes(x);
+        std::multimap<std::array<int, 3>, int> xboxAt;
+        for (int j = 0; j < x.header->vtxCnt; j++)
+            xboxAt.emplace(Mm(x.Position(j)), j);
+        int matched = 0, bones = 0, weights = 0, normals = 0, sts = 0;
+        for (int i = 0; i < k.header->vtxCnt; i++) {
+            auto range = xboxAt.equal_range(Mm(k.Position(i)));
+            if (range.first == range.second)
+                continue;
+            matched++;
+            SkinWeights a = Weights(k, ps2Palettes, i);
+            float na[3];
+            UnpackNormal(k.Normal(i), na);
+            const float *sta = (const float *)((const uint8_t *)k.vertices + i * k.stride + 20);
+            int best = -1;
+            bool bestFlags[4] = {};
+            for (auto it = range.first; it != range.second; ++it) {
+                int j = it->second;
+                SkinWeights b = Weights(x, xboxPalettes, j);
+                float nb[3];
+                UnpackNormal(x.Normal(j), nb);
+                const float *stb = (const float *)((const uint8_t *)x.vertices + j * x.stride + 20);
+                bool flags[4] = {
+                    a.boneA == b.boneA && (b.weightA > 0.999f || a.boneB == b.boneB),
+                    fabsf(a.weightA - b.weightA) < 0.01f,
+                    na[0] * nb[0] + na[1] * nb[1] + na[2] * nb[2] > 0.9f,
+                    WrappedNear(sta[0], stb[0]) && WrappedNear(sta[1], stb[1]),
+                };
+                int score = flags[0] + flags[1] + flags[2] + flags[3];
+                if (score > best) {
+                    best = score;
+                    memcpy(bestFlags, flags, sizeof(flags));
+                }
+            }
+            bones += bestFlags[0];
+            weights += bestFlags[1];
+            normals += bestFlags[2];
+            sts += bestFlags[3];
+        }
+        // Triangles, and the winding of those both have
+        std::map<Corners, bool> xboxTriangles;
+        for (const Corners &c : Triangles(x)) {
+            bool odd;
+            xboxTriangles.emplace(Sorted(c, &odd), odd);
+        }
+        std::set<Corners> ps2Seen;
+        int ps2Triangles = 0, found = 0, sameWinding = 0;
+        for (const Corners &c : Triangles(k)) {
+            bool odd;
+            Corners key = Sorted(c, &odd);
+            if (!ps2Seen.insert(key).second)
+                continue;
+            ps2Triangles++;
+            auto t = xboxTriangles.find(key);
+            if (t == xboxTriangles.end())
+                continue;
+            found++;
+            sameWinding += t->second == odd;
+        }
+        int foundOnPs2 = 0;
+        for (auto &t : xboxTriangles)
+            foundOnPs2 += ps2Seen.count(t.first) != 0;
+        printf("  %08x: %4d vertices (Xbox %4d), %4d at an Xbox vertex: bones %4d, weight %4d, normal %4d, ST %4d; "
+               "%4d triangles (Xbox %4d): %4d on the Xbox (%4d wound the same), %4d of the Xbox's here\n", entity.first,
+               k.header->vtxCnt, x.header->vtxCnt, matched, bones, weights, normals, sts, ps2Triangles,
+               (int)xboxTriangles.size(), found, sameWinding, foundOnPs2);
+        totals.ps2Vertices += k.header->vtxCnt;
+        totals.matched += matched;
+        totals.bones += bones;
+        totals.weights += weights;
+        totals.normals += normals;
+        totals.sts += sts;
+        totals.ps2Triangles += ps2Triangles;
+        totals.foundOnXbox += found;
+        totals.sameWinding += sameWinding;
+        totals.xboxTriangles += (int)xboxTriangles.size();
+        totals.foundOnPs2 += foundOnPs2;
+    }
+    printf("[ps2skin] %s: %d skinned meshes, %d converted (%d with too many bones), %d bad batches, %d unread chains; "
+           "%d with an Xbox twin\n", hash.c_str(), totals.meshes, totals.converted, totals.tooManyBones,
+           totals.badBatches, totals.unknownVif, totals.twins);
+    printf("[ps2skin] %s: %d vertices, %d at an Xbox vertex: the same bones %d, weight %d, normal %d, ST %d\n",
+           hash.c_str(), totals.ps2Vertices, totals.matched, totals.bones, totals.weights, totals.normals, totals.sts);
+    printf("[ps2skin] %s: %d distinct triangles, %d on the Xbox (%d wound the same way); %d of the Xbox's %d here\n",
+           hash.c_str(), totals.ps2Triangles, totals.foundOnXbox, totals.sameWinding, totals.foundOnPs2,
+           totals.xboxTriangles);
+    return totals.badBatches != 0 || totals.unknownVif != 0;
+}
+
 // The pause screen's film as FS_ps2.cpp finds it (the first level bundle with a "woman" entry), against the Xbox's
 // woman.rle when given
 int CmdWoman(Disc &disc, const char *xboxPath) {
@@ -919,7 +1157,7 @@ int CmdAll(Disc &disc) {
 int main(int argc, char **argv) {
     if (argc < 3) {
         printf("usage: ps2data_check <disc> files | bundle <hash> | textures <hash> [<out>] | "
-               "meshes <hash> [<xbox bundle>] [--obj <out>] | all | woman [<xbox woman.rle>] | sound <bank> [<out>] | "
+               "meshes <hash> [<xbox bundle>] [--obj <out>] | skins <hash> <xbox bundle> | all | woman [<xbox woman.rle>] | sound <bank> [<out>] | "
                "music <track> [<wav>]\n");
         return 2;
     }
@@ -943,6 +1181,8 @@ int main(int argc, char **argv) {
         }
         return CmdMeshes(disc, argv[3], xbox, obj, false);
     }
+    if (cmd == "skins" && argc > 4)
+        return CmdSkins(disc, argv[3], argv[4]);
     if (cmd == "all")
         return CmdAll(disc);
     if (cmd == "sound" && argc > 3)

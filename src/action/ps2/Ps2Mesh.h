@@ -2,8 +2,8 @@
 #define PS2_PS2MESH_H_
 
 // The PS2's meshes (block 0x2d, docs/ps2-data.md) made the Xbox's (block 0x0d, a KXE: ModelData, its vertices, strip
-// indices and primitives), which psiCreateEntityGfx registers as it does the Xbox's. Rigid meshes only so far: a
-// skinned one (a skin record in the footer) converts to nothing. No game state: the offline checker uses it too.
+// indices, primitives and bone palettes), which psiCreateEntityGfx registers as it does the Xbox's. No game state:
+// the offline checker uses it too.
 //
 // A 0x2d block, offsets from the block's header word:
 //   +0x04 u32 size (the footer is at +size), two zero words, the data, then the footer (Ps2GfxFooter)
@@ -13,7 +13,12 @@
 //   MSCNT. A STROW before the batches it applies to holds their texture in its first word: an index into the
 //   pack's texture list (the box's texture list holds the offsets of those STROWs, which PS2 psiCreateEntityGfx
 //   0x1173a8 patches with the GS's texture).
-
+//
+// A skinned mesh (the footer's skin record, Ps2SkinRecord) keeps its vertices apart, in bind pose (Ps2SkinVertex),
+// which the PS2 skins every frame on the VU0 (SkinIt 0x10c128, into a copy CacheSkin 0x1114b8 makes). Its leaf
+// holds a DMA chain instead: CNT tags carry the VIF codes, GIF tags, colours and STs; REF tags whose word offsets the
+// skin record lists pull runs of skin vertices into the batch (with STCYCL so that vertex k's position and normal
+// land beside its colour); other REF tags pull a texture's registers, their address the pack's texture index.
 #include <stdint.h>
 #include <vector>
 
@@ -36,7 +41,29 @@ struct Ps2GfxBox {
     uint32_t vertexCount;   // 0x30
     uint32_t flags;         // 0x34
 };
+struct Ps2SkinRecord {
+    uint32_t vertices;      // offset of the Ps2SkinVertex array
+    uint32_t vertexBytes;
+    uint32_t refTags;       // offset of the REF tags' word offsets in the leaf's chain, ending -1
+    uint32_t bones;         // offset of the bone list: skin bone numbers, ending 0xff
+};
+struct Ps2SkinVertex {      // 32 bytes
+    float position[3];      // model space
+    float weight;           // bone A's; bone B has the rest
+    uint16_t boneA;         // bits 0-14: the bone's place in the bone list (the VU0's matrix)
+    int16_t normalX;        // 64ths, pointing out of the mesh
+    uint16_t boneB;
+    int16_t normalY;
+    uint16_t unused18;
+    int16_t normalZ;
+    uint16_t flags;         // PS2_SKIN_ADC: the triangle this vertex ends is not drawn
+    int16_t morph;          // -1, or the vertex's first morph delta
+};
 #pragma pack(pop)
+#define PS2_SKIN_BONE_MASK 0x7fff
+#define PS2_SKIN_ADC 0x8000
+static_assert(sizeof(Ps2SkinRecord) == 0x10, "Ps2SkinRecord is 0x10 bytes");
+static_assert(sizeof(Ps2SkinVertex) == 0x20, "Ps2SkinVertex is 0x20 bytes");
 static_assert(sizeof(Ps2GfxFooter) == 0x10, "Ps2GfxFooter is 0x10 bytes");
 static_assert(sizeof(Ps2GfxBox) == 0x38, "Ps2GfxBox is 0x38 bytes");
 
@@ -54,12 +81,14 @@ struct Ps2MeshStats {
     int skippedTriangles;   // the ADC flag set
     int primitives;
     bool skinned;
+    int bones;              // a skinned mesh's bone list
+    int unresolved;         // batch vertices with no skin vertex where the VU1 reads it, not drawn
     bool unknownVif;        // a VIF command this reader does not know stopped a chain
     uint32_t leafFlags;     // the leaves' flags, or'd together
 };
 
 // Converts the block (its data after the header word, blockBytes of it) to a KXE in out. False when there is nothing
-// to draw: no boxes, a skinned mesh, or no batches.
+// to draw: no boxes or no batches.
 bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, std::vector<uint8_t> &out, Ps2MeshStats *stats);
 
 #endif // PS2_PS2MESH_H_

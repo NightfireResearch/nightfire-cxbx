@@ -7,6 +7,7 @@
 #include "../memory.h"
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 
 // The game's own allocation types for these (MemInfo's names)
@@ -41,17 +42,21 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
     header->textureInfo = tex;
 }
 
-// The last mesh converted was skinned: the entity params block after it stands the Xbox's in (interim)
+// The last mesh was a skinned one left to the Xbox's: the entity params block after it stands the Xbox's in. Interim,
+// for comparing: with NIGHTFIRE_PS2_XBOX_SKINS set, or when one does not convert.
 static bool SkinnedMeshPending;
 
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     std::vector<uint8_t> kxe;
     Ps2MeshStats stats;
     SkinnedMeshPending = false;
-    if (!Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats)) {
-        SkinnedMeshPending = stats.skinned;
+    bool converted = Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats);
+    if (stats.skinned && (!converted || getenv("NIGHTFIRE_PS2_XBOX_SKINS") != NULL)) {
+        SkinnedMeshPending = true;
         return NULL;
     }
+    if (!converted)
+        return NULL;
     ModelData *model = (ModelData *)Mem_Malloc(kxe.size(), MALLOC_PS2_OBJECT, 0);
     memcpy(model, kxe.data(), kxe.size());
     return model;
