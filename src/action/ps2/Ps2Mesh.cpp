@@ -70,6 +70,7 @@ static uint8_t SkinSlotRegister(int slot) {
 
 // The Xbox primitive's states (docs spec-mesh.md 5.5): z-write, wrap U and V, double-sided until the winding is
 // settled (docs/ps2-data.md)
+#define PRIM_STATE_MORPH 0x0001         // the morph streams on
 #define PRIM_STATE_BLEND_ADD 0x0002     // bits 1-2: 0 alpha blend, 1 additive, 2 subtractive
 #define PRIM_STATE_BLEND_SUBTRACT 0x0004
 #define PRIM_STATE_DOUBLE_SIDED 0x0008
@@ -80,6 +81,10 @@ static uint8_t SkinSlotRegister(int slot) {
 #define PRIM_STATE_DEFAULT (PRIM_STATE_DOUBLE_SIDED | PRIM_STATE_Z_WRITE | PRIM_STATE_WRAP_U | PRIM_STATE_WRAP_V)
 #define PRIM_CHANGE_ALL 0x7b            // every state but the second texture, as the Xbox's first primitives
 #define PRIM_CHANGE_STATES 0x7a         // the same less the morph streams
+#define PRIM_CHANGE_MORPH 0x01
+
+// The Xbox's morph deltas are s16, a displacement of delta * weight / 32767 (spec-facial.md 2.3)
+#define XBOX_MORPH_ONE 32767
 #define PRIM_NO_TEXTURE 0xffff
 
 // The GS registers a box's DIRECT packet sets (A+D: a 64-bit value, then the register's number)
@@ -171,6 +176,10 @@ static uint8_t Alpha8(uint8_t ps2Alpha) {
 struct MeshBuilder {
     std::vector<KxeVertex> vertices;
     std::vector<uint32_t> boneWords;    // a skinned mesh's, one a vertex
+    std::vector<int> morphRows;         // and each vertex's first morph row, or PS2_SKIN_NO_MORPH
+    int morphTargets = 0;
+    int morphVertices = 0;              // the first vertices, which the morph streams cover
+    std::vector<int16_t> morphDeltas;   // target by target, morphVertices of x, y, z each
     std::vector<uint8_t> bones;         // a skinned mesh's bone list
     std::vector<std::vector<uint8_t>> palettes;     // and its palettes: the bone list, or parts of it if too long
     std::vector<KxePrimitive> primitives;
@@ -575,6 +584,7 @@ static void AddSkinnedBatch(MeshBuilder &mesh, const uint8_t *const *vu, int tag
         mesh.vertices[base + k].normal = PackSkinNormal(v);
         mesh.boneWords.push_back(SkinBoneWord(mesh.Slot(palette, v->boneA & PS2_SKIN_BONE_MASK),
                                               mesh.Slot(palette, v->boneB & PS2_SKIN_BONE_MASK), v->weight));
+        mesh.morphRows.push_back(v->morph);
     }
 }
 
@@ -678,6 +688,87 @@ static bool ReadSkinnedLeaf(MeshBuilder &mesh, const uint8_t *file, uint32_t fil
     return true;
 }
 
+// Truncated, as the Xbox's exporter did: 99.8% of the Xbox heads' deltas come out the same
+static int16_t MorphDelta(float d) {
+    long v = (long)(d * XBOX_MORPH_ONE);
+    return (int16_t)(v < -32768 ? -32768 : v > 32767 ? 32767 : v);
+}
+
+// A head's morph targets as the Xbox's streams: the primitives that draw a morph vertex get them, and the vertices
+// those draw go first, since the streams cover only the first morphVertices (the others' deltas zero)
+static void AddMorphs(MeshBuilder &mesh, const uint8_t *morph, uint32_t morphBytes, Ps2MeshStats *stats) {
+    Ps2MorphHeader header;
+    if (morphBytes < sizeof(header))
+        return;
+    memcpy(&header, morph, sizeof(header));
+    if (header.targets == 0 || header.targets > 0xff)
+        return;
+    size_t vtxCnt = mesh.vertices.size();
+    std::vector<bool> drawnMorphing(vtxCnt, false);
+    size_t start = 0;
+    bool any = false;
+    for (KxePrimitive &p : mesh.primitives) {
+        size_t n = p.count + 2;
+        bool morphing = false;
+        for (size_t i = 0; i < n; i++) {
+            int row = mesh.morphRows[mesh.indices[start + i]];
+            if (row != PS2_SKIN_NO_MORPH && (uint32_t)(row + header.targets) * PS2_MORPH_ROW_BYTES <= morphBytes)
+                morphing = true;
+        }
+        if (morphing) {
+            p.stateFlags |= PRIM_STATE_MORPH;
+            for (size_t i = 0; i < n; i++)
+                drawnMorphing[mesh.indices[start + i]] = true;
+            any = true;
+        }
+        start += n;
+    }
+    if (!any)
+        return;
+
+    std::vector<uint16_t> to(vtxCnt);
+    std::vector<size_t> from;
+    for (int pass = 0; pass < 2; pass++)
+        for (size_t v = 0; v < vtxCnt; v++)
+            if (drawnMorphing[v] == (pass == 0)) {
+                to[v] = (uint16_t)from.size();
+                from.push_back(v);
+            }
+    std::vector<KxeVertex> vertices(vtxCnt);
+    std::vector<uint32_t> boneWords(vtxCnt);
+    std::vector<int> morphRows(vtxCnt);
+    for (size_t v = 0; v < vtxCnt; v++) {
+        vertices[v] = mesh.vertices[from[v]];
+        boneWords[v] = mesh.boneWords[from[v]];
+        morphRows[v] = mesh.morphRows[from[v]];
+    }
+    mesh.vertices.swap(vertices);
+    mesh.boneWords.swap(boneWords);
+    mesh.morphRows.swap(morphRows);
+    for (uint16_t &i : mesh.indices)
+        i = to[i];
+
+    int count = 0;
+    while (count < (int)vtxCnt && drawnMorphing[from[count]])
+        count++;
+    mesh.morphTargets = (int)header.targets;
+    mesh.morphVertices = count;
+    mesh.morphDeltas.assign((size_t)header.targets * count * 3, 0);
+    for (int v = 0; v < count; v++) {
+        int row = mesh.morphRows[v];
+        if (row == PS2_SKIN_NO_MORPH || (uint32_t)(row + header.targets) * PS2_MORPH_ROW_BYTES > morphBytes)
+            continue;
+        for (uint32_t t = 0; t < header.targets; t++) {
+            float d[3];
+            memcpy(d, morph + (row + t) * PS2_MORPH_ROW_BYTES, sizeof(d));
+            for (int a = 0; a < 3; a++)
+                mesh.morphDeltas[((size_t)t * count + v) * 3 + a] = MorphDelta(d[a]);
+        }
+    }
+    stats->morphTargets = mesh.morphTargets;
+    stats->morphVertices = mesh.morphVertices;
+}
+
 // d3dGetVertexDataSize and d3dGetIndexDataSize, which psiCreateEntityGfx steps over the sections with: the data and
 // three bytes to spare
 static uint32_t KxeVertexBytes(int vtxCnt, bool skinned) {
@@ -704,8 +795,8 @@ static int DegenerateTriangles(const MeshBuilder &mesh) {
 }
 
 // The KXE: ModelData's header, then each section where psiCreateEntityGfx looks for it - three spare bytes after the
-// vertices and the indices, which d3dCreateVertexBuffers and d3dCreateIndexBuffer move their data up into - and a
-// skinned mesh's one bone palette after the primitives
+// vertices and the indices, which d3dCreateVertexBuffers and d3dCreateIndexBuffer move their data up into - a skinned
+// mesh's bone palettes after the primitives, and a head's morph streams after those, with three to spare too
 static void WriteKxe(const MeshBuilder &mesh, std::vector<uint8_t> &out) {
     bool skinned = !mesh.palettes.empty();
     int vtxCnt = (int)mesh.vertices.size();
@@ -713,8 +804,9 @@ static void WriteKxe(const MeshBuilder &mesh, std::vector<uint8_t> &out) {
     int primitiveCnt = (int)mesh.primitives.size();
     uint32_t vertexBytes = KxeVertexBytes(vtxCnt, skinned);
     uint32_t indexBytes = KxeIndexBytes(idxCnt);
+    size_t morphBytes = mesh.morphDeltas.empty() ? 0 : mesh.morphDeltas.size() * sizeof(int16_t) + 3;
     size_t size = offsetof(ModelData, data) + vertexBytes + indexBytes + primitiveCnt * sizeof(KxePrimitive) +
-                  mesh.palettes.size() * XBOX_PALETTE_BYTES;
+                  mesh.palettes.size() * XBOX_PALETTE_BYTES + morphBytes;
     out.assign((size + 3) & ~(size_t)3, 0xff);
 
     ModelData header;
@@ -725,6 +817,10 @@ static void WriteKxe(const MeshBuilder &mesh, std::vector<uint8_t> &out) {
     header.idxCnt = idxCnt;
     header.primitiveCnt = primitiveCnt;
     header.skinGroupCnt = (int)mesh.palettes.size();
+    if (!mesh.morphDeltas.empty()) {
+        header.batchCnt = (uint)mesh.morphTargets;
+        header.batchVtxCnt = (uint)mesh.morphVertices;
+    }
     int triangles = 0;
     for (const KxePrimitive &p : mesh.primitives)
         triangles += (int)p.count;
@@ -747,17 +843,27 @@ static void WriteKxe(const MeshBuilder &mesh, std::vector<uint8_t> &out) {
     // The first primitive sets every state; the others those of theirs that differ from the one before
     KxePrimitive *prims = (KxePrimitive *)at;
     memcpy(prims, mesh.primitives.data(), primitiveCnt * sizeof(KxePrimitive));
-    for (int p = 0; p < primitiveCnt; p++)
-        prims[p].changeMask = p == 0 ? PRIM_CHANGE_ALL
-                            : prims[p].stateFlags != prims[p - 1].stateFlags ? PRIM_CHANGE_STATES : 0;
+    for (int p = 0; p < primitiveCnt; p++) {
+        if (p == 0) {
+            prims[p].changeMask = PRIM_CHANGE_ALL;
+            continue;
+        }
+        uint16_t changed = prims[p].stateFlags ^ prims[p - 1].stateFlags;
+        prims[p].changeMask = (changed & ~PRIM_STATE_MORPH ? PRIM_CHANGE_STATES : 0) |
+                              (changed & PRIM_STATE_MORPH ? PRIM_CHANGE_MORPH : 0);
+    }
     uint8_t *palettes = at + primitiveCnt * sizeof(KxePrimitive);
     for (size_t p = 0; p < mesh.palettes.size(); p++) {
         memset(palettes + p * XBOX_PALETTE_BYTES, XBOX_PALETTE_END, XBOX_PALETTE_BYTES);
         memcpy(palettes + p * XBOX_PALETTE_BYTES, mesh.palettes[p].data(), mesh.palettes[p].size());
     }
+    if (!mesh.morphDeltas.empty())
+        memcpy(palettes + mesh.palettes.size() * XBOX_PALETTE_BYTES, mesh.morphDeltas.data(),
+               mesh.morphDeltas.size() * sizeof(int16_t));
 }
 
-bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, std::vector<uint8_t> &out, Ps2MeshStats *stats) {
+bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, const uint8_t *morph, uint32_t morphBytes,
+                          std::vector<uint8_t> &out, Ps2MeshStats *stats) {
     memset(stats, 0, sizeof(*stats));
     out.clear();
     const uint8_t *file = block - 4;    // offsets are from the header word
@@ -802,6 +908,8 @@ bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, std::vector
     stats->primitives = (int)mesh.primitives.size();
     if (mesh.primitives.empty() || mesh.vertices.size() > 0xffff)
         return false;
+    if (morph != NULL && !mesh.palettes.empty())
+        AddMorphs(mesh, morph, morphBytes, stats);
     WriteKxe(mesh, out);
     return true;
 }

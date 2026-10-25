@@ -40,10 +40,21 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
     header->textureInfo = tex;
 }
 
+// The last block 0x2b, for the mesh after it
+static const uint8_t *MorphData;
+static uint32_t MorphDataBytes;
+
+void Ps2_MorphData(const uint8_t *block, uint32_t blockBytes) {
+    MorphData = block;
+    MorphDataBytes = blockBytes;
+}
+
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
     std::vector<uint8_t> kxe;
     Ps2MeshStats stats;
-    if (!Ps2Mesh_ConvertToKxe(block, blockBytes, kxe, &stats))
+    bool converted = Ps2Mesh_ConvertToKxe(block, blockBytes, MorphData, MorphDataBytes, kxe, &stats);
+    MorphData = NULL;
+    if (!converted)
         return NULL;
     ModelData *model = (ModelData *)Mem_Malloc(kxe.size(), MALLOC_PS2_OBJECT, 0);
     memcpy(model, kxe.data(), kxe.size());

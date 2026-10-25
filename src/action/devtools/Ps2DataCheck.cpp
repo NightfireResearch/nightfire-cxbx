@@ -10,6 +10,8 @@
 //   ps2data_check <disc> skins <hash> <xbox bundle>     every skinned mesh converted and checked against the Xbox's
 //                                                       twin (the same hashcode): vertices, bones, weights, normals,
 //                                                       STs, triangles and their winding
+//   ps2data_check <disc> morphs <hash> <xbox bundle>    every head's morph targets converted and checked against the
+//                                                       Xbox twin's: each morph vertex's deltas, target by target
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
@@ -563,6 +565,8 @@ struct NamedMesh {
     const uint8_t *data;
     uint32_t size;
     int id;
+    const uint8_t *morph;   // the PS2's block 0x2b before it, or NULL
+    uint32_t morphSize;
 };
 
 std::map<std::string, NamedMesh> Entities(const std::vector<Entry> &entries, int meshId) {
@@ -570,10 +574,18 @@ std::map<std::string, NamedMesh> Entities(const std::vector<Entry> &entries, int
     for (const Entry &e : entries) {
         if (!IsPack(e.type))
             continue;
-        NamedMesh last = { NULL, 0, 0 };
+        NamedMesh last = { NULL, 0, 0, NULL, 0 };
+        const uint8_t *morph = NULL;
+        uint32_t morphSize = 0;
         for (const Block &b : ReadBlocks(e.data, e.size)) {
-            if (b.id == meshId)
-                last = { b.data, b.size, b.id };
+            if (b.id == 0x2b) {
+                morph = b.data;
+                morphSize = b.size;
+            }
+            if (b.id == meshId) {
+                last = { b.data, b.size, b.id, morph, morphSize };
+                morph = NULL;
+            }
             if (b.id == 0x04 && last.data != NULL) {
                 std::string name = (const char *)(b.data + 0x30);
                 out.emplace(name, last);
@@ -656,7 +668,8 @@ int CmdMeshes(Disc &disc, const std::string &hash, const char *xboxBundlePath, c
         totals.meshes++;
         Bytes kxe;
         Ps2MeshStats s;
-        bool ok = Ps2Mesh_ConvertToKxe(named.second.data, named.second.size, kxe, &s);
+        bool ok = Ps2Mesh_ConvertToKxe(named.second.data, named.second.size, named.second.morph, named.second.morphSize,
+                                       kxe, &s);
         totals.skinned += s.skinned;
         totals.unknownVif += s.unknownVif;
         totals.badBatches += s.badBatches;
@@ -767,10 +780,18 @@ std::map<uint32_t, NamedMesh> EntitiesByHash(const std::vector<Entry> &entries, 
     for (const Entry &e : entries) {
         if (!IsPack(e.type))
             continue;
-        NamedMesh last = { NULL, 0, 0 };
+        NamedMesh last = { NULL, 0, 0, NULL, 0 };
+        const uint8_t *morph = NULL;
+        uint32_t morphSize = 0;
         for (const Block &b : ReadBlocks(e.data, e.size)) {
-            if (b.id == meshId)
-                last = { b.data, b.size, b.id };
+            if (b.id == 0x2b) {
+                morph = b.data;
+                morphSize = b.size;
+            }
+            if (b.id == meshId) {
+                last = { b.data, b.size, b.id, morph, morphSize };
+                morph = NULL;
+            }
             if (b.id == 0x04 && last.data != NULL) {
                 uint32_t hashcode;
                 memcpy(&hashcode, b.data, 4);
@@ -880,7 +901,8 @@ int CmdSkins(Disc &disc, const std::string &hash, const char *xboxBundlePath) {
     for (auto &entity : EntitiesByHash(ReadBundle(bundle, PS2_SECTOR_SIZE), 0x2d)) {
         Bytes kxe;
         Ps2MeshStats st;
-        bool ok = Ps2Mesh_ConvertToKxe(entity.second.data, entity.second.size, kxe, &st);
+        bool ok = Ps2Mesh_ConvertToKxe(entity.second.data, entity.second.size, entity.second.morph,
+                                       entity.second.morphSize, kxe, &st);
         if (!st.skinned)
             continue;
         totals.meshes++;
@@ -990,6 +1012,127 @@ int CmdSkins(Disc &disc, const std::string &hash, const char *xboxBundlePath) {
            hash.c_str(), totals.ps2Triangles, totals.foundOnXbox, totals.sameWinding, totals.foundOnPs2,
            totals.xboxTriangles);
     return totals.badBatches != 0 || totals.unknownVif != 0;
+}
+
+// A KXE's morph streams (spec-facial.md 2.3): after the palettes, target by target, batchVtxCnt deltas of x, y, z
+const int16_t *MorphDeltas(const Kxe &k) {
+    return (const int16_t *)((const uint8_t *)k.prims + k.header->primitiveCnt * 12 + k.header->skinGroupCnt * 0x36);
+}
+
+struct MorphTotals {
+    int heads = 0, converted = 0, twins = 0, vertices = 0, matched = 0, exact = 0, within2 = 0, within20 = 0,
+        targetsCompared = 0, xboxVertices = 0, xboxMatched = 0, morphPrims = 0, outsidePrims = 0;
+};
+
+int CmdMorphs(Disc &disc, const std::string &hash, const char *xboxBundlePath) {
+    Bytes bundle, xboxBundle;
+    if (!ReadPs2Bundle(disc, hash, bundle))
+        return 1;
+    if (!ReadWhole(xboxBundlePath, xboxBundle)) {
+        printf("no %s\n", xboxBundlePath);
+        return 1;
+    }
+    std::map<uint32_t, NamedMesh> xbox = EntitiesByHash(ReadBundle(xboxBundle, 0x20), 0x0d);
+    MorphTotals totals;
+    for (auto &entity : EntitiesByHash(ReadBundle(bundle, PS2_SECTOR_SIZE), 0x2d)) {
+        if (entity.second.morph == NULL)
+            continue;
+        totals.heads++;
+        Bytes kxe;
+        Ps2MeshStats st;
+        if (!Ps2Mesh_ConvertToKxe(entity.second.data, entity.second.size, entity.second.morph, entity.second.morphSize,
+                                  kxe, &st) || st.morphTargets == 0) {
+            printf("  %08x: no morph streams\n", entity.first);
+            continue;
+        }
+        totals.converted++;
+        Kxe k;
+        k.Parse(kxe.data(), kxe.size());
+        // Morphing primitives draw only the morph vertices
+        int start = 0;
+        for (int p = 0; p < k.header->primitiveCnt; p++) {
+            if (k.prims[p].stateFlags & 1) {
+                totals.morphPrims++;
+                for (uint32_t i = 0; i < k.prims[p].count + 2; i++)
+                    if (k.Index(start + i) >= (int)k.header->batchVtxCnt) {
+                        totals.outsidePrims++;
+                        break;
+                    }
+            }
+            start += k.prims[p].count + 2;
+        }
+        auto twin = xbox.find(entity.first);
+        Kxe x;
+        if (twin == xbox.end() || !x.Parse(twin->second.data, twin->second.size) || x.header->batchCnt == 0) {
+            printf("  %08x: no Xbox twin with morphs\n", entity.first);
+            continue;
+        }
+        totals.twins++;
+        int targets = (int)std::min(k.header->batchCnt, x.header->batchCnt);
+        int pn = (int)k.header->batchVtxCnt, xn = (int)x.header->batchVtxCnt;
+        const int16_t *pd = MorphDeltas(k), *xd = MorphDeltas(x);
+        std::multimap<std::array<int, 3>, int> xboxAt;
+        for (int j = 0; j < xn; j++)
+            xboxAt.emplace(Mm(x.Position(j)), j);
+        std::set<std::array<int, 3>> ps2Moving;
+        int moving = 0, matched = 0, exact = 0, within2 = 0, within20 = 0;
+        for (int i = 0; i < pn; i++) {
+            bool moves = false;
+            for (int t = 0; t < targets && !moves; t++)
+                for (int a = 0; a < 3; a++)
+                    moves |= pd[((size_t)t * pn + i) * 3 + a] != 0;
+            if (!moves)
+                continue;
+            moving++;
+            ps2Moving.insert(Mm(k.Position(i)));
+            auto range = xboxAt.equal_range(Mm(k.Position(i)));
+            int best = 1 << 30, bestJ = -1;
+            for (auto it = range.first; it != range.second; ++it) {
+                int worst = 0;
+                for (int t = 0; t < targets; t++)
+                    for (int a = 0; a < 3; a++)
+                        worst = std::max(worst, abs(pd[((size_t)t * pn + i) * 3 + a] - xd[((size_t)t * xn + it->second) * 3 + a]));
+                if (worst < best) {
+                    best = worst;
+                    bestJ = it->second;
+                }
+            }
+            if (bestJ < 0)
+                continue;
+            matched++;
+            exact += best == 0;
+            within2 += best <= 2;
+            within20 += best <= 20;
+        }
+        // The Xbox's moving vertices with a moving PS2 one at the same place
+        int xboxMoving = 0, xboxMet = 0;
+        for (int j = 0; j < xn; j++) {
+            bool moves = false;
+            for (int t = 0; t < targets && !moves; t++)
+                for (int a = 0; a < 3; a++)
+                    moves |= xd[((size_t)t * xn + j) * 3 + a] != 0;
+            xboxMoving += moves;
+            xboxMet += moves && ps2Moving.count(Mm(x.Position(j))) != 0;
+        }
+        printf("  %08x: %d targets (Xbox %d); %4d morph vertices (Xbox %4d), %4d that move (Xbox %4d), %4d at an Xbox "
+               "morph vertex: every target the same %4d, within 2 %4d, within 20 %4d; %4d of the Xbox's moving ones "
+               "met\n", entity.first, (int)k.header->batchCnt, (int)x.header->batchCnt, pn, xn, moving, xboxMoving,
+               matched, exact, within2, within20, xboxMet);
+        totals.vertices += moving;
+        totals.matched += matched;
+        totals.exact += exact;
+        totals.within2 += within2;
+        totals.within20 += within20;
+        totals.xboxVertices += xboxMoving;
+        totals.xboxMatched += xboxMet;
+    }
+    printf("[ps2morph] %s: %d heads, %d with morph streams, %d with an Xbox twin; %d morphing primitives, %d drawing a "
+           "vertex past the streams\n", hash.c_str(), totals.heads, totals.converted, totals.twins, totals.morphPrims,
+           totals.outsidePrims);
+    printf("[ps2morph] %s: %d moving vertices, %d at an Xbox morph vertex: every target the same %d, within 2 %d, within "
+           "20 %d; %d of the Xbox's %d moving vertices met\n", hash.c_str(), totals.vertices, totals.matched,
+           totals.exact, totals.within2, totals.within20, totals.xboxMatched, totals.xboxVertices);
+    return totals.outsidePrims != 0;
 }
 
 // The pause screen's film as FS_ps2.cpp finds it (the first level bundle with a "woman" entry), against the Xbox's
@@ -1157,7 +1300,7 @@ int CmdAll(Disc &disc) {
 int main(int argc, char **argv) {
     if (argc < 3) {
         printf("usage: ps2data_check <disc> files | bundle <hash> | textures <hash> [<out>] | "
-               "meshes <hash> [<xbox bundle>] [--obj <out>] | skins <hash> <xbox bundle> | all | woman [<xbox woman.rle>] | sound <bank> [<out>] | "
+               "meshes <hash> [<xbox bundle>] [--obj <out>] | skins <hash> <xbox bundle> | morphs <hash> <xbox bundle> | all | woman [<xbox woman.rle>] | sound <bank> [<out>] | "
                "music <track> [<wav>]\n");
         return 2;
     }
@@ -1183,6 +1326,8 @@ int main(int argc, char **argv) {
     }
     if (cmd == "skins" && argc > 4)
         return CmdSkins(disc, argv[3], argv[4]);
+    if (cmd == "morphs" && argc > 4)
+        return CmdMorphs(disc, argv[3], argv[4]);
     if (cmd == "all")
         return CmdAll(disc);
     if (cmd == "sound" && argc > 3)

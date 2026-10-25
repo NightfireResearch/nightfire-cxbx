@@ -12,6 +12,9 @@
 // texture's, from its palette header.
 void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint8_t *palette, uint32_t paletteBytes);
 
+// Block 0x2b, a head's morph targets: kept for the mesh block after it
+void Ps2_MorphData(const uint8_t *block, uint32_t blockBytes);
+
 // Block 0x2d, a mesh: the Xbox's (a KXE) for the entity's geom_idx, or NULL when it has nothing to draw
 ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes);
 

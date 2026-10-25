@@ -844,6 +844,7 @@ enum {
     BLOCK_COLLISION2 = 0x2f,
     BLOCK_PARTICLES = 0x30,
     BLOCK_ENTITY_GEOMETRY_PS2 = 0x2d,   // the PS2's meshes (docs/ps2-data.md)
+    BLOCK_MORPH_DATA_PS2 = 0x2b,        // and its heads' morph targets
 };
 
 // The current block's data, after its header word
@@ -1208,6 +1209,9 @@ bool parsemap_handle_block_id(char mainMap) {
 #if NIGHTFIRE_DATA_PS2
     case BLOCK_ENTITY_GEOMETRY_PS2:
         pCurrCelList->geom_idx = (int)PtrTo32(Ps2_ConvertModel((uchar *)BlockData(), CurrentBH.size - 4));
+        return false;
+    case BLOCK_MORPH_DATA_PS2:
+        Ps2_MorphData((uchar *)BlockData(), CurrentBH.size - 4);
         return false;
 #endif
     case BLOCK_MAP_HEADER:

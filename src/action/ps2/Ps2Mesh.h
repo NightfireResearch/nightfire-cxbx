@@ -19,6 +19,10 @@
 // holds a DMA chain instead: CNT tags carry the VIF codes, GIF tags, colours and STs; REF tags whose word offsets the
 // skin record lists pull runs of skin vertices into the batch (with STCYCL so that vertex k's position and normal
 // land beside its colour); other REF tags pull a texture's registers, their address the pack's texture index.
+//
+// A skinned head's morph targets come in block 0x2b, before its 0x2d (Ps2MorphHeader): float3 deltas in rows of 12
+// bytes from the block's start, each morph vertex's targets in consecutive rows from the row its skin vertex names.
+// SkinIt adds weight * row (index + target) to the bind position before skinning.
 #include <stdint.h>
 #include <vector>
 
@@ -59,7 +63,14 @@ struct Ps2SkinVertex {      // 32 bytes
     uint16_t flags;         // PS2_SKIN_ADC: the triangle this vertex ends is not drawn
     int16_t morph;          // -1, or the vertex's first morph delta
 };
+struct Ps2MorphHeader {     // block 0x2b
+    uint32_t vertices;      // morph vertices, each with a word in the list after this header
+    uint32_t targets;       // 22 on every head
+    uint32_t firstRow;      // the rows (12 bytes, from here) where the deltas start, past the list
+};
 #pragma pack(pop)
+#define PS2_MORPH_ROW_BYTES 12
+#define PS2_SKIN_NO_MORPH -1
 #define PS2_SKIN_BONE_MASK 0x7fff
 #define PS2_SKIN_ADC 0x8000
 static_assert(sizeof(Ps2SkinRecord) == 0x10, "Ps2SkinRecord is 0x10 bytes");
@@ -82,13 +93,17 @@ struct Ps2MeshStats {
     int primitives;
     bool skinned;
     int bones;              // a skinned mesh's bone list
+    int morphTargets;       // a head's: the morph streams written
+    int morphVertices;      // the vertices they cover (the KXE's first)
     int unresolved;         // batch vertices with no skin vertex where the VU1 reads it, not drawn
     bool unknownVif;        // a VIF command this reader does not know stopped a chain
     uint32_t leafFlags;     // the leaves' flags, or'd together
 };
 
-// Converts the block (its data after the header word, blockBytes of it) to a KXE in out. False when there is nothing
-// to draw: no boxes or no batches.
-bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, std::vector<uint8_t> &out, Ps2MeshStats *stats);
+// Converts the block (its data after the header word, blockBytes of it) to a KXE in out, with a skinned head's morph
+// targets from the 0x2b block before it when given (else NULL). False when there is nothing to draw: no boxes or no
+// batches.
+bool Ps2Mesh_ConvertToKxe(const uint8_t *block, uint32_t blockBytes, const uint8_t *morph, uint32_t morphBytes,
+                          std::vector<uint8_t> &out, Ps2MeshStats *stats);
 
 #endif // PS2_PS2MESH_H_
