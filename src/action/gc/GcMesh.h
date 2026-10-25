@@ -76,6 +76,7 @@ static_assert(sizeof(GcMeshHeader) == 0xac, "GcMeshHeader is 0xac bytes");
 static_assert(sizeof(GcStripGroup) == 0x14, "GcStripGroup is 0x14 bytes");
 
 #define GC_MESH_NO_Z_WRITE 0x200
+#define GC_LAYER_ENVIRONMENT 0x01   // an environment map: coordinates from the normals
 #define GC_LAYER_ADD 0x02           // additive; no depth writes
 #define GC_LAYER_SUBTRACT 0x04      // subtractive; no depth writes
 #define GC_LAYER_TWO_TEXTURES 0x40  // the next layer's texture as a second stage, in the same pass

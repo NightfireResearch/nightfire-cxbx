@@ -231,6 +231,13 @@ static bool WalkStrips(MeshData &m, std::vector<RawStrip> &strips, GcMeshStats *
                 raw.texture = group.texture[layer];
                 raw.secondTexture = (m.h.layerFlags[layer] & GC_LAYER_TWO_TEXTURES) && layer + 1 < GC_MESH_LAYERS
                                         ? group.texture[layer + 1] : NO_TEXTURE;
+                // An environment map: the GameCube makes its coordinates from the normals (a texture coordinate
+                // generation from the normal, 0x1e); the Xbox's primitive has it as the second texture, with no
+                // first, which its draw maps from the normals
+                if (m.h.layerFlags[layer] & GC_LAYER_ENVIRONMENT) {
+                    raw.secondTexture = raw.texture;
+                    raw.texture = NO_TEXTURE;
+                }
                 raw.counts = group.counts;
                 uint32_t n = m.Index(m.h.stripLengths, strip) + 2u;
                 for (uint32_t k = 0; k < n; k++, position++, uv++) {
