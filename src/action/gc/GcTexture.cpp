@@ -205,7 +205,8 @@ bool GcTexture_Valid(const uint8_t *block, uint32_t blockBytes, int frames) {
     return GcFrameBytes(&h) * (uint32_t)frames <= h.pixelBytes && sizeof(h) + h.pixelBytes <= blockBytes;
 }
 
-bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int rate, std::vector<uint8_t> &kxt) {
+bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int rate, bool linear,
+                     std::vector<uint8_t> &kxt) {
     if (frames < 1)
         frames = 1;
     if (!GcTexture_Valid(block, blockBytes, frames))
@@ -226,7 +227,9 @@ bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int 
         return true;
     }
 
-    bool dxt = h.format == GC_TEX_CMPR;
+    bool dxt = h.format == GC_TEX_CMPR && !linear;
+    if (linear)
+        h.levels = 1;
     uint32_t chain = 0;
     for (uint32_t level = 0; level < h.levels; level++)
         chain += XboxLevelBytes(dxt, LevelSize(h.width, level), LevelSize(h.height, level));
@@ -238,6 +241,7 @@ bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int 
     info.levels = h.levels;
     info.formatType = dxt ? 1 : 0;                  // 1: DXT1; 0 with 8 bits: A8R8G8B8, swizzled
     info.bitsPerPixel = dxt ? 0 : 8;
+    info.registerParam6 = linear ? 1 : 0;           // 1: linear
     memcpy((char *)&info + 0x34, h.name, sizeof(h.name));   // where the Xbox's headers keep the name
 
     size_t header = offsetof(TextureInfo, baseIdx) + frames * sizeof(int);
@@ -246,7 +250,7 @@ bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int 
 
     const uint8_t *texels = block + sizeof(GcTextureHeader);
     uint8_t *pixels = kxt.data() + header;
-    std::vector<uint32_t> linear, swizzled;
+    std::vector<uint32_t> texelRows, swizzled;
     for (int f = 0; f < frames; f++) {
         uint8_t *out = pixels + (size_t)f * info.frameBytes;
         for (uint32_t level = 0; level < h.levels; level++) {
@@ -255,11 +259,15 @@ bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int 
                 // A level under 4x4 texels is still one block on both
                 CmprLevelToDxt1(texels, w < 4 ? 4 : w, ht < 4 ? 4 : ht, out);
             } else {
-                linear.resize((size_t)w * ht);
+                texelRows.resize((size_t)w * ht);
                 swizzled.resize((size_t)w * ht);
-                GcTexture_DecodeLevel(texels, (int)h.format, w, ht, (uint8_t *)linear.data());
-                Swizzle(linear.data(), swizzled.data(), w, ht);
-                memcpy(out, swizzled.data(), swizzled.size() * 4);
+                GcTexture_DecodeLevel(texels, (int)h.format, w, ht, (uint8_t *)texelRows.data());
+                if (linear) {
+                    memcpy(out, texelRows.data(), texelRows.size() * 4);
+                } else {
+                    Swizzle(texelRows.data(), swizzled.data(), w, ht);
+                    memcpy(out, swizzled.data(), swizzled.size() * 4);
+                }
             }
             texels += GcTexture_LevelBytes((int)h.format, w, ht);
             out += XboxLevelBytes(dxt, w, ht);

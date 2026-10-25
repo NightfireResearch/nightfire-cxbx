@@ -2,6 +2,7 @@
 #include "GcBytes.h"
 #include "GcMesh.h"
 #include "GcTexture.h"
+#include "../Hashcodes.h"
 
 #include <math.h>
 #include <string.h>
@@ -162,12 +163,16 @@ void GcMap_Convert(const uint8_t *pack, uint32_t bytes, const uint8_t *bundle, u
             }
         } else if (id == GC_BLOCK_TEXTURE_DATA) {
             int frames = 1, rate = 0;
+            uint32_t hashcode = 0;
             if ((texture + 1) * TEXHEADER_BYTES <= (int)textureHeaders.size()) {
                 frames = textureHeaders[texture * TEXHEADER_BYTES + 6];
                 rate = textureHeaders[texture * TEXHEADER_BYTES + 7];
+                hashcode = GcLe32(&textureHeaders[texture * TEXHEADER_BYTES + 8]);
             }
             texture++;
-            if (GcTexture_ToKxt(block.data(), dataBytes, frames, rate, kxt)) {
+            // The pause screen's film is drawn into one texture from another, pixel by pixel (Woman.cpp)
+            bool linear = hashcode == HT_Texture_Fire2 || hashcode == HT_Texture_WomanBack;
+            if (GcTexture_ToKxt(block.data(), dataBytes, frames, rate, linear, kxt)) {
                 if ((GcBe32(block.data()) >> 16) == GC_TEX_DUPLICATE)
                     stats->duplicates++;
                 else

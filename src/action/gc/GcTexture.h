@@ -51,7 +51,10 @@ uint32_t GcTexture_LevelBytes(int format, int width, int height);
 
 // Block 0x17 to the Xbox's texture header and frames (a KXT): CMPR as DXT1, the others swizzled A8R8G8B8, with every
 // level the GameCube has. frames and rate are the texture header's (block 0x10: its animFrames and someDivisor). A
-// "DT" header becomes the Xbox's, with room for its frames' slots. False when the block is not one this reads.
-bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int rate, std::vector<uint8_t> &kxt);
+// "DT" header becomes the Xbox's, with room for its frames' slots. linear makes it A8R8G8B8 in rows, one level, for
+// the textures the game writes pixel by pixel (the pause screen's Fire2 and WomanBack, as the Xbox's are). False when
+// the block is not one this reads.
+bool GcTexture_ToKxt(const uint8_t *block, uint32_t blockBytes, int frames, int rate, bool linear,
+                     std::vector<uint8_t> &kxt);
 
 #endif // GC_GCTEXTURE_H_

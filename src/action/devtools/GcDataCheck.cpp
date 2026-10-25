@@ -1006,7 +1006,7 @@ int Textures(GcDisc &disc, const std::string &hash, const char *outDir) {
             formats[format]++;
             if (frames > 1 && (int)GcBe32(b.data + 0x2c) == rate)
                 rateMatches++;
-            if (!GcTexture_ToKxt(b.data, b.bytes, frames, rate, kxt)) {
+            if (!GcTexture_ToKxt(b.data, b.bytes, frames, rate, false, kxt)) {
                 failed++;
                 printf("  %s texture %d: not converted (format %d, %dx%d, %d frames, %u bytes)\n", e.name.c_str(),
                        texture - 1, format, w, h, frames, GcBe32(b.data + 0x18));
