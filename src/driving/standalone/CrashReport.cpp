@@ -6,6 +6,7 @@
 #include <string.h>
 
 #include "../platform/Host.h"
+#include "../../common/version.h"
 
 // A record is gathered here and appended to crash.log when it is complete, as the loader does: one append is
 // milliseconds, a file opened per line was seconds a fault on a loaded machine. Lines outside a record (and those
@@ -84,6 +85,7 @@ void CrashReport_Begin(const char *what) {
     uintptr_t base = CrashHost_ExecutableBase();
     CrashReport_Line("[standalone] %s loaded at 0x" ADDR "\n", CrashHost_Module(base, scratch, sizeof(scratch)),
                      kAddrDigits, base);
+    CrashReport_Line("[standalone] version %s\n", NightfireVersion);
 }
 
 void CrashReport_End(void) {

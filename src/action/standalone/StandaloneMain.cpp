@@ -17,6 +17,7 @@
 #include "../engine/XboxStartup.h"
 #include "../memory.h"
 #include "../../common/console.h"
+#include "../../common/version.h"
 #include "../../common/xboxPath.h"
 #include "../../driving/platform/Host.h"
 #include "../../driving/platform/HostWindow.h"
@@ -44,7 +45,7 @@ int main(int argc, char **argv) {
     CrashReport_Install();
     HostSetCommandLine(argc, argv);
     EnsureConsoleOutput();
-    printf("[standalone] Nightfire (action engine), no XBE\n");
+    printf("[standalone] Nightfire %s (action engine), no XBE\n", NightfireVersion);
     StartThreadReport();
 
     // -level and -difficulty; then a time demo's mode (action_standalone_test): a playback moves into its sandbox

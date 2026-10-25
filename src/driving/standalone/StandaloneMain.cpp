@@ -22,6 +22,7 @@
 #include "../platform/XboxStartup.h"
 #include "../platform/XboxXapi.h"
 #include "../../common/fmv/Ffmpeg.h"
+#include "../../common/version.h"
 
 static const size_t kGameStackSize = 0x10000;   // the XBE header's stack commit
 
@@ -33,6 +34,7 @@ extern "C" void __main(void) {}
 
 int main(int argc, char **argv) {
     CrashReport_Install();
+    printf("[standalone] Nightfire %s (driving engine), no XBE\n", NightfireVersion);
     HostSetCommandLine(argc, argv);
     KernelStart();
     Xbox_ApplyDiscPathSetting();

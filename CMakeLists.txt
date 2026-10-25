@@ -1229,6 +1229,22 @@ add_dependencies(actioninject preprocess)
 add_dependencies(drivinginject preprocess)
 endif()
 
+# The build's version (src/common/version.h): git describe, or NIGHTFIRE_VERSION, which the release job sets from
+# its tag (.github/workflows/release.yml). cmake/version.cmake writes it into a source of its own once now, so that
+# the file exists to configure with, and again before every build, so that a new commit is seen; the standalone
+# executables and the launcher compile it in (nf_versioned below). Nothing else changes in them.
+set(NIGHTFIRE_VERSION "" CACHE STRING "The build's version (x.y.z[-pre]); empty: from git describe")
+set(nf_version_source ${CMAKE_BINARY_DIR}/generated/nfVersion.cpp)
+set(nf_version_command ${CMAKE_COMMAND} -DSOURCE_DIR=${CMAKE_SOURCE_DIR} -DOUTPUT=${nf_version_source}
+                       -DVERSION=${NIGHTFIRE_VERSION} -P ${CMAKE_SOURCE_DIR}/cmake/version.cmake)
+execute_process(COMMAND ${nf_version_command})
+add_custom_target(nf_version COMMAND ${nf_version_command} BYPRODUCTS ${nf_version_source}
+                  COMMENT "The build's version (cmake/version.cmake)")
+function(nf_versioned target)
+  target_sources(${target} PRIVATE ${nf_version_source})
+  add_dependencies(${target} nf_version)
+endfunction()
+
 # Direct3D 9 on a host without it: dxvk-native, D3D9 over Vulkan with SDL3 as its window system. Its release
 # tarball carries i386 libraries (lib32) as well as x86-64 ones, built for the Steam runtime, so the build takes
 # that, pinned by version and hash; NF_DXVK_DIR takes an extracted release (its usr directory) instead. macOS has
@@ -1364,6 +1380,7 @@ if(CMAKE_SIZEOF_VOID_P EQUAL 8)
 endif()
 option(NIGHTFIRE_ACTION_X87 "Action engine, standalone: keep the x87 instructions (off: C)" ON)
 foreach(target action_standalone action_standalone_test)
+  nf_versioned(${target})
   target_compile_definitions(${target} PRIVATE UNICODE _UNICODE NF_ANTIALIASING NIGHTFIRE_STANDALONE)
   if(NIGHTFIRE_ACTION_X87)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
@@ -1549,6 +1566,7 @@ endforeach()
 set(NIGHTFIRE_SANITIZE "" CACHE STRING "Clang sanitizers for the standalone executables (-fsanitize=<value>); empty for none")
 foreach(target driving_standalone driving_standalone_test)
   add_dependencies(${target} preprocess)
+  nf_versioned(${target})
   if(NIGHTFIRE_SANITIZE AND NOT MSVC)
     target_compile_options(${target} PRIVATE -fsanitize=${NIGHTFIRE_SANITIZE} -fno-omit-frame-pointer -g)
     # The runtime as a shared library, so that the game's own operator new and delete win over its; found where

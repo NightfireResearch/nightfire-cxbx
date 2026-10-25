@@ -5,7 +5,7 @@
 // Every hard fault is reported to stdout and appended to crash.log in the working directory - registers, the bytes
 // at eip and esp, the frame chain and every return address on the stack, each named by the module it lies in - and
 // each report starts with where the executable is loaded, so that tools/symbolise.py --map names our functions from
-// the linker's map. On Windows the fault that ends the process also writes crash.dmp (a full-memory minidump), and
+// the linker's map, and the build's version (src/common/version.h). On Windows the fault that ends the process also writes crash.dmp (a full-memory minidump), and
 // closing the window reports where every other thread is (CrashReport_Threads), the record of a freeze. It only
 // reports: the fault's handling is left as it was.
 //
