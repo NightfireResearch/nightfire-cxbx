@@ -1,8 +1,10 @@
-# Installing and updating: a proposal
+# Installing and updating
 
 How someone who is not a developer could get this project onto their computer, point it at their own copy of
-the game, and keep it up to date. Nothing here is built yet; this is the design and its order of work
-(24 October 2026).
+the game, and keep it up to date. The design dates from 24 October 2026. Steps 1-5 of its order of work (below)
+were built for Windows x86 on 25 October 2026: the versioned executables (`cmake/version.cmake`), the release job
+(`.github/workflows/release.yml`, `tools/release/`) and the launcher (`src/launcher/`, the CMake option
+`NIGHTFIRE_LAUNCHER`). "Where it stands", at the end, lists what is built, how it is tested and what is left.
 
 ## What a player has to end up with
 
@@ -63,8 +65,8 @@ The launcher's first screen when `launcher.json` has no game data:
 3. **Check the data.**
    - The folder must contain `eurocom/filesys.d00` onwards, `eurocom/25_fps/` and `driving/`, with plausible sizes.
    - The launcher also hashes a few key files and compares them with a short table of known releases, then says
-     "recognised: PAL" or "not a version we have tested". An unknown version gets a warning, not a refusal: we
-     have tested one release, and the others may well work.
+     "recognised: PAL", "recognised: NTSC (US)" or "not a version we have tested". An unknown version gets a
+     warning, not a refusal: the others may well work.
 4. **Copy** the data into `disc/` with a progress bar, check the copies (the same hashes), and write
    `user/settings.ini` with the absolute `DiscPath` and the defaults.
 5. **Offer the basic settings**: resolution, widescreen, language, region where it matters (`Region=PAL`). Then
@@ -142,8 +144,12 @@ own file on Windows, but it can rename it. So the launcher:
 3. restarts, and deletes `launcher.old` on the next start.
 
 macOS replaces the app bundle the same way, and Linux replaces the file. When a release's `minLauncher` is newer
-than the running launcher, the launcher updates itself first and then installs the release. That way an old
-launcher is never asked to read a format it doesn't know. The manifest format itself only ever gains fields.
+than the running launcher, the launcher updates itself first and then installs the release: after the checks it
+takes only the launcher out of the zip, puts it in place, and restarts it with `--finish-update`, and the new
+launcher checks for and installs the release itself. That way an old launcher is never asked to lay out a release
+it doesn't know. A restarted launcher that is still older than `minLauncher` refuses the release rather than loop,
+and so does any release whose `minLauncher` is above its own version. The manifest format itself only ever gains
+fields.
 
 **Renaming the repository.** GitHub redirects a renamed repository's web, git and API addresses, so launchers in
 the field keep working after a rename (the launcher follows redirects). On top of that, every manifest carries
@@ -151,11 +157,39 @@ its repository's name, and the launcher saves it, so after a rename one release 
 name without relying on the redirect. If the repository does get a new name, it is one constant and one
 manifest field.
 
+## The release key
+
+The launcher installs nothing whose `manifest.json` is not signed by the project's Ed25519 key. Its public half is
+built into the launcher (`src/launcher/ReleaseKey.h`, `kReleasePublicKey`); its private half is a repository secret
+that only the release job reads. Until the key exists `kReleasePublicKey` is empty: such a launcher says that
+updates cannot be checked, and a release build (`NIGHTFIRE_RELEASE=ON`, which the release job sets) refuses to
+configure. To make it, once:
+
+1. `python tools/release/sign_manifest.py keygen --private-out release_key.txt` (plain Python, nothing to install)
+   prints the public key and writes the private key, 64 hex digits, to `release_key.txt`.
+2. On GitHub, in the repository's Settings, "Secrets and variables", Actions: a new repository secret named
+   `NIGHTFIRE_RELEASE_KEY`, its value the private key. Keep a copy offline (a password manager), then delete
+   `release_key.txt`. Never commit it.
+3. Put the public key in `src/launcher/ReleaseKey.h` as `kReleasePublicKey`, and commit that.
+
+The release job signs with the secret, refuses the test key (`sign --release`), and checks the signature against
+`ReleaseKey.h` before it publishes anything, so a secret that does not match the launchers' key stops the release.
+A lost private key means a new key and a launcher that every player installs by hand; a leaked one means the same,
+at once.
+
+`tools/release/test_key.txt` is a **test key**, whose private half is in the repository. A launcher trusts it only
+when built with `NIGHTFIRE_LAUNCHER_TEST_KEY=ON`: CMake warns loudly, the window and `--version` say so, and
+`NIGHTFIRE_RELEASE=ON` refuses the combination, as it refuses a `kReleasePublicKey` equal to the test key.
+
+**Making a release.** An annotated tag `vX.Y.Z` pushed to GitHub runs `.github/workflows/release.yml`. The tag's
+message becomes the release notes, and a version with a pre-release part (`v0.5.0-rc.1`) is marked pre-release.
+"Run workflow" on the Actions page makes a pre-release from a branch head (`dev`) with the version typed in, tagged
+`v<version>` at that commit, with GitHub's generated notes; only the Development channel offers pre-releases.
+Raise `MIN_LAUNCHER` in `tools/release/package.py` when a release needs a newer launcher than the last one to lay
+it out.
+
 ## Before players can be pointed at it
 
-- **A licence.** The repository has no LICENSE file. Without one, nobody else may legally redistribute it, so the
-  project should choose a licence before publishing binaries. The README's "What you need" already says the game
-  data is never included.
 - **Signed programs.** Unsigned programs bring up warnings:
   - Windows SmartScreen says "Windows protected your PC" for a new unsigned program, and the player has to click
     through. A code-signing certificate removes it, or the warning fades as the program builds a reputation.
@@ -164,8 +198,8 @@ manifest field.
   - Linux has no such step: ship a zip, an AppImage later if wanted.
 
   The README should explain these warnings until the programs are signed.
-- **What we test.** One disc release (PAL) is known to work. The data check (above) tells players with other
-  versions that they are trying something untested, and asks them to report how it goes.
+- **What we test.** The PAL disc is known to work. The data check (above) also recognises the US (NTSC) disc, and
+  tells players with other versions that they are trying something untested, and asks them to report how it goes.
 
 ## Order of work
 
@@ -182,3 +216,73 @@ manifest field.
 
 Steps 1-4 give a first usable version: download one zip, run the launcher, point it at an extracted disc, play,
 and receive updates.
+
+## Where it stands (25 October 2026)
+
+Built for Windows x86, steps 1-5:
+
+- **Versions.** `cmake/version.cmake` writes `NightfireVersion` (`src/common/version.h`) from `git describe`, or
+  from `NIGHTFIRE_VERSION`, which the release job sets from the tag. Both standalone executables print
+  `[standalone] Nightfire <version>` at start and put it in each crash record.
+- **The release job**, `.github/workflows/release.yml`: the version from the tag or the input; the windows-x86 job
+  builds `action_standalone`, `driving_standalone` and the launcher with `NIGHTFIRE_RELEASE=ON`, checks that the
+  executables carry the version, and zips them (`tools/release/package.py zip`); the publish job writes
+  `manifest.json`, signs it (`tools/release/sign_manifest.py`, with the plain-Python Ed25519 of
+  `tools/release/ed25519.py`), checks the signature against `ReleaseKey.h`, and creates the GitHub Release.
+  Windows x64, Linux x86-64 and macOS arm64 are marked TODO in both files. CI's Windows job builds the launcher and
+  runs the same tools on its build with the test key, as a dry run.
+- **The zip** holds the executables, the launcher, FFmpeg's DLLs, `licences/` (Dear ImGui, miniz, Monocypher,
+  SDL3, and FFmpeg's notes beside the DLLs) and `nightfire-release.json` (version, platform, files). The launcher
+  run from the extracted zip sees that file, installs the release into the per-user folder, copies itself to the
+  root and says to start it from there.
+- **The launcher**, `src/launcher/`, target `nightfire_launcher` (`launcher.exe`), built with
+  `-DNIGHTFIRE_LAUNCHER=ON`; Windows only so far (`Platform.h` and `Http.h` name the files a macOS or Linux port
+  adds). SDL3, linked statically so that it is one file that can replace itself, with Dear ImGui on SDL's
+  renderer; WinHTTP; miniz; Monocypher. First-time setup, then four tabs: **Play** (Play, an optional `-level`,
+  Stop, which closes the game's window before it ends the process so that the game writes out its log, the saves, logs and game folders), **Updates** (Stable or Development, the check, the release notes,
+  Update, Undo the last update), **Settings** (resolution, widescreen, language, region, open the file; the game
+  data's check and change), **Help** (Report a problem, shown in full and editable before it opens a GitHub
+  new-issue page; about). The game runs in a job object, with the working folder `user/` and its output in
+  `user/logs/game-<time>.log`. settings.ini gets the absolute `DiscPath`, in its 8.3 form if the path is outside
+  the ANSI code page, since the game opens files with narrow calls.
+- **Known releases** (`src/launcher/DiscSetup.cpp`): the PAL disc (the repository's `disc/`;
+  `nightfire-re/iso_extract/xbox_eu` is the same release) and the US disc. Their `eurocom/filesys.d00`-`.d10` and
+  `driving/` music, `.viv` and English speech are the same bytes. What differs:
+  - the background movies: `eurocom/25_fps/` (25 files) on PAL, `eurocom/30_fps/` (22: no `073c0048`-`073e0048`)
+    on US. The game opens `30_fps` when it runs at 60 Hz, which is `Region=NTSC` (`src/action/engine/Fmv.cpp`),
+    so setup writes `Region=NTSC` for the US data, and the Settings tab warns when the region and the disc
+    disagree;
+  - `eurocom/config.txt`, US only, `AM`: American text (`src/action/engine/XboxSystem.cpp`);
+  - `driving/misc.viv` (644,839,568 bytes PAL, 187,968,400 US), and the French, German and Spanish driving speech
+    (`driving/mis*fr.spe`, `ge`, `sp`), PAL only;
+  - `default.xbe` and `Driving.xbe`, which the standalone executables do not read and setup does not copy.
+- **Tests.** `launcher --selftest` (a test-key build) runs the window's own code without the window: setup into a
+  fresh folder, the first install from an extracted release, no network, a bad signature, a bad hash, a good update
+  (the launcher replaced by renaming), the minLauncher path (the launcher first, a still-old launcher's refusal,
+  then the install), undo, and the game started for a while. `tools/release/fake_releases.py` makes its fake
+  releases API, signed with the test key, as files (`file://`) or served on 127.0.0.1 (WinHTTP, redirects
+  included):
+
+  ```
+  cmake --preset windows -DNIGHTFIRE_LAUNCHER=ON -DNIGHTFIRE_LAUNCHER_TEST_KEY=ON
+  cmake --build --preset windows --target action_standalone driving_standalone nightfire_launcher
+  python tools/release/fake_releases.py --build build/windows/Release --out fake --serve 8765
+  build/windows/Release/launcher.exe --selftest --root selftest --disc disc --api-base http://127.0.0.1:8765 --bundle fake/bundle
+  ```
+
+  `--in-place` uses the disc where it is instead of copying 3 GB, and `--play-seconds 0` skips the game. The
+  window takes `--root`, `--api-base`, `--repository` and `--no-update-check` too, and
+  `--screenshot FILE.bmp [--tab NAME]` draws it once and exits.
+
+Left for later:
+
+- the disc image reader (step 6), more platforms (step 7: a `PlatformPosix.cpp`, `Http` files for NSURLSession and
+  libcurl, their jobs in `release.yml`), and signing and notarisation (step 8);
+- **a choice of game data**: the PS2 and GameCube data builds, once they are ready, with the differences explained
+  and players steered to the better assets (the GameCube audio is poor). It belongs in setup, as a source, and in
+  the Settings tab's Game data section; `launcher.json` would hold one entry per data set beside `discPath`, each
+  in its own folder under `disc/`;
+- **mods** (docs/modding.md, on the modding-design branch): a Mods tab for the built-in modules, and a profile
+  choice beside Play (Default: PC controls and bug fixes; Speedrun: bug fixes, time-demo recording and autosplit
+  only) passed to the one executable. Nothing in the launcher's layout or `launcher.json` stands in the way of
+  either.

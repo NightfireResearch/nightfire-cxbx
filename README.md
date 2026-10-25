@@ -22,8 +22,9 @@ top: high resolutions and widescreen, mouse and keyboard as well as controllers,
 - **Checked against the original.** Recorded play sessions replay frame for frame, identical to the original game.
   That is how we know a change hasn't altered the game.
 - **Rough edges:**
-  - There are no ready-made downloads or installer yet. One is planned: `docs/install-and-update.md`.
-  - Only the PAL (European) Xbox disc has been tested.
+  - There are no ready-made downloads yet. The launcher that will install and update them, and the release job
+    that will publish them, are built (`docs/install-and-update.md`); no release has been published.
+  - Only the PAL (European) Xbox disc has been tested. The launcher recognises the US disc too.
   - Loading the PS2 version's data is an early experiment.
 
 ## What you need
@@ -198,6 +199,9 @@ it. The repository's own scripts and the docs' smoke tests use `Release/` in the
 cmake -B . -A Win32
 cmake --build . --config Release --target driving drivinginject
 ```
+
+**The launcher** (`src/launcher/`, `docs/install-and-update.md`) is its own target, `nightfire_launcher`, built
+with `-DNIGHTFIRE_LAUNCHER=ON` on Windows; `tools/release/` holds the release job's packaging and signing tools.
 
 The targets are `action` and `actioninject`, `driving` and `drivinginject`. A
 DLL is compiled with the shared backends in it, so a change under `src/common/` wants both injects rebuilt.
