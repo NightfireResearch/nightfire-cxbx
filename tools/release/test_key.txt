@@ -1,0 +1,3 @@
+# TEST KEY - for local tests of the launcher and the release tools only. NEVER sign a release with it.
+# Its public half: 36d671bf247b437d38fa3bd105d8ade4a86e8de379c61d28007aa66ca14ba8d1 (src/launcher/ReleaseKey.h, NIGHTFIRE_LAUNCHER_TEST_KEY)
+b626d9080f18e20d0cbe650123aa230ca9c50f4c775203bb93ac8ad40631e266

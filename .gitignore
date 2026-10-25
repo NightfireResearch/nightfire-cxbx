@@ -6,6 +6,8 @@ CMakeCache.txt
 CMakeFiles/
 *.dir/
 Release/
+# the release tools; Release/ above matches it on a case-insensitive file system
+!/tools/release/
 Release64/
 Debug/
 cmake_install.cmake

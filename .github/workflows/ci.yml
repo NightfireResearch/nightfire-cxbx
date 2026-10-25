@@ -16,11 +16,23 @@ jobs:
     steps:
       - uses: actions/checkout@v7
 
+      # With the launcher (src/launcher), which adds SDL3's static library to the build
       - name: Configure
-        run: cmake --preset windows
+        run: cmake --preset windows -DNIGHTFIRE_LAUNCHER=ON
 
       - name: Build
         run: cmake --build --preset windows
+
+      # The release job's tools (.github/workflows/release.yml) on this build, signed with the test key: the zip, the
+      # manifest, the signature and its check
+      - name: Release tools, a dry run
+        shell: bash
+        run: |
+          python tools/release/ed25519.py
+          python tools/release/package.py zip --platform windows-x86 --version 0.0.0-ci --build build/windows/Release --out dist
+          python tools/release/package.py manifest --version 0.0.0-ci --out dist/manifest.json dist/*.zip
+          python tools/release/sign_manifest.py sign dist/manifest.json --test-key
+          python tools/release/sign_manifest.py verify dist/manifest.json --test-key
 
       # action.exe only works because it is the image at the XBE's base address - linked at 0x10000, large
       # enough to span the XBE, with ASLR off, and with its own code above the XBE's end. Those are link

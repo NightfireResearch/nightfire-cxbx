@@ -1,0 +1,133 @@
+name: Release
+
+# A release (docs/install-and-update.md, "Releases and updates"): each platform's standalone executables and the
+# launcher zipped, manifest.json listing the zips, signed with the release key, and all of it published as a GitHub
+# Release. A tag vX.Y.Z runs it, its annotated message the release notes; "Run workflow" on a branch (dev) makes a
+# pre-release of the version given, tagged v<version> at that commit.
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version, e.g. 0.5.0-dev.3 (tagged v<version> at this branch head)'
+        required: true
+        type: string
+      prerelease:
+        description: 'Mark as a pre-release (the launcher Development channel only)'
+        required: true
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: The version, from the tag or the input
+        id: version
+        env:
+          EVENT: ${{ github.event_name }}
+          TAG: ${{ github.ref_name }}
+          INPUT: ${{ inputs.version }}
+        run: |
+          if [ "$EVENT" = push ]; then version="${TAG#v}"; else version="$INPUT"; fi
+          if ! echo "$version" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::'$version' is not a release version (MAJOR.MINOR.PATCH, optionally -pre-release)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  # The 32-bit x87 build, the one exact against the original: action_standalone, driving_standalone, the launcher.
+  # NIGHTFIRE_RELEASE makes the configure fail if the launcher lacks the release key (src/launcher/ReleaseKey.h).
+  windows-x86:
+    needs: version
+    runs-on: windows-2022
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Configure
+        run: cmake --preset windows -DNIGHTFIRE_LAUNCHER=ON -DNIGHTFIRE_RELEASE=ON "-DNIGHTFIRE_VERSION=$env:VERSION"
+
+      - name: Build
+        run: cmake --build --preset windows --target action_standalone driving_standalone nightfire_launcher
+
+      - name: Check the executables carry the version
+        shell: bash
+        run: |
+          for exe in action_standalone driving_standalone launcher; do
+            grep -qa "$VERSION" "build/windows/Release/$exe.exe" || { echo "::error::$exe.exe lacks $VERSION"; exit 1; }
+          done
+
+      - name: Zip
+        run: python tools/release/package.py zip --platform windows-x86 --version "$env:VERSION" --build build/windows/Release --out dist
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: release-windows-x86
+          path: dist/*.zip
+          if-no-files-found: error
+
+  # TODO, each when it is ready for players (the design's step 7), as a job like windows-x86 above uploading
+  # release-<platform>, with its files listed in tools/release/package.py's PLATFORMS and the launcher built for it:
+  #   windows-x64     the windows-x64 preset
+  #   linux-x86_64    the linux-x64 preset (SDL3, dxvk-native and FFmpeg beside the executables)
+  #   macos-arm64     the macos-arm64 preset (an app bundle; notarised once there is an Apple Developer account)
+
+  publish:
+    needs: [version, windows-x86]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ needs.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/download-artifact@v7
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Write the manifest
+        env:
+          REPOSITORY: ${{ github.repository }}
+        run: python3 tools/release/package.py manifest --version "$VERSION" --repository "$REPOSITORY" --out dist/manifest.json dist/*.zip
+
+      # The private key never leaves this step's environment. --release refuses the test key; the check after it
+      # refuses a secret that does not match the key the launcher was built with.
+      - name: Sign the manifest
+        env:
+          NIGHTFIRE_RELEASE_KEY: ${{ secrets.NIGHTFIRE_RELEASE_KEY }}
+        run: python3 tools/release/sign_manifest.py sign dist/manifest.json --key-env NIGHTFIRE_RELEASE_KEY --release
+
+      - name: Check the signature against the launcher's key
+        run: python3 tools/release/sign_manifest.py verify dist/manifest.json --header src/launcher/ReleaseKey.h
+
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          EVENT: ${{ github.event_name }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          SHA: ${{ github.sha }}
+        run: |
+          options=(--title "Nightfire $VERSION")
+          if [ "$EVENT" = push ]; then
+            options+=(--notes-from-tag --verify-tag)
+            case "$VERSION" in *-*) options+=(--prerelease) ;; esac
+          else
+            options+=(--target "$SHA" --generate-notes)
+            [ "$PRERELEASE" = true ] && options+=(--prerelease)
+          fi
+          gh release create "v$VERSION" "${options[@]}" dist/manifest.json dist/manifest.json.sig dist/*.zip
