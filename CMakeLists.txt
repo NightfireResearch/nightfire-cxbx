@@ -1340,9 +1340,16 @@ endif()
 if(APPLE)   # the D3D9 backend's Win32 calls, whose types are dxvk's
   list(REMOVE_ITEM nf_action_standalone_sources src/common/linux/win32Calls.cpp)
 endif()
-# The GameCube version's data converted to the Xbox's (docs/gc-data.md)
+# The GameCube version's data in place of the Xbox's (docs/gc-data.md): its disc's loose files for the Xbox's archives,
+# each bundle converted whole as it is opened. Off, the targets are built exactly as without it.
+option(NIGHTFIRE_ACTION_DATA_GC "Action engine, standalone: load the GameCube version's data (docs/gc-data.md)" OFF)
 set(nf_action_gc_data_sources src/action/gc/GcBundle.cpp src/action/gc/GcDisc.cpp src/action/gc/GcMap.cpp
                                src/action/gc/GcTexture.cpp)
+if(NIGHTFIRE_ACTION_DATA_GC)
+  list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
+  list(APPEND nf_action_standalone_sources ${nf_action_gc_data_sources} src/action/gc/GcFs.cpp
+                                           src/action/gc/GcAnim.cpp)
+endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
   src/action/standalone/StandaloneMain.cpp
@@ -1372,6 +1379,9 @@ foreach(target action_standalone action_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=1)
   else()
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
+  endif()
+  if(NIGHTFIRE_ACTION_DATA_GC)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_GC=1)
   endif()
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)

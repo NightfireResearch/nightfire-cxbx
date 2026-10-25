@@ -2277,13 +2277,21 @@ static constexpr float kHeightSkeleton1 = -0.995208f;
 static_assert(std::bit_cast<uint32_t>(kHeightAltSkeleton) == 0xbf9487ec, "-1.160398");
 static_assert(std::bit_cast<uint32_t>(kHeightSkeleton1) == 0xbf7ec5f4, "-0.995208");
 
+#if NIGHTFIRE_DATA_GC   // here, not with the includes, so that no line before it moves (docs/gc-data.md)
+#include "../gc/GcAnim.h"
+#endif
+
 // Animates the object with the skin: its pose, matrices, datums and rigid parts. 0, and no anim object, if the skin is
 // not loaded or anything fails.
 // AUTOINJECT
 int AnimObjectNew(obj_tag *obj, HASHCODE skinHash) {
     if ((skinHash & HASHCODE_SECTION_MASK) != HT_Skin_HASHCODE_BASE || obj == NULL)
         return 0;
+#if NIGHTFIRE_DATA_GC   // the GameCube's levels swap other skins, which its bundles hold (docs/gc-data.md)
+    skinHash = GcFixupSkinHashcode(skinHash);
+#else
     skinHash = FixupSkinHashcode(skinHash);
+#endif
     sAnimSkin_tag *skin = (sAnimSkin_tag *)hashtable_getitem(skinHash);
     if (skin == NULL) {
         NF_WARN("Skin 0x%x not loaded", skinHash); // GC check (0x800452fc)
