@@ -1340,6 +1340,9 @@ endif()
 if(APPLE)   # the D3D9 backend's Win32 calls, whose types are dxvk's
   list(REMOVE_ITEM nf_action_standalone_sources src/common/linux/win32Calls.cpp)
 endif()
+# The GameCube version's data converted to the Xbox's (docs/gc-data.md)
+set(nf_action_gc_data_sources src/action/gc/GcBundle.cpp src/action/gc/GcDisc.cpp src/action/gc/GcMap.cpp
+                               src/action/gc/GcTexture.cpp)
 add_executable(action_standalone
   ${nf_action_standalone_sources}
   src/action/standalone/StandaloneMain.cpp
@@ -1409,6 +1412,16 @@ foreach(target action_standalone action_standalone_test)
     target_link_options(${target} PRIVATE -Wl,-Map,${target}.map)
   endif()
 endforeach()
+# The GameCube data's conversions run offline over an extracted GameCube disc, checked against an Xbox disc
+# (docs/gc-data.md)
+add_executable(gcdata_check EXCLUDE_FROM_ALL src/action/devtools/GcDataCheck.cpp ${nf_action_gc_data_sources}
+                                             src/action/engine/EDL.cpp src/action/engine/Inflate.cpp
+                                             src/action/util/crc.cpp)
+target_compile_definitions(gcdata_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
+if(NOT WIN32)
+  target_compile_options(gcdata_check PRIVATE ${NF_XBOX_ABI_OPTIONS}
+                         -include ${CMAKE_SOURCE_DIR}/src/common/linux/msvcNames.h)
+endif()
 endif()   # Windows, 64-bit Linux and macOS: the standalone action engine
 
 # The standalone driving engine (docs/driving/standalone.md): our code alone, with no Driving.xbe mapped or read, no
