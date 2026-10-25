@@ -1,0 +1,792 @@
+{
+ "classes": [
+  {
+   "name": "RFog",
+   "size": 28,
+   "base": null,
+   "vtable": "0x191514",
+   "comment": "Singleton: RFog::Init 8b690 allocates 0x1c and stores the object in global 0x1ec004. No USingleton base (ctor 7d930 stores only its own vtable 0x191514, 3 slots). Fields sit at identical offsets on PS2 (vptr at +0 on both).",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "void *",
+     "name": "fogInfo",
+     "confidence": "high",
+     "evidence": "ctor 7d930 allocates a separate 0x1c-byte block and stores it here, then fills it: +0 1.0, +4 fog end (copied from +0x14), +8 density 0.000476, +0xc int 3 (mode), +0x10 colour 0x80856838, +0x14 5000.0, +0x18 scale 1.0; tuning-DB attribs bound to its members. FogColour 7d790 reads it; PS2 +0x4 in FogInfo/FogColour/CalcFogEnd. Pointee type unknown (fog-parameters struct). Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 1,
+     "type": "bool",
+     "name": "scaling",
+     "confidence": "high",
+     "evidence": "UpdateScale 7d8c0 tests byte +0x8 and clears it when the fade ends; ctor zeroes it. PS2 +0x8 is a 4-byte int (SetFogScale/UpdateScale). Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "int",
+     "name": "scaleEndFrame",
+     "confidence": "medium",
+     "evidence": "UpdateScale compares it with the frame counter global 0x1f2a4c and uses (end - now) as the remaining time; PS2 +0xc written by SetFogScale. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "float",
+     "name": "scaleRate",
+     "confidence": "medium",
+     "evidence": "UpdateScale: remaining * [+0x10] subtracted from +0x18 gives the current scale; PS2 SetFogScale(float,float) writes +0x10 float. Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "float",
+     "name": "targetScale",
+     "confidence": "medium",
+     "evidence": "ctor sets 1.0; UpdateScale copies it into fogInfo+0x18 when the fade ends; PS2 +0x18 float in SetFogScale/UpdateScale. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RColorize",
+   "size": 96,
+   "base": null,
+   "vtable": "0x1927c8",
+   "comment": "Singleton: Init 8b770 allocates 0x60 and stores it in global 0x1f6898. No USingleton base. Offsets identical on PS2 (vptr at +0 on both); +0x4..+0xf is padding before the 16-byte colour vectors.",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 16,
+     "type": "COORD4",
+     "name": "colourA",
+     "confidence": "medium",
+     "evidence": "SetEnabled 9a500 copies a 4-float vector (built by 14440) to +0x10 and the same value to +0x20; Draw LEAs it. PS2 +0x10/+0x18 as two 64-bit stores (SetEnabled/Draw). Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 16,
+     "type": "COORD4",
+     "name": "colourB",
+     "confidence": "medium",
+     "evidence": "SetEnabled 9a500 copies the same vector here as +0x10; Draw LEAs it; PS2 +0x20/+0x28. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 4,
+     "type": "int",
+     "name": "mode",
+     "confidence": "high",
+     "evidence": "SetEnabled(int) 9a500 stores the argument and switches on 0..3; PS2 Enabled 1d9368 returns mode!=0 and IRModeEnabled 1d9378 returns mode==1; ctor and Reset clear it. Name invented"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "int",
+     "name": "motionBlurTimer",
+     "confidence": "low",
+     "evidence": "EnableMotionBlur 9a4d0 zeroes it, DisableMotionBlur/Draw touch it; PS2 +0x34 same methods. Name invented"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "int",
+     "name": "brightnessChangeTime",
+     "confidence": "medium",
+     "evidence": "SetAreaBrightness 9a4a0 and SetEnabled store the game time global 0x234e34 here; ctor/Reset zero it. PS2 +0x38. Name invented"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "uint",
+     "name": "tintColour",
+     "confidence": "medium",
+     "evidence": "SetEnabled writes ARGB constants (0xff001010, 0xff282840, 0xff000000); Draw reads bytes +0x3d..+0x3f. PS2 +0x3c. Name invented"
+    },
+    {
+     "offset": "0x40",
+     "size": 4,
+     "type": "uint",
+     "name": "tintColour2",
+     "confidence": "low",
+     "evidence": "SetEnabled writes ARGB constants (same as +0x3c); PS2 +0x40. Name invented"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "uint",
+     "name": "tintColour3",
+     "confidence": "low",
+     "evidence": "SetEnabled writes 0xffff0050 / 0xff008080 / 0xff000000; PS2 +0x44. Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 4,
+     "type": "float",
+     "name": "areaBrightness",
+     "confidence": "high",
+     "evidence": "SetAreaBrightness 9a4a0 writes arg*arg*k here after saving the old value to +0x4c; PS2 GetAreaBrightness 1d8770 returns it. Name from PS2 sheet accessor"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "float",
+     "name": "prevAreaBrightness",
+     "confidence": "medium",
+     "evidence": "SetAreaBrightness copies the previous +0x48 here before overwriting; SetEnabled loads a global float into it. PS2 +0x4c. Name invented"
+    },
+    {
+     "offset": "0x50",
+     "size": 4,
+     "type": "float",
+     "name": "motionBlurAmount",
+     "confidence": "high",
+     "evidence": "EnableMotionBlur(float) 9a4d0 stores its argument here; ctor zeroes; PS2 EnableMotionBlur 1d9010 +0x50. Name invented"
+    },
+    {
+     "offset": "0x54",
+     "size": 4,
+     "type": "float",
+     "name": "blastStrength",
+     "confidence": "medium",
+     "evidence": "PS2 SetBlastStrength(float) 1d9388 writes +0x54; Xbox Draw writes it (no Xbox SetBlastStrength). Name from PS2 sheet"
+    },
+    {
+     "offset": "0x58",
+     "size": 4,
+     "type": "void *",
+     "name": "frontBuffer",
+     "confidence": "medium",
+     "evidence": "ctor 9a420 stores the result of EAGL::RenderContextExtension::GetFrontBuffer (e8270 on [0x1ebff4]+0x64); Draw reads it. Xbox only. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "REmpBolts",
+   "size": 556,
+   "base": null,
+   "vtable": null,
+   "comment": "No vptr. Allocated 0x22c by RVehicle::TriggerEmpBolts 95a10 (stored at RVehicle+0x368); ctor 9dc90 REmpBolts(RVehicle*) is __thiscall RET 4. Scalar field offsets match PS2; the anchor container at +0x18 is an MSVC tree on Xbox but a FastFree'd pointer on PS2.",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "RVehicle *",
+     "name": "vehicle",
+     "confidence": "high",
+     "evidence": "ctor stores its RVehicle* argument; passed to RSceneObj::GetPosition/LocateFX in CreateVehicleBolt/CreateWorldBolt/Draw/FindAnchors on both builds. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "uint",
+     "name": "lastUpdateTime",
+     "confidence": "medium",
+     "evidence": "ctor copies game time global 0x234e34; Update 9d6b0 computes now - [+4] as elapsed. PS2 +4 in ctor/Update. Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "uint",
+     "name": "startTime",
+     "confidence": "low",
+     "evidence": "ctor copies game time 0x234e34; PS2 +8 ctor. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "float",
+     "name": "intensity",
+     "confidence": "low",
+     "evidence": "ctor sets 1.0; PS2 +0xc float (PS2 RVehicle has SetIntensityEmpBolts). Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "void *",
+     "name": "anchors",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; FindAnchors/TrySpawnBolt R/W; PS2 +0x10 freed with __builtin_vec_delete in ~REmpBolts, read by GetRandomAnchor. REmpBolts::Anchor array. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "int",
+     "name": "numAnchors",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; FindAnchors/TrySpawnBolt; PS2 +0x14 used by GetRandomAnchor(void). Name invented"
+    },
+    {
+     "offset": "0x18",
+     "size": 12,
+     "type": "undefined4[3]",
+     "name": "anchorTree",
+     "confidence": "low",
+     "evidence": "MSVC tree (12 bytes): ctor LEAs +0x18, writes a byte at +0x18, calls 9c420 (head-node alloc) and stores the head at +0x1c (node self-linked, isnil byte +0x19 set), size 0 at +0x20. PS2 +0x18 is a pointer freed with UMemory::FastFree (GetRandomAnchor(unsigned)). Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 512,
+     "type": "undefined4[128]",
+     "name": "bolts",
+     "confidence": "medium",
+     "evidence": "32 records of 16 bytes: Update 9d6b0 indexes [+0x228]*16+0x24, passes the first dword to RLightning (global 0x200f4c) 9f840 and compacts by copying the last record over dead ones; PS2 Update LEAs +0x24. Name invented"
+    },
+    {
+     "offset": "0x224",
+     "size": 4,
+     "type": "uint",
+     "name": "numBolts",
+     "confidence": "high",
+     "evidence": "ctor zeroes; Update decrements it when a bolt dies and processes at most 8 per call; PS2 +0x224. Name invented"
+    },
+    {
+     "offset": "0x228",
+     "size": 4,
+     "type": "uint",
+     "name": "boltCursor",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; Update increments and wraps it to 0 at numBolts; PS2 +0x228. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RParticulate",
+   "size": 4208,
+   "base": null,
+   "vtable": "0x192e54",
+   "comment": "Singleton: Init 8bd60 allocates 0x1070 and stores it in global 0x201754; deleting dtor frees 0x1070. No USingleton base. 200 particles. Offsets identical on PS2.",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 3200,
+     "type": "COORD4[200]",
+     "name": "positions",
+     "confidence": "high",
+     "evidence": "_init a32b0 fills 16-byte records at +0x10,+0x20,... with random xyz in [-range,range] and w=1.0; Draw LEAs +0x10; count 200 from +0x1004. PS2 Update LEA +0x10. Name invented"
+    },
+    {
+     "offset": "0xc90",
+     "size": 800,
+     "type": "uint[200]",
+     "name": "colours",
+     "confidence": "high",
+     "evidence": "ctor a3f30 memsets 0xc8 dwords at +0xc90; _init writes a packed ARGB (alpha from +0xfb4, rgb from +0xfc0..) per particle at +0xc90+4i; Draw LEAs it. PS2 +0xc90 LEA. Name invented"
+    },
+    {
+     "offset": "0xfb0",
+     "size": 4,
+     "type": "float",
+     "name": "range",
+     "confidence": "medium",
+     "evidence": "_init sets 70.0 and uses 2*range*rand - range for positions; Update writes; PS2 +0xfb0. Name invented"
+    },
+    {
+     "offset": "0xfb4",
+     "size": 4,
+     "type": "float",
+     "name": "alpha",
+     "confidence": "medium",
+     "evidence": "_init sets 25.0 and converts it (ftol) to the alpha byte of each colour; PS2 +0xfb4. Name invented"
+    },
+    {
+     "offset": "0xfc0",
+     "size": 16,
+     "type": "COORD4",
+     "name": "colour",
+     "confidence": "medium",
+     "evidence": "_init stores (0.3,0.4,0.55,0) as a 4-float block (LEA +0xfc0) and packs *255 into the particle colours; PS2 +0xfc0..+0xfc8 (64-bit accesses). Name invented"
+    },
+    {
+     "offset": "0xfd0",
+     "size": 4,
+     "type": "float",
+     "name": "unkFD0",
+     "confidence": "low",
+     "evidence": "_init sets 0.094; PS2 +0xfd0 float in Update/_init. Name invented"
+    },
+    {
+     "offset": "0xfd4",
+     "size": 4,
+     "type": "float",
+     "name": "unkFD4",
+     "confidence": "low",
+     "evidence": "_init sets 0.012; PS2 +0xfd4 float. Name invented"
+    },
+    {
+     "offset": "0xfd8",
+     "size": 4,
+     "type": "float",
+     "name": "unkFD8",
+     "confidence": "low",
+     "evidence": "_init sets 0.055; PS2 +0xfd8 float. Name invented"
+    },
+    {
+     "offset": "0xfdc",
+     "size": 4,
+     "type": "float",
+     "name": "unkFDC",
+     "confidence": "low",
+     "evidence": "_init sets 0.1, Update writes; PS2 +0xfdc float. Name invented"
+    },
+    {
+     "offset": "0xfe0",
+     "size": 4,
+     "type": "float",
+     "name": "unkFE0",
+     "confidence": "low",
+     "evidence": "_init sets 0.7; PS2 +0xfe0 float. Name invented"
+    },
+    {
+     "offset": "0xffc",
+     "size": 1,
+     "type": "bool",
+     "name": "enabled",
+     "confidence": "medium",
+     "evidence": "ctor clears byte +0xffc; Draw/Update test it. PS2 +0xffc is addr-taken in LoadAttributes (a 4-byte attribute-bound flag). Name invented"
+    },
+    {
+     "offset": "0x1000",
+     "size": 4,
+     "type": "int",
+     "name": "firstParticle",
+     "confidence": "low",
+     "evidence": "_init sets 0; Draw reads; PS2 +0x1000. Name invented"
+    },
+    {
+     "offset": "0x1004",
+     "size": 4,
+     "type": "int",
+     "name": "numParticles",
+     "confidence": "high",
+     "evidence": "_init sets 200 (0xc8), matching the 200-entry arrays; Draw reads; PS2 +0x1004. Name invented"
+    },
+    {
+     "offset": "0x1010",
+     "size": 96,
+     "type": "byte[96]",
+     "name": "material",
+     "confidence": "medium",
+     "evidence": "USimpleMaterial embedded: ctor calls USimpleMaterial::USimpleMaterial (11bb60) on this+0x1010, ~RParticulate calls ef490 on it; runs to the end of the 0x1070 object (type not in Ghidra). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RPostProcessing",
+   "size": 8,
+   "base": null,
+   "vtable": "0x192ec4",
+   "comment": "Singleton: Init 8bc80 allocates 8 and stores it in global 0x20175c; deleting dtor frees 8. Just a vptr and a private-data pointer on both builds.",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 4,
+     "type": "void *",
+     "name": "privateData",
+     "confidence": "high",
+     "evidence": "ctor a49a0 allocates it (__builtin_new) and every method goes through it (Reset/Draw/GetSubsampledBackBuffer/GrabBackBuffer; dtor deletes); PS2 +4 same; PS2 sheet names RPostProcessing::PPPrivateData (DrawBlurPoly, ExtractAlphaInfo). Type not in Ghidra. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RSniperZoom",
+   "size": 3184,
+   "base": null,
+   "vtable": "0x193008",
+   "comment": "Singleton: Init 8be40 allocates 0xc70 and stores it in global 0x201818; deleting dtor frees 0xc70. No USingleton base. Offsets identical on PS2 up to +0xc10; PS2's material is larger (PS2 +0xc40 accessed).",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 1,
+     "type": "bool",
+     "name": "enabled",
+     "confidence": "high",
+     "evidence": "ctor/Reset clear byte +4; GrabBackBuffer/Draw test it. PS2 +4 is 4 bytes (Enabled 1ede08 returns it, Show/Hide write it). Name from PS2 Enabled()"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "uint",
+     "name": "showParam",
+     "confidence": "medium",
+     "evidence": "ctor/Reset store 0xff; PS2 Show(unsigned int) 1ede10 writes its argument to +8, SetupVerts reads it. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 36,
+     "type": "byte[36]",
+     "name": "offscreenBuffer",
+     "confidence": "high",
+     "evidence": "ROffscreenBuffer embedded: ctor calls ROffscreenBuffer::ROffscreenBuffer(64,64,32,0,0) (7f610) on this+0xc, dtor calls ~ROffscreenBuffer; Draw reads +0x18 inside it. Ends at +0x30 on both builds (type not in Ghidra). Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 672,
+     "type": "byte[672]",
+     "name": "verts0",
+     "confidence": "medium",
+     "evidence": "vertex block: Draw/SetupVerts LEA +0x30; next block at +0x2d0 (0x2a0 apart); PS2 same offsets. Name invented"
+    },
+    {
+     "offset": "0x2d0",
+     "size": 672,
+     "type": "byte[672]",
+     "name": "verts1",
+     "confidence": "medium",
+     "evidence": "Draw LEA +0x2d0; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": "0x570",
+     "size": 672,
+     "type": "byte[672]",
+     "name": "verts2",
+     "confidence": "medium",
+     "evidence": "Draw LEA +0x570; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": "0x810",
+     "size": 672,
+     "type": "byte[672]",
+     "name": "verts3",
+     "confidence": "medium",
+     "evidence": "Draw LEA +0x810; PS2 Draw/SetupVerts. Name invented"
+    },
+    {
+     "offset": "0xab0",
+     "size": 168,
+     "type": "undefined4[42]",
+     "name": "indexBlock0",
+     "confidence": "low",
+     "evidence": "ctor memsets 0x2a dwords at +0xab0; Draw LEAs it; PS2 ctor/Draw. Name invented"
+    },
+    {
+     "offset": "0xb60",
+     "size": 168,
+     "type": "undefined4[42]",
+     "name": "indexBlock1",
+     "confidence": "low",
+     "evidence": "ctor memsets 0x2a dwords at +0xb60; Draw/SetupVerts LEA it; PS2 same. Name invented"
+    },
+    {
+     "offset": "0xc10",
+     "size": 96,
+     "type": "byte[96]",
+     "name": "material",
+     "confidence": "medium",
+     "evidence": "USimpleTexturedMaterial embedded: ctor calls 11bcd0 then state setters eecf0/eedc0/eecd0 on this+0xc10, dtor calls ef490; runs to the end of the object (type not in Ghidra). Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RDecalManager",
+   "size": 672,
+   "base": null,
+   "vtable": "0x192838",
+   "comment": "Singleton: Init 8b7e0 allocates 0x2a0 and stores it in global 0x1fe820. No USingleton base. Most decal state lives in globals (0x1f68b0: 8 decal buckets of 0x3c bytes, material 0x1ff7f0, vertex pools 0x1f6a20/0x1fa920). Offsets identical on PS2.",
+   "fields": [
+    {
+     "offset": "0x10",
+     "size": 640,
+     "type": "byte[640]",
+     "name": "decalTable",
+     "confidence": "medium",
+     "evidence": "ctor 9acf0 memcpys 0x280 bytes of a loaded data file into this+0x10 (or memsets 0x280 bytes if the load fails); PS2 ctor LEAs +0x10 and AddDecal LEAs +0x54 (inside the table). Name invented"
+    },
+    {
+     "offset": "0x290",
+     "size": 4,
+     "type": "int",
+     "name": "numDecals",
+     "confidence": "low",
+     "evidence": "PS2 ClearDecals 1dae58 writes +0x290 (no Xbox ClearDecals). Name invented"
+    },
+    {
+     "offset": "0x294",
+     "size": 4,
+     "type": "int",
+     "name": "nextDecal",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; AddDecal 9b070 R/W; PS2 +0x294 same. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RGain",
+   "size": 300,
+   "base": null,
+   "vtable": "0x192bdc",
+   "comment": "Singleton: Init 8bcf0 allocates 0x12c and stores it in global 0x200f20; deleting dtor frees 0x12c. No USingleton base. Gain/offset vectors match PS2 +4..+0x20; everything after is Xbox-only (material, EAGL::DynamicModel and a parameter-binding block).",
+   "fields": [
+    {
+     "offset": "0x4",
+     "size": 16,
+     "type": "float[4]",
+     "name": "gain",
+     "confidence": "high",
+     "evidence": "ctor sets 1.0 x4; PS2 SetGain(float,float,float,float) 1df880 writes +4..+0x10; ctor stores &this+4 at +0x108 (shader binding). Name from PS2 SetGain"
+    },
+    {
+     "offset": "0x14",
+     "size": 16,
+     "type": "float[4]",
+     "name": "offset",
+     "confidence": "high",
+     "evidence": "ctor zeroes x4; PS2 SetOffset(float x4) 1df898 writes +0x14..+0x20; ctor stores &this+0x14 at +0x110. Name from PS2 SetOffset"
+    },
+    {
+     "offset": "0x24",
+     "size": 76,
+     "type": "byte[76]",
+     "name": "material",
+     "confidence": "medium",
+     "evidence": "material embedded: ctor calls ef480 on this+0x24 then render-state setters (eec70/eee60/eecf0/eecd0/eedc0/eecb0/eee20), dtor calls ef490 (the destructor also used on USimpleMaterial members). 0x4c bytes up to the DynamicModel. Name invented"
+    },
+    {
+     "offset": "0x70",
+     "size": 88,
+     "type": "byte[88]",
+     "name": "model",
+     "confidence": "high",
+     "evidence": "EAGL::DynamicModel embedded: ctor calls DynamicModel ctor e9760 on this+0x70, dtor calls ~DynamicModel; Draw uses it; ctor calls e9890 on it with this+0xd8. Name invented"
+    },
+    {
+     "offset": "0xc8",
+     "size": 16,
+     "type": "undefined4[4]",
+     "name": "shaderConst",
+     "confidence": "low",
+     "evidence": "ctor zeroes +0xc8..+0xd4 and stores &this+0xc8 at +0xf0; Draw LEAs +0xc8. Name invented"
+    },
+    {
+     "offset": "0xd8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "bindingHeader",
+     "confidence": "low",
+     "evidence": "ctor calls 9dd40 on this+0xd8 (start of a parameter-binding block running to the end, 0x54 bytes) and passes it to the DynamicModel (e9890); dtor calls f12c0 on it. Name invented"
+    },
+    {
+     "offset": "0xdc",
+     "size": 4,
+     "type": "int",
+     "name": "binding0Count",
+     "confidence": "low",
+     "evidence": "ctor sets 1; paired with +0xe0. Name invented"
+    },
+    {
+     "offset": "0xe0",
+     "size": 4,
+     "type": "void *",
+     "name": "binding0Material",
+     "confidence": "low",
+     "evidence": "ctor stores &this+0x24 (the material). Name invented"
+    },
+    {
+     "offset": "0xe4",
+     "size": 4,
+     "type": "undefined4",
+     "name": "binding0Extra",
+     "confidence": "low",
+     "evidence": "Draw writes. Name invented"
+    },
+    {
+     "offset": "0xe8",
+     "size": 4,
+     "type": "undefined4",
+     "name": "binding0Extra2",
+     "confidence": "low",
+     "evidence": "Draw writes. Name invented"
+    },
+    {
+     "offset": "0xec",
+     "size": 4,
+     "type": "int",
+     "name": "binding1Count",
+     "confidence": "low",
+     "evidence": "ctor sets 1; paired with +0xf0. Name invented"
+    },
+    {
+     "offset": "0xf0",
+     "size": 4,
+     "type": "void *",
+     "name": "binding1Data",
+     "confidence": "low",
+     "evidence": "ctor stores &this+0xc8. Name invented"
+    },
+    {
+     "offset": "0x104",
+     "size": 4,
+     "type": "int",
+     "name": "binding2Count",
+     "confidence": "low",
+     "evidence": "ctor sets 1; paired with +0x108. Name invented"
+    },
+    {
+     "offset": "0x108",
+     "size": 4,
+     "type": "float *",
+     "name": "binding2Gain",
+     "confidence": "low",
+     "evidence": "ctor stores &this+4 (gain). Name invented"
+    },
+    {
+     "offset": "0x10c",
+     "size": 4,
+     "type": "int",
+     "name": "binding3Count",
+     "confidence": "low",
+     "evidence": "ctor sets 1; paired with +0x110. Name invented"
+    },
+    {
+     "offset": "0x110",
+     "size": 4,
+     "type": "float *",
+     "name": "binding3Offset",
+     "confidence": "low",
+     "evidence": "ctor stores &this+0x14 (offset). Name invented"
+    },
+    {
+     "offset": "0x114",
+     "size": 24,
+     "type": "undefined4[6]",
+     "name": "drawParams",
+     "confidence": "low",
+     "evidence": "Draw writes +0x114..+0x128 each frame. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RTyreTrack",
+   "size": 2336,
+   "base": null,
+   "vtable": null,
+   "comment": "No vptr; allocated 0x920 (2336). PBondCar::tyreTracks[4] (+0x74) point to these. Ctor abfc0 RTyreTrack(float width, bool, bool) __thiscall RET 0xc. Offsets identical on PS2 (+0x900..+0x917 match exactly).",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 2048,
+     "type": "COORD4[128]",
+     "name": "points",
+     "confidence": "medium",
+     "evidence": "64 segments x 32 bytes (two COORD4 each): ctor inits the last segment's pair via [maxSegments*32-0x20] and [-0x10] (VU0_v4Init); PS2 Add LEAs +4/+8 inside the first entries. Name invented"
+    },
+    {
+     "offset": "0x800",
+     "size": 256,
+     "type": "undefined4[64]",
+     "name": "segmentData",
+     "confidence": "low",
+     "evidence": "PS2 Break/Draw LEA +0x800, i.e. a 64-entry per-segment array after the points (element type unknown). Name invented"
+    },
+    {
+     "offset": "0x900",
+     "size": 4,
+     "type": "int",
+     "name": "head",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; Add/Break/Draw R/W on both builds. Name invented"
+    },
+    {
+     "offset": "0x904",
+     "size": 4,
+     "type": "int",
+     "name": "count",
+     "confidence": "medium",
+     "evidence": "ctor zeroes; Add/Break/Draw R/W on both builds. Name invented"
+    },
+    {
+     "offset": "0x908",
+     "size": 4,
+     "type": "int",
+     "name": "unk908",
+     "confidence": "low",
+     "evidence": "ctor zeroes; Add/Break on both builds. Name invented"
+    },
+    {
+     "offset": "0x90c",
+     "size": 4,
+     "type": "int",
+     "name": "unk90C",
+     "confidence": "low",
+     "evidence": "ctor zeroes; Add/Break/Draw on both builds. Name invented"
+    },
+    {
+     "offset": "0x910",
+     "size": 4,
+     "type": "float",
+     "name": "width",
+     "confidence": "high",
+     "evidence": "ctor stores its float argument; Add writes; PS2 +0x910 float (also Draw). Name invented"
+    },
+    {
+     "offset": "0x914",
+     "size": 1,
+     "type": "byte",
+     "name": "unk914",
+     "confidence": "low",
+     "evidence": "ctor clears; Add/Break R/W byte on both builds. Name invented"
+    },
+    {
+     "offset": "0x915",
+     "size": 1,
+     "type": "byte",
+     "name": "unk915",
+     "confidence": "low",
+     "evidence": "ctor clears; Add/Break/Draw byte on both builds. Name invented"
+    },
+    {
+     "offset": "0x916",
+     "size": 1,
+     "type": "byte",
+     "name": "maxSegments",
+     "confidence": "high",
+     "evidence": "ctor sets 0x40 if the first bool is true else 0x20 and uses it as the segment count (x32 bytes); Add/Break/Draw read. PS2 +0x916 byte. Name invented"
+    },
+    {
+     "offset": "0x917",
+     "size": 1,
+     "type": "bool",
+     "name": "flag917",
+     "confidence": "medium",
+     "evidence": "ctor stores the second bool argument; Add/Break read; PS2 +0x917 byte. Name invented"
+    }
+   ]
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x7d930": "RFog *",
+  "0x9a420": "RColorize *",
+  "0x9dc90": "REmpBolts *",
+  "0xa3f30": "RParticulate *",
+  "0xa69a0": "RSniperZoom *",
+  "0x9acf0": "RDecalManager *",
+  "0x9dfe0": "RGain *",
+  "0xabfc0": "RTyreTrack *",
+  "0x9a4a0": "void",
+  "0x9a4d0": "void",
+  "0x9a500": "void",
+  "0x9d6b0": "void",
+  "0x95a10": "void",
+  "0x8b690": "void",
+  "0x8b770": "void",
+  "0x8b7e0": "void",
+  "0x8bc80": "void",
+  "0x8bcf0": "void",
+  "0x8bd60": "void",
+  "0x8be40": "void",
+  "0xa32b0": "void"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "Singleton globals (Init stores the new object): RFog 0x1ec004, RColorize 0x1f6898, RDecalManager 0x1fe820, RGain 0x200f20, RParticulate 0x201754, RPostProcessing 0x20175c, RSniperZoom 0x201818. None has a USingleton base: every ctor stores only its own 3-slot vtable and calls no base ctor.",
+  "All nine classes keep the same field offsets on PS2 and Xbox (vptr at +0 on both where present); only bool widths differ (RFog +8, RSniperZoom +4, RParticulate +0xffc are 1 byte on Xbox, 4 on PS2) and padding follows each, so nothing moves.",
+  "RGain on Xbox is a different implementation: PS2 only has gain/offset (+4..+0x20); Xbox adds a material (+0x24), an EAGL::DynamicModel (+0x70) and a parameter-binding block (+0xd8..+0x12b) pointing back at the material, +0xc8, gain and offset. Binding-block field names are guesses.",
+  "REmpBolts +0x18: MSVC std::map/set on Xbox (12 bytes), a FastFree'd pointer on PS2; the two PS2 GetRandomAnchor overloads use +0x10/+0x14 and +0x18 respectively.",
+  "RTyreTrack segment layout (32 bytes per segment, 64 or 32 segments) comes from the ctor's maxSegments*32 indexing; the +0x800 region is PS2 evidence only.",
+  "USimpleMaterial / USimpleTexturedMaterial / ROffscreenBuffer / EAGL::DynamicModel members are byte arrays (0x60, 0x60, 0x24, 0x58 by position) because the types are not in Ghidra; the 0x60 material sizes assume the member runs to the end of the object.",
+  "RFog::UpdateScale 7d8c0 tail-jumps to SetFogParams 7d840, so its return type follows SetFogParams (left unset).",
+  "RVehicle::TriggerEmpBolts 95a10 allocates REmpBolts with size 0x22c (only caller of the ctor)."
+ ]
+}

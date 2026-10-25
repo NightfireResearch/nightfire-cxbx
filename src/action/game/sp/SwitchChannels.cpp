@@ -1,5 +1,17 @@
 #include "SwitchChannels.h"
 
+// XBE_GLOBAL(0x001dee38, 0x100)
+char switch_channels_prev[256];
+// XBE_GLOBAL(0x001df138, 0x100)
+char switch_channels[256];
+// XBE_GLOBAL(0x001df238, 0x100)
+char switch_channels_hold[256];
+// XBE_GLOBAL(0x001df428, 0x400)
+uint32_t switch_channels_time[256];
+
+// XBE_GLOBAL(0x001def38, 0x200)
+ushort switch_channels_MusicVars[256];
+
 // AUTOINJECT
 void Init_SwitchChannels(void) {
 

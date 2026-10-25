@@ -1,0 +1,270 @@
+{
+ "program": "Driving.xbe",
+ "labels": [
+  {
+   "address": "0x001b64ec",
+   "name": "gAIElementHardLimit",
+   "comment": "PS2 0x327c2c (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001d4830",
+   "name": "gDebugAllocAddress",
+   "comment": "PS2 0x355a90 (152 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001d48c4",
+   "name": "UMemory::fgMemVectors",
+   "comment": "PS2 0x355b34 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001dda98",
+   "name": "AICharacterHands::fgZoomButton",
+   "comment": "PS2 0x3276e0 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001dda99",
+   "name": "AICharacterHands::fgIsZoomed",
+   "comment": "PS2 0x3276e4 (1028 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001ddaf0",
+   "name": "AICharacterHands::fgActor",
+   "comment": "PS2 0x3276c0 (32 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001dde95",
+   "name": "AICharacterPedestrian::fgPedsEnabled",
+   "comment": "PS2 0x3c8230 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001dded8",
+   "name": "AICharacterPedestrian::fgNumPeds",
+   "comment": "PS2 0x3c8238 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001ddee4",
+   "name": "AIElementController::fObj",
+   "comment": "PS2 0x327c30 (16 bytes on PS2); 9 votes"
+  },
+  {
+   "address": "0x001de738",
+   "name": "AIRoadSpawn::fInitialUpdate",
+   "comment": "PS2 0x327d60 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001de804",
+   "name": "AIRoadSpawn::fgRoadSpawn",
+   "comment": "PS2 0x327d58 (4 bytes on PS2); 4 votes"
+  },
+  {
+   "address": "0x001de808",
+   "name": "AIRoadSpawn::fNumSpawnSegments",
+   "comment": "PS2 0x327d5c (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001de814",
+   "name": "AIRoadSpawn::fForceRespawn",
+   "comment": "PS2 0x327d70 (52 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001e1f14",
+   "name": "AIZoneController::fgController",
+   "comment": "PS2 0x32b760 (8 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001e22e8",
+   "name": "DTuningDBMgr::fgThis_DTuningDBMgr",
+   "comment": "PS2 0x32bae0 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001e464c",
+   "name": "AttributeSystem::fgThis_AttributeSystem",
+   "comment": "PS2 0x32e638 (72 bytes on PS2); 8 votes"
+  },
+  {
+   "address": "0x001e520c",
+   "name": "Scheduler::fgScheduler",
+   "comment": "PS2 0x32f2b0 (4 bytes on PS2); 5 votes"
+  },
+  {
+   "address": "0x001e84e4",
+   "name": "RayShell::fNumActiveRayShells",
+   "comment": "PS2 0x332950 (16 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x001ebff4",
+   "name": "RRenderer::fgRenderer",
+   "comment": "PS2 0x333760 (4 bytes on PS2); 19 votes"
+  },
+  {
+   "address": "0x001ec004",
+   "name": "RFog::fgThis_RFog",
+   "comment": "PS2 0x33376c (52 bytes on PS2); 4 votes"
+  },
+  {
+   "address": "0x001ec260",
+   "name": "RLightManager::fgThis_RLightManager",
+   "comment": "PS2 0x333830 (496 bytes on PS2); 5 votes"
+  },
+  {
+   "address": "0x001f1cf4",
+   "name": "RSceneObj::fgNumVisibleDrawLastObjs",
+   "comment": "PS2 0x3c8324 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001f2a30",
+   "name": "RTextureContextManager::fgThis_RTextureContextManager",
+   "comment": "PS2 0x333fe4 (56 bytes on PS2); 5 votes"
+  },
+  {
+   "address": "0x001f2dfc",
+   "name": "RReflection::fgThis",
+   "comment": "PS2 0x333e68 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x001f6898",
+   "name": "RColorize::fgThis_RColorize",
+   "comment": "PS2 0x3349e0 (64 bytes on PS2); 5 votes"
+  },
+  {
+   "address": "0x001fe820",
+   "name": "RDecalManager::fgThis_RDecalManager",
+   "comment": "PS2 0x334bc0 (12 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00200f44",
+   "name": "RLensFlareManager::fgThis_RLensFlareManager",
+   "comment": "PS2 0x334d50 (40 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00200f4c",
+   "name": "RLightning::fgThis_RLightning",
+   "comment": "PS2 0x334d58 (56 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00201730",
+   "name": "RParticleSystemManager::fManager",
+   "comment": "PS2 0x3c82f0 (8 bytes on PS2); 4 votes"
+  },
+  {
+   "address": "0x00201844",
+   "name": "RWater::fgThis_RWater",
+   "comment": "PS2 0x335b20 (540 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00208cb4",
+   "name": "RGlareManager::fgThis_RGlareManager",
+   "comment": "PS2 0x339090 (132 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x0023e0d0",
+   "name": "WRoadNetwork::fNumRoads",
+   "comment": "PS2 0x3c8258 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x0023e0e0",
+   "name": "WRoadNetwork::fgRoadNetwork",
+   "comment": "PS2 0x33a5f8 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x0023e0e4",
+   "name": "WRoadNetwork::fNodes",
+   "comment": "PS2 0x33a5fc (4 bytes on PS2); 4 votes"
+  },
+  {
+   "address": "0x0023e0e8",
+   "name": "WRoadNetwork::fSegments",
+   "comment": "PS2 0x33a600 (4 bytes on PS2); 9 votes"
+  },
+  {
+   "address": "0x0023e0ec",
+   "name": "WRoadNetwork::fIntersections",
+   "comment": "PS2 0x33a604 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x0023e0f4",
+   "name": "WRoadNetwork::fRoads",
+   "comment": "PS2 0x33a60c (8 bytes on PS2); 4 votes"
+  },
+  {
+   "address": "0x0023e0f8",
+   "name": "WRoadNetwork::fSegmentStamp",
+   "comment": "PS2 0x33a610 (848 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x0023f320",
+   "name": "GFX::fGallery",
+   "comment": "PS2 0x33aad0 (40 bytes on PS2); 8 votes"
+  },
+  {
+   "address": "0x0023f828",
+   "name": "GSubtitles::fTheApp",
+   "comment": "PS2 0x33ba60 (44 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x0023fb60",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentDevice",
+   "comment": "PS2 0x3485ac (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x0023fb64",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentRenderContext",
+   "comment": "PS2 0x3485b0 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x0023fb68",
+   "name": "EAGLInternal::DevicePrivate::gpCurrentTextureRenderContext",
+   "comment": "PS2 0x3485b4 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00242ce0",
+   "name": "memclass",
+   "comment": "PS2 0x355990 (256 bytes on PS2); 5 votes"
+  },
+  {
+   "address": "0x00242fd0",
+   "name": "UMemory::fgHeaps",
+   "comment": "PS2 0x355b40 (64 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x00243710",
+   "name": "USimpleTexturedMaterial::fgLayerData",
+   "comment": "PS2 0x3c8300 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00243750",
+   "name": "USimpleMaterial::fgCur",
+   "comment": "PS2 0x3c82fc (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00243758",
+   "name": "USimpleMaterial::fgLayerData",
+   "comment": "PS2 0x3c82f8 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x00243830",
+   "name": "UVolatileMaterial::fgCur",
+   "comment": "PS2 0x3c833c (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x00243878",
+   "name": "UVolatileMaterial::fgLayerData",
+   "comment": "PS2 0x3c8338 (4 bytes on PS2); 3 votes"
+  },
+  {
+   "address": "0x00243a58",
+   "name": "ASoundManager::fgSoundList",
+   "comment": "PS2 0x355dc0 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00243a80",
+   "name": "AStream::fTrigger",
+   "comment": "PS2 0x355db0 (4 bytes on PS2); 2 votes"
+  },
+  {
+   "address": "0x00243b34",
+   "name": "ASystem::fgSystem",
+   "comment": "PS2 0x355d28 (8 bytes on PS2); 2 votes"
+  }
+ ]
+}

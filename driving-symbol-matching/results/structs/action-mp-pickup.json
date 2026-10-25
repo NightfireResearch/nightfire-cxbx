@@ -1,0 +1,17 @@
+{
+ "program": "default.xbe",
+ "types": [
+  {
+   "name": "MP_PICKUP",
+   "size": 88,
+   "comment": "A multiplayer pickup slot (MPpickups, 64 of them). src/action/game/mp/multiplayer.cpp",
+   "fields": [
+    {"offset": 0, "type": "obj_tag *", "name": "gameObj"},
+    {"offset": 4, "type": "CelPos_tag", "name": "celPos"},
+    {"offset": 20, "type": "AIEmitter_tag", "name": "aiEmitter", "comment": "so bots can path to it"},
+    {"offset": 60, "type": "float[6]", "name": "maybeBotPickupVisitTimes", "comment": "one per bot: MP_Pickup_Process ages all 6; MP_ResetBotPickupTimes and BOTSTATE_pickGoal index it by bot"},
+    {"offset": 84, "type": "undefined4", "name": "unknown_0x54", "comment": "no reference in the XBE (MP_Init's clear aside)"}
+   ]
+  }
+ ]
+}

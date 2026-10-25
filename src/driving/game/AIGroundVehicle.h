@@ -1,0 +1,303 @@
+#ifndef DRIVING_GAME_AIGROUNDVEHICLE_H_
+#define DRIVING_GAME_AIGROUNDVEHICLE_H_
+
+// ---------------------------------------------------------------------------------------------------------------
+// AIGroundVehicle (0x270 bytes, vtable 0x0018b8d4): the AI driving a car (PBondCar). Every car in the Simulation has
+// one: the players' (AIVehicleController's PlayerGroundVehicles), the traffic's and the agents'. Update runs it by
+// type: the player's car only while auto-drive or a spline path has it; traffic follows its lane; an agent picks a
+// goal (its target vehicle, the command's position, or the road ahead) each step, drives there by navigate mode -
+// straight at it, along the road network towards it, at random along the roads, or along a spline - sets its speed
+// by attack mode, and fires its weapons. AIGroundVehicle.cpp holds the modes, the navigators and the lane weights;
+// the driving, the collision checks and the weapons are in the methods declared after them.
+//
+// The field names are ours unless a comment says otherwise; the events port's (its EAICommand) are kept.
+// ---------------------------------------------------------------------------------------------------------------
+
+#include <stddef.h>
+#include "../Vtables.h"   // our copies of the game's vtables
+#include <stdint.h>
+
+#include "AIVehicle.h"
+#include "../../common/xbeClass.h" // LAYOUT_32
+
+class WRoadNav;
+struct PhysicsObject;
+
+// AIGroundVehicle::type: what Update runs (the names are ours)
+enum AIGroundVehicleType : int32_t {
+    kAIGroundNone = 0,              // Reset's
+    kAIGroundPlayer = 1,            // a player's car: no AI but DoPlayerLogic
+    kAIDrivingOnRoad = 2,           // a player's car in auto-drive (EngageAutoDrive); PBondCar::ResetCar puts the
+                                    //   car back on its road
+    kAIGroundSplinePath = 3,        // carried along a spline path (EngageSplinePath)
+    kAIGroundTraffic = 4,
+    kAIGroundAgent = 5,
+};
+
+// AIGroundVehicle::navigateMode: how the goal is reached (names ours; the driving navigator's WRoadNavMode follows)
+enum AIGroundNavigateMode : int32_t {
+    kGroundNavigateNone = 1,        // the navigator stopped
+    kGroundNavigateDirect = 2,      // straight at the goal
+    kGroundNavigateRoad = 3,        // along the road network, towards the goal (kNavDirection)
+    kGroundNavigateRandom = 4,      // along the roads at random (kNavRandom); auto-drive's
+    kGroundNavigateSpline = 5,      // along the command's spline
+};
+
+// AIGroundVehicle::targetMode
+enum AIGroundTargetMode : int32_t {
+    kGroundTargetPlayer = 0,        // the first player's car
+    kGroundTargetPosition = 1,      // targetPosition
+};
+
+// AIGroundVehicle::attackMode: how DoAttackMode sets the speed, and which weapons DoWeaponUpdate fires (names ours;
+// the others set no speed)
+enum AIGroundAttackMode : int32_t {
+    kGroundAttackMove = 1,          // to the goal at the maximum speed, slowing within the range
+    kGroundAttackGuns = 9,          // DoWeaponUpdate: the guns only
+    kGroundAttackRockets = 10,      // DoWeaponUpdate: the rockets only
+    kGroundAttack12 = 12,           // 7.5
+    kGroundAttackChase = 13,        // after the target, by its speed; the siren on (HAS_SIREN)
+    kGroundAttack14 = 14,           // by the target's speed, at least 10
+    kGroundAttackAutoDrive = 15,    // the road's speed (EngageAutoDrive)
+};
+
+class AIGroundVehicle : public AIVehicle {
+public:
+    int32_t type;                   // +0x80 AIGroundVehicleType
+    int32_t navigateModeStep;       // +0x84 the agent's navigate mode does not change before this step; 0 none
+    int32_t navigateMode;           // +0x88 AIGroundNavigateMode
+    int32_t previousNavigateMode;   // +0x8c the agent's, when it last changed mode
+    int32_t targetMode;             // +0x90 AIGroundTargetMode
+    int32_t attackMode;             // +0x94 AIGroundAttackMode
+    AICommand *command;             // +0x98 EAICommand's last (the events port's name)
+    float targetSpeed;              // +0x9c DoAttackMode's
+    int16_t road;                   // +0xa0 the road whose carCount counts it, -1 none
+    uint8_t unknownA2[2];
+    int32_t skipFullUpdate;         // +0xa4 the controller's updates: 0 on the step it updates the car in full
+    uint8_t laneWeights[0x40];      // +0xa8 the cost of each lane, 0x20 the middle of the road, 0xff blocked
+    uint8_t laneSpan;               // +0xe8 the lanes the car covers: 3, or 4 for the large traffic (bus, truck,
+                                    //   tnkr, flatb)
+    uint8_t hitByCollision;         // +0xe9 ECollision: a collision of a kind up to 2 (the events port's name)
+    uint8_t collisionKind;          // +0xea ECollision: the other side's kind (the events port's name)
+    uint8_t shocked;                // +0xeb traffic: set while the car is in shock, so it reacts once
+    int32_t collNavStep;            // +0xec when GetCollNav last placed collNav
+    WRoadNav *collNav;              // +0xf0 GetCollNav's, kNavDirection
+    int32_t laneCollNavStep;        // +0xf4 ... laneCollNav
+    WRoadNav *laneCollNav;          // +0xf8 GetCollNav's in a lane, kNavRandom
+    int32_t heliCollNavStep;        // +0xfc ... heliCollNav
+    WRoadNav *heliCollNav;          // +0x100 GetHeliCollNav's, kNavDirection5
+    WRoadNav *targetNav;            // +0x104 the agent's at its goal, without a target vehicle
+    uint8_t isSub;                  // +0x108 its car physics' IS_SUB
+    uint8_t followTargetHeight;     // +0x109 the command's: a sub keeps to its target's height
+    uint8_t unknown10A[2];
+    float maxHeight;                // +0x10c the command's: a sub's ceiling
+    float minHeight;                // +0x110 the command's: its floor
+    float heightPhase;              // +0x114 turns: a sub's height swings by sin(heightPhase) * heightSwing
+    float heightSwing;              // +0x118 2.5 for IS_HELI, else 10 (SetNavigateMode)
+    uint8_t hasTurret;              // +0x11c its car's HAS_TURRET
+    uint8_t useGuns;                // +0x11d the events port's names
+    uint8_t useRockets;             // +0x11e
+    uint8_t useMissiles;            // +0x11f
+    int8_t accuracy;                // +0x120 the command's
+    int8_t aimScale;                // +0x121 the command's
+    uint8_t unknown122[2];
+    float autoDriveSpeed;           // +0x124 EAutoDriveSpeedChange's (the events port's name); scales the
+                                    //   auto-drive speed, 1 at Reset
+    float maxSpeed;                 // +0x128 the command's
+    float speedScale;               // +0x12c the command's: the speed, by the target's
+    uint8_t reversing;              // +0x130 DriveToPoint backs away from a point behind it
+    uint8_t unknown131[3];
+    int32_t chargeRollStep;         // +0x134 steps to the agent's next roll for chargeChance
+    int32_t chargeSteps;            // +0x138 steps the agent keeps charging the target at full speed
+    float chargeChance;             // +0x13c the command's shotCount: each roll's chance of a charge
+    float unknown140;               // +0x140 the command's unknown6c: the least lead time on the target's way
+    uint8_t useLanes;               // +0x144 the command's unknown7c is 0: the navigator keeps a lane
+    uint8_t unknown145;             // +0x145 the command's unknown7d is not 0
+    uint8_t unknown146[2];
+    int32_t airSteps;               // +0x148 steps with no wheel on the ground
+    uint8_t autoDriveSteering;      // +0x14c EAutoDriveSteering: clear while the player steers (the events port's)
+    uint8_t unknown14D;
+    int16_t zoneStopSteps;          // +0x14e entering an AI zone of type 4: a second without auto-drive speed
+    uint8_t enteredZone;            // +0x150 an AI zone of type 4 stopped it (GetProperty's "SMOKED")
+    uint8_t oiled;                  // +0x151 GetProperty's "OILED"
+    uint8_t stopped;                // +0x152 no speed, no weapons: set when its snowmobile rider dies
+    uint8_t unknown153;
+    int32_t pathCheckStep;          // +0x154 when the line-of-sight checks were last made (four times a second)
+    uint8_t minSimUpdate;           // +0x158 Ghidra's name: UpdateNavPos moves the navigator at the traffic's speed;
+                                    //   DriveToPointTraffic does nothing
+    uint8_t unknown159[3];
+    Coord3 navPosition;             // +0x15c the navigator's road point, with minSimUpdate
+    Coord3 navDirection;            // +0x168 ... and its direction
+    uint8_t stopping;               // +0x174 traffic stopping for a car or a light: UpdateNavPos leaves the
+                                    //   navigator where it is
+    uint8_t atRedLight;             // +0x175 ... at a red light
+    uint8_t heldStill;              // +0x176 ... and held still
+    uint8_t newCommand;             // +0x177 set by EAICommand: Update makes the next update a full one
+    AIGroundVehicle *target;        // +0x178 the target vehicle, NULL for none (a ground vehicle)
+    Coord3 targetPosition;          // +0x17c kGroundTargetPosition's
+    uint8_t unknown188[8];
+    Coord3 goal;                    // +0x190 where it drives
+    uint8_t goalInSight;            // +0x19c nothing in the way of the target (DrivableVec)
+    uint8_t unknown19D[3];
+    float goalDistance;             // +0x1a0
+    uint8_t unknown1A4[0xc];
+    Coord3 goalDirection;           // +0x1b0 unit, towards the goal
+    uint32_t unknown1BC;
+    Coord3 steerPoint;              // +0x1c0 UpdateNavPos's
+    int16_t targetSegment;          // +0x1cc the road segment the target is on, -1 none
+    uint8_t unknown1CE[2];
+    AIGroundVehicle *commandTarget; // +0x1d0 the target SetTargetMode chose
+    void *secondaryTarget;          // +0x1d4 a CARP reference to an AI element: its vehicle becomes the target
+    int32_t goalHidden;             // +0x1d8 1: the target is out of sight; 0: it is in sight
+    uint8_t sawTarget;              // +0x1dc
+    uint8_t unknown1DD[3];
+    Coord3 navHeading;              // +0x1e0 unit, towards the navigator
+    uint8_t navInSight;             // +0x1ec nothing in the way of the navigator's road point
+    uint8_t unknown1ED[3];
+    float attackRange;              // +0x1f0 the command's range
+    uint8_t weaponsEnabled;         // +0x1f4 1 at Reset
+    uint8_t unknown1F5;
+    int16_t gunSteps;               // +0x1f6 the weapons' timers and alternating sides
+    float fireDelay;                // +0x1f8 the command's
+    int16_t rocketSteps;            // +0x1fc
+    uint8_t rocketSide;             // +0x1fe
+    uint8_t unknown1FF;
+    int16_t missileSteps;           // +0x200
+    uint8_t missileSide;            // +0x202
+    uint8_t unknown203;
+    float turretAngle;              // +0x204 turns, 0 to 1
+    uint8_t turretOnTarget;         // +0x208 turretAngle reached the goal's direction
+    uint8_t unknown209[7];
+    Coord3 aimPoint;                // +0x210 the guns' aim (the events port's names)
+    uint32_t unknown21C;
+    Coord3 leadPoint;               // +0x220 the rockets' aim
+    int16_t stuckEventStep;         // +0x22c
+    uint8_t stuckEvent;             // +0x22e
+    uint8_t unknown22F;
+    int16_t stuckSteps;             // +0x230 UpdateStuck's count while the car is held back
+    uint8_t stuck;                  // +0x232 it moved less than 5 in five seconds
+    uint8_t unknown233;
+    uint8_t unknown234[0xc];
+    Coord3 stuckPosition;           // +0x240 where the count began
+    uint8_t facingNav;              // +0x24c the car faces its navigator
+    uint8_t unknown24D[3];
+    Coord3 spawnPosition;           // +0x250 Spawn's place
+    uint8_t maySpawn;               // +0x25c the place is out of sight
+    uint8_t unknown25D[3];
+    int32_t spawnStep;              // +0x260 ESpawnTraffic's
+    uint8_t unknown264[0xc];
+
+    AIGroundVehicle* Construct();                                                               // 0x0002bd40
+    void Destruct();                                                                            // 0x0002be70
+
+    // ---- AIVehicle's virtual methods (the slot)
+    // 0, the vector deleting destructor: with flags bit 1, the array this heads, every element destroyed (the
+    // linker put it among the controller's code, and Ghidra inside AIVehicleController::Init)
+    AIGroundVehicle* Delete(unsigned flags);                                                    // 0x00035d90
+    void Reset();                               // 1                                            // 0x00029d60
+    void Update();                              // 2                                            // 0x00031750
+    void EngageSplinePath(CARP::AISpline *spline);  // 3                                        // 0x0002a800
+    void DisengageSplinePath();                 // 4                                            // 0x0002a850
+
+    // ---- the modes (0 leaves each as it is)
+    void SetNavigateMode(int mode, CARP::AISpline *spline);                                     // 0x0002a0d0
+    // kGroundTargetPosition's position
+    void SetTargetMode(int mode, const Coord3 *position);                                       // 0x0002a2c0
+    void SetAttackMode(int mode);                                                               // 0x0002a330
+    // The vehicle of the CARP AI element, if it is a ground vehicle, becomes the target
+    void SetSecondaryTarget(void *element);                                                     // 0x0002a380
+    // The target vehicle's position, or targetPosition
+    Coord3* GetTargetPos();                                                                     // 0x0002a3c0
+    // The point the navigator reaches, moved on to stay `distance` ahead
+    void UpdateNavPos(Coord3 *point, float distance);                                           // 0x0002a3e0
+    // A player's car handed to the AI along the roads, and back
+    void EngageAutoDrive();                                                                     // 0x0002a690
+    void DisengageAutoDrive();                                                                  // 0x0002a760
+    void DoPlayerLogic();                                                                       // 0x0002a7c0
+    void DoSplinePathUpdate();                                                                  // 0x0002a8b0
+
+    // ---- the world and the roads
+    // Nothing in the world in the way from one point to the other, within 200
+    bool DrivableVec(const Coord3 *from, const Coord3 *to);                                     // 0x0002a9e0
+    // After a collision of kind 6: a barrier ahead within twice the car's half length (behind and at both rear
+    // corners when reversing)
+    bool BarriersInPath(bool reversing);                                                        // 0x0002aaf0
+    void UpdateStuck();                                                                         // 0x0002af50
+    // A navigator at the car's place a quarter of a second ahead, facing along the heading; placed again after
+    // 15 steps (the lane navigator also when the lane changes)
+    WRoadNav* GetHeliCollNav(const Coord3 *heading);                                            // 0x0002b0c0
+    WRoadNav* GetCollNav(const Coord3 *heading, bool inLane, int8_t lane);                      // 0x0002b210
+    // The middle of the cheapest stretch of laneSpan lanes (the argument is not read)
+    int GetBestWeightedLane(int lane);                                                          // 0x0002b5e0
+    // laneWeights from the road network, plus 5 a lane away from the navigator's
+    void GetRoadNetworkLaneWeights();                                                           // 0x0002b660
+    // laneWeights off the road: 5 a lane away from the middle, the lanes past barriers either side of the point
+    // blocked, the middle three free
+    void GetDirectLaneWeights(const Coord3 *point);                                             // 0x0002b7a0
+
+    // ---- each step
+    void DoAttackMode();                                                                        // 0x0002bf40
+    void TurnTurret();                                                                          // 0x0002c6e0
+    void DoAutoDriveUpdate();                                                                   // 0x0002c9d0
+    void DoAgentStateUpdate();                                                                  // 0x0002cd80
+    // Out of the way: parked far off, asleep, its road count and sound reset
+    void UnSpawn();                                                                             // 0x0002dac0
+
+    // ---- the driving, the collision checks and the weapons (AIGroundVehicleDriving.cpp)
+    // How far ahead to steer for: 0.35 of the flat speed, at least the car's half length and 7.5 (the argument is
+    // not read)
+    double GetLookAhead(float speed);                                                           // 0x0002dc90
+    // The controls set to drive at `speed` towards the point: a car (DriveToPoint), traffic, a sub (pitching too)
+    void DriveToPoint(Coord3 *point, float speed);                                              // 0x0002f610
+    void DriveToPointTraffic(const Coord3 *point, float speed);                                 // 0x0002dd80
+    void DriveToPointSub(const Coord3 *point, float speed);                                     // 0x0002e0a0
+    // The lane weights raised where other cars are in the way, and the navigator moved to the best lane (the
+    // argument is not read)
+    void CheckAgentRoadNetworkCollision(Coord3 *point);                                         // 0x0002fde0
+    // ... off the road: the point moved across to the best lane
+    void CheckAgentDirectCollision(Coord3 *point);                                              // 0x000306b0
+    // Traffic: the point pulled back to stop at a red light or behind the nearest car in the way
+    void CheckTrafficCollision(Coord3 *point);                                                  // 0x00030b80
+    void DoMoveMode();                                                                          // 0x00030fb0
+    // Traffic: brought back on the road out of sight while fewer than `maxTraffic` are about
+    void Spawn(int16_t maxTraffic);                                                             // 0x0002f190
+    void DoTrafficStateUpdate();                                                                // 0x0002f4c0
+    // The weapons by attack mode, each firing through the car's animation systems
+    void DoWeaponUpdate();                                                                      // 0x0002f0e0
+    void FireBullets();                                                                         // 0x0002e910
+    void FireRockets();                                                                         // 0x0002eb40
+    void FireMissiles();                                                                        // 0x0002ee00
+};
+LAYOUT_32(sizeof(AIGroundVehicle) == 0x270, "an AI ground vehicle is 0x270 bytes");
+LAYOUT_32(offsetof(AIGroundVehicle, type) == 0x80 && offsetof(AIGroundVehicle, navigateMode) == 0x88 &&
+          offsetof(AIGroundVehicle, attackMode) == 0x94 && offsetof(AIGroundVehicle, command) == 0x98 &&
+          offsetof(AIGroundVehicle, road) == 0xa0 && offsetof(AIGroundVehicle, skipFullUpdate) == 0xa4 &&
+          offsetof(AIGroundVehicle, laneWeights) == 0xa8 && offsetof(AIGroundVehicle, laneSpan) == 0xe8 &&
+          offsetof(AIGroundVehicle, collNav) == 0xf0 && offsetof(AIGroundVehicle, targetNav) == 0x104 &&
+          offsetof(AIGroundVehicle, isSub) == 0x108 && offsetof(AIGroundVehicle, hasTurret) == 0x11c &&
+          offsetof(AIGroundVehicle, autoDriveSpeed) == 0x124 && offsetof(AIGroundVehicle, useLanes) == 0x144 &&
+          offsetof(AIGroundVehicle, zoneStopSteps) == 0x14e && offsetof(AIGroundVehicle, stopped) == 0x152 &&
+          offsetof(AIGroundVehicle, navPosition) == 0x15c && offsetof(AIGroundVehicle, newCommand) == 0x177 &&
+          offsetof(AIGroundVehicle, target) == 0x178 && offsetof(AIGroundVehicle, goal) == 0x190 &&
+          offsetof(AIGroundVehicle, goalDistance) == 0x1a0 && offsetof(AIGroundVehicle, goalDirection) == 0x1b0 &&
+          offsetof(AIGroundVehicle, steerPoint) == 0x1c0 && offsetof(AIGroundVehicle, targetSegment) == 0x1cc &&
+          offsetof(AIGroundVehicle, goalHidden) == 0x1d8 && offsetof(AIGroundVehicle, navHeading) == 0x1e0 &&
+          offsetof(AIGroundVehicle, attackRange) == 0x1f0 && offsetof(AIGroundVehicle, turretAngle) == 0x204 &&
+          offsetof(AIGroundVehicle, aimPoint) == 0x210 && offsetof(AIGroundVehicle, leadPoint) == 0x220 &&
+          offsetof(AIGroundVehicle, stuckSteps) == 0x230 && offsetof(AIGroundVehicle, stuckPosition) == 0x240 &&
+          offsetof(AIGroundVehicle, facingNav) == 0x24c && offsetof(AIGroundVehicle, spawnStep) == 0x260,
+          "AIGroundVehicle layout");
+
+void **const kAIGroundVehicleVtable = Vtable_0018b8d4;
+
+// The heightPhase SetNavigateMode hands the next car, and how far along UnSpawn parks the next car (names ours)
+extern float NextHeightPhase;
+extern float NextParkingOffset;
+// How far a traffic car's navigator moves on a step
+extern float TrafficStepDistance;
+
+// Seen from the object, `other` lies in `point`'s direction (their unit directions' dot product at least 0.9) and
+// either within `range` of it or nearer the object (a free function among AIGroundVehicle's methods)
+bool TestForCollision(PhysicsObject *object, const Coord3 *point, const Coord3 *other, float range);   // 0x0002b4d0
+
+#endif // DRIVING_GAME_AIGROUNDVEHICLE_H_

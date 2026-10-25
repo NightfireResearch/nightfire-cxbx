@@ -1,0 +1,71 @@
+{
+ "batch": "043",
+ "program": "Driving.xbe",
+ "applied": "Sun Sep 27 01:46:52 2026",
+ "items": [
+  {
+   "xbox": "0x0001aa70",
+   "old_name": "~RSceneObj",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0001aa70 from '~RSceneObj' to '~RAutonomousObj'",
+      "warnings": [
+       "Function name '~RAutonomousObj' \u2014 main part '~RAutonomousObj' is not PascalCase. Expected: ~rautonomousobj"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0001aa70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "~RAutonomousObj",
+   "ok": true
+  },
+  {
+   "xbox": "0x00015770",
+   "old_name": "FUN_00015770",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00015770 from 'FUN_00015770' to 'TriggerIlluminate'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'TriggerIlluminate' shares the same token set as existing function 'Trigger' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00015770",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "TriggerIlluminate",
+   "ok": true
+  }
+ ]
+}

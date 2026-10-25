@@ -1,0 +1,106 @@
+{
+ "batch": "P021",
+ "program": "DRIVING.ELF",
+ "note": "The nine functions the user created by hand after P019's refusals. 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x0016ec40",
+   "expect": "FUN_0016ec40",
+   "name": "AttributeSystem::GetMetrics",
+   "sheet_name": "AttributeSystem::GetMetrics(unsigned int &, unsigned int &, uns",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 2229: window review: Not a function yet: right after InitializeExtensionType, zeroes eight unsigned int& outputs (a1..t3 and a stack arg) - metrics stubbed to 0."
+   ]
+  },
+  {
+   "xbox": "0x00232088",
+   "expect": "FUN_00232088",
+   "name": "WWorldMath::Quatern_QuatToMat",
+   "sheet_name": "WWorldMath::Quatern_QuatToMat(COORD4 *, MATRIX3 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5145: window review: Hidden 0xa0 function inside the 0x231ff8 body: quaternion -> 3x3 matrix (x2 products, 1 - ...); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00237d18",
+   "expect": "FUN_00237d18",
+   "name": "GGallery::LINE_SetState",
+   "sheet_name": "GGallery::LINE_SetState(GGallery::Keys *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5261: window review: Hidden 0x78 function after FONT_Height (exact size): copies Keys fields into gallery state at +0x60 like FONT_SetState; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00291150",
+   "expect": "FUN_00291150",
+   "name": "EAGL::RenderContextExtension::GetBackBufferInfo",
+   "sheet_name": "EAGL::RenderContextExtension::GetBackBufferInfo(int *, int *, i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5975: window review: Hidden 0x28 function (exact) in the 0x291130 body: writes three ints (+0x77c/+0x790/+0x788) to out params; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00291198",
+   "expect": "FUN_00291198",
+   "name": "EAGL::RenderContextExtension::GetZBuffer",
+   "sheet_name": "EAGL::RenderContextExtension::GetZBuffer(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5978: window review: Hidden 0x10 function in the 0x291188 body: returns context +0x840; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00293a38",
+   "expect": "FUN_00293a38",
+   "name": "EAGL::Transform::ExtractRotTrans",
+   "sheet_name": "EAGL::Transform::ExtractRotTrans(MATRIX3 *, COORD3 *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6062: window review: Hidden 0x68 function: copies this rotation rows to a MATRIX3 and the translation to a COORD3; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00295188",
+   "expect": "FUN_00295188",
+   "name": "EAGL::Transform::BuildQT",
+   "sheet_name": "EAGL::Transform::BuildQT(float, float, float, float, float, flo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6095: window review: Hidden 0xb0 function (exact) in the 0x2950b0 body: quaternion matrix + translation without scale; needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297ba8",
+   "expect": "FUN_00297ba8",
+   "name": "EAGL::VU0_MATRIX3x4_mult",
+   "sheet_name": "EAGL::VU0_MATRIX3x4_mult(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6132: window review: Hidden 0x50 VU0 lqc2 matrix multiply (exact); needs creating."
+   ]
+  },
+  {
+   "xbox": "0x00297cd8",
+   "expect": "FUN_00297cd8",
+   "name": "EAGL::VU0_MATRIX4_multb",
+   "sheet_name": "EAGL::VU0_MATRIX4_multb(MATRIX4 &, MATRIX4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6135: window review: Hidden 0xa8 VU0 multiply with operands swapped (exact); needs creating."
+   ]
+  }
+ ]
+}

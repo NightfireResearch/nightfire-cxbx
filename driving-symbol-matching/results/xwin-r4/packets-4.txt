@@ -1,0 +1,674 @@
+## window 35: Xbox 0xa8780 RWindow::Init .. 0xa8ae0 _Rb_tree<WCollisionInstance_*,_WCollisionInstance>::find   (PS2 0x1f0b48 .. 0x1f13f0)
+
+Xbox functions in the window, address order:
+  0xa87a0 UNNAMED
+     callers: FUN_000c2200
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void FUN_000a87a0(int *param_1)
+     {
+       char cVar1;
+       param_1 = (int *)*param_1;
+       cVar1 = *(char *)((int)param_1 + 0x3d);
+       while (cVar1 == '\0') {
+         param_1 = (int *)*param_1;
+         cVar1 = *(char *)((int)param_1 + 0x3d);
+       }
+       return;
+     }
+  0xa87c0 UNNAMED
+     callers: FUN_000556e0, FUN_000bda70, FUN_000c1f30
+     chain: FUN_000556e0@556e0 <- FUN_00055bf0@55bf0 <- AttributeSystem::MakeString@55da0 | FUN_000c1f30@c1f30 <- FUN_000c3180@c3180 <- WCollisionMgr::GetInstanceListGuts@c43c0
+     callees: FastFree
+     void FUN_000a87c0(void *param_1,int param_2)
+     {
+       if (param_1 != (void *)0x0) {
+         UMemory::FastFree(param_1,param_2 * 8);
+       }
+       return;
+     }
+  0xa87e0 UNNAMED
+     callers: DrawBrokenWindows
+     chain: RWindow::DrawBrokenWindows@a8c10
+     callees: Draw
+     void FUN_000a87e0(undefined4 *param_1,undefined4 *param_2,undefined4 *param_3,undefined4 param_4,
+                      undefined4 *param_5,char param_6)
+     {
+       undefined4 uVar1;
+       undefined4 *in_EAX;
+       int iVar2;
+       undefined4 *puVar3;
+       if ((_DAT_00202a70 & 1) == 0) {
+         _DAT_00202a70 = _DAT_00202a70 | 1;
+         puVar3 = &DAT_00202870;
+         for (iVar2 = 0x80; iVar2 != 0; iVar2 = iVar2 + -1) {
+           *puVar3 = 0;
+           puVar3 = puVar3 + 1;
+         }
+         ...
+  0xa8a80 UNNAMED
+     callers: FUN_000c2200
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void __fastcall FUN_000a8a80(int *param_1)
+     {
+       char cVar1;
+       int iVar2;
+       int *piVar3;
+       int *piVar4;
+       iVar2 = *param_1;
+       if (*(char *)(iVar2 + 0x3d) == '\0') {
+         piVar3 = *(int **)(iVar2 + 8);
+         if (*(char *)((int)piVar3 + 0x3d) == '\0') {
+           cVar1 = *(char *)(*piVar3 + 0x3d);
+           piVar4 = (int *)*piVar3;
+           while (cVar1 == '\0') {
+             cVar1 = *(char *)(*piVar4 + 0x3d);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1f0b80 RWindow::Kill
+     callers: KillGameRender
+     callees: 
+     void RWindow::Kill(void)
+     {
+       return;
+     }
+
+====================================================================================================
+
+## window 36: Xbox 0xfb650 EAGLAnim::FnDeltaLerpChan::EvalVel2D .. 0xfb930 EAGLAnim::FnKeyDeltaChan::EvalToPrevValues   (PS2 0x276508 .. 0x276688)
+
+Xbox functions in the window, address order:
+  0xfb670 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: DecompressValues, DecompressValuesIndexed
+     void __thiscall FUN_000fb670(int param_1,undefined4 param_2,float param_3,int param_4)
+     {
+       undefined4 *puVar1;
+       undefined4 *puVar2;
+       ushort uVar3;
+       int iVar4;
+       uint uVar5;
+       ushort *puVar6;
+       int iVar7;
+       iVar4 = (int)param_3;
+       uVar5 = (uint)*(ushort *)(*(int *)(param_1 + 0xc) + 8);
+       if (iVar4 < (int)uVar5) {
+         iVar7 = iVar4;
+         if (iVar4 < 0) {
+         ...
+  0xfb780 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: DecompressValues, DecompressValuesIndexed
+     undefined4 __thiscall FUN_000fb780(int param_1,float param_2,int param_3)
+     {
+       undefined4 *puVar1;
+       undefined4 *puVar2;
+       ushort uVar3;
+       int iVar4;
+       uint uVar5;
+       ushort *puVar6;
+       int iVar7;
+       iVar4 = (int)param_2;
+       uVar5 = (uint)*(ushort *)(*(int *)(param_1 + 0xc) + 8);
+       if (iVar4 < (int)uVar5) {
+         iVar7 = iVar4;
+         if (iVar4 < 0) {
+         ...
+  0xfb890 UNNAMED
+     callers: FUN_000f76b0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: ~FnAnimMemoryMap
+     void __fastcall FUN_000fb890(undefined4 *param_1)
+     {
+       undefined4 *puVar1;
+       puVar1 = (undefined4 *)param_1[5];
+       *param_1 = &vtable_EAGLAnim::FnUNKNOWN;
+       if (puVar1 != (undefined4 *)0x0) {
+         *puVar1 = (&DAT_00241520)[puVar1[-1]];
+         (&DAT_00241520)[puVar1[-1]] = puVar1;
+       }
+       EAGLAnim::FnAnimMemoryMap::~FnAnimMemoryMap();
+       return;
+     }
+  0xfb8c0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_000f7c90
+     void __thiscall FUN_000fb8c0(int param_1_00,int param_1)
+     {
+       ushort uVar1;
+       undefined4 *puVar2;
+       undefined4 uVar3;
+       puVar2 = *(undefined4 **)(param_1_00 + 0x14);
+       if (puVar2 == (undefined4 *)0x0) {
+         uVar1 = **(ushort **)(param_1 + 4);
+       }
+       else {
+         if (**(ushort **)(param_1 + 4) < **(ushort **)(*(int *)(param_1_00 + 0xc) + 4))
+         goto LAB_000fb914;
+         *puVar2 = (&DAT_00241520)[puVar2[-1]];
+         (&DAT_00241520)[puVar2[-1]] = puVar2;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x276538 EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan
+     callers: 
+     callees: eagl_free, ~FnAnimMemoryMap
+     void EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan(long param_1,ulong param_2)
+     {
+       int *piVar1;
+       *(vtable_EAGLAnim_FnAnim **)((int)param_1 + 8) = &vtable_EAGLAnim::FnDeltaQuatChan;
+       piVar1 = *(int **)((int)param_1 + 0x14);
+       if (piVar1 != (int *)0x0) {
+         *piVar1 = *(int *)(&DAT_00343dc0 + piVar1[-1] * 4);
+         *(int **)(&DAT_00343dc0 + piVar1[-1] * 4) = piVar1;
+       }
+       FnAnimMemoryMap::~FnAnimMemoryMap(param_1,0);
+       if ((param_2 & 1) != 0) {
+         (*(code *)maybeEaglFree)(param_1,0x18);
+         ...
+
+====================================================================================================
+
+## window 37: Xbox 0x123c50 AVoice::View::~View .. 0x1243c0 AVoice::BuildMap   (PS2 0x2de0b8 .. 0x2dd918)
+
+Xbox functions in the window, address order:
+  0x123ca0 (named) AVoice::AVoice
+  0x123ce0 UNNAMED
+     callers: FUN_00124240
+     chain: FUN_00124240@124240 <- AVoice::BuildMap@1243c0
+     callees: FUN_00013630, FUN_00013700, FUN_000527e0, FUN_001238d0, FUN_001239d0, FUN_001325ad
+     void __thiscall
+     FUN_00123ce0(int param_1_00,undefined4 *param_1,char param_2,undefined4 *param_3,undefined4 param_4)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int iVar4;
+       char *pcVar5;
+       char *pcVar6;
+       int *piVar7;
+       int *piVar8;
+       int *piVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+         ...
+  0x123ec0 (named) list_extend
+  0x123f70 UNNAMED
+     callers: FUN_00124300
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00013630, FUN_00013700, FUN_000527e0, FUN_00052a20, FUN_000bf460, FUN_00123850, FUN_001238d0, FUN_001325ad, FastFree
+     void __thiscall FUN_00123f70(int param_1_00,undefined4 *param_1,int *param_2)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       char *pcVar3;
+       char *pcVar4;
+       int *piVar5;
+       undefined4 uVar6;
+       int *piVar7;
+       int *piVar8;
+       bool bVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+         ...
+  0x124240 UNNAMED
+     callers: BuildMap
+     chain: AVoice::BuildMap@1243c0
+     callees: FUN_00123930, FUN_00123ce0
+     void __thiscall FUN_00124240(int param_1_00,undefined4 *param_1,uint *param_2)
+     {
+       int *piVar1;
+       uint *puVar2;
+       int *piVar3;
+       undefined4 *puVar4;
+       int *piVar5;
+       bool bVar6;
+       puVar2 = param_2;
+       piVar1 = *(int **)(param_1_00 + 4);
+       bVar6 = true;
+       piVar5 = piVar1;
+       if (*(char *)(piVar1[1] + 0x1d) == '\0') {
+         piVar3 = (int *)piVar1[1];
+         ...
+  0x124300 UNNAMED
+     callers: FUN_00124750
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00123990, FUN_00123f70
+     void __thiscall FUN_00124300(int param_1_00,undefined4 *param_1,int *param_2,int *param_3)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       piVar4 = param_3;
+       piVar6 = *(int **)(param_1_00 + 4);
+       piVar2 = param_2;
+       if ((param_2 == (int *)*piVar6) && (param_3 == piVar6)) {
+         FUN_00123990(piVar6[1]);
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2de060 AVoice::View::Restart
+     callers: Set
+     callees: SNDSYS_entercritical, SNDSYS_leavecritical, SNDstop
+     void AVoice::View::Restart(int param_1)
+     {
+       if (*(int *)(param_1 + 0xc) != -1) {
+         SNDSYS_entercritical();
+         SNDstop((long)*(int *)(param_1 + 0xc));
+         SNDSYS_leavecritical();
+         *(undefined4 *)(param_1 + 0xc) = 0xffffffff;
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 38: Xbox 0x14870 ActCharacter::GetShadowTriangle .. 0x14a50 ActCharacter::ChangeCharacter   (PS2 0x10dd00 .. 0x10ce20)
+
+Xbox functions in the window, address order:
+  0x14880 UNNAMED
+     callers: ~ECollision
+     chain: ECollision::~ECollision@49eb0
+     callees: 
+     float * FUN_00014880(float *param_1,float *param_2)
+     {
+       if (*param_1 <= *param_2) {
+         param_2 = param_1;
+       }
+       return param_2;
+     }
+  0x148a0 UNNAMED
+     callers: Draw
+     chain: ActCharacter::Draw@14c50
+     callees: 
+     void __thiscall FUN_000148a0(int param_1_00,int param_1,undefined4 *param_2,undefined4 *param_3)
+     {
+       *param_2 = *(undefined4 *)(param_1_00 + param_1 * 4);
+       param_2[1] = *(undefined4 *)(param_1_00 + 0x10 + param_1 * 4);
+       param_2[2] = *(undefined4 *)(param_1_00 + 0x20 + param_1 * 4);
+       param_3[1] = *(undefined4 *)((param_1 + 3) * 0x10 + param_1_00);
+       param_1_00 = param_1 * 0x10 + param_1_00;
+       param_3[2] = *(undefined4 *)(param_1_00 + 0x34);
+       param_3[3] = *(undefined4 *)(param_1_00 + 0x38);
+       *param_3 = *(undefined4 *)(param_1_00 + 0x3c);
+       return;
+     }
+  0x148f0 UNNAMED
+     callers: Draw
+     chain: ActCharacter::Draw@14c50
+     callees: 
+     void __thiscall FUN_000148f0(int param_1_00,int param_1,undefined4 *param_2,undefined4 *param_3)
+     {
+       undefined4 *puVar1;
+       *(undefined4 *)(param_1_00 + param_1 * 4) = *param_2;
+       *(undefined4 *)(param_1_00 + 0x10 + param_1 * 4) = param_2[1];
+       *(undefined4 *)(param_1_00 + 0x20 + param_1 * 4) = param_2[2];
+       puVar1 = (undefined4 *)((param_1 + 3) * 0x10 + param_1_00);
+       *puVar1 = *param_3;
+       puVar1[1] = param_3[1];
+       puVar1[2] = param_3[2];
+       puVar1[3] = param_3[3];
+       return;
+     }
+  0x14940 UNNAMED
+     callers: Draw
+     chain: ActCharacter::Draw@14c50
+     callees: 
+     void __thiscall FUN_00014940(int *param_1_00,int *param_1,int param_2)
+     {
+       int iVar1;
+       *param_1_00 = (int)ROUND((float)*param_1 * 0.003921569 * 255.0);
+       iVar1 = param_1[1];
+       param_1_00[3] = iVar1;
+       param_1_00[2] = iVar1;
+       param_1_00[1] = iVar1;
+       param_1_00[4] = 0x3f800000;
+       param_1_00[0xc] = param_1[0xc];
+       param_1_00[0xd] = param_1[0xd];
+       param_1_00[0xe] = param_1[0xe];
+       param_1_00[0xf] = param_1[0xf];
+       param_1_00[0x10] = param_1[0x10];
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x10d238 ActCharacter::GetAlpha
+     callers: Draw
+     callees: 
+     float ActCharacter::GetAlpha(ActCharacter *param_1)
+     {
+       return (float)*(int *)param_1->alpha * 0.003921569;
+     }
+  0x10d308 ActCharacter::GetBaseScaleFactor
+     callers: GetScaleFactors
+     callees: 
+     float ActCharacter::GetBaseScaleFactor(void)
+     {
+       return 0.1;
+     }
+
+====================================================================================================
+
+## window 39: Xbox 0x93390 RTextureContext::Unload .. 0x93a90 RTexList::CreateNewTextureElement   (PS2 0x1cf0f8 .. 0x1ceec0)
+
+Xbox functions in the window, address order:
+  0x93420 UNNAMED
+     callers: FUN_000938d0
+     chain: FUN_000938d0@938d0 <- RTexList::CreateNewTextureElement@93a90
+     callees: FUN_00013630, FUN_00013700, FUN_00092590, FUN_000925f0, FUN_00093260, FUN_001325ad
+     void __thiscall
+     FUN_00093420(int param_1_00,undefined4 *param_1,char param_2,undefined4 *param_3,undefined4 param_4)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int iVar4;
+       char *pcVar5;
+       char *pcVar6;
+       int *piVar7;
+       int *piVar8;
+       int *piVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+         ...
+  0x93600 UNNAMED
+     callers: FUN_000939d0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00013630, FUN_00013700, FUN_000920d0, FUN_00092590, FUN_000925f0, FUN_00093180, FUN_000931a0, FUN_001325ad, FastFree
+     void __thiscall FUN_00093600(int param_1_00,undefined4 *param_1,int *param_2)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       char *pcVar3;
+       char *pcVar4;
+       int *piVar5;
+       undefined4 uVar6;
+       int *piVar7;
+       int *piVar8;
+       bool bVar9;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+         ...
+  0x938d0 UNNAMED
+     callers: CreateNewTextureElement
+     chain: RTexList::CreateNewTextureElement@93a90
+     callees: FUN_00093200, FUN_00093420
+     void __thiscall FUN_000938d0(int param_1_00,undefined4 *param_1,uint *param_2)
+     {
+       int *piVar1;
+       undefined4 uVar2;
+       uint *puVar3;
+       int *piVar4;
+       undefined4 *puVar5;
+       int *piVar6;
+       bool bVar7;
+       puVar3 = param_2;
+       piVar1 = *(int **)(param_1_00 + 4);
+       bVar7 = true;
+       piVar6 = piVar1;
+       if (*(char *)(piVar1[1] + 0x21) == '\0') {
+         ...
+  0x939d0 UNNAMED
+     callers: FUN_00093d90
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00093350, FUN_00093600
+     void __thiscall FUN_000939d0(int param_1_00,undefined4 *param_1,int *param_2,int *param_3)
+     {
+       char cVar1;
+       int *piVar2;
+       int *piVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       piVar4 = param_3;
+       piVar6 = *(int **)(param_1_00 + 4);
+       piVar2 = param_2;
+       if ((param_2 == (int *)*piVar6) && (param_3 == piVar6)) {
+         FUN_00093350(piVar6[1]);
+         *(int *)(*(int *)(param_1_00 + 4) + 4) = *(int *)(param_1_00 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1cf010 RTextureContext::~RTextureContext
+     callers: 
+     callees: FUN_001cfb68, FastFree, Unload
+     void RTextureContext::~RTextureContext(undefined8 param_1,ulong param_2)
+     {
+       int *piVar1;
+       *(undefined4 *)param_1 = &vtable_RTextureContext;
+       Unload((int)(undefined4 *)param_1);
+       piVar1 = (int *)((undefined4 *)param_1)[3];
+       if ((long)(int)piVar1 != 0) {
+         if (piVar1[1] != 0) {
+           FUN_001cfb68((long)(int)piVar1,(long)*(int *)(*piVar1 + 4));
+           *(int *)(*piVar1 + 8) = *piVar1;
+           *(undefined4 *)(*piVar1 + 4) = 0;
+           *(int *)(*piVar1 + 0xc) = *piVar1;
+         ...
+  0x1cf0c0 RTextureContext::Load
+     callers: RTextureContext
+     callees: FileLoadz
+     void RTextureContext::Load(int param_1,char *param_2)
+     {
+       long lVar1;
+       lVar1 = (long)*(int *)(param_1 + 8);
+       if (lVar1 == 0) {
+         UFileLoader::FileLoadz(param_2,0);
+         *(int *)(param_1 + 8) = (int)lVar1;
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 40: Xbox 0xc2ff0 WCollisionMgr::SetCollisionArticle .. 0xc36a0 WCollisionMgr::GetObjectLists   (PS2 0x213720 .. 0x218150)
+
+Xbox functions in the window, address order:
+  0xc30f0 UNNAMED
+     callers: FUN_000c3880
+     chain: FUN_000c3880@c3880 <- FUN_000be2d0@be2d0 <- WCollider::Refresh@be4b0
+     callees: FUN_000c0da0, FUN_000c2b40
+     void __thiscall FUN_000c30f0(int param_1_00,undefined4 param_1)
+     {
+       int iVar1;
+       iVar1 = *(int *)(param_1_00 + 4);
+       if ((iVar1 != 0) &&
+          ((uint)((*(int *)(param_1_00 + 8) - iVar1) / 0x28) <
+           (uint)((*(int *)(param_1_00 + 0xc) - iVar1) / 0x28))) {
+         iVar1 = *(int *)(param_1_00 + 8);
+         FUN_000c0da0(iVar1,1,param_1,param_1_00,param_1);
+         *(int *)(param_1_00 + 8) = iVar1 + 0x28;
+         return;
+       }
+       FUN_000c2b40(&param_1,*(undefined4 *)(param_1_00 + 8),param_1);
+       return;
+         ...
+  0xc3180 UNNAMED
+     callers: FUN_000c31f0, GetInstanceListGuts
+     chain: WCollisionMgr::GetInstanceListGuts@c43c0 | FUN_000c31f0@c31f0 <- WCollisionMgr::GetInstanceList@c3410
+     callees: FUN_000c0dd0, FUN_000c1f30
+     void __thiscall FUN_000c3180(int param_1_00,undefined4 param_1)
+     {
+       int iVar1;
+       iVar1 = *(int *)(param_1_00 + 4);
+       if ((iVar1 != 0) &&
+          ((uint)(*(int *)(param_1_00 + 8) - iVar1 >> 3) <
+           (uint)(*(int *)(param_1_00 + 0xc) - iVar1 >> 3))) {
+         iVar1 = *(int *)(param_1_00 + 8);
+         FUN_000c0dd0(iVar1,1,param_1,param_1_00,param_1);
+         *(int *)(param_1_00 + 8) = iVar1 + 8;
+         return;
+       }
+       FUN_000c1f30(*(undefined4 *)(param_1_00 + 8),1,param_1);
+       return;
+         ...
+  0xc31f0 UNNAMED
+     callers: GetInstanceList
+     chain: WCollisionMgr::GetInstanceList@c3410
+     callees: FUN_000bd470, FUN_000bfee0, FUN_000bff50, FUN_000c3180, MakeMatrix, OrthoInverse, VU0_v4sub
+     void __thiscall FUN_000c31f0(int param_1_00,int param_1,undefined4 param_2,int param_3)
+     {
+       float fVar1;
+       ushort *puVar2;
+       int *piVar3;
+       int iVar4;
+       int *piVar5;
+       float local_cc;
+       float local_c8;
+       float local_c0;
+       float local_bc;
+       float local_b8;
+       int local_a8;
+       float local_a4;
+         ...
+  0xc3410 (named) WCollisionMgr::GetInstanceList
+  0xc34c0 UNNAMED
+     callers: FUN_000c37c0, GetObjectLists
+     chain: WCollisionMgr::GetObjectLists@c36a0 | FUN_000c37c0@c37c0 <- RigidBody::CollideWithWorld@b1420
+     callees: FUN_000bfee0, FUN_000bff50, FUN_000c1bf0, maybe_memset_fromptr
+     void __thiscall
+     FUN_000c34c0(int param_1_00,int param_1,int param_2,int param_3,float *param_4,float param_5)
+     {
+       int iVar1;
+       int *piVar2;
+       float *pfVar3;
+       float fVar4;
+       int iVar5;
+       float *pfVar6;
+       ushort *puVar7;
+       int *piVar8;
+       undefined4 uVar9;
+       pfVar6 = param_4;
+       iVar5 = DAT_0023b3a0;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x216d30 WCollisionMgr::ClosestCollisionInfo
+     callers: GetWorldNormal, Simulate
+     callees: 
+     void WCollisionMgr::ClosestCollisionInfo
+                    (undefined8 param_1,undefined (*param_2) [16],undefined (*param_3) [16],
+                    undefined (*param_4) [16],undefined4 *param_5)
+     {
+       char cVar1;
+       bool bVar2;
+       undefined8 uVar3;
+       undefined8 uVar4;
+       undefined (*pauVar5) [16];
+       undefined4 uVar6;
+       undefined4 uVar7;
+       undefined4 uVar8;
+         ...
+  0x217e30 WCollisionMgr::GetObjectListsGuts
+     callers: FUN_00218440, GetObjectLists
+     callees: FUN_0021ba50
+     void WCollisionMgr::GetObjectListsGuts
+                    (float param_1,int param_2,ulong param_3,int *param_4,int *param_5,float *param_6)
+     {
+       undefined1 *puVar1;
+       byte bVar2;
+       uint uVar3;
+       uint uVar4;
+       uint *puVar5;
+       bool bVar6;
+       bool bVar7;
+       bool bVar8;
+       ushort *puVar9;
+         ...
+
+====================================================================================================
+
+## window 41: Xbox 0x1455b0 SFILTER_modifyHPFFIR8 .. 0x145700 SFILTER_createSOURCE   (PS2 0x3168f0 .. 0x316998)
+
+Xbox functions in the window, address order:
+  0x1455f0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_001466e0
+     int FUN_001455f0(int param_1,int param_2,undefined4 param_3,undefined4 param_4)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       puVar1 = *(undefined4 **)(param_1 + 8);
+       if ((puVar1 != (undefined4 *)0x0) &&
+          (iVar2 = (*(code *)*puVar1)(puVar1,param_2,param_4,param_3,*(undefined1 *)(param_1 + 0x1a)),
+          iVar2 < 1)) {
+         return iVar2;
+       }
+       FUN_001466e0(param_1 + 0x1c,param_2,param_3,param_4);
+       return param_2;
+     }
+  0x145640 UNNAMED
+     callers: SNDMIXI_initfx
+     chain: SNDMIXI_initfx@142fc0
+     callees: FUN_001466c0
+     undefined4 FUN_00145640(undefined4 *param_1)
+     {
+       param_1[2] = 0;
+       param_1[3] = 0;
+       param_1[4] = 0;
+       param_1[5] = 0;
+       *(undefined1 *)((int)param_1 + 0x1b) = 0;
+       param_1[1] = 0;
+       *param_1 = FUN_001455f0;
+       FUN_001466c0(param_1 + 7);
+       return 0;
+     }
+  0x145670 UNNAMED
+     callers: SNDMIXI_initfx
+     chain: SNDMIXI_initfx@142fc0
+     callees: FUN_00146930
+     void FUN_00145670(int param_1,int *param_2)
+     {
+       *(float *)(param_1 + 0x54) =
+            ((float)(*param_2 >> 8) + (float)(*param_2 >> 8)) / (float)(param_2[1] >> 8);
+       FUN_00146930();
+       return;
+     }
+  0x1456e0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: 
+     void FUN_001456e0(undefined4 *param_1,undefined4 param_2)
+     {
+       *param_1 = &LAB_001456b0;
+       param_1[1] = 0;
+       param_1[7] = param_2;
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x316928 SFILTER_src
+     callers: 
+     callees: FUN_00310f68
+     undefined8 SFILTER_src(int param_1,undefined8 param_2,undefined8 param_3,undefined8 *param_4)
+     {
+       int iVar1;
+       iVar1 = (int)param_2 * 4;
+       FUN_00310f68(param_4,*(undefined8 **)(param_1 + 0x1c),iVar1);
+       *(int *)(param_1 + 0x1c) = *(int *)(param_1 + 0x1c) + iVar1;
+       return param_2;
+     }
+  0x316980 SFILTER_initSOURCE
+     callers: SNDMIXI_modlapifxadd
+     callees: 
+     void SFILTER_initSOURCE(undefined4 *param_1,undefined4 param_2)
+     {
+       param_1[7] = param_2;
+       param_1[1] = 0;
+       *param_1 = SFILTER_src;
+       return;
+     }
+
+====================================================================================================
+

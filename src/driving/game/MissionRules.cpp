@@ -1,0 +1,682 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#pragma fp_contract(off)
+
+#include "MissionRules.h"
+#include "../Vtables.h"   // our copies of the game's vtables
+
+#include <stddef.h>
+#include <stdint.h>
+#include <string.h>
+
+#include "AIElements.h"
+#include "MissionManager.h"               // glbMissionManager
+#include "Simulation.h"
+#include "Vehicle.h"                      // PVehicle
+#include "WeaponManager.h"                // WeaponManager
+#include "../../common/xbeOverload.h"     // XbeVirtual
+#include "../../helpers.h"
+#include "../Schedule.hpp"                // TaskCallback
+#include "../Scheduler.hpp"               // RegisterEvent
+#include "../audio/Sound.h"               // AMenuSound, kSoundViewShared
+#include "../camera/CameraSpline.h"       // CrtAcosTimes
+#include "../engine/UMemory.hpp"
+#include "../physics/PhysicsObject.h"
+#include "../physics/RigidBody.h"
+#include "../platform/RealMath.h"
+#include "../platform/RealPrint.h"        // MEM_fill
+#include "../platform/X87.h"              // Ftol, QuietNaN
+#include "../world/Trigger.h"             // TriggerEvents, gEventDynamicData
+
+// ---------------------------------------------------------------------------------------------------------------
+// SMissionRule, SMissionTimer, SMissionRuleTarget and the SRule* tests (0x000b9500-0x000ba7f0), ported from the
+// listing. No random numbers.
+//
+// The deleting destructors are shared by the rules of one size (the linker folded them): each is named after one of
+// them. A rule's destructor only puts SMissionRule's vtable back.
+// ---------------------------------------------------------------------------------------------------------------
+
+namespace {
+
+constexpr float kDegreesPerRadian = 57.2957763671875f;     // 0x42652ee0
+constexpr int kEventDataBytes = 0x64;
+
+} // namespace
+
+// ---- calls to originals not ported
+
+
+// ---- globals
+// 1 / FLT_MIN, the maths header's, as the static initialisers made it for the unit after the mission manager's;
+// nothing reads it
+// XBE_GLOBAL(0x00239238, 4)
+float MissionRulesInverseFloatMin = 8.507059e+37f;
+
+
+
+#define SMissionRuleVtable ((void **)Vtable_001935c0)
+#define SRuleAlwaysVtable ((void **)Vtable_SRuleAlways)
+#define SRuleDamageVtable ((void **)Vtable_SRuleDamage)
+#define SRuleDeathVtable ((void **)Vtable_SRuleDeath)
+#define SRulePIPVtable ((void **)Vtable_SRulePIP)
+#define SRuleProgVtable ((void **)Vtable_SRuleProg)
+#define SRulePropertyVtable ((void **)Vtable_SRuleProperty)
+#define SRuleDifficultyVtable ((void **)Vtable_SRuleDifficulty)
+#define SRulePlayerDirVtable ((void **)Vtable_SRulePlayerDir)
+#define SRuleCollisionVtable ((void **)Vtable_SRuleCollision)
+#define SRuleProgCounterVtable ((void **)Vtable_SRuleProgCounter)
+#define SRuleAmmoVtable ((void **)Vtable_SRuleAmmo)
+#define SRuleHealthVtable ((void **)Vtable_SRuleHealth)
+#define SRuleRangeVtable ((void **)Vtable_SRuleRange)
+#define SRuleSpeedVtable ((void **)Vtable_SRuleSpeed)
+#define SRuleTimerVtable ((void **)Vtable_SRuleTimer)
+
+namespace {
+
+RigidBody *PlayerBody() {
+    return fgSimulation.GetRigidBody(fgSimulation.cars.first[0]->rigidBodySlot);
+}
+
+// The AI element a target's word names (a resolved reference)
+CARP::AIElement *ElementOf(uint32_t element) {
+    return PtrFrom32<CARP::AIElement>(element);
+}
+
+AIElementTracking *Tracking(uint32_t element) {
+    return fgAIElementController->GetCarpElementTracking(ElementOf(element));
+}
+
+AIElementStats *Stats() {
+    return fgAIElementController->GetStats();
+}
+
+// The target's health as Damage, Death and Health read it: 0 for the types other than the player and an element
+int TargetHealth(const SMissionRuleTarget &target) {
+    if (target.type == kTargetPlayer)
+        return Ftol(glbMissionManager->playerHealth);
+    if (target.type == kTargetElement)
+        return Ftol(Tracking(target.element)->element->hitPoints);
+    return 0;
+}
+
+// operator new of the rules
+template <class Rule>
+SMissionRule *NewRule(const MissionRuleRecord *record) {
+    Rule *rule = static_cast<Rule *>(UMemory::FastAlloc(sizeof(Rule), "SMissionRule"));
+    if (rule == NULL)
+        return NULL;
+    return rule->Construct(record);
+}
+
+} // namespace
+
+// ---- SMissionRule
+
+void SMissionRule::Construct(const MissionRuleRecord *record) {
+    vtable = SMissionRuleVtable;
+    events = record->events;
+    enabled = (record->flags & MissionRuleRecord::kEnabled) != 0;
+    once = (record->flags & MissionRuleRecord::kOnce) != 0;
+    inverted = (record->flags & MissionRuleRecord::kInverted) != 0;
+}
+
+// FUNC_AT(0x000b9ac0)
+void SMissionRule::Destruct() {
+    vtable = SMissionRuleVtable;
+}
+
+// FUNC_AT(0x000b9cb0)
+SMissionRule* SMissionRule::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SMissionRule));
+    return this;
+}
+
+bool SMissionRule::CheckRule() {
+    return (this->*XbeVirtual<bool (SMissionRule::*)()>(this, 1))();
+}
+
+// FUNC_AT(0x000b9500)
+void SMissionRule::RunEvents() {
+    if (events == NULL)
+        return;
+    MEM_fill(&gEventDynamicData, 0, kEventDataBytes);
+    gEventDynamicData.index = -1;
+    gEventDynamicData.instanceIndex = -1;
+    gEventDynamicData.flag = fgSimulation.GetPlayerObject()->flags & PhysicsObject::kSimpleBody;
+    gEventDynamicData.index = fgSimulation.GetPlayerObject()->rigidBodySlot;
+
+    TriggerEvent *event = events->Events();
+    for (uint32_t i = 0; i < uint32_t(events->count); i++, event++) {
+        TaskCallback callback = RegisterEvent::LookupEvent(event->type);
+        if (callback != NULL)
+            callback(event->Data());
+    }
+}
+
+// FUNC_AT(0x000b9590)
+void SMissionRule::DoRule() {
+    if (!enabled)
+        return;
+    bool passed = CheckRule();
+    if (inverted)
+        passed = !passed;
+    if (passed) {
+        RunEvents();
+        if (once)
+            enabled = false;
+    }
+}
+
+// FUNC_AT(0x000ba150)
+SMissionRule* SMissionRule::Instantiate(const MissionRuleRecord *record) {
+    switch (record->type) {
+    case kRuleAlways:
+        return NewRule<SRuleAlways>(record);
+    case kRuleAmmo:
+        return NewRule<SRuleAmmo>(record);
+    case kRuleDamage:
+        return NewRule<SRuleDamage>(record);
+    case kRuleDeath:
+        return NewRule<SRuleDeath>(record);
+    case kRuleHealth:
+        return NewRule<SRuleHealth>(record);
+    case kRulePIP:
+        return NewRule<SRulePIP>(record);
+    case kRuleProg:
+        return NewRule<SRuleProg>(record);
+    case kRuleRange:
+        return NewRule<SRuleRange>(record);
+    case kRuleSpeed:
+        return NewRule<SRuleSpeed>(record);
+    case kRuleTimer:
+        return NewRule<SRuleTimer>(record);
+    case kRuleProperty:
+        return NewRule<SRuleProperty>(record);
+    case kRuleCollision:
+        return NewRule<SRuleCollision>(record);
+    case kRulePlayerDir:
+        return NewRule<SRulePlayerDir>(record);
+    case kRuleDifficulty:
+        return NewRule<SRuleDifficulty>(record);
+    case kRuleProgCounter:
+        return NewRule<SRuleProgCounter>(record);
+    default:
+        return NULL;
+    }
+}
+
+// FUNC_AT(0x000b98f0)
+bool StubError() {
+    return true;
+}
+
+// ---- SMissionRuleTarget
+
+// FUNC_AT(0x000ba390)
+int SMissionRuleTarget::GetSpeed() {
+    if (type == kTargetPlayer)
+        return Ftol(VU0_v3length(&PlayerBody()->velocity));
+    if (type == kTargetElement)
+        return Ftol(Tracking(element)->speed);
+    return 0;
+}
+
+// FUNC_AT(0x000ba3e0)
+void SMissionRuleTarget::GetPos(Coord4 *position) {
+    const Coord3 *from;
+    if (type == kTargetPlayer)
+        from = &PlayerBody()->position;
+    else if (type == kTargetElement)
+        from = &Tracking(element)->position;
+    else
+        return;
+    position->x = from->x;
+    position->y = from->y;
+    position->z = from->z;
+}
+
+// FUNC_AT(0x000ba430)
+bool SMissionRuleTarget::GetMatrix(MATRIX4 *matrix) {
+    int slot;
+    if (type == kTargetPlayer) {
+        slot = fgSimulation.cars.first[0]->rigidBodySlot;
+    } else if (type == kTargetElement) {
+        CARP::AIElement *redirected = fgAIElementController->RedirectCarpElement(ElementOf(element));
+        if (redirected->state != kElementAwake || redirected->type != CARP::kAIElementVehicle ||
+            redirected->object == NULL)
+            return false;
+        slot = redirected->object->rigidBodySlot;
+    } else {
+        return false;
+    }
+    *matrix = fgSimulation.GetRigidBody(slot)->info->orientation;
+    return true;
+}
+
+// FUNC_AT(0x000ba4a0)
+bool SMissionRuleTarget::GetProperty(const char *name) {
+    if (type == kTargetPlayer) {
+        if (strcmp(name, "NOBOOST") == 0)
+            return WeaponManager->weapons[kWeaponQBooster].shotsFired == 0;
+        if (strcmp(name, "ONEEMP") == 0)
+            return WeaponManager->weapons[kWeaponQPulse].shotsFired == 1;
+        if (strcmp(name, "2WHEELS") == 0)
+            return fgSimulation.cars.first[0]->GetIsInTwoWheelMode();
+        return false;
+    }
+    if (type == kTargetElement)
+        return Tracking(element)->GetProperty(name);
+    return false;
+}
+
+// ---- the rules
+
+// FUNC_AT(0x000b96c0)
+SRuleAlways* SRuleAlways::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleAlwaysVtable;
+    return this;
+}
+
+// FUNC_AT(0x000b9d00)
+SRuleAlways* SRuleAlways::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleAlways));
+    return this;
+}
+
+// FUNC_AT(0x000b9700)
+SRuleDamage* SRuleDamage::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleDamageVtable;
+    target.Construct(record->args[0], record->args[1]);
+    threshold = record->args[2];
+    lastHealth = 0;
+    return this;
+}
+
+// FUNC_AT(0x000b9770)
+bool SRuleDamage::CheckRule() {
+    if (target.type == kTargetStats)
+        return Ftol(Stats()->maxDamage) > threshold;
+    int health = TargetHealth(target);
+    int damage = lastHealth - health;
+    lastHealth = health;
+    return damage > threshold;
+}
+
+// FUNC_AT(0x000b97f0)
+SRuleDeath* SRuleDeath::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleDeathVtable;
+    target.Construct(record->args[0], record->args[1]);
+    return this;
+}
+
+// The other target types (kTargetStats among them) read a health of 0, so pass.
+// FUNC_AT(0x000b9850)
+bool SRuleDeath::CheckRule() {
+    return TargetHealth(target) == 0;
+}
+
+// FUNC_AT(0x000b9df0)
+SRuleDeath* SRuleDeath::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleDeath));
+    return this;
+}
+
+// FUNC_AT(0x000b98a0)
+SRulePIP* SRulePIP::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRulePIPVtable;
+    unknown0c = record->args[0];
+    unknown10 = record->args[1];
+    unknown14 = record->args[2];
+    return this;
+}
+
+// FUNC_AT(0x000b9900)
+SRuleProg* SRuleProg::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleProgVtable;
+    event = record->args[0];
+    return this;
+}
+
+// FUNC_AT(0x000b9950)
+bool SRuleProg::CheckRule() {
+    return glbMissionManager->CheckProgrammerEvent(event);
+}
+
+// FUNC_AT(0x000b9f60)
+SRuleProg* SRuleProg::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleProg));
+    return this;
+}
+
+// FUNC_AT(0x000b9960)
+SRuleProperty* SRuleProperty::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRulePropertyVtable;
+    target.Construct(record->args[0], record->args[1]);
+    strncpy(name, &record->text[8], sizeof(name));
+    return this;
+}
+
+// FUNC_AT(0x000ba560)
+bool SRuleProperty::CheckRule() {
+    return target.GetProperty(name);
+}
+
+// FUNC_AT(0x000b99d0)
+SRuleDifficulty* SRuleDifficulty::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleDifficultyVtable;
+    mask = record->args[0];
+    return this;
+}
+
+// FUNC_AT(0x000b9a20)
+bool SRuleDifficulty::CheckRule() {
+    int difficulty = glbMissionManager->difficulty;
+    return ((mask & 1) && difficulty == 0) || ((mask & 2) && difficulty == 1) || ((mask & 4) && difficulty == 2);
+}
+
+// FUNC_AT(0x000b9a50)
+SRulePlayerDir* SRulePlayerDir::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRulePlayerDirVtable;
+    target.Construct(record->args[0], record->args[1]);
+    minimum = record->args[2];
+    maximum = record->args[3];
+    return this;
+}
+
+// The original leaves the w of its target and player positions and of the forward axis unset; nothing reads them.
+// FUNC_AT(0x000ba690)
+bool SRulePlayerDir::CheckRule() {
+    if (target.type != kTargetElement)
+        return false;
+    Coord4 targetPosition = { 0.0f, 0.0f, 0.0f, 0.0f };
+    target.GetPos(&targetPosition);
+    const Coord3 &player = PlayerBody()->position;
+    Coord4 playerPosition = { player.x, player.y, player.z, 0.0f };
+    MATRIX4 matrix;
+    if (!target.GetMatrix(&matrix))
+        return false;
+
+    Coord4 toPlayer;
+    VU0_v4sub(&playerPosition, &targetPosition, &toPlayer);
+    Coord4 forward = { matrix.mtx[2][0], matrix.mtx[2][1], matrix.mtx[2][2], 0.0f };
+    VU0_v4unitxyz(&toPlayer, &toPlayer);
+    float cosine = v3dotprod(&forward, &toPlayer);
+    Coord4 cross;
+    VU0_v4crossprodxyz(&forward, &toPlayer, &cross);
+    float angle = float(CrtAcosTimes(cosine, &kDegreesPerRadian));
+    if (cross.y < 0.0f)
+        angle = -angle;
+    return CompareWithinDegrees(angle, float(minimum), float(maximum)) != 0.0f;
+}
+
+// FUNC_AT(0x000b9ad0)
+float CompareWithinDegrees(float angle, float from, float to) {
+    double past = double(angle) - from;
+    if (past < 0.0)
+        past += 360.0;
+    if (past >= 180.0)
+        return 0.0f;
+    double before = double(to) - angle;
+    if (before < 0.0)
+        before += 360.0;
+    return before >= 180.0 ? 0.0f : 1.0f;
+}
+
+// FUNC_AT(0x000b9b30)
+SRuleCollision* SRuleCollision::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleCollisionVtable;
+    target.Construct(record->args[0], record->args[1]);
+    return this;
+}
+
+// FUNC_AT(0x000b9b90)
+SRuleProgCounter* SRuleProgCounter::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleProgCounterVtable;
+    counter = record->args[0];
+    comparison = record->args[1];
+    value = record->args[2];
+    return this;
+}
+
+// FUNC_AT(0x000b9be0)
+bool SRuleProgCounter::CheckRule() {
+    int count = glbMissionManager->GetMagicCounter(counter);
+    switch (comparison) {
+    case kEqual:
+        return count == value;
+    case kGreater:
+        return count > value;
+    case kLess:
+        return count < value;
+    case kAnyBits:
+        return (value & count) != 0;
+    case kNoBits:
+        return (value & count) == 0;
+    default:
+        return false;
+    }
+}
+
+// FUNC_AT(0x000b9f40)
+SRuleProgCounter* SRuleProgCounter::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleProgCounter));
+    return this;
+}
+
+// FUNC_AT(0x000b9d20)
+SRuleAmmo* SRuleAmmo::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleAmmoVtable;
+    ammo.Construct(record->args[1], record->args[2]);
+    weapon = record->args[0];
+    return this;
+}
+
+// FUNC_AT(0x000b9db0)
+bool SRuleAmmo::CheckRule() {
+    return ammo.Crossed(WeaponManager->weapons[weapon].ammo);
+}
+
+// FUNC_AT(0x000b9d90)
+SRuleAmmo* SRuleAmmo::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleAmmo));
+    return this;
+}
+
+// FUNC_AT(0x000b9e10)
+SRuleHealth* SRuleHealth::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleHealthVtable;
+    target.Construct(record->args[0], record->args[1]);
+    health.Construct(record->args[2], record->args[3]);
+    return this;
+}
+
+// FUNC_AT(0x000b9eb0)
+bool SRuleHealth::CheckRule() {
+    int value;
+    if (target.type == kTargetStats) {
+        AIElementStats *stats = Stats();
+        value = Ftol(health.direction != 0 ? stats->maxHitPoints : stats->minHitPoints);
+    } else {
+        value = TargetHealth(target);
+    }
+    return health.Crossed(value);
+}
+
+// FUNC_AT(0x000b9f80)
+SRuleRange* SRuleRange::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleRangeVtable;
+    target.Construct(record->args[0], record->args[1]);
+    distance.Construct(record->args[2], record->args[3]);
+    return this;
+}
+
+// FUNC_AT(0x000ba570)
+bool SRuleRange::CheckRule() {
+    int value;
+    if (target.type == kTargetStats) {
+        AIElementStats *stats = Stats();
+        value = Ftol(distance.direction != 0 ? stats->maxDistance : stats->minDistance);
+    } else {
+        Coord4 position = { 0.0f, 0.0f, 0.0f, 0.0f };
+        target.GetPos(&position);
+        value = Ftol(v3distance(&position, &PlayerBody()->position));
+    }
+    distance.last = value;
+    if (distance.direction == 0)
+        return value < distance.threshold;
+    return value > distance.threshold;
+}
+
+// FUNC_AT(0x000b9e90)
+SRuleRange* SRuleRange::Delete(unsigned int flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(SRuleRange));
+    return this;
+}
+
+// FUNC_AT(0x000ba000)
+SRuleSpeed* SRuleSpeed::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleSpeedVtable;
+    target.Construct(record->args[0], record->args[1]);
+    speed.Construct(record->args[2], record->args[3]);
+    return this;
+}
+
+// FUNC_AT(0x000ba620)
+bool SRuleSpeed::CheckRule() {
+    int value;
+    if (target.type == kTargetStats) {
+        AIElementStats *stats = Stats();
+        value = Ftol(speed.direction != 0 ? stats->maxSpeed : stats->minSpeed);
+    } else {
+        value = target.GetSpeed();
+    }
+    return speed.Crossed(value);
+}
+
+// FUNC_AT(0x000ba080)
+SRuleTimer* SRuleTimer::Construct(const MissionRuleRecord *record) {
+    SMissionRule::Construct(record);
+    vtable = SRuleTimerVtable;
+    timer = record->args[0];
+    seconds.threshold = QuietNaN(record->floatArgs[2]);    // moved through the x87
+    seconds.direction = record->args[1];
+    seconds.last = seconds.direction == 0 ? seconds.threshold - 1.0f : seconds.threshold + 1.0f;
+    return this;
+}
+
+// FUNC_AT(0x000ba0f0)
+bool SRuleTimer::CheckRule() {
+    SMissionTimer *missionTimer = &glbMissionManager->timers[timer];
+    if (!missionTimer->running)
+        return false;
+    int stepsPerSecond = fgSimulation.stepsPerSecond;
+    return seconds.Crossed(float(double(missionTimer->GetValue()) / stepsPerSecond));
+}
+
+// FUNC_AT(0x000b9c50)
+bool RuleCrossing::Crossed(float value) {
+    bool crossed = false;
+    if (direction == 0) {
+        if (value < threshold && last >= threshold)
+            crossed = true;
+    } else {
+        if (value > threshold && last <= threshold)
+            crossed = true;
+    }
+    last = value;
+    return crossed;
+}
+
+// ---- SMissionTimer
+
+// FUNC_AT(0x000b95d0)
+SMissionTimer* SMissionTimer::Construct() {
+    running = false;
+    ticking = false;
+    value = 0;
+    lastBeep = 0;
+    return this;
+}
+
+// FUNC_AT(0x000b95e0)
+void SMissionTimer::Reset(int startValue) {
+    value = startValue;
+    startStep = fgSimulation.stepCount;
+}
+
+// FUNC_AT(0x000b9600)
+void SMissionTimer::Start(int countRate) {
+    if (running)
+        return;
+    rate = countRate;
+    startStep = fgSimulation.stepCount;
+    running = true;
+}
+
+// FUNC_AT(0x000b9620)
+void SMissionTimer::Increment(int amount) {
+    value += amount;
+}
+
+// FUNC_AT(0x000b9630)
+int SMissionTimer::GetValue() {
+    if (!running)
+        return value;
+    int current = (fgSimulation.stepCount - startStep) * rate + value;
+    if (ticking) {
+        int second = current / fgSimulation.stepsPerSecond;
+        if (second != lastBeep && second > 0) {
+            int bank = 0;
+            AMenuSound::Trigger(bank, "SFX_ReverseBeep", "Gadgets", kSoundViewShared);
+            lastBeep = second;
+        }
+    }
+    return current;
+}
+
+// FUNC_AT(0x000b96a0)
+bool SMissionTimer::IsReverse() {
+    return rate < 0;
+}
+
+// FUNC_AT(0x000b96b0)
+void SMissionTimer::SetTicking(bool on) {
+    ticking = on;
+}
+
+// FUNC_AT(0x000b9ce0)
+void SMissionTimer::Stop() {
+    if (!running)
+        return;
+    value = GetValue();
+    running = false;
+}

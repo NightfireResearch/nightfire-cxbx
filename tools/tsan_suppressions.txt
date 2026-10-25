@@ -1,0 +1,29 @@
+# ThreadSanitizer suppressions for the driving engine's Linux x86-64 sanitizer runs (docs/driving/macos.md, package
+# M2): TSAN_OPTIONS=suppressions=<this file>. Each is a race on a value alone, which publishes no other data, so no
+# memory ordering is needed on any host; aligned 32-bit words are read and written whole on x86 and arm64 alike.
+
+# Tick counts the timer thread advances and other threads read (TIMER_ontick, the kernel's tick, the game clock)
+race:SomeTicks
+race:LibTicks
+race:TickCount
+race:^Clock$
+race:RealClock_Div2Ticks
+
+# The pads' rumble: motor speeds and the letterbox's "no rumble" flag, which the feedback thread reads each pass
+race:gFeedbackPorts
+race:gFeedbackAllowed
+
+# The FILESYS worker's test of the cancel bit of the op it is about to run (FsWorkerThread, unlocked, as the
+# original) while FILESYS_callbackop sets the op's callback bits under the lock: a cancel that lands meanwhile is
+# reported when the op finishes instead
+race_top:FsWorkerThread
+
+# The sound buffers' samples, which the device side reads while the mixer writes ahead of it, as DirectSound's
+# hardware did (positions, not locks, keep them apart)
+race:sdlAudioDriving.cpp
+
+# Mesa's lavapipe, the CPU Vulkan driver of the WSL2 runs
+race:libvulkan_lvp.so
+
+# dxvk-native (a prebuilt release)
+race:libdxvk_d3d9.so

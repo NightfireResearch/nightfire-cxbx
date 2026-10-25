@@ -1,0 +1,811 @@
+{
+ "batch": "P020",
+ "program": "DRIVING.ELF",
+ "applied": "Sat Sep 26 00:50:25 2026",
+ "items": [
+  {
+   "xbox": "0x002b4c08",
+   "old_name": "sceDevVif0GetErr",
+   "old_plate": "[symbol-matching]\nCanonical name: sceDevVif0GetErr\nEvidence: sheet row 7702, placed by align\nBatch: P004b\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b4c08 from 'sceDevVif0GetErr' to 'FUN_002b4c08'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b4c08",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_002b4c08",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b4f38",
+   "old_name": "sceDevVif1GetCnd",
+   "old_plate": "[symbol-matching]\nCanonical name: sceDevVif1GetCnd\nEvidence: sheet row 7710, body review: Decodes REG_VIF1_STAT into a 0-4 condition code; used by sceDevVif1Pause/Continue: GetCnd.\nBatch: P015\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b4f38 from 'sceDevVif1GetCnd' to 'FUN_002b4f38'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b4f38",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_002b4f38",
+   "ok": true
+  },
+  {
+   "xbox": "0x002bedf0",
+   "old_name": "SetTLBEntry",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002bedf0 from 'SetTLBEntry' to 'FUN_002bedf0'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002bedf0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_002bedf0",
+   "ok": true
+  },
+  {
+   "xbox": "0x001b23e8",
+   "old_name": "RPathHandle",
+   "old_plate": "[symbol-matching]\nCanonical name: RPathEngine::RPathHandle::RPathHandle\nSymbol file name: RPathEngine::RPathHandle::RPathHandle(RPathEngine::RPathHandle\nClass: RPathEngine::RPathHandle\nEvidence: sheet row 3223, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001b23e8 from 'RPathHandle' to 'FUN_001b23e8'"
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001b23e8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FUN_001b23e8",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019efd8",
+   "old_name": "operator_delete",
+   "old_plate": "[symbol-matching]\nCanonical name: Smackable::operator_delete\nSymbol file name: Smackable::operator delete(void *, unsigned int)\nClass: Smackable\nEvidence: sheet row 2844, placed by align\nBatch: P004\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019efd8 from 'operator_delete' to 'Smackable_global_ctors'",
+      "warnings": [
+       "Function name 'Smackable_global_ctors' \u2014 main part 'Smackable_global_ctors' is not PascalCase. Expected: SmackableGlobalCtors",
+       "Function name 'Smackable_global_ctors' \u2014 main part 'Smackable_global_ctors' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'Smackable_global_ctors' does not start with a recognized verb. First word 'Smackable_global_ctors' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019efd8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "Smackable_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x0019efb0",
+   "old_name": "FUN_0019efb0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0019efb0 from 'FUN_0019efb0' to 'operator_delete'",
+      "warnings": [
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' is not PascalCase. Expected: OperatorDelete",
+       "Function name 'operator_delete' \u2014 main part 'operator_delete' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0019efb0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "operator_delete",
+   "ok": true
+  },
+  {
+   "xbox": "0x00259560",
+   "old_name": "MOUSE_init",
+   "old_plate": "[symbol-matching]\nCanonical name: MOUSE_init\nEvidence: sheet row 7063: window review: Initialises mouse globals (position, dims 0x200 x 0x1c0, clears 0x21c state), calls the pad init; size 0x90 exact.\nBatch: P019\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00259560",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_init",
+   "ok": true
+  },
+  {
+   "xbox": "0x002595f0",
+   "old_name": "MOUSE_restore",
+   "old_plate": "[symbol-matching]\nCanonical name: MOUSE_restore\nEvidence: sheet row 7064: window review: 8-byte function clearing one global right after MOUSE_init; size 0x8 exact.\nBatch: P019\n[/symbol-matching]",
+   "created": false,
+   "steps": [
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002595f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_restore",
+   "ok": true
+  },
+  {
+   "xbox": "0x002595f8",
+   "old_name": "maybe_MOUSE_init",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002595f8 from 'maybe_MOUSE_init' to 'MOUSE_setstate'",
+      "warnings": [
+       "Function name 'MOUSE_setstate' \u2014 main part 'MOUSE_setstate' is not PascalCase. Expected: MouseSetstate",
+       "Function name 'MOUSE_setstate' \u2014 main part 'MOUSE_setstate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002595f8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_setstate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00259668",
+   "old_name": "maybe_MOUSE_restore",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00259668 from 'maybe_MOUSE_restore' to 'MOUSE_getstate'",
+      "warnings": [
+       "Function name 'MOUSE_getstate' \u2014 main part 'MOUSE_getstate' is not PascalCase. Expected: MouseGetstate",
+       "Function name 'MOUSE_getstate' \u2014 main part 'MOUSE_getstate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00259668",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_getstate",
+   "ok": true
+  },
+  {
+   "xbox": "0x002598e0",
+   "old_name": "maybe_MOUSE_setstate",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002598e0 from 'maybe_MOUSE_setstate' to 'MOUSE_setbounds'",
+      "warnings": [
+       "Function name 'MOUSE_setbounds' \u2014 main part 'MOUSE_setbounds' is not PascalCase. Expected: MouseSetbounds",
+       "Function name 'MOUSE_setbounds' \u2014 main part 'MOUSE_setbounds' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002598e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_setbounds",
+   "ok": true
+  },
+  {
+   "xbox": "0x002598f8",
+   "old_name": "maybe_MOUSE_getstate",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002598f8 from 'maybe_MOUSE_getstate' to 'MOUSE_getbounds'",
+      "warnings": [
+       "Function name 'MOUSE_getbounds' \u2014 main part 'MOUSE_getbounds' is not PascalCase. Expected: MouseGetbounds",
+       "Function name 'MOUSE_getbounds' \u2014 main part 'MOUSE_getbounds' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002598f8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "MOUSE_getbounds",
+   "ok": true
+  },
+  {
+   "xbox": "0x00259920",
+   "old_name": "maybe_MOUSE_setbounds",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00259920 from 'maybe_MOUSE_setbounds' to 'PAD_getconfigopts'",
+      "warnings": [
+       "Function name 'PAD_getconfigopts' \u2014 main part 'PAD_getconfigopts' is not PascalCase. Expected: PadGetconfigopts",
+       "Function name 'PAD_getconfigopts' \u2014 main part 'PAD_getconfigopts' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00259920",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PAD_getconfigopts",
+   "ok": true
+  },
+  {
+   "xbox": "0x00259950",
+   "old_name": "maybe_MOUSE_getbounds",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00259950 from 'maybe_MOUSE_getbounds' to 'PAD_setconfigopts'",
+      "warnings": [
+       "Function name 'PAD_setconfigopts' \u2014 main part 'PAD_setconfigopts' is not PascalCase. Expected: PadSetconfigopts",
+       "Function name 'PAD_setconfigopts' \u2014 main part 'PAD_setconfigopts' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00259950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PAD_setconfigopts",
+   "ok": true
+  },
+  {
+   "xbox": "0x00259980",
+   "old_name": "maybe_PAD_getconfigopts",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00259980 from 'maybe_PAD_getconfigopts' to 'PAD_init'",
+      "warnings": [
+       "Function name 'PAD_init' \u2014 main part 'PAD_init' is not PascalCase. Expected: PadInit",
+       "Function name 'PAD_init' \u2014 main part 'PAD_init' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00259980",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PAD_init",
+   "ok": true
+  },
+  {
+   "xbox": "0x00275510",
+   "old_name": "FnDeltaChan",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00275510 from 'FnDeltaChan' to 'FnDeltaChan_type_info_function'",
+      "warnings": [
+       "Function name 'FnDeltaChan_type_info_function' \u2014 main part 'FnDeltaChan_type_info_function' is not PascalCase. Expected: FndeltachanTypeInfoFunction",
+       "Function name 'FnDeltaChan_type_info_function' \u2014 main part 'FnDeltaChan_type_info_function' contains underscores. Use PascalCase after the module prefix.",
+       "Function name 'FnDeltaChan_type_info_function' does not start with a recognized verb. First word 'Fn' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00275510",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "FnDeltaChan_type_info_function",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b4f88",
+   "old_name": "FUN_002b4f88",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b4f88 from 'FUN_002b4f88' to 'sceDevVif1GetCnd'",
+      "warnings": [
+       "Function name 'sceDevVif1GetCnd' \u2014 main part 'sceDevVif1GetCnd' is not PascalCase. Expected: Scedevvif1getcnd"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b4f88",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceDevVif1GetCnd",
+   "ok": true
+  },
+  {
+   "xbox": "0x002bee00",
+   "old_name": "FUN_002bee00",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002bee00 from 'FUN_002bee00' to 'SetTLBEntry'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetTLBEntry' shares the same token set as existing function 'Set' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002bee00",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetTLBEntry",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b98d0",
+   "old_name": "maybeLibcdvd_bind",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b98d0 from 'maybeLibcdvd_bind' to 'sceSifBindRpc'",
+      "warnings": [
+       "Function name 'sceSifBindRpc' \u2014 main part 'sceSifBindRpc' is not PascalCase. Expected: Scesifbindrpc"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b98d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceSifBindRpc",
+   "ok": true
+  },
+  {
+   "xbox": "0x002cfd68",
+   "old_name": "GetSomeGlobalFileRelatedObject",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002cfd68 from 'GetSomeGlobalFileRelatedObject' to 'ObjectMemClass'",
+      "warnings": [
+       "Function name 'ObjectMemClass' does not start with a recognized verb. First word 'Object' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle",
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'ObjectMemClass' shares the same token set as existing function 'Class' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002cfd68",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ObjectMemClass",
+   "ok": true
+  },
+  {
+   "xbox": "0x002126d0",
+   "old_name": "FUN_002126d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002126d0 from 'FUN_002126d0' to 'InRegion'",
+      "warnings": [
+       "Function name 'InRegion' does not start with a recognized verb. First word 'In' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002126d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "InRegion",
+   "ok": true
+  },
+  {
+   "xbox": "0x002446d8",
+   "old_name": "FUN_002446d8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002446d8 from 'FUN_002446d8' to 'DrawFont'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'DrawFont' shares the same token set as existing function 'Draw' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002446d8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "DrawFont",
+   "ok": true
+  },
+  {
+   "xbox": "0x00285b08",
+   "old_name": "FUN_00285b08",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00285b08 from 'FUN_00285b08' to 'SetTexture'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'SetTexture' shares the same token set as existing function 'Texture' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00285b08",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "SetTexture",
+   "ok": true
+  },
+  {
+   "xbox": "0x002953c0",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002953c0",
+      "function_name": "FUN_002953c0",
+      "entry_point": "002953c0",
+      "body_size": 36,
+      "message": "Function created successfully at 002953c0"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002953c0 from 'FUN_002953c0' to 'PreMult'",
+      "warnings": [
+       "Function name 'PreMult' is too short (main part 'PreMult' is 7 chars, minimum 8).",
+       "Function name 'PreMult' does not start with a recognized verb. First word 'Pre' not in allowed list. Common verbs: Get, Set, Initialize, Process, Calculate, Find, Check, Handle"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002953c0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PreMult",
+   "ok": true
+  },
+  {
+   "xbox": "0x002b4bf8",
+   "old_name": null,
+   "old_plate": null,
+   "created": true,
+   "steps": [
+    [
+     "create_function",
+     {
+      "success": true,
+      "address": "002b4bf8",
+      "function_name": "FUN_002b4bf8",
+      "entry_point": "002b4bf8",
+      "body_size": 16,
+      "message": "Function created successfully at 002b4bf8"
+     }
+    ],
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002b4bf8 from 'FUN_002b4bf8' to 'sceDevVif0GetErr'",
+      "warnings": [
+       "Function name 'sceDevVif0GetErr' \u2014 main part 'sceDevVif0GetErr' is not PascalCase. Expected: Scedevvif0geterr"
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002b4bf8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "sceDevVif0GetErr",
+   "ok": true
+  }
+ ]
+}

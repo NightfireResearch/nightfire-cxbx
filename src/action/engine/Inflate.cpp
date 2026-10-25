@@ -1,9 +1,265 @@
-#include "inflate.h"
+#include "Inflate.h"
 
+#include "../actionhelpers.h"
+
+#include <stddef.h>
 #include <string.h>
 
-// AUTOGEN
-void Inflate_huffman(maybeEDLDecompressorState *state);
+// ---- Inflate_huffman: blocks of stored bytes, or of literals and matches coded by two canonical Huffman trees
+// (literal/length and distance) sent as code lengths. A block may send no tree and use the last one.
+
+// The code tables and the lists they are built from, the game's (they last from one EDL block to the next). An entry
+// of a table is a leaf, symbol << 7 | code length, or (length 0) a subtable's place: offset << 7 | index bits << 4.
+#pragma pack(push, 1)
+typedef struct HuffmanTables {
+    uint lengthCounts[33];          // 0x0000 codes of each length; [0] cleared after a tree's lengths are read
+    uint pad84;
+    ushort literals[1024 + 512];    // 0x0088 a 10-bit root and its subtables
+    uchar subtableLengths[1024];    // 0x0c88 the longest code under each root entry
+    ushort distances[256 + 512];    // 0x1088 an 8-bit root and its subtables
+    // 0x1688 the lengths by symbol, then in code order; the codes, bit-reversed; the symbols in code order (290
+    // places, to the end of the block). The lengths of a tree of more than 288 symbols run on into the codes, as in
+    // the original.
+    uint lists[288 + 288 + 290];
+} HuffmanTables;
+#pragma pack(pop)
+static_assert(offsetof(HuffmanTables, lists) == 0x1688, "HuffmanTables layout");
+static_assert(sizeof(HuffmanTables) == 0x2410, "HuffmanTables is 0x2410 bytes");
+// XBE_GLOBAL(0x0029b2d0, 0x2410)
+HuffmanTables HuffTables;
+#define HuffLengths (HuffTables.lists)
+#define HuffCodes (HuffTables.lists + 288)
+#define HuffSymbols (HuffTables.lists + 576)
+
+// The length and distance codes' bases and extra bits, one after another as the game has them: indexed as the
+// original does, so a symbol past the 29 lengths or the 30 distances reads what follows them
+typedef struct InflateCodes {
+    uchar lengthBase[32];
+    uchar lengthExtra[32];
+    ushort distanceBase[30];
+    signed char distanceExtra[32];
+} InflateCodes;
+static_assert(sizeof(InflateCodes) == 0x9c, "InflateCodes is 0x9c bytes");
+// XBE_GLOBAL(0x0018cd5c, 0x9c)
+static const InflateCodes InflateCodeTables = {
+    .lengthBase = {
+        0, 1, 2, 3, 4, 5, 6, 7, 8, 10, 12, 14, 16, 20, 24, 28, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160,
+        192, 224, 255,
+    },
+    .lengthExtra = {0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 2, 2, 2, 2, 3, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 5},
+    .distanceBase = {
+        0, 1, 2, 3, 4, 6, 8, 12, 16, 24, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024, 1536,
+        2048, 3072, 4096, 6144, 8192, 0x3000, 0x4000, 0x6000,
+    },
+    .distanceExtra = {0, 0, 0, 0, 1, 1, 2, 2, 3, 3, 4, 4, 5, 5, 6, 6, 7, 7, 8, 8, 9, 9, 10, 10, 11, 11, 12, 12, 13, 13},
+};
+#define LengthBase (InflateCodeTables.lengthBase - 257)       // [257 + n]
+#define LengthExtra (InflateCodeTables.lengthExtra - 257)     // [257 + n]
+#define DistanceBase (InflateCodeTables.distanceBase)
+#define DistanceExtra (InflateCodeTables.distanceExtra)
+
+#define HUFFMAN_END_OF_BLOCK 0x100
+#define HUFFMAN_MIN_MATCH 3
+#define HUFFMAN_MAX_LENGTH 15
+#define HUFFMAN_ERROR_SUBTABLE (-8)     // a code too long for its root's subtable
+#define HUFFMAN_ERROR_TABLE_FULL (-9)   // more subtables than the table has room for
+
+// x86 shifts: the count's low five bits
+static inline uint32_t Shl(uint32_t x, int n) { return x << (n & 31); }
+static inline uint32_t Shr(uint32_t x, int n) { return x >> (n & 31); }
+
+// The stream, read least significant bit first: the word in hand, the next, and the bits left in hand
+typedef struct HuffReader {
+    uint32_t bits;
+    uint32_t next;
+    const uint32_t *ptr;
+    int count;
+} HuffReader;
+
+static uint32_t Huff_Read(HuffReader *r, int n) {
+    uint32_t mask = Shl(1, n) - 1;
+    r->count -= n;
+    if (r->count >= 0) {
+        uint32_t v = r->bits & mask;
+        r->bits = Shr(r->bits, n);
+        return v;
+    }
+    uint32_t v = (Shl(r->next, r->count + n) + r->bits) & mask;
+    r->bits = Shr(r->next, -r->count);
+    r->next = *r->ptr++;
+    r->count += 32;
+    return v;
+}
+
+// A symbol: fifteen bits looked at, the root entry's (or its subtable's) length taken
+static uint Huff_Decode(HuffReader *r, const ushort *table, int rootBits) {
+    uint32_t peek = r->count < HUFFMAN_MAX_LENGTH ? Shl(r->next, r->count) + r->bits : r->bits;
+    uint entry = table[peek & (Shl(1, rootBits) - 1)];
+    if ((entry & 0xf) == 0) {
+        uint index = Shr(peek, rootBits) & (Shl(1, (entry >> 4) & 7) - 1);
+        entry = table[Shl(1, rootBits) + index + (entry >> 7)];
+    }
+    int length = entry & 0xf;
+    r->count -= length;
+    if (r->count < 0) {
+        r->bits = Shr(r->next, -r->count);
+        r->next = *r->ptr++;
+        r->count += 32;
+    } else {
+        r->bits = Shr(r->bits, length);
+    }
+    return entry >> 7;
+}
+
+// A tree of count symbols' code lengths (each a bit: a new 4-bit length follows, else the last one again) into
+// table. Returns 0, or an error.
+static int Huff_BuildTree(HuffReader *r, uint count, ushort *table, int rootBits, uint *lastLength) {
+    HuffmanTables &t = HuffTables;
+    memset(&t.lengthCounts[1], 0, 32 * sizeof(uint));
+    uint length = *lastLength;
+    for (uint i = 0; i < count; i++) {
+        if (Huff_Read(r, 1) == 1)
+            length = Huff_Read(r, 4);
+        HuffLengths[i] = length;
+        t.lengthCounts[length]++;
+    }
+    *lastLength = length;
+    t.lengthCounts[0] = 0;
+
+    // The symbols in code order (by length, then symbol), and their lengths in that order
+    uint n = 0;
+    for (uint l = 1; l <= HUFFMAN_MAX_LENGTH; l++)
+        for (uint s = 0; s < count; s++)
+            if (HuffLengths[s] == l)
+                HuffSymbols[n++] = s;
+    uint k = 0;
+    for (uint l = 1; l <= HUFFMAN_MAX_LENGTH; l++)
+        for (uint c = 0; c < t.lengthCounts[l]; c++)
+            HuffLengths[k++] = l;
+    HuffLengths[k] = 0;
+
+    // The canonical codes, bit-reversed for the least-significant-first stream
+    k = 0;
+    uint code = 0;
+    for (uint l = HuffLengths[0]; HuffLengths[k] != 0; l++, code <<= 1) {
+        for (; HuffLengths[k] == l; k++) {
+            uint v = Shl(1, l) | code++;
+            uint reversed = 0;
+            do {
+                reversed = (v & 1) + reversed * 2;
+                v >>= 1;
+            } while (v != 1);
+            HuffCodes[k] = reversed;
+        }
+    }
+
+    // The root: the codes shorter than it repeated through it; the longest code under each of its other entries
+    uint size = Shl(1, rootBits);
+    for (uint j = 0; j < size; j++)
+        t.subtableLengths[j] = 0;
+    uint l = 1;
+    k = 0;
+    for (; l < (uint)rootBits; l++) {
+        for (uint c = 1; c <= t.lengthCounts[l]; c++, k++) {
+            for (uint j = HuffCodes[k]; j < size; j += Shl(1, l))
+                table[j] = (ushort)((ushort)HuffSymbols[k] << 7) + l;
+        }
+    }
+    uint first = k;
+    for (; l <= HUFFMAN_MAX_LENGTH; l++) {
+        for (uint c = 0; c < t.lengthCounts[l]; c++, k++) {
+            uchar *longest = &t.subtableLengths[HuffCodes[k] & (size - 1)];
+            if (HuffLengths[k] > *longest)
+                *longest = (uchar)HuffLengths[k];
+        }
+    }
+
+    // A subtable for each of those entries, as many bits as its longest code has past the root
+    uint offset = 0;
+    for (uint j = 0; j < size; j++) {
+        uchar longest = t.subtableLengths[j];
+        if (longest == 0)
+            continue;
+        uint extra = longest - rootBits;
+        if (extra > 7)
+            return HUFFMAN_ERROR_SUBTABLE;
+        table[j] = (ushort)((longest + offset * 8 - rootBits) << 4);
+        offset += Shl(1, extra);
+    }
+    if (offset > 0x1ff)
+        return HUFFMAN_ERROR_TABLE_FULL;
+
+    // The codes as long as the root or longer, into their subtables
+    k = first;
+    if ((uint)rootBits <= HUFFMAN_MAX_LENGTH) {
+        for (l = rootBits; l <= HUFFMAN_MAX_LENGTH; l++) {
+            for (uint c = 1; c <= t.lengthCounts[l]; c++, k++) {
+                uint rootEntry = table[(size - 1) & HuffCodes[k]];
+                ushort *subtable = table + (rootEntry >> 7) + size;
+                uint limit = Shl(1, (rootEntry >> 4) & 7);
+                uint j = Shr(HuffCodes[k], rootBits);
+                do {
+                    subtable[j] = (ushort)((ushort)HuffSymbols[k] << 7) + (ushort)HuffLengths[k];
+                    j += Shl(1, HuffLengths[k] - rootBits);
+                } while (j < limit);
+            }
+        }
+    }
+    return 0;
+}
+
+// AUTOINJECT
+void Inflate_huffman(EDLDecompressorState *state) {
+    uchar *out = (uchar *)state->dst;
+    // After the EDL header
+    const uint32_t *words = (const uint32_t *)(state->src + sizeof(EDLHeader));
+    HuffReader r;
+    r.bits = words[0];
+    r.next = words[1];
+    r.ptr = words + 2;
+    r.count = 32;
+    uint lastLength = 0;
+    do {
+        if (Huff_Read(&r, 1) == 0) {
+            // Stored bytes
+            for (uint n = Huff_Read(&r, 15); n != 0; n--)
+                *out++ = (uchar)Huff_Read(&r, 8);
+            continue;
+        }
+        // The literal/length tree, then the distance tree, each kept when no lengths are sent
+        for (int tree = 1; tree >= 0; tree--) {
+            ushort *table = tree ? HuffTables.literals : HuffTables.distances;
+            int rootBits = tree ? 10 : 8;
+            uint count = Huff_Read(&r, 9);
+            if (count == 0)
+                continue;
+            int error = Huff_BuildTree(&r, count, table, rootBits, &lastLength);
+            if (error != 0) {
+                state->errNum = error;
+                return;
+            }
+        }
+        for (;;) {
+            uint symbol = Huff_Decode(&r, HuffTables.literals, 10);
+            if (symbol < HUFFMAN_END_OF_BLOCK) {
+                *out++ = (uchar)symbol;
+                continue;
+            }
+            if (symbol == HUFFMAN_END_OF_BLOCK)
+                break;
+            uint extra = LengthExtra[symbol];
+            uint lengthBits = extra != 0 ? Huff_Read(&r, extra) : 0;
+            uint length = LengthBase[symbol] + lengthBits + HUFFMAN_MIN_MATCH;
+            uint d = Huff_Decode(&r, HuffTables.distances, 8);
+            int distanceExtra = DistanceExtra[d];
+            uint distanceBits = distanceExtra != 0 ? Huff_Read(&r, distanceExtra) : 0;
+            uint distance = DistanceBase[d] + distanceBits;
+            const uchar *from = out - distance - 1;
+            for (; length != 0; length--)
+                *out++ = *from++;
+        }
+    } while (Huff_Read(&r, 1) == 0);
+}
 
 typedef struct {
     const uint32_t *ptr;
@@ -42,7 +298,7 @@ static inline uint32_t br_get(BitReader *br, int n)
 }
 
 // AUTOINJECT
-void Inflate_bitwise(maybeEDLDecompressorState *st) {
+void Inflate_bitwise(EDLDecompressorState *st) {
     BitReader br;
     uint8_t *out = (uint8_t*)(st->dst);
 
@@ -94,9 +350,8 @@ void Inflate_bitwise(maybeEDLDecompressorState *st) {
     }
 }
 
-
 // AUTOINJECT
-void Inflate_directcopy(maybeEDLDecompressorState *state) {
+void Inflate_directcopy(EDLDecompressorState *state) {
 
     // The source and destination may overlap - this must be done with memmove for safety
     memmove(state->dst, state->src + sizeof(EDLHeader), state->compressedSize);

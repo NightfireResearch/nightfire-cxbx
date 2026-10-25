@@ -61,7 +61,7 @@ bool Stack_Init(STACKINFO* stack, ushort size, int *mem) {
     stack->fillLevel = 0;
 
     if(mem == NULL && size > 0) {
-        stack->items = (void**)Mem_Malloc(size * sizeof(void*), 0x1B04, 0);
+        stack->items = (void**)Mem_Malloc(size * sizeof(void*), MALLOC_LLIST, 0);
         memset(stack->items, 0, size * sizeof(void*));
     }
 

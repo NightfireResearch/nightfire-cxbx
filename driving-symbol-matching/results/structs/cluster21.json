@@ -1,0 +1,632 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "RRenderer",
+   "size": 144,
+   "fields": [
+    {
+     "offset": 4,
+     "type": "RViewCamera *",
+     "name": "currentView",
+     "comment": "medium: ctor 7d2a0 zeroes; EndView 7d030 reads/clears; PS2 BeginView(RViewCamera&) 1abf98 writes +0x4. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "undefined4",
+     "name": "drawGroup",
+     "comment": "medium: embedded RDrawGroup: ctor LEA +0x8 -> RDrawGroup ctor 7cf40, dtor 7d670 -> ~RDrawGroup; PS2 +0x8 addr-taken. RDrawGroup is 4 bytes on Xbox (next member at +0xc). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "undefined4",
+     "name": "reflectedDrawGroup",
+     "comment": "medium: second embedded RDrawGroup: ctor LEA +0xc -> 7cf40; PS2 EnterReflection 1abff8 takes +0xc. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "activeDrawGroup",
+     "comment": "medium: ctor sets = this+0x8; FlushDrawLists 7d020 reads it; PS2 EnterReflection writes +0x10 (switches to the reflected group). Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "int",
+     "name": "cpuType",
+     "comment": "medium: ctor stores the return of CPU_detect 10b1d0. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int",
+     "name": "unk18",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "bool",
+     "name": "initArgFlag",
+     "comment": "medium: ctor stores its bool arg c (RRenderer(char*,int,bool)). Name invented"
+    },
+    {
+     "offset": 29,
+     "type": "bool",
+     "name": "screenCapturePending",
+     "comment": "medium: EndFrame 7d5b0: if set, calls DoScreenCapture 7d110 then clears. Name invented"
+    },
+    {
+     "offset": 30,
+     "type": "bool",
+     "name": "alphaWritesEnabled",
+     "comment": "high: EnableAlphaWrites 7d0b0 returns true if already set, else sets it, calls RenderContext e7900(0x1010101) and returns false; DisableAlphaWrites 7d0e0 mirrors. PS2 +0x30 (4-byte bool). Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "unk20",
+     "comment": "low: ctor zeroes. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "frameCount",
+     "comment": "high: EndFrame 7d5b0 INC dword [+0x24]; ctor zeroes. PS2 EndFrame R/W +0x2c/+0x38. Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "int",
+     "name": "screenWidth",
+     "comment": "high: ctor zeroes, ConfigureRes 7cfb0 writes; ctor FILDs +0x40/+0x44 for the RenderContext size and pushes both to 981c0 with 0x20 (bpp). Integers (FILD), not floats. PS2 +0x50. Name invented"
+    },
+    {
+     "offset": 68,
+     "type": "int",
+     "name": "screenHeight",
+     "comment": "high: ctor CMP [+0x44],0x1e0 (480); FILD. PS2 +0x54. Name invented"
+    },
+    {
+     "offset": 72,
+     "type": "int",
+     "name": "resMode",
+     "comment": "medium: ctor CMP [+0x48],3; written by ConfigureRes. Name invented"
+    },
+    {
+     "offset": 76,
+     "type": "bool",
+     "name": "unk4c",
+     "comment": "low: ctor/ConfigureRes write a byte. Name invented"
+    },
+    {
+     "offset": 77,
+     "type": "bool",
+     "name": "unk4d",
+     "comment": "low: ctor tests it to call RenderContext e7b20(1); ConfigureRes writes. Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "float",
+     "name": "scaleX",
+     "comment": "low: ctor = 1.0f, ConfigureRes writes. PS2 +0x64/+0x68 float. Name invented"
+    },
+    {
+     "offset": 84,
+     "type": "float",
+     "name": "scaleY",
+     "comment": "low: ctor = 1.0f, ConfigureRes writes. Name invented"
+    },
+    {
+     "offset": 88,
+     "type": "float",
+     "name": "unk58",
+     "comment": "low: ctor = 1.0f. Name invented"
+    },
+    {
+     "offset": 92,
+     "type": "int",
+     "name": "unk5c",
+     "comment": "low: ctor = -128 (0xffffff80). Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "void *",
+     "name": "device",
+     "comment": "high: EAGL::Device*: ctor FastAlloc 0x1c + e50c0, stores it; NewRenderContext/DeleteRenderContext/~Device use it. PS2 +0x74. Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "void *",
+     "name": "renderContext",
+     "comment": "high: EAGL::RenderContext*: result of Device e8900; Begin/EndFrame, StartFrame 7d060, Flush, DoScreenCapture, EnableAlphaWrites use it. PS2 +0x78. Name invented"
+    },
+    {
+     "offset": 104,
+     "type": "void *",
+     "name": "viewPort",
+     "comment": "high: EAGL::ViewPort*: result of RenderContext ee010; SetViewMatrix/e4870/e4ef0 on it. PS2 +0x7c. Name invented"
+    },
+    {
+     "offset": 108,
+     "type": "void *",
+     "name": "debugFont",
+     "comment": "medium: LoadDebugFont 7d560 writes; ctor zeroes; dtor reads. PS2 +0x80. Name invented"
+    },
+    {
+     "offset": 112,
+     "type": "void *",
+     "name": "debugFontData",
+     "comment": "medium: LoadDebugFont writes; dtor MEM_free. PS2 +0x84. Name invented"
+    },
+    {
+     "offset": 116,
+     "type": "bool",
+     "name": "frameEnded",
+     "comment": "medium: EndFrame sets 1; Flush 7d070 reads; ctor zeroes. PS2 +0x88. Name invented"
+    }
+   ],
+   "comment": "Singleton, no vptr. RRenderer::Init 7d5e0 FastAllocs 0x90 and constructs (7d2a0), stored in global 0x1ebff4 (the ctor also writes this there). PS2 layout differs past +0x10 (PS2 has 64-bit stores at +0x18/+0x20 and 4-byte bools), so Xbox offsets come from Xbox code only."
+  },
+  {
+   "name": "RRenderHigh",
+   "size": 68,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "undefined4[8]",
+     "name": "playerViews",
+     "comment": "medium: 4 entries of {RViewCamera* view, RPlayerCamera* player}: ctor MEM_fill(this,0,0x20); after PushPlayerView the ctor reads [this+count*8-8] as a camera; PS2 Render reads +0x0 -> RViewCamera::Render, +0x4 addr-taken in PopPlayerView/ReceiveCamer"
+    },
+    {
+     "offset": 32,
+     "type": "int",
+     "name": "playerViewCount",
+     "comment": "high: index for the 8-byte entries (ctor, PushPlayerView, PopPlayerView, RearrangeSplitScreens, ReceiveCameraInput); same offset on PS2. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "int",
+     "name": "unk24",
+     "comment": "low: ctor zeroes, dtor reads. Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "RViewCamera *",
+     "name": "hudView",
+     "comment": "high: ctor FastAlloc 0x4c tag 'RRenderHUDView', 96ae0 (RViewCamera ctor) then vtable 0x191aa8. Name from the tag"
+    },
+    {
+     "offset": 48,
+     "type": "void *",
+     "name": "debugViewPerspective",
+     "comment": "high: ctor FastAlloc 0x50 tag 'RRenderDebugViewPerspective', ctor 8b300(camera), [obj+0x10]=7; PS2 Render -> RViewCamera::Render. Name from the tag"
+    },
+    {
+     "offset": 52,
+     "type": "void *",
+     "name": "debugViewScreenSpace",
+     "comment": "high: ctor FastAlloc 0x4c tag 'RRenderDebugViewScreenSpace', ctor 8b3a0, [obj+0x10]=7. Name from the tag"
+    },
+    {
+     "offset": 56,
+     "type": "void *",
+     "name": "unk38",
+     "comment": "medium: ctor operator new(0x4f0) + ctor dab50; dtor frees. Class unknown. Name invented"
+    },
+    {
+     "offset": 60,
+     "type": "int",
+     "name": "unk3c",
+     "comment": "low: ctor zeroes (PS2 +0x40 is a 64-bit value passed to __floatdisf). Name invented"
+    },
+    {
+     "offset": 64,
+     "type": "float",
+     "name": "targetFps",
+     "comment": "low: ctor = 60.0f (0x42700000); PS2 +0x48 float in Render. Name invented"
+    }
+   ],
+   "comment": "No vptr: the vtable 0x191aa8 its ctor stores goes into a newly allocated RRenderHUDView (tag string at 0x191a58), not into this. Constructed as a local in RunTheGame (ESP+0x11c at 5aab6) and published via global 0x1ec488 (fgThis). Size is only a lower bound (last field +0x40)."
+  },
+  {
+   "name": "WRender",
+   "size": 224,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "map",
+     "comment": "high: ctor c7a50: data pointer of the 'Map ' chunk (UGroup locate 117950/117a60); DrawWorld/DrawWorldAtPoint read. CARP::Map. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *[5]",
+     "name": "bucketInstances",
+     "comment": "medium: ctor zeroes +0x4..+0x14 then sorts 64-byte CARP instances into 5 buckets (by shader byte +0x1d or flag 4): [this+4+b*4]=instance; empty buckets get filled from the next. PS2 +0x4 addr-taken in CopyDrawPasses/DrawPass. Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "int[5]",
+     "name": "bucketCounts",
+     "comment": "medium: ctor zeroes +0x18..+0x28 and increments [this+0x18+b*4] per instance; +0x28 re-zeroed; PS2 +0x18 addr-taken. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "void *",
+     "name": "psChunk",
+     "comment": "medium: ctor: data of the 'ps  ' chunk or 0; PS2 DrawPass/DrawWorldAtPoint read +0x2c. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "uint",
+     "name": "curtainCount",
+     "comment": "high: ctor: element count of the 'VisC' chunk; loop bound. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "void *",
+     "name": "curtains",
+     "comment": "high: ctor: FastAlloc(count*0x20), zeroed, filled by d0ff0 per 'VisC' entry; FindVisibleTreeNodesAndCurtains reads. Name invented"
+    },
+    {
+     "offset": 212,
+     "type": "int",
+     "name": "unkd4",
+     "comment": "low: FindVisibleTreeNodesAndCurtains R/W, GenerateCurtainsAndNodes; same on PS2. Name invented"
+    },
+    {
+     "offset": 216,
+     "type": "float",
+     "name": "unkd8",
+     "comment": "low: GenerateCurtainsAndNodes(RCamera&, float) writes; PS2 swc1 (float). Name invented"
+    }
+   ],
+   "comment": "No vptr; size 224 from the constructed-size table. Same offsets on PS2 for every field seen. +0x38..+0xd3 not seen in its own methods."
+  },
+  {
+   "name": "RTextureContext",
+   "size": 16,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 93dd0 stores 0x19219c; PS2 ctor/dtor +0x0"
+    },
+    {
+     "offset": 4,
+     "type": "uint",
+     "name": "flags",
+     "comment": "low: ctor writes (probably the unsigned int ctor arg); PS2 ctor +0x4. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "fileData",
+     "comment": "medium: loaded file buffer: ctor (UFileLoader::FileLoadz), Unload/Find* read; PS2 Load writes, Unload -> UMemory::Free. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "textureMap",
+     "comment": "medium: heap MSVC tree (12-byte block, node alloc 93310); 932b0/93350/93d90 walk it in Find/FindOrCreateTexture/Unload; freed by the deleting dtor. Name invented"
+    }
+   ],
+   "comment": "Deleting destructor 93e80 frees 0x10 (this) and 0xc (the map head block at +0xc). Same offsets on PS2 (vptr at +0 there too)."
+  },
+  {
+   "name": "RTextureContextManager",
+   "size": 8,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 95080 stores 0x1921b4; ~RTextureContextManager 95290 restores it"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "contexts",
+     "comment": "high: ctor: operator new(0xc) MSVC tree {alloc byte, head (node 94030), size 0}; FindOrCreateTexture/KillContext/NewContext -> 94d10. PS2 +0x4 same. Name invented"
+    }
+   ],
+   "comment": "Singleton: RTextureContextManager::Init 8b700 operator new(8) + ctor 95080, global 0x1f2a30. 95080 is the constructor (named RTextureContext_or_ContextManager)."
+  },
+  {
+   "name": "RParticleSystemManager",
+   "size": 65584,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "int",
+     "name": "unk0",
+     "comment": "low: ctor zeroes; UpdateSpawnAllSystems R/W; PS2 +0x0 same. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "systemMap",
+     "comment": "high: ctor: FastAlloc 0xc MSVC tree head (node 94030); AddOrRefresh/Reset/UpdateSpawnAllSystems -> a2660/a2a70; PS2 +0x4 in GetSystem(void*). Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "undefined1[8]",
+     "name": "library",
+     "comment": "medium: embedded RParticleLibrary: ctor LEA +0x8 -> a2e70, later a2d50; next member at +0x10. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "undefined1[65552]",
+     "name": "particleCache",
+     "comment": "low: embedded RParticleParticleCache: ctor LEA +0x10 -> aaa60; extent assumed up to +0x10020 (Reset writes +0x14/+0x18 inside it). Name invented"
+    },
+    {
+     "offset": 65568,
+     "type": "int",
+     "name": "unk10020",
+     "comment": "low: Reset a29c0 writes. Name invented"
+    },
+    {
+     "offset": 65572,
+     "type": "int",
+     "name": "unk10024",
+     "comment": "low: Reset a29c0 writes. Name invented"
+    }
+   ],
+   "comment": "Singleton: Init a3140 FastAlloc 0x10030 + ctor a2f00, global 0x201730 (ctor also stores it). PS2 embeds a larger library (cache at +0x40 there), so offsets past +0x8 differ."
+  },
+  {
+   "name": "RStateManager",
+   "size": 20,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 92f50 stores 0x192130; dtor 930a0"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "namespaceVtable",
+     "comment": "high: USymbolTable::Namespace base subobject vptr: ctor stores 0x18f8f8 then 0x19212c; PS2 sheet has 'RStateManager::USymbolTable::Namespace virtual table'"
+    },
+    {
+     "offset": 8,
+     "type": "int",
+     "name": "stateCount",
+     "comment": "medium: ctor zeroes; GetGeoPrimState R/W (next free slot). Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "geoPrimStates",
+     "comment": "high: new[] 0x984 = 32 x 0x4c EAGL::GeoPrimState (ctor ef480), MEM_fill 0x980; PS2 -> ~GeoPrimState. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "stateTree",
+     "comment": "high: heap MSVC tree (0xc block, node 93310) -> _Rb_tree<StateRef>::insert_unique in GetGeoPrimState. Name invented"
+    }
+   ],
+   "comment": "Singleton: its Init (unnamed FUN_0008b5b0) operator new(0x14) + ctor 92f50, global 0x1f2608. Two vptrs: own at +0, USymbolTable::Namespace subobject vptr at +4 (0x18f8f8 then 0x19212c). Same offsets on PS2."
+  },
+  {
+   "name": "WWorld",
+   "size": 60,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AttributeSet",
+     "name": "attributes",
+     "comment": "medium: ctor calls AttributeSet::AttributeSet 58f00 with ECX=this (AttributeSet is 4 bytes); could equally be a base. Name invented"
+    },
+    {
+     "offset": 4,
+     "type": "void *",
+     "name": "array4",
+     "comment": "low: LoadTrackFile/Open/dtor; PS2 -> __builtin_vec_delete. Name invented"
+    },
+    {
+     "offset": 8,
+     "type": "void *",
+     "name": "array8",
+     "comment": "low: ctor zeroes; PS2 vec_delete. Name invented"
+    },
+    {
+     "offset": 12,
+     "type": "void *",
+     "name": "arrayC",
+     "comment": "low: ctor zeroes; PS2 vec_delete. Name invented"
+    },
+    {
+     "offset": 16,
+     "type": "void *",
+     "name": "array10",
+     "comment": "low: ctor zeroes; PS2 vec_delete. Name invented"
+    },
+    {
+     "offset": 20,
+     "type": "UGroup *",
+     "name": "trackGroup",
+     "comment": "medium: UGroup::GetArray/GroupLocateTag on it, passed to WGrid::Init (PS2 WCollisionMgr::Init). Name invented"
+    },
+    {
+     "offset": 24,
+     "type": "void *",
+     "name": "trackFile",
+     "comment": "medium: RCARPFile*: PS2 GetTrackFile 22fa30 returns +0x18, dtor -> RCARPFile::~RCARPFile. Name invented"
+    },
+    {
+     "offset": 28,
+     "type": "int",
+     "name": "unk1c",
+     "comment": "low: written in Open only. Name invented"
+    },
+    {
+     "offset": 32,
+     "type": "void *",
+     "name": "instances",
+     "comment": "high: CARP::Instance array (64-byte stride): GetSceneObjFromInstance d14a0 bounds check [+0x20, +0x20+count*64); GetEnviroDesc indexes it. Name invented"
+    },
+    {
+     "offset": 36,
+     "type": "void *",
+     "name": "instanceObjects",
+     "comment": "high: 32-byte entries indexed by instance word +0xe; entry+8 is the RSceneObj (GetSceneObjFromInstance d14a0). Name invented"
+    },
+    {
+     "offset": 40,
+     "type": "int",
+     "name": "instanceCount",
+     "comment": "high: upper bound in GetSceneObjFromInstance; passed to RPathEngine::AddInstanceList. Name invented"
+    },
+    {
+     "offset": 44,
+     "type": "int",
+     "name": "enviroDescCount",
+     "comment": "high: GetEnviroDesc d1470 clamps the index to < [+0x2c]. Name invented"
+    },
+    {
+     "offset": 48,
+     "type": "void *",
+     "name": "enviroDescs",
+     "comment": "high: GetEnviroDesc returns [+0x30]+index*0x1c. Name invented"
+    },
+    {
+     "offset": 52,
+     "type": "void *",
+     "name": "unk34",
+     "comment": "low: Open/Close/Reset/dtor pass it to d1ae0/d2110. Name invented"
+    },
+    {
+     "offset": 56,
+     "type": "void *",
+     "name": "soundGroup",
+     "comment": "high: ctor FastAlloc 0x10 + WSoundGroup::WSoundGroup cd5a0; WSoundGroup::Add/Start/End/~ on it. Name invented"
+    }
+   ],
+   "comment": "No vptr; size 60 from the constructed-size table. Ctor d1230 constructs an AttributeSet on this+0 (58f00). Same offsets on PS2 for every field."
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0007cfb0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::ConfigureRes(void)"
+  },
+  {
+   "address": "0x0007d020",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::FlushDrawLists(void)"
+  },
+  {
+   "address": "0x0007d030",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::EndView(void)"
+  },
+  {
+   "address": "0x0007d060",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::StartFrame(void)"
+  },
+  {
+   "address": "0x0007d070",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RRenderer::Flush(bool)"
+  },
+  {
+   "address": "0x0007d0b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::EnableAlphaWrites(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0007d0e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::DisableAlphaWrites(void)"
+  },
+  {
+   "address": "0x0007d110",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::DoScreenCapture(void)"
+  },
+  {
+   "address": "0x0007d2a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RRenderer::RRenderer(char *, int, bool)",
+   "return": "RRenderer *"
+  },
+  {
+   "address": "0x0007d560",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::LoadDebugFont(void)"
+  },
+  {
+   "address": "0x0007d5b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::EndFrame(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0007d5e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "RRenderer::Init(char *, int, bool)",
+   "return": "void"
+  },
+  {
+   "address": "0x0007d670",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RRenderer::~RRenderer(void)"
+  },
+  {
+   "address": "0x0007d740",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RRenderer::Shutdown(void)"
+  }
+ ]
+}

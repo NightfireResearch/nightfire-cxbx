@@ -1,0 +1,81 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000e4f70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::Init(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x000e50c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::Device(void)",
+   "return": "EAGL::Device *"
+  },
+  {
+   "address": "0x000e50e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::~Device(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000e8900",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::NewRenderContext(void)",
+   "return": "EAGL::RenderContext *"
+  },
+  {
+   "address": "0x000e89e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::GetCurrentRenderContext(void) const",
+   "return": "EAGL::RenderContext *"
+  },
+  {
+   "address": "0x000e89f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGL::Device::GetCurrentTextureRenderContext(void) const",
+   "return": "EAGL::TextureRenderContext *"
+  },
+  {
+   "address": "0x000e8a20",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void * *"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::Device::SetNewOverride(void *(*)(unsigned int, char *))"
+  },
+  {
+   "address": "0x000e8a40",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "EAGL::Device::Get(void)",
+   "return": "EAGL::Device *"
+  },
+  {
+   "address": "0x000e8a50",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "EAGL::Device::DeleteRenderContext(EAGL::RenderContext *)"
+  }
+ ]
+}

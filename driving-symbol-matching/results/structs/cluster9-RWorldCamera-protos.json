@@ -1,0 +1,192 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00097240",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorSpeed(void)"
+  },
+  {
+   "address": "0x000972c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD4 *"
+    }
+   ],
+   "sheet": "RWorldCamera::GetAnchorAcceleration(COORD4 &)"
+  },
+  {
+   "address": "0x000973c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorMatrix4(void)"
+  },
+  {
+   "address": "0x00097470",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorPosition(void)"
+  },
+  {
+   "address": "0x000974e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorResetAvailable(void)"
+  },
+  {
+   "address": "0x00097530",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "PhysicsObject *"
+    }
+   ],
+   "sheet": "RWorldCamera::SetAnchor(PhysicsObject *)",
+   "return": "void"
+  },
+  {
+   "address": "0x000975d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorRenderOffset(void)"
+  },
+  {
+   "address": "0x00097620",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::StartCameraInputReceiver(void)"
+  },
+  {
+   "address": "0x00097690",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::ReceiveCameraInput(void)"
+  },
+  {
+   "address": "0x00097710",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "RWorldCamera::SetCameraZoom(float, float)"
+  },
+  {
+   "address": "0x00097770",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "CARP::Instance *"
+    }
+   ],
+   "sheet": "RWorldCamera::LoadSingleAnimation(CARP::Instance *)"
+  },
+  {
+   "address": "0x000977d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RWorldCamera::LoadAISplinePathAnimation(CARP::AISpline *)"
+  },
+  {
+   "address": "0x00097870",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "uint"
+    }
+   ],
+   "sheet": "RWorldCamera::LoadSingleAnimationFromList(unsigned int)"
+  },
+  {
+   "address": "0x00097930",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::PlayCurrentAnimation(void)"
+  },
+  {
+   "address": "0x000979f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::~RWorldCamera(void)"
+  },
+  {
+   "address": "0x00097aa0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "MATRIX4 *"
+    },
+    {
+     "name": "param_2",
+     "type": "char"
+    }
+   ],
+   "sheet": "RWorldCamera::UpdateAnimationCam(MATRIX4 &, char)"
+  },
+  {
+   "address": "0x00097c60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RWorldCamera::AnchorCamera(bool, RWorldCamera::AnchorInfo &)"
+  },
+  {
+   "address": "0x00097eb0",
+   "calling_convention": "__thiscall",
+   "return": "RWorldCamera *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x00097ee0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::RestartCamera(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x00097fc0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::GetAnchorLinearVelocity(void)"
+  },
+  {
+   "address": "0x00098070",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RWorldCamera::RWorldCamera(void)",
+   "return": "RWorldCamera *"
+  }
+ ]
+}

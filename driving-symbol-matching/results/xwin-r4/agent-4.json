@@ -1,0 +1,307 @@
+{
+ "verdicts": [
+  {
+   "item": "35.1",
+   "xbox": "0xa87a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree max/rightmost walk (isnil +0x3d) for the WCollisionInstance set; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "35.2",
+   "xbox": "0xa87c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "allocator deallocate (FastFree n*8), shared by several containers; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "35.3",
+   "xbox": "0xa87e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "static helper of DrawBrokenWindows with local static buffer; PS2 counterpart FUN_001f0b88 has no name (RWindow::Kill is the empty fn at 0x1f0b80, not this)",
+   "intermediates": []
+  },
+  {
+   "item": "35.4",
+   "xbox": "0xa8a80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree iterator decrement (isnil +0x3d); STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "36.1",
+   "xbox": "0xfb670",
+   "ps2": "0x274d30",
+   "name": "EAGLAnim::FnDeltaQuatChan::Eval",
+   "verdict": "accept",
+   "why": "Eval slot (3) of Xbox vtable 0x1a10a8 (dtor FnDeltaQuatChan::scalar_deleting_destructor, default EvalVel2D) = PS2 FnDeltaQuatChan vtable 0x3b24e4 Eval slot FUN_00274d30 = sheet row 6741; bodies identical: clamp key, DecompressValues, DecompressValuesIndexed stride 4, else copy 4 words per index",
+   "intermediates": [
+    {
+     "xbox": "0xfb440",
+     "ps2": "0x276398",
+     "name": "EAGLAnim::FnDeltaLerpChan::Eval",
+     "verdict": "accept",
+     "why": "Eval slot of FnDeltaLerpChan vtable 0x1a1060 (holds FnDeltaLerpChan::EvalVel2D/EvalWeights) = PS2 0x3b2584 Eval slot FUN_00276398, sheet row 6739; same body with stride 1"
+    },
+    {
+     "xbox": "0xfb530",
+     "ps2": "0x274bf0",
+     "name": "EAGLAnim::FnDeltaLerpChan::EvalSQT",
+     "verdict": "accept",
+     "why": "EvalSQT slot of FnDeltaLerpChan vtable 0x1a1060 = PS2 0x3b2584 EvalSQT slot FUN_00274bf0, sheet row 6740; stride-1 DecompressValuesIndexed, returns 1"
+    }
+   ]
+  },
+  {
+   "item": "36.2",
+   "xbox": "0xfb780",
+   "ps2": "0x274e88",
+   "name": "EAGLAnim::FnDeltaQuatChan::EvalSQT",
+   "verdict": "accept",
+   "why": "EvalSQT slot (6) of FnDeltaQuatChan vtable 0x1a10a8 = PS2 0x3b24e4 EvalSQT slot FUN_00274e88 = sheet row 6742; same body as Eval but returns 1, stride 4",
+   "intermediates": []
+  },
+  {
+   "item": "36.3",
+   "xbox": "0xfb890",
+   "ps2": "0x276538",
+   "name": "EAGLAnim::FnKeyDeltaChan::~FnKeyDeltaChan",
+   "verdict": "accept",
+   "why": "non-deleting dtor: stores vtable 0x1a0d80 (FnKeyDeltaChan: GetLength fbe10, slot 15 = shared SetAnimMemoryMap), frees +0x14 buffer to the free-list table, calls ~FnAnimMemoryMap; PS2 0x276538 same body; only caller f76b0 is the deleting wrapper",
+   "intermediates": [
+    {
+     "xbox": "0xf76b0",
+     "ps2": "0x276538",
+     "name": "EAGLAnim::FnKeyDeltaChan::scalar_deleting_destructor",
+     "verdict": "accept",
+     "why": "dtor slot of FnKeyDeltaChan vtable 0x1a0d80 (= PS2 vtable 0x3b2440 slot ~FnKeyDeltaChan); calls fb890 then eagl free(0x18) on flag&1"
+    },
+    {
+     "xbox": "0xfb360",
+     "ps2": "0x276200",
+     "name": "EAGLAnim::FnDeltaChan::~FnDeltaChan",
+     "verdict": "accept",
+     "why": "non-deleting dtor storing FnDeltaChan vtable 0x1a0e58; PS2 FnDeltaChan vtable 0x3b2624 dtor slot FUN_00276200 (stores vtable_EAGLAnim::FnDeltaChan), sheet row 6737"
+    },
+    {
+     "xbox": "0xf7740",
+     "ps2": "0x276200",
+     "name": "EAGLAnim::FnDeltaChan::scalar_deleting_destructor",
+     "verdict": "accept",
+     "why": "dtor slot of Xbox FnDeltaChan vtable 0x1a0e58; calls fb360 then free(0x18) on flag&1; PS2 FUN_00276200, sheet row 6737"
+    },
+    {
+     "xbox": "0xfb390",
+     "ps2": "0x276288",
+     "name": "EAGLAnim::FnDeltaChan::SetAnimMemoryMap",
+     "verdict": "accept",
+     "why": "slot 15 shared by the FnDeltaChan/FnDeltaLerpChan/FnDeltaQuatChan vtables on both platforms (PS2 FUN_00276288 in 0x3b2624/0x3b2584/0x3b24e4), sheet row 6738; identical body (realloc +0x14 by key count, +0xc=map, +0x10=-1)"
+    },
+    {
+     "xbox": "0xf7770",
+     "ps2": "0x2761e0",
+     "name": "EAGLAnim::FnDeltaChan::GetLength",
+     "verdict": "accept",
+     "why": "GetLength slot shared by the same three Delta vtables on both platforms (PS2 FUN_002761e0 xrefs 0x3b250c/0x3b25ac/0x3b264c), sheet row 6823; *out=(float)keycount(+0xc->+8), return 1"
+    }
+   ]
+  },
+  {
+   "item": "36.4",
+   "xbox": "0xfb8c0",
+   "ps2": "0x2765c0",
+   "name": "EAGLAnim::FnKeyDeltaChan::SetAnimMemoryMap",
+   "verdict": "accept",
+   "why": "slot 15 (after GetAttributes) shared by FnKeyDeltaChan/FnKeyLerpChan/FnKeyQuatChan vtables on Xbox (0x1a0dbc/e04/e4c) as PS2 FUN_002765c0 in 0x3b2440/0x3b23a4/0x3b2304; sheet row 6744 (right after ~FnKeyDeltaChan row 6743, same retail order); identical body",
+   "intermediates": []
+  },
+  {
+   "item": "37.1",
+   "xbox": "0x123ce0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::_Insert for BuildMap map (called by insert 124240); STL internal, PS2 counterparts unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "37.2",
+   "xbox": "0x123f70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::erase(iterator) with rebalance; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "37.3",
+   "xbox": "0x124240",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::insert(value) (called by BuildMap); STL internal, PS2 FUN_002de208/2de5f8 unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "37.4",
+   "xbox": "0x124300",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::erase(first,last); STL internal. (PS2 AVoice::View::Restart is inlined into Xbox AVoice::Set)",
+   "intermediates": []
+  },
+  {
+   "item": "38.1",
+   "xbox": "0x14880",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "min(float*,float*) helper; MSVC shared helper",
+   "intermediates": []
+  },
+  {
+   "item": "38.2",
+   "xbox": "0x148a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "matrix row/translation getter used by Draw; Xbox-only inline helper, PS2 Draw has no such callee",
+   "intermediates": []
+  },
+  {
+   "item": "38.3",
+   "xbox": "0x148f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "matrix row/translation setter used by Draw; Xbox-only inline helper",
+   "intermediates": []
+  },
+  {
+   "item": "38.4",
+   "xbox": "0x14940",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "render-params constructor (alpha*255, 1e6 distance) called by Draw; PS2 Draw memsets instead; GetAlpha is inlined here, GetBaseScaleFactor absent",
+   "intermediates": []
+  },
+  {
+   "item": "39.1",
+   "xbox": "0x93420",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::_Insert for RTexList map; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "39.2",
+   "xbox": "0x93600",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::erase(iterator); STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "39.3",
+   "xbox": "0x938d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::insert(value) called by CreateNewTextureElement; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "39.4",
+   "xbox": "0x939d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "_Tree::erase(first,last); STL internal. (~RTextureContext and Load are inlined into Xbox scalar_deleting_destructor / ctor)",
+   "intermediates": []
+  },
+  {
+   "item": "40.1",
+   "xbox": "0xc30f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "vector<40-byte elem>::push_back; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "40.2",
+   "xbox": "0xc3180",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "vector<8-byte elem>::push_back; STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "40.3",
+   "xbox": "0xc31f0",
+   "ps2": "0x217768",
+   "name": "WCollisionMgr::GetInstanceListGuts",
+   "verdict": "accept",
+   "why": "overload: CheckHitWorld->GetInstanceList(c3410)->c31f0 as PS2 CheckHitWorld->GetInstanceList 0x217c88->GetInstanceListGuts 0x217768 (other overload 0x217228 = Xbox c43c0); body: ++counter +4, v4sub segment, min/max y, per-node instance walk, MakeMatrix+OrthoInverse, radius^2 test, flags&3 splits into two lists",
+   "intermediates": []
+  },
+  {
+   "item": "40.4",
+   "xbox": "0xc34c0",
+   "ps2": "0x217e30",
+   "name": "WCollisionMgr::GetObjectListsGuts",
+   "verdict": "accept",
+   "why": "callers GetObjectLists and RigidBody::CollideWithWorld wrapper c37c0, as PS2 (GetObjectLists, FUN_00218440<-CollideWithWorld); body: object stride 0x30, |dx|,|dz| octagonal distance with 0.25, byte +0x20 selects list",
+   "intermediates": []
+  },
+  {
+   "item": "41.1",
+   "xbox": "0x1455f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "process fn of filter type 2 (installed by 145640); PS2 case-2 functions FUN_00319a40/319a88 unnamed, no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "41.2",
+   "xbox": "0x145640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "create fn for filter type 2 in SNDMIXI_initfx switch; PS2 counterpart FUN_00319a40 unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "41.3",
+   "xbox": "0x145670",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "modify fn for filter type 2 in SNDMIXI_initfx switch; PS2 counterpart FUN_00319a88 unnamed",
+   "intermediates": []
+  },
+  {
+   "item": "41.4",
+   "xbox": "0x1456e0",
+   "ps2": "0x316980",
+   "name": "SFILTER_initSOURCE",
+   "verdict": "accept",
+   "why": "identical body: p[0]=src fn (Xbox LAB_001456b0 = SFILTER_src, not a defined function), p[1]=0, p[7]=arg; sits right before SFILTER_createSOURCE as on PS2; called from 0x143862 (not in a defined function; PS2 caller SNDMIXI_modlapifxadd)",
+   "intermediates": []
+  }
+ ]
+}

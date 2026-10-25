@@ -1,0 +1,106 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0012b960",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "ASubmersible::ASubmersible(char *)",
+   "return": "ASubmersible *"
+  },
+  {
+   "address": "0x0012bb60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "int"
+    }
+   ],
+   "sheet": "ASubmersible::SetCreakLevel(short, int)",
+   "return": "void"
+  },
+  {
+   "address": "0x0012bb80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASubmersible::PlayCreaks(APath &)"
+  },
+  {
+   "address": "0x0012bc60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASubmersible::PlayFanMotors(APath &)"
+  },
+  {
+   "address": "0x0012be30",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "ASubmersible::~ASubmersible(void)"
+  },
+  {
+   "address": "0x0012bf00",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASubmersible::PlayCavitation(APath &)"
+  },
+  {
+   "address": "0x0012c260",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASubmersible::PlayServos(APath &)"
+  },
+  {
+   "address": "0x0012c4e0",
+   "calling_convention": "__thiscall",
+   "return": "ASubmersible *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0012c510",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "ASubmersible::Play(APath &)"
+  }
+ ]
+}

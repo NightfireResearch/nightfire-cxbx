@@ -1,12 +1,13 @@
 #include "SpaceMissile.h"
+#include "../../../common/xbeClass.h"
 
 #include "../../engine/Script.h"
 
 #pragma pack(push, 1)
 typedef struct {
     SCRIPTINFO* currentAnimScript;
-    HASHCODE missileLaunchCouplerIntactAnim; // Maybe deploy? TBC
-    HASHCODE missileLaunchCouplerDestroyedAnim; // Maybe launch? TBC
+    HASHCODE missileLaunchCouplerIntactAnim;
+    HASHCODE missileLaunchCouplerDestroyedAnim;
     ushort missileNum; // 1-indexed
     ushort switchChannelOnLaunchedWithCouplerIntact; // triggered on animation completion
     ushort switchChannelOnLaunchedWithCouplerDestroyed; // triggered on animation completion
@@ -18,10 +19,10 @@ typedef struct {
     SCRIPTINFO* animScriptInfo4;
 } ObjData_SpaceMissile;
 
-static_assert(sizeof(ObjData_SpaceMissile) == 0x28, "Bad size for ObjData_SpaceMissile");
+LAYOUT_32(sizeof(ObjData_SpaceMissile) == 0x28, "Bad size for ObjData_SpaceMissile");
 
 typedef struct {
-    ObjectCreationData_Basic baseCreation; // 0x00-0x2b
+    PlacementHeader header;         // 0x00
     HASHCODE missileDeploymentAnim; // 0x2c
     HASHCODE missileLaunchCouplerIntactAnim; // 0x30
     HASHCODE missileLaunchCouplerDestroyedAnim; // 0x34
@@ -42,9 +43,8 @@ typedef struct {
 
 #pragma pack(pop)
 
-// 8 one-byte bools, representing whether each has been started, found at 0x0029a28c
-// Used by the HUD
-#define MissileDeploy (*(uchar(*)[8])(0x0029a28c))
+// XBE_GLOBAL(0x0029a28c, 0x8)
+uchar MissileDeploy[8];
 
 // AUTOINJECT
 obj_tag * Create_SpaceMissile(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
@@ -87,13 +87,12 @@ obj_tag * Create_SpaceMissile(_VECTOR *pos,_VECTOR *rot, level_tag* lvl) {
         Script_Play(spaceMissile->animScriptInfo4, 0);
     }
 
-    gameObj->curState = 0;
+    gameObj->curState = SPACEMISSILE_WAITING;
     Script_Update(spaceMissile->currentAnimScript);
     
-    // Clear the space missile HUD icons, each time any missile is created.
-    // This is what the original game code does - untidy but functional.
+    // every missile's state cleared, as each is made
     for(int i = 0; i < 8; i++) {
-        MissileDeploy[i] = 0;
+        MissileDeploy[i] = MISSILE_NOT_DEPLOYED;
     }
 
     return gameObj;
@@ -107,9 +106,7 @@ void SpaceMissile_Update(obj_tag *obj) {
     if(spaceMissile->currentAnimScript == NULL)
         return;
 
-    if((obj->curState != 0) && (obj->curState != 4)) {
-
-        // Idle animations?
+    if((obj->curState != SPACEMISSILE_WAITING) && (obj->curState != SPACEMISSILE_DONE)) {
 
         if(spaceMissile->animScriptInfo1 != NULL)
             Script_Update(spaceMissile->animScriptInfo1);
@@ -125,73 +122,65 @@ void SpaceMissile_Update(obj_tag *obj) {
 
     }
 
-
     switch(obj->curState) {
-        case 0: // Inactive, waiting to be triggered and timer to reach zero
+        case SPACEMISSILE_WAITING:
             if ((spaceMissile->deployOnChannel == 0) || (switch_channels[spaceMissile->deployOnChannel])) {
                 
                 spaceMissile->deployDelay -= REC_FRAME_RATE;
 
                 if(spaceMissile->deployDelay < 0) {
-                    obj->curState = 1;
-                    MissileDeploy[spaceMissile->missileNum - 1] = 1;
+                    obj->curState = SPACEMISSILE_DEPLOYING;
+                    MissileDeploy[spaceMissile->missileNum - 1] = MISSILE_DEPLOYED;
                 }
 
             }
             break;
 
-        case 1: // Deploy and countdown animation running?
+        case SPACEMISSILE_DEPLOYING:
             Script_Update(spaceMissile->currentAnimScript);
 
-            // Animation complete?
-            if(spaceMissile->currentAnimScript->maybeSomeSleepFrames != 0)
-                obj->curState = 2;
+            if(spaceMissile->currentAnimScript->waitFrames != 0)
+                obj->curState = SPACEMISSILE_DECIDING;
             break;
 
-        case 2: // Countdown over - decide whether it flies off target or succeeds 
+        case SPACEMISSILE_DECIDING:
 
             if(switch_channels[spaceMissile->missileNum] != 0) {
                 
-                // Player managed to destroy the coupler - missile flies off target
                 Script_Free(spaceMissile->currentAnimScript);
                 spaceMissile->currentAnimScript = Script_Load(spaceMissile->missileLaunchCouplerDestroyedAnim, &obj->position, &obj->rotation, NULL, NULL, NULL, NULL);
                 Script_Play(spaceMissile->currentAnimScript, 0);
                 Script_Update(spaceMissile->currentAnimScript);
-                obj->curState = 3;
+                obj->curState = SPACEMISSILE_LAUNCHING;
                 obj->subState = 0;
-                MissileDeploy[spaceMissile->missileNum - 1] = 2; // Set the HUD icon for this missile to solid red
+                MissileDeploy[spaceMissile->missileNum - 1] = MISSILE_COUPLER_DESTROYED;
 
             } else {
 
-                // Player did not destroy the coupler - missile launch succeeds, player fails
                 Script_Free(spaceMissile->currentAnimScript);
                 spaceMissile->currentAnimScript = Script_Load(spaceMissile->missileLaunchCouplerIntactAnim, &obj->position, &obj->rotation, NULL, NULL, NULL, NULL);
                 Script_Play(spaceMissile->currentAnimScript, 0);
                 Script_Update(spaceMissile->currentAnimScript);
-                obj->curState = 3;
+                obj->curState = SPACEMISSILE_LAUNCHING;
                 obj->subState = 1;
-                MissileDeploy[spaceMissile->missileNum - 1] = 3; // HUD icon to solid green
+                MissileDeploy[spaceMissile->missileNum - 1] = MISSILE_COUPLER_INTACT;
 
             }
             break;
 
-        case 3: // Play out the launch animation
+        case SPACEMISSILE_LAUNCHING:
 
             Script_Update(spaceMissile->currentAnimScript);
 
             if(!Script_IsPlaying(spaceMissile->currentAnimScript)) {
 
-                // Missile launch animation has finished
-
                 if(obj->subState == 0) { 
-                    // Missile off target
                     SwitchChannel_SetActive(spaceMissile->switchChannelOnLaunchedWithCouplerDestroyed);
                 } else {
-                    // Missile on target
                     SwitchChannel_SetActive(spaceMissile->switchChannelOnLaunchedWithCouplerIntact);
                 }
 
-                obj->curState = 4;
+                obj->curState = SPACEMISSILE_DONE;
                 spaceMissile->currentAnimScript = NULL;
 
             }
@@ -199,7 +188,5 @@ void SpaceMissile_Update(obj_tag *obj) {
             break;
 
     }
-
-
 
 }

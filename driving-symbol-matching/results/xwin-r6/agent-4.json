@@ -1,0 +1,958 @@
+{
+ "verdicts": [
+  {
+   "item": "window 51",
+   "xbox": "0x38210",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38280",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38290",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x382a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x382b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x382e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38380",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38430",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38460",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38490",
+   "ps2": "0x1434f8",
+   "name": "DebugVariable<unsigned_int>::SetToMin",
+   "verdict": "accept",
+   "why": "slot 7 of DebugIndexer vtable 0x18bd00 (used only by dbindex) = PS2 DebugIndexer vtable 0x36cdf4 slot 7; body *GetDeindexedPtr(this+0x18) = this+0x20 identical",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x384c0",
+   "ps2": "0x143528",
+   "name": "DebugVariable<unsigned_int>::SetToMax",
+   "verdict": "accept",
+   "why": "slot 8 of DebugIndexer vtable 0x18bd00 = PS2 slot 8; body stores this+0x1c via deindexed ptr, identical",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38520",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38540",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38590",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x385f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38700",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38770",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38790",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x387f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38860",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x388c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38a80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38af0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38b50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL strstreambuf/ios internals (vtables 0x18bd50/0x18bdc4, locale facets); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38b70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38c70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38ce0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38e00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38f10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x38fa0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39120",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x392d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39450",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x395d0",
+   "ps2": "0x142548",
+   "name": "dbattrib_f",
+   "verdict": "accept",
+   "why": "same dbattrib template as Xbox dbattrib_float (FindItem/FindIndexedItem loop, vtable slot 9 index string); sole caller ReflPrivateData passes \"Sky bright\", byte field at +0, range 0..0xff = PS2 dbattrib_f call (str 0x383d98 'Sky bright', puVar12+0, 0..0xff); reads a single char like PS2's byte store; sits before dbattrib_s8 as on PS2 (f precedes float)",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x396d0",
+   "ps2": "0x142e08",
+   "name": "DebugVariable<unsigned_int>::AsString",
+   "verdict": "accept",
+   "why": "slot 9 of DebugIndexer vtable 0x18bd00 = PS2 slot 9; body: if names table +0x28 null format value (+0x18 deindexed) to string else strcpy names[value], identical",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39810",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39940",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39950",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39a20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39a90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39c00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39d10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39db0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39e40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39ed0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 51",
+   "xbox": "0x39f60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC istrstream/istream template instantiation (operator>>, sentry, num_get facet); PS2 uses sscanf inline",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x525f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "1-insn empty function; no identifiable counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52600",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52660",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x526c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52720",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52780",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x527c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x527e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52840",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52860",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52880",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x528e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52920",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52980",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x529a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x529c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52a20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52a80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52ae0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52b40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52ba0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52bd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52c00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52c70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52cd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52d30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52d90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52de0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52e30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52e90",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52ef0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52f50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x52fb0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53010",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53070",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x530d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53130",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53190",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53200",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53280",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53350",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53430",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x534a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53500",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53540",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53580",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x535c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53600",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53680",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x536c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53700",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53740",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53780",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x537c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x537f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53820",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  },
+  {
+   "item": "window 52",
+   "xbox": "0x53900",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL map/tree helper (AttributeSystem containers: node alloc/FastAlloc, recursive erase, lower_bound/stricmp compare); PS2 FindCollection not matched by any",
+   "intermediates": []
+  }
+ ]
+}

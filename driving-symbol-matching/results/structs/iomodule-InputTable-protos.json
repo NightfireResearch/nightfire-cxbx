@@ -1,0 +1,27 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000507a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputTable::InputTable(void)",
+   "return": "InputTable *"
+  },
+  {
+   "address": "0x000507c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputTable::~InputTable(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000507e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "InputTable::GrowArrayForOneElement(void)",
+   "return": "void"
+  }
+ ]
+}

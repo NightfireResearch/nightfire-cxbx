@@ -1,0 +1,821 @@
+{
+ "classes": [
+  {
+   "name": "WWorldPos",
+   "size": 64,
+   "base": null,
+   "vtable": null,
+   "comment": "cached ground face: three vertices at a 16-byte stride + face data; same layout on PS2 and Xbox except the 1-byte bool at +0x30",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "vertex0",
+     "confidence": "medium",
+     "evidence": "face vertex 0: MakeFaceAtPoint(d2f10) copies p.xyz to +0x0/+0x4/+0x8; ctor d2fd0 copies the zero COORD3 at 0x243030. +0xc never touched (16-byte stride on both builds; PS2 +0x0/+0x8 w8/w4). Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "vertex1",
+     "confidence": "medium",
+     "evidence": "MakeFaceAtPoint stores (p.x+C, p.y, p.z) with C=[0x18a498]; ctor 'LEA EDX,[EAX+0x10]' + zero COORD3; PS2 +0x10 same. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "vertex2",
+     "confidence": "medium",
+     "evidence": "MakeFaceAtPoint stores (p.x, p.y, p.z+C); ctor LEA +0x20 + zero COORD3; PS2 +0x20 same. 12 bytes only: +0x2c is a byte field on both builds. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 1,
+     "type": "byte",
+     "name": "faceType",
+     "confidence": "low",
+     "evidence": "MakeFaceAtPoint writes 1 (low byte of a word store with +0x2d=0), ctor 0; PS2 sb +0x2c in both. Meaning unknown, name invented"
+    },
+    {
+     "offset": "0x2d",
+     "size": 1,
+     "type": "byte",
+     "name": "faceSubType",
+     "confidence": "low",
+     "evidence": "ctor/MakeFaceAtPoint write 0; PS2 sb +0x2d. Name invented"
+    },
+    {
+     "offset": "0x2e",
+     "size": 2,
+     "type": "ushort",
+     "name": "faceId",
+     "confidence": "low",
+     "evidence": "WORD store of 0 in ctor and MakeFaceAtPoint; PS2 sh +0x2e. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 1,
+     "type": "bool",
+     "name": "faceValid",
+     "confidence": "medium",
+     "evidence": "byte on Xbox (ctor 0, MakeFaceAtPoint 1, read by all FindClosestFace/HeightAtPoint), word on PS2 (+0x30, same method set): PS2 4-byte bool; the next field stays at +0x34 on both, so no drift. Name invented"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "uint",
+     "name": "cacheStamp",
+     "confidence": "low",
+     "evidence": "MakeFaceAtPoint stores *(*(0x239a70)+8) (a global counter/stamp), ctor 0; R/W in the three FindClosestFace overloads; PS2 +0x34 same methods. Name invented"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "uint",
+     "name": "unknown_38",
+     "confidence": "low",
+     "evidence": "ctor and MakeFaceAtPoint zero it; R/W in FindClosestFace x3; PS2 +0x38 same. Possibly a cached face/instance pointer"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "uint",
+     "name": "unknown_3c",
+     "confidence": "low",
+     "evidence": "ctor zeroes it; written by the two list-taking FindClosestFace overloads (d3110, d31f0); PS2 +0x3c written by 2322c8/232638"
+    }
+   ]
+  },
+  {
+   "name": "WCollider",
+   "size": 104,
+   "base": null,
+   "vtable": null,
+   "comment": "sphere collider (current, previous, region spheres), three MSVC vectors, two bools and a collision mask; PS2 0x60 bytes",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 12,
+     "type": "COORD3",
+     "name": "position",
+     "confidence": "medium",
+     "evidence": "ctors be540/be620 and Refresh x2 write xyz (ctor from the zero COORD3 0x243030, then Refresh(COORD3&,float)); PS2 +0x0 w8 + +0x8 w4 (unpadded COORD3 on PS2 too). Sheet: Refresh(COORD3&,float)/Refresh(COORD4*) - the sphere xyz. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "float",
+     "name": "radius",
+     "confidence": "medium",
+     "evidence": "ctor zeroes, Refresh writes float; PS2 +0xc float. Completes a COORD4-style sphere with +0x0. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 12,
+     "type": "COORD3",
+     "name": "prevPosition",
+     "confidence": "low",
+     "evidence": "ctor 'LEA EDX,[ESI+0x10]' + zero COORD3, Refresh x2 write; PS2 +0x10 w8/+0x18 w4. Second sphere, probably the previous position for the swept region. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "float",
+     "name": "prevRadius",
+     "confidence": "low",
+     "evidence": "ctor 0, Refresh R/W float; PS2 +0x1c float. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 12,
+     "type": "COORD3",
+     "name": "regionCentre",
+     "confidence": "medium",
+     "evidence": "ctor LEA +0x20 + zero COORD3; PrepareRegion/Refresh use it; PS2 +0x20 float (InRegion x2, PrepareRegion, Refresh). Third sphere = region bounding the two above (InRegion tests against it). Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "float",
+     "name": "regionRadius",
+     "confidence": "medium",
+     "evidence": "ctor 0; float R/W in InRegion(bd820), PrepareRegion, Refresh; address also taken (LEA +0x2c). PS2 +0x2c float, same methods. Name invented"
+    },
+    {
+     "offset": "0x34",
+     "size": 4,
+     "type": "void *",
+     "name": "list0First",
+     "confidence": "medium",
+     "evidence": "MSVC std::vector (16 bytes: allocator at +0, then first/last/end) - ctors/dtor/Clear zero or free it; Validate(bd750) walks [+0x34,+0x38) in 8-byte records {a,b} and requires b==0 || b->+0x10 == a->+0x1c; GetWorldNormal/PrepareRegion take its address. PS2 GCC vector (12 bytes) at +0x30 (+0x34 read by Validate). Possibly vector<InstValidationRec> (sheet __uninitialized_copy_aux<WCollider::InstValidationRec>). Allocator dword left undefined. Name invented"
+    },
+    {
+     "offset": "0x38",
+     "size": 4,
+     "type": "void *",
+     "name": "list0Last",
+     "confidence": "medium",
+     "evidence": "see list0First"
+    },
+    {
+     "offset": "0x3c",
+     "size": 4,
+     "type": "void *",
+     "name": "list0End",
+     "confidence": "medium",
+     "evidence": "see list0First; ctor zeroes it, dtor frees"
+    },
+    {
+     "offset": "0x44",
+     "size": 4,
+     "type": "void *",
+     "name": "list1First",
+     "confidence": "medium",
+     "evidence": "MSVC std::vector (16 bytes: allocator at +0, then first/last/end) - ctors/dtor/Clear; GetWorldNormal and PrepareRegion read +0x44/+0x48; PrepareRegion takes +0x40. PS2 vector at +0x3c (+0x40 read by GetWorldNormal). Allocator dword left undefined. Name invented"
+    },
+    {
+     "offset": "0x48",
+     "size": 4,
+     "type": "void *",
+     "name": "list1Last",
+     "confidence": "medium",
+     "evidence": "see list1First"
+    },
+    {
+     "offset": "0x4c",
+     "size": 4,
+     "type": "void *",
+     "name": "list1End",
+     "confidence": "medium",
+     "evidence": "see list1First; ctor zeroes it, dtor frees"
+    },
+    {
+     "offset": "0x54",
+     "size": 4,
+     "type": "void *",
+     "name": "list2First",
+     "confidence": "medium",
+     "evidence": "MSVC std::vector (16 bytes: allocator at +0, then first/last/end) - ctors/dtor/Clear; Validate walks [+0x54,+0x58) in 8-byte records {a,b*} requiring *b==a; PrepareRegion takes +0x50. PS2 vector at +0x48 (+0x4c read by Validate). Allocator dword left undefined. Name invented"
+    },
+    {
+     "offset": "0x58",
+     "size": 4,
+     "type": "void *",
+     "name": "list2Last",
+     "confidence": "medium",
+     "evidence": "see list2First"
+    },
+    {
+     "offset": "0x5c",
+     "size": 4,
+     "type": "void *",
+     "name": "list2End",
+     "confidence": "medium",
+     "evidence": "see list2First; ctor zeroes it, dtor frees"
+    },
+    {
+     "offset": "0x60",
+     "size": 1,
+     "type": "bool",
+     "name": "regionValid",
+     "confidence": "medium",
+     "evidence": "byte; ctor be540 stores 0; Validate returns false immediately when clear; Clear/PrepareRegion/Refresh(be4b0) touch it. PS2 +0x54 word (4-byte bool) in the same methods. Name invented"
+    },
+    {
+     "offset": "0x61",
+     "size": 1,
+     "type": "bool",
+     "name": "flag61",
+     "confidence": "medium",
+     "evidence": "byte = the ctor's bool argument (be540: 'MOV DL,[EBP+0x10]; MOV [ESI+0x61],DL'); read in PrepareRegion. PS2 +0x58 word (ctors, PrepareRegion). Name invented"
+    },
+    {
+     "offset": "0x64",
+     "size": 4,
+     "type": "uint",
+     "name": "collisionMask",
+     "confidence": "medium",
+     "evidence": "= the ctor's unsigned int argument (be540 [EBP+0x14] -> +0x64); byte tests and dword reads in InRegion x2, GetWorldNormal, PrepareRegion, Refresh. PS2 +0x5c. Name invented (sheet parameter is 'unsigned int')"
+    }
+   ]
+  },
+  {
+   "name": "Simulation",
+   "size": 3876,
+   "base": null,
+   "vtable": null,
+   "comment": "physics world: body pools and slot tables, sim state, 12 per-type object vectors, tracked instances, two heap trees. Size = end of last field (no allocation site)",
+   "fields": [
+    {
+     "offset": "0x0",
+     "size": 4,
+     "type": "SimRandom *",
+     "name": "random",
+     "confidence": "high",
+     "evidence": "ctor: FastAlloc(0x10) + ctor 0x5cc80, stored to [EBP]; dtor deletes via a folded dtor; PS2 +0x0 loaded and passed to SimRandom::~SimRandom. Name invented"
+    },
+    {
+     "offset": "0x4",
+     "size": 1,
+     "type": "bool",
+     "name": "useScratchPad",
+     "confidence": "medium",
+     "evidence": "byte on Xbox, word on PS2 (4-byte bool); GetRigidBody(b2700) picks +0x28 when set, else +0x1c; PS2 CopyRigidBodiesFromScratchPad uses +0x4. No drift after it (+0x8 same on both). Name invented"
+    },
+    {
+     "offset": "0x8",
+     "size": 4,
+     "type": "int",
+     "name": "numRigidBodies",
+     "confidence": "high",
+     "evidence": "AssignRigidBodySlot 'INC [ECX+0x8]' on the rigid-body path, CanSpawnRigidBody reads it, Reset writes; PS2 +0x8 same. Name invented"
+    },
+    {
+     "offset": "0xc",
+     "size": 4,
+     "type": "int",
+     "name": "numSimpleRigidBodies",
+     "confidence": "high",
+     "evidence": "AssignRigidBodySlot 'INC [ECX+0xc]' on the simple path; CanSpawnSimpleRigidBody/ReleaseRigidBodySlot; PS2 +0xc. Name invented"
+    },
+    {
+     "offset": "0x10",
+     "size": 4,
+     "type": "uint",
+     "name": "bodyPoolSize",
+     "confidence": "high",
+     "evidence": "ctor = 0x17800 and passed as the size of the +0x18 allocation and its memset; PS2 +0x10 ctor. Name invented"
+    },
+    {
+     "offset": "0x14",
+     "size": 4,
+     "type": "uint",
+     "name": "scratchPadFreeZone",
+     "confidence": "medium",
+     "evidence": "ctor = 0x3800; PS2 GetScratchPadFreeZone returns +0x14. Name from the PS2 method"
+    },
+    {
+     "offset": "0x18",
+     "size": 4,
+     "type": "void *",
+     "name": "bodyPool",
+     "confidence": "high",
+     "evidence": "ctor stores the 0x17800-byte block from 0x114470 and zero-fills it; dtor frees; PS2 +0x18. Name invented"
+    },
+    {
+     "offset": "0x1c",
+     "size": 4,
+     "type": "RigidBody *",
+     "name": "rigidBodies",
+     "confidence": "high",
+     "evidence": "= bodyPool; GetRigidBody returns +0x1c + id*0x80 (64 slots * 0x80 = 0x2000); PS2 +0x1c. Name invented"
+    },
+    {
+     "offset": "0x20",
+     "size": 4,
+     "type": "SimpleRigidBody *",
+     "name": "simpleRigidBodies",
+     "confidence": "high",
+     "evidence": "= bodyPool+0x2000 (96 * 0x40 = 0x1800); GetSimpleRigidBody/DetectCollisionsSRB/ReleaseRigidBodySlot; PS2 +0x20. Name invented"
+    },
+    {
+     "offset": "0x24",
+     "size": 4,
+     "type": "void *",
+     "name": "rigidBodyInfo",
+     "confidence": "high",
+     "evidence": "= bodyPool+0x3800; GetRigidBodyInfo returns +0x24 + id*0x500 (64*0x500 ends exactly at 0x17800); PS2 +0x24. Element type unknown. Name invented"
+    },
+    {
+     "offset": "0x28",
+     "size": 4,
+     "type": "RigidBody *",
+     "name": "rigidBodiesScratch",
+     "confidence": "medium",
+     "evidence": "ctor 0; GetRigidBody uses it when useScratchPad; PS2 +0x28 passed to DMA_FromScratchPad. Name invented"
+    },
+    {
+     "offset": "0x2c",
+     "size": 4,
+     "type": "SimpleRigidBody *",
+     "name": "simpleRigidBodiesScratch",
+     "confidence": "medium",
+     "evidence": "ctor 0; GetSimpleRigidBody/DetectCollisionsSRB counterpart of +0x28; PS2 +0x2c. Name invented"
+    },
+    {
+     "offset": "0x30",
+     "size": 256,
+     "type": "uint[64]",
+     "name": "rigidBodySigs",
+     "confidence": "high",
+     "evidence": "ctor REP STOSD 0x40 dwords; AssignRigidBodySlot stores the signature (slot<<24 | counter) at [ECX+EAX*4+0x30], 64 slots. PS2 +0x30 has only 48 entries (0xc0): Xbox raised the rigid-body limit. Name invented"
+    },
+    {
+     "offset": "0x130",
+     "size": 384,
+     "type": "uint[96]",
+     "name": "simpleRigidBodySigs",
+     "confidence": "high",
+     "evidence": "ctor REP STOSD 0x60; AssignRigidBodySlot(simple) stores sig|0x80000000 at +0x130+i*4, 96 slots. PS2 +0xf0 (also 96). Name invented"
+    },
+    {
+     "offset": "0x2b0",
+     "size": 256,
+     "type": "PhysicsObject *[64]",
+     "name": "rigidBodyOwners",
+     "confidence": "high",
+     "evidence": "AssignRigidBodySlot searches the first null of 0x40 entries at +0x2b0 and stores the PhysicsObject* argument; SimulateGame iterates it. PS2 +0x270 (48 entries). Name invented"
+    },
+    {
+     "offset": "0x3b0",
+     "size": 384,
+     "type": "PhysicsObject *[96]",
+     "name": "simpleRigidBodyOwners",
+     "confidence": "high",
+     "evidence": "AssignRigidBodySlot(simple) searches 0x60 entries at +0x3b0 and stores the owner; DetectCollisionsSRB. PS2 +0x330. Name invented"
+    },
+    {
+     "offset": "0x530",
+     "size": 2304,
+     "type": "byte[2304]",
+     "name": "srbPairs",
+     "confidence": "low",
+     "evidence": "ctor zero-fills 0x900 bytes as 288 8-byte records ([+0x530],[+0x534]=0 then MOVSD 0x23e dwords); DetectCollisionsSRB takes its address. PS2 +0x4b0 (same 0x900 size). Element type unknown, name invented"
+    },
+    {
+     "offset": "0xe30",
+     "size": 4,
+     "type": "int",
+     "name": "savedSimState",
+     "confidence": "high",
+     "evidence": "PauseSimState copies simState here before setting it to 3; UnPauseSimState restores it; PS2 +0xdb0. Name invented"
+    },
+    {
+     "offset": "0xe34",
+     "size": 4,
+     "type": "int",
+     "name": "simState",
+     "confidence": "high",
+     "evidence": "3 = paused (PauseSimState/UnPauseSimState/AdvanceStep compare with 3); SimulateGame/Reset; PS2 +0xdb4. Name invented"
+    },
+    {
+     "offset": "0xe3c",
+     "size": 4,
+     "type": "uint",
+     "name": "unknown_e3c",
+     "confidence": "low",
+     "evidence": "ctor and Reset zero it; PS2 +0xdbc (ctor)"
+    },
+    {
+     "offset": "0xe40",
+     "size": 4,
+     "type": "float",
+     "name": "unknown_e40",
+     "confidence": "low",
+     "evidence": "float, ctor and Reset write 0; PS2 +0xdc0"
+    },
+    {
+     "offset": "0xe44",
+     "size": 4,
+     "type": "int",
+     "name": "stepCount",
+     "confidence": "high",
+     "evidence": "AdvanceStep 'INC [ECX+0xe44]' unless paused; Reset writes; PS2 +0xdc4 (AdvanceStep). Name invented"
+    },
+    {
+     "offset": "0xe48",
+     "size": 4,
+     "type": "uint",
+     "name": "reflectiveObjectSig",
+     "confidence": "medium",
+     "evidence": "ctor 0; PS2 +0xdc8 read/written by Get/SetReflectiveObject(SimObjSig) (no separate Xbox functions). Name from PS2 methods"
+    },
+    {
+     "offset": "0xe50",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "carsFirst",
+     "confidence": "high",
+     "evidence": "std::vector<PVehicle*> (MSVC 16 bytes; allocator dword at 0xe4c left undefined): ctor zeroes 0xe50/0xe54/0xe58 and reserves 0x40 via 0xb4080; dtor frees. PS2 GCC vector at 0xdcc (-> remove<PVehicle_**>). Typed PhysicsObject** because PVehicle derives from PhysicsObject. Name invented; GetPlayerObject(b2d30) reads first ({hex(b+4)}), PS2 GetPlayerObject reads +0xdcc: cars[0] is the player"
+    },
+    {
+     "offset": "0xe54",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "carsLast",
+     "confidence": "high",
+     "evidence": "see carsFirst"
+    },
+    {
+     "offset": "0xe58",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "carsEnd",
+     "confidence": "high",
+     "evidence": "see carsFirst"
+    },
+    {
+     "offset": "0xe60",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "activeCarsFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<PVehicle*> (MSVC 16 bytes; allocator dword at 0xe5c left undefined): ctor zeroes 0xe60/0xe64/0xe68 and reserves 0x40 via 0xb4080; dtor frees. PS2 GCC vector at 0xdd8 (-> remove<PVehicle_**>). Typed PhysicsObject** because PVehicle derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xe64",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "activeCarsLast",
+     "confidence": "medium",
+     "evidence": "see activeCarsFirst"
+    },
+    {
+     "offset": "0xe68",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "activeCarsEnd",
+     "confidence": "medium",
+     "evidence": "see activeCarsFirst"
+    },
+    {
+     "offset": "0xe70",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "smackablesFirst",
+     "confidence": "high",
+     "evidence": "std::vector<Smackable*> (MSVC 16 bytes; allocator dword at 0xe6c left undefined): ctor zeroes 0xe70/0xe74/0xe78 and reserves 0x40 via 0xb4080; dtor frees. PS2 GCC vector at 0xde4 (-> remove<Smackable_**>). Typed PhysicsObject** because Smackable derives from PhysicsObject. Name invented; CanSpawnRigidBody reads its first/last"
+    },
+    {
+     "offset": "0xe74",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "smackablesLast",
+     "confidence": "high",
+     "evidence": "see smackablesFirst"
+    },
+    {
+     "offset": "0xe78",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "smackablesEnd",
+     "confidence": "high",
+     "evidence": "see smackablesFirst"
+    },
+    {
+     "offset": "0xe80",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "humansFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Human*> (MSVC 16 bytes; allocator dword at 0xe7c left undefined): ctor zeroes 0xe80/0xe84/0xe88 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xdf0 (-> remove<Human_**>). Typed PhysicsObject** because Human derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xe84",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "humansLast",
+     "confidence": "medium",
+     "evidence": "see humansFirst"
+    },
+    {
+     "offset": "0xe88",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "humansEnd",
+     "confidence": "medium",
+     "evidence": "see humansFirst"
+    },
+    {
+     "offset": "0xe90",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "missilesFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Missile*> (MSVC 16 bytes; allocator dword at 0xe8c left undefined): ctor zeroes 0xe90/0xe94/0xe98 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xdfc (-> remove<Missile_**>). Typed PhysicsObject** because Missile derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xe94",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "missilesLast",
+     "confidence": "medium",
+     "evidence": "see missilesFirst"
+    },
+    {
+     "offset": "0xe98",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "missilesEnd",
+     "confidence": "medium",
+     "evidence": "see missilesFirst"
+    },
+    {
+     "offset": "0xea0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "minesFirst",
+     "confidence": "high",
+     "evidence": "std::vector<Mine*> (MSVC 16 bytes; allocator dword at 0xe9c left undefined): ctor zeroes 0xea0/0xea4/0xea8 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xe08 (-> remove<Mine_**>). Typed PhysicsObject** because Mine derives from PhysicsObject. Name invented; DetonateRemoteMines walks it"
+    },
+    {
+     "offset": "0xea4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "minesLast",
+     "confidence": "high",
+     "evidence": "see minesFirst"
+    },
+    {
+     "offset": "0xea8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "minesEnd",
+     "confidence": "high",
+     "evidence": "see minesFirst"
+    },
+    {
+     "offset": "0xeb0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "grenadesFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Grenade*> (MSVC 16 bytes; allocator dword at 0xeac left undefined): ctor zeroes 0xeb0/0xeb4/0xeb8 and reserves nothing (no reserve call) via 0xb4080; dtor frees. PS2 GCC vector at 0xe14 (-> remove<Grenade_**>). Typed PhysicsObject** because Grenade derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xeb4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "grenadesLast",
+     "confidence": "medium",
+     "evidence": "see grenadesFirst"
+    },
+    {
+     "offset": "0xeb8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "grenadesEnd",
+     "confidence": "medium",
+     "evidence": "see grenadesFirst"
+    },
+    {
+     "offset": "0xec0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "shellsFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Shell*> (MSVC 16 bytes; allocator dword at 0xebc left undefined): ctor zeroes 0xec0/0xec4/0xec8 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xe20 (-> remove<Shell_**>). Typed PhysicsObject** because Shell derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xec4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "shellsLast",
+     "confidence": "medium",
+     "evidence": "see shellsFirst"
+    },
+    {
+     "offset": "0xec8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "shellsEnd",
+     "confidence": "medium",
+     "evidence": "see shellsFirst"
+    },
+    {
+     "offset": "0xed0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "explosionsFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Explosion*> (MSVC 16 bytes; allocator dword at 0xecc left undefined): ctor zeroes 0xed0/0xed4/0xed8 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xe2c (-> remove<Explosion_**>). Typed PhysicsObject** because Explosion derives from PhysicsObject. Name invented; SpawnPhysicsObject push_back / DeletePhysicsObject on it"
+    },
+    {
+     "offset": "0xed4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "explosionsLast",
+     "confidence": "medium",
+     "evidence": "see explosionsFirst"
+    },
+    {
+     "offset": "0xed8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "explosionsEnd",
+     "confidence": "medium",
+     "evidence": "see explosionsFirst"
+    },
+    {
+     "offset": "0xee0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "newtonsFirst",
+     "confidence": "high",
+     "evidence": "std::vector<Newton*> (MSVC 16 bytes; allocator dword at 0xedc left undefined): ctor zeroes 0xee0/0xee4/0xee8 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xe38 (-> remove<Newton_**>). Typed PhysicsObject** because Newton derives from PhysicsObject. Name invented; CanSpawnSimpleRigidBody reads its first/last"
+    },
+    {
+     "offset": "0xee4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "newtonsLast",
+     "confidence": "high",
+     "evidence": "see newtonsFirst"
+    },
+    {
+     "offset": "0xee8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "newtonsEnd",
+     "confidence": "high",
+     "evidence": "see newtonsFirst"
+    },
+    {
+     "offset": "0xef0",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "helicoptersFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<PHelicopter*> (MSVC 16 bytes; allocator dword at 0xeec left undefined): ctor zeroes 0xef0/0xef4/0xef8 and reserves 4 via 0xb4080; dtor frees. PS2 GCC vector at 0xe44 (-> remove<PHelicopter_**>). Typed PhysicsObject** because PHelicopter derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xef4",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "helicoptersLast",
+     "confidence": "medium",
+     "evidence": "see helicoptersFirst"
+    },
+    {
+     "offset": "0xef8",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "helicoptersEnd",
+     "confidence": "medium",
+     "evidence": "see helicoptersFirst"
+    },
+    {
+     "offset": "0xf00",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "sentriesFirst",
+     "confidence": "medium",
+     "evidence": "std::vector<Sentry*> (MSVC 16 bytes; allocator dword at 0xefc left undefined): ctor zeroes 0xf00/0xf04/0xf08 and reserves 0x60 via 0xb4080; dtor frees. PS2 GCC vector at 0xe50 (-> remove<Sentry_**>). Typed PhysicsObject** because Sentry derives from PhysicsObject. Name invented"
+    },
+    {
+     "offset": "0xf04",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "sentriesLast",
+     "confidence": "medium",
+     "evidence": "see sentriesFirst"
+    },
+    {
+     "offset": "0xf08",
+     "size": 4,
+     "type": "PhysicsObject * *",
+     "name": "sentriesEnd",
+     "confidence": "medium",
+     "evidence": "see sentriesFirst"
+    },
+    {
+     "offset": "0xf10",
+     "size": 4,
+     "type": "void *",
+     "name": "trackedInstancesFirst",
+     "confidence": "medium",
+     "evidence": "MSVC std::vector at 0xf0c (address returned by GetTrackedInstanceList, used by TrackInstance/UpdateTrackedInstanceVisibility); ctor zeroes 0xf10/0xf14/0xf18; PS2 GCC vector at +0xe5c. Element type (tracked-instance record) unknown. Name invented"
+    },
+    {
+     "offset": "0xf14",
+     "size": 4,
+     "type": "void *",
+     "name": "trackedInstancesLast",
+     "confidence": "medium",
+     "evidence": "see trackedInstancesFirst; UntrackInstance/UntrackAllInstances"
+    },
+    {
+     "offset": "0xf18",
+     "size": 4,
+     "type": "void *",
+     "name": "trackedInstancesEnd",
+     "confidence": "medium",
+     "evidence": "see trackedInstancesFirst"
+    },
+    {
+     "offset": "0xf1c",
+     "size": 4,
+     "type": "void *",
+     "name": "objectTree",
+     "confidence": "medium",
+     "evidence": "ctor FastAlloc(0xc) and builds an MSVC _Tree (allocator byte, head node from 0x94030 with self-links, size 0) = a heap std::multimap/multiset; passed as this to std::__tree<>::insert_multi in SpawnPhysicsObject; DeleteDeadObjects/DeletePhysicsObject/CleanUpObjects. PS2 +0xe68. Name invented"
+    },
+    {
+     "offset": "0xf20",
+     "size": 4,
+     "type": "void *",
+     "name": "deadObjectTree",
+     "confidence": "low",
+     "evidence": "ctor FastAlloc(0xc), a second _Tree (head node from 0x53640); DeleteDeadObjects/DeletePhysicsObject; dtor 0xb2dc0. PS2 +0xe6c. Name invented"
+    }
+   ]
+  },
+  {
+   "name": "RigidBody",
+   "size": 128,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "SimpleRigidBody",
+   "size": 64,
+   "if_missing": true,
+   "fields": []
+  },
+  {
+   "name": "SimRandom",
+   "size": 16,
+   "if_missing": true,
+   "fields": []
+  }
+ ],
+ "vtable_slots": [],
+ "returns": {
+  "0x000d2fd0": "WWorldPos *",
+  "0x000d2f10": "void",
+  "0x000d2f90": "float",
+  "0x000bd750": "bool",
+  "0x000bd7b0": "bool",
+  "0x000bd820": "bool",
+  "0x000be540": "WCollider *",
+  "0x000be620": "WCollider *",
+  "0x000b25e0": "void",
+  "0x000b2600": "void",
+  "0x000b2620": "void",
+  "0x000b2630": "int",
+  "0x000b2700": "RigidBody *",
+  "0x000b2730": "SimpleRigidBody *",
+  "0x000b2760": "void *",
+  "0x000b27d0": "PhysicsObject *",
+  "0x000b2c40": "bool",
+  "0x000b47a0": "bool",
+  "0x000b2d30": "PhysicsObject *",
+  "0x000b4fe0": "Simulation *"
+ },
+ "skip_prototypes": [],
+ "notes": [
+  "No class here has a vtable, so there is no +4 shift. The shifts come from bools, containers and one array-limit change.",
+  "WWorldPos: identical offsets on both builds; +0x30 is a bool (Xbox byte, PS2 word) followed by padding, so no drift. The three COORD3s sit at a 16-byte stride on both builds.",
+  "WCollider: offsets match up to +0x30; PS2 GCC vectors are 12 bytes (+0x30/+0x3c/+0x48), Xbox MSVC 16 bytes (+0x30/+0x40/+0x50); then the PS2 4-byte bools +0x54/+0x58 become Xbox bytes +0x60/+0x61 and the mask moves PS2 +0x5c -> Xbox +0x64. Size 0x68 matches FastAlloc(0x68,'WCollider').",
+  "Simulation: offsets match to +0x30; the rigid-body slot limit is 48 on PS2 and 64 on Xbox (AssignRigidBodySlot loop bound 0x40), so the sig table and the owner table each grow by 0x40: PS2 0xf0/0x270/0x330/0x4b0/0xdb0 -> Xbox 0x130/0x2b0/0x3b0/0x530/0xe30 (net +0x80). The simple-rigid-body arrays (96) and the 0x900 block keep their size. From +0xdcc the 12 GCC vectors (12 bytes) become MSVC 16-byte vectors, adding 4 each: tracked instances PS2 0xe5c -> Xbox 0xf0c, trees 0xe68/0xe6c -> 0xf1c/0xf20.",
+  "Simulation size 0xf24 is inferred from the last field; no FastAlloc or deleting dtor was found (probably a global/static instance). The ctor reserves 11 of the 12 vectors: grenades (0xeac) gets no reserve call, helicopters reserves only 4.",
+  "The Xbox evidence lists +0x4a read by GetRigidBody@0x1c180: that function reads PhysicsObject+0x4a (rigidBodySlot), so it is PhysicsObject::GetRigidBody (a helper), not a Simulation method; its access was left out of Simulation.",
+  "MSVC STL on this build: vector = {allocator dword, first, last, end} (16 bytes); the heap tree objects are 12 bytes {allocator byte, head, size}. The allocator dwords are left undefined.",
+  "AssignRigidBodySlot returns the slot index (EAX, -1 on failure), not the signature: the existing 'uint' prototype should be int. GetPlayerObject returns cars[0] (a PVehicle*); typed PhysicsObject * to avoid another placeholder.",
+  "InRegion, HeightAtPoint, CanSpawn*, FindPhysicsObjectSignature and the second WCollider ctor returns come from sheet semantics or MSVC convention, not from disassembly.",
+  "Placeholders RigidBody (0x80, GetRigidBody stride), SimpleRigidBody (0x40, pool split 0x1800/96) and SimRandom (0x10, FastAlloc size) are only created if missing."
+ ]
+}

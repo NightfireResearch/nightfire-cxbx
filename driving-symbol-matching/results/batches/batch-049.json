@@ -1,0 +1,25 @@
+{
+ "batch": "049",
+ "program": "Driving.xbe",
+ "note": "Struct cluster21 findings.",
+ "items": [
+  {
+   "xbox": "0x00095080",
+   "expect": "RTextureContext::RTextureContext_or_ContextManager",
+   "name": "RTextureContextManager::RTextureContextManager",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "RTextureContextManager::RTextureContextManager(void). Stores the RTextureContextManager vtable 0x1921b4 at +0 and allocates the context map (12-byte MSVC tree) for +4. Was named RTextureContext_or_ContextManager.",
+   "evidence": []
+  },
+  {
+   "xbox": "0x0008b5b0",
+   "expect": "FUN_0008b5b0",
+   "name": "RStateManager::Init",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "RStateManager::Init(void) (static). Allocates 0x14 bytes (RStateManager), runs its constructor (0x92f50) and stores the object in the global at 0x1f2608 (0 if the allocation fails).",
+   "evidence": []
+  }
+ ]
+}

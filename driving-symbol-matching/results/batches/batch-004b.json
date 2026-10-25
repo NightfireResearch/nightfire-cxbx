@@ -1,0 +1,1041 @@
+{
+ "batch": "004b",
+ "program": "Driving.xbe",
+ "note": "Undo Version Tracking's copied PS2 plates; hand-checked name fixes. (the items after 0x96c60, which Ghidra refused)",
+ "items": [
+  {
+   "xbox": "0x00097620",
+   "expect": "RWorldCamera::StartCameraInputReceiver",
+   "name": "RWorldCamera::StartCameraInputReceiver",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "RWorldCamera::StartCameraInputReceiver(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001d60a0"
+   ]
+  },
+  {
+   "xbox": "0x000993e0",
+   "expect": "RReflection::InitPostSim",
+   "name": "RReflection::InitPostSim",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "RReflection::InitPostSim(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001c1358"
+   ]
+  },
+  {
+   "xbox": "0x000a4550",
+   "expect": "RPostProcessing::Reset",
+   "name": "RPostProcessing::Reset",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: RPostProcessing::Reset\nClass: RPostProcessing\nEvidence: RPostProcessing slot 1 (PS2 001ea3f8, row 4192, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x000ad3f0",
+   "expect": "RigidBody::ResolveForce",
+   "name": "RigidBody::ResolveForce",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "RigidBody::ResolveForce(COORD3 *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001f86e8"
+   ]
+  },
+  {
+   "xbox": "0x000ad420",
+   "expect": "RigidBody::ResolveTorque",
+   "name": "RigidBody::ResolveTorque",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "RigidBody::ResolveTorque(COORD3 *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001f8778"
+   ]
+  },
+  {
+   "xbox": "0x000ad470",
+   "expect": "RigidBody::ResolveMassScaledTorque4",
+   "name": "RigidBody::ResolveMassScaledTorque4",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "RigidBody::ResolveMassScaledTorque4(COORD4 *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001f88c8"
+   ]
+  },
+  {
+   "xbox": "0x000b1f10",
+   "expect": "SimpleRigidBody::SetOrientation",
+   "name": "SimpleRigidBody::SetOrientation",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SimpleRigidBody::SetOrientation(COORD4 &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001fd620"
+   ]
+  },
+  {
+   "xbox": "0x000b1f30",
+   "expect": "SimpleRigidBody::GetScalarVelocity",
+   "name": "SimpleRigidBody::GetScalarVelocity",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SimpleRigidBody::GetScalarVelocity(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x001fd648"
+   ]
+  },
+  {
+   "xbox": "0x000b28d0",
+   "expect": "Simulation::GetOrderedBody",
+   "name": "Simulation::GetOrderedBody",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "Simulation::GetOrderedBody(int)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00201590"
+   ]
+  },
+  {
+   "xbox": "0x000b3000",
+   "expect": "Simulation::UntrackInstance",
+   "name": "Simulation::UntrackInstance",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "Simulation::UntrackInstance(CARP::Instance *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00201690"
+   ]
+  },
+  {
+   "xbox": "0x000b8460",
+   "expect": "SMissionManager::GetObjectiveByIndex",
+   "name": "SMissionManager::GetObjectiveByIndex",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SMissionManager::GetObjectiveByIndex(unsigned int)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00208a48"
+   ]
+  },
+  {
+   "xbox": "0x000b96b0",
+   "expect": "SMissionTimer::SetTicking",
+   "name": "SMissionTimer::SetTicking",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SMissionTimer::SetTicking(bool)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00209d58"
+   ]
+  },
+  {
+   "xbox": "0x000ccb40",
+   "expect": "WSoundGroup::Update",
+   "name": "WSoundGroup::Update",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "WSoundGroup::Update(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00228470"
+   ]
+  },
+  {
+   "xbox": "0x000ce0f0",
+   "expect": "WTargetPicker::ActivateTargeting",
+   "name": "WTargetPicker::ActivateTargeting",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "WTargetPicker::ActivateTargeting(TargetingState)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0022b638"
+   ]
+  },
+  {
+   "xbox": "0x000ce150",
+   "expect": "WTargetPicker::DeactivateTargeting",
+   "name": "WTargetPicker::DeactivateTargeting",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "WTargetPicker::DeactivateTargeting(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0022b698"
+   ]
+  },
+  {
+   "xbox": "0x000d3850",
+   "expect": "GGallery::GET_Canvas",
+   "name": "GGallery::GET_Canvas",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GGallery::GET_Canvas(UGroup *, char *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00236b60"
+   ]
+  },
+  {
+   "xbox": "0x000d5810",
+   "expect": "GGallery::GET_Puppet",
+   "name": "GGallery::GET_Puppet",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GGallery::GET_Puppet(UGroup *, char *, int, int)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00236cc0"
+   ]
+  },
+  {
+   "xbox": "0x000d9f50",
+   "expect": "GHud::SetTarget",
+   "name": "GHud::SetTarget",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GHud::SetTarget(COORD2 &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002457a0"
+   ]
+  },
+  {
+   "xbox": "0x000d9fb0",
+   "expect": "GHud::SetTargetLockState",
+   "name": "GHud::SetTargetLockState",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GHud::SetTargetLockState(TargetLockState)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00245800"
+   ]
+  },
+  {
+   "xbox": "0x000da030",
+   "expect": "GHud::TriggerMissionMsg",
+   "name": "GHud::TriggerMissionMsg",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GHud::TriggerMissionMsg(int, float)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00245890"
+   ]
+  },
+  {
+   "xbox": "0x000e3d20",
+   "expect": "IsJungleMission",
+   "name": "GSystem::IsEARS",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "compares MissionName with junglea_mis13a etc., as PS2 GSystem::IsEARS (sheet row 5491, green, 'Certain'); GetGalleryName returns ears_gall1.gal when it is true. Was the guess IsJungleMission",
+    "PS2 0x0024b680"
+   ]
+  },
+  {
+   "xbox": "0x000e3db0",
+   "expect": "IsSnowMission",
+   "name": "GSystem::IsSavage",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "compares MissionName with snow1a_mis3 and snow2a_mis4, as PS2 GSystem::IsSavage (sheet row 5492, between IsEARS and GetGalleryName); GetGalleryName returns sav_gall1.gal when it is true. Was the guess IsSnowMission",
+    "PS2 0x0024b740"
+   ]
+  },
+  {
+   "xbox": "0x000e3e20",
+   "expect": "GSystem::GetGalleryName",
+   "name": "GSystem::GetGalleryName",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "GSystem::GetGalleryName(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0024b7d0"
+   ]
+  },
+  {
+   "xbox": "0x000e4a10",
+   "expect": "EAGL::ViewPort::IsSphereInView",
+   "name": "EAGL::ViewPort::IsSphereInView",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::ViewPort::IsSphereInView(COORD3 &, float)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00296b98"
+   ]
+  },
+  {
+   "xbox": "0x000e89e0",
+   "expect": "EAGL::Device::GetCurrentTextureRenderContext",
+   "name": "EAGL::Device::GetCurrentTextureRenderContext",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Device::GetCurrentTextureRenderContext(void) const",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00287738"
+   ]
+  },
+  {
+   "xbox": "0x000e8a40",
+   "expect": "EAGL::Device::Get",
+   "name": "EAGL::Device::Get",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Device::Get(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00287788"
+   ]
+  },
+  {
+   "xbox": "0x000e8a50",
+   "expect": "EAGL::Device::DeleteRenderContext",
+   "name": "EAGL::Device::DeleteRenderContext",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Device::DeleteRenderContext(EAGL::RenderContext *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00287608"
+   ]
+  },
+  {
+   "xbox": "0x000ea210",
+   "expect": "EAGL::Model::Draw",
+   "name": "EAGL::Model::Draw",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Model::Draw(MATRIX4 &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002843a0"
+   ]
+  },
+  {
+   "xbox": "0x000ede60",
+   "expect": "EAGL::DynamicLoader::RegisterShapes",
+   "name": "EAGL::DynamicLoader::RegisterShapes",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::DynamicLoader::RegisterShapes(char *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0029fda0"
+   ]
+  },
+  {
+   "xbox": "0x000eecd0",
+   "expect": "EAGL::GeoPrimState::SetDepthTestMethod",
+   "name": "EAGL::GeoPrimState::SetDepthTestMethod",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::GeoPrimState::SetDepthTestMethod(EAGL::DepthTestMethod)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00284038"
+   ]
+  },
+  {
+   "xbox": "0x000ef480",
+   "expect": "EAGL::GeoPrimState::GeoPrimState",
+   "name": "EAGL::GeoPrimState::GeoPrimState",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::GeoPrimState::GeoPrimState(EAGL::GeoPrimState &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00283f28"
+   ]
+  },
+  {
+   "xbox": "0x000f19a0",
+   "expect": "EAGL::Transform::BuildMatrix",
+   "name": "EAGL::Transform::BuildMatrix",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Transform::BuildMatrix(MATRIX4 *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00293aa0"
+   ]
+  },
+  {
+   "xbox": "0x000f2e50",
+   "expect": "EAGL::Transform::PrependMatrix",
+   "name": "EAGL::Transform::PrependMatrix",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::Transform::PrependMatrix(MATRIX4 *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00294b70"
+   ]
+  },
+  {
+   "xbox": "0x000f3cc0",
+   "expect": "EAGL::SymbolPool::Insert",
+   "name": "EAGL::SymbolPool::Insert",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGL::SymbolPool::Insert(char *, void *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0029d840"
+   ]
+  },
+  {
+   "xbox": "0x000f70b0",
+   "expect": "EAGLAnim::FnCompoundChannel::FnCompoundChannel",
+   "name": "EAGLAnim::FnCompoundChannel::FnCompoundChannel",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::FnCompoundChannel(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00266238"
+   ]
+  },
+  {
+   "xbox": "0x000f7360",
+   "expect": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel",
+   "name": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00271c20"
+   ]
+  },
+  {
+   "xbox": "0x000f7410",
+   "expect": "EAGLAnim::FnRawEventChannel::SetAnimMemoryMap",
+   "name": "EAGLAnim::FnRawEventChannel::SetAnimMemoryMap",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: EAGLAnim::FnRawEventChannel::SetAnimMemoryMap\nClass: EAGLAnim::FnRawEventChannel\nEvidence: EAGLAnim::FnRawEventChannel slot 15 (PS2 00264bf8, row 6379, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x000f7430",
+   "expect": "EAGLAnim::FnRawEventChannel::EvalEvent",
+   "name": "EAGLAnim::FnRawEventChannel::EvalEvent",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: EAGLAnim::FnRawEventChannel::EvalEvent\nClass: EAGLAnim::FnRawEventChannel\nEvidence: EAGLAnim::FnRawEventChannel slot 9 (PS2 00264c08, row 6380, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x000f7460",
+   "expect": "EAGLAnim::FnRawEventChannel::Eval",
+   "name": "EAGLAnim::FnRawEventChannel::Eval",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: EAGLAnim::FnRawEventChannel::Eval\nClass: EAGLAnim::FnRawEventChannel\nEvidence: EAGLAnim::FnRawEventChannel slot 3 (PS2 00264c40, row 6381, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x000f74b0",
+   "expect": "EAGLAnim::FnRawEventChannel::~FnRawEventChannel",
+   "name": "EAGLAnim::FnRawEventChannel::~FnRawEventChannel",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: EAGLAnim::FnRawEventChannel::~FnRawEventChannel\nClass: EAGLAnim::FnRawEventChannel\nEvidence: called by EAGLAnim::FnRawEventChannel::scalar_deleting_destructor (0x000f7480) and stores EAGLAnim::FnRawEventChannel's vtable\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x000f76e0",
+   "expect": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan",
+   "name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::FnKeyLerpChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00275ef0"
+   ]
+  },
+  {
+   "xbox": "0x000f7710",
+   "expect": "EAGLAnim::FnKeyQuatChan::FnKeyQuatChan",
+   "name": "EAGLAnim::FnKeyQuatChan::FnKeyQuatChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnKeyQuatChan::FnKeyQuatChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00276158"
+   ]
+  },
+  {
+   "xbox": "0x000f7810",
+   "expect": "EAGLAnim::FnPoseBlender::FnPoseBlender",
+   "name": "EAGLAnim::FnPoseBlender::FnPoseBlender",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnPoseBlender::FnPoseBlender(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00273e88"
+   ]
+  },
+  {
+   "xbox": "0x000f7b20",
+   "expect": "EAGLAnim::FnPhaseChan::FnPhaseChan",
+   "name": "EAGLAnim::FnPhaseChan::FnPhaseChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnPhaseChan::FnPhaseChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002776e8"
+   ]
+  },
+  {
+   "xbox": "0x000f7b60",
+   "expect": "EAGLAnim::FnRawStateChan::FnRawStateChan",
+   "name": "EAGLAnim::FnRawStateChan::FnRawStateChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnRawStateChan::FnRawStateChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00267288"
+   ]
+  },
+  {
+   "xbox": "0x000f81f0",
+   "expect": "EAGLAnim::FnDeltaLerpChan::FnDeltaLerpChan",
+   "name": "EAGLAnim::FnDeltaLerpChan::FnDeltaLerpChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnDeltaLerpChan::FnDeltaLerpChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00275890"
+   ]
+  },
+  {
+   "xbox": "0x000f8220",
+   "expect": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan",
+   "name": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00275af0"
+   ]
+  },
+  {
+   "xbox": "0x00107e30",
+   "expect": "SHAPE_name",
+   "name": "SHAPE_name",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00260104"
+   ]
+  },
+  {
+   "xbox": "0x00108a50",
+   "expect": "random",
+   "name": "random",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": ""
+  },
+  {
+   "xbox": "0x0010a7e0",
+   "expect": "THREAD_yield",
+   "name": "THREAD_yield",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002614d8"
+   ]
+  },
+  {
+   "xbox": "0x0010a7f0",
+   "expect": "THREAD_iscurrent",
+   "name": "THREAD_iscurrent",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00261578"
+   ]
+  },
+  {
+   "xbox": "0x001140a0",
+   "expect": "MEM_tailsize",
+   "name": "MEM_tailsize",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "MEM_tailsize(char *, int)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002ca740"
+   ]
+  },
+  {
+   "xbox": "0x00117c10",
+   "expect": "UGroup::ProcessBreadthFirst",
+   "name": "UGroup::ProcessBreadthFirst",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "UGroup::ProcessBreadthFirst(UGroup::Processor &) const",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002d6070"
+   ]
+  },
+  {
+   "xbox": "0x00117e40",
+   "expect": "UGroup::Processor::StartGroup",
+   "name": "UGroup::Processor::StartGroup",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "UGroup::Processor::StartGroup(UGroup *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002dc150"
+   ]
+  },
+  {
+   "xbox": "0x00117e50",
+   "expect": "CARP::TagReference::TagReference",
+   "name": "CARP::TagReference::TagReference",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "CARP::TagReference::TagReference(UGroup *, UGroup *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002dab48"
+   ]
+  },
+  {
+   "xbox": "0x00119d80",
+   "expect": "CARP::ResolveSymbolicReferences",
+   "name": "CARP::ResolveSymbolicReferences",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "CARP::ResolveSymbolicReferences(UGroup *, USymbolTable &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002daa18"
+   ]
+  },
+  {
+   "xbox": "0x0011a110",
+   "expect": "StringToNumber::ConvertStringToNumber",
+   "name": "StringToNumber::ConvertStringToNumber",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "StringToNumber::ConvertStringToNumber(char *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002cec98"
+   ]
+  },
+  {
+   "xbox": "0x0011b690",
+   "expect": "UCarpNamespace::operator_new",
+   "name": "UCarpNamespace::UCarpNamespace",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "sets vtable 001a2244, FastAlloc(0xc, \"UCarpNamespace\") map header into this+4, as PS2 UCarpNamespace::UCarpNamespace. VT had named it operator_new, which MSVC inlined",
+    "PS2 0x002cd788"
+   ]
+  },
+  {
+   "xbox": "0x0011b730",
+   "expect": "FUN_0011b730",
+   "name": "UCarpNamespace::~UCarpNamespace",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "resets vtable 001a2244, clears and frees the 0xc map header, as PS2 ~UCarpNamespace",
+    "PS2 0x002cd818"
+   ]
+  },
+  {
+   "xbox": "0x0011b760",
+   "expect": "FUN_0011b760",
+   "name": "UCarpNamespace::scalar_deleting_destructor",
+   "rename": true,
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "",
+   "evidence": [
+    "same as ~UCarpNamespace plus FastFree(this, 8) when flag bit 1 is set",
+    "PS2 0x002cd818"
+   ]
+  },
+  {
+   "xbox": "0x001233f0",
+   "expect": "URefCounter<AStream>::AddReference",
+   "name": "URefCounter<AStream>::AddReference",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": ""
+  },
+  {
+   "xbox": "0x00123630",
+   "expect": "URefCounter<AStream>::Get",
+   "name": "URefCounter<AStream>::Get",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": ""
+  },
+  {
+   "xbox": "0x00123870",
+   "expect": "AVoice::View::Restart",
+   "name": "AVoice::View::Restart",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AVoice::View::Restart(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002de060"
+   ]
+  },
+  {
+   "xbox": "0x00124830",
+   "expect": "AFX::IsAllVoices",
+   "name": "AFX::IsAllVoices",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AFX::IsAllVoices(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f7e48"
+   ]
+  },
+  {
+   "xbox": "0x00124ae0",
+   "expect": "AListener::AListener",
+   "name": "AListener::AListener",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AListener::AListener(AView)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f4d78, 0x002f4e00"
+   ]
+  },
+  {
+   "xbox": "0x00124c40",
+   "expect": "AFader::Priv::Priv",
+   "name": "AFader::Priv::Priv",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AFader::Priv::Priv(AStream &, AMix &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f8d58"
+   ]
+  },
+  {
+   "xbox": "0x00125180",
+   "expect": "AFader::AFader",
+   "name": "AFader::AFader",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AFader::AFader(AStream &, AMix &)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f95b0"
+   ]
+  },
+  {
+   "xbox": "0x00125260",
+   "expect": "AFader::Update",
+   "name": "AFader::Update",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AFader::Update(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f9828"
+   ]
+  },
+  {
+   "xbox": "0x00125c20",
+   "expect": "URefCounter<AFader>::Get",
+   "name": "URefCounter<AFader>::Get",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "URefCounter<AFader>::Get(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002fa880"
+   ]
+  },
+  {
+   "xbox": "0x00125d40",
+   "expect": "AFader::Get",
+   "name": "AFader::Get",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "AFader::Get(char *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002f9710"
+   ]
+  },
+  {
+   "xbox": "0x0012bb60",
+   "expect": "ASubmersible::SetCreakLevel",
+   "name": "ASubmersible::SetCreakLevel",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: ASubmersible::SetCreakLevel\nClass: ASubmersible\nEvidence: ASubmersible slot 9 (PS2 002e8650, row 8783, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x0012c930",
+   "expect": "AHelicopter::PlayLanding",
+   "name": "AHelicopter::PlayLanding",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: AHelicopter::PlayLanding\nClass: AHelicopter\nEvidence: AHelicopter slot 4 (PS2 002f6900, row 9010, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x0012c950",
+   "expect": "AHelicopter::Play",
+   "name": "AHelicopter::Play",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": "[symbol-matching]\nCanonical name: AHelicopter::Play\nClass: AHelicopter\nEvidence: AHelicopter slot 3 (PS2 002f6938, row 9011, infill-exact)\nBatch: 002\n[/symbol-matching]"
+  },
+  {
+   "xbox": "0x00131d35",
+   "expect": "__pure_virtual",
+   "name": "__pure_virtual",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x0024c5d0"
+   ]
+  },
+  {
+   "xbox": "0x0013282a",
+   "expect": "strtok",
+   "name": "strtok",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x002aabd8"
+   ]
+  },
+  {
+   "xbox": "0x001429d0",
+   "expect": "SNDMEMI_restore",
+   "name": "SNDMEMI_restore",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SNDMEMI_restore(void)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00307c70"
+   ]
+  },
+  {
+   "xbox": "0x001434b0",
+   "expect": "MIX_restorereverb",
+   "name": "MIX_restorereverb",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x003187b8"
+   ]
+  },
+  {
+   "xbox": "0x00143740",
+   "expect": "SFILTER_modifyLPFRC",
+   "name": "SFILTER_modifyLPFRC",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SFILTER_modifyLPFRC(LPFRCSTATE *, int *)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x003167c8"
+   ]
+  },
+  {
+   "xbox": "0x00144460",
+   "expect": "SFILTER_addtofilterlist",
+   "name": "SFILTER_addtofilterlist",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_exact": ""
+  },
+  {
+   "xbox": "0x00146000",
+   "expect": "SFILTER_unpackpf",
+   "name": "SFILTER_unpackpf",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "sheet_name": "SFILTER_unpackpf(void *, int, void *, void *, int)",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00314d60"
+   ]
+  },
+  {
+   "xbox": "0x0014a1e0",
+   "expect": "decode16x87",
+   "name": "decode16x87",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00314fb0"
+   ]
+  },
+  {
+   "xbox": "0x0014b5d0",
+   "expect": "STREAM_gettable",
+   "name": "STREAM_gettable",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00306728"
+   ]
+  },
+  {
+   "xbox": "0x0014b5f0",
+   "expect": "STREAM_state",
+   "name": "STREAM_state",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x00306758"
+   ]
+  },
+  {
+   "xbox": "0x0014b640",
+   "expect": "STREAM_buffersize",
+   "name": "STREAM_buffersize",
+   "rename": false,
+   "create": false,
+   "allow_duplicate": true,
+   "plate_base": "",
+   "evidence": [
+    "Version Tracking match (accepted by hand) to PS2 0x003067e0"
+   ]
+  }
+ ]
+}

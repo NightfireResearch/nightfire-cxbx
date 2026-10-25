@@ -1,0 +1,1125 @@
+{
+ "batch": "P009",
+ "program": "DRIVING.ELF",
+ "applied": "Fri Sep 25 22:54:30 2026",
+ "items": [
+  {
+   "xbox": "0x0010b950",
+   "old_name": "FUN_0010b950",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x0010b950 from 'FUN_0010b950' to '__lexicographical_compare_3way<signed_char_*,_signed_char_*>'",
+      "warnings": [
+       "Function name '__lexicographical_compare_3way<signed_char_*,_signed_char_*>' \u2014 main part '__lexicographical_compare_3way<signed_char_*,_signed_char_*>' is not PascalCase. Expected: LexicographicalCompare3way<signedChar*,SignedChar*>",
+       "Function name '__lexicographical_compare_3way<signed_char_*,_signed_char_*>' \u2014 main part '__lexicographical_compare_3way<signed_char_*,_signed_char_*>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x0010b950",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__lexicographical_compare_3way<signed_char_*,_signed_char_*>",
+   "ok": true
+  },
+  {
+   "xbox": "0x00115418",
+   "old_name": "FUN_00115418",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00115418 from 'FUN_00115418' to 'GetReference'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetReference' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00115418",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetReference",
+   "ok": true
+  },
+  {
+   "xbox": "0x00115a98",
+   "old_name": "FUN_00115a98",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00115a98 from 'FUN_00115a98' to 'AddReference'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddReference' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00115a98",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddReference",
+   "ok": true
+  },
+  {
+   "xbox": "0x001724a0",
+   "old_name": "FUN_001724a0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001724a0 from 'FUN_001724a0' to '__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>'",
+      "warnings": [
+       "Function name '__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' \u2014 main part '__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' is not PascalCase. Expected: PushHeap<attributestoreblock*,Int,Attributestoreblock>",
+       "Function name '__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' \u2014 main part '__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001724a0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__push_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>",
+   "ok": true
+  },
+  {
+   "xbox": "0x00172568",
+   "old_name": "FUN_00172568",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00172568 from 'FUN_00172568' to '__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>'",
+      "warnings": [
+       "Function name '__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' \u2014 main part '__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' is not PascalCase. Expected: AdjustHeap<attributestoreblock*,Int,Attributestoreblock>",
+       "Function name '__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' \u2014 main part '__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00172568",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__adjust_heap<AttributeStoreBlock_*,_int,_AttributeStoreBlock>",
+   "ok": true
+  },
+  {
+   "xbox": "0x00172648",
+   "old_name": "FUN_00172648",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00172648 from 'FUN_00172648' to '__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>'",
+      "warnings": [
+       "Function name '__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>' \u2014 main part '__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>' is not PascalCase. Expected: MakeHeap<attributestoreblock*,Attributestoreblock,Int>",
+       "Function name '__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>' \u2014 main part '__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00172648",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__make_heap<AttributeStoreBlock_*,_AttributeStoreBlock,_int>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001727a8",
+   "old_name": "FUN_001727a8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001727a8 from 'FUN_001727a8' to '__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>'",
+      "warnings": [
+       "Function name '__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>' \u2014 main part '__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>' is not PascalCase. Expected: PartialSort<attributestoreblock*,Attributestoreblock>",
+       "Function name '__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>' \u2014 main part '__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001727a8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__partial_sort<AttributeStoreBlock_*,_AttributeStoreBlock>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a3ef0",
+   "old_name": "FUN_001a3ef0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a3ef0 from 'FUN_001a3ef0' to '__unguarded_partition<unsigned_char_*,_unsigned_char>'",
+      "warnings": [
+       "Function name '__unguarded_partition<unsigned_char_*,_unsigned_char>' \u2014 main part '__unguarded_partition<unsigned_char_*,_unsigned_char>' is not PascalCase. Expected: UnguardedPartition<unsignedChar*,UnsignedChar>",
+       "Function name '__unguarded_partition<unsigned_char_*,_unsigned_char>' \u2014 main part '__unguarded_partition<unsigned_char_*,_unsigned_char>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a3ef0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__unguarded_partition<unsigned_char_*,_unsigned_char>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a4148",
+   "old_name": "FUN_001a4148",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a4148 from 'FUN_001a4148' to '__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>'",
+      "warnings": [
+       "Function name '__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>' \u2014 main part '__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>' is not PascalCase. Expected: UnguardedInsertionSortAux<unsignedChar*,UnsignedChar>",
+       "Function name '__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>' \u2014 main part '__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a4148",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__unguarded_insertion_sort_aux<unsigned_char_*,_unsigned_char>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001a42c8",
+   "old_name": "FUN_001a42c8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001a42c8 from 'FUN_001a42c8' to '__lower_bound<unsigned_char_*,_unsigned_char,_int>'",
+      "warnings": [
+       "Function name '__lower_bound<unsigned_char_*,_unsigned_char,_int>' \u2014 main part '__lower_bound<unsigned_char_*,_unsigned_char,_int>' is not PascalCase. Expected: LowerBound<unsignedChar*,UnsignedChar,Int>",
+       "Function name '__lower_bound<unsigned_char_*,_unsigned_char,_int>' \u2014 main part '__lower_bound<unsigned_char_*,_unsigned_char,_int>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001a42c8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__lower_bound<unsigned_char_*,_unsigned_char,_int>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001ab2f0",
+   "old_name": "FUN_001ab2f0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001ab2f0 from 'FUN_001ab2f0' to '__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>'",
+      "warnings": [
+       "Function name '__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>' \u2014 main part '__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>' is not PascalCase. Expected: UninitializedCopyAux<rdrawelement*,Rdrawelement*>",
+       "Function name '__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>' \u2014 main part '__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001ab2f0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__uninitialized_copy_aux<RDrawElement_*,_RDrawElement_*>",
+   "ok": true
+  },
+  {
+   "xbox": "0x001b05e8",
+   "old_name": "FUN_001b05e8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001b05e8 from 'FUN_001b05e8' to 'fgThis_RLightManager_global_ctors'",
+      "warnings": [
+       "Function name 'fgThis_RLightManager_global_ctors' \u2014 main part 'fgThis_RLightManager_global_ctors' is not PascalCase. Expected: FgthisRlightmanagerGlobalCtors",
+       "Function name 'fgThis_RLightManager_global_ctors' \u2014 main part 'fgThis_RLightManager_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001b05e8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RLightManager_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001cee80",
+   "old_name": "FUN_001cee80",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001cee80 from 'FUN_001cee80' to 'fgThis_RStateManager_global_ctors'",
+      "warnings": [
+       "Function name 'fgThis_RStateManager_global_ctors' \u2014 main part 'fgThis_RStateManager_global_ctors' is not PascalCase. Expected: FgthisRstatemanagerGlobalCtors",
+       "Function name 'fgThis_RStateManager_global_ctors' \u2014 main part 'fgThis_RStateManager_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001cee80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RStateManager_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001ceea0",
+   "old_name": "FUN_001ceea0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001ceea0 from 'FUN_001ceea0' to 'fgThis_RStateManager_global_dtors'",
+      "warnings": [
+       "Function name 'fgThis_RStateManager_global_dtors' \u2014 main part 'fgThis_RStateManager_global_dtors' is not PascalCase. Expected: FgthisRstatemanagerGlobalDtors",
+       "Function name 'fgThis_RStateManager_global_dtors' \u2014 main part 'fgThis_RStateManager_global_dtors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001ceea0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RStateManager_global_dtors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001dae60",
+   "old_name": "FUN_001dae60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001dae60 from 'FUN_001dae60' to 'fgThis_RDecalManager_global_ctors'",
+      "warnings": [
+       "Function name 'fgThis_RDecalManager_global_ctors' \u2014 main part 'fgThis_RDecalManager_global_ctors' is not PascalCase. Expected: FgthisRdecalmanagerGlobalCtors",
+       "Function name 'fgThis_RDecalManager_global_ctors' \u2014 main part 'fgThis_RDecalManager_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001dae60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RDecalManager_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001dae80",
+   "old_name": "FUN_001dae80",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001dae80 from 'FUN_001dae80' to 'fgThis_RDecalManager_global_dtors'",
+      "warnings": [
+       "Function name 'fgThis_RDecalManager_global_dtors' \u2014 main part 'fgThis_RDecalManager_global_dtors' is not PascalCase. Expected: FgthisRdecalmanagerGlobalDtors",
+       "Function name 'fgThis_RDecalManager_global_dtors' \u2014 main part 'fgThis_RDecalManager_global_dtors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001dae80",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RDecalManager_global_dtors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001e08e0",
+   "old_name": "FUN_001e08e0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001e08e0 from 'FUN_001e08e0' to 'fgThis_RLensFlareManager_global_ctors'",
+      "warnings": [
+       "Function name 'fgThis_RLensFlareManager_global_ctors' \u2014 main part 'fgThis_RLensFlareManager_global_ctors' is not PascalCase. Expected: FgthisRlensflaremanagerGlobalCtors",
+       "Function name 'fgThis_RLensFlareManager_global_ctors' \u2014 main part 'fgThis_RLensFlareManager_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001e08e0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RLensFlareManager_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001ea8c8",
+   "old_name": "FUN_001ea8c8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001ea8c8 from 'FUN_001ea8c8' to 'fgThis_RPostProcessing_global_ctors'",
+      "warnings": [
+       "Function name 'fgThis_RPostProcessing_global_ctors' \u2014 main part 'fgThis_RPostProcessing_global_ctors' is not PascalCase. Expected: FgthisRpostprocessingGlobalCtors",
+       "Function name 'fgThis_RPostProcessing_global_ctors' \u2014 main part 'fgThis_RPostProcessing_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001ea8c8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "fgThis_RPostProcessing_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001f4f70",
+   "old_name": "FUN_001f4f70",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001f4f70 from 'FUN_001f4f70' to 'ResetParticle_global_ctors'",
+      "warnings": [
+       "Function name 'ResetParticle_global_ctors' \u2014 main part 'ResetParticle_global_ctors' is not PascalCase. Expected: ResetparticleGlobalCtors",
+       "Function name 'ResetParticle_global_ctors' \u2014 main part 'ResetParticle_global_ctors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001f4f70",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResetParticle_global_ctors",
+   "ok": true
+  },
+  {
+   "xbox": "0x001f4f90",
+   "old_name": "FUN_001f4f90",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x001f4f90 from 'FUN_001f4f90' to 'ResetParticle_global_dtors'",
+      "warnings": [
+       "Function name 'ResetParticle_global_dtors' \u2014 main part 'ResetParticle_global_dtors' is not PascalCase. Expected: ResetparticleGlobalDtors",
+       "Function name 'ResetParticle_global_dtors' \u2014 main part 'ResetParticle_global_dtors' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x001f4f90",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "ResetParticle_global_dtors",
+   "ok": true
+  },
+  {
+   "xbox": "0x00204410",
+   "old_name": "FUN_00204410",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00204410 from 'FUN_00204410' to 'remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>'",
+      "warnings": [
+       "Function name 'remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>' \u2014 main part 'remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>' is not PascalCase. Expected: RemoveCopy<phelicopter**,Phelicopter**,Phelicopter*>",
+       "Function name 'remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>' \u2014 main part 'remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00204410",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "remove_copy<PHelicopter_**,_PHelicopter_**,_PHelicopter_*>",
+   "ok": true
+  },
+  {
+   "xbox": "0x002048b0",
+   "old_name": "FUN_002048b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002048b0 from 'FUN_002048b0' to 'find<SimTrackedInstance_**,_SimTrackedInstance_*>'",
+      "warnings": [
+       "Function name 'find<SimTrackedInstance_**,_SimTrackedInstance_*>' \u2014 main part 'find<SimTrackedInstance_**,_SimTrackedInstance_*>' is not PascalCase. Expected: Find<simtrackedinstance**,Simtrackedinstance*>",
+       "Function name 'find<SimTrackedInstance_**,_SimTrackedInstance_*>' \u2014 main part 'find<SimTrackedInstance_**,_SimTrackedInstance_*>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002048b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "find<SimTrackedInstance_**,_SimTrackedInstance_*>",
+   "ok": true
+  },
+  {
+   "xbox": "0x00220298",
+   "old_name": "FUN_00220298",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00220298 from 'FUN_00220298' to '__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>'",
+      "warnings": [
+       "Function name '__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' \u2014 main part '__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' is not PascalCase. Expected: PushHeap<instanceanddistance*,Int,Instanceanddistance>",
+       "Function name '__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' \u2014 main part '__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00220298",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__push_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>",
+   "ok": true
+  },
+  {
+   "xbox": "0x00220368",
+   "old_name": "FUN_00220368",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00220368 from 'FUN_00220368' to '__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>'",
+      "warnings": [
+       "Function name '__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' \u2014 main part '__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' is not PascalCase. Expected: AdjustHeap<instanceanddistance*,Int,Instanceanddistance>",
+       "Function name '__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' \u2014 main part '__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00220368",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "__adjust_heap<InstanceAndDistance_*,_int,_InstanceAndDistance>",
+   "ok": true
+  },
+  {
+   "xbox": "0x002608b0",
+   "old_name": "FUN_002608b0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002608b0 from 'FUN_002608b0' to 'PRINT_setdevicestate'",
+      "warnings": [
+       "Function name 'PRINT_setdevicestate' \u2014 main part 'PRINT_setdevicestate' is not PascalCase. Expected: PrintSetdevicestate",
+       "Function name 'PRINT_setdevicestate' \u2014 main part 'PRINT_setdevicestate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002608b0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_setdevicestate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260918",
+   "old_name": "FUN_00260918",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260918 from 'FUN_00260918' to 'PRINT_getdevicestate'",
+      "warnings": [
+       "Function name 'PRINT_getdevicestate' \u2014 main part 'PRINT_getdevicestate' is not PascalCase. Expected: PrintGetdevicestate",
+       "Function name 'PRINT_getdevicestate' \u2014 main part 'PRINT_getdevicestate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260918",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_getdevicestate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260968",
+   "old_name": "FUN_00260968",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260968 from 'FUN_00260968' to 'PRINT_setdevicename'",
+      "warnings": [
+       "Function name 'PRINT_setdevicename' \u2014 main part 'PRINT_setdevicename' is not PascalCase. Expected: PrintSetdevicename",
+       "Function name 'PRINT_setdevicename' \u2014 main part 'PRINT_setdevicename' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260968",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_setdevicename",
+   "ok": true
+  },
+  {
+   "xbox": "0x002609d0",
+   "old_name": "FUN_002609d0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002609d0 from 'FUN_002609d0' to 'PRINT_setchannelstate'",
+      "warnings": [
+       "Function name 'PRINT_setchannelstate' \u2014 main part 'PRINT_setchannelstate' is not PascalCase. Expected: PrintSetchannelstate",
+       "Function name 'PRINT_setchannelstate' \u2014 main part 'PRINT_setchannelstate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002609d0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_setchannelstate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260a18",
+   "old_name": "FUN_00260a18",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260a18 from 'FUN_00260a18' to 'PRINT_getchannelstate'",
+      "warnings": [
+       "Function name 'PRINT_getchannelstate' \u2014 main part 'PRINT_getchannelstate' is not PascalCase. Expected: PrintGetchannelstate",
+       "Function name 'PRINT_getchannelstate' \u2014 main part 'PRINT_getchannelstate' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260a18",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_getchannelstate",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260a60",
+   "old_name": "FUN_00260a60",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260a60 from 'FUN_00260a60' to 'PRINT_setchannelname'",
+      "warnings": [
+       "Function name 'PRINT_setchannelname' \u2014 main part 'PRINT_setchannelname' is not PascalCase. Expected: PrintSetchannelname",
+       "Function name 'PRINT_setchannelname' \u2014 main part 'PRINT_setchannelname' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260a60",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_setchannelname",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260ab0",
+   "old_name": "FUN_00260ab0",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260ab0 from 'FUN_00260ab0' to 'PRINT_todevice'",
+      "warnings": [
+       "Function name 'PRINT_todevice' \u2014 main part 'PRINT_todevice' is not PascalCase. Expected: PrintTodevice",
+       "Function name 'PRINT_todevice' \u2014 main part 'PRINT_todevice' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260ab0",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "PRINT_todevice",
+   "ok": true
+  },
+  {
+   "xbox": "0x00260b28",
+   "old_name": "FUN_00260b28",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x00260b28 from 'FUN_00260b28' to 'REAL_restore'",
+      "warnings": [
+       "Function name 'REAL_restore' \u2014 main part 'REAL_restore' is not PascalCase. Expected: RealRestore",
+       "Function name 'REAL_restore' \u2014 main part 'REAL_restore' contains underscores. Use PascalCase after the module prefix."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x00260b28",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "REAL_restore",
+   "ok": true
+  },
+  {
+   "xbox": "0x002f9b28",
+   "old_name": "FUN_002f9b28",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002f9b28 from 'FUN_002f9b28' to 'GetReference'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'GetReference' shares the same token set as existing function 'Get' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002f9b28",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "GetReference",
+   "ok": true
+  },
+  {
+   "xbox": "0x002fa1a8",
+   "old_name": "FUN_002fa1a8",
+   "old_plate": null,
+   "created": false,
+   "steps": [
+    [
+     "rename",
+     {
+      "status": "success",
+      "message": "Success: Renamed function at 0x002fa1a8 from 'FUN_002fa1a8' to 'AddReference'",
+      "warnings": [
+       "Strict naming enforcement disabled: would have rejected name_collision/token_subset_duplicate - Token-subset collision: 'AddReference' shares the same token set as existing function 'Add' in this program. Names that differ only by an added/removed trailing token are usually a sign that the function needs a more meaningful distinguisher."
+      ]
+     }
+    ],
+    [
+     "plate",
+     {
+      "status": "success",
+      "message": "Set plate comment for function at 0x002fa1a8",
+      "warnings": [
+       "Plate comment missing Algorithm section",
+       "Plate comment missing Parameters section",
+       "Plate comment missing Returns section"
+      ]
+     }
+    ]
+   ],
+   "new_name": "AddReference",
+   "ok": true
+  }
+ ]
+}

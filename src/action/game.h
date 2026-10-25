@@ -2,48 +2,108 @@
 #define GAME_H
 
 #include "actionhelpers.h"
+#include "../common/xbeClass.h"
 
 void Game_Run(void);
 void GameFlow_Main(void);
 bool movieFinished(void);
+void __profiling_or_debugging_hook_point(void);
 bool Graphics_IsPalI(void);
+bool IsNotPalI(void);
+bool Graphics_IsSomeGraphicsRegion(void);
+int GetTvType(void);
+HASHCODE ResetMap_LevelAfterMovie(HASHCODE movie);
+bool Graphics_IsWidescreen(void);
+bool Graphics_IsSomeRegionBasedThing(void);
 void mainloop(void);
 void bootup_bootup(void);
+void Boot_GetPTPData(void **data, uint *size);
+void __stdcall Boot_LoadPTPData(void);
 void psiInitTimeIn100ths(void);
 unsigned long long psiGetTimeIn100ths(void);
+
+// Milliseconds from a free-running host clock. Reimplemented rather than used from the image, because
+// the original divides the CPU's cycle counter by the Xbox's own 733 MHz - see game.cpp.
+double timestamp(void);
+
+// The XAPI's own performance counter pair, replaced for the same reason - see game.cpp. Patched by
+// address, so these names are ours and only the addresses matter. The parameter type is spelled by its
+// tag so that this header does not have to drag in windows.h, which collides with the Xbox-shaped
+// XINPUT structures elsewhere in the tree.
+union _LARGE_INTEGER;
+uint32_t __stdcall Xbox_QueryPerformanceCounter(union _LARGE_INTEGER *counter);
+uint32_t __stdcall Xbox_QueryPerformanceFrequency(union _LARGE_INTEGER *frequency);
 void Reset_MapLoadSettings(void);
+
+// The states on the game flow's stack (GameFlow_Main runs the top one). Our names.
+enum GameFlowState {
+  GAMEFLOW_NONE,                // the stack is empty
+  GAMEFLOW_BOOT,                // bootup_bootup, then the game
+  GAMEFLOW_GAME,
+  GAMEFLOW_LOAD_LEVEL,          // ResetMap_Load
+  GAMEFLOW_INIT_LOCKS,          // Locks_Init
+  GAMEFLOW_IDLE,                // nothing this frame
+  GAMEFLOW_MOVIE,               // until the movie ends or is skipped
+  GAMEFLOW_FADE,                // pushed: fades the screen, and is GAMEFLOW_FADING
+  GAMEFLOW_FADING,              // until the fade is done
+  GAMEFLOW_DRIVING,             // hands over to the driving engine
+  GAMEFLOW_10,                  // draws the game until CheatInfo.someThing is set
+  GAMEFLOW_DELAY,               // pushed: sets the fade viewer's fadeRate, and is GAMEFLOW_DELAYING
+  GAMEFLOW_DELAYING,            // counts it down
+  GAMEFLOW_FADE_FROZEN,         // pushed: fades the screen, and is GAMEFLOW_FADING_FROZEN
+  GAMEFLOW_FADING_FROZEN,       // until the fade is done, with only the cameras updated
+};
+
 uint GameFlow_GetState(void);
-void GameFlow_PushState(int state, float param_2, uint param_3);
 void ResetMap_LevelToLoad(HASHCODE level, bool warmReset, bool skipFmv);
+void ResetMap_GameInit(void);
+void ResetMap_GenLoadScreen(void);
+void ResetMap_Load(void);
+void GameFlow_PushState(int state, float time, uint colour);
+uint GameFlow_PopState(void);
+void set_InhibitGameDrawIfRequired(void);
+// The loading screen's picture for a level and its hint and objective text
+HASHCODE ResetMap_LevelCode2Img(HASHCODE level, char **hintOut, char **objectiveOut);
 void psiStopBackgroundMovie(void);
+void psiUpdateBackgroundMovie(void);
 void psiStartBackgroundMovie(HASHCODE hashcode, char looping, int volume);
 void GS_SetRefreshRate(int gameFrameRate, int videoFrameRate);
 void GS_PauseGame(bool pause);
 void GS_PausePlayer(char pause, ushort playerNum);
 bool GS_IsPaused(short playerNum);
 
+// GameState.difficultyModifier: the menu's three, and a fourth the code tests with the hardest
+enum Difficulty {
+    DIFF_OPERATIVE = 1,
+    DIFF_AGENT = 2,
+    DIFF_00AGENT = 3,
+    DIFF_4 = 4,
+};
+
 #pragma pack(push, 1)
 typedef struct {
     undefined4 field0_0x0;
-    undefined4 field1_0x4;
+    uint32_t collisionStamp;   // 0x04 - Collide_StraddleCels takes the next one per query, to mark portals visited
     HASHCODE NextLevelHashcode;
     HASHCODE CurrentLevelHashcode;
     undefined4 MovieHashcode;
-    undefined4 field5_0x14;
+    uchar field5_0x14;     // 0x14 - cleared with MovieHashcode by Trigger_Update, Trigger_Activate and ResetMap_Load
+    undefined field5_0x15[3];
     undefined4 ReloadGame;
     undefined4 ReloadMenupage;
     undefined4 ReloadMainMenu;
-    undefined4 maybePaused;
-    undefined4 difficultyModifier;
-    undefined maybeUnused; // no apparent sites where this is used
+    undefined4 LevelEnding;
+    undefined4 difficultyModifier;  // Difficulty
+    undefined Pulse; // no apparent sites where this is used
     undefined field12_0x2d;
     undefined field13_0x2e;
     undefined field14_0x2f;
-    undefined4 maybeLoadingBlobs;
+    undefined4 NumDraws;
     undefined4 NumFramesUnpaused;
     undefined4 VideoFrames;
     undefined4 NumFrames;
-    undefined4 InhibitGameDraw;
+    uchar InhibitGameDraw;      // 0x40 - a byte: every reader and writer takes one
+    undefined field19_0x41[3];
     undefined4 field20_0x44;
     undefined4 BaseMapHashCode;
     undefined4 LoadTimeStart;
@@ -56,16 +116,15 @@ typedef struct {
 
 static_assert(sizeof(GameState_t) == 0x58, "Bad size for GameState");
 
-#define GameState (*((GameState_t*)0x001f6580))
+extern GameState_t GameState;
+// The hashcode of the background movie that is playing, 0 when none
+extern uint32_t BackgroundMovieHashcode;
 
 struct CheatInfo_t {
     undefined4 Immortal;
     undefined4 AllWeapons;
     undefined4 UnlimitedAmmo;
-    undefined field3_0xc;
-    undefined field4_0xd;
-    undefined field5_0xe;
-    undefined field6_0xf;
+    undefined4 pauseCleared; // P_PAUSE clears it as the page opens; nothing reads it
     undefined4 someThing;
     undefined field11_0x14;
     undefined field12_0x15;
@@ -96,15 +155,33 @@ struct CheatInfo_t {
     undefined field37_0x2e;
     undefined field38_0x2f;
 };
-
+extern CheatInfo_t CheatInfo;   // game.cpp
 
 typedef struct {
     char unknown[560]; // 464 bytes on PS2
 } MPGame_t;
 
-
+// The action engine's part of the page handed between the engines (Boot_GetPTPData and Boot_LoadPTPData): the
+// codename's settings, which the driving engine hands back
 typedef struct {
-    char unknown[0xc0];
+    char codename[32];          // 0x00 ls.codename
+    char unknown20[0x60];
+    uint codenameSlot;          // 0x80 ls.slot
+    uint canSave;               // 0x84 ls.canSave
+    uint crouchToggle;          // 0x88 player 1's PlayerInput settings
+    uint manualAimToggle;       // 0x8c
+    uint autoAim;               // 0x90
+    uint autoSwitchBetterWeapon; // 0x94
+    uint input05;               // 0x98 PlayerInput::field5_0x5
+    uint levelViewOnPace;       // 0x9c
+    uint rememberZoom;          // 0xa0
+    uint sfxLanguage;           // 0xa4
+    uint flashingObjects;       // 0xa8 PlayerInput::flashingObjects
+    int controlStyle;           // 0xac
+    uint mpRadar;          // 0xb0 MPSettings.Player[0]'s
+    int healthModifier;         // 0xb4
+    uint autoAimMultiplayer;    // 0xb8
+    uint splitScreenLayout;     // 0xbc MultiplayerLayout_LeftRightOrTopBtm
     undefined4 MP_MaxDuration;
     undefined4 MP_MaxPoints;
     undefined4 MP_FriendlyFire;
@@ -115,11 +192,22 @@ typedef struct {
     undefined4 MP_RespawnMode;
     undefined4 MP_GunEmplacements;
     undefined4 MP_ExplosiveScenery;
-    char unknown1[68];
-    undefined4 Cheat_Immortal;
+    int musicVolume;            // 0xe8
+    int sfxVolume;              // 0xec
+    char defaultCodename[0x38]; // 0xf0 the second default codename (def_codename[1]), whole
+    uint unlockEverything;      // 0x128 menu_unlock_everything
+    undefined4 Cheat_Immortal;  // 0x12c
     undefined4 Cheat_UnlimitedAmmo;
     undefined4 Cheat_AllWeapons;
-    undefined4 NightfireStatus;
+    undefined4 NightfireStatus; // 0x138
+    uint bonusHi;               // 0x13c Menu_GetBonus's, player 1's
+    uint bonusLo;               // 0x140
+    int difficulty;             // 0x144
+    uint mainMenuSound;         // 0x148 ls.relatedToMainMenuSound
+    HASHCODE level;             // 0x14c the level to go to
+    uint weaponUpgrade;         // 0x150 GameState.WeaponUpgradeRelated
+    uint bestScores[12];        // 0x154 PlrStats_GetDrivingData's
+    uint bondMoments[12];       // 0x184
 } PTP_Eurocom;
 
 typedef struct {
@@ -133,7 +221,10 @@ typedef struct { /* PTP Data */
     };
     union {
         PTP_EA EACDataBuf;
-        char asBytes[1200];
+        // Named apart from the first union's asBytes. Both unions are anonymous, so their members are
+        // members of this struct, and MSVC tolerates the repeated name where every other compiler rejects
+        // it. Neither member is referenced anywhere - they record that each buffer is 1200 bytes.
+        char asBytesEAC[1200];
     };
     undefined4 Version;
     undefined4 SoundVol;
@@ -146,70 +237,54 @@ typedef struct { /* PTP Data */
     undefined4 fShouldRebootIOP;
     undefined4 fSkillLevel;
     undefined4 fLanguage;
-    short fControllerConfig;
-    undefined field14_0x98e;
-    undefined field15_0x98f;
-    bool fControllerPort;
-    undefined field17_0x991;
-    undefined field18_0x992;
-    undefined field19_0x993;
-    bool fVibration;
-    undefined field21_0x995;
-    undefined field22_0x996;
-    undefined field23_0x997;
+    int fControllerConfig;      // 0x98c
+    uint fControllerPort;
+    uint fVibration;
     undefined4 fHudAlwaysVisible;
     undefined4 fCrossHairOff;
     undefined4 fCheat;
     undefined4 fEasterEgg;
     undefined4 Scoring[9][3];
-    short fControllerConfigDriving;
-    undefined field30_0xa16;
-    undefined field31_0xa17;
+    int fControllerConfigDriving; // 0xa14
     undefined4 fLoadedFromMemCard;
     undefined4 TvType;
     undefined4 fLoadedFromCDOrDVD;
-    bool fControllerInvert;
-    undefined field36_0xa25;
-    undefined field37_0xa26;
-    undefined field38_0xa27;
+    uint fControllerInvert;     // 0xa24
     undefined4 fSoundMode;
     undefined4 fSubTitles;
     undefined4 fScreenAdjustX;
     undefined4 fScreenAdjustY;
     undefined4 fAntialiasMode;
     undefined4 fMedalAwarded;
-    bool fAutoAim;
-    undefined field46_0xa41;
-    undefined field47_0xa42;
-    undefined field48_0xa43;
-    bool fManualAimToggle;
-    undefined field50_0xa45;
-    undefined field51_0xa46;
-    undefined field52_0xa47;
-    bool fAutoSwitchWeapons;
-    undefined field54_0xa49;
-    undefined field55_0xa4a;
-    undefined field56_0xa4b;
+    uint fAutoAim;              // 0xa40
+    uint fManualAimToggle;
+    uint fAutoSwitchWeapons;
     undefined4 field57_0xa4c;
 } sNightFireShared_tag;
 
 typedef struct {
-    undefined4 field0_0x0;
-    undefined4 field1_0x4;
-    char DecoderTarget[4];
-    undefined field3_0xc;
+    obj_tag *keypadPlayer;     // 0x00 - who opened a lock's keypad (Lock_Activate)
+    BLData *keypadBLData;      // 0x04 - and his BLData
+    char DecoderTarget[4];     // 0x08 - the lock's code, copied with its KeyCodeEntry
+    undefined DecoderTargetKnown; // 0x0c - the KeyCodeEntry's discovered
     char DecoderDisplay[4];
     undefined field5_0x11;
-    char DecoderNumDigits;
-    char DecoderDigitAt;
-    undefined field8_0x14;
+    uchar DecoderNumDigits;
+    uchar DecoderDigitAt;  // the next digit C_KEYPAD_Handler writes
+    uchar DecoderDisplayShown; // 0x14 - set while a lock shows DecoderDisplay on the decryptor (Player_WeaponFiring)
     undefined field9_0x15;
     undefined field10_0x16;
     undefined field11_0x17;
 } GlobalVars_t;
-
+extern GlobalVars_t GlobalVars;   // game.cpp
 
 static_assert(sizeof(sNightFireShared_tag) == 2640, "Size of sNightFireShared not correct");
+static_assert(sizeof(PTP_Eurocom) == 0x1b4, "PTP_Eurocom is 0x1b4 bytes");
+static_assert(offsetof(PTP_Eurocom, MP_MaxDuration) == 0xc0, "PTP_Eurocom MP_MaxDuration offset incorrect");
+static_assert(offsetof(PTP_Eurocom, Cheat_Immortal) == 0x12c, "PTP_Eurocom Cheat_Immortal offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fControllerConfig) == 0x98c, "fControllerConfig offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fControllerConfigDriving) == 0xa14, "fControllerConfigDriving offset incorrect");
+static_assert(offsetof(sNightFireShared_tag, fAutoAim) == 0xa40, "fAutoAim offset incorrect");
 
 typedef enum WeaponBaseNum {
     Weap_None=0,
@@ -218,7 +293,11 @@ typedef enum WeaponBaseNum {
     Weap_RemoteMine=55,
     Weap_Satchel=59,
     Weap_OddjobHat=69,
-    Weap_MaybeHandsOnlyOrLadder = 71,
+    Weap_Hands=71,              // nothing in hand (Player_WeaponNone); the last of the weapons the weapon button
+                                // cycles, 1-71
+    // 72 and 73 empty, then the gadgets the gadget button cycles, 74-94
+    Weap_WatchLaser=78,
+    Weap_WatchLaser_Upgraded=79,
     Weap_Ronin=82,
     Weap_Camera=84,
     Weap_Camera_Upgraded=85,
@@ -226,10 +305,12 @@ typedef enum WeaponBaseNum {
     Weap_Decryptor_Upgraded=87,
     Weap_QWorm = 88,
     Weap_MaybeNightvision = 0x5d,
+    // 95 on, which neither button reaches: the helicopters' guns and missiles, the sub's and the space laser, and
+    // second entries of some of the player's (smoke grenade, laser, satchel, AT-600, Phoenix Samurai)
     Weap_CopterGunCastle=97,
     Weap_CopterMissileCastle=98,
-    Weap_Laser=103,
-    Weap_SubLaser=104,
+    Weap_SubLaser=103,          // the sub's laser, and its missiles (names ours: Sub.cpp is all that fires them)
+    Weap_SubMissile=104,
     Weap_SmokeGrenade=105,
     Weap_LaserBurst1=106,
     Weap_SpaceLaser=107,
@@ -240,148 +321,264 @@ typedef enum WeaponBaseNum {
     NUM_WEAPONS=114,
 } WeaponBaseNum;
 
-typedef struct {
-    short weaponVariantNum; /* Unique index into this array */
-    char weaponBaseNum; /* WeaponBaseNum: Upgrades/variants will have the same base number */
-    undefined field2_0x3;
-    bool isBaseWeapon;
-    uchar offsetToNextAltFireVariant;
-    undefined1 maybeFlags;
-    undefined field6_0x7;
-    float maybeExplodeRange;
-    float damage;
-    ushort field9_0x10;
-    undefined field10_0x12;
-    undefined field11_0x13;
-    float autoaimRelated;
-    undefined1 numBulletsPerShot;
-    undefined field14_0x19;
-    undefined field15_0x1a;
-    undefined field16_0x1b;
-    float someDistance;
-    float unknownPurposeMaybeFloat;
-    float maybeAccuracyRelated;
-    short indexIntoSomePlayerAmmoArray;
-    short maybeUnused;
-    short droneBulletBurstTimeRelated;
-    short unk15;
-    Action_TranslatedText fireModePrimary;
-    Action_TranslatedText fireModeSecondary;
-    Action_TranslatedText weaponNameLongSp;
-    Action_TranslatedText weaponNameShortMp;
-    int unk16;
-    uint unk17;
-    HASHCODE muzzleFlash1stPerson;
-    HASHCODE muzzleFlash3rdPerson;
-    byte animDatumRelated3;
-    undefined field33_0x51;
-    undefined field34_0x52;
-    undefined field35_0x53;
-    undefined1 muzzleFlash_b; /* Created by retype action */
-    undefined1 muzzleFlash_g; /* Created by retype action */
-    undefined1 muzzleFlash_r; /* Created by retype action */
-    undefined field39_0x57;
-    float muzzleFlashBrightness; /* Created by retype action */
-    HASHCODE projectileGfx;
-    ushort animDatumRelated2;
-    undefined field43_0x62;
-    undefined field44_0x63;
-    undefined field45_0x64;
-    undefined field46_0x65;
-    undefined field47_0x66;
-    undefined field48_0x67;
-    uint someFlags; /* Created by retype action */
-    uint flagsForSwooshAndCasing; /* Created by retype action */
-    uint someFlagsRelatedToExplosiveTimer;
-    short unk18;
-    short swooshRelated;
-    short casingDelayFrames; /* Created by retype action, size unclear */
-    short unk19;
-    HASHCODE suppressorGfx;
-    HASHCODE wpn3rdPersonGfx; /* Created by retype action */
-    uint weaponAnimationSet; /* Created by retype action */
-    float maxZoom;
-    float cameraSwingAmt; /* Created by retype action */
-    uchar ammoType; /* Created by retype action */
-    uint8_t cooldownTimerIncreaseAmount;
-    short clipSizeOrCooldown; /* Created by retype action */
-    uint8_t rumble; /* Created by retype action */
-    uint8_t _pad1;
-    uint8_t _pad2;
-    uint8_t _pad3;
-    float accuracyModifierSomehow;
-    float unk22;
-    HASHCODE animScriptTag; /* Created by retype action */
-    HASHCODE someAnimhc3;
-    HASHCODE someAnimHsh;
-    HASHCODE maybeAnAnimScript;
-    HASHCODE maybeWeaponFireAnimHashcode2;
-    HASHCODE maybeWeaponFireAnimHashcode;
-    HASHCODE someAnimHC2;
-    HASHCODE someAnimHC;
-    HASHCODE animationHashcode;
-    HASHCODE animSpeedRelated; /* Could also be a hashcode? */
-    HASHCODE field80_0xc8;
-    HASHCODE anotherAnimScriptTag; /* Created by retype action */
-    HASHCODE field82_0xd0;
-    HASHCODE field83_0xd4;
-    HASHCODE animationScript;
-    HASHCODE weaponModelHashcode;
-    float animRelated1[3];
-    float animRelated2[3];
-    float casingSpawnPos[3];
-    undefined4 multiplayerWeaponFiredCallback; /* Created by retype action */
-    undefined field90_0x108;
-    undefined field91_0x109;
-    undefined field92_0x10a;
-    undefined field93_0x10b;
+// weapon_definition_tag::weaponFlags (docs/weapons.md)
+enum WeaponFlags {
+    WPNFLAG_UNDERWATER = 0x2,               // fires under water
+    WPNFLAG_LASER_SIGHT = 0x8,
+    WPNFLAG_SWITCH_TO_ALT = 0x10,           // out of ammo, the alt-fire variant is tried first
+    WPNFLAG_NO_AMMO_COUNT = 0x20,           // no ammo counter on the HUD
+    WPNFLAG_REAL_SCOPE = 0x40,              // scoped: the gun hidden, alt fire and reload blocked, more weapon states
+                                            // drop the scope
+    WPNFLAG_SHELL_RELOAD = 0x100,           // reloads a shell at a time
+    WPNFLAG_ALT_RELOADS = 0x200,            // the reload anims take turns
+    WPNFLAG_CONTINUOUS = 0x400,             // fires while the button is held, then plays animFireAlt
+    WPNFLAG_SILENCER = 0x800,
+    WPNFLAG_SLIDE_LOCK = 0x1000,
+    WPNFLAG_NO_SMOKE = 0x2000,
+    WPNFLAG_CAN_BE_SHOT = 0x4000,           // the projectile goes off when shot
+    WPNFLAG_SINGLE_ACTION = 0x8000,         // no refire until the fire anim ends; in weapon state 9 the scope may
+                                            // stay up, but not be raised
+    WPNFLAG_FROM_MUZZLE = 0x10000,          // the shot starts half way between the eye and the muzzle
+    WPNFLAG_DETONATOR = 0x20000,
+    WPNFLAG_TWIN_GUNS = 0x40000,
+    WPNFLAG_RANDOM_FIRE = 0x80000,
+    WPNFLAG_REFIRE_HELD = 0x100000,         // the fire anim starts again while the button is held
+    WPNFLAG_PERFECT_WHEN_SCOPED = 0x400000,
+};
+
+// weapon_definition_tag::projectileFlags (docs/weapons.md)
+enum ProjectileFlags {
+    PROJFLAG_SMOKE = 0x2,
+    PROJFLAG_REMOTE_CONTROL = 0x4,
+    PROJFLAG_GRAVITY = 0x8,
+    PROJFLAG_NO_MODEL = 0x10,
+    PROJFLAG_DUST = 0x20,
+    PROJFLAG_CASING = 0x40,
+    PROJFLAG_TASER = 0x80,
+    PROJFLAG_LASER = 0x100,
+    PROJFLAG_ACCELERATES = 0x200,
+    PROJFLAG_THROWN = 0x400,
+    PROJFLAG_MATERIAL_MASK = 0x800,
+    PROJFLAG_TRACER = 0x1000,
+    PROJFLAG_LIGHT = 0x2000,
+    PROJFLAG_GRAPPLE_LINE = 0x4000,
+    PROJFLAG_TUMBLES = 0x8000,
+    PROJFLAG_SWOOSH = 0x10000,
+    PROJFLAG_HOMING = 0x20000,
+    PROJFLAG_FLY_BY = 0x40000,
+    PROJFLAG_FINE_DUST = 0x80000,
+};
+
+// weapon_definition_tag::impactFlags (docs/weapons.md)
+enum ImpactFlags {
+    IMPACTFLAG_MARKS = 0x2,
+    IMPACTFLAG_EXPLODES = 0x4,
+    IMPACTFLAG_RICOCHETS = 0x10,
+    IMPACTFLAG_GRAPPLE = 0x40,
+    IMPACTFLAG_BOUNCES = 0x80,
+    IMPACTFLAG_STICKS = 0x100,
+    IMPACTFLAG_FUSE = 0x200,
+    IMPACTFLAG_LASER_EFFECT = 0x1000,
+    IMPACTFLAG_FLASH_BANG = 0x2000,
+    IMPACTFLAG_LONG_FUSE = 0x10000,
+    IMPACTFLAG_SMOKE_CLOUD = 0x20000,
+    IMPACTFLAG_TRIP_BOMB = 0x80000,
+    IMPACTFLAG_BEAM_EXPLODES = 0x100000,
+    IMPACTFLAG_BEAM_EXPLODES_2 = 0x200000,
+};
+
+// One entry per weapon variant; weapon_data[115] at 0x0018cfa0. Entries 0x35.. are built by
+// WeaponDataTableInit (0x000f5530). See docs/weapons.md.
+typedef struct weapon_definition_tag {
+    short weaponVariantNum;           // 0x000 this entry's index
+    short weaponBaseNum;              // 0x002 base variant of the group
+    bool isBaseWeapon;                // 0x004 owns the group's inventory slot
+    int8_t offsetToNextAltFireVariant; // 0x005 entry offset to the alt-fire variant (signed)
+    uchar botWeaponClass;             // 0x006 1 handgun 2 auto 3 sniper 4 explosive
+    uchar _pad07;                     // 0x007
+    float explodeRadius;              // 0x008 explosion size, units
+    float damage;                     // 0x00c damage per hit / explosion strength
+    ushort damageClass;               // 0x010 weapon class bit, see doc
+    uchar _pad12[2];                  // 0x012
+    float autoAimStrength;            // 0x014 percent
+    uchar numBulletsPerShot;          // 0x018 projectiles per shot
+    uchar _pad19[3];                  // 0x019
+    float range;                      // 0x01c max travel / use range, units
+    float projectileSpeed;            // 0x020 units per 60 Hz frame
+    float baseSpread;                 // 0x024 x0.0014 rad
+    short shotsPerTrigger[2];         // 0x028 per fire mode, 999 = auto
+    short droneBurstLength;           // 0x02c shots per drone burst
+    char numFireModes;                // 0x02e modes the alt-fire button cycles
+    uchar _pad2f;                     // 0x02f
+    Action_TranslatedText fireModeName[2]; // 0x030 HUD text per fire mode
+    Action_TranslatedText nameLong;   // 0x038 single-player HUD name
+    Action_TranslatedText nameShort;  // 0x03c multiplayer HUD name
+    int refireDelay;                  // 0x040 frames between shots (min 1)
+    ushort bulletSpawnFrame;          // 0x044 fire-anim frame that spawns the bullet
+    uchar _pad46[2];                  // 0x046
+    HASHCODE muzzleFlash1stPerson;    // 0x048 first-person flash entity (0x02)
+    HASHCODE muzzleFlash3rdPerson;    // 0x04c third-person flash entity (0x02)
+    uchar weaponDatum;                // 0x050 first weapon datum on the skeleton, 0xff none
+    uchar muzzleFlashAlphaMin;        // 0x051 flash sprite brightness range
+    uchar muzzleFlashAlphaMax;        // 0x052
+    uchar _pad53;                     // 0x053
+    uchar muzzleFlash_b;              // 0x054 light colour, blue
+    uchar muzzleFlash_g;              // 0x055 light colour, green
+    uchar muzzleFlash_r;              // 0x056 light colour, red
+    uchar _pad57;                     // 0x057
+    float muzzleLightRadius;          // 0x058 Light_Create radius
+    HASHCODE projectileGfx;           // 0x05c projectile entity (0x02)
+    ushort fireSound3rdPerson;        // 0x060 SFX id for drones/scripts
+    uchar _pad62[2];                  // 0x062
+    uchar unk64;                      // 0x064 0/2/3, no reader found
+    uchar _pad65[3];                  // 0x065
+    uint weaponFlags;                 // 0x068 WeaponFlags
+    uint projectileFlags;             // 0x06c ProjectileFlags
+    uint impactFlags;                 // 0x070 ImpactFlags
+    short swooshInterval;             // 0x074 frames between trail segments
+    short swooshLifetime;             // 0x076 trail segment lifetime, frames
+    uchar casingDelayFrames;          // 0x078 frames before the casing appears
+    uchar _pad79;                     // 0x079
+    short effectDurationFrames;       // 0x07a 15 s / 60 s, no reader found
+    HASHCODE suppressorGfx;           // 0x07c silencer entity (0x02)
+    HASHCODE worldModelGfx;           // 0x080 held/pickup entity (0x02)
+    uchar animSet;                    // 0x084 third-person AnimSet
+    uchar _pad85[3];                  // 0x085
+    float maxZoom;                    // 0x088 max scope zoom factor
+    float scopeSway;                  // 0x08c sway x (zoom - 1)
+    uchar ammoType;                   // 0x090 index into ammo_data / BLData.ammo
+    uchar ammoPerShot;                // 0x091
+    short clipSize;                   // 0x092 clip or max charge
+    uchar rumble;                     // 0x094 rumble strength 0-100
+    uchar _pad95[3];                  // 0x095
+    float spreadPerShot;              // 0x098 bloom per shot
+    float unk9c;                      // 0x09c no reader found
+    HASHCODE animIdle;                // 0x0a0
+    HASHCODE animReload;              // 0x0a4
+    HASHCODE animReloadStart;         // 0x0a8
+    HASHCODE animReloadEnd;           // 0x0ac
+    HASHCODE animFire;                // 0x0b0
+    HASHCODE animFireAlt;             // 0x0b4
+    HASHCODE animScopeIn;             // 0x0b8
+    HASHCODE animScopeOut;            // 0x0bc
+    HASHCODE animRaise;               // 0x0c0
+    HASHCODE animLower;               // 0x0c4
+    HASHCODE animModeSwitch;          // 0x0c8
+    HASHCODE animFidget;              // 0x0cc
+    HASHCODE animRelax;               // 0x0d0
+    HASHCODE animRelaxEnd;            // 0x0d4
+    HASHCODE animLowerRelaxed;        // 0x0d8
+    HASHCODE weaponModelHashcode;     // 0x0dc first-person model (0x05)
+    float viewOffset[3];              // 0x0e0 view-model offset, SP standing
+    float viewOffsetAlt[3];           // 0x0ec MP / SP crouched
+    float casingEjectVelocity[3];     // 0x0f8 bone space, units per frame
+    void (*onFired)(obj_tag *player); // 0x104 always NULL
+    void (*onImpact)(obj_tag *bullet, plane_equ_tag *plane, _VECTOR *pos); // 0x108 always NULL
 } weapon_definition_tag;
 
-static_assert(sizeof(weapon_definition_tag) == 0x10c, "Size of weapon_definition_tag not correct");
-static_assert(offsetof(weapon_definition_tag,someDistance) == 0x1c, "someDistance is in the wrong place");
+LAYOUT_32(sizeof(weapon_definition_tag) == 0x10c, "weapon_definition_tag size");
+static_assert(offsetof(weapon_definition_tag, botWeaponClass) == 0x006, "botWeaponClass");
+static_assert(offsetof(weapon_definition_tag, damageClass) == 0x010, "damageClass");
+static_assert(offsetof(weapon_definition_tag, range) == 0x01c, "range");
+static_assert(offsetof(weapon_definition_tag, shotsPerTrigger) == 0x028, "shotsPerTrigger");
+static_assert(offsetof(weapon_definition_tag, numFireModes) == 0x02e, "numFireModes");
+static_assert(offsetof(weapon_definition_tag, refireDelay) == 0x040, "refireDelay");
+static_assert(offsetof(weapon_definition_tag, weaponDatum) == 0x050, "weaponDatum");
+static_assert(offsetof(weapon_definition_tag, fireSound3rdPerson) == 0x060, "fireSound3rdPerson");
+static_assert(offsetof(weapon_definition_tag, weaponFlags) == 0x068, "weaponFlags");
+static_assert(offsetof(weapon_definition_tag, casingDelayFrames) == 0x078, "casingDelayFrames");
+static_assert(offsetof(weapon_definition_tag, animSet) == 0x084, "animSet");
+static_assert(offsetof(weapon_definition_tag, ammoType) == 0x090, "ammoType");
+static_assert(offsetof(weapon_definition_tag, clipSize) == 0x092, "clipSize");
+static_assert(offsetof(weapon_definition_tag, animIdle) == 0x0a0, "animIdle");
+static_assert(offsetof(weapon_definition_tag, weaponModelHashcode) == 0x0dc, "weaponModelHashcode");
+static_assert(offsetof(weapon_definition_tag, casingEjectVelocity) == 0x0f8, "casingEjectVelocity");
+LAYOUT_32(offsetof(weapon_definition_tag, onImpact) == 0x108, "onImpact");
 
 typedef struct {
     uint paused;
-    char unknown_pad[0x1c-4];
+    uint victories;         // the debriefing's "Victories"
+    uint deaths;            // the debriefing's "Deaths" (Ghidra: pointsScored)
+    char unknown0c[4];
+    uint unknown10;         // 0x10 MP_PlayerKilled adds one with each victory and clears it on a suicide
+    char unknown14[4];
+    float points;           // the debriefing's "Points"
     obj_tag* playerObj;
-    short maybeIdxOfLastInjurer; // Index of who or what last dealt me damage? -2 = environment?
+    short idxOfLastInjurer; // the agent who last hurt this player, by index; negative for none
     short friendlyFireLabelTimer;
     short friendlyFireProtectionLabelTimer;
-    char unknown_pad1[2];
-    short maybeIdxOfMyAssassin;
-    char unknown_pad2[0x30-0x2a];
+    ushort flags;           // 0x26 MPGamePlayerFlags; NDrone2_FindOpponent tests the low 4 bits
+    short idxOfMyKiller;
+    char unknown2a[2];
+    float hillSoundTime;    // 0x2c MPGame.TimeIncPaused when MP_KOHUpdate last played the hill's entry sound
 } MPGamePlayer;
 
-static_assert(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+enum MPGamePlayerFlags : ushort {
+    MPPLAYER_HAS_FLAG = 1,      // holds the enemy flag (MP_FlagUpdate); a CTF bot with it heads for its base
+    MPPLAYER_HAS_BLUEPRINT = 2, // holds the blueprint; a bot with it heads for the espionage base, and
+                                // MP_BluePrintReachedBase clears it
+    MPPLAYER_GOLDENEYE_KEY = 4,     // holds the GoldenEye key (MP_GoldenEyeUpdate)
+    MPPLAYER_GOLDENEYE_CRYSTAL = 8, // holds the GoldenEye crystal (MP_GoldenEyeUpdate)
+    MPPLAYER_IN_HILL = 0x10,    // inside the King of the Hill object's box (MP_KOHUpdate); a bot with it picks no objective
+};
+
+LAYOUT_32(sizeof(MPGamePlayer) == 0x30, "MPGamePlayer is wrong size"); // Determined from stride length in various funcs
+static_assert(offsetof(MPGamePlayer, playerObj) == 0x1c, "Wrong offset for MPGamePlayer.playerObj");
+LAYOUT_32(offsetof(MPGamePlayer, flags) == 0x26, "Offset of MPGamePlayer.flags wrong");
+LAYOUT_32(offsetof(MPGamePlayer, hillSoundTime) == 0x2c, "Offset of MPGamePlayer.hillSoundTime wrong");
+
+// MPGame.EndGameFlowState, as MP_Update steps it
+enum MPEndState : uint32_t {
+    MPEND_PLAYING = 0,
+    MPEND_DECIDE_WINNER = 1,    // the points limit, or Top Agent's last agents out: MP_SortOutWhoWon
+    MPEND_TIME_UP = 2,
+    MPEND_SHOW_RESULT = 3,      // five seconds of the result, then the level ends
+    MPEND_DEBRIEF = 4,          // the fade to the debriefing
+    MPEND_LEAVING = 5,
+    MPEND_RESTART_ROUND = 6,    // a demolition or protection round over: the scenario restarts
+};
+
+// The marks over the assassin and the target a player sees
+typedef struct {
+    sprite *target;
+    sprite *assassin;
+} MPRadarMarks;
 
 typedef struct {
   // Note that PS2 and Xbox have different number of entries in MPGame! PS2 has 8, Xbox has 10
-  MPGamePlayer players[10];
+  MPGamePlayer players[NUM_AGENTS];
   // Immediately following is more state related to MP game
-  uint unknown_1; // end conditions / debriefing / objective related
-  uint unknown_2; // end conditions / debriefing
-  uint EndGameFlowState;
-  uint unknown_3; // end conditions
-  uint TimeUnpaused;
+  float teamScore[2]; // by MPTeam: Phoenix, MI6 (MP_SortOutWhoWon, the debriefing)
+  uint EndGameFlowState; // MPEndState
+  uint unknown_3; // MP_CheckForEndCondition: the highest score, team or player
+  float TimeUnpaused; // seconds of unpaused play, against TimeLimit (MP_CheckForEndCondition)
   float TimeLimit;
   float restartScenarioTimeout;
-  uint TimeIncPaused; // pickups, opponent selection, visit times?? possibly misidentified?
+  float TimeIncPaused; // seconds of unpaused play, counted even with switch_MP4EVER: pickup visit times, bot goals
   float winStateTimeout; // MP init and update
   float lastTimePaused; // end conditions
-  short unknown_maybe_capture_state; // player status / goals
-  short unknown_maybe_unused; // restart
-  short unknown_9; // uplink, goldeneye, blueprint timers?
-  short maybe_pad;
-  sprite* radar_related[2 * 4]; // One pair per human participant
+  union {
+    struct {
+      short phoenixObjectiveFlags; // player status / goals
+      short mi6ObjectiveFlags; // restart
+      short unknown_9; // uplink, goldeneye, blueprint timers?
+    };
+    ushort teamObjectiveFlags[3]; // by MPTeam: bits 1 and 2 match an objective's MP_OBJ_EXT.flags, and a bot drops
+                                  // its goal for an objective whose bit is set (BOTSTATE_processGoals). BOTSTATE_pickGoal
+                                  // reads it for NO_TEAM too, which is unknown_9
+  };
+  short _pad20e;
+  MPRadarMarks radarMarks[NUM_PLAYERS]; // 0x210 - per human player, shown over the others in Assassin (HUD_RadarUpdate)
 } MPGameStruct;
 
-static_assert(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
+LAYOUT_32(sizeof(MPGameStruct) == 0x230, "MPGameStruct is wrong size"); // Determined from MP_Init
 
-static_assert(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
+LAYOUT_32(offsetof(MPGameStruct, lastTimePaused) == 0x204, "Offset of lastTimePaused wrong");
+LAYOUT_32(offsetof(MPGameStruct, TimeIncPaused) == 0x1fc, "Offset of TimeIncPaused wrong");
+LAYOUT_32(offsetof(MPGameStruct, teamObjectiveFlags) == 0x208, "Offset of teamObjectiveFlags wrong");
 
 #pragma pack(pop)
 
-
-#define MPGame (*(MPGameStruct(*))0x00262738)
+extern MPGameStruct MPGame;
 
 #endif // GAME_H

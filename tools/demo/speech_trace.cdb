@@ -1,0 +1,23 @@
+$$ cdb script: logs the drones' punch, pain, death and speech calls during a time demo playback, with the frame
+$$ (GameState.NumFramesUnpaused) of each. All are the original's functions in default.xbe. Used for the open
+$$ question in docs/audio-inventory.md ("A guard's knockout cry not heard in CastleExterior"). From Release\:
+$$
+$$   set NIGHTFIRE_DEMO_PLAY=..\tests\demos\action\CastleExterior-20261016-031815.nfdemo
+$$   set NIGHTFIRE_DEMO_FAST=4
+$$   "C:\Program Files (x86)\Windows Kits\10\Debuggers\x86\cdb.exe" -cf ..\tools\demo\speech_trace.cdb -logo trace.log .\action.exe
+$$
+$$ The breakpoints go in once actioninject.dll loads: the XBE is mapped by then, and a breakpoint set earlier would
+$$ be overwritten by the mapping.
+sxe ld:actioninject
+g
+bp 0x0003e010 ".printf \"PUNCH f=%u drone=%08x health=%08x\\n\", poi(0x1f65b4), poi(poi(@esp+4)+4), poi(poi(poi(@esp+4)+4)+0x90); gc"
+bp 0x0003e148 ".printf \"  knocked out by the punch (no pain cry)\\n\"; gc"
+bp 0x0003e1a4 ".printf \"  survived the punch: PainTalk\\n\"; gc"
+bp 0x0003bd80 ".printf \"PAINTALK f=%u caller=%08x drone=%08x\\n\", poi(0x1f65b4), poi(@esp), poi(poi(@esp+4)+4); gc"
+bp 0x0003be90 ".printf \"DEATHTALK f=%u caller=%08x drone=%08x\\n\", poi(0x1f65b4), poi(@esp), poi(poi(@esp+4)+4); gc"
+bp 0x00037530 ".printf \"SPEECH f=%u sfx=%u caller=%08x drone=%08x\\n\", poi(0x1f65b4), poi(@esp+8), poi(@esp), poi(poi(@esp+4)+4); gc"
+bp 0x00037340 ".printf \"PLAYSFX f=%u caller=%08x\\n\", poi(0x1f65b4), poi(@esp); gc"
+sxd av
+sxd ld
+g
+q

@@ -1,0 +1,75 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000cd660",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::~WTargetable(void)"
+  },
+  {
+   "address": "0x000cd670",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::UpdateVisibility(void)"
+  },
+  {
+   "address": "0x000cd740",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "WTargetable::GetVelocity(COORD3 &) const"
+  },
+  {
+   "address": "0x000cd840",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "WTargetable::DistFromCamera(int)"
+  },
+  {
+   "address": "0x000cd890",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "WTargetable::DistFromScreenPos(COORD2 &)"
+  },
+  {
+   "address": "0x000cd8d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::DistFromScreenCenter(void)"
+  },
+  {
+   "address": "0x000cd920",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::AddReference(void)"
+  },
+  {
+   "address": "0x000cda90",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::UpdatePosition(void)"
+  },
+  {
+   "address": "0x000cdb80",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WTargetable::RemoveReference(void)"
+  }
+ ]
+}

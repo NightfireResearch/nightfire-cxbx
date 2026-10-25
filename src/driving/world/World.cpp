@@ -1,0 +1,584 @@
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+#include "World.h"
+
+#include "CollisionManager.h"
+#include "Grid.h"
+#include "SoundGroup.h"                   // WSound
+#include "Tree.h"
+#include "TriggerManager.h"
+#include "WorldPos.h"
+
+#include <stdio.h>
+#include <string.h>
+
+#include "../../common/xbeOverload.h"
+#include "../../helpers.h"
+#include "../data/RCARPFile.h"
+#include "../engine/CoreFoundation.h"     // NullFunction, ThrowLengthError
+#include "../game/AICharacter.h"
+#include "../game/AIElements.h"
+#include "../game/AIRoadSpawn.h"
+#include "../game/AIVehicleController.h"
+#include "../game/Gfx.h"
+#include "../game/LoadingScreen.h"
+#include "../game/MissionManager.h"
+#include "../engine/UGroup.h"
+#include "../engine/UMemory.hpp"
+#include "../game/Simulation.h"
+#include "../render/PathEngine.h"
+#include "../render/RSceneObj.hpp"
+#include "../../common/xbeClass.h"        // LAYOUT_32
+
+// XBE_GLOBAL(0x0023f310, 0x4)
+WWorld *fgWorld;
+
+// ---------------------------------------------------------------------------------------------------------------
+// WWorld (0x000d1210-0x000d2860 and its InitSingleton at 0x000595c0), ported from the listing, with the compiled
+// copy of std::vector<WorldSceneObject> the linker put among its methods. The systems the world starts and stops
+// are called through their ports where they exist, at their addresses otherwise.
+// ---------------------------------------------------------------------------------------------------------------
+
+// ---- the game's globals
+// XBE_GLOBAL(0x0023f290, 0x80)
+char TrackName[0x80];
+
+namespace {
+
+const Coord4 kDefaultVector = {0.0f, 0.0f, 0.0f, 1.0f};
+
+constexpr uint32_t kTagMap = 0x4d617020;            // 'Map '
+constexpr uint32_t kTagWorldMap = 0x576d6170;       // 'Wmap'
+constexpr uint32_t kTagAIElements = 0x4149456c;     // 'AIEl'
+constexpr uint32_t kTagRules = 0x52756c65;          // 'Rule'
+constexpr uint32_t kTagMissionSets = 0x4d536574;    // 'MSet'
+constexpr uint32_t kTagAudio = 0x41756469;          // 'Audi'
+constexpr uint32_t kTagTriggers = 0x54726772;       // 'Trgr'
+constexpr uint32_t kTagInstances = 0x696e2020;      // 'in  '
+constexpr uint32_t kTagProcAnims = 0x70732020;      // 'ps  '
+constexpr uint32_t kTagEnviro = 0x456e7669;         // 'Envi'
+constexpr uint32_t kTagAttributeName = 0x44424e20;  // 'DBN '
+
+LAYOUT_32(sizeof(RSceneObj) == 0x40, "a scene object is 64 bytes");
+
+char *CopyString(const char *text) {
+    char *copy = static_cast<char *>(OperatorNewArray(unsigned(strlen(text) + 1)));
+    strcpy(copy, text);
+    return copy;
+}
+
+RSceneObj *NewSceneObj(CARP::Instance *instance) {
+    void *memory = UMemory::FastAlloc(sizeof(RSceneObj), "RSceneObj");
+    return memory != NULL ? static_cast<RSceneObj *>(memory)->Construct(instance) : NULL;
+}
+
+void DeleteSceneObj(RSceneObj *sceneObj) {
+    typedef RSceneObj *(RSceneObj::*DeletingDestructor)(unsigned flags);
+    (sceneObj->*XbeVirtual<DeletingDestructor>(sceneObj, 0))(1);
+}
+
+// The simulation tracks the instance unless its model is the one it never tracks.
+void TrackInstance(CARP::Instance *instance) {
+    const WorldModelInfo *info = ArticleOf(instance)->model->info;
+    if (info == NULL || info->id != kUntrackedModel)
+        fgSimulation.TrackInstance(instance, 0);
+}
+
+}  // namespace
+
+// ---- the scene object vector
+
+// FUNC_AT(0x000d1520)
+uint32_t WorldSceneObjectList::Size() const {
+    return first == NULL ? 0 : uint32_t(last - first);
+}
+
+// FUNC_AT(0x000d1550)
+void WorldSceneObjectList::Deallocate(WorldSceneObject *block, uint32_t count) {
+    if (block != NULL)
+        UMemory::FastFree(block, count * sizeof(WorldSceneObject));
+}
+
+// FUNC_AT(0x000d16b0)
+void WorldSceneObjectFill(WorldSceneObject *from, WorldSceneObject *to, const WorldSceneObject *value) {
+    for (; from != to; from++)
+        *from = *value;
+}
+
+// FUNC_AT(0x000d16e0)
+WorldSceneObject** WorldSceneObjectCopyBackwardTagged(WorldSceneObject **result, WorldSceneObject *from,
+                                                      WorldSceneObject *to, WorldSceneObject *destEnd) {
+    while (to != from)
+        *--destEnd = *--to;
+    *result = destEnd;
+    return result;
+}
+
+// FUNC_AT(0x000d1720)
+WorldSceneObject* WorldSceneObjectUninitializedCopy(WorldSceneObject *from, WorldSceneObject *to,
+                                                    WorldSceneObject *dest) {
+    for (; from != to; from++, dest++)
+        if (dest != NULL)
+            *dest = *from;
+    return dest;
+}
+
+// FUNC_AT(0x000d1a10)
+WorldSceneObject** WorldSceneObjectCopyBackward(WorldSceneObject **result, WorldSceneObject *from,
+                                                WorldSceneObject *to, WorldSceneObject *destEnd) {
+    return WorldSceneObjectCopyBackwardTagged(result, from, to, destEnd);
+}
+
+// FUNC_AT(0x000d1a50)
+void WorldSceneObjectUninitializedFill(WorldSceneObject *dest, uint32_t count, const WorldSceneObject *value) {
+    for (; count != 0; count--, dest++)
+        if (dest != NULL)
+            *dest = *value;
+}
+
+// FUNC_AT(0x000d1a80)
+WorldSceneObject* WorldSceneObjectList::Ucopy(WorldSceneObject *from, WorldSceneObject *to, WorldSceneObject *dest) {
+    return WorldSceneObjectUninitializedCopy(from, to, dest);
+}
+
+// FUNC_AT(0x000d1ab0)
+WorldSceneObject* WorldSceneObjectList::Ufill(WorldSceneObject *dest, uint32_t count, const WorldSceneObject *value) {
+    WorldSceneObjectUninitializedFill(dest, count, value);
+    return dest + count;
+}
+
+// FUNC_AT(0x000d1ae0)
+void WorldSceneObjectList::Tidy() {
+    if (first != NULL)
+        Deallocate(first, Capacity());
+    first = NULL;
+    last = NULL;
+    end = NULL;
+}
+
+// FUNC_AT(0x000d1ba0)
+void WorldSceneObjectList::Xlen() {
+    WORLD_UNTESTED("WorldSceneObjectList::Xlen");
+    ThrowLengthError("vector<T> too long");
+}
+
+// _Insert_n: room made by moving the tail, or a new array half as large again (or as large as needed). Open
+// reserves exactly what it pushes, so nothing reaches it.
+// FUNC_AT(0x000d1c20)
+void WorldSceneObjectList::InsertN(WorldSceneObject *where, uint32_t count, const WorldSceneObject *value) {
+    WORLD_UNTESTED("WorldSceneObjectList::InsertN");
+    WorldSceneObject held = *value;   // in case value is in the vector
+    uint32_t capacity = Capacity();
+    if (count == 0)
+        return;
+    if (kMaxSize - Size() < count) {
+        Xlen();
+        return;
+    }
+    if (capacity < Size() + count) {
+        capacity = kMaxSize - capacity / 2 < capacity ? 0 : capacity + capacity / 2;
+        if (capacity < Size() + count)
+            capacity = Size() + count;
+        WorldSceneObject *storage =
+            static_cast<WorldSceneObject *>(UMemory::FastAlloc(capacity * sizeof(WorldSceneObject), "STL"));
+        WorldSceneObject *at = WorldSceneObjectUninitializedCopy(first, where, storage);
+        WorldSceneObjectUninitializedFill(at, count, &held);
+        WorldSceneObjectUninitializedCopy(where, last, at + count);
+        count += Size();
+        Deallocate(first, Capacity());
+        end = storage + capacity;
+        last = storage + count;
+        first = storage;
+    } else if (uint32_t(last - where) < count) {
+        Ucopy(where, last, where + count);
+        Ufill(last, count - uint32_t(last - where), &held);
+        last += count;
+        WorldSceneObjectFill(where, last - count, &held);
+    } else {
+        WorldSceneObject *oldLast = last;
+        last = Ucopy(oldLast - count, oldLast, oldLast);
+        WorldSceneObject *copied;
+        WorldSceneObjectCopyBackward(&copied, where, oldLast - count, oldLast);
+        WorldSceneObjectFill(where, where + count, &held);
+    }
+}
+
+// FUNC_AT(0x000d1f50)
+void WorldSceneObjectList::Reserve(uint32_t count) {
+    if (count > kMaxSize) {
+        Xlen();
+        return;
+    }
+    if (Capacity() < count) {
+        WorldSceneObject *storage =
+            static_cast<WorldSceneObject *>(UMemory::FastAlloc(count * sizeof(WorldSceneObject), "STL"));
+        WorldSceneObjectUninitializedCopy(first, last, storage);
+        uint32_t size = Size();
+        Deallocate(first, Capacity());
+        end = storage + count;
+        first = storage;
+        last = storage + size;
+    }
+}
+
+// FUNC_AT(0x000d20a0)
+WorldSceneObject** WorldSceneObjectList::Insert(WorldSceneObject **result, WorldSceneObject *where,
+                                                const WorldSceneObject *value) {
+    uint32_t offset = Size() == 0 ? 0 : uint32_t(where - first);
+    InsertN(where, 1, value);
+    *result = first + offset;
+    return result;
+}
+
+// FUNC_AT(0x000d2110)
+void WorldSceneObjectList::PushBack(const WorldSceneObject *value) {
+    if (first != NULL && Size() < Capacity()) {
+        WorldSceneObjectUninitializedFill(last, 1, value);
+        last++;
+    } else {
+        WorldSceneObject *where;
+        Insert(&where, last, value);
+    }
+}
+
+// ---- the world
+
+// FUNC_AT(0x000595c0)
+void WWorld::InitSingleton() {
+    void *memory = OperatorNew(sizeof(WWorld));
+    fgWorld = memory != NULL ? static_cast<WWorld *>(memory)->Construct() : NULL;
+}
+
+// FUNC_AT(0x000d1210)
+void WWorld::SetTrackName(const char *name, bool copy) {
+    if (copy)
+        strcpy(TrackName, name);
+}
+
+// directory, map, enviroCount and sceneObjects are left as they were
+// FUNC_AT(0x000d1230)
+WWorld* WWorld::Construct() {
+    attributes.Construct("world", "default");
+    fileName = NULL;
+    trackName = NULL;
+    attributeName = NULL;
+    group = NULL;
+    carp = NULL;
+    instances = NULL;
+    procAnims = NULL;
+    instanceCount = 0;
+    enviroDescs = NULL;
+    void *memory = UMemory::FastAlloc(sizeof(WSoundGroup), "WSoundGroup");
+    soundGroup = memory != NULL ? static_cast<WSoundGroup *>(memory)->Construct() : NULL;
+    return this;
+}
+
+// FUNC_AT(0x000d12d0)
+void WWorld::LoadTrackFile(const char *trackDirectory, const char *track) {
+    AttributeSystemInstance->SetCollectionSection(track);
+    char carpName[80];
+    sprintf(carpName, "%s.crp", track);
+    trackName = CopyString(track);
+    fileName = CopyString(carpName);
+    directory = CopyString(trackDirectory);
+
+    RCARPFileLoader loader;
+    loader.Construct();
+    carp = loader.LoadCARPFile(trackDirectory, fileName, NULL, false);
+    group = carp->root;
+    UData *name = carp->root->DataLocateTag(kTagAttributeName);
+    if (name != carp->root->DataEnd()) {
+        attributeName = CopyString(reinterpret_cast<const char *>(name->Data()));
+        attributes.SetName(attributeName, true);
+    }
+    loader.Destruct();
+}
+
+// The environment of the instance under the place; the first for an index past the end
+// FUNC_AT(0x000d1470)
+EnviroDesc* WWorld::GetEnviroDesc(const WWorldPos *position) {
+    int index = uint16_t(instances[position->instance->renderIndex].unknown2c);
+    if (index >= enviroCount)
+        index = 0;
+    return &enviroDescs[index];
+}
+
+// FUNC_AT(0x000d14a0)
+RSceneObj* WWorld::GetSceneObjFromInstance(const CARP::Instance *instance) {
+    if (instance >= instances && instance < instances + instanceCount && (instance->flags & kWorldInstanceProcAnim))
+        return procAnims[instance->procAnimIndex].sceneObj;
+    return NULL;
+}
+
+// FUNC_AT(0x000d14e0)
+ProcAnimState* WWorld::GetProcAnimStateFromInstance(const CARP::Instance *instance) {
+    if (instance >= instances && instance < instances + instanceCount && (instance->flags & kWorldInstanceProcAnim))
+        return &procAnims[instance->procAnimIndex];
+    return NULL;
+}
+
+// The scene object vector (Close frees it) and the sound group are left to Close.
+// FUNC_AT(0x000d1610)
+void WWorld::Destruct() {
+    if (carp != NULL) {
+        carp->Destruct();
+        UMemory::FastFree(carp, sizeof(RCARPFile));
+    }
+    group = NULL;
+    sceneObjects = NULL;
+    OperatorDelete(directory);
+    directory = NULL;
+    OperatorDelete(fileName);
+    fileName = NULL;
+    OperatorDelete(trackName);
+    trackName = NULL;
+    OperatorDelete(attributeName);
+    attributeName = NULL;
+    attributes.Destruct();
+}
+
+// FUNC_AT(0x000d1750)
+void WWorld::Reset() {
+    UGroup *mapGroup = group->GroupLocateTag(kTagMap);
+    mapGroup->DataLocateTag(kTagWorldMap);   // looked up and not used
+    AIElementController::Create(mapGroup->DataLocateTag(kTagAIElements));
+    glbMissionManager->Reset();
+    UData *rules = mapGroup->DataLocateTag(kTagRules);
+    UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
+    if (missionSets == mapGroup->DataEnd())
+        missionSets = NULL;
+    if (rules != mapGroup->DataEnd()) {
+        glbMissionManager->Load(rules, missionSets);
+        glbMissionManager->ChangeStage(0);
+        glbMissionManager->Start();
+    }
+    WTriggerManager::Restart();
+    WCollisionMgr::Restart();
+    WGrid::Restart();
+    fgSimulation.UntrackAllInstances();
+
+    // the scene objects made again from what Open saved
+    if (sceneObjects != NULL && sceneObjects->first != sceneObjects->last) {
+        for (WorldSceneObject *object = sceneObjects->first; object != sceneObjects->last; object++) {
+            if (object->procAnim->sceneObj != NULL)
+                DeleteSceneObj(object->procAnim->sceneObj);
+            memcpy(object->procAnim, object->savedState, sizeof(object->savedState));
+            CARP::Instance *instance = &instances[object->instanceIndex];
+            object->procAnim->sceneObj = NewSceneObj(instance);
+            object->procAnim->sceneObj->UseArticle(ArticleOf(instance)->model->group, object->procAnim->article);
+            object->procAnim->sceneObj->SetTransform(object->Transform());
+            if (object->targetable)
+                object->procAnim->sceneObj->EnableTarget();
+            if (object->procAnim->flags & kProcAnimTracked)
+                TrackInstance(instance);
+        }
+    }
+
+    RPathEngine::Reset(float(fgSimulation.stepCount));
+
+    // the effects of the instances without a proc-anim state triggered again
+    for (uint32_t i = 0; i < instanceCount; i++) {
+        CARP::Instance *instance = &instances[i];
+        if (instance->flags & kWorldInstanceProcAnim)
+            continue;
+        WorldArticle *article = ArticleOf(instance);
+        if (article == NULL || article->effects == NULL)
+            continue;
+        for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
+            if (effect->flags & ArticleEffect::kStartsOn) {
+                if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
+                    effect->gfx.triggered = GFX::Trigger(effect->gfx.reference,
+                                                         reinterpret_cast<const Coord3 *>(instance->position),
+                                                         &kDefaultVector, &effect->position, &effect->gfx.rotation,
+                                                         NULL, 0, NULL);
+            } else {
+                effect->gfx.triggered = 0;
+            }
+        }
+    }
+}
+
+// The sound group, the scene object vector's pointer and the trigger manager's are not cleared.
+// FUNC_AT(0x000d1b30)
+void WWorld::Close() {
+    WorldSceneObjectList *list = sceneObjects;
+    if (list != NULL) {
+        list->Tidy();
+        OperatorDelete(list);
+    }
+    RPathEngine::Purge();
+    SMissionManager::Destroy();
+    AIElementController::Destroy();
+    WTriggerManager *triggers = fgTriggerManager;
+    if (triggers != NULL) {
+        NullFunction();   // the trigger manager's destructor, an empty function
+        OperatorDelete(triggers);
+    }
+    WCollisionMgr::Shutdown();
+    WGrid::Shutdown();
+    WSoundGroup *sounds = soundGroup;
+    if (sounds != NULL) {
+        sounds->Destruct();
+        UMemory::FastFree(sounds, sizeof(WSoundGroup));
+    }
+}
+
+// FUNC_AT(0x000d21a0)
+bool WWorld::Open() {
+    RCARPFileLoader loader;
+    loader.Construct();
+    loader.ResolveCARPFile(directory, carp);
+    loader.Destruct();
+    GLoadingScreen::Status("Resolving misc world elements");
+
+    UGroup *mapGroup = group->GroupLocateTag(kTagMap);
+    map = reinterpret_cast<WMapHeader *>(mapGroup->DataLocateTag(kTagWorldMap)->Data());
+    WTree::InitializeTree(map->root, 0, 0, 0);
+
+    UData *rules = mapGroup->DataLocateTag(kTagRules);
+    UData *missionSets = mapGroup->DataLocateTag(kTagMissionSets);
+    if (missionSets == mapGroup->DataEnd())
+        missionSets = NULL;
+    SMissionManager::Create();
+    if (rules != mapGroup->DataEnd()) {
+        glbMissionManager->Load(rules, missionSets);
+        glbMissionManager->ChangeStage(0);
+        glbMissionManager->Start();
+    }
+
+    // the track's sounds; the lookup is compared with the root group's end, not the map group's
+    int soundId = 0;
+    UData *soundData = mapGroup->DataLocateTag(kTagAudio);
+    if (soundData != group->DataEnd()) {
+        soundGroup->Start();
+        const WorldSoundRecord *records = reinterpret_cast<const WorldSoundRecord *>(soundData->Data());
+        int count = int(soundData->count);
+        for (; soundId < count; soundId++) {
+            const WorldSoundRecord *record = &records[soundId];
+            WSound *sound = soundGroup->Add(soundId, record->name);
+            sound->volume = record->volume;
+            sound->pitch = record->pitch;
+            sound->position = record->position;
+            sound->minDistance = record->unknown58;
+            sound->maxDistance = record->radius;
+            sound->maxDistanceSq = record->radius * record->radius;
+            sound->SetDelays(record->minDelay, record->maxDelay);
+            sound->maxRepeats = record->maxRepeats;
+            sound->minRepeats = record->minRepeats;
+            sound->mode = record->unknown3f == 0;
+        }
+        soundGroup->End();
+    }
+
+    UData *triggers = mapGroup->DataLocateTag(kTagTriggers);
+    WTriggerManager::Init(triggers != mapGroup->DataEnd() ? triggers : NULL);
+
+    UData *instanceData = mapGroup->DataLocateFirst(kTagInstances, 0, 0xffffffff);
+    UData *procAnimData = mapGroup->DataLocateFirst(kTagProcAnims, 0, 0xffffffff);
+    instances = reinterpret_cast<CARP::Instance *>(instanceData->Data());
+    instanceCount = instanceData->count;
+    procAnims = NULL;
+    if (procAnimData != mapGroup->DataEnd())
+        procAnims = reinterpret_cast<ProcAnimState *>(procAnimData->Data());
+    RPathEngine::AddInstanceList(instances, procAnims, instanceCount, float(fgSimulation.stepCount));
+
+    // a sound, and its voice, for each path whose model has one
+    for (RPathHandle *path = RPathEngine::GetFirstPathHandle(); path != NULL; path = RPathEngine::GetNextPathHandle()) {
+        const WorldArticle *article = ArticleOf(path->instance);
+        if (article == NULL)
+            continue;
+        const WorldModel *model = article->model;
+        if (model == NULL || model->info == NULL || model->info->sound < 0)
+            continue;
+        WSound *sound = soundGroup->AddPacked(soundId, model->info->sound);
+        soundId++;
+        sound->position = *path->GetPosition();
+        sound->pathHandle = path;
+        sound->minDistance = 10.0f;
+        sound->maxDistance = 100.0f;
+        sound->maxDistanceSq = 10000.0f;
+        if (model->info->voice >= 0)
+            sound->SetVoice(model->info->voice);
+    }
+
+    // a scene object for each proc-anim state that names an article; the effects of the other instances
+    WorldSceneObjectList *list = static_cast<WorldSceneObjectList *>(OperatorNew(sizeof(WorldSceneObjectList)));
+    if (list != NULL) {
+        list->first = NULL;
+        list->last = NULL;
+        list->end = NULL;
+    }
+    sceneObjects = list;
+    uint32_t sceneObjectCount = 0;
+    for (uint32_t i = 0; i < instanceCount; i++) {
+        const CARP::Instance *instance = &instances[i];
+        if ((instance->flags & kWorldInstanceProcAnim) && procAnims[instance->procAnimIndex].article != kNoArticle &&
+            instance->articleDesc.value != 0)
+            sceneObjectCount++;
+    }
+    list->Reserve(sceneObjectCount);
+
+    for (uint32_t i = 0; i < instanceCount; i++) {
+        CARP::Instance *instance = &instances[i];
+        if (instance->flags & kWorldInstanceProcAnim) {
+            ProcAnimState *state = &procAnims[instance->procAnimIndex];
+            if (state->article != kNoArticle) {
+                instance->flags |= kWorldInstanceSceneObj;
+                if (instance->articleDesc.value != 0) {
+                    state->sceneObj = NewSceneObj(instance);
+                    state->sceneObj->UseArticle(ArticleOf(instance)->model->group, state->article);
+                    MATRIX4 transform = instance->Matrix();
+                    transform.mtx[0][3] = 0.0f;
+                    transform.mtx[1][3] = 0.0f;
+                    transform.mtx[2][3] = 0.0f;
+                    transform.mtx[3][3] = 1.0f;
+                    state->sceneObj->SetTransform(&transform);
+
+                    WorldSceneObject object;
+                    memcpy(&object, &transform, sizeof(transform));
+                    memcpy(object.savedState, state, sizeof(object.savedState));
+                    object.instanceIndex = i;
+                    object.procAnim = state;
+                    if (instance->flags & kWorldInstanceTargetable) {
+                        state->sceneObj->EnableTarget();
+                        object.targetable = 1;
+                    } else {
+                        object.targetable = 0;
+                    }
+                    sceneObjects->PushBack(&object);
+                }
+            }
+            if (state->flags & kProcAnimTracked)
+                TrackInstance(instance);
+        } else {
+            WorldArticle *article = ArticleOf(instance);
+            if (article == NULL || article->effects == NULL)
+                continue;
+            for (ArticleEffect *effect = article->effects; effect->type != ArticleEffect::kTypeEnd; effect++) {
+                if (effect->flags & ArticleEffect::kStartsOn) {
+                    effect->flags |= ArticleEffect::kFlag01;
+                    if (effect->type == ArticleEffect::kTypeGfx && effect->gfx.reference != NULL)
+                        effect->gfx.triggered = GFX::Trigger(effect->gfx.reference,
+                                                             reinterpret_cast<const Coord3 *>(instance->position),
+                                                             &kDefaultVector, &effect->position, &effect->gfx.rotation,
+                                                             NULL, 0, NULL);
+                } else if (effect->type == ArticleEffect::kTypeGlare) {
+                    effect->flags |= ArticleEffect::kFlag01;
+                }
+            }
+        }
+    }
+
+    UData *enviro = mapGroup->DataLocateTag(kTagEnviro);
+    enviroCount = int32_t(enviro->count);
+    enviroDescs = reinterpret_cast<EnviroDesc *>(enviro->Data());
+    WCollisionMgr::Init(group);
+    WGrid::Init(group);
+    return group != NULL;
+}
+
+// FUNC_AT(0x0007dae0)
+ArticleLod* WorldArticle::GetLods() {
+    return lods;
+}

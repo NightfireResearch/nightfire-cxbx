@@ -1,0 +1,25 @@
+# The language page at boot (no language chosen before: run_menu.sh clears t:\): the cursor down the flags, the help
+# line in each language, and one picked, before the idents and the start page.
+waitpage 0x40000034 3000   # P_LANGUAGE
+wait 100
+shot language
+press DOWN
+wait 30
+shot language_down
+press DOWN
+wait 30
+press DOWN
+wait 30
+shot language_down3
+press UP
+wait 30
+press UP
+wait 30
+press UP
+wait 30
+shot language_up
+press A                    # English
+waitpage 0x40000009 3000   # P_START
+wait 500
+shot start
+quit

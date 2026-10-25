@@ -1,0 +1,192 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00031850",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AIHelicopter::EnableTargetBeacon(bool)"
+  },
+  {
+   "address": "0x000318d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::DisableTargetBeacon(void)"
+  },
+  {
+   "address": "0x00031910",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIHelicopter::GetDirectionToTarget(COORD3 &)"
+  },
+  {
+   "address": "0x00031990",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::GetPlayerLaneOffsets(void)"
+  },
+  {
+   "address": "0x00031c80",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIHelicopter::EngageSplinePath(CARP::AISpline *)"
+  },
+  {
+   "address": "0x00031ca0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::DisengageSplinePath(void)"
+  },
+  {
+   "address": "0x00031cd0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AIHelicopter::ManeuverToPos(COORD3 *, float, float, bool)"
+  },
+  {
+   "address": "0x000321d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::~AIHelicopter(void)"
+  },
+  {
+   "address": "0x00032280",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::Reset(void)"
+  },
+  {
+   "address": "0x000324d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_4",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AIHelicopter::FireBullets(float, COORD3 &, COORD3 &, COORD3 &)"
+  },
+  {
+   "address": "0x00032700",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "AIHelicopter::NewState(CARP::AICommand *)"
+  },
+  {
+   "address": "0x00032a20",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AIHelicopter::GetLookAhead(float, float)",
+   "return": "float"
+  },
+  {
+   "address": "0x00032a60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::AIHelicopter(void)"
+  },
+  {
+   "address": "0x00032af0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "bool"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AIHelicopter::ControlMoveState(bool, bool)"
+  },
+  {
+   "address": "0x000331c0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::DoAgentLogic(void)"
+  },
+  {
+   "address": "0x00034600",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::DoProximityDestruct(void)"
+  },
+  {
+   "address": "0x00034760",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AIHelicopter::Update(void)"
+  },
+  {
+   "address": "0x00035df0",
+   "calling_convention": "__thiscall",
+   "return": "AIHelicopter *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

@@ -1,0 +1,80 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008b770",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RColorize::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009a420",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RColorize::RColorize(void)",
+   "return": "RColorize *"
+  },
+  {
+   "address": "0x0009a480",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RColorize::Kill(void)"
+  },
+  {
+   "address": "0x0009a4a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RColorize::SetAreaBrightness(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009a4d0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "RColorize::EnableMotionBlur(float)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009a4f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RColorize::DisableMotionBlur(void)"
+  },
+  {
+   "address": "0x0009a500",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "RColorize::SetEnabled(int)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009a6e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RColorize::Draw(void)"
+  },
+  {
+   "address": "0x0009ac00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RColorize::Reset(void)"
+  }
+ ]
+}

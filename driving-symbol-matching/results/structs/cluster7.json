@@ -1,0 +1,599 @@
+{
+ "program": "Driving.xbe",
+ "types": [
+  {
+   "name": "AICharacter",
+   "size": 320,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "void *",
+     "name": "vtable",
+     "comment": "high: ctor 1c870 stores 0x18a540 at [EBX]; PS2 keeps the vptr LAST at +0x140 (ctor 118720 'sw v0,0x140(a0)'), hence the +0x10 shift below"
+    },
+    {
+     "offset": 16,
+     "type": "MATRIX4",
+     "name": "rotPos",
+     "comment": "high: ctor 1c870 copies 16 dwords from identity 0x1d4c10 to this+0x10; subclass ctors copy their MATRIX4& arg here; Execute LEA +0x40 = row 3 (position). PS2 +0x0 (GetXAxis +0x0, GetYAxis +0x10, GetZAxis +0x20, GetPosition +0x30). Name invented"
+    },
+    {
+     "offset": 80,
+     "type": "COORD3",
+     "name": "collisionBias",
+     "comment": "high: ctor 1c870 writes {-0.08,0,0.12} via LEA ECX,[EBX+0x50]; PS2 GetCollisionBias +0x40, ctor writes the same constants to +0x40..+0x48"
+    },
+    {
+     "offset": 92,
+     "type": "int",
+     "name": "state",
+     "comment": "high: IsAlive 1c200 returns state!=0x16 && state!=0xf; zeroed in ctor; every Do* writes it; PS2 +0x4c (IsAlive 119638). Name invented"
+    },
+    {
+     "offset": 96,
+     "type": "int",
+     "name": "subState",
+     "comment": "low: zeroed in ctor; Hands HideHands 22c50 compares it with 0xd; PS2 +0x50. Name invented"
+    },
+    {
+     "offset": 100,
+     "type": "int",
+     "name": "stateParam",
+     "comment": "low: zeroed in ctor; written by many Do*; PS2 +0x54. Name invented"
+    },
+    {
+     "offset": 104,
+     "type": "int",
+     "name": "weapon",
+     "comment": "medium: AICharacterHands::GetWeapon 22860 returns [ECX+0x68]; EnemyGround ctor stores its clamped (1..2) int arg; PS2 +0x58. Name from GetWeapon"
+    },
+    {
+     "offset": 108,
+     "type": "int",
+     "name": "unknown6c",
+     "comment": "low: zeroed in ctor 1c870; PS2 +0x5c zeroed"
+    },
+    {
+     "offset": 112,
+     "type": "int",
+     "name": "unknown70",
+     "comment": "low: zeroed in ctor; EnemyGround ctor stores its 3rd arg; PS2 +0x60"
+    },
+    {
+     "offset": 116,
+     "type": "float",
+     "name": "targetRangeSquared",
+     "comment": "high: ctor writes 0x45afc800 (5625.0 = 75^2); EnemyWindow TargetIsInRange reads it; PS2 Get/SetTargetRangeSquared +0x64 (ctor same constant)"
+    },
+    {
+     "offset": 120,
+     "type": "float *",
+     "name": "hitPointLoc",
+     "comment": "medium: zeroed in ctor; PS2 SetHitPointLoc(float *)/GetHitPointLoc/GetHealth/MortallyWounded +0x68"
+    },
+    {
+     "offset": 124,
+     "type": "float",
+     "name": "newDamage",
+     "comment": "high: zeroed in ctor; PS2 Get/Notify/ClearNewDamage +0x6c (float)"
+    },
+    {
+     "offset": 128,
+     "type": "float",
+     "name": "initialHitPoints",
+     "comment": "low: written by neither ctor; PS2 SetHitPointLoc writes a float to +0x70 (presumably a copy of *hitPointLoc). Name invented"
+    },
+    {
+     "offset": 132,
+     "type": "Human *",
+     "name": "humanPtr",
+     "comment": "high: ctor zeroes; EnemyWindow passes it to Human::Activate/Deactivate; PS2 Get/SetHumanPtr +0x74"
+    },
+    {
+     "offset": 136,
+     "type": "int",
+     "name": "unknown88",
+     "comment": "low: ctor 0; subclass ctors set it (Bond 0, EnemyWindow 0xd, EnemyGround 3 or 4 by weapon); Hands Fire/Reload/ChangeWeapon write it; PS2 +0x78"
+    },
+    {
+     "offset": 140,
+     "type": "int",
+     "name": "unknown8c",
+     "comment": "low: ctor 15, EnemyGround 25 for weapon 1; PS2 +0x7c = 15"
+    },
+    {
+     "offset": 144,
+     "type": "int",
+     "name": "unknown90",
+     "comment": "low: ctor 15, EnemyGround 25 or 0 by weapon; PS2 +0x80 = 15"
+    },
+    {
+     "offset": 148,
+     "type": "int",
+     "name": "unknown94",
+     "comment": "low: ctor 0; EnemyGround TargetIsAcquired writes it; PS2 +0x84"
+    },
+    {
+     "offset": 152,
+     "type": "int",
+     "name": "unknown98",
+     "comment": "low: ctor 0; PS2 +0x88"
+    },
+    {
+     "offset": 156,
+     "type": "int",
+     "name": "unknown9c",
+     "comment": "low: ctor 0x3c (60); PS2 +0x8c = 0x3c"
+    },
+    {
+     "offset": 160,
+     "type": "int",
+     "name": "unknownA0",
+     "comment": "low: ctor 0; EnemyWindow DoArmed R/W; PS2 +0x90"
+    },
+    {
+     "offset": 164,
+     "type": "ACharacter *",
+     "name": "aCharacter",
+     "comment": "high: GetACharacter 1c230 lazily FastAllocs 0xd0 bytes, runs ctor 0x1c0c0, stores and returns [ESI+0xa4]; PS2 GetACharacter/~AICharacter +0x94"
+    },
+    {
+     "offset": 168,
+     "type": "void *",
+     "name": "actor",
+     "comment": "medium: _List_iterator<ActActor*> node (SetActor 1c220 writes it; passed to ActActorDatabase::KillActorByHandle; Hands reads [[+0xa8]+8]+0x24 = actor visible flag and stores table entry 0x1ddaf0[weapon]); PS2 Get/SetActor +0x98"
+    },
+    {
+     "offset": 172,
+     "type": "void *",
+     "name": "animController",
+     "comment": "medium: AnimationController * (Hands and EnemyGround pass it to AnimationController::GetCurrentFrame/GetTotalTime); ctor 0; PS2 +0x9c. Name invented"
+    },
+    {
+     "offset": 176,
+     "type": "int",
+     "name": "unknownB0",
+     "comment": "low: ctor 0; many Do*/PlayZoneInjuryAnim R/W; PS2 +0xa0"
+    },
+    {
+     "offset": 180,
+     "type": "void *",
+     "name": "injuryZones",
+     "comment": "high: AICharacterInjuryZones * (EnemyGround ctor stores 0x1b51c0, EnemyWindow 0x1b51d8: kDefault/kVehicleInjuryZones); NotifyZoneDamage reads; PS2 Set/GetInjuryZones +0xa4"
+    },
+    {
+     "offset": 184,
+     "type": "int",
+     "name": "zoneLastHit",
+     "comment": "high: GetZoneLastHit 1c5a0 returns [ECX+0xb8]; NotifyZoneDamage writes; PS2 +0xa8"
+    },
+    {
+     "offset": 188,
+     "type": "bool",
+     "name": "fireFlag",
+     "comment": "high: ctor byte 1; PS2 Get/SetFireFlag +0xac (4-byte, ctor 1)"
+    },
+    {
+     "offset": 189,
+     "type": "bool",
+     "name": "scoreable",
+     "comment": "high: ctor byte 1; PS2 Get/SetScoreable +0xb0 (ctor 1); EnemyGround DoDying R/W"
+    },
+    {
+     "offset": 192,
+     "type": "COORD3",
+     "name": "customTarget",
+     "comment": "high: ctor zeroes +0xc0/+0xc4/+0xc8; EnemyGround DoAiming/TargetIsAcquired LEA +0xc0; PS2 Get/SetCustomTarget +0xc0..+0xc8 (PS2 pads +0xb4..+0xbf, Xbox +0xbe..+0xbf: shift back to 0 here)"
+    },
+    {
+     "offset": 204,
+     "type": "bool",
+     "name": "useCustomTarget",
+     "comment": "high: ctor byte 0; EnemyGround reads the byte; PS2 Get/SetUseCustomTarget +0xcc"
+    },
+    {
+     "offset": 208,
+     "type": "MATRIX4",
+     "name": "rotPos2",
+     "comment": "medium: ctor calls VU0_MATRIX4Init(this+0xd0); Execute writes +0x100..+0x108 (row 3); PS2 ctor stores identity rows +0xd0/+0xe0/+0xf0 and vf0 at +0x100; UpdateRotPos. Name invented (which of the two matrices GetRotPos returns is unchecked)"
+    },
+    {
+     "offset": 272,
+     "type": "COORD3",
+     "name": "unknown110",
+     "comment": "low: ctor zeroes +0x110..+0x118; Execute LEA and float writes; PS2 +0x110..+0x118 floats in Execute"
+    },
+    {
+     "offset": 284,
+     "type": "bool",
+     "name": "unknown11c",
+     "comment": "medium: ctor byte 0; Execute/UpdateRotPos R/W; PS2 +0x11c 4-byte"
+    },
+    {
+     "offset": 285,
+     "type": "bool",
+     "name": "unknown11d",
+     "comment": "medium: ctor byte 0; Execute R/W; PS2 +0x120 4-byte"
+    },
+    {
+     "offset": 288,
+     "type": "float",
+     "name": "avoidZoneDistance",
+     "comment": "high: ctor 0; EnemyGround DoAvoiding writes a float; PS2 SetAvoidZoneDistance +0x124 (shift -4 from bool packing)"
+    },
+    {
+     "offset": 304,
+     "type": "COORD3",
+     "name": "avoidZoneBase",
+     "comment": "high: ctor zeroes +0x130..+0x138; EnemyGround DoAvoiding LEA +0x130; PS2 SetAvoidZoneBase +0x130..+0x138 (Xbox +0x124..+0x12f unaccounted)"
+    },
+    {
+     "offset": 316,
+     "type": "bool",
+     "name": "useAvoidZone",
+     "comment": "high: ctor byte 0; EnemyGround AvoidThreat/DoAvoiding read the byte; PS2 SetUseAvoidZone +0x13c"
+    }
+   ],
+   "comment": "AI character base; size 0x140 from scalar_deleting_destructor 1c640 FastFree. Vptr first on Xbox, last (+0x140) on PS2: fields shift +0x10 up to +0xb8 (PS2 +0xa8), bools pack at +0xbc/+0xbd, then 0 from customTarget +0xc0, -4 at avoidZoneDistance +0x120, 0 again at avoidZoneBase +0x130. PS2 size 0x150."
+  },
+  {
+   "name": "AICharacterBond",
+   "size": 336,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "int",
+     "name": "unknown140",
+     "comment": "medium: ctor 1cbb0 stores its 2nd (int) arg; DoNeutral R/W; PS2 +0x150 (ctor, DoNeutral, HandleInterrupts). Own fields PS2 -0x10 (PS2 base ends with the vptr at +0x140, padded to 0x150)"
+    }
+   ],
+   "comment": "Bond's own AI character (ctor(MATRIX4 &, int)); size 0x150 from dtor 1cc00 FastFree. Own fields PS2 -0x10."
+  },
+  {
+   "name": "AICharacterEnemyGround",
+   "size": 448,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "WTargetable *",
+     "name": "targetable",
+     "comment": "high: ctor 1dc80: if bool arg, FastAlloc 0x50 + WTargetable::WTargetable(this), stored at +0x140 and registered with 0x23e1b0; dtor passes it to WTargetable::RemoveReference; PS2 +0x150"
+    },
+    {
+     "offset": 324,
+     "type": "int",
+     "name": "unknown144",
+     "comment": "low: ctor 0x320 (800); PS2 +0x154"
+    },
+    {
+     "offset": 328,
+     "type": "int",
+     "name": "unknown148",
+     "comment": "low: ctor 0; PS2 +0x158"
+    },
+    {
+     "offset": 332,
+     "type": "int",
+     "name": "unknown14c",
+     "comment": "low: ctor 0; DoRunning R/W; PS2 +0x15c"
+    },
+    {
+     "offset": 336,
+     "type": "float",
+     "name": "unknown150",
+     "comment": "low: ctor 0; PS2 +0x160 float (ThreatenedByVehicle)"
+    },
+    {
+     "offset": 352,
+     "type": "COORD3",
+     "name": "unknown160",
+     "comment": "low: ctor copies global COORD3 0x243030; DoRunning LEA and float writes; PS2 +0x170..+0x178 floats"
+    },
+    {
+     "offset": 364,
+     "type": "float",
+     "name": "unknown16c",
+     "comment": "low: ctor 1.0f; PS2 +0x17c float"
+    },
+    {
+     "offset": 368,
+     "type": "int",
+     "name": "unknown170",
+     "comment": "low: ctor 0; PS2 +0x180"
+    },
+    {
+     "offset": 372,
+     "type": "int",
+     "name": "unknown174",
+     "comment": "low: ctor 0; TargetIsAcquired writes; PS2 +0x184"
+    },
+    {
+     "offset": 376,
+     "type": "int",
+     "name": "initialBank",
+     "comment": "medium: PS2 SetInitialBank writes +0x188 (no Xbox setter found; placed by the uniform -0x10 shift)"
+    },
+    {
+     "offset": 380,
+     "type": "int",
+     "name": "unknown17c",
+     "comment": "low: ctor stores its 4th arg; HandleInterrupts R/W; PS2 +0x18c"
+    },
+    {
+     "offset": 384,
+     "type": "int",
+     "name": "claustrophobic",
+     "comment": "medium: ctor 0; PlayZoneInjuryAnim R/W; PS2 SetClaustrophobic +0x190"
+    },
+    {
+     "offset": 388,
+     "type": "int",
+     "name": "unknown184",
+     "comment": "low: ctor 0; PS2 +0x194"
+    },
+    {
+     "offset": 392,
+     "type": "int",
+     "name": "unknown188",
+     "comment": "low: ctor 0; PS2 +0x198"
+    },
+    {
+     "offset": 396,
+     "type": "int",
+     "name": "unknown18c",
+     "comment": "low: ctor 0; AvoidThreat/DoAvoiding R/W; PS2 +0x19c"
+    },
+    {
+     "offset": 400,
+     "type": "float",
+     "name": "initialHeight",
+     "comment": "low: ctor copies matrix arg [+0x34] (position y); HandleInterrupts writes a float; PS2 +0x1a0 float. Name invented"
+    },
+    {
+     "offset": 416,
+     "type": "COORD3",
+     "name": "initialPosition",
+     "comment": "medium: ctor copies matrix arg row 3 (+0x30..+0x38) to LEA +0x1a0; PS2 +0x1b0/+0x1b8. Name invented"
+    },
+    {
+     "offset": 428,
+     "type": "int",
+     "name": "worker",
+     "comment": "medium: ctor 0; DoInitial R/W; PS2 SetWorker +0x1bc"
+    },
+    {
+     "offset": 432,
+     "type": "WCollider *",
+     "name": "collider",
+     "comment": "medium: ctor FastAllocs 0x68 and runs ctor 0xbe540(pos, 4.5f, 0, 4); WCollider::GetWorldNormal/InRegion/~WCollider on it; PS2 +0x1c0"
+    },
+    {
+     "offset": 436,
+     "type": "int",
+     "name": "unknown1b4",
+     "comment": "low: ctor 1; PS2 +0x1c4"
+    }
+   ],
+   "comment": "Ground enemy; size 0x1c0 from dtor 1df40. Own fields uniformly PS2 -0x10 (PS2 +0x150..+0x1c4)."
+  },
+  {
+   "name": "AICharacterHands",
+   "size": 352,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "bool",
+     "name": "unknown140",
+     "comment": "medium: AbleToFire 22830 returns false when set; Reload/DoIdling R/W; PS2 +0x150"
+    },
+    {
+     "offset": 321,
+     "type": "bool",
+     "name": "unknown141",
+     "comment": "medium: HideHands 22c50 byte test; PS2 +0x154"
+    },
+    {
+     "offset": 324,
+     "type": "int",
+     "name": "nextWeapon",
+     "comment": "medium: HideHands copies a nonzero +0x144 into weapon +0x68 and clears it; ChangeWeapon writes; PS2 +0x158. Name invented"
+    },
+    {
+     "offset": 328,
+     "type": "float",
+     "name": "unknown148",
+     "comment": "low: no Xbox access seen; PS2 +0x15c float (ctor, UpdateRotPos), placed by shift"
+    },
+    {
+     "offset": 332,
+     "type": "float",
+     "name": "aimFraction",
+     "comment": "high: GetAimFraction 227a0 returns fgHandObj->+0x14c; DoAiming writes a float; PS2 +0x160"
+    },
+    {
+     "offset": 336,
+     "type": "bool",
+     "name": "handsVisible",
+     "comment": "high: ShowHands 22c30 sets 1, HideHands clears; PS2 AreVisible +0x164"
+    }
+   ],
+   "comment": "First-person hands; size 0x160 from dtor 228b0. PS2 4-byte bools +0x150/+0x154 pack to Xbox +0x140/+0x141, then shift -0x14 from +0x158 through handsVisible (PS2 +0x164 -> +0x150)."
+  },
+  {
+   "name": "AICharacterEnemyWindow",
+   "size": 352,
+   "fields": [
+    {
+     "offset": 0,
+     "type": "AICharacter",
+     "name": "super_AICharacter"
+    },
+    {
+     "offset": 320,
+     "type": "PVehicle *",
+     "name": "vehicle",
+     "comment": "high: ctor 21d50 stores its 2nd arg (sheet ctor(MATRIX4 &, PVehi..)); passed to PhysicsObject::GetHitPoints; PS2 +0x150 (GetRotPos, GetVehiclePtr)"
+    },
+    {
+     "offset": 324,
+     "type": "float",
+     "name": "unknown144",
+     "comment": "low: ctor 0; DoAiming float; PS2 +0x154"
+    },
+    {
+     "offset": 328,
+     "type": "int",
+     "name": "unknown148",
+     "comment": "low: ctor 0; DoInitial; PS2 +0x158"
+    },
+    {
+     "offset": 332,
+     "type": "int",
+     "name": "unknown14c",
+     "comment": "low: ctor 0; DoInitial; PS2 +0x15c"
+    },
+    {
+     "offset": 336,
+     "type": "int",
+     "name": "unknown150",
+     "comment": "low: ctor 0; DoAiming; PS2 +0x160"
+    },
+    {
+     "offset": 340,
+     "type": "int",
+     "name": "unknown154",
+     "comment": "low: ctor 0; DoArmed/DoNeutral/HandleInterrupts; PS2 +0x164"
+    }
+   ],
+   "comment": "Enemy at a vehicle window (ctor(MATRIX4 &, PVehicle *)); size 0x160 from dtor 21dc0. Own fields PS2 -0x10."
+  },
+  {
+   "name": "ACharacter",
+   "size": 208,
+   "fields": [],
+   "comment": "Derived by the struct pilot (results/struct-pilot-cluster7.json)",
+   "if_missing": true
+  }
+ ],
+ "prototypes": [
+  {
+   "address": "0x0001c190",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacter::Init(void)"
+  },
+  {
+   "address": "0x0001c1b0",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "AICharacter::Shutdown(void)"
+  },
+  {
+   "address": "0x0001c1d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::~AICharacter(void)"
+  },
+  {
+   "address": "0x0001c200",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::IsAlive(void)",
+   "return": "bool"
+  },
+  {
+   "address": "0x0001c230",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::GetACharacter(void)",
+   "return": "ACharacter *"
+  },
+  {
+   "address": "0x0001c2b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::Execute(void)"
+  },
+  {
+   "address": "0x0001c5a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::GetZoneLastHit(void)",
+   "return": "int"
+  },
+  {
+   "address": "0x0001c5b0",
+   "calling_convention": "__cdecl",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "AICharacter::GetZoneHitPointScale(int, float)",
+   "return": "float"
+  },
+  {
+   "address": "0x0001c640",
+   "calling_convention": "__thiscall",
+   "return": "AICharacter *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  },
+  {
+   "address": "0x0001c690",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    }
+   ],
+   "sheet": "AICharacter::NotifyZoneDamage(COORD3 &)"
+  },
+  {
+   "address": "0x0001c870",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AICharacter::AICharacter(void)"
+  },
+  {
+   "address": "0x0001c9c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AICharacter::MoveToPoint(COORD3 &, bool)"
+  }
+ ]
+}

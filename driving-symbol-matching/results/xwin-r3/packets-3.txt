@@ -1,0 +1,3468 @@
+## window 32: Xbox 0xd2c20 WWorldMath::IntersectSegPlane .. 0xd2f10 WWorldPos::MakeFaceAtPoint   (PS2 0x231af0 .. 0x232228)
+
+Xbox functions in the window, address order:
+  0xd2cf0 UNNAMED
+     callers: CheckCollide
+     chain: WTriggerManager::CheckCollide@cf520
+     callees: VU0_v3add, VU0_v4scale, VU0_v4sub, v3dotprod
+     void FUN_000d2cf0(undefined4 param_1,int param_2,undefined4 param_3)
+     {
+       float fVar1;
+       float fVar2;
+       float local_30 [4];
+       float local_20 [7];
+       VU0_v4sub(param_2 + 0x10,param_2,local_30);
+       VU0_v4sub(param_1,param_2,local_20);
+       fVar1 = v3dotprod(local_20,local_30);
+       fVar2 = v3dotprod(local_30,local_30);
+       VU0_v4scale(local_30,fVar1 / fVar2,local_30);
+       VU0_v3add(local_30,param_2,param_3);
+       return;
+     }
+  0xd2d70 UNNAMED
+     callers: FUN_000d3110
+     chain: FUN_000d3110@d3110 <- WCollisionMgr::CheckHitWorld@c3b40
+     callees: FUN_00115bc0, FUN_00115cc0, VU0_v4sub
+     uint FUN_000d2d70(float *param_1,float *param_2,undefined4 *param_3)
+     {
+       float *pfVar1;
+       float *pfVar2;
+       float fVar3;
+       float fVar4;
+       float10 fVar5;
+       if ((ABS(*param_1 - *param_2) < 0.0001) && (ABS(param_1[1] - param_2[1]) < 0.0001)) {
+         fVar3 = ABS(param_1[2] - param_2[2]);
+         if (fVar3 < 0.0001) {
+           return (uint)(ushort)((ushort)(fVar3 < 0.0001) << 8 | (ushort)NAN(fVar3) << 10 |
+                                (ushort)(fVar3 == 0.0001) << 0xe);
+         }
+       }
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x231c40 WWorldMath::CalcQuadNonCoPlanarIndex
+     callers: 
+     callees: CalcNormal, GetPlaneY
+     float WWorldMath::CalcQuadNonCoPlanarIndex(uint *param_1,undefined8 param_2,ulong param_3)
+     {
+       uint uVar1;
+       uint uVar2;
+       uint uVar3;
+       undefined4 uVar4;
+       ulong *puVar5;
+       float *pfVar6;
+       int iVar7;
+       float fVar8;
+       float afStack_70 [9];
+       float fStack_4c;
+         ...
+  0x231cc8 WWorldMath::NearestPointLine3D
+     callers: CheckCollide
+     callees: 
+     void WWorldMath::NearestPointLine3D
+                    (undefined (*param_1) [16],undefined (*param_2) [16],undefined (*param_3) [16])
+     {
+       undefined1 auVar1 [16];
+       undefined1 auVar2 [16];
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 local_20 [16];
+       undefined1 local_10 [16];
+       auVar1 = _lqc2(*(undefined1 (*) [16])(param_2 + 1));
+       auVar2 = _lqc2(*(undefined1 (*) [16])param_2);
+       _lqc2(local_20);
+         ...
+  0x231d68 WWorldMath::MakeSegSpaceMatrix
+     callers: FindClosestFace
+     callees: 
+     undefined4
+     WWorldMath::MakeSegSpaceMatrix
+               (undefined (*param_1) [16],undefined (*param_2) [16],undefined (*param_3) [16])
+     {
+       undefined *puVar1;
+       uint uVar2;
+       ulong *puVar3;
+       bool bVar4;
+       ulong uVar5;
+       ulong uVar6;
+       undefined1 (*pauVar7) [16];
+       undefined4 uVar8;
+         ...
+  0x231fa8 WWorldMath::Quatern_VecInterpolate
+     callers: Quatern_Interpolate
+     callees: 
+     void WWorldMath::Quatern_VecInterpolate(float param_1,float *param_2,float *param_3,float *param_4)
+     {
+       *param_4 = *param_2 + (*param_3 - *param_2) * param_1;
+       param_4[1] = param_2[1] + (param_3[1] - param_2[1]) * param_1;
+       param_4[2] = param_2[2] + (param_3[2] - param_2[2]) * param_1;
+       return;
+     }
+  0x231ff8 WWorldMath::Quatern_Interpolate
+     callers: 
+     callees: Quatern_VecInterpolate
+     void WWorldMath::Quatern_Interpolate
+                    (float param_1,float *param_2,float *param_3,float *param_4,float *param_5,
+                    float *param_6,float *param_7)
+     {
+       *param_6 = *param_2 + (*param_3 - *param_2) * param_1;
+       param_6[1] = param_2[1] + (param_3[1] - param_2[1]) * param_1;
+       param_6[2] = param_2[2] + (param_3[2] - param_2[2]) * param_1;
+       param_6[3] = param_2[3] + (param_3[3] - param_2[3]) * param_1;
+       Quatern_VecInterpolate(param_1,param_4,param_5,param_7);
+       return;
+     }
+  0x232088 WWorldMath::Quatern_QuatToMat
+     callers: 
+     callees: 
+     void WWorldMath::Quatern_QuatToMat(float *param_1,float *param_2)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       float fVar4;
+       float fVar5;
+       float fVar6;
+       float fVar7;
+       float fVar8;
+       fVar1 = *param_1;
+       fVar4 = param_1[1];
+         ...
+  0x232160 WWorldMath::CalcBoundingBox_global_ctors
+     callers: 
+     callees: FUN_00232128
+     void WWorldMath::CalcBoundingBox_global_ctors(void)
+     {
+       FUN_00232128(1,0xffff);
+       return;
+     }
+  0x232200 WWorldPos::~WWorldPos
+     callers: BarriersInPath, CheckHitWorld, CollideWithWorld, ControlTyreTracks, Destroy, DrivableVec, FireWeapon, GetDirectLaneWeights, GetWorldHeightAtPoint, GetWorldNormal, HandleNuclearSequence, InitializeCarV
+     callees: FastFree
+     void WWorldPos::~WWorldPos(undefined8 param_1,ulong param_2)
+     {
+       if ((param_2 & 1) != 0) {
+         UMemory::FastFree((void *)param_1,0x40);
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 33: Xbox 0x80b90 RPlayerCamera::UpdateBumperCam .. 0x80e80 RPlayerCamera::SetupCameraZoom   (PS2 0x1b3b40 .. 0x1b89e0)
+
+Xbox functions in the window, address order:
+  0x80cf0 UNNAMED
+     callers: 
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: AnchorCamera, FUN_00115c80, GetAnchorMatrix4, GetOrientMat, GetPosition, MatrixCopy, VU0_MATRIX4_mult
+     void __fastcall FUN_00080cf0(int param_1)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       float *pfVar3;
+       int iVar4;
+       MATRIX4 local_50;
+       if ((Sim.field3627_0xe34 != 3) && (*(int *)(param_1 + 0x120) != 0)) {
+         iVar2 = *(int *)(*(int *)(param_1 + 0x120) + 0x60);
+         RPathEngine::RPathHandle::GetOrientMat(&local_50);
+         pfVar3 = (float *)RPathEngine::RPathHandle::GetPosition();
+         local_50.field12_0x30 = *pfVar3;
+         iVar4 = RPathEngine::RPathHandle::GetPosition();
+         local_50.field13_0x34 = *(float *)(iVar4 + 4);
+         ...
+  0x80e20 UNNAMED
+     callers: DrawCrossHairs
+     chain: GHud::DrawCrossHairs@e0440
+     callees: 
+     float10 __fastcall FUN_00080e20(int param_1)
+     {
+       float10 fVar1;
+       float10 fVar2;
+       if (*(short *)(DAT_001ec368 + 10 + *(int *)(param_1 + 0x130) * 0x18) == 0x200) {
+         fVar1 = (float10)*(float *)(DAT_001ec368 + *(int *)(param_1 + 0x130) * 0x18 + 0xc);
+         fVar2 = (float10)*(float *)(*(char *)(param_1 + 0x27c) * 0x100 + 0x5c + DAT_001ec358);
+         if (fVar2 < fVar1) {
+           return (fVar1 - (float10)*(float *)(param_1 + 0xb4)) / (fVar1 - fVar2);
+         }
+       }
+       return (float10)0.0;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1b4430 RPlayerCamera::UpdateSplineCam
+     callers: 
+     callees: AnchorCamera, ClearTransition, DoSmoothModeChange, Get, GetAnchorLinearVelocity, GetAnchorMatrix4, GetAnchorPosition, GetAnchorSpeed, GetSafeWRoadNavPosition, IncNavPosition, InitAtPoint, InitTransition, ReverseNavDirection, SetCameraZoom, SetViewing
+     void RPlayerCamera::UpdateSplineCam
+                    (ulong param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5,
+                    double param_6,double param_7)
+     {
+       undefined1 *puVar1;
+       char cVar2;
+       uint uVar3;
+       uint uVar4;
+       ulong *puVar5;
+       undefined8 *puVar6;
+       undefined1 (*pauVar7) [16];
+       undefined1 (*pauVar8) [16];
+         ...
+  0x1b4c30 RPlayerCamera::UpdateEllipseCam
+     callers: 
+     callees: AnchorCamera, DoSmoothModeChange, FUN_001b2440, FUN_001b2480, GetAnchorLinearVelocity, GetAnchorMatrix4, GetAnchorPosition, InitTransition, ResolveAllCollisions, SetCameraZoom, SetViewingTransform, UpdateTransition, memset
+     void RPlayerCamera::UpdateEllipseCam
+                    (undefined (*param_1) [16],undefined8 param_2,undefined8 param_3,undefined8 param_4,
+                    long param_5)
+     {
+       char cVar1;
+       int iVar2;
+       uint uVar3;
+       int iVar4;
+       uint uVar5;
+       undefined8 *puVar6;
+       int iVar7;
+       undefined (*pauVar8) [16];
+         ...
+  0x1b5120 RPlayerCamera::UpdateFixedCam
+     callers: 
+     callees: AnchorCamera, DoSmoothModeChange, InitTransition, SetCameraZoom, SetViewingTransform, UpdateTransition, memset
+     void RPlayerCamera::UpdateFixedCam
+                    (ulong param_1,undefined8 param_2,undefined8 param_3,ulong param_4,ulong param_5)
+     {
+       undefined1 *puVar1;
+       undefined *puVar2;
+       char cVar3;
+       uint uVar4;
+       uint uVar5;
+       ulong *puVar6;
+       int iVar7;
+       ulong uVar8;
+       ulong uVar9;
+         ...
+  0x1b53c0 RPlayerCamera::UpdateWorldAnimationCam
+     callers: 
+     callees: BuildSpline, EvaluateSpline, GetAnchorPosition, GetPointListSize, PlayCurrentAnimation, UpdateAnimationCam, VU0_m4toquat, VU0_quattom4
+     void RPlayerCamera::UpdateWorldAnimationCam
+                    (ulong param_1,ulong param_2,ulong param_3,ulong param_4,long param_5)
+     {
+       undefined1 *puVar1;
+       undefined *puVar2;
+       uint uVar3;
+       uint uVar4;
+       Handle *pHVar5;
+       undefined (*pauVar6) [16];
+       ulong *puVar7;
+       bool bVar8;
+       undefined1 (*pauVar9) [16];
+         ...
+  0x1b5998 RPlayerCamera::UpdateRelativeAnimationCam
+     callers: 
+     callees: AnchorRelativeCamera, BuildSpline, ClearSplinePtList, DoSmoothModeChange, EvaluateSpline, FUN_001a7558, FUN_001b23e8, GetAnchorMatrix4, GetAnchorPosition, GetAnchorRenderOffset, PlayCurrentAnimation, UpdateAnimationCam, VU0_MATRIX3x4_mult, VU0_MATRIX
+     void RPlayerCamera::UpdateRelativeAnimationCam
+                    (ulong param_1,undefined8 param_2,ulong param_3,ulong param_4,long param_5)
+     {
+       undefined1 *puVar1;
+       undefined *puVar2;
+       uint uVar3;
+       uint uVar4;
+       Handle *pHVar5;
+       uint uVar6;
+       undefined (*pauVar7) [16];
+       ulong *puVar8;
+       undefined1 auVar9 [16];
+         ...
+  0x1b6160 RPlayerCamera::UpdateAIPathAnimationCam
+     callers: 
+     callees: AnchorCamera, GetAnchorMatrix4, GetOrientMat, GetPosition, VU0_MATRIX4_mult
+     void RPlayerCamera::UpdateAIPathAnimationCam
+                    (undefined4 *param_1,undefined8 param_2,ulong param_3,ulong param_4,
+                    undefined8 param_5)
+     {
+       int *piVar1;
+       undefined4 *puVar2;
+       int iVar3;
+       undefined8 extraout_a3;
+       undefined8 extraout_t0;
+       undefined4 local_b0 [4];
+       undefined4 local_a0;
+       undefined4 uStack_9c;
+         ...
+  0x1b62d0 RPlayerCamera::UpdateADWeaponAnims
+     callers: UpdateAutoDriveCam
+     callees: FUN_001b2510, FUN_001b25c0, FindAutoDriveArmInd, GetRigidBody, MATRIX4_mult, VU0_fastqslerp, VU0_quattom4
+     undefined *
+     RPlayerCamera::UpdateADWeaponAnims
+               (undefined8 param_1,undefined8 param_2,ulong param_3,ulong param_4,ulong param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       uint uVar4;
+       ulong *puVar5;
+       char cVar6;
+       int iVar7;
+       int iVar8;
+         ...
+  0x1b6c60 RPlayerCamera::LimitPitchYaw
+     callers: UpdateAutoDriveCam
+     callees: FUN_001b25c0
+     bool RPlayerCamera::LimitPitchYaw(undefined8 param_1,int param_2,float *param_3,float *param_4)
+     {
+       bool bVar1;
+       bool bVar2;
+       bool bVar3;
+       int iVar4;
+       int iVar5;
+       int iVar6;
+       int iVar7;
+       int iVar8;
+       int iVar9;
+       float fVar10;
+         ...
+  0x1b8960 RPlayerCamera::GetZoomPercent
+     callers: DrawCrossHairs
+     callees: 
+     float RPlayerCamera::GetZoomPercent(int param_1)
+     {
+       int iVar1;
+       float fVar2;
+       float fVar3;
+       iVar1 = *(int *)(param_1 + 0x120) * 0x1c + DAT_003339bc;
+       if (*(short *)(iVar1 + 10) != 0x200) {
+         return 0.0;
+       }
+       fVar3 = *(float *)(iVar1 + 0xc);
+       fVar2 = *(float *)(*(char *)(param_1 + 0x27f) * 0x100 + DAT_004244f8 + 0x5c);
+       if (fVar3 <= fVar2) {
+         ...
+
+====================================================================================================
+
+## window 34: Xbox 0xcdb80 WTargetable::RemoveReference .. 0xcdfb0 WTargetPicker::GetSelectedTarget   (PS2 0x229bb0 .. 0x22af38)
+
+Xbox functions in the window, address order:
+  0xcdba0 (named) WTargetable::WTargetable
+  0xcdc10 UNNAMED
+     callers: UpdateTargets
+     chain: WTargetPicker::UpdateTargets@ce950
+     callees: FUN_000f3990, FUN_00116280, VU0_v4unitxyz
+     void FUN_000cdc10(float *param_1,float *param_2)
+     {
+       int iVar1;
+       float fVar2;
+       float fVar3;
+       float fVar4;
+       float fVar5;
+       float local_80;
+       float local_7c;
+       float local_70;
+       float local_6c;
+       float local_68;
+       undefined4 local_64;
+       float local_60;
+         ...
+  0xcdee0 UNNAMED
+     callers: UpdateTargets
+     chain: WTargetPicker::UpdateTargets@ce950
+     callees: 
+     undefined4 FUN_000cdee0(float *param_1)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       float local_14;
+       local_14 = (float)RRenderer::fgRenderer->resX * 0.46000004;
+       fVar2 = (float)RRenderer::fgRenderer->resY * 0.4;
+       if (RRenderer::fgRenderer->field_0x4c != '\0') {
+         local_14 = local_14 + 107.0;
+       }
+       fVar1 = *param_1 - (float)RRenderer::fgRenderer->resX * 0.5;
+       fVar3 = param_1[1] - (float)RRenderer::fgRenderer->resY * 0.5;
+       if ((((-fVar2 <= fVar3) && (fVar3 < fVar2 != (fVar3 == fVar2))) &&
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x229ce8 WTargetable::fTargetsInWorld_global_ctors
+     callers: 
+     callees: FUN_00229cb0
+     void WTargetable::fTargetsInWorld_global_ctors(void)
+     {
+       FUN_00229cb0(1,0xffff);
+       return;
+     }
+  0x229f40 WTargetPicker::WTargetPicker
+     callers: FUN_0022c100
+     callees: ATargeting, FastAlloc, __builtin_new
+     undefined8
+     WTargetPicker::WTargetPicker
+               (undefined8 param_1,undefined8 param_2,undefined8 param_3,undefined8 param_4,
+               undefined8 param_5,ulong param_6)
+     {
+       int *piVar1;
+       void *pvVar2;
+       ATargeting *this;
+       undefined8 uVar3;
+       undefined4 *puVar4;
+       puVar4 = (undefined4 *)param_1;
+       puVar4[0x1c] = 0;
+         ...
+  0x229ff0 WTargetPicker::~WTargetPicker
+     callers: FUN_0022c100
+     callees: ClearAllTargets, FastFree, __builtin_delete, clear
+     void WTargetPicker::~WTargetPicker(undefined8 param_1,ulong param_2)
+     {
+       int **ppiVar1;
+       ClearAllTargets((int)(void *)param_1);
+       ppiVar1 = *(int ***)((int)(void *)param_1 + 0x2c);
+       if ((long)(int)ppiVar1 != 0) {
+         _List_base<WTargetable_*,_allocator<WTargetable_*>_>::clear(ppiVar1);
+         UMemory::FastFree(*ppiVar1,0xc);
+         __builtin_delete((long)(int)ppiVar1);
+       }
+       __builtin_delete((long)*(int *)((int)(void *)param_1 + 0x7c));
+       if ((param_2 & 1) != 0) {
+         ...
+  0x22a070 WTargetPicker::GetViewMatrix
+     callers: GetOffScreenPos
+     callees: FUN_00297480
+     void WTargetPicker::GetViewMatrix(undefined8 param_1,ulong param_2,ulong param_3)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       uint uVar4;
+       ulong uVar5;
+       ulong extraout_a0;
+       ulong uVar6;
+       ulong extraout_a1;
+       ulong uVar7;
+       ulong extraout_a2;
+         ...
+  0x22a430 WTargetPicker::GetOffScreenPos
+     callers: UpdateTargets
+     callees: GetViewMatrix
+     ulong WTargetPicker::GetOffScreenPos(undefined8 param_1,ulong *param_2,ulong param_3)
+     {
+       undefined1 *puVar1;
+       undefined4 *puVar2;
+       uint uVar3;
+       ulong *puVar4;
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       ulong uVar7;
+       undefined4 uVar8;
+       undefined4 uVar9;
+       undefined4 uVar10;
+         ...
+  0x22a728 WTargetPicker::IsPointOnScreen
+     callers: UpdateTargets
+     callees: 
+     bool WTargetPicker::IsPointOnScreen(undefined8 param_1,uint param_2)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       bool bVar4;
+       ulong uVar5;
+       float fVar6;
+       float fVar7;
+       float fVar8;
+       float local_10;
+       undefined1 local_c [12];
+         ...
+  0x22a818 WTargetPicker::IsPointLockable
+     callers: 
+     callees: 
+     undefined4 WTargetPicker::IsPointLockable(undefined8 param_1,float *param_2)
+     {
+       undefined4 uVar1;
+       float fVar2;
+       float fVar3;
+       uVar1 = 0;
+       fVar3 = (float)RRenderer::fgRenderer->resY * 0.4;
+       fVar2 = (float)RRenderer::fgRenderer->resX * 0.56;
+       if ((((-fVar3 <= param_2[1]) && (param_2[1] <= fVar3)) && (-fVar2 <= *param_2)) &&
+          (*param_2 <= fVar2)) {
+         uVar1 = 1;
+       }
+         ...
+  0x22a8a8 WTargetPicker::InterpolateAndSnap2D
+     callers: 
+     callees: 
+     undefined4
+     WTargetPicker::InterpolateAndSnap2D
+               (float param_1,float param_2,float param_3,undefined8 param_4,float *param_5,
+               float *param_6)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       undefined4 uVar4;
+       ulong in_v1;
+       ulong uVar5;
+       float fVar6;
+         ...
+  0x22aed0 WTargetPicker::GetLockOnPercent
+     callers: 
+     callees: 
+     float WTargetPicker::GetLockOnPercent(int param_1)
+     {
+       float fVar1;
+       if (*(int *)(param_1 + 0xa0) == 0) {
+         fVar1 = 0.0;
+       }
+       else {
+         fVar1 = ((float)(DAT_00339f54 - *(int *)(param_1 + 0x1c)) * DAT_00339f50) / DAT_0033aa34;
+         if (1.0 < fVar1) {
+           return 1.0;
+         }
+       }
+         ...
+
+====================================================================================================
+
+## window 35: Xbox 0x12580 ActActorDatabase::PrepareActorsForCulling .. 0x125f0 StandardAnimationController::scalar_deleting_destructor   (PS2 0x10b5d8 .. 0x10bba8)
+
+Xbox functions in the window, address order:
+  0x12590 UNNAMED
+     callers: Print
+     chain: GLoadingScreen::Print@e2e30
+     callees: 
+     int __fastcall FUN_00012590(int param_1)
+     {
+       if (0xf < *(uint *)(param_1 + 0x18)) {
+         return *(int *)(param_1 + 4);
+       }
+       return param_1 + 4;
+     }
+  0x125a0 UNNAMED
+     callers: Print
+     chain: GLoadingScreen::Print@e2e30
+     callees: FastFree
+     void FUN_000125a0(void *param_1,size_t param_2)
+     {
+       if (param_1 != (void *)0x0) {
+         UMemory::FastFree(param_1,param_2);
+       }
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x10b778 ActActorDatabase::DrawAllWeapons
+     callers: DrawActorWeapons
+     callees: DrawWeapons
+     void ActActorDatabase::DrawAllWeapons(int **param_1,undefined8 param_2,long param_3)
+     {
+       int *piVar1;
+       int *local_60;
+       local_60 = (int *)**param_1;
+       if (local_60 != *param_1) {
+         do {
+           if (((int *)local_60[2])[0x15] == 0) {
+             ActActor::DrawWeapons((int *)local_60[2],param_2,param_3);
+             piVar1 = *param_1;
+           }
+           else {
+         ...
+  0x10b8e8 lexicographical_compare<signed_char_*,_signed_char_*>
+     callers: 
+     callees: 
+     bool lexicographical_compare<signed_char_*,_signed_char_*>
+                    (char *param_1,char *param_2,char *param_3,char *param_4)
+     {
+       char cVar1;
+       if ((param_1 != param_2) && (param_3 != param_4)) {
+         cVar1 = *param_1;
+         while( true ) {
+           if (cVar1 < *param_3) {
+             return true;
+           }
+           param_1 = param_1 + 1;
+           if (*param_3 < cVar1) {
+         ...
+  0x10b950 __lexicographical_compare_3way<signed_char_*,_signed_char_*>
+     callers: 
+     callees: 
+     uint __lexicographical_compare_3way<signed_char_*,_signed_char_*>
+                    (char *param_1,char *param_2,char *param_3,char *param_4)
+     {
+       char cVar1;
+       if (param_1 == param_2) {
+     LAB_0010b990:
+         if (param_3 == param_4) {
+     LAB_0010b9a8:
+           return (uint)(param_1 != param_2);
+         }
+       }
+       else {
+         ...
+  0x10b9b0 _Rb_tree<LString,_LString>::_M_erase
+     callers: FUN_00117308, FUN_0012ab68, FUN_0013fec8, FUN_00142cc0, FUN_001437a8, FUN_00143cd0, FUN_0015e680, FUN_0016ed60, FUN_00175478, FUN_0017a6f0, FUN_00183988, FUN_00192b48, FUN_00195e38, FUN_0019cb30, FUN_
+     callees: FastFree, _M_erase
+     void _Rb_tree<LString,_LString>::_M_erase(undefined8 param_1,long param_2)
+     {
+       int iVar1;
+       void *pvVar2;
+       if (param_2 != 0) {
+         iVar1 = *(int *)((int)param_2 + 0xc);
+         while( true ) {
+           _M_erase(param_1,(long)iVar1);
+           pvVar2 = (void *)param_2;
+           iVar1 = *(int *)((int)pvVar2 + 8);
+           param_2 = (long)iVar1;
+           UMemory::FastFree(pvVar2,0x18);
+         ...
+  0x10ba18 _Rb_tree<LString,_DebugItem_*>::_M_erase
+     callers: FUN_00117370, FUN_0012abd0, FUN_0013ff30, FUN_00142d28, FUN_00143810, FUN_00143d38, FUN_0015e6e8, FUN_0016edc8, FUN_001754e0, FUN_0017a758, FUN_001839f0, FUN_00192bb0, FUN_00195ea0, FUN_0019cb98, FUN_
+     callees: FastFree, _M_erase
+     void _Rb_tree<LString,_DebugItem_*>::_M_erase(undefined8 param_1,long param_2)
+     {
+       int iVar1;
+       void *pvVar2;
+       if (param_2 != 0) {
+         iVar1 = *(int *)((int)param_2 + 0xc);
+         while( true ) {
+           _M_erase(param_1,(long)iVar1);
+           pvVar2 = (void *)param_2;
+           iVar1 = *(int *)((int)pvVar2 + 8);
+           param_2 = (long)iVar1;
+           UMemory::FastFree(pvVar2,0x1c);
+         ...
+  0x10ba80 _List_base<ActActor_*,_allocator<ActActor_*>_>::clear
+     callers: ~ActActorDatabase
+     callees: FastFree
+     void _List_base<ActActor_*,_allocator<ActActor_*>_>::clear(int **param_1)
+     {
+       int *piVar1;
+       int *piVar2;
+       piVar1 = *param_1;
+       piVar2 = (int *)*piVar1;
+       if (piVar2 != piVar1) {
+         do {
+           piVar1 = (int *)*piVar2;
+           UMemory::FastFree(piVar2,0xc);
+           piVar2 = piVar1;
+         } while (piVar1 != *param_1);
+         ...
+  0x10bb20 AnimationController_type_info_function
+     callers: 
+     callees: maybePrintTypeInfo
+     undefined8 AnimationController_type_info_function(void)
+     {
+       if (DAT_003c8200 == 0) {
+         maybePrintTypeInfo(0x3c8200,"19AnimationController");
+       }
+       return 0x3c8200;
+     }
+  0x10bb60 AnimationController::operator_new
+     callers: 
+     callees: FastAlloc
+     undefined8 * AnimationController::operator_new(ulong param_1)
+     {
+       undefined8 *puVar1;
+       puVar1 = UMemory::FastAlloc(param_1,"AnimationController");
+       return puVar1;
+     }
+  0x10bb80 AnimationController::operator_delete
+     callers: 
+     callees: FastFree
+     void AnimationController::operator_delete(undefined8 param_1,ulong param_2)
+     {
+       UMemory::FastFree((void *)param_1,param_2);
+       return;
+     }
+  0x10bba0 AnimationController::GetActPoser
+     callers: 
+     callees: 
+     undefined4 AnimationController::GetActPoser(int param_1)
+     {
+       return *(undefined4 *)(param_1 + 4);
+     }
+
+====================================================================================================
+
+## window 36: Xbox 0x1bd60 ActWeaponDatabase::LoadWeapon .. 0x1bef0 URefCounter<ActWeaponDatabase::WeaponInfo>::Get   (PS2 0x117060 .. 0x1185f8)
+
+Xbox functions in the window, address order:
+  0x1be20 UNNAMED
+     callers: FUN_00150900
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_0001ba00, FastFree
+     void __fastcall FUN_0001be20(int param_1)
+     {
+       int local_4;
+       local_4 = param_1;
+       FUN_0001ba00(&local_4,**(undefined4 **)(param_1 + 4),*(undefined4 **)(param_1 + 4));
+       if (*(void **)(param_1 + 4) != (void *)0x0) {
+         UMemory::FastFree(*(void **)(param_1 + 4),0x98);
+       }
+       *(undefined4 *)(param_1 + 4) = 0;
+       *(undefined4 *)(param_1 + 8) = 0;
+       return;
+     }
+  0x1be60 UNNAMED
+     callers: FUN_0015cd40
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_0001b450, FUN_0001ba00, FastFree
+     void __fastcall FUN_0001be60(int param_1)
+     {
+       int local_10;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00150908;
+       local_4 = 0;
+       local_10 = param_1;
+       FUN_0001b450(*(undefined4 *)(*(int *)(param_1 + 4) + 4));
+       *(int *)(*(int *)(param_1 + 4) + 4) = *(int *)(param_1 + 4);
+       *(undefined4 *)(param_1 + 8) = 0;
+       *(undefined4 *)*(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_1 + 4);
+       *(int *)(*(int *)(param_1 + 4) + 8) = *(int *)(param_1 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x117148 ActWeaponDatabase::UnloadWeapon
+     callers: ~ActWeaponDatabase
+     callees: FastFree, GetReference, RemoveReference, UnLoad, __builtin_delete
+     void __thiscall ActWeaponDatabase::UnloadWeapon(ActWeaponDatabase *this,char *param_1)
+     {
+       int *piVar1;
+       undefined4 *puVar2;
+       puVar2 = (undefined4 *)
+                URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference((int *)this->field0_0x0,param_1)
+       ;
+       URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference(this->field0_0x0,(int)puVar2);
+       piVar1 = (int *)*puVar2;
+       if (piVar1 != (int *)0x0) {
+         ActWeaponAux::UnLoad(piVar1);
+         UMemory::FastFree(piVar1,4);
+         ...
+  0x1173d8 _Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase
+     callers: _M_erase, ~URefCounter
+     callees: FastFree, _M_erase
+     void _Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase(undefined8 param_1,long param_2)
+     {
+       int iVar1;
+       void *pvVar2;
+       if (param_2 != 0) {
+         iVar1 = *(int *)((int)param_2 + 0xc);
+         while( true ) {
+           _M_erase(param_1,(long)iVar1);
+           pvVar2 = (void *)param_2;
+           iVar1 = *(int *)((int)pvVar2 + 8);
+           param_2 = (long)iVar1;
+           UMemory::FastFree(pvVar2,0x98);
+         ...
+  0x117440 URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter
+     callers: Get
+     callees: FastAlloc
+     undefined8 URefCounter<ActWeaponDatabase::WeaponInfo>::URefCounter(undefined8 param_1)
+     {
+       undefined4 *puVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       *piVar2 = 0;
+       puVar1 = UMemory::FastAlloc(0x98,"STL");
+       piVar2[1] = 0;
+       *piVar2 = (int)puVar1;
+       *(undefined1 *)(piVar2 + 2) = 0;
+       *puVar1 = 0;
+       *(undefined4 *)(*piVar2 + 4) = 0;
+         ...
+  0x1174a8 URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter
+     callers: FUN_00116f60
+     callees: FastFree, _M_erase, __builtin_delete
+     void URefCounter<ActWeaponDatabase::WeaponInfo>::~URefCounter(long param_1,ulong param_2)
+     {
+       int *piVar1;
+       piVar1 = (int *)param_1;
+       if (piVar1[1] != 0) {
+         _Rb_tree<MapKey,_ActWeaponDatabase::WeaponInfo>::_M_erase(param_1,(long)*(int *)(*piVar1 + 4));
+         *(int *)(*piVar1 + 8) = *piVar1;
+         *(undefined4 *)(*piVar1 + 4) = 0;
+         *(int *)(*piVar1 + 0xc) = *piVar1;
+         piVar1[1] = 0;
+       }
+       UMemory::FastFree((void *)*piVar1,0x98);
+         ...
+  0x1175d0 URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference
+     callers: LoadWeapon, UnloadWeapon, UseWeapon
+     callees: FUN_00117528, strcpy
+     undefined4 URefCounter<ActWeaponDatabase::WeaponInfo>::GetReference(int *param_1,char *param_2)
+     {
+       undefined4 uVar1;
+       int local_b0 [4];
+       char local_a0 [128];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       strcpy(local_a0,param_2);
+       FUN_00117528((long)(int)local_b0,param_1,local_a0);
+       if (local_b0[0] == *param_1) {
+         ...
+  0x117d38 URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference
+     callers: UnloadWeapon
+     callees: FastFree
+     undefined4 URefCounter<ActWeaponDatabase::WeaponInfo>::RemoveReference(int **param_1,int param_2)
+     {
+       int iVar1;
+       int *piVar2;
+       int iVar3;
+       int *piVar4;
+       int *piVar5;
+       int *piVar6;
+       int *piVar7;
+       int *piVar8;
+       int *piVar9;
+       int *local_60;
+         ...
+  0x118360 RAutonomousObj::~RAutonomousObj
+     callers: 
+     callees: FastFree, ~RSceneObj
+     void RAutonomousObj::~RAutonomousObj
+                    (undefined8 param_1,ulong param_2,undefined8 param_3,undefined8 param_4,
+                    undefined8 param_5)
+     {
+       *(int **)((int)(void *)param_1 + 0x7c) = &INT_00367508;
+       RSceneObj::~RSceneObj((long)((int)(void *)param_1 + 0x40),0,param_3,param_4,param_5);
+       if ((param_2 & 1) != 0) {
+         UMemory::FastFree((void *)param_1,0x80);
+       }
+       return;
+     }
+  0x1183b8 RAutonomousObj_type_info_function
+     callers: 
+     callees: Instance_type_info_function, RSceneObj_type_info_function, __rtti_class
+     undefined8 RAutonomousObj_type_info_function(void)
+     {
+       if (DAT_00422380 == 0) {
+         RSceneObj_type_info_function();
+         CARP::Instance_type_info_function();
+         __rtti_class(0x422380,"14RAutonomousObj",&PTR_DAT_003675c8,2);
+       }
+       return 0x422380;
+     }
+  0x118418 ActWeapon_type_info_function
+     callers: 
+     callees: Instance_type_info_function, RSceneObj_type_info_function, __rtti_class
+     undefined4 * ActWeapon_type_info_function(void)
+     {
+       if (DAT_00422390 == 0) {
+         if (DAT_00422380 == 0) {
+           RSceneObj_type_info_function();
+           CARP::Instance_type_info_function();
+           __rtti_class(0x422380,"14RAutonomousObj",&PTR_DAT_003675c8,2);
+         }
+         __rtti_class(0x422390,"9ActWeapon",&PTR_DAT_003675e8,1);
+       }
+       return &DAT_00422390;
+     }
+  0x1184b8 ActWeapon::operator_new
+     callers: 
+     callees: FastAlloc
+     undefined8 * ActWeapon::operator_new(ulong param_1)
+     {
+       undefined8 *puVar1;
+       puVar1 = UMemory::FastAlloc(param_1,"ActWeapon");
+       return puVar1;
+     }
+  0x1184d8 ActWeapon::operator_delete
+     callers: 
+     callees: FastFree
+     void ActWeapon::operator_delete(undefined8 param_1,ulong param_2)
+     {
+       UMemory::FastFree((void *)param_1,param_2);
+       return;
+     }
+
+====================================================================================================
+
+## window 37: Xbox 0xa1b50 RMuzzleFlash::Init .. 0xa1e30 RParticleSystemManager::UpdateAndRenderAllSystems   (PS2 0x1e5488 .. 0x1e6e48)
+
+Xbox functions in the window, address order:
+  0xa1c00 UNNAMED
+     callers: RParticleSystem
+     chain: RParticleSystem::RParticleSystem@a2140
+     callees: FUN_00115cc0
+     void __fastcall FUN_000a1c00(int param_1)
+     {
+       undefined4 *puVar1;
+       float fVar2;
+       puVar1 = *(undefined4 **)(param_1 + 0x44);
+       *(undefined4 **)(param_1 + 0x4c) = puVar1;
+       *(undefined4 *)(param_1 + 0x20) = *puVar1;
+       *(undefined4 *)(param_1 + 0x24) = puVar1[1];
+       *(undefined4 *)(param_1 + 0x28) = puVar1[2];
+       FUN_00115cc0(puVar1 + 8,puVar1 + 0xc,param_1 + 0x10);
+       fVar2 = (float)*(int *)(*(int *)(param_1 + 0x40) + 0x48);
+       if (*(int *)(*(int *)(param_1 + 0x40) + 0x48) < 0) {
+         fVar2 = fVar2 + 4.2949673e+09;
+       }
+         ...
+  0xa1c60 UNNAMED
+     callers: ApplyWorldEffects
+     chain: Shell::ApplyWorldEffects@749b0
+     callees: ResetParticle, Spawn, VU0_v4unitcrossprodxyz
+     void FUN_000a1c60(undefined4 param_1,undefined4 param_2,float *param_3,int param_4)
+     {
+       int iVar1;
+       uint local_84;
+       float local_80;
+       float local_7c;
+       float local_78;
+       undefined4 local_70;
+       undefined4 local_6c;
+       undefined4 local_68;
+       undefined4 local_5c;
+       undefined4 local_58;
+       undefined4 local_54;
+       undefined1 local_50 [32];
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1e55e8 RMuzzleFlash::Kill
+     callers: KillGameRender
+     callees: 
+     void RMuzzleFlash::Kill(void)
+     {
+       return;
+     }
+  0x1e5c98 RMuzzleFlash_fgPts_global_ctors
+     callers: 
+     callees: FUN_001e5ba0
+     void RMuzzleFlash_fgPts_global_ctors(void)
+     {
+       FUN_001e5ba0(1,0xffff);
+       return;
+     }
+  0x1e5cb8 RMuzzleFlash_fgPts_global_dtors
+     callers: 
+     callees: FUN_001e5ba0
+     void RMuzzleFlash_fgPts_global_dtors(void)
+     {
+       FUN_001e5ba0(0,0xffff);
+       return;
+     }
+  0x1e5cd8 CalcEmitVal
+     callers: RParticleSystem, SetSystem
+     callees: 
+     float CalcEmitVal(int param_1,int param_2,int param_3,long param_4)
+     {
+       int iVar1;
+       if ((param_4 != 0) && (iVar1 = param_3 + (int)param_4, param_3 <= param_2)) {
+         if (param_2 <= iVar1) {
+           return (float)param_1 / (float)param_3;
+         }
+         return (float)param_1 / (((float)param_2 / (float)iVar1) * (float)param_3);
+       }
+       return (float)param_1 / (float)param_2;
+     }
+  0x1e5d78 RParticleSystem::InitData
+     callers: RMovableParticleSystem, RParticleSystem
+     callees: 
+     void RParticleSystem::InitData(undefined (*param_1) [16])
+     {
+       undefined *puVar1;
+       uint uVar2;
+       uint uVar3;
+       uint uVar4;
+       undefined4 uVar5;
+       ulong *puVar6;
+       ulong in_v0;
+       ulong uVar7;
+       undefined1 auVar8 [16];
+       undefined1 auVar9 [16];
+         ...
+  0x1e5f60 RParticleSystem::~RParticleSystem
+     callers: ~RMovableParticleSystem
+     callees: FastFree
+     void RParticleSystem::~RParticleSystem(undefined8 param_1,ulong param_2)
+     {
+       *(undefined **)((int)(void *)param_1 + 0x60) = &DAT_003909a8;
+       if (*(int *)((int)(void *)param_1 + 0x34) != 0) {
+         *(undefined4 *)(*(int *)((int)(void *)param_1 + 0x34) + 0x18) = 0;
+       }
+       if ((param_2 & 1) != 0) {
+         UMemory::FastFree((void *)param_1,0x70);
+       }
+       return;
+     }
+  0x1e5fa0 RParticleSystem::SetSystem
+     callers: UpdateCar
+     callees: CalcEmitVal, FindSystemViaTag
+     void RParticleSystem::SetSystem(int param_1,uint param_2)
+     {
+       int iVar1;
+       uint uVar2;
+       float fVar3;
+       iVar1 = RParticleSystemManager::fManager;
+       if (*(uint *)(*(int *)(param_1 + 0x34) + 0x2c) != param_2) {
+         *(uint *)(*(int *)(param_1 + 0x34) + 0x2c) = param_2;
+         iVar1 = RParticleLibrary::FindSystemViaTag((int *)(iVar1 + 8),param_2);
+         uVar2 = (uint)(*(int *)(iVar1 + 0xc) * FeatureManager::_particlePercent256) >> 8;
+         *(uint *)(param_1 + 0x58) = uVar2;
+         fVar3 = CalcEmitVal(uVar2,*(int *)(iVar1 + 0x3c),*(int *)(iVar1 + 0x40),
+         ...
+  0x1e6028 RParticleSystem::RParticleCreator::Create
+     callers: 
+     callees: FastAlloc, RParticleSystem
+     void RParticleSystem::RParticleCreator::Create(undefined4 param_1,undefined8 param_2,int param_3)
+     {
+       void *pvVar1;
+       pvVar1 = UMemory::FastAlloc(0x70,"RParticleSystem");
+       RParticleSystem(param_1,(long)(int)pvVar1,param_3,1);
+       return;
+     }
+  0x1e6078 RMovableParticleSystem::RMovableParticleCreator::Create
+     callers: 
+     callees: FastAlloc, RMovableParticleSystem
+     void RMovableParticleSystem::RMovableParticleCreator::Create
+                    (undefined4 param_1,undefined8 param_2,ulong param_3,undefined8 param_4,ulong param_5
+                    )
+     {
+       void *pvVar1;
+       undefined8 extraout_a2;
+       ulong extraout_a3;
+       pvVar1 = UMemory::FastAlloc(0xb0,"RMovableParticleSystem");
+       RMovableParticleSystem(param_1,(long)(int)pvVar1,param_3,extraout_a2,extraout_a3);
+       return;
+     }
+  0x1e60c8 RMovableParticleSystem::RMovableParticleSystem
+     callers: Create
+     callees: InitData, RParticleSystem
+     undefined8
+     RMovableParticleSystem::RMovableParticleSystem
+               (undefined4 param_1,undefined8 param_2,ulong param_3,undefined8 param_4,ulong param_5)
+     {
+       undefined *puVar1;
+       uint uVar2;
+       uint uVar3;
+       ulong *puVar4;
+       ulong uVar5;
+       uint uVar6;
+       ulong uVar7;
+       ulong extraout_a2;
+         ...
+  0x1e61a0 RMovableParticleSystem::~RMovableParticleSystem
+     callers: 
+     callees: FastFree, ~RParticleSystem
+     void RMovableParticleSystem::~RMovableParticleSystem(undefined8 param_1,ulong param_2)
+     {
+       *(undefined **)((int)(void *)param_1 + 0x60) = &vtable_RMovableParticleSystem;
+       RParticleSystem::~RParticleSystem(param_1,0);
+       if ((param_2 & 1) != 0) {
+         UMemory::FastFree((void *)param_1,0xb0);
+       }
+       return;
+     }
+  0x1e62e0 RParticleSystemManager::GetSystem
+     callers: 
+     callees: find
+     undefined4 RParticleSystemManager::GetSystem(int param_1,uint param_2)
+     {
+       undefined4 uVar1;
+       int local_50 [8];
+       uint local_30 [4];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       local_30[0] = param_2;
+       _Rb_tree<unsigned_int,_RParticleSystem_*>::find
+                 ((long)(int)local_50,*(int **)(param_1 + 4),local_30);
+         ...
+  0x1e6330 RParticleSystemManager::CreateParticles
+     callers: ApplyWorldEffects
+     callees: ResetParticle, Spawn
+     void RParticleSystemManager::CreateParticles
+                    (undefined8 param_1,float *param_2,uint param_3,long param_4,int param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       uint uVar3;
+       float fVar4;
+       float *pfVar5;
+       ulong in_v1;
+       ulong uVar6;
+       uint uVar7;
+       undefined1 in_vf0 [16];
+         ...
+
+====================================================================================================
+
+## window 38: Xbox 0xd3850 GGallery::GET_Canvas .. 0xd39f0 GFXGallery::GET_EffectPosQuat   (PS2 0x236b60 .. 0x233f88)
+
+Xbox functions in the window, address order:
+  0xd38f0 UNNAMED
+     callers: CANVAS_Draw
+     chain: GFXGallery::CANVAS_Draw@d51e0
+     callees: 
+     void FUN_000d38f0(int param_1,int param_2,int param_3,int *param_4,int *param_5,int *param_6,
+                      int *param_7)
+     {
+       int iVar1;
+       int iVar2;
+       int iVar3;
+       int iVar4;
+       uint uVar5;
+       int iVar6;
+       uint uVar7;
+       *param_4 = param_1;
+       *param_5 = 0;
+       *param_6 = param_1;
+       *param_7 = 0;
+         ...
+  0xd39d0 UNNAMED
+     callers: CANVAS_Draw
+     chain: GFXGallery::CANVAS_Draw@d51e0
+     callees: DataLocateTag
+     int FUN_000d39d0(void)
+     {
+       int iVar1;
+       int iVar2;
+       iVar1 = UGroup::DataLocateTag(0x676b3000);
+       iVar2 = *(int *)(iVar1 + 0xc);
+       if ((*(byte *)(iVar1 + 4) & 2) != 0) {
+         iVar2 = iVar2 + iVar1;
+       }
+       return iVar2;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x234068 GFXGallery::Get_InterpolatedKey
+     callers: 
+     callees: 
+     undefined8
+     GFXGallery::Get_InterpolatedKey
+               (float param_1,undefined8 param_2,undefined8 param_3,float *param_4,ulong param_5,
+               ulong param_6)
+     {
+       uint uVar1;
+       uint uVar2;
+       float fVar3;
+       float fVar4;
+       ulong *puVar5;
+       ulong uVar6;
+       ulong uVar7;
+         ...
+  0x234190 GFXGallery::GET_NumParticleLibrarySystems
+     callers: 
+     callees: 
+     undefined4 GFXGallery::GET_NumParticleLibrarySystems(int param_1)
+     {
+       return *(undefined4 *)(&DAT_00001418 + param_1);
+     }
+  0x234258 GFXGallery::CULL_SetCanvas
+     callers: CULL_SetCanvas
+     callees: 
+     void GFXGallery::CULL_SetCanvas(int param_1,int param_2,ulong param_3)
+     {
+       ulong uVar1;
+       ulong uVar2;
+       ulong uVar3;
+       int iVar4;
+       uVar2 = (param_3 & 1) << 0x2a;
+       iVar4 = *(int *)(&DAT_00001414 + param_1) + *(int *)(param_1 + param_2 * 4 + 0x408) * 0x90;
+       uVar1 = *(ulong *)(iVar4 + 0x68);
+       uVar3 = uVar1 & 0xfffffbffffffffff | uVar2;
+       *(ulong *)(iVar4 + 0x68) = uVar3;
+       if (param_3 != 0) {
+         ...
+  0x234330 GFXGallery::STICKY_ReleaseAllIndexes
+     callers: GFXGallery, PurgeAllEffects, ~GFXGallery
+     callees: 
+     void GFXGallery::STICKY_ReleaseAllIndexes(int param_1)
+     {
+       int iVar1;
+       undefined4 *puVar2;
+       puVar2 = (undefined4 *)(param_1 + 0x404);
+       iVar1 = 1;
+       do {
+         *puVar2 = 0;
+         iVar1 = iVar1 + -1;
+         puVar2 = puVar2 + -1;
+       } while (-1 < iVar1);
+       return;
+         ...
+  0x2344d0 GFXGallery::STICKY_ReleaseIndex
+     callers: FRAME_Draw
+     callees: 
+     void GFXGallery::STICKY_ReleaseIndex(int param_1,ulong param_2)
+     {
+       uint *puVar1;
+       if (param_2 < 0x40) {
+         puVar1 = (uint *)(param_1 + 0x400 + ((uint)param_2 >> 5) * 4);
+         *puVar1 = *puVar1 & ~(1 << ((uint)param_2 & 0x1f));
+       }
+       return;
+     }
+  0x234508 GFXGallery::GET_StickyEffectPos
+     callers: FUN_002360c0, RenderBlock
+     callees: 
+     undefined4 GFXGallery::GET_StickyEffectPos(int param_1,ulong param_2,uint param_3)
+     {
+       ulong uVar1;
+       ulong uVar2;
+       ulong *puVar3;
+       uint uVar4;
+       uint uVar5;
+       ulong uStack_19;
+       undefined1 auStack_11 [9];
+       uint local_8;
+       undefined4 local_4;
+       uVar2 = DAT_00355ba8;
+         ...
+  0x235490 GFXGallery::CANVAS_PurgeSceneObjEffects
+     callers: PurgeSceneObjEffects
+     callees: CANVAS_PurgeSceneObj
+     void GFXGallery::CANVAS_PurgeSceneObjEffects
+                    (int param_1,int param_2,undefined8 param_3,undefined8 param_4,undefined8 param_5)
+     {
+       int iVar1;
+       undefined8 extraout_a2;
+       undefined8 extraout_a3;
+       undefined8 extraout_t0;
+       int *piVar2;
+       int iVar3;
+       iVar3 = 0;
+       if (0 < *(int *)(&DAT_0000141c + param_1)) {
+         piVar2 = (int *)(param_1 + 0x408);
+         ...
+  0x235520 GFXGallery::CANVAS_PurgeSceneObj
+     callers: CANVAS_Purge, CANVAS_PurgeSceneObjEffects
+     callees: memset
+     void GFXGallery::CANVAS_PurgeSceneObj
+                    (int param_1,int param_2,undefined8 param_3,undefined8 param_4,undefined8 param_5)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       int iVar3;
+       undefined4 uVar4;
+       uint uVar5;
+       ulong *puVar6;
+       int iVar7;
+       uint uVar8;
+       long lVar9;
+         ...
+  0x2356d8 GFXGallery::CANVAS_SetCulling
+     callers: SetCulling
+     callees: 
+     void GFXGallery::CANVAS_SetCulling(int param_1,int param_2,ulong param_3)
+     {
+       int iVar1;
+       iVar1 = *(int *)(param_1 + param_2 * 4 + 0x408) * 0x90 + *(int *)(&DAT_00001414 + param_1);
+       *(ulong *)(iVar1 + 0x68) = *(ulong *)(iVar1 + 0x68) & 0xfffffbffffffffff | (param_3 & 1) << 0x2a;
+       return;
+     }
+  0x235808 GFXGallery::DEBRIS_SetState
+     callers: CANVAS_Draw
+     callees: 
+     void GFXGallery::DEBRIS_SetState(void)
+     {
+       return;
+     }
+  0x235ea0 GFXGallery::GLARE_Interpolate
+     callers: CANVAS_Draw
+     callees: 
+     void GFXGallery::GLARE_Interpolate
+                    (float param_1,undefined8 param_2,undefined4 *param_3,int param_4,undefined4 *param_5
+                    )
+     {
+       param_5[1] = ABS((float)param_3[1] + (*(float *)(param_4 + 4) - (float)param_3[1]) * param_1);
+       *param_5 = *param_3;
+       param_5[2] = param_3[2];
+       return;
+     }
+  0x236718 NULL_SOUND_ID_global_ctors
+     callers: 
+     callees: FUN_002366e0
+     void NULL_SOUND_ID_global_ctors(void)
+     {
+       FUN_002366e0(1,0xffff);
+       return;
+     }
+  0x236b48 GGallery::DataIndex
+     callers: GET_FirstIdleKey, GET_Puppet, GET_PuppetAndGroup
+     callees: 
+     uint GGallery::DataIndex(undefined8 param_1,int param_2,uint param_3)
+     {
+       return param_2 << 0xc | param_3;
+     }
+
+====================================================================================================
+
+## window 39: Xbox 0xad470 RigidBody::ResolveMassScaledTorque4 .. 0xad600 RigidBody::ForceToSleep   (PS2 0x1f88c8 .. 0x1fd170)
+
+Xbox functions in the window, address order:
+  0xad4a0 UNNAMED
+     callers: FUN_000b0ec0, ResetObject, RigidBody
+     chain: RigidBody::ResetObject@adcd0 | RigidBody::RigidBody@b0b20 | FUN_000b0ec0@b0ec0 <- Simulation::SimulateGame@b4a60
+     callees: 
+     void __fastcall FUN_000ad4a0(int param_1)
+     {
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f0) = (int)ROUND(*(float *)(param_1 + 0x10) * 0.2);
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f4) = (int)ROUND(*(float *)(param_1 + 0x14) * 0.2);
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f8) = (int)ROUND(*(float *)(param_1 + 0x18) * 0.2);
+       return;
+     }
+  0xad520 UNNAMED
+     callers: CollideWithWorld
+     chain: CollideWithWorld@b1420 <- Simulation::SimulateGame@b4a60
+     callees: 
+     void __thiscall FUN_000ad520(int param_1,undefined4 param_2,float param_3)
+     {
+       float fVar1;
+       char cVar2;
+       int iVar3;
+       if (*(char *)(param_1 + 0x6d) < '\x04') {
+         fVar1 = 0.2;
+       }
+       else {
+         fVar1 = 0.05;
+       }
+       if (fVar1 < param_3) {
+         param_3 = FLOAT_001c8fac * 2.0 * param_3;
+         if (*(char *)(param_1 + 0x6d) < '\x04') {
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1f8908 RigidBody::UpdateZonalInfo
+     callers: ResetObject, RigidBody, Timestep_CollectVU0data
+     callees: 
+     void RigidBody::UpdateZonalInfo(int param_1)
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       fVar2 = *(float *)(param_1 + 0x10) * 0.2;
+       fVar3 = 0.5;
+       if (fVar2 < 0.0) {
+         fVar3 = -0.5;
+       }
+       fVar1 = 0.5;
+       *(int *)(*(int *)(param_1 + 0x5c) + 0x4f0) = (int)(fVar3 + fVar2);
+         ...
+  0x1f89e0 Timestep_LoadAndStartVU0
+     callers: UpdatePositionAndOrientation
+     callees: Timestep_CollectVU0data, memset
+     void Timestep_LoadAndStartVU0
+                    (float param_1,undefined (*param_2) [16],undefined (*param_3) [16],undefined8 param_4
+                    ,undefined8 param_5,undefined8 param_6)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       ulong uVar3;
+       int iVar4;
+       undefined1 auVar5 [8];
+       undefined1 auVar6 [16];
+       undefined (*pauVar7) [16];
+       undefined1 auVar8 [16];
+         ...
+  0x1f8cf0 RigidBody::Timestep_CollectVU0data
+     callers: SimulateGame, Timestep_LoadAndStartVU0
+     callees: ControlSleep, UpdateZonalInfo
+     void RigidBody::Timestep_CollectVU0data(void)
+     {
+       undefined4 *puVar1;
+       int iVar2;
+       undefined1 auVar3 [16];
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 (*pauVar7) [16];
+       undefined1 (*pauVar8) [16];
+       undefined1 auVar9 [16];
+       float fVar10;
+         ...
+  0x1f8fc8 RigidBody::Debug
+     callers: DebugObject
+     callees: 
+     void RigidBody::Debug(void)
+     {
+       return;
+     }
+  0x1f8fd0 RigidBody::UpdatePositionAndOrientation
+     callers: SimulateGame
+     callees: Timestep_LoadAndStartVU0
+     void RigidBody::UpdatePositionAndOrientation
+                    (float param_1,undefined (*param_2) [16],undefined8 param_3,undefined8 param_4,
+                    undefined8 param_5,undefined8 param_6)
+     {
+       Timestep_LoadAndStartVU0
+                 (param_1,param_2,*(undefined (**) [16])(param_2[5] + 0xc),param_4,param_5,param_6);
+       return;
+     }
+  0x1f8ff0 RigidBody::Resolve_CollectVU0data
+     callers: ResolveLeverForces, SimulateGame
+     callees: ECollision, operator_new
+     void RigidBody::Resolve_CollectVU0data(void)
+     {
+       undefined1 *puVar1;
+       uint uVar2;
+       int iVar3;
+       int iVar4;
+       float fVar5;
+       undefined4 extraout_a2_lo;
+       undefined4 extraout_a2_hi;
+       undefined1 auVar6 [16];
+       float fVar7;
+       undefined4 in_vf22w;
+         ...
+  0x1f91e8 RigidBody::ResolveLeverForces
+     callers: CollideWithGround
+     callees: GetOwner, Resolve_CollectVU0data
+     void RigidBody::ResolveLeverForces
+                    (undefined (*param_1) [16],int param_2,undefined (*param_3) [16],
+                    undefined (*param_4) [16],undefined (*param_5) [16])
+     {
+       int iVar1;
+       int iVar2;
+       undefined1 (*pauVar3) [16];
+       float fVar4;
+       float fVar5;
+       undefined4 uVar6;
+       undefined1 auVar7 [16];
+       iVar1 = DAT_00339178;
+         ...
+  0x1f9500 RigidBody::CollideWithGround
+     callers: SimulateGame
+     callees: GetOrientToGround, GetOwner, ResolveLeverForces, TempGetHeightInformation
+     void RigidBody::CollideWithGround(undefined (*param_1) [16])
+     {
+       undefined *puVar1;
+       char cVar2;
+       uint uVar3;
+       uint uVar4;
+       int iVar5;
+       long lVar6;
+       ulong uVar7;
+       int iVar8;
+       ulong uVar9;
+       ulong uVar10;
+         ...
+  0x1f98e8 RigidBody::ModifyLevers
+     callers: ResolveCollision
+     callees: ConvertLocalToWorld, ConvertWorldToLocal
+     void RigidBody::ModifyLevers
+                    (int param_1,int param_2,undefined (*param_3) [16],undefined (*param_4) [16],
+                    undefined (*param_5) [16],undefined (*param_6) [16],long param_7)
+     {
+       char cVar1;
+       bool bVar2;
+       bool bVar3;
+       float fVar4;
+       float fVar5;
+       float fVar6;
+       undefined1 in_vf0 [16];
+       undefined1 auVar7 [16];
+         ...
+  0x1f9b40 RigidBody::ScaleObjObjForces
+     callers: ResolveCollision
+     callees: 
+     void RigidBody::ScaleObjObjForces
+                    (float param_1,float param_2,float param_3,int param_4,int param_5,
+                    undefined (*param_6) [16],undefined (*param_7) [16])
+     {
+       float fVar1;
+       float fVar2;
+       float fVar3;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined1 auVar7 [16];
+       undefined1 local_20 [16];
+         ...
+  0x1f9d98 RigidBody::ResolveCollision
+     callers: CollideWithObject
+     callees: GetHitPoints, GetOwner, ModifyLevers, PlayAnimation, ScaleObjObjForces
+     undefined8
+     RigidBody::ResolveCollision
+               (float param_1,int param_2,int param_3,int param_4,undefined (*param_5) [16],
+               undefined (*param_6) [16],uint param_7)
+     {
+       uint uVar1;
+       int iVar2;
+       ulong *puVar3;
+       bool bVar4;
+       bool bVar5;
+       bool bVar6;
+       bool bVar7;
+         ...
+  0x1fade8 RigidBody::ResolveWorldOBBCollision
+     callers: CollideWithWorld
+     callees: 
+     undefined8
+     RigidBody::ResolveWorldOBBCollision
+               (float param_1,undefined4 param_2,int param_3,undefined (*param_4) [16],
+               undefined (*param_5) [16],uint param_6,undefined (*param_7) [16])
+     {
+       byte bVar1;
+       uint uVar2;
+       uint uVar3;
+       int iVar4;
+       ulong *puVar5;
+       bool bVar6;
+       ulong uVar7;
+         ...
+  0x1fc198 RigidBody::CalculateAndApplyWorldDamage
+     callers: CollideWithWorld
+     callees: GetOwner
+     void RigidBody::CalculateAndApplyWorldDamage(float param_1,int param_2,undefined8 param_3)
+     {
+       char cVar1;
+       bool bVar2;
+       int iVar3;
+       long lVar4;
+       float fVar5;
+       fVar5 = 0.05;
+       bVar2 = *(char *)(param_2 + 0x6d) < '\x04';
+       if (bVar2) {
+         fVar5 = 0.2;
+       }
+         ...
+  0x1fc2f0 RigidBody::CollideWithWorld
+     callers: SimulateGame
+     callees: CalculateAndApplyWorldDamage, CheckOBBOverlapAndFindIntersection, ECollision, FUN_00218440, FUN_00218668, FUN_002187f0, FastAlloc, FastFree, GenerateImpulse, GetOwner, GetRenderInstance, GetSceneObjFromInstance, GetWorldNormal, ProcessStimuli, Progra
+     void RigidBody::CollideWithWorld(ulong param_1)
+     {
+       undefined1 *puVar1;
+       byte bVar2;
+       undefined1 (*pauVar3) [16];
+       bool bVar4;
+       undefined1 auVar5 [16];
+       undefined1 auVar6 [16];
+       undefined8 *puVar7;
+       undefined8 *puVar8;
+       bool bVar9;
+       int iVar10;
+         ...
+
+====================================================================================================
+
+## window 40: Xbox 0x121d00 ASoundManager::Shutdown .. 0x121e80 AStream::SetPath   (PS2 0x2ec140 .. 0x2e86a0)
+
+Xbox functions in the window, address order:
+  0x121d90 UNNAMED
+     callers: FUN_00121e40
+     chain: FUN_00121e40@121e40 <- WTriggerManager::Restart@cff90
+     callees: FUN_00013630, FUN_00013700, FUN_001325ad
+     void __thiscall FUN_00121d90(int param_1_00,uint param_1)
+     {
+       char *pcVar1;
+       char *pcVar2;
+       int iVar3;
+       int extraout_ECX;
+       undefined8 uVar4;
+       undefined1 local_50 [4];
+       undefined1 local_4c;
+       undefined4 local_3c;
+       undefined4 local_38;
+       undefined **local_34 [10];
+       undefined4 local_c;
+       code *pcStack_8;
+         ...
+  0x121e40 UNNAMED
+     callers: Restart
+     chain: WTriggerManager::Restart@cff90
+     callees: FUN_000130e0, FUN_00121d90
+     void FUN_00121e40(void)
+     {
+       int iVar1;
+       int iVar2;
+       iVar1 = *(int *)(DAT_00243a5c + 4);
+       iVar2 = FUN_000130e0(iVar1,*(undefined4 *)(iVar1 + 4),&stack0x00000004);
+       FUN_00121d90(1);
+       *(int *)(iVar1 + 4) = iVar2;
+       **(int **)(iVar2 + 4) = iVar2;
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2e9968 AStream::IsQueueEmpty
+     callers: 
+     callees: 
+     bool __thiscall AStream::IsQueueEmpty(AStream *this)
+     {
+       return this->aStreamPriv->field6_0x18 == this->aStreamPriv->field2_0x8;
+     }
+  0x2e99c0 AStream::IsPreBuffered
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::IsPreBuffered(AStream *this)
+     {
+       return this->aStreamPriv->isPreBuffered;
+     }
+  0x2e9ae0 AStream::Last
+     callers: 
+     callees: FUN_002ea120, Next
+     void __thiscall AStream::Last(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       int iVar2;
+       Next(this);
+       while( true ) {
+         pAVar1 = this->aStreamPriv;
+         iVar2 = pAVar1->field2_0x8;
+         if ((uint)((((int)(pAVar1->field9_0x24 - pAVar1->field5_0x14) >> 2) + -1) * 6 +
+                    ((pAVar1->field6_0x18 - pAVar1->field7_0x1c) * 0x286bca1b >> 2) +
+                   ((pAVar1->field4_0x10 - iVar2) * 0x286bca1b >> 2)) < 2) break;
+         if (iVar2 == pAVar1->field4_0x10 + -0x4c) {
+         ...
+  0x2e9c38 AStream::GetState
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::GetState(AStream *this)
+     {
+       return *(undefined4 *)&this->aStreamPriv->curState;
+     }
+  0x2e9d00 AStream::QueryTime
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::QueryTime(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       pAVar1 = this->aStreamPriv;
+       if (((pAVar1->isPreBuffered != 0) && (-1 < (int)pAVar1->field47_0x5c)) && (pAVar1->isLoop == 0)) {
+         return this->time;
+       }
+       return 0;
+     }
+  0x2e9d38 AStream::QueryLibTime
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::QueryLibTime(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       pAVar1 = this->aStreamPriv;
+       if ((((pAVar1->isPreBuffered != 0) && (-1 < (int)pAVar1->field47_0x5c)) && (pAVar1->isLoop == 0))
+          && (*(int *)&pAVar1->field_0x34 == 2)) {
+         return *(undefined4 *)&pAVar1->libTime;
+       }
+       return 0xffffffff;
+     }
+  0x2ea1f8 URefCounter<AStream>::URefCounter
+     callers: Get
+     callees: FastAlloc
+     undefined8 URefCounter<AStream>::URefCounter(undefined8 param_1)
+     {
+       undefined4 *puVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       *piVar2 = 0;
+       puVar1 = UMemory::FastAlloc(0x98,"STL");
+       piVar2[1] = 0;
+       *piVar2 = (int)puVar1;
+       *(undefined1 *)(piVar2 + 2) = 0;
+       *puVar1 = 0;
+       *(undefined4 *)(*piVar2 + 4) = 0;
+         ...
+  0x2ea260 URefCounter<AStream>::~URefCounter
+     callers: FUN_002e9550
+     callees: FUN_002ea190, FastFree, __builtin_delete
+     void URefCounter<AStream>::~URefCounter(long param_1,ulong param_2)
+     {
+       int *piVar1;
+       piVar1 = (int *)param_1;
+       if (piVar1[1] != 0) {
+         FUN_002ea190(param_1,(long)*(int *)(*piVar1 + 4));
+         *(int *)(*piVar1 + 8) = *piVar1;
+         *(undefined4 *)(*piVar1 + 4) = 0;
+         *(int *)(*piVar1 + 0xc) = *piVar1;
+         piVar1[1] = 0;
+       }
+       UMemory::FastFree((void *)*piVar1,0x98);
+         ...
+  0x2ea388 URefCounter<AStream>::GetReference
+     callers: Create, Get, Remove
+     callees: FUN_002ea2e0, strcpy
+     undefined4 URefCounter<AStream>::GetReference(int *param_1,char *param_2)
+     {
+       undefined4 uVar1;
+       int local_b0 [4];
+       char local_a0 [128];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       strcpy(local_a0,param_2);
+       FUN_002ea2e0((long)(int)local_b0,param_1,local_a0);
+       if (local_b0[0] == *param_1) {
+         ...
+  0x2eb4d8 maybeDequeStreamEntry
+     callers: Stop
+     callees: FastFree
+     void maybeDequeStreamEntry(int param_1)
+     {
+       uint uVar1;
+       void *pvVar2;
+       ulong *puVar3;
+       bool bVar4;
+       ulong uVar5;
+       undefined4 *puVar6;
+       void *pvVar7;
+       uint uVar8;
+       int iVar9;
+       ulong uVar10;
+         ...
+  0x2eb678 AStream_type_info_function
+     callers: 
+     callees: ABaseSound_type_info_function, __rtti_si
+     undefined8 AStream_type_info_function(void)
+     {
+       if (DAT_00427818 == 0) {
+         ABaseSound_type_info_function();
+         __rtti_si(0x427818,"7AStream",&DAT_003c83f0);
+       }
+       return 0x427818;
+     }
+  0x2eb6c8 AStream::GetHoldState
+     callers: 
+     callees: 
+     undefined4 AStream::GetHoldState(void)
+     {
+       return holdState;
+     }
+  0x2eb6d8 AStream::operator_new
+     callers: 
+     callees: operator_new
+     undefined8 * AStream::operator_new(ulong param_1)
+     {
+       undefined8 *puVar1;
+       puVar1 = ABaseSound::operator_new(param_1,"AStream");
+       return puVar1;
+     }
+  0x2eb708 AStream::Release
+     callers: 
+     callees: logWarning
+     void AStream::Release(void)
+     {
+       if (holdState == 1) {
+         holdState = 2;
+       }
+       else if (holdState == 0) {
+         logWarning("WARNING! Ignoring command to release a non-prebuffered stream");
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 41: Xbox 0x1234d0 AStream::Event .. 0x123630 URefCounter<AStream>::Get   (PS2 0x2e9728 .. 0x2eb750)
+
+Xbox functions in the window, address order:
+  0x123560 UNNAMED
+     callers: FUN_00155d10
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00123070, FastFree
+     void __fastcall FUN_00123560(int param_1)
+     {
+       int local_4;
+       local_4 = param_1;
+       FUN_00123070(&local_4,**(undefined4 **)(param_1 + 4),*(undefined4 **)(param_1 + 4));
+       if (*(void **)(param_1 + 4) != (void *)0x0) {
+         UMemory::FastFree(*(void **)(param_1 + 4),0x98);
+       }
+       *(undefined4 *)(param_1 + 4) = 0;
+       *(undefined4 *)(param_1 + 8) = 0;
+       return;
+     }
+  0x1235a0 UNNAMED
+     callers: FUN_0015d260
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_00122500, FUN_00123070, FastFree
+     void __fastcall FUN_001235a0(int param_1)
+     {
+       int local_10;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_00155d18;
+       local_4 = 0;
+       local_10 = param_1;
+       FUN_00122500(*(undefined4 *)(*(int *)(param_1 + 4) + 4));
+       *(int *)(*(int *)(param_1 + 4) + 4) = *(int *)(param_1 + 4);
+       *(undefined4 *)(param_1 + 8) = 0;
+       *(undefined4 *)*(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_1 + 4);
+       *(int *)(*(int *)(param_1 + 4) + 8) = *(int *)(param_1 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2e9968 AStream::IsQueueEmpty
+     callers: 
+     callees: 
+     bool __thiscall AStream::IsQueueEmpty(AStream *this)
+     {
+       return this->aStreamPriv->field6_0x18 == this->aStreamPriv->field2_0x8;
+     }
+  0x2e99c0 AStream::IsPreBuffered
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::IsPreBuffered(AStream *this)
+     {
+       return this->aStreamPriv->isPreBuffered;
+     }
+  0x2e9ae0 AStream::Last
+     callers: 
+     callees: FUN_002ea120, Next
+     void __thiscall AStream::Last(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       int iVar2;
+       Next(this);
+       while( true ) {
+         pAVar1 = this->aStreamPriv;
+         iVar2 = pAVar1->field2_0x8;
+         if ((uint)((((int)(pAVar1->field9_0x24 - pAVar1->field5_0x14) >> 2) + -1) * 6 +
+                    ((pAVar1->field6_0x18 - pAVar1->field7_0x1c) * 0x286bca1b >> 2) +
+                   ((pAVar1->field4_0x10 - iVar2) * 0x286bca1b >> 2)) < 2) break;
+         if (iVar2 == pAVar1->field4_0x10 + -0x4c) {
+         ...
+  0x2e9c38 AStream::GetState
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::GetState(AStream *this)
+     {
+       return *(undefined4 *)&this->aStreamPriv->curState;
+     }
+  0x2e9d00 AStream::QueryTime
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::QueryTime(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       pAVar1 = this->aStreamPriv;
+       if (((pAVar1->isPreBuffered != 0) && (-1 < (int)pAVar1->field47_0x5c)) && (pAVar1->isLoop == 0)) {
+         return this->time;
+       }
+       return 0;
+     }
+  0x2e9d38 AStream::QueryLibTime
+     callers: 
+     callees: 
+     undefined4 __thiscall AStream::QueryLibTime(AStream *this)
+     {
+       AStreamPriv *pAVar1;
+       pAVar1 = this->aStreamPriv;
+       if ((((pAVar1->isPreBuffered != 0) && (-1 < (int)pAVar1->field47_0x5c)) && (pAVar1->isLoop == 0))
+          && (*(int *)&pAVar1->field_0x34 == 2)) {
+         return *(undefined4 *)&pAVar1->libTime;
+       }
+       return 0xffffffff;
+     }
+  0x2ea1f8 URefCounter<AStream>::URefCounter
+     callers: Get
+     callees: FastAlloc
+     undefined8 URefCounter<AStream>::URefCounter(undefined8 param_1)
+     {
+       undefined4 *puVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       *piVar2 = 0;
+       puVar1 = UMemory::FastAlloc(0x98,"STL");
+       piVar2[1] = 0;
+       *piVar2 = (int)puVar1;
+       *(undefined1 *)(piVar2 + 2) = 0;
+       *puVar1 = 0;
+       *(undefined4 *)(*piVar2 + 4) = 0;
+         ...
+  0x2ea260 URefCounter<AStream>::~URefCounter
+     callers: FUN_002e9550
+     callees: FUN_002ea190, FastFree, __builtin_delete
+     void URefCounter<AStream>::~URefCounter(long param_1,ulong param_2)
+     {
+       int *piVar1;
+       piVar1 = (int *)param_1;
+       if (piVar1[1] != 0) {
+         FUN_002ea190(param_1,(long)*(int *)(*piVar1 + 4));
+         *(int *)(*piVar1 + 8) = *piVar1;
+         *(undefined4 *)(*piVar1 + 4) = 0;
+         *(int *)(*piVar1 + 0xc) = *piVar1;
+         piVar1[1] = 0;
+       }
+       UMemory::FastFree((void *)*piVar1,0x98);
+         ...
+  0x2ea388 URefCounter<AStream>::GetReference
+     callers: Create, Get, Remove
+     callees: FUN_002ea2e0, strcpy
+     undefined4 URefCounter<AStream>::GetReference(int *param_1,char *param_2)
+     {
+       undefined4 uVar1;
+       int local_b0 [4];
+       char local_a0 [128];
+       undefined4 local_20;
+       undefined4 uStack_1c;
+       undefined4 local_10;
+       undefined4 uStack_c;
+       strcpy(local_a0,param_2);
+       FUN_002ea2e0((long)(int)local_b0,param_1,local_a0);
+       if (local_b0[0] == *param_1) {
+         ...
+  0x2eb4d8 maybeDequeStreamEntry
+     callers: Stop
+     callees: FastFree
+     void maybeDequeStreamEntry(int param_1)
+     {
+       uint uVar1;
+       void *pvVar2;
+       ulong *puVar3;
+       bool bVar4;
+       ulong uVar5;
+       undefined4 *puVar6;
+       void *pvVar7;
+       uint uVar8;
+       int iVar9;
+       ulong uVar10;
+         ...
+  0x2eb678 AStream_type_info_function
+     callers: 
+     callees: ABaseSound_type_info_function, __rtti_si
+     undefined8 AStream_type_info_function(void)
+     {
+       if (DAT_00427818 == 0) {
+         ABaseSound_type_info_function();
+         __rtti_si(0x427818,"7AStream",&DAT_003c83f0);
+       }
+       return 0x427818;
+     }
+  0x2eb6c8 AStream::GetHoldState
+     callers: 
+     callees: 
+     undefined4 AStream::GetHoldState(void)
+     {
+       return holdState;
+     }
+  0x2eb6d8 AStream::operator_new
+     callers: 
+     callees: operator_new
+     undefined8 * AStream::operator_new(ulong param_1)
+     {
+       undefined8 *puVar1;
+       puVar1 = ABaseSound::operator_new(param_1,"AStream");
+       return puVar1;
+     }
+  0x2eb708 AStream::Release
+     callers: 
+     callees: logWarning
+     void AStream::Release(void)
+     {
+       if (holdState == 1) {
+         holdState = 2;
+       }
+       else if (holdState == 0) {
+         logWarning("WARNING! Ignoring command to release a non-prebuffered stream");
+       }
+       return;
+     }
+
+====================================================================================================
+
+## window 42: Xbox 0x10cac0 FILESYS_setmemcallbacks .. 0x10ccc0 FILESYS_init   (PS2 0x253fe8 .. 0x252308)
+
+Xbox functions in the window, address order:
+  0x10cae0 UNNAMED
+     callers: FILESYS_atomic, FUN_0010cbf0
+     chain: FILESYS_atomic@10d160 | FUN_0010cbf0@10cbf0 <- FILESYS_addbig@10d030 | FUN_0010cbf0@10cbf0 <- FILESYS_close@10ce60
+     callees: CreateEventA, FUN_0010e999, FUN_0014a5f0, FUN_0014a640, FUN_0014a9e0, FUN_0014aa00, MUTEX_create, ResetEvent, SIGNAL_create, THREAD_create
+     void FUN_0010cae0(void)
+     {
+       int iVar1;
+       int iVar2;
+       char cVar3;
+       undefined4 uVar4;
+       undefined4 uVar5;
+       int iVar6;
+       if (*(int *)(iVar6 + FILESYS_operations) == 0) {
+         uVar4 = FUN_0014a9e0(&DAT_00242874);
+         iVar1 = iVar6 + 0x14 + FILESYS_operations;
+         *(undefined4 *)(iVar6 + 0x10 + FILESYS_operations) = 0;
+         FUN_0014a5f0(iVar1,FUN_0010c030,0);
+         FUN_0014a640(iVar6 + 0x4c + FILESYS_operations,0,0,iVar6 + 0x14 + FILESYS_operations);
+         ...
+  0x10cbf0 UNNAMED
+     callers: FILESYS_addbig, FILESYS_close, FILESYS_delbig, FILESYS_exists, FILESYS_open, FILESYS_read, FILESYS_size
+     chain: FILESYS_addbig@10d030 | FILESYS_close@10ce60 | FILESYS_delbig@10d0f0
+     callees: FUN_0010cae0, FUN_0014a720, FUN_0014a9e0, FUN_0014aa00
+     int FUN_0010cbf0(undefined4 param_1,undefined1 param_2,undefined4 param_3,uint param_4)
+     {
+       int iVar1;
+       undefined4 uVar2;
+       uint uVar3;
+       int *piVar4;
+       iVar1 = FUN_0014a720(&DAT_00242874);
+       piVar4 = (int *)(param_4 * 0xb8 + FILESYS_operations);
+       if (*piVar4 == 0) {
+         FUN_0010cae0();
+       }
+       *(undefined1 *)(iVar1 + 0x11) = param_2;
+       *(undefined4 *)(iVar1 + 8) = param_1;
+       *(uint *)(iVar1 + 0xc) = *(uint *)(iVar1 + 0xc) & 0xfffffff0;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2524c0 FILESYS_overhead
+     callers: FILESYS_init, FILESYS_initadr
+     callees: 
+     int FILESYS_overhead(int param_1,int param_2,int param_3)
+     {
+       int iVar1;
+       int iVar2;
+       int iVar3;
+       iVar3 = 0x10;
+       if (param_1 != 0) {
+         iVar3 = param_1;
+       }
+       iVar1 = 0x20;
+       if (param_3 != 0) {
+         iVar1 = param_3;
+         ...
+  0x252508 FILESYS_restore
+     callers: 
+     callees: CDVD_shutdown, FILESYS_closesync, MEM_clear, MUTEX_destroy
+     void FILESYS_restore(undefined4 param_1,undefined4 param_2,undefined4 param_3,undefined4 param_4,
+                         undefined4 param_5,undefined4 param_6,undefined4 param_7)
+     {
+       undefined4 *puVar1;
+       undefined4 extraout_f13;
+       undefined4 extraout_f12;
+       undefined4 extraout_f15;
+       undefined4 extraout_f14;
+       undefined4 extraout_f17;
+       undefined4 extraout_f16;
+       undefined4 extraout_f18;
+       CDVD_shutdown();
+         ...
+  0x252628 FILESYS_operror
+     callers: FileHandlerCallback
+     callees: 
+     undefined4 FILESYS_operror(uint param_1)
+     {
+       return *(undefined4 *)&FILESYS_operations[param_1 >> 0x18].field_0xc;
+     }
+  0x252658 FILESYS_opuserdata
+     callers: 
+     callees: 
+     undefined4 FILESYS_opuserdata(uint param_1)
+     {
+       return FILESYS_operations[param_1 >> 0x18].field14_0x14;
+     }
+  0x252e38 FILESYS_write
+     callers: StartWrite
+     callees: FUN_00253d40, FUN_00253d48, iFILE_ExecCommand
+     uint FILESYS_write(long param_1,uint param_2,uint param_3,uint param_4,uint param_5,uint param_6)
+     {
+       uint *puVar1;
+       puVar1 = (uint *)FUN_00253d48();
+       puVar1[5] = param_6;
+       *puVar1 = *puVar1 & 0xff0fffff | 0x500000;
+       if (param_1 == 0) {
+         puVar1[3] = 6;
+         FUN_00253d40();
+       }
+       puVar1[9] = (uint)param_1;
+       puVar1[4] = param_5;
+         ...
+  0x252f90 FILESYS_null
+     callers: 
+     callees: FUN_00253d48, iFILE_ExecCommand
+     uint FILESYS_null(undefined8 param_1,uint param_2,uint param_3)
+     {
+       uint *puVar1;
+       puVar1 = (uint *)FUN_00253d48();
+       puVar1[5] = param_3;
+       puVar1[4] = param_2;
+       *puVar1 = *puVar1 & 0xff0fffff | 0x700000;
+       iFILE_ExecCommand((long)(int)puVar1);
+       return *puVar1;
+     }
+  0x253000 iFILE_addbigreadcallback
+     callers: 
+     callees: BIG_sizeofheader, BIG_typeofheader, FILESYS_callbackop, FILESYS_completeop, FILESYS_read, iFILE_ExecCommand
+     void iFILE_addbigreadcallback(uint param_1,undefined8 param_2,byte **param_3)
+     {
+       int iVar1;
+       byte *pbVar2;
+       byte *pbVar3;
+       uint uVar4;
+       pbVar2 = *(byte **)&FILESYS_operations[param_1 >> 0x18].field_0x24;
+       uVar4 = FILESYS_operations[param_1 >> 0x18].field13_0x10;
+       param_3[2] = pbVar2;
+       *(byte **)(param_3[3] + 0x24) = pbVar2;
+       FILESYS_completeop(param_1);
+       iVar1 = BIG_typeofheader(*param_3);
+         ...
+  0x253128 iFILE_addbigopencallback
+     callers: 
+     callees: FILESYS_callbackop, FILESYS_completeop, FILESYS_read, iFILE_ExecCommand
+     void iFILE_addbigopencallback(uint param_1,int param_2,uint *param_3)
+     {
+       int iVar1;
+       uint uVar2;
+       uVar2 = FILESYS_operations[param_1 >> 0x18].field13_0x10;
+       iVar1 = FILESYS_completeop(param_1);
+       if (param_2 == 1) {
+         uVar2 = FILESYS_read((long)iVar1,0,*param_3,0x800,uVar2,(uint)param_3);
+         FILESYS_callbackop(uVar2,iFILE_addbigreadcallback);
+       }
+       else {
+         *(undefined4 *)(param_3[3] + 0xc) = 4;
+         ...
+  0x253318 iFILE_delbigclosecallback
+     callers: 
+     callees: FILESYS_completeop, iFILE_ExecCommand
+     void iFILE_delbigclosecallback(uint param_1,undefined8 param_2,long param_3)
+     {
+       FILESYS_completeop(param_1);
+       iFILE_ExecCommand(param_3);
+       return;
+     }
+  0x253568 FILESYS_setminpriority
+     callers: 
+     callees: iFILE_ExecCommand
+     void FILESYS_setminpriority(undefined4 param_1)
+     {
+       DAT_0033cef0 = param_1;
+       iFILE_ExecCommand(0);
+       return;
+     }
+  0x253590 FILESYS_setcurrentpath
+     callers: Bond_StartUpSystem
+     callees: strcat, strcpy, strlen, strncasecmp
+     void FILESYS_setcurrentpath(char *param_1)
+     {
+       int iVar1;
+       int iVar2;
+       iVar1 = strlen(PTR_s_host0__003c7f30);
+       iVar2 = strncasecmp(param_1,PTR_PTR_003c7f04,3);
+       if (iVar2 == 0) {
+         if ((DAT_003c7f48 & 3) == 2) {
+           return;
+         }
+         param_1 = param_1 + 3;
+         DAT_003c7f44 = 1;
+         ...
+  0x253678 FILESYS_getcurrentpath
+     callers: 
+     callees: strncpy
+     char * FILESYS_getcurrentpath(char *param_1)
+     {
+       char *pcVar1;
+       pcVar1 = strncpy(param_1,&DAT_0033cf20,0x100);
+       return pcVar1;
+     }
+  0x2536a0 iFILE_ExecCommand
+     callers: FILESYS_addbig, FILESYS_atomic, FILESYS_close, FILESYS_exists, FILESYS_null, FILESYS_open, FILESYS_read, FILESYS_setminpriority, FILESYS_write, iFILE_CommandCompleteCallback, iFILE_addbigopencallback,
+     callees: BIG_locateentryz, FILEDEV_close, FILEDEV_getsize, FILEDEV_open, FILEDEV_readreq, FILEDEV_write, MUTEX_lock, MUTEX_unlock, freehandle, iFILE_CommandCompleteCallback, strchr, strcmp, strcpy, strncpy
+     long iFILE_ExecCommand(long param_1)
+     {
+       bool bVar1;
+       int *piVar2;
+       char *pcVar3;
+       int iVar4;
+       undefined4 uVar5;
+       byte *pbVar6;
+       uint uVar7;
+       long lVar8;
+       undefined8 uVar9;
+       uint uVar10;
+         ...
+  0x253af8 iFILE_CommandCompleteCallback
+     callers: CDVD_read, FILEDEV_maybeSync, FILEDEV_write, FUN_00255538, iFILE_ExecCommand
+     callees: iFILE_ExecCommand
+     void iFILE_CommandCompleteCallback(long param_1)
+     {
+       undefined4 *puVar1;
+       undefined4 uVar2;
+       puVar1 = DAT_0033cf0c;
+       DAT_0033cef8 = DAT_0033cef8 + 1;
+       if (DAT_0033cf0c != (undefined4 *)0x0) {
+         uVar2 = 0xffffffff;
+         if ((DAT_0033cf0c[1] == 0) && (uVar2 = 0xfffffffe, param_1 != 0)) {
+           uVar2 = 1;
+         }
+         DAT_0033cf0c[2] = uVar2;
+         ...
+  0x253ba8 FILESYS_bypassqueuefileinfo
+     callers: Event
+     callees: BIG_locateentryz, FILEDEV_close, FILEDEV_getsize, FILEDEV_open, strchr, strcmp, strcpy, strncpy
+     int FILESYS_bypassqueuefileinfo(char *param_1,ulong param_2,uint *param_3)
+     {
+       bool bVar1;
+       char *pcVar2;
+       int iVar3;
+       uint uVar4;
+       byte *pbVar5;
+       undefined4 *puVar6;
+       int iVar7;
+       uint uVar8;
+       char acStack_280 [256];
+       char local_180 [256];
+         ...
+  0x253f98 freehandle
+     callers: FILESYS_completeop, iFILE_ExecCommand
+     callees: MEM_fill, MUTEX_lock, MUTEX_unlock
+     void freehandle(undefined8 *param_1)
+     {
+       MUTEX_lock(&FILESYS_global_mutex);
+       MEM_fill(param_1,0,0x10c);
+       MUTEX_unlock(&FILESYS_global_mutex);
+       return;
+     }
+
+====================================================================================================
+
+## window 43: Xbox 0xf5b60 EAGL::DrawTextured::~DrawTextured .. 0xf5c30 EAGL::DrawArray::~DrawArray   (PS2 0x29cdd0 .. 0x29c070)
+
+Xbox functions in the window, address order:
+  0xf5be0 UNNAMED
+     callers: FUN_0014cf10, FUN_0014d1d0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: D3DDevice_Begin, D3DDevice_End
+     void __fastcall FUN_000f5be0(undefined4 *param_1)
+     {
+       if (*(char *)(param_1 + 0x17) != '\0') {
+         D3D8::D3DDevice_End();
+         D3D8::D3DDevice_Begin(*param_1);
+       }
+       return;
+     }
+  0xf5c00 UNNAMED
+     callers: FUN_0014d1d0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: D3DDevice_Begin, D3DDevice_End
+     void __thiscall FUN_000f5c00(undefined4 *param_1_00,undefined4 param_1)
+     {
+       if (*(char *)(param_1_00 + 0x17) != '\0') {
+         D3D8::D3DDevice_End();
+         D3D8::D3DDevice_Begin(*param_1_00);
+         param_1_00[0x14] = param_1;
+         return;
+       }
+       param_1_00[0x14] = param_1;
+       return;
+     }
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x29c0f8 EAGL::DrawArray::SetPrimitiveType
+     callers: RGlareManager, RParticleParticleCache, SetPrimitiveType
+     callees: 
+     uint EAGL::DrawArray::SetPrimitiveType(undefined4 *param_1,undefined8 param_2)
+     {
+       short sVar1;
+       int iVar2;
+       int iVar3;
+       undefined4 uVar4;
+       int iVar5;
+       switch(param_2) {
+       case 0:
+       case 1:
+       case 4:
+       case 10:
+         ...
+  0x29c2e8 EAGL::DrawArray::SetVar
+     callers: RGlareManager, RParticleParticleCache, SetStream, SetVar
+     callees: SetVar, strcmp
+     undefined4
+     EAGL::DrawArray::SetVar
+               (int param_1,char *param_2,uint param_3,long param_4,long param_5,undefined8 param_6,
+               undefined8 param_7,undefined8 param_8)
+     {
+       int iVar1;
+       undefined4 uVar2;
+       undefined8 extraout_t1;
+       undefined8 extraout_t2;
+       undefined8 extraout_t3;
+       undefined4 *puVar3;
+       long lVar4;
+         ...
+  0x29c3b0 EAGL::DrawArray::SetVar
+     callers: FUN_0029d0a0, FUN_0029d5a0, Init, SetStream, SetVar
+     callees: PrintMessage
+     undefined4
+     EAGL::DrawArray::SetVar
+               (int param_1,long param_2,uint param_3,long param_4,long param_5,undefined8 param_6,
+               undefined8 param_7,undefined8 param_8)
+     {
+       undefined4 uVar1;
+       int iVar2;
+       uVar1 = 0;
+       if (param_5 != -1) {
+         *(undefined4 *)(param_1 + 0x38) = 1;
+       }
+       if (param_2 != -1) {
+         ...
+  0x29c488 EAGL::DrawArray::Lock
+     callers: Lock
+     callees: 
+     undefined4 EAGL::DrawArray::Lock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x34) = 1;
+       *(undefined4 *)(param_1 + 0x18) = 1;
+       return 1;
+     }
+  0x29c4a0 EAGL::DrawArray::Unlock
+     callers: Unlock, ~DrawArray, ~DrawClipGouraud, ~DrawClipTextured, ~DrawGouraud, ~DrawTextured
+     callees: 
+     undefined4 EAGL::DrawArray::Unlock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x18) = 0;
+       return 1;
+     }
+  0x29c558 EAGL::DrawArray::SetNumVerts
+     callers: SetNumVerts
+     callees: 
+     undefined4 EAGL::DrawArray::SetNumVerts(int param_1,undefined4 param_2)
+     {
+       *(undefined4 *)(param_1 + 0x3c) = param_2;
+       return 1;
+     }
+  0x29c588 EAGL::DrawGouraud::DrawGouraud
+     callers: DrawRegions
+     callees: DynamicModel, FUN_00283eb0, GetRegisteredVar, eagl_alloc
+     undefined8 EAGL::DrawGouraud::DrawGouraud(undefined8 param_1)
+     {
+       unknownFunction *puVar1;
+       char cVar2;
+       undefined4 uVar3;
+       undefined8 uVar4;
+       undefined4 *puVar5;
+       bool abStack_60 [16];
+       undefined4 local_50;
+       undefined4 uStack_4c;
+       undefined4 local_40;
+       undefined4 uStack_3c;
+         ...
+  0x29c678 EAGL::DrawGouraud::~DrawGouraud
+     callers: 
+     callees: Unlock, eagl_free, ~DynamicModel, ~GeoPrimState
+     void EAGL::DrawGouraud::~DrawGouraud(undefined8 param_1,ulong param_2)
+     {
+       int iVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       if (*piVar2 != 0) {
+         (*(code *)maybeEaglFree)(*piVar2,0xc00);
+       }
+       if (piVar2[1] != 0) {
+         (*(code *)maybeEaglFree)(piVar2[1],0x300);
+       }
+       GeoPrimState::~GeoPrimState((long)(int)(piVar2 + 0x20),2);
+         ...
+  0x29c800 EAGL::DrawGouraud::End
+     callers: DrawRegion
+     callees: Draw, SetUpGeoPrim
+     void EAGL::DrawGouraud::End(int param_1,undefined8 param_2,ulong param_3,ulong param_4)
+     {
+       int iVar1;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar2;
+       *(undefined4 *)(param_1 + 0x24) = 0;
+       if ((*(int *)(param_1 + 0x4c) == 5) || (*(int *)(param_1 + 0x4c) == 2)) {
+         iVar1 = *(int *)(param_1 + 8);
+         iVar2 = 0;
+         if (iVar1 != 0) {
+         ...
+  0x29c8c8 EAGL::DrawGouraud::SetState
+     callers: 
+     callees: SetPrimitiveType, operator=
+     undefined4 EAGL::DrawGouraud::SetState(int param_1,undefined8 *param_2)
+     {
+       undefined4 uVar1;
+       GeoPrimState::operator=((long)(param_1 + 0x80),param_2);
+       uVar1 = GeoPrimState::SetPrimitiveType(param_1 + 0x80,*(int *)(param_1 + 0x4c));
+       return uVar1;
+     }
+  0x29c908 EAGL::DrawGouraud::GetState
+     callers: DrawRegions
+     callees: 
+     int EAGL::DrawGouraud::GetState(int param_1)
+     {
+       return param_1 + 0x80;
+     }
+  0x29c910 EAGL::DrawGouraud::SetModelMatrix
+     callers: 
+     callees: SetModelMatrix
+     void EAGL::DrawGouraud::SetModelMatrix(int param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       DynamicModel::SetModelMatrix(*(uint *)(param_1 + 0x10),param_2,param_3,param_4);
+       return;
+     }
+  0x29c930 EAGL::DrawClipGouraud::DrawClipGouraud
+     callers: 
+     callees: DynamicModel, FUN_00283eb0, GetRegisteredVar, eagl_alloc
+     undefined8 EAGL::DrawClipGouraud::DrawClipGouraud(undefined8 param_1)
+     {
+       unknownFunction *puVar1;
+       char cVar2;
+       undefined4 uVar3;
+       undefined8 uVar4;
+       undefined4 *puVar5;
+       bool abStack_60 [16];
+       undefined4 local_50;
+       undefined4 uStack_4c;
+       undefined4 local_40;
+       undefined4 uStack_3c;
+         ...
+  0x29ca20 EAGL::DrawClipGouraud::~DrawClipGouraud
+     callers: 
+     callees: Unlock, eagl_free, ~DynamicModel, ~GeoPrimState
+     void EAGL::DrawClipGouraud::~DrawClipGouraud(undefined8 param_1,ulong param_2)
+     {
+       int iVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       if (*piVar2 != 0) {
+         (*(code *)maybeEaglFree)(*piVar2,0xc00);
+       }
+       if (piVar2[1] != 0) {
+         (*(code *)maybeEaglFree)(piVar2[1],0x300);
+       }
+       GeoPrimState::~GeoPrimState((long)(int)(piVar2 + 0x20),2);
+         ...
+  0x29caf8 EAGL::DrawClipGouraud::InternalFlush
+     callers: 
+     callees: Draw, SetUpGeoPrim
+     void EAGL::DrawClipGouraud::InternalFlush
+                    (int param_1,undefined8 param_2,ulong param_3,ulong param_4)
+     {
+       int iVar1;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar2;
+       iVar1 = *(int *)(param_1 + 8);
+       if (iVar1 != 0) {
+         *(int *)(param_1 + 0x48) = iVar1;
+         if (*(int *)(param_1 + 0x24) == 0) {
+         ...
+  0x29cba8 EAGL::DrawClipGouraud::End
+     callers: 
+     callees: Draw, SetUpGeoPrim
+     void EAGL::DrawClipGouraud::End(int param_1,undefined8 param_2,ulong param_3,ulong param_4)
+     {
+       int iVar1;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar2;
+       *(undefined4 *)(param_1 + 0x24) = 0;
+       if ((*(int *)(param_1 + 0x4c) == 5) || (*(int *)(param_1 + 0x4c) == 2)) {
+         iVar1 = *(int *)(param_1 + 8);
+         iVar2 = 0;
+         if (iVar1 != 0) {
+         ...
+  0x29cc70 EAGL::DrawClipGouraud::SetState
+     callers: 
+     callees: SetPrimitiveType, operator=
+     undefined4 EAGL::DrawClipGouraud::SetState(int param_1,undefined8 *param_2)
+     {
+       undefined4 uVar1;
+       GeoPrimState::operator=((long)(param_1 + 0x80),param_2);
+       uVar1 = GeoPrimState::SetPrimitiveType(param_1 + 0x80,*(int *)(param_1 + 0x4c));
+       return uVar1;
+     }
+  0x29ccb0 EAGL::DrawClipGouraud::GetState
+     callers: 
+     callees: 
+     int EAGL::DrawClipGouraud::GetState(int param_1)
+     {
+       return param_1 + 0x80;
+     }
+  0x29ccb8 EAGL::DrawClipGouraud::SetModelMatrix
+     callers: 
+     callees: SetModelMatrix
+     void EAGL::DrawClipGouraud::SetModelMatrix(int param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       DynamicModel::SetModelMatrix(*(uint *)(param_1 + 0x10),param_2,param_3,param_4);
+       return;
+     }
+
+====================================================================================================
+
+## window 44: Xbox 0xf5820 EAGL::DrawArray::SetUpGeoPrim .. 0xf59f0 EAGL::DrawGouraud::InternalFlush   (PS2 0x299ee8 .. 0x29c750)
+
+Xbox functions in the window, address order:
+  0xf58b0 UNNAMED
+     callers: DrawRegions
+     chain: EAGL::ProfilerRegion::DrawRegions@f5020
+     callees: FUN_000f6fa0, FUN_000f6ff0, GeoPrimState, eagl_alloc
+     undefined4 * __fastcall FUN_000f58b0(undefined4 *param_1)
+     {
+       int iVar1;
+       undefined4 uVar2;
+       undefined4 uStack_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       local_4 = 0xffffffff;
+       pcStack_8 = FUN_00155082;
+       *param_1 = 1;
+       EAGL::GeoPrimState::GeoPrimState();
+       local_4 = 0;
+       iVar1 = (*(code *)EAGLInternal::EAGLMalloc)(4,s_EAGL__VertexShader_new_001cd144);
+       local_4._0_1_ = 1;
+         ...
+  0xf5970 UNNAMED
+     callers: DrawRegions
+     chain: EAGL::ProfilerRegion::DrawRegions@f5020
+     callees: FUN_000eecb0, FUN_000eecf0, FUN_000eee20, SetTransparencyMethod
+     undefined4 __fastcall FUN_000f5970(int param_1)
+     {
+       FUN_000eee20(0);
+       EAGL::GeoPrimState::SetTransparencyMethod(1);
+       FUN_000eecf0(0);
+       FUN_000eecb0(0);
+       *(undefined1 *)(param_1 + 0x58) = 0;
+       *(undefined4 *)(param_1 + 0x5c) = 0x3f800000;
+       *(undefined4 *)(param_1 + 0x60) = 0;
+       *(undefined4 *)(param_1 + 100) = 0;
+       *(undefined4 *)(param_1 + 0x68) = 0;
+       *(undefined4 *)(param_1 + 0x6c) = 0;
+       *(undefined4 *)(param_1 + 0x70) = 0x3f800000;
+       *(undefined4 *)(param_1 + 0x74) = 0;
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x29a008 EAGL::DrawGouraud::Init
+     callers: DrawRegions
+     callees: SetGeoPrim, SetPrimitiveType, SetVar, eagl_alloc, strcmp
+     undefined4 EAGL::DrawGouraud::Init(uint *param_1)
+     {
+       short sVar1;
+       unknownFunction *puVar2;
+       undefined *puVar3;
+       char cVar4;
+       int iVar5;
+       int iVar6;
+       uint uVar7;
+       long lVar8;
+       undefined8 extraout_a2;
+       undefined8 extraout_a3;
+         ...
+  0x29a3f8 EAGL::DrawGouraud::Begin
+     callers: DrawRegion
+     callees: Draw, SetPrimitiveType, SetUpGeoPrim
+     void EAGL::DrawGouraud::Begin(int param_1,int param_2,ulong param_3,ulong param_4)
+     {
+       short sVar1;
+       int iVar2;
+       undefined4 uVar3;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar4;
+       if (param_2 == *(int *)(param_1 + 0x4c)) goto LAB_0029a550;
+       iVar2 = *(int *)(param_1 + 8);
+       if (iVar2 != 0) {
+         ...
+  0x29a580 EAGL::DrawGouraud::AddVertex
+     callers: AddVertex, DrawRegion
+     callees: AddVertex, Draw, SetUpGeoPrim
+     void EAGL::DrawGouraud::AddVertex(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       uint uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong extraout_a0;
+       ulong extraout_a0_00;
+       undefined8 extraout_a1;
+         ...
+  0x29a728 EAGL::DrawClipGouraud::Init
+     callers: 
+     callees: SetGeoPrim, SetPrimitiveType, SetVar, eagl_alloc, strcmp
+     undefined4 EAGL::DrawClipGouraud::Init(uint *param_1)
+     {
+       short sVar1;
+       unknownFunction *puVar2;
+       undefined *puVar3;
+       char cVar4;
+       int iVar5;
+       int iVar6;
+       uint uVar7;
+       long lVar8;
+       undefined8 extraout_a2;
+       undefined8 extraout_a3;
+         ...
+  0x29ab18 EAGL::DrawClipGouraud::Begin
+     callers: 
+     callees: Draw, SetPrimitiveType, SetUpGeoPrim
+     void EAGL::DrawClipGouraud::Begin(int param_1,int param_2,ulong param_3,ulong param_4)
+     {
+       short sVar1;
+       int iVar2;
+       undefined4 uVar3;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar4;
+       if (param_2 == *(int *)(param_1 + 0x4c)) goto LAB_0029ac70;
+       iVar2 = *(int *)(param_1 + 8);
+       if (iVar2 != 0) {
+         ...
+  0x29aca0 EAGL::DrawClipGouraud::AddVertex
+     callers: AddVertex
+     callees: AddVertex, Draw, SetUpGeoPrim
+     void EAGL::DrawClipGouraud::AddVertex(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       uint uVar5;
+       ulong uVar6;
+       ulong uVar7;
+       ulong extraout_a0;
+       ulong extraout_a0_00;
+       undefined8 extraout_a1;
+         ...
+  0x29b330 EAGL::DrawTextured::Begin
+     callers: iDraw
+     callees: Draw, SetPrimitiveType, SetUpGeoPrim
+     void EAGL::DrawTextured::Begin(int param_1,int param_2,ulong param_3,ulong param_4)
+     {
+       short sVar1;
+       int iVar2;
+       undefined4 uVar3;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar4;
+       if (param_2 == *(int *)(param_1 + 0x50)) goto LAB_0029b488;
+       iVar2 = *(int *)(param_1 + 0xc);
+       if (iVar2 != 0) {
+         ...
+  0x29b4b8 EAGL::DrawTextured::AddVertex
+     callers: AddVertex, iDraw
+     callees: AddVertex, Draw, SetUpGeoPrim
+     void EAGL::DrawTextured::AddVertex(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       uint uVar5;
+       ulong uVar6;
+       undefined4 *puVar7;
+       ulong uVar8;
+       ulong extraout_a0;
+       ulong extraout_a0_00;
+         ...
+  0x29b6b8 EAGL::DrawClipTextured::Init
+     callers: 
+     callees: SetGeoPrim, SetPrimitiveType, SetVar, eagl_alloc, strcmp
+     undefined4 EAGL::DrawClipTextured::Init(uint *param_1)
+     {
+       short sVar1;
+       unknownFunction *puVar2;
+       undefined *puVar3;
+       char cVar4;
+       int iVar5;
+       int iVar6;
+       uint uVar7;
+       long lVar8;
+       undefined8 extraout_a2;
+       undefined8 extraout_a3;
+         ...
+  0x29bba0 EAGL::DrawClipTextured::Begin
+     callers: 
+     callees: Draw, SetPrimitiveType, SetUpGeoPrim
+     void EAGL::DrawClipTextured::Begin(int param_1,int param_2,ulong param_3,ulong param_4)
+     {
+       short sVar1;
+       int iVar2;
+       undefined4 uVar3;
+       undefined8 extraout_a1;
+       ulong extraout_a2;
+       ulong extraout_a3;
+       int iVar4;
+       if (param_2 == *(int *)(param_1 + 0x50)) goto LAB_0029bcf8;
+       iVar2 = *(int *)(param_1 + 0xc);
+       if (iVar2 != 0) {
+         ...
+  0x29bd28 EAGL::DrawClipTextured::AddVertex
+     callers: AddVertex
+     callees: AddVertex, Draw, SetUpGeoPrim
+     void EAGL::DrawClipTextured::AddVertex(ulong param_1,uint param_2,ulong param_3,ulong param_4)
+     {
+       uint uVar1;
+       uint uVar2;
+       ulong *puVar3;
+       int iVar4;
+       uint uVar5;
+       ulong uVar6;
+       undefined4 *puVar7;
+       ulong uVar8;
+       ulong extraout_a0;
+       ulong extraout_a0_00;
+         ...
+  0x29bf28 EAGL::DrawArray::ParamBufAlloc
+     callers: 
+     callees: eagl_alloc
+     void EAGL::DrawArray::ParamBufAlloc(int param_1)
+     {
+       char cVar1;
+       if (DAT_00348ac8 == 0) {
+         cVar1 = (*maybeEaglAlloc)(param_1 << 4,"EAGL::gParamPool");
+         DAT_00348ac8 = (int)cVar1;
+         DAT_00348acc = 0;
+         DAT_00348ad0 = param_1;
+       }
+       return;
+     }
+  0x29bf88 EAGL::DrawArray::ParamBufFree
+     callers: 
+     callees: eagl_free
+     void EAGL::DrawArray::ParamBufFree(void)
+     {
+       if (DAT_00348ac8 != 0) {
+         (*(code *)maybeEaglFree)(DAT_00348ac8,DAT_00348ad0 << 4);
+         DAT_00348ac8 = 0;
+         DAT_00348acc = 0;
+         DAT_00348ad0 = 0;
+       }
+       return;
+     }
+  0x29bfe0 EAGL::DrawArray::DrawArray
+     callers: FUN_001f26a8, FUN_001f4bb8, GetIndexFromName, Lock, SetNumVerts, SetParamName, SetPrimitiveType, SetStream, SetVar, Unlock
+     callees: DynamicModel, eagl_alloc
+     undefined8 EAGL::DrawArray::DrawArray(undefined8 param_1)
+     {
+       unknownFunction *puVar1;
+       char cVar2;
+       undefined8 uVar3;
+       undefined4 *puVar4;
+       puVar1 = maybeEaglAlloc;
+       puVar4 = (undefined4 *)param_1;
+       *puVar4 = 0;
+       puVar4[1] = 0;
+       puVar4[2] = 0;
+       puVar4[3] = 0;
+         ...
+  0x29c0f8 EAGL::DrawArray::SetPrimitiveType
+     callers: RGlareManager, RParticleParticleCache, SetPrimitiveType
+     callees: 
+     uint EAGL::DrawArray::SetPrimitiveType(undefined4 *param_1,undefined8 param_2)
+     {
+       short sVar1;
+       int iVar2;
+       int iVar3;
+       undefined4 uVar4;
+       int iVar5;
+       switch(param_2) {
+       case 0:
+       case 1:
+       case 4:
+       case 10:
+         ...
+  0x29c2e8 EAGL::DrawArray::SetVar
+     callers: RGlareManager, RParticleParticleCache, SetStream, SetVar
+     callees: SetVar, strcmp
+     undefined4
+     EAGL::DrawArray::SetVar
+               (int param_1,char *param_2,uint param_3,long param_4,long param_5,undefined8 param_6,
+               undefined8 param_7,undefined8 param_8)
+     {
+       int iVar1;
+       undefined4 uVar2;
+       undefined8 extraout_t1;
+       undefined8 extraout_t2;
+       undefined8 extraout_t3;
+       undefined4 *puVar3;
+       long lVar4;
+         ...
+  0x29c3b0 EAGL::DrawArray::SetVar
+     callers: FUN_0029d0a0, FUN_0029d5a0, Init, SetStream, SetVar
+     callees: PrintMessage
+     undefined4
+     EAGL::DrawArray::SetVar
+               (int param_1,long param_2,uint param_3,long param_4,long param_5,undefined8 param_6,
+               undefined8 param_7,undefined8 param_8)
+     {
+       undefined4 uVar1;
+       int iVar2;
+       uVar1 = 0;
+       if (param_5 != -1) {
+         *(undefined4 *)(param_1 + 0x38) = 1;
+       }
+       if (param_2 != -1) {
+         ...
+  0x29c488 EAGL::DrawArray::Lock
+     callers: Lock
+     callees: 
+     undefined4 EAGL::DrawArray::Lock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x34) = 1;
+       *(undefined4 *)(param_1 + 0x18) = 1;
+       return 1;
+     }
+  0x29c4a0 EAGL::DrawArray::Unlock
+     callers: Unlock, ~DrawArray, ~DrawClipGouraud, ~DrawClipTextured, ~DrawGouraud, ~DrawTextured
+     callees: 
+     undefined4 EAGL::DrawArray::Unlock(int param_1)
+     {
+       *(undefined4 *)(param_1 + 0x18) = 0;
+       return 1;
+     }
+  0x29c558 EAGL::DrawArray::SetNumVerts
+     callers: SetNumVerts
+     callees: 
+     undefined4 EAGL::DrawArray::SetNumVerts(int param_1,undefined4 param_2)
+     {
+       *(undefined4 *)(param_1 + 0x3c) = param_2;
+       return 1;
+     }
+  0x29c588 EAGL::DrawGouraud::DrawGouraud
+     callers: DrawRegions
+     callees: DynamicModel, FUN_00283eb0, GetRegisteredVar, eagl_alloc
+     undefined8 EAGL::DrawGouraud::DrawGouraud(undefined8 param_1)
+     {
+       unknownFunction *puVar1;
+       char cVar2;
+       undefined4 uVar3;
+       undefined8 uVar4;
+       undefined4 *puVar5;
+       bool abStack_60 [16];
+       undefined4 local_50;
+       undefined4 uStack_4c;
+       undefined4 local_40;
+       undefined4 uStack_3c;
+         ...
+  0x29c678 EAGL::DrawGouraud::~DrawGouraud
+     callers: 
+     callees: Unlock, eagl_free, ~DynamicModel, ~GeoPrimState
+     void EAGL::DrawGouraud::~DrawGouraud(undefined8 param_1,ulong param_2)
+     {
+       int iVar1;
+       int *piVar2;
+       piVar2 = (int *)param_1;
+       if (*piVar2 != 0) {
+         (*(code *)maybeEaglFree)(*piVar2,0xc00);
+       }
+       if (piVar2[1] != 0) {
+         (*(code *)maybeEaglFree)(piVar2[1],0x300);
+       }
+       GeoPrimState::~GeoPrimState((long)(int)(piVar2 + 0x20),2);
+         ...
+
+====================================================================================================
+
+## window 45: Xbox 0x90280 URefCounter<RCARPFile>::AddReference .. 0x90430 URefCounter<RCARPFile>::Get   (PS2 0x1cbc10 .. 0x1cc4f0)
+
+Xbox functions in the window, address order:
+  0x90360 UNNAMED
+     callers: FUN_001530a0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_000900b0, FastFree
+     void __fastcall FUN_00090360(int param_1)
+     {
+       int local_4;
+       local_4 = param_1;
+       FUN_000900b0(&local_4,**(undefined4 **)(param_1 + 4),*(undefined4 **)(param_1 + 4));
+       if (*(void **)(param_1 + 4) != (void *)0x0) {
+         UMemory::FastFree(*(void **)(param_1 + 4),0x98);
+       }
+       *(undefined4 *)(param_1 + 4) = 0;
+       *(undefined4 *)(param_1 + 8) = 0;
+       return;
+     }
+  0x903a0 UNNAMED
+     callers: FUN_0015ced0
+     chain: (no chain to a function named on both sides within 3 levels)
+     callees: FUN_0008fb00, FUN_000900b0, FastFree
+     void __fastcall FUN_000903a0(int param_1)
+     {
+       int local_10;
+       undefined4 local_c;
+       code *pcStack_8;
+       undefined4 local_4;
+       pcStack_8 = FUN_001530a8;
+       local_4 = 0;
+       local_10 = param_1;
+       FUN_0008fb00(*(undefined4 *)(*(int *)(param_1 + 4) + 4));
+       *(int *)(*(int *)(param_1 + 4) + 4) = *(int *)(param_1 + 4);
+       *(undefined4 *)(param_1 + 8) = 0;
+       *(undefined4 *)*(undefined4 *)(param_1 + 4) = *(undefined4 *)(param_1 + 4);
+       *(int *)(*(int *)(param_1 + 4) + 8) = *(int *)(param_1 + 4);
+         ...
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x1cc320 RSceneObj_type_info_function
+     callers: ActWeapon_type_info_function, FUN_0015efb0, FUN_0017f2f0, FUN_001808d0, FUN_00183bb0, FUN_001852f8, RAutonomousObj_type_info_function, RSkeletalObj_type_info_function
+     callees: maybePrintTypeInfo
+     undefined8 RSceneObj_type_info_function(void)
+     {
+       if (DAT_003c8220 == 0) {
+         maybePrintTypeInfo(0x3c8220,"9RSceneObj");
+       }
+       return 0x3c8220;
+     }
+  0x1cc360 RSceneObj::operator_new
+     callers: 
+     callees: FastAlloc
+     undefined8 * RSceneObj::operator_new(ulong param_1)
+     {
+       undefined8 *puVar1;
+       puVar1 = UMemory::FastAlloc(param_1,"RSceneObj");
+       return puVar1;
+     }
+  0x1cc380 RSceneObj::operator_delete
+     callers: 
+     callees: FastFree
+     void RSceneObj::operator_delete(undefined8 param_1,ulong param_2)
+     {
+       UMemory::FastFree((void *)param_1,param_2);
+       return;
+     }
+  0x1cc3a0 RSceneObj::IsVisible
+     callers: 
+     callees: 
+     byte __thiscall RSceneObj::IsVisible(RSceneObj *this)
+     {
+       return *(byte *)((int)&this->field6_0x18 + 3) & 1;
+     }
+  0x1cc3b0 RSceneObj::GetVariation
+     callers: 
+     callees: 
+     undefined1 RSceneObj::GetVariation(int param_1)
+     {
+       return *(undefined1 *)(param_1 + 0x19);
+     }
+  0x1cc3b8 RSceneObj::GetCARPFile
+     callers: 
+     callees: 
+     undefined4 RSceneObj::GetCARPFile(int param_1)
+     {
+       return *(undefined4 *)(param_1 + 0x10);
+     }
+  0x1cc3c0 RSceneObj::GetBaseDesc
+     callers: 
+     callees: 
+     undefined4 __thiscall RSceneObj::GetBaseDesc(RSceneObj *this,int param_1)
+     {
+       return this->baseDesc;
+     }
+  0x1cc3c8 RSceneObj::RenderShadow
+     callers: 
+     callees: 
+     void RSceneObj::RenderShadow(void)
+     {
+       return;
+     }
+  0x1cc3d0 RSceneObj::RenderDeferredEffects
+     callers: 
+     callees: 
+     void RSceneObj::RenderDeferredEffects(void)
+     {
+       return;
+     }
+  0x1cc3d8 RSceneObj::Brightness
+     callers: 
+     callees: 
+     float __thiscall RSceneObj::Brightness(RSceneObj *this)
+     {
+       return (float)*(byte *)((int)&this->field6_0x18 + 2) * 0.003921569;
+     }
+  0x1cc400 RSceneObj::SetBrightness
+     callers: 
+     callees: 
+     void __thiscall RSceneObj::SetBrightness(RSceneObj *this,float param_1)
+     {
+       if (1.0 < param_1) {
+         param_1 = 1.0;
+       }
+       if (param_1 < 0.0) {
+         param_1 = 0.0;
+       }
+       *(char *)((int)&this->field6_0x18 + 2) = (char)(int)(param_1 * 255.0);
+       return;
+     }
+  0x1cc458 RSceneObj::IsVehicle
+     callers: 
+     callees: 
+     uint __thiscall RSceneObj::IsVehicle(RSceneObj *this)
+     {
+       return (int)this->field6_0x18 >> 0x1c & 1;
+     }
+  0x1cc468 RSceneObj::GetRenderTypeIndex
+     callers: 
+     callees: 
+     undefined1 RSceneObj::GetRenderTypeIndex(int param_1)
+     {
+       return *(undefined1 *)(param_1 + 0x18);
+     }
+  0x1cc470 RSceneObj::SetRenderTypeIndex
+     callers: 
+     callees: 
+     void __thiscall RSceneObj::SetRenderTypeIndex(RSceneObj *this,uint param_1)
+     {
+       *(char *)&this->field6_0x18 = (char)param_1;
+       return;
+     }
+  0x1cc478 RSceneObj::GetAnimHandle
+     callers: 
+     callees: 
+     undefined4 RSceneObj::GetAnimHandle(int param_1)
+     {
+       return *(undefined4 *)(param_1 + 0x28);
+     }
+  0x1cc480 RSceneObj::GetPathHandle
+     callers: 
+     callees: 
+     undefined4 RSceneObj::GetPathHandle(int param_1)
+     {
+       return *(undefined4 *)(param_1 + 0x2c);
+     }
+  0x1cc488 RSceneObj::GetPhysics
+     callers: 
+     callees: 
+     undefined4 __thiscall RSceneObj::GetPhysics(RSceneObj *this)
+     {
+       return this->physics;
+     }
+  0x1cc490 RSceneObj::GetPhysics
+     callers: 
+     callees: 
+     undefined4 __thiscall RSceneObj::GetPhysics(RSceneObj *this)
+     {
+       return this->physics;
+     }
+  0x1cc498 RSceneObj::DrawLast
+     callers: 
+     callees: 
+     void RSceneObj::DrawLast(int param_1,uint param_2)
+     {
+       *(uint *)(param_1 + 0x18) = *(uint *)(param_1 + 0x18) & 0xf7ffffff | (param_2 & 1) << 0x1b;
+       return;
+     }
+  0x1cc4c0 RSceneObj::GetDamagedZones
+     callers: 
+     callees: 
+     undefined2 RSceneObj::GetDamagedZones(int param_1)
+     {
+       return *(undefined2 *)(param_1 + 0x1c);
+     }
+  0x1cc4c8 RSceneObj::SourceInstance
+     callers: 
+     callees: 
+     undefined4 RSceneObj::SourceInstance(int param_1)
+     {
+       return *(undefined4 *)(param_1 + 8);
+     }
+  0x1cc4d0 RSceneObj::Debug
+     callers: 
+     callees: 
+     void RSceneObj::Debug(void)
+     {
+       return;
+     }
+  0x1cc4d8 RSceneObj::SetVehicle
+     callers: 
+     callees: 
+     void RSceneObj::SetVehicle(int param_1)
+     {
+       *(uint *)(param_1 + 0x18) = *(uint *)(param_1 + 0x18) | 0x10000000;
+       return;
+     }
+
+====================================================================================================
+
+## window 46: Xbox 0x133a30 strchr .. 0x133e84 atof   (PS2 0x2a9378 .. 0x2a7290)
+
+Xbox functions in the window, address order:
+  0x133aee UNNAMED
+     callers: AssertMessage, FONT_drawtextfa, FUN_0010b110, REAL_abortmessage, SYSTEM_abortmessage, Status
+     chain: AssertMessage@117db0 | FONT_drawtextfa@1073a0 | REAL_abortmessage@10b210
+     callees: __flsbuf, vfprintf
+     int FUN_00133aee(char *param_1,char *param_2,__gnuc_va_list param_3)
+     {
+       int iVar1;
+       char *local_24;
+       char *local_20;
+       char *local_1c;
+       char *local_18;
+       local_20 = (char *)0x7fffffff;
+       local_18 = (char *)0x42;
+       local_1c = param_1;
+       local_24 = param_1;
+       iVar1 = vfprintf((FILE *)&local_24,param_2,param_3);
+       if (param_1 != (char *)0x0) {
+         local_20 = local_20 + -1;
+         ...
+  0x133b45 (named) __abstract_cw
+  0x133bd7 (named) __hw_cw
+  0x133c65 (named) __abstract_sw
+  0x133c9e UNNAMED
+     callers: FUN_0005a6b0, ~ESetVideo
+     chain: ESetVideo::~ESetVideo@44970 | FUN_0005a6b0@5a6b0 <- RunTheGame@5aa80
+     callees: __abstract_sw
+     void FUN_00133c9e(void)
+     {
+       __abstract_sw();
+       return;
+     }
+  0x133cb1 (named) __control87
+  0x133ce3 (named) __controlfp
+  0x133cf9 (named) _atol
+  0x133d51 (named) _atol
+  0x133d60 (named) _strncpy
+
+PS2 functions in the matching range whose names the Xbox doesn't have yet:
+  0x2a72b0 atoi
+     callers: Bool_AttribByteOffsetParserFunc, InitLoadScreen, Int_AttribByteOffsetParserFunc, LoadSubtitles, ParseDefFileForFrontEnd, ParseMasterConfigFile, ParseNameAndTag, ReadInteger, ReadUnsignedInteger, Runti
+     callees: strtol
+     undefined4 atoi(char *param_1)
+     {
+       undefined4 uVar1;
+       uVar1 = strtol(param_1,(char **)0x0,10);
+       return uVar1;
+     }
+  0x2a72d8 bsearch
+     callers: CDVD_open, FUN_002592e0
+     callees: 
+     void * bsearch(void *key,void *base,size_t numItems,size_t size,code *comparisonFunc)
+     {
+       long lVar1;
+       uint uVar2;
+       void *pvVar4;
+       ulong uVar5;
+       size_t sVar3;
+       uVar5 = 0;
+       if (numItems != 0) {
+         if (size == 0) {
+           return (void *)0x0;
+         }
+         ...
+  0x2a73b0 fiprintf
+     callers: __assert
+     callees: vfiprintf
+     void fiprintf(undefined8 param_1,char *fmt,...)
+     {
+       ulong in_a2;
+       undefined8 in_a3;
+       undefined8 in_t0;
+       undefined8 in_t1;
+       undefined8 in_t2;
+       undefined8 in_t3;
+       ulong local_30;
+       undefined8 local_28;
+       undefined8 local_20;
+       undefined8 local_18;
+         ...
+  0x2a73e8 malloc
+     callers: FUN_0024e4f8, FUN_0024ee50, FUN_00250978, FUN_00250ca8, FUN_002d05f8, __eh_alloc, __register_frame, __register_frame_table, atexit, eagl_alloc
+     callees: _malloc_r
+     undefined4 * malloc(int param_1)
+     {
+       undefined4 *puVar1;
+       puVar1 = _malloc_r((int *)PTR_DAT_0034ff4c,param_1);
+       return puVar1;
+     }
+  0x2a7410 free
+     callers: FUN_0024e480, FUN_0024e620, FUN_00250640, FUN_00250ca8, FUN_002d0638, KillScript, __deregister_frame, __deregister_frame_info, __eh_free, eagl_free
+     callees: FUN_002afb58
+     void free(long param_1)
+     {
+       FUN_002afb58((int *)PTR_DAT_0034ff4c,param_1);
+       return;
+     }
+  0x2a7678 _malloc_r
+     callers: FUN_002af838, FUN_002b0548, FUN_002b1db8, FUN_002b2090, _init_signal_r, _realloc_r, malloc
+     callees: FUN_002a7420, __malloc_lock, __malloc_unlock
+     undefined4 * _malloc_r(int *param_1,int param_2)
+     {
+       int iVar1;
+       undefined4 *puVar2;
+       int iVar3;
+       ulong uVar4;
+       ulong uVar5;
+       undefined4 *puVar6;
+       ulong uVar7;
+       uint uVar8;
+       uint uVar9;
+       undefined *puVar10;
+         ...
+  0x2a7df0 memcmp
+     callers: FUN_001ce6c0, FUN_001ce758, FUN_002ba9f0, FUN_002bd958, SNDSTRMI_parseheader, insert_unique
+     callees: 
+     int memcmp(void *param_1,void *param_2,uint sizeBytes)
+     {
+       undefined1 (*pauVar1) [16];
+       undefined1 (*pauVar2) [16];
+       ulong uVar3;
+       undefined8 in_a3_udw;
+       undefined1 auVar4 [16];
+       undefined1 auVar5 [16];
+       if ((0xf < sizeBytes) && ((((uint)param_1 | (uint)param_2) & 0xf) == 0)) {
+         do {
+           uVar3 = CONCAT71(0,sizeBytes < 0x20);
+           pauVar2 = (undefined1 (*) [16])((int)param_1 + 0x10);
+         ...
+  0x2a7e84 memcpy
+     callers: AIElementController, ClearMorphModel, DAFI_open, DecompressValues, FUN_00137e28, FUN_0013bc50, FUN_0015e750, FUN_001771b8, FUN_00177260, FUN_00192c18, FUN_00192cc0, FUN_00194a20, FUN_0019cc00, FUN_001
+     callees: 
+     undefined8 * memcpy(void *dest,void *src,uint numBytes)
+     {
+       undefined1 uVar1;
+       undefined8 uVar2;
+       undefined4 uVar3;
+       undefined4 uVar4;
+       undefined8 *puVar5;
+       puVar5 = dest;
+       if ((0x1f < numBytes) && ((((uint)src | (uint)dest) & 0xf) == 0)) {
+         do {
+           uVar2 = *(undefined8 *)src;
+           uVar3 = *(undefined4 *)((int)src + 8);
+         ...
+  0x2a7f34 memmove
+     callers: ActivateCarObject, ClearAllBolts, CollideWithWorld, DeactivateCarObject, DeletePhysicsObject, FUN_00165a18, FUN_00177260, FUN_00192cc0, FUN_001df338, FUN_00202e40, FUN_00204748, FUN_00218440, FUN_0021
+     callees: 
+     undefined8 * memmove(undefined8 *dest,undefined8 *src,uint len)
+     {
+       undefined1 uVar1;
+       undefined1 *puVar2;
+       undefined8 uVar3;
+       undefined4 uVar4;
+       undefined4 uVar5;
+       int iVar6;
+       undefined8 *puVar7;
+       if ((src < dest) && (puVar7 = (undefined8 *)((int)src + len), dest < puVar7)) {
+         puVar2 = (undefined1 *)((int)dest + len);
+         iVar6 = len - 1;
+         ...
+  0x2a8038 memset
+     callers: Add, AddGeoPrim, AddPlayerHeadlight, AnchorCamera, AnchorRelativeCamera, ApplyDamage, ApplyInitialForcesAndTorques, BITMAP_Draw2D, BarriersInPath, CANVAS_Add, CANVAS_Draw, CANVAS_PurgeSceneObj, CalcRa
+     callees: 
+     undefined8 * memset(void *param_1,int value,uint numBytes)
+     {
+       bool bVar1;
+       undefined1 auVar2 [16];
+       undefined8 *puVar3;
+       undefined8 in_t0_udw;
+       undefined1 auVar4 [16];
+       puVar3 = param_1;
+       if ((7 < numBytes) && (((uint)param_1 & 0xf) == 0)) {
+         auVar2._0_8_ = ((long)value & 0xffU) << 8 | (long)value & 0xffU;
+         auVar2._8_8_ = in_t0_udw;
+         auVar2 = _pcpyh(auVar2);
+         ...
+  0x2a80f8 __malloc_lock
+     callers: FUN_002afb58, FUN_002afe78, _malloc_r, _realloc_r
+     callees: 
+     void __malloc_lock(void)
+     {
+       return;
+     }
+  0x2a8100 __malloc_unlock
+     callers: FUN_002afb58, FUN_002afe78, _malloc_r, _realloc_r
+     callees: 
+     void __malloc_unlock(void)
+     {
+       return;
+     }
+  0x2a8108 _printf_r
+     callers: 
+     callees: _vfprintf_r
+     char * _printf_r(int param_1,char *param_2,undefined8 param_3,undefined8 param_4,undefined8 param_5,
+                     undefined8 param_6,undefined8 param_7,undefined8 param_8)
+     {
+       char *pcVar1;
+       undefined8 local_30;
+       undefined8 local_28;
+       undefined8 local_20;
+       undefined8 local_18;
+       undefined8 local_10;
+       undefined8 local_8;
+       local_30 = param_3;
+       local_28 = param_4;
+         ...
+  0x2a8bbc srand
+     callers: 
+     callees: 
+     void srand(undefined4 param_1)
+     {
+       *(undefined4 *)(PTR_DAT_0034ff4c + 0x58) = param_1;
+       return;
+     }
+  0x2a8bd0 rand
+     callers: NormalizedRandomNumber, Util_GaussRandom, noise_init
+     callees: 
+     uint rand(void)
+     {
+       int iVar1;
+       iVar1 = *(int *)(PTR_DAT_0034ff4c + 0x58);
+       *(undefined **)(PTR_DAT_0034ff4c + 0x58) = &DAT_00003039 + iVar1 * 0x41c64e6d;
+       return (uint)(&DAT_00003039 + iVar1 * 0x41c64e6d) & 0x7fffffff;
+     }
+  0x2a8c00 _sbrk_r
+     callers: FUN_002a7420, FUN_002afe78
+     callees: sbrk
+     undefined * _sbrk_r(int *param_1,int param_2)
+     {
+       undefined *puVar1;
+       DAT_003c83c0 = 0;
+       puVar1 = sbrk(param_2);
+       if ((puVar1 == (undefined *)0xffffffff) && (DAT_003c83c0 != 0)) {
+         *param_1 = DAT_003c83c0;
+       }
+       return puVar1;
+     }
+  0x2a8c60 _init_signal_r
+     callers: __sigtramp_r, _init_signal, _raise_r, _signal_r
+     callees: _malloc_r
+     undefined4 _init_signal_r(int *param_1)
+     {
+       undefined4 *puVar1;
+       undefined4 uVar2;
+       int iVar3;
+       uVar2 = 0;
+       if (param_1[0x75] == 0) {
+         puVar1 = _malloc_r(param_1,0x80);
+         param_1[0x75] = (int)puVar1;
+         if (puVar1 == (undefined4 *)0x0) {
+           uVar2 = 0xffffffff;
+         }
+         ...
+  0x2a8cd0 _signal_r
+     callers: signal
+     callees: _init_signal_r
+     undefined4 _signal_r(int *param_1,ulong param_2,undefined4 param_3)
+     {
+       undefined4 uVar1;
+       int iVar2;
+       undefined4 *puVar3;
+       if (param_2 < 0x20) {
+         iVar2 = param_1[0x75];
+         if (iVar2 == 0) {
+           iVar2 = _init_signal_r(param_1);
+           if (iVar2 != 0) {
+             return 0xffffffff;
+           }
+         ...
+  0x2a8d60 _raise_r
+     callers: raise
+     callees: _getpid_r, _init_signal_r, _kill_r
+     long _raise_r(int *param_1,ulong param_2)
+     {
+       int iVar1;
+       int iVar2;
+       code *pcVar3;
+       int iVar4;
+       long lVar5;
+       lVar5 = 0;
+       if (param_2 < 0x20) {
+         iVar2 = param_1[0x75];
+         if (iVar2 == 0) {
+           iVar2 = _init_signal_r(param_1);
+         ...
+  0x2a8e50 __sigtramp_r
+     callers: __sigtramp
+     callees: _init_signal_r
+     undefined4 __sigtramp_r(int *param_1,ulong param_2)
+     {
+       int iVar1;
+       int iVar2;
+       undefined4 uVar3;
+       code *pcVar4;
+       int iVar5;
+       if (param_2 < 0x20) {
+         iVar2 = param_1[0x75];
+         if (iVar2 == 0) {
+           iVar2 = _init_signal_r(param_1);
+           if (iVar2 != 0) goto LAB_002a8e8c;
+         ...
+  0x2a8f08 raise
+     callers: abort
+     callees: _raise_r
+     void raise(ulong param_1)
+     {
+       _raise_r((int *)PTR_DAT_0034ff4c,param_1);
+       return;
+     }
+  0x2a8f30 signal
+     callers: 
+     callees: _signal_r
+     undefined4 signal(ulong param_1,undefined4 param_2)
+     {
+       undefined4 uVar1;
+       uVar1 = _signal_r((int *)PTR_DAT_0034ff4c,param_1,param_2);
+       return uVar1;
+     }
+  0x2a8f60 _init_signal
+     callers: 
+     callees: _init_signal_r
+     undefined4 _init_signal(void)
+     {
+       undefined4 uVar1;
+       uVar1 = _init_signal_r((int *)PTR_DAT_0034ff4c);
+       return uVar1;
+     }
+  0x2a8f84 __sigtramp
+     callers: 
+     callees: __sigtramp_r
+     undefined4 __sigtramp(ulong param_1)
+     {
+       undefined4 uVar1;
+       uVar1 = __sigtramp_r((int *)PTR_DAT_0034ff4c,param_1);
+       return uVar1;
+     }
+  0x2a8fb0 _kill_r
+     callers: _raise_r
+     callees: kill
+     long _kill_r(int *param_1,int param_2)
+     {
+       long lVar1;
+       DAT_003c83c0 = 0;
+       lVar1 = kill(param_2);
+       if ((lVar1 == -1) && (DAT_003c83c0 != 0)) {
+         *param_1 = DAT_003c83c0;
+       }
+       return lVar1;
+     }
+  0x2a9010 _getpid_r
+     callers: _raise_r
+     callees: getpid
+     undefined4 _getpid_r(void)
+     {
+       undefined4 uVar1;
+       uVar1 = getpid();
+       return uVar1;
+     }
+  0x2a9030 _sprintf_r
+     callers: 
+     callees: vfprintf
+     int _sprintf_r(undefined4 param_1,char *param_2,char *param_3,undefined8 param_4,undefined8 param_5,
+                   undefined8 param_6,undefined8 param_7,undefined8 param_8)
+     {
+       int iVar1;
+       char *local_e0;
+       char *local_d8;
+       undefined2 local_d4;
+       char *local_d0;
+       char *local_cc;
+       undefined4 local_8c;
+       undefined8 local_28;
+       undefined8 local_20;
+         ...
+  0x2a9198 strcasecmp
+     callers: APlayerVehicle, ATrafficVehicle, AddSnowmobileForces, ApplyInitialForcesAndTorques, AutoDriveCamInputHandler, Bool_AttribByteOffsetParserFunc, Call911, ChangeCarType, CountClassNames, Create, DAFI_get
+     callees: 
+     int strcasecmp(char *string_1,char *string_2)
+     {
+       byte bVar1;
+       byte bVar2;
+       int iVar3;
+       long lVar4;
+       uint uVar5;
+       int iVar6;
+       uint uVar7;
+       bVar2 = *string_1;
+       if (*string_1 == '\0') {
+         uVar7 = (uint)(byte)*string_1;
+         ...
+
+====================================================================================================
+

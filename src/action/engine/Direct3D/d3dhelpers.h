@@ -17,8 +17,6 @@ typedef struct _D3DMATRIX {
     };
 } D3DMATRIX;
 
-
 void _MATRIXtoD3DMATRIX(_MATRIX* m_in, D3DMATRIX* m_out);
-
 
 #endif // _D3DHELPERS_H_

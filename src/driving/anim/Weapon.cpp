@@ -1,0 +1,445 @@
+#pragma fp_contract(off)
+#ifndef _CRT_SECURE_NO_WARNINGS
+#define _CRT_SECURE_NO_WARNINGS
+#endif
+
+#include "Weapon.h"
+#include "../Vtables.h"   // our copies of the game's vtables
+
+#include "AnimEngine.h"                  // Handle
+
+#include "../../common/xbeOverload.h"
+#include "../data/DebugVariables.h"
+#include "../data/RCARPFile.h"
+#include "../engine/UGroup.h"
+#include "../engine/UMemory.hpp"
+#include "../game/Debris.h"
+#include "../game/WeaponEffects.h"      // RMuzzleFlash
+#include "../game/WeaponManager.h"
+#include "../physics/PhysicsMath.h"     // Abs
+#include "../physics/Newton.h"
+#include "../physics/PhysicsObject.h"
+#include "../game/Simulation.h"
+#include "../game/Vehicle.h"
+#include "../platform/RealMath.h"
+#include "../render/Renderer.h"
+#include "../world/Trigger.h"             // gEventDynamicData
+#include "../../helpers.h"
+#include "../platform/CRuntime.h"
+
+#include <bit>
+#include <math.h>
+#include <stdio.h>
+#include <string.h>
+
+
+// ---------------------------------------------------------------------------------------------------------------
+// ActWeapon, ActWeaponAux, ActWeaponDatabase, URefCounter<WeaponInfo>'s tree and FloatAbs. See Weapon.h.
+// ---------------------------------------------------------------------------------------------------------------
+
+// The warning beside a provisional port (code no shipped data reaches), once.
+#define ANIM_UNTESTED(what) \
+    do { \
+        static bool warned_; \
+        if (!warned_) { \
+            warned_ = true; \
+            printf("[anim] WARNING: %s ran - a provisional port that no shipped data reaches, UNTESTED. Check " \
+                   "what it computes against the original.\n", what); \
+            fflush(stdout); \
+        } \
+    } while (0)
+
+// ---- originals called by address
+
+
+// ---- globals
+
+// The matrix each weapon instance starts from: the identity's 3x3, [0][3] holding the bits 0x0000ff00, [3][3] zero
+// XBE_GLOBAL(0x00191b70, 0x40)
+alignas(16) const MATRIX4 InstanceMatrix = { {
+    { 1.0f, 0.0f, 0.0f, std::bit_cast<float>(0x0000ff00u) },
+    { 0.0f, 1.0f, 0.0f, 0.0f },
+    { 0.0f, 0.0f, 1.0f, 0.0f },
+    { 0.0f, 0.0f, 0.0f, 0.0f },
+} };
+// XBE_GLOBAL(0x001c4654, 0x4)
+const MATRIX4 *IdentityMatrix = &InstanceMatrix;
+// XBE_GLOBAL(0x001b4e3c, 4)
+static float HenchmenMuzzleFlashSize = 0.4f;
+
+RSceneObj_vtbl *const kActWeaponVtable = (RSceneObj_vtbl *)Vtable_ActWeapon;
+
+constexpr uint32_t kArticleTag = 0x41727469;      // 'Arti'
+constexpr int kFlashTicks = 4;                    // a flash is drawn for four steps
+constexpr int kMuzzleFlashTicks = 7;              // CurrentMuzzleFlashStrength's
+constexpr float kOneSeventh = 1.0f / 7.0f;
+constexpr float kSpawnMass = 3.14159012f;
+constexpr float kSpawnLifetime = 4.0f;
+constexpr double kFlashFade = 0.75;               // a flash's size, by each step it has been drawn
+constexpr float kDistanceSize = 0.0025f;          // a flash's extra size, a metre from the player
+constexpr float kMaxDistanceSize = 0.5f;
+constexpr float kUnitHigh = 1.00000012f;          // w further from 1 than these is divided out
+constexpr float kUnitLow = 0.999999881f;
+static_assert(std::bit_cast<uint32_t>(kOneSeventh) == 0x3e124925 && std::bit_cast<uint32_t>(kSpawnMass) == 0x40490fd0 &&
+              std::bit_cast<uint32_t>(kDistanceSize) == 0x3b23d70a && std::bit_cast<uint32_t>(kUnitHigh) == 0x3f800001 &&
+              std::bit_cast<uint32_t>(kUnitLow) == 0x3f7ffffe, "the original's constants");
+
+#if NIGHTFIRE_X87
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own), which takes its operands (the base below the exponent)
+// and answers on the x87 stack
+__declspec(naked) static double CrtPow(double, double) {
+    __asm {
+        fld qword ptr [esp + 4]
+        fld qword ptr [esp + 12]
+        call Crt::CIpow
+        ret
+    }
+}
+#else
+// The C runtime's pow (_CIpow at 0x00132a94, the game's own)
+static double CrtPow(double base, double exponent) {
+    return Crt::CIpow(base, exponent);
+}
+#endif
+
+// ---- ActWeaponAux
+
+// FUNC_AT(0x0001ab50)
+void ActWeaponAux::Load(const char *name) {
+    char file[36];
+    sprintf(file, "%s.crp", name);
+    RCARPFileLoader loader;
+    loader.Construct();
+    carp = loader.LoadCARPFile("data\\actors\\weapons\\", file, NULL, true);
+    loader.Destruct();
+}
+
+// ---- ActWeapon
+
+// FUNC_AT(0x0001ab20)
+void ActWeapon::LoadAttributes() {
+    dbattrib_float("Henchmen muzzle flash size", &HenchmenMuzzleFlashSize, 0.0f, 1.0f, 0, 1.0f, NULL);
+}
+
+// FUNC_AT(0x0001abd0)
+ActWeapon* ActWeapon::Construct(ActWeaponAux *aux, uint32_t flags) {
+    memcpy(&instance, IdentityMatrix, sizeof instance);
+    RSceneObj::Construct(&instance);
+    this->flags = flags;
+    vtable = kActWeaponVtable;
+    muzzleFlashEndTick = 0;
+    worldTransforms[0] = NULL;
+    worldTransforms[1] = NULL;
+    owner = NULL;
+    characterInfo = NULL;
+    unknown160 = 0;
+    unknown164 = 0;
+    velocity.z = 0.0f;
+    velocity.y = 0.0f;
+    velocity.x = 0.0f;
+    this->aux = aux;
+    UseArticle(aux->carp->root->GroupLocateTag(kArticleTag), 0);
+    for (int i = 0; i < kFlashCount; i++)
+        flashes[i].endTick = 0;
+    this->flags |= kManualRender;
+    return this;
+}
+
+// FUNC_AT(0x0001acc0)
+void ActWeapon::Destruct() {
+    vtable = kActWeaponVtable;
+    if (worldTransforms[0] != NULL)
+        OperatorDelete(worldTransforms[0]);
+    if (worldTransforms[1] != NULL)
+        OperatorDelete(worldTransforms[1]);
+    RSceneObj::Destruct();
+}
+
+// FUNC_AT(0x0001b1b0)
+ActWeapon* ActWeapon::Delete(unsigned flags) {
+    Destruct();
+    if (flags & 1)
+        UMemory::FastFree(this, sizeof(ActWeapon));
+    return this;
+}
+
+// FUNC_AT(0x0001ad00)
+void ActWeapon::SetTransformToWorldSpace(const MATRIX4 *first, const MATRIX4 *second) {
+    if (worldTransforms[0] == NULL)
+        worldTransforms[0] = static_cast<MATRIX4 *>(OperatorNew(sizeof(MATRIX4)));
+    if (worldTransforms[1] == NULL)
+        worldTransforms[1] = static_cast<MATRIX4 *>(OperatorNew(sizeof(MATRIX4)));
+    *worldTransforms[0] = *first;
+    *worldTransforms[1] = *second;
+}
+
+// FUNC_AT(0x0001ad70)
+void ActWeapon::SetOwner(PhysicsObject *owner) {
+    this->owner = owner;
+    if (owner->IsOwnedBy(fgSimulation.GetPlayerObject()))
+        flags |= kPlayerOwned;
+    else
+        flags &= ~kPlayerOwned;
+}
+
+// FUNC_AT(0x0001adc0)
+void ActWeapon::SetEventDynamicData() {
+    RSceneObj::SetEventDynamicData();
+    gEventDynamicData.weapon = this;
+}
+
+// FUNC_AT(0x0001add0)
+void ActWeapon::PlayEvent(int stimulus) {
+    animHandle->ProcessStimuli(stimulus, fgSimulation.stepCount, 1);
+}
+
+// FUNC_AT(0x0001adf0)
+Newton* ActWeapon::SpawnWeapon(const Coord3 *position, const Coord3 *direction, const Coord3 *momentum,
+                               const Coord3 *spin) {
+    return static_cast<Newton *>(fgSimulation.SpawnNewtonObject(direction, position, momentum, spin,
+                                                                animHandle->Instances(), animHandle->instanceCount,
+                                                                kSpawnMass, kSpawnLifetime));
+}
+
+// FUNC_AT(0x0001ae30)
+double ActWeapon::CurrentMuzzleFlashStrength() {
+    int32_t remaining = muzzleFlashEndTick - fgSimulation.stepCount;
+    if (remaining > 0)
+        return remaining * (double)kOneSeventh;
+    return 0.0;
+}
+
+// FUNC_AT(0x0001ae60)
+void ActWeapon::Render() {
+    if (!(flags & kManualRender)) {
+        typedef void (ActWeapon::*Method)();
+        (this->*XbeVirtual<Method>(this, 19))();   // ManualRender
+    }
+}
+
+// FUNC_AT(0x0001ae70)
+void ActWeapon::ManualRender() {
+    SetNowVisible();
+    RRenderSharedData::SendPerViewPort();
+    RSceneObj::Render();
+    for (int i = 0; i < kFlashCount; i++) {
+        const ActWeaponFlash &flash = flashes[i];
+        if (flash.endTick <= fgSimulation.stepCount)
+            continue;
+        Coord4 position = {flash.position.x, flash.position.y, flash.position.z, 1.0f};
+        // Steps drawn so far (unsigned: a flash set further ahead fades to nothing at once)
+        uint32_t drawn = fgSimulation.stepCount - flash.endTick + kFlashTicks;
+        float fade = (float)CrtPow(kFlashFade, (double)drawn);
+        alignas(16) MATRIX4 transform;
+        GetTransform(&transform);
+        if (flags & kPlayerOwned) {
+            float size;
+            int type;   // RMuzzleFlash::DrawPOV's
+            switch (WeaponManager->lastFired) {
+            case kWeaponSniperRifle:
+                size = 0.18f;
+                type = 2;
+                break;
+            case kWeaponUltralightGun:
+                size = 0.06f;
+                type = 6;
+                break;
+            case kWeaponUltralightRocket:
+                size = 0.08f;
+                type = 3;
+                break;
+            case kWeaponFodGun:
+                size = 0.1f;
+                type = 7;
+                break;
+            case kWeaponFodRocket:
+                size = 0.2f;
+                type = 7;
+                break;
+            default:
+                size = 0.078f;
+                type = 0;
+                break;
+            }
+            RMuzzleFlash::DrawPOV(&transform, &position, type, (float)((double)size * flash.size * fade));
+        } else {
+            Coord4 direction = {0.0f, 0.0f, 1.0f, 0.0f};
+            RMuzzleFlash::Draw(&transform, &position, &direction, 0,
+                               (float)((double)HenchmenMuzzleFlashSize * flash.size * fade));
+        }
+    }
+}
+static_assert(std::bit_cast<uint32_t>(0.18f) == 0x3e3851ec && std::bit_cast<uint32_t>(0.06f) == 0x3d75c28f &&
+              std::bit_cast<uint32_t>(0.08f) == 0x3da3d70a && std::bit_cast<uint32_t>(0.1f) == 0x3dcccccd &&
+              std::bit_cast<uint32_t>(0.2f) == 0x3e4ccccd && std::bit_cast<uint32_t>(0.078f) == 0x3d9fbe77,
+              "ManualRender's flash sizes");
+
+// FUNC_AT(0x0001b020)
+void ActWeapon::RenderShellCasings() {
+    if ((flags & kPlayerOwned) && WeaponManager->lastFired == kWeaponSnowmobileGun)
+        Debris->DrawShellCasings();
+}
+
+// FUNC_AT(0x0001b050)
+void ActWeapon::TransformToWorldSpace(MATRIX4 *matrix) {
+    if (worldTransforms[0] != NULL && worldTransforms[1] != NULL) {
+        VU0_MATRIX4_mult(matrix, matrix, worldTransforms[0]);
+        VU0_MATRIX4_mult(matrix, matrix, worldTransforms[1]);
+    }
+}
+
+// FUNC_AT(0x0001b090)
+void ActWeapon::TransformMatrixToWorldSpace(MATRIX4 *matrix) {
+    if (worldTransforms[1] != NULL && worldTransforms[0] != NULL) {
+        VU0_MATRIX4_mult(matrix, matrix, worldTransforms[0]);
+        VU0_MATRIX4_mult(matrix, matrix, worldTransforms[1]);
+        VU0_v4unitxyz(matrix->mtx[0], matrix->mtx[0]);
+        VU0_v4unitxyz(matrix->mtx[1], matrix->mtx[1]);
+        VU0_v4unitxyz(matrix->mtx[2], matrix->mtx[2]);
+        float w = fabsf(matrix->mtx[3][3]);
+        if (w > kUnitHigh || w < kUnitLow)
+            VU0_v4scale4(matrix->mtx[3], 1.0f / matrix->mtx[3][3], matrix->mtx[3]);
+    }
+}
+
+// FUNC_AT(0x0001b130)
+Coord3* ActWeapon::GetVelocity() {
+    return &velocity;
+}
+
+// FUNC_AT(0x0001b1e0)
+void ActWeapon::TransformPointToWorldSpace(Coord4 *point) {
+    if (worldTransforms[1] != NULL && worldTransforms[0] != NULL) {
+        VU0_MATRIX4_vect4mult(point, worldTransforms[0], point);
+        VU0_MATRIX4_vect4mult(point, worldTransforms[1], point);
+        float w = Abs(point->w);
+        if (w > kUnitHigh || w < kUnitLow)
+            VU0_v4scale4(point, 1.0f / point->w, point);
+    }
+}
+
+// FUNC_AT(0x0001b270)
+void ActWeapon::StartMuzzleFlash(const Coord3 *position) {
+    int slot = 0;
+    while (flashes[slot].endTick > fgSimulation.stepCount) {
+        if (++slot >= kFlashCount)
+            return;
+    }
+    Coord3 player = *fgSimulation.cars.first[0]->GetPosition();
+    Coord3 at = *position;
+    double extra = vec3distance(&player, &at) * (double)kDistanceSize;
+    if (kMaxDistanceSize < extra)
+        extra = kMaxDistanceSize;
+    ActWeaponFlash &flash = flashes[slot];
+    flash.position = *position;
+    flash.endTick = fgSimulation.stepCount + kFlashTicks;
+    flash.size = (float)(RandomShort() * 0.25 * (1.0 / 65536) + extra + 0.75);
+    alignas(16) MATRIX4 transform;
+    GetTransform(&transform);
+    muzzleDirection.x = transform.mtx[2][0];
+    muzzleDirection.y = transform.mtx[2][1];
+    muzzleDirection.z = transform.mtx[2][2];
+    muzzleDirection.w = transform.mtx[2][3];
+    muzzleFlashEndTick = fgSimulation.stepCount + kMuzzleFlashTicks;
+}
+
+// ---- ActWeaponDatabase
+
+// FUNC_AT(0x0001bf80)
+ActWeaponDatabase* ActWeaponDatabase::Construct() {
+    memset(weapons, 0, sizeof weapons);
+    count = 0;
+    references = WeaponInfoRefCounter::Get();
+    return this;
+}
+
+// FUNC_AT(0x0001bcb0)
+void ActWeaponDatabase::Destruct() {
+    for (int i = 0; i < count; i++) {
+        ActWeaponInfo *info = references->GetReference(weapons[i]->name);
+        references->RemoveReference(info);
+        ActWeaponAux *aux = info->aux;
+        if (aux != NULL) {
+            RCARPFile *carp = aux->carp;
+            if (carp != NULL) {
+                carp->Destruct();
+                UMemory::FastFree(carp, sizeof(RCARPFile));
+            }
+            UMemory::FastFree(aux, sizeof(ActWeaponAux));
+        }
+        OperatorDelete(info);
+        weapons[i] = NULL;
+    }
+    count = 0;
+}
+
+// FUNC_AT(0x0001bd60)
+void ActWeaponDatabase::LoadWeapon(const char *name) {
+    if (references->GetReference(name) != NULL)
+        return;
+    weapons[count] = static_cast<ActWeaponInfo *>(OperatorNew(sizeof(ActWeaponInfo)));
+    strcpy(weapons[count]->name, name);
+    ActWeaponAux *aux = static_cast<ActWeaponAux *>(UMemory::FastAlloc(sizeof(ActWeaponAux), "ActWeaponAux"));
+    if (aux != NULL)
+        aux->Load(name);
+    weapons[count]->aux = aux;
+    references->AddReference(name, weapons[count]);
+    count++;
+}
+
+// FUNC_AT(0x0001b3d0)
+ActWeapon* ActWeaponDatabase::UseWeapon(const char *name, uint32_t flags) {
+    ActWeaponInfo *info = references->GetReference(name);
+    ActWeapon *weapon = static_cast<ActWeapon *>(UMemory::FastAlloc(sizeof(ActWeapon), "ActWeapon"));
+    if (weapon == NULL)
+        return NULL;
+    return weapon->Construct(info->aux, flags);
+}
+
+// FUNC_AT(0x0001b140)
+void ActWeaponDatabase::StopUsingWeapon(const char *, ActWeapon *weapon) {
+    if (weapon != NULL) {
+        typedef ActWeapon *(ActWeapon::*Method)(unsigned);
+        (weapon->*XbeVirtual<Method>(weapon, 0))(1);   // the scalar deleting destructor
+    }
+}
+
+// ---- URefCounter<WeaponInfo>'s tree
+
+// FUNC_AT(0x0001b450)
+void WeaponInfoRefTree::EraseSubtree(RefCounterNode *node) {
+    RefCounterTree::EraseSubtree(node);
+}
+
+// FUNC_AT(0x0001b4a0)
+RefCounterNode** WeaponInfoRefTree::EraseAt(RefCounterNode **result, RefCounterNode *where) {
+    return RefCounterTree::EraseAt(result, where);
+}
+
+// FUNC_AT(0x0001b810)
+RefCounterNode** WeaponInfoRefTree::InsertAt(RefCounterNode **result, bool addLeft, RefCounterNode *where, const RefCounterValue *value) {
+    return RefCounterTree::InsertAt(result, addLeft, where, value);
+}
+
+// FUNC_AT(0x0001ba00)
+RefCounterNode** WeaponInfoRefTree::EraseRange(RefCounterNode **result, RefCounterNode *first, RefCounterNode *last) {
+    return RefCounterTree::EraseRange(result, first, last);
+}
+
+// FUNC_AT(0x0001baf0)
+RefCounterInsertResult* WeaponInfoRefTree::InsertUnique(RefCounterInsertResult *result, const RefCounterValue *value) {
+    return RefCounterTree::InsertUnique(result, value);
+}
+
+// FUNC_AT(0x0001be20)
+void WeaponInfoRefTree::DestroyRange() {
+    ANIM_UNTESTED("URefCounter<WeaponInfo>'s tree, destroyed by an exception unwind");
+    RefCounterTree::DestroyRange();
+}
+
+// ---- FloatAbs
+
+// FUNC_AT(0x0001b160)
+float FloatAbs(float x) {
+    return Abs(x);
+}

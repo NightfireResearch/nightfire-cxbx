@@ -1,0 +1,339 @@
+{
+ "verdicts": [
+  {
+   "item": "47.1",
+   "xbox": "0x57a80",
+   "ps2": "0x16d130",
+   "name": "AttributeSystem::ProcessDafiSection",
+   "verdict": "accept",
+   "why": "Only callee of LoadCollection called 3x (collection section, named section, 'default') exactly where PS2 LoadCollection calls ProcessDafiSection; callees DAFI_getkeycount/CreateExtensionAttribute/MakeString match PS2",
+   "intermediates": []
+  },
+  {
+   "item": "47.2",
+   "xbox": "0x57ea0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC STL container tidy (tree erase + FastFree node 0x1c); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "48.1",
+   "xbox": "0xad630",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Shared FastFree(p,n*4) deallocate helper with 8 unrelated callers (STL allocator)",
+   "intermediates": []
+  },
+  {
+   "item": "48.2",
+   "xbox": "0xad650",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Tiny min(|a|*c/b,1) helper called from ResolveCollision (aec10); PS2 inlines it in ResolveCollision, no out-of-line named function",
+   "intermediates": []
+  },
+  {
+   "item": "49.1",
+   "xbox": "0xb0ec0",
+   "ps2": "0x1f8fd0",
+   "name": "RigidBody::UpdatePositionAndOrientation",
+   "verdict": "accept",
+   "why": "SimulateGame: per-body loop calls ApplyAngularDamping then this(1.0f), same as PS2 ApplyAngularDamping; UpdatePositionAndOrientation(1.0,body); Xbox inlines PS2's Timestep_LoadAndStartVU0/Timestep_CollectVU0data chain (ControlSleep, quattom4, matrix ops)",
+   "intermediates": [
+    {
+     "item": "intermediate",
+     "xbox": "0xae4c0",
+     "ps2": "0x1f9500",
+     "name": "RigidBody::CollideWithGround",
+     "verdict": "accept",
+     "why": "SimulateGame ground loop (type==2) position of PS2 CollideWithGround; body: isUnderwater early out, owner vfunc check +0xc4, sets +0x4e0/4e4/4e8 = 0,1,0 and returns - identical to PS2",
+     "intermediates": []
+    },
+    {
+     "item": "intermediate",
+     "xbox": "0xae150",
+     "ps2": "0x1f91e8",
+     "name": "RigidBody::ResolveLeverForces",
+     "verdict": "accept",
+     "why": "Sole callee of CollideWithGround (ae4c0) like PS2; C version of PS2's VU0 routine: loops lever count (+0xc), MICRO_THRESHOLD, owner vfunc +200 selects constant",
+     "intermediates": []
+    },
+    {
+     "item": "intermediate",
+     "xbox": "0xaec10",
+     "ps2": "0x1f9d98",
+     "name": "RigidBody::ResolveCollision",
+     "verdict": "accept",
+     "why": "Called from CollideWithObject where PS2 calls ResolveCollision; callees GetHitPoints, PlayAnimation, ModifyLevers, ScaleObjObjForces match PS2",
+     "intermediates": []
+    },
+    {
+     "item": "intermediate",
+     "xbox": "0xae830",
+     "ps2": "0x1f98e8",
+     "name": "RigidBody::ModifyLevers",
+     "verdict": "accept",
+     "why": "Callee of ResolveCollision; world->local transforms, |dot|>0.866 tests, CAR_COLLIDE_COG_SCALE, flag param_7 - matches PS2",
+     "intermediates": []
+    },
+    {
+     "item": "intermediate",
+     "xbox": "0xaea40",
+     "ps2": "0x1f9b40",
+     "name": "RigidBody::ScaleObjObjForces",
+     "verdict": "accept",
+     "why": "Callee of ResolveCollision; max of two lengths at +0x20 compared to param, then scales - matches PS2 start",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "49.2",
+   "xbox": "0xb13a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector<T> 'too long' length_error thrower (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "50.1",
+   "xbox": "0x19d20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree rotate helper shared by many map instantiations",
+   "intermediates": []
+  },
+  {
+   "item": "50.2",
+   "xbox": "0x19d80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree iterator increment/decrement helper, shared",
+   "intermediates": []
+  },
+  {
+   "item": "50.3",
+   "xbox": "0x19de0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree lower_bound with stricmp compare, shared by several URefCounter<> maps (folded)",
+   "intermediates": []
+  },
+  {
+   "item": "51.1",
+   "xbox": "0x8d610",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "64-bit flag-set helper (|= 1<<i at +0x20) used by ToggleEffect; PS2 ToggleEffect inlines it, no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "51.2",
+   "xbox": "0x8d640",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Packed radius decode helper (bits>>10&0x3ff * scale table); inline on PS2 (GetNextSceneObjCullInfo etc.), used also by WRender/SMissionManager; no out-of-line PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "51.3",
+   "xbox": "0x8d6b0",
+   "ps2": "0x1c6f60",
+   "name": "RSceneObj::ResolveData",
+   "verdict": "accept",
+   "why": "Static (char*,bool&): *flag=0; if global obj non-null call its vfunc slot 18 (Xbox +0x48 = PS2 pfn +0x9c, 8-byte entries after type_info) else 0; no callers on either side; sits right before ResolveObjectData on both",
+   "intermediates": []
+  },
+  {
+   "item": "52.1",
+   "xbox": "0x11d380",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::insert for the URefCounter<AMix> map (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "52.2",
+   "xbox": "0x11d460",
+   "ps2": "0x2f3f08",
+   "name": "URefCounter<AMix>::AddReference",
+   "verdict": "accept",
+   "why": "AMix::Add calls it where PS2 AMix::Add calls URefCounter<AMix>::AddReference; body identical to named URefCounter<AEngine>::AddReference (lookup by name, insert, set +0x90, ++refcount +0x8c)",
+   "intermediates": []
+  },
+  {
+   "item": "52.3",
+   "xbox": "0x11d580",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC map destructor (tree erase + free head node 0x98) from atexit thunk; SGI _List_base::clear on PS2 is a different STL routine",
+   "intermediates": []
+  },
+  {
+   "item": "53.1",
+   "xbox": "0x130e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC list _Buynode (FastAlloc 0xc 'STL'), shared by many lists",
+   "intermediates": []
+  },
+  {
+   "item": "53.2",
+   "xbox": "0x13110",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string _Tidy (cap 0xf), shared",
+   "intermediates": []
+  },
+  {
+   "item": "53.3",
+   "xbox": "0x13150",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string _Copy/grow, shared",
+   "intermediates": []
+  },
+  {
+   "item": "54.1",
+   "xbox": "0xa29c0",
+   "ps2": "0x1e76c8",
+   "name": "RParticleSystemManager::Reset",
+   "verdict": "accept",
+   "why": "RestartTrackRender calls it where PS2 calls RParticleSystemManager::Reset; body: zero counter, index=-1, clear two big-offset fields, iterate system map deleting each system (virtual deleting dtor) and erasing - same as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "54.2",
+   "xbox": "0xa2a70",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::insert for particle-system map (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "54.3",
+   "xbox": "0xa2b30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::erase(range) (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "55.1",
+   "xbox": "0xa8120",
+   "ps2": "0x1ef1e0",
+   "name": "RVehicleParticle::UpdateAll",
+   "verdict": "accept",
+   "why": "Called from RRenderHigh::Render (PS2 from StopFrameRender, not present on Xbox so inlined); body: frame-delta check vs Sim frame, store frame, iterate global fAllCars set calling vfunc slot 1 (arg 1) on 14 sub-emitters, then erase-range - same as PS2",
+   "intermediates": [
+    {
+     "item": "intermediate",
+     "xbox": "0xa79f0",
+     "ps2": "0x1ee3e0",
+     "name": "RVehicleParticle::~RVehicleParticle",
+     "verdict": "accept",
+     "why": "Installs vtable 0x1930b0, deletes 14 sub-emitters (virtual deleting dtor), deletes array at +4, erases this from global set - same as PS2 ~RVehicleParticle (without delete flag on Xbox)",
+     "intermediates": []
+    },
+    {
+     "item": "intermediate",
+     "xbox": "0xa7300",
+     "ps2": "0x1ef338",
+     "name": "RVehicleParticle::ResetAll",
+     "verdict": "accept",
+     "why": "Called from RestartTrackRender like PS2 ResetAll; iterates global set setting +0x44=0 (PS2 Reset inlined: +0x40, +4 shift)",
+     "intermediates": []
+    }
+   ]
+  },
+  {
+   "item": "55.2",
+   "xbox": "0xa81e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC set/_Tree destructor tidy (node 0x14) called from Kill (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "55.3",
+   "xbox": "0xa8220",
+   "ps2": "0x1ee3e0",
+   "name": "RVehicleParticle::scalar_deleting_destructor",
+   "verdict": "accept",
+   "why": "Slot 0 of vtable 0x1930b0, the vtable installed by 0xa79f0 (~RVehicleParticle); calls it then FastFree(this,0x4c) - PS2 ~RVehicleParticle frees 0x4c too",
+   "intermediates": []
+  },
+  {
+   "item": "56.1",
+   "xbox": "0xbde10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector::reserve (max 0x6666667, 40-byte elements) (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "56.2",
+   "xbox": "0xbdf60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector::reserve (8-byte elements) (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "56.3",
+   "xbox": "0xbe070",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector::reserve (8-byte elements) (STL)",
+   "intermediates": []
+  },
+  {
+   "item": "57.1",
+   "xbox": "0x1220c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC deque pop_front for AStream queue; PS2 uses SGI deque (different routine)",
+   "intermediates": []
+  },
+  {
+   "item": "57.2",
+   "xbox": "0x1220f0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC deque clear/_Tidy (blocks 0x44); PS2 counterparts are SGI deque code (maybeDequeStreamEntry is a guessed name / FUN_002ea0b0)",
+   "intermediates": []
+  },
+  {
+   "item": "57.3",
+   "xbox": "0x122170",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC deque front()/operator[] (STL)",
+   "intermediates": []
+  }
+ ]
+}

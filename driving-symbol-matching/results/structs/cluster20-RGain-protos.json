@@ -1,0 +1,55 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0008bcf0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGain::Init(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x0009de00",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGain::~RGain(void)"
+  },
+  {
+   "address": "0x0009de80",
+   "calling_convention": "__cdecl",
+   "params": [],
+   "sheet": "RGain::Kill(void)"
+  },
+  {
+   "address": "0x0009dea0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGain::Reset(void)"
+  },
+  {
+   "address": "0x0009dec0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGain::Draw(void)"
+  },
+  {
+   "address": "0x0009dfe0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RGain::RGain(void)",
+   "return": "RGain *"
+  },
+  {
+   "address": "0x0009e120",
+   "calling_convention": "__thiscall",
+   "return": "RGain *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

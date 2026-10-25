@@ -1,0 +1,161 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00052030",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSet::Name(void) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x00057a40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "AttributeSet::~AttributeSet(void)"
+  },
+  {
+   "address": "0x00058020",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "void * *"
+    }
+   ],
+   "sheet": "AttributeSet::FindAttribute(char *, AttributeValue *&) const"
+  },
+  {
+   "address": "0x000580e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupBool(char *, bool *) const",
+   "return": "bool"
+  },
+  {
+   "address": "0x00058180",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupInt(char *, bool *) const",
+   "return": "int"
+  },
+  {
+   "address": "0x00058220",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupUInt(char *, bool *) const",
+   "return": "uint"
+  },
+  {
+   "address": "0x000582c0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupFloat(char *, bool *) const",
+   "return": "float"
+  },
+  {
+   "address": "0x00058360",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupVector(char *, bool *) const"
+  },
+  {
+   "address": "0x000583a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupString(char *, bool *) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x000583e0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "AttributeSet::LookupValidString(char *, bool *) const",
+   "return": "char *"
+  },
+  {
+   "address": "0x00058f40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    },
+    {
+     "name": "param_2",
+     "type": "bool"
+    }
+   ],
+   "sheet": "AttributeSet::SetName(char *, bool)",
+   "return": "void"
+  }
+ ]
+}

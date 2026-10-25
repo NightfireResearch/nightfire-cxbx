@@ -6,6 +6,4 @@
 
 uint32_t crc32buf(const uint8_t *data, size_t length);
 
-
-
 #endif // CRC_H_

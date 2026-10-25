@@ -1,0 +1,29 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00060b60",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Newton::~Newton(void)"
+  },
+  {
+   "address": "0x00060b70",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "Newton::Simulate(void)"
+  },
+  {
+   "address": "0x000612f0",
+   "calling_convention": "__thiscall",
+   "return": "Newton *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

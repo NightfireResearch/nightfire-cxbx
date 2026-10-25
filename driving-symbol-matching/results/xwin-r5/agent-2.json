@@ -1,0 +1,274 @@
+{
+ "verdicts": [
+  {
+   "item": "9.1",
+   "xbox": "0x5c7b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only disc-error font teardown (FONT_destroy of dirty-disc font); PS2 Bond_CleanUp has no counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "9.2",
+   "xbox": "0x5c7e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only dirty-disc error screen (localised 'There's a problem with the disc' strings); no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "9.3",
+   "xbox": "0x5c960",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only dirty-disc render callback wrapping 0x5c7e0; no PS2 counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "9.4",
+   "xbox": "0x5c9a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "Xbox-only dirty-disc font setup (registers 0x5c960 callback) from Bond_StartUpSystem; PS2 has none",
+   "intermediates": []
+  },
+  {
+   "item": "10.1",
+   "xbox": "0x132c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string _Tidy (SSO 0xf) shared helper",
+   "intermediates": []
+  },
+  {
+   "item": "10.2",
+   "xbox": "0x13300",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string _Grow shared helper",
+   "intermediates": []
+  },
+  {
+   "item": "10.3",
+   "xbox": "0x133d0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC CRT exception-derived class destructor with std::string member (logic_error-like)",
+   "intermediates": []
+  },
+  {
+   "item": "10.4",
+   "xbox": "0x13460",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "scalar deleting destructor of 0x133d0 MSVC CRT class",
+   "intermediates": []
+  },
+  {
+   "item": "10.5",
+   "xbox": "0x13480",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string erase/replace helper (memmove)",
+   "intermediates": []
+  },
+  {
+   "item": "11.1",
+   "xbox": "0x1172b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list erase(range), node 0x108",
+   "intermediates": []
+  },
+  {
+   "item": "11.2",
+   "xbox": "0x117300",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode head, node 0x108",
+   "intermediates": []
+  },
+  {
+   "item": "11.3",
+   "xbox": "0x117330",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list constructor used by three dynamic initializers",
+   "intermediates": []
+  },
+  {
+   "item": "11.4",
+   "xbox": "0x117350",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list destructor used by atexit destructors",
+   "intermediates": []
+  },
+  {
+   "item": "11.6",
+   "xbox": "0x117420",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string assign/append helper instance (same body as 0xe2d80)",
+   "intermediates": []
+  },
+  {
+   "item": "12.1",
+   "xbox": "0xe2c20",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode head, node 0x24",
+   "intermediates": []
+  },
+  {
+   "item": "12.2",
+   "xbox": "0xe2c40",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "std::string _Tidy on list node member",
+   "intermediates": []
+  },
+  {
+   "item": "12.3",
+   "xbox": "0xe2c80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list erase(range), node 0x24",
+   "intermediates": []
+  },
+  {
+   "item": "12.4",
+   "xbox": "0xe2ce0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL list _Buynode(next,prev,value) with string copy",
+   "intermediates": []
+  },
+  {
+   "item": "12.5",
+   "xbox": "0xe2d80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC std::string helper instance (same body as 0x117420)",
+   "intermediates": []
+  },
+  {
+   "item": "13.1",
+   "xbox": "0x12ef50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL pair<char[128],...> copy constructor (0x80 bytes + 8), template helper",
+   "intermediates": []
+  },
+  {
+   "item": "13.2",
+   "xbox": "0x12ef80",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Erase recursion, node 0x98",
+   "intermediates": []
+  },
+  {
+   "item": "13.3",
+   "xbox": "0x12efd0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(iterator) for URefCounter<AEngine> map",
+   "intermediates": []
+  },
+  {
+   "item": "13.4",
+   "xbox": "0x12f340",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Insert for URefCounter<AEngine> map",
+   "intermediates": []
+  },
+  {
+   "item": "13.5",
+   "xbox": "0x12f530",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(first,last) for URefCounter<AEngine> map",
+   "intermediates": []
+  },
+  {
+   "item": "14.3",
+   "xbox": "0xa23c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::_Insert (particle library map)",
+   "intermediates": []
+  },
+  {
+   "item": "14.1",
+   "xbox": "0xa2290",
+   "ps2": "0x1e5fa0",
+   "name": "RParticleSystem::SetSystem",
+   "verdict": "accept",
+   "why": "called by RVehicleParticle::UpdateCar on both; same tag compare at [+0x44/+0x34]+0x2c, _particlePercent256*[+0xc]>>8, emit-rate calc from +0x3c/+0x40/+0x44 (CalcEmitVal and FindSystemViaTag inlined)",
+   "intermediates": []
+  },
+  {
+   "item": "14.2",
+   "xbox": "0xa2350",
+   "ps2": "0x1e6028",
+   "name": "RParticleSystem::RParticleCreator::Create",
+   "verdict": "accept",
+   "why": "only referenced from a data slot (creator vtable) on both; FastAlloc(0x70,\"RParticleSystem\") then RParticleSystem ctor(...,1), identical",
+   "intermediates": []
+  },
+  {
+   "item": "14.4",
+   "xbox": "0xa25a0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(first,last) (particle system map)",
+   "intermediates": []
+  },
+  {
+   "item": "14.5",
+   "xbox": "0xa2660",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "STL _Tree::erase(iterator) (particle system map)",
+   "intermediates": []
+  }
+ ],
+ "intermediates": [
+  {
+   "xbox": "0x1173a0",
+   "ps2": "0x2d6e98",
+   "name": "UFileLoader::Startup",
+   "verdict": "accept",
+   "why": "currently named placeholder 'maybeMemcardSavefileRelated'; called from Bond_StartUpSystem on both; clears three global std::list<node 0x108> exactly like PS2 Startup's three FUN_002d7bb0 calls (0x355c98/ca0/ca8); rename needs user review"
+  }
+ ]
+}

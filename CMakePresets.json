@@ -1,0 +1,86 @@
+{
+  "version": 3,
+  "cmakeMinimumRequired": { "major": 3, "minor": 21, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "windows",
+      "displayName": "Windows - MSVC (Visual Studio 2022, Win32)",
+      "description": "The native build. 32-bit because the loader has to share the game's address space.",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "Win32",
+      "binaryDir": "${sourceDir}/build/windows",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "windows-x64",
+      "displayName": "Windows - MSVC (Visual Studio 2022, x64), the standalone driving engine",
+      "description": "64-bit: driving_standalone and driving_standalone_test only, x87 off. See docs/driving/64-bit.md.",
+      "generator": "Visual Studio 17 2022",
+      "architecture": "x64",
+      "binaryDir": "${sourceDir}/build/windows-x64",
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "macos",
+      "displayName": "macOS - clang with the mingw-w64 sysroot, cross-compiling to Windows",
+      "description": "Needs mingw-w64 and ninja. Works on Linux too. See docs/macos-build.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+      "condition": { "type": "notEquals", "lhs": "${hostSystemName}", "rhs": "Windows" }
+    },
+    {
+      "name": "linux",
+      "displayName": "Linux - clang with the distribution's mingw-w64 sysroot, cross-compiling to Windows",
+      "description": "Needs clang, ninja and the i686 mingw-w64 packages. Same toolchain file as macOS; see docs/macos-build.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-mingw.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "linux-i386",
+      "displayName": "Linux - native 32-bit x86 with clang, the standalone driving engine",
+      "description": "SDL3 and dxvk-native; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh linux-i386. See docs/driving/portable.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-i386",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-linux-i386.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "linux-x64",
+      "displayName": "Linux - native x86-64 with clang, the standalone driving engine",
+      "description": "64-bit: SDL3 and dxvk-native; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh linux-x86_64. See docs/driving/64-bit.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/linux-x64",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-linux-x64.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Linux" }
+    },
+    {
+      "name": "macos-arm64",
+      "displayName": "macOS - Apple clang, native arm64, the standalone driving and action engines",
+      "description": "Both engines' standalone executables: SDL3, its GPU API on Metal; FFmpeg 8.0 from tools/fmv/build_ffmpeg.sh macos-arm64. See docs/driving/macos.md and docs/action-portable.md.",
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build/macos-arm64",
+      "toolchainFile": "${sourceDir}/cmake/toolchain-macos-arm64.cmake",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release", "NIGHTFIRE_SDL": "ON", "NIGHTFIRE_GFX": "sdlgpu",
+                          "NIGHTFIRE_WINDOW_BASE": "0x100000000" },
+      "condition": { "type": "equals", "lhs": "${hostSystemName}", "rhs": "Darwin" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "windows", "configurePreset": "windows", "configuration": "Release" },
+    { "name": "windows-x64", "configurePreset": "windows-x64", "configuration": "Release",
+      "targets": [ "driving_standalone", "driving_standalone_test" ] },
+    { "name": "macos", "configurePreset": "macos" },
+    { "name": "linux", "configurePreset": "linux" },
+    { "name": "linux-i386", "configurePreset": "linux-i386", "targets": [ "driving_standalone", "driving_standalone_test" ] },
+    { "name": "linux-x64", "configurePreset": "linux-x64",
+      "targets": [ "driving_standalone", "driving_standalone_test", "action_standalone", "action_standalone_test" ] },
+    { "name": "macos-arm64", "configurePreset": "macos-arm64", "targets": [ "driving_standalone", "driving_standalone_test", "action_standalone", "action_standalone_test" ] }
+  ]
+}

@@ -1,5 +1,7 @@
 #include "Light.h"
 
+#include <math.h>
+#include <stdint.h>
 #include <string.h>
 
 #include "../../util/DList.h"
@@ -11,9 +13,19 @@
 #include "../../sound/Sound.h"
 #include "../sp/SwitchChannels.h"
 #include "../../game.h"
+#include "../../engine/celglist.h"
+#include "../../engine/viewer.h"
+#include "../../math/X87Ops.h"
+#include "../../util/Sort.h"
 
-#define LightList (*(DLISTINFO_tag*)0x00215700)
+#pragma fp_contract(off)
+
+// XBE_GLOBAL(0x00215700, 0x18)
+DLISTINFO_tag LightList;
 #define NUM_LIGHTS 32
+// Lights_CalcClosestLights' answer
+// XBE_GLOBAL(0x00215718, 0x78)
+light_tag *ClosestLights[30];
 
 // AUTOINJECT
 void Light_Init(void) {
@@ -24,13 +36,18 @@ void Light_Init(void) {
 // AUTOINJECT
 void Light_AllocateEntries(void) {
     size_t allocSize = sizeof(light_tag) * NUM_LIGHTS;
-    light_tag* lightMemory = (light_tag*)Mem_Malloc(allocSize, (MallocFlags)0x3704, 0);
+    light_tag* lightMemory = (light_tag*)Mem_Malloc(allocSize, MALLOC_LIGHT_DATA, 0);
 
     memset(lightMemory, 0, allocSize);
 
     for (int i = 0; i < NUM_LIGHTS; i++) {
         LList_Add(&LightList.freeList, (LLNODE_tag*)&lightMemory[i]);
     }
+}
+
+// None on the Xbox, where the linker shares psiLight_Create's `return 0` with it: no object finds its light
+light_tag *Light_FindMapLight(_VECTOR *pos, float radius) {
+    return NULL;
 }
 
 // AUTOINJECT
@@ -52,7 +69,8 @@ bool Light_Delete(light_tag* light) {
 // AUTOINJECT
 light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefined1 clr_b,
                         float brightness, ushort switchChannel, short lifetimeFrames, undefined1 lightType,
-                        float param_9, ushort soundState, ushort soundTimingBase, undefined2 param_12, int soundID) {
+                        float intensity, ushort flickerMax, ushort flickerBase,
+                        undefined2 flickerMask, int soundID) {
     light_tag* light = (light_tag*)DList_MoveFromFree2InUse(&LightList);
 
     if (light == NULL) {
@@ -74,19 +92,19 @@ light_tag* Light_Create(_VECTOR *pos, undefined1 clr_r, undefined1 clr_g, undefi
     }
 
     light->lightType = lightType;
-    light->field33_0x34 = param_9;
-    light->soundState = soundState;
-    light->soundTimingBase = soundTimingBase >> 1;
+    light->intensity = intensity;
+    light->flickerMax = flickerMax;
+    light->flickerBase = flickerBase >> 1;
 
-    uint randomValue = Rand_Rand(soundTimingBase);
-    light->soundTimingCounter = (short)randomValue + soundTimingBase;
+    uint randomValue = Rand_Rand(flickerBase);
+    light->flickerCounter = (short)randomValue + flickerBase;
 
-    light->flickerMask = param_12;
+    light->flickerMask = flickerMask;
 
     if (soundID == 0) {
-        light->soundID = (short)0xffff;
+        light->soundID = SFX_NONE;
     } else {
-        light->soundID = (short)soundID;
+        light->soundID = soundID;
     }
 
     Vec_Copy(pos, &light->position);
@@ -104,44 +122,133 @@ void Light_Update(void) {
         light_tag* light = (light_tag*)node;
         node = node->next;
 
-        // Update lifetime and delete expired lights
         if (!light->lifetimeFrames || (light->lifetimeFrames--, light->lifetimeFrames != 0)) {
 
-            // Update enabled state from switch channel
             if (light->switchChannel) {
                 light->enabled = switch_channels[light->switchChannel];
             }
 
-            // Handle sound logic
-            if (light->soundID != -1) {
-                // Check if we should trigger sound (counter at 0)
-                if ((light->soundTimingCounter & 0xfff) == 0) {
-                    light->soundTimingCounter = 0xf000;
+            // The flicker, its sound played as the count down ends
+            if (light->flickerMax != 0) {
+                if ((light->flickerCounter & 0xfff) == 0) {
+                    light->flickerCounter = 0xf000;
                     Sound_Play3D((Action_SFX)light->soundID, &light->position, 100.0, -1.0, -1.0, 0, 0, 0);
                 }
 
-                // Update sound timing
-                if ((light->soundTimingCounter & 0xf000) == 0) {
-                    // Countdown mode
-                    light->soundTimingCounter--;
+                if ((light->flickerCounter & 0xf000) == 0) {
+                    light->flickerCounter--;
                     light->enabled = 1;
                 } else {
-                    // Random flickering mode based on frame parity
+                    // lit on the frames that match flickerMask
                     light->enabled = (light->flickerMask == (light->flickerMask & GameState.NumFramesUnpaused));
-                    light->soundTimingCounter++;
+                    light->flickerCounter++;
 
-                    // Reset counter if exceeded base value
-                    if (light->soundState < (light->soundTimingCounter & 0xfff)) {
-                        uint randomValue = Rand_Rand(light->soundTimingBase);
-                        light->soundTimingCounter = (short)randomValue + light->soundTimingBase;
+                    if (light->flickerMax < (light->flickerCounter & 0xfff)) {
+                        uint randomValue = Rand_Rand(light->flickerBase);
+                        light->flickerCounter = (short)randomValue + light->flickerBase;
                     }
                 }
             }
 
         } else {
-            // Lifetime expired - delete light
             Light_Delete(light);
         }
     }
 }
 
+// A colour component moved towards another by a share of the way, at least 1 unless already there
+// FUNC_AT(0x0006b0a0)
+double ClrStep(float from, float to, float share) {
+    double step = (double)to - from;
+    if (share < 0.0f)
+        share = 0.0f;
+    else if (share > 1.0f)
+        share = 1.0f;
+    if (step == 0.0)
+        return from;
+    step = step * share;
+    if (!(AbsFchs(step) < 1.0f))
+        return step + from;
+    if (step < 0.0f)
+        return -1.0f + (double)from;
+    return 1.0f + (double)from;
+}
+
+// An object lit by its cel (EFFECT_CEL_LIT) eases its ambient light towards the cel's for the state of the cel's
+// channel, twice as bright (up to 255) with EFFECT_SUNLIT while player 0 can see the sun (ambientBoost)
+// AUTOINJECT
+void Lights_CalcAmbientLight(obj_tag *obj) {
+    cel_tag *cel = obj->inCel;
+    if (cel == NULL || !(obj->effectFlags & EFFECT_CEL_LIT))
+        return;
+    ushort state = (uchar)switch_channels[(uchar)cel->ambientChannel];
+    short r = cel->ambientR[state];
+    short g = cel->ambientG[state];
+    short b = cel->ambientB[state];
+    if ((obj->effectFlags & EFFECT_SUNLIT) && glb_blokes[0]->ambientBoost) {
+        r = r * 2 > 0xff ? 0xff : r * 2;
+        g = g * 2 > 0xff ? 0xff : g * 2;
+        b = b * 2 > 0xff ? 0xff : b * 2;
+    }
+    obj->ambientR = (uchar)Ftol(ClrStep(obj->ambientR, r, 0.1f));
+    obj->ambientG = (uchar)Ftol(ClrStep(obj->ambientG, g, 0.1f));
+    obj->ambientB = (uchar)Ftol(ClrStep(obj->ambientB, b, 0.1f));
+}
+
+// The lights within reach of a sphere (its radius after its centre), up to 30, sorted, in a list of the module's; NULL
+// for none. The mask is the object's effect flags.
+// AUTOINJECT
+light_tag** Lights_CalcClosestLights(_VECTOR *sphere, uint mask, ushort *count) {
+    ushort found = 0;
+    if (count == NULL)
+        return NULL;
+    for (light_tag *light = (light_tag *)LightList.activeList.head; light != NULL;
+         light = (light_tag *)light->node.next) {
+        if (found >= 30)
+            break;
+        if (!light->enabled)
+            continue;
+        uchar type = light->lightType;
+        if (type == LIGHT_PLACED && !(mask & EFFECT_PLACED_LIGHTS))
+            continue;
+        if (type == LIGHT_TRANSIENT && (mask & EFFECT_NO_TRANSIENT_LIGHTS))
+            continue;
+        double distance;
+        if (type == LIGHT_CARRIED) {
+            if (!(mask & EFFECT_PLACED_LIGHTS))
+                continue;
+            distance = Vec_Dist2D(&light->parentObject->position, sphere);
+            if (distance > 4.0f)
+                continue;
+            light->intensity = (float)((1.0f - 0.25f * distance) * 50.0f);
+        } else {
+            distance = Vec_Dist3D(&light->position, sphere);
+            if (distance > (double)light->brightness + ((sphere_equ_tag *)sphere)->r)
+                continue;
+        }
+        light->distanceShare = (float)(distance / ((double)light->brightness * 0.5f));
+        ClosestLights[found++] = light;
+    }
+    *count = found;
+    if (found == 1)
+        return ClosestLights;
+    if (found == 0)
+        return NULL;
+    QuickSort(ClosestLights, found, sizeof(light_tag *), Compare_Unknown1, NULL);
+    return ClosestLights;
+}
+
+// The level's ambient lights, from its map: type 0, each colour component from 0 to 1, the radius from its square
+// AUTOINJECT
+void Light_SetAmbientRadiators(AMBIENT_RADIATORS *radiators) {
+    for (ushort i = 0; i < radiators->count; i++) {
+        AMBIENT_RADIATOR *radiator = &radiators->lights[i];
+        _VECTOR pos;
+        Vec_Copy(&radiator->pos, &pos);
+        float radius = (float)sqrt(radiator->radiusSq);
+        uchar b = (uchar)Ftol(radiator->b * 255.0f);
+        uchar g = (uchar)Ftol(radiator->g * 255.0f);
+        uchar r = (uchar)Ftol(radiator->r * 255.0f);
+        Light_Create(&pos, r, g, b, radius, 0, -1, LIGHT_PLACED, 1.0f, 0, 0, 0, SFX_NONE);
+    }
+}

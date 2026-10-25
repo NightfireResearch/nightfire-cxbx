@@ -1,0 +1,7168 @@
+{
+ "batch": "P004b",
+ "program": "DRIVING.ELF",
+ "note": "The rest of P004 after it stopped on 'long long type_info function' (a space Ghidra refuses). 'xbox' is the PS2 address.",
+ "items": [
+  {
+   "xbox": "0x00251c78",
+   "expect": "FUN_00251c78",
+   "name": "long_long_type_info_function",
+   "sheet_name": "long long type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5659, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251cb0",
+   "expect": "FUN_00251cb0",
+   "name": "long_type_info_function",
+   "sheet_name": "long type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5660, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251ce8",
+   "expect": "FUN_00251ce8",
+   "name": "int_type_info_function",
+   "sheet_name": "int type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5661, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251d20",
+   "expect": "FUN_00251d20",
+   "name": "short_type_info_function",
+   "sheet_name": "short type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5662, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251d58",
+   "expect": "FUN_00251d58",
+   "name": "bool_type_info_function",
+   "sheet_name": "bool type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5663, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251d90",
+   "expect": "FUN_00251d90",
+   "name": "char_type_info_function",
+   "sheet_name": "char type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5664, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251dc8",
+   "expect": "FUN_00251dc8",
+   "name": "wchar_t_type_info_function",
+   "sheet_name": "wchar_t type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5665, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251e00",
+   "expect": "FUN_00251e00",
+   "name": "long_double_type_info_function",
+   "sheet_name": "long double type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5666, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251e38",
+   "expect": "FUN_00251e38",
+   "name": "double_type_info_function",
+   "sheet_name": "double type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5667, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251e70",
+   "expect": "FUN_00251e70",
+   "name": "float_type_info_function",
+   "sheet_name": "float type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5668, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251ea8",
+   "expect": "FUN_00251ea8",
+   "name": "unsigned_int_type_info_function",
+   "sheet_name": "unsigned int type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5669, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251ee0",
+   "expect": "FUN_00251ee0",
+   "name": "unsigned_long_type_info_function",
+   "sheet_name": "unsigned long type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5670, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251f18",
+   "expect": "FUN_00251f18",
+   "name": "unsigned_long_long_type_info_function",
+   "sheet_name": "unsigned long long type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5671, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251f50",
+   "expect": "FUN_00251f50",
+   "name": "unsigned_short_type_info_function",
+   "sheet_name": "unsigned short type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5672, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251f88",
+   "expect": "FUN_00251f88",
+   "name": "unsigned_char_type_info_function",
+   "sheet_name": "unsigned char type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5673, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00251fc0",
+   "expect": "FUN_00251fc0",
+   "name": "signed_char_type_info_function",
+   "sheet_name": "signed char type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5674, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d180",
+   "expect": "FUN_0027d180",
+   "name": "EAGL::TARExtension::Use",
+   "sheet_name": "EAGL::TARExtension::Use(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5695, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d340",
+   "expect": "FUN_0027d340",
+   "name": "EAGL::TARExtension::OutputGifTags",
+   "sheet_name": "EAGL::TARExtension::OutputGifTags(unsigned long *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5696, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d5e0",
+   "expect": "FUN_0027d5e0",
+   "name": "EAGL::TARExtension::TemporaryREALMetalbinCheck",
+   "sheet_name": "EAGL::TARExtension::TemporaryREALMetalbinCheck(SHAPE *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5698, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d718",
+   "expect": "FUN_0027d718",
+   "name": "EAGL::TARExtension::GetTRC",
+   "sheet_name": "EAGL::TARExtension::GetTRC(EAGL::TRC *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5699, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d828",
+   "expect": "FUN_0027d828",
+   "name": "EAGL::TARExtension::EnableUpload",
+   "sheet_name": "EAGL::TARExtension::EnableUpload(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5700, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027d958",
+   "expect": "FUN_0027d958",
+   "name": "EAGL::TARExtension::AddBarrier",
+   "sheet_name": "EAGL::TARExtension::AddBarrier(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5701, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027f430",
+   "expect": "FUN_0027f430",
+   "name": "EAGL::TARExtension::GetOverlay",
+   "sheet_name": "EAGL::TARExtension::GetOverlay(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5759, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fa20",
+   "expect": "FUN_0027fa20",
+   "name": "EAGLInternal::Image::Transfer",
+   "sheet_name": "EAGLInternal::Image::Transfer(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5762, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fd50",
+   "expect": "FUN_0027fd50",
+   "name": "EAGLInternal::Image::Image",
+   "sheet_name": "EAGLInternal::Image::Image(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5763, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fd58",
+   "expect": "FUN_0027fd58",
+   "name": "EAGLInternal::Image::~Image",
+   "sheet_name": "EAGLInternal::Image::~Image(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5764, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fd88",
+   "expect": "FUN_0027fd88",
+   "name": "EAGLInternal::Image::Default",
+   "sheet_name": "EAGLInternal::Image::Default(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5765, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fe18",
+   "expect": "FUN_0027fe18",
+   "name": "EAGLInternal::Image::Kill",
+   "sheet_name": "EAGLInternal::Image::Kill(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5766, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027fe38",
+   "expect": "FUN_0027fe38",
+   "name": "EAGLInternal::Image::FreeChains",
+   "sheet_name": "EAGLInternal::Image::FreeChains(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5767, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283568",
+   "expect": "FUN_00283568",
+   "name": "EAGL::GeoPrimStateExtension::GeoPrimStateExtension",
+   "sheet_name": "EAGL::GeoPrimStateExtension::GeoPrimStateExtension(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5770, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283708",
+   "expect": "FUN_00283708",
+   "name": "EAGL::GeoPrimStateExtension::DumpState",
+   "sheet_name": "EAGL::GeoPrimStateExtension::DumpState(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5771, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283ed8",
+   "expect": "FUN_00283ed8",
+   "name": "EAGL::GeoPrimState::~GeoPrimState",
+   "sheet_name": "EAGL::GeoPrimState::~GeoPrimState(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5773, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283f28",
+   "expect": "FUN_00283f28",
+   "name": "EAGL::GeoPrimState::GeoPrimState",
+   "sheet_name": "EAGL::GeoPrimState::GeoPrimState(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5774, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283f70",
+   "expect": "FUN_00283f70",
+   "name": "EAGL::GeoPrimState::operator=",
+   "sheet_name": "EAGL::GeoPrimState::operator=(EAGL::GeoPrimState &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5775, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00283fa0",
+   "expect": "FUN_00283fa0",
+   "name": "EAGL::GeoPrimStateExtension::~GeoPrimStateExtension",
+   "sheet_name": "EAGL::GeoPrimStateExtension::~GeoPrimStateExtension(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5776, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002843a0",
+   "expect": "FUN_002843a0",
+   "name": "EAGL::Model::Draw",
+   "sheet_name": "EAGL::Model::Draw(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5782, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002848b0",
+   "expect": "FUN_002848b0",
+   "name": "EAGL::Model::DrawInstances",
+   "sheet_name": "EAGL::Model::DrawInstances(EAGL::InstanceArray *, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5783, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00284c40",
+   "expect": "FUN_00284c40",
+   "name": "EAGL::Model::Optimize",
+   "sheet_name": "EAGL::Model::Optimize(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5784, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00284d88",
+   "expect": "FUN_00284d88",
+   "name": "EAGL::Model::MorphModel",
+   "sheet_name": "EAGL::Model::MorphModel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5785, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002850b0",
+   "expect": "FUN_002850b0",
+   "name": "EAGL::DynamicModel::Preallocate",
+   "sheet_name": "EAGL::DynamicModel::Preallocate(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5786, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002851f8",
+   "expect": "FUN_002851f8",
+   "name": "EAGL::DynamicModel::AddGeoPrim",
+   "sheet_name": "EAGL::DynamicModel::AddGeoPrim(EAGL::GeoPrim *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5787, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00285388",
+   "expect": "FUN_00285388",
+   "name": "EAGL::DynamicModel::Draw",
+   "sheet_name": "EAGL::DynamicModel::Draw(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5788, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00285970",
+   "expect": "FUN_00285970",
+   "name": "EAGL::Model::SetModelMatrix",
+   "sheet_name": "EAGL::Model::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5804, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002859f8",
+   "expect": "FUN_002859f8",
+   "name": "EAGL::Model::SetTexture",
+   "sheet_name": "EAGL::Model::SetTexture(char *, SHAPE *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5806, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00285a48",
+   "expect": "FUN_00285a48",
+   "name": "EAGL::Model::GetTARList",
+   "sheet_name": "EAGL::Model::GetTARList(char *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5807, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00285ec0",
+   "expect": "FUN_00285ec0",
+   "name": "EAGL::Model::Call",
+   "sheet_name": "EAGL::Model::Call(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5818, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00285f48",
+   "expect": "FUN_00285f48",
+   "name": "EAGL::Model::ClearMorphModel",
+   "sheet_name": "EAGL::Model::ClearMorphModel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5819, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286170",
+   "expect": "FUN_00286170",
+   "name": "EAGL::DynamicModel::DrawNoTransform",
+   "sheet_name": "EAGL::DynamicModel::DrawNoTransform(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5822, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286210",
+   "expect": "FUN_00286210",
+   "name": "EAGL::DynamicModel::GetModelMatrix",
+   "sheet_name": "EAGL::DynamicModel::GetModelMatrix(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5823, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286218",
+   "expect": "FUN_00286218",
+   "name": "EAGL::DynamicModel::SetModelMatrix",
+   "sheet_name": "EAGL::DynamicModel::SetModelMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5824, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002862a0",
+   "expect": "FUN_002862a0",
+   "name": "EAGL::DynamicModel::SetPrimitiveType",
+   "sheet_name": "EAGL::DynamicModel::SetPrimitiveType(int, EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5825, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286348",
+   "expect": "FUN_00286348",
+   "name": "EAGL::DynamicModel::GetIndexFromName",
+   "sheet_name": "EAGL::DynamicModel::GetIndexFromName(int, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5826, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002863f0",
+   "expect": "FUN_002863f0",
+   "name": "EAGL::DynamicModel::SetVar",
+   "sheet_name": "EAGL::DynamicModel::SetVar(int, char *, void *, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5827, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002864c0",
+   "expect": "FUN_002864c0",
+   "name": "EAGL::DynamicModel::SetVar",
+   "sheet_name": "EAGL::DynamicModel::SetVar(int, int, void *, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5828, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286590",
+   "expect": "FUN_00286590",
+   "name": "EAGL::DynamicModel::SetStream",
+   "sheet_name": "EAGL::DynamicModel::SetStream(int, char *, void *, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5829, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286660",
+   "expect": "FUN_00286660",
+   "name": "EAGL::DynamicModel::SetStream",
+   "sheet_name": "EAGL::DynamicModel::SetStream(int, int, void *, int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 5830, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286730",
+   "expect": "FUN_00286730",
+   "name": "EAGL::DynamicModel::SetParamName",
+   "sheet_name": "EAGL::DynamicModel::SetParamName(int, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5831, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002867d8",
+   "expect": "FUN_002867d8",
+   "name": "EAGL::DynamicModel::Lock",
+   "sheet_name": "EAGL::DynamicModel::Lock(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5832, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286878",
+   "expect": "FUN_00286878",
+   "name": "EAGL::DynamicModel::Unlock",
+   "sheet_name": "EAGL::DynamicModel::Unlock(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5833, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00286918",
+   "expect": "FUN_00286918",
+   "name": "EAGL::DynamicModel::SetNumVerts",
+   "sheet_name": "EAGL::DynamicModel::SetNumVerts(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5834, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00289200",
+   "expect": "FUN_00289200",
+   "name": "EAGLInternal::DMA_To_GIF",
+   "sheet_name": "EAGLInternal::DMA_To_GIF(unsigned long *, unsigned int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5909, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00289300",
+   "expect": "FUN_00289300",
+   "name": "EAGLInternal::DMA_To_GIF_SourceChain",
+   "sheet_name": "EAGLInternal::DMA_To_GIF_SourceChain(unsigned long *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5910, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00289420",
+   "expect": "FUN_00289420",
+   "name": "EAGLInternal::DMA_To_VIF1",
+   "sheet_name": "EAGLInternal::DMA_To_VIF1(unsigned long *, unsigned int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5911, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00289fc0",
+   "expect": "FUN_00289fc0",
+   "name": "EAGLInternal::DMA_Reset",
+   "sheet_name": "EAGLInternal::DMA_Reset(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5924, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028a080",
+   "expect": "FUN_0028a080",
+   "name": "EAGLInternal::FlushDCache",
+   "sheet_name": "EAGLInternal::FlushDCache(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5925, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028dc78",
+   "expect": "FUN_0028dc78",
+   "name": "EAGL::RenderContextExtension::FogSprite",
+   "sheet_name": "EAGL::RenderContextExtension::FogSprite(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5944, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028e0e0",
+   "expect": "FUN_0028e0e0",
+   "name": "EAGL::RenderContextExtension::SetClutFog",
+   "sheet_name": "EAGL::RenderContextExtension::SetClutFog(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5945, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028e580",
+   "expect": "FUN_0028e580",
+   "name": "EAGL::RenderContextExtension::FogTexSprite",
+   "sheet_name": "EAGL::RenderContextExtension::FogTexSprite(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5946, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028edb0",
+   "expect": "FUN_0028edb0",
+   "name": "EAGL::RenderContextExtension::DoDepthOfField",
+   "sheet_name": "EAGL::RenderContextExtension::DoDepthOfField(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5948, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0028f4a8",
+   "expect": "FUN_0028f4a8",
+   "name": "EAGL::RenderContextExtension::DoFlare",
+   "sheet_name": "EAGL::RenderContextExtension::DoFlare(EAGL::TAR &, int, int, in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5949, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290c08",
+   "expect": "FUN_00290c08",
+   "name": "EAGL::RenderContext::~RenderContext",
+   "sheet_name": "EAGL::RenderContext::~RenderContext(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5950, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290cc8",
+   "expect": "FUN_00290cc8",
+   "name": "EAGL::RenderContext::SetSize",
+   "sheet_name": "EAGL::RenderContext::SetSize(float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5951, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290ce0",
+   "expect": "FUN_00290ce0",
+   "name": "EAGL::RenderContext::GetSize",
+   "sheet_name": "EAGL::RenderContext::GetSize(float &, float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5952, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d00",
+   "expect": "FUN_00290d00",
+   "name": "EAGL::RenderContext::SetFrontBufferDepth",
+   "sheet_name": "EAGL::RenderContext::SetFrontBufferDepth(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5953, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d08",
+   "expect": "FUN_00290d08",
+   "name": "EAGL::RenderContext::GetFrontBufferDepth",
+   "sheet_name": "EAGL::RenderContext::GetFrontBufferDepth(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5954, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d10",
+   "expect": "FUN_00290d10",
+   "name": "EAGL::RenderContext::SetBackBufferDepth",
+   "sheet_name": "EAGL::RenderContext::SetBackBufferDepth(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5955, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d18",
+   "expect": "FUN_00290d18",
+   "name": "EAGL::RenderContext::GetBackBufferDepth",
+   "sheet_name": "EAGL::RenderContext::GetBackBufferDepth(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5956, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d20",
+   "expect": "FUN_00290d20",
+   "name": "EAGL::RenderContext::SetZBufferDepth",
+   "sheet_name": "EAGL::RenderContext::SetZBufferDepth(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5957, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d28",
+   "expect": "FUN_00290d28",
+   "name": "EAGL::RenderContext::GetZBufferDepth",
+   "sheet_name": "EAGL::RenderContext::GetZBufferDepth(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5958, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d30",
+   "expect": "FUN_00290d30",
+   "name": "EAGL::RenderContext::SetSyncToVBL",
+   "sheet_name": "EAGL::RenderContext::SetSyncToVBL(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5959, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d38",
+   "expect": "FUN_00290d38",
+   "name": "EAGL::RenderContext::GetSyncToVBL",
+   "sheet_name": "EAGL::RenderContext::GetSyncToVBL(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5960, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d40",
+   "expect": "FUN_00290d40",
+   "name": "EAGL::RenderContext::SetDitherEnable",
+   "sheet_name": "EAGL::RenderContext::SetDitherEnable(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5961, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d50",
+   "expect": "FUN_00290d50",
+   "name": "EAGL::RenderContext::GetDitherEnable",
+   "sheet_name": "EAGL::RenderContext::GetDitherEnable(bool &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5962, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d60",
+   "expect": "FUN_00290d60",
+   "name": "EAGL::RenderContextExtension::RenderContextExtension",
+   "sheet_name": "EAGL::RenderContextExtension::RenderContextExtension(EAGL::Rend",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5963, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290d80",
+   "expect": "FUN_00290d80",
+   "name": "EAGL::RenderContextExtension::~RenderContextExtension",
+   "sheet_name": "EAGL::RenderContextExtension::~RenderContextExtension(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5964, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290da8",
+   "expect": "FUN_00290da8",
+   "name": "EAGLInternal::RenderContextPrivate::RenderContextPrivate",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::RenderContextPrivate(EAGL::",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5965, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290e90",
+   "expect": "FUN_00290e90",
+   "name": "EAGLInternal::RenderContextPrivate::Screen::Screen",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::Screen::Screen(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5966, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290eb8",
+   "expect": "FUN_00290eb8",
+   "name": "EAGLInternal::RenderContextPrivate::FrameBuffer::FrameBuffer",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::FrameBuffer::FrameBuffer(vo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5967, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290f08",
+   "expect": "FUN_00290f08",
+   "name": "EAGLInternal::RenderContextPrivate::FlickerFilter::FlickerFilter",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::FlickerFilter::FlickerFilte",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5968, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290f40",
+   "expect": "FUN_00290f40",
+   "name": "EAGLInternal::RenderContextPrivate::Video::Video",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::Video::Video(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5969, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00290f70",
+   "expect": "FUN_00290f70",
+   "name": "EAGL::RenderContextExtension::TakeSnapShot",
+   "sheet_name": "EAGL::RenderContextExtension::TakeSnapShot(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5970, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00291078",
+   "expect": "FUN_00291078",
+   "name": "EAGL::RenderContextExtension::ReadRects",
+   "sheet_name": "EAGL::RenderContextExtension::ReadRects(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5972, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002911a8",
+   "expect": "FUN_002911a8",
+   "name": "EAGL::RenderContextExtension::SetFilterAlpha",
+   "sheet_name": "EAGL::RenderContextExtension::SetFilterAlpha(unsigned char)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5979, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002911c0",
+   "expect": "FUN_002911c0",
+   "name": "EAGL::RenderContextExtension::SetFilterRGB",
+   "sheet_name": "EAGL::RenderContextExtension::SetFilterRGB(unsigned char, unsig",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5980, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002911f0",
+   "expect": "FUN_002911f0",
+   "name": "EAGL::RenderContextExtension::SetFilterOffset",
+   "sheet_name": "EAGL::RenderContextExtension::SetFilterOffset(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5981, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00291268",
+   "expect": "FUN_00291268",
+   "name": "EAGLInternal::RenderContextPrivate::RemoveVBLHandler",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::RemoveVBLHandler(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5988, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002912c8",
+   "expect": "FUN_002912c8",
+   "name": "EAGLInternal::RenderContextPrivate::InstallVBLHandler",
+   "sheet_name": "EAGLInternal::RenderContextPrivate::InstallVBLHandler(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 5989, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00292770",
+   "expect": "FUN_00292770",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD3 *, unsign",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6044, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00292930",
+   "expect": "FUN_00292930",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD3 *, COORD3",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6045, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00292ad0",
+   "expect": "FUN_00292ad0",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD4 *, unsign",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6046, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00292d28",
+   "expect": "FUN_00292d28",
+   "name": "EAGL::Transform::TransformPoints",
+   "sheet_name": "EAGL::Transform::TransformPoints(unsigned int, COORD4 *, COORD4",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6047, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00292f68",
+   "expect": "FUN_00292f68",
+   "name": "EAGL::Transform::Invert",
+   "sheet_name": "EAGL::Transform::Invert(EAGL::Transform &, EAGL::Transform &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6048, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00293170",
+   "expect": "FUN_00293170",
+   "name": "EAGL::Transform::TransformPoint",
+   "sheet_name": "EAGL::Transform::TransformPoint(COORD3 &, COORD3 &) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6049, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002932d8",
+   "expect": "FUN_002932d8",
+   "name": "EAGL::Transform::TransformPoint",
+   "sheet_name": "EAGL::Transform::TransformPoint(COORD4 &, COORD4 &) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6050, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00294480",
+   "expect": "FUN_00294480",
+   "name": "EAGL::Transform::AppendScale",
+   "sheet_name": "EAGL::Transform::AppendScale(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6075, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002946c0",
+   "expect": "FUN_002946c0",
+   "name": "EAGL::Transform::AppendMatrix",
+   "sheet_name": "EAGL::Transform::AppendMatrix(MATRIX4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6080, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002947f0",
+   "expect": "FUN_002947f0",
+   "name": "EAGL::Transform::AppendAimedTrans",
+   "sheet_name": "EAGL::Transform::AppendAimedTrans(COORD3 *, COORD3 *, EAGL::Tra",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6082, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00294940",
+   "expect": "FUN_00294940",
+   "name": "EAGL::Transform::PrependScale",
+   "sheet_name": "EAGL::Transform::PrependScale(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6083, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00294b70",
+   "expect": "FUN_00294b70",
+   "name": "EAGL::Transform::PrependMatrix",
+   "sheet_name": "EAGL::Transform::PrependMatrix(MATRIX4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6088, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00294ca0",
+   "expect": "FUN_00294ca0",
+   "name": "EAGL::Transform::PrependAimedTrans",
+   "sheet_name": "EAGL::Transform::PrependAimedTrans(COORD3 *, COORD3 *, EAGL::Tr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6090, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00294df0",
+   "expect": "FUN_00294df0",
+   "name": "EAGL::Transform::TransformVector",
+   "sheet_name": "EAGL::Transform::TransformVector(COORD3 &, COORD3 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6091, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002953e8",
+   "expect": "FUN_002953e8",
+   "name": "EAGL::Transform::PreMult",
+   "sheet_name": "EAGL::Transform::PreMult(EAGL::Transform &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6099, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00295db8",
+   "expect": "FUN_00295db8",
+   "name": "EAGL::ViewPort::SetOrthographic",
+   "sheet_name": "EAGL::ViewPort::SetOrthographic(float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6102, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00295fe8",
+   "expect": "FUN_00295fe8",
+   "name": "EAGL::ViewPort::BeginView",
+   "sheet_name": "EAGL::ViewPort::BeginView(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6104, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296548",
+   "expect": "FUN_00296548",
+   "name": "EAGL::ViewPort::ClearViewPort",
+   "sheet_name": "EAGL::ViewPort::ClearViewPort(EAGL::ClearFlags)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6105, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296d88",
+   "expect": "FUN_00296d88",
+   "name": "EAGL::ViewPort::GetShape",
+   "sheet_name": "EAGL::ViewPort::GetShape(float &, float &, float &, float &, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6107, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296dd0",
+   "expect": "FUN_00296dd0",
+   "name": "EAGLInternal::ViewPortPrivate::GetScale",
+   "sheet_name": "EAGLInternal::ViewPortPrivate::GetScale(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6108, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296e28",
+   "expect": "FUN_00296e28",
+   "name": "EAGLInternal::ViewPortPrivate::GetOffset",
+   "sheet_name": "EAGLInternal::ViewPortPrivate::GetOffset(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6109, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296e80",
+   "expect": "FUN_00296e80",
+   "name": "EAGL::ViewPort::SetViewMatrix",
+   "sheet_name": "EAGL::ViewPort::SetViewMatrix(MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6110, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296f28",
+   "expect": "FUN_00296f28",
+   "name": "EAGLInternal::ViewPortPrivate::ReBegin",
+   "sheet_name": "EAGLInternal::ViewPortPrivate::ReBegin(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6111, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296fb8",
+   "expect": "FUN_00296fb8",
+   "name": "EAGL::ViewPortExtension::~ViewPortExtension",
+   "sheet_name": "EAGL::ViewPortExtension::~ViewPortExtension(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6116, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00296fe0",
+   "expect": "FUN_00296fe0",
+   "name": "EAGLInternal::ViewPortPrivate::ViewPortPrivate",
+   "sheet_name": "EAGLInternal::ViewPortPrivate::ViewPortPrivate(EAGL::ViewPort *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6117, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00298478",
+   "expect": "FUN_00298478",
+   "name": "EAGL::VU0_fastqslerp",
+   "sheet_name": "EAGL::VU0_fastqslerp(COORD4 &, COORD4 &, COORD4 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6141, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00298528",
+   "expect": "FUN_00298528",
+   "name": "EAGL::VU0_quattom4",
+   "sheet_name": "EAGL::VU0_quattom4(COORD4 &, MATRIX4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6142, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00298928",
+   "expect": "FUN_00298928",
+   "name": "EAGL::ProfilerRegion::DrawRegions",
+   "sheet_name": "EAGL::ProfilerRegion::DrawRegions(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6153, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00298be0",
+   "expect": "FUN_00298be0",
+   "name": "EAGL::ProfilerRegion::ProcessRegion",
+   "sheet_name": "EAGL::ProfilerRegion::ProcessRegion(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6154, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00298d38",
+   "expect": "FUN_00298d38",
+   "name": "EAGL::ProfilerRegion::DrawRegion",
+   "sheet_name": "EAGL::ProfilerRegion::DrawRegion(float, float, unsigned int, in",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6155, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299868",
+   "expect": "FUN_00299868",
+   "name": "EAGL::ProfilerRegion::ProfilerRegion",
+   "sheet_name": "EAGL::ProfilerRegion::ProfilerRegion(char *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6159, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299ae0",
+   "expect": "FUN_00299ae0",
+   "name": "EAGL::ProfilerRegion::AddRegionToList",
+   "sheet_name": "EAGL::ProfilerRegion::AddRegionToList(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6165, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299af8",
+   "expect": "FUN_00299af8",
+   "name": "EAGL::ProfilerRegion::RemoveRegionFromList",
+   "sheet_name": "EAGL::ProfilerRegion::RemoveRegionFromList(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6166, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299b48",
+   "expect": "FUN_00299b48",
+   "name": "EAGL::Profiler::OpenProfileSection",
+   "sheet_name": "EAGL::Profiler::OpenProfileSection(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6167, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299b88",
+   "expect": "FUN_00299b88",
+   "name": "EAGL::Profiler::CloseProfileSection",
+   "sheet_name": "EAGL::Profiler::CloseProfileSection(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6168, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299bd0",
+   "expect": "FUN_00299bd0",
+   "name": "EAGL::Profiler::Profiler",
+   "sheet_name": "EAGL::Profiler::Profiler(EAGL::ProfilerRegion &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6169, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299cb0",
+   "expect": "FUN_00299cb0",
+   "name": "EAGL::Profiler::~Profiler",
+   "sheet_name": "EAGL::Profiler::~Profiler(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6171, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299da8",
+   "expect": "FUN_00299da8",
+   "name": "EAGL::DrawArray::SetGeoPrim",
+   "sheet_name": "EAGL::DrawArray::SetGeoPrim(EAGL::GeoPrim *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6175, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00299ee8",
+   "expect": "FUN_00299ee8",
+   "name": "EAGL::DrawArray::SetUpGeoPrim",
+   "sheet_name": "EAGL::DrawArray::SetUpGeoPrim(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6176, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029a3f8",
+   "expect": "FUN_0029a3f8",
+   "name": "EAGL::DrawGouraud::Begin",
+   "sheet_name": "EAGL::DrawGouraud::Begin(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6178, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029a580",
+   "expect": "FUN_0029a580",
+   "name": "EAGL::DrawGouraud::AddVertex",
+   "sheet_name": "EAGL::DrawGouraud::AddVertex(COORD4 &, EAGL::Colour &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6179, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029ab18",
+   "expect": "FUN_0029ab18",
+   "name": "EAGL::DrawClipGouraud::Begin",
+   "sheet_name": "EAGL::DrawClipGouraud::Begin(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6181, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029aca0",
+   "expect": "FUN_0029aca0",
+   "name": "EAGL::DrawClipGouraud::AddVertex",
+   "sheet_name": "EAGL::DrawClipGouraud::AddVertex(COORD4 &, EAGL::Colour &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6182, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029b330",
+   "expect": "FUN_0029b330",
+   "name": "EAGL::DrawTextured::Begin",
+   "sheet_name": "EAGL::DrawTextured::Begin(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6184, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029b4b8",
+   "expect": "FUN_0029b4b8",
+   "name": "EAGL::DrawTextured::AddVertex",
+   "sheet_name": "EAGL::DrawTextured::AddVertex(COORD4 &, EAGL::Colour &, COORD4",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6185, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029bba0",
+   "expect": "FUN_0029bba0",
+   "name": "EAGL::DrawClipTextured::Begin",
+   "sheet_name": "EAGL::DrawClipTextured::Begin(EAGL::PrimitiveType)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6188, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029bd28",
+   "expect": "FUN_0029bd28",
+   "name": "EAGL::DrawClipTextured::AddVertex",
+   "sheet_name": "EAGL::DrawClipTextured::AddVertex(COORD4 &, EAGL::Colour &, COO",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6189, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029bf28",
+   "expect": "FUN_0029bf28",
+   "name": "EAGL::DrawArray::ParamBufAlloc",
+   "sheet_name": "EAGL::DrawArray::ParamBufAlloc(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6191, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0029bf88",
+   "expect": "FUN_0029bf88",
+   "name": "EAGL::DrawArray::ParamBufFree",
+   "sheet_name": "EAGL::DrawArray::ParamBufFree(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6192, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00264360",
+   "expect": "FUN_00264360",
+   "name": "EAGLAnim::EventTarget::AddHandler",
+   "sheet_name": "EAGLAnim::EventTarget::AddHandler(EAGLAnim::EventHandler **, ch",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6355, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002643c0",
+   "expect": "FUN_002643c0",
+   "name": "EAGLAnim::EventTarget::RemoveHandler",
+   "sheet_name": "EAGLAnim::EventTarget::RemoveHandler(EAGLAnim::EventHandler **,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6356, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002653e0",
+   "expect": "FUN_002653e0",
+   "name": "EAGLAnim::FnCycle::EvalEvent",
+   "sheet_name": "EAGLAnim::FnCycle::EvalEvent(float, float, EAGLAnim::EventHandl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6396, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00265508",
+   "expect": "FUN_00265508",
+   "name": "EAGLAnim::FnCycle::EvalSQT",
+   "sheet_name": "EAGLAnim::FnCycle::EvalSQT(float, float *, EAGLAnim::BoneMask *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6397, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002655b8",
+   "expect": "FUN_002655b8",
+   "name": "EAGLAnim::FnCycle::EvalPhase",
+   "sheet_name": "EAGLAnim::FnCycle::EvalPhase(float, EAGLAnim::PhaseValue &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6398, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002658a8",
+   "expect": "FUN_002658a8",
+   "name": "EAGLAnim::MemoryPoolManager::Cleanup",
+   "sheet_name": "EAGLAnim::MemoryPoolManager::Cleanup(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6401, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002658e0",
+   "expect": "FUN_002658e0",
+   "name": "EAGLAnim::FnRawEventChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnRawEventChannel::operator delete(void *, unsigned i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6402, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00265908",
+   "expect": "FUN_00265908",
+   "name": "EAGLAnim::FnRawLinearChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnRawLinearChannel::operator delete(void *, unsigned",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6403, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00265930",
+   "expect": "FUN_00265930",
+   "name": "EAGLAnim::FnGraft::operator_delete",
+   "sheet_name": "EAGLAnim::FnGraft::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6404, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00265958",
+   "expect": "FUN_00265958",
+   "name": "EAGLAnim::FnPoseMirror::operator_delete",
+   "sheet_name": "EAGLAnim::FnPoseMirror::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6405, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00265980",
+   "expect": "FUN_00265980",
+   "name": "EAGLAnim::FnCycle::operator_delete",
+   "sheet_name": "EAGLAnim::FnCycle::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6406, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266238",
+   "expect": "FUN_00266238",
+   "name": "EAGLAnim::FnCompoundChannel::FnCompoundChannel",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::FnCompoundChannel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6416, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266280",
+   "expect": "FUN_00266280",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6417, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002662a8",
+   "expect": "FUN_002662a8",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6418, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002662d0",
+   "expect": "FUN_002662d0",
+   "name": "EAGLAnim::FnCompoundChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator delete(void *, unsigned i",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6419, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002662f8",
+   "expect": "FUN_002662f8",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6420, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266320",
+   "expect": "FUN_00266320",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new [](unsigned int, char",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6421, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266348",
+   "expect": "FUN_00266348",
+   "name": "EAGLAnim::FnCompoundChannel::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator delete [](void *, unsigne",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6422, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266370",
+   "expect": "FUN_00266370",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6423, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266378",
+   "expect": "FUN_00266378",
+   "name": "EAGLAnim::FnCompoundChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6424, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266380",
+   "expect": "FUN_00266380",
+   "name": "EAGLAnim::FnCompoundChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator new [](unsigned int, void",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6425, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266388",
+   "expect": "FUN_00266388",
+   "name": "EAGLAnim::FnCompoundChannel::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6426, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266390",
+   "expect": "FUN_00266390",
+   "name": "EAGLAnim::FnCompoundChannel::GetTargetCheckSum",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetTargetCheckSum(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6427, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002663a0",
+   "expect": "FUN_002663a0",
+   "name": "EAGLAnim::FnCompoundChannel::GetCompoundChannel",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetCompoundChannel(void)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6428, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002663a8",
+   "expect": "FUN_002663a8",
+   "name": "EAGLAnim::FnCompoundChannel::GetCompoundChannel",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetCompoundChannel(void) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6429, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002663b0",
+   "expect": "FUN_002663b0",
+   "name": "EAGLAnim::FnCompoundChannel::GetLength",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6430, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002663f0",
+   "expect": "FUN_002663f0",
+   "name": "EAGLAnim::AnimMemoryMap::GetAttributes",
+   "sheet_name": "EAGLAnim::AnimMemoryMap::GetAttributes(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6431, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002665e8",
+   "expect": "FUN_002665e8",
+   "name": "EAGLAnim::FnCompoundChannel::GetAttributes",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetAttributes(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6432, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002665f8",
+   "expect": "FUN_002665f8",
+   "name": "EAGLAnim::FnCompoundChannel::InitSubChannels",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::InitSubChannels(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6433, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002666b8",
+   "expect": "FUN_002666b8",
+   "name": "EAGLAnim::FnCompoundChannel::Eval",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6434, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266820",
+   "expect": "FUN_00266820",
+   "name": "EAGLAnim::FnCompoundChannel::FindTime",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::FindTime(EAGLAnim::StateTest &, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6435, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002669c8",
+   "expect": "FUN_002669c8",
+   "name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap",
+   "sheet_name": "EAGLAnim::CompoundChannel::InitAnimMemoryMap(EAGLAnim::AnimMemo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6437, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266a20",
+   "expect": "FUN_00266a20",
+   "name": "EAGLAnim::FnCompoundChannel::UseFPS",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::UseFPS(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6438, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266aa0",
+   "expect": "FUN_00266aa0",
+   "name": "EAGLAnim::FnCompoundChannel::GetFPS",
+   "sheet_name": "EAGLAnim::FnCompoundChannel::GetFPS(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6439, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266b18",
+   "expect": "FUN_00266b18",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, C",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6440, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266b68",
+   "expect": "FUN_00266b68",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, C",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6441, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266bb8",
+   "expect": "FUN_00266bb8",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, f",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6442, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266c28",
+   "expect": "FUN_00266c28",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, C",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6443, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266c78",
+   "expect": "FUN_00266c78",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, C",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6444, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266cc8",
+   "expect": "FUN_00266cc8",
+   "name": "EAGLAnim::AttributeBlock::FindAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::FindAttribute(EAGLAnim::AttributeId)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6445, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266d30",
+   "expect": "FUN_00266d30",
+   "name": "EAGLAnim::AttributeBlock::GetAttribute",
+   "sheet_name": "EAGLAnim::AttributeBlock::GetAttribute(EAGLAnim::AttributeId, v",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6446, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266dc8",
+   "expect": "FUN_00266dc8",
+   "name": "EAGLAnim::FnRawStateChan::Decode",
+   "sheet_name": "EAGLAnim::FnRawStateChan::Decode(unsigned char *, unsigned char",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6447, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00266f48",
+   "expect": "FUN_00266f48",
+   "name": "EAGLAnim::FnRawStateChan::EvalState",
+   "sheet_name": "EAGLAnim::FnRawStateChan::EvalState(float, EAGLAnim::State *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6448, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267288",
+   "expect": "FUN_00267288",
+   "name": "EAGLAnim::FnRawStateChan::FnRawStateChan",
+   "sheet_name": "EAGLAnim::FnRawStateChan::FnRawStateChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6461, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002672c8",
+   "expect": "FUN_002672c8",
+   "name": "EAGLAnim::FnRawStateChan::~FnRawStateChan",
+   "sheet_name": "EAGLAnim::FnRawStateChan::~FnRawStateChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6462, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267328",
+   "expect": "FUN_00267328",
+   "name": "EAGLAnim::FnRawStateChan::GetLength",
+   "sheet_name": "EAGLAnim::FnRawStateChan::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6463, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267348",
+   "expect": "FUN_00267348",
+   "name": "EAGLAnim::FnRawStateChan::Eval",
+   "sheet_name": "EAGLAnim::FnRawStateChan::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6464, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267480",
+   "expect": "FUN_00267480",
+   "name": "EAGLAnim::BoneMask::BoneMask",
+   "sheet_name": "EAGLAnim::BoneMask::BoneMask(bool)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6465, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002674a8",
+   "expect": "FUN_002674a8",
+   "name": "EAGLAnim::BoneMask::BoneMask",
+   "sheet_name": "EAGLAnim::BoneMask::BoneMask(EAGLAnim::BoneMask &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6466, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002674f0",
+   "expect": "FUN_002674f0",
+   "name": "EAGLAnim::BoneMask::SetAll",
+   "sheet_name": "EAGLAnim::BoneMask::SetAll(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6467, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267588",
+   "expect": "FUN_00267588",
+   "name": "EAGLAnim::BoneMask::operator&=",
+   "sheet_name": "EAGLAnim::BoneMask::operator&=(EAGLAnim::BoneMask &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6469, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002675b8",
+   "expect": "FUN_002675b8",
+   "name": "EAGLAnim::BoneMask::operator|=",
+   "sheet_name": "EAGLAnim::BoneMask::operator|=(EAGLAnim::BoneMask &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6470, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002675e8",
+   "expect": "FUN_002675e8",
+   "name": "EAGLAnim::BoneMask::operator^=",
+   "sheet_name": "EAGLAnim::BoneMask::operator^=(EAGLAnim::BoneMask &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6471, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267618",
+   "expect": "FUN_00267618",
+   "name": "EAGLAnim::BoneMask::operator&",
+   "sheet_name": "EAGLAnim::BoneMask::operator&(EAGLAnim::BoneMask &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6472, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002676d8",
+   "expect": "FUN_002676d8",
+   "name": "EAGLAnim::BoneMask::operator|",
+   "sheet_name": "EAGLAnim::BoneMask::operator|(EAGLAnim::BoneMask &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6473, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267798",
+   "expect": "FUN_00267798",
+   "name": "EAGLAnim::BoneMask::operator^",
+   "sheet_name": "EAGLAnim::BoneMask::operator^(EAGLAnim::BoneMask &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6474, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267858",
+   "expect": "FUN_00267858",
+   "name": "EAGLAnim::BoneMask::operator~",
+   "sheet_name": "EAGLAnim::BoneMask::operator~(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6475, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267900",
+   "expect": "FUN_00267900",
+   "name": "EAGLAnim::BoneMask::operator==",
+   "sheet_name": "EAGLAnim::BoneMask::operator==(EAGLAnim::BoneMask &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6476, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00267938",
+   "expect": "FUN_00267938",
+   "name": "EAGLAnim::FnDeltaQ::EvalSQTMasked",
+   "sheet_name": "EAGLAnim::FnDeltaQ::EvalSQTMasked(float, EAGLAnim::BoneMask *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6478, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00268768",
+   "expect": "FUN_00268768",
+   "name": "EAGLAnim::DeltaQMinRange::UnQuantize",
+   "sheet_name": "EAGLAnim::DeltaQMinRange::UnQuantize(EAGLAnim::DeltaQMinRangef",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6479, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00268858",
+   "expect": "FUN_00268858",
+   "name": "EAGLAnim::DeltaQPhysical::UnQuantize",
+   "sheet_name": "EAGLAnim::DeltaQPhysical::UnQuantize(COORD4 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6480, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00268948",
+   "expect": "FUN_00268948",
+   "name": "EAGLAnim::DeltaQ::GetConstBoneIdx",
+   "sheet_name": "EAGLAnim::DeltaQ::GetConstBoneIdx(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6481, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002689d0",
+   "expect": "FUN_002689d0",
+   "name": "EAGLAnim::DeltaQ::GetConstPhysical",
+   "sheet_name": "EAGLAnim::DeltaQ::GetConstPhysical(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6482, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00268e40",
+   "expect": "FUN_00268e40",
+   "name": "EAGLAnim::FnDeltaSingleQ::EvalSQTMasked",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::EvalSQTMasked(float, EAGLAnim::BoneMa",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6501, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026b428",
+   "expect": "FUN_0026b428",
+   "name": "EAGLAnim::FnDeltaSingleQ::InitBuffersAsRequired",
+   "sheet_name": "EAGLAnim::FnDeltaSingleQ::InitBuffersAsRequired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6514, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026ccf8",
+   "expect": "FUN_0026ccf8",
+   "name": "EAGLAnim::FnDeltaQFast::UpdateNextQsMask",
+   "sheet_name": "EAGLAnim::FnDeltaQFast::UpdateNextQsMask(EAGLAnim::DeltaQFast *",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6529, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026cfb8",
+   "expect": "FUN_0026cfb8",
+   "name": "EAGLAnim::DeltaQFastMinRange::UnQuantize",
+   "sheet_name": "EAGLAnim::DeltaQFastMinRange::UnQuantize(EAGLAnim::DeltaQFastMi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6530, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026d0d8",
+   "expect": "FUN_0026d0d8",
+   "name": "EAGLAnim::DeltaQFastPhysical::UnQuantize",
+   "sheet_name": "EAGLAnim::DeltaQFastPhysical::UnQuantize(COORD4 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6531, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026d180",
+   "expect": "FUN_0026d180",
+   "name": "EAGLAnim::DeltaQFast::GetConstBoneIdx",
+   "sheet_name": "EAGLAnim::DeltaQFast::GetConstBoneIdx(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6532, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026d200",
+   "expect": "FUN_0026d200",
+   "name": "EAGLAnim::DeltaQFast::GetConstPhysical",
+   "sheet_name": "EAGLAnim::DeltaQFast::GetConstPhysical(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6533, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfb0",
+   "expect": "FUN_0026dfb0",
+   "name": "EAGLAnim::FnAnim::GetType",
+   "sheet_name": "EAGLAnim::FnAnim::GetType(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6583, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfb8",
+   "expect": "FUN_0026dfb8",
+   "name": "EAGLAnim::FnAnim::GetTargetCheckSum",
+   "sheet_name": "EAGLAnim::FnAnim::GetTargetCheckSum(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6584, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfc0",
+   "expect": "FUN_0026dfc0",
+   "name": "EAGLAnim::FnAnim::UseFPS",
+   "sheet_name": "EAGLAnim::FnAnim::UseFPS(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6585, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfc8",
+   "expect": "FUN_0026dfc8",
+   "name": "EAGLAnim::FnAnim::Eval",
+   "sheet_name": "EAGLAnim::FnAnim::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6586, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfd0",
+   "expect": "FUN_0026dfd0",
+   "name": "EAGLAnim::FnAnim::GetLength",
+   "sheet_name": "EAGLAnim::FnAnim::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6587, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfd8",
+   "expect": "FUN_0026dfd8",
+   "name": "EAGLAnim::FnAnim::FindMatchTime",
+   "sheet_name": "EAGLAnim::FnAnim::FindMatchTime(EAGLAnim::MatchPhaseInput &, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6588, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfe0",
+   "expect": "FUN_0026dfe0",
+   "name": "EAGLAnim::FnAnim::EvalSQT",
+   "sheet_name": "EAGLAnim::FnAnim::EvalSQT(float, float *, EAGLAnim::BoneMask *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6589, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dfe8",
+   "expect": "FUN_0026dfe8",
+   "name": "EAGLAnim::FnAnim::EvalPhase",
+   "sheet_name": "EAGLAnim::FnAnim::EvalPhase(float, EAGLAnim::PhaseValue &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6590, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dff0",
+   "expect": "FUN_0026dff0",
+   "name": "EAGLAnim::FnAnim::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnAnim::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6591, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026dff8",
+   "expect": "FUN_0026dff8",
+   "name": "EAGLAnim::FnAnim::EvalEvent",
+   "sheet_name": "EAGLAnim::FnAnim::EvalEvent(float, float, EAGLAnim::EventHandle",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6592, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e000",
+   "expect": "FUN_0026e000",
+   "name": "EAGLAnim::FnAnim::EvalWeights",
+   "sheet_name": "EAGLAnim::FnAnim::EvalWeights(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6593, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e008",
+   "expect": "FUN_0026e008",
+   "name": "EAGLAnim::FnAnim::EvalState",
+   "sheet_name": "EAGLAnim::FnAnim::EvalState(float, EAGLAnim::State *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6594, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e010",
+   "expect": "FUN_0026e010",
+   "name": "EAGLAnim::FnAnim::FindTime",
+   "sheet_name": "EAGLAnim::FnAnim::FindTime(EAGLAnim::StateTest &, float, float",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6595, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e018",
+   "expect": "FUN_0026e018",
+   "name": "EAGLAnim::FnAnim::GetPhaseChan",
+   "sheet_name": "EAGLAnim::FnAnim::GetPhaseChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6596, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e020",
+   "expect": "FUN_0026e020",
+   "name": "EAGLAnim::FnAnim::GetAttribute",
+   "sheet_name": "EAGLAnim::FnAnim::GetAttribute(EAGLAnim::AttributeId, float &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6597, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e4d8",
+   "expect": "FUN_0026e4d8",
+   "name": "EAGLAnim::FnAnim::GetAttributes",
+   "sheet_name": "EAGLAnim::FnAnim::GetAttributes(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6608, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026e4e0",
+   "expect": "FUN_0026e4e0",
+   "name": "EAGLAnim::FnDeltaF3::EvalSQT",
+   "sheet_name": "EAGLAnim::FnDeltaF3::EvalSQT(float, float *, EAGLAnim::BoneMask",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6609, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026eff0",
+   "expect": "FUN_0026eff0",
+   "name": "EAGLAnim::FnDeltaF3::EvalSQTMask",
+   "sheet_name": "EAGLAnim::FnDeltaF3::EvalSQTMask(float, float *, EAGLAnim::Bone",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6610, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0026fc80",
+   "expect": "FUN_0026fc80",
+   "name": "EAGLAnim::FnDeltaF3::InitBuffersAsRequired",
+   "sheet_name": "EAGLAnim::FnDeltaF3::InitBuffersAsRequired(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6611, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271c20",
+   "expect": "FUN_00271c20",
+   "name": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::FnRawPoseChannel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6669, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271c60",
+   "expect": "FUN_00271c60",
+   "name": "EAGLAnim::FnRawPoseChannel::~FnRawPoseChannel",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::~FnRawPoseChannel(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6670, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271cb8",
+   "expect": "FUN_00271cb8",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6671, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271ce0",
+   "expect": "FUN_00271ce0",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6672, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271d08",
+   "expect": "FUN_00271d08",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator delete(void *, unsigned in",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6673, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271d30",
+   "expect": "FUN_00271d30",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6674, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271d58",
+   "expect": "FUN_00271d58",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new [](unsigned int, char",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6675, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271d80",
+   "expect": "FUN_00271d80",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator delete [](void *, unsigned",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6676, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271da8",
+   "expect": "FUN_00271da8",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6677, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271db0",
+   "expect": "FUN_00271db0",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_delete",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6678, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271db8",
+   "expect": "FUN_00271db8",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_new_array",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator new [](unsigned int, void",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6679, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271dc0",
+   "expect": "FUN_00271dc0",
+   "name": "EAGLAnim::FnRawPoseChannel::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6680, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271dc8",
+   "expect": "FUN_00271dc8",
+   "name": "EAGLAnim::FnRawPoseChannel::GetRawPoseChannel",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::GetRawPoseChannel(void)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6681, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271dd0",
+   "expect": "FUN_00271dd0",
+   "name": "EAGLAnim::FnRawPoseChannel::GetRawPoseChannel",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::GetRawPoseChannel(void) const",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6682, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271dd8",
+   "expect": "FUN_00271dd8",
+   "name": "EAGLAnim::FnRawPoseChannel::SetInterp",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::SetInterp(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6683, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271de0",
+   "expect": "FUN_00271de0",
+   "name": "EAGLAnim::FnRawPoseChannel::IsInterp",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::IsInterp(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6684, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271de8",
+   "expect": "FUN_00271de8",
+   "name": "EAGLAnim::FnRawPoseChannel::GetLength",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6685, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271e00",
+   "expect": "FUN_00271e00",
+   "name": "EAGLAnim::FnRawPoseChannel::GetNumFrames",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::GetNumFrames(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6686, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271e10",
+   "expect": "FUN_00271e10",
+   "name": "EAGLAnim::FnRawPoseChannel::GetNumBones",
+   "sheet_name": "EAGLAnim::FnRawPoseChannel::GetNumBones(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6687, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00271eb0",
+   "expect": "FUN_00271eb0",
+   "name": "EAGLAnim::RawPoseChannel::InitAnimMemoryMap",
+   "sheet_name": "EAGLAnim::RawPoseChannel::InitAnimMemoryMap(EAGLAnim::AnimMemor",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6690, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00272088",
+   "expect": "FUN_00272088",
+   "name": "EAGLAnim::RawPoseChannel::UnInit",
+   "sheet_name": "EAGLAnim::RawPoseChannel::UnInit(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6691, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00272870",
+   "expect": "FUN_00272870",
+   "name": "EAGLAnim::EulF3Interp",
+   "sheet_name": "EAGLAnim::EulF3Interp(float, float *&, float *&, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6697, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273068",
+   "expect": "FUN_00273068",
+   "name": "EAGLAnim::FnPoseBlender::EvalSQT",
+   "sheet_name": "EAGLAnim::FnPoseBlender::EvalSQT(float, float *, EAGLAnim::Bone",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6703, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273760",
+   "expect": "FUN_00273760",
+   "name": "EAGLAnim::FnPoseBlender::Eval",
+   "sheet_name": "EAGLAnim::FnPoseBlender::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6704, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273b98",
+   "expect": "FUN_00273b98",
+   "name": "EAGLAnim::FnPoseBlender::XZProjectAlign",
+   "sheet_name": "EAGLAnim::FnPoseBlender::XZProjectAlign(EAGL::Transform &, EAGL",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6705, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273e88",
+   "expect": "FUN_00273e88",
+   "name": "EAGLAnim::FnPoseBlender::FnPoseBlender",
+   "sheet_name": "EAGLAnim::FnPoseBlender::FnPoseBlender(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6707, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273ec8",
+   "expect": "FUN_00273ec8",
+   "name": "EAGLAnim::FnPoseBlender::~FnPoseBlender",
+   "sheet_name": "EAGLAnim::FnPoseBlender::~FnPoseBlender(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6708, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273ef8",
+   "expect": "FUN_00273ef8",
+   "name": "EAGLAnim::FnPoseBlender::operator_new",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6709, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273f20",
+   "expect": "FUN_00273f20",
+   "name": "EAGLAnim::FnPoseBlender::operator_new",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6710, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273f48",
+   "expect": "FUN_00273f48",
+   "name": "EAGLAnim::FnPoseBlender::operator_delete",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6711, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273f70",
+   "expect": "FUN_00273f70",
+   "name": "EAGLAnim::FnPoseBlender::operator_new_array",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6712, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273f98",
+   "expect": "FUN_00273f98",
+   "name": "EAGLAnim::FnPoseBlender::operator_new_array",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6713, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273fc0",
+   "expect": "FUN_00273fc0",
+   "name": "EAGLAnim::FnPoseBlender::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator delete [](void *, unsigned in",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6714, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273fe8",
+   "expect": "FUN_00273fe8",
+   "name": "EAGLAnim::FnPoseBlender::operator_new",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6715, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273ff0",
+   "expect": "FUN_00273ff0",
+   "name": "EAGLAnim::FnPoseBlender::operator_delete",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6716, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00273ff8",
+   "expect": "FUN_00273ff8",
+   "name": "EAGLAnim::FnPoseBlender::operator_new_array",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator new [](unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6717, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274000",
+   "expect": "FUN_00274000",
+   "name": "EAGLAnim::FnPoseBlender::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnPoseBlender::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6718, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274008",
+   "expect": "FUN_00274008",
+   "name": "EAGLAnim::FnPoseBlender::GetTimeOffset",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetTimeOffset(int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6719, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274018",
+   "expect": "FUN_00274018",
+   "name": "EAGLAnim::FnPoseBlender::GetAnim",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetAnim(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6720, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274028",
+   "expect": "FUN_00274028",
+   "name": "EAGLAnim::FnPoseBlender::GetStartTransTime",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetStartTransTime(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6721, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274030",
+   "expect": "FUN_00274030",
+   "name": "EAGLAnim::FnPoseBlender::GetTransDuration",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetTransDuration(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6722, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274038",
+   "expect": "FUN_00274038",
+   "name": "EAGLAnim::FnPoseBlender::GetEndTransTime",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetEndTransTime(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6723, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274040",
+   "expect": "FUN_00274040",
+   "name": "EAGLAnim::FnPoseBlender::SetResetBuffers",
+   "sheet_name": "EAGLAnim::FnPoseBlender::SetResetBuffers(int, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6724, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274050",
+   "expect": "FUN_00274050",
+   "name": "EAGLAnim::FnPoseBlender::GetResetBuffers",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetResetBuffers(int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6725, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274060",
+   "expect": "FUN_00274060",
+   "name": "EAGLAnim::FnPoseBlender::Init",
+   "sheet_name": "EAGLAnim::FnPoseBlender::Init(EAGLAnim::Skeleton *, float *, fl",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6726, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002740c0",
+   "expect": "FUN_002740c0",
+   "name": "EAGLAnim::FnPoseBlender::LinearBlendF3",
+   "sheet_name": "EAGLAnim::FnPoseBlender::LinearBlendF3(float, bool, float *, bo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6727, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274160",
+   "expect": "FUN_00274160",
+   "name": "EAGLAnim::FnPoseBlender::QuatBlendF4",
+   "sheet_name": "EAGLAnim::FnPoseBlender::QuatBlendF4(float, bool, float *, bool",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6728, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002741e0",
+   "expect": "FUN_002741e0",
+   "name": "EAGLAnim::FnPoseBlender::GetMaxXZProjectAxis",
+   "sheet_name": "EAGLAnim::FnPoseBlender::GetMaxXZProjectAxis(EAGL::Transform &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6729, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002742c8",
+   "expect": "FUN_002742c8",
+   "name": "EAGLAnim::FnPoseBlender::XZProjectAxis",
+   "sheet_name": "EAGLAnim::FnPoseBlender::XZProjectAxis(EAGL::Transform &, COORD",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6730, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274378",
+   "expect": "FUN_00274378",
+   "name": "EAGLAnim::FnPoseBlender::BlendQ",
+   "sheet_name": "EAGLAnim::FnPoseBlender::BlendQ(int, float, float *, float *, f",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6731, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274490",
+   "expect": "FUN_00274490",
+   "name": "EAGLAnim::FnPoseBlender::BlendAll",
+   "sheet_name": "EAGLAnim::FnPoseBlender::BlendAll(int, float, float *, float *,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6732, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274738",
+   "expect": "FUN_00274738",
+   "name": "EAGLAnim::FnPoseBlender::Set",
+   "sheet_name": "EAGLAnim::FnPoseBlender::Set(EAGLAnim::FnAnim *, float, EAGLAni",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6733, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002748e0",
+   "expect": "FUN_002748e0",
+   "name": "EAGLAnim::FnPoseBlender::Set",
+   "sheet_name": "EAGLAnim::FnPoseBlender::Set(EAGLAnim::FnAnim *, float, EAGLAni",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6734, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274928",
+   "expect": "FUN_00274928",
+   "name": "EAGLAnim::FnPoseBlender::Set",
+   "sheet_name": "EAGLAnim::FnPoseBlender::Set(EAGLAnim::FnAnim *, float, EAGLAni",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6735, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274958",
+   "expect": "FUN_00274958",
+   "name": "EAGLAnim::RawEventChannel::Eval",
+   "sheet_name": "EAGLAnim::RawEventChannel::Eval(float, float, int &, float &, E",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6736, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00274fe0",
+   "expect": "FUN_00274fe0",
+   "name": "EAGLAnim::FnKeyLerpChan::EvalSQT",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::EvalSQT(float, float *, EAGLAnim::Bone",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6745, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275228",
+   "expect": "FUN_00275228",
+   "name": "EAGLAnim::FnKeyQuatChan::EvalSQT",
+   "sheet_name": "EAGLAnim::FnKeyQuatChan::EvalSQT(float, float *, EAGLAnim::Bone",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6746, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275560",
+   "expect": "FUN_00275560",
+   "name": "EAGLAnim::FnDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6748, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275588",
+   "expect": "FUN_00275588",
+   "name": "EAGLAnim::FnDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new(unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6749, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002755b0",
+   "expect": "FUN_002755b0",
+   "name": "EAGLAnim::FnDeltaChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator delete(void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6750, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002755d8",
+   "expect": "FUN_002755d8",
+   "name": "EAGLAnim::FnDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new [](unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6751, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275600",
+   "expect": "FUN_00275600",
+   "name": "EAGLAnim::FnDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new [](unsigned int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6752, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275628",
+   "expect": "FUN_00275628",
+   "name": "EAGLAnim::FnDeltaChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator delete [](void *, unsigned int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6753, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275650",
+   "expect": "FUN_00275650",
+   "name": "EAGLAnim::FnDeltaChan::operator_new",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new(unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6754, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275658",
+   "expect": "FUN_00275658",
+   "name": "EAGLAnim::FnDeltaChan::operator_delete",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator delete(void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6755, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275660",
+   "expect": "FUN_00275660",
+   "name": "EAGLAnim::FnDeltaChan::operator_new_array",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator new [](unsigned int, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6756, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275668",
+   "expect": "FUN_00275668",
+   "name": "EAGLAnim::FnDeltaChan::operator_delete_array",
+   "sheet_name": "EAGLAnim::FnDeltaChan::operator delete [](void *, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 6757, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00275af0",
+   "expect": "FUN_00275af0",
+   "name": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan",
+   "sheet_name": "EAGLAnim::FnDeltaQuatChan::FnDeltaQuatChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6783, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002764d8",
+   "expect": "FUN_002764d8",
+   "name": "EAGLAnim::FnDeltaLerpChan::EvalWeights",
+   "sheet_name": "EAGLAnim::FnDeltaLerpChan::EvalWeights(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6825, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00276508",
+   "expect": "FUN_00276508",
+   "name": "EAGLAnim::FnDeltaLerpChan::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnDeltaLerpChan::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6826, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002766e0",
+   "expect": "FUN_002766e0",
+   "name": "EAGLAnim::FnKeyDeltaChan::FindLowerKey",
+   "sheet_name": "EAGLAnim::FnKeyDeltaChan::FindLowerKey(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6829, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002767c0",
+   "expect": "FUN_002767c0",
+   "name": "EAGLAnim::FnKeyLerpChan::Eval",
+   "sheet_name": "EAGLAnim::FnKeyLerpChan::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6830, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002767f0",
+   "expect": "FUN_002767f0",
+   "name": "EAGLAnim::FnKeyQuatChan::Eval",
+   "sheet_name": "EAGLAnim::FnKeyQuatChan::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6831, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00276820",
+   "expect": "FUN_00276820",
+   "name": "EAGLAnim::DeltaCompressedData::DecompressValues",
+   "sheet_name": "EAGLAnim::DeltaCompressedData::DecompressValues(int, int, int,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6832, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00276c70",
+   "expect": "FUN_00276c70",
+   "name": "EAGLAnim::DeltaCompressedData::DecompressValuesIndexed",
+   "sheet_name": "EAGLAnim::DeltaCompressedData::DecompressValuesIndexed(int, int",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6833, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277028",
+   "expect": "FUN_00277028",
+   "name": "EAGLAnim::DeltaCompressedData::DecompressValue",
+   "sheet_name": "EAGLAnim::DeltaCompressedData::DecompressValue(int, int, int, f",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6834, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277060",
+   "expect": "FUN_00277060",
+   "name": "EAGLAnim::PhaseChan::FindMatchTime",
+   "sheet_name": "EAGLAnim::PhaseChan::FindMatchTime(EAGLAnim::MatchPhaseInput &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6835, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277360",
+   "expect": "FUN_00277360",
+   "name": "EAGLAnim::FnPhaseChan::Eval",
+   "sheet_name": "EAGLAnim::FnPhaseChan::Eval(float, float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6836, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277538",
+   "expect": "FUN_00277538",
+   "name": "EAGLAnim::FnPhaseChan::~FnPhaseChan",
+   "sheet_name": "EAGLAnim::FnPhaseChan::~FnPhaseChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6837, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277730",
+   "expect": "FUN_00277730",
+   "name": "EAGLAnim::FnPhaseChan::GetPhaseChan",
+   "sheet_name": "EAGLAnim::FnPhaseChan::GetPhaseChan(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6850, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00277738",
+   "expect": "FUN_00277738",
+   "name": "EAGLAnim::FnPhaseChan::GetLength",
+   "sheet_name": "EAGLAnim::FnPhaseChan::GetLength(float &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6851, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00278450",
+   "expect": "FUN_00278450",
+   "name": "EAGLAnim::FnRunBlender::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnRunBlender::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6857, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00278698",
+   "expect": "FUN_00278698",
+   "name": "EAGLAnim::FnRunBlender::FindMatchTime",
+   "sheet_name": "EAGLAnim::FnRunBlender::FindMatchTime(EAGLAnim::MatchPhaseInput",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6858, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002788e0",
+   "expect": "FUN_002788e0",
+   "name": "EAGLAnim::FnRunBlender::AlignCycleBeginEnd",
+   "sheet_name": "EAGLAnim::FnRunBlender::AlignCycleBeginEnd(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6859, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00278c20",
+   "expect": "FUN_00278c20",
+   "name": "EAGLAnim::FnRunBlender::BlendVel",
+   "sheet_name": "EAGLAnim::FnRunBlender::BlendVel(float, float, float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6862, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00278d80",
+   "expect": "FUN_00278d80",
+   "name": "EAGLAnim::FnRunBlender::BlendFacing",
+   "sheet_name": "EAGLAnim::FnRunBlender::BlendFacing(float, float, float *) cons",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6863, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00278ff0",
+   "expect": "FUN_00278ff0",
+   "name": "EAGLAnim::FnRunBlender::ComputeEndRootQ",
+   "sheet_name": "EAGLAnim::FnRunBlender::ComputeEndRootQ(COORD4 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6864, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279440",
+   "expect": "FUN_00279440",
+   "name": "EAGLAnim::FnRunBlender::ComputeCycleIdx",
+   "sheet_name": "EAGLAnim::FnRunBlender::ComputeCycleIdx(float, float, float) co",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6883, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002794a0",
+   "expect": "FUN_002794a0",
+   "name": "EAGLAnim::FnRunBlender::ComputeAlignQ",
+   "sheet_name": "EAGLAnim::FnRunBlender::ComputeAlignQ(float *, float *, COORD4",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6885, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279808",
+   "expect": "FUN_00279808",
+   "name": "EAGLAnim::FnRunBlender::GetFrequency",
+   "sheet_name": "EAGLAnim::FnRunBlender::GetFrequency(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6888, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279810",
+   "expect": "FUN_00279810",
+   "name": "EAGLAnim::FnRunBlender::ComputeRootQ",
+   "sheet_name": "EAGLAnim::FnRunBlender::ComputeRootQ(float, float, COORD4 &) co",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6889, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279960",
+   "expect": "FUN_00279960",
+   "name": "EAGLAnim::FnRunBlender::ComputeBeginRootQ",
+   "sheet_name": "EAGLAnim::FnRunBlender::ComputeBeginRootQ(COORD4 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6890, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279aa0",
+   "expect": "FUN_00279aa0",
+   "name": "EAGLAnim::FnTurnBlender::EvalSQT",
+   "sheet_name": "EAGLAnim::FnTurnBlender::EvalSQT(float, float *, EAGLAnim::Bone",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6892, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279c70",
+   "expect": "FUN_00279c70",
+   "name": "EAGLAnim::FnTurnBlender::SetWeight",
+   "sheet_name": "EAGLAnim::FnTurnBlender::SetWeight(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6893, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00279e30",
+   "expect": "FUN_00279e30",
+   "name": "EAGLAnim::FnTurnBlender::EvalVel2D",
+   "sheet_name": "EAGLAnim::FnTurnBlender::EvalVel2D(float, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6894, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027a048",
+   "expect": "FUN_0027a048",
+   "name": "EAGLAnim::FnTurnBlender::BlendVel",
+   "sheet_name": "EAGLAnim::FnTurnBlender::BlendVel(float, float, float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6895, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027a1a8",
+   "expect": "FUN_0027a1a8",
+   "name": "EAGLAnim::FnTurnBlender::AlignCycleBeginEnd",
+   "sheet_name": "EAGLAnim::FnTurnBlender::AlignCycleBeginEnd(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6896, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027a520",
+   "expect": "FUN_0027a520",
+   "name": "EAGLAnim::FnTurnBlender::BlendBeginFacing",
+   "sheet_name": "EAGLAnim::FnTurnBlender::BlendBeginFacing(float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6899, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0027a6b8",
+   "expect": "FUN_0027a6b8",
+   "name": "EAGLAnim::FnTurnBlender::BlendEndFacing",
+   "sheet_name": "EAGLAnim::FnTurnBlender::BlendEndFacing(float *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6900, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254c78",
+   "expect": "FUN_00254c78",
+   "name": "BIG_locateentry",
+   "sheet_name": "BIG_locateentry",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6969, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254c98",
+   "expect": "FUN_00254c98",
+   "name": "BIG_locateoffset",
+   "sheet_name": "BIG_locateoffset",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6970, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254cc8",
+   "expect": "FUN_00254cc8",
+   "name": "BIG_locateoffsetz",
+   "sheet_name": "BIG_locateoffsetz",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6971, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254cf8",
+   "expect": "FUN_00254cf8",
+   "name": "BIG_pointer",
+   "sheet_name": "BIG_pointer",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6972, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254d40",
+   "expect": "FUN_00254d40",
+   "name": "BIG_pointerz",
+   "sheet_name": "BIG_pointerz",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6973, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254d88",
+   "expect": "FUN_00254d88",
+   "name": "BIG_locate",
+   "sheet_name": "BIG_locate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6974, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254db8",
+   "expect": "FUN_00254db8",
+   "name": "BIG_locatez",
+   "sheet_name": "BIG_locatez",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6975, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254de8",
+   "expect": "FUN_00254de8",
+   "name": "BIG_locatemany",
+   "sheet_name": "BIG_locatemany",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6976, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00254e78",
+   "expect": "FUN_00254e78",
+   "name": "BIG_count",
+   "sheet_name": "BIG_count",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6977, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255048",
+   "expect": "FUN_00255048",
+   "name": "readsectorB",
+   "sheet_name": "readsectorB(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6981, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255128",
+   "expect": "FUN_00255128",
+   "name": "CDVD_hashname",
+   "sheet_name": "CDVD_hashname(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6982, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002556d0",
+   "expect": "FUN_002556d0",
+   "name": "CDVD_resettask",
+   "sheet_name": "CDVD_resettask(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6985, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255958",
+   "expect": "FUN_00255958",
+   "name": "CDVD_watchdogtimeout",
+   "sheet_name": "CDVD_watchdogtimeout(int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6986, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255998",
+   "expect": "FUN_00255998",
+   "name": "CDVD_init",
+   "sheet_name": "CDVD_init(int, char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6987, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255cd8",
+   "expect": "FUN_00255cd8",
+   "name": "CDVD_shutdown",
+   "sheet_name": "CDVD_shutdown(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6988, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255d30",
+   "expect": "FUN_00255d30",
+   "name": "CDVD_open",
+   "sheet_name": "CDVD_open(char *, unsigned int, int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6989, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00255e98",
+   "expect": "FUN_00255e98",
+   "name": "CDVD_read",
+   "sheet_name": "CDVD_read(int, void *, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6990, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00256128",
+   "expect": "FUN_00256128",
+   "name": "CDVD_getattrfromhandle",
+   "sheet_name": "CDVD_getattrfromhandle(int, char *, int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 6991, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258020",
+   "expect": "FUN_00258020",
+   "name": "FONT_drawtexta",
+   "sheet_name": "FONT_drawtexta",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7034, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258040",
+   "expect": "FUN_00258040",
+   "name": "FONT_drawtextw",
+   "sheet_name": "FONT_drawtextw",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7035, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258060",
+   "expect": "FUN_00258060",
+   "name": "FONTDL_builda",
+   "sheet_name": "FONTDL_builda",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7036, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258090",
+   "expect": "FUN_00258090",
+   "name": "FONTDL_buildw",
+   "sheet_name": "FONTDL_buildw",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7037, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002580c0",
+   "expect": "FUN_002580c0",
+   "name": "FONT_getrecta",
+   "sheet_name": "FONT_getrecta",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7038, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002580e0",
+   "expect": "FUN_002580e0",
+   "name": "FONT_getrectw",
+   "sheet_name": "FONT_getrectw",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7039, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258880",
+   "expect": "FUN_00258880",
+   "name": "FONT_getrectx__H1ZUc_P4FONTPCX01PfN32_v",
+   "sheet_name": "FONT_getrectx__H1ZUc_P4FONTPCX01PfN32_v",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7042, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00258c60",
+   "expect": "FUN_00258c60",
+   "name": "FONT_getrectx__H1ZUs_P4FONTPCX01PfN32_v",
+   "sheet_name": "FONT_getrectx__H1ZUs_P4FONTPCX01PfN32_v",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7043, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002591d0",
+   "expect": "FUN_002591d0",
+   "name": "LOCALE_getstate",
+   "sheet_name": "LOCALE_getstate",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7048, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259ac0",
+   "expect": "FUN_00259ac0",
+   "name": "PAD_restore",
+   "sheet_name": "PAD_restore",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7072, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259b78",
+   "expect": "FUN_00259b78",
+   "name": "PAD_getdataptr",
+   "sheet_name": "PAD_getdataptr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7073, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259b90",
+   "expect": "FUN_00259b90",
+   "name": "PAD_getpadtype",
+   "sheet_name": "PAD_getpadtype",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7074, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259ba8",
+   "expect": "FUN_00259ba8",
+   "name": "PAD_active",
+   "sheet_name": "PAD_active",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7075, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259bf8",
+   "expect": "FUN_00259bf8",
+   "name": "PAD_scan",
+   "sheet_name": "PAD_scan",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7076, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259c70",
+   "expect": "FUN_00259c70",
+   "name": "PAD_state",
+   "sheet_name": "PAD_state",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7077, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259cb8",
+   "expect": "FUN_00259cb8",
+   "name": "PAD_eventpress",
+   "sheet_name": "PAD_eventpress",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7078, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259d08",
+   "expect": "FUN_00259d08",
+   "name": "PAD_getstickinfo",
+   "sheet_name": "PAD_getstickinfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7079, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259d50",
+   "expect": "FUN_00259d50",
+   "name": "PAD_getbuttonpressure",
+   "sheet_name": "PAD_getbuttonpressure",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7080, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259f50",
+   "expect": "FUN_00259f50",
+   "name": "PAD_getpressureinfo",
+   "sheet_name": "PAD_getpressureinfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7081, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00259f90",
+   "expect": "FUN_00259f90",
+   "name": "PAD_setmode",
+   "sheet_name": "PAD_setmode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7082, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0025a028",
+   "expect": "FUN_0025a028",
+   "name": "PAD_setactuator",
+   "sheet_name": "PAD_setactuator",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7083, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x0025a4a8",
+   "expect": "FUN_0025a4a8",
+   "name": "PAD_update",
+   "sheet_name": "PAD_update",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7085, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00260648",
+   "expect": "FUN_00260648",
+   "name": "PRINT_init",
+   "sheet_name": "PRINT_init",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7188, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002613f8",
+   "expect": "FUN_002613f8",
+   "name": "THREAD_yieldticks",
+   "sheet_name": "THREAD_yieldticks",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7224, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002614d8",
+   "expect": "FUN_002614d8",
+   "name": "THREAD_yield",
+   "sheet_name": "THREAD_yield",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7225, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00261578",
+   "expect": "FUN_00261578",
+   "name": "THREAD_iscurrent",
+   "sheet_name": "THREAD_iscurrent",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7226, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002615d0",
+   "expect": "FUN_002615d0",
+   "name": "THREAD_getpriority",
+   "sheet_name": "THREAD_getpriority",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7227, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00261638",
+   "expect": "FUN_00261638",
+   "name": "THREAD_setpriority",
+   "sheet_name": "THREAD_setpriority",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7228, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002616b0",
+   "expect": "FUN_002616b0",
+   "name": "THREAD_testexit",
+   "sheet_name": "THREAD_testexit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7229, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00261710",
+   "expect": "FUN_00261710",
+   "name": "THREAD_waitexit",
+   "sheet_name": "THREAD_waitexit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7230, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002617a8",
+   "expect": "FUN_002617a8",
+   "name": "THREAD_exit",
+   "sheet_name": "THREAD_exit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7231, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00314ef8",
+   "expect": "FUN_00314ef8",
+   "name": "SNDI_s16tofunaligned",
+   "sheet_name": "SNDI_s16tofunaligned(int, short *, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7407, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315130",
+   "expect": "FUN_00315130",
+   "name": "discardbits",
+   "sheet_name": "discardbits(UTALKSTATE *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7410, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315b90",
+   "expect": "FUN_00315b90",
+   "name": "SFILTER_unpackxaf",
+   "sheet_name": "SFILTER_unpackxaf(void *, int, void *, void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7414, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315c30",
+   "expect": "FUN_00315c30",
+   "name": "SFILTER_unpackgetframexaf",
+   "sheet_name": "SFILTER_unpackgetframexaf(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7415, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315c38",
+   "expect": "FUN_00315c38",
+   "name": "SFILTER_unpackxafrestore",
+   "sheet_name": "SFILTER_unpackxafrestore(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7416, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315c58",
+   "expect": "FUN_00315c58",
+   "name": "SFILTER_unpackxafinit",
+   "sheet_name": "SFILTER_unpackxafinit(void *, UNPACKINITPARAMS *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7417, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315ce8",
+   "expect": "FUN_00315ce8",
+   "name": "SND::CEAXABLKDecf::~CEAXABLKDecf",
+   "sheet_name": "SND::CEAXABLKDecf::~CEAXABLKDecf(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7418, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315d08",
+   "expect": "FUN_00315d08",
+   "name": "SFILTER_unpackxalf",
+   "sheet_name": "SFILTER_unpackxalf(void *, int, void *, void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7419, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315f10",
+   "expect": "FUN_00315f10",
+   "name": "SFILTER_unpackgetframexalf",
+   "sheet_name": "SFILTER_unpackgetframexalf(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7420, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315f18",
+   "expect": "FUN_00315f18",
+   "name": "SFILTER_unpackxalfrestore",
+   "sheet_name": "SFILTER_unpackxalfrestore(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7421, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00315fe8",
+   "expect": "FUN_00315fe8",
+   "name": "SFILTER_unpackxapf",
+   "sheet_name": "SFILTER_unpackxapf(void *, int, void *, void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7423, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316158",
+   "expect": "FUN_00316158",
+   "name": "SFILTER_unpackxapfrestore",
+   "sheet_name": "SFILTER_unpackxapfrestore(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7424, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316224",
+   "expect": "FUN_00316224",
+   "name": "mtfilter5900",
+   "sheet_name": "mtfilter5900",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7426, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003165d0",
+   "expect": "FUN_003165d0",
+   "name": "SFILTER_ft16",
+   "sheet_name": "SFILTER_ft16(void *, int, void *, void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7427, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316928",
+   "expect": "FUN_00316928",
+   "name": "SFILTER_src",
+   "sheet_name": "SFILTER_src(void *, int, void *, void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7435, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316980",
+   "expect": "FUN_00316980",
+   "name": "SFILTER_initSOURCE",
+   "sheet_name": "SFILTER_initSOURCE(SRCSTATE *, void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7436, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316e28",
+   "expect": "FUN_00316e28",
+   "name": "stretchframesneeded",
+   "sheet_name": "stretchframesneeded(void *, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7439, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00316f40",
+   "expect": "FUN_00316f40",
+   "name": "stretch",
+   "sheet_name": "stretch(void *, int, float *, float *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7440, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00317c00",
+   "expect": "FUN_00317c00",
+   "name": "remap",
+   "sheet_name": "remap(int, int, int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7451, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00318268",
+   "expect": "FUN_00318268",
+   "name": "SNDMIXI_initfx2",
+   "sheet_name": "SNDMIXI_initfx2(int, MIXFXFILTHEADER *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7454, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a7678",
+   "expect": "FUN_002a7678",
+   "name": "_malloc_r",
+   "sheet_name": "_malloc_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7548, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8198",
+   "expect": "FUN_002a8198",
+   "name": "qsort",
+   "sheet_name": "qsort",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7557, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8bd0",
+   "expect": "FUN_002a8bd0",
+   "name": "rand",
+   "sheet_name": "rand",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7559, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8c00",
+   "expect": "FUN_002a8c00",
+   "name": "_sbrk_r",
+   "sheet_name": "_sbrk_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7560, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8c60",
+   "expect": "FUN_002a8c60",
+   "name": "_init_signal_r",
+   "sheet_name": "_init_signal_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7561, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8cd0",
+   "expect": "FUN_002a8cd0",
+   "name": "_signal_r",
+   "sheet_name": "_signal_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7562, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8d60",
+   "expect": "FUN_002a8d60",
+   "name": "_raise_r",
+   "sheet_name": "_raise_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7563, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8e50",
+   "expect": "FUN_002a8e50",
+   "name": "__sigtramp_r",
+   "sheet_name": "__sigtramp_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7564, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8f08",
+   "expect": "FUN_002a8f08",
+   "name": "raise",
+   "sheet_name": "raise",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7565, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8f30",
+   "expect": "FUN_002a8f30",
+   "name": "signal",
+   "sheet_name": "signal",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7566, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a8fb0",
+   "expect": "FUN_002a8fb0",
+   "name": "_kill_r",
+   "sheet_name": "_kill_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7569, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a9010",
+   "expect": "FUN_002a9010",
+   "name": "_getpid_r",
+   "sheet_name": "_getpid_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7570, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002a9030",
+   "expect": "FUN_002a9030",
+   "name": "_sprintf_r",
+   "sheet_name": "_sprintf_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7571, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002aab80",
+   "expect": "FUN_002aab80",
+   "name": "strtod",
+   "sheet_name": "strtod",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7590, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002aabb0",
+   "expect": "FUN_002aabb0",
+   "name": "strtodf",
+   "sheet_name": "strtodf",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7591, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002aabd8",
+   "expect": "FUN_002aabd8",
+   "name": "strtok",
+   "sheet_name": "strtok",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7592, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002aac00",
+   "expect": "FUN_002aac00",
+   "name": "strtok_r",
+   "sheet_name": "strtok_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7593, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002aaca0",
+   "expect": "FUN_002aaca0",
+   "name": "_strtol_r",
+   "sheet_name": "_strtol_r",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7594, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ab010",
+   "expect": "FUN_002ab010",
+   "name": "vfiprintf",
+   "sheet_name": "vfiprintf",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7597, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b47f8",
+   "expect": "FUN_002b47f8",
+   "name": "sceDevVu1Exec",
+   "sheet_name": "sceDevVu1Exec",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7694, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4808",
+   "expect": "FUN_002b4808",
+   "name": "sceDevVu1GetTpc",
+   "sheet_name": "sceDevVu1GetTpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7695, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4830",
+   "expect": "FUN_002b4830",
+   "name": "sceDevVu1GetCnd",
+   "sheet_name": "sceDevVu1GetCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7696, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b49c0",
+   "expect": "FUN_002b49c0",
+   "name": "sceDevVu1PutCnd",
+   "sheet_name": "sceDevVu1PutCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7697, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4b08",
+   "expect": "FUN_002b4b08",
+   "name": "sceDevVif0Reset",
+   "sheet_name": "sceDevVif0Reset",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7698, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4b30",
+   "expect": "FUN_002b4b30",
+   "name": "sceDevVif0Pause",
+   "sheet_name": "sceDevVif0Pause",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7699, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4c08",
+   "expect": "FUN_002b4c08",
+   "name": "sceDevVif0GetErr",
+   "sheet_name": "sceDevVif0GetErr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7702, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b4c58",
+   "expect": "FUN_002b4c58",
+   "name": "sceDevVif0GetCnd",
+   "sheet_name": "sceDevVif0GetCnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7703, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b55a8",
+   "expect": "FUN_002b55a8",
+   "name": "sceDmaSend",
+   "sheet_name": "sceDmaSend",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7720, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5680",
+   "expect": "FUN_002b5680",
+   "name": "sceDmaSendN",
+   "sheet_name": "sceDmaSendN",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7721, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5768",
+   "expect": "FUN_002b5768",
+   "name": "sceDmaSendI",
+   "sheet_name": "sceDmaSendI",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7722, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5850",
+   "expect": "FUN_002b5850",
+   "name": "sceDmaRecv",
+   "sheet_name": "sceDmaRecv",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7723, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5918",
+   "expect": "FUN_002b5918",
+   "name": "sceDmaRecvN",
+   "sheet_name": "sceDmaRecvN",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7724, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5a08",
+   "expect": "FUN_002b5a08",
+   "name": "sceDmaRecvI",
+   "sheet_name": "sceDmaRecvI",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7725, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5af8",
+   "expect": "FUN_002b5af8",
+   "name": "sceDmaSync",
+   "sheet_name": "sceDmaSync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7726, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5cf0",
+   "expect": "FUN_002b5cf0",
+   "name": "__fixdfdi",
+   "sheet_name": "__fixdfdi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7730, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b5d50",
+   "expect": "FUN_002b5d50",
+   "name": "__fixunsdfdi",
+   "sheet_name": "__fixunsdfdi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7731, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7460",
+   "expect": "FUN_002b7460",
+   "name": "sbrk",
+   "sheet_name": "sbrk",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7885, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7510",
+   "expect": "FUN_002b7510",
+   "name": "isatty",
+   "sheet_name": "isatty",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7886, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7518",
+   "expect": "FUN_002b7518",
+   "name": "fstat",
+   "sheet_name": "fstat",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7887, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7530",
+   "expect": "FUN_002b7530",
+   "name": "getpid",
+   "sheet_name": "getpid",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7888, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7538",
+   "expect": "FUN_002b7538",
+   "name": "kill",
+   "sheet_name": "kill",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7889, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7560",
+   "expect": "FUN_002b7560",
+   "name": "stat",
+   "sheet_name": "stat",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7890, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7588",
+   "expect": "FUN_002b7588",
+   "name": "unlink",
+   "sheet_name": "unlink",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7891, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b75b0",
+   "expect": "FUN_002b75b0",
+   "name": "QueryIntrContext",
+   "sheet_name": "QueryIntrContext",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7892, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b75c0",
+   "expect": "FUN_002b75c0",
+   "name": "DisableIntc",
+   "sheet_name": "DisableIntc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7893, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7ad0",
+   "expect": "FUN_002b7ad0",
+   "name": "iWakeupThread",
+   "sheet_name": "iWakeupThread",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7904, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7b68",
+   "expect": "FUN_002b7b68",
+   "name": "iRotateThreadReadyQueue",
+   "sheet_name": "iRotateThreadReadyQueue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7905, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b7ec0",
+   "expect": "FUN_002b7ec0",
+   "name": "sceTtyWrite",
+   "sheet_name": "sceTtyWrite",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7908, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b8010",
+   "expect": "FUN_002b8010",
+   "name": "sceTtyRead",
+   "sheet_name": "sceTtyRead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7909, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b84b8",
+   "expect": "FUN_002b84b8",
+   "name": "_printf",
+   "sheet_name": "_printf",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7912, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b8b90",
+   "expect": "FUN_002b8b90",
+   "name": "sceSifInitCmd",
+   "sheet_name": "sceSifInitCmd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7919, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b91b0",
+   "expect": "FUN_002b91b0",
+   "name": "sceSifWriteBackDCache",
+   "sheet_name": "sceSifWriteBackDCache",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7927, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9260",
+   "expect": "FUN_002b9260",
+   "name": "sceSifInitRpc",
+   "sheet_name": "sceSifInitRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7928, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9aa0",
+   "expect": "FUN_002b9aa0",
+   "name": "sceSifCallRpc",
+   "sheet_name": "sceSifCallRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7932, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9c90",
+   "expect": "FUN_002b9c90",
+   "name": "sceSifCheckStatRpc",
+   "sheet_name": "sceSifCheckStatRpc",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7933, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9ed0",
+   "expect": "FUN_002b9ed0",
+   "name": "sceSifRemoveRpcQueue",
+   "sheet_name": "sceSifRemoveRpcQueue",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7937, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9f60",
+   "expect": "FUN_002b9f60",
+   "name": "sceSifGetNextRequest",
+   "sheet_name": "sceSifGetNextRequest",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7938, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002b9fb8",
+   "expect": "FUN_002b9fb8",
+   "name": "sceSifExecRequest",
+   "sheet_name": "sceSifExecRequest",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7939, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002baa80",
+   "expect": "FUN_002baa80",
+   "name": "sceFsReset",
+   "sheet_name": "sceFsReset",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7944, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002baab8",
+   "expect": "FUN_002baab8",
+   "name": "sceOpen",
+   "sheet_name": "sceOpen",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7945, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002bad40",
+   "expect": "FUN_002bad40",
+   "name": "sceClose",
+   "sheet_name": "sceClose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 7946, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002be9e8",
+   "expect": "FUN_002be9e8",
+   "name": "sceDeci2Open",
+   "sheet_name": "sceDeci2Open",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8004, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002bea30",
+   "expect": "FUN_002bea30",
+   "name": "sceDeci2Close",
+   "sheet_name": "sceDeci2Close",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8005, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002bea58",
+   "expect": "FUN_002bea58",
+   "name": "sceDeci2ReqSend",
+   "sheet_name": "sceDeci2ReqSend",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8006, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002bea88",
+   "expect": "FUN_002bea88",
+   "name": "sceDeci2Poll",
+   "sheet_name": "sceDeci2Poll",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8007, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002beb50",
+   "expect": "FUN_002beb50",
+   "name": "sceDeci2ExLock",
+   "sheet_name": "sceDeci2ExLock",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8011, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002beb78",
+   "expect": "FUN_002beb78",
+   "name": "sceDeci2ExUnLock",
+   "sheet_name": "sceDeci2ExUnLock",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8012, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002beba0",
+   "expect": "FUN_002beba0",
+   "name": "kputs",
+   "sheet_name": "kputs",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8013, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6c50",
+   "expect": "FUN_002c6c50",
+   "name": "_lmcGetClientPtr",
+   "sheet_name": "_lmcGetClientPtr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8077, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6c80",
+   "expect": "FUN_002c6c80",
+   "name": "sceMcChangeThreadPriority",
+   "sheet_name": "sceMcChangeThreadPriority",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8078, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6d38",
+   "expect": "FUN_002c6d38",
+   "name": "sceMcGetSlotMax",
+   "sheet_name": "sceMcGetSlotMax",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8079, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6df8",
+   "expect": "FUN_002c6df8",
+   "name": "sceMcOpen",
+   "sheet_name": "sceMcOpen",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8080, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6f30",
+   "expect": "FUN_002c6f30",
+   "name": "sceMcMkdir",
+   "sheet_name": "sceMcMkdir",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8081, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c6f68",
+   "expect": "FUN_002c6f68",
+   "name": "sceMcClose",
+   "sheet_name": "sceMcClose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8082, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7020",
+   "expect": "FUN_002c7020",
+   "name": "sceMcSeek",
+   "sheet_name": "sceMcSeek",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8083, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7188",
+   "expect": "FUN_002c7188",
+   "name": "sceMcRead",
+   "sheet_name": "sceMcRead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8084, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7498",
+   "expect": "FUN_002c7498",
+   "name": "sceMcSync",
+   "sheet_name": "sceMcSync",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8086, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c75d0",
+   "expect": "FUN_002c75d0",
+   "name": "sceMcGetInfo",
+   "sheet_name": "sceMcGetInfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8087, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7758",
+   "expect": "FUN_002c7758",
+   "name": "sceMcUdCheckNewCard",
+   "sheet_name": "sceMcUdCheckNewCard",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8088, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c79a8",
+   "expect": "FUN_002c79a8",
+   "name": "sceMcChdir",
+   "sheet_name": "sceMcChdir",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8090, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7af8",
+   "expect": "FUN_002c7af8",
+   "name": "sceMcFormat",
+   "sheet_name": "sceMcFormat",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8091, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7bc0",
+   "expect": "FUN_002c7bc0",
+   "name": "sceMcDelete",
+   "sheet_name": "sceMcDelete",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8092, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7ce8",
+   "expect": "FUN_002c7ce8",
+   "name": "sceMcFlush",
+   "sheet_name": "sceMcFlush",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8093, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7da0",
+   "expect": "FUN_002c7da0",
+   "name": "sceMcSetFileInfo",
+   "sheet_name": "sceMcSetFileInfo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8094, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c7f78",
+   "expect": "FUN_002c7f78",
+   "name": "sceMcRename",
+   "sheet_name": "sceMcRename",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8095, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c80e0",
+   "expect": "FUN_002c80e0",
+   "name": "sceMcUnformat",
+   "sheet_name": "sceMcUnformat",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8096, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c82e8",
+   "expect": "FUN_002c82e8",
+   "name": "sceMtapInit",
+   "sheet_name": "sceMtapInit",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8099, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c8568",
+   "expect": "FUN_002c8568",
+   "name": "sceMtapPortOpen",
+   "sheet_name": "sceMtapPortOpen",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8100, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c85d8",
+   "expect": "FUN_002c85d8",
+   "name": "sceMtapPortClose",
+   "sheet_name": "sceMtapPortClose",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8101, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c8648",
+   "expect": "FUN_002c8648",
+   "name": "sceMtapGetConnection",
+   "sheet_name": "sceMtapGetConnection",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8102, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c86b8",
+   "expect": "FUN_002c86b8",
+   "name": "sceMtapChangeThreadPriority",
+   "sheet_name": "sceMtapChangeThreadPriority",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8103, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c8a88",
+   "expect": "FUN_002c8a88",
+   "name": "scePadEnd",
+   "sheet_name": "scePadEnd",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8107, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c8b08",
+   "expect": "FUN_002c8b08",
+   "name": "scePadPortOpen",
+   "sheet_name": "scePadPortOpen",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8108, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c8e58",
+   "expect": "FUN_002c8e58",
+   "name": "scePadRead",
+   "sheet_name": "scePadRead",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8111, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c92b8",
+   "expect": "FUN_002c92b8",
+   "name": "scePadInfoMode",
+   "sheet_name": "scePadInfoMode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8118, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c93f0",
+   "expect": "FUN_002c93f0",
+   "name": "scePadSetMainMode",
+   "sheet_name": "scePadSetMainMode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8119, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c94a8",
+   "expect": "FUN_002c94a8",
+   "name": "scePadSetActDirect",
+   "sheet_name": "scePadSetActDirect",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8120, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c97a8",
+   "expect": "FUN_002c97a8",
+   "name": "scePadInfoPressMode",
+   "sheet_name": "scePadInfoPressMode",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8122, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c98b8",
+   "expect": "FUN_002c98b8",
+   "name": "scePadGetSlotMax",
+   "sheet_name": "scePadGetSlotMax",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8125, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002c9b90",
+   "expect": "FUN_002c9b90",
+   "name": "scePcStop",
+   "sheet_name": "scePcStop",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8128, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ca11c",
+   "expect": "FUN_002ca11c",
+   "name": "snDIntr",
+   "sheet_name": "snDIntr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8137, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ca150",
+   "expect": "FUN_002ca150",
+   "name": "snEIntr",
+   "sheet_name": "snEIntr",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8138, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ca168",
+   "expect": "FUN_002ca168",
+   "name": "_snProfEnableInt",
+   "sheet_name": "_snProfEnableInt",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8139, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ceb18",
+   "expect": "FUN_002ceb18",
+   "name": "StringToNumber::StringToNumber",
+   "sheet_name": "StringToNumber::StringToNumber(StringToNumberEntry *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8232, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002cec40",
+   "expect": "FUN_002cec40",
+   "name": "StringToNumber::~StringToNumber",
+   "sheet_name": "StringToNumber::~StringToNumber(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8233, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002cec98",
+   "expect": "FUN_002cec98",
+   "name": "StringToNumber::ConvertStringToNumber",
+   "sheet_name": "StringToNumber::ConvertStringToNumber(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8234, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ced58",
+   "expect": "FUN_002ced58",
+   "name": "StringToNumber::ConvertNumberToString",
+   "sheet_name": "StringToNumber::ConvertNumberToString(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8235, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002cedf0",
+   "expect": "FUN_002cedf0",
+   "name": "StringToNumber::BinarySearch",
+   "sheet_name": "StringToNumber::BinarySearch(char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8236, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ceeb8",
+   "expect": "FUN_002ceeb8",
+   "name": "StringToNumber::BinarySearch",
+   "sheet_name": "StringToNumber::BinarySearch(int)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8237, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d2260",
+   "expect": "FUN_002d2260",
+   "name": "USphere::USphere",
+   "sheet_name": "USphere::USphere(unsigned int, COORD4 *, int *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8331, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d2430",
+   "expect": "FUN_002d2430",
+   "name": "TriIntersect",
+   "sheet_name": "TriIntersect(COORD4 &, COORD4 &, COORD4 &, COORD4 &, COORD4 &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8332, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d2610",
+   "expect": "FUN_002d2610",
+   "name": "QuadIntersect",
+   "sheet_name": "QuadIntersect(COORD4 &, COORD4 &, COORD4 &, COORD4 &, COORD4 &,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8333, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d2870",
+   "expect": "FUN_002d2870",
+   "name": "PtInPoly",
+   "sheet_name": "PtInPoly(COORD4 &, unsigned int, int *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8334, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d2948",
+   "expect": "FUN_002d2948",
+   "name": "PolyIntersect",
+   "sheet_name": "PolyIntersect(unsigned int, int *, COORD4 *, COORD4 &, float &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8335, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3268",
+   "expect": "FUN_002d3268",
+   "name": "SegmentToPointXZDistSqr",
+   "sheet_name": "SegmentToPointXZDistSqr(COORD3 &, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8339, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3318",
+   "expect": "FUN_002d3318",
+   "name": "BoxHullIntersectXZ",
+   "sheet_name": "BoxHullIntersectXZ(unsigned int, COORD4 *, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8340, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3720",
+   "expect": "FUN_002d3720",
+   "name": "CircleHullIntersectXZ",
+   "sheet_name": "CircleHullIntersectXZ(unsigned int, COORD4 *, COORD3 &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8341, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3950",
+   "expect": "FUN_002d3950",
+   "name": "FindOBBIntersect",
+   "sheet_name": "FindOBBIntersect(COORD3 &, COORD3 &, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8342, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3c30",
+   "expect": "FUN_002d3c30",
+   "name": "CalcPlaneEquation",
+   "sheet_name": "CalcPlaneEquation(unsigned int, COORD4 *, COORD4 *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8343, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d3f28",
+   "expect": "FUN_002d3f28",
+   "name": "PTDir",
+   "sheet_name": "PTDir(COORD3 &, COORD3 &, COORD3 &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8346, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4898",
+   "expect": "FUN_002d4898",
+   "name": "UData::UData",
+   "sheet_name": "UData::UData(UData &, void *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8361, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4930",
+   "expect": "FUN_002d4930",
+   "name": "UData::ResolveOffsets",
+   "sheet_name": "UData::ResolveOffsets(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8362, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4960",
+   "expect": "FUN_002d4960",
+   "name": "UGroup::UGroup",
+   "sheet_name": "UGroup::UGroup(UGroup &)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8363, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4a90",
+   "expect": "FUN_002d4a90",
+   "name": "UGroup::~UGroup",
+   "sheet_name": "UGroup::~UGroup(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8365, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4b70",
+   "expect": "FUN_002d4b70",
+   "name": "UGroup::ConstCast",
+   "sheet_name": "UGroup::ConstCast(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8366, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4b90",
+   "expect": "FUN_002d4b90",
+   "name": "UGroup::SerializedMaximumSize",
+   "sheet_name": "UGroup::SerializedMaximumSize(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8367, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4bd0",
+   "expect": "FUN_002d4bd0",
+   "name": "UGroup::Serialize",
+   "sheet_name": "UGroup::Serialize(void *, unsigned int *, UGroup::Serialization",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8368, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4ce0",
+   "expect": "FUN_002d4ce0",
+   "name": "UGroup::Deserialize",
+   "sheet_name": "UGroup::Deserialize(void *, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8369, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4f30",
+   "expect": "FUN_002d4f30",
+   "name": "UGroup::GroupCountType",
+   "sheet_name": "UGroup::GroupCountType(unsigned int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8372, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d4fd0",
+   "expect": "FUN_002d4fd0",
+   "name": "UGroup::GroupFindFirstUnusedIndex",
+   "sheet_name": "UGroup::GroupFindFirstUnusedIndex(unsigned int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8373, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d5070",
+   "expect": "FUN_002d5070",
+   "name": "UGroup::GroupFindLastUnusedIndex",
+   "sheet_name": "UGroup::GroupFindLastUnusedIndex(unsigned int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8374, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002d5110",
+   "expect": "FUN_002d5110",
+   "name": "UGroup::GroupLocateFirst",
+   "sheet_name": "UGroup::GroupLocateFirst(unsigned int, unsigned int, unsigned i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8375, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002daa18",
+   "expect": "FUN_002daa18",
+   "name": "CARP::ResolveSymbolicReferences",
+   "sheet_name": "CARP::ResolveSymbolicReferences(UGroup *, USymbolTable &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8536, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dab18",
+   "expect": "FUN_002dab18",
+   "name": "CARP::SetDiagnosticFunc",
+   "sheet_name": "CARP::SetDiagnosticFunc(bool (*)(char *, bool))",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8537, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dab38",
+   "expect": "FUN_002dab38",
+   "name": "CARP::EnableResolveWarnings",
+   "sheet_name": "CARP::EnableResolveWarnings(bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8538, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dac58",
+   "expect": "FUN_002dac58",
+   "name": "CARP::Instance::SetDimensions",
+   "sheet_name": "CARP::Instance::SetDimensions(bool, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8540, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dadc8",
+   "expect": "FUN_002dadc8",
+   "name": "CARP::PathInfo::FindChannelIndex",
+   "sheet_name": "CARP::PathInfo::FindChannelIndex(char *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8541, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dae58",
+   "expect": "FUN_002dae58",
+   "name": "CARP::PathInfo::GetKnotIndex",
+   "sheet_name": "CARP::PathInfo::GetKnotIndex(float, unsigned int, CARP::PathInf",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8542, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dafb8",
+   "expect": "FUN_002dafb8",
+   "name": "CARP::PathInfo::ComputeUnitTime",
+   "sheet_name": "CARP::PathInfo::ComputeUnitTime(float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8543, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dafe0",
+   "expect": "FUN_002dafe0",
+   "name": "CARP::PathInfo::ComputeLinear",
+   "sheet_name": "CARP::PathInfo::ComputeLinear(COORD4 &, COORD4 &, COORD4 &, flo",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8544, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db028",
+   "expect": "FUN_002db028",
+   "name": "CARP::PathInfo::ScaleToUnitTime",
+   "sheet_name": "CARP::PathInfo::ScaleToUnitTime(float, unsigned int, unsigned i",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8545, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db188",
+   "expect": "FUN_002db188",
+   "name": "CARP::PathInfo::EvaluateSpline",
+   "sheet_name": "CARP::PathInfo::EvaluateSpline(float, unsigned int, CARP::PathI",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8547, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db370",
+   "expect": "FUN_002db370",
+   "name": "CARP::PathInfo::EvaluateMatrix",
+   "sheet_name": "CARP::PathInfo::EvaluateMatrix(float, unsigned int &, unsigned",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8549, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db478",
+   "expect": "FUN_002db478",
+   "name": "CARP::RotateSplineAboutBase",
+   "sheet_name": "CARP::RotateSplineAboutBase(MATRIX4 &, MATRIX4 &, MATRIX4 &, MA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8550, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db690",
+   "expect": "FUN_002db690",
+   "name": "CARP::AISpline::GetApplyTransform",
+   "sheet_name": "CARP::AISpline::GetApplyTransform(MATRIX4 *) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8551, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002db798",
+   "expect": "FUN_002db798",
+   "name": "CARP::BaseDesc::CalcDamageZone",
+   "sheet_name": "CARP::BaseDesc::CalcDamageZone(COORD3 &) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8552, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dba30",
+   "expect": "FUN_002dba30",
+   "name": "CARP::BaseDesc::CalcAdjacentZones",
+   "sheet_name": "CARP::BaseDesc::CalcAdjacentZones(unsigned int) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8553, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002dc150",
+   "expect": "FUN_002dc150",
+   "name": "UGroup::Processor::StartGroup",
+   "sheet_name": "UGroup::Processor::StartGroup(UGroup *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8560, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ddc80",
+   "expect": "FUN_002ddc80",
+   "name": "AVoice::View::Stop",
+   "sheet_name": "AVoice::View::Stop(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8657, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ddd20",
+   "expect": "FUN_002ddd20",
+   "name": "AVoice::View::Play",
+   "sheet_name": "AVoice::View::Play(float, float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8658, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ddfd0",
+   "expect": "FUN_002ddfd0",
+   "name": "AVoice::Play",
+   "sheet_name": "AVoice::Play(AView, float, float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8659, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002de060",
+   "expect": "FUN_002de060",
+   "name": "AVoice::View::Restart",
+   "sheet_name": "AVoice::View::Restart(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8660, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002de0b8",
+   "expect": "FUN_002de0b8",
+   "name": "AVoice::View::~View",
+   "sheet_name": "AVoice::View::~View(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8661, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e3c40",
+   "expect": "FUN_002e3c40",
+   "name": "AUltraLite::Play",
+   "sheet_name": "AUltraLite::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8743, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e5598",
+   "expect": "FUN_002e5598",
+   "name": "ATrafficVehicle::Play",
+   "sheet_name": "ATrafficVehicle::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8754, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e58f8",
+   "expect": "FUN_002e58f8",
+   "name": "ATrafficVehicle::ActivateSiren",
+   "sheet_name": "ATrafficVehicle::ActivateSiren(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8755, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e5968",
+   "expect": "FUN_002e5968",
+   "name": "ATrafficVehicle::PlaySnowmobileSpecifics",
+   "sheet_name": "ATrafficVehicle::PlaySnowmobileSpecifics(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8756, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e6640",
+   "expect": "FUN_002e6640",
+   "name": "ATrafficVehicle::~ATrafficVehicle",
+   "sheet_name": "ATrafficVehicle::~ATrafficVehicle(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8757, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e6a48",
+   "expect": "FUN_002e6a48",
+   "name": "ATrafficVehicle::operator_new",
+   "sheet_name": "ATrafficVehicle::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8764, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e7210",
+   "expect": "FUN_002e7210",
+   "name": "ASubmersible::~ASubmersible",
+   "sheet_name": "ASubmersible::~ASubmersible(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8775, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e7358",
+   "expect": "FUN_002e7358",
+   "name": "ASubmersible::Play",
+   "sheet_name": "ASubmersible::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8776, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e73b8",
+   "expect": "FUN_002e73b8",
+   "name": "ASubmersible::PlayCreaks",
+   "sheet_name": "ASubmersible::PlayCreaks(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8777, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e74d8",
+   "expect": "FUN_002e74d8",
+   "name": "ASubmersible::PlayFanMotors",
+   "sheet_name": "ASubmersible::PlayFanMotors(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8778, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e76f8",
+   "expect": "FUN_002e76f8",
+   "name": "ASubmersible::PlayCavitation",
+   "sheet_name": "ASubmersible::PlayCavitation(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8779, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002e7d60",
+   "expect": "FUN_002e7d60",
+   "name": "ASubmersible::PlayServos",
+   "sheet_name": "ASubmersible::PlayServos(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8780, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002eb708",
+   "expect": "FUN_002eb708",
+   "name": "AStream::Release",
+   "sheet_name": "AStream::Release(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8836, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ecf60",
+   "expect": "FUN_002ecf60",
+   "name": "ASoundManager::ReportFailure",
+   "sheet_name": "ASoundManager::ReportFailure(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8851, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ecfe0",
+   "expect": "FUN_002ecfe0",
+   "name": "ARegisterSound::ARegisterSound",
+   "sheet_name": "ARegisterSound::ARegisterSound(int, int, void (*)(void *, int,",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8852, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed018",
+   "expect": "FUN_002ed018",
+   "name": "ARegisterSound::~ARegisterSound",
+   "sheet_name": "ARegisterSound::~ARegisterSound(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8853, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed260",
+   "expect": "FUN_002ed260",
+   "name": "ASound::ASound",
+   "sheet_name": "ASound::ASound(char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8859, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed3d0",
+   "expect": "FUN_002ed3d0",
+   "name": "ASound::ASound",
+   "sheet_name": "ASound::ASound(int, int, char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8860, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed518",
+   "expect": "FUN_002ed518",
+   "name": "ASound::Play",
+   "sheet_name": "ASound::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8861, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed5a0",
+   "expect": "FUN_002ed5a0",
+   "name": "ASound::~ASound",
+   "sheet_name": "ASound::~ASound(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8862, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ed638",
+   "expect": "FUN_002ed638",
+   "name": "ASound::GetName",
+   "sheet_name": "ASound::GetName(void) const",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8863, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002edb08",
+   "expect": "FUN_002edb08",
+   "name": "ASnowMobile::~ASnowMobile",
+   "sheet_name": "ASnowMobile::~ASnowMobile(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8869, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002edd88",
+   "expect": "FUN_002edd88",
+   "name": "ASnowMobile::Play",
+   "sheet_name": "ASnowMobile::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8870, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002ede60",
+   "expect": "FUN_002ede60",
+   "name": "ASnowMobile::PlayMotor",
+   "sheet_name": "ASnowMobile::PlayMotor(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8871, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f07a8",
+   "expect": "FUN_002f07a8",
+   "name": "ASceneObj::operator_new",
+   "sheet_name": "ASceneObj::operator new(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8912, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f0900",
+   "expect": "FUN_002f0900",
+   "name": "APlayerVehicle::Play",
+   "sheet_name": "APlayerVehicle::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8914, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f0c18",
+   "expect": "FUN_002f0c18",
+   "name": "APlayerVehicle::~APlayerVehicle",
+   "sheet_name": "APlayerVehicle::~APlayerVehicle(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8915, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f1000",
+   "expect": "FUN_002f1000",
+   "name": "APlayerTank::Play",
+   "sheet_name": "APlayerTank::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8921, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f16b8",
+   "expect": "FUN_002f16b8",
+   "name": "APlayerHeli::Play",
+   "sheet_name": "APlayerHeli::Play(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 8928, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f2700",
+   "expect": "FUN_002f2700",
+   "name": "AOneShotSound::AOneShotSound",
+   "sheet_name": "AOneShotSound::AOneShotSound(int, int, COORD3 &, COORD3 &, floa",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8937, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f28b0",
+   "expect": "FUN_002f28b0",
+   "name": "AOneShotSound::AOneShotSound",
+   "sheet_name": "AOneShotSound::AOneShotSound(int, int, COORD3 &, float, char *,",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 8938, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f8d58",
+   "expect": "FUN_002f8d58",
+   "name": "AFader::Priv::Priv",
+   "sheet_name": "AFader::Priv::Priv(AStream &, AMix &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9043, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f8dd8",
+   "expect": "FUN_002f8dd8",
+   "name": "AFader::Priv::~Priv",
+   "sheet_name": "AFader::Priv::~Priv(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9044, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f8e00",
+   "expect": "FUN_002f8e00",
+   "name": "AFader::Priv::Event",
+   "sheet_name": "AFader::Priv::Event(char *, float, bool, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9045, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f9120",
+   "expect": "FUN_002f9120",
+   "name": "AFader::Priv::Call911",
+   "sheet_name": "AFader::Priv::Call911(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9047, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f9178",
+   "expect": "FUN_002f9178",
+   "name": "AFader::Priv::SetSecondary",
+   "sheet_name": "AFader::Priv::SetSecondary(bool)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9048, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f9180",
+   "expect": "FUN_002f9180",
+   "name": "AFader::Priv::Update",
+   "sheet_name": "AFader::Priv::Update(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9049, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f95b0",
+   "expect": "FUN_002f95b0",
+   "name": "AFader::AFader",
+   "sheet_name": "AFader::AFader(AStream &, AMix &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9050, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f9798",
+   "expect": "FUN_002f9798",
+   "name": "AFader::QueuePrimary",
+   "sheet_name": "AFader::QueuePrimary(char *, float, bool, bool)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9055, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f97b8",
+   "expect": "FUN_002f97b8",
+   "name": "AFader::SetSecondary",
+   "sheet_name": "AFader::SetSecondary(char *)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9056, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f97d8",
+   "expect": "FUN_002f97d8",
+   "name": "AFader::SetSecondary",
+   "sheet_name": "AFader::SetSecondary(bool)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9057, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002f97f8",
+   "expect": "FUN_002f97f8",
+   "name": "AFader::SetFilter",
+   "sheet_name": "AFader::SetFilter(float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9058, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fbe00",
+   "expect": "FUN_002fbe00",
+   "name": "ACharacter::Say",
+   "sheet_name": "ACharacter::Say(char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9092, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fe9c0",
+   "expect": "FUN_002fe9c0",
+   "name": "AVehicleWind::AVehicleWind",
+   "sheet_name": "AVehicleWind::AVehicleWind(AVehicle &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9172, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002feaa0",
+   "expect": "FUN_002feaa0",
+   "name": "AVehicleWind::Play",
+   "sheet_name": "AVehicleWind::Play(APath &, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9173, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x002fed98",
+   "expect": "FUN_002fed98",
+   "name": "AVehicleWind::Stop",
+   "sheet_name": "AVehicleWind::Stop(APath &)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9174, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00301c80",
+   "expect": "FUN_00301c80",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::SetPosition",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::SetPosition(float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9222, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00301c90",
+   "expect": "FUN_00301c90",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::SetScale",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::SetScale(float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9223, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00301ca0",
+   "expect": "FUN_00301ca0",
+   "name": "RCMP::EAGL_VD_create",
+   "sheet_name": "RCMP::EAGL_VD_create(RCMP::DECODER *, RCMP::FRAME *, EAGL::Devi",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9224, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00301d38",
+   "expect": "FUN_00301d38",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::EAGL_VD_PS2_SINGLE_BUFFERD",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::EAGL_VD_PS2_SINGLE_BUFFERD(RCMP::DE",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9225, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00301fa0",
+   "expect": "FUN_00301fa0",
+   "name": "{anonymous}::Coord",
+   "sheet_name": "{anonymous}::Coord(float, float, float, float)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9226, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003020f8",
+   "expect": "FUN_003020f8",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::iDraw",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::iDraw(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9228, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003023e0",
+   "expect": "FUN_003023e0",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::Draw",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::Draw(RCMP::FRAME *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9229, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003024e8",
+   "expect": "FUN_003024e8",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::ReDraw",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::ReDraw(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9230, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302508",
+   "expect": "FUN_00302508",
+   "name": "EAGL_VD_PS2_SINGLE_BUFFERD::CompleteDraw",
+   "sheet_name": "EAGL_VD_PS2_SINGLE_BUFFERD::CompleteDraw(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9231, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302550",
+   "expect": "FUN_00302550",
+   "name": "RCMP::VIDEO_DRIVER_type_info_function",
+   "sheet_name": "RCMP::VIDEO_DRIVER type_info function",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9232, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003025c8",
+   "expect": "FUN_003025c8",
+   "name": "VD_TEXTURE_POINTER::SetTextureData",
+   "sheet_name": "VD_TEXTURE_POINTER::SetTextureData(void *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9235, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302820",
+   "expect": "FUN_00302820",
+   "name": "RCMP::DECODER::DECODER",
+   "sheet_name": "RCMP::DECODER::DECODER(RCMP::CODEC_IDATA *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9248, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302890",
+   "expect": "FUN_00302890",
+   "name": "RCMP::DECODER::~DECODER",
+   "sheet_name": "RCMP::DECODER::~DECODER(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9249, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003028e8",
+   "expect": "FUN_003028e8",
+   "name": "RCMP::DECODER::ChooseCodec",
+   "sheet_name": "RCMP::DECODER::ChooseCodec(RCMP::CODEC *, RCMP::CHUNK *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9250, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302928",
+   "expect": "FUN_00302928",
+   "name": "RCMP::DECODER::FreeChosenCodec",
+   "sheet_name": "RCMP::DECODER::FreeChosenCodec(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9251, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302970",
+   "expect": "FUN_00302970",
+   "name": "RCMP::DECODER::GetCurrentFrameNumber",
+   "sheet_name": "RCMP::DECODER::GetCurrentFrameNumber(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9252, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003029b0",
+   "expect": "FUN_003029b0",
+   "name": "RCMP::DECODER::GetFrameRate",
+   "sheet_name": "RCMP::DECODER::GetFrameRate(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9253, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003029f0",
+   "expect": "FUN_003029f0",
+   "name": "RCMP::DECODER::GetFrame",
+   "sheet_name": "RCMP::DECODER::GetFrame(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9254, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302a70",
+   "expect": "FUN_00302a70",
+   "name": "RCMP::DECODER::ReleaseFrame",
+   "sheet_name": "RCMP::DECODER::ReleaseFrame(RCMP::FRAME *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9255, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302aa0",
+   "expect": "FUN_00302aa0",
+   "name": "RCMP::DECODER::GetChunk",
+   "sheet_name": "RCMP::DECODER::GetChunk(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9256, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302ae8",
+   "expect": "FUN_00302ae8",
+   "name": "RCMP::DECODER::ReleaseChunk",
+   "sheet_name": "RCMP::DECODER::ReleaseChunk(RCMP::CHUNK *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9257, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302b10",
+   "expect": "FUN_00302b10",
+   "name": "RCMP::CHUNK::CHUNK",
+   "sheet_name": "RCMP::CHUNK::CHUNK(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9258, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302e20",
+   "expect": "FUN_00302e20",
+   "name": "PS2_SONY_FRAME::PS2_SONY_FRAME",
+   "sheet_name": "PS2_SONY_FRAME::PS2_SONY_FRAME(unsigned int, unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9279, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302ef8",
+   "expect": "FUN_00302ef8",
+   "name": "PS2_SONY_FRAME::~PS2_SONY_FRAME",
+   "sheet_name": "PS2_SONY_FRAME::~PS2_SONY_FRAME(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9280, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302f50",
+   "expect": "FUN_00302f50",
+   "name": "PS2_SONY_CODEC_INTERNAL::PS2_SONY_CODEC_INTERNAL",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::PS2_SONY_CODEC_INTERNAL(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9281, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00302f88",
+   "expect": "FUN_00302f88",
+   "name": "PS2_SONY_CODEC_INTERNAL::~PS2_SONY_CODEC_INTERNAL",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::~PS2_SONY_CODEC_INTERNAL(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9282, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303178",
+   "expect": "FUN_00303178",
+   "name": "PS2_SONY_CODEC_INTERNAL::mpegNodata",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::mpegNodata(sceMpeg *, sceMpegCbData *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9283, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303290",
+   "expect": "FUN_00303290",
+   "name": "PS2_SONY_CODEC_INTERNAL::Init",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::Init(RCMP::DECODER *, RCMP::CHUNK *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9284, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003035c8",
+   "expect": "FUN_003035c8",
+   "name": "PS2_SONY_CODEC_INTERNAL::GetCurrentFrameNumber",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::GetCurrentFrameNumber(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9285, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003035d0",
+   "expect": "FUN_003035d0",
+   "name": "PS2_SONY_CODEC_INTERNAL::GetFrameRate",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::GetFrameRate(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9286, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003035e0",
+   "expect": "FUN_003035e0",
+   "name": "PS2_SONY_CODEC_INTERNAL::DecodeFrame",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::DecodeFrame(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9287, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303678",
+   "expect": "FUN_00303678",
+   "name": "PS2_SONY_CODEC_INTERNAL::GetFrame",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::GetFrame(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9288, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003036f8",
+   "expect": "FUN_003036f8",
+   "name": "PS2_SONY_CODEC_INTERNAL::CreateFrame",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::CreateFrame(void)",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9289, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303758",
+   "expect": "FUN_00303758",
+   "name": "PS2_SONY_CODEC_INTERNAL::ReleaseFrame",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::ReleaseFrame(RCMP::FRAME *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9290, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x003037a8",
+   "expect": "FUN_003037a8",
+   "name": "RCMP::PS2_SONY_CODEC_create",
+   "sheet_name": "RCMP::PS2_SONY_CODEC_create(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9291, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303a38",
+   "expect": "FUN_00303a38",
+   "name": "PS2_SONY_CODEC_INTERNAL::CreateFrame",
+   "sheet_name": "PS2_SONY_CODEC_INTERNAL::CreateFrame(unsigned int, unsigned int",
+   "create": false,
+   "allow_duplicate": true,
+   "evidence": [
+    "sheet row 9306, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303ac8",
+   "expect": "FUN_00303ac8",
+   "name": "RCMP::PS2_SONY_CODEC_is_chunk_for_codec",
+   "sheet_name": "RCMP::PS2_SONY_CODEC_is_chunk_for_codec(unsigned int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9307, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303b00",
+   "expect": "FUN_00303b00",
+   "name": "Initialize_Buffer",
+   "sheet_name": "Initialize_Buffer(unsigned char *)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9308, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303b30",
+   "expect": "FUN_00303b30",
+   "name": "Show_Bits",
+   "sheet_name": "Show_Bits(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9309, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303b48",
+   "expect": "FUN_00303b48",
+   "name": "Get_Bits1",
+   "sheet_name": "Get_Bits1(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9310, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303b68",
+   "expect": "FUN_00303b68",
+   "name": "Flush_Buffer",
+   "sheet_name": "Flush_Buffer(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9311, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303bd8",
+   "expect": "FUN_00303bd8",
+   "name": "Get_Bits",
+   "sheet_name": "Get_Bits(int)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9312, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303c18",
+   "expect": "FUN_00303c18",
+   "name": "Flush_Buffer32",
+   "sheet_name": "Flush_Buffer32(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9313, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303c80",
+   "expect": "FUN_00303c80",
+   "name": "Get_Bits32",
+   "sheet_name": "Get_Bits32(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9314, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00303cb0",
+   "expect": "FUN_00303cb0",
+   "name": "Get_Hdr",
+   "sheet_name": "Get_Hdr(void)",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9315, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00304150",
+   "expect": "FUN_00304150",
+   "name": "TRP_init",
+   "sheet_name": "TRP_init",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9319, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00323e78",
+   "expect": "FUN_00323e78",
+   "name": "unpacksize",
+   "sheet_name": "unpacksize",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9632, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00324298",
+   "expect": "FUN_00324298",
+   "name": "sceIpuStopDMA",
+   "sheet_name": "sceIpuStopDMA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9635, placed by align"
+   ]
+  },
+  {
+   "xbox": "0x00324380",
+   "expect": "FUN_00324380",
+   "name": "sceIpuRestartDMA",
+   "sheet_name": "sceIpuRestartDMA",
+   "create": false,
+   "allow_duplicate": false,
+   "evidence": [
+    "sheet row 9636, placed by align"
+   ]
+  }
+ ]
+}

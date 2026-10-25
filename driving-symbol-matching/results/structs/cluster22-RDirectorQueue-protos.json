@@ -1,0 +1,48 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x0007c380",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RDirectorQueue::RDirectorQueue(RPlayerCamera *)",
+   "return": "RDirectorQueue *"
+  },
+  {
+   "address": "0x0007c3b0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDirectorQueue::~RDirectorQueue(void)"
+  },
+  {
+   "address": "0x0007c3f0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDirectorQueue::ProcessDirectorLogic(void)"
+  },
+  {
+   "address": "0x0007c5e0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RDirectorQueue::RestartDirectorQueue(void)"
+  },
+  {
+   "address": "0x0007c6a0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    }
+   ],
+   "sheet": "RDirectorQueue::AppendData(RDirectorQueueData &)",
+   "return": "void"
+  }
+ ]
+}

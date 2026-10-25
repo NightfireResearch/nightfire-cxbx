@@ -1,0 +1,62 @@
+{
+ "batch": "036",
+ "program": "Driving.xbe",
+ "note": "Compiler-generated exception handling: frame handlers and unwind funclets (xbox_eh.py).",
+ "items": [
+  {
+   "xbox": "0x00154358",
+   "expect": "FUN_00154358",
+   "name": "PrepareRegion_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b0a0c; JMP __CxxFrameHandler; installed by PrepareRegion (0xbe2d0)"
+   ]
+  },
+  {
+   "xbox": "0x00154d55",
+   "expect": "FUN_00154d55",
+   "name": "SetParamName_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1b70; JMP __CxxFrameHandler; installed by SetParamName (0xe9ea0)"
+   ]
+  },
+  {
+   "xbox": "0x00154d6e",
+   "expect": "FUN_00154d6e",
+   "name": "Lock_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1b94; JMP __CxxFrameHandler; installed by Lock (0xe9f40)"
+   ]
+  },
+  {
+   "xbox": "0x00154d87",
+   "expect": "FUN_00154d87",
+   "name": "Unlock_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1bb8; JMP __CxxFrameHandler; installed by Unlock (0xe9fe0)"
+   ]
+  },
+  {
+   "xbox": "0x00154da0",
+   "expect": "FUN_00154da0",
+   "name": "SetNumVerts_Frame_Handler",
+   "create": false,
+   "allow_duplicate": false,
+   "also": [],
+   "evidence": [
+    "MSVC C++ exception frame handler: MOV EAX, FuncInfo 0x1b1bdc; JMP __CxxFrameHandler; installed by SetNumVerts (0xea080)"
+   ]
+  }
+ ]
+}

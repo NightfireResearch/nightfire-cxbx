@@ -1,0 +1,16 @@
+{
+ "batch": "047",
+ "program": "Driving.xbe",
+ "note": "Struct cluster16: ClearMessageList at 0xb8960 is ClearObjectiveList.",
+ "items": [
+  {
+   "xbox": "0x000b8960",
+   "expect": "SMissionManager::ClearMessageList",
+   "name": "SMissionManager::ClearObjectiveList",
+   "create": false,
+   "allow_duplicate": false,
+   "plate_base": "SMissionManager::ClearObjectiveList(void) (PS2 0x208b40). Walks and frees the objective list at this+0x0 (Xbox MSVC std::list; the list GetObjectiveByIndex, PassObjective, FailObjective and SetCurrentObjective walk), as PS2 ClearObjectiveList walks this+0x0. Was misnamed ClearMessageList (that is 0xb89c0, which clears the list at +0xc).",
+   "evidence": []
+  }
+ ]
+}

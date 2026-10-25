@@ -1,0 +1,8 @@
+{"verdicts": [
+ {"item": "5c", "xbox": "0x0008ed50", "ps2": "0x001cb000", "name": "RSceneObj::GetViewDistance", "verdict": "accept",
+  "why": "trial item 5 corrected: copies the transform then returns GetArticleViewDistance, as PS2 GetViewDistance (VT had crossed it with RenderSimple)"},
+ {"item": "20c", "xbox": "0x0008f930", "ps2": "0x001caf08", "name": "RSceneObj::RenderSimple", "verdict": "accept",
+  "why": "trial item 20 corrected: DrawInstanceList, RenderEffects and a virtual call, as PS2 RenderSimple (VT had crossed it with GetViewDistance)"},
+ {"item": "45c", "xbox": "0x001073a0", "ps2": "0x00259040", "name": "FONT_drawtextfa", "verdict": "accept",
+  "why": "trial item 45 corrected: formats into a 0x2000 stack buffer then draws, as PS2 FONT_drawtextfa; callers InfoDraw, MixerDraw, LoadAndDrawUnLoadingScreen, Update as on PS2"}
+]}

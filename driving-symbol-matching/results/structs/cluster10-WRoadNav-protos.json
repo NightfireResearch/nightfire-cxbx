@@ -1,0 +1,262 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000c9130",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WRoadNav::Reset(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000c9240",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "WRoadNav::CalcNextSegmentRandom(COORD3 &, char &, bool &)"
+  },
+  {
+   "address": "0x000c95a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WRoadNav::ReverseNavDirection(void)"
+  },
+  {
+   "address": "0x000c96b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_4",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WRoadNav::SetBoundPos(WRoadSegment &, float, COORD3 &, bool)"
+  },
+  {
+   "address": "0x000c97b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "WRoadNav::PathShareRoadSegment(short)"
+  },
+  {
+   "address": "0x000c9810",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "WRoadNav::PathForwardRoadSegment(short, bool *)"
+  },
+  {
+   "address": "0x000c99f0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "WRoadNav::UpdateLaneChange(float)"
+  },
+  {
+   "address": "0x000ca090",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WRoadNav::WRoadNav(void)"
+  },
+  {
+   "address": "0x000ca100",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WRoadNav::~WRoadNav(void)"
+  },
+  {
+   "address": "0x000ca530",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "WRoadNav::CalcNextSegmentLane(float &, char &, bool &)"
+  },
+  {
+   "address": "0x000cad40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    },
+    {
+     "name": "param_2",
+     "type": "char *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool *"
+    }
+   ],
+   "sheet": "WRoadNav::CalcNextSegmentSidewalk(float &, char &, bool &)"
+  },
+  {
+   "address": "0x000cb280",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "void *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WRoadNav::SetControlPos(WRoadSegment &, COORD3 &, bool)"
+  },
+  {
+   "address": "0x000cb4b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "int"
+    }
+   ],
+   "sheet": "WRoadNav::IncNavPosition(float, COORD3 &, short)"
+  },
+  {
+   "address": "0x000cb900",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    },
+    {
+     "name": "param_2",
+     "type": "char"
+    },
+    {
+     "name": "param_3",
+     "type": "float"
+    },
+    {
+     "name": "param_4",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WRoadNav::InitAtSegment(short, char, float, bool)"
+  },
+  {
+   "address": "0x000cbcf0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    }
+   ],
+   "sheet": "WRoadNav::ChangeLanes(float, float)"
+  },
+  {
+   "address": "0x000cbf20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "WRoadNav::FindClosestSegmentInd(COORD3 &, COORD3 &, float &)"
+  },
+  {
+   "address": "0x000cc100",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_2",
+     "type": "COORD3 *"
+    },
+    {
+     "name": "param_3",
+     "type": "bool"
+    }
+   ],
+   "sheet": "WRoadNav::InitAtPoint(COORD3 &, COORD3 &, bool)"
+  }
+ ]
+}

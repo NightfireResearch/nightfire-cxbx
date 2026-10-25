@@ -1,0 +1,41 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x00092d20",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "char *"
+    }
+   ],
+   "sheet": "RStateManager::GetGeoPrimState(char *)"
+  },
+  {
+   "address": "0x00092f50",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RStateManager::RStateManager(void)",
+   "return": "RStateManager *"
+  },
+  {
+   "address": "0x000930a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "RStateManager::~RStateManager(void)"
+  },
+  {
+   "address": "0x00093160",
+   "calling_convention": "__thiscall",
+   "return": "RStateManager *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

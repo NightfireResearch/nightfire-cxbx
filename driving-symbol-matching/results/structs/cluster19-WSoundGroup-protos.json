@@ -1,0 +1,44 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x000ccad0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::Start(void)"
+  },
+  {
+   "address": "0x000ccb40",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::Update(void)"
+  },
+  {
+   "address": "0x000cd190",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::End(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x000cd220",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::Clear(void)"
+  },
+  {
+   "address": "0x000cd5a0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::WSoundGroup(void)",
+   "return": "WSoundGroup *"
+  },
+  {
+   "address": "0x000cd630",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "WSoundGroup::~WSoundGroup(void)"
+  }
+ ]
+}

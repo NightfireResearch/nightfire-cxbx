@@ -1,0 +1,120 @@
+{
+ "program": "Driving.xbe",
+ "types": [],
+ "prototypes": [
+  {
+   "address": "0x001042d0",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnTurnBlender::FnTurnBlender(void)",
+   "return": "EAGLAnim::FnTurnBlender *"
+  },
+  {
+   "address": "0x00104310",
+   "calling_convention": "__thiscall",
+   "params": [],
+   "sheet": "EAGLAnim::FnTurnBlender::~FnTurnBlender(void)",
+   "return": "void"
+  },
+  {
+   "address": "0x001043b0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::SetWeight(float)"
+  },
+  {
+   "address": "0x00104580",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float"
+    },
+    {
+     "name": "param_3",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::BlendVel(float, float, float *) const"
+  },
+  {
+   "address": "0x00104820",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::AlignVel(float *) const"
+  },
+  {
+   "address": "0x00104870",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::BlendBeginFacing(float *) const"
+  },
+  {
+   "address": "0x00104a40",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::BlendEndFacing(float *) const"
+  },
+  {
+   "address": "0x00104af0",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "int"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::AlignCycleBeginEnd(int)"
+  },
+  {
+   "address": "0x00104d60",
+   "calling_convention": "__thiscall",
+   "params": [
+    {
+     "name": "param_1",
+     "type": "float"
+    },
+    {
+     "name": "param_2",
+     "type": "float *"
+    }
+   ],
+   "sheet": "EAGLAnim::FnTurnBlender::EvalVel2D(float, float *)"
+  },
+  {
+   "address": "0x00104fa0",
+   "calling_convention": "__thiscall",
+   "return": "EAGLAnim::FnTurnBlender *",
+   "params": [
+    {
+     "name": "flags",
+     "type": "uint"
+    }
+   ]
+  }
+ ]
+}

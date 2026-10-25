@@ -1,0 +1,309 @@
+{
+ "verdicts": [
+  {
+   "item": "25.1",
+   "xbox": "0x93ed0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Erase recursive node free (FastFree 0x18) - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "25.2",
+   "xbox": "0x93f10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Buynode (FastAlloc 0x18 'STL'), shared by 10 callers - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "25.3",
+   "xbox": "0x93f60",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Buynode (FastAlloc 0x98 'STL') - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "26.1",
+   "xbox": "0xe6aa0",
+   "ps2": "0x290d00",
+   "name": "EAGL::RenderContext::SetFrontBufferDepth",
+   "verdict": "accept",
+   "why": "RRenderer::RRenderer calls it 1st of 3 with 0x10 right after SetSize, as PS2 RRenderer calls SetFrontBufferDepth(0x10); empty on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "26.2",
+   "xbox": "0xe6ac0",
+   "ps2": "0x290d10",
+   "name": "EAGL::RenderContext::SetBackBufferDepth",
+   "verdict": "accept",
+   "why": "RRenderer 2nd call with 0x20 = PS2 SetBackBufferDepth(0x20); body picks 16/32-bit colour format",
+   "intermediates": []
+  },
+  {
+   "item": "26.3",
+   "xbox": "0xe6b10",
+   "ps2": "0x290d20",
+   "name": "EAGL::RenderContext::SetZBufferDepth",
+   "verdict": "accept",
+   "why": "RRenderer 3rd call with 0x20 = PS2 SetZBufferDepth(0x20); body handles depth 0/16/32 (z formats)",
+   "intermediates": []
+  },
+  {
+   "item": "27.1",
+   "xbox": "0xa2080",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Erase recursion - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "27.2",
+   "xbox": "0xa20c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Erase recursion - STL internal",
+   "intermediates": []
+  },
+  {
+   "item": "27.3",
+   "xbox": "0xa2100",
+   "ps2": "0x1e8008",
+   "name": "RParticleLibrary::FindSystemViaTag",
+   "verdict": "accept",
+   "why": "Shell::ApplyWorldEffects calls it with this=RParticleSystemManager::fManager+8 and tag 'SPKB' (PS2 passes fManager+8 to RParticleLibrary::FindSystemViaTag); body = inlined RPartLibraryData::FindSystemViaTag: map at *this+0xb008, find tag, fall back to leftmost node value",
+   "intermediates": []
+  },
+  {
+   "item": "28.1",
+   "xbox": "0x80f50",
+   "ps2": "0x1b8f80",
+   "name": "PointDir",
+   "verdict": "accept",
+   "why": "called only by PointInTriangle(80fe0); axis 2/1/else 2D cross-product body identical to PS2 PointDir",
+   "intermediates": []
+  },
+  {
+   "item": "28.2",
+   "xbox": "0x80fe0",
+   "ps2": "0x1b9020",
+   "name": "PointInTriangle",
+   "verdict": "accept",
+   "why": "RPlayerCamera::ResolveAllCollisions -> it -> PointDir, same as PS2 ResolveAllCollisions -> PointInTriangle -> PointDir",
+   "intermediates": []
+  },
+  {
+   "item": "28.3",
+   "xbox": "0x81110",
+   "ps2": "0x1b9ab8",
+   "name": "RPlayerCamera::GetSafeWRoadNavPosition",
+   "verdict": "accept",
+   "why": "same body: out = (+0x364)->x,y-in,z,1.0; FindClosestFace; if (+0x360)->+0x30 plane normal then GetPlaneY else copy +0x364 pos",
+   "intermediates": []
+  },
+  {
+   "item": "29.1",
+   "xbox": "0x98980",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sphere-map UV math (unit vector -> 0.5+x/2m); no PS2 counterpart among RReflection functions - Xbox-only env-map code",
+   "intermediates": []
+  },
+  {
+   "item": "29.2",
+   "xbox": "0x98a00",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "paraboloid-map UV math; no PS2 counterpart - Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "29.3",
+   "xbox": "0x98ab0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "builds direction from angle via sin/cos_fractionalangle and calls 98980/98a00; not PS2 SetCamera or any RReflection function - Xbox-only",
+   "intermediates": []
+  },
+  {
+   "item": "30.1",
+   "xbox": "0x105e10",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "shared ComputeRootQ(frameA,frameB,out) helper used by ComputeBegin/EndRootQ; inlined into both on PS2, no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "30.2",
+   "xbox": "0x105ef0",
+   "ps2": "0x279960",
+   "name": "EAGLAnim::FnRunBlender::ComputeBeginRootQ",
+   "verdict": "accept",
+   "why": "FnTurnBlender::BlendBeginFacing(104870) calls it twice as PS2 BlendBeginFacing calls ComputeBeginRootQ; passes frames 0,0 like PS2 body (eval at frame 0 for +0x18 and +0x1c anims)",
+   "intermediates": [
+    {
+     "item": "30.i1",
+     "xbox": "0x104870",
+     "ps2": "0x27a520",
+     "name": "EAGLAnim::FnTurnBlender::BlendBeginFacing",
+     "verdict": "accept",
+     "why": "FnTurnBlender::AlignCycleBeginEnd 3rd callee; calls ComputeBeginRootQ x2, fastqslerp, printf 'Facing: %g %g' as PS2"
+    },
+    {
+     "item": "30.i2",
+     "xbox": "0x104a40",
+     "ps2": "0x27a6b8",
+     "name": "EAGLAnim::FnTurnBlender::BlendEndFacing",
+     "verdict": "accept",
+     "why": "FnTurnBlender::AlignCycleBeginEnd 4th callee; calls ComputeEndRootQ x2, fastqslerp, printf 'Facing' as PS2"
+    }
+   ]
+  },
+  {
+   "item": "30.3",
+   "xbox": "0x105f10",
+   "ps2": "0x278ff0",
+   "name": "EAGLAnim::FnRunBlender::ComputeEndRootQ",
+   "verdict": "accept",
+   "why": "called twice by FnTurnBlender::BlendEndFacing like PS2; frames = numFrames-1 of anims at +0x10[+0x30] and [+0x30+1], same as PS2 body",
+   "intermediates": []
+  },
+  {
+   "item": "31.1",
+   "xbox": "0x108780",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "plain sqrt wrapper (return SQRT(x)); PS2 math helpers here are inlined/newlib sqrtf - no named counterpart",
+   "intermediates": []
+  },
+  {
+   "item": "31.2",
+   "xbox": "0x1087b0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "sincos in turns (fsin/fcos of x*2pi); inlined on PS2, no PS2 name in the PAD_/v3 range",
+   "intermediates": []
+  },
+  {
+   "item": "31.3",
+   "xbox": "0x1087e0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "tan in turns (fptan x*2pi); inlined on PS2, no PS2 name",
+   "intermediates": []
+  },
+  {
+   "item": "32.1",
+   "xbox": "0x7f5a0",
+   "ps2": "0x1b0798",
+   "name": "ROffscreenBuffer::~ROffscreenBuffer",
+   "verdict": "accept",
+   "why": "called by ~RPostProcessing and ~RSniperZoom (same callers as PS2 ~ROffscreenBuffer); body DeleteViewPort(this+8) = PS2 DeleteViewPort(this[0],this[1]) with +4 shift; no delete flag on Xbox",
+   "intermediates": []
+  },
+  {
+   "item": "32.2",
+   "xbox": "0x7f5b0",
+   "ps2": "0x1b0cb8",
+   "name": "ROffscreenBuffer::Begin",
+   "verdict": "accept",
+   "why": "ROffscreenBuffer layout (TRC +4, viewport +8): BeginFrame(TRC), BeginView(vp), ClearViewPort(vp,7) = core of PS2 Begin (PS2 adds main EndView + Lock); Xbox MakeCopy inlines the same sequence. Moderate confidence - review",
+   "intermediates": []
+  },
+  {
+   "item": "32.3",
+   "xbox": "0x7f5f0",
+   "ps2": "0x1b0d10",
+   "name": "ROffscreenBuffer::End",
+   "verdict": "accept",
+   "why": "EndView(vp +8), EndFrame(TRC +4) = PS2 End order (PS2 then re-BeginViews main view); pairs with Begin 7f5b0 in the ROffscreenBuffer block. Moderate confidence - review",
+   "intermediates": []
+  },
+  {
+   "item": "33.1",
+   "xbox": "0x4f400",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector _Tidy (FastFree begin..capacity, zero 3 ptrs), shared by unrelated classes - STL",
+   "intermediates": []
+  },
+  {
+   "item": "33.2",
+   "xbox": "0x4f440",
+   "ps2": "0x1657c0",
+   "name": "ActionQueueManager::UnRegisterQueue",
+   "verdict": "accept",
+   "why": "sole callee of ActionQueue::~ActionQueue as on PS2; body scans queue vector for param, memmove-erases and decrements end, same as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "33.3",
+   "xbox": "0x4f490",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector length_error 'too long' throw helper - STL",
+   "intermediates": []
+  },
+  {
+   "item": "33.4",
+   "xbox": "0x4f510",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC vector _Insert_n (FastAlloc/copy/fill) under RegisterQueue's push_back - STL",
+   "intermediates": []
+  },
+  {
+   "item": "34.1",
+   "xbox": "0xa6f30",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Max (walk right until nil flag +0x11) - STL",
+   "intermediates": []
+  },
+  {
+   "item": "34.2",
+   "xbox": "0xa6f50",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Min - STL",
+   "intermediates": []
+  },
+  {
+   "item": "34.3",
+   "xbox": "0xa6f70",
+   "ps2": "0x1eed18",
+   "name": "RVehicleParticle::TriggerSparks",
+   "verdict": "accept",
+   "why": "callers RVehicle::TriggerFX and RVehicleParticle::UpdateCar exactly as PS2; body: entry=idx*0x40, +0x3c = rigid-body id clamped 0xff, GetRigidBody, pos minus body +0x10/+0x14/+0x18 with y offset - same as PS2",
+   "intermediates": []
+  },
+  {
+   "item": "34.4",
+   "xbox": "0xa72c0",
+   "ps2": null,
+   "name": "",
+   "verdict": "reject",
+   "why": "MSVC _Tree::_Erase recursion (FastFree 0x14) - STL",
+   "intermediates": []
+  }
+ ]
+}
