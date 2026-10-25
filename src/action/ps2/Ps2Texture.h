@@ -29,11 +29,13 @@ void Ps2Texture_DecodeFrame(const uint8_t *texels, const uint8_t *palette, int c
 void Ps2Texture_Swizzle(const uint32_t *linear, uint32_t *swizzled, int width, int height);
 
 // The Xbox format a texture is made: DXT1 (opaque, or each texel opaque or clear), DXT5 (alpha between), as the
-// Xbox's own map textures mostly are, and swizzled A8R8G8B8 under 4 texels across or down. A level's textures take
-// 3-5 MB so where A8R8G8B8 took 12-35, which the heap and contiguous memory cannot spare (docs/ps2-data.md). Linear
-// A8R8G8B8 is for the textures the game reads and writes as pixels (Woman.cpp's), as the Xbox has them.
+// Xbox's own map textures mostly are, and swizzled A8R8G8B8 under 4 texels across or down, or where DXT would put a
+// texel far from its colour (frames of the texels given). A level's textures take 3-5 MB so where A8R8G8B8 took
+// 12-35, which the heap and contiguous memory cannot spare (docs/ps2-data.md). Linear A8R8G8B8 is for the textures
+// the game reads and writes as pixels (Woman.cpp's), as the Xbox has them.
 enum Ps2TextureFormat { PS2TEX_A8R8G8B8, PS2TEX_DXT1, PS2TEX_DXT5, PS2TEX_LIN_A8R8G8B8 };
-Ps2TextureFormat Ps2Texture_ChooseFormat(const uint8_t *palette, int colours, int width, int height);
+Ps2TextureFormat Ps2Texture_ChooseFormat(const uint8_t *texels, const uint8_t *palette, int colours, int width,
+                                         int height, int frames);
 
 // The bytes Ps2Texture_BuildKxt writes for a texture of this size: the header, a texture slot per frame, and each
 // frame's pixels with 128 bytes to spare (RegisterTexture moves a frame up to a 128-byte boundary in place)

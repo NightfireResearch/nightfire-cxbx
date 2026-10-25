@@ -92,30 +92,16 @@ static void From565(uint16_t c, int *r, int *g, int *b) {
     *b = (c & 31) * 255 / 31;
 }
 
-// A block's colours (bytes B, G, R, A, 16 texels in rows): the two end colours from the box the texels lie in (pulled
-// in by a sixteenth), then each texel's nearest of the four (or of three and transparent, with transparent set: the
-// texels whose alpha is under half)
-static void EncodeColourBlock(const uint8_t *texels, bool transparent, uint8_t *out) {
-    int lo[3] = { 255, 255, 255 }, hi[3] = { 0, 0, 0 };
-    bool any = false;
-    for (int i = 0; i < 16; i++) {
-        const uint8_t *t = texels + i * 4;
-        if (transparent && t[3] < 128)
-            continue;
-        any = true;
-        for (int c = 0; c < 3; c++) {       // r, g, b
-            lo[c] = t[2 - c] < lo[c] ? t[2 - c] : lo[c];
-            hi[c] = t[2 - c] > hi[c] ? t[2 - c] : hi[c];
-        }
-    }
-    if (!any)
-        lo[0] = lo[1] = lo[2] = hi[0] = hi[1] = hi[2] = 0;
-    for (int c = 0; c < 3; c++) {
-        int inset = (hi[c] - lo[c]) / 16;
-        lo[c] += inset;
-        hi[c] -= inset;
-    }
-    uint16_t c0 = To565(hi[0], hi[1], hi[2]), c1 = To565(lo[0], lo[1], lo[2]);
+// A block's colours with two end colours (565): each texel's nearest of the four (or of three and transparent, with
+// transparent set: the texels whose alpha is under half). The squared error of the block, and of its worst texel.
+struct ColourBlock {
+    uint16_t c0, c1;
+    uint32_t indices;
+    int error;
+    int worst;
+};
+
+static ColourBlock FitColourBlock(const uint8_t *texels, bool transparent, uint16_t c0, uint16_t c1) {
     // Four colours want c0 > c1, three and transparent c0 <= c1
     if (transparent ? c0 > c1 : c0 < c1) {
         uint16_t t = c0;
@@ -134,7 +120,7 @@ static void EncodeColourBlock(const uint8_t *texels, bool transparent, uint8_t *
             palette[2][c] = (palette[0][c] + palette[1][c]) / 2;
         }
     }
-    uint32_t indices = 0;
+    ColourBlock block = { c0, c1, 0, 0, 0 };
     for (int i = 0; i < 16; i++) {
         const uint8_t *t = texels + i * 4;
         uint32_t index = 0;
@@ -150,12 +136,55 @@ static void EncodeColourBlock(const uint8_t *texels, bool transparent, uint8_t *
                     index = (uint32_t)k;
                 }
             }
+            block.error += best;
+            block.worst = best > block.worst ? best : block.worst;
         }
-        indices |= index << (i * 2);
+        block.indices |= index << (i * 2);
     }
-    memcpy(out, &c0, 2);
-    memcpy(out + 2, &c1, 2);
-    memcpy(out + 4, &indices, 4);
+    return block;
+}
+
+// A block's colours (bytes B, G, R, A, 16 texels in rows): the best of the box the texels lie in (pulled in by a
+// sixteenth) and every pair of the block's own colours as the end colours - a palette texture's block has few, and
+// the box of, say, red, white and blue is black to white. The worst texel's squared error.
+static int EncodeColourBlock(const uint8_t *texels, bool transparent, uint8_t *out) {
+    int lo[3] = { 255, 255, 255 }, hi[3] = { 0, 0, 0 };
+    uint16_t own[16];
+    int ownCount = 0;
+    for (int i = 0; i < 16; i++) {
+        const uint8_t *t = texels + i * 4;
+        if (transparent && t[3] < 128)
+            continue;
+        for (int c = 0; c < 3; c++) {       // r, g, b
+            lo[c] = t[2 - c] < lo[c] ? t[2 - c] : lo[c];
+            hi[c] = t[2 - c] > hi[c] ? t[2 - c] : hi[c];
+        }
+        uint16_t c565 = To565(t[2], t[1], t[0]);
+        int k = 0;
+        while (k < ownCount && own[k] != c565)
+            k++;
+        if (k == ownCount)
+            own[ownCount++] = c565;
+    }
+    if (ownCount == 0)
+        lo[0] = lo[1] = lo[2] = hi[0] = hi[1] = hi[2] = 0;
+    for (int c = 0; c < 3; c++) {
+        int inset = (hi[c] - lo[c]) / 16;
+        lo[c] += inset;
+        hi[c] -= inset;
+    }
+    ColourBlock best = FitColourBlock(texels, transparent, To565(hi[0], hi[1], hi[2]), To565(lo[0], lo[1], lo[2]));
+    for (int a = 0; a < ownCount && best.error != 0; a++) {
+        for (int b = a; b < ownCount; b++) {
+            ColourBlock block = FitColourBlock(texels, transparent, own[a], own[b]);
+            if (block.error < best.error)
+                best = block;
+        }
+    }
+    memcpy(out, &best.c0, 2);
+    memcpy(out + 2, &best.c1, 2);
+    memcpy(out + 4, &best.indices, 4);
+    return best.worst;
 }
 
 // A block's alpha for DXT5: its highest and lowest, and each texel's nearest of the eight between
@@ -188,36 +217,30 @@ static void EncodeAlphaBlock(const uint8_t *texels, uint8_t *out) {
         out[2 + b] = (uint8_t)(indices >> (b * 8));
 }
 
-static void EncodeDxt(const uint8_t *bgra, int width, int height, Ps2TextureFormat format, uint8_t *out) {
+// Encodes a frame; the worst texel's squared colour error
+static int EncodeDxt(const uint8_t *bgra, int width, int height, Ps2TextureFormat format, uint8_t *out) {
+    int worst = 0;
     for (int by = 0; by < height; by += 4) {
         for (int bx = 0; bx < width; bx += 4) {
             uint8_t block[16 * 4];
             for (int y = 0; y < 4; y++)
                 memcpy(block + y * 16, bgra + ((size_t)(by + y) * width + bx) * 4, 16);
+            int error;
             if (format == PS2TEX_DXT5) {
                 EncodeAlphaBlock(block, out);
-                EncodeColourBlock(block, false, out + 8);
+                error = EncodeColourBlock(block, false, out + 8);
                 out += DXT5_BLOCK_BYTES;
             } else {
                 bool transparent = false;
                 for (int i = 0; i < 16; i++)
                     transparent |= block[i * 4 + 3] < 128;
-                EncodeColourBlock(block, transparent, out);
+                error = EncodeColourBlock(block, transparent, out);
                 out += DXT1_BLOCK_BYTES;
             }
+            worst = error > worst ? error : worst;
         }
     }
-}
-
-Ps2TextureFormat Ps2Texture_ChooseFormat(const uint8_t *palette, int colours, int width, int height) {
-    if (width < 4 || height < 4)
-        return PS2TEX_A8R8G8B8;
-    for (int i = 0; i < colours; i++) {
-        uint8_t a = Alpha8(palette[i * 4 + 3]);
-        if (a != 0 && a != 0xff)
-            return PS2TEX_DXT5;
-    }
-    return PS2TEX_DXT1;
+    return worst;
 }
 
 static uint32_t FramePixelBytes(int width, int height, Ps2TextureFormat format) {
@@ -227,6 +250,32 @@ static uint32_t FramePixelBytes(int width, int height, Ps2TextureFormat format) 
     default: return (uint32_t)width * height * 4;
     }
 }
+
+// A texel DXT cannot come within this of (RGB, squared) makes the texture A8R8G8B8: blocks of three or more colours far
+// apart, as in a flag
+#define DXT_WORST_TEXEL_ERROR (160 * 160)
+
+Ps2TextureFormat Ps2Texture_ChooseFormat(const uint8_t *texels, const uint8_t *palette, int colours, int width,
+                                         int height, int frames) {
+    if (width < 4 || height < 4)
+        return PS2TEX_A8R8G8B8;
+    Ps2TextureFormat format = PS2TEX_DXT1;
+    for (int i = 0; i < colours; i++) {
+        uint8_t a = Alpha8(palette[i * 4 + 3]);
+        if (a != 0 && a != 0xff)
+            format = PS2TEX_DXT5;
+    }
+    std::vector<uint32_t> linear((size_t)width * height);
+    std::vector<uint8_t> dxt(FramePixelBytes(width, height, format));
+    uint32_t frameTexels = Ps2Texture_TexelBytes(width, height, 1, colours);
+    for (int f = 0; f < frames; f++) {
+        Ps2Texture_DecodeFrame(texels + f * frameTexels, palette, colours, width, height, (uint8_t *)linear.data());
+        if (EncodeDxt((const uint8_t *)linear.data(), width, height, format, dxt.data()) > DXT_WORST_TEXEL_ERROR)
+            return PS2TEX_A8R8G8B8;
+    }
+    return format;
+}
+
 
 uint32_t Ps2Texture_KxtBytes(int width, int height, int frames, Ps2TextureFormat format) {
     return offsetof(TextureInfo, baseIdx) + frames * 4 +

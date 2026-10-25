@@ -370,7 +370,7 @@ void ConvertPackTextures(const std::vector<Block> &blocks, const std::string &pa
                        pack.c_str(), next, hashcode, width, height, frames, b.size, texelBytes);
                 totals.failed++;
             } else {
-                Ps2TextureFormat format = Ps2Texture_ChooseFormat(b.data, colours, width, height);
+                Ps2TextureFormat format = Ps2Texture_ChooseFormat(texels, b.data, colours, width, height, frames);
                 Bytes kxt(Ps2Texture_KxtBytes(width, height, frames, format));
                 TextureInfo *tex = (TextureInfo *)kxt.data();
                 Ps2Texture_BuildKxt(tex, hashcode, width, height, frames, h.someDivisor, texels, b.data, colours,

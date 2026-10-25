@@ -31,7 +31,7 @@ void Ps2_ConvertMapTexture(bmpHeaderEntry *header, uint32_t hashcode, const uint
         header->textureInfo = NULL;
         return;
     }
-    Ps2TextureFormat format = Ps2Texture_ChooseFormat(palette, colours, width, height);
+    Ps2TextureFormat format = Ps2Texture_ChooseFormat(texels, palette, colours, width, height, frames);
     // The pause screen's film is drawn into one texture from another, pixel by pixel (Woman.cpp): those stay linear
     // A8R8G8B8, as the Xbox's are
     if (hashcode == HT_Texture_Fire2 || hashcode == HT_Texture_WomanBack)
