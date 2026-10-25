@@ -13,6 +13,8 @@
 //   gcdata_check <gc disc> xbox <xbox disc> <name> <out>    a file out of the Xbox's archives
 //   gcdata_check <gc disc> names <xbox disc>                every name the Xbox build asks for, found on both discs
 //   gcdata_check <gc disc> dt <hash>                        the "DT" texture headers' indices against their names
+//   gcdata_check <gc disc> meshes <xbox disc> [<hash>...]   every rigid mesh to a KXE, against the Xbox's twins
+//                                                           (every level when no hash is given)
 //
 // <gc disc> is the folder with Nightfire.elf, common\ and gc\. <hash> is a bundle's name without .bin (0700001b).
 
@@ -20,6 +22,7 @@
 #include "../gc/GcBytes.h"
 #include "../gc/GcDisc.h"
 #include "../gc/GcMap.h"
+#include "../gc/GcMesh.h"
 #include "../gc/GcTexture.h"
 #include "../engine/EDL.h"
 #include "../engine/psiGraphics.h"
@@ -31,9 +34,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <algorithm>
+#include <array>
 #include <map>
 #include <set>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace {
@@ -414,6 +419,335 @@ int BundleInfo(GcDisc &disc, const std::string &hash) {
     return 0;
 }
 
+// ---- Meshes: our KXEs against the Xbox's
+
+#pragma pack(push, 1)
+struct KxeVertexData {      // the rigid vertex (a skinned one has a bone word after it)
+    float position[3];
+    uint32_t normal;
+    uint8_t colour[4];      // B, G, R, A
+    float uv[2];
+};
+struct KxePrimitiveData {
+    uint16_t tex0, tex1;
+    uint32_t count;
+    uint16_t states;
+    uint8_t changes, palette;
+};
+#pragma pack(pop)
+
+struct Kxe {
+    std::vector<KxeVertexData> vertices;
+    std::vector<uint16_t> indices;
+    std::vector<KxePrimitiveData> primitives;
+    bool skinned = false;
+};
+
+bool ReadKxe(const uint8_t *p, uint32_t bytes, Kxe &k) {
+    if (bytes < 0x60 || GcLe32(p) != 0x0645584b)
+        return false;
+    uint32_t vtxCnt = GcLe32(p + 8), idxCnt = GcLe32(p + 0xc), primCnt = GcLe32(p + 0x10);
+    k.skinned = GcLe32(p + 0x1c) != 0;
+    uint32_t stride = k.skinned ? 32 : 28;
+    uint64_t need = 0x60 + (uint64_t)vtxCnt * stride + 3 + idxCnt * 2 + 3 + primCnt * 12;
+    if (need > bytes)
+        return false;
+    const uint8_t *at = p + 0x60;
+    k.vertices.resize(vtxCnt);
+    for (uint32_t i = 0; i < vtxCnt; i++)
+        memcpy(&k.vertices[i], at + i * stride, sizeof(KxeVertexData));
+    at += vtxCnt * stride + 3;
+    k.indices.resize(idxCnt);
+    memcpy(k.indices.data(), at, idxCnt * 2);
+    at += idxCnt * 2 + 3;
+    k.primitives.resize(primCnt);
+    memcpy(k.primitives.data(), at, primCnt * 12);
+    return true;
+}
+
+// A pack's entities in order, each with its mesh block (id meshId, before its parameters block paramsId), or none
+std::vector<Block> EntityMeshes(const uint8_t *pack, uint32_t bytes, int meshId, int paramsId) {
+    std::vector<Block> out;
+    Block mesh = { 0, NULL, 0 };
+    for (const Block &b : Blocks(pack, bytes)) {
+        if (b.id == meshId)
+            mesh = b;
+        if (b.id == paramsId) {
+            out.push_back(mesh);
+            mesh.data = NULL;
+        }
+    }
+    return out;
+}
+
+// Positions within a few millimetres taken as one
+struct PositionSnap {
+    static constexpr float kTolerance = 0.002f;
+    std::vector<std::array<float, 3>> points;
+    std::map<std::tuple<int, int, int>, std::vector<int>> grid;
+
+    std::tuple<int, int, int> Cell(const float *p) const {
+        return std::make_tuple((int)floorf(p[0] / kTolerance), (int)floorf(p[1] / kTolerance),
+                               (int)floorf(p[2] / kTolerance));
+    }
+    int Find(const float *p) const {
+        auto c = Cell(p);
+        int best = -1;
+        float bestD = kTolerance;
+        for (int dx = -1; dx <= 1; dx++)
+            for (int dy = -1; dy <= 1; dy++)
+                for (int dz = -1; dz <= 1; dz++) {
+                    auto it = grid.find(std::make_tuple(std::get<0>(c) + dx, std::get<1>(c) + dy, std::get<2>(c) + dz));
+                    if (it == grid.end())
+                        continue;
+                    for (int i : it->second) {
+                        const float *q = points[i].data();
+                        float d = sqrtf((p[0] - q[0]) * (p[0] - q[0]) + (p[1] - q[1]) * (p[1] - q[1]) +
+                                        (p[2] - q[2]) * (p[2] - q[2]));
+                        if (d <= bestD) {
+                            bestD = d;
+                            best = i;
+                        }
+                    }
+                }
+        return best;
+    }
+    int Add(const float *p) {
+        int i = Find(p);
+        if (i >= 0)
+            return i;
+        points.push_back({ p[0], p[1], p[2] });
+        grid[Cell(p)].push_back((int)points.size() - 1);
+        return (int)points.size() - 1;
+    }
+};
+
+void UnpackNormal(uint32_t n, float *out) {
+    out[0] = (float)((int32_t)(n << 21) >> 21) / 1023.0f;
+    out[1] = (float)((int32_t)(n << 10) >> 21) / 1023.0f;
+    out[2] = (float)((int32_t)n >> 22) / 511.0f;
+}
+
+// A KXE's triangles as (three position ids, the primitive), wound as drawn; degenerate ones left out
+struct Triangle {
+    int v[3];
+    int vertex[3];          // the KXE's own vertex indices
+    int primitive;
+};
+std::vector<Triangle> KxeTriangles(const Kxe &k, const std::vector<int> &ids) {
+    std::vector<Triangle> out;
+    size_t start = 0;
+    for (size_t p = 0; p < k.primitives.size(); p++) {
+        const KxePrimitiveData &prim = k.primitives[p];
+        for (uint32_t i = 0; i < prim.count && start + i + 2 < k.indices.size(); i++) {
+            int a = k.indices[start + i], b = k.indices[start + i + 1], c = k.indices[start + i + 2];
+            if (i & 1)
+                std::swap(a, b);
+            if (a >= (int)ids.size() || b >= (int)ids.size() || c >= (int)ids.size())
+                continue;
+            Triangle t = { { ids[a], ids[b], ids[c] }, { a, b, c }, (int)p };
+            if (t.v[0] < 0 || t.v[1] < 0 || t.v[2] < 0 || t.v[0] == t.v[1] || t.v[1] == t.v[2] || t.v[0] == t.v[2])
+                continue;
+            out.push_back(t);
+        }
+        start += prim.count + 2;
+    }
+    return out;
+}
+
+// The triangle's corners turned to start at the smallest id, keeping the winding
+std::tuple<int, int, int> Canonical(int a, int b, int c) {
+    if (b < a && b < c)
+        return std::make_tuple(b, c, a);
+    if (c < a && c < b)
+        return std::make_tuple(c, a, b);
+    return std::make_tuple(a, b, c);
+}
+
+struct MeshTotals {
+    std::map<std::string, long> counts;
+    void Add(const std::string &what, long n = 1) { counts[what] += n; }
+};
+
+void CompareMesh(const Kxe &ours, const Kxe &xbox, MeshTotals &t) {
+    PositionSnap snap;
+    std::vector<int> ourIds(ours.vertices.size()), xboxIds(xbox.vertices.size());
+    for (size_t i = 0; i < ours.vertices.size(); i++)
+        ourIds[i] = snap.Add(ours.vertices[i].position);
+    std::map<int, std::vector<int>> xboxAt;     // our position id -> the Xbox's vertices there
+    for (size_t i = 0; i < xbox.vertices.size(); i++) {
+        xboxIds[i] = snap.Find(xbox.vertices[i].position);
+        if (xboxIds[i] >= 0)
+            xboxAt[xboxIds[i]].push_back((int)i);
+    }
+    t.Add("xbox vertices", (long)xbox.vertices.size());
+    long at = 0;
+    for (int id : xboxIds)
+        at += id >= 0;
+    t.Add("xbox vertices at one of ours", at);
+    t.Add("our vertices", (long)ours.vertices.size());
+    for (size_t i = 0; i < ours.vertices.size(); i++) {
+        auto it = xboxAt.find(ourIds[i]);
+        if (it == xboxAt.end())
+            continue;
+        t.Add("our vertices at an xbox vertex");
+        const KxeVertexData &v = ours.vertices[i];
+        // The Xbox's vertex there with the nearest coordinates
+        const KxeVertexData *best = &xbox.vertices[it->second[0]];
+        float bestD = 1e9f;
+        for (int j : it->second) {
+            const KxeVertexData &x = xbox.vertices[j];
+            float d = fabsf(x.uv[0] - v.uv[0]) + fabsf(x.uv[1] - v.uv[1]);
+            if (d < bestD) {
+                bestD = d;
+                best = &x;
+            }
+        }
+        t.Add(bestD < 0.002f ? "  uv the same" : "  uv differs");
+        float a[3], b[3];
+        UnpackNormal(v.normal, a);
+        UnpackNormal(best->normal, b);
+        float dot = a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        t.Add(dot > 0.9f ? "  normal the same (cos > 0.9)" : dot < -0.9f ? "  normal opposite" : "  normal differs");
+        bool colour = memcmp(v.colour, best->colour, 4) == 0;
+        t.Add(colour ? "  colour the same" : memcmp(v.colour, best->colour, 3) == 0 ? "  colour, alpha differs"
+                                                                                       : "  colour differs");
+    }
+
+    std::map<std::tuple<int, int, int>, std::vector<int>> xboxTris;    // -> the Xbox primitives drawing it
+    std::set<std::pair<int, int>> xboxEdges;
+    for (const Triangle &x : KxeTriangles(xbox, xboxIds)) {
+        xboxTris[Canonical(x.v[0], x.v[1], x.v[2])].push_back(x.primitive);
+        for (int e = 0; e < 3; e++)
+            xboxEdges.insert(std::minmax(x.v[e], x.v[(e + 1) % 3]));
+    }
+    std::set<std::pair<std::tuple<int, int, int>, int>> seen;
+    for (const Triangle &o : KxeTriangles(ours, ourIds)) {
+        auto key = Canonical(o.v[0], o.v[1], o.v[2]);
+        const KxePrimitiveData &op = ours.primitives[o.primitive];
+        if (!seen.insert(std::make_pair(key, (int)op.tex0)).second)
+            continue;
+        t.Add("our triangles");
+        auto it = xboxTris.find(key);
+        if (it == xboxTris.end()) {
+            if (xboxTris.count(Canonical(o.v[0], o.v[2], o.v[1]))) {
+                t.Add("  wound the other way");
+                continue;
+            }
+            int edges = 0;
+            for (int e = 0; e < 3; e++)
+                edges += xboxEdges.count(std::minmax(o.v[e], o.v[(e + 1) % 3])) != 0;
+            t.Add(edges == 2 ? "  the quad's other diagonal on the xbox" : "  not on the xbox");
+            continue;
+        }
+        t.Add("  the xbox's, wound the same");
+        // Against the Xbox primitive with the same texture, else any
+        const KxePrimitiveData *xp = &xbox.primitives[it->second[0]];
+        for (int p : it->second)
+            if (xbox.primitives[p].tex0 == op.tex0)
+                xp = &xbox.primitives[p];
+        t.Add(xp->tex0 == op.tex0 ? "    texture the same" : "    texture differs");
+        if (xp->tex0 != op.tex0)
+            continue;
+        auto state = [&](const char *name, int mask) {
+            bool a = (op.states & mask) != 0, b = (xp->states & mask) != 0;
+            t.Add(std::string("    ") + name + (a == b ? " the same" : a ? " ours only" : " xbox only"));
+        };
+        state("double-sided", 0x08);
+        if (op.states & 0x06)
+            t.Add(std::string("    blended: double-sided on the xbox ") + ((xp->states & 0x08) ? "yes" : "no") +
+                  ", ours " + ((op.states & 0x08) ? "yes" : "no"));
+        state("blend additive", 0x02);
+        state("blend subtractive", 0x04);
+        state("z-write", 0x20);
+        state("alpha reference 180", 0x10);
+        state("wrap u", 0x80);
+        state("wrap v", 0x100);
+        t.Add(op.tex1 == xp->tex1 ? "    second texture the same" : "    second texture differs");
+    }
+}
+
+int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &hashes) {
+    MeshTotals t;
+    for (const std::string &hash : hashes) {
+        Bytes bundle, xbox;
+        if (!disc.Bundle(hash, bundle) || !xboxDisc.Read((hash + ".bin").c_str(), xbox)) {
+            printf("%s: not on both discs\n", hash.c_str());
+            continue;
+        }
+        std::vector<GcBundleEntry> ge, xe;
+        GcBundle_Directory(bundle.data(), (uint32_t)bundle.size(), ge);
+        GcBundle_Directory(xbox.data(), (uint32_t)xbox.size(), xe);
+        std::map<std::string, const GcBundleEntry *> xbyName;
+        for (const GcBundleEntry &e : xe)
+            xbyName[Upper(e.name)] = &e;
+        for (const GcBundleEntry &e : ge) {
+            if (!(e.type == 0 || e.type == 1 || e.type == 2 || e.type == 11))
+                continue;
+            auto xi = xbyName.find(Upper(e.name));
+            if (xi == xbyName.end())
+                continue;
+            std::vector<Block> ours = EntityMeshes(bundle.data() + e.offset, e.length, GC_BLOCK_ENTITY_GEOMETRY,
+                                                   GC_BLOCK_ENTITY_PARAMS);
+            std::vector<Block> theirs = EntityMeshes(xbox.data() + xi->second->offset, xi->second->length, 0x0d, 0x04);
+            if (ours.size() != theirs.size()) {
+                t.Add("packs with another entity count");
+                continue;
+            }
+            for (size_t i = 0; i < ours.size(); i++) {
+                if (ours[i].data == NULL)
+                    continue;
+                t.Add("meshes");
+                Kxe x;
+                bool xboxOk = theirs[i].data != NULL && ReadKxe(theirs[i].data, theirs[i].bytes, x);
+                std::vector<uint8_t> kxe;
+                GcMeshStats stats;
+                bool converted = GcMesh_ConvertToKxe(ours[i].data, bundle.data(), (uint32_t)bundle.size(), kxe,
+                                                      &stats);
+                if (stats.skinned) {
+                    t.Add("  skinned (left out)");
+                    t.Add(xboxOk && x.skinned ? "    the xbox's skinned too" : "    the xbox's not skinned");
+                    continue;
+                }
+                if (!converted) {
+                    t.Add(stats.outOfRange ? "  NOT CONVERTED: past the bundle" : "  nothing to draw");
+                    continue;
+                }
+                t.Add("  converted");
+                t.Add("  double-sided triangles", stats.doubleSidedTriangles);
+                if (stats.layers != 0)
+                    t.Add("  with layers after the first");
+                Kxe k;
+                if (!ReadKxe(kxe.data(), (uint32_t)kxe.size(), k)) {
+                    t.Add("  OUR KXE DOES NOT READ");
+                    continue;
+                }
+                if (!xboxOk || x.vertices.empty()) {
+                    t.Add("  the xbox's draws nothing");
+                    continue;
+                }
+                if (x.skinned) {
+                    t.Add("  the xbox's skinned");
+                    continue;
+                }
+                t.Add("  compared");
+                MeshTotals one;
+                CompareMesh(k, x, one);
+                for (auto &c : one.counts)
+                    t.Add(c.first, c.second);
+                long covered = one.counts["xbox vertices at one of ours"];
+                if (getenv("GCDATA_SHOW") != NULL && covered * 10 < (long)x.vertices.size() * 9)
+                    printf("  %s %s mesh %zu (%.20s): %ld of %zu xbox vertices at ours, %zu of ours\n", hash.c_str(),
+                           e.name.c_str(), i, (const char *)ours[i].data + 4, covered, x.vertices.size(),
+                           k.vertices.size());
+            }
+        }
+    }
+    for (auto &c : t.counts)
+        printf("%-50s %ld\n", c.first.c_str(), c.second);
+    return 0;
+}
+
 // The names the Xbox build asks its archives for, each found on the GameCube's disc as GcFs.cpp finds it (GcDisc_Path)
 // and set beside the Xbox's file: whether both discs have it and whether the bytes are the same
 int Names(GcDisc &disc, XboxDisc &xbox) {
@@ -657,8 +991,9 @@ void ComparePack(const uint8_t *ours, uint32_t ourBytes, const uint8_t *xbox, ui
     for (auto &k : b) ids.insert(k.first);
     for (int id : ids) {
         std::vector<Block> &x = a[id], &y = b[id];
-        if (id == 0x0d) {           // the meshes: none yet
-            pc.Note(id, "xbox mesh, none converted");
+        if (id == 0x0d) {           // the meshes: the meshes command compares them
+            pc.Note(id, x.size() == y.size() ? "as many meshes" : x.size() < y.size() ? "fewer meshes than the Xbox's"
+                                                                                     : "more meshes than the Xbox's");
             continue;
         }
         if (x.size() != y.size()) {
@@ -803,10 +1138,12 @@ int Convert(GcDisc &disc, XboxDisc &xboxDisc, const std::string &hash, ConvertTo
     bool okA = GcBundle_Directory(ours.data(), (uint32_t)ours.size(), a);
     bool okB = GcBundle_Directory(xbox.data(), (uint32_t)xbox.size(), b);
     printf("%s: %zu bytes as the Xbox's (%s), %d entries (%d sequences added, %d left out), %d packs: %d textures, "
-           "%d DT, %d failed, %d meshes left out, %d unknown blocks; the Xbox's: %zu bytes, %zu entries\n",
+           "%d DT, %d failed, %d meshes (%d skinned and %d with nothing to draw left out), %d unknown blocks; the "
+           "Xbox's: %zu bytes, %zu entries\n",
            hash.c_str(), ours.size(), okA ? "directory reads" : "DIRECTORY BAD", stats.entries, stats.sequencesAdded,
            stats.dropped, stats.packs, stats.texturesConverted, stats.duplicates, stats.texturesFailed,
-           stats.meshesSkipped, stats.unknownBlocks, xbox.size(), okB ? b.size() : 0);
+           stats.meshesConverted, stats.meshesSkinned, stats.meshesSkipped, stats.unknownBlocks, xbox.size(),
+           okB ? b.size() : 0);
     std::map<std::string, const GcBundleEntry *> xb;
     for (const GcBundleEntry &e : b)
         xb[Upper(e.name)] = &e;
@@ -864,6 +1201,12 @@ void PrintTotals(const ConvertTotals &t) {
                t.packs.texturePsnrCount, t.packs.textureExact, t.packs.texturePsnrWorst, t.packs.worstTexture.c_str());
 }
 
+// The level bundles on both discs
+const char *const kLevels[] = { "07000002", "07000003", "07000004", "07000005", "07000006", "07000007", "07000008",
+    "07000009", "0700000a", "0700000b", "0700000c", "0700000d", "07000011", "07000012", "07000013", "07000014",
+    "07000015", "07000016", "0700001b", "07000023", "07000024", "07000025", "07000026", "07000027", "07000028",
+    "07000029", "07000048", "0700004a", "0700004b" };
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -871,7 +1214,7 @@ int main(int argc, char **argv) {
     if (argc < 3) {
         printf("usage: gcdata_check <gc disc> files | bundle <hash> | textures <hash> [<out>] | "
                "convert <hash> <xbox disc> | all <xbox disc> | xbox <xbox disc> <name> <out> | names <xbox disc> | "
-               "dt <hash>\n");
+               "dt <hash> | meshes <xbox disc> [<hash>...]\n");
         return 2;
     }
     GcDisc disc;
@@ -889,6 +1232,15 @@ int main(int argc, char **argv) {
     if (cmd == "names" && argc >= 4) {
         XboxDisc xbox;
         return xbox.Open(argv[3]) ? Names(disc, xbox) : 1;
+    }
+    if (cmd == "meshes" && argc >= 4) {
+        XboxDisc xbox;
+        if (!xbox.Open(argv[3]))
+            return 1;
+        std::vector<std::string> hashes(argv + 4, argv + argc);
+        if (hashes.empty())
+            hashes.assign(std::begin(kLevels), std::end(kLevels));
+        return Meshes(disc, xbox, hashes);
     }
     if (cmd == "dt" && argc >= 4)
         return Duplicates(disc, argv[3]);
@@ -911,10 +1263,6 @@ int main(int argc, char **argv) {
         if (cmd == "convert") {
             Convert(disc, xbox, argv[3], totals, true);
         } else {
-            static const char *const kLevels[] = { "07000002", "07000003", "07000004", "07000005", "07000006",
-                "07000007", "07000008", "07000009", "0700000a", "0700000b", "0700000c", "0700000d", "07000011",
-                "07000012", "07000013", "07000014", "07000015", "07000016", "0700001b", "07000023", "07000024",
-                "07000025", "07000026", "07000027", "07000028", "07000029", "07000048", "0700004a", "0700004b" };
             for (const char *level : kLevels)
                 Convert(disc, xbox, level, totals, false);
         }

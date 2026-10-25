@@ -1,5 +1,6 @@
 #include "GcMap.h"
 #include "GcBytes.h"
+#include "GcMesh.h"
 #include "GcTexture.h"
 
 #include <math.h>
@@ -126,7 +127,8 @@ static void PutBlock(std::vector<uint8_t> &out, int id, const uint8_t *data, uin
         memcpy(&out[at + BLOCK_HEADER_BYTES], data, bytes);
 }
 
-void GcMap_Convert(const uint8_t *pack, uint32_t bytes, std::vector<uint8_t> &out, GcMapStats *stats) {
+void GcMap_Convert(const uint8_t *pack, uint32_t bytes, const uint8_t *bundle, uint32_t bundleBytes,
+                   std::vector<uint8_t> &out, GcMapStats *stats) {
     memset(stats, 0, sizeof(*stats));
     out.clear();
     out.reserve(bytes + bytes / 4);
@@ -136,7 +138,7 @@ void GcMap_Convert(const uint8_t *pack, uint32_t bytes, std::vector<uint8_t> &ou
 
     std::vector<uint8_t> textureHeaders;        // block 0x10, the Xbox's way round: frames and rate per texture
     int texture = 0;
-    std::vector<uint8_t> block, kxt;
+    std::vector<uint8_t> block, kxt, kxe;
     uint32_t o = 4;
     while (o + BLOCK_HEADER_BYTES <= bytes) {
         uint32_t header = GcLe32(pack + o);
@@ -149,7 +151,15 @@ void GcMap_Convert(const uint8_t *pack, uint32_t bytes, std::vector<uint8_t> &ou
         uint32_t dataBytes = size - BLOCK_HEADER_BYTES;
 
         if (id == GC_BLOCK_ENTITY_GEOMETRY) {
-            stats->meshesSkipped++;
+            GcMeshStats mesh;
+            if (GcMesh_ConvertToKxe(pack + o + BLOCK_HEADER_BYTES, bundle, bundleBytes, kxe, &mesh)) {
+                stats->meshesConverted++;
+                PutBlock(out, GC_BLOCK_ENTITY_GEOMETRY_XBOX, kxe.data(), (uint32_t)kxe.size());
+            } else if (mesh.skinned) {
+                stats->meshesSkinned++;
+            } else {
+                stats->meshesSkipped++;
+            }
         } else if (id == GC_BLOCK_TEXTURE_DATA) {
             int frames = 1, rate = 0;
             if ((texture + 1) * TEXHEADER_BYTES <= (int)textureHeaders.size()) {

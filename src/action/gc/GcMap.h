@@ -4,9 +4,9 @@
 // A GameCube map pack (a bundle's type 0, 1, 2 or 11 entry, docs/gc-data.md) made the Xbox's, block by block. The
 // block headers are little-endian on both; most blocks are big-endian on the GameCube's disc, and some (palette
 // headers, portals, hashlists, AI paths, particles) are as the Xbox has them. Each block is turned round field by
-// field, the textures (0x17) become the Xbox's (0x18, GcTexture.h), and the meshes (0x0c, whose data is in the
-// bundle's "GC EXTRA" entries) are left out for now: their entities have no geometry. No game state: the offline
-// checker uses it too.
+// field, the textures (0x17) become the Xbox's (0x18, GcTexture.h), and the rigid meshes (0x0c, whose data is in the
+// bundle's "GC EXTRA" entries) the Xbox's (0x0d, GcMesh.h); the skinned ones are left out for now, their entities
+// with no geometry. No game state: the offline checker uses it too.
 
 #include <stdint.h>
 #include <vector>
@@ -17,7 +17,9 @@ struct GcMapStats {
     int texturesConverted;
     int texturesFailed;
     int duplicates;         // "DT" texture headers
-    int meshesSkipped;      // 0x0c blocks left out
+    int meshesConverted;    // 0x0c blocks made 0x0d
+    int meshesSkinned;      // 0x0c blocks left out: skinned
+    int meshesSkipped;      // 0x0c blocks left out: nothing to draw, or unreadable
     int unknownBlocks;      // blocks of an id this does not know, copied as they are
 };
 
@@ -25,6 +27,7 @@ struct GcMapStats {
 enum GcMapBlock {
     GC_BLOCK_AI_PATHS = 0x05,
     GC_BLOCK_ENTITY_GEOMETRY = 0x0c,    // the GameCube's mesh header; the data is in the bundle's GC EXTRA entries
+    GC_BLOCK_ENTITY_GEOMETRY_XBOX = 0x0d,
     GC_BLOCK_MAP_HEADER = 0x0e,
     GC_BLOCK_PALETTE_HEADER = 0x0f,
     GC_BLOCK_TEXTURE_HEADER = 0x10,
@@ -48,7 +51,9 @@ enum GcMapBlock {
 // for an id it has no rule for.
 bool GcMap_SwapBlock(int id, uint8_t *data, uint32_t bytes);
 
-// The whole pack: pack is the entry's bytes, out gets the Xbox's
-void GcMap_Convert(const uint8_t *pack, uint32_t bytes, std::vector<uint8_t> &out, GcMapStats *stats);
+// The whole pack: pack is the entry's bytes, inside the (decompressed) bundle, whose GC EXTRA entries the meshes'
+// offsets reach into; out gets the Xbox's
+void GcMap_Convert(const uint8_t *pack, uint32_t bytes, const uint8_t *bundle, uint32_t bundleBytes,
+                   std::vector<uint8_t> &out, GcMapStats *stats);
 
 #endif // GC_GCMAP_H_

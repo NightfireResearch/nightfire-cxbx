@@ -12,7 +12,8 @@
 //   group of levels (0x07e0000n, the group from common.bin) and one of the level's own (0x07d0xxxx): they are added,
 //   as the Xbox's level bundles hold them;
 // - the cutscenes' loadable entries (type 12, a binary hashcode for a name) and the meshes' data ("GC EXTRA STATIC",
-//   type 13, and "GC EXTRA DISCARD", type 14) are left out.
+//   type 13, and "GC EXTRA DISCARD", type 14, which the converted meshes have taken what they need from) are left
+//   out.
 //
 // No game state: the offline checker uses it too.
 
@@ -48,6 +49,8 @@ struct GcBundleStats {
     int texturesConverted;
     int texturesFailed;
     int duplicates;
+    int meshesConverted;
+    int meshesSkinned;
     int meshesSkipped;
     int unknownBlocks;
 };

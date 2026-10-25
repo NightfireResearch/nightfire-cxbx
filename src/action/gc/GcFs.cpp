@@ -105,9 +105,9 @@ static bool GcFile_Open(const char *name, GcFile *file) {
             if (!GcBundle_Load(GcDisc_BundleHash(name), ReadWhole, NULL, Converted, &stats))
                 return false;
             snprintf(ConvertedName, sizeof(ConvertedName), "%s", name);
-            printf("[gc] %s: %u bytes as the Xbox's, %d entries (%d sequences added), %d textures, %d meshes left "
-                   "out\n", name, (unsigned)Converted.size(), stats.entries, stats.sequencesAdded,
-                   stats.texturesConverted, stats.meshesSkipped);
+            printf("[gc] %s: %u bytes as the Xbox's, %d entries (%d sequences added), %d textures, %d meshes (%d "
+                   "skinned left out)\n", name, (unsigned)Converted.size(), stats.entries, stats.sequencesAdded,
+                   stats.texturesConverted, stats.meshesConverted, stats.meshesSkinned);
         }
         file->memory = Converted.data();
         file->handle = INVALID_HANDLE_VALUE;

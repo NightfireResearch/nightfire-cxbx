@@ -147,11 +147,13 @@ void GcBundle_Convert(const uint8_t *bundle, uint32_t bytes, const std::vector<G
         const uint8_t *data = bundle + e.offset;
         if (e.type == ENTRY_MAP || e.type == ENTRY_MAP_SECOND_PASS || e.type == ENTRY_MAP_2 || e.type == ENTRY_MAP_B) {
             GcMapStats map;
-            GcMap_Convert(data, e.length, x.data, &map);
+            GcMap_Convert(data, e.length, bundle, bytes, x.data, &map);
             stats->packs++;
             stats->texturesConverted += map.texturesConverted;
             stats->texturesFailed += map.texturesFailed;
             stats->duplicates += map.duplicates;
+            stats->meshesConverted += map.meshesConverted;
+            stats->meshesSkinned += map.meshesSkinned;
             stats->meshesSkipped += map.meshesSkipped;
             stats->unknownBlocks += map.unknownBlocks;
         } else {
