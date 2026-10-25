@@ -1826,5 +1826,7 @@ if(NIGHTFIRE_LAUNCHER)
   target_link_libraries(nightfire_launcher PRIVATE winhttp shell32 ole32)
   if(MSVC)
     target_compile_options(nightfire_launcher PRIVATE /utf-8)
+  else()
+    target_link_options(nightfire_launcher PRIVATE -municode)   # UNICODE: SDL_main.h's entry point is wWinMain
   endif()
 endif()

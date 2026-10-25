@@ -229,10 +229,39 @@ bool Platform_GameRunning(const GameProcess &game, int *exitCode) {
     return false;
 }
 
+namespace {
+
+// WM_CLOSE to each top-level window of the game's processes
+BOOL CALLBACK CloseGameWindow(HWND window, LPARAM parameter) {
+    const GameProcess &game = *reinterpret_cast<const GameProcess *>(parameter);
+    DWORD processId = 0;
+    GetWindowThreadProcessId(window, &processId);
+    bool ours = processId == game.id;
+    if (!ours && game.job != nullptr) {
+        HANDLE process = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, processId);
+        BOOL inJob = FALSE;
+        ours = process != nullptr && IsProcessInJob(process, game.job, &inJob) && inJob;
+        if (process != nullptr)
+            CloseHandle(process);
+    }
+    if (ours && IsWindowVisible(window))
+        PostMessageW(window, WM_CLOSE, 0, 0);
+    return TRUE;
+}
+
+} // namespace
+
 void Platform_StopGame(const GameProcess &game) {
+    if (game.process == nullptr)
+        return;
+    // Its window closed first: the game then ends by itself and writes out the output it still holds (its standard
+    // output is a file, which the C runtime buffers). Ended outright if it has not after a few seconds.
+    EnumWindows(CloseGameWindow, reinterpret_cast<LPARAM>(&game));
+    for (int wait = 0; wait < 100 && Platform_GameRunning(game, nullptr); wait++)
+        Sleep(50);
     if (game.job != nullptr)
         TerminateJobObject(game.job, 1);
-    else if (game.process != nullptr)
+    else
         TerminateProcess(game.process, 1);
 }
 

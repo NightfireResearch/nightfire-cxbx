@@ -55,6 +55,7 @@ bool Platform_StartGame(const fs::path &executable, const std::vector<std::strin
                         std::string *error);
 // Whether any of its processes is still running; the first process's exit code once none is
 bool Platform_GameRunning(const GameProcess &game, int *exitCode);
+// Its windows asked to close, then, after a few seconds, the processes ended
 void Platform_StopGame(const GameProcess &game);
 void Platform_CloseGame(GameProcess *game);
 
