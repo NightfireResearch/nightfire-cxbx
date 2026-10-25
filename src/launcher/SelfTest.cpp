@@ -226,7 +226,7 @@ int SelfTest_Run(int argc, char **argv) {
     launcher.CheckDisc(disc);
     JobStatus status = Wait(launcher);
     DiscCheck check = launcher.LastDiscCheck();
-    Check(status.ok && check.usable, "the disc folder's check", status.message);
+    Check(status.ok && check.usable, "the disc's check", status.message);
     Check(!check.release.empty(), "the disc is a release we know", check.release.empty() ? "unknown" : check.release);
     launcher.SetUpDisc(disc, !inPlace);
     status = Wait(launcher);

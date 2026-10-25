@@ -1,7 +1,7 @@
 # Installing and updating
 
 How someone who is not a developer could get this project onto their computer, point it at their own copy of
-the game, and keep it up to date. The design dates from 24 October 2026. Steps 1-5 of its order of work (below)
+the game, and keep it up to date. The design dates from 24 October 2026. Steps 1-6 of its order of work (below)
 were built for Windows x86 on 25 October 2026: the versioned executables (`cmake/version.cmake`), the release job
 (`.github/workflows/release.yml`, `tools/release/`) and the launcher (`src/launcher/`, the CMake option
 `NIGHTFIRE_LAUNCHER`). "Where it stands", at the end, lists what is built, how it is tested and what is left.
@@ -245,6 +245,16 @@ Built for Windows x86, steps 1-5:
   new-issue page; about). The game runs in a job object, with the working folder `user/` and its output in
   `user/logs/game-<time>.log`. settings.ini gets the absolute `DiscPath`, in its 8.3 form if the path is outside
   the ANSI code page, since the game opens files with narrow calls.
+- **Disc images** (`src/launcher/Xdvdfs.cpp`): setup takes an `.iso` as well as a folder. The reader looks for
+  the volume descriptor at sector 32 of a game partition at 0 (a trimmed xiso, as extract-xiso and similar tools
+  write) or at 0x18300000, 0xFD90000 or 0x2080000 (full images of the original Xbox's discs and of the Xbox 360's
+  two later disc formats, as redump-style dumps hold them), walks the directory trees with every offset and size
+  checked against the table and the file, and copies out `eurocom/` and `driving/` only. The release is named from
+  the image's file sizes at once ("recognised: PAL (by its files' sizes...)") and confirmed by the key files'
+  hashes after the copy, which goes into `disc.partial/` and replaces `disc/` only once it is complete and checked.
+  A copy from an image or a folder first checks the free space. `launcher --check-disc PATH` prints the check of an
+  image or folder. Images with another layout (a CSO or other compressed image, a split image, a bare video
+  partition) are refused as not an Xbox disc image.
 - **Known releases** (`src/launcher/DiscSetup.cpp`): the PAL disc (the repository's `disc/`;
   `nightfire-re/iso_extract/xbox_eu` is the same release) and the US disc. Their `eurocom/filesys.d00`-`.d10` and
   `driving/` music, `.viv` and English speech are the same bytes. What differs:
@@ -259,7 +269,11 @@ Built for Windows x86, steps 1-5:
 - **Tests.** `launcher --selftest` (a test-key build) runs the window's own code without the window: setup into a
   fresh folder, the first install from an extracted release, no network, a bad signature, a bad hash, a good update
   (the launcher replaced by renaming), the minLauncher path (the launcher first, a still-old launcher's refusal,
-  then the install), undo, and the game started for a while. `tools/release/fake_releases.py` makes its fake
+  then the install), undo, and the game started for a while. `--disc` may be a disc image; `--image ISO
+  --reference FOLDER` (repeated) checks and extracts an image and compares every file with the folder it was made
+  from, and `--bad-image FILE` (repeated) must be refused. `tools/release/make_test_xiso.py` builds such images
+  from an extracted disc, as an xiso or with `--redump` as a full image, and small damaged ones with `--synthetic
+  --damage truncate|dirloop|badoffset`; they are about the size of the disc, so make them where there is room. `tools/release/fake_releases.py` makes its fake
   releases API, signed with the test key, as files (`file://`) or served on 127.0.0.1 (WinHTTP, redirects
   included):
 
@@ -276,7 +290,7 @@ Built for Windows x86, steps 1-5:
 
 Left for later:
 
-- the disc image reader (step 6), more platforms (step 7: a `PlatformPosix.cpp`, `Http` files for NSURLSession and
+- more platforms (step 7: a `PlatformPosix.cpp`, `Http` files for NSURLSession and
   libcurl, their jobs in `release.yml`), and signing and notarisation (step 8);
 - **a choice of game data**: the PS2 and GameCube data builds, once they are ready, with the differences explained
   and players steered to the better assets (the GameCube audio is poor). It belongs in setup, as a source, and in
