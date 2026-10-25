@@ -1,0 +1,339 @@
+[sndtrace] SNDSYS_restore and SNDSYSI_exithook are one function in this build: our own calls to it are not traced
+[sndtrace] 37 sound entries traced to sndtrace.log (0 original entries, 114 call sites in our code)
+[startup] thread running, initialising the process
+[startup] process heap at 03F40000
+[startup] running the C runtime and C++ constructors
+[launch] XGetLaunchInfo: data at 0x00f3dbd0
+[launch] no psiLaunch.bin - starting from a clean hand-over page
+[launch] -mission: mission 8, snow2a_race
+[startup] XInitDevices: no Xbox USB stack here, so nothing to initialise
+[timer] tick every 20 ms (timer 16), callback at 0x00e4bdc0
+PhysicsObjMap: Default constructor should not be called
+[startup] calling main
+main launching with 1 args: 0: D:\DRIVING.XBE, 
+[sndlockstep] the sound driver, stream reads and TIMER_gettick follow the simulation's ticks
+(00:00:00) 35.64MB - Init main singletons
+(00:00:00) 35.64MB - Init Lib Render
+[d3dSeam] device 640x480, format 0x6, multisample type 0x1121, flags 0x0
+[d3dSeam] no refresh rate in the present parameters; pacing to the game's 50 Hz tick
+[d3d9] adapter: NVIDIA GeForce RTX 3090
+[d3d9] device created on window 003D04A8 (640x480 backbuffer, 32-bit float reversed depth, paced to 50 Hz).
+[d3d9] max point size 8192
+[d3d9] unhandled NV2A render state method 0x4036c = 0xffffffff
+[d3d9] unhandled NV2A render state method 0x40368 = 0x0
+[d3d9] unhandled NV2A render state method 0x40364 = 0x207
+[d3d9] unhandled NV2A render state method 0x40378 = 0x0
+[d3d9] unhandled NV2A render state method 0x40374 = 0x1e00
+[lockstep] one simulation tick per frame
+[lockstep] frames not paced; every so many presented (NIGHTFIRE_PRESENT_EVERY)
+[d3dSeam] not implemented: D3DDevice_PersistDisplay
+[d3dSeam] not implemented: D3DDevice_Reset
+(00:00:02) 35.58MB - Init File System
+(00:00:02) 35.58MB - Init ASync File System
+(00:00:02) 35.58MB - Init Threads
+(00:00:02) 35.58MB - CPU Detect
+(00:00:02) 35.58MB - Opening misc.viv
+(00:00:02) 35.57MB - *** misc.viv found, and being used! ***
+(00:00:02) 35.57MB - Init Global Render
+[d3d9] unhandled NV2A render state method 0x4034c = 0x0
+[d3d9] unhandled NV2A render state method 0x4037c = 0x1d01
+[d3d9] shader 5 translated: 8 NV2A instructions, inputs 0x0007, outputs 0x1009, streams 0x007
+[d3d9] pixel shader 5 translated: 1 stages, texture modes 0/0/0/1
+[d3d9] unhandled NV2A render state method 0x40384 = 0x0
+[d3d9] unhandled NV2A render state method 0x40388 = 0x0
+[d3d9] FXAA on (AntiAliasing=1 in settings.ini; 0 turns it off)
+[d3d9] unhandled NV2A render state method 0x4147c = 0x0
+[d3d9] unhandled NV2A render state method 0x41d78 = 0x1
+[d3d9] unhandled NV2A render state method 0x40330 = 0x0
+[d3d9] unhandled NV2A render state method 0x40334 = 0x0
+[d3d9] unhandled NV2A render state method 0x40338 = 0x0
+[d3d9] unhandled NV2A render state method 0x409f8 = 0x4
+(00:00:02) 35.26MB - Init Giotto
+(00:00:02) 34.89MB - Load debug font
+(00:00:02) 34.88MB - Show loading screen
+(00:00:02) 34.47MB - Opening race.viv
+(00:00:02) 34.46MB - *** race.viv found, and being used! ***
+(00:00:02) 34.46MB - Init Attribute System
+[d3d9] pixel shader 7 translated: 1 stages, texture modes 1/0/0/0, fog by the host
+(00:00:03) 34.45MB - Loading track file
+(00:00:03) 29.73MB - Init Controllers
+[input] no pad on port 1: the keyboard is standing in for one (WASD or arrows, Enter for START)
+[input] controllers on ports: 1
+(00:00:03) 29.71MB - Init Noise
+(00:00:03) 29.71MB - Entering GameLoop
+(00:00:03) 29.71MB - Reset Ray Shells
+(00:00:03) 29.71MB - Reset Sim
+(00:00:03) 29.71MB - Init Clock
+(00:00:03) 29.71MB - Init Events
+(00:00:03) 29.68MB - Init Scheduler
+(00:00:03) 29.67MB - Init Game Render
+(00:00:03) 27.95MB - Init Sound
+[xa2] audio device open: 2 channels at 48000 Hz, streaming 192-sample chunks
+[dsnd] DirectSound opened, the output device behind it
+(00:00:04) 24.63MB - Music Volume : Uber(75) --> Driving(0.750000)
+
+(00:00:04) 24.63MB - Effects Volume : Uber(100) --> Driving(1.000000)
+
+(00:00:04) 24.63MB - Audio System Mode : 1
+
+(00:00:04) 24.63MB - Init Actors
+(00:00:05) 23.51MB - Init Weapon Manager
+(00:00:05) 23.50MB - Init World
+(00:00:05) 21.22MB - Resolving misc world elements
+(00:00:05) 20.93MB - Init AI Elements
+(00:00:06) 19.23MB - Init AI Controllers
+(00:00:06) 19.19MB - Init Roads
+(00:00:06) 19.19MB - Init Simulation
+(00:00:06) 19.19MB - Preload common models
+(00:00:06) 18.59MB - Spawn player car
+(00:00:06) 16.82MB - Init AI Characters
+(00:00:06) 15.88MB - Leaving StartUp
+Track is snow2a_race
+(00:00:06) 15.19MB - Entering main loop
+[sndlockstep] first tick: 2 driver steps a tick at 50 Hz
+event ALPS_intro, 0.0, one-shot
+event ALPS_loop, -1.0, loop
+[d3d9] shader 155 translated: 42 NV2A instructions, inputs 0x0007, outputs 0x0229, streams 0x007
+[d3d9] pixel shader 155 translated: 2 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 169 translated: 50 NV2A instructions, inputs 0x0007, outputs 0x0229, streams 0x007
+[d3d9] pixel shader 169 translated: 2 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 148 translated: 56 NV2A instructions, inputs 0x0007, outputs 0x0e29, streams 0x007
+[d3d9] pixel shader 148 translated: 2 stages, texture modes 1/1/1/0, fog by the host
+[d3d9] shader 146 translated: 56 NV2A instructions, inputs 0x0007, outputs 0x0e29, streams 0x007
+[d3d9] pixel shader 146 translated: 2 stages, texture modes 1/1/1/0, fog by the host
+[d3d9] shader 147 translated: 42 NV2A instructions, inputs 0x0007, outputs 0x0229, streams 0x007
+[d3d9] pixel shader 147 translated: 2 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 182 translated: 52 NV2A instructions, inputs 0x001f, outputs 0x0209, streams 0x01f
+[d3d9] pixel shader 182 translated: 4 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 195 translated: 66 NV2A instructions, inputs 0x0007, outputs 0x0229, streams 0x007
+[d3d9] pixel shader 195 translated: 2 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 191 translated: 81 NV2A instructions, inputs 0x007f, outputs 0x1e29, streams 0x07f
+[d3d9] pixel shader 191 translated: 3 stages, texture modes 1/1/1/4, fog by the host
+[d3d9] shader 144 translated: 79 NV2A instructions, inputs 0x00ff, outputs 0x1639, streams 0x0ff
+[d3d9] pixel shader 144 translated: 7 stages, texture modes 1/1/4/4
+[d3d9] shader 185 translated: 81 NV2A instructions, inputs 0x007f, outputs 0x1e29, streams 0x07f
+[d3d9] pixel shader 185 translated: 3 stages, texture modes 1/1/1/4, fog by the host
+[d3d9] shader 164 translated: 55 NV2A instructions, inputs 0x007f, outputs 0x0229, streams 0x07f
+[d3d9] pixel shader 164 translated: 1 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 168 translated: 62 NV2A instructions, inputs 0x007f, outputs 0x0229, streams 0x07f
+[d3d9] pixel shader 168 translated: 2 stages, texture modes 1/0/0/0, fog by the host
+[d3d9] shader 161 translated: 82 NV2A instructions, inputs 0x007f, outputs 0x1e39, streams 0x07f
+[d3d9] pixel shader 161 translated: 4 stages, texture modes 1/1/1/1, fog by the host
+[d3d9] shader 0 translated: 8 NV2A instructions, inputs 0x0007, outputs 0x1009, streams 0x007
+[d3d9] pixel shader 0 translated: 1 stages, texture modes 0/0/0/1
+[d3d9] shader 1 translated: 7 NV2A instructions, inputs 0x0003, outputs 0x0009, streams 0x003
+[d3d9] pixel shader 1 translated: 1 stages, texture modes 0/0/0/0, fog by the host
+[d3d9] shader 2 translated: 13 NV2A instructions, inputs 0x0003, outputs 0x0009, streams 0x003
+[d3d9] pixel shader 2 translated: 1 stages, texture modes 0/0/0/1
+[d3d9] not implemented yet: draw with a morph stream that couldn't be uploaded (zeros fed)
+event autobahn, 0.0, loop
+[teleport] dumping frame 525 (d3d9_dump_frame_525.bmp), 500 ticks after the car appeared
+[perf] 74.6 fps (asked for 50), 13.4 ms working + 0.0 ms waiting per frame
+[perf]   33.1 us per draw call
+[perf]   constants: 371 uploads of 11119 registers per frame (29 per upload)
+[perf]   draw mix: 352 indexed, 46 direct, 6 immediate, 158 vertices each on average
+[perf]   per frame: 405 draws, 1 texture uploads, 642 texture lookups costing 63290 comparisons (145 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13773 chunks streamed, 6405 with sound; 186 voices, 12 playing
+[xa2]   voice 0EAF3FD0: 1780 chunks, 1 plays, 1 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1780 chunks, 1 plays, 1 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1780 chunks, 1 plays, 1 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[d3d9] frame 600 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=576
+[teleport] dumping frame 1025 (d3d9_dump_frame_1025.bmp), 1000 ticks after the car appeared
+[perf] 89.6 fps (asked for 50), 11.2 ms working + 0.0 ms waiting per frame
+[perf]   25.7 us per draw call
+[perf]   constants: 395 uploads of 12037 registers per frame (30 per upload)
+[perf]   draw mix: 379 indexed, 48 direct, 6 immediate, 149 vertices each on average
+[perf]   per frame: 434 draws, 1 texture uploads, 672 texture lookups costing 69217 comparisons (161 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13142 chunks streamed, 7338 with sound; 186 voices, 15 playing
+[xa2]   voice 0EAF3FD0: 1451 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF73F0: 1451 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF4CD8: 1451 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[d3d9] frame 1200 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=1176
+[teleport] dumping frame 1525 (d3d9_dump_frame_1525.bmp), 1500 ticks after the car appeared
+[perf] 65.4 fps (asked for 50), 15.3 ms working + 0.0 ms waiting per frame
+[perf]   32.4 us per draw call
+[perf]   constants: 423 uploads of 13439 registers per frame (31 per upload)
+[perf]   draw mix: 414 indexed, 51 direct, 6 immediate, 144 vertices each on average
+[perf]   per frame: 471 draws, 1 texture uploads, 750 texture lookups costing 81471 comparisons (175 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 20854 chunks streamed, 12910 with sound; 186 voices, 19 playing
+[xa2]   voice 0EAF3FD0: 1986 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 1536
+[xa2]   voice 0EAF73F0: 1986 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 1536
+[xa2]   voice 0EAF4CD8: 1986 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 1536
+[d3d9] frame 1800 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=1776
+[teleport] dumping frame 2025 (d3d9_dump_frame_2025.bmp), 2000 ticks after the car appeared
+[perf] 93.2 fps (asked for 50), 10.7 ms working + 0.0 ms waiting per frame
+[perf]   21.1 us per draw call
+[perf]   constants: 455 uploads of 15015 registers per frame (32 per upload)
+[perf]   draw mix: 450 indexed, 51 direct, 6 immediate, 142 vertices each on average
+[perf]   per frame: 508 draws, 1 texture uploads, 813 texture lookups costing 90900 comparisons (181 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 14593 chunks streamed, 9009 with sound; 186 voices, 21 playing
+[xa2]   voice 0EAF3FD0: 1396 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF73F0: 1396 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF4CD8: 1396 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[d3d9] frame 2400 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=2376
+[d3d9] shader 167 translated: 7 NV2A instructions, inputs 0x0001, outputs 0x0001, streams 0x001
+[d3d9] pixel shader 167 translated: 1 stages, texture modes 0/0/0/0
+[teleport] dumping frame 2525 (d3d9_dump_frame_2525.bmp), 2500 ticks after the car appeared
+[perf] 87.8 fps (asked for 50), 11.4 ms working + 0.0 ms waiting per frame
+[perf]   21.6 us per draw call
+[perf]   constants: 474 uploads of 16091 registers per frame (33 per upload)
+[perf]   draw mix: 470 indexed, 51 direct, 6 immediate, 144 vertices each on average
+[perf]   per frame: 528 draws, 1 texture uploads, 840 texture lookups costing 95620 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13605 chunks streamed, 7685 with sound; 186 voices, 19 playing
+[xa2]   voice 0EAF3FD0: 1480 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF73F0: 1480 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF4CD8: 1480 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[d3d9] frame 3000 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=2976
+[teleport] dumping frame 3025 (d3d9_dump_frame_3025.bmp), 3000 ticks after the car appeared
+[perf] 73.0 fps (asked for 50), 13.7 ms working + 0.0 ms waiting per frame
+[perf]   25.3 us per draw call
+[perf]   constants: 484 uploads of 16568 registers per frame (34 per upload)
+[perf]   draw mix: 483 indexed, 51 direct, 6 immediate, 145 vertices each on average
+[perf]   per frame: 541 draws, 1 texture uploads, 863 texture lookups costing 98348 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 16734 chunks streamed, 9602 with sound; 186 voices, 21 playing
+[xa2]   voice 0EAF3FD0: 1783 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF73F0: 1783 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF4CD8: 1783 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[teleport] dumping frame 3525 (d3d9_dump_frame_3525.bmp), 3500 ticks after the car appeared
+[perf] 68.7 fps (asked for 50), 14.6 ms working + 0.0 ms waiting per frame
+[perf]   26.5 us per draw call
+[perf]   constants: 490 uploads of 16892 registers per frame (34 per upload)
+[perf]   draw mix: 491 indexed, 52 direct, 6 immediate, 145 vertices each on average
+[perf]   per frame: 549 draws, 1 texture uploads, 876 texture lookups costing 99880 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 16709 chunks streamed, 9169 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1885 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF73F0: 1885 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[xa2]   voice 0EAF4CD8: 1885 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 3456
+[d3d9] frame 3600 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=3576
+[teleport] dumping frame 4025 (d3d9_dump_frame_4025.bmp), 4000 ticks after the car appeared
+[perf] 82.4 fps (asked for 50), 12.1 ms working + 0.0 ms waiting per frame
+[perf]   21.7 us per draw call
+[perf]   constants: 499 uploads of 17348 registers per frame (34 per upload)
+[perf]   draw mix: 501 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 559 draws, 1 texture uploads, 893 texture lookups costing 102059 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13715 chunks streamed, 7399 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1579 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF73F0: 1579 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF4CD8: 1579 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[d3d9] frame 4200 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=4176
+[teleport] dumping frame 4525 (d3d9_dump_frame_4525.bmp), 4500 ticks after the car appeared
+[perf] 86.3 fps (asked for 50), 11.6 ms working + 0.0 ms waiting per frame
+[perf]   20.7 us per draw call
+[perf]   constants: 500 uploads of 17378 registers per frame (34 per upload)
+[perf]   draw mix: 502 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 560 draws, 1 texture uploads, 896 texture lookups costing 102335 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13067 chunks streamed, 7047 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1505 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1505 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1505 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[d3d9] frame 4800 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=4776
+[teleport] dumping frame 5025 (d3d9_dump_frame_5025.bmp), 5000 ticks after the car appeared
+[perf] 97.2 fps (asked for 50), 10.3 ms working + 0.0 ms waiting per frame
+[perf]   18.4 us per draw call
+[perf]   constants: 500 uploads of 17378 registers per frame (34 per upload)
+[perf]   draw mix: 502 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 560 draws, 1 texture uploads, 897 texture lookups costing 102482 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 11596 chunks streamed, 6240 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1339 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1339 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1339 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[d3d9] frame 5400 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=5376
+[teleport] dumping frame 5525 (d3d9_dump_frame_5525.bmp), 5500 ticks after the car appeared
+[perf] 83.9 fps (asked for 50), 11.9 ms working + 0.0 ms waiting per frame
+[perf]   21.3 us per draw call
+[perf]   constants: 500 uploads of 17375 registers per frame (34 per upload)
+[perf]   draw mix: 502 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 560 draws, 1 texture uploads, 897 texture lookups costing 102470 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13399 chunks streamed, 7211 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1547 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1547 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1547 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[d3d9] frame 6000 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=5976
+[teleport] dumping frame 6025 (d3d9_dump_frame_6025.bmp), 6000 ticks after the car appeared
+[perf] 95.2 fps (asked for 50), 10.5 ms working + 0.0 ms waiting per frame
+[perf]   18.8 us per draw call
+[perf]   constants: 500 uploads of 17375 registers per frame (34 per upload)
+[perf]   draw mix: 502 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 560 draws, 1 texture uploads, 897 texture lookups costing 102470 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 11809 chunks streamed, 6349 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1365 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1365 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1365 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[teleport] dumping frame 6525 (d3d9_dump_frame_6525.bmp), 6500 ticks after the car appeared
+[d3d9] frame 6600 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=6576
+[perf] 146.4 fps (asked for 50), 6.8 ms working + 0.0 ms waiting per frame
+[perf]   12.2 us per draw call
+[perf]   constants: 499 uploads of 17370 registers per frame (34 per upload)
+[perf]   draw mix: 501 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 559 draws, 1 texture uploads, 897 texture lookups costing 102386 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 11225 chunks streamed, 6025 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1300 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF73F0: 1300 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[xa2]   voice 0EAF4CD8: 1300 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 4608
+[teleport] dumping frame 7025 (d3d9_dump_frame_7025.bmp), 7000 ticks after the car appeared
+[d3d9] frame 7200 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=7176
+[perf] 111.5 fps (asked for 50), 9.0 ms working + 0.0 ms waiting per frame
+[perf]   16.0 us per draw call
+[perf]   constants: 499 uploads of 17349 registers per frame (34 per upload)
+[perf]   draw mix: 501 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 559 draws, 1 texture uploads, 896 texture lookups costing 102347 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 11245 chunks streamed, 6033 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1303 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF73F0: 1303 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF4CD8: 1303 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[d3d9] frame 7800 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=7776
+[teleport] dumping frame 8025 (d3d9_dump_frame_8025.bmp), 8000 ticks after the car appeared
+[perf] 117.4 fps (asked for 50), 8.5 ms working + 0.0 ms waiting per frame
+[perf]   15.2 us per draw call
+[perf]   constants: 498 uploads of 17348 registers per frame (34 per upload)
+[perf]   draw mix: 500 indexed, 52 direct, 6 immediate, 146 vertices each on average
+[perf]   per frame: 558 draws, 1 texture uploads, 896 texture lookups costing 102308 comparisons (182 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 13559 chunks streamed, 7267 with sound; 186 voices, 20 playing
+[xa2]   voice 0EAF3FD0: 1573 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF73F0: 1573 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+[xa2]   voice 0EAF4CD8: 1573 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 768
+ERROR IN PARTICLE DATA: lifeTime of 300 is too large. Capping at 255.
+[d3d9] frame 8400 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=8376
+[d3d9] frame 9000 - entry points still unimplemented (calls so far): draw with a morph stream that couldn't be uploaded (zeros fed)=8976
+[teleport] dumping frame 9025 (d3d9_dump_frame_9025.bmp), 9000 ticks after the car appeared - the last
+[perf] 142.4 fps (asked for 50), 7.0 ms working + 0.0 ms waiting per frame
+[perf]   12.9 us per draw call
+[perf]   constants: 484 uploads of 17267 registers per frame (35 per upload)
+[perf]   draw mix: 500 indexed, 38 direct, 4 immediate, 150 vertices each on average
+[perf]   per frame: 542 draws, 1 texture uploads, 879 texture lookups costing 100278 comparisons (187 registered)
+[perf]   per frame: 0 backbuffer captures, 0 render targets created, 0 buffers created; 0 visibility tests in the window
+[perf]   never idle, so the frame rate is what the machine can manage, not the pacing.
+[xa2] 11600 chunks streamed, 1182 with sound; 186 voices, 6 playing
+[xa2]   voice 0EAF3FD0: 1825 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF73F0: 1825 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
+[xa2]   voice 0EAF4CD8: 1825 chunks, 0 plays, 0 seeks; pcm 4800 bytes, looping, loop 0+0, 48000 Hz, read 2688
