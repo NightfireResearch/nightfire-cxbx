@@ -24,6 +24,11 @@ runner (Intel i7-9700K). The C runtime was linked statically, so that only the C
 
   The 32-bit UCRT's sin and cos also lose their range reduction above about 2^20. glibc's double functions gave
   the same results on x86-64 and arm64.
+- **SSE's estimate instructions.** RSQRTSS (and RCPSS) are only specified to within 1.5 * 2^-12, and AMD's
+  answers differ from Intel's. The driving engine's ports use RSQRTSS (`VU0_rsqrt`, the unit vectors). The C builds
+  take its answer from the runner's Intel table (SseC.h's `RsqrtEstimate`, through Sse.h), as arm64 always has. With
+  the instruction itself, the Linux build on this PC's AMD parted from the Intel runner's sound traces at tick 1. With
+  the table, it matched them to tick 9000. The x87 builds keep the instruction.
 - **The basic operations** (`+ - * /`, square root, `fmod`, conversions) are exact in IEEE 754, so they give the
   same results everywhere. That holds only when each operation is rounded once to its type, and only if the
   compiler does not fuse multiplies with adds.

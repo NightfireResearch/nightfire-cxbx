@@ -76,6 +76,16 @@ static inline void __movsd(unsigned long *destination, const unsigned long *sour
 #define _mm_sub_ps sse::sub_ps
 #define _mm_sub_ss sse::sub_ss
 #define _mm_xor_ps sse::xor_ps
+#elif NIGHTFIRE_DET_MATH && defined(NIGHTFIRE_X87) && !NIGHTFIRE_X87
+// RSQRTSS's estimate is the CPU's own: AMD's and Intel's differ, and so would a C build's frames on the two. The C
+// forms of the x87 code are the same bits on every host (docs/deterministic-maths.md), so their builds take the
+// estimate from the C form's table (the runner's Intel's) with the other instructions kept.
+#include "SseC.h"
+
+static inline __m128 DetRsqrtSs(__m128 a) {
+    return _mm_move_ss(a, _mm_set_ss(sse::RsqrtEstimate(_mm_cvtss_f32(a))));
+}
+#define _mm_rsqrt_ss DetRsqrtSs
 #endif
 
 #endif // DRIVING_PLATFORM_SSE_H_

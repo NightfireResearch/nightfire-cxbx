@@ -332,6 +332,9 @@ the level, the cars, the HUD and its text, the Mission Failed screen.
 - A Linux runner (step 5), with its own baselines.
 - The Linux build with `-DNIGHTFIRE_X87=OFF`: done 15 October 2026, with baselines of its own for this PC's WSL2,
   `lwsl_c_*` (16 runs, lavapipe, 640x480), against which the x86-64 Linux build is compared (64-bit.md 7.11).
+  Those differed from the runner's `lbase_c` because of RSQRTSS, whose estimate is AMD's here and Intel's there. Since
+  24 October 2026 the C builds take it from the runner's table (Sse.h), and the Linux build's sound traces match
+  `lbase_c`'s (docs/deterministic-maths.md).
 
 ## The x87 option (15 October 2026)
 
