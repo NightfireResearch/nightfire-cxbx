@@ -161,8 +161,8 @@ order. A group's texture numbers are the pack's, offset by where the map's textu
 shared where the indices repeat; the strips are joined with degenerate triangles into one strip per texture and
 state, wound as they are (GX strips turn as D3D's do); normals are turned round, colours made B, G, R, A, and a mesh
 with no colours gets white. The states: the layer's blend, depth writes unless the mesh's flag or a blend turns them
-off, wrap in both directions, double-sided from the group's bit 28 - and also for every blended layer with depth
-writes off (below). The skinned meshes are left out (their entities draw nothing) until milestone 7.
+off, wrap in both directions, double-sided from the group's bit 28 - and, with `FIX_ORIGINAL_GAME_BUGS`, also for
+every blended layer with depth writes off (below). The skinned meshes are left out (their entities draw nothing) until milestone 7.
 
 **Checked** (`gcdata_check meshes`, every level, against the Xbox's twins: the same entity in the same pack):
 
@@ -196,7 +196,11 @@ have bit 28 clear (`cloud_n`, `smoke`, `gas_steam` and a few others have it set)
 they face away from the camera. Over every level, 10,544 blended triangles were double-sided on the Xbox and not in
 the GameCube's data, against 12,205 double-sided in both and 9,919 single-sided in both; giving the double-sided bit
 to every blended layer with depth writes off (the mesh flag 0x200) leaves 148 the Xbox has and we lack and 186 we
-have and it lacks. The conversion does that, so these effects draw as on the Xbox.
+have and it lacks. That is the GameCube release's bug, and the conversion fixes it only with
+`FIX_ORIGINAL_GAME_BUGS` (on by default; docs/original-bug-fixes.md, "GcMesh StripStates"): built without it, bit 28
+alone decides, and the effects are culled as on the retail GameCube. Under the modding design (branch
+`modding-design`, docs/modding.md) the fix belongs in the fixes module with the other original-bug fixes, once that
+module exists.
 
 The particles are drawn otherwise: GC psiDrawParticleList (0x8002af38) sets `GX_CULL_BACK` (its state 1, through the
 GX's cull mode call, 0x80181688) for every particle quad, where the Xbox's sets no cull mode that we have found and

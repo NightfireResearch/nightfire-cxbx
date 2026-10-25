@@ -308,7 +308,7 @@ static int16_t MorphDelta(float d) {
 //
 // The GameCube's data leaves the double-sided bit off most blended effect quads with no depth writes (the explosions'
 // Blast_frame_n, flash, HitSpark), which the Xbox's twins all have, so the GameCube culls them when they face away.
-// They are made double-sided here, as the Xbox's are.
+// Fixed: they are made double-sided, as the Xbox's are (docs/original-bug-fixes.md).
 static uint16_t StripStates(const GcMeshHeader &h, const RawStrip &s) {
     uint32_t layer = h.layerFlags[s.layer];
     uint16_t states = PRIM_STATE_LIT | PRIM_STATE_WRAP_U | PRIM_STATE_WRAP_V;
@@ -320,8 +320,10 @@ static uint16_t StripStates(const GcMeshHeader &h, const RawStrip &s) {
         states |= PRIM_STATE_Z_WRITE;
     if (s.counts & GC_GROUP_DOUBLE_SIDED)
         states |= PRIM_STATE_DOUBLE_SIDED;
+#if FIX_ORIGINAL_GAME_BUGS
     if ((layer & (GC_LAYER_ADD | GC_LAYER_SUBTRACT)) && (h.flags & GC_MESH_NO_Z_WRITE))
         states |= PRIM_STATE_DOUBLE_SIDED;
+#endif
     return states;
 }
 

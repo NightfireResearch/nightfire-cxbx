@@ -123,3 +123,28 @@ HUD (src/action/ui/HUD.cpp):
   so record the baseline with the setting the comparison build uses. Built without the fix, lockstep
   (`Teleport_BeforeRun`) leaves `oneTickPerRun` off below a timeScale of 1. The original's truncation turns one
   scaled tick into none and never advances, so the forced one-tick mode would hang.
+
+## GameCube data (NIGHTFIRE_ACTION_DATA_GC)
+
+These concern only the build that loads the GameCube version's data (docs/gc-data.md): the original is the retail
+GameCube release, and the fix changes how its data is converted, not the game code.
+
+### GcMesh StripStates: blended effect quads culled when they face away
+
+- **Where:** `src/action/gc/GcMesh.cpp`, `StripStates` (the conversion of block 0x0c to a KXE); the GameCube's draw is
+  maybe_psiDrawClonedObject (Nightfire.elf 0x8002ea08) and its cull state flush (0x80036244).
+- **Original:** a strip group's culling comes from bit 28 of its counts word alone: set, `GX_CULL_NONE`; clear,
+  `GX_CULL_BACK`. The GameCube's data has bit 28 clear on most of the flat, additive effect quads that draw with no
+  depth writes: the explosion's `Blast_frame_1` to `_17`, `Single_Blast_frame`, `flash`, `ExplodeMarker` and
+  `Vertical_smoke` (pack 0x01000081), the bullet impacts' `HitSpark` (pack 0x0100002d), the dust's `smoke_1_dust` and
+  `smoke_2_fire` (pack 0x01000004), and others like them. So on the retail GameCube these are culled whenever they
+  face away from the camera, which is why the explosions in SpaceStationD and the impact effects on drones go
+  missing there. The Xbox's twins of every one of them are double-sided (primitive state 0x1ca). (`gas_steam`,
+  `cloud_n` and `smoke` have bit 28 set and draw on both.)
+- **Fix:** a layer that blends (additive or subtractive) on a mesh with depth writes off (mesh flag 0x200) is made
+  double-sided as well. Over every level that leaves 148 blended triangles the Xbox draws double-sided and we do
+  not, and 186 the other way, against 10,544 without it (`gcdata_check meshes`).
+- **Effect:** drawing only: the effects show as on the Xbox. Built without the fix, the GameCube data's culling is the
+  retail GameCube's exactly. The Xbox build is untouched (the conversion is not in it). Under the modding design
+  (branch `modding-design`, docs/modding.md) this belongs in the fixes module with the other original-bug fixes,
+  once that module exists.
