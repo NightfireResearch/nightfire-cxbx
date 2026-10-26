@@ -11,8 +11,9 @@ Status (25 October 2026): the disc's files are served (milestone 1), every level
 against the US Xbox disc's twins. In game HendersonB, CastleCourtyard and SpaceStationD load from the GameCube's
 bundles and draw from the GameCube's meshes and textures on the test runner; CastleCourtyard's frames are within
 2-2.6 grey levels of the Xbox build's at the same moments, and with the cutscenes' loadable bundles (milestone 4)
-HendersonB's intro cutscene plays as the Xbox's does, frame for frame within a few. Sound is still to come.
-See [Milestones](#milestones) and [In game](#in-game).
+HendersonB's intro cutscene plays as the Xbox's does, frame for frame within a few. The sound banks and music
+(milestone 5) are decoded and played with nothing re-encoded. Movies and the button symbols are still to come. See
+[Milestones](#milestones) and [In game](#in-game).
 
 Sources: the GameCube disc as extracted by the extractor project (Q:\nightfire-re, read only:
 `iso_extract/gc_us`), the US Xbox disc (`iso_extract/xbox_us`), the GameCube executable in Ghidra
@@ -73,8 +74,8 @@ not swapped throughout: each format below says which way round it is.
 | Skinned meshes, morphs | no | the same 0x0c headers, the positions in bind pose, with runs of one or two skeleton bones and two 14-bit weights a position, which the GameCube applies on the CPU (SkinIt); a head's 22 morph targets in the same header (no 0x2b blocks on this disc, where the PS2's have them) ([Skinned meshes](#skinned-meshes)) | all that a conversion needs | - | GcMesh.cpp: skinned KXEs with bone palettes and morph streams | done |
 | Text banks | yes | the nine `*Txt.dat` byte for byte the Xbox's; the GameCube adds `*TxtU.dat` | - | what reads `TxtU` | none | none |
 | Fonts, button symbols | glyphs probably | the glyph tables are executable data (`GC FontInc.cpp`); the button symbols are the GameCube pad's | - | the GameCube's symbol table in Nightfire.elf (no symbols: find it by the Xbox table's layout) | SpecialChars, as the PS2's | small |
-| Sound banks | container yes, codec no | the same files, big-endian (the `.SHF` sample headers' nine words; `.SFX` 98% of bytes the Xbox's once each word is turned round); samples Nintendo DSP ADPCM (8 bytes per 14 samples) with the DSP's 96-byte headers (coefficients, history) in the new `.SHG`; every sample mono, at lower rates ([Sound](#sound)) | the codec, the rates | the `.SFX` fields that differ | SFX.cpp LoadSoundBank, as the PS2's | medium |
-| Music | container yes, codec nearly | `.SMF` markers big-endian, positions four times the byte offset; `.SSD` headerless IMA ADPCM, stereo, one byte (two samples) of each channel in turn, low nibble first, 32 kHz | the layout (by decoding) | the exact rate (32,000 bytes a second implies 32 kHz) | GcFs.cpp's reads, as the PS2's | small-medium |
+| Sound banks | container yes, codec no | the same files, big-endian (the `.SHF` sample headers' nine words; `.SFX` 98% of bytes the Xbox's once each word is turned round); samples Nintendo DSP ADPCM (8 bytes per 14 samples) with the DSP's 96-byte headers (coefficients, history) in the new `.SHG`; every sample mono, at lower rates ([Sound](#sound)) | all | - | GcSound.cpp, GcFs.cpp: decoded to PCM, played as it is ([Sound](#sound)) | done |
+| Music | container yes, codec nearly | `.SMF` markers big-endian, positions four times the byte offset; `.SSD` headerless IMA ADPCM, stereo, one byte (two samples) of each channel in turn, low nibble first, 32 kHz | all (the markers' times match the Xbox's at 32 kHz) | - | GcSound.cpp: the same codes as Xbox ADPCM blocks; SFX.h's SFX_MUSIC_FREQUENCY | done |
 | Streamed speech | n/a | none on either disc's language folder by that name; the GameCube has no streams at all | - | - | GcFs.cpp (a stream that cannot open is given up) | done |
 | FMV | no | HVQM4 1.5 (`HVQM4 1.5` magic; 640x480, 33,366 µs a frame) where the Xbox has XMV (WMV2) | the container's header | the decoder (FFmpeg has none) | Fmv.cpp replaced | medium-large |
 | Woman (pause background) | yes | `common\Woman.rle` byte for byte the Xbox's | - | - | none | none |
@@ -88,7 +89,8 @@ not swapped throughout: each format below says which way round it is.
 | The levels' swapped skins | engine/Anim.cpp AnimObjectNew | gc/GcAnim.cpp: the GameCube's own FixupSkinHashcode (0x80045298: Elite_B becomes Elite in PowerStationA1, Elite_Beret in EvilBase), since the Xbox's swaps in "Spec" skins the GameCube's bundles lack |
 | Meshes | none: block 0x0c becomes 0x0d as the bundle converts (GcMap.cpp), so parsemap and psiCreateEntityGfx are the Xbox's | gc/GcMesh.cpp |
 | The cutscene loadables | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | gc/GcLoader.cpp: the loadable bundle (0x0780xxxx-0x07A0xxxx) through LoaderLoad, and on reload the level's sequences again (0x07f0xxxx, which GcBundle_Load makes from the level's sequence bundles), into one buffer while they fit (GcFs_LoadNextInto), as GC LoadableLoad (0x8005c1e4) reads a loadable over the sequences |
-| Sound banks, music (to come) | sound/SFX.cpp LoadSoundBank; GcFs.cpp's reads | DSP ADPCM decoder, Xbox ADPCM encoder (the PS2 branch's) |
+| Sound banks | sound/pcmCache.cpp PcmCache_Decode: a GameCube sample's stand-in hands over its PCM | gc/GcSound.cpp, gc/GcFs.cpp: the bank's samples decoded when its files are asked for |
+| The music's rate | sound/SFX.h SFX_MUSIC_FREQUENCY (44,100, or 32,000 for the GameCube's), used by SFXStream.cpp's two places | gc/GcSound.cpp: the tracks and their markers |
 | Movies (to come) | engine/Fmv.cpp replaced | an HVQM4 decoder |
 
 ## Textures
@@ -101,6 +103,19 @@ unchanged:
 - **RGB5A3** and **RGBA8** become swizzled A8R8G8B8 (RGB5A3 could go to A1R5G5B5 or A4R4G4B4 exactly, as half the
   memory, but which one changes per texel).
 - Every mip level the GameCube has is kept.
+- The pause screen's **Fire2** and **WomanBack**, whose pixels Woman.cpp writes and reads, become A8R8G8B8 in rows
+  (one level, the KXT's linear flag), as the Xbox's are; swizzled, the film's woman did not show.
+
+The HUD and menu art is the Xbox's size everywhere (the crosshair sheet `__final_controls` 64x64, `Hud2Gfx` 256x256,
+`NFont2` 512x128, `buttons` 256x128, `pause_bg` 512x256, `iris_1`-`5` 128x128, the menu icons 128x128 or 128x64, the
+Nightfire logo 256x128, `Scope` 256x256), so the GameCube's overlays are not higher resolution. Where the Xbox has
+32-bit A8R8G8B8, the GameCube has RGB5A3 (5 bits a colour, or 4 with 3 of alpha: the fonts, the HUD sheet, the
+irises, the logo) or CMPR (DXT1: the menu icons, `iris_5`, `Scope`), so they are if anything coarser.
+
+The zoomed crosshair's stray dot (docs/original-bug-fixes.md, "Candidates", HUD) is in the GameCube's sheet too. Its
+converted sheet hashes as the Xbox's (`09c4f43a25829f60`, the same texels, as the texture dumps of both builds show),
+so the Xbox's replacement, `textures/09c4f43a25829f60.dds` beside the executable, clears it in the GameCube build
+as well: the GameCube build's run folder needs its `textures` folder too.
 
 Checked (`gcdata_check textures`, every level bundle): all 17,848 textures convert and every KXT decodes to the
 GameCube's own texels exactly. Against the Xbox's twins (`all`): of 15,708 pairs compared, 12,456 decode to the same
@@ -136,7 +151,7 @@ headers (in 0x0c blocks larger than 0xac bytes) have their data inline in the pa
 | 0x28, 0x2c | 0 on a rigid mesh |
 | 0x30 | flags: 0x200 turns the depth writes off (a z mode of (1, 0, 3) where it is otherwise (1, 1, 3)) |
 | 0x34 | bit 0: the layers' blend and alpha-compare states left as they are; bit 2: fogged, by the look of it |
-| 0x38 | eight layers' flags: 0x02 additive, 0x04 subtractive (both with depth writes off), 0x40 the next layer's texture as a second stage in the same pass; bit 0 picks another alpha compare |
+| 0x38 | eight layers' flags: 0x01 an environment map (its coordinates generated from the normals), 0x02 additive, 0x04 subtractive (both with depth writes off), 0x40 the next layer's texture as a second stage in the same pass |
 | 0x58 | -1: float positions (16 bytes a vertex: three floats, three signed bytes of normal with 7 fraction bits); else the byte at 0x5b is the position shift: 12 bytes a vertex, three signed halfwords of position with 16 - shift fraction bits, three of normal with 14 |
 | 0x5f | the texture coordinates' shift: two signed halfwords with 16 - shift fraction bits |
 | 0x60 | the centre, three floats, added to every position (the draw adds it to the matrix's translation) |
@@ -158,6 +173,13 @@ moves the cursors on. Per strip vertex the display list gets the position index 
 colour index when the mesh has colours, and the coordinate index. The position indices are walked from the start
 for every layer; a group's coordinate and colour indices come once for each of its layers with a texture, in layer
 order. A group's texture numbers are the pack's, offset by where the map's textures start (as the Xbox's).
+
+An environment-mapped layer (flag 0x01: the sniper rifle's scope, the pistols' metal, the lighter) becomes the
+Xbox primitive's second texture with no first, which is how the Xbox's twins have it and how its draw maps a texture
+from the normals; drawn as a plain texture on the mesh's own coordinates it made the scope's barrel far too light.
+The Xbox's twins give those primitives' vertices an alpha (200 most often, 122 on the sniper's scope) that sets
+how strongly the reflection adds; the GameCube's meshes have no colours there, so it adds at full strength and the
+scope is a little shinier than the Xbox's.
 
 **The conversion** (GcMesh_ConvertToKxe): every strip vertex (its three indices) becomes a 28-byte KXE vertex,
 shared where the indices repeat; the strips are joined with degenerate triangles into one strip per texture and
@@ -276,10 +298,31 @@ Xbox's 11 stereo samples are two mono samples each on the GameCube, which makes 
   stereo Xbox ADPCM); `.SMF` markers the Xbox's, big-endian, with positions in units of a quarter byte and each
   section start's decoder state as two (step index, sample) halfword pairs.
 
-So in sound the GameCube's data is the poorer: a GameCube build can only play what is there. Converting means
-decoding DSP ADPCM with the `.SHG` coefficients and encoding Xbox ADPCM at the GameCube's rates, as the PS2 branch
-does from SPU ADPCM; the music is the same codec family as the Xbox's and wants re-blocking and its marker
-positions moved.
+So in sound the GameCube's data is the poorer, and a GameCube build can only play what is there. The conversion
+therefore adds nothing lossy of its own:
+
+- **Banks.** When the game asks for a bank's `.SHF`, GcFs.cpp reads the bank's `.SHF`, `.SHG` and `.SBF` and
+  decodes every sample's DSP ADPCM to 16-bit PCM (GcSound_DecodeDsp: the frame's predictor pair from the `.SHG`'s
+  coefficients, its scale, the history the header starts with). The game is served the Xbox's `.SHF` (each sample's
+  size that of the Xbox ADPCM its samples would take, the GameCube's rate, mono, the loop's start at the block it
+  falls in) and an `.SBF` of stand-ins of those sizes, each starting with a tag (`GCPC` and the bank's and sample's
+  numbers). When a sound backend decodes a buffer (pcmCache.cpp, both XAudio2 and SDL), a tagged buffer gets the
+  sample's PCM, padded to whole blocks (a looping sample's padding taken from its loop), so nothing is re-encoded.
+  The PCM is kept per bank, up to 128 MB, the banks asked for longest ago given back first.
+- **Sounds.** The `.SFX` is turned round field by field (SFXParameters' words, halfwords and bytes, the sample
+  pools' words); 99.2% of its bytes are then the Xbox's.
+- **Music.** A track's IMA codes are already the Xbox ADPCM codes: given the decoder's state every 64 samples as
+  each block's header, and the channels' bytes regrouped four at a time, the track is the Xbox's stereo ADPCM with
+  every code the GameCube's (GcSound_XboxMusic). The markers' positions become those blocks' bytes, and the music
+  stream plays at 32 kHz (SFX_MUSIC_FREQUENCY).
+
+Checked (`gcdata_check sound`, 26 October 2026): 25 banks, 7,750 samples (269 that loop), 9,437 s of sound, all
+decoded; against the Xbox's samples, resampled to the Xbox's rate, the sounds with tones correlate at 0.84-0.998
+(noisy ones lower, as their high frequencies are gone); 956,424 bytes of `.SFX`, 99.2% the Xbox's once converted;
+16 music tracks, each the Xbox's length to half a second, and 2,540 markers each at the Xbox's time to 10 ms.
+In game on the runner (CastleCourtyard) the bank loads (300 samples, 8.9 MB of PCM) and its samples reach the
+mixer at 11,025 and 19,000 Hz; the runner has no way to record what plays, so the sound itself is to be listened
+to.
 
 ## In game
 
@@ -313,7 +356,7 @@ branch's (devtools/Demo.cpp, behind its switch), to bring over for this build.
 | 2 | Bundles converted: the directory, the sequences merged, every map block, textures to KXT; checked against the Xbox's twins offline | 1 | done |
 | 3 | A level's static world: block 0x0c and the GC EXTRA entries to KXE, the double-sided bit carried over | 2 | done (rigid meshes) |
 | 4 | Placements and objects in play: the 078/079/07A loadables (cutscene scripts and sequences) as the PS2 branch's LoadableLoad; collision and paths confirmed with the Xbox's time demos | 3 | loadables done; the time demos to do (1-2 days, with the PS2 branch's rebase tools) |
-| 5 | Sound: DSP ADPCM banks to Xbox ADPCM, the `.SFX` fields, the music re-blocked and its markers | 1 | medium (2-3 days) |
+| 5 | Sound: DSP ADPCM banks to PCM, the `.SFX` fields, the music re-blocked and its markers | 1 | done |
 | 6 | Text, fonts, menus: text needs nothing; the GameCube's button symbols from Nightfire.elf | 2 | small (1 day) |
 | 7 | Skinned characters and morphs: the skinning data at 0x90-0xa0, bone palettes and morph streams into the KXE | 3 | done; faces in game wait for the cutscenes (4) |
 | 8 | Movies: an HVQM4 decoder, or the Xbox's movies in its place | 1 | medium-large (3-5 days), or skip |
@@ -325,8 +368,8 @@ branch's (devtools/Demo.cpp, behind its switch), to bring over for this build.
 - **Mesh states the data does not obviously give:** the Xbox's alpha reference 180 (0.7% of triangles) and clamped
   textures (0.5%); perhaps the texture header's words at 0x24 and 0x28, or layer flag bit 0.
 - **The invisible blocking meshes** the GameCube has geometry for and the Xbox not: whether the game hides them.
-- **The `.SFX` fields that differ** after the words are turned round (2% of bytes): halfwords or bytes inside
-  words, or values that changed with the stereo samples split in two.
+- **The `.SFX` bytes that differ** from the Xbox's after conversion (0.8%): the sample numbers, shifted by the
+  stereo samples split in two, and the sounds that play the halves together.
 - **The HVQM4 movies:** the audio track's format, a decoder to port.
 - **`07000001.bin`** (HendersonA) is empty in the extraction; check the disc image.
 - **The `*TxtU.dat` banks and `08000001/2.bin`:** what reads them on the GameCube.
@@ -345,6 +388,7 @@ gcdata_check <gc disc> textures 07000002 [<out>]      every texture to a KXT, de
 gcdata_check <gc disc> dt 07000002                    the "DT" headers' indices against the names they point at
 gcdata_check <gc disc> meshes <xbox disc> [<hash>...]  every rigid mesh to a KXE, against the Xbox's twins
 gcdata_check <gc disc> skins <xbox disc> [<hash>...]   every skinned mesh: bones, weights and morphs too
+gcdata_check <gc disc> sound <xbox disc> [<wav dir>]   the banks decoded, the sounds and music against the Xbox's
 gcdata_check <gc disc> convert 07000002 <xbox disc>   the level as the Xbox's, against the Xbox's bundle
 gcdata_check <gc disc> all <xbox disc>                convert, for every level, totals only
 gcdata_check <gc disc> names <xbox disc>              every name the Xbox build asks for, found on both discs
