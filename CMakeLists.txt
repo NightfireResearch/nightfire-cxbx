@@ -1732,6 +1732,10 @@ add_executable(shadercheck EXCLUDE_FROM_ALL
 target_link_libraries(shadercheck PRIVATE d3d9 d3dcompiler user32)
 endif()   # WIN32: gamewindow_test, standalone_poison, shadercheck
 
+# The GameCube's driving data against the Xbox's, offline over the two extracted discs (docs/gc-driving.md)
+add_executable(gcdrive_check EXCLUDE_FROM_ALL src/driving/devtools/GcDriveCheck.cpp src/driving/gc/GcViv.cpp
+                                              src/driving/gc/GcUData.cpp src/driving/platform/RefPack.cpp)
+
 # A 64-bit configuration (the windows-x64 preset) is for the standalone driving engine alone: the loaders and the
 # injection DLLs share the 32-bit XBE's address space by construction (docs/driving/64-bit.md).
 if(CMAKE_SIZEOF_VOID_P EQUAL 8)

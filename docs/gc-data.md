@@ -48,7 +48,7 @@ cmake --build build/gcon --config Release --target action_standalone
 
 No archive: the GameCube's disc file system holds every file loose (an extraction is a folder tree). The action
 engine's files are under `gc\` (bundles, sound, movies) and `common\` (text, the pause screen's film); the driving
-engine has `driving\` and `driving.elf` (not covered here). Endianness: the GameCube is big-endian, and the data is
+engine has `driving\` and `driving.elf` (docs/gc-driving.md). Endianness: the GameCube is big-endian, and the data is
 not swapped throughout: each format below says which way round it is.
 
 | GameCube | Size | Xbox twin |
