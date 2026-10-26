@@ -27,6 +27,7 @@
 #include "../gc/GcMap.h"
 #include "../gc/GcMesh.h"
 #include "../gc/GcSound.h"
+#include "../sound/PcmBanks.h"
 #include "../gc/GcTexture.h"
 #include "../engine/EDL.h"
 #include "../engine/psiGraphics.h"
@@ -890,6 +891,7 @@ void WriteWav(const std::string &path, const int16_t *pcm, size_t samples, int c
 
 int Sound(GcDisc &disc, XboxDisc &xbox, const char *wavDir) {
     std::map<std::string, long> t;
+    uint32_t pcmFingerprint = 2166136261u;      // FNV-1a over every sample's PCM, bank by bank
     for (int bank = 0; bank < 32; bank++) {
         char name[512], path[512];
         Bytes shf, shg, sbf, sfx, x;
@@ -920,6 +922,21 @@ int Sound(GcDisc &disc, XboxDisc &xbox, const char *wavDir) {
             }
         }
         t["seconds of sound"] += (long)seconds;
+        for (size_t i = 0; i < samples.size(); i++) {
+            const GcSoundSample &s = samples[i];
+            for (int16_t v : s.pcm)
+                for (int b = 0; b < 2; b++) {
+                    pcmFingerprint ^= (uint8_t)((uint16_t)v >> (8 * b));
+                    pcmFingerprint *= 16777619u;
+                }
+            // What the backends get (sound/PcmBanks.cpp prints the same for the first samples played)
+            if (getenv("GCDATA_SHOW") != NULL) {
+                std::vector<int16_t> padded = s.pcm;
+                PcmBanks_Pad(padded, s.loops ? s.loopStart : -1);
+                printf("bank %d's sample %zu: %zu samples at %d Hz, fingerprint %08x\n", bank, i, padded.size(),
+                       s.frequency, PcmBanks_Fingerprint(padded.data(), padded.size()));
+            }
+        }
         // The sounds against the Xbox's, word for word
         GcSound_ConvertSfx(sfx.data(), (uint32_t)sfx.size());
         snprintf(name, sizeof(name), "ENGLISH/SB_%d/SB_%d.SFX", bank / 8, bank);
@@ -977,6 +994,7 @@ int Sound(GcDisc &disc, XboxDisc &xbox, const char *wavDir) {
     }
     for (auto &c : t)
         printf("%-40s %ld\n", c.first.c_str(), c.second);
+    printf("the samples' PCM, fingerprint %08x\n", pcmFingerprint);
     return 0;
 }
 

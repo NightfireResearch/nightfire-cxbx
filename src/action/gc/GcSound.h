@@ -7,8 +7,7 @@
 // - A bank's samples are Nintendo DSP ADPCM in the .SBF, each with the DSP's 96-byte header (coefficients, initial
 //   history, loop) in the .SHG and a big-endian sample header in the .SHF. They are decoded to 16-bit PCM, which the
 //   sound backends play as it is (no re-encoding): the bank the game loads holds, for each sample, a stand-in as
-//   long as the Xbox ADPCM of the same samples would be, tagged with the sample's number, and the backends' decode
-//   (pcmCache.cpp) hands over the PCM for the tag (GcFs.cpp keeps it).
+//   long as the Xbox ADPCM of the same samples would be (sound/PcmBanks.h, which keeps the PCM for GcFs.cpp).
 // - A bank's sounds (.SFX) are the Xbox's, big-endian.
 // - The music (.SSD) is headerless IMA ADPCM, stereo, one byte (two samples) of each channel in turn, at 32 kHz. The
 //   same codes, given the decoder's state every 64 samples as block headers, are the Xbox's ADPCM blocks: nothing is
@@ -17,7 +16,6 @@
 #include <stdint.h>
 #include <vector>
 
-#define GC_SOUND_TAG 0x43504347u        // "GCPC": a stand-in sample's first word; its number follows
 #define GC_DSP_HEADER_BYTES 0x60
 #define GC_MUSIC_FREQUENCY 32000
 
@@ -36,12 +34,9 @@ bool GcSound_DecodeDsp(const uint8_t *dspHeader, const uint8_t *frames, uint32_t
 bool GcSound_DecodeBank(const uint8_t *shf, uint32_t shfBytes, const uint8_t *shg, uint32_t shgBytes,
                         const uint8_t *sbf, uint32_t sbfBytes, std::vector<GcSoundSample> &samples);
 
-// The Xbox's .SHF and the stand-in .SBF for decoded samples (bank: the bank's number, which the tags carry)
+// The Xbox's .SHF and the stand-in .SBF for decoded samples (bank: the bank's number, which the stand-ins carry)
 void GcSound_XboxBank(const std::vector<GcSoundSample> &samples, int bank, std::vector<uint8_t> &shf,
                       std::vector<uint8_t> &sbf);
-
-// The stand-in's tag at the start of a sample's data: true, with its bank and sample, when it has one
-bool GcSound_ReadTag(const void *data, uint32_t bytes, int *bank, int *sample);
 
 // The .SFX turned round field by field, in place
 void GcSound_ConvertSfx(uint8_t *file, uint32_t bytes);

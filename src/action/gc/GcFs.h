@@ -3,7 +3,6 @@
 
 // GcFs.cpp's own calls beside FS.h's. Built only with NIGHTFIRE_ACTION_DATA_GC.
 
-#include <stddef.h>
 #include <stdint.h>
 
 // The next whole file FS_AllocateAndLoadBlocking loads goes into this buffer, if it fits; else memory of its own
@@ -14,9 +13,5 @@ void *GcFs_LastLoad(uint32_t *bytes);
 
 // How many level bundles (0x0700xxxx) have been loaded: one more means the level's heap has started again
 uint32_t GcFs_LevelLoads(void);
-
-// A sound bank sample's PCM, when the data the sound backend is to decode is the stand-in GcFs.cpp served for it
-// (GcSound.h): its values, or NULL for any other data
-const int16_t *GcFs_SamplePcm(const void *data, uint32_t bytes, int channels, size_t *values);
 
 #endif // GC_GCFS_H_

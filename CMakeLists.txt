@@ -1348,7 +1348,8 @@ set(nf_action_gc_data_sources src/action/gc/GcBundle.cpp src/action/gc/GcDisc.cp
 if(NIGHTFIRE_ACTION_DATA_GC)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_gc_data_sources} src/action/gc/GcFs.cpp
-                                           src/action/gc/GcAnim.cpp src/action/gc/GcLoader.cpp)
+                                           src/action/gc/GcAnim.cpp src/action/gc/GcLoader.cpp
+                                           src/action/sound/PcmBanks.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
@@ -1381,7 +1382,7 @@ foreach(target action_standalone action_standalone_test)
     target_compile_definitions(${target} PRIVATE NIGHTFIRE_X87=0)
   endif()
   if(NIGHTFIRE_ACTION_DATA_GC)
-    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_GC=1)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_GC=1 NIGHTFIRE_DATA_PCM_BANKS=1)
   endif()
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
@@ -1426,7 +1427,8 @@ endforeach()
 # (docs/gc-data.md)
 add_executable(gcdata_check EXCLUDE_FROM_ALL src/action/devtools/GcDataCheck.cpp ${nf_action_gc_data_sources}
                                              src/action/engine/EDL.cpp src/action/engine/Inflate.cpp
-                                             src/action/util/crc.cpp src/common/sound/xadpcm.cpp)
+                                             src/action/util/crc.cpp src/common/sound/xadpcm.cpp
+                                             src/action/sound/PcmBanks.cpp)
 target_compile_definitions(gcdata_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
 if(NOT WIN32)
   target_compile_options(gcdata_check PRIVATE ${NF_XBOX_ABI_OPTIONS}

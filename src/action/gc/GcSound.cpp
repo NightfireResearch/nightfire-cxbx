@@ -1,5 +1,6 @@
 #include "GcSound.h"
 #include "GcBytes.h"
+#include "../sound/PcmBanks.h"
 
 #include <string.h>
 
@@ -109,20 +110,9 @@ void GcSound_XboxBank(const std::vector<GcSoundSample> &samples, int bank, std::
         uint32_t loopBlock = s.loops ? (uint32_t)s.loopStart / XADPCM_BLOCK_SAMPLES : 0;
         GcPutLe32(h + SHF_LOOP_OFFSET * 4, loopBlock * XADPCM_BLOCK_BYTES);
         size_t at = sbf.size();
-        sbf.resize(at + size, 0);
-        GcPutLe32(&sbf[at], GC_SOUND_TAG);
-        GcPutLe32(&sbf[at + 4], (uint32_t)bank << 16 | (uint32_t)i);
+        sbf.resize(at + size);
+        PcmBanks_WriteStandIn(&sbf[at], size, bank, (int)i);
     }
-}
-
-bool GcSound_ReadTag(const void *data, uint32_t bytes, int *bank, int *sample) {
-    const uint8_t *p = (const uint8_t *)data;
-    if (data == NULL || bytes < 8 || GcLe32(p) != GC_SOUND_TAG)
-        return false;
-    uint32_t key = GcLe32(p + 4);
-    *bank = (int)(key >> 16);
-    *sample = (int)(key & 0xffff);
-    return true;
 }
 
 // ---- Sounds: a count, then (hashcode, offset) pairs, then at each offset an SFXParameters and its sample pool
