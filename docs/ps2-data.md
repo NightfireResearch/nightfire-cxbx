@@ -71,8 +71,8 @@ have no pointers in them that the Xbox's lack (both store offsets or hashcodes a
 | Text banks (`UKTxt.dat`...) | yes | same layout and entry count (2,801 in UKTxt), a few strings differ (the pads' button names, by the look of the diff) | - | - | none (FileList) | none |
 | Fonts | glyphs yes, button symbols no | Glyph tables are executable data on both: the PS2's `FontDataNFont2`, `FontDataSerpLight`, `FontDataMedium` are, all 149 glyphs each, our FontData.inc's Font1, Font2 and Font3, and the font textures (NFont2 512x128, SerpLight 512x64, Medium 512x128, buttons 256x128) are the same sizes. The button symbols in text (`~A`...) differ: the PS2's `specialchar` (0x002de700) has 17 entries (A B C D E F H I J L R S T V W X Y) where the Xbox's SpecialChars has 23, at other places in the PS2's `buttons` texture, and seemingly another field order (u, v, w, h, screen w, h) | everything; the record layout is the Xbox's | - | SpecialChars filled from ACTION.ELF's `specialchar` (Ps2ExecutableData.cpp) | small, done |
 | Menus, UI | yes | menu files identical; sprites and HUD art come through the textures | - | the HUD's PS2 sprite coordinates (as fonts) | none | small |
-| Sound banks (`SB_n.SHF/SFX/SBF`) | container yes, codec no | Same three files and the same 36-byte sample headers, but PS2 SPU ADPCM (VAG blocks, 16 bytes = 28 samples) where the Xbox has Xbox ADPCM; the header's rate word is the SPU pitch (4096 = 48 kHz: 1882 = 22,050 Hz) where the Xbox has Hz; sample counts differ (the banks were built separately: SB_0 has 6 samples on PS2, 5 on Xbox) | the codec (nightfire-re's extract_audio.py; FFmpeg's `adpcm_psx`) | the `.SFX` parameter differences (SB_0's differ from byte 593) | SFX.cpp LoadSoundBank: each sample re-encoded as Xbox ADPCM | medium, done |
-| Music, streams | container yes | `MUSIC\MFX_n\*.SMF/SSD`, `ENGLISH\STREAMS\STREAMS.BIN/LUT`, `MFXINFO.MXI`, `SBINFO.SBI`: the same names; PS2 data is SPU ADPCM (music stereo, 0x80-byte interleave, 32 kHz; streams mono 22,050 Hz) | nightfire-re | - | FS_ps2.cpp: music served as the Xbox's track; the streams not (see [Sound and movies](#sound-and-movies)) | medium; music done |
+| Sound banks (`SB_n.SHF/SFX/SBF`) | container yes, codec no | Same three files and the same 36-byte sample headers, but PS2 SPU ADPCM (VAG blocks, 16 bytes = 28 samples) where the Xbox has Xbox ADPCM; the header's rate word is the SPU pitch (4096 = 48 kHz: 1882 = 22,050 Hz) where the Xbox has Hz; sample counts differ (the banks were built separately: SB_0 has 6 samples on PS2, 5 on Xbox) | the codec (nightfire-re's extract_audio.py; FFmpeg's `adpcm_psx`) | the `.SFX` parameter differences (SB_0's differ from byte 593) | SFX.cpp LoadSoundBank: each sample decoded to PCM, which the backends play (PcmBanks) | medium, done |
+| Music, streams | container yes | `MUSIC\MFX_n\*.SMF/SSD`, `ENGLISH\STREAMS\STREAMS.BIN/LUT`, `MFXINFO.MXI`, `SBINFO.SBI`: the same names; PS2 data is SPU ADPCM (music stereo, 0x80-byte interleave, 32 kHz; streams mono 22,050 Hz) | nightfire-re | - | FS_ps2.cpp: music served as stand-ins of its PCM at 32 kHz; the streams as samples of the banks (see [Sound and movies](#sound-and-movies)) | medium, done |
 | FMV | no | Xbox `eurocom\25_fps\<hash>.xmv` (WMV2 + Xbox ADPCM); PS2 `MOVIES\25_FPS\<LANG>\<hash>.PSS` (MPEG-2 program stream; the sound 16-bit PCM in private stream 1, `SShd`/`SSbd`), the same hashcode names | all | - | Fmv.cpp replaced by Fmv_ps2.cpp | small, done |
 | Saves | n/a | ours are host files (psiSave.cpp); the PS2 memory card format matters only to import PS2 saves | - | the card layout | psiSave.cpp | small (optional) |
 | Woman (pause background) | yes | Xbox `woman.rle` (a file); PS2 each level bundle's entry type 16 `woman`, byte for byte the Xbox's file padded with zeros | all | - | FS_ps2.cpp serves `woman.rle` from the first level bundle that has it | small, done |
@@ -319,20 +319,28 @@ triangles, and nothing in it says where the Xbox's diagonals went. Runs repeat e
 
 ## Sound and movies
 
+- **No re-encoding.** The PS2's sound plays as it decodes: sound effects, speech and music reach the mixer as the
+  PCM of the SPU ADPCM on the disc, at their own rates, with no codec between. The game's banks and music hold
+  stand-ins as long as the Xbox ADPCM of the same samples would be, so everything the Xbox's code reckons in bytes
+  (sizes, loop offsets, the music's positions and markers) is as it would be for the Xbox's data; the sound backends'
+  decode (pcmCache.cpp, behind NIGHTFIRE_DATA_PCM_BANKS) takes a stand-in's samples from `src/action/sound/PcmBanks.cpp`
+  instead of decoding it. PcmBanks is the GameCube data's PCM store (gc-data, docs/gc-data.md) made one for both
+  builds: the banks' PCM by bank and sample, up to 128 MB, the bank used longest ago given back first. (Until
+  26 October 2026 the sound was encoded again as Xbox IMA ADPCM, 15-24 dB signal to noise against the decode, and
+  the music resampled to 44.1 kHz; both are gone.)
 - **Sound banks.** LoadSoundBank reads the PS2's three files as it does the Xbox's; after the sample headers,
   `Ps2_ConvertSoundBank` decodes each sample's SPU ADPCM (16-byte blocks of 28 samples, the five filters, up to the
-  block with the end flag; the same samples as FFmpeg's `adpcm_psx` within rounding), encodes Xbox IMA ADPCM (36-byte
-  blocks of 64 samples per channel, each code the best of 16 with a one-sample look-ahead) into new memory and frees
-  the SPU data. The header's rate word becomes Hz (pitch x 48,000 / 4,096, put on the nearest standard rate:
-  1882 = 22,050 Hz), and the block with the SPU's loop-start flag becomes the loop offset (the Xbox ADPCM block it
-  falls in). IMA ADPCM is coarser than the SPU's: 15-24 dB signal to noise against the PS2's decoded samples
-  (`ps2data_check sound`), audible as a little hiss on quiet sounds; the decoder was checked against the reference.
-- **Music.** The PS2's tracks are stereo SPU ADPCM, interleaved in 0x80-byte blocks, at 32 kHz; the Xbox's music
-  code reads two channels of Xbox ADPCM at 44.1 kHz from wherever it likes in the file. FS_ps2.cpp therefore serves
-  a `.SSD` as the Xbox's track would be: its size is the Xbox's equivalent (track 1: 14,582,948 bytes against the
-  Xbox's 14,583,808), and each read decodes the PS2 blocks it needs (eight blocks before it to settle the
-  predictors), resamples them and encodes the Xbox blocks asked for. The `.SMF` marker files' byte positions are
-  moved by the same ratio as they load. `ps2data_check music` checks that tracks read in pieces match tracks read whole.
+  block with the end flag; the same samples as FFmpeg's `adpcm_psx` within rounding), pads it to whole 64-sample
+  blocks (round from its loop's start, or with silence), keeps it in PcmBanks and gives the bank a stand-in in its
+  place (a tag and the bank and sample, then zeros), freeing the SPU data. The header's rate word becomes Hz (pitch
+  x 48,000 / 4,096, put on the nearest standard rate: 1882 = 22,050 Hz), and the block with the SPU's loop-start
+  flag becomes the loop offset (the Xbox ADPCM block it falls in).
+- **Music.** The PS2's tracks are stereo SPU ADPCM, interleaved in 0x80-byte blocks, at 32 kHz, and they play at
+  32 kHz (SFX_MUSIC_FREQUENCY in SFX.h, which the GameCube's data shares; 44.1 kHz for the Xbox's). When the music
+  code opens a `.SSD`, FS_ps2.cpp decodes the whole track once into PcmBanks and serves the file as stand-in blocks
+  of the Xbox ADPCM's size (72 bytes, 64 samples a channel, each tagged with the track and its number); the game
+  copies them into its stream buffer as it would the Xbox's, and the backends' decode of each write takes the
+  blocks' samples from the track. The `.SMF` markers' byte positions are moved to the stand-in's as they load.
 - **Streamed speech.** A PS2 bank's sound whose sample-pool FileRef is below 0 plays entry `-1 - FileRef` of the
   language's `STREAMS\STREAMS.BIN` (STREAMS.LUT: 16 bytes an entry, the offset and size of its 136 bytes of
   markers, then of its audio: mono SPU ADPCM at 22,050 Hz, its end marker where its end flag is). 6 to 187 of a
@@ -342,6 +350,14 @@ triangles, and nothing in it says where the Xbox's diagonals went. Runs repeat e
   loads (Ps2_ConvertSoundBank) each stream its sounds play is read through STREAMS.LUT, decoded to its end flag and
   encoded with the bank's own samples, given a header after theirs, and the FileRefs pointed at it. The lengths come
   out the Xbox's to within a block (HendersonA's cutscene: 167,552 samples against 167,488, 113,792 against 113,728).
+- **Checked.** `ps2data_check sound <bank> [<out>]` runs each sample through the conversion and fetches it back as the
+  backends do: bank 5's 228 and bank 10's 236 samples come back the same as their SPU decode, sample for sample.
+  `ps2data_check music <track> [<wav>]` reads a track's stand-in in the music code's 0x4800-byte pieces through the
+  stream's decode: track 1's 9,405,984 stereo samples come back the same as the whole track's decode. In game
+  (HendersonA, on the runner) the samples reach the mixer at 11,025, 12,000 and 22,050 Hz with the same fingerprints
+  as the offline decode (bank 10's samples 61, 62, 106, 109, 188, 194; music track 5), no bank sample is decoded as
+  ADPCM, and the CastleExterior time demo, rebased, gives the same viewer bits as before - and now matches the Xbox
+  recording on every frame (179 frames parted from frame 4884 before, when the sound was re-encoded).
 - **Movies.** Fmv_ps2.cpp keeps Fmv.cpp's drawing and sound path and finds `MOVIES\25_FPS\<language>\<name>.PSS`
   (the sound language, else English). FFmpeg (the PS2 build's DLLs, above) decodes the MPEG-2 video at 512x512,
   scaled to the Xbox movies' 640x480 bilinearly: the nearest texel repeated every fourth column and dropped every
@@ -351,14 +367,6 @@ triangles, and nothing in it says where the Xbox's diagonals went. Runs repeat e
   reads: private stream 1 carries a 4-byte prefix, then an `SShd` header (format 1 = 16-bit PCM, 48 kHz, two
   channels, 0x200-byte interleave) and `SSbd` data, so Fmv_ps2.cpp reads it from the file itself and gives it to
   the movie sound as frames.
-- **The sound's quality.** The banks, the speech and the music are decoded from the PS2's SPU ADPCM and encoded
-  again as Xbox IMA ADPCM (15-24 dB signal to noise against the decode), a loss on top of the PS2's own. The
-  backends decode that to PCM anyway (pcmCache.cpp, in host memory), so the loss could go: the conversion could
-  hand PcmCache the PCM it decoded, under the converted sample's address and at its padded length, and the
-  backends would play that instead of decoding the IMA - the game's own data, and so everything it can see,
-  unchanged. About half a day for the banks and the speech (a PcmCache entry point, built only for the PS2 data,
-  and the calls from Ps2_ConvertSoundBank), a few hours more for the music (each transcoded read's PCM given with
-  it, as PcmCache_Written patches a streamed buffer). Not done yet.
 
 ## Driving missions
 
@@ -425,6 +433,6 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline, and in game the static worlds draw right ([In game](#in-game)); every converted primitive double-sided |
 | 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins. Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play checked with four Xbox time demos ([Time demos](#time-demos)): the player moves exactly as on the Xbox in three whole recordings and in HendersonA to frame 745, where the drones have parted after the glass doors shatter differently (the PS2's window is triangulated otherwise: data) |
 | 5 | done: text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); SpecialChars takes the PS2's 17 symbols from ACTION.ELF's `specialchar` (the same 0x18-byte records, coordinates in the PS2's `buttons` texture), its other slots empty, so prompts show the PS2's pad |
-| 6 | done: sound banks and music from SPU ADPCM, the streamed speech as samples of its bank (above), movies from PSS through FFmpeg |
+| 6 | done: sound banks, speech and music played as the PCM of their SPU ADPCM (nothing re-encoded; the music at its own 32 kHz), the streamed speech as samples of its bank (above), movies from PSS through FFmpeg |
 | 7 | done: the PS2's skinned meshes become skinned KXEs with bone palettes ([Skinned meshes](#skinned-meshes)); all 459 convert and match their Xbox twins; in game the characters skin right, and the time demos' viewer and pictures are those of the Xbox's meshes. The stand-in, its seam and `XboxDiscPath` are gone. The PS2 build reads nothing from the Xbox disc |
 | 8 | done: block 0x2b's morph targets become the KXE's morph streams ([Morph targets](#morph-targets)); all 151 heads convert, 99.5% of their moving vertices the Xbox's to the unit; in game the faces take the Xbox's expressions, and move as the Xbox's once the PS2's longer intro movie (10 frames) is allowed for |
