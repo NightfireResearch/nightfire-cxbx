@@ -101,7 +101,8 @@ HUD (src/action/ui/HUD.cpp):
   30.03 with D3D8 pixel centres): it is in the original's data, not our texel mapping. Crosshairs 4-8 are never
   chosen (Check_Target sets 2 or 3, HUD_UpdateCrossHair 1 when zoomed), so a replacement of the sheet
   (textures/09c4f43a25829f60.dds, tools/texture_replacement.py) with crosshair 6's box cleared removes the dot
-  without a change to the core.
+  without a change to the core. The PS2 data's build converts the sheet, so its replacement has another name:
+  textures/a5348873cd7b9888.dds, the same box cleared in the PS2's sheet (docs/ps2-data.md, `ps2data_check texhash`).
 
 ## Driving engine
 

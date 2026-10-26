@@ -15,6 +15,9 @@
 //   ps2data_check <disc> tris <hash> <xbox bundle> <name>
 //                                                       an entity's triangles in drawing order, the PS2's as converted
 //                                                       and the Xbox's (psiGetTriList's: what breaking glass shatters)
+//   ps2data_check <disc> texhash <hash> <texture>       a texture (its hashcode, 03xxxxxx) as converted: the name a
+//                                                       replacement of it needs (textures/<name>.dds, as
+//                                                       src/common/gfx/textureReplace.cpp hashes it), and a PNG
 //   ps2data_check <disc> all                            textures and meshes of every level bundle, totals only
 //   ps2data_check <disc> woman [<xbox woman.rle>]       the pause screen's film, as FS_ps2.cpp finds it
 //   ps2data_check <disc> sound <bank> [<out>]            a sound bank's samples decoded and made Xbox ADPCM (WAVs)
@@ -333,6 +336,29 @@ void DecodeDxt(const uint8_t *blocks, int width, int height, bool dxt5, uint8_t 
     }
 }
 
+// texhash's texture, or 0
+uint32_t HashTexture;
+
+// The Xbox format code (xboxTexture.h) the backend sees for a converted texture
+uint32_t XboxFormatCode(Ps2TextureFormat format) {
+    switch (format) {
+    case PS2TEX_DXT1: return 0x0c;
+    case PS2TEX_DXT5: return 0x0f;
+    case PS2TEX_LIN_A8R8G8B8: return 0x12;
+    default: return 0x06;
+    }
+}
+
+// TextureReplace_Hash (src/common/gfx/textureReplace.cpp): FNV-1a over the format, the size and the top level
+uint64_t ReplacementHash(uint32_t format, uint32_t width, uint32_t height, const uint8_t *data, size_t bytes) {
+    uint64_t h = 0xcbf29ce484222325ull;
+    const uint32_t words[3] = { format, width, height };
+    const uint8_t *w = (const uint8_t *)words;
+    for (size_t i = 0; i < sizeof(words); i++) { h ^= w[i]; h *= 0x100000001b3ull; }
+    for (size_t i = 0; i < bytes; i++) { h ^= data[i]; h *= 0x100000001b3ull; }
+    return h;
+}
+
 // As parsemap: block 0x10 the headers, then per texture 0x16 (texels) and 0x12 (palette), which converts it
 void ConvertPackTextures(const std::vector<Block> &blocks, const std::string &pack, const char *outDir,
                          TextureTotals &totals) {
@@ -375,6 +401,22 @@ void ConvertPackTextures(const std::vector<Block> &blocks, const std::string &pa
                 TextureInfo *tex = (TextureInfo *)kxt.data();
                 Ps2Texture_BuildKxt(tex, hashcode, width, height, frames, h.someDivisor, texels, b.data, colours,
                                     format);
+                if (hashcode == HashTexture) {
+                    size_t bytes = format == PS2TEX_DXT1 ? (size_t)width * height / 2
+                                 : format == PS2TEX_DXT5 ? (size_t)width * height : (size_t)width * height * 4;
+                    printf("  %s texture %d (0x%08x): %dx%d, format 0x%02x: replacement textures/%016llx.dds\n",
+                           pack.c_str(), next, hashcode, width, height, XboxFormatCode(format),
+                           (unsigned long long)ReplacementHash(XboxFormatCode(format), width, height,
+                                                               (const uint8_t *)(&tex->baseIdx + frames), bytes));
+                    // The PS2's texels straight from their palette, for painting a replacement over
+                    if (outDir != NULL) {
+                        std::vector<uint32_t> source((size_t)width * height);
+                        Ps2Texture_DecodeFrame(texels, b.data, colours, width, height, (uint8_t *)source.data());
+                        char name[512];
+                        snprintf(name, sizeof(name), "%s/%08x_source.png", outDir, hashcode);
+                        WritePng(name, width, height, (const uint8_t *)source.data());
+                    }
+                }
                 totals.textures++;
                 totals.frames += frames;
                 totals.kxtBytes += kxt.size();
@@ -1365,6 +1407,10 @@ int main(int argc, char **argv) {
         return CmdMorphs(disc, argv[3], argv[4]);
     if (cmd == "tris" && argc > 5)
         return CmdTris(disc, argv[3], argv[4], argv[5]);
+    if (cmd == "texhash" && argc > 4) {
+        HashTexture = (uint32_t)strtoul(argv[4], NULL, 16);
+        return CmdTextures(disc, argv[3], argc > 5 ? argv[5] : NULL, false);
+    }
     if (cmd == "all")
         return CmdAll(disc);
     if (cmd == "sound" && argc > 3)

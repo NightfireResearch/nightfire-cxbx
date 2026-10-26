@@ -344,9 +344,31 @@ triangles, and nothing in it says where the Xbox's diagonals went. Runs repeat e
   out the Xbox's to within a block (HendersonA's cutscene: 167,552 samples against 167,488, 113,792 against 113,728).
 - **Movies.** Fmv_ps2.cpp keeps Fmv.cpp's drawing and sound path and finds `MOVIES\25_FPS\<language>\<name>.PSS`
   (the sound language, else English). FFmpeg (the PS2 build's DLLs, above) decodes the MPEG-2 video at 512x512,
-  scaled to the Xbox movies' 640x480. The sound is not one FFmpeg reads: private stream 1 carries a 4-byte prefix,
-  then an `SShd` header (format 1 = 16-bit PCM, 48 kHz, two channels, 0x200-byte interleave) and `SSbd` data, so
-  Fmv_ps2.cpp reads it from the file itself and gives it to the movie sound as frames.
+  scaled to the Xbox movies' 640x480 bilinearly: the nearest texel repeated every fourth column and dropped every
+  sixteenth line, which showed as vertical stripes and lines out of order on edges (Bond's jacket in the title
+  movie). The PSS video is progressive (every picture a progressive frame, 4:2:0, a 4:3 aspect), so there is nothing
+  to deinterlace; its detail is the PSS's own, a fifth less across than the XMV's. The sound is not one FFmpeg
+  reads: private stream 1 carries a 4-byte prefix, then an `SShd` header (format 1 = 16-bit PCM, 48 kHz, two
+  channels, 0x200-byte interleave) and `SSbd` data, so Fmv_ps2.cpp reads it from the file itself and gives it to
+  the movie sound as frames.
+- **The sound's quality.** The banks, the speech and the music are decoded from the PS2's SPU ADPCM and encoded
+  again as Xbox IMA ADPCM (15-24 dB signal to noise against the decode), a loss on top of the PS2's own. The
+  backends decode that to PCM anyway (pcmCache.cpp, in host memory), so the loss could go: the conversion could
+  hand PcmCache the PCM it decoded, under the converted sample's address and at its padded length, and the
+  backends would play that instead of decoding the IMA - the game's own data, and so everything it can see,
+  unchanged. About half a day for the banks and the speech (a PcmCache entry point, built only for the PS2 data,
+  and the calls from Ps2_ConvertSoundBank), a few hours more for the music (each transcoded read's PCM given with
+  it, as PcmCache_Written patches a streamed buffer). Not done yet.
+
+## Driving missions
+
+Starting a new game (Start at the title screen with no profile) begins with the Paris mission, a driving one: the
+action engine hands over to driving_standalone, which reads the Xbox's driving data. The PS2 data has no driving
+engine of ours, and a PS2 run folder has no driving_standalone.exe, so the game exits there. Until there is one, a
+profile copied from the Xbox build gets past it. The cleanest stop-gaps, neither built: start the Xbox's driving
+engine against an Xbox disc when one is configured (the hand-over as it is, with the Xbox data for the driving
+missions), or, with none, say so on screen and go back to the front end with the mission marked done, as finishing
+it would.
 
 ## Multiplayer maps by name
 
@@ -380,6 +402,12 @@ Release\ps2data_check.exe <disc> music 1 [<wav>]                          a trac
 
 `skins <hash> <xbox bundle>` checks the skinned meshes against the Xbox's twins ([Skinned meshes](#skinned-meshes)),
 `morphs <hash> <xbox bundle>` the heads' morph streams ([Morph targets](#morph-targets)).
+`texhash <bundle> <texture> [<out>]` converts one texture (its 03xxxxxx hashcode) and prints the name its replacement
+needs under textures/ (src/common/gfx/textureReplace.cpp hashes the converted data, so the Xbox's replacements do not
+apply), and writes the PS2's texels decoded straight from their palette to paint over. The PS2 build's crosshair
+sheet (HT_Texture_gunsight 0x03000026, DXT5) is textures/a5348873cd7b9888.dds: the Xbox's replacement
+(docs/original-bug-fixes.md, HUDCrossCoords[1]) made from the PS2's sheet, crosshair 6's box cleared; the game loads
+it (`replaced a5348873cd7b9888`).
 `textures` also prints the DXT formats chosen and the mean and worst PSNR of the DXT texels against the PS2's.
 
 `tools/pe_compare.py` compares two builds of an executable section by section: the default build before and after a
@@ -393,7 +421,7 @@ The Xbox's decompressed bundles are what `tools/anim/extract_all.py` (blender-ex
 | # | State |
 |---|---|
 | 1 | done: FS_ps2.cpp (FileList from ACTION.ELF's symbol table, FILES.BIN, loose PS2\ files), the bundle header. Checked offline and in game |
-| 2 | done: block 0x12 to a KXT of DXT1 or DXT5 (A8R8G8B8 where it must be). All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); 07000001's take 2.8 MB at a mean PSNR of 38 dB; right in game |
+| 2 | done: block 0x12 to a KXT of DXT1 or DXT5, A8R8G8B8 where it must be or where DXT cannot come within 160 of a texel (a block of three colours far apart, as in the language select's UK flag, which drew with grey blocks before). A DXT block's end colours are the best of its colour box and every pair of its own colours. All 25,082 textures of the 99 bundles convert (one 64x64 header with 32x32 texels is decoded at 32x32); 07000001's take 3.0 MB at a mean PSNR of 39.8 dB, 2-15 textures a level A8R8G8B8; right in game |
 | 3 | rigid meshes convert to KXE with their render states; checked against the Xbox twins offline, and in game the static worlds draw right ([In game](#in-game)); every converted primitive double-sided |
 | 4 | mostly done: the 07F sequence bundle loads before the level (PS2 ResetMap_Load's `LoaderLoad(0, level)`); the cutscenes' loadable bundles through the PS2's LoadableLoad and LoadableReload (HendersonA's and SpaceStationD's intros play); `woman.rle` from a level bundle; no Xbox "Spec" skins. Drones, cutscenes and the HUD work in the levels tried. The loadables and the sequences' reload go into the memory the level's sequence bundle took, as the PS2's LoaderLoad reads modes 2 and 3 into LoaderAnimBase: every loadable on the disc is smaller than its level's 07F bundle, so a level's cutscenes take no more memory (a bundle that did not fit would take new memory and give the old back). Collision, AI paths and objects in play checked with four Xbox time demos ([Time demos](#time-demos)): the player moves exactly as on the Xbox in three whole recordings and in HendersonA to frame 745, where the drones have parted after the glass doors shatter differently (the PS2's window is triangulated otherwise: data) |
 | 5 | done: text banks load through FileList (done with 1); the fonts need nothing (glyph tables and texture sizes identical); SpecialChars takes the PS2's 17 symbols from ACTION.ELF's `specialchar` (the same 0x18-byte records, coordinates in the PS2's `buttons` texture), its other slots empty, so prompts show the PS2's pad |
