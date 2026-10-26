@@ -153,9 +153,6 @@ manifest field.
 
 ## Before players can be pointed at it
 
-- **A licence.** The repository has no LICENSE file. Without one, nobody else may legally redistribute it, so the
-  project should choose a licence before publishing binaries. The README's "What you need" already says the game
-  data is never included.
 - **Signed programs.** Unsigned programs bring up warnings:
   - Windows SmartScreen says "Windows protected your PC" for a new unsigned program, and the player has to click
     through. A code-signing certificate removes it, or the warning fades as the program builds a reputation.

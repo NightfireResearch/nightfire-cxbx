@@ -10,7 +10,7 @@ on:
 jobs:
   # The native build, with MSVC. Pinned to the 2022 generator to match the runner image; the game is a
   # 32-bit x86 binary and the loader has to share its address space, so Win32 is not a choice. Both of
-  # those live in CMakePresets.json now, so this runs the same two commands the README gives a person.
+  # those live in CMakePresets.json now, so this runs the same two commands DEVELOPERS.md gives a person.
   windows:
     runs-on: windows-2022
     steps:

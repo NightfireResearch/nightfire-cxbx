@@ -33,7 +33,7 @@
 #define GA_ROOT_ 2
 
 static bool GameWindowHasFocus(void) {
-    HWND render = FindWindowA(NIGHTFIRE_RENDER_WINDOW_CLASS, NULL);
+    HWND render = FindOwnRenderWindow();
     if (render == NULL)
         return true;
     HWND foreground = GetForegroundWindow();
