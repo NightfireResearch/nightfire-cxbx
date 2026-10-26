@@ -17,7 +17,7 @@ recorded to `Release/demos/<date>-<time>.nfdemo`. You can also set `NIGHTFIRE_DE
 run to a file of your choice.
 
 - **Starting in a level:** add `-level NAME` (and `-difficulty N`) to boot straight into a level without the
-  front end or a save (README, "Starting an on-foot level directly"). The recording keeps those options, and
+  front end or a save (DEVELOPERS.md, "Starting an on-foot level directly"). The recording keeps those options, and
   playback applies them itself.
 - **F6** marks a moment, for example where something looks wrong. A playback prints the mark when it reaches it.
 - **A recording ends when the game leaves for a driving mission.** The driving engine is not recorded. When the

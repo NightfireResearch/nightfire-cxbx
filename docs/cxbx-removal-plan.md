@@ -428,7 +428,7 @@ standalone, and reuse the D3D9 and audio backends as libraries.
 
 ## 5. Practical notes for agents
 
-- **Build** (from the repository root; "Building" in the README has the presets and the cross builds).
+- **Build** (from the repository root; "Building" in DEVELOPERS.md has the presets and the cross builds).
   For a build that runs straight away, configure in-source once (`cmake -B . -A Win32`), then
   `cmake --build . --config Release --target actioninject`: the output is `Release/actioninject.dll`, beside
   `disc/`. `cmake --build --preset windows --target actioninject` builds the same into `build/windows/Release/`.
