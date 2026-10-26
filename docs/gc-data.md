@@ -89,8 +89,8 @@ not swapped throughout: each format below says which way round it is.
 | The levels' swapped skins | engine/Anim.cpp AnimObjectNew | gc/GcAnim.cpp: the GameCube's own FixupSkinHashcode (0x80045298: Elite_B becomes Elite in PowerStationA1, Elite_Beret in EvilBase), since the Xbox's swaps in "Spec" skins the GameCube's bundles lack |
 | Meshes | none: block 0x0c becomes 0x0d as the bundle converts (GcMap.cpp), so parsemap and psiCreateEntityGfx are the Xbox's | gc/GcMesh.cpp |
 | The cutscene loadables | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | gc/GcLoader.cpp: the loadable bundle (0x0780xxxx-0x07A0xxxx) through LoaderLoad, and on reload the level's sequences again (0x07f0xxxx, which GcBundle_Load makes from the level's sequence bundles), into one buffer while they fit (GcFs_LoadNextInto), as GC LoadableLoad (0x8005c1e4) reads a loadable over the sequences |
-| Sound banks | sound/pcmCache.cpp PcmCache_Decode: a GameCube sample's stand-in hands over its PCM | gc/GcSound.cpp, gc/GcFs.cpp: the bank's samples decoded when its files are asked for |
-| The music's rate | sound/SFX.h SFX_MUSIC_FREQUENCY (44,100, or 32,000 for the GameCube's), used by SFXStream.cpp's two places | gc/GcSound.cpp: the tracks and their markers |
+| Sound banks | sound/pcmCache.cpp PcmCache_Decode, behind `NIGHTFIRE_DATA_PCM_BANKS` (which the GameCube build turns on, as the PS2 data's does): a stand-in's samples from sound/PcmBanks, the store both data builds share | gc/GcSound.cpp, gc/GcFs.cpp: the bank's samples decoded when its files are asked for, and kept in PcmBanks |
+| The music's rate | sound/SFX.h SFX_MUSIC_FREQUENCY (44,100, or 32,000 for the PS2's and the GameCube's), used by SFXStream.cpp's two places | gc/GcSound.cpp: the tracks and their markers |
 | Movies (to come) | engine/Fmv.cpp replaced | an HVQM4 decoder |
 
 ## Textures
@@ -305,10 +305,12 @@ therefore adds nothing lossy of its own:
   decodes every sample's DSP ADPCM to 16-bit PCM (GcSound_DecodeDsp: the frame's predictor pair from the `.SHG`'s
   coefficients, its scale, the history the header starts with). The game is served the Xbox's `.SHF` (each sample's
   size that of the Xbox ADPCM its samples would take, the GameCube's rate, mono, the loop's start at the block it
-  falls in) and an `.SBF` of stand-ins of those sizes, each starting with a tag (`GCPC` and the bank's and sample's
-  numbers). When a sound backend decodes a buffer (pcmCache.cpp, both XAudio2 and SDL), a tagged buffer gets the
-  sample's PCM, padded to whole blocks (a looping sample's padding taken from its loop), so nothing is re-encoded.
-  The PCM is kept per bank, up to 128 MB, the banks asked for longest ago given back first.
+  falls in) and an `.SBF` of stand-ins of those sizes, each starting with `PCM_BANKS_SAMPLE_TAG` and the bank's and
+  sample's numbers. The PCM, padded to whole blocks (a looping sample's padding taken from its loop), goes to
+  sound/PcmBanks, the store the PS2 data's build uses too: kept per bank, up to 128 MB, the banks used longest ago
+  given back first. When a sound backend decodes a buffer (pcmCache.cpp, both XAudio2 and SDL, behind
+  `NIGHTFIRE_DATA_PCM_BANKS`), a stand-in gets its sample's PCM from the store, so nothing is re-encoded. The
+  GameCube's music needs none of the store's music stand-ins: its blocks are real Xbox ADPCM.
 - **Sounds.** The `.SFX` is turned round field by field (SFXParameters' words, halfwords and bytes, the sample
   pools' words); 99.2% of its bytes are then the Xbox's.
 - **Music.** A track's IMA codes are already the Xbox ADPCM codes: given the decoder's state every 64 samples as
@@ -321,8 +323,9 @@ decoded; against the Xbox's samples, resampled to the Xbox's rate, the sounds wi
 (noisy ones lower, as their high frequencies are gone); 956,424 bytes of `.SFX`, 99.2% the Xbox's once converted;
 16 music tracks, each the Xbox's length to half a second, and 2,540 markers each at the Xbox's time to 10 ms.
 In game on the runner (CastleCourtyard) the bank loads (300 samples, 8.9 MB of PCM) and its samples reach the
-mixer at 11,025 and 19,000 Hz; the runner has no way to record what plays, so the sound itself is to be listened
-to.
+mixer at 11,025, 12,000 and 19,000 Hz, each with the fingerprint (PcmBanks_Fingerprint) `gcdata_check sound`
+computes for it offline (`GCDATA_SHOW=1` prints them); the runner has no way to record what plays, so the sound
+itself is to be listened to.
 
 ## In game
 
