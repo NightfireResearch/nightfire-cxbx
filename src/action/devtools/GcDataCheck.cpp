@@ -16,6 +16,8 @@
 //   gcdata_check <gc disc> meshes <xbox disc> [<hash>...]   every rigid mesh to a KXE, against the Xbox's twins
 //                                                           (every level when no hash is given)
 //   gcdata_check <gc disc> skins <xbox disc> [<hash>...]    the same for the skinned meshes: bones, weights, morphs
+//   gcdata_check <gc disc> sound <xbox disc> [<wav dir>]    the banks decoded, the sounds and music against the
+//                                                           Xbox's; WAVs of the samples and the first track
 //
 // <gc disc> is the folder with Nightfire.elf, common\ and gc\. <hash> is a bundle's name without .bin (0700001b).
 
@@ -24,10 +26,12 @@
 #include "../gc/GcDisc.h"
 #include "../gc/GcMap.h"
 #include "../gc/GcMesh.h"
+#include "../gc/GcSound.h"
 #include "../gc/GcTexture.h"
 #include "../engine/EDL.h"
 #include "../engine/psiGraphics.h"
 #include "../util/crc.h"
+#include "../../common/sound/xadpcm.h"
 
 #include <ctype.h>
 #include <math.h>
@@ -865,6 +869,117 @@ int Meshes(GcDisc &disc, XboxDisc &xboxDisc, const std::vector<std::string> &has
     return 0;
 }
 
+// ---- Sound: the banks decoded, their sounds and the music's markers against the Xbox's
+
+void WriteWav(const std::string &path, const int16_t *pcm, size_t samples, int channels, int rate) {
+    Bytes out(44 + samples * 2);
+    uint32_t data = (uint32_t)(samples * 2);
+    memcpy(&out[0], "RIFF", 4);
+    GcPutLe32(&out[4], 36 + data);
+    memcpy(&out[8], "WAVEfmt ", 8);
+    GcPutLe32(&out[16], 16);
+    GcPutLe32(&out[20], 1 | (uint32_t)channels << 16);
+    GcPutLe32(&out[24], (uint32_t)rate);
+    GcPutLe32(&out[28], (uint32_t)(rate * channels * 2));
+    GcPutLe32(&out[32], (uint32_t)(channels * 2) | 16u << 16);
+    memcpy(&out[36], "data", 4);
+    GcPutLe32(&out[40], data);
+    memcpy(&out[44], pcm, data);
+    WriteWhole(path, out.data(), out.size());
+}
+
+int Sound(GcDisc &disc, XboxDisc &xbox, const char *wavDir) {
+    std::map<std::string, long> t;
+    for (int bank = 0; bank < 32; bank++) {
+        char name[512], path[512];
+        Bytes shf, shg, sbf, sfx, x;
+        snprintf(path, sizeof(path), "%s/gc/audio/SFX/English/SB_%d/SB_%d.", disc.root.c_str(), bank / 8, bank);
+        std::string p = path;
+        if (!ReadWhole(p + "shf", shf) || !ReadWhole(p + "shg", shg) || !ReadWhole(p + "sbf", sbf) ||
+            !ReadWhole(p + "sfx", sfx))
+            continue;
+        std::vector<GcSoundSample> samples;
+        if (!GcSound_DecodeBank(shf.data(), (uint32_t)shf.size(), shg.data(), (uint32_t)shg.size(), sbf.data(),
+                                (uint32_t)sbf.size(), samples)) {
+            t["banks not decoded"]++;
+            continue;
+        }
+        t["banks"]++;
+        t["samples"] += (long)samples.size();
+        double seconds = 0;
+        for (size_t i = 0; i < samples.size(); i++) {
+            const GcSoundSample &s = samples[i];
+            seconds += (double)s.pcm.size() / (s.frequency > 0 ? s.frequency : 1);
+            if (s.pcm.size() <= 1)
+                t["samples empty"]++;
+            if (s.loops)
+                t["samples that loop"]++;
+            if (wavDir != NULL) {
+                snprintf(name, sizeof(name), "%s/SB_%d_%03zu.wav", wavDir, bank, i);
+                WriteWav(name, s.pcm.data(), s.pcm.size(), 1, s.frequency);
+            }
+        }
+        t["seconds of sound"] += (long)seconds;
+        // The sounds against the Xbox's, word for word
+        GcSound_ConvertSfx(sfx.data(), (uint32_t)sfx.size());
+        snprintf(name, sizeof(name), "ENGLISH/SB_%d/SB_%d.SFX", bank / 8, bank);
+        if (xbox.Read(name, x)) {
+            size_t n = std::min(sfx.size(), x.size()), same = 0;
+            for (size_t i = 0; i < n; i++)
+                same += sfx[i] == x[i];
+            t["sfx bytes"] += (long)sfx.size();
+            t["sfx bytes the same as the xbox's"] += (long)same;
+            // The Xbox's archive pads its files to 2 KB
+            bool sameSize = sfx.size() == x.size() || (x.size() > sfx.size() && x.size() - sfx.size() < 2048);
+            t[sameSize ? "sfx files the same size" : "sfx files of another size"]++;
+        }
+    }
+    for (int track = 1; track < 32; track++) {
+        char path[512], name[64];
+        Bytes ssd, smf, xssd, xsmf;
+        snprintf(path, sizeof(path), "%s/gc/audio/SFX/music/MFX_%d/MFX_%d.", disc.root.c_str(), track >> 4, track);
+        std::string p = path;
+        if (!ReadWhole(p + "ssd", ssd) || !ReadWhole(p + "smf", smf))
+            continue;
+        t["music tracks"]++;
+        std::vector<uint8_t> music;
+        GcSound_XboxMusic(ssd.data(), (uint32_t)ssd.size(), music);
+        GcSound_ConvertMarkers(smf.data(), (uint32_t)smf.size());
+        snprintf(name, sizeof(name), "music/MFX_%d/MFX_%d.SSD", track >> 4, track);
+        bool haveX = xbox.Read(name, xssd);
+        snprintf(name, sizeof(name), "music/MFX_%d/MFX_%d.SMF", track >> 4, track);
+        haveX = haveX && xbox.Read(name, xsmf);
+        double gcSeconds = (double)ssd.size() / GC_MUSIC_FREQUENCY;   // a byte a sample of both channels
+        t["music seconds"] += (long)gcSeconds;
+        if (!haveX)
+            continue;
+        double xSeconds = (double)xssd.size() / 72 * 64 / 44100;
+        t[fabs(gcSeconds - xSeconds) < 0.5 ? "music tracks the xbox's length (0.5 s)"
+                                           : "music tracks of another length"]++;
+        // Marker positions against the Xbox's, in seconds
+        if (xsmf.size() >= 20 && smf.size() >= 20) {
+            uint32_t mc = std::min(GcLe32(&smf[4]), GcLe32(&xsmf[4]));
+            uint32_t mo = GcLe32(&smf[12]), xmo = GcLe32(&xsmf[12]);
+            for (uint32_t i = 0; i < mc; i++) {
+                if (mo + i * 32 + 8 > smf.size() || xmo + i * 32 + 8 > xsmf.size())
+                    break;
+                double a = (double)(int32_t)GcLe32(&smf[mo + i * 32 + 4]) / 72 * 64 / GC_MUSIC_FREQUENCY;
+                double b = (double)(int32_t)GcLe32(&xsmf[xmo + i * 32 + 4]) / 72 * 64 / 44100;
+                t[fabs(a - b) < 0.01 ? "markers at the xbox's time (10 ms)" : "markers at another time"]++;
+            }
+        }
+        if (wavDir != NULL && track == 1) {
+            std::vector<int16_t> pcm(XAdpcm_DecodedValueCount(music.size(), 2));
+            size_t got = XAdpcm_Decode(music.data(), music.size(), 2, pcm.data(), pcm.size());
+            std::string w = std::string(wavDir) + "/MFX_1.wav";
+            WriteWav(w, pcm.data(), got, 2, GC_MUSIC_FREQUENCY);
+        }
+    }
+    for (auto &c : t)
+        printf("%-40s %ld\n", c.first.c_str(), c.second);
+    return 0;
+}
+
 // The names the Xbox build asks its archives for, each found on the GameCube's disc as GcFs.cpp finds it (GcDisc_Path)
 // and set beside the Xbox's file: whether both discs have it and whether the bytes are the same
 int Names(GcDisc &disc, XboxDisc &xbox) {
@@ -1349,6 +1464,10 @@ int main(int argc, char **argv) {
     if (cmd == "names" && argc >= 4) {
         XboxDisc xbox;
         return xbox.Open(argv[3]) ? Names(disc, xbox) : 1;
+    }
+    if (cmd == "sound" && argc >= 4) {
+        XboxDisc xbox;
+        return xbox.Open(argv[3]) ? Sound(disc, xbox, argc >= 5 ? argv[4] : NULL) : 1;
     }
     if ((cmd == "meshes" || cmd == "skins") && argc >= 4) {
         XboxDisc xbox;

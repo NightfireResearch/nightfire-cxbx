@@ -122,7 +122,7 @@ void ES_InitialStreamBuffer(void) {
     for (int n = 0; n < SFX_NUM_STREAMS; n++) {
         StreamData *stream = &Streams[n];
         if (n == 0) {
-            stream->StreamHandle = psiStreamCreatePlaybackBuffer(44100, 2, 0x4800);
+            stream->StreamHandle = psiStreamCreatePlaybackBuffer(SFX_MUSIC_FREQUENCY, 2, 0x4800);
             for (int i = 0; i < STREAM_READ_BUFFERS; i++)
                 stream->Read[i].DataBuffer = psiAsyncCreateBuffer(0x4800);
         } else {
@@ -558,7 +558,7 @@ void SFXInitialiseStreamUpdate(void) {
             sprintf(MarkerFileName, "%s%s/STREAMS/STREAMS.BIN", STRFilePath, SFXLanguageName);
         } else {
             stream->Channels = 2;
-            stream->Frequency = 44100;
+            stream->Frequency = SFX_MUSIC_FREQUENCY;
             stream->KeyOn = 1;
             stream->MusicStream = 1;
             sprintf(StreamFileName, "%sMFX_%d/MFX_%d.SSD", MFXFilePath2, stream->HashCode >> 4, stream->HashCode);

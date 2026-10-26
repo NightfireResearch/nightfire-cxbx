@@ -17,17 +17,19 @@
 #include "GcBytes.h"
 #include "GcDisc.h"
 #include "GcFs.h"
+#include "GcSound.h"
 
+#include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
+#include <map>
+#include <string>
 
 // The bundle converted last, by the name it was asked for
 static char ConvertedName[16];
 static GcBytesVec Converted;
 
-// Until the sound is converted (docs/gc-data.md, milestone 5) the game hears none: every sound bank is served empty,
-// the music list names no tracks, and the bank list is turned round to the Xbox's byte order
-static GcBytesVec SoundStandIn;
 
 static HANDLE OpenOnDisc(const char *path) {
     char discPath[300];
@@ -63,27 +65,138 @@ static bool EndsWith(const char *name, const char *suffix) {
     return n >= k && _stricmp(name + n - k, suffix) == 0;
 }
 
-// The silent stand-in for a sound file: false for one the game must not open (the music, which the empty list
-// keeps it from asking for)
-#define SOUND_LIST_BYTES 0x800
-static bool SoundStandIn_Make(const char *name, const char *path) {
-    SoundStandIn.clear();
-    if (EndsWith(name, ".SFX") || EndsWith(name, ".SHF") || EndsWith(name, ".SBF") || EndsWith(name, ".SHG")) {
-        SoundStandIn.assign(4, 0);          // a count of 0
-        return true;
+// The sound files converted (GcSound.h), each kept by the name it was asked for: the banks' sample headers and
+// stand-ins with their samples' PCM, the banks' sounds, the lists, the music's markers, and the last music track
+struct SoundBank {
+    GcBytesVec shf, sbf;
+    std::vector<GcSoundSample> samples;     // each padded to whole Xbox ADPCM blocks, as its stand-in is long
+    uint32_t used;                          // when it was last asked for, to give the oldest back
+};
+static std::map<int, SoundBank> SoundBanks;
+static uint32_t SoundBankClock;
+static std::map<std::string, GcBytesVec> SoundFiles;
+static std::string MusicName;
+static GcBytesVec Music;
+
+#define SOUND_LIST_BYTES 0x800              // the Xbox's lists, which its archive pads with zeros to 2 KB
+#define SOUND_PCM_KEPT (128u << 20)         // the banks' PCM kept, in bytes, before the oldest goes
+#define XADPCM_BLOCK_SAMPLES 64
+
+static std::string Upper(const char *name) {
+    std::string s = name;
+    for (char &c : s)
+        c = (char)toupper((unsigned char)c);
+    return s;
+}
+
+// A bank's number from its file's name (".../SB_<n>.SHF"), or -1
+static int BankNumber(const char *name) {
+    const char *at = strrchr(name, '_');
+    return at != NULL ? atoi(at + 1) : -1;
+}
+
+// The bank converted from the disc's three files, its samples padded to whole blocks (a loop's padding taken from
+// its start, the others' silent), the oldest banks given back past SOUND_PCM_KEPT
+static SoundBank *LoadSoundBank(int bank, const char *path) {
+    auto found = SoundBanks.find(bank);
+    if (found != SoundBanks.end()) {
+        found->second.used = ++SoundBankClock;
+        return &found->second;
     }
-    if (EndsWith(name, "MFXINFO.MXI")) {
-        SoundStandIn.assign(SOUND_LIST_BYTES, 0xff);
-        return true;
+    std::string base(path, strlen(path) - 3);
+    GcBytesVec shf, shg, sbf;
+    if (!ReadWhole(NULL, (base + "SHF").c_str(), shf) || !ReadWhole(NULL, (base + "SHG").c_str(), shg) ||
+        !ReadWhole(NULL, (base + "SBF").c_str(), sbf))
+        return NULL;
+    SoundBank b;
+    if (!GcSound_DecodeBank(shf.data(), (uint32_t)shf.size(), shg.data(), (uint32_t)shg.size(), sbf.data(),
+                            (uint32_t)sbf.size(), b.samples))
+        return NULL;
+    size_t bytes = 0;
+    for (GcSoundSample &s : b.samples) {
+        size_t n = s.pcm.size(), padded = (n + XADPCM_BLOCK_SAMPLES - 1) / XADPCM_BLOCK_SAMPLES * XADPCM_BLOCK_SAMPLES;
+        for (size_t k = n; k < padded; k++)
+            s.pcm.push_back(s.loops ? s.pcm[s.loopStart + (k - n) % (n - s.loopStart)] : 0);
+        bytes += s.pcm.size() * sizeof(int16_t);
     }
-    if (EndsWith(name, "SBINFO.SBI") && ReadWhole(NULL, path, SoundStandIn)) {
-        // The Xbox's, word for word, which its archive pads with zeros to 2 KB
-        GcSwapWords(SoundStandIn.data(), (uint32_t)SoundStandIn.size());
-        if (SoundStandIn.size() < SOUND_LIST_BYTES)
-            SoundStandIn.resize(SOUND_LIST_BYTES, 0);
-        return true;
+    GcSound_XboxBank(b.samples, bank, b.shf, b.sbf);
+    b.used = ++SoundBankClock;
+    SoundBank &kept = SoundBanks[bank] = std::move(b);
+    printf("[gc] sound bank %d: %u samples, %.1f MB of PCM\n", bank, (unsigned)kept.samples.size(), bytes / 1048576.0);
+
+    size_t total = 0;
+    for (auto &k : SoundBanks)
+        for (GcSoundSample &s : k.second.samples)
+            total += s.pcm.size() * sizeof(int16_t);
+    while (total > SOUND_PCM_KEPT && SoundBanks.size() > 1) {
+        auto oldest = SoundBanks.begin();
+        for (auto it = SoundBanks.begin(); it != SoundBanks.end(); ++it)
+            if (it->second.used < oldest->second.used)
+                oldest = it;
+        if (oldest->first == bank)
+            break;
+        for (GcSoundSample &s : oldest->second.samples)
+            total -= s.pcm.size() * sizeof(int16_t);
+        SoundBanks.erase(oldest);
     }
-    return false;
+    return &kept;
+}
+
+// A sound file as the Xbox's: its bytes, kept; NULL for one the GameCube has no counterpart of
+static const GcBytesVec *LoadSoundFile(const char *name, const char *path) {
+    if (EndsWith(name, ".SHF") || EndsWith(name, ".SBF")) {
+        SoundBank *bank = LoadSoundBank(BankNumber(name), path);
+        return bank == NULL ? NULL : EndsWith(name, ".SHF") ? &bank->shf : &bank->sbf;
+    }
+    if (EndsWith(name, ".SSD")) {
+        if (MusicName != Upper(name)) {
+            GcBytesVec ssd;
+            if (!ReadWhole(NULL, path, ssd))
+                return NULL;
+            GcSound_XboxMusic(ssd.data(), (uint32_t)ssd.size(), Music);
+            MusicName = Upper(name);
+        }
+        return &Music;
+    }
+    std::string key = Upper(name);
+    auto found = SoundFiles.find(key);
+    if (found != SoundFiles.end())
+        return &found->second;
+    GcBytesVec bytes;
+    if (EndsWith(name, ".SHG")) {
+        bytes.assign(4, 0);                 // not read by the Xbox's code
+    } else {
+        if (!ReadWhole(NULL, path, bytes))
+            return NULL;
+        if (EndsWith(name, ".SFX")) {
+            GcSound_ConvertSfx(bytes.data(), (uint32_t)bytes.size());
+        } else if (EndsWith(name, ".SMF")) {
+            GcSound_ConvertMarkers(bytes.data(), (uint32_t)bytes.size());
+        } else {                            // the lists: words
+            GcSwapWords(bytes.data(), (uint32_t)bytes.size());
+            if (bytes.size() < SOUND_LIST_BYTES)
+                bytes.resize(SOUND_LIST_BYTES, 0);
+        }
+    }
+    return &(SoundFiles[key] = std::move(bytes));
+}
+
+const int16_t *GcFs_SamplePcm(const void *data, uint32_t bytes, int channels, size_t *values) {
+    int bank, sample;
+    if (channels != 1 || !GcSound_ReadTag(data, bytes, &bank, &sample))
+        return NULL;
+    auto found = SoundBanks.find(bank);
+    if (found == SoundBanks.end() || sample >= (int)found->second.samples.size())
+        return NULL;
+    const std::vector<int16_t> &pcm = found->second.samples[sample].pcm;
+    static int told;
+    if (told < 3) {
+        told++;
+        printf("[gc] sound bank %d's sample %d to the mixer: %u samples at %d Hz\n", bank, sample,
+               (unsigned)pcm.size(), found->second.samples[sample].frequency);
+    }
+    *values = pcm.size();
+    return pcm.data();
 }
 
 // A file the game asked for: a converted bundle or a stand-in in memory, or a file on the disc
@@ -116,11 +229,12 @@ static bool GcFile_Open(const char *name, GcFile *file) {
         return true;
     }
     if (kind == GC_FILE_SOUND) {
-        if (!SoundStandIn_Make(name, path))
+        const GcBytesVec *sound = LoadSoundFile(name, path);
+        if (sound == NULL)
             return false;
-        file->memory = SoundStandIn.data();
+        file->memory = sound->data();
         file->handle = INVALID_HANDLE_VALUE;
-        file->size = (uint32_t)SoundStandIn.size();
+        file->size = (uint32_t)sound->size();
         return true;
     }
     file->memory = NULL;

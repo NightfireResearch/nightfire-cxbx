@@ -3,6 +3,9 @@
 #include "dsndSeam.h"   // DSound_BackendMissing
 #include "../../common/sound/xadpcm.h"
 #include "../../driving/platform/Host.h"
+#if NIGHTFIRE_DATA_GC
+#include "../gc/GcFs.h"     // the GameCube's samples, PCM already
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +78,10 @@ static bool EvictOneCacheEntry(void) {
 }
 
 const int16_t *PcmCache_Decode(const void *adpcm, uint32_t adpcmBytes, int channels, size_t *values) {
+#if NIGHTFIRE_DATA_GC   // the GameCube's samples are decoded already (docs/gc-data.md)
+    if (const int16_t *pcm = GcFs_SamplePcm(adpcm, adpcmBytes, channels, values))
+        return pcm;
+#endif
     uint32_t fingerprint = FingerprintAdpcm(adpcm, adpcmBytes);
     for (int i = 0; i < g_pcmCacheCount; i++) {
         if (g_pcmCache[i].adpcm == adpcm && g_pcmCache[i].adpcmBytes == adpcmBytes &&

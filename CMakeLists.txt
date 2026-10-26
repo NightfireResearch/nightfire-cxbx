@@ -1344,7 +1344,7 @@ endif()
 # each bundle converted whole as it is opened. Off, the targets are built exactly as without it.
 option(NIGHTFIRE_ACTION_DATA_GC "Action engine, standalone: load the GameCube version's data (docs/gc-data.md)" OFF)
 set(nf_action_gc_data_sources src/action/gc/GcBundle.cpp src/action/gc/GcDisc.cpp src/action/gc/GcMap.cpp
-                               src/action/gc/GcMesh.cpp src/action/gc/GcTexture.cpp)
+                               src/action/gc/GcMesh.cpp src/action/gc/GcSound.cpp src/action/gc/GcTexture.cpp)
 if(NIGHTFIRE_ACTION_DATA_GC)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_gc_data_sources} src/action/gc/GcFs.cpp
@@ -1426,7 +1426,7 @@ endforeach()
 # (docs/gc-data.md)
 add_executable(gcdata_check EXCLUDE_FROM_ALL src/action/devtools/GcDataCheck.cpp ${nf_action_gc_data_sources}
                                              src/action/engine/EDL.cpp src/action/engine/Inflate.cpp
-                                             src/action/util/crc.cpp)
+                                             src/action/util/crc.cpp src/common/sound/xadpcm.cpp)
 target_compile_definitions(gcdata_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
 if(NOT WIN32)
   target_compile_options(gcdata_check PRIVATE ${NF_XBOX_ABI_OPTIONS}
