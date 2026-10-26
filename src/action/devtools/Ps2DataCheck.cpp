@@ -29,6 +29,7 @@
 #include "../ps2/Ps2Mesh.h"
 #include "../ps2/Ps2Texture.h"
 #include "../ps2/Ps2Sound.h"
+#include "../sound/PcmBanks.h"
 #include "../../common/sound/xadpcm.h"
 
 #include <math.h>
@@ -1259,8 +1260,21 @@ void WriteWav(const std::string &path, const int16_t *pcm, size_t samples, uint3
     fclose(f);
 }
 
-// A sound bank's samples as Ps2_ConvertSoundBank converts them: the SPU decode (to WAV, with <out>), then the Xbox
-// ADPCM made of it decoded again, against it
+void WriteStereoWav(const std::string &path, const int16_t *pcm, size_t frames, uint32_t rate) {
+    FILE *f = fopen(path.c_str(), "wb");
+    if (f == NULL)
+        return;
+    uint32_t dataBytes = (uint32_t)(frames * 4);
+    uint32_t h[11] = { 0x46464952, 36 + dataBytes, 0x45564157, 0x20746d66, 16, 0x00020001, rate, rate * 4, 0x00100004,
+                       0x61746164, dataBytes };
+    fwrite(h, 4, 11, f);
+    fwrite(pcm, 4, frames, f);
+    fclose(f);
+}
+
+// A sound bank's samples as Ps2_ConvertSoundBank converts them and the backends get them: each decoded, kept in
+// PcmBanks under a stand-in as the bank holds, and fetched back through the stand-in as pcmCache.cpp fetches it -
+// against the decode, sample for sample. With <out>, WAVs of what the backends get.
 int CmdSound(Disc &disc, int bank, const char *outDir) {
     char base[300];
     snprintf(base, sizeof(base), "%s/PS2/ENGLISH/SB_%d/SB_%d", disc.root.c_str(), bank / 8, bank);
@@ -1271,52 +1285,50 @@ int CmdSound(Disc &disc, int bank, const char *outDir) {
     }
     uint32_t count;
     memcpy(&count, shf.data(), 4);
-    double worstSnr = 1e9;
+    std::vector<std::vector<int16_t>> decoded(count);
+    std::vector<PcmBankSample> kept(count);
+    std::vector<uint32_t> rates(count);
     for (uint32_t i = 0; i < count; i++) {
         uint32_t h[9];
         memcpy(h, shf.data() + 4 + i * 36, sizeof(h));
-        uint32_t offset = h[1], size = h[2], pitch = h[3];
-        std::vector<int16_t> pcm(size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES + 1);
+        uint32_t offset = h[1], size = h[2];
+        decoded[i].resize(size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES + 1);
         long loopStart;
-        size_t n = Ps2Spu_Decode(sbf.data() + offset, size, pcm.data(), &loopStart);
-        Bytes xadpcm(Ps2Spu_XAdpcmBytes(n));
-        Ps2Spu_EncodeXAdpcm(pcm.data(), n, xadpcm.data());
-        std::vector<int16_t> back(XAdpcm_DecodedValueCount(xadpcm.size(), 1));
-        XAdpcm_Decode(xadpcm.data(), xadpcm.size(), 1, back.data(), back.size());
-        double signal = 0, noise = 0;
-        for (size_t k = 0; k < n; k++) {
-            signal += (double)pcm[k] * pcm[k];
-            noise += ((double)pcm[k] - back[k]) * ((double)pcm[k] - back[k]);
-        }
-        double snr = noise > 0 ? 10 * log10(signal / noise) : 99;
-        if (signal > 0 && snr < worstSnr)
-            worstSnr = snr;
-        printf("  sample %u: %u bytes, %zu samples, pitch %u = %u Hz, loop flag %u, loop start %ld, %zu bytes of Xbox "
-               "ADPCM, %.1f dB\n", i, size, n, pitch, Ps2Spu_PitchToHz(pitch), h[0], loopStart, xadpcm.size(), snr);
-        if (outDir != NULL) {
+        decoded[i].resize(Ps2Spu_Decode(sbf.data() + offset, size, decoded[i].data(), &loopStart));
+        kept[i].pcm = decoded[i];
+        PcmBanks_Pad(kept[i].pcm, (h[0] & 1) && loopStart >= 0 ? (int)loopStart : -1);
+        rates[i] = Ps2Spu_PitchToHz(h[3]);
+        kept[i].frequency = (int)rates[i];
+    }
+    std::vector<Bytes> standIns(count);
+    for (uint32_t i = 0; i < count; i++) {
+        standIns[i].resize(Ps2Spu_XAdpcmBytes(kept[i].pcm.size()));
+        PcmBanks_WriteStandIn(standIns[i].data(), (uint32_t)standIns[i].size(), bank, (int)i);
+    }
+    PcmBanks_Keep(bank, std::move(kept));
+    int same = 0;
+    for (uint32_t i = 0; i < count; i++) {
+        size_t values = 0;
+        const int16_t *got = PcmBanks_SamplePcm(standIns[i].data(), (uint32_t)standIns[i].size(), 1, &values);
+        bool identical = got != NULL && values >= decoded[i].size() &&
+                         memcmp(got, decoded[i].data(), decoded[i].size() * sizeof(int16_t)) == 0;
+        same += identical;
+        printf("  sample %u: %zu samples at %u Hz, a stand-in of %zu bytes; the backends get %zu samples, %s the "
+               "decode, fingerprint %08x\n", i, decoded[i].size(), rates[i], standIns[i].size(), values,
+               identical ? "the same as" : "NOT", got != NULL ? PcmBanks_Fingerprint(got, values) : 0);
+        if (outDir != NULL && got != NULL) {
             char name[400];
             snprintf(name, sizeof(name), "%s/sb%d_%u.wav", outDir, bank, i);
-            WriteWav(name, pcm.data(), n, Ps2Spu_PitchToHz(pitch));
-            snprintf(name, sizeof(name), "%s/sb%d_%u_xbox.wav", outDir, bank, i);
-            WriteWav(name, back.data(), n, Ps2Spu_PitchToHz(pitch));
+            WriteWav(name, got, values, rates[i]);
         }
     }
-    printf("[ps2sound] bank %d: %u samples, the Xbox ADPCM's worst signal to noise %.1f dB\n", bank, count, worstSnr);
-    return 0;
+    printf("[ps2sound] bank %d: %u samples, %d played as their decode, nothing re-encoded\n", bank, count, same);
+    return same == (int)count ? 0 : 1;
 }
 
-bool ReadFromBytes(void *context, uint32_t offset, uint32_t bytes, uint8_t *out) {
-    const Bytes *data = (const Bytes *)context;
-    if (offset >= data->size())
-        return false;
-    if (bytes > data->size() - offset)
-        bytes = (uint32_t)(data->size() - offset);
-    memcpy(out, data->data() + offset, bytes);
-    return true;
-}
-
-// A music track read as FS_ps2.cpp reads it for the music code (the Xbox's 0x4800-byte pieces), against the same
-// seconds made in one piece: the pieces must join without a seam. Writes the first seconds as a stereo WAV.
+// A music track as FS_ps2.cpp serves it and the backends play it: decoded whole, its stand-in read in the music code's
+// 0x4800-byte pieces and decoded through PcmBanks_Decode as pcmCache.cpp decodes the stream's writes, against the
+// decode. With <out.wav>, the first seconds of what the backends get.
 int CmdMusic(Disc &disc, int track, const char *outWav) {
     char path[300];
     snprintf(path, sizeof(path), "%s/PS2/MUSIC/MFX_%d/MFX_%d.SSD", disc.root.c_str(), track / 16, track);
@@ -1325,38 +1337,31 @@ int CmdMusic(Disc &disc, int track, const char *outWav) {
         printf("no %s\n", path);
         return 1;
     }
-    uint32_t xboxBytes = Ps2Music_ToXboxBytes((uint32_t)ssd.size());
-    const uint32_t piece = 0x4800, blockBytes = 72, span = piece * 16;    // the first 16 pieces, about 6 s
-    Bytes pieces(span), whole(span);
-    for (uint32_t at = 0; at < span; at += piece)
-        Ps2Music_XboxBlocks(at / blockBytes, piece / blockBytes, (uint32_t)ssd.size(), ReadFromBytes, &ssd,
-                            pieces.data() + at);
-    Ps2Music_XboxBlocks(0, span / blockBytes, (uint32_t)ssd.size(), ReadFromBytes, &ssd, whole.data());
-    std::vector<int16_t> a(XAdpcm_DecodedValueCount(span, 2)), b(a.size());
-    XAdpcm_Decode(pieces.data(), span, 2, a.data(), a.size());
-    XAdpcm_Decode(whole.data(), span, 2, b.data(), b.size());
-    int worst = 0;
-    double energy = 0, difference = 0;
-    for (size_t k = 0; k < a.size(); k++) {
-        worst = std::max(worst, abs(a[k] - b[k]));
-        energy += (double)a[k] * a[k];
-        difference += (double)(a[k] - b[k]) * (a[k] - b[k]);
+    std::vector<int16_t> decoded;
+    Ps2Music_Decode(ssd.data(), ssd.size(), decoded);
+    std::vector<int16_t> whole = decoded;
+    uint32_t key = PcmBanks_KeepMusic(std::move(whole));
+    const uint32_t piece = 0x4800, blockBytes = 72;
+    size_t frames = decoded.size() / 2;
+    uint32_t blocks = (uint32_t)((frames + 63) / 64);
+    std::vector<int16_t> played;
+    for (uint32_t at = 0; at < blocks * blockBytes; at += piece) {
+        uint32_t n = std::min(piece, blocks * blockBytes - at);
+        Bytes standIn(n);
+        PcmBanks_WriteMusic(key, at / blockBytes, n / blockBytes, standIn.data());
+        std::vector<int16_t> pcm(n / blockBytes * 128);
+        PcmBanks_Decode(standIn.data(), n, 2, pcm.data(), pcm.size());
+        played.insert(played.end(), pcm.begin(), pcm.end());
     }
-    printf("[ps2music] track %d: %zu PS2 bytes, %u as the Xbox's; the first %u bytes in pieces against in one: the "
-           "music's RMS %.0f, the difference's %.1f (worst %d)\n", track, ssd.size(), xboxBytes, span,
-           sqrt(energy / a.size()), sqrt(difference / a.size()), worst);
-    if (outWav != NULL) {
-        FILE *f = fopen(outWav, "wb");
-        if (f != NULL) {
-            uint32_t dataBytes = (uint32_t)(a.size() * 2);
-            uint32_t h[11] = { 0x46464952, 36 + dataBytes, 0x45564157, 0x20746d66, 16, 0x00020001, 44100, 44100 * 4,
-                               0x00100004, 0x61746164, dataBytes };
-            fwrite(h, 4, 11, f);
-            fwrite(a.data(), 2, a.size(), f);
-            fclose(f);
-        }
-    }
-    return 0;
+    bool identical = played.size() >= decoded.size() &&
+                     memcmp(played.data(), decoded.data(), decoded.size() * sizeof(int16_t)) == 0;
+    printf("[ps2music] track %d: %zu PS2 bytes, %zu stereo samples at 32 kHz, a stand-in of %u bytes; played in "
+           "pieces: %s the decode, nothing re-encoded or resampled, fingerprint %08x\n", track, ssd.size(), frames,
+           blocks * blockBytes, identical ? "the same as" : "NOT",
+           PcmBanks_Fingerprint(decoded.data(), decoded.size()));
+    if (outWav != NULL)
+        WriteStereoWav(outWav, played.data(), std::min(frames, (size_t)32000 * 10), 32000);
+    return identical ? 0 : 1;
 }
 
 int CmdAll(Disc &disc) {

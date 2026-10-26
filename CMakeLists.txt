@@ -1353,7 +1353,7 @@ if(NIGHTFIRE_ACTION_DATA_PS2)
   list(REMOVE_ITEM nf_action_standalone_sources src/action/engine/FS.cpp src/action/engine/Fmv.cpp)
   list(APPEND nf_action_standalone_sources ${nf_action_ps2_data_sources} src/action/ps2/FS_ps2.cpp
                                            src/action/ps2/Ps2Convert.cpp src/action/ps2/Ps2Loader.cpp src/action/ps2/Ps2ExecutableData.cpp
-                                           src/action/ps2/Fmv_ps2.cpp)
+                                           src/action/ps2/Fmv_ps2.cpp src/action/sound/PcmBanks.cpp)
 endif()
 add_executable(action_standalone
   ${nf_action_standalone_sources}
@@ -1387,7 +1387,7 @@ foreach(target action_standalone action_standalone_test)
   endif()
   if(NIGHTFIRE_ACTION_DATA_PS2)
     # The heap (memory.cpp): 64 MB, for the PS2 data's converted textures, meshes and stand-ins beside the bundles
-    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_PS2=1 HEAP_SIZE=0x4000000)
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DATA_PS2=1 NIGHTFIRE_DATA_PCM_BANKS=1 HEAP_SIZE=0x4000000)
   endif()
   add_dependencies(${target} preprocess)
   target_include_directories(${target} PRIVATE ${NF_FFMPEG_DIR}/include)
@@ -1430,7 +1430,7 @@ foreach(target action_standalone action_standalone_test)
 endforeach()
 # The PS2 data's conversions run offline over an extracted PS2 disc (docs/ps2-data.md)
 add_executable(ps2data_check EXCLUDE_FROM_ALL src/action/devtools/Ps2DataCheck.cpp ${nf_action_ps2_data_sources}
-                                              src/common/sound/xadpcm.cpp)
+                                              src/common/sound/xadpcm.cpp src/action/sound/PcmBanks.cpp)
 target_compile_definitions(ps2data_check PRIVATE UNICODE _UNICODE NIGHTFIRE_STANDALONE NIGHTFIRE_X87=0)
 if(NOT WIN32)
   target_compile_options(ps2data_check PRIVATE ${NF_XBOX_ABI_OPTIONS}

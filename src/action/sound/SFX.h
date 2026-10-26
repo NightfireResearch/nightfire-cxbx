@@ -345,6 +345,13 @@ enum MusicMarkerType {
 
 #define SFX_NUM_ITEMS 100
 #define SFX_NUM_BANKS 150
+
+// The music's rate: the Xbox's tracks are 44.1 kHz, the PS2's and GameCube's 32 kHz (docs/ps2-data.md, docs/gc-data.md)
+#if NIGHTFIRE_DATA_PS2 || NIGHTFIRE_DATA_GC
+#define SFX_MUSIC_FREQUENCY 32000
+#else
+#define SFX_MUSIC_FREQUENCY 44100
+#endif
 #define SFX_NUM_VOICE_HANDLES 100
 #define SFX_NUM_LISTENERS 4
 #define SFX_NUM_STREAMS 1

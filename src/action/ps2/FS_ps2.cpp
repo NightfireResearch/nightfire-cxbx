@@ -17,6 +17,7 @@
 #include "Ps2ExecutableData.h"
 #include "Ps2Sound.h"
 #include "../sound/SFX.h"           // the music markers
+#include "../sound/PcmBanks.h"      // the music's PCM
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,7 +29,7 @@ struct Ps2File {
     uint32_t base;          // its first byte in that file
     uint32_t size;
     bool loose;             // the handle is the file's own, closed with it
-    uint32_t musicBytes;    // a music track's (.SSD) PS2 bytes, read as the Xbox's track (size is then that's): or 0
+    uint32_t musicKey;      // a music track's (.SSD): its PCM's key in PcmBanks, its reads stand-in blocks; or 0
 };
 
 struct Ps2FileSystem {
@@ -105,7 +106,7 @@ static bool EndsWith(const char *name, const char *suffix) {
 
 // The file named: a FileList entry in FILES.BIN, the woman, else a loose file under PS2\. False when it is none.
 static bool Ps2File_Open(const char *name, Ps2File *file) {
-    file->musicBytes = 0;
+    file->musicKey = 0;
     int index = Ps2Disc_FindFile(FileSystem.files, FileSystem.fileCount, name);
     if (index >= 0) {
         file->handle = FileSystem.filesBin;
@@ -137,26 +138,28 @@ static void Ps2File_Close(Ps2File *file) {
     file->handle = INVALID_HANDLE_VALUE;
 }
 
-static bool ReadMusic(void *context, uint32_t offset, uint32_t bytes, uint8_t *out) {
-    const Ps2File *file = (const Ps2File *)context;
-    if (offset >= file->musicBytes)
-        return false;
-    if (bytes > file->musicBytes - offset)
-        bytes = file->musicBytes - offset;
-    return ReadAt(file->handle, out, bytes, file->base + offset);
-}
-
-// A music track's bytes as the Xbox's track has them, made from the PS2's a whole block at a time
+// A music track's bytes as the Xbox's code reads them: stand-in blocks of its PCM (PcmBanks.h), a whole block at a time
 #define MUSIC_XBOX_BLOCK_BYTES 72
+#define MUSIC_BLOCK_SAMPLES 64
 static void Ps2File_ReadMusic(const Ps2File *file, uint8_t *buffer, uint32_t len, uint32_t offset) {
     uint32_t first = offset / MUSIC_XBOX_BLOCK_BYTES;
     uint32_t last = (offset + len + MUSIC_XBOX_BLOCK_BYTES - 1) / MUSIC_XBOX_BLOCK_BYTES;
-    uint8_t *blocks = (uint8_t *)malloc((size_t)(last - first) * MUSIC_XBOX_BLOCK_BYTES);
-    if (blocks == NULL)
-        return;
-    Ps2Music_XboxBlocks(first, last - first, file->musicBytes, ReadMusic, (void *)file, blocks);
-    memcpy(buffer, blocks + (offset - first * MUSIC_XBOX_BLOCK_BYTES), len);
-    free(blocks);
+    std::vector<uint8_t> blocks((size_t)(last - first) * MUSIC_XBOX_BLOCK_BYTES);
+    PcmBanks_WriteMusic(file->musicKey, first, last - first, blocks.data());
+    memcpy(buffer, blocks.data() + (offset - first * MUSIC_XBOX_BLOCK_BYTES), len);
+}
+
+// A music track opened: the whole track decoded once and kept for the backends, the file then as long as the Xbox
+// ADPCM of the same samples, in whole blocks
+static void Ps2File_OpenMusic(Ps2File *file) {
+    std::vector<uint8_t> ssd(file->size);
+    if (!ReadAt(file->handle, ssd.data(), file->size, file->base))
+        FS_FatalErrorHandler();
+    std::vector<int16_t> stereo;
+    Ps2Music_Decode(ssd.data(), ssd.size(), stereo);
+    uint32_t blocks = (uint32_t)((stereo.size() / 2 + MUSIC_BLOCK_SAMPLES - 1) / MUSIC_BLOCK_SAMPLES);
+    file->musicKey = PcmBanks_KeepMusic(std::move(stereo));
+    file->size = blocks * MUSIC_XBOX_BLOCK_BYTES;
 }
 
 // Reads len bytes from offset in the file, no further than its end
@@ -165,7 +168,7 @@ static void Ps2File_Read(const Ps2File *file, void *buffer, uint32_t len, uint32
         return;
     if (len > file->size - offset)
         len = file->size - offset;
-    if (file->musicBytes != 0) {
+    if (file->musicKey != 0) {
         Ps2File_ReadMusic(file, (uint8_t *)buffer, len, offset);
         return;
     }
@@ -333,10 +336,8 @@ int psiAsyncOpenFile(char *fileName) {
         FS_FatalErrorHandler();
     Ps2File *file = &AsyncStreams[stream].file;
     Ps2File_OpenOrDie(fileName, file);
-    if (EndsWith(fileName, ".SSD")) {      // a music track: read as the Xbox's
-        file->musicBytes = file->size;
-        file->size = Ps2Music_ToXboxBytes(file->size);
-    }
+    if (EndsWith(fileName, ".SSD"))        // a music track: read as the Xbox's
+        Ps2File_OpenMusic(file);
     AsyncStreams[stream].open = true;
     return stream;
 }

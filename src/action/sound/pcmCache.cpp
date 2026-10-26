@@ -3,6 +3,10 @@
 #include "dsndSeam.h"   // DSound_BackendMissing
 #include "../../common/sound/xadpcm.h"
 #include "../../driving/platform/Host.h"
+#if NIGHTFIRE_DATA_PCM_BANKS
+#include "PcmBanks.h"   // the PS2's and GameCube's sound, PCM already: its stand-ins' samples (docs/ps2-data.md)
+#define XAdpcm_Decode PcmBanks_Decode
+#endif
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -75,6 +79,10 @@ static bool EvictOneCacheEntry(void) {
 }
 
 const int16_t *PcmCache_Decode(const void *adpcm, uint32_t adpcmBytes, int channels, size_t *values) {
+#if NIGHTFIRE_DATA_PCM_BANKS
+    if (const int16_t *pcm = PcmBanks_SamplePcm(adpcm, adpcmBytes, channels, values))
+        return pcm;
+#endif
     uint32_t fingerprint = FingerprintAdpcm(adpcm, adpcmBytes);
     for (int i = 0; i < g_pcmCacheCount; i++) {
         if (g_pcmCache[i].adpcm == adpcm && g_pcmCache[i].adpcmBytes == adpcmBytes &&

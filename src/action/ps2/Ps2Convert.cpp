@@ -3,6 +3,7 @@
 #include "Ps2Mesh.h"
 #include "Ps2Texture.h"
 #include "Ps2Sound.h"
+#include "../sound/PcmBanks.h"
 #include "../../common/sound/xadpcm.h"
 #include "../memory.h"
 
@@ -67,6 +68,7 @@ ModelData *Ps2_ConvertModel(const uint8_t *block, uint32_t blockBytes) {
 #define STREAM_FREQUENCY 22050
 #define STREAM_CHANNELS 1
 #define STREAM_BITS_PER_SAMPLE 4
+#define SAMPLE_LOOPS 1                  // SampleHeaderData.Flags
 
 // A streamed sound's SPU ADPCM out of the language's STREAMS.BIN, through STREAMS.LUT (SFXStream.cpp's
 // StreamLookupFileDetails); empty when it cannot be read
@@ -129,7 +131,7 @@ void Ps2_ConvertSoundBank(SoundBankHeader *bank) {
         pcm[i].resize((size_t)samples[i].Size / SPU_BLOCK_BYTES * SPU_BLOCK_SAMPLES);
         pcm[i].resize(Ps2Spu_Decode((const uint8_t *)(void *)samples[i].Address, samples[i].Size, pcm[i].data(),
                                     &loopStarts[i]));
-        bytes += Ps2Spu_XAdpcmBytes(pcm[i].size());
+        bytes += Ps2Spu_XAdpcmBytes(pcm[i].empty() ? 1 : pcm[i].size());      // a stand-in is a block at least
     }
     int missing = 0;
     for (size_t s = 0; s < streams.size(); s++) {
@@ -139,7 +141,7 @@ void Ps2_ConvertSoundBank(SoundBankHeader *bank) {
         long loopStart;
         out.resize(Ps2Spu_Decode(audio.data(), audio.size(), out.data(), &loopStart));
         missing += out.empty();
-        bytes += Ps2Spu_XAdpcmBytes(out.size());
+        bytes += Ps2Spu_XAdpcmBytes(out.empty() ? 1 : out.size());
     }
     if (missing != 0)
         printf("[ps2] a sound bank's streamed sounds: %d of %d not in STREAMS.BIN\n", missing, (int)streams.size());
@@ -164,14 +166,20 @@ void Ps2_ConvertSoundBank(SoundBankHeader *bank) {
         samples = all;
     }
 
+    // Each sample a stand-in of its Xbox ADPCM's size in the bank, its PCM kept for the backends (PcmBanks.h)
+    int key = (int)(bank - SoundBankData);
+    std::vector<PcmBankSample> kept(bank->SampleCount);
     void *spu = samples[0].Address;     // the .SBF file, the samples one after another
     uint8_t *out = (uint8_t *)Mem_Malloc(bytes, MALLOC_XBOX, 0);
     for (int i = 0; i < bank->SampleCount; i++) {
         SampleHeaderData *sample = &samples[i];
-        int written = (int)Ps2Spu_EncodeXAdpcm(pcm[i].data(), pcm[i].size(), out);
+        bool loops = i < count && (sample->Flags & SAMPLE_LOOPS) && loopStarts[i] >= 0;
+        PcmBanks_Pad(pcm[i], loops ? (int)loopStarts[i] : -1);
+        int standIn = (int)Ps2Spu_XAdpcmBytes(pcm[i].size());
+        PcmBanks_WriteStandIn(out, (uint32_t)standIn, key, i);
         sample->Address = out;
-        sample->Size = written;
-        sample->RealSize = written;
+        sample->Size = standIn;
+        sample->RealSize = standIn;
         if (i < count) {
             sample->Frequency = (int)Ps2Spu_PitchToHz(sample->Frequency);
             // The loop's start (the block the SPU flags) as the Xbox's: the byte offset of its block
@@ -179,7 +187,10 @@ void Ps2_ConvertSoundBank(SoundBankHeader *bank) {
                                                            XADPCM_BLOCK_BYTES_PER_CHANNEL)
                                                    : 0;
         }
-        out += written;
+        kept[i].pcm = std::move(pcm[i]);
+        kept[i].frequency = sample->Frequency;
+        out += standIn;
     }
+    PcmBanks_Keep(key, std::move(kept));
     Mem_Free(&spu);
 }
