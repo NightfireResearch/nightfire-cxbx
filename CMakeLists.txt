@@ -1367,6 +1367,8 @@ add_executable(action_standalone_test EXCLUDE_FROM_ALL
   ${nf_action_resources}
 )
 target_compile_definitions(action_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# Both copy the same libraries beside themselves after linking; built in parallel, the two copies collide.
+add_dependencies(action_standalone_test action_standalone)
 # Their x87 code (math/X87Ops.cpp, docs/action-64bit.md): on, the x87's own instructions, as actioninject always has
 # them, exact against the original and the recordings; off, C in double, which a 64-bit build always is. The
 # recordings stay in step with it off only against checksums rebased by a build with it off.
