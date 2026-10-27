@@ -354,7 +354,7 @@ FFmpeg out). The default build keeps 8.0.3 and is compiled as before.
   demuxer`, `avcodec: add HVQM4 video decoder`), never merged, the decoder derived from Tillmann Karras's reference
   decoder (github.com/Tilka/hvqm4, LGPL 2.1 or later). `tools/fmv/patches/0001` and `0002` are them ported to 8.1
   and changed; each patch's header and each new file's comment says what was changed, by whom and when, for the
-  LGPL's §2(a). The patch's third part, an IMA ADPCM decoder, is FFmpeg 8.1's own now and is not used.
+  LGPL's §2(b). The patch's third part, an IMA ADPCM decoder, is FFmpeg 8.1's own now and is not used.
 
 What changed from the patches:
 
