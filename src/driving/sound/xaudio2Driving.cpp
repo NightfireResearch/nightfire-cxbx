@@ -1,6 +1,9 @@
 #include "DrivingAudio.h"
 
 #include "../../common/sound/xadpcm.h"
+#ifdef NIGHTFIRE_DRIVING_DATA_GC
+#include "../gc/GcPcm.h"
+#endif
 #include "../platform/Host.h"
 
 #define WIN32_LEAN_AND_MEAN
@@ -356,7 +359,11 @@ static bool PrepareChunk(DrivingVoice *v, Chunk *c, bool *lastOfStream) {
     const uint8_t *src = v->data + v->readPos;
     size_t values;
     if (v->formatTag == WAVE_FORMAT_XBOX_ADPCM) {
+#ifdef NIGHTFIRE_DRIVING_DATA_GC   // the GameCube's bank samples, decoded to PCM as they loaded
+        values = GcPcm_Decode(src, take, v->channels, c->pcm, sizeof(c->pcm) / sizeof(c->pcm[0]));
+#else
         values = XAdpcm_Decode(src, take, v->channels, c->pcm, sizeof(c->pcm) / sizeof(c->pcm[0]));
+#endif
     } else if (v->bitsPerSample == 8) {
         for (uint32_t i = 0; i < take; i++) c->pcm[i] = (int16_t)((src[i] - 128) << 8);
         values = take;

@@ -13,6 +13,7 @@
 // paired with the Xbox's .xsh and .xfn of the same name.
 
 #include "../gc/GcConvert.h"
+#include "../gc/GcPcm.h"
 #include "../gc/GcUData.h"
 #include "../gc/GcViv.h"
 #include "../../common/sound/xadpcm.h"
@@ -440,12 +441,16 @@ std::vector<BankTimbre> BankTimbres(const Bytes &b, bool big) {
     return out;
 }
 
-// Every GameCube bank made the Xbox's (GcSound.cpp): its timbres against the Xbox twin's, and the Xbox ADPCM made of
-// each DSP sample decoded again and measured against the DSP sample's own PCM
+// Every GameCube bank made the Xbox's (GcSound.cpp): its timbres against the Xbox twin's, and each sample's stand-in
+// decoded as the sound outputs decode it (GcPcm_Decode) against the DSP sample's own PCM. GCDRIVE_SHOW=1 prints each
+// sample's fingerprint (GcPcm_Fingerprint) by bank and sample number, for tools/gcdriving_check.py's own decode and the
+// game's NIGHTFIRE_GC_PCM_SHOW lines.
 int Banks(const Discs &discs) {
+    const bool show = getenv("GCDRIVE_SHOW") != NULL;
     std::set<std::string> seen;
-    int banks = 0, patchesSame = 0, timbres = 0, timbresTwin = 0;
-    double signal = 0, noise = 0, gcSeconds = 0, xboxSeconds = 0;
+    std::set<uint32_t> numbers;
+    int banks = 0, patchesSame = 0, timbres = 0, timbresTwin = 0, samples = 0, samplesSame = 0;
+    double gcSeconds = 0, xboxSeconds = 0, everyBank = 0;
     for (const char *archive : kArchives) {
         if (ArchiveKind(archive) != "viv")
             continue;
@@ -453,14 +458,21 @@ int Banks(const Discs &discs) {
         if (!OpenPair(discs, archive, gc, xbox))
             return 1;
         for (const GcVivEntry &entry : gc.Entries()) {
-            if (Extension(entry.name) != ".bnk" || !seen.insert(Lower(entry.name)).second)
+            if (Extension(entry.name) != ".bnk")
                 continue;
             Bytes a, b, converted;
             gc.Load(entry, a);
-            if (!Gc_ConvertBank(a.data(), uint32_t(a.size()), &converted)) {
+            uint32_t number = GcPcm_BankNumber(a.data(), uint32_t(a.size()));
+            std::vector<GcPcmSample> pcm;
+            if (!Gc_ConvertBank(a.data(), uint32_t(a.size()), number, &converted, &pcm)) {
                 printf("  %s: not converted\n", entry.name.c_str());
                 continue;
             }
+            if (numbers.insert(number).second)
+                for (const GcPcmSample &sample : pcm)
+                    everyBank += sample.pcm.size() * 2.0;
+            if (!seen.insert(Lower(entry.name)).second)
+                continue;
             banks++;
             std::vector<BankTimbre> source = BankTimbres(a, true), ours = BankTimbres(converted, false);
             const GcVivEntry *twin = xbox.Find(entry.name);
@@ -474,30 +486,35 @@ int Banks(const Discs &discs) {
                     xboxSeconds += t.frames / 16000.0;
             }
             timbres += int(ours.size());
-            for (size_t i = 0; i < ours.size() && i < source.size(); i++) {
-                const BankTimbre &s = source[i], &o = ours[i];
-                gcSeconds += s.frames / 32000.0;
-                if (s.coefficients == NULL || o.rep != 0x14 || s.offsets[0] >= a.size())
-                    continue;
-                uint32_t dspBytes = (s.frames + 13) / 14 * 8;
-                std::vector<int16_t> pcm = Gc_DecodeDsp(&a[s.offsets[0]],
-                                                        (std::min)(dspBytes, uint32_t(a.size() - s.offsets[0])),
-                                                        s.frames, s.coefficients);
-                size_t adpcmBytes = (s.frames + 63) / 64 * 36;
-                if (o.offsets[0] + adpcmBytes > converted.size())
-                    continue;
-                std::vector<int16_t> back(adpcmBytes / 36 * 64);
-                XAdpcm_Decode(&converted[o.offsets[0]], adpcmBytes, 1, back.data(), back.size());
-                for (size_t k = 0; k < pcm.size(); k++) {
-                    signal += double(pcm[k]) * pcm[k];
-                    noise += double(pcm[k] - back[k]) * (pcm[k] - back[k]);
+            for (size_t i = 0; i < ours.size() && i < source.size(); i++)
+                gcSeconds += source[i].frames / 32000.0;
+            // The stand-ins in the order the samples were made: timbre by timbre, channel by channel
+            GcPcm_Keep(number, entry.name.c_str(), std::vector<GcPcmSample>(pcm));
+            size_t next = 0;
+            for (size_t i = 0; i < ours.size() && next < pcm.size(); i++) {
+                const BankTimbre &o = ours[i];
+                for (uint32_t ch = 0; ch < o.channels && ch < 6 && next < pcm.size(); ch++, next++) {
+                    const GcPcmSample &sample = pcm[next];
+                    size_t adpcmBytes = (o.frames + 63) / 64 * 36;
+                    samples++;
+                    if (show)
+                        printf("%s %u: %u frames, fingerprint %08x\n", Lower(entry.name).c_str(), unsigned(next),
+                               sample.frames, GcPcm_Fingerprint(sample.pcm.data(), sample.frames));
+                    if (o.rep != 0x14 || o.frames != sample.frames || o.offsets[ch] + adpcmBytes > converted.size())
+                        continue;
+                    std::vector<int16_t> back(adpcmBytes / 36 * 64);
+                    size_t values = GcPcm_Decode(&converted[o.offsets[ch]], adpcmBytes, 1, back.data(), back.size());
+                    if (values == back.size() && values == sample.pcm.size() &&
+                        memcmp(back.data(), sample.pcm.data(), values * 2) == 0)
+                        samplesSame++;
                 }
             }
         }
     }
     printf("%d banks: patch counts the Xbox twin's in %d; timbres %d (the twins %d); %.1f s of samples (the twins "
-           "%.1f s at 16 kHz); Xbox ADPCM against the DSP decode: SNR %.1f dB\n", banks, patchesSame, timbres,
-           timbresTwin, gcSeconds, xboxSeconds, noise > 0 ? 10 * log10(signal / noise) : 999.0);
+           "%.1f s at 16 kHz); %d samples, %d decoded from their stand-ins as the PCM they were decoded to; every "
+           "bank's PCM %.1f MB\n", banks, patchesSame, timbres, timbresTwin, gcSeconds, xboxSeconds, samples,
+           samplesSame, everyBank / 1048576.0);
     return 0;
 }
 

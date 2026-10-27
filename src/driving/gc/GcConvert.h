@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <vector>
 
+struct GcPcmSample;
+
 // A GameCube image container (SHPG) as the Xbox's (SHPX) (GcShape.cpp)
 bool Gc_ConvertShapes(const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
 
@@ -17,8 +19,10 @@ bool Gc_ConvertFont(const uint8_t *file, uint32_t size, std::vector<uint8_t> *co
 // each moved to the end (GcShape.cpp)
 bool Gc_ConvertDataGroup(const char *path, const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
 
-// A sound bank (BNKb) as the Xbox's (BNKl), its DSP ADPCM samples made Xbox ADPCM (GcSound.cpp)
-bool Gc_ConvertBank(const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
+// A sound bank (BNKb) as the Xbox's (BNKl), its DSP ADPCM samples decoded to PCM (pcm, in the order of the timbres
+// and their channels) and stand-ins for them of the Xbox ADPCM's size naming the bank by its number (GcSound.cpp)
+bool Gc_ConvertBank(const uint8_t *file, uint32_t size, uint32_t bank, std::vector<uint8_t> *converted,
+                    std::vector<GcPcmSample> *pcm);
 
 // A DSP ADPCM sample's frames (eight bytes a frame: a predictor and scale byte, fourteen 4-bit samples) as PCM, by
 // its sixteen big-endian coefficients (GcSound.cpp)

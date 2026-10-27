@@ -1,6 +1,9 @@
 #include "voiceMixer.h"
 
 #include "xadpcm.h"
+#ifdef NIGHTFIRE_DRIVING_DATA_GC
+#include "../../driving/gc/GcPcm.h"
+#endif
 #include "../../driving/platform/Host.h"
 
 #include <SDL3/SDL.h>
@@ -93,8 +96,13 @@ static float Sample(MixerVoice *v, uint32_t frame, uint32_t channel) {
     if (v->formatTag == WAVE_FORMAT_XBOX_ADPCM) {
         int32_t block = (int32_t)(frame / XADPCM_SAMPLES_PER_BLOCK);
         if (block != v->decodedBlock) {
+#ifdef NIGHTFIRE_DRIVING_DATA_GC   // the GameCube's bank samples, decoded to PCM as they loaded
+            GcPcm_Decode(v->data + (uint32_t)block * v->frameBytes, v->frameBytes, v->channels, v->decoded,
+                         sizeof(v->decoded) / sizeof(v->decoded[0]));
+#else
             XAdpcm_Decode(v->data + (uint32_t)block * v->frameBytes, v->frameBytes, v->channels, v->decoded,
                           sizeof(v->decoded) / sizeof(v->decoded[0]));
+#endif
             v->decodedBlock = block;
         }
         return v->decoded[frame % XADPCM_SAMPLES_PER_BLOCK * v->channels + channel] * (1.0f / 32768.0f);

@@ -8,6 +8,7 @@
 #include "GcData.h"
 #include "GcBytes.h"
 #include "GcConvert.h"
+#include "GcPcm.h"
 #include "GcRenderMethods.h"
 
 #include "../engine/UMemory.hpp"
@@ -18,6 +19,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -142,10 +144,14 @@ void *Gc_ConvertFile(void *data, int *size, const char *path, int flags, FileMal
         return data;
     }
     std::vector<uint8_t> converted;
+    std::vector<GcPcmSample> pcm;
+    uint32_t bank = GcPcm_BankNumber(file, bytes);
     if (!Gc_ConvertShapes(file, bytes, &converted) && !Gc_ConvertFont(file, bytes, &converted) &&
-        !Gc_ConvertBank(file, bytes, &converted) &&
+        !Gc_ConvertBank(file, bytes, bank, &converted, &pcm) &&
         !Gc_ConvertDataGroup(path, file, bytes, &converted) && !Gc_ConvertControls(path, file, bytes, &converted))
         return data;
+    if (bank != 0)
+        GcPcm_Keep(bank, path, std::move(pcm));
     if (converted.size() == bytes) {   // the same block, when the size holds
         memcpy(data, converted.data(), bytes);
         return data;

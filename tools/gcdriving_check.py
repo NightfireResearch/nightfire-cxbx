@@ -3,6 +3,7 @@
     python tools/gcdriving_check.py geoprims <gc driving dir> <xbox driving dir> [archive file.crp ...]
     python tools/gcdriving_check.py methods <gc driving dir>
     python tools/gcdriving_check.py anims <gc driving dir> <xbox driving dir>
+    python tools/gcdriving_check.py banks <gc driving dir> [bank name ...]
 
 geoprims decodes every CARP file's GameCube GeoPrims as src/driving/gc/GcModel.cpp does (or the files named) and
 compares them with the Xbox twins' models of the same name: GeoPrim and vertex counts, how many models' bounds agree,
@@ -10,7 +11,10 @@ the Xbox parent methods each GameCube method's models use (the mapping table's e
 scale against the Xbox's and the vertex colours against the Xbox's, matched by vertex position. methods lists every
 render method the GameCube's objects (CARP files and actors) name, with the display lists' indices per vertex and
 primitive kinds. anims turns every animation bank round as src/driving/gc/GcObject.cpp does (over the file, passing
-the relocation sites) and compares the bytes it touched with the Xbox twin's, by anim type. The C++ checker,
+the relocation sites) and compares the bytes it touched with the Xbox twin's, by anim type. banks decodes every
+sound bank's DSP ADPCM samples (or the banks named) on its own, not as GcSound.cpp does, and prints each sample's
+fingerprint in the lines `GCDRIVE_SHOW=1 gcdrive_check ... banks` prints, so the two can be compared with diff; the
+game prints the same fingerprints for the samples it plays with NIGHTFIRE_GC_PCM_SHOW=1. The C++ checker,
 gcdrive_check, does the rest (data groups, images, banks).
 
 Both discs keep the driving engine's files in EA BIGF archives whose entries may be RefPack-packed; the readers
@@ -657,6 +661,93 @@ def cmd_anims(gc_dir, xbox_dir):
         print(f"    {kind}: {n:,} bytes, {100.0 * same / max(n, 1):.2f}% the Xbox's")
 
 
+# ---- sound banks
+
+OFFSET_TAGS = (0x88, 0x89, 0x94, 0x95, 0xA2, 0xA3)   # each channel's sample data offset
+
+
+def bank_samples(data):
+    """a BNKb bank's samples, in the order GcSound.cpp makes them: (frames, DSP data offset, coefficients)"""
+    out = []
+    for patch in range(be16(data, 6)):
+        offset = be32(data, 0x14 + patch * 4)
+        if offset == 0:
+            continue
+        p = 0x14 + patch * 4 + offset
+        if data[p:p + 2] != b"PT":
+            continue
+        p += 4
+        tags = []
+        while p < len(data):
+            tag = data[p]
+            p += 1
+            if tag in (0xFE, 0xFF):
+                values = dict((t, v) for t, v in tags)
+                channels, frames = min(int.from_bytes(values.get(0x82, b"\1"), "big"), 6), values.get(0x85)
+                frames = int.from_bytes(frames, "big") if frames is not None else 0
+                coefficients = [v for t, v in tags if t == 0x8F and len(v) >= 32]
+                for t, v in tags:
+                    channel = OFFSET_TAGS.index(t) if t in OFFSET_TAGS else -1
+                    if 0 <= channel < channels and frames > 0:
+                        coefs = coefficients[channel] if channel < len(coefficients) else coefficients[0]
+                        out.append((frames, int.from_bytes(v, "big"), coefs))
+                tags = []
+                if tag == 0xFF:
+                    break
+                continue
+            if tag >= 0xFC:
+                continue
+            length = data[p]
+            tags.append((tag, data[p + 1:p + 1 + length]))
+            p += 1 + length
+    return out
+
+
+def dsp_decode(data, start, frames, coefs):
+    """DSP ADPCM to 16-bit samples: each 8-byte frame a header (predictor pair, scale) and 14 signed nibbles"""
+    pairs = [(struct.unpack_from(">h", coefs, i * 4)[0], struct.unpack_from(">h", coefs, i * 4 + 2)[0])
+             for i in range(8)]
+    out, h1, h2, p = [], 0, 0, start
+    while len(out) < frames and p + 8 <= len(data):
+        header = data[p]
+        c1, c2 = pairs[(header >> 4) & 7]
+        scale = 1 << (header & 15)
+        for byte in data[p + 1:p + 8]:
+            for nibble in (byte >> 4, byte & 15):
+                if nibble >= 8:
+                    nibble -= 16
+                s = ((nibble * scale) << 11) + 1024 + c1 * h1 + c2 * h2 >> 11
+                s = -32768 if s < -32768 else 32767 if s > 32767 else s
+                out.append(s)
+                h2, h1 = h1, s
+        p += 8
+    out = out[:frames]
+    return out + [0] * (frames - len(out))
+
+
+def fnv1a(samples):
+    h = 0x811C9DC5
+    for b in struct.pack("<%dh" % len(samples), *samples):
+        h = ((h ^ b) * 0x01000193) & 0xFFFFFFFF
+    return h
+
+
+def cmd_banks(gc_dir, names):
+    """every bank's samples decoded on their own, each one's fingerprint as gcdrive_check prints it"""
+    gc, seen = Disc(gc_dir), set()
+    for a in ARCHIVES:
+        for n, _, _ in gc.entries(a):
+            if not n.lower().endswith(".bnk") or n.lower() in seen:
+                continue
+            seen.add(n.lower())
+            if names and n.lower() not in [x.lower() for x in names]:
+                continue
+            data = gc.load(a, n)
+            for i, (frames, start, coefs) in enumerate(bank_samples(data)):
+                fingerprint = fnv1a(dsp_decode(data, start, frames, coefs))
+                print(f"{n.lower()} {i}: {frames} frames, fingerprint {fingerprint:08x}")
+
+
 def main(argv):
     if len(argv) >= 4 and argv[1] == "geoprims":
         cmd_geoprims(argv[2], argv[3], argv[4:])
@@ -664,6 +755,8 @@ def main(argv):
         cmd_anims(argv[2], argv[3])
     elif len(argv) == 3 and argv[1] == "methods":
         cmd_methods(argv[2])
+    elif len(argv) >= 3 and argv[1] == "banks":
+        cmd_banks(argv[2], argv[3:])
     else:
         print(__doc__)
         return 1
