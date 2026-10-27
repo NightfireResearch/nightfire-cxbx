@@ -16,6 +16,9 @@
 #include "../../common/xboxPath.h"
 #include "../../common/fmv/Ffmpeg.h"
 #include "../../common/fmv/FmvAudio.h"
+#if NIGHTFIRE_DATA_GC
+#include "../gc/GcDisc.h"
+#endif
 
 // ---------------------------------------------------------------------------------------------------------------
 // FMV playback through FFmpeg.
@@ -231,7 +234,15 @@ void BackgroundMoviePlayFile(char *filename) {
     }
 
     char xboxPath[300], hostPath[300];
+#if NIGHTFIRE_DATA_GC
+    // The GameCube's HVQM4 movie of the same hashcode, one frame rate (docs/gc-data.md)
+    char gcPath[256];
+    if (GcDisc_Path(filename, gcPath, sizeof(gcPath)) != GC_FILE_MOVIE)
+        gcPath[0] = '\0';
+    snprintf(xboxPath, sizeof(xboxPath), "d:\\%s", gcPath);
+#else
     snprintf(xboxPath, sizeof(xboxPath), "d:\\eurocom\\%s%s", Graphics_IsPalI() ? "30_fps\\" : "25_fps\\", filename);
+#endif
     if (!Xbox_ResolvePath(xboxPath, hostPath, sizeof(hostPath)) || ff.open_input(&M.format, hostPath, NULL, NULL) < 0) {
         printf("[fmv] cannot open %s\n", xboxPath);
         BackgroundMovieCleanup();

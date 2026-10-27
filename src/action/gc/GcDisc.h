@@ -14,7 +14,7 @@ enum GcFileKind {
     GC_FILE_AS_IS,          // the Xbox's bytes (text banks, woman.rle)
     GC_FILE_BUNDLE,         // a bundle (<hashcode>.bin), converted whole (GcBundle_Load)
     GC_FILE_SOUND,          // the sound banks, music and their tables: big-endian, another codec (not converted yet)
-    GC_FILE_MOVIE,          // an HVQM4 movie where the Xbox has an XMV (not decoded yet)
+    GC_FILE_MOVIE,          // an HVQM4 movie where the Xbox has an XMV (Fmv.cpp plays it)
 };
 
 // The path on the GameCube's disc, from its root and with '\' for '/', of the file the Xbox build names (as its
