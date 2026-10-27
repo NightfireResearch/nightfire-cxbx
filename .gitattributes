@@ -3,3 +3,6 @@
 
 # Time demo recordings (docs/action-timedemo.md) are binary
 *.nfdemo binary
+
+# Patches for third-party sources keep their bytes (patch matches them against LF sources)
+*.patch -text

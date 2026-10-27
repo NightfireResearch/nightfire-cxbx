@@ -12,8 +12,10 @@ against the US Xbox disc's twins. In game HendersonB, CastleCourtyard and SpaceS
 bundles and draw from the GameCube's meshes and textures on the test runner; CastleCourtyard's frames are within
 2-2.6 grey levels of the Xbox build's at the same moments, and with the cutscenes' loadable bundles (milestone 4)
 HendersonB's intro cutscene plays as the Xbox's does, frame for frame within a few. The sound banks and music
-(milestone 5) are decoded and played with nothing re-encoded. Movies and the button symbols are still to come. See
-[Milestones](#milestones) and [In game](#in-game).
+(milestone 5) are decoded and played with nothing re-encoded. The movies (milestone 8, 26 October) decode through
+FFmpeg with an HVQM4 decoder ported from unmerged patches, every frame identical to the reference decoder's, but have
+not been seen in game yet. The button symbols are still to come. See [Milestones](#milestones), [Movies](#movies)
+and [In game](#in-game).
 
 Sources: the GameCube disc as extracted by the extractor project (Q:\nightfire-re, read only:
 `iso_extract/gc_us`), the US Xbox disc (`iso_extract/xbox_us`), the GameCube executable in Ghidra
@@ -33,7 +35,8 @@ action_standalone_test). On, they are compiled with `NIGHTFIRE_DATA_GC=1` and:
 Off, nothing is compiled differently. Checked on 25 October 2026 with `tools/pe_compare.py` (from the PS2 branch):
 action_standalone and action_standalone_test built with the GameCube work in the tree have the same `.text`,
 `.data`, `.reloc`, `.rsrc` and `.rdata` as those built before it, but for the debug directory's timestamp. The one
-seam in a game file (Anim.cpp) comes after the file's last runtime `__LINE__` use, so moves no assert's line.
+seam in a game file (Anim.cpp) comes after the file's last runtime `__LINE__` use, so moves no assert's line. The
+movies' seam (Fmv.cpp, 26 October) is in a file with no `__LINE__` use at all; not re-checked with pe_compare.
 actioninject never gets the switch.
 
 `DiscPath` (settings.ini) names the extracted GameCube disc: the folder holding `Nightfire.elf`, `common\` and
@@ -77,7 +80,7 @@ not swapped throughout: each format below says which way round it is.
 | Sound banks | container yes, codec no | the same files, big-endian (the `.SHF` sample headers' nine words; `.SFX` 98% of bytes the Xbox's once each word is turned round); samples Nintendo DSP ADPCM (8 bytes per 14 samples) with the DSP's 96-byte headers (coefficients, history) in the new `.SHG`; every sample mono, at lower rates ([Sound](#sound)) | all | - | GcSound.cpp, GcFs.cpp: decoded to PCM, played as it is ([Sound](#sound)) | done |
 | Music | container yes, codec nearly | `.SMF` markers big-endian, positions four times the byte offset; `.SSD` headerless IMA ADPCM, stereo, one byte (two samples) of each channel in turn, low nibble first, 32 kHz | all (the markers' times match the Xbox's at 32 kHz) | - | GcSound.cpp: the same codes as Xbox ADPCM blocks; SFX.h's SFX_MUSIC_FREQUENCY | done |
 | Streamed speech | n/a | none on either disc's language folder by that name; the GameCube has no streams at all | - | - | GcFs.cpp (a stream that cannot open is given up) | done |
-| FMV | no | HVQM4 1.5 (`HVQM4 1.5` magic; 640x480, 33,366 µs a frame) where the Xbox has XMV (WMV2) | the container's header | the decoder (FFmpeg has none) | Fmv.cpp replaced | medium-large |
+| FMV | no | HVQM4 1.5 (`HVQM4 1.5` magic; 640x480, 33,366 µs a frame, IMA ADPCM audio at 32,028 Hz) where the Xbox has XMV (WMV2) | all | - | Fmv.cpp's path; FFmpeg 8.1 with an HVQM4 demuxer and decoder ([Movies](#movies)) | done, not seen in game |
 | Woman (pause background) | yes | `common\Woman.rle` byte for byte the Xbox's | - | - | none | none |
 | `SBInfo.sbi`, `MFXInfo.mxi` | yes, turned round | each word big-endian; otherwise the Xbox's (the Xbox's padded to 2 KB) | all | - | GcFs.cpp | done |
 
@@ -91,7 +94,7 @@ not swapped throughout: each format below says which way round it is.
 | The cutscene loadables | engine/Loader.cpp: the Xbox's LoadableLoad and LoadableReload left out | gc/GcLoader.cpp: the loadable bundle (0x0780xxxx-0x07A0xxxx) through LoaderLoad, and on reload the level's sequences again (0x07f0xxxx, which GcBundle_Load makes from the level's sequence bundles), into one buffer while they fit (GcFs_LoadNextInto), as GC LoadableLoad (0x8005c1e4) reads a loadable over the sequences |
 | Sound banks | sound/pcmCache.cpp PcmCache_Decode, behind `NIGHTFIRE_DATA_PCM_BANKS` (which the GameCube build turns on, as the PS2 data's does): a stand-in's samples from sound/PcmBanks, the store both data builds share | gc/GcSound.cpp, gc/GcFs.cpp: the bank's samples decoded when its files are asked for, and kept in PcmBanks |
 | The music's rate | sound/SFX.h SFX_MUSIC_FREQUENCY (44,100, or 32,000 for the PS2's and the GameCube's), used by SFXStream.cpp's two places | gc/GcSound.cpp: the tracks and their markers |
-| Movies (to come) | engine/Fmv.cpp replaced | an HVQM4 decoder |
+| Movies | engine/Fmv.cpp BackgroundMoviePlayFile: the path, through GcDisc_Path | third_party/ffmpeg-prebuilt-gc (tools/fmv/patches) |
 
 ## Textures
 
@@ -327,6 +330,99 @@ mixer at 11,025, 12,000 and 19,000 Hz, each with the fingerprint (PcmBanks_Finge
 computes for it offline (`GCDATA_SHOW=1` prints them); the runner has no way to record what plays, so the sound
 itself is to be listened to.
 
+## Movies
+
+The 22 movies, `gc\movies\<hash>.h4m` with the Xbox's hashcodes, are all HVQM4 1.5 (Hudson's codec): 640x480,
+4:2:0, 33,366 µs a frame (29.97 fps; 0730000d and 07390048 33,333 µs, 30 fps), each block (GOP) one I frame and up to
+29 P frames, no B frames, display order the decode order. The audio is HVQM4's IMA ADPCM, stereo at 32,028 Hz, one
+audio frame per video frame: type 1 frames open each block with each channel's predictor and step index, type 2
+frames carry on from the frame before. 07330048 and 07350048 have no audio.
+
+Fmv.cpp plays them unchanged but for the path: `GcDisc_Path` makes the game's `07100001.xmv` into
+`gc\movies\07100001.h4m` (one frame rate: the GameCube has no 25_fps/30_fps folders). FFmpeg is
+`third_party/ffmpeg-prebuilt-gc`, which CMake takes in place of `third_party/ffmpeg-prebuilt` when
+`NIGHTFIRE_ACTION_DATA_GC` is on: FFmpeg 8.1.3 with the HVQM4 demuxer and decoders added, built by
+`FFMPEG_SOURCE=<FFmpeg n8.1.3> sh tools/fmv/build_ffmpeg.sh windows-x86-gc` (the script's header says how to check
+FFmpeg out). The default build keeps 8.0.3 and is compiled as before.
+
+### The decoder
+
+- **Audio:** `adpcm_ima_hvqm4`, in FFmpeg since 8.1. FFmpeg's configure marks it `lgpl_gpl`, files under the LGPL
+  that "some developers prefer only building ... with --enable-gpl", so an LGPL build leaves it out;
+  `tools/fmv/patches/0003` deletes that one line. The decoder's file, `libavcodec/adpcm.c`, is LGPL 2.1 or later.
+- **Demuxer and video:** Paul B Mahol's patches of July 2023 (ffmpeg-devel, "[PATCH] HVQM4": `avformat: add hvqm4
+  demuxer`, `avcodec: add HVQM4 video decoder`), never merged, the decoder derived from Tillmann Karras's reference
+  decoder (github.com/Tilka/hvqm4, LGPL 2.1 or later). `tools/fmv/patches/0001` and `0002` are them ported to 8.1
+  and changed; each patch's header and each new file's comment says what was changed, by whom and when, for the
+  LGPL's §2(a). The patch's third part, an IMA ADPCM decoder, is FFmpeg 8.1's own now and is not used.
+
+What changed from the patches:
+
+| Patch | Change | Why |
+|---|---|---|
+| both | FFmpeg 8.1's interfaces: `FFInputFormat`, `ff_vlc_init_from_lengths`, `ff_vlc_free` | the port |
+| video | pictures decoded into contiguous Y, U and V planes, as the reference decoder does, then copied out | the patch drew into padded AVFrames, cropped with `crop_left` 64 for a 32-pixel border and no right or bottom crop, so frames came out the wrong size; motion vectors reaching past a plane read the neighbouring plane's rows in the reference decoder, and now do here |
+| video | every read of a reference picture checked against its buffer: the reference decoder's sample inside, the nearest outside | the nest's reads in P frames (`MCBlockDecMCNest`) were unchecked; out-of-range vectors made the patch skip the rest of the macroblock |
+| video | the nest's position in I frames, the shifts and the motion vectors' residual bits checked | read past the block array, or shifts that are undefined |
+| video | Huffman trees: 256 leaves, codes up to 27 bits (three 9-bit VLC levels); one-leaf and absent trees decode without reading bits, as the reference decoder's do | the 2022 review's read_trees() points (no depth or leaf limit) were already met by the 2023 patch, with 16 levels; one-leaf trees failed there |
+| video | an escape symbol from a one-leaf tree ends a sum | the reference decoder loops for ever on it |
+| video | the macroblock type and proc runs count as the reference decoder's (a run of 0 wraps) | the patch returned 0 for such a run |
+| video | the "suspected bug" in `decode_PB_cc`: it tested the chroma plane's run length after decoding the luma's | a check only (a negative run cannot happen with the unsigned runs the reference decoder has), so removed |
+| video | HVQM4 1.3's chroma half-pel positions (the luma vector's), from the file header passed as extradata | the patch always used 1.5's |
+| video | B frames and chroma sampling other than 4:2:0 refused | B frames need reordering the patch never did; neither occurs here |
+| demuxer | blocks read in order, each frame checked against its block | the patch kept a list of blocks found by position |
+| demuxer | video timestamps from each frame's display number, audio timestamps and durations from its sample counts; no audio stream in a file without audio; only audio format 0 | the patch set none, made an audio stream always, and mapped format 1 to PCM unseen |
+
+### Security review
+
+Before anything was built (26 October 2026), each download in an empty folder of its own: the three patches as
+attached to the ffmpeg-devel message, Tilka/hvqm4 at its last commit (0970075, 7 November 2020) and FFmpeg n8.1.3 (commit
+1041abdc, the tag's on git.ffmpeg.org; FFmpeg's build here is from a checkout of git.ffmpeg.org). Every line of the patches (2,269) and of Tilka's
+`h4m_audio_decode.c` (2,569), `yoloader.c`, `symbols.inc`, `makefile` and README was read.
+
+- The patches add `libavformat/hvqm4dec.c` and `libavcodec/hvqm4.c` and register them (the two Makefiles,
+  `allformats.c`, `allcodecs.c`, `codec_desc.c`, `codec_id.h`). Nothing else: no network, file, process or environment
+  calls, no build-system hooks, nothing obfuscated.
+- Tilka's decoder reads its input and writes the `.wav` it is given and `output/*.ppm`. `yoloader.c` maps a
+  PowerPC game executable into memory with execute permission and patches its calls, for testing against Hudson's
+  code under QEMU; it is compiled only without `NATIVE`, and was not built.
+- Memory safety: Tilka's decoder checks no bounds at all (it is a reference, run here only on the game's movies,
+  under AddressSanitizer, in a container). Paul's reads its bits through FFmpeg's checked reader and limits its
+  trees, but left the reads above unchecked; they are checked now (the table above).
+
+Nothing suspicious was found. Everything was built and run in Docker (the test container without a network), on
+copies of the movies.
+
+### Tests
+
+The patched FFmpeg built for Linux with AddressSanitizer and UndefinedBehaviorSanitizer, every movie decoded whole
+(video to per-frame MD5s, audio to WAV), and Tilka's decoder built the same way with its audio path switched on and
+its frames written raw:
+
+- **All 22 movies:** 34,502 frames, each movie's count as its header says; 36,226,272 audio samples per channel, the
+  sum of the audio frames' sample counts; no errors, warnings or sanitizer reports; no read outside a reference
+  picture in any frame, so the clamping is never used.
+- **Against Tilka's decoder:** every frame of all 22 movies identical, Y, U and V (MD5 per frame); his decoder ran
+  clean under AddressSanitizer too, so neither reads outside its pictures on these files. Tilka's README says his
+  decoder is bit-exact with Hudson's, tested against Hudson's own code; that is his claim, not checked here.
+- **Audio against hcs's decoder** (the one in Tilka's file, switched off there): every sample of the 20 movies with
+  audio identical. 30 samples reach full scale over all of them, peaks rather than clipping.
+- **Looked at:** I frames, P frames at the middle and end of blocks and the last frames of 07100005, 0730000d and
+  07330048, converted to PNG: whole pictures, no blocks out of place or drift.
+- **Corrupted files:** 600 copies of two movies (07370048, 07350048) with random bytes, runs, stream offsets or header
+  fields changed, decoded under the sanitizers (and 300 more against an earlier state of the decoder): no reports,
+  crashes or hangs.
+
+The checks were run in a throwaway container; their scripts are not kept in the repository.
+
+### Open
+
+- Not yet played in game (the runner).
+- The colour range is FFmpeg's default (unspecified); the YUY2 path draws it as it draws the XMVs. Whether the
+  GameCube treats HVQM4's YUV as full range (as Tilka's PPM conversion does) is not known.
+- The demuxer reads only in order (Fmv.cpp never seeks).
+- HVQM4 1.3 files, B frames and other chroma sampling are untested or refused: none of the game's movies has them.
+
 ## In game
 
 On the test runner (vr-desktop, `C:\nightfire-gc\run`: `DiscPath=C:/nightfire-gc/gcdisc`, a copy of the bundles,
@@ -362,7 +458,7 @@ branch's (devtools/Demo.cpp, behind its switch), to bring over for this build.
 | 5 | Sound: DSP ADPCM banks to PCM, the `.SFX` fields, the music re-blocked and its markers | 1 | done |
 | 6 | Text, fonts, menus: text needs nothing; the GameCube's button symbols from Nightfire.elf | 2 | small (1 day) |
 | 7 | Skinned characters and morphs: the skinning data at 0x90-0xa0, bone palettes and morph streams into the KXE | 3 | done; faces in game wait for the cutscenes (4) |
-| 8 | Movies: an HVQM4 decoder, or the Xbox's movies in its place | 1 | medium-large (3-5 days), or skip |
+| 8 | Movies: an HVQM4 decoder, or the Xbox's movies in its place | 1 | done (FFmpeg with the HVQM4 patches ported); not seen in game |
 
 ## Research items
 
@@ -373,7 +469,6 @@ branch's (devtools/Demo.cpp, behind its switch), to bring over for this build.
 - **The invisible blocking meshes** the GameCube has geometry for and the Xbox not: whether the game hides them.
 - **The `.SFX` bytes that differ** from the Xbox's after conversion (0.8%): the sample numbers, shifted by the
   stereo samples split in two, and the sounds that play the halves together.
-- **The HVQM4 movies:** the audio track's format, a decoder to port.
 - **`07000001.bin`** (HendersonA) is empty in the extraction; check the disc image.
 - **The `*TxtU.dat` banks and `08000001/2.bin`:** what reads them on the GameCube.
 - **Entity parameters and collision blocks that differ** beyond float noise (62 and 79 over all levels).

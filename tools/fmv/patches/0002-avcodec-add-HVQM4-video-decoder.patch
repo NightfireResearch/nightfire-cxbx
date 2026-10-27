@@ -1,0 +1,1865 @@
+From: Paul B Mahol <onemda@gmail.com>
+Subject: [PATCH 2/3] avcodec: add HVQM4 video decoder
+
+The HVQM4 video decoder from Paul B Mahol's patch series "HVQM4" on ffmpeg-devel, 9 July 2023
+(https://ffmpeg.org/pipermail/ffmpeg-devel/2023-July/311852.html, 0003-avcodec-add-HVQM4-video-decoder.patch),
+never merged into FFmpeg, itself based on Tillmann Karras's reference decoder (https://github.com/Tilka/hvqm4,
+LGPL 2.1 or later). Licensed under the GNU Lesser General Public License 2.1 or later, as FFmpeg is.
+
+Changed by Charlie Bruce for the nightfire-cxbx project, 26 October 2026 (the changes are also listed at the top of
+libavcodec/hvqm4.c):
+ - ported to FFmpeg 8.1 (ff_vlc_init_from_lengths, ff_vlc_free);
+ - pictures decoded into contiguous Y, U and V planes as the reference decoder does, and copied out, in place of
+   the padded reference AVFrames and their crop (crop_left was 64 for a 32-pixel border; right and bottom were
+   never cropped);
+ - every read of a reference picture checked against that picture's buffer: the reference decoder's result
+   inside it, clamped outside it, where the patch skipped the rest of the macroblock;
+ - Huffman trees limited to 256 leaves and 27-bit codes; one-leaf and absent trees decode without reading bits,
+   as the reference decoder's do; an escape symbol from a one-leaf tree ends the sum;
+ - the macroblock type and proc run lengths count as the reference decoder's do (the patch returned 0 where a
+   run of 0 was decoded);
+ - the nest's position, the shifts and the motion vector residual bits checked;
+ - the luma run length error check tested the chroma plane's (removed: the run lengths are unsigned, as the
+   reference decoder's);
+ - HVQM4 1.3's chroma half-pel positions (the luma vector's) from the file header in extradata;
+ - B frames, which need reordering, refused; chroma sampling other than 4:2:0 refused.
+The 2022 review's points on read_trees() (no depth or leaf limit) were already met by the 2023 patch (16 levels,
+256 leaves); the limit here is the VLC reader's three levels of 9 bits.
+Applies to FFmpeg n8.1.3, after 0001.
+
+diff -uN a/libavcodec/Makefile b/libavcodec/Makefile
+--- a/libavcodec/Makefile
++++ b/libavcodec/Makefile
+@@ -488,6 +488,7 @@
+ OBJS-$(CONFIG_HNM4_VIDEO_DECODER)      += hnm4video.o
+ OBJS-$(CONFIG_HQ_HQA_DECODER)          += hq_hqa.o hq_hqadsp.o hq_common.o canopus.o
+ OBJS-$(CONFIG_HQX_DECODER)             += hqx.o hqxdsp.o hq_common.o canopus.o
++OBJS-$(CONFIG_HVQM4_DECODER)           += hvqm4.o
+ OBJS-$(CONFIG_HUFFYUV_DECODER)         += huffyuv.o huffyuvdec.o
+ OBJS-$(CONFIG_HUFFYUV_ENCODER)         += huffyuv.o huffyuvenc.o
+ OBJS-$(CONFIG_HYMT_DECODER)            += huffyuv.o huffyuvdec.o
+diff -uN a/libavcodec/allcodecs.c b/libavcodec/allcodecs.c
+--- a/libavcodec/allcodecs.c
++++ b/libavcodec/allcodecs.c
+@@ -169,6 +169,7 @@
+ extern const FFCodec ff_hnm4_video_decoder;
+ extern const FFCodec ff_hq_hqa_decoder;
+ extern const FFCodec ff_hqx_decoder;
++extern const FFCodec ff_hvqm4_decoder;
+ extern const FFCodec ff_huffyuv_encoder;
+ extern const FFCodec ff_huffyuv_decoder;
+ extern const FFCodec ff_hymt_decoder;
+diff -uN a/libavcodec/codec_desc.c b/libavcodec/codec_desc.c
+--- a/libavcodec/codec_desc.c
++++ b/libavcodec/codec_desc.c
+@@ -2009,6 +2009,13 @@
+                      AV_CODEC_PROP_LOSSLESS,
+         .mime_types= MT("image/jxs"),
+     },
++    {
++        .id        = AV_CODEC_ID_HVQM4,
++        .type      = AVMEDIA_TYPE_VIDEO,
++        .name      = "hvqm4",
++        .long_name = NULL_IF_CONFIG_SMALL("HVQM4 Video"),
++        .props     = AV_CODEC_PROP_LOSSY,
++    },
+ 
+     /* various PCM "codecs" */
+     {
+diff -uN a/libavcodec/codec_id.h b/libavcodec/codec_id.h
+--- a/libavcodec/codec_id.h
++++ b/libavcodec/codec_id.h
+@@ -332,6 +332,7 @@
+     AV_CODEC_ID_APV,
+     AV_CODEC_ID_PRORES_RAW,
+     AV_CODEC_ID_JPEGXS,
++    AV_CODEC_ID_HVQM4,
+ 
+     /* various PCM "codecs" */
+     AV_CODEC_ID_FIRST_AUDIO = 0x10000,     ///< A dummy id pointing at the start of audio codecs
+diff -uN a/libavcodec/hvqm4.c b/libavcodec/hvqm4.c
+--- /dev/null
++++ b/libavcodec/hvqm4.c
+@@ -0,0 +1,1782 @@
++/*
++ * HVQM4 video decoder
++ * Copyright (c) 2018-2020 Tillmann Karras
++ * Copyright (c) 2022 Paul B Mahol
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++/*
++ * Changed by Charlie Bruce for the nightfire-cxbx project, 26 October 2026, from Paul B Mahol's
++ * "avcodec: add HVQM4 video decoder" (ffmpeg-devel, 9 July 2023), which is based on Tillmann Karras's
++ * reference decoder (https://github.com/Tilka/hvqm4):
++ *  - ported to FFmpeg 8.1 (ff_vlc_init_from_lengths, ff_vlc_free);
++ *  - pictures are decoded into contiguous Y, U and V planes as the reference decoder does, and copied
++ *    out, in place of the padded reference AVFrames and their crop (crop_left was 64 for a 32-pixel
++ *    border, and right and bottom were never cropped);
++ *  - every read of a reference picture is checked against that picture's buffer: the reference
++ *    decoder's results inside it, clamped outside it, where it skipped the rest of the block;
++ *  - Huffman trees limited to 256 leaves and 27-bit codes; one-leaf and absent trees decode without
++ *    reading bits, as the reference decoder's do, and an escape symbol from one ends the sum (the reference
++ *    decoder never returns);
++ *  - the run lengths of the macroblock type and proc streams count as the reference decoder's do;
++ *  - the nest's position, the shifts and the motion vector residual bits are checked;
++ *  - the luma run length error check tested the chroma plane's;
++ *  - HVQM4 1.3's chroma half-pel positions (the luma plane's) from the file header in extradata;
++ *  - B frames, which need reordering, refused.
++ */
++
++#include "libavutil/imgutils.h"
++#include "libavutil/intreadwrite.h"
++#include "libavutil/mem.h"
++#include "libavutil/thread.h"
++
++#include "avcodec.h"
++#include "codec_internal.h"
++#include "decode.h"
++#include "get_bits.h"
++
++#define PLANE_COUNT 3
++#define LUMA_CHROMA 2
++#define LUMA_IDX 0
++#define CHROMA_IDX 1
++
++#define VLC_BITS 9
++#define MAX_CODE_LENGTH (3 * VLC_BITS)
++
++#define NEST_H 70
++#define NEST_V 38
++
++enum FrameType {
++    I_FRAME = 0x10,
++    P_FRAME = 0x20,
++    B_FRAME = 0x30,
++};
++
++typedef struct BlockData {
++    uint8_t value;
++    uint8_t type;
++} BlockData;
++
++typedef struct Tree {
++    VLC vlc;
++    int nb_bits;
++    int single;     // one leaf, or no tree: decodes to symbol without reading bits
++    int symbol;
++} Tree;
++
++typedef struct BitBuf {
++    GetBitContext gb;
++    uint32_t size;
++    Tree *tree;
++} BitBuf;
++
++typedef struct HVQPlaneDesc {
++    BlockData *border;  // beginning of the plane including the border
++    BlockData *payload; // beginning of the non-border plane data
++    int h_blocks;
++    int v_blocks;
++    int h_blocks_safe;
++    int v_blocks_safe;
++    // offsets of PBs within one MCB
++    // +---+---+
++    // | 0 | 3 |
++    // +---+---+
++    // | 1 | 2 |
++    // +---+---+
++    int mcb_offset[4];
++    // same for samples within one PB
++    ptrdiff_t pb_offset[4];
++    int width_in_samples;
++    int height_in_samples;
++    ptrdiff_t offset;   // of the plane within a picture
++    int width_shift;
++    int height_shift;
++    int pb_per_mcb_x;
++    int pb_per_mcb_y;
++    int blocks_per_mcb;
++} HVQPlaneDesc;
++
++typedef struct StackState {
++    int plane_idx;
++    const BlockData *line_prev;
++    const BlockData *line_curr;
++    const BlockData *line_next;
++    BlockData next;
++    BlockData curr;
++    uint8_t value_prev;
++} StackState;
++
++typedef struct MCPlane {
++    uint32_t rle;
++    uint32_t pb_dc;
++    BlockData *payload_cur_blk;
++    BlockData *payload_cur_row;
++    ptrdiff_t present;  // offsets within a picture
++    ptrdiff_t top;
++    ptrdiff_t h_mcb_stride;
++    ptrdiff_t v_mcb_stride;
++    int pb_per_mcb_x;
++    ptrdiff_t stride;
++} MCPlane;
++
++typedef struct RLDecoder {
++    uint32_t value;
++    uint32_t count;
++} RLDecoder;
++
++typedef void (*motion_comp_func)(uint8_t *dst, ptrdiff_t dst_stride,
++                                 const uint8_t *src, ptrdiff_t src_stride);
++
++typedef struct HVQM4Context {
++    AVCodecContext *avctx;
++
++    int width;
++    int height;
++    int chroma_hpel;    // 1.5: chroma half-pel positions from the chroma vectors
++
++    uint8_t *pic[3];
++    uint8_t *past;
++    uint8_t *present;
++    uint8_t *future;
++    const uint8_t *target; // the reference picture of the current macroblocks
++    ptrdiff_t pic_size;
++    int have_reference;
++    int out_of_bounds;
++
++    BlockData *blocks;
++    ptrdiff_t nb_blocks;
++    HVQPlaneDesc planes[PLANE_COUNT];
++
++    Tree trees[6];
++    BitBuf dc_values[PLANE_COUNT];  // DC values
++    BitBuf dc_rle[PLANE_COUNT];     // DC run lengths
++    BitBuf bufTree0[PLANE_COUNT];
++    BitBuf basis_num[LUMA_CHROMA];
++    BitBuf basis_num_run[LUMA_CHROMA];
++    GetBitContext fixvl[PLANE_COUNT]; // uncompressed high-entropy data
++    BitBuf mv_h;                    // horizontal motion vectors
++    BitBuf mv_v;                    // vertical motion vectors
++    BitBuf mcb_proc;                // macroblock proc
++    BitBuf mcb_type;                // macroblock type
++
++    int h_nest_size;
++    int v_nest_size;
++    int is_landscape;
++    uint8_t nest_data[NEST_H * NEST_V];
++    int dc_max;
++    int dc_min;
++    int unk_shift;
++    int dc_shift;
++    // number of residual bits to read from mv_h/mv_v,
++    // one setting for each of past and future; [2] for macroblock type 3
++    int mc_residual_bits_h[3];
++    int mc_residual_bits_v[3];
++} HVQM4Context;
++
++static int32_t div_tab[16];
++static int32_t mcdiv_tab[512];
++
++static av_cold void hvqm4_init_static(void)
++{
++    div_tab[0] = 0;
++    mcdiv_tab[0] = 0;
++
++    for (int i = 1; i < 16; i++)
++        div_tab[i] = 0x1000 / (i * 16) * 16;
++    for (int i = 1; i < 512; i++)
++        mcdiv_tab[i] = 0x1000 / i;
++}
++
++static void motion_comp_00(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src, ptrdiff_t src_stride)
++{
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++)
++            dst[j] = src[j];
++        dst += dst_stride;
++        src += src_stride;
++    }
++}
++
++// offset vertically by half a sample
++static void motion_comp_01(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src, ptrdiff_t src_stride)
++{
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++)
++            dst[j] = (src[j] + src[src_stride + j] + 1) / 2;
++        dst += dst_stride;
++        src += src_stride;
++    }
++}
++
++// offset horizontally by half a sample
++static void motion_comp_10(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src, ptrdiff_t src_stride)
++{
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++)
++            dst[j] = (src[j] + src[j + 1] + 1) / 2;
++        dst += dst_stride;
++        src += src_stride;
++    }
++}
++
++// offset by half a sample in both directions
++static void motion_comp_11(uint8_t *dst, ptrdiff_t dst_stride, const uint8_t *src, ptrdiff_t src_stride)
++{
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++)
++            dst[j] = (src[j] + src[j + 1] +
++                      src[src_stride + j] + src[src_stride + j + 1] + 2) >> 2;
++        dst += dst_stride;
++        src += src_stride;
++    }
++}
++
++static const motion_comp_func motion_comp_funcs[2][2] = {
++    { motion_comp_00, motion_comp_01 },
++    { motion_comp_10, motion_comp_11 },
++};
++
++// a sample of the reference picture: the reference decoder reads its neighbours in memory outside it
++static uint8_t target_sample(HVQM4Context *s, ptrdiff_t pos)
++{
++    if (pos < 0 || pos >= s->pic_size) {
++        s->out_of_bounds++;
++        pos = av_clip64(pos, 0, s->pic_size - 1);
++    }
++    return s->target[pos];
++}
++
++// a 4x4 block from the reference picture at offset src, with half-pel interpolation
++static void motion_comp_block(HVQM4Context *s, uint8_t *dst, ptrdiff_t dst_stride,
++                              ptrdiff_t src, ptrdiff_t src_stride, int hpel_dx, int hpel_dy)
++{
++    uint8_t edge[5 * 5];
++
++    if (src < 0 || src + (3 + hpel_dy) * src_stride + 3 + hpel_dx >= s->pic_size) {
++        for (int y = 0; y < 4 + hpel_dy; y++)
++            for (int x = 0; x < 4 + hpel_dx; x++)
++                edge[y * 5 + x] = target_sample(s, src + y * src_stride + x);
++        motion_comp_funcs[hpel_dx][hpel_dy](dst, dst_stride, edge, 5);
++        return;
++    }
++    motion_comp_funcs[hpel_dx][hpel_dy](dst, dst_stride, s->target + src, src_stride);
++}
++
++static void set_plane_desc(HVQM4Context *s, int plane_idx, int h_samp, int v_samp, ptrdiff_t offset)
++{
++    HVQPlaneDesc *plane = &s->planes[plane_idx];
++
++    plane->width_shift = h_samp == 2 ? 1 : 0;
++    plane->width_in_samples = s->width >> plane->width_shift;
++    plane->height_shift = v_samp == 2 ? 1 : 0;
++    plane->height_in_samples = s->height >> plane->height_shift;
++    plane->offset = offset;
++    // pixels per 2x2 block
++    plane->pb_per_mcb_x = 2 >> plane->width_shift;  // 1..2
++    plane->pb_per_mcb_y = 2 >> plane->height_shift; // 1..2
++    plane->blocks_per_mcb = plane->pb_per_mcb_x * plane->pb_per_mcb_y; // 1..4
++    // number of 4x4 blocks
++    plane->h_blocks = s->width / (h_samp * 4);
++    plane->v_blocks = s->height / (v_samp * 4);
++    // number of 4x4 blocks + border
++    plane->h_blocks_safe = plane->h_blocks + 2;
++    plane->v_blocks_safe = plane->v_blocks + 2;
++    // offset of blocks in MCB
++    plane->mcb_offset[0] = 0;
++    plane->mcb_offset[1] = plane->h_blocks_safe;
++    plane->mcb_offset[2] = plane->h_blocks_safe + 1;
++    plane->mcb_offset[3] = 1;
++    plane->pb_offset[0] = 0;
++    plane->pb_offset[1] = plane->width_in_samples * 4;
++    plane->pb_offset[2] = plane->width_in_samples * 4 + 4;
++    plane->pb_offset[3] = 4;
++}
++
++static void set_border(BlockData *dst)
++{
++    dst->value = 0x7F;
++    dst->type = 0xFF;
++}
++
++static int set_buffer(HVQM4Context *s)
++{
++    BlockData *plane_data;
++    ptrdiff_t luma_size = (ptrdiff_t)s->width * s->height;
++    ptrdiff_t chroma_size = luma_size / 4;
++
++    set_plane_desc(s, 0, 1, 1, 0);
++    set_plane_desc(s, 1, 2, 2, luma_size);
++    set_plane_desc(s, 2, 2, 2, luma_size + chroma_size);
++    s->pic_size = luma_size + 2 * chroma_size;
++
++    s->is_landscape = s->width >= s->height;
++    if (s->is_landscape) {
++        s->h_nest_size = NEST_H;
++        s->v_nest_size = NEST_V;
++    } else {
++        s->h_nest_size = NEST_V;
++        s->v_nest_size = NEST_H;
++    }
++
++    s->basis_num[0].tree = &s->trees[3];
++    s->basis_num[1].tree = &s->trees[3];
++
++    s->basis_num_run[0].tree = &s->trees[1];
++    s->basis_num_run[1].tree = &s->trees[1];
++
++    s->dc_values[0].tree = &s->trees[0];
++    s->dc_values[1].tree = &s->trees[0];
++    s->dc_values[2].tree = &s->trees[0];
++
++    s->dc_rle[0].tree = &s->trees[1]; // reuse!
++    s->dc_rle[1].tree = &s->trees[1];
++    s->dc_rle[2].tree = &s->trees[1];
++
++    s->bufTree0[0].tree = &s->trees[2];
++    s->bufTree0[1].tree = &s->trees[2];
++    s->bufTree0[2].tree = &s->trees[2];
++
++    s->mv_h.tree = &s->trees[4];
++    s->mv_v.tree = &s->trees[4];
++
++    s->mcb_proc.tree = &s->trees[5];
++    s->mcb_type.tree = &s->trees[5];
++
++    for (int i = 0; i < 6; i++) {
++        s->trees[i].single = 1;
++        s->trees[i].symbol = 0;
++    }
++
++    s->nb_blocks = 0;
++    for (int i = 0; i < PLANE_COUNT; i++)
++        s->nb_blocks += s->planes[i].h_blocks_safe * s->planes[i].v_blocks_safe;
++    s->blocks = av_calloc(s->nb_blocks, sizeof(*s->blocks));
++    if (!s->blocks)
++        return AVERROR(ENOMEM);
++
++    plane_data = s->blocks;
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        HVQPlaneDesc *plane = &s->planes[i];
++        ptrdiff_t stride = plane->h_blocks_safe;
++        BlockData *ptr;
++
++        plane->border = plane_data;
++        // skip top border (stride) and left border (1)
++        plane->payload = plane_data + stride + 1;
++        plane_data += plane->h_blocks_safe * plane->v_blocks_safe;
++
++        // set horizontal borders
++        ptr = plane->border;
++        for (int j = plane->h_blocks_safe; j > 0; j--)
++            set_border(ptr++);
++
++        ptr = plane_data;
++        for (int j = plane->h_blocks_safe; j > 0; j--)
++            set_border(--ptr);
++
++        // set vertical borders
++        ptr = plane->border + stride;
++        for (int j = plane->v_blocks_safe - 2; j > 0; j--) {
++            set_border(ptr);
++            ptr += stride;
++        }
++
++        ptr = plane->border + stride * 2 - 1;
++        for (int j = plane->v_blocks_safe - 2; j > 0; j--) {
++            set_border(ptr);
++            ptr += stride;
++        }
++    }
++
++    for (int i = 0; i < 3; i++) {
++        s->pic[i] = av_calloc(s->pic_size, 1);
++        if (!s->pic[i])
++            return AVERROR(ENOMEM);
++    }
++    s->past    = s->pic[0];
++    s->present = s->pic[1];
++    s->future  = s->pic[2];
++
++    return 0;
++}
++
++static av_cold int hvqm4_init(AVCodecContext *avctx)
++{
++    static AVOnce init_static_once = AV_ONCE_INIT;
++    HVQM4Context *s = avctx->priv_data;
++    int h_samp = 2, v_samp = 2;
++    int ret;
++
++    s->avctx = avctx;
++    s->chroma_hpel = 1;
++
++    // the file header, from the demuxer
++    if (avctx->extradata_size >= 0x44) {
++        if (!memcmp(avctx->extradata, "HVQM4 1.3", 9))
++            s->chroma_hpel = 0;
++        h_samp = avctx->extradata[0x38];
++        v_samp = avctx->extradata[0x39];
++    }
++    if (h_samp != 2 || v_samp != 2) {
++        avpriv_request_sample(avctx, "Chroma sampling %dx%d", h_samp, v_samp);
++        return AVERROR_PATCHWELCOME;
++    }
++
++    if (avctx->width <= 0 || avctx->height <= 0 ||
++        avctx->width % 8 || avctx->height % 8 ||
++        avctx->width > 4096 || avctx->height > 4096) {
++        av_log(avctx, AV_LOG_ERROR, "Unsupported dimensions %dx%d\n", avctx->width, avctx->height);
++        return AVERROR_INVALIDDATA;
++    }
++
++    avctx->pix_fmt = AV_PIX_FMT_YUV420P;
++    s->width  = avctx->width;
++    s->height = avctx->height;
++
++    ff_thread_once(&init_static_once, hvqm4_init_static);
++
++    ret = set_buffer(s);
++    if (ret < 0)
++        return ret;
++
++    return 0;
++}
++
++typedef struct HuffTree {
++    int nb_codes;
++    int max_bits;
++    int8_t bits[256];
++    int16_t symbols[256];
++} HuffTree;
++
++static int read_trees(int length, HuffTree *huff, GetBitContext *gb,
++                      int tree_signed, int tree_scale)
++{
++    int ret;
++
++    if (get_bits_left(gb) < 1)
++        return AVERROR_INVALIDDATA;
++
++    if (get_bits1(gb) == 0) { // leaf node
++        int byte = get_bits(gb, 8);
++        int16_t symbol = tree_signed ? (int8_t)byte : byte;
++
++        symbol = symbol * (1 << tree_scale);
++        if (huff->nb_codes >= FF_ARRAY_ELEMS(huff->bits))
++            return AVERROR_INVALIDDATA;
++        huff->bits[huff->nb_codes]    = length;
++        huff->symbols[huff->nb_codes] = symbol;
++        huff->max_bits = FFMAX(huff->max_bits, length);
++        huff->nb_codes++;
++        return 0;
++    } else { // recurse
++        if (length == MAX_CODE_LENGTH)
++            return AVERROR_INVALIDDATA;
++        // read the 0 side of the tree
++        ret = read_trees(length + 1, huff, gb, tree_signed, tree_scale);
++        if (ret < 0)
++            return ret;
++        // read the 1 side of the tree
++        return read_trees(length + 1, huff, gb, tree_signed, tree_scale);
++    }
++}
++
++// multiple BitBufs share the same Tree, the first BitBuf of each group contains the Tree itself
++static int build_huff(HVQM4Context *s, BitBuf *buf, int is_signed, int scale)
++{
++    Tree *tree = buf->tree;
++    HuffTree huff;
++    int ret;
++
++    ff_vlc_free(&tree->vlc);
++    tree->single = 1;
++    tree->symbol = 0;
++    if (!buf->size)
++        return 0;
++
++    huff.nb_codes = 0;
++    huff.max_bits = 0;
++    ret = read_trees(0, &huff, &buf->gb, is_signed, scale);
++    if (ret < 0)
++        return ret;
++
++    if (!huff.max_bits) {
++        tree->symbol = huff.symbols[0];
++        return 0;
++    }
++
++    tree->single = 0;
++    tree->nb_bits = FFMIN(huff.max_bits, VLC_BITS);
++    return ff_vlc_init_from_lengths(&tree->vlc, tree->nb_bits, huff.nb_codes,
++                                    huff.bits, 1, huff.symbols, 2, 2,
++                                    0, 0, s->avctx);
++}
++
++// a stream: its offset from the table, then its size and bytes at that offset in data
++static int get_code(GetBitContext *dst, uint32_t *size, GetBitContext *table,
++                    const uint8_t *data, uint32_t data_size)
++{
++    uint32_t offset = get_bits_long(table, 32);
++    uint32_t len;
++
++    if (data_size < 4 || offset > data_size - 4)
++        return AVERROR_INVALIDDATA;
++    len = AV_RB32(data + offset);
++    if (len > data_size - 4 - offset)
++        return AVERROR_INVALIDDATA;
++    if (size)
++        *size = len;
++
++    return init_get_bits8(dst, data + offset + 4, len);
++}
++
++static int decode_huff(BitBuf *buf)
++{
++    Tree *tree = buf->tree;
++
++    if (tree->single)
++        return tree->symbol;
++    if (get_bits_left(&buf->gb) <= 0)
++        return 0;
++    return get_vlc2(&buf->gb, tree->vlc.table, tree->nb_bits, 3);
++}
++
++// used for DC values
++static int decode_sovf_sym(BitBuf *buf, int min, int max)
++{
++    unsigned sum = 0;
++    int value;
++
++    // a one-leaf tree reads no bits, and the reference decoder loops forever on an escape symbol
++    if (buf->tree->single)
++        return buf->tree->symbol;
++    do {
++        value = decode_huff(buf);
++        sum += value;
++    } while (value <= min || value >= max);
++
++    return sum;
++}
++
++// used for MCB proc/type, max is always 255
++static uint32_t decode_uovf_sym(BitBuf *buf, int max)
++{
++    uint32_t sum = 0;
++    int value;
++
++    if (buf->tree->single)
++        return buf->tree->symbol;
++    do {
++        value = decode_huff(buf);
++        sum += value;
++    } while (value >= max);
++
++    return sum;
++}
++
++static void iframe_basis_numdec(HVQM4Context *s)
++{
++    BlockData *luma_dst = s->planes[LUMA_IDX].payload;
++    const int luma_h_blocks = s->planes[LUMA_IDX].h_blocks;
++    const int luma_v_blocks = s->planes[LUMA_IDX].v_blocks;
++    const int chroma_h_blocks = s->planes[CHROMA_IDX].h_blocks;
++    const int chroma_v_blocks = s->planes[CHROMA_IDX].v_blocks;
++    BlockData *u_dst = s->planes[1].payload;
++    BlockData *v_dst = s->planes[2].payload;
++    uint32_t rle = 0;
++
++    for (int y = 0; y < luma_v_blocks; y++) {
++        for (int x = 0; x < luma_h_blocks; x++) {
++            if (rle) {
++                luma_dst->type = 0;
++                rle--;
++            } else {
++                int num = decode_huff(&s->basis_num[LUMA_IDX]) & 0xFFFF;
++
++                if (num == 0)
++                    rle = decode_huff(&s->basis_num_run[LUMA_IDX]);
++                luma_dst->type = num & 0xFF;
++            }
++            luma_dst++;
++        }
++        // skip borders
++        luma_dst += 2;
++    }
++
++    rle = 0;
++    for (int y = 0; y < chroma_v_blocks; y++) {
++        for (int x = 0; x < chroma_h_blocks; x++) {
++            if (rle) {
++                u_dst->type = 0;
++                v_dst->type = 0;
++                rle--;
++            } else {
++                int num = decode_huff(&s->basis_num[CHROMA_IDX]) & 0xFFFF;
++
++                if (num == 0)
++                    rle = decode_huff(&s->basis_num_run[CHROMA_IDX]);
++                u_dst->type = (num >> 0) & 0xF;
++                v_dst->type = (num >> 4) & 0xF;
++            }
++            u_dst++;
++            v_dst++;
++        }
++        u_dst += 2;
++        v_dst += 2;
++    }
++}
++
++static int get_delta_dc(HVQM4Context *s, int plane_idx, uint32_t *rle)
++{
++    if (*rle == 0) {
++        int delta = decode_sovf_sym(&s->dc_values[plane_idx], s->dc_min, s->dc_max);
++
++        // successive zeroes are run-length encoded
++        if (delta == 0)
++            *rle = decode_huff(&s->dc_rle[plane_idx]);
++        return delta;
++    } else {
++        --*rle;
++        return 0;
++    }
++}
++
++static void iframe_dc_decode(HVQM4Context *s)
++{
++    for (int plane_idx = 0; plane_idx < PLANE_COUNT; plane_idx++) {
++        HVQPlaneDesc *plane = &s->planes[plane_idx];
++        BlockData *curr = plane->payload;
++        uint32_t rle = 0;
++
++        for (int y = 0; y < plane->v_blocks; y++) {
++            // pointer to previous line
++            const BlockData *prev = curr - plane->h_blocks_safe;
++            // first prediction on a line is only the previous line's value
++            uint8_t value = prev->value;
++
++            for (int x = 0; x < plane->h_blocks; x++) {
++                value += get_delta_dc(s, plane_idx, &rle);
++                curr->value = value;
++                curr++;
++                prev++;
++                // next prediction on this line is the mean of left (current) and top values
++                // +---+---+
++                // |   | T |
++                // +---+---+
++                // | L | P |
++                // +---+---+
++                value = (value + prev->value + 1) / 2;
++            }
++            // skip right border of this line and left border of next line
++            curr += 2;
++        }
++    }
++}
++
++static int make_nest(HVQM4Context *s, int nest_x, int nest_y)
++{
++    HVQPlaneDesc *y_plane = &s->planes[0];
++    ptrdiff_t start = (y_plane->payload - s->blocks) + (ptrdiff_t)y_plane->h_blocks_safe * nest_y + nest_x;
++    const BlockData *ptr = s->blocks + start;
++    int v_empty, h_empty, v_nest_blocks, h_nest_blocks, v_mirror, h_mirror;
++    const uint8_t *nest2;
++    uint8_t *nest;
++
++    if (y_plane->h_blocks < s->h_nest_size) {
++        // special case if the video is less than 280 pixels wide (assuming landscape mode)
++        h_nest_blocks = y_plane->h_blocks;
++        h_mirror = s->h_nest_size - y_plane->h_blocks;
++        if (h_mirror > y_plane->h_blocks)
++            h_mirror = y_plane->h_blocks;
++        h_empty = s->h_nest_size - (h_nest_blocks + h_mirror);
++    } else {
++        h_nest_blocks = s->h_nest_size;
++        h_empty = 0;
++        h_mirror = 0;
++    }
++
++    if (y_plane->v_blocks < s->v_nest_size) {
++        // special case if the video is less than 152 pixels high
++        v_nest_blocks = y_plane->v_blocks;
++        v_mirror = s->v_nest_size - y_plane->v_blocks;
++        if (v_mirror > y_plane->v_blocks)
++            v_mirror = y_plane->v_blocks;
++        v_empty = s->v_nest_size - (v_nest_blocks + v_mirror);
++    } else {
++        v_nest_blocks = s->v_nest_size;
++        v_empty = 0;
++        v_mirror = 0;
++    }
++
++    // the blocks read lie in the block array, as the reference decoder's do
++    if (start + (ptrdiff_t)(v_nest_blocks - 1) * y_plane->h_blocks_safe + h_nest_blocks > s->nb_blocks)
++        return AVERROR_INVALIDDATA;
++
++    nest = s->nest_data;
++    for (int i = 0; i < v_nest_blocks; i++) {
++        const BlockData *p = ptr;
++
++        for (int j = 0; j < h_nest_blocks; j++) {
++            *nest++ = (p->value >> 4) & 0xF;
++            p++;
++        }
++        // if the video is too small, mirror it
++        for (int j = 0; j < h_mirror; j++) {
++            p--;
++            *nest++ = (p->value >> 4) & 0xF;
++        }
++        // if it is still too small, null out the rest
++        for (int j = 0; j < h_empty; j++)
++            *nest++ = 0;
++        ptr += y_plane->h_blocks_safe;
++    }
++
++    // handle vertical mirroring
++    nest2 = nest - s->h_nest_size;
++    for (int i = 0; i < v_mirror; i++) {
++        for (int j = 0; j < s->h_nest_size; j++)
++            *nest++ = nest2[j];
++        nest2 -= s->h_nest_size;
++    }
++
++    // and vertical nulling
++    for (int i = 0; i < v_empty; i++)
++        for (int j = 0; j < s->h_nest_size; j++)
++            *nest++ = 0;
++
++    return 0;
++}
++
++static uint8_t sat_mean8(uint32_t u)
++{
++    return av_clip_uint8((u + 4) / 8);
++}
++
++// 4x4 block
++static void weight_im_block(uint8_t *dst, ptrdiff_t stride, uint8_t value,
++                            uint8_t top, uint8_t bottom, uint8_t left, uint8_t right)
++{
++    /*
++    +---+---+---+
++    |   | T |   |
++    +---+---+---+
++    | L | D | R |
++    +---+---+---+
++    |   | B |   |
++    +---+---+---+
++     */
++    int32_t tmb = top - bottom;
++    int32_t lmr = left - right;
++    int32_t vph = tmb + lmr;
++    int32_t vmh = tmb - lmr;
++
++    int32_t v2 = value * 2;
++    int32_t v8 = value * 8;
++
++    int32_t tpl = (top    + left ) - v2;
++    int32_t tpr = (top    + right) - v2;
++    int32_t bpr = (bottom + right) - v2;
++    int32_t bpl = (bottom + left ) - v2;
++
++    int32_t tml = top    - left;
++    int32_t tmr = top    - right;
++    int32_t bmr = bottom - right;
++    int32_t bml = bottom - left;
++
++    // V:
++    // 6  8  8 6
++    // 8 10 10 8
++    // 8 10 10 8
++    // 6  8  8 6
++    //
++    // T:
++    //  2  2  2  2
++    //  0  0  0  0
++    // -1 -1 -1 -1
++    // -1 -1 -1 -1
++    //
++    // B/L/R: like T but rotated accordingly
++
++    // (6*V + 2*T - B + 2*L -   R + 4) / 8
++    // (8*V + 2*T - B       -   R + 4) / 8
++    // (8*V + 2*T - B -   L       + 4) / 8
++    // (6*V + 2*T - B -   L + 2*R + 4) / 8
++
++    dst[0] = sat_mean8(v8 + vph + tpl);
++    dst[1] = sat_mean8(v8 + vph + tml);
++    dst[2] = sat_mean8(v8 + vmh + tmr);
++    dst[3] = sat_mean8(v8 + vmh + tpr);
++
++    dst += stride;
++
++    // ( 8*V - B + 2*L -   R + 4) / 8
++    // (10*V - B       -   R + 4) / 8
++    // (10*V - B -   L       + 4) / 8
++    // ( 8*V - B -   L + 2*R + 4) / 8
++
++    dst[0] = sat_mean8(v8 + vph - tml);
++    dst[1] = sat_mean8(v8 - bpr);
++    dst[2] = sat_mean8(v8 - bpl);
++    dst[3] = sat_mean8(v8 + vmh - tmr);
++
++    dst += stride;
++
++    dst[0] = sat_mean8(v8 - vmh - bml);
++    dst[1] = sat_mean8(v8 - tpr);
++    dst[2] = sat_mean8(v8 - tpl);
++    dst[3] = sat_mean8(v8 - vph - bmr);
++
++    dst += stride;
++
++    dst[0] = sat_mean8(v8 - vmh + bpl);
++    dst[1] = sat_mean8(v8 - vmh + bml);
++    dst[2] = sat_mean8(v8 - vph + bmr);
++    dst[3] = sat_mean8(v8 - vph + bpr);
++}
++
++// 4x4 block of single value
++static void dc_block(uint8_t *dst, ptrdiff_t stride, uint8_t value)
++{
++    for (int y = 0; y < 4; y++) {
++        for (int x = 0; x < 4; x++)
++            dst[x] = value;
++        dst += stride;
++    }
++}
++
++static uint32_t get_aot_basis(HVQM4Context *s, uint8_t basis_out[4][4], int32_t *sum,
++                              const uint8_t *nest_data, ptrdiff_t nest_stride, int plane_idx)
++{
++    GetBitContext *gb = &s->fixvl[plane_idx];
++    // the nest size 70x38 is chosen to allow for
++    // 6/5-bit coordinates (0..63 x 0..31) + largest sampling pattern (6x6) = 0..69 x 0..37
++    // 0x003F: offset70 : 6
++    // 0x07C0: offset38 : 5
++    // 0x0800: stride70 : 1
++    // 0x1000: stride38 : 1
++    // 0x6000: offset   : 2
++    // 0x8000: negated  : 1
++    unsigned bits = get_bits(gb, 16);
++    unsigned offset70 = bits & 0x3F;
++    unsigned offset38 = (bits >> 6) & 0x1F;
++    unsigned stride70 = (bits >> 11) & 1;
++    unsigned stride38 = (bits >> 12) & 1;
++    ptrdiff_t x_stride, y_stride;
++    int32_t inverse, offset;
++    uint8_t min, max;
++
++    // compute the offset inside the nest
++    if (s->is_landscape) {
++        nest_data += nest_stride * offset38 + offset70;
++        x_stride = 1 << stride70;
++        y_stride = nest_stride << stride38;
++    } else {
++        nest_data += nest_stride * offset70 + offset38;
++        x_stride = 1 << stride38;
++        y_stride = nest_stride << stride70;
++    }
++
++    // copy basis vector from the nest
++    min = nest_data[0];
++    max = nest_data[0];
++    for (int y = 0; y < 4; y++) {
++        for (int x = 0; x < 4; x++) {
++            uint8_t nest_value = nest_data[y * y_stride + x * x_stride];
++
++            basis_out[y][x] = nest_value;
++            min = FFMIN(nest_value, min);
++            max = FFMAX(nest_value, max);
++        }
++    }
++    *sum += decode_huff(&s->bufTree0[plane_idx]);
++    inverse = div_tab[max - min];
++    if (bits & 0x8000)
++        inverse = -inverse;
++    offset = (bits >> 13) & 3;
++    return (uint32_t)(*sum + offset) * inverse;
++}
++
++// as get_aot_basis(), from the upper 4 bits of the reference picture's luma
++static uint32_t get_mc_aot_basis(HVQM4Context *s, uint8_t basis_out[4][4], int32_t *sum,
++                                 ptrdiff_t nest_pos, ptrdiff_t nest_stride, int plane_idx)
++{
++    GetBitContext *gb = &s->fixvl[plane_idx];
++    unsigned bits = get_bits(gb, 16);
++    unsigned big = bits & 0x3F;
++    unsigned small = (bits >> 6) & 0x1F;
++    ptrdiff_t step, stride;
++    int32_t inverse, offset;
++    uint8_t min, max;
++
++    if (s->is_landscape) {
++        nest_pos += nest_stride * small + big;
++        step   =           1 << ((bits >> 11) & 1);
++        stride = nest_stride << ((bits >> 12) & 1);
++    } else {
++        nest_pos += nest_stride * big + small;
++        step   =           1 << ((bits >> 12) & 1);
++        stride = nest_stride << ((bits >> 11) & 1);
++    }
++    min = max = (target_sample(s, nest_pos) >> 4) & 0xF;
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++) {
++            uint8_t nest_value = (target_sample(s, nest_pos + i * stride + j * step) >> 4) & 0xF;
++
++            basis_out[i][j] = nest_value;
++            min = FFMIN(nest_value, min);
++            max = FFMAX(nest_value, max);
++        }
++    }
++    *sum += decode_huff(&s->bufTree0[plane_idx]);
++    inverse = div_tab[max - min];
++    if (bits & 0x8000)
++        inverse = -inverse;
++    offset = (bits >> 13) & 3;
++    return (uint32_t)(*sum + offset) * inverse;
++}
++
++static int32_t get_aot_sum(HVQM4Context *s, int32_t result[4][4], int num_bases,
++                           const uint8_t *nest_data, ptrdiff_t nest_stride, int plane_idx)
++{
++    uint8_t basis[4][4];
++    int32_t temp = 0;
++    uint32_t sum = 0;
++
++    for (int y = 0; y < 4; y++)
++        for (int x = 0; x < 4; x++)
++            result[y][x] = 0;
++
++    for (int k = 0; k < num_bases; k++) {
++        uint32_t factor = get_aot_basis(s, basis, &temp, nest_data, nest_stride, plane_idx);
++
++        for (int y = 0; y < 4; y++)
++            for (int x = 0; x < 4; x++)
++                result[y][x] += factor * basis[y][x];
++    }
++
++    for (int y = 0; y < 4; y++)
++        for (int x = 0; x < 4; x++)
++            sum += result[y][x];
++
++    return (int32_t)sum >> 4;
++}
++
++static int32_t get_mc_aot_sum(HVQM4Context *s, int32_t result[4][4], int num_bases,
++                              ptrdiff_t nest_pos, ptrdiff_t nest_stride, int plane_idx)
++{
++    uint8_t basis[4][4];
++    int32_t temp = 0;
++    uint32_t sum = 0;
++
++    for (int i = 0; i < 4; i++)
++        for (int j = 0; j < 4; j++)
++            result[i][j] = 0;
++
++    for (int k = 0; k < num_bases; k++) {
++        uint32_t factor = get_mc_aot_basis(s, basis, &temp, nest_pos, nest_stride, plane_idx);
++
++        for (int i = 0; i < 4; i++)
++            for (int j = 0; j < 4; j++)
++                result[i][j] += factor * basis[i][j];
++    }
++
++    for (int i = 0; i < 4; i++)
++        for (int j = 0; j < 4; j++)
++            sum += result[i][j];
++
++    return (int32_t)sum >> 4;
++}
++
++// copy uncompressed 4x4 block
++static void org_block(HVQM4Context *s, uint8_t *dst, ptrdiff_t stride, int plane_idx)
++{
++    GetBitContext *gb = &s->fixvl[plane_idx];
++
++    for (int y = 0; y < 4; y++) {
++        for (int x = 0; x < 4; x++)
++            dst[x] = get_bits(gb, 8);
++        dst += stride;
++    }
++}
++
++// aot = adaptive orthogonal transform
++static void intra_aot_block(HVQM4Context *s, uint8_t *dst, ptrdiff_t stride,
++                            uint8_t target_average, int block_type, int plane_idx)
++{
++    int32_t result[4][4], aot_average, delta;
++
++    if (block_type == 6) {
++        org_block(s, dst, stride, plane_idx);
++        return;
++    }
++
++    // block types 1..5 serve as number of bases to use, 9..15 are unused
++    aot_average = get_aot_sum(s, result, block_type, s->nest_data, s->h_nest_size, plane_idx);
++    delta = (int32_t)((uint32_t)target_average << s->unk_shift) - aot_average;
++    for (int y = 0; y < 4; y++) {
++        for (int x = 0; x < 4; x++)
++            dst[x] = av_clip_uint8((int32_t)((uint32_t)result[y][x] + delta) >> s->unk_shift);
++        dst += stride;
++    }
++}
++
++static void iframe_block(HVQM4Context *s, uint8_t *dst, ptrdiff_t stride, StackState *stack_state)
++{
++    if (stack_state->curr.type == 0) {
++        uint8_t top    = stack_state->line_prev->type & 0x77 ? stack_state->curr.value : stack_state->line_prev->value;
++        uint8_t bottom = stack_state->line_next->type & 0x77 ? stack_state->curr.value : stack_state->line_next->value;
++        uint8_t right  = stack_state->next.type       & 0x77 ? stack_state->curr.value : stack_state->next.value;
++        // the left value is tracked manually, the logic is equivalent with the other surrounding values
++        uint8_t left   = stack_state->value_prev;
++
++        weight_im_block(dst, stride, stack_state->curr.value, top, bottom, left, right);
++        stack_state->value_prev = stack_state->curr.value;
++    } else if (stack_state->curr.type == 8) {
++        dc_block(dst, stride, stack_state->curr.value);
++        stack_state->value_prev = stack_state->curr.value;
++    } else {
++        intra_aot_block(s, dst, stride, stack_state->curr.value, stack_state->curr.type, stack_state->plane_idx);
++        // don't use the current DC value to predict the next one
++        stack_state->value_prev = stack_state->next.value;
++    }
++    // next block
++    stack_state->line_prev++;
++    stack_state->line_next++;
++}
++
++static void iframe_line(HVQM4Context *s, uint8_t *dst, ptrdiff_t stride,
++                        StackState *stack_state, int h_blocks)
++{
++    stack_state->next = stack_state->line_curr[0];
++    stack_state->value_prev = stack_state->line_curr[0].value;
++
++    while (--h_blocks > 0) {
++        stack_state->curr = stack_state->next;
++        stack_state->line_curr++;
++        stack_state->next = stack_state->line_curr[0];
++        iframe_block(s, dst, stride, stack_state);
++        // next block on same line
++        dst += 4;
++    }
++
++    stack_state->curr = stack_state->next;
++    iframe_block(s, dst, stride, stack_state);
++
++    // skip current, right border on same line, and left border on next line
++    stack_state->line_curr += 3;
++
++    // these have already been advanced to the right border in iframe_block
++    stack_state->line_prev += 2;
++    stack_state->line_next += 2;
++}
++
++static void iframe_plane(HVQM4Context *s, int plane_idx, uint8_t *dst)
++{
++    HVQPlaneDesc *plane = &s->planes[plane_idx];
++    ptrdiff_t stride = plane->width_in_samples;
++    StackState stack_state;
++    int v_blocks = plane->v_blocks;
++
++    stack_state.plane_idx = plane_idx;
++    stack_state.line_prev = plane->payload;
++    stack_state.line_curr = plane->payload;
++    stack_state.line_next = plane->payload + plane->h_blocks_safe;
++
++    // first line
++    if (v_blocks > 0) {
++        iframe_line(s, dst, stride, &stack_state, plane->h_blocks);
++        // blocks are 4x4 so advance dst by 4 lines
++        dst += stride * 4;
++        v_blocks--;
++    }
++    // middle lines
++    stack_state.line_prev = plane->payload;
++    while (v_blocks > 1) {
++        iframe_line(s, dst, stride, &stack_state, plane->h_blocks);
++        dst += stride * 4;
++        v_blocks--;
++    }
++    // last line
++    if (v_blocks > 0) {
++        stack_state.line_next = stack_state.line_curr;
++        iframe_line(s, dst, stride, &stack_state, plane->h_blocks);
++    }
++}
++
++static int check_shifts(HVQM4Context *s, int dc_shift)
++{
++    if (dc_shift > 15 || s->unk_shift > 23) {
++        av_log(s->avctx, AV_LOG_ERROR, "Invalid shifts %d %d\n", dc_shift, s->unk_shift);
++        return AVERROR_INVALIDDATA;
++    }
++    return 0;
++}
++
++static int decode_iframe(HVQM4Context *s, GetBitContext *gb, const uint8_t *data, uint32_t data_size)
++{
++    int dc_shift, nest_x, nest_y, ret;
++
++    dc_shift     = get_bits(gb, 8);
++    s->unk_shift = get_bits(gb, 8);
++    skip_bits(gb, 16); // unused, seems to be always zero
++    nest_x = get_bits(gb, 16);
++    nest_y = get_bits(gb, 16);
++    ret = check_shifts(s, dc_shift);
++    if (ret < 0)
++        return ret;
++
++    for (int i = 0; i < LUMA_CHROMA; i++) {
++        if ((ret = get_code(&s->basis_num[i].gb,     &s->basis_num[i].size,     gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->basis_num_run[i].gb, &s->basis_num_run[i].size, gb, data, data_size)) < 0)
++            return ret;
++    }
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        if ((ret = get_code(&s->dc_values[i].gb, &s->dc_values[i].size, gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->bufTree0[i].gb,  &s->bufTree0[i].size,  gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->fixvl[i],        NULL,                  gb, data, data_size)) < 0)
++            return ret;
++    }
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        if ((ret = get_code(&s->dc_rle[i].gb, &s->dc_rle[i].size, gb, data, data_size)) < 0)
++            return ret;
++    }
++
++    if ((ret = build_huff(s, &s->basis_num[0],     0, 0))        < 0 ||
++        (ret = build_huff(s, &s->basis_num_run[0], 0, 0))        < 0 ||
++        (ret = build_huff(s, &s->dc_values[0],     1, dc_shift)) < 0 ||
++        (ret = build_huff(s, &s->bufTree0[0],      0, 2))        < 0)
++        return ret;
++
++    s->dc_max =   127 << dc_shift;
++    s->dc_min = -(128 << dc_shift);
++
++    // 4x4 block types
++    iframe_basis_numdec(s);
++    // 4x4 block DC values
++    iframe_dc_decode(s);
++    // 70x38 nest copied from upper 4 bits of DC values somewhere in the luma plane
++    ret = make_nest(s, nest_x, nest_y);
++    if (ret < 0)
++        return ret;
++
++    for (int i = 0; i < PLANE_COUNT; i++)
++        iframe_plane(s, i, s->present + s->planes[i].offset);
++
++    return 0;
++}
++
++static void init_mc_handler(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        MCPlane *mcplane = &mcplanes[i];
++        HVQPlaneDesc *plane = &s->planes[i];
++
++        mcplane->rle = 0;
++        mcplane->pb_dc = 0x7F;
++        mcplane->present = plane->offset;
++        mcplane->payload_cur_blk = plane->payload;
++        mcplane->payload_cur_row = plane->payload;
++        mcplane->h_mcb_stride = 8 >> plane->width_shift;
++        mcplane->v_mcb_stride = plane->width_in_samples * (8 >> plane->height_shift);
++        mcplane->pb_per_mcb_x = plane->pb_per_mcb_x;
++        mcplane->stride = plane->h_blocks_safe * plane->pb_per_mcb_y;
++    }
++}
++
++// stream of 0 or 1
++static void init_mcb_proc(BitBuf *buf, RLDecoder *proc)
++{
++    proc->value = 0;
++    proc->count = 0;
++    if (buf->size) {
++        proc->value = get_bits1(&buf->gb);
++        proc->count = decode_uovf_sym(buf, 255);
++    }
++}
++
++// stream of 0, 1 or 2
++static void init_mcb_type(BitBuf *buf, RLDecoder *type)
++{
++    type->value = 0;
++    type->count = 0;
++    if (buf->size) {
++        uint32_t value = get_bits1(&buf->gb) << 1;
++
++        type->value = value | get_bits1(&buf->gb);
++        type->count = decode_uovf_sym(buf, 255);
++    }
++}
++
++static void set_mc_top(MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++)
++        mcplanes[i].top = mcplanes[i].present;
++}
++
++// a type of 3 (from the first two bits) reads on past the reference decoder's table
++static const uint8_t mcbtypetrans[2 * 3 + 1] = {
++    1, 2, 0,
++    2, 0, 1,
++    0,
++};
++
++static uint32_t get_mcb_type(BitBuf *buf, RLDecoder *type)
++{
++    if (type->count == 0) {
++        // only three possible values, so when the value changes,
++        // a single bit decides which other value to select
++        // bit == 0 -> increment
++        // bit == 1 -> decrement
++        // then wrap to range 0..2
++        int bit = get_bits1(&buf->gb);
++
++        type->value = mcbtypetrans[bit * 3 + type->value];
++        type->count = decode_uovf_sym(buf, 255);
++    }
++    type->count--;
++    return type->value;
++}
++
++static uint32_t get_mcb_proc(BitBuf *buf, RLDecoder *proc)
++{
++    if (proc->count == 0) {
++        proc->value ^= 1;
++        proc->count = decode_uovf_sym(buf, 255);
++    }
++    proc->count--;
++    return proc->value;
++}
++
++// advance one 8x8 block to the right
++static void set_mc_next_blk(MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        mcplanes[i].top += mcplanes[i].h_mcb_stride;
++        mcplanes[i].payload_cur_blk += mcplanes[i].pb_per_mcb_x;
++    }
++}
++
++// move to the next row of 8x8 blocks
++static void set_mc_down_blk(MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        MCPlane *mcplane = &mcplanes[i];
++        BlockData *first_block_on_next_row = mcplane->payload_cur_row + mcplane->stride;
++
++        mcplane->present += mcplane->v_mcb_stride;
++        mcplane->payload_cur_blk = first_block_on_next_row;
++        mcplane->payload_cur_row = first_block_on_next_row;
++    }
++}
++
++static void decode_pb_dc(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        HVQPlaneDesc *plane = &s->planes[i];
++        MCPlane *mcplane = &mcplanes[i];
++
++        for (int j = 0; j < plane->blocks_per_mcb; j++) {
++            mcplane->pb_dc += decode_sovf_sym(&s->dc_values[i], s->dc_min, s->dc_max);
++            mcplane->payload_cur_blk[plane->mcb_offset[j]].value = mcplane->pb_dc;
++        }
++    }
++}
++
++static void reset_pb_dc(MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++)
++        mcplanes[i].pb_dc = 0x7F;
++}
++
++static void decode_pb_cc(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT], uint32_t proc, uint32_t type)
++{
++    uint32_t block_type = (type << 5) | (proc << 4);
++
++    if (proc == 1) {
++        for (int i = 0; i < PLANE_COUNT; i++) {
++            BlockData *payload = mcplanes[i].payload_cur_blk;
++            HVQPlaneDesc *plane = &s->planes[i];
++
++            for (int j = 0; j < plane->blocks_per_mcb; j++)
++                payload[plane->mcb_offset[j]].type = block_type;
++        }
++    } else {
++        HVQPlaneDesc *planeY = &s->planes[0];
++        HVQPlaneDesc *planeU = &s->planes[1];
++        MCPlane *mcplaneY = &mcplanes[0];
++        MCPlane *mcplaneU = &mcplanes[1];
++        MCPlane *mcplaneV = &mcplanes[2];
++
++        // luma
++        for (int i = 0; i < planeY->blocks_per_mcb; i++) {
++            BlockData *ptr = mcplaneY->payload_cur_blk;
++
++            if (mcplaneY->rle) {
++                ptr[planeY->mcb_offset[i]].type = block_type;
++                mcplaneY->rle--;
++            } else {
++                int16_t huff = decode_huff(&s->basis_num[LUMA_IDX]);
++
++                if (huff) {
++                    ptr[planeY->mcb_offset[i]].type = block_type | huff;
++                } else {
++                    ptr[planeY->mcb_offset[i]].type = block_type;
++                    mcplaneY->rle = decode_huff(&s->basis_num_run[LUMA_IDX]);
++                }
++            }
++        }
++        // chroma
++        for (int i = 0; i < planeU->blocks_per_mcb; i++) {
++            BlockData *ptrU = mcplaneU->payload_cur_blk;
++            BlockData *ptrV = mcplaneV->payload_cur_blk;
++
++            if (mcplaneU->rle) {
++                ptrU[planeU->mcb_offset[i]].type = block_type;
++                ptrV[planeU->mcb_offset[i]].type = block_type;
++                mcplaneU->rle--;
++            } else {
++                int16_t huff = decode_huff(&s->basis_num[CHROMA_IDX]);
++
++                if (huff) {
++                    ptrU[planeU->mcb_offset[i]].type = block_type | ((huff >> 0) & 0xF);
++                    ptrV[planeU->mcb_offset[i]].type = block_type | ((huff >> 4) & 0xF);
++                } else {
++                    ptrU[planeU->mcb_offset[i]].type = block_type;
++                    ptrV[planeU->mcb_offset[i]].type = block_type;
++                    mcplaneU->rle = decode_huff(&s->basis_num_run[CHROMA_IDX]);
++                }
++            }
++        }
++    }
++}
++
++static void spread_pb_desc_map(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT])
++{
++    RLDecoder proc, type;
++
++    init_mcb_proc(&s->mcb_proc, &proc);
++    init_mcb_type(&s->mcb_type, &type);
++    for (int i = 0; i < s->height; i += 8) {
++        set_mc_top(mcplanes);
++        for (int j = 0; j < s->width; j += 8) {
++            get_mcb_type(&s->mcb_type, &type);
++            if (type.value == 0) {
++                decode_pb_dc(s, mcplanes);
++                decode_pb_cc(s, mcplanes, 0, type.value);
++            } else {
++                reset_pb_dc(mcplanes);
++                decode_pb_cc(s, mcplanes, get_mcb_proc(&s->mcb_proc, &proc), type.value);
++            }
++            set_mc_next_blk(mcplanes);
++        }
++        set_mc_down_blk(mcplanes);
++    }
++}
++
++static void reset_mc_handler(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        mcplanes[i].present = s->planes[i].offset;
++        mcplanes[i].payload_cur_blk = s->planes[i].payload;
++        mcplanes[i].payload_cur_row = s->planes[i].payload;
++    }
++}
++
++static void mc_block_dec_dc_nest(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT])
++{
++    for (int plane_idx = 0; plane_idx < PLANE_COUNT; plane_idx++) {
++        const BlockData *ptr = mcplanes[plane_idx].payload_cur_blk;
++        HVQPlaneDesc *plane = &s->planes[plane_idx];
++        ptrdiff_t stride = plane->width_in_samples;
++        int line = plane->h_blocks_safe;
++
++        for (int j = 0; j < plane->blocks_per_mcb; j++) {
++            // dst is a 4x4 region
++            uint8_t *dst = s->present + mcplanes[plane_idx].top + plane->pb_offset[j];
++            int block_idx = plane->mcb_offset[j];
++            uint8_t value = ptr[block_idx].value;
++            // block type:
++            // 0: weighted
++            // 6: literal block
++            // 8: single value
++            int type = ptr[block_idx].type & 0xF;
++
++            // see also iframe_block
++            if (type == 0) {
++                uint8_t top    = ptr[block_idx - line].type & 0x77 ? value : ptr[block_idx - line].value;
++                uint8_t left   = ptr[block_idx -    1].type & 0x77 ? value : ptr[block_idx -    1].value;
++                uint8_t right  = ptr[block_idx +    1].type & 0x77 ? value : ptr[block_idx +    1].value;
++                uint8_t bottom = ptr[block_idx + line].type & 0x77 ? value : ptr[block_idx + line].value;
++
++                weight_im_block(dst, stride, value, top, bottom, left, right);
++            } else if (type == 8) {
++                dc_block(dst, stride, value);
++            } else {
++                intra_aot_block(s, dst, stride, value, type, plane_idx);
++            }
++        }
++    }
++}
++
++// select which frame to use as an MC reference
++static void set_mc_target(HVQM4Context *s, int reference_frame)
++{
++    s->target = reference_frame == 0 ? s->past : s->future;
++}
++
++static void get_mv_vector(int *result, BitBuf *buf, int residual_bits)
++{
++    int max_val_plus_1 = 1 << (residual_bits + 5);
++    // quantized value
++    int value = decode_huff(buf) * (1 << residual_bits);
++
++    // residual bits
++    value += get_bits_long(&buf->gb, residual_bits);
++    *result += value;
++    // signed wrap to -max_val_plus_1 .. max_val_plus_1-1
++    if (*result >= max_val_plus_1)
++        *result -= max_val_plus_1 << 1;
++    else if (*result < -max_val_plus_1)
++        *result += max_val_plus_1 << 1;
++}
++
++static void predi_aot_block(HVQM4Context *s, uint8_t *dst, ptrdiff_t src, ptrdiff_t stride,
++                            int block_type, ptrdiff_t nest_pos, ptrdiff_t nest_stride,
++                            int plane_idx, int hpel_dx, int hpel_dy)
++{
++    int32_t result[4][4], diff[4][4];
++    int32_t aot_sum = get_mc_aot_sum(s, result, block_type - 1, nest_pos, nest_stride, plane_idx);
++    uint8_t mdst[4][4];
++    uint32_t addend, factor;
++    int32_t mean, min, max;
++
++    motion_comp_block(s, &mdst[0][0], 4, src, stride, hpel_dx, hpel_dy);
++    mean = 8;
++    for (int y = 0; y < 4; y++)
++        for (int x = 0; x < 4; x++)
++            mean += mdst[y][x];
++    mean /= 16;
++    min = max = mdst[0][0] - mean;
++    for (int i = 0; i < 4; i++) {
++        for (int j = 0; j < 4; j++) {
++            int32_t value = diff[i][j] = mdst[i][j] - mean;
++
++            min = FFMIN(value, min);
++            max = FFMAX(value, max);
++        }
++    }
++    addend  = (uint32_t)(decode_sovf_sym(&s->dc_values[plane_idx], s->dc_min, s->dc_max) >> s->dc_shift) << s->unk_shift;
++    addend -= aot_sum;
++    factor  = decode_sovf_sym(&s->dc_values[plane_idx], s->dc_min, s->dc_max) >> s->dc_shift;
++    factor *= mcdiv_tab[max - min];
++    for (int i = 0; i < 4; i++)
++        for (int j = 0; j < 4; j++)
++            result[i][j] += addend + diff[i][j] * factor;
++
++    for (int i = 0; i < 4; i++)
++        for (int j = 0; j < 4; j++)
++            dst[i * stride + j] = av_clip_uint8((result[i][j] >> s->unk_shift) + mdst[i][j]);
++}
++
++static void mc_block_dec_mc_nest(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT], int x, int y)
++{
++    ptrdiff_t luma_stride = s->planes[0].width_in_samples;
++    int hpel_dx = x & 1;
++    int hpel_dy = y & 1;
++    ptrdiff_t nest_pos;
++
++    if (s->is_landscape)
++        nest_pos = x / 2 + (y / 2 - 16) * luma_stride - 32;
++    else
++        nest_pos = x / 2 + (y / 2 - 32) * luma_stride - 16;
++
++    for (int plane_idx = 0; plane_idx < PLANE_COUNT; plane_idx++) {
++        MCPlane *mcplane = &mcplanes[plane_idx];
++        HVQPlaneDesc *plane = &s->planes[plane_idx];
++        ptrdiff_t stride = plane->width_in_samples;
++
++        for (int i = 0; i < plane->blocks_per_mcb; i++) {
++            const BlockData *ptr = mcplane->payload_cur_blk;
++            int block_type = ptr[plane->mcb_offset[i]].type & 0xF;
++            // dst is a 4x4 region
++            uint8_t *dst = s->present + mcplane->top + plane->pb_offset[i];
++
++            if (block_type == 6) {
++                org_block(s, dst, stride, plane_idx);
++            } else {
++                int plane_dx = x >> plane->width_shift;
++                int plane_dy = y >> plane->height_shift;
++                ptrdiff_t src;
++
++                if (s->chroma_hpel) {
++                    hpel_dx = plane_dx & 1;
++                    hpel_dy = plane_dy & 1;
++                }
++                src = plane->offset + (plane_dy >> 1) * stride + (plane_dx >> 1) + plane->pb_offset[i];
++                if (block_type == 0)
++                    motion_comp_block(s, dst, stride, src, stride, hpel_dx, hpel_dy);
++                else
++                    predi_aot_block(s, dst, src, stride, block_type, nest_pos, luma_stride,
++                                    plane_idx, hpel_dx, hpel_dy);
++            }
++        }
++    }
++}
++
++static void motion_comp(HVQM4Context *s, MCPlane mcplanes[PLANE_COUNT], int dx, int dy)
++{
++    int hpel_dx = dx & 1;
++    int hpel_dy = dy & 1;
++
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        MCPlane *mcplane = &mcplanes[i];
++        HVQPlaneDesc *plane = &s->planes[i];
++        ptrdiff_t stride = plane->width_in_samples;
++        int plane_dx = dx >> plane->width_shift;
++        int plane_dy = dy >> plane->height_shift;
++        ptrdiff_t src = plane->offset + (plane_dy >> 1) * stride + (plane_dx >> 1);
++
++        if (s->chroma_hpel) {
++            hpel_dx = plane_dx & 1;
++            hpel_dy = plane_dy & 1;
++        }
++        for (int j = 0; j < plane->blocks_per_mcb; j++)
++            motion_comp_block(s, s->present + mcplane->top + plane->pb_offset[j], stride,
++                              src + plane->pb_offset[j], stride, hpel_dx, hpel_dy);
++    }
++}
++
++static void pframe_planes(HVQM4Context *s)
++{
++    MCPlane mcplanes[PLANE_COUNT];
++    int reference_frame = -1;
++    int mv_h = 0, mv_v = 0;
++
++    init_mc_handler(s, mcplanes);
++    spread_pb_desc_map(s, mcplanes);
++    reset_mc_handler(s, mcplanes);
++    // MC blocks are 8x8 pixels
++    for (int y = 0; y < s->height; y += 8) {
++        set_mc_top(mcplanes);
++        for (int x = 0; x < s->width; x += 8) {
++            uint8_t bits = mcplanes[0].payload_cur_blk->type;
++            // 0: intra
++            // 1: inter - past
++            // 2: inter - future
++            // see get_mcb_type()
++            int new_reference_frame = (bits >> 5) & 3;
++
++            if (new_reference_frame == 0) {
++                // intra
++                mc_block_dec_dc_nest(s, mcplanes);
++            } else {
++                int ref_x, ref_y;
++
++                new_reference_frame--;
++                // check if we need to update the reference frame pointers
++                if (new_reference_frame != reference_frame) {
++                    reference_frame = new_reference_frame;
++                    set_mc_target(s, reference_frame);
++                    mv_h = 0;
++                    mv_v = 0;
++                }
++                get_mv_vector(&mv_h, &s->mv_h, s->mc_residual_bits_h[reference_frame]);
++                get_mv_vector(&mv_v, &s->mv_v, s->mc_residual_bits_v[reference_frame]);
++
++                // compute half-pixel position of reference macroblock
++                ref_x = x * 2 + mv_h;
++                ref_y = y * 2 + mv_v;
++
++                // see get_mcb_proc()
++                if (((bits >> 4) & 1) == 0)
++                    mc_block_dec_mc_nest(s, mcplanes, ref_x, ref_y);
++                else
++                    motion_comp(s, mcplanes, ref_x, ref_y);
++            }
++            set_mc_next_blk(mcplanes);
++        }
++        set_mc_down_blk(mcplanes);
++    }
++}
++
++static int decode_pframe(HVQM4Context *s, GetBitContext *gb, const uint8_t *data, uint32_t data_size)
++{
++    int ret;
++
++    s->dc_shift = get_bits(gb, 8);
++    s->unk_shift = get_bits(gb, 8);
++    s->mc_residual_bits_h[0] = get_bits(gb, 8);
++    s->mc_residual_bits_v[0] = get_bits(gb, 8);
++    s->mc_residual_bits_h[1] = get_bits(gb, 8);
++    s->mc_residual_bits_v[1] = get_bits(gb, 8);
++    skip_bits(gb, 16); // unused
++    // the reference decoder's layout: [2] are the next fields, the vertical bits for past and padding
++    s->mc_residual_bits_h[2] = s->mc_residual_bits_v[0];
++    s->mc_residual_bits_v[2] = 0;
++    ret = check_shifts(s, s->dc_shift);
++    if (ret < 0)
++        return ret;
++    for (int i = 0; i < 2; i++) {
++        if (s->mc_residual_bits_h[i] > 24 || s->mc_residual_bits_v[i] > 24) {
++            av_log(s->avctx, AV_LOG_ERROR, "Invalid motion vector residual bits\n");
++            return AVERROR_INVALIDDATA;
++        }
++    }
++
++    for (int i = 0; i < LUMA_CHROMA; i++) {
++        if ((ret = get_code(&s->basis_num[i].gb,     &s->basis_num[i].size,     gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->basis_num_run[i].gb, &s->basis_num_run[i].size, gb, data, data_size)) < 0)
++            return ret;
++    }
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        if ((ret = get_code(&s->dc_values[i].gb, &s->dc_values[i].size, gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->bufTree0[i].gb,  &s->bufTree0[i].size,  gb, data, data_size)) < 0 ||
++            (ret = get_code(&s->fixvl[i],        NULL,                  gb, data, data_size)) < 0)
++            return ret;
++    }
++    if ((ret = get_code(&s->mv_h.gb,     &s->mv_h.size,     gb, data, data_size)) < 0 ||
++        (ret = get_code(&s->mv_v.gb,     &s->mv_v.size,     gb, data, data_size)) < 0 ||
++        (ret = get_code(&s->mcb_type.gb, &s->mcb_type.size, gb, data, data_size)) < 0 ||
++        (ret = get_code(&s->mcb_proc.gb, &s->mcb_proc.size, gb, data, data_size)) < 0)
++        return ret;
++
++    if ((ret = build_huff(s, &s->basis_num[0],     0, 0))           < 0 ||
++        (ret = build_huff(s, &s->basis_num_run[0], 0, 0))           < 0 ||
++        (ret = build_huff(s, &s->dc_values[0],     1, s->dc_shift)) < 0 ||
++        (ret = build_huff(s, &s->bufTree0[0],      0, 2))           < 0 ||
++        (ret = build_huff(s, &s->mv_h,             1, 0))           < 0 ||
++        (ret = build_huff(s, &s->mcb_type,         0, 0))           < 0)
++        return ret;
++
++    s->dc_max =   127 << s->dc_shift;
++    s->dc_min = -(128 << s->dc_shift);
++
++    pframe_planes(s);
++
++    return 0;
++}
++
++static int hvqm4_decode(AVCodecContext *avctx, AVFrame *frame,
++                        int *got_frame, AVPacket *pkt)
++{
++    HVQM4Context *s = avctx->priv_data;
++    // frame type, display number, then the picture: its header, the stream offsets and the streams
++    const int header_size = 2 + 4 + 8;
++    GetBitContext gb;
++    const uint8_t *data;
++    uint32_t data_size;
++    int frame_type, table_size, ret;
++
++    if (pkt->size < header_size + 0x44)
++        return AVERROR_INVALIDDATA;
++
++    frame_type = AV_RB16(pkt->data);
++    if (frame_type == B_FRAME) {
++        avpriv_request_sample(avctx, "B frames");
++        return AVERROR_PATCHWELCOME;
++    }
++    if (frame_type != I_FRAME && frame_type != P_FRAME)
++        return AVERROR_INVALIDDATA;
++    if (frame_type == P_FRAME && !s->have_reference)
++        return AVERROR_INVALIDDATA;
++
++    table_size = frame_type == I_FRAME ? 0x40 : 0x44;
++    data = pkt->data + header_size + table_size;
++    data_size = pkt->size - header_size - table_size;
++    ret = init_get_bits8(&gb, pkt->data + 6, header_size - 6 + table_size);
++    if (ret < 0)
++        return ret;
++
++    // I and P frames shift the past/future reference window
++    FFSWAP(uint8_t *, s->past, s->future);
++
++    s->out_of_bounds = 0;
++    if (frame_type == I_FRAME) {
++        ret = decode_iframe(s, &gb, data, data_size);
++    } else {
++        // a P frame's "future" is the picture being decoded
++        uint8_t *future = s->future;
++
++        s->future = s->present;
++        ret = decode_pframe(s, &gb, data, data_size);
++        s->future = future;
++    }
++    if (s->out_of_bounds)
++        av_log(avctx, AV_LOG_VERBOSE, "%d reads outside the reference picture\n", s->out_of_bounds);
++    if (ret < 0) {
++        FFSWAP(uint8_t *, s->past, s->future);
++        return ret;
++    }
++
++    if ((ret = ff_get_buffer(avctx, frame, 0)) < 0)
++        return ret;
++    for (int i = 0; i < PLANE_COUNT; i++) {
++        HVQPlaneDesc *plane = &s->planes[i];
++
++        av_image_copy_plane(frame->data[i], frame->linesize[i],
++                            s->present + plane->offset, plane->width_in_samples,
++                            plane->width_in_samples, plane->height_in_samples);
++    }
++    if (frame_type == I_FRAME) {
++        frame->pict_type = AV_PICTURE_TYPE_I;
++        frame->flags |= AV_FRAME_FLAG_KEY;
++    } else {
++        frame->pict_type = AV_PICTURE_TYPE_P;
++        frame->flags &= ~AV_FRAME_FLAG_KEY;
++    }
++
++    FFSWAP(uint8_t *, s->present, s->future);
++    s->have_reference = 1;
++    *got_frame = 1;
++
++    return pkt->size;
++}
++
++static av_cold void hvqm4_flush(AVCodecContext *avctx)
++{
++    HVQM4Context *s = avctx->priv_data;
++
++    s->have_reference = 0;
++}
++
++static av_cold int hvqm4_close(AVCodecContext *avctx)
++{
++    HVQM4Context *s = avctx->priv_data;
++
++    av_freep(&s->blocks);
++    for (int i = 0; i < 6; i++)
++        ff_vlc_free(&s->trees[i].vlc);
++    for (int i = 0; i < 3; i++)
++        av_freep(&s->pic[i]);
++
++    return 0;
++}
++
++const FFCodec ff_hvqm4_decoder = {
++    .p.name         = "hvqm4",
++    CODEC_LONG_NAME("HVQM4 Video"),
++    .p.type         = AVMEDIA_TYPE_VIDEO,
++    .p.id           = AV_CODEC_ID_HVQM4,
++    .priv_data_size = sizeof(HVQM4Context),
++    .init           = hvqm4_init,
++    FF_CODEC_DECODE_CB(hvqm4_decode),
++    .flush          = hvqm4_flush,
++    .close          = hvqm4_close,
++    .p.capabilities = AV_CODEC_CAP_DR1,
++    .caps_internal  = FF_CODEC_CAP_INIT_CLEANUP,
++};

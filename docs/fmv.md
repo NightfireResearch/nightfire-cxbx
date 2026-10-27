@@ -37,6 +37,10 @@ build FFmpeg itself, but that took over ten minutes on its runners.)
 
 The game loads the DLLs at startup (`Fmv_Init`). If they are missing it says so and exits.
 
+The GameCube data build (`NIGHTFIRE_ACTION_DATA_GC`) takes `third_party/ffmpeg-prebuilt-gc` instead: FFmpeg 8.1.3
+with an HVQM4 demuxer and video decoder added by the patches in `tools/fmv/patches`, for the GameCube's movies. Its
+source, changes, review and tests are in [gc-data.md](gc-data.md#movies).
+
 ## How it plays
 
 The player keeps the originals' contract. Their callers are ours (`psiStartBackgroundMovie`,

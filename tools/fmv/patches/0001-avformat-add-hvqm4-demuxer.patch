@@ -1,0 +1,262 @@
+From: Paul B Mahol <onemda@gmail.com>
+Subject: [PATCH 1/3] avformat: add hvqm4 demuxer
+
+The HVQM4 demuxer from Paul B Mahol's patch series "HVQM4" on ffmpeg-devel, 9 July 2023
+(https://ffmpeg.org/pipermail/ffmpeg-devel/2023-July/311852.html, 0001-avformat-add-hvqm4-demuxer.patch),
+never merged into FFmpeg. Licensed under the GNU Lesser General Public License 2.1 or later, as FFmpeg is.
+
+Changed by Charlie Bruce for the nightfire-cxbx project, 26 October 2026 (the changes are also listed at the top of
+libavformat/hvqm4dec.c):
+ - ported to FFmpeg 8.1 (FFInputFormat; the audio decoder it names, adpcm_ima_hvqm4, is in FFmpeg since 8.1);
+ - the blocks are read in order, each frame checked against its block's size, in place of a list of blocks found
+   by position;
+ - video timestamps from each frame's display number, audio timestamps and durations from the sample counts;
+ - no audio stream when the file has none; only the ADPCM audio format (0) is mapped;
+ - the file header is passed to the decoder as extradata.
+Applies to FFmpeg n8.1.3.
+
+diff -uN a/libavformat/Makefile b/libavformat/Makefile
+--- a/libavformat/Makefile
++++ b/libavformat/Makefile
+@@ -273,6 +273,7 @@
+ OBJS-$(CONFIG_HLS_DEMUXER)               += hls.o hls_sample_encryption.o
+ OBJS-$(CONFIG_HLS_MUXER)                 += hlsenc.o hlsplaylist.o
+ OBJS-$(CONFIG_HNM_DEMUXER)               += hnm.o
++OBJS-$(CONFIG_HVQM4_DEMUXER)             += hvqm4dec.o
+ OBJS-$(CONFIG_HXVS_DEMUXER)              += hxvs.o
+ OBJS-$(CONFIG_IAMF_DEMUXER)              += iamfdec.o
+ OBJS-$(CONFIG_IAMF_MUXER)                += iamfenc.o
+diff -uN a/libavformat/allformats.c b/libavformat/allformats.c
+--- a/libavformat/allformats.c
++++ b/libavformat/allformats.c
+@@ -216,6 +216,7 @@
+ extern const FFInputFormat  ff_hls_demuxer;
+ extern const FFOutputFormat ff_hls_muxer;
+ extern const FFInputFormat  ff_hnm_demuxer;
++extern const FFInputFormat  ff_hvqm4_demuxer;
+ extern const FFInputFormat  ff_hxvs_demuxer;
+ extern const FFInputFormat  ff_iamf_demuxer;
+ extern const FFOutputFormat ff_iamf_muxer;
+diff -uN a/libavformat/hvqm4dec.c b/libavformat/hvqm4dec.c
+--- /dev/null
++++ b/libavformat/hvqm4dec.c
+@@ -0,0 +1,219 @@
++/*
++ * HVQM4 demuxer
++ * Copyright (c) 2021 Paul B Mahol
++ *
++ * This file is part of FFmpeg.
++ *
++ * FFmpeg is free software; you can redistribute it and/or
++ * modify it under the terms of the GNU Lesser General Public
++ * License as published by the Free Software Foundation; either
++ * version 2.1 of the License, or (at your option) any later version.
++ *
++ * FFmpeg is distributed in the hope that it will be useful,
++ * but WITHOUT ANY WARRANTY; without even the implied warranty of
++ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
++ * Lesser General Public License for more details.
++ *
++ * You should have received a copy of the GNU Lesser General Public
++ * License along with FFmpeg; if not, write to the Free Software
++ * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA
++ */
++
++/*
++ * Changed by Charlie Bruce for the nightfire-cxbx project, 26 October 2026, from Paul B Mahol's
++ * "avformat: add hvqm4 demuxer" (ffmpeg-devel, 9 July 2023):
++ *  - ported to FFmpeg 8.1 (FFInputFormat);
++ *  - the blocks are read in order, each frame checked against its block, in place of the list of
++ *    blocks found by position;
++ *  - video timestamps from each frame's display number, audio timestamps from the sample counts;
++ *  - only ADPCM audio, and no audio stream when the file has no audio;
++ *  - the file header is the video stream's extradata, for the decoder.
++ */
++
++#include "libavutil/intreadwrite.h"
++
++#include "avformat.h"
++#include "avio_internal.h"
++#include "demux.h"
++#include "internal.h"
++
++#define HEADER_SIZE 0x44
++#define BLOCK_HEADER_SIZE 20
++
++typedef struct HVQM4DemuxContext {
++    uint32_t blocks_left;
++    int64_t block_end;
++    int64_t next_pos;       // where the next packet starts, when nothing has seeked
++    int64_t video_base;     // number of the current block's first frame
++    int64_t next_video_base;
++    int64_t audio_pts;
++    int audio_stream;
++} HVQM4DemuxContext;
++
++static int hvqm4_probe(const AVProbeData *p)
++{
++    if (p->buf_size < HEADER_SIZE)
++        return 0;
++    if (memcmp(p->buf, "HVQM4 1.3", 10) &&
++        memcmp(p->buf, "HVQM4 1.5", 10))
++        return 0;
++    if (AV_RB32(p->buf + 0x10) != HEADER_SIZE)
++        return AVPROBE_SCORE_MAX / 2;
++
++    return AVPROBE_SCORE_MAX;
++}
++
++static int hvqm4_read_header(AVFormatContext *s)
++{
++    HVQM4DemuxContext *hvqm4 = s->priv_data;
++    AVIOContext *pb = s->pb;
++    uint8_t header[HEADER_SIZE];
++    uint32_t header_size, usec_per_frame, audio_frames, sample_rate;
++    int channels, bits, audio_format, ret;
++    AVStream *vst, *ast;
++
++    ret = ffio_read_size(pb, header, HEADER_SIZE);
++    if (ret < 0)
++        return ret;
++
++    header_size    = AV_RB32(header + 0x10);
++    hvqm4->blocks_left = AV_RB32(header + 0x18);
++    usec_per_frame = AV_RB32(header + 0x24);
++    audio_frames   = AV_RB32(header + 0x20);
++    channels       = header[0x3C];
++    bits           = header[0x3D];
++    audio_format   = header[0x3E];
++    sample_rate    = AV_RB32(header + 0x40);
++    if (header_size < HEADER_SIZE || !usec_per_frame)
++        return AVERROR_INVALIDDATA;
++
++    vst = avformat_new_stream(s, NULL);
++    if (!vst)
++        return AVERROR(ENOMEM);
++    vst->codecpar->codec_type = AVMEDIA_TYPE_VIDEO;
++    vst->codecpar->codec_id   = AV_CODEC_ID_HVQM4;
++    vst->codecpar->width      = AV_RB16(header + 0x34);
++    vst->codecpar->height     = AV_RB16(header + 0x36);
++    vst->start_time = 0;
++    vst->nb_frames  = AV_RB32(header + 0x1C);
++    vst->duration   = vst->nb_frames;
++    avpriv_set_pts_info(vst, 64, usec_per_frame, 1000000);
++    ret = ff_alloc_extradata(vst->codecpar, HEADER_SIZE);
++    if (ret < 0)
++        return ret;
++    memcpy(vst->codecpar->extradata, header, HEADER_SIZE);
++
++    hvqm4->audio_stream = -1;
++    if (audio_frames && channels && sample_rate) {
++        if (audio_format != 0 || bits != 16 || channels > 2) {
++            avpriv_request_sample(s, "Audio format %d, %d bits, %d channels", audio_format, bits, channels);
++        } else {
++            ast = avformat_new_stream(s, NULL);
++            if (!ast)
++                return AVERROR(ENOMEM);
++            ast->codecpar->codec_type  = AVMEDIA_TYPE_AUDIO;
++            ast->codecpar->codec_id    = AV_CODEC_ID_ADPCM_IMA_HVQM4;
++            ast->codecpar->ch_layout.nb_channels = channels;
++            ast->codecpar->bits_per_coded_sample = 4;
++            ast->codecpar->sample_rate = sample_rate;
++            ast->start_time = 0;
++            avpriv_set_pts_info(ast, 64, 1, sample_rate);
++            hvqm4->audio_stream = ast->index;
++        }
++    }
++
++    avio_skip(pb, header_size - HEADER_SIZE);
++    hvqm4->block_end = hvqm4->next_pos = avio_tell(pb);
++
++    return 0;
++}
++
++static int hvqm4_read_packet(AVFormatContext *s, AVPacket *pkt)
++{
++    HVQM4DemuxContext *hvqm4 = s->priv_data;
++    AVIOContext *pb = s->pb;
++    int media_type, frame_type, ret;
++    uint32_t size;
++    int64_t pos;
++
++    for (;;) {
++        pos = avio_tell(pb);
++        if (pos != hvqm4->next_pos)
++            return AVERROR(EIO); // only reading in order is supported
++        if (avio_feof(pb))
++            return AVERROR_EOF;
++
++        if (pos >= hvqm4->block_end) {
++            uint32_t block_size, video_frames;
++
++            if (!hvqm4->blocks_left)
++                return AVERROR_EOF;
++            avio_skip(pb, 4);
++            block_size   = avio_rb32(pb);
++            video_frames = avio_rb32(pb);
++            avio_skip(pb, 8);
++            if (avio_feof(pb))
++                return AVERROR_EOF;
++            hvqm4->blocks_left--;
++            hvqm4->block_end = pos + BLOCK_HEADER_SIZE + block_size;
++            hvqm4->video_base = hvqm4->next_video_base;
++            hvqm4->next_video_base += video_frames;
++            hvqm4->next_pos = pos + BLOCK_HEADER_SIZE;
++            continue;
++        }
++
++        media_type = avio_rb16(pb);
++        frame_type = avio_rb16(pb);
++        size       = avio_rb32(pb);
++        if (avio_feof(pb))
++            return AVERROR_EOF;
++        if (size > hvqm4->block_end - pos - 8 || size > INT_MAX - 2)
++            return AVERROR_INVALIDDATA;
++        hvqm4->next_pos = pos + 8 + size;
++
++        if (media_type == 1 || (media_type == 0 && hvqm4->audio_stream >= 0))
++            break;
++        avio_skip(pb, size);
++    }
++
++    ret = av_new_packet(pkt, size + 2);
++    if (ret < 0)
++        return ret;
++    AV_WB16(pkt->data, frame_type);
++    ret = ffio_read_size(pb, pkt->data + 2, size);
++    if (ret < 0)
++        return ret;
++
++    pkt->pos = pos;
++    if (media_type == 1) {
++        pkt->stream_index = 0;
++        if (size >= 4)
++            pkt->pts = hvqm4->video_base + AV_RB32(pkt->data + 2);
++        pkt->duration = 1;
++        if (frame_type == 0x10)
++            pkt->flags |= AV_PKT_FLAG_KEY;
++    } else {
++        uint32_t samples = size >= 4 ? AV_RB32(pkt->data + 2) : 0;
++
++        pkt->stream_index = hvqm4->audio_stream;
++        pkt->pts = hvqm4->audio_pts;
++        pkt->duration = samples;
++        hvqm4->audio_pts += samples;
++        // frames of type 2 continue from the previous frame's state
++        if (frame_type != 2)
++            pkt->flags |= AV_PKT_FLAG_KEY;
++    }
++
++    return 0;
++}
++
++const FFInputFormat ff_hvqm4_demuxer = {
++    .p.name         = "hvqm4",
++    .p.long_name    = NULL_IF_CONFIG_SMALL("HVQM4"),
++    .p.extensions   = "h4m",
++    .p.flags        = AVFMT_NO_BYTE_SEEK | AVFMT_NOGENSEARCH | AVFMT_NOBINSEARCH,
++    .priv_data_size = sizeof(HVQM4DemuxContext),
++    .read_probe     = hvqm4_probe,
++    .read_header    = hvqm4_read_header,
++    .read_packet    = hvqm4_read_packet,
++};
