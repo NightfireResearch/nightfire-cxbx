@@ -14,22 +14,30 @@ struct RenderMethod;
 // What one parameter of the Xbox GeoPrim is
 enum Ps2ParamKind : uint8_t {
     kParamState,          // the GeoPrimState the PS2 program names, or the one before it in the draw list
-    kParamTexture,        // the PS2 program's TAR number `index`, likewise
+    kParamTexture,        // the object's own TAR number `index` the PS2 program names, likewise
     kParamStream,         // opcode 2's stream description: the index count
     kParamIndices,        // 16-bit indices
+    kParamVariable,       // `name`, as the loader would resolve it: the game's resolver, then the registered variables
+    kParamProgramVariable, // the variable the PS2 program names whose name starts with `name`, else `fallback`
+    kParamConstant,       // `count` four-float registers of the method (zeros without `constant`)
     kParamPositions,      // stream: float x, y, z
     kParamTexCoords,      // stream: short u, v, in 1/256ths
+    kParamTexCoordsFloat, // stream: float u, v
     kParamColours,        // stream: D3DCOLOR, one array a variation
-    kParamVariable,       // a name the loader would resolve: the game's resolver, then the registered variables
-    kParamConstant,       // a four-float constant of the method
+    kParamNormals,        // stream: D3DVSDT_NORMPACKED3
+    kParamDamageVectors,  // stream: float x, y, z
+    kParamDamageNormals,  // stream: float x, y, z
+    kParamDamageWeights,  // stream: float
+    kParamDamageZones,    // stream: short
 };
 
 struct Ps2Param {
     Ps2ParamKind kind;
     uint8_t index;        // kParamTexture
-    uint16_t count;       // kParamVariable: the parameter's count (registers)
-    const char *name;     // kParamVariable
+    uint16_t count;       // the parameter's count (registers, for the constants and variables)
+    const char *name;     // kParamVariable, kParamProgramVariable
     const float *constant; // kParamConstant
+    const char *fallback; // kParamProgramVariable
 };
 
 struct Ps2RenderMethod {
@@ -38,6 +46,7 @@ struct Ps2RenderMethod {
     const Ps2Param *params;
     int paramCount;
     uint8_t texCoordShift;        // the PS2's 16-bit texture coordinates divided by 1 << this make the Xbox's 1/256ths
+    uint8_t vertexQuadwords;      // what the PS2's strip starts count a vertex in
     EAGL::RenderMethod *method;   // the child of the Xbox method the GeoPrims use, made on first use
 };
 

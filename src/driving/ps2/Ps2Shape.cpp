@@ -3,8 +3,8 @@
 #endif
 
 // The PS2's image containers (SHPS) as the Xbox's (SHPX), alone, in galleries and as fonts' images
-// (docs/ps2-driving.md, "Textures"). The directory is the same; each image becomes a 32-bit one (type 0x7d, one
-// level) with its attachments but the palette, or, palettised with sides that are powers of two, an 8-bit one (type
+// (docs/ps2-driving.md, "Textures"). The directory is the same; each image keeps its header (but the type, the
+// swizzle flag and the mip count) and its attachments but the palette, and becomes a 32-bit one (type 0x7d), or, palettised with sides that are powers of two, an 8-bit one (type
 // 0x7b) with a 256-colour palette attachment (0x2a); swizzled when its sides are powers of two (the NV2A addresses a
 // linear texture in texels, which the models' coordinates are not). PS2 images: 16-byte headers, the pixels after
 // them; type 1 four bits a pixel (the first in the low half), type 2 eight, each with a palette attachment (0x21:
@@ -34,24 +34,17 @@ struct ShapeDirectoryEntry {         // from +0x10
     uint32_t offset;
 };
 
+// An image's header on both (EAGL::ShapeImage's first 0x10 bytes: the pixels follow it unless flag 0x1000 says
+// otherwise). An atlas entry (a 1x1 image in a gallery) keeps its place in the atlas in +0x08 and +0x0c.
 struct Ps2ShapeImage {               // 0x10
     uint32_t typeAndNext;            // +0x00 type in the low byte, the next attachment's offset above
     uint16_t width;                  // +0x04
     uint16_t height;                 // +0x06
     uint32_t unknown08;              // +0x08
-    uint32_t flags;                  // +0x0c bits 28..31 mip levels - 1
+    uint32_t flags;                  // +0x0c bits 28..31 mip levels - 1; the Xbox's 0x2000 swizzled
 
     uint32_t Type() const { return typeAndNext & 0xff; }
     uint32_t Next() const { return typeAndNext >> 8; }
-};
-
-struct XboxShapeImage {              // 0x14 (EAGL::ShapeImage)
-    uint32_t typeAndNext;
-    uint16_t width;
-    uint16_t height;
-    uint32_t unknown08;
-    uint32_t flags;
-    uint32_t dataOffset;
 };
 
 enum Ps2ShapeType : uint32_t {
@@ -78,6 +71,20 @@ int PaletteSlot(int index) {
 uint32_t Argb(const uint8_t *rgba) {
     uint32_t alpha = rgba[3] >= kPs2Opaque ? 0xff : rgba[3] * 2;
     return alpha << 24 | uint32_t(rgba[0]) << 16 | uint32_t(rgba[1]) << 8 | rgba[2];
+}
+
+// The cars' shadow (common's "cshd"): the PS2 subtracts a white shape on black from the ground, the Xbox's code
+// multiplies the ground by its own image of it, a dark grey shape (0x45) on white. The PS2's image made the Xbox's.
+constexpr char kCarShadowImage[4] = { 'c', 's', 'h', 'd' };
+constexpr uint32_t kCarShadowDarkest = 0x45;
+
+uint32_t CarShadowFromPs2(uint32_t argb) {
+    uint32_t out = argb & 0xff000000;
+    for (int shift = 0; shift < 24; shift += 8) {
+        uint32_t c = argb >> shift & 0xff;
+        out |= (0xff - c * (0xff - kCarShadowDarkest) / 0xff) << shift;
+    }
+    return out;
 }
 
 bool PowerOfTwo(uint32_t n) {
@@ -119,9 +126,14 @@ void Align16(std::vector<uint8_t> *out) {
 }
 
 // One image and its attachments (from `at` to `end`) appended to `out` as the Xbox's: a palettised image whose
-// sides are powers of two as 8-bit (type 0x7b) with a 256-colour palette attachment, anything else as 32-bit
-void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<uint8_t> *out) {
+// sides are powers of two as 8-bit (type 0x7b) with a 256-colour palette attachment, anything else as 32-bit.
+// `name` is its directory name (NULL for a font's image).
+void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, const char *name, std::vector<uint8_t> *out) {
     const Ps2ShapeImage *image = reinterpret_cast<const Ps2ShapeImage *>(file + at);
+    bool carShadow = name != NULL && memcmp(name, kCarShadowImage, sizeof(kCarShadowImage)) == 0;
+    auto colourOf = [carShadow](const uint8_t *rgba) {
+        return carShadow ? CarShadowFromPs2(Argb(rgba)) : Argb(rgba);
+    };
     uint32_t type = image->Type();
     if (type != kPs2Indexed4 && type != kPs2Indexed8 && type != kPs2Rgb && type != kPs2Rgba) {
         out->insert(out->end(), file + at, file + end);
@@ -168,11 +180,9 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
     }
 
     size_t start = out->size();
-    XboxShapeImage header = {};
-    header.width = uint16_t(width);
-    header.height = uint16_t(height);
-    header.unknown08 = image->unknown08;
-    header.flags = (swizzled ? kXboxSwizzled : 0) | (levels - 1) << kMipLevelShift;
+    Ps2ShapeImage header = *image;
+    uint32_t mipMask = 0xfu << kMipLevelShift;
+    header.flags = (image->flags & ~mipMask) | (swizzled ? kXboxSwizzled : 0) | (levels - 1) << kMipLevelShift;
     Append(out, &header, sizeof(header));
     for (uint32_t level = 0; level < levels; level++) {
         uint32_t w = width >> level, h = height >> level, texels = w * h;
@@ -195,7 +205,7 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
                     uint32_t index = type == kPs2Indexed8 ? PaletteSlot(pixels[i]) : pixels[i / 2] >> (i & 1) * 4 & 0xf;
                     colour = palette != NULL && index < colours ? palette + index * 4 : kBlack;
                 }
-                argb[i] = Argb(colour);
+                argb[i] = colourOf(colour);
             }
             if (swizzled)
                 Swizzle(argb.data(), swizzledArgb.data(), w, h);
@@ -217,7 +227,7 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
         Append(out, &clut, sizeof(clut));
         for (uint32_t i = 0; i < kPaletteColours; i++) {
             uint32_t slot = type == kPs2Indexed8 ? PaletteSlot(int(i)) : i;
-            uint32_t colour = Argb(slot < colours ? palette + slot * 4 : kBlack);
+            uint32_t colour = colourOf(slot < colours ? palette + slot * 4 : kBlack);
             Append(out, &colour, 4);
         }
     }
@@ -258,7 +268,7 @@ bool Ps2_ConvertShapes(const uint8_t *file, std::vector<uint8_t> *converted) {
         auto later = std::upper_bound(starts.begin(), starts.end(), at);
         uint32_t end = later != starts.end() ? *later : fileSize;
         offsets[i] = uint32_t(out.size());
-        ConvertImage(file, at, end, &out);
+        ConvertImage(file, at, end, directory[i].name, &out);
     }
     ShapeFileHeader *outHeader = reinterpret_cast<ShapeFileHeader *>(out.data());
     memcpy(outHeader->magic, "SHPX", 4);
@@ -324,7 +334,7 @@ bool Ps2_ConvertFont(const uint8_t *file, int size, std::vector<uint8_t> *conver
     if (image >= uint32_t(size))
         return false;
     converted->assign(file, file + image);
-    ConvertImage(file, image, uint32_t(size), converted);
+    ConvertImage(file, image, uint32_t(size), NULL, converted);
     memcpy(converted->data(), "FNTX", 4);
     uint32_t total = uint32_t(converted->size());
     memcpy(converted->data() + 4, &total, 4);
