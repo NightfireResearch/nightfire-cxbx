@@ -2,14 +2,17 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// The PS2's image containers (SHPS) as the Xbox's (SHPX) (docs/ps2-driving.md, "Textures"). The directory is the
-// same; each image becomes a 32-bit one (type 0x7d, one level) with its attachments but the palette, swizzled when
-// its sides are powers of two (the NV2A addresses a linear texture in texels, which the models' coordinates are not). PS2 images: 16-byte headers, the pixels after them; type 1 four bits a pixel (the first in the
-// low half), type 2 eight, each with a palette attachment (0x21: as many RGBA colours as its width, an 8-bit
-// image's indices in the GS's CSM1 order, bits 3 and 4 exchanged), type 4 RGB, type 5 RGBA; alpha 0x80 is opaque.
-// Only the first mip level is kept.
+// The PS2's image containers (SHPS) as the Xbox's (SHPX), alone, in galleries and as fonts' images
+// (docs/ps2-driving.md, "Textures"). The directory is the same; each image becomes a 32-bit one (type 0x7d, one
+// level) with its attachments but the palette, swizzled when its sides are powers of two (the NV2A addresses a
+// linear texture in texels, which the models' coordinates are not). PS2 images: 16-byte headers, the pixels after
+// them; type 1 four bits a pixel (the first in the low half), type 2 eight, each with a palette attachment (0x21:
+// as many RGBA colours as its width, an 8-bit image's indices in the GS's CSM1 order, bits 3 and 4 exchanged),
+// type 4 RGB, type 5 RGBA; alpha 0x80 is opaque. Only the first mip level is kept.
 
 #include "Ps2Convert.h"
+
+#include "../data/UData.h"
 
 #include <stdint.h>
 #include <string.h>
@@ -205,6 +208,53 @@ bool Ps2_ConvertShapes(const uint8_t *file, std::vector<uint8_t> *converted) {
     ShapeDirectoryEntry *outDirectory = reinterpret_cast<ShapeDirectoryEntry *>(out.data() + sizeof(*header));
     for (uint32_t i = 0; i < header->count; i++)
         outDirectory[i].offset = offsets[i];
+    return true;
+}
+
+namespace {
+
+constexpr uint32_t kGroupCountShift = 5;   // UGroup::kGroupCountShift: a group's subgroups in its flags
+
+// Every image container among a group's records (and its subgroups'), converted and appended to `out`, the record
+// pointed at the copy
+void ConvertGroupShapes(std::vector<uint8_t> *out, uint32_t group, int depth) {
+    UData record;
+    memcpy(&record, out->data() + group, sizeof(record));
+    uint32_t items = group + record.data * 16;
+    uint32_t groups = record.flags >> kGroupCountShift;
+    for (uint32_t i = 0; i < groups + record.count && depth < 16; i++) {
+        uint32_t at = items + i * sizeof(UData);
+        if (at + sizeof(UData) > out->size())
+            return;
+        if (i < groups) {
+            ConvertGroupShapes(out, at, depth + 1);
+            continue;
+        }
+        UData item;
+        memcpy(&item, out->data() + at, sizeof(item));
+        uint32_t payload = at + item.data;
+        if (!(item.flags & kDataRelative) || payload + 4 > out->size() || memcmp(out->data() + payload, "SHPS", 4))
+            continue;
+        std::vector<uint8_t> shapes;
+        std::vector<uint8_t> source(out->begin() + payload, out->begin() + payload + item.Size());
+        Ps2_ConvertShapes(source.data(), &shapes);
+        while (out->size() % 16 != 0)
+            out->push_back(0);
+        item.data = uint32_t(out->size()) - at;
+        item.flags = (item.flags & 0xff) | uint32_t(shapes.size()) << 8;
+        out->insert(out->end(), shapes.begin(), shapes.end());
+        memcpy(out->data() + at, &item, sizeof(item));
+    }
+}
+
+}  // namespace
+
+bool Ps2_ConvertGallery(const char *path, const uint8_t *file, int size, std::vector<uint8_t> *converted) {
+    size_t length = strlen(path);
+    if (length < 4 || size < int(sizeof(UData)) || _stricmp(path + length - 4, ".gal") != 0)
+        return false;
+    converted->assign(file, file + size);
+    ConvertGroupShapes(converted, 0, 0);
     return true;
 }
 

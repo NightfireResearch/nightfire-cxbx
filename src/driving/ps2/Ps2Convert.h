@@ -10,6 +10,9 @@
 // A PS2 image container (SHPS) as the Xbox's (SHPX) (Ps2Shape.cpp)
 bool Ps2_ConvertShapes(const uint8_t *file, std::vector<uint8_t> *converted);
 
+// A gallery (.gal, a data group) with its image containers converted, each moved to the end (Ps2Shape.cpp)
+bool Ps2_ConvertGallery(const char *path, const uint8_t *file, int size, std::vector<uint8_t> *converted);
+
 // A PS2 font (FNTS) as the Xbox's (FNTX): the same header and tables, its image converted (Ps2Shape.cpp)
 bool Ps2_ConvertFont(const uint8_t *file, int size, std::vector<uint8_t> *converted);
 

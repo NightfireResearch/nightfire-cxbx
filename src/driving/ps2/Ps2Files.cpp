@@ -142,7 +142,7 @@ void *Ps2_ConvertFile(void *data, int *size, const char *path, int flags, FileMa
     int bytes = size != NULL ? *size : int(MEM_size(data));
     std::vector<uint8_t> converted;
     if (!Ps2_ConvertShapes(file, &converted) && !Ps2_ConvertFont(file, bytes, &converted) &&
-        !Ps2_ConvertControls(path, file, bytes, &converted))
+        !Ps2_ConvertGallery(path, file, bytes, &converted) && !Ps2_ConvertControls(path, file, bytes, &converted))
         return data;
     void *result = allocate(path, int(converted.size()), flags);
     if (result == NULL)
