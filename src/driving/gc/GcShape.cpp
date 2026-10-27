@@ -59,22 +59,16 @@ struct ShapeDirectoryEntry {         // from +0x10
     uint32_t offset;
 };
 
-struct XboxShapeImage {              // 0x14 (EAGL::ShapeImage)
+// An Xbox image's or attachment's header (EAGL::ShapeImage less its data offset, which only an image with
+// kShapeDataAtOffset has: the pixels follow these 16 bytes)
+struct XboxShapeImage {
     uint32_t typeAndNext;
     uint16_t width;
     uint16_t height;
     uint32_t unknown08;
     uint32_t flags;
-    uint32_t dataOffset;
 };
-
-struct XboxAttachment {              // an attachment's header: 0x10
-    uint32_t typeAndNext;
-    uint16_t width;
-    uint16_t height;
-    uint32_t unknown08;
-    uint32_t unknown0c;
-};
+static_assert(sizeof(XboxShapeImage) == 0x10, "the pixels start at +0x10");
 
 // A GameCube image header, read
 struct GcImage {
@@ -327,7 +321,7 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
     if (indexed) {
         starts.push_back(out->size());
         types.push_back(kXboxPalette);
-        XboxAttachment clut = {};
+        XboxShapeImage clut = {};
         clut.width = kPaletteColours;
         clut.height = 1;
         clut.unknown08 = kPaletteColours;
@@ -339,7 +333,7 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
     }
     starts.push_back(out->size());
     types.push_back(kXboxInfo);
-    XboxAttachment info = {};
+    XboxShapeImage info = {};
     info.width = kInfoBytes;
     info.height = 0x10;
     Append(out, &info, sizeof(info));

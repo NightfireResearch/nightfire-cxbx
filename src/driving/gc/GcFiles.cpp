@@ -171,6 +171,12 @@ void *Gc_ConvertFile(void *data, int *size, const char *path, int flags, FileMal
     return result;
 }
 
+void Gc_ConvertStreamChunk(uint32_t *chunk, int channels) {
+    uint8_t *words = reinterpret_cast<uint8_t *>(chunk);
+    for (int i = 0; i < 1 + channels; i++)
+        GcSwap32(words + 8 + i * 4);
+}
+
 const char *Gc_FileName(const char *path, char *mapped, size_t size) {
     size_t length = strlen(path);
     for (const ExtensionPair &pair : kExtensions) {

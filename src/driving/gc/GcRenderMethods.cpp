@@ -135,6 +135,10 @@ void Gc_RegisterRenderMethodNames() {
     registered = true;
     for (int i = 0; i < kRenderMethodCount; i++)
         DynamicLoader::RegisterVar(RenderMethods[i].gcName, &RenderMethods[i]);
+    // The skinned methods' fields the characters' GeoPrims name and the executable defines; they are not drawn
+    static float unused[16];
+    for (const char *name : { "ShadowDarkness", "ReferenceTriangle", "ModelAlphaValue", "DrawAsShadow" })
+        DynamicLoader::RegisterVar(name, unused);
 }
 
 GcRenderMethod *Gc_FindRenderMethod(const void *reference) {
@@ -163,10 +167,10 @@ RenderMethod *Gc_XboxMethod(GcRenderMethod *entry) {
             continue;
         }
         if (p->Opcode() == EAGL::kOpDynamicStream) {
-            // The same operands: variation stride, stream, element size
+            // The same operands: variation stride, stream, element size. One colour set serves every variation.
             EAGL::ParamPacket *stream = static_cast<EAGL::ParamPacket *>(p);
             stream->header = EAGL::PacketHeader(EAGL::kOpInlineStreamSource, p->Length());
-            stream->variationStride = entry->params[param].kind == kParamColours ? kInlineStreamStride : 0;
+            stream->variationStride = 0;
         }
         param++;
     }

@@ -15,6 +15,11 @@
 
 #include "../eagl/Loader.h"
 #include "../eagl/Model.h"
+#include "../eagl/anim/AnimChannels.h"
+#include "../eagl/anim/AnimDecode.h"
+#include "../eagl/anim/AnimDeltaF.h"
+#include "../eagl/anim/AnimObjects.h"
+#include "../eagl/anim/Skeleton.h"
 #include "../platform/Ptr32.h"
 
 #include <stdio.h>
@@ -63,7 +68,8 @@ constexpr uint32_t kShtRel = 9;
 constexpr uint32_t kModelGcOnlyStart = 0x6c;
 constexpr uint32_t kModelGcOnlyEnd = 0x9c;
 
-constexpr uint32_t kDrawListGeoPrim = 0xffff;   // a draw list entry's low half: a GeoPrim follows
+constexpr uint32_t kDrawListGeoPrim = 0xffff;
+constexpr uint32_t kBoxBytes = 0x18;            // a BBOX: two corners   // a draw list entry's low half: a GeoPrim follows
 
 class ObjectSwapper {
 public:
@@ -92,12 +98,19 @@ private:
     void SwapDrawList(uint32_t *list, Model *model);
     void SwapTarList(uint32_t *list);
     void SwapTar(uint8_t *tar);
+    void SwapSkeleton(uint8_t *data);
+    void SwapAnimationBank(uint8_t *data);
+    void SwapAnim(uint8_t *data, int depth);
+    void SwapDeltaF(uint8_t *data, int components);
+    void SwapDeltaCompressed(DeltaCompressedData *info, uint32_t rows);
+    void Halves(void *p, uint32_t count);
 
     DynamicLoader *loader_;
     std::vector<uintptr_t> sites_;
     std::set<uintptr_t> done_;
     std::set<Model *> models_;
     std::set<uint32_t *> lists_;
+    std::set<DeltaCompressedData *> infos_;
     int untested_;
 };
 
@@ -156,6 +169,147 @@ void ObjectSwapper::SwapDrawList(uint32_t *list, Model *model) {
     }
 }
 
+// Skeleton (eagl/anim/Skeleton.h): two halfwords, then words: the count, the length scales, the bones
+void ObjectSwapper::SwapSkeleton(uint8_t *data) {
+    Half(data);
+    Half(data + 2);
+    Words(data + 4, 0x0c);
+    Skeleton *skeleton = reinterpret_cast<Skeleton *>(data);
+    Words(skeleton->bones, uint32_t(skeleton->count) * sizeof(SkeletonBone));
+    if (skeleton->lengthScales != NULL)
+        Words(skeleton->lengthScales, uint32_t(skeleton->count) * sizeof(float));
+}
+
+// AnimBank (eagl/anim/AnimObjects.h): its header's words, then each anim
+void ObjectSwapper::SwapAnimationBank(uint8_t *data) {
+    Words(data, sizeof(AnimBank));
+    AnimBank *bank = reinterpret_cast<AnimBank *>(data);
+    for (int i = 0; i < bank->count && bank->anims != NULL; i++)
+        SwapAnim(bank->anims[i], 0);
+}
+
+// Delta-compressed values (DeltaCompressedData, eagl/anim/AnimDecode.h): the header, the dofs' floats, then `rows`
+// rows of a delta per value, turned round when they are 16-bit
+void ObjectSwapper::SwapDeltaCompressed(DeltaCompressedData *info, uint32_t rows) {
+    if (info == NULL || !infos_.insert(info).second)
+        return;
+    Half(&info->count);
+    Words(info->dofs, info->count * uint32_t(sizeof(DofInfo)));
+    if (info->bits == 16)
+        for (uint32_t i = 0; i < rows * info->count; i++)
+            Half(info->Stream() + i * 2);
+}
+
+void ObjectSwapper::Halves(void *p, uint32_t count) {
+    for (uint32_t i = 0; i < count; i++)
+        Half(static_cast<uint8_t *>(p) + i * 2);
+}
+
+// The DeltaF1 and DeltaF3 data (eagl/anim/AnimDeltaF.h): the header, the output indexes and key times, the range
+// records, then the key blocks - each the first key's 16-bit values and a byte a value for each key after it - and
+// the constants: their 16-bit output indexes and their floats
+void ObjectSwapper::SwapDeltaF(uint8_t *data, int components) {
+    DeltaFData *d = reinterpret_cast<DeltaFData *>(data);
+    Words(data + 4, 8);
+    Half(&d->keys);
+    Half(&d->count);
+    Half(&d->unknown12);
+    uint32_t n = d->count, values = n * components;
+    if (d->index != NULL)
+        Halves(d->index, n);
+    if (d->times != NULL && d->keys > 1)
+        Halves(d->times, d->keys - 1u);
+    uint8_t *range = data + sizeof(DeltaFData);
+    uint32_t rangeBytes = components == 1 ? sizeof(DeltaF1Range) : sizeof(DeltaF3Range);
+    for (uint32_t i = 0; i < n; i++, range += rangeBytes) {
+        Words(range, components * 8);
+        Halves(range + components * 8, components * 2);
+    }
+    uint8_t *blocks = range;
+    uint32_t unit = 1u << d->shift;
+    uint32_t blockSize = (((unit + 1) * values) + 1) & ~1u;
+    uint32_t fullBlocks = d->keys >> d->shift, rem = d->keys & (unit - 1);
+    for (uint32_t b = 0; b < fullBlocks + (rem > 0 ? 1 : 0); b++)
+        Halves(blocks + b * blockSize, values);
+    uintptr_t p = reinterpret_cast<uintptr_t>(blocks + blockSize * fullBlocks);
+    if (rem > 0)
+        p = (p + (rem + 1) * values + 1) & ~uintptr_t(1);
+    if (n == 0)
+        p = (p + 1) & ~uintptr_t(1);
+    uint8_t *constants = reinterpret_cast<uint8_t *>(p);
+    Halves(constants, d->constants);
+    Words(reinterpret_cast<uint8_t *>((p + d->constants * 2 + 3) & ~uintptr_t(3)), d->constants * components * 4);
+}
+
+// One anim's data by its type (FnAnim.h's FnAnimType), the types the disc's banks hold
+void ObjectSwapper::SwapAnim(uint8_t *data, int depth) {
+    enum : uint16_t { kRawEvent = 1, kDeltaQuat = 11, kKeyQuat = 13, kCompound = 15, kDeltaF3 = 20, kDeltaF1 = 21 };
+    if (data == NULL || depth > 8 || done_.count(reinterpret_cast<uintptr_t>(data)) != 0)
+        return;
+    Half(data);
+    Half(data + 2);
+    switch (reinterpret_cast<AnimData *>(data)->type) {
+    case kCompound: {
+        CompoundData *compound = reinterpret_cast<CompoundData *>(data);
+        Half(&compound->count);
+        Half(&compound->frames);
+        if (compound->attributes != NULL) {
+            // AttributeBlock: a count, then {id, size, a value of up to four bytes or a pointer}
+            AttributeBlock *block = compound->attributes;
+            Word(&block->count);
+            for (int i = 0; i < block->count; i++) {
+                AttributeEntry *entry = &block->entries[i];
+                Half(&entry->id);
+                Half(&entry->size);
+                if (entry->size == 4)
+                    Word(&entry->value);
+                else if (entry->size == 2)
+                    Half(&entry->value);
+            }
+        }
+        for (int i = 0; i < compound->count; i++)
+            SwapAnim(compound->subs[i], depth + 1);
+        break;
+    }
+    case kRawEvent: {
+        RawEventData *events = reinterpret_cast<RawEventData *>(data);
+        Word(&events->count);
+        Words(events->events, uint32_t(events->count) * sizeof(RawEvent));
+        break;
+    }
+    case kDeltaQuat: {
+        DeltaChanData *channel = reinterpret_cast<DeltaChanData *>(data);
+        Half(&channel->frames);
+        if (channel->info != NULL) {
+            SwapDeltaCompressed(channel->info, channel->frames > 0 ? channel->frames - 1u : 0);
+            Halves(channel->index, channel->info->count / 4u);
+        }
+        break;
+    }
+    case kKeyQuat: {
+        KeyChanData *channel = reinterpret_cast<KeyChanData *>(data);
+        Half(&channel->keys);
+        if (channel->times != NULL && channel->keys > 1)
+            Halves(channel->times, channel->keys - 1u);
+        if (channel->info != NULL) {
+            SwapDeltaCompressed(channel->info, channel->keys > 0 ? channel->keys - 1u : 0);
+            Halves(channel->index, channel->info->count / 4u);
+        }
+        break;
+    }
+    case kDeltaF3:
+        SwapDeltaF(data, 3);
+        break;
+    case kDeltaF1:
+        SwapDeltaF(data, 1);
+        break;
+    default:
+        if (untested_++ == 0)
+            printf("[gc] an anim of type %u: left as the GameCube has it\n", reinterpret_cast<AnimData *>(data)->type);
+        break;
+    }
+}
+
 void ObjectSwapper::SwapModel(Model *model) {
     if (!models_.insert(model).second)
         return;
@@ -171,8 +325,9 @@ void ObjectSwapper::SwapModel(Model *model) {
         for (uint32_t i = 0; i < patch[0] && i < 0x10000; i++)
             Words(patch + 1 + i * 2, 8);
     }
-    if ((model->morphData != NULL || model->morphWeights != NULL) && untested_++ == 0)
-        printf("[gc] a model with morph data: left as the GameCube has it (untested)\n");
+    // Morph targets are not converted: the model is drawn without them
+    model->morphData = NULL;
+    model->morphWeights = NULL;
 }
 
 void ObjectSwapper::Run() {
@@ -193,10 +348,19 @@ void ObjectSwapper::Run() {
     for (int i = 0; loader_->GetSymbol(&symbol, i)->name != NULL; i++) {
         if ((uint8_t)symbol.defined == 0 || symbol.address == NULL)
             continue;
+        uint8_t *data = static_cast<uint8_t *>(symbol.address);
         if (strcmp(symbol.className, "Model") == 0)
             SwapModel(static_cast<Model *>(symbol.address));
         else if (strcmp(symbol.className, "EAGL::TAR") == 0)
-            SwapTar(static_cast<uint8_t *>(symbol.address));
+            SwapTar(data);
+        else if (strcmp(symbol.className, "Skeleton") == 0)
+            SwapSkeleton(data);
+        else if (strcmp(symbol.className, "Bone") == 0)
+            Word(data);                       // the bone's index
+        else if (strcmp(symbol.className, "BBOX") == 0)
+            Words(data, kBoxBytes);
+        else if (strcmp(symbol.className, "AnimationBank") == 0)
+            SwapAnimationBank(data);
     }
 }
 

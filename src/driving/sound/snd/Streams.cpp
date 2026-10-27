@@ -7,6 +7,9 @@
 #include "../../platform/RealPrint.h"
 #include "SndGlobals.h"
 #include "../../../common/xbeClass.h"   // LAYOUT_32
+#if NIGHTFIRE_DRIVING_DATA_GC
+#include "../../gc/GcData.h"
+#endif
 
 #include <stddef.h>
 #include <stdint.h>
@@ -561,6 +564,9 @@ int SNDSTRMI_parseheader(int stream, uint32_t *chunk) {
 // An SCDl chunk: submitted as one packet; an empty chunk goes straight back.
 // FUNC_AT(0x0013bdb0)
 int SNDSTRMI_parsedata(SND::StreamState *ss, uint32_t *chunk) {
+#if NIGHTFIRE_DRIVING_DATA_GC
+    Gc_ConvertStreamChunk(chunk, ss->format.channels);
+#endif
     DataChunk *data = reinterpret_cast<DataChunk *>(chunk);
     SND::Packet packet;
     packet.unused00 = 0;

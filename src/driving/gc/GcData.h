@@ -6,6 +6,7 @@
 // (misc.viv's eaglrm.o and bondrm.o) from the Xbox disc named by settings.ini's XboxDiscPath.
 
 #include <stddef.h>
+#include <stdint.h>
 
 #include "../platform/FileSys.h"   // FileMallocFn, FileFreeFn
 
@@ -20,6 +21,10 @@ const char *Gc_FileName(const char *path, char *mapped, size_t size);
 // the animation lookup. In place, or in a new block from `allocate` (the old one given to `release`); anything else
 // is returned as it is. `size`, if not NULL, is the file's and follows.
 void *Gc_ConvertFile(void *data, int *size, const char *path, int flags, FileMallocFn allocate, FileFreeFn release);
+
+// A stream's SCDl chunk (snd/Streams.cpp DataChunk) as it is about to be played: its frame count and its channels'
+// offsets are big-endian on the GameCube, the tag and size little-endian as the Xbox's
+void Gc_ConvertStreamChunk(uint32_t *chunk, int channels);
 
 // One of the render-method libraries (data\render\eaglrm.o, bondrm.o), from the Xbox disc's misc.viv, in a block
 // UMemory knows the size of; the GameCube render methods' names are registered on the first call
