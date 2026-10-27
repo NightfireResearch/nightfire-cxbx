@@ -213,4 +213,5 @@ All go through `platform_fatal_error_handler` (fatal). Listed by file:
 - FUN_8012eadc (MP debrief): printf of a number format at 0x801b4ab8.
 - Player_CollisionHandler: "Fall damage = %d".
 - dbg_printf: FUN_8003f770 mono/stereo channel trace; FUN_8014635c "Int mode enabled"; FS_Try_Load_From_Server "File server function not available"; FUN_8003bed8 "Exception in:%s" (gc/Nightfire.map lookup); FUN_8003c0bc custom DSI register/stack dump; platform_fatal_error_handler's own "in %s on line %d" and backtrace; OS exception handlers FUN_80155718 and FUN_801550b0; SDK banners and OSCheckHeap/OSCheckActiveThreads/OSCheckAlarmQueue asserts in FUN_8015203c, FUN_80162554, FUN_8016650c, FUN_80168f00, FUN_8018ca04, FUN_8019da34, FUN_8019dd60, FUN_801620ec, FUN_801617a4 and unnamed code at 0x80154990-0x80154a50 and 0x8015c1cc/0x801466d8/0x80147cf8.
+- The debug tweak menu and its overlays (heap map, statistics, texture viewer): docs/gc-debug-overlays.md.
 - Strings with no references: "Warning trying to free too much memory" (0x801a6c08), "ERROR : too many rewards" (0x801ab12c).
