@@ -9,6 +9,9 @@
 #include "XboxXapi.h"
 #include "../devtools/SndLockstep.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
+#if NIGHTFIRE_DRIVING_DATA_PS2
+#include "../ps2/Ps2Data.h"
+#endif
 
 #include "Win32Types.h"
 #include <stdint.h>
@@ -615,6 +618,10 @@ static int FILEDEV_bigmatch(void *node, intptr_t argument) {            // 0x001
 }
 
 static int FILEDEV_resolveopen(const char *path, int mode, int searchBig) {   // 0x0010c070 (ESI = path)
+#if NIGHTFIRE_DRIVING_DATA_PS2
+    char ps2Path[256];
+    path = Ps2_FileName(path, ps2Path, sizeof(ps2Path));
+#endif
     char name[256];
     ResolveCtx c = { name, path, 0, 0 };
     const char *bar = strchr(path, '|');
@@ -1382,6 +1389,9 @@ static void *LoadInternal(int priority, FileReq *r, bool keepSize) {
     void *buffer = pFILE_malloc(r->path, size, r->allocFlags);
     if (buffer != NULL) {
         FILESYS_readsync(slot, 0, buffer, size, priority - 1);
+#if NIGHTFIRE_DRIVING_DATA_PS2
+        buffer = Ps2_ConvertFile(buffer, &size, r->path, r->allocFlags, pFILE_malloc, pFILE_mfree);
+#endif
         if (keepSize)
             r->size = size;
     }
@@ -1504,6 +1514,9 @@ void* FILE_loadpackz(char *path, int flags) {
         }
         pFILE_mfree(packed);
     }
+#if NIGHTFIRE_DRIVING_DATA_PS2
+    data = static_cast<uint8_t *>(Ps2_ConvertFile(data, NULL, path, flags, pFILE_malloc, pFILE_mfree));
+#endif
     return data;
 }
 

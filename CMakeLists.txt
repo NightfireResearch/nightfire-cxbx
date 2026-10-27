@@ -1555,6 +1555,21 @@ endforeach()
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# The PS2 release's data in place of the Xbox's (docs/ps2-driving.md): its file names and image containers, and its
+# models' GeoPrims converted as they load, drawn with the Xbox disc's render methods (settings.ini XboxDiscPath).
+# Off, the targets are built exactly as without it.
+option(NIGHTFIRE_DRIVING_DATA_PS2 "Driving engine, standalone: load the PS2 release's data (docs/ps2-driving.md)" OFF)
+if(NIGHTFIRE_DRIVING_DATA_PS2)
+  set(nf_driving_ps2_sources src/driving/ps2/Ps2Files.cpp src/driving/ps2/Ps2Model.cpp
+                             src/driving/ps2/Ps2RenderMethods.cpp src/driving/ps2/Ps2Shape.cpp)
+  if(NOT WIN32)
+    set_source_files_properties(${nf_driving_ps2_sources} PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
+  endif()
+  foreach(target driving_standalone driving_standalone_test)
+    target_sources(${target} PRIVATE ${nf_driving_ps2_sources})
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DRIVING_DATA_PS2=1)
+  endforeach()
+endif()
 # NIGHTFIRE_SNDTRACE's wrappers by name (devtools/SndCallTraceRedirect.h): the test executable's sources outside the
 # sound library and the wrappers' own file are compiled with that header first. The sources are driving_standalone's
 # too, hence the condition on the target.
