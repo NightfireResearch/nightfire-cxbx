@@ -2,18 +2,22 @@
 
     python tools/gcdriving_check.py geoprims <gc driving dir> <xbox driving dir> [archive file.crp ...]
     python tools/gcdriving_check.py methods <gc driving dir>
+    python tools/gcdriving_check.py anims <gc driving dir> <xbox driving dir>
 
 geoprims decodes every CARP file's GameCube GeoPrims as src/driving/gc/GcModel.cpp does (or the files named) and
 compares them with the Xbox twins' models of the same name: GeoPrim and vertex counts, how many models' bounds agree,
 the Xbox parent methods each GameCube method's models use (the mapping table's evidence), the texture coordinates'
 scale against the Xbox's and the vertex colours against the Xbox's, matched by vertex position. methods lists every
 render method the GameCube's objects (CARP files and actors) name, with the display lists' indices per vertex and
-primitive kinds. The C++ checker, gcdrive_check, does the rest (data groups, images, banks).
+primitive kinds. anims turns every animation bank round as src/driving/gc/GcObject.cpp does (over the file, passing
+the relocation sites) and compares the bytes it touched with the Xbox twin's, by anim type. The C++ checker,
+gcdrive_check, does the rest (data groups, images, banks).
 
-Both discs keep the driving engine's files in EA BIGF archives whose entries may be RefPack-packed; the readers follow
-tools/ps2driving_check.py's. The GameCube's data groups are big-endian with their flag bit-fields from the top bit
-down (src/driving/gc/GcUData.h); its EAGL objects are the Xbox's little-endian ELF container with big-endian data
-around little-endian relocation sites. Reads only; writes nothing.
+Both discs keep the driving engine's files in EA BIGF archives whose entries may be RefPack-packed; the readers
+follow the extractor project's common/extraction/extract_bigf.py (Q:\\nightfire-re). The GameCube's data groups are
+big-endian with their flag bit-fields from the top bit down (src/driving/gc/GcUData.h); its EAGL objects are the
+Xbox's little-endian ELF container with big-endian data around little-endian relocation sites. Reads only; writes
+nothing.
 """
 
 import collections
@@ -29,14 +33,16 @@ ARCHIVES = ["misc.viv", "race.viv", "mis01.viv", "mis3.viv", "mis4.viv", "mis11.
 FIELDS = {
     "BondTexturePacked": "Parameters ModelViewMatrix ViewMatrix Coordinates Colours UV DisplayList Texture "
                          "LightSources State",
-    "BondTexture": "Parameters ModelViewMatrix ViewMatrix Coordinates Colours UV DisplayList Texture LightSources State",
+    "BondTexture": "Parameters ModelViewMatrix ViewMatrix Coordinates Colours UV DisplayList Texture LightSources "
+                   "State",
     "BondReflectTexturePacked": "Parameters ModelViewMatrix ModelMatrix ViewMatrix Coordinates Colours UV DisplayList "
                                 "Texture EnvironmentMap CameraPos LightSources State",
     "BondDynamicTexture": "Parameters ModelViewMatrix ViewMatrix Coordinates Normals Colours UV DisplayList Texture "
                           "LightSources LightingProperties AmbientDiffuse State",
-    "BondScrollTex1": "Parameters ModelViewMatrix ScrollUV SimStep Coordinates Colours UV DisplayList Texture State Stage0",
-    "BondScrollTex2": "Parameters ModelViewMatrix ScrollUV ScrollUV1 SimStep Coordinates Colours UV DisplayList Texture "
-                      "Texture1 State Stage0 Stage1",
+    "BondScrollTex1": "Parameters ModelViewMatrix ScrollUV SimStep Coordinates Colours UV DisplayList Texture State "
+                      "Stage0",
+    "BondScrollTex2": "Parameters ModelViewMatrix ScrollUV ScrollUV1 SimStep Coordinates Colours UV DisplayList "
+                      "Texture Texture1 State Stage0 Stage1",
     "BondScrollTex3": "Parameters ModelViewMatrix ScrollUV ScrollUV1 ScrollUV2 SimStep Coordinates Colours UV "
                       "DisplayList Texture Texture1 Texture2 State Stage0 Stage1 Stage2",
     "BondFrameAnim": "Parameters ModelViewMatrix FrameAnim SimStep Coordinates Colours UV DisplayList Texture State",
@@ -51,8 +57,8 @@ FIELDS = {
                 "State SwayData SimStep",
     "BondGouraud": "Parameters ModelViewMatrix Coordinates Colours DisplayList State",
     "BondCarTexture": "Parameters ModelViewMatrix ViewMatrix ModelMatrix Coordinates Normals UV DmgVec DmgNrm "
-                      "DamageZones DmgZone DmgLen DisplayList Texture SphereMap SpecularMap SpecularMat ReflectionInfo2 "
-                      "LightingProperties AmbientDiffuse State LightSources",
+                      "DamageZones DmgZone DmgLen DisplayList Texture SphereMap SpecularMap SpecularMat "
+                      "ReflectionInfo2 LightingProperties AmbientDiffuse State LightSources",
     "BondCarTextureDull": "Parameters ModelViewMatrix ViewMatrix Coordinates Normals UV DmgVec DmgNrm DamageZones "
                           "DmgZone DmgLen DisplayList Texture State LightSources LightingProperties AmbientDiffuse",
     "BondCarTextureSwitch": "Parameters ModelViewMatrix ViewMatrix Coordinates Normals UV DmgVec DmgNrm DamageZones "
@@ -65,7 +71,8 @@ FIELDS = {
                     "DamageZones DmgZone DmgLen DisplayList Texture DamageMap SphereMap SpecularMap SpecularMat "
                     "ReflectionInfo2 LightingProperties AmbientDiffuse State LightSources",
     "BondCarGouraudDull": "Parameters ModelViewMatrix ViewMatrix Coordinates Normals DmgVec DmgNrm DamageZones DmgZone "
-                          "DmgLen ColourSlot ColourSet DisplayList State LightSources LightingProperties AmbientDiffuse",
+                          "DmgLen ColourSlot ColourSet DisplayList State LightSources LightingProperties "
+                          "AmbientDiffuse",
 }
 for name, base in [("BondScrollTex1Packed", "BondScrollTex1"), ("BondScrollTex2Packed", "BondScrollTex2"),
                    ("BondScrollTex3Packed", "BondScrollTex3"), ("BondFrameAnimPacked", "BondFrameAnim"),
@@ -487,9 +494,174 @@ def cmd_methods(gc_dir):
     print("  primitives: " + ", ".join(f"0x{k:02x} x{v}" for k, v in sorted(kinds.items())))
 
 
+class AnimSwapper:
+    """GcObject.cpp's animation bank conversion over a file's bytes: each word or halfword turned round once, never a
+    relocation site; the bytes it touched recorded, by anim type, to be compared with the Xbox twin's"""
+
+    def __init__(self, e):
+        self.e, self.d = e, bytearray(e.d)
+        self.sites = set(e.secs[s][4] + off for (s, off) in e.rel)
+        self.done, self.touched = set(), collections.defaultdict(set)
+
+    def word(self, a, kind):
+        self.touched[kind].update(range(a, a + 4))
+        if a in self.sites or a in self.done:
+            return
+        self.done.add(a)
+        self.d[a:a + 4] = self.d[a:a + 4][::-1]
+
+    def half(self, a, kind):
+        self.touched[kind].update(range(a, a + 2))
+        if a in self.done:
+            return
+        self.done.add(a)
+        self.d[a:a + 2] = self.d[a:a + 2][::-1]
+
+    def target(self, a):
+        """the address a relocation site at a points at"""
+        for (s, off), sym in self.e.rel.items():
+            if self.e.secs[s][4] + off == a:
+                p = self.e.ptr(s, off)
+                return None if p is None or p[0] == "ext" else self.e.at(*p)
+        return None
+
+    def anim(self, a, depth=0):
+        if a is None or depth > 8 or a in self.done:
+            return
+        kind = be16(self.d, a)
+        self.half(a, kind)
+        self.half(a + 2, kind)
+        if kind == 15:   # compound
+            self.half(a + 8, kind)
+            self.half(a + 10, kind)
+            attributes = self.target(a + 4)
+            if attributes is not None:
+                self.word(attributes, kind)
+                for i in range(le32(self.d, attributes)):
+                    entry = attributes + 4 + i * 8
+                    self.half(entry, kind)
+                    self.half(entry + 2, kind)
+                    size = le16(self.d, entry + 2)
+                    if size == 4:
+                        self.word(entry + 4, kind)
+                    elif size == 2:
+                        self.half(entry + 4, kind)
+            for i in range(le16(self.d, a + 8)):
+                self.anim(self.target(a + 12 + i * 4), depth + 1)
+        elif kind == 1:   # raw events
+            self.word(a + 4, kind)
+            for i in range(le32(self.d, a + 4) * 4):
+                self.word(a + 8 + i * 4, kind)
+        elif kind in (11, 13):   # DeltaQuat, KeyQuat
+            if kind == 11:
+                self.half(a + 8, kind)
+                rows, index = le16(self.d, a + 8), a + 10
+            else:
+                self.half(a + 12, kind)
+                rows, index = le16(self.d, a + 12), a + 14
+                times = self.target(a + 8)
+                if times is not None:
+                    for i in range(max(rows - 1, 0)):
+                        self.half(times + i * 2, kind)
+            rows = max(rows - 1, 0)
+            info = self.target(a + 4)
+            if info is not None:
+                if info not in self.done:
+                    self.half(info, kind)
+                    count, bits = le16(self.d, info), self.d[info + 2]
+                    for i in range(count * 3):
+                        self.word(info + 4 + i * 4, kind)
+                    if bits == 16:
+                        for i in range(rows * count):
+                            self.half(info + 4 + count * 12 + i * 2, kind)
+                count = le16(self.d, info)
+                for i in range(count // 4):
+                    self.half(index + i * 2, kind)
+        elif kind in (20, 21):   # DeltaF3, DeltaF1
+            components = 3 if kind == 20 else 1
+            self.half(a + 0xc, kind)
+            self.half(a + 0xe, kind)
+            self.half(a + 0x12, kind)
+            keys, n = le16(self.d, a + 0xc), le16(self.d, a + 0xe)
+            shift, constants = self.d[a + 0x10], self.d[a + 0x11]
+            index, times = self.target(a + 4), self.target(a + 8)
+            if index is not None:
+                for i in range(n):
+                    self.half(index + i * 2, kind)
+            if times is not None:
+                for i in range(max(keys - 1, 0)):
+                    self.half(times + i * 2, kind)
+            r = a + 0x14
+            for i in range(n):
+                for k in range(components * 2):
+                    self.word(r + k * 4, kind)
+                for k in range(components * 2):
+                    self.half(r + components * 8 + k * 2, kind)
+                r += components * 12
+            values = n * components
+            unit = 1 << shift
+            block = (((unit + 1) * values) + 1) & ~1
+            full, rem = keys >> shift, keys & (unit - 1)
+            for b in range(full + (1 if rem else 0)):
+                for i in range(values):
+                    self.half(r + b * block + i * 2, kind)
+            p = r + block * full
+            if rem:
+                p = (p + (rem + 1) * values + 1) & ~1
+            if n == 0:
+                p = (p + 1) & ~1
+            for i in range(constants):
+                self.half(p + i * 2, kind)
+            q = (p + constants * 2 + 3) & ~3
+            for i in range(constants * components):
+                self.word(q + i * 4, kind)
+
+
+def cmd_anims(gc_dir, xbox_dir):
+    """every animation bank turned round as GcObject.cpp does, the bytes it touched against the Xbox twin's"""
+    gc, xbox = Disc(gc_dir), Disc(xbox_dir)
+    totals = collections.defaultdict(lambda: [0, 0])
+    seen = set()
+    for a in ARCHIVES:
+        for n, _, _ in gc.entries(a):
+            if not n.lower().endswith(".dat") or "\\anims\\" not in n.lower() or n.lower() in seen:
+                continue
+            seen.add(n.lower())
+            objects = []
+            for disc in (gc, xbox):
+                d, rel = disc.load(a, n), disc.load(a, n[:-4] + ".rel") or b""
+                objects.append(Elf(d + rel if rel and le32(d, 0x20) + 40 > len(d) else d))
+            ge, xe = objects
+            # The data is section 1 on both; the halves around it differ (the GameCube's .rel a half of its own)
+            gbase, xbase, size = ge.secs[1][4], xe.secs[1][4], ge.secs[1][5]
+            if size != xe.secs[1][5]:
+                print(f"  {n}: the data sections' sizes differ")
+                continue
+            swapper = AnimSwapper(ge)
+            for name, value, shndx in ge.syms:
+                if name.startswith("__AnimationBank:::") and shndx and shndx < len(ge.secs):
+                    bank = ge.at(shndx, value)
+                    for k in range(5):
+                        swapper.word(bank + k * 4, "bank")
+                    anims = swapper.target(bank + 0xc)
+                    for i in range(le32(swapper.d, bank + 4)):
+                        swapper.anim(swapper.target(anims + i * 4))
+            for kind, addresses in swapper.touched.items():
+                for x in addresses:
+                    if not gbase <= x < gbase + size or any(x - k in swapper.sites for k in range(4)):
+                        continue
+                    totals[kind][0] += 1
+                    totals[kind][1] += swapper.d[x] == xe.d[xbase + x - gbase]
+    print("  anim type: bytes turned round (or left) and compared, the Xbox twin's")
+    for kind, (n, same) in sorted(totals.items(), key=lambda kv: str(kv[0])):
+        print(f"    {kind}: {n:,} bytes, {100.0 * same / max(n, 1):.2f}% the Xbox's")
+
+
 def main(argv):
     if len(argv) >= 4 and argv[1] == "geoprims":
         cmd_geoprims(argv[2], argv[3], argv[4:])
+    elif len(argv) == 4 and argv[1] == "anims":
+        cmd_anims(argv[2], argv[3])
     elif len(argv) == 3 and argv[1] == "methods":
         cmd_methods(argv[2])
     else:
