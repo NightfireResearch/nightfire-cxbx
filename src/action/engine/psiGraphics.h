@@ -35,6 +35,7 @@ static_assert(offsetof(TextureInfo, animSpeed) == 0x28, "Bad offset of TextureIn
 static_assert(offsetof(TextureInfo, baseIdx) == 0x54, "Bad offset of TextureInfo.baseIdx");
 
 extern TextureInfo *Tex[2048];
+extern int NumXboxTexLoaded;   // the next free slot of Tex[]; psiResetResources sets it back to 1
 
 // A particle batch's overlay buffer, held until the GPU has finished with it (psiDrawParticleList fills one,
 // psiAgeParticleOverlayRing frees it when framesToLive runs out). Cleared, not freed, by psiResetResources.

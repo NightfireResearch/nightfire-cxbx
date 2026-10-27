@@ -466,6 +466,7 @@ add_library(actioninject SHARED
   src/action/devtools/MPObjectsShadow.cpp
   src/action/devtools/MPObjectivesShadow.cpp
   src/action/devtools/Teleport.cpp
+  src/action/devtools/GcDebugOverlays.cpp
   src/action/devtools/Demo.cpp
   ${nf_action_sources}
 )

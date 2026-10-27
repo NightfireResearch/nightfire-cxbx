@@ -98,7 +98,7 @@ static TextureInfo DefaultTextureInfo;
 // XBE_GLOBAL(0x00194808, 0x4)
 static int NumXboxEntityGfxsCreated = 1;
 // XBE_GLOBAL(0x0019480c, 0x4)
-static int NumXboxTexLoaded = 1;
+int NumXboxTexLoaded = 1;     // not static: devtools/GcDebugOverlays.cpp lists Tex[] up to it
 // XBE_GLOBAL(0x00194810, 0x4)
 static int FirstMapTexIdx = 1; // psiCreateMapTextures: NumXboxTexLoaded when the map's textures began
 // XBE_GLOBAL(0x002adf24, 0x4)

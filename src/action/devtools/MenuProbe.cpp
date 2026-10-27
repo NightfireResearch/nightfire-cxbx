@@ -301,10 +301,12 @@ static bool LoadScript(const char *path) {
             // The debug cheat menu's switches, which the retail build still honours, by name. For unattended runs
             // in levels with enemies: "nodrones" freezes every drone's AI (switch_NO_DRONES: Drone_InitComms marks
             // them all disabled and skips the AI pass, every frame), "blind" leaves them running but unable to see
-            // or attack (switch_BLIND_DRONES), "immortal" stops the player taking damage (CheatInfo.Immortal). Set
-            // "immortal" after the level has loaded: loading a codename overwrites it.
+            // or attack (switch_BLIND_DRONES), "immortal" stops the player taking damage (CheatInfo.Immortal), "coords"
+            // shows the HUD's position readout (switch_SHOW_COORDS). Set "immortal" after the level has loaded:
+            // loading a codename overwrites it.
             static const struct { const char *name; unsigned address; } cheats[] = {
                 {"nodrones", XbeOurs(0x001df99c)}, {"blind", XbeOurs(0x001df9a0)}, {"immortal", XbeOurs(0x001f65dc)},
+                {"coords", XbeOurs(0x001df9dc)},
             };
             bool known = false;
             for (size_t i = 0; i < sizeof(cheats) / sizeof(cheats[0]); i++)
@@ -315,7 +317,7 @@ static bool LoadScript(const char *path) {
                     known = true;
                 }
             if (!known)
-                printf("[menuscript] line %d: no cheat \"%s\" (nodrones, blind, immortal)\n", lineNo, a);
+                printf("[menuscript] line %d: no cheat \"%s\" (nodrones, blind, immortal, coords)\n", lineNo, a);
         } else if (_stricmp(cmd, "reload") == 0) {
             // Loads the current level again, as the end of a mission does: tests a level change
             s.kind = Step::RELOAD; AddStep(s);

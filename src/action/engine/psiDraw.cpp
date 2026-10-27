@@ -18,6 +18,7 @@
 #include <string.h>
 #include "../gfx/LowLevel.h"
 #include "../devtools/MenuProbe.h"
+#include "../devtools/GcDebugOverlays.h"
 
 // ---------------------------------------------------------------------------------------------------------------
 // State shared by the functions here
@@ -321,6 +322,8 @@ void psiPostDraw(void) {
     d3dSetupViewportDimensions(0, 0, 640, 480);
     if (ScreenBlur != 0 && MenuManager_GetStatus() != MENU_STATUS_PAUSE)
         psiBlurScreen(ScreenBlur);
+    // devtools: the GameCube build's debug overlays draw over the finished frame, so the hook sits before the swap
+    GcDebugOverlays_Draw();
     d3dSwap();
     dsndUpdateVoices();
     psiInput_RumbleUpdate();

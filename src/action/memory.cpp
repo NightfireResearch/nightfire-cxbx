@@ -30,19 +30,6 @@ uint32_t QuickBlock;
 // XBE_GLOBAL(0x00223a8c, 0x4)
 static uint32_t MallocSize;
 
-// A heap block's header. The block's data follows it; the next block follows the data, at size bytes from here.
-#pragma pack(push, 1)
-typedef struct MemBlock {
-    Ptr32<struct MemBlock> prev;    // 0x0 - the previous block; the first block's is itself
-    uint size;              // 0x4 - including this header
-    ushort flags;           // 0x8 - the MallocFlags it was allocated with (low byte the alignment, high byte the
-                            //       type); 4 once free
-    uchar slack;            // 0xa - bytes at the end of the block past what was asked for (Mem_Shrink uses it)
-    uchar isFree;           // 0xb
-} MemBlock;
-#pragma pack(pop)
-static_assert(sizeof(MemBlock) == 0xc, "MemBlock is 0xc bytes");
-
 // The end of the walk over the blocks: every walk stops at the last header-sized slot of the heap
 static inline MemBlock* Mem_HeapStart(void) { return PtrFrom32<MemBlock>(PtrHeap); }
 static inline MemBlock* Mem_HeapEnd(void) { return PtrFrom32<MemBlock>(PtrHeap + HeapByteSize - (uint32_t)sizeof(MemBlock)); }

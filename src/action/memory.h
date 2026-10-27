@@ -5,6 +5,24 @@
 #include <stdint.h>
 
 #include "actionhelpers.h"
+#include "../driving/platform/Ptr32.h"   // the heap's words, and its blocks' headers
+
+// A heap block's header. The block's data follows it; the next block follows the data, at size bytes from here.
+#pragma pack(push, 1)
+typedef struct MemBlock {
+    Ptr32<struct MemBlock> prev;    // 0x0 - the previous block; the first block's is itself
+    uint size;              // 0x4 - including this header
+    ushort flags;           // 0x8 - the MallocFlags it was allocated with (low byte the alignment, high byte the
+                            //       type); 4 once free
+    uchar slack;            // 0xa - bytes at the end of the block past what was asked for (Mem_Shrink uses it)
+    uchar isFree;           // 0xb
+} MemBlock;
+#pragma pack(pop)
+static_assert(sizeof(MemBlock) == 0xc, "MemBlock is 0xc bytes");
+
+// The heap: HeapByteSize bytes at PtrHeap (an address in the game window, Ptr32.h), all of it blocks
+extern uint32_t PtrHeap;
+extern uint32_t HeapByteSize;
 
 void Mem_Init(void);
 void Mem_TakeHeap(void);   // before Mem_Init, the standalone build's (memory.cpp)

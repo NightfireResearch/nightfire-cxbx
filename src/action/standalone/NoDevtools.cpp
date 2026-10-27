@@ -3,6 +3,7 @@
 
 #include "../devtools/Demo.h"
 #include "../devtools/FileDump.h"
+#include "../devtools/GcDebugOverlays.h"
 #include "../devtools/MenuProbe.h"
 #include "../devtools/SndTrace.h"
 #include "../engine/psiInput.h"
@@ -58,6 +59,9 @@ bool MenuProbe_HandleMessage(uchar managerNum, M_CONTROL *control, uint message,
 
 // No teleport keys, frame dumps or per-frame shadow tests
 void Devtools_Tick(void) {}
+
+// No GameCube debug overlays
+void GcDebugOverlays_Draw(void) {}
 
 // No sound call trace, and no copies of the files read
 void SndTrace(const char *, ...) {}
