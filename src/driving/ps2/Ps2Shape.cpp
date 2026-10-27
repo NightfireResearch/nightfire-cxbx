@@ -4,11 +4,12 @@
 
 // The PS2's image containers (SHPS) as the Xbox's (SHPX), alone, in galleries and as fonts' images
 // (docs/ps2-driving.md, "Textures"). The directory is the same; each image becomes a 32-bit one (type 0x7d, one
-// level) with its attachments but the palette, swizzled when its sides are powers of two (the NV2A addresses a
+// level) with its attachments but the palette, or, palettised with sides that are powers of two, an 8-bit one (type
+// 0x7b) with a 256-colour palette attachment (0x2a); swizzled when its sides are powers of two (the NV2A addresses a
 // linear texture in texels, which the models' coordinates are not). PS2 images: 16-byte headers, the pixels after
 // them; type 1 four bits a pixel (the first in the low half), type 2 eight, each with a palette attachment (0x21:
 // as many RGBA colours as its width, an 8-bit image's indices in the GS's CSM1 order, bits 3 and 4 exchanged),
-// type 4 RGB, type 5 RGBA; alpha 0x80 is opaque. Only the first mip level is kept.
+// type 4 RGB, type 5 RGBA; alpha 0x80 is opaque; mip levels back to back after the first (bits 28..31 of the flags).
 
 #include "Ps2Convert.h"
 
@@ -62,6 +63,10 @@ enum Ps2ShapeType : uint32_t {
 };
 
 constexpr uint32_t kXboxArgb = 0x7d;
+constexpr uint32_t kXboxIndexed = 0x7b;
+constexpr uint32_t kXboxPalette = 0x2a;
+constexpr uint32_t kPaletteColours = 256;
+constexpr uint32_t kMipLevelShift = 28;   // an image's flags: mip levels - 1 in bits 28..31
 constexpr uint32_t kXboxSwizzled = 0x2000;   // EAGL::kShapeSwizzled
 constexpr uint8_t kPs2Opaque = 0x80;
 constexpr uint32_t kFontShapeOffset = 0x1c;   // FNTXFont::shapeOffset
@@ -80,7 +85,7 @@ bool PowerOfTwo(uint32_t n) {
 }
 
 // The NV2A's swizzled order: the bits of x and y interleaved, x first, while both have bits left
-void Swizzle(const uint32_t *linear, uint32_t *swizzled, uint32_t width, uint32_t height) {
+template <class T> void Swizzle(const T *linear, T *swizzled, uint32_t width, uint32_t height) {
     uint32_t maskX = 0, maskY = 0;
     for (uint32_t bit = 1, size = 1; size < width || size < height; size <<= 1) {
         if (size < width) {
@@ -103,7 +108,18 @@ void Swizzle(const uint32_t *linear, uint32_t *swizzled, uint32_t width, uint32_
     }
 }
 
-// One image and its attachments (from `at` to `end`) appended to `out` as the Xbox's
+void Append(std::vector<uint8_t> *out, const void *data, size_t bytes) {
+    const uint8_t *p = static_cast<const uint8_t *>(data);
+    out->insert(out->end(), p, p + bytes);
+}
+
+void Align16(std::vector<uint8_t> *out) {
+    while (out->size() % 16 != 0)
+        out->push_back(0);
+}
+
+// One image and its attachments (from `at` to `end`) appended to `out` as the Xbox's: a palettised image whose
+// sides are powers of two as 8-bit (type 0x7b) with a 256-colour palette attachment, anything else as 32-bit
 void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<uint8_t> *out) {
     const Ps2ShapeImage *image = reinterpret_cast<const Ps2ShapeImage *>(file + at);
     uint32_t type = image->Type();
@@ -131,51 +147,93 @@ void ConvertImage(const uint8_t *file, uint32_t at, uint32_t end, std::vector<ui
     }
 
     uint32_t width = image->width, height = image->height;
-    size_t start = out->size();
-    out->resize(start + sizeof(XboxShapeImage) + width * height * 4);
-    XboxShapeImage header = {};
-    uint32_t pixelBlock = uint32_t(sizeof(XboxShapeImage) + width * height * 4);
     bool swizzled = PowerOfTwo(width) && PowerOfTwo(height);
-    header.typeAndNext = kXboxArgb | (kept.empty() ? 0 : pixelBlock << 8);
+    bool indexed = (type == kPs2Indexed4 || type == kPs2Indexed8) && palette != NULL && swizzled;
+    const uint8_t *pixels = file + at + sizeof(Ps2ShapeImage);
+    static const uint8_t kBlack[4] = { 0, 0, 0, kPs2Opaque };
+
+    // The mip levels a swizzled image keeps: the PS2's, back to back after the first, as long as they lie inside
+    // the image's block and are a texel or more a side
+    uint32_t bitsPerTexel = type == kPs2Indexed4 ? 4 : type == kPs2Indexed8 ? 8 : type == kPs2Rgb ? 24 : 32;
+    uint32_t levels = 1;
+    if (swizzled) {
+        uint32_t wanted = (image->flags >> kMipLevelShift) + 1;
+        uint32_t limit = (image->Next() != 0 ? image->Next() : end - at) - sizeof(Ps2ShapeImage);
+        uint32_t bytes = width * height * bitsPerTexel / 8;
+        while (levels < wanted && (width >> levels) != 0 && (height >> levels) != 0 &&
+               bytes + (width >> levels) * (height >> levels) * bitsPerTexel / 8 <= limit) {
+            bytes += (width >> levels) * (height >> levels) * bitsPerTexel / 8;
+            levels++;
+        }
+    }
+
+    size_t start = out->size();
+    XboxShapeImage header = {};
     header.width = uint16_t(width);
     header.height = uint16_t(height);
     header.unknown08 = image->unknown08;
-    header.flags = swizzled ? kXboxSwizzled : 0;
-    memcpy(&(*out)[start], &header, sizeof(header));
-    std::vector<uint32_t> argb(width * height);
-    const uint8_t *pixels = file + at + sizeof(Ps2ShapeImage);
-    static const uint8_t kBlack[4] = { 0, 0, 0, kPs2Opaque };
-    for (uint32_t i = 0; i < width * height; i++) {
-        uint8_t rgba[4] = { 0, 0, 0, kPs2Opaque };
-        const uint8_t *colour = rgba;
-        if (type == kPs2Rgba) {
-            colour = pixels + i * 4;
-        } else if (type == kPs2Rgb) {
-            memcpy(rgba, pixels + i * 3, 3);
+    header.flags = (swizzled ? kXboxSwizzled : 0) | (levels - 1) << kMipLevelShift;
+    Append(out, &header, sizeof(header));
+    for (uint32_t level = 0; level < levels; level++) {
+        uint32_t w = width >> level, h = height >> level, texels = w * h;
+        if (indexed) {
+            std::vector<uint8_t> indices(texels), swizzledIndices(texels);
+            for (uint32_t i = 0; i < texels; i++)
+                indices[i] = type == kPs2Indexed8 ? pixels[i] : pixels[i / 2] >> (i & 1) * 4 & 0xf;
+            Swizzle(indices.data(), swizzledIndices.data(), w, h);
+            Append(out, swizzledIndices.data(), texels);
         } else {
-            uint32_t index = type == kPs2Indexed8 ? pixels[i] : pixels[i / 2] >> (i & 1) * 4 & 0xf;
-            if (type == kPs2Indexed8)
-                index = PaletteSlot(int(index));
-            colour = palette != NULL && index < colours ? palette + index * 4 : kBlack;
+            std::vector<uint32_t> argb(texels), swizzledArgb(texels);
+            for (uint32_t i = 0; i < texels; i++) {
+                uint8_t rgba[4] = { 0, 0, 0, kPs2Opaque };
+                const uint8_t *colour = rgba;
+                if (type == kPs2Rgba) {
+                    colour = pixels + i * 4;
+                } else if (type == kPs2Rgb) {
+                    memcpy(rgba, pixels + i * 3, 3);
+                } else {
+                    uint32_t index = type == kPs2Indexed8 ? PaletteSlot(pixels[i]) : pixels[i / 2] >> (i & 1) * 4 & 0xf;
+                    colour = palette != NULL && index < colours ? palette + index * 4 : kBlack;
+                }
+                argb[i] = Argb(colour);
+            }
+            if (swizzled)
+                Swizzle(argb.data(), swizzledArgb.data(), w, h);
+            Append(out, swizzled ? swizzledArgb.data() : argb.data(), texels * 4);
         }
-        argb[i] = Argb(colour);
+        pixels += texels * bitsPerTexel / 8;
     }
-    uint32_t *texels = reinterpret_cast<uint32_t *>(&(*out)[start + sizeof(XboxShapeImage)]);
-    if (swizzled)
-        Swizzle(argb.data(), texels, width, height);
-    else
-        memcpy(texels, argb.data(), argb.size() * 4);
-    for (size_t k = 0; k < kept.size(); k++) {
-        size_t here = out->size();
-        out->insert(out->end(), file + kept[k].first, file + kept[k].second);
-        uint32_t next = k + 1 < kept.size() ? kept[k].second - kept[k].first : 0;
+    Align16(out);
+
+    // The attachments, each one's offset to the next in its first word
+    std::vector<size_t> starts(1, start);
+    if (indexed) {
+        starts.push_back(out->size());
+        Ps2ShapeImage clut = {};
+        clut.typeAndNext = kXboxPalette;
+        clut.width = kPaletteColours;
+        clut.height = 1;
+        clut.unknown08 = kPaletteColours;
+        Append(out, &clut, sizeof(clut));
+        for (uint32_t i = 0; i < kPaletteColours; i++) {
+            uint32_t slot = type == kPs2Indexed8 ? PaletteSlot(int(i)) : i;
+            uint32_t colour = Argb(slot < colours ? palette + slot * 4 : kBlack);
+            Append(out, &colour, 4);
+        }
+    }
+    for (const auto &k : kept) {
+        starts.push_back(out->size());
+        out->insert(out->end(), file + k.first, file + k.second);
+    }
+    uint32_t imageType = indexed ? kXboxIndexed : kXboxArgb;
+    for (size_t k = 0; k < starts.size(); k++) {
         uint32_t word;
-        memcpy(&word, &(*out)[here], 4);
-        word = (word & 0xff) | next << 8;
-        memcpy(&(*out)[here], &word, 4);
+        memcpy(&word, &(*out)[starts[k]], 4);
+        uint32_t next = k + 1 < starts.size() ? uint32_t(starts[k + 1] - starts[k]) : 0;
+        word = (k == 0 ? imageType : word & 0xff) | next << 8;
+        memcpy(&(*out)[starts[k]], &word, 4);
     }
-    while (out->size() % 16 != 0)
-        out->push_back(0);
+    Align16(out);
 }
 
 }  // namespace

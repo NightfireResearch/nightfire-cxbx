@@ -37,6 +37,7 @@ struct Ps2RenderMethod {
     const char *xboxName;         // the Xbox render method drawn instead, or NULL: the GeoPrims are not drawn
     const Ps2Param *params;
     int paramCount;
+    uint8_t texCoordShift;        // the PS2's 16-bit texture coordinates divided by 1 << this make the Xbox's 1/256ths
     EAGL::RenderMethod *method;   // the child of the Xbox method the GeoPrims use, made on first use
 };
 

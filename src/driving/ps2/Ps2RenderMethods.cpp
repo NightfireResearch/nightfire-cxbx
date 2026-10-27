@@ -57,34 +57,35 @@ const Ps2Param kReflectParams[] = {
 #define PARAMS(list) list, int(sizeof(list) / sizeof(list[0]))
 
 // The 26 render methods the PS2's model objects name (tools/ps2driving_check.py objects). Those drawn with a
-// simpler Xbox method than their own twin are so until their extra streams and constants are converted.
+// simpler Xbox method than their own twin are so until their extra streams and constants are converted. The car
+// methods' texture coordinates are in 1/1024ths (against the Xbox twins' 1/256ths, paired by model).
 Ps2RenderMethod RenderMethods[] = {
-    { "MatBondTexturePacked",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },
-    { "MatBondTexture",              "ParentRM_BondTexture",       PARAMS(kTextureParams), NULL },
-    { "MatBondReflectTexturePacked", "ParentRM_BondReflectPacked", PARAMS(kReflectParams), NULL },
-    { "MatDynamicTexturePacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondDynTexture
-    { "MatBondScrollTexture",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondScrollTex1
-    { "MatBondScrollTexturePacked",  "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondScrollTex1
-    { "MatBondScrollTexture2",       "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondScrollTex2
-    { "MatBondScrollTexture2Packed", "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondScrollTex2
-    { "MatBondScrollTexture3Packed", "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondScrollTex3
-    { "MatBondFrameAnimPacked",      "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondFrameAnim
-    { "MatBondWater",                "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondWater
-    { "MatBondWaterPacked",          "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondWater
-    { "BondUnderWater",              "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondUnderWater
-    { "BondUnderWaterPacked",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondUnderWaterPacked
-    { "BondKelp",                    "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondKelp
-    { "BondGouraud",                 "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondGouraud
-    { "MatCarTexturePacked",         "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarTexture
-    { "MatCarTextureDullPacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarTextureDull
-    { "MatCarTextureSwitchPacked",   "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarTextureSwitch
-    { "MatCarGouraudDullPacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarGouraudDull
-    { "MatCarChrome",                "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarChrome
-    { "MatCarGlassPacked",           "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },   // twin: BondCarGlass
-    { "MatCarDash",                  "ParentRM_BondTexturePacked", PARAMS(kTextureParams), NULL },
-    { "BondCarShadow",               NULL, NULL, 0, NULL },
-    { "BondLitTextureAndShadow_Skin", NULL, NULL, 0, NULL },
-    { "BondLitTextureAndShadowSpecular_Skin", NULL, NULL, 0, NULL },
+    { "MatBondTexturePacked",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },
+    { "MatBondTexture",              "ParentRM_BondTexture",       PARAMS(kTextureParams), 0, NULL },
+    { "MatBondReflectTexturePacked", "ParentRM_BondReflectPacked", PARAMS(kReflectParams), 0, NULL },
+    { "MatDynamicTexturePacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondDynTexture
+    { "MatBondScrollTexture",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondScrollTex1
+    { "MatBondScrollTexturePacked",  "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondScrollTex1
+    { "MatBondScrollTexture2",       "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondScrollTex2
+    { "MatBondScrollTexture2Packed", "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondScrollTex2
+    { "MatBondScrollTexture3Packed", "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondScrollTex3
+    { "MatBondFrameAnimPacked",      "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondFrameAnim
+    { "MatBondWater",                "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondWater
+    { "MatBondWaterPacked",          "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondWater
+    { "BondUnderWater",              "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondUnderWater
+    { "BondUnderWaterPacked",        "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondUnderWaterPacked
+    { "BondKelp",                    "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondKelp
+    { "BondGouraud",                 "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 0, NULL },   // twin: BondGouraud
+    { "MatCarTexturePacked",         "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarTexture
+    { "MatCarTextureDullPacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarTextureDull
+    { "MatCarTextureSwitchPacked",   "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarTextureSwitch
+    { "MatCarGouraudDullPacked",     "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarGouraudDull
+    { "MatCarChrome",                "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarChrome
+    { "MatCarGlassPacked",           "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },   // twin: BondCarGlass
+    { "MatCarDash",                  "ParentRM_BondTexturePacked", PARAMS(kTextureParams), 2, NULL },
+    { "BondCarShadow",               NULL, NULL, 0, 0, NULL },
+    { "BondLitTextureAndShadow_Skin", NULL, NULL, 0, 0, NULL },
+    { "BondLitTextureAndShadowSpecular_Skin", NULL, NULL, 0, 0, NULL },
 };
 constexpr int kRenderMethodCount = int(sizeof(RenderMethods) / sizeof(RenderMethods[0]));
 

@@ -408,7 +408,8 @@ GeoPrim *Converter::Convert(const Ps2GeoPrim *ps2, Current *current) {
                 if (texCoords->format == kV2_16) {
                     uint16_t raw;
                     memcpy(&raw, texCoords->data + i * 4 + k * 2, 2);
-                    uvs[i * 2 + k] = int16_t(texCoords->isUnsigned ? int(raw) - 0x8000 : int16_t(raw));
+                    int value = texCoords->isUnsigned ? int(raw) - 0x8000 : int16_t(raw);
+                    uvs[i * 2 + k] = int16_t(value / (1 << entry->texCoordShift));
                 } else {
                     float f;
                     memcpy(&f, texCoords->data + i * 8 + k * 4, 4);
