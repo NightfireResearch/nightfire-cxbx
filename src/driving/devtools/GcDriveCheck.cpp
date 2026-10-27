@@ -298,6 +298,95 @@ int UData(const Discs &discs) {
     return 0;
 }
 
+// ---- payloads
+
+// Every paired data record's payload turned round by its type (GcUData_ConvertPayloads) and compared with the Xbox
+// twin's, byte for byte, per type; with "detail <type>", where in the type's element the differing bytes fall
+int Payloads(const Discs &discs, const std::string &detail) {
+    struct Kind {
+        int records = 0, identical = 0;
+        double bytes = 0, same = 0;
+        std::map<uint32_t, int> differ;   // offset in the element -> differing bytes
+        uint32_t period = 0;
+    };
+    std::map<std::string, Kind> kinds;
+    std::set<std::string> seen;
+    for (const char *archive : kArchives) {
+        if (ArchiveKind(archive) != "viv")
+            continue;
+        GcViv gc, xbox;
+        if (!OpenPair(discs, archive, gc, xbox))
+            return 1;
+        for (const GcVivEntry &entry : gc.Entries()) {
+            std::string ext = Extension(entry.name);
+            if ((ext != ".crp" && ext != ".gal") || !seen.insert(Lower(entry.name)).second)
+                continue;
+            const GcVivEntry *twin = xbox.Find(entry.name);
+            if (twin == NULL)
+                continue;
+            Bytes a, b;
+            gc.Load(entry, a);
+            xbox.Load(*twin, b);
+            if (!GcUData_ConvertHeaders(a.data(), a.size()) || !GcUData_ConvertPayloads(a.data(), a.size())) {
+                printf("  %s: an offset leaves the file\n", entry.name.c_str());
+                continue;
+            }
+            std::map<std::string, Record> ta, tb;
+            Walk(a, 0, "", ta, 0);
+            Walk(b, 0, "", tb, 0);
+            for (const auto &kv : ta) {
+                auto other = tb.find(kv.first);
+                const Record &ra = kv.second;
+                if (ra.group || other == tb.end() || ra.payload == 0 || other->second.payload == 0)
+                    continue;
+                const Record &rb = other->second;
+                if (ra.size != rb.size || ra.size == 0 || ra.payload + ra.size > a.size() ||
+                    rb.payload + rb.size > b.size())
+                    continue;
+                std::string type = TypeOf(kv.first, ra);
+                if (type == "ELFd" || type == "ELFr")
+                    continue;
+                Kind &k = kinds[type];
+                k.records++;
+                k.bytes += ra.size;
+                uint32_t period = ra.count != 0 && ra.size % ra.count == 0 ? ra.size / ra.count : ra.size;
+                int differing = 0;
+                for (uint32_t i = 0; i < ra.size; i++) {
+                    if (a[ra.payload + i] == b[rb.payload + i])
+                        continue;
+                    differing++;
+                    if (type == detail)
+                        k.differ[(i % period) | period << 16]++;
+                }
+                k.same += ra.size - differing;
+                if (type == detail && differing != 0 && k.records - k.identical <= 3) {
+                    printf("%s %s (%u bytes, count %u):\n", entry.name.c_str(), kv.first.c_str(), ra.size, ra.count);
+                    for (uint32_t i = 0; i < ra.size && i < 0x200; i += 16) {
+                        printf("  %04x GC ", i);
+                        for (uint32_t j = i; j < i + 16 && j < ra.size; j++)
+                            printf("%02x%c", a[ra.payload + j], a[ra.payload + j] != b[rb.payload + j] ? '*' : ' ');
+                        printf("\n       XB ");
+                        for (uint32_t j = i; j < i + 16 && j < ra.size; j++)
+                            printf("%02x ", b[rb.payload + j]);
+                        printf("\n");
+                    }
+                }
+                if (differing == 0)
+                    k.identical++;
+            }
+        }
+    }
+    printf("%-8s %8s %9s %12s %8s\n", "type", "records", "identical", "bytes", "same %");
+    for (const auto &kv : kinds) {
+        const Kind &k = kv.second;
+        printf("%-8s %8d %9d %12.0f %8.3f\n", kv.first.c_str(), k.records, k.identical, k.bytes,
+               k.bytes > 0 ? 100.0 * k.same / k.bytes : 100.0);
+        for (const auto &d : k.differ)
+            printf("    element %u +0x%x: %d bytes differ\n", d.first >> 16, d.first & 0xffff, d.second);
+    }
+    return 0;
+}
+
 // ---- objects
 
 struct Census {
@@ -512,6 +601,8 @@ int main(int argc, char **argv) {
         return Files(discs);
     if (command == "udata")
         return UData(discs);
+    if (command == "payloads")
+        return Payloads(discs, argc > 4 ? argv[4] : "");
     if (command == "objects")
         return Objects(discs);
     if (command == "sound")

@@ -28,6 +28,9 @@
 #include "../render/TextureContext.h"
 #include "../platform/CRuntime.h"
 #include "../render/TimeData.h"          // SimStep
+#if NIGHTFIRE_DRIVING_DATA_GC
+#include "../gc/GcData.h"
+#endif
 #include "../eagl/EaglGlobals.h"          // EaglMalloc, EaglFree
 #include "../camera/CameraSpline.h"       // NoSymbolCallback
 #include "../engine/StaticInit.h"         // DestroyStatic_001ebd60
@@ -433,6 +436,9 @@ void RCARPFile::Resolve(const char *directory, UCarpNamespace *carp) {
     CARP::ResolveSymbolicReferences(root, Symbols);
     if (loader != NULL) {
         loader->Resolve();
+#if NIGHTFIRE_DRIVING_DATA_GC
+        Gc_ConvertModels(loader);
+#endif
         loader->Release();
     }
 
@@ -477,7 +483,11 @@ void RCARPFile::LoadEAGLMaterials() {
     for (const char *const *file = MaterialFiles; *file != NULL; file++) {
         char path[64];
         BuildFileName(path, 0, "data\\render\\", *file, "");
+#if NIGHTFIRE_DRIVING_DATA_GC
+        MaterialData = Gc_LoadXboxRenderMethods(path);
+#else
         MaterialData = UFileLoader::FileLoadz(path, 0);
+#endif
         uint32_t size = UMemory::Size(MaterialData);
         void *memory = EaglMalloc(sizeof(DynamicLoader), "EAGL::DynamicLoader new");
         if (memory != NULL)   // kept loaded for the rest of the run

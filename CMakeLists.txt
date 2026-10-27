@@ -1553,6 +1553,22 @@ endforeach()
 add_executable(driving_standalone ${nf_standalone_sources} src/driving/standalone/NoDevtools.cpp)
 add_executable(driving_standalone_test EXCLUDE_FROM_ALL ${nf_standalone_sources} ${nf_standalone_harness})
 target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_TEST)
+# The GameCube US release's data in place of the Xbox's (docs/gc-driving.md): its file names, data groups, image
+# containers, fonts and controller configurations converted as they load, its EAGL objects turned round as they are
+# relocated and its models' GeoPrims drawn with the Xbox disc's render methods (settings.ini XboxDiscPath). Off, the
+# targets are built exactly as without it.
+option(NIGHTFIRE_DRIVING_DATA_GC "Driving engine, standalone: load the GameCube US release's data (docs/gc-driving.md)" OFF)
+if(NIGHTFIRE_DRIVING_DATA_GC)
+  set(nf_driving_gc_sources src/driving/gc/GcFiles.cpp src/driving/gc/GcModel.cpp src/driving/gc/GcObject.cpp
+                            src/driving/gc/GcRenderMethods.cpp src/driving/gc/GcShape.cpp src/driving/gc/GcUData.cpp)
+  if(NOT WIN32)
+    set_source_files_properties(${nf_driving_gc_sources} PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
+  endif()
+  foreach(target driving_standalone driving_standalone_test)
+    target_sources(${target} PRIVATE ${nf_driving_gc_sources})
+    target_compile_definitions(${target} PRIVATE NIGHTFIRE_DRIVING_DATA_GC=1)
+  endforeach()
+endif()
 # NIGHTFIRE_SNDTRACE's wrappers by name (devtools/SndCallTraceRedirect.h): the test executable's sources outside the
 # sound library and the wrappers' own file are compiled with that header first. The sources are driving_standalone's
 # too, hence the condition on the target.

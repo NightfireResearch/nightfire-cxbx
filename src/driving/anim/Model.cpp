@@ -13,6 +13,9 @@
 #include "../engine/UMemory.hpp"
 #include "../../helpers.h"
 #include "../logging.h"
+#if NIGHTFIRE_DRIVING_DATA_GC
+#include "../gc/GcData.h"
+#endif
 
 #include <stdio.h>
 #include <string.h>
@@ -54,6 +57,9 @@ static void LoadObject(ActModel *model, ActCharacterInfo *info, int i, const cha
     model->loaders[i] = memory != NULL
         ? memory->ConstructSplit(model->files[i], size, symbols, 0, ActManager::GetSymbolResolver())
         : NULL;
+#if NIGHTFIRE_DRIVING_DATA_GC
+    Gc_ConvertModels(model->loaders[i]);
+#endif
     model->FindTars(i, model->loaders[i]);
     void *symbol;
     model->loaders[i]->GetAddr("Model", name, &symbol);

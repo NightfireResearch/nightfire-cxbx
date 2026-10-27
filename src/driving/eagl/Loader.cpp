@@ -6,6 +6,9 @@
 #include "../platform/Ptr32.h"
 #include "../../helpers.h"
 #include "../../common/xbeClass.h"   // LAYOUT_32
+#if NIGHTFIRE_DRIVING_DATA_GC
+#include "../gc/GcData.h"
+#endif
 
 #include <ctype.h>
 #include <stdint.h>
@@ -716,6 +719,9 @@ void DynamicLoader::Resolve() {
             }
         }
     }
+#if NIGHTFIRE_DRIVING_DATA_GC
+    Gc_ConvertObject(this);   // the GameCube's data turned round before the constructors read it
+#endif
     RunConstructors();
 }
 
