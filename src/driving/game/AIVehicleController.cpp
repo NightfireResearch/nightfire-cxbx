@@ -401,7 +401,11 @@ void AIVehicleController::CreateSimTrafficCars(bool preload) {
     };
     bool typesFound = false;
     bool maxFound = false;
+#if NIGHTFIRE_DRIVING_DATA_GC
+    int typeCount = fgWorld->attributes.LookupInt("NUM_TRAFFIC_TYPES_GC", &typesFound);   // the GameCube's key
+#else
     int typeCount = fgWorld->attributes.LookupInt("NUM_TRAFFIC_TYPES_XBOX", &typesFound);
+#endif
     int maxTraffic = fgWorld->attributes.LookupInt("MAX_TRAFFIC", &maxFound);
     if (!maxFound)
         maxTraffic = kDefaultMaxTraffic;

@@ -61,22 +61,34 @@ constexpr uint32_t Tag(char a, char b, char c = ' ', char d = ' ') {
     return uint32_t(uint8_t(a)) << 24 | uint32_t(uint8_t(b)) << 16 | uint32_t(uint8_t(c)) << 8 | uint8_t(d);
 }
 
-// A float a game could hold: zero, or neither tiny nor huge
-bool Plausible(uint32_t word) {
+// A float a game could hold: neither zero, nor tiny, nor huge
+bool SaneFloat(uint32_t word) {
     uint32_t exponent = word >> 23 & 0xff;
-    return (word & 0x7fffffff) == 0 || (exponent > 127 - 20 && exponent < 127 + 24);
+    return (word & 0x7fffffff) != 0 && exponent > 127 - 20 && exponent < 127 + 24;
 }
 
-// A float the GameCube's file has in either order (some gallery keys' are the Xbox's already): turned round unless
-// only the order it is in makes a plausible value
-void SwapEither(uint8_t *p) {
-    if (Plausible(GcBe32(p)) || !Plausible(GcLe32(p)))
+bool SmallInteger(uint32_t word) {
+    return word < 0x10000 || word >= 0xffff0000;
+}
+
+// A word the GameCube's file has in either order (some gallery keys' fields are the Xbox's already): kept as it is
+// when only that order reads as a sane float or, failing that, as a small integer - for an integer field, the other
+// way round; else turned round
+void SwapEither(uint8_t *p, bool integer) {
+    uint32_t big = GcBe32(p), little = GcLe32(p);
+    bool floats = SaneFloat(big) != SaneFloat(little), integers = SmallInteger(big) != SmallInteger(little);
+    bool keep;
+    if (integer)
+        keep = integers ? SmallInteger(little) : floats && SaneFloat(little);
+    else
+        keep = floats ? SaneFloat(little) : integers && SmallInteger(little);
+    if (!keep)
         GcSwap32(p);
 }
 
 // Turns `bytes` bytes at p round by a layout: fields in order, each a count (1 if none) and a width - 'w' a word, 'f'
-// a float in either order (SwapEither), 'h' a halfword, 'b' a byte left as it is - and '*' after the last to repeat
-// it to the end. The layout is applied again and again until the bytes run out; a field that would cross the end is
+// and 'i' a float or an integer word in either order (SwapEither), 'h' a halfword, 'b' a byte left as it is - and '*'
+// after the last to repeat it to the end. The layout is applied again and again until the bytes run out; a field that would cross the end is
 // left. Answers the bytes it covered.
 uint32_t Swap(uint8_t *p, uint32_t bytes, const char *layout) {
     uint32_t at = 0;
@@ -97,12 +109,12 @@ uint32_t Swap(uint8_t *p, uint32_t bytes, const char *layout) {
                 l++;
                 count = 0xffffffff;
             }
-            uint32_t step = width == 'w' || width == 'f' ? 4 : width == 'h' ? 2 : 1;
+            uint32_t step = width == 'w' || width == 'f' || width == 'i' ? 4 : width == 'h' ? 2 : 1;
             for (uint32_t i = 0; i < count && at + step <= bytes; i++, at += step) {
                 if (width == 'w')
                     GcSwap32(p + at);
-                else if (width == 'f')
-                    SwapEither(p + at);
+                else if (width == 'f' || width == 'i')
+                    SwapEither(p + at, width == 'i');
                 else if (width == 'h')
                     GcSwap16(p + at);
             }
@@ -232,21 +244,24 @@ void SwapEffects(uint8_t *p, uint32_t size) {
 }
 
 // The gallery's keys (GalleryKey, game/Gallery.h): a header, then the data of the kind the key's group holds, then
-// words to the next key. The header's orientation and the two words after its bytes are in either order on the
-// GameCube's disc (the first key's big-endian, later keys' often the Xbox's already).
+// words to the next key. Their words are in either order on the GameCube's disc, field by field (the first key's
+// big-endian; in later keys the orientation, some data and often the whole last key the Xbox's already): each is
+// taken as SwapEither finds it.
 void SwapGalleryKeys(uint8_t *p, uint32_t size, uint32_t count, uint32_t parent) {
     const char *data;
     switch (parent & 0xffff0000) {
-    case Tag('g', 'b', 0, 0): data = "12w 27b 4b b w*"; break;   // GallerySprite
-    case Tag('g', 't', 0, 0): data = "4w 16b w*"; break;         // GalleryText
-    case Tag('g', 's', 0, 0): data = "3w 32b w*"; break;         // GallerySound: the patch's name
-    case Tag('g', 'd', 0, 0): data = "4w 4b w*"; break;          // GalleryDebris: its colour in bytes
-    default: data = "w*"; break;                                 // quads, glares, particles: words
+    case Tag('g', 'b', 0, 0): data = "6f 6i 27b 4b b f*"; break;   // GallerySprite
+    case Tag('g', 't', 0, 0): data = "4i 16b i f*"; break;         // GalleryText
+    case Tag('g', 's', 0, 0): data = "3i 32b 3i f*"; break;        // GallerySound: the patch's name
+    case Tag('g', 'd', 0, 0): data = "4f 4b 2i 4f i f*"; break;    // GalleryDebris: its colour in bytes
+    case Tag('g', 'g', 0, 0): data = "i f i f*"; break;            // GalleryGlare
+    case Tag('q', 'd', 0, 0): data = "4i 8f f*"; break;            // GalleryQuad
+    default: data = "f*"; break;                                   // particles
     }
     uint32_t at = 0;
     for (uint32_t k = 0; k < count && at + 0x30 <= size; k++) {
         uint8_t *key = p + at;
-        Swap(key, 0x30, "4w 4f 4b 2f w");
+        Swap(key, 0x30, "3f i 4f i 3f");
         uint32_t extra = key[0x21];
         uint32_t stride = extra + 0x30 > 0x40 ? extra + 0x30 : 0x40;
         Swap(key + 0x30, (at + stride <= size ? stride : size - at) - 0x30, data);

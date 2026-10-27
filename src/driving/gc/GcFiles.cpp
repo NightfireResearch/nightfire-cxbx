@@ -49,7 +49,6 @@ const ControlPair kControls[] = {
 };
 
 constexpr char kAnimLookup[] = "alookup.bin";   // anim/AnimationDatabase.cpp: a table of words
-constexpr uint32_t kBankHeaderBytes = 0x14;
 
 bool IsSeparator(uint8_t c) {
     return c == ' ' || c == '\t' || c == '\r' || c == '\n';
@@ -142,19 +141,9 @@ void *Gc_ConvertFile(void *data, int *size, const char *path, int flags, FileMal
             GcSwap32(file + at);
         return data;
     }
-    if (bytes >= kBankHeaderBytes && memcmp(file, "BNKb", 4) == 0) {
-        // A sound bank (snd/Banks.h BankHeader, big-endian): its samples are DSP ADPCM, which the sound library
-        // does not play, so it becomes a BNKl with no patches - silent
-        memcpy(file, "BNKl", 4);
-        GcSwap16(file + 4);
-        GcPutLe16(file + 6, 0);
-        GcSwap32(file + 8);
-        GcSwap32(file + 12);
-        GcSwap32(file + 16);
-        return data;
-    }
     std::vector<uint8_t> converted;
     if (!Gc_ConvertShapes(file, bytes, &converted) && !Gc_ConvertFont(file, bytes, &converted) &&
+        !Gc_ConvertBank(file, bytes, &converted) &&
         !Gc_ConvertDataGroup(path, file, bytes, &converted) && !Gc_ConvertControls(path, file, bytes, &converted))
         return data;
     if (converted.size() == bytes) {   // the same block, when the size holds

@@ -12,13 +12,17 @@
 // A disc is the folder holding driving\ (the GameCube's also holds driving.elf). The GameCube's .gsh and .gfn are
 // paired with the Xbox's .xsh and .xfn of the same name.
 
+#include "../gc/GcConvert.h"
 #include "../gc/GcUData.h"
 #include "../gc/GcViv.h"
+#include "../../common/sound/xadpcm.h"
 
 #include <ctype.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <algorithm>
 #include <map>
 #include <set>
 #include <string>
@@ -387,6 +391,276 @@ int Payloads(const Discs &discs, const std::string &detail) {
     return 0;
 }
 
+// ---- banks
+
+// A bank's patches' PT tags, as (patch, tag, value) for the tags given
+struct BankTimbre {
+    uint32_t patch, frames, rep, channels;
+    uint32_t offsets[6];
+    const uint8_t *coefficients;
+};
+
+std::vector<BankTimbre> BankTimbres(const Bytes &b, bool big) {
+    std::vector<BankTimbre> out;
+    auto r16 = [&](size_t at) { return big ? uint32_t(b[at] << 8 | b[at + 1]) : uint32_t(Le16(&b[at])); };
+    auto r32 = [&](size_t at) { return big ? Be32(&b[at]) : Le32(&b[at]); };
+    static const uint8_t kOffsetTags[6] = { 0x88, 0x89, 0x94, 0x95, 0xa2, 0xa3 };
+    uint32_t patches = r16(6);
+    for (uint32_t patch = 0; patch < patches && 0x14 + patch * 4 + 4 <= b.size(); patch++) {
+        uint32_t offset = r32(0x14 + patch * 4);
+        if (offset == 0)
+            continue;
+        size_t p = 0x14 + patch * 4 + offset + 4;
+        BankTimbre t = { patch, 0, 0, 1, {}, NULL };
+        while (p < b.size()) {
+            uint8_t id = b[p++];
+            if (id == 0xff || id == 0xfe) {
+                if (t.frames != 0)
+                    out.push_back(t);
+                t = { patch, 0, 0, 1, {}, NULL };
+                if (id == 0xff)
+                    break;
+                continue;
+            }
+            if (id >= 0xfc || p >= b.size())
+                continue;
+            uint32_t length = b[p++], value = 0;
+            for (uint32_t i = 0; i < length && i < 4 && p + i < b.size(); i++)
+                value = value << 8 | b[p + i];
+            if (id == 0x85) t.frames = value;
+            if (id == 0xa0) t.rep = value;
+            if (id == 0x82) t.channels = value;
+            if (id == 0x8f && t.coefficients == NULL) t.coefficients = &b[p];
+            for (int ch = 0; ch < 6; ch++)
+                if (id == kOffsetTags[ch])
+                    t.offsets[ch] = value;
+            p += length;
+        }
+    }
+    return out;
+}
+
+// Every GameCube bank made the Xbox's (GcSound.cpp): its timbres against the Xbox twin's, and the Xbox ADPCM made of
+// each DSP sample decoded again and measured against the DSP sample's own PCM
+int Banks(const Discs &discs) {
+    std::set<std::string> seen;
+    int banks = 0, patchesSame = 0, timbres = 0, timbresTwin = 0;
+    double signal = 0, noise = 0, gcSeconds = 0, xboxSeconds = 0;
+    for (const char *archive : kArchives) {
+        if (ArchiveKind(archive) != "viv")
+            continue;
+        GcViv gc, xbox;
+        if (!OpenPair(discs, archive, gc, xbox))
+            return 1;
+        for (const GcVivEntry &entry : gc.Entries()) {
+            if (Extension(entry.name) != ".bnk" || !seen.insert(Lower(entry.name)).second)
+                continue;
+            Bytes a, b, converted;
+            gc.Load(entry, a);
+            if (!Gc_ConvertBank(a.data(), uint32_t(a.size()), &converted)) {
+                printf("  %s: not converted\n", entry.name.c_str());
+                continue;
+            }
+            banks++;
+            std::vector<BankTimbre> source = BankTimbres(a, true), ours = BankTimbres(converted, false);
+            const GcVivEntry *twin = xbox.Find(entry.name);
+            if (twin != NULL) {
+                xbox.Load(*twin, b);
+                if (Le16(&b[6]) == Le16(&converted[6]))
+                    patchesSame++;
+                std::vector<BankTimbre> theirs = BankTimbres(b, false);
+                timbresTwin += int(theirs.size());
+                for (const BankTimbre &t : theirs)
+                    xboxSeconds += t.frames / 16000.0;
+            }
+            timbres += int(ours.size());
+            for (size_t i = 0; i < ours.size() && i < source.size(); i++) {
+                const BankTimbre &s = source[i], &o = ours[i];
+                gcSeconds += s.frames / 32000.0;
+                if (s.coefficients == NULL || o.rep != 0x14 || s.offsets[0] >= a.size())
+                    continue;
+                uint32_t dspBytes = (s.frames + 13) / 14 * 8;
+                std::vector<int16_t> pcm = Gc_DecodeDsp(&a[s.offsets[0]],
+                                                        (std::min)(dspBytes, uint32_t(a.size() - s.offsets[0])),
+                                                        s.frames, s.coefficients);
+                size_t adpcmBytes = (s.frames + 63) / 64 * 36;
+                if (o.offsets[0] + adpcmBytes > converted.size())
+                    continue;
+                std::vector<int16_t> back(adpcmBytes / 36 * 64);
+                XAdpcm_Decode(&converted[o.offsets[0]], adpcmBytes, 1, back.data(), back.size());
+                for (size_t k = 0; k < pcm.size(); k++) {
+                    signal += double(pcm[k]) * pcm[k];
+                    noise += double(pcm[k] - back[k]) * (pcm[k] - back[k]);
+                }
+            }
+        }
+    }
+    printf("%d banks: patch counts the Xbox twin's in %d; timbres %d (the twins %d); %.1f s of samples (the twins "
+           "%.1f s at 16 kHz); Xbox ADPCM against the DSP decode: SNR %.1f dB\n", banks, patchesSame, timbres,
+           timbresTwin, gcSeconds, xboxSeconds, noise > 0 ? 10 * log10(signal / noise) : 999.0);
+    return 0;
+}
+
+// ---- shapes
+
+// An Xbox SHPX image (EAGL::ShapeImage, eagl/Tar.h) decoded to rows of B, G, R, A: DXT1/3/5 (0x60-0x62), 8-bit with
+// its palette attachment (0x7b), 32-bit (0x7d), swizzled by flag 0x2000. False for any other type.
+bool DecodeXboxImage(const uint8_t *file, size_t size, uint32_t at, std::vector<uint8_t> *bgra, int *w, int *h) {
+    if (at + 16 > size)
+        return false;
+    uint32_t word = Le32(file + at), type = word & 0xff;
+    int width = Le16(file + at + 4), height = Le16(file + at + 6);
+    uint32_t flags = Le32(file + at + 12);
+    const uint8_t *pixels = file + at + ((flags & 0x1000) ? Le32(file + at + 16) : 16);
+    *w = width;
+    *h = height;
+    bgra->assign(size_t(width) * height * 4, 0);
+    auto unswizzle = [&](int x, int y) {
+        uint32_t offset = 0, bit = 1;
+        for (int sx = 1, sy = 1; sx < width || sy < height; sx <<= 1, sy <<= 1) {
+            if (sx < width) {
+                if (x & sx)
+                    offset |= bit;
+                bit <<= 1;
+            }
+            if (sy < height) {
+                if (y & sy)
+                    offset |= bit;
+                bit <<= 1;
+            }
+        }
+        return offset;
+    };
+    bool swizzled = (flags & 0x2000) != 0;
+    if (type == 0x7d || type == 0x7b) {
+        const uint8_t *palette = NULL;
+        for (uint32_t a = at, next = word >> 8; next != 0 && a + next + 16 <= size;) {
+            a += next;
+            uint32_t w2 = Le32(file + a);
+            if ((w2 & 0xff) == 0x2a)
+                palette = file + a + 16;
+            next = w2 >> 8;
+        }
+        for (int y = 0; y < height; y++) {
+            for (int x = 0; x < width; x++) {
+                uint32_t i = swizzled ? unswizzle(x, y) : uint32_t(y * width + x);
+                const uint8_t *c = type == 0x7d ? pixels + i * 4 : palette != NULL ? palette + pixels[i] * 4 : NULL;
+                if (c != NULL && c + 4 <= file + size)
+                    memcpy(&(*bgra)[(size_t(y) * width + x) * 4], c, 4);
+            }
+        }
+        return true;
+    }
+    if (type < 0x60 || type > 0x62)
+        return false;
+    int blockBytes = type == 0x60 ? 8 : 16, bx = (width + 3) / 4;
+    for (int by = 0; by < (height + 3) / 4; by++) {
+        for (int x0 = 0; x0 < bx; x0++) {
+            const uint8_t *block = pixels + (by * bx + x0) * blockBytes;
+            if (block + blockBytes > file + size)
+                return true;
+            const uint8_t *colour = block + blockBytes - 8;
+            uint16_t c0 = Le16(colour), c1 = Le16(colour + 2);
+            int rgb[4][3];
+            for (int k = 0; k < 2; k++) {
+                uint16_t c = k == 0 ? c0 : c1;
+                rgb[k][2] = (c >> 11) * 255 / 31;
+                rgb[k][1] = (c >> 5 & 63) * 255 / 63;
+                rgb[k][0] = (c & 31) * 255 / 31;
+            }
+            bool four = c0 > c1 || type != 0x60;
+            for (int k = 0; k < 3; k++) {
+                rgb[2][k] = four ? (2 * rgb[0][k] + rgb[1][k]) / 3 : (rgb[0][k] + rgb[1][k]) / 2;
+                rgb[3][k] = four ? (rgb[0][k] + 2 * rgb[1][k]) / 3 : 0;
+            }
+            for (int i = 0; i < 16; i++) {
+                int x = x0 * 4 + i % 4, y = by * 4 + i / 4;
+                if (x >= width || y >= height)
+                    continue;
+                int index = colour[4 + i / 4] >> (i % 4 * 2) & 3;
+                uint8_t *out = &(*bgra)[(size_t(y) * width + x) * 4];
+                for (int k = 0; k < 3; k++)
+                    out[k] = uint8_t(rgb[index][k]);
+                out[3] = type == 0x60 && !four && index == 3 ? 0 : 255;
+            }
+        }
+    }
+    return true;
+}
+
+// Every GameCube image container made the Xbox's (GcShape.cpp) and decoded, against the Xbox twin's image of the same
+// name where both are decodable and the same size: the mean difference of the colour channels, and the worst images
+int Shapes(const Discs &discs) {
+    std::set<std::string> seen;
+    int files = 0, images = 0, compared = 0, otherSize = 0, undecodable = 0;
+    double total = 0;
+    std::vector<std::pair<double, std::string>> worst;
+    for (const char *archive : kArchives) {
+        if (ArchiveKind(archive) != "viv")
+            continue;
+        GcViv gc, xbox;
+        if (!OpenPair(discs, archive, gc, xbox))
+            return 1;
+        for (const GcVivEntry &entry : gc.Entries()) {
+            if (Extension(entry.name) != ".gsh" || !seen.insert(Lower(entry.name)).second)
+                continue;
+            const GcVivEntry *twin = xbox.Find(XboxName(entry.name));
+            Bytes a, b, converted;
+            gc.Load(entry, a);
+            if (!Gc_ConvertShapes(a.data(), uint32_t(a.size()), &converted))
+                continue;
+            files++;
+            if (twin != NULL)
+                xbox.Load(*twin, b);
+            uint32_t count = Le32(&converted[8]);
+            images += int(count);
+            for (uint32_t i = 0; i < count; i++) {
+                const uint8_t *e = &converted[16 + i * 8];
+                std::vector<uint8_t> ours, theirs;
+                int w1, h1, w2, h2;
+                if (!DecodeXboxImage(converted.data(), converted.size(), Le32(e + 4), &ours, &w1, &h1)) {
+                    undecodable++;
+                    continue;
+                }
+                bool found = false;
+                for (uint32_t j = 0; b.size() > 16 && j < Le32(&b[8]) && !found; j++) {
+                    if (memcmp(&b[16 + j * 8], e, 4) != 0)
+                        continue;
+                    found = true;
+                    if (!DecodeXboxImage(b.data(), b.size(), Le32(&b[16 + j * 8 + 4]), &theirs, &w2, &h2))
+                        break;
+                    if (w1 != w2 || h1 != h2) {
+                        otherSize++;
+                        break;
+                    }
+                    double sum = 0;
+                    for (size_t k = 0; k < ours.size(); k++)
+                        if (k % 4 != 3)
+                            sum += abs(int(ours[k]) - int(theirs[k]));
+                    double mean = sum / (double(w1) * h1 * 3);
+                    total += mean;
+                    compared++;
+                    worst.push_back(std::make_pair(mean, entry.name + " " + std::string((const char *)e, 4)));
+                }
+            }
+        }
+    }
+    std::sort(worst.rbegin(), worst.rend());
+    printf("%d files, %d images: %d compared with the Xbox twin's, mean channel difference %.2f (of 255); %d at "
+           "another size, %d not decodable here\n", files, images, compared, compared ? total / compared : 0.0,
+           otherSize, undecodable);
+    int within[4] = {};   // under 4, 8, 16, 32
+    for (const auto &w : worst)
+        for (int k = 0; k < 4; k++)
+            if (w.first < (4 << k))
+                within[k]++;
+    printf("  images within 4: %d, 8: %d, 16: %d, 32: %d; the median %.2f\n", within[0], within[1], within[2],
+           within[3], worst.empty() ? 0.0 : worst[worst.size() / 2].first);
+    for (size_t i = 0; i < worst.size() && i < 12; i++)
+        printf("  %6.2f  %s\n", worst[i].first, worst[i].second.c_str());
+    return 0;
+}
+
 // ---- objects
 
 struct Census {
@@ -601,6 +875,10 @@ int main(int argc, char **argv) {
         return Files(discs);
     if (command == "udata")
         return UData(discs);
+    if (command == "banks")
+        return Banks(discs);
+    if (command == "shapes")
+        return Shapes(discs);
     if (command == "payloads")
         return Payloads(discs, argc > 4 ? argv[4] : "");
     if (command == "objects")

@@ -17,6 +17,13 @@ bool Gc_ConvertFont(const uint8_t *file, uint32_t size, std::vector<uint8_t> *co
 // each moved to the end (GcShape.cpp)
 bool Gc_ConvertDataGroup(const char *path, const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
 
+// A sound bank (BNKb) as the Xbox's (BNKl), its DSP ADPCM samples made Xbox ADPCM (GcSound.cpp)
+bool Gc_ConvertBank(const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
+
+// A DSP ADPCM sample's frames (eight bytes a frame: a predictor and scale byte, fourteen 4-bit samples) as PCM, by
+// its sixteen big-endian coefficients (GcSound.cpp)
+std::vector<int16_t> Gc_DecodeDsp(const uint8_t *frames, uint32_t bytes, uint32_t samples, const uint8_t *coefficients);
+
 // A controller configuration (.def) with the GameCube pad's control names as the Xbox pad's (GcFiles.cpp)
 bool Gc_ConvertControls(const char *path, const uint8_t *file, uint32_t size, std::vector<uint8_t> *converted);
 

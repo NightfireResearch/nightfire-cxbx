@@ -1560,7 +1560,8 @@ target_compile_definitions(driving_standalone_test PRIVATE NIGHTFIRE_STANDALONE_
 option(NIGHTFIRE_DRIVING_DATA_GC "Driving engine, standalone: load the GameCube US release's data (docs/gc-driving.md)" OFF)
 if(NIGHTFIRE_DRIVING_DATA_GC)
   set(nf_driving_gc_sources src/driving/gc/GcFiles.cpp src/driving/gc/GcModel.cpp src/driving/gc/GcObject.cpp
-                            src/driving/gc/GcRenderMethods.cpp src/driving/gc/GcShape.cpp src/driving/gc/GcUData.cpp)
+                            src/driving/gc/GcRenderMethods.cpp src/driving/gc/GcShape.cpp src/driving/gc/GcSound.cpp
+                            src/driving/gc/GcUData.cpp)
   if(NOT WIN32)
     set_source_files_properties(${nf_driving_gc_sources} PROPERTIES COMPILE_OPTIONS "${NF_XBOX_ABI_OPTIONS}")
   endif()
@@ -1750,7 +1751,9 @@ endif()   # WIN32: gamewindow_test, standalone_poison, shadercheck
 
 # The GameCube's driving data against the Xbox's, offline over the two extracted discs (docs/gc-driving.md)
 add_executable(gcdrive_check EXCLUDE_FROM_ALL src/driving/devtools/GcDriveCheck.cpp src/driving/gc/GcViv.cpp
-                                              src/driving/gc/GcUData.cpp src/driving/platform/RefPack.cpp)
+                                              src/driving/gc/GcUData.cpp src/driving/gc/GcShape.cpp
+                                              src/driving/gc/GcSound.cpp src/common/sound/xadpcm.cpp
+                                              src/driving/platform/RefPack.cpp)
 
 # A 64-bit configuration (the windows-x64 preset) is for the standalone driving engine alone: the loaders and the
 # injection DLLs share the 32-bit XBE's address space by construction (docs/driving/64-bit.md).
