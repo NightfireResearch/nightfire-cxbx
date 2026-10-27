@@ -88,8 +88,8 @@ void SwapEither(uint8_t *p, bool integer) {
 
 // Turns `bytes` bytes at p round by a layout: fields in order, each a count (1 if none) and a width - 'w' a word, 'f'
 // and 'i' a float or an integer word in either order (SwapEither), 'h' a halfword, 'b' a byte left as it is - and '*'
-// after the last to repeat it to the end. The layout is applied again and again until the bytes run out; a field that would cross the end is
-// left. Answers the bytes it covered.
+// after the last to repeat it to the end. The layout is applied again and again until the bytes run out; a field
+// that would cross the end is left. Answers the bytes it covered.
 uint32_t Swap(uint8_t *p, uint32_t bytes, const char *layout) {
     uint32_t at = 0;
     while (at < bytes) {

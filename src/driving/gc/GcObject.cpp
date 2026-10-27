@@ -68,8 +68,8 @@ constexpr uint32_t kShtRel = 9;
 constexpr uint32_t kModelGcOnlyStart = 0x6c;
 constexpr uint32_t kModelGcOnlyEnd = 0x9c;
 
-constexpr uint32_t kDrawListGeoPrim = 0xffff;
-constexpr uint32_t kBoxBytes = 0x18;            // a BBOX: two corners   // a draw list entry's low half: a GeoPrim follows
+constexpr uint32_t kDrawListGeoPrim = 0xffff;   // a draw list entry's low half: a GeoPrim follows
+constexpr uint32_t kBoxBytes = 0x18;            // a BBOX: two corners
 
 class ObjectSwapper {
 public:

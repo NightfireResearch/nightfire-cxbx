@@ -1390,7 +1390,7 @@ static void *LoadInternal(int priority, FileReq *r, bool keepSize) {
     if (buffer != NULL) {
         FILESYS_readsync(slot, 0, buffer, size, priority - 1);
 #if NIGHTFIRE_DRIVING_DATA_GC
-        if (unpacksizez(static_cast<const uint8_t *>(buffer)) == 0)   // a packed file is converted once FILE_loadpackz has unpacked it
+        if (unpacksizez(static_cast<const uint8_t *>(buffer)) == 0)   // a packed one once FILE_loadpackz unpacks it
             buffer = Gc_ConvertFile(buffer, &size, r->path, r->allocFlags, pFILE_malloc, pFILE_mfree);
 #endif
         if (keepSize)

@@ -47,7 +47,7 @@ struct GcGeoPrim {
     Ptr32<const uint8_t> pcode;  // +0x04
     struct Field {
         uint32_t count;          // big-endian
-        Ptr32<const uint8_t> data;
+        Ptr32<uint8_t> data;
     } fields[1];                 // +0x08
 };
 
@@ -236,9 +236,8 @@ GeoPrim *Converter::Convert(const GcGeoPrim *gc) {
     bool parsed = false;
     for (int attributes = 1; attributes <= kMaxAttributes && !parsed; attributes++)
         parsed = ParseDisplayList(list->data, listBytes, attributes, vertexCount, &primitives);
-    GeoPrimState *state = stateField != NULL ? reinterpret_cast<GeoPrimState *>(const_cast<uint8_t *>(
-                                                   static_cast<const uint8_t *>(stateField->data)))
-                                             : NULL;
+    uint8_t *stateData = stateField != NULL ? static_cast<uint8_t *>(stateField->data) : NULL;
+    GeoPrimState *state = reinterpret_cast<GeoPrimState *>(stateData);
     if (state == NULL)
         state = static_cast<GeoPrimState *>(Resolve("STATE::texalpha=noA;primtype=tristrip"));
     if (!parsed || vertexCount == 0 || state == NULL) {

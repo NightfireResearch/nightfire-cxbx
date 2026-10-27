@@ -136,7 +136,8 @@ int SampleOffsetChannel(uint8_t id) {
 
 }  // namespace
 
-std::vector<int16_t> Gc_DecodeDsp(const uint8_t *frames, uint32_t bytes, uint32_t samples, const uint8_t *coefficients) {
+std::vector<int16_t> Gc_DecodeDsp(const uint8_t *frames, uint32_t bytes, uint32_t samples,
+                                  const uint8_t *coefficients) {
     std::vector<int16_t> pcm;
     pcm.reserve(samples);
     int history1 = 0, history2 = 0;
@@ -222,7 +223,8 @@ bool Gc_ConvertBank(const uint8_t *file, uint32_t size, std::vector<uint8_t> *co
                         samples.push_back(0);
                     uint32_t sampleOffset = uint32_t(samples.size());
                     if (coef != NULL && at < size) {
-                        std::vector<int16_t> pcm = Gc_DecodeDsp(file + at, (std::min)(dspBytes, size - at), frames, coef);
+                        std::vector<int16_t> pcm =
+                            Gc_DecodeDsp(file + at, (std::min)(dspBytes, size - at), frames, coef);
                         EncodeXboxAdpcm(pcm, &samples);
                     } else {
                         samples.insert(samples.end(), (frames + kAdpcmBlockSamples - 1) / kAdpcmBlockSamples *
