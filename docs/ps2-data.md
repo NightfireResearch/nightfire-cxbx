@@ -384,6 +384,69 @@ it would.
 left out on purpose: a map started with `-level` has no match settings, so its match ends at once, and adding the
 names would change the default build. `-level 07000024` (the bundle's hashcode) starts one for a look.
 
+## The PS2's own levels
+
+The PS2 disc has four level bundles the Xbox disc lacks, each with its sequence bundle (`07F0xxxx`) and no
+loadables. The names are Hashcodes.h's:
+
+| Hashcode | Name | Bundle | Sequences (07F) | Directory |
+|---|---|---|---|---|
+| 0x07000041 | RefRoom | 14.5 MB | 9.7 MB | 1,070 entries: 44 map, 44 map B, 11 map 2, 861 type 5, 55 type 3, 45 skeletons, 7 scripts, a menu, `woman` |
+| 0x07000043 | AllCharacters | 14.6 MB | 2.4 MB | 349: 16 map, 6 map B, 55 map 2, 163 type 5, 61 type 3, 45 skeletons, a menu, `woman` |
+| 0x07000046 | TestRoom2 | 12.4 MB | 3.8 MB | 600: 47 map, 44 map B, 1 map 2, 401 type 5, 45 type 3, 45 skeletons, 14 scripts, a menu, `woman` |
+| 0x07000049 | AllCharacters2 | 15.4 MB | 2.4 MB | 335: 16 map, 6 map B, 48 map 2, 163 type 5, 54 type 3, 45 skeletons, a menu, `woman` |
+
+Every other level bundle is on both discs, 07000500 (SharedFiles) and 07000999 among them (the PS2's 07F00500 and
+07F00999 are empty, one sector each).
+
+**The code is on both.** The Xbox's code knows all four, as ours (ported from it) does: AnimDebugCreate
+(engine/Anim.cpp) puts every skin of skeletons 0 and 1 in a ring round the player in AllCharacters and
+AllCharacters2, and in RefRoom one HT_Skin_SnowGuard_Head4 in front of him, talking in a loop; psiDraw.cpp has their
+gamma ramps, music.cpp their MapMusic entries, Env.cpp keeps AllCharacters' trees still, SFX.cpp loads bank 11 for
+RefRoom, and the drone code has RefRoom cases (NDrone2_Combat.cpp, NDrone2_States.cpp). The PS2's ACTION.ELF has the
+same: its MapMusic (0x2501d8) holds the four, AnimDebugCreate (0x1bd6d0) compares against 0x43, 0x49 and 0x41,
+Env_Tree_Create against 0x43, and DroneFunc_FirstSightState, DroneFunc_FirstAlertState and
+NDrone2_DSTATE_EnemyRunToPoint against 0x41. The Xbox disc has only the data missing.
+
+**Nothing in the PS2 game leads to them.** Searched in ACTION.ELF and FILES.BIN (October 2026):
+- no code builds any of the four hashcodes except to compare it (every `lui 0x700` paired with `ori`/`addiu` 0x41,
+  0x43, 0x46 or 0x49 is one of the comparisons above), and the only data words holding them are MapMusic's;
+- no file in FILES.BIN holds them (as words or as text), so no menu lists them;
+- the codenames Menu_SpecialCodenameCheck knows (PASSPORT, GAMEROOM, Q LAB...) set mission and bonus bits only;
+- the debug menus left in the game list other things: C_NIS (0x2067b0) the cutscenes of the missions, C_LBPMMAP
+  adds "Main Menu" to the map list it is given; ResetMap_LevelToLoad and GetLevelToLoadFromMovieCode have no case
+  for them.
+
+So the shipped PS2 game cannot reach them; they are left on the disc, and here `-level` is the way in.
+
+**Loading them.** In the PS2 build, `-level RefRoom`, `-level AllCharacters`, `-level TestRoom2` or
+`-level AllCharacters2` (LaunchOptions.cpp, under `#if NIGHTFIRE_DATA_PS2`, so the default build is unchanged:
+`tools/pe_compare.py` on action_standalone before and after gives identical `.text`, `.data`, `.reloc`, `.rsrc`,
+and `.rdata` but the debug directory), or the hashcode (`-level 07000043`). Nothing else was needed: the level and
+its 07F bundle load through the existing seams.
+
+**In game** (test runner, `C:\nightfire-ps2rooms`, `DumpEvery=250`, 150 s each with no input, 27 October 2026):
+
+| Level | What the frames show |
+|---|---|
+| AllCharacters | a dark floor, the characters standing round the player (AnimDebugCreate's ring), the HUD |
+| AllCharacters2 | the same with other characters (suits, dresses...) |
+| RefRoom | a grey walled yard under a sky, a guard in a white winter coat in front of the player, talking (bank 16's samples play), a sphere in the distance |
+| TestRoom2 | a panelled room with a patterned carpet and a lit fireplace, an object turning in the fire, blue particles |
+
+All four load, draw and run their 150 s with no fault (`exit 124`, the timeout); the logs show only what other
+levels show (sprites the HUD asks for that are not in the bundle, weapons not loaded, `EMITTER TEXTURE MISSING`
+once, AllCharacters' and AllCharacters2's `Anim script 0x6000151 not loaded`).
+
+**Open: the player cannot move.** With keys sent (tools/drive_game.ps1: W held 12-20 s, the arrows) the view in
+TestRoom2 and AllCharacters does not change, where the same run moves the player in CastleCourtyard. In all four the
+HUD's health iris is red with only its first segment, blinking (HUD_UpdateHealthPane: health under 0.5 / 0.07,
+about 7), so the player seems to be dead or dying from the start, which takes his input away. Mission_Init finds no
+mission for these levels (MISSION_UPDATE_WAITING), so no "Mission Failed" follows. What takes his health is not known
+yet: the next step is to read glb_players[0]'s position, state and health (BLData + 0x824) in a running game - an
+attempt with cdb's non-invasive attach hung the debugger - or to log Player_HandlePain's pain types (5 to 7 come from
+the level) and Player_SetHealth's callers.
+
 ## Tools
 
 `ps2data_check` (src/action/devtools/Ps2DataCheck.cpp, `cmake --build . --config Release --target ps2data_check`):

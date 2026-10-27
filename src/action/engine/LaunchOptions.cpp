@@ -51,6 +51,13 @@ static const struct { const char *name; uint32_t hash; } kLevels[] = {
     { "EvilSilo", HT_Level_EvilSilo },
     { "EvilBaseC", HT_Level_EvilBaseC },
     { "SpaceStationD", HT_Level_SpaceStationD },
+#if NIGHTFIRE_DATA_PS2
+    // On the PS2's disc only (docs/ps2-data.md)
+    { "RefRoom", HT_Level_RefRoom },
+    { "AllCharacters", HT_Level_AllCharacters },
+    { "TestRoom2", HT_Level_TestRoom2 },
+    { "AllCharacters2", HT_Level_AllCharacters2 },
+#endif
 };
 
 static uint32_t g_level = 0;        // 0: the front end, as usual
