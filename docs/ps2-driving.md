@@ -111,15 +111,31 @@ What `Ps2Model.cpp` reads (and `tools/ps2driving_check.py geoprims` decodes offl
   coordinates (`V2-16` unsigned less 0x8000 - in 1/256ths for the world's methods, 1/1024ths for the car methods,
   established from the twins' ranges - or `V2-32` floats); then the method's other fields, in the order its PS2
   template lists them (the parameter names in the PS2's `bondrm.o`: `MatCarTextureDullPacked` has Coordinates,
-  STQ, Normals, DmgVec, DmgNrm, ColourSlot, ColourSet): colours (`V3-8` masked), normals (`V3-8` unmasked, signed),
+  STQ, Normals, DmgVec, DmgNrm, ColourSlot, ColourSet): colours (`V3-8` masked), normals (`V3-8` unmasked: bytes with 0x80 the zero),
   the damage vector and damage normal (`V4-16`, xyz less 0x8000 in 1/1024ths; the vector's w the damage weight in
   the same units, the normal's w the damage zone as it is) - each checked value for value against the Xbox's car
   streams at the same positions; `MSCNT`. `MatCarDash` has every field as `V4-32` floats (Coordinates, Normals,
   STQ, DmgVec, DmgNrm).
-- **Normals**: the PS2's point the other way from what the Xbox methods light by. With them as they are the cars
-  came out black with bright reflections; negated, as the Xbox's at frame 1500. (The Xbox's own car normals are not
-  the geometric ones either - they correlate with neither the PS2's nor normals computed from the strips - so the
-  sign was settled by the frames.)
+- **Normals** (from the data): the PS2's car normal bytes are unsigned, 0x80 the zero: (value - 128) / 127 is a
+  unit vector (mean length 1.004 over the Vanquish). Matched to the Xbox's car normals vertex by vertex (same model,
+  position and texture coordinates: 7,639 vertices), the direction agrees to a mean dot product of 0.9987, and the
+  Xbox's are that direction at length 0.9 (0.899): a least-squares fit of the Xbox's normals on the PS2's bytes gives
+  (byte - 128) x 0.00704 on the diagonal, nothing off it, residual 0.02-0.03. The conversion writes the same: the
+  direction at length 0.9. Read as signed bytes they had looked unrelated (an earlier version negated them by eye).
+  This is the PS2 format's; the GameCube's car normals need checking the same way.
+- **Car lighting tuning differs** (the cars' remaining difference, 27 October 2026): with the normals right, the
+  PS2's Vanquish is still lighter than the Xbox's at the same frame (1.4-2.4 times on the body), with or without
+  reflections (drawn with the Dull method only, the same). The cause is data: the car materials' lighting comes from
+  `data\tuning\render\carrender\default.tun` (`GAME::CarLighting*Props`), and the PS2's file is tuned for the
+  PS2's renderer: `[Dull]Ambient{vanquish}` 0.57 against the Xbox's 0.26, `[Dull]Diffuse` 0.80 against 0.386,
+  `[Paint]Reflect` 0.38 against 0.2, `[Chrome]Ambient` 0.98 against 0.3, the defaults 0.5 against 0.2-0.25, and 1,180
+  keys against 970 (the PS2's `Desat`, `Skyblend`, `Refl*`...). The ambient and diffuse values are mostly about twice
+  the Xbox's, but not uniformly (paint, chrome, reflect and specular go other ways), so no one scale converts them.
+  Choices: read that one tuning file from the Xbox disc with the render methods (it is the Xbox car methods'
+  tuning, but widens the exception), or convert key by key. Not done yet; the mission lighting files
+  (`render\lighting\*.tun`) also differ for some missions (Paris's `Light2{World}` 0.478 against 0.258) and would
+  need the same decision for the world's lit methods. Applies equally to any other platform's data drawn with the
+  Xbox's methods.
 - Models that share a draw list (`Model[0].00`, `.01` ... of one placement) are converted once; GeoPrims shared
   between lists likewise. Paris: 1,890 model symbols, 497 distinct draw lists, 1,779 distinct GeoPrims (the Xbox's
   twins have 789: the PS2 cuts a primitive into VU1-sized batches), 80,517 vertices against the Xbox's 66,388.
@@ -205,7 +221,7 @@ On the test runner (vr-desktop, slot 13 with its own checkout `C:\nightfire-ps2r
 - **Mission 6 (snow2a_mis4), frame 1500**, against the default build on the Xbox disc at the same frame: the same
   road, snow banks, fir trees, sky and mountain, the player's Vanquish (plate, lights, interior through the rear
   window), its shadow, the enemy car ahead, the timer and weapon text, the radar. Differences: the PS2's Vanquish is
-  a little lighter and more reflective than the Xbox's; the timer reads 4:32 against the Xbox's 4:47 at the same
+  lighter than the Xbox's (the car tuning above); the timer reads 4:32 against the Xbox's 4:47 at the same
   frame (the PS2 build has no opening movie, so its timer starts earlier); the traffic car differs (a random pick).
   The first build's frame showed the faults since fixed: a black chequered block under the car, a stray texel
   column beside each digit, the radar broken up, the car unlit with a blank plate.

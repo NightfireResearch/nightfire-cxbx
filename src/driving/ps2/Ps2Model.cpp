@@ -203,6 +203,12 @@ void Normalise(float *v) {
     }
 }
 
+// The packed normals' bytes: unsigned, 0x80 the zero (value - 128) / 127
+constexpr int kNormalByteZero = 0x80;
+constexpr float kNormalByteScale = 127.0f;
+// The length the Xbox's car normals have (0.899 over the Vanquish's, against its PS2 twin's unit normals)
+constexpr float kXboxNormalLength = 0.9f;
+
 // D3DVSDT_NORMPACKED3: x and y in 11 bits, z in 10, signed
 uint32_t NormPacked3(const float *n) {
     auto field = [](float f, float scale, uint32_t mask) {
@@ -213,7 +219,8 @@ uint32_t NormPacked3(const float *n) {
 }
 
 // The geometry's unpacks after the header and the strip starts, by what the methods put where: positions first;
-// then for the packed layouts the texture coordinates (V2), normals (V3-8, unmasked), colours (V3-8, masked) and the
+// then for the packed layouts the texture coordinates (V2), normals (V3-8 unmasked, bytes with 0x80 the zero),
+// colours (V3-8, masked) and the
 // damage vector and normal (the first and second V4-16: xyz, the vector's w the weight, the normal's the zone); for
 // the float layout (MatCarDash: every field V4-32) normals, texture coordinates (s, t), damage vector (w the
 // weight) and damage normal (w the zone), in that order.
@@ -294,8 +301,11 @@ bool DecodeGeometry(const std::vector<Unpack> &geometry, const std::vector<std::
         for (uint32_t i = 0; i < count && i < normals->count; i++) {
             float *n = &out->normals[i * 3];
             for (int k = 0; k < 3; k++)
-                n[k] = -(floatLayout ? Float32(normals->data + i * 16 + k * 4) : int8_t(normals->data[i * 3 + k]));
+                n[k] = floatLayout ? Float32(normals->data + i * 16 + k * 4)
+                                   : (normals->data[i * 3 + k] - kNormalByteZero) / kNormalByteScale;
             Normalise(n);
+            for (int k = 0; k < 3; k++)
+                n[k] *= kXboxNormalLength;
         }
     }
     if (damageVectors != NULL && damageNormals != NULL) {
