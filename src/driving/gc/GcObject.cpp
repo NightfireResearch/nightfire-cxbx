@@ -7,7 +7,8 @@
 // their data is big-endian, but for the relocation sites, which the tools left little-endian and the loader has just
 // filled with addresses. So each symbol's data is turned round by its class, word by word or halfword by halfword,
 // passing over the relocation sites, and so is what its pointers lead to: a model's draw list, TAR list, enable table
-// and patch list. The GeoPrims stay as they are: GcModel.cpp reads them once the constructors have run.
+// and patch list, a skeleton's bones, an animation bank's anims channel by channel. The GeoPrims stay as they are:
+// GcModel.cpp reads them once the constructors have run.
 
 #include "GcData.h"
 #include "GcBytes.h"
