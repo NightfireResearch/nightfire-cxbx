@@ -9,9 +9,10 @@ disc's render methods**.
 Status (27 October 2026): the switch is in (`NIGHTFIRE_DRIVING_DATA_GC`, the default build unchanged), and **every
 mission loads and its world, cars and props draw from the GameCube's geometry and textures with the Xbox's render
 methods**, compared with the Xbox build on the test runner ([In game](#in-game)). The HUD, fonts and front-end
-galleries draw from the GameCube's images, and the sound banks play the GameCube's samples (re-encoded). Not done:
-characters (skinned GeoPrims are left out of the draw lists), morph targets, movies, and most methods are drawn with a
-simpler Xbox method than their twin ([the mapping table](#the-mapping-table)). See [What is left](#what-is-left).
+galleries draw from the GameCube's images, and the sound banks play the GameCube's samples, decoded once to PCM.
+Not done: characters (skinned GeoPrims are left out of the draw lists), morph targets, movies, and most methods are
+drawn with a simpler Xbox method than their twin ([the mapping table](#the-mapping-table)). See
+[What is left](#what-is-left).
 
 **The exception to "nothing from the Xbox disc".** The action engine's GameCube build reads nothing from the Xbox
 disc. This build reads two files from it, by agreement: `data\render\eaglrm.o` and `data\render\bondrm.o` from the
@@ -69,6 +70,7 @@ Each a guarded line or two in the game file; the work in `src/driving/gc/`.
 | A CARP file's models (tracks, cars, props, weapons), its constructors run | data/RCARPFile.cpp `Resolve`, after `loader->Resolve()` | GcModel.cpp `Gc_ConvertModels` |
 | A character's models | anim/Model.cpp `LoadObject` | the same (all skinned: taken out of the draw lists) |
 | A stream's SCDl chunk: its frame count and channel offsets | sound/snd/Streams.cpp `SNDSTRMI_parsedata` | GcFiles.cpp `Gc_ConvertStreamChunk` |
+| A bank sample's Xbox ADPCM blocks decoded by the sound output: a stand-in's PCM taken from the store | sound/xaudio2Driving.cpp `PrepareChunk`, common/sound/voiceMixer.cpp `Sample` (SDL) | GcPcm.cpp `GcPcm_Decode` |
 | The traffic's car types: `NUM_TRAFFIC_TYPES_GC` (the GameCube release's key; the Xbox's is `_XBOX`) | game/AIVehicleController.cpp | - |
 | The pedestrian types: `NUM_PED_TYPES_GC` (no attribute file sets it, so the default stays) | game/AIPedestrian.cpp | - |
 
@@ -205,14 +207,42 @@ drawing the cars lit and damaged needs.
 
 - **Banks** (`BNKb`, GcSound.cpp): the PT headers' tags are the same on both discs (values big-endian on both). A
   GameCube timbre's samples are DSP ADPCM (representation 0x12, at 32 kHz), its sixteen coefficients and a byte in tag
-  0x8f, its data where tag 0x88 (0x89 ... per channel) says from the bank's start. Each is decoded to PCM and encoded
-  as Xbox ADPCM (0x14), and the bank rebuilt (header, PT headers, samples), each timbre's tags kept but the
-  representation, the data offsets and the coefficients, with the Xbox banks' render mode (tag 0x8c, 0x420).
-  `gcdrive_check banks`: 42 banks, 1,207 timbres, the same patch counts as the twins; the Xbox ADPCM decoded again
-  against the DSP decode, 27 dB. A bank of no patches is not a silent stand-in: the pedestrians' voice picker loops
-  until a patch is present (the female voices never stop looking), which is how mission 1 found it.
-- **Streams** (`.asf`): the same EA-XA in the same chunks; each SCDl's frame count and channel offsets are big-endian
-  on the GameCube and are turned round as the chunk is submitted.
+  0x8f, its data where tag 0x88 (0x89 ... per channel) says from the bank's start. As the bank loads, each sample is
+  decoded to 16-bit PCM once, and nothing is encoded again:
+  - The PCM goes to a store (GcPcm.cpp), padded to whole 64-sample blocks: a looping sample's padding comes from its
+    loop, from tag 0x86 round. The store is keyed by the bank's contents, so a bank loaded again finds its samples
+    there. It is host memory, outside the game's heap: every bank on the disc comes to 80 MB of PCM, and missions 1
+    and 6 keep 13 MB each.
+  - The bank is rebuilt with a stand-in for each sample. A stand-in is as long as the sample's Xbox ADPCM would be
+    (representation 0x14, 36 bytes for each 64 samples). Each of its blocks is the tag `GPCM`, the bank's number and
+    the sample's, the block's number, then zeros. A real block's fourth byte is 0, so the two cannot be confused.
+  - Each timbre keeps its tags as the GameCube has them but the representation, the data offsets and the
+    coefficients, with the Xbox banks' render mode (tag 0x8c, 0x420).
+  - The game handles the bank as an Xbox one. The sizes, the platform driver's ADPCM buffer pool and its loops rounded
+    to blocks, and the play cursors are all the Xbox data's. Only the decode differs: where a sound output decodes a
+    buffer's blocks (xaudio2Driving.cpp, or voiceMixer.cpp with SDL), `GcPcm_Decode` copies a stand-in block's 64
+    samples from the store and decodes any other block as before.
+
+  The driver could play PCM banks directly: a representation other than 0x14 goes to its PCM16 buffer pool. That
+  route was not taken, because the banks would be four times the Xbox ADPCM's size inside the game's fixed 36 MB
+  heap, and the pool's 28 buffers would be borrowed against the ADPCM pool's 152.
+
+  Checked:
+  - `gcdrive_check banks`: 42 banks and 1,207 timbres, with the same patch counts as the twins. Every timbre is mono,
+    and every one of the 1,207 stand-ins decodes through `GcPcm_Decode` to its sample's PCM, sample for sample.
+  - `tools/gcdriving_check.py banks` decodes the DSP ADPCM by its own code. Its fingerprints (FNV-1a over the PCM)
+    match `GCDRIVE_SHOW=1 gcdrive_check ... banks` for all 1,207 samples.
+  - In game on the runner, `NIGHTFIRE_GC_PCM_SHOW=1` prints each bank as it is kept and each sample's fingerprint the
+    first time an output takes its first block. Mission 1 took 50 samples from 5 banks, and mission 6 took 17 from 5;
+    every one carried the offline decode's fingerprint. The XAudio2 output's chunks were non-silent there (in mission
+    1, 6,900-21,200 of each 13,500-25,700 between its reports).
+  - A bank of no patches is not a silent stand-in: the pedestrians' voice picker loops until a patch is present (the
+    female voices never stop looking), which is how mission 1 found it.
+- **Streams** (music `.mus` and speech `.spe`; the GameCube has 36 and 200 of them, `gcdrive_check sound`): both
+  discs use the same EA-XA (representation 10) in the same chunks, at 32 kHz on the GameCube rather than 48 kHz. The
+  engine's own decoder makes them PCM in its software mixer, as it does the Xbox's, so they are decoded once and never
+  encoded again. Each SCDl's frame count and channel offsets are big-endian on the GameCube and are turned round as
+  the chunk is submitted.
 
 ## Controls
 
@@ -276,14 +306,16 @@ mostly 8-bit and DXT1 with no mip levels; the converted GeoPrims' arrays are hos
   round. Not tried.
 - **Gallery keys**: 2% of their bytes still differ from the twins (particle words both orders make plausible).
 - Converted GeoPrims are never freed (a level's unload leaks them); the Linux build, the 64-bit build (the arrays are
-  `calloc`ed outside the game window) and case-sensitive file names are untried.
+  `calloc`ed outside the game window) and case-sensitive file names are untried. On 32-bit Linux the SDL sound output
+  is built into `drivinghost`, a library of its own, which does not have the PCM store; the switch does not reach it.
 - The default build is unchanged; CI does not build the switch's sources. They compile with MSVC and, with the switch
   on, in the clang/mingw-w64 cross build (the `linux` preset in the nf-cross image, 27 October 2026, no warnings).
 
 ## Tools
 
 `gcdrive_check` (src/driving/devtools/GcDriveCheck.cpp, `cmake --build . --config Release --target gcdrive_check`)
-links the conversions themselves (GcUData.cpp, GcShape.cpp, GcSound.cpp) and runs them over the two extracted discs:
+links the conversions themselves (GcUData.cpp, GcShape.cpp, GcSound.cpp, GcPcm.cpp) and runs them over the two
+extracted discs:
 
 ```
 gcdrive_check <gc disc> <xbox disc> files            every entry against its Xbox twin, by archive kind and extension
@@ -292,24 +324,28 @@ gcdrive_check <gc disc> <xbox disc> payloads [type]  every payload turned round 
                                                      (with a type: where in its element the bytes differ, and the
                                                      first differing records side by side)
 gcdrive_check <gc disc> <xbox disc> shapes           every image converted and decoded against the Xbox twin's
-gcdrive_check <gc disc> <xbox disc> banks            every bank converted: timbres against the twins, the Xbox ADPCM
-                                                     against the DSP decode
+gcdrive_check <gc disc> <xbox disc> banks            every bank converted: timbres against the twins, each stand-in
+                                                     decoded against its sample's PCM (GCDRIVE_SHOW=1: fingerprints)
 gcdrive_check <gc disc> <xbox disc> objects          EAGL objects' classes, relocations and names no object defines
 gcdrive_check <gc disc> <xbox disc> sound            PT headers of every stream and bank patch: platform, codec, rate
 ```
 
 A disc is the folder holding `driving\`. `tools/gcdriving_check.py` (Python, no game, reads both discs' `driving`
-folders) decodes the models:
+folders) decodes the models, the animation banks and the sound banks:
 
 ```
 python tools/gcdriving_check.py geoprims <gc driving dir> <xbox driving dir> [archive file.crp ...]
 python tools/gcdriving_check.py methods <gc driving dir>
+python tools/gcdriving_check.py anims <gc driving dir> <xbox driving dir>
+python tools/gcdriving_check.py banks <gc driving dir> [bank name ...]
 ```
 
 `geoprims` prints the GeoPrim and vertex counts, how many models' bounds agree with the Xbox twins', the Xbox parent
 methods each GameCube method's models use (the mapping table's evidence), the texture coordinates' scale against the
 Xbox's and the colours against the Xbox's, matched by vertex position (about 20 s over every CARP file). `methods`
-lists the render methods the objects name, the display lists' indices per vertex and their primitive kinds.
+lists the render methods the objects name, the display lists' indices per vertex and their primitive kinds. `banks`
+decodes every bank's DSP ADPCM by its own code (about 15 s) and prints each sample's fingerprint in the lines
+`GCDRIVE_SHOW=1 gcdrive_check ... banks` prints, for `diff --strip-trailing-cr`.
 
 ## The scoping study
 
