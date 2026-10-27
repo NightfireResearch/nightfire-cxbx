@@ -103,6 +103,8 @@ struct Unpack {
 };
 
 uint32_t UnpackBytes(uint8_t format, uint32_t count) {
+    if ((format & 3) == 3)                       // V4-5: 16 bits an element
+        return (count * 2 + 3) & ~3u;
     uint32_t components = (format >> 2 & 3) + 1;
     uint32_t bits = 32 >> (format & 3);
     return (count * components * bits / 8 + 3) & ~3u;
@@ -357,6 +359,12 @@ GeoPrim *Converter::Convert(const Ps2GeoPrim *ps2, Current *current) {
         counts_[3]++;
         return NULL;
     }
+    for (int i = 0; i < entry->paramCount; i++) {
+        if (entry->params[i].kind == kParamTexture && entry->params[i].index >= current->textureCount) {
+            counts_[3]++;
+            return NULL;
+        }
+    }
 
     std::vector<std::pair<uint32_t, uint32_t>> strips;
     uint32_t first = 0;
@@ -460,11 +468,6 @@ GeoPrim *Converter::Convert(const Ps2GeoPrim *ps2, Current *current) {
                 param.Set(1, state);
                 break;
             case kParamTexture:
-                if (p.index >= current->textureCount) {
-                    counts_[3]++;
-                    free(prim);
-                    return NULL;
-                }
                 param.Set(1, current->textures[p.index]);
                 break;
             case kParamStream:
