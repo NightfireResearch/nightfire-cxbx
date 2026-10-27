@@ -5,6 +5,7 @@
     python tools/ps2driving_check.py headers <ps2 DRIVING dir> <xbox driving dir> <ext>
     python tools/ps2driving_check.py syms <DRIVING.SYM> [pattern]
     python tools/ps2driving_check.py carp <ps2 dir> <xbox dir> <archive> <file.crp|.gal> [...]
+    python tools/ps2driving_check.py geoprims <ps2 dir> <xbox dir> <archive> <file.crp> [...]
     python tools/ps2driving_check.py objects <ps2 dir> <xbox dir>
     python tools/ps2driving_check.py shapes <ps2 dir> <xbox dir>
     python tools/ps2driving_check.py banks <ps2 dir> <xbox dir>
@@ -12,8 +13,9 @@
 
 list, compare and headers work on whole files; carp compares the data-group records of CARP files and galleries
 (UGroup, engine/UGroup.h); objects counts the EAGL ELF objects' symbol classes and the render methods they name
-(eagl/Loader.cpp); shapes the image types of the SHPS/SHPX containers; banks the sample headers of the BNKl
-banks; streams the SCHl/SCDl blocks of the .asf streams.
+(eagl/Loader.cpp); geoprims decodes a CARP file's PS2 GeoPrims as src/driving/ps2/Ps2Model.cpp does and compares
+them with the Xbox twin's (counts, bounds, the methods each model pairs); shapes the image types of the SHPS/SHPX
+containers; banks the sample headers of the BNKl banks; streams the SCHl/SCDl blocks of the .asf streams.
 
 Both discs keep the driving engine's files in EA BIGF archives (.viv, .mus, .spe), whose entries may be
 RefPack-compressed (0x10 0xfb). The BIGF and RefPack readers follow the extractor project's
@@ -560,6 +562,257 @@ def cmd_streams(ps2_dir, xbox_dir):
         print(f"  {v:4} streams: {k}")
 
 
+# ---- GeoPrims (src/driving/ps2/Ps2Model.cpp): a PS2 GeoPrim is {render method, 0}; the method is a child of a PS2
+# render method whose compiled program names the TARs and GeoPrimState that changed since the GeoPrim before it and,
+# after a 0x04000002 word, a table of DMA CALL tags, one a variation, each calling a block that unpacks its colours
+# and calls the geometry chain (header V4-32 with the vertex count, three V4-8 words of strip starts at three a
+# vertex, positions V3-16 in 1/256ths offset by 0x8000 or float, texture coordinates V2-16 or float, ending in RET).
+# An Xbox GeoPrim is {its RenderMethod child (parent at +0x2c), parameters}; the parameters of the opcode-9 packets
+# are its streams.
+
+class Elf:
+    """An EAGL object with its relocations, unrelocated: pointers are (symbol name, section, offset)."""
+
+    def __init__(self, image):
+        self.image = image
+        shoff = struct.unpack_from("<I", image, 0x20)[0]
+        shnum = struct.unpack_from("<H", image, 0x30)[0]
+        self.sections = [struct.unpack_from("<IIIIIIIIII", image, shoff + i * 40) for i in range(shnum)]
+        self.symbols = []
+        self.relocations = {}
+        for s in self.sections:
+            if s[1] == 2:
+                strtab = self.sections[s[6]][4]
+                for i in range(s[5] // 16):
+                    name_at, value, size, info, other, shndx = struct.unpack_from("<IIIBBH", image, s[4] + i * 16)
+                    end = image.index(b"\0", strtab + name_at)
+                    self.symbols.append((image[strtab + name_at:end].decode("latin1"), value, shndx))
+        for s in self.sections:
+            if s[1] == 9:
+                for i in range(s[5] // 8):
+                    offset, info = struct.unpack_from("<II", image, s[4] + i * 8)
+                    self.relocations[s[7], offset] = info >> 8
+
+    def u32(self, section, offset):
+        return struct.unpack_from("<I", self.image, self.sections[section][4] + offset)[0]
+
+    def at(self, section, offset):
+        return self.sections[section][4] + offset
+
+    def ptr(self, section, offset):
+        r = self.relocations.get((section, offset))
+        if r is None:
+            return None
+        name, value, shndx = self.symbols[r]
+        return name, shndx, value + self.u32(section, offset)
+
+    def models(self):
+        return [s for s in self.symbols if s[0].startswith("__Model:::") and s[2]]
+
+    def draw_list(self, model):
+        """(the list's place, [GeoPrim (section, offset)]) - WalkDrawList over every block"""
+        p = self.ptr(model[2], model[1] + 0xcc)
+        if p is None:
+            return None, []
+        section, at = p[1], p[2]
+        start = (section, at)
+        limit = self.u32(section, at) & 0xffff
+        at += 4
+        entry, out = limit, []
+        while True:
+            if entry == 0xffff:
+                g = self.ptr(section, at)
+                if g:
+                    out.append((g[1], g[2]))
+                at += 4
+            else:
+                at += 8
+            entry = self.u32(section, at) & 0xffff
+            at += 4
+            if not entry > limit:
+                return start, out
+
+
+UNPACK_SIZES = {0x4: 8, 0x5: 4, 0x8: 12, 0x9: 6, 0xa: 3, 0xc: 16, 0xd: 8, 0xe: 4}
+
+
+def vif_unpacks(image, at, end):
+    """[(format, count, VU address and flags, masked, data offset)] of the VIF codes from at to end"""
+    out = []
+    while at + 4 <= end:
+        code = struct.unpack_from("<I", image, at)[0]
+        at += 4
+        command, count, immediate = code >> 24 & 0x7f, code >> 16 & 0xff, code & 0xffff
+        if command & 0x60 == 0x60:
+            n = count or 256
+            out.append((command & 0xf, n, immediate, bool(command & 0x10), at))
+            at += (n * UNPACK_SIZES.get(command & 0xf, 2) + 3) & ~3
+        elif command == 0x20:
+            at += 4
+        elif command in (0x30, 0x31):
+            at += 16
+        elif command in (0x50, 0x51):
+            at += immediate * 16
+    return out
+
+
+def ps2_geoprim(elf, section, offset):
+    """(method, vertex count, strips, positions, texture coordinates, variations) of a PS2 GeoPrim, or None"""
+    record = elf.ptr(section, offset)
+    method = elf.ptr(record[1], record[2] + 8)
+    program = elf.ptr(record[1], record[2])
+    table = None
+    for k in range(400):
+        if elf.u32(program[1], program[2] + 4 * k) == 0x04000002:
+            table = elf.ptr(program[1], program[2] + 4 * k + 4)
+            break
+    if table is None:
+        return None
+    variations, chain = 0, None
+    while (elf.u32(table[1], table[2] + 16 * variations) >> 28 & 7) == 5:
+        block = elf.ptr(table[1], table[2] + 16 * variations + 4)
+        if chain is None:
+            chain = elf.ptr(block[1], block[2] + 4) if elf.u32(block[1], block[2]) >> 28 & 7 == 5 else block
+        variations += 1
+    unpacks, at = [], chain[2]
+    while True:
+        tag = elf.u32(chain[1], at)
+        unpacks += vif_unpacks(elf.image, elf.at(chain[1], at + 8), elf.at(chain[1], at + 16 + (tag & 0xffff) * 16))
+        if tag >> 28 & 7 != 1:
+            break
+        at += 16 + (tag & 0xffff) * 16
+    count = struct.unpack_from("<I", elf.image, unpacks[0][4])[0]
+    starts = b"".join(elf.image[u[4]:u[4] + 4] for u in unpacks[1:4])
+    cuts = [0]
+    for b in starts:
+        if b == 0:
+            break
+        cuts.append(min(b // 3, count))
+    cuts.append(count)
+    positions = texcoords = None
+    for f, n, imm, masked, data in unpacks[4:]:
+        if positions is None and f in (0x9, 0x8, 0xc):
+            if f == 0x9:
+                raw = struct.unpack_from("<%dH" % (3 * n), elf.image, data)
+                positions = [tuple((raw[3 * i + k] - 0x8000) / 256 for k in range(3)) for i in range(n)]
+            else:
+                step = 16 if f == 0xc else 12
+                positions = [struct.unpack_from("<3f", elf.image, data + step * i) for i in range(n)]
+        elif positions is not None and texcoords is None and f in (0x5, 0x4):
+            texcoords = ([struct.unpack_from("<2H", elf.image, data + 4 * i) for i in range(n)] if f == 0x5 else
+                         [struct.unpack_from("<2f", elf.image, data + 8 * i) for i in range(n)])
+    return method[0], count, list(zip(cuts, cuts[1:])), positions, texcoords, variations
+
+
+def xbox_geoprim(elf, section, offset):
+    """(parent method, index count, positions) of an Xbox GeoPrim"""
+    method = elf.ptr(section, offset)
+    parent = elf.ptr(method[1], method[2] + 0x2c)
+    packets = elf.ptr(method[1], method[2])
+    at, param, indices, positions = packets[2], 0, 0, None
+    while True:
+        header = elf.u32(packets[1], at)
+        if header == 0:
+            break
+        op, length = header >> 16, header & 0xffff
+        if op not in (4, 25, 26, 36):
+            count = elf.u32(section, offset + 4 + 8 * param)
+            data = elf.ptr(section, offset + 8 + 8 * param)
+            if op == 2:
+                indices = elf.u32(data[1], data[2])
+            elif op == 9 and elf.u32(packets[1], at + 8) == 0 and elf.u32(packets[1], at + 12) == 12:
+                positions = [struct.unpack_from("<3f", elf.image, elf.at(data[1], data[2]) + 12 * i)
+                             for i in range(count)]
+            param += 1
+        at += 4 * length
+    return parent[0] if parent else None, indices, positions
+
+
+def bounds(points):
+    return [min(p[k] for p in points) for k in range(3)] + [max(p[k] for p in points) for k in range(3)]
+
+
+def carp_object(data):
+    image = None
+    for item, size, count, offset in group_items(data):
+        if item.endswith("ELFd"):
+            image = data[offset:offset + size]
+        elif item.endswith("ELFr") and image is not None:
+            if struct.unpack_from("<I", image, 0x20)[0] + 40 > len(image):
+                image += data[offset:offset + size]
+            return Elf(image)
+    return None
+
+
+def cmd_geoprims(ps2_dir, xbox_dir, specs):
+    for arc, name in specs:
+        got = [(p, x) for a, n, p, x in paired_entries(ps2_dir, xbox_dir, lambda n: n == name.lower())
+               if a == arc.lower()]
+        if not got:
+            print(f"{arc}: {name}: not found")
+            continue
+        pe, xe = carp_object(got[0][0]), carp_object(got[0][1])
+        xbox_models = {m[0]: m for m in xe.models()}
+        stats = collections.Counter()
+        pairs = collections.Counter()
+        texcoord_ranges = collections.defaultdict(lambda: [1 << 30, -(1 << 30)])
+        worst = []
+        lists = set()
+        for model in pe.models():
+            start, prims = pe.draw_list(model)
+            if start is None or start in lists:
+                continue
+            lists.add(start)
+            stats["models"] += 1
+            ps2_points = []
+            methods = []
+            for g in prims:
+                prim = ps2_geoprim(pe, *g)
+                if prim is None:
+                    stats["PS2 GeoPrims without a table"] += 1
+                    continue
+                method, count, strips, positions, texcoords, variations = prim
+                methods.append(method)
+                stats["PS2 GeoPrims"] += 1
+                stats["PS2 vertices"] += count
+                stats["PS2 triangles"] += sum(max(0, b - a - 2) for a, b in strips)
+                stats["PS2 variations"] += variations
+                ps2_points += positions or []
+                if texcoords and isinstance(texcoords[0][0], int):
+                    r = texcoord_ranges[method]
+                    r[0] = min(r[0], min(min(t) for t in texcoords) - 0x8000)
+                    r[1] = max(r[1], max(max(t) for t in texcoords) - 0x8000)
+            twin = xbox_models.get(model[0])
+            if twin is None:
+                stats["models without an Xbox twin"] += 1
+                continue
+            xbox_points = []
+            xprims = [xbox_geoprim(xe, *g) for g in xe.draw_list(twin)[1]]
+            for parent, indices, positions in xprims:
+                stats["Xbox GeoPrims"] += 1
+                stats["Xbox vertices"] += len(positions or [])
+                xbox_points += positions or []
+            for method in set(methods):
+                for parent in set(p[0] for p in xprims):
+                    pairs[method, parent] += 1
+            if ps2_points and xbox_points:
+                d = max(abs(a - b) for a, b in zip(bounds(ps2_points), bounds(xbox_points)))
+                stats["models with both bounds"] += 1
+                stats["bounds within 0.05"] += d < 0.05
+                worst.append((d, model[0]))
+        print(f"{arc} {name}:")
+        for k, v in stats.items():
+            print(f"  {k}: {v:,}")
+        worst.sort(reverse=True)
+        print("  largest bounds differences: " + ", ".join(f"{d:.3f} {n[10:50]}" for d, n in worst[:3]))
+        print("  PS2 method -> Xbox parent methods of the same models (models):")
+        for (method, parent), v in pairs.most_common():
+            print(f"    {v:5}  {method} -> {parent}")
+        print("  16-bit texture coordinates less 0x8000, by method (min, max):")
+        for method, r in sorted(texcoord_ranges.items()):
+            print(f"    {method}: {r[0]}, {r[1]}")
+
+
 def main(argv):
     if len(argv) >= 2 and argv[0] == "list":
         cmd_list(argv[1])
@@ -571,6 +824,8 @@ def main(argv):
         cmd_syms(argv[1], argv[2] if len(argv) > 2 else None)
     elif len(argv) >= 5 and len(argv) % 2 == 1 and argv[0] == "carp":
         cmd_carp(argv[1], argv[2], list(zip(argv[3::2], argv[4::2])))
+    elif len(argv) >= 5 and len(argv) % 2 == 1 and argv[0] == "geoprims":
+        cmd_geoprims(argv[1], argv[2], list(zip(argv[3::2], argv[4::2])))
     elif len(argv) == 3 and argv[0] in ("objects", "shapes", "banks", "streams"):
         {"objects": cmd_objects, "shapes": cmd_shapes, "banks": cmd_banks, "streams": cmd_streams}[argv[0]](
             argv[1], argv[2])
