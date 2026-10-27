@@ -438,14 +438,36 @@ All four load, draw and run their 150 s with no fault (`exit 124`, the timeout);
 levels show (sprites the HUD asks for that are not in the bundle, weapons not loaded, `EMITTER TEXTURE MISSING`
 once, AllCharacters' and AllCharacters2's `Anim script 0x6000151 not loaded`).
 
-**Open: the player cannot move.** With keys sent (tools/drive_game.ps1: W held 12-20 s, the arrows) the view in
-TestRoom2 and AllCharacters does not change, where the same run moves the player in CastleCourtyard. In all four the
-HUD's health iris is red with only its first segment, blinking (HUD_UpdateHealthPane: health under 0.5 / 0.07,
-about 7), so the player seems to be dead or dying from the start, which takes his input away. Mission_Init finds no
-mission for these levels (MISSION_UPDATE_WAITING), so no "Mission Failed" follows. What takes his health is not known
-yet: the next step is to read glb_players[0]'s position, state and health (BLData + 0x824) in a running game - an
-attempt with cdb's non-invasive attach hung the debugger - or to log Player_HandlePain's pain types (5 to 7 come from
-the level) and Player_SetHealth's callers.
+**The player is dead from the third frame, as on the PS2.** With keys sent (tools/drive_game.ps1: W held 12-20 s,
+the arrows) the view in TestRoom2 and AllCharacters does not change, where the same run moves the player in
+CastleCourtyard, and the HUD's health iris is red with only its first segment blinking (HUD_UpdateHealthPane: health
+under 0.5 / 0.07). The cause is in the game's code, the PS2's and ours alike:
+
+1. Mission_Init (PS2 0x182970) finds none of the four in MissionData, so it sets the mission status to 5
+   (MISSION_STATUS_NONE) and InternalState 5 (waiting). It runs in ResetMap_Load, before the level's objects.
+2. Player_SetHealth (PS2 0x1967f8) stores nothing unless PlrStat_OkToUpdate (0x199b50) allows it, and that allows a
+   single-player game only while the status is 0 or 1. So Player_Init's (0x191818) `Player_SetHealth(player, 100)`
+   is dropped and the health stays at the 0 control_create_object's memset left.
+3. Player_CheckForDeath (0x190f30) then finds health 0 and kills him: OBJECTTYPE_DEAD_PLAYER, no weapon,
+   SFX_CHR_BOND_DIE, the dying substate, curState 2. Without a mission, Mission_Update never moves on to "Mission
+   Failed" (it waits), so he stays dead and takes no input.
+
+Checked in game (27 October 2026, a scratch build that printed Player_Init's and Player_CheckForDeath's state, not
+committed): in all four rooms `Player_Init frame 2: asked health 100, has 0, mission status 5, ok 0` and
+`Player_CheckForDeath: dies at frame 3, health 0`, the start positions real placements (AllCharacters and
+AllCharacters2 4.39 0.68 11.79, RefRoom 27.22 1.32 -30.15, TestRoom2 -42.11 -9.17 18.53); CastleCourtyard, for
+comparison, `has 100, mission status 1, ok 1` and no death. So it is not our loading path: no missing start, no fall,
+no damage - nothing takes health, it was never given.
+
+The PS2's ACTION.ELF does the same in every step (the four functions above read the same as our ports), so the
+original, sent to these rooms, would kill the player at once too. One way out is in the code: Player_CheckForDeath skips the death while the immortality cheat is on (the PS2's
+`CheatInfo` word, which Boot_LoadPTPData fills from the shared data's Cheat_Immortal; our `CheatInfo.Immortal`). With
+it the player would live on 0 health, which Player_HandlePain then leaves alone (it returns at health <= 0).
+
+What a fix could look like (none applied): the PS2 build's `-level` for these four rooms could, after Mission_Init,
+leave the mission status at 1 (running), so that Player_Init's health is stored, as for a mission level; or start
+them with the immortality cheat on, as the PS2's code allows. Either is a launch-time change outside the game's
+functions; changing Mission_Init or PlrStat_OkToUpdate would change the game's own rules for every level.
 
 ## Tools
 
