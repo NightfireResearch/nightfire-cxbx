@@ -9,7 +9,8 @@ build of the shortcut that study pointed at: **the PS2's models drawn with the X
 Status (27 October 2026): the switch is in (`NIGHTFIRE_DRIVING_DATA_PS2`, the default build unchanged), and **every
 mission's world, cars and props draw from the PS2's geometry and textures with the Xbox's render methods** (mission 6
 compared frame for frame with the Xbox build on the test runner: the same scene, see [In game](#in-game)). The HUD,
-fonts and menus draw from the PS2's images. Not done: characters (skinned GeoPrims are left out of the draw lists),
+fonts and menus draw from the PS2's images. The cars use the Xbox's car methods (lit, reflective, damage streams)
+and cast the Xbox's shadow. Not done: characters (skinned GeoPrims are left out of the draw lists),
 sound (the PS2's banks), movies (`MPCh`), and several methods are drawn with a simpler Xbox method than their twin
 (the mapping table). See [What is left](#what-is-left).
 
@@ -103,12 +104,22 @@ What `Ps2Model.cpp` reads (and `tools/ps2driving_check.py geoprims` decodes offl
   colours (`STMASK 0x40404040`, `STROW 0,0,0,0x80`, `UNPACK V3-8` masked: RGB, alpha 0x80) and calls the geometry,
   or is the geometry itself for methods with one colour set.
 - The geometry chain (CNT tags, ending in RET): an `UNPACK V4-32` header at VU address 0 whose x is the vertex
-  count; three `UNPACK V4-8` words of strip starts (bytes, three to a vertex, the list ended by 0); the positions
+  count; three `UNPACK V4-8` words of strip starts (bytes, three to a vertex - two for `BondCarShadow`, whose VU
+  output is position and colour - the list ended by 0); the positions
   (`V3-16` unsigned, value - 0x8000 in 1/256ths, or `V3-32` / `V4-32` floats; the models' scale and offset fields are
   1 and 0, and the bounds of all 467 Paris models with an Xbox twin agree with the Xbox's to 0.01); the texture
   coordinates (`V2-16` unsigned less 0x8000 - in 1/256ths for the world's methods, 1/1024ths for the car methods,
-  established from the twins' ranges - or `V2-32` floats); for some methods the colours (`V3-8` masked) or normals
-  (`V3-8` unmasked, not used); `MSCNT`.
+  established from the twins' ranges - or `V2-32` floats); then the method's other fields, in the order its PS2
+  template lists them (the parameter names in the PS2's `bondrm.o`: `MatCarTextureDullPacked` has Coordinates,
+  STQ, Normals, DmgVec, DmgNrm, ColourSlot, ColourSet): colours (`V3-8` masked), normals (`V3-8` unmasked, signed),
+  the damage vector and damage normal (`V4-16`, xyz less 0x8000 in 1/1024ths; the vector's w the damage weight in
+  the same units, the normal's w the damage zone as it is) - each checked value for value against the Xbox's car
+  streams at the same positions; `MSCNT`. `MatCarDash` has every field as `V4-32` floats (Coordinates, Normals,
+  STQ, DmgVec, DmgNrm).
+- **Normals**: the PS2's point the other way from what the Xbox methods light by. With them as they are the cars
+  came out black with bright reflections; negated, as the Xbox's at frame 1500. (The Xbox's own car normals are not
+  the geometric ones either - they correlate with neither the PS2's nor normals computed from the strips - so the
+  sign was settled by the frames.)
 - Models that share a draw list (`Model[0].00`, `.01` ... of one placement) are converted once; GeoPrims shared
   between lists likewise. Paris: 1,890 model symbols, 497 distinct draw lists, 1,779 distinct GeoPrims (the Xbox's
   twins have 789: the PS2 cuts a primitive into VU1-sized batches), 80,517 vertices against the Xbox's 66,388.
@@ -117,7 +128,9 @@ An Xbox GeoPrim is made from each: the positions as `FLOAT3`, the texture coordi
 Xbox methods' constant register `{0, 1, 2, 1/256}`), one `D3DCOLOR` array per variation (`0xff000000 | rgb`, the
 PS2's 0x80 being the Xbox's 0x80: both mean 1.0 in these methods), and 16-bit indices that join the strips into one
 strip with repeated indices (a new strip always starting on an even index, so the winding holds) or, for a
-GeoPrimState whose primitive type is a list, triangles. Each stream's source is a `StaticVertexBuffer`
+GeoPrimState whose primitive type is a list, triangles. The car methods' other streams: normals as `NORMPACKED3`,
+damage vectors and normals as `FLOAT3`, damage weights as `FLOAT1`, zones as `SHORT1` (the Xbox car methods'
+declaration; `BondCarTextureSwitch` takes `FLOAT2` texture coordinates). Each stream's source is a `StaticVertexBuffer`
 and a D3D8 vertex buffer header over the array, registered against it, laid out where opcode 9 reads it (0x10 into
 the parameter's data, one 0x30-byte record a variation for the colours). The parameters follow the mapping table;
 the draw list's entry is pointed at the new GeoPrim, or set to null (`WalkDrawList` skips nulls) for a method mapped
@@ -138,8 +151,13 @@ GeoPrims of it.
 | `MatBondScrollTexture`, `...Packed`, `...2`, `...2Packed`, `...3Packed` | `BondTexturePacked` | `BondScrollTex1/2/3` (two coordinate sets, scroll constants, `GAME::SimStep`) | the first coordinate set, not scrolled |
 | `MatBondFrameAnimPacked` | `BondTexturePacked` | `BondFrameAnim` | not animated |
 | `MatBondWater`, `MatBondWaterPacked`, `BondUnderWater`, `BondUnderWaterPacked`, `BondKelp`, `BondGouraud` | `BondTexturePacked` | `BondWater`, `BondUnderWater`, `BondUnderWaterPacked`, `BondKelp`, `BondGouraud` | |
-| `MatCarTexturePacked`, `MatCarTextureDullPacked`, `MatCarTextureSwitchPacked`, `MatCarGouraudDullPacked`, `MatCarChrome`, `MatCarGlassPacked`, `MatCarDash` | `BondTexturePacked`, coordinates / 4 | `BondCarTexture`, `...Dull`, `...Switch`, `BondCarGouraudDull`, `BondCarChrome`, `BondCarGlass`, `BondCarSpecularBump` (normals, damage zones, reflection and specular maps, lighting) | unlit, no reflection, no damage deformation |
-| `BondCarShadow` | none | `BondCarShadow` | positions only, strip starts of another stride: left out |
+| `MatCarTexturePacked` | `BondCarTexture` | the same | state, TAR 0, `GAME::ReflectionMap`, `GAME::SpecularMap`, stream, indices, MVP, model, `GAME::SpecularMat`, `GAME::ReflMatrix`, `GAME::LightSources`, `GAME::CameraPos`, positional lights x8, `EAGL::DamageZones` x16, zeros x8, zeros, `{0,1,2,1/256}`, `{0.5,0.5,0,0}`, `GAME::ReflectionInfo2`, `GAME::CarLightingGlossyProps`, `GAME::ReflectionCarPos`; positions, damage vectors, normals, damage normals, coordinates, damage weights, zones |
+| `MatCarChrome` | `BondCarChrome` | the same | as `BondCarTexture` with `GAME::CarLightingChromeProps` |
+| `MatCarTextureDullPacked` | `BondCarTextureDull` | the same | state, TAR 0, stream, indices, MVP, model, light sources, positional lights, damage zones, zeros, `{0,1,2,1/256}`, `GAME::CarLightingDullProps`; the seven car streams |
+| `MatCarTextureSwitchPacked` | `BondCarTextureSwitch` | the same | as Dull with `{0.5,1,1,1}` and the `GAME::SwitchData[n]` the PS2 program names (the brake and indicator lights); float coordinates |
+| `MatCarGlassPacked` | `BondCarGlass` | the same | as `BondCarTexture` with the damage texture (the program's second TAR) and `GAME::CarLightingGlassProps` |
+| `MatCarDash` | `BondCarTextureDull` | `BondCarSpecularBump` (tangents, a bump map) | not bump-mapped |
+| `MatCarGouraudDullPacked`, `BondCarShadow` | `BondCarShadow` | `BondCarShadow` (the Xbox pairs both PS2 methods' models with it) | state, stream, indices, MVP, model, light sources, `{0,1,2,1/256}`, positions |
 | `BondLitTextureAndShadow_Skin`, `BondLitTextureAndShadowSpecular_Skin` | none | the same names | characters: left out |
 
 The 26 are every method the PS2's model objects name (`ps2driving_check.py objects`). The PS2's own `bondrm.o`
@@ -152,7 +170,12 @@ which could pair the remaining methods by fields rather than by name.
 
 `Ps2Shape.cpp`, applied to every file as it loads (`Ps2_ConvertFile`):
 
-- **SHPS to SHPX.** The same directory; each image's PS2 header (16 bytes) becomes the Xbox's (0x14). Palettised
+- **SHPS to SHPX.** The same directory; each image keeps the PS2's 16-byte header, which is the Xbox's too (the
+  pixels follow at +0x10 unless flag 0x1000 says otherwise), with the type, the swizzle flag and the mip count
+  changed. A gallery's atlas entries (1x1 images) keep their place in the atlas in +0x08 and +0x0c. (A first version
+  wrote a 0x14-byte header: every texture shifted by four bytes, which showed as a stray texel column beside each
+  glyph of the HUD's digits, as the HUD's sprites cut from the wrong place of their atlas - the radar - and as noise
+  on a truck's roof in mission 5.) Palettised
   images (type 1, 4-bit; type 2, 8-bit with the GS's CSM1 palette order, bits 3 and 4 of the index exchanged: checked
   by decoding against the Xbox's twins) whose sides are powers of two become 8-bit (type 0x7b, `P8`) with a
   256-colour palette attachment (0x2a), as the Xbox's own 8-bit images are; everything else becomes 32-bit (0x7d).
@@ -162,6 +185,10 @@ which could pair the remaining methods by fields rather than by name.
   one texel's colour.
 - The first build made every image 32-bit and ran out of game heap in mission 5 (snow1a): 8.7 MB free where the Xbox
   data leaves 15.7 MB. With the 8-bit images it leaves 17.5 MB (mission 6, at "Init AI Characters").
+- **The cars' shadow** (`common`'s `cshd`): the PS2 subtracts a white shape on black from the ground, the Xbox's
+  code multiplies the ground by its own image, a dark grey (0x45) shape on white; the conversion makes the PS2's
+  image the Xbox's (255 - value x 0xba / 0xff), which matches the Xbox's twin. Before that the shadow quad under
+  each car drew black.
 - **Fonts** (`FNTS`, `.sfn`): the header and glyph tables are the Xbox's; the image (at `+0x1c`) is converted as
   above and the magic made `FNTX`.
 - **Galleries** (`.gal`, data groups): each `SHPS` item is converted, appended at the end of the file and its record
@@ -177,15 +204,19 @@ On the test runner (vr-desktop, slot 13 with its own checkout `C:\nightfire-ps2r
 
 - **Mission 6 (snow2a_mis4), frame 1500**, against the default build on the Xbox disc at the same frame: the same
   road, snow banks, fir trees, sky and mountain, the player's Vanquish (plate, lights, interior through the rear
-  window), the enemy car ahead, the timer and weapon text, the radar. Differences: the Xbox's car is reflective and
-  lit (the PS2's car methods are drawn unlit here); the traffic car differs (a random pick).
+  window), its shadow, the enemy car ahead, the timer and weapon text, the radar. Differences: the PS2's Vanquish is
+  a little lighter and more reflective than the Xbox's; the timer reads 4:32 against the Xbox's 4:47 at the same
+  frame (the PS2 build has no opening movie, so its timer starts earlier); the traffic car differs (a random pick).
+  The first build's frame showed the faults since fixed: a black chequered block under the car, a stray texel
+  column beside each digit, the radar broken up, the car unlit with a blank plate.
 - **Mission 1 (paris_mis01)**: the opening in-engine scene inside the van (seat, driver, door, a truck and a car on
   the road), then Paris at night from the van: the river embankment, the bridge with its gilded statues and lamps,
   building fronts with lit windows, the road markings; the mission-failed screen when nothing is done. The PS2
   build has no opening movie (no `MPCh` player), so it reaches the scene the Xbox reaches after its movie.
 - **Missions 2, 3, 4, 5, 7, 8**: each loads and draws: the underwater approach with the submersible car (2), the
   jungle track with the armoured car (3), the jungle hillside from the red car (4), the snow village's buildings,
-  cable car and lamps at night (5: the same view as the Xbox at frame 1500, less the characters and the weapon), the
+  cable car and lamps at night (5: the same view as the Xbox at frame 1500, the truck's roof included, less the
+  characters and the weapon), the
   dock with its crane and waterfall (7), the snow race with the red Cobra and traffic (8). No faults in any.
 
 ## What is left
@@ -193,14 +224,14 @@ On the test runner (vr-desktop, slot 13 with its own checkout `C:\nightfire-ps2r
 - **Characters**: their GeoPrims (`BondLitTextureAndShadow_Skin`, `_Specular_Skin`) are taken out of the draw lists.
   They need the skinned layout (bone indices and weights, the matrix palette) converted to the Xbox skinned methods'
   streams; the skeletons and animation are the Xbox's already.
-- **The methods drawn with a simpler Xbox method** (table above): reflections on cars, lit dynamic objects,
-  scrolling and animated textures, water, damage deformation. Each needs its extra streams (normals, second
-  coordinates, damage data) found in the VIF layout and its Xbox parameters filled in.
-- **Roads**: the Xbox draws roads with `BondRoad*` methods, which project the cars' shadows; the PS2's road models
-  use the plain methods, and `BondCarShadow` GeoPrims are left out, so no car shadows on the road.
-- A few views differ from the Xbox's: in mission 1's sniping section the van's interior is in view where the Xbox
-  build shows the street and the rifle; mission 5's view from the truck shows its roof textured with noise. Not
-  investigated.
+- **The methods drawn with a simpler Xbox method** (table above): lit dynamic objects, scrolling and animated
+  textures, water, the dashboards' bump mapping. Each needs its extra fields found in the VIF layout (the PS2
+  templates name them) and its Xbox parameters filled in. Damage deformation has its streams but was not tried in
+  game.
+- **Roads**: the Xbox draws roads with `BondRoad*` methods (they also take the shadow map); the PS2's road models use
+  the plain methods. The cars' own shadow quads draw as the Xbox's.
+- In mission 1's sniping section the van's interior is in view where the Xbox build shows the street and the rifle.
+  Not investigated.
 - **Sound, movies, the PS2's speech languages**: as the scoping study (milestones 3, 4).
 - Converted GeoPrims are never freed; the Linux build and case-sensitive file names are untried.
 
