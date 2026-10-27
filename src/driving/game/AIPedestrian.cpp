@@ -171,7 +171,11 @@ void AICharacterPedestrian::Init(int) {
 
     Pedestrians.pedBase = GetPedBase();
     bool found = false;
+#if NIGHTFIRE_DRIVING_DATA_PS2
+    int types = fgWorld->attributes.LookupInt("NUM_PED_TYPES_PS2", &found);   // the PS2 release's key
+#else
     int types = fgWorld->attributes.LookupInt("NUM_PED_TYPES_XBOX", &found);
+#endif
     if (found)
         PedSets[Pedestrians.pedBase].count = types;
 

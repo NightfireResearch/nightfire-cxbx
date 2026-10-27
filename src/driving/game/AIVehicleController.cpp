@@ -401,7 +401,11 @@ void AIVehicleController::CreateSimTrafficCars(bool preload) {
     };
     bool typesFound = false;
     bool maxFound = false;
+#if NIGHTFIRE_DRIVING_DATA_PS2
+    int typeCount = fgWorld->attributes.LookupInt("NUM_TRAFFIC_TYPES_PS2", &typesFound);   // the PS2 release's key
+#else
     int typeCount = fgWorld->attributes.LookupInt("NUM_TRAFFIC_TYPES_XBOX", &typesFound);
+#endif
     int maxTraffic = fgWorld->attributes.LookupInt("MAX_TRAFFIC", &maxFound);
     if (!maxFound)
         maxTraffic = kDefaultMaxTraffic;

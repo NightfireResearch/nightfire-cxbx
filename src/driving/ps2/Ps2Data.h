@@ -15,8 +15,9 @@ class DynamicLoader;
 // itself, or `mapped`.
 const char *Ps2_FileName(const char *path, char *mapped, size_t size);
 
-// A file just loaded (and unpacked): a PS2 image container (SHPS) becomes the Xbox's (SHPX), in a new block from
-// `allocate` (the old one given to `release`); anything else is returned as it is. `size`, if not NULL, follows.
+// A file just loaded (and unpacked): a PS2 image container (SHPS) becomes the Xbox's (SHPX) and a controller
+// configuration (.def) names the Xbox pad's controls, each in a new block from `allocate` (the old one given to
+// `release`); anything else is returned as it is. `size`, if not NULL, is the file's and follows.
 void *Ps2_ConvertFile(void *data, int *size, const char *path, int flags, FileMallocFn allocate,
                       FileFreeFn release);
 

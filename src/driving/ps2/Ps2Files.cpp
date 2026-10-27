@@ -2,14 +2,16 @@
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-// The PS2 disc's file names, and the one thing read from the Xbox disc: the render-method libraries in its
-// misc.viv (docs/ps2-driving.md, "The render methods").
+// The PS2 disc's file names, the conversions applied to its files as they load, and the one thing read from the
+// Xbox disc: the render-method libraries in its misc.viv (docs/ps2-driving.md).
 
 #include "Ps2Data.h"
+#include "Ps2Convert.h"
 #include "Ps2RenderMethods.h"
 
 #include "../engine/UMemory.hpp"
 #include "../platform/Host.h"
+#include "../platform/RealMemory.h"
 #include "../platform/RefPack.h"
 
 #include <stdint.h>
@@ -29,6 +31,32 @@ const ExtensionPair kExtensions[] = {
     { ".xfn", ".sfn" },   // fonts
     { ".mad", ".mpc" },   // movies
 };
+
+// The PS2 pad's controls in the controller configurations (.def) and the Xbox pad's the game knows
+// (XBoxPadDevice::Initialize's scalars, InputConfig.cpp's front-end slots), by the buttons' places on the pads
+struct ControlPair {
+    const char *ps2;
+    const char *xbox;
+};
+const ControlPair kControls[] = {
+    { "AButtonCross", "AButtonA" },        { "DButtonCross", "AButtonA" },
+    { "AButtonCircle", "AButtonB" },       { "DButtonCircle", "AButtonB" },
+    { "AButtonSquare", "AButtonX" },       { "DButtonSquare", "AButtonX" },
+    { "AButtonTriangle", "AButtonY" },     { "DButtonTriangle", "AButtonY" },
+    { "DButtonL1", "AButtonLTrigger" },    { "DButtonR1", "AButtonRTrigger" },
+    { "DButtonL2", "AButtonWhite" },       { "DButtonR2", "AButtonBlack" },
+    { "DButtonL3", "DButtonLThumb" },      { "DButtonR3", "DButtonRThumb" },
+    { "DButtonSelect", "DButtonBack" },
+    { "ButtonCross", "ButtonA" },          { "ButtonCircle", "ButtonB" },
+    { "ButtonSquare", "ButtonX" },         { "ButtonTriangle", "ButtonY" },
+    { "ButtonL1", "ButtonLTrigger" },      { "ButtonR1", "ButtonRTrigger" },
+    { "ButtonL2", "ButtonWhite" },         { "ButtonR2", "ButtonBlack" },
+    { "ButtonLStick", "ButtonLThumb" },    { "ButtonRStick", "ButtonRThumb" },
+};
+
+bool IsSeparator(uint8_t c) {
+    return c == ' ' || c == '\t' || c == '\r' || c == '\n';
+}
 
 uint32_t BigEndian32(const uint8_t *p) {
     return uint32_t(p[0]) << 24 | uint32_t(p[1]) << 16 | uint32_t(p[2]) << 8 | p[3];
@@ -79,6 +107,51 @@ bool ReadBigEntry(const char *archive, const char *name, std::vector<uint8_t> *o
 }
 
 }  // namespace
+
+bool Ps2_ConvertControls(const char *path, const uint8_t *file, int size, std::vector<uint8_t> *converted) {
+    size_t length = strlen(path);
+    if (length < 4 || !SameName(path + length - 4, ".def"))
+        return false;
+    converted->clear();
+    for (int i = 0; i < size;) {
+        if (IsSeparator(file[i])) {
+            converted->push_back(file[i++]);
+            continue;
+        }
+        int end = i;
+        while (end < size && !IsSeparator(file[end]))
+            end++;
+        const char *replacement = NULL;
+        for (const ControlPair &pair : kControls)
+            if (size_t(end - i) == strlen(pair.ps2) && memcmp(file + i, pair.ps2, end - i) == 0)
+                replacement = pair.xbox;
+        if (replacement != NULL)
+            converted->insert(converted->end(), replacement, replacement + strlen(replacement));
+        else
+            converted->insert(converted->end(), file + i, file + end);
+        i = end;
+    }
+    return true;
+}
+
+void *Ps2_ConvertFile(void *data, int *size, const char *path, int flags, FileMallocFn allocate,
+                      FileFreeFn release) {
+    if (data == NULL)
+        return data;
+    const uint8_t *file = static_cast<const uint8_t *>(data);
+    int bytes = size != NULL ? *size : int(MEM_size(data));
+    std::vector<uint8_t> converted;
+    if (!Ps2_ConvertShapes(file, &converted) && !Ps2_ConvertControls(path, file, bytes, &converted))
+        return data;
+    void *result = allocate(path, int(converted.size()), flags);
+    if (result == NULL)
+        return data;
+    memcpy(result, converted.data(), converted.size());
+    release(data);
+    if (size != NULL)
+        *size = int(converted.size());
+    return result;
+}
 
 const char *Ps2_FileName(const char *path, char *mapped, size_t size) {
     size_t length = strlen(path);

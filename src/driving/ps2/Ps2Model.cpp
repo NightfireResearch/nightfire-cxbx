@@ -28,6 +28,7 @@
 #include <string.h>
 #include <algorithm>
 #include <map>
+#include <set>
 #include <string>
 #include <vector>
 
@@ -94,6 +95,7 @@ enum UnpackFormat : uint8_t {
 
 struct Unpack {
     uint8_t format;
+    bool masked;                     // the command's 0x10: written through STMASK (the colours; normals are not)
     bool isUnsigned;                 // the 0x4000 flag of the address: zero-extended
     uint16_t address;                // in VU memory, quadwords
     uint32_t count;
@@ -118,6 +120,7 @@ void ReadVif(const uint8_t *p, const uint8_t *end, std::vector<Unpack> *out) {
         if ((command & kVifUnpack) == kVifUnpack) {
             Unpack u;
             u.format = uint8_t(command & 0xf);
+            u.masked = (command & 0x10) != 0;
             u.isUnsigned = (immediate & 0x4000) != 0;
             u.address = uint16_t(immediate & 0x3ff);
             u.count = count != 0 ? count : 256;
@@ -240,6 +243,7 @@ private:
     DynamicLoader *loader_;
     std::vector<const void *> textures_, states_;
     std::map<const Ps2GeoPrim *, GeoPrim *> converted_;
+    std::set<const uint32_t *> lists_;
     std::map<std::string, void *> resolved_;
     int counts_[4];   // converted, not drawn by mapping, unknown method, unreadable
 };
@@ -339,7 +343,7 @@ GeoPrim *Converter::Convert(const Ps2GeoPrim *ps2, Current *current) {
             positions = &u;
         else if (positions != NULL && texCoords == NULL && (u.format == kV2_16 || u.format == kV2_32))
             texCoords = &u;
-        else if (chainColours == NULL && u.format == kV3_8)
+        else if (chainColours == NULL && u.format == kV3_8 && u.masked)
             chainColours = &u;
     }
     if (positions == NULL || vertexCount == 0 || vertexCount > positions->count) {
@@ -420,7 +424,7 @@ GeoPrim *Converter::Convert(const Ps2GeoPrim *ps2, Current *current) {
         const Unpack *u = chainColours;
         if (v < variationColours.size())
             for (const Unpack &c : variationColours[v])
-                if (c.format == kV3_8)
+                if (c.format == kV3_8 && c.masked)
                     u = &c;
         for (uint32_t i = 0; i < vertexCount; i++) {
             static const uint8_t kWhite[3] = { 0x80, 0x80, 0x80 };
@@ -499,7 +503,7 @@ void Converter::Run() {
     while (loader_->GetNextSymbol("Model", &index, &s)) {
         Model *model = static_cast<Model *>(s.address);
         uint32_t *p = model->drawList;
-        if (p == NULL)
+        if (p == NULL || !lists_.insert(p).second)   // models may share a list
             continue;
         models++;
         Current current = {};
