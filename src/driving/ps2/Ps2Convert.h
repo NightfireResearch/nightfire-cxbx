@@ -10,6 +10,9 @@
 // A PS2 image container (SHPS) as the Xbox's (SHPX) (Ps2Shape.cpp)
 bool Ps2_ConvertShapes(const uint8_t *file, std::vector<uint8_t> *converted);
 
+// A PS2 font (FNTS) as the Xbox's (FNTX): the same header and tables, its image converted (Ps2Shape.cpp)
+bool Ps2_ConvertFont(const uint8_t *file, int size, std::vector<uint8_t> *converted);
+
 // A controller configuration (.def) with the PS2 pad's control names as the Xbox pad's (Ps2Files.cpp)
 bool Ps2_ConvertControls(const char *path, const uint8_t *file, int size, std::vector<uint8_t> *converted);
 

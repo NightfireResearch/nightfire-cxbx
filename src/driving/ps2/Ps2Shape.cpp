@@ -61,6 +61,7 @@ enum Ps2ShapeType : uint32_t {
 constexpr uint32_t kXboxArgb = 0x7d;
 constexpr uint32_t kXboxSwizzled = 0x2000;   // EAGL::kShapeSwizzled
 constexpr uint8_t kPs2Opaque = 0x80;
+constexpr uint32_t kFontShapeOffset = 0x1c;   // FNTXFont::shapeOffset
 
 int PaletteSlot(int index) {
     return (index & ~0x18) | ((index & 0x08) << 1) | ((index & 0x10) >> 1);
@@ -204,5 +205,20 @@ bool Ps2_ConvertShapes(const uint8_t *file, std::vector<uint8_t> *converted) {
     ShapeDirectoryEntry *outDirectory = reinterpret_cast<ShapeDirectoryEntry *>(out.data() + sizeof(*header));
     for (uint32_t i = 0; i < header->count; i++)
         outDirectory[i].offset = offsets[i];
+    return true;
+}
+
+bool Ps2_ConvertFont(const uint8_t *file, int size, std::vector<uint8_t> *converted) {
+    if (size < 0x20 || memcmp(file, "FNTS", 4) != 0)
+        return false;
+    uint32_t image;
+    memcpy(&image, file + kFontShapeOffset, 4);
+    if (image >= uint32_t(size))
+        return false;
+    converted->assign(file, file + image);
+    ConvertImage(file, image, uint32_t(size), converted);
+    memcpy(converted->data(), "FNTX", 4);
+    uint32_t total = uint32_t(converted->size());
+    memcpy(converted->data() + 4, &total, 4);
     return true;
 }
