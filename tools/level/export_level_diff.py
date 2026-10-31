@@ -152,6 +152,7 @@ class DiffExporter:
     def dynamic(self, dy):
         oa, ob = self.eo.level.dynamic_objects(), self.en.level.dynamic_objects()
         sa, sb = self.sky_slots(oa), self.sky_slots(ob)
+        xa, xb = dl.placement_extras(self.old, oa), dl.placement_extras(self.new, ob)
         matched_a, matched_b = set(), set()
         for i, j, amb in dy['_pairs']:
             matched_a.add(i)
@@ -160,8 +161,7 @@ class DiffExporter:
             d = dl.dist(pa.pos, pb.pos)
             r = dl.angle_diff(pa.rot, pb.rot)
             kd = dl.key_diff(pa, pb)
-            other = pa.glist_hash != pb.glist_hash or (pa.path_frames, pa.path_rate, pa.path_index) != \
-                (pb.path_frames, pb.path_rate, pb.path_index)
+            other = xa[i] != xb[j]
             moved = d > dl.MOVE_EPS or r > dl.ROT_EPS
             if not (moved or kd or other):
                 self.tint(self.en.export_object(pb, fb, eb, self.characters, sb, prefix=('unchanged',)), GREY)

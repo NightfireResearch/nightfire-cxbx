@@ -70,6 +70,26 @@ Objects whose glist the game never draws (entity flag 0x10 or 0x8000 - editor ma
 Destroy volumes) are exported but marked `hidden` (and with `KHR_node_visibility`, which Blender 5.1's importer does
 not apply); `blender_import_level.py` hides them.
 
+## Comparing two builds of a level
+
+```
+python diff_level.py OLD.bin NEW.bin -o report          # report.json and report.md
+python export_level_diff.py OLD.bin NEW.bin -o diff.glb --old-label pre-release --new-label retail
+blender --python blender_import_level.py -- diff.glb    # a collection per kind of difference
+blender -b --factory-startup --python blender_render_level.py -- diff.glb out   # out_top.png
+```
+
+`diff_level.py` matches the map files' dynamic placements per type by nearest position (keys, glist and path
+break ties) and reports each as unchanged, moved, turned, with changed keys (by name, old and new value, and
+whether a changed channel is read or written), added or removed; switch channels whose readers or writers
+changed; static cels and rooms added, removed or moved; entities whose shape, shading or strips changed; textures,
+collision, portals, object and AI paths, radiators and map sounds; and the bundle's sub-files, with changes the
+game cannot see (sequences' bounding spheres, placement padding, smaller mip levels) counted as trivial. A bundle
+whose end is missing is compared as far as its entries go. `export_level_diff.py` draws it: unchanged in grey,
+added in green, removed in red, moved or changed in yellow with the old position as a translucent ghost and a
+line, changed geometry in both versions (cyan and magenta). docs/prerelease-cached-filesys.md has what it found
+in the pre-release and earlier builds.
+
 ## How it was checked
 
 - `parse_level.py validate` decodes all 21,725 placements of the 32 bundles; every glist resolves; collision (2.0

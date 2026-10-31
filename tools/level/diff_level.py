@@ -222,8 +222,10 @@ def pack_change(a, b):
 
 
 def diff_entries(old, new):
-    only_old = sorted(k for k in old.entries if k not in new.entries)
-    only_new = sorted(k for k in new.entries if k not in old.entries)
+    cut_old = set((m['type'], m['name'].lower()) for m in old.missing)
+    cut_new = set((m['type'], m['name'].lower()) for m in new.missing)
+    only_old = sorted(k for k in old.entries if k not in new.entries and k not in cut_new)
+    only_new = sorted(k for k in new.entries if k not in old.entries and k not in cut_old)
     changed = []
     same = 0
     for k in sorted(set(old.entries) & set(new.entries)):
@@ -309,16 +311,28 @@ def key_diff(a, b):
     return out
 
 
-def pair_score(a, b):
+def placement_extras(side, objs):
+    """per placement: its glist by entity name and the path frames it follows (path indices are renumbered when a
+    path is added or removed)"""
+    paths = side.level.paths()
+    out = []
+    for p, (f, e) in objs:
+        frames = paths[p.path_index][:p.path_frames] if p.path_frames and p.path_index < len(paths) else []
+        out.append(dict(glist=e.name or '%s#%d' % (f.name, e.index), path=(p.path_frames, p.path_rate,
+                        tuple((tuple(fr['pos']), tuple(fr['quat'])) for fr in frames))))
+    return out
+
+
+def pair_score(a, b, xa, xb):
     d = dist(a.pos, b.pos)
     n = sum(1 for k in set(a.keys) | set(b.keys) if a.keys.get(k) != b.keys.get(k))
-    n += a.glist_hash != b.glist_hash
-    n += (a.path_frames, a.path_index) != (b.path_frames, b.path_index)
+    n += xa['glist'] != xb['glist']
+    n += xa['path'] != xb['path']
     return d + KEY_WEIGHT * n, d
 
 
-def match_placements(old, new, tol):
-    """[(i_old, j_new, ambiguous)], unmatched old, unmatched new, per type"""
+def match_placements(old, new, tol, xo, xn):
+    """[(i_old, j_new, ambiguous)], unmatched old, unmatched new, per type; xo/xn from placement_extras"""
     pairs = []
     by_t_old, by_t_new = collections.defaultdict(list), collections.defaultdict(list)
     for i, p in enumerate(old):
@@ -330,16 +344,11 @@ def match_placements(old, new, tol):
         cand = []
         for i in io:
             for j in jn:
-                s, d = pair_score(old[i], new[j])
+                s, d = pair_score(old[i], new[j], xo[i], xn[j])
                 if d <= tol:
                     cand.append((s, d, i, j))
         cand.sort()
         used_i, used_j = set(), set()
-        scores_i = collections.defaultdict(list)
-        scores_j = collections.defaultdict(list)
-        for s, d, i, j in cand:
-            scores_i[i].append(s)
-            scores_j[j].append(s)
         for s, d, i, j in cand:
             if i in used_i or j in used_j:
                 continue
@@ -354,13 +363,12 @@ def match_placements(old, new, tol):
         # far moves: same keys and glist, one candidate each way
         rest_i = [i for i in io if i not in used_i]
         rest_j = [j for j in jn if j not in used_j]
-        sig = lambda p: (tuple(sorted(p.kv)), p.glist_hash)
         so = collections.defaultdict(list)
         sn = collections.defaultdict(list)
         for i in rest_i:
-            so[sig(old[i])].append(i)
+            so[(tuple(sorted(old[i].kv)), xo[i]['glist'])].append(i)
         for j in rest_j:
-            sn[sig(new[j])].append(j)
+            sn[(tuple(sorted(new[j].kv)), xn[j]['glist'])].append(j)
         for k, li in so.items():
             lj = sn.get(k, [])
             if len(li) == 1 and len(lj) == 1 and dist(old[li[0]].pos, new[lj[0]].pos) <= FAR:
@@ -372,7 +380,7 @@ def match_placements(old, new, tol):
         for i in io:
             for j in jn:
                 if i not in used_i and j not in used_j:
-                    s, d = pair_score(old[i], new[j])
+                    s, d = pair_score(old[i], new[j], xo[i], xn[j])
                     if d <= NEAR * tol and s - d <= KEY_WEIGHT * NEAR_KEYS:
                         cand.append((s, d, i, j))
         for s, d, i, j in sorted(cand):
@@ -385,6 +393,13 @@ def match_placements(old, new, tol):
     return pairs, [i for i in range(len(old)) if i not in mi], [j for j in range(len(new)) if j not in mj]
 
 
+def path_move(a, b):
+    """the furthest any common frame of a followed path moved, or None when the frame counts differ"""
+    if len(a) != len(b):
+        return None
+    return round(max([dist(x[0], y[0]) for x, y in zip(a, b)] or [0.0]), 4)
+
+
 def plc_record(plc):
     return dict(label=plc_label(plc), type=type_name(plc.type & 0xff), index=plc.index, pos=vec(plc.pos),
                 rot=vec(plc.rot), keys=plc_keys(plc), glist='0x%08x' % plc.glist_hash,
@@ -392,9 +407,10 @@ def plc_record(plc):
 
 
 def diff_dynamic(old, new, tol):
-    a = [p for p, r in old.level.dynamic_objects()]
-    b = [p for p, r in new.level.dynamic_objects()]
-    pairs, rem, add = match_placements(a, b, tol)
+    oa, ob = old.level.dynamic_objects(), new.level.dynamic_objects()
+    a, b = [p for p, r in oa], [p for p, r in ob]
+    xa, xb = placement_extras(old, oa), placement_extras(new, ob)
+    pairs, rem, add = match_placements(a, b, tol, xa, xb)
     out = dict(old_count=len(a), new_count=len(b), unchanged=0, ambiguous=0, interchangeable=0,
                changed=[], added=[plc_record(b[j]) for j in add], removed=[plc_record(a[i]) for i in rem])
     per_type = collections.defaultdict(collections.Counter)
@@ -425,9 +441,9 @@ def diff_dynamic(old, new, tol):
             what.append('rotated')
         if kd:
             what.append('keys')
-        if pa.glist_hash != pb.glist_hash:
+        if xa[i]['glist'] != xb[j]['glist']:
             what.append('glist')
-        if (pa.path_frames, pa.path_rate, pa.path_index) != (pb.path_frames, pb.path_rate, pb.path_index):
+        if xa[i]['path'] != xb[j]['path']:
             what.append('path')
         if any(abs(pa.scale[k] - pb.scale[k]) > 1e-4 for k in range(3)):
             what.append('scale')
@@ -441,9 +457,11 @@ def diff_dynamic(old, new, tol):
                    new_pos=vec(pb.pos), distance=round(d, 4), rotation=round(math.degrees(r), 2), keys=kd,
                    ambiguous=amb)
         if 'glist' in what:
-            rec['glist'] = ['0x%08x' % pa.glist_hash, '0x%08x' % pb.glist_hash]
+            rec['glist'] = [xa[i]['glist'], xb[j]['glist']]
         if 'path' in what:
-            rec['path'] = [[pa.path_frames, pa.path_rate, pa.path_index], [pb.path_frames, pb.path_rate, pb.path_index]]
+            rec['path'] = [[pa.path_frames, pa.path_rate, pa.path_index],
+                           [pb.path_frames, pb.path_rate, pb.path_index]]
+            rec['path_moved'] = path_move(xa[i]['path'][2], xb[j]['path'][2])
         out['changed'].append(rec)
     out['per_type'] = {k: dict(v) for k, v in sorted(per_type.items())}
     out['channels'] = diff_channels(old, new, a, b, ids)
@@ -505,6 +523,20 @@ def texture_names(side):
     return {pk.name: [t.name.lower() for t in pk.textures] for pk in side.tex.packs}
 
 
+def collision_change(fa, a, fb, b):
+    """'triangles' when the set of triangles changed, 'surfaces' when only their surface bytes did, else 'layout'
+    (the same triangles in another box tree)"""
+    try:
+        ta, tb = fa.collision(a).triangles(), fb.collision(b).triangles()
+    except Exception:
+        return 'changed (not decoded)'
+    shape = lambda ts: sorted(tuple(round(c, 3) for v in t[:3] for c in v) for t in ts)
+    if shape(ta) != shape(tb):
+        return 'triangles'
+    surf = lambda ts: sorted(tuple(round(c, 3) for v in t[:3] for c in v) + (t[3],) for t in ts)
+    return 'surfaces' if surf(ta) != surf(tb) else 'layout'
+
+
 def entity_key(f, e):
     return (f.name, e.name) if e.name else (f.name, '#%d' % e.index)
 
@@ -537,8 +569,8 @@ def diff_entities(old, new):
         ca = fa.data[a.coll_block.off:a.coll_block.off + a.coll_block.size] if a.coll_block else None
         cb = fb.data[b.coll_block.off:b.coll_block.off + b.coll_block.size] if b.coll_block else None
         if ca != cb:
-            coll.append(dict(file=k[0], entity=k[1],
-                             change='added' if ca is None else 'removed' if cb is None else 'changed'))
+            change = 'added' if ca is None else 'removed' if cb is None else collision_change(fa, a, fb, b)
+            coll.append(dict(file=k[0], entity=k[1], change=change))
     # entities of a file both builds have, present in one only
     only = lambda x, y, fy: [dict(file=k[0], entity=k[1]) for k in sorted(set(x) - set(y)) if k[0] in fy]
     return dict(geometry=geom, collision=coll, only_old=only(ea, eb, files_b), only_new=only(eb, ea, files_a))
@@ -593,29 +625,36 @@ def diff_cels(old, new, geom_changed):
                 moved=moved, keys=keys, geometry=geom, _pairs=pairs, _added=added, _removed=removed)
 
 
-def texture_table(side):
+def texture_table(side, packs):
+    """{texture name: {pixel hash: [packs]}} over the KXT textures of the given packs"""
     out = {}
     if side.tex is None:
         return out
     for pk in side.tex.packs:
+        if pk.name not in packs:
+            continue
         for t in pk.textures:
             if t.kind != 'KXT':
                 continue
             top = parse_tex.level_size(t.fmt(), t.width, t.height)
             px = b''.join(t.d[t.dataOff + k * t.frameSize:t.dataOff + k * t.frameSize + top]
                           for k in range(t.numFrames))
-            out.setdefault('%s/%s' % (pk.name, t.name.lower()), dict(pack=pk.name, hash=crc(px),
-                                                                     size=[t.width, t.height], frames=t.numFrames))
+            rec = out.setdefault(t.name.lower(), dict(hashes={}, size=[t.width, t.height]))
+            rec['hashes'].setdefault(crc(px), []).append(pk.name)
     return out
 
 
 def diff_textures(old, new):
-    a, b = texture_table(old), texture_table(new)
-    return dict(old_count=len(a), new_count=len(b),
-                added=[dict(name=k, **b[k]) for k in sorted(set(b) - set(a))],
-                removed=[dict(name=k, **a[k]) for k in sorted(set(a) - set(b))],
-                changed=[dict(name=k, old=a[k], new=b[k]) for k in sorted(set(a) & set(b))
-                         if a[k]['hash'] != b[k]['hash']])
+    """by name, over the packs both bundles hold (a texture that moved to another pack is not a change)"""
+    packs = set(f.name for f in old.level.files) & set(f.name for f in new.level.files)
+    a, b = texture_table(old, packs), texture_table(new, packs)
+    rec = lambda t, side: dict(name=t, size=side[t]['size'], packs=sorted(set(p for v in side[t]['hashes'].values()
+                                                                              for p in v)))
+    return dict(old_count=len(a), new_count=len(b), packs_compared=len(packs),
+                added=[rec(k, b) for k in sorted(set(b) - set(a))],
+                removed=[rec(k, a) for k in sorted(set(a) - set(b))],
+                changed=[dict(name=k, old_size=a[k]['size'], new_size=b[k]['size'])
+                         for k in sorted(set(a) & set(b)) if set(a[k]['hashes']) != set(b[k]['hashes'])])
 
 
 def diff_portals(old, new):
@@ -806,9 +845,9 @@ def markdown(rep, cap=400):
         L.append('## Dynamic placements')
         L.append('')
         L.append('%d in %s, %d in %s: %d unchanged, %d changed, %d added, %d removed. %d matches were ambiguous, '
-                 '%d between identical placements.' % (dy['old_count'], o, dy['new_count'], n, dy['unchanged'],
-                                                       len(dy['changed']), len(dy['added']), len(dy['removed']),
-                                                       dy['ambiguous'], dy['interchangeable']))
+                 '%d between identical placements. Placement numbers are each build\'s own record numbers.' % (
+                     dy['old_count'], o, dy['new_count'], n, dy['unchanged'], len(dy['changed']), len(dy['added']),
+                     len(dy['removed']), dy['ambiguous'], dy['interchangeable']))
         L.append('')
         cols = ('old', 'new', 'unchanged', 'moved', 'rotated', 'keys', 'glist', 'path', 'added', 'removed')
         rows = [(t, c) for t, c in dy['per_type'].items() if c.get('old', 0) != c.get('unchanged', 0) or
@@ -836,9 +875,10 @@ def markdown(rep, cap=400):
                                                            for (t, k, a, b), c in common.most_common() if c >= 3])
         kc = [r for r in dy['changed'] if r['keys'] or 'glist' in r['what'] or 'path' in r['what']]
         lst('### Keys changed', ['%s (%s in %s): %s%s%s' % (
-            r['label'], r['old_label'], o, fmt_keys(r['keys']),
+            r['label'], r['old_label'], o, fmt_keys(r['keys']) or '-',
             '; glist %s -> %s' % tuple(r['glist']) if 'glist' in r else '',
-            '; path (frames, rate, index) %s -> %s' % tuple(r['path']) if 'path' in r else '') for r in kc])
+            '; path (frames, rate, index) %s -> %s%s' % (r['path'][0], r['path'][1], ', furthest frame moved %.2f' % (
+                r['path_moved']) if r.get('path_moved') is not None else '') if 'path' in r else '') for r in kc])
         ch = []
         for c in dy['channels']:
             role = lambda r: {'in': 'reads', 'out': 'writes', 'inout': 'reads and writes'}.get(r, 'uses')
@@ -878,18 +918,22 @@ def markdown(rep, cap=400):
             r['file'], r['entity'], r['change'], ', vertices %d -> %d, triangles %d -> %d' % (
                 r['verts'][0], r['verts'][1], r['tris'][0], r['tris'][1]) if r['change'] == 'shape' else '')
             for r in g])
-        lst('### Collision changed', ['%s/%s %s' % (r['file'], r['entity'], r['change']) for r in en['collision']])
+        cc = collections.Counter(r['change'] for r in en['collision'])
+        lst('### Collision changed (%s)' % ', '.join('%d %s' % (v, k) for k, v in sorted(cc.items())),
+            ['%s/%s %s' % (r['file'], r['entity'], r['change']) for r in en['collision']
+             if r['change'] not in ('surfaces', 'layout')])
         lst('### Entities only in %s (files both have)' % n,
             ['%s/%s' % (r['file'], r['entity']) for r in en['only_new']])
         lst('### Entities only in %s (files both have)' % o,
             ['%s/%s' % (r['file'], r['entity']) for r in en['only_old']])
     tx = rep.get('textures')
     if tx:
-        lst('### Textures', ['added: %s (%s, %dx%d)' % (r['name'], r['pack'], r['size'][0], r['size'][1])
-                             for r in tx['added']] +
-            ['removed: %s (%s)' % (r['name'], r['pack']) for r in tx['removed']] +
-            ['changed: %s (%dx%d -> %dx%d)' % (r['name'], r['old']['size'][0], r['old']['size'][1],
-                                               r['new']['size'][0], r['new']['size'][1]) for r in tx['changed']])
+        lst('### Textures (by name, in the %d packs both have)' % tx['packs_compared'],
+            ['added: %s (%dx%d, %s)' % (r['name'], r['size'][0], r['size'][1], ', '.join(r['packs']))
+             for r in tx['added']] +
+            ['removed: %s (%s)' % (r['name'], ', '.join(r['packs'])) for r in tx['removed']] +
+            ['changed: %s (%dx%d -> %dx%d)' % (r['name'], r['old_size'][0], r['old_size'][1], r['new_size'][0],
+                                               r['new_size'][1]) for r in tx['changed']])
     if rep.get('portals'):
         p = rep['portals']
         L.append('Portals: %d -> %d, %d of those in common changed.' % (p['old_count'], p['new_count'],
