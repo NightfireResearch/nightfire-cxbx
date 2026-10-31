@@ -8,7 +8,7 @@ height), both with backface culling on so inside-out faces would show as holes, 
 
 A scene from export_level_diff.py gets only the top view, in its groups' colours (changed geometry in its new
 version only), with the differences rendered a second time on their own and laid over it (OVERLAY opacity) so
-that roofs do not hide them, and a dot on every added, removed and moved object or cel.
+that roofs do not hide them, and a dot on every added, removed, moved or turned object or cel.
 """
 import json
 import math
@@ -142,8 +142,9 @@ if pts:
         dots = 0
         for o in objs:
             col = dot_colour(o) if o.get('placementIndex') is not None or o.get('placement') is not None else None
-            if col is None:
-                continue
+            moved = any(w in o.get('diff', '') for w in ('moved', 'turned'))
+            if col is None or (col == DOT_COLOURS[3][1] and not moved):
+                continue                     # a change of keys only gets no dot
             p = o.matrix_world.translation
             px = int((p.x - c.x) / cam_data.ortho_scale * size + size / 2)
             py = int((p.y - c.y) / cam_data.ortho_scale * size + size / 2)   # Blender's rows run bottom-up
