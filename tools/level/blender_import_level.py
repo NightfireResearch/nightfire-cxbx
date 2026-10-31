@@ -13,7 +13,9 @@ On top of Blender's glTF importer it:
 - hides the objects the game never draws (custom property "hidden": glist flag 0x10 or 0x8000 - editor markers
   such as the red boxes of Destroy volumes). The file marks them with KHR_node_visibility too, which Blender's
   importer does not apply (5.1);
-- sets the scene to 60 fps (the rate of the game's animations) and the viewport's clip end to 5 km.
+- sets the scene to 60 fps (the rate of the game's animations) and the viewport's clip end to 5 km;
+- for a scene from export_level_diff.py: a collection per difference group (blender_diff.py), and the viewport
+  showing material colours (the groups' colours).
 """
 import glob
 import json
@@ -128,10 +130,25 @@ for o in new:
         o.hide_set(True)
         o.hide_render = True
         hidden += 1
+diff_groups = 0
+if TYPES_DIR and TYPES_DIR not in sys.path:
+    sys.path.insert(0, TYPES_DIR)
+try:
+    import blender_diff
+except ImportError:
+    blender_diff = None
+if blender_diff is not None:
+    for root in blender_diff.diff_roots(new):
+        diff_groups += blender_diff.diff_collections(root)
+    if diff_groups:
+        blender_diff.show_colours()
 for area in getattr(bpy.context.screen, 'areas', None) or []:
     if area.type == 'VIEW_3D':
         for sp in area.spaces:
             if sp.type == 'VIEW_3D':
                 sp.clip_end = 5000
-print('imported %s: %d objects, %d property tooltips%s, %d switch channels, %d hidden (never drawn by the game)' % (
-    PATH, len(new), tips, '' if types else ' (types_*.json not found: set TYPES_DIR)', channels, hidden))
+                if diff_groups:
+                    sp.shading.color_type = 'MATERIAL'
+print('imported %s: %d objects, %d property tooltips%s, %d switch channels, %d hidden (never drawn by the game)%s' % (
+    PATH, len(new), tips, '' if types else ' (types_*.json not found: set TYPES_DIR)', channels, hidden,
+    ', %d difference collections' % diff_groups if diff_groups else ''))

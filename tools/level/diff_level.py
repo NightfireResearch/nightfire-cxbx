@@ -864,7 +864,8 @@ def markdown(rep, cap=400):
                      st['old_count'], st['old_rooms'], o, st['new_count'], st['new_rooms'], n, st['unchanged'],
                      len(st['moved']), len(st['added']), len(st['removed']), len(st['keys']), len(st['geometry'])))
         L.append('')
-        cel = lambda r: '%s %s/%s at %s' % ('room' if r['room'] else 'cel', r['file'], r['entity'], fmt_pos(r['centre']))
+        cel = lambda r: '%s %s/%s at %s' % ('room' if r['room'] else 'cel', r['file'], r['entity'],
+                                            fmt_pos(r['centre']))
         lst('### Cels added in %s' % n, [cel(r) for r in st['added']])
         lst('### Cels removed (in %s only)' % o, [cel(r) for r in st['removed']])
         lst('### Cels moved', ['%s: moved %.2f, turned %.1f deg' % (cel(r), r['distance'], r['rotation'])
@@ -878,8 +879,10 @@ def markdown(rep, cap=400):
                 r['verts'][0], r['verts'][1], r['tris'][0], r['tris'][1]) if r['change'] == 'shape' else '')
             for r in g])
         lst('### Collision changed', ['%s/%s %s' % (r['file'], r['entity'], r['change']) for r in en['collision']])
-        lst('### Entities only in %s (files both have)' % n, ['%s/%s' % (r['file'], r['entity']) for r in en['only_new']])
-        lst('### Entities only in %s (files both have)' % o, ['%s/%s' % (r['file'], r['entity']) for r in en['only_old']])
+        lst('### Entities only in %s (files both have)' % n,
+            ['%s/%s' % (r['file'], r['entity']) for r in en['only_new']])
+        lst('### Entities only in %s (files both have)' % o,
+            ['%s/%s' % (r['file'], r['entity']) for r in en['only_old']])
     tx = rep.get('textures')
     if tx:
         lst('### Textures', ['added: %s (%s, %dx%d)' % (r['name'], r['pack'], r['size'][0], r['size'][1])

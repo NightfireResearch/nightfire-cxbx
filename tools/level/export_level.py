@@ -255,14 +255,13 @@ class LevelExporter(eg.Exporter):
         for c in self.level.static_cels():
             self.export_cel(c, collision, rooms_linked)
 
-    def export_cel(self, c, collision=False, rooms_linked=False, parent=None):
-        """one static cel under `parent` (default: the "rooms" or "static" group); its node, or None"""
+    def export_cel(self, c, collision=False, rooms_linked=False, prefix=()):
+        """one static cel in its "rooms" or "static" group (under the groups named in `prefix`); its node, or None"""
         if not c.drawable:
             self.count('static not drawable')
             return None
         mi = self.mesh_of(c.file, c.entity)
-        if parent is None:
-            parent = self.group('rooms') if c.is_room else self.group('static')
+        parent = self.group(*prefix, 'rooms' if c.is_room else 'static')
         m = c.world
         extras = dict(placement=c.placement.index, file=c.file.name, entity=c.entity.name,
                       type='0x%x' % (c.placement.type & 0xffff))
@@ -377,9 +376,9 @@ class LevelExporter(eg.Exporter):
         for plc, (f, ent) in objs:
             self.export_object(plc, f, ent, characters, sky_slots)
 
-    def export_object(self, plc, f, ent, characters=True, sky_slots=None, parent=None):
-        """one dynamic object under `parent` (default: its category and type group); its node, or None when the
-        game creates nothing for it"""
+    def export_object(self, plc, f, ent, characters=True, sky_slots=None, prefix=()):
+        """one dynamic object in its category and type group (under the groups named in `prefix`); its node, or
+        None when the game creates nothing for it"""
         weapon_table = TYPES.get(15, {}).get('weapon_gfx', {})
         tid = plc.type & 0xff
         t = TYPES.get(tid)
@@ -397,8 +396,7 @@ class LevelExporter(eg.Exporter):
         m = self.object_matrix(plc, t, ent)
         category = {'volume': 'volumes', 'skin': 'characters', 'marker': 'markers', 'light': 'lights',
                     'sky': 'sky'}.get(kind, 'objects')
-        if parent is None:
-            parent = self.group(category, t['name'])
+        parent = self.group(*prefix, category, t['name'])
         node_kw = dict(name=name, matrix=None if is_identity(m) else gl_matrix(m), extras=extras)
         if kind == 'skin' and characters:
             skin_hash = plc.dword(0) if tid == 15 else (0x05000003 if tid == 243 else None)
