@@ -254,9 +254,12 @@ class Level:
     next NumXboxTexLoaded values (starting at 1 after maybePsiResetResources); a TD's low 16 bits + 1 is one of
     those values. Packs without an entity block never create their textures (and take no numbers)."""
 
-    def __init__(self, path):
-        D = open(path, 'rb').read()
-        self.name = os.path.basename(path)[:-4]
+    def __init__(self, path, name=None):
+        if isinstance(path, (bytes, bytearray)):
+            D, self.name = bytes(path), name
+        else:
+            D = open(path, 'rb').read()
+            self.name = name or os.path.basename(path)[:-4]
         self.packs = []
         self.byGlobal = {}
         n = 1

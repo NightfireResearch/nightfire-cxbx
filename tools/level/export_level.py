@@ -99,10 +99,12 @@ def fmt_value(field, v):
 class LevelExporter(eg.Exporter):
     """Reuses export_gltf.Exporter's mesh, material and texture code, with a level instead of a skin."""
 
-    def __init__(self, path, log=print, textures=True):
+    def __init__(self, path, log=print, textures=True, name=None, gltf=None):
+        """path: a bundle file, or its bytes with `name` (the level hashcode); gltf: a Gltf to add to (another
+        exporter's, so two levels share one file)"""
         # (Exporter.__init__ wants a skin; set what build_mesh and the material code use instead)
         self.log = log
-        self.g = eg.Gltf()
+        self.g = gltf or eg.Gltf()
         self.materials, self.images = {}, {}
         self.image_writer = None
         self.vertex_ids = False
@@ -110,8 +112,9 @@ class LevelExporter(eg.Exporter):
         self.morph_nodes = []
         self.textures = textures
         self.path = path
-        self.level = pl.Level(path)
-        self.tex = parse_tex.Level(path)
+        data = path if isinstance(path, (bytes, bytearray)) else open(path, 'rb').read()
+        self.level = pl.Level(data, name=name or os.path.basename(path)[:8].lower())
+        self.tex = parse_tex.Level(data, name=self.level.name)
         packs01 = [pk for pk in self.tex.packs]
         files = self.level.files
         if [f.name for f in files] != [pk.name for pk in packs01]:
@@ -120,7 +123,6 @@ class LevelExporter(eg.Exporter):
         self.mesh_cache = {}
         self.groups = {}
         self.skel_table = parse_skeleton.load_table()
-        data = open(path, 'rb').read()
         import bundle
         self.skins = {int(n[:8], 16): data[o:o + l] for t, n, o, l in bundle.walk(data) if n.lower().startswith('05')}
         self.character_cache = {}
@@ -242,43 +244,50 @@ class LevelExporter(eg.Exporter):
         return True
 
     # --- the static world
-    def export_static(self, collision):
+    def export_static(self, collision, link=True):
         rooms_linked = False
-        try:
-            self.level.link_rooms()
-            rooms_linked = True
-        except Exception as e:
-            self.log('  room linking failed: %s' % e)
+        if link:
+            try:
+                self.level.link_rooms()
+                rooms_linked = True
+            except Exception as e:
+                self.log('  room linking failed: %s' % e)
         for c in self.level.static_cels():
-            if not c.drawable:
-                self.count('static not drawable')
-                continue
-            mi = self.mesh_of(c.file, c.entity)
-            grp = self.group('rooms') if c.is_room else self.group('static')
-            m = c.world
-            extras = dict(placement=c.placement.index, file=c.file.name, entity=c.entity.name,
-                          type='0x%x' % (c.placement.type & 0xffff))
-            if c.is_room:
-                extras.update(ambient=list(c.ambient), switchChannel=c.switch_channel, musicEvent=c.music_event)
-            elif rooms_linked:
-                if c.room is not None:
-                    extras['room'] = c.room.entity.name
-            if c.eflags & 0x8:
-                extras['billboard'] = True
-            self.add(grp, name=c.entity.name or 'cel', mesh=mi,
-                     matrix=None if is_identity(m) else gl_matrix(m), extras=extras)
-            self.count('rooms' if c.is_room else 'static objects')
-            if collision:
-                coll = c.file.collision(c.entity)
-                if coll is not None:
-                    tris = coll.triangles()
-                    key = ('coll', id(c.file), c.entity.index)
-                    if key not in self.mesh_cache:
-                        self.mesh_cache[key] = self.collision_mesh(c.entity.name, tris)
-                    if self.mesh_cache[key] is not None:
-                        mc = c.world_collision
-                        self.add(self.group('collision'), name='coll_%s' % (c.entity.name or 'cel'),
-                                 mesh=self.mesh_cache[key], matrix=None if is_identity(mc) else gl_matrix(mc))
+            self.export_cel(c, collision, rooms_linked)
+
+    def export_cel(self, c, collision=False, rooms_linked=False, parent=None):
+        """one static cel under `parent` (default: the "rooms" or "static" group); its node, or None"""
+        if not c.drawable:
+            self.count('static not drawable')
+            return None
+        mi = self.mesh_of(c.file, c.entity)
+        if parent is None:
+            parent = self.group('rooms') if c.is_room else self.group('static')
+        m = c.world
+        extras = dict(placement=c.placement.index, file=c.file.name, entity=c.entity.name,
+                      type='0x%x' % (c.placement.type & 0xffff))
+        if c.is_room:
+            extras.update(ambient=list(c.ambient), switchChannel=c.switch_channel, musicEvent=c.music_event)
+        elif rooms_linked:
+            if c.room is not None:
+                extras['room'] = c.room.entity.name
+        if c.eflags & 0x8:
+            extras['billboard'] = True
+        node = self.add(parent, name=c.entity.name or 'cel', mesh=mi,
+                        matrix=None if is_identity(m) else gl_matrix(m), extras=extras)
+        self.count('rooms' if c.is_room else 'static objects')
+        if collision:
+            coll = c.file.collision(c.entity)
+            if coll is not None:
+                tris = coll.triangles()
+                key = ('coll', id(c.file), c.entity.index)
+                if key not in self.mesh_cache:
+                    self.mesh_cache[key] = self.collision_mesh(c.entity.name, tris)
+                if self.mesh_cache[key] is not None:
+                    mc = c.world_collision
+                    self.add(self.group('collision'), name='coll_%s' % (c.entity.name or 'cel'),
+                             mesh=self.mesh_cache[key], matrix=None if is_identity(mc) else gl_matrix(mc))
+        return node
 
     def collision_mesh(self, name, tris):
         pts, idx = [], []
@@ -365,63 +374,71 @@ class LevelExporter(eg.Exporter):
             tid = plc.type & 0xff
             if tid == 42:
                 sky_slots[plc.dword(0)] = plc          # a later placement in a slot replaces the earlier one
-        weapon_table = TYPES.get(15, {}).get('weapon_gfx', {})
         for plc, (f, ent) in objs:
-            tid = plc.type & 0xff
-            t = TYPES.get(tid)
-            if t is None:
-                self.count('unknown type %d' % tid)
-                continue
-            kind = t.get('visual', {}).get('kind', 'none') if isinstance(t.get('visual'), dict) else 'none'
-            if tid in (255, 246, 247, 221):
-                continue                              # the game does nothing with these
-            if tid == 42 and sky_slots.get(plc.dword(0)) is not plc:
-                continue
-            if tid == 15 and plc.dword(0) == 0x05000000:
-                continue                              # the editor's template drone
-            extras, name = self.object_properties(plc, t, tid, ent)
-            m = self.object_matrix(plc, t, ent)
-            category = {'volume': 'volumes', 'skin': 'characters', 'marker': 'markers', 'light': 'lights',
-                        'sky': 'sky'}.get(kind, 'objects')
+            self.export_object(plc, f, ent, characters, sky_slots)
+
+    def export_object(self, plc, f, ent, characters=True, sky_slots=None, parent=None):
+        """one dynamic object under `parent` (default: its category and type group); its node, or None when the
+        game creates nothing for it"""
+        weapon_table = TYPES.get(15, {}).get('weapon_gfx', {})
+        tid = plc.type & 0xff
+        t = TYPES.get(tid)
+        if t is None:
+            self.count('unknown type %d' % tid)
+            return None
+        kind = t.get('visual', {}).get('kind', 'none') if isinstance(t.get('visual'), dict) else 'none'
+        if tid in (255, 246, 247, 221):
+            return None                           # the game does nothing with these
+        if tid == 42 and sky_slots is not None and sky_slots.get(plc.dword(0)) is not plc:
+            return None
+        if tid == 15 and plc.dword(0) == 0x05000000:
+            return None                           # the editor's template drone
+        extras, name = self.object_properties(plc, t, tid, ent)
+        m = self.object_matrix(plc, t, ent)
+        category = {'volume': 'volumes', 'skin': 'characters', 'marker': 'markers', 'light': 'lights',
+                    'sky': 'sky'}.get(kind, 'objects')
+        if parent is None:
             parent = self.group(category, t['name'])
-            node_kw = dict(name=name, matrix=None if is_identity(m) else gl_matrix(m), extras=extras)
-            if kind == 'skin' and characters:
-                skin_hash = plc.dword(0) if tid == 15 else (0x05000003 if tid == 243 else None)
-                if tid == 15 and skin_hash == 0x050000b1 and skin_hash not in self.skins:
-                    skin_hash = 0x0500008c            # maybeFixupSkinHashcode (EvilBase)
-                node = self.add(parent, **node_kw)
-                weapon = None
-                if tid == 15:
-                    wt = weapon_table.get(str(plc.dword(9)))
-                    if wt and wt.get('gfx'):
-                        weapon = (int(wt['gfx'], 16), wt.get('whichBone'))
-                if skin_hash is None or not self.place_character(node, skin_hash, weapon):
-                    self.count('characters without a skin in this level')
-                self.count('characters')
-            elif kind == 'volume':
-                sc = plc.scale if tid in (245, 248) else (1.0, 1.0, 1.0)
-                mi = self.box_mesh(ent.bbmin, ent.bbmax, (1.0, 0.6, 0.1) if tid not in (245, 248) else (0.2, 0.6, 1.0))
-                self.add(parent, mesh=mi, scale=list(sc) if tuple(sc) != (1.0, 1.0, 1.0) else None, **node_kw)
-                self.count('volumes')
-            elif kind in ('glist', 'sprite', 'sky', 'animated'):
-                mi = self.mesh_of(f, ent)
-                if ent.flags & 0x8010:
-                    # glist flag 0x10 (hidden) or 0x8000 (never drawn): the game draws nothing here - often an
-                    # editor-coloured marker (Destroy volumes use a red "Portal_Red" box). Kept, but invisible.
-                    extras['hidden'] = True
-                    node_kw['extensions'] = dict(KHR_node_visibility=dict(visible=False))
-                    used = self.g.j.setdefault('extensionsUsed', [])
-                    if 'KHR_node_visibility' not in used:
-                        used.append('KHR_node_visibility')
-                    self.count('hidden objects')
-                self.add(parent, mesh=mi, **node_kw)
-                self.count('objects with a mesh' if mi is not None else 'objects without geometry')
-            else:
-                self.add(parent, **node_kw)
-                self.count('markers and logic')
-            if tid == 78:
-                self.light(parent, name + ' light', plc.pos, [plc.dword(k) / 255.0 for k in (1, 2, 3)],
-                           max(plc.as_float(0), 0.0) or None)
+        node_kw = dict(name=name, matrix=None if is_identity(m) else gl_matrix(m), extras=extras)
+        if kind == 'skin' and characters:
+            skin_hash = plc.dword(0) if tid == 15 else (0x05000003 if tid == 243 else None)
+            if tid == 15 and skin_hash == 0x050000b1 and skin_hash not in self.skins:
+                skin_hash = 0x0500008c            # maybeFixupSkinHashcode (EvilBase)
+            node = self.add(parent, **node_kw)
+            weapon = None
+            if tid == 15:
+                wt = weapon_table.get(str(plc.dword(9)))
+                if wt and wt.get('gfx'):
+                    weapon = (int(wt['gfx'], 16), wt.get('whichBone'))
+            if skin_hash is None or not self.place_character(node, skin_hash, weapon):
+                self.count('characters without a skin in this level')
+            self.count('characters')
+        elif kind == 'volume':
+            sc = plc.scale if tid in (245, 248) else (1.0, 1.0, 1.0)
+            mi = self.box_mesh(ent.bbmin, ent.bbmax, (1.0, 0.6, 0.1) if tid not in (245, 248) else (0.2, 0.6, 1.0))
+            node = self.add(parent, mesh=mi, scale=list(sc) if tuple(sc) != (1.0, 1.0, 1.0) else None,
+                            **node_kw)
+            self.count('volumes')
+        elif kind in ('glist', 'sprite', 'sky', 'animated'):
+            mi = self.mesh_of(f, ent)
+            if ent.flags & 0x8010:
+                # glist flag 0x10 (hidden) or 0x8000 (never drawn): the game draws nothing here - often an
+                # editor-coloured marker (Destroy volumes use a red "Portal_Red" box). Kept, but invisible.
+                extras['hidden'] = True
+                node_kw['extensions'] = dict(KHR_node_visibility=dict(visible=False))
+                used = self.g.j.setdefault('extensionsUsed', [])
+                if 'KHR_node_visibility' not in used:
+                    used.append('KHR_node_visibility')
+                self.count('hidden objects')
+            node = self.add(parent, mesh=mi, **node_kw)
+            self.count('objects with a mesh' if mi is not None else 'objects without geometry')
+        else:
+            node = self.add(parent, **node_kw)
+            self.count('markers and logic')
+        if tid == 78:
+            self.light(parent, name + ' light', plc.pos, [plc.dword(k) / 255.0 for k in (1, 2, 3)],
+                       max(plc.as_float(0), 0.0) or None)
+        return node
 
     # --- lights, paths, portals
     def light(self, parent, name, pos, colour, rng):
