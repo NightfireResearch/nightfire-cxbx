@@ -13,6 +13,7 @@ are identical to the pre-release copy (or to retail when there is none): fewest 
 and OUT/summary.json holds every step's headline counts.
 """
 import argparse
+import collections
 import json
 import os
 import subprocess
@@ -76,7 +77,9 @@ def headline(rep):
         st = rep['static']
         h['static'] = dict(old=st['old_count'], new=st['new_count'], rooms=[st['old_rooms'], st['new_rooms']],
                            added=len(st['added']), removed=len(st['removed']), moved=len(st['moved']),
-                           keys=len(st['keys']), geometry=len(st['geometry']))
+                           keys=len(st['keys']), geometry=len(st['geometry']),
+                           removed_space=dict(collections.Counter(r['space']['kind'] for r in st['removed']
+                                                                  if 'space' in r)))
         h['ai_paths'] = dict(added=len(rep['ai_paths']['added']), removed=len(rep['ai_paths']['removed']),
                              changed=len(rep['ai_paths']['changed']))
         h['paths'] = dict(old=rep['paths']['old_count'], new=rep['paths']['new_count'],

@@ -82,11 +82,12 @@ blender -b --factory-startup --python blender_render_level.py -- diff.glb out   
 `diff_level.py` matches the map files' dynamic placements per type by nearest position (keys, glist and path
 break ties) and reports each as unchanged, moved, turned, with changed keys (by name, old and new value, and
 whether a changed channel is read or written), added or removed; switch channels whose readers or writers
-changed; static cels and rooms added, removed or moved; entities whose shape, shading or strips changed; textures,
+changed; static cels and rooms added, removed (and whether the removed one's surface was re-cut into other cels,
+replaced by other geometry, or is gone) or moved; entities whose shape, shading or strips changed; textures,
 collision, portals, object and AI paths, radiators and map sounds; and the bundle's sub-files, with changes the
 game cannot see (sequences' bounding spheres, placement padding, smaller mip levels) counted as trivial. A bundle
 whose end is missing is compared as far as its entries go. `export_level_diff.py` draws it: unchanged in grey,
-added in green, removed in red, moved or changed in yellow with the old position as a translucent ghost and a
+added in green, removed in red (re-cut in violet, replaced in orange), moved or changed in yellow with the old position as a translucent ghost and a
 line, changed geometry in both versions (cyan and magenta). docs/prerelease-cached-filesys.md has what it found
 in the pre-release and earlier builds.
 

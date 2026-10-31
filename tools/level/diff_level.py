@@ -14,7 +14,8 @@ Writes OUT_PREFIX.json (everything) and OUT_PREFIX.md (a readable summary); with
   candidate scored within AMBIGUOUS of the chosen one.
 - Static cels are matched by (file, entity name), nearest position first; geometry is compared per entity by the
   hash of its mesh's vertex and index data, then its strips (materials); textures by name and pixel hash;
-  collision per entity and portals by index.
+  collision per entity and portals by index. A removed cel is checked for where its space went (removed_space):
+  re-cut into NEW's cels that still carry its surface, replaced by other geometry, or gone.
 - Object paths by index, AI paths by name, radiators and map sounds by nearest position.
 - Sub-files present in only one bundle, and changed ones by kind. A change is trivial when it only touches the
   bytes listed in TRIVIAL (sequences' bounding sphere) or, in a graphics pack, when its placements and textures
@@ -46,6 +47,14 @@ NEAR_KEYS = 2
 MOVE_EPS = 1e-3
 ROT_EPS = 1e-3
 TRIVIAL_PACK_BYTES = 64
+# where a removed cel's space went (removed_space)
+SPACE_EPS = 0.2
+SPACE_CELL = 4.0
+SPACE_MERGED = 0.6
+SPACE_REPLACED = 0.3
+SPACE_MAX_TRIS = 2000
+SPACE_BOUNDS_AREA = 10.0
+SAMPLES = ((1 / 3, 1 / 3, 1 / 3), (2 / 3, 1 / 6, 1 / 6), (1 / 6, 2 / 3, 1 / 6), (1 / 6, 1 / 6, 2 / 3))
 
 KINDS = {0: 'graphics pack', 1: 'map file', 2: 'graphics pack', 3: 'skin', 4: 'animation sequence',
          5: 'animation script', 6: 'skeleton', 7: 'game script', 8: 'menu file', 11: 'graphics pack',
@@ -625,6 +634,110 @@ def diff_cels(old, new, geom_changed):
                 moved=moved, keys=keys, geometry=geom, _pairs=pairs, _added=added, _removed=removed)
 
 
+def cel_triangles(c):
+    """a static cel's drawn triangles in world space"""
+    m = c.entity.mesh
+    if m is None or m.empty:
+        return []
+    w = c.world
+    pos = [pl.xform(w, v['pos']) for v in m.vertices]
+    return [(pos[a], pos[b], pos[d]) for a, b, d, pi in m.triangles()]
+
+
+def tri_area(t):
+    a, b, c = t
+    u = [b[k] - a[k] for k in range(3)]
+    v = [c[k] - a[k] for k in range(3)]
+    x = (u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0])
+    return 0.5 * math.sqrt(x[0] * x[0] + x[1] * x[1] + x[2] * x[2])
+
+
+class TriGrid:
+    """world triangles bucketed by SPACE_CELL cubes (bounding box widened by SPACE_EPS) for nearest-surface tests"""
+
+    def __init__(self, tris):
+        self.tris = tris
+        self.cells = collections.defaultdict(list)
+        self.big = []
+        for i, (t, owner) in enumerate(tris):
+            lo = [int(math.floor((min(p[k] for p in t) - SPACE_EPS) / SPACE_CELL)) for k in range(3)]
+            hi = [int(math.floor((max(p[k] for p in t) + SPACE_EPS) / SPACE_CELL)) for k in range(3)]
+            if (hi[0] - lo[0] + 1) * (hi[1] - lo[1] + 1) * (hi[2] - lo[2] + 1) > 512:
+                self.big.append(i)
+                continue
+            for x in range(lo[0], hi[0] + 1):
+                for y in range(lo[1], hi[1] + 1):
+                    for z in range(lo[2], hi[2] + 1):
+                        self.cells[(x, y, z)].append(i)
+
+    def near(self, p):
+        """the owner of a triangle within SPACE_EPS of p, or None"""
+        key = tuple(int(math.floor(p[k] / SPACE_CELL)) for k in range(3))
+        for i in self.cells.get(key, []) + self.big:
+            t, owner = self.tris[i]
+            if pl._pt_tri_dist2(p, *t) <= SPACE_EPS * SPACE_EPS:
+                return owner
+        return None
+
+
+def removed_space(old, new, st):
+    """Where each removed cel's surface went: sample points over its triangles, and the retail (NEW) cels with a
+    surface within SPACE_EPS of them. 're-cut' when NEW covers at least SPACE_MERGED of its area (with the cels
+    that cover it), 'replaced' when less is covered but NEW has at least SPACE_REPLACED of its area in triangles
+    inside its bounds, else 'gone'. A cel without a mesh is 'replaced' when NEW has SPACE_BOUNDS_AREA of triangles
+    inside its bounds, else 'gone'."""
+    if not st['_removed']:
+        return
+    a, b = old.level.static_cels(), new.level.static_cels()
+    owners = []
+    tris = []
+    for j, c in enumerate(b):
+        if c.drawable:
+            name = '%s %s' % ('room' if c.is_room else 'cel', c.entity.name or '#%d' % c.entity.index)
+            owners.append(name)
+            tris += [(t, len(owners) - 1) for t in cel_triangles(c) if tri_area(t) > 1e-6]
+    grid = TriGrid(tris)
+    centroids = [([sum(p[k] for p in t) / 3 for k in range(3)], tri_area(t)) for t, o in tris]
+    for rec, i in zip(st['removed'], st['_removed']):
+        ts = cel_triangles(a[i])
+        if not ts:
+            # a cel without a mesh (a room drawn by its objects): by its bounds alone
+            c = a[i]
+            corners = [pl.xform(c.world, (x, y, z)) for x in (c.bbmin[0], c.bbmax[0]) for y in (c.bbmin[1], c.bbmax[1])
+                       for z in (c.bbmin[2], c.bbmax[2])]
+            lo = [min(p[k] for p in corners) for k in range(3)]
+            hi = [max(p[k] for p in corners) for k in range(3)]
+            inside = sum(ar for cen, ar in centroids if all(lo[k] <= cen[k] <= hi[k] for k in range(3)))
+            rec['space'] = dict(kind='replaced' if inside >= SPACE_BOUNDS_AREA else 'gone', by_bounds=True,
+                                new_area_inside=round(inside, 2), into=[])
+            continue
+        step = max(1, len(ts) // SPACE_MAX_TRIS)
+        total = covered = 0.0
+        by_owner = collections.Counter()
+        for t in ts[::step]:
+            ar = tri_area(t)
+            for wa, wb, wc in SAMPLES:
+                p = [wa * t[0][k] + wb * t[1][k] + wc * t[2][k] for k in range(3)]
+                total += ar / 4
+                o = grid.near(p)
+                if o is not None:
+                    covered += ar / 4
+                    by_owner[o] += ar / 4
+        lo = [min(p[k] for t in ts for p in t) for k in range(3)]
+        hi = [max(p[k] for t in ts for p in t) for k in range(3)]
+        inside = sum(ar for cen, ar in centroids if all(lo[k] <= cen[k] <= hi[k] for k in range(3)))
+        frac = covered / total if total else 0.0
+        kind = 'gone'
+        if frac >= SPACE_MERGED:
+            kind = 're-cut'
+        elif total and inside >= SPACE_REPLACED * total / step:
+            kind = 'replaced'
+        rec['space'] = dict(kind=kind, covered=round(frac, 3), area=round(total * step, 2),
+                            new_area_inside=round(inside, 2),
+                            into=[dict(cel=owners[o], share=round(v / total, 3)) for o, v in by_owner.most_common(3)
+                                  if v / total >= 0.05])
+
+
 def texture_table(side, packs):
     """{texture name: {pixel hash: [packs]}} over the KXT textures of the given packs"""
     out = {}
@@ -771,6 +884,7 @@ def compare(old_path, new_path, old_label='old', new_label='new', tol=TOL):
                               'lights and sounds' % (old.label if not old.has_map else new.label))
         return rep, old, new
     rep['static'] = diff_cels(old, new, geom_changed)
+    removed_space(old, new, rep['static'])
     rep['dynamic'] = diff_dynamic(old, new, tol)
     rep['portals'] = diff_portals(old, new)
     rep['paths'] = diff_paths(old, new)
@@ -907,7 +1021,23 @@ def markdown(rep, cap=400):
         cel = lambda r: '%s %s/%s at %s' % ('room' if r['room'] else 'cel', r['file'], r['entity'],
                                             fmt_pos(r['centre']))
         lst('### Cels added in %s' % n, [cel(r) for r in st['added']])
-        lst('### Cels removed (in %s only)' % o, [cel(r) for r in st['removed']])
+        def space(r):
+            sp = r.get('space')
+            if not sp:
+                return ''
+            if sp.get('by_bounds'):
+                return ' - %s: no mesh; %s has %.0f square units of triangles inside its bounds' % (
+                    'space gone' if sp['kind'] == 'gone' else 'replaced', n, sp['new_area_inside'])
+            text = {'re-cut': 're-cut: %s covers %d%% of its surface' % (n, round(100 * sp['covered'])),
+                    'replaced': 'replaced: %s covers %d%% of its surface, with other geometry inside its bounds' % (
+                        n, round(100 * sp['covered'])),
+                    'gone': 'space gone: %s covers %d%% of its surface' % (n, round(100 * sp['covered']))}[sp['kind']]
+            if sp['into']:
+                text += ' (%s)' % ', '.join('%s %d%%' % (x['cel'], round(100 * x['share'])) for x in sp['into'])
+            return ' - ' + text
+        kinds = collections.Counter(r['space']['kind'] for r in st['removed'] if 'space' in r)
+        how = ': %s' % ', '.join('%d %s' % (v, k) for k, v in sorted(kinds.items())) if kinds else ''
+        lst('### Cels removed (in %s only)%s' % (o, how), [cel(r) + space(r) for r in st['removed']])
         lst('### Cels moved', ['%s: moved %.2f, turned %.1f deg' % (cel(r), r['distance'], r['rotation'])
                                for r in st['moved']])
         lst('### Cels with changed keys', ['%s: %s -> %s' % (cel(r), r['old_keys'], r['new_keys']) for r in st['keys']])

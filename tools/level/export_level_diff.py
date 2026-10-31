@@ -10,7 +10,9 @@ One root node "diff_<level>", then a group per kind of difference, each holding 
 |---|---|---|
 | unchanged | grey | NEW's static cels and objects that match OLD's in place, keys and geometry |
 | added in NEW | green | NEW's cels, objects, object paths and AI paths that OLD does not have |
-| removed from OLD | red | OLD's that NEW does not have |
+| removed from OLD | red | OLD's that NEW does not have (a removed cel whose surface NEW no longer has) |
+| re-cut in NEW | violet | OLD's removed cels whose surface NEW's cels still cover (diff_level.removed_space) |
+| replaced in NEW | orange | OLD's removed cels whose space NEW fills with other geometry |
 | moved or changed | yellow | NEW's matched objects and cels that moved, turned or changed keys, where NEW has them |
 | moved or changed/OLD positions | pale yellow, translucent | the same, where OLD had them, with a line to NEW's |
 | changed geometry/NEW, changed geometry/OLD | cyan, magenta | both versions of each cel whose entity's shape changed |
@@ -37,6 +39,8 @@ YELLOW = (1.0, 0.85, 0.0, 1.0)
 GHOST = (1.0, 0.95, 0.5, 0.35)
 CYAN = (0.0, 0.8, 0.9, 1.0)
 MAGENTA = (0.9, 0.2, 0.9, 1.0)
+VIOLET = (0.55, 0.45, 1.0, 1.0)
+ORANGE = (1.0, 0.55, 0.1, 1.0)
 SHAPE_CHANGES = ('shape', 'mesh added', 'mesh removed')
 
 
@@ -139,8 +143,23 @@ class DiffExporter:
                 self.tint(self.en.export_cel(cb, prefix=('unchanged',)), GREY)
         for j in st['_added']:
             self.tint(self.en.export_cel(b[j], prefix=(self.added,)), GREEN)
-        for i in st['_removed']:
-            self.tint(self.eo.export_cel(a[i], prefix=(self.removed,)), RED)
+        for rec, i in zip(st['removed'], st['_removed']):
+            sp = rec.get('space', {})
+            kind = sp.get('kind')
+            if kind == 're-cut':
+                node = self.eo.export_cel(a[i], prefix=('re-cut in %s' % self.new.label,))
+                self.tint(node, VIOLET)
+            elif kind == 'replaced':
+                node = self.eo.export_cel(a[i], prefix=('replaced in %s' % self.new.label,))
+                self.tint(node, ORANGE)
+            else:
+                node = self.eo.export_cel(a[i], prefix=(self.removed,))
+                self.tint(node, RED)
+            if 'covered' in sp:
+                self.mark(node, '%s: %d%% of its surface still there%s' % (
+                    kind, round(100 * sp['covered']),
+                    ' (%s)' % ', '.join('%s %d%%' % (x['cel'], round(100 * x['share'])) for x in sp['into'])
+                    if sp['into'] else ''))
 
     def sky_slots(self, objs):
         slots = {}

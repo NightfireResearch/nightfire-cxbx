@@ -8,7 +8,8 @@ height), both with backface culling on so inside-out faces would show as holes, 
 
 A scene from export_level_diff.py gets only the top view, in its groups' colours (changed geometry in its new
 version only), with the differences rendered a second time on their own and laid over it (OVERLAY opacity) so
-that roofs do not hide them, and a dot on every added, removed, moved or turned object or cel.
+that roofs do not hide them, and a dot on every added, removed (red, or violet when its surface was re-cut into other cels, orange when other
+geometry replaced it), moved or turned object or cel.
 """
 import json
 import math
@@ -45,8 +46,9 @@ def under(o, names):
 
 diff = any(o.name.startswith('diff_') and o.parent is None for o in objs)
 DOT = 7
+MOVED = (1.0, 0.85, 0.0)
 DOT_COLOURS = ((' positions', (1.0, 0.95, 0.5)), ('added in ', (0.1, 0.85, 0.2)), ('removed from ', (0.95, 0.15, 0.1)),
-               ('moved or changed', (1.0, 0.85, 0.0)))
+               ('re-cut in ', (0.55, 0.45, 1.0)), ('replaced in ', (1.0, 0.55, 0.1)), ('moved or changed', MOVED))
 
 
 def dot_colour(o):
@@ -143,9 +145,12 @@ if pts:
         for o in objs:
             col = dot_colour(o) if o.get('placementIndex') is not None or o.get('placement') is not None else None
             moved = any(w in o.get('diff', '') for w in ('moved', 'turned'))
-            if col is None or (col == DOT_COLOURS[3][1] and not moved):
+            if col is None or (col == MOVED and not moved):
                 continue                     # a change of keys only gets no dot
             p = o.matrix_world.translation
+            if o.get('placement') is not None and o.type == 'MESH':
+                # a cel: rooms are built in world space, so its node sits at the origin; the dot goes on its middle
+                p = sum((o.matrix_world @ Vector(v) for v in o.bound_box), Vector()) / 8
             px = int((p.x - c.x) / cam_data.ortho_scale * size + size / 2)
             py = int((p.y - c.y) / cam_data.ortho_scale * size + size / 2)   # Blender's rows run bottom-up
             if DOT <= px < size - DOT and DOT <= py < size - DOT:

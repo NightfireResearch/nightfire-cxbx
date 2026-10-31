@@ -171,28 +171,37 @@ pre-release build's.
 | Level | Placements | What changed |
 |---|---|---|
 | 07000001 HendersonA (older) | 206 -> 205 | one Light removed; one TriggerTouch moved 1.2 and its glist changed; 13 Drones and 2 Pickups by weapon number only. Rooms unchanged |
-| 07000002 HendersonB (older) | 263 -> 266 | rooms 42 -> 28: `garden1`-`garden8` and `waterarea2`-`waterarea6` among the 16 cels removed, 3 cels added; portals 62 -> 37. TriggerTouchOnce 22 -> 24, a TriggerMultiplexSIn added, a TriggerTouch replaced; 8 switch channels rewired |
+| 07000002 HendersonB (older) | 263 -> 266 | the garden re-cut into fewer rooms (42 -> 28): `garden1`-`garden6`, `garden8`, `garden8_roof` and two other cels lie on retail room `garden7`'s surface, and `waterarea2`-`waterarea7` on `waterarea1`'s (all 16 fully covered), so the portals between them go too (62 -> 37); 3 cels added. TriggerTouchOnce 22 -> 24, a TriggerMultiplexSIn added, a TriggerTouch replaced; 8 switch channels rewired |
 | 07000003 HendersonC (older) | 253 -> 242 | RigidBody 12 -> 3, Door 15 -> 13 (the removed doors' paths go too: 23 -> 21 object paths), one Pickup replaced and two moved about 7; one cel added (`opendoorsbedrtoom`) |
 | 07000004 HendersonD (older) | 28 -> 28 | weapon numbers only; one cel added |
 | 07000005 CastleExterior (pre) | 228 -> 227 | one DroneCoverCorner removed; three Drones moved (up to 6.8). 10 entities' shapes changed, among them the rooms `Room_Road_B`, `Room_Outerwall_Corner` and `Room_outerwall_B4`, and the helicopter parts in pack 01000051 |
 | 07000006 CastleCourtyard (pre) | 447 -> 450 | Destroy 4 -> 6, Pickup 10 -> 11 (two added, one removed); three Drones moved (up to 3.5); two Doors gain open and close sounds. 47 entities' shading changed, 5 shapes |
 | 07000008 CastleIndoors2 (older) | 182 -> 184 | Pickup 6 -> 8, one moved 10.6; five Doors gain open and close sounds; three DroneCoverLow change their animation |
 | 07000009 TowerA (older) | 89 -> 91 | two Hints added; one Pickup moved 7.7 |
-| 0700000a TowerB (older) | 281 -> 283 | two Hints added; static cels 4 added, 4 removed, 3 moved, 39 with changed keys; 35 entity shapes changed |
+| 0700000a TowerB (older) | 281 -> 283 | two Hints added; static cels 4 added, 3 moved, 39 with changed keys, and 4 removed whose surfaces retail rooms `Office-A` and `Office-J+K` now carry; 35 entity shapes changed |
 | 0700000b TowerC (older) | 164 -> 163 | one SoundTrigger removed, three set to keep playing; one TriggerTouchOnce moved 1.0; 5 channels rewired |
-| 0700000c PowerStationA1 (older) | 264 -> 268 | DynamicObject 3 -> 5, a SoundTrigger and a TriggerTouchOnce added; six Destroy objects' health 0 -> 20; static cels 7 added, 5 removed |
+| 0700000c PowerStationA1 (older) | 264 -> 268 | DynamicObject 3 -> 5, a SoundTrigger and a TriggerTouchOnce added; six Destroy objects' health 0 -> 20; static cels 7 added; of the 5 removed, two meshless blockers and a pallet stack are gone and the rest replaced by other geometry |
 | 0700000d PowerStationA2 (older) | 261 -> 281 | DroneCoverLow 60 -> 68, DroneCoverCorner 52 -> 56, Drone 39 -> 41 (3 added, 1 removed), Pickup 14 -> 16, a DroneSpawner, DynamicObject, ThirdIcon and TriggerTouch added; 11 static cels added; an AI path added |
-| 07000012 Tower2B (older) | 335 -> 312 | Breakable 126 -> 97, all four Hurt volumes removed, TriggerTouchOnce 23 -> 28, SkyObject 1 -> 3, a Destroy, DroneSpawner, Hint, Pickup and DroneAIPoint added, a Door and a DroneCoverCorner removed; `drawWeapon` 10 -> 1 on 28 Drones; a room added (`corridors_b_4A`), 20 cels added, 6 removed; 53 entity shapes changed; 6 AI paths changed |
+| 07000012 Tower2B (older) | 335 -> 312 | Breakable 126 -> 97, all four Hurt volumes removed, TriggerTouchOnce 23 -> 28, SkyObject 1 -> 3, a Destroy, DroneSpawner, Hint, Pickup and DroneAIPoint added, a Door and a DroneCoverCorner removed; `drawWeapon` 10 -> 1 on 28 Drones; a room added (`corridors_b_4A`), 20 cels added; of 6 cels removed, 5 now lie on retail rooms (`Office-A`, `Office_N-security room`, `MERGED_4 RIGHT`) and one meshless blocker's space holds other geometry; 53 entity shapes changed; 6 AI paths changed |
 | 07000013 Tower2C (older) | 116 -> 121 | the three Shooters removed; Pickup 3 -> 7, SkyObject 2 -> 4, TriggerTouchOnce 6 -> 8; `drawWeapon` 10 -> 1 on 10 Drones, two Drones' skins changed |
-| 07000014 EvilBase (older) | 688 -> 745 | 35 Emitters added (none before); DynamicObject 26 -> 45; Drone 60 -> 61 (6 added, 5 removed), DroneSpawner 11 -> 14, ScriptPlayer 12 -> 15, InverterTrigger 1 -> 4, Door 59 -> 55, Pickup 34 -> 32 (four added, six removed, nine moved, one of them by 92); 42 switch channels rewired; room `Underwater_section1` added, 63 cels added, 42 removed; 30 of 74 object paths changed |
-| 07000015 EvilSilo (older) | 296 -> 254 | rooms 91 -> 59: the 26 `room_corridor_*` rooms and the `ladderbit*` rooms are gone, and their corridor cels with them (91 cels removed in all); portals 121 -> 62; Door 82 -> 54, and 14 more moved about 1 with their paths; Corona 90 -> 76; five Mines moved |
+| 07000014 EvilBase (older) | 688 -> 745 | 35 Emitters added (none before); DynamicObject 26 -> 45; Drone 60 -> 61 (6 added, 5 removed), DroneSpawner 11 -> 14, ScriptPlayer 12 -> 15, InverterTrigger 1 -> 4, Door 59 -> 55, Pickup 34 -> 32 (four added, six removed, nine moved, one of them by 92); 42 switch channels rewired; room `Underwater_section1` added, 63 cels added; the 42 removed cels (41 `Fire` cels and one more) lie on retail cels `FX_Fire_Small`, `FX_Fire_Large` and room `CorridorA8_1` - the same surfaces under new names; 30 of 74 object paths changed |
+| 07000015 EvilSilo (older) | 296 -> 254 | the older build has corridors between the hub rooms on three floors (cels' centres at heights 24, 33 and 42); retail keeps only the top floor's. The 24 lower `room_corridor_*` rooms (A and B) and their 34 `corridor_*` and lamp cels are gone - retail has no surface within 0.2 of 99% of them and no geometry in their bounds - as are the 8 `ladderbit*` rooms; 25 smaller cels removed (codepads and others) lie on retail's `Silo_D*` cels. Rooms 91 -> 59, portals 121 -> 62 with them; Door 82 -> 54, and 14 more moved about 1 with their paths; Corona 90 -> 76; five Mines moved |
 | 07000024 SkyRail (older) | 112 -> 112 | a Car replaced, another moved 15.9; Pickups by weapon number; a room added (`MHU1C1`) |
 | 07000025 SubPen (older) | 126 -> 126 | four Hurt volumes moved, two of them now `hurtType` 6 with `damage` 1000 (were 0 and 1); three MPObjects moved |
-| 07000026 StealthShip (older) | 96 -> 99 | rooms 5 -> 1 (`Upstairsstorage`, `Upstairsstairs` and their copies removed), portals 7 -> 0; Hurt 1 -> 4; all four Cars moved (up to 9) |
+| 07000026 StealthShip (older) | 96 -> 99 | rooms 5 -> 1: `Upstairsstorage`, `Upstairsstairs` and their copies are re-cut into retail room `stealthship`, which covers all of their surfaces, so the 7 portals between them go; cels `waterA` and `Corona_Demolition` gone; Hurt 1 -> 4; all four Cars moved (up to 9) |
 | 07000027 FortKnox (older) | 113 -> 113 | weapon numbers only; one Car turned |
-| 07000028 MissileSilo (older) | 82 -> 83 | Pickup 16 -> 17 (two added, one removed); 7 static cels added, 1 removed |
+| 07000028 MissileSilo (older) | 82 -> 83 | Pickup 16 -> 17 (two added, one removed); 7 static cels added; cel `Corona_Demolition` gone (as in 24, 25, 26 and 27) |
 | 07000023 Atlantis, 07000029 SnowBlind (older) | - | map file cut off: sub-files only |
 | 07000048 front end, 07000500 shared | - | they place nothing: sub-files only |
+
+**Where removed rooms went.** A cel or room missing from the later build is not always space taken out.
+`diff_level.py` samples each removed cel's surface and looks for the later build's surfaces within 0.2 units:
+"re-cut" when 60% or more is still covered (it names the cels that cover it), "replaced" when less is but the
+later build has other triangles inside its bounds, "gone" otherwise (a cel without a mesh is judged by its bounds).
+Over all pairs: 07000002's 16, 0a's 4, 12's 5, 14's 42 and 26's 5 are re-cut; 15's lower corridors and ladder
+rooms (66 cels and rooms), 0c's two blockers and a pallet stack, and `Corona_Demolition` in the five multiplayer
+maps are gone; 0c's other two and 12's blocker are replaced. In the scenes and renders re-cut cels are violet and
+replaced ones orange, not red.
 
 **Sub-files only one build has.**
 
@@ -288,7 +297,8 @@ python tools/prerelease/diff_all.py C:/nightfire-prerelease/bundles C:/nightfire
   `trim()` in `tools/anim/bundle.py` reads what is there.
 - `diff_all.py` (about 15 minutes with the renders) writes `reports/<level>_<from>_vs_<to>.json` and `.md`,
   `glb/<same>.glb`, `renders/<same>_top.png` and `summary.json`. In the scenes and renders: unchanged in grey,
-  added in the later build in green, removed in red, moved or changed in yellow with the old position as a pale
+  added in the later build in green, removed in red (violet when the later build's cels still cover the removed
+  cel's surface, orange when other geometry fills its space), moved or changed in yellow with the old position as a pale
   ghost and a line, changed geometry in cyan (magenta for the old version, which the render leaves out). The renders
   lay the differences over the roofs and put a dot on each added, removed, moved or turned object.
 - The text, small-file and sound-bank findings above came from one-off scripts kept in `build/prerelease/scripts/`
