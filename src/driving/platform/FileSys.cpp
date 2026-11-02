@@ -1363,7 +1363,8 @@ struct FileReq {
     int allocFlags;
 };
 
-static intptr_t SizeInternal(int priority, void *argument) {            // 0x0010d870
+// FUNC_AT(0x0010d870)
+intptr_t SizeInternal(int priority, void *argument) {
     FileReq *r = (FileReq *)argument;
     int slot;
     if (!FILESYS_opensync(r->path, MODE_READ, priority, &slot))
@@ -1373,7 +1374,7 @@ static intptr_t SizeInternal(int priority, void *argument) {            // 0x001
     return size;
 }
 
-// The allocation is named after the file. 0x0010da00 is the same, and also keeps the size.
+// The allocation is named after the file. FILE_loadsize_internal is the same, and also keeps the size.
 static void *LoadInternal(int priority, FileReq *r, bool keepSize) {
     int slot;
     if (!FILESYS_opensync(r->path, MODE_READ, priority, &slot))
@@ -1389,15 +1390,18 @@ static void *LoadInternal(int priority, FileReq *r, bool keepSize) {
     return buffer;
 }
 
-static intptr_t FILE_load_internal(int priority, void *argument) {      // 0x0010d900
+// AUTOINJECT
+intptr_t FILE_load_internal(int priority, void *argument) {
     return (intptr_t)LoadInternal(priority, (FileReq *)argument, false);
 }
 
-static intptr_t FILE_loadsize_internal(int priority, void *argument) {  // 0x0010da00
+// FUNC_AT(0x0010da00)
+intptr_t FILE_loadsize_internal(int priority, void *argument) {
     return (intptr_t)LoadInternal(priority, (FileReq *)argument, true);
 }
 
-static intptr_t FILE_loadat_internal(int priority, void *argument) {    // 0x0010dae0
+// AUTOINJECT
+intptr_t FILE_loadat_internal(int priority, void *argument) {
     FileReq *r = (FileReq *)argument;
     int count = r->size > 0 ? r->size : 0x7fffffff;
     int slot;
@@ -1408,7 +1412,8 @@ static intptr_t FILE_loadat_internal(int priority, void *argument) {    // 0x001
     return got;
 }
 
-static intptr_t FILE_save_internal(int priority, void *argument) {      // 0x0010dbe0
+// FUNC_AT(0x0010dbe0)
+intptr_t FILE_save_internal(int priority, void *argument) {
     FileReq *r = (FileReq *)argument;
     int slot;
     if (!FILESYS_opensync(r->path, MODE_CREATE | MODE_TRUNCATE, priority, &slot))

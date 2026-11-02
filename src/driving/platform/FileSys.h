@@ -59,6 +59,14 @@ bool FILE_save(char *path, void *buffer, int size);
 unsigned FILE_unpacksizez(char *path);
 void* FILE_loadpackz(char *path, int flags);
 
+// FILESYS_atomic's functions under FILE_sizez, FILE_load(z), FILE_loadsizez, FILE_loadat(z) and FILE_save; the
+// argument is their request (path, buffer, size, flag, allocation flags).
+intptr_t SizeInternal(int priority, void *argument);
+intptr_t FILE_load_internal(int priority, void *argument);
+intptr_t FILE_loadsize_internal(int priority, void *argument);
+intptr_t FILE_loadat_internal(int priority, void *argument);
+intptr_t FILE_save_internal(int priority, void *argument);
+
 int ASYNCFILE_init(int count, int allocFlags);
 int ASYNCFILE_cancel(unsigned id);
 void ASYNCFILE_restore();
