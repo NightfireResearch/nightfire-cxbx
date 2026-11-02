@@ -678,8 +678,12 @@ Roughly in order of how much a player would notice:
    None is reached underwater. Read the seam's stub report after each new level. Of the ones that are
    reached, `DeleteVertexShader` matters: the backend's shader table is 512 slots and a level creates about
    196, so if a restart within one process does not free them, a few restarts fill it.
-3. **Stencil and fill mode**, accepted and dropped by the seam. The seam ties stencil to shadows; compare a
-   CXBX capture of the same spot to see whether anything is missing. Related, for fidelity rather than
+3. **Fill mode**, accepted and dropped by the seam. Stencil is drawn since 2 November 2026: the game asks for
+   D24S8 (AutoDepthStencilFormat 0x2a), so the seam asks the backend for a 24-bit depth buffer with stencil in
+   place of its reversed 32-bit float one, and the character shadows' stencil test (ActCharacter::StartShadow:
+   NOTEQUAL 1, REPLACE) takes effect. The radar draws no stencil state in Nightfire (its draw traces show only
+   the shadows'). Frames differ from the float buffer's by tens to about 900 scattered pixels, depth ties on
+   distant geometry. Related, for fidelity rather than
    correctness: the game asks for two-sample quincunx antialiasing (section 3), and the backend renders
    without any.
 4. **Sound's remainder**: the per-voice low-pass filter (distance muffling) and the I3DL2 reverb, both

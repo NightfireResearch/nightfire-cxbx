@@ -176,6 +176,11 @@ static void InitialiseD3D8State(void) {
     }
 }
 
+// The Xbox's depth formats with a stencil: D24S8 and F24S8, swizzled (0x2a, 0x2b) and linear (0x2e, 0x2f).
+static bool IsStencilFormat(uint32_t format) {
+    return format == 0x2a || format == 0x2b || format == 0x2e || format == 0x2f;
+}
+
 int32_t __stdcall Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, void *focusWindow,
                                         uint32_t behaviourFlags, void *presentationParameters,
                                         void **returnedDevice) {
@@ -195,6 +200,11 @@ int32_t __stdcall Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, v
                uint32_t(TimerFrequency));
     }
 
+    // Words 8 and 9: EnableAutoDepthStencil and AutoDepthStencilFormat. A depth format with stencil gets one from
+    // the backend, in place of its stencil-less float depth buffer: the game draws through the stencil
+    // (ActCharacter::StartShadow).
+    if (parameters != NULL && parameters[8] != 0 && IsStencilFormat(parameters[9]))
+        D3D9_RequestStencilBuffer();
     int32_t result = D3D9_CreateDevice(adapter, deviceType, focusWindow, behaviourFlags,
                                         parameters, returnedDevice);
     InitialiseD3D8State();
