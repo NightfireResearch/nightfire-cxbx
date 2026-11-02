@@ -474,7 +474,7 @@ void Bond_StartUpSystem() {
 
 // FUNC_AT(0x0005a110)
 void Bond_CleanUp() {
-    CURATOR_Shutdown();
+    GSystem::CURATOR_Shutdown();
     ASoundManager::Stop();
     AFader::Remove("SpeechVsAmbience");
     AStream::Remove("speech");

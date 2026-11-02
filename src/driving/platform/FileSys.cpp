@@ -885,7 +885,7 @@ static unsigned Submit(FsOp *op) {
     FsWorker *w = WorkerOf(op->handle);
     unsigned handle = op->handle;   // the op may finish and be completed before Submit returns
     Q_insertsorted(&w->pending, op);
-    SIGNAL_post(&w->signal);
+    SIGNAL_set(&w->signal);
     return handle;
 }
 
@@ -1194,7 +1194,7 @@ void FILESYS_priorityop(unsigned handle, int priority) {
     if (op != NULL) {
         op->priority = (uint8_t)priority;
         Q_insertsorted(&w->pending, op);
-        SIGNAL_post(&w->signal);
+        SIGNAL_set(&w->signal);
     }
 }
 
@@ -1215,7 +1215,7 @@ intptr_t FILESYS_atomic(FsAtomicFn function, int worker, int priority, void *arg
         w->ceiling = priority;
         result = function(priority, argument);
         w->ceiling = old;
-        SIGNAL_post(&w->signal);
+        SIGNAL_set(&w->signal);
     }
     MUTEX_unlock(&w->atomicMutex);
     return result;

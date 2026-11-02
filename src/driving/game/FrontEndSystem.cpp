@@ -158,7 +158,7 @@ void GSystem::CURATOR_Init() {
 }
 
 // FUNC_AT(0x000e3eb0)
-void CURATOR_Shutdown() {
+void GSystem::CURATOR_Shutdown() {
     GFX::Shutdown();
     if (LocaleFile != NULL) {
         MEM_free(LocaleFile);

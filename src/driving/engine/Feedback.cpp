@@ -74,7 +74,7 @@ static void SetMotors(int port, uint16_t speed) {
 
 // FUNC_AT(0x0004f8b0)
 void IFeedback_Timer_Callback() {
-    SIGNAL_post(&gFeedbackSignal);
+    SIGNAL_set(&gFeedbackSignal);
 }
 
 // FUNC_AT(0x0004fe10)
@@ -119,7 +119,7 @@ void IFeedback::Destruct() {
         return;
     TIMER_removetask(IFeedback_Timer_Callback);
     gFeedbackThreadStop = true;
-    SIGNAL_post(&gFeedbackSignal);
+    SIGNAL_set(&gFeedbackSignal);
     while (!THREAD_testexit(&gFeedbackThread))
         SYNCTASK_run(0);
     THREAD_destroy(&gFeedbackThread);

@@ -92,8 +92,8 @@ public:
     WSound* Add(int id, int bank, int index);                                   // 0x000cd370
     // The same from a "bank: sound" name.
     WSound* Add(int id, const char *name);                                      // 0x000cd4c0
-    // The same from a bank number and index packed as bank * 128 + index (name ours).
-    WSound* AddPacked(int id, int packed);                                      // 0x000cd540
+    // The same from a bank number and index packed as bank * 128 + index.
+    WSound* Add(int id, int packed);                                            // 0x000cd540
 };
 LAYOUT_32(sizeof(WSoundGroup) == 0x10, "WSoundGroup is 16 bytes");
 

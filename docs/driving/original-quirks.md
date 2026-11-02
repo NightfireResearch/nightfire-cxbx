@@ -435,7 +435,7 @@ A shadow test masks a field, or leaves it out, when the original fills it from i
 | GHud::DrawFadingCrossHairs | 0x000d8ea0 | calls GetSelectedTarget and drops the answer | game-frontend |
 | GHud::dbDrawTarget | 0x000da8e0 | the spread is multiplied by 0.0; the third argument is not read | game-frontend |
 | GHud::DrawPauseMenu | 0x000dd340 | the title's y is y - 4 + 4 | game-frontend |
-| GGallery::GET_Puppet; GFXGallery::CULL_SetCanvas, PARTICLE_Add, DEBRIS_Draw | 0x000d5810; 0x000d3b30, 0x000d43a0, 0x000d4b90 | arguments not read | game-frontend |
+| GGallery::GET_Puppet; GFXGallery::CULL_SetCanvas, SOUND_Play, DEBRIS_Draw | 0x000d5810; 0x000d3b30, 0x000d43a0, 0x000d4b90 | arguments not read | game-frontend |
 | GGirl::UpdateTexture | 0x000d6f60 | writes palette speeds that nothing reads | game-frontend |
 | GOrthoHudView::DoRender | 0x000e1ce0 | calls GetFoundationVideoMode and drops the answer; keeps the view port in HudViewPort (0x0023f410), which nothing reads | game-frontend |
 | GLocale::GetSubDirectory | 0x000e3140 | calls GetFoundationVideoMode up to three times | game-frontend |

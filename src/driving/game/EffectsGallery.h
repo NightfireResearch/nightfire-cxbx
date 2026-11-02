@@ -156,7 +156,7 @@ public:
     // FUN_000d42a0)
     uint32_t PARTICLE_GetSystem(UGroup *part, const RParticleSystemData *data);                 // 0x000d42a0
     // A sound part's sound placed, and given its patch when `key` is not NULL (does not read `this`)
-    void PARTICLE_Add(UGroup *part, const GallerySound *key, ASound *sound, const Coord4 *position,
+    void SOUND_Play(UGroup *part, const GallerySound *key, ASound *sound, const Coord4 *position,
                       const Coord3 *velocity, int frame);                                       // 0x000d43a0
     void GLARE_Draw(UGroup *part, const GalleryGlare *glare, const Coord4 *position);           // 0x000d4160
     void DEBRIS_Draw(const GalleryKey *key, const Coord4 *position, const Coord4 *orientation,

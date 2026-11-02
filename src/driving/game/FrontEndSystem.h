@@ -48,12 +48,12 @@ public:
     static void LOCALE_LoadLanguage(int language);                                              // 0x000e3f30
     // The data path, the effects' random generator seeded, GFX::Init, the language's strings
     static void CURATOR_Init();                                                                 // 0x000e3fd0
+    // GFX::Shutdown, and the locale's strings freed
+    static void CURATOR_Shutdown();                                                             // 0x000e3eb0
 };
 
 // The particle file for the mission
 const char* GetParticFileForMission();                                                          // 0x000e3e50
-// GFX::Shutdown, and the locale's strings freed
-void CURATOR_Shutdown();                                                                        // 0x000e3eb0
 
 class GLocale {
 public:

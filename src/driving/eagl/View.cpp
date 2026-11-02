@@ -566,7 +566,7 @@ void EAGL::ViewPort::SetViewMatrix(const float *matrix) {
 }
 
 // FUNC_AT(0x000f37d0)
-EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContext *context) {
+EAGL::ViewPort* EAGL::ViewPort::Construct(EAGL::RenderContext *context) {
     Extension()->Construct(this);
     Private()->Construct(this);
     previous = NULL;
@@ -579,9 +579,9 @@ EAGL::ViewPort* EAGL::ViewPort::Construct(RenderContext *context) {
     return this;
 }
 
-// ViewPort::ViewPort for a TextureRenderContext (TextureRenderContext::NewViewPort's). Ghidra: unnamed.
+// ViewPort::ViewPort for a TextureRenderContext (TextureRenderContext::NewViewPort's).
 // FUNC_AT(0x000f3860)
-EAGL::ViewPort* EAGL::ViewPort::ConstructForTexture(TextureRenderContext *context) {
+EAGL::ViewPort* EAGL::ViewPort::Construct(EAGL::TextureRenderContext *context) {
     Extension()->Construct(this);
     Private()->Construct(this);
     previous = NULL;
@@ -730,7 +730,7 @@ EAGL::TextureRenderContext* EAGL::TextureRenderContext::Construct(Device *owner)
 // FUNC_AT(0x000f34b0)
 EAGL::ViewPort* EAGL::TextureRenderContext::NewViewPort() {
     void *memory = EaglMalloc(sizeof(ViewPort), "EAGL::Viewport new");
-    ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->ConstructForTexture(this) : NULL;
+    ViewPort *v = memory != NULL ? static_cast<ViewPort *>(memory)->Construct(this) : NULL;
     v->next = viewPorts;
     viewPorts = v;
     return v;

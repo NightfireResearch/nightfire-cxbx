@@ -530,8 +530,8 @@ void FILESYS_workerthread(int i) {                          // 0x0010c110
 ### 4.4 The asynchronous API
 
 All cdecl, all return the op handle (or 0). `prio` is a byte. Every one but `FILESYS_size` ends with
-`Q_insertsorted(&w->pending, op); SIGNAL_post(&w->signal); return op->handle;` where `w` is the op's worker
-(`SIGNAL_post` = `iFILE_maybeExecCommand`, `0x0010a700`, `SetEvent(signal+4)`).
+`Q_insertsorted(&w->pending, op); SIGNAL_set(&w->signal); return op->handle;` where `w` is the op's worker
+(`SIGNAL_set` = `iFILE_maybeExecCommand`, `0x0010a700`, `SetEvent(signal+4)`).
 
 | address | name | true size | signature | fields set | callers outside |
 |---|---|---|---|---|---|
@@ -650,7 +650,7 @@ void FILESYS_cancelop(h) {
 }
 void FILESYS_priorityop(h, prio) {
     op = Q_findremove(&worker(h)->pending, FUN_0010c010, h);   // pending only
-    if (op) { op->prio = prio; Q_insertsorted(&worker(op->handle)->pending, op); SIGNAL_post(...); }
+    if (op) { op->prio = prio; Q_insertsorted(&worker(op->handle)->pending, op); SIGNAL_set(...); }
 }
 ```
 
@@ -748,7 +748,7 @@ int FILESYS_atomic(fn, i, prio, arg) {
     if (!w->alive) FILESYS_startworker(/*EBX*/ i);
     lock(&w->atomicMutex);
     old = w->ceiling;
-    if (prio <= old) { w->ceiling = prio; r = fn(prio, arg); w->ceiling = old; SIGNAL_post(&w->signal); }
+    if (prio <= old) { w->ceiling = prio; r = fn(prio, arg); w->ceiling = old; SIGNAL_set(&w->signal); }
     unlock(&w->atomicMutex);
     return r;                                               // 0 without calling fn if prio > ceiling
 }
@@ -1070,7 +1070,7 @@ void STREAM_appendrequest(/*EDI*/ s, /*ESI*/ r) {          // list head +0x6c, c
 
 | address | name | why |
 |---|---|---|
-| `0x0010a700` | `iFILE_maybeExecCommand` (really REAL's `SIGNAL_post`: `SetEvent(sig->event)`) | REAL SIGNAL library; also called by `IFeedback` (engine.input). Port with `RealSystem.cpp`, keep the address patched |
+| `0x0010a700` | `iFILE_maybeExecCommand` (really REAL's `SIGNAL_set`: `SetEvent(sig->event)`) | REAL SIGNAL library; also called by `IFeedback` (engine.input). Port with `RealSystem.cpp`, keep the address patched |
 | `0x0010a710` | `FUN_0010a710` (REAL's `SIGNAL_wait`: `WaitForSingleObject(sig->event, INFINITE)`) | same; also `IFeedback::Update` |
 | `0x0014aa10` | `FUN_0014aa10` | `IsBadReadPtr`/`IsBadWritePtr` wrapper, called by `FUN_00113b10` |
 | `0x0014aa50` | `MEM_move` | memory library |
@@ -1115,7 +1115,7 @@ layer, so a whole-layer port needs no register adaptors at all.
 | `0x0010e9ab` | `Sleep(INFINITE)` | Win32 | only on an unhandled read error |
 | `0x0010f8f7` / `0x0010f91f` | `GetLastError` / `SetLastError` | Win32 (`src/driving/platform/XboxStartup.cpp`) | the same thread-local value the Win32 file calls set |
 | `0x0010a6e0` | `SIGNAL_create` | `RealSystem.cpp` | auto-reset event at +4 |
-| `0x0010a700` / `0x0010a710` | `SIGNAL_post` / `SIGNAL_wait` | **original** | 4.12 |
+| `0x0010a700` / `0x0010a710` | `SIGNAL_set` / `SIGNAL_wait` | **original** | 4.12 |
 | `0x0010a9c0` | `THREAD_createparam(thread, fn, param, 0, stack 0, priority 1)` | `RealSystem.cpp` | waits until the thread has started |
 | `0x0010a7f0` / `0x0010a7e0` | `THREAD_iscurrent(0)` (main thread?) / `THREAD_yield(ms)` | `RealSystem.cpp` | |
 | `0x0010ac40` | `SYNCTASK_run(0)` | `RealSystem.cpp` | run by `waitop` on the main thread |

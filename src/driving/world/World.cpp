@@ -491,7 +491,7 @@ bool WWorld::Open() {
         const WorldModel *model = article->model;
         if (model == NULL || model->info == NULL || model->info->sound < 0)
             continue;
-        WSound *sound = soundGroup->AddPacked(soundId, model->info->sound);
+        WSound *sound = soundGroup->Add(soundId, model->info->sound);
         soundId++;
         sound->position = *path->GetPosition();
         sound->pathHandle = path;

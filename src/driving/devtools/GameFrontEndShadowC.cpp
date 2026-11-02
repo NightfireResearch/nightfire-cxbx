@@ -71,7 +71,7 @@
 //     Construct, FONT_Load and Destruct of a second "hudNTSC.gal";
 //   - GFXGallery on a synthetic gallery over the live effects: scripts of CANVAS_Add (every flag, the effects of
 //     the mission's gallery, a fake scene object), FRAME_Draw (and so CANVAS_Draw, PARTICLE_Draw,
-//     PARTICLE_GetSystem, PARTICLE_Add, GLARE_Draw, DEBRIS_Draw with fake systems, sounds that finish or not),
+//     PARTICLE_GetSystem, SOUND_Play, GLARE_Draw, DEBRIS_Draw with fake systems, sounds that finish or not),
 //     culling, the sticky entries, suppress, intensity, purges, CANVAS_HasStopped, PurgeAllEffects; GLARE_Draw and
 //     DEBRIS_Draw on random keys and generator states; GET_Keys; Construct and Destruct;
 //   - GGirl: DoGirl sequences from nothing (the textures' pixels hashed) under a fake clock that steps, jumps and
@@ -1955,7 +1955,7 @@ void TestEffectScripts(const Snapshot &before) {
     }
 }
 
-// GLARE_Draw, DEBRIS_Draw, PARTICLE_GetSystem, PARTICLE_Add, GET_Keys and GET_FirstIdleKey, called directly
+// GLARE_Draw, DEBRIS_Draw, PARTICLE_GetSystem, SOUND_Play, GET_Keys and GET_FirstIdleKey, called directly
 alignas(16) uint8_t g_soundBlock[sizeof(ASound)];
 
 void SideFxDirect() {
@@ -1987,7 +1987,7 @@ void SideFxDirect() {
         if (g_original)
             Orig_SoundAdd(fx, 0, NULL, key, sound, &g_in.position, Xyz(&g_in.scale), g_in.index);
         else
-            fx->PARTICLE_Add(NULL, key, sound, &g_in.position, Xyz(&g_in.scale), g_in.index);
+            fx->SOUND_Play(NULL, key, sound, &g_in.position, Xyz(&g_in.scale), g_in.index);
         break;
     }
     case 4: {
@@ -2013,7 +2013,7 @@ void TestEffectDirect(const Snapshot &before) {
                                      kHookLookup, kHookVoiceSet }))
         return;
     static const char *const kOps[] = { "GFXGallery::GLARE_Draw", "GFXGallery::DEBRIS_Draw",
-                                        "GFXGallery::PARTICLE_GetSystem", "GFXGallery::PARTICLE_Add",
+                                        "GFXGallery::PARTICLE_GetSystem", "GFXGallery::SOUND_Play",
                                         "GFXGallery::GET_Keys" };
     for (long i = 0; i < 800; i++) {
         ResetFx(g_fx);

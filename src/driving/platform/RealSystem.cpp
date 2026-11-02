@@ -347,7 +347,7 @@ void SIGNAL_destroy(RealSignal *signal) {
 
 // FILESYS raises its worker's signal with it, IFeedback its own.
 // FUNC_AT(0x0010a700)
-BOOL SIGNAL_post(RealSignal *signal) {
+BOOL SIGNAL_set(RealSignal *signal) {
     return Xbox_SetEvent(signal->event);
 }
 

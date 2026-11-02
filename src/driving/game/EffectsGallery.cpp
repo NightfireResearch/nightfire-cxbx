@@ -581,7 +581,7 @@ void GFXGallery::CANVAS_Draw(Canvas *canvas, const Coord4 *where, const Coord4 *
                         }
                     }
                     if (*sound != NULL)
-                        PARTICLE_Add(part, key, *sound, where, &canvas->velocity, canvas->frame);
+                        SOUND_Play(part, key, *sound, where, &canvas->velocity, canvas->frame);
                 }
                 soundIndex++;
                 sound++;
@@ -700,7 +700,7 @@ uint32_t GFXGallery::PARTICLE_GetSystem(UGroup *part, const RParticleSystemData 
 }
 
 // FUNC_AT(0x000d43a0)
-void GFXGallery::PARTICLE_Add(UGroup *part, const GallerySound *key, ASound *sound, const Coord4 *where,
+void GFXGallery::SOUND_Play(UGroup *part, const GallerySound *key, ASound *sound, const Coord4 *where,
                               const Coord3 *velocity, int frame) {
     (void)part;
     (void)frame;

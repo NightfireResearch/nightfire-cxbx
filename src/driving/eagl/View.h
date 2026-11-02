@@ -76,7 +76,7 @@ struct ViewPort {                        // 0x1a0
     ViewPortPrivate* Private() { return reinterpret_cast<ViewPortPrivate *>(&viewport); }
 
     ViewPort* Construct(RenderContext *context);                             // 0x000f37d0
-    ViewPort* ConstructForTexture(TextureRenderContext *context);            // 0x000f3860
+    ViewPort* Construct(TextureRenderContext *context);                      // 0x000f3860
     void Destruct();                                                         // 0x000e4ba0 (empty)
     void DestructThunk();                                                    // 0x000f3910 (jumps to Destruct)
     void SetShape(float x, float y, float width, float height, float minZ, float maxZ);       // 0x000e4340

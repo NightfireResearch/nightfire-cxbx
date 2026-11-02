@@ -301,7 +301,7 @@ WSound* WSoundGroup::Add(int id, const char *name) {
 }
 
 // FUNC_AT(0x000cd540)
-WSound* WSoundGroup::AddPacked(int id, int packed) {
+WSound* WSoundGroup::Add(int id, int packed) {
     return Add(id, packed >> 7, packed & 0x7f);
 }
 
