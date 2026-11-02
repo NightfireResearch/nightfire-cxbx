@@ -34,7 +34,13 @@ under a write mask. Values live in components of the twelve temporaries from def
 shader keeps lanes in their own components (ps_2_0 swizzles are the identity or a replicate), a vertex shader puts
 them anywhere. An operand whose lanes are not together in one register is gathered by movs, and the copies stay
 for later readers until their components are needed (copies of leaves, or of values held twice, are evicted
-first; when nothing fits, a register's few values are moved to make a whole one free). Literals are packed into
+first; when nothing fits, a register's few values are moved to make a whole one free). In a vertex shader the lanes
+that come from one register are gathered by one swizzled mov, and an operand is completed in a temporary that
+already holds some of its lanes where that takes fewer movs (`(v.xyz, 1)` for a dp4 is one mov into `.w`); when no
+register has room for a gather, the missing lanes go to that temporary anyway, its other values moved to free
+components elsewhere first. The first value of an NV2A register goes, in its own lanes, to an empty temporary, so
+the register's later values join it there as the compiler kept them, and an output register's components that come
+from one register are written by one mov. Literals are packed into
 def'd constants, in registers the program does not read (past c191 when it reads relative to a0, and never the
 backend's c200-c204). Read-port limits are kept: per instruction a vertex shader reads one constant and one input
 register, a pixel shader two constants, one colour and one texture coordinate register; anything over is moved to a
@@ -42,7 +48,9 @@ temporary first. Relative constant reads set `a0.x` with `mova` when it holds an
 colour goes to `oC0` whole from one register.
 
 What the D3D9 runtime's validator refuses (each found when it returned D3DERR_INVALIDCALL; `shadercheck` now puts
-every program to it on a NULLREF device): an `lrp` or `nrm` writing a register it reads (they are macros); a
+every program to it on a NULLREF device): a vertex shader over vs_2_0's 256 instruction slots - counted as slots,
+not instructions: `lit` and `nrm` take three, `lrp` two; an `nrm` writing fewer than `.xyz` (one whose program reads
+two of its components still writes three); an `lrp` or `nrm` writing a register it reads (they are macros); a
 pixel shader instruction reading two different constant registers; a `dcl t#`/`dcl v#` mask that is not .x, .xy,
 .xyz or .xyzw; and a pixel shader whose texlds come in more phases than ps_2_0 allows. The runtime counts a phase
 for a texld that follows arithmetic, and tracks how deep in texture reads each register is per whole register (a
@@ -92,6 +100,10 @@ translators:
 
 Where the old HLSL failed to compile (a write to R12, a read past c191), translation fails the same way.
 
+A program the translation still cannot make, or makes in a form the runtime refuses, is made by the backend from
+the old HLSL, compiled (`ShaderCheck_CompileVertex`, logged "compiled from its HLSL"): a safety net, which no known
+program needs (below), and which the standalone build, without D3DCompile, does not have.
+
 ## The check
 
 `NIGHTFIRE_SHADERCHECK=1` runs, for every program the game translates, the old HLSL translator and `D3DCompile`
@@ -128,3 +140,21 @@ raw tokens is only validated. `-v` lists every program, `-d` adds the disassembl
 
 Instruction counts are within about 20% of the compiler's (vertex shaders up to 216 of vs_2_0's 256, pixel shaders
 up to 44 of ps_2_0's 64).
+
+## Results (2 November 2026): EON's programs, and slots
+
+EON's driving engine (the sister project's, on this backend) has programs Nightfire's do not. Under the instruction
+count four failed in the game and fell back to the HLSL: shaders 158 and 23 (269 and 260 slots), 159 (out of
+temporaries gathering an operand: an operand's three lanes sat in a register whose fourth component held a live
+value, and three components were free in three other registers) and 47/48 (an `nrm r6.xy`, refused). With the
+gathers, the in-place completion, the binding of an NV2A register's first value and the three-component `nrm`
+above, all translate and are accepted: 158 at 224 slots, 23 at 222, 159 at 244 (the compiler's own: about 195),
+47/48 at 147.
+
+- `shadercheck` over 140 shader logs of Nightfire's runs (2170 programs with the XBEs' 190) before and after: every
+  program's verdict and every reported difference the same (one symbolic trace names a max's operands the other
+  way round), none refused; the vertex programs' slots fell 12% in
+  total (232055 to 203179), the largest from 234 to 201. The differences it reports - against the compiled HLSL,
+  before and after alike - are almost all `oPos` where `|w|` is under RCC's clamp: the epilogue's `1 / kRccMax` is
+  5.30654005e-20, the compiled HLSL's 5.30654037e-20.
+- Over EON's logs and its XBE (388 programs): none fails, none refused.

@@ -1195,6 +1195,11 @@ static uint32_t g_fogColour = 0;
 void D3D9_SetFogColor(uint32_t colour) { g_fogColour = colour; }
 void D3D9_SetZBias(int zBias) { g_state.depthBias = (float)zBias * (g_reversedDepth ? 0.00001f : -0.00001f); }
 void D3D9_SetZEnable(uint32_t value) { g_state.zEnable = value != 0; }
+// No stencil here yet (the D3D9 backend has it): the request and the two states are taken and dropped, the
+// simple stencil states reported as unhandled.
+void D3D9_RequestStencilBuffer(void) {}
+void D3D9_SetStencilEnable(uint32_t value) { (void)value; }
+void D3D9_SetStencilFail(uint32_t op) { (void)op; }
 void D3D9_SetNormalizeNormals(uint32_t value) { (void)value; }
 void D3D9_SetVertexBlend(uint32_t value) { (void)value; }
 void D3D9_SetShaderConstantMode(uint32_t value) { (void)value; }
@@ -1669,6 +1674,8 @@ void D3D9_SetVertexShader(void *handle) {
     uint32_t h = (uint32_t)(uintptr_t)handle;
     g_currentVertexShader = ((h & 0xFFFF0000u) == VS_HANDLE_TAG) ? (int)(h & 0xFFFF) : -1;
 }
+
+void D3D9_DeleteVertexShader(uint32_t handle) { (void)handle; }   // slots are not reused here
 
 static void StoreConstants(uint32_t index, const float *values, uint32_t count4) {
     for (uint32_t i = 0; i < count4; i++) {
@@ -2767,7 +2774,7 @@ static const uint32_t kSurfaceDataMask = 0x0FFFFFFFu;
 void *D3D9_GetSurfaceLevel2(void *pTexture, uint32_t level) {
     (void)level;
     const uint32_t *header = (const uint32_t*)pTexture;
-    XboxSurface *s = (XboxSurface*)malloc(sizeof(XboxSurface));
+    XboxSurface *s = (XboxSurface*)GfxHost_Alloc(sizeof(XboxSurface));
     if (s == NULL)
         return NULL;
     s->Common = XBOX_SURFACE_COMMON;
@@ -2795,7 +2802,7 @@ uint32_t D3D9_ResourceRelease(void *pResource) {
     }
     for (int i = 0; i < g_allocatedSurfaceCount; i++) {
         if (g_allocatedSurfaces[i] == pResource) {
-            free(pResource);
+            GfxHost_Free(pResource);
             g_allocatedSurfaces[i] = g_allocatedSurfaces[--g_allocatedSurfaceCount];
             return 0;
         }

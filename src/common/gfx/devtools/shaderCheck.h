@@ -3,6 +3,7 @@
 
 #include <stddef.h>
 #include <stdint.h>
+#include <vector>
 
 // ---------------------------------------------------------------------------------------------------------------
 // The shader check: the translators' bytecode against the HLSL they used to produce, compiled by D3DCompile.
@@ -25,6 +26,11 @@
 bool ShaderCheck_Vertex(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
                         char *report, size_t reportSize);
 bool ShaderCheck_Pixel(const uint32_t def[60], char *report, size_t reportSize);
+
+// The HLSL reference itself, compiled to vs_2_0 tokens, and the input and output registers it uses. False if it
+// does not compile. For a program whose translated bytecode the runtime refuses (d3d9Backend.cpp, BuildVertexShader).
+bool ShaderCheck_CompileVertex(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
+                               std::vector<uint32_t> *code, uint32_t *inputsUsed, uint32_t *outputsWritten);
 
 // Runs two programs of one kind on the same inputs. Returns the number of output components that differ in
 // any trial (or -1 if either cannot be run) and describes the differences.

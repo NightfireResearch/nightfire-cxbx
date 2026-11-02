@@ -554,6 +554,9 @@ private:
                        int *defReg, uint8_t (*comps)[4]);
     bool LiteralSource(float value, Source *out);
     bool Resolve(const ShaderValue *want, uint8_t mask, bool texCoord, Source *out);
+    int MoveCount(const ShaderValue *want, uint8_t mask, bool negateAll) const;
+    int GatherInPlace(const ShaderValue *want, uint8_t mask, bool negateAll, int movsToBeat, bool spare,
+                      int *at, uint8_t *missing);
     bool Gather(const ShaderValue *want, uint8_t mask, bool texCoord, Source *out);
     bool MoveToTemp(Source *src, uint8_t mask);
     void SetAddress(int node);
@@ -592,6 +595,7 @@ private:
     uint8_t m_inputMask[16], m_texMask[8];
     uint32_t m_samplerType[16];
     int m_arithmetic, m_texture;
+    int m_vertexSlots;          // vs_2_0's instruction slots: a macro (lit, lrp, nrm...) takes more than one
     char m_error[160];
     bool m_failed;
 };
@@ -931,28 +935,136 @@ void Lowering::EmitInstruction(int opcode, bool sat, uint32_t dest, const Source
     m_code.push_back((uint32_t)opcode | ((uint32_t)n << 24));
     m_code.insert(m_code.end(), params, params + n);
     if (opcode == OP_TEX) m_texture++; else m_arithmetic++;
+    m_vertexSlots += opcode == OP_LIT || opcode == OP_NRM ? 3 : opcode == OP_LRP ? 2 : 1;
 }
 
-// Copies the wanted lane values into a temporary, each in its own lane's component. What is copied
-// unnegated stays as a copy for later reads.
+// The number of movs that copy the lanes in mask: one per register they come from (the literals counted as one).
+int Lowering::MoveCount(const ShaderValue *want, uint8_t mask, bool negateAll) const {
+    Place seen[4];
+    bool seenFlip[4];
+    int count = 0;
+    for (int l = 0; l < 4; l++) {
+        if (!(mask & (1 << l))) continue;
+        Place p;
+        int comp;
+        if (!Locate(want[l], &p, &comp)) return 4;
+        bool flip = want[l].negate != negateAll, known = false;
+        for (int i = 0; i < count && !known; i++)
+            known = seen[i].file == p.file && seen[i].reg == p.reg && seen[i].address == p.address && seenFlip[i] == flip;
+        if (!known) { seen[count] = p; seenFlip[count] = flip; count++; }
+    }
+    return count;
+}
+
+// A vertex shader's operand completed in a temporary that holds some of its lanes already: the lanes missing go
+// to the register's free components, or to components holding copies of values held elsewhere, or - with spare
+// set, when no register is free for a gather - to components whose values are first moved to free components of
+// other registers. Taken when it needs fewer movs than movsToBeat. Returns the register, with at (the component
+// each lane is in) and the lanes still to move, or kNone.
+int Lowering::GatherInPlace(const ShaderValue *want, uint8_t mask, bool negateAll, int movsToBeat, bool spare,
+                            int *at, uint8_t *missingOut) {
+    int best = kNone, bestCost = movsToBeat;
+    int bestAt[4], bestDisplace[4][2];
+    uint8_t bestMissing = 0;
+    for (int r = 0; r < kMaxTemps; r++) {
+        if (m_avoid & (1u << r)) continue;
+        bool pinned = (m_pinned & (1u << r)) != 0;
+        int comp[4] = { 0, 0, 0, 0 };
+        uint8_t have = 0, used = 0;
+        for (int l = 0; l < 4; l++) {
+            if (!(mask & (1 << l)) || want[l].negate != negateAll || IsLiteralOp(m_nodes[want[l].node].op)) continue;
+            if (InTemp(want[l].node, r, &comp[l], l)) { have |= (uint8_t)(1 << l); used |= (uint8_t)(1 << comp[l]); }
+        }
+        if (have == 0) continue;
+        uint8_t missing = (uint8_t)(mask & ~have);
+        int cost = MoveCount(want, missing, negateAll);
+        int displace[4][2];   // per component of r: the free component elsewhere its value moves to
+        bool reserved[kMaxTemps][4];
+        memset(reserved, 0, sizeof(reserved));
+        for (int c = 0; c < 4; c++) displace[c][0] = kNone;
+        bool fits = true;
+        for (int l = 0; l < 4 && fits; l++) {
+            if (!(missing & (1 << l))) continue;
+            int found = kNone;
+            for (int c = 0; c < 4 && found == kNone; c++)
+                if (!(used & (1 << c)) && m_temp[r][c] == kNone) found = c;
+            for (int c = 0; c < 4 && found == kNone; c++)
+                if (!(used & (1 << c)) && m_temp[r][c] >= 0 && Evictable(r, c)) found = c;
+            for (int c = 0; c < 4 && found == kNone && spare && !pinned; c++) {
+                if ((used & (1 << c)) || m_temp[r][c] < 0) continue;
+                for (int q = 0; q < kMaxTemps && found == kNone; q++)
+                    for (int d = 0; d < 4 && found == kNone; d++)
+                        if (q != r && m_temp[q][d] == kNone && !reserved[q][d]) {
+                            reserved[q][d] = true;
+                            displace[c][0] = q;
+                            displace[c][1] = d;
+                            found = c;
+                            cost++;
+                        }
+            }
+            if (found == kNone) fits = false;
+            else { comp[l] = found; used |= (uint8_t)(1 << found); }
+        }
+        if (fits && cost < bestCost) {
+            best = r;
+            bestCost = cost;
+            memcpy(bestAt, comp, sizeof(comp));
+            memcpy(bestDisplace, displace, sizeof(displace));
+            bestMissing = missing;
+        }
+    }
+    if (best == kNone)
+        return kNone;
+    for (int l = 0; l < 4; l++) {
+        if (!(bestMissing & (1 << l))) continue;
+        int c = bestAt[l];
+        if (bestDisplace[c][0] != kNone) {
+            Source s;
+            s.place.file = REG_TEMP; s.place.reg = best; s.place.address = kNone;
+            s.negate = false;
+            memset(s.swizzle, c, 4);
+            int q = bestDisplace[c][0], d = bestDisplace[c][1];
+            EmitInstruction(OP_MOV, false, RegisterBits(REG_TEMP, q) | (1u << (16 + d)), &s, 1);
+            m_temp[q][d] = m_temp[best][c];
+        }
+        m_temp[best][c] = kNone;   // free, an evicted copy, or moved away
+    }
+    memcpy(at, bestAt, sizeof(bestAt));
+    *missingOut = bestMissing;
+    return best;
+}
+
+// Copies the wanted lane values into a temporary, each in its own lane's component - a vertex shader's in any
+// component, and into a temporary holding some of them already where that takes fewer movs (GatherInPlace).
+// What is copied unnegated stays as a copy for later reads.
 bool Lowering::Gather(const ShaderValue *want, uint8_t mask, bool texCoord, Source *out) {
     int lanes[4], count = 0, chosen[4];
     for (int l = 0; l < 4; l++) if (mask & (1 << l)) lanes[count++] = l;
-    m_wantDepth = 0;
-    for (int l = 0; l < 4; l++) if ((mask & (1 << l)) && m_depth[want[l].node] > m_wantDepth) m_wantDepth = m_depth[want[l].node];
-    int reg = FindTemp(lanes, count, m_pixel || texCoord, chosen, false);   // a vertex shader can swizzle them back
-    m_wantDepth = 1 << 20;
-    if (reg == kNone) return Fail("out of temporary registers gathering an operand");
-    m_pinned |= 1u << reg;
-    int at[4] = { 0, 1, 2, 3 };   // the component each lane goes to
-    for (int i = 0; i < count; i++) at[lanes[i]] = chosen[i];
     // A lane whose value is negated where the others are not is copied negated, and so is no copy.
     int plain = 0, negated = 0;
     for (int l = 0; l < 4; l++) if (mask & (1 << l)) (want[l].negate ? negated : plain)++;
     bool negateAll = negated > plain;
+    bool inPlace = !m_pixel && !texCoord;
+    int at[4] = { 0, 1, 2, 3 };   // the component each lane goes to
+    uint8_t move = mask;          // the lanes moved there
+    int reg = kNone;
+    if (inPlace)
+        reg = GatherInPlace(want, mask, negateAll, MoveCount(want, mask, negateAll), false, at, &move);
+    if (reg == kNone) {
+        m_wantDepth = 0;
+        for (int l = 0; l < 4; l++) if ((mask & (1 << l)) && m_depth[want[l].node] > m_wantDepth) m_wantDepth = m_depth[want[l].node];
+        reg = FindTemp(lanes, count, m_pixel || texCoord, chosen, false);   // a vertex shader can swizzle them back
+        m_wantDepth = 1 << 20;
+        if (reg != kNone) for (int i = 0; i < count; i++) at[lanes[i]] = chosen[i];
+    }
+    if (reg == kNone && inPlace)
+        reg = GatherInPlace(want, mask, negateAll, 1 << 20, true, at, &move);
+    if (reg == kNone) return Fail("out of temporary registers gathering an operand");
+    m_pinned |= 1u << reg;
+    Source from[4];
     for (int l = 0; l < 4; l++) {
-        if (!(mask & (1 << l))) continue;
-        Source s;
+        if (!(move & (1 << l))) continue;
+        Source &s = from[l];
         int comp;
         bool flip = want[l].negate != negateAll;
         if (IsLiteralOp(m_nodes[want[l].node].op)) {
@@ -963,8 +1075,25 @@ bool Lowering::Gather(const ShaderValue *want, uint8_t mask, bool texCoord, Sour
         } else {
             return Fail("internal: an operand is used before it is computed");
         }
-        EmitInstruction(OP_MOV, false, RegisterBits(REG_TEMP, reg) | (1u << (16 + at[l])), &s, 1);
-        m_temp[reg][at[l]] = flip ? kGathered : want[l].node;
+    }
+    // A vertex shader moves the lanes that come from one register in one mov, swizzled. The sources were all
+    // found before the first mov: none is in a component the moves write.
+    bool moved[4] = { false, false, false, false };
+    for (int l = 0; l < 4; l++) {
+        if (!(move & (1 << l)) || moved[l]) continue;
+        Source s = from[l];
+        uint32_t writeMask = 0;
+        for (int k = l; k < 4; k++) {
+            if (!(move & (1 << k)) || moved[k]) continue;
+            const Place &p = from[k].place;
+            if (k != l && (m_pixel || p.file != s.place.file || p.reg != s.place.reg || p.address != s.place.address ||
+                           from[k].negate != s.negate)) continue;
+            s.swizzle[at[k]] = from[k].swizzle[0];
+            writeMask |= 1u << at[k];
+            moved[k] = true;
+            m_temp[reg][at[k]] = want[k].negate != negateAll ? kGathered : want[k].node;
+        }
+        EmitInstruction(OP_MOV, false, RegisterBits(REG_TEMP, reg) | (writeMask << 16), &s, 1);
     }
     out->place.file = REG_TEMP; out->place.reg = reg; out->place.address = kNone;
     out->negate = negateAll;
@@ -1088,9 +1217,20 @@ void Lowering::WriteOutputs(int node) {
     if (!Locate(v, &s.place, &comp)) return;
     s.negate = false;
     memset(s.swizzle, comp, 4);
-    for (size_t i = 0; i < m_outputUses[node].size(); i++) {
-        EmitInstruction(OP_MOV, false, OutputDest(m_outputUses[node][i].output, 1u << m_outputUses[node][i].component), &s, 1);
+    // The components of one output register it goes to are written by one mov.
+    std::vector<OutputUse> &uses = m_outputUses[node];
+    for (size_t i = 0; i < uses.size(); i++) {
+        if (uses[i].output < 0) continue;
+        uint32_t writeMask = 0;
+        for (size_t j = i + 1; j < uses.size(); j++)
+            if (uses[j].output == uses[i].output) {
+                writeMask |= 1u << uses[j].component;
+                uses[j].output = kNone;
+                m_uses[node]--;
+            }
+        writeMask |= 1u << uses[i].component;
         m_uses[node]--;
+        EmitInstruction(OP_MOV, false, OutputDest(uses[i].output, writeMask), &s, 1);
     }
     m_outputUses[node].clear();
     Release(node);
@@ -1305,9 +1445,10 @@ bool Lowering::EmitGroup(const int *members, int count) {
         dest = OutputDest(m_outputUses[members[0]][0].output, writeMask);
         for (int i = 0; i < count; i++) { m_uses[members[i]]--; m_outputUses[members[i]].clear(); }
     } else {
-        if (op == kTex) {
+        if (op == kTex || (op == kNrm && count < 3)) {
+            // texld writes all four channels; the runtime refuses an nrm that writes fewer than .xyz.
             int all[4] = { 0, 1, 2, 3 };
-            destReg = FindTemp(all, 4, true, destComp, true);
+            destReg = FindTemp(all, op == kTex ? 4 : 3, true, destComp, true);
             for (int i = 0; i < count; i++) destComp[i] = m_nodes[members[i]].component;
         } else if (IsChannelOp(op)) {
             int channels[4];
@@ -1338,6 +1479,24 @@ bool Lowering::EmitGroup(const int *members, int count) {
                     if (n == count) destReg = r;
                 }
             }
+            // The first value of a source register goes, in its own lanes, to an empty temporary, where the
+            // values of the register made after it can join it.
+            if (destReg == kNone && !m_pixel && variable >= 0 && variable < 64 &&
+                m_variableTemp[variable] == kNone) {
+                bool lanesKnown = true;
+                for (int i = 0; i < count; i++) {
+                    int l = m_nodes[members[i]].lane;
+                    if (l < 0) lanesKnown = false;
+                    for (int j = 0; j < i; j++) if (m_nodes[members[j]].lane == l) lanesKnown = false;
+                }
+                for (int r = 0; r < kMaxTemps && lanesKnown && destReg == kNone; r++) {
+                    bool empty = !(m_avoid & (1u << r));
+                    for (int c = 0; c < 4; c++) if (m_temp[r][c] != kNone) empty = false;
+                    if (!empty) continue;
+                    destReg = r;
+                    for (int i = 0; i < count; i++) destComp[i] = m_nodes[members[i]].lane;
+                }
+            }
             if (destReg == kNone)
                 destReg = FindTemp(wanted, laneOp ? count : 1, m_pixel && laneOp && count > 1, destComp, true);
             if (destReg != kNone && !m_pixel && variable >= 0 && variable < 64 && m_variableTemp[variable] == kNone)
@@ -1348,6 +1507,7 @@ bool Lowering::EmitGroup(const int *members, int count) {
         if (destReg == kNone) return Fail("out of temporary registers");
         for (int i = 0; i < count; i++) writeMask |= 1u << destComp[i];
         if (op == kTex) writeMask = 0xF;
+        if (op == kNrm) writeMask |= 0x7;
         dest = RegisterBits(REG_TEMP, destReg) | (writeMask << 16);
     }
 
@@ -1527,7 +1687,7 @@ bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<In
     memset(m_inputMask, 0, sizeof(m_inputMask));
     memset(m_texMask, 0, sizeof(m_texMask));
     memset(m_samplerType, 0, sizeof(m_samplerType));
-    m_arithmetic = m_texture = 0;
+    m_arithmetic = m_texture = m_vertexSlots = 0;
     FuseProducts(outputs);
 
     std::vector<int> uses(n, 0);
@@ -1679,12 +1839,14 @@ bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<In
         EndInstruction();
     }
 
-    // What is left to write: outputs that are leaves (vertex shaders), and a pixel shader's colour, which goes
-    // to oC0 whole from one register.
+    // What is left to write: outputs that are leaves (vertex shaders), the components of one output register read
+    // from one register by one mov, and a pixel shader's colour, which goes to oC0 whole from one register.
+    std::vector<Source> leafSources(outputs.size());
+    std::vector<bool> leafWritten(outputs.size(), true);
     for (size_t i = 0; i < outputs.size() && !m_failed && !m_pixel; i++) {
         ShaderValue v = outputs[i].value;
         if (!IsLeaf(m_nodes[v.node].op)) continue;
-        Source s;
+        Source &s = leafSources[i];
         if (IsLiteralOp(m_nodes[v.node].op)) {
             if (!LiteralSource(LiteralValue(v), &s)) break;
         } else {
@@ -1693,7 +1855,21 @@ bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<In
             s.negate = v.negate;
             memset(s.swizzle, comp, 4);
         }
-        EmitInstruction(OP_MOV, false, OutputDest(outputs[i].output, 1u << outputs[i].component), &s, 1);
+        leafWritten[i] = false;
+    }
+    for (size_t i = 0; i < outputs.size() && !m_failed && !m_pixel; i++) {
+        if (leafWritten[i]) continue;
+        Source s = leafSources[i];
+        uint32_t writeMask = 0;
+        for (size_t j = i; j < outputs.size(); j++) {
+            const Source &t = leafSources[j];
+            if (leafWritten[j] || outputs[j].output != outputs[i].output || t.place.file != s.place.file ||
+                t.place.reg != s.place.reg || t.place.address != s.place.address || t.negate != s.negate) continue;
+            s.swizzle[outputs[j].component] = t.swizzle[0];
+            writeMask |= 1u << outputs[j].component;
+            leafWritten[j] = true;
+        }
+        EmitInstruction(OP_MOV, false, OutputDest(outputs[i].output, writeMask), &s, 1);
     }
     if (!m_failed && m_pixel) {
         ShaderValue colour[4];
@@ -1731,7 +1907,7 @@ bool Lowering::Run(const std::vector<OutputValue> &outputs, const std::vector<In
             if (!m_failed) EmitInstruction(OP_MOV, false, RegisterBits(REG_COLOROUT, 0) | 0xF0000u, &s, 1);
         }
     }
-    if (!m_failed && !m_pixel && m_arithmetic > 256) Fail("%d instructions, over vs_2_0's 256", m_arithmetic);
+    if (!m_failed && !m_pixel && m_vertexSlots > 256) Fail("%d instruction slots, over vs_2_0's 256", m_vertexSlots);
     if (!m_failed && m_pixel && m_arithmetic > 64) Fail("%d arithmetic instructions, over ps_2_0's 64", m_arithmetic);
     if (!m_failed && m_pixel && m_texture > 32) Fail("%d texture instructions, over ps_2_0's 32", m_texture);
     if (m_failed) {

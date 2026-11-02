@@ -39,6 +39,8 @@ void D3D9_BackendMissing(const char *entryPoint);
 // Device
 uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWindow, uint32_t behaviorFlags,
                            void *pPresentationParameters, void **ppDevice);
+// Before D3D9_CreateDevice: the depth buffer gets stencil (24-bit fixed depth) in place of the 32-bit float one.
+void D3D9_RequestStencilBuffer(void);
 uint32_t D3D9_ArePushBuffersSupported(uint32_t unused);
 void D3D9_SetPushBufferSize(uint32_t pushBufferSize, uint32_t kickOffSize);
 void D3D9_Clear(uint32_t rectCount, void *pRects, uint32_t flags, uint32_t colour, float z, uint32_t stencil);
@@ -47,11 +49,13 @@ void D3D9_SetViewport(uint32_t x, uint32_t y, uint32_t width, uint32_t height, f
 void D3D9_SetGammaRamp(uint32_t flags, void *pRamp);
 
 // Render state
-void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value); // the 11 NV097 methods the game uses
+void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value); // the NV097 methods the games use
 void D3D9_SetCullMode(int xboxCullMode);
 void D3D9_SetFogColor(uint32_t colour);
 void D3D9_SetZBias(int zBias);
 void D3D9_SetZEnable(uint32_t value);
+void D3D9_SetStencilEnable(uint32_t value);
+void D3D9_SetStencilFail(uint32_t op);
 void D3D9_SetNormalizeNormals(uint32_t value);
 void D3D9_SetVertexBlend(uint32_t value);
 void D3D9_SetShaderConstantMode(uint32_t value);
@@ -69,6 +73,7 @@ void D3D9_DeletePixelShader(uint32_t handle);
 // Shaders and constants
 uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage);
 void D3D9_SetVertexShader(void *handle);
+void D3D9_DeleteVertexShader(uint32_t handle);
 void D3D9_SetVertexShaderConstant1(uint32_t constantIndex, float *pConstants);
 void D3D9_SetVertexShaderConstant4(uint32_t constantIndex, void *pMatrix);
 void D3D9_SetVertexShaderConstantNotInline(uint32_t constantIndex, void *pData, uint32_t countDwords);

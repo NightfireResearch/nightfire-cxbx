@@ -703,6 +703,16 @@ bool ShaderCheck_Vertex(const uint8_t *function, uint32_t normPackedInputs, cons
     return differing == 0;
 }
 
+bool ShaderCheck_CompileVertex(const uint8_t *function, uint32_t normPackedInputs, const uint8_t inputComponents[16],
+                               std::vector<uint32_t> *code, uint32_t *inputsUsed, uint32_t *outputsWritten) {
+    static char hlsl[65536];
+    static const char *const profiles[2] = { "vs_2_0", "vs_2_a" };
+    int count;
+    std::string message;
+    return ShaderHlsl_Vertex(function, &normPackedInputs, inputComponents, hlsl, sizeof(hlsl), inputsUsed, outputsWritten, &count) &&
+           Compile(hlsl, profiles, 2, code, &message);
+}
+
 bool ShaderCheck_Pixel(const uint32_t def[60], char *reportText, size_t reportSize) {
     Report report = { reportText, reportSize, 0 };
     std::vector<uint32_t> ours, reference;

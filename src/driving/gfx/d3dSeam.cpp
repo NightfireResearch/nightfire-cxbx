@@ -187,8 +187,8 @@ int32_t __stdcall Direct3D_CreateDevice(uint32_t adapter, uint32_t deviceType, v
     // Word 4 is MultiSampleType. The NV2A's visibility tests count samples, not pixels, so the lens flare's
     // arithmetic depends on it (RLensFlareManager::DrawFlares, plan section 3).
     if (parameters != NULL)
-        printf("[d3dSeam] device %ux%u, format 0x%x, multisample type 0x%x, flags 0x%x\n",
-               parameters[0], parameters[1], parameters[2], parameters[4], parameters[10]);
+        printf("[d3dSeam] device %ux%u, format 0x%x, multisample type 0x%x, depth format 0x%x, flags 0x%x\n",
+               parameters[0], parameters[1], parameters[2], parameters[4], parameters[9], parameters[10]);
     if (parameters != NULL && parameters[11] == 0 && uint32_t(TimerFrequency) != 0) {
         parameters[11] = uint32_t(TimerFrequency);
         printf("[d3dSeam] no refresh rate in the present parameters; pacing to the game's %u Hz tick\n",
@@ -326,17 +326,16 @@ void __stdcall D3DDevice_SetScreenSpaceOffset(float x, float y) {
     (void)x; (void)y;
 }
 
-// Stencil, and the shadow-buffer comparison that goes with it. The backend has no stencil support yet - it
-// creates a depth-stencil buffer but never sets a stencil state - so these are accepted and dropped rather
-// than reported on every frame. They are on the list for when shadows are looked at.
+// The two stencil states with entry points of their own; the rest arrive as simple render states.
 void __stdcall D3DDevice_SetRenderState_StencilEnable(uint32_t value) {
-    (void)value;
+    D3D9_SetStencilEnable(value);
 }
 
 void __stdcall D3DDevice_SetRenderState_StencilFail(uint32_t value) {
-    (void)value;
+    D3D9_SetStencilFail(value);
 }
 
+// The shadow-buffer comparison, accepted and dropped: the backend has no shadow buffers.
 void __stdcall D3DDevice_SetRenderState_ShadowFunc(uint32_t value) {
     (void)value;
 }
@@ -449,6 +448,10 @@ int32_t __stdcall D3DDevice_CreateVertexShader(const void *declaration, const vo
     if (result == 0)
         *handle = uint32_t(uintptr_t(backendHandle));
     return result;
+}
+
+void __stdcall D3DDevice_DeleteVertexShader(uint32_t handle) {
+    D3D9_DeleteVertexShader(handle);
 }
 
 // ---------------------------------------------------------------------------------------------------------------
@@ -1316,11 +1319,6 @@ void __stdcall D3DDevice_SetTextureState_TexCoordIndex(uint32_t stage, uint32_t 
 void __stdcall D3DDevice_SetTextureState_ColorKeyColor(uint32_t stage, uint32_t value) {
     (void)stage; (void)value;
     ReachedUnimplemented("D3DDevice_SetTextureState_ColorKeyColor");
-}
-
-void __stdcall D3DDevice_DeleteVertexShader(uint32_t handle) {
-    (void)handle;
-    ReachedUnimplemented("D3DDevice_DeleteVertexShader");
 }
 
 void __stdcall D3DDevice_RunPushBuffer(D3DPushBuffer *pushBuffer, void *fixup) {

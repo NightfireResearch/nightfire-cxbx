@@ -1,5 +1,7 @@
 #include "../../common/gfx/backendHost.h"
 
+#include <stdlib.h>
+
 #include "d3dSeam.h"
 #include "../devtools/Teleport.h"
 #include "../platform/HostWindow.h"
@@ -33,6 +35,15 @@ void GfxHost_ReportPeriodic(void) {
 
 int GfxHost_PresentEvery(void) {
     return Teleport_LockstepPresentEvery();   // NIGHTFIRE_LOCKSTEP only
+}
+
+// Surfaces the backend hands the game are the C heap's: no run of this engine depends on where they are.
+void *GfxHost_Alloc(size_t bytes) {
+    return calloc(1, bytes);
+}
+
+void GfxHost_Free(void *memory) {
+    free(memory);
 }
 
 #ifdef NIGHTFIRE_SDL

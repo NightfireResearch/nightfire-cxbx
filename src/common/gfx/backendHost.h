@@ -1,6 +1,8 @@
 #ifndef COMMON_GFX_BACKENDHOST_H_
 #define COMMON_GFX_BACKENDHOST_H_
 
+#include <stddef.h>
+
 // ---------------------------------------------------------------------------------------------------------------
 // What the D3D9 backend needs from the engine it is compiled into.
 //
@@ -32,5 +34,10 @@ void GfxHost_SizeWindow(uint32_t width, uint32_t height);
 // The SDL_Window itself, for the SDL GPU backend (sdlGpuBackend.cpp) to present into.
 void *GfxHost_SdlWindow(void);
 #endif
+
+// Memory for an object the game is handed and later releases (a surface around a texture's level), zeroed: the
+// engine's to place, so that its lockstep runs can keep such objects at the same addresses.
+void *GfxHost_Alloc(size_t bytes);
+void GfxHost_Free(void *memory);
 
 #endif // COMMON_GFX_BACKENDHOST_H_

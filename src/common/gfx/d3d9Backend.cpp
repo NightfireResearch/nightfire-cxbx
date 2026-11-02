@@ -776,6 +776,12 @@ static int ForcedResetEvery(void);
 static bool g_reversedDepth = false;   // 32-bit float depth buffer with reversed Z (see D3D9_CreateDevice)
 static uint32_t g_xboxSamplesPerPixel = 1;   // from the game's MultiSampleType; scales visibility-test counts
 static bool g_hasStencil = true;
+static bool g_stencilRequested = false;   // D3D9_RequestStencilBuffer, before the device is made
+
+void D3D9_RequestStencilBuffer(void) {
+    g_stencilRequested = true;
+}
+
 static void BeginSceneIfNeeded(void) {
     if (g_device != NULL && !g_inScene) {
         g_device->BeginScene();
@@ -897,13 +903,17 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     g_presentParams.BackBufferFormat = D3DFMT_X8R8G8B8;
     g_presentParams.BackBufferCount = 1;
     g_presentParams.EnableAutoDepthStencil = TRUE;
-    // Depth format. The game W-buffers with a near:far ratio around 1:300000, which a 24-bit fixed z-buffer
-    // would z-fight badly, so prefer a 32-bit float depth buffer and store reversed Z (1 at near, 0 at far),
-    // which keeps precision at all distances. No stencil: the game never sets a stencil state.
+    // Depth format. The action engine W-buffers with a near:far ratio around 1:300000, which a 24-bit fixed
+    // z-buffer would z-fight badly, so prefer a 32-bit float depth buffer and store reversed Z (1 at near, 0 at
+    // far), which keeps precision at all distances. That format has no stencil, and the action engine never sets
+    // a stencil state. The driving engines do (Nightfire's character shadows, EON's radar mask) and project the
+    // ordinary way, so where the game's own present parameters ask for a stencil format, their seams ask for the
+    // console's 24-bit depth with 8 bits of stencil instead (D3D9_RequestStencilBuffer).
     g_presentParams.AutoDepthStencilFormat = D3DFMT_D24S8;
     g_reversedDepth = false;
     g_hasStencil = true;
-    if (SUCCEEDED(g_d3d->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, D3DFMT_D32F_LOCKABLE)) &&
+    if (!g_stencilRequested &&
+        SUCCEEDED(g_d3d->CheckDeviceFormat(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DUSAGE_DEPTHSTENCIL, D3DRTYPE_SURFACE, D3DFMT_D32F_LOCKABLE)) &&
         SUCCEEDED(g_d3d->CheckDepthStencilMatch(D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, D3DFMT_X8R8G8B8, D3DFMT_X8R8G8B8, D3DFMT_D32F_LOCKABLE))) {
         g_presentParams.AutoDepthStencilFormat = D3DFMT_D32F_LOCKABLE;
         g_reversedDepth = true;
@@ -927,7 +937,8 @@ uint32_t D3D9_CreateDevice(uint32_t adapter, uint32_t deviceType, void *hFocusWi
     int fpsOverride = GfxHost_FpsOverride(); // the same override mainloop applies to the game's own tick rate
     g_targetFrameRate = (fpsOverride > 0) ? fpsOverride : (int)xboxParams[11];
     D3D9Log("[d3d9] device created on window %p (%ux%u backbuffer, %s depth, paced to %d Hz).\n",
-           (void*)g_window, width, height, g_reversedDepth ? "32-bit float reversed" : "24-bit fixed", g_targetFrameRate);
+           (void*)g_window, width, height, g_reversedDepth ? "32-bit float reversed" : "24-bit fixed, 8-bit stencil",
+           g_targetFrameRate);
     InitPinnedConstants();
     g_device->GetRenderTarget(0, &g_backBufferSurface);
     g_device->GetDepthStencilSurface(&g_mainDepthSurface);
@@ -1327,6 +1338,18 @@ static D3DCMPFUNC GlCompareToD3D(uint32_t gl) {           // NV097 0x200..0x207 
     if (gl >= 0x200 && gl <= 0x207) return (D3DCMPFUNC)(gl - 0x200 + 1);
     return D3DCMP_ALWAYS;
 }
+static D3DSTENCILOP GlStencilOpToD3D(uint32_t gl) {
+    switch (gl) {
+        case 0x0000: return D3DSTENCILOP_ZERO;
+        case 0x1e01: return D3DSTENCILOP_REPLACE;
+        case 0x1e02: return D3DSTENCILOP_INCRSAT;
+        case 0x1e03: return D3DSTENCILOP_DECRSAT;
+        case 0x150a: return D3DSTENCILOP_INVERT;
+        case 0x8507: return D3DSTENCILOP_INCR;   // GL_INCR_WRAP
+        case 0x8508: return D3DSTENCILOP_DECR;   // GL_DECR_WRAP
+        default:     return D3DSTENCILOP_KEEP;   // 0x1e00
+    }
+}
 // With reversed Z, "nearer" is a larger depth value, so the ordering comparisons flip.
 static D3DCMPFUNC ReverseCompareIfNeeded(D3DCMPFUNC f) {
     if (!g_reversedDepth) return f;
@@ -1433,6 +1456,12 @@ void D3D9_SetRenderStateSimple(uint32_t nv2aMethod, uint32_t value) {
             break;
         }
         case 0x35c: SetGameRenderState(D3DRS_ZWRITEENABLE, value != 0); break;
+        case 0x360: SetGameRenderState(D3DRS_STENCILWRITEMASK, value); break;
+        case 0x364: SetGameRenderState(D3DRS_STENCILFUNC, GlCompareToD3D(value)); break;
+        case 0x368: SetGameRenderState(D3DRS_STENCILREF, value); break;
+        case 0x36c: SetGameRenderState(D3DRS_STENCILMASK, value); break;
+        case 0x374: SetGameRenderState(D3DRS_STENCILZFAIL, GlStencilOpToD3D(value)); break;
+        case 0x378: SetGameRenderState(D3DRS_STENCILPASS, GlStencilOpToD3D(value)); break;
         default: {
             static uint32_t warned[16]; static int warnedCount = 0;
             bool seen = false;
@@ -1460,6 +1489,14 @@ void D3D9_SetZBias(int zBias) {
 }
 void D3D9_SetZEnable(uint32_t value) {
     if (g_device != NULL) SetGameRenderState(D3DRS_ZENABLE, value != 0 ? D3DZB_TRUE : D3DZB_FALSE);
+}
+// The two stencil states with entry points of their own; the rest are simple ones (D3D9_SetRenderStateSimple). A
+// depth buffer without stencil (see D3D9_CreateDevice) leaves the test off.
+void D3D9_SetStencilEnable(uint32_t value) {
+    if (g_device != NULL) SetGameRenderState(D3DRS_STENCILENABLE, value != 0 && g_hasStencil);
+}
+void D3D9_SetStencilFail(uint32_t op) {
+    if (g_device != NULL) SetGameRenderState(D3DRS_STENCILFAIL, GlStencilOpToD3D(op));
 }
 void D3D9_SetNormalizeNormals(uint32_t value) { (void)value; } // fixed-function lighting is never used
 void D3D9_SetVertexBlend(uint32_t value) { (void)value; }      // ditto
@@ -1529,7 +1566,7 @@ struct TranslatedPixelShader {
     uint32_t def[60];
     Nv2aPixelShaderInfo info;
     IDirect3DPixelShader9 *shader;
-    bool attempted, failed;
+    bool inUse, attempted, failed;
 };
 static TranslatedPixelShader g_pixelShaders[512];
 static int g_pixelShaderCount = 0;
@@ -1612,16 +1649,21 @@ static void BuildPixelShader(TranslatedPixelShader *ps, int index) {
 uint32_t D3D9_CreatePixelShader(const void *definition, uint32_t *handleOut) {
     if (handleOut == NULL || definition == NULL)
         return 0x8876086Cu;   // D3DERR_INVALIDCALL
-    if (g_pixelShaderCount >= (int)(sizeof(g_pixelShaders) / sizeof(g_pixelShaders[0]))) {
+    int index = 0;   // a slot D3D9_DeletePixelShader freed, before the table grows
+    while (index < g_pixelShaderCount && g_pixelShaders[index].inUse)
+        index++;
+    if (index >= (int)(sizeof(g_pixelShaders) / sizeof(g_pixelShaders[0]))) {
         static bool said = false;
         if (!said) { said = true; D3D9Log("[d3d9] out of pixel shader slots after %d\n", g_pixelShaderCount); }
         return 0x8876086Cu;
     }
-    TranslatedPixelShader *ps = &g_pixelShaders[g_pixelShaderCount];
+    TranslatedPixelShader *ps = &g_pixelShaders[index];
     memset(ps, 0, sizeof(*ps));
+    ps->inUse = true;
     memcpy(ps->def, definition, sizeof(ps->def));
-    *handleOut = PS_HANDLE_TAG | (uint32_t)g_pixelShaderCount;
-    g_pixelShaderCount++;
+    *handleOut = PS_HANDLE_TAG | (uint32_t)index;
+    if (index == g_pixelShaderCount)
+        g_pixelShaderCount++;
     return 0;
 }
 
@@ -1644,7 +1686,11 @@ void D3D9_SetPixelShaderConstant(uint32_t reg, const float *values, uint32_t cou
 }
 
 void D3D9_DeletePixelShader(uint32_t handle) {
-    (void)handle;   // slots are never reused; the game creates its shaders once
+    if ((handle & 0xFFFF0000u) != PS_HANDLE_TAG || (int)(handle & 0xFFFF) >= g_pixelShaderCount)
+        return;
+    TranslatedPixelShader *ps = &g_pixelShaders[handle & 0xFFFF];
+    if (ps->shader != NULL) ps->shader->Release();
+    memset(ps, 0, sizeof(*ps));
 }
 
 // The translated program to draw with, or NULL for the fixed-function stage state.
@@ -1652,6 +1698,8 @@ static TranslatedPixelShader *CurrentPixelShaderForDraw(void) {
     if (g_currentPixelShader < 0 || g_currentPixelShader >= g_pixelShaderCount)
         return NULL;
     TranslatedPixelShader *ps = &g_pixelShaders[g_currentPixelShader];
+    if (!ps->inUse)
+        return NULL;
     if (!ps->attempted)
         BuildPixelShader(ps, g_currentPixelShader);
     return ps->failed ? NULL : ps;
@@ -1819,7 +1867,7 @@ struct TranslatedVertexShader {
     uint16_t declaredStride[16];  // bytes the declaration reads from each stream, for the stride check
     uint8_t positionComponents;   // floats in register 0's element, or 0 when it is not a float type
     uint32_t inputsUsed, outputsWritten;
-    bool attempted, failed;
+    bool inUse, attempted, failed;
 };
 // The driving engine creates about 196 of these, the action engine far fewer. A table too small to hold
 // them all is quiet in a way that is hard to trace: CreateVertexShader fails, the game keeps whatever
@@ -1935,34 +1983,52 @@ static bool BuildVertexShader(TranslatedVertexShader *vs, int index) {
     std::vector<uint32_t> code;
     Nv2aVertexShaderInfo info;
     char error[256];
-    if (!Nv2aVertexShader_Translate((const uint8_t*)vs->function, normPacked, inputComponents, &code, &info, error, sizeof(error))) {
+    bool translated = Nv2aVertexShader_Translate((const uint8_t*)vs->function, normPacked, inputComponents, &code, &info, error, sizeof(error));
+    HRESULT hr = D3DERR_INVALIDCALL;
+    if (translated) {
+        vs->inputsUsed = info.inputsUsed;
+        vs->outputsWritten = info.outputsWritten;
+        DumpTranslatedShader(index, vs, elements, elementCount, "(translated)");
+#ifndef NIGHTFIRE_STANDALONE
+        if (ShaderCheckWanted()) {
+            static char report[65536];
+            ShaderCheckLog("vertex shader", index, ShaderCheck_Vertex((const uint8_t*)vs->function, normPacked, inputComponents,
+                                                                      report, sizeof(report)), report);
+        }
+#endif
+        hr = g_device->CreateVertexShader((const DWORD*)code.data(), &vs->shader);
+        if (FAILED(hr))
+            D3D9Log("[d3d9] shader %d: CreateVertexShader refused the translation (0x%08lx)\n", index, hr);
+    } else {
         D3D9Log("[d3d9] shader %d: translation failed: %s\n", index, error);
         DumpTranslatedShader(index, vs, elements, elementCount, "(translation failed)");
-        return false;
     }
-    vs->inputsUsed = info.inputsUsed;
-    vs->outputsWritten = info.outputsWritten;
-    int instructionCount = info.instructionCount;
-    DumpTranslatedShader(index, vs, elements, elementCount, "(translated)");
 #ifndef NIGHTFIRE_STANDALONE
-    if (ShaderCheckWanted()) {
-        static char report[65536];
-        ShaderCheckLog("vertex shader", index, ShaderCheck_Vertex((const uint8_t*)vs->function, normPacked, inputComponents,
-                                                                  report, sizeof(report)), report);
+    // A program the translation cannot make, or makes in a form the runtime refuses, is made from the HLSL the
+    // translation replaced, compiled. Every program the games are known to have translates (shadercheck over their
+    // logs and XBEs, docs/architecture/shader-bytecode.md); the standalone build, without D3DCompile, has no net.
+    if (FAILED(hr) && ShaderCheck_CompileVertex((const uint8_t*)vs->function, normPacked, inputComponents, &code,
+                                                &vs->inputsUsed, &vs->outputsWritten)) {
+        D3D9Log("[d3d9] shader %d: compiled from its HLSL\n", index);
+        hr = g_device->CreateVertexShader((const DWORD*)code.data(), &vs->shader);
     }
 #endif
-    HRESULT hr = g_device->CreateVertexShader((const DWORD*)code.data(), &vs->shader);
     if (FAILED(hr)) { D3D9Log("[d3d9] shader %d: CreateVertexShader failed 0x%08lx\n", index, hr); return false; }
     if (FAILED(g_device->CreateVertexDeclaration(elements, &vs->decl))) { D3D9Log("[d3d9] shader %d: CreateVertexDeclaration failed\n", index); return false; }
     D3D9Log("[d3d9] shader %d translated: %d NV2A instructions, inputs 0x%04x, outputs 0x%04x, streams 0x%03x\n",
-           index, instructionCount, vs->inputsUsed, vs->outputsWritten, vs->streamsUsed);
+           index, ((const uint8_t*)vs->function)[2], vs->inputsUsed, vs->outputsWritten, vs->streamsUsed);
     vs->failed = false;
     return true;
 }
 
+// A slot freed by D3D9_DeleteVertexShader is used again before the table grows: EON's render methods delete their
+// shaders when they are destroyed.
 uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction, void **pHandle, uint32_t usage) {
     (void)usage;
-    if (g_vertexShaderCount >= (int)(sizeof(g_vertexShaders) / sizeof(g_vertexShaders[0]))) {
+    int index = 0;
+    while (index < g_vertexShaderCount && g_vertexShaders[index].inUse)
+        index++;
+    if (index >= (int)(sizeof(g_vertexShaders) / sizeof(g_vertexShaders[0]))) {
         static bool said = false;
         if (!said) {
             said = true;
@@ -1971,13 +2037,24 @@ uint32_t D3D9_CreateVertexShader(const void *pDeclaration, const void *pFunction
         }
         return 0x8876086Cu;   // D3DERR_INVALIDCALL
     }
-    TranslatedVertexShader *vs = &g_vertexShaders[g_vertexShaderCount];
+    TranslatedVertexShader *vs = &g_vertexShaders[index];
     memset(vs, 0, sizeof(*vs));
+    vs->inUse = true;
     vs->declaration = pDeclaration;
     vs->function = pFunction;
-    *pHandle = (void*)(uintptr_t)(VS_HANDLE_TAG | (uint32_t)g_vertexShaderCount); // 'VS' tag + index
-    g_vertexShaderCount++;
+    *pHandle = (void*)(uintptr_t)(VS_HANDLE_TAG | (uint32_t)index); // 'VS' tag + index
+    if (index == g_vertexShaderCount)
+        g_vertexShaderCount++;
     return 0;
+}
+
+void D3D9_DeleteVertexShader(uint32_t handle) {
+    if ((handle & 0xFFFF0000u) != VS_HANDLE_TAG || (int)(handle & 0xFFFF) >= g_vertexShaderCount)
+        return;
+    TranslatedVertexShader *vs = &g_vertexShaders[handle & 0xFFFF];
+    if (vs->shader != NULL) vs->shader->Release();
+    if (vs->decl != NULL) vs->decl->Release();
+    memset(vs, 0, sizeof(*vs));
 }
 
 void D3D9_SetVertexShader(void *handle) {
@@ -2387,6 +2464,10 @@ static bool PrepareShaderDraw(bool bindStreams, uint32_t firstVertex, uint32_t v
         return false;
     }
     TranslatedVertexShader *vs = &g_vertexShaders[g_currentVertexShader];
+    if (!vs->inUse) {
+        D3D9_BackendMissing("draw with a deleted vertex shader selected");
+        return false;
+    }
     if (!vs->attempted)
         BuildVertexShader(vs, g_currentVertexShader);
     if (vs->failed)
@@ -2575,16 +2656,18 @@ static void TraceDraw(const char *kind, uint32_t primType, uint32_t count, uint3
 }
 
 // The host state a draw went out with, after PrepareShaderDraw has applied the texture stages: blending, depth,
-// alpha test and stage 0's combiners. Traced frames only.
+// alpha test, colour writes, stencil and stage 0's combiners. Traced frames only.
 static void TraceHostState(void) {
     FILE *f = TraceFile();
     if (f == NULL || g_device == NULL)
         return;
     static const D3DRENDERSTATETYPE rs[] = { D3DRS_ALPHABLENDENABLE, D3DRS_SRCBLEND, D3DRS_DESTBLEND, D3DRS_BLENDOP,
-        D3DRS_ZENABLE, D3DRS_ZWRITEENABLE, D3DRS_ZFUNC, D3DRS_ALPHATESTENABLE, D3DRS_ALPHAREF, D3DRS_CULLMODE,
-        D3DRS_TEXTUREFACTOR, D3DRS_POINTSPRITEENABLE, D3DRS_POINTSIZE, D3DRS_LIGHTING, D3DRS_FOGENABLE };
-    static const char *rsName[] = { "blend", "src", "dst", "op", "z", "zwrite", "zfunc", "atest", "aref", "cull",
-        "tfactor", "psprite", "psize", "light", "fog" };
+        D3DRS_ZENABLE, D3DRS_ZWRITEENABLE, D3DRS_ZFUNC, D3DRS_ALPHATESTENABLE, D3DRS_ALPHAFUNC, D3DRS_ALPHAREF,
+        D3DRS_CULLMODE, D3DRS_TEXTUREFACTOR, D3DRS_POINTSPRITEENABLE, D3DRS_POINTSIZE, D3DRS_LIGHTING,
+        D3DRS_FOGENABLE, D3DRS_COLORWRITEENABLE, D3DRS_STENCILENABLE, D3DRS_STENCILFUNC, D3DRS_STENCILREF,
+        D3DRS_STENCILPASS };
+    static const char *rsName[] = { "blend", "src", "dst", "op", "z", "zwrite", "zfunc", "atest", "afunc", "aref",
+        "cull", "tfactor", "psprite", "psize", "light", "fog", "cwrite", "stencil", "sfunc", "sref", "spass" };
     fprintf(f, "  host:");
     for (int i = 0; i < (int)(sizeof(rs) / sizeof(rs[0])); i++) {
         DWORD v = 0;
@@ -3127,7 +3210,7 @@ const uint32_t kSurfaceDataMask = 0x0FFFFFFFu;
 void *D3D9_GetSurfaceLevel2(void *pTexture, uint32_t level) {
     (void)level; // only level 0 is ever asked for
     const uint32_t *header = (const uint32_t*)pTexture;
-    XboxSurface *s = (XboxSurface*)malloc(sizeof(XboxSurface));
+    XboxSurface *s = (XboxSurface*)GfxHost_Alloc(sizeof(XboxSurface));
     if (s == NULL)
         return NULL;
     s->Common = XBOX_SURFACE_COMMON;
@@ -3162,7 +3245,7 @@ uint32_t D3D9_ResourceRelease(void *pResource) {
     }
     for (int i = 0; i < g_allocatedSurfaceCount; i++) {
         if (g_allocatedSurfaces[i] == pResource) {
-            free(pResource);
+            GfxHost_Free(pResource);
             g_allocatedSurfaces[i] = g_allocatedSurfaces[--g_allocatedSurfaceCount];
             return 0;
         }
